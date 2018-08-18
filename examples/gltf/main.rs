@@ -94,7 +94,7 @@ impl<'a> PrefabData<'a> for ScenePrefabData {
     }
 }
 
-impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+impl<'a, 'b> State<GameData<'a, 'b>, ()> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
 
@@ -112,30 +112,39 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
         );
     }
 
-    fn handle_event(&mut self, data: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
+    fn handle_event(
+        &mut self,
+        data: StateData<GameData>,
+        event: StateEvent<()>,
+    ) -> Trans<GameData<'a, 'b>, ()> {
         let StateData { world, .. } = data;
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else if is_key_down(&event, VirtualKeyCode::Space) {
-            toggle_or_cycle_animation(
-                self.entity,
-                &mut world.write_resource(),
-                &world.read_storage(),
-                &mut world.write_storage(),
-            );
-            Trans::None
+        if let StateEvent::Window(event) = &event {
+            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                Trans::Quit
+            } else if is_key_down(&event, VirtualKeyCode::Space) {
+                toggle_or_cycle_animation(
+                    self.entity,
+                    &mut world.write_resource(),
+                    &world.read_storage(),
+                    &mut world.write_storage(),
+                );
+                Trans::None
+            } else {
+                Trans::None
+            }
         } else {
             Trans::None
         }
     }
 
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>, ()> {
         if !self.initialised {
             let remove = match self.progress.as_ref().map(|p| p.complete()) {
                 None | Some(Completion::Loading) => false,
 
                 Some(Completion::Complete) => {
-                    let scene_handle = data.world
+                    let scene_handle = data
+                        .world
                         .read_resource::<Scene>()
                         .handle
                         .as_ref()
@@ -160,7 +169,8 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                 self.progress = None;
             }
             if self.entity.is_none() {
-                if let Some(entity) = data.world
+                if let Some(entity) = data
+                    .world
                     .exec(|finder: TagFinder<AnimationMarker>| finder.find())
                 {
                     self.entity = Some(entity);

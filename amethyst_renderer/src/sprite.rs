@@ -99,7 +99,8 @@ impl<'a> SpriteRenderData<'a> {
 
         let vertices =
             Shape::Plane(None).generate::<Vec<PosTex>>(Some((half_width, half_height, 0.0)));
-        let mesh = self.loader
+        let mesh = self
+            .loader
             .load_from_data(vertices, (), &self.asset_storage);
 
         let material = Material {

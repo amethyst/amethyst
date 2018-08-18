@@ -1,28 +1,25 @@
 //! Rendering system.
 //!
 
-use std::mem;
-use std::sync::Arc;
-
 use amethyst_assets::{AssetStorage, HotReloadStrategy};
 use amethyst_core::shrev::EventChannel;
 use amethyst_core::specs::prelude::{
     Read, ReadExpect, Resources, RunNow, SystemData, Write, WriteExpect,
 };
 use amethyst_core::Time;
-use amethyst::StateEvent;
-use rayon::ThreadPool;
-use winit::{DeviceEvent, Event, WindowEvent};
-
 use config::DisplayConfig;
 use error::Result;
 use formats::{create_mesh_asset, create_texture_asset};
 use mesh::Mesh;
 use mtl::{Material, MaterialDefaults};
 use pipe::{PipelineBuild, PipelineData, PolyPipeline};
+use rayon::ThreadPool;
 use renderer::Renderer;
 use resources::{ScreenDimensions, WindowMessages};
+use std::mem;
+use std::sync::Arc;
 use tex::Texture;
+use winit::{DeviceEvent, Event, WindowEvent};
 
 /// Rendering system.
 #[derive(Derivative)]
@@ -136,7 +133,7 @@ where
         self.renderer.events_mut().poll_events(|new_event| {
             compress_events(events, new_event);
         });
-        event_handler.iter_write(events.drain(..).map(|e| StateEvent::Window(e)));
+        event_handler.iter_write(events.drain(..));
     }
 }
 
@@ -151,7 +148,7 @@ type AssetLoadingData<'a> = (
 type WindowData<'a> = (Write<'a, WindowMessages>, WriteExpect<'a, ScreenDimensions>);
 
 type RenderData<'a, P> = (
-    Write<'a, EventChannel<StateEvent>>,
+    Write<'a, EventChannel<Event>>,
     <P as PipelineData<'a>>::Data,
 );
 
@@ -174,7 +171,8 @@ where
 
         let mat = create_default_mat(res);
         res.insert(MaterialDefaults(mat));
-        let (width, height) = self.renderer
+        let (width, height) = self
+            .renderer
             .window()
             .get_inner_size()
             .expect("Window closed during initialization!");

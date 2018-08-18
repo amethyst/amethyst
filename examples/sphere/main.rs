@@ -6,14 +6,14 @@ use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
 use amethyst::core::transform::TransformBundle;
 use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
-use amethyst::renderer::{DrawShaded, Event, PosNormTex, VirtualKeyCode};
+use amethyst::renderer::{DrawShaded, PosNormTex, VirtualKeyCode};
 use amethyst::utils::scene::BasicScenePrefab;
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 struct Example;
 
-impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+impl<'a, 'b> State<GameData<'a, 'b>, ()> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         // Initialise the scene with an object, a light and a camera.
         let handle = data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
@@ -22,15 +22,23 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
         data.world.create_entity().with(handle).build();
     }
 
-    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
+    fn handle_event(
+        &mut self,
+        _: StateData<GameData>,
+        event: StateEvent<()>,
+    ) -> Trans<GameData<'a, 'b>, ()> {
+        if let StateEvent::Window(event) = &event {
+            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                Trans::Quit
+            } else {
+                Trans::None
+            }
         } else {
             Trans::None
         }
     }
 
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>, ()> {
         data.data.update(&data.world);
         Trans::None
     }

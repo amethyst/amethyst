@@ -11,7 +11,7 @@ use amethyst::renderer::*;
 
 struct Example;
 
-impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+impl<'a, 'b> State<GameData<'a, 'b>, ()> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
         let mat_defaults = world.read_resource::<MaterialDefaults>().0.clone();
@@ -112,15 +112,23 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
             .build();
     }
 
-    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
+    fn handle_event(
+        &mut self,
+        _: StateData<GameData>,
+        event: StateEvent<()>,
+    ) -> Trans<GameData<'a, 'b>, ()> {
+        if let StateEvent::Window(event) = &event {
+            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                Trans::Quit
+            } else {
+                Trans::None
+            }
         } else {
             Trans::None
         }
     }
 
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>, ()> {
         data.data.update(&data.world);
         Trans::None
     }

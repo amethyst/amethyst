@@ -1,27 +1,28 @@
 //! The core engine framework.
 
-use std::error::Error as StdError;
-use std::path::Path;
-use std::sync::Arc;
-use std::time::Duration;
-
-use core::shrev::{EventChannel, ReaderId};
-use log::Level;
-use rayon::ThreadPoolBuilder;
-use shred::Resource;
-#[cfg(feature = "profiler")]
-use thread_profiler::{register_thread_with_profiler, write_profile};
-use winit::{Event, WindowEvent};
-
+use amethyst_ui::UiEvent;
 use assets::{Loader, Source};
 use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
+use core::shrev::{EventChannel, ReaderId};
 use core::timing::{Stopwatch, Time};
 use ecs::common::Errors;
 use ecs::prelude::{Component, World};
 use error::{Error, Result};
 use game_data::DataInit;
+use log::Level;
+use rayon::ThreadPoolBuilder;
+use shred::Resource;
 use state::{State, StateData, StateMachine};
+use state_event::StateEvent;
+use std::error::Error as StdError;
+use std::marker::PhantomData;
+use std::path::Path;
+use std::sync::Arc;
+use std::time::Duration;
+#[cfg(feature = "profiler")]
+use thread_profiler::{register_thread_with_profiler, write_profile};
 use vergen;
+use winit::{Event, WindowEvent};
 
 /// An Application is the root object of the game engine. It binds the OS
 /// event loop, state machines, timers and other core components in a central place.
@@ -94,17 +95,19 @@ use vergen;
 /// [log]: https://crates.io/crates/log
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct Application<'a, T> {
+pub struct Application<'a, T, E: Send + Sync + 'static> {
     /// The world
     #[derivative(Debug = "ignore")]
     world: World,
-    events_reader_id: ReaderId<StateEvent>,
-    states: StateMachine<'a, T>,
+    window_reader_id: ReaderId<Event>,
+    ui_reader_id: ReaderId<UiEvent>,
+    custom_reader_id: ReaderId<E>,
+    states: StateMachine<'a, T, E>,
     ignore_window_close: bool,
     data: T,
 }
 
-impl<'a, T> Application<'a, T> {
+impl<'a, T, E: Send + Sync + Clone + 'static> Application<'a, T, E> {
     /// Creates a new Application with the given initial game state.
     /// This will create and allocate all the needed resources for
     /// the event loop of the game engine. It is a shortcut for convenience
@@ -153,10 +156,10 @@ impl<'a, T> Application<'a, T> {
     /// let mut game = Application::new("assets/", NullState, ()).expect("Failed to initialize");
     /// game.run();
     /// ~~~
-    pub fn new<P, S, I>(path: P, initial_state: S, init: I) -> Result<Application<'a, T>>
+    pub fn new<P, S, I>(path: P, initial_state: S, init: I) -> Result<Self>
     where
         P: AsRef<Path>,
-        S: State<T> + 'a,
+        S: State<T, E> + 'a,
         I: DataInit<T>,
     {
         ApplicationBuilder::new(path, initial_state)?.build(init)
@@ -166,10 +169,10 @@ impl<'a, T> Application<'a, T> {
     ///
     /// This is identical in function to
     /// [ApplicationBuilder::new](struct.ApplicationBuilder.html#method.new).
-    pub fn build<P, S>(path: P, initial_state: S) -> Result<ApplicationBuilder<S>>
+    pub fn build<P, S>(path: P, initial_state: S) -> Result<ApplicationBuilder<S, E>>
     where
         P: AsRef<Path>,
-        S: State<T>,
+        S: State<T, E>,
     {
         ApplicationBuilder::new(path, initial_state)
     }
@@ -223,32 +226,53 @@ impl<'a, T> Application<'a, T> {
             profile_scope!("handle_event");
 
             let events = world
-                .read_resource::<EventChannel<StateEvent>>()
-                .read(&mut self.events_reader_id)
+                .read_resource::<EventChannel<Event>>()
+                .read(&mut self.window_reader_id)
                 .cloned()
+                .map(|e| StateEvent::Window(e))
                 .collect::<Vec<_>>();
 
             for event in events {
-                states.handle_event(StateData::new(world, &mut self.data), event.clone());
                 if !self.ignore_window_close {
                     if cfg!(target_os = "ios") {
-                        if let &WindowEvent(Event::WindowEvent) {
+                        if let &StateEvent::Window(Event::WindowEvent {
                             event: WindowEvent::Destroyed,
                             ..
-                        } = &event
+                        }) = &event
                         {
                             states.stop(StateData::new(world, &mut self.data));
                         }
                     } else {
-                        if let &WindowEvent(Event::WindowEvent) {
+                        if let &StateEvent::Window(Event::WindowEvent {
                             event: WindowEvent::CloseRequested,
                             ..
-                        } = &event
+                        }) = &event
                         {
                             states.stop(StateData::new(world, &mut self.data));
                         }
                     }
                 }
+                states.handle_event(StateData::new(world, &mut self.data), event);
+            }
+
+            let events = world
+                .read_resource::<EventChannel<UiEvent>>()
+                .read(&mut self.ui_reader_id)
+                .cloned()
+                .map(|e| StateEvent::Ui(e))
+                .collect::<Vec<_>>();
+            for event in events {
+                states.handle_event(StateData::new(world, &mut self.data), event);
+            }
+
+            let events = world
+                .read_resource::<EventChannel<E>>()
+                .read(&mut self.custom_reader_id)
+                .cloned()
+                .map(|e| StateEvent::Custom(e))
+                .collect::<Vec<_>>();
+            for event in events {
+                states.handle_event(StateData::new(world, &mut self.data), event);
             }
         }
         {
@@ -289,7 +313,7 @@ impl<'a, T> Application<'a, T> {
 }
 
 #[cfg(feature = "profiler")]
-impl<'a, T> Drop for Application<'a, T> {
+impl<'a, T, E> Drop for Application<'a, T, E> {
     fn drop(&mut self) {
         // TODO: Specify filename in config.
         let path = format!("{}/thread_profile.json", env!("CARGO_MANIFEST_DIR"));
@@ -302,15 +326,16 @@ impl<'a, T> Drop for Application<'a, T> {
 /// using a custom set of configuration. This is the normal way an
 /// [`Application`](struct.Application.html)
 /// object is created.
-pub struct ApplicationBuilder<S> {
+pub struct ApplicationBuilder<S, E> {
     // config: Config,
     initial_state: S,
     /// Used by bundles to access the world directly
     pub world: World,
     ignore_window_close: bool,
+    phantom: PhantomData<E>,
 }
 
-impl<S> ApplicationBuilder<S> {
+impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
     /// Creates a new [ApplicationBuilder](struct.ApplicationBuilder.html) instance
     /// that wraps the initial_state. This is the more verbose way of initializing
     /// your application if you require specific configuration details to be changed
@@ -407,7 +432,9 @@ impl<S> ApplicationBuilder<S> {
             .map_err(|err| Error::Core(err.description().to_string().into()))?;
         world.add_resource(Loader::new(path.as_ref().to_owned(), pool.clone()));
         world.add_resource(pool);
-        world.add_resource(EventChannel::<StateEvent>::with_capacity(2000));
+        world.add_resource(EventChannel::<Event>::with_capacity(2000));
+        world.add_resource(EventChannel::<UiEvent>::with_capacity(40));
+        world.add_resource(EventChannel::<E>::with_capacity(2));
         world.add_resource(Errors::default());
         world.add_resource(FrameLimiter::default());
         world.add_resource(Stopwatch::default());
@@ -417,6 +444,7 @@ impl<S> ApplicationBuilder<S> {
             initial_state,
             world,
             ignore_window_close: false,
+            phantom: PhantomData,
         })
     }
 
@@ -672,9 +700,9 @@ impl<S> ApplicationBuilder<S> {
     ///
     /// See the [example show for `ApplicationBuilder::new()`](struct.ApplicationBuilder.html#examples)
     /// for an example on how this method is used.
-    pub fn build<'a, T, I>(mut self, init: I) -> Result<Application<'a, T>>
+    pub fn build<'a, T, I>(mut self, init: I) -> Result<Application<'a, T, E>>
     where
-        S: State<T> + 'a,
+        S: State<T, E> + 'a,
         I: DataInit<T>,
     {
         trace!("Entering `ApplicationBuilder::build`");
@@ -684,8 +712,17 @@ impl<S> ApplicationBuilder<S> {
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 
-        let reader_id = self.world
-            .write_resource::<EventChannel<StateEvent>>()
+        let window_reader_id = self
+            .world
+            .write_resource::<EventChannel<Event>>()
+            .register_reader();
+        let ui_reader_id = self
+            .world
+            .write_resource::<EventChannel<UiEvent>>()
+            .register_reader();
+        let custom_reader_id = self
+            .world
+            .write_resource::<EventChannel<E>>()
             .register_reader();
 
         let data = init.build(&mut self.world);
@@ -693,7 +730,9 @@ impl<S> ApplicationBuilder<S> {
         Ok(Application {
             world: self.world,
             states: StateMachine::new(self.initial_state),
-            events_reader_id: reader_id,
+            window_reader_id,
+            ui_reader_id,
+            custom_reader_id,
             ignore_window_close: self.ignore_window_close,
             data,
         })

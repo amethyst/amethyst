@@ -1,8 +1,7 @@
 //! Render target used for storing 2D pixel representations of 3D scenes.
 
-use fnv::FnvHashMap as HashMap;
-
 use error::Result;
+use fnv::FnvHashMap as HashMap;
 use types::{DepthStencilView, Encoder, Factory, RenderTargetView, ShaderResourceView, Window};
 
 /// Target color buffer.

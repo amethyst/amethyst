@@ -1,5 +1,4 @@
 use amethyst::renderer::{Sprite, SpriteSheet};
-
 use sprite;
 
 /// Loads a sprite sheet from the assets folder.

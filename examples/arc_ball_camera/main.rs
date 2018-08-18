@@ -7,7 +7,7 @@ use amethyst::controls::ArcBallControlBundle;
 use amethyst::core::transform::TransformBundle;
 use amethyst::input::{is_close_requested, is_key_down, InputBundle};
 use amethyst::prelude::*;
-use amethyst::renderer::{DrawShaded, Event, PosNormTex, VirtualKeyCode};
+use amethyst::renderer::{DrawShaded, PosNormTex, VirtualKeyCode};
 use amethyst::utils::scene::BasicScenePrefab;
 use amethyst::Error;
 
@@ -15,7 +15,7 @@ type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 struct ExampleState;
 
-impl<'a, 'b> State<GameData<'a, 'b>> for ExampleState {
+impl<'a, 'b> State<GameData<'a, 'b>, ()> for ExampleState {
     fn on_start(&mut self, data: StateData<GameData>) {
         let prefab_handle = data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
             loader.load("prefab/arc_ball_camera.ron", RonFormat, (), ())
@@ -23,15 +23,20 @@ impl<'a, 'b> State<GameData<'a, 'b>> for ExampleState {
         data.world.create_entity().with(prefab_handle).build();
     }
 
-    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else {
-            Trans::None
+    fn handle_event(
+        &mut self,
+        _: StateData<GameData>,
+        event: StateEvent<()>,
+    ) -> Trans<GameData<'a, 'b>, ()> {
+        if let StateEvent::Window(event) = &event {
+            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                return Trans::Quit;
+            }
         }
+        Trans::None
     }
 
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>, ()> {
         data.data.update(&data.world);
         Trans::None
     }
@@ -56,7 +61,7 @@ fn main() -> Result<(), Error> {
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new().with_dep(&[]))?
         .with_bundle(
-            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?
+            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
         .with_bundle(ArcBallControlBundle::<String, String>::new())?
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;

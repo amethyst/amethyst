@@ -1,18 +1,16 @@
 //! World resource that handles all user input.
 
-use std::borrow::Borrow;
-use std::hash::Hash;
-
-use amethyst_core::shrev::EventChannel;
-use smallvec::SmallVec;
-use winit::{
-    DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent,
-};
-
 use super::controller::{ControllerButton, ControllerEvent};
 use super::event::InputEvent;
 use super::event::InputEvent::*;
 use super::*;
+use amethyst_core::shrev::EventChannel;
+use smallvec::SmallVec;
+use std::borrow::Borrow;
+use std::hash::Hash;
+use winit::{
+    DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent,
+};
 
 /// This struct holds state information about input devices.
 ///
@@ -135,7 +133,8 @@ where
                     ..
                 } => {
                     let mouse_button = button;
-                    if self.pressed_mouse_buttons
+                    if self
+                        .pressed_mouse_buttons
                         .iter()
                         .all(|&b| b != mouse_button)
                     {
@@ -162,7 +161,8 @@ where
                     ..
                 } => {
                     let mouse_button = button;
-                    let index = self.pressed_mouse_buttons
+                    let index = self
+                        .pressed_mouse_buttons
                         .iter()
                         .position(|&b| b == mouse_button);
                     if let Some(i) = index {
@@ -240,7 +240,8 @@ where
             }
             ControllerButtonPressed { which, button } => {
                 if let Some(controller_id) = self.controller_idx_to_id(which) {
-                    if self.pressed_controller_buttons
+                    if self
+                        .pressed_controller_buttons
                         .iter()
                         .all(|&(id, b)| id != controller_id || b != button)
                     {
@@ -265,7 +266,8 @@ where
             }
             ControllerButtonReleased { which, button } => {
                 if let Some(controller_id) = self.controller_idx_to_id(which) {
-                    let index = self.pressed_controller_buttons
+                    let index = self
+                        .pressed_controller_buttons
                         .iter()
                         .position(|&(id, b)| id == controller_id && b == button);
                     if let Some(i) = index {
@@ -290,7 +292,8 @@ where
             ControllerConnected { which } => {
                 if self.controller_idx_to_id(which).is_none() {
                     let controller_id = self.alloc_controller_id();
-                    if self.connected_controllers
+                    if self
+                        .connected_controllers
                         .iter()
                         .all(|&ids| ids.0 != controller_id)
                     {
@@ -300,7 +303,8 @@ where
             }
             ControllerDisconnected { which } => {
                 if let Some(controller_id) = self.controller_idx_to_id(which) {
-                    let index = self.connected_controllers
+                    let index = self
+                        .connected_controllers
                         .iter()
                         .position(|&ids| ids.0 == controller_id);
                     if let Some(i) = index {
@@ -387,13 +391,16 @@ where
 
     /// Returns an iterator over all buttons that are down.
     pub fn buttons_that_are_down<'a>(&self) -> impl Iterator<Item = Button> + '_ {
-        let mouse_buttons = self.pressed_mouse_buttons
+        let mouse_buttons = self
+            .pressed_mouse_buttons
             .iter()
             .map(|&mb| Button::Mouse(mb));
-        let keys = self.pressed_keys
+        let keys = self
+            .pressed_keys
             .iter()
             .flat_map(|v| KeyThenCode::new(v.clone()));
-        let controller_buttons = self.pressed_controller_buttons
+        let controller_buttons = self
+            .pressed_controller_buttons
             .iter()
             .map(|&gb| Button::Controller(gb.0, gb.1));
 
@@ -433,7 +440,8 @@ where
                 invert,
                 dead_zone,
                 ..
-            } => self.controller_axes
+            } => self
+                .controller_axes
                 .iter()
                 .find(|&&(id, a, _)| id == controller_id && a == axis)
                 .map(|&(_, _, val)| if invert { -val } else { val })
@@ -465,7 +473,8 @@ where
     fn alloc_controller_id(&self) -> u32 {
         let mut i = 0u32;
         loop {
-            if self.connected_controllers
+            if self
+                .connected_controllers
                 .iter()
                 .find(|ids| ids.0 == i)
                 .is_none()

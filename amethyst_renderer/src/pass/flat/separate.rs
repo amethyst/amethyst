@@ -1,15 +1,14 @@
 //! Simple flat forward drawing pass.
 
+use super::*;
 use amethyst_assets::AssetStorage;
 use amethyst_core::specs::prelude::{Entities, Join, Read, ReadExpect, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
+use cam::{ActiveCamera, Camera};
+use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
-
-use super::*;
-use cam::{ActiveCamera, Camera};
-use error::Result;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
 use pass::skinning::{create_skinning_effect, setup_skinning_buffers};

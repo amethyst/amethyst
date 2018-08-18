@@ -1,11 +1,10 @@
-use std::path::Path;
-use std::sync::Arc;
-
 use core::specs::prelude::{Dispatcher, DispatcherBuilder, System, World};
 use core::SystemBundle;
 use error::{Error, Result};
 use rayon::ThreadPool;
 use renderer::pipe::pass::Pass;
+use std::path::Path;
+use std::sync::Arc;
 
 /// Initialise trait for game data
 pub trait DataInit<T> {

@@ -1,19 +1,17 @@
-use std::fmt::Debug;
-use std::result::Result as StdResult;
-
 use amethyst_assets::{
     Asset, AssetStorage, Error, Loader, PrefabData, PrefabError, ProcessingState, Result,
     ResultExt, SimpleFormat,
 };
 use amethyst_core::cgmath::{InnerSpace, Vector3};
 use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, VecStorage, WriteStorage};
+use mesh::{Mesh, MeshBuilder, MeshHandle};
+use std::fmt::Debug;
+use std::result::Result as StdResult;
+use vertex::*;
 use wavefront_obj::obj::{
     parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex, TextureIndex, Vertex,
     VertexIndex,
 };
-
-use mesh::{Mesh, MeshBuilder, MeshHandle};
-use vertex::*;
 use Renderer;
 
 /// Mesh data for loading
@@ -129,16 +127,20 @@ fn convert(
             let vertex: Vertex = object.vertices[vi];
             [vertex.x as f32, vertex.y as f32, vertex.z as f32]
         },
-        normal: ni.map(|i| {
-            let normal: Normal = object.normals[i];
-            Vector3::from([normal.x as f32, normal.y as f32, normal.z as f32])
-                .normalize()
-                .into()
-        }).unwrap_or([0.0, 0.0, 0.0]),
-        tex_coord: ti.map(|i| {
-            let tvertex: TVertex = object.tex_vertices[i];
-            [tvertex.u as f32, tvertex.v as f32]
-        }).unwrap_or([0.0, 0.0]),
+        normal: ni
+            .map(|i| {
+                let normal: Normal = object.normals[i];
+                Vector3::from([normal.x as f32, normal.y as f32, normal.z as f32])
+                    .normalize()
+                    .into()
+            })
+            .unwrap_or([0.0, 0.0, 0.0]),
+        tex_coord: ti
+            .map(|i| {
+                let tvertex: TVertex = object.tex_vertices[i];
+                [tvertex.u as f32, tvertex.v as f32]
+            })
+            .unwrap_or([0.0, 0.0]),
     }
 }
 

@@ -59,7 +59,7 @@ impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> SystemBun
             );
         };
         builder.add_thread_local(
-            RenderSystem::build(self.pipe, self.config).chain_err(|| "Renderer error!")?
+            RenderSystem::build(self.pipe, self.config).chain_err(|| "Renderer error!")?,
         );
         Ok(())
     }

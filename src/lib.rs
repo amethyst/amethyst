@@ -69,6 +69,7 @@ pub extern crate amethyst_ui as ui;
 pub extern crate amethyst_utils as utils;
 pub extern crate winit;
 
+extern crate amethyst_ui;
 #[macro_use]
 extern crate derivative;
 extern crate fern;
@@ -82,11 +83,10 @@ pub use self::error::{Error, Result};
 pub use self::game_data::{DataInit, GameData, GameDataBuilder};
 pub use self::logger::{start_logger, LevelFilter as LogLevelFilter, LoggerConfig};
 pub use self::state::{State, StateData, StateMachine, Trans};
+pub use self::state_event::StateEvent;
 pub use core::shred;
 pub use core::shrev;
 pub use core::specs as ecs;
-
-pub use renderer::state_event::StateEvent;
 
 pub mod prelude;
 

@@ -7,8 +7,6 @@ mod bundle;
 mod pong;
 mod systems;
 
-use std::time::Duration;
-
 use amethyst::audio::AudioBundle;
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::TransformBundle;
@@ -17,9 +15,9 @@ use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{DrawFlat, PosTex};
 use amethyst::ui::UiBundle;
-
 use audio::Music;
 use bundle::PongBundle;
+use std::time::Duration;
 
 const ARENA_HEIGHT: f32 = 100.0;
 const ARENA_WIDTH: f32 = 100.0;
@@ -68,7 +66,7 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
-            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?
+            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
         .with_bundle(PongBundle)?
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?

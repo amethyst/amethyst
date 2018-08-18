@@ -2,8 +2,8 @@
 
 #![allow(missing_docs)]
 
-use std::mem;
-
+pub use self::pso::{Data, Init, Meta};
+use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
 use gfx::buffer::{Info as BufferInfo, Role as BufferRole};
 use gfx::memory::{Bind, Usage};
@@ -14,13 +14,9 @@ use gfx::shade::{ProgramError, ToUniform};
 use gfx::state::{Blend, ColorMask, Comparison, Depth, MultiSample, Rasterizer, Stencil};
 use gfx::traits::Pod;
 use gfx::{Primitive, ShaderSet};
-
 use glsl_layout::Std140;
-
-pub use self::pso::{Data, Init, Meta};
-
-use error::{Error, Result};
 use pipe::Target;
+use std::mem;
 use types::{Encoder, Factory, PipelineState, Resources, Slice};
 use vertex::Attributes;
 
@@ -45,21 +41,24 @@ impl<'a> ProgramSource<'a> {
         use gfx::Factory;
 
         match *self {
-            ProgramSource::Simple(ref vs, ref ps) => fac.create_shader_set(vs, ps)
+            ProgramSource::Simple(ref vs, ref ps) => fac
+                .create_shader_set(vs, ps)
                 .map_err(|e| Error::ProgramCreation(e)),
             ProgramSource::Geometry(ref vs, ref gs, ref ps) => {
-                let v = fac.create_shader_vertex(vs)
+                let v = fac
+                    .create_shader_vertex(vs)
                     .map_err(|e| ProgramError::Vertex(e))?;
-                let g = fac.create_shader_geometry(gs)
+                let g = fac
+                    .create_shader_geometry(gs)
                     .expect("Geometry shader creation failed");
-                let p = fac.create_shader_pixel(ps)
+                let p = fac
+                    .create_shader_pixel(ps)
                     .map_err(|e| ProgramError::Pixel(e))?;
                 Ok(ShaderSet::Geometry(v, g, p))
             }
-            ProgramSource::Tessellated(ref vs, ref hs, ref ds, ref ps) => {
-                fac.create_shader_set_tessellation(vs, hs, ds, ps)
-                    .map_err(|e| Error::ProgramCreation(e))
-            }
+            ProgramSource::Tessellated(ref vs, ref hs, ref ds, ref ps) => fac
+                .create_shader_set_tessellation(vs, hs, ds, ps)
+                .map_err(|e| Error::ProgramCreation(e)),
         }
     }
 }
@@ -326,7 +325,8 @@ impl<'a> EffectBuilder<'a> {
         let mut data = Data::default();
 
         debug!("Creating raw constant buffers");
-        let const_bufs = self.init
+        let const_bufs = self
+            .init
             .const_bufs
             .iter()
             .enumerate()
@@ -339,7 +339,8 @@ impl<'a> EffectBuilder<'a> {
             .collect::<Result<HashMap<_, _>>>()?;
 
         debug!("Set global uniforms");
-        let globals = self.init
+        let globals = self
+            .init
             .globals
             .iter()
             .enumerate()
@@ -365,7 +366,8 @@ impl<'a> EffectBuilder<'a> {
                 .map(|cb| &cb.as_output)
                 .cloned(),
         );
-        data.out_depth = self.out
+        data.out_depth = self
+            .out
             .depth_buf()
             .map(|db| (db.as_output.clone(), (0, 0)));
 

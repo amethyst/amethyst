@@ -25,22 +25,22 @@ where
 }
 
 /// Types of state transitions.
-pub enum Trans<T> {
+pub enum Trans<T, E> {
     /// Continue as normal.
     None,
     /// Remove the active state and resume the next state on the stack or stop
     /// if there are none.
     Pop,
     /// Pause the active state and push a new state onto the stack.
-    Push(Box<State<T>>),
+    Push(Box<State<T, E>>),
     /// Remove the current state on the stack and insert a different one.
-    Switch(Box<State<T>>),
+    Switch(Box<State<T, E>>),
     /// Stop and remove all states and shut down the engine.
     Quit,
 }
 
 /// A trait which defines game states that can be used by the state machine.
-pub trait State<T> {
+pub trait State<T, E: Send + Sync + 'static> {
     /// Executed when the game state begins.
     fn on_start(&mut self, _data: StateData<T>) {}
 
@@ -54,18 +54,18 @@ pub trait State<T> {
     fn on_resume(&mut self, _data: StateData<T>) {}
 
     /// Executed on every frame before updating, for use in reacting to events.
-    fn handle_event(&mut self, _data: StateData<T>, _event: StateEvent) -> Trans<T> {
+    fn handle_event(&mut self, _data: StateData<T>, _event: StateEvent<E>) -> Trans<T, E> {
         Trans::None
     }
 
     /// Executed repeatedly at stable, predictable intervals (1/60th of a second
     /// by default).
-    fn fixed_update(&mut self, _data: StateData<T>) -> Trans<T> {
+    fn fixed_update(&mut self, _data: StateData<T>) -> Trans<T, E> {
         Trans::None
     }
 
     /// Executed on every frame immediately, as fast as the engine will allow.
-    fn update(&mut self, _data: StateData<T>) -> Trans<T> {
+    fn update(&mut self, _data: StateData<T>) -> Trans<T, E> {
         Trans::None
     }
 }
@@ -73,15 +73,15 @@ pub trait State<T> {
 /// A simple stack-based state machine (pushdown automaton).
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct StateMachine<'a, T> {
+pub struct StateMachine<'a, T, E> {
     running: bool,
     #[derivative(Debug = "ignore")]
-    state_stack: Vec<Box<State<T> + 'a>>,
+    state_stack: Vec<Box<State<T, E> + 'a>>,
 }
 
-impl<'a, T> StateMachine<'a, T> {
+impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
     /// Creates a new state machine with the given initial state.
-    pub fn new<S: State<T> + 'a>(initial_state: S) -> StateMachine<'a, T> {
+    pub fn new<S: State<T, E> + 'a>(initial_state: S) -> StateMachine<'a, T, E> {
         StateMachine {
             running: false,
             state_stack: vec![Box::new(initial_state)],
@@ -106,7 +106,7 @@ impl<'a, T> StateMachine<'a, T> {
     }
 
     /// Passes a single event to the active state to handle.
-    pub fn handle_event(&mut self, data: StateData<T>, event: StateEvent) {
+    pub fn handle_event(&mut self, data: StateData<T>, event: StateEvent<E>) {
         let StateData { world, data } = data;
         if self.running {
             let trans = match self.state_stack.last_mut() {
@@ -146,7 +146,7 @@ impl<'a, T> StateMachine<'a, T> {
 
     /// Performs a state transition, if requested by either update() or
     /// fixed_update().
-    fn transition(&mut self, request: Trans<T>, data: StateData<T>) {
+    fn transition(&mut self, request: Trans<T, E>, data: StateData<T>) {
         if self.running {
             match request {
                 Trans::None => (),
@@ -159,7 +159,7 @@ impl<'a, T> StateMachine<'a, T> {
     }
 
     /// Removes the current state on the stack and inserts a different one.
-    fn switch(&mut self, state: Box<State<T>>, data: StateData<T>) {
+    fn switch(&mut self, state: Box<State<T, E>>, data: StateData<T>) {
         if self.running {
             let StateData { world, data } = data;
             if let Some(mut state) = self.state_stack.pop() {
@@ -173,7 +173,7 @@ impl<'a, T> StateMachine<'a, T> {
     }
 
     /// Pauses the active state and pushes a new state onto the state stack.
-    fn push(&mut self, state: Box<State<T>>, data: StateData<T>) {
+    fn push(&mut self, state: Box<State<T, E>>, data: StateData<T>) {
         if self.running {
             let StateData { world, data } = data;
             if let Some(state) = self.state_stack.last_mut() {

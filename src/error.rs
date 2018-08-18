@@ -1,13 +1,12 @@
 //! Engine error types.
 
+use config::ConfigError;
+use core;
+use renderer;
 use std::error::Error as StdError;
 use std::fmt::Result as FmtResult;
 use std::fmt::{Display, Formatter};
 use std::result::Result as StdResult;
-
-use config::ConfigError;
-use core;
-use renderer;
 
 /// Engine result type.
 pub type Result<T> = StdResult<T, Error>;

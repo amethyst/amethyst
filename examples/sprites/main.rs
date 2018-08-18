@@ -16,8 +16,6 @@ mod png_loader;
 mod sprite;
 mod sprite_sheet_loader;
 
-use std::time::Duration;
-
 use amethyst::animation::{
     get_animation_set, AnimationBundle, AnimationCommand, AnimationControl, ControlState,
     EndControl,
@@ -29,10 +27,11 @@ use amethyst::ecs::prelude::Entity;
 use amethyst::input::{is_close_requested, is_key_down, InputBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{
-    Camera, ColorMask, DrawFlat, Event, Material, MaterialDefaults, MaterialTextureSet, Mesh,
-    PosTex, Projection, ScreenDimensions, VirtualKeyCode, ALPHA,
+    Camera, ColorMask, DrawFlat, Material, MaterialDefaults, MaterialTextureSet, Mesh, PosTex,
+    Projection, ScreenDimensions, VirtualKeyCode, ALPHA,
 };
 use amethyst::ui::UiBundle;
+use std::time::Duration;
 
 #[derive(Debug, Default)]
 struct Example {
@@ -40,7 +39,7 @@ struct Example {
     entities: Vec<Entity>,
 }
 
-impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+impl<'a, 'b> State<GameData<'a, 'b>, ()> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
 
@@ -156,15 +155,23 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
         }
     }
 
-    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
+    fn handle_event(
+        &mut self,
+        _: StateData<GameData>,
+        event: StateEvent<()>,
+    ) -> Trans<GameData<'a, 'b>, ()> {
+        if let StateEvent::Window(event) = &event {
+            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                Trans::Quit
+            } else {
+                Trans::None
+            }
         } else {
             Trans::None
         }
     }
 
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>, ()> {
         data.data.update(&data.world);
         Trans::None
     }

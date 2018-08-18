@@ -24,7 +24,7 @@ impl Example {
     }
 }
 
-impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+impl<'a, 'b> State<GameData<'a, 'b>, ()> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         data.world.add_resource(AssetStorage::<Locale>::new());
         let mut progress_counter = ProgressCounter::default();
@@ -53,7 +53,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
         self.progress_counter = Some(progress_counter);
     }
 
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>, ()> {
         data.data.update(&data.world);
 
         // Check if the locale has been loaded.

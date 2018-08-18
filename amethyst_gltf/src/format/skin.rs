@@ -1,12 +1,10 @@
-use std::collections::HashMap;
-
+use super::{Buffers, GltfError};
 use animation::{JointPrefab, SkinPrefab, SkinnablePrefab};
 use assets::Prefab;
 use core::cgmath::{Matrix4, SquareMatrix};
 use gltf;
 use renderer::JointTransformsPrefab;
-
-use super::{Buffers, GltfError};
+use std::collections::HashMap;
 use GltfPrefab;
 
 pub fn load_skin(
@@ -17,7 +15,8 @@ pub fn load_skin(
     meshes: Vec<usize>,
     prefab: &mut Prefab<GltfPrefab>,
 ) -> Result<(), GltfError> {
-    let joints = skin.joints()
+    let joints = skin
+        .joints()
         .map(|j| node_map.get(&j.index()).cloned().unwrap())
         .collect::<Vec<_>>();
 

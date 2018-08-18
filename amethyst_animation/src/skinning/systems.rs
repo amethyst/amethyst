@@ -1,3 +1,4 @@
+use super::resources::*;
 use amethyst_core::cgmath::{Matrix4, SquareMatrix};
 use amethyst_core::specs::prelude::{
     BitSet, InsertedFlag, Join, ModifiedFlag, ReadStorage, ReaderId, Resources, System,
@@ -5,8 +6,6 @@ use amethyst_core::specs::prelude::{
 };
 use amethyst_core::GlobalTransform;
 use amethyst_renderer::JointTransforms;
-
-use super::resources::*;
 
 /// System for performing vertex skinning.
 ///
@@ -88,7 +87,8 @@ impl<'a> System<'a> for VertexSkinningSystem {
         {
             if let Some(global_inverse) = mesh_global.0.invert() {
                 let skin = skins.get(joint_transform.skin).unwrap();
-                let joint_matrices = skin.joints
+                let joint_matrices = skin
+                    .joints
                     .iter()
                     .map(|joint_entity| {
                         (

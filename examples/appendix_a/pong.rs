@@ -5,7 +5,7 @@ use amethyst::ecs::prelude::World;
 use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::{
-    Camera, Event, Material, MeshHandle, PosTex, Projection, VirtualKeyCode, WindowMessages,
+    Camera, Material, MeshHandle, PosTex, Projection, VirtualKeyCode, WindowMessages,
 };
 use amethyst::ui::{Anchor, TtfFormat, UiText, UiTransform};
 use config::{ArenaConfig, BallConfig, PaddlesConfig};
@@ -14,7 +14,7 @@ use {Ball, Paddle, Side};
 
 pub struct Pong;
 
-impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
+impl<'a, 'b> State<GameData<'a, 'b>, ()> for Pong {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
         use audio::initialise_audio;
@@ -28,15 +28,20 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
         hide_cursor(world);
     }
 
-    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else {
-            Trans::None
+    fn handle_event(
+        &mut self,
+        _: StateData<GameData>,
+        event: StateEvent<()>,
+    ) -> Trans<GameData<'a, 'b>, ()> {
+        if let StateEvent::Window(event) = &event {
+            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                return Trans::Quit;
+            }
         }
+        Trans::None
     }
 
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>, ()> {
         data.data.update(&data.world);
         Trans::None
     }

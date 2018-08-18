@@ -1,8 +1,6 @@
 pub use self::control::AnimationControlSystem;
 pub use self::sampling::SamplerInterpolationSystem;
-
 use amethyst_assets::Processor;
-
 use resources::{Animation, Sampler};
 
 mod control;
