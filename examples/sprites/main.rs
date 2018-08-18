@@ -95,19 +95,6 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
             sprite_h,
         );
     }
-
-    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else {
-            Trans::None
-        }
-    }
-
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
-        data.data.update(&data.world);
-        Trans::None
-    }
 }
 
 impl Example {
@@ -320,9 +307,11 @@ fn initialise_camera(world: &mut World) -> Entity {
         .create_entity()
         .with(Camera::from(Projection::orthographic(
             0.0, width, height, 0.0,
-        ))).with(GlobalTransform(Matrix4::from_translation(
+        )))
+        .with(GlobalTransform(Matrix4::from_translation(
             Vector3::new(0.0, 0.0, 1.0).into(),
-        ))).build()
+        )))
+        .build()
 }
 
 fn main() -> amethyst::Result<()> {

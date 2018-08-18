@@ -34,8 +34,7 @@ fn main() -> amethyst::Result<()> {
     // of the git repository. It only is a different location to load the assets from.
     let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
 
-    let input_bundle =
-        InputBundle::<String, String>::new().with_bindings_from_file(binding_path)?;
+    let input_bundle = InputBundle::<String, String>::new().with_bindings_from_file(binding_path)?;
 
     let game_data = GameDataBuilder::default()
         .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?

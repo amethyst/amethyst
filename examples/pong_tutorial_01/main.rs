@@ -1,9 +1,7 @@
 extern crate amethyst;
 
 use amethyst::prelude::*;
-use amethyst::renderer::{
-    DisplayConfig, DrawSprite, Pipeline, RenderBundle, Stage,
-};
+use amethyst::renderer::{DisplayConfig, DrawSprite, Pipeline, RenderBundle, Stage};
 
 pub struct Pong;
 

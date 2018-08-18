@@ -398,8 +398,8 @@ mod tests {
     struct State1(u8);
     struct State2;
 
-    impl State<()> for State1 {
-        fn update(&mut self, _: StateData<()>) -> Trans<()> {
+    impl State<(), ()> for State1 {
+        fn update(&mut self, _: StateData<()>) -> Trans<(), ()> {
             if self.0 > 0 {
                 self.0 -= 1;
                 Trans::None
@@ -409,8 +409,8 @@ mod tests {
         }
     }
 
-    impl State<()> for State2 {
-        fn update(&mut self, _: StateData<()>) -> Trans<()> {
+    impl State<(), ()> for State2 {
+        fn update(&mut self, _: StateData<()>) -> Trans<(), ()> {
             Trans::Pop
         }
     }

@@ -1,3 +1,5 @@
+use std::mem;
+
 use amethyst_assets::AssetStorage;
 use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
 use amethyst_core::specs::prelude::{Join, Read, ReadStorage};
