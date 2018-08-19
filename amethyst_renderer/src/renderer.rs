@@ -163,7 +163,8 @@ impl RendererBuilder {
     pub fn with_config(&mut self, config: DisplayConfig) -> &mut Self {
         self.config = config;
         let mut wb = self.winit_builder.clone();
-        wb = wb.with_title(self.config.title.clone())
+        wb = wb
+            .with_title(self.config.title.clone())
             .with_visibility(self.config.visibility);
 
         if self.config.fullscreen {

@@ -216,9 +216,11 @@ where
     match &control.state {
         &ControlState::Running(_) => find_max_duration(
             control.id,
-            samplers.get(*hierarchy
-                .and_then(|h| h.nodes.values().next())
-                .unwrap_or(entity)),
+            samplers.get(
+                *hierarchy
+                    .and_then(|h| h.nodes.values().next())
+                    .unwrap_or(entity),
+            ),
         ),
         _ => -1.0,
     }

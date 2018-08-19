@@ -135,7 +135,8 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                 None | Some(Completion::Loading) => false,
 
                 Some(Completion::Complete) => {
-                    let scene_handle = data.world
+                    let scene_handle = data
+                        .world
                         .read_resource::<Scene>()
                         .handle
                         .as_ref()
@@ -160,7 +161,8 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                 self.progress = None;
             }
             if self.entity.is_none() {
-                if let Some(entity) = data.world
+                if let Some(entity) = data
+                    .world
                     .exec(|finder: TagFinder<AnimationMarker>| finder.find())
                 {
                     self.entity = Some(entity);

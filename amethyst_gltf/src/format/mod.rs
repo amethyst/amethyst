@@ -126,7 +126,7 @@ impl Format<Prefab<GltfPrefab>> for GltfSceneFormat {
         _create_reload: bool,
     ) -> AssetResult<FormatValue<Prefab<GltfPrefab>>> {
         Ok(FormatValue::data(
-            load_gltf(source, &name, options).chain_err(|| "Failed to import gltf scene")?
+            load_gltf(source, &name, options).chain_err(|| "Failed to import gltf scene")?,
         ))
     }
 }
