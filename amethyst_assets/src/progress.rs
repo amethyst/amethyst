@@ -151,6 +151,10 @@ impl Tracker for ProgressCounterTracker {
             asset_name,
             error
         );
+        error
+            .iter()
+            .skip(1)
+            .for_each(|e| error!("caused by: {:?}", e));
         self.errors.lock().push(AssetErrorMeta {
             error,
             handle_id,
