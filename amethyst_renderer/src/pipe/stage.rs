@@ -241,7 +241,8 @@ impl<Q> StageBuilder<Q> {
             .cloned()
             .ok_or(Error::NoSuchTarget(self.target_name.clone()))?;
 
-        let passes = self.passes
+        let passes = self
+            .passes
             .into_list()
             .fmap(CompilePass::new(fac, &out, multisampling))
             .try()?;

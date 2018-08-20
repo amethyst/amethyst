@@ -114,6 +114,7 @@ pub use skinning::{
 pub use sprite::{
     Sprite, SpriteRender, SpriteSheet, SpriteSheetHandle, SpriteSheetSet, TextureCoordinates,
 };
+pub use sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem};
 pub use system::RenderSystem;
 pub use tex::{Texture, TextureBuilder, TextureHandle};
 pub use transparent::{
@@ -126,7 +127,6 @@ pub use vertex::{
     With,
 };
 pub use visibility::{Visibility, VisibilitySortingSystem};
-pub use sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem};
 
 pub mod error;
 pub mod mouse;
@@ -150,10 +150,10 @@ mod resources;
 mod shape;
 mod skinning;
 mod sprite;
+mod sprite_visibility;
 mod system;
 mod tex;
 mod transparent;
 mod types;
 mod vertex;
 mod visibility;
-mod sprite_visibility;

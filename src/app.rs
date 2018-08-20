@@ -684,7 +684,8 @@ impl<S> ApplicationBuilder<S> {
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 
-        let reader_id = self.world
+        let reader_id = self
+            .world
             .write_resource::<EventChannel<Event>>()
             .register_reader();
 

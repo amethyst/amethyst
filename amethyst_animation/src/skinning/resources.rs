@@ -88,7 +88,8 @@ impl<'a> PrefabData<'a> for SkinPrefab {
                 entity,
                 Skin {
                     joints: self.joints.iter().map(|index| entities[*index]).collect(),
-                    meshes: self.meshes
+                    meshes: self
+                        .meshes
                         .iter()
                         .map(|index| entities[*index].id())
                         .collect(),

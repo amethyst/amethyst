@@ -105,7 +105,8 @@ where
         } {
             ret = true;
         }
-        if self.material
+        if self
+            .material
             .trigger_sub_loading(progress, &mut system_data.1)?
         {
             ret = true;

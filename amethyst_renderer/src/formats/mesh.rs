@@ -129,16 +129,20 @@ fn convert(
             let vertex: Vertex = object.vertices[vi];
             [vertex.x as f32, vertex.y as f32, vertex.z as f32]
         },
-        normal: ni.map(|i| {
-            let normal: Normal = object.normals[i];
-            Vector3::from([normal.x as f32, normal.y as f32, normal.z as f32])
-                .normalize()
-                .into()
-        }).unwrap_or([0.0, 0.0, 0.0]),
-        tex_coord: ti.map(|i| {
-            let tvertex: TVertex = object.tex_vertices[i];
-            [tvertex.u as f32, tvertex.v as f32]
-        }).unwrap_or([0.0, 0.0]),
+        normal: ni
+            .map(|i| {
+                let normal: Normal = object.normals[i];
+                Vector3::from([normal.x as f32, normal.y as f32, normal.z as f32])
+                    .normalize()
+                    .into()
+            })
+            .unwrap_or([0.0, 0.0, 0.0]),
+        tex_coord: ti
+            .map(|i| {
+                let tvertex: TVertex = object.tex_vertices[i];
+                [tvertex.u as f32, tvertex.v as f32]
+            })
+            .unwrap_or([0.0, 0.0]),
     }
 }
 

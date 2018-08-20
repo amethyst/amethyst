@@ -191,7 +191,8 @@ where
     }
 
     fn close_controller(&mut self, which: u32) {
-        let index = self.opened_controllers
+        let index = self
+            .opened_controllers
             .iter()
             .position(|(_, c)| c.instance_id() as u32 == which);
         if let Some(i) = index {

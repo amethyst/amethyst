@@ -14,9 +14,9 @@ use pass::util::{draw_sprite, get_camera, setup_textures, SpriteArgs, VertexArgs
 use pipe::pass::{Pass, PassData};
 use pipe::{DepthMode, Effect, NewEffect};
 use sprite::{SpriteRender, SpriteSheet};
+use sprite_visibility::SpriteVisibility;
 use tex::Texture;
 use types::{Encoder, Factory};
-use sprite_visibility::SpriteVisibility;
 
 /// Draws sprites on a 2D quad.
 #[derive(Derivative, Clone, Debug, PartialEq)]

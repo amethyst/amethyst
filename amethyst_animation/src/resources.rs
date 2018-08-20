@@ -394,7 +394,8 @@ where
 {
     /// Set channel control
     pub fn add_control(&mut self, control: SamplerControl<T>) {
-        match self.samplers
+        match self
+            .samplers
             .iter()
             .position(|t| t.control_id == control.control_id && t.channel == control.channel)
         {
@@ -428,7 +429,8 @@ where
 
     /// Pause control set
     pub fn pause(&mut self, control_id: u64) {
-        for sampler in self.samplers
+        for sampler in self
+            .samplers
             .iter_mut()
             .filter(|t| t.control_id == control_id)
         {
@@ -441,7 +443,8 @@ where
 
     /// Unpause control set
     pub fn unpause(&mut self, control_id: u64) {
-        for sampler in self.samplers
+        for sampler in self
+            .samplers
             .iter_mut()
             .filter(|t| t.control_id == control_id)
         {
@@ -723,7 +726,8 @@ where
     fn set_command(&mut self, id: I, command: AnimationCommand<T>) {
         if let Some(&mut (_, ref mut control)) = self.animations.iter_mut().find(|a| a.0 == id) {
             control.command = command;
-        } else if let Some(ref mut control) = self.deferred_animations
+        } else if let Some(ref mut control) = self
+            .deferred_animations
             .iter_mut()
             .find(|a| a.animation_id == id)
         {
@@ -757,7 +761,8 @@ where
         if let Some(&mut (_, ref mut control)) = self.animations.iter_mut().find(|a| a.0 == id) {
             control.rate_multiplier = rate_multiplier;
         }
-        if let Some(ref mut control) = self.deferred_animations
+        if let Some(ref mut control) = self
+            .deferred_animations
             .iter_mut()
             .find(|a| a.animation_id == id)
         {

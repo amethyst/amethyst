@@ -153,7 +153,8 @@ pub fn get_image_data(
                 if let Some(ty) = mime_type {
                     Ok((data, ImageFormat::from_mime_type(ty)))
                 } else {
-                    let mimetype = uri.split(',')
+                    let mimetype = uri
+                        .split(',')
                         .nth(0)
                         .unwrap()
                         .split(':')
@@ -170,7 +171,8 @@ pub fn get_image_data(
                 if let Some(ty) = mime_type {
                     Ok((data, ImageFormat::from_mime_type(ty)))
                 } else {
-                    let ext = path.extension()
+                    let ext = path
+                        .extension()
                         .and_then(|s| s.to_str())
                         .map_or("".to_string(), |s| s.to_ascii_lowercase());
                     let format = match &ext[..] {
