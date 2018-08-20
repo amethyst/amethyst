@@ -106,14 +106,22 @@ If you are compiling on Linux make sure to install the following dependencies:
 ### Ubuntu
 
 ```
-$ sudo apt install libasound2-dev libx11-xcb-dev
+$ sudo apt install libasound2-dev libx11-xcb-dev libssl-dev
 ```
 
 ### Fedora
 
 ```
-$ sudo dnf install alsa-lib-devel
+$ sudo dnf install alsa-lib-devel openssl-devel
 ```
+
+### Other
+
+See your distribution specific installation process for the equivalent dependencies.
+
+Please note that you need to have a functionnal graphics driver installed.
+If you get a panic about the renderer unable to create the context when trying to run an example,
+faulty driver installation can be the issue.
 
 ## Building Documentation
 
