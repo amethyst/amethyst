@@ -144,6 +144,13 @@ impl Tracker for ProgressCounterTracker {
         asset_name: String,
         error: Error,
     ) {
+        error!(
+            "Error loading handle {}, {}, with name {}, caused by: {:?}",
+            handle_id,
+            asset_type_name,
+            asset_name,
+            error
+        );
         self.errors.lock().push(AssetErrorMeta {
             error,
             handle_id,
@@ -188,13 +195,13 @@ impl Tracker for () {
         error: Error,
     ) {
         error!(
-            "error loading handle {}, {}, with name {}, caused by: {:?}",
+            "Error loading handle {}, {}, with name {}, caused by: {:?}",
             handle_id, asset_type_name, asset_name, error
         );
         error
             .iter()
             .skip(1)
             .for_each(|e| error!("caused by: {:?}", e));
-        error!("note: to handle the error, use a `Progress` other than `()`");
+        error!("Note: to handle the error, use a `Progress` other than `()`");
     }
 }
