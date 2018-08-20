@@ -79,7 +79,6 @@ pub trait State<T, E: Send + Sync + 'static> {
 }
 
 /// An empty `State` trait. It contains no `StateData` or custom `StateEvent`.
-/// A simple `State` trait. It contains `GameData` as its `StateData` and no custom `StateEvent`.
 pub trait EmptyState {
     /// Executed when the game state begins.
     fn on_start(&mut self, _data: StateData<()>) {}
@@ -117,9 +116,8 @@ pub trait EmptyState {
         Trans::None
     }
 }
-impl<T: EmptyState> State<(), ()> for T {
-    //pub trait SimpleState<'a,'b>: State<GameData<'a,'b>,()> {
 
+impl<T: EmptyState> State<(), ()> for T {
     /// Executed when the game state begins.
     fn on_start(&mut self, data: StateData<()>) {
         self.on_start(data)
