@@ -12,12 +12,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `SpriteRender` pass to draw sprites without using `Material` and `Mesh`. ([#829], [#830])
 * Sprite animation uses the `SpriteRenderChannel`. ([#829], [#830])
 * Added Named Component. ([#879])
+* Support for progressive jpeg loading. ([#877])
 
 ### Changed
 * Sprites contain their dimensions and offsets to render them with the right size and desired position. ([#829], [#830])
 * Texture coordinates for sprites are 1.0 at the top of the texture and 0.0 at the bottom. ([#829], [#830])
 * Made get_camera public. ([#878)]
-
+* Replaced the `imagefmt` crate with `image`. ([#877])
 ### Removed
 
 ### Fixed
@@ -29,7 +30,6 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## [0.8.0] - 2018-08
 ### Added
-* Support for progressive jpeg loading. ([#877])
 * UI `ScaleMode` is now functional, permitting percentage based `UiTransform`s. ([#774])
 * Add serde trait derives to many core components ([#760])
 * Add a generic asset `Format` for `ron` files ([#760])
@@ -55,7 +55,6 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Promote `UiButton` to a fundamental Ui component ([#798])
 
 ### Changed
-* Replaced the `imagefmt` crate with `image`. ([#877])
 * UI systems will now never overwrite your local `UiTransform` values ([#774])
 * Global `UiTransform` values are no longer writable ([#774])
 * `UiResize` refactored to be more user friendly and more helpful ([#774])
