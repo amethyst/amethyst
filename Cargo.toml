@@ -176,3 +176,7 @@ path = "examples/prefab/main.rs"
 
 [workspace]
 members = ["amethyst_gltf"]
+
+[[example]]
+name = "2d_isometry"
+path = "examples/2d_isometry/main.rs"
