@@ -123,7 +123,10 @@ fn deconstruct_image(data: &TextureData, offset: usize, step: usize) -> TextureD
         TextureData::Image(ref image_data, ref metadata) => {
             let metadata = metadata
                 .clone()
-                .with_size(image_data.rgba.width() as u16, image_data.rgba.height() as u16)
+                .with_size(
+                    image_data.rgba.width() as u16,
+                    image_data.rgba.height() as u16,
+                )
                 .with_format(SurfaceType::R8);
             let image_data = image_data
                 .rgba
