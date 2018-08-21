@@ -47,7 +47,7 @@ use winit::{Event, WindowEvent};
 /// use amethyst::ecs::prelude::System;
 ///
 /// struct NullState;
-/// impl State<()> for NullState {}
+/// impl EmptyState for NullState {}
 ///
 /// fn main() -> amethyst::Result<()> {
 ///     // Build the application instance to initialize the default logger.
@@ -76,7 +76,7 @@ use winit::{Event, WindowEvent};
 /// use amethyst::ecs::prelude::System;
 ///
 /// struct NullState;
-/// impl State<()> for NullState {}
+/// impl EmptyState for NullState {}
 ///
 /// fn main() -> amethyst::Result<()> {
 ///     // Initialize your custom logger (using env_logger in this case) before creating the
@@ -151,7 +151,7 @@ impl<'a, T, E: Send + Sync + Clone + 'static> Application<'a, T, E> {
     /// use amethyst::prelude::*;
     ///
     /// struct NullState;
-    /// impl State<()> for NullState {}
+    /// impl EmptyState for NullState {}
     ///
     /// let mut game = Application::new("assets/", NullState, ()).expect("Failed to initialize");
     /// game.run();
@@ -375,7 +375,7 @@ impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
     /// use amethyst::ecs::prelude::System;
     ///
     /// struct NullState;
-    /// impl State<()> for NullState {}
+    /// impl EmptyState for NullState {}
     ///
     /// // initialize the builder, the `ApplicationBuilder` object
     /// // follows the use pattern of most builder objects found
@@ -473,7 +473,7 @@ impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
     /// use amethyst::ecs::storage::HashMapStorage;
     ///
     /// struct NullState;
-    /// impl State<()> for NullState {}
+    /// impl EmptyState for NullState {}
     ///
     /// // define your custom type for the ECS
     /// struct Velocity([f32; 3]);
@@ -534,7 +534,7 @@ impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
     /// use amethyst::prelude::*;
     ///
     /// struct NullState;
-    /// impl State<()> for NullState {}
+    /// impl EmptyState for NullState {}
     ///
     /// // your resource can be anything that can be safely stored in a `Arc`
     /// // in this example, it is a vector of scores with a user name
@@ -597,7 +597,7 @@ impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
     ///     .run();
     ///
     /// struct LoadingState;
-    /// impl<'a, 'b> State<GameData<'a, 'b>> for LoadingState {
+    /// impl<'a, 'b> SimpleState<'a, 'b> for LoadingState {
     ///     fn on_start(&mut self, data: StateData<GameData>) {
     ///         let storage = data.world.read_resource();
     ///

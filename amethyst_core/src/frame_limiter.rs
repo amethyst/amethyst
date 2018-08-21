@@ -24,7 +24,7 @@
 //! use std::time::Duration;
 //!
 //! # struct GameState;
-//! # impl<'a, 'b> State<GameData<'a, 'b>> for GameState {}
+//! # impl<'a, 'b> SimpleState<'a, 'b> for GameState {}
 //! # fn main() -> amethyst::Result<()> {
 //! let mut game = Application::build("./", GameState)?
 //!     .with_frame_limit(
