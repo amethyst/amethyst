@@ -199,14 +199,18 @@ impl Tracker for () {
         asset_name: String,
         error: Error,
     ) {
-        error!(
+        let mut err_out = format!(
             "Error loading handle {}, {}, with name {}, caused by: {:?}",
-            handle_id, asset_type_name, asset_name, error
+            handle_id,
+            asset_type_name,
+            asset_name,
+            error
         );
         error
             .iter()
             .skip(1)
-            .for_each(|e| error!("caused by: {:?}", e));
+            .for_each(|e| err_out.push_str(&format!("\r\ncaused by: {:?}", e)));
+        error!("{}", err_out);
         error!("Note: to handle the error, use a `Progress` other than `()`");
     }
 }
