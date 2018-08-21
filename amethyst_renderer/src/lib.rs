@@ -43,7 +43,7 @@ extern crate gfx_macros;
 extern crate glsl_layout;
 extern crate hetseq;
 extern crate hibitset;
-extern crate imagefmt;
+extern crate image;
 #[macro_use]
 extern crate log;
 extern crate rayon;
@@ -88,7 +88,7 @@ pub use color::Rgba;
 pub use config::DisplayConfig;
 pub use formats::{
     build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat, ComboMeshCreator,
-    GraphicsPrefab, ImageData, ImageError, JpgFormat, MaterialPrefab, MeshCreator, MeshData,
+    GraphicsPrefab, ImageData, JpgFormat, MaterialPrefab, MeshCreator, MeshData,
     ObjFormat, PngFormat, TextureData, TextureFormat, TextureMetadata, TexturePrefab,
 };
 pub use input::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
@@ -114,6 +114,7 @@ pub use skinning::{
 pub use sprite::{
     Sprite, SpriteRender, SpriteSheet, SpriteSheetHandle, SpriteSheetSet, TextureCoordinates,
 };
+pub use sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem};
 pub use system::RenderSystem;
 pub use tex::{Texture, TextureBuilder, TextureHandle};
 pub use transparent::{
@@ -126,7 +127,6 @@ pub use vertex::{
     With,
 };
 pub use visibility::{Visibility, VisibilitySortingSystem};
-pub use sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem};
 
 pub mod error;
 pub mod mouse;
@@ -150,10 +150,10 @@ mod resources;
 mod shape;
 mod skinning;
 mod sprite;
+mod sprite_visibility;
 mod system;
 mod tex;
 mod transparent;
 mod types;
 mod vertex;
 mod visibility;
-mod sprite_visibility;

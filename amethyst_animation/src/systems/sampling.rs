@@ -75,7 +75,8 @@ where
                 for channel in &self.channels {
                     match comp.blend_method(channel) {
                         None => {
-                            if let Some(p) = self.inner
+                            if let Some(p) = self
+                                .inner
                                 .iter()
                                 .filter(|p| p.1 == *channel)
                                 .map(|p| p.2)
@@ -265,9 +266,7 @@ where
                 .iter()
                 .filter(|o| o.1 == *channel)
                 .map(|o| single_blend::<T>(total_blend_weight, o))
-                .fold(T::default_primitive(channel), |acc, p| {
-                    acc.add(&p)
-                }),
+                .fold(T::default_primitive(channel), |acc, p| acc.add(&p)),
         )
     }
 }

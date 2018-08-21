@@ -190,15 +190,18 @@ impl<'a> System<'a> for UiKeyboardSystem {
             // Create a bitset containing only the new indices.
             let new = (&transform_set ^ &self.tab_order_cache.cached) & &transform_set;
             for (entity, transform, _new) in (&*entities, &transform, &new).join() {
-                let pos = self.tab_order_cache
+                let pos = self
+                    .tab_order_cache
                     .cache
                     .iter()
                     .position(|&(cached_t, _)| transform.tab_order < cached_t);
                 match pos {
-                    Some(pos) => self.tab_order_cache
+                    Some(pos) => self
+                        .tab_order_cache
                         .cache
                         .insert(pos, (transform.tab_order, entity)),
-                    None => self.tab_order_cache
+                    None => self
+                        .tab_order_cache
                         .cache
                         .push((transform.tab_order, entity)),
                 }
@@ -257,7 +260,8 @@ impl<'a> System<'a> for UiKeyboardSystem {
                         },
                     ..
                 } => if let Some(focused) = focused.entity.as_mut() {
-                    if let Some((i, _)) = self.tab_order_cache
+                    if let Some((i, _)) = self
+                        .tab_order_cache
                         .cache
                         .iter()
                         .enumerate()
@@ -727,16 +731,20 @@ fn cursor_byte_index(edit: &TextEditing, text: &UiText) -> usize {
 
 /// Returns the byte indices that are highlighted in the string.
 fn highlighted_bytes(edit: &TextEditing, text: &UiText) -> Range<usize> {
-    let start = edit.cursor_position
+    let start = edit
+        .cursor_position
         .min(edit.cursor_position + edit.highlight_vector) as usize;
-    let end = edit.cursor_position
+    let end = edit
+        .cursor_position
         .max(edit.cursor_position + edit.highlight_vector) as usize;
-    let start_byte = text.text
+    let start_byte = text
+        .text
         .grapheme_indices(true)
         .nth(start)
         .map(|i| i.0)
         .unwrap_or(text.text.len());
-    let end_byte = text.text
+    let end_byte = text
+        .text
         .grapheme_indices(true)
         .nth(end)
         .map(|i| i.0)

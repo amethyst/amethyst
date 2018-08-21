@@ -17,7 +17,8 @@ pub fn load_animations(
     let mut prefab = AnimationSetPrefab::default();
     for animation in gltf.animations() {
         let anim = load_animation(&animation, buffers)?;
-        if anim.samplers
+        if anim
+            .samplers
             .iter()
             .any(|sampler| node_map.contains_key(&sampler.0))
         {

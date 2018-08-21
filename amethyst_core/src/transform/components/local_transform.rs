@@ -318,7 +318,8 @@ impl CgTransform<Point3<f32>> for Transform {
         Self {
             scale: self.scale.mul_element_wise(other.scale),
             rotation: self.rotation * other.rotation,
-            translation: self.rotation
+            translation: self
+                .rotation
                 .rotate_vector(other.translation.mul_element_wise(self.scale))
                 + self.translation,
         }
@@ -375,7 +376,8 @@ impl CgTransform<Point2<f32>> for Transform {
         Self {
             scale: self.scale.mul_element_wise(other.scale),
             rotation: self.rotation * other.rotation,
-            translation: self.rotation
+            translation: self
+                .rotation
                 .rotate_vector(other.translation.mul_element_wise(self.scale))
                 + self.translation,
         }

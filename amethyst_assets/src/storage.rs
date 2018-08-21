@@ -160,9 +160,9 @@ impl<A: Asset> AssetStorage<A> {
                         name,
                         tracker,
                     } => {
-                        let (asset, reload_obj) = match data.map(|FormatValue { data, reload }| {
-                            (data, reload)
-                        }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
+                        let (asset, reload_obj) = match data
+                            .map(|FormatValue { data, reload }| (data, reload))
+                            .and_then(|(d, rel)| f(d).map(|a| (a, rel)))
                             .chain_err(|| ErrorKind::Asset(name.clone()))
                         {
                             Ok((ProcessingState::Loaded(x), r)) => {
@@ -239,9 +239,9 @@ impl<A: Asset> AssetStorage<A> {
                         name,
                         old_reload,
                     } => {
-                        let (asset, reload_obj) = match data.map(|FormatValue { data, reload }| {
-                            (data, reload)
-                        }).and_then(|(d, rel)| f(d).map(|a| (a, rel)))
+                        let (asset, reload_obj) = match data
+                            .map(|FormatValue { data, reload }| (data, reload))
+                            .and_then(|(d, rel)| f(d).map(|a| (a, rel)))
                             .chain_err(|| ErrorKind::Asset(name.clone()))
                         {
                             Ok((ProcessingState::Loaded(x), r)) => (x, r),
@@ -338,7 +338,8 @@ impl<A: Asset> AssetStorage<A> {
 
     fn hot_reload(&mut self, pool: &ThreadPool) {
         self.reloads.retain(|&(ref handle, _)| !handle.is_dead());
-        while let Some(p) = self.reloads
+        while let Some(p) = self
+            .reloads
             .iter()
             .position(|&(_, ref rel)| rel.needs_reload())
         {

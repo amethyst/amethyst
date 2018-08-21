@@ -20,13 +20,15 @@ pub fn load_material(
     name: &str,
 ) -> Result<MaterialPrefab<TextureFormat>, GltfError> {
     let mut prefab = MaterialPrefab::default();
-    prefab.albedo = Some(load_texture_with_factor(
-        material.pbr_metallic_roughness().base_color_texture(),
-        material.pbr_metallic_roughness().base_color_factor(),
-        buffers,
-        source.clone(),
-        name,
-    ).map(|(texture, _)| TexturePrefab::Data(texture))?);
+    prefab.albedo = Some(
+        load_texture_with_factor(
+            material.pbr_metallic_roughness().base_color_texture(),
+            material.pbr_metallic_roughness().base_color_factor(),
+            buffers,
+            source.clone(),
+            name,
+        ).map(|(texture, _)| TexturePrefab::Data(texture))?,
+    );
     prefab.albedo_id = material.index().map(|i| i as u64 * 100);
 
     let (metallic, roughness) =
@@ -56,23 +58,23 @@ pub fn load_material(
     prefab.roughness_id = material.index().map(|i| i as u64 * 10 + 2);
 
     let em_factor = material.emissive_factor();
-    prefab.emission = Some(load_texture_with_factor(
-        material.emissive_texture(),
-        [em_factor[0], em_factor[1], em_factor[2], 1.0],
-        buffers,
-        source.clone(),
-        name,
-    ).map(|(texture, _)| TexturePrefab::Data(texture))?);
+    prefab.emission = Some(
+        load_texture_with_factor(
+            material.emissive_texture(),
+            [em_factor[0], em_factor[1], em_factor[2], 1.0],
+            buffers,
+            source.clone(),
+            name,
+        ).map(|(texture, _)| TexturePrefab::Data(texture))?,
+    );
     prefab.emission_id = material.index().map(|i| i as u64 * 10 + 3);
 
     // Can't use map/and_then because of Result returning from the load_texture function
     prefab.normal = match material.normal_texture() {
-        Some(normal_texture) => {
-            Some(
-                load_texture(&normal_texture.texture(), buffers, source.clone(), name)
-                    .map(|data| TexturePrefab::Data(data))?,
-            )
-        }
+        Some(normal_texture) => Some(
+            load_texture(&normal_texture.texture(), buffers, source.clone(), name)
+                .map(|data| TexturePrefab::Data(data))?,
+        ),
 
         None => None,
     };
@@ -80,12 +82,10 @@ pub fn load_material(
 
     // Can't use map/and_then because of Result returning from the load_texture function
     prefab.ambient_occlusion = match material.occlusion_texture() {
-        Some(occlusion_texture) => {
-            Some(
-                load_texture(&occlusion_texture.texture(), buffers, source.clone(), name)
-                    .map(|data| TexturePrefab::Data(data))?,
-            )
-        }
+        Some(occlusion_texture) => Some(
+            load_texture(&occlusion_texture.texture(), buffers, source.clone(), name)
+                .map(|data| TexturePrefab::Data(data))?,
+        ),
 
         None => None,
     };
@@ -125,11 +125,12 @@ fn deconstruct_image(data: &TextureData, offset: usize, step: usize) -> TextureD
         TextureData::Image(ref image_data, ref metadata) => {
             let metadata = metadata
                 .clone()
-                .with_size(image_data.raw.w as u16, image_data.raw.h as u16)
+                .with_size(image_data.rgba.width() as u16, image_data.rgba.height() as u16)
                 .with_format(SurfaceType::R8);
             let image_data = image_data
-                .raw
-                .buf
+                .rgba
+                .clone()
+                .into_raw()
                 .iter()
                 .dropping(offset)
                 .step(step)

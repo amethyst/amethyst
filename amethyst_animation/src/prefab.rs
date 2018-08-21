@@ -79,7 +79,8 @@ where
         &mut (ref loader, ref sampler_storage, ref animation_storage): &mut Self::SystemData,
     ) -> Result<bool, PrefabError> {
         let animation = Animation::<T> {
-            nodes: self.samplers
+            nodes: self
+                .samplers
                 .iter()
                 .map(|(node_index, channel, sampler)| {
                     (

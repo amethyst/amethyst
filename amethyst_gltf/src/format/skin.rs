@@ -17,7 +17,8 @@ pub fn load_skin(
     meshes: Vec<usize>,
     prefab: &mut Prefab<GltfPrefab>,
 ) -> Result<(), GltfError> {
-    let joints = skin.joints()
+    let joints = skin
+        .joints()
         .map(|j| node_map.get(&j.index()).cloned().unwrap())
         .collect::<Vec<_>>();
 
