@@ -2,8 +2,8 @@
 
 use hibitset::BitSet;
 use specs::prelude::{
-    Entities, InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage, ReaderId, Resources,
-    System, WriteStorage,
+    Entities, Entity, InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage, ReaderId,
+    Resources, System, WriteStorage,
 };
 use transform::{GlobalTransform, HierarchyEvent, Parent, ParentHierarchy, Transform};
 
@@ -17,6 +17,8 @@ pub struct TransformSystem {
     modified_local_id: Option<ReaderId<ModifiedFlag>>,
 
     parent_events_id: Option<ReaderId<HierarchyEvent>>,
+
+    scratch: Vec<Entity>,
 }
 
 impl TransformSystem {
@@ -28,6 +30,7 @@ impl TransformSystem {
             parent_events_id: None,
             local_modified: BitSet::default(),
             global_modified: BitSet::default(),
+            scratch: Vec::new(),
         }
     }
 }
@@ -43,6 +46,15 @@ impl<'a> System<'a> for TransformSystem {
     fn run(&mut self, (entities, hierarchy, locals, parents, mut globals): Self::SystemData) {
         #[cfg(feature = "profiler")]
         profile_scope!("transform_system");
+
+        self.scratch.clear();
+        self.scratch
+            .extend((&*entities, &locals, !&globals).join().map(|d| d.0));
+        for entity in &self.scratch {
+            globals
+                .insert(*entity, GlobalTransform::default())
+                .expect("unreachable");
+        }
 
         self.local_modified.clear();
         self.global_modified.clear();

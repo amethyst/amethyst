@@ -177,7 +177,6 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
             height: PADDLE_HEIGHT,
             velocity: PADDLE_VELOCITY,
         })
-        .with(GlobalTransform::default())
         .with(left_transform)
         .build();
 
@@ -191,7 +190,6 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
             height: PADDLE_HEIGHT,
             velocity: PADDLE_VELOCITY,
         })
-        .with(GlobalTransform::default())
         .with(right_transform)
         .build();
 }
@@ -220,7 +218,6 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
             velocity: [BALL_VELOCITY_X, BALL_VELOCITY_Y],
         })
         .with(local_transform)
-        .with(GlobalTransform::default())
         .build();
 }
 

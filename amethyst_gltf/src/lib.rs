@@ -7,7 +7,6 @@ extern crate fnv;
 extern crate gfx;
 extern crate gltf;
 extern crate hibitset;
-extern crate imagefmt;
 extern crate itertools;
 #[macro_use]
 extern crate log;
