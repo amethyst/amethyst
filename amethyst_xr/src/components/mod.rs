@@ -1,5 +1,5 @@
-use amethyst_core::specs::Component;
 use amethyst_core::specs::storage::BTreeStorage;
+use amethyst_core::specs::Component;
 
 use amethyst_renderer::{Mesh, MeshHandle, TextureHandle};
 
@@ -11,6 +11,9 @@ pub struct TrackingDevice {
     texture: Option<TextureHandle>,
     tracking: bool,
     available: bool,
+
+    pub(crate) has_render_model: bool,
+    pub(crate) render_model_enabled: bool,
 }
 
 impl TrackingDevice {
@@ -22,6 +25,9 @@ impl TrackingDevice {
             tracking: false,
             available: false,
             haptic_duration: None,
+
+            has_render_model: false,
+            render_model_enabled: false,
         }
     }
 
@@ -59,6 +65,18 @@ impl TrackingDevice {
 
     pub fn texture(&self) -> Option<TextureHandle> {
         self.texture.clone()
+    }
+
+    pub fn has_model(&self) -> bool {
+        self.has_render_model
+    }
+
+    pub fn set_render_model_enabled(&mut self, enabled: bool) {
+        self.render_model_enabled = enabled;
+    }
+
+    pub fn render_model_enabled(&self) -> bool {
+        self.render_model_enabled
     }
 
     pub fn tracking(&self) -> bool {
