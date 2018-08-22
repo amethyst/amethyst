@@ -1,6 +1,7 @@
 //! Flat forward drawing pass that mimics a blit.
 
 use amethyst_assets::{AssetStorage, Handle};
+use amethyst_core::cgmath::Vector4;
 use amethyst_core::specs::prelude::{Join, Read, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
 use gfx_core::state::{Blend, ColorMask};
@@ -65,6 +66,7 @@ impl<'a> PassData<'a> for DrawSprite {
 impl Pass for DrawSprite {
     fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
         use gfx::format::{ChannelType, Format, SurfaceType};
+        use gfx::pso::buffer::Element;
         use std::mem;
 
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);
@@ -83,18 +85,50 @@ impl Pass for DrawSprite {
                 &[
                     (
                         "half_diag",
-                        Format(SurfaceType::R32_G32, ChannelType::Float),
+                        Element {
+                            offset: 0,
+                            format: Format(SurfaceType::R32_G32, ChannelType::Float),
+                        },
                     ),
-                    ("offsets", Format(SurfaceType::R32_G32, ChannelType::Float)),
-                    ("u_offset", Format(SurfaceType::R32_G32, ChannelType::Float)),
-                    ("v_offset", Format(SurfaceType::R32_G32, ChannelType::Float)),
+                    (
+                        "offsets",
+                        Element {
+                            offset: 8,
+                            format: Format(SurfaceType::R32_G32, ChannelType::Float),
+                        },
+                    ),
+                    (
+                        "u_offset",
+                        Element {
+                            offset: 16,
+                            format: Format(SurfaceType::R32_G32, ChannelType::Float),
+                        },
+                    ),
+                    (
+                        "v_offset",
+                        Element {
+                            offset: 24,
+                            format: Format(SurfaceType::R32_G32, ChannelType::Float),
+                        },
+                    ),
+                    /*
                     (
                         "flip_horizontal",
-                        Format(SurfaceType::R32, ChannelType::Int),
+                        Element {
+                            offset: 32,
+                            format: Format(SurfaceType::R32, ChannelType::Int),
+                        },
                     ),
-                    ("flip_vertical", Format(SurfaceType::R32, ChannelType::Int)),
+                    (
+                        "flip_vertical",
+                        Element {
+                            offset: 36,
+                            format: Format(SurfaceType::R32, ChannelType::Int),
+                        },
+                    ),
+                    */
                 ],
-                40,
+                32,
                 1,
             );
         setup_textures(&mut builder, &TEXTURES);
@@ -109,7 +143,7 @@ impl Pass for DrawSprite {
         &'a mut self,
         encoder: &mut Encoder,
         effect: &mut Effect,
-        _factory: Factory,
+        mut factory: Factory,
         (
             active,
             camera,
@@ -163,7 +197,14 @@ impl Pass for DrawSprite {
                 }
             }
         }
-        batch.encode(encoder, effect, camera, &sprite_sheet_storage, &tex_storage);
+        batch.encode(
+            encoder,
+            &mut factory,
+            effect,
+            camera,
+            &sprite_sheet_storage,
+            &tex_storage,
+        );
     }
 }
 
@@ -231,11 +272,16 @@ impl SpriteBatch {
     pub fn encode(
         &self,
         encoder: &mut Encoder,
+        factory: &mut Factory,
         effect: &mut Effect,
         camera: Option<(&Camera, &GlobalTransform)>,
         sprite_sheet_storage: &AssetStorage<SpriteSheet>,
         tex_storage: &AssetStorage<Texture>,
     ) {
+        use gfx::buffer;
+        use gfx::memory::{Bind, Typed};
+        use gfx::Factory;
+
         if self.sprites.is_empty() {
             return;
         }
@@ -264,26 +310,36 @@ impl SpriteBatch {
             }
 
             let sprite_data = &sprite_sheet.sprites[sprite.render.sprite_number];
-
-            set_sprite_args(
-                effect,
-                encoder,
-                &sprite.transform,
-                sprite_data,
-                &sprite.render,
-            );
             add_texture(effect, texture.unwrap());
 
             // Set texture coordinates
             let tex_coords = &sprite_data.tex_coords;
-            effect.update_constant_buffer(
-                "AlbedoOffset",
-                &TextureOffsetPod {
-                    u_offset: [tex_coords.left, tex_coords.right].into(),
-                    v_offset: [tex_coords.bottom, tex_coords.top].into(),
-                }.std140(),
-                encoder,
-            );
+            let half_dir =
+                sprite.transform.0 * Vector4::new(sprite_data.width, sprite_data.height, 0.0, 0.0);
+            let offset = sprite.transform.0
+                * Vector4::new(sprite_data.offsets[0], sprite_data.offsets[1], 0.0, 1.0);
+
+            let vbuf = factory
+                .create_buffer_immutable(
+                    &[
+                        half_dir.x,
+                        half_dir.y,
+                        offset.x,
+                        offset.y,
+                        tex_coords.left,
+                        tex_coords.right,
+                        tex_coords.bottom,
+                        tex_coords.top,
+                    ],
+                    buffer::Role::Vertex,
+                    Bind::empty(),
+                )
+                .unwrap();
+
+            effect.data.vertex_bufs.push(vbuf.raw().clone());
+            effect.data.vertex_bufs.push(vbuf.raw().clone());
+            effect.data.vertex_bufs.push(vbuf.raw().clone());
+            effect.data.vertex_bufs.push(vbuf.raw().clone());
 
             effect.draw(
                 &Slice {
@@ -295,8 +351,7 @@ impl SpriteBatch {
                 },
                 encoder,
             );
+            effect.clear();
         }
-
-        effect.clear();
     }
 }

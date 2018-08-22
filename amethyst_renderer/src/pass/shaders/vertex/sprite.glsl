@@ -13,11 +13,6 @@ in vec2 offsets;
 in vec2 u_offset;
 in vec2 v_offset;
 
-// Whether to flip the sprite horizontally
-in bool flip_horizontal;
-// Whether to flip the sprite vertically
-in bool flip_vertical;
-
 out vec2 uv;
 out vec2 tex_uv;
 
@@ -96,7 +91,7 @@ void main() {
     float tex_u;
     float tex_v;
 
-    if (flip_horizontal) {
+    if (false) {
         tex_u = positions_flip[gl_VertexID][0];
         u = positions[gl_VertexID][0] * half_diag[0] + offsets[0] - half_diag[0];
     } else {
@@ -104,7 +99,7 @@ void main() {
         u = tex_u * half_diag[0] + offsets[0] - half_diag[0];
     }
 
-    if (flip_vertical) {
+    if (false) {
         tex_v = positions_flip[gl_VertexID][1];
         v = positions[gl_VertexID][1] * half_diag[1] + offsets[1] - half_diag[1];
     } else {
