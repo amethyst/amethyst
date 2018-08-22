@@ -46,10 +46,10 @@ pub(crate) struct VertexArgs {
 #[repr(C, align(16))]
 #[derive(Clone, Copy, Debug, Uniform)]
 pub(crate) struct SpriteArgs {
-    half_diag: vec2,
-    offsets: vec2,
-    flip_horizontal: boolean,
-    flip_vertical: boolean,
+    pub half_diag: vec2,
+    pub offsets: vec2,
+    pub flip_horizontal: boolean,
+    pub flip_vertical: boolean,
 }
 
 #[repr(C, align(16))]
