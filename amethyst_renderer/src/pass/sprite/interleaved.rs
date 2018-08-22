@@ -76,15 +76,10 @@ impl Pass for DrawSprite {
                 mem::size_of::<<ViewArgs as Uniform>::Std140>(),
                 1,
             )
-            .with_raw_constant_buffer(
-                "SpriteArgs",
-                mem::size_of::<<SpriteArgs as Uniform>::Std140>(),
-                1,
-            )
             .with_raw_vertex_buffer(
                 &[
                     (
-                        "half_diag",
+                        "size",
                         Element {
                             offset: 0,
                             format: Format(SurfaceType::R32_G32, ChannelType::Float),
@@ -111,22 +106,6 @@ impl Pass for DrawSprite {
                             format: Format(SurfaceType::R32_G32, ChannelType::Float),
                         },
                     ),
-                    /*
-                    (
-                        "flip_horizontal",
-                        Element {
-                            offset: 32,
-                            format: Format(SurfaceType::R32, ChannelType::Int),
-                        },
-                    ),
-                    (
-                        "flip_vertical",
-                        Element {
-                            offset: 36,
-                            format: Format(SurfaceType::R32, ChannelType::Int),
-                        },
-                    ),
-                    */
                 ],
                 32,
                 1,
@@ -308,28 +287,32 @@ impl SpriteBatch {
                 );
                 return;
             }
-
-            let sprite_data = &sprite_sheet.sprites[sprite.render.sprite_number];
             add_texture(effect, texture.unwrap());
 
-            // Set texture coordinates
+            let sprite_data = &sprite_sheet.sprites[sprite.render.sprite_number];
+
             let tex_coords = &sprite_data.tex_coords;
-            let half_dir =
-                sprite.transform.0 * Vector4::new(sprite_data.width, sprite_data.height, 0.0, 0.0);
-            let offset = sprite.transform.0
-                * Vector4::new(sprite_data.offsets[0], sprite_data.offsets[1], 0.0, 1.0);
+            let (uv_left, uv_right) = if sprite.render.flip_horizontal {
+                (tex_coords.right, tex_coords.left)
+            } else {
+                (tex_coords.left, tex_coords.right)
+            };
+            let (uv_bottom, uv_top) = if sprite.render.flip_vertical {
+                (tex_coords.top, tex_coords.bottom)
+            } else {
+                (tex_coords.bottom, tex_coords.top)
+            };
+
+            let transform = &sprite.transform.0;
+
+            let size = transform * Vector4::new(sprite_data.width, sprite_data.height, 0.0, 0.0);
+            let offset =
+                transform * Vector4::new(sprite_data.offsets[0], sprite_data.offsets[1], 0.0, 1.0);
 
             let vbuf = factory
                 .create_buffer_immutable(
                     &[
-                        half_dir.x,
-                        half_dir.y,
-                        offset.x,
-                        offset.y,
-                        tex_coords.left,
-                        tex_coords.right,
-                        tex_coords.bottom,
-                        tex_coords.top,
+                        size.x, size.y, offset.x, offset.y, uv_left, uv_right, uv_bottom, uv_top,
                     ],
                     buffer::Role::Vertex,
                     Bind::empty(),
