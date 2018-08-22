@@ -145,6 +145,7 @@ impl Pass for DrawSprite {
                         Some(global),
                         &sprite_sheet_storage,
                         &material_texture_set,
+                        &tex_storage,
                     );
                 }
                 batch.sort();
@@ -158,6 +159,7 @@ impl Pass for DrawSprite {
                         Some(global),
                         &sprite_sheet_storage,
                         &material_texture_set,
+                        &tex_storage,
                     );
                 }
 
@@ -171,6 +173,7 @@ impl Pass for DrawSprite {
                             global.get(*entity),
                             &sprite_sheet_storage,
                             &material_texture_set,
+                            &tex_storage,
                         );
                     }
                 }
@@ -210,6 +213,7 @@ impl SpriteBatch {
         global: Option<&GlobalTransform>,
         sprite_sheet_storage: &AssetStorage<SpriteSheet>,
         material_texture_set: &MaterialTextureSet,
+        tex_storage: &AssetStorage<Texture>,
     ) {
         if global.is_none() {
             return;
@@ -233,9 +237,19 @@ impl SpriteBatch {
             );
             return;
         }
+        let texture_handle = texture_handle.unwrap();
+
+        let texture = tex_storage.get(&texture_handle);
+        if texture.is_none() {
+            warn!(
+                "Texture not loaded for texture id: `{}`.",
+                sprite_sheet.texture_id
+            );
+            return;
+        }
 
         self.sprites.push(SpriteDrawData {
-            texture: texture_handle.unwrap(),
+            texture: texture_handle,
             render: sprite_render.clone(),
             transform: global.unwrap().clone(),
         });
@@ -268,27 +282,19 @@ impl SpriteBatch {
         // Sprite vertex shader
         set_view_args(effect, encoder, camera);
 
-        for sprite in &self.sprites {
-            let sprite_sheet = sprite_sheet_storage.get(&sprite.render.sprite_sheet);
-            if sprite_sheet.is_none() {
-                warn!(
-                    "Sprite sheet not loaded for sprite_render: `{:?}`.",
-                    sprite.render
-                );
-                return;
-            }
-            let sprite_sheet = sprite_sheet.unwrap();
+        let mut instance_data = Vec::<f32>::new();
+        let mut num_instances = 0;
+        let num_sprites = self.sprites.len();
 
-            let texture = tex_storage.get(&sprite.texture);
-            if texture.is_none() {
-                warn!(
-                    "Texture not loaded for texture id: `{}`.",
-                    sprite_sheet.texture_id
-                );
-                return;
-            }
-            add_texture(effect, texture.unwrap());
+        for (i, sprite) in self.sprites.iter().enumerate() {
+            // `unwrap` checked when collecting the sprites.
+            let sprite_sheet = sprite_sheet_storage
+                .get(&sprite.render.sprite_sheet)
+                .unwrap();
 
+            let texture = tex_storage.get(&sprite.texture).unwrap();
+
+            // Append sprite to instance data.
             let sprite_data = &sprite_sheet.sprites[sprite.render.sprite_number];
 
             let tex_coords = &sprite_data.tex_coords;
@@ -309,32 +315,46 @@ impl SpriteBatch {
             let offset =
                 transform * Vector4::new(sprite_data.offsets[0], sprite_data.offsets[1], 0.0, 1.0);
 
-            let vbuf = factory
-                .create_buffer_immutable(
-                    &[
-                        size.x, size.y, offset.x, offset.y, uv_left, uv_right, uv_bottom, uv_top,
-                    ],
-                    buffer::Role::Vertex,
-                    Bind::empty(),
-                )
-                .unwrap();
+            instance_data.extend(&[
+                size.x, size.y, offset.x, offset.y, uv_left, uv_right, uv_bottom, uv_top,
+            ]);
+            num_instances += 1;
 
-            effect.data.vertex_bufs.push(vbuf.raw().clone());
-            effect.data.vertex_bufs.push(vbuf.raw().clone());
-            effect.data.vertex_bufs.push(vbuf.raw().clone());
-            effect.data.vertex_bufs.push(vbuf.raw().clone());
+            // Need to flush outstanding draw calls due to state switch (texture).
+            //
+            // 1. We are at the last sprite and want to submit all pending work.
+            // 2. The next sprite will use a different texture triggering a flush.
+            let need_flush =
+                i >= num_sprites - 1 || self.sprites[i + 1].texture.id() != sprite.texture.id();
 
-            effect.draw(
-                &Slice {
-                    start: 0,
-                    end: 6,
-                    base_vertex: 0,
-                    instances: None,
-                    buffer: Default::default(),
-                },
-                encoder,
-            );
-            effect.clear();
+            if need_flush {
+                add_texture(effect, texture);
+
+                let vbuf = factory
+                    .create_buffer_immutable(&instance_data, buffer::Role::Vertex, Bind::empty())
+                    .unwrap();
+
+                effect.data.vertex_bufs.push(vbuf.raw().clone());
+                effect.data.vertex_bufs.push(vbuf.raw().clone());
+                effect.data.vertex_bufs.push(vbuf.raw().clone());
+                effect.data.vertex_bufs.push(vbuf.raw().clone());
+
+                effect.draw(
+                    &Slice {
+                        start: 0,
+                        end: 6,
+                        base_vertex: 0,
+                        instances: Some((num_instances, 0)),
+                        buffer: Default::default(),
+                    },
+                    encoder,
+                );
+
+                effect.clear();
+
+                num_instances = 0;
+                instance_data.clear();
+            }
         }
     }
 }
