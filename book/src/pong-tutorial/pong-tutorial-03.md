@@ -100,7 +100,6 @@ We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 use amethyst::core::Transform;
 use amethyst::ecs::{Join, Read, ReadStorage, System, WriteStorage};
 use amethyst::input::InputHandler;
-use pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 # pub enum Side {
 #   Left,
 #   Right,
@@ -111,7 +110,6 @@ use pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 # impl amethyst::ecs::Component for Paddle {
 #   type Storage = amethyst::ecs::VecStorage<Paddle>;    
 # }
-
 pub struct PaddleSystem;
 
 impl<'s> System<'s> for PaddleSystem {
@@ -139,6 +137,11 @@ impl<'s> System<'s> for PaddleSystem {
     }
   }
 }
+```
+Note: You will also need to add a `use` statement to bring in `Paddle` and `Side` from pong.rs:
+
+```rust,ignore
+use pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 ```
 
 Now lets add this system to our `GameDataBuilder` in `main.rs`:
