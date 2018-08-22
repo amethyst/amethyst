@@ -74,8 +74,6 @@ impl IsometricTransform {
     /// size (w;h) in the local coordinates system.
     pub fn from_unit_dimensions(w: f32, h: f32) -> Self {
         let angle = Deg((h / w).atan());
-        //let scale = 1.0/((h * 0.5).powi(2) + (w * 0.50).powi(2)).sqrt();
-        //let scale = 1.0/(3f32).sqrt();
         let scale = Vector2 {
             x: 1.0 / w,
             y: -1.0 / h,

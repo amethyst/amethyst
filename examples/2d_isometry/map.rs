@@ -8,7 +8,6 @@ use amethyst::renderer::{SpriteRender, SpriteSheetHandle, Transparent};
 pub const UNIT_DIMENSIONS: (f32, f32) = (128.0, 64.0);
 const MAP_SIZE: usize = 16;
 
-// 067: Grass
 #[cfg_attr(rustfmt, rustfmt_skip)]
 const MAP: [[u8;MAP_SIZE];MAP_SIZE] = [
     [074, 067, 067, 067, 067, 067, 067, 067, 067, 067, 067, 067, 067, 067, 067, 067],
