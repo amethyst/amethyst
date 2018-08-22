@@ -141,8 +141,6 @@ impl<'s> System<'s> for PaddleSystem {
 }
 ```
 
-Note: We had to make our Paddle, Side, PADDLE_HEIGHT, and ARENA_HEIGHT public in `pong.rs`
-
 Now lets add this system to our `GameDataBuilder` in `main.rs`:
 
 ```rust,no_run,noplaypen
