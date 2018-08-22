@@ -2,15 +2,19 @@ use cgmath::{Angle, Deg, Matrix2, SquareMatrix, Vector2};
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
 /// Component describing the position of an entity on an isometric plane.
+/// This Transform will place the entity according to isometric coordinates
+/// on the local plane to abstract away isometric math.
+/// The transform converts the isometric coordinates into local
+/// coordinates and insert them into the associated `Transform`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct IsometricTransform {
-    /// Position of the transform on the isometric plane
+    /// Position of the transform on the isometric plane.
     pub translation: Vector2<f32>,
     /// Weight influencing the likelihood of this entity to be rendered
     /// on top of other entities. Entities are ordered by `-local_y + priority`.
     /// The higher the priority, the higher the likelihood of this entity
-    /// to be rendered on top. 
+    /// to be rendered on top.
     pub order_priority: f32,
 
     scale: Vector2<f32>,
@@ -49,14 +53,13 @@ fn matrices_from_angle(angle: Deg<f32>, scale: Vector2<f32>) -> (Matrix2<f32>, M
 impl Default for IsometricTransform {
     /// The default transform does nothing when used to transform an entity.
     fn default() -> Self {
-        let scale = Vector2 { x: 1.0, y: 1.0 };
-        let angle = Deg(30.0);
-        let (local_to_iso, iso_to_local) = matrices_from_angle(angle, scale);
+        let (local_to_iso, iso_to_local) =
+            matrices_from_angle(Deg(30.0), Vector2 { x: 1.0, y: 1.0 });
         Self {
             translation: Vector2 { x: 0.0, y: 0.0 },
             order_priority: 0.0,
-            scale,
-            angle,
+            scale: Vector2 { x: 1.0, y: 1.0 },
+            angle: Deg(30.0),
             local_to_iso,
             iso_to_local,
         }

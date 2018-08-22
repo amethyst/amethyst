@@ -1,7 +1,5 @@
-use std::collections::HashMap;
-
-use amethyst::core::{GlobalTransform, IsometricTransform, Parent, Transform};
-use amethyst::ecs::prelude::*;
+use amethyst::core::{GlobalTransform, IsometricTransform, Transform};
+use amethyst::ecs::World;
 use amethyst::prelude::*;
 use amethyst::renderer::{SpriteRender, SpriteSheetHandle, Transparent};
 
@@ -29,7 +27,6 @@ const MAP: [[u8;MAP_SIZE];MAP_SIZE] = [
 ];
 
 pub fn initialise_map(world: &mut World, spritesheet: SpriteSheetHandle) {
-    use amethyst::core::cgmath::{Deg, Vector2};
     for i in 0..MAP_SIZE {
         for k in 0..MAP_SIZE {
             let mut iso_transf =

@@ -42,6 +42,7 @@ hibitset = { version = "0.5.0", features = ["parallel"] }
 image = "0.19"
 log = "0.4"
 rayon = "1.0.1"
+ron = "0.4"
 serde = { version = "1", features = ["serde_derive"] }
 shred-derive = "0.5"
 shred = "0.7"

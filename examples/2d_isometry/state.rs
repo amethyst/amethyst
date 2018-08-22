@@ -1,8 +1,6 @@
-use amethyst::assets::ProgressCounter;
-use amethyst::core::transform::{GlobalTransform, Transform};
 use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
-use amethyst::renderer::{Event, PngFormat, Projection, Texture, VirtualKeyCode};
+use amethyst::renderer::{Event, VirtualKeyCode};
 
 use camera::initialise_camera;
 use map::initialise_map;

@@ -1,6 +1,10 @@
-use amethyst_assets::{Asset, Handle, ProcessingState, Result as AssetsResult};
+use amethyst_assets::{
+    Asset, Error as AssetsError, ErrorKind as AssetsErrorKind, Handle, ProcessingState,
+    Result as AssetsResult, SimpleFormat,
+};
 use amethyst_core::specs::prelude::{Component, VecStorage};
 use fnv::FnvHashMap;
+use ron::de::from_bytes as from_ron_bytes;
 
 /// An asset handle to sprite sheet metadata.
 pub type SpriteSheetHandle = Handle<SpriteSheet>;
@@ -176,6 +180,28 @@ impl SpriteSheetSet {
     pub fn clear(&mut self) {
         self.sprite_sheets.clear();
         self.sprite_sheet_inverse.clear();
+    }
+}
+
+/// Allows loading of sprite lists in RON format.
+#[derive(Clone, Deserialize, Serialize)]
+pub struct SpriteSheetFormat;
+
+impl SimpleFormat<SpriteSheet> for SpriteSheetFormat {
+    const NAME: &'static str = "SPRITE_SHEET";
+
+    type Options = u64;
+
+    fn import(&self, bytes: Vec<u8>, texture_id: Self::Options) -> AssetsResult<SpriteSheet> {
+        let sprites: Vec<Sprite> = from_ron_bytes(&bytes).map_err(|_| {
+            AssetsError::from_kind(AssetsErrorKind::Format(
+                "Failed to parse sprites Ron file for SpriteSheet",
+            ))
+        })?;
+        Ok(SpriteSheet {
+            texture_id,
+            sprites,
+        })
     }
 }
 

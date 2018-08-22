@@ -1,6 +1,6 @@
 use amethyst::assets::{AssetStorage, Loader};
-use amethyst::core::{GlobalTransform, IsometricTransform, Parent, Time, Transform};
-use amethyst::ecs::{Component, Entity, Join, Read, System, VecStorage, World, WriteStorage};
+use amethyst::core::{GlobalTransform, IsometricTransform, Time, Transform};
+use amethyst::ecs::{Component, Join, Read, System, VecStorage, World, WriteStorage};
 use amethyst::prelude::*;
 use amethyst::renderer::{
     FilterMethod, MaterialTextureSet, PngFormat, SamplerInfo, Sprite, SpriteRender, SpriteSheet,

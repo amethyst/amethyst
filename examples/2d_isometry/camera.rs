@@ -1,9 +1,8 @@
-use amethyst::core::cgmath::Ortho;
 use amethyst::core::{GlobalTransform, Time, Transform};
-use amethyst::ecs::{Entities, Join, Read, ReadExpect, ReadStorage, System, World, WriteStorage};
+use amethyst::ecs::{Entities, Join, Read, ReadStorage, System, World, WriteStorage};
 use amethyst::input::InputHandler;
 use amethyst::prelude::*;
-use amethyst::renderer::{ActiveCamera, Camera, Projection};
+use amethyst::renderer::{Camera, Projection};
 
 const CAMERA_EDGE: f32 = 512.0;
 const CAMERA_SPEED: f32 = 512.0;

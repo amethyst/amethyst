@@ -47,6 +47,7 @@ extern crate image;
 #[macro_use]
 extern crate log;
 extern crate rayon;
+extern crate ron;
 #[macro_use]
 extern crate serde;
 extern crate shred;
@@ -88,8 +89,8 @@ pub use color::Rgba;
 pub use config::DisplayConfig;
 pub use formats::{
     build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat, ComboMeshCreator,
-    GraphicsPrefab, ImageData, JpgFormat, MaterialPrefab, MeshCreator, MeshData,
-    ObjFormat, PngFormat, TextureData, TextureFormat, TextureMetadata, TexturePrefab,
+    GraphicsPrefab, ImageData, JpgFormat, MaterialPrefab, MeshCreator, MeshData, ObjFormat,
+    PngFormat, TextureData, TextureFormat, TextureMetadata, TexturePrefab,
 };
 pub use gfx::texture::{FilterMethod, SamplerInfo, WrapMode};
 pub use input::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
@@ -113,7 +114,8 @@ pub use skinning::{
     JointTransformsPrefab, JointWeights,
 };
 pub use sprite::{
-    Sprite, SpriteRender, SpriteSheet, SpriteSheetHandle, SpriteSheetSet, TextureCoordinates,
+    Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, SpriteSheetSet,
+    TextureCoordinates,
 };
 pub use sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem};
 pub use system::RenderSystem;
