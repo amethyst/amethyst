@@ -1,26 +1,22 @@
 #version 150 core
 
-layout (std140) uniform VertexArgs {
-    uniform mat4 proj;
-    uniform mat4 view;
-    uniform mat4 model;
+layout (std140) uniform ViewArgs {
+    mat4 proj;
+    mat4 view;
 };
 
-layout (std140) uniform SpriteArgs {
-    // Sprite width and height.
-    uniform vec2 sprite_dimensions;
-    // Pixel offsets for the sprite. Used to shift the sprite left and down.
-    uniform vec2 offsets;
-    // Whether to flip the sprite horizontally
-    uniform bool flip_horizontal;
-    // Whether to flip the sprite vertically
-    uniform bool flip_vertical;
-};
+//
+in vec2 half_diag;
+// Pixel offsets for the sprite. Used to shift the sprite left and down.
+in vec2 offsets;
 
-layout (std140) uniform AlbedoOffset {
-    vec2 u_offset;
-    vec2 v_offset;
-} albedo_offset;
+in vec2 u_offset;
+in vec2 v_offset;
+
+// Whether to flip the sprite horizontally
+in bool flip_horizontal;
+// Whether to flip the sprite vertically
+in bool flip_vertical;
 
 out vec2 uv;
 out vec2 tex_uv;
@@ -102,23 +98,23 @@ void main() {
 
     if (flip_horizontal) {
         tex_u = positions_flip[gl_VertexID][0];
-        u = positions[gl_VertexID][0] * sprite_dimensions[0] + offsets[0] - sprite_dimensions[0];
+        u = positions[gl_VertexID][0] * half_diag[0] + offsets[0] - half_diag[0];
     } else {
         tex_u = positions[gl_VertexID][0];
-        u = tex_u * sprite_dimensions[0] - offsets[0];
+        u = tex_u * half_diag[0] + offsets[0] - half_diag[0];
     }
 
     if (flip_vertical) {
         tex_v = positions_flip[gl_VertexID][1];
-        v = positions[gl_VertexID][1] * sprite_dimensions[1] + offsets[1] - sprite_dimensions[1];
+        v = positions[gl_VertexID][1] * half_diag[1] + offsets[1] - half_diag[1];
     } else {
         tex_v = positions[gl_VertexID][1];
-        v = tex_v * sprite_dimensions[1] - offsets[1];
+        v = tex_v * half_diag[1] + offsets[1] - half_diag[1];
     }
 
     uv = vec2(u, v);
-    tex_uv = texture_coords(vec2(tex_u, tex_v), albedo_offset.u_offset, albedo_offset.v_offset);
+    tex_uv = texture_coords(vec2(tex_u, tex_v), u_offset, v_offset);
 
     vec4 vertex = vec4(uv, 0.0, 1.0);
-    gl_Position = proj * view * model * vertex;
+    gl_Position = proj * view * vertex;
 }

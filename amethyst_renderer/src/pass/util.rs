@@ -1,7 +1,7 @@
 use std::mem;
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
+use amethyst_core::cgmath::{Matrix4, One, SquareMatrix, Vector4};
 use amethyst_core::specs::prelude::{Join, Read, ReadStorage};
 use amethyst_core::GlobalTransform;
 
@@ -30,6 +30,13 @@ pub(crate) enum TextureType {
 
 #[repr(C, align(16))]
 #[derive(Clone, Copy, Debug, Uniform)]
+pub(crate) struct ViewArgs {
+    proj: mat4,
+    view: mat4,
+}
+
+#[repr(C, align(16))]
+#[derive(Clone, Copy, Debug, Uniform)]
 pub(crate) struct VertexArgs {
     proj: mat4,
     view: mat4,
@@ -39,7 +46,7 @@ pub(crate) struct VertexArgs {
 #[repr(C, align(16))]
 #[derive(Clone, Copy, Debug, Uniform)]
 pub(crate) struct SpriteArgs {
-    sprite_dimensions: vec2,
+    half_diag: vec2,
     offsets: vec2,
     flip_horizontal: boolean,
     flip_vertical: boolean,
@@ -48,8 +55,8 @@ pub(crate) struct SpriteArgs {
 #[repr(C, align(16))]
 #[derive(Clone, Copy, Debug, Uniform)]
 pub(crate) struct TextureOffsetPod {
-    u_offset: vec2,
-    v_offset: vec2,
+    pub u_offset: vec2,
+    pub v_offset: vec2,
 }
 
 impl TextureOffsetPod {
@@ -261,15 +268,38 @@ pub fn set_vertex_args(
     effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
 }
 
+pub fn set_view_args(
+    effect: &mut Effect,
+    encoder: &mut Encoder,
+    camera: Option<(&Camera, &GlobalTransform)>,
+) {
+    let view_args = camera
+        .as_ref()
+        .map(|&(ref cam, ref transform)| ViewArgs {
+            proj: cam.proj.into(),
+            view: transform.0.invert().unwrap().into(),
+        })
+        .unwrap_or_else(|| ViewArgs {
+            proj: Matrix4::one().into(),
+            view: Matrix4::one().into(),
+        });
+    effect.update_constant_buffer("ViewArgs", &view_args.std140(), encoder);
+}
+
 pub(crate) fn set_sprite_args(
     effect: &mut Effect,
     encoder: &mut Encoder,
+    transform: &GlobalTransform,
     sprite: &Sprite,
     sprite_render: &SpriteRender,
 ) {
+    use amethyst_core::cgmath::Matrix;
+
+    let half_dir = transform.0 * Vector4::new(sprite.width, sprite.height, 0.0, 0.0);
+    let offset = transform.0 * Vector4::new(sprite.offsets[0], sprite.offsets[1], 0.0, 1.0);
     let geometry_args = SpriteArgs {
-        sprite_dimensions: [sprite.width, sprite.height].into(),
-        offsets: sprite.offsets.into(),
+        half_diag: [half_dir.x, half_dir.y].into(),
+        offsets: [offset.x, offset.y].into(),
         flip_horizontal: sprite_render.flip_horizontal.into(),
         flip_vertical: sprite_render.flip_vertical.into(),
     };
@@ -371,8 +401,8 @@ pub(crate) fn draw_sprite(
     let sprite = &sprite_sheet.sprites[sprite_render.sprite_number];
 
     // Sprite vertex shader
-    set_vertex_args(effect, encoder, camera, global.unwrap());
-    set_sprite_args(effect, encoder, sprite, sprite_render);
+    set_view_args(effect, encoder, camera);
+    set_sprite_args(effect, encoder, global.unwrap(), sprite, sprite_render);
 
     add_texture(effect, texture.unwrap());
 

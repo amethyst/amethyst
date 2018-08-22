@@ -1,6 +1,6 @@
 //! Flat forward drawing pass that mimics a blit.
 
-use amethyst_assets::AssetStorage;
+use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::specs::prelude::{Join, Read, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
 use gfx_core::state::{Blend, ColorMask};
@@ -10,13 +10,16 @@ use super::*;
 use cam::{ActiveCamera, Camera};
 use error::Result;
 use mtl::MaterialTextureSet;
-use pass::util::{draw_sprite, get_camera, setup_textures, SpriteArgs, VertexArgs};
+use pass::util::{
+    add_texture, get_camera, set_sprite_args, set_view_args, setup_textures, SpriteArgs,
+    TextureOffsetPod, ViewArgs,
+};
 use pipe::pass::{Pass, PassData};
 use pipe::{DepthMode, Effect, NewEffect};
 use sprite::{SpriteRender, SpriteSheet};
 use sprite_visibility::SpriteVisibility;
 use tex::Texture;
-use types::{Encoder, Factory};
+use types::{Encoder, Factory, Slice};
 
 /// Draws sprites on a 2D quad.
 #[derive(Derivative, Clone, Debug, PartialEq)]
@@ -61,17 +64,37 @@ impl<'a> PassData<'a> for DrawSprite {
 
 impl Pass for DrawSprite {
     fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
+        use gfx::format::{ChannelType, Format, SurfaceType};
         use std::mem;
+
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);
         builder
             .with_raw_constant_buffer(
-                "VertexArgs",
-                mem::size_of::<<VertexArgs as Uniform>::Std140>(),
+                "ViewArgs",
+                mem::size_of::<<ViewArgs as Uniform>::Std140>(),
                 1,
             )
             .with_raw_constant_buffer(
                 "SpriteArgs",
                 mem::size_of::<<SpriteArgs as Uniform>::Std140>(),
+                1,
+            )
+            .with_raw_vertex_buffer(
+                &[
+                    (
+                        "half_diag",
+                        Format(SurfaceType::R32_G32, ChannelType::Float),
+                    ),
+                    ("offsets", Format(SurfaceType::R32_G32, ChannelType::Float)),
+                    ("u_offset", Format(SurfaceType::R32_G32, ChannelType::Float)),
+                    ("v_offset", Format(SurfaceType::R32_G32, ChannelType::Float)),
+                    (
+                        "flip_horizontal",
+                        Format(SurfaceType::R32, ChannelType::Int),
+                    ),
+                    ("flip_vertical", Format(SurfaceType::R32, ChannelType::Int)),
+                ],
+                40,
                 1,
             );
         setup_textures(&mut builder, &TEXTURES);
@@ -100,50 +123,180 @@ impl Pass for DrawSprite {
     ) {
         let camera = get_camera(active, &camera, &global);
 
+        let mut batch = SpriteBatch::new();
         match visibility {
-            None => for (sprite_render, global) in (&sprite_render, &global).join() {
-                draw_sprite(
-                    encoder,
-                    effect,
-                    sprite_render,
-                    &sprite_sheet_storage,
-                    &tex_storage,
-                    &material_texture_set,
-                    camera,
-                    Some(global),
-                );
-            },
+            None => {
+                for (sprite_render, global) in (&sprite_render, &global).join() {
+                    batch.add_sprite(
+                        sprite_render,
+                        Some(global),
+                        &sprite_sheet_storage,
+                        &material_texture_set,
+                    );
+                }
+                batch.sort();
+            }
             Some(ref visibility) => {
                 for (sprite_render, global, _) in
                     (&sprite_render, &global, &visibility.visible_unordered).join()
                 {
-                    draw_sprite(
-                        encoder,
-                        effect,
+                    batch.add_sprite(
                         sprite_render,
-                        &sprite_sheet_storage,
-                        &tex_storage,
-                        &material_texture_set,
-                        camera,
                         Some(global),
+                        &sprite_sheet_storage,
+                        &material_texture_set,
                     );
                 }
 
+                // We are free to optimize the order of the opaque sprites.
+                batch.sort();
+
                 for entity in &visibility.visible_ordered {
                     if let Some(sprite_render) = sprite_render.get(*entity) {
-                        draw_sprite(
-                            encoder,
-                            effect,
+                        batch.add_sprite(
                             sprite_render,
-                            &sprite_sheet_storage,
-                            &tex_storage,
-                            &material_texture_set,
-                            camera,
                             global.get(*entity),
+                            &sprite_sheet_storage,
+                            &material_texture_set,
                         );
                     }
                 }
             }
         }
+        batch.encode(encoder, effect, camera, &sprite_sheet_storage, &tex_storage);
+    }
+}
+
+struct SpriteDrawData {
+    texture: Handle<Texture>,
+    render: SpriteRender,
+    transform: GlobalTransform,
+}
+
+struct SpriteBatch {
+    sprites: Vec<SpriteDrawData>,
+}
+
+impl SpriteBatch {
+    pub fn new() -> Self {
+        SpriteBatch {
+            sprites: Vec::new(),
+        }
+    }
+
+    pub fn add_sprite(
+        &mut self,
+        sprite_render: &SpriteRender,
+        global: Option<&GlobalTransform>,
+        sprite_sheet_storage: &AssetStorage<SpriteSheet>,
+        material_texture_set: &MaterialTextureSet,
+    ) {
+        if global.is_none() {
+            return;
+        }
+
+        let sprite_sheet = sprite_sheet_storage.get(&sprite_render.sprite_sheet);
+        if sprite_sheet.is_none() {
+            warn!(
+                "Sprite sheet not loaded for sprite_render: `{:?}`.",
+                sprite_render
+            );
+            return;
+        }
+        let sprite_sheet = sprite_sheet.unwrap();
+
+        let texture_handle = material_texture_set.handle(sprite_sheet.texture_id);
+        if texture_handle.is_none() {
+            warn!(
+                "Texture handle not found for texture id: `{}`.",
+                sprite_sheet.texture_id
+            );
+            return;
+        }
+
+        self.sprites.push(SpriteDrawData {
+            texture: texture_handle.unwrap(),
+            render: sprite_render.clone(),
+            transform: global.unwrap().clone(),
+        });
+    }
+
+    /// Optimize the sprite order to generating more coherent batches.
+    pub fn sort(&mut self) {
+        // Only takes the texture into account for now.
+        self.sprites
+            .sort_by(|a, b| a.texture.id().cmp(&b.texture.id()));
+    }
+
+    pub fn encode(
+        &self,
+        encoder: &mut Encoder,
+        effect: &mut Effect,
+        camera: Option<(&Camera, &GlobalTransform)>,
+        sprite_sheet_storage: &AssetStorage<SpriteSheet>,
+        tex_storage: &AssetStorage<Texture>,
+    ) {
+        if self.sprites.is_empty() {
+            return;
+        }
+
+        // Sprite vertex shader
+        set_view_args(effect, encoder, camera);
+
+        for sprite in &self.sprites {
+            let sprite_sheet = sprite_sheet_storage.get(&sprite.render.sprite_sheet);
+            if sprite_sheet.is_none() {
+                warn!(
+                    "Sprite sheet not loaded for sprite_render: `{:?}`.",
+                    sprite.render
+                );
+                return;
+            }
+            let sprite_sheet = sprite_sheet.unwrap();
+
+            let texture = tex_storage.get(&sprite.texture);
+            if texture.is_none() {
+                warn!(
+                    "Texture not loaded for texture id: `{}`.",
+                    sprite_sheet.texture_id
+                );
+                return;
+            }
+
+            let sprite_data = &sprite_sheet.sprites[sprite.render.sprite_number];
+
+            set_sprite_args(
+                effect,
+                encoder,
+                &sprite.transform,
+                sprite_data,
+                &sprite.render,
+            );
+            add_texture(effect, texture.unwrap());
+
+            // Set texture coordinates
+            let tex_coords = &sprite_data.tex_coords;
+            effect.update_constant_buffer(
+                "AlbedoOffset",
+                &TextureOffsetPod {
+                    u_offset: [tex_coords.left, tex_coords.right].into(),
+                    v_offset: [tex_coords.bottom, tex_coords.top].into(),
+                }.std140(),
+                encoder,
+            );
+
+            effect.draw(
+                &Slice {
+                    start: 0,
+                    end: 6,
+                    base_vertex: 0,
+                    instances: None,
+                    buffer: Default::default(),
+                },
+                encoder,
+            );
+        }
+
+        effect.clear();
     }
 }
