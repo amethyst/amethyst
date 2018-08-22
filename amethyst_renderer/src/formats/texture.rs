@@ -242,8 +242,7 @@ pub struct ImageData {
     pub rgba: RgbaImage,
 }
 
-
-fn load_into_rgba8_from_memory(data: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
+fn load_into_rgba8_from_memory(data: &[u8], options: TextureMetadata) -> Result<TextureData> {
     use image::load_from_memory;
     load_from_memory(&data)
         .map(|image| {
@@ -268,7 +267,7 @@ pub struct JpgFormat;
 
 impl JpgFormat {
     /// Load Jpg from memory buffer
-    pub fn from_data(&self, data: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
+    pub fn from_data(&self, data: &[u8], options: TextureMetadata) -> Result<TextureData> {
         load_into_rgba8_from_memory(data, options)
     }
 }
@@ -279,7 +278,7 @@ impl SimpleFormat<Texture> for JpgFormat {
     type Options = TextureMetadata;
 
     fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
-        self.from_data(bytes, options)
+        self.from_data(&bytes, options)
     }
 }
 
@@ -289,7 +288,7 @@ pub struct PngFormat;
 
 impl PngFormat {
     /// Load Png from memory buffer
-    pub fn from_data(&self, data: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
+    pub fn from_data(&self, data: &[u8], options: TextureMetadata) -> Result<TextureData> {
         load_into_rgba8_from_memory(data, options)
     }
 }
@@ -300,7 +299,7 @@ impl SimpleFormat<Texture> for PngFormat {
     type Options = TextureMetadata;
 
     fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
-        self.from_data(bytes, options)
+        self.from_data(&bytes, options)
     }
 }
 
@@ -316,7 +315,7 @@ impl SimpleFormat<Texture> for BmpFormat {
     fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
         // TODO: consider reading directly into GPU-visible memory
         // TODO: as noted by @omni-viral.
-        load_into_rgba8_from_memory(bytes, options)
+        load_into_rgba8_from_memory(&bytes, options)
     }
 }
 
