@@ -25,7 +25,13 @@ use vertex::{Normal, Position, Query, Tangent, TexCoord};
 use visibility::Visibility;
 
 /// Draw mesh with physically based lighting
-/// `V` is `VertexFormat`
+///
+/// See the [crate level documentation](index.html) for information about interleaved and separate
+/// passes.
+///
+/// # Type Parameters
+///
+/// * `V`: `VertexFormat`
 #[derive(Derivative, Clone, Debug, PartialEq)]
 #[derivative(Default(bound = "V: Query<(Position, Normal, Tangent, TexCoord)>"))]
 pub struct DrawPbm<V> {

@@ -31,6 +31,9 @@ static ATTRIBUTES: [Attributes<'static>; 3] = [
 ];
 
 /// Draw mesh with simple lighting technique
+///
+/// See the [crate level documentation](index.html) for information about interleaved and separate
+/// passes.
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct DrawShadedSeparate {
     skinning: bool,

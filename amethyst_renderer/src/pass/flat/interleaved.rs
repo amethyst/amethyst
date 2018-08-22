@@ -23,7 +23,13 @@ use vertex::{Position, Query, TexCoord};
 use visibility::Visibility;
 
 /// Draw mesh without lighting
-/// `V` is `VertexFormat`
+///
+/// See the [crate level documentation](index.html) for information about interleaved and separate
+/// passes.
+///
+/// # Type Parameters
+///
+/// * `V`: `VertexFormat`
 #[derive(Derivative, Clone, Debug, PartialEq)]
 #[derivative(Default(bound = "V: Query<(Position, TexCoord)>, Self: Pass"))]
 pub struct DrawFlat<V> {

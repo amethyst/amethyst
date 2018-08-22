@@ -173,7 +173,8 @@ where
 
         let mat = create_default_mat(res);
         res.insert(MaterialDefaults(mat));
-        let (width, height) = self.renderer
+        let (width, height) = self
+            .renderer
             .window()
             .get_inner_size()
             .expect("Window closed during initialization!");

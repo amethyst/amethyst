@@ -71,7 +71,8 @@ where
                 d.tag = Some(self.next_tag);
                 self.next_tag += 1;
                 if !d.loading() {
-                    if !d.trigger_sub_loading(&mut prefab_system_data)
+                    if !d
+                        .trigger_sub_loading(&mut prefab_system_data)
                         .chain_err(|| "Failed starting sub asset loading")?
                     {
                         return Ok(ProcessingState::Loaded(d));

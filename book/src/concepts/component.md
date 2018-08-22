@@ -16,20 +16,35 @@ In this example, the bottle is the entity, and the properties are components.
 
 Creating a component is easy.
 
-You declare a struct:
+You declare the relevant underlying data:
 
-```rust,ignore
-pub struct MyComponent {
-    some_property: String,
+```rust,no_run,noplaypen
+/// This `Component` describes the shape of an `Entity`
+enum Shape {
+    Sphere { radius: f32 },
+    RectangularPrism { height: f32, width: f32, depth: f32 },
+}
+
+/// This `Component` describes the contents of an `Entity`
+pub struct Content {
+    content_name: String,
 }
 ```
 
-and then you implement the `Component` trait for it.
+and then you implement the `Component` trait for them:
 
-```rust,ignore
-use amethyst::ecs::{Component, VecStorage};
-impl Component for MyComponent {
-    type Storage = VecStorage<Self>;
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# struct Shape;
+# struct Content;
+use amethyst::ecs::{Component, DenseVecStorage};
+
+impl Component for Shape {
+    type Storage = DenseVecStorage<Self>;
+}
+
+impl Component for Content {
+    type Storage = DenseVecStorage<Self>;
 }
 ```
 
@@ -42,6 +57,7 @@ They are instead stored in different types of `Storage`, which all have differen
 When implementing `Component` for a type, you have to specify which storage strategy it should use.
 
 Here's a comparison of the most used ones:
+
 * `DenseVecStorage`: Elements are stored in a contiguous array. No empty space is left between `Component`s, allowing a lowered memory usage.
   This is less performant than `VecStorage`.
 * `VecStorage`: Elements are stored into a contiguous array. Uses more memory than `DenseVecStorage` but is more performant when you use a `Component` type a lot.

@@ -1,5 +1,5 @@
 (
-  dimensions: Some((500, 75)),
+  dimensions: Some((500, 150)),
   max_dimensions: None,
   min_dimensions: None,
   fullscreen: false,

@@ -224,14 +224,16 @@ where
 {
     type Pipeline = Pipeline<R>;
     fn build(mut self, fac: &mut Factory, out: &Target, multisampling: u16) -> Result<Pipeline<R>> {
-        let mut targets = self.targets
+        let mut targets = self
+            .targets
             .drain(..)
             .map(|tb| tb.build(fac, out.size()))
             .collect::<Result<Targets>>()?;
 
         targets.insert("".into(), out.clone());
 
-        let stages = self.stages
+        let stages = self
+            .stages
             .into_list()
             .fmap(BuildStage::new(fac, &targets, multisampling))
             .try()?;

@@ -46,7 +46,14 @@ Next, we'll add an input bundle to the game's `Application` object, that
 contains an input handler system which captures inputs and maps them to the
 axes we defined. Let's make the following changes to `main.rs`.
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::prelude::*;
+# use amethyst::core::transform::TransformBundle;
+# use amethyst::renderer::{DisplayConfig, DrawFlat, Event, Pipeline,
+#                        PosTex, RenderBundle, Stage, VirtualKeyCode};
+# macro_rules! env { ($x:expr) => ("") }
+# fn main() -> amethyst::Result<()> {
 use amethyst::input::InputBundle;
 
 let binding_path = format!(
@@ -56,12 +63,22 @@ let binding_path = format!(
 
 let input_bundle = InputBundle::<String, String>::new().with_bindings_from_file(binding_path)?;
 
+# let path = "./resources/display_config.ron";
+# let config = DisplayConfig::load(&path);
+# let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
+#       .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+#       .with_pass(DrawFlat::<PosTex>::new()),
+# );
+# struct Pong;
+# impl<'a, 'b> State<GameData<'a, 'b>> for Pong { }
 let game_data = GameDataBuilder::default()
+    .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
     .with_bundle(TransformBundle::new())?
-    .with_bundle(RenderBundle::new(pipe, Some(config)))?
     .with_bundle(input_bundle)?;
 let mut game = Application::new("./", Pong, game_data)?;
 game.run();
+# Ok(())
+# }
 ```
 
 At this point, we're ready to write a system that reads input from the
@@ -78,11 +95,21 @@ pub use self::paddle::PaddleSystem;
 
 We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 
-```rust,ignore
-use amethyst::core::transform::components::Transform;
+```rust,no_run,noplaypen
+# extern crate amethyst;
+use amethyst::core::Transform;
 use amethyst::ecs::{Join, Read, ReadStorage, System, WriteStorage};
 use amethyst::input::InputHandler;
-use pong::{Paddle, Side};
+# pub enum Side {
+#   Left,
+#   Right,
+# }
+# pub struct Paddle {
+#   side: Side,
+# }
+# impl amethyst::ecs::Component for Paddle {
+#   type Storage = amethyst::ecs::VecStorage<Paddle>;    
+# }
 
 pub struct PaddleSystem;
 
@@ -117,15 +144,42 @@ Note: We had to make our Paddle and Side public in `pong.rs`
 
 Now lets add this system to our `GameDataBuilder` in `main.rs`:
 
-```rust,ignore
-mod systems;
-
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::prelude::*;
+# use amethyst::core::transform::TransformBundle;
+# use amethyst::renderer::{DisplayConfig, DrawFlat, Event, Pipeline,
+#                        PosTex, RenderBundle, Stage, VirtualKeyCode};
+# fn main() -> amethyst::Result<()> {
+# let path = "./resources/display_config.ron";
+# let config = DisplayConfig::load(&path);
+# let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
+#       .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+#       .with_pass(DrawFlat::<PosTex>::new()),
+# );
+# mod systems {
+# use amethyst;
+# pub struct PaddleSystem;
+# impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
+# type SystemData = ();
+# fn run(&mut self, _: Self::SystemData) { }
+# }
+# }
+# let input_bundle = amethyst::input::InputBundle::<String, String>::new();
 // in the run() function
 let game_data = GameDataBuilder::default()
+    .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
     .with_bundle(TransformBundle::new())?
-    .with_bundle(RenderBundle::new(pipe, Some(config)))?
     .with_bundle(input_bundle)?
     .with(systems::PaddleSystem, "paddle_system", &["input_system"]); // Add this line
+# Ok(())
+# }
+```
+
+Don't forget to also add at the top of `main.rs`:
+
+```rust,ignore
+mod systems;
 ```
 
 Take a look at the `with` method call. Here, we're not adding a bundle, we're adding
@@ -169,7 +223,28 @@ If we run the game now, we'll see the console print our keypresses. Let's
 make it update the position of the paddle. To do this, we'll modify the y
 component of the transform's translation.
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::core::Transform;
+# use amethyst::ecs::{Join, Read, ReadStorage, System, WriteStorage};
+# use amethyst::input::InputHandler;
+# enum Side {
+#   Left,
+#   Right,
+# }
+# pub struct Paddle {
+#   side: Side,
+# }
+# impl amethyst::ecs::Component for Paddle {
+#   type Storage = amethyst::ecs::VecStorage<Paddle>;    
+# }
+# pub struct PaddleSystem;
+# impl<'s> System<'s> for PaddleSystem {
+#  type SystemData = (
+#    WriteStorage<'s, Transform>,
+#    ReadStorage<'s, Paddle>,
+#    Read<'s, InputHandler<String, String>>,
+#  );
   fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
     for (paddle, mut transform) in (&paddles, &mut transforms).join() {
       let movement = match paddle.side {
@@ -182,6 +257,7 @@ component of the transform's translation.
       }
     }
   }
+# }
 ```
 
 This is our first attempt at moving the paddles: we take the movement, and
@@ -201,7 +277,32 @@ lower) to `PADDLE_HEIGHT * 0.5` (the bottom of the screen but a little bit highe
 
 Our run function should now look something like this:
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::core::Transform;
+# use amethyst::ecs::{Join, Read, ReadStorage, System, WriteStorage};
+# use amethyst::input::InputHandler;
+# const PADDLE_HEIGHT: f32 = 16.0;
+# const PADDLE_WIDTH: f32 = 4.0;
+# const ARENA_HEIGHT: f32 = 100.0;
+# const ARENA_WIDTH: f32 = 100.0;
+# enum Side {
+#   Left,
+#   Right,
+# }
+# pub struct Paddle {
+#   side: Side,
+# }
+# impl amethyst::ecs::Component for Paddle {
+#   type Storage = amethyst::ecs::VecStorage<Paddle>;    
+# }
+# pub struct PaddleSystem;
+# impl<'s> System<'s> for PaddleSystem {
+#  type SystemData = (
+#    WriteStorage<'s, Transform>,
+#    ReadStorage<'s, Paddle>,
+#    Read<'s, InputHandler<String, String>>,
+#  );
   fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
     for (paddle, mut transform) in (&paddles, &mut transforms).join() {
       let movement = match paddle.side {
@@ -216,6 +317,7 @@ Our run function should now look something like this:
       }
     }
   }
+# }
 ```
 
 Note: For the above to work, we'll have to mark `PADDLE_HEIGHT` and `ARENA_HEIGHT`

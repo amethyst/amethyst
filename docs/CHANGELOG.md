@@ -9,10 +9,27 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## Unreleased
 ### Added
+* `SpriteRender` pass to draw sprites without using `Material` and `Mesh`. ([#829], [#830])
+* Sprite animation uses the `SpriteRenderChannel`. ([#829], [#830])
+* Added Named Component. ([#879])
+* Support for progressive jpeg loading. ([#877])
+
 ### Changed
+* Sprites contain their dimensions and offsets to render them with the right size and desired position. ([#829], [#830])
+* Texture coordinates for sprites are 1.0 at the top of the texture and 0.0 at the bottom. ([#829], [#830])
+* Made get_camera public. ([#878)]
+* Updated ProgressCounter to show loading errors. ([#892])
+* Replaced the `imagefmt` crate with `image`. ([#877])
 ### Removed
+
 ### Fixed
 
+[#829]: https://github.com/amethyst/amethyst/issues/829
+[#830]: https://github.com/amethyst/amethyst/pull/830
+[#879]: https://github.com/amethyst/amethyst/pull/879
+[#878]: https://github.com/amethyst/amethyst/pull/878
+[#892]: https://github.com/amethyst/amethyst/pull/892
+[#877]: https://github.com/amethyst/amethyst/pull/877
 
 ## [0.8.0] - 2018-08
 ### Added

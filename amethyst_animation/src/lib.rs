@@ -73,6 +73,7 @@ pub use self::resources::{
 pub use self::skinning::{
     Joint, JointPrefab, Skin, SkinPrefab, SkinnablePrefab, VertexSkinningSystem,
 };
+pub use self::sprite::{SpriteRenderChannel, SpriteRenderPrimitive};
 pub use self::systems::{
     AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem, SamplerProcessor,
 };
@@ -85,6 +86,7 @@ mod material;
 mod prefab;
 mod resources;
 mod skinning;
+mod sprite;
 mod systems;
 mod transform;
 mod util;

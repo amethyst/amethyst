@@ -141,6 +141,10 @@ name = "sprites"
 path = "examples/sprites/main.rs"
 
 [[example]]
+name = "sprites_ordered"
+path = "examples/sprites_ordered/main.rs"
+
+[[example]]
 name = "pong_tutorial_01"
 path = "examples/pong_tutorial_01/main.rs"
 

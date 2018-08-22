@@ -147,7 +147,8 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Main {
             Trans::Quit
         } else if is_key_down(&event, VirtualKeyCode::Space) {
             Trans::Push(Box::new(Paused {
-                ui: data.world
+                ui: data
+                    .world
                     .create_entity()
                     .with(self.paused_ui.clone())
                     .build(),
