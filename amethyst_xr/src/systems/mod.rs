@@ -52,7 +52,7 @@ impl<'a> System<'a> for XRSystem {
             transform.rotation = tracker_position_data.rotation;
 
             // Update render model if requested
-            if tracker.render_model_enabled {
+            if tracker.render_model_enabled && tracker.mesh().is_none() {
                 if let TrackerModelLoadStatus::Available((vertices, indices), maybe_texture) =
                     self.backend.get_tracker_model(tracker.id())
                 {
@@ -71,6 +71,7 @@ impl<'a> System<'a> for XRSystem {
                         tracker.set_texture(Some(texture));
                     }
 
+                    println!("Render model loaded for tracker {}", tracker.id());
                     events.single_write(::XREvent::TrackerModelLoaded(tracker.id()))
                 }
             }
