@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Added Named Component. ([#879])
 * Support for progressive jpeg loading. ([#877])
 * `IsometricTransform` abstracting away 2D isometric math. ([#895])
+* `XYCameraSystem` to control a 2D camera along the X and Y axis. ([#895])
+* `SpriteSheetFormat` to load sprite positions into a sprite sheet from a RON file. ([#895])
 
 ### Changed
 * Sprites contain their dimensions and offsets to render them with the right size and desired position. ([#829], [#830])
@@ -23,6 +25,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Replaced the `imagefmt` crate with `image`. ([#877])
 
 ### Removed
+* `SpriteRenderData` and `WithSpriteRender` 2D utilities. Replaced by `SpriteRender`.
 
 ### Fixed
 

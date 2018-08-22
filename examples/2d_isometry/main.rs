@@ -1,5 +1,6 @@
 extern crate amethyst;
 
+use amethyst::controls::XYCameraSystem;
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::TransformBundle;
 use amethyst::input::InputBundle;
@@ -47,15 +48,18 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
         .with_bundle(
-            InputBundle::<String, String>::new()
-                .with_bindings_from_file(input_config_path)?,
+            InputBundle::<String, String>::new().with_bindings_from_file(input_config_path)?,
         )?
         .with_bundle(
             RenderBundle::new(pipe, Some(config))
                 .with_sprite_sheet_processor()
                 .with_sprite_visibility_sorting(&["transform_system"]),
         )?
-        .with(camera::MoveCamera, "camera_movement", &[])
+        .with(
+            XYCameraSystem::<String, String>::new("horizontal", "vertical").with_zoom("zoom"),
+            "camera_movement",
+            &[],
+        )
         .with(cars::MoveCars, "cars_system", &[]);
     let mut game = Application::build(assets_dir, IsometryState)?
         .with_frame_limit(
