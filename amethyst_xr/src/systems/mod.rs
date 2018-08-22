@@ -31,7 +31,11 @@ impl<'a> System<'a> for XRSystem {
         if let Some(new_trackers) = self.backend.get_new_trackers() {
             events.iter_write(new_trackers.iter().map(|id| {
                 let mut tracker = TrackingDevice::new(*id);
-                tracker.has_render_model = self.backend.tracker_has_model(tracker.id());
+
+                let capabilities = self.backend.get_tracker_capabilities(tracker.id());
+                tracker.has_render_model = capabilities.has_render_model;
+                tracker.is_camera = capabilities.is_camera;
+
                 ::XREvent::TrackerAdded(tracker)
             }));
         }

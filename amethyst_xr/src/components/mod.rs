@@ -12,6 +12,8 @@ pub struct TrackingDevice {
     tracking: bool,
     available: bool,
 
+    pub(crate) is_camera: bool,
+
     pub(crate) has_render_model: bool,
     pub(crate) render_model_enabled: bool,
 }
@@ -25,6 +27,8 @@ impl TrackingDevice {
             tracking: false,
             available: false,
             haptic_duration: None,
+
+            is_camera: false,
 
             has_render_model: false,
             render_model_enabled: false,
@@ -89,6 +93,10 @@ impl TrackingDevice {
 
     pub fn trigger_haptics(&mut self, duration: u16) {
         self.haptic_duration = Some(duration);
+    }
+
+    pub fn is_camera(&self) -> bool {
+        self.is_camera
     }
 }
 

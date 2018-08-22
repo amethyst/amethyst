@@ -26,8 +26,9 @@ pub trait XRBackend: Send {
     fn get_area(&mut self) -> Vec<[f32; 3]>;
     fn get_hidden_area_mesh(&mut self) -> Vec<[f32; 3]>;
 
-    fn tracker_has_model(&mut self, index: u32) -> bool;
     fn get_tracker_model(&mut self, index: u32) -> TrackerModelLoadStatus;
+
+    fn get_tracker_capabilities(&mut self, index: u32) -> TrackerCapabilities;
 }
 
 pub enum XREvent {
@@ -44,6 +45,12 @@ pub struct TrackerPositionData {
     pub velocity: Vector3<f32>,
     pub angular_velocity: Vector3<f32>,
     pub valid: bool,
+}
+
+#[derive(Debug)]
+pub struct TrackerCapabilities {
+    pub has_render_model: bool,
+    pub is_camera: bool,
 }
 
 pub enum TrackerModelLoadStatus {
