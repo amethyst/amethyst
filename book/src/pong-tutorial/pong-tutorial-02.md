@@ -89,8 +89,8 @@ moved around at will.
 First, let's define some constants:
 
 ```rust,no_run,noplaypen
-const ARENA_HEIGHT: f32 = 100.0;
-const ARENA_WIDTH: f32 = 100.0;
+pub const ARENA_HEIGHT: f32 = 100.0;
+pub const ARENA_WIDTH: f32 = 100.0;
 ```
 
 These constants will determine the size of our arena.
@@ -159,12 +159,12 @@ In `pong.rs` let's create our first `Component`, a definition of a paddle.
 
 ```rust,no_run,noplaypen
 #[derive(PartialEq, Eq)]
-enum Side {
+pub enum Side {
     Left,
     Right,
 }
 
-struct Paddle {
+pub struct Paddle {
     pub side: Side,
     pub width: f32,
     pub height: f32,
