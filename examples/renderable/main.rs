@@ -48,7 +48,6 @@ impl<'a, 'b> SimpleState<'a, 'b> for Loading {
     }
 
     fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
-        data.data.update(&data.world);
         match self.progress.complete() {
             Completion::Failed => {
                 println!("Failed loading assets: {:?}", self.progress.errors());
