@@ -1,7 +1,6 @@
 use amethyst::controls::XYControlTag;
-use amethyst::core::{GlobalTransform, Time, Transform};
-use amethyst::ecs::{Entities, Join, Read, ReadStorage, System, World, WriteStorage};
-use amethyst::input::InputHandler;
+use amethyst::core::{GlobalTransform, Transform};
+use amethyst::ecs::World;
 use amethyst::prelude::*;
 use amethyst::renderer::{Camera, Projection};
 
