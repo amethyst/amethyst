@@ -101,14 +101,14 @@ impl IsometricTransform {
 
     /// Returns the isometric translation vector in this transform's
     /// plane of a local translation vector. In other words, this
-    /// converts isometric coordinates into local coordinates.
+    /// converts local coordinates into isometric coordinates.
     pub fn local_to_iso(&self, local: Vector2<f32>) -> Vector2<f32> {
         self.local_to_iso * local
     }
 
     /// Returns the local translation vector of an isometric translation
     /// vector in this transform's plane. In other words, this converts
-    /// local coordinates into isometric coordinates.
+    /// isometric coordinates into local coordinates.
     pub fn iso_to_local(&self, iso: Vector2<f32>) -> Vector2<f32> {
         self.iso_to_local * iso
     }
