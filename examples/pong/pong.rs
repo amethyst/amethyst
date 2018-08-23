@@ -2,11 +2,10 @@ use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::cgmath::Vector3;
 use amethyst::core::transform::{GlobalTransform, Transform};
 use amethyst::ecs::prelude::World;
-use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::{
-    Camera, Event, MaterialTextureSet, PngFormat, Projection, Sprite, SpriteRender, SpriteSheet,
-    SpriteSheetHandle, Texture, TextureCoordinates, VirtualKeyCode, WindowMessages,
+    Camera, MaterialTextureSet, PngFormat, Projection, Sprite, SpriteRender, SpriteSheet,
+    SpriteSheetHandle, Texture, TextureCoordinates, WindowMessages,
 };
 use amethyst::ui::{Anchor, TtfFormat, UiText, UiTransform};
 use systems::ScoreText;
@@ -15,7 +14,7 @@ use {ARENA_HEIGHT, ARENA_WIDTH, SPRITESHEET_SIZE};
 
 pub struct Pong;
 
-impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
+impl<'a, 'b> SimpleState<'a, 'b> for Pong {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
         use audio::initialise_audio;
@@ -32,19 +31,6 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
         initialise_audio(world);
         initialise_score(world);
         hide_cursor(world);
-    }
-
-    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else {
-            Trans::None
-        }
-    }
-
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
-        data.data.update(&data.world);
-        Trans::None
     }
 }
 

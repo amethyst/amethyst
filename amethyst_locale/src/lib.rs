@@ -11,12 +11,11 @@ extern crate fluent;
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
-#[cfg(feature = "profiler")]
-use thread_profiler::{register_thread_with_profiler, write_profile};
-
 use amethyst_assets::{Asset, Handle, ProcessingState, Result, SimpleFormat};
 use amethyst_core::specs::prelude::VecStorage;
 use fluent::MessageContext;
+#[cfg(feature = "profiler")]
+use thread_profiler::{register_thread_with_profiler, write_profile};
 
 /// Loads the strings from localisation files.
 #[derive(Clone)]

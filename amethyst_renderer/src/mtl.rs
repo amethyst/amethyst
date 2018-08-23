@@ -3,7 +3,6 @@
 use amethyst_assets::Handle;
 use amethyst_core::specs::prelude::{Component, DenseVecStorage};
 use fnv::FnvHashMap;
-
 use tex::{Texture, TextureHandle};
 
 /// Material reference this part of the texture

@@ -1,6 +1,3 @@
-use std::hash::Hash;
-use std::marker::PhantomData;
-
 use amethyst_core::cgmath::{Deg, Vector3};
 use amethyst_core::shrev::{EventChannel, ReaderId};
 use amethyst_core::specs::prelude::{
@@ -10,10 +7,11 @@ use amethyst_core::timing::Time;
 use amethyst_core::transform::Transform;
 use amethyst_input::InputHandler;
 use amethyst_renderer::WindowMessages;
-use winit::{DeviceEvent, Event, WindowEvent};
-
 use components::{ArcBallControlTag, FlyControlTag};
 use resources::WindowFocus;
+use std::hash::Hash;
+use std::marker::PhantomData;
+use winit::{DeviceEvent, Event, WindowEvent};
 
 /// The system that manages the fly movement.
 /// Generic parameters are the parameters for the InputHandler.

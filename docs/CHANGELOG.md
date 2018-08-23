@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Added
 * `SpriteRender` pass to draw sprites without using `Material` and `Mesh`. ([#829], [#830])
 * Sprite animation uses the `SpriteRenderChannel`. ([#829], [#830])
+* State::handle_event can now handle multiple types of events. ([#887])
 * Added Named Component. ([#879])([#896])
 * Support for progressive jpeg loading. ([#877])
 
@@ -18,6 +19,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Sprites contain their dimensions and offsets to render them with the right size and desired position. ([#829], [#830])
 * Texture coordinates for sprites are 1.0 at the top of the texture and 0.0 at the bottom. ([#829], [#830])
 * Made get_camera public. ([#878)]
+* Simplified creating states with SimpleState and EmptyState. ([#887])
 * Updated ProgressCounter to show loading errors. ([#892])
 * Replaced the `imagefmt` crate with `image`. ([#877])
 ### Removed
@@ -28,6 +30,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#830]: https://github.com/amethyst/amethyst/pull/830
 [#879]: https://github.com/amethyst/amethyst/pull/879
 [#878]: https://github.com/amethyst/amethyst/pull/878
+[#887]: https://github.com/amethyst/amethyst/pull/887
 [#892]: https://github.com/amethyst/amethyst/pull/892
 [#877]: https://github.com/amethyst/amethyst/pull/877
 [#896]: https://github.com/amethyst/amethyst/pull/896

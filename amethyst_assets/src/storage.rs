@@ -1,18 +1,16 @@
-use std::marker::PhantomData;
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex, Weak};
-
 use amethyst_core::specs::prelude::{Component, Read, ReadExpect, System, VecStorage, Write};
 use amethyst_core::specs::storage::UnprotectedStorage;
 use amethyst_core::Time;
-use crossbeam::sync::MsQueue;
-use hibitset::BitSet;
-use rayon::ThreadPool;
-
 use asset::{Asset, FormatValue};
+use crossbeam::sync::MsQueue;
 use error::{Error, ErrorKind, Result, ResultExt};
+use hibitset::BitSet;
 use progress::Tracker;
+use rayon::ThreadPool;
 use reload::{HotReloadStrategy, Reload};
+use std::marker::PhantomData;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex, Weak};
 
 /// An `Allocator`, holding a counter for producing unique IDs.
 #[derive(Debug, Default)]

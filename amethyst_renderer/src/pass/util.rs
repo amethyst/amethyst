@@ -4,10 +4,8 @@ use amethyst_assets::AssetStorage;
 use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
 use amethyst_core::specs::prelude::{Join, Read, ReadStorage};
 use amethyst_core::GlobalTransform;
-
-use glsl_layout::*;
-
 use cam::{ActiveCamera, Camera};
+use glsl_layout::*;
 use mesh::Mesh;
 use mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset};
 use pass::set_skinning_buffers;

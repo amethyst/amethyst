@@ -1,8 +1,6 @@
+use fnv::FnvHashMap;
 use std::borrow::Borrow;
 use std::hash::Hash;
-
-use fnv::FnvHashMap;
-
 use {Handle, WeakHandle};
 
 /// A simple cache for asset handles of type `A`.

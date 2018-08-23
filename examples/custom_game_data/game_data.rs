@@ -1,9 +1,8 @@
-use std::sync::Arc;
-
 use amethyst::core::SystemBundle;
 use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World};
 use amethyst::{DataInit, Error, Result};
 use rayon::ThreadPool;
+use std::sync::Arc;
 
 pub struct CustomGameData<'a, 'b> {
     pub base: Dispatcher<'a, 'b>,

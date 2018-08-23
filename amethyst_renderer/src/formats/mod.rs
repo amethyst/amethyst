@@ -4,12 +4,10 @@
 pub use self::mesh::*;
 pub use self::mtl::*;
 pub use self::texture::*;
-
 use amethyst_assets::{AssetPrefab, Format, PrefabData, PrefabError, ProgressCounter};
 use amethyst_core::specs::prelude::Entity;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-
 use shape::InternalShape;
 use {Mesh, ShapePrefab, Texture};
 

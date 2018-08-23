@@ -1,13 +1,11 @@
 //! Utilities for skinning
 
-use std::mem;
-
 use gfx::pso::buffer::ElemStride;
-
 use mesh::Mesh;
 use pass::util::set_attribute_buffers;
 use pipe::{Effect, EffectBuilder, NewEffect};
 use skinning::{JointIds, JointWeights};
+use std::mem;
 use vertex::{Attributes, Separate, VertexFormat};
 
 static VERT_SKIN_SRC: &[u8] = include_bytes!("shaders/vertex/skinned.glsl");

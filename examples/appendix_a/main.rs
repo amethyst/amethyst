@@ -10,8 +10,6 @@ mod config;
 mod pong;
 mod systems;
 
-use std::time::Duration;
-
 use amethyst::audio::AudioBundle;
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::TransformBundle;
@@ -20,10 +18,10 @@ use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{DrawFlat, PosTex};
 use amethyst::ui::UiBundle;
-
 use audio::Music;
 use bundle::PongBundle;
 use config::PongConfig;
+use std::time::Duration;
 
 const AUDIO_MUSIC: &'static [&'static str] = &[
     "audio/Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg",
