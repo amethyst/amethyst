@@ -8,7 +8,7 @@ layout (std140) uniform ViewArgs {
 //
 in vec2 size;
 // Pixel offsets for the sprite. Used to shift the sprite left and down.
-in vec2 offsets;
+in vec2 offset;
 
 in vec2 u_offset;
 in vec2 v_offset;
@@ -42,8 +42,8 @@ void main() {
     float tex_u = positions[gl_VertexID][0];
     float tex_v = positions[gl_VertexID][1];
 
-    float u = (tex_u - 1.0f) * size[0] + offsets[0];
-    float v = (tex_v - 1.0f) * size[1] + offsets[1];
+    float u = (tex_u - 1.0f) * size[0] + offset[0];
+    float v = (tex_v - 1.0f) * size[1] + offset[1];
 
     tex_uv = texture_coords(vec2(tex_u, tex_v), u_offset, v_offset);
 

@@ -4,23 +4,23 @@ use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::cgmath::Vector4;
 use amethyst_core::specs::prelude::{Join, Read, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
+
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
 
 use super::*;
 use cam::{ActiveCamera, Camera};
 use error::Result;
+use gfx::pso::buffer::ElemStride;
 use mtl::MaterialTextureSet;
-use pass::util::{
-    add_texture, get_camera, set_sprite_args, set_view_args, setup_textures, SpriteArgs,
-    TextureOffsetPod, ViewArgs,
-};
+use pass::util::{add_texture, get_camera, set_view_args, setup_textures, ViewArgs};
 use pipe::pass::{Pass, PassData};
 use pipe::{DepthMode, Effect, NewEffect};
 use sprite::{SpriteRender, SpriteSheet};
 use sprite_visibility::SpriteVisibility;
 use tex::Texture;
 use types::{Encoder, Factory, Slice};
+use vertex::{Query, VertexFormat};
 
 /// Draws sprites on a 2D quad.
 #[derive(Derivative, Clone, Debug, PartialEq)]
@@ -65,8 +65,6 @@ impl<'a> PassData<'a> for DrawSprite {
 
 impl Pass for DrawSprite {
     fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
-        use gfx::format::{ChannelType, Format, SurfaceType};
-        use gfx::pso::buffer::Element;
         use std::mem;
 
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);
@@ -77,37 +75,8 @@ impl Pass for DrawSprite {
                 1,
             )
             .with_raw_vertex_buffer(
-                &[
-                    (
-                        "size",
-                        Element {
-                            offset: 0,
-                            format: Format(SurfaceType::R32_G32, ChannelType::Float),
-                        },
-                    ),
-                    (
-                        "offsets",
-                        Element {
-                            offset: 8,
-                            format: Format(SurfaceType::R32_G32, ChannelType::Float),
-                        },
-                    ),
-                    (
-                        "u_offset",
-                        Element {
-                            offset: 16,
-                            format: Format(SurfaceType::R32_G32, ChannelType::Float),
-                        },
-                    ),
-                    (
-                        "v_offset",
-                        Element {
-                            offset: 24,
-                            format: Format(SurfaceType::R32_G32, ChannelType::Float),
-                        },
-                    ),
-                ],
-                32,
+                <SpriteInstance as Query<(Size, Offset, OffsetU, OffsetV)>>::QUERIED_ATTRIBUTES,
+                SpriteInstance::size() as ElemStride,
                 1,
             );
         setup_textures(&mut builder, &TEXTURES);

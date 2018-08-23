@@ -1,7 +1,7 @@
 use std::mem;
 
 use amethyst_assets::AssetStorage;
-use amethyst_core::cgmath::{Matrix4, One, SquareMatrix, Vector4};
+use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
 use amethyst_core::specs::prelude::{Join, Read, ReadStorage};
 use amethyst_core::GlobalTransform;
 
@@ -9,13 +9,12 @@ use glsl_layout::*;
 
 use cam::{ActiveCamera, Camera};
 use mesh::Mesh;
-use mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset};
+use mtl::{Material, MaterialDefaults, TextureOffset};
 use pass::set_skinning_buffers;
 use pipe::{Effect, EffectBuilder};
 use skinning::JointTransforms;
-use sprite::{Sprite, SpriteRender, SpriteSheet};
 use tex::Texture;
-use types::{Encoder, Slice};
+use types::Encoder;
 use vertex::Attributes;
 
 pub(crate) enum TextureType {
@@ -41,15 +40,6 @@ pub(crate) struct VertexArgs {
     proj: mat4,
     view: mat4,
     model: mat4,
-}
-
-#[repr(C, align(16))]
-#[derive(Clone, Copy, Debug, Uniform)]
-pub(crate) struct SpriteArgs {
-    pub half_diag: vec2,
-    pub offsets: vec2,
-    pub flip_horizontal: boolean,
-    pub flip_vertical: boolean,
 }
 
 #[repr(C, align(16))]
@@ -286,26 +276,6 @@ pub fn set_view_args(
     effect.update_constant_buffer("ViewArgs", &view_args.std140(), encoder);
 }
 
-pub(crate) fn set_sprite_args(
-    effect: &mut Effect,
-    encoder: &mut Encoder,
-    transform: &GlobalTransform,
-    sprite: &Sprite,
-    sprite_render: &SpriteRender,
-) {
-    use amethyst_core::cgmath::Matrix;
-
-    let half_dir = transform.0 * Vector4::new(sprite.width, sprite.height, 0.0, 0.0);
-    let offset = transform.0 * Vector4::new(sprite.offsets[0], sprite.offsets[1], 0.0, 1.0);
-    let geometry_args = SpriteArgs {
-        half_diag: [half_dir.x, half_dir.y].into(),
-        offsets: [offset.x, offset.y].into(),
-        flip_horizontal: sprite_render.flip_horizontal.into(),
-        flip_vertical: sprite_render.flip_vertical.into(),
-    };
-    effect.update_constant_buffer("SpriteArgs", &geometry_args.std140(), encoder);
-}
-
 pub(crate) fn draw_mesh(
     encoder: &mut Encoder,
     effect: &mut Effect,
@@ -353,80 +323,6 @@ pub(crate) fn draw_mesh(
     );
 
     effect.draw(mesh.slice(), encoder);
-    effect.clear();
-}
-
-pub(crate) fn draw_sprite(
-    encoder: &mut Encoder,
-    effect: &mut Effect,
-    sprite_render: &SpriteRender,
-    sprite_sheet_storage: &AssetStorage<SpriteSheet>,
-    tex_storage: &AssetStorage<Texture>,
-    material_texture_set: &MaterialTextureSet,
-    camera: Option<(&Camera, &GlobalTransform)>,
-    global: Option<&GlobalTransform>,
-) {
-    if global.is_none() {
-        return;
-    }
-
-    let sprite_sheet = sprite_sheet_storage.get(&sprite_render.sprite_sheet);
-    if sprite_sheet.is_none() {
-        warn!(
-            "Sprite sheet not loaded for sprite_render: `{:?}`.",
-            sprite_render
-        );
-        return;
-    }
-    let sprite_sheet = sprite_sheet.unwrap();
-
-    let texture_handle = material_texture_set.handle(sprite_sheet.texture_id);
-    if texture_handle.is_none() {
-        warn!(
-            "Texture handle not found for texture id: `{}`.",
-            sprite_sheet.texture_id
-        );
-        return;
-    }
-
-    let texture = tex_storage.get(&texture_handle.unwrap());
-    if texture.is_none() {
-        warn!(
-            "Texture not loaded for texture id: `{}`.",
-            sprite_sheet.texture_id
-        );
-        return;
-    }
-
-    let sprite = &sprite_sheet.sprites[sprite_render.sprite_number];
-
-    // Sprite vertex shader
-    set_view_args(effect, encoder, camera);
-    set_sprite_args(effect, encoder, global.unwrap(), sprite, sprite_render);
-
-    add_texture(effect, texture.unwrap());
-
-    // Set texture coordinates
-    let tex_coords = &sprite.tex_coords;
-    effect.update_constant_buffer(
-        "AlbedoOffset",
-        &TextureOffsetPod {
-            u_offset: [tex_coords.left, tex_coords.right].into(),
-            v_offset: [tex_coords.bottom, tex_coords.top].into(),
-        }.std140(),
-        encoder,
-    );
-
-    effect.draw(
-        &Slice {
-            start: 0,
-            end: 6,
-            base_vertex: 0,
-            instances: None,
-            buffer: Default::default(),
-        },
-        encoder,
-    );
     effect.clear();
 }
 
