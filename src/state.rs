@@ -26,6 +26,8 @@ where
 }
 
 /// Types of state transitions.
+/// T is the type of shared data between states.
+/// E is the type of custom events handled by StateEvent<E>.
 pub enum Trans<T, E> {
     /// Continue as normal.
     None,
@@ -72,7 +74,7 @@ pub trait State<T, E: Send + Sync + 'static> {
         Trans::None
     }
 
-    /// Executed on every frame immediately, as fast as the engine will allow.
+    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit).
     fn update(&mut self, _data: StateData<T>) -> Trans<T, E> {
         Trans::None
     }
@@ -111,7 +113,7 @@ pub trait EmptyState {
         Trans::None
     }
 
-    /// Executed on every frame immediately, as fast as the engine will allow.
+    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit).
     fn update(&mut self, _data: StateData<()>) -> EmptyTrans {
         Trans::None
     }
@@ -149,7 +151,7 @@ impl<T: EmptyState> State<(), ()> for T {
         self.fixed_update(data)
     }
 
-    /// Executed on every frame immediately, as fast as the engine will allow.
+    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit).
     fn update(&mut self, data: StateData<()>) -> EmptyTrans {
         self.update(data)
     }
@@ -192,7 +194,7 @@ pub trait SimpleState<'a, 'b> {
         Trans::None
     }
 
-    /// Executed on every frame immediately, as fast as the engine will allow.
+    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit).
     fn update(&mut self, _data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
         Trans::None
     }
@@ -235,7 +237,7 @@ impl<'a, 'b, T: SimpleState<'a, 'b>> State<GameData<'a, 'b>, ()> for T {
         self.fixed_update(data)
     }
 
-    /// Executed on every frame immediately, as fast as the engine will allow.
+    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit).
     fn update(&mut self, mut data: StateData<GameData>) -> SimpleTrans<'a, 'b> {
         let r = self.update(&mut data);
         data.data.update(&data.world);

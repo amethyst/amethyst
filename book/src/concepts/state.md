@@ -113,7 +113,7 @@ We first declare the `State`'s struct `GameplayState`.
 In this case, we give it some data: player_count as byte.
 
 Then, we implement the `SimpleState` trait for our `GameplayState`.
-`SimpleState` is a shorthand for `State<GameData<'a,'b>,()>` where `GameData` is the internal shared data between states.
+`SimpleState` is a shorthand for `State<GameData<'a, 'b>, ()>` where `GameData` is the internal shared data between states.
 
 ### Switching State
 
@@ -139,7 +139,7 @@ struct PausedState;
 
 // This time around, we are using () instead of GameData, because we don't have any `System`s that need to be updated.
 // (They are covered in the dedicated section of the book.)
-// Instead of writing `State<(),()>`, we can instead use `EmptyState`.
+// Instead of writing `State<(), ()>`, we can instead use `EmptyState`.
 impl EmptyState for GameplayState {
     fn handle_event(&mut self, _data: StateData<()>, event: StateEvent<()>) -> EmptyTrans {
         if let StateEvent::Window(event) = &event {

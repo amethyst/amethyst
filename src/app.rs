@@ -225,14 +225,14 @@ impl<'a, T, E: Send + Sync + Clone + 'static> Application<'a, T, E> {
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
-            let events = world
+            let window_events = world
                 .read_resource::<EventChannel<Event>>()
                 .read(&mut self.window_reader_id)
                 .cloned()
                 .map(|e| StateEvent::Window(e))
                 .collect::<Vec<_>>();
 
-            for event in events {
+            for event in window_events {
                 if !self.ignore_window_close {
                     if cfg!(target_os = "ios") {
                         if let &StateEvent::Window(Event::WindowEvent {
@@ -255,23 +255,23 @@ impl<'a, T, E: Send + Sync + Clone + 'static> Application<'a, T, E> {
                 states.handle_event(StateData::new(world, &mut self.data), event);
             }
 
-            let events = world
+            let ui_events = world
                 .read_resource::<EventChannel<UiEvent>>()
                 .read(&mut self.ui_reader_id)
                 .cloned()
                 .map(|e| StateEvent::Ui(e))
                 .collect::<Vec<_>>();
-            for event in events {
+            for event in ui_events {
                 states.handle_event(StateData::new(world, &mut self.data), event);
             }
 
-            let events = world
+            let custom_events = world
                 .read_resource::<EventChannel<E>>()
                 .read(&mut self.custom_reader_id)
                 .cloned()
                 .map(|e| StateEvent::Custom(e))
                 .collect::<Vec<_>>();
-            for event in events {
+            for event in custom_events {
                 states.handle_event(StateData::new(world, &mut self.data), event);
             }
         }
