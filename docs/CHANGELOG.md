@@ -22,6 +22,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Simplified creating states with SimpleState and EmptyState. ([#887])
 * Updated ProgressCounter to show loading errors. ([#892])
 * Replaced the `imagefmt` crate with `image`. ([#877])
+* Derive `Debug` and `PartialEq` for `amethyst_input::Axis`. ([#903], [#904])
+
 ### Removed
 
 ### Fixed
@@ -34,6 +36,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#892]: https://github.com/amethyst/amethyst/pull/892
 [#877]: https://github.com/amethyst/amethyst/pull/877
 [#896]: https://github.com/amethyst/amethyst/pull/896
+[#903]: https://github.com/amethyst/amethyst/issues/903
+[#904]: https://github.com/amethyst/amethyst/pull/904
 
 ## [0.8.0] - 2018-08
 ### Added
