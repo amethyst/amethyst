@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Added
 * `SpriteRender` pass to draw sprites without using `Material` and `Mesh`. ([#829], [#830])
 * Sprite animation uses the `SpriteRenderChannel`. ([#829], [#830])
-* Added Named Component. ([#879])
+* Added Named Component. ([#879])([#896])
 * Support for progressive jpeg loading. ([#877])
 
 ### Changed
@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#878]: https://github.com/amethyst/amethyst/pull/878
 [#892]: https://github.com/amethyst/amethyst/pull/892
 [#877]: https://github.com/amethyst/amethyst/pull/877
+[#896]: https://github.com/amethyst/amethyst/pull/896
 
 ## [0.8.0] - 2018-08
 ### Added
