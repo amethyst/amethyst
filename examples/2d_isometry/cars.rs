@@ -1,5 +1,5 @@
 use amethyst::assets::{AssetStorage, Loader};
-use amethyst::core::{GlobalTransform, IsometricTransform, Time, Transform};
+use amethyst::core::{IsometricTransform, Time};
 use amethyst::ecs::{Component, Join, Read, System, VecStorage, World, WriteStorage};
 use amethyst::prelude::*;
 use amethyst::renderer::{
@@ -31,8 +31,6 @@ pub fn initialise_cars(world: &mut World, sprite_sheet: SpriteSheetHandle) {
     iso_transf.order_priority = 300.0;
     world
         .create_entity()
-        .with(GlobalTransform::default())
-        .with(Transform::default())
         .with(iso_transf)
         .with(Car {
             top: 2.3,

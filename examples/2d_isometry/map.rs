@@ -1,4 +1,4 @@
-use amethyst::core::{GlobalTransform, IsometricTransform, Transform};
+use amethyst::core::IsometricTransform;
 use amethyst::ecs::World;
 use amethyst::prelude::*;
 use amethyst::renderer::{SpriteRender, SpriteSheetHandle, Transparent};
@@ -35,8 +35,6 @@ pub fn initialise_map(world: &mut World, spritesheet: SpriteSheetHandle) {
             iso_transf.translation.y = k as f32;
             world
                 .create_entity()
-                .with(GlobalTransform::new())
-                .with(Transform::default())
                 .with(iso_transf)
                 .with(Transparent)
                 .with(SpriteRender {

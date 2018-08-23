@@ -62,6 +62,15 @@ impl<'a> System<'a> for TransformSystem {
 
         self.scratch.clear();
         self.scratch
+            .extend((&*entities, &isoms, !&locals).join().map(|d| d.0));
+        for entity in &self.scratch {
+            locals
+                .insert(*entity, Transform::default())
+                .expect("unreachable");
+        }
+
+        self.scratch.clear();
+        self.scratch
             .extend((&*entities, &locals, !&globals).join().map(|d| d.0));
         for entity in &self.scratch {
             globals
