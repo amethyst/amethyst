@@ -20,13 +20,14 @@ use sprite::{SpriteRender, SpriteSheet};
 use sprite_visibility::SpriteVisibility;
 use tex::Texture;
 use types::{Encoder, Factory, Slice};
-use vertex::{Query, VertexFormat};
+use vertex::{Attributes, Query, VertexFormat};
 
 /// Draws sprites on a 2D quad.
-#[derive(Derivative, Clone, Debug, PartialEq)]
+#[derive(Derivative, Clone, Debug)]
 #[derivative(Default(bound = "Self: Pass"))]
 pub struct DrawSprite {
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
+    batch: SpriteBatch,
 }
 
 impl DrawSprite
@@ -47,6 +48,10 @@ where
     ) -> Self {
         self.transparency = Some((mask, blend, depth));
         self
+    }
+
+    fn attributes() -> Attributes<'static> {
+        <SpriteInstance as Query<(Size, Offset, OffsetU, OffsetV)>>::QUERIED_ATTRIBUTES
     }
 }
 
@@ -74,11 +79,7 @@ impl Pass for DrawSprite {
                 mem::size_of::<<ViewArgs as Uniform>::Std140>(),
                 1,
             )
-            .with_raw_vertex_buffer(
-                <SpriteInstance as Query<(Size, Offset, OffsetU, OffsetV)>>::QUERIED_ATTRIBUTES,
-                SpriteInstance::size() as ElemStride,
-                1,
-            );
+            .with_raw_vertex_buffer(Self::attributes(), SpriteInstance::size() as ElemStride, 1);
         setup_textures(&mut builder, &TEXTURES);
         match self.transparency {
             Some((mask, blend, depth)) => builder.with_blended_output("color", mask, blend, depth),
@@ -105,11 +106,10 @@ impl Pass for DrawSprite {
     ) {
         let camera = get_camera(active, &camera, &global);
 
-        let mut batch = SpriteBatch::new();
         match visibility {
             None => {
                 for (sprite_render, global) in (&sprite_render, &global).join() {
-                    batch.add_sprite(
+                    self.batch.add_sprite(
                         sprite_render,
                         Some(global),
                         &sprite_sheet_storage,
@@ -117,13 +117,13 @@ impl Pass for DrawSprite {
                         &tex_storage,
                     );
                 }
-                batch.sort();
+                self.batch.sort();
             }
             Some(ref visibility) => {
                 for (sprite_render, global, _) in
                     (&sprite_render, &global, &visibility.visible_unordered).join()
                 {
-                    batch.add_sprite(
+                    self.batch.add_sprite(
                         sprite_render,
                         Some(global),
                         &sprite_sheet_storage,
@@ -133,11 +133,11 @@ impl Pass for DrawSprite {
                 }
 
                 // We are free to optimize the order of the opaque sprites.
-                batch.sort();
+                self.batch.sort();
 
                 for entity in &visibility.visible_ordered {
                     if let Some(sprite_render) = sprite_render.get(*entity) {
-                        batch.add_sprite(
+                        self.batch.add_sprite(
                             sprite_render,
                             global.get(*entity),
                             &sprite_sheet_storage,
@@ -148,7 +148,7 @@ impl Pass for DrawSprite {
                 }
             }
         }
-        batch.encode(
+        self.batch.encode(
             encoder,
             &mut factory,
             effect,
@@ -156,26 +156,23 @@ impl Pass for DrawSprite {
             &sprite_sheet_storage,
             &tex_storage,
         );
+        self.batch.reset();
     }
 }
 
+#[derive(Clone, Debug)]
 struct SpriteDrawData {
     texture: Handle<Texture>,
     render: SpriteRender,
     transform: GlobalTransform,
 }
 
+#[derive(Clone, Default, Debug)]
 struct SpriteBatch {
     sprites: Vec<SpriteDrawData>,
 }
 
 impl SpriteBatch {
-    pub fn new() -> Self {
-        SpriteBatch {
-            sprites: Vec::new(),
-        }
-    }
-
     pub fn add_sprite(
         &mut self,
         sprite_render: &SpriteRender,
@@ -303,10 +300,9 @@ impl SpriteBatch {
                     .create_buffer_immutable(&instance_data, buffer::Role::Vertex, Bind::empty())
                     .unwrap();
 
-                effect.data.vertex_bufs.push(vbuf.raw().clone());
-                effect.data.vertex_bufs.push(vbuf.raw().clone());
-                effect.data.vertex_bufs.push(vbuf.raw().clone());
-                effect.data.vertex_bufs.push(vbuf.raw().clone());
+                for _ in DrawSprite::attributes() {
+                    effect.data.vertex_bufs.push(vbuf.raw().clone());
+                }
 
                 effect.draw(
                     &Slice {
@@ -325,5 +321,9 @@ impl SpriteBatch {
                 instance_data.clear();
             }
         }
+    }
+
+    pub fn reset(&mut self) {
+        self.sprites.clear();
     }
 }
