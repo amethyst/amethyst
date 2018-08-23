@@ -1,16 +1,18 @@
-use amethyst_core::specs::storage::BTreeStorage;
+use amethyst_core::specs::storage::HashMapStorage;
 use amethyst_core::specs::Component;
 
 use amethyst_renderer::{Mesh, MeshHandle, TextureHandle};
+
+pub type ComponentModel = (String, MeshHandle, TextureHandle);
 
 #[derive(Clone)]
 pub struct TrackingDevice {
     id: u32,
     haptic_duration: Option<u16>,
-    mesh: Option<MeshHandle>,
-    texture: Option<TextureHandle>,
     tracking: bool,
     available: bool,
+
+    pub(crate) component_models: Vec<ComponentModel>,
 
     pub(crate) is_camera: bool,
 
@@ -22,11 +24,11 @@ impl TrackingDevice {
     pub(crate) fn new(id: u32) -> TrackingDevice {
         TrackingDevice {
             id,
-            mesh: None,
-            texture: None,
             tracking: false,
             available: false,
             haptic_duration: None,
+
+            component_models: Vec::new(),
 
             is_camera: false,
 
@@ -35,12 +37,8 @@ impl TrackingDevice {
         }
     }
 
-    pub(crate) fn set_mesh(&mut self, mesh: Option<MeshHandle>) {
-        self.mesh = mesh;
-    }
-
-    pub(crate) fn set_texture(&mut self, texture: Option<TextureHandle>) {
-        self.texture = texture
+    pub fn component_models(&self) -> &[ComponentModel] {
+        &self.component_models
     }
 
     pub(crate) fn set_tracking(&mut self, tracking: bool) {
@@ -55,7 +53,7 @@ impl TrackingDevice {
         return self.id;
     }
 
-    pub fn has_mesh(&self) -> bool {
+    pub fn has_model(&self) -> bool {
         self.mesh.is_some()
     }
 
@@ -101,5 +99,11 @@ impl TrackingDevice {
 }
 
 impl Component for TrackingDevice {
-    type Storage = BTreeStorage<Self>;
+    type Storage = HashMapStorage<Self>;
+}
+
+pub struct RenderModelComponent(String);
+
+impl Component for RenderModelComponent {
+    type Storage = HashMapStorage<Self>;
 }

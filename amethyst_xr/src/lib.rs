@@ -56,7 +56,14 @@ pub struct TrackerCapabilities {
 pub enum TrackerModelLoadStatus {
     Unavailable,
     Pending,
-    Available((Vec<PosNormTangTex>, Vec<u16>), Option<TextureData>),
+    Available(Vec<TrackerComponentModelInfo>),
+}
+
+pub struct TrackerComponentModelInfo {
+    pub component_name: Option<String>,
+    pub vertices: Vec<PosNormTangTex>,
+    pub indices: Vec<u16>,
+    pub texture: Option<TextureData>,
 }
 
 pub struct XRBundle<'a> {

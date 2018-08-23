@@ -57,26 +57,27 @@ impl<'a> System<'a> for XRSystem {
 
             // Update render model if requested
             if tracker.render_model_enabled && tracker.mesh().is_none() {
-                if let TrackerModelLoadStatus::Available((vertices, indices), maybe_texture) =
+                if let TrackerModelLoadStatus::Available(models) =
                     self.backend.get_tracker_model(tracker.id())
                 {
-                    let vertices = MeshData::PosNormTangTex(
-                        indices
-                            .iter()
-                            .map(|i| vertices[*i as usize].clone())
-                            .collect(),
-                    );
+                    for model_info in models.into_iter() {
+                        let vertices = MeshData::PosNormTangTex(
+                            model_info.indices
+                                .iter()
+                                .map(|i| model_info.vertices[*i as usize].clone())
+                                .collect(),
+                        );
 
-                    let mesh = loader.load_from_data(vertices, (), &meshes);
-                    tracker.set_mesh(Some(mesh));
+                        let mesh = loader.load_from_data(model_info.vertices, (), &meshes);
+                        tracker.set_mesh(Some(mesh));
 
-                    if let Some(texture) = maybe_texture {
-                        let texture = loader.load_from_data(texture, (), &textures);
-                        tracker.set_texture(Some(texture));
+                        if let Some(texture) = model_info.texture {
+                            let texture = loader.load_from_data(texture, (), &textures);
+                            tracker.set_texture(Some(texture));
+                        }
+
+                        events.single_write(::XREvent::TrackerModelLoaded(tracker.id()));
                     }
-
-                    println!("Render model loaded for tracker {}", tracker.id());
-                    events.single_write(::XREvent::TrackerModelLoaded(tracker.id()))
                 }
             }
         }
