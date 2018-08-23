@@ -4,29 +4,30 @@ use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::cgmath::Vector4;
 use amethyst_core::specs::prelude::{Join, Read, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
+
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
 
 use super::*;
 use cam::{ActiveCamera, Camera};
 use error::Result;
+use gfx::pso::buffer::ElemStride;
 use mtl::MaterialTextureSet;
-use pass::util::{
-    add_texture, get_camera, set_sprite_args, set_view_args, setup_textures, SpriteArgs,
-    TextureOffsetPod, ViewArgs,
-};
+use pass::util::{add_texture, get_camera, set_view_args, setup_textures, ViewArgs};
 use pipe::pass::{Pass, PassData};
 use pipe::{DepthMode, Effect, NewEffect};
 use sprite::{SpriteRender, SpriteSheet};
 use sprite_visibility::SpriteVisibility;
 use tex::Texture;
 use types::{Encoder, Factory, Slice};
+use vertex::{Attributes, Query, VertexFormat};
 
 /// Draws sprites on a 2D quad.
-#[derive(Derivative, Clone, Debug, PartialEq)]
+#[derive(Derivative, Clone, Debug)]
 #[derivative(Default(bound = "Self: Pass"))]
 pub struct DrawSprite {
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
+    batch: SpriteBatch,
 }
 
 impl DrawSprite
@@ -48,6 +49,10 @@ where
         self.transparency = Some((mask, blend, depth));
         self
     }
+
+    fn attributes() -> Attributes<'static> {
+        <SpriteInstance as Query<(DirX, DirY, Pos, OffsetU, OffsetV)>>::QUERIED_ATTRIBUTES
+    }
 }
 
 impl<'a> PassData<'a> for DrawSprite {
@@ -65,8 +70,6 @@ impl<'a> PassData<'a> for DrawSprite {
 
 impl Pass for DrawSprite {
     fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
-        use gfx::format::{ChannelType, Format, SurfaceType};
-        use gfx::pso::buffer::Element;
         use std::mem;
 
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);
@@ -76,40 +79,7 @@ impl Pass for DrawSprite {
                 mem::size_of::<<ViewArgs as Uniform>::Std140>(),
                 1,
             )
-            .with_raw_vertex_buffer(
-                &[
-                    (
-                        "size",
-                        Element {
-                            offset: 0,
-                            format: Format(SurfaceType::R32_G32, ChannelType::Float),
-                        },
-                    ),
-                    (
-                        "offsets",
-                        Element {
-                            offset: 8,
-                            format: Format(SurfaceType::R32_G32, ChannelType::Float),
-                        },
-                    ),
-                    (
-                        "u_offset",
-                        Element {
-                            offset: 16,
-                            format: Format(SurfaceType::R32_G32, ChannelType::Float),
-                        },
-                    ),
-                    (
-                        "v_offset",
-                        Element {
-                            offset: 24,
-                            format: Format(SurfaceType::R32_G32, ChannelType::Float),
-                        },
-                    ),
-                ],
-                32,
-                1,
-            );
+            .with_raw_vertex_buffer(Self::attributes(), SpriteInstance::size() as ElemStride, 1);
         setup_textures(&mut builder, &TEXTURES);
         match self.transparency {
             Some((mask, blend, depth)) => builder.with_blended_output("color", mask, blend, depth),
@@ -136,11 +106,10 @@ impl Pass for DrawSprite {
     ) {
         let camera = get_camera(active, &camera, &global);
 
-        let mut batch = SpriteBatch::new();
         match visibility {
             None => {
                 for (sprite_render, global) in (&sprite_render, &global).join() {
-                    batch.add_sprite(
+                    self.batch.add_sprite(
                         sprite_render,
                         Some(global),
                         &sprite_sheet_storage,
@@ -148,13 +117,13 @@ impl Pass for DrawSprite {
                         &tex_storage,
                     );
                 }
-                batch.sort();
+                self.batch.sort();
             }
             Some(ref visibility) => {
                 for (sprite_render, global, _) in
                     (&sprite_render, &global, &visibility.visible_unordered).join()
                 {
-                    batch.add_sprite(
+                    self.batch.add_sprite(
                         sprite_render,
                         Some(global),
                         &sprite_sheet_storage,
@@ -164,11 +133,11 @@ impl Pass for DrawSprite {
                 }
 
                 // We are free to optimize the order of the opaque sprites.
-                batch.sort();
+                self.batch.sort();
 
                 for entity in &visibility.visible_ordered {
                     if let Some(sprite_render) = sprite_render.get(*entity) {
-                        batch.add_sprite(
+                        self.batch.add_sprite(
                             sprite_render,
                             global.get(*entity),
                             &sprite_sheet_storage,
@@ -179,7 +148,7 @@ impl Pass for DrawSprite {
                 }
             }
         }
-        batch.encode(
+        self.batch.encode(
             encoder,
             &mut factory,
             effect,
@@ -187,26 +156,23 @@ impl Pass for DrawSprite {
             &sprite_sheet_storage,
             &tex_storage,
         );
+        self.batch.reset();
     }
 }
 
+#[derive(Clone, Debug)]
 struct SpriteDrawData {
     texture: Handle<Texture>,
     render: SpriteRender,
     transform: GlobalTransform,
 }
 
+#[derive(Clone, Default, Debug)]
 struct SpriteBatch {
     sprites: Vec<SpriteDrawData>,
 }
 
 impl SpriteBatch {
-    pub fn new() -> Self {
-        SpriteBatch {
-            sprites: Vec::new(),
-        }
-    }
-
     pub fn add_sprite(
         &mut self,
         sprite_render: &SpriteRender,
@@ -311,12 +277,14 @@ impl SpriteBatch {
 
             let transform = &sprite.transform.0;
 
-            let size = transform * Vector4::new(sprite_data.width, sprite_data.height, 0.0, 0.0);
-            let offset =
+            let dir_x = transform.x * sprite_data.width;
+            let dir_y = transform.y * sprite_data.height;
+            let pos =
                 transform * Vector4::new(sprite_data.offsets[0], sprite_data.offsets[1], 0.0, 1.0);
 
             instance_data.extend(&[
-                size.x, size.y, offset.x, offset.y, uv_left, uv_right, uv_bottom, uv_top,
+                dir_x.x, dir_x.y, dir_y.x, dir_y.y, pos.x, pos.y, uv_left, uv_right, uv_bottom,
+                uv_top,
             ]);
             num_instances += 1;
 
@@ -334,10 +302,9 @@ impl SpriteBatch {
                     .create_buffer_immutable(&instance_data, buffer::Role::Vertex, Bind::empty())
                     .unwrap();
 
-                effect.data.vertex_bufs.push(vbuf.raw().clone());
-                effect.data.vertex_bufs.push(vbuf.raw().clone());
-                effect.data.vertex_bufs.push(vbuf.raw().clone());
-                effect.data.vertex_bufs.push(vbuf.raw().clone());
+                for _ in DrawSprite::attributes() {
+                    effect.data.vertex_bufs.push(vbuf.raw().clone());
+                }
 
                 effect.draw(
                     &Slice {
@@ -356,5 +323,9 @@ impl SpriteBatch {
                 instance_data.clear();
             }
         }
+    }
+
+    pub fn reset(&mut self) {
+        self.sprites.clear();
     }
 }
