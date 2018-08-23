@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Added
 * `SpriteRender` pass to draw sprites without using `Material` and `Mesh`. ([#829], [#830])
 * Sprite animation uses the `SpriteRenderChannel`. ([#829], [#830])
-* Added Named Component. ([#879])
+* Added Named Component. ([#879])([#896])
 * Support for progressive jpeg loading. ([#877])
 * `IsometricTransform` abstracting away 2D isometric math. ([#895])
 * `XYCameraSystem` to control a 2D camera along the X and Y axis. ([#895])
@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#892]: https://github.com/amethyst/amethyst/pull/892
 [#877]: https://github.com/amethyst/amethyst/pull/877
 [#895]: https://github.com/amethyst/amethyst/pull/895
+[#896]: https://github.com/amethyst/amethyst/pull/896
 
 ## [0.8.0] - 2018-08
 ### Added
