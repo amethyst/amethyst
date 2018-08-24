@@ -248,7 +248,6 @@ impl<'a> System<'a> for CursorHideSystem {
         self.event_reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
 
         let mut msg = res.fetch_mut::<WindowMessages>();
-        grab_cursor(&mut msg);
         set_mouse_cursor_none(&mut msg);
     }
 }
