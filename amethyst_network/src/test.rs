@@ -2,7 +2,9 @@
 mod test {
     use amethyst_core::shred::{DispatcherBuilder, SystemData};
     use amethyst_core::specs::storage::UnprotectedStorage;
-    use amethyst_core::specs::{Join, ReadStorage, RunNow, VecStorage, World, WriteStorage,Builder};
+    use amethyst_core::specs::{
+        Builder, Join, ReadStorage, RunNow, VecStorage, World, WriteStorage,
+    };
     use fern::Dispatch;
     use log::LevelFilter;
     use std::io;
