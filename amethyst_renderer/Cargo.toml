@@ -67,7 +67,7 @@ gfx_device_dx11 = { version = "0.6", optional = true }
 gfx_window_dxgi = { version = "0.13", optional = true }
 
 [dependencies.hetseq]
-version = "0.1.5"
+version = "0.2"
 
 [dependencies.smallvec]
 version = "0.6"
