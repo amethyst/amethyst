@@ -15,7 +15,7 @@ static FRAG_SRC: &[u8] = include_bytes!("../shaders/fragment/sprite.glsl");
 static TEXTURES: [TextureType; 1] = [TextureType::Albedo];
 
 #[derive(Clone, Debug)]
-pub enum Size {}
+enum Size {}
 impl Attribute for Size {
     const NAME: &'static str = "size";
     const FORMAT: Format = Format(SurfaceType::R32_G32, ChannelType::Float);
@@ -24,7 +24,7 @@ impl Attribute for Size {
 }
 
 #[derive(Clone, Debug)]
-pub enum Offset {}
+enum Offset {}
 impl Attribute for Offset {
     const NAME: &'static str = "offset";
     const FORMAT: Format = Format(SurfaceType::R32_G32, ChannelType::Float);
@@ -33,7 +33,7 @@ impl Attribute for Offset {
 }
 
 #[derive(Clone, Debug)]
-pub enum OffsetU {}
+enum OffsetU {}
 impl Attribute for OffsetU {
     const NAME: &'static str = "u_offset";
     const FORMAT: Format = Format(SurfaceType::R32_G32, ChannelType::Float);
@@ -42,7 +42,7 @@ impl Attribute for OffsetU {
 }
 
 #[derive(Clone, Debug)]
-pub enum OffsetV {}
+enum OffsetV {}
 impl Attribute for OffsetV {
     const NAME: &'static str = "v_offset";
     const FORMAT: Format = Format(SurfaceType::R32_G32, ChannelType::Float);
@@ -52,7 +52,7 @@ impl Attribute for OffsetV {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-pub struct SpriteInstance {
+struct SpriteInstance {
     pub size: [f32; 2],
     pub offset: [f32; 2],
     pub u_offset: [f32; 2],

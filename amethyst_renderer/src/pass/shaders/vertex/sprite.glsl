@@ -5,11 +5,11 @@ layout (std140) uniform ViewArgs {
     mat4 view;
 };
 
-//
+// Quad transform.
 in vec2 size;
-// Pixel offsets for the sprite. Used to shift the sprite left and down.
 in vec2 offset;
 
+// Texture quad.
 in vec2 u_offset;
 in vec2 v_offset;
 
@@ -28,14 +28,9 @@ const vec2 positions[6] = vec2[](
     vec2(0.0, 0.0)  // Left bottom
 );
 
-// coord = 0.0 to 1.0 texture coordinate
-float texture_coord(float coord, vec2 offset) {
-    return offset.x + coord * (offset.y - offset.x);
-}
-
 // coords = 0.0 to 1.0 texture coordinates
 vec2 texture_coords(vec2 coords, vec2 u, vec2 v) {
-    return vec2(texture_coord(coords.x, u), texture_coord(coords.y, v));
+    return vec2(mix(u.x, u.y, coords.x), mix(v.x, v.y, coords.y));
 }
 
 void main() {
