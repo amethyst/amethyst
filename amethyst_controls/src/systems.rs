@@ -228,7 +228,8 @@ impl<'a> System<'a> for CursorHideSystem {
                 Event::WindowEvent { ref event, .. } => match event {
                     &WindowEvent::Focused(focused) => {
                         if focused {
-                            grab_cursor(&mut msg)
+                            grab_cursor(&mut msg);
+                            hide_cursor(&mut msg);
                         } else {
                             release_cursor(&mut msg)
                         }
@@ -249,6 +250,6 @@ impl<'a> System<'a> for CursorHideSystem {
 
         let mut msg = res.fetch_mut::<WindowMessages>();
         grab_cursor(&mut msg);
-        set_mouse_cursor_none(&mut msg);
+        hide_cursor(&mut msg);
     }
 }
