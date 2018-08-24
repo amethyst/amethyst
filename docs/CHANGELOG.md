@@ -22,7 +22,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Simplified creating states with SimpleState and EmptyState. ([#887])
 * Updated ProgressCounter to show loading errors. ([#892])
 * Replaced the `imagefmt` crate with `image`. ([#877])
+* Updated `winit` to `0.17` (see [Winit's changelog][winit_017]). ([#906])
+* Updated `glutin` to `0.18` (see [Glutin's changelog][glutin_018]). ([#906])
+* Updated `gfx_window_glutin` to `0.26`. ([#906])
+* Updated `hetseq` to `0.2`. ([#906])
+
 ### Removed
+* `LMenu` and `RMenu` key codes, following the `winit` update. ([#906])
 
 ### Fixed
 
@@ -34,6 +40,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#892]: https://github.com/amethyst/amethyst/pull/892
 [#877]: https://github.com/amethyst/amethyst/pull/877
 [#896]: https://github.com/amethyst/amethyst/pull/896
+[winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
+[glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
 
 ## [0.8.0] - 2018-08
 ### Added
