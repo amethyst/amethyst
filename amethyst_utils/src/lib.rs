@@ -15,3 +15,4 @@ pub mod circular_buffer;
 pub mod fps_counter;
 pub mod scene;
 pub mod tag;
+pub mod app_root_dir;
