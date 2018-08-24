@@ -7,6 +7,7 @@ use amethyst::ecs::{Read, ReadExpect};
 use amethyst::locale::*;
 use amethyst::prelude::*;
 use amethyst::Error;
+use amethyst::utils::application_root_dir;
 
 struct Example {
     progress_counter: Option<ProgressCounter>,
@@ -87,7 +88,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
-    let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
+    let resources_directory = format!("{}/examples/assets", application_root_dir());
 
     let game_data = GameDataBuilder::default().with(Processor::<Locale>::new(), "proc", &[]);
 

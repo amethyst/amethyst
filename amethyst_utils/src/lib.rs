@@ -16,3 +16,5 @@ pub mod fps_counter;
 pub mod scene;
 pub mod tag;
 pub mod app_root_dir;
+
+pub use self::app_root_dir::*;

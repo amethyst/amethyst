@@ -18,6 +18,7 @@ use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{DrawFlat, PosTex};
 use amethyst::ui::UiBundle;
+use amethyst::utils::application_root_dir;
 use audio::Music;
 use bundle::PongBundle;
 use config::PongConfig;
@@ -35,20 +36,22 @@ fn main() -> amethyst::Result<()> {
 
     use pong::Pong;
 
+    let app_root = application_root_dir();
+
     let display_config_path = format!(
         "{}/examples/appendix_a/resources/display.ron",
-        env!("CARGO_MANIFEST_DIR")
+        app_root
     );
     let key_bindings_path = format!(
         "{}/examples/appendix_a/resources/input.ron",
-        env!("CARGO_MANIFEST_DIR")
+        app_root
     );
 
     let config = format!(
         "{}/examples/appendix_a/resources/config.ron",
-        env!("CARGO_MANIFEST_DIR")
+        app_root
     );
-    let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+    let assets_dir = format!("{}/examples/assets/", app_root);
 
     let pong_config = PongConfig::load(&config);
 

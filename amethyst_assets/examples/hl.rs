@@ -2,6 +2,7 @@
 
 #![allow(unused)]
 
+extern crate amethyst;
 extern crate amethyst_assets;
 extern crate amethyst_core;
 extern crate rayon;
@@ -15,6 +16,7 @@ use amethyst_core::specs::prelude::{
     Builder, Dispatcher, DispatcherBuilder, Read, ReadExpect, System, VecStorage, World, Write,
 };
 use amethyst_core::Time;
+use amethyst::utils::application_root_dir;
 use rayon::{ThreadPool, ThreadPoolBuilder};
 use std::sync::Arc;
 
@@ -191,7 +193,7 @@ fn main() {
         .with(RenderingSystem, "rendering", &[])
         .build();
 
-    let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+    let assets_dir = format!("{}/examples/assets/", application_root_dir());
     let mut app = App::new(disp, &assets_dir, State::Start);
     app.run();
 }

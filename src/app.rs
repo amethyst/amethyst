@@ -23,6 +23,7 @@ use std::time::Duration;
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use vergen;
 use winit::{Event, WindowEvent};
+use utils::app_root_dir::*;
 
 /// An Application is the root object of the game engine. It binds the OS
 /// event loop, state machines, timers and other core components in a central place.
@@ -313,10 +314,10 @@ impl<'a, T, E: Send + Sync + Clone + 'static> Application<'a, T, E> {
 }
 
 #[cfg(feature = "profiler")]
-impl<'a, T, E: Send+Sync+'static> Drop for Application<'a, T, E> {
+impl<'a, T, E: Send + Sync + 'static> Drop for Application<'a, T, E> {
     fn drop(&mut self) {
         // TODO: Specify filename in config.
-        let path = format!("{}/thread_profile.json", env!("CARGO_MANIFEST_DIR"));
+        let path = format!("{}/thread_profile.json", application_root_dir());
         write_profile(path.as_str());
     }
 }

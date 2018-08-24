@@ -7,6 +7,7 @@ use amethyst::core::cgmath::{Deg, Matrix4};
 use amethyst::core::transform::GlobalTransform;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
+use amethyst::utils::application_root_dir;
 
 struct Example;
 
@@ -115,12 +116,14 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
+    let app_root = application_root_dir();
+
     let path = format!(
         "{}/examples/material/resources/display_config.ron",
-        env!("CARGO_MANIFEST_DIR")
+        app_root
     );
 
-    let resources = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+    let resources = format!("{}/examples/assets/", app_root);
 
     let game_data = GameDataBuilder::default().with_basic_renderer(
         path,

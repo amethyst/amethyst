@@ -2,7 +2,10 @@ extern crate amethyst_config;
 #[macro_use]
 extern crate serde_derive;
 
+extern crate amethyst;
+
 use amethyst_config::Config;
+use amethyst::utils::application_root_dir;
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct DisplayConfig {
@@ -34,7 +37,7 @@ pub struct ExampleConfig {
 }
 
 fn main() {
-    let path = format!("{}/examples/display_config.ron", env!("CARGO_MANIFEST_DIR"));
+    let path = format!("{}/examples/display_config.ron", application_root_dir());
     let res = ExampleConfig::load_no_fallback(&path);
 
     match res {
