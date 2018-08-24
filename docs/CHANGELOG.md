@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * State::handle_event can now handle multiple types of events. ([#887])
 * Added Named Component. ([#879])([#896])
 * Support for progressive jpeg loading. ([#877])
+* New `application_root_dir()` function in `amethyst_utils`. ([#831])
 
 ### Changed
 * Sprites contain their dimensions and offsets to render them with the right size and desired position. ([#829], [#830])
