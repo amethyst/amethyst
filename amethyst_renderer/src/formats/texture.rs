@@ -267,7 +267,7 @@ pub struct JpgFormat;
 
 impl JpgFormat {
     /// Load Jpg from memory buffer
-    pub fn from_data(&self, data: &[u8], options: TextureMetadata) -> Result<TextureData> {
+    pub fn from_data(data: &[u8], options: TextureMetadata) -> Result<TextureData> {
         load_into_rgba8_from_memory(data, options)
     }
 }
@@ -278,7 +278,7 @@ impl SimpleFormat<Texture> for JpgFormat {
     type Options = TextureMetadata;
 
     fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
-        self.from_data(&bytes, options)
+        JpgFormat::from_data(&bytes, options)
     }
 }
 
@@ -288,7 +288,7 @@ pub struct PngFormat;
 
 impl PngFormat {
     /// Load Png from memory buffer
-    pub fn from_data(&self, data: &[u8], options: TextureMetadata) -> Result<TextureData> {
+    pub fn from_data(data: &[u8], options: TextureMetadata) -> Result<TextureData> {
         load_into_rgba8_from_memory(data, options)
     }
 }
@@ -299,7 +299,7 @@ impl SimpleFormat<Texture> for PngFormat {
     type Options = TextureMetadata;
 
     fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
-        self.from_data(&bytes, options)
+        PngFormat::from_data(&bytes, options)
     }
 }
 

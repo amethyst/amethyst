@@ -125,7 +125,10 @@ fn deconstruct_image(data: &TextureData, offset: usize, step: usize) -> TextureD
         TextureData::Image(ref image_data, ref metadata) => {
             let metadata = metadata
                 .clone()
-                .with_size(image_data.rgba.width() as u16, image_data.rgba.height() as u16)
+                .with_size(
+                    image_data.rgba.width() as u16,
+                    image_data.rgba.height() as u16,
+                )
                 .with_format(SurfaceType::R8);
             let image_data = image_data
                 .rgba
@@ -170,8 +173,8 @@ fn load_texture(
     let (data, format) = get_image_data(&texture.source(), buffers, source, name.as_ref())?;
     let metadata = TextureMetadata::default().with_sampler(load_sampler_info(&texture.sampler()));
     Ok(match format {
-        ImageFormat::Png => PngFormat.from_data(&data, metadata),
-        ImageFormat::Jpeg => JpgFormat.from_data(&data, metadata),
+        ImageFormat::Png => PngFormat::from_data(&data, metadata),
+        ImageFormat::Jpeg => JpgFormat::from_data(&data, metadata),
     }?)
 }
 
