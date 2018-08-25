@@ -1,19 +1,17 @@
-use std::fmt::Debug;
-use std::result::Result as StdResult;
-
 use amethyst_assets::{
     Asset, AssetStorage, Error, Loader, PrefabData, PrefabError, ProcessingState, Result,
     ResultExt, SimpleFormat,
 };
 use amethyst_core::cgmath::{InnerSpace, Vector3};
 use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, VecStorage, WriteStorage};
+use mesh::{Mesh, MeshBuilder, MeshHandle};
+use std::fmt::Debug;
+use std::result::Result as StdResult;
+use vertex::*;
 use wavefront_obj::obj::{
     parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex, TextureIndex, Vertex,
     VertexIndex,
 };
-
-use mesh::{Mesh, MeshBuilder, MeshHandle};
-use vertex::*;
 use Renderer;
 
 /// Mesh data for loading

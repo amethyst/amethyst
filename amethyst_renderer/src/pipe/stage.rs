@@ -1,13 +1,11 @@
 //! A stage in the rendering pipeline.
 
-use hetseq::*;
-
 use amethyst_core::specs::prelude::SystemData;
 use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
+use hetseq::*;
 use pipe::pass::{CompiledPass, Pass, PassData};
 use pipe::{Target, Targets};
-
 use types::{Encoder, Factory};
 
 /// A stage in the rendering pipeline.

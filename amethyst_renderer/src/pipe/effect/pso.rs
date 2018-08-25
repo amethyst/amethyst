@@ -4,7 +4,6 @@ use gfx::pso::target;
 use gfx::pso::{DataBind, DataLink, Descriptor, InitError, PipelineData, PipelineInit};
 use gfx::shade::core::{BaseType, ContainerType, OutputVar, ProgramInfo};
 use gfx::{handle, pso};
-
 use types::{ColorFormat, DepthFormat, Resources};
 
 type AccessInfo = pso::AccessInfo<Resources>;

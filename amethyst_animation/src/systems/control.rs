@@ -1,7 +1,3 @@
-use std::hash::Hash;
-use std::marker;
-use std::time::Duration;
-
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::specs::prelude::{
     Component, Entities, Entity, Join, Read, ReadStorage, Resources, System, SystemData,
@@ -10,12 +6,14 @@ use amethyst_core::specs::prelude::{
 use amethyst_core::timing::secs_to_duration;
 use fnv::FnvHashMap;
 use minterpolate::InterpolationPrimitive;
-
 use resources::{
     Animation, AnimationCommand, AnimationControl, AnimationControlSet, AnimationHierarchy,
     AnimationSampling, AnimationSet, ApplyData, ControlState, DeferStartRelation, RestState,
     Sampler, SamplerControl, SamplerControlSet, StepDirection,
 };
+use std::hash::Hash;
+use std::marker;
+use std::time::Duration;
 
 /// System for setting up animations, should run before `SamplerInterpolationSystem`.
 ///

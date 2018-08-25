@@ -1,14 +1,13 @@
 //! Forward physically-based drawing pass.
 
+use super::*;
 use amethyst_assets::AssetStorage;
 use amethyst_core::specs::prelude::{Entities, Join, Read, ReadExpect, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
-use gfx::pso::buffer::ElemStride;
-use gfx_core::state::{Blend, ColorMask};
-
-use super::*;
 use cam::{ActiveCamera, Camera};
 use error::Result;
+use gfx::pso::buffer::ElemStride;
+use gfx_core::state::{Blend, ColorMask};
 use light::Light;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};

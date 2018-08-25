@@ -1,6 +1,4 @@
-use std::cmp::Ordering;
-use std::ops::Range;
-
+use super::*;
 use amethyst_core::shrev::{EventChannel, ReaderId};
 use amethyst_core::specs::prelude::{
     Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage, Resources,
@@ -11,14 +9,14 @@ use amethyst_renderer::ScreenDimensions;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use gfx_glyph::PositionedGlyph;
 use hibitset::BitSet;
+use std::cmp::Ordering;
+use std::ops::Range;
 use unicode_normalization::char::is_combining_mark;
 use unicode_normalization::UnicodeNormalization;
 use unicode_segmentation::UnicodeSegmentation;
 use winit::{
     ElementState, Event, KeyboardInput, ModifiersState, MouseButton, VirtualKeyCode, WindowEvent,
 };
-
-use super::*;
 
 /// A component used to display text in this entity's UiTransform
 #[derive(Clone, Derivative)]

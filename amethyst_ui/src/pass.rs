@@ -1,8 +1,6 @@
 //! Simple flat forward drawing pass.
 
-use std::cmp::{Ordering, PartialOrd};
-use std::hash::{Hash, Hasher};
-
+use super::*;
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_core::cgmath::vec4 as cg_vec4;
 use amethyst_core::specs::prelude::{
@@ -25,9 +23,9 @@ use gfx_glyph::{
 };
 use glsl_layout::{vec2, vec4, Uniform};
 use hibitset::BitSet;
+use std::cmp::{Ordering, PartialOrd};
+use std::hash::{Hash, Hasher};
 use unicode_segmentation::UnicodeSegmentation;
-
-use super::*;
 
 const VERT_SRC: &[u8] = include_bytes!("shaders/vertex.glsl");
 const FRAG_SRC: &[u8] = include_bytes!("shaders/frag.glsl");

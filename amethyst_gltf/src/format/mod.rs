@@ -1,10 +1,11 @@
 //! GLTF format
 
-use std::collections::HashMap;
-use std::error::Error as StdError;
-use std::fmt;
-use std::sync::Arc;
-
+use self::animation::load_animations;
+use self::importer::{get_image_data, import, Buffers, ImageFormat};
+use self::material::load_material;
+use self::mesh::load_mesh;
+use self::skin::load_skin;
+use super::*;
 use animation::AnimationHierarchyPrefab;
 use assets::{
     Error as AssetError, Format, FormatValue, Prefab, Result as AssetResult, ResultExt, Source,
@@ -12,13 +13,10 @@ use assets::{
 use core::transform::Transform;
 use gltf;
 use gltf::Gltf;
-
-use self::animation::load_animations;
-use self::importer::{get_image_data, import, Buffers, ImageFormat};
-use self::material::load_material;
-use self::mesh::load_mesh;
-use self::skin::load_skin;
-use super::*;
+use std::collections::HashMap;
+use std::error::Error as StdError;
+use std::fmt;
+use std::sync::Arc;
 
 mod animation;
 mod importer;

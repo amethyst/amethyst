@@ -1,9 +1,7 @@
-use std::io::Cursor;
-
-use rodio::{Decoder, Sink};
-
 use output::Output;
+use rodio::{Decoder, Sink};
 use source::Source;
+use std::io::Cursor;
 use DecoderError;
 
 /// This structure provides a way to programmatically pick and play music.

@@ -1,5 +1,4 @@
-use std::sync::Arc;
-
+use super::{get_image_data, Buffers, GltfError, ImageFormat};
 use assets::Source;
 use gfx::texture::SamplerInfo;
 use gltf;
@@ -9,8 +8,7 @@ use renderer::{
     JpgFormat, MaterialPrefab, PngFormat, TextureData, TextureFormat, TextureMetadata,
     TexturePrefab,
 };
-
-use super::{get_image_data, Buffers, GltfError, ImageFormat};
+use std::sync::Arc;
 
 // Load a single material, and transform into a format usable by the engine
 pub fn load_material(

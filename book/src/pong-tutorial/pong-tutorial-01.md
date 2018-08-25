@@ -41,22 +41,10 @@ just implement two methods:
 # extern crate amethyst;
 # use amethyst::input::{is_close_requested, is_key_down};
 # use amethyst::prelude::*;
-# use amethyst::renderer::{DisplayConfig, DrawFlat, Event, Pipeline,
-#                          PosTex, RenderBundle, Stage, VirtualKeyCode};
+# use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline,
+#                          PosTex, RenderBundle, Stage};
 # struct Pong;
-impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
-    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else {
-            Trans::None
-        }
-    }
-
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
-        data.data.update(&data.world);
-        Trans::None
-    }
+impl<'a, 'b> SimpleState<'a,'b> for Pong {
 }
 ```
 
@@ -160,8 +148,8 @@ Now let's pack everything up and run it:
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
-# use amethyst::renderer::{DisplayConfig, DrawSprite, Event, Pipeline,
-#                        RenderBundle, Stage, VirtualKeyCode};
+# use amethyst::renderer::{DisplayConfig, DrawSprite, Pipeline,
+#                        RenderBundle, Stage};
 # fn main() -> amethyst::Result<()> {
 # let path = "./resources/display_config.ron";
 # let config = DisplayConfig::load(&path);
@@ -170,7 +158,7 @@ Now let's pack everything up and run it:
 #       .with_pass(DrawSprite::new()),
 # );
 # struct Pong;
-# impl<'a, 'b> State<GameData<'a, 'b>> for Pong { }
+# impl<'a, 'b> SimpleState<'a,'b> for Pong { }
 let game_data = GameDataBuilder::default()
     .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?;
 let mut game = Application::new("./", Pong, game_data)?;

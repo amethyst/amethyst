@@ -19,25 +19,29 @@
 //!
 //! struct GameState;
 //!
-//! impl State<()> for GameState {
+//! impl EmptyState for GameState {
 //!     fn on_start(&mut self, _: StateData<()>) {
 //!         println!("Starting game!");
 //!     }
 //!
-//!     fn handle_event(&mut self, _: StateData<()>, event: Event) -> Trans<()> {
-//!         match event {
-//!             Event::WindowEvent { event, .. } => match event {
-//!                 WindowEvent::KeyboardInput {
-//!                     input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
-//!                 } |
-//!                 WindowEvent::CloseRequested => Trans::Quit,
+//!     fn handle_event(&mut self, _: StateData<()>, event: StateEvent<()>) -> EmptyTrans {
+//!         if let StateEvent::Window(event) = &event {
+//!             match event {
+//!                  Event::WindowEvent { event, .. } => match event {
+//!                     WindowEvent::KeyboardInput {
+//!                         input: KeyboardInput { virtual_keycode: Some(VirtualKeyCode::Escape), .. }, ..
+//!                     } |
+//!                     WindowEvent::CloseRequested => Trans::Quit,
+//!                     _ => Trans::None,
+//!                 },
 //!                 _ => Trans::None,
-//!             },
-//!             _ => Trans::None,
+//!             }
+//!         } else {
+//!             Trans::None
 //!         }
 //!     }
 //!
-//!     fn update(&mut self, _: StateData<()>) -> Trans<()> {
+//!     fn update(&mut self, _: StateData<()>) -> EmptyTrans {
 //!         println!("Computing some more whoop-ass...");
 //!         Trans::Quit
 //!     }
@@ -69,11 +73,13 @@ pub extern crate amethyst_ui as ui;
 pub extern crate amethyst_utils as utils;
 pub extern crate winit;
 
+extern crate amethyst_ui;
 #[macro_use]
 extern crate derivative;
 extern crate fern;
 #[macro_use]
 extern crate log;
+extern crate amethyst_input;
 extern crate rayon;
 extern crate rustc_version_runtime;
 
@@ -81,7 +87,10 @@ pub use self::app::{Application, ApplicationBuilder};
 pub use self::error::{Error, Result};
 pub use self::game_data::{DataInit, GameData, GameDataBuilder};
 pub use self::logger::{start_logger, LevelFilter as LogLevelFilter, LoggerConfig};
-pub use self::state::{State, StateData, StateMachine, Trans};
+pub use self::state::{
+    EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, StateMachine, Trans,
+};
+pub use self::state_event::StateEvent;
 pub use core::shred;
 pub use core::shrev;
 pub use core::specs as ecs;
@@ -93,4 +102,5 @@ mod error;
 mod game_data;
 mod logger;
 mod state;
+mod state_event;
 mod vergen;

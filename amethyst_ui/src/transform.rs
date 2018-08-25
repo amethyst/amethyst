@@ -1,10 +1,8 @@
-use std::marker::PhantomData;
-
+use super::{Anchor, ScaleMode, Stretch};
 use amethyst_core::specs::prelude::{
     Component, DenseVecStorage, Entities, Entity, FlaggedStorage, Join, ReadStorage,
 };
-
-use super::{Anchor, ScaleMode, Stretch};
+use std::marker::PhantomData;
 
 /// Utility `SystemData` for finding UI entities based on `UiTransform` id
 #[derive(SystemData)]
