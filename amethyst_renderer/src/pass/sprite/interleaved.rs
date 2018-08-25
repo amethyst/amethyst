@@ -185,34 +185,35 @@ impl SpriteBatch {
             return;
         }
 
-        let sprite_sheet = sprite_sheet_storage.get(&sprite_render.sprite_sheet);
-        if sprite_sheet.is_none() {
-            warn!(
-                "Sprite sheet not loaded for sprite_render: `{:?}`.",
-                sprite_render
-            );
-            return;
-        }
-        let sprite_sheet = sprite_sheet.unwrap();
+        let texture_handle = match sprite_sheet_storage.get(&sprite_render.sprite_sheet) {
+            Some(sprite_sheet) => match material_texture_set.handle(sprite_sheet.texture_id) {
+                Some(texture_handle) => {
+                    if tex_storage.get(&texture_handle).is_none() {
+                        warn!(
+                            "Texture not loaded for texture id: `{}`.",
+                            sprite_sheet.texture_id
+                        );
+                        return;
+                    }
 
-        let texture_handle = material_texture_set.handle(sprite_sheet.texture_id);
-        if texture_handle.is_none() {
-            warn!(
-                "Texture handle not found for texture id: `{}`.",
-                sprite_sheet.texture_id
-            );
-            return;
-        }
-        let texture_handle = texture_handle.unwrap();
-
-        let texture = tex_storage.get(&texture_handle);
-        if texture.is_none() {
-            warn!(
-                "Texture not loaded for texture id: `{}`.",
-                sprite_sheet.texture_id
-            );
-            return;
-        }
+                    texture_handle
+                }
+                None => {
+                    warn!(
+                        "Texture handle not found for texture id: `{}`.",
+                        sprite_sheet.texture_id
+                    );
+                    return;
+                }
+            },
+            None => {
+                warn!(
+                    "Sprite sheet not loaded for sprite_render: `{:?}`.",
+                    sprite_render
+                );
+                return;
+            }
+        };
 
         self.sprites.push(SpriteDrawData {
             texture: texture_handle,
