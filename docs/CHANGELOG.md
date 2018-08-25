@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Removed
 
 ### Fixed
+* Material ids in GLTF loader caused multiple GLTF files to get incorrect materials applied ([#915])
 
 [#829]: https://github.com/amethyst/amethyst/issues/829
 [#830]: https://github.com/amethyst/amethyst/pull/830
@@ -34,6 +35,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#892]: https://github.com/amethyst/amethyst/pull/892
 [#877]: https://github.com/amethyst/amethyst/pull/877
 [#896]: https://github.com/amethyst/amethyst/pull/896
+[#915]: https://github.com/amethyst/amethyst/pull/915
 
 ## [0.8.0] - 2018-08
 ### Added
