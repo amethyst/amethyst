@@ -26,7 +26,7 @@ These principles are what make amethyst unique and competitive in the world of g
 
 * Massively parallel architecture.
 * Powered by a correct [Entity Component System][ecs] model.
-* Rapid prototyping with [RON](Json-like) files for prefabs and an abstract scripting API.
+* Rapid prototyping with [RON][ron] files for prefabs and an abstract scripting API.
 * Strong focus on encouraging reusability and clean interfaces.
 
 [ecs]: https://en.wikipedia.org/wiki/Entity–component–system
@@ -55,7 +55,7 @@ While we may not be feature-packed (yet!), we all strongly believe that the comm
 
 Please visit the [features page][feat] for a list of features Amethyst provides.
 
-[feat]: docs/FEATURES.md
+[feat]: amethyst/docs/FEATURES.md 
 
 ## Documentation
 
@@ -63,8 +63,8 @@ Please visit the [features page][feat] for a list of features Amethyst provides.
 
 [adb1]: https://img.shields.io/badge/docs-develop-blue.svg
 [adb2]: https://img.shields.io/badge/docs-master-blue.svg
-[ad1]: https://www.amethyst.rs/doc/develop.html
-[ad2]: https://www.amethyst.rs/doc/master.html
+[ad1]: https://www.amethyst.rs/book/master/
+[ad2]: https://www.amethyst.rs/book/develop/
 
 ## Usage
 
@@ -97,7 +97,7 @@ For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chap
 in the book.
 
 [ex]: examples/
-[gs]: https://www.amethyst.rs/book/master/getting_started.html
+[gs]: https://www.amethyst.rs/book/master/#getting-started
 
 ## Dependencies
 
