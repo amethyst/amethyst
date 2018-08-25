@@ -63,8 +63,8 @@ Please visit the [features page][feat] for a list of features Amethyst provides.
 
 [adb1]: https://img.shields.io/badge/docs-develop-blue.svg
 [adb2]: https://img.shields.io/badge/docs-master-blue.svg
-[ad1]: https://www.amethyst.rs/book/develop/
-[ad2]: https://www.amethyst.rs/book/master/
+[ad1]: https://www.amethyst.rs/doc/develop/doc/amethyst/index.html
+[ad2]: https://www.amethyst.rs/doc/master/doc/amethyst/index.html
 
 ## Usage
 
@@ -97,7 +97,7 @@ For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chap
 in the book.
 
 [ex]: examples/
-[gs]: https://www.amethyst.rs/book/master/#getting-started
+[gs]: https://www.amethyst.rs/book/master/
 
 ## Dependencies
 
