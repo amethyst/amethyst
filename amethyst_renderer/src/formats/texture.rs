@@ -242,7 +242,6 @@ pub struct ImageData {
     pub rgba: RgbaImage,
 }
 
-
 fn load_into_rgba8_from_memory(data: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
     use image::load_from_memory;
     load_from_memory(&data)

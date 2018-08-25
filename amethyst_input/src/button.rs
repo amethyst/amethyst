@@ -1,8 +1,7 @@
-use winit::{MouseButton, VirtualKeyCode};
-
 use super::controller::ControllerButton;
 use super::local_mouse_button::LocalMouseButton;
 use super::local_virtual_key_code::LocalVirtualKeyCode;
+use winit::{MouseButton, VirtualKeyCode};
 
 /// A Button is any kind of digital input that the engine supports.
 #[derive(Eq, PartialEq, Debug, Copy, Clone, Serialize, Deserialize)]

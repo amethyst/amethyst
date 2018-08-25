@@ -1,6 +1,3 @@
-use std::marker;
-use std::time::Duration;
-
 use amethyst_assets::AssetStorage;
 use amethyst_core::specs::prelude::{Component, Join, Read, System, WriteStorage};
 use amethyst_core::{
@@ -8,11 +5,12 @@ use amethyst_core::{
 };
 use itertools::Itertools;
 use minterpolate::InterpolationPrimitive;
-
 use resources::{
     AnimationSampling, ApplyData, BlendMethod, ControlState, EndControl, Sampler, SamplerControl,
     SamplerControlSet,
 };
+use std::marker;
+use std::time::Duration;
 
 /// System for interpolating active samplers.
 ///

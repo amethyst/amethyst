@@ -4,14 +4,13 @@ extern crate amethyst_assets;
 extern crate amethyst_core;
 extern crate rayon;
 
+use amethyst_assets::*;
+use amethyst_core::specs::prelude::VecStorage;
+use rayon::ThreadPoolBuilder;
 use std::str::from_utf8;
 use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
-
-use amethyst_assets::*;
-use amethyst_core::specs::prelude::VecStorage;
-use rayon::ThreadPoolBuilder;
 
 #[derive(Clone, Debug)]
 struct DummyAsset(String);

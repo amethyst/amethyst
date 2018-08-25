@@ -17,6 +17,8 @@ extern crate gfx_glyph;
 #[macro_use]
 extern crate glsl_layout;
 extern crate hibitset;
+#[macro_use]
+extern crate log;
 extern crate ron;
 #[macro_use]
 extern crate serde;
@@ -26,8 +28,6 @@ extern crate shred_derive;
 extern crate unicode_normalization;
 extern crate unicode_segmentation;
 extern crate winit;
-#[macro_use]
-extern crate log;
 
 #[macro_use]
 #[cfg(feature = "profiler")]

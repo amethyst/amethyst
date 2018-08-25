@@ -1,6 +1,5 @@
 use amethyst_core::specs::{Entity, WriteStorage};
 use amethyst_core::{GlobalTransform, Transform};
-
 use {PrefabData, PrefabError, ProgressCounter};
 
 impl<'a, T> PrefabData<'a> for Option<T>

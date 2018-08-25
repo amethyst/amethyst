@@ -1,7 +1,6 @@
-use std::io;
-
 use fern;
 pub use log::LevelFilter;
+use std::io;
 
 /// Logger configuration object.
 #[derive(Clone, Copy)]

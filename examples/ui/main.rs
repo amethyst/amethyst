@@ -17,7 +17,7 @@ use amethyst::shrev::{EventChannel, ReaderId};
 use amethyst::ui::{UiBundle, UiCreator, UiEvent, UiFinder, UiText};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::utils::scene::BasicScenePrefab;
-use amethyst::winit::{Event, VirtualKeyCode};
+use amethyst::winit::VirtualKeyCode;
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
@@ -25,7 +25,7 @@ struct Example {
     fps_display: Option<Entity>,
 }
 
-impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+impl<'a, 'b> SimpleState<'a, 'b> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
         // Initialise the scene with an object, a light and a camera.
@@ -39,15 +39,31 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
         });
     }
 
-    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else {
-            Trans::None
+    fn handle_event(
+        &mut self,
+        _: StateData<GameData>,
+        event: StateEvent<()>,
+    ) -> SimpleTrans<'a, 'b> {
+        match &event {
+            StateEvent::Window(event) => {
+                if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                    Trans::Quit
+                } else {
+                    Trans::None
+                }
+            }
+            StateEvent::Ui(ui_event) => {
+                info!(
+                    "[HANDLE_EVENT] You just interacted with a ui element: {:?}",
+                    ui_event
+                );
+                Trans::None
+            }
+            _ => Trans::None,
         }
     }
 
-    fn update(&mut self, state_data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+    fn update(&mut self, state_data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
         let StateData { world, data } = state_data;
         data.update(&world);
         if self.fps_display.is_none() {
@@ -112,7 +128,7 @@ impl<'a> System<'a> for UiEventHandlerSystem {
             self.reader_id = Some(events.register_reader());
         }
         for ev in events.read(self.reader_id.as_mut().unwrap()) {
-            info!("You just interacted with a ui element: {:?}", ev);
+            info!("[SYSTEM] You just interacted with a ui element: {:?}", ev);
         }
     }
 }

@@ -16,7 +16,7 @@ use amethyst::ecs::prelude::{Entity, Join, Read, ReadStorage, System, Write, Wri
 use amethyst::input::{get_key, is_close_requested, is_key_down, InputBundle};
 use amethyst::prelude::*;
 use amethyst::renderer::{
-    AmbientColor, Camera, DrawShaded, ElementState, Event, Light, PosNormTex, VirtualKeyCode,
+    AmbientColor, Camera, DrawShaded, ElementState, Light, PosNormTex, VirtualKeyCode,
 };
 use amethyst::ui::{UiBundle, UiCreator, UiFinder, UiText};
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
@@ -35,7 +35,7 @@ struct Example {
     scene: Handle<Prefab<MyPrefabData>>,
 }
 
-impl<'a, 'b> State<GameData<'a, 'b>> for Loading {
+impl<'a, 'b> SimpleState<'a, 'b> for Loading {
     fn on_start(&mut self, data: StateData<GameData>) {
         self.prefab = Some(data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
             loader.load("prefab/renderable.ron", RonFormat, (), &mut self.progress)
@@ -47,16 +47,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Loading {
         });
     }
 
-    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else {
-            Trans::None
-        }
-    }
-
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
-        data.data.update(&data.world);
+    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
         match self.progress.complete() {
             Completion::Failed => {
                 println!("Failed loading assets: {:?}", self.progress.errors());
@@ -76,92 +67,93 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Loading {
     }
 }
 
-impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+impl<'a, 'b> SimpleState<'a, 'b> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
 
         world.create_entity().with(self.scene.clone()).build();
     }
 
-    fn handle_event(&mut self, data: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
+    fn handle_event(
+        &mut self,
+        data: StateData<GameData>,
+        event: StateEvent<()>,
+    ) -> SimpleTrans<'a, 'b> {
         let w = data.world;
-        // Exit if user hits Escape or closes the window
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            return Trans::Quit;
-        }
-        match get_key(&event) {
-            Some((VirtualKeyCode::R, ElementState::Pressed)) => {
-                w.exec(|mut state: Write<DemoState>| {
-                    state.light_color = [0.8, 0.2, 0.2, 1.0];
-                });
+        if let StateEvent::Window(event) = &event {
+            // Exit if user hits Escape or closes the window
+            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                return Trans::Quit;
             }
-            Some((VirtualKeyCode::G, ElementState::Pressed)) => {
-                w.exec(|mut state: Write<DemoState>| {
-                    state.light_color = [0.2, 0.8, 0.2, 1.0];
-                });
-            }
-            Some((VirtualKeyCode::B, ElementState::Pressed)) => {
-                w.exec(|mut state: Write<DemoState>| {
-                    state.light_color = [0.2, 0.2, 0.8, 1.0];
-                });
-            }
-            Some((VirtualKeyCode::W, ElementState::Pressed)) => {
-                w.exec(|mut state: Write<DemoState>| {
-                    state.light_color = [1.0, 1.0, 1.0, 1.0];
-                });
-            }
-            Some((VirtualKeyCode::A, ElementState::Pressed)) => {
-                w.exec(
-                    |(mut state, mut color): (Write<DemoState>, Write<AmbientColor>)| {
-                        if state.ambient_light {
-                            state.ambient_light = false;
-                            color.0 = [0.0; 3].into();
-                        } else {
-                            state.ambient_light = true;
-                            color.0 = [0.01; 3].into();
-                        }
-                    },
-                );
-            }
-            Some((VirtualKeyCode::D, ElementState::Pressed)) => {
-                w.exec(
-                    |(mut state, mut lights): (Write<DemoState>, WriteStorage<Light>)| {
-                        if state.directional_light {
-                            state.directional_light = false;
-                            for light in (&mut lights).join() {
-                                if let Light::Directional(ref mut d) = *light {
-                                    d.color = [0.0; 4].into();
+            match get_key(&event) {
+                Some((VirtualKeyCode::R, ElementState::Pressed)) => {
+                    w.exec(|mut state: Write<DemoState>| {
+                        state.light_color = [0.8, 0.2, 0.2, 1.0];
+                    });
+                }
+                Some((VirtualKeyCode::G, ElementState::Pressed)) => {
+                    w.exec(|mut state: Write<DemoState>| {
+                        state.light_color = [0.2, 0.8, 0.2, 1.0];
+                    });
+                }
+                Some((VirtualKeyCode::B, ElementState::Pressed)) => {
+                    w.exec(|mut state: Write<DemoState>| {
+                        state.light_color = [0.2, 0.2, 0.8, 1.0];
+                    });
+                }
+                Some((VirtualKeyCode::W, ElementState::Pressed)) => {
+                    w.exec(|mut state: Write<DemoState>| {
+                        state.light_color = [1.0, 1.0, 1.0, 1.0];
+                    });
+                }
+                Some((VirtualKeyCode::A, ElementState::Pressed)) => {
+                    w.exec(
+                        |(mut state, mut color): (Write<DemoState>, Write<AmbientColor>)| {
+                            if state.ambient_light {
+                                state.ambient_light = false;
+                                color.0 = [0.0; 3].into();
+                            } else {
+                                state.ambient_light = true;
+                                color.0 = [0.01; 3].into();
+                            }
+                        },
+                    );
+                }
+                Some((VirtualKeyCode::D, ElementState::Pressed)) => {
+                    w.exec(
+                        |(mut state, mut lights): (Write<DemoState>, WriteStorage<Light>)| {
+                            if state.directional_light {
+                                state.directional_light = false;
+                                for light in (&mut lights).join() {
+                                    if let Light::Directional(ref mut d) = *light {
+                                        d.color = [0.0; 4].into();
+                                    }
+                                }
+                            } else {
+                                state.directional_light = true;
+                                for light in (&mut lights).join() {
+                                    if let Light::Directional(ref mut d) = *light {
+                                        d.color = [0.2; 4].into();
+                                    }
                                 }
                             }
+                        },
+                    );
+                }
+                Some((VirtualKeyCode::P, ElementState::Pressed)) => {
+                    w.exec(|mut state: Write<DemoState>| {
+                        if state.point_light {
+                            state.point_light = false;
+                            state.light_color = [0.0; 4].into();
                         } else {
-                            state.directional_light = true;
-                            for light in (&mut lights).join() {
-                                if let Light::Directional(ref mut d) = *light {
-                                    d.color = [0.2; 4].into();
-                                }
-                            }
+                            state.point_light = true;
+                            state.light_color = [1.0; 4].into();
                         }
-                    },
-                );
+                    });
+                }
+                _ => (),
             }
-            Some((VirtualKeyCode::P, ElementState::Pressed)) => {
-                w.exec(|mut state: Write<DemoState>| {
-                    if state.point_light {
-                        state.point_light = false;
-                        state.light_color = [0.0; 4].into();
-                    } else {
-                        state.point_light = true;
-                        state.light_color = [1.0; 4].into();
-                    }
-                });
-            }
-            _ => (),
         }
-        Trans::None
-    }
-
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
-        data.data.update(&data.world);
         Trans::None
     }
 }
