@@ -27,7 +27,6 @@ pub fn load_material(
             name,
         ).map(|(texture, _)| TexturePrefab::Data(texture))?,
     );
-    prefab.albedo_id = material.index().map(|i| i as u64 * 100);
 
     let (metallic, roughness) =
         load_texture_with_factor(
@@ -51,9 +50,7 @@ pub fn load_material(
                 )
             })?;
     prefab.metallic = Some(metallic);
-    prefab.metallic_id = material.index().map(|i| i as u64 * 10 + 1);
     prefab.roughness = Some(roughness);
-    prefab.roughness_id = material.index().map(|i| i as u64 * 10 + 2);
 
     let em_factor = material.emissive_factor();
     prefab.emission = Some(
@@ -65,7 +62,6 @@ pub fn load_material(
             name,
         ).map(|(texture, _)| TexturePrefab::Data(texture))?,
     );
-    prefab.emission_id = material.index().map(|i| i as u64 * 10 + 3);
 
     // Can't use map/and_then because of Result returning from the load_texture function
     prefab.normal = match material.normal_texture() {
@@ -76,7 +72,6 @@ pub fn load_material(
 
         None => None,
     };
-    prefab.normal_id = material.index().map(|i| i as u64 * 10 + 4);
 
     // Can't use map/and_then because of Result returning from the load_texture function
     prefab.ambient_occlusion = match material.occlusion_texture() {
@@ -87,7 +82,6 @@ pub fn load_material(
 
         None => None,
     };
-    prefab.ambient_occlusion_id = material.index().map(|i| i as u64 * 10 + 5);
     prefab.transparent = if let AlphaMode::Blend = material.alpha_mode() {
         true
     } else {
