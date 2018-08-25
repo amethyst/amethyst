@@ -1,15 +1,14 @@
-use std;
-use std::error::Error as StdError;
-use std::fmt;
-use std::path::Path;
-use std::sync::Arc;
-
 use assets::{Error as AssetError, Result as AssetResult, Source as AssetSource};
 use base64;
 use gltf;
 use gltf::json;
 use gltf::json::validation;
 use gltf::Gltf;
+use std;
+use std::error::Error as StdError;
+use std::fmt;
+use std::path::Path;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub enum ImageFormat {
@@ -153,7 +152,8 @@ pub fn get_image_data(
                 if let Some(ty) = mime_type {
                     Ok((data, ImageFormat::from_mime_type(ty)))
                 } else {
-                    let mimetype = uri.split(',')
+                    let mimetype = uri
+                        .split(',')
                         .nth(0)
                         .unwrap()
                         .split(':')
@@ -170,7 +170,8 @@ pub fn get_image_data(
                 if let Some(ty) = mime_type {
                     Ok((data, ImageFormat::from_mime_type(ty)))
                 } else {
-                    let ext = path.extension()
+                    let ext = path
+                        .extension()
                         .and_then(|s| s.to_str())
                         .map_or("".to_string(), |s| s.to_ascii_lowercase());
                     let format = match &ext[..] {

@@ -21,15 +21,16 @@ extern crate thread_profiler;
 #[cfg(all(target_os = "emscripten", not(no_threading)))]
 compile_error!("the cfg flag \"no_threading\" is required when building for emscripten");
 
+pub use self::named::{Named, WithNamed};
 pub use bundle::{Error, ErrorKind, Result, SystemBundle};
 pub use orientation::Orientation;
+use std::sync::Arc;
 pub use timing::*;
 pub use transform::*;
 
-use std::sync::Arc;
-
 pub mod bundle;
 pub mod frame_limiter;
+mod named;
 mod orientation;
 pub mod timing;
 pub mod transform;

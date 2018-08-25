@@ -1,8 +1,7 @@
+use source::Source;
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
-
-use source::Source;
 use {ErrorKind, Result, ResultExt};
 
 /// Directory source.
@@ -71,10 +70,9 @@ impl Source for Directory {
 
 #[cfg(test)]
 mod test {
-    use std::path::Path;
-
     use super::Directory;
     use source::Source;
+    use std::path::Path;
 
     #[test]
     fn loads_asset_from_assets_directory() {

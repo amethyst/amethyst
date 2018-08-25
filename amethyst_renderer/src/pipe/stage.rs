@@ -1,13 +1,11 @@
 //! A stage in the rendering pipeline.
 
-use hetseq::*;
-
 use amethyst_core::specs::prelude::SystemData;
 use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
+use hetseq::*;
 use pipe::pass::{CompiledPass, Pass, PassData};
 use pipe::{Target, Targets};
-
 use types::{Encoder, Factory};
 
 /// A stage in the rendering pipeline.
@@ -241,7 +239,8 @@ impl<Q> StageBuilder<Q> {
             .cloned()
             .ok_or(Error::NoSuchTarget(self.target_name.clone()))?;
 
-        let passes = self.passes
+        let passes = self
+            .passes
             .into_list()
             .fmap(CompilePass::new(fac, &out, multisampling))
             .try()?;

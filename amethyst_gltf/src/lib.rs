@@ -7,7 +7,6 @@ extern crate fnv;
 extern crate gfx;
 extern crate gltf;
 extern crate hibitset;
-extern crate imagefmt;
 extern crate itertools;
 #[macro_use]
 extern crate log;
@@ -19,17 +18,15 @@ extern crate serde;
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
-pub use format::GltfSceneFormat;
-
-use std::ops::Range;
-
 use animation::{AnimatablePrefab, SkinnablePrefab};
 use assets::{Handle, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter};
 use core::cgmath::{Array, EuclideanSpace, Point3, Vector3};
 use core::specs::error::Error;
 use core::specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage};
 use core::transform::Transform;
+pub use format::GltfSceneFormat;
 use renderer::{MaterialPrefab, Mesh, MeshData, TextureFormat};
+use std::ops::Range;
 
 mod format;
 

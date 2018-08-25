@@ -1,6 +1,3 @@
-use std::marker;
-use std::time::Duration;
-
 use amethyst_assets::AssetStorage;
 use amethyst_core::specs::prelude::{Component, Join, Read, System, WriteStorage};
 use amethyst_core::{
@@ -8,11 +5,12 @@ use amethyst_core::{
 };
 use itertools::Itertools;
 use minterpolate::InterpolationPrimitive;
-
 use resources::{
     AnimationSampling, ApplyData, BlendMethod, ControlState, EndControl, Sampler, SamplerControl,
     SamplerControlSet,
 };
+use std::marker;
+use std::time::Duration;
 
 /// System for interpolating active samplers.
 ///
@@ -75,7 +73,8 @@ where
                 for channel in &self.channels {
                     match comp.blend_method(channel) {
                         None => {
-                            if let Some(p) = self.inner
+                            if let Some(p) = self
+                                .inner
                                 .iter()
                                 .filter(|p| p.1 == *channel)
                                 .map(|p| p.2)
@@ -265,9 +264,7 @@ where
                 .iter()
                 .filter(|o| o.1 == *channel)
                 .map(|o| single_blend::<T>(total_blend_weight, o))
-                .fold(T::default_primitive(channel), |acc, p| {
-                    acc.add(&p)
-                }),
+                .fold(T::default_primitive(channel), |acc, p| acc.add(&p)),
         )
     }
 }

@@ -7,19 +7,18 @@ mod bundle;
 mod pong;
 mod systems;
 
-use std::time::Duration;
-
 use amethyst::audio::AudioBundle;
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::TransformBundle;
 use amethyst::ecs::prelude::{Component, DenseVecStorage};
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
-use amethyst::renderer::{DrawFlat, PosTex};
-use amethyst::ui::UiBundle;
+use amethyst::renderer::{DisplayConfig, DrawSprite, Pipeline, RenderBundle, Stage};
+use amethyst::ui::{DrawUi, UiBundle};
 
 use audio::Music;
 use bundle::PongBundle;
+use std::time::Duration;
 
 const ARENA_HEIGHT: f32 = 100.0;
 const ARENA_WIDTH: f32 = 100.0;
@@ -49,6 +48,14 @@ fn main() -> amethyst::Result<()> {
         "{}/examples/pong/resources/display.ron",
         env!("CARGO_MANIFEST_DIR")
     );
+    let config = DisplayConfig::load(&display_config_path);
+
+    let pipe = Pipeline::build().with_stage(
+        Stage::with_backbuffer()
+            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+            .with_pass(DrawSprite::new())
+            .with_pass(DrawUi::new()),
+    );
 
     let key_bindings_path = {
         if cfg!(feature = "sdl_controller") {
@@ -68,13 +75,13 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
-            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?
+            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
         .with_bundle(PongBundle)?
+        .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
         .with_bundle(AudioBundle::new(|music: &mut Music| music.music.next()))?
-        .with_bundle(UiBundle::<String, String>::new())?
-        .with_basic_renderer(display_config_path, DrawFlat::<PosTex>::new(), true)?;
+        .with_bundle(UiBundle::<String, String>::new())?;
     let mut game = Application::build(assets_dir, Pong)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),

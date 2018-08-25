@@ -1,7 +1,6 @@
+use super::{Texture, TextureMetadata, TexturePrefab};
 use amethyst_assets::{Format, Handle, PrefabData, PrefabError, ProgressCounter};
 use amethyst_core::specs::prelude::{Entity, ReadExpect, Write, WriteStorage};
-
-use super::{Texture, TextureMetadata, TexturePrefab};
 use mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset};
 use transparent::Transparent;
 

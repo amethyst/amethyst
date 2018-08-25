@@ -1,7 +1,6 @@
 use amethyst_core::cgmath::Point3;
 use amethyst_core::specs::prelude::Component;
 use amethyst_core::specs::storage::HashMapStorage;
-
 use output::Output;
 
 /// An audio listener, add this component to the local player character.

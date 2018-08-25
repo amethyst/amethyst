@@ -67,9 +67,6 @@ A `State` contains methods that reflect the most commons of those events:
 * fixed_update: This method is called at a fixed time interval (default 1/60th second).
 * update: This method is called as often as possible by the engine.
 
-
-**IMPORTANT: In order to have the game working, you NEED to implement the `update` method and have it call `data.data.update(&mut data.world)`. This is an implementation detail and will no longer be necessary in future release 0.9 of Amethyst. For more information, read the "More" section at the end of the world chapter [here](./world.md#more).**
-
 ## Game Data
 
 `State`s can have arbitrary data associated with them.
@@ -94,7 +91,7 @@ For more advanced examples, see the following pong tutorial.
 
 ```rust,no_run,noplaypen
 extern crate amethyst;
-use amethyst::{GameData, State, StateData};
+use amethyst::prelude::*;
 
 struct GameplayState {
     /// The `State`-local data. Usually you will not have anything.
@@ -102,8 +99,8 @@ struct GameplayState {
     player_count: u8,
 }
 
-impl<'a,'b> State<GameData<'a,'b>> for GameplayState {
-    fn on_start(&mut self, _data: StateData<GameData<'a,'b>>) {
+impl<'a,'b> SimpleState<'a,'b> for GameplayState {
+    fn on_start(&mut self, _data: StateData<GameData>) {
         println!("Number of players: {}", self.player_count);
     }
 }
@@ -111,11 +108,12 @@ impl<'a,'b> State<GameData<'a,'b>> for GameplayState {
 
 That's a lot of code, indeed!
 
-We first declare the `State`'s struct.
+We first declare the `State`'s struct `GameplayState`.
 
 In this case, we give it some data: player_count as byte.
 
-Then, we implement the `State` trait for our `GameplayState`, and we specify that we want to have the `GameData` internal data.
+Then, we implement the `SimpleState` trait for our `GameplayState`.
+`SimpleState` is a shorthand for `State<GameData<'a, 'b>, ()>` where `GameData` is the internal shared data between states.
 
 ### Switching State
 
@@ -132,34 +130,78 @@ Let's use handle_event to go to the `PausedState` and come back by pressing the 
 
 ```rust,no_run,noplaypen
 extern crate amethyst;
-use amethyst::{State, StateData, Trans};
-use amethyst::renderer::{Event, VirtualKeyCode};
+use amethyst::prelude::*;
+use amethyst::renderer::VirtualKeyCode;
 use amethyst::input::is_key_down;
 
 struct GameplayState;
 struct PausedState;
 
-// This time around, we are using () instead of GameData, because we don't have any `System`s.
-// `System`s will be covered later in this book.
-impl State<()> for GameplayState {
-    fn handle_event(&mut self, _data: StateData<()>, event: Event) -> Trans<()> {
-        if is_key_down(&event, VirtualKeyCode::Escape) {
-            // Pause the game by going to the `PausedState`.
-            return Trans::Push(Box::new(PausedState));
+// This time around, we are using () instead of GameData, because we don't have any `System`s that need to be updated.
+// (They are covered in the dedicated section of the book.)
+// Instead of writing `State<(), ()>`, we can instead use `EmptyState`.
+impl EmptyState for GameplayState {
+    fn handle_event(&mut self, _data: StateData<()>, event: StateEvent<()>) -> EmptyTrans {
+        if let StateEvent::Window(event) = &event {
+            if is_key_down(&event, VirtualKeyCode::Escape) {
+                // Pause the game by going to the `PausedState`.
+                return Trans::Push(Box::new(PausedState));
+            }
         }
+        
         // Escape isn't pressed, so we stay in this `State`.
         Trans::None
     }
 }
 
-impl State<()> for PausedState {
-    fn handle_event(&mut self, _data: StateData<()>, event: Event) -> Trans<()> {
-        if is_key_down(&event, VirtualKeyCode::Escape) {
-            // Go back to the `GameplayState`.
-            return Trans::Pop;
+impl EmptyState for PausedState {
+    fn handle_event(&mut self, _data: StateData<()>, event: StateEvent<()>) -> EmptyTrans {
+        if let StateEvent::Window(event) = &event {
+            if is_key_down(&event, VirtualKeyCode::Escape) {
+                // Go back to the `GameplayState`.
+                return Trans::Pop;
+            }
         }
+        
         // Escape isn't pressed, so we stay in this `State`.
         Trans::None
     }
 }
 ```
+
+### Event Handling
+
+As you already saw, we can handle events from the `handle_event` method.
+But what is this weird `StateEvent<()>` all about?
+
+Well, it is simply an enum. It regroups multiple types of events that are emitted throughout the engine.
+The generic parameter `()` indicates that we don't have any custom event type that we care about.
+If you were to replace `()` by `MyEventType`, then you could react to them from your state like so:
+
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::prelude::*;
+# use amethyst::renderer::VirtualKeyCode;
+# use amethyst::input::is_key_down;
+
+#[derive(Debug)]
+struct MyEvent {
+    data: i32,
+}
+
+struct MyState;
+
+impl State<(), MyEvent> for GameplayState {
+    fn handle_event(&mut self, _data: StateData<()>, event: StateEvent<MyEvent>) -> Trans<(), MyEvent> {
+        match event {
+            StateEvent::Window(_) => {}, // Events related to the window and inputs.
+            StateEvent::Ui(_) => {}, // Ui event. Button presses, mouse hover, etc...
+            StateEvent::Custom(ev) => println!("Got a custom event: {:?}", ev),
+        }
+        
+        Trans::None
+    }
+}
+```
+
+*Note: Events are gathered from `EventChannel`s. If you use a custom event, you need to write events to the global `EventChannel<MyEvent>`. `EventChannel`s are covered in the dedicated book section.*

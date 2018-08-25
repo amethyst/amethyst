@@ -9,8 +9,6 @@ extern crate ron;
 #[macro_use]
 extern crate serde;
 
-use std::sync::Arc;
-
 use amethyst_assets::*;
 use amethyst_core::specs::common::Errors;
 use amethyst_core::specs::prelude::{
@@ -18,6 +16,7 @@ use amethyst_core::specs::prelude::{
 };
 use amethyst_core::Time;
 use rayon::{ThreadPool, ThreadPoolBuilder};
+use std::sync::Arc;
 
 struct App {
     dispatcher: Dispatcher<'static, 'static>,

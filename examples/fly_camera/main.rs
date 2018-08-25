@@ -5,9 +5,10 @@ extern crate amethyst;
 use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
 use amethyst::controls::FlyControlBundle;
 use amethyst::core::transform::TransformBundle;
-use amethyst::input::{is_close_requested, is_key_down, InputBundle};
+use amethyst::core::WithNamed;
+use amethyst::input::InputBundle;
 use amethyst::prelude::*;
-use amethyst::renderer::{DrawShaded, Event, PosNormTex, VirtualKeyCode};
+use amethyst::renderer::{DrawShaded, PosNormTex};
 use amethyst::utils::scene::BasicScenePrefab;
 use amethyst::Error;
 
@@ -15,25 +16,16 @@ type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 struct ExampleState;
 
-impl<'a, 'b> State<GameData<'a, 'b>> for ExampleState {
+impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
     fn on_start(&mut self, data: StateData<GameData>) {
         let prefab_handle = data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
             loader.load("prefab/fly_camera.ron", RonFormat, (), ())
         });
-        data.world.create_entity().with(prefab_handle).build();
-    }
-
-    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else {
-            Trans::None
-        }
-    }
-
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
-        data.data.update(&data.world);
-        Trans::None
+        data.world
+            .create_entity()
+            .named("Fly Camera Scene")
+            .with(prefab_handle)
+            .build();
     }
 }
 
@@ -63,7 +55,7 @@ fn main() -> Result<(), Error> {
         )?
         .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_bundle(
-            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?
+            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
     let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;

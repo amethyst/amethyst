@@ -1,14 +1,11 @@
-use std::mem;
-
 use amethyst_core::specs::prelude::{Join, ReadStorage};
 use amethyst_core::GlobalTransform;
-
-use glsl_layout::*;
-
 use cam::Camera;
+use glsl_layout::*;
 use light::Light;
 use pipe::{Effect, EffectBuilder};
 use resources::AmbientColor;
+use std::mem;
 use types::Encoder;
 
 #[derive(Clone, Copy, Debug, Uniform)]

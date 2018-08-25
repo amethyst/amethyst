@@ -1,14 +1,13 @@
 //! Simple shaded pass
 
+use super::*;
 use amethyst_assets::AssetStorage;
 use amethyst_core::specs::prelude::{Entities, Join, Read, ReadExpect, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
-use gfx::pso::buffer::ElemStride;
-use gfx_core::state::{Blend, ColorMask};
-
-use super::*;
 use cam::{ActiveCamera, Camera};
 use error::Result;
+use gfx::pso::buffer::ElemStride;
+use gfx_core::state::{Blend, ColorMask};
 use light::Light;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
@@ -31,6 +30,9 @@ static ATTRIBUTES: [Attributes<'static>; 3] = [
 ];
 
 /// Draw mesh with simple lighting technique
+///
+/// See the [crate level documentation](index.html) for information about interleaved and separate
+/// passes.
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct DrawShadedSeparate {
     skinning: bool,

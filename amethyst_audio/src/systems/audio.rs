@@ -1,17 +1,15 @@
-use std::iter::Iterator;
-use std::mem::replace;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
-
 use amethyst_core::cgmath::Transform;
 use amethyst_core::specs::prelude::{
     Entities, Entity, Join, Read, ReadStorage, System, WriteStorage,
 };
 use amethyst_core::transform::GlobalTransform;
-use rodio::SpatialSink;
-
 use components::{AudioEmitter, AudioListener};
 use end_signal::EndSignalSource;
+use rodio::SpatialSink;
+use std::iter::Iterator;
+use std::mem::replace;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 /// Syncs 3D transform data with the audio engine to provide 3D audio.
 #[derive(Default)]

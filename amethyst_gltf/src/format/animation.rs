@@ -1,13 +1,11 @@
-use std::collections::HashMap;
-
+use super::{Buffers, GltfError};
 use animation::{
     AnimationPrefab, AnimationSetPrefab, InterpolationFunction, InterpolationPrimitive, Sampler,
     SamplerPrimitive, TransformChannel,
 };
 use core::Transform;
 use gltf;
-
-use super::{Buffers, GltfError};
+use std::collections::HashMap;
 
 pub fn load_animations(
     gltf: &gltf::Gltf,
@@ -17,7 +15,8 @@ pub fn load_animations(
     let mut prefab = AnimationSetPrefab::default();
     for animation in gltf.animations() {
         let anim = load_animation(&animation, buffers)?;
-        if anim.samplers
+        if anim
+            .samplers
             .iter()
             .any(|sampler| node_map.contains_key(&sampler.0))
         {
