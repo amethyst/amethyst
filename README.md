@@ -55,7 +55,7 @@ While we may not be feature-packed (yet!), we all strongly believe that the comm
 
 Please visit the [features page][feat] for a list of features Amethyst provides.
 
-[feat]: amethyst/docs/FEATURES.md 
+[feat]: docs/FEATURES.md
 
 ## Documentation
 
@@ -63,8 +63,8 @@ Please visit the [features page][feat] for a list of features Amethyst provides.
 
 [adb1]: https://img.shields.io/badge/docs-develop-blue.svg
 [adb2]: https://img.shields.io/badge/docs-master-blue.svg
-[ad1]: https://www.amethyst.rs/book/master/
-[ad2]: https://www.amethyst.rs/book/develop/
+[ad1]: https://www.amethyst.rs/book/develop/
+[ad2]: https://www.amethyst.rs/book/master/
 
 ## Usage
 
