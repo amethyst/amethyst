@@ -7,7 +7,7 @@ use amethyst_renderer::{
     CameraPrefab, GraphicsPrefab, InternalShape, LightPrefab, Mesh, MeshData, ObjFormat,
     TextureFormat,
 };
-use RemovalPrefab;
+use removal::RemovalPrefab;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -24,23 +24,25 @@ use serde::Serialize;
 /// - `M`: `Format` to use for loading `Mesh`es from file
 #[derive(Deserialize, Serialize)]
 #[serde(default)]
-pub struct BasicScenePrefab<V, M = ObjFormat>
+pub struct BasicScenePrefab<V, R, M = ObjFormat>
 where
     M: Format<Mesh>,
     M::Options: DeserializeOwned + Serialize,
+    R: PartialEq + Clone + Send + Sync + 'static,
 {
     graphics: Option<GraphicsPrefab<V, M, TextureFormat>>,
     transform: Option<Transform>,
     light: Option<LightPrefab>,
     camera: Option<CameraPrefab>,
     control_tag: Option<ControlTagPrefab>,
-    removal: Option<RemovalPrefab>,
+    removal: Option<RemovalPrefab<R>>,
 }
 
-impl<V, M> Default for BasicScenePrefab<V, M>
+impl<V, R, M> Default for BasicScenePrefab<V, R, M>
 where
     M: Format<Mesh>,
     M::Options: DeserializeOwned + Serialize,
+    R: PartialEq + Clone + Send + Sync + 'static,
 {
     fn default() -> Self {
         BasicScenePrefab {
@@ -54,11 +56,12 @@ where
     }
 }
 
-impl<'a, V, M> PrefabData<'a> for BasicScenePrefab<V, M>
+impl<'a, V, R, M> PrefabData<'a> for BasicScenePrefab<V, R, M>
 where
     M: Format<Mesh> + Clone,
     M::Options: DeserializeOwned + Serialize + Clone,
     V: From<InternalShape> + Into<MeshData>,
+    R: PartialEq + Clone + Send + Sync + 'static,
 {
     type SystemData = (
         <GraphicsPrefab<V, M, TextureFormat> as PrefabData<'a>>::SystemData,
@@ -66,7 +69,7 @@ where
         <LightPrefab as PrefabData<'a>>::SystemData,
         <CameraPrefab as PrefabData<'a>>::SystemData,
         <ControlTagPrefab as PrefabData<'a>>::SystemData,
-        <RemovalPrefab as PrefabData<'a>>::SystemData,
+        <RemovalPrefab<R> as PrefabData<'a>>::SystemData,
     );
 
     type Result = ();

@@ -4,6 +4,7 @@ use amethyst_core::specs::{Component, DenseVecStorage, Join, System, ReadExpect,
 use amethyst_renderer::{Camera, ScreenDimensions};
 
 /// `Component` attached to the camera's entity that allows automatically adjusting the camera's matrix according to preferences in the "mode" field.
+/// It tries as much as possible to ajust the camera so that the world's coordinate (0,0) is at the bottom left and (1,1) is at the top right of the window.
 #[derive(Default)]
 pub struct NormalOrthoCamera {
     /// How the camera's matrix is changed when the window's aspect ratio changes. See `CameraNormalizeMode` for more info.
@@ -23,17 +24,23 @@ impl Component for NormalOrthoCamera {
 /// Settings that decide how to scale the camera's matrix when the aspect ratio changes.
 pub enum CameraNormalizeMode {
     /// Using an aspect ratio of 1:1, tries to ajust the matrix values of the camera so
-    /// that the direction opposite to the stretch_direction is always [0,1].
+    /// that the direction opposite to the stretch_direction always have a world size of 1.
+    /// If you use the default `Transform` (position = 0,0,0), this means that the direction opposite to stretch_direction 
+    /// will go from 0.0 to 1.0 in world coordinates.
     /// Scene space can be lost on the specified stretch_direction.
     Lossy {stretch_direction: Axis2},
     
     /// Scales the render dynamically to ensure no space is lost in the [0,1] range on any axis.
+    /// In other words, this ensures that you can always at least see everything between the world coordinates
+    /// (0,0) up to (1,1).
+    /// If you have a non-default `Transform` on your camera,
+    /// it will just translate those coordinates by the translation of the `Transform`.
     Shrink,
 }
 
 impl CameraNormalizeMode {
     /// Get the camera matrix offsets according to the specified options.
-    pub fn camera_offsets(&self, aspect_ratio: f32) -> (f32,f32,f32,f32) {
+    fn camera_offsets(&self, aspect_ratio: f32) -> (f32,f32,f32,f32) {
         match self {
             &CameraNormalizeMode::Lossy {ref stretch_direction} => {
                 match stretch_direction {

@@ -6,7 +6,7 @@ use std::result::Result;
 
 /// A marker `Component` used to remove entities and clean up your scene.
 /// The generic parameter `I` is the type of id you want to use.
-/// Generally a int or an enum.
+/// Generally an int or an enum.
 pub struct Removal<I> {
     id: I,
 }
@@ -28,7 +28,10 @@ pub struct RemovalPrefab<I> {
     id: I,
 }
 
-impl<'a, I: PartialEq + Clone + Send + Sync + 'static> PrefabData<'a> for RemovalPrefab<I> {
+impl<'a, I> PrefabData<'a> for RemovalPrefab<I> 
+where
+    I: PartialEq + Clone + Send + Sync + 'static,
+{
     type SystemData = (WriteStorage<'a, Removal<I>>,);
     type Result = ();
 
@@ -49,11 +52,9 @@ pub fn exec_removal<I: Send + Sync + PartialEq + 'static>(
     removal_storage: &ReadStorage<Removal<I>>,
     removal_id: I,
 ) {
-    for (e, r) in (&*entities, removal_storage).join() {
-        if r.id == removal_id {
-            if let Err(err) = entities.delete(e) {
-                error!("Failed to delete entity during exec_removal: {:?}", err);
-            }
+    for (e, _) in (&*entities, removal_storage).join().filter(|(_, r)| r.id == removal_id) {
+        if let Err(err) = entities.delete(e) {
+            error!("Failed to delete entity during exec_removal: {:?}", err);
         }
     }
 }
