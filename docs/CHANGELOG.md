@@ -20,6 +20,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Made get_camera public. ([#878)]
 * Updated ProgressCounter to show loading errors. ([#892])
 * Replaced the `imagefmt` crate with `image`. ([#877])
+* Optimize Sprite rendering via batching. ([#902])
+
 ### Removed
 
 ### Fixed
@@ -31,6 +33,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#892]: https://github.com/amethyst/amethyst/pull/892
 [#877]: https://github.com/amethyst/amethyst/pull/877
 [#896]: https://github.com/amethyst/amethyst/pull/896
+[#902]: https://github.com/amethyst/amethyst/pull/902
 
 ## [0.8.0] - 2018-08
 ### Added
