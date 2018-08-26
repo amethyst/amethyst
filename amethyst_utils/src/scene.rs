@@ -7,6 +7,7 @@ use amethyst_renderer::{
     CameraPrefab, GraphicsPrefab, InternalShape, LightPrefab, Mesh, MeshData, ObjFormat,
     TextureFormat,
 };
+use RemovalPrefab;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -33,6 +34,7 @@ where
     light: Option<LightPrefab>,
     camera: Option<CameraPrefab>,
     control_tag: Option<ControlTagPrefab>,
+    removal: Option<RemovalPrefab>,
 }
 
 impl<V, M> Default for BasicScenePrefab<V, M>
@@ -47,6 +49,7 @@ where
             light: None,
             camera: None,
             control_tag: None,
+            removal: None,
         }
     }
 }
@@ -63,6 +66,7 @@ where
         <LightPrefab as PrefabData<'a>>::SystemData,
         <CameraPrefab as PrefabData<'a>>::SystemData,
         <ControlTagPrefab as PrefabData<'a>>::SystemData,
+        <RemovalPrefab as PrefabData<'a>>::SystemData,
     );
 
     type Result = ();
@@ -73,13 +77,14 @@ where
         system_data: &mut Self::SystemData,
         entities: &[Entity],
     ) -> Result<(), Error> {
-        let (ref mut graphics, ref mut transforms, ref mut lights, ref mut cameras, ref mut tags) =
+        let (ref mut graphics, ref mut transforms, ref mut lights, ref mut cameras, ref mut tags, ref mut removals) =
             system_data;
         self.graphics.load_prefab(entity, graphics, entities)?;
         self.transform.load_prefab(entity, transforms, entities)?;
         self.light.load_prefab(entity, lights, entities)?;
         self.camera.load_prefab(entity, cameras, entities)?;
         self.control_tag.load_prefab(entity, tags, entities)?;
+        self.removal.load_prefab(entity, removals, entities)?;
         Ok(())
     }
 
@@ -89,7 +94,7 @@ where
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
         let mut ret = false;
-        let (ref mut graphics, ref mut transforms, ref mut lights, ref mut cameras, ref mut tags) =
+        let (ref mut graphics, ref mut transforms, ref mut lights, ref mut cameras, ref mut tags, ref mut removals) =
             system_data;
         if self.graphics.trigger_sub_loading(progress, graphics)? {
             ret = true;
@@ -104,6 +109,9 @@ where
             ret = true;
         }
         if self.control_tag.trigger_sub_loading(progress, tags)? {
+            ret = true;
+        }
+        if self.removal.trigger_sub_loading(progress, removals)? {
             ret = true;
         }
         Ok(ret)
