@@ -102,7 +102,7 @@ impl<'a> System<'a> for NormalOrthoCameraSystem {
                     bottom: offsets.2,
                     top: offsets.3,
                     near: 0.1,
-                    far: 1000.0,
+                    far: 2000.0,
                 }.into();
             }
         }
