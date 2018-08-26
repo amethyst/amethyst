@@ -79,6 +79,8 @@ where
     }
 }
 
+/// System moving any entity holding a `XYControlTag` component along the
+/// X and Y axis. It can also zoom using the transform's scale property.
 #[derive(Default)]
 pub struct XYCameraSystem<A, B> {
     /// The name of the input axis to locally move in the x coordinates.
@@ -95,6 +97,7 @@ where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
+    /// Creates the camera system.
     pub fn new(x_axis: impl Into<A>, y_axis: impl Into<A>) -> Self {
         Self {
             x_axis: Some(x_axis.into()),
@@ -104,6 +107,7 @@ where
         }
     }
 
+    /// Allows to control the zoom level.
     pub fn with_zoom(mut self, zoom_axis: impl Into<A>) -> Self {
         self.zoom_axis = Some(zoom_axis.into());
         self
