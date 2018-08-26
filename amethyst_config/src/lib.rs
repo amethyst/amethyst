@@ -2,7 +2,7 @@
 //!
 
 #![crate_name = "amethyst_config"]
-#![doc(html_logo_url = "http://tinyurl.com/hgsb45k")]
+#![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
 
 #[macro_use]
 extern crate log;
