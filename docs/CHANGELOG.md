@@ -15,6 +15,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Added Named Component. ([#879])([#896])
 * Support for progressive jpeg loading. ([#877])
 * Load node names for glTF prefabs. ([#905])
+* Added automatic camera matrix resizing to allow clean screen resizes. ([#920])
+* Added the Removal component to facilitate manual entity removal and scene cleaning. ([#920])
+* Added DestroyAtTime and DestroyInTime components to easily destroy entities. ([#920])
 
 ### Changed
 * Sprites contain their dimensions and offsets to render them with the right size and desired position. ([#829], [#830])
@@ -39,7 +42,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#896]: https://github.com/amethyst/amethyst/pull/896
 [#902]: https://github.com/amethyst/amethyst/pull/902
 [#905]: https://github.com/amethyst/amethyst/pull/905
-
+[#920]: https://github.com/amethyst/amethyst/pull/920
 ## [0.8.0] - 2018-08
 ### Added
 * UI `ScaleMode` is now functional, permitting percentage based `UiTransform`s. ([#774])
