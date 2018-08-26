@@ -1,10 +1,8 @@
-use std::ops::Range;
-
+use super::{Buffers, GltfError};
 use gltf;
 use mikktspace;
 use renderer::{AnimatedComboMeshCreator, Attribute, MeshData, Separate};
-
-use super::{Buffers, GltfError};
+use std::ops::Range;
 use GltfSceneOptions;
 
 pub fn load_mesh(

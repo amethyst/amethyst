@@ -25,7 +25,7 @@
 //! [bk]: https://www.amethyst.rs/book/master/
 
 #![deny(missing_docs)]
-#![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
+#![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
 
 extern crate amethyst_assets;
 extern crate amethyst_core;
@@ -88,8 +88,8 @@ pub use color::Rgba;
 pub use config::DisplayConfig;
 pub use formats::{
     build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat, ComboMeshCreator,
-    GraphicsPrefab, ImageData, JpgFormat, MaterialPrefab, MeshCreator, MeshData,
-    ObjFormat, PngFormat, TextureData, TextureFormat, TextureMetadata, TexturePrefab,
+    GraphicsPrefab, ImageData, JpgFormat, MaterialPrefab, MeshCreator, MeshData, ObjFormat,
+    PngFormat, TextureData, TextureFormat, TextureMetadata, TexturePrefab,
 };
 pub use input::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
 pub use light::{DirectionalLight, Light, LightPrefab, PointLight, SpotLight, SunLight};

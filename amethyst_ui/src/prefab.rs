@@ -6,7 +6,6 @@ use amethyst_audio::{AudioFormat, Source as Audio};
 use amethyst_core::specs::prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage};
 use amethyst_renderer::{Texture, TextureFormat, TextureMetadata, TexturePrefab};
 use serde::de::DeserializeOwned;
-
 use {
     Anchor, FontAsset, FontFormat, MouseReactive, OnUiActionImage, OnUiActionSound, Stretch,
     TextEditing, UiButton, UiFocused, UiImage, UiText, UiTransform,

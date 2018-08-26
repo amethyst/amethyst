@@ -1,17 +1,15 @@
-use std::fmt;
-use std::hash::Hash;
-use std::marker::PhantomData;
-use std::path::PathBuf;
-
+use super::controller::{ControllerAxis, ControllerButton, ControllerEvent};
+use super::{InputEvent, InputHandler};
 use amethyst_core::shrev::EventChannel;
 use amethyst_core::specs::prelude::{Resources, RunNow, SystemData, Write};
 use sdl2;
 use sdl2::controller::{AddMappingError, Axis, Button, GameController};
 use sdl2::event::Event;
 use sdl2::{EventPump, GameControllerSubsystem, Sdl};
-
-use super::controller::{ControllerAxis, ControllerButton, ControllerEvent};
-use super::{InputEvent, InputHandler};
+use std::fmt;
+use std::hash::Hash;
+use std::marker::PhantomData;
+use std::path::PathBuf;
 
 #[derive(Debug)]
 pub enum SdlSystemError {

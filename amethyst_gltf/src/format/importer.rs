@@ -1,15 +1,14 @@
-use std;
-use std::error::Error as StdError;
-use std::fmt;
-use std::path::Path;
-use std::sync::Arc;
-
 use assets::{Error as AssetError, Result as AssetResult, Source as AssetSource};
 use base64;
 use gltf;
 use gltf::json;
 use gltf::json::validation;
 use gltf::Gltf;
+use std;
+use std::error::Error as StdError;
+use std::fmt;
+use std::path::Path;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub enum ImageFormat {

@@ -1,12 +1,10 @@
-use amethyst_core::specs::prelude::SystemData;
-use hetseq::*;
-
 use super::stage::*;
 use super::target::*;
-
+use amethyst_core::specs::prelude::SystemData;
 // use color::Rgba;
 use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
+use hetseq::*;
 use types::{Encoder, Factory};
 
 /// Defines how the rendering pipeline should be configured.

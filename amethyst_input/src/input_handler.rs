@@ -1,18 +1,16 @@
 //! World resource that handles all user input.
 
-use std::borrow::Borrow;
-use std::hash::Hash;
-
-use amethyst_core::shrev::EventChannel;
-use smallvec::SmallVec;
-use winit::{
-    DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent,
-};
-
 use super::controller::{ControllerButton, ControllerEvent};
 use super::event::InputEvent;
 use super::event::InputEvent::*;
 use super::*;
+use amethyst_core::shrev::EventChannel;
+use smallvec::SmallVec;
+use std::borrow::Borrow;
+use std::hash::Hash;
+use winit::{
+    DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent,
+};
 
 /// This struct holds state information about input devices.
 ///

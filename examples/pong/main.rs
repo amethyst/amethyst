@@ -7,8 +7,6 @@ mod bundle;
 mod pong;
 mod systems;
 
-use std::time::Duration;
-
 use amethyst::audio::AudioBundle;
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::TransformBundle;
@@ -20,6 +18,7 @@ use amethyst::ui::{DrawUi, UiBundle};
 
 use audio::Music;
 use bundle::PongBundle;
+use std::time::Duration;
 
 const ARENA_HEIGHT: f32 = 100.0;
 const ARENA_WIDTH: f32 = 100.0;

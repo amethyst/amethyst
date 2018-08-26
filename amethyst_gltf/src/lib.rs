@@ -18,17 +18,16 @@ extern crate serde;
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
-pub use format::GltfSceneFormat;
-
-use std::ops::Range;
-
 use animation::{AnimatablePrefab, SkinnablePrefab};
 use assets::{Handle, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter};
+use core::Named;
 use core::cgmath::{Array, EuclideanSpace, Point3, Vector3};
 use core::specs::error::Error;
 use core::specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage};
 use core::transform::Transform;
+pub use format::GltfSceneFormat;
 use renderer::{MaterialPrefab, Mesh, MeshData, TextureFormat};
+use std::ops::Range;
 
 mod format;
 
@@ -57,6 +56,8 @@ pub struct GltfPrefab {
     pub skinnable: Option<SkinnablePrefab>,
     /// Node extent
     pub extent: Option<GltfNodeExtent>,
+    /// Node name
+    pub name: Option<Named>,
 }
 
 impl GltfPrefab {
@@ -169,6 +170,7 @@ impl<'a> PrefabData<'a> for GltfPrefab {
     type SystemData = (
         <Transform as PrefabData<'a>>::SystemData,
         <MeshData as PrefabData<'a>>::SystemData,
+        <Named as PrefabData<'a>>::SystemData,
         <MaterialPrefab<TextureFormat> as PrefabData<'a>>::SystemData,
         <AnimatablePrefab<usize, Transform> as PrefabData<'a>>::SystemData,
         <SkinnablePrefab as PrefabData<'a>>::SystemData,
@@ -185,6 +187,7 @@ impl<'a> PrefabData<'a> for GltfPrefab {
         let (
             ref mut transforms,
             ref mut meshes,
+            ref mut names,
             ref mut materials,
             ref mut animatables,
             ref mut skinnables,
@@ -195,6 +198,9 @@ impl<'a> PrefabData<'a> for GltfPrefab {
         }
         if let Some(ref mesh) = self.mesh_handle {
             meshes.1.insert(entity, mesh.clone())?;
+        }
+        if let Some(ref name) = self.name {
+            name.load_prefab(entity, names, entities)?;
         }
         if let Some(ref material) = self.material {
             material.load_prefab(entity, materials, entities)?;
@@ -216,7 +222,7 @@ impl<'a> PrefabData<'a> for GltfPrefab {
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        let (_, ref mut meshes, ref mut materials, ref mut animatables, _, _) = system_data;
+        let (_, ref mut meshes, _, ref mut materials, ref mut animatables, _, _) = system_data;
         let mut ret = false;
         if let Some(ref mesh) = self.mesh {
             self.mesh_handle = Some(meshes.0.load_from_data(

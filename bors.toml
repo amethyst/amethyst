@@ -1,8 +1,7 @@
 # Test suite must pass on both Travis and AppVeyor before merging into either
 # `develop` or `master`.
 status = [
-    "continuous-integration/travis-ci/push",
-    "continuous-integration/appveyor/branch"
+    "continuous-integration/travis-ci/push"
 ]
 
 # Do not allow pull requests with these labels to be merged.

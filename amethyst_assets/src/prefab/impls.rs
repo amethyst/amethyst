@@ -1,6 +1,5 @@
 use amethyst_core::specs::{Entity, WriteStorage};
-use amethyst_core::{GlobalTransform, Transform};
-
+use amethyst_core::{GlobalTransform, Named, Transform};
 use {PrefabData, PrefabError, ProgressCounter};
 
 impl<'a, T> PrefabData<'a> for Option<T>
@@ -64,6 +63,22 @@ impl<'a> PrefabData<'a> for Transform {
         _: &[Entity],
     ) -> Result<(), PrefabError> {
         storages.1.insert(entity, GlobalTransform::default())?;
+        storages.0.insert(entity, self.clone()).map(|_| ())
+    }
+}
+
+impl<'a> PrefabData<'a> for Named {
+    type SystemData = (
+        WriteStorage<'a, Named>,
+    );
+    type Result = ();
+
+    fn load_prefab(
+        &self,
+        entity: Entity,
+        storages: &mut Self::SystemData,
+        _: &[Entity],
+    ) -> Result<(), PrefabError> {
         storages.0.insert(entity, self.clone()).map(|_| ())
     }
 }
