@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * State::handle_event can now handle multiple types of events. ([#887])
 * Added Named Component. ([#879])([#896])
 * Support for progressive jpeg loading. ([#877])
+* Load node names for glTF prefabs. ([#905])
 * `IsometricTransform` abstracting away 2D isometric math. ([#895])
 * `XYCameraSystem` to control a 2D camera along the X and Y axis. ([#895])
 * `SpriteSheetFormat` to load sprite positions into a sprite sheet from a RON file. ([#895])
@@ -40,6 +41,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#877]: https://github.com/amethyst/amethyst/pull/877
 [#895]: https://github.com/amethyst/amethyst/pull/895
 [#896]: https://github.com/amethyst/amethyst/pull/896
+[#905]: https://github.com/amethyst/amethyst/pull/905
 
 ## [0.8.0] - 2018-08
 ### Added

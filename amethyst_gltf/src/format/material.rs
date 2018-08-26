@@ -171,8 +171,8 @@ fn load_texture(
     let (data, format) = get_image_data(&texture.source(), buffers, source, name.as_ref())?;
     let metadata = TextureMetadata::default().with_sampler(load_sampler_info(&texture.sampler()));
     Ok(match format {
-        ImageFormat::Png => PngFormat.from_data(data, metadata),
-        ImageFormat::Jpeg => JpgFormat.from_data(data, metadata),
+        ImageFormat::Png => PngFormat::from_data(&data, metadata),
+        ImageFormat::Jpeg => JpgFormat::from_data(&data, metadata),
     }?)
 }
 
