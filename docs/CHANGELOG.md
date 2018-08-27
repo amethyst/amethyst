@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * State::handle_event can now handle multiple types of events. ([#887])
 * Added Named Component. ([#879])([#896])
 * Support for progressive jpeg loading. ([#877])
+* Load node names for glTF prefabs. ([#905])
 
 ### Changed
 * Sprites contain their dimensions and offsets to render them with the right size and desired position. ([#829], [#830])
@@ -22,6 +23,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Simplified creating states with SimpleState and EmptyState. ([#887])
 * Updated ProgressCounter to show loading errors. ([#892])
 * Replaced the `imagefmt` crate with `image`. ([#877])
+* Optimize Sprite rendering via batching. ([#902])
 * Derive `Debug` and `PartialEq` for `amethyst_input::Axis`. ([#903], [#904])
 
 ### Removed
@@ -36,6 +38,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#892]: https://github.com/amethyst/amethyst/pull/892
 [#877]: https://github.com/amethyst/amethyst/pull/877
 [#896]: https://github.com/amethyst/amethyst/pull/896
+[#902]: https://github.com/amethyst/amethyst/pull/902
+[#905]: https://github.com/amethyst/amethyst/pull/905
 [#903]: https://github.com/amethyst/amethyst/issues/903
 [#904]: https://github.com/amethyst/amethyst/pull/904
 

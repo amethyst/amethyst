@@ -110,7 +110,6 @@ use amethyst::input::InputHandler;
 # impl amethyst::ecs::Component for Paddle {
 #   type Storage = amethyst::ecs::VecStorage<Paddle>;    
 # }
-
 pub struct PaddleSystem;
 
 impl<'s> System<'s> for PaddleSystem {
@@ -139,8 +138,11 @@ impl<'s> System<'s> for PaddleSystem {
   }
 }
 ```
+Note: You will also need to add a `use` statement to bring in `Paddle` and `Side` from pong.rs:
 
-Note: We had to make our Paddle and Side public in `pong.rs`
+```rust,ignore
+use pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
+```
 
 Now lets add this system to our `GameDataBuilder` in `main.rs`:
 

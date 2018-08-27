@@ -277,6 +277,11 @@ fn load_node(
 ) -> Result<(), GltfError> {
     node_map.insert(node.index(), entity_index);
 
+    // Load node name.
+    if let Some(name) = node.name() {
+        prefab.data_or_default(entity_index).name = Some(Named::new(name.to_string()));
+    }
+
     // Load transformation data, default will be identity
     let (translation, rotation, scale) = node.transform().decomposed();
     let mut local_transform = Transform::default();
