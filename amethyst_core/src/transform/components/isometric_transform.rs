@@ -1,4 +1,4 @@
-use cgmath::{Angle, Deg, Matrix2, SquareMatrix, Vector2};
+use cgmath::{Angle, Deg, Matrix2, Rad, SquareMatrix, Vector2};
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
 /// Component describing the position of an entity on an isometric plane.
@@ -18,22 +18,22 @@ pub struct IsometricTransform {
     pub order_priority: f32,
 
     scale: Vector2<f32>,
-    angle: Deg<f32>,
+    angle: Rad<f32>,
     iso_to_local: Matrix2<f32>,
     local_to_iso: Matrix2<f32>,
 }
 
-fn matrices_from_angle(angle: Deg<f32>, scale: Vector2<f32>) -> (Matrix2<f32>, Matrix2<f32>) {
+fn matrices_from_angle(angle: Rad<f32>, scale: Vector2<f32>) -> (Matrix2<f32>, Matrix2<f32>) {
     // This is a change of basis matrix.
     // It goes from the usual basis to the isometric basis.
     let local_to_iso = Matrix2 {
         x: Vector2 {
-            x: scale.x * angle.cos(),
-            y: scale.x * angle.cos(),
+            x: angle.cos() * scale.x,
+            y: angle.cos() * scale.x,
         },
         y: Vector2 {
-            x: scale.y * angle.cos(),
-            y: -scale.y * angle.cos(),
+            x: -angle.cos() * scale.y,
+            y: angle.cos() * scale.y,
         },
     };
 
@@ -53,13 +53,13 @@ fn matrices_from_angle(angle: Deg<f32>, scale: Vector2<f32>) -> (Matrix2<f32>, M
 impl Default for IsometricTransform {
     /// The default transform does nothing when used to transform an entity.
     fn default() -> Self {
-        let (local_to_iso, iso_to_local) =
-            matrices_from_angle(Deg(30.0), Vector2 { x: 1.0, y: 1.0 });
+        let angle = Deg(30.0).into();
+        let (local_to_iso, iso_to_local) = matrices_from_angle(angle, Vector2 { x: 1.0, y: 1.0 });
         Self {
             translation: Vector2 { x: 0.0, y: 0.0 },
             order_priority: 0.0,
             scale: Vector2 { x: 1.0, y: 1.0 },
-            angle: Deg(30.0),
+            angle,
             local_to_iso,
             iso_to_local,
         }
@@ -76,24 +76,26 @@ impl IsometricTransform {
     /// will build the isometric grid so that this unit fits in a rectangle of
     /// size (w;h) in the local coordinates system.
     pub fn from_unit_dimensions(w: f32, h: f32) -> Self {
-        let angle = Deg((h / w).atan());
+        let angle = Rad::atan(h / w);
         let scale = Vector2 {
-            x: 1.0 / w,
-            y: -1.0 / h,
+            x: 1.0 / h,
+            y: 1.0 / w,
         };
+        //let scale = Vector2 { x: 1.0, y: 1.0 };
         Self::from_angle(angle, scale)
     }
 
     /// Builds an IsometricTransform from the angle between the usual x axis
     /// and the isometric axes. In other words, if you consider an isometric unit,
     /// the angle parameter is half the angle of the lateral corners.
-    pub fn from_angle(angle: Deg<f32>, scale: Vector2<f32>) -> Self {
+    pub fn from_angle(angle: impl Into<Rad<f32>>, scale: Vector2<f32>) -> Self {
+        let angle = angle.into();
         let (local_to_iso, iso_to_local) = matrices_from_angle(angle, scale);
         Self {
             translation: Vector2 { x: 0.0, y: 0.0 },
             order_priority: 0.0,
-            scale,
             angle,
+            scale,
             local_to_iso,
             iso_to_local,
         }
@@ -122,8 +124,12 @@ impl IsometricTransform {
     /// Changes the angle or scale of this transform.
     /// In other words, if you consider an isometric unit,
     /// the angle parameter is half the angle of the lateral corners.
-    pub fn set_isometry(&mut self, angle: Option<Deg<f32>>, scale: Option<Vector2<f32>>) {
-        let angle = angle.unwrap_or(self.angle);
+    pub fn set_isometry(
+        &mut self,
+        angle: Option<impl Into<Rad<f32>>>,
+        scale: Option<Vector2<f32>>,
+    ) {
+        let angle = angle.map(|a| a.into()).unwrap_or(self.angle);
         let scale = scale.unwrap_or(self.scale);
         let (local_to_iso, iso_to_local) = matrices_from_angle(angle, scale);
         self.local_to_iso = local_to_iso;
@@ -137,7 +143,7 @@ impl IsometricTransform {
     /// will change the isometric grid so that this unit fits in a rectangle of
     /// size (w;h) in the local coordinates system.
     pub fn set_square_unit_dimensions(&mut self, w: f32, h: f32) {
-        let angle = Deg((h / w).atan());
+        let angle = Rad((h / w).atan());
         self.set_isometry(Some(angle), Some(Vector2 { x: 1.0, y: 1.0 }));
     }
 }

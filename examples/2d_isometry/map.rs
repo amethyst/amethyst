@@ -3,7 +3,7 @@ use amethyst::ecs::World;
 use amethyst::prelude::*;
 use amethyst::renderer::{SpriteRender, SpriteSheetHandle, Transparent};
 
-pub const UNIT_DIMENSIONS: (f32, f32) = (128.0, 64.0);
+pub const UNIT_DIMENSIONS: (f32, f32) = (132.0, 66.0);
 const MAP_SIZE: usize = 16;
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
@@ -31,8 +31,9 @@ pub fn initialise_map(world: &mut World, spritesheet: SpriteSheetHandle) {
         for k in 0..MAP_SIZE {
             let mut iso_transf =
                 IsometricTransform::from_unit_dimensions(UNIT_DIMENSIONS.0, UNIT_DIMENSIONS.1);
-            iso_transf.translation.x = i as f32;
-            iso_transf.translation.y = k as f32;
+            let scale = ((UNIT_DIMENSIONS.0).powi(2) + (UNIT_DIMENSIONS.1).powi(2)).sqrt();
+            iso_transf.translation.x = i as f32 * scale;
+            iso_transf.translation.y = k as f32 * scale;
             world
                 .create_entity()
                 .with(iso_transf)
