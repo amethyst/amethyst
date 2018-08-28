@@ -69,7 +69,7 @@ where
     fn run(&mut self, (time, mut transform, input, tag): Self::SystemData) {
         let x = FlyMovementSystem::get_axis(&self.right_input_axis, &input);
         let y = FlyMovementSystem::get_axis(&self.up_input_axis, &input);
-        let z = FlyMovementSystem::get_axis(&self.forward_input_axis, &input);
+        let z = -FlyMovementSystem::get_axis(&self.forward_input_axis, &input);
 
         let dir = Vector3::new(x, y, z);
 
