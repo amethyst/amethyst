@@ -59,6 +59,15 @@ impl Attribute for OffsetV {
     type Repr = [f32; 2];
 }
 
+#[derive(Clone, Debug)]
+enum Depth {}
+impl Attribute for Depth {
+    const NAME: &'static str = "depth";
+    const FORMAT: Format = Format(SurfaceType::R32, ChannelType::Float);
+    const SIZE: u32 = 4;
+    type Repr = f32;
+}
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 struct SpriteInstance {
@@ -67,6 +76,7 @@ struct SpriteInstance {
     pub pos: [f32; 2],
     pub u_offset: [f32; 2],
     pub v_offset: [f32; 2],
+    pub depth: f32,
 }
 
 unsafe impl Pod for SpriteInstance {}
@@ -78,6 +88,7 @@ impl VertexFormat for SpriteInstance {
         (Pos::NAME, <Self as With<Pos>>::FORMAT),
         (OffsetU::NAME, <Self as With<OffsetU>>::FORMAT),
         (OffsetV::NAME, <Self as With<OffsetV>>::FORMAT),
+        (Depth::NAME, <Self as With<Depth>>::FORMAT),
     ];
 }
 
@@ -113,5 +124,12 @@ impl With<OffsetV> for SpriteInstance {
     const FORMAT: AttributeFormat = Element {
         offset: DirX::SIZE + DirY::SIZE + Pos::SIZE + OffsetU::SIZE,
         format: OffsetV::FORMAT,
+    };
+}
+
+impl With<Depth> for SpriteInstance {
+    const FORMAT: AttributeFormat = Element {
+        offset: DirX::SIZE + DirY::SIZE + Pos::SIZE + OffsetU::SIZE + OffsetV::SIZE,
+        format: Depth::FORMAT,
     };
 }
