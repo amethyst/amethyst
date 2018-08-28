@@ -2,7 +2,7 @@ use super::{Button, ControllerAxis};
 
 /// Represents any input represented by a float value from -1 to 1.
 /// Retrieve the value of this with [axis_value](struct.InputHandler.html#method.axis_value).
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub enum Axis {
     /// Represents an emulated analogue axis made up of pair of digital inputs,
     /// like W and S keyboard buttons or `DPadUp` and `DPadDown` controller buttons.

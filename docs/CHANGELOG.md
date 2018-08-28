@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Updated ProgressCounter to show loading errors. ([#892])
 * Replaced the `imagefmt` crate with `image`. ([#877])
 * Optimize Sprite rendering via batching. ([#902])
+* Derive `Debug` and `PartialEq` for `amethyst_input::Axis`. ([#903], [#904])
 
 ### Removed
 
@@ -39,6 +40,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#896]: https://github.com/amethyst/amethyst/pull/896
 [#902]: https://github.com/amethyst/amethyst/pull/902
 [#905]: https://github.com/amethyst/amethyst/pull/905
+[#903]: https://github.com/amethyst/amethyst/issues/903
+[#904]: https://github.com/amethyst/amethyst/pull/904
 
 ## [0.8.0] - 2018-08
 ### Added
