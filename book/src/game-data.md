@@ -81,7 +81,8 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
 
 impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> {
     fn build(self, world: &mut World) -> CustomGameData<'a, 'b> {
-        let pool = world.read_resource::<ThreadPool>().clone();
+        // Get a handle to the `ThreadPool`.
+        let pool = world.read_resource::<Arc<ThreadPool>>().clone();
 
         let mut core_dispatcher = self.core.with_pool(pool.clone()).build();
         let mut running_dispatcher = self.running.with_pool(pool.clone()).build();
@@ -100,7 +101,7 @@ our `Application`, but first we should create some `State`s.
 struct Main;
 struct Paused;
 
-impl<'a, 'b> State<CustomGameData<'a, 'b>> for Paused {
+impl<'a, 'b> State<CustomGameData<'a, 'b>,()> for Paused {
     fn on_start(&mut self, data: StateData<CustomGameData>) {
         create_paused_ui(data.world);
     }
@@ -108,25 +109,29 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Paused {
     fn handle_event(
         &mut self,
         data: StateData<CustomGameData>,
-        event: Event,
-    ) -> Trans<CustomGameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else if is_key_down(&event, VirtualKeyCode::Space) {
-            delete_paused_ui(data.world);
-            Trans::Pop
+        event: StateEvent<()>,
+    ) -> Trans<CustomGameData<'a, 'b>,()> {
+        if let StateEvent::Window(event) = &event {
+            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                Trans::Quit
+            } else if is_key_down(&event, VirtualKeyCode::Space) {
+                delete_paused_ui(data.world);
+                Trans::Pop
+            } else {
+                Trans::None
+            }
         } else {
             Trans::None
         }
     }
 
-    fn update(&mut self, data: StateData<CustomGameData>) -> Trans<CustomGameData<'a, 'b>> {
+    fn update(&mut self, data: StateData<CustomGameData>) -> Trans<CustomGameData<'a, 'b>,()> {
         data.data.update(&data.world, false); // false to say we should not dispatch running
         Trans::None
     }
 }
 
-impl<'a, 'b> State<CustomGameData<'a, 'b>> for Main {
+impl<'a, 'b> State<CustomGameData<'a, 'b>,()> for Main {
     fn on_start(&mut self, data: StateData<CustomGameData>) {
         initialise(data.world);
     }
@@ -134,12 +139,16 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>> for Main {
     fn handle_event(
         &mut self,
         _: StateData<CustomGameData>,
-        event: Event,
-    ) -> Trans<CustomGameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else if is_key_down(&event, VirtualKeyCode::Space) {
-            Trans::Push(Box::new(Paused))
+        event: StateEvent<()>,
+    ) -> Trans<CustomGameData<'a, 'b>,()> {
+        if let StateEvent::Window(event) = &event {
+            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                Trans::Quit
+            } else if is_key_down(&event, VirtualKeyCode::Space) {
+                Trans::Push(Box::new(Paused))
+            } else {
+                Trans::None
+            }
         } else {
             Trans::None
         }

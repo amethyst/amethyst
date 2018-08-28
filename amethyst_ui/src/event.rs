@@ -26,7 +26,7 @@ pub enum UiEventType {
 }
 
 /// A ui event instance.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct UiEvent {
     /// The type of ui event.
     pub event_type: UiEventType,

@@ -6,7 +6,7 @@ use amethyst::prelude::*;
 
 struct Example;
 
-impl State<()> for Example {
+impl EmptyState for Example {
     fn on_start(&mut self, _: StateData<()>) {
         println!("Begin!");
     }
@@ -15,7 +15,7 @@ impl State<()> for Example {
         println!("End!");
     }
 
-    fn update(&mut self, _: StateData<()>) -> Trans<()> {
+    fn update(&mut self, _: StateData<()>) -> EmptyTrans {
         println!("Hello from Amethyst!");
         Trans::Quit
     }

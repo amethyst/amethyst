@@ -238,9 +238,9 @@ impl Transform {
     ///
     /// # Arguments
     ///
-    ///  - x - The angle to apply around the x axis. Also known at the pitch.
-    ///  - y - The angle to apply around the y axis. Also known at the yaw.
-    ///  - z - The angle to apply around the z axis. Also known at the roll.
+    ///  - x - The angle to apply around the x axis. Also known as the pitch.
+    ///  - y - The angle to apply around the y axis. Also known as the yaw.
+    ///  - z - The angle to apply around the z axis. Also known as the roll.
     pub fn set_rotation<A>(&mut self, x: A, y: A, z: A) -> &mut Self
     where
         A: Angle<Unitless = f32>,
@@ -318,7 +318,8 @@ impl CgTransform<Point3<f32>> for Transform {
         Self {
             scale: self.scale.mul_element_wise(other.scale),
             rotation: self.rotation * other.rotation,
-            translation: self.rotation
+            translation: self
+                .rotation
                 .rotate_vector(other.translation.mul_element_wise(self.scale))
                 + self.translation,
         }
@@ -375,7 +376,8 @@ impl CgTransform<Point2<f32>> for Transform {
         Self {
             scale: self.scale.mul_element_wise(other.scale),
             rotation: self.rotation * other.rotation,
-            translation: self.rotation
+            translation: self
+                .rotation
                 .rotate_vector(other.translation.mul_element_wise(self.scale))
                 + self.translation,
         }

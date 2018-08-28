@@ -1,29 +1,33 @@
 //! Simple flat forward drawing pass.
 
-use std::marker::PhantomData;
-
+use super::*;
 use amethyst_assets::AssetStorage;
 use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
+use cam::{ActiveCamera, Camera};
+use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
-
-use super::*;
-use cam::{ActiveCamera, Camera};
-use error::Result;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
 use pass::util::{draw_mesh, get_camera, setup_textures, VertexArgs};
 use pipe::pass::{Pass, PassData};
 use pipe::{DepthMode, Effect, NewEffect};
+use std::marker::PhantomData;
 use tex::Texture;
 use types::{Encoder, Factory};
 use vertex::{Position, Query, TexCoord};
 use visibility::Visibility;
 
 /// Draw mesh without lighting
-/// `V` is `VertexFormat`
+///
+/// See the [crate level documentation](index.html) for information about interleaved and separate
+/// passes.
+///
+/// # Type Parameters
+///
+/// * `V`: `VertexFormat`
 #[derive(Derivative, Clone, Debug, PartialEq)]
 #[derivative(Default(bound = "V: Query<(Position, TexCoord)>, Self: Pass"))]
 pub struct DrawFlat<V> {

@@ -1,7 +1,6 @@
 use amethyst_core::specs::prelude::Read;
 use amethyst_renderer::{Material, MaterialTextureSet, Sprite, TextureOffset};
 use minterpolate::InterpolationPrimitive;
-
 use {AnimationSampling, ApplyData, BlendMethod};
 
 /// Sampler primitive for Material animations
@@ -44,13 +43,21 @@ impl InterpolationPrimitive for MaterialPrimitive {
 
 impl From<Sprite> for MaterialPrimitive {
     fn from(sprite: Sprite) -> Self {
-        MaterialPrimitive::Offset((sprite.left, sprite.right), (sprite.top, sprite.bottom))
+        let tex_coords = &sprite.tex_coords;
+        MaterialPrimitive::Offset(
+            (tex_coords.left, tex_coords.right),
+            (tex_coords.top, tex_coords.bottom),
+        )
     }
 }
 
 impl<'a> From<&'a Sprite> for MaterialPrimitive {
     fn from(sprite: &'a Sprite) -> Self {
-        MaterialPrimitive::Offset((sprite.left, sprite.right), (sprite.top, sprite.bottom))
+        let tex_coords = &sprite.tex_coords;
+        MaterialPrimitive::Offset(
+            (tex_coords.left, tex_coords.right),
+            (tex_coords.top, tex_coords.bottom),
+        )
     }
 }
 

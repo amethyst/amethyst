@@ -1,6 +1,5 @@
-use serde::Deserialize;
-
 use error::{Error, ResultExt};
+use serde::Deserialize;
 use {Asset, SimpleFormat};
 
 /// Format for loading from Ron files.

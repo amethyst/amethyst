@@ -1,14 +1,11 @@
 //! Mesh resource.
 
+use amethyst_assets::Handle;
+use amethyst_core::cgmath::{Deg, Matrix4, Point3, Transform, Vector3};
+use error::Result;
+use gfx::Primitive;
 use std::iter::{once, Chain, Once};
 use std::marker::PhantomData;
-
-use amethyst_assets::Handle;
-
-use amethyst_core::cgmath::{Deg, Matrix4, Point3, Transform, Vector3};
-use gfx::Primitive;
-
-use error::Result;
 use types::{Factory, RawBuffer, Slice};
 use vertex::{Attributes, VertexFormat};
 

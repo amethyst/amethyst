@@ -9,7 +9,9 @@ Instructions should be on screen once rustup is downloaded.
 
 ## Required dependencies
 
-If you are on Linux, you'll need to install `libasound2-dev` and `libx11-xcb-dev`.
+If you are on Linux, you'll need to install `libasound2-dev`, `libx11-xcb-dev` and `libssl-dev`.
+
+See the readme on github for distribution specific details.
 
 ## Setting up Amethyst
 

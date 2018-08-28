@@ -7,11 +7,11 @@ extern crate rayon;
 use amethyst::assets::{Loader, Result as AssetResult, SimpleFormat};
 use amethyst::core::cgmath::{Array, Matrix4, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
-use amethyst::input::{is_close_requested, is_key_down, InputBundle};
+use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{
-    Camera, DrawShaded, Event, Light, Material, MaterialDefaults, Mesh, MeshData, PointLight,
-    PosNormTex, Projection, Rgba, VirtualKeyCode,
+    Camera, DrawShaded, Light, Material, MaterialDefaults, Mesh, MeshData, PointLight, PosNormTex,
+    Projection, Rgba,
 };
 use amethyst::Error;
 
@@ -58,7 +58,7 @@ impl SimpleFormat<Mesh> for Custom {
 
 struct AssetsExample;
 
-impl<'a, 'b> State<GameData<'a, 'b>> for AssetsExample {
+impl<'a, 'b> SimpleState<'a, 'b> for AssetsExample {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
         world.add_resource(0usize);
@@ -94,19 +94,6 @@ impl<'a, 'b> State<GameData<'a, 'b>> for AssetsExample {
             .with(trans)
             .with(GlobalTransform::default())
             .build();
-    }
-
-    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else {
-            Trans::None
-        }
-    }
-
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
-        data.data.update(&data.world);
-        Trans::None
     }
 }
 

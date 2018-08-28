@@ -1,5 +1,3 @@
-use std::marker::PhantomData;
-
 use amethyst_assets::{
     AssetStorage, Handle, Loader, PrefabData, PrefabError, Progress, ProgressCounter,
 };
@@ -9,7 +7,7 @@ use genmesh::generators::{
     Circle, Cone, Cube, Cylinder, IcoSphere, IndexedPolygon, Plane, SharedVertex, SphereUv, Torus,
 };
 use genmesh::{EmitTriangles, MapVertex, Triangulate, Vertex, Vertices};
-
+use std::marker::PhantomData;
 use {
     ComboMeshCreator, Mesh, MeshData, MeshHandle, Normal, PosNormTangTex, PosNormTex, PosTex,
     Position, Separate, Tangent, TexCoord,

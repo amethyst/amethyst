@@ -1,11 +1,10 @@
+use super::DemoState;
 use amethyst::core::cgmath::{Quaternion, Rad, Rotation, Rotation3};
 use amethyst::core::{Time, Transform};
 use amethyst::ecs::prelude::{Entity, Join, Read, ReadStorage, System, WriteExpect, WriteStorage};
 use amethyst::renderer::{Camera, Light};
 use amethyst::ui::{UiFinder, UiText};
 use amethyst::utils::fps_counter::FPSCounter;
-
-use super::DemoState;
 
 #[derive(Default)]
 pub struct ExampleSystem {

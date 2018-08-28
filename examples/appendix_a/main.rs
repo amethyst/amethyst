@@ -10,8 +10,6 @@ mod config;
 mod pong;
 mod systems;
 
-use std::time::Duration;
-
 use amethyst::audio::AudioBundle;
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::core::transform::TransformBundle;
@@ -20,10 +18,10 @@ use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{DrawFlat, PosTex};
 use amethyst::ui::UiBundle;
-
 use audio::Music;
 use bundle::PongBundle;
 use config::PongConfig;
+use std::time::Duration;
 
 const AUDIO_MUSIC: &'static [&'static str] = &[
     "audio/Computer_Music_All-Stars_-_Wheres_My_Jetpack.ogg",
@@ -56,7 +54,7 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
-            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?
+            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
         .with_bundle(PongBundle::default())?
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?

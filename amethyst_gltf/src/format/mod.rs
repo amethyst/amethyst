@@ -1,10 +1,11 @@
 //! GLTF format
 
-use std::collections::HashMap;
-use std::error::Error as StdError;
-use std::fmt;
-use std::sync::Arc;
-
+use self::animation::load_animations;
+use self::importer::{get_image_data, import, Buffers, ImageFormat};
+use self::material::load_material;
+use self::mesh::load_mesh;
+use self::skin::load_skin;
+use super::*;
 use animation::AnimationHierarchyPrefab;
 use assets::{
     Error as AssetError, Format, FormatValue, Prefab, Result as AssetResult, ResultExt, Source,
@@ -12,13 +13,10 @@ use assets::{
 use core::transform::Transform;
 use gltf;
 use gltf::Gltf;
-
-use self::animation::load_animations;
-use self::importer::{get_image_data, import, Buffers, ImageFormat};
-use self::material::load_material;
-use self::mesh::load_mesh;
-use self::skin::load_skin;
-use super::*;
+use std::collections::HashMap;
+use std::error::Error as StdError;
+use std::fmt;
+use std::sync::Arc;
 
 mod animation;
 mod importer;
@@ -126,7 +124,7 @@ impl Format<Prefab<GltfPrefab>> for GltfSceneFormat {
         _create_reload: bool,
     ) -> AssetResult<FormatValue<Prefab<GltfPrefab>>> {
         Ok(FormatValue::data(
-            load_gltf(source, &name, options).chain_err(|| "Failed to import gltf scene")?
+            load_gltf(source, &name, options).chain_err(|| "Failed to import gltf scene")?,
         ))
     }
 }
@@ -278,6 +276,11 @@ fn load_node(
     parent_bounding_box: &mut GltfNodeExtent,
 ) -> Result<(), GltfError> {
     node_map.insert(node.index(), entity_index);
+
+    // Load node name.
+    if let Some(name) = node.name() {
+        prefab.data_or_default(entity_index).name = Some(Named::new(name.to_string()));
+    }
 
     // Load transformation data, default will be identity
     let (translation, rotation, scale) = node.transform().decomposed();

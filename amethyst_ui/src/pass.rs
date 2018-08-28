@@ -1,8 +1,6 @@
 //! Simple flat forward drawing pass.
 
-use std::cmp::{Ordering, PartialOrd};
-use std::hash::{Hash, Hasher};
-
+use super::*;
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_core::cgmath::vec4 as cg_vec4;
 use amethyst_core::specs::prelude::{
@@ -25,9 +23,9 @@ use gfx_glyph::{
 };
 use glsl_layout::{vec2, vec4, Uniform};
 use hibitset::BitSet;
+use std::cmp::{Ordering, PartialOrd};
+use std::hash::{Hash, Hasher};
 use unicode_segmentation::UnicodeSegmentation;
-
-use super::*;
 
 const VERT_SRC: &[u8] = include_bytes!("shaders/vertex.glsl");
 const FRAG_SRC: &[u8] = include_bytes!("shaders/frag.glsl");
@@ -194,15 +192,18 @@ impl Pass for DrawUi {
             // Create a bitset containing only the new indices.
             let new = (&transform_set ^ &self.cached_draw_order.cached) & &transform_set;
             for (entity, transform, _new) in (&*entities, &ui_transform, &new).join() {
-                let pos = self.cached_draw_order
+                let pos = self
+                    .cached_draw_order
                     .cache
                     .iter()
                     .position(|&(cached_z, _)| transform.global_z >= cached_z);
                 match pos {
-                    Some(pos) => self.cached_draw_order
+                    Some(pos) => self
+                        .cached_draw_order
                         .cache
                         .insert(pos, (transform.global_z, entity)),
-                    None => self.cached_draw_order
+                    None => self
+                        .cached_draw_order
                         .cache
                         .push((transform.global_z, entity)),
                 }
@@ -363,7 +364,8 @@ impl Pass for DrawUi {
                 };
 
                 // Render background highlight
-                let brush = &mut self.glyph_brushes
+                let brush = &mut self
+                    .glyph_brushes
                     .get_mut(&ui_text.brush_id.unwrap())
                     .unwrap();
                 // Maintain the glyph cache (used by the input code).
@@ -373,10 +375,12 @@ impl Pass for DrawUi {
                     .extend(brush.glyphs(&section).cloned());
                 let cache = &mut self.cached_color_textures;
                 if let Some((texture, (start, end))) = editing.and_then(|ed| {
-                    let start = ed.cursor_position
+                    let start = ed
+                        .cursor_position
                         .min(ed.cursor_position + ed.highlight_vector)
                         as usize;
-                    let end = ed.cursor_position
+                    let end = ed
+                        .cursor_position
                         .max(ed.cursor_position + ed.highlight_vector)
                         as usize;
                     let color = if focused.entity == Some(entity) {

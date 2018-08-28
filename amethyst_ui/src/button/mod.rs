@@ -3,7 +3,6 @@ mod system;
 
 pub use self::builder::{UiButtonBuilder, UiButtonBuilderResources};
 pub use self::system::UiButtonSystem;
-
 ///! A clickable button.
 use amethyst_core::specs::prelude::{Component, DenseVecStorage};
 

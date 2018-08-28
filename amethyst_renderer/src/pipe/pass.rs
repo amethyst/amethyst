@@ -1,7 +1,6 @@
 //! Types for constructing render passes.
 
 use amethyst_core::specs::prelude::SystemData;
-
 use error::Result;
 use pipe::{Effect, NewEffect, Target};
 use types::{Encoder, Factory};
