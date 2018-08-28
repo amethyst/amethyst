@@ -32,8 +32,8 @@ use amethyst::renderer::{
     Stage, ALPHA,
 };
 use amethyst::ui::UiBundle;
-use std::time::Duration;
 use amethyst::utils::application_root_dir;
+use std::time::Duration;
 
 use sprite::SpriteSheetDefinition;
 

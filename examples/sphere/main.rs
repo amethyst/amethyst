@@ -6,8 +6,8 @@ use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
 use amethyst::core::transform::TransformBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{DrawShaded, PosNormTex};
-use amethyst::utils::scene::BasicScenePrefab;
 use amethyst::utils::application_root_dir;
+use amethyst::utils::scene::BasicScenePrefab;
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
@@ -28,10 +28,7 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir();
 
-    let display_config_path = format!(
-        "{}/examples/sphere/resources/display_config.ron",
-        app_root
-    );
+    let display_config_path = format!("{}/examples/sphere/resources/display_config.ron", app_root);
 
     let resources = format!("{}/examples/assets/", app_root);
 

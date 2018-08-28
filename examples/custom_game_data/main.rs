@@ -16,9 +16,9 @@ use amethyst::renderer::{
     DisplayConfig, DrawShaded, Pipeline, PosNormTex, RenderBundle, Stage, VirtualKeyCode,
 };
 use amethyst::ui::{DrawUi, UiBundle, UiCreator, UiLoader, UiPrefab};
+use amethyst::utils::application_root_dir;
 use amethyst::utils::fps_counter::FPSCounterBundle;
 use amethyst::utils::scene::BasicScenePrefab;
-use amethyst::utils::application_root_dir;
 use amethyst::Error;
 use example_system::ExampleSystem;
 use game_data::{CustomGameData, CustomGameDataBuilder};

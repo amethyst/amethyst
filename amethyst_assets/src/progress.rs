@@ -194,10 +194,7 @@ impl Tracker for () {
 fn show_error(handle_id: u32, asset_type_name: &'static str, asset_name: &String, error: &Error) {
     let mut err_out = format!(
         "Error loading handle {}, {}, with name {}, caused by: {:?}",
-        handle_id,
-        asset_type_name,
-        asset_name,
-        error
+        handle_id, asset_type_name, asset_name, error
     );
     error
         .iter()

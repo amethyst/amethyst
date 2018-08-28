@@ -73,11 +73,10 @@ mod test {
     use super::Directory;
     use source::Source;
     use std::path::Path;
-    use amethyst::utils::application_root_dir;
 
     #[test]
     fn loads_asset_from_assets_directory() {
-        let test_assets_dir = Path::new(application_root_dir()).join("tests/assets");
+        let test_assets_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/assets");
         let directory = Directory::new(test_assets_dir);
 
         assert_eq!(
@@ -92,7 +91,7 @@ mod test {
     #[test]
     fn tolerates_backslashed_location_with_forward_slashed_asset_paths() {
         // Canonicalized path on Windows uses backslashes
-        let test_assets_dir = Path::new(application_root_dir())
+        let test_assets_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("tests/assets")
             .canonicalize()
             .expect("Failed to canonicalize tests/assets directory");

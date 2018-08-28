@@ -13,8 +13,8 @@ use amethyst::renderer::{
     Camera, DrawShaded, Light, Material, MaterialDefaults, Mesh, MeshData, PointLight, PosNormTex,
     Projection, Rgba,
 };
-use amethyst::Error;
 use amethyst::utils::application_root_dir;
+use amethyst::Error;
 
 #[derive(Clone)]
 struct Custom;

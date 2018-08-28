@@ -38,19 +38,10 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir();
 
-    let display_config_path = format!(
-        "{}/examples/appendix_a/resources/display.ron",
-        app_root
-    );
-    let key_bindings_path = format!(
-        "{}/examples/appendix_a/resources/input.ron",
-        app_root
-    );
+    let display_config_path = format!("{}/examples/appendix_a/resources/display.ron", app_root);
+    let key_bindings_path = format!("{}/examples/appendix_a/resources/input.ron", app_root);
 
-    let config = format!(
-        "{}/examples/appendix_a/resources/config.ron",
-        app_root
-    );
+    let config = format!("{}/examples/appendix_a/resources/config.ron", app_root);
     let assets_dir = format!("{}/examples/assets/", app_root);
 
     let pong_config = PongConfig::load(&config);

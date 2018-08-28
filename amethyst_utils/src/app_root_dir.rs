@@ -2,7 +2,7 @@ use std::env;
 use std::fs;
 
 // Returns the cargo manifest directory when running the executable with cargo
-// or the directory in which the executable resides otherwise, 
+// or the directory in which the executable resides otherwise,
 // traversing symlinks if necessary.
 pub fn application_root_dir() -> String {
     match env::var("PROFILE") {
@@ -12,7 +12,12 @@ pub fn application_root_dir() -> String {
             while let Ok(target) = fs::read_link(path.clone()) {
                 path = target;
             }
-            String::from(path.parent().expect("Failed to get parent directory of the executable.").to_str().unwrap())
+            String::from(
+                path.parent()
+                    .expect("Failed to get parent directory of the executable.")
+                    .to_str()
+                    .unwrap(),
+            )
         }
     }
 }

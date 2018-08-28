@@ -6,8 +6,8 @@ use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
 use amethyst::core::transform::TransformBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use amethyst::utils::scene::BasicScenePrefab;
 use amethyst::utils::application_root_dir;
+use amethyst::utils::scene::BasicScenePrefab;
 
 type MyPrefabData = BasicScenePrefab<ComboMeshCreator>;
 

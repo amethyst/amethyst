@@ -15,9 +15,9 @@ use amethyst::prelude::*;
 use amethyst::renderer::{DrawShaded, PosNormTex};
 use amethyst::shrev::{EventChannel, ReaderId};
 use amethyst::ui::{UiBundle, UiCreator, UiEvent, UiFinder, UiText};
+use amethyst::utils::application_root_dir;
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::utils::scene::BasicScenePrefab;
-use amethyst::utils::application_root_dir;
 use amethyst::winit::VirtualKeyCode;
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
@@ -91,10 +91,7 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir();
 
-    let display_config_path = format!(
-        "{}/examples/ui/resources/display.ron",
-        app_root
-    );
+    let display_config_path = format!("{}/examples/ui/resources/display.ron", app_root);
 
     let resources = format!("{}/examples/assets", app_root);
 

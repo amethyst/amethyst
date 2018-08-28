@@ -6,8 +6,8 @@ use amethyst::assets::{AssetStorage, Handle, Loader, Processor, ProgressCounter}
 use amethyst::ecs::{Read, ReadExpect};
 use amethyst::locale::*;
 use amethyst::prelude::*;
-use amethyst::Error;
 use amethyst::utils::application_root_dir;
+use amethyst::Error;
 
 struct Example {
     progress_counter: Option<ProgressCounter>,

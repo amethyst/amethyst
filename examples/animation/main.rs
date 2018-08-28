@@ -14,8 +14,8 @@ use amethyst::ecs::prelude::Entity;
 use amethyst::input::{get_key, is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::{DrawShaded, ElementState, PosNormTex, VirtualKeyCode};
-use amethyst::utils::scene::BasicScenePrefab;
 use amethyst::utils::application_root_dir;
+use amethyst::utils::scene::BasicScenePrefab;
 
 type MyPrefabData = (
     Option<BasicScenePrefab<Vec<PosNormTex>>>,

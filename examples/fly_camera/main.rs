@@ -9,8 +9,8 @@ use amethyst::core::WithNamed;
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{DrawShaded, PosNormTex};
-use amethyst::utils::scene::BasicScenePrefab;
 use amethyst::utils::application_root_dir;
+use amethyst::utils::scene::BasicScenePrefab;
 use amethyst::Error;
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
@@ -42,10 +42,7 @@ fn main() -> Result<(), Error> {
         app_root
     );
 
-    let key_bindings_path = format!(
-        "{}/examples/fly_camera/resources/input.ron",
-        app_root
-    );
+    let key_bindings_path = format!("{}/examples/fly_camera/resources/input.ron", app_root);
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])

@@ -6,8 +6,8 @@ use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
 use amethyst::core::transform::TransformBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{DrawShaded, PosNormTex};
-use amethyst::utils::scene::BasicScenePrefab;
 use amethyst::utils::application_root_dir;
+use amethyst::utils::scene::BasicScenePrefab;
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 

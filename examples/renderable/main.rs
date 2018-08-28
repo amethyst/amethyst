@@ -19,9 +19,9 @@ use amethyst::renderer::{
     AmbientColor, Camera, DrawShaded, ElementState, Light, PosNormTex, VirtualKeyCode,
 };
 use amethyst::ui::{UiBundle, UiCreator, UiFinder, UiText};
+use amethyst::utils::application_root_dir;
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::utils::scene::BasicScenePrefab;
-use amethyst::utils::application_root_dir;
 use amethyst::Error;
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;

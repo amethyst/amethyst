@@ -23,7 +23,6 @@ use std::time::Duration;
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use vergen;
 use winit::{Event, WindowEvent};
-use utils::app_root_dir::*;
 
 /// An Application is the root object of the game engine. It binds the OS
 /// event loop, state machines, timers and other core components in a central place.

@@ -20,8 +20,8 @@ use amethyst::ecs::prelude::{Entity, ReadStorage, Write, WriteStorage};
 use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use amethyst::utils::tag::{Tag, TagFinder};
 use amethyst::utils::application_root_dir;
+use amethyst::utils::tag::{Tag, TagFinder};
 use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem};
 
 #[derive(Default)]
@@ -221,10 +221,7 @@ fn main() -> Result<(), amethyst::Error> {
 
     let app_root = application_root_dir();
 
-    let path = format!(
-        "{}/examples/gltf/resources/display_config.ron",
-        app_root
-    );
+    let path = format!("{}/examples/gltf/resources/display_config.ron", app_root);
 
     let resources_directory = format!("{}/examples/assets/", app_root);
 

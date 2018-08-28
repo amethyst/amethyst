@@ -1,13 +1,11 @@
 //! Defining a custom asset and format.
 
-extern crate amethyst;
 extern crate amethyst_assets;
 extern crate amethyst_core;
 extern crate rayon;
 
 use amethyst_assets::*;
 use amethyst_core::specs::prelude::VecStorage;
-use amethyst::utils::application_root_dir;
 use rayon::ThreadPoolBuilder;
 use std::str::from_utf8;
 use std::sync::Arc;
@@ -44,7 +42,7 @@ impl Format<DummyAsset> for DummyFormat {
 }
 
 fn main() {
-    let path = format!("{}/examples/assets", application_root_dir());
+    let path = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
 
     let builder = ThreadPoolBuilder::new().num_threads(8);
     let pool = Arc::new(builder.build().expect("Invalid config"));

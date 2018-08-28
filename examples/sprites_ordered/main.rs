@@ -17,12 +17,12 @@ use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::Entity;
 use amethyst::input::{get_key, is_close_requested, is_key_down};
 use amethyst::prelude::*;
-use amethyst::utils::application_root_dir;
 use amethyst::renderer::{
     Camera, ColorMask, DepthMode, DisplayConfig, DrawSprite, ElementState, MaterialTextureSet,
     Pipeline, Projection, RenderBundle, ScreenDimensions, SpriteRender, SpriteSheet,
     SpriteSheetHandle, Stage, Transparent, VirtualKeyCode, ALPHA,
 };
+use amethyst::utils::application_root_dir;
 
 use sprite::SpriteSheetDefinition;
 
