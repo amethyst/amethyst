@@ -1,8 +1,6 @@
-use amethyst::core::SystemBundle;
+use amethyst::core::{SystemBundle, ThreadPool};
 use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World};
 use amethyst::{DataInit, Error, Result};
-use rayon::ThreadPool;
-use std::sync::Arc;
 
 pub struct CustomGameData<'a, 'b> {
     pub base: Dispatcher<'a, 'b>,
@@ -68,7 +66,7 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
 impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> {
     fn build(self, world: &mut World) -> CustomGameData<'a, 'b> {
         #[cfg(not(no_threading))]
-        let pool = world.read_resource::<Arc<ThreadPool>>().clone();
+        let pool = world.read_resource::<ThreadPool>().clone();
 
         #[cfg(not(no_threading))]
         let mut base = self.base.with_pool(pool.clone()).build();

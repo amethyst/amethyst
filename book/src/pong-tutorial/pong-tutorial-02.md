@@ -84,11 +84,12 @@ that will determine what is rendered on screen. It behaves just like a
 real life camera: it records a specific part of the world and can be
 moved around at will.
 
-First, let's define some constants:
+First, let's define some constants. We will make them public for use in other
+modules later:
 
 ```rust,no_run,noplaypen
-const ARENA_HEIGHT: f32 = 100.0;
-const ARENA_WIDTH: f32 = 100.0;
+pub const ARENA_HEIGHT: f32 = 100.0;
+pub const ARENA_WIDTH: f32 = 100.0;
 ```
 
 These constants will determine the size of our arena.
@@ -153,16 +154,17 @@ much better from then on, we promise!
 
 ## Our first Component
 
-In `pong.rs` let's create our first `Component`, a definition of a paddle.
+In `pong.rs` let's create our first `Component`, a definition of a paddle. We
+will make `Side` and `Paddle` public for use in other modules later.
 
 ```rust,no_run,noplaypen
 #[derive(PartialEq, Eq)]
-enum Side {
+pub enum Side {
     Left,
     Right,
 }
 
-struct Paddle {
+pub struct Paddle {
     pub side: Side,
     pub width: f32,
     pub height: f32,

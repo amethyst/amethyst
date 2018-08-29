@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Added Named Component. ([#879])([#896])
 * Support for progressive jpeg loading. ([#877])
 * New `application_root_dir()` function in `amethyst_utils`. ([#831])
+* Load node names for glTF prefabs. ([#905])
 
 ### Changed
 * Sprites contain their dimensions and offsets to render them with the right size and desired position. ([#829], [#830])
@@ -23,9 +24,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Simplified creating states with SimpleState and EmptyState. ([#887])
 * Updated ProgressCounter to show loading errors. ([#892])
 * Replaced the `imagefmt` crate with `image`. ([#877])
+* Optimize Sprite rendering via batching. ([#902])
+* Derive `Debug` and `PartialEq` for `amethyst_input::Axis`. ([#903], [#904])
+
 ### Removed
 
 ### Fixed
+* Material ids in GLTF loader caused multiple GLTF files to get incorrect materials applied ([#915])
 
 [#829]: https://github.com/amethyst/amethyst/issues/829
 [#830]: https://github.com/amethyst/amethyst/pull/830
@@ -36,6 +41,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#877]: https://github.com/amethyst/amethyst/pull/877
 [#896]: https://github.com/amethyst/amethyst/pull/896
 [#831]: https://github.com/amethyst/amethyst/pull/831
+[#902]: https://github.com/amethyst/amethyst/pull/902
+[#905]: https://github.com/amethyst/amethyst/pull/905
+[#903]: https://github.com/amethyst/amethyst/issues/903
+[#904]: https://github.com/amethyst/amethyst/pull/904
+[#915]: https://github.com/amethyst/amethyst/pull/915
 
 ## [0.8.0] - 2018-08
 ### Added
