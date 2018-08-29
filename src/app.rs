@@ -21,6 +21,7 @@ use std::sync::Arc;
 use std::time::Duration;
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
+use utils::application_root_dir;
 use vergen;
 use winit::{Event, WindowEvent};
 
