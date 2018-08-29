@@ -35,6 +35,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#892]: https://github.com/amethyst/amethyst/pull/892
 [#877]: https://github.com/amethyst/amethyst/pull/877
 [#896]: https://github.com/amethyst/amethyst/pull/896
+[#831]: https://github.com/amethyst/amethyst/pull/831
 
 ## [0.8.0] - 2018-08
 ### Added
