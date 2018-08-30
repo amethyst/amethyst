@@ -6,6 +6,7 @@ use amethyst::assets::{AssetStorage, Handle, Loader, Processor, ProgressCounter}
 use amethyst::ecs::{Read, ReadExpect};
 use amethyst::locale::*;
 use amethyst::prelude::*;
+use amethyst::utils::application_root_dir;
 use amethyst::Error;
 
 struct Example {
@@ -87,7 +88,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
-    let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
+    let resources_directory = format!("{}/examples/assets", application_root_dir());
 
     let game_data = GameDataBuilder::default().with(Processor::<Locale>::new(), "proc", &[]);
 

@@ -9,6 +9,7 @@ use amethyst::core::WithNamed;
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{DrawShaded, PosNormTex};
+use amethyst::utils::application_root_dir;
 use amethyst::utils::scene::BasicScenePrefab;
 use amethyst::Error;
 
@@ -32,17 +33,16 @@ impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
-    let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
+    let app_root = application_root_dir();
+
+    let resources_directory = format!("{}/examples/assets", app_root);
 
     let display_config_path = format!(
         "{}/examples/fly_camera/resources/display_config.ron",
-        env!("CARGO_MANIFEST_DIR")
+        app_root
     );
 
-    let key_bindings_path = format!(
-        "{}/examples/fly_camera/resources/input.ron",
-        env!("CARGO_MANIFEST_DIR")
-    );
+    let key_bindings_path = format!("{}/examples/fly_camera/resources/input.ron", app_root);
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])

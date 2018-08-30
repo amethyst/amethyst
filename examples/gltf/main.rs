@@ -20,6 +20,7 @@ use amethyst::ecs::prelude::{Entity, ReadStorage, Write, WriteStorage};
 use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::*;
+use amethyst::utils::application_root_dir;
 use amethyst::utils::tag::{Tag, TagFinder};
 use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem};
 
@@ -218,12 +219,11 @@ fn toggle_or_cycle_animation(
 fn main() -> Result<(), amethyst::Error> {
     amethyst::start_logger(Default::default());
 
-    let path = format!(
-        "{}/examples/gltf/resources/display_config.ron",
-        env!("CARGO_MANIFEST_DIR")
-    );
+    let app_root = application_root_dir();
 
-    let resources_directory = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+    let path = format!("{}/examples/gltf/resources/display_config.ron", app_root);
+
+    let resources_directory = format!("{}/examples/assets/", app_root);
 
     let game_data = GameDataBuilder::default()
         .with(

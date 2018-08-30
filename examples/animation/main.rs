@@ -14,6 +14,7 @@ use amethyst::ecs::prelude::Entity;
 use amethyst::input::{get_key, is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::{DrawShaded, ElementState, PosNormTex, VirtualKeyCode};
+use amethyst::utils::application_root_dir;
 use amethyst::utils::scene::BasicScenePrefab;
 
 type MyPrefabData = (
@@ -168,12 +169,14 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
+    let app_root = application_root_dir();
+
     let display_config_path = format!(
         "{}/examples/animation/resources/display_config.ron",
-        env!("CARGO_MANIFEST_DIR")
+        app_root
     );
 
-    let resources = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+    let resources = format!("{}/examples/assets/", app_root);
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])

@@ -19,6 +19,7 @@ use amethyst::renderer::{
     AmbientColor, Camera, DrawShaded, ElementState, Light, PosNormTex, VirtualKeyCode,
 };
 use amethyst::ui::{UiBundle, UiCreator, UiFinder, UiText};
+use amethyst::utils::application_root_dir;
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::utils::scene::BasicScenePrefab;
 use amethyst::Error;
@@ -161,12 +162,14 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
+    let app_root = application_root_dir();
+
     // Add our meshes directory to the asset loader.
-    let resources_directory = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+    let resources_directory = format!("{}/examples/assets/", app_root);
 
     let display_config_path = format!(
         "{}/examples/renderable/resources/display_config.ron",
-        env!("CARGO_MANIFEST_DIR")
+        app_root
     );
 
     let game_data = GameDataBuilder::default()

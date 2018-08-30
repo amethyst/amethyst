@@ -11,7 +11,10 @@ extern crate shred_derive;
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
+pub mod app_root_dir;
 pub mod circular_buffer;
 pub mod fps_counter;
 pub mod scene;
 pub mod tag;
+
+pub use self::app_root_dir::*;

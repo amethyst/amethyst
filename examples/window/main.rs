@@ -4,6 +4,7 @@ extern crate amethyst;
 
 use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosNormTex, RenderBundle, Stage};
+use amethyst::utils::application_root_dir;
 
 struct Example;
 
@@ -14,7 +15,7 @@ fn main() -> amethyst::Result<()> {
 
     let path = format!(
         "{}/examples/window/resources/display_config.ron",
-        env!("CARGO_MANIFEST_DIR")
+        application_root_dir()
     );
     let config = DisplayConfig::load(&path);
 

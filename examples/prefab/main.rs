@@ -7,6 +7,7 @@ use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
 use amethyst::core::TransformBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{DrawShaded, PosNormTex};
+use amethyst::utils::application_root_dir;
 use amethyst::utils::scene::BasicScenePrefab;
 use amethyst::Error;
 
@@ -27,13 +28,12 @@ impl<'a, 'b> SimpleState<'a, 'b> for AssetsExample {
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
-    // Add our meshes directory to the asset loader.
-    let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
+    let app_root = application_root_dir();
 
-    let display_config_path = format!(
-        "{}/examples/prefab/resources/display_config.ron",
-        env!("CARGO_MANIFEST_DIR")
-    );
+    // Add our meshes directory to the asset loader.
+    let resources_directory = format!("{}/examples/assets", app_root);
+
+    let display_config_path = format!("{}/examples/prefab/resources/display_config.ron", app_root);
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
