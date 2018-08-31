@@ -178,6 +178,49 @@ impl With<Color> for PosColor {
     };
 }
 
+/// Vertex format with position, RGBA8 color and normal attributes.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PosColorNorm {
+    /// Position of the vertex in 3D space.
+    pub position: [f32; 3],
+    /// RGBA color value of the vertex.
+    pub color: [f32; 4],
+    /// Normal vector of the vertex.
+    pub normal: [f32; 3],
+}
+
+unsafe impl Pod for PosColorNorm {}
+
+impl VertexFormat for PosColorNorm {
+    const ATTRIBUTES: Attributes<'static> = &[
+        (Position::NAME, <Self as With<Position>>::FORMAT),
+        (Color::NAME, <Self as With<Color>>::FORMAT),
+        (Normal::NAME, <Self as With<Normal>>::FORMAT),
+    ];
+}
+
+impl With<Position> for PosColorNorm {
+    const FORMAT: AttributeFormat = Element {
+        offset: 0,
+        format: Position::FORMAT,
+    };
+}
+
+impl With<Color> for PosColorNorm {
+    const FORMAT: AttributeFormat = Element {
+        offset: Position::SIZE,
+        format: Color::FORMAT,
+    };
+}
+
+impl With<Normal> for PosColorNorm {
+    const FORMAT: AttributeFormat = Element {
+        offset: Position::SIZE + Color::SIZE,
+        format: Normal::FORMAT,
+    };
+}
+
 /// Vertex format with position and UV texture coordinate attributes.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
