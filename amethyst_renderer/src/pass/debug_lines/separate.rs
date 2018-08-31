@@ -2,25 +2,20 @@
 
 use super::*;
 use amethyst_assets::AssetStorage;
-use amethyst_core::specs::prelude::{Entities, Join, Read, ReadExpect, ReadStorage};
+use amethyst_core::specs::prelude::{Entities, Join, Read, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
 use cam::{ActiveCamera, Camera};
 use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
-use light::Light;
 use mesh::{Mesh, MeshHandle};
-use mtl::{Material, MaterialDefaults};
-use pass::shaded_util::{set_light_args, setup_light_buffers};
-use pass::skinning::{create_skinning_effect, setup_skinning_buffers};
-use pass::util::{draw_mesh, get_camera, setup_textures, setup_vertex_args};
+use pass::util::{
+    draw_mesh, get_camera, set_attribute_buffers, set_vertex_args, setup_vertex_args,
+};
 use pipe::pass::{Pass, PassData};
 use pipe::{DepthMode, Effect, NewEffect};
-use resources::AmbientColor;
-use skinning::JointTransforms;
-use tex::Texture;
 use types::{Encoder, Factory};
-use vertex::{Attributes, Normal, Position, Separate, TexCoord, VertexFormat};
+use vertex::{Attributes, Normal, Position, Separate, VertexFormat};
 use visibility::Visibility;
 
 static ATTRIBUTES: [Attributes<'static>; 2] = [
@@ -57,16 +52,10 @@ impl<'a> PassData<'a> for DrawDebugLinesSeparate {
         Entities<'a>,
         Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
-        Read<'a, AmbientColor>,
         Read<'a, AssetStorage<Mesh>>,
-        Read<'a, AssetStorage<Texture>>,
-        ReadExpect<'a, MaterialDefaults>,
         Option<Read<'a, Visibility>>,
         ReadStorage<'a, MeshHandle>,
-        ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
-        ReadStorage<'a, Light>,
-        ReadStorage<'a, JointTransforms>,
     );
 }
 
@@ -100,86 +89,48 @@ impl Pass for DrawDebugLinesSeparate {
         encoder: &mut Encoder,
         effect: &mut Effect,
         _factory: Factory,
-        (
-            entities,
-            active,
-            camera,
-            ambient,
-            mesh_storage,
-            tex_storage,
-            material_defaults,
-            visibility,
-            mesh,
-            material,
-            global,
-            light,
-            joints,
-        ): <Self as PassData<'a>>::Data,
+        (entities, active, camera, mesh_storage, visibility, mesh, global): <Self as PassData<
+            'a,
+        >>::Data,
     ) {
         trace!("Drawing shaded pass");
         let camera = get_camera(active, &camera, &global);
 
         match visibility {
-            None => for (entity, mesh, material, global) in
-                (&*entities, &mesh, &material, &global).join()
-            {
-                draw_mesh(
-                    encoder,
-                    effect,
-                    false,
-                    mesh_storage.get(mesh),
-                    joints.get(entity),
-                    &tex_storage,
-                    Some(material),
-                    &material_defaults,
-                    camera,
-                    Some(global),
-                    &ATTRIBUTES,
-                    &TEXTURES,
-                );
-            },
-            Some(ref visibility) => {
-                for (entity, mesh, material, global, _) in (
-                    &*entities,
-                    &mesh,
-                    &material,
-                    &global,
-                    &visibility.visible_unordered,
-                ).join()
-                {
-                    draw_mesh(
-                        encoder,
-                        effect,
-                        false,
-                        mesh_storage.get(mesh),
-                        joints.get(entity),
-                        &tex_storage,
-                        Some(material),
-                        &material_defaults,
-                        camera,
-                        Some(global),
-                        &ATTRIBUTES,
-                        &TEXTURES,
-                    );
+            None => for (entity, mesh, global) in (&*entities, &mesh, &global).join() {
+                let mesh = match mesh_storage.get(mesh) {
+                    Some(mesh) => mesh,
+                    None => return,
+                };
+
+                if !set_attribute_buffers(effect, mesh, &ATTRIBUTES) {
+                    effect.clear();
+                    return;
                 }
 
-                for entity in &visibility.visible_ordered {
-                    if let Some(mesh) = mesh.get(*entity) {
-                        draw_mesh(
-                            encoder,
-                            effect,
-                            false,
-                            mesh_storage.get(mesh),
-                            joints.get(*entity),
-                            &tex_storage,
-                            material.get(*entity),
-                            &material_defaults,
-                            camera,
-                            global.get(*entity),
-                            &ATTRIBUTES,
-                            &TEXTURES,
-                        );
+                set_vertex_args(effect, encoder, camera, global);
+
+                effect.draw(mesh.slice(), encoder);
+                effect.clear();
+            },
+            Some(ref visibility) => {
+                for (entity, mesh, global, _) in
+                    (&*entities, &mesh, &global, &visibility.visible_unordered).join()
+                {
+                    let mesh = match mesh_storage.get(mesh) {
+                        Some(mesh) => mesh,
+                        None => return,
+                    };
+
+                    if !set_attribute_buffers(effect, mesh, &ATTRIBUTES) {
+                        effect.clear();
+                        return;
                     }
+
+                    set_vertex_args(effect, encoder, camera, global);
+
+                    effect.draw(mesh.slice(), encoder);
+                    effect.clear();
                 }
             }
         }
