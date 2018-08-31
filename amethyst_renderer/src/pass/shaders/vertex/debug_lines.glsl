@@ -9,11 +9,13 @@ layout (std140) uniform VertexArgs {
 };
 
 in vec3 position;
-in vec3 normal;
+// in vec3 normal;
+in vec4 color;
 
 out VertexData {
     vec3 position;
     vec3 normal;
+    vec4 color;
 } vertex;
 
 void main() {
@@ -22,5 +24,7 @@ void main() {
     gl_Position = proj * view * vertex_position;
 
     mat3 correctionMatrix = mat3(transpose(inverse(view * model)));
-    vertex.normal = normalize(vec3(proj * vec4(correctionMatrix * normal, 0.0)));
+    vertex.normal = normalize(vec3(proj * vec4(correctionMatrix * vec3(1, 1, 1), 0.0)));
+
+    vertex.color = color;
 }

@@ -3,6 +3,7 @@
 in VertexData {
     vec3 position;
     vec3 normal;
+    vec4 color;
 } vertex[3];
 
 layout (triangles) in;

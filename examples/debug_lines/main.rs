@@ -2,7 +2,8 @@
 
 extern crate amethyst;
 
-use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
+use amethyst::assets::{Loader, PrefabLoader, PrefabLoaderSystem, ProgressCounter, RonFormat};
+use amethyst::core::transform::GlobalTransform;
 use amethyst::core::transform::TransformBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
@@ -15,10 +16,36 @@ struct Example;
 
 impl<'a, 'b> SimpleState<'a, 'b> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
-        let handle = data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
-            loader.load("prefab/sphere.ron", RonFormat, (), ())
-        });
-        data.world.create_entity().with(handle).build();
+        let mut progress = ProgressCounter::default();
+
+        let mesh: MeshHandle = {
+            let mesh_storage = data.world.read_resource();
+            let loader = data.world.read_resource::<Loader>();
+            let vertices = vec![
+                PosColor {
+                    position: [0.5, -0.5, 0.0],
+                    color: [0.0, 0.0, 1.0, 1.0],
+                    // normal: [1.0, 0.0, 0.0],
+                },
+                PosColor {
+                    position: [0.0, 0.5, 0.0],
+                    color: [1.0, 0.0, 0.0, 1.0],
+                    // normal: [1.0, 0.0, 0.0],
+                },
+                PosColor {
+                    position: [-0.5, -0.5, 0.0],
+                    color: [0.0, 1.0, 0.0, 1.0],
+                    // normal: [1.0, 0.0, 0.0],
+                },
+            ];
+            loader.load_from_data(MeshData::from(vertices), &mut progress, &mesh_storage)
+        };
+
+        data.world
+            .create_entity()
+            .with(mesh)
+            .with(GlobalTransform::new())
+            .build();
     }
 }
 
@@ -27,18 +54,15 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = env!("CARGO_MANIFEST_DIR");
 
-    let display_config_path = format!(
-        "{}/examples/separate_sphere/resources/display.ron",
-        app_root
-    );
+    let display_config_path = format!("{}/examples/debug_lines/resources/display.ron", app_root);
 
     let resources = format!("{}/examples/assets/", app_root);
 
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.001, 0.005, 0.005, 1.0], 1.0)
-            .with_pass(DrawShadedSeparate::new())
-            .with_pass(DrawDebugLinesSeparate::new()),
+            // .with_pass(DrawShadedSeparate::new()),
+        .with_pass(DrawDebugLines::<PosColor>::new()),
     );
 
     let config = DisplayConfig::load(display_config_path);
