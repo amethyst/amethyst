@@ -20,6 +20,9 @@ pub enum MeshData {
     /// Position and color
     PosColor(Vec<PosColor>),
 
+    /// Position, color and normal
+    PosColorNorm(Vec<PosColorNorm>),
+
     /// Position and texture coordinates
     PosTex(Vec<PosTex>),
 
@@ -37,6 +40,12 @@ pub enum MeshData {
 impl From<Vec<PosColor>> for MeshData {
     fn from(data: Vec<PosColor>) -> Self {
         MeshData::PosColor(data)
+    }
+}
+
+impl From<Vec<PosColorNorm>> for MeshData {
+    fn from(data: Vec<PosColorNorm>) -> Self {
+        MeshData::PosColorNorm(data)
     }
 }
 
@@ -183,6 +192,10 @@ fn from_data(obj_set: ObjSet) -> Vec<PosNormTex> {
 pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> Result<ProcessingState<Mesh>> {
     let data = match data {
         MeshData::PosColor(ref vertices) => {
+            let mb = MeshBuilder::new(vertices);
+            renderer.create_mesh(mb)
+        }
+        MeshData::PosColorNorm(ref vertices) => {
             let mb = MeshBuilder::new(vertices);
             renderer.create_mesh(mb)
         }

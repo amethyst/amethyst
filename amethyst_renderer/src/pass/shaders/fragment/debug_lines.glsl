@@ -4,8 +4,8 @@
 
 in VertexData {
     vec3 position;
-    vec3 normal;
     vec4 color;
+    vec3 normal;
 } vertex;
 
 out vec4 out_color;

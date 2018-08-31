@@ -29,7 +29,7 @@ use visibility::Visibility;
 ///
 /// * `V`: `VertexFormat`
 #[derive(Derivative, Clone, Debug, PartialEq)]
-#[derivative(Default(bound = "V: Query<(Position, Color)>"))]
+#[derivative(Default(bound = "V: Query<(Position, Color, Normal)>"))]
 pub struct DrawDebugLines<V> {
     _pd: PhantomData<V>,
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
@@ -37,7 +37,7 @@ pub struct DrawDebugLines<V> {
 
 impl<V> DrawDebugLines<V>
 where
-    V: Query<(Position, Color)>,
+    V: Query<(Position, Color, Normal)>,
 {
     /// Create instance of `DrawDebugLines` pass
     pub fn new() -> Self {
@@ -58,7 +58,7 @@ where
 
 impl<'a, V> PassData<'a> for DrawDebugLines<V>
 where
-    V: Query<(Position, Color)>,
+    V: Query<(Position, Color, Normal)>,
 {
     type Data = (
         Entities<'a>,
@@ -73,7 +73,7 @@ where
 
 impl<V> Pass for DrawDebugLines<V>
 where
-    V: Query<(Position, Color)>,
+    V: Query<(Position, Color, Normal)>,
 {
     fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
         debug!("Building debug lines pass");

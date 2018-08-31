@@ -22,20 +22,20 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
             let mesh_storage = data.world.read_resource();
             let loader = data.world.read_resource::<Loader>();
             let vertices = vec![
-                PosColor {
+                PosColorNorm {
                     position: [0.5, -0.5, 0.0],
                     color: [0.0, 0.0, 1.0, 1.0],
-                    // normal: [1.0, 0.0, 0.0],
+                    normal: [1.0, 0.0, 0.0],
                 },
-                PosColor {
+                PosColorNorm {
                     position: [0.0, 0.5, 0.0],
                     color: [1.0, 0.0, 0.0, 1.0],
-                    // normal: [1.0, 0.0, 0.0],
+                    normal: [0.0, 1.0, 0.0],
                 },
-                PosColor {
+                PosColorNorm {
                     position: [-0.5, -0.5, 0.0],
                     color: [0.0, 1.0, 0.0, 1.0],
-                    // normal: [1.0, 0.0, 0.0],
+                    normal: [-1.0, 0.0, 0.0],
                 },
             ];
             loader.load_from_data(MeshData::from(vertices), &mut progress, &mesh_storage)
@@ -62,7 +62,7 @@ fn main() -> amethyst::Result<()> {
         Stage::with_backbuffer()
             .clear_target([0.001, 0.005, 0.005, 1.0], 1.0)
             // .with_pass(DrawShadedSeparate::new()),
-        .with_pass(DrawDebugLines::<PosColor>::new()),
+        .with_pass(DrawDebugLines::<PosColorNorm>::new()),
     );
 
     let config = DisplayConfig::load(display_config_path);
