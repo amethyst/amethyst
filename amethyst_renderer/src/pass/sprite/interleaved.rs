@@ -74,6 +74,7 @@ impl Pass for DrawSprite {
 
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);
         builder
+            .without_back_face_culling()
             .with_raw_constant_buffer(
                 "ViewArgs",
                 mem::size_of::<<ViewArgs as Uniform>::Std140>(),
