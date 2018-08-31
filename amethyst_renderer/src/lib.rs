@@ -122,9 +122,9 @@ pub use transparent::{
 };
 pub use types::{Encoder, Factory, PipelineState, Resources};
 pub use vertex::{
-    Attribute, AttributeFormat, Attributes, Color, Normal, PosColor, PosNormTangTex, PosNormTex,
-    PosTex, Position, Query, Separate, Tangent, TexCoord, VertexBufferCombination, VertexFormat,
-    With,
+    Attribute, AttributeFormat, Attributes, Color, Normal, PosColor, PosColorNorm, PosNormTangTex,
+    PosNormTex, PosTex, Position, Query, Separate, Tangent, TexCoord, VertexBufferCombination,
+    VertexFormat, With,
 };
 pub use visibility::{Visibility, VisibilitySortingSystem};
 
