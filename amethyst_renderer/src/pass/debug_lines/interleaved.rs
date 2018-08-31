@@ -2,6 +2,7 @@
 
 use super::*;
 use amethyst_assets::AssetStorage;
+use amethyst_core::cgmath::{Matrix4, One};
 use amethyst_core::specs::prelude::{Entities, Join, Read, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
 use cam::{ActiveCamera, Camera};
@@ -14,28 +15,36 @@ use pass::util::{
 };
 use pipe::pass::{Pass, PassData};
 use pipe::{DepthMode, Effect, NewEffect};
+use std::marker::PhantomData;
 use types::{Encoder, Factory};
-use vertex::{Attributes, Normal, Position, Separate, VertexFormat};
+use vertex::{Color, Normal, Position, Query, VertexFormat};
 use visibility::Visibility;
 
-static ATTRIBUTES: [Attributes<'static>; 2] = [
-    Separate::<Position>::ATTRIBUTES,
-    Separate::<Normal>::ATTRIBUTES,
-];
-
-/// Draw a bunch of instanced debugging lines
-#[derive(Default, Clone, Debug, PartialEq)]
-pub struct DrawDebugLinesSeparate {
+/// Draw several simple lines for debugging
+///
+/// See the [crate level documentation](index.html) for information about interleaved and separate
+/// passes.
+///
+/// # Type Parameters:
+///
+/// * `V`: `VertexFormat`
+#[derive(Derivative, Clone, Debug, PartialEq)]
+#[derivative(Default(bound = "V: Query<(Position, Color)>"))]
+pub struct DrawDebugLines<V> {
+    _pd: PhantomData<V>,
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
 }
 
-impl DrawDebugLinesSeparate {
+impl<V> DrawDebugLines<V>
+where
+    V: Query<(Position, Color)>,
+{
     /// Create instance of `DrawDebugLines` pass
     pub fn new() -> Self {
         Default::default()
     }
 
-    /// Enable transparency
+    /// Enable transparency { Currently not supported, but should be useful }
     pub fn with_transparency(
         mut self,
         mask: ColorMask,
@@ -47,7 +56,10 @@ impl DrawDebugLinesSeparate {
     }
 }
 
-impl<'a> PassData<'a> for DrawDebugLinesSeparate {
+impl<'a, V> PassData<'a> for DrawDebugLines<V>
+where
+    V: Query<(Position, Color)>,
+{
     type Data = (
         Entities<'a>,
         Option<Read<'a, ActiveCamera>>,
@@ -59,23 +71,18 @@ impl<'a> PassData<'a> for DrawDebugLinesSeparate {
     );
 }
 
-impl Pass for DrawDebugLinesSeparate {
+impl<V> Pass for DrawDebugLines<V>
+where
+    V: Query<(Position, Color)>,
+{
     fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
-        debug!("Building shaded pass");
-        let mut builder = effect.geom(VERT_SRC, GEOM_SRC, FRAG_SRC);
+        debug!("Building debug lines pass");
+        // let mut builder = effect.geom(VERT_SRC, GEOM_SRC, FRAG_SRC);
+        let mut builder = effect.simple(VERT_SRC, FRAG_SRC);
 
         debug!("Effect compiled, adding vertex/uniform buffers");
-        builder
-            .with_raw_vertex_buffer(
-                Separate::<Position>::ATTRIBUTES,
-                Separate::<Position>::size() as ElemStride,
-                0,
-            )
-            .with_raw_vertex_buffer(
-                Separate::<Normal>::ATTRIBUTES,
-                Separate::<Normal>::size() as ElemStride,
-                0,
-            );
+        builder.with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0);
+
         setup_vertex_args(&mut builder);
         match self.transparency {
             Some((mask, blend, depth)) => builder.with_blended_output("color", mask, blend, depth),
@@ -93,41 +100,39 @@ impl Pass for DrawDebugLinesSeparate {
             'a,
         >>::Data,
     ) {
-        trace!("Drawing shaded pass");
+        trace!("Drawing debug lines pass");
         let camera = get_camera(active, &camera, &global);
 
         match visibility {
-            None => for (entity, mesh, global) in (&*entities, &mesh, &global).join() {
+            None => for (entity, mesh) in (&*entities, &mesh).join() {
                 let mesh = match mesh_storage.get(mesh) {
                     Some(mesh) => mesh,
                     None => return,
                 };
 
-                if !set_attribute_buffers(effect, mesh, &ATTRIBUTES) {
+                if !set_attribute_buffers(effect, mesh, &[V::QUERIED_ATTRIBUTES]) {
                     effect.clear();
                     return;
                 }
 
-                set_vertex_args(effect, encoder, camera, global);
+                set_vertex_args(effect, encoder, camera, &GlobalTransform(Matrix4::one()));
 
                 effect.draw(mesh.slice(), encoder);
                 effect.clear();
             },
             Some(ref visibility) => {
-                for (entity, mesh, global, _) in
-                    (&*entities, &mesh, &global, &visibility.visible_unordered).join()
-                {
+                for (entity, mesh, _) in (&*entities, &mesh, &visibility.visible_unordered).join() {
                     let mesh = match mesh_storage.get(mesh) {
                         Some(mesh) => mesh,
                         None => return,
                     };
 
-                    if !set_attribute_buffers(effect, mesh, &ATTRIBUTES) {
+                    if !set_attribute_buffers(effect, mesh, &[V::QUERIED_ATTRIBUTES]) {
                         effect.clear();
                         return;
                     }
 
-                    set_vertex_args(effect, encoder, camera, global);
+                    set_vertex_args(effect, encoder, camera, &GlobalTransform(Matrix4::one()));
 
                     effect.draw(mesh.slice(), encoder);
                     effect.clear();

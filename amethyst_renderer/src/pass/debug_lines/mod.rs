@@ -1,6 +1,6 @@
-pub use self::separate::DrawDebugLinesSeparate;
+pub use self::interleaved::DrawDebugLines;
 
-mod separate;
+mod interleaved;
 
 static VERT_SRC: &[u8] = include_bytes!("../shaders/vertex/debug_lines.glsl");
 static GEOM_SRC: &[u8] = include_bytes!("../shaders/geometry/debug_lines.glsl");

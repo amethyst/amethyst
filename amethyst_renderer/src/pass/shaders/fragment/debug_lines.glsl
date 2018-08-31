@@ -2,10 +2,10 @@
 
 #version 150 core
 
-uniform vec3 camera_position;
-
 in VertexData {
     vec3 position;
+    vec3 normal;
+    vec4 color;
 } vertex;
 
 out vec4 out_color;
@@ -18,10 +18,10 @@ float checker(vec2 uv, float repeats) {
 }
 
 void main() {
-    vec4 color = vec4(1.0, 1.0, 1.0, 1.0);
+    vec4 color = vertex.color;
 
-    // if (checker(gl_FragCoord.xy, 0.5) > 0) 
+    // if (checker(gl_FragCoord.xy, 0.9) > 0) 
     //     discard;
 
-    out_color = color;
+    out_color = vertex.color;
 }
