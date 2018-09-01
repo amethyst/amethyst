@@ -23,7 +23,7 @@ impl SimpleFormat<Locale> for LocaleFormat {
     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<Locale> {
         let s = String::from_utf8(bytes)?;
 
-        let mut ctx = MessageContext::new::<&str>(&[]);
+        let mut ctx = MessageContext::new(&[]);
         ctx.add_messages(&s);
         Ok(Locale { context: ctx })
     }
@@ -43,9 +43,6 @@ pub struct Locale {
     /// The message context.
     pub context: MessageContext<'static>,
 }
-
-unsafe impl Sync for Locale {}
-unsafe impl Send for Locale {}
 
 impl Asset for Locale {
     const NAME: &'static str = "locale::Locale";
