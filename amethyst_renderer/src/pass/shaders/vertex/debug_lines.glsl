@@ -22,8 +22,6 @@ void main() {
     vertex.position = position;
     gl_Position = proj * view * vec4(position, 1.0);
 
-    mat3 correctionMatrix = mat3(transpose(inverse(view * model)));
-    vertex.normal = normalize(vec3(proj * vec4(correctionMatrix * vec3(normal), 0.0)));
-
+    vertex.normal = vec3(proj * view * vec4(normal, 0.0));
     vertex.color = color;
 }

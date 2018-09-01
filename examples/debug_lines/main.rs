@@ -24,18 +24,18 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
             let vertices = vec![
                 PosColorNorm {
                     position: [0.5, -0.5, 0.0],
-                    color: [0.0, 0.0, 1.0, 1.0],
-                    normal: [1.0, 0.0, 0.0],
+                    color: [0.0, 0.3, 1.0, 1.0],
+                    normal: [-0.2, 0.6, 0.0],
                 },
                 PosColorNorm {
                     position: [0.0, 0.5, 0.0],
-                    color: [1.0, 0.0, 0.0, 1.0],
-                    normal: [0.0, 1.0, 0.0],
+                    color: [1.0, 0.1, 0.1, 1.0],
+                    normal: [0.0, 0.3, 0.0],
                 },
                 PosColorNorm {
                     position: [-0.5, -0.5, 0.0],
-                    color: [0.0, 1.0, 0.0, 1.0],
-                    normal: [-1.0, 0.0, 0.0],
+                    color: [0.1, 0.9, 0.2, 1.0],
+                    normal: [0.1, 1.0, 0.0],
                 },
             ];
             loader.load_from_data(MeshData::from(vertices), &mut progress, &mesh_storage)
