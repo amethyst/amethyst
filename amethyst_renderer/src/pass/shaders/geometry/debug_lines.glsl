@@ -10,7 +10,7 @@ in VertexData {
     vec3 position;
     vec4 color;
     vec3 normal;
-} vertex_in[3];
+} vertex_in[1];
 
 out VertexData {
     vec3 position;
@@ -18,7 +18,7 @@ out VertexData {
     vec3 normal;
 } vertex;
 
-layout (triangles) in;
+layout (points) in;
 layout (triangle_strip, max_vertices = 12) out;
 
 const float WIDTH = 2.0 / 500.0;
@@ -52,6 +52,6 @@ void EmitLine (int id) {
 void main()
 {
     EmitLine(0);
-    EmitLine(1);
-    EmitLine(2);
+    // EmitLine(1);
+    // EmitLine(2);
 }
