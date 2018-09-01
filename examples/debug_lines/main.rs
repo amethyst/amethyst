@@ -2,15 +2,12 @@
 
 extern crate amethyst;
 
-use amethyst::assets::{Loader, PrefabLoader, PrefabLoaderSystem, ProgressCounter, RonFormat};
+use amethyst::assets::{Loader, ProgressCounter};
 use amethyst::core::transform::GlobalTransform;
 use amethyst::core::transform::TransformBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
-use amethyst::utils::application_root_dir;
-use amethyst::utils::scene::BasicScenePrefab;
-
-type MyPrefabData = BasicScenePrefab<ComboMeshCreator>;
+// use amethyst::utils::application_root_dir;
 
 struct Example;
 
@@ -37,6 +34,21 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                     color: [0.1, 0.9, 0.2, 1.0],
                     normal: [0.1, 1.0, 0.0],
                 },
+                PosColorNorm {
+                    position: [-0.6, -0.5, -0.5],
+                    color: [0.0, 1.0, 1.0, 1.0],
+                    normal: [0.1, 1.0, 0.0],
+                },
+                PosColorNorm {
+                    position: [-0.7, -0.5, 0.0],
+                    color: [1.0, 0.0, 1.0, 1.0],
+                    normal: [0.1, 1.0, 0.0],
+                },
+                PosColorNorm {
+                    position: [-0.8, -0.5, 0.5],
+                    color: [1.0, 1.0, 0.0, 1.0],
+                    normal: [0.1, 1.0, 0.0],
+                },
             ];
             loader.load_from_data(MeshData::from(vertices), &mut progress, &mesh_storage)
         };
@@ -61,14 +73,12 @@ fn main() -> amethyst::Result<()> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.001, 0.005, 0.005, 1.0], 1.0)
-            // .with_pass(DrawShadedSeparate::new()),
-        .with_pass(DrawDebugLines::<PosColorNorm>::new()),
+            .with_pass(DrawDebugLines::<PosColorNorm>::new()),
     );
 
     let config = DisplayConfig::load(display_config_path);
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
         .with_bundle(RenderBundle::new(pipe, Some(config)))?;
 

@@ -1,5 +1,11 @@
 #version 150 core
 
+layout (std140) uniform VertexArgs {
+    uniform mat4 proj;
+    uniform mat4 view;
+    uniform mat4 model; /* Not actually used, all our lines are in world coordinates */
+};
+
 in VertexData {
     vec3 position;
     vec4 color;
@@ -13,16 +19,32 @@ out VertexData {
 } vertex;
 
 layout (triangles) in;
-layout (line_strip, max_vertices = 6) out;
+layout (triangle_strip, max_vertices = 12) out;
 
-const float MAGNITUDE = 0.1;
+const float WIDTH = 2.0 / 500.0;
+const float HALF_WIDTH = WIDTH / 2.0;
 
 void EmitLine (int id) {
+    vec3 width_vector = vec3(HALF_WIDTH, 0, 0);
+
     vertex.color = vertex_in[id].color;
-    gl_Position = gl_in[id].gl_Position;
+    vec3 pos = vertex_in[id].position - width_vector;
+    gl_Position = proj * view * vec4(pos, 1.0);
     EmitVertex();
+    
     vertex.color = vertex_in[id].color;
-    gl_Position = gl_in[id].gl_Position + vec4(vertex_in[id].normal, 0);
+    pos = vertex_in[id].position + width_vector;
+    gl_Position = proj * view * vec4(pos, 1.0);    
+    EmitVertex();
+    
+    vertex.color = vertex_in[id].color;
+    pos = vertex_in[id].position + vertex_in[id].normal - width_vector;
+    gl_Position = proj * view * vec4(pos, 1.0);
+    EmitVertex();
+
+    vertex.color = vertex_in[id].color;
+    pos = vertex_in[id].position + vertex_in[id].normal + width_vector;
+    gl_Position = proj * view * vec4(pos, 1.0);    
     EmitVertex();
     EndPrimitive();
 }

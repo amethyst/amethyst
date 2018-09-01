@@ -78,7 +78,6 @@ where
     fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
         debug!("Building debug lines pass");
         let mut builder = effect.geom(VERT_SRC, GEOM_SRC, FRAG_SRC);
-        // let mut builder = effect.simple(VERT_SRC, FRAG_SRC);
 
         debug!("Effect compiled, adding vertex/uniform buffers");
         builder.with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0);

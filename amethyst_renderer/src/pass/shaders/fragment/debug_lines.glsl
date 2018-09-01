@@ -10,18 +10,17 @@ in VertexData {
 
 out vec4 out_color;
 
-float checker(vec2 uv, float repeats) {
-    float cx = floor(repeats * uv.x);
-    float cy = floor(repeats * uv.y); 
-    float result = mod(cx + cy, 2.0);
+float checker(vec2 uv, float tiling) {
+    float x = floor(tiling * uv.x);
+    float y = floor(tiling * uv.y); 
+    float result = mod(x + y, 2.0);
     return sign(result);
 }
 
 void main() {
     vec4 color = vertex.color;
 
-    // if (checker(gl_FragCoord.xy, 0.9) > 0) 
-    //     discard;
+    // if (checker(gl_FragCoord.xy, 1.0) > 0) discard;
 
-    out_color = vertex.color;
+    out_color = vec4(vertex.color.rgb, 1.0);
 }
