@@ -108,7 +108,9 @@ where
 
         // Send resource size changes to the window
         if screen_dimensions.dirty {
-            self.renderer.window().set_inner_size((width, height).into());
+            self.renderer
+                .window()
+                .set_inner_size((width, height).into());
             screen_dimensions.dirty = false;
         }
 

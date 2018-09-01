@@ -21,7 +21,7 @@ use std::sync::Arc;
 use std::time::Duration;
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
-use vergen;
+use utils::application_root_dir;
 use winit::{Event, WindowEvent};
 
 /// An Application is the root object of the game engine. It binds the OS
@@ -409,8 +409,8 @@ impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
 
         info!("Initializing Amethyst...");
         info!("Version: {}", env!("CARGO_PKG_VERSION"));
-        info!("Platform: {}", vergen::target());
-        info!("Amethyst git commit: {}", vergen::sha());
+        info!("Platform: {}", env!("VERGEN_TARGET_TRIPLE"));
+        info!("Amethyst git commit: {}", env!("VERGEN_SHA"));
         let rustc_meta = rustc_version_runtime::version_meta();
         info!(
             "Rustc version: {} {:?}",

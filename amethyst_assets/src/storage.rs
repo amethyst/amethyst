@@ -2,7 +2,7 @@ use amethyst_core::specs::prelude::{Component, Read, ReadExpect, System, VecStor
 use amethyst_core::specs::storage::UnprotectedStorage;
 use amethyst_core::Time;
 use asset::{Asset, FormatValue};
-use crossbeam::sync::MsQueue;
+use crossbeam::queue::MsQueue;
 use error::{Error, ErrorKind, Result, ResultExt};
 use hibitset::BitSet;
 use progress::Tracker;
