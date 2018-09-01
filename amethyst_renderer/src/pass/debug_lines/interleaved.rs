@@ -8,6 +8,7 @@ use amethyst_core::transform::GlobalTransform;
 use cam::{ActiveCamera, Camera};
 use error::Result;
 use gfx::pso::buffer::ElemStride;
+use gfx::Primitive;
 use gfx_core::state::{Blend, ColorMask};
 use mesh::{Mesh, MeshHandle};
 use pass::util::{
@@ -87,6 +88,9 @@ where
             Some((mask, blend, depth)) => builder.with_blended_output("color", mask, blend, depth),
             None => builder.with_output("color", Some(DepthMode::LessEqualWrite)),
         };
+
+        builder.with_primitive_type(Primitive::PointList);
+        // builder.without_back_face_culling();
         builder.build()
     }
 
@@ -108,6 +112,7 @@ where
                     Some(mesh) => mesh,
                     None => return,
                 };
+                // println!("{:?}", mesh);
 
                 if !set_attribute_buffers(effect, mesh, &[V::QUERIED_ATTRIBUTES]) {
                     effect.clear();

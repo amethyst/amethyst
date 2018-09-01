@@ -7,6 +7,7 @@ use amethyst::core::transform::GlobalTransform;
 use amethyst::core::transform::TransformBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::*;
+
 // use amethyst::utils::application_root_dir;
 
 struct Example;
@@ -42,11 +43,6 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                 PosColorNorm {
                     position: [-0.7, -0.5, 0.0],
                     color: [1.0, 0.0, 1.0, 1.0],
-                    normal: [0.1, 1.0, 0.0],
-                },
-                PosColorNorm {
-                    position: [-0.8, -0.5, 0.5],
-                    color: [1.0, 1.0, 0.0, 1.0],
                     normal: [0.1, 1.0, 0.0],
                 },
             ];
