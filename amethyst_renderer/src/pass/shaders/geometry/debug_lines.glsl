@@ -2,32 +2,34 @@
 
 in VertexData {
     vec3 position;
-    vec3 normal;
     vec4 color;
-} vertex[3];
+    vec3 normal;
+} vertex_in[3];
+
+out VertexData {
+    vec3 position;
+    vec4 color;
+    vec3 normal;
+} vertex;
 
 layout (triangles) in;
 layout (line_strip, max_vertices = 6) out;
 
 const float MAGNITUDE = 0.1;
 
+void EmitLine (int id) {
+    vertex.color = vertex_in[id].color;
+    gl_Position = gl_in[id].gl_Position;
+    EmitVertex();
+    vertex.color = vertex_in[id].color;
+    gl_Position = gl_in[id].gl_Position + vec4(vertex_in[id].normal, 0);
+    EmitVertex();
+    EndPrimitive();
+}
+
 void main()
 {
-    gl_Position = gl_in[0].gl_Position; 
-    EmitVertex();
-    gl_Position = gl_in[0].gl_Position + vec4(vertex[0].normal, 0) * MAGNITUDE; 
-    EmitVertex();
-    EndPrimitive();
-
-    gl_Position = gl_in[1].gl_Position; 
-    EmitVertex();
-    gl_Position = gl_in[1].gl_Position + vec4(vertex[1].normal, 0) * MAGNITUDE;
-    EmitVertex();
-    EndPrimitive();
-
-    gl_Position = gl_in[2].gl_Position; 
-    EmitVertex();
-    gl_Position = gl_in[2].gl_Position + vec4(vertex[2].normal, 0) * MAGNITUDE;
-    EmitVertex();
-    EndPrimitive();
+    EmitLine(0);
+    EmitLine(1);
+    EmitLine(2);
 }
