@@ -90,7 +90,7 @@ where
         };
 
         builder.with_primitive_type(Primitive::PointList);
-        // builder.without_back_face_culling();
+        builder.without_back_face_culling();
         builder.build()
     }
 
