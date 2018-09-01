@@ -425,7 +425,7 @@ impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
         let thread_pool_builder = ThreadPoolBuilder::new();
         #[cfg(feature = "profiler")]
         let thread_pool_builder = thread_pool_builder.start_handler(|index| {
-            register_thread_with_profiler(format!("thread_pool{}", index));
+            register_thread_with_profiler();
         });
         let pool = thread_pool_builder
             .build()
@@ -709,7 +709,7 @@ impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
         trace!("Entering `ApplicationBuilder::build`");
 
         #[cfg(feature = "profiler")]
-        register_thread_with_profiler("Main".into());
+        register_thread_with_profiler();
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 
