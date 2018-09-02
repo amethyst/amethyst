@@ -12,6 +12,8 @@ in vec3 position;
 in vec4 color;
 in vec3 normal;
 
+uniform vec3 camera_position;
+
 out VertexData {
     vec3 position;
     vec4 color;
