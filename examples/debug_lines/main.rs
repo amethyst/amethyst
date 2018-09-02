@@ -40,17 +40,17 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                     normal: [0.1, 1.0, 0.0],
                 },
                 PosColorNorm {
-                    position: [0.0, 0.001, 0.0],
+                    position: [0.0, 0.0001, 0.0],
                     color: [1.0, 0.0, 0.23, 1.0],
                     normal: [1.0, 0.0, 0.0],
                 },
                 PosColorNorm {
                     position: [0.0, 0.0, 0.0],
-                    color: [0.666, 0.85, 0.0, 1.0],
+                    color: [0.5, 0.85, 0.1, 1.0],
                     normal: [0.0, 1.0, 0.0],
                 },
                 PosColorNorm {
-                    position: [0.0, 0.001, 0.0],
+                    position: [0.0, 0.0001, 0.0],
                     color: [0.2, 0.75, 0.93, 1.0],
                     normal: [0.0, 0.0, 1.0],
                 },
@@ -73,6 +73,21 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                     normal: normal,
                 };
                 vertices.push(vertex);
+
+                if x != width {
+                    for sub_x in 1..10 {
+                        let position = [
+                            position[0] + (1.0 / 10.0) * sub_x as f32,
+                            -0.001,
+                            position[2],
+                        ];
+                        vertices.push(PosColorNorm {
+                            position: position,
+                            color: [0.1, 0.1, 0.1, 0.1],
+                            normal: normal,
+                        });
+                    }
+                }
             }
             for z in 0..=depth {
                 let (z, width, depth) = (z as f32, width as f32, depth as f32);
@@ -86,6 +101,21 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                     normal: normal,
                 };
                 vertices.push(vertex);
+
+                if z != depth {
+                    for sub_z in 1..10 {
+                        let position = [
+                            position[0],
+                            -0.001,
+                            position[2] + (1.0 / 10.0) * sub_z as f32,
+                        ];
+                        vertices.push(PosColorNorm {
+                            position: position,
+                            color: [0.1, 0.1, 0.1, 0.1],
+                            normal: normal,
+                        });
+                    }
+                }
             }
             loader.load_from_data(MeshData::from(vertices), &mut progress, &mesh_storage)
         };
