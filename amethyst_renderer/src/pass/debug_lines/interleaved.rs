@@ -89,8 +89,9 @@ where
             None => builder.with_output("color", Some(DepthMode::LessEqualWrite)),
         };
 
+        builder.with_raw_global("camera_position");
         builder.with_primitive_type(Primitive::PointList);
-        builder.without_back_face_culling();
+        // builder.without_back_face_culling();
         builder.build()
     }
 
@@ -105,6 +106,13 @@ where
     ) {
         trace!("Drawing debug lines pass");
         let camera = get_camera(active, &camera, &global);
+        effect.update_global(
+            "camera_position",
+            camera
+                .as_ref()
+                .map(|&(_, ref trans)| [trans.0[3][0], trans.0[3][1], trans.0[3][2]])
+                .unwrap_or([0.0; 3]),
+        );
 
         match visibility {
             None => for (entity, mesh) in (&*entities, &mesh).join() {
