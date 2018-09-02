@@ -25,43 +25,64 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
             let loader = data.world.read_resource::<Loader>();
             let mut vertices = vec![
                 PosColorNorm {
-                    position: [0.5, -0.5, 0.0],
-                    color: [0.0, 0.3, 1.0, 1.0],
+                    position: [0.5, -0.5, 0.5],
+                    color: [0.5, 0.05, 0.65, 1.0],
                     normal: [-0.2, 0.6, 0.0],
                 },
                 PosColorNorm {
-                    position: [0.0, 0.5, 0.0],
-                    color: [1.0, 0.1, 0.1, 1.0],
+                    position: [0.0, 0.5, 0.5],
+                    color: [0.5, 0.05, 0.65, 1.0],
                     normal: [0.0, 0.3, 0.0],
                 },
                 PosColorNorm {
-                    position: [-0.5, -0.5, 0.0],
-                    color: [0.1, 0.9, 0.2, 1.0],
+                    position: [-0.5, -0.5, 0.5],
+                    color: [0.5, 0.05, 0.65, 1.0],
                     normal: [0.1, 1.0, 0.0],
+                },
+                PosColorNorm {
+                    position: [0.0, 0.001, 0.0],
+                    color: [1.0, 0.0, 0.23, 1.0],
+                    normal: [1.0, 0.0, 0.0],
+                },
+                PosColorNorm {
+                    position: [0.0, 0.0, 0.0],
+                    color: [0.666, 0.85, 0.0, 1.0],
+                    normal: [0.0, 1.0, 0.0],
+                },
+                PosColorNorm {
+                    position: [0.0, 0.001, 0.0],
+                    color: [0.2, 0.75, 0.93, 1.0],
+                    normal: [0.0, 0.0, 1.0],
                 },
             ];
 
-            const WIDTH: u32 = 10;
-            const DEPTH: u32 = 10;
+            let main_color = [0.4, 0.4, 0.4, 1.0];
 
-            for x in 0..=WIDTH {
-                let position = [x as f32 - (WIDTH as f32) / 2.0, 0.0, 0.0];
-                let color = [0.4, 0.4, 0.4, 1.0];
-                let normal = [DEPTH as f32, 0.0, 0.0];
+            let width: u32 = 10;
+            let depth: u32 = 10;
+
+            for x in 0..=width {
+                let (x, width, depth) = (x as f32, width as f32, depth as f32);
+
+                let position = [x - width / 2.0, 0.0, -depth / 2.0];
+                let normal = [0.0, 0.0, depth];
+
                 let vertex = PosColorNorm {
                     position: position,
-                    color: color,
+                    color: main_color,
                     normal: normal,
                 };
                 vertices.push(vertex);
             }
-            for z in 0..=DEPTH {
-                let position = [0.0, 0.0, z as f32 - (DEPTH as f32) / 2.0];
-                let color = [0.4, 0.4, 0.4, 1.0];
-                let normal = [0.0, z as f32, WIDTH as f32];
+            for z in 0..=depth {
+                let (z, width, depth) = (z as f32, width as f32, depth as f32);
+
+                let position = [-width / 2.0, 0.0, z - depth / 2.0];
+                let normal = [width, 0.0, 0.0];
+
                 let vertex = PosColorNorm {
                     position: position,
-                    color: color,
+                    color: main_color,
                     normal: normal,
                 };
                 vertices.push(vertex);
