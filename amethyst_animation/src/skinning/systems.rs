@@ -1,5 +1,5 @@
 use super::resources::*;
-use amethyst_core::cgmath::{Matrix4, SquareMatrix};
+use amethyst_core::cgmath::SquareMatrix;
 use amethyst_core::specs::prelude::{
     BitSet, InsertedFlag, Join, ModifiedFlag, ReadStorage, ReaderId, Resources, System,
     WriteStorage,
@@ -11,10 +11,6 @@ use amethyst_renderer::JointTransforms;
 ///
 /// Needs to run after global transforms have been updated for the current frame.
 pub struct VertexSkinningSystem {
-    /// Scratch space vector used while calculating joint matrices.
-    /// This exists only to allow the system to re-use the same allocation
-    /// for animation calculations.
-    joint_matrices: Vec<Matrix4<f32>>,
     /// Also scratch space, used while determining which skins need to be updated.
     updated: BitSet,
     updated_skins: BitSet,
@@ -26,7 +22,6 @@ pub struct VertexSkinningSystem {
 impl VertexSkinningSystem {
     pub fn new() -> Self {
         Self {
-            joint_matrices: Vec::new(),
             updated: BitSet::new(),
             updated_skins: BitSet::new(),
             inserted_id: None,
@@ -39,33 +34,34 @@ impl<'a> System<'a> for VertexSkinningSystem {
     type SystemData = (
         ReadStorage<'a, Joint>,
         ReadStorage<'a, GlobalTransform>,
-        ReadStorage<'a, Skin>,
+        WriteStorage<'a, Skin>,
         WriteStorage<'a, JointTransforms>,
     );
 
-    fn run(&mut self, (joints, transforms, skins, mut matrices): Self::SystemData) {
+    fn run(&mut self, (joints, transforms, mut skins, mut matrices): Self::SystemData) {
         self.updated.clear();
         transforms.populate_modified(&mut self.updated_id.as_mut().unwrap(), &mut self.updated);
         transforms.populate_inserted(&mut self.inserted_id.as_mut().unwrap(), &mut self.updated);
         self.updated_skins.clear();
         for (_, joint) in (&self.updated, &joints).join() {
-            self.updated_skins.add(joint.skin.id());
+            for skin in &joint.skins {
+                self.updated_skins.add(skin.id());
+            }
         }
 
-        for (_id, skin) in (&self.updated_skins, &skins).join() {
+        for (_id, skin) in (&self.updated_skins, &mut skins).join() {
             // Compute the joint transforms
-            self.joint_matrices.clear();
-            self.joint_matrices.extend(
+            skin.joint_matrices.clear();
+            let bind_shape = skin.bind_shape_matrix;
+            skin.joint_matrices.extend(
                 skin.joints
                     .iter()
-                    .map(|joint_entity| {
-                        (
-                            joints.get(*joint_entity).unwrap(),
-                            transforms.get(*joint_entity).unwrap(),
-                        )
+                    .zip(skin.inverse_bind_matrices.iter())
+                    .map(|(joint_entity, inverse_bind_matrix)| {
+                        (transforms.get(*joint_entity).unwrap(), inverse_bind_matrix)
                     })
-                    .map(|(joint, global)| {
-                        (global.0 * joint.inverse_bind_matrix * skin.bind_shape_matrix)
+                    .map(|(global, inverse_bind_matrix)| {
+                        (global.0 * inverse_bind_matrix * bind_shape)
                     }),
             );
 
@@ -75,7 +71,7 @@ impl<'a> System<'a> for VertexSkinningSystem {
                     matrix.matrices.clear();
                     matrix
                         .matrices
-                        .extend(self.joint_matrices.iter().map(|joint_matrix| {
+                        .extend(skin.joint_matrices.iter().map(|joint_matrix| {
                             Into::<[[f32; 4]; 4]>::into(global_inverse * joint_matrix)
                         }));
                 }
@@ -87,23 +83,10 @@ impl<'a> System<'a> for VertexSkinningSystem {
         {
             if let Some(global_inverse) = mesh_global.0.invert() {
                 let skin = skins.get(joint_transform.skin).unwrap();
-                let joint_matrices = skin
-                    .joints
-                    .iter()
-                    .map(|joint_entity| {
-                        (
-                            joints.get(*joint_entity).unwrap(),
-                            transforms.get(*joint_entity).unwrap(),
-                        )
-                    })
-                    .map(|(joint, global)| {
-                        (global.0 * joint.inverse_bind_matrix * skin.bind_shape_matrix)
-                    });
-
                 joint_transform.matrices.clear();
                 joint_transform
                     .matrices
-                    .extend(joint_matrices.map(|joint_matrix| {
+                    .extend(skin.joint_matrices.iter().map(|joint_matrix| {
                         Into::<[[f32; 4]; 4]>::into(global_inverse * joint_matrix)
                     }));
             }
