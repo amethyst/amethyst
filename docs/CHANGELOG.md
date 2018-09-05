@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Support for progressive jpeg loading. ([#877])
 * New `application_root_dir()` function in `amethyst_utils`. ([#831])
 * Load node names for glTF prefabs. ([#905])
+* Support for loading TGA images. ([#934])
 
 ### Changed
 * Sprites contain their dimensions and offsets to render them with the right size and desired position. ([#829], [#830])
@@ -55,6 +56,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#915]: https://github.com/amethyst/amethyst/pull/915
 [#868]: https://github.com/amethyst/amethyst/pull/868
 [#929]: https://github.com/amethyst/amethyst/pull/929
+[#934]: https://github.com/amethyst/amethyst/pull/934
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
 
