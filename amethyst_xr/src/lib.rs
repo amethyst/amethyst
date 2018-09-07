@@ -26,7 +26,7 @@ pub trait XRBackend: Send {
     fn get_area(&mut self) -> Vec<[f32; 3]>;
     fn get_hidden_area_mesh(&mut self) -> Vec<[f32; 3]>;
 
-    fn get_tracker_model(&mut self, index: u32) -> TrackerModelLoadStatus;
+    fn get_tracker_models(&mut self, index: u32) -> TrackerModelLoadStatus;
 
     fn get_tracker_capabilities(&mut self, index: u32) -> TrackerCapabilities;
 }
@@ -49,16 +49,18 @@ pub struct TrackerPositionData {
 
 #[derive(Debug)]
 pub struct TrackerCapabilities {
-    pub has_render_model: bool,
+    pub render_model_components: u32,
     pub is_camera: bool,
 }
 
+#[derive(Debug)]
 pub enum TrackerModelLoadStatus {
     Unavailable,
     Pending,
     Available(Vec<TrackerComponentModelInfo>),
 }
 
+#[derive(Debug)]
 pub struct TrackerComponentModelInfo {
     pub component_name: Option<String>,
     pub vertices: Vec<PosNormTangTex>,

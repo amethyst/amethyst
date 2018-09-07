@@ -30,10 +30,9 @@ impl<'a> System<'a> for XRSystem {
 
         if let Some(new_trackers) = self.backend.get_new_trackers() {
             events.iter_write(new_trackers.iter().map(|id| {
-                let mut tracker = TrackingDevice::new(*id);
+                let capabilities = self.backend.get_tracker_capabilities(*id);
 
-                let capabilities = self.backend.get_tracker_capabilities(tracker.id());
-                tracker.has_render_model = capabilities.has_render_model;
+                let mut tracker = TrackingDevice::new(*id, capabilities.render_model_components);
                 tracker.is_camera = capabilities.is_camera;
 
                 ::XREvent::TrackerAdded(tracker)
@@ -56,28 +55,40 @@ impl<'a> System<'a> for XRSystem {
             transform.rotation = tracker_position_data.rotation;
 
             // Update render model if requested
-            if tracker.render_model_enabled && tracker.mesh().is_none() {
+            if tracker.render_model_enabled && !tracker.models_loaded() {
                 if let TrackerModelLoadStatus::Available(models) =
-                    self.backend.get_tracker_model(tracker.id())
+                    self.backend.get_tracker_models(tracker.id())
                 {
-                    for model_info in models.into_iter() {
+                    for (i, model_info) in models.into_iter().enumerate() {
                         let vertices = MeshData::PosNormTangTex(
-                            model_info.indices
+                            model_info
+                                .indices
                                 .iter()
                                 .map(|i| model_info.vertices[*i as usize].clone())
                                 .collect(),
                         );
 
-                        let mesh = loader.load_from_data(model_info.vertices, (), &meshes);
-                        tracker.set_mesh(Some(mesh));
+                        let mesh = loader.load_from_data(vertices, (), &meshes);
 
-                        if let Some(texture) = model_info.texture {
-                            let texture = loader.load_from_data(texture, (), &textures);
-                            tracker.set_texture(Some(texture));
-                        }
+                        let texture = if let Some(texture) = model_info.texture {
+                            Some(loader.load_from_data(texture, (), &textures))
+                        } else {
+                            None
+                        };
 
-                        events.single_write(::XREvent::TrackerModelLoaded(tracker.id()));
+                        let tracker_id = tracker.id();
+
+                        tracker.component_models.push((
+                            model_info
+                                .component_name
+                                .unwrap_or_else(|| String::from("unkown-tracker-component"))
+                                + &format!("-{}-{}", tracker_id, i),
+                            mesh,
+                            texture,
+                        ));
                     }
+
+                    events.single_write(::XREvent::TrackerModelLoaded(tracker.id()));
                 }
             }
         }

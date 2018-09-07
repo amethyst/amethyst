@@ -3,7 +3,7 @@ use amethyst_core::specs::Component;
 
 use amethyst_renderer::{Mesh, MeshHandle, TextureHandle};
 
-pub type ComponentModel = (String, MeshHandle, TextureHandle);
+pub type ComponentModel = (String, MeshHandle, Option<TextureHandle>);
 
 #[derive(Clone)]
 pub struct TrackingDevice {
@@ -16,12 +16,12 @@ pub struct TrackingDevice {
 
     pub(crate) is_camera: bool,
 
-    pub(crate) has_render_model: bool,
+    pub(crate) available_render_models: u32,
     pub(crate) render_model_enabled: bool,
 }
 
 impl TrackingDevice {
-    pub(crate) fn new(id: u32) -> TrackingDevice {
+    pub(crate) fn new(id: u32, available_render_models: u32) -> TrackingDevice {
         TrackingDevice {
             id,
             tracking: false,
@@ -32,13 +32,13 @@ impl TrackingDevice {
 
             is_camera: false,
 
-            has_render_model: false,
+            available_render_models,
             render_model_enabled: false,
         }
     }
 
     pub fn component_models(&self) -> &[ComponentModel] {
-        &self.component_models
+        self.component_models.as_slice()
     }
 
     pub(crate) fn set_tracking(&mut self, tracking: bool) {
@@ -53,24 +53,12 @@ impl TrackingDevice {
         return self.id;
     }
 
-    pub fn has_model(&self) -> bool {
-        self.mesh.is_some()
+    pub fn has_models(&self) -> bool {
+        self.available_render_models > 0
     }
 
-    pub fn has_texture(&self) -> bool {
-        self.texture.is_some()
-    }
-
-    pub fn mesh(&self) -> Option<MeshHandle> {
-        self.mesh.clone()
-    }
-
-    pub fn texture(&self) -> Option<TextureHandle> {
-        self.texture.clone()
-    }
-
-    pub fn has_model(&self) -> bool {
-        self.has_render_model
+    pub fn models_loaded(&self) -> bool {
+        self.component_models.len() > 0
     }
 
     pub fn set_render_model_enabled(&mut self, enabled: bool) {
