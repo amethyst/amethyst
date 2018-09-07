@@ -1,3 +1,5 @@
+// TODO: Needs documentation.
+
 #version 150 core
 
 layout (std140) uniform VertexArgs {
@@ -27,21 +29,8 @@ const float WIDTH = 2.0 / 500.0;
 const float HALF_WIDTH = WIDTH / 2.0;
 
 void EmitLine (int id) {
-    // TODO: PASS ACTUAL CAMERA POSITION :(
-    // vec3 right = vec3(view[0][0], view[1][0], view[2][0]);
-    vec3 cam_up = vec3(view[0][1], view[1][1], view[2][1]);
     vec3 cam_dir = normalize(vertex_in[id].position - camera_position);
-    // vec3 direction_to_camera = transpose(view)[3].xyz - vertex_in[id].position;
-
-    // vec3 right;
-    // // float dot = dot(vertex_in[id].normal, camDir);
-    // if (abs(dot) < 1.0f)
-    // {
-    //     vec3 right = cross(normalize(vertex_in[id].normal), camDir);
-
-    // }
     vec3 right = normalize(cross(cam_dir, vertex_in[id].normal));
-    // wUp = normalize(wUp) * particle_size;
 
     vec3 width_vector = right * HALF_WIDTH;
 

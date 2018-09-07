@@ -11,14 +11,12 @@ use gfx::pso::buffer::ElemStride;
 use gfx::Primitive;
 use gfx_core::state::{Blend, ColorMask};
 use mesh::{Mesh, MeshHandle};
-use pass::util::{
-    draw_mesh, get_camera, set_attribute_buffers, set_vertex_args, setup_vertex_args,
-};
+use pass::util::{get_camera, set_attribute_buffers, set_vertex_args, setup_vertex_args};
 use pipe::pass::{Pass, PassData};
 use pipe::{DepthMode, Effect, NewEffect};
 use std::marker::PhantomData;
 use types::{Encoder, Factory};
-use vertex::{Color, Normal, Position, Query, VertexFormat};
+use vertex::{Color, Normal, Position, Query};
 use visibility::Visibility;
 
 /// Draw several simple lines for debugging
@@ -91,7 +89,6 @@ where
 
         builder.with_raw_global("camera_position");
         builder.with_primitive_type(Primitive::PointList);
-        // builder.without_back_face_culling();
         builder.build()
     }
 
@@ -120,7 +117,6 @@ where
                     Some(mesh) => mesh,
                     None => return,
                 };
-                // println!("{:?}", mesh);
 
                 if !set_attribute_buffers(effect, mesh, &[V::QUERIED_ATTRIBUTES]) {
                     effect.clear();

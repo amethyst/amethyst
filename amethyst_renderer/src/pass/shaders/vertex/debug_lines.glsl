@@ -22,7 +22,6 @@ out VertexData {
 
 void main() {
     vertex.position = position;
-    // vertex.normal = vec3(proj * view * vec4(normal, 0.0));
     vertex.normal = normal;
     vertex.color = color;
 }
