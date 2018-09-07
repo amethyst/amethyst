@@ -3,6 +3,21 @@
 use amethyst_input::is_close_requested;
 use ecs::prelude::World;
 use {GameData, StateEvent};
+use std::fmt::Result as FmtResult;
+use std::fmt::{Display, Formatter};
+
+#[derive(Debug)]
+pub enum StateError {
+    NoStatesPresent
+}
+
+impl Display for StateError {
+    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+        match *self {
+            StateError::NoStatesPresent => write!(fmt, "Tried to start state machine without any states present"),
+        }
+    }
+}
 
 /// State data encapsulates the data sent to all state functions from the application main loop.
 pub struct StateData<'a, T>
@@ -272,12 +287,15 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
     ///
     /// # Panics
     /// Panics if no states are present in the stack.
-    pub fn start(&mut self, data: StateData<T>) {
+    pub fn start(&mut self, data: StateData<T>) -> Result<(), StateError> {
         if !self.running {
-            let state = self.state_stack.last_mut().unwrap();
+            let state = self.state_stack
+                .last_mut()
+                .ok_or(StateError::NoStatesPresent)?;
             state.on_start(data);
             self.running = true;
         }
+        Ok(())
     }
 
     /// Passes a single event to the active state to handle.
@@ -342,6 +360,8 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
             }
 
             self.state_stack.push(state);
+
+            //State was just pushed, thus pop will always succeed
             let state = self.state_stack.last_mut().unwrap();
             state.on_start(StateData { world, data });
         }
@@ -356,6 +376,8 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
             }
 
             self.state_stack.push(state);
+
+            //State was just pushed, thus pop will always succeed
             let state = self.state_stack.last_mut().unwrap();
             state.on_start(StateData { world, data });
         }

@@ -187,8 +187,8 @@ impl<'a, T, E: Send + Sync + Clone + 'static> Application<'a, T, E> {
     ///
     /// See the example supplied in the
     /// [`new`](struct.Application.html#examples) method.
-    pub fn run(&mut self) {
-        self.initialize();
+    pub fn run(&mut self) -> Result<()> {
+        self.initialize()?;
         self.world.write_resource::<Stopwatch>().start();
         while self.states.is_running() {
             self.advance_frame();
@@ -206,14 +206,16 @@ impl<'a, T, E: Send + Sync + Clone + 'static> Application<'a, T, E> {
         }
 
         self.shutdown();
+        Ok(())
     }
 
     /// Sets up the application.
-    fn initialize(&mut self) {
+    fn initialize(&mut self) -> Result<()> {
         #[cfg(feature = "profiler")]
         profile_scope!("initialize");
         self.states
-            .start(StateData::new(&mut self.world, &mut self.data));
+            .start(StateData::new(&mut self.world, &mut self.data))
+            .map_err(|e| Error::StateMachine(e))
     }
 
     /// Advances the game world by one tick.
