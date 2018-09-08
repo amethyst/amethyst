@@ -1,4 +1,4 @@
-//! Displays a shaded sphere to the user.
+//! Displays several lines with both methods.
 
 extern crate amethyst;
 
@@ -18,113 +18,107 @@ struct Example;
 
 impl<'a, 'b> SimpleState<'a, 'b> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
-        let mut progress = ProgressCounter::default();
+        let mut debug_lines = DebugLines::new().with_capacity(100);
 
-        let mesh: MeshHandle = {
-            let mesh_storage = data.world.read_resource();
-            let loader = data.world.read_resource::<Loader>();
-            let mut vertices = vec![
-                PosColorNorm {
-                    position: [0.5, -0.5, 0.5],
-                    color: [0.5, 0.05, 0.65, 1.0],
-                    normal: [-0.2, 0.6, 0.0],
-                },
-                PosColorNorm {
-                    position: [0.0, 0.5, 0.5],
-                    color: [0.5, 0.05, 0.65, 1.0],
-                    normal: [0.0, 0.3, 0.0],
-                },
-                PosColorNorm {
-                    position: [-0.5, -0.5, 0.5],
-                    color: [0.5, 0.05, 0.65, 1.0],
-                    normal: [0.1, 1.0, 0.0],
-                },
-                PosColorNorm {
-                    position: [0.0, 0.0001, 0.0],
-                    color: [1.0, 0.0, 0.23, 1.0],
-                    normal: [1.0, 0.0, 0.0],
-                },
-                PosColorNorm {
-                    position: [0.0, 0.0, 0.0],
-                    color: [0.5, 0.85, 0.1, 1.0],
-                    normal: [0.0, 1.0, 0.0],
-                },
-                PosColorNorm {
-                    position: [0.0, 0.0001, 0.0],
-                    color: [0.2, 0.75, 0.93, 1.0],
-                    normal: [0.0, 0.0, 1.0],
-                },
-            ];
+        debug_lines.add_as_direction(
+            [0.5, -0.5, -0.5],
+            [1.0, 0.0, 0.0],
+            [1.0, 1.0, 1.0, 1.0].into(),
+        );
+        debug_lines.add_as_direction(
+            [0.5, -0.5, -0.5],
+            [1.0, 0.0, 0.0],
+            [1.0, 1.0, 1.0, 1.0].into(),
+        );
+        debug_lines.add_as_direction(
+            [0.5, -0.5, -0.5],
+            [1.0, 0.0, 0.0],
+            [1.0, 1.0, 1.0, 1.0].into(),
+        );
 
-            let main_color = [0.4, 0.4, 0.4, 1.0];
+        debug_lines.add_as_direction(
+            [0.5, -0.5, 0.5],
+            [-0.2, 0.6, 0.0],
+            [0.5, 0.05, 0.65, 1.0].into(),
+        );
+        debug_lines.add_as_direction(
+            [0.0, 0.5, 0.5],
+            [0.0, 0.3, 0.0],
+            [0.5, 0.05, 0.65, 1.0].into(),
+        );
+        debug_lines.add_as_direction(
+            [-0.5, -0.5, 0.5],
+            [0.1, 1.0, 0.0],
+            [0.5, 0.05, 0.65, 1.0].into(),
+        );
 
-            let width: u32 = 10;
-            let depth: u32 = 10;
+        debug_lines.add_as_direction(
+            [0.0, 0.0001, 0.0],
+            [1.0, 0.0, 0.0],
+            [1.0, 0.0, 0.23, 1.0].into(),
+        );
+        debug_lines.add_as_direction(
+            [0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.5, 0.85, 0.1, 1.0].into(),
+        );
+        debug_lines.add_as_direction(
+            [0.0, 0.0001, 0.0],
+            [0.0, 0.0, 1.0],
+            [0.2, 0.75, 0.93, 1.0].into(),
+        );
 
-            for x in 0..=width {
-                let (x, width, depth) = (x as f32, width as f32, depth as f32);
+        let main_color = [0.4, 0.4, 0.4, 1.0].into();
 
-                let position = [x - width / 2.0, 0.0, -depth / 2.0];
-                let normal = [0.0, 0.0, depth];
+        let width: u32 = 10;
+        let depth: u32 = 10;
 
-                let vertex = PosColorNorm {
-                    position: position,
-                    color: main_color,
-                    normal: normal,
-                };
-                vertices.push(vertex);
+        // Lines in X-axis
+        for x in 0..=width {
+            let (x, width, depth) = (x as f32, width as f32, depth as f32);
 
-                if x != width {
-                    for sub_x in 1..10 {
-                        let position = [
-                            position[0] + (1.0 / 10.0) * sub_x as f32,
-                            -0.001,
-                            position[2],
-                        ];
-                        vertices.push(PosColorNorm {
-                            position: position,
-                            color: [0.1, 0.1, 0.1, 0.1],
-                            normal: normal,
-                        });
-                    }
+            let position = [x - width / 2.0, 0.0, -depth / 2.0];
+            let normal = [0.0, 0.0, depth];
+
+            debug_lines.add_as_direction(position, normal, main_color);
+
+            // Sublines
+            if x != width {
+                for sub_x in 1..10 {
+                    let position = [
+                        position[0] + (1.0 / 10.0) * sub_x as f32,
+                        -0.001,
+                        position[2],
+                    ];
+
+                    debug_lines.add_as_direction(position, normal, [0.1, 0.1, 0.1, 0.1].into());
                 }
             }
-            for z in 0..=depth {
-                let (z, width, depth) = (z as f32, width as f32, depth as f32);
+        }
 
-                let position = [-width / 2.0, 0.0, z - depth / 2.0];
-                let normal = [width, 0.0, 0.0];
+        // Lines in Z-axis
+        for z in 0..=depth {
+            let (z, width, depth) = (z as f32, width as f32, depth as f32);
 
-                let vertex = PosColorNorm {
-                    position: position,
-                    color: main_color,
-                    normal: normal,
-                };
-                vertices.push(vertex);
+            let position = [-width / 2.0, 0.0, z - depth / 2.0];
+            let normal = [width, 0.0, 0.0];
 
-                if z != depth {
-                    for sub_z in 1..10 {
-                        let position = [
-                            position[0],
-                            -0.001,
-                            position[2] + (1.0 / 10.0) * sub_z as f32,
-                        ];
-                        vertices.push(PosColorNorm {
-                            position: position,
-                            color: [0.1, 0.1, 0.1, 0.1],
-                            normal: normal,
-                        });
-                    }
+            debug_lines.add_as_direction(position, normal, main_color);
+
+            // Sublines
+            if z != depth {
+                for sub_z in 1..10 {
+                    let position = [
+                        position[0],
+                        -0.001,
+                        position[2] + (1.0 / 10.0) * sub_z as f32,
+                    ];
+                    debug_lines.add_as_direction(position, normal, [0.1, 0.1, 0.1, 0.0].into());
                 }
             }
-            loader.load_from_data(MeshData::from(vertices), &mut progress, &mesh_storage)
-        };
+        }
 
-        data.world
-            .create_entity()
-            .with(mesh)
-            .with(FlyControlTag)
-            .build();
+        data.world.add_resource(debug_lines);
 
         let mut local_transform = Transform::default();
         local_transform.set_position([0.0, 0.5, 2.0].into());
@@ -146,13 +140,16 @@ fn main() -> amethyst::Result<()> {
 
     let display_config_path = format!("{}/examples/debug_lines/resources/display.ron", app_root);
     let key_bindings_path = format!("{}/examples/fly_camera/resources/input.ron", app_root);
-
     let resources = format!("{}/examples/assets/", app_root);
 
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.001, 0.005, 0.005, 1.0], 1.0)
-            .with_pass(DrawDebugLines::<PosColorNorm>::new()),
+            .with_pass(DrawDebugLines::<PosColorNorm>::new().with_transparency(
+                ColorMask::all(),
+                ALPHA,
+                Some(DepthMode::LessEqualWrite),
+            )),
     );
 
     let config = DisplayConfig::load(display_config_path);

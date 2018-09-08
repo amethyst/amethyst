@@ -3,7 +3,7 @@
 use super::*;
 use amethyst_assets::AssetStorage;
 use amethyst_core::cgmath::{Matrix4, One};
-use amethyst_core::specs::prelude::{Entities, Join, Read, ReadStorage};
+use amethyst_core::specs::prelude::{Entities, Join, Read, ReadExpect, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
 use cam::{ActiveCamera, Camera};
 use error::Result;
@@ -14,6 +14,7 @@ use mesh::{Mesh, MeshHandle};
 use pass::util::{get_camera, set_attribute_buffers, set_vertex_args, setup_vertex_args};
 use pipe::pass::{Pass, PassData};
 use pipe::{DepthMode, Effect, NewEffect};
+use resources::DebugLines;
 use std::marker::PhantomData;
 use types::{Encoder, Factory};
 use vertex::{Color, Normal, Position, Query};
@@ -67,6 +68,7 @@ where
         Option<Read<'a, Visibility>>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, GlobalTransform>,
+        ReadExpect<'a, DebugLines>,
     );
 }
 
@@ -82,25 +84,20 @@ where
         builder.with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0);
 
         setup_vertex_args(&mut builder);
+        builder.with_raw_global("camera_position");
+        builder.with_primitive_type(Primitive::PointList);
+
         match self.transparency {
             Some((mask, blend, depth)) => builder.with_blended_output("color", mask, blend, depth),
             None => builder.with_output("color", Some(DepthMode::LessEqualWrite)),
         };
-
-        builder.with_raw_global("camera_position");
-        builder.with_primitive_type(Primitive::PointList);
         builder.build()
     }
 
-    fn apply<'a, 'b: 'a>(
-        &'a mut self,
-        encoder: &mut Encoder,
-        effect: &mut Effect,
-        _factory: Factory,
-        (entities, active, camera, mesh_storage, visibility, mesh, global): <Self as PassData<
-            'a,
-        >>::Data,
-    ) {
+fn apply<'a, 'b: 'a> (&'a mut self, encoder: &mut Encoder, effect: &mut Effect, mut _factory: Factory,
+(entities, active, camera, mesh_storage, visibility, mesh, global, debug_lines)
+: <Self as PassData<'a,>>::Data)
+{
         trace!("Drawing debug lines pass");
         let camera = get_camera(active, &camera, &global);
         effect.update_global(
@@ -110,42 +107,21 @@ where
                 .map(|&(_, ref trans)| [trans.0[3][0], trans.0[3][1], trans.0[3][2]])
                 .unwrap_or([0.0; 3]),
         );
+        let debug_lines = &debug_lines.lines;
+        println!("{:?}", debug_lines);
 
-        match visibility {
-            None => for (entity, mesh) in (&*entities, &mesh).join() {
-                let mesh = match mesh_storage.get(mesh) {
-                    Some(mesh) => mesh,
-                    None => return,
-                };
+        let mesh = Mesh::build(debug_lines)
+            .build(&mut _factory)
+            .expect("Failed to create debug lines mesh");
 
-                if !set_attribute_buffers(effect, mesh, &[V::QUERIED_ATTRIBUTES]) {
-                    effect.clear();
-                    return;
-                }
-
-                set_vertex_args(effect, encoder, camera, &GlobalTransform(Matrix4::one()));
-
-                effect.draw(mesh.slice(), encoder);
-                effect.clear();
-            },
-            Some(ref visibility) => {
-                for (entity, mesh, _) in (&*entities, &mesh, &visibility.visible_unordered).join() {
-                    let mesh = match mesh_storage.get(mesh) {
-                        Some(mesh) => mesh,
-                        None => return,
-                    };
-
-                    if !set_attribute_buffers(effect, mesh, &[V::QUERIED_ATTRIBUTES]) {
-                        effect.clear();
-                        return;
-                    }
-
-                    set_vertex_args(effect, encoder, camera, &GlobalTransform(Matrix4::one()));
-
-                    effect.draw(mesh.slice(), encoder);
-                    effect.clear();
-                }
-            }
+        if !set_attribute_buffers(effect, &mesh, &[V::QUERIED_ATTRIBUTES]) {
+            effect.clear();
+            return;
         }
+
+        set_vertex_args(effect, encoder, camera, &GlobalTransform(Matrix4::one()));
+
+        effect.draw(mesh.slice(), encoder);
+        effect.clear();
     }
 }

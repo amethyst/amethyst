@@ -105,7 +105,7 @@ pub use pipe::{
     Stage, StageBuilder, Target, TargetBuilder, Targets,
 };
 pub use renderer::Renderer;
-pub use resources::{AmbientColor, ScreenDimensions, WindowMessages};
+pub use resources::{AmbientColor, DebugLines, ScreenDimensions, WindowMessages};
 pub use shape::{InternalShape, Shape, ShapePrefab, ShapeUpload};
 pub use skinning::{
     AnimatedComboMeshCreator, AnimatedVertexBufferCombination, JointIds, JointTransforms,
