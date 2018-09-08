@@ -5,16 +5,22 @@ use specs::prelude::{
     Entities, Entity, InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage, ReaderId,
     Resources, System, WriteStorage,
 };
-use transform::{GlobalTransform, HierarchyEvent, Parent, ParentHierarchy, Transform};
+use transform::{
+    GlobalTransform, HierarchyEvent, IsometricTransform, Parent, ParentHierarchy, Transform,
+};
 
 /// Handles updating `GlobalTransform` components based on the `Transform`
 /// component and parents.
 pub struct TransformSystem {
     local_modified: BitSet,
     global_modified: BitSet,
+    isom_modified: BitSet,
 
     inserted_local_id: Option<ReaderId<InsertedFlag>>,
     modified_local_id: Option<ReaderId<ModifiedFlag>>,
+
+    inserted_isom_id: Option<ReaderId<InsertedFlag>>,
+    modified_isom_id: Option<ReaderId<ModifiedFlag>>,
 
     parent_events_id: Option<ReaderId<HierarchyEvent>>,
 
@@ -27,9 +33,12 @@ impl TransformSystem {
         TransformSystem {
             inserted_local_id: None,
             modified_local_id: None,
+            inserted_isom_id: None,
+            modified_isom_id: None,
             parent_events_id: None,
             local_modified: BitSet::default(),
             global_modified: BitSet::default(),
+            isom_modified: BitSet::default(),
             scratch: Vec::new(),
         }
     }
@@ -39,13 +48,26 @@ impl<'a> System<'a> for TransformSystem {
     type SystemData = (
         Entities<'a>,
         ReadExpect<'a, ParentHierarchy>,
-        ReadStorage<'a, Transform>,
+        ReadStorage<'a, IsometricTransform>,
+        WriteStorage<'a, Transform>,
         ReadStorage<'a, Parent>,
         WriteStorage<'a, GlobalTransform>,
     );
-    fn run(&mut self, (entities, hierarchy, locals, parents, mut globals): Self::SystemData) {
+    fn run(
+        &mut self,
+        (entities, hierarchy, isoms, mut locals, parents, mut globals): Self::SystemData,
+    ) {
         #[cfg(feature = "profiler")]
         profile_scope!("transform_system");
+
+        self.scratch.clear();
+        self.scratch
+            .extend((&*entities, &isoms, !&locals).join().map(|d| d.0));
+        for entity in &self.scratch {
+            locals
+                .insert(*entity, Transform::default())
+                .expect("unreachable");
+        }
 
         self.scratch.clear();
         self.scratch
@@ -56,8 +78,25 @@ impl<'a> System<'a> for TransformSystem {
                 .expect("unreachable");
         }
 
+        self.isom_modified.clear();
         self.local_modified.clear();
         self.global_modified.clear();
+
+        // Gather the inserted and mutated IsometricTransforms in one BitSet.
+        isoms.populate_inserted(
+            self.inserted_isom_id.as_mut().unwrap(),
+            &mut self.isom_modified,
+        );
+        isoms.populate_modified(
+            self.modified_isom_id.as_mut().unwrap(),
+            &mut self.isom_modified,
+        );
+
+        // Apply IsometricTransforms to their associated Transform.
+        for (_, isom, mut local) in (&self.isom_modified, &isoms, &mut locals).join() {
+            let v = isom.local();
+            local.translation = v.extend(-v.y + isom.order_priority);
+        }
 
         locals.populate_inserted(
             self.inserted_local_id.as_mut().unwrap(),
@@ -131,10 +170,13 @@ impl<'a> System<'a> for TransformSystem {
         use specs::prelude::SystemData;
         Self::SystemData::setup(res);
         let mut hierarchy = res.fetch_mut::<ParentHierarchy>();
+        let mut isoms = WriteStorage::<IsometricTransform>::fetch(res);
         let mut locals = WriteStorage::<Transform>::fetch(res);
         self.parent_events_id = Some(hierarchy.track());
         self.inserted_local_id = Some(locals.track_inserted());
         self.modified_local_id = Some(locals.track_modified());
+        self.inserted_isom_id = Some(isoms.track_inserted());
+        self.modified_isom_id = Some(isoms.track_modified());
     }
 }
 

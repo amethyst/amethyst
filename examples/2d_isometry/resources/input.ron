@@ -1,0 +1,19 @@
+(
+    axes: {
+        "horizontal": Emulated(
+            pos: Key(Right),
+            neg: Key(Left),
+        ),
+        "vertical": Emulated(
+            pos: Key(Up),
+            neg: Key(Down),
+        ),
+        "zoom": Emulated(
+            pos: Key(RShift),
+            neg: Key(RControl),
+        )
+    },
+    actions: {
+
+    },
+)

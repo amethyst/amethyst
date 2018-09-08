@@ -7,7 +7,7 @@ use amethyst_core::timing::Time;
 use amethyst_core::transform::Transform;
 use amethyst_input::InputHandler;
 use amethyst_renderer::WindowMessages;
-use components::{ArcBallControlTag, FlyControlTag};
+use components::{ArcBallControlTag, FlyControlTag, XYControlTag};
 use resources::WindowFocus;
 use std::hash::Hash;
 use std::marker::PhantomData;
@@ -75,6 +75,87 @@ where
 
         for (transform, _) in (&mut transform, &tag).join() {
             transform.move_along_local(dir, time.delta_seconds() * self.speed);
+        }
+    }
+}
+
+/// System moving any entity holding a `XYControlTag` component along the
+/// X and Y axis. It can also zoom using the transform's scale property.
+#[derive(Default)]
+pub struct XYCameraSystem<A, B> {
+    /// The name of the input axis to locally move in the x coordinates.
+    pub x_axis: Option<A>,
+    /// The name of the input axis to locally move in the y coordinates.
+    pub y_axis: Option<A>,
+    /// The name of the input axis to zoom.
+    pub zoom_axis: Option<A>,
+    _marker: PhantomData<B>,
+}
+
+impl<A, B> XYCameraSystem<A, B>
+where
+    A: Send + Sync + Hash + Eq + Clone + 'static,
+    B: Send + Sync + Hash + Eq + Clone + 'static,
+{
+    /// Creates the camera system.
+    pub fn new(x_axis: impl Into<A>, y_axis: impl Into<A>) -> Self {
+        Self {
+            x_axis: Some(x_axis.into()),
+            y_axis: Some(y_axis.into()),
+            zoom_axis: None,
+            _marker: PhantomData,
+        }
+    }
+
+    /// Allows to control the zoom level.
+    pub fn with_zoom(mut self, zoom_axis: impl Into<A>) -> Self {
+        self.zoom_axis = Some(zoom_axis.into());
+        self
+    }
+}
+
+impl<'a, A, B> System<'a> for XYCameraSystem<A, B>
+where
+    A: Send + Sync + Hash + Eq + Clone + 'static,
+    B: Send + Sync + Hash + Eq + Clone + 'static,
+{
+    type SystemData = (
+        ReadStorage<'a, XYControlTag>,
+        Read<'a, Time>,
+        Read<'a, InputHandler<A, B>>,
+        WriteStorage<'a, Transform>,
+    );
+
+    fn run(&mut self, (cameras, time, input, mut transf): Self::SystemData) {
+        for (camera, mut camera_transf) in (&cameras, &mut transf).join() {
+            if let Some(ref x_axis) = self.x_axis {
+                if let Some(horiz) = input.axis_value(x_axis) {
+                    camera_transf.translation.x = (camera_transf.translation.x
+                        + camera.x_speed * time.delta_seconds() * horiz as f32)
+                        .max(camera.horizontal_borders.0)
+                        .min(camera.horizontal_borders.1);
+                }
+            }
+            if let Some(ref y_axis) = self.y_axis {
+                if let Some(vert) = input.axis_value(y_axis) {
+                    camera_transf.translation.y = (camera_transf.translation.y
+                        + camera.y_speed * time.delta_seconds() * vert as f32)
+                        .max(camera.vertical_borders.0)
+                        .min(camera.vertical_borders.1);
+                }
+            }
+            if let Some(ref zoom_axis) = self.zoom_axis {
+                if let Some(zoom) = input.axis_value(zoom_axis) {
+                    camera_transf.scale.x = (camera_transf.scale.x
+                        + camera.zoom_speed * zoom as f32)
+                        .max(camera.zoom_borders.0)
+                        .min(camera.zoom_borders.1);
+                    camera_transf.scale.y = (camera_transf.scale.y
+                        + camera.zoom_speed * zoom as f32)
+                        .max(camera.zoom_borders.0)
+                        .min(camera.zoom_borders.1);
+                }
+            }
         }
     }
 }

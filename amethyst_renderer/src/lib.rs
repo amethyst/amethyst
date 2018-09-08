@@ -47,6 +47,7 @@ extern crate image;
 #[macro_use]
 extern crate log;
 extern crate rayon;
+extern crate ron;
 #[macro_use]
 extern crate serde;
 extern crate shred;
@@ -91,6 +92,7 @@ pub use formats::{
     GraphicsPrefab, ImageData, JpgFormat, MaterialPrefab, MeshCreator, MeshData, ObjFormat,
     PngFormat, TextureData, TextureFormat, TextureMetadata, TexturePrefab,
 };
+pub use gfx::texture::{FilterMethod, SamplerInfo, WrapMode};
 pub use input::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
 pub use light::{DirectionalLight, Light, LightPrefab, PointLight, SpotLight, SunLight};
 pub use mesh::{vertex_data, Mesh, MeshBuilder, MeshHandle, VertexBuffer};
@@ -112,7 +114,8 @@ pub use skinning::{
     JointTransformsPrefab, JointWeights,
 };
 pub use sprite::{
-    Sprite, SpriteRender, SpriteSheet, SpriteSheetHandle, SpriteSheetSet, TextureCoordinates,
+    Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, SpriteSheetSet,
+    TextureCoordinates,
 };
 pub use sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem};
 pub use system::RenderSystem;

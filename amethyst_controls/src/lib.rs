@@ -16,9 +16,9 @@ mod resources;
 mod systems;
 
 pub use self::bundles::{ArcBallControlBundle, FlyControlBundle};
-pub use self::components::{ArcBallControlTag, ControlTagPrefab, FlyControlTag};
+pub use self::components::{ArcBallControlTag, ControlTagPrefab, FlyControlTag, XYControlTag};
 pub use self::resources::WindowFocus;
 pub use self::systems::{
     ArcBallMovementSystem, CursorHideSystem, FlyMovementSystem, FreeRotationSystem,
-    MouseFocusUpdateSystem,
+    MouseFocusUpdateSystem, XYCameraSystem,
 };
