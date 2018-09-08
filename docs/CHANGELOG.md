@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Fixed
 * Material ids in GLTF loader caused multiple GLTF files to get incorrect materials applied ([#915])
 * Fix render gamma for most textures. ([#868])
+* Fixed regression in sprite positioning after batching. ([#929])
 
 [#829]: https://github.com/amethyst/amethyst/issues/829
 [#830]: https://github.com/amethyst/amethyst/pull/830
@@ -48,6 +49,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#904]: https://github.com/amethyst/amethyst/pull/904
 [#915]: https://github.com/amethyst/amethyst/pull/915
 [#868]: https://github.com/amethyst/amethyst/pull/868
+[#929]: https://github.com/amethyst/amethyst/pull/929
 
 ## [0.8.0] - 2018-08
 ### Added
