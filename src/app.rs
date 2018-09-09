@@ -5,6 +5,7 @@ use assets::{Loader, Source};
 use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
 use core::shrev::{EventChannel, ReaderId};
 use core::timing::{Stopwatch, Time};
+use core::Named;
 use ecs::common::Errors;
 use ecs::prelude::{Component, World};
 use error::{Error, Result};
@@ -440,6 +441,8 @@ impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
         world.add_resource(FrameLimiter::default());
         world.add_resource(Stopwatch::default());
         world.add_resource(Time::default());
+
+        world.register::<Named>();
 
         Ok(ApplicationBuilder {
             initial_state,
