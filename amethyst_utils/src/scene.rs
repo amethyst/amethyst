@@ -10,6 +10,7 @@ use amethyst_renderer::{
 use removal::RemovalPrefab;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use std::fmt::Debug;
 
 /// Basic `Prefab` scene node, meant to be used for fast prototyping, and most likely replaced
 /// for more complex scenarios.
@@ -28,7 +29,7 @@ pub struct BasicScenePrefab<V, R, M = ObjFormat>
 where
     M: Format<Mesh>,
     M::Options: DeserializeOwned + Serialize,
-    R: PartialEq + Clone + Send + Sync + 'static,
+    R: PartialEq + Debug + Clone + Send + Sync + 'static,
 {
     graphics: Option<GraphicsPrefab<V, M, TextureFormat>>,
     transform: Option<Transform>,
@@ -42,7 +43,7 @@ impl<V, R, M> Default for BasicScenePrefab<V, R, M>
 where
     M: Format<Mesh>,
     M::Options: DeserializeOwned + Serialize,
-    R: PartialEq + Clone + Send + Sync + 'static,
+    R: PartialEq + Debug + Clone + Send + Sync + 'static,
 {
     fn default() -> Self {
         BasicScenePrefab {
@@ -61,7 +62,7 @@ where
     M: Format<Mesh> + Clone,
     M::Options: DeserializeOwned + Serialize + Clone,
     V: From<InternalShape> + Into<MeshData>,
-    R: PartialEq + Clone + Send + Sync + 'static,
+    R: PartialEq + Debug + Clone + Send + Sync + 'static,
 {
     type SystemData = (
         <GraphicsPrefab<V, M, TextureFormat> as PrefabData<'a>>::SystemData,
