@@ -20,7 +20,7 @@ use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::utils::scene::BasicScenePrefab;
 use amethyst::winit::VirtualKeyCode;
 
-type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
+type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>, ()>;
 
 struct Example {
     fps_display: Option<Entity>,

@@ -2,6 +2,7 @@ use amethyst_core::specs::{Component, DenseVecStorage, Entities, Join, Read, Rea
 use amethyst_core::timing::Time;
 
 /// Destroys the entity to which this is attached at the specified time (in seconds).
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DestroyAtTime {
     /// The time at which the entity should be destroyed in seconds.
     /// Compared to `Time::absolute_time_seconds`.
@@ -13,6 +14,7 @@ impl Component for DestroyAtTime {
 }
 
 /// Destroys the entity to which this is attached after the specified time interval (in seconds).
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DestroyInTime {
     /// The amount of time before the entity should be destroyed in seconds.
     /// Compared to `Time::absolute_time_seconds`.

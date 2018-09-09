@@ -1,4 +1,4 @@
-use amethyst::core::{SystemBundle, ThreadPool};
+use amethyst::core::{SystemBundle, ArcThreadPool};
 use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World};
 use amethyst::{DataInit, Error, Result};
 
@@ -66,7 +66,7 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
 impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> {
     fn build(self, world: &mut World) -> CustomGameData<'a, 'b> {
         #[cfg(not(no_threading))]
-        let pool = world.read_resource::<ThreadPool>().clone();
+        let pool = world.read_resource::<ArcThreadPool>().clone();
 
         #[cfg(not(no_threading))]
         let mut base = self.base.with_pool(pool.clone()).build();

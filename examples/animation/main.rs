@@ -18,7 +18,7 @@ use amethyst::utils::application_root_dir;
 use amethyst::utils::scene::BasicScenePrefab;
 
 type MyPrefabData = (
-    Option<BasicScenePrefab<Vec<PosNormTex>>>,
+    Option<BasicScenePrefab<Vec<PosNormTex>, ()>>,
     Option<AnimationSetPrefab<AnimationId, Transform>>,
 );
 

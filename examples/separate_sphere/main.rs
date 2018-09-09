@@ -9,7 +9,7 @@ use amethyst::renderer::*;
 use amethyst::utils::application_root_dir;
 use amethyst::utils::scene::BasicScenePrefab;
 
-type MyPrefabData = BasicScenePrefab<ComboMeshCreator>;
+type MyPrefabData = BasicScenePrefab<ComboMeshCreator, ()>;
 
 struct Example;
 
