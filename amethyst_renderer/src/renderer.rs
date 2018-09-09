@@ -78,7 +78,6 @@ impl Renderer {
         use glutin::GlContext;
 
         if let Some(size) = self.window().get_inner_size() {
-            let size: (u32, u32) = size.into();
             if size != self.cached_size {
                 self.cached_size = size.into();
                 #[cfg(feature = "opengl")]
@@ -305,7 +304,7 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> R
             as_input: None,
             as_output: depth,
         },
-        size.into(),
+        size,
     );
 
     Ok(Backend(dev, fac, main_target, win))
