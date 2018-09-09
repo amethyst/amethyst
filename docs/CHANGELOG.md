@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * State::handle_event can now handle multiple types of events. ([#887])
 * Added Named Component. ([#879])([#896])
 * Support for progressive jpeg loading. ([#877])
+* New `application_root_dir()` function in `amethyst_utils`. ([#831])
 * Load node names for glTF prefabs. ([#905])
 
 ### Changed
@@ -29,6 +30,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Removed
 
 ### Fixed
+* Material ids in GLTF loader caused multiple GLTF files to get incorrect materials applied ([#915])
+* Fix render gamma for most textures. ([#868])
+* Fixed regression in sprite positioning after batching. ([#929])
 
 [#829]: https://github.com/amethyst/amethyst/issues/829
 [#830]: https://github.com/amethyst/amethyst/pull/830
@@ -38,10 +42,14 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#892]: https://github.com/amethyst/amethyst/pull/892
 [#877]: https://github.com/amethyst/amethyst/pull/877
 [#896]: https://github.com/amethyst/amethyst/pull/896
+[#831]: https://github.com/amethyst/amethyst/pull/831
 [#902]: https://github.com/amethyst/amethyst/pull/902
 [#905]: https://github.com/amethyst/amethyst/pull/905
 [#903]: https://github.com/amethyst/amethyst/issues/903
 [#904]: https://github.com/amethyst/amethyst/pull/904
+[#915]: https://github.com/amethyst/amethyst/pull/915
+[#868]: https://github.com/amethyst/amethyst/pull/868
+[#929]: https://github.com/amethyst/amethyst/pull/929
 
 ## [0.8.0] - 2018-08
 ### Added

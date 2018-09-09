@@ -22,6 +22,7 @@ use amethyst::renderer::{
     Pipeline, Projection, RenderBundle, ScreenDimensions, SpriteRender, SpriteSheet,
     SpriteSheetHandle, Stage, Transparent, VirtualKeyCode, ALPHA,
 };
+use amethyst::utils::application_root_dir;
 
 use sprite::SpriteSheetDefinition;
 
@@ -345,9 +346,11 @@ fn load_sprite_sheet(world: &mut World) -> LoadedSpriteSheet {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
+    let app_root = application_root_dir();
+
     let display_config = DisplayConfig::load(format!(
         "{}/examples/sprites_ordered/resources/display_config.ron",
-        env!("CARGO_MANIFEST_DIR")
+        app_root
     ));
 
     let pipe = Pipeline::build().with_stage(
@@ -360,7 +363,7 @@ fn main() -> amethyst::Result<()> {
             )),
     );
 
-    let assets_directory = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+    let assets_directory = format!("{}/examples/assets/", app_root);
 
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?

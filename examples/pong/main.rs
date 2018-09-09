@@ -15,6 +15,7 @@ use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawSprite, Pipeline, RenderBundle, Stage};
 use amethyst::ui::{DrawUi, UiBundle};
+use amethyst::utils::application_root_dir;
 
 use audio::Music;
 use bundle::PongBundle;
@@ -44,10 +45,9 @@ fn main() -> amethyst::Result<()> {
 
     use pong::Pong;
 
-    let display_config_path = format!(
-        "{}/examples/pong/resources/display.ron",
-        env!("CARGO_MANIFEST_DIR")
-    );
+    let app_root = application_root_dir();
+
+    let display_config_path = format!("{}/examples/pong/resources/display.ron", app_root);
     let config = DisplayConfig::load(&display_config_path);
 
     let pipe = Pipeline::build().with_stage(
@@ -59,19 +59,13 @@ fn main() -> amethyst::Result<()> {
 
     let key_bindings_path = {
         if cfg!(feature = "sdl_controller") {
-            format!(
-                "{}/examples/pong/resources/input_controller.ron",
-                env!("CARGO_MANIFEST_DIR")
-            )
+            format!("{}/examples/pong/resources/input_controller.ron", app_root)
         } else {
-            format!(
-                "{}/examples/pong/resources/input.ron",
-                env!("CARGO_MANIFEST_DIR")
-            )
+            format!("{}/examples/pong/resources/input.ron", app_root)
         }
     };
 
-    let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+    let assets_dir = format!("{}/examples/assets/", app_root);
 
     let game_data = GameDataBuilder::default()
         .with_bundle(

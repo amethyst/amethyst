@@ -313,10 +313,11 @@ impl<'a, T, E: Send + Sync + Clone + 'static> Application<'a, T, E> {
 }
 
 #[cfg(feature = "profiler")]
-impl<'a, T, E: Send+Sync+'static> Drop for Application<'a, T, E> {
+impl<'a, T, E: Send + Sync + 'static> Drop for Application<'a, T, E> {
     fn drop(&mut self) {
         // TODO: Specify filename in config.
-        let path = format!("{}/thread_profile.json", env!("CARGO_MANIFEST_DIR"));
+        use utils::application_root_dir;
+        let path = format!("{}/thread_profile.json", application_root_dir());
         write_profile(path.as_str());
     }
 }

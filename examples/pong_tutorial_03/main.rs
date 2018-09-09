@@ -7,15 +7,18 @@ use amethyst::core::transform::TransformBundle;
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawSprite, Pipeline, RenderBundle, Stage};
+use amethyst::utils::application_root_dir;
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     use pong::Pong;
 
+    let app_root = application_root_dir();
+
     let path = format!(
         "{}/examples/pong_tutorial_03/resources/display_config.ron",
-        env!("CARGO_MANIFEST_DIR")
+        app_root
     );
     let config = DisplayConfig::load(&path);
 
@@ -27,12 +30,12 @@ fn main() -> amethyst::Result<()> {
 
     let binding_path = format!(
         "{}/examples/pong_tutorial_03/resources/bindings_config.ron",
-        env!("CARGO_MANIFEST_DIR")
+        app_root
     );
 
     // This line is not mentioned in the pong tutorial as it is specific to the context
     // of the git repository. It only is a different location to load the assets from.
-    let assets_dir = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+    let assets_dir = format!("{}/examples/assets/", app_root);
 
     let input_bundle = InputBundle::<String, String>::new().with_bindings_from_file(binding_path)?;
 

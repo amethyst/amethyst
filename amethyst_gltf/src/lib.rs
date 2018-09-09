@@ -20,11 +20,11 @@ extern crate thread_profiler;
 
 use animation::{AnimatablePrefab, SkinnablePrefab};
 use assets::{Handle, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter};
-use core::Named;
 use core::cgmath::{Array, EuclideanSpace, Point3, Vector3};
 use core::specs::error::Error;
 use core::specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage};
 use core::transform::Transform;
+use core::Named;
 pub use format::GltfSceneFormat;
 use renderer::{MaterialPrefab, Mesh, MeshData, TextureFormat};
 use std::ops::Range;

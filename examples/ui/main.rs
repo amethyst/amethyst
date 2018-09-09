@@ -15,6 +15,7 @@ use amethyst::prelude::*;
 use amethyst::renderer::{DrawShaded, PosNormTex};
 use amethyst::shrev::{EventChannel, ReaderId};
 use amethyst::ui::{UiBundle, UiCreator, UiEvent, UiFinder, UiText};
+use amethyst::utils::application_root_dir;
 use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
 use amethyst::utils::scene::BasicScenePrefab;
 use amethyst::winit::VirtualKeyCode;
@@ -88,12 +89,11 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let display_config_path = format!(
-        "{}/examples/ui/resources/display.ron",
-        env!("CARGO_MANIFEST_DIR")
-    );
+    let app_root = application_root_dir();
 
-    let resources = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
+    let display_config_path = format!("{}/examples/ui/resources/display.ron", app_root);
+
+    let resources = format!("{}/examples/assets", app_root);
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])

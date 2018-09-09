@@ -68,9 +68,7 @@ impl<'a> PrefabData<'a> for Transform {
 }
 
 impl<'a> PrefabData<'a> for Named {
-    type SystemData = (
-        WriteStorage<'a, Named>,
-    );
+    type SystemData = (WriteStorage<'a, Named>,);
     type Result = ();
 
     fn load_prefab(

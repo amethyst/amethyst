@@ -423,6 +423,7 @@ fn create_texture_asset_from_image(
     renderer: &mut Renderer,
 ) -> Result<Texture> {
     let fmt = SurfaceType::R8_G8_B8_A8;
+    let chan = options.channel.unwrap_or(ChannelType::Srgb);
     let rgba = image.rgba;
     let w = rgba.width();
     let h = rgba.height();
@@ -438,6 +439,7 @@ fn create_texture_asset_from_image(
     let tb = apply_options(
         TextureBuilder::new(rgba.into_raw())
             .with_format(fmt)
+            .with_channel_type(chan)
             .with_size(w as u16, h as u16),
         options,
     );
