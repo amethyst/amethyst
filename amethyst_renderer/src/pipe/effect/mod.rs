@@ -11,7 +11,7 @@ use gfx::preset::depth::{LESS_EQUAL_TEST, LESS_EQUAL_WRITE};
 use gfx::pso::buffer::{ElemStride, InstanceRate};
 use gfx::shade::core::UniformValue;
 use gfx::shade::{ProgramError, ToUniform};
-use gfx::state::{Blend, ColorMask, Comparison, Depth, MultiSample, Rasterizer, Stencil};
+use gfx::state::{Blend, ColorMask, Comparison, Depth, MultiSample, Rasterizer, Stencil, CullFace};
 use gfx::traits::Pod;
 use gfx::{Primitive, ShaderSet};
 use glsl_layout::Std140;
@@ -198,6 +198,12 @@ impl<'a> EffectBuilder<'a> {
             prog: src,
             const_bufs: Vec::new(),
         }
+    }
+
+    /// Disable back face culling
+    pub fn without_back_face_culling(&mut self) -> &mut Self {
+        self.rast.cull_face = CullFace::Nothing;
+        self
     }
 
     /// Adds a global constant to this `Effect`.

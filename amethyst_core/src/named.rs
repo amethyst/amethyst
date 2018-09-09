@@ -107,7 +107,10 @@ impl Named {
     /// let entity_num = 7;
     /// let name_component = Named::new(format!("Entity Number {}", entity_num));
     /// ```
-    pub fn new<S>(name: S) -> Self where S: Into<Cow<'static, str>> {
+    pub fn new<S>(name: S) -> Self
+    where
+        S: Into<Cow<'static, str>>,
+    {
         Named { name: name.into() }
     }
 }
@@ -122,11 +125,16 @@ where
     Self: Sized,
 {
     /// Adds a name to the entity being built.
-    fn named<S>(self, name: S) -> Self where S: Into<Cow<'static, str>>;
+    fn named<S>(self, name: S) -> Self
+    where
+        S: Into<Cow<'static, str>>;
 }
 
 impl<'a> WithNamed for EntityBuilder<'a> {
-    fn named<S>(self, name: S) -> Self where S: Into<Cow<'static, str>> {
+    fn named<S>(self, name: S) -> Self
+    where
+        S: Into<Cow<'static, str>>,
+    {
         // Unwrap: The only way this can fail is if the entity is invalid and this is used while creating the entity.
         self.world
             .system_data::<(WriteStorage<'a, Named>,)>()
@@ -138,7 +146,10 @@ impl<'a> WithNamed for EntityBuilder<'a> {
 }
 
 impl<'a> WithNamed for LazyBuilder<'a> {
-    fn named<S>(self, name: S) -> Self where S: Into<Cow<'static, str>> {
+    fn named<S>(self, name: S) -> Self
+    where
+        S: Into<Cow<'static, str>>,
+    {
         self.lazy.insert::<Named>(self.entity, Named::new(name));
         self
     }

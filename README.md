@@ -2,19 +2,19 @@
 
 # Amethyst
 
-[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT/Apache][s3]][li] [![Join the chat][s4]][gc] [![Join us on Discord][s5]][di] ![Lines of Code][s6]
+[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT/Apache][s3]][li] [![Join us on Discord][s4]][di] [![Join the chat][s5]][gc] ![Lines of Code][s6]
 
 [s1]: https://travis-ci.org/amethyst/amethyst.svg?branch=master
 [s2]: https://img.shields.io/crates/v/amethyst.svg
 [s3]: https://img.shields.io/badge/license-MIT%2FApache-blue.svg
-[s4]: https://badges.gitter.im/amethyst/general.svg
-[s5]: https://img.shields.io/discord/425678876929163284.svg?logo=discord
+[s4]: https://img.shields.io/discord/425678876929163284.svg?logo=discord
+[s5]: https://badges.gitter.im/amethyst/general.svg
 [s6]: https://tokei.rs/b1/github/amethyst/amethyst?category=code
 [tc]: https://travis-ci.org/amethyst/amethyst/
 [ci]: https://crates.io/crates/amethyst/
 [li]: COPYING
-[gc]: https://gitter.im/orgs/amethyst/rooms
 [di]: https://discord.gg/GnP5Whs
+[gc]: https://gitter.im/orgs/amethyst/rooms
 
 ## What is Amethyst?!
 
@@ -26,7 +26,7 @@ These principles are what make amethyst unique and competitive in the world of g
 
 * Massively parallel architecture.
 * Powered by a correct [Entity Component System][ecs] model.
-* Rapid prototyping with [RON](Json-like) files for prefabs and an abstract scripting API.
+* Rapid prototyping with [RON][ron] files for prefabs and an abstract scripting API.
 * Strong focus on encouraging reusability and clean interfaces.
 
 [ecs]: https://en.wikipedia.org/wiki/Entity–component–system
@@ -63,8 +63,8 @@ Please visit the [features page][feat] for a list of features Amethyst provides.
 
 [adb1]: https://img.shields.io/badge/docs-develop-blue.svg
 [adb2]: https://img.shields.io/badge/docs-master-blue.svg
-[ad1]: https://www.amethyst.rs/doc/develop.html
-[ad2]: https://www.amethyst.rs/doc/master.html
+[ad1]: https://www.amethyst.rs/doc/develop/doc/amethyst/index.html
+[ad2]: https://www.amethyst.rs/doc/master/doc/amethyst/index.html
 
 ## Usage
 
@@ -97,7 +97,7 @@ For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chap
 in the book.
 
 [ex]: examples/
-[gs]: https://www.amethyst.rs/book/master/getting_started.html
+[gs]: https://www.amethyst.rs/book/master/
 
 ## Dependencies
 

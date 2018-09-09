@@ -1,6 +1,7 @@
 use fern;
 pub use log::LevelFilter;
 use std::io;
+use std::env;
 
 /// Logger configuration object.
 #[derive(Clone, Copy)]
@@ -13,9 +14,20 @@ pub struct LoggerConfig {
 
 impl Default for LoggerConfig {
     fn default() -> LoggerConfig {
+        let use_colors = if let Ok(_) = env::var("AMETHYST_LOG_DISABLE_COLORS") {
+            false
+        } else {
+            true
+        };
+        let level_filter = if let Ok(lf) = env::var("AMETHYST_LOG_LEVEL_FILTER") {
+            use std::str::FromStr;
+            LevelFilter::from_str(&lf).unwrap_or(LevelFilter::Debug)
+        } else {
+            LevelFilter::Debug
+        };
         LoggerConfig {
-            use_colors: true,
-            level_filter: LevelFilter::Debug,
+            use_colors,
+            level_filter,
         }
     }
 }
@@ -24,7 +36,20 @@ impl Default for LoggerConfig {
 ///
 /// If you do not intend on using the logger builtin to Amethyst, it's highly recommended you
 /// initialise your own.
-pub fn start_logger(config: LoggerConfig) {
+///
+/// Configuration of the logger can also be controlled via environment variables:
+///
+/// * AMETHYST_LOG_DISABLE_COLORS - if set, disables colors for the log output
+/// * AMETHYST_LOG_LEVEL_FILTER - sets the log level
+/// 
+pub fn start_logger(mut config: LoggerConfig) {
+    if let Ok(_) = env::var("AMETHYST_LOG_DISABLE_COLORS") {
+        config.use_colors = false;
+    }
+    if let Ok(lf) = env::var("AMETHYST_LOG_LEVEL_FILTER") {
+        use std::str::FromStr;
+        config.level_filter = LevelFilter::from_str(&lf).unwrap_or(LevelFilter::Debug)
+    }
     let color_config = fern::colors::ColoredLevelConfig::new();
 
     fern::Dispatch::new()

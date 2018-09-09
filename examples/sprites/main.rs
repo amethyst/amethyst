@@ -32,6 +32,7 @@ use amethyst::renderer::{
     Stage, ALPHA,
 };
 use amethyst::ui::UiBundle;
+use amethyst::utils::application_root_dir;
 use std::time::Duration;
 
 use sprite::SpriteSheetDefinition;
@@ -317,9 +318,11 @@ fn initialise_camera(world: &mut World) -> Entity {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
+    let app_root = application_root_dir();
+
     let display_config = DisplayConfig::load(format!(
         "{}/examples/sprites/resources/display_config.ron",
-        env!("CARGO_MANIFEST_DIR")
+        app_root
     ));
 
     let pipe = Pipeline::build().with_stage(
@@ -328,7 +331,7 @@ fn main() -> amethyst::Result<()> {
             .with_pass(DrawSprite::new().with_transparency(ColorMask::all(), ALPHA, None)),
     );
 
-    let assets_directory = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+    let assets_directory = format!("{}/examples/assets/", app_root);
 
     let game_data = GameDataBuilder::default()
         .with_bundle(AnimationBundle::<u32, SpriteRender>::new(
