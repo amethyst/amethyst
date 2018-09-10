@@ -3,7 +3,7 @@ use amethyst_assets::{
     ResultExt, SimpleFormat,
 };
 use amethyst_core::cgmath::{InnerSpace, Vector3};
-use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, VecStorage, WriteStorage};
+use amethyst_core::specs::prelude::{Component, Entity, Read, ReadExpect, VecStorage, WriteStorage};
 use mesh::{Mesh, MeshBuilder, MeshHandle};
 use std::fmt::Debug;
 use std::result::Result as StdResult;
@@ -32,6 +32,10 @@ pub enum MeshData {
     /// Create a mesh from a given creator
     #[serde(skip)]
     Creator(Box<MeshCreator>),
+}
+
+impl Component for MeshData {
+    type Storage = VecStorage<Self>;
 }
 
 impl From<Vec<PosColor>> for MeshData {
