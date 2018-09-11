@@ -234,6 +234,8 @@ pub trait MeshCreator: Send + Sync + Debug + 'static {
     /// Build a mesh given a `Renderer`
     fn build(self: Box<Self>, renderer: &mut Renderer) -> ::error::Result<Mesh>;
 
+    fn vertices(self: Box<Self>) -> Vec<Separate<Position>>;
+
     /// Clone a boxed version of this object
     fn box_clone(&self) -> Box<MeshCreator>;
 }
@@ -262,6 +264,10 @@ impl MeshCreator for ComboMeshCreator {
         build_mesh_with_combo(self.combo, renderer)
     }
 
+    fn vertices(self: Box<Self>) -> Vec<Separate<Position>> {
+        self.combo.0
+    }
+    
     fn box_clone(&self) -> Box<MeshCreator> {
         Box::new((*self).clone())
     }

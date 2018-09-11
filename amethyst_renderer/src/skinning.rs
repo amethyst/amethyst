@@ -90,6 +90,10 @@ impl MeshCreator for AnimatedComboMeshCreator {
         build_mesh_with_combo(self.combo, renderer)
     }
 
+    fn vertices(self: Box<Self>) -> Vec<Separate<Position>> {
+        self.combo.0
+    }
+
     fn box_clone(&self) -> Box<MeshCreator> {
         Box::new((*self).clone())
     }
