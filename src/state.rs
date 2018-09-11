@@ -6,6 +6,7 @@ use std::fmt::Result as FmtResult;
 use std::fmt::{Display, Formatter};
 use {GameData, StateEvent};
 
+/// Error type for errors occurring in StateMachine
 #[derive(Debug)]
 pub enum StateError {
     NoStatesPresent,
@@ -287,9 +288,6 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
     }
 
     /// Initializes the state machine.
-    ///
-    /// # Panics
-    /// Panics if no states are present in the stack.
     pub fn start(&mut self, data: StateData<T>) -> Result<(), StateError> {
         if !self.running {
             let state = self
