@@ -2,10 +2,9 @@
 
 extern crate amethyst;
 
-use amethyst::assets::{Loader, ProgressCounter};
 use amethyst::controls::FlyControlBundle;
 use amethyst::controls::FlyControlTag;
-use amethyst::core::cgmath::{Deg, Matrix4};
+use amethyst::core::cgmath::Deg;
 use amethyst::core::transform::TransformBundle;
 use amethyst::core::transform::{GlobalTransform, Transform};
 use amethyst::input::InputBundle;
@@ -68,6 +67,12 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
             [0.2, 0.75, 0.93, 1.0].into(),
         );
 
+        data.world.add_resource(debug_lines);
+
+        // Using debug lines as a component
+        data.world.register::<DebugLines>();
+        let mut debug_lines_component = DebugLines::new().with_capacity(100);
+
         let main_color = [0.4, 0.4, 0.4, 1.0].into();
 
         let width: u32 = 10;
@@ -80,7 +85,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
             let position = [x - width / 2.0, 0.0, -depth / 2.0];
             let normal = [0.0, 0.0, depth];
 
-            debug_lines.add_as_direction(position, normal, main_color);
+            debug_lines_component.add_as_direction(position, normal, main_color);
 
             // Sublines
             if x != width {
@@ -91,7 +96,11 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                         position[2],
                     ];
 
-                    debug_lines.add_as_direction(position, normal, [0.1, 0.1, 0.1, 0.1].into());
+                    debug_lines_component.add_as_direction(
+                        position,
+                        normal,
+                        [0.1, 0.1, 0.1, 0.1].into(),
+                    );
                 }
             }
         }
@@ -103,7 +112,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
             let position = [-width / 2.0, 0.0, z - depth / 2.0];
             let normal = [width, 0.0, 0.0];
 
-            debug_lines.add_as_direction(position, normal, main_color);
+            debug_lines_component.add_as_direction(position, normal, main_color);
 
             // Sublines
             if z != depth {
@@ -113,13 +122,24 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                         -0.001,
                         position[2] + (1.0 / 10.0) * sub_z as f32,
                     ];
-                    debug_lines.add_as_direction(position, normal, [0.1, 0.1, 0.1, 0.0].into());
+
+                    debug_lines_component.add_as_direction(
+                        position,
+                        normal,
+                        [0.1, 0.1, 0.1, 0.0].into(),
+                    );
                 }
             }
         }
 
-        data.world.add_resource(debug_lines);
+        data.world
+            .create_entity()
+            .with(GlobalTransform::default())
+            .with(Transform::default())
+            .with(debug_lines_component)
+            .build();
 
+        // Setup camera
         let mut local_transform = Transform::default();
         local_transform.set_position([0.0, 0.5, 2.0].into());
 
