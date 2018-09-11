@@ -214,7 +214,7 @@ impl<'a, T, E: Send + Sync + Clone + 'static> Application<'a, T, E> {
         profile_scope!("initialize");
         self.states
             .start(StateData::new(&mut self.world, &mut self.data))
-            .unwrap(); //TODO: figure out whether this needs to be handled
+            .expect("Tried to start state machine without any states present");
     }
 
     /// Advances the game world by one tick.
