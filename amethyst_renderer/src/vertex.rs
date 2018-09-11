@@ -109,7 +109,7 @@ pub trait With<F: Attribute>: VertexFormat {
 /// Vertex format for attributes in separate buffers
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-pub struct Separate<T: Attribute>(T::Repr);
+pub struct Separate<T: Attribute>(pub T::Repr);
 unsafe impl<T> Pod for Separate<T> where T: Attribute {}
 
 impl<T> Separate<T>
