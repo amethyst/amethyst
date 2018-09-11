@@ -86,6 +86,7 @@ pub use bundle::RenderBundle;
 pub use cam::{ActiveCamera, ActiveCameraPrefab, Camera, CameraPrefab, Projection};
 pub use color::Rgba;
 pub use config::DisplayConfig;
+pub use debug_drawing::DebugLines;
 pub use formats::{
     build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat, ComboMeshCreator,
     GraphicsPrefab, ImageData, JpgFormat, MaterialPrefab, MeshCreator, MeshData, ObjFormat,
@@ -105,7 +106,7 @@ pub use pipe::{
     Stage, StageBuilder, Target, TargetBuilder, Targets,
 };
 pub use renderer::Renderer;
-pub use resources::{AmbientColor, DebugLines, ScreenDimensions, WindowMessages};
+pub use resources::{AmbientColor, ScreenDimensions, WindowMessages};
 pub use shape::{InternalShape, Shape, ShapePrefab, ShapeUpload};
 pub use skinning::{
     AnimatedComboMeshCreator, AnimatedVertexBufferCombination, JointIds, JointTransforms,
@@ -139,6 +140,7 @@ mod bundle;
 mod cam;
 mod color;
 mod config;
+mod debug_drawing;
 mod formats;
 mod input;
 mod light;

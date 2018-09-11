@@ -6,6 +6,7 @@ use amethyst_core::cgmath::{Matrix4, One};
 use amethyst_core::specs::prelude::{Entities, Join, Read, ReadExpect, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
 use cam::{ActiveCamera, Camera};
+use debug_drawing::DebugLines;
 use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx::Primitive;
@@ -14,9 +15,9 @@ use mesh::{Mesh, MeshHandle};
 use pass::util::{get_camera, set_attribute_buffers, set_vertex_args, setup_vertex_args};
 use pipe::pass::{Pass, PassData};
 use pipe::{DepthMode, Effect, NewEffect};
-use resources::DebugLines;
 use std::marker::PhantomData;
 use types::{Encoder, Factory};
+use vertex::PosColorNorm;
 use vertex::{Color, Normal, Position, Query};
 use visibility::Visibility;
 
@@ -61,13 +62,10 @@ where
     V: Query<(Position, Color, Normal)>,
 {
     type Data = (
-        Entities<'a>,
         Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
-        Read<'a, AssetStorage<Mesh>>,
-        Option<Read<'a, Visibility>>,
-        ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, GlobalTransform>,
+        ReadStorage<'a, DebugLines>,
         ReadExpect<'a, DebugLines>,
     );
 }
@@ -94,11 +92,25 @@ where
         builder.build()
     }
 
-fn apply<'a, 'b: 'a> (&'a mut self, encoder: &mut Encoder, effect: &mut Effect, mut _factory: Factory,
-(entities, active, camera, mesh_storage, visibility, mesh, global, debug_lines)
-: <Self as PassData<'a,>>::Data)
-{
+    fn apply<'a, 'b: 'a>(
+        &'a mut self,
+        encoder: &mut Encoder,
+        effect: &mut Effect,
+        mut _factory: Factory,
+        (active, camera, global, lines_component, lines_resource): <Self as PassData<'a>>::Data,
+    ) {
         trace!("Drawing debug lines pass");
+        let debug_lines = {
+            let mut lines = Vec::<PosColorNorm>::new();
+
+            for debug_lines_component in (&lines_component).join() {
+                lines.extend(&debug_lines_component.lines);
+            }
+
+            lines.extend(&lines_resource.lines);
+            lines
+        };
+
         let camera = get_camera(active, &camera, &global);
         effect.update_global(
             "camera_position",
@@ -107,8 +119,6 @@ fn apply<'a, 'b: 'a> (&'a mut self, encoder: &mut Encoder, effect: &mut Effect, 
                 .map(|&(_, ref trans)| [trans.0[3][0], trans.0[3][1], trans.0[3][2]])
                 .unwrap_or([0.0; 3]),
         );
-        let debug_lines = &debug_lines.lines;
-        println!("{:?}", debug_lines);
 
         let mesh = Mesh::build(debug_lines)
             .build(&mut _factory)
