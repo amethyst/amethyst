@@ -213,7 +213,8 @@ impl<'a, T, E: Send + Sync + Clone + 'static> Application<'a, T, E> {
         #[cfg(feature = "profiler")]
         profile_scope!("initialize");
         self.states
-            .start(StateData::new(&mut self.world, &mut self.data));
+            .start(StateData::new(&mut self.world, &mut self.data))
+            .expect("Tried to start state machine without any states present");
     }
 
     /// Advances the game world by one tick.
