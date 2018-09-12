@@ -1,25 +1,22 @@
 //! Debug lines pass
 
 use super::*;
-use amethyst_assets::AssetStorage;
 use amethyst_core::cgmath::{Matrix4, One};
-use amethyst_core::specs::prelude::{Entities, Join, Read, ReadExpect, ReadStorage};
+use amethyst_core::specs::{Join, Read, ReadStorage, Write, WriteStorage};
 use amethyst_core::transform::GlobalTransform;
 use cam::{ActiveCamera, Camera};
-use debug_drawing::DebugLines;
+use debug_drawing::{DebugLine, DebugLines};
 use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx::Primitive;
 use gfx_core::state::{Blend, ColorMask};
-use mesh::{Mesh, MeshHandle};
+use mesh::Mesh;
 use pass::util::{get_camera, set_attribute_buffers, set_vertex_args, setup_vertex_args};
 use pipe::pass::{Pass, PassData};
 use pipe::{DepthMode, Effect, NewEffect};
 use std::marker::PhantomData;
 use types::{Encoder, Factory};
-use vertex::PosColorNorm;
 use vertex::{Color, Normal, Position, Query};
-use visibility::Visibility;
 
 /// Draw several simple lines for debugging
 ///
@@ -65,8 +62,8 @@ where
         Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, GlobalTransform>,
-        ReadStorage<'a, DebugLines>,
-        ReadExpect<'a, DebugLines>,
+        WriteStorage<'a, DebugLines>,  // DebugLines components
+        Option<Write<'a, DebugLines>>, // DebugLines resource
     );
 }
 
@@ -97,17 +94,21 @@ where
         encoder: &mut Encoder,
         effect: &mut Effect,
         mut _factory: Factory,
-        (active, camera, global, lines_component, lines_resource): <Self as PassData<'a>>::Data,
+        (active, camera, global, mut lines_component, lines_resource): <Self as PassData<'a>>::Data,
     ) {
         trace!("Drawing debug lines pass");
         let debug_lines = {
-            let mut lines = Vec::<PosColorNorm>::new();
+            let mut lines = Vec::<DebugLine>::new();
 
-            for debug_lines_component in (&lines_component).join() {
-                lines.extend(&debug_lines_component.lines);
+            for debug_lines_component in (&mut lines_component).join() {
+                lines.append(&mut debug_lines_component.lines);
             }
 
-            lines.extend(&lines_resource.lines);
+            match lines_resource {
+                Some(mut lines_resource) => lines.append(&mut lines_resource.lines),
+                None => {}
+            };
+
             lines
         };
 

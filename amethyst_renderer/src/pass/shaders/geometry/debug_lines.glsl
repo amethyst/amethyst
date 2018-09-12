@@ -25,7 +25,7 @@ layout (triangle_strip, max_vertices = 4) out;
 
 uniform vec3 camera_position;
 
-const float WIDTH = 2.0 / 500.0;
+const float WIDTH = 2.0 / 800.0;
 const float HALF_WIDTH = WIDTH / 2.0;
 
 void EmitLine (int id) {
@@ -41,7 +41,7 @@ void EmitLine (int id) {
     
     vertex.color = vertex_in[id].color;
     pos = vertex_in[id].position + width_vector;
-    gl_Position = proj * view * vec4(pos, 1.0);    
+    gl_Position = proj * view * vec4(pos, 1.0);
     EmitVertex();
     
     vertex.color = vertex_in[id].color;
@@ -51,7 +51,7 @@ void EmitLine (int id) {
 
     vertex.color = vertex_in[id].color;
     pos = vertex_in[id].position + vertex_in[id].normal + width_vector;
-    gl_Position = proj * view * vec4(pos, 1.0);    
+    gl_Position = proj * view * vec4(pos, 1.0);
     EmitVertex();
     EndPrimitive();
 }
