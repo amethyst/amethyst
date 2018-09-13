@@ -42,7 +42,7 @@ where
         Default::default()
     }
 
-    /// Enable transparency { Currently not supported, but should be useful }
+    /// Enable transparency
     pub fn with_transparency(
         mut self,
         mask: ColorMask,
@@ -93,7 +93,7 @@ where
         &'a mut self,
         encoder: &mut Encoder,
         effect: &mut Effect,
-        mut _factory: Factory,
+        mut factory: Factory,
         (active, camera, global, mut lines_component, lines_resource): <Self as PassData<'a>>::Data,
     ) {
         trace!("Drawing debug lines pass");
@@ -122,7 +122,7 @@ where
         );
 
         let mesh = Mesh::build(debug_lines)
-            .build(&mut _factory)
+            .build(&mut factory)
             .expect("Failed to create debug lines mesh");
 
         if !set_attribute_buffers(effect, &mesh, &[V::QUERIED_ATTRIBUTES]) {
