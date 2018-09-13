@@ -25,7 +25,8 @@ layout (triangle_strip, max_vertices = 4) out;
 
 uniform vec3 camera_position;
 
-const float WIDTH = 2.0 / 800.0;
+// The line width is 1 line width unit, which is one 400th the unit size
+const float WIDTH = 1.0 / 400.0;
 const float HALF_WIDTH = WIDTH / 2.0;
 
 void EmitLine (int id) {
