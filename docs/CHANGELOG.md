@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## Unreleased
 ### Added
+* Support for debug lines using `DebugLines` pass, and `DebugLines` component or resource. ([#917])
 * Added JsonFormat ([#950]).
 * `SpriteRender` pass to draw sprites without using `Material` and `Mesh`. ([#829], [#830])
 * Sprite animation uses the `SpriteRenderChannel`. ([#829], [#830])
@@ -76,7 +77,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#904]: https://github.com/amethyst/amethyst/pull/904
 [#915]: https://github.com/amethyst/amethyst/pull/915
 [#868]: https://github.com/amethyst/amethyst/pull/868
+<<<<<<< HEAD
 [#933]: https://github.com/amethyst/amethyst/pull/933
+=======
+[#917]: https://github.com/amethyst/amethyst/issues/917
+>>>>>>> Ran cargo fmt
 [#929]: https://github.com/amethyst/amethyst/pull/929
 [#934]: https://github.com/amethyst/amethyst/pull/934
 [#940]: https://github.com/amethyst/amethyst/pull/940
@@ -84,6 +89,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#950]: https://github.com/amethyst/amethyst/pull/950
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
+
 
 ## [0.8.0] - 2018-08
 ### Added
