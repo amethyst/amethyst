@@ -4,7 +4,7 @@ extern crate amethyst;
 
 use amethyst::controls::FlyControlBundle;
 use amethyst::controls::FlyControlTag;
-use amethyst::core::cgmath::Deg;
+use amethyst::core::cgmath::{Deg, Point3, Vector3};
 use amethyst::core::transform::TransformBundle;
 use amethyst::core::transform::{GlobalTransform, Transform};
 use amethyst::core::Time;
@@ -36,14 +36,14 @@ impl<'s> System<'s> for ExampleLinesSystem {
             let t = (time.absolute_time_seconds() as f32).cos();
 
             debug_lines_resource.add_as_direction(
-                [t, 0.0, 0.5],
-                [0.0, 0.3, 0.0],
+                [t, 0.0, 0.5].into(),
+                [0.0, 0.3, 0.0].into(),
                 [0.5, 0.05, 0.65, 1.0].into(),
             );
 
             debug_lines_resource.add_as_line(
-                [t, 0.0, 0.5],
-                [0.0, 0.0, 0.2],
+                [t, 0.0, 0.5].into(),
+                [0.0, 0.0, 0.2].into(),
                 [0.5, 0.05, 0.65, 1.0].into(),
             );
         }
@@ -52,18 +52,18 @@ impl<'s> System<'s> for ExampleLinesSystem {
         for (mut debug_lines, _) in (&mut debug_lines, &tags).join() {
             // Axis lines
             debug_lines.add_as_direction(
-                [0.0, 0.0001, 0.0],
-                [0.2, 0.0, 0.0],
+                [0.0, 0.0001, 0.0].into(),
+                [0.2, 0.0, 0.0].into(),
                 [1.0, 0.0, 0.23, 1.0].into(),
             );
             debug_lines.add_as_direction(
-                [0.0, 0.0, 0.0],
-                [0.0, 0.2, 0.0],
+                [0.0, 0.0, 0.0].into(),
+                [0.0, 0.2, 0.0].into(),
                 [0.5, 0.85, 0.1, 1.0].into(),
             );
             debug_lines.add_as_direction(
-                [0.0, 0.0001, 0.0],
-                [0.0, 0.0, 0.2],
+                [0.0, 0.0001, 0.0].into(),
+                [0.0, 0.0, 0.2].into(),
                 [0.2, 0.75, 0.93, 1.0].into(),
             );
 
@@ -75,21 +75,21 @@ impl<'s> System<'s> for ExampleLinesSystem {
             for x in 0..=width {
                 let (x, width, depth) = (x as f32, width as f32, depth as f32);
 
-                let position = [x - width / 2.0, 0.0, -depth / 2.0];
-                let normal = [0.0, 0.0, depth];
+                let position = Point3::new(x - width / 2.0, 0.0, -depth / 2.0);
+                let direction = Vector3::new(0.0, 0.0, depth);
 
-                debug_lines.add_as_direction(position, normal, main_color);
+                debug_lines.add_as_direction(position, direction, main_color);
 
                 // Sub-grid lines
                 if x != width {
                     for sub_x in 1..10 {
-                        let position = [
-                            position[0] + (1.0 / 10.0) * sub_x as f32,
-                            -0.001,
-                            position[2],
-                        ];
+                        let sub_offset = Vector3::new((1.0 / 10.0) * sub_x as f32, -0.001, 0.0);
 
-                        debug_lines.add_as_direction(position, normal, [0.1, 0.1, 0.1, 0.1].into());
+                        debug_lines.add_as_direction(
+                            position + sub_offset,
+                            direction,
+                            [0.1, 0.1, 0.1, 0.1].into(),
+                        );
                     }
                 }
             }
@@ -98,21 +98,21 @@ impl<'s> System<'s> for ExampleLinesSystem {
             for z in 0..=depth {
                 let (z, width, depth) = (z as f32, width as f32, depth as f32);
 
-                let position = [-width / 2.0, 0.0, z - depth / 2.0];
-                let normal = [width, 0.0, 0.0];
+                let position = Point3::new(-width / 2.0, 0.0, z - depth / 2.0);
+                let direction = Vector3::new(width, 0.0, 0.0);
 
-                debug_lines.add_as_direction(position, normal, main_color);
+                debug_lines.add_as_direction(position, direction, main_color);
 
                 // Sub-grid lines
                 if z != depth {
                     for sub_z in 1..10 {
-                        let position = [
-                            position[0],
-                            -0.001,
-                            position[2] + (1.0 / 10.0) * sub_z as f32,
-                        ];
+                        let sub_offset = Vector3::new(0.0, -0.001, (1.0 / 10.0) * sub_z as f32);
 
-                        debug_lines.add_as_direction(position, normal, [0.1, 0.1, 0.1, 0.0].into());
+                        debug_lines.add_as_direction(
+                            position + sub_offset,
+                            direction,
+                            [0.1, 0.1, 0.1, 0.0].into(),
+                        );
                     }
                 }
             }
