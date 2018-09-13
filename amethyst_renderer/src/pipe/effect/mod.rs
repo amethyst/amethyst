@@ -11,7 +11,7 @@ use gfx::preset::depth::{LESS_EQUAL_TEST, LESS_EQUAL_WRITE};
 use gfx::pso::buffer::{ElemStride, InstanceRate};
 use gfx::shade::core::UniformValue;
 use gfx::shade::{ProgramError, ToUniform};
-use gfx::state::{Blend, ColorMask, Comparison, Depth, MultiSample, Rasterizer, Stencil, CullFace};
+use gfx::state::{Blend, ColorMask, Comparison, CullFace, Depth, MultiSample, Rasterizer, Stencil};
 use gfx::traits::Pod;
 use gfx::{Primitive, ShaderSet};
 use glsl_layout::Std140;
