@@ -1,3 +1,4 @@
+use amethyst_core::cgmath::{Point3, Vector3};
 use amethyst_core::specs::{Component, DenseVecStorage};
 use color::Rgba;
 use vertex::PosColorNorm;
@@ -9,7 +10,7 @@ use vertex::PosColorNorm;
 pub type DebugLine = PosColorNorm;
 
 /// Resource that stores debug lines to be rendered in DebugLinesPass draw pass
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct DebugLines {
     /// Lines to be rendered
     pub lines: Vec<DebugLine>,
@@ -17,12 +18,6 @@ pub struct DebugLines {
 
 impl Component for DebugLines {
     type Storage = DenseVecStorage<Self>;
-}
-
-impl Default for DebugLines {
-    fn default() -> Self {
-        DebugLines::new()
-    }
 }
 
 impl DebugLines {
@@ -40,22 +35,27 @@ impl DebugLines {
     }
 
     /// Adds a line to be rendered by giving a position and a direction.
-    pub fn add_as_direction(&mut self, position: [f32; 3], direction: [f32; 3], color: Rgba) {
+    pub fn add_as_direction(
+        &mut self,
+        position: Point3<f32>,
+        direction: Vector3<f32>,
+        color: Rgba,
+    ) {
         let vertex = DebugLine {
-            position: position,
+            position: position.into(),
             color: color.into(),
-            normal: direction,
+            normal: direction.into(),
         };
 
         self.lines.push(vertex);
     }
 
     /// Adds a line to be rendered by giving a start and an end position.
-    pub fn add_as_line(&mut self, start: [f32; 3], end: [f32; 3], color: Rgba) {
+    pub fn add_as_line(&mut self, start: Point3<f32>, end: Point3<f32>, color: Rgba) {
         let vertex = DebugLine {
-            position: start,
+            position: start.into(),
             color: color.into(),
-            normal: [end[0] - start[0], end[1] - start[1], end[2] - start[2]],
+            normal: (end - start).into(),
         };
 
         self.lines.push(vertex);
