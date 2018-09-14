@@ -86,7 +86,7 @@ pub use bundle::RenderBundle;
 pub use cam::{ActiveCamera, ActiveCameraPrefab, Camera, CameraPrefab, Projection};
 pub use color::Rgba;
 pub use config::DisplayConfig;
-pub use debug_drawing::DebugLines;
+pub use debug_drawing::{DebugLines, DebugLinesComponent};
 pub use formats::{
     build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat, ComboMeshCreator,
     GraphicsPrefab, ImageData, JpgFormat, MaterialPrefab, MeshCreator, MeshData, ObjFormat,
