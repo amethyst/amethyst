@@ -5,7 +5,7 @@ use amethyst_core::cgmath::{Matrix4, One};
 use amethyst_core::specs::{Join, Read, ReadStorage, Write, WriteStorage};
 use amethyst_core::transform::GlobalTransform;
 use cam::{ActiveCamera, Camera};
-use debug_drawing::{DebugLine, DebugLines};
+use debug_drawing::{DebugLine, DebugLines, DebugLinesComponent};
 use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx::Primitive;
@@ -50,7 +50,7 @@ where
         depth: Option<DepthMode>,
     ) -> Self {
         self.transparency = Some((mask, blend, depth));
-        self
+        unimplemented!();
     }
 }
 
@@ -62,8 +62,8 @@ where
         Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, GlobalTransform>,
-        WriteStorage<'a, DebugLines>,  // DebugLines components
-        Option<Write<'a, DebugLines>>, // DebugLines resource
+        WriteStorage<'a, DebugLinesComponent>, // DebugLines components
+        Option<Write<'a, DebugLines>>,         // DebugLines resource
     );
 }
 
@@ -94,14 +94,14 @@ where
         encoder: &mut Encoder,
         effect: &mut Effect,
         mut factory: Factory,
-        (active, camera, global, mut lines_component, lines_resource): <Self as PassData<'a>>::Data,
-    ) {
+        (active, camera, global, mut lines_components, lines_resource): <Self as PassData<'a>>::Data,
+){
         trace!("Drawing debug lines pass");
         let debug_lines = {
             let mut lines = Vec::<DebugLine>::new();
 
-            for debug_lines_component in (&mut lines_component).join() {
-                lines.append(&mut debug_lines_component.lines);
+            for debug_lines_component in (&lines_components).join() {
+                lines.extend(&debug_lines_component.lines);
             }
 
             match lines_resource {
