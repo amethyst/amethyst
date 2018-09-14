@@ -40,6 +40,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Material ids in GLTF loader caused multiple GLTF files to get incorrect materials applied ([#915])
 * Fix render gamma for most textures. ([#868])
 * Fixed regression in sprite positioning after batching. ([#929])
+* Fixed HiDPI scaling for UI. ([#943], [#944])
 
 [#829]: https://github.com/amethyst/amethyst/issues/829
 [#830]: https://github.com/amethyst/amethyst/pull/830
@@ -59,6 +60,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#929]: https://github.com/amethyst/amethyst/pull/929
 [#934]: https://github.com/amethyst/amethyst/pull/934
 [#940]: https://github.com/amethyst/amethyst/pull/940
+[#943]: https://github.com/amethyst/amethyst/issues/943
+[#944]: https://github.com/amethyst/amethyst/pull/944
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
 
