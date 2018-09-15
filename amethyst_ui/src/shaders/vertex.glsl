@@ -27,11 +27,15 @@ void main() {
     // Double the size in a [0,1] coordinates system, but opengl is [-1,1].
     vertex.position *= vec4(dimension * 2, 1, 1);
 
-    // Move everything by the coordinates of the element in pixels.
-    vertex.position += vec4(coord, 0, 0);
     // Scale everything back down from pixel coordinates to [-1,1] domain.
     vertex.position *= proj_vec;
-    //vertex.position += vec4(-1, 1, 0, 0);
+
+    // Move everything by the coordinates of the element.
+    vertex.position += vec4(coord * 2, 0, 0) * proj_vec;
+
+    // Recenter the whole viewport.
+    vertex.position += vec4(-1, -1, 0, 0);
+
     vertex.tex_coord = tex_coord;
     gl_Position = vertex.position;
 }

@@ -153,15 +153,15 @@ impl Pass for DrawUi {
             },
             PosTex {
                 position: [0.5, 0.5, 0.],
-                tex_coord: [0., 0.],
-            },
-            PosTex {
-                position: [-0.5, 0.5, 0.],
                 tex_coord: [1., 1.],
             },
             PosTex {
-                position: [-0.5, -0.5, 0.],
+                position: [-0.5, 0.5, 0.],
                 tex_coord: [0., 1.],
+            },
+            PosTex {
+                position: [-0.5, -0.5, 0.],
+                tex_coord: [0., 0.],
             },
         ];
 
@@ -382,12 +382,13 @@ impl Pass for DrawUi {
                     h_align: HorizontalAlign::Left,
                     v_align: VerticalAlign::Top,
                 };
+
                 let section = VariedSection {
+                    // Needs a recenter because we are using [-0.5,0.5] for the mesh
+                    // instead of the expected [0,1]
                     screen_position: (
-                        ui_transform.pixel_x - ui_transform.pixel_width / 2.0
-                            + screen_dimensions.width() / 2.,
-                        ui_transform.pixel_y - ui_transform.pixel_height / 2.0
-                            + screen_dimensions.height() / 2.,
+                        ui_transform.pixel_x - ui_transform.pixel_width / 2.0,
+                        ui_transform.pixel_y - ui_transform.pixel_height / 2.0,
                     ),
                     bounds: (ui_transform.pixel_width, ui_transform.pixel_height),
                     z: ui_transform.global_z / highest_abs_z,
@@ -448,7 +449,8 @@ impl Pass for DrawUi {
                         let pos = glyph.position();
                         let vertex_args = VertexArgs {
                             proj_vec: proj_vec.into(),
-                            coord: [pos.x, pos.y - ascent].into(),
+                            // gfx-glyph uses y down so we need to convert to y up
+                            coord: [pos.x, pos.y + ascent].into(),
                             dimension: [width, height].into(),
                         };
                         effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
@@ -496,12 +498,12 @@ impl Pass for DrawUi {
                                 // If we aren't using the block cursor, don't bother.
                                 0.0
                             };
-                            let ascent = brush
+                            /*let ascent = brush
                                 .fonts()
                                 .get(&FontId(0))
                                 .unwrap()
                                 .v_metrics(Scale::uniform(ui_text.font_size))
-                                .ascent;
+                                .ascent;*/
                             let glyph_len = brush.glyphs(&section).count();
                             let (glyph, at_end) = if editing.cursor_position as usize >= glyph_len {
                                 (brush.glyphs(&section).last(), true)
@@ -524,12 +526,11 @@ impl Pass for DrawUi {
                                 height = ui_text.font_size;
                                 width = 2.0;
                             }
+
                             let pos = glyph.map(|g| g.position()).unwrap_or(Point {
-                                x: ui_transform.pixel_x - ui_transform.pixel_width / 2.0
-                                    + screen_dimensions.width() / 2.,
-                                y: ui_transform.pixel_y - ui_transform.pixel_height / 2.0
-                                    + ascent
-                                    + screen_dimensions.height() / 2.,
+                                x: ui_transform.pixel_x,
+                                // gfx-glyph uses y down so we need to convert to y up
+                                y: ui_transform.pixel_y,
                             });
                             let mut x = pos.x;
                             if let Some(glyph) = glyph {
@@ -537,9 +538,9 @@ impl Pass for DrawUi {
                                     x += glyph.unpositioned().h_metrics().advance_width;
                                 }
                             }
-                            let mut y = pos.y - ascent;
+                            let mut y = pos.y;
                             if editing.use_block_cursor && !blink_on {
-                                y += ui_text.font_size * 0.9;
+                                y -= ui_text.font_size * 0.9;
                             }
                             let vertex_args = VertexArgs {
                                 proj_vec: proj_vec.into(),

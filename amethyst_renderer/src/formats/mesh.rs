@@ -234,6 +234,7 @@ pub trait MeshCreator: Send + Sync + Debug + 'static {
     /// Build a mesh given a `Renderer`
     fn build(self: Box<Self>, renderer: &mut Renderer) -> ::error::Result<Mesh>;
 
+    /// Returns the vertices contained in the MeshCreator.
     fn vertices(&self) -> &Vec<Separate<Position>>;
 
     /// Clone a boxed version of this object
