@@ -4,6 +4,31 @@ use gfx::shade::{Formatted, ToUniform};
 use gfx_core::shade::{BaseType, ContainerType, UniformValue};
 use glsl_layout::{vec3, vec4};
 
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, PartialOrd, Serialize)]
+pub enum Color {
+    Rgba(Rgba),
+    Hsla(Hsla)
+}
+
+impl Color {
+    /// Converts the color to a rgba array.
+    pub fn rgba(&self) -> [f32; 4] {
+        match *self {
+            Color::Rgba(rgba) => rgba.into(),
+            _ => unimplemented!(),
+        }
+    }
+}
+
+/// An HSLA color value.
+/// H: Hue
+/// S: Saturation
+/// L: Lightness
+/// A: Alpha
+/// UNIMPLEMENTED!
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, PartialOrd, Serialize)]
+pub struct Hsla(pub f32, pub f32, pub f32, pub f32);
+
 /// An RGBA color value.
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, PartialOrd, Serialize)]
 pub struct Rgba(pub f32, pub f32, pub f32, pub f32);

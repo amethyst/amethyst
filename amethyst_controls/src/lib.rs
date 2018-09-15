@@ -19,6 +19,6 @@ pub use self::bundles::{ArcBallControlBundle, FlyControlBundle};
 pub use self::components::{ArcBallControlTag, ControlTagPrefab, FlyControlTag};
 pub use self::resources::WindowFocus;
 pub use self::systems::{
-    ArcBallMovementSystem, CursorHideSystem, FlyMovementSystem, FreeRotationSystem,
+    ArcBallRotationSystem, CursorHideSystem, FlyMovementSystem, FreeRotationSystem,
     MouseFocusUpdateSystem,
 };
