@@ -146,8 +146,8 @@ impl<'a> System<'a> for UiTransformSystem {
                 }
                 let transform = transform.unwrap();
                 let norm = transform.anchor.norm_offset();
-                transform.pixel_x = screen_dim.width() * norm.0;
-                transform.pixel_y = screen_dim.height() * norm.1;
+                transform.pixel_x = screen_dim.width() * norm.0 + screen_dim.width() / 2.0;
+                transform.pixel_y = screen_dim.height() * norm.1 + screen_dim.height() / 2.0;
                 transform.global_z = transform.local_z;
 
                 let new_size = match transform.stretch {
