@@ -388,7 +388,8 @@ impl Pass for DrawUi {
                     // instead of the expected [0,1]
                     screen_position: (
                         ui_transform.pixel_x - ui_transform.pixel_width / 2.0,
-                        ui_transform.pixel_y - ui_transform.pixel_height / 2.0,
+                        // invert y because gfx-glyph inverts it back
+                        screen_dimensions.height() - (ui_transform.pixel_y + ui_transform.pixel_height / 2.0),
                     ),
                     bounds: (ui_transform.pixel_width, ui_transform.pixel_height),
                     z: ui_transform.global_z / highest_abs_z,
