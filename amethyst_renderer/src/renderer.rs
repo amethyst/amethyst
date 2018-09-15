@@ -8,7 +8,7 @@ use pipe::{
 };
 use tex::{Texture, TextureBuilder};
 use types::{ColorFormat, DepthFormat, Device, Encoder, Factory, Window};
-use winit::{EventsLoop, Window as WinitWindow, WindowBuilder};
+use winit::{dpi::LogicalSize, EventsLoop, Window as WinitWindow, WindowBuilder};
 
 /// Generic renderer.
 pub struct Renderer {
@@ -21,7 +21,7 @@ pub struct Renderer {
     window: Window,
     events: EventsLoop,
     multisampling: u16,
-    cached_size: (u32, u32),
+    cached_size: LogicalSize,
     /// Whether to keep the meshes in a MeshData component instead of discarting them after uploading them to the gpu.
     pub keep_meshes: bool,
 }
@@ -75,14 +75,19 @@ impl Renderer {
     {
         use gfx::Device;
         #[cfg(feature = "opengl")]
+        use glutin::dpi::PhysicalSize;
+        #[cfg(feature = "opengl")]
         use glutin::GlContext;
 
         if let Some(size) = self.window().get_inner_size() {
             if size != self.cached_size {
                 self.cached_size = size;
                 #[cfg(feature = "opengl")]
-                self.window.resize(size.0, size.1);
-                self.resize(pipe, size);
+                self.window.resize(PhysicalSize::from_logical(
+                    size,
+                    self.window().get_hidpi_factor(),
+                ));
+                self.resize(pipe, size.into());
             }
         }
 
@@ -175,20 +180,20 @@ impl RendererBuilder {
             wb = wb.with_fullscreen(Some(self.events.get_primary_monitor()));
         }
         match self.config.dimensions {
-            Some((width, height)) => {
-                wb = wb.with_dimensions(width, height);
+            Some(dimensions) => {
+                wb = wb.with_dimensions(dimensions.into());
             }
             _ => (),
         }
         match self.config.min_dimensions {
-            Some((width, height)) => {
-                wb = wb.with_min_dimensions(width, height);
+            Some(dimensions) => {
+                wb = wb.with_min_dimensions(dimensions.into());
             }
             _ => (),
         }
         match self.config.max_dimensions {
-            Some((width, height)) => {
-                wb = wb.with_max_dimensions(width, height);
+            Some(dimensions) => {
+                wb = wb.with_max_dimensions(dimensions.into());
             }
             _ => (),
         }
@@ -309,7 +314,7 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> R
             as_input: None,
             as_output: depth,
         },
-        size,
+        size.into(),
     );
 
     Ok(Backend(dev, fac, main_target, win))

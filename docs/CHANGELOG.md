@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Support for progressive jpeg loading. ([#877])
 * New `application_root_dir()` function in `amethyst_utils`. ([#831])
 * Load node names for glTF prefabs. ([#905])
+* Support for loading TGA images. ([#934])
 
 ### Changed
 * Sprites contain their dimensions and offsets to render them with the right size and desired position. ([#829], [#830])
@@ -26,8 +27,14 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Replaced the `imagefmt` crate with `image`. ([#877])
 * Optimize Sprite rendering via batching. ([#902])
 * Derive `Debug` and `PartialEq` for `amethyst_input::Axis`. ([#903], [#904])
+* Updated `winit` to `0.17` (see [Winit's changelog][winit_017]). ([#906])
+* Updated `glutin` to `0.18` (see [Glutin's changelog][glutin_018]). ([#906])
+* Updated `gfx_window_glutin` to `0.26`. ([#906])
+* Updated `hetseq` to `0.2`. ([#906])
+* Removed unwraps from StateMachine ([#940])
 
 ### Removed
+* `LMenu` and `RMenu` key codes, following the `winit` update. ([#906])
 
 ### Fixed
 * Material ids in GLTF loader caused multiple GLTF files to get incorrect materials applied ([#915])
@@ -50,6 +57,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#915]: https://github.com/amethyst/amethyst/pull/915
 [#868]: https://github.com/amethyst/amethyst/pull/868
 [#929]: https://github.com/amethyst/amethyst/pull/929
+[#934]: https://github.com/amethyst/amethyst/pull/934
+[#940]: https://github.com/amethyst/amethyst/pull/940
+[winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
+[glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
 
 ## [0.8.0] - 2018-08
 ### Added

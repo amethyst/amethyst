@@ -6,3 +6,4 @@ pub use ecs::prelude::{Builder, World};
 pub use game_data::{DataInit, GameData, GameDataBuilder};
 pub use state::{EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, Trans};
 pub use state_event::StateEvent;
+pub use core::WithNamed;
