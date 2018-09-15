@@ -109,33 +109,62 @@ impl<'a> PassData<'a> for DrawUi {
 
 impl Pass for DrawUi {
     fn compile(&mut self, mut effect: NewEffect) -> Result<Effect> {
-        // Initialize a single unit quad, we'll use this mesh when drawing quads later
-        let data = vec![
+        // Initialize a single unit quad, we'll use this mesh when drawing quads later.
+        // Centered around (0,0) and of size 1
+        /*let data = vec![
             PosTex {
-                position: [0., 1., 0.],
+                position: [-0.5, 0.5, 0.],
                 tex_coord: [0., 0.],
             },
             PosTex {
-                position: [1., 1., 0.],
+                position: [0.5, 0.5, 0.],
                 tex_coord: [1., 0.],
             },
             PosTex {
-                position: [1., 0., 0.],
+                position: [0.5, -0.5, 0.],
                 tex_coord: [1., 1.],
             },
             PosTex {
-                position: [0., 1., 0.],
+                position: [-0.5, 0.5, 0.],
                 tex_coord: [0., 0.],
             },
             PosTex {
-                position: [1., 0., 0.],
+                position: [0.5, -0.5, 0.],
                 tex_coord: [1., 1.],
             },
             PosTex {
-                position: [0., 0., 0.],
+                position: [-0.5, -0.5, 0.],
+                tex_coord: [0., 1.],
+            },
+        ];*/
+
+        let data = vec![
+            PosTex {
+                position: [-0.5, -0.5, 0.],
+                tex_coord: [0., 0.],
+            },
+            PosTex {
+                position: [0.5, -0.5, 0.],
+                tex_coord: [1., 0.],
+            },
+            PosTex {
+                position: [0.5, 0.5, 0.],
+                tex_coord: [1., 1.],
+            },
+            PosTex {
+                position: [0.5, 0.5, 0.],
+                tex_coord: [0., 0.],
+            },
+            PosTex {
+                position: [-0.5, 0.5, 0.],
+                tex_coord: [1., 1.],
+            },
+            PosTex {
+                position: [-0.5, -0.5, 0.],
                 tex_coord: [0., 1.],
             },
         ];
+
         self.mesh = Some(Mesh::build(data).build(&mut effect.factory)?);
         use std::mem;
         effect
@@ -219,9 +248,13 @@ impl Pass for DrawUi {
             .sort_unstable_by(|&(z1, _), &(z2, _)| z2.partial_cmp(&z1).unwrap_or(Ordering::Equal));
 
         let proj_vec = cg_vec4(
-            2. / screen_dimensions.width(),
-            2. / screen_dimensions.height(),
-            2.,
+            // Multiply x by two to translate from the amethyst coordinates [0,px width] to opengl [-1,1]
+            1. / screen_dimensions.width(),
+            // Multiply y by two to translate from the amethyst coordinates [0,px height] to opengl [-1,1]
+            1. / screen_dimensions.height(),
+            // Multiply z
+            1.,
+            // Used in a multiplication of the w component of the position vector. Does nothing.
             1.,
         );
 
@@ -248,13 +281,12 @@ impl Pass for DrawUi {
                     proj_vec: proj_vec.into(),
                     // Coordinates are middle centered. It makes it easier to do layouting in most cases.
                     coord: [
-                        ui_transform.pixel_x - ui_transform.pixel_width / 2.0
-                            + screen_dimensions.width() / 2.,
-                        ui_transform.pixel_y - ui_transform.pixel_height / 2.0
-                            + screen_dimensions.height() / 2.,
+                        ui_transform.pixel_x,
+                        ui_transform.pixel_y,
                     ].into(),
                     dimension: [ui_transform.pixel_width, ui_transform.pixel_height].into(),
                 };
+
                 effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
                 effect.data.textures.push(image.view().clone());
                 effect.data.samplers.push(image.sampler().clone());

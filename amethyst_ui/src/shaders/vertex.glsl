@@ -9,6 +9,7 @@ layout (std140) uniform VertexArgs {
     uniform vec2 dimension;
 };
 
+// Square [-0.5,0.5]
 in vec3 position;
 in vec2 tex_coord;
 
@@ -18,11 +19,19 @@ out VertexData {
 } vertex;
 
 void main() {
+    // Create a vec4 with w=1
     vertex.position = vec4(position, 1);
-    vertex.position *= vec4(dimension, 1, 1);
+
+    // Multiply by the size of the element we want to draw.
+    // [-elem_width, +elem_width]
+    // Double the size in a [0,1] coordinates system, but opengl is [-1,1].
+    vertex.position *= vec4(dimension * 2, 1, 1);
+
+    // Move everything by the coordinates of the element in pixels.
     vertex.position += vec4(coord, 0, 0);
+    // Scale everything back down from pixel coordinates to [-1,1] domain.
     vertex.position *= proj_vec;
-    vertex.position += vec4(-1, 1, 0, 0);
+    //vertex.position += vec4(-1, 1, 0, 0);
     vertex.tex_coord = tex_coord;
     gl_Position = vertex.position;
 }
