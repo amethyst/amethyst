@@ -22,8 +22,6 @@ pub struct Renderer {
     events: EventsLoop,
     multisampling: u16,
     cached_size: LogicalSize,
-    /// Whether to keep the meshes in a MeshData component instead of discarting them after uploading them to the gpu.
-    pub keep_meshes: bool,
 }
 
 impl Renderer {
@@ -154,7 +152,6 @@ pub struct RendererBuilder {
     config: DisplayConfig,
     events: EventsLoop,
     winit_builder: WindowBuilder,
-    keep_meshes: bool,
 }
 
 impl RendererBuilder {
@@ -164,7 +161,6 @@ impl RendererBuilder {
             config: DisplayConfig::default(),
             events: el,
             winit_builder: WindowBuilder::new().with_title("Amethyst"),
-            keep_meshes: false,
         }
     }
 
@@ -201,12 +197,6 @@ impl RendererBuilder {
         self
     }
 
-    /// Ensures meshes are kept in memory by adding them to a MeshData component.
-    pub fn keep_meshes(&mut self) -> &mut Self {
-    	self.keep_meshes = true;
-    	self
-    }
-
     /// Applies window settings from the given `glutin::WindowBuilder`.
     pub fn use_winit_builder(&mut self, wb: WindowBuilder) -> &mut Self {
         self.winit_builder = wb;
@@ -231,7 +221,6 @@ impl RendererBuilder {
             events: self.events,
             multisampling: self.config.multisampling,
             cached_size,
-            keep_meshes: self.keep_meshes,
         })
     }
 }

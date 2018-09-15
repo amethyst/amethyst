@@ -43,7 +43,7 @@ pub enum Anchor {
 impl Anchor {
     /// Returns the normalized offset using the `Anchor` setting.
     /// The normalized offset is a [-0.5,0.5] value
-    /// indicating the relative offset from the parent's position (centered).
+    /// indicating the relative offset multiplier from the parent's position (centered).
     pub fn norm_offset(&self) -> (f32, f32) {
         match self {
             Anchor::TopLeft => (-0.5, 0.5),

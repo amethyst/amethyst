@@ -4,12 +4,12 @@
 use amethyst_assets::{AssetStorage, HotReloadStrategy};
 use amethyst_core::shrev::EventChannel;
 use amethyst_core::specs::prelude::{
-    Read, ReadExpect, Resources, RunNow, SystemData, Write, WriteExpect, WriteStorage,
+    Read, ReadExpect, Resources, RunNow, SystemData, Write, WriteExpect,
 };
 use amethyst_core::Time;
 use config::DisplayConfig;
 use error::Result;
-use formats::{create_mesh_asset, create_texture_asset, MeshData};
+use formats::{create_mesh_asset, create_texture_asset};
 use mesh::Mesh;
 use mtl::{Material, MaterialDefaults};
 use pipe::{PipelineBuild, PipelineData, PolyPipeline};
@@ -76,7 +76,7 @@ where
 
     fn asset_loading(
         &mut self,
-        (time, pool, strategy, mut mesh_storage, mut texture_storage, mut memory_meshes): AssetLoadingData,
+        (time, pool, strategy, mut mesh_storage, mut texture_storage): AssetLoadingData,
     ) {
         use std::ops::Deref;
 
@@ -84,9 +84,6 @@ where
 
         mesh_storage.process(
             |d| {
-                /*if self.renderer.keep_meshes {
-                    memory_meshes;
-                }*/
                 create_mesh_asset(d, &mut self.renderer)
             },
             time.frame_number(),
@@ -147,7 +144,6 @@ type AssetLoadingData<'a> = (
     Option<Read<'a, HotReloadStrategy>>,
     Write<'a, AssetStorage<Mesh>>,
     Write<'a, AssetStorage<Texture>>,
-    WriteStorage<'a, MeshData>,
 );
 
 type WindowData<'a> = (Write<'a, WindowMessages>, WriteExpect<'a, ScreenDimensions>);

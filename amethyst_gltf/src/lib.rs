@@ -175,6 +175,7 @@ impl<'a> PrefabData<'a> for GltfPrefab {
         <AnimatablePrefab<usize, Transform> as PrefabData<'a>>::SystemData,
         <SkinnablePrefab as PrefabData<'a>>::SystemData,
         WriteStorage<'a, GltfNodeExtent>,
+        // TODO make optionnal after prefab refactor. We need a way to pass options to decide to enable this or not, but without touching the prefab.
         WriteStorage<'a, MeshData>,
     );
     type Result = ();
@@ -199,7 +200,7 @@ impl<'a> PrefabData<'a> for GltfPrefab {
             transform.load_prefab(entity, transforms, entities)?;
         }
         if let Some(ref mesh) = self.mesh {
-            mesh_data.insert(entity, mesh.clone());
+            mesh_data.insert(entity, mesh.clone())?;
         }
         if let Some(ref mesh) = self.mesh_handle {
             meshes.1.insert(entity, mesh.clone())?;

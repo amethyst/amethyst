@@ -9,7 +9,7 @@ use {
     TtfFormat, UiButton, UiImage, UiText, UiTransform,
 };
 
-const DEFAULT_Z: f32 = -1.0;
+const DEFAULT_Z: f32 = 1.0;
 const DEFAULT_WIDTH: f32 = 128.0;
 const DEFAULT_HEIGHT: f32 = 64.0;
 const DEFAULT_TAB_ORDER: i32 = 9;
