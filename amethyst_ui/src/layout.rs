@@ -146,8 +146,8 @@ impl<'a> System<'a> for UiTransformSystem {
                 }
                 let transform = transform.unwrap();
                 let norm = transform.anchor.norm_offset();
-                transform.pixel_x = screen_dim.width() * norm.0 + screen_dim.width() / 2.0;
-                transform.pixel_y = screen_dim.height() * norm.1 + screen_dim.height() / 2.0;
+                transform.pixel_x = screen_dim.width() * (norm.0 + 0.5);
+                transform.pixel_y = screen_dim.height() * (norm.1 + 0.5);
                 transform.global_z = transform.local_z;
 
                 let new_size = match transform.stretch {
@@ -204,9 +204,9 @@ impl<'a> System<'a> for UiTransformSystem {
                     let mut transform = transform.unwrap();
                     let norm = transform.anchor.norm_offset();
                     transform.pixel_x =
-                        parent_transform_copy.pixel_x + parent_transform_copy.pixel_width * norm.0;
+                        parent_transform_copy.pixel_x + parent_transform_copy.pixel_width * (norm.0 + 0.5);
                     transform.pixel_y =
-                        parent_transform_copy.pixel_y + parent_transform_copy.pixel_height * norm.1;
+                        parent_transform_copy.pixel_y + parent_transform_copy.pixel_height * (norm.1 + 0.5);
                     transform.global_z = parent_transform_copy.global_z + transform.local_z;
 
                     let new_size = match transform.stretch {
