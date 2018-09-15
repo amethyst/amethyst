@@ -276,6 +276,16 @@ impl Component for Transform {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
 
+/// Creates a Transform using the `Vector3` as the translation vector.
+impl From<Vector3<f32>> for Transform {
+    fn from(translation: Vector3<f32>) -> Self {
+        Transform {
+            translation,
+            ..Default::default()
+        }
+    }
+}
+
 impl CgTransform<Point3<f32>> for Transform {
     fn one() -> Self {
         Default::default()
