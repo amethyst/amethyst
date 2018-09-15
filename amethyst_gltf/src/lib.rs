@@ -175,7 +175,7 @@ impl<'a> PrefabData<'a> for GltfPrefab {
         <AnimatablePrefab<usize, Transform> as PrefabData<'a>>::SystemData,
         <SkinnablePrefab as PrefabData<'a>>::SystemData,
         WriteStorage<'a, GltfNodeExtent>,
-        // TODO make optionnal after prefab refactor. We need a way to pass options to decide to enable this or not, but without touching the prefab.
+        // TODO make optional after prefab refactor. We need a way to pass options to decide to enable this or not, but without touching the prefab.
         WriteStorage<'a, MeshData>,
     );
     type Result = ();

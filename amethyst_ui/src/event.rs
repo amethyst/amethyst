@@ -97,8 +97,6 @@ where
         let click_stopped = !down && self.was_down;
 
         if let Some((pos_x, pos_y)) = input.mouse_position() {
-            //let x = pos_x as f32 - screen_dimensions.width() / 2.;
-            //let y = pos_y as f32 - screen_dimensions.height() / 2.;
             let x = pos_x as f32;
             let y = screen_dimensions.height() - pos_y as f32;
 
