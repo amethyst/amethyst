@@ -8,7 +8,7 @@ use amethyst_core::transform::Transform;
 use amethyst_input::{get_input_axis_simple, InputHandler};
 use amethyst_renderer::WindowMessages;
 use components::{ArcBallControlTag, FlyControlTag};
-use resources::{HideMouse, WindowFocus};
+use resources::{HideCursor, WindowFocus};
 use std::hash::Hash;
 use std::marker::PhantomData;
 use winit::{DeviceEvent, Event, WindowEvent};
@@ -228,8 +228,10 @@ impl<'a> System<'a> for CursorHideSystem {
                         if focused && hide.hide && !self.is_hidden {
                             grab_cursor(&mut msg);
                             hide_cursor(&mut msg);
+                            self.is_hidden = true;
                         } else if !focused {
                             release_cursor(&mut msg);
+                            self.is_hidden = false;
                         }
                     }
                     _ => (),
@@ -239,6 +241,7 @@ impl<'a> System<'a> for CursorHideSystem {
         }
         if !hide.hide && self.is_hidden {
             release_cursor(&mut msg);
+            self.is_hidden = false;
         }
     }
 
