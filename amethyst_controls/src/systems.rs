@@ -200,48 +200,39 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
     }
 }
 
-// System which hides the cursor when the window is focused
+/// System which hides the cursor when the window is focused.
+/// Requires the usage MouseFocusUpdateSystem at the same time.
 pub struct CursorHideSystem {
-    event_reader: Option<ReaderId<Event>>,
     is_hidden: bool,
 }
 
 impl CursorHideSystem {
     pub fn new() -> CursorHideSystem {
         CursorHideSystem { 
-            event_reader: None,
             is_hidden: false,
         }
     }
 }
 
 impl<'a> System<'a> for CursorHideSystem {
-    type SystemData = (Read<'a, EventChannel<Event>>, Write<'a, WindowMessages>, Read<'a, HideCursor>);
+    type SystemData = (Write<'a, WindowMessages>, Read<'a, HideCursor>, Read<'a, WindowFocus>);
 
-    fn run(&mut self, (events, mut msg, hide): Self::SystemData) {
+    fn run(&mut self, (mut msg, hide, focus): Self::SystemData) {
         use amethyst_renderer::mouse::*;
-
-        for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
-            match *event {
-                Event::WindowEvent { ref event, .. } => match event {
-                    &WindowEvent::Focused(focused) => {
-                        if focused && hide.hide && !self.is_hidden {
-                            grab_cursor(&mut msg);
-                            hide_cursor(&mut msg);
-                            self.is_hidden = true;
-                        } else if !focused {
-                            release_cursor(&mut msg);
-                            self.is_hidden = false;
-                        }
-                    }
-                    _ => (),
-                },
-                _ => (),
+        if focus.is_focused {
+            if !self.is_hidden && hide.hide {
+                grab_cursor(&mut msg);
+                hide_cursor(&mut msg);
+                self.is_hidden = true;
+            } else if self.is_hidden && !hide.hide {
+                release_cursor(&mut msg);
+                self.is_hidden = false;
             }
-        }
-        if !hide.hide && self.is_hidden {
-            release_cursor(&mut msg);
-            self.is_hidden = false;
+        } else {
+            if self.is_hidden {
+                release_cursor(&mut msg);
+                self.is_hidden = false;
+            }
         }
     }
 
@@ -250,10 +241,10 @@ impl<'a> System<'a> for CursorHideSystem {
         use amethyst_renderer::mouse::*;
 
         Self::SystemData::setup(res);
-        self.event_reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
 
         let mut msg = res.fetch_mut::<WindowMessages>();
         grab_cursor(&mut msg);
         hide_cursor(&mut msg);
+        self.is_hidden = true;
     }
 }
