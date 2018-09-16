@@ -8,7 +8,7 @@ use amethyst_core::transform::Transform;
 use amethyst_input::{get_input_axis_simple, InputHandler};
 use amethyst_renderer::WindowMessages;
 use components::{ArcBallControlTag, FlyControlTag};
-use resources::WindowFocus;
+use resources::{HideMouse, WindowFocus};
 use std::hash::Hash;
 use std::marker::PhantomData;
 use winit::{DeviceEvent, Event, WindowEvent};
@@ -203,35 +203,42 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
 // System which hides the cursor when the window is focused
 pub struct CursorHideSystem {
     event_reader: Option<ReaderId<Event>>,
+    is_hidden: bool,
 }
 
 impl CursorHideSystem {
     pub fn new() -> CursorHideSystem {
-        CursorHideSystem { event_reader: None }
+        CursorHideSystem { 
+            event_reader: None,
+            is_hidden: false,
+        }
     }
 }
 
 impl<'a> System<'a> for CursorHideSystem {
-    type SystemData = (Read<'a, EventChannel<Event>>, Write<'a, WindowMessages>);
+    type SystemData = (Read<'a, EventChannel<Event>>, Write<'a, WindowMessages>, Read<'a, HideCursor>);
 
-    fn run(&mut self, (events, mut msg): Self::SystemData) {
+    fn run(&mut self, (events, mut msg, hide): Self::SystemData) {
         use amethyst_renderer::mouse::*;
 
         for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
             match *event {
                 Event::WindowEvent { ref event, .. } => match event {
                     &WindowEvent::Focused(focused) => {
-                        if focused {
+                        if focused && hide.hide && !self.is_hidden {
                             grab_cursor(&mut msg);
                             hide_cursor(&mut msg);
-                        } else {
-                            release_cursor(&mut msg)
+                        } else if !focused {
+                            release_cursor(&mut msg);
                         }
                     }
                     _ => (),
                 },
                 _ => (),
             }
+        }
+        if !hide.hide && self.is_hidden {
+            release_cursor(&mut msg);
         }
     }
 
