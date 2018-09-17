@@ -79,7 +79,7 @@ use std::borrow::Cow;
 ///     }
 /// }
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Named {
     pub name: Cow<'static, str>,
 }
