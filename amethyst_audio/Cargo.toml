@@ -26,7 +26,7 @@ log = "0.4"
 rodio = "0.8"
 serde = { version = "1.0", features = ["derive"] }
 
-thread_profiler = { version = "0.1", optional = true }
+thread_profiler = { version = "0.3", optional = true }
 
 [dependencies.smallvec]
 version = "0.6"

@@ -401,7 +401,7 @@ impl Pass for DrawUi {
                     effect.data.samplers.push(texture.sampler().clone());
                     let ascent = brush
                         .fonts()
-                        .get(&FontId(0))
+                        .get(0)
                         .unwrap()
                         .v_metrics(Scale::uniform(ui_text.font_size))
                         .ascent;
@@ -454,7 +454,7 @@ impl Pass for DrawUi {
                             let space_width = if editing.use_block_cursor {
                                 brush
                                     .fonts()
-                                    .get(&FontId(0))
+                                    .get(0)
                                     .unwrap()
                                     .glyph(' ')
                                     .scaled(Scale::uniform(ui_text.font_size))
@@ -466,7 +466,7 @@ impl Pass for DrawUi {
                             };
                             let ascent = brush
                                 .fonts()
-                                .get(&FontId(0))
+                                .get(0)
                                 .unwrap()
                                 .v_metrics(Scale::uniform(ui_text.font_size))
                                 .ascent;
