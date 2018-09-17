@@ -273,7 +273,7 @@ impl UiButtonBuilder {
         res.transform
             .insert(
                 text_entity,
-                UiTransform::new(id, Anchor::Middle, 0., 0., -0.01, 0., 0., 10)
+                UiTransform::new(id, Anchor::Middle, 0., 0., 0.01, 0., 0., 10)
                     .as_transparent()
                     .with_stretch(Stretch::XY {
                         x_margin: 0.,
