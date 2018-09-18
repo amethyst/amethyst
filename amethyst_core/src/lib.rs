@@ -21,6 +21,7 @@ extern crate thread_profiler;
 #[cfg(all(target_os = "emscripten", not(no_threading)))]
 compile_error!("the cfg flag \"no_threading\" is required when building for emscripten");
 
+pub use self::axis::{Axis2, Axis3};
 pub use self::named::{Named, WithNamed};
 pub use bundle::{Error, ErrorKind, Result, SystemBundle};
 pub use orientation::Orientation;
@@ -28,6 +29,7 @@ use std::sync::Arc;
 pub use timing::*;
 pub use transform::*;
 
+mod axis;
 pub mod bundle;
 pub mod frame_limiter;
 mod named;
@@ -36,4 +38,4 @@ pub mod timing;
 pub mod transform;
 
 /// A rayon thread pool wrapped in an `Arc`. This should be used as resource in `World`.
-pub type ThreadPool = Arc<rayon::ThreadPool>;
+pub type ArcThreadPool = Arc<rayon::ThreadPool>;

@@ -16,6 +16,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Support for progressive jpeg loading. ([#877])
 * New `application_root_dir()` function in `amethyst_utils`. ([#831])
 * Load node names for glTF prefabs. ([#905])
+* Added automatic camera matrix resizing to allow clean screen resizes. ([#920])
+* Added the Removal component to facilitate manual entity removal and scene cleaning. ([#920])
+* Added DestroyAtTime and DestroyInTime components to easily destroy entities. ([#920])
 * Support for loading TGA images. ([#934])
 
 ### Changed
@@ -52,6 +55,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#831]: https://github.com/amethyst/amethyst/pull/831
 [#902]: https://github.com/amethyst/amethyst/pull/902
 [#905]: https://github.com/amethyst/amethyst/pull/905
+[#920]: https://github.com/amethyst/amethyst/pull/920
 [#903]: https://github.com/amethyst/amethyst/issues/903
 [#904]: https://github.com/amethyst/amethyst/pull/904
 [#915]: https://github.com/amethyst/amethyst/pull/915
