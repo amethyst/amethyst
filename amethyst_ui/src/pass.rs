@@ -477,7 +477,7 @@ impl Pass for DrawUi {
                                 height = ui_text.font_size;
                                 width = 2.0;
                             }
-                            println!("2 px y {}", ui_transform.pixel_y);
+                            
                             let pos = glyph.map(|g| g.position()).unwrap_or(Point {
                                 x: ui_transform.pixel_x,
                                 // gfx-glyph uses y down so we need to convert to y up
