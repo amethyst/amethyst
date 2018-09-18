@@ -86,6 +86,7 @@ pub use bundle::RenderBundle;
 pub use cam::{ActiveCamera, ActiveCameraPrefab, Camera, CameraPrefab, Projection};
 pub use color::Rgba;
 pub use config::DisplayConfig;
+pub use debug_drawing::{DebugLines, DebugLinesComponent};
 pub use formats::{
     build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat, ComboMeshCreator,
     GraphicsPrefab, ImageData, JpgFormat, MaterialPrefab, MeshCreator, MeshData, ObjFormat,
@@ -96,8 +97,8 @@ pub use light::{DirectionalLight, Light, LightPrefab, PointLight, SpotLight, Sun
 pub use mesh::{vertex_data, Mesh, MeshBuilder, MeshHandle, VertexBuffer};
 pub use mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset};
 pub use pass::{
-    get_camera, set_vertex_args, DrawFlat, DrawFlatSeparate, DrawPbm, DrawPbmSeparate, DrawShaded,
-    DrawShadedSeparate, DrawSprite,
+    get_camera, set_vertex_args, DrawDebugLines, DrawFlat, DrawFlatSeparate, DrawPbm,
+    DrawPbmSeparate, DrawShaded, DrawShadedSeparate, DrawSprite,
 };
 pub use pipe::{
     ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder, Init, Meta, NewEffect,
@@ -122,9 +123,9 @@ pub use transparent::{
 };
 pub use types::{Encoder, Factory, PipelineState, Resources};
 pub use vertex::{
-    Attribute, AttributeFormat, Attributes, Color, Normal, PosColor, PosNormTangTex, PosNormTex,
-    PosTex, Position, Query, Separate, Tangent, TexCoord, VertexBufferCombination, VertexFormat,
-    With,
+    Attribute, AttributeFormat, Attributes, Color, Normal, PosColor, PosColorNorm, PosNormTangTex,
+    PosNormTex, PosTex, Position, Query, Separate, Tangent, TexCoord, VertexBufferCombination,
+    VertexFormat, With,
 };
 pub use visibility::{Visibility, VisibilitySortingSystem};
 
@@ -139,6 +140,7 @@ mod bundle;
 mod cam;
 mod color;
 mod config;
+mod debug_drawing;
 mod formats;
 mod input;
 mod light;
