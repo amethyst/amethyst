@@ -9,7 +9,7 @@ use amethyst::renderer::{DrawShaded, PosNormTex};
 use amethyst::utils::application_root_dir;
 use amethyst::utils::scene::BasicScenePrefab;
 
-type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>, ()>;
+type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 struct Example;
 

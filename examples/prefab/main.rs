@@ -11,7 +11,7 @@ use amethyst::utils::application_root_dir;
 use amethyst::utils::scene::BasicScenePrefab;
 use amethyst::Error;
 
-type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>, ()>;
+type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 struct AssetsExample;
 

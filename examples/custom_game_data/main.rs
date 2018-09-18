@@ -26,7 +26,7 @@ use game_data::{CustomGameData, CustomGameDataBuilder};
 mod example_system;
 mod game_data;
 
-type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>, ()>;
+type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 pub struct DemoState {
     light_angle: f32,
