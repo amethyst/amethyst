@@ -22,10 +22,11 @@ use std::fmt::Debug;
 ///     * `Vec<PosNormTex>`
 ///     * `Vec<PosNormTangTex>`
 ///     * `ComboMeshCreator`
+/// `R`: The type of id used by the Removal component.
 /// - `M`: `Format` to use for loading `Mesh`es from file
 #[derive(Deserialize, Serialize)]
 #[serde(default)]
-pub struct BasicScenePrefab<V, R, M = ObjFormat>
+pub struct BasicScenePrefab<V, R = (), M = ObjFormat>
 where
     M: Format<Mesh>,
     M::Options: DeserializeOwned + Serialize,

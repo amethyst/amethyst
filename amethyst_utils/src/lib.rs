@@ -2,6 +2,11 @@ extern crate amethyst_assets;
 extern crate amethyst_controls;
 extern crate amethyst_core;
 extern crate amethyst_renderer;
+
+// Used for tests.
+#[allow(unused_imports)]
+#[macro_use]
+extern crate cgmath;
 #[macro_use]
 extern crate log;
 #[macro_use]
