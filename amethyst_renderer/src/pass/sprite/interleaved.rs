@@ -281,8 +281,18 @@ impl SpriteBatch {
 
             let dir_x = transform.x * sprite_data.width;
             let dir_y = transform.y * sprite_data.height;
-            let pos =
-                transform * Vector4::new(sprite_data.offsets[0], sprite_data.offsets[1], 0.0, 1.0);
+
+            // The offsets are negated to shift the sprite left and down relative to the entity, in
+            // regards to pivot points. This is the convention adopted in:
+            //
+            // * libgdx: <https://gamedev.stackexchange.com/q/22553>
+            // * godot: <https://godotengine.org/qa/9784>
+            let pos = transform * Vector4::new(
+                -sprite_data.offsets[0],
+                -sprite_data.offsets[1],
+                0.0,
+                1.0
+            );
 
             instance_data.extend(&[
                 dir_x.x, dir_x.y, dir_y.x, dir_y.y, pos.x, pos.y, uv_left, uv_right, uv_bottom,

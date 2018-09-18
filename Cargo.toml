@@ -65,22 +65,22 @@ amethyst_utils = { path = "amethyst_utils", version = "0.3.0" }
 derivative = "1.0"
 fern = { version = "0.5", features = ["colored"] }
 log = "0.4"
-rayon = "1.0.1"
+rayon = "1.0.2"
 rustc_version_runtime = "0.1"
-winit = "0.15"
+winit = "0.17"
 
-thread_profiler = { version = "0.1", optional = true }
+thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
 amethyst_gltf = { path = "amethyst_gltf", version = "0.3.0" }
-env_logger = "0.5.10"
+env_logger = "0.5.13"
 genmesh = "0.6"
 ron = "0.2"
 serde = "1.0"
 serde_derive = "1.0"
 
 [build-dependencies]
-vergen = "0.1"
+vergen = "2.0"
 
 [[example]]
 name = "hello_world"

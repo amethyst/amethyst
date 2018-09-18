@@ -9,7 +9,8 @@ use smallvec::SmallVec;
 use std::borrow::Borrow;
 use std::hash::Hash;
 use winit::{
-    DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent,
+    dpi::LogicalPosition, DeviceEvent, ElementState, Event, KeyboardInput, MouseButton,
+    VirtualKeyCode, WindowEvent,
 };
 
 /// This struct holds state information about input devices.
@@ -80,7 +81,8 @@ where
                             KeyPressed { key_code, scancode },
                             ButtonPressed(Button::Key(key_code)),
                             ButtonPressed(Button::ScanCode(scancode)),
-                        ].iter()
+                        ]
+                            .iter()
                             .cloned(),
                     );
                     for (k, v) in self.bindings.actions.iter() {
@@ -112,7 +114,8 @@ where
                                 KeyReleased { key_code, scancode },
                                 ButtonReleased(Button::Key(key_code)),
                                 ButtonReleased(Button::ScanCode(scancode)),
-                            ].iter()
+                            ]
+                                .iter()
                                 .cloned(),
                         );
                         for (k, v) in self.bindings.actions.iter() {
@@ -143,7 +146,8 @@ where
                             [
                                 MouseButtonPressed(mouse_button),
                                 ButtonPressed(Button::Mouse(mouse_button)),
-                            ].iter()
+                            ]
+                                .iter()
                                 .cloned(),
                         );
                         for (k, v) in self.bindings.actions.iter() {
@@ -171,7 +175,8 @@ where
                             [
                                 MouseButtonReleased(mouse_button),
                                 ButtonReleased(Button::Mouse(mouse_button)),
-                            ].iter()
+                            ]
+                                .iter()
                                 .cloned(),
                         );
                         for (k, v) in self.bindings.actions.iter() {
@@ -184,7 +189,8 @@ where
                     }
                 }
                 WindowEvent::CursorMoved {
-                    position: (x, y), ..
+                    position: LogicalPosition { x, y },
+                    ..
                 } => {
                     if let Some((old_x, old_y)) = self.mouse_position {
                         event_handler.single_write(CursorMoved {
@@ -251,7 +257,8 @@ where
                             [
                                 event.into(),
                                 ButtonPressed(Button::Controller(controller_id, button)),
-                            ].iter()
+                            ]
+                                .iter()
                                 .cloned(),
                         );
                         for (k, v) in self.bindings.actions.iter() {
@@ -276,7 +283,8 @@ where
                             [
                                 event.into(),
                                 ButtonReleased(Button::Controller(controller_id, button)),
-                            ].iter()
+                            ]
+                                .iter()
                                 .cloned(),
                         );
                         for (k, v) in self.bindings.actions.iter() {
@@ -453,8 +461,7 @@ where
                     } else {
                         0.0
                     }
-                })
-                .unwrap_or(0.0),
+                }).unwrap_or(0.0),
         })
     }
 

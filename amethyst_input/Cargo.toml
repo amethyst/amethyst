@@ -18,12 +18,12 @@ travis-ci = { repository = "amethyst/amethyst" }
 amethyst_core = { path = "../amethyst_core/", version = "0.3.0" }
 amethyst_config = { path = "../amethyst_config/", version = "0.7.0" }
 derivative = "1.0"
-fnv = "1.0"
+fnv = "1"
 serde = { version = "1", features = ["serde_derive"] }
-winit = "0.15"
+winit = "0.17"
 sdl2 = { version = "0.31.0", optional = true }
 
-thread_profiler = { version = "0.1", optional = true }
+thread_profiler = { version = "0.3", optional = true }
 
 [dependencies.smallvec]
 version = "0.6"

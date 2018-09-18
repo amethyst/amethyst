@@ -40,24 +40,16 @@ fn initialise_camera(world: &mut World) {
             arena_width,
             arena_height,
             0.0,
-        )))
-        .with(GlobalTransform(
+        ))).with(GlobalTransform(
             Matrix4::from_translation(Vector3::new(0.0, 0.0, 1.0)).into(),
-        ))
-        .build();
+        )).build();
 }
 
 /// Hide the cursor, so it's invisible while playing.
 fn hide_cursor(world: &mut World) {
-    use amethyst::winit::CursorState;
-
     world
         .write_resource::<WindowMessages>()
-        .send_command(|win| {
-            if let Err(err) = win.set_cursor_state(CursorState::Hide) {
-                eprintln!("Unable to make cursor hidden! Error: {:?}", err);
-            }
-        });
+        .send_command(|win| win.hide_cursor(true));
 }
 
 /// Initialises one paddle on the left, and one paddle on the right.
@@ -130,8 +122,7 @@ fn initialise_paddles(world: &mut World) {
             height: left_height,
             width: left_width,
             velocity: left_velocity,
-        })
-        .with(GlobalTransform::default())
+        }).with(GlobalTransform::default())
         .with(left_transform)
         .build();
     // Create right paddle
@@ -144,8 +135,7 @@ fn initialise_paddles(world: &mut World) {
             height: right_height,
             width: right_width,
             velocity: right_velocity,
-        })
-        .with(GlobalTransform::default())
+        }).with(GlobalTransform::default())
         .with(right_transform)
         .build();
 }
@@ -179,8 +169,7 @@ fn initialise_balls(world: &mut World) {
         .with(Ball {
             radius: radius,
             velocity: [velocity_x, velocity_y],
-        })
-        .with(local_transform)
+        }).with(local_transform)
         .with(GlobalTransform::default())
         .build();
 }
@@ -223,8 +212,7 @@ fn initialise_score(world: &mut World) {
             "0".to_string(),
             [1.0, 1.0, 1.0, 1.0],
             50.,
-        ))
-        .build();
+        )).build();
     let p2_score = world
         .create_entity()
         .with(p2_transform)
@@ -233,8 +221,7 @@ fn initialise_score(world: &mut World) {
             "0".to_string(),
             [1.0, 1.0, 1.0, 1.0],
             50.,
-        ))
-        .build();
+        )).build();
     world.add_resource(ScoreText { p1_score, p2_score });
 }
 

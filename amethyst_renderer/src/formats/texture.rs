@@ -1,5 +1,4 @@
-use image::DynamicImage;
-use image::RgbaImage;
+use image::{DynamicImage, ImageFormat, RgbaImage};
 
 use std::result::Result as StdResult;
 
@@ -242,9 +241,13 @@ pub struct ImageData {
     pub rgba: RgbaImage,
 }
 
-fn load_into_rgba8_from_memory(data: &[u8], options: TextureMetadata) -> Result<TextureData> {
-    use image::load_from_memory;
-    load_from_memory(&data)
+fn load_into_rgba8_from_memory(
+    data: &[u8],
+    options: TextureMetadata,
+    format: ImageFormat,
+) -> Result<TextureData> {
+    use image::load_from_memory_with_format;
+    load_from_memory_with_format(data, format)
         .map(|image| {
             match image {
                 DynamicImage::ImageRgba8(im) => im,
@@ -268,7 +271,7 @@ pub struct JpgFormat;
 impl JpgFormat {
     /// Load Jpg from memory buffer
     pub fn from_data(data: &[u8], options: TextureMetadata) -> Result<TextureData> {
-        load_into_rgba8_from_memory(data, options)
+        load_into_rgba8_from_memory(data, options, ImageFormat::JPEG)
     }
 }
 
@@ -289,7 +292,7 @@ pub struct PngFormat;
 impl PngFormat {
     /// Load Png from memory buffer
     pub fn from_data(data: &[u8], options: TextureMetadata) -> Result<TextureData> {
-        load_into_rgba8_from_memory(data, options)
+        load_into_rgba8_from_memory(data, options, ImageFormat::PNG)
     }
 }
 
@@ -315,7 +318,27 @@ impl SimpleFormat<Texture> for BmpFormat {
     fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
         // TODO: consider reading directly into GPU-visible memory
         // TODO: as noted by @omni-viral.
-        load_into_rgba8_from_memory(&bytes, options)
+        load_into_rgba8_from_memory(&bytes, options, ImageFormat::BMP)
+    }
+}
+
+/// Allows loading of TGA files.
+pub struct TgaFormat;
+
+impl TgaFormat {
+    /// Loads a TGA image from a byte slice.
+    pub fn from_data(data: &[u8], options: TextureMetadata) -> Result<TextureData> {
+        load_into_rgba8_from_memory(data, options, ImageFormat::TGA)
+    }
+}
+
+impl SimpleFormat<Texture> for TgaFormat {
+    const NAME: &'static str = "TGA";
+
+    type Options = TextureMetadata;
+
+    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
+        TgaFormat::from_data(&bytes, options)
     }
 }
 
@@ -457,6 +480,8 @@ pub enum TextureFormat {
     Png,
     /// Bmp
     Bmp,
+    /// Tga
+    Tga,
 }
 
 impl SimpleFormat<Texture> for TextureFormat {
@@ -469,6 +494,7 @@ impl SimpleFormat<Texture> for TextureFormat {
             TextureFormat::Jpg => SimpleFormat::import(&JpgFormat, bytes, options),
             TextureFormat::Png => SimpleFormat::import(&PngFormat, bytes, options),
             TextureFormat::Bmp => SimpleFormat::import(&BmpFormat, bytes, options),
+            TextureFormat::Tga => SimpleFormat::import(&TgaFormat, bytes, options),
         }
     }
 }

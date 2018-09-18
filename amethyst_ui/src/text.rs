@@ -288,8 +288,8 @@ impl<'a> System<'a> for UiKeyboardSystem {
                     ..
                 } => {
                     self.mouse_position = (
-                        position.0 as f32 - screen_dimensions.width() / 2.,
-                        position.1 as f32 - screen_dimensions.height() / 2.,
+                        position.x as f32 - screen_dimensions.width() / 2.,
+                        position.y as f32 - screen_dimensions.height() / 2.,
                     );
                     if self.left_mouse_button_pressed {
                         let mut focused_text_edit = focused.entity.and_then(|entity| {

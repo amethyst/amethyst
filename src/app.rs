@@ -5,6 +5,7 @@ use assets::{Loader, Source};
 use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
 use core::shrev::{EventChannel, ReaderId};
 use core::timing::{Stopwatch, Time};
+use core::Named;
 use ecs::common::Errors;
 use ecs::prelude::{Component, World};
 use error::{Error, Result};
@@ -21,7 +22,7 @@ use std::sync::Arc;
 use std::time::Duration;
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
-use vergen;
+use utils::application_root_dir;
 use winit::{Event, WindowEvent};
 
 /// An Application is the root object of the game engine. It binds the OS
@@ -212,7 +213,8 @@ impl<'a, T, E: Send + Sync + Clone + 'static> Application<'a, T, E> {
         #[cfg(feature = "profiler")]
         profile_scope!("initialize");
         self.states
-            .start(StateData::new(&mut self.world, &mut self.data));
+            .start(StateData::new(&mut self.world, &mut self.data))
+            .expect("Tried to start state machine without any states present");
     }
 
     /// Advances the game world by one tick.
@@ -409,8 +411,8 @@ impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
 
         info!("Initializing Amethyst...");
         info!("Version: {}", env!("CARGO_PKG_VERSION"));
-        info!("Platform: {}", vergen::target());
-        info!("Amethyst git commit: {}", vergen::sha());
+        info!("Platform: {}", env!("VERGEN_TARGET_TRIPLE"));
+        info!("Amethyst git commit: {}", env!("VERGEN_SHA"));
         let rustc_meta = rustc_version_runtime::version_meta();
         info!(
             "Rustc version: {} {:?}",
@@ -425,7 +427,7 @@ impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
         let thread_pool_builder = ThreadPoolBuilder::new();
         #[cfg(feature = "profiler")]
         let thread_pool_builder = thread_pool_builder.start_handler(|index| {
-            register_thread_with_profiler(format!("thread_pool{}", index));
+            register_thread_with_profiler();
         });
         let pool = thread_pool_builder
             .build()
@@ -440,6 +442,8 @@ impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
         world.add_resource(FrameLimiter::default());
         world.add_resource(Stopwatch::default());
         world.add_resource(Time::default());
+
+        world.register::<Named>();
 
         Ok(ApplicationBuilder {
             initial_state,
@@ -709,7 +713,7 @@ impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
         trace!("Entering `ApplicationBuilder::build`");
 
         #[cfg(feature = "profiler")]
-        register_thread_with_profiler("Main".into());
+        register_thread_with_profiler();
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 

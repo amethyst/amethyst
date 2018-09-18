@@ -21,19 +21,19 @@ clipboard = "0.4"
 derivative = "1.0"
 fnv = "1"
 gfx = { version = "0.17", features = ["serialize"] }
-gfx_glyph = "0.11.0"
+gfx_glyph = "0.12.2"
 glsl-layout = { version = "0.1.1", features = ["cgmath", "gfx"] }
-hibitset = { version = "0.5.0", features = ["parallel"] }
-ron = "0.2"
+hibitset = { version = "0.5.1", features = ["parallel"] }
+ron = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 shred-derive = "0.5"
 shred = "0.7"
 unicode-normalization = "0.1"
 unicode-segmentation = "1.2"
-winit = "0.15"
+winit = "0.17"
 log = "0.4"
 
-thread_profiler = { version = "0.1", optional = true }
+thread_profiler = { version = "0.3", optional = true }
 
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
