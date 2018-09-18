@@ -38,10 +38,10 @@ impl<'a> System<'a> for VertexSkinningSystem {
         WriteStorage<'a, JointTransforms>,
     );
 
-    fn run(&mut self, (joints, transforms, mut skins, mut matrices): Self::SystemData) {
+    fn run(&mut self, (joints, global_transforms, mut skins, mut matrices): Self::SystemData) {
         self.updated.clear();
-        transforms.populate_modified(&mut self.updated_id.as_mut().unwrap(), &mut self.updated);
-        transforms.populate_inserted(&mut self.inserted_id.as_mut().unwrap(), &mut self.updated);
+        global_transforms.populate_modified(&mut self.updated_id.as_mut().unwrap(), &mut self.updated);
+        global_transforms.populate_inserted(&mut self.inserted_id.as_mut().unwrap(), &mut self.updated);
         self.updated_skins.clear();
         for (_, joint) in (&self.updated, &joints).join() {
             for skin in &joint.skins {
@@ -50,7 +50,7 @@ impl<'a> System<'a> for VertexSkinningSystem {
         }
 
         for (_id, skin) in (&self.updated_skins, &mut skins).join() {
-            // Compute the joint transforms
+            // Compute the joint global_transforms
             skin.joint_matrices.clear();
             let bind_shape = skin.bind_shape_matrix;
             skin.joint_matrices.extend(
@@ -58,15 +58,21 @@ impl<'a> System<'a> for VertexSkinningSystem {
                     .iter()
                     .zip(skin.inverse_bind_matrices.iter())
                     .map(|(joint_entity, inverse_bind_matrix)| {
-                        (transforms.get(*joint_entity).unwrap(), inverse_bind_matrix)
+                        if let Some(transform) = global_transforms.get(*joint_entity){
+                            Some((transform, inverse_bind_matrix))
+                        } else {
+                            error!("Missing `Transform` Component for join entity {:?}", joint_entity);
+                            None
+                        }
                     })
+                    .flatten()
                     .map(|(global, inverse_bind_matrix)| {
                         (global.0 * inverse_bind_matrix * bind_shape)
                     }),
             );
 
             // update the joint matrices in all referenced mesh entities
-            for (_, mesh_global, matrix) in (&skin.meshes, &transforms, &mut matrices).join() {
+            for (_, mesh_global, matrix) in (&skin.meshes, &global_transforms, &mut matrices).join() {
                 if let Some(global_inverse) = mesh_global.0.invert() {
                     matrix.matrices.clear();
                     matrix
@@ -79,7 +85,7 @@ impl<'a> System<'a> for VertexSkinningSystem {
         }
 
         for (_, mesh_global, mut joint_transform) in
-            (&self.updated, &transforms, &mut matrices).join()
+            (&self.updated, &global_transforms, &mut matrices).join()
         {
             if let Some(global_inverse) = mesh_global.0.invert() {
                 let skin = skins.get(joint_transform.skin).unwrap();
