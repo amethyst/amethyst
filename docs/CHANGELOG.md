@@ -16,6 +16,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Support for progressive jpeg loading. ([#877])
 * New `application_root_dir()` function in `amethyst_utils`. ([#831])
 * Load node names for glTF prefabs. ([#905])
+* Added automatic camera matrix resizing to allow clean screen resizes. ([#920])
+* Added the Removal component to facilitate manual entity removal and scene cleaning. ([#920])
+* Added DestroyAtTime and DestroyInTime components to easily destroy entities. ([#920])
 * Support for loading TGA images. ([#934])
 * GltfPrefab adds MeshData as a component on loaded entities. This is not configurable until the Prefab rework. ([#946])
 * Added implementation of From<Vector3<f32>> for Transform which creates a Transform using Vector3 as the translation vector. ([#946])
@@ -51,8 +54,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `LMenu` and `RMenu` key codes, following the `winit` update. ([#906])
 
 ### Fixed
-* Material ids in GLTF loader caused multiple GLTF files to get incorrect materials applied ([#915])
+* Material ids in GLTF loader caused multiple GLTF files to get incorrect materials applied. ([#915])
 * Fix render gamma for most textures. ([#868])
+* Joint entities can only be part of a single skin: Materials are not swapped anymore. ([#933])
 * Fixed regression in sprite positioning after batching. ([#929])
 
 [#829]: https://github.com/amethyst/amethyst/issues/829
@@ -66,10 +70,12 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#831]: https://github.com/amethyst/amethyst/pull/831
 [#902]: https://github.com/amethyst/amethyst/pull/902
 [#905]: https://github.com/amethyst/amethyst/pull/905
+[#920]: https://github.com/amethyst/amethyst/pull/920
 [#903]: https://github.com/amethyst/amethyst/issues/903
 [#904]: https://github.com/amethyst/amethyst/pull/904
 [#915]: https://github.com/amethyst/amethyst/pull/915
 [#868]: https://github.com/amethyst/amethyst/pull/868
+[#933]: https://github.com/amethyst/amethyst/pull/933
 [#929]: https://github.com/amethyst/amethyst/pull/929
 [#934]: https://github.com/amethyst/amethyst/pull/934
 [#940]: https://github.com/amethyst/amethyst/pull/940

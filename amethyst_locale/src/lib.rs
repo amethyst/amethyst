@@ -22,6 +22,7 @@ impl SimpleFormat<Locale> for LocaleFormat {
 
     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<Locale> {
         let s = String::from_utf8(bytes)?;
+
         let mut ctx = MessageContext::new(&[]);
         ctx.add_messages(&s);
         Ok(Locale { context: ctx })

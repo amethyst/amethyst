@@ -21,13 +21,13 @@ amethyst_assets = { path = "../amethyst_assets/", version = "0.4.0" }
 amethyst_core = { path = "../amethyst_core/", version = "0.3.0" }
 amethyst_renderer = { path = "../amethyst_renderer/", version = "0.8.0" }
 fnv = "1"
-hibitset = { version = "0.5.0", features = ["parallel"] }
-itertools = "0.7.6"
+hibitset = { version = "0.5.1", features = ["parallel"] }
+itertools = "0.7.8"
 log = "0.4"
 minterpolate = { version = "0.3", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 
-thread_profiler = { version = "0.1", optional = true }
+thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
 

@@ -41,6 +41,8 @@ a builder that implements `DataInit`. This is the only requirement placed on the
 `GameData` structure.
 
 ```rust,ignore
+use amethyst::core::ArcThreadPool;
+
 pub struct CustomGameDataBuilder<'a, 'b> {
     pub core: DispatcherBuilder<'a, 'b>,
     pub running: DispatcherBuilder<'a, 'b>,
@@ -82,7 +84,7 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
 impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> {
     fn build(self, world: &mut World) -> CustomGameData<'a, 'b> {
         // Get a handle to the `ThreadPool`.
-        let pool = world.read_resource::<ThreadPool>().clone();
+        let pool = world.read_resource::<ArcThreadPool>().clone();
 
         let mut core_dispatcher = self.core.with_pool(pool.clone()).build();
         let mut running_dispatcher = self.running.with_pool(pool.clone()).build();

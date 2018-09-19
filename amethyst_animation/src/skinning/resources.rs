@@ -1,5 +1,5 @@
 use amethyst_assets::{PrefabData, PrefabError};
-use amethyst_core::cgmath::Matrix4;
+use amethyst_core::cgmath::{Matrix4, SquareMatrix};
 use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage};
 use amethyst_renderer::JointTransformsPrefab;
 use hibitset::BitSet;
@@ -7,9 +7,7 @@ use hibitset::BitSet;
 /// Joint, attach to an entity with a `Transform`
 #[derive(Debug, Clone)]
 pub struct Joint {
-    /// Bring the mesh into the joints local coordinate system
-    pub inverse_bind_matrix: Matrix4<f32>,
-    pub skin: Entity,
+    pub skins: Vec<Entity>,
 }
 
 impl Component for Joint {
@@ -25,6 +23,27 @@ pub struct Skin {
     pub meshes: BitSet,
     /// Bind shape matrix
     pub bind_shape_matrix: Matrix4<f32>,
+    /// Bring the mesh into the joints local coordinate system
+    pub inverse_bind_matrices: Vec<Matrix4<f32>>,
+    /// Scratch area holding the current joint matrices
+    pub joint_matrices: Vec<Matrix4<f32>>,
+}
+
+impl Skin {
+    pub fn new(
+        joints: Vec<Entity>,
+        meshes: BitSet,
+        inverse_bind_matrices: Vec<Matrix4<f32>>,
+    ) -> Self {
+        let len = joints.len();
+        Skin {
+            joints,
+            meshes,
+            inverse_bind_matrices,
+            bind_shape_matrix: Matrix4::identity(),
+            joint_matrices: Vec::with_capacity(len),
+        }
+    }
 }
 
 impl Component for Skin {
@@ -32,12 +51,10 @@ impl Component for Skin {
 }
 
 /// `PrefabData` for loading `Joint`s
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct JointPrefab {
     /// Index of the `Prefab` `Entity` where the `Skin` is placed.
-    pub skin: usize,
-    /// Inverse bind matrix of the `Joint`
-    pub inverse_bind_matrix: Matrix4<f32>,
+    pub skins: Vec<usize>,
 }
 
 impl<'a> PrefabData<'a> for JointPrefab {
@@ -54,8 +71,7 @@ impl<'a> PrefabData<'a> for JointPrefab {
             .insert(
                 entity,
                 Joint {
-                    skin: entities[self.skin],
-                    inverse_bind_matrix: self.inverse_bind_matrix,
+                    skins: self.skins.iter().map(|i| entities[*i]).collect(),
                 },
             )
             .map(|_| ())
@@ -71,6 +87,8 @@ pub struct SkinPrefab {
     pub bind_shape_matrix: Matrix4<f32>,
     /// Indices of the `Entity`s in the `Prefab` which have `Mesh`s using this `Skin`
     pub meshes: Vec<usize>,
+    /// Inverse bind matrices of the `Joint`s
+    pub inverse_bind_matrices: Vec<Matrix4<f32>>,
 }
 
 impl<'a> PrefabData<'a> for SkinPrefab {
@@ -94,6 +112,8 @@ impl<'a> PrefabData<'a> for SkinPrefab {
                         .map(|index| entities[*index].id())
                         .collect(),
                     bind_shape_matrix: self.bind_shape_matrix,
+                    inverse_bind_matrices: self.inverse_bind_matrices.clone(),
+                    joint_matrices: Vec::with_capacity(self.joints.len()),
                 },
             )
             .map(|_| ())

@@ -1,5 +1,5 @@
 use core::specs::prelude::{Dispatcher, DispatcherBuilder, System, World};
-use core::{SystemBundle, ThreadPool};
+use core::{SystemBundle, ArcThreadPool};
 use error::{Error, Result};
 use renderer::pipe::pass::Pass;
 use std::path::Path;
@@ -257,7 +257,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
 impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
     fn build(self, world: &mut World) -> GameData<'a, 'b> {
         #[cfg(not(no_threading))]
-        let pool = world.read_resource::<ThreadPool>().clone();
+        let pool = world.read_resource::<ArcThreadPool>().clone();
 
         #[cfg(not(no_threading))]
         let mut dispatcher = self.disp_builder.with_pool(pool).build();

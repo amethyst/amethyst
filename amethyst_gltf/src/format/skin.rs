@@ -24,19 +24,18 @@ pub fn load_skin(
 
     let inverse_bind_matrices = reader
         .read_inverse_bind_matrices()
-        .map(|matrices| matrices.collect())
+        .map(|matrices| matrices.map(|m| m.into()).collect())
         .unwrap_or(vec![Matrix4::identity().into(); joints.len()]);
 
     for (bind_index, joint_index) in joints.iter().enumerate() {
-        let joint = JointPrefab {
-            inverse_bind_matrix: inverse_bind_matrices[bind_index].into(),
-            skin: skin_entity,
-        };
         prefab
             .data_or_default(*joint_index)
             .skinnable
             .get_or_insert_with(SkinnablePrefab::default)
-            .joint = Some(joint);
+            .joint
+            .get_or_insert_with(JointPrefab::default)
+            .skins
+            .push(skin_entity);
     }
     let joint_transforms = JointTransformsPrefab {
         skin: skin_entity,
@@ -54,6 +53,7 @@ pub fn load_skin(
         joints,
         meshes,
         bind_shape_matrix: Matrix4::identity(),
+        inverse_bind_matrices,
     };
     prefab
         .data_or_default(skin_entity)

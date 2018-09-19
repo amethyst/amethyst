@@ -1,7 +1,7 @@
 use fern;
 pub use log::LevelFilter;
-use std::io;
 use std::env;
+use std::io;
 
 /// Logger configuration object.
 #[derive(Clone, Copy)]
@@ -41,7 +41,7 @@ impl Default for LoggerConfig {
 ///
 /// * AMETHYST_LOG_DISABLE_COLORS - if set, disables colors for the log output
 /// * AMETHYST_LOG_LEVEL_FILTER - sets the log level
-/// 
+///
 pub fn start_logger(mut config: LoggerConfig) {
     if let Ok(_) = env::var("AMETHYST_LOG_DISABLE_COLORS") {
         config.use_colors = false;

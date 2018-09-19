@@ -103,4 +103,3 @@ mod game_data;
 mod logger;
 mod state;
 mod state_event;
-mod vergen;
