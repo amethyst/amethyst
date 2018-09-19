@@ -30,6 +30,7 @@ log = "0.4"
 parking_lot = "0.6"
 rayon = "1.0.2"
 serde = { version = "1", features = ["serde_derive"] }
+serde_json = "1"
 shred = { version = "0.7" }
 shred-derive = { version = "0.5" }
 ron = "0.4"

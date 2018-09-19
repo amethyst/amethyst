@@ -24,6 +24,7 @@ extern crate rayon;
 extern crate ron;
 #[macro_use]
 extern crate serde;
+extern crate serde_json;
 extern crate shred;
 #[macro_use]
 extern crate shred_derive;
@@ -35,7 +36,7 @@ extern crate thread_profiler;
 pub use asset::{Asset, Format, FormatValue, SimpleFormat};
 pub use cache::Cache;
 pub use error::{Error, ErrorKind, Result, ResultExt};
-pub use formats::RonFormat;
+pub use formats::{RonFormat, JsonFormat};
 pub use loader::Loader;
 pub use prefab::{AssetPrefab, Prefab, PrefabData, PrefabError, PrefabLoader, PrefabLoaderSystem};
 pub use progress::{Completion, Progress, ProgressCounter, Tracker};
