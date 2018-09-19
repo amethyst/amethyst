@@ -25,9 +25,11 @@ where
 }
 
 /// Format for loading from Json files.
+#[cfg(feature="json")]
 #[derive(Default, Clone, Debug)]
 pub struct JsonFormat;
 
+#[cfg(feature="json")]
 impl<T> SimpleFormat<T> for JsonFormat
 where
     T: Asset,
