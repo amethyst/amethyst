@@ -40,8 +40,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `LMenu` and `RMenu` key codes, following the `winit` update. ([#906])
 
 ### Fixed
-* Material ids in GLTF loader caused multiple GLTF files to get incorrect materials applied ([#915])
+* Material ids in GLTF loader caused multiple GLTF files to get incorrect materials applied. ([#915])
 * Fix render gamma for most textures. ([#868])
+* Joint entities can only be part of a single skin: Materials are not swapped anymore. ([#933])
 * Fixed regression in sprite positioning after batching. ([#929])
 
 [#829]: https://github.com/amethyst/amethyst/issues/829
@@ -60,6 +61,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#904]: https://github.com/amethyst/amethyst/pull/904
 [#915]: https://github.com/amethyst/amethyst/pull/915
 [#868]: https://github.com/amethyst/amethyst/pull/868
+[#933]: https://github.com/amethyst/amethyst/pull/933
 [#929]: https://github.com/amethyst/amethyst/pull/929
 [#934]: https://github.com/amethyst/amethyst/pull/934
 [#940]: https://github.com/amethyst/amethyst/pull/940
