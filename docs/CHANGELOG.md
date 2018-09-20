@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## Unreleased
 ### Added
+* Added JsonFormat ([#950]).
 * `SpriteRender` pass to draw sprites without using `Material` and `Mesh`. ([#829], [#830])
 * Sprite animation uses the `SpriteRenderChannel`. ([#829], [#830])
 * State::handle_event can now handle multiple types of events. ([#887])
@@ -65,6 +66,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#929]: https://github.com/amethyst/amethyst/pull/929
 [#934]: https://github.com/amethyst/amethyst/pull/934
 [#940]: https://github.com/amethyst/amethyst/pull/940
+[#950]: https://github.com/amethyst/amethyst/pull/950
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
 
