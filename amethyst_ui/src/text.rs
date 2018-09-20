@@ -288,8 +288,8 @@ impl<'a> System<'a> for UiKeyboardSystem {
                     ..
                 } => {
                     self.mouse_position = (
-                        position.x as f32 - screen_dimensions.width() / 2.,
-                        position.y as f32 - screen_dimensions.height() / 2.,
+                        position.x as f32,
+                        screen_dimensions.height() - position.y as f32,
                     );
                     if self.left_mouse_button_pressed {
                         let mut focused_text_edit = focused.entity.and_then(|entity| {
@@ -303,8 +303,8 @@ impl<'a> System<'a> for UiKeyboardSystem {
                         {
                             use std::f32::NAN;
 
-                            let mouse_x = self.mouse_position.0 + screen_dimensions.width() / 2.;
-                            let mouse_y = self.mouse_position.1 + screen_dimensions.height() / 2.;
+                            let mouse_x = self.mouse_position.0;
+                            let mouse_y = self.mouse_position.1;
                             // Find the glyph closest to the mouse position.
                             focused_edit.highlight_vector = focused_text
                                 .cached_glyphs
@@ -360,6 +360,7 @@ impl<'a> System<'a> for UiKeyboardSystem {
                             use std::f32::INFINITY;
 
                             self.left_mouse_button_pressed = true;
+                            println!("click! {:?}", self.mouse_position);
                             // Start searching for an element to focus.
                             // Find all eligible elements
                             let mut eligible = (&*entities, &transform)
@@ -372,17 +373,18 @@ impl<'a> System<'a> for UiKeyboardSystem {
                                 })
                                 .collect::<Vec<_>>();
                             // In instances of ambiguity we want to select the element with the
-                            // lowest Z order, so we need to find the lowest Z order value among
-                            // eligible elements
-                            let lowest_z = eligible
+                            // highest Z order, so we need to find the highest Z order value among
+                            // eligible elements.
+                            let highest_z = eligible
                                 .iter()
-                                .fold(INFINITY, |lowest, &(_, t)| lowest.min(t.global_z));
+                                .fold(-INFINITY, |highest, &(_, t)| highest.max(t.global_z));
                             // Then filter by it
-                            eligible.retain(|&(_, t)| t.global_z == lowest_z);
+                            eligible.retain(|&(_, t)| t.global_z == highest_z);
                             // We may still have ambiguity as to what to select at this point,
                             // so we'll resolve that by selecting the most recently created
                             // element.
                             focused.entity = eligible.iter().fold(None, |most_recent, &(e, _)| {
+                                println!("eligible {:?}!", e);
                                 Some(match most_recent {
                                     Some(most_recent) => if most_recent > e {
                                         most_recent
@@ -406,9 +408,9 @@ impl<'a> System<'a> for UiKeyboardSystem {
                                 use std::f32::NAN;
 
                                 let mouse_x =
-                                    self.mouse_position.0 + screen_dimensions.width() / 2.;
+                                    self.mouse_position.0;
                                 let mouse_y =
-                                    self.mouse_position.1 + screen_dimensions.height() / 2.;
+                                    self.mouse_position.1;
                                 // Find the glyph closest to the click position.
                                 focused_edit.highlight_vector = 0;
                                 focused_edit.cursor_position = focused_text
