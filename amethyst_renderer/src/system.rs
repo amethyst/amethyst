@@ -83,7 +83,9 @@ where
         let strategy = strategy.as_ref().map(Deref::deref);
 
         mesh_storage.process(
-            |d| create_mesh_asset(d, &mut self.renderer),
+            |d| {
+                create_mesh_asset(d, &mut self.renderer)
+            },
             time.frame_number(),
             &**pool,
             strategy,

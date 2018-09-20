@@ -21,6 +21,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Added the Removal component to facilitate manual entity removal and scene cleaning. ([#920])
 * Added DestroyAtTime and DestroyInTime components to easily destroy entities. ([#920])
 * Support for loading TGA images. ([#934])
+* GltfPrefab adds MeshData as a component on loaded entities. This is not configurable until the Prefab rework. ([#946])
+* Added implementation of From<Vector3<f32>> for Transform which creates a Transform using Vector3 as the translation vector. ([#946])
+* New vertices() method on MeshCreator trait. ([#946])
+
+
 
 ### Changed
 * Sprites contain their dimensions and offsets to render them with the right size and desired position. ([#829], [#830])
@@ -36,6 +41,15 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Updated `gfx_window_glutin` to `0.26`. ([#906])
 * Updated `hetseq` to `0.2`. ([#906])
 * Removed unwraps from StateMachine ([#940])
+* Renamed ArcBallMovementSystem to ArcBallRotationSystem. ([#946])
+* Moved the ArcBallMovementSystem::get_axis method to amethyst_input/src/utils: get_input_axis_simple ([#946])
+* Ui Y axis is now from bottom to top. ([#946])
+* Fixed issue with global anchors not actually aligning ui elements and containers properly. ([#946])
+* Fixed issue with ui events not triggering at times. ([#946])
+* Reduced the complexity of the UiPass and associated shaders. ([#946])
+* Added comments to UiPass and shaders explaining what is going on. ([#946])
+* The z in UiTransformBuilder now defaults to 1 instead of 0, allowing to skip defining the z in the ui prefabs. ([#946])
+* Added comments to ui prefab. ([#946])
 
 ### Removed
 * `LMenu` and `RMenu` key codes, following the `winit` update. ([#906])
@@ -66,6 +80,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#929]: https://github.com/amethyst/amethyst/pull/929
 [#934]: https://github.com/amethyst/amethyst/pull/934
 [#940]: https://github.com/amethyst/amethyst/pull/940
+[#946]: https://github.com/amethyst/amethyst/pull/946
 [#950]: https://github.com/amethyst/amethyst/pull/950
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03

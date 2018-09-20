@@ -74,7 +74,8 @@ fn build_mesh_with_combo(
 /// Mesh creator for `VertexBufferCombination`.
 #[derive(Debug, Clone)]
 pub struct AnimatedComboMeshCreator {
-    combo: AnimatedVertexBufferCombination,
+    /// The internal mesh combo data.
+    pub combo: AnimatedVertexBufferCombination,
 }
 
 impl AnimatedComboMeshCreator {
@@ -87,6 +88,10 @@ impl AnimatedComboMeshCreator {
 impl MeshCreator for AnimatedComboMeshCreator {
     fn build(self: Box<Self>, renderer: &mut Renderer) -> Result<Mesh> {
         build_mesh_with_combo(self.combo, renderer)
+    }
+
+    fn vertices(&self) -> &Vec<Separate<Position>> {
+        &self.combo.0
     }
 
     fn box_clone(&self) -> Box<MeshCreator> {

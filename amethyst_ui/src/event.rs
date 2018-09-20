@@ -97,11 +97,10 @@ where
         let click_stopped = !down && self.was_down;
 
         if let Some((pos_x, pos_y)) = input.mouse_position() {
-            let x = pos_x as f32 - screen_dimensions.width() / 2.;
-            let y = pos_y as f32 - screen_dimensions.height() / 2.;
+            let x = pos_x as f32;
+            let y = screen_dimensions.height() - pos_y as f32;
 
             let target = targeted((x, y), (&*entities, &transform).join(), &react);
-
             if target != self.last_target {
                 if let Some(last_target) = self.last_target {
                     events.single_write(UiEvent::new(UiEventType::HoverStop, last_target));
@@ -152,10 +151,10 @@ where
     let candidate = transforms
         .filter(|(_e, t)| t.opaque && t.position_inside(pos.0, pos.1))
         .fold(
-            (None, INFINITY),
-            |(lowest_entity, lowest_z), (entity, t)| {
-                if lowest_z < t.global_z {
-                    (lowest_entity, lowest_z)
+            (None, -INFINITY),
+            |(highest_entity, highest_z), (entity, t)| {
+                if highest_z > t.global_z {
+                    (highest_entity, highest_z)
                 } else {
                     (Some(entity), t.global_z)
                 }

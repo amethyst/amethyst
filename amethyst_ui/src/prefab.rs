@@ -11,7 +11,8 @@ use {
     TextEditing, UiButton, UiFocused, UiImage, UiText, UiTransform,
 };
 
-/// Loadable `UiTransform` data
+/// Loadable `UiTransform` data.
+/// By default z is equal to one.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(default)]
 pub struct UiTransformBuilder {
@@ -35,7 +36,7 @@ impl Default for UiTransformBuilder {
             id: "".to_string(),
             x: 0.,
             y: 0.,
-            z: 0.,
+            z: 1.,
             width: 0.,
             height: 0.,
             tab_order: 0,
@@ -699,7 +700,7 @@ fn button_text_transform(mut id: String) -> UiTransformBuilder {
     id.push_str("_btn_txt");
     UiTransformBuilder::default()
         .with_id(id)
-        .with_position(0., 0., -1.)
+        .with_position(0., 0., 1.)
         .with_tab_order(10)
         .with_anchor(Anchor::Middle)
         .with_stretch(Stretch::XY {

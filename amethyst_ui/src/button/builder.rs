@@ -9,7 +9,7 @@ use {
     TtfFormat, UiButton, UiImage, UiText, UiTransform,
 };
 
-const DEFAULT_Z: f32 = -1.0;
+const DEFAULT_Z: f32 = 1.0;
 const DEFAULT_WIDTH: f32 = 128.0;
 const DEFAULT_HEIGHT: f32 = 64.0;
 const DEFAULT_TAB_ORDER: i32 = 9;
@@ -273,7 +273,7 @@ impl UiButtonBuilder {
         res.transform
             .insert(
                 text_entity,
-                UiTransform::new(id, Anchor::Middle, 0., 0., -0.01, 0., 0., 10)
+                UiTransform::new(id, Anchor::Middle, 0., 0., 0.01, 0., 0., 10)
                     .as_transparent()
                     .with_stretch(Stretch::XY {
                         x_margin: 0.,

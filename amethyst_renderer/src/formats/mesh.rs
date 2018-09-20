@@ -3,7 +3,7 @@ use amethyst_assets::{
     ResultExt, SimpleFormat,
 };
 use amethyst_core::cgmath::{InnerSpace, Vector3};
-use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, VecStorage, WriteStorage};
+use amethyst_core::specs::prelude::{Component, Entity, Read, ReadExpect, VecStorage, WriteStorage};
 use mesh::{Mesh, MeshBuilder, MeshHandle};
 use std::fmt::Debug;
 use std::result::Result as StdResult;
@@ -32,6 +32,10 @@ pub enum MeshData {
     /// Create a mesh from a given creator
     #[serde(skip)]
     Creator(Box<MeshCreator>),
+}
+
+impl Component for MeshData {
+    type Storage = VecStorage<Self>;
 }
 
 impl From<Vec<PosColor>> for MeshData {
@@ -230,6 +234,9 @@ pub trait MeshCreator: Send + Sync + Debug + 'static {
     /// Build a mesh given a `Renderer`
     fn build(self: Box<Self>, renderer: &mut Renderer) -> ::error::Result<Mesh>;
 
+    /// Returns the vertices contained in the MeshCreator.
+    fn vertices(&self) -> &Vec<Separate<Position>>;
+
     /// Clone a boxed version of this object
     fn box_clone(&self) -> Box<MeshCreator>;
 }
@@ -256,6 +263,10 @@ impl ComboMeshCreator {
 impl MeshCreator for ComboMeshCreator {
     fn build(self: Box<Self>, renderer: &mut Renderer) -> ::error::Result<Mesh> {
         build_mesh_with_combo(self.combo, renderer)
+    }
+
+    fn vertices(&self) -> &Vec<Separate<Position>> {
+        &self.combo.0
     }
 
     fn box_clone(&self) -> Box<MeshCreator> {

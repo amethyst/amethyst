@@ -5,10 +5,10 @@ use amethyst_core::specs::prelude::{
 };
 use amethyst_core::timing::Time;
 use amethyst_core::transform::Transform;
-use amethyst_input::InputHandler;
+use amethyst_input::{get_input_axis_simple, InputHandler};
 use amethyst_renderer::WindowMessages;
 use components::{ArcBallControlTag, FlyControlTag};
-use resources::WindowFocus;
+use resources::{HideCursor, WindowFocus};
 use std::hash::Hash;
 use std::marker::PhantomData;
 use winit::{DeviceEvent, Event, WindowEvent};
@@ -46,12 +46,6 @@ where
             _marker: PhantomData,
         }
     }
-
-    fn get_axis(name: &Option<A>, input: &InputHandler<A, B>) -> f32 {
-        name.as_ref()
-            .and_then(|ref n| input.axis_value(n))
-            .unwrap_or(0.0) as f32
-    }
 }
 
 impl<'a, A, B> System<'a> for FlyMovementSystem<A, B>
@@ -67,9 +61,9 @@ where
     );
 
     fn run(&mut self, (time, mut transform, input, tag): Self::SystemData) {
-        let x = FlyMovementSystem::get_axis(&self.right_input_axis, &input);
-        let y = FlyMovementSystem::get_axis(&self.up_input_axis, &input);
-        let z = FlyMovementSystem::get_axis(&self.forward_input_axis, &input);
+        let x = get_input_axis_simple(&self.right_input_axis, &input);
+        let y = get_input_axis_simple(&self.up_input_axis, &input);
+        let z = get_input_axis_simple(&self.forward_input_axis, &input);
 
         let dir = Vector3::new(x, y, z);
 
@@ -85,9 +79,9 @@ where
 /// To modify the orientation of the camera in accordance with the mouse input, please use the
 /// FreeRotationSystem.
 #[derive(Default)]
-pub struct ArcBallMovementSystem;
+pub struct ArcBallRotationSystem;
 
-impl<'a> System<'a> for ArcBallMovementSystem {
+impl<'a> System<'a> for ArcBallRotationSystem {
     type SystemData = (
         WriteStorage<'a, Transform>,
         ReadStorage<'a, ArcBallControlTag>,
@@ -206,37 +200,38 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
     }
 }
 
-// System which hides the cursor when the window is focused
+/// System which hides the cursor when the window is focused.
+/// Requires the usage MouseFocusUpdateSystem at the same time.
 pub struct CursorHideSystem {
-    event_reader: Option<ReaderId<Event>>,
+    is_hidden: bool,
 }
 
 impl CursorHideSystem {
     pub fn new() -> CursorHideSystem {
-        CursorHideSystem { event_reader: None }
+        CursorHideSystem { 
+            is_hidden: false,
+        }
     }
 }
 
 impl<'a> System<'a> for CursorHideSystem {
-    type SystemData = (Read<'a, EventChannel<Event>>, Write<'a, WindowMessages>);
+    type SystemData = (Write<'a, WindowMessages>, Read<'a, HideCursor>, Read<'a, WindowFocus>);
 
-    fn run(&mut self, (events, mut msg): Self::SystemData) {
+    fn run(&mut self, (mut msg, hide, focus): Self::SystemData) {
         use amethyst_renderer::mouse::*;
-
-        for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
-            match *event {
-                Event::WindowEvent { ref event, .. } => match event {
-                    &WindowEvent::Focused(focused) => {
-                        if focused {
-                            grab_cursor(&mut msg);
-                            hide_cursor(&mut msg);
-                        } else {
-                            release_cursor(&mut msg)
-                        }
-                    }
-                    _ => (),
-                },
-                _ => (),
+        if focus.is_focused {
+            if !self.is_hidden && hide.hide {
+                grab_cursor(&mut msg);
+                hide_cursor(&mut msg);
+                self.is_hidden = true;
+            } else if self.is_hidden && !hide.hide {
+                release_cursor(&mut msg);
+                self.is_hidden = false;
+            }
+        } else {
+            if self.is_hidden {
+                release_cursor(&mut msg);
+                self.is_hidden = false;
             }
         }
     }
@@ -246,10 +241,10 @@ impl<'a> System<'a> for CursorHideSystem {
         use amethyst_renderer::mouse::*;
 
         Self::SystemData::setup(res);
-        self.event_reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
 
         let mut msg = res.fetch_mut::<WindowMessages>();
         grab_cursor(&mut msg);
         hide_cursor(&mut msg);
+        self.is_hidden = true;
     }
 }

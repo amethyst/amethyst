@@ -2,7 +2,7 @@
 
 use super::*;
 use amethyst_assets::{AssetStorage, Loader};
-use amethyst_core::cgmath::vec4 as cg_vec4;
+use amethyst_core::cgmath::vec2 as cg_vec2;
 use amethyst_core::specs::prelude::{
     Entities, Entity, Join, Read, ReadExpect, ReadStorage, WriteStorage,
 };
@@ -10,7 +10,7 @@ use amethyst_renderer::error::Result;
 use amethyst_renderer::pipe::pass::{Pass, PassData};
 use amethyst_renderer::pipe::{Effect, NewEffect};
 use amethyst_renderer::{
-    Encoder, Factory, Mesh, PosTex, Resources, ScreenDimensions, Texture, TextureData,
+    Encoder, Factory, Mesh, PosTex, Resources, ScreenDimensions, Shape, Texture, TextureData,
     TextureHandle, TextureMetadata, VertexFormat,
 };
 use fnv::FnvHashMap as HashMap;
@@ -21,7 +21,7 @@ use gfx_glyph::{
     BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher, HorizontalAlign,
     Layout, Point, Scale, SectionText, VariedSection, VerticalAlign,
 };
-use glsl_layout::{vec2, vec4, Uniform};
+use glsl_layout::{vec2, Uniform};
 use hibitset::BitSet;
 use std::cmp::{Ordering, PartialOrd};
 use std::hash::{Hash, Hasher};
@@ -34,7 +34,7 @@ const FRAG_SRC: &[u8] = include_bytes!("shaders/frag.glsl");
 #[allow(dead_code)] // This is used by the shaders
 #[repr(C)]
 struct VertexArgs {
-    proj_vec: vec4,
+    invert_window_size: vec2,
     coord: vec2,
     dimension: vec2,
 }
@@ -109,34 +109,12 @@ impl<'a> PassData<'a> for DrawUi {
 
 impl Pass for DrawUi {
     fn compile(&mut self, mut effect: NewEffect) -> Result<Effect> {
-        // Initialize a single unit quad, we'll use this mesh when drawing quads later
-        let data = vec![
-            PosTex {
-                position: [0., 1., 0.],
-                tex_coord: [0., 0.],
-            },
-            PosTex {
-                position: [1., 1., 0.],
-                tex_coord: [1., 0.],
-            },
-            PosTex {
-                position: [1., 0., 0.],
-                tex_coord: [1., 1.],
-            },
-            PosTex {
-                position: [0., 1., 0.],
-                tex_coord: [0., 0.],
-            },
-            PosTex {
-                position: [1., 0., 0.],
-                tex_coord: [1., 1.],
-            },
-            PosTex {
-                position: [0., 0., 0.],
-                tex_coord: [0., 1.],
-            },
-        ];
+        // Initialize a single unit quad, we'll use this mesh when drawing quads later.
+        // Centered around (0,0) and of size 2
+        let data = Shape::Plane(None).generate_vertices::<Vec<PosTex>>(None);
         self.mesh = Some(Mesh::build(data).build(&mut effect.factory)?);
+
+        // Create the effect
         use std::mem;
         effect
             .simple(VERT_SRC, FRAG_SRC)
@@ -216,13 +194,12 @@ impl Pass for DrawUi {
         // change.
         self.cached_draw_order
             .cache
-            .sort_unstable_by(|&(z1, _), &(z2, _)| z2.partial_cmp(&z1).unwrap_or(Ordering::Equal));
+            .sort_unstable_by(|&(z1, _), &(z2, _)| z1.partial_cmp(&z2).unwrap_or(Ordering::Equal));
 
-        let proj_vec = cg_vec4(
-            2. / screen_dimensions.width(),
-            -2. / screen_dimensions.height(),
-            -2.,
-            1.,
+        // Inverted screen dimensions. Used to scale from pixel coordinates to the opengl coordinates in the vertex shader.
+        let invert_window_size = cg_vec2(
+            1. / screen_dimensions.width(),
+            1. / screen_dimensions.height(),
         );
 
         let mesh = self.mesh.as_ref().unwrap();
@@ -245,16 +222,15 @@ impl Pass for DrawUi {
                 .and_then(|image| tex_storage.get(&image.texture))
             {
                 let vertex_args = VertexArgs {
-                    proj_vec: proj_vec.into(),
+                    invert_window_size: invert_window_size.into(),
                     // Coordinates are middle centered. It makes it easier to do layouting in most cases.
                     coord: [
-                        ui_transform.pixel_x - ui_transform.pixel_width / 2.0
-                            + screen_dimensions.width() / 2.,
-                        ui_transform.pixel_y - ui_transform.pixel_height / 2.0
-                            + screen_dimensions.height() / 2.,
+                        ui_transform.pixel_x,
+                        ui_transform.pixel_y,
                     ].into(),
                     dimension: [ui_transform.pixel_width, ui_transform.pixel_height].into(),
                 };
+
                 effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
                 effect.data.textures.push(image.view().clone());
                 effect.data.samplers.push(image.sampler().clone());
@@ -350,14 +326,18 @@ impl Pass for DrawUi {
                     h_align: HorizontalAlign::Left,
                     v_align: VerticalAlign::Top,
                 };
+
                 let section = VariedSection {
+                    // Needs a recenter because we are using [-0.5,0.5] for the mesh
+                    // instead of the expected [0,1]
                     screen_position: (
-                        ui_transform.pixel_x - ui_transform.pixel_width / 2.0
-                            + screen_dimensions.width() / 2.,
-                        ui_transform.pixel_y - ui_transform.pixel_height / 2.0
-                            + screen_dimensions.height() / 2.,
+                        ui_transform.pixel_x - ui_transform.pixel_width / 2.0,
+                        // invert y because gfx-glyph inverts it back
+                        screen_dimensions.height() - ui_transform.pixel_y - ui_transform.pixel_height / 2.0,
                     ),
                     bounds: (ui_transform.pixel_width, ui_transform.pixel_height),
+                    // TODO
+                    // Invert z because of gfx-glyph using z+ forward
                     z: ui_transform.global_z / highest_abs_z,
                     layout,
                     text,
@@ -374,6 +354,8 @@ impl Pass for DrawUi {
                     .cached_glyphs
                     .extend(brush.glyphs(&section).cloned());
                 let cache = &mut self.cached_color_textures;
+
+                // Render text selection
                 if let Some((texture, (start, end))) = editing.and_then(|ed| {
                     let start = ed
                         .cursor_position
@@ -397,6 +379,8 @@ impl Pass for DrawUi {
                         .get(&cached_color_texture(cache, color, &loader, &tex_storage))
                         .map(|tex| (tex, (start, end)))
                 }) {
+                    // Text selection rendering
+
                     effect.data.textures.push(texture.view().clone());
                     effect.data.samplers.push(texture.sampler().clone());
                     let ascent = brush
@@ -415,8 +399,9 @@ impl Pass for DrawUi {
                         let width = glyph.unpositioned().h_metrics().advance_width;
                         let pos = glyph.position();
                         let vertex_args = VertexArgs {
-                            proj_vec: proj_vec.into(),
-                            coord: [pos.x, pos.y - ascent].into(),
+                            invert_window_size: invert_window_size.into(),
+                            // gfx-glyph uses y down so we need to convert to y up
+                            coord: [pos.x + width / 2.0, screen_dimensions.height() - pos.y + ascent / 2.0].into(),
                             dimension: [width, height].into(),
                         };
                         effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
@@ -492,12 +477,11 @@ impl Pass for DrawUi {
                                 height = ui_text.font_size;
                                 width = 2.0;
                             }
+                            
                             let pos = glyph.map(|g| g.position()).unwrap_or(Point {
-                                x: ui_transform.pixel_x - ui_transform.pixel_width / 2.0
-                                    + screen_dimensions.width() / 2.,
-                                y: ui_transform.pixel_y - ui_transform.pixel_height / 2.0
-                                    + ascent
-                                    + screen_dimensions.height() / 2.,
+                                x: ui_transform.pixel_x,
+                                // gfx-glyph uses y down so we need to convert to y up
+                                y: ui_transform.pixel_y,
                             });
                             let mut x = pos.x;
                             if let Some(glyph) = glyph {
@@ -505,13 +489,14 @@ impl Pass for DrawUi {
                                     x += glyph.unpositioned().h_metrics().advance_width;
                                 }
                             }
-                            let mut y = pos.y - ascent;
+                            let mut y = pos.y;
                             if editing.use_block_cursor && !blink_on {
-                                y += ui_text.font_size * 0.9;
+                                y -= ui_text.font_size * 0.9;
                             }
                             let vertex_args = VertexArgs {
-                                proj_vec: proj_vec.into(),
-                                coord: [x, y].into(),
+                                invert_window_size: invert_window_size.into(),
+                                //coord: [x, y].into(),
+                                coord: [x + width / 2.0, screen_dimensions.height() - y + ascent / 2.0].into(),
                                 dimension: [width, height].into(),
                             };
                             effect.update_constant_buffer(
