@@ -360,7 +360,7 @@ impl<'a> System<'a> for UiKeyboardSystem {
                             use std::f32::INFINITY;
 
                             self.left_mouse_button_pressed = true;
-                            println!("click! {:?}", self.mouse_position);
+                            
                             // Start searching for an element to focus.
                             // Find all eligible elements
                             let mut eligible = (&*entities, &transform)
@@ -384,7 +384,6 @@ impl<'a> System<'a> for UiKeyboardSystem {
                             // so we'll resolve that by selecting the most recently created
                             // element.
                             focused.entity = eligible.iter().fold(None, |most_recent, &(e, _)| {
-                                println!("eligible {:?}!", e);
                                 Some(match most_recent {
                                     Some(most_recent) => if most_recent > e {
                                         most_recent
