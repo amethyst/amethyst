@@ -248,10 +248,12 @@ impl Pass for DrawUi {
                     proj_vec: proj_vec.into(),
                     // Coordinates are middle centered. It makes it easier to do layouting in most cases.
                     coord: [
-                        ui_transform.pixel_x - ui_transform.pixel_width / 2.0
-                            + screen_dimensions.width() / 2.,
-                        ui_transform.pixel_y - ui_transform.pixel_height / 2.0
-                            + screen_dimensions.height() / 2.,
+                        (ui_transform.pixel_x - ui_transform.pixel_width / 2.0
+                            + screen_dimensions.width() / 2.)
+                            * screen_dimensions.hidpi_factor(),
+                        (ui_transform.pixel_y - ui_transform.pixel_height / 2.0
+                            + screen_dimensions.height() / 2.)
+                            * screen_dimensions.hidpi_factor(),
                     ].into(),
                     dimension: [ui_transform.pixel_width, ui_transform.pixel_height].into(),
                 };
@@ -352,10 +354,12 @@ impl Pass for DrawUi {
                 };
                 let section = VariedSection {
                     screen_position: (
-                        ui_transform.pixel_x - ui_transform.pixel_width / 2.0
-                            + screen_dimensions.width() / 2.,
-                        ui_transform.pixel_y - ui_transform.pixel_height / 2.0
-                            + screen_dimensions.height() / 2.,
+                        (ui_transform.pixel_x - ui_transform.pixel_width / 2.0
+                            + screen_dimensions.width() / 2.)
+                            * screen_dimensions.hidpi_factor(),
+                        (ui_transform.pixel_y - ui_transform.pixel_height / 2.0
+                            + screen_dimensions.height() / 2.)
+                            * screen_dimensions.hidpi_factor(),
                     ),
                     bounds: (ui_transform.pixel_width, ui_transform.pixel_height),
                     z: ui_transform.global_z / highest_abs_z,
@@ -493,11 +497,12 @@ impl Pass for DrawUi {
                                 width = 2.0;
                             }
                             let pos = glyph.map(|g| g.position()).unwrap_or(Point {
-                                x: ui_transform.pixel_x - ui_transform.pixel_width / 2.0
-                                    + screen_dimensions.width() / 2.,
-                                y: ui_transform.pixel_y - ui_transform.pixel_height / 2.0
-                                    + ascent
-                                    + screen_dimensions.height() / 2.,
+                                x: (ui_transform.pixel_x - ui_transform.pixel_width / 2.0
+                                    + screen_dimensions.width() / 2.)
+                                    * screen_dimensions.hidpi_factor(),
+                                y: (ui_transform.pixel_y - ui_transform.pixel_height / 2.0
+                                    + screen_dimensions.height() / 2.)
+                                    * screen_dimensions.hidpi_factor(),
                             });
                             let mut x = pos.x;
                             if let Some(glyph) = glyph {
