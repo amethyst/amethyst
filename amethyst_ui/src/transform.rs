@@ -22,7 +22,7 @@ impl<'a> UiFinder<'a> {
 }
 
 /// The UiTransform represents the transformation of a ui element.
-/// Values are in pixel and the position is calculated from the top left of the screen
+/// Values are in pixel and the position is calculated from the bottom left of the screen
 /// to the center of the ui element's area.
 #[derive(Clone, Debug)]
 pub struct UiTransform {
@@ -37,12 +37,12 @@ pub struct UiTransform {
     ///
     /// Centered in the middle of the ui element.
     pub local_x: f32,
-    /// Y coordinate, 0 is the top edge of the screen. If scale_mode is set to pixel then the height of the
-    /// screen in pixel is the bottom edge.  If scale_mode is percent then the bottom edge is 1.
+    /// Y coordinate, 0 is the bottom edge of the screen. If scale_mode is set to pixel then the height of the
+    /// screen in pixel is the top edge.  If scale_mode is percent then the top edge is 1.
     ///
     /// Centered in the middle of the ui element.
     pub local_y: f32,
-    /// Z order, entities with a lower Z order will be rendered on top of entities with a higher
+    /// Z order, entities with a higher Z order will be rendered on top of entities with a lower
     /// Z order.
     pub local_z: f32,
     /// The width of this UI element.
