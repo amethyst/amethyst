@@ -49,6 +49,9 @@ nightly = [
 sdl_controller = [
     "amethyst_input/sdl_controller",
 ]
+json = [
+    "amethyst_assets/json"
+]
 
 [dependencies]
 amethyst_animation = { path = "amethyst_animation", version = "0.3.0" }

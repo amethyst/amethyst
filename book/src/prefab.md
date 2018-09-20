@@ -201,6 +201,8 @@ There are a few provided formats that create `Prefab`s, some with very specific 
  
 * `RonFormat` - this format can be used to load `Prefab`s in `ron` format with any `PrefabData`
  that also implements `serde::Deserialize`.
+* `JsonFormat` - this format can be used to load `Prefab`s in `Json` format with any `PrefabData`
+ that also implements `serde::Deserialize`. It can be enabled with the `json` feature flag.
 * `GltfSceneFormat` - used to load `Gltf` files
 * `UiFormat` - used to load UI components in a specialised DSL format.
 
