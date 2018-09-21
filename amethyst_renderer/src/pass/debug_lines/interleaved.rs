@@ -9,7 +9,6 @@ use debug_drawing::{DebugLine, DebugLines, DebugLinesComponent};
 use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx::Primitive;
-use gfx_core::state::{Blend, ColorMask};
 use mesh::Mesh;
 use pass::util::{get_camera, set_attribute_buffers, set_vertex_args, setup_vertex_args};
 use pipe::pass::{Pass, PassData};
@@ -30,7 +29,6 @@ use vertex::{Color, Normal, Position, Query};
 #[derivative(Default(bound = "V: Query<(Position, Color, Normal)>"))]
 pub struct DrawDebugLines<V> {
     _pd: PhantomData<V>,
-    transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
 }
 
 impl<V> DrawDebugLines<V>
@@ -40,17 +38,6 @@ where
     /// Create instance of `DrawDebugLines` pass
     pub fn new() -> Self {
         Default::default()
-    }
-
-    /// Enable transparency
-    pub fn with_transparency(
-        mut self,
-        mask: ColorMask,
-        blend: Blend,
-        depth: Option<DepthMode>,
-    ) -> Self {
-        self.transparency = Some((mask, blend, depth));
-        unimplemented!();
     }
 }
 
@@ -81,11 +68,8 @@ where
         setup_vertex_args(&mut builder);
         builder.with_raw_global("camera_position");
         builder.with_primitive_type(Primitive::PointList);
+        builder.with_output("color", Some(DepthMode::LessEqualWrite));
 
-        match self.transparency {
-            Some((mask, blend, depth)) => builder.with_blended_output("color", mask, blend, depth),
-            None => builder.with_output("color", Some(DepthMode::LessEqualWrite)),
-        };
         builder.build()
     }
 
@@ -104,9 +88,8 @@ where
                 lines.extend(&debug_lines_component.lines);
             }
 
-            match lines_resource {
-                Some(mut lines_resource) => lines.append(&mut lines_resource.lines),
-                None => {}
+            if let Some(mut lines_resource) = lines_resource {
+                lines.append(&mut lines_resource.lines);
             };
 
             lines

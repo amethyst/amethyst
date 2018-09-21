@@ -57,7 +57,6 @@ void EmitLine (int id) {
     EndPrimitive();
 }
 
-void main()
-{
+void main() {
     EmitLine(0);
 }

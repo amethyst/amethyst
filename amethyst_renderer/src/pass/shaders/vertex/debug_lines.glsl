@@ -5,7 +5,7 @@
 layout (std140) uniform VertexArgs {
     uniform mat4 proj;
     uniform mat4 view;
-    uniform mat4 model; /* Not actually used, all our lines are in world coordinates */
+    uniform mat4 model; /* Not actually used, lines are in world coordinates */
 };
 
 in vec3 position;
