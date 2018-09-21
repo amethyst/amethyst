@@ -357,10 +357,10 @@ impl<'a> System<'a> for UiKeyboardSystem {
                 } => {
                     match state {
                         ElementState::Pressed => {
-                            use std::f32::INFINITY;
+                            use std::f32::NEG_INFINITY;
 
                             self.left_mouse_button_pressed = true;
-                            
+
                             // Start searching for an element to focus.
                             // Find all eligible elements
                             let mut eligible = (&*entities, &transform)
@@ -377,7 +377,7 @@ impl<'a> System<'a> for UiKeyboardSystem {
                             // eligible elements.
                             let highest_z = eligible
                                 .iter()
-                                .fold(-INFINITY, |highest, &(_, t)| highest.max(t.global_z));
+                                .fold(NEG_INFINITY, |highest, &(_, t)| highest.max(t.global_z));
                             // Then filter by it
                             eligible.retain(|&(_, t)| t.global_z == highest_z);
                             // We may still have ambiguity as to what to select at this point,
