@@ -2,7 +2,7 @@
 
 use super::*;
 use amethyst_assets::AssetStorage;
-use amethyst_core::specs::prelude::{Entities, Join, Read, ReadExpect, ReadStorage};
+use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
 use cam::{ActiveCamera, Camera};
 use error::Result;
@@ -65,7 +65,6 @@ impl DrawShadedSeparate {
 
 impl<'a> PassData<'a> for DrawShadedSeparate {
     type Data = (
-        Entities<'a>,
         Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
         Read<'a, AmbientColor>,
@@ -95,13 +94,11 @@ impl Pass for DrawShadedSeparate {
                 Separate::<Position>::ATTRIBUTES,
                 Separate::<Position>::size() as ElemStride,
                 0,
-            )
-            .with_raw_vertex_buffer(
+            ).with_raw_vertex_buffer(
                 Separate::<Normal>::ATTRIBUTES,
                 Separate::<Normal>::size() as ElemStride,
                 0,
-            )
-            .with_raw_vertex_buffer(
+            ).with_raw_vertex_buffer(
                 Separate::<TexCoord>::ATTRIBUTES,
                 Separate::<TexCoord>::size() as ElemStride,
                 0,
@@ -125,7 +122,6 @@ impl Pass for DrawShadedSeparate {
         effect: &mut Effect,
         _factory: Factory,
         (
-            entities,
             active,
             camera,
             ambient,
@@ -146,15 +142,15 @@ impl Pass for DrawShadedSeparate {
         set_light_args(effect, encoder, &light, &global, &ambient, camera);
 
         match visibility {
-            None => for (entity, mesh, material, global) in
-                (&*entities, &mesh, &material, &global).join()
+            None => for (joint, mesh, material, global) in
+                (joints.maybe(), &mesh, &material, &global).join()
             {
                 draw_mesh(
                     encoder,
                     effect,
                     self.skinning,
                     mesh_storage.get(mesh),
-                    joints.get(entity),
+                    joint,
                     &tex_storage,
                     Some(material),
                     &material_defaults,
@@ -165,20 +161,21 @@ impl Pass for DrawShadedSeparate {
                 );
             },
             Some(ref visibility) => {
-                for (entity, mesh, material, global, _) in (
-                    &*entities,
+                for (joint, mesh, material, global, _) in (
+                    joints.maybe(),
                     &mesh,
                     &material,
                     &global,
                     &visibility.visible_unordered,
-                ).join()
+                )
+                    .join()
                 {
                     draw_mesh(
                         encoder,
                         effect,
                         self.skinning,
                         mesh_storage.get(mesh),
-                        joints.get(entity),
+                        joint,
                         &tex_storage,
                         Some(material),
                         &material_defaults,

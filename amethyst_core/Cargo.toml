@@ -18,12 +18,12 @@ travis-ci = { repository = "amethyst/amethyst" }
 cgmath = { version = "0.16", features = ["serde", "mint"] }
 error-chain = "0.12"
 fnv = "1"
-hibitset = { version = "0.5.1", features = ["parallel"] }
+hibitset = { version = "0.5.2", features = ["parallel"] }
 log = "0.4"
 rayon = "1.0.2"
 serde = { version = "1", features = ["serde_derive"] }
 shred = { version = "0.7" }
-specs = { version = "0.12", features = ["common"] }
+specs = { version = "0.12.3", features = ["common"] }
 specs-hierarchy = { version = "0.2" }
 shrev = "1.0"
 
