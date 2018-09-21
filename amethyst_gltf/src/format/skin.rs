@@ -27,7 +27,7 @@ pub fn load_skin(
         .map(|matrices| matrices.map(|m| m.into()).collect())
         .unwrap_or(vec![Matrix4::identity().into(); joints.len()]);
 
-    for (bind_index, joint_index) in joints.iter().enumerate() {
+    for (_bind_index, joint_index) in joints.iter().enumerate() {
         prefab
             .data_or_default(*joint_index)
             .skinnable

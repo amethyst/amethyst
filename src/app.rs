@@ -22,7 +22,6 @@ use std::sync::Arc;
 use std::time::Duration;
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
-use utils::application_root_dir;
 use winit::{Event, WindowEvent};
 
 /// An Application is the root object of the game engine. It binds the OS
