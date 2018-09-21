@@ -128,6 +128,7 @@ where
                 screen_dimensions.dirty = false;
             }
         }
+        screen_dimensions.update_hidpi_factor(self.renderer.window().get_hidpi_factor());
     }
 
     fn render(&mut self, (mut event_handler, data): RenderData<P>) {
@@ -181,7 +182,7 @@ where
             .expect("Window closed during initialization!")
             .into();
         let hidpi = self.renderer.window().get_hidpi_factor();
-        res.insert(ScreenDimensions::new(width, height, hidpi as f32));
+        res.insert(ScreenDimensions::new(width, height, hidpi));
     }
 }
 
