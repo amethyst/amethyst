@@ -2,10 +2,12 @@
 
 # Amethyst
 
-[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT/Apache][s3]][li] [![Join us on Discord][s4]][di] [![Join the chat][s5]][gc] ![Lines of Code][s6]
+[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![master docs][docs-badge]][docs] [![MIT/Apache][s3]][li] [![Join us on Discord][s4]][di] [![Join the chat][s5]][gc] ![Lines of Code][s6]
 
 [s1]: https://travis-ci.org/amethyst/amethyst.svg?branch=master
 [s2]: https://img.shields.io/crates/v/amethyst.svg
+[docs-badge]: https://img.shields.io/badge/docs-master-blue.svg
+[docs]: https://www.amethyst.rs/doc/master/doc/amethyst/index.html
 [s3]: https://img.shields.io/badge/license-MIT%2FApache-blue.svg
 [s4]: https://img.shields.io/discord/425678876929163284.svg?logo=discord
 [s5]: https://badges.gitter.im/amethyst/general.svg
@@ -56,15 +58,6 @@ While we may not be feature-packed (yet!), we all strongly believe that the comm
 Please visit the [features page][feat] for a list of features Amethyst provides.
 
 [feat]: docs/FEATURES.md
-
-## Documentation
-
-[![develop docs][adb1]][ad1] [![master docs][adb2]][ad2]
-
-[adb1]: https://img.shields.io/badge/docs-develop-blue.svg
-[adb2]: https://img.shields.io/badge/docs-master-blue.svg
-[ad1]: https://www.amethyst.rs/doc/develop/doc/amethyst/index.html
-[ad2]: https://www.amethyst.rs/doc/master/doc/amethyst/index.html
 
 ## Usage
 

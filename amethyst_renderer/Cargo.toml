@@ -15,7 +15,7 @@ readme = "README.md"
 license = "MIT OR Apache-2.0"
 
 [badges]
-appveyor = { repository = "amethyst/amethyst", branch = "develop" }
+appveyor = { repository = "amethyst/amethyst", branch = "master" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [features]

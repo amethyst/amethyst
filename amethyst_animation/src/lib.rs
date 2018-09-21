@@ -42,8 +42,8 @@
 //! [sampler]: struct.Sampler.html
 //! [channel]: trait.AnimationSampling.html#associatedtype.Channel
 //! [ani_hie]: struct.AnimationHierarchy.html
-//! [ex_ani]: https://github.com/amethyst/amethyst/tree/develop/examples/animation
-//! [ex_gltf]: https://github.com/amethyst/amethyst/tree/develop/examples/gltf
+//! [ex_ani]: https://github.com/amethyst/amethyst/tree/master/examples/animation
+//! [ex_gltf]: https://github.com/amethyst/amethyst/tree/master/examples/gltf
 
 extern crate amethyst_assets;
 extern crate amethyst_core;

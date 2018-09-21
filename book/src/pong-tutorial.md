@@ -30,5 +30,5 @@ But for your own project you'll probably want something like this:
 let path = "./resources/display_config.ron";
 ```
 
-[pong]: https://github.com/amethyst/amethyst/tree/develop/examples/pong
+[pong]: https://github.com/amethyst/amethyst/tree/master/examples/pong
 

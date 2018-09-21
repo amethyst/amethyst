@@ -8,6 +8,6 @@ Right now we do not have a tutorial for defining an animation from scratch, but 
 * [gltf example][ex_gltf]
 * [API docs][api]
 
-[ex_ani]: https://github.com/amethyst/amethyst/tree/develop/examples/animation
-[ex_gltf]: https://github.com/amethyst/amethyst/tree/develop/examples/gltf
+[ex_ani]: https://github.com/amethyst/amethyst/tree/master/examples/animation
+[ex_gltf]: https://github.com/amethyst/amethyst/tree/master/examples/gltf
 [api]: https://docs.rs/amethyst_animation
