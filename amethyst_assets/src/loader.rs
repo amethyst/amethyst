@@ -1,11 +1,9 @@
+use fnv::FnvHashMap;
+use rayon::ThreadPool;
 use std::borrow::Borrow;
 use std::hash::Hash;
 use std::path::PathBuf;
 use std::sync::Arc;
-
-use fnv::FnvHashMap;
-use rayon::ThreadPool;
-
 use storage::{AssetStorage, Handle, Processed};
 use {Asset, Directory, ErrorKind, Format, FormatValue, Progress, ResultExt, Source};
 

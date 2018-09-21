@@ -1,6 +1,5 @@
-pub use imagefmt::Error as ImageError;
+use image::{DynamicImage, ImageFormat, RgbaImage};
 
-use std::io::Cursor;
 use std::result::Result as StdResult;
 
 use amethyst_assets::{
@@ -11,8 +10,6 @@ use amethyst_core::specs::prelude::{Entity, Read, ReadExpect};
 use gfx::format::{ChannelType, SurfaceType};
 use gfx::texture::SamplerInfo;
 use gfx::traits::Pod;
-use imagefmt;
-use imagefmt::{ColFmt, Image};
 use tex::{Texture, TextureBuilder};
 use Renderer;
 
@@ -241,7 +238,30 @@ where
 #[derive(Clone, Debug)]
 pub struct ImageData {
     /// The raw image data.
-    pub raw: Image<u8>,
+    pub rgba: RgbaImage,
+}
+
+fn load_into_rgba8_from_memory(
+    data: &[u8],
+    options: TextureMetadata,
+    format: ImageFormat,
+) -> Result<TextureData> {
+    use image::load_from_memory_with_format;
+    load_from_memory_with_format(data, format)
+        .map(|image| {
+            match image {
+                DynamicImage::ImageRgba8(im) => im,
+                _ => {
+                    // TODO: Log performance warning.
+                    image.to_rgba()
+                },
+            }
+        })
+        .map(|rgba| {
+            TextureData::Image(ImageData { rgba }, options)
+        })
+        // TODO: Add more context? File path or containing gltf archive?
+        .chain_err(|| "Image decoding failed")
 }
 
 /// Allows loading of jpg or jpeg files.
@@ -250,10 +270,8 @@ pub struct JpgFormat;
 
 impl JpgFormat {
     /// Load Jpg from memory buffer
-    pub fn from_data(&self, data: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
-        imagefmt::jpeg::read(&mut Cursor::new(data), ColFmt::RGBA)
-            .map(|raw| TextureData::Image(ImageData { raw }, options))
-            .chain_err(|| "Image decoding failed")
+    pub fn from_data(data: &[u8], options: TextureMetadata) -> Result<TextureData> {
+        load_into_rgba8_from_memory(data, options, ImageFormat::JPEG)
     }
 }
 
@@ -263,7 +281,7 @@ impl SimpleFormat<Texture> for JpgFormat {
     type Options = TextureMetadata;
 
     fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
-        self.from_data(bytes, options)
+        JpgFormat::from_data(&bytes, options)
     }
 }
 
@@ -273,10 +291,8 @@ pub struct PngFormat;
 
 impl PngFormat {
     /// Load Png from memory buffer
-    pub fn from_data(&self, data: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
-        imagefmt::png::read(&mut Cursor::new(data), ColFmt::RGBA)
-            .map(|raw| TextureData::Image(ImageData { raw }, options))
-            .chain_err(|| "Image decoding failed")
+    pub fn from_data(data: &[u8], options: TextureMetadata) -> Result<TextureData> {
+        load_into_rgba8_from_memory(data, options, ImageFormat::PNG)
     }
 }
 
@@ -286,7 +302,7 @@ impl SimpleFormat<Texture> for PngFormat {
     type Options = TextureMetadata;
 
     fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
-        self.from_data(bytes, options)
+        PngFormat::from_data(&bytes, options)
     }
 }
 
@@ -302,9 +318,27 @@ impl SimpleFormat<Texture> for BmpFormat {
     fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
         // TODO: consider reading directly into GPU-visible memory
         // TODO: as noted by @omni-viral.
-        imagefmt::bmp::read(&mut Cursor::new(bytes), ColFmt::RGBA)
-            .map(|raw| TextureData::Image(ImageData { raw }, options))
-            .chain_err(|| "Image decoding failed")
+        load_into_rgba8_from_memory(&bytes, options, ImageFormat::BMP)
+    }
+}
+
+/// Allows loading of TGA files.
+pub struct TgaFormat;
+
+impl TgaFormat {
+    /// Loads a TGA image from a byte slice.
+    pub fn from_data(data: &[u8], options: TextureMetadata) -> Result<TextureData> {
+        load_into_rgba8_from_memory(data, options, ImageFormat::TGA)
+    }
+}
+
+impl SimpleFormat<Texture> for TgaFormat {
+    const NAME: &'static str = "TGA";
+
+    type Options = TextureMetadata;
+
+    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
+        TgaFormat::from_data(&bytes, options)
     }
 }
 
@@ -411,36 +445,27 @@ fn create_texture_asset_from_image(
     options: TextureMetadata,
     renderer: &mut Renderer,
 ) -> Result<Texture> {
-    fn convert_color_format(fmt: ColFmt) -> Option<SurfaceType> {
-        match fmt {
-            ColFmt::Auto => unreachable!(),
-            ColFmt::RGBA => Some(SurfaceType::R8_G8_B8_A8),
-            ColFmt::BGRA => Some(SurfaceType::B8_G8_R8_A8),
-            _ => None,
-        }
-    }
-
-    let image = image.raw;
-    let fmt = convert_color_format(image.fmt)
-        .chain_err(|| format!("Unsupported color format {:?}", image.fmt))?;
-
-    if image.w > u16::max_value() as usize || image.h > u16::max_value() as usize {
+    let fmt = SurfaceType::R8_G8_B8_A8;
+    let chan = options.channel.unwrap_or(ChannelType::Srgb);
+    let rgba = image.rgba;
+    let w = rgba.width();
+    let h = rgba.height();
+    if w > u16::max_value() as u32 || h > u16::max_value() as u32 {
         bail!(
             "Unsupported texture size (expected: ({}, {}), got: ({}, {})",
             u16::max_value(),
             u16::max_value(),
-            image.w,
-            image.h
+            w,
+            h
         );
     }
-
     let tb = apply_options(
-        TextureBuilder::new(image.buf)
+        TextureBuilder::new(rgba.into_raw())
             .with_format(fmt)
-            .with_size(image.w as u16, image.h as u16),
+            .with_channel_type(chan)
+            .with_size(w as u16, h as u16),
         options,
     );
-
     renderer
         .create_texture(tb)
         .chain_err(|| "Failed to create texture from texture data")
@@ -455,6 +480,8 @@ pub enum TextureFormat {
     Png,
     /// Bmp
     Bmp,
+    /// Tga
+    Tga,
 }
 
 impl SimpleFormat<Texture> for TextureFormat {
@@ -467,6 +494,7 @@ impl SimpleFormat<Texture> for TextureFormat {
             TextureFormat::Jpg => SimpleFormat::import(&JpgFormat, bytes, options),
             TextureFormat::Png => SimpleFormat::import(&PngFormat, bytes, options),
             TextureFormat::Bmp => SimpleFormat::import(&BmpFormat, bytes, options),
+            TextureFormat::Tga => SimpleFormat::import(&TgaFormat, bytes, options),
         }
     }
 }

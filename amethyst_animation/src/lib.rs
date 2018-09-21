@@ -42,8 +42,8 @@
 //! [sampler]: struct.Sampler.html
 //! [channel]: trait.AnimationSampling.html#associatedtype.Channel
 //! [ani_hie]: struct.AnimationHierarchy.html
-//! [ex_ani]: https://github.com/amethyst/amethyst/tree/develop/examples/animation
-//! [ex_gltf]: https://github.com/amethyst/amethyst/tree/develop/examples/gltf
+//! [ex_ani]: https://github.com/amethyst/amethyst/tree/master/examples/animation
+//! [ex_gltf]: https://github.com/amethyst/amethyst/tree/master/examples/gltf
 
 extern crate amethyst_assets;
 extern crate amethyst_core;
@@ -73,6 +73,7 @@ pub use self::resources::{
 pub use self::skinning::{
     Joint, JointPrefab, Skin, SkinPrefab, SkinnablePrefab, VertexSkinningSystem,
 };
+pub use self::sprite::{SpriteRenderChannel, SpriteRenderPrimitive};
 pub use self::systems::{
     AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem, SamplerProcessor,
 };
@@ -85,6 +86,7 @@ mod material;
 mod prefab;
 mod resources;
 mod skinning;
+mod sprite;
 mod systems;
 mod transform;
 mod util;

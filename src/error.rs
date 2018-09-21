@@ -1,13 +1,13 @@
 //! Engine error types.
 
+use config::ConfigError;
+use state::StateError;
+use core;
+use renderer;
 use std::error::Error as StdError;
 use std::fmt::Result as FmtResult;
 use std::fmt::{Display, Formatter};
 use std::result::Result as StdResult;
-
-use config::ConfigError;
-use core;
-use renderer;
 
 /// Engine result type.
 pub type Result<T> = StdResult<T, Error>;
@@ -17,6 +17,8 @@ pub type Result<T> = StdResult<T, Error>;
 pub enum Error {
     /// Application error.
     Application,
+    /// StateMachine error
+    StateMachine(StateError),
     /// Asset management error.
     // Asset(AssetError),
     /// Configuration error.
@@ -31,6 +33,7 @@ impl StdError for Error {
             Error::Application => "Application error!",
             Error::Config(_) => "Configuration error!",
             Error::Core(_) => "Core error!",
+            Error::StateMachine(_) => "StateMachine error!",
         }
     }
 
@@ -48,6 +51,7 @@ impl Display for Error {
             Error::Application => write!(fmt, "Application initialization failed!"),
             Error::Config(ref e) => write!(fmt, "Configuration loading failed: {}", e),
             Error::Core(ref e) => write!(fmt, "System creation failed: {}", e),
+            Error::StateMachine(ref e) => write!(fmt, "Error in state machine: {}", e),
         }
     }
 }

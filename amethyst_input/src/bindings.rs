@@ -1,12 +1,10 @@
 //! Defines binding structure used for saving and loading input settings.
 
-use std::borrow::Borrow;
-use std::hash::Hash;
-
+use super::{Axis, Button};
 use fnv::FnvHashMap as HashMap;
 use smallvec::SmallVec;
-
-use super::{Axis, Button};
+use std::borrow::Borrow;
+use std::hash::Hash;
 
 /// Used for saving and loading input settings.
 #[derive(Derivative, Serialize, Deserialize, Clone)]

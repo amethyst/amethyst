@@ -9,10 +9,81 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## Unreleased
 ### Added
-### Changed
-### Removed
-### Fixed
+* Added JsonFormat ([#950]).
+* `SpriteRender` pass to draw sprites without using `Material` and `Mesh`. ([#829], [#830])
+* Sprite animation uses the `SpriteRenderChannel`. ([#829], [#830])
+* State::handle_event can now handle multiple types of events. ([#887])
+* Added Named Component. ([#879])([#896])
+* Support for progressive jpeg loading. ([#877])
+* New `application_root_dir()` function in `amethyst_utils`. ([#831])
+* Load node names for glTF prefabs. ([#905])
+* Added automatic camera matrix resizing to allow clean screen resizes. ([#920])
+* Added the Removal component to facilitate manual entity removal and scene cleaning. ([#920])
+* Added DestroyAtTime and DestroyInTime components to easily destroy entities. ([#920])
+* Support for loading TGA images. ([#934])
+* GltfPrefab adds MeshData as a component on loaded entities. This is not configurable until the Prefab rework. ([#946])
+* Added implementation of From<Vector3<f32>> for Transform which creates a Transform using Vector3 as the translation vector. ([#946])
+* New vertices() method on MeshCreator trait. ([#946])
 
+
+
+### Changed
+* Sprites contain their dimensions and offsets to render them with the right size and desired position. ([#829], [#830])
+* Texture coordinates for sprites are 1.0 at the top of the texture and 0.0 at the bottom. ([#829], [#830])
+* Made get_camera public. ([#878)]
+* Simplified creating states with SimpleState and EmptyState. ([#887])
+* Updated ProgressCounter to show loading errors. ([#892])
+* Replaced the `imagefmt` crate with `image`. ([#877])
+* Optimize Sprite rendering via batching. ([#902])
+* Derive `Debug` and `PartialEq` for `amethyst_input::Axis`. ([#903], [#904])
+* Updated `winit` to `0.17` (see [Winit's changelog][winit_017]). ([#906])
+* Updated `glutin` to `0.18` (see [Glutin's changelog][glutin_018]). ([#906])
+* Updated `gfx_window_glutin` to `0.26`. ([#906])
+* Updated `hetseq` to `0.2`. ([#906])
+* Removed unwraps from StateMachine ([#940])
+* Renamed ArcBallMovementSystem to ArcBallRotationSystem. ([#946])
+* Moved the ArcBallMovementSystem::get_axis method to amethyst_input/src/utils: get_input_axis_simple ([#946])
+* Ui Y axis is now from bottom to top. ([#946])
+* Fixed issue with global anchors not actually aligning ui elements and containers properly. ([#946])
+* Fixed issue with ui events not triggering at times. ([#946])
+* Reduced the complexity of the UiPass and associated shaders. ([#946])
+* Added comments to UiPass and shaders explaining what is going on. ([#946])
+* The z in UiTransformBuilder now defaults to 1 instead of 0, allowing to skip defining the z in the ui prefabs. ([#946])
+* Added comments to ui prefab. ([#946])
+
+### Removed
+* `LMenu` and `RMenu` key codes, following the `winit` update. ([#906])
+
+### Fixed
+* Material ids in GLTF loader caused multiple GLTF files to get incorrect materials applied. ([#915])
+* Fix render gamma for most textures. ([#868])
+* Joint entities can only be part of a single skin: Materials are not swapped anymore. ([#933])
+* Fixed regression in sprite positioning after batching. ([#929])
+
+[#829]: https://github.com/amethyst/amethyst/issues/829
+[#830]: https://github.com/amethyst/amethyst/pull/830
+[#879]: https://github.com/amethyst/amethyst/pull/879
+[#878]: https://github.com/amethyst/amethyst/pull/878
+[#887]: https://github.com/amethyst/amethyst/pull/887
+[#892]: https://github.com/amethyst/amethyst/pull/892
+[#877]: https://github.com/amethyst/amethyst/pull/877
+[#896]: https://github.com/amethyst/amethyst/pull/896
+[#831]: https://github.com/amethyst/amethyst/pull/831
+[#902]: https://github.com/amethyst/amethyst/pull/902
+[#905]: https://github.com/amethyst/amethyst/pull/905
+[#920]: https://github.com/amethyst/amethyst/pull/920
+[#903]: https://github.com/amethyst/amethyst/issues/903
+[#904]: https://github.com/amethyst/amethyst/pull/904
+[#915]: https://github.com/amethyst/amethyst/pull/915
+[#868]: https://github.com/amethyst/amethyst/pull/868
+[#933]: https://github.com/amethyst/amethyst/pull/933
+[#929]: https://github.com/amethyst/amethyst/pull/929
+[#934]: https://github.com/amethyst/amethyst/pull/934
+[#940]: https://github.com/amethyst/amethyst/pull/940
+[#946]: https://github.com/amethyst/amethyst/pull/946
+[#950]: https://github.com/amethyst/amethyst/pull/950
+[winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
+[glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
 
 ## [0.8.0] - 2018-08
 ### Added

@@ -1,19 +1,17 @@
-use std::fmt::Debug;
-use std::result::Result as StdResult;
-
 use amethyst_assets::{
     Asset, AssetStorage, Error, Loader, PrefabData, PrefabError, ProcessingState, Result,
     ResultExt, SimpleFormat,
 };
 use amethyst_core::cgmath::{InnerSpace, Vector3};
-use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, VecStorage, WriteStorage};
+use amethyst_core::specs::prelude::{Component, Entity, Read, ReadExpect, VecStorage, WriteStorage};
+use mesh::{Mesh, MeshBuilder, MeshHandle};
+use std::fmt::Debug;
+use std::result::Result as StdResult;
+use vertex::*;
 use wavefront_obj::obj::{
     parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex, TextureIndex, Vertex,
     VertexIndex,
 };
-
-use mesh::{Mesh, MeshBuilder, MeshHandle};
-use vertex::*;
 use Renderer;
 
 /// Mesh data for loading
@@ -34,6 +32,10 @@ pub enum MeshData {
     /// Create a mesh from a given creator
     #[serde(skip)]
     Creator(Box<MeshCreator>),
+}
+
+impl Component for MeshData {
+    type Storage = VecStorage<Self>;
 }
 
 impl From<Vec<PosColor>> for MeshData {
@@ -129,16 +131,20 @@ fn convert(
             let vertex: Vertex = object.vertices[vi];
             [vertex.x as f32, vertex.y as f32, vertex.z as f32]
         },
-        normal: ni.map(|i| {
-            let normal: Normal = object.normals[i];
-            Vector3::from([normal.x as f32, normal.y as f32, normal.z as f32])
-                .normalize()
-                .into()
-        }).unwrap_or([0.0, 0.0, 0.0]),
-        tex_coord: ti.map(|i| {
-            let tvertex: TVertex = object.tex_vertices[i];
-            [tvertex.u as f32, tvertex.v as f32]
-        }).unwrap_or([0.0, 0.0]),
+        normal: ni
+            .map(|i| {
+                let normal: Normal = object.normals[i];
+                Vector3::from([normal.x as f32, normal.y as f32, normal.z as f32])
+                    .normalize()
+                    .into()
+            })
+            .unwrap_or([0.0, 0.0, 0.0]),
+        tex_coord: ti
+            .map(|i| {
+                let tvertex: TVertex = object.tex_vertices[i];
+                [tvertex.u as f32, tvertex.v as f32]
+            })
+            .unwrap_or([0.0, 0.0]),
     }
 }
 
@@ -228,6 +234,9 @@ pub trait MeshCreator: Send + Sync + Debug + 'static {
     /// Build a mesh given a `Renderer`
     fn build(self: Box<Self>, renderer: &mut Renderer) -> ::error::Result<Mesh>;
 
+    /// Returns the vertices contained in the MeshCreator.
+    fn vertices(&self) -> &Vec<Separate<Position>>;
+
     /// Clone a boxed version of this object
     fn box_clone(&self) -> Box<MeshCreator>;
 }
@@ -254,6 +263,10 @@ impl ComboMeshCreator {
 impl MeshCreator for ComboMeshCreator {
     fn build(self: Box<Self>, renderer: &mut Renderer) -> ::error::Result<Mesh> {
         build_mesh_with_combo(self.combo, renderer)
+    }
+
+    fn vertices(&self) -> &Vec<Separate<Position>> {
+        &self.combo.0
     }
 
     fn box_clone(&self) -> Box<MeshCreator> {

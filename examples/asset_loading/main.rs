@@ -7,12 +7,13 @@ extern crate rayon;
 use amethyst::assets::{Loader, Result as AssetResult, SimpleFormat};
 use amethyst::core::cgmath::{Array, Matrix4, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
-use amethyst::input::{is_close_requested, is_key_down, InputBundle};
+use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{
-    Camera, DrawShaded, Event, Light, Material, MaterialDefaults, Mesh, MeshData, PointLight,
-    PosNormTex, Projection, Rgba, VirtualKeyCode,
+    Camera, DrawShaded, Light, Material, MaterialDefaults, Mesh, MeshData, PointLight, PosNormTex,
+    Projection, Rgba,
 };
+use amethyst::utils::application_root_dir;
 use amethyst::Error;
 
 #[derive(Clone)]
@@ -58,7 +59,7 @@ impl SimpleFormat<Mesh> for Custom {
 
 struct AssetsExample;
 
-impl<'a, 'b> State<GameData<'a, 'b>> for AssetsExample {
+impl<'a, 'b> SimpleState<'a, 'b> for AssetsExample {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
         world.add_resource(0usize);
@@ -95,30 +96,19 @@ impl<'a, 'b> State<GameData<'a, 'b>> for AssetsExample {
             .with(GlobalTransform::default())
             .build();
     }
-
-    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else {
-            Trans::None
-        }
-    }
-
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
-        data.data.update(&data.world);
-        Trans::None
-    }
 }
 
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
+    let app_root = application_root_dir();
+
     // Add our meshes directory to the asset loader.
-    let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
+    let resources_directory = format!("{}/examples/assets", app_root);
 
     let display_config_path = format!(
         "{}/examples/asset_loading/resources/display_config.ron",
-        env!("CARGO_MANIFEST_DIR")
+        app_root
     );
 
     let game_data = GameDataBuilder::default()

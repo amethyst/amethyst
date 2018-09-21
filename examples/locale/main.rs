@@ -6,6 +6,7 @@ use amethyst::assets::{AssetStorage, Handle, Loader, Processor, ProgressCounter}
 use amethyst::ecs::{Read, ReadExpect};
 use amethyst::locale::*;
 use amethyst::prelude::*;
+use amethyst::utils::application_root_dir;
 use amethyst::Error;
 
 struct Example {
@@ -24,7 +25,7 @@ impl Example {
     }
 }
 
-impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+impl<'a, 'b> SimpleState<'a, 'b> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         data.world.add_resource(AssetStorage::<Locale>::new());
         let mut progress_counter = ProgressCounter::default();
@@ -53,9 +54,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
         self.progress_counter = Some(progress_counter);
     }
 
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
-        data.data.update(&data.world);
-
+    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
         // Check if the locale has been loaded.
         if self.progress_counter.as_ref().unwrap().is_complete() {
             let store = data.world.read_resource::<AssetStorage<Locale>>();
@@ -89,7 +88,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
-    let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
+    let resources_directory = format!("{}/examples/assets", application_root_dir());
 
     let game_data = GameDataBuilder::default().with(Processor::<Locale>::new(), "proc", &[]);
 

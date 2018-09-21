@@ -4,12 +4,10 @@
 pub use self::mesh::*;
 pub use self::mtl::*;
 pub use self::texture::*;
-
 use amethyst_assets::{AssetPrefab, Format, PrefabData, PrefabError, ProgressCounter};
 use amethyst_core::specs::prelude::Entity;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-
 use shape::InternalShape;
 use {Mesh, ShapePrefab, Texture};
 
@@ -105,7 +103,8 @@ where
         } {
             ret = true;
         }
-        if self.material
+        if self
+            .material
             .trigger_sub_loading(progress, &mut system_data.1)?
         {
             ret = true;

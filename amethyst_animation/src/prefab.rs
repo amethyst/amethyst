@@ -1,12 +1,10 @@
-use std::fmt::Debug;
-use std::hash::Hash;
-use std::marker::PhantomData;
-
 use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, PrefabError, ProgressCounter};
 use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, WriteStorage};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-
+use std::fmt::Debug;
+use std::hash::Hash;
+use std::marker::PhantomData;
 use {Animation, AnimationHierarchy, AnimationSampling, AnimationSet, RestState, Sampler};
 
 /// `PrefabData` for loading a single `Animation`
@@ -79,7 +77,8 @@ where
         &mut (ref loader, ref sampler_storage, ref animation_storage): &mut Self::SystemData,
     ) -> Result<bool, PrefabError> {
         let animation = Animation::<T> {
-            nodes: self.samplers
+            nodes: self
+                .samplers
                 .iter()
                 .map(|(node_index, channel, sampler)| {
                     (

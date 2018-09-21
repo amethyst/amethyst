@@ -114,7 +114,7 @@ where
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
-        builder.add(ArcBallMovementSystem::default(), "arc_ball_movement", &[]);
+        builder.add(ArcBallRotationSystem::default(), "arc_ball_rotation", &[]);
         builder.add(
             FreeRotationSystem::<A, B>::new(self.sensitivity_x, self.sensitivity_y),
             "free_rotation",

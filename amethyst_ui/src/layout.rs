@@ -1,7 +1,7 @@
 use super::UiTransform;
 use amethyst_core::specs::prelude::{
-    BitSet, Entities, InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage, ReaderId,
-    Resources, System, WriteStorage,
+    BitSet, InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage, ReaderId, Resources, System,
+    WriteStorage,
 };
 use amethyst_core::{HierarchyEvent, Parent, ParentHierarchy};
 use amethyst_renderer::ScreenDimensions;
@@ -43,18 +43,18 @@ pub enum Anchor {
 impl Anchor {
     /// Returns the normalized offset using the `Anchor` setting.
     /// The normalized offset is a [-0.5,0.5] value
-    /// indicating the relative offset from the parent's position (centered).
+    /// indicating the relative offset multiplier from the parent's position (centered).
     pub fn norm_offset(&self) -> (f32, f32) {
         match self {
-            Anchor::TopLeft => (-0.5, -0.5),
-            Anchor::TopMiddle => (0.0, -0.5),
-            Anchor::TopRight => (0.5, -0.5),
+            Anchor::TopLeft => (-0.5, 0.5),
+            Anchor::TopMiddle => (0.0, 0.5),
+            Anchor::TopRight => (0.5, 0.5),
             Anchor::MiddleLeft => (-0.5, 0.0),
             Anchor::Middle => (0.0, 0.0),
             Anchor::MiddleRight => (0.5, 0.0),
-            Anchor::BottomLeft => (-0.5, 0.5),
-            Anchor::BottomMiddle => (0.0, 0.5),
-            Anchor::BottomRight => (0.5, 0.5),
+            Anchor::BottomLeft => (-0.5, -0.5),
+            Anchor::BottomMiddle => (0.0, -0.5),
+            Anchor::BottomRight => (0.5, -0.5),
         }
     }
 }
@@ -100,14 +100,13 @@ pub struct UiTransformSystem {
 
 impl<'a> System<'a> for UiTransformSystem {
     type SystemData = (
-        Entities<'a>,
         WriteStorage<'a, UiTransform>,
         ReadStorage<'a, Parent>,
         ReadExpect<'a, ScreenDimensions>,
         ReadExpect<'a, ParentHierarchy>,
     );
     fn run(&mut self, data: Self::SystemData) {
-        let (entities, mut transforms, parents, screen_dim, hierarchy) = data;
+        let (mut transforms, parents, screen_dim, hierarchy) = data;
         #[cfg(feature = "profiler")]
         profile_scope!("ui_parent_system");
 
@@ -134,52 +133,18 @@ impl<'a> System<'a> for UiTransformSystem {
         let current_screen_size = (screen_dim.width(), screen_dim.height());
         let screen_resized = current_screen_size != self.screen_size;
         self.screen_size = current_screen_size;
-        for (entity, _) in (&*entities, !&parents).join() {
-            let self_dirty = self.transform_modified.contains(entity.id());
-            if self_dirty || screen_resized {
-                // By doing things this way we prevent grabbing mutable
-                // borrows unnecessarily which allows us to avoid re-computing
-                // for no changes.
-                let transform = transforms.get_mut(entity);
-                if transform.is_none() {
-                    continue;
-                }
-                let transform = transform.unwrap();
-                let norm = transform.anchor.norm_offset();
-                transform.pixel_x = screen_dim.width() * norm.0;
-                transform.pixel_y = screen_dim.height() * norm.1;
-                transform.global_z = transform.local_z;
-
-                let new_size = match transform.stretch {
-                    Stretch::NoStretch => (transform.width, transform.height),
-                    Stretch::X { x_margin } => {
-                        (screen_dim.width() - x_margin * 2.0, transform.height)
-                    }
-                    Stretch::Y { y_margin } => {
-                        (transform.width, screen_dim.height() - y_margin * 2.0)
-                    }
-                    Stretch::XY { x_margin, y_margin } => (
-                        screen_dim.width() - x_margin * 2.0,
-                        screen_dim.height() - y_margin * 2.0,
-                    ),
-                };
-                transform.width = new_size.0;
-                transform.height = new_size.1;
-                match transform.scale_mode {
-                    ScaleMode::Pixel => {
-                        transform.pixel_x += transform.local_x;
-                        transform.pixel_y += transform.local_y;
-                        transform.pixel_width = transform.width;
-                        transform.pixel_height = transform.height;
-                    }
-                    ScaleMode::Percent => {
-                        transform.pixel_x += transform.local_x * screen_dim.width();
-                        transform.pixel_y += transform.local_y * screen_dim.height();
-                        transform.pixel_width = transform.width * screen_dim.width();
-                        transform.pixel_height = transform.height * screen_dim.height();
-                    }
-                }
-            }
+        if screen_resized {
+            process_root_iter(
+                (&mut transforms, !&parents).join().map(|i| i.0),
+                &*screen_dim,
+            );
+        } else {
+            process_root_iter(
+                (&mut transforms, !&parents, &self.transform_modified)
+                    .join()
+                    .map(|i| i.0),
+                &*screen_dim,
+            );
         }
 
         // Populate the modifications we just did.
@@ -271,5 +236,47 @@ impl<'a> System<'a> for UiTransformSystem {
         let mut transforms = WriteStorage::<UiTransform>::fetch(res);
         self.inserted_transform_id = Some(transforms.track_inserted());
         self.modified_transform_id = Some(transforms.track_modified());
+    }
+}
+
+fn process_root_iter<'a, I>(iter: I, screen_dim: &ScreenDimensions)
+where
+    I: Iterator<Item = &'a mut UiTransform>,
+{
+    for transform in iter {
+        let norm = transform.anchor.norm_offset();
+        transform.pixel_x = screen_dim.width() / 2.0 + screen_dim.width() * norm.0;
+        transform.pixel_y = screen_dim.height() / 2.0 + screen_dim.height() * norm.1;
+        transform.global_z = transform.local_z;
+
+        let new_size = match transform.stretch {
+            Stretch::NoStretch => (transform.width, transform.height),
+            Stretch::X { x_margin } => {
+                (screen_dim.width() - x_margin * 2.0, transform.height)
+            }
+            Stretch::Y { y_margin } => {
+                (transform.width, screen_dim.height() - y_margin * 2.0)
+            }
+            Stretch::XY { x_margin, y_margin } => (
+                screen_dim.width() - x_margin * 2.0,
+                screen_dim.height() - y_margin * 2.0,
+            ),
+        };
+        transform.width = new_size.0;
+        transform.height = new_size.1;
+        match transform.scale_mode {
+            ScaleMode::Pixel => {
+                transform.pixel_x += transform.local_x;
+                transform.pixel_y += transform.local_y;
+                transform.pixel_width = transform.width;
+                transform.pixel_height = transform.height;
+            }
+            ScaleMode::Percent => {
+                transform.pixel_x += transform.local_x * screen_dim.width();
+                transform.pixel_y += transform.local_y * screen_dim.height();
+                transform.pixel_width = transform.width * screen_dim.width();
+                transform.pixel_height = transform.height * screen_dim.height();
+            }
+        }
     }
 }

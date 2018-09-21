@@ -2,24 +2,23 @@
 //!
 
 #![crate_name = "amethyst_config"]
-#![doc(html_logo_url = "http://tinyurl.com/hgsb45k")]
+#![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
 
-extern crate ron;
-extern crate serde;
 #[macro_use]
 extern crate log;
+extern crate ron;
+extern crate serde;
 
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
+use ron::de::Error as DeError;
+use ron::ser::Error as SerError;
+use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::fmt;
 use std::io;
 use std::path::{Path, PathBuf};
-
-use ron::de::Error as DeError;
-use ron::ser::Error as SerError;
-use serde::{Deserialize, Serialize};
 
 /// Error related to anything that manages/creates configurations as well as
 /// "workspace"-related things.

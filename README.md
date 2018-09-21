@@ -2,19 +2,21 @@
 
 # Amethyst
 
-[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT/Apache][s3]][li] [![Join the chat][s4]][gc] [![Join us on Discord][s5]][di] ![Lines of Code][s6]
+[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![master docs][docs-badge]][docs] [![MIT/Apache][s3]][li] [![Join us on Discord][s4]][di] [![Join the chat][s5]][gc] ![Lines of Code][s6]
 
 [s1]: https://travis-ci.org/amethyst/amethyst.svg?branch=master
 [s2]: https://img.shields.io/crates/v/amethyst.svg
+[docs-badge]: https://img.shields.io/badge/docs-master-blue.svg
+[docs]: https://www.amethyst.rs/doc/master/doc/amethyst/index.html
 [s3]: https://img.shields.io/badge/license-MIT%2FApache-blue.svg
-[s4]: https://badges.gitter.im/amethyst/general.svg
-[s5]: https://img.shields.io/discord/425678876929163284.svg?logo=discord
+[s4]: https://img.shields.io/discord/425678876929163284.svg?logo=discord
+[s5]: https://badges.gitter.im/amethyst/general.svg
 [s6]: https://tokei.rs/b1/github/amethyst/amethyst?category=code
 [tc]: https://travis-ci.org/amethyst/amethyst/
 [ci]: https://crates.io/crates/amethyst/
 [li]: COPYING
-[gc]: https://gitter.im/orgs/amethyst/rooms
 [di]: https://discord.gg/GnP5Whs
+[gc]: https://gitter.im/orgs/amethyst/rooms
 
 ## What is Amethyst?!
 
@@ -26,7 +28,7 @@ These principles are what make amethyst unique and competitive in the world of g
 
 * Massively parallel architecture.
 * Powered by a correct [Entity Component System][ecs] model.
-* Rapid prototyping with [RON](Json-like) files for prefabs and an abstract scripting API.
+* Rapid prototyping with [RON][ron] files for prefabs and an abstract scripting API.
 * Strong focus on encouraging reusability and clean interfaces.
 
 [ecs]: https://en.wikipedia.org/wiki/Entity–component–system
@@ -56,15 +58,6 @@ While we may not be feature-packed (yet!), we all strongly believe that the comm
 Please visit the [features page][feat] for a list of features Amethyst provides.
 
 [feat]: docs/FEATURES.md
-
-## Documentation
-
-[![develop docs][adb1]][ad1] [![master docs][adb2]][ad2]
-
-[adb1]: https://img.shields.io/badge/docs-develop-blue.svg
-[adb2]: https://img.shields.io/badge/docs-master-blue.svg
-[ad1]: https://www.amethyst.rs/doc/develop.html
-[ad2]: https://www.amethyst.rs/doc/master.html
 
 ## Usage
 
@@ -97,7 +90,7 @@ For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chap
 in the book.
 
 [ex]: examples/
-[gs]: https://www.amethyst.rs/book/master/getting_started.html
+[gs]: https://www.amethyst.rs/book/master/
 
 ## Dependencies
 
@@ -106,14 +99,22 @@ If you are compiling on Linux make sure to install the following dependencies:
 ### Ubuntu
 
 ```
-$ sudo apt install libasound2-dev libx11-xcb-dev
+$ sudo apt install libasound2-dev libx11-xcb-dev libssl-dev
 ```
 
 ### Fedora
 
 ```
-$ sudo dnf install alsa-lib-devel
+$ sudo dnf install alsa-lib-devel openssl-devel
 ```
+
+### Other
+
+See your distribution specific installation process for the equivalent dependencies.
+
+Please note that you need to have a functionnal graphics driver installed.
+If you get a panic about the renderer unable to create the context when trying to run an example,
+faulty driver installation can be the issue.
 
 ## Building Documentation
 

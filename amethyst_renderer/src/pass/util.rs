@@ -4,10 +4,8 @@ use amethyst_assets::AssetStorage;
 use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
 use amethyst_core::specs::prelude::{Join, Read, ReadStorage};
 use amethyst_core::GlobalTransform;
-
-use glsl_layout::*;
-
 use cam::{ActiveCamera, Camera};
+use glsl_layout::*;
 use mesh::Mesh;
 use mtl::{Material, MaterialDefaults, TextureOffset};
 use pass::set_skinning_buffers;
@@ -29,6 +27,13 @@ pub(crate) enum TextureType {
 
 #[repr(C, align(16))]
 #[derive(Clone, Copy, Debug, Uniform)]
+pub(crate) struct ViewArgs {
+    proj: mat4,
+    view: mat4,
+}
+
+#[repr(C, align(16))]
+#[derive(Clone, Copy, Debug, Uniform)]
 pub(crate) struct VertexArgs {
     proj: mat4,
     view: mat4,
@@ -38,8 +43,8 @@ pub(crate) struct VertexArgs {
 #[repr(C, align(16))]
 #[derive(Clone, Copy, Debug, Uniform)]
 pub(crate) struct TextureOffsetPod {
-    u_offset: vec2,
-    v_offset: vec2,
+    pub u_offset: vec2,
+    pub v_offset: vec2,
 }
 
 impl TextureOffsetPod {
@@ -229,7 +234,8 @@ pub(crate) fn setup_vertex_args(builder: &mut EffectBuilder) {
     );
 }
 
-pub(crate) fn set_vertex_args(
+/// Sets the vertex argument in the constant buffer.
+pub fn set_vertex_args(
     effect: &mut Effect,
     encoder: &mut Encoder,
     camera: Option<(&Camera, &GlobalTransform)>,
@@ -248,6 +254,24 @@ pub(crate) fn set_vertex_args(
             model: global.0.into(),
         });
     effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
+}
+
+pub fn set_view_args(
+    effect: &mut Effect,
+    encoder: &mut Encoder,
+    camera: Option<(&Camera, &GlobalTransform)>,
+) {
+    let view_args = camera
+        .as_ref()
+        .map(|&(ref cam, ref transform)| ViewArgs {
+            proj: cam.proj.into(),
+            view: transform.0.invert().unwrap().into(),
+        })
+        .unwrap_or_else(|| ViewArgs {
+            proj: Matrix4::one().into(),
+            view: Matrix4::one().into(),
+        });
+    effect.update_constant_buffer("ViewArgs", &view_args.std140(), encoder);
 }
 
 pub(crate) fn draw_mesh(
@@ -300,7 +324,8 @@ pub(crate) fn draw_mesh(
     effect.clear();
 }
 
-pub(crate) fn get_camera<'a>(
+/// Returns the main camera and its `GlobalTransform`
+pub fn get_camera<'a>(
     active: Option<Read<'a, ActiveCamera>>,
     camera: &'a ReadStorage<Camera>,
     global: &'a ReadStorage<GlobalTransform>,

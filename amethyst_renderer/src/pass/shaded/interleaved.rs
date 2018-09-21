@@ -1,16 +1,13 @@
 //! Simple shaded pass
 
-use std::marker::PhantomData;
-
+use super::*;
 use amethyst_assets::AssetStorage;
 use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
-use gfx::pso::buffer::ElemStride;
-use gfx_core::state::{Blend, ColorMask};
-
-use super::*;
 use cam::{ActiveCamera, Camera};
 use error::Result;
+use gfx::pso::buffer::ElemStride;
+use gfx_core::state::{Blend, ColorMask};
 use light::Light;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
@@ -19,13 +16,20 @@ use pass::util::{draw_mesh, get_camera, setup_textures, setup_vertex_args};
 use pipe::pass::{Pass, PassData};
 use pipe::{DepthMode, Effect, NewEffect};
 use resources::AmbientColor;
+use std::marker::PhantomData;
 use tex::Texture;
 use types::{Encoder, Factory};
 use vertex::{Normal, Position, Query, TexCoord};
 use visibility::Visibility;
 
 /// Draw mesh with simple lighting technique
-/// `V` is `VertexFormat`
+///
+/// See the [crate level documentation](index.html) for information about interleaved and separate
+/// passes.
+///
+/// # Type Parameters:
+///
+/// * `V`: `VertexFormat`
 #[derive(Derivative, Clone, Debug, PartialEq)]
 #[derivative(Default(bound = "V: Query<(Position, Normal, TexCoord)>"))]
 pub struct DrawShaded<V> {

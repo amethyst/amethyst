@@ -1,7 +1,6 @@
 use specs::prelude::{Component, DenseVecStorage, Entity, FlaggedStorage};
-use specs_hierarchy::{Hierarchy, Parent as HParent};
-
 pub use specs_hierarchy::HierarchyEvent;
+use specs_hierarchy::{Hierarchy, Parent as HParent};
 pub type ParentHierarchy = Hierarchy<Parent>;
 
 /// Component for defining a parent entity.

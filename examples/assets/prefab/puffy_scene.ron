@@ -10,7 +10,7 @@ Prefab (
         (
             data: (
                 gltf: File("mesh/puffy.gltf", GltfSceneFormat, (
-                    load_animations: false,
+                    load_animations: true,
                     flip_v_coord: true,
                 )),
                 tag: (),

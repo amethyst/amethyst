@@ -38,17 +38,16 @@ and try our best to resolve it.
 
 ## Pull Requests
 
-So, you want to write some code? Great! But before you start writing, please
-make sure you are familiar with how our repositories are structured:
-
-1. __develop__: If adding features, tweaking, improving docs, etc. do so here.
-2. __release-*__: If releasing a bugfix against a specific release, do so here.
-3. __hotfix-*__: Do not touch. Hotfix branches for broken (yanked) releases.
-4. __master__: Do not touch. Latest production-ready state of the code.
+So, you want to write some code? Great!
 
 To begin hacking, fork the repository to your account and `git clone` the forked
-copy to your local machine. Then switch to either the **develop** branch or
-appropriate __release-*__ branch. Now you're ready to work!
+copy to your local machine. On clone you will be on the *master* branch. This
+is the branch that contains all new work that has not been released yet. If you 
+are adding a new feature to amethyst then you want to base your work off of this
+branch. Otherwise, if you are attemping to fix something in an older release you
+will have to base your work off of a released tag. This can be done after a clone
+by running `git checkout TAG` where `TAG` is a released tag eg `v0.8.0`. Now that
+you have the latest code you can start contributing.
 
 ### Submission Checklist
 
@@ -57,8 +56,7 @@ done the following things first:
 
 1. You have ensured the pull request is based on a recent version of your
    respective branch.
-2. You have processed your source code with `cargo fmt` (we use latest rustup stable, 
-   0.4 at the time of writing).
+2. You have processed your source code with `cargo fmt` (we use latest rustup stable).
 3. All of the following commands completed without errors.
    * `cargo build`
    * `cargo test --all`
@@ -206,8 +204,8 @@ There are two types of documentation in Amethyst you can work on:
 1. [API documentation][ad]
 2. [The Amethyst book][ab]
 
-[ad]: https://www.amethyst.rs/doc/develop/doc/amethyst/index.html
-[ab]: https://www.amethyst.rs/book/develop/
+[ad]: https://www.amethyst.rs/doc/doc/amethyst/index.html
+[ab]: https://www.amethyst.rs/book/
 
 Our Rust API documentation is generated directly from source code comments
 marked with either `///` or `//!` using  a tool called Rustdoc. See

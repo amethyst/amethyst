@@ -50,6 +50,7 @@ axes we defined. Let's make the following changes to `main.rs`.
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;
+# use amethyst::utils::application_root_dir;
 # use amethyst::renderer::{DisplayConfig, DrawFlat, Event, Pipeline,
 #                        PosTex, RenderBundle, Stage, VirtualKeyCode};
 # macro_rules! env { ($x:expr) => ("") }
@@ -58,7 +59,7 @@ use amethyst::input::InputBundle;
 
 let binding_path = format!(
     "{}/resources/bindings_config.ron",
-    env!("CARGO_MANIFEST_DIR")
+    application_root_dir()
 );
 
 let input_bundle = InputBundle::<String, String>::new().with_bindings_from_file(binding_path)?;
@@ -70,10 +71,10 @@ let input_bundle = InputBundle::<String, String>::new().with_bindings_from_file(
 #       .with_pass(DrawFlat::<PosTex>::new()),
 # );
 # struct Pong;
-# impl<'a, 'b> State<GameData<'a, 'b>> for Pong { }
+# impl<'a, 'b> SimpleState<'a,'b> for Pong { }
 let game_data = GameDataBuilder::default()
+    .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
     .with_bundle(TransformBundle::new())?
-    .with_bundle(RenderBundle::new(pipe, Some(config)))?
     .with_bundle(input_bundle)?;
 let mut game = Application::new("./", Pong, game_data)?;
 game.run();
@@ -110,7 +111,6 @@ use amethyst::input::InputHandler;
 # impl amethyst::ecs::Component for Paddle {
 #   type Storage = amethyst::ecs::VecStorage<Paddle>;    
 # }
-
 pub struct PaddleSystem;
 
 impl<'s> System<'s> for PaddleSystem {
@@ -139,8 +139,11 @@ impl<'s> System<'s> for PaddleSystem {
   }
 }
 ```
+Note: You will also need to add a `use` statement to bring in `Paddle` and `Side` from pong.rs:
 
-Note: We had to make our Paddle and Side public in `pong.rs`
+```rust,ignore
+use pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
+```
 
 Now lets add this system to our `GameDataBuilder` in `main.rs`:
 
@@ -148,8 +151,8 @@ Now lets add this system to our `GameDataBuilder` in `main.rs`:
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;
-# use amethyst::renderer::{DisplayConfig, DrawFlat, Event, Pipeline,
-#                        PosTex, RenderBundle, Stage, VirtualKeyCode};
+# use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline,
+#                        PosTex, RenderBundle, Stage};
 # fn main() -> amethyst::Result<()> {
 # let path = "./resources/display_config.ron";
 # let config = DisplayConfig::load(&path);
@@ -168,8 +171,8 @@ Now lets add this system to our `GameDataBuilder` in `main.rs`:
 # let input_bundle = amethyst::input::InputBundle::<String, String>::new();
 // in the run() function
 let game_data = GameDataBuilder::default()
+    .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
     .with_bundle(TransformBundle::new())?
-    .with_bundle(RenderBundle::new(pipe, Some(config)))?
     .with_bundle(input_bundle)?
     .with(systems::PaddleSystem, "paddle_system", &["input_system"]); // Add this line
 # Ok(())

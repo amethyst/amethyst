@@ -1,5 +1,4 @@
-use amethyst::renderer::{Sprite, SpriteSheet};
-
+use amethyst::renderer::{Sprite, SpriteSheet, TextureCoordinates};
 use sprite;
 
 /// Loads a sprite sheet from the assets folder.
@@ -16,10 +15,7 @@ pub fn load(texture_id: u64, definition: &sprite::SpriteSheetDefinition) -> Spri
         offset_h * definition.row_count as f32,
     );
 
-    // Push the rows in reverse order because the texture coordinates are treated as beginning
-    // from the bottom of the image, whereas for this example I want the top left sprite to be
-    // the first sprite
-    for row in (0..definition.row_count).rev() {
+    for row in 0..definition.row_count {
         for col in 0..definition.column_count {
             // Sprites are numbered in the following pattern:
             //
@@ -33,10 +29,10 @@ pub fn load(texture_id: u64, definition: &sprite::SpriteSheetDefinition) -> Spri
             let sprite = create_sprite(
                 image_w,
                 image_h,
+                definition.sprite_w,
+                definition.sprite_h,
                 offset_x,
                 offset_y,
-                offset_x + definition.sprite_w,
-                offset_y + definition.sprite_h,
             );
 
             let sprite_number = row * definition.column_count + col;
@@ -78,28 +74,38 @@ fn offset_distances(definition: &sprite::SpriteSheetDefinition) -> (f32, f32) {
 ///
 /// * `image_w`: Width of the full sprite sheet.
 /// * `image_h`: Height of the full sprite sheet.
+/// * `sprite_w`: Width of the sprite.
+/// * `sprite_h`: Height of the sprite.
 /// * `pixel_left`: Pixel X coordinate of the left side of the sprite.
 /// * `pixel_top`: Pixel Y coordinate of the top of the sprite.
-/// * `pixel_right`: Pixel X coordinate of the right side of the sprite.
-/// * `pixel_bottom`: Pixel Y coordinate of the bottom of the sprite.
 fn create_sprite(
     image_w: f32,
     image_h: f32,
+    sprite_w: f32,
+    sprite_h: f32,
     pixel_left: f32,
     pixel_top: f32,
-    pixel_right: f32,
-    pixel_bottom: f32,
 ) -> Sprite {
+    let pixel_right = pixel_left + sprite_w;
+    let pixel_bottom = pixel_top + sprite_h;
+
     // Texture coordinates are expressed as fractions of the position on the image.
     let left = pixel_left / image_w;
-    let top = pixel_top / image_h;
     let right = pixel_right / image_w;
-    let bottom = pixel_bottom / image_h;
+    let top = 1.0 - pixel_top / image_h;
+    let bottom = 1.0 - pixel_bottom / image_h;
 
-    Sprite {
+    let tex_coords = TextureCoordinates {
         left,
-        top,
         right,
         bottom,
+        top,
+    };
+
+    Sprite {
+        width: sprite_w,
+        height: sprite_h,
+        offsets: [sprite_w / 2.0, sprite_h / 2.0],
+        tex_coords,
     }
 }

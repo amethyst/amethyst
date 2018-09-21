@@ -1,16 +1,15 @@
-use {
-    Anchor, FontAsset, FontHandle, MouseReactive, OnUiActionImage, OnUiActionSound, Stretch,
-    TtfFormat, UiButton, UiImage, UiText, UiTransform,
-};
-
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_audio::SourceHandle;
 use amethyst_core::specs::prelude::{Entities, Entity, Read, ReadExpect, World, WriteStorage};
 use amethyst_core::Parent;
 use amethyst_renderer::{Texture, TextureHandle};
 use shred::SystemData;
+use {
+    Anchor, FontAsset, FontHandle, MouseReactive, OnUiActionImage, OnUiActionSound, Stretch,
+    TtfFormat, UiButton, UiImage, UiText, UiTransform,
+};
 
-const DEFAULT_Z: f32 = -1.0;
+const DEFAULT_Z: f32 = 1.0;
 const DEFAULT_WIDTH: f32 = 128.0;
 const DEFAULT_HEIGHT: f32 = 64.0;
 const DEFAULT_TAB_ORDER: i32 = 9;
@@ -227,7 +226,7 @@ impl UiButtonBuilder {
         self
     }
 
-    /// Build this with the `UiButtonBuilderResources`.    
+    /// Build this with the `UiButtonBuilderResources`.
     pub fn build(mut self, mut res: UiButtonBuilderResources) -> Entity {
         // unwraps are safe because we create the entities inside
         let mut id = self.name.clone();
@@ -274,7 +273,7 @@ impl UiButtonBuilder {
         res.transform
             .insert(
                 text_entity,
-                UiTransform::new(id, Anchor::Middle, 0., 0., -0.01, 0., 0., 10)
+                UiTransform::new(id, Anchor::Middle, 0., 0., 0.01, 0., 0., 10)
                     .as_transparent()
                     .with_stretch(Stretch::XY {
                         x_margin: 0.,
