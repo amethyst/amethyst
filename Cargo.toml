@@ -177,5 +177,9 @@ path = "examples/arc_ball_camera/main.rs"
 name = "prefab"
 path = "examples/prefab/main.rs"
 
+[[example]]
+name = "debug_lines"
+path = "examples/debug_lines/main.rs"
+
 [workspace]
 members = ["amethyst_gltf"]
