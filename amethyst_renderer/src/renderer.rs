@@ -18,6 +18,7 @@ pub struct Renderer {
     device: Device,
     encoder: Encoder,
     main_target: Target,
+    xr_targets: Vec<Target>,
     window: Window,
     events: EventsLoop,
     multisampling: u16,
@@ -67,11 +68,10 @@ impl Renderer {
     }
 
     /// Draws a scene with the given pipeline.
-    pub fn draw<'a, P>(&mut self, pipe: &mut P, data: <P as PipelineData<'a>>::Data)
+    pub fn draw_to_window<'a, P>(&mut self, pipe: &mut P, data: <P as PipelineData<'a>>::Data)
     where
         P: PolyPipeline,
     {
-        use gfx::Device;
         #[cfg(feature = "opengl")]
         use glutin::dpi::PhysicalSize;
         #[cfg(feature = "opengl")]
@@ -89,14 +89,42 @@ impl Renderer {
             }
         }
 
+        pipe.update_target("", self.main_target.clone());
         pipe.apply(&mut self.encoder, self.factory.clone(), data);
+    }
+
+    ///
+    pub fn draw_to_xr_target<'a, P>(
+        &mut self,
+        target: usize,
+        pipe: &mut P,
+        data: <P as PipelineData<'a>>::Data
+    ) where
+        P: PolyPipeline,
+    {
+        let target = &self.xr_targets[target];
+        pipe.update_target("", target.clone());
+        pipe.apply(&mut self.encoder, self.factory.clone(), data);
+    }
+
+    ///
+    pub fn flush(&mut self) {
+        use gfx::Device;
+        #[cfg(feature = "opengl")]
+        use glutin::GlContext;
+
         self.encoder.flush(&mut self.device);
         self.device.cleanup();
 
         #[cfg(feature = "opengl")]
-        self.window
+            self.window
             .swap_buffers()
             .expect("OpenGL context has been lost");
+    }
+
+    ///
+    pub fn xr_targets(&self) -> usize {
+        self.xr_targets.len()
     }
 
     /// Retrieve a mutable borrow of the events loop
@@ -118,6 +146,13 @@ impl Renderer {
             targets.insert(key, target);
         }
         pipe.new_targets(targets);
+    }
+
+    ///
+    pub fn init_xr_targets(&mut self, targets: Vec<(u32, u32)>) {
+        self.xr_targets = targets.iter().map(|size| {
+            TargetBuilder::new("").with_depth_buf(true).build(&mut self.factory, *size).unwrap().1
+        }).collect();
     }
 
     /// Retrieves an immutable borrow of the window.
@@ -152,6 +187,7 @@ pub struct RendererBuilder {
     config: DisplayConfig,
     events: EventsLoop,
     winit_builder: WindowBuilder,
+    xr_targets: Vec<(u32, u32)>,
 }
 
 impl RendererBuilder {
@@ -161,6 +197,7 @@ impl RendererBuilder {
             config: DisplayConfig::default(),
             events: el,
             winit_builder: WindowBuilder::new().with_title("Amethyst"),
+            xr_targets: Vec::new(),
         }
     }
 
@@ -218,6 +255,7 @@ impl RendererBuilder {
             encoder,
             factory,
             main_target,
+            xr_targets: Vec::new(),
             window,
             events: self.events,
             multisampling: self.config.multisampling,

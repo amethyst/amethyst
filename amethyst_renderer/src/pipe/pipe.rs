@@ -125,6 +125,9 @@ pub trait PolyPipeline: for<'a> PipelineData<'a> {
     /// Resizes the pipeline targets
     fn new_targets(&mut self, new_targets: HashMap<String, Target>);
 
+    ///
+    fn update_target(&mut self, name: &str, target: Target);
+
     /// Returns an immutable reference to all targets and their name strings.
     fn targets(&self) -> &HashMap<String, Target>;
 }
@@ -152,6 +155,10 @@ where
     fn new_targets(&mut self, new_targets: HashMap<String, Target>) {
         self.stages.new_targets(&new_targets);
         self.targets = new_targets;
+    }
+
+    fn update_target(&mut self, name: &str, target: Target) {
+        self.targets.insert(String::from(name), target);
     }
 
     /// Returns an immutable reference to all targets and their name strings.

@@ -19,6 +19,7 @@ use tex::Texture;
 use types::{Encoder, Factory};
 use vertex::{Position, Query, TexCoord};
 use visibility::Visibility;
+use xr::XRRenderInfo;
 
 /// Draw mesh without lighting
 ///
@@ -71,6 +72,7 @@ where
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
+        Option<Read<'a, XRRenderInfo>>,
     );
 }
 
@@ -110,9 +112,11 @@ where
             mesh,
             material,
             global,
+            xr_info,
         ): <Self as PassData<'a>>::Data,
     ) {
         let camera = get_camera(active, &camera, &global);
+        let xr_camera = xr_info.as_ref().and_then(|i| i.camera_reference());
 
         match visibility {
             None => for (mesh, material, global) in (&mesh, &material, &global).join() {
@@ -129,6 +133,7 @@ where
                     Some(global),
                     &[V::QUERIED_ATTRIBUTES],
                     &TEXTURES,
+                    &xr_camera,
                 );
             },
             Some(ref visibility) => {
@@ -148,6 +153,7 @@ where
                         Some(global),
                         &[V::QUERIED_ATTRIBUTES],
                         &TEXTURES,
+                        &xr_camera,
                     );
                 }
 
@@ -166,6 +172,7 @@ where
                             global.get(*entity),
                             &[V::QUERIED_ATTRIBUTES],
                             &TEXTURES,
+                            &xr_camera,
                         );
                     }
                 }

@@ -20,6 +20,7 @@ use tex::Texture;
 use types::{Encoder, Factory};
 use vertex::{Attributes, Position, Separate, TexCoord, VertexFormat};
 use visibility::Visibility;
+use xr::XRRenderInfo;
 
 static ATTRIBUTES: [Attributes<'static>; 2] = [
     Separate::<Position>::ATTRIBUTES,
@@ -80,6 +81,7 @@ impl<'a> PassData<'a> for DrawFlatSeparate {
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
         ReadStorage<'a, JointTransforms>,
+        Option<Read<'a, XRRenderInfo>>,
     );
 }
 
@@ -133,9 +135,11 @@ impl Pass for DrawFlatSeparate {
             material,
             global,
             joints,
+            xr_info,
         ): <Self as PassData<'a>>::Data,
     ) {
         let camera = get_camera(active, &camera, &global);
+        let xr_camera = xr_info.as_ref().and_then(|i| i.camera_reference());
 
         match visibility {
             None => for (joint, mesh, material, global) in
@@ -154,6 +158,7 @@ impl Pass for DrawFlatSeparate {
                     Some(global),
                     &ATTRIBUTES,
                     &TEXTURES,
+                    &xr_camera,
                 );
             },
             Some(ref visibility) => {
@@ -179,6 +184,7 @@ impl Pass for DrawFlatSeparate {
                         Some(global),
                         &ATTRIBUTES,
                         &TEXTURES,
+                        &xr_camera,
                     );
                 }
 
@@ -197,6 +203,7 @@ impl Pass for DrawFlatSeparate {
                             global.get(*entity),
                             &ATTRIBUTES,
                             &TEXTURES,
+                            &xr_camera,
                         );
                     }
                 }

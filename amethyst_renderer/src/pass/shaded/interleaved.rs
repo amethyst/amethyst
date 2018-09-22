@@ -21,6 +21,7 @@ use tex::Texture;
 use types::{Encoder, Factory};
 use vertex::{Normal, Position, Query, TexCoord};
 use visibility::Visibility;
+use xr::XRRenderInfo;
 
 /// Draw mesh with simple lighting technique
 ///
@@ -74,6 +75,7 @@ where
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
         ReadStorage<'a, Light>,
+        Option<Read<'a, XRRenderInfo>>,
     );
 }
 
@@ -111,9 +113,11 @@ where
             material,
             global,
             light,
+            xr_info,
         ): <Self as PassData<'a>>::Data,
     ) {
         let camera = get_camera(active, &camera, &global);
+        let xr_camera = xr_info.as_ref().and_then(|i| i.camera_reference());
 
         set_light_args(effect, encoder, &light, &global, &ambient, camera);
 
@@ -132,6 +136,7 @@ where
                     Some(global),
                     &[V::QUERIED_ATTRIBUTES],
                     &TEXTURES,
+                    &xr_camera,
                 );
             },
             Some(ref visibility) => {
@@ -151,6 +156,7 @@ where
                         Some(global),
                         &[V::QUERIED_ATTRIBUTES],
                         &TEXTURES,
+                        &xr_camera,
                     );
                 }
 
@@ -169,6 +175,7 @@ where
                             global.get(*entity),
                             &[V::QUERIED_ATTRIBUTES],
                             &TEXTURES,
+                            &xr_camera,
                         );
                     }
                 }

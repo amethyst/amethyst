@@ -128,15 +128,6 @@ where
         }
         screen_dimensions.update_hidpi_factor(self.renderer.window().get_hidpi_factor());
     }
-
-    fn render(&mut self, (mut event_handler, data): RenderData<P>) {
-        self.renderer.draw(&mut self.pipe, data);
-        let events = &mut self.event_vec;
-        self.renderer.events_mut().poll_events(|new_event| {
-            compress_events(events, new_event);
-        });
-        event_handler.iter_write(events.drain(..));
-    }
 }
 
 type AssetLoadingData<'a> = (
@@ -149,10 +140,7 @@ type AssetLoadingData<'a> = (
 
 type WindowData<'a> = (Write<'a, WindowMessages>, WriteExpect<'a, ScreenDimensions>);
 
-type RenderData<'a, P> = (
-    Write<'a, EventChannel<Event>>,
-    <P as PipelineData<'a>>::Data,
-);
+type RenderData<'a, P> = <P as PipelineData<'a>>::Data;
 
 impl<'a, P> RunNow<'a> for RenderSystem<P>
 where
@@ -163,7 +151,20 @@ where
         profile_scope!("render_system");
         self.asset_loading(AssetLoadingData::fetch(res));
         self.window_management(WindowData::fetch(res));
-        self.render(RenderData::<P>::fetch(res));
+
+//        if let Some(xr_info) = res.fetch::<>
+        for target in 0..self.renderer.xr_targets() {
+
+            self.renderer.draw_to_xr_target(target, &mut self.pipe, RenderData::<P>::fetch(res));
+        }
+        self.renderer.draw_to_window(&mut self.pipe, RenderData::<P>::fetch(res));
+        self.renderer.flush();
+
+        let events = &mut self.event_vec;
+        self.renderer.events_mut().poll_events(|new_event| {
+            compress_events(events, new_event);
+        });
+        res.fetch_mut::<EventChannel<Event>>().iter_write(events.drain(..));
     }
 
     fn setup(&mut self, res: &mut Resources) {

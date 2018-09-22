@@ -14,6 +14,7 @@ use skinning::JointTransforms;
 use tex::Texture;
 use types::Encoder;
 use vertex::Attributes;
+use xr::XRCameraReference;
 
 pub(crate) enum TextureType {
     Albedo,
@@ -239,17 +240,21 @@ pub fn set_vertex_args(
     effect: &mut Effect,
     encoder: &mut Encoder,
     camera: Option<(&Camera, &GlobalTransform)>,
+    xr_camera: &Option<XRCameraReference>,
     global: &GlobalTransform,
 ) {
+    let one = Matrix4::one();
     let vertex_args = camera
         .as_ref()
         .map(|&(ref cam, ref transform)| VertexArgs {
-            proj: cam.proj.into(),
-            view: transform.0.invert().unwrap().into(),
+            proj: xr_camera.as_ref().map(|c| c.projection.clone().into()).unwrap_or_else(|| cam.proj.into()),
+            view: (transform.0.invert().unwrap() * xr_camera.as_ref().map(|c| c.view_offset)
+                .unwrap_or_else(|| &one)).into(),
             model: global.0.into(),
-        }).unwrap_or_else(|| VertexArgs {
-            proj: Matrix4::one().into(),
-            view: Matrix4::one().into(),
+        })
+        .unwrap_or_else(|| VertexArgs {
+            proj: one.into(),
+            view: one.into(),
             model: global.0.into(),
         });
     effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
@@ -285,6 +290,7 @@ pub(crate) fn draw_mesh(
     global: Option<&GlobalTransform>,
     attributes: &[Attributes<'static>],
     textures: &[TextureType],
+    xr_camera: &Option<XRCameraReference>,
 ) {
     let mesh = match mesh {
         Some(mesh) => mesh,
@@ -301,7 +307,7 @@ pub(crate) fn draw_mesh(
         return;
     }
 
-    set_vertex_args(effect, encoder, camera, global.unwrap());
+    set_vertex_args(effect, encoder, camera, xr_camera, global.unwrap());
 
     if skinning {
         if let Some(joint) = joint {

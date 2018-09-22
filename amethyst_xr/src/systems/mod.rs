@@ -1,45 +1,38 @@
-use amethyst_assets::{AssetStorage, Loader};
+use std::sync::Mutex;
+
 use amethyst_core::components::Transform;
 use amethyst_core::frame_limiter::FrameLimiter;
 use amethyst_core::shrev::EventChannel;
 use amethyst_core::specs::prelude::*;
-use amethyst_renderer::{Mesh, MeshData, Texture};
 
 use components::TrackingDevice;
-use {TrackerModelLoadStatus, XRBackend};
+use {XRBackend, XRInfo};
 
 pub struct XRSystem {
-    pub(crate) backend: Box<dyn XRBackend>,
+    pub(crate) backend: Option<Box<dyn XRBackend>>,
 }
 
 impl<'a> System<'a> for XRSystem {
     type SystemData = (
+        WriteExpect<'a, XRInfo>,
         Write<'a, EventChannel<::XREvent>>,
         WriteStorage<'a, TrackingDevice>,
         WriteStorage<'a, Transform>,
-        ReadExpect<'a, Loader>,
-        Read<'a, AssetStorage<Mesh>>,
-        Read<'a, AssetStorage<Texture>>,
     );
 
-    fn run(
-        &mut self,
-        (mut events, mut trackers, mut transforms, loader, meshes, textures): Self::SystemData,
-    ) {
-        self.backend.wait();
+    fn run(&mut self, (mut info, mut events, mut trackers, mut transforms): Self::SystemData) {
+        let mut backend = info.backend();
 
-        if let Some(new_trackers) = self.backend.get_new_trackers() {
-            events.iter_write(new_trackers.iter().map(|id| {
-                let capabilities = self.backend.get_tracker_capabilities(*id);
+        backend.wait();
 
-                let mut tracker = TrackingDevice::new(*id, capabilities.render_model_components);
-                tracker.is_camera = capabilities.is_camera;
-
+        if let Some(new_trackers) = backend.get_new_trackers() {
+            events.iter_write(new_trackers.into_iter().map(|(id, capabilities)| {
+                let mut tracker = TrackingDevice::new(id, capabilities);
                 ::XREvent::TrackerAdded(tracker)
             }));
         }
 
-        if let Some(removed_trackers) = self.backend.get_removed_trackers() {
+        if let Some(removed_trackers) = backend.get_removed_trackers() {
             events.iter_write(
                 removed_trackers
                     .iter()
@@ -49,48 +42,10 @@ impl<'a> System<'a> for XRSystem {
 
         for (tracker, transform) in (&mut trackers, &mut transforms).join() {
             // Set position and rotation
-            let tracker_position_data = self.backend.get_tracker_position(tracker.id());
+            let tracker_position_data = backend.get_tracker_position(tracker.id());
 
             transform.translation = tracker_position_data.position;
             transform.rotation = tracker_position_data.rotation;
-
-            // Update render model if requested
-            if tracker.render_model_enabled && !tracker.models_loaded() {
-                if let TrackerModelLoadStatus::Available(models) =
-                    self.backend.get_tracker_models(tracker.id())
-                {
-                    for (i, model_info) in models.into_iter().enumerate() {
-                        let vertices = MeshData::PosNormTangTex(
-                            model_info
-                                .indices
-                                .iter()
-                                .map(|i| model_info.vertices[*i as usize].clone())
-                                .collect(),
-                        );
-
-                        let mesh = loader.load_from_data(vertices, (), &meshes);
-
-                        let texture = if let Some(texture) = model_info.texture {
-                            Some(loader.load_from_data(texture, (), &textures))
-                        } else {
-                            None
-                        };
-
-                        let tracker_id = tracker.id();
-
-                        tracker.component_models.push((
-                            model_info
-                                .component_name
-                                .unwrap_or_else(|| String::from("unkown-tracker-component"))
-                                + &format!("-{}-{}", tracker_id, i),
-                            mesh,
-                            texture,
-                        ));
-                    }
-
-                    events.single_write(::XREvent::TrackerModelLoaded(tracker.id()));
-                }
-            }
         }
     }
 
@@ -102,5 +57,13 @@ impl<'a> System<'a> for XRSystem {
         }
 
         res.insert(EventChannel::<::XREvent>::new());
+
+        let targets = self.backend.as_mut().unwrap().get_gl_target_info(0.1, 1000.0);
+        res.insert(XRInfo {
+            targets,
+
+            defined_area: vec![],
+            backend: Mutex::new(self.backend.take().unwrap()),
+        });
     }
 }

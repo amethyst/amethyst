@@ -1,24 +1,22 @@
 extern crate amethyst_assets;
 extern crate amethyst_core;
-extern crate amethyst_renderer;
 
 pub mod components;
 mod systems;
 
 use std::collections::BTreeMap;
+use std::sync::{Mutex, MutexGuard};
 
 use amethyst_core::bundle::{Result, SystemBundle};
-use amethyst_core::cgmath::{Quaternion, Vector3};
+use amethyst_core::cgmath::{Quaternion, Vector3, Matrix4};
 use amethyst_core::specs::prelude::DispatcherBuilder;
 
 use amethyst_assets::Loader;
 
-use amethyst_renderer::{PosNormTangTex, TextureData};
-
 pub trait XRBackend: Send {
     fn wait(&mut self);
 
-    fn get_new_trackers(&mut self) -> Option<Vec<u32>>;
+    fn get_new_trackers(&mut self) -> Option<Vec<(u32, TrackerCapabilities)>>;
     fn get_removed_trackers(&mut self) -> Option<Vec<u32>>;
 
     fn get_tracker_position(&mut self, index: u32) -> TrackerPositionData;
@@ -28,14 +26,14 @@ pub trait XRBackend: Send {
 
     fn get_tracker_models(&mut self, index: u32) -> TrackerModelLoadStatus;
 
-    fn get_tracker_capabilities(&mut self, index: u32) -> TrackerCapabilities;
+    fn get_gl_target_info(&mut self, near: f32, far: f32) -> Vec<(Matrix4<f32>, (u32, u32))>;
+    fn submit_gl_target(&mut self, target_index: usize, gl_target: usize);
 }
 
 pub enum XREvent {
     AreaChanged,
     TrackerAdded(components::TrackingDevice),
     TrackerRemoved(u32),
-    TrackerModelLoaded(u32),
 }
 
 #[derive(Debug)]
@@ -47,7 +45,7 @@ pub struct TrackerPositionData {
     pub valid: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TrackerCapabilities {
     pub render_model_components: u32,
     pub is_camera: bool,
@@ -63,9 +61,28 @@ pub enum TrackerModelLoadStatus {
 #[derive(Debug)]
 pub struct TrackerComponentModelInfo {
     pub component_name: Option<String>,
-    pub vertices: Vec<PosNormTangTex>,
+    pub vertices: Vec<TrackerComponentVertex>,
     pub indices: Vec<u16>,
-    pub texture: Option<TextureData>,
+    pub texture: Option<TrackerComponentTextureData>,
+}
+
+#[derive(Debug, Clone)]
+pub struct TrackerComponentVertex {
+    pub position: [f32; 3],
+    pub normal: [f32; 3],
+    pub tangent: [f32; 3],
+    pub tex_coord: [f32; 2],
+}
+
+/// Assumed RGBA8 for now
+#[derive(Debug)]
+pub struct TrackerComponentTextureData {
+    pub data: Vec<u8>,
+    pub size: (u16, u16),
+}
+
+pub struct TrackerModelComponentTexture {
+
 }
 
 pub struct XRBundle<'a> {
@@ -91,7 +108,7 @@ impl<'a, 'b, 'c> SystemBundle<'a, 'b> for XRBundle<'c> {
     fn build(self, dispatcher: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
         dispatcher.add(
             systems::XRSystem {
-                backend: self.backend,
+                backend: Some(self.backend),
             },
             "xr_system",
             self.dep,
@@ -102,5 +119,14 @@ impl<'a, 'b, 'c> SystemBundle<'a, 'b> for XRBundle<'c> {
 }
 
 pub struct XRInfo {
-    pub defined_area: Vec<[f32; 3]>,
+    targets: Vec<(Matrix4<f32>, (u32, u32))>,
+
+    defined_area: Vec<[f32; 3]>,
+    backend: Mutex<Box<dyn XRBackend>>,
+}
+
+impl XRInfo {
+    pub fn backend(&mut self) -> MutexGuard<Box<dyn XRBackend>> {
+        self.backend.lock().unwrap()
+    }
 }

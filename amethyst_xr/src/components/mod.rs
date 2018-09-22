@@ -1,9 +1,7 @@
 use amethyst_core::specs::storage::HashMapStorage;
 use amethyst_core::specs::Component;
 
-use amethyst_renderer::{Mesh, MeshHandle, TextureHandle};
-
-pub type ComponentModel = (String, MeshHandle, Option<TextureHandle>);
+use TrackerCapabilities;
 
 #[derive(Clone)]
 pub struct TrackingDevice {
@@ -12,33 +10,19 @@ pub struct TrackingDevice {
     tracking: bool,
     available: bool,
 
-    pub(crate) component_models: Vec<ComponentModel>,
-
-    pub(crate) is_camera: bool,
-
-    pub(crate) available_render_models: u32,
-    pub(crate) render_model_enabled: bool,
+    capabilities: TrackerCapabilities,
 }
 
 impl TrackingDevice {
-    pub(crate) fn new(id: u32, available_render_models: u32) -> TrackingDevice {
+    pub(crate) fn new(id: u32, capabilities: TrackerCapabilities) -> TrackingDevice {
         TrackingDevice {
             id,
             tracking: false,
             available: false,
             haptic_duration: None,
 
-            component_models: Vec::new(),
-
-            is_camera: false,
-
-            available_render_models,
-            render_model_enabled: false,
+            capabilities,
         }
-    }
-
-    pub fn component_models(&self) -> &[ComponentModel] {
-        self.component_models.as_slice()
     }
 
     pub(crate) fn set_tracking(&mut self, tracking: bool) {
@@ -53,22 +37,6 @@ impl TrackingDevice {
         return self.id;
     }
 
-    pub fn has_models(&self) -> bool {
-        self.available_render_models > 0
-    }
-
-    pub fn models_loaded(&self) -> bool {
-        self.component_models.len() > 0
-    }
-
-    pub fn set_render_model_enabled(&mut self, enabled: bool) {
-        self.render_model_enabled = enabled;
-    }
-
-    pub fn render_model_enabled(&self) -> bool {
-        self.render_model_enabled
-    }
-
     pub fn tracking(&self) -> bool {
         self.tracking
     }
@@ -81,8 +49,8 @@ impl TrackingDevice {
         self.haptic_duration = Some(duration);
     }
 
-    pub fn is_camera(&self) -> bool {
-        self.is_camera
+    pub fn capabilities(&self) -> &TrackerCapabilities {
+        &self.capabilities
     }
 }
 

@@ -22,6 +22,7 @@ use tex::Texture;
 use types::{Encoder, Factory};
 use vertex::{Attributes, Normal, Position, Separate, TexCoord, VertexFormat};
 use visibility::Visibility;
+use xr::XRRenderInfo;
 
 static ATTRIBUTES: [Attributes<'static>; 3] = [
     Separate::<Position>::ATTRIBUTES,
@@ -77,6 +78,7 @@ impl<'a> PassData<'a> for DrawShadedSeparate {
         ReadStorage<'a, GlobalTransform>,
         ReadStorage<'a, Light>,
         ReadStorage<'a, JointTransforms>,
+        Option<Read<'a, XRRenderInfo>>,
     );
 }
 
@@ -134,10 +136,12 @@ impl Pass for DrawShadedSeparate {
             global,
             light,
             joints,
+            xr_info,
         ): <Self as PassData<'a>>::Data,
     ) {
         trace!("Drawing shaded pass");
         let camera = get_camera(active, &camera, &global);
+        let xr_camera = xr_info.as_ref().and_then(|i| i.camera_reference());
 
         set_light_args(effect, encoder, &light, &global, &ambient, camera);
 
@@ -158,6 +162,7 @@ impl Pass for DrawShadedSeparate {
                     Some(global),
                     &ATTRIBUTES,
                     &TEXTURES,
+                    &xr_camera,
                 );
             },
             Some(ref visibility) => {
@@ -183,6 +188,7 @@ impl Pass for DrawShadedSeparate {
                         Some(global),
                         &ATTRIBUTES,
                         &TEXTURES,
+                        &xr_camera,
                     );
                 }
 
@@ -201,6 +207,7 @@ impl Pass for DrawShadedSeparate {
                             global.get(*entity),
                             &ATTRIBUTES,
                             &TEXTURES,
+                            &xr_camera,
                         );
                     }
                 }
