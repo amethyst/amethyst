@@ -267,6 +267,9 @@ impl Pass for DrawUi {
                     None
                 };
                 let rendered_string = password_string.as_ref().unwrap_or(&ui_text.text);
+                let hidpi = screen_dimensions.hidpi_factor() as f32;
+                let size = ui_text.font_size * hidpi;
+                let scale = Scale::uniform(size);
                 let text = editing
                     .and_then(|editing| {
                         if editing.highlight_vector == 0 {
@@ -295,19 +298,19 @@ impl Pass for DrawUi {
                         vec![
                             SectionText {
                                 text: &((rendered_string)[0..start_byte]),
-                                scale: Scale::uniform(ui_text.font_size),
+                                scale: scale,
                                 color: ui_text.color,
                                 font_id: FontId(0),
                             },
                             SectionText {
                                 text: &((rendered_string)[start_byte..end_byte]),
-                                scale: Scale::uniform(ui_text.font_size),
+                                scale: scale,
                                 color: editing.selected_text_color,
                                 font_id: FontId(0),
                             },
                             SectionText {
                                 text: &((rendered_string)[end_byte..]),
-                                scale: Scale::uniform(ui_text.font_size),
+                                scale: scale,
                                 color: ui_text.color,
                                 font_id: FontId(0),
                             },
@@ -315,7 +318,7 @@ impl Pass for DrawUi {
                     })
                     .unwrap_or(vec![SectionText {
                         text: rendered_string,
-                        scale: Scale::uniform(ui_text.font_size),
+                        scale: scale,
                         color: ui_text.color,
                         font_id: FontId(0),
                     }]);
@@ -331,9 +334,9 @@ impl Pass for DrawUi {
                     // Needs a recenter because we are using [-0.5,0.5] for the mesh
                     // instead of the expected [0,1]
                     screen_position: (
-                        ui_transform.pixel_x - ui_transform.pixel_width / 2.0,
+                        (ui_transform.pixel_x - ui_transform.pixel_width / 2.0) * hidpi,
                         // invert y because gfx-glyph inverts it back
-                        screen_dimensions.height() - ui_transform.pixel_y - ui_transform.pixel_height / 2.0,
+                        (screen_dimensions.height() - ui_transform.pixel_y - ui_transform.pixel_height / 2.0) * hidpi,
                     ),
                     bounds: (ui_transform.pixel_width, ui_transform.pixel_height),
                     // TODO
@@ -395,9 +398,11 @@ impl Pass for DrawUi {
                         .filter(|&(i, _g)| start <= i && i < end)
                         .map(|(_i, g)| g)
                     {
-                        let height = glyph.scale().y;
-                        let width = glyph.unpositioned().h_metrics().advance_width;
-                        let pos = glyph.position();
+                        let height = glyph.scale().y / hidpi;
+                        let width = glyph.unpositioned().h_metrics().advance_width / hidpi;
+                        let mut pos = glyph.position();
+                        pos.x /= hidpi;
+                        pos.y /= hidpi;
                         let vertex_args = VertexArgs {
                             invert_window_size: invert_window_size.into(),
                             // gfx-glyph uses y down so we need to convert to y up
@@ -479,24 +484,23 @@ impl Pass for DrawUi {
                             }
                             
                             let pos = glyph.map(|g| g.position()).unwrap_or(Point {
-                                x: ui_transform.pixel_x,
+                                x: ui_transform.pixel_x - ui_transform.width / 2.,
                                 // gfx-glyph uses y down so we need to convert to y up
-                                y: ui_transform.pixel_y,
+                                y: screen_dimensions.height() - ui_transform.pixel_y + ascent / 2.0,
                             });
-                            let mut x = pos.x;
+                            let mut x = pos.x / hidpi;
                             if let Some(glyph) = glyph {
                                 if at_end {
-                                    x += glyph.unpositioned().h_metrics().advance_width;
+                                    x += glyph.unpositioned().h_metrics().advance_width / hidpi;
                                 }
                             }
-                            let mut y = pos.y;
+                            let mut y = pos.y / hidpi;
                             if editing.use_block_cursor && !blink_on {
                                 y -= ui_text.font_size * 0.9;
                             }
                             let vertex_args = VertexArgs {
                                 invert_window_size: invert_window_size.into(),
-                                //coord: [x, y].into(),
-                                coord: [x + width / 2.0, screen_dimensions.height() - y + ascent / 2.0].into(),
+                                coord: [x, screen_dimensions.height() - y + ascent / 2.0].into(),
                                 dimension: [width, height].into(),
                             };
                             effect.update_constant_buffer(
