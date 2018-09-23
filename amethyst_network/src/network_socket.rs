@@ -1,11 +1,7 @@
 //! The network send and receive System
 
-use super::{deserialize_event, send_event, ConnectionState, NetConnection, NetEvent, NetFilter};
-use mio::{Events, Poll, PollOpt, Ready, Token};
-//use mio::net::UdpSocket;
-use amethyst_core::specs::{
-    Entities, Entity, Join, Read, ReadStorage, Resources, System, SystemData, Write, WriteStorage,
-};
+use super::{deserialize_event, send_event, ConnectionState, NetConnection, NetEvent};
+use amethyst_core::specs::{Entities, Entity, Join, Resources, System, SystemData, WriteStorage};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use shrev::*;
@@ -17,13 +13,9 @@ use std::net::SocketAddr;
 use std::net::UdpSocket;
 use std::str;
 use std::str::FromStr;
-use std::time::Duration;
-use uuid::Uuid;
 
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
-
-const SOCKET: Token = Token(0);
 
 enum InternalSocketEvent<E> {
     SendEvents {
@@ -99,7 +91,7 @@ where
             //rx1,tx2
             let send_queue = rx1;
             let receive_queue = tx2;
-            let mut socket = socket;
+            let socket = socket;
             'outer: loop {
                 // send
                 for control_event in send_queue.try_iter() {
@@ -124,8 +116,7 @@ where
                                     byte_count: amt,
                                     data: buf[..amt].iter().cloned().collect(),
                                     source: src,
-                                })
-                                .unwrap();
+                                }).unwrap();
                         }
                         Err(e) => {
                             if e.kind() == ErrorKind::WouldBlock {
@@ -184,7 +175,10 @@ where
     fn run(&mut self, (entities, mut net_connections): Self::SystemData) {
         //self.socket.set_nonblocking(false).unwrap();
         for (entity, mut net_connection) in (&*entities, &mut net_connections).join() {
-            let mut reader = self.send_queues_readers
+            // TODO: find out why the read needs this
+
+            let mut _reader = self
+                .send_queues_readers
                 .entry(entity)
                 .or_insert(net_connection.send_buffer.register_reader());
             let target = net_connection.target.clone();
@@ -197,8 +191,7 @@ where
                     .send(InternalSocketEvent::SendEvents {
                         target,
                         events: net_connection.send_buffer_early_read().cloned().collect(),
-                    })
-                    .unwrap();
+                    }).unwrap();
                 /*let target = pool.connection_from_address(&ev.socket);
             if let Some(t) = target {
                 if t.state == ConnectionState::Connected || t.state == ConnectionState::Connecting {

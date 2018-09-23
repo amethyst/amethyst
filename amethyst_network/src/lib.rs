@@ -18,7 +18,6 @@ extern crate uuid;
 
 mod bundle;
 mod connection;
-mod connection_manager;
 mod filter;
 mod net_event;
 mod network_socket;
@@ -27,7 +26,6 @@ mod utils;
 
 pub use bundle::NetworkBundle;
 pub use connection::{ConnectionState, NetConnection, NetIdentity};
-pub use connection_manager::ConnectionManagerSystem;
 pub use filter::{FilterConnected, NetFilter};
 pub use net_event::NetEvent;
 pub use network_socket::NetSocketSystem;

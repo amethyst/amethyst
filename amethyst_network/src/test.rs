@@ -1,10 +1,7 @@
 #[cfg(test)]
 mod test {
     use amethyst_core::shred::{DispatcherBuilder, SystemData};
-    use amethyst_core::specs::storage::UnprotectedStorage;
-    use amethyst_core::specs::{
-        Builder, Join, ReadStorage, RunNow, VecStorage, World, WriteStorage,
-    };
+    use amethyst_core::specs::{Builder, Join, World, WriteStorage};
     use fern::Dispatch;
     use log::LevelFilter;
     use std::io;
@@ -24,16 +21,14 @@ mod test {
                 NetSocketSystem::<()>::new("127.0.0.1", 21201).unwrap(),
                 "s",
                 &[],
-            )
-            .build();
+            ).build();
         cl_dispatch.setup(&mut world_cl.res);
         let mut sv_dispatch = DispatcherBuilder::new()
             .with(
                 NetSocketSystem::<()>::new("127.0.0.1", 21200).unwrap(),
                 "s",
                 &[],
-            )
-            .build();
+            ).build();
         sv_dispatch.setup(&mut world_sv.res);
 
         let mut conn_to_server = NetConnection::<()>::new(SocketAddr::new(
@@ -55,6 +50,8 @@ mod test {
         let mut rcv = conn_to_client.receive_buffer.register_reader();
         let conn_to_client_entity = world_sv.create_entity().with(conn_to_client).build();
 
+        sleep(Duration::from_millis(500));
+
         cl_dispatch.dispatch(&mut world_cl.res);
         sv_dispatch.dispatch(&mut world_sv.res);
 
@@ -75,8 +72,7 @@ mod test {
                     record.level(),
                     message
                 ))
-            })
-            .level(LevelFilter::Debug)
+            }).level(LevelFilter::Debug)
             .chain(io::stdout())
             .apply()
             .unwrap_or_else(|_| {
@@ -88,28 +84,26 @@ mod test {
 
         let mut cl_dispatch = DispatcherBuilder::new()
             .with(
-                NetSocketSystem::<()>::new("127.0.0.1", 21201).unwrap(),
+                NetSocketSystem::<()>::new("127.0.0.1", 21204).unwrap(),
                 "s",
                 &[],
-            )
-            .build();
+            ).build();
         cl_dispatch.setup(&mut world_cl.res);
         let mut sv_dispatch = DispatcherBuilder::new()
             .with(
-                NetSocketSystem::<()>::new("127.0.0.1", 21200).unwrap(),
+                NetSocketSystem::<()>::new("127.0.0.1", 21205).unwrap(),
                 "s",
                 &[],
-            )
-            .build();
+            ).build();
         sv_dispatch.setup(&mut world_sv.res);
 
-        let mut conn_to_server = NetConnection::<()>::new(SocketAddr::new(
+        let conn_to_server = NetConnection::<()>::new(SocketAddr::new(
             IpAddr::from_str("127.0.0.1").unwrap(),
-            21200,
+            21205,
         ));
         let mut conn_to_client = NetConnection::<()>::new(SocketAddr::new(
             IpAddr::from_str("127.0.0.1").unwrap(),
-            21201,
+            21204,
         ));
 
         let test_event = NetEvent::TextMessage {
@@ -123,22 +117,22 @@ mod test {
         let mut rcv = conn_to_client.receive_buffer.register_reader();
         let conn_to_client_entity = world_sv.create_entity().with(conn_to_client).build();
 
-        for i in 0..10 {
+        for _i in 0..10 {
             sleep(Duration::from_millis(50));
             {
                 let mut sto = WriteStorage::<NetConnection<()>>::fetch(&world_cl.res);
                 for mut cmp in (&mut sto).join() {
-                    for i in 0..10000 {
+                    for _i in 0..10000 {
                         cmp.send_buffer.single_write(test_event.clone());
                     }
                 }
             }
             cl_dispatch.dispatch(&mut world_cl.res);
-            sleep(Duration::from_millis(10));
+            sleep(Duration::from_millis(100));
             sv_dispatch.dispatch(&mut world_sv.res);
             let storage = world_sv.read_storage::<NetConnection<()>>();
             let comp = storage.get(conn_to_client_entity).unwrap();
-            assert_eq!(comp.receive_buffer.read(&mut rcv).count(), 10000);
+            assert_eq!(comp.receive_buffer.read(&mut rcv).count(), 10000); //10000);
         }
 
         /*let storage = world_sv.read_storage::<NetConnection<()>>();

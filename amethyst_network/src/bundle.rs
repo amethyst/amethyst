@@ -55,7 +55,7 @@ impl<'a, 'b, 'c, T> SystemBundle<'a, 'b> for NetworkBundle<'c, T>
 where
     T: Send + Sync + PartialEq + Serialize + Clone + DeserializeOwned + 'static,
 {
-    fn build(mut self, mut builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
         //let mut pool = NetConnectionPool::new();
         //world.add_resource(NetSendBuffer::<T>::new());
         //world.add_resource(NetReceiveBuffer::<T>::new());
@@ -69,7 +69,7 @@ where
             info!("Starting NetworkBundle using a random port.");
         }
 
-        let mut s = NetSocketSystem::<T>::new(self.ip, self.port.unwrap())
+        let s = NetSocketSystem::<T>::new(self.ip, self.port.unwrap())
             .expect("Failed to open network system.");
         /*if let Some(c) = self.connect_to {
             s.connect(c, &mut pool, uuid);

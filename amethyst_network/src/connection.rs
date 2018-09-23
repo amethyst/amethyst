@@ -14,13 +14,16 @@ pub struct NetConnection<E: 'static> {
     pub target: SocketAddr,
     /// The state of the connection.
     pub state: ConnectionState,
+    /// The buffer of events to be sent.
     pub send_buffer: EventChannel<NetEvent<E>>,
+    /// The buffer of events that have been received.
     pub receive_buffer: EventChannel<NetEvent<E>>,
     /// Private. Used by `NetSocketSystem` to be able to immediately send events upon receiving a new NetConnection.
     send_reader: ReaderId<NetEvent<E>>,
 }
 
 impl<E: Send + Sync + 'static> NetConnection<E> {
+    /// Construct a new NetConnection. `SocketAddr` is the address that will be connected to.
     pub fn new(target: SocketAddr) -> Self {
         let mut send_buffer = EventChannel::new();
         let send_reader = send_buffer.register_reader();

@@ -1,5 +1,5 @@
 //! The network filter base trait
-use super::{ConnectionState, NetEvent};
+use super::NetEvent;
 use std::marker::PhantomData;
 use std::net::SocketAddr;
 
@@ -24,23 +24,24 @@ impl<T> FilterConnected<T> {
     }
 }
 
-impl<T> FilterConnected<T> {
-    /// Hardcoded event bypass.
-    fn event_bypass(event: &NetEvent<T>) -> bool {
-        match event {
-            &NetEvent::Connect { client_uuid: _ } => true,
-            &NetEvent::Connected { server_uuid: _ } => true,
-            _ => false,
-        }
-    }
-}
+// impl<T> FilterConnected<T> {
+//     /// Hardcoded event bypass.
+//     fn event_bypass(event: &NetEvent<T>) -> bool {
+//         match event {
+//             &NetEvent::Connect { client_uuid: _ } => true,
+//             &NetEvent::Connected { server_uuid: _ } => true,
+//             _ => false,
+//         }
+//     }
+// }
 
 impl<T> NetFilter<T> for FilterConnected<T>
 where
     T: PartialEq + Send + Sync,
 {
     /// Checks if the event is from a connected client.
-    fn allow(&mut self, source: &SocketAddr, event: &NetEvent<T>) -> bool {
+    fn allow(&mut self, _source: &SocketAddr, _event: &NetEvent<T>) -> bool {
+        // TODO: finish this
         /*if let Some(ref conn) = pool.connection_from_address(source) {
             if conn.state == ConnectionState::Connected {
                 true

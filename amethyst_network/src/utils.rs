@@ -1,15 +1,11 @@
 extern crate bincode;
 
-use super::{NetConnection, NetEvent};
+use super::NetEvent;
 use bincode::internal::ErrorKind;
 use bincode::{deserialize, serialize, Infinite};
-//use mio::net::UdpSocket;
-use std::thread::sleep;
-use std::time::Duration;
 
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use std::clone::Clone;
 use std::net::SocketAddr;
 use std::net::UdpSocket;
 
@@ -24,7 +20,7 @@ where
         Ok(s) => {
             let slice = s.as_slice();
             match socket.send_to(slice, target) {
-                Ok(qty) => {}
+                Ok(_qty) => {}
                 Err(e) => error!("Failed to send data to network socket: {}", e),
             }
             //sleep(Duration::from_millis(1));
