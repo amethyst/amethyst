@@ -16,8 +16,6 @@ mod png_loader;
 mod sprite;
 mod sprite_sheet_loader;
 
-use std::time::Duration;
-
 use amethyst::animation::{
     get_animation_set, AnimationBundle, AnimationCommand, AnimationControl, ControlState,
     EndControl,
@@ -26,14 +24,16 @@ use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::cgmath::{Matrix4, Point3, Transform as CgTransform, Vector3};
 use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::ecs::prelude::Entity;
-use amethyst::input::{is_close_requested, is_key_down, InputBundle};
+use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{
-    Camera, ColorMask, DisplayConfig, DrawSprite, Event, MaterialTextureSet, Pipeline, Projection,
+    Camera, ColorMask, DisplayConfig, DrawSprite, MaterialTextureSet, Pipeline, Projection,
     RenderBundle, ScreenDimensions, SpriteRender, SpriteSheet, SpriteSheetHandle, SpriteSheetSet,
-    Stage, VirtualKeyCode, ALPHA,
+    Stage, ALPHA,
 };
 use amethyst::ui::UiBundle;
+use amethyst::utils::application_root_dir;
+use std::time::Duration;
 
 use sprite::SpriteSheetDefinition;
 
@@ -43,7 +43,7 @@ struct Example {
     entities: Vec<Entity>,
 }
 
-impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+impl<'a, 'b> SimpleState<'a, 'b> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
 
@@ -95,19 +95,6 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
             sprite_w,
             sprite_h,
         );
-    }
-
-    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else {
-            Trans::None
-        }
-    }
-
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
-        data.data.update(&data.world);
-        Trans::None
     }
 }
 
@@ -331,9 +318,11 @@ fn initialise_camera(world: &mut World) -> Entity {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
+    let app_root = application_root_dir();
+
     let display_config = DisplayConfig::load(format!(
         "{}/examples/sprites/resources/display_config.ron",
-        env!("CARGO_MANIFEST_DIR")
+        app_root
     ));
 
     let pipe = Pipeline::build().with_stage(
@@ -342,7 +331,7 @@ fn main() -> amethyst::Result<()> {
             .with_pass(DrawSprite::new().with_transparency(ColorMask::all(), ALPHA, None)),
     );
 
-    let assets_directory = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+    let assets_directory = format!("{}/examples/assets/", app_root);
 
     let game_data = GameDataBuilder::default()
         .with_bundle(AnimationBundle::<u32, SpriteRender>::new(

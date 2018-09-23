@@ -1,19 +1,17 @@
-use std::fmt::Debug;
-use std::result::Result as StdResult;
-
 use amethyst_assets::{
     Asset, AssetStorage, Error, Loader, PrefabData, PrefabError, ProcessingState, Result,
     ResultExt, SimpleFormat,
 };
 use amethyst_core::cgmath::{InnerSpace, Vector3};
-use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, VecStorage, WriteStorage};
+use amethyst_core::specs::prelude::{Component, Entity, Read, ReadExpect, VecStorage, WriteStorage};
+use mesh::{Mesh, MeshBuilder, MeshHandle};
+use std::fmt::Debug;
+use std::result::Result as StdResult;
+use vertex::*;
 use wavefront_obj::obj::{
     parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex, TextureIndex, Vertex,
     VertexIndex,
 };
-
-use mesh::{Mesh, MeshBuilder, MeshHandle};
-use vertex::*;
 use Renderer;
 
 /// Mesh data for loading
@@ -21,6 +19,9 @@ use Renderer;
 pub enum MeshData {
     /// Position and color
     PosColor(Vec<PosColor>),
+
+    /// Position, color and normal
+    PosColorNorm(Vec<PosColorNorm>),
 
     /// Position and texture coordinates
     PosTex(Vec<PosTex>),
@@ -36,9 +37,19 @@ pub enum MeshData {
     Creator(Box<MeshCreator>),
 }
 
+impl Component for MeshData {
+    type Storage = VecStorage<Self>;
+}
+
 impl From<Vec<PosColor>> for MeshData {
     fn from(data: Vec<PosColor>) -> Self {
         MeshData::PosColor(data)
+    }
+}
+
+impl From<Vec<PosColorNorm>> for MeshData {
+    fn from(data: Vec<PosColorNorm>) -> Self {
+        MeshData::PosColorNorm(data)
     }
 }
 
@@ -188,6 +199,10 @@ pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> Result<Proc
             let mb = MeshBuilder::new(vertices);
             renderer.create_mesh(mb)
         }
+        MeshData::PosColorNorm(ref vertices) => {
+            let mb = MeshBuilder::new(vertices);
+            renderer.create_mesh(mb)
+        }
         MeshData::PosTex(ref vertices) => {
             let mb = MeshBuilder::new(vertices);
             renderer.create_mesh(mb)
@@ -232,6 +247,9 @@ pub trait MeshCreator: Send + Sync + Debug + 'static {
     /// Build a mesh given a `Renderer`
     fn build(self: Box<Self>, renderer: &mut Renderer) -> ::error::Result<Mesh>;
 
+    /// Returns the vertices contained in the MeshCreator.
+    fn vertices(&self) -> &Vec<Separate<Position>>;
+
     /// Clone a boxed version of this object
     fn box_clone(&self) -> Box<MeshCreator>;
 }
@@ -258,6 +276,10 @@ impl ComboMeshCreator {
 impl MeshCreator for ComboMeshCreator {
     fn build(self: Box<Self>, renderer: &mut Renderer) -> ::error::Result<Mesh> {
         build_mesh_with_combo(self.combo, renderer)
+    }
+
+    fn vertices(&self) -> &Vec<Separate<Position>> {
+        &self.combo.0
     }
 
     fn box_clone(&self) -> Box<MeshCreator> {

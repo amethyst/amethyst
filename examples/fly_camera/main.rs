@@ -6,9 +6,10 @@ use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
 use amethyst::controls::FlyControlBundle;
 use amethyst::core::transform::TransformBundle;
 use amethyst::core::WithNamed;
-use amethyst::input::{is_close_requested, is_key_down, InputBundle};
+use amethyst::input::InputBundle;
 use amethyst::prelude::*;
-use amethyst::renderer::{DrawShaded, Event, PosNormTex, VirtualKeyCode};
+use amethyst::renderer::{DrawShaded, PosNormTex};
+use amethyst::utils::application_root_dir;
 use amethyst::utils::scene::BasicScenePrefab;
 use amethyst::Error;
 
@@ -16,7 +17,7 @@ type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 struct ExampleState;
 
-impl<'a, 'b> State<GameData<'a, 'b>> for ExampleState {
+impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
     fn on_start(&mut self, data: StateData<GameData>) {
         let prefab_handle = data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
             loader.load("prefab/fly_camera.ron", RonFormat, (), ())
@@ -27,35 +28,21 @@ impl<'a, 'b> State<GameData<'a, 'b>> for ExampleState {
             .with(prefab_handle)
             .build();
     }
-
-    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else {
-            Trans::None
-        }
-    }
-
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
-        data.data.update(&data.world);
-        Trans::None
-    }
 }
 
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
-    let resources_directory = format!("{}/examples/assets", env!("CARGO_MANIFEST_DIR"));
+    let app_root = application_root_dir();
+
+    let resources_directory = format!("{}/examples/assets", app_root);
 
     let display_config_path = format!(
         "{}/examples/fly_camera/resources/display_config.ron",
-        env!("CARGO_MANIFEST_DIR")
+        app_root
     );
 
-    let key_bindings_path = format!(
-        "{}/examples/fly_camera/resources/input.ron",
-        env!("CARGO_MANIFEST_DIR")
-    );
+    let key_bindings_path = format!("{}/examples/fly_camera/resources/input.ron", app_root);
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])

@@ -20,6 +20,7 @@ use amethyst::ecs::prelude::{Entity, ReadStorage, Write, WriteStorage};
 use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::*;
+use amethyst::utils::application_root_dir;
 use amethyst::utils::tag::{Tag, TagFinder};
 use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem};
 
@@ -94,7 +95,7 @@ impl<'a> PrefabData<'a> for ScenePrefabData {
     }
 }
 
-impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+impl<'a, 'b> SimpleState<'a, 'b> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
 
@@ -112,24 +113,32 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
         );
     }
 
-    fn handle_event(&mut self, data: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
+    fn handle_event(
+        &mut self,
+        data: StateData<GameData>,
+        event: StateEvent<()>,
+    ) -> SimpleTrans<'a, 'b> {
         let StateData { world, .. } = data;
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else if is_key_down(&event, VirtualKeyCode::Space) {
-            toggle_or_cycle_animation(
-                self.entity,
-                &mut world.write_resource(),
-                &world.read_storage(),
-                &mut world.write_storage(),
-            );
-            Trans::None
+        if let StateEvent::Window(event) = &event {
+            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                Trans::Quit
+            } else if is_key_down(&event, VirtualKeyCode::Space) {
+                toggle_or_cycle_animation(
+                    self.entity,
+                    &mut world.write_resource(),
+                    &world.read_storage(),
+                    &mut world.write_storage(),
+                );
+                Trans::None
+            } else {
+                Trans::None
+            }
         } else {
             Trans::None
         }
     }
 
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
         if !self.initialised {
             let remove = match self.progress.as_ref().map(|p| p.complete()) {
                 None | Some(Completion::Loading) => false,
@@ -170,7 +179,6 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
                 }
             }
         }
-        data.data.update(&data.world);
         Trans::None
     }
 }
@@ -211,12 +219,11 @@ fn toggle_or_cycle_animation(
 fn main() -> Result<(), amethyst::Error> {
     amethyst::start_logger(Default::default());
 
-    let path = format!(
-        "{}/examples/gltf/resources/display_config.ron",
-        env!("CARGO_MANIFEST_DIR")
-    );
+    let app_root = application_root_dir();
 
-    let resources_directory = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+    let path = format!("{}/examples/gltf/resources/display_config.ron", app_root);
+
+    let resources_directory = format!("{}/examples/assets/", app_root);
 
     let game_data = GameDataBuilder::default()
         .with(

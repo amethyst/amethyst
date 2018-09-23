@@ -4,9 +4,8 @@
 
 use amethyst_assets::{PrefabData, PrefabError};
 use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, Write, WriteStorage};
-use gfx;
-
 use color::Rgba;
+use gfx;
 use resources::AmbientColor;
 
 /// A light source.

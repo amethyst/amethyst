@@ -238,9 +238,9 @@ impl Transform {
     ///
     /// # Arguments
     ///
-    ///  - x - The angle to apply around the x axis. Also known at the pitch.
-    ///  - y - The angle to apply around the y axis. Also known at the yaw.
-    ///  - z - The angle to apply around the z axis. Also known at the roll.
+    ///  - x - The angle to apply around the x axis. Also known as the pitch.
+    ///  - y - The angle to apply around the y axis. Also known as the yaw.
+    ///  - z - The angle to apply around the z axis. Also known as the roll.
     pub fn set_rotation<A>(&mut self, x: A, y: A, z: A) -> &mut Self
     where
         A: Angle<Unitless = f32>,
@@ -274,6 +274,16 @@ impl Default for Transform {
 
 impl Component for Transform {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
+}
+
+/// Creates a Transform using the `Vector3` as the translation vector.
+impl From<Vector3<f32>> for Transform {
+    fn from(translation: Vector3<f32>) -> Self {
+        Transform {
+            translation,
+            ..Default::default()
+        }
+    }
 }
 
 impl CgTransform<Point3<f32>> for Transform {

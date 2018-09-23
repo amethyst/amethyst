@@ -2,8 +2,8 @@
 
 #![allow(missing_docs)]
 
-use std::mem;
-
+pub use self::pso::{Data, Init, Meta};
+use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
 use gfx::buffer::{Info as BufferInfo, Role as BufferRole};
 use gfx::memory::{Bind, Usage};
@@ -11,16 +11,12 @@ use gfx::preset::depth::{LESS_EQUAL_TEST, LESS_EQUAL_WRITE};
 use gfx::pso::buffer::{ElemStride, InstanceRate};
 use gfx::shade::core::UniformValue;
 use gfx::shade::{ProgramError, ToUniform};
-use gfx::state::{Blend, ColorMask, Comparison, Depth, MultiSample, Rasterizer, Stencil};
+use gfx::state::{Blend, ColorMask, Comparison, CullFace, Depth, MultiSample, Rasterizer, Stencil};
 use gfx::traits::Pod;
 use gfx::{Primitive, ShaderSet};
-
 use glsl_layout::Std140;
-
-pub use self::pso::{Data, Init, Meta};
-
-use error::{Error, Result};
 use pipe::Target;
+use std::mem;
 use types::{Encoder, Factory, PipelineState, Resources, Slice};
 use vertex::Attributes;
 
@@ -202,6 +198,12 @@ impl<'a> EffectBuilder<'a> {
             prog: src,
             const_bufs: Vec::new(),
         }
+    }
+
+    /// Disable back face culling
+    pub fn without_back_face_culling(&mut self) -> &mut Self {
+        self.rast.cull_face = CullFace::Nothing;
+        self
     }
 
     /// Adds a global constant to this `Effect`.

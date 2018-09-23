@@ -232,11 +232,3 @@ There is a function that acts as a shorthand for this:
 ```
 
 We will talk about what `SystemData` is in the system chapter.
-
-## More
-
-Because of an implementation detail, for the world to be updated you need to call `state_data.data.update(&state_data.world)` inside of the state update method.
-If you do not do this, the world will not update and the game will look like it froze.
-If you have a bug where nothing happens at all, this is the first thing you should check!
-
-*NOTE: This will no longer be necessary in future release 0.9 of Amethyst.*

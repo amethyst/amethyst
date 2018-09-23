@@ -1,27 +1,25 @@
 //! Rendering system.
 //!
 
-use std::mem;
-use std::sync::Arc;
-
 use amethyst_assets::{AssetStorage, HotReloadStrategy};
 use amethyst_core::shrev::EventChannel;
 use amethyst_core::specs::prelude::{
     Read, ReadExpect, Resources, RunNow, SystemData, Write, WriteExpect,
 };
 use amethyst_core::Time;
-use rayon::ThreadPool;
-use winit::{DeviceEvent, Event, WindowEvent};
-
 use config::DisplayConfig;
 use error::Result;
 use formats::{create_mesh_asset, create_texture_asset};
 use mesh::Mesh;
 use mtl::{Material, MaterialDefaults};
 use pipe::{PipelineBuild, PipelineData, PolyPipeline};
+use rayon::ThreadPool;
 use renderer::Renderer;
 use resources::{ScreenDimensions, WindowMessages};
+use std::mem;
+use std::sync::Arc;
 use tex::Texture;
+use winit::{DeviceEvent, Event, WindowEvent};
 
 /// Rendering system.
 #[derive(Derivative)]
@@ -67,7 +65,7 @@ where
 
     /// Create a new render system
     pub fn new(pipe: P, renderer: Renderer) -> Self {
-        let cached_size = renderer.window().get_inner_size().unwrap();
+        let cached_size = renderer.window().get_inner_size().unwrap().into();
         Self {
             pipe,
             renderer,
@@ -85,7 +83,9 @@ where
         let strategy = strategy.as_ref().map(Deref::deref);
 
         mesh_storage.process(
-            |d| create_mesh_asset(d, &mut self.renderer),
+            |d| {
+                create_mesh_asset(d, &mut self.renderer)
+            },
             time.frame_number(),
             &**pool,
             strategy,
@@ -105,28 +105,30 @@ where
             command(self.renderer.window());
         }
 
+        let width = screen_dimensions.width() as u32;
+        let height = screen_dimensions.height() as u32;
+
         // Send resource size changes to the window
         if screen_dimensions.dirty {
-            self.renderer.window().set_inner_size(
-                screen_dimensions.width() as u32,
-                screen_dimensions.height() as u32,
-            );
+            self.renderer
+                .window()
+                .set_inner_size((width, height).into());
             screen_dimensions.dirty = false;
         }
 
         if let Some(size) = self.renderer.window().get_inner_size() {
+            let (window_width, window_height): (u32, u32) = size.into();
+
             // Send window size changes to the resource
-            if size != (
-                screen_dimensions.width() as u32,
-                screen_dimensions.height() as u32,
-            ) {
-                screen_dimensions.update(size.0, size.1);
+            if (window_width, window_height) != (width, height) {
+                screen_dimensions.update(window_width, window_height);
 
                 // We don't need to send the updated size of the window back to the window itself,
                 // so set dirty to false.
                 screen_dimensions.dirty = false;
             }
         }
+        screen_dimensions.update_hidpi_factor(self.renderer.window().get_hidpi_factor());
     }
 
     fn render(&mut self, (mut event_handler, data): RenderData<P>) {
@@ -177,8 +179,9 @@ where
             .renderer
             .window()
             .get_inner_size()
-            .expect("Window closed during initialization!");
-        let hidpi = self.renderer.window().hidpi_factor();
+            .expect("Window closed during initialization!")
+            .into();
+        let hidpi = self.renderer.window().get_hidpi_factor();
         res.insert(ScreenDimensions::new(width, height, hidpi));
     }
 }

@@ -1,15 +1,13 @@
-use std::result::Result as StdResult;
-
 use amethyst_assets::{PrefabData, PrefabError};
 use amethyst_core::specs::prelude::{
     Component, DenseVecStorage, Entity, FlaggedStorage, WriteStorage,
 };
-use gfx::format::{ChannelType, Format, SurfaceType};
-
 use error::Result;
 use formats::MeshCreator;
+use gfx::format::{ChannelType, Format, SurfaceType};
 use mesh::{Mesh, MeshBuilder};
 use renderer::Renderer;
+use std::result::Result as StdResult;
 use vertex::{Attribute, Color, Normal, Position, Separate, Tangent, TexCoord};
 
 /// Type for joint weights attribute of vertex
@@ -76,7 +74,8 @@ fn build_mesh_with_combo(
 /// Mesh creator for `VertexBufferCombination`.
 #[derive(Debug, Clone)]
 pub struct AnimatedComboMeshCreator {
-    combo: AnimatedVertexBufferCombination,
+    /// The internal mesh combo data.
+    pub combo: AnimatedVertexBufferCombination,
 }
 
 impl AnimatedComboMeshCreator {
@@ -89,6 +88,10 @@ impl AnimatedComboMeshCreator {
 impl MeshCreator for AnimatedComboMeshCreator {
     fn build(self: Box<Self>, renderer: &mut Renderer) -> Result<Mesh> {
         build_mesh_with_combo(self.combo, renderer)
+    }
+
+    fn vertices(&self) -> &Vec<Separate<Position>> {
+        &self.combo.0
     }
 
     fn box_clone(&self) -> Box<MeshCreator> {

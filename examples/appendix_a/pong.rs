@@ -2,11 +2,8 @@ use amethyst::assets::Loader;
 use amethyst::core::cgmath::Vector3;
 use amethyst::core::transform::{GlobalTransform, Transform};
 use amethyst::ecs::prelude::World;
-use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
-use amethyst::renderer::{
-    Camera, Event, Material, MeshHandle, PosTex, Projection, VirtualKeyCode, WindowMessages,
-};
+use amethyst::renderer::{Camera, Material, MeshHandle, PosTex, Projection, WindowMessages};
 use amethyst::ui::{Anchor, TtfFormat, UiText, UiTransform};
 use config::{ArenaConfig, BallConfig, PaddlesConfig};
 use systems::ScoreText;
@@ -14,7 +11,7 @@ use {Ball, Paddle, Side};
 
 pub struct Pong;
 
-impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
+impl<'a, 'b> SimpleState<'a, 'b> for Pong {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
         use audio::initialise_audio;
@@ -26,19 +23,6 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Pong {
         initialise_audio(world);
         initialise_score(world);
         hide_cursor(world);
-    }
-
-    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else {
-            Trans::None
-        }
-    }
-
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
-        data.data.update(&data.world);
-        Trans::None
     }
 }
 
@@ -56,24 +40,16 @@ fn initialise_camera(world: &mut World) {
             arena_width,
             arena_height,
             0.0,
-        )))
-        .with(GlobalTransform(
+        ))).with(GlobalTransform(
             Matrix4::from_translation(Vector3::new(0.0, 0.0, 1.0)).into(),
-        ))
-        .build();
+        )).build();
 }
 
 /// Hide the cursor, so it's invisible while playing.
 fn hide_cursor(world: &mut World) {
-    use amethyst::winit::CursorState;
-
     world
         .write_resource::<WindowMessages>()
-        .send_command(|win| {
-            if let Err(err) = win.set_cursor_state(CursorState::Hide) {
-                eprintln!("Unable to make cursor hidden! Error: {:?}", err);
-            }
-        });
+        .send_command(|win| win.hide_cursor(true));
 }
 
 /// Initialises one paddle on the left, and one paddle on the right.
@@ -146,8 +122,7 @@ fn initialise_paddles(world: &mut World) {
             height: left_height,
             width: left_width,
             velocity: left_velocity,
-        })
-        .with(GlobalTransform::default())
+        }).with(GlobalTransform::default())
         .with(left_transform)
         .build();
     // Create right paddle
@@ -160,8 +135,7 @@ fn initialise_paddles(world: &mut World) {
             height: right_height,
             width: right_width,
             velocity: right_velocity,
-        })
-        .with(GlobalTransform::default())
+        }).with(GlobalTransform::default())
         .with(right_transform)
         .build();
 }
@@ -195,8 +169,7 @@ fn initialise_balls(world: &mut World) {
         .with(Ball {
             radius: radius,
             velocity: [velocity_x, velocity_y],
-        })
-        .with(local_transform)
+        }).with(local_transform)
         .with(GlobalTransform::default())
         .build();
 }
@@ -239,8 +212,7 @@ fn initialise_score(world: &mut World) {
             "0".to_string(),
             [1.0, 1.0, 1.0, 1.0],
             50.,
-        ))
-        .build();
+        )).build();
     let p2_score = world
         .create_entity()
         .with(p2_transform)
@@ -249,8 +221,7 @@ fn initialise_score(world: &mut World) {
             "0".to_string(),
             [1.0, 1.0, 1.0, 1.0],
             50.,
-        ))
-        .build();
+        )).build();
     world.add_resource(ScoreText { p1_score, p2_score });
 }
 

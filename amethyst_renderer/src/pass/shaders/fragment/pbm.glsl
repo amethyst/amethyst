@@ -173,6 +173,6 @@ void main() {
 
     vec3 ambient = ambient_color * albedo * ambient_occlusion;
     vec3 color = ambient + lighted + emission;
-   
+
     out_color = vec4(color, alpha);
 }

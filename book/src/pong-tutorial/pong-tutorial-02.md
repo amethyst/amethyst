@@ -44,12 +44,10 @@ use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::cgmath::{Vector3, Matrix4};
 use amethyst::core::transform::{GlobalTransform, Transform};
 use amethyst::ecs::prelude::{Component, DenseVecStorage};
-use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::{
-    Camera, Event, MaterialTextureSet, PngFormat, Projection, Sprite,
+    Camera, MaterialTextureSet, PngFormat, Projection, Sprite,
     SpriteRender, SpriteSheet, SpriteSheetHandle, Texture, TextureCoordinates,
-    VirtualKeyCode,
 };
 ```
 
@@ -63,7 +61,7 @@ We will leave it empty for now, but it will become useful later down the line.
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # struct MyState;
-# impl<'a, 'b> State<GameData<'a, 'b>> for MyState {
+# impl<'a, 'b> SimpleState<'a,'b> for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
 
 }
@@ -86,11 +84,12 @@ that will determine what is rendered on screen. It behaves just like a
 real life camera: it records a specific part of the world and can be
 moved around at will.
 
-First, let's define some constants:
+First, let's define some constants. We will make them public for use in other
+modules later:
 
 ```rust,no_run,noplaypen
-const ARENA_HEIGHT: f32 = 100.0;
-const ARENA_WIDTH: f32 = 100.0;
+pub const ARENA_HEIGHT: f32 = 100.0;
+pub const ARENA_WIDTH: f32 = 100.0;
 ```
 
 These constants will determine the size of our arena.
@@ -140,7 +139,7 @@ To finish setting up the camera, let's call it in our State's `on_start` method:
 # use amethyst::ecs::World;
 # fn initialise_camera(world: &mut World) { }
 # struct MyState;
-# impl<'a, 'b> State<GameData<'a, 'b>> for MyState {
+# impl<'a, 'b> SimpleState<'a,'b> for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
     let world = data.world;
 
@@ -155,16 +154,17 @@ much better from then on, we promise!
 
 ## Our first Component
 
-In `pong.rs` let's create our first `Component`, a definition of a paddle.
+In `pong.rs` let's create our first `Component`, a definition of a paddle. We
+will make `Side` and `Paddle` public for use in other modules later.
 
 ```rust,no_run,noplaypen
 #[derive(PartialEq, Eq)]
-enum Side {
+pub enum Side {
     Left,
     Right,
 }
 
-struct Paddle {
+pub struct Paddle {
     pub side: Side,
     pub width: f32,
     pub height: f32,
@@ -297,7 +297,7 @@ compiles. Update the `on_start` method to the following:
 # fn initialise_paddles(world: &mut World) { }
 # fn initialise_camera(world: &mut World) { }
 # struct MyState;
-# impl<'a, 'b> State<GameData<'a, 'b>> for MyState {
+# impl<'a, 'b> SimpleState<'a,'b> for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
     let world = data.world;
 
@@ -387,7 +387,7 @@ the pattern and add the `TransformBundle`.
 #       .with_pass(DrawSprite::new()),
 # );
 # struct Pong;
-# impl<'a, 'b> State<GameData<'a, 'b>> for Pong { }
+# impl<'a, 'b> SimpleState<'a,'b> for Pong { }
 let game_data = GameDataBuilder::default()
     .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
     .with_bundle(TransformBundle::new())?;
@@ -688,7 +688,7 @@ all together in the `on_start()` method:
 # fn initialise_camera(world: &mut World) { }
 # fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle { unimplemented!() }
 # struct MyState;
-# impl<'a, 'b> State<GameData<'a, 'b>> for MyState {
+# impl<'a, 'b> SimpleState<'a,'b> for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
     let world = data.world;
 
@@ -715,4 +715,4 @@ moving!
 [sb]: https://slide-rs.github.io/specs/
 [sb-storage]: https://slide-rs.github.io/specs/05_storages.html#densevecstorage
 [cg]: https://docs.rs/cgmath/0.15.0/cgmath/
-[2d]: https://www.amethyst.rs/doc/develop/doc/amethyst_renderer/struct.Camera.html#method.standard_2d
+[2d]: https://www.amethyst.rs/doc/master/doc/amethyst_renderer/struct.Camera.html#method.standard_2d

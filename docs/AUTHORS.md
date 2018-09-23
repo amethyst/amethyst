@@ -10,6 +10,7 @@
 * Hittherhod
 * Ilya Bogdanov
 * Joël Lupien
+* khskarl (Karll Henning)
 * Konstantin Zverev
 * Lucio Franco
 * Lukas Schmierer

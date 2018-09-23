@@ -1,11 +1,8 @@
-use std::path::Path;
-use std::sync::Arc;
-
 use core::specs::prelude::{Dispatcher, DispatcherBuilder, System, World};
-use core::SystemBundle;
+use core::{SystemBundle, ArcThreadPool};
 use error::{Error, Result};
-use rayon::ThreadPool;
 use renderer::pipe::pass::Pass;
+use std::path::Path;
 
 /// Initialise trait for game data
 pub trait DataInit<T> {
@@ -260,7 +257,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
 impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
     fn build(self, world: &mut World) -> GameData<'a, 'b> {
         #[cfg(not(no_threading))]
-        let pool = world.read_resource::<Arc<ThreadPool>>().clone();
+        let pool = world.read_resource::<ArcThreadPool>().clone();
 
         #[cfg(not(no_threading))]
         let mut dispatcher = self.disp_builder.with_pool(pool).build();

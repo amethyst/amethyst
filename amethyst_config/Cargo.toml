@@ -16,11 +16,11 @@ appveyor = { repository = "amethyst/amethyst" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-ron = "0.2"
+ron = "0.4"
 serde = "1.0"
 log = "0.4"
 
-thread_profiler = { version = "0.1", optional = true }
+thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
 serde_derive = "1"

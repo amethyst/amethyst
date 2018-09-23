@@ -1,16 +1,13 @@
 //! Provides structures and functions used to get audio outputs.
 
 // We have to use types from this to provide an output iterator type.
-use std::fmt::{Debug, Formatter, Result as FmtResult};
-use std::io::Cursor;
-
 use amethyst_core::shred::Resources;
-
 use cpal::OutputDevices;
 use rodio::{default_output_device, output_devices, Decoder, Device, Sink, Source as RSource};
-
 use sink::AudioSink;
 use source::Source;
+use std::fmt::{Debug, Formatter, Result as FmtResult};
+use std::io::Cursor;
 use DecoderError;
 
 /// A speaker(s) through which audio can be played.

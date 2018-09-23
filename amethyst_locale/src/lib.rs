@@ -7,13 +7,6 @@ extern crate amethyst_assets;
 extern crate amethyst_core;
 extern crate fluent;
 
-#[macro_use]
-#[cfg(feature = "profiler")]
-extern crate thread_profiler;
-
-#[cfg(feature = "profiler")]
-use thread_profiler::{register_thread_with_profiler, write_profile};
-
 use amethyst_assets::{Asset, Handle, ProcessingState, Result, SimpleFormat};
 use amethyst_core::specs::prelude::VecStorage;
 use fluent::MessageContext;
@@ -29,6 +22,7 @@ impl SimpleFormat<Locale> for LocaleFormat {
 
     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<Locale> {
         let s = String::from_utf8(bytes)?;
+
         let mut ctx = MessageContext::new(&[]);
         ctx.add_messages(&s);
         Ok(Locale { context: ctx })

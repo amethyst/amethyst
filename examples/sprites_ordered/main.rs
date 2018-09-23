@@ -18,10 +18,11 @@ use amethyst::ecs::prelude::Entity;
 use amethyst::input::{get_key, is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::{
-    Camera, ColorMask, DepthMode, DisplayConfig, DrawSprite, ElementState, Event,
-    MaterialTextureSet, Pipeline, Projection, RenderBundle, ScreenDimensions, SpriteRender,
-    SpriteSheet, SpriteSheetHandle, Stage, Transparent, VirtualKeyCode, ALPHA,
+    Camera, ColorMask, DepthMode, DisplayConfig, DrawSprite, ElementState, MaterialTextureSet,
+    Pipeline, Projection, RenderBundle, ScreenDimensions, SpriteRender, SpriteSheet,
+    SpriteSheetHandle, Stage, Transparent, VirtualKeyCode, ALPHA,
 };
+use amethyst::utils::application_root_dir;
 
 use sprite::SpriteSheetDefinition;
 
@@ -78,7 +79,7 @@ impl Example {
     }
 }
 
-impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+impl<'a, 'b> SimpleState<'a, 'b> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
 
@@ -91,75 +92,72 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
     fn handle_event(
         &mut self,
         mut data: StateData<GameData>,
-        event: Event,
-    ) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            return Trans::Quit;
-        };
+        event: StateEvent<()>,
+    ) -> SimpleTrans<'a, 'b> {
+        if let StateEvent::Window(event) = &event {
+            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                return Trans::Quit;
+            };
 
-        match get_key(&event) {
-            Some((VirtualKeyCode::T, ElementState::Pressed)) => {
-                self.transparent = !self.transparent;
-                info!(
-                    "Transparent component is {}",
-                    if self.transparent {
-                        "enabled"
-                    } else {
-                        "disabled"
-                    }
-                );
-                self.redraw_sprites(&mut data.world);
-            }
+            match get_key(&event) {
+                Some((VirtualKeyCode::T, ElementState::Pressed)) => {
+                    self.transparent = !self.transparent;
+                    info!(
+                        "Transparent component is {}",
+                        if self.transparent {
+                            "enabled"
+                        } else {
+                            "disabled"
+                        }
+                    );
+                    self.redraw_sprites(&mut data.world);
+                }
 
-            Some((VirtualKeyCode::R, ElementState::Pressed)) => {
-                self.reverse = !self.reverse;
-                info!(
-                    "Sprite Z order is {}",
-                    if self.reverse {
-                        "reversed. Right most sprite has Z: 0, increasing to the left."
-                    } else {
-                        "normal. Left most sprite has Z: 0, increasing to the right."
-                    }
-                );
-                self.redraw_sprites(&mut data.world);
-            }
+                Some((VirtualKeyCode::R, ElementState::Pressed)) => {
+                    self.reverse = !self.reverse;
+                    info!(
+                        "Sprite Z order is {}",
+                        if self.reverse {
+                            "reversed. Right most sprite has Z: 0, increasing to the left."
+                        } else {
+                            "normal. Left most sprite has Z: 0, increasing to the right."
+                        }
+                    );
+                    self.redraw_sprites(&mut data.world);
+                }
 
-            Some((VirtualKeyCode::Up, ElementState::Pressed)) => {
-                self.camera_z -= 1.0;
-                info!("Camera Z position is: {}", self.camera_z);
-                self.adjust_camera(&mut data.world);
-                self.redraw_sprites(&mut data.world);
-            }
+                Some((VirtualKeyCode::Up, ElementState::Pressed)) => {
+                    self.camera_z -= 1.0;
+                    info!("Camera Z position is: {}", self.camera_z);
+                    self.adjust_camera(&mut data.world);
+                    self.redraw_sprites(&mut data.world);
+                }
 
-            Some((VirtualKeyCode::Down, ElementState::Pressed)) => {
-                self.camera_z += 1.0;
-                info!("Camera Z position is: {}", self.camera_z);
-                self.adjust_camera(&mut data.world);
-                self.redraw_sprites(&mut data.world);
-            }
+                Some((VirtualKeyCode::Down, ElementState::Pressed)) => {
+                    self.camera_z += 1.0;
+                    info!("Camera Z position is: {}", self.camera_z);
+                    self.adjust_camera(&mut data.world);
+                    self.redraw_sprites(&mut data.world);
+                }
 
-            Some((VirtualKeyCode::Left, ElementState::Pressed)) => {
-                self.camera_depth_vision -= 1.0;
-                info!("Camera depth vision: {}", self.camera_depth_vision);
-                self.adjust_camera(&mut data.world);
-                self.redraw_sprites(&mut data.world);
-            }
+                Some((VirtualKeyCode::Left, ElementState::Pressed)) => {
+                    self.camera_depth_vision -= 1.0;
+                    info!("Camera depth vision: {}", self.camera_depth_vision);
+                    self.adjust_camera(&mut data.world);
+                    self.redraw_sprites(&mut data.world);
+                }
 
-            Some((VirtualKeyCode::Right, ElementState::Pressed)) => {
-                self.camera_depth_vision += 1.0;
-                info!("Camera depth vision: {}", self.camera_depth_vision);
-                self.adjust_camera(&mut data.world);
-                self.redraw_sprites(&mut data.world);
-            }
+                Some((VirtualKeyCode::Right, ElementState::Pressed)) => {
+                    self.camera_depth_vision += 1.0;
+                    info!("Camera depth vision: {}", self.camera_depth_vision);
+                    self.adjust_camera(&mut data.world);
+                    self.redraw_sprites(&mut data.world);
+                }
 
-            _ => {}
-        };
+                _ => {}
+            };
+        }
 
-        Trans::None
-    }
-
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
-        data.data.update(&data.world);
         Trans::None
     }
 }
@@ -348,9 +346,11 @@ fn load_sprite_sheet(world: &mut World) -> LoadedSpriteSheet {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
+    let app_root = application_root_dir();
+
     let display_config = DisplayConfig::load(format!(
         "{}/examples/sprites_ordered/resources/display_config.ron",
-        env!("CARGO_MANIFEST_DIR")
+        app_root
     ));
 
     let pipe = Pipeline::build().with_stage(
@@ -363,7 +363,7 @@ fn main() -> amethyst::Result<()> {
             )),
     );
 
-    let assets_directory = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+    let assets_directory = format!("{}/examples/assets/", app_root);
 
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?

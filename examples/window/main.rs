@@ -2,35 +2,20 @@
 
 extern crate amethyst;
 
-use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
-use amethyst::renderer::{
-    DisplayConfig, DrawFlat, Event, Pipeline, PosNormTex, RenderBundle, Stage, VirtualKeyCode,
-};
+use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosNormTex, RenderBundle, Stage};
+use amethyst::utils::application_root_dir;
 
 struct Example;
 
-impl<'a, 'b> State<GameData<'a, 'b>> for Example {
-    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else {
-            Trans::None
-        }
-    }
-
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
-        data.data.update(&data.world);
-        Trans::None
-    }
-}
+impl<'a, 'b> SimpleState<'a, 'b> for Example {}
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let path = format!(
         "{}/examples/window/resources/display_config.ron",
-        env!("CARGO_MANIFEST_DIR")
+        application_root_dir()
     );
     let config = DisplayConfig::load(&path);
 
@@ -41,7 +26,7 @@ fn main() -> amethyst::Result<()> {
     );
 
     let game_data = GameDataBuilder::default().with_bundle(RenderBundle::new(pipe, Some(config)))?;
-    let mut game = Application::<GameData>::new("./", Example, game_data)?;
+    let mut game = Application::new("./", Example, game_data)?;
 
     game.run();
 

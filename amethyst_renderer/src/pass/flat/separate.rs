@@ -1,15 +1,14 @@
 //! Simple flat forward drawing pass.
 
+use super::*;
 use amethyst_assets::AssetStorage;
-use amethyst_core::specs::prelude::{Entities, Join, Read, ReadExpect, ReadStorage};
+use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage};
 use amethyst_core::transform::GlobalTransform;
+use cam::{ActiveCamera, Camera};
+use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
-
-use super::*;
-use cam::{ActiveCamera, Camera};
-use error::Result;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
 use pass::skinning::{create_skinning_effect, setup_skinning_buffers};
@@ -71,7 +70,6 @@ where
 
 impl<'a> PassData<'a> for DrawFlatSeparate {
     type Data = (
-        Entities<'a>,
         Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
         Read<'a, AssetStorage<Mesh>>,
@@ -98,8 +96,7 @@ impl Pass for DrawFlatSeparate {
                 Separate::<Position>::ATTRIBUTES,
                 Separate::<Position>::size() as ElemStride,
                 0,
-            )
-            .with_raw_vertex_buffer(
+            ).with_raw_vertex_buffer(
                 Separate::<TexCoord>::ATTRIBUTES,
                 Separate::<TexCoord>::size() as ElemStride,
                 0,
@@ -126,7 +123,6 @@ impl Pass for DrawFlatSeparate {
         effect: &mut Effect,
         _factory: Factory,
         (
-            entities,
             active,
             camera,
             mesh_storage,
@@ -142,15 +138,15 @@ impl Pass for DrawFlatSeparate {
         let camera = get_camera(active, &camera, &global);
 
         match visibility {
-            None => for (entity, mesh, material, global) in
-                (&*entities, &mesh, &material, &global).join()
+            None => for (joint, mesh, material, global) in
+                (joints.maybe(), &mesh, &material, &global).join()
             {
                 draw_mesh(
                     encoder,
                     effect,
                     self.skinning,
                     mesh_storage.get(mesh),
-                    joints.get(entity),
+                    joint,
                     &tex_storage,
                     Some(material),
                     &material_defaults,
@@ -161,20 +157,21 @@ impl Pass for DrawFlatSeparate {
                 );
             },
             Some(ref visibility) => {
-                for (entity, mesh, material, global, _) in (
-                    &*entities,
+                for (joint, mesh, material, global, _) in (
+                    joints.maybe(),
                     &mesh,
                     &material,
                     &global,
                     &visibility.visible_unordered,
-                ).join()
+                )
+                    .join()
                 {
                     draw_mesh(
                         encoder,
                         effect,
                         self.skinning,
                         mesh_storage.get(mesh),
-                        joints.get(entity),
+                        joint,
                         &tex_storage,
                         Some(material),
                         &material_defaults,

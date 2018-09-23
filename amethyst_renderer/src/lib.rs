@@ -21,11 +21,11 @@
 //! is the `DrawSprite` pass, which does not support joint transformations.
 //!
 //! [am]: https://www.amethyst.rs/
-//! [gh]: https://github.com/amethyst/amethyst/tree/develop/src/renderer
+//! [gh]: https://github.com/amethyst/amethyst/tree/master/src/renderer
 //! [bk]: https://www.amethyst.rs/book/master/
 
 #![deny(missing_docs)]
-#![doc(html_logo_url = "https://tinyurl.com/jtmm43a")]
+#![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
 
 extern crate amethyst_assets;
 extern crate amethyst_core;
@@ -86,18 +86,19 @@ pub use bundle::RenderBundle;
 pub use cam::{ActiveCamera, ActiveCameraPrefab, Camera, CameraPrefab, Projection};
 pub use color::Rgba;
 pub use config::DisplayConfig;
+pub use debug_drawing::{DebugLines, DebugLinesComponent};
 pub use formats::{
     build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat, ComboMeshCreator,
-    GraphicsPrefab, ImageData, JpgFormat, MaterialPrefab, MeshCreator, MeshData,
-    ObjFormat, PngFormat, TextureData, TextureFormat, TextureMetadata, TexturePrefab,
+    GraphicsPrefab, ImageData, JpgFormat, MaterialPrefab, MeshCreator, MeshData, ObjFormat,
+    PngFormat, TextureData, TextureFormat, TextureMetadata, TexturePrefab, TgaFormat,
 };
-pub use input::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
+pub use input::{DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
 pub use light::{DirectionalLight, Light, LightPrefab, PointLight, SpotLight, SunLight};
 pub use mesh::{vertex_data, Mesh, MeshBuilder, MeshHandle, VertexBuffer};
 pub use mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset};
 pub use pass::{
-    get_camera, set_vertex_args, DrawFlat, DrawFlatSeparate, DrawPbm, DrawPbmSeparate, DrawShaded,
-    DrawShadedSeparate, DrawSprite,
+    get_camera, set_vertex_args, DrawDebugLines, DrawFlat, DrawFlatSeparate, DrawPbm,
+    DrawPbmSeparate, DrawShaded, DrawShadedSeparate, DrawSprite,
 };
 pub use pipe::{
     ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder, Init, Meta, NewEffect,
@@ -122,9 +123,9 @@ pub use transparent::{
 };
 pub use types::{Encoder, Factory, PipelineState, Resources};
 pub use vertex::{
-    Attribute, AttributeFormat, Attributes, Color, Normal, PosColor, PosNormTangTex, PosNormTex,
-    PosTex, Position, Query, Separate, Tangent, TexCoord, VertexBufferCombination, VertexFormat,
-    With,
+    Attribute, AttributeFormat, Attributes, Color, Normal, PosColor, PosColorNorm, PosNormTangTex,
+    PosNormTex, PosTex, Position, Query, Separate, Tangent, TexCoord, VertexBufferCombination,
+    VertexFormat, With,
 };
 pub use visibility::{Visibility, VisibilitySortingSystem};
 
@@ -139,6 +140,7 @@ mod bundle;
 mod cam;
 mod color;
 mod config;
+mod debug_drawing;
 mod formats;
 mod input;
 mod light;

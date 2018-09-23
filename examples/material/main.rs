@@ -5,13 +5,13 @@ extern crate amethyst;
 use amethyst::assets::Loader;
 use amethyst::core::cgmath::{Deg, Matrix4};
 use amethyst::core::transform::GlobalTransform;
-use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::*;
+use amethyst::utils::application_root_dir;
 
 struct Example;
 
-impl<'a, 'b> State<GameData<'a, 'b>> for Example {
+impl<'a, 'b> SimpleState<'a, 'b> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
         let mat_defaults = world.read_resource::<MaterialDefaults>().0.clone();
@@ -111,30 +111,19 @@ impl<'a, 'b> State<GameData<'a, 'b>> for Example {
             .with(GlobalTransform(transform.into()))
             .build();
     }
-
-    fn handle_event(&mut self, _: StateData<GameData>, event: Event) -> Trans<GameData<'a, 'b>> {
-        if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-            Trans::Quit
-        } else {
-            Trans::None
-        }
-    }
-
-    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
-        data.data.update(&data.world);
-        Trans::None
-    }
 }
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
+    let app_root = application_root_dir();
+
     let path = format!(
         "{}/examples/material/resources/display_config.ron",
-        env!("CARGO_MANIFEST_DIR")
+        app_root
     );
 
-    let resources = format!("{}/examples/assets/", env!("CARGO_MANIFEST_DIR"));
+    let resources = format!("{}/examples/assets/", app_root);
 
     let game_data = GameDataBuilder::default().with_basic_renderer(
         path,

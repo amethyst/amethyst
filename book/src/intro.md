@@ -47,11 +47,7 @@ Read the crate-level [API documentation][ad] for more details.
 
 [ad]: https://www.amethyst.rs/doc/master/doc/amethyst/index.html
 
-> Please note that the default github branch is [develop][db], while the documentation in this document is based on the master/release branch.
-> The documentation for the develop branch is located [here][dd].
-
 [db]: https://github.com/amethyst/amethyst/
-[dd]: https://www.amethyst.rs/doc/develop/doc/amethyst/index.html
 
 ## Motivation
 

@@ -26,7 +26,7 @@ pub enum UiEventType {
 }
 
 /// A ui event instance.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct UiEvent {
     /// The type of ui event.
     pub event_type: UiEventType,
@@ -97,11 +97,10 @@ where
         let click_stopped = !down && self.was_down;
 
         if let Some((pos_x, pos_y)) = input.mouse_position() {
-            let x = pos_x as f32 - screen_dimensions.width() / 2.;
-            let y = pos_y as f32 - screen_dimensions.height() / 2.;
+            let x = pos_x as f32;
+            let y = screen_dimensions.height() - pos_y as f32;
 
-            let target = targeted((x, y), (&*entities, &transform).join(), &react);
-
+            let target = targeted((x, y), (&*entities, &transform, react.maybe()).join());
             if target != self.last_target {
                 if let Some(last_target) = self.last_target {
                     events.single_write(UiEvent::new(UiEventType::HoverStop, last_target));
@@ -142,30 +141,27 @@ where
 fn targeted<'a, I>(
     pos: (f32, f32),
     transforms: I,
-    react: &ReadStorage<MouseReactive>,
 ) -> Option<Entity>
 where
-    I: Iterator<Item = (Entity, &'a UiTransform)> + 'a,
+    I: Iterator<Item = (Entity, &'a UiTransform, Option<&'a MouseReactive>)> + 'a,
 {
     use std::f32::INFINITY;
 
-    let candidate = transforms
-        .filter(|(_e, t)| t.opaque && t.position_inside(pos.0, pos.1))
+    let (e, _t, m) = transforms
+        .filter(|(_e, t, _m)| t.opaque && t.position_inside(pos.0, pos.1))
         .fold(
-            (None, INFINITY),
-            |(lowest_entity, lowest_z), (entity, t)| {
-                if lowest_z < t.global_z {
-                    (lowest_entity, lowest_z)
+            (None, -INFINITY, None),
+            |(highest_entity, highest_z, highest_mouse_reactive), (entity, t, m)| {
+                if highest_z > t.global_z {
+                    (highest_entity, highest_z, highest_mouse_reactive)
                 } else {
-                    (Some(entity), t.global_z)
+                    (Some(entity), t.global_z, m)
                 }
             },
-        )
-        .0;
-    if let Some(candidate) = candidate {
-        if react.get(candidate).is_some() {
-            return Some(candidate);
-        }
+        );
+    if m.is_some() {
+        e
+    } else {
+        None
     }
-    None
 }

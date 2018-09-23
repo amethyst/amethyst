@@ -10,7 +10,7 @@ matrix:
   allow_failures:
     - rust: nightly
 
-# Build the Bors staging and trying branches, plus PRs to develop, master, and
+# Build the Bors staging and trying branches, plus PRs to master, and
 # the latest release branch.
 branches:
   only:
