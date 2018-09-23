@@ -49,6 +49,7 @@ where
     E: PartialEq,
 {
     /// The network socket, currently supports Udp only for demonstration purposes.
+    // TODO: figure out why this is uncommented
     //pub socket: UdpSocket,
 
     /// The list of filters applied on the events received.
@@ -131,10 +132,6 @@ where
             }
         });
 
-        //socket.set_write_timeout(Some(Duration::from_millis(100))).unwrap();
-        //let poll = Poll::new()?;
-        //poll.register(&socket, SOCKET, Ready::readable(), PollOpt::level())?;
-        //poll.register(&socket, SOCKET, Ready::readable(), PollOpt::edge())?;
         Ok(NetSocketSystem {
             //socket,
             //filters,
@@ -144,18 +141,6 @@ where
             send_queues_readers: HashMap::new(),
         })
     }
-    /*
-    /// Connects to a remote server (client-only call)
-    pub fn connect(&mut self, target: SocketAddr, pool: &mut NetConnectionPool, client_uuid: Uuid) {
-        info!("Sending connection request to remote {:?}", target);
-        let conn = NetConnection {
-            target,
-            state: ConnectionState::Connecting,
-            uuid: None,
-        };
-        send_event(&NetEvent::Connect::<T> { client_uuid }, &conn, &self.socket);
-        pool.connections.push(conn);
-    }*/
 }
 
 impl<'a, E> System<'a> for NetSocketSystem<E>
@@ -163,15 +148,11 @@ where
     E: Send + Sync + Serialize + Clone + DeserializeOwned + PartialEq + 'static,
 {
     type SystemData = (Entities<'a>, WriteStorage<'a, NetConnection<E>>);
+
     fn setup(&mut self, res: &mut Resources) {
         Self::SystemData::setup(res);
-        //type InitSystemData = (Entities<'a>,WriteStorage<'a,NetConnection<E>>);
-        //for (entity,mut net_connection) in (&*res.fetch::<EntitiesRes>(),&mut res.write_storage::<NetConnection<E>>()).join() {
-
-        /*for (entity,mut net_connection) in (&*Entities::fetch(&res),&mut WriteStorage::<NetConnection<E>>::fetch(&res)).join() {
-          self.send_queues_readers.insert(entity.clone(),net_connection.send_buffer.register_reader());
-        }*/
     }
+
     fn run(&mut self, (entities, mut net_connections): Self::SystemData) {
         //self.socket.set_nonblocking(false).unwrap();
         for (entity, mut net_connection) in (&*entities, &mut net_connections).join() {
@@ -185,47 +166,15 @@ where
             if net_connection.state == ConnectionState::Connected
                 || net_connection.state == ConnectionState::Connecting
             {
-                //for ev in net_connection.send_buffer_early_read() {
-                //send_event(ev, &target, &self.socket);
                 self.tx
                     .send(InternalSocketEvent::SendEvents {
                         target,
                         events: net_connection.send_buffer_early_read().cloned().collect(),
                     }).unwrap();
-                /*let target = pool.connection_from_address(&ev.socket);
-            if let Some(t) = target {
-                if t.state == ConnectionState::Connected || t.state == ConnectionState::Connecting {
-                    send_event(&ev.event, &t, &self.socket);
-                } else {
-                    warn!("Tried to send packet while target is not in a connected or connecting state.");
-                }
-            } else {
-                warn!("Targeted address is not in the NetConnection pool.")
-            }*/
-                //}
             }
         }
-        //self.socket.set_nonblocking(true).unwrap();
-        // Receives event through mio's `Poll`.
-        // I'm not sure if this is the right way to use Poll, but it seems to work.
-        //let mut events = Events::with_capacity(2048);
-        //        let mut buf = [0 as u8;2048];
-        //loop {
-        //self.poll.poll(&mut events, Some(Duration::from_millis(0))).expect("Failed to poll network socket.");
-        //self.poll.poll(&mut events, Some(Duration::from_millis(100))).expect("Failed to poll network socket.");
-        //self.poll.poll(&mut events, None).expect("Failed to poll network socket.");
 
-        /*if events.is_empty() {
-                break;
-            }*/
         for raw_event in self.rx.try_iter() {
-            //            loop{
-            //for raw_event in events.iter() {
-            //println!("EVENT!!!");
-            //if raw_event.readiness().is_readable() {
-            //                    match self.socket.recv_from(&mut buf) {
-            // Data received
-            //                        Ok((amt, src)) => {
             let mut matched = false;
             // Get the NetConnection from the source
             for mut net_connection in (&mut net_connections).join() {
@@ -238,12 +187,7 @@ where
                         Ok(ev) => {
                             // Filter events
                             let mut filtered = false;
-                            /*for mut f in net_connection.filters.iter_mut() {
-                                            if !f.allow(&src, &ev) {
-                                                filtered = true;
-                                                break;
-                                            }
-                                        }*/
+
                             if !filtered {
                                 net_connection.receive_buffer.single_write(ev);
                             } else {
@@ -264,8 +208,5 @@ where
                 }
             }
         }
-        //}
-        //}
-        //}
     }
 }

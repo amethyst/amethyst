@@ -17,6 +17,8 @@ extern crate shrev;
 extern crate uuid;
 
 mod bundle;
+// TODO: Readd components and entity sync
+//mod components;
 mod connection;
 mod filter;
 mod net_event;
@@ -29,4 +31,4 @@ pub use connection::{ConnectionState, NetConnection, NetIdentity};
 pub use filter::{FilterConnected, NetFilter};
 pub use net_event::NetEvent;
 pub use network_socket::NetSocketSystem;
-pub use utils::{deserialize_event, send_event /*send_to, send_to_all, send_to_all_except*/};
+pub use utils::{deserialize_event, send_event};

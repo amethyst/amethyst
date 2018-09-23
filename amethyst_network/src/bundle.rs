@@ -56,12 +56,6 @@ where
     T: Send + Sync + PartialEq + Serialize + Clone + DeserializeOwned + 'static,
 {
     fn build(mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
-        //let mut pool = NetConnectionPool::new();
-        //world.add_resource(NetSendBuffer::<T>::new());
-        //world.add_resource(NetReceiveBuffer::<T>::new());
-
-        //let uuid = Uuid::new_v4();
-
         let custom_port = self.port.is_some();
 
         if !custom_port {
@@ -71,19 +65,8 @@ where
 
         let s = NetSocketSystem::<T>::new(self.ip, self.port.unwrap())
             .expect("Failed to open network system.");
-        /*if let Some(c) = self.connect_to {
-            s.connect(c, &mut pool, uuid);
-        }*/
-
-        //world.add_resource(pool);
-        //world.add_resource(NetIdentity { uuid });
 
         builder.add(s, "net_socket", &[]);
-        /*builder.add(
-            ConnectionManagerSystem::<T>::new(self.is_server),
-            "connection_manager",
-            &["net_socket"],
-        );*/
 
         Ok(())
     }

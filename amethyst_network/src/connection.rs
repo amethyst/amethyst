@@ -27,6 +27,7 @@ impl<E: Send + Sync + 'static> NetConnection<E> {
     pub fn new(target: SocketAddr) -> Self {
         let mut send_buffer = EventChannel::new();
         let send_reader = send_buffer.register_reader();
+
         NetConnection {
             target,
             state: ConnectionState::Connecting,
@@ -91,55 +92,3 @@ impl Default for NetIdentity {
 impl Component for NetIdentity {
     type Storage = VecStorage<NetIdentity>;
 }
-
-/*
-/// The list of network connections allocated by the network system.
-#[derive(Default)]
-pub struct NetConnectionPool {
-    /// The connections.
-    pub connections: Vec<NetConnection>,
-}
-
-impl NetConnectionPool {
-    /// Creates a new NetConnectionPool.
-    pub fn new() -> Self {
-        NetConnectionPool {
-            connections: vec![],
-        }
-    }
-
-    /// Fetches the NetConnection from the uuid.
-    pub fn connection_from_uuid(&self, uuid: &Uuid) -> Option<&NetConnection> {
-        for c in &self.connections {
-            if let Some(cl_uuid) = c.uuid {
-                if cl_uuid == *uuid {
-                    return Some(c);
-                }
-            }
-        }
-        None
-    }
-
-    /// Fetches the NetConnection from the network socket address.
-    pub fn connection_from_address(&self, socket: &SocketAddr) -> Option<&NetConnection> {
-        self.connections.iter().filter(|c| c.target == *socket).next()
-    }
-
-    /// Fetches the NetConnection from the network socket address mutably.
-    pub fn connection_from_address_mut(
-        &mut self,
-        socket: &SocketAddr,
-    ) -> Option<&mut NetConnection> {
-        self.connections.iter_mut().filter(|c| c.target == *socket).next()
-    }
-
-    /// Removes the connection for the specified network socket address.
-    pub fn remove_connection_for_address(&mut self, socket: &SocketAddr) -> Option<NetConnection> {
-        let index = self.connections.iter().position(|c| c.target == *socket);
-        index.map(|i| self.connections.swap_remove(i))
-    }
-}
-
-impl Component for NetConnectionPool {
-    type Storage = VecStorage<NetConnectionPool>;
-}*/

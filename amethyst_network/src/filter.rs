@@ -24,6 +24,7 @@ impl<T> FilterConnected<T> {
     }
 }
 
+// TODO: uncomment this section
 // impl<T> FilterConnected<T> {
 //     /// Hardcoded event bypass.
 //     fn event_bypass(event: &NetEvent<T>) -> bool {

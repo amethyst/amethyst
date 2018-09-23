@@ -40,7 +40,6 @@ mod test {
             21201,
         ));
 
-        //let test_event = NetEvent::TextMessage{msg: "Test Message From Client1".to_string()};
         let test_event = NetEvent::TextMessage {
             msg: "1".to_string(),
         };
@@ -109,9 +108,7 @@ mod test {
         let test_event = NetEvent::TextMessage {
             msg: "Test Message From Client1".to_string(),
         };
-        /*for i in 0..100000{
-      conn_to_server.send_buffer.single_write(test_event.clone());
-    }*/
+
         world_cl.create_entity().with(conn_to_server).build();
 
         let mut rcv = conn_to_client.receive_buffer.register_reader();
@@ -132,11 +129,7 @@ mod test {
             sv_dispatch.dispatch(&mut world_sv.res);
             let storage = world_sv.read_storage::<NetConnection<()>>();
             let comp = storage.get(conn_to_client_entity).unwrap();
-            assert_eq!(comp.receive_buffer.read(&mut rcv).count(), 10000); //10000);
+            assert_eq!(comp.receive_buffer.read(&mut rcv).count(), 10000);
         }
-
-        /*let storage = world_sv.read_storage::<NetConnection<()>>();
-    let comp = storage.get(conn_to_client_entity).unwrap();
-    assert_eq!(comp.receive_buffer.read(&mut rcv).count(), 100000);*/
     }
 }
