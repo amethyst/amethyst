@@ -164,10 +164,6 @@ name = "net_server"
 path = "examples/net_server/main.rs"
 
 [[example]]
-name = "net_echo_server"
-path = "examples/net_echo_server/main.rs"
-
-[[example]]
 name = "pong_tutorial_03"
 path = "examples/pong_tutorial_03/main.rs"
 
