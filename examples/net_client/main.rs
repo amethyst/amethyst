@@ -31,7 +31,7 @@ fn main() -> Result<()> {
 
 /// Default empty state
 pub struct State1;
-impl<'a, 'b> State<GameData<'a, 'b>> for State1 {
+impl<'a, 'b> State<GameData<'a, 'b>, ()> for State1 {
     fn on_start(&mut self, data: StateData<GameData>) {
         data.world
             .create_entity()
@@ -39,7 +39,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for State1 {
             .build();
     }
 
-    fn update(&mut self, mut data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+    fn update(&mut self, mut data: StateData<GameData>) -> Trans<GameData<'a, 'b>, ()> {
         data.data.update(&mut data.world);
         Trans::None
     }

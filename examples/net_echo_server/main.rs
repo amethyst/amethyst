@@ -1,6 +1,4 @@
 extern crate amethyst;
-#[macro_use]
-extern crate log;
 
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::ecs::{Join, System, WriteStorage};
@@ -17,21 +15,19 @@ fn main() -> Result<()> {
             "127.0.0.1",
             Some(3456 as u16),
             vec![Box::new(FilterConnected::<()>::new())],
-        ))?
-        .with(EchoSystem::new(), "echo", &[]);
+        ))?.with(EchoSystem::new(), "echo", &[]);
     let mut game = Application::build("./", State1)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             1,
-        )
-        .build(game_data)?;
+        ).build(game_data)?;
     game.run();
     Ok(())
 }
 
 /// Default empty state
 pub struct State1;
-impl<'a, 'b> State<GameData<'a, 'b>> for State1 {
+impl<'a, 'b> State<GameData<'a, 'b>, ()> for State1 {
     fn on_start(&mut self, data: StateData<GameData>) {
         data.world
             .create_entity()
@@ -39,7 +35,7 @@ impl<'a, 'b> State<GameData<'a, 'b>> for State1 {
             .build();
     }
 
-    fn update(&mut self, mut data: StateData<GameData>) -> Trans<GameData<'a, 'b>> {
+    fn update(&mut self, mut data: StateData<GameData>) -> Trans<GameData<'a, 'b>, ()> {
         data.data.update(&mut data.world);
         Trans::None
     }

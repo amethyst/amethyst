@@ -124,7 +124,7 @@ mod test {
                 }
             }
             cl_dispatch.dispatch(&mut world_cl.res);
-            sleep(Duration::from_millis(100));
+            sleep(Duration::from_millis(200));
             sv_dispatch.dispatch(&mut world_sv.res);
             let storage = world_sv.read_storage::<NetConnection<()>>();
             let comp = storage.get(conn_to_client_entity).unwrap();
