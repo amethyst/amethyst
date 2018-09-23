@@ -47,6 +47,7 @@ extern crate image;
 #[macro_use]
 extern crate log;
 extern crate rayon;
+extern crate ron;
 #[macro_use]
 extern crate serde;
 extern crate shred;
@@ -115,7 +116,8 @@ pub use skinning::{
     JointTransformsPrefab, JointWeights,
 };
 pub use sprite::{
-    Sprite, SpriteRender, SpriteSheet, SpriteSheetHandle, SpriteSheetSet, TextureCoordinates,
+    Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, SpriteSheetSet,
+    TextureCoordinates,
 };
 pub use sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem};
 pub use system::RenderSystem;
