@@ -18,6 +18,15 @@ use winit::{
     ElementState, Event, KeyboardInput, ModifiersState, MouseButton, VirtualKeyCode, WindowEvent,
 };
 
+/// How lines should behave when they are longer than the maximum line length.
+#[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
+pub enum LineMode {
+    /// Single line. It ignores line breaks.
+    Single,
+    /// Multiple lines. The text will automatically wrap when exceeding the maximum width.
+    Wrap,
+}
+
 /// A component used to display text in this entity's UiTransform
 #[derive(Clone, Derivative)]
 #[derivative(Debug)]
@@ -32,6 +41,10 @@ pub struct UiText {
     pub font: FontHandle,
     /// If true this will be rendered as dots instead of the text.
     pub password: bool,
+    /// How the text should handle new lines.
+    pub line_mode: LineMode,
+    /// How to align the text within its `UiTransform`.
+    pub align: Anchor,
     /// Cached FontHandle, used to detect changes to the font.
     pub(crate) cached_font: FontHandle,
     /// Cached glyph positions, used to process mouse highlighting
@@ -57,6 +70,8 @@ impl UiText {
             font_size,
             font: font.clone(),
             password: false,
+            line_mode: LineMode::Single,
+            align: Anchor::Middle,
             cached_font: font,
             cached_glyphs: Vec::new(),
             brush_id: None,
