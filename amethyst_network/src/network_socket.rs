@@ -1,12 +1,10 @@
 //! The network send and receive System
 
-use super::{deserialize_event, send_event, ConnectionState, NetConnection, NetEvent};
-use amethyst_core::specs::{Entities, Entity, Join, Resources, System, SystemData, WriteStorage};
+use super::{deserialize_event, send_event, ConnectionState, NetConnection, NetEvent, NetFilter};
+use amethyst_core::specs::{Join, Resources, System, SystemData, WriteStorage};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use shrev::*;
 use std::clone::Clone;
-use std::collections::HashMap;
 use std::io::{Error, ErrorKind};
 use std::net::IpAddr;
 use std::net::SocketAddr;
@@ -48,23 +46,11 @@ pub struct NetSocketSystem<E: 'static>
 where
     E: PartialEq,
 {
-    /// The network socket, currently supports Udp only for demonstration purposes.
-    // TODO: figure out why this is uncommented
-    //pub socket: UdpSocket,
-
     /// The list of filters applied on the events received.
-    //pub filters: Vec<Box<NetFilter<T>>>,
+    pub filters: Vec<Box<NetFilter<E>>>,
 
-    /// The mio's `Poll`.
-    //pub poll: Poll,
     tx: Sender<InternalSocketEvent<E>>,
     rx: Receiver<RawEvent>,
-
-    /// Readers corresponding to each of the Connections. Use to keep track of when to send which event to who.
-    /// When: When there is a new event that hasn't been read yet.
-    /// Which: The event
-    /// Who: The NetConnection's SocketAddr attached to the key Entity.
-    send_queues_readers: HashMap<Entity, ReaderId<NetEvent<E>>>,
 }
 
 impl<E> NetSocketSystem<E>
@@ -75,12 +61,13 @@ where
     pub fn new(
         ip: &str,
         port: u16,
-        //filters: Vec<Box<NetFilter<T>>>,
+        filters: Vec<Box<NetFilter<E>>>,
     ) -> Result<NetSocketSystem<E>, Error> {
         let socket = UdpSocket::bind(&SocketAddr::new(
             IpAddr::from_str(ip).expect("Unreadable input IP."),
             port,
         ))?;
+
         socket.set_nonblocking(true).unwrap();
 
         // this -> thread
@@ -93,19 +80,20 @@ where
             let send_queue = rx1;
             let receive_queue = tx2;
             let socket = socket;
+
             'outer: loop {
                 // send
                 for control_event in send_queue.try_iter() {
                     match control_event {
                         InternalSocketEvent::SendEvents { target, events } => {
                             for ev in events {
-                                //info!("Sending event");
                                 send_event(&ev, &target, &socket);
                             }
                         }
                         InternalSocketEvent::Stop => break 'outer,
                     }
                 }
+
                 // receive
                 let mut buf = [0 as u8; 2048];
                 loop {
@@ -133,12 +121,9 @@ where
         });
 
         Ok(NetSocketSystem {
-            //socket,
-            //filters,
-            //poll,
+            filters,
             tx: tx1,
             rx: rx2,
-            send_queues_readers: HashMap::new(),
         })
     }
 }
@@ -147,22 +132,16 @@ impl<'a, E> System<'a> for NetSocketSystem<E>
 where
     E: Send + Sync + Serialize + Clone + DeserializeOwned + PartialEq + 'static,
 {
-    type SystemData = (Entities<'a>, WriteStorage<'a, NetConnection<E>>);
+    type SystemData = (WriteStorage<'a, NetConnection<E>>);
 
     fn setup(&mut self, res: &mut Resources) {
         Self::SystemData::setup(res);
     }
 
-    fn run(&mut self, (entities, mut net_connections): Self::SystemData) {
-        //self.socket.set_nonblocking(false).unwrap();
-        for (entity, mut net_connection) in (&*entities, &mut net_connections).join() {
-            // TODO: find out why the read needs this
-
-            let mut _reader = self
-                .send_queues_readers
-                .entry(entity)
-                .or_insert(net_connection.send_buffer.register_reader());
+    fn run(&mut self, mut net_connections: Self::SystemData) {
+        for mut net_connection in (&mut net_connections).join() {
             let target = net_connection.target.clone();
+
             if net_connection.state == ConnectionState::Connected
                 || net_connection.state == ConnectionState::Connecting
             {
@@ -171,6 +150,8 @@ where
                         target,
                         events: net_connection.send_buffer_early_read().cloned().collect(),
                     }).unwrap();
+            } else if net_connection.state == ConnectionState::Disconnected {
+                self.tx.send(InternalSocketEvent::Stop).unwrap();
             }
         }
 

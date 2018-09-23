@@ -24,36 +24,16 @@ impl<T> FilterConnected<T> {
     }
 }
 
-// TODO: uncomment this section
-// impl<T> FilterConnected<T> {
-//     /// Hardcoded event bypass.
-//     fn event_bypass(event: &NetEvent<T>) -> bool {
-//         match event {
-//             &NetEvent::Connect { client_uuid: _ } => true,
-//             &NetEvent::Connected { server_uuid: _ } => true,
-//             _ => false,
-//         }
-//     }
-// }
-
 impl<T> NetFilter<T> for FilterConnected<T>
 where
     T: PartialEq + Send + Sync,
 {
     /// Checks if the event is from a connected client.
-    fn allow(&mut self, _source: &SocketAddr, _event: &NetEvent<T>) -> bool {
-        // TODO: finish this
-        /*if let Some(ref conn) = pool.connection_from_address(source) {
-            if conn.state == ConnectionState::Connected {
-                true
-            } else {
-                FilterConnected::event_bypass(event)
-            }
-        } else {
-            FilterConnected::event_bypass(event)
-        }*/
-
-        // insert :joy: emoji here
-        true
+    fn allow(&mut self, _source: &SocketAddr, event: &NetEvent<T>) -> bool {
+        match event {
+            &NetEvent::Connect { client_uuid: _ } => true,
+            &NetEvent::Connected { server_uuid: _ } => true,
+            _ => false,
+        }
     }
 }

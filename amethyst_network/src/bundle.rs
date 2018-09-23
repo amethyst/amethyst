@@ -14,8 +14,6 @@ pub struct NetworkBundle<'a, T> {
     port: Option<u16>,
     /// The filters applied on received network events.
     filters: Vec<Box<NetFilter<T>>>,
-    /// Indicates if this should behaves as a server or as a client when handling remote connections.
-    is_server: bool,
     /// The server to automatically connect to.
     /// You would usually want this if you set is_server = false.
     connect_to: Option<SocketAddr>,
@@ -28,7 +26,6 @@ impl<'a, T> NetworkBundle<'a, T> {
             ip,
             port,
             filters,
-            is_server: false,
             connect_to: None,
         }
     }
@@ -39,7 +36,6 @@ impl<'a, T> NetworkBundle<'a, T> {
             ip,
             port,
             filters,
-            is_server: true,
             connect_to: None,
         }
     }
@@ -63,7 +59,7 @@ where
             info!("Starting NetworkBundle using a random port.");
         }
 
-        let s = NetSocketSystem::<T>::new(self.ip, self.port.unwrap())
+        let s = NetSocketSystem::<T>::new(self.ip, self.port.unwrap(), self.filters)
             .expect("Failed to open network system.");
 
         builder.add(s, "net_socket", &[]);

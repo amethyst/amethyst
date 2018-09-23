@@ -18,15 +18,13 @@ fn main() -> Result<()> {
             "127.0.0.1",
             Some(3455 as u16),
             vec![],
-        ))?
-        .with(SpamSystem::new(), "spam", &[])
+        ))?.with(SpamSystem::new(), "spam", &[])
         .with(ReaderSystem::new(), "reader", &[]);
     let mut game = Application::build("./", State1)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,
-        )
-        .build(game_data)?;
+        ).build(game_data)?;
     game.run();
     Ok(())
 }
@@ -60,7 +58,7 @@ impl SpamSystem {
 impl<'a> System<'a> for SpamSystem {
     type SystemData = (WriteStorage<'a, NetConnection<()>>, Read<'a, Time>);
     fn run(&mut self, (mut connections, time): Self::SystemData) {
-        for (mut conn,) in (&mut connections,).join() {
+        for mut conn in (&mut connections).join() {
             info!("Sending 10k messages.");
             for i in 0..10000 {
                 let ev = NetEvent::TextMessage {
@@ -71,7 +69,7 @@ impl<'a> System<'a> for SpamSystem {
                         i
                     ),
                 };
-                //send_to_all(ev, &mut send_buf, &pool);
+
                 conn.send_buffer.single_write(ev);
             }
         }

@@ -18,14 +18,14 @@ mod test {
 
         let mut cl_dispatch = DispatcherBuilder::new()
             .with(
-                NetSocketSystem::<()>::new("127.0.0.1", 21201).unwrap(),
+                NetSocketSystem::<()>::new("127.0.0.1", 21201, Vec::new()).unwrap(),
                 "s",
                 &[],
             ).build();
         cl_dispatch.setup(&mut world_cl.res);
         let mut sv_dispatch = DispatcherBuilder::new()
             .with(
-                NetSocketSystem::<()>::new("127.0.0.1", 21200).unwrap(),
+                NetSocketSystem::<()>::new("127.0.0.1", 21200, Vec::new()).unwrap(),
                 "s",
                 &[],
             ).build();
@@ -49,9 +49,8 @@ mod test {
         let mut rcv = conn_to_client.receive_buffer.register_reader();
         let conn_to_client_entity = world_sv.create_entity().with(conn_to_client).build();
 
-        sleep(Duration::from_millis(500));
-
         cl_dispatch.dispatch(&mut world_cl.res);
+        sleep(Duration::from_millis(500));
         sv_dispatch.dispatch(&mut world_sv.res);
 
         let storage = world_sv.read_storage::<NetConnection<()>>();
@@ -83,14 +82,14 @@ mod test {
 
         let mut cl_dispatch = DispatcherBuilder::new()
             .with(
-                NetSocketSystem::<()>::new("127.0.0.1", 21204).unwrap(),
+                NetSocketSystem::<()>::new("127.0.0.1", 21204, Vec::new()).unwrap(),
                 "s",
                 &[],
             ).build();
         cl_dispatch.setup(&mut world_cl.res);
         let mut sv_dispatch = DispatcherBuilder::new()
             .with(
-                NetSocketSystem::<()>::new("127.0.0.1", 21205).unwrap(),
+                NetSocketSystem::<()>::new("127.0.0.1", 21205, Vec::new()).unwrap(),
                 "s",
                 &[],
             ).build();
