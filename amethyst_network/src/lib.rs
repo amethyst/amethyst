@@ -2,13 +2,10 @@
 
 #![warn(missing_docs)]
 
-extern crate amethyst_assets;
 extern crate amethyst_core;
 extern crate bincode;
 #[macro_use]
 extern crate log;
-extern crate mio;
-extern crate rand;
 #[macro_use]
 extern crate serde;
 extern crate fern;
