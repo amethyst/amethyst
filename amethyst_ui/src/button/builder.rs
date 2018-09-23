@@ -3,10 +3,11 @@ use amethyst_audio::SourceHandle;
 use amethyst_core::specs::prelude::{Entities, Entity, Read, ReadExpect, World, WriteStorage};
 use amethyst_core::Parent;
 use amethyst_renderer::{Texture, TextureHandle};
+use font::default::get_default_font;
 use shred::SystemData;
 use {
     Anchor, FontAsset, FontHandle, MouseReactive, OnUiActionImage, OnUiActionSound, Stretch,
-    TtfFormat, UiButton, UiImage, UiText, UiTransform,
+    UiButton, UiImage, UiText, UiTransform,
 };
 
 const DEFAULT_Z: f32 = 1.0;
@@ -15,7 +16,6 @@ const DEFAULT_HEIGHT: f32 = 64.0;
 const DEFAULT_TAB_ORDER: i32 = 9;
 const DEFAULT_BKGD_COLOR: [f32; 4] = [0.82, 0.83, 0.83, 1.0];
 const DEFAULT_TXT_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
-const DEFAULT_FONT_NAME: &'static str = "font/square.ttf";
 
 /// Container for all the resources the builder needs to make a new UiButton.
 #[derive(SystemData)]
@@ -282,13 +282,7 @@ impl UiButtonBuilder {
             )
             .unwrap();
         let font_handle = self.font.unwrap_or_else(|| {
-            res.loader.load(
-                DEFAULT_FONT_NAME,
-                TtfFormat,
-                Default::default(),
-                (),
-                &res.font_asset,
-            )
+            get_default_font(&res.loader, &res.font_asset)
         });
         res.text
             .insert(
