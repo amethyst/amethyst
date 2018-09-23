@@ -78,7 +78,7 @@ where
         encoder: &mut Encoder,
         effect: &mut Effect,
         mut factory: Factory,
-        (active, camera, global, mut lines_components, lines_resource): <Self as PassData<'a>>::Data,
+        (active, camera, global, lines_components, lines_resource): <Self as PassData<'a>>::Data,
 ){
         trace!("Drawing debug lines pass");
         let debug_lines = {
