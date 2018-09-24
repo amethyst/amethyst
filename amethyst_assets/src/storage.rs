@@ -445,7 +445,11 @@ where
 /// in an `AssetStorage`.
 #[derive(Derivative)]
 #[derivative(
-    Clone(bound = ""), Eq(bound = ""), Hash(bound = ""), PartialEq(bound = ""), Debug(bound = "")
+    Clone(bound = ""),
+    Eq(bound = ""),
+    Hash(bound = ""),
+    PartialEq(bound = ""),
+    Debug(bound = "")
 )]
 pub struct Handle<A: ?Sized> {
     id: Arc<u32>,

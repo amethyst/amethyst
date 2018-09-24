@@ -1,4 +1,6 @@
-use amethyst_core::specs::{Component, DenseVecStorage, Entities, Join, Read, ReadStorage, System, WriteStorage};
+use amethyst_core::specs::{
+    Component, DenseVecStorage, Entities, Join, Read, ReadStorage, System, WriteStorage,
+};
 use amethyst_core::timing::Time;
 
 /// Destroys the entity to which this is attached at the specified time (in seconds).

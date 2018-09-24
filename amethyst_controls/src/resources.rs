@@ -14,13 +14,11 @@ impl WindowFocus {
 /// Resource indicating if the mouse should be grabbed and hidden by the CursorHideSystem
 /// when the window is focused.
 pub struct HideCursor {
-	pub hide: bool,
+    pub hide: bool,
 }
 
 impl Default for HideCursor {
-	fn default() -> Self {
-		HideCursor {
-			hide: true,
-		}
-	}
+    fn default() -> Self {
+        HideCursor { hide: true }
+    }
 }

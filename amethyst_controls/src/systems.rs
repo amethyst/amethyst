@@ -208,14 +208,16 @@ pub struct CursorHideSystem {
 
 impl CursorHideSystem {
     pub fn new() -> CursorHideSystem {
-        CursorHideSystem { 
-            is_hidden: false,
-        }
+        CursorHideSystem { is_hidden: false }
     }
 }
 
 impl<'a> System<'a> for CursorHideSystem {
-    type SystemData = (Write<'a, WindowMessages>, Read<'a, HideCursor>, Read<'a, WindowFocus>);
+    type SystemData = (
+        Write<'a, WindowMessages>,
+        Read<'a, HideCursor>,
+        Read<'a, WindowFocus>,
+    );
 
     fn run(&mut self, (mut msg, hide, focus): Self::SystemData) {
         use amethyst_renderer::mouse::*;

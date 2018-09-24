@@ -1,5 +1,5 @@
 use core::specs::prelude::{Dispatcher, DispatcherBuilder, System, World};
-use core::{SystemBundle, ArcThreadPool};
+use core::{ArcThreadPool, SystemBundle};
 use error::{Error, Result};
 use renderer::pipe::pass::Pass;
 use std::path::Path;

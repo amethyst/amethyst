@@ -49,8 +49,7 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
-        )?
-        .with_bundle(PongBundle::default())?
+        )?.with_bundle(PongBundle::default())?
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
         .with_bundle(AudioBundle::new(|music: &mut Music| music.music.next()))?
         .with_bundle(UiBundle::<String, String>::new())?
@@ -60,8 +59,7 @@ fn main() -> amethyst::Result<()> {
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,
-        )
-        .with_resource(pong_config.arena)
+        ).with_resource(pong_config.arena)
         .with_resource(pong_config.ball)
         .with_resource(pong_config.paddles)
         .build(game_data)?;

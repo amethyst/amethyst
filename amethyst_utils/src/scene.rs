@@ -82,8 +82,14 @@ where
         system_data: &mut Self::SystemData,
         entities: &[Entity],
     ) -> Result<(), Error> {
-        let (ref mut graphics, ref mut transforms, ref mut lights, ref mut cameras, ref mut tags, ref mut removals) =
-            system_data;
+        let (
+            ref mut graphics,
+            ref mut transforms,
+            ref mut lights,
+            ref mut cameras,
+            ref mut tags,
+            ref mut removals,
+        ) = system_data;
         self.graphics.load_prefab(entity, graphics, entities)?;
         self.transform.load_prefab(entity, transforms, entities)?;
         self.light.load_prefab(entity, lights, entities)?;
@@ -99,8 +105,14 @@ where
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
         let mut ret = false;
-        let (ref mut graphics, ref mut transforms, ref mut lights, ref mut cameras, ref mut tags, ref mut removals) =
-            system_data;
+        let (
+            ref mut graphics,
+            ref mut transforms,
+            ref mut lights,
+            ref mut cameras,
+            ref mut tags,
+            ref mut removals,
+        ) = system_data;
         if self.graphics.trigger_sub_loading(progress, graphics)? {
             ret = true;
         }

@@ -1,4 +1,4 @@
-use amethyst::core::{SystemBundle, ArcThreadPool};
+use amethyst::core::{ArcThreadPool, SystemBundle};
 use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World};
 use amethyst::{DataInit, Error, Result};
 
