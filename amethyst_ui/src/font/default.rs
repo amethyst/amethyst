@@ -10,7 +10,8 @@ pub fn get_default_font(loader: &Loader, storage: &AssetStorage<FontAsset>) -> F
 
 	match system_font {
 		Ok(handle) => match handle {
-			FontKitHandle::Path{..} => unimplemented!(),
+			FontKitHandle::Path{..} => unimplemented!("Default system font was provided as a path, this is not yet supported.
+				If you see this message, open an issue so that we know we need to implement it."),
 			FontKitHandle::Memory{bytes, ..} => {
 				let font_data = TtfFormat.import(bytes.to_vec(), ());
 				match font_data {
