@@ -51,8 +51,7 @@ pub(crate) fn set_light_args(
             } else {
                 None
             }
-        })
-        .collect();
+        }).collect();
 
     let directional_lights: Vec<_> = light
         .join()
@@ -67,8 +66,7 @@ pub(crate) fn set_light_args(
             } else {
                 None
             }
-        })
-        .collect();
+        }).collect();
 
     let fragment_args = FragmentArgs {
         point_light_count: point_lights.len() as u32,
@@ -96,17 +94,14 @@ pub(crate) fn setup_light_buffers(builder: &mut EffectBuilder) {
             "FragmentArgs",
             mem::size_of::<<FragmentArgs as Uniform>::Std140>(),
             1,
-        )
-        .with_raw_constant_buffer(
+        ).with_raw_constant_buffer(
             "PointLights",
             mem::size_of::<<PointLightPod as Uniform>::Std140>(),
             128,
-        )
-        .with_raw_constant_buffer(
+        ).with_raw_constant_buffer(
             "DirectionalLights",
             mem::size_of::<<DirectionalLightPod as Uniform>::Std140>(),
             16,
-        )
-        .with_raw_global("ambient_color")
+        ).with_raw_global("ambient_color")
         .with_raw_global("camera_position");
 }

@@ -128,7 +128,7 @@ impl ScreenDimensions {
     }
 
     /// Updates the hidpi factor stored in this structure.
-    /// 
+    ///
     /// Amethyst will call this for you automatically, most engine users won't need this.
     pub fn update_hidpi_factor(&mut self, factor: f64) {
         self.hidpi = factor;

@@ -40,8 +40,10 @@ impl<'a> System<'a> for VertexSkinningSystem {
 
     fn run(&mut self, (joints, global_transforms, mut skins, mut matrices): Self::SystemData) {
         self.updated.clear();
-        global_transforms.populate_modified(&mut self.updated_id.as_mut().unwrap(), &mut self.updated);
-        global_transforms.populate_inserted(&mut self.inserted_id.as_mut().unwrap(), &mut self.updated);
+        global_transforms
+            .populate_modified(&mut self.updated_id.as_mut().unwrap(), &mut self.updated);
+        global_transforms
+            .populate_inserted(&mut self.inserted_id.as_mut().unwrap(), &mut self.updated);
         self.updated_skins.clear();
         for (_, joint) in (&self.updated, &joints).join() {
             for skin in &joint.skins {
@@ -58,21 +60,24 @@ impl<'a> System<'a> for VertexSkinningSystem {
                     .iter()
                     .zip(skin.inverse_bind_matrices.iter())
                     .map(|(joint_entity, inverse_bind_matrix)| {
-                        if let Some(transform) = global_transforms.get(*joint_entity){
+                        if let Some(transform) = global_transforms.get(*joint_entity) {
                             Some((transform, inverse_bind_matrix))
                         } else {
-                            error!("Missing `Transform` Component for join entity {:?}", joint_entity);
+                            error!(
+                                "Missing `Transform` Component for join entity {:?}",
+                                joint_entity
+                            );
                             None
                         }
-                    })
-                    .flatten()
+                    }).flatten()
                     .map(|(global, inverse_bind_matrix)| {
                         (global.0 * inverse_bind_matrix * bind_shape)
                     }),
             );
 
             // update the joint matrices in all referenced mesh entities
-            for (_, mesh_global, matrix) in (&skin.meshes, &global_transforms, &mut matrices).join() {
+            for (_, mesh_global, matrix) in (&skin.meshes, &global_transforms, &mut matrices).join()
+            {
                 if let Some(global_inverse) = mesh_global.0.invert() {
                     matrix.matrices.clear();
                     matrix

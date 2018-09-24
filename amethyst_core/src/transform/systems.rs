@@ -92,7 +92,8 @@ impl<'a> System<'a> for TransformSystem {
             &locals,
             &mut globals,
             !&parents,
-        ).join()
+        )
+            .join()
         {
             self.global_modified.add(entity.id());
             global.0 = local.matrix();

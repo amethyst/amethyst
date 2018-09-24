@@ -247,8 +247,7 @@ pub fn set_vertex_args(
             proj: cam.proj.into(),
             view: transform.0.invert().unwrap().into(),
             model: global.0.into(),
-        })
-        .unwrap_or_else(|| VertexArgs {
+        }).unwrap_or_else(|| VertexArgs {
             proj: Matrix4::one().into(),
             view: Matrix4::one().into(),
             model: global.0.into(),
@@ -266,8 +265,7 @@ pub fn set_view_args(
         .map(|&(ref cam, ref transform)| ViewArgs {
             proj: cam.proj.into(),
             view: transform.0.invert().unwrap().into(),
-        })
-        .unwrap_or_else(|| ViewArgs {
+        }).unwrap_or_else(|| ViewArgs {
             proj: Matrix4::one().into(),
             view: Matrix4::one().into(),
         });
@@ -335,6 +333,5 @@ pub fn get_camera<'a>(
             let cam = camera.get(a.entity);
             let transform = global.get(a.entity);
             cam.into_iter().zip(transform.into_iter()).next()
-        })
-        .or_else(|| (camera, global).join().next())
+        }).or_else(|| (camera, global).join().next())
 }

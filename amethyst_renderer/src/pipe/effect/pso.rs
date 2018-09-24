@@ -146,7 +146,8 @@ impl<'d> PipelineInit for Init<'d> {
             let mut meta_tex = <RawShaderResource as DataLink<'d>>::new();
             for info in &info.textures {
                 if let Some(res) = meta_tex.link_resource_view(info, tex) {
-                    let d = res.map_err(|_| InitError::ResourceView(info.name.as_str(), Some(())))?;
+                    let d =
+                        res.map_err(|_| InitError::ResourceView(info.name.as_str(), Some(())))?;
                     desc.resource_views[info.slot as usize] = Some(d);
                     break;
                 }

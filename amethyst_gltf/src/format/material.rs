@@ -28,27 +28,26 @@ pub fn load_material(
         ).map(|(texture, _)| TexturePrefab::Data(texture))?,
     );
 
-    let (metallic, roughness) =
-        load_texture_with_factor(
-            material
-                .pbr_metallic_roughness()
-                .metallic_roughness_texture(),
-            [
-                material.pbr_metallic_roughness().metallic_factor(),
-                material.pbr_metallic_roughness().roughness_factor(),
-                1.0,
-                1.0,
-            ],
-            buffers,
-            source.clone(),
-            name,
-        ).map(|(texture, factors)| deconstruct_metallic_roughness(texture, factors[0], factors[1]))
-            .map(|(metallic, roughness)| {
-                (
-                    TexturePrefab::Data(metallic.0),
-                    TexturePrefab::Data(roughness.0),
-                )
-            })?;
+    let (metallic, roughness) = load_texture_with_factor(
+        material
+            .pbr_metallic_roughness()
+            .metallic_roughness_texture(),
+        [
+            material.pbr_metallic_roughness().metallic_factor(),
+            material.pbr_metallic_roughness().roughness_factor(),
+            1.0,
+            1.0,
+        ],
+        buffers,
+        source.clone(),
+        name,
+    ).map(|(texture, factors)| deconstruct_metallic_roughness(texture, factors[0], factors[1]))
+    .map(|(metallic, roughness)| {
+        (
+            TexturePrefab::Data(metallic.0),
+            TexturePrefab::Data(roughness.0),
+        )
+    })?;
     prefab.metallic = Some(metallic);
     prefab.roughness = Some(roughness);
 
@@ -120,8 +119,7 @@ fn deconstruct_image(data: &TextureData, offset: usize, step: usize) -> TextureD
                 .with_size(
                     image_data.rgba.width() as u16,
                     image_data.rgba.height() as u16,
-                )
-                .with_format(SurfaceType::R8);
+                ).with_format(SurfaceType::R8);
             let image_data = image_data
                 .rgba
                 .clone()

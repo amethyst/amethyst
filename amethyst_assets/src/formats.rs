@@ -16,7 +16,8 @@ where
 
     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<T::Data, Error> {
         use ron::de::Deserializer;
-        let mut d = Deserializer::from_bytes(&bytes).chain_err(|| "Failed deserializing Ron file")?;
+        let mut d =
+            Deserializer::from_bytes(&bytes).chain_err(|| "Failed deserializing Ron file")?;
         let val = T::Data::deserialize(&mut d).chain_err(|| "Failed parsing Ron file")?;
         d.end().chain_err(|| "Failed parsing Ron file")?;
 
@@ -25,11 +26,11 @@ where
 }
 
 /// Format for loading from Json files.
-#[cfg(feature="json")]
+#[cfg(feature = "json")]
 #[derive(Default, Clone, Debug)]
 pub struct JsonFormat;
 
-#[cfg(feature="json")]
+#[cfg(feature = "json")]
 impl<T> SimpleFormat<T> for JsonFormat
 where
     T: Asset,

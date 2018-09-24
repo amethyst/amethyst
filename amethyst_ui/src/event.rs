@@ -138,10 +138,7 @@ where
     }
 }
 
-fn targeted<'a, I>(
-    pos: (f32, f32),
-    transforms: I,
-) -> Option<Entity>
+fn targeted<'a, I>(pos: (f32, f32), transforms: I) -> Option<Entity>
 where
     I: Iterator<Item = (Entity, &'a UiTransform, Option<&'a MouseReactive>)> + 'a,
 {

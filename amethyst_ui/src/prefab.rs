@@ -368,7 +368,9 @@ where
             ref mut textures,
             ref mut sounds,
         ) = system_data;
-        let normal_image = self.normal_image.load_prefab(entity, textures, entity_set)?;
+        let normal_image = self
+            .normal_image
+            .load_prefab(entity, textures, entity_set)?;
         let hover_image = self.hover_image.load_prefab(entity, textures, entity_set)?;
         let press_image = self.press_image.load_prefab(entity, textures, entity_set)?;
         let hover_sound = self.hover_sound.load_prefab(entity, sounds, entity_set)?;
@@ -501,7 +503,8 @@ where
     fn import(&self, bytes: Vec<u8>, _: ()) -> AssetResult<UiPrefab<A, I, F>> {
         use ron::de::Deserializer;
         use serde::Deserialize;
-        let mut d = Deserializer::from_bytes(&bytes).chain_err(|| "Failed deserializing Ron file")?;
+        let mut d =
+            Deserializer::from_bytes(&bytes).chain_err(|| "Failed deserializing Ron file")?;
         let root: UiWidget<A, I, F> =
             UiWidget::deserialize(&mut d).chain_err(|| "Failed parsing Ron file")?;
         d.end().chain_err(|| "Failed parsing Ron file")?;
@@ -706,6 +709,5 @@ fn button_text_transform(mut id: String) -> UiTransformBuilder {
         .with_stretch(Stretch::XY {
             x_margin: 0.,
             y_margin: 0.,
-        })
-        .transparent()
+        }).transparent()
 }
