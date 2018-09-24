@@ -4,6 +4,8 @@
 
 A system is where the logic of the game is executed. In practice, it consists of a struct implementing a function executed on every iteration of the game loop, and taking as an argument data about the game.
 
+Systems can be seen as a small unit of logic. All systems are run by the engine together (even in parallel when possible), and do a specialized operation on one or a group of entities.
+
 ## Structure
 
 A system struct is a structure implementing the trait `amethyst::ecs::System`.
@@ -66,24 +68,24 @@ Sometimes, it can be useful to get a component in the storage for a specific ent
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::ecs::{System, ReadExpect, WriteStorage};
+# use amethyst::ecs::{Entity, System, WriteStorage};
 # use amethyst::core::Transform;
-# use amethyst::renderer::ActiveCamera;
-struct CameraGoesUp;
+struct WalkPlayerUp {
+    player: Entity,
+}
 
-impl<'a> System<'a> for CameraGoesUp {
-    type SystemData = (
-        WriteStorage<'a, Transform>,
-        ReadExpect<'a, ActiveCamera>,
-    );
+impl<'a> System<'a> for WalkPlayerUp {
+    type SystemData = WriteStorage<'a, Transform>;
 
-    fn run(&mut self, (mut transforms, camera): Self::SystemData) {
-        transforms.get_mut(camera.entity).unwrap().translation.y += 0.1;
+    fn run(&mut self, mut transforms: Self::SystemData) {
+        transforms.get_mut(self.player).unwrap().translation.y += 0.1;
     }
 }
 ```
 
-This system makes the current main camera (obtained through the `amethyst::renderer::ActiveCamera` resource) go up by 0.1 unit every iteration of the game loop! Notice that as the `ActiveCamera` resource does not implement `Default`, we had to use `ReadExpect`.
+This system makes the player go up by 0.1 unit every iteration of the game loop! To identify what entity the player is, we stored it beforehand in the system's struct. Then, we get its `Transform` from the transform storage, and move it along the Y axis by 0.1.
+
+> A transform is a very common structure in game development. It represents the position, rotation and scale of an object in the game world. You will use them a lot, as they are what you need to change when you want to move something around in your game.
 
 However, this approach is pretty rare because most of the time you don't know what entity you want to manipulate, and in fact you may want to apply your changes to multiple entities.
 

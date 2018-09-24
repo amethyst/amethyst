@@ -189,7 +189,7 @@ struct MyEvent {
     data: i32,
 }
 
-struct MyState;
+struct GameplayState;
 
 impl State<(), MyEvent> for GameplayState {
     fn handle_event(&mut self, _data: StateData<()>, event: StateEvent<MyEvent>) -> Trans<(), MyEvent> {
