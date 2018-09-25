@@ -14,9 +14,8 @@ use std::time::Duration;
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
     let game_data = GameDataBuilder::default()
-        .with_bundle(NetworkBundle::<()>::new_client(
-            "127.0.0.1",
-            Some(3455 as u16),
+        .with_bundle(NetworkBundle::<()>::new(
+            "127.0.0.1:3455".parse().unwrap(),
             vec![],
         ))?.with(SpamSystem::new(), "spam", &[])
         .with(ReaderSystem::new(), "reader", &[]);

@@ -1,4 +1,6 @@
 extern crate amethyst;
+#[macro_use]
+extern crate log;
 
 use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 use amethyst::ecs::{Join, System, WriteStorage};
@@ -11,9 +13,8 @@ use std::time::Duration;
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
     let game_data = GameDataBuilder::default()
-        .with_bundle(NetworkBundle::<()>::new_server(
-            "127.0.0.1",
-            Some(3456 as u16),
+        .with_bundle(NetworkBundle::<()>::new(
+            "127.0.0.1:3456".parse().unwrap(),
             vec![Box::new(FilterConnected::<()>::new())],
         ))?.with(SpamReceiveSystem::new(), "rcv", &[]);
     let mut game = Application::build("./", State1)?
