@@ -37,8 +37,9 @@ mod test {
         // We should have consumed the only event in the iterator by calling next().
         assert!(comp.receive_buffer.read(&mut rcv).count() == 0);
     }
+
     #[test]
-    fn send_receive_10k_packets() {
+    fn send_receive_100_packets() {
         let addr1: SocketAddr = "127.0.0.1:21205".parse().unwrap();
         let addr2: SocketAddr = "127.0.0.1:21204".parse().unwrap();
         let (mut world_cl, mut cl_dispatch, mut world_sv, mut sv_dispatch) =
@@ -60,17 +61,17 @@ mod test {
         {
             let mut sto = WriteStorage::<NetConnection<()>>::fetch(&world_cl.res);
             for mut cmp in (&mut sto).join() {
-                for _i in 0..10000 {
+                for _i in 0..100 {
                     cmp.send_buffer.single_write(test_event.clone());
                 }
             }
         }
         cl_dispatch.dispatch(&mut world_cl.res);
-        sleep(Duration::from_millis(2000));
+        sleep(Duration::from_millis(500));
         sv_dispatch.dispatch(&mut world_sv.res);
         let storage = world_sv.read_storage::<NetConnection<()>>();
         let comp = storage.get(conn_to_client_entity).unwrap();
-        assert_eq!(comp.receive_buffer.read(&mut rcv).count(), 10000);
+        assert_eq!(comp.receive_buffer.read(&mut rcv).count(), 100);
     }
 
     fn build<'a, 'b>(
