@@ -57,6 +57,11 @@ where
         addr: SocketAddr,
         filters: Vec<Box<NetFilter<E>>>,
     ) -> Result<NetSocketSystem<E>, Error> {
+        if addr.port() < 1024 {
+            // Just warning the user here, just in case they want to use the root port.
+            warn!("Using a port below 1024, this will require root permission and should not be done.");
+        }
+
         let socket = UdpSocket::bind(addr)?;
 
         socket.set_nonblocking(true).unwrap();
