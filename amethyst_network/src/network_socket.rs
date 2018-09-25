@@ -161,17 +161,7 @@ where
                     let net_event = deserialize_event::<E>(raw_event.data.as_slice());
                     match net_event {
                         Ok(ev) => {
-                            // Filter events
-                            let mut filtered = false;
-
-                            if !filtered {
-                                net_connection.receive_buffer.single_write(ev);
-                            } else {
-                                info!(
-                                    "Filtered an incoming network packet from source {:?}",
-                                    raw_event.source
-                                );
-                            }
+                            net_connection.receive_buffer.single_write(ev);
                         }
                         Err(e) => error!(
                             "Failed to deserialize an incoming network event: {} From source: {:?}",
