@@ -109,7 +109,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     ).unwrap()
-                        .step(self.current_animation, StepDirection::Backward);
+                    .step(self.current_animation, StepDirection::Backward);
                 }
 
                 Some((VirtualKeyCode::Right, ElementState::Pressed)) => {
@@ -117,7 +117,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     ).unwrap()
-                        .step(self.current_animation, StepDirection::Forward);
+                    .step(self.current_animation, StepDirection::Forward);
                 }
 
                 Some((VirtualKeyCode::F, ElementState::Pressed)) => {
@@ -126,7 +126,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     ).unwrap()
-                        .set_rate(self.current_animation, self.rate);
+                    .set_rate(self.current_animation, self.rate);
                 }
 
                 Some((VirtualKeyCode::V, ElementState::Pressed)) => {
@@ -135,7 +135,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     ).unwrap()
-                        .set_rate(self.current_animation, self.rate);
+                    .set_rate(self.current_animation, self.rate);
                 }
 
                 Some((VirtualKeyCode::H, ElementState::Pressed)) => {
@@ -144,7 +144,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     ).unwrap()
-                        .set_rate(self.current_animation, self.rate);
+                    .set_rate(self.current_animation, self.rate);
                 }
 
                 Some((VirtualKeyCode::R, ElementState::Pressed)) => {
@@ -183,8 +183,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(AnimationBundle::<AnimationId, Transform>::new(
             "animation_control_system",
             "sampler_interpolation_system",
-        ))?
-        .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
+        ))?.with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
     let mut game = Application::new(resources, Example::default(), game_data)?;
     game.run();

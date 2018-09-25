@@ -128,11 +128,9 @@ fn initialise_camera(world: &mut World) {
             ARENA_WIDTH,
             ARENA_HEIGHT,
             0.0,
-        )))
-        .with(GlobalTransform(
+        ))).with(GlobalTransform(
             Matrix4::from_translation(Vector3::new(0.0, 0.0, 1.0)).into(),
-        ))
-        .build();
+        )).build();
 }
 
 /// Initialises one paddle on the left, and one paddle on the right.

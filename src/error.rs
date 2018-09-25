@@ -1,9 +1,9 @@
 //! Engine error types.
 
 use config::ConfigError;
-use state::StateError;
 use core;
 use renderer;
+use state::StateError;
 use std::error::Error as StdError;
 use std::fmt::Result as FmtResult;
 use std::fmt::{Display, Formatter};

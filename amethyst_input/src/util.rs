@@ -1,5 +1,5 @@
-use std::hash::Hash;
 use input_handler::InputHandler;
+use std::hash::Hash;
 use winit::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 
 pub fn get_key(event: &Event) -> Option<(VirtualKeyCode, ElementState)> {
@@ -40,7 +40,7 @@ pub fn is_close_requested(event: &Event) -> bool {
 
 /// Gets the input axis value from the `InputHandler`.
 /// If the name is None, it will return the default value of the axis (0.0).
-pub fn get_input_axis_simple<A, B>(name: &Option<A>, input: &InputHandler<A, B>) -> f32 
+pub fn get_input_axis_simple<A, B>(name: &Option<A>, input: &InputHandler<A, B>) -> f32
 where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,

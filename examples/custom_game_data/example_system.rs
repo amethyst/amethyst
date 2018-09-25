@@ -45,15 +45,16 @@ impl<'a> System<'a> for ExampleSystem {
             transform.rotation = (delta_rot * Quaternion::from(transform.rotation)).into();
         }
 
-        for (point_light, transform) in (&mut lights, &mut transforms).join().filter_map(
-            |(light, transform)| {
-                if let Light::Point(ref mut point_light) = *light {
-                    Some((point_light, transform))
-                } else {
-                    None
-                }
-            },
-        ) {
+        for (point_light, transform) in
+            (&mut lights, &mut transforms)
+                .join()
+                .filter_map(|(light, transform)| {
+                    if let Light::Point(ref mut point_light) = *light {
+                        Some((point_light, transform))
+                    } else {
+                        None
+                    }
+                }) {
             transform.translation.x = light_orbit_radius * state.light_angle.cos();
             transform.translation.y = light_orbit_radius * state.light_angle.sin();
             transform.translation.z = light_z;

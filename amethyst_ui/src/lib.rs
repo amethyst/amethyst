@@ -39,6 +39,7 @@ mod bundle;
 mod button;
 mod event;
 mod focused;
+mod font;
 mod format;
 mod image;
 mod layout;
@@ -47,7 +48,6 @@ mod prefab;
 mod resize;
 mod text;
 mod transform;
-mod font;
 
 pub use self::action_components::{OnUiActionImage, OnUiActionSound};
 pub use self::bundle::UiBundle;
@@ -55,7 +55,9 @@ pub use self::button::{UiButton, UiButtonBuilder, UiButtonBuilderResources, UiBu
 pub use self::event::{MouseReactive, UiEvent, UiEventType, UiMouseSystem};
 pub use self::focused::UiFocused;
 pub use self::font::default::get_default_font;
-pub use self::font::systemfont::{default_system_font, get_all_font_handles, list_system_font_families};
+pub use self::font::systemfont::{
+    default_system_font, get_all_font_handles, list_system_font_families,
+};
 pub use self::format::{FontAsset, FontFormat, FontHandle, OtfFormat, TtfFormat};
 pub use self::image::UiImage;
 pub use self::layout::{Anchor, ScaleMode, Stretch, UiTransformSystem};

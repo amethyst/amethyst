@@ -3,7 +3,9 @@ use amethyst_assets::{
     ResultExt, SimpleFormat,
 };
 use amethyst_core::cgmath::{InnerSpace, Vector3};
-use amethyst_core::specs::prelude::{Component, Entity, Read, ReadExpect, VecStorage, WriteStorage};
+use amethyst_core::specs::prelude::{
+    Component, Entity, Read, ReadExpect, VecStorage, WriteStorage,
+};
 use mesh::{Mesh, MeshBuilder, MeshHandle};
 use std::fmt::Debug;
 use std::result::Result as StdResult;
@@ -124,8 +126,7 @@ impl SimpleFormat<Mesh> for ObjFormat {
                 parse(string)
                     .map_err(|e| Error::from(format!("In line {}: {:?}", e.line_number, e.message)))
                     .chain_err(|| "Failed to parse OBJ")
-            })
-            .map(|set| from_data(set).into())
+            }).map(|set| from_data(set).into())
     }
 }
 
@@ -146,14 +147,12 @@ fn convert(
                 Vector3::from([normal.x as f32, normal.y as f32, normal.z as f32])
                     .normalize()
                     .into()
-            })
-            .unwrap_or([0.0, 0.0, 0.0]),
+            }).unwrap_or([0.0, 0.0, 0.0]),
         tex_coord: ti
             .map(|i| {
                 let tvertex: TVertex = object.tex_vertices[i];
                 [tvertex.u as f32, tvertex.v as f32]
-            })
-            .unwrap_or([0.0, 0.0]),
+            }).unwrap_or([0.0, 0.0]),
     }
 }
 

@@ -282,12 +282,8 @@ where
 
         let new_size = match transform.stretch {
             Stretch::NoStretch => (transform.width, transform.height),
-            Stretch::X { x_margin } => {
-                (screen_dim.width() - x_margin * 2.0, transform.height)
-            }
-            Stretch::Y { y_margin } => {
-                (transform.width, screen_dim.height() - y_margin * 2.0)
-            }
+            Stretch::X { x_margin } => (screen_dim.width() - x_margin * 2.0, transform.height),
+            Stretch::Y { y_margin } => (transform.width, screen_dim.height() - y_margin * 2.0),
             Stretch::XY { x_margin, y_margin } => (
                 screen_dim.width() - x_margin * 2.0,
                 screen_dim.height() - y_margin * 2.0,

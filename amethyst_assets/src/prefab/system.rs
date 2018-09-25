@@ -3,7 +3,7 @@ use amethyst_core::specs::{
     BitSet, Entities, Entity, InsertedFlag, Join, Read, ReadExpect, ReadStorage, ReaderId,
     Resources, System, Write, WriteStorage,
 };
-use amethyst_core::{Parent, ArcThreadPool, Time};
+use amethyst_core::{ArcThreadPool, Parent, Time};
 use std::marker::PhantomData;
 use std::ops::Deref;
 use {AssetStorage, Completion, Handle, HotReloadStrategy, ProcessingState, ResultExt};
@@ -108,8 +108,7 @@ where
                                 Parent {
                                     entity: self.entities[parent],
                                 },
-                            )
-                            .unwrap();
+                            ).unwrap();
                     }
                     tags.insert(new_entity, PrefabTag::new(prefab.tag.unwrap()))
                         .unwrap();
@@ -122,8 +121,7 @@ where
                                 self.entities[index],
                                 &mut prefab_system_data,
                                 &self.entities,
-                            )
-                            .unwrap();
+                            ).unwrap();
                     }
                 }
             }

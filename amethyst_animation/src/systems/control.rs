@@ -89,23 +89,24 @@ where
             let hierarchy = hierarchies.get(entity);
             for &mut (ref id, ref mut control) in control_set.animations.iter_mut() {
                 let mut remove = false;
-                if let Some(state) = animation_storage.get(&control.animation).and_then(
-                    |animation| {
-                        process_animation_control(
-                            &entity,
-                            animation,
-                            control,
-                            hierarchy,
-                            &*sampler_storage,
-                            &mut samplers,
-                            &mut rest_states,
-                            &transforms,
-                            &mut remove,
-                            &mut self.next_id,
-                            &apply_data,
-                        )
-                    },
-                ) {
+                if let Some(state) =
+                    animation_storage
+                        .get(&control.animation)
+                        .and_then(|animation| {
+                            process_animation_control(
+                                &entity,
+                                animation,
+                                control,
+                                hierarchy,
+                                &*sampler_storage,
+                                &mut samplers,
+                                &mut rest_states,
+                                &transforms,
+                                &mut remove,
+                                &mut self.next_id,
+                                &apply_data,
+                            )
+                        }) {
                     control.state = state;
                 }
                 if let AnimationCommand::Step(_) = control.command {
@@ -161,23 +162,24 @@ where
                 def.control.state = ControlState::Deferred(secs_to_duration(start_dur));
                 def.control.command = AnimationCommand::Start;
                 let mut remove = false;
-                if let Some(state) = animation_storage.get(&def.control.animation).and_then(
-                    |animation| {
-                        process_animation_control(
-                            &entity,
-                            animation,
-                            &mut def.control,
-                            hierarchy,
-                            &*sampler_storage,
-                            &mut samplers,
-                            &mut rest_states,
-                            &transforms,
-                            &mut remove,
-                            &mut next_id,
-                            &apply_data,
-                        )
-                    },
-                ) {
+                if let Some(state) =
+                    animation_storage
+                        .get(&def.control.animation)
+                        .and_then(|animation| {
+                            process_animation_control(
+                                &entity,
+                                animation,
+                                &mut def.control,
+                                hierarchy,
+                                &*sampler_storage,
+                                &mut samplers,
+                                &mut rest_states,
+                                &transforms,
+                                &mut remove,
+                                &mut next_id,
+                                &apply_data,
+                            )
+                        }) {
                     def.control.state = state;
                 }
                 control_set.insert(id, def.control);
@@ -388,8 +390,7 @@ where
                         .map(|sampler| {
                             sampler.clear(control.id);
                             sampler.is_empty()
-                        })
-                        .unwrap_or(false);
+                        }).unwrap_or(false);
                     if empty {
                         samplers.remove(*node_entity);
                     }
@@ -601,8 +602,7 @@ where
                 .map(|sampler| {
                     sampler.clear(control_id);
                     sampler.is_empty()
-                })
-                .unwrap_or(false);
+                }).unwrap_or(false);
             if empty {
                 samplers.remove(*node_entity);
             }

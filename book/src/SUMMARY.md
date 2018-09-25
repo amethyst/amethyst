@@ -21,6 +21,7 @@
     * [Sampler](./animation/sampler.md)
     * [Definition](./animation/definition.md)
 * [Custom `GameData`](./game-data.md)
+* [Prefabs](./prefab.md)
 * [Glossary](./glossary.md)
 * [Appendix A: Config Files](./appendices/a_config_files.md)
     * [Adding an Arena Config](./appendices/a_config_files/arena_config.md)

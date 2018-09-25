@@ -44,8 +44,7 @@ fn main() -> Result<(), Error> {
         .with_bundle(TransformBundle::new().with_dep(&[]))?
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
-        )?
-        .with_bundle(ArcBallControlBundle::<String, String>::new())?
+        )?.with_bundle(ArcBallControlBundle::<String, String>::new())?
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
     let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
     game.run();

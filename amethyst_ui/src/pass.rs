@@ -122,8 +122,7 @@ impl Pass for DrawUi {
                 "VertexArgs",
                 mem::size_of::<<VertexArgs as Uniform>::Std140>(),
                 1,
-            )
-            .with_raw_vertex_buffer(PosTex::ATTRIBUTES, PosTex::size() as ElemStride, 0)
+            ).with_raw_vertex_buffer(PosTex::ATTRIBUTES, PosTex::size() as ElemStride, 0)
             .with_texture("albedo")
             .with_blended_output("color", ColorMask::all(), blend::ALPHA, None)
             .build()
@@ -224,10 +223,7 @@ impl Pass for DrawUi {
                 let vertex_args = VertexArgs {
                     invert_window_size: invert_window_size.into(),
                     // Coordinates are middle centered. It makes it easier to do layouting in most cases.
-                    coord: [
-                        ui_transform.pixel_x,
-                        ui_transform.pixel_y,
-                    ].into(),
+                    coord: [ui_transform.pixel_x, ui_transform.pixel_y].into(),
                     dimension: [ui_transform.pixel_width, ui_transform.pixel_height].into(),
                 };
 
@@ -293,8 +289,7 @@ impl Pass for DrawUi {
                             .map(|i| i.0)
                             .unwrap_or(rendered_string.len());
                         start_byte.map(|start_byte| (editing, (start_byte, end_byte)))
-                    })
-                    .map(|(editing, (start_byte, end_byte))| {
+                    }).map(|(editing, (start_byte, end_byte))| {
                         vec![
                             SectionText {
                                 text: &((rendered_string)[0..start_byte]),
@@ -315,8 +310,7 @@ impl Pass for DrawUi {
                                 font_id: FontId(0),
                             },
                         ]
-                    })
-                    .unwrap_or(vec![SectionText {
+                    }).unwrap_or(vec![SectionText {
                         text: rendered_string,
                         scale: scale,
                         color: ui_text.color,
@@ -411,7 +405,11 @@ impl Pass for DrawUi {
                         let vertex_args = VertexArgs {
                             invert_window_size: invert_window_size.into(),
                             // gfx-glyph uses y down so we need to convert to y up
-                            coord: [pos.x + width / 2.0, screen_dimensions.height() - pos.y + ascent / 2.0].into(),
+                            coord: [
+                                pos.x + width / 2.0,
+                                screen_dimensions.height() - pos.y + ascent / 2.0,
+                            ]
+                                .into(),
                             dimension: [width, height].into(),
                         };
                         effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
@@ -438,8 +436,7 @@ impl Pass for DrawUi {
                                 ui_text.color,
                                 &loader,
                                 &tex_storage,
-                            ))
-                            .map(|tex| (tex, ed))
+                            )).map(|tex| (tex, ed))
                     }) {
                         let blink_on = editing.cursor_blink_timer < 0.5 / CURSOR_BLINK_RATE;
                         if editing.use_block_cursor || blink_on {
@@ -554,6 +551,5 @@ fn cached_color_texture(
             };
             let texture_data = TextureData::Rgba(color, meta);
             loader.load_from_data(texture_data, (), storage)
-        })
-        .clone()
+        }).clone()
 }

@@ -69,8 +69,7 @@ pub fn start_logger(mut config: LoggerConfig) {
                 message = message,
                 color_reset = if config.use_colors { "\x1B[0m" } else { "" }
             ))
-        })
-        .level(config.level_filter)
+        }).level(config.level_filter)
         .chain(io::stdout())
         .apply()
         .unwrap_or_else(|_| {
