@@ -488,11 +488,13 @@ impl Pass for DrawUi {
                                 width = 2.0;
                             }
                             
-                            let pos = glyph.map(|g| g.position()).unwrap_or(Point {
-                                x: ui_transform.pixel_x - ui_transform.width / 2.,
-                                // gfx-glyph uses y down so we need to convert to y up
-                                y: screen_dimensions.height() - ui_transform.pixel_y + ascent / 2.0,
+                            let mut pos = glyph.map(|g| g.position()).unwrap_or(Point {
+                                x: ui_transform.pixel_x + ui_transform.width * ui_text.align.norm_offset().0,
+                                y: 0.0,
                             });
+                            // gfx-glyph uses y down so we need to convert to y up
+                            pos.y = screen_dimensions.height() - ui_transform.pixel_y + ascent / 2.0;
+
                             let mut x = pos.x / hidpi;
                             if let Some(glyph) = glyph {
                                 if at_end {
