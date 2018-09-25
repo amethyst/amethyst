@@ -25,7 +25,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * GltfPrefab adds MeshData as a component on loaded entities. This is not configurable until the Prefab rework. ([#946])
 * Added implementation of From<Vector3<f32>> for Transform which creates a Transform using Vector3 as the translation vector. ([#946])
 * New vertices() method on MeshCreator trait. ([#946])
-* Support for text alignement (align left, center, right). ([#965])
+* Support for text alignment (align left, center, right). ([#965])
 * Support for multiline text. ([#965])
 
 
