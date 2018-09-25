@@ -97,7 +97,7 @@ impl<'a> System<'a> for ReaderSystem {
             }
             for ev in conn.receive_buffer.read(self.reader.as_mut().unwrap()) {
                 match ev {
-                    NetEvent::TextMessage { ref msg } => println!("Received: {}", msg),
+                    NetEvent::TextMessage { ref msg } => info!("Received: {}", msg),
                     _ => {}
                 }
             }

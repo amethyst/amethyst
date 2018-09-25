@@ -29,6 +29,7 @@ where
     T: PartialEq + Send + Sync,
 {
     /// Checks if the event is from a connected client.
+    /// Note: This is not usable currently.
     fn allow(&mut self, _source: &SocketAddr, event: &NetEvent<T>) -> bool {
         match event {
             &NetEvent::Connect { client_uuid: _ } => true,

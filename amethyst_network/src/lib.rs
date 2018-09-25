@@ -3,7 +3,6 @@
 #![warn(missing_docs)]
 
 extern crate amethyst_core;
-extern crate bincode;
 #[macro_use]
 extern crate log;
 #[macro_use]
@@ -14,7 +13,7 @@ extern crate shrev;
 extern crate uuid;
 
 mod bundle;
-// TODO: Readd components and entity sync
+// TODO: Uncomment components and entity sync
 //mod components;
 mod connection;
 mod filter;

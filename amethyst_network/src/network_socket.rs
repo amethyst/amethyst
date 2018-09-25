@@ -6,12 +6,8 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::clone::Clone;
 use std::io::{Error, ErrorKind};
-use std::net::IpAddr;
 use std::net::SocketAddr;
 use std::net::UdpSocket;
-use std::str;
-use std::str::FromStr;
-
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 
@@ -31,7 +27,6 @@ struct RawEvent {
 
 // If a client sends both a connect event and other events,
 // only the connect event will be considered valid and all others will be lost.
-
 /// The System managing the network state and connections.
 /// The T generic parameter corresponds to the network event type.
 /// Receives events and filters them.
@@ -59,14 +54,10 @@ where
 {
     /// Creates a `NetSocketSystem` and binds the Socket on the ip and port added in parameters.
     pub fn new(
-        ip: &str,
-        port: u16,
+        addr: SocketAddr,
         filters: Vec<Box<NetFilter<E>>>,
     ) -> Result<NetSocketSystem<E>, Error> {
-        let socket = UdpSocket::bind(&SocketAddr::new(
-            IpAddr::from_str(ip).expect("Unreadable input IP."),
-            port,
-        ))?;
+        let socket = UdpSocket::bind(addr)?;
 
         socket.set_nonblocking(true).unwrap();
 
@@ -109,7 +100,6 @@ where
                         }
                         Err(e) => {
                             if e.kind() == ErrorKind::WouldBlock {
-                                //error!("WouldBlock: {}", e);
                                 break;
                             } else {
                                 error!("Could not receive datagram: {}", e);

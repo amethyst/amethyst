@@ -63,11 +63,11 @@ impl<'a> System<'a> for SpamReceiveSystem {
             for ev in conn.receive_buffer.read(self.reader.as_mut().unwrap()) {
                 count += 1;
                 match ev {
-                    &NetEvent::TextMessage { ref msg } => println!("{}", msg),
+                    &NetEvent::TextMessage { ref msg } => info!("{}", msg),
                     _ => {}
                 }
             }
         }
-        println!("Received {} messages this frame", count);
+        info!("Received {} messages this frame", count);
     }
 }

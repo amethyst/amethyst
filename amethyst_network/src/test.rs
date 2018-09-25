@@ -1,44 +1,21 @@
 #[cfg(test)]
 mod test {
-    use amethyst_core::shred::{DispatcherBuilder, SystemData};
+    use amethyst_core::shred::{Dispatcher, DispatcherBuilder, SystemData};
     use amethyst_core::specs::{Builder, Join, World, WriteStorage};
-    use fern::Dispatch;
-    use log::LevelFilter;
-    use std::io;
-    use std::net::{IpAddr, SocketAddr};
-    use std::str::FromStr;
+    use std::net::SocketAddr;
     use std::thread::sleep;
     use std::time::Duration;
     use {NetConnection, NetEvent, NetSocketSystem};
 
     #[test]
     fn single_packet_early() {
-        let mut world_cl = World::new();
-        let mut world_sv = World::new();
+        let addr1: SocketAddr = "127.0.0.1:21200".parse().unwrap();
+        let addr2: SocketAddr = "127.0.0.1:21201".parse().unwrap();
+        let (mut world_cl, mut cl_dispatch, mut world_sv, mut sv_dispatch) =
+            build(addr1.clone(), addr2.clone());
 
-        let mut cl_dispatch = DispatcherBuilder::new()
-            .with(
-                NetSocketSystem::<()>::new("127.0.0.1", 21201, Vec::new()).unwrap(),
-                "s",
-                &[],
-            ).build();
-        cl_dispatch.setup(&mut world_cl.res);
-        let mut sv_dispatch = DispatcherBuilder::new()
-            .with(
-                NetSocketSystem::<()>::new("127.0.0.1", 21200, Vec::new()).unwrap(),
-                "s",
-                &[],
-            ).build();
-        sv_dispatch.setup(&mut world_sv.res);
-
-        let mut conn_to_server = NetConnection::<()>::new(SocketAddr::new(
-            IpAddr::from_str("127.0.0.1").unwrap(),
-            21200,
-        ));
-        let mut conn_to_client = NetConnection::<()>::new(SocketAddr::new(
-            IpAddr::from_str("127.0.0.1").unwrap(),
-            21201,
-        ));
+        let mut conn_to_server = NetConnection::<()>::new(addr2);
+        let mut conn_to_client = NetConnection::<()>::new(addr1);
 
         let test_event = NetEvent::TextMessage {
             msg: "1".to_string(),
@@ -50,7 +27,7 @@ mod test {
         let conn_to_client_entity = world_sv.create_entity().with(conn_to_client).build();
 
         cl_dispatch.dispatch(&mut world_cl.res);
-        sleep(Duration::from_millis(500));
+        sleep(Duration::from_millis(1000));
         sv_dispatch.dispatch(&mut world_sv.res);
 
         let storage = world_sv.read_storage::<NetConnection<()>>();
@@ -61,48 +38,14 @@ mod test {
         assert!(comp.receive_buffer.read(&mut rcv).count() == 0);
     }
     #[test]
-    fn send_receive_100k_packets() {
-        Dispatch::new()
-            .format(|out, message, record| {
-                out.finish(format_args!(
-                    "[{}][{}] {}",
-                    record.target(),
-                    record.level(),
-                    message
-                ))
-            }).level(LevelFilter::Debug)
-            .chain(io::stdout())
-            .apply()
-            .unwrap_or_else(|_| {
-                debug!("Global logger already set, default amethyst logger will not be used")
-            });
+    fn send_receive_10k_packets() {
+        let addr1: SocketAddr = "127.0.0.1:21205".parse().unwrap();
+        let addr2: SocketAddr = "127.0.0.1:21204".parse().unwrap();
+        let (mut world_cl, mut cl_dispatch, mut world_sv, mut sv_dispatch) =
+            build(addr1.clone(), addr2.clone());
 
-        let mut world_cl = World::new();
-        let mut world_sv = World::new();
-
-        let mut cl_dispatch = DispatcherBuilder::new()
-            .with(
-                NetSocketSystem::<()>::new("127.0.0.1", 21204, Vec::new()).unwrap(),
-                "s",
-                &[],
-            ).build();
-        cl_dispatch.setup(&mut world_cl.res);
-        let mut sv_dispatch = DispatcherBuilder::new()
-            .with(
-                NetSocketSystem::<()>::new("127.0.0.1", 21205, Vec::new()).unwrap(),
-                "s",
-                &[],
-            ).build();
-        sv_dispatch.setup(&mut world_sv.res);
-
-        let conn_to_server = NetConnection::<()>::new(SocketAddr::new(
-            IpAddr::from_str("127.0.0.1").unwrap(),
-            21205,
-        ));
-        let mut conn_to_client = NetConnection::<()>::new(SocketAddr::new(
-            IpAddr::from_str("127.0.0.1").unwrap(),
-            21204,
-        ));
+        let conn_to_server = NetConnection::<()>::new(addr2);
+        let mut conn_to_client = NetConnection::<()>::new(addr1);
 
         let test_event = NetEvent::TextMessage {
             msg: "Test Message From Client1".to_string(),
@@ -113,22 +56,45 @@ mod test {
         let mut rcv = conn_to_client.receive_buffer.register_reader();
         let conn_to_client_entity = world_sv.create_entity().with(conn_to_client).build();
 
-        for _i in 0..10 {
-            sleep(Duration::from_millis(50));
-            {
-                let mut sto = WriteStorage::<NetConnection<()>>::fetch(&world_cl.res);
-                for mut cmp in (&mut sto).join() {
-                    for _i in 0..10000 {
-                        cmp.send_buffer.single_write(test_event.clone());
-                    }
+        sleep(Duration::from_millis(50));
+        {
+            let mut sto = WriteStorage::<NetConnection<()>>::fetch(&world_cl.res);
+            for mut cmp in (&mut sto).join() {
+                for _i in 0..10000 {
+                    cmp.send_buffer.single_write(test_event.clone());
                 }
             }
-            cl_dispatch.dispatch(&mut world_cl.res);
-            sleep(Duration::from_millis(500));
-            sv_dispatch.dispatch(&mut world_sv.res);
-            let storage = world_sv.read_storage::<NetConnection<()>>();
-            let comp = storage.get(conn_to_client_entity).unwrap();
-            assert_eq!(comp.receive_buffer.read(&mut rcv).count(), 10000);
         }
+        cl_dispatch.dispatch(&mut world_cl.res);
+        sleep(Duration::from_millis(2000));
+        sv_dispatch.dispatch(&mut world_sv.res);
+        let storage = world_sv.read_storage::<NetConnection<()>>();
+        let comp = storage.get(conn_to_client_entity).unwrap();
+        assert_eq!(comp.receive_buffer.read(&mut rcv).count(), 10000);
+    }
+
+    fn build<'a, 'b>(
+        addr1: SocketAddr,
+        addr2: SocketAddr,
+    ) -> (World, Dispatcher<'a, 'b>, World, Dispatcher<'a, 'b>) {
+        let mut world_cl = World::new();
+        let mut world_sv = World::new();
+
+        let mut cl_dispatch = DispatcherBuilder::new()
+            .with(
+                NetSocketSystem::<()>::new(addr1, Vec::new()).unwrap(),
+                "s",
+                &[],
+            ).build();
+        cl_dispatch.setup(&mut world_cl.res);
+        let mut sv_dispatch = DispatcherBuilder::new()
+            .with(
+                NetSocketSystem::<()>::new(addr2, Vec::new()).unwrap(),
+                "s",
+                &[],
+            ).build();
+        sv_dispatch.setup(&mut world_sv.res);
+
+        (world_cl, cl_dispatch, world_sv, sv_dispatch)
     }
 }

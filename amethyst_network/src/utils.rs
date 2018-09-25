@@ -1,8 +1,8 @@
 extern crate bincode;
 
 use super::NetEvent;
-use bincode::internal::ErrorKind;
-use bincode::{deserialize, serialize, Infinite};
+use utils::bincode::internal::ErrorKind;
+use utils::bincode::{deserialize, serialize, Infinite};
 
 use serde::de::DeserializeOwned;
 use serde::Serialize;
