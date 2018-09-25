@@ -18,8 +18,8 @@ use gfx::preset::blend;
 use gfx::pso::buffer::ElemStride;
 use gfx::state::ColorMask;
 use gfx_glyph::{
-    BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher, HorizontalAlign,
-    Layout, Point, Scale, SectionText, VariedSection, VerticalAlign,
+    BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher,
+    Layout, Point, Scale, SectionText, VariedSection,
 };
 use glsl_layout::{vec2, Uniform};
 use hibitset::BitSet;
@@ -316,27 +316,29 @@ impl Pass for DrawUi {
                         color: ui_text.color,
                         font_id: FontId(0),
                     }]);
-                // TODO: If you're adding multi-line support you need to change this to use
-                // Layout::Wrap.
-                let layout = Layout::SingleLine {
-                    line_breaker: BuiltInLineBreaker::UnicodeLineBreaker,
-                    h_align: HorizontalAlign::Left,
-                    v_align: VerticalAlign::Top,
+
+                let layout = match ui_text.line_mode {
+                    LineMode::Single => Layout::SingleLine {
+                        line_breaker: BuiltInLineBreaker::UnicodeLineBreaker,
+                        h_align: ui_text.align.horizontal_align(),
+                        v_align: ui_text.align.vertical_align(),
+                    },
+                    LineMode::Wrap => Layout::Wrap {
+                        line_breaker: BuiltInLineBreaker::UnicodeLineBreaker,
+                        h_align: ui_text.align.horizontal_align(),
+                        v_align: ui_text.align.vertical_align(),
+                    },
                 };
 
                 let section = VariedSection {
                     // Needs a recenter because we are using [-0.5,0.5] for the mesh
                     // instead of the expected [0,1]
                     screen_position: (
-                        (ui_transform.pixel_x - ui_transform.pixel_width / 2.0) * hidpi,
+                        (ui_transform.pixel_x + ui_transform.pixel_width * ui_text.align.norm_offset().0) * hidpi,
                         // invert y because gfx-glyph inverts it back
-                        (screen_dimensions.height()
-                            - ui_transform.pixel_y
-                            - ui_transform.pixel_height / 2.0)
-                            * hidpi,
+                        (screen_dimensions.height() - ui_transform.pixel_y - ui_transform.pixel_height * ui_text.align.norm_offset().1) * hidpi,
                     ),
                     bounds: (ui_transform.pixel_width, ui_transform.pixel_height),
-                    // TODO
                     // Invert z because of gfx-glyph using z+ forward
                     z: ui_transform.global_z / highest_abs_z,
                     layout,
@@ -482,12 +484,14 @@ impl Pass for DrawUi {
                                 height = ui_text.font_size;
                                 width = 2.0;
                             }
-
-                            let pos = glyph.map(|g| g.position()).unwrap_or(Point {
-                                x: ui_transform.pixel_x - ui_transform.width / 2.,
-                                // gfx-glyph uses y down so we need to convert to y up
-                                y: screen_dimensions.height() - ui_transform.pixel_y + ascent / 2.0,
+                            
+                            let mut pos = glyph.map(|g| g.position()).unwrap_or(Point {
+                                x: ui_transform.pixel_x + ui_transform.width * ui_text.align.norm_offset().0,
+                                y: 0.0,
                             });
+                            // gfx-glyph uses y down so we need to convert to y up
+                            pos.y = screen_dimensions.height() - ui_transform.pixel_y + ascent / 2.0;
+
                             let mut x = pos.x / hidpi;
                             if let Some(glyph) = glyph {
                                 if at_end {

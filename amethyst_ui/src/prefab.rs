@@ -6,10 +6,7 @@ use amethyst_audio::{AudioFormat, Source as Audio};
 use amethyst_core::specs::prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage};
 use amethyst_renderer::{Texture, TextureFormat, TextureMetadata, TexturePrefab};
 use serde::de::DeserializeOwned;
-use {
-    Anchor, FontAsset, FontFormat, MouseReactive, OnUiActionImage, OnUiActionSound, Stretch,
-    TextEditing, UiButton, UiFocused, UiImage, UiText, UiTransform,
-};
+use super::*;
 
 /// Loadable `UiTransform` data.
 /// By default z is equal to one.
@@ -164,9 +161,13 @@ where
     pub color: [f32; 4],
     /// Font
     pub font: AssetPrefab<FontAsset, F>,
-    /// Password field ?
+    /// Should the text be shown as dots instead of the proper characters?
     #[serde(default)]
     pub password: bool,
+    /// Where should the text be aligned from. Relative to its own UiTransform's area.
+    pub align: Option<Anchor>,
+    /// How should the text behave with line breaks.
+    pub line_mode: Option<LineMode>,
     /// Optionally make the text editable
     #[serde(default)]
     pub editable: Option<TextEditingPrefab>,
@@ -222,6 +223,15 @@ where
         let font_handle = self.font.load_prefab(entity, fonts, &[])?;
         let mut ui_text = UiText::new(font_handle, self.text.clone(), self.color, self.font_size);
         ui_text.password = self.password;
+
+        if let Some(ref align) = self.align {
+             ui_text.align = align.clone();
+         }
+         
+         if let Some(ref line_mode) = self.line_mode {
+             ui_text.line_mode = line_mode.clone();
+         }
+
         texts.insert(entity, ui_text)?;
         if let Some(ref editing) = self.editable {
             editables.insert(
@@ -568,6 +578,8 @@ fn walk_ui_tree<A, I, F>(
                 editable: None,
                 font: button.font.clone(),
                 password: false,
+                align: None,
+                line_mode: None,
                 text: button.text.clone(),
                 font_size: button.font_size,
             };

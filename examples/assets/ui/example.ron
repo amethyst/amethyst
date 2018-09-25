@@ -85,6 +85,7 @@ Container(
                         font: File("font/square.ttf", Ttf, ()),
                         font_size: 75.,
                         color: (0.2, 0.2, 1.0, 1.0),
+                        align: MiddleRight,
                         editable: (
                             max_length: 12,
                         ),
@@ -155,5 +156,78 @@ Container(
                 color: (1.0, 1.0, 1.0, 1.0),
             )
         ),
+
+        Text(
+            transform: (
+                id: "multiline",
+                x: -200.,
+                width: 400.,
+                height: 200.,
+                tab_order: 1,
+                anchor: MiddleRight,
+            ),
+            text: (
+                text: "Multiline\nText!",
+                font: File("font/square.ttf", Ttf, ()),
+                font_size: 30.,
+                color: (0.2, 0.2, 1.0, 1.0),
+                line_mode: Wrap,
+                align: MiddleRight,
+            )
+        ),
+
+        // ------ Text Align Start ------
+        Text(
+            transform: (
+                id: "TopLeft",
+                y: -100.0,
+                width: 500.,
+                height: 75.,
+                tab_order: 1,
+                anchor: Middle,
+            ),
+            text: (
+                text: "TopLeft",
+                font: File("font/square.ttf", Ttf, ()),
+                font_size: 75.,
+                color: (0.2, 0.2, 1.0, 1.0),
+                align: TopLeft,
+            )
+        ),
+        Text(
+            transform: (
+                id: "Middle",
+                y: -200.0,
+                width: 500.,
+                height: 75.,
+                tab_order: 1,
+                anchor: Middle,
+            ),
+            text: (
+                text: "Middle",
+                font: File("font/square.ttf", Ttf, ()),
+                font_size: 75.,
+                color: (0.2, 0.2, 1.0, 1.0),
+                align: Middle,
+            )
+        ),
+        Text(
+            transform: (
+                id: "BottomRight",
+                y: -300.0,
+                width: 500.,
+                height: 75.,
+                tab_order: 1,
+                anchor: Middle,
+            ),
+            text: (
+                text: "BottomRight",
+                font: File("font/square.ttf", Ttf, ()),
+                font_size: 75.,
+                color: (0.2, 0.2, 1.0, 1.0),
+                align: BottomRight,
+            )
+        ),
+        // ------ Text Align Stop -------
     ],
 )

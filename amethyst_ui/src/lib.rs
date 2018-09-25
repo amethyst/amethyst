@@ -67,7 +67,7 @@ pub use self::prefab::{
     UiTransformBuilder, UiWidget,
 };
 pub use self::resize::{ResizeSystem, UiResize};
-pub use self::text::{TextEditing, UiKeyboardSystem, UiText};
+pub use self::text::{LineMode, TextEditing, UiKeyboardSystem, UiText};
 pub use self::transform::{UiFinder, UiTransform};
 
 /// How many times the cursor blinks per second while editing text.

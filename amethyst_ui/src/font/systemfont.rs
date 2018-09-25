@@ -4,10 +4,6 @@ use font_kit::handle::Handle;
 use font_kit::properties::{Properties, Style};
 use font_kit::source::SystemSource;
 
-// Temporarily disabled because const can't contain heap allocations.
-// Fantasy contains comic sans btw
-//const DEFAULT_FONTS: &[FamilyName] = &[FamilyName::Title("arial".to_string()), FamilyName::SansSerif, FamilyName::Monospace, FamilyName::Fantasy];
-
 /// Lists all installed font families on the system.
 pub fn list_system_font_families() -> Result<Vec<String>, SelectionError> {
     let source = SystemSource::new();
@@ -31,7 +27,6 @@ pub fn get_all_font_handles() -> Result<Vec<Handle>, SelectionError> {
 /// Returns the default system font.
 pub fn default_system_font() -> Result<Handle, SelectionError> {
     let source = SystemSource::new();
-    // TODO: remove once font_kit accepts titles with &str
     let default_fonts = &[
         FamilyName::Title("arial".to_string()),
         FamilyName::SansSerif,
