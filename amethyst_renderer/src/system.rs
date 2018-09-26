@@ -7,6 +7,8 @@ use amethyst_core::specs::prelude::{
     Read, ReadExpect, Resources, RunNow, SystemData, Write, WriteExpect,
 };
 use amethyst_core::Time;
+use amethyst_xr::XRInfo;
+use xr::{XRRenderInfo, XRTargetInfo};
 use config::DisplayConfig;
 use error::Result;
 use formats::{create_mesh_asset, create_texture_asset};
@@ -152,19 +154,54 @@ where
         self.asset_loading(AssetLoadingData::fetch(res));
         self.window_management(WindowData::fetch(res));
 
-//        if let Some(xr_info) = res.fetch::<>
-        for target in 0..self.renderer.xr_targets() {
+        if let Some(mut xr_info) = res.try_fetch_mut::<XRInfo>() {
+            {
+                let mut targets = self.renderer.xr_targets().len();
+                let target_infos = xr_info.targets();
 
-            self.renderer.draw_to_xr_target(target, &mut self.pipe, RenderData::<P>::fetch(res));
+                if targets != target_infos.len() {
+                    self.renderer
+                        .init_xr_targets(target_infos.iter().map(|i| i.size.clone()).collect());
+                }
+
+                for target_index in 0..targets {
+                    let target_info = &target_infos[target_index];
+                    *res.fetch_mut::<XRRenderInfo>() = XRRenderInfo::XR(XRTargetInfo {
+                        render_target: target_index,
+                        view_offset: target_info.view_offset.clone(),
+                        projection: target_info.projection.clone(),
+                    });
+                    self.renderer.draw_to_xr_target(
+                        target_index,
+                        &mut self.pipe,
+                        RenderData::<P>::fetch(res),
+                    );
+                }
+                self.renderer.flush();
+            }
+
+            let mut backend = xr_info.backend();
+            for (target_index, target) in self.renderer.xr_targets().iter().enumerate() {
+                #[cfg(feature = "opengl")]
+                {
+                    let gl_target = (target.color_bufs()[0].as_input.as_ref().unwrap().raw_view().gl_texture()) as usize;
+                    backend.submit_gl_target(target_index, gl_target);
+                }
+            }
+
+            *res.fetch_mut::<XRRenderInfo>() = XRRenderInfo::Window;
         }
-        self.renderer.draw_to_window(&mut self.pipe, RenderData::<P>::fetch(res));
+        self.renderer
+            .draw_to_window(&mut self.pipe, RenderData::<P>::fetch(res));
         self.renderer.flush();
+        self.renderer.swap_window_buffers();
 
         let events = &mut self.event_vec;
         self.renderer.events_mut().poll_events(|new_event| {
             compress_events(events, new_event);
         });
-        res.fetch_mut::<EventChannel<Event>>().iter_write(events.drain(..));
+        res.fetch_mut::<EventChannel<Event>>()
+            .iter_write(events.drain(..));
     }
 
     fn setup(&mut self, res: &mut Resources) {
@@ -182,6 +219,8 @@ where
             .into();
         let hidpi = self.renderer.window().get_hidpi_factor();
         res.insert(ScreenDimensions::new(width, height, hidpi));
+
+        res.insert(XRRenderInfo::Window);
     }
 }
 

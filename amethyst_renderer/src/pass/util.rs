@@ -247,12 +247,17 @@ pub fn set_vertex_args(
     let vertex_args = camera
         .as_ref()
         .map(|&(ref cam, ref transform)| VertexArgs {
-            proj: xr_camera.as_ref().map(|c| c.projection.clone().into()).unwrap_or_else(|| cam.proj.into()),
-            view: (transform.0.invert().unwrap() * xr_camera.as_ref().map(|c| c.view_offset)
-                .unwrap_or_else(|| &one)).into(),
+            proj: xr_camera
+                .as_ref()
+                .map(|c| c.projection.clone().into())
+                .unwrap_or_else(|| cam.proj.into()),
+            view: (xr_camera
+                .as_ref()
+                .map(|c| c.view_offset)
+                .unwrap_or_else(|| &one)
+                * transform.0.invert().unwrap()).into(),
             model: global.0.into(),
-        })
-        .unwrap_or_else(|| VertexArgs {
+        }).unwrap_or_else(|| VertexArgs {
             proj: one.into(),
             view: one.into(),
             model: global.0.into(),

@@ -16,7 +16,7 @@ in VertexData {
     vec2 tex_coord;
 } vertex;
 
-out vec4 color;
+out vec4 out_color;
 
 float tex_coord(float coord, vec2 offset) {
     return offset.x + coord * (offset.y - offset.x);
@@ -27,5 +27,5 @@ vec2 tex_coords(vec2 coord, vec2 u, vec2 v) {
 }
 
 void main() {
-    color = texture(albedo, tex_coords(vertex.tex_coord, albedo_offset.u_offset, albedo_offset.v_offset));
+    out_color = texture(albedo, tex_coords(vertex.tex_coord, albedo_offset.u_offset, albedo_offset.v_offset));
 }

@@ -6,8 +6,8 @@ uniform sampler2D albedo;
 
 in vec2 tex_uv;
 
-out vec4 color;
+out vec4 out_color;
 
 void main() {
-    color = texture(albedo, tex_uv);
+    out_color = texture(albedo, tex_uv);
 }

@@ -94,6 +94,12 @@ impl From<gfx::CombinedError> for Error {
     }
 }
 
+impl From<gfx::TargetViewError> for Error {
+    fn from(e: gfx::TargetViewError) -> Error {
+        Error::TargetCreation(e.into())
+    }
+}
+
 impl From<gfx::PipelineStateError<String>> for Error {
     fn from(e: gfx::PipelineStateError<String>) -> Error {
         Error::PassInit(e)

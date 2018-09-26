@@ -26,17 +26,18 @@ pub trait XRBackend: Send {
 
     fn get_tracker_models(&mut self, index: u32) -> TrackerModelLoadStatus;
 
-    fn get_gl_target_info(&mut self, near: f32, far: f32) -> Vec<(Matrix4<f32>, (u32, u32))>;
+    fn get_gl_target_info(&mut self, near: f32, far: f32) -> Vec<XRTargetInfo>;
     fn submit_gl_target(&mut self, target_index: usize, gl_target: usize);
 }
 
+#[derive(Debug, Clone)]
 pub enum XREvent {
     AreaChanged,
     TrackerAdded(components::TrackingDevice),
     TrackerRemoved(u32),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TrackerPositionData {
     pub position: Vector3<f32>,
     pub rotation: Quaternion<f32>,
@@ -81,10 +82,6 @@ pub struct TrackerComponentTextureData {
     pub size: (u16, u16),
 }
 
-pub struct TrackerModelComponentTexture {
-
-}
-
 pub struct XRBundle<'a> {
     dep: &'a [&'a str],
     backend: Box<dyn XRBackend>,
@@ -118,14 +115,25 @@ impl<'a, 'b, 'c> SystemBundle<'a, 'b> for XRBundle<'c> {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct XRTargetInfo {
+    pub size: (u32, u32),
+    pub view_offset: Matrix4<f32>,
+    pub projection: Matrix4<f32>,
+}
+
 pub struct XRInfo {
-    targets: Vec<(Matrix4<f32>, (u32, u32))>,
+    targets: Vec<XRTargetInfo>,
 
     defined_area: Vec<[f32; 3]>,
     backend: Mutex<Box<dyn XRBackend>>,
 }
 
 impl XRInfo {
+    pub fn targets(&self) -> &[XRTargetInfo] {
+        &self.targets
+    }
+
     pub fn backend(&mut self) -> MutexGuard<Box<dyn XRBackend>> {
         self.backend.lock().unwrap()
     }

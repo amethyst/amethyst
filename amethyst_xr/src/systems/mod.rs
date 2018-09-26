@@ -58,7 +58,12 @@ impl<'a> System<'a> for XRSystem {
 
         res.insert(EventChannel::<::XREvent>::new());
 
-        let targets = self.backend.as_mut().unwrap().get_gl_target_info(0.1, 1000.0);
+        let targets = self
+            .backend
+            .as_mut()
+            .unwrap()
+            .get_gl_target_info(0.01, 1000.0);
+
         res.insert(XRInfo {
             targets,
 

@@ -159,6 +159,7 @@ where
 
     fn update_target(&mut self, name: &str, target: Target) {
         self.targets.insert(String::from(name), target);
+        self.stages.new_targets(&self.targets);
     }
 
     /// Returns an immutable reference to all targets and their name strings.

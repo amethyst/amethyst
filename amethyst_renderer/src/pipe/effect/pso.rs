@@ -71,6 +71,7 @@ impl<'d> PipelineInit for Init<'d> {
 
         for color in &self.out_colors {
             let mut meta_color = <RenderTarget as DataLink<'d>>::new();
+            println!("info outputs {:#?} {:#?}", info.outputs, color);
             for info in &info.outputs {
                 if let Some(res) = meta_color.link_output(info, color) {
                     let d = res.map_err(|e| InitError::PixelExport(info.name.as_str(), Some(e)))?;
@@ -78,6 +79,7 @@ impl<'d> PipelineInit for Init<'d> {
                     break;
                 }
             }
+            println!("meta colors {:#?}", meta_color);
             meta.out_colors.push(meta_color);
         }
 

@@ -29,6 +29,7 @@
 
 extern crate amethyst_assets;
 extern crate amethyst_core;
+extern crate amethyst_xr;
 #[macro_use]
 extern crate derivative;
 #[macro_use]

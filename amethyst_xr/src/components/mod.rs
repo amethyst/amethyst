@@ -3,7 +3,7 @@ use amethyst_core::specs::Component;
 
 use TrackerCapabilities;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct TrackingDevice {
     id: u32,
     haptic_duration: Option<u16>,
@@ -58,6 +58,7 @@ impl Component for TrackingDevice {
     type Storage = HashMapStorage<Self>;
 }
 
+#[derive(Debug, Clone)]
 pub struct RenderModelComponent(String);
 
 impl Component for RenderModelComponent {

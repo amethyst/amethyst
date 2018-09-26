@@ -2,6 +2,7 @@ use config::DisplayConfig;
 use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
 use gfx::memory::Pod;
+use gfx::texture::AaMode;
 use mesh::{Mesh, MeshBuilder, VertexDataSet};
 use pipe::{
     ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, Target, TargetBuilder,
@@ -110,21 +111,23 @@ impl Renderer {
     ///
     pub fn flush(&mut self) {
         use gfx::Device;
-        #[cfg(feature = "opengl")]
-        use glutin::GlContext;
-
         self.encoder.flush(&mut self.device);
         self.device.cleanup();
+    }
 
+    ///
+    pub fn swap_window_buffers(&mut self) {
         #[cfg(feature = "opengl")]
-            self.window
+        use glutin::GlContext;
+        #[cfg(feature = "opengl")]
+        self.window
             .swap_buffers()
             .expect("OpenGL context has been lost");
     }
 
     ///
-    pub fn xr_targets(&self) -> usize {
-        self.xr_targets.len()
+    pub fn xr_targets(&self) -> &[Target] {
+        &self.xr_targets
     }
 
     /// Retrieve a mutable borrow of the events loop
@@ -151,7 +154,12 @@ impl Renderer {
     ///
     pub fn init_xr_targets(&mut self, targets: Vec<(u32, u32)>) {
         self.xr_targets = targets.iter().map(|size| {
-            TargetBuilder::new("").with_depth_buf(true).build(&mut self.factory, *size).unwrap().1
+            TargetBuilder::new("")
+                .with_depth_buf(true)
+                .with_aa(AaMode::Single) // FIXME: OpenVR seems to segfault with MSAA
+                .build(&mut self.factory, *size)
+                .unwrap()
+                .1
         }).collect();
     }
 
@@ -187,7 +195,6 @@ pub struct RendererBuilder {
     config: DisplayConfig,
     events: EventsLoop,
     winit_builder: WindowBuilder,
-    xr_targets: Vec<(u32, u32)>,
 }
 
 impl RendererBuilder {
@@ -197,7 +204,6 @@ impl RendererBuilder {
             config: DisplayConfig::default(),
             events: el,
             winit_builder: WindowBuilder::new().with_title("Amethyst"),
-            xr_targets: Vec::new(),
         }
     }
 

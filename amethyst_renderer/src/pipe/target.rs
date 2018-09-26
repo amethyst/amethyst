@@ -2,7 +2,11 @@
 
 use error::Result;
 use fnv::FnvHashMap as HashMap;
-use types::{DepthStencilView, Encoder, Factory, RenderTargetView, ShaderResourceView, Window};
+use types::{ColorFormat, DepthFormat, DepthStencilView, Encoder, Factory, RenderTargetView, ShaderResourceView, Window};
+use gfx::texture;
+use gfx::texture::AaMode;
+use gfx::format::{Swizzle, Formatted, ChannelTyped};
+use gfx::memory::{Bind, Usage};
 
 /// Target color buffer.
 #[derive(Clone, Debug, PartialEq)]
@@ -121,6 +125,7 @@ pub struct TargetBuilder {
     name: String,
     has_depth_buf: bool,
     num_color_bufs: usize,
+    aa_mode: AaMode,
 }
 
 impl TargetBuilder {
@@ -131,6 +136,7 @@ impl TargetBuilder {
             name: name.into(),
             has_depth_buf: false,
             num_color_bufs: 1,
+            aa_mode: AaMode::Single,
         }
     }
 
@@ -157,6 +163,12 @@ impl TargetBuilder {
         self
     }
 
+    /// Specifies the anti-aliasing mode to use.
+    pub fn with_aa(mut self, aa_mode: AaMode) -> Self {
+        self.aa_mode = aa_mode;
+        self
+    }
+
     /// Builds and returns the new render target.
     pub(crate) fn build(self, fac: &mut Factory, size: (u32, u32)) -> Result<(String, Target)> {
         use gfx::Factory;
@@ -167,7 +179,14 @@ impl TargetBuilder {
             .into_iter()
             .map(|_| {
                 let (w, h) = (size.0 as u16, size.1 as u16);
-                let (_, res, rt) = fac.create_render_target(w, h)?;
+
+                let kind = texture::Kind::D2(w, h, self.aa_mode);
+                let levels = 1;
+                let cty = <<ColorFormat as Formatted>::Channel as ChannelTyped>::get_channel_type();
+                let tex = fac.create_texture(kind, levels, Bind::SHADER_RESOURCE | Bind::RENDER_TARGET, Usage::Data, Some(cty))?;
+                let res = fac.view_texture_as_shader_resource::<ColorFormat>(&tex, (0, levels - 1), Swizzle::new())?;
+                let rt = fac.view_texture_as_render_target(&tex, 0, None)?;
+
                 Ok(ColorBuffer {
                     as_input: Some(res),
                     as_output: rt,
@@ -176,7 +195,13 @@ impl TargetBuilder {
 
         let depth_buf = if self.has_depth_buf {
             let (w, h) = (size.0 as u16, size.1 as u16);
-            let (_, res, dt) = fac.create_depth_stencil(w, h)?;
+
+            let kind = texture::Kind::D2(w, h, self.aa_mode);
+            let cty = <<DepthFormat as Formatted>::Channel as ChannelTyped>::get_channel_type();
+            let tex = fac.create_texture(kind, 1, Bind::SHADER_RESOURCE | Bind::DEPTH_STENCIL, Usage::Data, Some(cty))?;
+            let res = fac.view_texture_as_shader_resource::<DepthFormat>(&tex, (0, 0), Swizzle::new())?;
+            let dt = fac.view_texture_as_depth_stencil_trivial(&tex)?;
+
             let depth = DepthBuffer {
                 as_input: Some(res),
                 as_output: dt,
