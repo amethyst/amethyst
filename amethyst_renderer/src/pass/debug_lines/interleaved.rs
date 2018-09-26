@@ -16,6 +16,7 @@ use pipe::{DepthMode, Effect, NewEffect};
 use std::marker::PhantomData;
 use types::{Encoder, Factory};
 use vertex::{Color, Normal, Position, Query};
+use xr::XRRenderInfo;
 
 /// Draw several simple lines for debugging
 ///
@@ -51,6 +52,7 @@ where
         ReadStorage<'a, GlobalTransform>,
         WriteStorage<'a, DebugLinesComponent>, // DebugLines components
         Option<Write<'a, DebugLines>>,         // DebugLines resource
+        Option<Read<'a, XRRenderInfo>>,
     );
 }
 
@@ -78,8 +80,10 @@ where
         encoder: &mut Encoder,
         effect: &mut Effect,
         mut factory: Factory,
-        (active, camera, global, lines_components, lines_resource): <Self as PassData<'a>>::Data,
-){
+        (active, camera, global, lines_components, lines_resource, xr_info): <Self as PassData<
+            'a,
+        >>::Data,
+    ) {
         trace!("Drawing debug lines pass");
         let debug_lines = {
             let mut lines = Vec::<DebugLine>::new();
@@ -113,7 +117,13 @@ where
             return;
         }
 
-        set_vertex_args(effect, encoder, camera, &GlobalTransform(Matrix4::one()));
+        set_vertex_args(
+            effect,
+            encoder,
+            camera,
+            &xr_info.as_ref().and_then(|i| i.camera_reference()),
+            &GlobalTransform(Matrix4::one()),
+        );
 
         effect.draw(mesh.slice(), encoder);
         effect.clear();
