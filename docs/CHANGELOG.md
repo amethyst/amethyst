@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## Unreleased
 ### Added
+* Added base networking implementation and the `amethyst_network` crate. ([#969])
 * Support for debug lines using `DebugLines` pass, and `DebugLines` component or resource. ([#917], [#957])
 * Added JsonFormat ([#950]). 
 * `SpriteRender` pass to draw sprites without using `Material` and `Mesh`. ([#829], [#830])
@@ -90,6 +91,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#957]: https://github.com/amethyst/amethyst/pull/957
 [#964]: https://github.com/amethyst/amethyst/pull/964
 [#965]: https://github.com/amethyst/amethyst/pull/965
+[#969]: https://github.com/amethyst/amethyst/pull/969
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
 
