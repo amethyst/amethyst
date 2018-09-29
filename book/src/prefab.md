@@ -1,6 +1,6 @@
 # Prefabs
 
-A `Prefab` in `Amethyst` is at the core a simple list of future entities, where each entry in 
+A `Prefab` in Amethyst is at the core a simple list of future entities, where each entry in 
 the list consists of two pieces of optional data:
 
 * a parent index that refers to a different entry in the list
@@ -18,7 +18,7 @@ The lifetime of a `Prefab` can roughy be divided into three distinct parts:
 
 **Loading**
 
-This is the same as for all assets in `Amethyst`, the user initiates a load using `Loader`, a 
+This is the same as for all assets in Amethyst, the user initiates a load using `Loader`, a 
 `Source` and a `Format`. The `Format` returns a `Prefab`, and the user is handed a `Handle<Prefab<T>>`,
 for some `T` that implements `PrefabData`.
 
@@ -55,24 +55,31 @@ of `PrefabData` call the `load_prefab` function.
 
 Ok, so what would a simple implementation of `PrefabData` look like?
 
-Let's take a look at the implementation for `Transform`, which is a core concept in `Amethyst`:
+Let's take a look at the implementation for `Transform`, which is a core concept in Amethyst:
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::assets::PrefabData;
+# use amethyst::ecs::{WriteStorage, Entity, Component, NullStorage, error::Error as SpecsError};
+# 
+# // We declare that struct for the sake of automated testing.
+# #[derive(Default, Clone)]
+# struct Transform;
+# impl Component for Transform {
+#   type Storage = NullStorage<Transform>;
+# }
+#
 impl<'a> PrefabData<'a> for Transform {
-    type SystemData = (
-        WriteStorage<'a, Transform>,
-        WriteStorage<'a, GlobalTransform>,
-    );
+    type SystemData = WriteStorage<'a, Transform>;
     type Result = ();
 
     fn load_prefab(
         &self,
         entity: Entity,
-        storages: &mut Self::SystemData,
+        storage: &mut Self::SystemData,
         _: &[Entity],
     ) -> Result<(), SpecsError> {
-        storages.1.insert(entity, GlobalTransform::default())?;
-        storages.0.insert(entity, self.clone()).map(|_| ())
+        storage.insert(entity, self.clone()).map(|_| ())
     }
 }
 ```
@@ -97,7 +104,13 @@ are no secondary assets to load from `Source` here.
 Let's look at a slightly more complex implementation, the `AssetPrefab`. This `PrefabData` is used to
 load extra `Asset`s as part of a `Prefab`:
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# #[macro_use] extern crate serde_derive;
+# use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter};
+# use amethyst::assets::PrefabData;
+# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, error::Error as SpecsError};
+# 
 #[derive(Deserialize, Serialize)]
 pub enum AssetPrefab<A, F>
 where

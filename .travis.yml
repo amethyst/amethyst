@@ -50,13 +50,7 @@ before_script:
   - export PATH=$PATH:/home/travis/.cargo/bin
 
 # Generate documentation, compile the engine, run tests.
-script: |
-  # Build and test without profiler
-  cargo test --all -v &&
-  # Build and test with profiler
-  cargo test --all --features profiler -v &&
-  # Build and test with sdl_controller
-  cargo test --all --features sdl_controller -v
+script: bash travis.sh
 
 # Push notifications to `amethyst/general` and `amethyst/engine` Gitter chats.
 notifications:
