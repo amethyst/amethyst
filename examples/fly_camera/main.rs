@@ -5,7 +5,7 @@ extern crate amethyst;
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
     controls::FlyControlBundle,
-    core::{transform::TransformBundle, WithNamed},
+    core::{transform::TransformBundle},
     input::InputBundle,
     prelude::*,
     renderer::{DrawShaded, PosNormTex},
