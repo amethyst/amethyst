@@ -1,7 +1,8 @@
-use fern;
 pub use log::LevelFilter;
-use std::env;
-use std::io;
+
+use fern::{self, FormatCallback};
+use log;
+use std::{env, fmt, io, str::FromStr};
 
 /// Logger configuration object.
 #[derive(Clone, Copy)]
@@ -14,17 +15,11 @@ pub struct LoggerConfig {
 
 impl Default for LoggerConfig {
     fn default() -> LoggerConfig {
-        let use_colors = if let Ok(_) = env::var("AMETHYST_LOG_DISABLE_COLORS") {
-            false
-        } else {
-            true
-        };
-        let level_filter = if let Ok(lf) = env::var("AMETHYST_LOG_LEVEL_FILTER") {
-            use std::str::FromStr;
-            LevelFilter::from_str(&lf).unwrap_or(LevelFilter::Debug)
-        } else {
-            LevelFilter::Debug
-        };
+        let use_colors = env::var_os("AMETHYST_LOG_DISABLE_COLORS").is_none();
+        let level_filter = env::var("AMETHYST_LOG_LEVEL_FILTER").ok()
+            .and_then(|lf| LevelFilter::from_str(&lf).ok())
+            .unwrap_or(LevelFilter::Debug);
+
         LoggerConfig {
             use_colors,
             level_filter,
@@ -43,33 +38,35 @@ impl Default for LoggerConfig {
 /// * AMETHYST_LOG_LEVEL_FILTER - sets the log level
 ///
 pub fn start_logger(mut config: LoggerConfig) {
-    if let Ok(_) = env::var("AMETHYST_LOG_DISABLE_COLORS") {
+    if env::var("AMETHYST_LOG_DISABLE_COLORS").is_ok() {
         config.use_colors = false;
     }
     if let Ok(lf) = env::var("AMETHYST_LOG_LEVEL_FILTER") {
-        use std::str::FromStr;
         config.level_filter = LevelFilter::from_str(&lf).unwrap_or(LevelFilter::Debug)
     }
+
     let color_config = fern::colors::ColoredLevelConfig::new();
+    let format = move |out: FormatCallback, message: &fmt::Arguments, record: &log::Record| {
+        let (color, color_reset) = if config.use_colors {
+            let color_code = color_config.get_color(&record.level()).to_fg_str();
+            (format!("\x1B[{}m", color_code), "\x1B[0m")
+        } else {
+            (String::new(), "")
+        };
+
+        out.finish(format_args!(
+            "{color}[{level}][{target}] {message}{color_reset}",
+            color = color,
+            level = record.level(),
+            target = record.target(),
+            message = message,
+            color_reset = color_reset
+        ))
+    };
 
     fern::Dispatch::new()
-        .format(move |out, message, record| {
-            out.finish(format_args!(
-                "{color}[{level}][{target}] {message}{color_reset}",
-                color = if config.use_colors {
-                    format!(
-                        "\x1B[{}m",
-                        color_config.get_color(&record.level()).to_fg_str()
-                    )
-                } else {
-                    String::from("")
-                },
-                level = record.level(),
-                target = record.target(),
-                message = message,
-                color_reset = if config.use_colors { "\x1B[0m" } else { "" }
-            ))
-        }).level(config.level_filter)
+        .format(format)
+        .level(config.level_filter)
         .chain(io::stdout())
         .apply()
         .unwrap_or_else(|_| {
