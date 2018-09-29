@@ -2,9 +2,11 @@
 
 extern crate amethyst;
 
-use amethyst::prelude::*;
-use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline, PosNormTex, RenderBundle, Stage};
-use amethyst::utils::application_root_dir;
+use amethyst::{
+    prelude::*,
+    renderer::{DisplayConfig, DrawFlat, Pipeline, PosNormTex, RenderBundle, Stage},
+    utils::application_root_dir,
+};
 
 struct Example;
 

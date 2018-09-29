@@ -2,12 +2,16 @@
 
 extern crate amethyst;
 
-use amethyst::assets::Loader;
-use amethyst::core::cgmath::{Deg, Matrix4};
-use amethyst::core::transform::GlobalTransform;
-use amethyst::prelude::*;
-use amethyst::renderer::*;
-use amethyst::utils::application_root_dir;
+use amethyst::{
+    assets::Loader,
+    core::{
+        cgmath::{Deg, Matrix4},
+        transform::GlobalTransform,
+    },
+    prelude::*,
+    renderer::*,
+    utils::application_root_dir,
+};
 
 struct Example;
 

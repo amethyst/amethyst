@@ -5,24 +5,28 @@
 
 extern crate amethyst;
 
-use amethyst::assets::{
-    Completion, Handle, HotReloadBundle, Prefab, PrefabLoader, PrefabLoaderSystem, ProgressCounter,
-    RonFormat,
+use amethyst::{
+    assets::{
+        Completion, Handle, HotReloadBundle, Prefab, PrefabLoader, PrefabLoaderSystem,
+        ProgressCounter, RonFormat,
+    },
+    core::{
+        cgmath::{Quaternion, Rad, Rotation, Rotation3},
+        timing::Time,
+        transform::{Transform, TransformBundle},
+    },
+    ecs::prelude::{Entity, Join, Read, ReadStorage, System, Write, WriteStorage},
+    input::{get_key, is_close_requested, is_key_down, InputBundle},
+    prelude::*,
+    renderer::{AmbientColor, Camera, DrawShaded, ElementState, Light, PosNormTex, VirtualKeyCode},
+    ui::{UiBundle, UiCreator, UiFinder, UiText},
+    utils::{
+        application_root_dir,
+        fps_counter::{FPSCounter, FPSCounterBundle},
+        scene::BasicScenePrefab,
+    },
+    Error,
 };
-use amethyst::core::cgmath::{Quaternion, Rad, Rotation, Rotation3};
-use amethyst::core::timing::Time;
-use amethyst::core::transform::{Transform, TransformBundle};
-use amethyst::ecs::prelude::{Entity, Join, Read, ReadStorage, System, Write, WriteStorage};
-use amethyst::input::{get_key, is_close_requested, is_key_down, InputBundle};
-use amethyst::prelude::*;
-use amethyst::renderer::{
-    AmbientColor, Camera, DrawShaded, ElementState, Light, PosNormTex, VirtualKeyCode,
-};
-use amethyst::ui::{UiBundle, UiCreator, UiFinder, UiText};
-use amethyst::utils::application_root_dir;
-use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
-use amethyst::utils::scene::BasicScenePrefab;
-use amethyst::Error;
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 

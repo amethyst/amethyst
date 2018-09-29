@@ -1,7 +1,8 @@
-use amethyst::core::timing::Time;
-use amethyst::core::transform::Transform;
-use amethyst::ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage};
-use amethyst::input::InputHandler;
+use amethyst::{
+    core::{timing::Time, transform::Transform},
+    ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
+    input::InputHandler,
+};
 use config::ArenaConfig;
 use Paddle;
 /// This system is responsible for moving all the paddles according to the user

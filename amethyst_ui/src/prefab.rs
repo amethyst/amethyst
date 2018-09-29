@@ -1,3 +1,4 @@
+use super::*;
 use amethyst_assets::{
     AssetPrefab, AssetStorage, Format, Handle, Loader, Prefab, PrefabData, PrefabError,
     PrefabLoaderSystem, Progress, ProgressCounter, Result as AssetResult, ResultExt, SimpleFormat,
@@ -6,7 +7,6 @@ use amethyst_audio::{AudioFormat, Source as Audio};
 use amethyst_core::specs::prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage};
 use amethyst_renderer::{Texture, TextureFormat, TextureMetadata, TexturePrefab};
 use serde::de::DeserializeOwned;
-use super::*;
 
 /// Loadable `UiTransform` data.
 /// By default z is equal to one.
@@ -225,12 +225,12 @@ where
         ui_text.password = self.password;
 
         if let Some(ref align) = self.align {
-             ui_text.align = align.clone();
-         }
-         
-         if let Some(ref line_mode) = self.line_mode {
-             ui_text.line_mode = line_mode.clone();
-         }
+            ui_text.align = align.clone();
+        }
+
+        if let Some(ref line_mode) = self.line_mode {
+            ui_text.line_mode = line_mode.clone();
+        }
 
         texts.insert(entity, ui_text)?;
         if let Some(ref editing) = self.editable {

@@ -2,16 +2,16 @@
 
 extern crate amethyst;
 
-use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
-use amethyst::controls::FlyControlBundle;
-use amethyst::core::transform::TransformBundle;
-use amethyst::core::WithNamed;
-use amethyst::input::InputBundle;
-use amethyst::prelude::*;
-use amethyst::renderer::{DrawShaded, PosNormTex};
-use amethyst::utils::application_root_dir;
-use amethyst::utils::scene::BasicScenePrefab;
-use amethyst::Error;
+use amethyst::{
+    assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
+    controls::FlyControlBundle,
+    core::{transform::TransformBundle, WithNamed},
+    input::InputBundle,
+    prelude::*,
+    renderer::{DrawShaded, PosNormTex},
+    utils::{application_root_dir, scene::BasicScenePrefab},
+    Error,
+};
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
@@ -55,11 +55,7 @@ fn main() -> Result<(), Error> {
         )?.with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
-        )?.with_basic_renderer(
-            display_config_path,
-            DrawShaded::<PosNormTex>::new(),
-            false,
-        )?;
+        )?.with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
     let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
     game.run();
     Ok(())

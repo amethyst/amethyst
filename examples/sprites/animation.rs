@@ -1,6 +1,8 @@
-use amethyst::assets::{Handle, Loader};
-use amethyst::prelude::*;
-use amethyst::renderer::SpriteRender;
+use amethyst::{
+    assets::{Handle, Loader},
+    prelude::*,
+    renderer::SpriteRender,
+};
 use amethyst_animation::{
     Animation, InterpolationFunction, Sampler, SpriteRenderChannel, SpriteRenderPrimitive,
 };

@@ -10,15 +10,16 @@ mod config;
 mod pong;
 mod systems;
 
-use amethyst::audio::AudioBundle;
-use amethyst::core::frame_limiter::FrameRateLimitStrategy;
-use amethyst::core::transform::TransformBundle;
-use amethyst::ecs::prelude::{Component, DenseVecStorage};
-use amethyst::input::InputBundle;
-use amethyst::prelude::*;
-use amethyst::renderer::{DrawFlat, PosTex};
-use amethyst::ui::UiBundle;
-use amethyst::utils::application_root_dir;
+use amethyst::{
+    audio::AudioBundle,
+    core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle},
+    ecs::prelude::{Component, DenseVecStorage},
+    input::InputBundle,
+    prelude::*,
+    renderer::{DrawFlat, PosTex},
+    ui::UiBundle,
+    utils::application_root_dir,
+};
 use audio::Music;
 use bundle::PongBundle;
 use config::PongConfig;

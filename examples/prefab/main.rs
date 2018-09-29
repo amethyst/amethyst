@@ -3,13 +3,14 @@
 extern crate amethyst;
 extern crate rayon;
 
-use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
-use amethyst::core::TransformBundle;
-use amethyst::prelude::*;
-use amethyst::renderer::{DrawShaded, PosNormTex};
-use amethyst::utils::application_root_dir;
-use amethyst::utils::scene::BasicScenePrefab;
-use amethyst::Error;
+use amethyst::{
+    assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
+    core::TransformBundle,
+    prelude::*,
+    renderer::{DrawShaded, PosNormTex},
+    utils::{application_root_dir, scene::BasicScenePrefab},
+    Error,
+};
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
