@@ -3,9 +3,9 @@
 Sprites are 2D images that represent an object or background. Sprites are represented by two main chunks of data:
 
 * **Texture:** The image made of pixels.
-* **Layout:** The coordinates of the sprites on that image.
+* **Sprite Layout:** The (rectangular) coordinates of the sprites on that image.
 
-In Amethyst, these are represented by the [`Texture`][doc_tex] and [`SpriteSheet`][doc_ss] types respectively. The next few pages in this section will explain how to set up your application to load and display sprites.
+In Amethyst, these are represented by the [`Texture`][doc_tex] and [`SpriteSheet`][doc_ss] types respectively. The pages in this section will explain how to set up your application to load and display sprites.
 
 > **Note:** To see complete application example code, please refer to the [*sprites*][ex_sprites] or [*sprites_ordered*][ex_ordered] examples in the [examples][ex_all] directory.
 
