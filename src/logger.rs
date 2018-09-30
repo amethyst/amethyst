@@ -14,6 +14,8 @@ pub struct LoggerConfig {
     pub level_filter: LevelFilter,
     /// If set, enables logging to file at the given path.
     pub log_file: Option<PathBuf>,
+    /// If set, allows the config values to be overriden via the corresponding environmental variables.
+    pub allow_env_override: bool,
 }
 
 impl Default for LoggerConfig {
@@ -26,6 +28,7 @@ impl Default for LoggerConfig {
                 .unwrap_or(LevelFilter::Debug),
             log_file: env::var("AMETHYST_LOG_FILE_PATH").ok()
                 .map(|path| PathBuf::from(path)),
+            allow_env_override: true,
         }
     }
 }
@@ -41,7 +44,10 @@ impl Default for LoggerConfig {
 /// * AMETHYST_LOG_LEVEL_FILTER - sets the log level
 /// * AMETHYST_LOG_FILE_PATH - if set, enables logging to the file at the path
 pub fn start_logger(mut config: LoggerConfig) {
-    env_var_override(&mut config);
+    if config.allow_env_override {
+        env_var_override(&mut config);
+    }
+
     let mut dispatch = basic_dispatch(config.level_filter);
 
     if config.use_stdout {
