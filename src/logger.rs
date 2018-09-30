@@ -21,13 +21,10 @@ pub struct LoggerConfig {
 impl Default for LoggerConfig {
     fn default() -> LoggerConfig {
         LoggerConfig {
-            use_stdout: env::var_os("AMETHYST_LOG_DISABLE_STDOUT").is_none(),
-            use_colors: env::var_os("AMETHYST_LOG_DISABLE_COLORS").is_none(),
-            level_filter: env::var("AMETHYST_LOG_LEVEL_FILTER").ok()
-                .and_then(|lf| LevelFilter::from_str(&lf).ok())
-                .unwrap_or(LevelFilter::Debug),
-            log_file: env::var("AMETHYST_LOG_FILE_PATH").ok()
-                .map(|path| PathBuf::from(path)),
+            use_stdout: true,
+            use_colors: true,
+            level_filter: LevelFilter::Debug,
+            log_file: None,
             allow_env_override: true,
         }
     }
@@ -39,8 +36,8 @@ impl Default for LoggerConfig {
 /// initialise your own.
 ///
 /// Configuration of the logger can also be controlled via environment variables:
-/// * AMETHYST_LOG_DISABLE_STDOUT - if set, disables logging to the terminal
-/// * AMETHYST_LOG_DISABLE_COLORS - if set, disables colors for the log output
+/// * AMETHYST_LOG_ENABLE_STDOUT - toggles the logging to the terminal
+/// * AMETHYST_LOG_ENABLE_COLORS - toggles the usage of colors for the terminal log output
 /// * AMETHYST_LOG_LEVEL_FILTER - sets the log level
 /// * AMETHYST_LOG_FILE_PATH - if set, enables logging to the file at the path
 pub fn start_logger(mut config: LoggerConfig) {
@@ -71,11 +68,19 @@ pub fn start_logger(mut config: LoggerConfig) {
 }
 
 fn env_var_override(config: &mut LoggerConfig) {
-    if env::var("AMETHYST_LOG_DISABLE_STDOUT").is_ok() {
-        config.use_stdout = false;
+    if let Ok(var) = env::var("AMETHYST_LOG_ENABLE_STDOUT") {
+        match var.as_ref() {
+            "0" => config.use_stdout = false,
+            "1" => config.use_stdout = true,
+            _ => {},
+        }
     }
-    if env::var("AMETHYST_LOG_DISABLE_COLORS").is_ok() {
-        config.use_colors = false;
+    if let Ok(var) = env::var("AMETHYST_LOG_ENABLE_COLORS") {
+        match var.as_ref() {
+            "0" => config.use_colors = false,
+            "1" => config.use_colors = true,
+            _ => {},
+        }
     }
     if let Ok(lf) = env::var("AMETHYST_LOG_LEVEL_FILTER") {
         config.level_filter = LevelFilter::from_str(&lf).unwrap_or(LevelFilter::Debug)
