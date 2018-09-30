@@ -3,7 +3,7 @@ pub use log::LevelFilter;
 use fern;
 use std::{env, io, path::PathBuf, str::FromStr};
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum Stdout {
     Off,
     Plain,
@@ -11,7 +11,7 @@ pub enum Stdout {
 }
 
 /// Logger configuration object.
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct LoggerConfig {
     /// Determines whether to log to the terminal or not.
     pub stdout: Stdout,
@@ -53,7 +53,7 @@ pub fn start_logger(mut config: LoggerConfig) {
     match config.stdout {
         Stdout::Plain => dispatch = dispatch.chain(io::stdout()),
         Stdout::Colored => dispatch = dispatch.chain(colored_stdout()),
-        Stdout::Off => {},
+        Stdout::Off => {}
     }
 
     if let Some(path) = config.log_file {
@@ -74,7 +74,7 @@ fn env_var_override(config: &mut LoggerConfig) {
             "off" => config.stdout = Stdout::Off,
             "plain" => config.stdout = Stdout::Plain,
             "colored" => config.stdout = Stdout::Colored,
-            _ => {},
+            _ => {}
         }
     }
     if let Ok(var) = env::var("AMETHYST_LOG_LEVEL_FILTER") {
