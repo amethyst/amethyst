@@ -36,8 +36,8 @@ impl Default for LoggerConfig {
 /// initialise your own.
 ///
 /// Configuration of the logger can also be controlled via environment variables:
-/// * AMETHYST_LOG_ENABLE_STDOUT - toggles the logging to the terminal
-/// * AMETHYST_LOG_ENABLE_COLORS - toggles the usage of colors for the terminal log output
+/// * AMETHYST_LOG_STDOUT - toggles the logging to the terminal
+/// * AMETHYST_LOG_COLORS - toggles the usage of colors for the terminal log output
 /// * AMETHYST_LOG_LEVEL_FILTER - sets the log level
 /// * AMETHYST_LOG_FILE_PATH - if set, enables logging to the file at the path
 pub fn start_logger(mut config: LoggerConfig) {
@@ -68,14 +68,14 @@ pub fn start_logger(mut config: LoggerConfig) {
 }
 
 fn env_var_override(config: &mut LoggerConfig) {
-    if let Ok(var) = env::var("AMETHYST_LOG_ENABLE_STDOUT") {
+    if let Ok(var) = env::var("AMETHYST_LOG_STDOUT") {
         match var.as_ref() {
             "0" => config.use_stdout = false,
             "1" => config.use_stdout = true,
             _ => {},
         }
     }
-    if let Ok(var) = env::var("AMETHYST_LOG_ENABLE_COLORS") {
+    if let Ok(var) = env::var("AMETHYST_LOG_COLORS") {
         match var.as_ref() {
             "0" => config.use_colors = false,
             "1" => config.use_colors = true,
