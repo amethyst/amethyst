@@ -1,12 +1,13 @@
 //! Texture resource.
 
+pub use gfx::format::{ChannelType, SurfaceType};
+pub use gfx::texture::{FilterMethod, SamplerInfo, WrapMode};
+
 use amethyst_assets::{Asset, Handle};
 use amethyst_core::specs::prelude::DenseVecStorage;
 use error::Result;
 use formats::TextureData;
-use gfx::format::{ChannelType, SurfaceType};
-pub use gfx::texture::{FilterMethod, WrapMode};
-use gfx::texture::{Info, Mipmap, SamplerInfo};
+use gfx::texture::{Info, Mipmap};
 use gfx::traits::Pod;
 use std::marker::PhantomData;
 use types::{ChannelFormat, Factory, RawShaderResourceView, RawTexture, Sampler, SurfaceFormat};
