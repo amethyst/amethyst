@@ -3,13 +3,18 @@ pub use log::LevelFilter;
 use fern;
 use std::{env, io, path::PathBuf, str::FromStr};
 
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Stdout {
+    Off,
+    Plain,
+    Colored,
+}
+
 /// Logger configuration object.
 #[derive(Clone)]
 pub struct LoggerConfig {
     /// Determines whether to log to the terminal or not.
-    pub use_stdout: bool,
-    /// Whether to use color output when logging to the terminal or not.
-    pub use_colors: bool,
+    pub stdout: Stdout,
     /// Sets the overarching level filter for the logger.
     pub level_filter: LevelFilter,
     /// If set, enables logging to file at the given path.
@@ -21,8 +26,7 @@ pub struct LoggerConfig {
 impl Default for LoggerConfig {
     fn default() -> LoggerConfig {
         LoggerConfig {
-            use_stdout: true,
-            use_colors: true,
+            stdout: Stdout::Colored,
             level_filter: LevelFilter::Debug,
             log_file: None,
             allow_env_override: true,
@@ -36,8 +40,7 @@ impl Default for LoggerConfig {
 /// initialise your own.
 ///
 /// Configuration of the logger can also be controlled via environment variables:
-/// * AMETHYST_LOG_STDOUT - toggles the logging to the terminal
-/// * AMETHYST_LOG_COLORS - toggles the usage of colors for the terminal log output
+/// * AMETHYST_LOG_STDOUT - determines the output to the terminal
 /// * AMETHYST_LOG_LEVEL_FILTER - sets the log level
 /// * AMETHYST_LOG_FILE_PATH - if set, enables logging to the file at the path
 pub fn start_logger(mut config: LoggerConfig) {
@@ -47,12 +50,10 @@ pub fn start_logger(mut config: LoggerConfig) {
 
     let mut dispatch = basic_dispatch(config.level_filter);
 
-    if config.use_stdout {
-        dispatch = if config.use_colors {
-            dispatch.chain(colored_stdout())
-        } else {
-            dispatch.chain(io::stdout())
-        }
+    match config.stdout {
+        Stdout::Plain => dispatch = dispatch.chain(io::stdout()),
+        Stdout::Colored => dispatch = dispatch.chain(colored_stdout()),
+        Stdout::Off => {},
     }
 
     if let Some(path) = config.log_file {
@@ -69,21 +70,17 @@ pub fn start_logger(mut config: LoggerConfig) {
 
 fn env_var_override(config: &mut LoggerConfig) {
     if let Ok(var) = env::var("AMETHYST_LOG_STDOUT") {
-        match var.as_ref() {
-            "0" => config.use_stdout = false,
-            "1" => config.use_stdout = true,
+        match var.to_lowercase().as_ref() {
+            "off" => config.stdout = Stdout::Off,
+            "plain" => config.stdout = Stdout::Plain,
+            "colored" => config.stdout = Stdout::Colored,
             _ => {},
         }
     }
-    if let Ok(var) = env::var("AMETHYST_LOG_COLORS") {
-        match var.as_ref() {
-            "0" => config.use_colors = false,
-            "1" => config.use_colors = true,
-            _ => {},
+    if let Ok(var) = env::var("AMETHYST_LOG_LEVEL_FILTER") {
+        if let Ok(lf) = LevelFilter::from_str(&var) {
+            config.level_filter = lf;
         }
-    }
-    if let Ok(lf) = env::var("AMETHYST_LOG_LEVEL_FILTER") {
-        config.level_filter = LevelFilter::from_str(&lf).unwrap_or(LevelFilter::Debug)
     }
     if let Ok(path) = env::var("AMETHYST_LOG_FILE_PATH") {
         config.log_file = Some(PathBuf::from(path));
