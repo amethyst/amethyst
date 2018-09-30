@@ -34,7 +34,7 @@ impl Default for LoggerConfig {
     }
 }
 
-/// Starts a basic logger outputting to stdout with color on supported platforms.
+/// Starts a basic logger outputting to stdout with color on supported platforms, and/or to file.
 ///
 /// If you do not intend on using the logger builtin to Amethyst, it's highly recommended you
 /// initialise your own.
