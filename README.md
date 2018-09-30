@@ -99,13 +99,13 @@ If you are compiling on Linux make sure to install the following dependencies:
 ### Ubuntu
 
 ```
-$ sudo apt install libasound2-dev libx11-xcb-dev libssl-dev
+$ sudo apt install libasound2-dev libx11-xcb-dev libssl-dev cmake libfreetype6-dev libexpat1-dev
 ```
 
 ### Fedora
 
 ```
-$ sudo dnf install alsa-lib-devel openssl-devel
+$ sudo dnf install alsa-lib-devel openssl-devel cmake freetype-devel expat-devel
 ```
 
 ### Other
