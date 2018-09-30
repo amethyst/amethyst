@@ -312,9 +312,11 @@ fn initialise_camera(world: &mut World) -> Entity {
         .create_entity()
         .with(Camera::from(Projection::orthographic(
             0.0, width, height, 0.0,
-        ))).with(GlobalTransform(Matrix4::from_translation(
+        )))
+        .with(GlobalTransform(Matrix4::from_translation(
             Vector3::new(0.0, 0.0, 1.0).into(),
-        ))).build()
+        )))
+        .build()
 }
 
 fn main() -> amethyst::Result<()> {
@@ -339,7 +341,8 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(AnimationBundle::<u32, SpriteRender>::new(
             "animation_control_system",
             "sampler_interpolation_system",
-        ))?.with_bundle(
+        ))?
+        .with_bundle(
             // Handles transformations of textures
             TransformBundle::new()
                 .with_dep(&["animation_control_system", "sampler_interpolation_system"]),

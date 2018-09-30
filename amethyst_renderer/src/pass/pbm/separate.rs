@@ -93,15 +93,18 @@ impl Pass for DrawPbmSeparate {
                 Separate::<Position>::ATTRIBUTES,
                 Separate::<Position>::size() as ElemStride,
                 0,
-            ).with_raw_vertex_buffer(
+            )
+            .with_raw_vertex_buffer(
                 Separate::<Normal>::ATTRIBUTES,
                 Separate::<Normal>::size() as ElemStride,
                 0,
-            ).with_raw_vertex_buffer(
+            )
+            .with_raw_vertex_buffer(
                 Separate::<Tangent>::ATTRIBUTES,
                 Separate::<Tangent>::size() as ElemStride,
                 0,
-            ).with_raw_vertex_buffer(
+            )
+            .with_raw_vertex_buffer(
                 Separate::<TexCoord>::ATTRIBUTES,
                 Separate::<TexCoord>::size() as ElemStride,
                 0,
@@ -144,24 +147,26 @@ impl Pass for DrawPbmSeparate {
         set_light_args(effect, encoder, &light, &global, &ambient, camera);
 
         match visibility {
-            None => for (joint, mesh, material, global) in
-                (joints.maybe(), &mesh, &material, &global).join()
-            {
-                draw_mesh(
-                    encoder,
-                    effect,
-                    self.skinning,
-                    mesh_storage.get(mesh),
-                    joint,
-                    &tex_storage,
-                    Some(material),
-                    &material_defaults,
-                    camera,
-                    Some(global),
-                    &ATTRIBUTES,
-                    &TEXTURES,
-                );
-            },
+            None => {
+                for (joint, mesh, material, global) in
+                    (joints.maybe(), &mesh, &material, &global).join()
+                {
+                    draw_mesh(
+                        encoder,
+                        effect,
+                        self.skinning,
+                        mesh_storage.get(mesh),
+                        joint,
+                        &tex_storage,
+                        Some(material),
+                        &material_defaults,
+                        camera,
+                        Some(global),
+                        &ATTRIBUTES,
+                        &TEXTURES,
+                    );
+                }
+            }
             Some(ref visibility) => {
                 for (joint, mesh, material, global, _) in (
                     joints.maybe(),

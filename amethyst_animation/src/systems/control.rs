@@ -290,15 +290,17 @@ where
     let h_fallback = AnimationHierarchy::new_single(animation.nodes[0].0, *entity);
     let hierarchy = match hierarchy {
         Some(h) => h,
-        None => if only_one_index(&animation.nodes) {
-            &h_fallback
-        } else {
-            error!(
+        None => {
+            if only_one_index(&animation.nodes) {
+                &h_fallback
+            } else {
+                error!(
                 "Animation control which target multiple nodes without a hierarchy detected, dropping"
             );
-            *remove = true;
-            return None;
-        },
+                *remove = true;
+                return None;
+            }
+        }
     };
     match (&control.state, &control.command) {
         // Check for aborted or done animation
@@ -390,7 +392,8 @@ where
                         .map(|sampler| {
                             sampler.clear(control.id);
                             sampler.is_empty()
-                        }).unwrap_or(false);
+                        })
+                        .unwrap_or(false);
                     if empty {
                         samplers.remove(*node_entity);
                     }
@@ -602,7 +605,8 @@ where
                 .map(|sampler| {
                     sampler.clear(control_id);
                     sampler.is_empty()
-                }).unwrap_or(false);
+                })
+                .unwrap_or(false);
             if empty {
                 samplers.remove(*node_entity);
             }

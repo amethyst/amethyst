@@ -179,7 +179,7 @@ impl<'a> System<'a> for UiKeyboardSystem {
     fn run(
         &mut self,
         (entities, mut text, mut editable, transform, mut focused, events, time, screen_dimensions): Self::SystemData,
-){
+    ) {
         // Populate and update the tab order cache.
         {
             let bitset = &mut self.tab_order_cache.cached;
@@ -272,32 +272,34 @@ impl<'a> System<'a> for UiKeyboardSystem {
                             ..
                         },
                     ..
-                } => if let Some(focused) = focused.entity.as_mut() {
-                    if let Some((i, _)) = self
-                        .tab_order_cache
-                        .cache
-                        .iter()
-                        .enumerate()
-                        .find(|&(_i, &(_, entity))| entity == *focused)
-                    {
-                        if self.tab_order_cache.cache.len() != 0 {
-                            if modifiers.shift {
-                                if i == 0 {
-                                    let new_i = self.tab_order_cache.cache.len() - 1;
-                                    *focused = self.tab_order_cache.cache[new_i].1;
+                } => {
+                    if let Some(focused) = focused.entity.as_mut() {
+                        if let Some((i, _)) = self
+                            .tab_order_cache
+                            .cache
+                            .iter()
+                            .enumerate()
+                            .find(|&(_i, &(_, entity))| entity == *focused)
+                        {
+                            if self.tab_order_cache.cache.len() != 0 {
+                                if modifiers.shift {
+                                    if i == 0 {
+                                        let new_i = self.tab_order_cache.cache.len() - 1;
+                                        *focused = self.tab_order_cache.cache[new_i].1;
+                                    } else {
+                                        *focused = self.tab_order_cache.cache[i - 1].1;
+                                    }
                                 } else {
-                                    *focused = self.tab_order_cache.cache[i - 1].1;
-                                }
-                            } else {
-                                if i + 1 == self.tab_order_cache.cache.len() {
-                                    *focused = self.tab_order_cache.cache[0].1;
-                                } else {
-                                    *focused = self.tab_order_cache.cache[i + 1].1;
+                                    if i + 1 == self.tab_order_cache.cache.len() {
+                                        *focused = self.tab_order_cache.cache[0].1;
+                                    } else {
+                                        *focused = self.tab_order_cache.cache[i + 1].1;
+                                    }
                                 }
                             }
                         }
                     }
-                },
+                }
                 Event::WindowEvent {
                     event: WindowEvent::CursorMoved { position, .. },
                     ..
@@ -337,7 +339,8 @@ impl<'a> System<'a> for UiKeyboardSystem {
                                     } else {
                                         (i, (pos.x, pos.y))
                                     }
-                                }).0
+                                })
+                                .0
                                 as isize
                                 - focused_edit.cursor_position;
                             // The end of the text, while not a glyph, is still something
@@ -385,7 +388,8 @@ impl<'a> System<'a> for UiKeyboardSystem {
                                         && t.pixel_x + t.width / 2.0 >= self.mouse_position.0
                                         && t.pixel_y - t.height / 2.0 <= self.mouse_position.1
                                         && t.pixel_y + t.height / 2.0 >= self.mouse_position.1
-                                }).collect::<Vec<_>>();
+                                })
+                                .collect::<Vec<_>>();
                             // In instances of ambiguity we want to select the element with the
                             // highest Z order, so we need to find the highest Z order value among
                             // eligible elements.
@@ -399,11 +403,13 @@ impl<'a> System<'a> for UiKeyboardSystem {
                             // element.
                             focused.entity = eligible.iter().fold(None, |most_recent, &(e, _)| {
                                 Some(match most_recent {
-                                    Some(most_recent) => if most_recent > e {
-                                        most_recent
-                                    } else {
-                                        e
-                                    },
+                                    Some(most_recent) => {
+                                        if most_recent > e {
+                                            most_recent
+                                        } else {
+                                            e
+                                        }
+                                    }
                                     None => e,
                                 })
                             });
@@ -433,13 +439,15 @@ impl<'a> System<'a> for UiKeyboardSystem {
                                         // Use Pythagorean theorem to compute distance
                                         if ((x - mouse_x).powi(2) + (y - mouse_y).powi(2)).sqrt()
                                             < ((pos.x - mouse_x).powi(2)
-                                                + (pos.y - mouse_y).powi(2)).sqrt()
+                                                + (pos.y - mouse_y).powi(2))
+                                            .sqrt()
                                         {
                                             (index, (x, y))
                                         } else {
                                             (i, (pos.x, pos.y))
                                         }
-                                    }).0
+                                    })
+                                    .0
                                     as isize;
                                 // The end of the text, while not a glyph, is still something
                                 // you'll likely want to click your cursor to, so if the cursor is
@@ -584,37 +592,38 @@ impl<'a> System<'a> for UiKeyboardSystem {
                                 }
                             }
                         }
-                        VirtualKeyCode::Left => if focused_edit.highlight_vector == 0
-                            || modifiers.shift
-                        {
-                            if focused_edit.cursor_position > 0 {
-                                let delta = if ctrl_or_cmd(&modifiers) {
-                                    let mut graphemes = 0;
-                                    for word in focused_text.text.split_word_bounds() {
-                                        let word_graphemes = word.graphemes(true).count() as isize;
-                                        if graphemes + word_graphemes
-                                            >= focused_edit.cursor_position
-                                        {
-                                            break;
+                        VirtualKeyCode::Left => {
+                            if focused_edit.highlight_vector == 0 || modifiers.shift {
+                                if focused_edit.cursor_position > 0 {
+                                    let delta = if ctrl_or_cmd(&modifiers) {
+                                        let mut graphemes = 0;
+                                        for word in focused_text.text.split_word_bounds() {
+                                            let word_graphemes =
+                                                word.graphemes(true).count() as isize;
+                                            if graphemes + word_graphemes
+                                                >= focused_edit.cursor_position
+                                            {
+                                                break;
+                                            }
+                                            graphemes += word_graphemes;
                                         }
-                                        graphemes += word_graphemes;
+                                        focused_edit.cursor_position - graphemes
+                                    } else {
+                                        1
+                                    };
+                                    focused_edit.cursor_position -= delta;
+                                    if modifiers.shift {
+                                        focused_edit.highlight_vector += delta;
                                     }
-                                    focused_edit.cursor_position - graphemes
-                                } else {
-                                    1
-                                };
-                                focused_edit.cursor_position -= delta;
-                                if modifiers.shift {
-                                    focused_edit.highlight_vector += delta;
+                                    focused_edit.cursor_blink_timer = 0.0;
                                 }
-                                focused_edit.cursor_blink_timer = 0.0;
+                            } else {
+                                focused_edit.cursor_position = focused_edit.cursor_position.min(
+                                    focused_edit.cursor_position + focused_edit.highlight_vector,
+                                );
+                                focused_edit.highlight_vector = 0;
                             }
-                        } else {
-                            focused_edit.cursor_position = focused_edit
-                                .cursor_position
-                                .min(focused_edit.cursor_position + focused_edit.highlight_vector);
-                            focused_edit.highlight_vector = 0;
-                        },
+                        }
                         VirtualKeyCode::Right => {
                             if focused_edit.highlight_vector == 0 || modifiers.shift {
                                 let glyph_len = focused_text.text.graphemes(true).count();
@@ -644,44 +653,52 @@ impl<'a> System<'a> for UiKeyboardSystem {
                                 focused_edit.highlight_vector = 0;
                             }
                         }
-                        VirtualKeyCode::A => if ctrl_or_cmd(&modifiers) {
-                            let glyph_len = focused_text.text.graphemes(true).count() as isize;
-                            focused_edit.cursor_position = glyph_len;
-                            focused_edit.highlight_vector = -glyph_len;
-                        },
-                        VirtualKeyCode::X => if ctrl_or_cmd(&modifiers) {
-                            let new_clip = extract_highlighted(focused_edit, focused_text);
-                            if new_clip.len() > 0 {
+                        VirtualKeyCode::A => {
+                            if ctrl_or_cmd(&modifiers) {
+                                let glyph_len = focused_text.text.graphemes(true).count() as isize;
+                                focused_edit.cursor_position = glyph_len;
+                                focused_edit.highlight_vector = -glyph_len;
+                            }
+                        }
+                        VirtualKeyCode::X => {
+                            if ctrl_or_cmd(&modifiers) {
+                                let new_clip = extract_highlighted(focused_edit, focused_text);
+                                if new_clip.len() > 0 {
+                                    let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+                                    ctx.set_contents(new_clip).unwrap();
+                                }
+                            }
+                        }
+                        VirtualKeyCode::C => {
+                            if ctrl_or_cmd(&modifiers) {
+                                let new_clip = read_highlighted(focused_edit, focused_text);
+                                if new_clip.len() > 0 {
+                                    let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+                                    ctx.set_contents(new_clip.to_owned()).unwrap();
+                                }
+                            }
+                        }
+                        VirtualKeyCode::V => {
+                            if ctrl_or_cmd(&modifiers) {
+                                delete_highlighted(focused_edit, focused_text);
                                 let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
-                                ctx.set_contents(new_clip).unwrap();
+                                if let Ok(contents) = ctx.get_contents() {
+                                    let index = cursor_byte_index(focused_edit, focused_text);
+                                    let empty_space = focused_edit.max_length
+                                        - focused_text.text.graphemes(true).count();
+                                    let contents = contents.graphemes(true).take(empty_space).fold(
+                                        String::new(),
+                                        |mut init, new| {
+                                            init.push_str(new);
+                                            init
+                                        },
+                                    );
+                                    focused_text.text.insert_str(index, &contents);
+                                    focused_edit.cursor_position +=
+                                        contents.graphemes(true).count() as isize;
+                                }
                             }
-                        },
-                        VirtualKeyCode::C => if ctrl_or_cmd(&modifiers) {
-                            let new_clip = read_highlighted(focused_edit, focused_text);
-                            if new_clip.len() > 0 {
-                                let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
-                                ctx.set_contents(new_clip.to_owned()).unwrap();
-                            }
-                        },
-                        VirtualKeyCode::V => if ctrl_or_cmd(&modifiers) {
-                            delete_highlighted(focused_edit, focused_text);
-                            let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
-                            if let Ok(contents) = ctx.get_contents() {
-                                let index = cursor_byte_index(focused_edit, focused_text);
-                                let empty_space = focused_edit.max_length
-                                    - focused_text.text.graphemes(true).count();
-                                let contents = contents.graphemes(true).take(empty_space).fold(
-                                    String::new(),
-                                    |mut init, new| {
-                                        init.push_str(new);
-                                        init
-                                    },
-                                );
-                                focused_text.text.insert_str(index, &contents);
-                                focused_edit.cursor_position +=
-                                    contents.graphemes(true).count() as isize;
-                            }
-                        },
+                        }
                         _ => {}
                     },
                     _ => {}

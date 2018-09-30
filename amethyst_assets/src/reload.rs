@@ -158,10 +158,12 @@ impl<'a> System<'a> for HotReloadSystem {
                 interval,
                 ref mut last,
                 ref mut frame_number,
-            } => if last.elapsed().as_secs() > interval as u64 {
-                *frame_number = time.frame_number() + 1;
-                *last = Instant::now();
-            },
+            } => {
+                if last.elapsed().as_secs() > interval as u64 {
+                    *frame_number = time.frame_number() + 1;
+                    *last = Instant::now();
+                }
+            }
             HotReloadStrategyInner::Never => {}
         }
     }

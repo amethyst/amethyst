@@ -721,5 +721,6 @@ fn button_text_transform(mut id: String) -> UiTransformBuilder {
         .with_stretch(Stretch::XY {
             x_margin: 0.,
             y_margin: 0.,
-        }).transparent()
+        })
+        .transparent()
 }

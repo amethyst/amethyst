@@ -108,7 +108,8 @@ where
                                 Parent {
                                     entity: self.entities[parent],
                                 },
-                            ).unwrap();
+                            )
+                            .unwrap();
                     }
                     tags.insert(new_entity, PrefabTag::new(prefab.tag.unwrap()))
                         .unwrap();
@@ -121,7 +122,8 @@ where
                                 self.entities[index],
                                 &mut prefab_system_data,
                                 &self.entities,
-                            ).unwrap();
+                            )
+                            .unwrap();
                     }
                 }
             }
