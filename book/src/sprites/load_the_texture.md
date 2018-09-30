@@ -1,6 +1,6 @@
 # Load The `Texture`
 
-The first part of loading sprites into `Amethyst` is to read the image into memory. Currently `Amethyst` supports [`PngFormat`][doc_fmt_png], [`BmpFormat`][doc_fmt_bmp], [`JpgFormat`][doc_fmt_jpg] and [`TgaFormat`][doc_fmt_tga].
+The first part of loading sprites into Amethyst is to read the image into memory. Currently Amethyst supports [`PngFormat`][doc_fmt_png], [`BmpFormat`][doc_fmt_bmp], [`JpgFormat`][doc_fmt_jpg] and [`TgaFormat`][doc_fmt_tga].
 
 The following snippet shows how to load a PNG image:
 

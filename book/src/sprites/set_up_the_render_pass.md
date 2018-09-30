@@ -1,6 +1,6 @@
 # Set Up The Render Pass
 
-`Amethyst` supports drawing sprites using the `DrawSprite` render pass. To enable this you have to do the following:
+Amethyst supports drawing sprites using the `DrawSprite` render pass. To enable this you have to do the following:
 
 1. Build a `Pipeline` with the `DrawSprite` pass. If your sprites have transparent pixels use the `.with_transparency(..)` method.
 2. Use the `.with_sprite_sheet_processor()` method on the `RenderBundle`.

@@ -1,6 +1,6 @@
 # Define The `SpriteSheet`
 
-With the texture loaded, `Amethyst` still needs to know *where the sprites are* on the image. Importantly, **we use pixel coordinates as well as texture coordinates** to define the sprite layout. Pixel coordinates indicate the dimensions of the sprite to draw on screen; texture coordinates indicate which part of the image contains the sprite, and are expressed as a proportion of the image.
+With the texture loaded, Amethyst still needs to know *where the sprites are* on the image. Importantly, **we use pixel coordinates as well as texture coordinates** to define the sprite layout. Pixel coordinates indicate the dimensions of the sprite to draw on screen; texture coordinates indicate which part of the image contains the sprite, and are expressed as a proportion of the image.
 
 The following table lists the differences between the coordinate systems:
 
