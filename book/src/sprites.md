@@ -7,7 +7,7 @@ Sprites are 2D images that represent an object or background. Sprites are repres
 
 In Amethyst, these are represented by the [`Texture`][doc_tex] and [`SpriteSheet`][doc_ss] types respectively. The pages in this section will explain how to set up your application to load and display sprites.
 
-> **Note:** To see complete application example code, please refer to the [*sprites*][ex_sprites] or [*sprites_ordered*][ex_ordered] examples in the [examples][ex_all] directory.
+> **Note:** The code snippets in this section explain the parts of setting up sprite rendering separately. For complete application examples, please refer to the [*sprites*][ex_sprites] or [*sprites_ordered*][ex_ordered] examples in the [examples][ex_all] directory.
 
 [doc_ss]: https://docs.rs/amethyst_renderer/latest/amethyst_renderer/struct.SpriteSheet.html
 [doc_tex]: https://docs.rs/amethyst_renderer/latest/amethyst_renderer/struct.Texture.html
