@@ -83,6 +83,8 @@ extern crate log;
 extern crate amethyst_input;
 extern crate rayon;
 extern crate rustc_version_runtime;
+#[macro_use]
+extern crate serde_derive;
 
 pub use self::app::{Application, ApplicationBuilder};
 pub use self::error::{Error, Result};
