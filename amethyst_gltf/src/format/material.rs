@@ -114,7 +114,10 @@ fn deconstruct_image(data: &TextureData, offset: usize, step: usize) -> TextureD
     use gfx::format::SurfaceType;
     match *data {
         TextureData::Image(ref image_data, ref metadata) => {
-            let metadata = metadata.clone().with_format(SurfaceType::R8);
+            let metadata = metadata
+                .clone()
+                .with_format(SurfaceType::R8)
+                .with_size(image_data.rgba.width() as u16, image_data.rgba.height() as u16);
             let image_data = image_data
                 .rgba
                 .clone()

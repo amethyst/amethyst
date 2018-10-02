@@ -37,6 +37,9 @@ pub struct TextureMetadata {
     /// The default is `R8_G8_B8_A8`.
     #[serde(default = "SurfaceFormat::get_surface_type")]
     pub format: SurfaceType,
+    /// The dimensions of the texture. Only needed for raw image data (`TextureData::U8` etc).
+    #[serde(default)]
+    pub size: Option<(u16, u16)>,
     /// The channel type which describes the data format of the channels (e.g. how the red value
     /// is stored).
     ///
@@ -44,21 +47,6 @@ pub struct TextureMetadata {
     /// (a floating-point number between `0.0` and `1.0`.
     pub channel: ChannelType,
 }
-
-/*
-impl Default for TextureMetadata {
-    fn default() -> Self {
-        Self {
-            sampler: serde_helper::default_sampler(),
-            mip_levels: serde_helper::default_mip_levels(),
-            size: None,
-            dynamic: false,
-            format: SurfaceFormat::get_surface_format(),
-            channel: ChannelFormat::get_channel_type(),
-        }
-    }
-}
-*/
 
 impl TextureMetadata {
     /// Creates texture metadata with `Unorm` channel type. This is used for normal / displacement
@@ -69,6 +57,7 @@ impl TextureMetadata {
             mip_levels: serde_helper::default_mip_levels(),
             dynamic: false,
             format: SurfaceFormat::get_surface_type(),
+            size: None,
             channel: ChannelType::Unorm,
         }
     }
@@ -105,6 +94,13 @@ impl TextureMetadata {
     /// Channel type
     pub fn with_channel(mut self, channel: ChannelType) -> Self {
         self.channel = channel;
+        self
+    }
+
+    /// Texture size
+    pub fn with_size(mut self, width: u16, height: u16) -> Self {
+        self.size = Some((width, height));
+
         self
     }
 
