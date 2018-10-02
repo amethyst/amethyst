@@ -82,7 +82,7 @@ thread_profiler = { version = "0.3", optional = true }
 amethyst_gltf = { path = "amethyst_gltf", version = "0.3.0" }
 env_logger = "0.5.13"
 genmesh = "0.6"
-ron = "0.2"
+ron = "0.4"
 
 [build-dependencies]
 vergen = "2.0"
