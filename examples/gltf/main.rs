@@ -233,7 +233,7 @@ fn main() -> Result<(), amethyst::Error> {
         ).with(
             GltfSceneLoaderSystem::default(),
             "gltf_loader",
-            &["scene_loader"],
+            &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
         ).with_basic_renderer(
             path,
             DrawPbmSeparate::new()

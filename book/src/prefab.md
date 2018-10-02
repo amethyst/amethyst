@@ -14,7 +14,7 @@ instantiation.
 NOTE: This means that we currently cannot target multiple existing entities from a single `Prefab`.
 This restriction is likely to be removed in the future.
 
-The lifetime of a `Prefab` can roughy be divided into three distinct parts:
+The lifetime of a `Prefab` can roughly be divided into three distinct parts:
 
 **Loading**
 
@@ -50,6 +50,10 @@ This stage happens after the `Prefab` has been fully loaded and `Complete` has b
 and all sub assets have been processed. The `PrefabLoaderSystem` will then walk through the `Prefab` data 
 immutably and create a new `Entity` for all but the first entry in the list, and then for each instance 
 of `PrefabData` call the `load_prefab` function.
+
+Note that for prefabs that reference other prefabs, to make instantiation be performed inside a single frame, 
+lower level `PrefabLoaderSystem`s need to depend on the higher level ones. To see how this works out check the gltf 
+example, where we have a scene prefab, and the gltf loader (which use the prefab system internally). 
 
 ## `PrefabData`
 
@@ -210,7 +214,7 @@ From the point of the user, there are a few parts to using a `Prefab`:
 ## `Prefab` formats
 
 There are a few provided formats that create `Prefab`s, some with very specific `PrefabData`, and
- one that is generic:
+ two that are generic:
  
 * `RonFormat` - this format can be used to load `Prefab`s in `ron` format with any `PrefabData`
  that also implements `serde::Deserialize`.
