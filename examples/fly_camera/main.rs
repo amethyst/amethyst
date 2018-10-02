@@ -3,19 +3,23 @@
 extern crate amethyst;
 
 use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
-use amethyst::controls::FlyControlBundle;
+use amethyst::controls::{FlyControlBundle, FlyControlTag, HideCursor};
 use amethyst::core::transform::TransformBundle;
 use amethyst::core::WithNamed;
-use amethyst::input::InputBundle;
+use amethyst::ecs::join::Join;
+use amethyst::input::{is_key_down, InputBundle};
 use amethyst::prelude::*;
-use amethyst::renderer::{DrawShaded, PosNormTex};
+use amethyst::renderer::{Camera, DrawShaded, PosNormTex, VirtualKeyCode};
 use amethyst::utils::application_root_dir;
 use amethyst::utils::scene::BasicScenePrefab;
 use amethyst::Error;
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
-struct ExampleState;
+#[derive(Default)]
+struct ExampleState {
+    is_grabbed: bool,
+}
 
 impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
     fn on_start(&mut self, data: StateData<GameData>) {
@@ -27,6 +31,46 @@ impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
             .named("Fly Camera Scene")
             .with(prefab_handle)
             .build();
+        self.is_grabbed = true;
+    }
+
+    fn handle_event(
+        &mut self,
+        data: StateData<GameData>,
+        event: StateEvent<()>,
+    ) -> SimpleTrans<'a, 'b> {
+        if let StateEvent::Window(event) = event {
+            if is_key_down(&event, VirtualKeyCode::Escape) {
+                if self.is_grabbed {
+                    self.ungrab_camera(data.world);
+                } else {
+                    self.grab_camera(data.world);
+                }
+            }
+        }
+
+        Trans::None
+    }
+}
+
+impl ExampleState {
+    fn ungrab_camera(&mut self, world: &mut World) {
+        for (entity, _) in (&*world.entities(), &world.read_storage::<Camera>()).join() {
+            world.write_storage::<FlyControlTag>().remove(entity);
+        }
+        world.write_resource::<HideCursor>().hide = false;
+        self.is_grabbed = false;
+    }
+
+    fn grab_camera(&mut self, world: &mut World) {
+        for (entity, _) in (&*world.entities(), &world.read_storage::<Camera>()).join() {
+            world
+                .write_storage::<FlyControlTag>()
+                .insert(entity, Default::default())
+                .expect("unable to attach FlyControlTag to camera");
+        }
+        world.write_resource::<HideCursor>().hide = true;
+        self.is_grabbed = true;
     }
 }
 
@@ -55,12 +99,11 @@ fn main() -> Result<(), Error> {
         )?.with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
-        )?.with_basic_renderer(
-            display_config_path,
-            DrawShaded::<PosNormTex>::new(),
-            false,
-        )?;
-    let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
-    game.run();
+        )?.with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
+
+    Application::build(resources_directory, ExampleState::default())?
+        .build(game_data)?
+        .run();
+
     Ok(())
 }
