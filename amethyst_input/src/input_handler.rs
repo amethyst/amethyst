@@ -10,7 +10,7 @@ use std::borrow::Borrow;
 use std::hash::Hash;
 use winit::{
     dpi::LogicalPosition, DeviceEvent, ElementState, Event, KeyboardInput, MouseButton,
-    VirtualKeyCode, WindowEvent,
+    VirtualKeyCode, WindowEvent, MouseScrollDelta
 };
 
 /// This struct holds state information about input devices.
@@ -212,6 +212,16 @@ where
                     delta: (delta_x, delta_y),
                 } => {
                     event_handler.single_write(MouseMoved { delta_x, delta_y });
+                }
+                DeviceEvent::MouseWheel {
+                    delta: MouseScrollDelta::LineDelta(delta_x, delta_y),
+                } => {
+                    event_handler.single_write(MouseWheelMoved { delta_x: delta_x.into(), delta_y: delta_y.into() });
+                }
+                DeviceEvent::MouseWheel {
+                    delta: MouseScrollDelta::PixelDelta(LogicalPosition { x, y }),
+                } => {
+                    event_handler.single_write(MouseWheelMoved { delta_x: x, delta_y: y });
                 }
                 _ => {}
             },

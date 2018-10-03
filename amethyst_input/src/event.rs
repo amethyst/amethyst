@@ -36,6 +36,8 @@ pub enum InputEvent<T> {
     CursorMoved { delta_x: f64, delta_y: f64 },
     /// The mouse device moved.  Use this for any use of the mouse that doesn't involve a standard mouse pointer.
     MouseMoved { delta_x: f64, delta_y: f64 },
+    /// The mousewheel was moved in either direction
+    MouseWheelMoved { delta_x: f64, delta_y: f64 },
     /// A controller Axis was moved.
     ControllerAxisMoved {
         which: u32,
