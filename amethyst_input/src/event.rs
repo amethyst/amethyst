@@ -62,4 +62,6 @@ pub enum InputEvent<T> {
     ActionPressed(T),
     /// The associated action had one of its keys released.
     ActionReleased(T),
+    /// The associated action has its mouse wheel moved.
+    ActionWheelMoved(T),
 }

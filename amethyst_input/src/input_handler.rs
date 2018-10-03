@@ -217,11 +217,13 @@ where
                     delta: MouseScrollDelta::LineDelta(delta_x, delta_y),
                 } => {
                     event_handler.single_write(MouseWheelMoved { delta_x: delta_x.into(), delta_y: delta_y.into() });
+                    self.invoke_wheel_moved(event_handler);
                 }
                 DeviceEvent::MouseWheel {
                     delta: MouseScrollDelta::PixelDelta(LogicalPosition { x, y }),
                 } => {
                     event_handler.single_write(MouseWheelMoved { delta_x: x, delta_y: y });
+                    self.invoke_wheel_moved(event_handler);
                 }
                 _ => {}
             },
@@ -432,6 +434,7 @@ where
             Button::Mouse(b) => self.mouse_button_is_down(b),
             Button::ScanCode(s) => self.scan_code_is_down(s),
             Button::Controller(g, b) => self.controller_button_is_down(g, b),
+            _ => false,
         }
     }
 
@@ -508,5 +511,16 @@ where
             .iter()
             .find(|ids| ids.1 == index)
             .map(|ids| ids.0)
+    }
+
+    /// Iterates all input bindings and invokes ActionWheelMoved for each action bound to the mouse wheel
+    fn invoke_wheel_moved(&self, event_handler: &mut EventChannel<InputEvent<AC>>) {
+        for (k, v) in self.bindings.actions.iter() {
+            for &button in v {
+                if  button == Button::MouseWheel {
+                    event_handler.single_write(ActionWheelMoved(k.clone()));
+                }
+            }
+        }
     }
 }

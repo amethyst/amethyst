@@ -17,6 +17,9 @@ pub enum Button {
     /// Mouse buttons
     Mouse(#[serde(with = "LocalMouseButton")] MouseButton),
 
+    /// Mouse wheel
+    MouseWheel,
+
     /// Controller buttons matching SDL controller model.
     /// A tuple of sequential controller_id in order of connection
     /// and specific type of used controller button.
