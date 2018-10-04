@@ -11,7 +11,8 @@ Prefab (
                 graphics: (
                     mesh: Asset(File("mesh/lid.obj", ObjFormat, ())),
                     material: (
-                        albedo: Data(Rgba((1.0, 0.0, 0.0, 1.0,), (channel: Srgb),)),
+                        albedo: Data(Rgba((1.0, 0.0, 0.0, 1.0,), (channel: Srgb,
+                            sampler: (filter: Anisotropic(8), wrap_mode: (Clamp, Clamp, Clamp)),))),
                     ),
                 ),
                 transform: (
@@ -29,7 +30,8 @@ Prefab (
                 graphics: (
                     mesh: Asset(File("mesh/teapot.obj", ObjFormat, ())),
                     material: (
-                        albedo: Data(Rgba((1.0, 0.0, 0.0, 1.0,), (channel: Srgb),)),
+                        albedo: Data(Rgba((1.0, 0.0, 0.0, 1.0,), (channel: Srgb,
+                            sampler: (filter: Anisotropic(8), wrap_mode: (Clamp, Clamp, Clamp)),))),
                     ),
                 ),
                 transform: (

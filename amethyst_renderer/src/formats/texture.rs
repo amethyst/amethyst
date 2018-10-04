@@ -10,7 +10,7 @@ use amethyst_core::specs::prelude::{Entity, Read, ReadExpect};
 use gfx::format::{ChannelType, SurfaceType, SurfaceTyped};
 use gfx::texture::SamplerInfo;
 use gfx::traits::Pod;
-use tex::{Texture, TextureBuilder};
+use tex::{FilterMethod, Texture, TextureBuilder};
 use types::SurfaceFormat;
 use Renderer;
 
@@ -22,7 +22,6 @@ pub struct TextureMetadata {
     /// The sampler info describes how to read from the texture, thus specifies
     /// filter and wrap mode.
     /// The default is nearest filtering (`FilterMethod::Scale`) and clamping (`WrapMode::Clamp`).
-    #[serde(with = "serde_helper")]
     #[serde(default = "serde_helper::default_sampler")]
     pub sampler: SamplerInfo,
     /// Mipmapping levels. The default is one level.
@@ -76,6 +75,13 @@ impl TextureMetadata {
     /// Sampler info
     pub fn with_sampler(mut self, info: SamplerInfo) -> Self {
         self.sampler = info;
+        self
+    }
+
+    /// Sets the filter method of the sampler.
+    pub fn with_filter(mut self, filter: FilterMethod) -> Self {
+        self.sampler.filter = filter;
+
         self
     }
 
@@ -508,56 +514,19 @@ impl SimpleFormat<Texture> for TextureFormat {
 }
 
 mod serde_helper {
-    use super::SamplerInfo as SamplerInfoComplex;
-    use serde::{Serialize, Deserialize, Serializer, Deserializer};
+    use super::SamplerInfo;
     use tex::{FilterMethod, WrapMode};
 
-    #[derive(Serialize, Deserialize)]
-    #[serde(untagged)]
-    enum SamplerInfo {
-        Simple(SamplerInfoSimple),
-        Complex(SamplerInfoComplex),
-    }
-
-    #[derive(Serialize, Deserialize)]
-    struct SamplerInfoSimple {
-        #[serde(default = "default_filter")]
-        filter: FilterMethod,
-        #[serde(default = "default_wrap")]
-        wrap: WrapMode,
-    }
-
-    pub fn serialize<S>(info: &SamplerInfoComplex, ser: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let info = SamplerInfo::Complex(info.clone());
-
-        info.serialize(ser)
-    }
-
-    pub fn deserialize<'de, D>(de: D) -> Result<SamplerInfoComplex, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let info: SamplerInfo = Deserialize::deserialize(de)?;
-
-        match info {
-            SamplerInfo::Simple(x) => Ok(SamplerInfoComplex::new(x.filter, x.wrap)),
-            SamplerInfo::Complex(x) => Ok(x),
-        }
-    }
-
     fn default_filter() -> FilterMethod {
-        FilterMethod::Scale
+        FilterMethod::Trilinear
     }
 
     fn default_wrap() -> WrapMode {
         WrapMode::Clamp
     }
 
-    pub fn default_sampler() -> SamplerInfoComplex {
-        SamplerInfoComplex::new(default_filter(), default_wrap())
+    pub fn default_sampler() -> SamplerInfo {
+        SamplerInfo::new(default_filter(), default_wrap())
     }
 
     pub fn default_mip_levels() -> u8 {
