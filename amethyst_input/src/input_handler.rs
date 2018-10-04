@@ -3,6 +3,7 @@
 use super::controller::{ControllerButton, ControllerEvent};
 use super::event::InputEvent;
 use super::event::InputEvent::*;
+use super::scroll_direction::ScrollDirection;
 use super::*;
 use amethyst_core::shrev::EventChannel;
 use smallvec::SmallVec;
@@ -216,14 +217,12 @@ where
                 DeviceEvent::MouseWheel {
                     delta: MouseScrollDelta::LineDelta(delta_x, delta_y),
                 } => {
-                    event_handler.single_write(MouseWheelMoved { delta_x: delta_x.into(), delta_y: delta_y.into() });
-                    self.invoke_wheel_moved(event_handler);
+                    self.invoke_wheel_moved(delta_x.into(), delta_y.into(), event_handler);
                 }
                 DeviceEvent::MouseWheel {
                     delta: MouseScrollDelta::PixelDelta(LogicalPosition { x, y }),
                 } => {
-                    event_handler.single_write(MouseWheelMoved { delta_x: x, delta_y: y });
-                    self.invoke_wheel_moved(event_handler);
+                    self.invoke_wheel_moved(x, y, event_handler);
                 }
                 _ => {}
             },
@@ -514,13 +513,52 @@ where
     }
 
     /// Iterates all input bindings and invokes ActionWheelMoved for each action bound to the mouse wheel
-    fn invoke_wheel_moved(&self, event_handler: &mut EventChannel<InputEvent<AC>>) {
+    fn invoke_wheel_moved(&self, delta_x: f64, delta_y: f64, event_handler: &mut EventChannel<InputEvent<AC>>) {
+        let mut events = Vec::<InputEvent<AC>>::new();
+
+        // determine if a horizontal scroll happend
+        let dir_x = match delta_x {
+            dx if dx > 0.0 => {
+                events.push(MouseWheelMoved(ScrollDirection::ScrollRight));
+                Some(ScrollDirection::ScrollRight)
+            }
+            dx if dx < 0.0 => {
+                events.push(MouseWheelMoved(ScrollDirection::ScrollLeft));
+                Some(ScrollDirection::ScrollLeft)
+            }
+            _ => None,
+        };
+
+        // determine if a vertical scroll happend
+        let dir_y = match delta_y {
+            dy if dy > 0.0 => {
+                events.push(MouseWheelMoved(ScrollDirection::ScrollDown));
+                Some(ScrollDirection::ScrollDown)
+            }
+            dy if dy < 0.0 => {
+                events.push(MouseWheelMoved(ScrollDirection::ScrollUp));
+                Some(ScrollDirection::ScrollUp)
+            }
+            _ => None,
+        };
+
+        // check for actions being bound to any invoked mouse wheel
         for (k, v) in self.bindings.actions.iter() {
             for &button in v {
-                if  button == Button::MouseWheel {
-                    event_handler.single_write(ActionWheelMoved(k.clone()));
+                if let Some(dir) = dir_x {
+                    if button == Button::MouseWheel(dir) {
+                        events.push(ActionWheelMoved(k.clone()));
+                    }
+                }
+                if let Some(dir) = dir_y {
+                    if button == Button::MouseWheel(dir) {
+                        events.push(ActionWheelMoved(k.clone()));
+                    }
                 }
             }
         }
+
+        // send all collected events
+        event_handler.iter_write(events);
     }
 }

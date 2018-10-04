@@ -37,6 +37,7 @@ mod event;
 mod input_handler;
 mod local_mouse_button;
 mod local_virtual_key_code;
+mod scroll_direction;
 mod system;
 mod util;
 
