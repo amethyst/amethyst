@@ -160,7 +160,9 @@ impl RendererBuilder {
         RendererBuilder {
             config: DisplayConfig::default(),
             events: el,
-            winit_builder: WindowBuilder::new().with_title("Amethyst"),
+            winit_builder: WindowBuilder::new()
+                .with_title("Amethyst")
+                .with_dimensions(LogicalSize::new(600.0, 500.0)),
         }
     }
 
