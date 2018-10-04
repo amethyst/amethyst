@@ -134,6 +134,41 @@ This system will make all entities with both a `Transform` with a positive y coo
 
 Cool! Now that looks like something we'll actually do in our games!
 
+### Getting entities that have some components, but not others
+
+There is a special type of `Storage` in specs called `AntiStorage`.
+You can invoke it using the "!" symbol when borrowing a normal `Storage`.
+It is used like this:
+
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::{System, ReadStorage, WriteStorage};
+# use amethyst::core::Transform;
+# struct FallingObject;
+# impl amethyst::ecs::Component for FallingObject {
+#   type Storage = amethyst::ecs::DenseVecStorage<FallingObject>;
+# }
+use amethyst::ecs::Join;
+
+struct NotFallingObjects;
+
+impl<'a> System<'a> for NotFallingObjects {
+    type SystemData = (
+        WriteStorage<'a, Transform>,
+        ReadStorage<'a, FallingObject>,
+    );
+
+    fn run(&mut self, (mut transforms, falling): Self::SystemData) {
+        for (mut transform, _) in (&mut transforms, !&falling).join() {
+            if transform.translation.y > 0.0 {
+                // If they don't fall, why not make them go up!
+                transform.translation.y += 0.1;
+            }
+        }
+    }
+}
+```
+
 ## Manipulating the structure of entities
 
 It may sometimes be interesting to manipulate the structure of entities in a system, such as creating new ones or modifying the component layout of existing ones. This kind of process is done using the `Entities<'a>` system data.
