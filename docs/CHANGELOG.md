@@ -54,6 +54,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Added comments to UiPass and shaders explaining what is going on. ([#946])
 * The z in UiTransformBuilder now defaults to 1 instead of 0, allowing to skip defining the z in the ui prefabs. ([#946])
 * Added comments to ui prefab. ([#946])
+* Summarized all `use amethyst::` statements to allow collapsing in IDE's. ([#974])
 
 ### Removed
 * `LMenu` and `RMenu` key codes, following the `winit` update. ([#906])

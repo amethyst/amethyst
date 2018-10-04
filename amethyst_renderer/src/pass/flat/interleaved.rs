@@ -115,22 +115,24 @@ where
         let camera = get_camera(active, &camera, &global);
 
         match visibility {
-            None => for (mesh, material, global) in (&mesh, &material, &global).join() {
-                draw_mesh(
-                    encoder,
-                    effect,
-                    false,
-                    mesh_storage.get(mesh),
-                    None,
-                    &tex_storage,
-                    Some(material),
-                    &material_defaults,
-                    camera,
-                    Some(global),
-                    &[V::QUERIED_ATTRIBUTES],
-                    &TEXTURES,
-                );
-            },
+            None => {
+                for (mesh, material, global) in (&mesh, &material, &global).join() {
+                    draw_mesh(
+                        encoder,
+                        effect,
+                        false,
+                        mesh_storage.get(mesh),
+                        None,
+                        &tex_storage,
+                        Some(material),
+                        &material_defaults,
+                        camera,
+                        Some(global),
+                        &[V::QUERIED_ATTRIBUTES],
+                        &TEXTURES,
+                    );
+                }
+            }
             Some(ref visibility) => {
                 for (mesh, material, global, _) in
                     (&mesh, &material, &global, &visibility.visible_unordered).join()

@@ -279,10 +279,12 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
                                     value: ref mut stored_value,
                                 },
                             ..
-                        } => if device_id == stored_device && axis == stored_axis {
-                            *stored_value += value;
-                            return;
-                        },
+                        } => {
+                            if device_id == stored_device && axis == stored_axis {
+                                *stored_value += value;
+                                return;
+                            }
+                        }
 
                         &mut Event::WindowEvent {
                             event: WindowEvent::CursorMoved { .. },
@@ -318,10 +320,12 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
                                 axis: stored_axis,
                                 value: ref mut stored_value,
                             },
-                    } => if device_id == stored_device && axis == stored_axis {
-                        *stored_value += value;
-                        return;
-                    },
+                    } => {
+                        if device_id == stored_device && axis == stored_axis {
+                            *stored_value += value;
+                            return;
+                        }
+                    }
 
                     &mut Event::WindowEvent {
                         event: WindowEvent::CursorMoved { .. },

@@ -18,8 +18,8 @@ use gfx::preset::blend;
 use gfx::pso::buffer::ElemStride;
 use gfx::state::ColorMask;
 use gfx_glyph::{
-    BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher,
-    Layout, Point, Scale, SectionText, VariedSection,
+    BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher, Layout, Point, Scale,
+    SectionText, VariedSection,
 };
 use glsl_layout::{vec2, Uniform};
 use hibitset::BitSet;
@@ -334,9 +334,14 @@ impl Pass for DrawUi {
                     // Needs a recenter because we are using [-0.5,0.5] for the mesh
                     // instead of the expected [0,1]
                     screen_position: (
-                        (ui_transform.pixel_x + ui_transform.pixel_width * ui_text.align.norm_offset().0) * hidpi,
+                        (ui_transform.pixel_x
+                            + ui_transform.pixel_width * ui_text.align.norm_offset().0)
+                            * hidpi,
                         // invert y because gfx-glyph inverts it back
-                        (screen_dimensions.height() - ui_transform.pixel_y - ui_transform.pixel_height * ui_text.align.norm_offset().1) * hidpi,
+                        (screen_dimensions.height()
+                            - ui_transform.pixel_y
+                            - ui_transform.pixel_height * ui_text.align.norm_offset().1)
+                            * hidpi,
                     ),
                     bounds: (ui_transform.pixel_width, ui_transform.pixel_height),
                     // Invert z because of gfx-glyph using z+ forward
@@ -484,13 +489,15 @@ impl Pass for DrawUi {
                                 height = ui_text.font_size;
                                 width = 2.0;
                             }
-                            
+
                             let mut pos = glyph.map(|g| g.position()).unwrap_or(Point {
-                                x: ui_transform.pixel_x + ui_transform.width * ui_text.align.norm_offset().0,
+                                x: ui_transform.pixel_x
+                                    + ui_transform.width * ui_text.align.norm_offset().0,
                                 y: 0.0,
                             });
                             // gfx-glyph uses y down so we need to convert to y up
-                            pos.y = screen_dimensions.height() - ui_transform.pixel_y + ascent / 2.0;
+                            pos.y =
+                                screen_dimensions.height() - ui_transform.pixel_y + ascent / 2.0;
 
                             let mut x = pos.x / hidpi;
                             if let Some(glyph) = glyph {

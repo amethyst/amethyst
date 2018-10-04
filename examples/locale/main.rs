@@ -2,12 +2,14 @@
 
 extern crate amethyst;
 
-use amethyst::assets::{AssetStorage, Handle, Loader, Processor, ProgressCounter};
-use amethyst::ecs::{Read, ReadExpect};
-use amethyst::locale::*;
-use amethyst::prelude::*;
-use amethyst::utils::application_root_dir;
-use amethyst::Error;
+use amethyst::{
+    assets::{AssetStorage, Handle, Loader, Processor, ProgressCounter},
+    ecs::{Read, ReadExpect},
+    locale::*,
+    prelude::*,
+    utils::application_root_dir,
+    Error,
+};
 
 struct Example {
     progress_counter: Option<ProgressCounter>,

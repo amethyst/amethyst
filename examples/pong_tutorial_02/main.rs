@@ -2,10 +2,12 @@ extern crate amethyst;
 
 mod pong;
 
-use amethyst::core::transform::TransformBundle;
-use amethyst::prelude::*;
-use amethyst::renderer::{DisplayConfig, DrawSprite, Pipeline, RenderBundle, Stage};
-use amethyst::utils::application_root_dir;
+use amethyst::{
+    core::transform::TransformBundle,
+    prelude::*,
+    renderer::{DisplayConfig, DrawSprite, Pipeline, RenderBundle, Stage},
+    utils::application_root_dir,
+};
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
