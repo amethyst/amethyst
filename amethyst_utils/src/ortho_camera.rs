@@ -132,8 +132,7 @@ impl<'a> System<'a> for CameraNormalOrthoSystem {
                     top: offsets.3,
                     near: 0.1,
                     far: 2000.0,
-                }
-                .into();
+                }.into();
             }
         }
     }

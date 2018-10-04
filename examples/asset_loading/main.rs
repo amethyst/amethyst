@@ -142,8 +142,7 @@ fn initialise_lights(world: &mut World) {
         radius: 1.0,
         color: Rgba::white(),
         ..Default::default()
-    }
-    .into();
+    }.into();
 
     let transform = Matrix4::from_translation([5.0, -20.0, 15.0].into());
 

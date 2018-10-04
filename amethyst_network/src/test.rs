@@ -86,16 +86,14 @@ mod test {
                 NetSocketSystem::<()>::new(addr1, Vec::new()).unwrap(),
                 "s",
                 &[],
-            )
-            .build();
+            ).build();
         cl_dispatch.setup(&mut world_cl.res);
         let mut sv_dispatch = DispatcherBuilder::new()
             .with(
                 NetSocketSystem::<()>::new(addr2, Vec::new()).unwrap(),
                 "s",
                 &[],
-            )
-            .build();
+            ).build();
         sv_dispatch.setup(&mut world_sv.res);
 
         (world_cl, cl_dispatch, world_sv, sv_dispatch)

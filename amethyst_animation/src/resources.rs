@@ -526,8 +526,7 @@ where
                 } else {
                     0.
                 }
-            })
-            .max_by(|a, b| a.partial_cmp(&b).unwrap_or(Ordering::Equal))
+            }).max_by(|a, b| a.partial_cmp(&b).unwrap_or(Ordering::Equal))
     }
 }
 

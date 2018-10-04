@@ -73,8 +73,7 @@ impl<'a> PrefabData<'a> for JointPrefab {
                 Joint {
                     skins: self.skins.iter().map(|i| entities[*i]).collect(),
                 },
-            )
-            .map(|_| ())
+            ).map(|_| ())
     }
 }
 
@@ -115,8 +114,7 @@ impl<'a> PrefabData<'a> for SkinPrefab {
                     inverse_bind_matrices: self.inverse_bind_matrices.clone(),
                     joint_matrices: Vec::with_capacity(self.joints.len()),
                 },
-            )
-            .map(|_| ())
+            ).map(|_| ())
     }
 }
 

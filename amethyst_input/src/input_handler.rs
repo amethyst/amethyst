@@ -463,8 +463,7 @@ where
                     } else {
                         0.0
                     }
-                })
-                .unwrap_or(0.0),
+                }).unwrap_or(0.0),
         })
     }
 

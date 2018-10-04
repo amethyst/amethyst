@@ -179,7 +179,7 @@ impl<'a> System<'a> for UiKeyboardSystem {
     fn run(
         &mut self,
         (entities, mut text, mut editable, transform, mut focused, events, time, screen_dimensions): Self::SystemData,
-    ) {
+){
         // Populate and update the tab order cache.
         {
             let bitset = &mut self.tab_order_cache.cached;
@@ -339,8 +339,7 @@ impl<'a> System<'a> for UiKeyboardSystem {
                                     } else {
                                         (i, (pos.x, pos.y))
                                     }
-                                })
-                                .0
+                                }).0
                                 as isize
                                 - focused_edit.cursor_position;
                             // The end of the text, while not a glyph, is still something
@@ -388,8 +387,7 @@ impl<'a> System<'a> for UiKeyboardSystem {
                                         && t.pixel_x + t.width / 2.0 >= self.mouse_position.0
                                         && t.pixel_y - t.height / 2.0 <= self.mouse_position.1
                                         && t.pixel_y + t.height / 2.0 >= self.mouse_position.1
-                                })
-                                .collect::<Vec<_>>();
+                                }).collect::<Vec<_>>();
                             // In instances of ambiguity we want to select the element with the
                             // highest Z order, so we need to find the highest Z order value among
                             // eligible elements.
@@ -439,15 +437,13 @@ impl<'a> System<'a> for UiKeyboardSystem {
                                         // Use Pythagorean theorem to compute distance
                                         if ((x - mouse_x).powi(2) + (y - mouse_y).powi(2)).sqrt()
                                             < ((pos.x - mouse_x).powi(2)
-                                                + (pos.y - mouse_y).powi(2))
-                                            .sqrt()
+                                                + (pos.y - mouse_y).powi(2)).sqrt()
                                         {
                                             (index, (x, y))
                                         } else {
                                             (i, (pos.x, pos.y))
                                         }
-                                    })
-                                    .0
+                                    }).0
                                     as isize;
                                 // The end of the text, while not a glyph, is still something
                                 // you'll likely want to click your cursor to, so if the cursor is

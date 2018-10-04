@@ -25,8 +25,7 @@ pub fn load_material(
             buffers,
             source.clone(),
             name,
-        )
-        .map(|(texture, _)| TexturePrefab::Data(texture))?,
+        ).map(|(texture, _)| TexturePrefab::Data(texture))?,
     );
 
     let (metallic, roughness) = load_texture_with_factor(
@@ -42,8 +41,7 @@ pub fn load_material(
         buffers,
         source.clone(),
         name,
-    )
-    .map(|(texture, factors)| deconstruct_metallic_roughness(texture, factors[0], factors[1]))
+    ).map(|(texture, factors)| deconstruct_metallic_roughness(texture, factors[0], factors[1]))
     .map(|(metallic, roughness)| {
         (
             TexturePrefab::Data(metallic.0),
@@ -61,8 +59,7 @@ pub fn load_material(
             buffers,
             source.clone(),
             name,
-        )
-        .map(|(texture, _)| TexturePrefab::Data(texture))?,
+        ).map(|(texture, _)| TexturePrefab::Data(texture))?,
     );
 
     // Can't use map/and_then because of Result returning from the load_texture function
@@ -122,8 +119,7 @@ fn deconstruct_image(data: &TextureData, offset: usize, step: usize) -> TextureD
                 .with_size(
                     image_data.rgba.width() as u16,
                     image_data.rgba.height() as u16,
-                )
-                .with_format(SurfaceType::R8);
+                ).with_format(SurfaceType::R8);
             let image_data = image_data
                 .rgba
                 .clone()
