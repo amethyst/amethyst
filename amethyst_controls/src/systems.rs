@@ -105,6 +105,10 @@ impl<'a> System<'a> for ArcBallRotationSystem {
 
 /// The system that manages the view rotation.
 /// Controlled by the mouse.
+/// Goes into an inactive state if the window is not focused (`WindowFocus` resource).
+/// 
+/// Can be manually disabled by making the mouse visible using the `HideCursor` resource: 
+/// `HideCursor.hide = false`
 pub struct FreeRotationSystem<A, B> {
     sensitivity_x: f32,
     sensitivity_y: f32,
@@ -135,12 +139,13 @@ where
         WriteStorage<'a, Transform>,
         ReadStorage<'a, FlyControlTag>,
         Read<'a, WindowFocus>,
+        Read<'a, HideCursor>,
     );
 
-    fn run(&mut self, (events, mut transform, tag, focus): Self::SystemData) {
+    fn run(&mut self, (events, mut transform, tag, focus, hide): Self::SystemData) {
         let focused = focus.is_focused;
         for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
-            if focused {
+            if focused && hide.hide {
                 match *event {
                     Event::DeviceEvent { ref event, .. } => match *event {
                         DeviceEvent::MouseMotion { delta: (x, y) } => {
