@@ -28,12 +28,14 @@ pub use orientation::Orientation;
 use std::sync::Arc;
 pub use timing::*;
 pub use transform::*;
+pub use event::EventReader;
 
 mod axis;
 pub mod bundle;
 pub mod frame_limiter;
 mod named;
 mod orientation;
+mod event;
 pub mod timing;
 pub mod transform;
 

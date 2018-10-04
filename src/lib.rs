@@ -93,7 +93,7 @@ pub use self::logger::{start_logger, LevelFilter as LogLevelFilter, LoggerConfig
 pub use self::state::{
     EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, StateMachine, Trans,
 };
-pub use self::state_event::StateEvent;
+pub use self::state_event::{StateEvent, StateEventReader};
 pub use core::shred;
 pub use core::shrev;
 pub use core::specs as ecs;

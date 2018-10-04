@@ -5,7 +5,7 @@ use assets::{Loader, Source};
 use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
 use core::shrev::{EventChannel, ReaderId};
 use core::timing::{Stopwatch, Time};
-use core::Named;
+use core::{Named, EventReader};
 use ecs::common::Errors;
 use ecs::prelude::{Component, World};
 use error::{Error, Result};
@@ -23,6 +23,7 @@ use std::time::Duration;
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use winit::{Event, WindowEvent};
+use state_event::StateEventReader;
 
 /// An Application is the root object of the game engine. It binds the OS
 /// event loop, state machines, timers and other core components in a central place.
@@ -99,10 +100,11 @@ pub struct Application<'a, T, E: Send + Sync + 'static> {
     /// The world
     #[derivative(Debug = "ignore")]
     world: World,
-    window_reader_id: ReaderId<Event>,
-    ui_reader_id: ReaderId<UiEvent>,
-    custom_reader_id: ReaderId<E>,
-    states: StateMachine<'a, T, E>,
+    #[derivative(Debug = "ignore")]
+    reader: StateEventReader<E>,
+    #[derivative(Debug = "ignore")]
+    events: Vec<StateEvent<E>>,
+    states: StateMachine<'a, T, StateEvent<E>>,
     ignore_window_close: bool,
     data: T,
 }
@@ -159,7 +161,7 @@ impl<'a, T, E: Send + Sync + Clone + 'static> Application<'a, T, E> {
     pub fn new<P, S, I>(path: P, initial_state: S, init: I) -> Result<Self>
     where
         P: AsRef<Path>,
-        S: State<T, E> + 'a,
+        S: State<T, StateEvent<E>> + 'a,
         I: DataInit<T>,
     {
         ApplicationBuilder::new(path, initial_state)?.build(init)
@@ -223,57 +225,16 @@ impl<'a, T, E: Send + Sync + Clone + 'static> Application<'a, T, E> {
         {
             let world = &mut self.world;
             let states = &mut self.states;
+
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
-            let window_events = world
-                .read_resource::<EventChannel<Event>>()
-                .read(&mut self.window_reader_id)
-                .cloned()
-                .map(|e| StateEvent::Window(e))
-                .collect::<Vec<_>>();
-
-            for event in window_events {
-                if !self.ignore_window_close {
-                    if cfg!(target_os = "ios") {
-                        if let &StateEvent::Window(Event::WindowEvent {
-                            event: WindowEvent::Destroyed,
-                            ..
-                        }) = &event
-                        {
-                            states.stop(StateData::new(world, &mut self.data));
-                        }
-                    } else {
-                        if let &StateEvent::Window(Event::WindowEvent {
-                            event: WindowEvent::CloseRequested,
-                            ..
-                        }) = &event
-                        {
-                            states.stop(StateData::new(world, &mut self.data));
-                        }
-                    }
-                }
-                states.handle_event(StateData::new(world, &mut self.data), event);
+            {
+                let events = &mut self.events;
+                self.reader.read(world.system_data(), events);
             }
-
-            let ui_events = world
-                .read_resource::<EventChannel<UiEvent>>()
-                .read(&mut self.ui_reader_id)
-                .cloned()
-                .map(|e| StateEvent::Ui(e))
-                .collect::<Vec<_>>();
-            for event in ui_events {
-                states.handle_event(StateData::new(world, &mut self.data), event);
-            }
-
-            let custom_events = world
-                .read_resource::<EventChannel<E>>()
-                .read(&mut self.custom_reader_id)
-                .cloned()
-                .map(|e| StateEvent::Custom(e))
-                .collect::<Vec<_>>();
-            for event in custom_events {
-                states.handle_event(StateData::new(world, &mut self.data), event);
+            for e in self.events.drain(..) {
+                states.handle_event(StateData::new(world, &mut self.data), e);
             }
         }
         {
@@ -706,7 +667,7 @@ impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
     /// for an example on how this method is used.
     pub fn build<'a, T, I>(mut self, init: I) -> Result<Application<'a, T, E>>
     where
-        S: State<T, E> + 'a,
+        S: State<T, StateEvent<E>> + 'a,
         I: DataInit<T>,
     {
         trace!("Entering `ApplicationBuilder::build`");
@@ -716,27 +677,15 @@ impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 
-        let window_reader_id = self
-            .world
-            .write_resource::<EventChannel<Event>>()
-            .register_reader();
-        let ui_reader_id = self
-            .world
-            .write_resource::<EventChannel<UiEvent>>()
-            .register_reader();
-        let custom_reader_id = self
-            .world
-            .write_resource::<EventChannel<E>>()
-            .register_reader();
+        let reader = StateEventReader::new(&mut self.world);
 
         let data = init.build(&mut self.world);
 
         Ok(Application {
             world: self.world,
             states: StateMachine::new(self.initial_state),
-            window_reader_id,
-            ui_reader_id,
-            custom_reader_id,
+            reader,
+            events: Vec::new(),
             ignore_window_close: self.ignore_window_close,
             data,
         })

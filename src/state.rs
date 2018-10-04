@@ -62,11 +62,11 @@ pub enum Trans<T, E> {
 }
 
 /// An empty `Trans`. Made to be used with `EmptyState`.
-pub type EmptyTrans = Trans<(), ()>;
+pub type EmptyTrans = Trans<(), StateEvent<()>>;
 
 /// A simple default `Trans`. Made to be used with `SimpleState`.
 /// By default it contains a `GameData` as its `StateData` and doesn't have a custom event type.
-pub type SimpleTrans<'a, 'b> = Trans<GameData<'a, 'b>, ()>;
+pub type SimpleTrans<'a, 'b> = Trans<GameData<'a, 'b>, StateEvent<()>>;
 
 /// A trait which defines game states that can be used by the state machine.
 pub trait State<T, E: Send + Sync + 'static> {
@@ -83,7 +83,7 @@ pub trait State<T, E: Send + Sync + 'static> {
     fn on_resume(&mut self, _data: StateData<T>) {}
 
     /// Executed on every frame before updating, for use in reacting to events.
-    fn handle_event(&mut self, _data: StateData<T>, _event: StateEvent<E>) -> Trans<T, E> {
+    fn handle_event(&mut self, _data: StateData<T>, _event: E) -> Trans<T, E> {
         Trans::None
     }
 
@@ -138,7 +138,7 @@ pub trait EmptyState {
     }
 }
 
-impl<T: EmptyState> State<(), ()> for T {
+impl<T: EmptyState> State<(), StateEvent<()>> for T {
     /// Executed when the game state begins.
     fn on_start(&mut self, data: StateData<()>) {
         self.on_start(data)
@@ -218,7 +218,7 @@ pub trait SimpleState<'a, 'b> {
         Trans::None
     }
 }
-impl<'a, 'b, T: SimpleState<'a, 'b>> State<GameData<'a, 'b>, ()> for T {
+impl<'a, 'b, T: SimpleState<'a, 'b>> State<GameData<'a, 'b>, StateEvent<()>> for T {
     //pub trait SimpleState<'a,'b>: State<GameData<'a,'b>,()> {
 
     /// Executed when the game state begins.
@@ -301,7 +301,7 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
     }
 
     /// Passes a single event to the active state to handle.
-    pub fn handle_event(&mut self, data: StateData<T>, event: StateEvent<E>) {
+    pub fn handle_event(&mut self, data: StateData<T>, event: E) {
         let StateData { world, data } = data;
         if self.running {
             let trans = match self.state_stack.last_mut() {
