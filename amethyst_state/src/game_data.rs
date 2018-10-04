@@ -64,8 +64,11 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// # Examples
     ///
     /// ~~~no_run
-    /// use amethyst::prelude::*;
-    /// use amethyst::ecs::prelude::System;
+    /// extern crate amethyst_core;
+    /// extern crate amethyst_state;
+    ///
+    /// use amethyst_core::specs::prelude::System;
+    /// use amethyst_state::GameDataBuilder;
     ///
     /// struct NopSystem;
     /// impl<'a> System<'a> for NopSystem {
@@ -120,8 +123,11 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// # Examples
     ///
     /// ~~~no_run
-    /// use amethyst::prelude::*;
-    /// use amethyst::ecs::prelude::System;
+    /// extern crate amethyst_core;
+    /// extern crate amethyst_state;
+    ///
+    /// use amethyst_core::specs::prelude::System;
+    /// use amethyst_state::GameDataBuilder;
     ///
     /// struct NopSystem;
     /// impl<'a> System<'a> for NopSystem {
@@ -171,8 +177,11 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// # Examples
     ///
     /// ~~~no_run
-    /// use amethyst::prelude::*;
-    /// use amethyst::ecs::prelude::System;
+    /// extern crate amethyst_core;
+    /// extern crate amethyst_state;
+    ///
+    /// use amethyst_core::specs::prelude::System;
+    /// use amethyst_state::GameDataBuilder;
     ///
     /// struct NopSystem;
     /// impl<'a> System<'a> for NopSystem {
