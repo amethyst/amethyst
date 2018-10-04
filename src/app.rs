@@ -1,6 +1,6 @@
 //! The core engine framework.
 
-use amethyst_ui::UiEvent;
+use ui::UiEvent;
 use assets::{Loader, Source};
 use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
 use core::shrev::{EventChannel, ReaderId};
@@ -9,12 +9,12 @@ use core::Named;
 use ecs::common::Errors;
 use ecs::prelude::{Component, World};
 use error::{Error, Result};
-use game_data::DataInit;
+use DataInit;
 use log::Level;
 use rayon::ThreadPoolBuilder;
 use shred::Resource;
 use state::{State, StateData, StateMachine};
-use state_event::StateEvent;
+use events::StateEvent;
 use std::error::Error as StdError;
 use std::marker::PhantomData;
 use std::path::Path;

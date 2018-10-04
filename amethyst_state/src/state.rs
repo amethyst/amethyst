@@ -1,14 +1,16 @@
 //! Utilities for game state management.
 
+use amethyst_events::StateEvent;
 use amethyst_input::is_close_requested;
-use ecs::prelude::World;
+use amethyst_core::specs::prelude::World;
 use std::fmt::Result as FmtResult;
 use std::fmt::{Display, Formatter};
-use {GameData, StateEvent};
+use GameData;
 
 /// Error type for errors occurring in StateMachine
 #[derive(Debug)]
 pub enum StateError {
+    /// No states are currently present in the StateMachine.
     NoStatesPresent,
 }
 
@@ -403,7 +405,7 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
     }
 
     /// Shuts the state machine down.
-    pub(crate) fn stop(&mut self, data: StateData<T>) {
+    pub fn stop(&mut self, data: StateData<T>) {
         if self.running {
             let StateData { world, data } = data;
             while let Some(mut state) = self.state_stack.pop() {
@@ -441,7 +443,7 @@ mod tests {
 
     #[test]
     fn switch_pop() {
-        use ecs::prelude::World;
+        use amethyst_core::specs::prelude::World;
 
         let mut world = World::new();
 

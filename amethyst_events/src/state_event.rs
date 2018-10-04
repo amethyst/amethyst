@@ -1,5 +1,5 @@
-use renderer::Event;
-use ui::UiEvent;
+use amethyst_renderer::Event;
+use amethyst_ui::UiEvent;
 
 /// The enum holding the different types of event that can be received in a `State` in the handle_event method.
 pub enum StateEvent<E: Send + Sync + 'static> {
