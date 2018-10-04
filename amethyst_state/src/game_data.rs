@@ -1,8 +1,12 @@
-use core::specs::prelude::{Dispatcher, DispatcherBuilder, System, World};
-use core::{ArcThreadPool, SystemBundle};
-use error::{Error, Result};
-use renderer::pipe::pass::Pass;
+
+use amethyst_core::Error;
+use amethyst_core::specs::prelude::{Dispatcher, DispatcherBuilder, System, World};
+use amethyst_core::{ArcThreadPool, SystemBundle};
+use amethyst_renderer::pipe::pass::Pass;
 use std::path::Path;
+use std::result::Result as StdResult;
+
+pub type Result<T> = StdResult<T, Error>;
 
 /// Initialise trait for game data
 pub trait DataInit<T> {
@@ -213,7 +217,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     {
         bundle
             .build(&mut self.disp_builder)
-            .map_err(|err| Error::Core(err))?;
+            .map_err(|err| Error(err.0,err.1))?;
         Ok(self)
     }
 
@@ -231,9 +235,9 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
         A: AsRef<Path>,
         P: Pass + 'b,
     {
-        use config::Config;
-        use renderer::{DisplayConfig, Pipeline, RenderBundle, Stage};
-        use ui::DrawUi;
+        use amethyst_config::Config;
+        use amethyst_renderer::{DisplayConfig, Pipeline, RenderBundle, Stage};
+        use amethyst_ui::DrawUi;
         let config = DisplayConfig::load(path);
         if with_ui {
             let pipe = Pipeline::build().with_stage(

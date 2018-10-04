@@ -66,15 +66,16 @@ pub extern crate amethyst_audio as audio;
 pub extern crate amethyst_config as config;
 pub extern crate amethyst_controls as controls;
 pub extern crate amethyst_core as core;
+pub extern crate amethyst_events as events;
 pub extern crate amethyst_input as input;
 pub extern crate amethyst_locale as locale;
 pub extern crate amethyst_network as network;
 pub extern crate amethyst_renderer as renderer;
+pub extern crate amethyst_state as state;
 pub extern crate amethyst_ui as ui;
 pub extern crate amethyst_utils as utils;
 pub extern crate winit;
 
-extern crate amethyst_ui;
 #[macro_use]
 extern crate derivative;
 extern crate fern;
@@ -88,12 +89,9 @@ extern crate serde_derive;
 
 pub use self::app::{Application, ApplicationBuilder};
 pub use self::error::{Error, Result};
-pub use self::game_data::{DataInit, GameData, GameDataBuilder};
 pub use self::logger::{start_logger, LevelFilter as LogLevelFilter, LoggerConfig};
-pub use self::state::{
-    EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, StateMachine, Trans,
-};
-pub use self::state_event::StateEvent;
+pub use state::*;
+pub use events::StateEvent;
 pub use core::shred;
 pub use core::shrev;
 pub use core::specs as ecs;
@@ -102,7 +100,4 @@ pub mod prelude;
 
 mod app;
 mod error;
-mod game_data;
 mod logger;
-mod state;
-mod state_event;
