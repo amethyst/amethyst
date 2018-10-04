@@ -4,17 +4,21 @@
 extern crate amethyst;
 extern crate rayon;
 
-use amethyst::assets::{Loader, Result as AssetResult, SimpleFormat};
-use amethyst::core::cgmath::{Array, Matrix4, Vector3};
-use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
-use amethyst::input::InputBundle;
-use amethyst::prelude::*;
-use amethyst::renderer::{
-    Camera, DrawShaded, Light, Material, MaterialDefaults, Mesh, MeshData, PointLight, PosNormTex,
-    Projection, Rgba,
+use amethyst::{
+    assets::{Loader, Result as AssetResult, SimpleFormat},
+    core::{
+        cgmath::{Array, Deg, Matrix4, Vector3},
+        transform::{GlobalTransform, Transform, TransformBundle},
+    },
+    input::InputBundle,
+    prelude::*,
+    renderer::{
+        Camera, DrawShaded, Light, Material, MaterialDefaults, Mesh, MeshData, PointLight,
+        PosNormTex, Projection, Rgba,
+    },
+    utils::application_root_dir,
+    Error,
 };
-use amethyst::utils::application_root_dir;
-use amethyst::Error;
 
 #[derive(Clone)]
 struct Custom;
@@ -122,7 +126,6 @@ fn main() -> Result<(), Error> {
 }
 
 fn initialise_camera(world: &mut World) {
-    use amethyst::core::cgmath::{Deg, Matrix4};
     let transform =
         Matrix4::from_translation([0., -20., 10.].into()) * Matrix4::from_angle_x(Deg(75.96));
     world

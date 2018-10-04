@@ -11,18 +11,22 @@ mod png_loader;
 mod sprite;
 mod sprite_sheet_loader;
 
-use amethyst::assets::{AssetStorage, Loader};
-use amethyst::core::cgmath::{Matrix4, Ortho, Point3, Transform as CgTransform, Vector3};
-use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
-use amethyst::ecs::prelude::Entity;
-use amethyst::input::{get_key, is_close_requested, is_key_down};
-use amethyst::prelude::*;
-use amethyst::renderer::{
-    Camera, ColorMask, DepthMode, DisplayConfig, DrawSprite, ElementState, MaterialTextureSet,
-    Pipeline, Projection, RenderBundle, ScreenDimensions, SpriteRender, SpriteSheet,
-    SpriteSheetHandle, Stage, Transparent, VirtualKeyCode, ALPHA,
+use amethyst::{
+    assets::{AssetStorage, Loader},
+    core::{
+        cgmath::{Matrix4, Ortho, Point3, Transform as CgTransform, Vector3},
+        transform::{GlobalTransform, Transform, TransformBundle},
+    },
+    ecs::prelude::Entity,
+    input::{get_key, is_close_requested, is_key_down},
+    prelude::*,
+    renderer::{
+        Camera, ColorMask, DepthMode, DisplayConfig, DrawSprite, ElementState, MaterialTextureSet,
+        Pipeline, Projection, RenderBundle, ScreenDimensions, SpriteRender, SpriteSheet,
+        SpriteSheetHandle, Stage, Transparent, VirtualKeyCode, ALPHA,
+    },
+    utils::application_root_dir,
 };
-use amethyst::utils::application_root_dir;
 
 use sprite::SpriteSheetDefinition;
 

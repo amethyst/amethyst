@@ -254,12 +254,10 @@ fn load_into_rgba8_from_memory(
                 _ => {
                     // TODO: Log performance warning.
                     image.to_rgba()
-                },
+                }
             }
         })
-        .map(|rgba| {
-            TextureData::Image(ImageData { rgba }, options)
-        })
+        .map(|rgba| TextureData::Image(ImageData { rgba }, options))
         // TODO: Add more context? File path or containing gltf archive?
         .chain_err(|| "Image decoding failed")
 }

@@ -2,16 +2,19 @@
 
 extern crate amethyst;
 
-use amethyst::controls::{FlyControlBundle, FlyControlTag};
-use amethyst::core::cgmath::{Deg, Point3, Vector3};
-use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
-use amethyst::core::Time;
-use amethyst::ecs::{Read, System, Write};
-use amethyst::input::InputBundle;
-use amethyst::prelude::*;
-use amethyst::renderer::*;
-
-use amethyst::utils::application_root_dir;
+use amethyst::{
+    controls::{FlyControlBundle, FlyControlTag},
+    core::Time,
+    core::{
+        cgmath::{Deg, Point3, Vector3},
+        transform::{GlobalTransform, Transform, TransformBundle},
+    },
+    ecs::{Read, System, Write},
+    input::InputBundle,
+    prelude::*,
+    renderer::*,
+    utils::application_root_dir,
+};
 
 struct ExampleLinesSystem;
 impl<'s> System<'s> for ExampleLinesSystem {

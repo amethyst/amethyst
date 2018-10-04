@@ -7,15 +7,16 @@ mod bundle;
 mod pong;
 mod systems;
 
-use amethyst::audio::AudioBundle;
-use amethyst::core::frame_limiter::FrameRateLimitStrategy;
-use amethyst::core::transform::TransformBundle;
-use amethyst::ecs::prelude::{Component, DenseVecStorage};
-use amethyst::input::InputBundle;
-use amethyst::prelude::*;
-use amethyst::renderer::{DisplayConfig, DrawSprite, Pipeline, RenderBundle, Stage};
-use amethyst::ui::{DrawUi, UiBundle};
-use amethyst::utils::application_root_dir;
+use amethyst::{
+    audio::AudioBundle,
+    core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle},
+    ecs::prelude::{Component, DenseVecStorage},
+    input::InputBundle,
+    prelude::*,
+    renderer::{DisplayConfig, DrawSprite, Pipeline, RenderBundle, Stage},
+    ui::{DrawUi, UiBundle},
+    utils::application_root_dir,
+};
 
 use audio::Music;
 use bundle::PongBundle;

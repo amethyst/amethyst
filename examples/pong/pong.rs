@@ -1,13 +1,17 @@
-use amethyst::assets::{AssetStorage, Loader};
-use amethyst::core::cgmath::Vector3;
-use amethyst::core::transform::{GlobalTransform, Transform};
-use amethyst::ecs::prelude::World;
-use amethyst::prelude::*;
-use amethyst::renderer::{
-    Camera, MaterialTextureSet, PngFormat, Projection, Sprite, SpriteRender, SpriteSheet,
-    SpriteSheetHandle, Texture, TextureCoordinates, WindowMessages,
+use amethyst::{
+    assets::{AssetStorage, Loader},
+    core::{
+        cgmath::{Matrix4, Vector3},
+        transform::{GlobalTransform, Transform},
+    },
+    ecs::prelude::World,
+    prelude::*,
+    renderer::{
+        Camera, MaterialTextureSet, PngFormat, Projection, Sprite, SpriteRender, SpriteSheet,
+        SpriteSheetHandle, Texture, TextureCoordinates, WindowMessages,
+    },
+    ui::{Anchor, TtfFormat, UiText, UiTransform},
 };
-use amethyst::ui::{Anchor, TtfFormat, UiText, UiTransform};
 use systems::ScoreText;
 use {Ball, Paddle, Side};
 use {ARENA_HEIGHT, ARENA_WIDTH, SPRITESHEET_SIZE};
@@ -112,7 +116,6 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
 
 /// Initialise the camera.
 fn initialise_camera(world: &mut World) {
-    use amethyst::core::cgmath::{Matrix4, Vector3};
     world
         .create_entity()
         .with(Camera::from(Projection::orthographic(

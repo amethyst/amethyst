@@ -74,28 +74,30 @@ where
                             ..
                         },
                     ..
-                } => if self.pressed_keys.iter().all(|&k| k.0 != key_code) {
-                    self.pressed_keys.push((key_code, scancode));
-                    event_handler.iter_write(
-                        [
-                            KeyPressed { key_code, scancode },
-                            ButtonPressed(Button::Key(key_code)),
-                            ButtonPressed(Button::ScanCode(scancode)),
-                        ]
-                            .iter()
-                            .cloned(),
-                    );
-                    for (k, v) in self.bindings.actions.iter() {
-                        for &button in v {
-                            if Button::Key(key_code) == button {
-                                event_handler.single_write(ActionPressed(k.clone()));
-                            }
-                            if Button::ScanCode(scancode) == button {
-                                event_handler.single_write(ActionPressed(k.clone()));
+                } => {
+                    if self.pressed_keys.iter().all(|&k| k.0 != key_code) {
+                        self.pressed_keys.push((key_code, scancode));
+                        event_handler.iter_write(
+                            [
+                                KeyPressed { key_code, scancode },
+                                ButtonPressed(Button::Key(key_code)),
+                                ButtonPressed(Button::ScanCode(scancode)),
+                            ]
+                                .iter()
+                                .cloned(),
+                        );
+                        for (k, v) in self.bindings.actions.iter() {
+                            for &button in v {
+                                if Button::Key(key_code) == button {
+                                    event_handler.single_write(ActionPressed(k.clone()));
+                                }
+                                if Button::ScanCode(scancode) == button {
+                                    event_handler.single_write(ActionPressed(k.clone()));
+                                }
                             }
                         }
                     }
-                },
+                }
                 WindowEvent::KeyboardInput {
                     input:
                         KeyboardInput {
