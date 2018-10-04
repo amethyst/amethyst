@@ -3,10 +3,14 @@ pub use log::LevelFilter;
 use fern;
 use std::{env, io, path::PathBuf, str::FromStr};
 
+/// An enum that contains options for logging to the terminal.
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum Stdout {
+    /// Disables logging to the terminal.
     Off,
+    /// Enables logging to the terminal without colored output.
     Plain,
+    /// Enables logging to the terminal with colored output on supported platforms.
     Colored,
 }
 
