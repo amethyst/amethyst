@@ -96,20 +96,22 @@ use state_event::StateEventReader;
 /// [log]: https://crates.io/crates/log
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct Application<'a, T, E: Send + Sync + 'static> {
+pub struct CoreApplication<'a, T, E = StateEvent, R = StateEventReader> {
     /// The world
     #[derivative(Debug = "ignore")]
     world: World,
     #[derivative(Debug = "ignore")]
-    reader: StateEventReader<E>,
+    reader: R,
     #[derivative(Debug = "ignore")]
-    events: Vec<StateEvent<E>>,
-    states: StateMachine<'a, T, StateEvent<E>>,
+    events: Vec<E>,
+    states: StateMachine<'a, T, E>,
     ignore_window_close: bool,
     data: T,
 }
 
-impl<'a, T, E: Send + Sync + Clone + 'static> Application<'a, T, E> {
+pub type Application<'a, T> = CoreApplication<'a, T, StateEvent, StateEventReader>;
+
+impl<'a, T, E, R> CoreApplication<'a, T, E, R> where E: Clone + Send + Sync + 'static, {
     /// Creates a new Application with the given initial game state.
     /// This will create and allocate all the needed resources for
     /// the event loop of the game engine. It is a shortcut for convenience
@@ -161,8 +163,9 @@ impl<'a, T, E: Send + Sync + Clone + 'static> Application<'a, T, E> {
     pub fn new<P, S, I>(path: P, initial_state: S, init: I) -> Result<Self>
     where
         P: AsRef<Path>,
-        S: State<T, StateEvent<E>> + 'a,
+        S: State<T, E> + 'a,
         I: DataInit<T>,
+        for<'b> R: EventReader<'b, Event = E>,
     {
         ApplicationBuilder::new(path, initial_state)?.build(init)
     }
@@ -171,10 +174,11 @@ impl<'a, T, E: Send + Sync + Clone + 'static> Application<'a, T, E> {
     ///
     /// This is identical in function to
     /// [ApplicationBuilder::new](struct.ApplicationBuilder.html#method.new).
-    pub fn build<P, S>(path: P, initial_state: S) -> Result<ApplicationBuilder<S, E>>
+    pub fn build<P, S>(path: P, initial_state: S) -> Result<ApplicationBuilder<S, E, R>>
     where
         P: AsRef<Path>,
-        S: State<T, E>,
+        S: State<T, E> + 'a,
+        for<'b> R: EventReader<'b, Event = E>,
     {
         ApplicationBuilder::new(path, initial_state)
     }
@@ -188,7 +192,7 @@ impl<'a, T, E: Send + Sync + Clone + 'static> Application<'a, T, E> {
     ///
     /// See the example supplied in the
     /// [`new`](struct.Application.html#examples) method.
-    pub fn run(&mut self) {
+    pub fn run(&mut self) where for <'b> R: EventReader<'b, Event = E>, {
         self.initialize();
         self.world.write_resource::<Stopwatch>().start();
         while self.states.is_running() {
@@ -219,22 +223,26 @@ impl<'a, T, E: Send + Sync + Clone + 'static> Application<'a, T, E> {
     }
 
     /// Advances the game world by one tick.
-    fn advance_frame(&mut self) {
+    fn advance_frame(&mut self) where for <'b> R: EventReader<'b, Event = E> {
         trace!("Advancing frame (`Application::advance_frame`)");
 
         {
-            let world = &mut self.world;
-            let states = &mut self.states;
+
 
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
             {
                 let events = &mut self.events;
-                self.reader.read(world.system_data(), events);
+                self.reader.read(self.world.system_data(), events);
             }
-            for e in self.events.drain(..) {
-                states.handle_event(StateData::new(world, &mut self.data), e);
+
+            {
+                let world = &mut self.world;
+                let states = &mut self.states;
+                for e in self.events.drain(..) {
+                    states.handle_event(StateData::new(world, &mut self.data), e);
+                }
             }
         }
         {
@@ -275,7 +283,7 @@ impl<'a, T, E: Send + Sync + Clone + 'static> Application<'a, T, E> {
 }
 
 #[cfg(feature = "profiler")]
-impl<'a, T, E: Send + Sync + 'static> Drop for Application<'a, T, E> {
+impl<'a, T, E, R> Drop for CoreApplication<'a, T, E, R> {
     fn drop(&mut self) {
         // TODO: Specify filename in config.
         use utils::application_root_dir;
@@ -289,16 +297,16 @@ impl<'a, T, E: Send + Sync + 'static> Drop for Application<'a, T, E> {
 /// using a custom set of configuration. This is the normal way an
 /// [`Application`](struct.Application.html)
 /// object is created.
-pub struct ApplicationBuilder<S, E> {
+pub struct ApplicationBuilder<S, E, R> {
     // config: Config,
     initial_state: S,
     /// Used by bundles to access the world directly
     pub world: World,
     ignore_window_close: bool,
-    phantom: PhantomData<E>,
+    phantom: PhantomData<(E, R)>,
 }
 
-impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
+impl<S, E, X> ApplicationBuilder<S, E, X> {
     /// Creates a new [ApplicationBuilder](struct.ApplicationBuilder.html) instance
     /// that wraps the initial_state. This is the more verbose way of initializing
     /// your application if you require specific configuration details to be changed
@@ -360,7 +368,7 @@ impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
     /// game.run();
     /// ~~~
 
-    pub fn new<P: AsRef<Path>>(path: P, initial_state: S) -> Result<Self> {
+    pub fn new<'a, P: AsRef<Path>>(path: P, initial_state: S) -> Result<Self> {
         use rustc_version_runtime;
 
         if !log_enabled!(Level::Error) {
@@ -397,7 +405,6 @@ impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
         world.add_resource(pool);
         world.add_resource(EventChannel::<Event>::with_capacity(2000));
         world.add_resource(EventChannel::<UiEvent>::with_capacity(40));
-        world.add_resource(EventChannel::<E>::with_capacity(2));
         world.add_resource(Errors::default());
         world.add_resource(FrameLimiter::default());
         world.add_resource(Stopwatch::default());
@@ -665,10 +672,12 @@ impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
     ///
     /// See the [example show for `ApplicationBuilder::new()`](struct.ApplicationBuilder.html#examples)
     /// for an example on how this method is used.
-    pub fn build<'a, T, I>(mut self, init: I) -> Result<Application<'a, T, E>>
+    pub fn build<'a, T, I>(mut self, init: I) -> Result<CoreApplication<'a, T, E, X>>
     where
-        S: State<T, StateEvent<E>> + 'a,
+        S: State<T, E> + 'a,
         I: DataInit<T>,
+        E: Clone + Send + Sync + 'static,
+        for<'b> X: EventReader<'b, Event = E>,
     {
         trace!("Entering `ApplicationBuilder::build`");
 
@@ -677,11 +686,10 @@ impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 
-        let reader = StateEventReader::new(&mut self.world);
-
+        let reader = X::build(&mut self.world);
         let data = init.build(&mut self.world);
 
-        Ok(Application {
+        Ok(CoreApplication {
             world: self.world,
             states: StateMachine::new(self.initial_state),
             reader,

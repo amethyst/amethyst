@@ -46,7 +46,7 @@ where
 
 /// Types of state transitions.
 /// T is the type of shared data between states.
-/// E is the type of custom events handled by StateEvent<E>.
+/// E is the type of events
 pub enum Trans<T, E> {
     /// Continue as normal.
     None,
@@ -62,11 +62,11 @@ pub enum Trans<T, E> {
 }
 
 /// An empty `Trans`. Made to be used with `EmptyState`.
-pub type EmptyTrans = Trans<(), StateEvent<()>>;
+pub type EmptyTrans = Trans<(), StateEvent>;
 
 /// A simple default `Trans`. Made to be used with `SimpleState`.
 /// By default it contains a `GameData` as its `StateData` and doesn't have a custom event type.
-pub type SimpleTrans<'a, 'b> = Trans<GameData<'a, 'b>, StateEvent<()>>;
+pub type SimpleTrans<'a, 'b> = Trans<GameData<'a, 'b>, StateEvent>;
 
 /// A trait which defines game states that can be used by the state machine.
 pub trait State<T, E: Send + Sync + 'static> {
@@ -127,7 +127,7 @@ pub trait EmptyState {
     fn on_resume(&mut self, _data: StateData<()>) {}
 
     /// Executed on every frame before updating, for use in reacting to events.
-    fn handle_event(&mut self, _data: StateData<()>, event: StateEvent<()>) -> EmptyTrans {
+    fn handle_event(&mut self, _data: StateData<()>, event: StateEvent) -> EmptyTrans {
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) {
                 Trans::Quit
@@ -162,7 +162,7 @@ pub trait EmptyState {
     fn shadow_update(&mut self, _data: StateData<()>) {}
 }
 
-impl<T: EmptyState> State<(), StateEvent<()>> for T {
+impl<T: EmptyState> State<(), StateEvent> for T {
     /// Executed when the game state begins.
     fn on_start(&mut self, data: StateData<()>) {
         self.on_start(data)
@@ -184,7 +184,7 @@ impl<T: EmptyState> State<(), StateEvent<()>> for T {
     }
 
     /// Executed on every frame before updating, for use in reacting to events.
-    fn handle_event(&mut self, data: StateData<()>, event: StateEvent<()>) -> EmptyTrans {
+    fn handle_event(&mut self, data: StateData<()>, event: StateEvent) -> EmptyTrans {
         self.handle_event(data, event)
     }
 
@@ -233,7 +233,7 @@ pub trait SimpleState<'a, 'b> {
     fn handle_event(
         &mut self,
         _data: StateData<GameData>,
-        event: StateEvent<()>,
+        event: StateEvent,
     ) -> SimpleTrans<'a, 'b> {
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) {
@@ -268,7 +268,8 @@ pub trait SimpleState<'a, 'b> {
     /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
     fn shadow_update(&mut self, _data: StateData<GameData>) {}
 }
-impl<'a, 'b, T: SimpleState<'a, 'b>> State<GameData<'a, 'b>, StateEvent<()>> for T {
+
+impl<'a, 'b, T: SimpleState<'a, 'b>> State<GameData<'a, 'b>, StateEvent> for T {
     //pub trait SimpleState<'a,'b>: State<GameData<'a,'b>,()> {
 
     /// Executed when the game state begins.
@@ -295,7 +296,7 @@ impl<'a, 'b, T: SimpleState<'a, 'b>> State<GameData<'a, 'b>, StateEvent<()>> for
     fn handle_event(
         &mut self,
         data: StateData<GameData>,
-        event: StateEvent<()>,
+        event: StateEvent,
     ) -> SimpleTrans<'a, 'b> {
         self.handle_event(data, event)
     }

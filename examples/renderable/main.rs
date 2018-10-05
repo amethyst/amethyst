@@ -82,7 +82,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
     fn handle_event(
         &mut self,
         data: StateData<GameData>,
-        event: StateEvent<()>,
+        event: StateEvent,
     ) -> SimpleTrans<'a, 'b> {
         let w = data.world;
         if let StateEvent::Window(event) = &event {
