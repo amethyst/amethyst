@@ -1,7 +1,7 @@
-# amethyst_locale
+# amethyst_events
 
-This crate is a simple wrapper around a localisation library.
-In this case, said library is `Fluent`.
+Sub crate containing the global enum StateData used in State::handle_event.
+Scheduled for removal in a future update.
 
 ## Contribution
 
@@ -15,5 +15,5 @@ MIT/Apache-2.
 
 ## License
 
-`amethyst_locale` is distributed under the terms of both the MIT
+`amethyst_events` is distributed under the terms of both the MIT
 license and the Apache License (Version 2.0).

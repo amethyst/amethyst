@@ -1,7 +1,6 @@
-# amethyst_locale
+# amethyst_state
 
-This crate is a simple wrapper around a localisation library.
-In this case, said library is `Fluent`.
+Sub crate containing the State, State machine and state transitions of amethyst.
 
 ## Contribution
 
@@ -15,5 +14,5 @@ MIT/Apache-2.
 
 ## License
 
-`amethyst_locale` is distributed under the terms of both the MIT
+`amethyst_state` is distributed under the terms of both the MIT
 license and the Apache License (Version 2.0).
