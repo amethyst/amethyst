@@ -14,7 +14,7 @@ pub fn application_root_dir() -> String {
             path.parent()
                 .expect("Failed to get parent directory of the executable.")
                 .to_str()
-                .unwrap(),
+                .expect("Failed to get valid string from path to the executable."),
         )
     })
 }
