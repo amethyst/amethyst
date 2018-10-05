@@ -225,8 +225,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
         B: SystemBundle<'a, 'b>,
     {
         bundle
-            .build(&mut self.disp_builder)
-            .map_err(|err| Error(err.0,err.1))?;
+            .build(&mut self.disp_builder)?;
         Ok(self)
     }
 

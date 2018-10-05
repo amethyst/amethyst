@@ -15,7 +15,10 @@ extern crate amethyst_ui;
 #[macro_use]
 extern crate derivative;
 
-pub use self::state::{EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, StateError, StateMachine, Trans,};
+pub use self::state::{
+	EmptyState, EmptyTrans, SimpleState, SimpleTrans, State,
+	StateData, StateError, StateMachine, Trans,
+};
 pub use self::game_data::{DataInit, GameData, GameDataBuilder};
 
 mod state;
