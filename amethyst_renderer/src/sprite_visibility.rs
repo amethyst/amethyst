@@ -7,6 +7,7 @@ use hibitset::BitSet;
 
 use cam::{ActiveCamera, Camera};
 use transparent::Transparent;
+use hidden::Hidden;
 
 /// Resource for controlling what entities should be rendered, and whether to draw them ordered or
 /// not, which is useful for transparent surfaces.
@@ -51,6 +52,7 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
     type SystemData = (
         Entities<'a>,
         Write<'a, SpriteVisibility>,
+        ReadStorage<'a, Hidden>,
         Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Transparent>,
@@ -59,7 +61,7 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
 
     fn run(
         &mut self,
-        (entities, mut visibility, active, camera, transparent, global): Self::SystemData,
+        (entities, mut visibility, hidden, active, camera, transparent, global): Self::SystemData,
     ) {
         let origin = Point3::origin();
 
@@ -77,9 +79,9 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
 
         self.centroids.clear();
         self.centroids.extend(
-            (&*entities, &global)
+            (&*entities, &global, !&hidden)
                 .join()
-                .map(|(entity, global)| (entity, global.0.transform_point(origin)))
+                .map(|(entity, global, _)| (entity, global.0.transform_point(origin)))
                 .map(|(entity, centroid)| Internals {
                     entity,
                     transparent: transparent.contains(entity),

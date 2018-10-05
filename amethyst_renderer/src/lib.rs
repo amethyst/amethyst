@@ -130,6 +130,7 @@ pub use vertex::{
     VertexFormat, With,
 };
 pub use visibility::{Visibility, VisibilitySortingSystem};
+pub use hidden::Hidden;
 
 pub mod error;
 pub mod mouse;
@@ -161,3 +162,4 @@ mod transparent;
 mod types;
 mod vertex;
 mod visibility;
+mod hidden;

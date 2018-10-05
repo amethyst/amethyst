@@ -11,7 +11,7 @@ use amethyst_renderer::pipe::pass::{Pass, PassData};
 use amethyst_renderer::pipe::{Effect, NewEffect};
 use amethyst_renderer::{
     Encoder, Factory, Mesh, PosTex, Resources, ScreenDimensions, Shape, Texture, TextureData,
-    TextureHandle, TextureMetadata, VertexFormat,
+    TextureHandle, TextureMetadata, VertexFormat, Hidden,
 };
 use fnv::FnvHashMap as HashMap;
 use gfx::preset::blend;
@@ -104,6 +104,7 @@ impl<'a> PassData<'a> for DrawUi {
         ReadStorage<'a, UiTransform>,
         WriteStorage<'a, UiText>,
         ReadStorage<'a, TextEditing>,
+        ReadStorage<'a, Hidden>,
     );
 }
 
@@ -144,13 +145,14 @@ impl Pass for DrawUi {
             ui_transform,
             mut ui_text,
             editing,
+            hidden,
         ): <Self as PassData>::Data,
     ) {
         // Populate and update the draw order cache.
         {
             let bitset = &mut self.cached_draw_order.cached;
             self.cached_draw_order.cache.retain(|&(_z, entity)| {
-                let keep = ui_transform.contains(entity);
+                let keep = ui_transform.contains(entity) && !hidden.contains(entity);
                 if !keep {
                     bitset.remove(entity.id());
                 }
@@ -162,13 +164,15 @@ impl Pass for DrawUi {
             *z = ui_transform.get(entity).unwrap().global_z;
         }
 
-        // Attempt to insert the new entities in sorted position.  Should reduce work during
+        // Attempt to insert the new entities in sorted position. Should reduce work during
         // the sorting step.
         let transform_set = ui_transform.mask().clone();
+        let hidden_set = hidden.mask().clone();
         {
             // Create a bitset containing only the new indices.
-            let new = (&transform_set ^ &self.cached_draw_order.cached) & &transform_set;
-            for (entity, transform, _new) in (&*entities, &ui_transform, &new).join() {
+            let visible_cached = (&self.cached_draw_order.cached ^ !&hidden_set) & &self.cached_draw_order.cached;
+            let new = (&transform_set ^ &visible_cached) & &transform_set;
+            for (entity, transform, _new, _) in (&*entities, &ui_transform, &new, !&hidden).join() {
                 let pos = self
                     .cached_draw_order
                     .cache
@@ -209,9 +213,9 @@ impl Pass for DrawUi {
         };
         effect.data.vertex_bufs.push(vbuf);
 
-        let highest_abs_z = (&ui_transform,)
+        let highest_abs_z = (&ui_transform, !&hidden)
             .join()
-            .map(|t| t.0.global_z)
+            .map(|(t, _)| t.global_z)
             .fold(1.0, |highest, current| current.abs().max(highest));
         for &(_z, entity) in &self.cached_draw_order.cache {
             // This won't panic as we guaranteed earlier these entities are present.

@@ -20,6 +20,7 @@ use tex::Texture;
 use types::{Encoder, Factory};
 use vertex::{Attributes, Position, Separate, TexCoord, VertexFormat};
 use visibility::Visibility;
+use hidden::Hidden;
 
 static ATTRIBUTES: [Attributes<'static>; 2] = [
     Separate::<Position>::ATTRIBUTES,
@@ -76,6 +77,7 @@ impl<'a> PassData<'a> for DrawFlatSeparate {
         Read<'a, AssetStorage<Texture>>,
         ReadExpect<'a, MaterialDefaults>,
         Option<Read<'a, Visibility>>,
+        ReadStorage<'a, Hidden>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
@@ -129,6 +131,7 @@ impl Pass for DrawFlatSeparate {
             tex_storage,
             material_defaults,
             visibility,
+            hidden,
             mesh,
             material,
             global,
@@ -139,8 +142,8 @@ impl Pass for DrawFlatSeparate {
 
         match visibility {
             None => {
-                for (joint, mesh, material, global) in
-                    (joints.maybe(), &mesh, &material, &global).join()
+                for (joint, mesh, material, global, _) in
+                    (joints.maybe(), &mesh, &material, &global, !&hidden).join()
                 {
                     draw_mesh(
                         encoder,
@@ -159,12 +162,13 @@ impl Pass for DrawFlatSeparate {
                 }
             }
             Some(ref visibility) => {
-                for (joint, mesh, material, global, _) in (
+                for (joint, mesh, material, global, _, _) in (
                     joints.maybe(),
                     &mesh,
                     &material,
                     &global,
                     &visibility.visible_unordered,
+                    !&hidden,
                 )
                     .join()
                 {

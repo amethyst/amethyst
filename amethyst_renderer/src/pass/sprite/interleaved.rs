@@ -18,6 +18,7 @@ use pipe::pass::{Pass, PassData};
 use pipe::{DepthMode, Effect, NewEffect};
 use sprite::{SpriteRender, SpriteSheet};
 use sprite_visibility::SpriteVisibility;
+use hidden::Hidden;
 use tex::Texture;
 use types::{Encoder, Factory, Slice};
 use vertex::{Attributes, Query, VertexFormat};
@@ -63,6 +64,7 @@ impl<'a> PassData<'a> for DrawSprite {
         Read<'a, AssetStorage<Texture>>,
         Read<'a, MaterialTextureSet>,
         Option<Read<'a, SpriteVisibility>>,
+        ReadStorage<'a, Hidden>,
         ReadStorage<'a, SpriteRender>,
         ReadStorage<'a, GlobalTransform>,
     );
@@ -104,6 +106,7 @@ impl Pass for DrawSprite {
             tex_storage,
             material_texture_set,
             visibility,
+            hidden,
             sprite_render,
             global,
         ): <Self as PassData<'a>>::Data,
@@ -112,7 +115,7 @@ impl Pass for DrawSprite {
 
         match visibility {
             None => {
-                for (sprite_render, global) in (&sprite_render, &global).join() {
+                for (sprite_render, global, _) in (&sprite_render, &global, !&hidden).join() {
                     self.batch.add_sprite(
                         sprite_render,
                         Some(global),
@@ -124,8 +127,8 @@ impl Pass for DrawSprite {
                 self.batch.sort();
             }
             Some(ref visibility) => {
-                for (sprite_render, global, _) in
-                    (&sprite_render, &global, &visibility.visible_unordered).join()
+                for (sprite_render, global, _, _) in
+                    (&sprite_render, &global, &visibility.visible_unordered, !&hidden).join()
                 {
                     self.batch.add_sprite(
                         sprite_render,

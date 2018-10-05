@@ -22,6 +22,7 @@ use tex::Texture;
 use types::{Encoder, Factory};
 use vertex::{Attributes, Normal, Position, Separate, Tangent, TexCoord, VertexFormat};
 use visibility::Visibility;
+use hidden::Hidden;
 
 static ATTRIBUTES: [Attributes<'static>; 4] = [
     Separate::<Position>::ATTRIBUTES,
@@ -73,6 +74,7 @@ impl<'a> PassData<'a> for DrawPbmSeparate {
         Read<'a, AssetStorage<Texture>>,
         ReadExpect<'a, MaterialDefaults>,
         Option<Read<'a, Visibility>>,
+        ReadStorage<'a, Hidden>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
@@ -132,6 +134,7 @@ impl Pass for DrawPbmSeparate {
             tex_storage,
             material_defaults,
             visibility,
+            hidden,
             mesh,
             material,
             global,
@@ -145,8 +148,8 @@ impl Pass for DrawPbmSeparate {
 
         match visibility {
             None => {
-                for (joint, mesh, material, global) in
-                    (joints.maybe(), &mesh, &material, &global).join()
+                for (joint, mesh, material, global, _) in
+                    (joints.maybe(), &mesh, &material, &global, !&hidden).join()
                 {
                     draw_mesh(
                         encoder,
@@ -165,12 +168,13 @@ impl Pass for DrawPbmSeparate {
                 }
             }
             Some(ref visibility) => {
-                for (joint, mesh, material, global, _) in (
+                for (joint, mesh, material, global, _, _) in (
                     joints.maybe(),
                     &mesh,
                     &material,
                     &global,
                     &visibility.visible_unordered,
+                    !&hidden,
                 )
                     .join()
                 {

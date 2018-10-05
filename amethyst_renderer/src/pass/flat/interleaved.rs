@@ -19,6 +19,7 @@ use tex::Texture;
 use types::{Encoder, Factory};
 use vertex::{Position, Query, TexCoord};
 use visibility::Visibility;
+use hidden::Hidden;
 
 /// Draw mesh without lighting
 ///
@@ -68,6 +69,7 @@ where
         Read<'a, AssetStorage<Texture>>,
         ReadExpect<'a, MaterialDefaults>,
         Option<Read<'a, Visibility>>,
+        ReadStorage<'a, Hidden>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
@@ -107,6 +109,7 @@ where
             tex_storage,
             material_defaults,
             visibility,
+            hidden,
             mesh,
             material,
             global,
@@ -116,7 +119,7 @@ where
 
         match visibility {
             None => {
-                for (mesh, material, global) in (&mesh, &material, &global).join() {
+                for (mesh, material, global, _) in (&mesh, &material, &global, !&hidden).join() {
                     draw_mesh(
                         encoder,
                         effect,
@@ -134,8 +137,8 @@ where
                 }
             }
             Some(ref visibility) => {
-                for (mesh, material, global, _) in
-                    (&mesh, &material, &global, &visibility.visible_unordered).join()
+                for (mesh, material, global, _, _) in
+                    (&mesh, &material, &global, &visibility.visible_unordered, !&hidden).join()
                 {
                     draw_mesh(
                         encoder,
