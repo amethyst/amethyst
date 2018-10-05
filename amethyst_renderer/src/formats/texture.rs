@@ -43,7 +43,7 @@ pub struct TextureMetadata {
     /// is stored).
     ///
     /// This is usually `Srgb` for color textures, normalmaps & similar mostly use `Unorm`
-    /// (a floating-point number between `0.0` and `1.0`.
+    /// (which represents a value between `0.0` and `1.0`).
     pub channel: ChannelType,
 }
 
