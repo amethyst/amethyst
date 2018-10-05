@@ -137,7 +137,7 @@ Cool! Now that looks like something we'll actually do in our games!
 ### Getting entities that have some components, but not others
 
 There is a special type of `Storage` in specs called `AntiStorage`.
-You can invoke it using the "!" symbol when borrowing a normal `Storage`.
+The not operator (!) turns a Storage into its AntiStorage counterpart.
 It is used like this:
 
 ```rust,no_run,noplaypen
@@ -160,10 +160,8 @@ impl<'a> System<'a> for NotFallingObjects {
 
     fn run(&mut self, (mut transforms, falling): Self::SystemData) {
         for (mut transform, _) in (&mut transforms, !&falling).join() {
-            if transform.translation.y > 0.0 {
-                // If they don't fall, why not make them go up!
-                transform.translation.y += 0.1;
-            }
+            // If they don't fall, why not make them go up!
+            transform.translation.y += 0.1;
         }
     }
 }
