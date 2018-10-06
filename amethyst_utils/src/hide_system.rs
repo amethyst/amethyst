@@ -5,11 +5,11 @@ use amethyst_core::{
     },
     transform::components::{HierarchyEvent, Parent, ParentHierarchy},
 };
-use amethyst_renderer::Hidden;
+use amethyst_renderer::HiddenPropagate;
 
 // Based on the [UiTransformSystem](struct.UiTransformSystem.html).
-/// This system adds a [Hidden](struct.Hidden.html)-component to all children.
-/// Using this system will result in every child being hidden, as it is currently not possible to make individual choices.
+/// This system adds a [HiddenPropagate](struct.HiddenPropagate.html)-component to all children.
+/// Using this system will result in every child being hidden.
 #[derive(Default)]
 pub struct HideHierarchySystem {
     hidden_entities: BitSet,
@@ -22,15 +22,12 @@ pub struct HideHierarchySystem {
 
 impl<'a> System<'a> for HideHierarchySystem {
     type SystemData = (
-        WriteStorage<'a, Hidden>,
+        WriteStorage<'a, HiddenPropagate>,
         ReadStorage<'a, Parent>,
         ReadExpect<'a, ParentHierarchy>,
     );
     fn run(&mut self, data: Self::SystemData) {
         let (mut hidden, parents, hierarchy) = data;
-        #[cfg(feature = "profiler")]
-        profile_scope!("hide_hierarchy_system");
-
         self.hidden_entities.clear();
 
         hidden.populate_inserted(
@@ -66,7 +63,7 @@ impl<'a> System<'a> for HideHierarchySystem {
                 if parent_dirty {
                     if hidden.contains(parent_entity) {
                         for child in hierarchy.children(parent_entity) {
-                            match hidden.insert(*child, Hidden::default()) {
+                            match hidden.insert(*child, HiddenPropagate::default()) {
                                 Ok(_v) => (),
                                 Err(e) => {
                                     error!(
@@ -84,7 +81,7 @@ impl<'a> System<'a> for HideHierarchySystem {
                 } else if self_dirty {
                     if hidden.contains(*entity) {
                         for child in hierarchy.children(*entity) {
-                            match hidden.insert(*child, Hidden::default()) {
+                            match hidden.insert(*child, HiddenPropagate::default()) {
                                 Ok(_v) => (),
                                 Err(e) => {
                                     error!(
@@ -117,7 +114,7 @@ impl<'a> System<'a> for HideHierarchySystem {
         use amethyst_core::specs::prelude::SystemData;
         Self::SystemData::setup(res);
         self.parent_events_id = Some(res.fetch_mut::<ParentHierarchy>().track());
-        let mut hidden = WriteStorage::<Hidden>::fetch(res);
+        let mut hidden = WriteStorage::<HiddenPropagate>::fetch(res);
         self.inserted_hidden_id = Some(hidden.track_inserted());
         self.removed_hidden_id = Some(hidden.track_removed());
     }

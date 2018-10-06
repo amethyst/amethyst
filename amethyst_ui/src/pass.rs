@@ -11,7 +11,7 @@ use amethyst_renderer::pipe::pass::{Pass, PassData};
 use amethyst_renderer::pipe::{Effect, NewEffect};
 use amethyst_renderer::{
     Encoder, Factory, Hidden, Mesh, PosTex, Resources, ScreenDimensions, Shape, Texture,
-    TextureData, TextureHandle, TextureMetadata, VertexFormat,
+    TextureData, TextureHandle, TextureMetadata, VertexFormat, HiddenPropagate,
 };
 use fnv::FnvHashMap as HashMap;
 use gfx::preset::blend;
@@ -105,6 +105,7 @@ impl<'a> PassData<'a> for DrawUi {
         WriteStorage<'a, UiText>,
         ReadStorage<'a, TextEditing>,
         ReadStorage<'a, Hidden>,
+        ReadStorage<'a, HiddenPropagate>,
     );
 }
 
@@ -146,13 +147,14 @@ impl Pass for DrawUi {
             mut ui_text,
             editing,
             hidden,
+            hidden_prop,
         ): <Self as PassData>::Data,
     ) {
         // Populate and update the draw order cache.
         {
             let bitset = &mut self.cached_draw_order.cached;
             self.cached_draw_order.cache.retain(|&(_z, entity)| {
-                let keep = ui_transform.contains(entity) && !hidden.contains(entity);
+                let keep = ui_transform.contains(entity) && !hidden.contains(entity) && !hidden_prop.contains(entity);
                 if !keep {
                     bitset.remove(entity.id());
                 }
@@ -168,12 +170,13 @@ impl Pass for DrawUi {
         // the sorting step.
         let transform_set = ui_transform.mask().clone();
         let hidden_set = hidden.mask().clone();
+        let hidden_prop_set = hidden_prop.mask().clone();
         {
             // Create a bitset containing only the new indices.
             let visible_cached =
-                (&self.cached_draw_order.cached ^ !&hidden_set) & &self.cached_draw_order.cached;
+                (&self.cached_draw_order.cached ^ (!&hidden_set & !&hidden_prop_set)) & &self.cached_draw_order.cached;
             let new = (&transform_set ^ &visible_cached) & &transform_set;
-            for (entity, transform, _new, _) in (&*entities, &ui_transform, &new, !&hidden).join() {
+            for (entity, transform, _new, _, _) in (&*entities, &ui_transform, &new, !&hidden, !&hidden_prop).join() {
                 let pos = self
                     .cached_draw_order
                     .cache

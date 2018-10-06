@@ -9,6 +9,13 @@ use amethyst_core::specs::{
 pub struct Hidden;
 
 impl Component for Hidden {
-    //type Storage = NullStorage<Self>;
+    type Storage = NullStorage<Self>;
+}
+
+/// Like [Hidden](struct.Hidden.html), but propagates through children.
+#[derive(Clone, Debug, Default)]
+pub struct HiddenPropagate;
+
+impl Component for HiddenPropagate {
     type Storage = FlaggedStorage<Self, NullStorage<Self>>;
 }

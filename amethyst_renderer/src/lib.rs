@@ -92,7 +92,7 @@ pub use formats::{
     GraphicsPrefab, ImageData, JpgFormat, MaterialPrefab, MeshCreator, MeshData, ObjFormat,
     PngFormat, TextureData, TextureFormat, TextureMetadata, TexturePrefab, TgaFormat,
 };
-pub use hidden::Hidden;
+pub use hidden::{Hidden, HiddenPropagate};
 pub use input::{
     DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent,
 };

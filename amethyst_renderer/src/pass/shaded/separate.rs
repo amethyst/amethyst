@@ -8,7 +8,7 @@ use cam::{ActiveCamera, Camera};
 use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
-use hidden::Hidden;
+use hidden::{Hidden, HiddenPropagate};
 use light::Light;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
@@ -74,6 +74,7 @@ impl<'a> PassData<'a> for DrawShadedSeparate {
         ReadExpect<'a, MaterialDefaults>,
         Option<Read<'a, Visibility>>,
         ReadStorage<'a, Hidden>,
+        ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
@@ -132,6 +133,7 @@ impl Pass for DrawShadedSeparate {
             material_defaults,
             visibility,
             hidden,
+            hidden_prop,
             mesh,
             material,
             global,
@@ -146,8 +148,8 @@ impl Pass for DrawShadedSeparate {
 
         match visibility {
             None => {
-                for (joint, mesh, material, global, _) in
-                    (joints.maybe(), &mesh, &material, &global, !&hidden).join()
+                for (joint, mesh, material, global, _, _) in
+                    (joints.maybe(), &mesh, &material, &global, !&hidden, !&hidden_prop).join()
                 {
                     draw_mesh(
                         encoder,
@@ -166,13 +168,12 @@ impl Pass for DrawShadedSeparate {
                 }
             }
             Some(ref visibility) => {
-                for (joint, mesh, material, global, _, _) in (
+                for (joint, mesh, material, global, _) in (
                     joints.maybe(),
                     &mesh,
                     &material,
                     &global,
                     &visibility.visible_unordered,
-                    !&hidden,
                 )
                     .join()
                 {
