@@ -22,6 +22,7 @@ pub struct Renderer {
     events: EventsLoop,
     multisampling: u16,
     cached_size: LogicalSize,
+    cached_hidpi_factor: f64,
 }
 
 impl Renderer {
@@ -78,12 +79,15 @@ impl Renderer {
         use glutin::GlContext;
 
         if let Some(size) = self.window().get_inner_size() {
-            if size != self.cached_size {
+            let hidpi_factor = self.window().get_hidpi_factor();
+
+            if size != self.cached_size || hidpi_factor != self.cached_hidpi_factor {
                 self.cached_size = size.into();
+                self.cached_hidpi_factor = hidpi_factor;
                 #[cfg(feature = "opengl")]
                 self.window.resize(PhysicalSize::from_logical(
                     size,
-                    self.window().get_hidpi_factor(),
+                    hidpi_factor,
                 ));
                 self.resize(pipe, size.into());
             }
@@ -214,6 +218,8 @@ impl RendererBuilder {
             .get_inner_size()
             .expect("Unable to fetch window size, as the window went away!")
             .into();
+        let cached_hidpi_factor = window.get_hidpi_factor();
+
         let encoder = factory.create_command_buffer().into();
         Ok(Renderer {
             device,
@@ -224,6 +230,7 @@ impl RendererBuilder {
             events: self.events,
             multisampling: self.config.multisampling,
             cached_size,
+            cached_hidpi_factor,
         })
     }
 }
