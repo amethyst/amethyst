@@ -3,9 +3,9 @@ use amethyst_core::specs::prelude::{Entities, Entity, Join, Read, ReadStorage, S
 use amethyst_core::GlobalTransform;
 use cam::{ActiveCamera, Camera};
 use hibitset::BitSet;
+use hidden::Hidden;
 use std::cmp::Ordering;
 use transparent::Transparent;
-use hidden::Hidden;
 
 /// Resource for controlling what entities should be rendered, and whether to draw them ordered or
 /// not, which is useful for transparent surfaces.

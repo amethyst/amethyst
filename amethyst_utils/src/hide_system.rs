@@ -1,16 +1,15 @@
 use amethyst_core::{
     specs::prelude::{
-        BitSet, InsertedFlag, RemovedFlag, ReadExpect, ReadStorage, ReaderId, 
-        Resources, System, WriteStorage,
+        BitSet, InsertedFlag, ReadExpect, ReadStorage, ReaderId, RemovedFlag, Resources, System,
+        WriteStorage,
     },
-    transform::components::{
-        HierarchyEvent, Parent, ParentHierarchy,
-    },
+    transform::components::{HierarchyEvent, Parent, ParentHierarchy},
 };
 use amethyst_renderer::Hidden;
 
-/// Manages the `Parent` component on entities having a `Hidden` Component
-/// An alteration of the [UiTransformSystem](struct.UiTransformSystem.html).
+// Based on the [UiTransformSystem](struct.UiTransformSystem.html).
+/// This system adds a [Hidden](struct.Hidden.html)-component to all children.
+/// Using this system will result in every child being hidden, as it is currently not possible to make individual choices.
 #[derive(Default)]
 pub struct HideHierarchySystem {
     hidden_entities: BitSet,
@@ -47,9 +46,13 @@ impl<'a> System<'a> for HideHierarchySystem {
             .changed()
             .read(&mut self.parent_events_id.as_mut().unwrap())
         {
-            match *event{
-                HierarchyEvent::Removed(entity) => {self.hidden_entities.add(entity.id());},
-                HierarchyEvent::Modified(entity) => {self.hidden_entities.add(entity.id());},
+            match *event {
+                HierarchyEvent::Removed(entity) => {
+                    self.hidden_entities.add(entity.id());
+                }
+                HierarchyEvent::Modified(entity) => {
+                    self.hidden_entities.add(entity.id());
+                }
                 //_ => {error!("Non-implemented HierarchyEvent received.");},
             }
         }
@@ -61,31 +64,38 @@ impl<'a> System<'a> for HideHierarchySystem {
                 let parent_entity = parents.get(*entity).unwrap().entity;
                 let parent_dirty = self.hidden_entities.contains(parent_entity.id());
                 if parent_dirty {
-                    if hidden.contains(parent_entity){
-                        for child in hierarchy.children(parent_entity){
-                            match hidden.insert(*child, Hidden::default()){
+                    if hidden.contains(parent_entity) {
+                        for child in hierarchy.children(parent_entity) {
+                            match hidden.insert(*child, Hidden::default()) {
                                 Ok(_v) => (),
-                                Err(e) => {error!("Failed to add Hidden component to child-entity {:?}. {:?}", *entity, e);},
+                                Err(e) => {
+                                    error!(
+                                        "Failed to add Hidden component to child-entity {:?}. {:?}",
+                                        *entity, e
+                                    );
+                                }
                             }
                         }
-                    }
-                    else{
-                        for child in hierarchy.children(parent_entity){
+                    } else {
+                        for child in hierarchy.children(parent_entity) {
                             hidden.remove(*child);
                         }
                     }
-                }
-                else if self_dirty {
-                    if hidden.contains(*entity){
-                        for child in hierarchy.children(*entity){
-                            match hidden.insert(*child, Hidden::default()){
+                } else if self_dirty {
+                    if hidden.contains(*entity) {
+                        for child in hierarchy.children(*entity) {
+                            match hidden.insert(*child, Hidden::default()) {
                                 Ok(_v) => (),
-                                Err(e) => {error!("Failed to add Hidden component to child-entity {:?}. {:?}", *entity, e);},
+                                Err(e) => {
+                                    error!(
+                                        "Failed to add Hidden component to child-entity {:?}. {:?}",
+                                        *entity, e
+                                    );
+                                }
                             }
                         }
-                    }
-                    else{
-                        for child in hierarchy.children(*entity){
+                    } else {
+                        for child in hierarchy.children(*entity) {
                             hidden.remove(*child);
                         }
                     }

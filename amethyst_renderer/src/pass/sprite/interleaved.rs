@@ -12,13 +12,13 @@ use super::*;
 use cam::{ActiveCamera, Camera};
 use error::Result;
 use gfx::pso::buffer::ElemStride;
+use hidden::Hidden;
 use mtl::MaterialTextureSet;
 use pass::util::{add_texture, get_camera, set_view_args, setup_textures, ViewArgs};
 use pipe::pass::{Pass, PassData};
 use pipe::{DepthMode, Effect, NewEffect};
 use sprite::{SpriteRender, SpriteSheet};
 use sprite_visibility::SpriteVisibility;
-use hidden::Hidden;
 use tex::Texture;
 use types::{Encoder, Factory, Slice};
 use vertex::{Attributes, Query, VertexFormat};
@@ -127,8 +127,13 @@ impl Pass for DrawSprite {
                 self.batch.sort();
             }
             Some(ref visibility) => {
-                for (sprite_render, global, _, _) in
-                    (&sprite_render, &global, &visibility.visible_unordered, !&hidden).join()
+                for (sprite_render, global, _, _) in (
+                    &sprite_render,
+                    &global,
+                    &visibility.visible_unordered,
+                    !&hidden,
+                )
+                    .join()
                 {
                     self.batch.add_sprite(
                         sprite_render,

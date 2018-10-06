@@ -9,6 +9,7 @@ use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
+use hidden::Hidden;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
 use pass::skinning::{create_skinning_effect, setup_skinning_buffers};
@@ -20,7 +21,6 @@ use tex::Texture;
 use types::{Encoder, Factory};
 use vertex::{Attributes, Position, Separate, TexCoord, VertexFormat};
 use visibility::Visibility;
-use hidden::Hidden;
 
 static ATTRIBUTES: [Attributes<'static>; 2] = [
     Separate::<Position>::ATTRIBUTES,

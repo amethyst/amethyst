@@ -18,10 +18,10 @@ extern crate shred_derive;
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
-pub mod hide_system;
 pub mod app_root_dir;
 pub mod circular_buffer;
 pub mod fps_counter;
+pub mod hide_system;
 pub mod ortho_camera;
 pub mod removal;
 pub mod scene;

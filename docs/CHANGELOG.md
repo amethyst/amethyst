@@ -29,7 +29,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Support for text alignment (align left, center, right). ([#965])
 * Support for multiline text. ([#965])
 * Support for logging to file, toggle for logging to stdout. ([#976], [#994])
-
+* Added a `Hidden` Component, that hides a single entity, and a HideHierarchySystem that toggles `Hidden` on all children when used. ([#1001])
 
 
 ### Changed

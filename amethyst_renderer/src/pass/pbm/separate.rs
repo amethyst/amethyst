@@ -8,6 +8,7 @@ use cam::{ActiveCamera, Camera};
 use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
+use hidden::Hidden;
 use light::Light;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
@@ -22,7 +23,6 @@ use tex::Texture;
 use types::{Encoder, Factory};
 use vertex::{Attributes, Normal, Position, Separate, Tangent, TexCoord, VertexFormat};
 use visibility::Visibility;
-use hidden::Hidden;
 
 static ATTRIBUTES: [Attributes<'static>; 4] = [
     Separate::<Position>::ATTRIBUTES,

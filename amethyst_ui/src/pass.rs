@@ -10,8 +10,8 @@ use amethyst_renderer::error::Result;
 use amethyst_renderer::pipe::pass::{Pass, PassData};
 use amethyst_renderer::pipe::{Effect, NewEffect};
 use amethyst_renderer::{
-    Encoder, Factory, Mesh, PosTex, Resources, ScreenDimensions, Shape, Texture, TextureData,
-    TextureHandle, TextureMetadata, VertexFormat, Hidden,
+    Encoder, Factory, Hidden, Mesh, PosTex, Resources, ScreenDimensions, Shape, Texture,
+    TextureData, TextureHandle, TextureMetadata, VertexFormat,
 };
 use fnv::FnvHashMap as HashMap;
 use gfx::preset::blend;
@@ -170,7 +170,8 @@ impl Pass for DrawUi {
         let hidden_set = hidden.mask().clone();
         {
             // Create a bitset containing only the new indices.
-            let visible_cached = (&self.cached_draw_order.cached ^ !&hidden_set) & &self.cached_draw_order.cached;
+            let visible_cached =
+                (&self.cached_draw_order.cached ^ !&hidden_set) & &self.cached_draw_order.cached;
             let new = (&transform_set ^ &visible_cached) & &transform_set;
             for (entity, transform, _new, _) in (&*entities, &ui_transform, &new, !&hidden).join() {
                 let pos = self

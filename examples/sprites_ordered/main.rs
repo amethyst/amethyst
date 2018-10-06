@@ -23,9 +23,12 @@ use amethyst::{
     renderer::{
         Camera, ColorMask, DepthMode, DisplayConfig, DrawSprite, ElementState, MaterialTextureSet,
         Pipeline, Projection, RenderBundle, ScreenDimensions, SpriteRender, SpriteSheet,
-        SpriteSheetHandle, Stage, Transparent, VirtualKeyCode, ALPHA,
+        SpriteSheetHandle, Stage, Transparent, VirtualKeyCode, ALPHA, Hidden,
     },
-    utils::application_root_dir,
+    utils::{
+        application_root_dir,
+        hide_system::HideHierarchySystem,
+    },
 };
 
 use sprite::SpriteSheetDefinition;
@@ -48,6 +51,8 @@ struct Example {
     entities: Vec<Entity>,
     /// Whether or not to add the transparent component to the entities
     transparent: bool,
+    /// Whether or not to add the hidden component to the entities
+    hidden: bool,
     /// Whether or not to reverse the Z coordinates of the entities
     ///
     /// Non-reversed means left most entity has Z: 0, and Z increases by 1.0 for each entity to the
@@ -75,6 +80,7 @@ impl Example {
             camera: None,
             entities: Vec::new(),
             transparent: true,
+            hidden: false,
             reverse: false,
             loaded_sprite_sheet: None,
             camera_z: 0.0,
@@ -125,6 +131,19 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                             "reversed. Right most sprite has Z: 0, increasing to the left."
                         } else {
                             "normal. Left most sprite has Z: 0, increasing to the right."
+                        }
+                    );
+                    self.redraw_sprites(&mut data.world);
+                }
+
+                Some((VirtualKeyCode::E, ElementState::Pressed)) => {
+                    self.hidden = !self.hidden;
+                    info!(
+                        "Sprites are {}",
+                        if self.hidden {
+                            "hidden"
+                        } else {
+                            "visible"
                         }
                     );
                     self.redraw_sprites(&mut data.world);
@@ -300,6 +319,9 @@ impl Example {
             if self.transparent {
                 entity_builder = entity_builder.with(Transparent);
             }
+            if self.hidden {
+                entity_builder = entity_builder.with(Hidden);
+            }
 
             // Store the entity
             self.entities.push(entity_builder.build());
@@ -375,7 +397,10 @@ fn main() -> amethyst::Result<()> {
             RenderBundle::new(pipe, Some(display_config))
                 .with_sprite_sheet_processor()
                 .with_sprite_visibility_sorting(&["transform_system"]),
-        )?;
+        )?
+        .with(
+            HideHierarchySystem::default(), "hide_hierarchy_system", &[]
+        );
 
     let mut game = Application::new(assets_directory, Example::new(), game_data)?;
     game.run();

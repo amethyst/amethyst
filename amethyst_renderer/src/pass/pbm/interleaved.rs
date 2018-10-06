@@ -8,6 +8,7 @@ use cam::{ActiveCamera, Camera};
 use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
+use hidden::Hidden;
 use light::Light;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
@@ -21,7 +22,6 @@ use tex::Texture;
 use types::{Encoder, Factory};
 use vertex::{Normal, Position, Query, Tangent, TexCoord};
 use visibility::Visibility;
-use hidden::Hidden;
 
 /// Draw mesh with physically based lighting
 ///
@@ -140,8 +140,14 @@ where
                 }
             }
             Some(ref visibility) => {
-                for (mesh, material, global, _, _) in
-                    (&mesh, &material, &global, &visibility.visible_unordered, !&hidden).join()
+                for (mesh, material, global, _, _) in (
+                    &mesh,
+                    &material,
+                    &global,
+                    &visibility.visible_unordered,
+                    !&hidden,
+                )
+                    .join()
                 {
                     draw_mesh(
                         encoder,

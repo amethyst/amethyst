@@ -9,6 +9,7 @@ use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
+use hidden::Hidden;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
 use pass::util::{draw_mesh, get_camera, setup_textures, VertexArgs};
@@ -19,7 +20,6 @@ use tex::Texture;
 use types::{Encoder, Factory};
 use vertex::{Position, Query, TexCoord};
 use visibility::Visibility;
-use hidden::Hidden;
 
 /// Draw mesh without lighting
 ///
@@ -137,8 +137,14 @@ where
                 }
             }
             Some(ref visibility) => {
-                for (mesh, material, global, _, _) in
-                    (&mesh, &material, &global, &visibility.visible_unordered, !&hidden).join()
+                for (mesh, material, global, _, _) in (
+                    &mesh,
+                    &material,
+                    &global,
+                    &visibility.visible_unordered,
+                    !&hidden,
+                )
+                    .join()
                 {
                     draw_mesh(
                         encoder,

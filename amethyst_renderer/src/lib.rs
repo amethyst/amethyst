@@ -92,6 +92,7 @@ pub use formats::{
     GraphicsPrefab, ImageData, JpgFormat, MaterialPrefab, MeshCreator, MeshData, ObjFormat,
     PngFormat, TextureData, TextureFormat, TextureMetadata, TexturePrefab, TgaFormat,
 };
+pub use hidden::Hidden;
 pub use input::{
     DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent,
 };
@@ -130,7 +131,6 @@ pub use vertex::{
     VertexFormat, With,
 };
 pub use visibility::{Visibility, VisibilitySortingSystem};
-pub use hidden::Hidden;
 
 pub mod error;
 pub mod mouse;
@@ -145,6 +145,7 @@ mod color;
 mod config;
 mod debug_drawing;
 mod formats;
+mod hidden;
 mod input;
 mod light;
 mod mesh;
@@ -162,4 +163,3 @@ mod transparent;
 mod types;
 mod vertex;
 mod visibility;
-mod hidden;

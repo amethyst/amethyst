@@ -6,8 +6,8 @@ use amethyst_core::GlobalTransform;
 use hibitset::BitSet;
 
 use cam::{ActiveCamera, Camera};
-use transparent::Transparent;
 use hidden::Hidden;
+use transparent::Transparent;
 
 /// Resource for controlling what entities should be rendered, and whether to draw them ordered or
 /// not, which is useful for transparent surfaces.
