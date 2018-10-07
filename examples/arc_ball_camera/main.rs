@@ -3,14 +3,19 @@
 extern crate amethyst;
 
 use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
-use amethyst::controls::ArcBallControlBundle;
-use amethyst::core::transform::TransformBundle;
-use amethyst::input::InputBundle;
+use amethyst::controls::{ ArcBallControlBundle, ArcBallControlTag };
+use amethyst::core::shrev::{EventChannel, ReaderId};
+use amethyst::core::transform::{ TransformBundle, Transform };
+use amethyst::ecs::prelude::{
+    Join, Read, ReadStorage, Resources, WriteStorage, System, SystemData,
+};
+use amethyst::input::{ InputBundle, InputEvent, ScrollDirection };
 use amethyst::prelude::*;
 use amethyst::renderer::{DrawShaded, PosNormTex};
 use amethyst::utils::application_root_dir;
 use amethyst::utils::scene::BasicScenePrefab;
 use amethyst::Error;
+use std::hash::Hash;
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
@@ -22,6 +27,61 @@ impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
             loader.load("prefab/arc_ball_camera.ron", RonFormat, (), ())
         });
         data.world.create_entity().with(prefab_handle).build();
+    }
+}
+
+struct CameraDistanceSystem<AC>
+    where AC: Hash + Eq + 'static,
+{
+    event_reader: Option<ReaderId<InputEvent<AC>>>,
+}
+
+impl<AC> CameraDistanceSystem<AC>
+    where AC: Hash + Eq + 'static
+{
+    pub fn new() -> Self {
+        CameraDistanceSystem { 
+            event_reader: None,
+        }
+    }
+}
+
+impl<'a, AC> System<'a> for CameraDistanceSystem<AC>
+    where AC: Hash + Eq + Clone + Send + Sync + 'static,
+{
+    type SystemData = (
+        Read<'a, EventChannel<InputEvent<AC>>>,
+        ReadStorage<'a, Transform>,
+        WriteStorage<'a, ArcBallControlTag>,
+    );
+
+    fn run(&mut self, (events, transforms, mut tags): Self::SystemData) {
+        for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
+            match *event {
+                InputEvent::MouseWheelMoved(direction) => {
+                    match direction {
+                        ScrollDirection::ScrollUp => {
+                            for (_, tag) in (&transforms, &mut tags).join() {
+                                tag.distance *= 0.9;
+                            }
+                        },
+                        ScrollDirection::ScrollDown => {
+                            for (_, tag) in (&transforms, &mut tags).join() {
+                                tag.distance *= 1.1;
+                            }
+                        },
+                        _ => (),
+                    }
+                }
+                _ => (),
+            }
+        }
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        Self::SystemData::setup(res);
+
+        self.event_reader = Some(res.fetch_mut::<EventChannel<InputEvent<AC>>>().register_reader());
     }
 }
 
@@ -45,6 +105,7 @@ fn main() -> Result<(), Error> {
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
         )?.with_bundle(ArcBallControlBundle::<String, String>::new())?
+        .with(CameraDistanceSystem::<String>::new(), "camera_distance_system", &["input_system"])
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
     let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
     game.run();

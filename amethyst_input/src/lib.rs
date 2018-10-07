@@ -25,6 +25,8 @@ pub use self::input_handler::InputHandler;
 pub use self::sdl_events_system::SdlEventsSystem;
 pub use self::system::InputSystem;
 pub use self::util::{get_input_axis_simple, get_key, is_close_requested, is_key_down};
+pub use self::scroll_direction::ScrollDirection;
+
 use std::iter::Iterator;
 use winit::VirtualKeyCode;
 
