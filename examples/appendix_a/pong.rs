@@ -1,10 +1,16 @@
-use amethyst::assets::Loader;
-use amethyst::core::cgmath::Vector3;
-use amethyst::core::transform::{GlobalTransform, Transform};
-use amethyst::ecs::prelude::World;
-use amethyst::prelude::*;
-use amethyst::renderer::{Camera, Material, MeshHandle, PosTex, Projection, WindowMessages};
-use amethyst::ui::{Anchor, TtfFormat, UiText, UiTransform};
+use amethyst::{
+    assets::Loader,
+    core::{
+        cgmath::{Matrix4, Vector3},
+        transform::{GlobalTransform, Transform},
+    },
+    ecs::prelude::World,
+    prelude::*,
+    renderer::{
+        Camera, Material, MaterialDefaults, MeshHandle, PosTex, Projection, WindowMessages,
+    },
+    ui::{Anchor, TtfFormat, UiText, UiTransform},
+};
 use config::{ArenaConfig, BallConfig, PaddlesConfig};
 use systems::ScoreText;
 use {Ball, Paddle, Side};
@@ -28,7 +34,6 @@ impl<'a, 'b> SimpleState<'a, 'b> for Pong {
 
 /// Initialise the camera.
 fn initialise_camera(world: &mut World) {
-    use amethyst::core::cgmath::{Matrix4, Vector3};
     let (arena_height, arena_width) = {
         let config = &world.read_resource::<ArenaConfig>();
         (config.height, config.width)
@@ -234,9 +239,6 @@ fn create_mesh(world: &World, vertices: Vec<PosTex>) -> MeshHandle {
 /// Creates a solid material of the specified colour.
 fn create_colour_material(world: &World, colour: [f32; 4]) -> Material {
     // TODO: optimize
-
-    use amethyst::renderer::MaterialDefaults;
-
     let mat_defaults = world.read_resource::<MaterialDefaults>();
     let loader = world.read_resource::<Loader>();
 

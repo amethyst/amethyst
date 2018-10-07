@@ -28,6 +28,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * New vertices() method on MeshCreator trait. ([#946])
 * Support for text alignment (align left, center, right). ([#965])
 * Support for multiline text. ([#965])
+* Support for logging to file, toggle for logging to stdout. ([#976], [#994])
 
 
 
@@ -54,6 +55,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Added comments to UiPass and shaders explaining what is going on. ([#946])
 * The z in UiTransformBuilder now defaults to 1 instead of 0, allowing to skip defining the z in the ui prefabs. ([#946])
 * Added comments to ui prefab. ([#946])
+* Summarized all `use amethyst::` statements to allow collapsing in IDE's. ([#974])
 
 ### Removed
 * `LMenu` and `RMenu` key codes, following the `winit` update. ([#906])
@@ -92,6 +94,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#964]: https://github.com/amethyst/amethyst/pull/964
 [#965]: https://github.com/amethyst/amethyst/pull/965
 [#969]: https://github.com/amethyst/amethyst/pull/969
+[#976]: https://github.com/amethyst/amethyst/pull/976
+[#994]: https://github.com/amethyst/amethyst/pull/994
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
 

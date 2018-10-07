@@ -5,7 +5,7 @@ use amethyst_core::specs::prelude::{
 };
 use amethyst_core::{HierarchyEvent, Parent, ParentHierarchy};
 use amethyst_renderer::ScreenDimensions;
-use gfx_glyph::{HorizontalAlign,VerticalAlign};
+use gfx_glyph::{HorizontalAlign, VerticalAlign};
 
 /// Indicates if the position and margins should be calculated in pixel or
 /// relative to their parent size.
@@ -73,7 +73,7 @@ impl Anchor {
             Anchor::BottomRight => VerticalAlign::Bottom,
         }
     }
-    
+
     /// Horizontal align. Used by the ui `Pass`.
     pub(crate) fn horizontal_align(&self) -> HorizontalAlign {
         match self {
@@ -87,7 +87,7 @@ impl Anchor {
             Anchor::BottomMiddle => HorizontalAlign::Center,
             Anchor::BottomRight => HorizontalAlign::Right,
         }
-     }
+    }
 }
 
 /// Indicates if a component should be stretched.

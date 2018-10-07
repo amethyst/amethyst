@@ -26,8 +26,8 @@ pub use filter::{FilterConnected, NetFilter};
 pub use net_event::NetEvent;
 pub use network_socket::NetSocketSystem;
 
-use bincode::internal::ErrorKind;
-use bincode::{deserialize, serialize, Infinite};
+use bincode::ErrorKind;
+use bincode::{deserialize, serialize};
 
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -40,7 +40,7 @@ pub fn send_event<T>(event: &NetEvent<T>, target: &SocketAddr, socket: &UdpSocke
 where
     T: Serialize,
 {
-    let ser = serialize(event, Infinite);
+    let ser = serialize(event);
     match ser {
         Ok(s) => {
             let slice = s.as_slice();

@@ -2,21 +2,19 @@
 
 # Amethyst
 
-[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![master docs][docs-badge]][docs] [![MIT/Apache][s3]][li] [![Join us on Discord][s4]][di] [![Join the chat][s5]][gc] ![Lines of Code][s6]
+[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![docs page][docs-badge]][docs] [![MIT/Apache][s3]][li] [![Join us on Discord][s4]][di] ![Lines of Code][s6]
 
 [s1]: https://travis-ci.org/amethyst/amethyst.svg?branch=master
 [s2]: https://img.shields.io/crates/v/amethyst.svg
-[docs-badge]: https://img.shields.io/badge/docs-master-blue.svg
-[docs]: https://www.amethyst.rs/doc/master/doc/amethyst/index.html
+[docs-badge]: https://img.shields.io/badge/docs-website-blue.svg
+[docs]: https://www.amethyst.rs/doc/
 [s3]: https://img.shields.io/badge/license-MIT%2FApache-blue.svg
 [s4]: https://img.shields.io/discord/425678876929163284.svg?logo=discord
-[s5]: https://badges.gitter.im/amethyst/general.svg
 [s6]: https://tokei.rs/b1/github/amethyst/amethyst?category=code
 [tc]: https://travis-ci.org/amethyst/amethyst/
 [ci]: https://crates.io/crates/amethyst/
 [li]: COPYING
 [di]: https://discord.gg/GnP5Whs
-[gc]: https://gitter.im/orgs/amethyst/rooms
 
 ## What is Amethyst?!
 
@@ -63,9 +61,9 @@ Please visit the [features page][feat] for a list of features Amethyst provides.
 
 While the engine can be hard to use at times, we made a lot of [documentation][bk] that will teach you everything you need to use amethyst comfortably!
 
-If you don't understand a part of the documentation, please let us know. Join us on discord or gitter, or open an issue, we are always happy to help!
+If you don't understand a part of the documentation, please let us know. Join us on discord or open an issue, we are always happy to help!
 
-[bk]: https://www.amethyst.rs/book/master/
+[bk]: https://www.amethyst.rs/book/latest/
 
 ## Getting started
 
@@ -90,22 +88,24 @@ For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chap
 in the book.
 
 [ex]: examples/
-[gs]: https://www.amethyst.rs/book/master/
+[gs]: https://www.amethyst.rs/book/latest/
 
 ## Dependencies
 
-If you are compiling on Linux make sure to install the following dependencies:
+If you are compiling on Linux make sure to install the dependencies below.
+
+Additionally, make sure you have EGL installed. Since the package depends on your drivers, we cannot list it here.
 
 ### Ubuntu
 
 ```
-$ sudo apt install libasound2-dev libx11-xcb-dev libssl-dev cmake libfreetype6-dev libexpat1-dev
+$ sudo apt install libasound2-dev libx11-xcb-dev libssl-dev cmake libfreetype6-dev libexpat1-dev libxcb1-dev
 ```
 
 ### Fedora
 
 ```
-$ sudo dnf install alsa-lib-devel openssl-devel cmake freetype-devel expat-devel
+$ sudo dnf install alsa-lib-devel openssl-devel cmake freetype-devel expat-devel libxcb-devel
 ```
 
 ### Other
@@ -148,12 +148,11 @@ We do not support anything other than the most recent Rust stable release. Use n
 
 Please check out the [FAQ][faq] before asking.
 
-If you have a question, just ask on [Discord][di] (most active) or [Gitter][gt] and we'll help you.
+If you have a question, feel free to ask on our [Discord server][di] and we'll help you.
 
 Other places you may want to check out are [r/rust_gamedev][rg] and [#rust-gamedev IRC][irc].
 
 [faq]: https://github.com/amethyst/amethyst/wiki/Frequently-Asked-Questions
-[gt]: https://gitter.im/amethyst/general
 [di]: https://discord.gg/GnP5Whs
 [rg]: https://www.reddit.com/r/rust_gamedev/
 [irc]: https://botbot.me/mozilla/rust-gamedev/

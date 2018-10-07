@@ -3,23 +3,25 @@
 extern crate amethyst;
 extern crate rayon;
 
-use amethyst::assets::{
-    Completion, Handle, Prefab, PrefabLoader, PrefabLoaderSystem, ProgressCounter, RonFormat,
+use amethyst::{
+    assets::{
+        Completion, Handle, Prefab, PrefabLoader, PrefabLoaderSystem, ProgressCounter, RonFormat,
+    },
+    config::Config,
+    core::transform::TransformBundle,
+    ecs::{
+        prelude::{Component, Entity},
+        storage::NullStorage,
+    },
+    input::{is_close_requested, is_key_down, InputBundle},
+    prelude::*,
+    renderer::{
+        DisplayConfig, DrawShaded, Pipeline, PosNormTex, RenderBundle, Stage, VirtualKeyCode,
+    },
+    ui::{DrawUi, UiBundle, UiCreator, UiLoader, UiPrefab},
+    utils::{application_root_dir, fps_counter::FPSCounterBundle, scene::BasicScenePrefab},
+    Error,
 };
-use amethyst::config::Config;
-use amethyst::core::transform::TransformBundle;
-use amethyst::ecs::prelude::{Component, Entity};
-use amethyst::ecs::storage::NullStorage;
-use amethyst::input::{is_close_requested, is_key_down, InputBundle};
-use amethyst::prelude::*;
-use amethyst::renderer::{
-    DisplayConfig, DrawShaded, Pipeline, PosNormTex, RenderBundle, Stage, VirtualKeyCode,
-};
-use amethyst::ui::{DrawUi, UiBundle, UiCreator, UiLoader, UiPrefab};
-use amethyst::utils::application_root_dir;
-use amethyst::utils::fps_counter::FPSCounterBundle;
-use amethyst::utils::scene::BasicScenePrefab;
-use amethyst::Error;
 use example_system::ExampleSystem;
 use game_data::{CustomGameData, CustomGameDataBuilder};
 

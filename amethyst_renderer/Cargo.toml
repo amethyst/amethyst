@@ -39,7 +39,7 @@ gfx_core = { version = "0.8", features = ["serialize"] }
 gfx_macros = "0.2"
 glsl-layout = { version = "0.1.1", features = ["cgmath", "gfx"] }
 hibitset = { version = "0.5.1", features = ["parallel"] }
-image = "0.19"
+image = "0.20"
 log = "0.4"
 rayon = "1.0.2"
 serde = { version = "1", features = ["serde_derive"] }

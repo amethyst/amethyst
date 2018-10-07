@@ -2,19 +2,20 @@
 
 extern crate amethyst;
 
-use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
-use amethyst::controls::{ ArcBallControlBundle, ArcBallControlTag };
-use amethyst::core::shrev::{EventChannel, ReaderId};
-use amethyst::core::transform::{ TransformBundle, Transform };
-use amethyst::ecs::prelude::{
-    Join, Read, ReadStorage, Resources, WriteStorage, System, SystemData,
+use amethyst::{
+    assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
+    controls::{ArcBallControlBundle, ArcBallControlTag},
+    core::{
+        transform::{TransformBundle, Transform},
+        shrev::{EventChannel, ReaderId},
+    },
+    ecs::prelude::{Join, Read, ReadStorage, Resources, WriteStorage, System, SystemData},
+    input::{ InputBundle, InputEvent, ScrollDirection },
+    prelude::*,
+    renderer::{DrawShaded, PosNormTex},
+    utils::{application_root_dir, scene::BasicScenePrefab},
+    Error,
 };
-use amethyst::input::{ InputBundle, InputEvent, ScrollDirection };
-use amethyst::prelude::*;
-use amethyst::renderer::{DrawShaded, PosNormTex};
-use amethyst::utils::application_root_dir;
-use amethyst::utils::scene::BasicScenePrefab;
-use amethyst::Error;
 use std::hash::Hash;
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;

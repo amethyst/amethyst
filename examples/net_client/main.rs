@@ -2,13 +2,14 @@ extern crate amethyst;
 #[macro_use]
 extern crate log;
 
-use amethyst::core::frame_limiter::FrameRateLimitStrategy;
-use amethyst::core::Time;
-use amethyst::ecs::{Join, Read, System, WriteStorage};
-use amethyst::network::*;
-use amethyst::prelude::*;
-use amethyst::shrev::ReaderId;
-use amethyst::Result;
+use amethyst::{
+    core::{frame_limiter::FrameRateLimitStrategy, Time},
+    ecs::{Join, Read, System, WriteStorage},
+    network::*,
+    prelude::*,
+    shrev::ReaderId,
+    Result,
+};
 use std::time::Duration;
 
 fn main() -> Result<()> {
