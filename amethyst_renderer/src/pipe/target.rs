@@ -56,6 +56,8 @@ impl Target {
 
     /// Clears all color buffers to the given value.
     pub fn clear_color<V: Into<[f32; 4]>>(&self, enc: &mut Encoder, value: V) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("render_target_clearcolor");
         let val = value.into();
         for buf in self.color_bufs.iter() {
             enc.clear(&buf.as_output, val);
@@ -105,6 +107,8 @@ impl Target {
     /// Creates the OpenGL backend.
     #[cfg(feature = "opengl")]
     pub fn resize_main_target(&mut self, window: &Window) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("render_target_resizemaintarget");
         if let Some(depth_buf) = self.depth_buf.as_mut() {
             for color_buf in &mut self.color_bufs {
                 use gfx_window_glutin as win;
@@ -163,6 +167,9 @@ impl TargetBuilder {
     /// Builds and returns the new render target.
     pub(crate) fn build(self, fac: &mut Factory, size: (u32, u32)) -> Result<(String, Target)> {
         use gfx::Factory;
+
+        #[cfg(feature = "profiler")]
+        profile_scope!("render_target_build");
 
         let size = self.custom_size.unwrap_or(size);
 
