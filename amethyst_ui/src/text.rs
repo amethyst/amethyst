@@ -28,7 +28,7 @@ pub enum LineMode {
 }
 
 /// A component used to display text in this entity's UiTransform
-#[derive(Clone, Derivative)]
+#[derive(Clone, Derivative, Serialize)]
 #[derivative(Debug)]
 pub struct UiText {
     /// The string rendered by this.
@@ -38,6 +38,7 @@ pub struct UiText {
     /// The color of the rendered text, using a range of 0.0 to 1.0 per channel.
     pub color: [f32; 4],
     /// The font used for rendering.
+    #[serde(skip)]
     pub font: FontHandle,
     /// If true this will be rendered as dots instead of the text.
     pub password: bool,
@@ -46,11 +47,14 @@ pub struct UiText {
     /// How to align the text within its `UiTransform`.
     pub align: Anchor,
     /// Cached FontHandle, used to detect changes to the font.
+    #[serde(skip)]
     pub(crate) cached_font: FontHandle,
     /// Cached glyph positions, used to process mouse highlighting
     #[derivative(Debug = "ignore")]
+    #[serde(skip)]
     pub(crate) cached_glyphs: Vec<PositionedGlyph<'static>>,
     /// Cached `GlyphBrush` id for use in the `UiPass`.
+    #[serde(skip)]
     pub(crate) brush_id: Option<u64>,
 }
 
