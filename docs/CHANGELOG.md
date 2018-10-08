@@ -95,8 +95,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#964]: https://github.com/amethyst/amethyst/pull/964
 [#965]: https://github.com/amethyst/amethyst/pull/965
 [#969]: https://github.com/amethyst/amethyst/pull/969
+[#974]: https://github.com/amethyst/amethyst/pull/974
 [#976]: https://github.com/amethyst/amethyst/pull/976
 [#994]: https://github.com/amethyst/amethyst/pull/994
+[#1006]: https://github.com/amethyst/amethyst/pull/1006
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
 
