@@ -88,15 +88,28 @@ pub trait State<T, E: Send + Sync + 'static> {
     }
 
     /// Executed repeatedly at stable, predictable intervals (1/60th of a second
-    /// by default).
+    /// by default), 
+    /// if this is the active state.
     fn fixed_update(&mut self, _data: StateData<T>) -> Trans<T, E> {
         Trans::None
     }
 
-    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit).
+    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit), 
+    /// if this is the active state.
     fn update(&mut self, _data: StateData<T>) -> Trans<T, E> {
         Trans::None
     }
+
+    /// Executed repeatedly at stable, predictable intervals (1/60th of a second
+    /// by default), 
+    /// even when this is not the active state, 
+    /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
+    fn shadow_fixed_update(&mut self, _data: StateData<T>){}
+
+    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit), 
+    /// even when this is not the active state, 
+    /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
+    fn shadow_update(&mut self, _data: StateData<T>){}
 }
 
 /// An empty `State` trait. It contains no `StateData` or custom `StateEvent`.
@@ -321,6 +334,9 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
                 Some(state) => state.fixed_update(StateData { world, data }),
                 None => Trans::None,
             };
+            for state in self.state_stack.iter_mut() {
+                state.shadow_fixed_update(StateData { world, data });
+            }
 
             self.transition(trans, StateData { world, data });
         }
@@ -334,6 +350,9 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
                 Some(state) => state.update(StateData { world, data }),
                 None => Trans::None,
             };
+            for state in self.state_stack.iter_mut() {
+                state.shadow_update(StateData { world, data });
+            }
 
             self.transition(trans, StateData { world, data });
         }
