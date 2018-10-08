@@ -85,10 +85,8 @@ impl Renderer {
                 self.cached_size = size.into();
                 self.cached_hidpi_factor = hidpi_factor;
                 #[cfg(feature = "opengl")]
-                self.window.resize(PhysicalSize::from_logical(
-                    size,
-                    hidpi_factor,
-                ));
+                self.window
+                    .resize(PhysicalSize::from_logical(size, hidpi_factor));
                 self.resize(pipe, size.into());
             }
         }
