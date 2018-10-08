@@ -350,6 +350,9 @@ impl<'a> System<'a> for UiKeyboardSystem {
                                         && t.pixel_y - t.height / 2.0 <= self.mouse_position.1
                                         && t.pixel_y + t.height / 2.0 >= self.mouse_position.1
                                 }).map(|(e, t)| (e, t.global_z))
+                                // In instances of ambiguity we want to select the element with the
+                                // highest Z order, so we need to find the highest Z order value among
+                                // eligible elements.
                                 .max_by(|(_, z1), (_, z2)| z1.partial_cmp(z2).expect("Z was NaN"))
                                 .map(|(e, _)| e);
                             // If we focused an editable text field be sure to position the cursor
