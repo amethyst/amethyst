@@ -121,7 +121,7 @@ impl<'a> PrefabData<'a> for CameraPrefab {
     type SystemData = WriteStorage<'a, Camera>;
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         storage: &mut Self::SystemData,
@@ -143,7 +143,7 @@ impl<'a> PrefabData<'a> for ActiveCameraPrefab {
     type SystemData = (Option<Write<'a, ActiveCamera>>,);
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         _: Entity,
         system_data: &mut Self::SystemData,

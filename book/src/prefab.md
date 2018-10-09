@@ -29,7 +29,7 @@ we don't want the user get a `Complete` notification on their `Progress` before 
 loaded.
 
 Because of this, once the `Format` have loaded the `Prefab` from the `Source`, and a `PrefabLoaderSystem`
-runs `process` on the `AssetStorage`, the system will invoke the `trigger_sub_loading` function on the
+runs `process` on the `AssetStorage`, the system will invoke the `load_sub_assets` function on the
 `PrefabData` implementation. If any asset loads are triggered during this, they must adhere to the following
 rules:
 
@@ -49,7 +49,7 @@ This stage happens after the `Prefab` has been fully loaded and `Complete` has b
 `Handle<Prefab<T>>` is put on an `Entity`. At this point we know that all internal data has been loaded, 
 and all sub assets have been processed. The `PrefabLoaderSystem` will then walk through the `Prefab` data 
 immutably and create a new `Entity` for all but the first entry in the list, and then for each instance 
-of `PrefabData` call the `load_prefab` function.
+of `PrefabData` call the `add_to_entity` function.
 
 Note that for prefabs that reference other prefabs, to make instantiation be performed inside a single frame, 
 lower level `PrefabLoaderSystem`s need to depend on the higher level ones. To see how this works out check the gltf 
@@ -77,7 +77,7 @@ impl<'a> PrefabData<'a> for Transform {
     type SystemData = WriteStorage<'a, Transform>;
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         storage: &mut Self::SystemData,
@@ -92,17 +92,17 @@ First, we specify a `SystemData` type, this is the data required from `World` in
 instantiate this `PrefabData`. Here we want to write to both `Transform` and `GlobalTransform`, 
 because `Transform` won't work without a companion `GlobalTransform`.
 
-Second, we specify what result the `load_prefab` function returns. In our case this is unit `()`, for 
+Second, we specify what result the `add_to_entity` function returns. In our case this is unit `()`, for 
 other implementations it could return a `Handle` etc. For an example of this, look at the `TexturePrefab`
 in the renderer crate. 
 
-Next we defined the `load_prefab` function, which is used to actually instantiate data. In our case here,
+Next we defined the `add_to_entity` function, which is used to actually instantiate data. In our case here,
 we insert a default `GlobalTransform` and the local `Transform` data on the referenced `Entity`. In this
 scenario we aren't using the third parameter to the function. This parameter contains a list of all `Entity`s
 affected by the `Prefab`, the first entry in the list will be the main `Entity`, and the rest will be the 
 `Entity`s that were created for all the entries in the data list inside the `Prefab`.
 
-Last of all, we can see that this does not implement `trigger_sub_loading`, which is because there
+Last of all, we can see that this does not implement `load_sub_assets`, which is because there
 are no secondary assets to load from `Source` here.
 
 Let's look at a slightly more complex implementation, the `AssetPrefab`. This `PrefabData` is used to
@@ -143,7 +143,7 @@ where
 
     type Result = Handle<A>;
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
@@ -162,7 +162,7 @@ where
         system_data.1.insert(entity, handle.clone()).map(|_| handle)
     }
 
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
@@ -186,10 +186,10 @@ where
 ```
 
 So, there are two main differences to this `PrefabData` compared the `Transform` example.
-The first difference is that the `load_prefab` function now return a `Handle<A>`.
-The second difference is that `trigger_sub_loading` is implemented, this is because we load 
-a sub asset. The `trigger_sub_loading` function here will do the actual loading, and morph the
-internal representation to the `AssetPrefab::Handle` variant, so when `load_prefab` runs later
+The first difference is that the `add_to_entity` function now return a `Handle<A>`.
+The second difference is that `load_sub_assets` is implemented, this is because we load 
+a sub asset. The `load_sub_assets` function here will do the actual loading, and morph the
+internal representation to the `AssetPrefab::Handle` variant, so when `add_to_entity` runs later
 it will straight up use the internally stored `Handle`.
 
 ### Special `PrefabData` implementations

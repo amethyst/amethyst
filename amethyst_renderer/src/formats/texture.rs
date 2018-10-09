@@ -134,7 +134,7 @@ impl<'a> PrefabData<'a> for TextureData {
     type SystemData = (ReadExpect<'a, Loader>, Read<'a, AssetStorage<Texture>>);
     type Result = Handle<Texture>;
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         _: Entity,
         system_data: &mut Self::SystemData,
@@ -177,7 +177,7 @@ where
 
     type Result = Handle<Texture>;
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         _: Entity,
         system_data: &mut Self::SystemData,
@@ -203,7 +203,7 @@ where
         Ok(handle)
     }
 
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,

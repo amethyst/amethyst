@@ -186,7 +186,7 @@ impl<'a> PrefabData<'a> for Light {
     type SystemData = WriteStorage<'a, Light>;
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         storage: &mut Self::SystemData,
@@ -211,14 +211,14 @@ impl<'a> PrefabData<'a> for LightPrefab {
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
     ) -> Result<(), PrefabError> {
         if let Some(ref light) = self.light {
-            light.load_prefab(entity, &mut system_data.0, &[])?;
+            light.add_to_entity(entity, &mut system_data.0, &[])?;
         }
         if let Some(ref ambient_color) = self.ambient_color {
             *system_data.1 = ambient_color.clone();

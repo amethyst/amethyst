@@ -96,7 +96,7 @@ impl<'a> PrefabData<'a> for MeshData {
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,

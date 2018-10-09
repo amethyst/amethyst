@@ -62,7 +62,7 @@ impl<'a> PrefabData<'a> for ScenePrefabData {
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
@@ -76,22 +76,22 @@ impl<'a> PrefabData<'a> for ScenePrefabData {
             ref mut tags,
             ref mut control_tags,
         ) = system_data;
-        self.transform.load_prefab(entity, transforms, entities)?;
-        self.gltf.load_prefab(entity, gltfs, entities)?;
-        self.camera.load_prefab(entity, cameras, entities)?;
-        self.light.load_prefab(entity, lights, entities)?;
-        self.tag.load_prefab(entity, tags, entities)?;
-        self.fly_tag.load_prefab(entity, control_tags, entities)?;
+        self.transform.add_to_entity(entity, transforms, entities)?;
+        self.gltf.add_to_entity(entity, gltfs, entities)?;
+        self.camera.add_to_entity(entity, cameras, entities)?;
+        self.light.add_to_entity(entity, lights, entities)?;
+        self.tag.add_to_entity(entity, tags, entities)?;
+        self.fly_tag.add_to_entity(entity, control_tags, entities)?;
         Ok(())
     }
 
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
         let (_, ref mut gltfs, _, _, _, _) = system_data;
-        self.gltf.trigger_sub_loading(progress, gltfs)
+        self.gltf.load_sub_assets(progress, gltfs)
     }
 }
 

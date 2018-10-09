@@ -40,7 +40,7 @@ impl<'a> PrefabData<'a> for ControlTagPrefab {
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,

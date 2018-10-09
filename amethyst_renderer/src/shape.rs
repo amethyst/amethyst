@@ -44,7 +44,7 @@ where
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
@@ -56,7 +56,7 @@ where
             .map(|_| ())
     }
 
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut <Self as PrefabData>::SystemData,
