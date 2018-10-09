@@ -42,11 +42,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
         });
     }
 
-    fn handle_event(
-        &mut self,
-        _: StateData<GameData>,
-        event: StateEvent<()>,
-    ) -> SimpleTrans<'a, 'b> {
+    fn handle_event(&mut self, _: StateData<GameData>, event: StateEvent) -> SimpleTrans<'a, 'b> {
         match &event {
             StateEvent::Window(event) => {
                 if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
@@ -62,7 +58,6 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                 );
                 Trans::None
             }
-            _ => Trans::None,
         }
     }
 

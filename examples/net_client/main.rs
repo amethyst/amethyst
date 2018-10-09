@@ -31,17 +31,12 @@ fn main() -> Result<()> {
 
 /// Default empty state
 pub struct State1;
-impl<'a, 'b> State<GameData<'a, 'b>, ()> for State1 {
+impl<'a, 'b> SimpleState<'a, 'b> for State1 {
     fn on_start(&mut self, data: StateData<GameData>) {
         data.world
             .create_entity()
             .with(NetConnection::<()>::new("127.0.0.1:3456".parse().unwrap()))
             .build();
-    }
-
-    fn update(&mut self, mut data: StateData<GameData>) -> Trans<GameData<'a, 'b>, ()> {
-        data.data.update(&mut data.world);
-        Trans::None
     }
 }
 

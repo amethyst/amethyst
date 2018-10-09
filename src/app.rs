@@ -5,9 +5,9 @@ use assets::{Loader, Source};
 use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
 use core::shrev::{EventChannel, ReaderId};
 use core::timing::{Stopwatch, Time};
-use core::{Named, EventReader};
+use core::{EventReader, Named};
 use ecs::common::Errors;
-use ecs::prelude::{Component, World};
+use ecs::prelude::{Component, World, Write, Read};
 use error::{Error, Result};
 use game_data::DataInit;
 use log::Level;
@@ -15,6 +15,7 @@ use rayon::ThreadPoolBuilder;
 use shred::Resource;
 use state::{State, StateData, StateMachine};
 use state_event::StateEvent;
+use state_event::StateEventReader;
 use std::error::Error as StdError;
 use std::marker::PhantomData;
 use std::path::Path;
@@ -22,8 +23,34 @@ use std::sync::Arc;
 use std::time::Duration;
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
-use winit::{Event, WindowEvent};
-use state_event::StateEventReader;
+use winit::Event;
+
+/// `CoreApplication` is the application implementation for the game engine. This is fully generic
+/// over the state type and event type.
+///
+/// When starting out with Amethyst, use the type alias `Application`, which have sensible defaults
+/// for the `Event` and `EventReader` generic types.
+///
+/// ### Type parameters:
+///
+/// - `T`: `State`
+/// - `E`: `Event` type that should be sent to the states
+/// - `R`: `EventReader` implementation for the given event type `E`
+#[derive(Derivative)]
+#[derivative(Debug)]
+pub struct CoreApplication<'a, T, E = StateEvent, R = StateEventReader> {
+    /// The world
+    #[derivative(Debug = "ignore")]
+    world: World,
+    #[derivative(Debug = "ignore")]
+    reader: R,
+    #[derivative(Debug = "ignore")]
+    events: Vec<E>,
+    event_reader_id: ReaderId<Event>,
+    states: StateMachine<'a, T, E>,
+    ignore_window_close: bool,
+    data: T,
+}
 
 /// An Application is the root object of the game engine. It binds the OS
 /// event loop, state machines, timers and other core components in a central place.
@@ -94,24 +121,12 @@ use state_event::StateEventReader;
 /// ```
 ///
 /// [log]: https://crates.io/crates/log
-#[derive(Derivative)]
-#[derivative(Debug)]
-pub struct CoreApplication<'a, T, E = StateEvent, R = StateEventReader> {
-    /// The world
-    #[derivative(Debug = "ignore")]
-    world: World,
-    #[derivative(Debug = "ignore")]
-    reader: R,
-    #[derivative(Debug = "ignore")]
-    events: Vec<E>,
-    states: StateMachine<'a, T, E>,
-    ignore_window_close: bool,
-    data: T,
-}
-
 pub type Application<'a, T> = CoreApplication<'a, T, StateEvent, StateEventReader>;
 
-impl<'a, T, E, R> CoreApplication<'a, T, E, R> where E: Clone + Send + Sync + 'static, {
+impl<'a, T, E, R> CoreApplication<'a, T, E, R>
+where
+    E: Clone + Send + Sync + 'static,
+{
     /// Creates a new Application with the given initial game state.
     /// This will create and allocate all the needed resources for
     /// the event loop of the game engine. It is a shortcut for convenience
@@ -166,6 +181,7 @@ impl<'a, T, E, R> CoreApplication<'a, T, E, R> where E: Clone + Send + Sync + 's
         S: State<T, E> + 'a,
         I: DataInit<T>,
         for<'b> R: EventReader<'b, Event = E>,
+        R: Default,
     {
         ApplicationBuilder::new(path, initial_state)?.build(init)
     }
@@ -192,7 +208,10 @@ impl<'a, T, E, R> CoreApplication<'a, T, E, R> where E: Clone + Send + Sync + 's
     ///
     /// See the example supplied in the
     /// [`new`](struct.Application.html#examples) method.
-    pub fn run(&mut self) where for <'b> R: EventReader<'b, Event = E>, {
+    pub fn run(&mut self)
+    where
+        for<'b> R: EventReader<'b, Event = E>,
+    {
         self.initialize();
         self.world.write_resource::<Stopwatch>().start();
         while self.states.is_running() {
@@ -222,13 +241,48 @@ impl<'a, T, E, R> CoreApplication<'a, T, E, R> where E: Clone + Send + Sync + 's
             .expect("Tried to start state machine without any states present");
     }
 
+    // React to window close events
+    fn should_close(&mut self) -> bool {
+        if self.ignore_window_close {
+            false
+        } else {
+            use renderer::WindowEvent;
+            let world = &mut self.world;
+            let reader_id = &mut self.event_reader_id;
+            world.exec(|ev : Read<EventChannel<Event>>| {
+                ev.read(reader_id).any(|e| {
+                    if cfg!(target_os = "ios") {
+                        if let Event::WindowEvent {event: WindowEvent::Destroyed,  .. } = e {
+                            true
+                        } else {
+                            false
+                        }
+                    } else {
+                        if let Event::WindowEvent {event: WindowEvent::CloseRequested,  .. } = e {
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                })
+            })
+        }
+    }
+
     /// Advances the game world by one tick.
-    fn advance_frame(&mut self) where for <'b> R: EventReader<'b, Event = E> {
+    fn advance_frame(&mut self)
+    where
+        for<'b> R: EventReader<'b, Event = E>,
+    {
         trace!("Advancing frame (`Application::advance_frame`)");
+        if self.should_close() {
+            let world = &mut self.world;
+            let states = &mut self.states;
+            states.stop(StateData::new(world, &mut self.data));
+        }
+
 
         {
-
-
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
@@ -677,6 +731,7 @@ impl<S, E, X> ApplicationBuilder<S, E, X> {
         S: State<T, E> + 'a,
         I: DataInit<T>,
         E: Clone + Send + Sync + 'static,
+        X: Default,
         for<'b> X: EventReader<'b, Event = E>,
     {
         trace!("Entering `ApplicationBuilder::build`");
@@ -686,8 +741,10 @@ impl<S, E, X> ApplicationBuilder<S, E, X> {
         #[cfg(feature = "profiler")]
         profile_scope!("new");
 
-        let reader = X::build(&mut self.world);
+        let mut reader = X::default();
+        reader.setup(&mut self.world.res);
         let data = init.build(&mut self.world);
+        let event_reader_id = self.world.exec(|mut ev : Write<EventChannel<Event>>| ev.register_reader());
 
         Ok(CoreApplication {
             world: self.world,
@@ -696,6 +753,7 @@ impl<S, E, X> ApplicationBuilder<S, E, X> {
             events: Vec::new(),
             ignore_window_close: self.ignore_window_close,
             data,
+            event_reader_id,
         })
     }
 }

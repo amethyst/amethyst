@@ -68,8 +68,13 @@ pub fn load_material(
     // Can't use map/and_then because of Result returning from the load_texture function
     prefab.normal = match material.normal_texture() {
         Some(normal_texture) => Some(
-            load_texture(&normal_texture.texture(), buffers, source.clone(), name, false)
-                .map(|data| TexturePrefab::Data(data))?,
+            load_texture(
+                &normal_texture.texture(),
+                buffers,
+                source.clone(),
+                name,
+                false,
+            ).map(|data| TexturePrefab::Data(data))?,
         ),
 
         None => None,
@@ -78,8 +83,13 @@ pub fn load_material(
     // Can't use map/and_then because of Result returning from the load_texture function
     prefab.ambient_occlusion = match material.occlusion_texture() {
         Some(occlusion_texture) => Some(
-            load_texture(&occlusion_texture.texture(), buffers, source.clone(), name, false)
-                .map(|data| TexturePrefab::Data(data))?,
+            load_texture(
+                &occlusion_texture.texture(),
+                buffers,
+                source.clone(),
+                name,
+                false,
+            ).map(|data| TexturePrefab::Data(data))?,
         ),
 
         None => None,
@@ -117,10 +127,10 @@ fn deconstruct_image(data: &TextureData, offset: usize, step: usize) -> TextureD
     use gfx::format::SurfaceType;
     match *data {
         TextureData::Image(ref image_data, ref metadata) => {
-            let metadata = metadata
-                .clone()
-                .with_format(SurfaceType::R8)
-                .with_size(image_data.rgba.width() as u16, image_data.rgba.height() as u16);
+            let metadata = metadata.clone().with_format(SurfaceType::R8).with_size(
+                image_data.rgba.width() as u16,
+                image_data.rgba.height() as u16,
+            );
             let image_data = image_data
                 .rgba
                 .clone()

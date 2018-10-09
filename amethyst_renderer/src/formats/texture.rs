@@ -436,16 +436,12 @@ pub fn create_texture_asset(
     t.map(|t| ProcessingState::Loaded(t))
 }
 
-fn apply_options<D, T>(
-    tb: TextureBuilder<D, T>,
-    metadata: TextureMetadata,
-) -> TextureBuilder<D, T>
+fn apply_options<D, T>(tb: TextureBuilder<D, T>, metadata: TextureMetadata) -> TextureBuilder<D, T>
 where
     D: AsRef<[T]>,
     T: Pod + Copy,
 {
-    tb
-        .with_sampler(metadata.sampler)
+    tb.with_sampler(metadata.sampler)
         .mip_levels(metadata.mip_levels)
         .dynamic(metadata.dynamic)
         .with_format(metadata.format)
