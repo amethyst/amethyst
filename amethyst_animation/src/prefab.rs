@@ -258,6 +258,7 @@ where
     pub rest_state: Option<RestState<T>>,
 }
 
+// TODO: derive PrefabData for AnimatablePrefab, require generics support in derive macro
 impl<'a, I, T> PrefabData<'a> for AnimatablePrefab<I, T>
 where
     T: AnimationSampling + Clone,

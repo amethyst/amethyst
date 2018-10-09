@@ -51,7 +51,7 @@ pub struct GltfPrefab {
     pub mesh: Option<MeshData>,
     /// Mesh handle after sub asset loading is done
     pub mesh_handle: Option<Handle<Mesh>>,
-    /// `MeshData` is placed on all `Entity`s with graphics primitives with material
+    /// `Material` is placed on all `Entity`s with graphics primitives with material
     pub material: Option<MaterialPrefab<TextureFormat>>,
     /// Loaded animations, if applicable, will always only be placed on the main `Entity`
     pub animatable: Option<AnimatablePrefab<usize, Transform>>,
