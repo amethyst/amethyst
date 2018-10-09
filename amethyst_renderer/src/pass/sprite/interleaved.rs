@@ -117,7 +117,9 @@ impl Pass for DrawSprite {
 
         match visibility {
             None => {
-                for (sprite_render, global, _, _) in (&sprite_render, &global, !&hidden, !&hidden_prop).join() {
+                for (sprite_render, global, _, _) in
+                    (&sprite_render, &global, !&hidden, !&hidden_prop).join()
+                {
                     self.batch.add_sprite(
                         sprite_render,
                         Some(global),
@@ -129,12 +131,8 @@ impl Pass for DrawSprite {
                 self.batch.sort();
             }
             Some(ref visibility) => {
-                for (sprite_render, global, _) in (
-                    &sprite_render,
-                    &global,
-                    &visibility.visible_unordered,
-                )
-                    .join()
+                for (sprite_render, global, _) in
+                    (&sprite_render, &global, &visibility.visible_unordered).join()
                 {
                     self.batch.add_sprite(
                         sprite_render,

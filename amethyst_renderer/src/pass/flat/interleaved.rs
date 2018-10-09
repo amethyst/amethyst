@@ -121,7 +121,9 @@ where
 
         match visibility {
             None => {
-                for (mesh, material, global, _, _) in (&mesh, &material, &global, !&hidden, !&hidden_prop).join() {
+                for (mesh, material, global, _, _) in
+                    (&mesh, &material, &global, !&hidden, !&hidden_prop).join()
+                {
                     draw_mesh(
                         encoder,
                         effect,
@@ -139,13 +141,8 @@ where
                 }
             }
             Some(ref visibility) => {
-                for (mesh, material, global, _) in (
-                    &mesh,
-                    &material,
-                    &global,
-                    &visibility.visible_unordered,
-                )
-                    .join()
+                for (mesh, material, global, _) in
+                    (&mesh, &material, &global, &visibility.visible_unordered).join()
                 {
                     draw_mesh(
                         encoder,

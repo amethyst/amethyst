@@ -21,14 +21,11 @@ use amethyst::{
     input::{get_key, is_close_requested, is_key_down},
     prelude::*,
     renderer::{
-        Camera, ColorMask, DepthMode, DisplayConfig, DrawSprite, ElementState, MaterialTextureSet,
-        Pipeline, Projection, RenderBundle, ScreenDimensions, SpriteRender, SpriteSheet,
-        SpriteSheetHandle, Stage, Transparent, VirtualKeyCode, ALPHA, Hidden,
+        Camera, ColorMask, DepthMode, DisplayConfig, DrawSprite, ElementState, Hidden,
+        MaterialTextureSet, Pipeline, Projection, RenderBundle, ScreenDimensions, SpriteRender,
+        SpriteSheet, SpriteSheetHandle, Stage, Transparent, VirtualKeyCode, ALPHA,
     },
-    utils::{
-        application_root_dir,
-        hide_system::HideHierarchySystem,
-    },
+    utils::application_root_dir,
 };
 
 use sprite::SpriteSheetDefinition;
@@ -140,11 +137,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                     self.hidden = !self.hidden;
                     info!(
                         "Sprites are {}",
-                        if self.hidden {
-                            "hidden"
-                        } else {
-                            "visible"
-                        }
+                        if self.hidden { "hidden" } else { "visible" }
                     );
                     self.redraw_sprites(&mut data.world);
                 }
@@ -397,10 +390,7 @@ fn main() -> amethyst::Result<()> {
             RenderBundle::new(pipe, Some(display_config))
                 .with_sprite_sheet_processor()
                 .with_sprite_visibility_sorting(&["transform_system"]),
-        )?
-        .with(
-            HideHierarchySystem::default(), "hide_hierarchy_system", &[]
-        );
+        )?;
 
     let mut game = Application::new(assets_directory, Example::new(), game_data)?;
     game.run();

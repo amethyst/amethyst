@@ -148,8 +148,15 @@ impl Pass for DrawShadedSeparate {
 
         match visibility {
             None => {
-                for (joint, mesh, material, global, _, _) in
-                    (joints.maybe(), &mesh, &material, &global, !&hidden, !&hidden_prop).join()
+                for (joint, mesh, material, global, _, _) in (
+                    joints.maybe(),
+                    &mesh,
+                    &material,
+                    &global,
+                    !&hidden,
+                    !&hidden_prop,
+                )
+                    .join()
                 {
                     draw_mesh(
                         encoder,

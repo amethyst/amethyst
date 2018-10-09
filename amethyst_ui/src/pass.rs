@@ -10,8 +10,8 @@ use amethyst_renderer::error::Result;
 use amethyst_renderer::pipe::pass::{Pass, PassData};
 use amethyst_renderer::pipe::{Effect, NewEffect};
 use amethyst_renderer::{
-    Encoder, Factory, Hidden, Mesh, PosTex, Resources, ScreenDimensions, Shape, Texture,
-    TextureData, TextureHandle, TextureMetadata, VertexFormat, HiddenPropagate,
+    Encoder, Factory, Hidden, HiddenPropagate, Mesh, PosTex, Resources, ScreenDimensions, Shape,
+    Texture, TextureData, TextureHandle, TextureMetadata, VertexFormat,
 };
 use fnv::FnvHashMap as HashMap;
 use gfx::preset::blend;
@@ -154,7 +154,9 @@ impl Pass for DrawUi {
         {
             let bitset = &mut self.cached_draw_order.cached;
             self.cached_draw_order.cache.retain(|&(_z, entity)| {
-                let keep = ui_transform.contains(entity) && !hidden.contains(entity) && !hidden_prop.contains(entity);
+                let keep = ui_transform.contains(entity)
+                    && !hidden.contains(entity)
+                    && !hidden_prop.contains(entity);
                 if !keep {
                     bitset.remove(entity.id());
                 }
@@ -173,10 +175,13 @@ impl Pass for DrawUi {
         let hidden_prop_set = hidden_prop.mask().clone();
         {
             // Create a bitset containing only the new indices.
-            let visible_cached =
-                (&self.cached_draw_order.cached ^ (!&hidden_set & !&hidden_prop_set)) & &self.cached_draw_order.cached;
+            let visible_cached = (&self.cached_draw_order.cached
+                ^ (!&hidden_set & !&hidden_prop_set))
+                & &self.cached_draw_order.cached;
             let new = (&transform_set ^ &visible_cached) & &transform_set;
-            for (entity, transform, _new, _, _) in (&*entities, &ui_transform, &new, !&hidden, !&hidden_prop).join() {
+            for (entity, transform, _new, _, _) in
+                (&*entities, &ui_transform, &new, !&hidden, !&hidden_prop).join()
+            {
                 let pos = self
                     .cached_draw_order
                     .cache

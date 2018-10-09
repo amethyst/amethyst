@@ -5,7 +5,7 @@ use amethyst_core::{
     },
     transform::components::{HierarchyEvent, Parent, ParentHierarchy},
 };
-use amethyst_renderer::HiddenPropagate;
+use HiddenPropagate;
 
 // Based on the [UiTransformSystem](struct.UiTransformSystem.html).
 /// This system adds a [HiddenPropagate](struct.HiddenPropagate.html)-component to all children.
@@ -26,8 +26,10 @@ impl<'a> System<'a> for HideHierarchySystem {
         ReadStorage<'a, Parent>,
         ReadExpect<'a, ParentHierarchy>,
     );
-    fn run(&mut self, data: Self::SystemData) {
-        let (mut hidden, parents, hierarchy) = data;
+    fn run(&mut self, (mut hidden, parents, hierarchy): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("hide_hierarchy_system");
+
         self.hidden_entities.clear();
 
         hidden.populate_inserted(
