@@ -56,6 +56,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * The z in UiTransformBuilder now defaults to 1 instead of 0, allowing to skip defining the z in the ui prefabs. ([#946])
 * Added comments to ui prefab. ([#946])
 * Summarized all `use amethyst::` statements to allow collapsing in IDE's. ([#974])
+* Renamed `PrefabData` functions to be easier to understand ([#1008])
 
 ### Removed
 * `LMenu` and `RMenu` key codes, following the `winit` update. ([#906])
@@ -96,6 +97,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#969]: https://github.com/amethyst/amethyst/pull/969
 [#976]: https://github.com/amethyst/amethyst/pull/976
 [#994]: https://github.com/amethyst/amethyst/pull/994
+[#1008]: https://github.com/amethyst/amethyst/pull/1008
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
 

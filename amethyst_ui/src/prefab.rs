@@ -109,7 +109,7 @@ impl<'a> PrefabData<'a> for UiTransformBuilder {
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
@@ -213,14 +213,14 @@ where
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
     ) -> Result<(), PrefabError> {
         let (ref mut texts, ref mut editables, ref mut fonts, ref mut focused) = system_data;
-        let font_handle = self.font.load_prefab(entity, fonts, &[])?;
+        let font_handle = self.font.add_to_entity(entity, fonts, &[])?;
         let mut ui_text = UiText::new(font_handle, self.text.clone(), self.color, self.font_size);
         ui_text.password = self.password;
 
@@ -250,13 +250,13 @@ where
         Ok(())
     }
 
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, PrefabError> {
         let (_, _, ref mut fonts, _) = system_data;
-        self.font.trigger_sub_loading(progress, fonts)
+        self.font.load_sub_assets(progress, fonts)
     }
 }
 
@@ -284,14 +284,14 @@ where
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
     ) -> Result<(), PrefabError> {
         let (ref mut images, ref mut textures) = system_data;
-        let texture_handle = self.image.load_prefab(entity, textures, entities)?;
+        let texture_handle = self.image.add_to_entity(entity, textures, entities)?;
         images.insert(
             entity,
             UiImage {
@@ -301,13 +301,13 @@ where
         Ok(())
     }
 
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, PrefabError> {
         let (_, ref mut textures) = system_data;
-        self.image.trigger_sub_loading(progress, textures)
+        self.image.load_sub_assets(progress, textures)
     }
 }
 
@@ -365,7 +365,7 @@ where
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
@@ -378,14 +378,12 @@ where
             ref mut textures,
             ref mut sounds,
         ) = system_data;
-        let normal_image = self
-            .normal_image
-            .load_prefab(entity, textures, entity_set)?;
-        let hover_image = self.hover_image.load_prefab(entity, textures, entity_set)?;
-        let press_image = self.press_image.load_prefab(entity, textures, entity_set)?;
-        let hover_sound = self.hover_sound.load_prefab(entity, sounds, entity_set)?;
-        let press_sound = self.press_sound.load_prefab(entity, sounds, entity_set)?;
-        let release_sound = self.release_sound.load_prefab(entity, sounds, entity_set)?;
+        let normal_image = self.normal_image.add_to_entity(entity, textures, entity_set)?;
+        let hover_image = self.hover_image.add_to_entity(entity, textures, entity_set)?;
+        let press_image = self.press_image.add_to_entity(entity, textures, entity_set)?;
+        let hover_sound = self.hover_sound.add_to_entity(entity, sounds, entity_set)?;
+        let press_sound = self.press_sound.add_to_entity(entity, sounds, entity_set)?;
+        let release_sound = self.release_sound.add_to_entity(entity, sounds, entity_set)?;
         buttons.insert(
             entity,
             UiButton::new(
@@ -409,18 +407,18 @@ where
         Ok(())
     }
 
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, PrefabError> {
         let (_, _, _, ref mut textures, ref mut sounds) = system_data;
-        self.normal_image.trigger_sub_loading(progress, textures)?;
-        self.hover_image.trigger_sub_loading(progress, textures)?;
-        self.press_image.trigger_sub_loading(progress, textures)?;
-        self.press_sound.trigger_sub_loading(progress, sounds)?;
-        self.hover_sound.trigger_sub_loading(progress, sounds)?;
-        self.release_sound.trigger_sub_loading(progress, sounds)
+        self.normal_image.load_sub_assets(progress, textures)?;
+        self.hover_image.load_sub_assets(progress, textures)?;
+        self.press_image.load_sub_assets(progress, textures)?;
+        self.press_sound.load_sub_assets(progress, sounds)?;
+        self.hover_sound.load_sub_assets(progress, sounds)?;
+        self.release_sound.load_sub_assets(progress, sounds)
     }
 }
 
