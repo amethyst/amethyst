@@ -281,7 +281,6 @@ where
             states.stop(StateData::new(world, &mut self.data));
         }
 
-
         {
             #[cfg(feature = "profiler")]
             profile_scope!("handle_event");

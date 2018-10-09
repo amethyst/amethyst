@@ -60,6 +60,7 @@ where
     }
 }
 
+// TODO: derive PrefabData for BasicScenePrefab, require generic support in derive macro
 impl<'a, V, R, M> PrefabData<'a> for BasicScenePrefab<V, R, M>
 where
     M: Format<Mesh> + Clone,

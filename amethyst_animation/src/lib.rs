@@ -49,6 +49,8 @@
 
 extern crate amethyst_assets;
 extern crate amethyst_core;
+#[macro_use]
+extern crate amethyst_derive;
 extern crate amethyst_renderer;
 extern crate fnv;
 extern crate hibitset;
