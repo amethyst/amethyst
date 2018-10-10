@@ -67,7 +67,7 @@ A `State` contains methods that reflect the most common of those events:
 * fixed_update: This method is called at a fixed time interval (default 1/60th second), while it is the ative `State`.
 * update: This method is called as often as possible by the engine, while it is the active `State`.
 * shadow_update: This method is called as often as possible by the engine, as long as the `State` is on the `StateMachines` stack, including when it is the active `State`. In opposite to `update`, this does not return a `Trans`.
-* shadow_fixed_update: This method is called at a fixed time interval (default 1/60th second), while it is the ative `State`, as long as the `State` is on the `StateMachines` stack, including when it is the active `State`. In opposite to `fixed_update`, this does not return a `Trans`.
+* shadow_fixed_update: This method is called at a fixed time interval (default 1/60th second), as long as the `State` is on the `StateMachines` stack, including when it is the active `State`. In opposite to `fixed_update`, this does not return a `Trans`.
 
 ## Game Data
 
