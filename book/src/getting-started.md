@@ -42,4 +42,3 @@ In case you're doing this with `cargo`, here's what you need to do:
 
 
 [cl]: https://github.com/amethyst/tools
-[gi]: https://gitter.im/amethyst/general

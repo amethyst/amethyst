@@ -15,7 +15,7 @@ game engine.
 [rs]: https://www.rust-lang.org/
 
 Amethyst is free and open source software, distributed under a dual license of [MIT][ml]
-and [Apache][al]. This means that the engine is given to you at no cost 
+and [Apache][al]. This means that the engine is given to you at no cost
 and its source code is completely yours to tinker with. The code is available on
 [GitHub][am]. Contributions and feature requests will always be welcomed!
 
@@ -85,7 +85,6 @@ Those principles are:
 
 We are always happy to welcome new contributors!
 
-If you want to contribute, or have questions, let us know either on [GitHub][db], on [Gitter][gt] or on [Discord].
+If you want to contribute, or have questions, let us know either on [GitHub][db], or on [Discord][di].
 
-[gt]: https://gitter.im/amethyst/general/
-[Discord]: https://discord.gg/GnP5Whs
+[di]: https://discord.gg/GnP5Whs
