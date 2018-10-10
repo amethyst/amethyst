@@ -1,6 +1,6 @@
 //! Provides a client-server networking architecture to amethyst.
 
-#![warn(missing_docs)]
+#![deny(missing_docs)]
 
 extern crate amethyst_core;
 #[macro_use]

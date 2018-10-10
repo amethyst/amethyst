@@ -1,3 +1,5 @@
+#![deny(missing_docs)]
+
 extern crate amethyst_assets;
 extern crate amethyst_controls;
 extern crate amethyst_core;

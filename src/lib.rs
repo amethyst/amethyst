@@ -53,7 +53,7 @@
 //! }
 //! ```
 
-#![warn(missing_docs)]
+#![deny(missing_docs)]
 #![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
 
 #[macro_use]

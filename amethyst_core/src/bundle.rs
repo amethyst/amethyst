@@ -1,3 +1,5 @@
+//! Provides a trait for adding bundles of systems to a dispatcher.
+
 use specs::prelude::DispatcherBuilder;
 
 error_chain!{}

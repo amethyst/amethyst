@@ -3,6 +3,7 @@
 
 #![crate_name = "amethyst_config"]
 #![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
+#![deny(missing_docs)]
 
 #[macro_use]
 extern crate log;

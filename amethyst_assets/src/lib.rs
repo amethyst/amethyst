@@ -7,7 +7,7 @@
 //! * asynchronous & parallel using rayon
 //! * allow different sources
 
-#![warn(missing_docs)]
+#![deny(missing_docs)]
 
 extern crate amethyst_core;
 extern crate crossbeam;
