@@ -1,9 +1,10 @@
 use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, PrefabError, ProgressCounter};
-use amethyst_core::specs::prelude::{BoxedErr, Entity, Read, ReadExpect, WriteStorage};
+use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, WriteStorage};
+use amethyst_core::specs::error::BoxedErr;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 use std::hash::Hash;
 use std::marker::PhantomData;
 use {Animation, AnimationHierarchy, AnimationSampling, AnimationSet, RestState, Sampler};
@@ -50,7 +51,14 @@ where
     }
 }
 
+#[derive(Debug)]
 pub struct MissingAssetHandle;
+
+impl Display for MissingAssetHandle {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        write!(f, "{:?}", self)
+    }
+}
 
 impl Error for MissingAssetHandle {
     fn description(&self) -> &str {
@@ -58,10 +66,6 @@ impl Error for MissingAssetHandle {
     }
 
     fn cause(&self) -> Option<&Error> {
-        None
-    }
-
-    fn source(&self) -> Option<&(Error + 'static)> {
         None
     }
 }
