@@ -149,6 +149,17 @@ pub trait EmptyState {
     fn update(&mut self, _data: StateData<()>) -> EmptyTrans {
         Trans::None
     }
+
+    /// Executed repeatedly at stable, predictable intervals (1/60th of a second
+    /// by default),
+    /// even when this is not the active state,
+    /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
+    fn shadow_fixed_update(&mut self, _data: StateData<()>) {}
+
+    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit),
+    /// even when this is not the active state,
+    /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
+    fn shadow_update(&mut self, _data: StateData<()>) {}
 }
 
 impl<T: EmptyState> State<(), ()> for T {
@@ -186,6 +197,21 @@ impl<T: EmptyState> State<(), ()> for T {
     /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit).
     fn update(&mut self, data: StateData<()>) -> EmptyTrans {
         self.update(data)
+    }
+
+    /// Executed repeatedly at stable, predictable intervals (1/60th of a second
+    /// by default),
+    /// even when this is not the active state,
+    /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
+    fn shadow_fixed_update(&mut self, data: StateData<()>) {
+        self.shadow_fixed_update(data);
+    }
+
+    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit),
+    /// even when this is not the active state,
+    /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
+    fn shadow_update(&mut self, data: StateData<()>) {
+        self.shadow_update(data);
     }
 }
 
@@ -230,6 +256,17 @@ pub trait SimpleState<'a, 'b> {
     fn update(&mut self, _data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
         Trans::None
     }
+
+    /// Executed repeatedly at stable, predictable intervals (1/60th of a second
+    /// by default),
+    /// even when this is not the active state,
+    /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
+    fn shadow_fixed_update(&mut self, _data: StateData<GameData>) {}
+
+    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit),
+    /// even when this is not the active state,
+    /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
+    fn shadow_update(&mut self, _data: StateData<GameData>) {}
 }
 impl<'a, 'b, T: SimpleState<'a, 'b>> State<GameData<'a, 'b>, ()> for T {
     //pub trait SimpleState<'a,'b>: State<GameData<'a,'b>,()> {
@@ -274,6 +311,21 @@ impl<'a, 'b, T: SimpleState<'a, 'b>> State<GameData<'a, 'b>, ()> for T {
         let r = self.update(&mut data);
         data.data.update(&data.world);
         r
+    }
+
+    /// Executed repeatedly at stable, predictable intervals (1/60th of a second
+    /// by default),
+    /// even when this is not the active state,
+    /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
+    fn shadow_fixed_update(&mut self, data: StateData<GameData>) {
+        self.shadow_fixed_update(data);
+    }
+
+    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit),
+    /// even when this is not the active state,
+    /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
+    fn shadow_update(&mut self, data: StateData<GameData>) {
+        self.shadow_update(data);
     }
 }
 
