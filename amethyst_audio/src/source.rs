@@ -39,7 +39,7 @@ impl<'a> PrefabData<'a> for AudioData {
     type SystemData = (ReadExpect<'a, Loader>, Read<'a, AssetStorage<Source>>);
     type Result = Handle<Source>;
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         _: Entity,
         system_data: &mut Self::SystemData,

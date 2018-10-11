@@ -72,7 +72,7 @@ where
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut <Self as PrefabData>::SystemData,
@@ -80,32 +80,32 @@ where
     ) -> Result<(), PrefabError> {
         match self.mesh {
             MeshPrefab::Asset(ref m) => {
-                m.load_prefab(entity, &mut system_data.0, entities)?;
+                m.add_to_entity(entity, &mut system_data.0, entities)?;
             }
             MeshPrefab::Shape(ref s) => {
-                s.load_prefab(entity, &mut system_data.0, entities)?;
+                s.add_to_entity(entity, &mut system_data.0, entities)?;
             }
         }
         self.material
-            .load_prefab(entity, &mut system_data.1, entities)?;
+            .add_to_entity(entity, &mut system_data.1, entities)?;
         Ok(())
     }
 
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, PrefabError> {
         let mut ret = false;
         if match self.mesh {
-            MeshPrefab::Asset(ref mut m) => m.trigger_sub_loading(progress, &mut system_data.0)?,
-            MeshPrefab::Shape(ref mut s) => s.trigger_sub_loading(progress, &mut system_data.0)?,
+            MeshPrefab::Asset(ref mut m) => m.load_sub_assets(progress, &mut system_data.0)?,
+            MeshPrefab::Shape(ref mut s) => s.load_sub_assets(progress, &mut system_data.0)?,
         } {
             ret = true;
         }
         if self
             .material
-            .trigger_sub_loading(progress, &mut system_data.1)?
+            .load_sub_assets(progress, &mut system_data.1)?
         {
             ret = true;
         }
