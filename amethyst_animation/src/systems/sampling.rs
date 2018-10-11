@@ -196,7 +196,6 @@ where
 
         // sampling is running, update duration and check end condition
         Running(duration) => {
-            let zero = Duration::from_secs(0);
             let current_dur =
                 duration + secs_to_duration(time.delta_seconds() * control.rate_multiplier);
             let last_frame = sampler
@@ -204,9 +203,9 @@ where
                 .last()
                 .cloned()
                 .map(secs_to_duration)
-                .unwrap_or(zero.clone());
+                .unwrap_or(Duration::from_secs(0));
             // duration is past last frame of sampling
-            if last_frame != zero && current_dur > last_frame {
+            if current_dur > last_frame {
                 // Check end conditions
                 match control.end {
                     // Do loop control
