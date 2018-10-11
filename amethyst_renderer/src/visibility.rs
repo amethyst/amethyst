@@ -61,7 +61,7 @@ impl<'a> System<'a> for VisibilitySortingSystem {
     fn run(
         &mut self,
         (entities, mut visibility, hidden, hidden_prop, active, camera, transparent, global): Self::SystemData,
-    ){
+){
         let origin = Point3::origin();
 
         let camera: Option<&GlobalTransform> = active

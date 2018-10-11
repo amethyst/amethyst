@@ -12,7 +12,8 @@ impl Component for Hidden {
     type Storage = NullStorage<Self>;
 }
 
-/// Like [Hidden](struct.Hidden.html), but propagates through children.
+/// Like [Hidden](struct.Hidden.html), but can propagate through children when the [HideHierarchySystem](struct.HideHierarchySystem.html)
+/// is enabled in the [RenderBundle](struct.RenderBundle.html).
 #[derive(Clone, Debug, Default)]
 pub struct HiddenPropagate;
 

@@ -222,9 +222,9 @@ impl Pass for DrawUi {
         };
         effect.data.vertex_bufs.push(vbuf);
 
-        let highest_abs_z = (&ui_transform, !&hidden)
+        let highest_abs_z = (&ui_transform,)
             .join()
-            .map(|(t, _)| t.global_z)
+            .map(|t| t.0.global_z)
             .fold(1.0, |highest, current| current.abs().max(highest));
         for &(_z, entity) in &self.cached_draw_order.cache {
             // This won't panic as we guaranteed earlier these entities are present.
