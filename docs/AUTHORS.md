@@ -16,6 +16,7 @@
 * Lukas Schmierer
 * Matthias Schuster
 * msiglreith
+* NCrashed (Anton Gushcha)
 * Nikita Chashchinskii
 * Oflor
 * Robbie Cooper
