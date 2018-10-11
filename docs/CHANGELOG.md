@@ -73,6 +73,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Fixed regression in sprite positioning after batching. ([#929])
 * Now loading default fonts from the system for UiButton ([#964])
 * Fixed single frame animation ([#1015])
+* Improved compatibility with older drivers ([#1012])
 
 [#829]: https://github.com/amethyst/amethyst/issues/829
 [#830]: https://github.com/amethyst/amethyst/pull/830
@@ -110,6 +111,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1001]: https://github.com/amethyst/amethyst/pull/1001
 [#1006]: https://github.com/amethyst/amethyst/pull/1006
 [#1008]: https://github.com/amethyst/amethyst/pull/1008
+[#1012]: https://github.com/amethyst/amethyst/pull/1012
 [#1015]: https://github.com/amethyst/amethyst/pull/1015
 [#1016]: https://github.com/amethyst/amethyst/pull/1016
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
