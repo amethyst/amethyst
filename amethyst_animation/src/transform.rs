@@ -6,8 +6,11 @@ use util::SamplerPrimitive;
 /// Channels that can be animated on `Transform`
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum TransformChannel {
+    /// The 3 dimensional cartesian coordinates of an entity
     Translation,
+    /// The rotation in 3 dimensional space
     Rotation,
+    /// The scale of an entity i.e. how big it is.
     Scale,
 }
 

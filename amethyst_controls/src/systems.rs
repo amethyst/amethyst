@@ -32,6 +32,7 @@ where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
+    /// Builds a new `FlyMovementSystem` using the provided speeds and axis controls.
     pub fn new(
         speed: f32,
         right_input_axis: Option<A>,
@@ -114,6 +115,7 @@ pub struct FreeRotationSystem<A, B> {
 }
 
 impl<A, B> FreeRotationSystem<A, B> {
+    /// Builds a new `FreeRotationSystem` with the specified mouse sensitivity values.
     pub fn new(sensitivity_x: f32, sensitivity_y: f32) -> Self {
         FreeRotationSystem {
             sensitivity_x,
@@ -171,6 +173,7 @@ pub struct MouseFocusUpdateSystem {
 }
 
 impl MouseFocusUpdateSystem {
+    /// Builds a new MouseFocusUpdateSystem.
     pub fn new() -> MouseFocusUpdateSystem {
         MouseFocusUpdateSystem { event_reader: None }
     }
@@ -207,6 +210,7 @@ pub struct CursorHideSystem {
 }
 
 impl CursorHideSystem {
+    /// Constructs a new CursorHideSystem
     pub fn new() -> CursorHideSystem {
         CursorHideSystem { is_hidden: false }
     }

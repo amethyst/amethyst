@@ -37,6 +37,7 @@ impl<T> SamplerInterpolationSystem<T>
 where
     T: AnimationSampling,
 {
+    /// Creates a new `SamplerInterpolationSystem`
     pub fn new() -> Self {
         Self {
             m: marker::PhantomData,

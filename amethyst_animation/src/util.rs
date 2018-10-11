@@ -32,9 +32,13 @@ pub enum SamplerPrimitive<S>
 where
     S: BaseNum,
 {
+    /// A single value
     Scalar(S),
+    /// Two values
     Vec2([S; 2]),
+    /// Three values
     Vec3([S; 3]),
+    /// Four values
     Vec4([S; 4]),
 }
 

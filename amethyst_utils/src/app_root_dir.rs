@@ -1,9 +1,11 @@
+//! Provides the directory of the executable.
+
 use std::env;
 use std::fs;
 
-// Returns the cargo manifest directory when running the executable with cargo
-// or the directory in which the executable resides otherwise,
-// traversing symlinks if necessary.
+/// Returns the cargo manifest directory when running the executable with cargo
+/// or the directory in which the executable resides otherwise,
+/// traversing symlinks if necessary.
 pub fn application_root_dir() -> String {
     env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| {
         let mut path = env::current_exe().expect("Failed to find executable path.");

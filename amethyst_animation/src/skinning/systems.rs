@@ -20,6 +20,7 @@ pub struct VertexSkinningSystem {
 }
 
 impl VertexSkinningSystem {
+    /// Creates a new `VertexSkinningSystem`
     pub fn new() -> Self {
         Self {
             updated: BitSet::new(),

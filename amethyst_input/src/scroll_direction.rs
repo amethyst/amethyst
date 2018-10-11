@@ -1,7 +1,12 @@
 #[derive(Eq, PartialEq, Debug, Copy, Clone, Serialize, Deserialize)]
+/// Indicates in what direction a mouse wheel scroll event was.
 pub enum ScrollDirection {
-    ScrollUp,
-    ScrollDown,
-    ScrollLeft,
-    ScrollRight,
+	/// Scroll was upwards
+	ScrollUp,
+	/// Scroll was downwards
+	ScrollDown,
+	/// Scroll was to the left
+	ScrollLeft,
+	/// Scroll was to the right
+	ScrollRight,
 }
