@@ -8,6 +8,7 @@ use amethyst_core::specs::prelude::{Component, DenseVecStorage};
 
 /// A clickable button, this must be paired with a `UiImage`
 /// and this entity must have a child entity with a `UiText`.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct UiButton {
     /// Default text color
     normal_text_color: [f32; 4],

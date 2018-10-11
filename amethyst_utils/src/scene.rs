@@ -76,7 +76,7 @@ where
 
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
@@ -90,16 +90,16 @@ where
             ref mut tags,
             ref mut removals,
         ) = system_data;
-        self.graphics.load_prefab(entity, graphics, entities)?;
-        self.transform.load_prefab(entity, transforms, entities)?;
-        self.light.load_prefab(entity, lights, entities)?;
-        self.camera.load_prefab(entity, cameras, entities)?;
-        self.control_tag.load_prefab(entity, tags, entities)?;
-        self.removal.load_prefab(entity, removals, entities)?;
+        self.graphics.add_to_entity(entity, graphics, entities)?;
+        self.transform.add_to_entity(entity, transforms, entities)?;
+        self.light.add_to_entity(entity, lights, entities)?;
+        self.camera.add_to_entity(entity, cameras, entities)?;
+        self.control_tag.add_to_entity(entity, tags, entities)?;
+        self.removal.add_to_entity(entity, removals, entities)?;
         Ok(())
     }
 
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
@@ -113,22 +113,22 @@ where
             ref mut tags,
             ref mut removals,
         ) = system_data;
-        if self.graphics.trigger_sub_loading(progress, graphics)? {
+        if self.graphics.load_sub_assets(progress, graphics)? {
             ret = true;
         }
-        if self.transform.trigger_sub_loading(progress, transforms)? {
+        if self.transform.load_sub_assets(progress, transforms)? {
             ret = true;
         }
-        if self.light.trigger_sub_loading(progress, lights)? {
+        if self.light.load_sub_assets(progress, lights)? {
             ret = true;
         }
-        if self.camera.trigger_sub_loading(progress, cameras)? {
+        if self.camera.load_sub_assets(progress, cameras)? {
             ret = true;
         }
-        if self.control_tag.trigger_sub_loading(progress, tags)? {
+        if self.control_tag.load_sub_assets(progress, tags)? {
             ret = true;
         }
-        if self.removal.trigger_sub_loading(progress, removals)? {
+        if self.removal.load_sub_assets(progress, removals)? {
             ret = true;
         }
         Ok(ret)

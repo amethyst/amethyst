@@ -31,7 +31,7 @@ where
     type SystemData = WriteStorage<'a, Tag<T>>;
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         storage: &mut Self::SystemData,
