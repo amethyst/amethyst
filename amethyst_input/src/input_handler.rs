@@ -11,7 +11,7 @@ use std::borrow::Borrow;
 use std::hash::Hash;
 use winit::{
     dpi::LogicalPosition, DeviceEvent, ElementState, Event, KeyboardInput, MouseButton,
-    VirtualKeyCode, WindowEvent, MouseScrollDelta
+    MouseScrollDelta, VirtualKeyCode, WindowEvent,
 };
 
 /// This struct holds state information about input devices.
@@ -515,7 +515,12 @@ where
     }
 
     /// Iterates all input bindings and invokes ActionWheelMoved for each action bound to the mouse wheel
-    fn invoke_wheel_moved(&self, delta_x: f64, delta_y: f64, event_handler: &mut EventChannel<InputEvent<AC>>) {
+    fn invoke_wheel_moved(
+        &self,
+        delta_x: f64,
+        delta_y: f64,
+        event_handler: &mut EventChannel<InputEvent<AC>>,
+    ) {
         let mut events = Vec::<InputEvent<AC>>::new();
 
         // determine if a horizontal scroll happend
