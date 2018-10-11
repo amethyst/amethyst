@@ -46,6 +46,10 @@ impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
         // Setup debug lines as a resource
         data.world
             .add_resource(DebugLines::new().with_capacity(100));
+        // Configure width of lines. Optional step
+        data.world.add_resource(DebugLinesParams {
+            line_width: 1.0 / 400.0,
+        });
 
         // Setup debug lines as a component and add lines to render axis&grid
         let mut debug_lines_component = DebugLinesComponent::new().with_capacity(100);
