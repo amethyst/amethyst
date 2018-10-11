@@ -57,7 +57,7 @@ pub enum CameraNormalizeMode {
     Lossy {
         /// The direction along which the camera will stretch and possibly have a length not equal
         /// to one.
-        stretch_direction: Axis2
+        stretch_direction: Axis2,
     },
 
     /// Scales the render dynamically to ensure no space is lost in the [0,1] range on any axis.
