@@ -6,7 +6,7 @@ A component is any struct that can be "attached" to an `Entity` (which we will c
 
 ## Usage
 
-The relationship between an entity and a component closely ressembles the relation between a real-life object and its properties.
+The relationship between an entity and a component closely resembles the relation between a real-life object and its properties.
 
 For example, a bottle of water has a shape, a volume, a color and is made of a material (usually plastic).
 
@@ -50,7 +50,7 @@ impl Component for Content {
 
 ## Storages?
 
-`Component`s, in contrast with popular belief, should not be stored directly inside of a `Entity`.
+`Component`s, in contrast with popular belief, should not be stored directly inside of an `Entity`.
 
 They are instead stored in different types of `Storage`, which all have different performance strategies.
 
@@ -61,7 +61,7 @@ Here's a comparison of the most used ones:
 * `DenseVecStorage`: Elements are stored in a contiguous array. No empty space is left between `Component`s, allowing a lowered memory usage.
   This is less performant than `VecStorage`.
 * `VecStorage`: Elements are stored into a contiguous array. Uses more memory than `DenseVecStorage` but is more performant when you use a `Component` type a lot.
-  Only use this when you know that a LOT of your entities are going to have that `Component` type. (More than 90%, for example).
+  Only use this when you know that many of your entities are going to have that `Component` (more than 10%, for example).
 * `FlaggedStorage`: Used to keep track of changes of a component. Useful for caching purposes.
 
 For more information, see the [specs storage reference](https://docs.rs/specs/latest/specs/storage/index.html).
