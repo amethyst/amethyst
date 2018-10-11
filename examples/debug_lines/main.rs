@@ -2,19 +2,16 @@
 
 extern crate amethyst;
 
-use amethyst::{
-    controls::{FlyControlBundle, FlyControlTag},
-    core::Time,
-    core::{
-        cgmath::{Deg, Point3, Vector3},
-        transform::{GlobalTransform, Transform, TransformBundle},
-    },
-    ecs::{Read, System, Write},
-    input::InputBundle,
-    prelude::*,
-    renderer::*,
-    utils::application_root_dir,
-};
+use amethyst::controls::{FlyControlBundle, FlyControlTag};
+use amethyst::core::cgmath::{Deg, Point3, Vector3};
+use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
+use amethyst::core::Time;
+use amethyst::ecs::{Read, System, Write};
+use amethyst::input::InputBundle;
+use amethyst::prelude::*;
+use amethyst::renderer::*;
+
+use amethyst::utils::application_root_dir;
 
 struct ExampleLinesSystem;
 impl<'s> System<'s> for ExampleLinesSystem {
@@ -157,12 +154,14 @@ fn main() -> amethyst::Result<()> {
         Some(String::from("move_x")),
         Some(String::from("move_y")),
         Some(String::from("move_z")),
-    ).with_sensitivity(0.1, 0.1);
+    )
+    .with_sensitivity(0.1, 0.1);
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
-        )?.with(ExampleLinesSystem, "example_lines_system", &[])
+        )?
+        .with(ExampleLinesSystem, "example_lines_system", &[])
         .with_bundle(fly_control_bundle)?
         .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_bundle(RenderBundle::new(pipe, Some(config)))?;
