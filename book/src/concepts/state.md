@@ -57,15 +57,17 @@ Events are what trigger the transitions. In the case of amethyst, it is the diff
 
 ## Life Cycle
 
-`State` are only valid for a certain period of time, during which a lot of things can occur.
-A `State` contains methods that reflect the most commons of those events:
+`State`s are only valid for a certain period of time, during which a lot of things can occur.
+A `State` contains methods that reflect the most common of those events:
 * on_start: When the state is added to the stack, this method is called.
 * on_stop: When it is removed from the stack, this method is called.
 * on_pause: When a `State` is pushed over the current one, the current one is paused.
 * on_resume: When the `State` that was pushed over the current `State` is popped, the current one resumes.
 * handle_event: Allows easily handling events, like the window closing or a key being pressed.
-* fixed_update: This method is called at a fixed time interval (default 1/60th second).
-* update: This method is called as often as possible by the engine.
+* fixed_update: This method is called at a fixed time interval (default 1/60th second), while it is the ative `State`.
+* update: This method is called as often as possible by the engine, while it is the active `State`.
+* shadow_update: This method is called as often as possible by the engine, as long as the `State` is on the `StateMachines` stack, including when it is the active `State`. In opposite to `update`, this does not return a `Trans`.
+* shadow_fixed_update: This method is called at a fixed time interval (default 1/60th second), as long as the `State` is on the `StateMachines` stack, including when it is the active `State`. In opposite to `fixed_update`, this does not return a `Trans`.
 
 ## Game Data
 
