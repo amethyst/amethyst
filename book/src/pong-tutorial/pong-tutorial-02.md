@@ -61,7 +61,7 @@ We will leave it empty for now, but it will become useful later down the line.
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # struct MyState;
-# impl<'a, 'b> SimpleState<'a,'b> for MyState {
+# impl<'a, 'b> SimpleState<'a, 'b> for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
 
 }
@@ -139,7 +139,7 @@ To finish setting up the camera, let's call it in our State's `on_start` method:
 # use amethyst::ecs::World;
 # fn initialise_camera(world: &mut World) { }
 # struct MyState;
-# impl<'a, 'b> SimpleState<'a,'b> for MyState {
+# impl<'a, 'b> SimpleState<'a, 'b> for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
     let world = data.world;
 
@@ -297,7 +297,7 @@ compiles. Update the `on_start` method to the following:
 # fn initialise_paddles(world: &mut World) { }
 # fn initialise_camera(world: &mut World) { }
 # struct MyState;
-# impl<'a, 'b> SimpleState<'a,'b> for MyState {
+# impl<'a, 'b> SimpleState<'a, 'b> for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
     let world = data.world;
 
@@ -387,7 +387,7 @@ the pattern and add the `TransformBundle`.
 #       .with_pass(DrawSprite::new()),
 # );
 # struct Pong;
-# impl<'a, 'b> SimpleState<'a,'b> for Pong { }
+# impl<'a, 'b> SimpleState<'a, 'b> for Pong { }
 let game_data = GameDataBuilder::default()
     .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
     .with_bundle(TransformBundle::new())?;
@@ -688,7 +688,7 @@ all together in the `on_start()` method:
 # fn initialise_camera(world: &mut World) { }
 # fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle { unimplemented!() }
 # struct MyState;
-# impl<'a, 'b> SimpleState<'a,'b> for MyState {
+# impl<'a, 'b> SimpleState<'a, 'b> for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
     let world = data.world;
 
