@@ -101,6 +101,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#994]: https://github.com/amethyst/amethyst/pull/994
 [#1006]: https://github.com/amethyst/amethyst/pull/1006
 [#1008]: https://github.com/amethyst/amethyst/pull/1008
+[#1016]: https://github.com/amethyst/amethyst/pull/1016
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
 
