@@ -11,7 +11,7 @@ pub fn hide_cursor(msg: &mut WindowMessages) {
 /// Set the cursor back to normal/visible.
 pub fn release_cursor(msg: &mut WindowMessages) {
     msg.send_command(move |win| {
-        if let Err(err) = win.grab_cursor(false) {
+        if let Err(err) = win.release_cursor(false) {
             error!("Unable to release the cursor. Error: {:?}", err);
         }
         win.hide_cursor(false);
