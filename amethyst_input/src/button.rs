@@ -1,6 +1,7 @@
 use super::controller::ControllerButton;
 use super::local_mouse_button::LocalMouseButton;
 use super::local_virtual_key_code::LocalVirtualKeyCode;
+use super::scroll_direction::ScrollDirection;
 use winit::{MouseButton, VirtualKeyCode};
 
 /// A Button is any kind of digital input that the engine supports.
@@ -16,6 +17,9 @@ pub enum Button {
 
     /// Mouse buttons
     Mouse(#[serde(with = "LocalMouseButton")] MouseButton),
+
+    /// Mouse wheel
+    MouseWheel(ScrollDirection),
 
     /// Controller buttons matching SDL controller model.
     /// A tuple of sequential controller_id in order of connection

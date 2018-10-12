@@ -43,6 +43,12 @@ where
     where
         B: PipelineBuild<Pipeline = P>,
     {
+        use std::env;
+
+        // ask winit explicitly to use X11 since Wayland causes several issues
+        // see https://github.com/amethyst/amethyst/issues/890
+        env::set_var("WINIT_UNIX_BACKEND", "x11");
+
         let mut renderer = {
             let mut renderer = Renderer::build();
 

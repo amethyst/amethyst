@@ -3,7 +3,7 @@ use amethyst_core::specs::prelude::{Component, Entity, HashMapStorage, NullStora
 
 /// Add this to a camera if you want it to be a fly camera.
 /// You need to add the FlyControlBundle or the required systems for it to work.
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 pub struct FlyControlTag;
 
 impl Component for FlyControlTag {
@@ -40,7 +40,7 @@ impl<'a> PrefabData<'a> for ControlTagPrefab {
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,

@@ -142,23 +142,11 @@ fn targeted<'a, I>(pos: (f32, f32), transforms: I) -> Option<Entity>
 where
     I: Iterator<Item = (Entity, &'a UiTransform, Option<&'a MouseReactive>)> + 'a,
 {
-    use std::f32::INFINITY;
-
-    let (e, _t, m) = transforms
+    transforms
         .filter(|(_e, t, _m)| t.opaque && t.position_inside(pos.0, pos.1))
-        .fold(
-            (None, -INFINITY, None),
-            |(highest_entity, highest_z, highest_mouse_reactive), (entity, t, m)| {
-                if highest_z > t.global_z {
-                    (highest_entity, highest_z, highest_mouse_reactive)
-                } else {
-                    (Some(entity), t.global_z, m)
-                }
-            },
-        );
-    if m.is_some() {
-        e
-    } else {
-        None
-    }
+        .max_by(|(_e1, t1, _m1), (_e2, t2, _m2)| {
+            t1.global_z
+                .partial_cmp(&t2.global_z)
+                .expect("Unexpected NaN")
+        }).and_then(|(e, _, m)| m.map(|_m| e))
 }

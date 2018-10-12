@@ -20,7 +20,7 @@ impl<'a> PrefabData<'a> for AmbientColor {
     type SystemData = Write<'a, AmbientColor>;
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         _: Entity,
         ambient: &mut Self::SystemData,

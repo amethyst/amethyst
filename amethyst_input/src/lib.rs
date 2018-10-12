@@ -21,10 +21,12 @@ pub use self::button::Button;
 pub use self::controller::{ControllerAxis, ControllerButton};
 pub use self::event::InputEvent;
 pub use self::input_handler::InputHandler;
+pub use self::scroll_direction::ScrollDirection;
 #[cfg(feature = "sdl_controller")]
 pub use self::sdl_events_system::SdlEventsSystem;
 pub use self::system::InputSystem;
 pub use self::util::{get_input_axis_simple, get_key, is_close_requested, is_key_down};
+
 use std::iter::Iterator;
 use winit::VirtualKeyCode;
 
@@ -37,6 +39,7 @@ mod event;
 mod input_handler;
 mod local_mouse_button;
 mod local_virtual_key_code;
+mod scroll_direction;
 mod system;
 mod util;
 
