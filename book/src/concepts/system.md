@@ -137,7 +137,7 @@ Cool! Now that looks like something we'll actually do in our games!
 ### Getting entities that have some components, but not others
 
 There is a special type of `Storage` in specs called `AntiStorage`.
-The not operator (!) turns a Storage into its AntiStorage counterpart.
+The not operator (!) turns a Storage into its AntiStorage counterpart, allowing you to iterate over entities that do NOT have this `Component`.
 It is used like this:
 
 ```rust,no_run,noplaypen
