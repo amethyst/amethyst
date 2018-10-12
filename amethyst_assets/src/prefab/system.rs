@@ -70,7 +70,7 @@ where
                 self.next_tag += 1;
                 if !d.loading() {
                     if !d
-                        .trigger_sub_loading(&mut prefab_system_data)
+                        .load_sub_assets(&mut prefab_system_data)
                         .chain_err(|| "Failed starting sub asset loading")?
                     {
                         return Ok(ProcessingState::Loaded(d));
@@ -117,7 +117,7 @@ where
                 for (index, entity_data) in prefab.entities.iter().enumerate() {
                     if let Some(ref prefab_data) = &entity_data.data {
                         prefab_data
-                            .load_prefab(
+                            .add_to_entity(
                                 self.entities[index],
                                 &mut prefab_system_data,
                                 &self.entities,

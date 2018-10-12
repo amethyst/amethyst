@@ -3,10 +3,14 @@ pub use log::LevelFilter;
 use fern;
 use std::{env, io, path::PathBuf, str::FromStr};
 
+/// An enum that contains options for logging to the terminal.
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
-pub enum Stdout {
+pub enum StdoutLog {
+    /// Disables logging to the terminal.
     Off,
+    /// Enables logging to the terminal without colored output.
     Plain,
+    /// Enables logging to the terminal with colored output on supported platforms.
     Colored,
 }
 
@@ -14,7 +18,7 @@ pub enum Stdout {
 #[derive(Clone, Serialize, Deserialize)]
 pub struct LoggerConfig {
     /// Determines whether to log to the terminal or not.
-    pub stdout: Stdout,
+    pub stdout: StdoutLog,
     /// Sets the overarching level filter for the logger.
     pub level_filter: LevelFilter,
     /// If set, enables logging to file at the given path.
@@ -26,7 +30,7 @@ pub struct LoggerConfig {
 impl Default for LoggerConfig {
     fn default() -> LoggerConfig {
         LoggerConfig {
-            stdout: Stdout::Colored,
+            stdout: StdoutLog::Colored,
             level_filter: LevelFilter::Debug,
             log_file: None,
             allow_env_override: true,
@@ -51,9 +55,9 @@ pub fn start_logger(mut config: LoggerConfig) {
     let mut dispatch = basic_dispatch(config.level_filter);
 
     match config.stdout {
-        Stdout::Plain => dispatch = dispatch.chain(io::stdout()),
-        Stdout::Colored => dispatch = dispatch.chain(colored_stdout()),
-        Stdout::Off => {}
+        StdoutLog::Plain => dispatch = dispatch.chain(io::stdout()),
+        StdoutLog::Colored => dispatch = dispatch.chain(colored_stdout()),
+        StdoutLog::Off => {}
     }
 
     if let Some(path) = config.log_file {
@@ -71,9 +75,9 @@ pub fn start_logger(mut config: LoggerConfig) {
 fn env_var_override(config: &mut LoggerConfig) {
     if let Ok(var) = env::var("AMETHYST_LOG_STDOUT") {
         match var.to_lowercase().as_ref() {
-            "off" => config.stdout = Stdout::Off,
-            "plain" => config.stdout = Stdout::Plain,
-            "colored" => config.stdout = Stdout::Colored,
+            "off" => config.stdout = StdoutLog::Off,
+            "plain" => config.stdout = StdoutLog::Plain,
+            "colored" => config.stdout = StdoutLog::Colored,
             _ => {}
         }
     }

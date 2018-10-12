@@ -180,7 +180,7 @@ impl<'a> PrefabData<'a> for GltfPrefab {
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
@@ -197,7 +197,7 @@ impl<'a> PrefabData<'a> for GltfPrefab {
             ref mut mesh_data,
         ) = system_data;
         if let Some(ref transform) = self.transform {
-            transform.load_prefab(entity, transforms, entities)?;
+            transform.add_to_entity(entity, transforms, entities)?;
         }
         if let Some(ref mesh) = self.mesh {
             mesh_data.insert(entity, mesh.clone())?;
@@ -206,16 +206,16 @@ impl<'a> PrefabData<'a> for GltfPrefab {
             meshes.1.insert(entity, mesh.clone())?;
         }
         if let Some(ref name) = self.name {
-            name.load_prefab(entity, names, entities)?;
+            name.add_to_entity(entity, names, entities)?;
         }
         if let Some(ref material) = self.material {
-            material.load_prefab(entity, materials, entities)?;
+            material.add_to_entity(entity, materials, entities)?;
         }
         if let Some(ref animatable) = self.animatable {
-            animatable.load_prefab(entity, animatables, entities)?;
+            animatable.add_to_entity(entity, animatables, entities)?;
         }
         if let Some(ref skinnable) = self.skinnable {
-            skinnable.load_prefab(entity, skinnables, entities)?;
+            skinnable.add_to_entity(entity, skinnables, entities)?;
         }
         if let Some(ref extent) = self.extent {
             extents.insert(entity, extent.clone())?;
@@ -223,7 +223,7 @@ impl<'a> PrefabData<'a> for GltfPrefab {
         Ok(())
     }
 
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
@@ -239,12 +239,12 @@ impl<'a> PrefabData<'a> for GltfPrefab {
             ret = true;
         }
         if let Some(ref mut material) = self.material {
-            if material.trigger_sub_loading(progress, materials)? {
+            if material.load_sub_assets(progress, materials)? {
                 ret = true;
             }
         }
         if let Some(ref mut animatable) = self.animatable {
-            if animatable.trigger_sub_loading(progress, animatables)? {
+            if animatable.load_sub_assets(progress, animatables)? {
                 ret = true;
             }
         }

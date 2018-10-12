@@ -62,7 +62,7 @@ where
     );
     type Result = Handle<Animation<T>>;
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         _: Entity,
         _: &mut Self::SystemData,
@@ -71,7 +71,7 @@ where
         Ok(self.handle.as_ref().unwrap().clone())
     }
 
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         &mut (ref loader, ref sampler_storage, ref animation_storage): &mut Self::SystemData,
@@ -123,7 +123,7 @@ where
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
@@ -136,20 +136,20 @@ where
         for (id, animation_prefab) in &self.animations {
             set.insert(
                 id.clone(),
-                animation_prefab.load_prefab(entity, &mut system_data.1, entities)?,
+                animation_prefab.add_to_entity(entity, &mut system_data.1, entities)?,
             );
         }
         Ok(())
     }
 
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, PrefabError> {
         let mut ret = false;
         for (_, animation_prefab) in &mut self.animations {
-            if animation_prefab.trigger_sub_loading(progress, &mut system_data.1)? {
+            if animation_prefab.load_sub_assets(progress, &mut system_data.1)? {
                 ret = true;
             }
         }
@@ -164,7 +164,7 @@ where
     type SystemData = WriteStorage<'a, RestState<T>>;
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         storage: &mut Self::SystemData,
@@ -192,7 +192,7 @@ where
     type SystemData = WriteStorage<'a, AnimationHierarchy<T>>;
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         storage: &mut Self::SystemData,
@@ -247,31 +247,31 @@ where
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut <Self as PrefabData>::SystemData,
         entities: &[Entity],
     ) -> Result<<Self as PrefabData>::Result, PrefabError> {
         if let Some(ref prefab) = self.animation_set {
-            prefab.load_prefab(entity, &mut system_data.0, entities)?;
+            prefab.add_to_entity(entity, &mut system_data.0, entities)?;
         }
         if let Some(ref prefab) = self.hierarchy {
-            prefab.load_prefab(entity, &mut system_data.1, entities)?;
+            prefab.add_to_entity(entity, &mut system_data.1, entities)?;
         }
         if let Some(ref prefab) = self.rest_state {
-            prefab.load_prefab(entity, &mut system_data.2, entities)?;
+            prefab.add_to_entity(entity, &mut system_data.2, entities)?;
         }
         Ok(())
     }
 
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, PrefabError> {
         if let Some(ref mut prefab) = self.animation_set {
-            prefab.trigger_sub_loading(progress, &mut system_data.0)
+            prefab.load_sub_assets(progress, &mut system_data.0)
         } else {
             Ok(false)
         }

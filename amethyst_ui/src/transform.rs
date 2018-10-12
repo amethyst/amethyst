@@ -24,7 +24,7 @@ impl<'a> UiFinder<'a> {
 /// The UiTransform represents the transformation of a ui element.
 /// Values are in pixel and the position is calculated from the bottom left of the screen
 /// to the center of the ui element's area.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct UiTransform {
     /// An identifier. Serves no purpose other than to help you distinguish between UI elements.
     pub id: String,

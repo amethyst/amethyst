@@ -118,7 +118,7 @@ impl<'a> PrefabData<'a> for JointTransformsPrefab {
     type SystemData = WriteStorage<'a, JointTransforms>;
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         storage: &mut Self::SystemData,
