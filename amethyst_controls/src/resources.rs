@@ -2,10 +2,12 @@
 /// Written to by MouseFocusUpdateSystem
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 pub struct WindowFocus {
+    /// If true then the window is actively focused.
     pub is_focused: bool,
 }
 
 impl WindowFocus {
+    /// Builds a new WindowFocus resource.
     pub fn new() -> WindowFocus {
         WindowFocus { is_focused: true }
     }
@@ -15,6 +17,7 @@ impl WindowFocus {
 /// when the window is focused.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct HideCursor {
+    /// If true this system will take control of the cursor.
     pub hide: bool,
 }
 

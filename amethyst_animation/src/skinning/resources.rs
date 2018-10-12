@@ -7,6 +7,7 @@ use hibitset::BitSet;
 /// Joint, attach to an entity with a `Transform`
 #[derive(Debug, Clone)]
 pub struct Joint {
+    /// The skins attached to this joint.
     pub skins: Vec<Entity>,
 }
 
@@ -30,6 +31,7 @@ pub struct Skin {
 }
 
 impl Skin {
+    /// Creates a new `Skin`
     pub fn new(
         joints: Vec<Entity>,
         meshes: BitSet,

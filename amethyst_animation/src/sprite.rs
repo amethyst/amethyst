@@ -8,7 +8,9 @@ use {AnimationSampling, ApplyData, BlendMethod};
 /// Note that sprites can only ever be animated with `Step`, or a panic will occur.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum SpriteRenderPrimitive {
+    /// A spritesheet id
     SpriteSheet(u64),
+    /// An index into a spritesheet
     SpriteIndex(usize),
 }
 
@@ -45,7 +47,9 @@ impl InterpolationPrimitive for SpriteRenderPrimitive {
 /// Channels that are animatable on `SpriteRender`
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum SpriteRenderChannel {
+    /// Selecting a spritesheet dynamically
     SpriteSheet,
+    /// Selecting a sprite index dynamically
     SpriteIndex,
 }
 
