@@ -53,14 +53,14 @@ There are two things that may surprise you.
 
     You pick the texture ID based on how you want to reference it. For example, you might have an application configuration that says `path/to/spritesheet_0.png` is ID `100`, `path/to/spritesheet_1.png` is ID `101`, so you can use that. Or, you might do something clever like calculate an ID based on the path, and if it's already loaded, then you know you don't have to load it again.
 
-[doc_asset]: https://docs.rs/amethyst_assets/latest/amethyst_assets/trait.Asset.html
-[doc_asset_get]: https://docs.rs/amethyst_assets/latest/amethyst_assets/struct.AssetStorage.html#method.get
-[doc_fmt_bmp]: https://docs.rs/amethyst_renderer/latest/amethyst_renderer/struct.BmpFormat.html
-[doc_fmt_jpg]: https://docs.rs/amethyst_renderer/latest/amethyst_renderer/struct.JpgFormat.html
-[doc_fmt_png]: https://docs.rs/amethyst_renderer/latest/amethyst_renderer/struct.PngFormat.html
-[doc_fmt_tga]: https://docs.rs/amethyst_renderer/latest/amethyst_renderer/struct.TgaFormat.html
-[doc_load]: https://docs.rs/amethyst_assets/load/amethyst_assets/struct.Loader.html#method.load
-[doc_read_resource]: https://docs.rs/specs/latest/specs/world/struct.World.html#method.read_resource
-[doc_ss]: https://docs.rs/amethyst_renderer/latest/amethyst_renderer/struct.SpriteSheet.html
-[doc_tex]: https://docs.rs/amethyst_renderer/latest/amethyst_renderer/struct.Texture.html
-[doc_tex_hd]: https://docs.rs/amethyst_renderer/latest/amethyst_renderer/type.TextureHandle.html
+[doc_asset]: https://www.amethyst.rs/doc/latest/doc/amethyst_assets/trait.Asset.html
+[doc_asset_get]: https://www.amethyst.rs/doc/latest/doc/amethyst_assets/struct.AssetStorage.html#method.get
+[doc_fmt_bmp]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.BmpFormat.html
+[doc_fmt_jpg]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.JpgFormat.html
+[doc_fmt_png]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.PngFormat.html
+[doc_fmt_tga]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.TgaFormat.html
+[doc_load]: https://www.amethyst.rs/doc/latest/doc/amethyst_assets/struct.Loader.html#method.load
+[doc_read_resource]: https://www.amethyst.rs/doc/latest/doc/specs/world/struct.World.html#method.read_resource
+[doc_ss]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.SpriteSheet.html
+[doc_tex]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.Texture.html
+[doc_tex_hd]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/type.TextureHandle.html

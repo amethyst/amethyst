@@ -9,8 +9,8 @@ In Amethyst, these are represented by the [`Texture`][doc_tex] and [`SpriteSheet
 
 > **Note:** The code snippets in this section explain the parts of setting up sprite rendering separately. For complete application examples, please refer to the [*sprites*][ex_sprites] or [*sprites_ordered*][ex_ordered] examples in the [examples][ex_all] directory.
 
-[doc_ss]: https://docs.rs/amethyst_renderer/latest/amethyst_renderer/struct.SpriteSheet.html
-[doc_tex]: https://docs.rs/amethyst_renderer/latest/amethyst_renderer/struct.Texture.html
+[doc_ss]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.SpriteSheet.html
+[doc_tex]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.Texture.html
 [ex_all]: https://github.com/amethyst/amethyst/tree/master/examples
 [ex_ordered]: https://github.com/amethyst/amethyst/tree/master/examples/sprites_ordered
 [ex_sprites]: https://github.com/amethyst/amethyst/tree/master/examples/sprites
