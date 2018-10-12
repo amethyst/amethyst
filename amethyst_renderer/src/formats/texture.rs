@@ -15,8 +15,6 @@ use types::SurfaceFormat;
 use Renderer;
 
 /// Additional texture metadata that can be passed to the asset loader or added to the prefab.
-///
-///
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct TextureMetadata {
     /// The sampler info describes how to read from the texture, thus specifies
