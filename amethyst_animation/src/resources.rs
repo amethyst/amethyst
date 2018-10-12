@@ -497,9 +497,8 @@ where
     ) {
         self.samplers
             .iter_mut()
-            .filter(|t| t.control_id == control_id)
-            .filter(|t| t.state != ControlState::Done)
-            .filter_map(|c| samplers.get(&c.sampler).map(|s| (s, c)))
+            .filter(|t| t.control_id == control_id && t.state != ControlState::Done)
+            .map(|c| (samplers.get(&c.sampler).expect("Referring to a missing sampler"), c))
             .for_each(|(s, c)| {
                 set_step_state(c, s, direction);
             });
