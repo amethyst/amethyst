@@ -28,6 +28,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * New vertices() method on MeshCreator trait. ([#946])
 * Support for text alignment (align left, center, right). ([#965])
 * Support for multiline text. ([#965])
+* Added AntiStorage documentation to the book. ([#997])
+* You can now stop the rotation of the FreeRotationSystem by setting HideCursor.hide value to false. ([#997])
 * Support for logging to file, toggle for logging to stdout. ([#976], [#994])
 * Added a `Hidden` Component, that hides a single entity, and a HideHierarchySystem that toggles `Hidden` on all children when used. ([#1001])
 * Added `shadow_update()` and `shadow_fixed_update()` to the `State` trait. ([#1006])
@@ -57,6 +59,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * The z in UiTransformBuilder now defaults to 1 instead of 0, allowing to skip defining the z in the ui prefabs. ([#946])
 * Added comments to ui prefab. ([#946])
 * Summarized all `use amethyst::` statements to allow collapsing in IDE's. ([#974])
+* Breaking: Refactor `TextureMetadata` so filter method and clamping can be configured more easily ([#981])
 * Renamed `PrefabData` functions to be easier to understand ([#1008])
 
 ### Removed
@@ -98,7 +101,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#969]: https://github.com/amethyst/amethyst/pull/969
 [#974]: https://github.com/amethyst/amethyst/pull/974
 [#976]: https://github.com/amethyst/amethyst/pull/976
+[#981]: https://github.com/amethyst/amethyst/pull/981
 [#994]: https://github.com/amethyst/amethyst/pull/994
+[#997]: https://github.com/amethyst/amethyst/pull/997
 [#1001]: https://github.com/amethyst/amethyst/pull/1001
 [#1006]: https://github.com/amethyst/amethyst/pull/1006
 [#1008]: https://github.com/amethyst/amethyst/pull/1008

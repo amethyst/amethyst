@@ -7,71 +7,104 @@ use amethyst_assets::{
     ProgressCounter, Result, ResultExt, SimpleFormat,
 };
 use amethyst_core::specs::prelude::{Entity, Read, ReadExpect};
-use gfx::format::{ChannelType, SurfaceType};
+use gfx::format::{ChannelType, SurfaceType, SurfaceTyped};
 use gfx::texture::SamplerInfo;
 use gfx::traits::Pod;
-use tex::{Texture, TextureBuilder};
+use tex::{FilterMethod, Texture, TextureBuilder};
+use types::SurfaceFormat;
 use Renderer;
 
-/// Texture metadata, used while loading
+/// Additional texture metadata that can be passed to the asset loader or added to the prefab.
 #[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(default)]
 pub struct TextureMetadata {
-    /// Sampler info
-    pub sampler: Option<SamplerInfo>,
-    /// Mipmapping
-    pub mip_levels: Option<u8>,
-    /// Texture size
-    pub size: Option<(u16, u16)>,
+    /// The sampler info describes how to read from the texture, thus specifies
+    /// filter and wrap mode.
+    /// The default is nearest filtering (`FilterMethod::Scale`) and clamping (`WrapMode::Clamp`).
+    #[serde(default = "serde_helper::default_sampler")]
+    pub sampler: SamplerInfo,
+    /// Mipmapping levels. The default is one level.
+    #[serde(default = "serde_helper::default_mip_levels")]
+    pub mip_levels: u8,
     /// Dynamic texture
+    #[serde(default)]
     pub dynamic: bool,
-    /// Surface type
-    pub format: Option<SurfaceType>,
-    /// Channel type
-    pub channel: Option<ChannelType>,
-}
-
-impl Default for TextureMetadata {
-    fn default() -> Self {
-        Self {
-            sampler: None,
-            mip_levels: None,
-            size: None,
-            dynamic: false,
-            format: None,
-            channel: None,
-        }
-    }
+    /// The surface type of the texture which describes the number of color channels and their size.
+    /// In simpler words, this defines the color format, e.g. RGBA 32-bit.
+    ///
+    /// The default is `R8_G8_B8_A8`.
+    #[serde(default = "SurfaceFormat::get_surface_type")]
+    pub format: SurfaceType,
+    /// The dimensions of the texture. Only needed for raw image data (`TextureData::U8` etc).
+    #[serde(default)]
+    pub size: Option<(u16, u16)>,
+    /// The channel type which describes the data format of the channels (e.g. how the red value
+    /// is stored).
+    ///
+    /// This is usually `Srgb` for color textures, normalmaps & similar mostly use `Unorm`
+    /// (which represents a value between `0.0` and `1.0`).
+    pub channel: ChannelType,
 }
 
 impl TextureMetadata {
+    /// Creates texture metadata with `Unorm` channel type. This is used for normal / displacement
+    /// maps. For color textures you most likely want to use `TextureMetadata::srgb`.
+    pub fn unorm() -> Self {
+        TextureMetadata {
+            sampler: serde_helper::default_sampler(),
+            mip_levels: serde_helper::default_mip_levels(),
+            dynamic: false,
+            format: SurfaceFormat::get_surface_type(),
+            size: None,
+            channel: ChannelType::Unorm,
+        }
+    }
+
+    /// Creates texture metadata for `Srgb` textures. This is usually the case for color textures.
+    ///
+    /// For the values of all the other fields please refer to the documentation of the respective
+    /// field.
+    pub fn srgb() -> Self {
+        TextureMetadata {
+            channel: ChannelType::Srgb,
+            ..TextureMetadata::unorm()
+        }
+    }
+
     /// Sampler info
     pub fn with_sampler(mut self, info: SamplerInfo) -> Self {
-        self.sampler = Some(info);
+        self.sampler = info;
+        self
+    }
+
+    /// Sets the filter method of the sampler.
+    pub fn with_filter(mut self, filter: FilterMethod) -> Self {
+        self.sampler.filter = filter;
+
         self
     }
 
     /// Mipmapping
     pub fn with_mip_levels(mut self, mip_levels: u8) -> Self {
-        self.mip_levels = Some(mip_levels);
+        self.mip_levels = mip_levels;
+        self
+    }
+
+    /// Surface type
+    pub fn with_format(mut self, format: SurfaceType) -> Self {
+        self.format = format;
+        self
+    }
+
+    /// Channel type
+    pub fn with_channel(mut self, channel: ChannelType) -> Self {
+        self.channel = channel;
         self
     }
 
     /// Texture size
     pub fn with_size(mut self, width: u16, height: u16) -> Self {
         self.size = Some((width, height));
-        self
-    }
 
-    /// Surface type
-    pub fn with_format(mut self, format: SurfaceType) -> Self {
-        self.format = Some(format);
-        self
-    }
-
-    /// Channel type
-    pub fn with_channel(mut self, channel: ChannelType) -> Self {
-        self.channel = Some(channel);
         self
     }
 
@@ -113,7 +146,7 @@ pub enum TextureData {
 
 impl From<[f32; 4]> for TextureData {
     fn from(color: [f32; 4]) -> Self {
-        TextureData::Rgba(color, Default::default())
+        TextureData::Rgba(color, TextureMetadata::srgb())
     }
 }
 
@@ -126,7 +159,7 @@ impl From<[f32; 3]> for TextureData {
 impl TextureData {
     /// Creates texture data from color.
     pub fn color(value: [f32; 4]) -> Self {
-        TextureData::Rgba(value, Default::default())
+        TextureData::Rgba(value, TextureMetadata::srgb())
     }
 }
 
@@ -404,38 +437,19 @@ pub fn create_texture_asset(
 }
 
 fn apply_options<D, T>(
-    mut tb: TextureBuilder<D, T>,
+    tb: TextureBuilder<D, T>,
     metadata: TextureMetadata,
 ) -> TextureBuilder<D, T>
 where
     D: AsRef<[T]>,
     T: Pod + Copy,
 {
-    match metadata.sampler {
-        Some(sampler) => tb = tb.with_sampler(sampler),
-        _ => (),
-    }
-    match metadata.mip_levels {
-        Some(mip) => tb = tb.mip_levels(mip),
-        _ => (),
-    }
-    match metadata.size {
-        Some((w, h)) => tb = tb.with_size(w, h),
-        _ => (),
-    }
-    if metadata.dynamic {
-        tb = tb.dynamic(true);
-    }
-    match metadata.format {
-        Some(format) => tb = tb.with_format(format),
-        _ => (),
-    }
-    match metadata.channel {
-        Some(channel) => tb = tb.with_channel_type(channel),
-        _ => (),
-    }
-
     tb
+        .with_sampler(metadata.sampler)
+        .mip_levels(metadata.mip_levels)
+        .dynamic(metadata.dynamic)
+        .with_format(metadata.format)
+        .with_channel_type(metadata.channel)
 }
 
 fn create_texture_asset_from_image(
@@ -444,7 +458,7 @@ fn create_texture_asset_from_image(
     renderer: &mut Renderer,
 ) -> Result<Texture> {
     let fmt = SurfaceType::R8_G8_B8_A8;
-    let chan = options.channel.unwrap_or(ChannelType::Srgb);
+    let chan = options.channel;
     let rgba = image.rgba;
     let w = rgba.width();
     let h = rgba.height();
@@ -494,6 +508,27 @@ impl SimpleFormat<Texture> for TextureFormat {
             TextureFormat::Bmp => SimpleFormat::import(&BmpFormat, bytes, options),
             TextureFormat::Tga => SimpleFormat::import(&TgaFormat, bytes, options),
         }
+    }
+}
+
+mod serde_helper {
+    use super::SamplerInfo;
+    use tex::{FilterMethod, WrapMode};
+
+    fn default_filter() -> FilterMethod {
+        FilterMethod::Trilinear
+    }
+
+    fn default_wrap() -> WrapMode {
+        WrapMode::Clamp
+    }
+
+    pub fn default_sampler() -> SamplerInfo {
+        SamplerInfo::new(default_filter(), default_wrap())
+    }
+
+    pub fn default_mip_levels() -> u8 {
+        1
     }
 }
 

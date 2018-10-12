@@ -48,6 +48,7 @@ use amethyst::prelude::*;
 use amethyst::renderer::{
     Camera, MaterialTextureSet, PngFormat, Projection, Sprite,
     SpriteRender, SpriteSheet, SpriteSheetHandle, Texture, TextureCoordinates,
+    TextureMetadata,
 };
 ```
 
@@ -428,7 +429,7 @@ Next, we declare the function and load the image.
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::assets::{Loader, AssetStorage};
-# use amethyst::renderer::{Texture, PngFormat, TextureHandle, SpriteSheetHandle};
+# use amethyst::renderer::{Texture, PngFormat, TextureHandle, TextureMetadata, SpriteSheetHandle};
 # use amethyst::ecs::World;
 fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
     // Load the sprite sheet necessary to render the graphics.
@@ -440,7 +441,7 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
         loader.load(
             "texture/pong_spritesheet.png",
             PngFormat,
-            Default::default(),
+            TextureMetadata::srgb(),
             (),
             &texture_storage,
         )
@@ -476,7 +477,7 @@ Heading back to the code, we need to add this snippet after loading the texture.
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::assets::{Loader, AssetStorage};
-# use amethyst::renderer::{Texture, PngFormat, TextureHandle, MaterialTextureSet, SpriteSheetHandle};
+# use amethyst::renderer::{Texture, PngFormat, TextureHandle, MaterialTextureSet, SpriteSheetHandle, TextureMetadata};
 # use amethyst::ecs::World;
 # fn load_sprite_sheet(world: &mut World) {
 #   let texture_handle = {
@@ -485,7 +486,7 @@ Heading back to the code, we need to add this snippet after loading the texture.
 #       loader.load(
 #           "texture/pong_spritesheet.png",
 #           PngFormat,
-#           Default::default(),
+#           TextureMetadata::srgb(),
 #           (),
 #           &texture_storage,
 #       )
@@ -513,7 +514,7 @@ sprite sheet. Behold, texture coordinates!
 # use amethyst::prelude::*;
 # use amethyst::assets::{Loader, AssetStorage};
 # use amethyst::renderer::{Texture, PngFormat, TextureHandle, MaterialTextureSet,
-                           TextureCoordinates, Sprite, SpriteSheet, SpriteSheetHandle};
+#                          TextureCoordinates, Sprite, SpriteSheet, SpriteSheetHandle, TextureMetadata};
 # use amethyst::ecs::World;
 # const PADDLE_HEIGHT: f32 = 16.0;
 # const PADDLE_WIDTH: f32 = 4.0;
@@ -525,7 +526,7 @@ sprite sheet. Behold, texture coordinates!
 #       loader.load(
 #           "texture/pong_spritesheet.png",
 #           PngFormat,
-#           Default::default(),
+#           TextureMetadata::srgb(),
 #           (),
 #           &texture_storage,
 #       )

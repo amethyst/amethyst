@@ -561,14 +561,7 @@ fn cached_color_texture(
     cache
         .entry(key)
         .or_insert_with(|| {
-            let meta = TextureMetadata {
-                sampler: None,
-                mip_levels: Some(1),
-                size: Some((1, 1)),
-                dynamic: false,
-                format: None,
-                channel: None,
-            };
+            let meta = TextureMetadata::srgb();
             let texture_data = TextureData::Rgba(color, meta);
             loader.load_from_data(texture_data, (), storage)
         }).clone()
