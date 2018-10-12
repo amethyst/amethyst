@@ -8,7 +8,7 @@ use amethyst::{
     prelude::*,
     renderer::{
         Camera, MaterialTextureSet, PngFormat, Projection, Sprite, SpriteRender, SpriteSheet,
-        SpriteSheetHandle, Texture, TextureCoordinates,
+        SpriteSheetHandle, Texture, TextureCoordinates, TextureMetadata,
     },
 };
 
@@ -76,7 +76,7 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
         loader.load(
             "texture/pong_spritesheet.png",
             PngFormat,
-            Default::default(),
+            TextureMetadata::srgb(),
             (),
             &texture_storage,
         )

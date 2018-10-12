@@ -119,7 +119,9 @@ pub use sprite::{
 };
 pub use sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem};
 pub use system::RenderSystem;
-pub use tex::{Texture, TextureBuilder, TextureHandle};
+pub use tex::{
+    FilterMethod, SamplerInfo, SurfaceType, Texture, TextureBuilder, TextureHandle, WrapMode
+};
 pub use transparent::{
     Blend, BlendChannel, BlendValue, ColorMask, Equation, Factor, Transparent, ALPHA, REPLACE,
 };

@@ -35,7 +35,7 @@ error-chain = "0.12"
 fnv = "1.0"
 genmesh = "0.6"
 gfx = { version = "0.17.1", features = ["serialize"] }
-gfx_core = { version = "0.8", features = ["serialize"] }
+gfx_core = { version = "0.8.3", features = ["serialize"] }
 gfx_macros = "0.2"
 glsl-layout = { version = "0.1.1", features = ["cgmath", "gfx"] }
 hibitset = { version = "0.5.1", features = ["parallel"] }

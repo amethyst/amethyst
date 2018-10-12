@@ -64,7 +64,7 @@ Prefab (
                     graphics: (
                         mesh: Shape(( shape: Sphere(32, 32), )),
                         material: (
-                            albedo: Data(Rgba((0.0, 0.0, 1.0, 1.0,), (),)),
+                            albedo: Data(Rgba((0.0, 0.0, 1.0, 1.0,), (channel: Srgb),)),
                         ),
                     ),
                     transform: (
