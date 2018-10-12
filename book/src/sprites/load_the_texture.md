@@ -8,7 +8,7 @@ The following snippet shows how to load a PNG image:
 # extern crate amethyst;
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::prelude::*;
-use amethyst::renderer::{MaterialTextureSet, PngFormat, Texture, TextureHandle};
+use amethyst::renderer::{MaterialTextureSet, PngFormat, Texture, TextureMetadata, TextureHandle};
 
 pub fn load_texture<N>(name: N, world: &World) -> TextureHandle
 where
@@ -18,7 +18,7 @@ where
     loader.load(
         name,
         PngFormat,
-        Default::default(),
+        TextureMetadata::srgb(),
         (),
         &world.read_resource::<AssetStorage<Texture>>(),
     )
@@ -45,7 +45,7 @@ There are two things that may surprise you.
 
 * Firstly, you don't get back the [`Texture`][doc_tex], but a [`TextureHandle`][doc_tex_hd], which is a cloneable reference to the texture.
 
-    When you use [`loader.load(..)`][doc_load] to load an [`Asset`][doc_asset], the method returns immediately with a unique handle for your texture. The actual asset loading is handled asynchronously, so if you attempt to use the texture handle to retrieve the texture, such as with [`world.read_resource::<AssetStorage<Texture>>()`][doc_read_resource][`.get(texture_handle)`][doc_asset_get], you may get a `None` for a few seconds.
+    When you use [`loader.load(..)`][doc_load] to load an [`Asset`][doc_asset], the method returns immediately with a unique handle for your texture. The actual asset loading is handled asynchronously, so if you attempt to use the texture handle to retrieve the texture, such as with [`world.read_resource::<AssetStorage<Texture>>()`][doc_read_resource][`.get(texture_handle)`][doc_asset_get], you will get a `None` until the `Texture` has finished loading.
 
 * Secondly, you have to insert the texture into a `MaterialTextureSet`, with an arbitrary `u64` ID.
 
