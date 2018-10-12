@@ -49,10 +49,12 @@ impl<'a, 'b> SimpleState<'a, 'b> for Pong {
 
 The `SimpleState` already implements a bunch of stuff for us, like the `update` 
 and `handle_event` methods that you would have to implement yourself were you 
-using just a simple `State`. In particular, the default implementation for
+using just a regular `State`. In particular, the default implementation for
 `handle_event` returns `Trans::Quit` when a close signal is received
 from your operating system, like when you press the close button in your graphical
-environment. This allows the application to quit as needed.
+environment. This allows the application to quit as needed. The default 
+implementation for `update` then just returns `Trans::None`, signifying that
+nothing is supposed to happen.
 
 Now that we know we can quit, let's add some code to actually get things
 started! We'll start with our `main` function, and we'll have it return a
