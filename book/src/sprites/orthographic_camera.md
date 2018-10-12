@@ -2,12 +2,12 @@
 
 Finally, you need to tell Amethyst to draw in 2D space. This is done by creating an entity with a `Camera` component using orthographic projection. For more information about orthographic projection, refer to the [OpenGL documentation][opengl_ortho].
 
-The following snippet demonstrates how to set up a `Camera` that sees entities within screen bounds, without culling entities based on Z position:
+The following snippet demonstrates how to set up a `Camera` that sees entities within screen bounds, where the entities' Z position is between -10.0 and 10.0:
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
-use amethyst::core::cgmath::{Matrix4, Ortho, Vector3};
-use amethyst::core::transform::GlobalTransform;
+use amethyst::core::cgmath::{Ortho, Vector3};
+use amethyst::core::transform::Transform;
 # use amethyst::prelude::*;
 use amethyst::renderer::{
     Camera, Projection, ScreenDimensions
@@ -31,34 +31,22 @@ impl ExampleState {
             (dim.width(), dim.height())
         };
 
-        // Camera translation from origin.
-        //
-        // The Z coordinate of the camera is how far along it should be before it faces
-        // the entities. If an entity's Z coordinate is greater than the camera's Z
-        // coordinate, it will be culled.
-        //
-        // By using `::std::f32::MAX` here, we ensure that all entities will be in the
-        // camera's view.
-        let translation = Matrix4::from_translation(Vector3::new(
-            0.0,
-            0.0,
-            ::std::f32::MAX,
-        ));
-        let global_transform = GlobalTransform(translation);
+        // Translate the camera to Z coordinate 10.0, and it looks back toward
+        // the origin with depth 20.0
+        let mut transform = Transform::default();
+        transform.translation = Vector3::new(0., 0., 10.);
 
         let camera = world
             .create_entity()
+            .with(transform)
             .with(Camera::from(Projection::Orthographic(Ortho {
                 left: 0.0,
                 right: width,
                 top: height,
                 bottom: 0.0,
                 near: 0.0,
-                // The distance that the camera can see. Since the camera is moved to
-                // the maximum Z position, we also need to give it maximum Z viewing
-                // distance to ensure it can see all entities in front of it.
-                far: ::std::f32::MAX,
-            }))).with(global_transform)
+                far: 20.0,
+            })))
             .build();
     }
 }
