@@ -1,6 +1,6 @@
 //! Provides components and systems to create an in game user interface.
 
-#![deny(missing_docs)]
+#![warn(missing_docs)]
 #![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
 
 extern crate amethyst_assets;

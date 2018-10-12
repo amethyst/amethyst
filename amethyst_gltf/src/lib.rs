@@ -1,6 +1,6 @@
 //! A crate for loading GLTF format scenes into Amethyst
 
-#![deny(missing_docs)]
+#![warn(missing_docs)]
 
 extern crate amethyst_animation as animation;
 extern crate amethyst_assets as assets;

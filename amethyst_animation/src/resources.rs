@@ -136,7 +136,7 @@ where
 /// Only required for animations which target more than a single node or entity.
 #[derive(Debug, Clone)]
 pub struct AnimationHierarchy<T> {
-    /// The nodes controlled by this
+    /// A mapping between indices and entities
     pub nodes: FnvHashMap<usize, Entity>,
     m: marker::PhantomData<T>,
 }

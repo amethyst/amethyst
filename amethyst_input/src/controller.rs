@@ -20,13 +20,17 @@ pub enum ControllerAxis {
 /// Controller buttons matching SDL controller model
 #[derive(Eq, PartialEq, Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum ControllerButton {
-    /// The A button, typically green and on the right side of the controller.
+    /// The A button, typically the lower button in the "diamond" of buttons on the right side
+    /// of the controller.
     A,
-    /// The B button, typically red and on the right side of the controller.
+    /// The B button, typically the right button in the "diamond" of buttons on the right side
+    /// of the controller.
     B,
-    /// The X button, typically blue and on the right side of the controller.
+    /// The X button, typically the left button in the "diamond" of buttons on the right side
+    /// of the controller.
     X,
-    /// The Y button, typically yellow and on the right side of the controller.
+    /// The Y button, typically the top button in the "diamond" of buttons on the right side
+    /// of the controller.
     Y,
     /// The dpad button pointed towards the player
     DPadDown,
@@ -36,9 +40,9 @@ pub enum ControllerButton {
     DPadRight,
     /// The dpad button pointed away from the player.
     DPadUp,
-    /// The digital left shoulder bumper.  Usually located above the left trigger.
+    /// The digital left shoulder bumper. Usually located above the left trigger.
     LeftShoulder,
-    /// The digital right shoulder bumper.  Usually located above the right trigger.
+    /// The digital right shoulder bumper. Usually located above the right trigger.
     RightShoulder,
     /// If your press the left analog stick into the controller this button is pressed.
     LeftStick,
@@ -48,7 +52,7 @@ pub enum ControllerButton {
     Back,
     /// The start button is typically a button slightly right of center with a rightward arrow on it.
     Start,
-    /// The centermost button on the controller.  Large and green on an Xbox controller.
+    /// The centermost button on the controller. Large and green on an Xbox controller.
     Guide,
 }
 

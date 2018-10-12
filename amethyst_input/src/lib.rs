@@ -1,5 +1,5 @@
 //! A collection of abstractions for various input devices to be used with Amethyst.
-#![deny(missing_docs)]
+#![warn(missing_docs)]
 
 extern crate amethyst_config;
 extern crate amethyst_core;

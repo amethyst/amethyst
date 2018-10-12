@@ -1,7 +1,7 @@
 //! # amethyst_locale
 //!
 //! Localisation binding a `Fluent` file to an Asset<Locale> via the use of amethyst_assets.
-#![deny(missing_docs)]
+#![warn(missing_docs)]
 
 extern crate amethyst_assets;
 extern crate amethyst_core;

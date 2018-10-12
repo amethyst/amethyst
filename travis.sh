@@ -1,7 +1,7 @@
 MDBOOK_RELEASE="v0.2.1/mdbook-v0.2.1-x86_64-unknown-linux-gnu.tar.gz"
 
 echo "Build and test without profiler"
-cargo test --all -v || exit 1
+cargo test --all -v -- --deny missing_docs || exit 1
 
 if [ ${TRAVIS_OS_NAME} = "linux" ]
 then
@@ -15,7 +15,7 @@ then
 fi
 
 echo "Build and test with profiler"
-cargo test --all --features profiler -v || exit 3
+cargo test --all --features profiler -v -- --deny missing_docs || exit 3
 
 echo "Build and test with sdl_controller"
-cargo test --all --features sdl_controller -v || exit 4
+cargo test --all --features sdl_controller -v -- --deny missing_docs || exit 4

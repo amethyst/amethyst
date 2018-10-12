@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Added
 * Added base networking implementation and the `amethyst_network` crate. ([#969])
 * Support for debug lines using `DebugLines` pass, and `DebugLines` component or resource. ([#917], [#957])
-* Added JsonFormat ([#950]). 
+* Added JsonFormat ([#950]).
 * `SpriteRender` pass to draw sprites without using `Material` and `Mesh`. ([#829], [#830])
 * Sprite animation uses the `SpriteRenderChannel`. ([#829], [#830])
 * State::handle_event can now handle multiple types of events. ([#887])

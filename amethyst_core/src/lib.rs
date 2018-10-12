@@ -1,6 +1,6 @@
 //! A collection of structures and functions useful across the entire amethyst project.
 
-#![deny(missing_docs)]
+#![warn(missing_docs)]
 
 #[macro_use]
 pub extern crate cgmath;

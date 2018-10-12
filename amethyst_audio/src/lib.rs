@@ -1,4 +1,4 @@
-#![deny(missing_docs)]
+#![warn(missing_docs)]
 
 //! Loading and playing of audio files.
 extern crate amethyst_assets;
