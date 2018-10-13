@@ -53,7 +53,7 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
         loader.load(
             "texture/pong_spritesheet.png",
             PngFormat,
-            TextureMetadata::srgb().with_filter(FilterMethod::Scale),
+            TextureMetadata::srgb_scale(),
             (),
             &texture_storage,
         )

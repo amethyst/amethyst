@@ -70,6 +70,15 @@ impl TextureMetadata {
         }
     }
 
+    /// Creates texture metadata for `Srgb` texture but without texture filtering. This is usually
+    /// the case for color textures for 2D sprites and pixel art textures.
+    ///
+    /// For the values of all the other fields please refer to the documentation of the respective
+    /// field.
+    pub fn srgb_scale() -> Self {
+        TextureMetadata::srgb().with_filter(FilterMethod::Scale)
+    }
+
     /// Sampler info
     pub fn with_sampler(mut self, info: SamplerInfo) -> Self {
         self.sampler = info;

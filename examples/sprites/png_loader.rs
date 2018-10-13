@@ -18,7 +18,7 @@ where
     loader.load(
         name,
         PngFormat,
-        TextureMetadata::srgb(),
+        TextureMetadata::srgb_scale(),
         (),
         &world.read_resource::<AssetStorage<Texture>>(),
     )

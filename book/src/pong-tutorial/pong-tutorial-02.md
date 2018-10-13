@@ -441,7 +441,7 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
         loader.load(
             "texture/pong_spritesheet.png",
             PngFormat,
-            TextureMetadata::srgb(),
+            TextureMetadata::srgb_scale(),
             (),
             &texture_storage,
         )
@@ -486,7 +486,7 @@ Heading back to the code, we need to add this snippet after loading the texture.
 #       loader.load(
 #           "texture/pong_spritesheet.png",
 #           PngFormat,
-#           TextureMetadata::srgb(),
+#           TextureMetadata::srgb_scale(),
 #           (),
 #           &texture_storage,
 #       )
@@ -526,7 +526,7 @@ sprite sheet. Behold, texture coordinates!
 #       loader.load(
 #           "texture/pong_spritesheet.png",
 #           PngFormat,
-#           TextureMetadata::srgb(),
+#           TextureMetadata::srgb_scale(),
 #           (),
 #           &texture_storage,
 #       )
@@ -656,7 +656,7 @@ Next we simply add the components to the paddle entities:
 #   sprite_number: 0,
 #   flip_horizontal: true,
 #   flip_vertical: false,
-# }; 
+# };
 // Create a left plank entity.
 world
     .create_entity()
