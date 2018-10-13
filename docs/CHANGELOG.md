@@ -67,6 +67,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `LMenu` and `RMenu` key codes, following the `winit` update. ([#906])
 
 ### Fixed
+* Fixed single frame animation ([#781])
 * Material ids in GLTF loader caused multiple GLTF files to get incorrect materials applied. ([#915])
 * Fix render gamma for most textures. ([#868])
 * Joint entities can only be part of a single skin: Materials are not swapped anymore. ([#933])
