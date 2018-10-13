@@ -20,6 +20,7 @@ pub struct VertexSkinningSystem {
 }
 
 impl VertexSkinningSystem {
+    /// Creates a new `VertexSkinningSystem`
     pub fn new() -> Self {
         Self {
             updated: BitSet::new(),
@@ -40,11 +41,17 @@ impl<'a> System<'a> for VertexSkinningSystem {
 
     fn run(&mut self, (joints, global_transforms, mut skins, mut matrices): Self::SystemData) {
         self.updated.clear();
-        global_transforms
-            .populate_modified(&mut self.updated_id.as_mut().unwrap(), &mut self.updated);
-        global_transforms
-            .populate_inserted(&mut self.inserted_id.as_mut().unwrap(), &mut self.updated);
+
+        global_transforms.populate_modified(
+            &mut self.updated_id.as_mut().expect("VertexSkinningSystem missing updated_id."), 
+            &mut self.updated);
+
+        global_transforms.populate_inserted(
+            &mut self.inserted_id.as_mut().expect("VertexSkinningSystem missing inserted_id."), 
+            &mut self.updated);
+
         self.updated_skins.clear();
+
         for (_, joint) in (&self.updated, &joints).join() {
             for skin in &joint.skins {
                 self.updated_skins.add(skin.id());

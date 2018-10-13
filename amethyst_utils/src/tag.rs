@@ -1,3 +1,5 @@
+//! Provides a small simple tag component for identifying entities.
+
 use amethyst_assets::{PrefabData, PrefabError};
 use amethyst_core::specs::prelude::{
     Component, Entities, Entity, Join, NullStorage, ReadStorage, WriteStorage,
@@ -47,7 +49,9 @@ pub struct TagFinder<'a, T>
 where
     T: Send + Sync + 'static,
 {
+    /// The `EntitiesRes` from the ECS used to lookup tags.
     pub entities: Entities<'a>,
+    /// The component storage for the tags being searched.
     pub tags: ReadStorage<'a, Tag<T>>,
 }
 
@@ -55,6 +59,7 @@ impl<'a, T> TagFinder<'a, T>
 where
     T: Send + Sync + 'static,
 {
+    /// Returns the first entity found with the tag in question.
     pub fn find(&self) -> Option<Entity> {
         (&*self.entities, &self.tags)
             .join()

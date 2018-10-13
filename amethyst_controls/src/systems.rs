@@ -32,6 +32,7 @@ where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
+    /// Builds a new `FlyMovementSystem` using the provided speeds and axis controls.
     pub fn new(
         speed: f32,
         right_input_axis: Option<A>,
@@ -105,6 +106,10 @@ impl<'a> System<'a> for ArcBallRotationSystem {
 
 /// The system that manages the view rotation.
 /// Controlled by the mouse.
+/// Goes into an inactive state if the window is not focused (`WindowFocus` resource).
+/// 
+/// Can be manually disabled by making the mouse visible using the `HideCursor` resource: 
+/// `HideCursor.hide = false`
 pub struct FreeRotationSystem<A, B> {
     sensitivity_x: f32,
     sensitivity_y: f32,
@@ -114,6 +119,7 @@ pub struct FreeRotationSystem<A, B> {
 }
 
 impl<A, B> FreeRotationSystem<A, B> {
+    /// Builds a new `FreeRotationSystem` with the specified mouse sensitivity values.
     pub fn new(sensitivity_x: f32, sensitivity_y: f32) -> Self {
         FreeRotationSystem {
             sensitivity_x,
@@ -135,12 +141,13 @@ where
         WriteStorage<'a, Transform>,
         ReadStorage<'a, FlyControlTag>,
         Read<'a, WindowFocus>,
+        Read<'a, HideCursor>,
     );
 
-    fn run(&mut self, (events, mut transform, tag, focus): Self::SystemData) {
+    fn run(&mut self, (events, mut transform, tag, focus, hide): Self::SystemData) {
         let focused = focus.is_focused;
         for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
-            if focused {
+            if focused && hide.hide {
                 match *event {
                     Event::DeviceEvent { ref event, .. } => match *event {
                         DeviceEvent::MouseMotion { delta: (x, y) } => {
@@ -171,6 +178,7 @@ pub struct MouseFocusUpdateSystem {
 }
 
 impl MouseFocusUpdateSystem {
+    /// Builds a new MouseFocusUpdateSystem.
     pub fn new() -> MouseFocusUpdateSystem {
         MouseFocusUpdateSystem { event_reader: None }
     }
@@ -207,6 +215,7 @@ pub struct CursorHideSystem {
 }
 
 impl CursorHideSystem {
+    /// Constructs a new CursorHideSystem
     pub fn new() -> CursorHideSystem {
         CursorHideSystem { is_hidden: false }
     }

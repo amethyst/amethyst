@@ -81,6 +81,7 @@ use std::borrow::Cow;
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Named {
+    /// The name of the entity this component is attached to.
     pub name: Cow<'static, str>,
 }
 

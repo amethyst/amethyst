@@ -1,3 +1,5 @@
+//! Allows you to automatically delete an entity after a set time has elapsed.
+
 use amethyst_core::specs::{
     Component, DenseVecStorage, Entities, Join, Read, ReadStorage, System, WriteStorage,
 };

@@ -1,3 +1,5 @@
+//! Provides a automatically resized orthographic camera.
+
 use amethyst_core::cgmath::Ortho;
 use amethyst_core::specs::{
     Component, DenseVecStorage, Join, ReadExpect, ReadStorage, System, WriteStorage,
@@ -18,6 +20,7 @@ pub struct CameraNormalOrtho {
 }
 
 impl CameraNormalOrtho {
+    /// Returns the camera matrix offsets according to the internal mode.
     pub fn camera_offsets(&self, ratio: f32) -> (f32, f32, f32, f32) {
         self.mode.camera_offsets(ratio)
     }
@@ -51,7 +54,11 @@ pub enum CameraNormalizeMode {
     ///
     /// If you want the whole world space between (0, 0) and (1, 1) to be shown at ALL times, consider using
     /// `CameraNormalizeMode::Contain` instead.
-    Lossy { stretch_direction: Axis2 },
+    Lossy {
+        /// The direction along which the camera will stretch and possibly have a length not equal
+        /// to one.
+        stretch_direction: Axis2,
+    },
 
     /// Scales the render dynamically to ensure no space is lost in the [0,1] range on any axis.
     /// In other words, this ensures that you can always at least see everything
@@ -159,7 +166,7 @@ mod test {
         let y = mat4.w.z; // c3r2
         let near = (y + 1.0) / x;
         let far = (x - 1.0) / y;
-    
+
         assert_ulps_eq!((near as f32 * 100.0).round() / 100.0, 0.1);
         assert_ulps_eq!((far as f32 * 100.0).round() / 100.0, 2000.0);
     }*/

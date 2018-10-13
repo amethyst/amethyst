@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Added
 * Added base networking implementation and the `amethyst_network` crate. ([#969])
 * Support for debug lines using `DebugLines` pass, and `DebugLines` component or resource. ([#917], [#957])
-* Added JsonFormat ([#950]). 
+* Added JsonFormat ([#950]).
 * `SpriteRender` pass to draw sprites without using `Material` and `Mesh`. ([#829], [#830])
 * Sprite animation uses the `SpriteRenderChannel`. ([#829], [#830])
 * State::handle_event can now handle multiple types of events. ([#887])
@@ -28,9 +28,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * New vertices() method on MeshCreator trait. ([#946])
 * Support for text alignment (align left, center, right). ([#965])
 * Support for multiline text. ([#965])
+* Added AntiStorage documentation to the book. ([#997])
+* You can now stop the rotation of the FreeRotationSystem by setting HideCursor.hide value to false. ([#997])
 * Support for logging to file, toggle for logging to stdout. ([#976], [#994])
+* Added a `Hidden` Component, that hides a single entity, and a HideHierarchySystem that toggles `Hidden` on all children when used. ([#1001])
+* Documentation for drawing sprites. ([#971])
 * Added `shadow_update()` and `shadow_fixed_update()` to the `State` trait. ([#1006])
-
+* Added configurable width for debug lines ([#1016])
 
 ### Changed
 * Sprites contain their dimensions and offsets to render them with the right size and desired position. ([#829], [#830])
@@ -96,12 +100,16 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#964]: https://github.com/amethyst/amethyst/pull/964
 [#965]: https://github.com/amethyst/amethyst/pull/965
 [#969]: https://github.com/amethyst/amethyst/pull/969
+[#971]: https://github.com/amethyst/amethyst/pull/971
 [#974]: https://github.com/amethyst/amethyst/pull/974
 [#976]: https://github.com/amethyst/amethyst/pull/976
 [#981]: https://github.com/amethyst/amethyst/pull/981
 [#994]: https://github.com/amethyst/amethyst/pull/994
+[#997]: https://github.com/amethyst/amethyst/pull/997
+[#1001]: https://github.com/amethyst/amethyst/pull/1001
 [#1006]: https://github.com/amethyst/amethyst/pull/1006
 [#1008]: https://github.com/amethyst/amethyst/pull/1008
+[#1016]: https://github.com/amethyst/amethyst/pull/1016
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
 

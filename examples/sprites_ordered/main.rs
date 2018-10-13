@@ -14,16 +14,16 @@ mod sprite_sheet_loader;
 use amethyst::{
     assets::{AssetStorage, Loader},
     core::{
-        cgmath::{Matrix4, Ortho, Point3, Transform as CgTransform, Vector3},
-        transform::{GlobalTransform, Transform, TransformBundle},
+        cgmath::{Ortho, Point3, Transform as CgTransform, Vector3},
+        transform::{Transform, TransformBundle},
     },
     ecs::prelude::Entity,
     input::{get_key, is_close_requested, is_key_down},
     prelude::*,
     renderer::{
-        Camera, ColorMask, DepthMode, DisplayConfig, DrawSprite, ElementState, MaterialTextureSet,
-        Pipeline, Projection, RenderBundle, ScreenDimensions, SpriteRender, SpriteSheet,
-        SpriteSheetHandle, Stage, Transparent, VirtualKeyCode, ALPHA,
+        Camera, ColorMask, DepthMode, DisplayConfig, DrawSprite, ElementState, Hidden,
+        MaterialTextureSet, Pipeline, Projection, RenderBundle, ScreenDimensions, SpriteRender,
+        SpriteSheet, SpriteSheetHandle, Stage, Transparent, VirtualKeyCode, ALPHA,
     },
     utils::application_root_dir,
 };
@@ -48,6 +48,8 @@ struct Example {
     entities: Vec<Entity>,
     /// Whether or not to add the transparent component to the entities
     transparent: bool,
+    /// Whether or not to add the hidden component to the entities
+    hidden: bool,
     /// Whether or not to reverse the Z coordinates of the entities
     ///
     /// Non-reversed means left most entity has Z: 0, and Z increases by 1.0 for each entity to the
@@ -75,6 +77,7 @@ impl Example {
             camera: None,
             entities: Vec::new(),
             transparent: true,
+            hidden: false,
             reverse: false,
             loaded_sprite_sheet: None,
             camera_z: 0.0,
@@ -126,6 +129,15 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                         } else {
                             "normal. Left most sprite has Z: 0, increasing to the right."
                         }
+                    );
+                    self.redraw_sprites(&mut data.world);
+                }
+
+                Some((VirtualKeyCode::E, ElementState::Pressed)) => {
+                    self.hidden = !self.hidden;
+                    info!(
+                        "Sprites are {}",
+                        if self.hidden { "hidden" } else { "visible" }
                     );
                     self.redraw_sprites(&mut data.world);
                 }
@@ -194,15 +206,15 @@ impl Example {
             (dim.width(), dim.height())
         };
 
+        let mut camera_transform = Transform::default();
+        camera_transform.translation = Vector3::new(0., 0., self.camera_z);
+
         let camera = world
             .create_entity()
-            .with(GlobalTransform(Matrix4::from_translation(
-                Vector3::new(0.0, 0.0, self.camera_z).into(),
-            )))
+            .with(camera_transform)
             // Define the view that the camera can see. It makes sense to keep the `near` value as
             // 0.0, as this means it starts seeing anything that is 0 units in front of it. The
-            // `far` value is the distance the camera can see facing the origin. You can use
-            // `::std::f32::MAX` to indicate that it has practically unlimited depth vision.
+            // `far` value is the distance the camera can see facing the origin.
             .with(Camera::from(Projection::Orthographic(Ortho {
                 left: 0.0,
                 right: width,
@@ -291,14 +303,15 @@ impl Example {
                 // Render info of the default sprite
                 .with(sprite_render)
                 // Shift sprite to some part of the window
-                .with(sprite_transform)
-                // Used by the engine to compute and store the rendered position.
-                .with(GlobalTransform::default());
+                .with(sprite_transform);
 
             // The `Transparent` component indicates that the pixel color should blend instead of
             // replacing the existing drawn pixel.
             if self.transparent {
                 entity_builder = entity_builder.with(Transparent);
+            }
+            if self.hidden {
+                entity_builder = entity_builder.with(Hidden);
             }
 
             // Store the entity

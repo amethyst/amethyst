@@ -129,6 +129,8 @@ impl<'a> System<'a> for UiEventHandlerSystem {
         if self.reader_id.is_none() {
             self.reader_id = Some(events.register_reader());
         }
+
+        // Reader id was just initialized above if empty
         for ev in events.read(self.reader_id.as_mut().unwrap()) {
             info!("[SYSTEM] You just interacted with a ui element: {:?}", ev);
         }

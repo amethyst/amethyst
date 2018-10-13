@@ -6,7 +6,7 @@ A component is any struct that can be "attached" to an `Entity` (which we will c
 
 ## Usage
 
-The relationship between an entity and a component closely ressembles the relation between a real-life object and its properties.
+The relationship between an entity and a component closely resembles the relation between a real-life object and its properties.
 
 For example, a bottle of water has a shape, a volume, a color and is made of a material (usually plastic).
 
@@ -48,9 +48,9 @@ impl Component for Content {
 }
 ```
 
-## Storages?
+## Storages
 
-`Component`s, in contrast with popular belief, should not be stored directly inside of a `Entity`.
+`Component`s, in contrast with popular belief, should not be stored directly inside of an `Entity`.
 
 They are instead stored in different types of `Storage`, which all have different performance strategies.
 
@@ -58,13 +58,17 @@ When implementing `Component` for a type, you have to specify which storage stra
 
 Here's a comparison of the most used ones:
 
-* `DenseVecStorage`: Elements are stored in a contiguous array. No empty space is left between `Component`s, allowing a lowered memory usage.
-  This is less performant than `VecStorage`.
-* `VecStorage`: Elements are stored into a contiguous array. Uses more memory than `DenseVecStorage` but is more performant when you use a `Component` type a lot.
-  Only use this when you know that a LOT of your entities are going to have that `Component` type. (More than 90%, for example).
+* `DenseVecStorage`: Elements are stored in a contiguous array. No empty space is left between `Component`s,
+  allowing a lowered memory usage for big components.
+* `VecStorage`: Elements are stored into a sparse array. If your component is small (<= 16 bytes) or is carried by most
+  entities, this is preferable over `DenseVecStorage`.
 * `FlaggedStorage`: Used to keep track of changes of a component. Useful for caching purposes.
 
 For more information, see the [specs storage reference](https://docs.rs/specs/latest/specs/storage/index.html).
+
+There are a bunch more storages, and deciding which one is the best isn't trivial and should be done based on careful
+benchmarking. If you don't know which one you should use, `DenseVecStorage` is a good default. It will need more memory
+than `VecStorage` for pointer-sized components, but it will perform well for most scenarios.
 
 ## Tags
 

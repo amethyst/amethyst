@@ -49,6 +49,10 @@ impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
         // Setup debug lines as a resource
         data.world
             .add_resource(DebugLines::new().with_capacity(100));
+        // Configure width of lines. Optional step
+        data.world.add_resource(DebugLinesParams {
+            line_width: 1.0 / 400.0,
+        });
 
         // Setup debug lines as a component and add lines to render axis&grid
         let mut debug_lines_component = DebugLinesComponent::new().with_capacity(100);
@@ -157,12 +161,14 @@ fn main() -> amethyst::Result<()> {
         Some(String::from("move_x")),
         Some(String::from("move_y")),
         Some(String::from("move_z")),
-    ).with_sensitivity(0.1, 0.1);
+    )
+    .with_sensitivity(0.1, 0.1);
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
-        )?.with(ExampleLinesSystem, "example_lines_system", &[])
+        )?
+        .with(ExampleLinesSystem, "example_lines_system", &[])
         .with_bundle(fly_control_bundle)?
         .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_bundle(RenderBundle::new(pipe, Some(config)))?;

@@ -13,14 +13,18 @@ use winit::{MouseButton, VirtualKeyCode};
 pub enum InputEvent<T> {
     /// A key was pressed down, sent exactly once per key press.
     KeyPressed {
+        /// The `VirtualKeyCode`, used for semantic info. i.e. "W" was pressed
         #[serde(with = "LocalVirtualKeyCode")]
         key_code: VirtualKeyCode,
+        /// The scancode, used for positional info. i.e. The third key on the first row was pressed.
         scancode: u32,
     },
     /// A key was released, sent exactly once per key release.
     KeyReleased {
+        /// The `VirtualKeyCode`, used for semantic info. i.e. "W" was released
         #[serde(with = "LocalVirtualKeyCode")]
         key_code: VirtualKeyCode,
+        /// The scancode, used for positional info. i.e. The third key on the first row was released.
         scancode: u32,
     },
     /// A unicode character was received by the window.  Good for typing.
@@ -34,31 +38,54 @@ pub enum InputEvent<T> {
     /// A button was released.
     ButtonReleased(Button),
     /// The mouse pointer moved on screen
-    CursorMoved { delta_x: f64, delta_y: f64 },
+    CursorMoved {
+        /// The amount the cursor moved horizontally in pixels.
+        delta_x: f64,
+        /// The amount the cursor moved vertically in pixels.
+        delta_y: f64,
+    },
     /// The mouse device moved.  Use this for any use of the mouse that doesn't involve a standard mouse pointer.
-    MouseMoved { delta_x: f64, delta_y: f64 },
+    MouseMoved {
+        /// The amount the mouse moved horizontally.
+        delta_x: f64,
+        /// The amount the mouse moved vertically.
+        delta_y: f64,
+    },
     /// The mousewheel was moved in either direction
     MouseWheelMoved(ScrollDirection),
     /// A controller Axis was moved.
     ControllerAxisMoved {
+        /// The id for the controller whose axis moved.
         which: u32,
+        /// The axis that moved on the controller.
         axis: ControllerAxis,
+        /// The amount that the axis moved.
         value: f64,
     },
     ///  A controller button was pressed.
     ControllerButtonPressed {
+        /// The id for the controller whose button was pressed.
         which: u32,
+        /// The button that was pressed.
         button: ControllerButton,
     },
     ///  A controller button was released.
     ControllerButtonReleased {
+        /// The id for the controller whose button was released.
         which: u32,
+        /// The button that was released.
         button: ControllerButton,
     },
     /// New controller was connected.
-    ControllerConnected { which: u32 },
+    ControllerConnected {
+        /// The id for the controller connected.
+        which: u32,
+    },
     /// Controller was disconnected, it's id might be reused later.
-    ControllerDisconnected { which: u32 },
+    ControllerDisconnected {
+        /// The id for the controller disconnected.
+        which: u32,
+    },
     /// The associated action had one of its keys pressed.
     ActionPressed(T),
     /// The associated action had one of its keys released.

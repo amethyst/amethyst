@@ -378,12 +378,20 @@ where
             ref mut textures,
             ref mut sounds,
         ) = system_data;
-        let normal_image = self.normal_image.add_to_entity(entity, textures, entity_set)?;
-        let hover_image = self.hover_image.add_to_entity(entity, textures, entity_set)?;
-        let press_image = self.press_image.add_to_entity(entity, textures, entity_set)?;
+        let normal_image = self
+            .normal_image
+            .add_to_entity(entity, textures, entity_set)?;
+        let hover_image = self
+            .hover_image
+            .add_to_entity(entity, textures, entity_set)?;
+        let press_image = self
+            .press_image
+            .add_to_entity(entity, textures, entity_set)?;
         let hover_sound = self.hover_sound.add_to_entity(entity, sounds, entity_set)?;
         let press_sound = self.press_sound.add_to_entity(entity, sounds, entity_set)?;
-        let release_sound = self.release_sound.add_to_entity(entity, sounds, entity_set)?;
+        let release_sound = self
+            .release_sound
+            .add_to_entity(entity, sounds, entity_set)?;
         buttons.insert(
             entity,
             UiButton::new(

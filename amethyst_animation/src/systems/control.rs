@@ -42,6 +42,7 @@ impl<I, T> AnimationControlSystem<I, T>
 where
     I: Eq + Hash,
 {
+    /// Creates a new `AnimationControlSystem`
     pub fn new() -> Self {
         AnimationControlSystem {
             m: marker::PhantomData,
