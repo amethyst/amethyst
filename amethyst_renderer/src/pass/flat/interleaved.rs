@@ -9,6 +9,7 @@ use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
+use hidden::{Hidden, HiddenPropagate};
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
 use pass::util::{draw_mesh, get_camera, setup_textures, VertexArgs};
@@ -68,6 +69,8 @@ where
         Read<'a, AssetStorage<Texture>>,
         ReadExpect<'a, MaterialDefaults>,
         Option<Read<'a, Visibility>>,
+        ReadStorage<'a, Hidden>,
+        ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
@@ -107,6 +110,8 @@ where
             tex_storage,
             material_defaults,
             visibility,
+            hidden,
+            hidden_prop,
             mesh,
             material,
             global,
@@ -116,7 +121,9 @@ where
 
         match visibility {
             None => {
-                for (mesh, material, global) in (&mesh, &material, &global).join() {
+                for (mesh, material, global, _, _) in
+                    (&mesh, &material, &global, !&hidden, !&hidden_prop).join()
+                {
                     draw_mesh(
                         encoder,
                         effect,

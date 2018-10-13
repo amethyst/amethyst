@@ -9,6 +9,7 @@ use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
+use hidden::{Hidden, HiddenPropagate};
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
 use pass::skinning::{create_skinning_effect, setup_skinning_buffers};
@@ -76,6 +77,8 @@ impl<'a> PassData<'a> for DrawFlatSeparate {
         Read<'a, AssetStorage<Texture>>,
         ReadExpect<'a, MaterialDefaults>,
         Option<Read<'a, Visibility>>,
+        ReadStorage<'a, Hidden>,
+        ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
@@ -129,6 +132,8 @@ impl Pass for DrawFlatSeparate {
             tex_storage,
             material_defaults,
             visibility,
+            hidden,
+            hidden_prop,
             mesh,
             material,
             global,
@@ -139,8 +144,15 @@ impl Pass for DrawFlatSeparate {
 
         match visibility {
             None => {
-                for (joint, mesh, material, global) in
-                    (joints.maybe(), &mesh, &material, &global).join()
+                for (joint, mesh, material, global, _, _) in (
+                    joints.maybe(),
+                    &mesh,
+                    &material,
+                    &global,
+                    !&hidden,
+                    !&hidden_prop,
+                )
+                    .join()
                 {
                     draw_mesh(
                         encoder,

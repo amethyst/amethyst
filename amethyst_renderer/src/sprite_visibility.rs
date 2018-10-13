@@ -6,6 +6,7 @@ use amethyst_core::GlobalTransform;
 use hibitset::BitSet;
 
 use cam::{ActiveCamera, Camera};
+use hidden::{Hidden, HiddenPropagate};
 use transparent::Transparent;
 
 /// Resource for controlling what entities should be rendered, and whether to draw them ordered or
@@ -51,6 +52,8 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
     type SystemData = (
         Entities<'a>,
         Write<'a, SpriteVisibility>,
+        ReadStorage<'a, Hidden>,
+        ReadStorage<'a, HiddenPropagate>,
         Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Transparent>,
@@ -59,8 +62,8 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
 
     fn run(
         &mut self,
-        (entities, mut visibility, active, camera, transparent, global): Self::SystemData,
-    ) {
+        (entities, mut visibility, hidden, hidden_prop, active, camera, transparent, global): Self::SystemData,
+){
         let origin = Point3::origin();
 
         // The camera position is used to determine culling, but the sprites are ordered based on
@@ -77,9 +80,9 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
 
         self.centroids.clear();
         self.centroids.extend(
-            (&*entities, &global)
+            (&*entities, &global, !&hidden, !&hidden_prop)
                 .join()
-                .map(|(entity, global)| (entity, global.0.transform_point(origin)))
+                .map(|(entity, global, _, _)| (entity, global.0.transform_point(origin)))
                 .map(|(entity, centroid)| Internals {
                     entity,
                     transparent: transparent.contains(entity),

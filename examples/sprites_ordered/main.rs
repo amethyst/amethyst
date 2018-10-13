@@ -21,9 +21,9 @@ use amethyst::{
     input::{get_key, is_close_requested, is_key_down},
     prelude::*,
     renderer::{
-        Camera, ColorMask, DepthMode, DisplayConfig, DrawSprite, ElementState, MaterialTextureSet,
-        Pipeline, Projection, RenderBundle, ScreenDimensions, SpriteRender, SpriteSheet,
-        SpriteSheetHandle, Stage, Transparent, VirtualKeyCode, ALPHA,
+        Camera, ColorMask, DepthMode, DisplayConfig, DrawSprite, ElementState, Hidden,
+        MaterialTextureSet, Pipeline, Projection, RenderBundle, ScreenDimensions, SpriteRender,
+        SpriteSheet, SpriteSheetHandle, Stage, Transparent, VirtualKeyCode, ALPHA,
     },
     utils::application_root_dir,
 };
@@ -48,6 +48,8 @@ struct Example {
     entities: Vec<Entity>,
     /// Whether or not to add the transparent component to the entities
     transparent: bool,
+    /// Whether or not to add the hidden component to the entities
+    hidden: bool,
     /// Whether or not to reverse the Z coordinates of the entities
     ///
     /// Non-reversed means left most entity has Z: 0, and Z increases by 1.0 for each entity to the
@@ -75,6 +77,7 @@ impl Example {
             camera: None,
             entities: Vec::new(),
             transparent: true,
+            hidden: false,
             reverse: false,
             loaded_sprite_sheet: None,
             camera_z: 0.0,
@@ -126,6 +129,15 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                         } else {
                             "normal. Left most sprite has Z: 0, increasing to the right."
                         }
+                    );
+                    self.redraw_sprites(&mut data.world);
+                }
+
+                Some((VirtualKeyCode::E, ElementState::Pressed)) => {
+                    self.hidden = !self.hidden;
+                    info!(
+                        "Sprites are {}",
+                        if self.hidden { "hidden" } else { "visible" }
                     );
                     self.redraw_sprites(&mut data.world);
                 }
@@ -297,6 +309,9 @@ impl Example {
             // replacing the existing drawn pixel.
             if self.transparent {
                 entity_builder = entity_builder.with(Transparent);
+            }
+            if self.hidden {
+                entity_builder = entity_builder.with(Hidden);
             }
 
             // Store the entity
