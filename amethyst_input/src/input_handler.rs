@@ -396,6 +396,7 @@ where
         self.connected_controllers.iter().map(|ids| ids.0)
     }
 
+    /// Returns true if a controller with the given id is connected.
     pub fn is_controller_connected(&self, controller_id: u32) -> bool {
         self.connected_controllers
             .iter()

@@ -45,6 +45,8 @@
 //! [ex_ani]: https://github.com/amethyst/amethyst/tree/master/examples/animation
 //! [ex_gltf]: https://github.com/amethyst/amethyst/tree/master/examples/gltf
 
+#![warn(missing_docs)]
+
 extern crate amethyst_assets;
 extern crate amethyst_core;
 extern crate amethyst_renderer;

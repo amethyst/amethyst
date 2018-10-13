@@ -181,6 +181,7 @@ where
 /// - `T`: The animatable `Component`
 #[derive(Clone, Debug, Deserialize, Serialize, Default)]
 pub struct AnimationHierarchyPrefab<T> {
+    /// A vec of the node index and the entity index.
     pub nodes: Vec<(usize, usize)>,
     _m: PhantomData<T>,
 }

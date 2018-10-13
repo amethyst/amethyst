@@ -1,3 +1,5 @@
+//! Provides utilities to remove large amounts of entities with a single command.
+
 use amethyst_assets::{PrefabData, PrefabError};
 use amethyst_core::specs::world::EntitiesRes;
 use amethyst_core::specs::{Component, DenseVecStorage, Entity, Join, ReadStorage, WriteStorage};

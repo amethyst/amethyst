@@ -1,3 +1,4 @@
+pub use self::interleaved::DebugLinesParams;
 pub use self::interleaved::DrawDebugLines;
 
 mod interleaved;
