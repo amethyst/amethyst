@@ -76,6 +76,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Improved compatibility with older drivers ([#1012])
 * `AssetPrefab` loaded files at an incorrect time ([#1020])
 * Removed unreachable code in `TexturePrefab` ([#1020])
+* Fix OpenGL not rendering on window creation due to `glutin` bug ([#972])
 
 [#829]: https://github.com/amethyst/amethyst/issues/829
 [#830]: https://github.com/amethyst/amethyst/pull/830
@@ -105,6 +106,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#965]: https://github.com/amethyst/amethyst/pull/965
 [#969]: https://github.com/amethyst/amethyst/pull/969
 [#971]: https://github.com/amethyst/amethyst/pull/971
+[#972]: https://github.com/amethyst/amethyst/issue/972
 [#974]: https://github.com/amethyst/amethyst/pull/974
 [#976]: https://github.com/amethyst/amethyst/pull/976
 [#981]: https://github.com/amethyst/amethyst/pull/981
