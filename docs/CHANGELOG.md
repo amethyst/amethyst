@@ -72,6 +72,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Joint entities can only be part of a single skin: Materials are not swapped anymore. ([#933])
 * Fixed regression in sprite positioning after batching. ([#929])
 * Now loading default fonts from the system for UiButton ([#964])
+* Fixed single frame animation ([#1015])
 
 [#829]: https://github.com/amethyst/amethyst/issues/829
 [#830]: https://github.com/amethyst/amethyst/pull/830
@@ -109,6 +110,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1001]: https://github.com/amethyst/amethyst/pull/1001
 [#1006]: https://github.com/amethyst/amethyst/pull/1006
 [#1008]: https://github.com/amethyst/amethyst/pull/1008
+[#1015]: https://github.com/amethyst/amethyst/pull/1015
 [#1016]: https://github.com/amethyst/amethyst/pull/1016
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
