@@ -292,13 +292,15 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> R
 #[cfg(feature = "opengl")]
 fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> Result<Backend> {
     use gfx_window_glutin as win;
-    use glutin::{self, GlProfile, GlRequest};
+    use glutin;
+    #[cfg(target_os = "macos")]
+    use glutin::{GlProfile, GlRequest};
 
     let ctx = glutin::ContextBuilder::new()
         .with_multisampling(config.multisampling)
-        .with_vsync(config.vsync)
-        .with_gl_profile(GlProfile::Core)
-        .with_gl(GlRequest::Latest);
+        .with_vsync(config.vsync);
+    #[cfg(target_os = "macos")]
+    let ctx = ctx.with_gl_profile(GlProfile::Core).with_gl(GlRequest::Latest);
 
     let (win, dev, fac, color, depth) = win::init::<ColorFormat, DepthFormat>(wb, ctx, el);
     let size = win.get_inner_size().ok_or(Error::WindowDestroyed)?.into();

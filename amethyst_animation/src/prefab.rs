@@ -1,8 +1,10 @@
 use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, PrefabError, ProgressCounter};
 use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, WriteStorage};
+use amethyst_core::specs::error::BoxedErr;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use std::fmt::Debug;
+use std::error::Error;
+use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
 use std::hash::Hash;
 use std::marker::PhantomData;
 use {Animation, AnimationHierarchy, AnimationSampling, AnimationSet, RestState, Sampler};
@@ -49,6 +51,25 @@ where
     }
 }
 
+#[derive(Debug)]
+pub struct MissingAssetHandle;
+
+impl Display for MissingAssetHandle {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl Error for MissingAssetHandle {
+    fn description(&self) -> &str {
+        "AnimationPrefab was not populated with an asset handle prior to calling load_prefab."
+    }
+
+    fn cause(&self) -> Option<&Error> {
+        None
+    }
+}
+
 impl<'a, T> PrefabData<'a> for AnimationPrefab<T>
 where
     T: AnimationSampling,
@@ -68,7 +89,7 @@ where
         _: &mut Self::SystemData,
         _: &[Entity],
     ) -> Result<Handle<Animation<T>>, PrefabError> {
-        Ok(self.handle.as_ref().unwrap().clone())
+        self.handle.as_ref().cloned().ok_or_else(|| PrefabError::Custom(BoxedErr::new(MissingAssetHandle)))
     }
 
     fn load_sub_assets(
