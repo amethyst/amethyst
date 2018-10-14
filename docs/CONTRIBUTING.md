@@ -104,7 +104,7 @@ Note: The author of a PR cannot approve their own PR.
 * If something went wrong (like a broken version has been released, the website doesn't work at all, ..) no approval is required for merging.
 * Merging can be performed instant (but still with bors).
 
-###### Grammar fixes, style improvements, forgotten coverage...
+###### Grammar fixes, style improvements, forgotten coverage, ...
 
 * Same here, no approval is required for merging.
 * There is no reason to wait 24 hours here.
