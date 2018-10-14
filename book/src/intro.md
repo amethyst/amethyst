@@ -60,7 +60,8 @@ weigh before using them, especially in regards to performance and scalability.
 [ud]: https://www.unrealengine.com/
 [jme]: http://jmonkeyengine.org/
 
-We think that basing the Amethyst engine on good and modern principles will allow us to make an open source game engine that can actually be more performant than those engines.
+We think that basing the Amethyst engine on good and modern principles will allow us to make an open source game engine
+that can actually be more performant than those engines.
 Those principles are:
 
 1. Modularity.
@@ -80,6 +81,20 @@ Those principles are:
    Complex behaviours like swapping assets during gameplay become a breeze, making testing and balancing a lot faster.
 
 [up]: https://en.wikipedia.org/wiki/Unix_philosophy
+
+But with all the [great "blocks" in the Rust gamedev ecosystem][awg], why not glue your own engine together?
+
+Glueing blocks together involves a lot more than one might think. While Amethyst is quite modular by itself, we have
+a big advantage over standalone libraries: All of our crates have a common basis, [Specs][specs] (an ECS framework).
+Due to Specs' nature we have a low-cost abstraction that needs close to no glue between the crates. If another crate
+wants to add new features, it can just take the existing components and transform them to other components, so there's
+often no glue required.
+
+Also, with random crates glued together, you have to make tools yourself. With Amethyst we can combine efforts and work
+on powerful tools together.
+
+[awg]: http://arewegameyet.com/
+[specs]: https://github.com/slide-rs/specs
 
 ## Contributing
 
