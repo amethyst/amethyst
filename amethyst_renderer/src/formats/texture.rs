@@ -234,13 +234,7 @@ where
                     .load_from_data(data.clone(), (), &system_data.1)
             }
 
-            TexturePrefab::File(ref name, ref format, ref options) => system_data.0.load(
-                name.as_ref(),
-                format.clone(),
-                options.clone(),
-                (),
-                &system_data.1,
-            ),
+            TexturePrefab::File(..) => unreachable!(),
 
             TexturePrefab::Handle(ref handle) => handle.clone(),
         };

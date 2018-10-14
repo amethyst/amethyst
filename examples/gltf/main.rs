@@ -206,9 +206,6 @@ fn toggle_or_cycle_animation(
                 );
             }
             scene.animation_index += 1;
-            if scene.animation_index == 6 {
-                scene.animation_index = 7;
-            }
             if scene.animation_index >= animations.animations.len() {
                 scene.animation_index = 0;
             }

@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Added AntiStorage documentation to the book. ([#997])
 * You can now stop the rotation of the FreeRotationSystem by setting HideCursor.hide value to false. ([#997])
 * Support for logging to file, toggle for logging to stdout. ([#976], [#994])
+* Added a `Hidden` Component, that hides a single entity, and a HideHierarchySystem that toggles `Hidden` on all children when used. ([#1001])
 * Documentation for drawing sprites. ([#971])
 * Added `shadow_update()` and `shadow_fixed_update()` to the `State` trait. ([#1006])
 * Added configurable width for debug lines ([#1016])
@@ -72,6 +73,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Joint entities can only be part of a single skin: Materials are not swapped anymore. ([#933])
 * Fixed regression in sprite positioning after batching. ([#929])
 * Now loading default fonts from the system for UiButton ([#964])
+* Fixed single frame animation ([#1015])
+* Improved compatibility with older drivers ([#1012])
+* `AssetPrefab` loaded files at an incorrect time ([#1020])
+* Removed unreachable code in `TexturePrefab` ([#1020])
 
 [#829]: https://github.com/amethyst/amethyst/issues/829
 [#830]: https://github.com/amethyst/amethyst/pull/830
@@ -106,9 +111,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#981]: https://github.com/amethyst/amethyst/pull/981
 [#994]: https://github.com/amethyst/amethyst/pull/994
 [#997]: https://github.com/amethyst/amethyst/pull/997
+[#1001]: https://github.com/amethyst/amethyst/pull/1001
 [#1006]: https://github.com/amethyst/amethyst/pull/1006
 [#1008]: https://github.com/amethyst/amethyst/pull/1008
+[#1012]: https://github.com/amethyst/amethyst/pull/1012
+[#1015]: https://github.com/amethyst/amethyst/pull/1015
 [#1016]: https://github.com/amethyst/amethyst/pull/1016
+[#1020]: https://github.com/amethyst/amethyst/pull/1020
 [#1023]: https://github.com/amethyst/amethyst/pull/1023
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03

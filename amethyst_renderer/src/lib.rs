@@ -132,6 +132,10 @@ pub use vertex::{
     VertexFormat, With,
 };
 pub use visibility::{Visibility, VisibilitySortingSystem};
+pub use {
+    hidden::{Hidden, HiddenPropagate},
+    hide_system::HideHierarchySystem,
+};
 
 pub mod error;
 pub mod mouse;
@@ -146,6 +150,8 @@ mod color;
 mod config;
 mod debug_drawing;
 mod formats;
+mod hidden;
+mod hide_system;
 mod input;
 mod light;
 mod mesh;

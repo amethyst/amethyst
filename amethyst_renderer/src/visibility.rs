@@ -3,6 +3,7 @@ use amethyst_core::specs::prelude::{Entities, Entity, Join, Read, ReadStorage, S
 use amethyst_core::GlobalTransform;
 use cam::{ActiveCamera, Camera};
 use hibitset::BitSet;
+use hidden::{Hidden, HiddenPropagate};
 use std::cmp::Ordering;
 use transparent::Transparent;
 
@@ -49,6 +50,8 @@ impl<'a> System<'a> for VisibilitySortingSystem {
     type SystemData = (
         Entities<'a>,
         Write<'a, Visibility>,
+        ReadStorage<'a, Hidden>,
+        ReadStorage<'a, HiddenPropagate>,
         Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Transparent>,
@@ -57,8 +60,8 @@ impl<'a> System<'a> for VisibilitySortingSystem {
 
     fn run(
         &mut self,
-        (entities, mut visibility, active, camera, transparent, global): Self::SystemData,
-    ) {
+        (entities, mut visibility, hidden, hidden_prop, active, camera, transparent, global): Self::SystemData,
+){
         let origin = Point3::origin();
 
         let camera: Option<&GlobalTransform> = active
@@ -73,9 +76,9 @@ impl<'a> System<'a> for VisibilitySortingSystem {
 
         self.centroids.clear();
         self.centroids.extend(
-            (&*entities, &global)
+            (&*entities, &global, !&hidden, !&hidden_prop)
                 .join()
-                .map(|(entity, global)| (entity, global.0.transform_point(origin)))
+                .map(|(entity, global, _, _)| (entity, global.0.transform_point(origin)))
                 .map(|(entity, centroid)| Internals {
                     entity,
                     transparent: transparent.contains(entity),
