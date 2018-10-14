@@ -186,27 +186,29 @@ impl AnimationSampling for Material {
         channel: &Self::Channel,
         extra: &Read<MaterialTextureSet>,
     ) -> Self::Primitive {
+        const ERR_MSG: &'static str = "Unable to get requested channel from MaterialTextureSet.";
+
         match *channel {
             MaterialChannel::AlbedoTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.albedo).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.albedo).expect(ERR_MSG))
             }
             MaterialChannel::EmissionTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.emission).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.emission).expect(ERR_MSG))
             }
             MaterialChannel::NormalTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.normal).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.normal).expect(ERR_MSG))
             }
             MaterialChannel::MetallicTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.metallic).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.metallic).expect(ERR_MSG))
             }
             MaterialChannel::RoughnessTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.roughness).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.roughness).expect(ERR_MSG))
             }
             MaterialChannel::AmbientOcclusionTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.ambient_occlusion).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.ambient_occlusion).expect(ERR_MSG))
             }
             MaterialChannel::CaveatTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.caveat).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.caveat).expect(ERR_MSG))
             }
             MaterialChannel::AlbedoOffset => offset(&self.albedo_offset),
             MaterialChannel::EmissionOffset => offset(&self.emission_offset),
