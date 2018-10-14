@@ -74,6 +74,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Now loading default fonts from the system for UiButton ([#964])
 * Fixed single frame animation ([#1015])
 * Improved compatibility with older drivers ([#1012])
+* Forgotten `channel` field on `examples/ui` prefab ([#1024])
 
 [#829]: https://github.com/amethyst/amethyst/issues/829
 [#830]: https://github.com/amethyst/amethyst/pull/830
@@ -114,6 +115,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1012]: https://github.com/amethyst/amethyst/pull/1012
 [#1015]: https://github.com/amethyst/amethyst/pull/1015
 [#1016]: https://github.com/amethyst/amethyst/pull/1016
+[#1024]: https://github.com/amethyst/amethyst/pull/1024
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
 
