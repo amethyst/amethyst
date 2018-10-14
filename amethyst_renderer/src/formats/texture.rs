@@ -75,6 +75,8 @@ impl TextureMetadata {
     ///
     /// For the values of all the other fields please refer to the documentation of the respective
     /// field.
+    ///
+    /// Wrap mode is set to `WrapMode::Clamp` by default. 
     pub fn srgb_scale() -> Self {
         TextureMetadata::srgb().with_filter(FilterMethod::Scale)
     }
