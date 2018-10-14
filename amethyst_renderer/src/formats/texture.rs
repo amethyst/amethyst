@@ -76,7 +76,7 @@ impl TextureMetadata {
     /// For the values of all the other fields please refer to the documentation of the respective
     /// field.
     ///
-    /// Wrap mode is set to `WrapMode::Clamp` by default. 
+    /// Wrap mode is set to `WrapMode::Clamp` by default.
     pub fn srgb_scale() -> Self {
         TextureMetadata::srgb().with_filter(FilterMethod::Scale)
     }
@@ -441,16 +441,12 @@ pub fn create_texture_asset(
     t.map(|t| ProcessingState::Loaded(t))
 }
 
-fn apply_options<D, T>(
-    tb: TextureBuilder<D, T>,
-    metadata: TextureMetadata,
-) -> TextureBuilder<D, T>
+fn apply_options<D, T>(tb: TextureBuilder<D, T>, metadata: TextureMetadata) -> TextureBuilder<D, T>
 where
     D: AsRef<[T]>,
     T: Pod + Copy,
 {
-    tb
-        .with_sampler(metadata.sampler)
+    tb.with_sampler(metadata.sampler)
         .mip_levels(metadata.mip_levels)
         .dynamic(metadata.dynamic)
         .with_format(metadata.format)
