@@ -1,6 +1,7 @@
+use minterpolate::InterpolationPrimitive;
+
 use amethyst_core::specs::prelude::Read;
 use amethyst_renderer::{SpriteRender, SpriteSheetSet};
-use minterpolate::InterpolationPrimitive;
 
 use {AnimationSampling, ApplyData, BlendMethod};
 

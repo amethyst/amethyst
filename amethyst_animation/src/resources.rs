@@ -1,16 +1,14 @@
-use amethyst_assets::{
-    Asset, AssetStorage, Handle, PrefabData, PrefabError, ProcessingState, Result,
-};
-use amethyst_core::shred::SystemData;
-use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage};
-use amethyst_core::timing::{duration_to_secs, secs_to_duration};
+use std::{cmp::Ordering, fmt::Debug, hash::Hash, marker, time::Duration};
+
 use fnv::FnvHashMap;
 use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
-use std::cmp::Ordering;
-use std::fmt::Debug;
-use std::hash::Hash;
-use std::marker;
-use std::time::Duration;
+
+use amethyst_assets::{Asset, AssetStorage, Handle, ProcessingState, Result};
+use amethyst_core::{
+    shred::SystemData,
+    specs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage},
+    timing::{duration_to_secs, secs_to_duration},
+};
 
 /// Blend method for sampler blending
 #[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Eq, Hash)]
@@ -109,19 +107,12 @@ where
 }
 
 /// Define the rest state for a component on an entity
-#[derive(Debug, Clone, Deserialize, Serialize, PrefabData)]
-#[prefab(Component)]
-pub struct RestState<T>
-where
-    T: AnimationSampling + Clone,
-{
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct RestState<T> {
     state: T,
 }
 
-impl<T> RestState<T>
-where
-    T: AnimationSampling + Clone,
-{
+impl<T> RestState<T> {
     /// Create new rest state
     pub fn new(t: T) -> Self {
         RestState { state: t }
@@ -135,7 +126,7 @@ where
 
 impl<T> Component for RestState<T>
 where
-    T: AnimationSampling + Clone,
+    T: AnimationSampling,
 {
     type Storage = DenseVecStorage<Self>;
 }
@@ -143,8 +134,7 @@ where
 /// Defines the hierarchy of nodes that a single animation can control.
 /// Attached to the root entity that an animation can be defined for.
 /// Only required for animations which target more than a single node or entity.
-#[derive(Derivative, Debug, Clone)]
-#[derivative(Default(bound = ""))]
+#[derive(Debug, Clone)]
 pub struct AnimationHierarchy<T> {
     /// A mapping between indices and entities
     pub nodes: FnvHashMap<usize, Entity>,
@@ -165,7 +155,10 @@ where
 {
     /// Create a new hierarchy
     pub fn new() -> Self {
-        Self::default()
+        AnimationHierarchy {
+            nodes: FnvHashMap::default(),
+            m: marker::PhantomData,
+        }
     }
 
     /// Create a new hierarchy containing a single given entity
@@ -188,7 +181,7 @@ where
     /// entity in the hierarchy.
     pub fn rest_state<F>(&self, get_component: F, states: &mut WriteStorage<RestState<T>>)
     where
-        T: AnimationSampling + Clone,
+        T: AnimationSampling,
         F: Fn(Entity) -> Option<T>,
     {
         for entity in self.nodes.values() {
@@ -508,14 +501,8 @@ where
         self.samplers
             .iter_mut()
             .filter(|t| t.control_id == control_id && t.state != ControlState::Done)
-            .map(|c| {
-                (
-                    samplers
-                        .get(&c.sampler)
-                        .expect("Referring to a missing sampler"),
-                    c,
-                )
-            }).for_each(|(s, c)| {
+            .map(|c| (samplers.get(&c.sampler).expect("Referring to a missing sampler"), c))
+            .for_each(|(s, c)| {
                 set_step_state(c, s, direction);
             });
     }
@@ -814,7 +801,7 @@ where
         rate_multiplier: f32,
         command: AnimationCommand<T>,
     ) {
-        if self.animations.iter().any(|a| a.0 == id) {
+        if let Some(_) = self.animations.iter().find(|a| a.0 == id) {
             return;
         }
         self.animations.push((
@@ -840,7 +827,7 @@ where
         wait_for: I,
         wait_deferred_for: DeferStartRelation,
     ) {
-        if self.animations.iter().any(|a| a.0 == id) {
+        if let Some(_) = self.animations.iter().find(|a| a.0 == id) {
             return;
         }
         self.deferred_animations.push(DeferredStart {
@@ -858,7 +845,7 @@ where
 
     /// Insert an animation directly
     pub fn insert(&mut self, id: I, control: AnimationControl<T>) {
-        if self.animations.iter().any(|a| a.0 == id) {
+        if let Some(_) = self.animations.iter().find(|a| a.0 == id) {
             return;
         }
         self.animations.push((id, control));
@@ -866,7 +853,11 @@ where
 
     /// Check if there is an animation with the given id in the set
     pub fn has_animation(&mut self, id: I) -> bool {
-        self.animations.iter().any(|a| a.0 == id)
+        if let Some(_) = self.animations.iter().find(|a| a.0 == id) {
+            true
+        } else {
+            false
+        }
     }
 }
 

@@ -1,8 +1,10 @@
-use source::Source;
-use std::fs::File;
-use std::path::{Path, PathBuf};
-use std::time::UNIX_EPOCH;
-use {ErrorKind, Result, ResultExt};
+use std::{
+    fs::File,
+    path::{Path, PathBuf},
+    time::UNIX_EPOCH,
+};
+
+use {source::Source, ErrorKind, Result, ResultExt};
 
 /// Directory source.
 ///

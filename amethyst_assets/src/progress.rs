@@ -1,6 +1,9 @@
+use std::sync::{
+    atomic::{AtomicUsize, Ordering},
+    Arc,
+};
+
 use parking_lot::Mutex;
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::Arc;
 use Error;
 
 /// Completion status, returned by `ProgressCounter::complete`.

@@ -1,10 +1,13 @@
 //! Defines the `Reload` trait.
 
+use std::{sync::Arc, time::Instant};
+
 use amethyst_core as core;
-use amethyst_core::specs::prelude::{DispatcherBuilder, Read, Resources, System, Write};
-use amethyst_core::{SystemBundle, Time};
-use std::sync::Arc;
-use std::time::Instant;
+use amethyst_core::{
+    specs::prelude::{DispatcherBuilder, Read, Resources, System, Write},
+    SystemBundle, Time,
+};
+
 use {Asset, Format, FormatValue, Loader, Result, Source};
 
 /// This bundle activates hot reload for the `Loader`,

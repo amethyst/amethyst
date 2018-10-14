@@ -1,16 +1,19 @@
-use amethyst_assets::AssetStorage;
-use amethyst_core::specs::prelude::{Component, Join, Read, System, WriteStorage};
-use amethyst_core::{
-    duration_to_nanos, duration_to_secs, nanos_to_duration, secs_to_duration, Time,
-};
+use std::{marker, time::Duration};
+
 use itertools::Itertools;
 use minterpolate::InterpolationPrimitive;
+
+use amethyst_assets::AssetStorage;
+use amethyst_core::{
+    duration_to_nanos, duration_to_secs, nanos_to_duration, secs_to_duration,
+    specs::prelude::{Component, Join, Read, System, WriteStorage},
+    Time,
+};
+
 use resources::{
     AnimationSampling, ApplyData, BlendMethod, ControlState, EndControl, Sampler, SamplerControl,
     SamplerControlSet,
 };
-use std::marker;
-use std::time::Duration;
 
 /// System for interpolating active samplers.
 ///

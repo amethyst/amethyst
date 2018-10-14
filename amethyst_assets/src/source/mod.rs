@@ -1,5 +1,6 @@
-pub use self::dir::Directory;
 use Result;
+
+pub use self::dir::Directory;
 
 mod dir;
 
