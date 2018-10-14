@@ -96,7 +96,7 @@ If you are compiling on Linux make sure to install the dependencies below.
 
 Additionally, make sure you have EGL installed. Since the package depends on your drivers, we cannot list it here.
 
-### Ubuntu
+### Debian/Ubuntu
 
 ```
 $ sudo apt install libasound2-dev libx11-xcb-dev libssl-dev cmake libfreetype6-dev libexpat1-dev libxcb1-dev
