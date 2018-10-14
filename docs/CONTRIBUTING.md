@@ -101,18 +101,23 @@ Note: The author of a PR cannot approve their own PR.
 
 ###### Urgent fixes
 
-* If something went wrong (like a broken version has been released, the website doesn't work at all, ..) no approval is required for merging
-* Merging can be performed instant (but still with bors)
+* If something went wrong (like a broken version has been released, the website doesn't work at all, ..) no approval is required for merging.
+* Merging can be performed instant (but still with bors).
 
-###### Grammar fixes, style improvements, ..
+###### Grammar fixes, style improvements, forgotten coverage...
 
-* Same here, no approval is required for merging
-* There is no reason to wait 24 hours here
+* Same here, no approval is required for merging.
+* There is no reason to wait 24 hours here.
+
+###### Forgotten mistakes in a merged PR
+
+* If the author of a PR noticed they forgot something minor in one of their PR that just got merged, only one review is sufficient.
+* bors is still required to make sure nothing new breaks, but can be performed immediately.
 
 ###### Documentation, tests, benchmarks
 
 * Unless it's a major rewrite in our testing / benchmarking architecture, one review is sufficient.
-* Please still wait one day before merging the PR
+* Please still wait one day before merging the PR.
 
 ###### Experimental branches
 
