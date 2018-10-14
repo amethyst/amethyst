@@ -74,8 +74,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Now loading default fonts from the system for UiButton ([#964])
 * Fixed single frame animation ([#1015])
 * Improved compatibility with older drivers ([#1012])
+* Forgotten `channel` field on `examples/ui` prefab ([#1024])
 * `AssetPrefab` loaded files at an incorrect time ([#1020])
 * Removed unreachable code in `TexturePrefab` ([#1020])
+* Fix OpenGL not rendering on window creation due to `glutin` bug ([#972])
 
 [#829]: https://github.com/amethyst/amethyst/issues/829
 [#830]: https://github.com/amethyst/amethyst/pull/830
@@ -105,6 +107,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#965]: https://github.com/amethyst/amethyst/pull/965
 [#969]: https://github.com/amethyst/amethyst/pull/969
 [#971]: https://github.com/amethyst/amethyst/pull/971
+[#972]: https://github.com/amethyst/amethyst/issue/972
 [#974]: https://github.com/amethyst/amethyst/pull/974
 [#976]: https://github.com/amethyst/amethyst/pull/976
 [#981]: https://github.com/amethyst/amethyst/pull/981
@@ -116,6 +119,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1012]: https://github.com/amethyst/amethyst/pull/1012
 [#1015]: https://github.com/amethyst/amethyst/pull/1015
 [#1016]: https://github.com/amethyst/amethyst/pull/1016
+[#1024]: https://github.com/amethyst/amethyst/pull/1024
 [#1020]: https://github.com/amethyst/amethyst/pull/1020
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
