@@ -16,8 +16,6 @@ branches:
   only:
     - staging
     - trying
-    - develop
-    - master
     - /release-.*/
 
 # Test on Linux - OSX builds take in excess of 5 hours to start as of 2017-09-19.
