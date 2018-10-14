@@ -9,16 +9,21 @@ use uuid::Uuid;
 // TODO: Think about relationship between NetConnection and NetIdentity.
 
 /// A network connection target data.
+#[derive(Serialize)]
+#[serde(bound = "")]
 pub struct NetConnection<E: 'static> {
     /// The remote socket address of this connection.
     pub target: SocketAddr,
     /// The state of the connection.
     pub state: ConnectionState,
     /// The buffer of events to be sent.
+    #[serde(skip)]
     pub send_buffer: EventChannel<NetEvent<E>>,
     /// The buffer of events that have been received.
+    #[serde(skip)]
     pub receive_buffer: EventChannel<NetEvent<E>>,
     /// Private. Used by `NetSocketSystem` to be able to immediately send events upon receiving a new NetConnection.
+    #[serde(skip)]
     send_reader: ReaderId<NetEvent<E>>,
 }
 
