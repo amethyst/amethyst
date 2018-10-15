@@ -5,7 +5,7 @@ use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
 use amethyst::core::Time;
 use amethyst::ecs::prelude::*;
 use amethyst::input::InputBundle;
-use amethyst::physics::picking::{primitive, MouseRaySys, PickEventSys, PickSys, Pickable, AB};
+use amethyst::physics::picking::{primitive, MouseRaySys, PickEventSys, PickSys, Pickable};
 use amethyst::prelude::*;
 use amethyst::renderer::{
     ActiveCamera, Camera, DirectionalLight, DrawShaded, Light, Pipeline, PosNormTex, RenderBundle,
@@ -86,8 +86,9 @@ impl<'a, 'b> State<GameData<'a, 'b>, ()> for Scene {
                     .with(Transform {
                         scale: [0.5, 0.5, 0.5].into(),
                         ..Default::default()
-                    }).with(Pickable {
-                        bounds: AB::A(primitive::Cube::new(2.).into()),
+                    })
+                    .with(Pickable::<primitive::Primitive3<f32>> {
+                        bounds: primitive::Cube::new(2.).into(),
                     }).with(HoverMat::new(hover_mat.clone()))
                     .with(Revolve {
                         center: Vector3::new(x - 0.5, -y - 0.5, -2.5) * 2.,
@@ -207,7 +208,11 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(InputBundle::<String, String>::new())?
         // TODO: put this in a bundle
         .with(MouseRaySys, "mouse_ray_sys", &["transform_system"])
-        .with(PickSys, "pick_sys", &["mouse_ray_sys"])
+        .with(
+            PickSys::<primitive::Primitive3<f32>>::new(),
+            "pick_sys",
+            &["mouse_ray_sys"],
+        )
         .with(
             PickEventSys::<String, String>::new(),
             "pick_event_sys",
