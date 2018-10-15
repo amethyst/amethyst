@@ -11,8 +11,8 @@ use amethyst_ui::{UiEvent, UiEventType};
 use super::pick::Picked;
 
 /// The system that generates `UiEvents` for `Pickable` entities, so these entities can be utilized by systems that deal with the UI.
+/// This is a counterpart for `UiMouseSystem` and emits events to the same channel.
 /// The generic types A and B represent the A and B generic parameter of the InputHandler<A,B>.
-/// This is the counterpart for `UiMouseSystem`, and is intended to have identical behavior.
 pub struct PickEventSys<A, B> {
     was_down: bool,
     click_started_on: Option<Entity>,
@@ -21,6 +21,7 @@ pub struct PickEventSys<A, B> {
 }
 
 impl<A, B> PickEventSys<A, B> {
+    /// Initialize a new `PickEventSys`.
     pub fn new() -> Self {
         PickEventSys {
             was_down: false,

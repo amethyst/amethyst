@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * You can now stop the rotation of the FreeRotationSystem by setting HideCursor.hide value to false. ([#997])
 * Support for logging to file, toggle for logging to stdout. ([#976], [#994])
 * Added `shadow_update()` and `shadow_fixed_update()` to the `State` trait. ([#1006])
+* Added systems to pick 3d-objects from a scene with the mouse by casting camera rays. ([#])
 
 
 ### Changed

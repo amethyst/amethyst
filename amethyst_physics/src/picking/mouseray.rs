@@ -8,14 +8,14 @@ use amethyst_renderer::{Camera, ScreenDimensions};
 
 use collision::Ray3;
 
-// TODO: use the actual Ray type from `collision`
-/// Resource which contains the ray in world space of the mouse from the active camera
+/// Resource which contains a ray from the `ActiveCamera` to the mouse in world space coordinates.
 pub struct MouseRay {
     origin: Point3<f32>,
     direction: Vector3<f32>,
 }
 
 impl MouseRay {
+    /// Construct a `Ray3` from a `MouseRay`.
     pub fn ray(&self) -> Ray3<f32> {
         Ray3::new(self.origin, self.direction)
     }
@@ -30,6 +30,7 @@ impl Default for MouseRay {
     }
 }
 
+/// System which unprojects a ray from the `ActiveCamera` to the mouse pointer.
 pub struct MouseRaySys;
 
 impl<'s> System<'s> for MouseRaySys {
@@ -67,7 +68,7 @@ impl<'s> System<'s> for MouseRaySys {
 }
 
 // TODO: optimize this by caching eg. the inverted projection matrix
-/// Convert a 2D point in window space to a 3D vector in world space
+/// Convert a 2D point in window space to a 3D vector in world space.
 fn from_window_space(
     (window_x, window_y): (f32, f32),
     (width, height): (f32, f32),

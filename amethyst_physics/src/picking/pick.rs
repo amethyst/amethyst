@@ -10,16 +10,11 @@ use collision::{Plane, Ray3};
 
 use super::mouseray::MouseRay;
 
-/// Resource indicating the entity which the mouseray intersects
+/// Resource indicating the entity which the `MouseRay` intersects and the point of intersection.
 pub struct Picked {
+    /// Contains the entity and intersection point only when there is an active intersection.
+    /// Otherwise empty.
     pub entity_intersection: Option<(Entity, Point3<f32>)>,
-}
-
-impl Picked {
-    fn is_entity(&self, other: Entity) -> bool {
-        self.entity_intersection
-            .map_or(false, |(entity, _)| entity == other)
-    }
 }
 
 impl Default for Picked {
@@ -35,10 +30,9 @@ pub enum AB<A, B> {
     B(B),
 }
 
-/// Component with a bounding box which can be compared with the mouseray
+/// Component which indicates an entity should be checked for intersections against the `MouseRay`.
 pub struct Pickable {
-    // TODO: try to remove this in favor of a generic .. will require a trait bound on
-    // ContinuousTransform in PickSys, and lots of lifetime bs
+    /// The bounding-hull of the entity in pre-transformation coordinates (eg. unscaled mesh size).
     pub bounds: AB<Primitive3<f32>, Plane<f32>>,
 }
 
@@ -46,8 +40,8 @@ impl Component for Pickable {
     type Storage = DenseVecStorage<Self>;
 }
 
-/// System to write the Picked resource by comparing bounding boxes to the mouseray
 pub struct PickSys;
+/// System which intersects the `MouseRay` against every `Pickable` entity.
 
 impl<'s> System<'s> for PickSys {
     type SystemData = (
@@ -73,9 +67,9 @@ impl<'s> System<'s> for PickSys {
     }
 }
 
-/// - check intersection of ray with obj_hull transformed by obj_trans
-/// - if there's an intersection and it's nearer than the previously stored one
-/// - then store the new intersection point, distance, and obj_entity
+/// - Check intersection of ray with obj_hull transformed by obj_trans.
+/// - If there's an intersection and it's nearer than the previously stored one,
+///   Then store the new intersection point, distance, and obj_entity.
 fn update_nearest<T>(
     nearest: &mut Option<(f32, Point3<f32>, Entity)>,
     ray: &Ray3<f32>,
