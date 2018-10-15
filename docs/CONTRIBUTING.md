@@ -88,6 +88,9 @@ developer, it will be merged into the source tree.
 
 ### Protocol for merging pull requests
 
+The following rules shall be applied strictly for the `amethyst` repository. For other repositories of this organization,
+thorough review would be desirable, but no strict application is required there due to lower activity and less influence.
+
 * Pull Requests shall not be merged before at least 24 hours have passed.
 * Pull Requests shall be approved by at least two members (two approvals from contributors can count as one member approval.)
 * Merging a PR shall be done with `bors r+`
@@ -103,16 +106,6 @@ Note: The author of a PR cannot approve their own PR.
 
 * If something went wrong (like a broken version has been released, the website doesn't work at all, ..) no approval is required for merging
 * Merging can be performed instant (but still with bors)
-
-###### Grammar fixes, style improvements, ..
-
-* Same here, no approval is required for merging
-* There is no reason to wait 24 hours here
-
-###### Documentation, tests, benchmarks
-
-* Unless it's a major rewrite in our testing / benchmarking architecture, one review is sufficient.
-* Please still wait one day before merging the PR
 
 ###### Experimental branches
 
