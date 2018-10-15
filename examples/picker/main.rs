@@ -86,8 +86,7 @@ impl<'a, 'b> State<GameData<'a, 'b>, ()> for Scene {
                     .with(Transform {
                         scale: [0.5, 0.5, 0.5].into(),
                         ..Default::default()
-                    })
-                    .with(Pickable::<primitive::Primitive3<f32>> {
+                    }).with(Pickable::<primitive::Primitive3<f32>> {
                         bounds: primitive::Cube::new(2.).into(),
                     }).with(HoverMat::new(hover_mat.clone()))
                     .with(Revolve {
