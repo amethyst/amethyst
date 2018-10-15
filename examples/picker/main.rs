@@ -54,11 +54,9 @@ impl<'a, 'b> State<GameData<'a, 'b>, ()> for Scene {
                 let light: Light = DirectionalLight {
                     color: Rgba::white(),
                     direction: [0.5, -1.5, -0.25],
-                }
-                .into();
+                }.into();
                 light
-            })
-            .build();
+            }).build();
 
         // Camera
         let camera = state
@@ -69,8 +67,7 @@ impl<'a, 'b> State<GameData<'a, 'b>, ()> for Scene {
             .with(Transform {
                 rotation: Quaternion::from_angle_x(Deg(-30.)),
                 ..Default::default()
-            })
-            .build();
+            }).build();
 
         // XXX: An active camera is required by MouseRaySys
         state.world.add_resource(ActiveCamera { entity: camera });
@@ -89,17 +86,14 @@ impl<'a, 'b> State<GameData<'a, 'b>, ()> for Scene {
                     .with(Transform {
                         scale: [0.5, 0.5, 0.5].into(),
                         ..Default::default()
-                    })
-                    .with(Pickable {
+                    }).with(Pickable {
                         bounds: AB::A(primitive::Cube::new(2.).into()),
-                    })
-                    .with(HoverMat::new(hover_mat.clone()))
+                    }).with(HoverMat::new(hover_mat.clone()))
                     .with(Revolve {
                         center: Vector3::new(x - 0.5, -y - 0.5, -2.5) * 2.,
                         radius: 0.75,
                         per_second: 0.1 + (0.1 * x) + (0.1 * y),
-                    })
-                    .build();
+                    }).build();
             }
         }
     }
