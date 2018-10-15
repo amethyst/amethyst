@@ -53,6 +53,9 @@ sdl_controller = [
 json = [
     "amethyst_assets/json"
 ]
+saveload = [
+    "amethyst_core/saveload"
+]
 
 [dependencies]
 amethyst_animation = { path = "amethyst_animation", version = "0.3.0" }
