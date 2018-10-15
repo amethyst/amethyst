@@ -103,7 +103,7 @@ our `Application`, but first we should create some `State`s.
 struct Main;
 struct Paused;
 
-impl<'a, 'b> State<CustomGameData<'a, 'b>,()> for Paused {
+impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Paused {
     fn on_start(&mut self, data: StateData<CustomGameData>) {
         create_paused_ui(data.world);
     }
@@ -111,8 +111,8 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>,()> for Paused {
     fn handle_event(
         &mut self,
         data: StateData<CustomGameData>,
-        event: StateEvent<()>,
-    ) -> Trans<CustomGameData<'a, 'b>,()> {
+        event: StateEvent>,
+    ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
                 Trans::Quit
@@ -127,13 +127,13 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>,()> for Paused {
         }
     }
 
-    fn update(&mut self, data: StateData<CustomGameData>) -> Trans<CustomGameData<'a, 'b>,()> {
+    fn update(&mut self, data: StateData<CustomGameData>) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         data.data.update(&data.world, false); // false to say we should not dispatch running
         Trans::None
     }
 }
 
-impl<'a, 'b> State<CustomGameData<'a, 'b>,()> for Main {
+impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Main {
     fn on_start(&mut self, data: StateData<CustomGameData>) {
         initialise(data.world);
     }
@@ -141,8 +141,8 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>,()> for Main {
     fn handle_event(
         &mut self,
         _: StateData<CustomGameData>,
-        event: StateEvent<()>,
-    ) -> Trans<CustomGameData<'a, 'b>,()> {
+        event: StateEvent,
+    ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
                 Trans::Quit
@@ -156,7 +156,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>,()> for Main {
         }
     }
 
-    fn update(&mut self, data: StateData<CustomGameData>) -> Trans<CustomGameData<'a, 'b>> {
+    fn update(&mut self, data: StateData<CustomGameData>) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         data.data.update(&data.world, true); // true to say we should dispatch running
         Trans::None
     }

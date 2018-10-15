@@ -107,8 +107,8 @@ impl<'a> System<'a> for ArcBallRotationSystem {
 /// The system that manages the view rotation.
 /// Controlled by the mouse.
 /// Goes into an inactive state if the window is not focused (`WindowFocus` resource).
-/// 
-/// Can be manually disabled by making the mouse visible using the `HideCursor` resource: 
+///
+/// Can be manually disabled by making the mouse visible using the `HideCursor` resource:
 /// `HideCursor.hide = false`
 pub struct FreeRotationSystem<A, B> {
     sensitivity_x: f32,

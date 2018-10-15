@@ -1,0 +1,25 @@
+[package]
+name = "amethyst_derive"
+version = "0.1.0"
+authors = ["Simon Rönnberg <seamonr@gmail.com>"]
+description = "Amethyst derive"
+
+documentation = "https://www.amethyst.rs/doc/master/doc/amethyst_derive/"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
+
+license = "MIT/Apache-2.0"
+
+[badges]
+appveyor = { repository = "amethyst/amethyst" }
+travis-ci = { repository = "amethyst/amethyst" }
+
+[dependencies]
+syn = { version = "0.15", features = ["visit"] }
+quote = "0.6"
+proc-macro2 = "0.4"
+amethyst_core = { path = "../amethyst_core", version = "0.3.0" }
+
+[lib]
+name = "amethyst_derive"
+proc-macro = true

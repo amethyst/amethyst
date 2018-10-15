@@ -2,6 +2,7 @@ export RUSTFLAGS="-D warnings"
 MDBOOK_RELEASE="v0.2.1/mdbook-v0.2.1-x86_64-unknown-linux-gnu.tar.gz"
 
 echo "Build and test without profiler"
+rm -rf target/debug/deps/amethyst* target/debug/deps/libamethyst*
 cargo test --all -v || exit 1
 
 if [ ${TRAVIS_OS_NAME} = "linux" ]

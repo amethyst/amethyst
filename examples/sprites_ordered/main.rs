@@ -99,7 +99,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
     fn handle_event(
         &mut self,
         mut data: StateData<GameData>,
-        event: StateEvent<()>,
+        event: StateEvent,
     ) -> SimpleTrans<'a, 'b> {
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {

@@ -24,7 +24,7 @@
 //!         println!("Starting game!");
 //!     }
 //!
-//!     fn handle_event(&mut self, _: StateData<()>, event: StateEvent<()>) -> EmptyTrans {
+//!     fn handle_event(&mut self, _: StateData<()>, event: StateEvent) -> EmptyTrans {
 //!         if let StateEvent::Window(event) = &event {
 //!             match event {
 //!                  Event::WindowEvent { event, .. } => match event {
@@ -66,6 +66,8 @@ pub extern crate amethyst_audio as audio;
 pub extern crate amethyst_config as config;
 pub extern crate amethyst_controls as controls;
 pub extern crate amethyst_core as core;
+#[macro_use]
+pub extern crate amethyst_derive as derive;
 pub extern crate amethyst_input as input;
 pub extern crate amethyst_locale as locale;
 pub extern crate amethyst_network as network;
@@ -86,17 +88,20 @@ extern crate rustc_version_runtime;
 #[macro_use]
 extern crate serde_derive;
 
-pub use self::app::{Application, ApplicationBuilder};
+pub use self::app::{Application, ApplicationBuilder, CoreApplication};
 pub use self::error::{Error, Result};
 pub use self::game_data::{DataInit, GameData, GameDataBuilder};
 pub use self::logger::{start_logger, LevelFilter as LogLevelFilter, LoggerConfig, StdoutLog};
 pub use self::state::{
     EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, StateMachine, Trans,
 };
-pub use self::state_event::StateEvent;
+pub use self::state_event::{StateEvent, StateEventReader};
 pub use core::shred;
 pub use core::shrev;
 pub use core::specs as ecs;
+
+#[doc(hidden)]
+pub use derive::*;
 
 pub mod prelude;
 

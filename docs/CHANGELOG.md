@@ -61,6 +61,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * The z in UiTransformBuilder now defaults to 1 instead of 0, allowing to skip defining the z in the ui prefabs. ([#946])
 * Added comments to ui prefab. ([#946])
 * Summarized all `use amethyst::` statements to allow collapsing in IDE's. ([#974])
+* `Application` now uses `EventReader`s to determine what events to send to the `State`s, more information in the `State` 
+  book chapter ([#996])
 * Breaking: Refactor `TextureMetadata` so filter method and clamping can be configured more easily ([#981])
 * Renamed `PrefabData` functions to be easier to understand ([#1008])
 
@@ -113,6 +115,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#976]: https://github.com/amethyst/amethyst/pull/976
 [#981]: https://github.com/amethyst/amethyst/pull/981
 [#994]: https://github.com/amethyst/amethyst/pull/994
+[#996]: https://github.com/amethyst/amethyst/pull/996
 [#997]: https://github.com/amethyst/amethyst/pull/997
 [#1001]: https://github.com/amethyst/amethyst/pull/1001
 [#1006]: https://github.com/amethyst/amethyst/pull/1006
