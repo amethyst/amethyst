@@ -24,7 +24,7 @@
 //! [gh]: https://github.com/amethyst/amethyst/tree/master/src/renderer
 //! [bk]: https://www.amethyst.rs/book/master/
 
-#![deny(missing_docs)]
+#![warn(missing_docs)]
 #![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
 
 extern crate amethyst_assets;
@@ -99,7 +99,7 @@ pub use light::{DirectionalLight, Light, LightPrefab, PointLight, SpotLight, Sun
 pub use mesh::{vertex_data, Mesh, MeshBuilder, MeshHandle, VertexBuffer};
 pub use mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset};
 pub use pass::{
-    get_camera, set_vertex_args, DrawDebugLines, DrawFlat, DrawFlatSeparate, DrawPbm,
+    get_camera, set_vertex_args, DrawDebugLines, DebugLinesParams, DrawFlat, DrawFlatSeparate, DrawPbm,
     DrawPbmSeparate, DrawShaded, DrawShadedSeparate, DrawSprite,
 };
 pub use pipe::{
@@ -132,6 +132,10 @@ pub use vertex::{
     VertexFormat, With,
 };
 pub use visibility::{Visibility, VisibilitySortingSystem};
+pub use {
+    hidden::{Hidden, HiddenPropagate},
+    hide_system::HideHierarchySystem,
+};
 
 pub mod error;
 pub mod mouse;
@@ -146,6 +150,8 @@ mod color;
 mod config;
 mod debug_drawing;
 mod formats;
+mod hidden;
+mod hide_system;
 mod input;
 mod light;
 mod mesh;

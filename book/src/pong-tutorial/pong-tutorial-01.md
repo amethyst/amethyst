@@ -17,7 +17,6 @@ functionality ourselves so we're sure we know what's going on.
 ```rust,no_run,noplaypen
 extern crate amethyst;
 
-use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
 use amethyst::renderer::{DisplayConfig, DrawSprite, Event, Pipeline,
                          RenderBundle, Stage, VirtualKeyCode};
@@ -44,19 +43,18 @@ just implement two methods:
 # use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline,
 #                          PosTex, RenderBundle, Stage};
 # struct Pong;
-impl<'a, 'b> SimpleState<'a,'b> for Pong {
+impl<'a, 'b> SimpleState<'a, 'b> for Pong {
 }
 ```
 
-The `handle_event` method is executed for every event before updating, and it's
-used to react to events. It returns a `Trans`, which is an enum of state machine
-transitions. In this case, we're watching for the Escape keycode, and the
-`CloseRequested` event from the Window. If we receive it, we'll return
-`Trans::Quit` which will be used to clean up the `State` and close the application.
-All other keyboard input is ignored for now.
-
-The `update` method is executed after events have happened.  In this instance
-we're just using it to execute our dispatcher.  More on that later.
+The `SimpleState` already implements a bunch of stuff for us, like the `update` 
+and `handle_event` methods that you would have to implement yourself were you 
+using just a regular `State`. In particular, the default implementation for
+`handle_event` returns `Trans::Quit` when a close signal is received
+from your operating system, like when you press the close button in your graphical
+environment. This allows the application to quit as needed. The default 
+implementation for `update` then just returns `Trans::None`, signifying that
+nothing is supposed to happen.
 
 Now that we know we can quit, let's add some code to actually get things
 started! We'll start with our `main` function, and we'll have it return a

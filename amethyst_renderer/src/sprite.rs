@@ -59,6 +59,67 @@ pub struct TextureCoordinates {
     pub top: f32,
 }
 
+impl Sprite {
+    /// Creates a `Sprite` from pixel values.
+    ///
+    /// This function expects pixel coordinates -- starting from the top left of the image. X
+    /// increases to the right, Y increases downwards. Texture coordinates are calculated from the
+    /// pixel values.
+    ///
+    /// # Parameters
+    ///
+    /// * `image_w`: Width of the full sprite sheet.
+    /// * `image_h`: Height of the full sprite sheet.
+    /// * `sprite_w`: Width of the sprite.
+    /// * `sprite_h`: Height of the sprite.
+    /// * `pixel_left`: Pixel X coordinate of the left side of the sprite.
+    /// * `pixel_top`: Pixel Y coordinate of the top of the sprite.
+    /// * `offsets`: Number of pixels to shift the sprite to the left and down relative to the
+    ///              entity.
+    pub fn from_pixel_values(
+        image_w: u32,
+        image_h: u32,
+        sprite_w: u32,
+        sprite_h: u32,
+        pixel_left: u32,
+        pixel_top: u32,
+        offsets: [i32; 2],
+    ) -> Sprite {
+        let image_w = image_w as f32;
+        let image_h = image_h as f32;
+        let offsets = [offsets[0] as f32, offsets[1] as f32];
+
+        let pixel_right = (pixel_left + sprite_w) as f32;
+        let pixel_bottom = (pixel_top + sprite_h) as f32;
+        let pixel_left = pixel_left as f32;
+        let pixel_top = pixel_top as f32;
+
+        // Texture coordinates are expressed as fractions of the position on the image.
+        // Y axis texture coordinates start at the bottom of the image, so we have to invert them.
+        //
+        // The 0.5 offsets is to get pixel perfection. See
+        // <http://www.mindcontrol.org/~hplus/graphics/opengl-pixel-perfect.html>
+        let left = (pixel_left + 0.5) / image_w;
+        let right = (pixel_right - 0.5) / image_w;
+        let top = (image_h - (pixel_top + 0.5)) / image_h;
+        let bottom = (image_h - (pixel_bottom - 0.5)) / image_h;
+
+        let tex_coords = TextureCoordinates {
+            left,
+            right,
+            top,
+            bottom,
+        };
+
+        Sprite {
+            width: sprite_w as f32,
+            height: sprite_h as f32,
+            offsets,
+            tex_coords,
+        }
+    }
+}
+
 impl From<((f32, f32), [f32; 4])> for Sprite {
     fn from((dimensions, tex_coords): ((f32, f32), [f32; 4])) -> Self {
         Self::from((dimensions, [0.0; 2], tex_coords))
@@ -242,6 +303,28 @@ mod test {
                 },
             },
             ((10., 40.), [0.0, 0.5, 0.75, 1.0]).into()
+        );
+    }
+
+    #[test]
+    fn sprite_from_pixel_values_calculates_pixel_perfect_coordinates() {
+        let image_w = 30;
+        let image_h = 40;
+        let sprite_w = 10;
+        let sprite_h = 20;
+        let pixel_left = 0;
+        let pixel_top = 20;
+        let offsets = [-5, -10]; // Support negative offsets
+
+        assert_eq!(
+            Sprite::from((
+                (10., 20.),                                    // Sprite w and h
+                [-5., -10.],                                   // Offsets
+                [0.5 / 30., 9.5 / 30., 0.5 / 40., 19.5 / 40.], // Texture coordinates
+            )),
+            Sprite::from_pixel_values(
+                image_w, image_h, sprite_w, sprite_h, pixel_left, pixel_top, offsets
+            )
         );
     }
 }

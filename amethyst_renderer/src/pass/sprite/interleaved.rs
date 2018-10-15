@@ -12,6 +12,7 @@ use super::*;
 use cam::{ActiveCamera, Camera};
 use error::Result;
 use gfx::pso::buffer::ElemStride;
+use hidden::{Hidden, HiddenPropagate};
 use mtl::MaterialTextureSet;
 use pass::util::{add_texture, get_camera, set_view_args, setup_textures, ViewArgs};
 use pipe::pass::{Pass, PassData};
@@ -63,6 +64,8 @@ impl<'a> PassData<'a> for DrawSprite {
         Read<'a, AssetStorage<Texture>>,
         Read<'a, MaterialTextureSet>,
         Option<Read<'a, SpriteVisibility>>,
+        ReadStorage<'a, Hidden>,
+        ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, SpriteRender>,
         ReadStorage<'a, GlobalTransform>,
     );
@@ -104,6 +107,8 @@ impl Pass for DrawSprite {
             tex_storage,
             material_texture_set,
             visibility,
+            hidden,
+            hidden_prop,
             sprite_render,
             global,
         ): <Self as PassData<'a>>::Data,
@@ -112,7 +117,9 @@ impl Pass for DrawSprite {
 
         match visibility {
             None => {
-                for (sprite_render, global) in (&sprite_render, &global).join() {
+                for (sprite_render, global, _, _) in
+                    (&sprite_render, &global, !&hidden, !&hidden_prop).join()
+                {
                     self.batch.add_sprite(
                         sprite_render,
                         Some(global),

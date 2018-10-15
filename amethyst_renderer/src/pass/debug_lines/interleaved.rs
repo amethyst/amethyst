@@ -17,6 +17,20 @@ use std::marker::PhantomData;
 use types::{Encoder, Factory};
 use vertex::{Color, Normal, Position, Query};
 
+/// Parameters for renderer of debug lines. The params affect all lines.
+pub struct DebugLinesParams {
+    /// Width of lines in units, default is 1.0 / 400.0 units
+    pub line_width: f32,
+}
+
+impl Default for DebugLinesParams {
+    fn default() -> Self {
+        DebugLinesParams {
+            line_width: 1.0 / 400.0,
+        }
+    }
+}
+
 /// Draw several simple lines for debugging
 ///
 /// See the [crate level documentation](index.html) for information about interleaved and separate
@@ -51,6 +65,7 @@ where
         ReadStorage<'a, GlobalTransform>,
         WriteStorage<'a, DebugLinesComponent>, // DebugLines components
         Option<Write<'a, DebugLines>>,         // DebugLines resource
+        Read<'a, DebugLinesParams>,
     );
 }
 
@@ -67,6 +82,7 @@ where
 
         setup_vertex_args(&mut builder);
         builder.with_raw_global("camera_position");
+        builder.with_raw_global("line_width");
         builder.with_primitive_type(Primitive::PointList);
         builder.with_output("color", Some(DepthMode::LessEqualWrite));
 
@@ -78,8 +94,8 @@ where
         encoder: &mut Encoder,
         effect: &mut Effect,
         mut factory: Factory,
-        (active, camera, global, lines_components, lines_resource): <Self as PassData<'a>>::Data,
-    ) {
+        (active, camera, global, lines_components, lines_resource, lines_params): <Self as PassData<'a>>::Data,
+){
         trace!("Drawing debug lines pass");
         let debug_lines = {
             let mut lines = Vec::<DebugLine>::new();
@@ -103,6 +119,8 @@ where
                 .map(|&(_, ref trans)| [trans.0[3][0], trans.0[3][1], trans.0[3][2]])
                 .unwrap_or([0.0; 3]),
         );
+
+        effect.update_global("line_width", lines_params.line_width);
 
         let mesh = Mesh::build(debug_lines)
             .build(&mut factory)

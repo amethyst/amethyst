@@ -1,3 +1,7 @@
+//! A collection of useful amethyst utilities, designed to make your game dev life easier.
+
+#![warn(missing_docs)]
+
 extern crate amethyst_assets;
 extern crate amethyst_controls;
 extern crate amethyst_core;

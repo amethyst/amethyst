@@ -1,3 +1,5 @@
+//! Provides utilities for building and describing scenes in your game.
+
 use amethyst_assets::{Format, PrefabData, ProgressCounter};
 use amethyst_controls::ControlTagPrefab;
 use amethyst_core::specs::error::Error;

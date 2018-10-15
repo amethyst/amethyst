@@ -517,6 +517,7 @@ mod tests {
         let mut world = World::new();
 
         let mut sm = StateMachine::new(State1(7));
+        // Unwrap here is fine because start can only fail when there are no states in the machine.
         sm.start(StateData::new(&mut world, &mut ())).unwrap();
 
         for _ in 0..8 {

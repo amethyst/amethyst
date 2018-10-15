@@ -7,7 +7,9 @@ use {AnimationSampling, ApplyData, BlendMethod};
 /// Note that material can only ever be animated with `Step`, or a panic will occur.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum MaterialPrimitive {
+    /// Dynamically altering the texture rendered
     Texture(u64),
+    /// Dynamically altering the section of the texture rendered.
     Offset((f32, f32), (f32, f32)),
 }
 
@@ -64,19 +66,33 @@ impl<'a> From<&'a Sprite> for MaterialPrimitive {
 /// Channels that are animatable on `Material`
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum MaterialChannel {
+    /// Animating the texture used for the albedo
     AlbedoTexture,
+    /// Animating the "window" used to render the albedo.
     AlbedoOffset,
+    /// Animating the texture used for the emission.
     EmissionTexture,
+    /// Animating the "window" used to render the emission.
     EmissionOffset,
+    /// Animating the texture used for the normal
     NormalTexture,
+    /// Animating the "window" used to render the normal.
     NormalOffset,
+    /// Animating the texture used for the metallic
     MetallicTexture,
+    /// Animating the "window" used to render the metallic.
     MetallicOffset,
+    /// Animating the texture used for the roughness
     RoughnessTexture,
+    /// Animating the "window" used to render the roughness.
     RoughnessOffset,
+    /// Animating the texture used for the ambient occlusion
     AmbientOcclusionTexture,
+    /// Animating the "window" used to render the ambient occlusion.
     AmbientOcclusionOffset,
+    /// Animating the texture used for the caveat
     CaveatTexture,
+    /// Animating the "window" used to render the caveat.
     CaveatOffset,
 }
 
@@ -170,27 +186,29 @@ impl AnimationSampling for Material {
         channel: &Self::Channel,
         extra: &Read<MaterialTextureSet>,
     ) -> Self::Primitive {
+        const ERR_MSG: &'static str = "Unable to get requested channel from MaterialTextureSet.";
+
         match *channel {
             MaterialChannel::AlbedoTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.albedo).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.albedo).expect(ERR_MSG))
             }
             MaterialChannel::EmissionTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.emission).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.emission).expect(ERR_MSG))
             }
             MaterialChannel::NormalTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.normal).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.normal).expect(ERR_MSG))
             }
             MaterialChannel::MetallicTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.metallic).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.metallic).expect(ERR_MSG))
             }
             MaterialChannel::RoughnessTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.roughness).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.roughness).expect(ERR_MSG))
             }
             MaterialChannel::AmbientOcclusionTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.ambient_occlusion).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.ambient_occlusion).expect(ERR_MSG))
             }
             MaterialChannel::CaveatTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.caveat).unwrap())
+                MaterialPrimitive::Texture(extra.id(&self.caveat).expect(ERR_MSG))
             }
             MaterialChannel::AlbedoOffset => offset(&self.albedo_offset),
             MaterialChannel::EmissionOffset => offset(&self.emission_offset),

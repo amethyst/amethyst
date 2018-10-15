@@ -9,6 +9,7 @@ use sprite::SpriteSheet;
 use sprite_visibility::SpriteVisibilitySortingSystem;
 use system::RenderSystem;
 use visibility::VisibilitySortingSystem;
+use HideHierarchySystem;
 
 /// Rendering bundle
 ///
@@ -29,6 +30,7 @@ where
     visibility_sorting: Option<&'a [&'a str]>,
     sprite_visibility_sorting: Option<&'a [&'a str]>,
     sprite_sheet_processor_enabled: bool,
+    hide_hierarchy_system_enabled: bool,
 }
 
 impl<'a, B, P> RenderBundle<'a, B, P>
@@ -44,6 +46,7 @@ where
             visibility_sorting: None,
             sprite_visibility_sorting: None,
             sprite_sheet_processor_enabled: false,
+            hide_hierarchy_system_enabled: false,
         }
     }
 
@@ -65,6 +68,13 @@ where
     /// will convert it to the `Asset`.
     pub fn with_sprite_sheet_processor(mut self) -> Self {
         self.sprite_sheet_processor_enabled = true;
+        self
+    }
+
+    /// Enable the [hierarchical hiding system](struct.HideHierarchySystem.html).
+    /// Requires the `"parent_hierarchy_system"` to be used, which is a default part of TransformBundle.
+    pub fn with_hide_hierarchy_system(mut self) -> Self {
+        self.hide_hierarchy_system_enabled = true;
         self
     }
 }
@@ -92,6 +102,13 @@ impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> SystemBun
                 Processor::<SpriteSheet>::new(),
                 "sprite_sheet_processor",
                 &[],
+            );
+        }
+        if self.hide_hierarchy_system_enabled {
+            builder.add(
+                HideHierarchySystem::default(),
+                "hide_hierarchy_system",
+                &["parent_hierarchy_system"],
             );
         }
         builder.add_thread_local(

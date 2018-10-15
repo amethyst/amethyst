@@ -425,7 +425,7 @@ impl<S, E: Send + Sync + 'static> ApplicationBuilder<S, E> {
 
         let thread_pool_builder = ThreadPoolBuilder::new();
         #[cfg(feature = "profiler")]
-        let thread_pool_builder = thread_pool_builder.start_handler(|index| {
+        let thread_pool_builder = thread_pool_builder.start_handler(|_index| {
             register_thread_with_profiler();
         });
         let pool = thread_pool_builder

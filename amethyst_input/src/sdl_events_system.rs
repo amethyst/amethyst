@@ -11,10 +11,14 @@ use std::hash::Hash;
 use std::marker::PhantomData;
 use std::path::PathBuf;
 
+/// A collection of errors that can occur in the SDL system.
 #[derive(Debug)]
 pub enum SdlSystemError {
+    /// Failure initializing SDL context
     ContextInit(String),
+    /// Failure initializing SDL controller subsystem
     ControllerSubsystemInit(String),
+    /// Failure adding a controller mapping
     AddMappingError(AddMappingError),
 }
 
@@ -32,11 +36,15 @@ impl fmt::Display for SdlSystemError {
     }
 }
 
+/// Different ways to pass in a controller mapping for an SDL controller.
 pub enum ControllerMappings {
+    /// Provide mappings from a file
     FromPath(PathBuf),
+    /// Provide mappings programmatically via a `String`.
     FromString(String),
 }
 
+/// A system that pumps SDL events into the `amethyst_input` APIs.
 pub struct SdlEventsSystem<AX, AC>
 where
     AX: Hash + Eq,
@@ -83,6 +91,7 @@ where
     AX: Hash + Eq + Clone + Send + Sync + 'static,
     AC: Hash + Eq + Clone + Send + Sync + 'static,
 {
+    /// Creates a new instance of this system with the provided controller mappings.
     pub fn new(mappings: Option<ControllerMappings>) -> Result<Self, SdlSystemError> {
         let sdl_context = sdl2::init().map_err(|e| SdlSystemError::ContextInit(e))?;
         let event_pump = sdl_context
