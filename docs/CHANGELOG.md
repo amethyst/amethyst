@@ -35,6 +35,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Documentation for drawing sprites. ([#971])
 * Added `shadow_update()` and `shadow_fixed_update()` to the `State` trait. ([#1006])
 * Added configurable width for debug lines ([#1016])
+* Added `TextureMetadata::srgb_scale()` for default texture metadata with nearest filter ([#1023])
 
 ### Changed
 * Sprites contain their dimensions and offsets to render them with the right size and desired position. ([#829], [#830])
@@ -121,6 +122,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1016]: https://github.com/amethyst/amethyst/pull/1016
 [#1024]: https://github.com/amethyst/amethyst/pull/1024
 [#1020]: https://github.com/amethyst/amethyst/pull/1020
+[#1023]: https://github.com/amethyst/amethyst/pull/1023
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
 
