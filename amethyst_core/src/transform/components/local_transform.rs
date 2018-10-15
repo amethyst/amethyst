@@ -320,15 +320,23 @@ impl Transform {
 
     /// Set the rotation using Euler x, y, z.
     ///
-    /// All angles are specified in radians.
+    /// All angles are specified in radians. Euler order is roll → pitch → yaw.
     ///
     /// # Arguments
     ///
-    ///  - x - The angle to apply around the x axis. Also known as the pitch.
-    ///  - y - The angle to apply around the y axis. Also known as the yaw.
-    ///  - z - The angle to apply around the z axis. Also known as the roll.
+    ///  - x - The angle to apply around the x axis. Also known as the roll.
+    ///  - y - The angle to apply around the y axis. Also known as the pitch.
+    ///  - z - The angle to apply around the z axis. Also known as the yaw.
+    /// ```
+    /// # use amethyst_core::transform::components::Transform;
+    /// let mut transform = Transform::default();
+    ///
+    /// transform.set_rotation_euler(1.0, 0.0, 0.0);
+    ///
+    /// assert_eq!(transform.rotation().euler_angles().0, 1.0);
+    /// ```
     pub fn set_rotation_euler(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
-        self.iso.rotation = UnitQuaternion::from_euler_angles(z, x, y);
+        self.iso.rotation = UnitQuaternion::from_euler_angles(x, y, z);
         self
     }
 
@@ -374,6 +382,14 @@ impl Component for Transform {
 }
 
 /// Creates a Transform using the `Vector3` as the translation vector.
+///
+/// ```
+/// # use amethyst_core::transform::components::Transform;
+/// # use amethyst_core::nalgebra::Vector3;
+/// let transform = Transform::from(Vector3::new(100.0, 200.0, 300.0));
+///
+/// assert_eq!(transform.translation().x, 100.0);
+/// ```
 impl From<Vector3<f32>> for Transform {
     fn from(translation: Vector3<f32>) -> Self {
         Transform {
