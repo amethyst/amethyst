@@ -65,18 +65,16 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                     println!(
                         "{}",
                         locale
-                            .context
-                            .get_message("hello")
-                            .and_then(|msg| locale.context.format(msg, None))
-                            .unwrap()
+                            .bundle
+                            .format("hello", None)
+                            .unwrap().0
                     );
                     println!(
                         "{}",
                         locale
-                            .context
-                            .get_message("bye")
-                            .and_then(|msg| locale.context.format(msg, None))
-                            .unwrap()
+                            .bundle
+                            .format("bye", None)
+                            .unwrap().0
                     );
                 }
             }
