@@ -9,24 +9,11 @@ use amethyst_renderer::{Camera, ScreenDimensions};
 use collision::Ray3;
 
 /// Resource which contains a ray from the `ActiveCamera` to the mouse in world space coordinates.
-pub struct MouseRay {
-    origin: Point3<f32>,
-    direction: Vector3<f32>,
-}
-
-impl MouseRay {
-    /// Construct a `Ray3` from a `MouseRay`.
-    pub fn ray(&self) -> Ray3<f32> {
-        Ray3::new(self.origin, self.direction)
-    }
-}
+pub struct MouseRay(pub Ray3<f32>);
 
 impl Default for MouseRay {
     fn default() -> Self {
-        MouseRay {
-            origin: Point3::new(0., 0., 0.),
-            direction: Vector3::new(1., 1., 1.),
-        }
+        MouseRay(Ray3::new(Point3::new(0., 0., 0.), Vector3::new(1., 1., 1.)))
     }
 }
 
@@ -52,8 +39,8 @@ impl<'s> System<'s> for MouseRaySys {
             (Some((x, y)), Some(camera), Some(transform)) => {
                 // FIXME: wrong if camera is a child of another entity with a transform
                 //        might be better to extract the translation from GlobalTransform
-                mouseray.origin = Point3::from_vec(transform.translation);
-                mouseray.direction = from_window_space(
+                mouseray.0.origin = Point3::from_vec(transform.translation);
+                mouseray.0.direction = from_window_space(
                     (x as f32, y as f32),
                     (dims.width(), dims.height()),
                     camera.proj,

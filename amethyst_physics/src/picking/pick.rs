@@ -67,7 +67,7 @@ where
         Write<'s, Picked>,
     );
     fn run(&mut self, (entity, mouseray, transform, pickable, mut picked): Self::SystemData) {
-        let ray = mouseray.ray();
+        let MouseRay(ray) = *mouseray;
         // Search for the nearest intersecting entity
         let mut nearest = None;
         for (entity, transform, pickable) in (&*entity, &transform, &pickable).join() {
