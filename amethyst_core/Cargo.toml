@@ -35,3 +35,4 @@ amethyst = { path = "..", version = "0.8.0" }
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
 nightly = [ "shred/nightly" ]
+saveload = ["specs/serde"]
