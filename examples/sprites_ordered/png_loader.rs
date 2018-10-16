@@ -1,7 +1,7 @@
 use amethyst::{
     assets::{AssetStorage, Loader},
     prelude::*,
-    renderer::{FilterMethod, PngFormat, Texture, TextureHandle, TextureMetadata},
+    renderer::{PngFormat, Texture, TextureHandle, TextureMetadata},
 };
 
 /// Returns a `TextureHandle` to the image.
@@ -18,7 +18,7 @@ where
     loader.load(
         name,
         PngFormat,
-        TextureMetadata::srgb().with_filter(FilterMethod::Scale),
+        TextureMetadata::srgb_scale(),
         (),
         &world.read_resource::<AssetStorage<Texture>>(),
     )

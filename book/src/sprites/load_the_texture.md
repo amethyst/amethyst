@@ -53,6 +53,8 @@ There are two things that may surprise you.
 
     You pick the texture ID based on how you want to reference it. For example, you might have an application configuration that says `path/to/spritesheet_0.png` is ID `100`, `path/to/spritesheet_1.png` is ID `101`, so you can use that. Or, you might do something clever like calculate an ID based on the path, and if it's already loaded, then you know you don't have to load it again.
 
+The loaded texture will use linear filter, e.g. screen pixels will be linearly interpolated between the closest image pixels. In layman's terms, if your images have small resolution, sprites will look blury. Use `TextureMetadata::srgb_scale()` instead to avoid such effect. Screen pixel will be taken from nearest pixel of texture in that case.
+
 [doc_asset]: https://www.amethyst.rs/doc/latest/doc/amethyst_assets/trait.Asset.html
 [doc_asset_get]: https://www.amethyst.rs/doc/latest/doc/amethyst_assets/struct.AssetStorage.html#method.get
 [doc_fmt_bmp]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.BmpFormat.html
