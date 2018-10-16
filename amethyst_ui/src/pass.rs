@@ -154,9 +154,7 @@ impl Pass for DrawUi {
         {
             let bitset = &mut self.cached_draw_order.cached;
             self.cached_draw_order.cache.retain(|&(_z, entity)| {
-                let keep = ui_transform.contains(entity)
-                    && !hidden.contains(entity)
-                    && !hidden_prop.contains(entity);
+                let keep = ui_transform.contains(entity);
                 if !keep {
                     bitset.remove(entity.id());
                 }
@@ -171,16 +169,11 @@ impl Pass for DrawUi {
         // Attempt to insert the new entities in sorted position. Should reduce work during
         // the sorting step.
         let transform_set = ui_transform.mask().clone();
-        let hidden_set = hidden.mask().clone();
-        let hidden_prop_set = hidden_prop.mask().clone();
         {
             // Create a bitset containing only the new indices.
-            let visible_cached = (&self.cached_draw_order.cached
-                ^ (!&hidden_set & !&hidden_prop_set))
-                & &self.cached_draw_order.cached;
-            let new = (&transform_set ^ &visible_cached) & &transform_set;
-            for (entity, transform, _new, _, _) in
-                (&*entities, &ui_transform, &new, !&hidden, !&hidden_prop).join()
+            let new = (&transform_set ^ &self.cached_draw_order.cached) & &transform_set;
+            for (entity, transform, _new) in
+                (&*entities, &ui_transform, &new).join()
             {
                 let pos = self
                     .cached_draw_order
@@ -227,6 +220,10 @@ impl Pass for DrawUi {
             .map(|t| t.0.global_z)
             .fold(1.0, |highest, current| current.abs().max(highest));
         for &(_z, entity) in &self.cached_draw_order.cache {
+            // Do not render hidden entities.
+            if hidden.contains(entity) || hidden_prop.contains(entity) {
+                continue;
+            }
             // This won't panic as we guaranteed earlier these entities are present.
             let ui_transform = ui_transform.get(entity).unwrap();
             if let Some(image) = ui_image
