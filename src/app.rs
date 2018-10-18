@@ -428,8 +428,7 @@ impl<S, E, X> ApplicationBuilder<S, E, X> {
     /// // the game instance can now be run, this exits only when the game is done
     /// game.run();
     /// ~~~
-
-    pub fn new<'a, P: AsRef<Path>>(path: P, initial_state: S) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, initial_state: S) -> Result<Self> {
         use rustc_version_runtime;
 
         if !log_enabled!(Level::Error) {
@@ -460,7 +459,7 @@ impl<S, E, X> ApplicationBuilder<S, E, X> {
         });
         let pool = thread_pool_builder
             .build()
-            .map(|p| Arc::new(p))
+            .map(Arc::new)
             .map_err(|err| Error::Core(err.description().to_string().into()))?;
         world.add_resource(Loader::new(path.as_ref().to_owned(), pool.clone()));
         world.add_resource(pool);

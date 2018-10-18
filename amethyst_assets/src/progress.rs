@@ -34,9 +34,7 @@ impl Progress for () {
 
     fn add_assets(&mut self, _: usize) {}
 
-    fn create_tracker(self) -> () {
-        ()
-    }
+    fn create_tracker(self) {}
 }
 
 /// A progress tracker which is passed to the `Loader`

@@ -27,7 +27,7 @@ pub struct Renderer {
 
 impl Renderer {
     /// Creates a `Renderer` with default window settings.
-    pub fn new() -> Result<Renderer> {
+    pub fn new() -> Result<Self> {
         Self::build().build()
     }
 
@@ -68,6 +68,7 @@ impl Renderer {
     }
 
     /// Draws a scene with the given pipeline.
+    #[cfg_attr(feature = "cargo-clippy", allow(float_cmp))] // cmp just used to recognize change
     pub fn draw<'a, P>(&mut self, pipe: &mut P, data: <P as PipelineData<'a>>::Data)
     where
         P: PolyPipeline,
@@ -82,7 +83,7 @@ impl Renderer {
             let hidpi_factor = self.window().get_hidpi_factor();
 
             if size != self.cached_size || hidpi_factor != self.cached_hidpi_factor {
-                self.cached_size = size.into();
+                self.cached_size = size;
                 self.cached_hidpi_factor = hidpi_factor;
                 #[cfg(feature = "opengl")]
                 self.window
@@ -179,24 +180,19 @@ impl RendererBuilder {
         if self.config.fullscreen {
             wb = wb.with_fullscreen(Some(self.events.get_primary_monitor()));
         }
-        match self.config.dimensions {
-            Some(dimensions) => {
-                wb = wb.with_dimensions(dimensions.into());
-            }
-            _ => (),
+
+        if let Some(dimensions) = self.config.dimensions {
+            wb = wb.with_dimensions(dimensions.into());
         }
-        match self.config.min_dimensions {
-            Some(dimensions) => {
-                wb = wb.with_min_dimensions(dimensions.into());
-            }
-            _ => (),
+
+        if let Some(dimensions) = self.config.min_dimensions {
+            wb = wb.with_min_dimensions(dimensions.into());
         }
-        match self.config.max_dimensions {
-            Some(dimensions) => {
-                wb = wb.with_max_dimensions(dimensions.into());
-            }
-            _ => (),
+
+        if let Some(dimensions) = self.config.max_dimensions {
+            wb = wb.with_max_dimensions(dimensions.into());
         }
+
         self.winit_builder = wb;
         self
     }
@@ -214,8 +210,8 @@ impl RendererBuilder {
 
         let cached_size = window
             .get_inner_size()
-            .expect("Unable to fetch window size, as the window went away!")
-            .into();
+            .expect("Unable to fetch window size, as the window went away!");
+
         let cached_hidpi_factor = window.get_hidpi_factor();
 
         let encoder = factory.create_command_buffer().into();

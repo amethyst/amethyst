@@ -36,17 +36,17 @@ impl AnimationSampling for Transform {
     fn current_sample(&self, channel: &Self::Channel, _: &()) -> SamplerPrimitive<f32> {
         use self::TransformChannel::*;
         match channel {
-            &Translation => SamplerPrimitive::Vec3(self.translation.into()),
-            &Rotation => SamplerPrimitive::Vec4(self.rotation.into()),
-            &Scale => SamplerPrimitive::Vec3(self.scale.into()),
+            Translation => SamplerPrimitive::Vec3(self.translation.into()),
+            Rotation => SamplerPrimitive::Vec4(self.rotation.into()),
+            Scale => SamplerPrimitive::Vec3(self.scale.into()),
         }
     }
     fn default_primitive(channel: &Self::Channel) -> Self::Primitive {
         use self::TransformChannel::*;
         match channel {
-            &Translation => SamplerPrimitive::Vec3([0.; 3]),
-            &Rotation => SamplerPrimitive::Vec4([0.; 4]),
-            &Scale => SamplerPrimitive::Vec3([0.; 3]),
+            Translation => SamplerPrimitive::Vec3([0.; 3]),
+            Rotation => SamplerPrimitive::Vec4([0.; 4]),
+            Scale => SamplerPrimitive::Vec3([0.; 3]),
         }
     }
 

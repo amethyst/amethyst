@@ -217,7 +217,7 @@ impl<T> Prefab<T> {
     }
 
     /// Get immutable access to all entities in the prefab
-    pub fn entities<'a>(&'a self) -> impl Iterator<Item = &'a PrefabEntity<T>> {
+    pub fn entities(&self) -> impl Iterator<Item = &PrefabEntity<T>> {
         self.entities.iter()
     }
 
@@ -232,7 +232,7 @@ impl<T> Prefab<T> {
     where
         T: Default,
     {
-        self.entities.get_mut(index).unwrap().data_or_default()
+        self.entities[index].data_or_default()
     }
 
     /// Check if sub asset loading have been triggered

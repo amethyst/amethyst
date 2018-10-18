@@ -295,7 +295,7 @@ impl Pass for DrawUi {
                             .grapheme_indices(true)
                             .nth(end)
                             .map(|i| i.0)
-                            .unwrap_or(rendered_string.len());
+                            .unwrap_or_else(|| rendered_string.len());
                         start_byte.map(|start_byte| (editing, (start_byte, end_byte)))
                     }).map(|(editing, (start_byte, end_byte))| {
                         vec![
@@ -318,7 +318,7 @@ impl Pass for DrawUi {
                                 font_id: FontId(0),
                             },
                         ]
-                    }).unwrap_or(vec![SectionText {
+                    }).unwrap_or_else(|| vec![SectionText {
                         text: rendered_string,
                         scale: scale,
                         color: ui_text.color,
@@ -487,19 +487,17 @@ impl Pass for DrawUi {
                                     false,
                                 )
                             };
-                            let height;
-                            let width;
-                            if editing.use_block_cursor {
-                                height = if blink_on {
+                            let (height, width) = if editing.use_block_cursor {
+                                let height = if blink_on {
                                     ui_text.font_size
                                 } else {
                                     ui_text.font_size / 10.0
                                 };
-                                width = space_width;
+
+                                (height, space_width)
                             } else {
-                                height = ui_text.font_size;
-                                width = 2.0;
-                            }
+                                (ui_text.font_size, 2.0)
+                            };
 
                             let mut pos = glyph.map(|g| g.position()).unwrap_or(Point {
                                 x: ui_transform.pixel_x

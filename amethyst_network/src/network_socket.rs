@@ -56,7 +56,7 @@ where
     pub fn new(
         addr: SocketAddr,
         filters: Vec<Box<NetFilter<E>>>,
-    ) -> Result<NetSocketSystem<E>, Error> {
+    ) -> Result<Self, Error> {
         if addr.port() < 1024 {
             // Just warning the user here, just in case they want to use the root port.
             warn!("Using a port below 1024, this will require root permission and should not be done.");
@@ -99,7 +99,7 @@ where
                             receive_queue
                                 .send(RawEvent {
                                     byte_count: amt,
-                                    data: buf[..amt].iter().cloned().collect(),
+                                    data: buf[..amt].to_vec(),
                                     source: src,
                                 }).unwrap();
                         }
@@ -135,7 +135,7 @@ where
 
     fn run(&mut self, mut net_connections: Self::SystemData) {
         for mut net_connection in (&mut net_connections).join() {
-            let target = net_connection.target.clone();
+            let target = net_connection.target;
 
             if net_connection.state == ConnectionState::Connected
                 || net_connection.state == ConnectionState::Connecting

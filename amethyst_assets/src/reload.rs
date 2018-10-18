@@ -159,7 +159,7 @@ impl<'a> System<'a> for HotReloadSystem {
                 ref mut last,
                 ref mut frame_number,
             } => {
-                if last.elapsed().as_secs() > interval as u64 {
+                if last.elapsed().as_secs() > u64::from(interval) {
                     *frame_number = time.frame_number() + 1;
                     *last = Instant::now();
                 }

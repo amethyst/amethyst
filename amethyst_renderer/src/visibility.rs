@@ -69,10 +69,10 @@ impl<'a> System<'a> for VisibilitySortingSystem {
             .or_else(|| (&camera, &global).join().map(|cg| cg.1).next());
         let camera_backward = camera
             .map(|c| c.0.z.truncate())
-            .unwrap_or(Vector3::unit_z());
+            .unwrap_or_else(Vector3::unit_z);
         let camera_centroid = camera
             .map(|g| g.0.transform_point(origin))
-            .unwrap_or(origin.clone());
+            .unwrap_or(origin);
 
         self.centroids.clear();
         self.centroids.extend(

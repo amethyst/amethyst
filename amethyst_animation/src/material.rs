@@ -186,7 +186,7 @@ impl AnimationSampling for Material {
         channel: &Self::Channel,
         extra: &Read<MaterialTextureSet>,
     ) -> Self::Primitive {
-        const ERR_MSG: &'static str = "Unable to get requested channel from MaterialTextureSet.";
+        const ERR_MSG: &str = "Unable to get requested channel from MaterialTextureSet.";
 
         match *channel {
             MaterialChannel::AlbedoTexture => {

@@ -1,5 +1,7 @@
 //! A collection of abstractions for various input devices to be used with Amethyst.
+
 #![warn(missing_docs)]
+#![cfg_attr(feature = "cargo-clippy", allow(type_complexity))] // complex project
 
 extern crate amethyst_config;
 extern crate amethyst_core;

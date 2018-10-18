@@ -438,7 +438,7 @@ pub fn create_texture_asset(
                 .chain_err(|| "Failed to build texture")
         }
     };
-    t.map(|t| ProcessingState::Loaded(t))
+    t.map(ProcessingState::Loaded)
 }
 
 fn apply_options<D, T>(tb: TextureBuilder<D, T>, metadata: TextureMetadata) -> TextureBuilder<D, T>
@@ -463,7 +463,7 @@ fn create_texture_asset_from_image(
     let rgba = image.rgba;
     let w = rgba.width();
     let h = rgba.height();
-    if w > u16::max_value() as u32 || h > u16::max_value() as u32 {
+    if w > u32::from(u16::max_value()) || h > u32::from(u16::max_value()) {
         bail!(
             "Unsupported texture size (expected: ({}, {}), got: ({}, {})",
             u16::max_value(),

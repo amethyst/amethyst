@@ -172,8 +172,8 @@ impl Default for Time {
             delta_time: Duration::from_secs(0),
             delta_real_seconds: 0.0,
             delta_real_time: Duration::from_secs(0),
-            fixed_seconds: duration_to_secs(Duration::new(0, 16666666)),
-            fixed_time: Duration::new(0, 16666666),
+            fixed_seconds: duration_to_secs(Duration::new(0, 16_666_666)),
+            fixed_time: Duration::new(0, 16_666_666),
             last_fixed_update: Instant::now(),
             frame_number: 0,
             absolute_real_time: Duration::default(),
@@ -359,7 +359,7 @@ pub fn duration_to_secs(duration: Duration) -> f32 {
 
 /// Converts a Duration to the time in seconds in an f64.
 pub fn duration_to_secs_f64(duration: Duration) -> f64 {
-    duration.as_secs() as f64 + (duration.subsec_nanos() as f64 / 1.0e9)
+    duration.as_secs() as f64 + (f64::from(duration.subsec_nanos()) / 1.0e9)
 }
 
 /// Converts a time in seconds to a duration
@@ -369,7 +369,7 @@ pub fn secs_to_duration(secs: f32) -> Duration {
 
 /// Converts a Duration to nanoseconds
 pub fn duration_to_nanos(duration: Duration) -> u64 {
-    (duration.as_secs() * 1_000_000_000) + duration.subsec_nanos() as u64
+    (duration.as_secs() * 1_000_000_000) + u64::from(duration.subsec_nanos())
 }
 
 /// Converts nanoseconds to a Duration

@@ -116,7 +116,7 @@ where
             if let (&Some(ref index), &Some(ref handle)) = (&index, &handle) {
                 texture_set.insert(*index, handle.clone());
             }
-            handle.unwrap_or(def.clone())
+            handle.unwrap_or_else(|| def.clone())
         })
 }
 

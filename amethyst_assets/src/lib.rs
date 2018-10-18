@@ -8,6 +8,7 @@
 //! * allow different sources
 
 #![warn(missing_docs)]
+#![cfg_attr(feature = "cargo-clippy", allow(type_complexity))] // complex project
 
 extern crate amethyst_core;
 extern crate crossbeam;

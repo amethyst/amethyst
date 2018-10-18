@@ -148,17 +148,13 @@ where
         let focused = focus.is_focused;
         for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
             if focused && hide.hide {
-                match *event {
-                    Event::DeviceEvent { ref event, .. } => match *event {
-                        DeviceEvent::MouseMotion { delta: (x, y) } => {
-                            for (transform, _) in (&mut transform, &tag).join() {
-                                transform.pitch_local(Deg((-1.0) * y as f32 * self.sensitivity_y));
-                                transform.yaw_global(Deg((-1.0) * x as f32 * self.sensitivity_x));
-                            }
+                if let Event::DeviceEvent { ref event, .. } = *event {
+                    if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
+                        for (transform, _) in (&mut transform, &tag).join() {
+                            transform.pitch_local(Deg((-1.0) * y as f32 * self.sensitivity_y));
+                            transform.yaw_global(Deg((-1.0) * x as f32 * self.sensitivity_x));
                         }
-                        _ => (),
-                    },
-                    _ => (),
+                    }
                 }
             }
         }
@@ -189,14 +185,10 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
 
     fn run(&mut self, (events, mut focus): Self::SystemData) {
         for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
-            match event {
-                &Event::WindowEvent { ref event, .. } => match event {
-                    &WindowEvent::Focused(focused) => {
-                        focus.is_focused = focused;
-                    }
-                    _ => (),
-                },
-                _ => (),
+            if let Event::WindowEvent { ref event, .. } = *event {
+                if let WindowEvent::Focused(focused) = *event {
+                    focus.is_focused = focused;
+                }
             }
         }
     }

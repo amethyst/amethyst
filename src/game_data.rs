@@ -213,7 +213,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     {
         bundle
             .build(&mut self.disp_builder)
-            .map_err(|err| Error::Core(err))?;
+            .map_err(Error::Core)?;
         Ok(self)
     }
 
@@ -269,7 +269,5 @@ impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
 }
 
 impl DataInit<()> for () {
-    fn build(self, _: &mut World) -> () {
-        ()
-    }
+    fn build(self, _: &mut World) {}
 }

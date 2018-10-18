@@ -47,7 +47,7 @@ impl SimpleFormat<FontAsset> for TtfFormat {
 
     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<FontData, Error> {
         Font::from_bytes(bytes)
-            .map(|f| FontData(f))
+            .map(FontData)
             .chain_err(|| "Font parsing error")
     }
 }
