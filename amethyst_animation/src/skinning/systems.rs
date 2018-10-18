@@ -43,12 +43,20 @@ impl<'a> System<'a> for VertexSkinningSystem {
         self.updated.clear();
 
         global_transforms.populate_modified(
-            &mut self.updated_id.as_mut().expect("VertexSkinningSystem missing updated_id."), 
-            &mut self.updated);
+            &mut self
+                .updated_id
+                .as_mut()
+                .expect("VertexSkinningSystem missing updated_id."),
+            &mut self.updated,
+        );
 
         global_transforms.populate_inserted(
-            &mut self.inserted_id.as_mut().expect("VertexSkinningSystem missing inserted_id."), 
-            &mut self.updated);
+            &mut self
+                .inserted_id
+                .as_mut()
+                .expect("VertexSkinningSystem missing inserted_id."),
+            &mut self.updated,
+        );
 
         self.updated_skins.clear();
 
