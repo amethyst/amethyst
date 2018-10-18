@@ -318,12 +318,14 @@ impl Pass for DrawUi {
                                 font_id: FontId(0),
                             },
                         ]
-                    }).unwrap_or_else(|| vec![SectionText {
-                        text: rendered_string,
-                        scale: scale,
-                        color: ui_text.color,
-                        font_id: FontId(0),
-                    }]);
+                    }).unwrap_or_else(|| {
+                        vec![SectionText {
+                            text: rendered_string,
+                            scale: scale,
+                            color: ui_text.color,
+                            font_id: FontId(0),
+                        }]
+                    });
 
                 let layout = match ui_text.line_mode {
                     LineMode::Single => Layout::SingleLine {

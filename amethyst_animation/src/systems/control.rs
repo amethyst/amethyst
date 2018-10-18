@@ -442,10 +442,10 @@ where
     if animation
         .nodes
         .iter()
-        .any(|&(ref node_index, _, ref sampler_handle)|
+        .any(|&(ref node_index, _, ref sampler_handle)| {
             !hierarchy.nodes.contains_key(node_index)
                 || sampler_storage.get(sampler_handle).is_none()
-        ) {
+        }) {
         return false;
     }
 

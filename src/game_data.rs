@@ -211,9 +211,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     where
         B: SystemBundle<'a, 'b>,
     {
-        bundle
-            .build(&mut self.disp_builder)
-            .map_err(Error::Core)?;
+        bundle.build(&mut self.disp_builder).map_err(Error::Core)?;
         Ok(self)
     }
 

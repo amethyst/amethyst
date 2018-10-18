@@ -109,12 +109,12 @@ impl<'a> System<'a> for TransformSystem {
             if let (Some(parent), Some(local)) = (parents.get(*entity), locals.get(*entity)) {
                 let parent_dirty = self.global_modified.contains(parent.entity.id());
                 if parent_dirty || self_dirty {
-                    let combined_transform =
-                        if let Some(parent_global) = globals.get(parent.entity) {
-                            (parent_global.0 * local.matrix())
-                        } else {
-                            local.matrix()
-                        };
+                    let combined_transform = if let Some(parent_global) = globals.get(parent.entity)
+                    {
+                        (parent_global.0 * local.matrix())
+                    } else {
+                        local.matrix()
+                    };
 
                     if let Some(global) = globals.get_mut(*entity) {
                         self.global_modified.add(entity.id());

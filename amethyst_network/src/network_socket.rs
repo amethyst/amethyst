@@ -53,10 +53,7 @@ where
     E: Serialize + PartialEq + Send + 'static,
 {
     /// Creates a `NetSocketSystem` and binds the Socket on the ip and port added in parameters.
-    pub fn new(
-        addr: SocketAddr,
-        filters: Vec<Box<NetFilter<E>>>,
-    ) -> Result<Self, Error> {
+    pub fn new(addr: SocketAddr, filters: Vec<Box<NetFilter<E>>>) -> Result<Self, Error> {
         if addr.port() < 1024 {
             // Just warning the user here, just in case they want to use the root port.
             warn!("Using a port below 1024, this will require root permission and should not be done.");

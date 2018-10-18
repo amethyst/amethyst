@@ -159,11 +159,11 @@ where
         data: <L as PassesData<'b>>::Data,
     ) {
         if let Some(color) = self.clear_color {
-           self.target.clear_color(encoder, color);
+            self.target.clear_color(encoder, color);
         }
 
         if let Some(depth) = self.clear_depth {
-           self.target.clear_depth_stencil(encoder, depth);
+            self.target.clear_depth_stencil(encoder, depth);
         }
 
         self.passes.apply(encoder, factory, data);

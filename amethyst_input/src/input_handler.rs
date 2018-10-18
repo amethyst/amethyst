@@ -417,10 +417,7 @@ where
             .pressed_mouse_buttons
             .iter()
             .map(|&mb| Button::Mouse(mb));
-        let keys = self
-            .pressed_keys
-            .iter()
-            .flat_map(|v| KeyThenCode::new(*v));
+        let keys = self.pressed_keys.iter().flat_map(|v| KeyThenCode::new(*v));
         let controller_buttons = self
             .pressed_controller_buttons
             .iter()

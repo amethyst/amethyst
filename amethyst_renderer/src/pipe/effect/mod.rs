@@ -45,15 +45,11 @@ impl<'a> ProgramSource<'a> {
                 .create_shader_set(vs, ps)
                 .map_err(Error::ProgramCreation),
             ProgramSource::Geometry(ref vs, ref gs, ref ps) => {
-                let v = fac
-                    .create_shader_vertex(vs)
-                    .map_err(ProgramError::Vertex)?;
+                let v = fac.create_shader_vertex(vs).map_err(ProgramError::Vertex)?;
                 let g = fac
                     .create_shader_geometry(gs)
                     .expect("Geometry shader creation failed");
-                let p = fac
-                    .create_shader_pixel(ps)
-                    .map_err(ProgramError::Pixel)?;
+                let p = fac.create_shader_pixel(ps).map_err(ProgramError::Pixel)?;
                 Ok(ShaderSet::Geometry(v, g, p))
             }
             ProgramSource::Tessellated(ref vs, ref hs, ref ds, ref ps) => fac
@@ -94,8 +90,11 @@ impl Effect {
         match self.const_bufs.get(name.as_ref()) {
             Some(i) => {
                 let raw = &self.data.const_bufs[*i];
-                enc.update_buffer::<T>(unsafe { &*(raw as *const RawBuffer<_> as *const Buffer<_, _>) }, &data[..], 0)
-                    .expect("Failed to update buffer (TODO: replace expect)");
+                enc.update_buffer::<T>(
+                    unsafe { &*(raw as *const RawBuffer<_> as *const Buffer<_, _>) },
+                    &data[..],
+                    0,
+                ).expect("Failed to update buffer (TODO: replace expect)");
             }
             None => {
                 warn!(
@@ -115,7 +114,10 @@ impl Effect {
         match self.const_bufs.get(name.as_ref()) {
             Some(i) => {
                 let raw = &self.data.const_bufs[*i];
-                enc.update_constant_buffer::<T>( unsafe { &*(raw as *const RawBuffer<_> as *const Buffer<_, _>) }, &data)
+                enc.update_constant_buffer::<T>(
+                    unsafe { &*(raw as *const RawBuffer<_> as *const Buffer<_, _>) },
+                    &data,
+                )
             }
             None => {
                 warn!(

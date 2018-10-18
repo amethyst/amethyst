@@ -185,7 +185,11 @@ impl TargetBuilder {
             None
         };
 
-        let target = Target { color_bufs, depth_buf, size };
+        let target = Target {
+            color_bufs,
+            depth_buf,
+            size,
+        };
         Ok((self.name, target))
     }
 }

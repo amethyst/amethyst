@@ -217,7 +217,8 @@ pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> Result<Proc
         MeshData::Creator(creator) => creator.build(renderer),
     };
 
-    data.map(ProcessingState::Loaded).chain_err(|| "Failed to build mesh")
+    data.map(ProcessingState::Loaded)
+        .chain_err(|| "Failed to build mesh")
 }
 
 /// Build Mesh with vertex buffer combination
