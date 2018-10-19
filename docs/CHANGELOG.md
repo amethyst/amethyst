@@ -81,6 +81,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `AssetPrefab` loaded files at an incorrect time ([#1020])
 * Removed unreachable code in `TexturePrefab` ([#1020])
 * Fix OpenGL not rendering on window creation due to `glutin` bug ([#972])
+* Fix debug lines panic when no lines are rendered ([#1049])
 
 [#829]: https://github.com/amethyst/amethyst/issues/829
 [#830]: https://github.com/amethyst/amethyst/pull/830
@@ -126,6 +127,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1024]: https://github.com/amethyst/amethyst/pull/1024
 [#1020]: https://github.com/amethyst/amethyst/pull/1020
 [#1023]: https://github.com/amethyst/amethyst/pull/1023
+[#1049]: https://github.com/amethyst/amethyst/pull/1049
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
 
