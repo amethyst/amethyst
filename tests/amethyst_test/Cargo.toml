@@ -12,7 +12,7 @@ hetseq = "0.2"
 lazy_static = "1.1"
 
 [features]
-default = ["graphics"]
+default = []
 nightly = ["amethyst/nightly"]
 
 # Used to tag tests that need a display (e.g. X) to run.
