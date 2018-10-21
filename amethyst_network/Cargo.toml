@@ -1,11 +1,15 @@
 [package]
 name = "amethyst_network"
 version = "0.1.0"
-authors = ["Joël Lupien (Jojolepro) <jojolepromain@gmail.com>", "Lucio Franco (LucioFranco) <luciofranco14@gmail.com>"]
-description = "Amethyst network crate"
+authors = [
+	"Joël Lupien (Jojolepro) <jojolepromain@gmail.com>",
+	"Lucio Franco (LucioFranco) <luciofranco14@gmail.com>"
+]
+description = "Amethyst networking crate"
 keywords = ["networking", "specs", "ecs", "amethyst", "serialization"]
 categories = ["game-engines"]
 
+readme = "README.md"
 documentation = "https://www.amethyst.rs/doc/master/doc/amethyst_network/index.html"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
