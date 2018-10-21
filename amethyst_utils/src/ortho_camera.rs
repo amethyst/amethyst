@@ -89,7 +89,7 @@ impl Component for CameraOrtho {
 }
 
 /// Settings that decide how to scale the camera's matrix when the aspect ratio changes.
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
 pub enum CameraNormalizeMode {
     /// Using the aspect ratio from the world coordinates for this camera, tries to adjust the matrix values of the
     /// camera so that the orthogonal direction to the stretch_direction always have a world size of 1.
