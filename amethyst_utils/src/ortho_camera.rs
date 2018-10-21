@@ -6,7 +6,7 @@ use amethyst_core::Axis2;
 use amethyst_renderer::{Camera, ScreenDimensions};
 
 /// The coordinates that `CameraOrtho` will keep visible in the window
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Copy)]
 pub struct CameraOrthoWorldCoordinates {
     /// Left x coordinate
     pub left: f32,
@@ -19,6 +19,7 @@ pub struct CameraOrthoWorldCoordinates {
 }
 
 impl CameraOrthoWorldCoordinates {
+
     /// Creates coordinates with (0,0) at the bottom left, and (1,1) at the top right
     pub fn normalized() -> CameraOrthoWorldCoordinates {
         CameraOrthoWorldCoordinates {
@@ -29,17 +30,17 @@ impl CameraOrthoWorldCoordinates {
         }
     }
 
-    /// width / height of the desired camera coordinates
+    /// Returns width / height of the desired camera coordinates.
     pub fn aspect_ratio(&self) -> f32 {
         self.width() / self.height()
     }
 
-    /// size of the x-axis
+    /// Returns size of the x-axis.
     pub fn width(&self) -> f32 {
         self.right - self.left
     }
 
-    /// size of the y-axis
+    /// Returns size of the y-axis.
     pub fn height(&self) -> f32 {
         self.top - self.bottom
     }
@@ -55,7 +56,7 @@ impl Default for CameraOrthoWorldCoordinates {
 /// to preferences in the "mode" and "world_coordinates" fields.
 /// It adjusts the camera so that the camera's world coordinates are always visible.
 /// You must add the `CameraNormalOrthoSystem` to your dispatcher for this to take effect (no dependencies required).
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CameraOrtho {
     /// How the camera's matrix is changed when the window's aspect ratio changes.
     /// See `CameraNormalizeMode` for more info.
@@ -65,6 +66,7 @@ pub struct CameraOrtho {
 }
 
 impl CameraOrtho {
+
     /// Creates a Camera that maintains window coordinates of (0,0) in the bottom left, and (1,1) at the top right
     pub fn normalized(mode: CameraNormalizeMode) -> CameraOrtho {
         CameraOrtho {
@@ -88,7 +90,7 @@ impl Component for CameraOrtho {
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum CameraNormalizeMode {
     /// Using the aspect ratio from the world coordinates for this camera, tries to adjust the matrix values of the
-    /// camera so that the direction opposite to the stretch_direction always have a world size of 1.
+    /// camera so that the orthogonal direction to the stretch_direction always have a world size of 1.
     ///
     /// This means that the direction opposite to stretch_direction
     /// will always be between 0.0 to 1.0 in world coordinates.
