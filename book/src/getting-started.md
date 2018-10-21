@@ -40,7 +40,7 @@ In case you're doing this with `cargo`, here's what you need to do:
 * Create a `resources` folder and put a `display_config.ron` in it.
 * (Optional) Copy the code from one of amethyst's examples.
 
-### Important note on versionning
+### Important note on versioning
 
 Amethyst is divided in two major versions:
 * The Release version, which is the latest version available on crates.io
@@ -61,7 +61,7 @@ If you want to use the latest unreleased changes, your Cargo.toml file should lo
 amethyst = { git = "https://github.com/amethyst/amethyst", rev = "COMMIT_HASH" }
 ```
 
-The commit hash part is optionnal. It indicates which specific commit your project uses, to prevent unexpected breakage when we make changes to the git version.
+The commit hash part is optional. It indicates which specific commit your project uses, to prevent unexpected breakage when we make changes to the git version.
 
 [agit]: https://github.com/amethyst/amethyst
 [cl]: https://github.com/amethyst/tools
