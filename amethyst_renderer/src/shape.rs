@@ -12,7 +12,7 @@ use amethyst_assets::{
     AssetStorage, Handle, Loader, PrefabData, PrefabError, Progress, ProgressCounter,
 };
 use amethyst_core::{
-    cgmath::{InnerSpace, Vector3},
+    nalgebra::Vector3,
     specs::prelude::{Entity, Read, ReadExpect, WriteStorage},
 };
 
@@ -240,8 +240,8 @@ where
                     .map(|(x, y, z)| {
                         Vector3::new(v.normal.x * x, v.normal.y * y, v.normal.z * z).normalize()
                     }).unwrap_or_else(|| Vector3::from(v.normal));
-                let up = Vector3::from([0.0, 1.0, 0.0]);
-                let tangent = normal.cross(up).cross(normal);
+                let up = Vector3::new(0.0, 1.0, 0.0);
+                let tangent = normal.cross(&up).cross(&normal);
                 (
                     pos.into(),
                     normal.into(),

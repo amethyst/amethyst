@@ -2,8 +2,7 @@
 
 #![warn(missing_docs)]
 
-#[macro_use]
-pub extern crate cgmath;
+pub extern crate nalgebra;
 pub extern crate shred;
 pub extern crate shrev;
 pub extern crate specs;

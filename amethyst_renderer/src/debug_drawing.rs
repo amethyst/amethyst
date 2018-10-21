@@ -1,5 +1,5 @@
 use amethyst_core::{
-    cgmath::{Point3, Vector3},
+    nalgebra::{Point3, Vector3},
     specs::{Component, DenseVecStorage},
 };
 

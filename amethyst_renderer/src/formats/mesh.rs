@@ -5,7 +5,7 @@ use amethyst_assets::{
     ResultExt, SimpleFormat,
 };
 use amethyst_core::{
-    cgmath::{InnerSpace, Vector3},
+    nalgebra::Vector3,
     specs::prelude::{Component, Entity, Read, ReadExpect, VecStorage, WriteStorage},
 };
 

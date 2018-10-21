@@ -60,6 +60,8 @@ extern crate hibitset;
 extern crate itertools;
 #[macro_use]
 extern crate log;
+extern crate alga;
+extern crate num_traits;
 extern crate minterpolate;
 #[macro_use]
 extern crate serde;

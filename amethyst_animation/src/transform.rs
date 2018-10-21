@@ -1,5 +1,5 @@
 use amethyst_core::{
-    cgmath::{InnerSpace, Quaternion, Vector3},
+    nalgebra::{Quaternion, Unit, Vector3},
     Transform,
 };
 
@@ -33,8 +33,10 @@ impl AnimationSampling for Transform {
         use self::TransformChannel::*;
 
         match (channel, *data) {
-            (&Translation, Vec3(ref d)) => self.translation = Vector3::from(*d),
-            (&Rotation, Vec4(ref d)) => self.rotation = Quaternion::from(*d).normalize(),
+            (&Translation, Vec3(ref d)) => *self.translation_mut() = Vector3::from(*d),
+            (&Rotation, Vec4(ref d)) => {
+                *self.rotation_mut() = Unit::new_normalize(Quaternion::new(d[0], d[1], d[2], d[3]))
+            }
             (&Scale, Vec3(ref d)) => self.scale = Vector3::from(*d),
             _ => panic!("Attempt to apply invalid sample to Transform"),
         }
@@ -43,8 +45,8 @@ impl AnimationSampling for Transform {
     fn current_sample(&self, channel: &Self::Channel, _: &()) -> SamplerPrimitive<f32> {
         use self::TransformChannel::*;
         match channel {
-            Translation => SamplerPrimitive::Vec3(self.translation.into()),
-            Rotation => SamplerPrimitive::Vec4(self.rotation.into()),
+            Translation => SamplerPrimitive::Vec3((*self.translation()).into()),
+            Rotation => SamplerPrimitive::Vec4(self.rotation().as_ref().coords.into()),
             Scale => SamplerPrimitive::Vec3(self.scale.into()),
         }
     }
