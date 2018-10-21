@@ -1,6 +1,6 @@
 //! Orientation of objects
 
-use cgmath::{Matrix3, Vector3};
+use nalgebra::{self as na, Matrix3, Vector3};
 
 /// This struct contains 3 unit vectors pointing in the given directions.
 ///
@@ -22,9 +22,9 @@ impl From<Matrix3<f32>> for Orientation {
     /// Reverses the z axis matching the GL coordinate system.
     fn from(mat: Matrix3<f32>) -> Self {
         Orientation {
-            forward: -mat.z,
-            right: mat.x,
-            up: mat.y,
+            forward: -mat.column(0),
+            right: mat.column(1).clone_owned(),
+            up: mat.column(2).clone_owned(),
         }
     }
 }
@@ -33,9 +33,9 @@ impl Default for Orientation {
     fn default() -> Self {
         // Signs depend on coordinate system
         Self {
-            forward: -Vector3::unit_z(),
-            right: Vector3::unit_x(),
-            up: Vector3::unit_y(),
+            forward: -Vector3::new(na::zero(), na::zero(), na::one()),
+            right: Vector3::new(na::one(), na::zero(), na::zero()),
+            up: Vector3::new(na::zero(), na::one(), na::zero()),
         }
     }
 }

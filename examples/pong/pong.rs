@@ -1,6 +1,9 @@
 use amethyst::{
     assets::{AssetStorage, Loader},
-    core::{cgmath::Vector3, transform::Transform},
+    core::{
+        nalgebra::{Translation, Vector3},
+        transform::{GlobalTransform, Transform},
+    },
     ecs::prelude::World,
     prelude::*,
     renderer::{
@@ -92,8 +95,8 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
 
     // Correctly position the paddles.
     let y = (ARENA_HEIGHT - PADDLE_HEIGHT) / 2.0;
-    left_transform.translation = Vector3::new(PADDLE_WIDTH * 0.5, y, 0.0);
-    right_transform.translation = Vector3::new(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
+    left_transform.set_xyz(PADDLE_WIDTH * 0.5, y, 0.0);
+    right_transform.set_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 
     // Assign the sprites for the paddles
     let sprite_render_left = SpriteRender {
@@ -141,7 +144,7 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
 
     // Create the translation.
     let mut local_transform = Transform::default();
-    local_transform.translation = Vector3::new(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
+    local_transform.set_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 
     // Assign the sprite for the ball
     let sprite_render = SpriteRender {

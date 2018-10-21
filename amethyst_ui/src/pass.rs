@@ -207,10 +207,10 @@ impl Pass for DrawUi {
             .sort_unstable_by(|&(z1, _), &(z2, _)| z1.partial_cmp(&z2).unwrap_or(Ordering::Equal));
 
         // Inverted screen dimensions. Used to scale from pixel coordinates to the opengl coordinates in the vertex shader.
-        let invert_window_size = cg_vec2(
+        let invert_window_size = [
             1. / screen_dimensions.width(),
             1. / screen_dimensions.height(),
-        );
+        ];
 
         let mesh = self.mesh.as_ref().unwrap();
 

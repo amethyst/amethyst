@@ -1,6 +1,9 @@
 use amethyst::{
     assets::Loader,
-    core::{cgmath::Vector3, Transform},
+    core::{
+        nalgebra::{Translation, Vector3},
+        transform::Transform,
+    },
     ecs::prelude::World,
     prelude::*,
     renderer::{
@@ -37,7 +40,7 @@ fn initialise_camera(world: &mut World) {
     };
 
     let mut transform = Transform::default();
-    transform.translation.z = 1.0;
+    transform.set_z(1.0);
     world
         .create_entity()
         .with(Camera::from(Projection::orthographic(

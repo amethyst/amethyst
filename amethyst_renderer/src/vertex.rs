@@ -6,6 +6,8 @@ use gfx::{
     traits::Pod,
 };
 
+use amethyst_core::nalgebra::{Point3, Vector3};
+
 /// Format for vertex attribute
 pub type AttributeFormat = Element<Format>;
 
@@ -185,11 +187,11 @@ impl With<Color> for PosColor {
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PosColorNorm {
     /// Position of the vertex in 3D space.
-    pub position: [f32; 3],
+    pub position: Point3<f32>,
     /// RGBA color value of the vertex.
     pub color: [f32; 4],
     /// Normal vector of the vertex.
-    pub normal: [f32; 3],
+    pub normal: Vector3<f32>,
 }
 
 unsafe impl Pod for PosColorNorm {}
