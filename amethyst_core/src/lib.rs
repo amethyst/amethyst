@@ -1,3 +1,7 @@
+//! A collection of structures and functions useful across the entire amethyst project.
+
+#![warn(missing_docs)]
+
 #[macro_use]
 pub extern crate cgmath;
 pub extern crate shred;
@@ -24,6 +28,7 @@ compile_error!("the cfg flag \"no_threading\" is required when building for emsc
 pub use self::axis::{Axis2, Axis3};
 pub use self::named::{Named, WithNamed};
 pub use bundle::{Error, ErrorKind, Result, SystemBundle};
+pub use event::EventReader;
 pub use orientation::Orientation;
 use std::sync::Arc;
 pub use timing::*;
@@ -31,6 +36,7 @@ pub use transform::*;
 
 mod axis;
 pub mod bundle;
+mod event;
 pub mod frame_limiter;
 mod named;
 mod orientation;

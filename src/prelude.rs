@@ -1,6 +1,6 @@
 //! Contains common types that can be glob-imported (`*`) for convenience.
 
-pub use app::{Application, ApplicationBuilder};
+pub use app::{Application, ApplicationBuilder, CoreApplication};
 pub use config::Config;
 pub use core::WithNamed;
 pub use ecs::prelude::{Builder, World};

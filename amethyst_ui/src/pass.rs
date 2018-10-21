@@ -10,16 +10,16 @@ use amethyst_renderer::error::Result;
 use amethyst_renderer::pipe::pass::{Pass, PassData};
 use amethyst_renderer::pipe::{Effect, NewEffect};
 use amethyst_renderer::{
-    Encoder, Factory, Mesh, PosTex, Resources, ScreenDimensions, Shape, Texture, TextureData,
-    TextureHandle, TextureMetadata, VertexFormat,
+    Encoder, Factory, Hidden, HiddenPropagate, Mesh, PosTex, Resources, ScreenDimensions, Shape,
+    Texture, TextureData, TextureHandle, TextureMetadata, VertexFormat,
 };
 use fnv::FnvHashMap as HashMap;
 use gfx::preset::blend;
 use gfx::pso::buffer::ElemStride;
 use gfx::state::ColorMask;
 use gfx_glyph::{
-    BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher,
-    Layout, Point, Scale, SectionText, VariedSection,
+    BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher, Layout, Point, Scale,
+    SectionText, VariedSection,
 };
 use glsl_layout::{vec2, Uniform};
 use hibitset::BitSet;
@@ -104,6 +104,8 @@ impl<'a> PassData<'a> for DrawUi {
         ReadStorage<'a, UiTransform>,
         WriteStorage<'a, UiText>,
         ReadStorage<'a, TextEditing>,
+        ReadStorage<'a, Hidden>,
+        ReadStorage<'a, HiddenPropagate>,
     );
 }
 
@@ -144,6 +146,8 @@ impl Pass for DrawUi {
             ui_transform,
             mut ui_text,
             editing,
+            hidden,
+            hidden_prop,
         ): <Self as PassData>::Data,
     ) {
         // Populate and update the draw order cache.
@@ -162,13 +166,15 @@ impl Pass for DrawUi {
             *z = ui_transform.get(entity).unwrap().global_z;
         }
 
-        // Attempt to insert the new entities in sorted position.  Should reduce work during
+        // Attempt to insert the new entities in sorted position. Should reduce work during
         // the sorting step.
         let transform_set = ui_transform.mask().clone();
         {
             // Create a bitset containing only the new indices.
             let new = (&transform_set ^ &self.cached_draw_order.cached) & &transform_set;
-            for (entity, transform, _new) in (&*entities, &ui_transform, &new).join() {
+            for (entity, transform, _new) in
+                (&*entities, &ui_transform, &new).join()
+            {
                 let pos = self
                     .cached_draw_order
                     .cache
@@ -214,6 +220,10 @@ impl Pass for DrawUi {
             .map(|t| t.0.global_z)
             .fold(1.0, |highest, current| current.abs().max(highest));
         for &(_z, entity) in &self.cached_draw_order.cache {
+            // Do not render hidden entities.
+            if hidden.contains(entity) || hidden_prop.contains(entity) {
+                continue;
+            }
             // This won't panic as we guaranteed earlier these entities are present.
             let ui_transform = ui_transform.get(entity).unwrap();
             if let Some(image) = ui_image
@@ -334,9 +344,14 @@ impl Pass for DrawUi {
                     // Needs a recenter because we are using [-0.5,0.5] for the mesh
                     // instead of the expected [0,1]
                     screen_position: (
-                        (ui_transform.pixel_x + ui_transform.pixel_width * ui_text.align.norm_offset().0) * hidpi,
+                        (ui_transform.pixel_x
+                            + ui_transform.pixel_width * ui_text.align.norm_offset().0)
+                            * hidpi,
                         // invert y because gfx-glyph inverts it back
-                        (screen_dimensions.height() - ui_transform.pixel_y - ui_transform.pixel_height * ui_text.align.norm_offset().1) * hidpi,
+                        (screen_dimensions.height()
+                            - ui_transform.pixel_y
+                            - ui_transform.pixel_height * ui_text.align.norm_offset().1)
+                            * hidpi,
                     ),
                     bounds: (ui_transform.pixel_width, ui_transform.pixel_height),
                     // Invert z because of gfx-glyph using z+ forward
@@ -484,13 +499,15 @@ impl Pass for DrawUi {
                                 height = ui_text.font_size;
                                 width = 2.0;
                             }
-                            
+
                             let mut pos = glyph.map(|g| g.position()).unwrap_or(Point {
-                                x: ui_transform.pixel_x + ui_transform.width * ui_text.align.norm_offset().0,
+                                x: ui_transform.pixel_x
+                                    + ui_transform.width * ui_text.align.norm_offset().0,
                                 y: 0.0,
                             });
                             // gfx-glyph uses y down so we need to convert to y up
-                            pos.y = screen_dimensions.height() - ui_transform.pixel_y + ascent / 2.0;
+                            pos.y =
+                                screen_dimensions.height() - ui_transform.pixel_y + ascent / 2.0;
 
                             let mut x = pos.x / hidpi;
                             if let Some(glyph) = glyph {
@@ -541,14 +558,7 @@ fn cached_color_texture(
     cache
         .entry(key)
         .or_insert_with(|| {
-            let meta = TextureMetadata {
-                sampler: None,
-                mip_levels: Some(1),
-                size: Some((1, 1)),
-                dynamic: false,
-                format: None,
-                channel: None,
-            };
+            let meta = TextureMetadata::srgb();
             let texture_data = TextureData::Rgba(color, meta);
             loader.load_from_data(texture_data, (), storage)
         }).clone()

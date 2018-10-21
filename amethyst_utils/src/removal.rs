@@ -1,3 +1,5 @@
+//! Provides utilities to remove large amounts of entities with a single command.
+
 use amethyst_assets::{PrefabData, PrefabError};
 use amethyst_core::specs::world::EntitiesRes;
 use amethyst_core::specs::{Component, DenseVecStorage, Entity, Join, ReadStorage, WriteStorage};
@@ -7,7 +9,7 @@ use std::result::Result;
 /// A marker `Component` used to remove entities and clean up your scene.
 /// The generic parameter `I` is the type of id you want to use.
 /// Generally an int or an enum.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Removal<I>
 where
     I: Debug + Clone,
@@ -45,7 +47,7 @@ where
     type SystemData = (WriteStorage<'a, Removal<I>>,);
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,

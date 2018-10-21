@@ -8,6 +8,7 @@ use cam::{ActiveCamera, Camera};
 use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
+use hidden::{Hidden, HiddenPropagate};
 use light::Light;
 use mesh::{Mesh, MeshHandle};
 use mtl::{Material, MaterialDefaults};
@@ -72,6 +73,8 @@ impl<'a> PassData<'a> for DrawShadedSeparate {
         Read<'a, AssetStorage<Texture>>,
         ReadExpect<'a, MaterialDefaults>,
         Option<Read<'a, Visibility>>,
+        ReadStorage<'a, Hidden>,
+        ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
@@ -129,6 +132,8 @@ impl Pass for DrawShadedSeparate {
             tex_storage,
             material_defaults,
             visibility,
+            hidden,
+            hidden_prop,
             mesh,
             material,
             global,
@@ -142,24 +147,33 @@ impl Pass for DrawShadedSeparate {
         set_light_args(effect, encoder, &light, &global, &ambient, camera);
 
         match visibility {
-            None => for (joint, mesh, material, global) in
-                (joints.maybe(), &mesh, &material, &global).join()
-            {
-                draw_mesh(
-                    encoder,
-                    effect,
-                    self.skinning,
-                    mesh_storage.get(mesh),
-                    joint,
-                    &tex_storage,
-                    Some(material),
-                    &material_defaults,
-                    camera,
-                    Some(global),
-                    &ATTRIBUTES,
-                    &TEXTURES,
-                );
-            },
+            None => {
+                for (joint, mesh, material, global, _, _) in (
+                    joints.maybe(),
+                    &mesh,
+                    &material,
+                    &global,
+                    !&hidden,
+                    !&hidden_prop,
+                )
+                    .join()
+                {
+                    draw_mesh(
+                        encoder,
+                        effect,
+                        self.skinning,
+                        mesh_storage.get(mesh),
+                        joint,
+                        &tex_storage,
+                        Some(material),
+                        &material_defaults,
+                        camera,
+                        Some(global),
+                        &ATTRIBUTES,
+                        &TEXTURES,
+                    );
+                }
+            }
             Some(ref visibility) => {
                 for (joint, mesh, material, global, _) in (
                     joints.maybe(),

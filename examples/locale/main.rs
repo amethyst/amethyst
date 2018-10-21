@@ -2,12 +2,14 @@
 
 extern crate amethyst;
 
-use amethyst::assets::{AssetStorage, Handle, Loader, Processor, ProgressCounter};
-use amethyst::ecs::{Read, ReadExpect};
-use amethyst::locale::*;
-use amethyst::prelude::*;
-use amethyst::utils::application_root_dir;
-use amethyst::Error;
+use amethyst::{
+    assets::{AssetStorage, Handle, Loader, Processor, ProgressCounter},
+    ecs::{Read, ReadExpect},
+    locale::*,
+    prelude::*,
+    utils::application_root_dir,
+    Error,
+};
 
 struct Example {
     progress_counter: Option<ProgressCounter>,
@@ -63,18 +65,16 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                     println!(
                         "{}",
                         locale
-                            .context
-                            .get_message("hello")
-                            .and_then(|msg| locale.context.format(msg, None))
-                            .unwrap()
+                            .bundle
+                            .format("hello", None)
+                            .unwrap().0
                     );
                     println!(
                         "{}",
                         locale
-                            .context
-                            .get_message("bye")
-                            .and_then(|msg| locale.context.format(msg, None))
-                            .unwrap()
+                            .bundle
+                            .format("bye", None)
+                            .unwrap().0
                     );
                 }
             }

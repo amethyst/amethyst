@@ -57,15 +57,17 @@ Events are what trigger the transitions. In the case of amethyst, it is the diff
 
 ## Life Cycle
 
-`State` are only valid for a certain period of time, during which a lot of things can occur.
-A `State` contains methods that reflect the most commons of those events:
+`State`s are only valid for a certain period of time, during which a lot of things can occur.
+A `State` contains methods that reflect the most common of those events:
 * on_start: When the state is added to the stack, this method is called.
 * on_stop: When it is removed from the stack, this method is called.
 * on_pause: When a `State` is pushed over the current one, the current one is paused.
 * on_resume: When the `State` that was pushed over the current `State` is popped, the current one resumes.
 * handle_event: Allows easily handling events, like the window closing or a key being pressed.
-* fixed_update: This method is called at a fixed time interval (default 1/60th second).
-* update: This method is called as often as possible by the engine.
+* fixed_update: This method is called at a fixed time interval (default 1/60th second), while it is the ative `State`.
+* update: This method is called as often as possible by the engine, while it is the active `State`.
+* shadow_update: This method is called as often as possible by the engine, as long as the `State` is on the `StateMachines` stack, including when it is the active `State`. In opposite to `update`, this does not return a `Trans`.
+* shadow_fixed_update: This method is called at a fixed time interval (default 1/60th second), as long as the `State` is on the `StateMachines` stack, including when it is the active `State`. In opposite to `fixed_update`, this does not return a `Trans`.
 
 ## Game Data
 
@@ -139,9 +141,9 @@ struct PausedState;
 
 // This time around, we are using () instead of GameData, because we don't have any `System`s that need to be updated.
 // (They are covered in the dedicated section of the book.)
-// Instead of writing `State<(), ()>`, we can instead use `EmptyState`.
+// Instead of writing `State<(), StateEvent>`, we can instead use `EmptyState`.
 impl EmptyState for GameplayState {
-    fn handle_event(&mut self, _data: StateData<()>, event: StateEvent<()>) -> EmptyTrans {
+    fn handle_event(&mut self, _data: StateData<()>, event: StateEvent) -> EmptyTrans {
         if let StateEvent::Window(event) = &event {
             if is_key_down(&event, VirtualKeyCode::Escape) {
                 // Pause the game by going to the `PausedState`.
@@ -155,7 +157,7 @@ impl EmptyState for GameplayState {
 }
 
 impl EmptyState for PausedState {
-    fn handle_event(&mut self, _data: StateData<()>, event: StateEvent<()>) -> EmptyTrans {
+    fn handle_event(&mut self, _data: StateData<()>, event: StateEvent) -> EmptyTrans {
         if let StateEvent::Window(event) = &event {
             if is_key_down(&event, VirtualKeyCode::Escape) {
                 // Go back to the `GameplayState`.
@@ -172,36 +174,59 @@ impl EmptyState for PausedState {
 ### Event Handling
 
 As you already saw, we can handle events from the `handle_event` method.
-But what is this weird `StateEvent<()>` all about?
+But what is this weird `StateEvent` all about?
 
-Well, it is simply an enum. It regroups multiple types of events that are emitted throughout the engine.
-The generic parameter `()` indicates that we don't have any custom event type that we care about.
-If you were to replace `()` by `MyEventType`, then you could react to them from your state like so:
+Well, it is simply an enum. It regroups multiple types of events that are emitted throughout the engine by default.
+To change the set of events that the state receives, you create a new event enum and derive `EventReader` for that type.
 
 ```rust,no_run,noplaypen
-# extern crate amethyst;
+# #[macro_use] extern crate amethyst;
 # use amethyst::prelude::*;
-# use amethyst::renderer::VirtualKeyCode;
+# use amethyst::renderer::{VirtualKeyCode, Event};
+# use amethyst::ui::UiEvent;
 # use amethyst::input::is_key_down;
 
-#[derive(Debug)]
-struct MyEvent {
+// These imports are required for the #[derive(EventReader)] code to build
+use amethyst::core::{
+    specs::{Read, SystemData, Resources}, 
+    shrev::{ReaderId, EventChannel}, 
+    EventReader
+};
+
+#[derive(Clone, Debug)]
+pub struct AppEvent {
     data: i32,
+}
+
+#[derive(Debug, EventReader, Clone)]
+#[reader(MyEventReader)]
+pub enum MyEvent {
+    Window(Event),
+    Ui(UiEvent),
+    App(AppEvent),
 }
 
 struct GameplayState;
 
 impl State<(), MyEvent> for GameplayState {
-    fn handle_event(&mut self, _data: StateData<()>, event: StateEvent<MyEvent>) -> Trans<(), MyEvent> {
+    fn handle_event(&mut self, _data: StateData<()>, event: MyEvent) -> Trans<(), MyEvent> {
         match event {
-            StateEvent::Window(_) => {}, // Events related to the window and inputs.
-            StateEvent::Ui(_) => {}, // Ui event. Button presses, mouse hover, etc...
-            StateEvent::Custom(ev) => println!("Got a custom event: {:?}", ev),
-        }
+            MyEvent::Window(_) => {}, // Events related to the window and inputs.
+            MyEvent::Ui(_) => {}, // Ui event. Button presses, mouse hover, etc...
+            MyEvent::App(ev) => println!("Got an app event: {:?}", ev),
+        };
         
         Trans::None
     }
 }
+
+# fn main() {}
 ```
 
-*Note: Events are gathered from `EventChannel`s. If you use a custom event, you need to write events to the global `EventChannel<MyEvent>`. `EventChannel`s are covered in the dedicated book section.*
+To make `Application` aware of the change to which events to send to the state, you also need to supply both the 
+event type, and the `EventReader` type (the name you give in the `#[reader(SomeReader)]` derive attribute) when 
+the `Application` is created. This is done by replacing `Application::build` (or `Application::new`) with 
+`CoreApplication::<_, MyEvent, MyEventReader>::build()` (or `CoreApplication::<_, MyEvent, MyEventReader>::new()`). 
+
+
+*Note: Events are gathered from `EventChannel`s. `EventChannel`s are covered in the dedicated book section.*

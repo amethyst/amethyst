@@ -17,7 +17,7 @@ pub trait PrefabData<'a> {
     /// The result type returned by the load operation
     type Result;
 
-    /// Load the data for this prefab onto the given `Entity`
+    /// Add the data for this prefab onto the given `Entity`
     ///
     /// This can also be used to load resources, the recommended way of doing so is to put the
     /// resources on the main `Entity` of the `Prefab`
@@ -28,7 +28,7 @@ pub trait PrefabData<'a> {
     /// - `system_data`: `SystemData` needed to do the loading
     /// - `entities`: Some components need access to the entities that was created as part of the
     ///               full prefab, for linking purposes, so this contains all those `Entity`s.
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
@@ -52,7 +52,7 @@ pub trait PrefabData<'a> {
     /// ### Type parameters:
     ///
     /// - `P`: Progress tracker
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         _progress: &mut ProgressCounter,
         _system_data: &mut Self::SystemData,
@@ -154,7 +154,7 @@ impl<T> PrefabEntity<T> {
     }
 
     /// Trigger sub asset loading for the prefab entity
-    pub fn trigger_sub_loading<'a>(
+    pub fn load_sub_assets<'a>(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut <T as PrefabData<'a>>::SystemData,
@@ -163,7 +163,7 @@ impl<T> PrefabEntity<T> {
         T: PrefabData<'a>,
     {
         if let Some(ref mut data) = self.data {
-            data.trigger_sub_loading(progress, system_data)
+            data.load_sub_assets(progress, system_data)
         } else {
             Ok(false)
         }
@@ -250,7 +250,7 @@ impl<T> Prefab<T> {
     }
 
     /// Trigger sub asset loading for the asset
-    pub fn trigger_sub_loading<'a>(
+    pub fn load_sub_assets<'a>(
         &mut self,
         system_data: &mut <T as PrefabData<'a>>::SystemData,
     ) -> Result<bool, PrefabError>
@@ -260,7 +260,7 @@ impl<T> Prefab<T> {
         let mut ret = false;
         let mut progress = ProgressCounter::default();
         for entity in &mut self.entities {
-            if entity.trigger_sub_loading(&mut progress, system_data)? {
+            if entity.load_sub_assets(&mut progress, system_data)? {
                 ret = true;
             }
         }
@@ -344,7 +344,7 @@ where
 
     type Result = Handle<A>;
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
@@ -352,15 +352,29 @@ where
     ) -> Result<Handle<A>, PrefabError> {
         let handle = match *self {
             AssetPrefab::Handle(ref handle) => handle.clone(),
-            AssetPrefab::File(ref name, ref format, ref options) => system_data.0.load(
+            AssetPrefab::File(..) => unreachable!(),
+        };
+        system_data.1.insert(entity, handle.clone()).map(|_| handle)
+    }
+
+    fn load_sub_assets(&mut self, progress: &mut ProgressCounter, system_data: &mut Self::SystemData) -> Result<bool, PrefabError> {
+        let handle = if let AssetPrefab::File(ref name, ref format, ref options) = *self {
+            Some(system_data.0.load(
                 name.as_ref(),
                 format.clone(),
                 options.clone(),
-                (),
+                progress,
                 &system_data.2,
-            ),
+            ))
+        } else {
+            None
         };
-        system_data.1.insert(entity, handle.clone()).map(|_| handle)
+        if let Some(handle) = handle {
+            *self = AssetPrefab::Handle(handle);
+            Ok(true)
+        } else {
+            Ok(false)
+        }
     }
 }
 

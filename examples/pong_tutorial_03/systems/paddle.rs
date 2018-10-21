@@ -1,6 +1,8 @@
-use amethyst::core::transform::components::Transform;
-use amethyst::ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage};
-use amethyst::input::InputHandler;
+use amethyst::{
+    core::transform::components::Transform,
+    ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
+    input::InputHandler,
+};
 use pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 
 pub struct PaddleSystem;

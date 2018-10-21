@@ -8,7 +8,7 @@ Container(
         height: 20.,
     ),
     background: (
-        image: Data(Rgba((0.36, 0.10, 0.57, 1.0), ())),
+        image: Data(Rgba((0.36, 0.10, 0.57, 1.0), (channel: Srgb))),
     ),
     children: [
         // Parenting test
@@ -22,7 +22,7 @@ Container(
                 anchor: TopRight,
             ),
             background: (
-                image: Data(Rgba((0.09, 0.02, 0.25, 1.0), ())),
+                image: Data(Rgba((0.09, 0.02, 0.25, 1.0), (channel: Srgb))),
             ),
             children: [
                 Image(
@@ -34,7 +34,7 @@ Container(
                         stretch: XY( x_margin: 0., y_margin: 10.),
                     ),
                     image: (
-                        image: Data(Rgba((0.18, 0.05, 0.85, 1.0), ())),
+                        image: Data(Rgba((0.18, 0.05, 0.85, 1.0), (channel: Srgb))),
                     )
                 ),
             ]
@@ -52,7 +52,7 @@ Container(
                 mouse_reactive: true,
             ),
             image: (
-                image: File("texture/logo_transparent.png", Png, ()),
+                image: File("texture/logo_transparent.png", Png, (channel: Srgb)),
             )
         ),
 
@@ -68,7 +68,7 @@ Container(
                 anchor: BottomLeft,
             ),
             background: (
-                image: Data(Rgba((0.09, 0.02, 0.25, 1.0), ())),
+                image: Data(Rgba((0.09, 0.02, 0.25, 1.0), (channel: Srgb))),
             ),
             children: [
                 Text(
@@ -110,9 +110,9 @@ Container(
                 font: File("font/square.ttf", Ttf, ()),
                 font_size: 20.,
                 normal_text_color: (0.2, 0.2, 1.0, 1.0),
-                normal_image: Data(Rgba((0., 1., 0., 1.), ())),
-                hover_image: Data(Rgba((0.3, 1., 0.3, 1.), ())),
-                press_image: Data(Rgba((0.15, 1., 0.15, 1.), ())),
+                normal_image: Data(Rgba((0., 1., 0., 1.), (channel: Srgb))),
+                hover_image: Data(Rgba((0.3, 1., 0.3, 1.), (channel: Srgb))),
+                press_image: Data(Rgba((0.15, 1., 0.15, 1.), (channel: Srgb))),
                 hover_sound: File("audio/boop.ogg", Ogg, ()),
                 press_sound: File("audio/confirm.ogg", Ogg, ()),
             )
@@ -135,7 +135,7 @@ Container(
                 font: File("font/square.ttf", Ttf, ()),
                 font_size: 20.,
                 normal_text_color: (0.0, 0.0, 0.0, 1.0),
-                normal_image: Data(Rgba((0.82, 0.83, 0.83, 1.0), ())),
+                normal_image: Data(Rgba((0.82, 0.83, 0.83, 1.0), (channel: Srgb))),
             )
         ),
         Text(

@@ -2,12 +2,13 @@
 
 extern crate amethyst;
 
-use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
-use amethyst::core::transform::TransformBundle;
-use amethyst::prelude::*;
-use amethyst::renderer::*;
-use amethyst::utils::application_root_dir;
-use amethyst::utils::scene::BasicScenePrefab;
+use amethyst::{
+    assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
+    core::transform::TransformBundle,
+    prelude::*,
+    renderer::*,
+    utils::{application_root_dir, scene::BasicScenePrefab},
+};
 
 type MyPrefabData = BasicScenePrefab<ComboMeshCreator>;
 

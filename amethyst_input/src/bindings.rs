@@ -73,9 +73,11 @@ where
     {
         let mut make_new = false;
         match self.actions.get_mut(&id) {
-            Some(action_bindings) => if action_bindings.iter().all(|&b| b != binding) {
-                action_bindings.push(binding);
-            },
+            Some(action_bindings) => {
+                if action_bindings.iter().all(|&b| b != binding) {
+                    action_bindings.push(binding);
+                }
+            }
             None => {
                 make_new = true;
             }

@@ -396,6 +396,7 @@ mod tests {
 
     #[test]
     #[should_panic]
+    #[cfg(debug_assertions)]
     fn nan_transform() {
         let (mut world, mut hs, mut system) = transform_world();
 
@@ -415,6 +416,7 @@ mod tests {
 
     #[test]
     #[should_panic]
+    #[cfg(debug_assertions)]
     fn is_finite_transform() {
         let (mut world, mut hs, mut system) = transform_world();
 

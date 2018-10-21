@@ -16,23 +16,27 @@ mod png_loader;
 mod sprite;
 mod sprite_sheet_loader;
 
-use amethyst::animation::{
-    get_animation_set, AnimationBundle, AnimationCommand, AnimationControl, ControlState,
-    EndControl,
+use amethyst::{
+    animation::{
+        get_animation_set, AnimationBundle, AnimationCommand, AnimationControl, ControlState,
+        EndControl,
+    },
+    assets::{AssetStorage, Loader},
+    core::{
+        cgmath::{Matrix4, Point3, Transform as CgTransform, Vector3},
+        transform::{GlobalTransform, Transform, TransformBundle},
+    },
+    ecs::prelude::Entity,
+    input::InputBundle,
+    prelude::*,
+    renderer::{
+        Camera, ColorMask, DisplayConfig, DrawSprite, MaterialTextureSet, Pipeline, Projection,
+        RenderBundle, ScreenDimensions, SpriteRender, SpriteSheet, SpriteSheetHandle,
+        SpriteSheetSet, Stage, ALPHA,
+    },
+    ui::UiBundle,
+    utils::application_root_dir,
 };
-use amethyst::assets::{AssetStorage, Loader};
-use amethyst::core::cgmath::{Matrix4, Point3, Transform as CgTransform, Vector3};
-use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
-use amethyst::ecs::prelude::Entity;
-use amethyst::input::InputBundle;
-use amethyst::prelude::*;
-use amethyst::renderer::{
-    Camera, ColorMask, DisplayConfig, DrawSprite, MaterialTextureSet, Pipeline, Projection,
-    RenderBundle, ScreenDimensions, SpriteRender, SpriteSheet, SpriteSheetHandle, SpriteSheetSet,
-    Stage, ALPHA,
-};
-use amethyst::ui::UiBundle;
-use amethyst::utils::application_root_dir;
 use std::time::Duration;
 
 use sprite::SpriteSheetDefinition;

@@ -20,6 +20,7 @@ pub struct FlyControlBundle<A, B> {
 }
 
 impl<A, B> FlyControlBundle<A, B> {
+    /// Builds a new fly control bundle using the provided axes as controls.
     pub fn new(
         right_input_axis: Option<A>,
         up_input_axis: Option<A>,
@@ -36,12 +37,14 @@ impl<A, B> FlyControlBundle<A, B> {
         }
     }
 
+    /// Alters the mouse sensitivy on this `FlyControlBundle`
     pub fn with_sensitivity(mut self, x: f32, y: f32) -> Self {
         self.sensitivity_x = x;
         self.sensitivity_y = y;
         self
     }
 
+    /// Alters the speed on this `FlyControlBundle`.
     pub fn with_speed(mut self, speed: f32) -> Self {
         self.speed = speed;
         self
@@ -93,6 +96,7 @@ pub struct ArcBallControlBundle<A, B> {
 }
 
 impl<A, B> ArcBallControlBundle<A, B> {
+    /// Builds a new `ArcBallControlBundle` with a default sensitivity of 1.0
     pub fn new() -> Self {
         ArcBallControlBundle {
             sensitivity_x: 1.0,
@@ -101,6 +105,7 @@ impl<A, B> ArcBallControlBundle<A, B> {
         }
     }
 
+    /// Builds a new `ArcBallControlBundle` with the provided mouse sensitivity values.
     pub fn with_sensitivity(mut self, x: f32, y: f32) -> Self {
         self.sensitivity_x = x;
         self.sensitivity_y = y;

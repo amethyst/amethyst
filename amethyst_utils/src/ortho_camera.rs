@@ -1,3 +1,5 @@
+//! Provides a automatically resized orthographic camera.
+
 use amethyst_core::cgmath::Ortho;
 use amethyst_core::specs::{
     Component, DenseVecStorage, Join, ReadExpect, ReadStorage, System, WriteStorage,
@@ -110,7 +112,11 @@ pub enum CameraNormalizeMode {
     ///
     /// If you want the whole world space between (0, 0) and (1, 1) to be shown at ALL times, consider using
     /// `CameraNormalizeMode::Contain` instead.
-    Lossy { stretch_direction: Axis2 },
+    Lossy {
+        /// The direction along which the camera will stretch and possibly have a length not equal
+        /// to one.
+        stretch_direction: Axis2,
+    },
 
     /// Scales the render dynamically to ensure the `CameraOrthoWorldCoordinates` are always visible.
     /// There may still be additional space in addition to the specific coordinates, but it will never hide anything.

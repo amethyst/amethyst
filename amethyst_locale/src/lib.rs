@@ -9,7 +9,7 @@ extern crate fluent;
 
 use amethyst_assets::{Asset, Handle, ProcessingState, Result, SimpleFormat};
 use amethyst_core::specs::prelude::VecStorage;
-use fluent::MessageContext;
+use fluent::bundle::FluentBundle;
 
 /// Loads the strings from localisation files.
 #[derive(Clone)]
@@ -23,9 +23,9 @@ impl SimpleFormat<Locale> for LocaleFormat {
     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<Locale> {
         let s = String::from_utf8(bytes)?;
 
-        let mut ctx = MessageContext::new(&[]);
-        ctx.add_messages(&s);
-        Ok(Locale { context: ctx })
+        let mut bundle = FluentBundle::new::<&'static str>(&[]);
+        bundle.add_messages(&s).expect("Error creating fluent bundle!");
+        Ok(Locale { bundle })
     }
 }
 
@@ -41,7 +41,7 @@ pub type LocaleHandle = Handle<Locale>;
 /// A loaded locale.
 pub struct Locale {
     /// The message context.
-    pub context: MessageContext<'static>,
+    pub bundle: FluentBundle<'static>,
 }
 
 impl Asset for Locale {

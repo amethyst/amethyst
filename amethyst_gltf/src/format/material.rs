@@ -25,6 +25,7 @@ pub fn load_material(
             buffers,
             source.clone(),
             name,
+            true,
         ).map(|(texture, _)| TexturePrefab::Data(texture))?,
     );
 
@@ -41,6 +42,7 @@ pub fn load_material(
         buffers,
         source.clone(),
         name,
+        false,
     ).map(|(texture, factors)| deconstruct_metallic_roughness(texture, factors[0], factors[1]))
     .map(|(metallic, roughness)| {
         (
@@ -59,14 +61,20 @@ pub fn load_material(
             buffers,
             source.clone(),
             name,
+            false,
         ).map(|(texture, _)| TexturePrefab::Data(texture))?,
     );
 
     // Can't use map/and_then because of Result returning from the load_texture function
     prefab.normal = match material.normal_texture() {
         Some(normal_texture) => Some(
-            load_texture(&normal_texture.texture(), buffers, source.clone(), name)
-                .map(|data| TexturePrefab::Data(data))?,
+            load_texture(
+                &normal_texture.texture(),
+                buffers,
+                source.clone(),
+                name,
+                false,
+            ).map(|data| TexturePrefab::Data(data))?,
         ),
 
         None => None,
@@ -75,8 +83,13 @@ pub fn load_material(
     // Can't use map/and_then because of Result returning from the load_texture function
     prefab.ambient_occlusion = match material.occlusion_texture() {
         Some(occlusion_texture) => Some(
-            load_texture(&occlusion_texture.texture(), buffers, source.clone(), name)
-                .map(|data| TexturePrefab::Data(data))?,
+            load_texture(
+                &occlusion_texture.texture(),
+                buffers,
+                source.clone(),
+                name,
+                false,
+            ).map(|data| TexturePrefab::Data(data))?,
         ),
 
         None => None,
@@ -114,12 +127,10 @@ fn deconstruct_image(data: &TextureData, offset: usize, step: usize) -> TextureD
     use gfx::format::SurfaceType;
     match *data {
         TextureData::Image(ref image_data, ref metadata) => {
-            let metadata = metadata
-                .clone()
-                .with_size(
-                    image_data.rgba.width() as u16,
-                    image_data.rgba.height() as u16,
-                ).with_format(SurfaceType::R8);
+            let metadata = metadata.clone().with_format(SurfaceType::R8).with_size(
+                image_data.rgba.width() as u16,
+                image_data.rgba.height() as u16,
+            );
             let image_data = image_data
                 .rgba
                 .clone()
@@ -144,10 +155,11 @@ fn load_texture_with_factor(
     buffers: &Buffers,
     source: Arc<Source>,
     name: &str,
+    srgb: bool,
 ) -> Result<(TextureData, [f32; 4]), GltfError> {
     match texture {
         Some(info) => Ok((
-            load_texture(&info.texture(), buffers, source, name)?,
+            load_texture(&info.texture(), buffers, source, name, srgb)?,
             factor,
         )),
         None => Ok((TextureData::color(factor), [1.0, 1.0, 1.0, 1.0])),
@@ -159,9 +171,15 @@ fn load_texture(
     buffers: &Buffers,
     source: Arc<Source>,
     name: &str,
+    srgb: bool,
 ) -> Result<TextureData, GltfError> {
     let (data, format) = get_image_data(&texture.source(), buffers, source, name.as_ref())?;
-    let metadata = TextureMetadata::default().with_sampler(load_sampler_info(&texture.sampler()));
+
+    let metadata = match srgb {
+        true => TextureMetadata::srgb(),
+        false => TextureMetadata::unorm(),
+    };
+    let metadata = metadata.with_sampler(load_sampler_info(&texture.sampler()));
     Ok(match format {
         ImageFormat::Png => PngFormat::from_data(&data, metadata),
         ImageFormat::Jpeg => JpgFormat::from_data(&data, metadata),

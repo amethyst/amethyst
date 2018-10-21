@@ -43,6 +43,12 @@ where
     where
         B: PipelineBuild<Pipeline = P>,
     {
+        use std::env;
+
+        // ask winit explicitly to use X11 since Wayland causes several issues
+        // see https://github.com/amethyst/amethyst/issues/890
+        env::set_var("WINIT_UNIX_BACKEND", "x11");
+
         let mut renderer = {
             let mut renderer = Renderer::build();
 
@@ -279,10 +285,12 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
                                     value: ref mut stored_value,
                                 },
                             ..
-                        } => if device_id == stored_device && axis == stored_axis {
-                            *stored_value += value;
-                            return;
-                        },
+                        } => {
+                            if device_id == stored_device && axis == stored_axis {
+                                *stored_value += value;
+                                return;
+                            }
+                        }
 
                         &mut Event::WindowEvent {
                             event: WindowEvent::CursorMoved { .. },
@@ -318,10 +326,12 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
                                 axis: stored_axis,
                                 value: ref mut stored_value,
                             },
-                    } => if device_id == stored_device && axis == stored_axis {
-                        *stored_value += value;
-                        return;
-                    },
+                    } => {
+                        if device_id == stored_device && axis == stored_axis {
+                            *stored_value += value;
+                            return;
+                        }
+                    }
 
                     &mut Event::WindowEvent {
                         event: WindowEvent::CursorMoved { .. },

@@ -13,6 +13,7 @@ use std::time::Duration;
 /// Blend method for sampler blending
 #[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Eq, Hash)]
 pub enum BlendMethod {
+    /// Simple linear blending
     Linear,
 }
 
@@ -135,6 +136,7 @@ where
 /// Only required for animations which target more than a single node or entity.
 #[derive(Debug, Clone)]
 pub struct AnimationHierarchy<T> {
+    /// A mapping between indices and entities
     pub nodes: FnvHashMap<usize, Entity>,
     m: marker::PhantomData<T>,
 }
@@ -373,6 +375,7 @@ pub struct SamplerControlSet<T>
 where
     T: AnimationSampling,
 {
+    /// The samplers in this set.
     pub samplers: Vec<SamplerControl<T>>,
 }
 
@@ -497,9 +500,8 @@ where
     ) {
         self.samplers
             .iter_mut()
-            .filter(|t| t.control_id == control_id)
-            .filter(|t| t.state != ControlState::Done)
-            .map(|c| (samplers.get(&c.sampler).unwrap(), c))
+            .filter(|t| t.control_id == control_id && t.state != ControlState::Done)
+            .map(|c| (samplers.get(&c.sampler).expect("Referring to a missing sampler"), c))
             .for_each(|(s, c)| {
                 set_step_state(c, s, direction);
             });
@@ -624,6 +626,7 @@ impl<T> AnimationControl<T>
 where
     T: AnimationSampling,
 {
+    /// Creates a new `AnimationControl`
     pub fn new(
         animation: Handle<Animation<T>>,
         end: EndControl,
@@ -685,6 +688,7 @@ pub struct AnimationControlSet<I, T>
 where
     T: AnimationSampling,
 {
+    /// The animation set.
     pub animations: Vec<(I, AnimationControl<T>)>,
     pub(crate) deferred_animations: Vec<DeferredStart<I, T>>,
 }
@@ -876,6 +880,7 @@ where
     I: Eq + Hash,
     T: AnimationSampling,
 {
+    /// The mapping between `I` and the animation handles.
     pub animations: FnvHashMap<I, Handle<Animation<T>>>,
 }
 

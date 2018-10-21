@@ -46,7 +46,7 @@ where
 
 /// Types of state transitions.
 /// T is the type of shared data between states.
-/// E is the type of custom events handled by StateEvent<E>.
+/// E is the type of events
 pub enum Trans<T, E> {
     /// Continue as normal.
     None,
@@ -62,11 +62,11 @@ pub enum Trans<T, E> {
 }
 
 /// An empty `Trans`. Made to be used with `EmptyState`.
-pub type EmptyTrans = Trans<(), ()>;
+pub type EmptyTrans = Trans<(), StateEvent>;
 
 /// A simple default `Trans`. Made to be used with `SimpleState`.
 /// By default it contains a `GameData` as its `StateData` and doesn't have a custom event type.
-pub type SimpleTrans<'a, 'b> = Trans<GameData<'a, 'b>, ()>;
+pub type SimpleTrans<'a, 'b> = Trans<GameData<'a, 'b>, StateEvent>;
 
 /// A trait which defines game states that can be used by the state machine.
 pub trait State<T, E: Send + Sync + 'static> {
@@ -83,20 +83,33 @@ pub trait State<T, E: Send + Sync + 'static> {
     fn on_resume(&mut self, _data: StateData<T>) {}
 
     /// Executed on every frame before updating, for use in reacting to events.
-    fn handle_event(&mut self, _data: StateData<T>, _event: StateEvent<E>) -> Trans<T, E> {
+    fn handle_event(&mut self, _data: StateData<T>, _event: E) -> Trans<T, E> {
         Trans::None
     }
 
     /// Executed repeatedly at stable, predictable intervals (1/60th of a second
-    /// by default).
+    /// by default),
+    /// if this is the active state.
     fn fixed_update(&mut self, _data: StateData<T>) -> Trans<T, E> {
         Trans::None
     }
 
-    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit).
+    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit),
+    /// if this is the active state.
     fn update(&mut self, _data: StateData<T>) -> Trans<T, E> {
         Trans::None
     }
+
+    /// Executed repeatedly at stable, predictable intervals (1/60th of a second
+    /// by default),
+    /// even when this is not the active state,
+    /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
+    fn shadow_fixed_update(&mut self, _data: StateData<T>) {}
+
+    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit),
+    /// even when this is not the active state,
+    /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
+    fn shadow_update(&mut self, _data: StateData<T>) {}
 }
 
 /// An empty `State` trait. It contains no `StateData` or custom `StateEvent`.
@@ -114,7 +127,7 @@ pub trait EmptyState {
     fn on_resume(&mut self, _data: StateData<()>) {}
 
     /// Executed on every frame before updating, for use in reacting to events.
-    fn handle_event(&mut self, _data: StateData<()>, event: StateEvent<()>) -> EmptyTrans {
+    fn handle_event(&mut self, _data: StateData<()>, event: StateEvent) -> EmptyTrans {
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) {
                 Trans::Quit
@@ -136,9 +149,20 @@ pub trait EmptyState {
     fn update(&mut self, _data: StateData<()>) -> EmptyTrans {
         Trans::None
     }
+
+    /// Executed repeatedly at stable, predictable intervals (1/60th of a second
+    /// by default),
+    /// even when this is not the active state,
+    /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
+    fn shadow_fixed_update(&mut self, _data: StateData<()>) {}
+
+    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit),
+    /// even when this is not the active state,
+    /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
+    fn shadow_update(&mut self, _data: StateData<()>) {}
 }
 
-impl<T: EmptyState> State<(), ()> for T {
+impl<T: EmptyState> State<(), StateEvent> for T {
     /// Executed when the game state begins.
     fn on_start(&mut self, data: StateData<()>) {
         self.on_start(data)
@@ -160,7 +184,7 @@ impl<T: EmptyState> State<(), ()> for T {
     }
 
     /// Executed on every frame before updating, for use in reacting to events.
-    fn handle_event(&mut self, data: StateData<()>, event: StateEvent<()>) -> EmptyTrans {
+    fn handle_event(&mut self, data: StateData<()>, event: StateEvent) -> EmptyTrans {
         self.handle_event(data, event)
     }
 
@@ -173,6 +197,21 @@ impl<T: EmptyState> State<(), ()> for T {
     /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit).
     fn update(&mut self, data: StateData<()>) -> EmptyTrans {
         self.update(data)
+    }
+
+    /// Executed repeatedly at stable, predictable intervals (1/60th of a second
+    /// by default),
+    /// even when this is not the active state,
+    /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
+    fn shadow_fixed_update(&mut self, data: StateData<()>) {
+        self.shadow_fixed_update(data);
+    }
+
+    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit),
+    /// even when this is not the active state,
+    /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
+    fn shadow_update(&mut self, data: StateData<()>) {
+        self.shadow_update(data);
     }
 }
 
@@ -194,7 +233,7 @@ pub trait SimpleState<'a, 'b> {
     fn handle_event(
         &mut self,
         _data: StateData<GameData>,
-        event: StateEvent<()>,
+        event: StateEvent,
     ) -> SimpleTrans<'a, 'b> {
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) {
@@ -217,8 +256,20 @@ pub trait SimpleState<'a, 'b> {
     fn update(&mut self, _data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
         Trans::None
     }
+
+    /// Executed repeatedly at stable, predictable intervals (1/60th of a second
+    /// by default),
+    /// even when this is not the active state,
+    /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
+    fn shadow_fixed_update(&mut self, _data: StateData<GameData>) {}
+
+    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit),
+    /// even when this is not the active state,
+    /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
+    fn shadow_update(&mut self, _data: StateData<GameData>) {}
 }
-impl<'a, 'b, T: SimpleState<'a, 'b>> State<GameData<'a, 'b>, ()> for T {
+
+impl<'a, 'b, T: SimpleState<'a, 'b>> State<GameData<'a, 'b>, StateEvent> for T {
     //pub trait SimpleState<'a,'b>: State<GameData<'a,'b>,()> {
 
     /// Executed when the game state begins.
@@ -245,7 +296,7 @@ impl<'a, 'b, T: SimpleState<'a, 'b>> State<GameData<'a, 'b>, ()> for T {
     fn handle_event(
         &mut self,
         data: StateData<GameData>,
-        event: StateEvent<()>,
+        event: StateEvent,
     ) -> SimpleTrans<'a, 'b> {
         self.handle_event(data, event)
     }
@@ -261,6 +312,21 @@ impl<'a, 'b, T: SimpleState<'a, 'b>> State<GameData<'a, 'b>, ()> for T {
         let r = self.update(&mut data);
         data.data.update(&data.world);
         r
+    }
+
+    /// Executed repeatedly at stable, predictable intervals (1/60th of a second
+    /// by default),
+    /// even when this is not the active state,
+    /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
+    fn shadow_fixed_update(&mut self, data: StateData<GameData>) {
+        self.shadow_fixed_update(data);
+    }
+
+    /// Executed on every frame immediately, as fast as the engine will allow (taking into account the frame rate limit),
+    /// even when this is not the active state,
+    /// as long as this state is on the [StateMachine](struct.StateMachine.html)'s state-stack.
+    fn shadow_update(&mut self, data: StateData<GameData>) {
+        self.shadow_update(data);
     }
 }
 
@@ -301,7 +367,7 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
     }
 
     /// Passes a single event to the active state to handle.
-    pub fn handle_event(&mut self, data: StateData<T>, event: StateEvent<E>) {
+    pub fn handle_event(&mut self, data: StateData<T>, event: E) {
         let StateData { world, data } = data;
         if self.running {
             let trans = match self.state_stack.last_mut() {
@@ -321,6 +387,9 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
                 Some(state) => state.fixed_update(StateData { world, data }),
                 None => Trans::None,
             };
+            for state in self.state_stack.iter_mut() {
+                state.shadow_fixed_update(StateData { world, data });
+            }
 
             self.transition(trans, StateData { world, data });
         }
@@ -334,6 +403,9 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
                 Some(state) => state.update(StateData { world, data }),
                 None => Trans::None,
             };
+            for state in self.state_stack.iter_mut() {
+                state.shadow_update(StateData { world, data });
+            }
 
             self.transition(trans, StateData { world, data });
         }
@@ -446,6 +518,7 @@ mod tests {
         let mut world = World::new();
 
         let mut sm = StateMachine::new(State1(7));
+        // Unwrap here is fine because start can only fail when there are no states in the machine.
         sm.start(StateData::new(&mut world, &mut ())).unwrap();
 
         for _ in 0..8 {

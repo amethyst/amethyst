@@ -1,3 +1,7 @@
+//! A crate for loading GLTF format scenes into Amethyst
+
+#![warn(missing_docs)]
+
 extern crate amethyst_animation as animation;
 extern crate amethyst_assets as assets;
 extern crate amethyst_core as core;
@@ -82,9 +86,12 @@ impl GltfPrefab {
     }
 }
 
+/// A GLTF node extent
 #[derive(Clone, Debug)]
 pub struct GltfNodeExtent {
+    /// The beginning of this extent
     pub start: Point3<f32>,
+    /// The end of this extent
     pub end: Point3<f32>,
 }
 
@@ -98,6 +105,7 @@ impl Default for GltfNodeExtent {
 }
 
 impl GltfNodeExtent {
+    /// Extends this to include the input range.
     pub fn extend_range(&mut self, other: &Range<[f32; 3]>) {
         for i in 0..3 {
             if other.start[i] < self.start[i] {
@@ -109,6 +117,7 @@ impl GltfNodeExtent {
         }
     }
 
+    /// Extends this to include the provided extent.
     pub fn extend(&mut self, other: &GltfNodeExtent) {
         for i in 0..3 {
             if other.start[i] < self.start[i] {
@@ -120,14 +129,17 @@ impl GltfNodeExtent {
         }
     }
 
+    /// Returns the centroid of this extent
     pub fn centroid(&self) -> Point3<f32> {
         (self.start + self.end.to_vec()) / 2.
     }
 
+    /// Returns the 3 dimensional distance between the start and end of this.
     pub fn distance(&self) -> Vector3<f32> {
         self.end - self.start
     }
 
+    /// Determines if this extent is valid.
     pub fn valid(&self) -> bool {
         for i in 0..3 {
             if self.start[i] > self.end[i] {
@@ -180,7 +192,7 @@ impl<'a> PrefabData<'a> for GltfPrefab {
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
@@ -197,7 +209,7 @@ impl<'a> PrefabData<'a> for GltfPrefab {
             ref mut mesh_data,
         ) = system_data;
         if let Some(ref transform) = self.transform {
-            transform.load_prefab(entity, transforms, entities)?;
+            transform.add_to_entity(entity, transforms, entities)?;
         }
         if let Some(ref mesh) = self.mesh {
             mesh_data.insert(entity, mesh.clone())?;
@@ -206,16 +218,16 @@ impl<'a> PrefabData<'a> for GltfPrefab {
             meshes.1.insert(entity, mesh.clone())?;
         }
         if let Some(ref name) = self.name {
-            name.load_prefab(entity, names, entities)?;
+            name.add_to_entity(entity, names, entities)?;
         }
         if let Some(ref material) = self.material {
-            material.load_prefab(entity, materials, entities)?;
+            material.add_to_entity(entity, materials, entities)?;
         }
         if let Some(ref animatable) = self.animatable {
-            animatable.load_prefab(entity, animatables, entities)?;
+            animatable.add_to_entity(entity, animatables, entities)?;
         }
         if let Some(ref skinnable) = self.skinnable {
-            skinnable.load_prefab(entity, skinnables, entities)?;
+            skinnable.add_to_entity(entity, skinnables, entities)?;
         }
         if let Some(ref extent) = self.extent {
             extents.insert(entity, extent.clone())?;
@@ -223,7 +235,7 @@ impl<'a> PrefabData<'a> for GltfPrefab {
         Ok(())
     }
 
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
@@ -239,12 +251,12 @@ impl<'a> PrefabData<'a> for GltfPrefab {
             ret = true;
         }
         if let Some(ref mut material) = self.material {
-            if material.trigger_sub_loading(progress, materials)? {
+            if material.load_sub_assets(progress, materials)? {
                 ret = true;
             }
         }
         if let Some(ref mut animatable) = self.animatable {
-            if animatable.trigger_sub_loading(progress, animatables)? {
+            if animatable.load_sub_assets(progress, animatables)? {
                 ret = true;
             }
         }

@@ -4,21 +4,23 @@ extern crate amethyst;
 #[macro_use]
 extern crate log;
 
-use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, Processor, RonFormat};
-use amethyst::audio::output::init_output;
-use amethyst::audio::Source;
-use amethyst::core::transform::TransformBundle;
-use amethyst::core::Time;
-use amethyst::ecs::prelude::{Entity, System, Write};
-use amethyst::input::{is_close_requested, is_key_down, InputBundle};
-use amethyst::prelude::*;
-use amethyst::renderer::{DrawShaded, PosNormTex};
-use amethyst::shrev::{EventChannel, ReaderId};
-use amethyst::ui::{UiBundle, UiCreator, UiEvent, UiFinder, UiText};
-use amethyst::utils::application_root_dir;
-use amethyst::utils::fps_counter::{FPSCounter, FPSCounterBundle};
-use amethyst::utils::scene::BasicScenePrefab;
-use amethyst::winit::VirtualKeyCode;
+use amethyst::{
+    assets::{PrefabLoader, PrefabLoaderSystem, Processor, RonFormat},
+    audio::{output::init_output, Source},
+    core::{transform::TransformBundle, Time},
+    ecs::prelude::{Entity, System, Write},
+    input::{is_close_requested, is_key_down, InputBundle},
+    prelude::*,
+    renderer::{DrawShaded, PosNormTex},
+    shrev::{EventChannel, ReaderId},
+    ui::{UiBundle, UiCreator, UiEvent, UiFinder, UiText},
+    utils::{
+        application_root_dir,
+        fps_counter::{FPSCounter, FPSCounterBundle},
+        scene::BasicScenePrefab,
+    },
+    winit::VirtualKeyCode,
+};
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
@@ -40,11 +42,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
         });
     }
 
-    fn handle_event(
-        &mut self,
-        _: StateData<GameData>,
-        event: StateEvent<()>,
-    ) -> SimpleTrans<'a, 'b> {
+    fn handle_event(&mut self, _: StateData<GameData>, event: StateEvent) -> SimpleTrans<'a, 'b> {
         match &event {
             StateEvent::Window(event) => {
                 if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
@@ -60,7 +58,6 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                 );
                 Trans::None
             }
-            _ => Trans::None,
         }
     }
 
@@ -127,6 +124,8 @@ impl<'a> System<'a> for UiEventHandlerSystem {
         if self.reader_id.is_none() {
             self.reader_id = Some(events.register_reader());
         }
+
+        // Reader id was just initialized above if empty
         for ev in events.read(self.reader_id.as_mut().unwrap()) {
             info!("[SYSTEM] You just interacted with a ui element: {:?}", ev);
         }

@@ -1,5 +1,7 @@
-use amethyst::core::bundle::{Result, SystemBundle};
-use amethyst::ecs::prelude::DispatcherBuilder;
+use amethyst::{
+    core::bundle::{Result, SystemBundle},
+    ecs::prelude::DispatcherBuilder,
+};
 use systems::{BounceSystem, MoveBallsSystem, PaddleSystem, WinnerSystem};
 
 /// A bundle is a convenient way to initialise related resources, components and systems in a

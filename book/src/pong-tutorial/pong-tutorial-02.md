@@ -48,6 +48,7 @@ use amethyst::prelude::*;
 use amethyst::renderer::{
     Camera, MaterialTextureSet, PngFormat, Projection, Sprite,
     SpriteRender, SpriteSheet, SpriteSheetHandle, Texture, TextureCoordinates,
+    TextureMetadata,
 };
 ```
 
@@ -61,7 +62,7 @@ We will leave it empty for now, but it will become useful later down the line.
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # struct MyState;
-# impl<'a, 'b> SimpleState<'a,'b> for MyState {
+# impl<'a, 'b> SimpleState<'a, 'b> for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
 
 }
@@ -139,7 +140,7 @@ To finish setting up the camera, let's call it in our State's `on_start` method:
 # use amethyst::ecs::World;
 # fn initialise_camera(world: &mut World) { }
 # struct MyState;
-# impl<'a, 'b> SimpleState<'a,'b> for MyState {
+# impl<'a, 'b> SimpleState<'a, 'b> for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
     let world = data.world;
 
@@ -297,7 +298,7 @@ compiles. Update the `on_start` method to the following:
 # fn initialise_paddles(world: &mut World) { }
 # fn initialise_camera(world: &mut World) { }
 # struct MyState;
-# impl<'a, 'b> SimpleState<'a,'b> for MyState {
+# impl<'a, 'b> SimpleState<'a, 'b> for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
     let world = data.world;
 
@@ -387,7 +388,7 @@ the pattern and add the `TransformBundle`.
 #       .with_pass(DrawSprite::new()),
 # );
 # struct Pong;
-# impl<'a, 'b> SimpleState<'a,'b> for Pong { }
+# impl<'a, 'b> SimpleState<'a, 'b> for Pong { }
 let game_data = GameDataBuilder::default()
     .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
     .with_bundle(TransformBundle::new())?;
@@ -428,7 +429,7 @@ Next, we declare the function and load the image.
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::assets::{Loader, AssetStorage};
-# use amethyst::renderer::{Texture, PngFormat, TextureHandle, SpriteSheetHandle};
+# use amethyst::renderer::{Texture, PngFormat, TextureHandle, TextureMetadata, SpriteSheetHandle};
 # use amethyst::ecs::World;
 fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
     // Load the sprite sheet necessary to render the graphics.
@@ -440,7 +441,7 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
         loader.load(
             "texture/pong_spritesheet.png",
             PngFormat,
-            Default::default(),
+            TextureMetadata::srgb_scale(),
             (),
             &texture_storage,
         )
@@ -476,7 +477,7 @@ Heading back to the code, we need to add this snippet after loading the texture.
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::assets::{Loader, AssetStorage};
-# use amethyst::renderer::{Texture, PngFormat, TextureHandle, MaterialTextureSet, SpriteSheetHandle};
+# use amethyst::renderer::{Texture, PngFormat, TextureHandle, MaterialTextureSet, SpriteSheetHandle, TextureMetadata};
 # use amethyst::ecs::World;
 # fn load_sprite_sheet(world: &mut World) {
 #   let texture_handle = {
@@ -485,7 +486,7 @@ Heading back to the code, we need to add this snippet after loading the texture.
 #       loader.load(
 #           "texture/pong_spritesheet.png",
 #           PngFormat,
-#           Default::default(),
+#           TextureMetadata::srgb_scale(),
 #           (),
 #           &texture_storage,
 #       )
@@ -513,7 +514,7 @@ sprite sheet. Behold, texture coordinates!
 # use amethyst::prelude::*;
 # use amethyst::assets::{Loader, AssetStorage};
 # use amethyst::renderer::{Texture, PngFormat, TextureHandle, MaterialTextureSet,
-                           TextureCoordinates, Sprite, SpriteSheet, SpriteSheetHandle};
+#                          TextureCoordinates, Sprite, SpriteSheet, SpriteSheetHandle, TextureMetadata};
 # use amethyst::ecs::World;
 # const PADDLE_HEIGHT: f32 = 16.0;
 # const PADDLE_WIDTH: f32 = 4.0;
@@ -525,7 +526,7 @@ sprite sheet. Behold, texture coordinates!
 #       loader.load(
 #           "texture/pong_spritesheet.png",
 #           PngFormat,
-#           Default::default(),
+#           TextureMetadata::srgb_scale(),
 #           (),
 #           &texture_storage,
 #       )
@@ -655,7 +656,7 @@ Next we simply add the components to the paddle entities:
 #   sprite_number: 0,
 #   flip_horizontal: true,
 #   flip_vertical: false,
-# }; 
+# };
 // Create a left plank entity.
 world
     .create_entity()
@@ -688,7 +689,7 @@ all together in the `on_start()` method:
 # fn initialise_camera(world: &mut World) { }
 # fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle { unimplemented!() }
 # struct MyState;
-# impl<'a, 'b> SimpleState<'a,'b> for MyState {
+# impl<'a, 'b> SimpleState<'a, 'b> for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
     let world = data.world;
 

@@ -22,6 +22,7 @@ pub struct Renderer {
     events: EventsLoop,
     multisampling: u16,
     cached_size: LogicalSize,
+    cached_hidpi_factor: f64,
 }
 
 impl Renderer {
@@ -78,13 +79,14 @@ impl Renderer {
         use glutin::GlContext;
 
         if let Some(size) = self.window().get_inner_size() {
-            if size != self.cached_size {
+            let hidpi_factor = self.window().get_hidpi_factor();
+
+            if size != self.cached_size || hidpi_factor != self.cached_hidpi_factor {
                 self.cached_size = size.into();
+                self.cached_hidpi_factor = hidpi_factor;
                 #[cfg(feature = "opengl")]
-                self.window.resize(PhysicalSize::from_logical(
-                    size,
-                    self.window().get_hidpi_factor(),
-                ));
+                self.window
+                    .resize(PhysicalSize::from_logical(size, hidpi_factor));
                 self.resize(pipe, size.into());
             }
         }
@@ -160,7 +162,9 @@ impl RendererBuilder {
         RendererBuilder {
             config: DisplayConfig::default(),
             events: el,
-            winit_builder: WindowBuilder::new().with_title("Amethyst"),
+            winit_builder: WindowBuilder::new()
+                .with_title("Amethyst")
+                .with_dimensions(LogicalSize::new(600.0, 500.0)),
         }
     }
 
@@ -204,14 +208,16 @@ impl RendererBuilder {
     }
 
     /// Consumes the builder and creates the new `Renderer`.
-    pub fn build(self) -> Result<Renderer> {
+    pub fn build(mut self) -> Result<Renderer> {
         let Backend(device, mut factory, main_target, window) =
-            init_backend(self.winit_builder.clone(), &self.events, &self.config)?;
+            init_backend(self.winit_builder.clone(), &mut self.events, &self.config)?;
 
         let cached_size = window
             .get_inner_size()
             .expect("Unable to fetch window size, as the window went away!")
             .into();
+        let cached_hidpi_factor = window.get_hidpi_factor();
+
         let encoder = factory.create_command_buffer().into();
         Ok(Renderer {
             device,
@@ -222,6 +228,7 @@ impl RendererBuilder {
             events: self.events,
             multisampling: self.config.multisampling,
             cached_size,
+            cached_hidpi_factor,
         })
     }
 }
@@ -231,7 +238,7 @@ struct Backend(pub Device, pub Factory, pub Target, pub Window);
 
 /// Creates the Direct3D 11 backend.
 #[cfg(all(feature = "d3d11", target_os = "windows"))]
-fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> Result<Backend> {
+fn init_backend(wb: WindowBuilder, el: &mut EventsLoop, config: &DisplayConfig) -> Result<Backend> {
     use gfx_window_dxgi as win;
 
     // FIXME: vsync + multisampling from config
@@ -257,7 +264,7 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> R
 }
 
 #[cfg(all(feature = "metal", target_os = "macos"))]
-fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> Result<Backend> {
+fn init_backend(wb: WindowBuilder, el: &mut EventsLoop, config: &DisplayConfig) -> Result<Backend> {
     use gfx_window_metal as win;
 
     // FIXME: vsync + multisampling from config
@@ -282,10 +289,41 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> R
 }
 
 /// Creates the OpenGL backend.
-#[cfg(feature = "opengl")]
-fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> Result<Backend> {
+#[cfg(all(feature = "opengl", not(target_os = "macos")))]
+fn init_backend(wb: WindowBuilder, el: &mut EventsLoop, config: &DisplayConfig) -> Result<Backend> {
     use gfx_window_glutin as win;
-    use glutin::{self, GlProfile, GlRequest};
+    use glutin;
+    #[cfg(target_os = "macos")]
+    use glutin::{GlProfile, GlRequest};
+
+    let ctx = glutin::ContextBuilder::new()
+        .with_multisampling(config.multisampling)
+        .with_vsync(config.vsync);
+    #[cfg(target_os = "macos")]
+    let ctx = ctx.with_gl_profile(GlProfile::Core).with_gl(GlRequest::Latest);
+
+    let (win, dev, fac, color, depth) = win::init::<ColorFormat, DepthFormat>(wb, ctx, el);
+    let size = win.get_inner_size().ok_or(Error::WindowDestroyed)?.into();
+    let main_target = Target::new(
+        ColorBuffer {
+            as_input: None,
+            as_output: color,
+        },
+        DepthBuffer {
+            as_input: None,
+            as_output: depth,
+        },
+        size,
+    );
+
+    Ok(Backend(dev, fac, main_target, win))
+}
+
+/// Creates the OpenGL backend.
+#[cfg(all(feature = "opengl", target_os = "macos"))]
+fn init_backend(wb: WindowBuilder, el: &mut EventsLoop, config: &DisplayConfig) -> Result<Backend> {
+    use gfx_window_glutin as win;
+    use glutin::{self, GlContext, GlProfile, GlRequest};
 
     let ctx = glutin::ContextBuilder::new()
         .with_multisampling(config.multisampling)
@@ -306,6 +344,16 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> R
         },
         size,
     );
+
+    // FIXME: Resolve #972 and remove this extra resize
+    // On Mac 10.14 we need to resize the window after creation
+    // this is related to this issue amethyst/amethyst#972
+    el.poll_events(|_| {});
+    let (width, height): (u32, u32) = win
+        .get_outer_size()
+        .expect("Window no longer exists")
+        .into();
+    win.resize((width, height).into());
 
     Ok(Backend(dev, fac, main_target, win))
 }

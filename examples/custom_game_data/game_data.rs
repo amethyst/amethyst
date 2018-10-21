@@ -1,6 +1,8 @@
-use amethyst::core::{ArcThreadPool, SystemBundle};
-use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World};
-use amethyst::{DataInit, Error, Result};
+use amethyst::{
+    core::{ArcThreadPool, SystemBundle},
+    ecs::prelude::{Dispatcher, DispatcherBuilder, System, World},
+    DataInit, Error, Result,
+};
 
 pub struct CustomGameData<'a, 'b> {
     pub base: Dispatcher<'a, 'b>,

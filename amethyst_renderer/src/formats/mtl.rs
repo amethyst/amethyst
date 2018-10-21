@@ -112,7 +112,7 @@ where
         .unwrap_or_else(|| {
             let handle = prefab
                 .as_ref()
-                .and_then(|tp| tp.load_prefab(entity, tp_data, &[]).ok());
+                .and_then(|tp| tp.add_to_entity(entity, tp_data, &[]).ok());
             if let (&Some(ref index), &Some(ref handle)) = (&index, &handle) {
                 texture_set.insert(*index, handle.clone());
             }
@@ -133,7 +133,7 @@ where
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
@@ -219,44 +219,44 @@ where
         Ok(())
     }
 
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, PrefabError> {
         let mut ret = false;
         if let Some(ref mut texture) = self.albedo {
-            if texture.trigger_sub_loading(progress, &mut system_data.3)? {
+            if texture.load_sub_assets(progress, &mut system_data.3)? {
                 ret = true;
             }
         }
         if let Some(ref mut texture) = self.emission {
-            if texture.trigger_sub_loading(progress, &mut system_data.3)? {
+            if texture.load_sub_assets(progress, &mut system_data.3)? {
                 ret = true;
             }
         }
         if let Some(ref mut texture) = self.normal {
-            if texture.trigger_sub_loading(progress, &mut system_data.3)? {
+            if texture.load_sub_assets(progress, &mut system_data.3)? {
                 ret = true;
             }
         }
         if let Some(ref mut texture) = self.metallic {
-            if texture.trigger_sub_loading(progress, &mut system_data.3)? {
+            if texture.load_sub_assets(progress, &mut system_data.3)? {
                 ret = true;
             }
         }
         if let Some(ref mut texture) = self.roughness {
-            if texture.trigger_sub_loading(progress, &mut system_data.3)? {
+            if texture.load_sub_assets(progress, &mut system_data.3)? {
                 ret = true;
             }
         }
         if let Some(ref mut texture) = self.ambient_occlusion {
-            if texture.trigger_sub_loading(progress, &mut system_data.3)? {
+            if texture.load_sub_assets(progress, &mut system_data.3)? {
                 ret = true;
             }
         }
         if let Some(ref mut texture) = self.caveat {
-            if texture.trigger_sub_loading(progress, &mut system_data.3)? {
+            if texture.load_sub_assets(progress, &mut system_data.3)? {
                 ret = true;
             }
         }

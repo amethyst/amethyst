@@ -1,9 +1,10 @@
-use amethyst::assets::AssetStorage;
-use amethyst::audio::output::Output;
-use amethyst::audio::Source;
-use amethyst::core::transform::Transform;
-use amethyst::ecs::prelude::{Entity, Join, Read, ReadExpect, System, Write, WriteStorage};
-use amethyst::ui::UiText;
+use amethyst::{
+    assets::AssetStorage,
+    audio::{output::Output, Source},
+    core::transform::Transform,
+    ecs::prelude::{Entity, Join, Read, ReadExpect, System, Write, WriteStorage},
+    ui::UiText,
+};
 use audio::Sounds;
 use config::ArenaConfig;
 use {Ball, ScoreBoard};

@@ -1,6 +1,8 @@
-use amethyst::assets::{AssetStorage, Loader};
-use amethyst::prelude::*;
-use amethyst::renderer::{PngFormat, Texture, TextureHandle};
+use amethyst::{
+    assets::{AssetStorage, Loader},
+    prelude::*,
+    renderer::{PngFormat, Texture, TextureHandle, TextureMetadata},
+};
 
 /// Returns a `TextureHandle` to the image.
 ///
@@ -16,7 +18,7 @@ where
     loader.load(
         name,
         PngFormat,
-        Default::default(),
+        TextureMetadata::srgb_scale(),
         (),
         &world.read_resource::<AssetStorage<Texture>>(),
     )

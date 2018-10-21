@@ -7,7 +7,7 @@ use amethyst_core::specs::prelude::{
 use amethyst_core::timing::Time;
 use amethyst_renderer::ScreenDimensions;
 use clipboard::{ClipboardContext, ClipboardProvider};
-use gfx_glyph::PositionedGlyph;
+use gfx_glyph::{Point, PositionedGlyph};
 use hibitset::BitSet;
 use std::cmp::Ordering;
 use std::ops::Range;
@@ -28,7 +28,7 @@ pub enum LineMode {
 }
 
 /// A component used to display text in this entity's UiTransform
-#[derive(Clone, Derivative)]
+#[derive(Clone, Derivative, Serialize)]
 #[derivative(Debug)]
 pub struct UiText {
     /// The string rendered by this.
@@ -38,6 +38,7 @@ pub struct UiText {
     /// The color of the rendered text, using a range of 0.0 to 1.0 per channel.
     pub color: [f32; 4],
     /// The font used for rendering.
+    #[serde(skip)]
     pub font: FontHandle,
     /// If true this will be rendered as dots instead of the text.
     pub password: bool,
@@ -46,11 +47,14 @@ pub struct UiText {
     /// How to align the text within its `UiTransform`.
     pub align: Anchor,
     /// Cached FontHandle, used to detect changes to the font.
+    #[serde(skip)]
     pub(crate) cached_font: FontHandle,
     /// Cached glyph positions, used to process mouse highlighting
     #[derivative(Debug = "ignore")]
+    #[serde(skip)]
     pub(crate) cached_glyphs: Vec<PositionedGlyph<'static>>,
     /// Cached `GlyphBrush` id for use in the `UiPass`.
+    #[serde(skip)]
     pub(crate) brush_id: Option<u64>,
 }
 
@@ -243,12 +247,9 @@ impl<'a> System<'a> for UiKeyboardSystem {
         }
 
         {
-            let mut focused_text_edit = focused.entity.and_then(|entity| {
-                text.get_mut(entity)
-                    .into_iter()
-                    .zip(editable.get_mut(entity).into_iter())
-                    .next()
-            });
+            let mut focused_text_edit = focused
+                .entity
+                .and_then(|entity| zip_options(text.get_mut(entity), editable.get_mut(entity)));
             if let Some((ref mut _focused_text, ref mut focused_edit)) = focused_text_edit {
                 focused_edit.cursor_blink_timer += time.delta_real_seconds();
                 if focused_edit.cursor_blink_timer >= 1.0 / CURSOR_BLINK_RATE {
@@ -272,32 +273,34 @@ impl<'a> System<'a> for UiKeyboardSystem {
                             ..
                         },
                     ..
-                } => if let Some(focused) = focused.entity.as_mut() {
-                    if let Some((i, _)) = self
-                        .tab_order_cache
-                        .cache
-                        .iter()
-                        .enumerate()
-                        .find(|&(_i, &(_, entity))| entity == *focused)
-                    {
-                        if self.tab_order_cache.cache.len() != 0 {
-                            if modifiers.shift {
-                                if i == 0 {
-                                    let new_i = self.tab_order_cache.cache.len() - 1;
-                                    *focused = self.tab_order_cache.cache[new_i].1;
+                } => {
+                    if let Some(focused) = focused.entity.as_mut() {
+                        if let Some((i, _)) = self
+                            .tab_order_cache
+                            .cache
+                            .iter()
+                            .enumerate()
+                            .find(|&(_i, &(_, entity))| entity == *focused)
+                        {
+                            if self.tab_order_cache.cache.len() != 0 {
+                                if modifiers.shift {
+                                    if i == 0 {
+                                        let new_i = self.tab_order_cache.cache.len() - 1;
+                                        *focused = self.tab_order_cache.cache[new_i].1;
+                                    } else {
+                                        *focused = self.tab_order_cache.cache[i - 1].1;
+                                    }
                                 } else {
-                                    *focused = self.tab_order_cache.cache[i - 1].1;
-                                }
-                            } else {
-                                if i + 1 == self.tab_order_cache.cache.len() {
-                                    *focused = self.tab_order_cache.cache[0].1;
-                                } else {
-                                    *focused = self.tab_order_cache.cache[i + 1].1;
+                                    if i + 1 == self.tab_order_cache.cache.len() {
+                                        *focused = self.tab_order_cache.cache[0].1;
+                                    } else {
+                                        *focused = self.tab_order_cache.cache[i + 1].1;
+                                    }
                                 }
                             }
                         }
                     }
-                },
+                }
                 Event::WindowEvent {
                     event: WindowEvent::CursorMoved { position, .. },
                     ..
@@ -309,54 +312,23 @@ impl<'a> System<'a> for UiKeyboardSystem {
                     );
                     if self.left_mouse_button_pressed {
                         let mut focused_text_edit = focused.entity.and_then(|entity| {
-                            text.get_mut(entity)
-                                .into_iter()
-                                .zip(editable.get_mut(entity).into_iter())
-                                .next()
+                            zip_options(text.get_mut(entity), editable.get_mut(entity))
                         });
                         if let Some((ref mut focused_text, ref mut focused_edit)) =
                             focused_text_edit
                         {
-                            use std::f32::NAN;
-
-                            let mouse_x = self.mouse_position.0;
-                            let mouse_y = self.mouse_position.1;
-                            // Find the glyph closest to the mouse position.
-                            focused_edit.highlight_vector = focused_text
-                                .cached_glyphs
-                                .iter()
-                                .enumerate()
-                                .fold((0, (NAN, NAN)), |(index, (x, y)), (i, g)| {
-                                    let pos = g.position();
-                                    // Use Pythagorean theorem to compute distance
-                                    if ((x - mouse_x).powi(2) + (y - mouse_y).powi(2)).sqrt()
-                                        < ((pos.x - mouse_x).powi(2) + (pos.y - mouse_y).powi(2))
-                                            .sqrt()
-                                    {
-                                        (index, (x, y))
-                                    } else {
-                                        (i, (pos.x, pos.y))
-                                    }
-                                }).0
-                                as isize
-                                - focused_edit.cursor_position;
+                            let (mouse_x, mouse_y) = self.mouse_position;
+                            focused_edit.highlight_vector = closest_glyph_index_to_mouse(
+                                mouse_x,
+                                mouse_y,
+                                focused_text.cached_glyphs.iter(),
+                            ) - focused_edit.cursor_position;
                             // The end of the text, while not a glyph, is still something
                             // you'll likely want to click your cursor to, so if the cursor is
                             // near the end of the text, check if we should put it at the end
                             // of the text.
-                            if focused_edit.cursor_position + focused_edit.highlight_vector + 1
-                                == focused_text.cached_glyphs.len() as isize
-                            {
-                                if let Some(last_glyph) = focused_text.cached_glyphs.iter().last() {
-                                    if (last_glyph.position().x - mouse_x).abs()
-                                        > ((last_glyph.position().x
-                                            + last_glyph.unpositioned().h_metrics().advance_width)
-                                            - mouse_x)
-                                            .abs()
-                                    {
-                                        focused_edit.highlight_vector += 1;
-                                    }
-                                }
+                            if should_advance_to_end(mouse_x, focused_edit, focused_text) {
+                                focused_edit.highlight_vector += 1;
                             }
                         }
                     }
@@ -372,96 +344,43 @@ impl<'a> System<'a> for UiKeyboardSystem {
                 } => {
                     match state {
                         ElementState::Pressed => {
-                            use std::f32::NEG_INFINITY;
-
                             self.left_mouse_button_pressed = true;
 
-                            // Start searching for an element to focus.
-                            // Find all eligible elements
-                            let mut eligible = (&*entities, &transform)
+                            focused.entity = (&*entities, &transform)
                                 .join()
                                 .filter(|&(_, t)| {
                                     t.pixel_x - t.width / 2.0 <= self.mouse_position.0
                                         && t.pixel_x + t.width / 2.0 >= self.mouse_position.0
                                         && t.pixel_y - t.height / 2.0 <= self.mouse_position.1
                                         && t.pixel_y + t.height / 2.0 >= self.mouse_position.1
-                                }).collect::<Vec<_>>();
-                            // In instances of ambiguity we want to select the element with the
-                            // highest Z order, so we need to find the highest Z order value among
-                            // eligible elements.
-                            let highest_z = eligible
-                                .iter()
-                                .fold(NEG_INFINITY, |highest, &(_, t)| highest.max(t.global_z));
-                            // Then filter by it
-                            eligible.retain(|&(_, t)| t.global_z == highest_z);
-                            // We may still have ambiguity as to what to select at this point,
-                            // so we'll resolve that by selecting the most recently created
-                            // element.
-                            focused.entity = eligible.iter().fold(None, |most_recent, &(e, _)| {
-                                Some(match most_recent {
-                                    Some(most_recent) => if most_recent > e {
-                                        most_recent
-                                    } else {
-                                        e
-                                    },
-                                    None => e,
-                                })
-                            });
+                                }).map(|(e, t)| (e, t.global_z))
+                                // In instances of ambiguity we want to select the element with the
+                                // highest Z order, so we need to find the highest Z order value among
+                                // eligible elements.
+                                .max_by(|(_, z1), (_, z2)| z1.partial_cmp(z2).expect("Z was NaN"))
+                                .map(|(e, _)| e);
                             // If we focused an editable text field be sure to position the cursor
                             // in it.
                             let mut focused_text_edit = focused.entity.and_then(|entity| {
-                                text.get_mut(entity)
-                                    .into_iter()
-                                    .zip(editable.get_mut(entity).into_iter())
-                                    .next()
+                                zip_options(text.get_mut(entity), editable.get_mut(entity))
                             });
                             if let Some((ref mut focused_text, ref mut focused_edit)) =
                                 focused_text_edit
                             {
-                                use std::f32::NAN;
-
-                                let mouse_x = self.mouse_position.0;
-                                let mouse_y = self.mouse_position.1;
-                                // Find the glyph closest to the click position.
+                                let (mouse_x, mouse_y) = self.mouse_position;
                                 focused_edit.highlight_vector = 0;
-                                focused_edit.cursor_position = focused_text
-                                    .cached_glyphs
-                                    .iter()
-                                    .enumerate()
-                                    .fold((0, (NAN, NAN)), |(index, (x, y)), (i, g)| {
-                                        let pos = g.position();
-                                        // Use Pythagorean theorem to compute distance
-                                        if ((x - mouse_x).powi(2) + (y - mouse_y).powi(2)).sqrt()
-                                            < ((pos.x - mouse_x).powi(2)
-                                                + (pos.y - mouse_y).powi(2)).sqrt()
-                                        {
-                                            (index, (x, y))
-                                        } else {
-                                            (i, (pos.x, pos.y))
-                                        }
-                                    }).0
-                                    as isize;
+                                focused_edit.cursor_position = closest_glyph_index_to_mouse(
+                                    mouse_x,
+                                    mouse_y,
+                                    focused_text.cached_glyphs.iter(),
+                                );
+
                                 // The end of the text, while not a glyph, is still something
                                 // you'll likely want to click your cursor to, so if the cursor is
                                 // near the end of the text, check if we should put it at the end
                                 // of the text.
-                                if focused_edit.cursor_position + 1
-                                    == focused_text.cached_glyphs.len() as isize
-                                {
-                                    if let Some(last_glyph) =
-                                        focused_text.cached_glyphs.iter().last()
-                                    {
-                                        if (last_glyph.position().x - mouse_x).abs()
-                                            > ((last_glyph.position().x + last_glyph
-                                                .unpositioned()
-                                                .h_metrics()
-                                                .advance_width)
-                                                - mouse_x)
-                                                .abs()
-                                        {
-                                            focused_edit.cursor_position += 1;
-                                        }
-                                    }
+                                if should_advance_to_end(mouse_x, focused_edit, focused_text) {
+                                    focused_edit.cursor_position += 1;
                                 }
                             }
                         }
@@ -472,12 +391,9 @@ impl<'a> System<'a> for UiKeyboardSystem {
                 }
                 _ => {}
             }
-            let mut focused_text_edit = focused.entity.and_then(|entity| {
-                text.get_mut(entity)
-                    .into_iter()
-                    .zip(editable.get_mut(entity).into_iter())
-                    .next()
-            });
+            let mut focused_text_edit = focused
+                .entity
+                .and_then(|entity| zip_options(text.get_mut(entity), editable.get_mut(entity)));
             // Process events for the focused text element
             if let Some((ref mut focused_text, ref mut focused_edit)) = focused_text_edit {
                 match *event {
@@ -584,37 +500,38 @@ impl<'a> System<'a> for UiKeyboardSystem {
                                 }
                             }
                         }
-                        VirtualKeyCode::Left => if focused_edit.highlight_vector == 0
-                            || modifiers.shift
-                        {
-                            if focused_edit.cursor_position > 0 {
-                                let delta = if ctrl_or_cmd(&modifiers) {
-                                    let mut graphemes = 0;
-                                    for word in focused_text.text.split_word_bounds() {
-                                        let word_graphemes = word.graphemes(true).count() as isize;
-                                        if graphemes + word_graphemes
-                                            >= focused_edit.cursor_position
-                                        {
-                                            break;
+                        VirtualKeyCode::Left => {
+                            if focused_edit.highlight_vector == 0 || modifiers.shift {
+                                if focused_edit.cursor_position > 0 {
+                                    let delta = if ctrl_or_cmd(&modifiers) {
+                                        let mut graphemes = 0;
+                                        for word in focused_text.text.split_word_bounds() {
+                                            let word_graphemes =
+                                                word.graphemes(true).count() as isize;
+                                            if graphemes + word_graphemes
+                                                >= focused_edit.cursor_position
+                                            {
+                                                break;
+                                            }
+                                            graphemes += word_graphemes;
                                         }
-                                        graphemes += word_graphemes;
+                                        focused_edit.cursor_position - graphemes
+                                    } else {
+                                        1
+                                    };
+                                    focused_edit.cursor_position -= delta;
+                                    if modifiers.shift {
+                                        focused_edit.highlight_vector += delta;
                                     }
-                                    focused_edit.cursor_position - graphemes
-                                } else {
-                                    1
-                                };
-                                focused_edit.cursor_position -= delta;
-                                if modifiers.shift {
-                                    focused_edit.highlight_vector += delta;
+                                    focused_edit.cursor_blink_timer = 0.0;
                                 }
-                                focused_edit.cursor_blink_timer = 0.0;
+                            } else {
+                                focused_edit.cursor_position = focused_edit.cursor_position.min(
+                                    focused_edit.cursor_position + focused_edit.highlight_vector,
+                                );
+                                focused_edit.highlight_vector = 0;
                             }
-                        } else {
-                            focused_edit.cursor_position = focused_edit
-                                .cursor_position
-                                .min(focused_edit.cursor_position + focused_edit.highlight_vector);
-                            focused_edit.highlight_vector = 0;
-                        },
+                        }
                         VirtualKeyCode::Right => {
                             if focused_edit.highlight_vector == 0 || modifiers.shift {
                                 let glyph_len = focused_text.text.graphemes(true).count();
@@ -644,44 +561,52 @@ impl<'a> System<'a> for UiKeyboardSystem {
                                 focused_edit.highlight_vector = 0;
                             }
                         }
-                        VirtualKeyCode::A => if ctrl_or_cmd(&modifiers) {
-                            let glyph_len = focused_text.text.graphemes(true).count() as isize;
-                            focused_edit.cursor_position = glyph_len;
-                            focused_edit.highlight_vector = -glyph_len;
-                        },
-                        VirtualKeyCode::X => if ctrl_or_cmd(&modifiers) {
-                            let new_clip = extract_highlighted(focused_edit, focused_text);
-                            if new_clip.len() > 0 {
+                        VirtualKeyCode::A => {
+                            if ctrl_or_cmd(&modifiers) {
+                                let glyph_len = focused_text.text.graphemes(true).count() as isize;
+                                focused_edit.cursor_position = glyph_len;
+                                focused_edit.highlight_vector = -glyph_len;
+                            }
+                        }
+                        VirtualKeyCode::X => {
+                            if ctrl_or_cmd(&modifiers) {
+                                let new_clip = extract_highlighted(focused_edit, focused_text);
+                                if new_clip.len() > 0 {
+                                    let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+                                    ctx.set_contents(new_clip).unwrap();
+                                }
+                            }
+                        }
+                        VirtualKeyCode::C => {
+                            if ctrl_or_cmd(&modifiers) {
+                                let new_clip = read_highlighted(focused_edit, focused_text);
+                                if new_clip.len() > 0 {
+                                    let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+                                    ctx.set_contents(new_clip.to_owned()).unwrap();
+                                }
+                            }
+                        }
+                        VirtualKeyCode::V => {
+                            if ctrl_or_cmd(&modifiers) {
+                                delete_highlighted(focused_edit, focused_text);
                                 let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
-                                ctx.set_contents(new_clip).unwrap();
+                                if let Ok(contents) = ctx.get_contents() {
+                                    let index = cursor_byte_index(focused_edit, focused_text);
+                                    let empty_space = focused_edit.max_length
+                                        - focused_text.text.graphemes(true).count();
+                                    let contents = contents.graphemes(true).take(empty_space).fold(
+                                        String::new(),
+                                        |mut init, new| {
+                                            init.push_str(new);
+                                            init
+                                        },
+                                    );
+                                    focused_text.text.insert_str(index, &contents);
+                                    focused_edit.cursor_position +=
+                                        contents.graphemes(true).count() as isize;
+                                }
                             }
-                        },
-                        VirtualKeyCode::C => if ctrl_or_cmd(&modifiers) {
-                            let new_clip = read_highlighted(focused_edit, focused_text);
-                            if new_clip.len() > 0 {
-                                let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
-                                ctx.set_contents(new_clip.to_owned()).unwrap();
-                            }
-                        },
-                        VirtualKeyCode::V => if ctrl_or_cmd(&modifiers) {
-                            delete_highlighted(focused_edit, focused_text);
-                            let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
-                            if let Ok(contents) = ctx.get_contents() {
-                                let index = cursor_byte_index(focused_edit, focused_text);
-                                let empty_space = focused_edit.max_length
-                                    - focused_text.text.graphemes(true).count();
-                                let contents = contents.graphemes(true).take(empty_space).fold(
-                                    String::new(),
-                                    |mut init, new| {
-                                        init.push_str(new);
-                                        init
-                                    },
-                                );
-                                focused_text.text.insert_str(index, &contents);
-                                focused_edit.cursor_position +=
-                                    contents.graphemes(true).count() as isize;
-                            }
-                        },
+                        }
                         _ => {}
                     },
                     _ => {}
@@ -695,6 +620,49 @@ impl<'a> System<'a> for UiKeyboardSystem {
         Self::SystemData::setup(res);
         self.reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
     }
+}
+
+fn should_advance_to_end(
+    mouse_x: f32,
+    focused_edit: &mut TextEditing,
+    focused_text: &mut UiText,
+) -> bool {
+    let cursor_pos = focused_edit.cursor_position + focused_edit.highlight_vector;
+    let len = focused_text.cached_glyphs.len() as isize;
+    if cursor_pos + 1 == len {
+        if let Some(last_glyph) = focused_text.cached_glyphs.last() {
+            let last_glyph_x = last_glyph.position().x;
+            let advance_width = last_glyph.unpositioned().h_metrics().advance_width;
+            if mouse_x - last_glyph_x > advance_width / 2.0 {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+fn zip_options<T1, T2>(o1: Option<T1>, o2: Option<T2>) -> Option<(T1, T2)> {
+    if let Some(o1) = o1 {
+        if let Some(o2) = o2 {
+            return Some((o1, o2));
+        }
+    }
+    None
+}
+
+fn closest_glyph_index_to_mouse<'a, 'b: 'a, I>(mouse_x: f32, mouse_y: f32, i: I) -> isize
+where
+    I: Iterator<Item = &'a PositionedGlyph<'b>>,
+{
+    i.enumerate()
+        .min_by(|(_, g1), (_, g2)| {
+            let dist = |g: &PositionedGlyph| {
+                let Point { x, y } = g.position();
+                ((x - mouse_x).powi(2) + (y - mouse_y).powi(2)).sqrt()
+            };
+            dist(g1).partial_cmp(&dist(g2)).expect("Unexpected NaN!")
+        }).map(|(i, _)| i)
+        .unwrap_or(0) as isize
 }
 
 /// Returns if the command key is down on OSX, and the CTRL key for everything else.

@@ -1,11 +1,15 @@
-use amethyst::assets::{AssetStorage, Loader};
-use amethyst::core::cgmath::{Matrix4, Vector3};
-use amethyst::core::transform::{GlobalTransform, Transform};
-use amethyst::ecs::prelude::{Component, DenseVecStorage};
-use amethyst::prelude::*;
-use amethyst::renderer::{
-    Camera, MaterialTextureSet, PngFormat, Projection, Sprite, SpriteRender, SpriteSheet,
-    SpriteSheetHandle, Texture, TextureCoordinates,
+use amethyst::{
+    assets::{AssetStorage, Loader},
+    core::{
+        cgmath::{Matrix4, Vector3},
+        transform::{GlobalTransform, Transform},
+    },
+    ecs::prelude::{Component, DenseVecStorage},
+    prelude::*,
+    renderer::{
+        Camera, MaterialTextureSet, PngFormat, Projection, Sprite, SpriteRender, SpriteSheet,
+        SpriteSheetHandle, Texture, TextureCoordinates, TextureMetadata,
+    },
 };
 
 pub const ARENA_HEIGHT: f32 = 100.0;
@@ -72,7 +76,7 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
         loader.load(
             "texture/pong_spritesheet.png",
             PngFormat,
-            Default::default(),
+            TextureMetadata::srgb_scale(),
             (),
             &texture_storage,
         )

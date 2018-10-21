@@ -42,7 +42,7 @@ So, you want to write some code? Great!
 
 To begin hacking, fork the repository to your account and `git clone` the forked
 copy to your local machine. On clone you will be on the *master* branch. This
-is the branch that contains all new work that has not been released yet. If you 
+is the branch that contains all new work that has not been released yet. If you
 are adding a new feature to amethyst then you want to base your work off of this
 branch. Otherwise, if you are attemping to fix something in an older release you
 will have to base your work off of a released tag. This can be done after a clone
@@ -88,6 +88,9 @@ developer, it will be merged into the source tree.
 
 ### Protocol for merging pull requests
 
+The following rules shall be applied strictly for the `amethyst` repository. For other repositories of this organization,
+thorough review would be desirable, but no strict application is required there due to lower activity and less influence.
+
 * Pull Requests shall not be merged before at least 24 hours have passed.
 * Pull Requests shall be approved by at least two members (two approvals from contributors can count as one member approval.)
 * Merging a PR shall be done with `bors r+`
@@ -103,16 +106,6 @@ Note: The author of a PR cannot approve their own PR.
 
 * If something went wrong (like a broken version has been released, the website doesn't work at all, ..) no approval is required for merging
 * Merging can be performed instant (but still with bors)
-
-###### Grammar fixes, style improvements, ..
-
-* Same here, no approval is required for merging
-* There is no reason to wait 24 hours here
-
-###### Documentation, tests, benchmarks
-
-* Unless it's a major rewrite in our testing / benchmarking architecture, one review is sufficient.
-* Please still wait one day before merging the PR
 
 ###### Experimental branches
 
@@ -169,7 +162,7 @@ $ git rebase upstream/<branch-to-sync-with>
 
 If any errors occur, Git will try to guess what happened. If you can't figure
 out how to solve your problem, a quick Google search can help, or you can hit us
-up on our [Gitter][gi] chat.
+up on our [Discord][di] chat.
 
 If needed, abort with `git rebase --abort` and also sometimes
 `git merge --abort`.
@@ -186,7 +179,7 @@ $ git merge --ff-only --no-commit upstream
 Then you can decide to do a FF rebase. This way, our commit logs remain nice
 and clean, and we'll be grateful.
 
-[gi]: https://gitter.im/orgs/amethyst/rooms
+[di]: https://discord.gg/GnP5Whs
 [rb]: https://github.com/edx/edx-platform/wiki/How-to-Rebase-a-Pull-Request#how-do-i-rebase
 
 Thank you so much for your contribution! Now Amethyst will be a little bit
@@ -204,8 +197,8 @@ There are two types of documentation in Amethyst you can work on:
 1. [API documentation][ad]
 2. [The Amethyst book][ab]
 
-[ad]: https://www.amethyst.rs/doc/doc/amethyst/index.html
-[ab]: https://www.amethyst.rs/book/
+[ad]: https://www.amethyst.rs/doc/master/doc/amethyst/
+[ab]: https://www.amethyst.rs/book/master/
 
 Our Rust API documentation is generated directly from source code comments
 marked with either `///` or `//!` using  a tool called Rustdoc. See

@@ -7,6 +7,7 @@ use hibitset::BitSet;
 /// Joint, attach to an entity with a `Transform`
 #[derive(Debug, Clone)]
 pub struct Joint {
+    /// The skins attached to this joint.
     pub skins: Vec<Entity>,
 }
 
@@ -30,6 +31,7 @@ pub struct Skin {
 }
 
 impl Skin {
+    /// Creates a new `Skin`
     pub fn new(
         joints: Vec<Entity>,
         meshes: BitSet,
@@ -61,7 +63,7 @@ impl<'a> PrefabData<'a> for JointPrefab {
     type SystemData = WriteStorage<'a, Joint>;
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         storage: &mut Self::SystemData,
@@ -94,7 +96,7 @@ impl<'a> PrefabData<'a> for SkinPrefab {
     type SystemData = WriteStorage<'a, Skin>;
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         storage: &mut Self::SystemData,
@@ -138,20 +140,20 @@ impl<'a> PrefabData<'a> for SkinnablePrefab {
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
     ) -> Result<(), PrefabError> {
         if let Some(ref prefab) = self.skin {
-            prefab.load_prefab(entity, &mut system_data.0, entities)?;
+            prefab.add_to_entity(entity, &mut system_data.0, entities)?;
         }
         if let Some(ref prefab) = self.joint {
-            prefab.load_prefab(entity, &mut system_data.1, entities)?;
+            prefab.add_to_entity(entity, &mut system_data.1, entities)?;
         }
         if let Some(ref prefab) = self.joint_transforms {
-            prefab.load_prefab(entity, &mut system_data.2, entities)?;
+            prefab.add_to_entity(entity, &mut system_data.2, entities)?;
         }
         Ok(())
     }

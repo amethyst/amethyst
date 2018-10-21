@@ -6,7 +6,7 @@ Prefab (
                 graphics: (
                     mesh: Asset(File ("mesh/cube.obj", ObjFormat, ())),
                     material: (
-                        albedo: Data(Rgba((0.0, 0.0, 1.0, 1.0,), (),)),
+                        albedo: Data(Rgba((0.0, 0.0, 1.0, 1.0,), (channel: Srgb))),
                     ),
                 ),
                 transform: (
