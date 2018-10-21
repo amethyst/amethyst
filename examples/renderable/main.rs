@@ -11,7 +11,7 @@ use amethyst::{
         ProgressCounter, RonFormat,
     },
     core::{
-        cgmath::{Quaternion, Rad, Rotation, Rotation3},
+        nalgebra::{UnitQuaternion, Vector3},
         timing::Time,
         transform::{Transform, TransformBundle},
     },
@@ -242,13 +242,13 @@ impl<'a> System<'a> for ExampleSystem {
         state.camera_angle += camera_angular_velocity * time.delta_seconds();
 
         let delta_rot =
-            Quaternion::from_angle_z(Rad(camera_angular_velocity * time.delta_seconds()));
+            UnitQuaternion::from_axis_angle(&Vector3::z_axis(), camera_angular_velocity * time.delta_seconds());
         for (_, transform) in (&camera, &mut transforms).join() {
             // rotate the camera, using the origin as a pivot point
-            transform.translation = delta_rot.rotate_vector(transform.translation);
+            *transform.translation_mut() = delta_rot * transform.translation();
             // add the delta rotation for the frame to the total rotation (quaternion multiplication
             // is the same as rotational addition)
-            transform.rotation = (delta_rot * Quaternion::from(transform.rotation)).into();
+            *transform.rotation_mut() = delta_rot * transform.rotation();
         }
 
         for (point_light, transform) in
@@ -261,9 +261,9 @@ impl<'a> System<'a> for ExampleSystem {
                         None
                     }
                 }) {
-            transform.translation.x = light_orbit_radius * state.light_angle.cos();
-            transform.translation.y = light_orbit_radius * state.light_angle.sin();
-            transform.translation.z = light_z;
+            (*transform.translation_mut()).x = light_orbit_radius * state.light_angle.cos();
+            (*transform.translation_mut()).y = light_orbit_radius * state.light_angle.sin();
+            (*transform.translation_mut()).z = light_z;
 
             point_light.color = state.light_color.into();
         }

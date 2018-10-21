@@ -9,7 +9,10 @@ use {
     assets::{
         Error as AssetError, Format, FormatValue, Prefab, Result as AssetResult, ResultExt, Source,
     },
-    core::transform::Transform,
+    core::{
+        nalgebra::{Unit, Quaternion},
+        transform::Transform,
+    },
 };
 
 use super::*;
@@ -291,9 +294,13 @@ fn load_node(
     // Load transformation data, default will be identity
     let (translation, rotation, scale) = node.transform().decomposed();
     let mut local_transform = Transform::default();
-    local_transform.translation = translation.into();
-    // gltf quat format: [x, y, z, w], our quat format: [w, x, y, z]
-    local_transform.rotation = [rotation[3], rotation[0], rotation[1], rotation[2]].into();
+    *local_transform.translation_mut() = translation.into();
+    *local_transform.rotation_mut() = Unit::new_normalize(Quaternion::new(
+        rotation[0],
+        rotation[1],
+        rotation[2],
+        rotation[3],
+    ));
     local_transform.scale = scale.into();
     prefab.data_or_default(entity_index).transform = Some(local_transform);
 

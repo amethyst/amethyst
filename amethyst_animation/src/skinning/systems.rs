@@ -1,5 +1,4 @@
 use amethyst_core::{
-    cgmath::SquareMatrix,
     specs::prelude::{
         BitSet, InsertedFlag, Join, ModifiedFlag, ReadStorage, ReaderId, Resources, System,
         WriteStorage,
@@ -96,7 +95,7 @@ impl<'a> System<'a> for VertexSkinningSystem {
             // update the joint matrices in all referenced mesh entities
             for (_, mesh_global, matrix) in (&skin.meshes, &global_transforms, &mut matrices).join()
             {
-                if let Some(global_inverse) = mesh_global.0.invert() {
+                if let Some(global_inverse) = mesh_global.0.try_inverse() {
                     matrix.matrices.clear();
                     matrix
                         .matrices
@@ -110,7 +109,7 @@ impl<'a> System<'a> for VertexSkinningSystem {
         for (_, mesh_global, mut joint_transform) in
             (&self.updated, &global_transforms, &mut matrices).join()
         {
-            if let Some(global_inverse) = mesh_global.0.invert() {
+            if let Some(global_inverse) = mesh_global.0.try_inverse() {
                 let skin = skins.get(joint_transform.skin).unwrap();
                 joint_transform.matrices.clear();
                 joint_transform
