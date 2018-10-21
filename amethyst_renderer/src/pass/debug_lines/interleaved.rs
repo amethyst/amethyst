@@ -111,6 +111,11 @@ where
             lines
         };
 
+        if debug_lines.len() == 0 {
+            effect.clear();
+            return;
+        }
+
         let camera = get_camera(active, &camera, &global);
         effect.update_global(
             "camera_position",
