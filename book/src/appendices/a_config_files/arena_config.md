@@ -83,10 +83,10 @@ type SystemData = (
     WriteStorage<'s, Ball>,
     ReadStorage<'s, Paddle>,
     ReadStorage<'s, Transform>,
-    Fetch<'s, AssetStorage<Source>>,
-    Fetch<'s, Sounds>,
-    Fetch<'s, Option<Output>>,
-    Fetch<'s, ArenaConfig>,
+    Read<'s, AssetStorage<Source>>,
+    ReadExpect<'s, Sounds>,
+    Read<'s, Option<Output>>,
+    Read<'s, ArenaConfig>,
 );
 ...
 fn run(&mut self, 
@@ -95,7 +95,7 @@ fn run(&mut self,
 
 Now, in the `run()` function, replace the reference to `ARENA_HEIGHT` with `arena_config.height`.
 
-Add `Fetch<'s, ArenaConfig>` to the `WinnerSystem` and `PaddleSystem` as well, replacing the reference to 
+Add `Read<'s, ArenaConfig>` to the `WinnerSystem` and `PaddleSystem` as well, replacing the reference to 
 `ARENA_WIDTH` with `arena_config.width`.
 
 ## Making `config.ron`
