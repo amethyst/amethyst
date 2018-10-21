@@ -81,6 +81,39 @@ Those principles are:
 
 [up]: https://en.wikipedia.org/wiki/Unix_philosophy
 
+## Why use Amethyst?
+
+While there are a lot of [great building blocks][awg] in the Rust ecosystem, using the Amethyst engine instead of building your own game engine definitely has a lot of advantages.
+
+First of all, we are based on the [Specs][specs] library, which is a common base on which we built all the engine concepts. Those are described in the [concepts](./concepts/intro.html) section of the book.
+Then, we proceeded to add features and gluing them together.
+
+There are the obvious ones:
+* Transformations
+* Graphics
+* Windowing
+* Inputs
+* Audio
+* Etc...
+
+And also the less known but also essential features:
+* Animations
+* Gltf
+* Locales
+* Networking
+
+If you were not using Amethyst, not only would you need to create all those features (or use pre-existing crates), but you would also need to add the glue layer that binds
+ the data of each feature together with the other ones so that they all work together as a whole.
+
+Amethyst does all of this for you, so that you can focus on making your game instead of worrying about the low-level details.
+
+Futhermore, because of the architecture of Amethyst, almost all the parts are both configurable and replaceable. This means that if you do want to change something to suit your needs, there's always a way to do it.
+
+For example, if we use the [rodio] crate for the audio features, but you would rather use something more complex or a custom solution, all you have to do is add some glue that moves the data coming from Specs into the library you are using to play and control the audio, without even having to touch the engine code!
+
+[awg]: http://arewegameyet.com/
+[specs]: https://github.com/slide-rs/specs
+
 ## Contributing
 
 We are always happy to welcome new contributors!
