@@ -46,7 +46,7 @@ Amethyst is divided in two major versions:
 * The Release version, which is the latest version available on crates.io
 * The Git version, which is the unreleased future version of Amethyst available on [Github][agit]
 
-Depending on the book version that you choosed to read, make sure that the amethyst version in your Cargo.toml matches that.
+Depending on the book version that you choose to read, make sure that the amethyst version in your Cargo.toml matches that.
 
 For the Release version, you should have something like this:
 ```rust,ignore
@@ -58,8 +58,10 @@ The latest crates.io version can be found [here](https://crates.io/crates/amethy
 If you want to use the latest unreleased changes, your Cargo.toml file should look like this:
 ```rust,ignore
 [dependencies]
-amethyst = { git = "https://github.com/amethyst/amethyst" }
+amethyst = { git = "https://github.com/amethyst/amethyst", rev = "COMMIT_HASH" }
 ```
+
+The commit hash part is optionnal. It indicates which specific commit your project uses, to prevent unexpected breakage when we make changes to the git version.
 
 [agit]: https://github.com/amethyst/amethyst
 [cl]: https://github.com/amethyst/tools
