@@ -35,8 +35,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Added a `Hidden` Component, that hides a single entity, and a HideHierarchySystem that toggles `Hidden` on all children when used. ([#1001])
 * Documentation for drawing sprites. ([#971])
 * Added `shadow_update()` and `shadow_fixed_update()` to the `State` trait. ([#1006])
-* Added configurable width for debug lines ([#1016])
-* Added `TextureMetadata::srgb_scale()` for default texture metadata with nearest filter ([#1023])
+* Added configurable width for debug lines. ([#1016])
+* Added `TextureMetadata::srgb_scale()` for default texture metadata with nearest filter. ([#1023])
+* Added motivation to use Amethyst over gluing the building blocks yourself in the book. ([#1057])
 
 ### Changed
 * Sprites contain their dimensions and offsets to render them with the right size and desired position. ([#829], [#830])
@@ -91,6 +92,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#887]: https://github.com/amethyst/amethyst/pull/887
 [#892]: https://github.com/amethyst/amethyst/pull/892
 [#877]: https://github.com/amethyst/amethyst/pull/877
+[#878]: https://github.com/amethyst/amethyst/pull/878
 [#896]: https://github.com/amethyst/amethyst/pull/896
 [#831]: https://github.com/amethyst/amethyst/pull/831
 [#902]: https://github.com/amethyst/amethyst/pull/902
@@ -98,6 +100,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#920]: https://github.com/amethyst/amethyst/pull/920
 [#903]: https://github.com/amethyst/amethyst/issues/903
 [#904]: https://github.com/amethyst/amethyst/pull/904
+[#906]: https://github.com/amethyst/amethyst/pull/906
 [#915]: https://github.com/amethyst/amethyst/pull/915
 [#868]: https://github.com/amethyst/amethyst/pull/868
 [#917]: https://github.com/amethyst/amethyst/issues/917
@@ -129,6 +132,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1024]: https://github.com/amethyst/amethyst/pull/1024
 [#1020]: https://github.com/amethyst/amethyst/pull/1020
 [#1023]: https://github.com/amethyst/amethyst/pull/1023
+[#1057]: https://github.com/amethyst/amethyst/pull/1057
 [#1049]: https://github.com/amethyst/amethyst/pull/1049
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
