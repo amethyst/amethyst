@@ -86,7 +86,7 @@ Those principles are:
 While there are a lot of [great building blocks][awg] in the Rust ecosystem, using the Amethyst engine instead of building your own game engine definitely has a lot of advantages.
 
 First of all, we are based on the [Specs][specs] library, which is a common base on which we built all the engine concepts. Those are described in the [concepts](./concepts/intro.html) section of the book.
-Then, we proceeded to add features and gluing them together.
+Then, we proceeded to add features and to glue them together.
 
 There are the obvious ones:
 * Transformations
@@ -109,7 +109,7 @@ Amethyst does all of this for you, so that you can focus on making your game ins
 
 Futhermore, because of the architecture of Amethyst, almost all the parts are both configurable and replaceable. This means that if you do want to change something to suit your needs, there's always a way to do it.
 
-For example, if we use the [rodio] crate for the audio features, but you would rather use something more complex or a custom solution, all you have to do is add some glue that moves the data coming from Specs into the library you are using to play and control the audio, without even having to touch the engine code!
+For example, if we use the [rodio](https://github.com/tomaka/rodio) crate for the audio features, but you would rather use something more complex or a custom solution, all you have to do is add some glue that moves the data coming from Specs into the library that you are using to play and control the audio, without even having to touch the engine code!
 
 [awg]: http://arewegameyet.com/
 [specs]: https://github.com/slide-rs/specs
@@ -117,6 +117,8 @@ For example, if we use the [rodio] crate for the audio features, but you would r
 ## Contributing
 
 We are always happy to welcome new contributors!
+
+To know where to start, we suggest you read our [contribution guidelines](https://github.com/amethyst/amethyst/blob/master/docs/CONTRIBUTING.md)
 
 If you want to contribute, or have questions, let us know either on [GitHub][db], or on [Discord][di].
 
