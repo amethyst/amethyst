@@ -92,6 +92,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#887]: https://github.com/amethyst/amethyst/pull/887
 [#892]: https://github.com/amethyst/amethyst/pull/892
 [#877]: https://github.com/amethyst/amethyst/pull/877
+[#878]: https://github.com/amethyst/amethyst/pull/878
 [#896]: https://github.com/amethyst/amethyst/pull/896
 [#831]: https://github.com/amethyst/amethyst/pull/831
 [#902]: https://github.com/amethyst/amethyst/pull/902
@@ -99,6 +100,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#920]: https://github.com/amethyst/amethyst/pull/920
 [#903]: https://github.com/amethyst/amethyst/issues/903
 [#904]: https://github.com/amethyst/amethyst/pull/904
+[#906]: https://github.com/amethyst/amethyst/pull/906
 [#915]: https://github.com/amethyst/amethyst/pull/915
 [#868]: https://github.com/amethyst/amethyst/pull/868
 [#917]: https://github.com/amethyst/amethyst/issues/917
