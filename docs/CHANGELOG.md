@@ -28,6 +28,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * New vertices() method on MeshCreator trait. ([#946])
 * Support for text alignment (align left, center, right). ([#965])
 * Support for multiline text. ([#965])
+* Added custom aspect ratio to OrthoCamera. ([#983])
 * Added AntiStorage documentation to the book. ([#997])
 * You can now stop the rotation of the FreeRotationSystem by setting HideCursor.hide value to false. ([#997])
 * Support for logging to file, toggle for logging to stdout. ([#976], [#994])
@@ -81,6 +82,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `AssetPrefab` loaded files at an incorrect time ([#1020])
 * Removed unreachable code in `TexturePrefab` ([#1020])
 * Fix OpenGL not rendering on window creation due to `glutin` bug ([#972])
+* Fix debug lines panic when no lines are rendered ([#1049])
 
 [#829]: https://github.com/amethyst/amethyst/issues/829
 [#830]: https://github.com/amethyst/amethyst/pull/830
@@ -109,6 +111,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#964]: https://github.com/amethyst/amethyst/pull/964
 [#965]: https://github.com/amethyst/amethyst/pull/965
 [#969]: https://github.com/amethyst/amethyst/pull/969
+[#983]: https://github.com/amethyst/amethyst/pull/983
 [#971]: https://github.com/amethyst/amethyst/pull/971
 [#972]: https://github.com/amethyst/amethyst/issue/972
 [#974]: https://github.com/amethyst/amethyst/pull/974
@@ -126,6 +129,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1024]: https://github.com/amethyst/amethyst/pull/1024
 [#1020]: https://github.com/amethyst/amethyst/pull/1020
 [#1023]: https://github.com/amethyst/amethyst/pull/1023
+[#1049]: https://github.com/amethyst/amethyst/pull/1049
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
 
