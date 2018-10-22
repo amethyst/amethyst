@@ -180,9 +180,9 @@ Container(
         Text(
             transform: (
                 id: "TopLeft",
-                y: -100.0,
-                width: 500.,
-                height: 75.,
+                y: 180.0,
+                width: 800.,
+                height: 175.,
                 tab_order: 1,
                 anchor: Middle,
             ),
@@ -191,15 +191,15 @@ Container(
                 font: File("font/square.ttf", Ttf, ()),
                 font_size: 75.,
                 color: (0.2, 0.2, 1.0, 1.0),
-                align: TopLeft,
+                align: TopLeft, // ! relative to the transform specified, which only has a width of 800 and height of 175 !
             )
         ),
         Text(
             transform: (
                 id: "Middle",
-                y: -200.0,
-                width: 500.,
-                height: 75.,
+                y: 0.0,
+                width: 800.,
+                height: 175.,
                 tab_order: 1,
                 anchor: Middle,
             ),
@@ -214,9 +214,9 @@ Container(
         Text(
             transform: (
                 id: "BottomRight",
-                y: -300.0,
-                width: 500.,
-                height: 75.,
+                y: -180.0,
+                width: 800.,
+                height: 175.,
                 tab_order: 1,
                 anchor: Middle,
             ),
