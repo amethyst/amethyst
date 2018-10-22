@@ -35,13 +35,3 @@ fn main() -> amethyst::Result<()> {
 
     Ok(())
 }
-
-use amethyst::ecs::{System, SystemData};
-
-impl<'a, T: SystemData<'a>, F: FnMut(T) -> ()> System<'a> for F {
-    type SystemData = T;
-
-    fn run(&mut self, data: Self::SystemData) {
-        self(data);
-    }
-}
