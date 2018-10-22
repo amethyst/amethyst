@@ -244,11 +244,8 @@ impl<'a> System<'a> for ExampleSystem {
         let delta_rot =
             UnitQuaternion::from_axis_angle(&Vector3::z_axis(), camera_angular_velocity * time.delta_seconds());
         for (_, transform) in (&camera, &mut transforms).join() {
-            // rotate the camera, using the origin as a pivot point
-            *transform.translation_mut() = delta_rot * transform.translation();
-            // add the delta rotation for the frame to the total rotation (quaternion multiplication
-            // is the same as rotational addition)
-            *transform.rotation_mut() = delta_rot * transform.rotation();
+            // Append the delta rotation to the current transform.
+            *transform.isometry_mut() = delta_rot * transform.isometry()
         }
 
         for (point_light, transform) in
