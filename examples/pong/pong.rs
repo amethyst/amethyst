@@ -177,9 +177,9 @@ fn initialise_score(world: &mut World) {
         "P1".to_string(),
         Anchor::TopMiddle,
         -50.,
-        50.,
+        -50.,
         1.,
-        55.,
+        200.,
         50.,
         0,
     );
@@ -188,9 +188,9 @@ fn initialise_score(world: &mut World) {
         "P2".to_string(),
         Anchor::TopMiddle,
         50.,
-        50.,
+        -50.,
         1.,
-        55.,
+        200.,
         50.,
         0,
     );
