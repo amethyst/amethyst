@@ -19,19 +19,19 @@ out vec2 tex_uv;
 
 const vec2 positions[6] = vec2[](
     // First triangle
-    vec2(0.0, 0.0), // Left bottom
-    vec2(1.0, 0.0), // Right bottom
-    vec2(1.0, 1.0), // Right top
+    vec2(-0.5, -0.5), // Left bottom
+    vec2(0.5, -0.5), // Right bottom
+    vec2(0.5, 0.5), // Right top
 
     // Second triangle
-    vec2(1.0, 1.0), // Right top
-    vec2(0.0, 1.0), // Left top
-    vec2(0.0, 0.0)  // Left bottom
+    vec2(0.5, 0.5), // Right top
+    vec2(-0.5, 0.5), // Left top
+    vec2(-0.5, -0.5)  // Left bottom
 );
 
 // coords = 0.0 to 1.0 texture coordinates
 vec2 texture_coords(vec2 coords, vec2 u, vec2 v) {
-    return vec2(mix(u.x, u.y, coords.x), mix(v.x, v.y, coords.y));
+    return vec2(mix(u.x, u.y, coords.x+0.5), mix(v.x, v.y, coords.y+0.5));
 }
 
 void main() {
