@@ -62,14 +62,13 @@ impl<'a> System<'a> for AudioSystem {
                 .and_then(|sl| transform.get(sl.0))
                 .or_else(|| transform.get(entity))
             {
-                let listener_transform = listener_transform.0.remove_columns_generic(0, na::U3).remove_row(3);
+                let listener_transform = listener_transform.0.column(3).xyz();
                 let left_ear_position = listener_transform + listener.left_ear;
                 let right_ear_position = listener_transform + listener.right_ear;
                 for (transform, mut audio_emitter) in (&transform, &mut audio_emitter).join() {
-                    let col = transform.0.column(3);
-                    let x = col[0];
-                    let y = col[1];
-                    let z = col[2];
+                    let x = transform.0[(0, 3)];
+                    let y = transform.0[(1, 3)];
+                    let z = transform.0[(2, 3)];
                     let emitter_position = [x, y, z];
                     // Remove all sinks whose sounds have ended.
                     audio_emitter.sinks.retain(|s| !s.1.load(Ordering::Relaxed));

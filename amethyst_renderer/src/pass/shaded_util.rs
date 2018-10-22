@@ -59,7 +59,7 @@ pub(crate) fn set_light_args(
         .join()
         .filter_map(|(light, transform)| {
             if let Light::Point(ref light) = *light {
-                let position: [f32; 3] = transform.0.column(3).remove_row(3).into();
+                let position: [f32; 3] = transform.0.column(3).xyz().into();
                 Some(
                     PointLightPod {
                         position: position.into(),
@@ -125,7 +125,7 @@ pub(crate) fn set_light_args(
         "camera_position",
         camera
             .as_ref()
-            .map(|&(_, ref trans)| trans.0.column(3).remove_row(3).into())
+            .map(|&(_, ref trans)| trans.0.column(3).xyz().into())
             .unwrap_or([0.0; 3]),
     );
 }
