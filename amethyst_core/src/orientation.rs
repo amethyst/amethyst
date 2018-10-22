@@ -23,8 +23,8 @@ impl From<Matrix3<f32>> for Orientation {
     fn from(mat: Matrix3<f32>) -> Self {
         Orientation {
             forward: -mat.column(0),
-            right: mat.column(1).clone_owned(),
-            up: mat.column(2).clone_owned(),
+            right: mat.column(1).into(),
+            up: mat.column(2).into(),
         }
     }
 }
@@ -33,9 +33,9 @@ impl Default for Orientation {
     fn default() -> Self {
         // Signs depend on coordinate system
         Self {
-            forward: -Vector3::new(na::zero(), na::zero(), na::one()),
-            right: Vector3::new(na::one(), na::zero(), na::zero()),
-            up: Vector3::new(na::zero(), na::one(), na::zero()),
+            forward: -Vector3::z(),
+            right: Vector3::x(),
+            up: Vector3::y(),
         }
     }
 }

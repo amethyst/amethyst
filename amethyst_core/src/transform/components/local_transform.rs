@@ -56,6 +56,13 @@ impl Transform {
     // TODO: fix example
     #[inline]
     pub fn look_at(&mut self, target: Vector3<f32>, up: Vector3<f32>) -> &mut Self {
+        /*
+         * Are you sure you actually want the look_at matrix here? It is worth noting this will
+         * generate a look_at view matrix (intended to be used by a camera). So that might
+         * be the inverse of what you intended to do here.
+         * You should try `new_observer_frame` (https://www.nalgebra.org/rustdoc/nalgebra/geometry/type.UnitQuaternion.html#method.new_observer_frame)
+         * instead.
+         */
         self.iso.rotation =
             UnitQuaternion::look_at_rh(&(self.iso.translation.vector - target), &up);
         self
@@ -109,6 +116,16 @@ impl Transform {
         &mut self.iso.rotation
     }
 
+    #[inline]
+    pub fn isometry(&self) -> &Isometry3<f32> {
+        &self.iso
+    }
+
+    #[inline]
+    pub fn isometry_mut(&mut self) -> &mut Isometry3<f32> {
+        &mut self.iso
+    }
+
     /// Convert this transform's rotation into an Orientation, guaranteed to be 3 unit orthogonal
     /// vectors
     pub fn orientation(&self) -> Orientation {
@@ -136,7 +153,7 @@ impl Transform {
     /// It will not move in the case where the axis is zero, for any distance.
     #[inline]
     pub fn move_along_global(&mut self, direction: Unit<Vector3<f32>>, distance: f32) -> &mut Self {
-        self.iso.translation.vector += direction.as_ref() * (distance / direction.magnitude());
+        self.iso.translation.vector += direction.as_ref() * distance;
         self
     }
 
@@ -146,7 +163,7 @@ impl Transform {
     #[inline]
     pub fn move_along_local(&mut self, direction: Unit<Vector3<f32>>, distance: f32) -> &mut Self {
         self.iso.translation.vector +=
-            self.iso.rotation * direction.as_ref() * (distance / direction.magnitude());
+            self.iso.rotation * direction.as_ref() * distance;
         self
     }
 
@@ -283,7 +300,7 @@ impl Default for Transform {
     /// The default transform does nothing when used to transform an entity.
     fn default() -> Self {
         Transform {
-            iso: Isometry3::from_parts(Translation3::from_vector(na::zero()), na::one()),
+            iso: Isometry3::identity(),
             scale: Vector3::from_element(1.0),
         }
     }
@@ -297,7 +314,7 @@ impl Component for Transform {
 impl From<Vector3<f32>> for Transform {
     fn from(translation: Vector3<f32>) -> Self {
         Transform {
-            iso: Isometry3::from_parts(Translation3::from_vector(translation), na::one()),
+            iso: Isometry3::new(translation, na::zero()),
             ..Default::default()
         }
     }

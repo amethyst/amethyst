@@ -240,7 +240,7 @@ where
                     .map(|(x, y, z)| {
                         Vector3::new(v.normal.x * x, v.normal.y * y, v.normal.z * z).normalize()
                     }).unwrap_or_else(|| Vector3::from(v.normal));
-                let up = Vector3::new(0.0, 1.0, 0.0);
+                let up = Vector3::y();
                 let tangent = normal.cross(&up).cross(&normal);
                 (
                     pos.into(),
