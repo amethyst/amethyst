@@ -144,10 +144,6 @@ name = "fly_camera"
 path = "examples/fly_camera/main.rs"
 
 [[example]]
-name = "sprites"
-path = "examples/sprites/main.rs"
-
-[[example]]
 name = "sprites_ordered"
 path = "examples/sprites_ordered/main.rs"
 
