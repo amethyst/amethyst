@@ -109,8 +109,9 @@ use amethyst::input::InputHandler;
 #   side: Side,
 # }
 # impl amethyst::ecs::Component for Paddle {
-#   type Storage = amethyst::ecs::VecStorage<Paddle>;    
+#   type Storage = amethyst::ecs::VecStorage<Paddle>;
 # }
+
 pub struct PaddleSystem;
 
 impl<'s> System<'s> for PaddleSystem {
@@ -239,7 +240,7 @@ component of the transform's translation.
 #   side: Side,
 # }
 # impl amethyst::ecs::Component for Paddle {
-#   type Storage = amethyst::ecs::VecStorage<Paddle>;    
+#   type Storage = amethyst::ecs::VecStorage<Paddle>;
 # }
 # pub struct PaddleSystem;
 # impl<'s> System<'s> for PaddleSystem {
@@ -297,7 +298,7 @@ Our run function should now look something like this:
 #   side: Side,
 # }
 # impl amethyst::ecs::Component for Paddle {
-#   type Storage = amethyst::ecs::VecStorage<Paddle>;    
+#   type Storage = amethyst::ecs::VecStorage<Paddle>;
 # }
 # pub struct PaddleSystem;
 # impl<'s> System<'s> for PaddleSystem {

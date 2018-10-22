@@ -15,6 +15,7 @@
     * [Opening (and closing!) a window](./pong-tutorial/pong-tutorial-01.md)
     * [Drawing the paddles](./pong-tutorial/pong-tutorial-02.md)
     * [Moving the paddles](./pong-tutorial/pong-tutorial-03.md)
+    * [Making a ball move and bounce](./pong-tutorial/pong-tutorial-04.md)
     * [Call for contribution](./pong-tutorial/contribution.md)
 * [Animation](./animation.md)
     * [Interpolation](./animation/interpolation.md)

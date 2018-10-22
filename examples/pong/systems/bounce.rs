@@ -53,7 +53,7 @@ impl<'s> System<'s> for BounceSystem {
                 // To determine whether the ball has collided with a paddle, we create a larger
                 // rectangle around the current one, by subtracting the ball radius from the
                 // lowest coordinates, and adding the ball radius to the highest ones. The ball
-                // is than within the paddle if its centre is within the larger wrapper
+                // is then within the paddle if its centre is within the larger wrapper
                 // rectangle.
                 if point_in_rect(
                     ball_x,
