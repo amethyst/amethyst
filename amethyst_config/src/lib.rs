@@ -106,6 +106,9 @@ where
     /// Loads a configuration structure from a file.
     fn load_no_fallback<P: AsRef<Path>>(path: P) -> Result<Self, ConfigError>;
 
+    /// Loads configuration structure from raw bytes.
+    fn load_bytes(bytes: &[u8]) -> Result<Self, ConfigError>;
+
     /// Writes a configuration structure to a file.
     fn write<P: AsRef<Path>>(&self, path: P) -> Result<(), ConfigError>;
 }
@@ -127,7 +130,6 @@ where
     }
 
     fn load_no_fallback<P: AsRef<Path>>(path: P) -> Result<Self, ConfigError> {
-        use ron::de::Deserializer;
         use std::fs::File;
         use std::io::Read;
 
@@ -142,14 +144,18 @@ where
         };
 
         if path.extension().and_then(|e| e.to_str()) == Some("ron") {
-            let mut d = Deserializer::from_bytes(&content)?;
-            let val = T::deserialize(&mut d)?;
-            d.end()?;
-
-            Ok(val)
+            Self::load_bytes(&content)
         } else {
             Err(ConfigError::Extension(path.to_path_buf()))
         }
+    }
+
+    fn load_bytes(bytes: &[u8]) -> Result<Self, ConfigError> {
+        let mut de = ron::de::Deserializer::from_bytes(bytes)?;
+        let val = T::deserialize(&mut de)?;
+        de.end()?;
+
+        Ok(val)
     }
 
     fn write<P: AsRef<Path>>(&self, path: P) -> Result<(), ConfigError> {
