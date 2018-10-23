@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_ui"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Jacob Kiesel <kieseljake@gmail.com>", "Joël Lupien <jojolepromain@gmail.com>"]
 description = "Amethyst UI crate"
 keywords = ["ui", "specs", "ecs", "amethyst"]
@@ -12,11 +12,11 @@ repository = "https://github.com/amethyst/amethyst"
 license = "MIT/Apache-2.0"
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets", version = "0.4.0" }
-amethyst_audio = { path = "../amethyst_audio", version = "0.3.0"}
-amethyst_core = { path = "../amethyst_core", version = "0.3.0" }
-amethyst_renderer = { path = "../amethyst_renderer", version = "0.8.0" }
-amethyst_input = { path = "../amethyst_input", version = "0.4.0" }
+amethyst_assets = { path = "../amethyst_assets", version = "0.5.0" }
+amethyst_audio = { path = "../amethyst_audio", version = "0.4.0"}
+amethyst_core = { path = "../amethyst_core", version = "0.4.0" }
+amethyst_renderer = { path = "../amethyst_renderer", version = "0.9.0" }
+amethyst_input = { path = "../amethyst_input", version = "0.5.0" }
 clipboard = "0.5"
 derivative = "1.0"
 fnv = "1"

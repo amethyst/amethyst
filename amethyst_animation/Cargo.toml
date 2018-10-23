@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_animation"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Simon Rönnberg <seamonr@gmail.com>"]
 description = "Animation support for Amethyst"
 keywords = ["game", "engine", "animation", "3d", "amethyst"]
@@ -17,9 +17,9 @@ appveyor = { repository = "amethyst/amethyst", branch = "master" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets/", version = "0.4.0" }
-amethyst_core = { path = "../amethyst_core/", version = "0.3.0" }
-amethyst_renderer = { path = "../amethyst_renderer/", version = "0.8.0" }
+amethyst_assets = { path = "../amethyst_assets/", version = "0.5.0" }
+amethyst_core = { path = "../amethyst_core/", version = "0.4.0" }
+amethyst_renderer = { path = "../amethyst_renderer/", version = "0.9.0" }
 fnv = "1"
 hibitset = { version = "0.5.1", features = ["parallel"] }
 itertools = "0.7.8"
