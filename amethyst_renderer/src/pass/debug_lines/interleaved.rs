@@ -130,7 +130,7 @@ where
             "camera_position",
             camera
                 .as_ref()
-                .map(|&(_, ref trans)| trans.0.column(3).remove_row(3).into())
+                .map(|&(_, ref trans)| trans.0.column(3).xyz().into())
                 .unwrap_or([0.0; 3]),
         );
 

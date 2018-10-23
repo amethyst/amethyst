@@ -75,7 +75,7 @@ impl<'a> System<'a> for VisibilitySortingSystem {
             .and_then(|a| global.get(a.entity))
             .or_else(|| (&camera, &global).join().map(|cg| cg.1).next());
         let camera_backward = camera
-            .map(|c| c.0.column(2).remove_row(3))
+            .map(|c| c.0.column(2).xyz())
             .unwrap_or_else(Vector3::z);
         let camera_centroid = camera
             .map(|g| g.0.fixed_resize::<na::U3, na::U3>(0.0) * origin)
