@@ -56,15 +56,8 @@ impl Transform {
     // TODO: fix example
     #[inline]
     pub fn look_at(&mut self, target: Vector3<f32>, up: Vector3<f32>) -> &mut Self {
-        /*
-         * Are you sure you actually want the look_at matrix here? It is worth noting this will
-         * generate a look_at view matrix (intended to be used by a camera). So that might
-         * be the inverse of what you intended to do here.
-         * You should try `new_observer_frame` (https://www.nalgebra.org/rustdoc/nalgebra/geometry/type.UnitQuaternion.html#method.new_observer_frame)
-         * instead.
-         */
         self.iso.rotation =
-            UnitQuaternion::look_at_rh(&(self.iso.translation.vector - target), &up);
+            UnitQuaternion::look_at_rh(&(target - self.iso.translation.vector), &up);
         self
     }
 
