@@ -75,7 +75,8 @@ impl GltfPrefab {
     /// Move the scene so the center of the bounding box is at the given `target` location.
     pub fn move_to(&mut self, target: Point3<f32>) {
         if let Some(ref extent) = self.extent {
-            *self.transform
+            *self
+                .transform
                 .get_or_insert_with(Transform::default)
                 .translation_mut() += target - extent.centroid();
         }
@@ -105,8 +106,8 @@ pub struct GltfNodeExtent {
 impl Default for GltfNodeExtent {
     fn default() -> Self {
         Self {
-            start: Point3::from_coordinates(Vector3::from_element(std::f32::MAX)),
-            end: Point3::from_coordinates(Vector3::from_element(std::f32::MIN)),
+            start: Point3::from(Vector3::from_element(std::f32::MAX)),
+            end: Point3::from(Vector3::from_element(std::f32::MIN)),
         }
     }
 }

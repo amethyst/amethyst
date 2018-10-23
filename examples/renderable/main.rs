@@ -241,11 +241,13 @@ impl<'a> System<'a> for ExampleSystem {
         state.light_angle += light_angular_velocity * time.delta_seconds();
         state.camera_angle += camera_angular_velocity * time.delta_seconds();
 
-        let delta_rot =
-            UnitQuaternion::from_axis_angle(&Vector3::z_axis(), camera_angular_velocity * time.delta_seconds());
+        let delta_rot = UnitQuaternion::from_axis_angle(
+            &Vector3::z_axis(),
+            camera_angular_velocity * time.delta_seconds(),
+        );
         for (_, transform) in (&camera, &mut transforms).join() {
             // Append the delta rotation to the current transform.
-            *transform.isometry_mut() = delta_rot * transform.isometry()
+            *transform.isometry_mut() = delta_rot * transform.isometry();
         }
 
         for (point_light, transform) in
@@ -258,9 +260,11 @@ impl<'a> System<'a> for ExampleSystem {
                         None
                     }
                 }) {
-            (*transform.translation_mut()).x = light_orbit_radius * state.light_angle.cos();
-            (*transform.translation_mut()).y = light_orbit_radius * state.light_angle.sin();
-            (*transform.translation_mut()).z = light_z;
+            transform.set_xyz(
+                light_orbit_radius * state.light_angle.cos(),
+                light_orbit_radius * state.light_angle.sin(),
+                light_z,
+            );
 
             point_light.color = state.light_color.into();
         }

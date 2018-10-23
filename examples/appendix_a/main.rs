@@ -13,7 +13,9 @@ mod systems;
 
 use amethyst::{
     audio::AudioBundle,
-    core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle, transform::Transform},
+    core::{
+        frame_limiter::FrameRateLimitStrategy, transform::Transform, transform::TransformBundle,
+    },
     ecs::prelude::{Component, DenseVecStorage},
     input::InputBundle,
     prelude::*,

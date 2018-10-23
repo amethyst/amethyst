@@ -10,16 +10,15 @@ Prefab (
                     ),
                 ),
                 transform: (
-                    translation: [0.0, 0.0, 5.0],
-                    scale: [2.0, 2.0, 2.0],
+                    translation: (0.0, 0.0, 5.0),
+                    scale: (2.0, 2.0, 2.0),
                 ),
             ),
         ),
         (
             data: ( 
                 transform: Transform (
-                    translation: [5.0, -20.0, 15.0],
-                    rotation: [0.0, 0.0, 0.0, 0.0],
+                    translation: (5.0, -20.0, 15.0),
                 ),
                 light: (
                     light: Point((
@@ -33,14 +32,14 @@ Prefab (
         (
             data: (
                 transform: Transform (
-                    translation: [0.0, -20.0, 10.0],
-                    rotation: [0.6153864, 0.0, 0.0, 0.7882256],
+                    translation: (0.0, -20.0, 10.0),
+                    rotation: (0.7882256, 0.6153864, 0.0, 0.0),
                 ),
                 camera: Perspective((
-                    fovy: Rad (1.0471975512),
                     aspect: 1.0,
-                    near: 0.1,
-                    far: 2000.0,
+                    fovy: 1.0471975512,
+                    znear: 0.1,
+                    zfar: 2000.0,
                 )),
             ),
         ),

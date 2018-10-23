@@ -295,11 +295,12 @@ fn load_node(
     let (translation, rotation, scale) = node.transform().decomposed();
     let mut local_transform = Transform::default();
     *local_transform.translation_mut() = translation.into();
+    // gltf quat format: [x, y, z, w], argument order expected by our quaternion: (w, x, y, z)
     *local_transform.rotation_mut() = Unit::new_normalize(Quaternion::new(
+        rotation[3],
         rotation[0],
         rotation[1],
         rotation[2],
-        rotation[3],
     ));
     local_transform.scale = scale.into();
     prefab.data_or_default(entity_index).transform = Some(local_transform);

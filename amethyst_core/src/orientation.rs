@@ -1,6 +1,6 @@
 //! Orientation of objects
 
-use nalgebra::{self as na, Matrix3, Vector3};
+use nalgebra::{Matrix3, Vector3};
 
 /// This struct contains 3 unit vectors pointing in the given directions.
 ///

@@ -1,9 +1,8 @@
-use alga::general::Real;
 use num_traits::cast::{NumCast, ToPrimitive};
 use minterpolate::InterpolationPrimitive;
 
 use amethyst_core::{
-    cgmath::{num_traits::NumCast, BaseNum},
+    nalgebra::Real,
     specs::prelude::{Entity, WriteStorage},
 };
 
