@@ -62,7 +62,7 @@ impl<'a> System<'a> for AudioSystem {
                 .and_then(|sl| transform.get(sl.0))
                 .or_else(|| transform.get(entity))
             {
-                let listener_transform = listener_transform.0.remove_columns_generic(0, na::U3).remove_row(3);
+                let listener_transform = listener_transform.0.column(3).xyz();
                 let left_ear_position = listener_transform + listener.left_ear;
                 let right_ear_position = listener_transform + listener.right_ear;
                 for (transform, mut audio_emitter) in (&transform, &mut audio_emitter).join() {
