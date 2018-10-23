@@ -21,7 +21,6 @@ pub struct CameraOrthoWorldCoordinates {
 }
 
 impl CameraOrthoWorldCoordinates {
-
     /// Creates coordinates with (0,0) at the bottom left, and (1,1) at the top right
     pub fn normalized() -> CameraOrthoWorldCoordinates {
         CameraOrthoWorldCoordinates {
@@ -68,7 +67,6 @@ pub struct CameraOrtho {
 }
 
 impl CameraOrtho {
-
     /// Creates a Camera that maintains window coordinates of (0,0) in the bottom left, and (1,1) at the top right
     pub fn normalized(mode: CameraNormalizeMode) -> CameraOrtho {
         CameraOrtho {

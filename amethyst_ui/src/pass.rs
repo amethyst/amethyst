@@ -172,9 +172,7 @@ impl Pass for DrawUi {
         {
             // Create a bitset containing only the new indices.
             let new = (&transform_set ^ &self.cached_draw_order.cached) & &transform_set;
-            for (entity, transform, _new) in
-                (&*entities, &ui_transform, &new).join()
-            {
+            for (entity, transform, _new) in (&*entities, &ui_transform, &new).join() {
                 let pos = self
                     .cached_draw_order
                     .cache
@@ -353,7 +351,10 @@ impl Pass for DrawUi {
                             - ui_transform.pixel_height * ui_text.align.norm_offset().1)
                             * hidpi,
                     ),
-                    bounds: (ui_transform.pixel_width * hidpi, ui_transform.pixel_height * hidpi),
+                    bounds: (
+                        ui_transform.pixel_width * hidpi,
+                        ui_transform.pixel_height * hidpi,
+                    ),
                     // Invert z because of gfx-glyph using z+ forward
                     z: ui_transform.global_z / highest_abs_z,
                     layout,
