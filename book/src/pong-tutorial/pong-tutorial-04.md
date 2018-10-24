@@ -183,7 +183,7 @@ As you can see, to gain access to time passed since the last frame, you need
 to use [`amethyst::core::timing::Time`][doc_time], a commonly used
 resource. It has a method called `delta_seconds` that does exactly what we want.
 
-Then, we'll implement the `BounceSystem` in `systems/bounce.rs`:
+Next, let's implement the `BounceSystem` in `systems/bounce.rs`:
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::prelude::{Component, DenseVecStorage};
