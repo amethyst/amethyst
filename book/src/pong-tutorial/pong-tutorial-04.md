@@ -89,7 +89,7 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
 
 In [a previous chapter][pong_02_drawing] we saw how to load a sprite sheet
 and get things drawn on the screen. As you may remember sprite sheet information
-are stored in `pong_spritesheet.ron` and the ball sprite was the
+is stored in `pong_spritesheet.ron` and the ball sprite was the
 second one whose index is `1`.
 
 Finally, let's make sure the code is working as intended by updating the `on_start` method:
