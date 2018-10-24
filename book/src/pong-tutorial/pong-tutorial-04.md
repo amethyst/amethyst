@@ -180,7 +180,7 @@ Note: You will need to add a `use` statement to bring in `Ball` from `pong.rs`.
 This system is responsible for moving all balls according to their speed and
 the elapsed time.
 As you can see, to gain access to time passed since the last frame, you need
-to use the [`amethyst::core::timing::Time`][doc_time], a commonly used
+to use [`amethyst::core::timing::Time`][doc_time], a commonly used
 resource. It has a method called `delta_seconds` that does exactly what we want.
 
 Then, we'll implement the `BounceSystem` in `systems/bounce.rs`:
