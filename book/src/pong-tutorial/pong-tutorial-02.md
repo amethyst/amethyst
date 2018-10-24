@@ -41,14 +41,13 @@ statements to make it through this chapter:
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 use amethyst::assets::{AssetStorage, Loader};
-use amethyst::core::cgmath::{Vector3, Matrix4};
-use amethyst::core::transform::{GlobalTransform, Transform};
+use amethyst::core::cgmath::Vector3;
+use amethyst::core::transform::Transform;
 use amethyst::ecs::prelude::{Component, DenseVecStorage};
 use amethyst::prelude::*;
 use amethyst::renderer::{
-    Camera, MaterialTextureSet, PngFormat, Projection, Sprite,
-    SpriteRender, SpriteSheet, SpriteSheetHandle, Texture, TextureCoordinates,
-    TextureMetadata,
+    Camera, MaterialTextureSet, PngFormat, Projection, SpriteRender, SpriteSheet,
+    SpriteSheetFormat, SpriteSheetHandle, Texture, TextureMetadata,
 };
 ```
 
@@ -104,26 +103,32 @@ the entire arena. Let's do it!
 # use amethyst::prelude::*;
 # use amethyst::ecs::World;
 # use amethyst::renderer::{Camera, Projection};
-# use amethyst::core::cgmath::{Vector3, Matrix4};
-# use amethyst::core::{Transform, GlobalTransform};
+# use amethyst::core::Transform;
 fn initialise_camera(world: &mut World) {
-    world.create_entity()
+    let mut transform = Transform::default();
+    transform.translation.z = 1.0;
+    world
+        .create_entity()
         .with(Camera::from(Projection::orthographic(
             0.0,
             ARENA_WIDTH,
             ARENA_HEIGHT,
             0.0,
         )))
-        .with(GlobalTransform(
-            Matrix4::from_translation(Vector3::new(0.0, 0.0, 1.0)).into()
-        ))
+        .with(transform)
         .build();
 }
 ```
 
 We create an entity that will carry our camera, with an orthographic projection
-of the size of our arena (as we want it to cover it all). Ignore the
-`GlobalTransform` for now, we'll deal with it in more details later on.
+of the size of our arena (as we want it to cover it all). We attach it a
+`Transform` component, representing its position in the world. Notice that
+we moved that transform a bit back on the z axis: this is to make sure the camera
+can see properly the sprites that will, for the duration of this tutorial, sit
+on the XY plane.
+
+![Illustrating the camera move](../images/pong_tutorial/camera.png)
+
 Note that as the origin of our camera is in the bottom left corner, we set
 `ARENA_HEIGHT` as the top and `0.0` as the bottom.
 
@@ -208,17 +213,16 @@ First let's look at our math imports:
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
-use amethyst::core::cgmath::{Vector3, Matrix4};
-use amethyst::core::transform::{GlobalTransform, Transform};
+use amethyst::core::cgmath::Vector3;
+use amethyst::core::transform::Transform;
 ```
 
 Amethyst uses the [cgmath crate][cg] under the hood and exposes it for our use.
 Today we just grabbed the `Vector3` type, which is a very good math thing to have.
-(we also grabbed `Matrix4` for the `GlobalTransform` earlier, but we won't use it here)
 
-`Transform` and `GlobalTransform` are Amethyst ECS components which carry
-position and orientation information. `Transform` is relative
-to a parent if one exists, while `GlobalTransform` is, well, global.
+`Transform` is an Amethyst ECS component which carry
+position and orientation information. It is relative
+to a parent, if one exists.
 
 Let's also define some constants for convenience:
 
@@ -239,7 +243,7 @@ general as it makes operations like rotation easier.
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
-# use amethyst::core::{Transform, GlobalTransform};
+# use amethyst::core::Transform;
 # use amethyst::core::cgmath::Vector3;
 # use amethyst::ecs::World;
 # enum Side {
@@ -271,7 +275,6 @@ fn initialise_paddles(world: &mut World) {
     world
         .create_entity()
         .with(Paddle::new(Side::Left))
-        .with(GlobalTransform::default())
         .with(left_transform)
         .build();
 
@@ -279,7 +282,6 @@ fn initialise_paddles(world: &mut World) {
     world
         .create_entity()
         .with(Paddle::new(Side::Right))
-        .with(GlobalTransform::default())
         .with(right_transform)
         .build();
 }
@@ -412,18 +414,9 @@ This section will finally allow us to see something.
 
 The first thing we will have to do is load the sprite sheet we will use for all
 our graphics in the game. Here, it is located in `texture/pong_spritesheet.png`.
-We will perform the loading in a new function called `load_sprite_sheet`. There
-is quite a lot to do to load a sprite sheet, so we will construct the
-`load_sprite_sheet` function in pieces.
+We will perform the loading in a new function called `load_sprite_sheet`.
 
-First, let's declare an additional constant for the spritesheet. This will be
-used when defining how the sprites are laid out on the sprite sheet.
-
-```rust,no_run,noplaypen
-const SPRITESHEET_SIZE: (f32, f32) = (8.0, 16.0);
-```
-
-Next, we declare the function and load the image.
+First, let's declare the function and load the spritesheet's image.
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
@@ -501,24 +494,19 @@ material_texture_set.insert(texture_id, texture_handle);
 
 The `MaterialTextureSet` is yet another `resource`, which is a bi-directional
 map between an application defined texture ID and the handle of the loaded
-texture. As you will see in a moment, `SpriteSheet`s are linked to textures
+texture. In other words, this allows us to associate a specific global ID to
+our texture. As you will see in a moment, `SpriteSheet`s are linked to textures
 through this ID. Since we only have one sprite sheet, we can just use `0` as the
 ID.
 
-We now need to define what part of the texture we want to render. To do that, we
-need to create a `Sprite`, which is a fancy name to call a rectangle on the
-sprite sheet. Behold, texture coordinates!
+Finally, we load the file containing the position of each sprites on the sheet.
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::assets::{Loader, AssetStorage};
-# use amethyst::renderer::{Texture, PngFormat, TextureHandle, MaterialTextureSet,
-#                          TextureCoordinates, Sprite, SpriteSheet, SpriteSheetHandle, TextureMetadata};
+# use amethyst::renderer::{Texture, PngFormat, TextureHandle, MaterialTextureSet, SpriteSheetHandle, SpriteSheetFormat, SpriteSheet, TextureMetadata};
 # use amethyst::ecs::World;
-# const PADDLE_HEIGHT: f32 = 16.0;
-# const PADDLE_WIDTH: f32 = 4.0;
-# const SPRITESHEET_SIZE: (f32, f32) = (8.0, 16.0);
 # fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
 #   let texture_handle = {
 #       let loader = world.read_resource::<Loader>();
@@ -531,74 +519,33 @@ sprite sheet. Behold, texture coordinates!
 #           &texture_storage,
 #       )
 #   };
-# let texture_id = 0;
-# let mut material_texture_set = world.write_resource::<MaterialTextureSet>();
-# material_texture_set.insert(texture_id, texture_handle);  
-// Create the sprite for the paddles.
-//
-// Texture coordinates are expressed as a proportion of the sprite sheet's
-// dimensions between 0.0 and 1.0, so they must be divided by the width or
-// height.
-//
-// In addition, on the Y axis, texture coordinates are 0.0 at the bottom of
-// the sprite sheet and 1.0 at the top, which is the opposite direction of
-// pixel coordinates, so we have to invert the value by subtracting the
-// pixel proportion from 1.0.
-let tex_coords = TextureCoordinates {
-    left: 0.0,
-    right: PADDLE_WIDTH / SPRITESHEET_SIZE.0,
-    bottom: 1.0 - PADDLE_HEIGHT / SPRITESHEET_SIZE.1,
-    top: 1.0,
-};
-let paddle_sprite = Sprite {
-    width: PADDLE_WIDTH,
-    height: PADDLE_HEIGHT,
-    offsets: [PADDLE_WIDTH / 2.0, PADDLE_HEIGHT / 2.0],
-    tex_coords,
-};
-
-// Collate the sprite layout information into a sprite sheet
-// `sprite_sheet` is the layout of the sprites on the image
-let sprite_sheet = SpriteSheet {
-    texture_id,
-    sprites: vec![paddle_sprite],
-};
-
-let sprite_sheet_handle = {
-    let loader = world.read_resource::<Loader>();
-    let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
-    loader.load_from_data(sprite_sheet, (), &sprite_sheet_store)
-};
-
-sprite_sheet_handle
+#   let texture_id = 0;
+#   let mut material_texture_set = world.write_resource::<MaterialTextureSet>();
+#   material_texture_set.insert(texture_id, texture_handle);
+let loader = world.read_resource::<Loader>();
+let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
+loader.load(
+    "texture/pong_spritesheet.ron", // Here we load the associated ron file
+    SpriteSheetFormat,
+    texture_id, // We pass it the ID of the texture we want it to use
+    (),
+    &sprite_sheet_store,
+)
 # }
 ```
 
-That's quite a bit of code, and well deserving of the comments. In the
-`TextureCoordinates` set up, the `SPRITESHEET_SIZE.0` and `SPRITESHEET_SIZE.1`
-correspond to the pixel width and height of the pong_spritesheet.png file. If
-you take a look at the sprite sheet, you will find the paddle sprite on the
-left, and the ball on the right. The texture coordinates may be confusing at
-first, but the flipped Y axis is how textures have been referenced since the
-beginning of time<sup>TM</sup>. From another perspective, it's consistent with
-the mathematical graph Y axis, and it is pixel coordinates that are actually
-inverted.
+This is where we have to use the associated ID. The `Loader` will take the
+file containing the sprites' positions and the texture ID, and create a
+nicely packaged `SpriteSheet` struct. It is this struct that we will be using
+to actually draw stuff on the screen.
 
-Anyway, in the `Sprite` declaration, the width and height indicate how many
-pixels the paddle sprite normally takes up &mdash; since the information is not
-retained in the `TextureCoordinates`. The `offsets` indicate how many pixels the
-sprite should be shifted left and down, relative to the entity that it is
-attached to. By using half the width and height of the paddle, the sprite will
-be placed such that its center aligns with the middle of the paddle.
-
-Lastly, we construct the `SpriteSheet`, passing it the ID of the texture that
-holds its pixel data, and the paddle sprite. The order of sprites declared on
-the sprite sheet is also significant, as sprites are referenced by the index in
+Please note that the order of sprites declared in the sprite sheet file 
+is also significant, as sprites are referenced by the index in
 the vector. If you're wondering about the ball sprite, it does exist on the
 image, but we will get to it in a later part of the tutorial.
 
-Phew! That's a lot to take in; but it's not over yet! We have to link the sprite
-to the paddle. We update the `initialise_paddle` function by changing its
+So far, so good. We have a sprite sheet loaded, now we need to link the sprites
+to the paddles. We update the `initialise_paddle` function by changing its
 signature to:
 
 ```rust,no_run,noplaypen

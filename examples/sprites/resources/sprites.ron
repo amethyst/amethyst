@@ -1,8 +1,0 @@
-// Sprite sheet definition
-SpriteSheet(
-    path: "texture/bat.32x32.png",
-    sprite_w: 32.0,
-    sprite_h: 32.0,
-    row_count: 2,
-    column_count: 6,
-)

@@ -7,40 +7,96 @@ use amethyst_core::specs::{
 use amethyst_core::Axis2;
 use amethyst_renderer::{Camera, ScreenDimensions};
 
-/// `Component` attached to the camera's entity that allows automatically adjusting the camera's matrix according
-/// to preferences in the "mode" field.
-/// It tries as much as possible to adjust the camera so that the world's coordinate (0, 0) is at the bottom left and
-/// (1, 1) is at the top right of the window.
-/// You must add the `CameraNormalOrthoSystem` to your dispatcher for this to take effect.
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
-pub struct CameraNormalOrtho {
-    /// How the camera's matrix is changed when the window's aspect ratio changes.
-    /// See `CameraNormalizeMode` for more info.
-    pub mode: CameraNormalizeMode,
+/// The coordinates that `CameraOrtho` will keep visible in the window
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Copy)]
+pub struct CameraOrthoWorldCoordinates {
+    /// Left x coordinate
+    pub left: f32,
+    /// Right x coordinate
+    pub right: f32,
+    /// Bottom y coordinate
+    pub bottom: f32,
+    /// Top y coordinate
+    pub top: f32,
 }
 
-impl CameraNormalOrtho {
-    /// Returns the camera matrix offsets according to the internal mode.
-    pub fn camera_offsets(&self, ratio: f32) -> (f32, f32, f32, f32) {
-        self.mode.camera_offsets(ratio)
+impl CameraOrthoWorldCoordinates {
+    /// Creates coordinates with (0,0) at the bottom left, and (1,1) at the top right
+    pub fn normalized() -> CameraOrthoWorldCoordinates {
+        CameraOrthoWorldCoordinates {
+            left: 0.0,
+            right: 1.0,
+            bottom: 0.0,
+            top: 1.0,
+        }
+    }
+
+    /// Returns width / height of the desired camera coordinates.
+    pub fn aspect_ratio(&self) -> f32 {
+        self.width() / self.height()
+    }
+
+    /// Returns size of the x-axis.
+    pub fn width(&self) -> f32 {
+        self.right - self.left
+    }
+
+    /// Returns size of the y-axis.
+    pub fn height(&self) -> f32 {
+        self.top - self.bottom
     }
 }
 
-impl Component for CameraNormalOrtho {
+impl Default for CameraOrthoWorldCoordinates {
+    fn default() -> Self {
+        Self::normalized()
+    }
+}
+
+/// `Component` attached to the camera's entity that allows automatically adjusting the camera's matrix according
+/// to preferences in the "mode" and "world_coordinates" fields.
+/// It adjusts the camera so that the camera's world coordinates are always visible.
+/// You must add the `CameraNormalOrthoSystem` to your dispatcher for this to take effect (no dependencies required).
+#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CameraOrtho {
+    /// How the camera's matrix is changed when the window's aspect ratio changes.
+    /// See `CameraNormalizeMode` for more info.
+    pub mode: CameraNormalizeMode,
+    /// The world coordinates that this camera will keep visible as the window size changes
+    pub world_coordinates: CameraOrthoWorldCoordinates,
+}
+
+impl CameraOrtho {
+    /// Creates a Camera that maintains window coordinates of (0,0) in the bottom left, and (1,1) at the top right
+    pub fn normalized(mode: CameraNormalizeMode) -> CameraOrtho {
+        CameraOrtho {
+            mode,
+            world_coordinates: Default::default(),
+        }
+    }
+
+    /// Get the camera matrix offsets according to the specified options.
+    pub fn camera_offsets(&self, window_aspect_ratio: f32) -> (f32, f32, f32, f32) {
+        self.mode
+            .camera_offsets(window_aspect_ratio, &self.world_coordinates)
+    }
+}
+
+impl Component for CameraOrtho {
     type Storage = DenseVecStorage<Self>;
 }
 
 /// Settings that decide how to scale the camera's matrix when the aspect ratio changes.
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
 pub enum CameraNormalizeMode {
-    /// Using an aspect ratio of 1:1, tries to adjust the matrix values of the camera so
-    /// that the direction opposite to the stretch_direction always have a world size of 1.
+    /// Using the aspect ratio from the world coordinates for this camera, tries to adjust the matrix values of the
+    /// camera so that the orthogonal direction to the stretch_direction always have a world size of 1.
     ///
     /// This means that the direction opposite to stretch_direction
     /// will always be between 0.0 to 1.0 in world coordinates.
-    /// Scene space can be lost on the specified stretch_direction however.
+    /// Scene space can be lost (or gained) on the specified stretch_direction however.
     ///
-    /// Example:
+    /// Example (using a normalized ortho camera):
     /// If you use Lossy with the stretch_direction of Axis::X,
     /// this means that a mesh or image going from the world coordinates (0, 0) to (1, 1)
     /// would take the whole screen size if the window dimension width is equal to its height.
@@ -60,9 +116,8 @@ pub enum CameraNormalizeMode {
         stretch_direction: Axis2,
     },
 
-    /// Scales the render dynamically to ensure no space is lost in the [0,1] range on any axis.
-    /// In other words, this ensures that you can always at least see everything
-    /// between the world coordinates (0, 0) up to (1, 1).
+    /// Scales the render dynamically to ensure the `CameraOrthoWorldCoordinates` are always visible.
+    /// There may still be additional space in addition to the specific coordinates, but it will never hide anything.
     ///
     /// If you have a non-default `Transform` on your camera,
     /// it will just translate those coordinates by the translation of the `Transform`.
@@ -71,34 +126,64 @@ pub enum CameraNormalizeMode {
 
 impl CameraNormalizeMode {
     /// Get the camera matrix offsets according to the specified options.
-    fn camera_offsets(&self, aspect_ratio: f32) -> (f32, f32, f32, f32) {
+    fn camera_offsets(
+        &self,
+        window_aspect_ratio: f32,
+        desired_coordinates: &CameraOrthoWorldCoordinates,
+    ) -> (f32, f32, f32, f32) {
         match self {
             &CameraNormalizeMode::Lossy {
                 ref stretch_direction,
             } => match stretch_direction {
-                Axis2::X => CameraNormalizeMode::lossy_x(aspect_ratio),
-                Axis2::Y => CameraNormalizeMode::lossy_y(aspect_ratio),
+                Axis2::X => CameraNormalizeMode::lossy_x(window_aspect_ratio, desired_coordinates),
+                Axis2::Y => CameraNormalizeMode::lossy_y(window_aspect_ratio, desired_coordinates),
             },
             &CameraNormalizeMode::Contain => {
-                if aspect_ratio > 1.0 {
-                    CameraNormalizeMode::lossy_x(aspect_ratio)
-                } else if aspect_ratio < 1.0 {
-                    CameraNormalizeMode::lossy_y(aspect_ratio)
+                let desired_aspect_ratio = desired_coordinates.aspect_ratio();
+                if window_aspect_ratio > desired_aspect_ratio {
+                    CameraNormalizeMode::lossy_x(window_aspect_ratio, desired_coordinates)
+                } else if window_aspect_ratio < desired_aspect_ratio {
+                    CameraNormalizeMode::lossy_y(window_aspect_ratio, desired_coordinates)
                 } else {
-                    (0.0, 1.0, 0.0, 1.0)
+                    (
+                        desired_coordinates.left,
+                        desired_coordinates.right,
+                        desired_coordinates.bottom,
+                        desired_coordinates.top,
+                    )
                 }
             }
         }
     }
 
-    fn lossy_x(aspect_ratio: f32) -> (f32, f32, f32, f32) {
-        let offset = (aspect_ratio - 1.0) / 2.0;
-        (-offset, 1.0 + offset, 0.0, 1.0)
+    fn lossy_x(
+        window_aspect_ratio: f32,
+        desired_coordinates: &CameraOrthoWorldCoordinates,
+    ) -> (f32, f32, f32, f32) {
+        let offset = (window_aspect_ratio * desired_coordinates.height()
+            - desired_coordinates.width())
+            / 2.0;
+        (
+            desired_coordinates.left - offset,
+            desired_coordinates.right + offset,
+            desired_coordinates.bottom,
+            desired_coordinates.top,
+        )
     }
 
-    fn lossy_y(aspect_ratio: f32) -> (f32, f32, f32, f32) {
-        let offset = (1.0 / aspect_ratio - 1.0) / 2.0;
-        (0.0, 1.0, -offset, 1.0 + offset)
+    fn lossy_y(
+        window_aspect_ratio: f32,
+        desired_coordinates: &CameraOrthoWorldCoordinates,
+    ) -> (f32, f32, f32, f32) {
+        let offset = (desired_coordinates.width() / window_aspect_ratio
+            - desired_coordinates.height())
+            / 2.0;
+        (
+            desired_coordinates.left,
+            desired_coordinates.right,
+            desired_coordinates.bottom - offset,
+            desired_coordinates.top + offset,
+        )
     }
 }
 
@@ -109,17 +194,17 @@ impl Default for CameraNormalizeMode {
 }
 
 /// System that automatically changes the camera matrix according to the settings in
-/// the `CameraNormalOrtho` attached to the camera entity.
+/// the `CameraOrtho` attached to the camera entity.
 #[derive(Default)]
-pub struct CameraNormalOrthoSystem {
+pub struct CameraOrthoSystem {
     aspect_ratio_cache: f32,
 }
 
-impl<'a> System<'a> for CameraNormalOrthoSystem {
+impl<'a> System<'a> for CameraOrthoSystem {
     type SystemData = (
         ReadExpect<'a, ScreenDimensions>,
         WriteStorage<'a, Camera>,
-        ReadStorage<'a, CameraNormalOrtho>,
+        ReadStorage<'a, CameraOrtho>,
     );
     fn run(&mut self, (dimensions, mut cameras, ortho_cameras): Self::SystemData) {
         let aspect = dimensions.aspect_ratio();
@@ -148,7 +233,7 @@ impl<'a> System<'a> for CameraNormalOrthoSystem {
 #[cfg(test)]
 mod test {
     use super::Axis2;
-    use ortho_camera::{CameraNormalOrtho, CameraNormalizeMode};
+    use ortho_camera::{CameraNormalizeMode, CameraOrtho, CameraOrthoWorldCoordinates};
 
     // TODO: Disabled until someone fixes the formula (if possible).
     /*#[test]
@@ -174,93 +259,120 @@ mod test {
     #[test]
     fn normal_camera_large_lossy_horizontal() {
         let aspect = 2.0 / 1.0;
-        let cam = CameraNormalOrtho {
-            mode: CameraNormalizeMode::Lossy {
-                stretch_direction: Axis2::X,
-            },
-        };
+        let cam = CameraOrtho::normalized(CameraNormalizeMode::Lossy {
+            stretch_direction: Axis2::X,
+        });
         assert_eq!((-0.5, 1.5, 0.0, 1.0), cam.camera_offsets(aspect));
     }
 
     #[test]
     fn normal_camera_large_lossy_vertical() {
         let aspect = 2.0 / 1.0;
-        let cam = CameraNormalOrtho {
-            mode: CameraNormalizeMode::Lossy {
-                stretch_direction: Axis2::Y,
-            },
-        };
+        let cam = CameraOrtho::normalized(CameraNormalizeMode::Lossy {
+            stretch_direction: Axis2::Y,
+        });
         assert_eq!((0.0, 1.0, 0.25, 0.75), cam.camera_offsets(aspect));
     }
 
     #[test]
     fn normal_camera_high_lossy_horizontal() {
         let aspect = 1.0 / 2.0;
-        let cam = CameraNormalOrtho {
-            mode: CameraNormalizeMode::Lossy {
-                stretch_direction: Axis2::X,
-            },
-        };
+        let cam = CameraOrtho::normalized(CameraNormalizeMode::Lossy {
+            stretch_direction: Axis2::X,
+        });
         assert_eq!((0.25, 0.75, 0.0, 1.0), cam.camera_offsets(aspect));
     }
 
     #[test]
     fn normal_camera_high_lossy_vertical() {
         let aspect = 1.0 / 2.0;
-        let cam = CameraNormalOrtho {
-            mode: CameraNormalizeMode::Lossy {
-                stretch_direction: Axis2::Y,
-            },
-        };
+        let cam = CameraOrtho::normalized(CameraNormalizeMode::Lossy {
+            stretch_direction: Axis2::Y,
+        });
         assert_eq!((0.0, 1.0, -0.5, 1.5), cam.camera_offsets(aspect));
     }
 
     #[test]
     fn normal_camera_square_lossy_horizontal() {
         let aspect = 1.0 / 1.0;
-        let cam = CameraNormalOrtho {
-            mode: CameraNormalizeMode::Lossy {
-                stretch_direction: Axis2::X,
-            },
-        };
+        let cam = CameraOrtho::normalized(CameraNormalizeMode::Lossy {
+            stretch_direction: Axis2::X,
+        });
         assert_eq!((0.0, 1.0, 0.0, 1.0), cam.camera_offsets(aspect));
     }
 
     #[test]
     fn normal_camera_square_lossy_vertical() {
         let aspect = 1.0 / 1.0;
-        let cam = CameraNormalOrtho {
-            mode: CameraNormalizeMode::Lossy {
-                stretch_direction: Axis2::Y,
-            },
-        };
+        let cam = CameraOrtho::normalized(CameraNormalizeMode::Lossy {
+            stretch_direction: Axis2::Y,
+        });
         assert_eq!((0.0, 1.0, 0.0, 1.0), cam.camera_offsets(aspect));
     }
 
     #[test]
     fn normal_camera_large_contain() {
         let aspect = 2.0 / 1.0;
-        let cam = CameraNormalOrtho {
-            mode: CameraNormalizeMode::Contain,
-        };
+        let cam = CameraOrtho::normalized(CameraNormalizeMode::Contain);
         assert_eq!((-0.5, 1.5, 0.0, 1.0), cam.camera_offsets(aspect));
     }
 
     #[test]
     fn normal_camera_high_contain() {
         let aspect = 1.0 / 2.0;
-        let cam = CameraNormalOrtho {
-            mode: CameraNormalizeMode::Contain,
-        };
+        let cam = CameraOrtho::normalized(CameraNormalizeMode::Contain);
         assert_eq!((0.0, 1.0, -0.5, 1.5), cam.camera_offsets(aspect));
     }
 
     #[test]
     fn normal_camera_square_contain() {
         let aspect = 1.0 / 1.0;
-        let cam = CameraNormalOrtho {
-            mode: CameraNormalizeMode::Contain,
-        };
+        let cam = CameraOrtho::normalized(CameraNormalizeMode::Contain);
         assert_eq!((0.0, 1.0, 0.0, 1.0), cam.camera_offsets(aspect));
+    }
+
+    #[test]
+    fn camera_square_contain() {
+        let aspect = 1.0 / 1.0;
+        let cam = CameraOrtho {
+            mode: CameraNormalizeMode::Contain,
+            world_coordinates: CameraOrthoWorldCoordinates {
+                left: 0.0,
+                right: 2.0,
+                top: 2.0,
+                bottom: 0.0,
+            },
+        };
+        assert_eq!((0.0, 2.0, 0.0, 2.0), cam.camera_offsets(aspect));
+    }
+
+    #[test]
+    fn camera_large_contain() {
+        let aspect = 2.0 / 1.0;
+        let cam = CameraOrtho {
+            mode: CameraNormalizeMode::Contain,
+            world_coordinates: CameraOrthoWorldCoordinates {
+                left: 0.0,
+                right: 2.0,
+                top: 2.0,
+                bottom: 0.0,
+            },
+        };
+        assert_eq!((-1.0, 3.0, 0.0, 2.0), cam.camera_offsets(aspect));
+    }
+
+    #[test]
+    fn camera_high_contain() {
+        let aspect = 1.0 / 2.0;
+        let cam = CameraOrtho {
+            mode: CameraNormalizeMode::Contain,
+            world_coordinates: CameraOrthoWorldCoordinates {
+                left: 0.0,
+                right: 2.0,
+                top: 2.0,
+                bottom: 0.0,
+            },
+        };
+        assert_eq!((0.0, 2.0, -1.0, 3.0), cam.camera_offsets(aspect));
     }
 }

@@ -179,7 +179,31 @@ been popped off the state machine's stack.
 
 Finally, let's create a `texture` folder in the root of the project. This
 will contain the [spritesheet texture][ss] `pong_spritesheet.png` we will need
-to render the elements of the game.
+to render the elements of the game. To go with it, we need a file describing
+where the sprites are on the sheet. Let's create, right next to it, a file
+called `pong_spritesheet.ron`. It will contain the following sprite sheet
+definition:
+
+```text,ignore
+(
+    spritesheet_width: 8.0,
+    spritesheet_height: 16.0,
+    sprites: [
+        (
+            x: 0.0,
+            y: 0.0,
+            width: 4.0,
+            height: 16.0,
+        ),
+        (
+            x: 4.0,
+            y: 0.0,
+            width: 4.0,
+            height: 4.0,
+        ),
+    ],
+)
+```
 
 Success! Now we should be able to compile and run this code and get a window.
 It should look something like this:

@@ -25,15 +25,15 @@ and its source code is completely yours to tinker with. The code is available on
 
 ## Getting started
 
-This book is split into four sections (more coming). This page is the first. The others are:
+This book is split into several sections, with this introduction being the first. The others are:
 
 * [Getting Started][gs] – Prepare your computer for Amethyst development.
-* [Concepts][cc] - An overview of the concepts used in Amethyst. Recommended.
+* [Concepts][cc] – An overview of the concepts used in Amethyst. Recommended.
 * [Pong Tutorial][pt] – Build a basic pong game in Rust.
 * [Animation][anim] – Explains the architecture of the `amethyst_animation` crate.
-* [Custom `GameData`][gad] - Shows you how to structure more complex games that need to change the system graph.
-* [Glossary][gl] - Defines special terms used throughout the book.
-* [Appendix A: Config Files][ax_a] - Shows you how to define your data in RON files.
+* [Custom `GameData`][gad] – Shows you how to structure more complex games that need to change the system graph.
+* [Glossary][gl] – Defines special terms used throughout the book.
+* [Appendix A: Config Files][ax_a] – Shows you how to define your data in RON files.
 
 [gs]: ./getting-started.html
 [cc]: ./concepts/intro.html
@@ -71,7 +71,7 @@ Those principles are:
 
 2. Parallelism.
 
-   Modern computers, even cheap ones, all have multithread / multicores CPU. With the years, there will be more and more opportunities for parallelism to improve performance.
+   Modern computers, even cheap ones, all have multithreading with multicore CPUs. We expect that over the years, there will be more and more opportunities for parallelism to improve performance.
    With a proper parallel engine, we are convinced that your game will be more and more performant over the years without even needing you to update it.
 
 3. Data-oriented/Data-driven.
@@ -81,9 +81,43 @@ Those principles are:
 
 [up]: https://en.wikipedia.org/wiki/Unix_philosophy
 
+## Why use Amethyst?
+
+While there are a lot of [great building blocks][awg] in the Rust ecosystem, using the Amethyst engine instead of building your own game engine definitely has a lot of advantages.
+
+First of all, the engine is based on the [Specs][specs] library, which is a common base on which the engine's concepts are built. Those are described in the [concepts](./concepts/intro.md) section of the book.
+A lot of features have been glued together using those:
+
+There are the obvious ones:
+* Transformations
+* Graphics
+* Windowing
+* Inputs
+* Audio
+* Etc...
+
+And also the less known but also essential features:
+* Animations
+* Gltf
+* Locales
+* Networking
+
+If you were not to use Amethyst, not only would you need to create all those features (or use pre-existing crates), but you would also need to glue the layers together.
+
+Amethyst does all of this for you, so that you can focus on making your game instead of worrying about the low-level details.
+
+Futhermore, because of the architecture of Amethyst, almost all the parts are both configurable and replaceable. This means that if you do want to change something to suit your needs, there's always a way to do it.
+
+For example, the [rodio](https://github.com/tomaka/rodio) crate is currently used for the audio features in the engine, but if you would rather use something more complex or a custom solution, all you have to do is add some glue that moves the data coming from Specs into the library that you are using to play and control the audio, without even having to touch the engine code!
+
+[awg]: http://arewegameyet.com/
+[specs]: https://github.com/slide-rs/specs
+
 ## Contributing
 
 We are always happy to welcome new contributors!
+
+To know where to start, we suggest you read our [contribution guidelines](https://github.com/amethyst/amethyst/blob/master/docs/CONTRIBUTING.md)
 
 If you want to contribute, or have questions, let us know either on [GitHub][db], or on [Discord][di].
 
