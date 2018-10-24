@@ -7,7 +7,7 @@ use core::shrev::{EventChannel, ReaderId};
 use core::timing::{Stopwatch, Time};
 use core::{EventReader, Named};
 use ecs::common::Errors;
-use ecs::prelude::{Component, World, Write, Read};
+use ecs::prelude::{Component, Read, World, Write};
 use error::{Error, Result};
 use game_data::DataInit;
 use log::Level;
@@ -249,16 +249,24 @@ where
             use renderer::WindowEvent;
             let world = &mut self.world;
             let reader_id = &mut self.event_reader_id;
-            world.exec(|ev : Read<EventChannel<Event>>| {
+            world.exec(|ev: Read<EventChannel<Event>>| {
                 ev.read(reader_id).any(|e| {
                     if cfg!(target_os = "ios") {
-                        if let Event::WindowEvent {event: WindowEvent::Destroyed,  .. } = e {
+                        if let Event::WindowEvent {
+                            event: WindowEvent::Destroyed,
+                            ..
+                        } = e
+                        {
                             true
                         } else {
                             false
                         }
                     } else {
-                        if let Event::WindowEvent {event: WindowEvent::CloseRequested,  .. } = e {
+                        if let Event::WindowEvent {
+                            event: WindowEvent::CloseRequested,
+                            ..
+                        } = e
+                        {
                             true
                         } else {
                             false
@@ -280,7 +288,6 @@ where
             let states = &mut self.states;
             states.stop(StateData::new(world, &mut self.data));
         }
-
 
         {
             #[cfg(feature = "profiler")]
@@ -744,7 +751,9 @@ impl<S, E, X> ApplicationBuilder<S, E, X> {
         let mut reader = X::default();
         reader.setup(&mut self.world.res);
         let data = init.build(&mut self.world);
-        let event_reader_id = self.world.exec(|mut ev : Write<EventChannel<Event>>| ev.register_reader());
+        let event_reader_id = self
+            .world
+            .exec(|mut ev: Write<EventChannel<Event>>| ev.register_reader());
 
         Ok(CoreApplication {
             world: self.world,

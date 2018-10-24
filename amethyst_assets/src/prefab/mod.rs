@@ -357,7 +357,11 @@ where
         system_data.1.insert(entity, handle.clone()).map(|_| handle)
     }
 
-    fn load_sub_assets(&mut self, progress: &mut ProgressCounter, system_data: &mut Self::SystemData) -> Result<bool, PrefabError> {
+    fn load_sub_assets(
+        &mut self,
+        progress: &mut ProgressCounter,
+        system_data: &mut Self::SystemData,
+    ) -> Result<bool, PrefabError> {
         let handle = if let AssetPrefab::File(ref name, ref format, ref options) = *self {
             Some(system_data.0.load(
                 name.as_ref(),

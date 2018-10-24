@@ -272,9 +272,9 @@ struct SerializedSpriteSheet {
 }
 
 /// Allows loading of sprite sheets in RON format.
-/// 
+///
 /// This format allows to conveniently load a sprite sheet from a RON file.
-/// 
+///
 /// Example:
 /// ```text,ignore
 /// (
@@ -290,9 +290,9 @@ struct SerializedSpriteSheet {
 ///             // Vertical position of the sprite in the sprite sheet
 ///             y: 0.0,
 ///             // Width of the sprite
-///             width: 16.0, 
+///             width: 16.0,
 ///             // Height of the sprite
-///             height: 16.0, 
+///             height: 16.0,
 ///             // Number of pixels to shift the sprite to the left and down relative to the entity holding it when rendering
 ///             offsets: (0.0, 0.0), // This is optional and defaults to (0.0, 0.0)
 ///         ),
@@ -305,7 +305,7 @@ struct SerializedSpriteSheet {
 ///     ],
 /// )
 /// ```
-/// 
+///
 /// Such a spritesheet description can be loaded using a `Loader` by passing it the ID of the corresponding loaded texture in the MaterialTextureSet.
 /// ```rust,no_run
 /// # extern crate amethyst_assets;
@@ -313,9 +313,9 @@ struct SerializedSpriteSheet {
 /// # extern crate amethyst_renderer;
 /// # use amethyst_assets::{Loader, AssetStorage};
 /// # use amethyst_renderer::{SpriteSheetFormat, SpriteSheet};
-/// # 
+/// #
 /// # const SPRITESHEET_TEXTURE_ID: u64 = 0;
-/// # 
+/// #
 /// # fn load_sprite_sheet() {
 /// #   let world = amethyst_core::specs::World::new(); // Normally, you would use Amethyst's world
 /// #   let loader = world.read_resource::<Loader>();
@@ -354,7 +354,7 @@ impl SimpleFormat<SpriteSheet> for SpriteSheetFormat {
                     right: (sp.x + sp.width) / sheet.spritesheet_width,
                     top: 1.0 - sp.y / sheet.spritesheet_height,
                     bottom: 1.0 - (sp.y + sp.height) / sheet.spritesheet_height,
-                }
+                },
             });
         }
         Ok(SpriteSheet {
