@@ -1,7 +1,7 @@
 # Making a ball move and bounce
 
 In the previous chapter, we learned how to capture user input
-to make things move on the screen by creating a so-called System
+to make things move on the screen by creating a so-called `System`
 ourselves.
 This chapter will reuse all the knowledge we acquired through the
 previous chapters to add a new object to our game: a ball that moves
