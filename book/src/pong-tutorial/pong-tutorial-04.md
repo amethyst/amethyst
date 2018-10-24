@@ -1,18 +1,22 @@
 # Making a ball move and bounce
 
 In the previous chapter, we learned how to capture user input
-to make things move on the screen by creating a so-called `System`
-ourselves.
+to make things move on the screen by creating a `System` ourselves.
 This chapter will reuse all the knowledge we acquired through the
 previous chapters to add a new object to our game: a ball that moves
 and bounces around!
 
 First, let's define some other useful constants for this chapter:
+
 ```rust,no_run,noplaypen
 pub const BALL_VELOCITY_X: f32 = 75.0;
 pub const BALL_VELOCITY_Y: f32 = 50.0;
 pub const BALL_RADIUS: f32 = 2.0;
 ```
+
+This could also be done by using an external config file. This is
+especially useful when you want to edit values a lot. Here, we're
+keeping it simple.
 
 ## Create our next Component: The ball Component!
 
@@ -31,7 +35,7 @@ impl Component for Ball {
 }
 ```
 
-A ball has a velocity and a radius.
+A ball has a velocity and a radius, so we store that information in the component.
 
 Then let's add a `initialise_ball` function the same way we wrote the
 `initialise_paddles` function.
@@ -70,8 +74,8 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
     // Assign the sprite for the ball
     let sprite_render = SpriteRender {
         sprite_sheet: sprite_sheet_handle,
-        sprite_number: 1, // ball is the second sprite on the sprite_sheet
-        flip_horizontal: true,
+        sprite_number: 1, // ball is the second sprite on the sprite sheet
+        flip_horizontal: false,
         flip_vertical: false,
     };
 
@@ -88,9 +92,9 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
 ```
 
 In [a previous chapter][pong_02_drawing] we saw how to load a sprite sheet
-and get things drawn on the screen. As you may remember sprite sheet information
-is stored in `pong_spritesheet.ron` and the ball sprite was the
-second one whose index is `1`.
+and get things drawn on the screen. Remember sprite sheet information
+is stored in `pong_spritesheet.ron`, and the ball sprite was the
+second one, whose index is `1`.
 
 Finally, let's make sure the code is working as intended by updating the `on_start` method:
 
@@ -130,7 +134,7 @@ fn on_start(&mut self, data: StateData<GameData>) {
 ```
 
 Don't forget to call `clone` on `sprite_sheet_handle` because `initialise_paddles` and
-`initialise_ball` *consumes* the handle.
+`initialise_ball` *consume* the handle.
 
 By running the game now, you should be able to see the two paddles and the ball
 in the center. In the next section, we're going to make this ball actually move!
@@ -178,12 +182,24 @@ impl<'s> System<'s> for MoveBallsSystem {
 Note: You will need to add a `use` statement to bring in `Ball` from `pong.rs`.
 
 This system is responsible for moving all balls according to their speed and
-the elapsed time.
-As you can see, to gain access to time passed since the last frame, you need
-to use [`amethyst::core::timing::Time`][doc_time], a commonly used
+the elapsed time. Notice how the `join()` method is used to iterate over all
+ball entities. Here we only have one ball, but if we ever need multiple, the
+system will handle them out of the box.
+In this system, we also want *framerate independence*.
+That is, no matter the framerate, all objects move with the same speed.
+To achieve that, a `delta time` since last frame is used.
+This is commonly known as [`delta timing`][delta_timing].
+As you can see in the snippet, to gain access to time passed since the last frame,
+you need to use [`amethyst::core::timing::Time`][doc_time], a commonly used
 resource. It has a method called `delta_seconds` that does exactly what we want.
 
-Next, let's implement the `BounceSystem` in `systems/bounce.rs`:
+Now that our ball can move, let's implement a new System:
+`BounceSystem` in `systems/bounce.rs`.
+It will be responsible for detecting collisions between balls and
+paddles, as well as balls and the top and bottom edges of the arena.
+If a collision is detected, the ball bounces off. This is done
+by negating the velocity of the `Ball` component on the `x` or `y` axis.
+
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::prelude::{Component, DenseVecStorage};
@@ -281,13 +297,9 @@ fn point_in_rect(x: f32, y: f32, left: f32, bottom: f32, right: f32, top: f32) -
 }
 ```
 
-This system is responsible for detecting collisions between balls and
-paddles, as well as balls and the top and bottom edges of the arena.
-If a collision is detected, the ball bounces off. This is done
-by modyfing the velocity of the `Ball` component.
-
 Also, don't forget to add `mod move_balls` and `mod bounce` in `systems/mod.rs`
 as well as adding our new systems to the game data:
+
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
@@ -342,10 +354,12 @@ on the right or the left, it never comes back and the game is over...
 
 ## Summary
 
-In this chapter, we finally added a ball to our game.
-In the next chapter, we'll add a system that checks when ball
-goes out of the screen on the right or on the left and add a scoring system!
+In this chapter, we finally added a ball to our game. As always, the full code
+is available under the `pong_tutorial_04` example in the Amethyst repository.
+In the next chapter, we'll add a system checking when a player loses the game,
+and add a scoring system!
 
 [pong_02_drawing]: pong-tutorial-02.html#drawing
 [doc_time]: https://www.amethyst.rs/doc/master/doc/amethyst_core/timing/struct.Time.html
+[delta_timing]: https://en.wikipedia.org/wiki/Delta_timing
 
