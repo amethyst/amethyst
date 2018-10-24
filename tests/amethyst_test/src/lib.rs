@@ -322,7 +322,7 @@ pub use effect_return::EffectReturn;
 pub use fixture::{MaterialAnimationFixture, SpriteRenderAnimationFixture};
 pub use game_update::GameUpdate;
 pub use state::{
-    CustomDispatcherState, CustomDispatcherStateBuilder, EmptyState, FunctionState, SequencerState,
+    CustomDispatcherState, CustomDispatcherStateBuilder, FunctionState, PopState, SequencerState,
 };
 pub(crate) use system_injection_bundle::SystemInjectionBundle;
 

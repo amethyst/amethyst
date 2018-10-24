@@ -670,10 +670,10 @@ mod test {
 
     use super::AmethystApplication;
     use EffectReturn;
-    use EmptyState;
     use FunctionState;
     #[cfg(feature = "graphics")]
     use MaterialAnimationFixture;
+    use PopState;
     #[cfg(feature = "graphics")]
     use SpriteRenderAnimationFixture;
 
@@ -754,9 +754,9 @@ mod test {
 
     #[test]
     fn assertion_push_with_loading_state_with_add_resource_succeeds() {
-        // Alternative to embedding the `FunctionState` is to switch to an `EmptyState` but still
+        // Alternative to embedding the `FunctionState` is to switch to a `PopState` but still
         // provide the assertion function
-        let state_fns = || LoadingState::new(EmptyState);
+        let state_fns = || LoadingState::new(PopState);
         let assertion_fn = |world: &mut World| {
             world.read_resource::<LoadResource>();
         };
@@ -792,9 +792,9 @@ mod test {
     #[test]
     #[should_panic(expected = "Failed to run Amethyst application")]
     fn assertion_push_with_loading_state_without_add_resource_should_panic() {
-        // Alternative to embedding the `FunctionState` is to switch to an `EmptyState` but still
+        // Alternative to embedding the `FunctionState` is to switch to a `PopState` but still
         // provide the assertion function
-        let state_fns = || SwitchState::new(EmptyState);
+        let state_fns = || SwitchState::new(PopState);
         let assertion_fn = |world: &mut World| {
             world.read_resource::<LoadResource>();
         };

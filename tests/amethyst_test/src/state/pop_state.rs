@@ -1,10 +1,10 @@
 use amethyst::prelude::*;
 
-/// Empty Amethyst State that returns `Trans::Pop` on `.update()`.
+/// State that returns `Trans::Pop` on `.update()`.
 #[derive(Debug)]
-pub struct EmptyState;
+pub struct PopState;
 
-impl<T, E> State<T, E> for EmptyState
+impl<T, E> State<T, E> for PopState
 where
     E: Send + Sync + 'static,
 {
