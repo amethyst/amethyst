@@ -28,7 +28,7 @@ Then, in `main.rs` declare a module:
 mod pong;
 ```
 
-And in main.rs, below the module declaration and before the main, add this import:
+And in main.rs, below the module declaration and before main, add this import:
 
 ```rust,ignore
 use pong::Pong;
