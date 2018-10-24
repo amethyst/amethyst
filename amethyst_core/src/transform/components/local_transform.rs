@@ -86,7 +86,7 @@ impl Transform {
         //     w.x, w.y, w.z, w.w, // Column 4
         // )
 
-        Matrix4::new_nonuniform_scaling(&self.scale) * self.iso.to_homogeneous()
+        self.iso.to_homogeneous() * Matrix4::new_nonuniform_scaling(&self.scale)
     }
 
     #[inline]
