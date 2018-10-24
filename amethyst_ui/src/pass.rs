@@ -172,9 +172,7 @@ impl Pass for DrawUi {
         {
             // Create a bitset containing only the new indices.
             let new = (&transform_set ^ &self.cached_draw_order.cached) & &transform_set;
-            for (entity, transform, _new) in
-                (&*entities, &ui_transform, &new).join()
-            {
+            for (entity, transform, _new) in (&*entities, &ui_transform, &new).join() {
                 let pos = self
                     .cached_draw_order
                     .cache

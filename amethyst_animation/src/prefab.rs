@@ -1,6 +1,6 @@
 use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, PrefabError, ProgressCounter};
-use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, WriteStorage};
 use amethyst_core::specs::error::BoxedErr;
+use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, WriteStorage};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
@@ -89,7 +89,10 @@ where
         _: &mut Self::SystemData,
         _: &[Entity],
     ) -> Result<Handle<Animation<T>>, PrefabError> {
-        self.handle.as_ref().cloned().ok_or_else(|| PrefabError::Custom(BoxedErr::new(MissingAssetHandle)))
+        self.handle
+            .as_ref()
+            .cloned()
+            .ok_or_else(|| PrefabError::Custom(BoxedErr::new(MissingAssetHandle)))
     }
 
     fn load_sub_assets(

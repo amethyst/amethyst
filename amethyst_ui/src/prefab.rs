@@ -5,7 +5,7 @@ use amethyst_assets::{
 };
 use amethyst_audio::{AudioFormat, Source as Audio};
 use amethyst_core::specs::prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage};
-use amethyst_renderer::{Texture, TextureFormat, TextureMetadata, TexturePrefab, HiddenPropagate};
+use amethyst_renderer::{HiddenPropagate, Texture, TextureFormat, TextureMetadata, TexturePrefab};
 use serde::de::DeserializeOwned;
 
 /// Loadable `UiTransform` data.
@@ -85,7 +85,7 @@ impl UiTransformBuilder {
         self
     }
 
-    /// Set to event transparent
+    /// Adds a [`HiddenPropagate`](../amethyst_renderer/struct.HiddenPropagate.html) component to the entity
     pub fn hidden(mut self) -> Self {
         self.hidden = true;
         self

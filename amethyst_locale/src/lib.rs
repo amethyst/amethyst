@@ -24,7 +24,9 @@ impl SimpleFormat<Locale> for LocaleFormat {
         let s = String::from_utf8(bytes)?;
 
         let mut bundle = FluentBundle::new::<&'static str>(&[]);
-        bundle.add_messages(&s).expect("Error creating fluent bundle!");
+        bundle
+            .add_messages(&s)
+            .expect("Error creating fluent bundle!");
         Ok(Locale { bundle })
     }
 }

@@ -300,7 +300,9 @@ fn init_backend(wb: WindowBuilder, el: &mut EventsLoop, config: &DisplayConfig) 
         .with_multisampling(config.multisampling)
         .with_vsync(config.vsync);
     #[cfg(target_os = "macos")]
-    let ctx = ctx.with_gl_profile(GlProfile::Core).with_gl(GlRequest::Latest);
+    let ctx = ctx
+        .with_gl_profile(GlProfile::Core)
+        .with_gl(GlRequest::Latest);
 
     let (win, dev, fac, color, depth) = win::init::<ColorFormat, DepthFormat>(wb, ctx, el);
     let size = win.get_inner_size().ok_or(Error::WindowDestroyed)?.into();

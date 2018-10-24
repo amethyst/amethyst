@@ -62,20 +62,8 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
             let store = data.world.read_resource::<AssetStorage<Locale>>();
             for h in [&self.handle_en, &self.handle_fr].iter() {
                 if let Some(locale) = h.as_ref().and_then(|h| store.get(h)) {
-                    println!(
-                        "{}",
-                        locale
-                            .bundle
-                            .format("hello", None)
-                            .unwrap().0
-                    );
-                    println!(
-                        "{}",
-                        locale
-                            .bundle
-                            .format("bye", None)
-                            .unwrap().0
-                    );
+                    println!("{}", locale.bundle.format("hello", None).unwrap().0);
+                    println!("{}", locale.bundle.format("bye", None).unwrap().0);
                 }
             }
             Trans::Quit
