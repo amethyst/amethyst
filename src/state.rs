@@ -419,8 +419,9 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
         }
     }
 
-    /// Performs a state transition, if requested by either update() or
-    /// fixed_update().
+    /// Performs a state transition.
+    /// Usually called by update or fixed_update.
+    /// Can also be called when TransQueue is used.
     pub fn transition(&mut self, request: Trans<T, E>, data: StateData<T>) {
         if self.running {
             match request {
