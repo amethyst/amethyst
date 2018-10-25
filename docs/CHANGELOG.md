@@ -51,6 +51,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Added configurable width for debug lines. ([#1016])
 * Added `TextureMetadata::srgb_scale()` for default texture metadata with nearest filter. ([#1023])
 * Added motivation to use Amethyst over gluing the building blocks yourself in the book. ([#1057])
+* Added `Config::load_bytes` for reading configuration from raw bytes. ([#1067])
 
 ### Changed
 * Sprites contain their dimensions and offsets to render them with the right size and desired position. ([#829], [#830])
@@ -76,7 +77,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * The z in UiTransformBuilder now defaults to 1 instead of 0, allowing to skip defining the z in the ui prefabs. ([#946])
 * Added comments to ui prefab. ([#946])
 * Summarized all `use amethyst::` statements to allow collapsing in IDE's. ([#974])
-* `Application` now uses `EventReader`s to determine what events to send to the `State`s, more information in the `State` 
+* `Application` now uses `EventReader`s to determine what events to send to the `State`s, more information in the `State`
   book chapter ([#996])
 * Breaking: Refactor `TextureMetadata` so filter method and clamping can be configured more easily ([#981])
 * Renamed `PrefabData` functions to be easier to understand ([#1008])
@@ -147,6 +148,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1023]: https://github.com/amethyst/amethyst/pull/1023
 [#1057]: https://github.com/amethyst/amethyst/pull/1057
 [#1049]: https://github.com/amethyst/amethyst/pull/1049
+[#1067]: https://github.com/amethyst/amethyst/pull/1067
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
 
