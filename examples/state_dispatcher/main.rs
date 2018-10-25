@@ -12,21 +12,22 @@ impl SimpleState<'static, 'static> for StateA {
     fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'static, 'static> {
         println!("StateA::update()");
         // Shows how to push a `Trans` through the event queue.
+        // If you do use TransQueue, you will be forced to use the 'static lifetime on your states.
         data.world
             .write_resource::<TransQueue<GameData<'static, 'static>, StateEvent>>()
             .push_back(Box::new(|| {
-                Trans::Push(Box::new(StateB::<'static, 'static>::default()))
+                Trans::Push(Box::new(StateB::default()))
             }));
         Trans::None
     }
 }
 
 /// StateB isn't Send + Sync
-struct StateB<'a, 'b> {
-    dispatcher: Dispatcher<'a, 'b>,
+struct StateB {
+    dispatcher: Dispatcher<'static, 'static>,
 }
 
-impl<'a, 'b> Default for StateB<'a, 'b> {
+impl Default for StateB {
     fn default() -> Self {
         StateB {
             dispatcher: DispatcherBuilder::new().build(),
@@ -34,8 +35,8 @@ impl<'a, 'b> Default for StateB<'a, 'b> {
     }
 }
 
-impl<'a, 'b> SimpleState<'a, 'b> for StateB<'a, 'b> {
-    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
+impl SimpleState<'static, 'static> for StateB {
+    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'static, 'static> {
         println!("StateB::update()");
         self.dispatcher.dispatch(&mut data.world.res);
         Trans::Quit

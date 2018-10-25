@@ -8,6 +8,19 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [sv]: http://semver.org/
 
 ## Unreleased
+
+### Added
+* Trans event queue. ([#1069])
+
+### Changed
+
+### Removed
+
+### Fixed
+
+[#1069]: https://github.com/amethyst/amethyst/issues/1069
+
+## [0.9.0] - 2018-10
 ### Added
 * Added base networking implementation and the `amethyst_network` crate. ([#969])
 * Support for debug lines using `DebugLines` pass, and `DebugLines` component or resource. ([#917], [#957])
