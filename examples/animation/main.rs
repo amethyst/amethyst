@@ -109,7 +109,8 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                     get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
-                    ).unwrap()
+                    )
+                    .unwrap()
                     .step(self.current_animation, StepDirection::Backward);
                 }
 
@@ -117,7 +118,8 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                     get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
-                    ).unwrap()
+                    )
+                    .unwrap()
                     .step(self.current_animation, StepDirection::Forward);
                 }
 
@@ -126,7 +128,8 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                     get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
-                    ).unwrap()
+                    )
+                    .unwrap()
                     .set_rate(self.current_animation, self.rate);
                 }
 
@@ -135,7 +138,8 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                     get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
-                    ).unwrap()
+                    )
+                    .unwrap()
                     .set_rate(self.current_animation, self.rate);
                 }
 
@@ -144,7 +148,8 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                     get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
-                    ).unwrap()
+                    )
+                    .unwrap()
                     .set_rate(self.current_animation, self.rate);
                 }
 
@@ -184,7 +189,8 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(AnimationBundle::<AnimationId, Transform>::new(
             "animation_control_system",
             "sampler_interpolation_system",
-        ))?.with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
+        ))?
+        .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
     let mut game = Application::new(resources, Example::default(), game_data)?;
     game.run();

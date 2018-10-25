@@ -42,7 +42,8 @@ pub fn load_mesh(
                     faces.iter().map(|i| vertices[*i]).collect::<Vec<_>>()
                 }
                 None => positions.collect(),
-            }).ok_or(GltfError::MissingPositions)?;
+            })
+            .ok_or(GltfError::MissingPositions)?;
 
         trace!("Loading normals");
         let normals = reader
@@ -53,7 +54,8 @@ pub fn load_mesh(
                     faces.iter().map(|i| normals[*i]).collect()
                 }
                 None => normals.collect(),
-            }).unwrap_or_else(|| {
+            })
+            .unwrap_or_else(|| {
                 use core::cgmath::Point3;
                 use std::iter::once;
                 let f = faces
@@ -69,7 +71,8 @@ pub fn load_mesh(
                         once(normal.clone())
                             .chain(once(normal.clone()))
                             .chain(once(normal))
-                    }).collect::<Vec<_>>()
+                    })
+                    .collect::<Vec<_>>()
             });
 
         trace!("Loading texture coordinates");
@@ -105,7 +108,8 @@ pub fn load_mesh(
                         .collect()
                 }
                 None => tangents.map(|t| [t[0], t[1], t[2]]).collect(),
-            }).unwrap_or_else(|| {
+            })
+            .unwrap_or_else(|| {
                 let f = faces
                     .as_ref()
                     .map(|f| f.clone())

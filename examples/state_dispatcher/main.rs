@@ -2,9 +2,9 @@
 
 extern crate amethyst;
 
-use amethyst::Error;
 use amethyst::ecs::{Dispatcher, DispatcherBuilder};
 use amethyst::prelude::*;
+use amethyst::Error;
 
 struct StateA;
 
@@ -12,7 +12,11 @@ impl SimpleState<'static, 'static> for StateA {
     fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'static, 'static> {
         println!("StateA::update()");
         // Shows how to push a `Trans` through the event queue.
-        data.world.write_resource::<TransQueue<GameData<'static, 'static>, StateEvent>>().push_back(Box::new(|| Trans::Push(Box::new(StateB::<'static, 'static>::default()))));
+        data.world
+            .write_resource::<TransQueue<GameData<'static, 'static>, StateEvent>>()
+            .push_back(Box::new(|| {
+                Trans::Push(Box::new(StateB::<'static, 'static>::default()))
+            }));
         Trans::None
     }
 }

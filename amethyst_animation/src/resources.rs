@@ -508,7 +508,8 @@ where
                         .expect("Referring to a missing sampler"),
                     c,
                 )
-            }).for_each(|(s, c)| {
+            })
+            .for_each(|(s, c)| {
                 set_step_state(c, s, direction);
             });
     }
@@ -534,7 +535,8 @@ where
                 } else {
                     0.
                 }
-            }).max_by(|a, b| a.partial_cmp(&b).unwrap_or(Ordering::Equal))
+            })
+            .max_by(|a, b| a.partial_cmp(&b).unwrap_or(Ordering::Equal))
     }
 }
 

@@ -18,13 +18,15 @@ fn main() -> Result<()> {
         .with_bundle(NetworkBundle::<()>::new(
             "127.0.0.1:3455".parse().unwrap(),
             vec![],
-        ))?.with(SpamSystem::new(), "spam", &[])
+        ))?
+        .with(SpamSystem::new(), "spam", &[])
         .with(ReaderSystem::new(), "reader", &[]);
     let mut game = Application::build("./", State1)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,
-        ).build(game_data)?;
+        )
+        .build(game_data)?;
     game.run();
     Ok(())
 }

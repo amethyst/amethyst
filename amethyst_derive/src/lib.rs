@@ -77,7 +77,8 @@ pub enum SomeEvent {{
             quote! {
                 self.#n = Some(res.fetch_mut::<EventChannel<#ty>>().register_reader());
             }
-        }).collect();
+        })
+        .collect();
     quote! {
         #[allow(missing_docs)]
         #[derive(Default)]
@@ -117,7 +118,8 @@ fn collect_field_types(ast: &Data) -> Vec<Type> {
                 .expect("Event enum variant does not contain an inner event type")
                 .ty
                 .clone()
-        }).collect()
+        })
+        .collect()
 }
 
 fn collect_variant_names(ast: &Data) -> Vec<Ident> {

@@ -104,7 +104,8 @@ fn initialise_camera(world: &mut World) {
             ARENA_WIDTH,
             ARENA_HEIGHT,
             0.0,
-        ))).with(transform)
+        )))
+        .with(transform)
         .build();
 }
 

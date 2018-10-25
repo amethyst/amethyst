@@ -382,8 +382,10 @@ pub struct ApplicationBuilder<S, T, E, R> {
     phantom: PhantomData<(T, E, R)>,
 }
 
-impl<S, T, E, X> ApplicationBuilder<S, T, E, X> 
-where T: 'static{
+impl<S, T, E, X> ApplicationBuilder<S, T, E, X>
+where
+    T: 'static,
+{
     /// Creates a new [ApplicationBuilder](struct.ApplicationBuilder.html) instance
     /// that wraps the initial_state. This is the more verbose way of initializing
     /// your application if you require specific configuration details to be changed
