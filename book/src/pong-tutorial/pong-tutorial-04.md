@@ -126,7 +126,7 @@ fn on_start(&mut self, data: StateData<GameData>) {
     world.register::<Paddle>();
     world.register::<Ball>(); // <- add this line
 
-    initialise_ball(world, sprite_sheet_handle.clone()); // <- and this line
+    initialise_ball(world, sprite_sheet_handle.clone()); // <- add this line
     initialise_paddles(world, sprite_sheet_handle);
     initialise_camera(world);
 }
@@ -291,11 +291,15 @@ impl<'s> System<'s> for BounceSystem {
 }
 
 // A point is in a box when its coordinates are smaller or equal than the top
-// right, but larger or equal than the bottom left.
+// right and larger or equal than the bottom left.
 fn point_in_rect(x: f32, y: f32, left: f32, bottom: f32, right: f32, top: f32) -> bool {
     x >= left && x <= right && y >= bottom && y <= top
 }
 ```
+
+The following image illustrates how collisions with paddles are checked.
+
+![Collision explanotary drawing](../images/pong_tutorial/pong_paddle_collision.png)
 
 Also, don't forget to add `mod move_balls` and `mod bounce` in `systems/mod.rs`
 as well as adding our new systems to the game data:
