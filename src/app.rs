@@ -1,6 +1,5 @@
 //! The core engine framework.
 
-use state::Trans;
 use amethyst_ui::UiEvent;
 use assets::{Loader, Source};
 use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
@@ -14,7 +13,7 @@ use game_data::DataInit;
 use log::Level;
 use rayon::ThreadPoolBuilder;
 use shred::Resource;
-use state::{State, StateData, StateMachine};
+use state::{State, StateData, StateMachine, TransQueue};
 use state_event::StateEvent;
 use state_event::StateEventReader;
 use std::collections::VecDeque;
@@ -125,8 +124,9 @@ pub struct CoreApplication<'a, T, E = StateEvent, R = StateEventReader> {
 /// [log]: https://crates.io/crates/log
 pub type Application<'a, T> = CoreApplication<'a, T, StateEvent, StateEventReader>;
 
-impl<'a, T: 'static, E, R> CoreApplication<'a, T, E, R>
+impl<'a, T, E, R> CoreApplication<'a, T, E, R>
 where
+    T: 'static,
     E: Clone + Send + Sync + 'static,
 {
     /// Creates a new Application with the given initial game state.
@@ -294,13 +294,13 @@ where
         // Read the Trans queue and apply changes.
         {
             let trans = {
-                let mut v = self.world.write_resource::<VecDeque<Trans<T, E>>>();
+                let mut v = self.world.write_resource::<TransQueue<T, E>>();
                 let x = v.drain(..).collect::<VecDeque<_>>();
                 x
             };
             let states = &mut self.states;
             for tr in trans.into_iter() {
-                states.transition(tr, StateData::new(&mut self.world, &mut self.data));
+                states.transition(tr(), StateData::new(&mut self.world, &mut self.data));
             }
         }
 
@@ -482,7 +482,7 @@ where T: 'static{
         world.add_resource(pool);
         world.add_resource(EventChannel::<Event>::with_capacity(2000));
         world.add_resource(EventChannel::<UiEvent>::with_capacity(40));
-        world.add_resource(VecDeque::<Trans<T, StateEvent>>::with_capacity(2));
+        world.add_resource(TransQueue::<T, StateEvent>::with_capacity(2));
         world.add_resource(Errors::default());
         world.add_resource(FrameLimiter::default());
         world.add_resource(Stopwatch::default());

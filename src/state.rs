@@ -2,6 +2,7 @@
 
 use amethyst_input::is_close_requested;
 use ecs::prelude::World;
+use std::collections::VecDeque;
 use std::fmt::Result as FmtResult;
 use std::fmt::{Display, Formatter};
 use {GameData, StateEvent};
@@ -54,13 +55,19 @@ pub enum Trans<T, E> {
     /// if there are none.
     Pop,
     /// Pause the active state and push a new state onto the stack.
-    Push(Box<State<T, E> + Send + Sync>),
+    Push(Box<State<T, E>>),
     /// Remove the current state on the stack and insert a different one.
-    Switch(Box<State<T, E> + Send + Sync>),
+    Switch(Box<State<T, E>>),
     /// Stop and remove all states and shut down the engine.
     Quit,
 }
 
+/// Event queue to trigger state `Trans` from other places than a `State`'s methods.
+/// # Example:
+/// ```rust, ignore
+/// world.write_resource::<TransQueue<MyGameData, StateEvent>>().push_back(Box::new(|| Trans::Quit));
+/// ```
+pub type TransQueue<T, E> = VecDeque<Box<Fn() -> Trans<T, E> + Send + Sync + 'static>>;
 
 /// An empty `Trans`. Made to be used with `EmptyState`.
 pub type EmptyTrans = Trans<(), StateEvent>;

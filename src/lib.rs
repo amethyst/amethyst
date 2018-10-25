@@ -93,7 +93,7 @@ pub use self::error::{Error, Result};
 pub use self::game_data::{DataInit, GameData, GameDataBuilder};
 pub use self::logger::{start_logger, LevelFilter as LogLevelFilter, LoggerConfig, StdoutLog};
 pub use self::state::{
-    EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, StateMachine, Trans,
+    EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, StateMachine, Trans, TransQueue,
 };
 pub use self::state_event::{StateEvent, StateEventReader};
 pub use core::shred;
