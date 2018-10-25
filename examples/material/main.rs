@@ -79,8 +79,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
             intensity: 6.0,
             color: [0.8, 0.0, 0.0].into(),
             ..PointLight::default()
-        }
-        .into();
+        }.into();
 
         let light1_transform =
             GlobalTransform(Matrix4::from_translation([6.0, 6.0, -6.0].into()).into());
@@ -89,8 +88,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
             intensity: 5.0,
             color: [0.0, 0.3, 0.7].into(),
             ..PointLight::default()
-        }
-        .into();
+        }.into();
 
         let light2_transform =
             GlobalTransform(Matrix4::from_translation([6.0, -6.0, -6.0].into()).into());

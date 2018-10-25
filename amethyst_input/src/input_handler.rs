@@ -84,8 +84,8 @@ where
                                 ButtonPressed(Button::Key(key_code)),
                                 ButtonPressed(Button::ScanCode(scancode)),
                             ]
-                            .iter()
-                            .cloned(),
+                                .iter()
+                                .cloned(),
                         );
                         for (k, v) in self.bindings.actions.iter() {
                             for &button in v {
@@ -118,8 +118,8 @@ where
                                 ButtonReleased(Button::Key(key_code)),
                                 ButtonReleased(Button::ScanCode(scancode)),
                             ]
-                            .iter()
-                            .cloned(),
+                                .iter()
+                                .cloned(),
                         );
                         for (k, v) in self.bindings.actions.iter() {
                             for &button in v {
@@ -150,8 +150,8 @@ where
                                 MouseButtonPressed(mouse_button),
                                 ButtonPressed(Button::Mouse(mouse_button)),
                             ]
-                            .iter()
-                            .cloned(),
+                                .iter()
+                                .cloned(),
                         );
                         for (k, v) in self.bindings.actions.iter() {
                             for &button in v {
@@ -179,8 +179,8 @@ where
                                 MouseButtonReleased(mouse_button),
                                 ButtonReleased(Button::Mouse(mouse_button)),
                             ]
-                            .iter()
-                            .cloned(),
+                                .iter()
+                                .cloned(),
                         );
                         for (k, v) in self.bindings.actions.iter() {
                             for &button in v {
@@ -271,8 +271,8 @@ where
                                 event.into(),
                                 ButtonPressed(Button::Controller(controller_id, button)),
                             ]
-                            .iter()
-                            .cloned(),
+                                .iter()
+                                .cloned(),
                         );
                         for (k, v) in self.bindings.actions.iter() {
                             for &b in v {
@@ -297,8 +297,8 @@ where
                                 event.into(),
                                 ButtonReleased(Button::Controller(controller_id, button)),
                             ]
-                            .iter()
-                            .cloned(),
+                                .iter()
+                                .cloned(),
                         );
                         for (k, v) in self.bindings.actions.iter() {
                             for &b in v {
@@ -476,8 +476,7 @@ where
                     } else {
                         0.0
                     }
-                })
-                .unwrap_or(0.0),
+                }).unwrap_or(0.0),
         })
     }
 

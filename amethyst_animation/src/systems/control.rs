@@ -393,8 +393,7 @@ where
                         .map(|sampler| {
                             sampler.clear(control.id);
                             sampler.is_empty()
-                        })
-                        .unwrap_or(false);
+                        }).unwrap_or(false);
                     if empty {
                         samplers.remove(*node_entity);
                     }
@@ -606,8 +605,7 @@ where
                 .map(|sampler| {
                     sampler.clear(control_id);
                     sampler.is_empty()
-                })
-                .unwrap_or(false);
+                }).unwrap_or(false);
             if empty {
                 samplers.remove(*node_entity);
             }

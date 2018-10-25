@@ -110,8 +110,7 @@ where
                         channel.clone(),
                         loader.load_from_data(sampler.clone(), &mut *progress, sampler_storage),
                     )
-                })
-                .collect(),
+                }).collect(),
         };
         self.handle = Some(loader.load_from_data(animation, progress, animation_storage));
         Ok(true)
@@ -233,8 +232,7 @@ where
                         .map(|(node_index, entity_index)| (*node_index, entities[*entity_index]))
                         .collect(),
                 ),
-            )
-            .map(|_| ())
+            ).map(|_| ())
     }
 }
 

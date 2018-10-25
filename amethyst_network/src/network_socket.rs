@@ -101,8 +101,7 @@ where
                                     byte_count: amt,
                                     data: buf[..amt].iter().cloned().collect(),
                                     source: src,
-                                })
-                                .unwrap();
+                                }).unwrap();
                         }
                         Err(e) => {
                             if e.kind() == ErrorKind::WouldBlock {
@@ -145,8 +144,7 @@ where
                     .send(InternalSocketEvent::SendEvents {
                         target,
                         events: net_connection.send_buffer_early_read().cloned().collect(),
-                    })
-                    .unwrap();
+                    }).unwrap();
             } else if net_connection.state == ConnectionState::Disconnected {
                 self.tx.send(InternalSocketEvent::Stop).unwrap();
             }

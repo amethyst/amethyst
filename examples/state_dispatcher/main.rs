@@ -15,9 +15,7 @@ impl SimpleState<'static, 'static> for StateA {
         // If you do use TransQueue, you will be forced to use the 'static lifetime on your states.
         data.world
             .write_resource::<TransQueue<GameData<'static, 'static>, StateEvent>>()
-            .push_back(Box::new(|| {
-                Trans::Push(Box::new(StateB::default()))
-            }));
+            .push_back(Box::new(|| Trans::Push(Box::new(StateB::default()))));
         Trans::None
     }
 }

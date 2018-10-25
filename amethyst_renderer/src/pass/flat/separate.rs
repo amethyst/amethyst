@@ -99,8 +99,7 @@ impl Pass for DrawFlatSeparate {
                 Separate::<Position>::ATTRIBUTES,
                 Separate::<Position>::size() as ElemStride,
                 0,
-            )
-            .with_raw_vertex_buffer(
+            ).with_raw_vertex_buffer(
                 Separate::<TexCoord>::ATTRIBUTES,
                 Separate::<TexCoord>::size() as ElemStride,
                 0,

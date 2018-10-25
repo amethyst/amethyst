@@ -61,7 +61,7 @@ impl<'a> System<'a> for VisibilitySortingSystem {
     fn run(
         &mut self,
         (entities, mut visibility, hidden, hidden_prop, active, camera, transparent, global): Self::SystemData,
-    ) {
+){
         let origin = Point3::origin();
 
         let camera: Option<&GlobalTransform> = active
@@ -85,8 +85,7 @@ impl<'a> System<'a> for VisibilitySortingSystem {
                     centroid,
                     camera_distance: centroid.distance2(camera_centroid),
                     from_camera: centroid - camera_centroid,
-                })
-                .filter(|c| c.from_camera.dot(camera_backward) < 0.), // filter entities behind the camera
+                }).filter(|c| c.from_camera.dot(camera_backward) < 0.), // filter entities behind the camera
         );
         self.transparent.clear();
         self.transparent
