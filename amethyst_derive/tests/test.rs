@@ -46,3 +46,18 @@ where
 {
     inner: Stuff<T>,
 }
+
+#[derive(Clone)]
+pub struct External {
+    inner: u64,
+}
+
+impl Component for External {
+    type Storage = DenseVecStorage<Self>;
+}
+
+#[derive(PrefabData, Clone)]
+pub struct Outer {
+    #[prefab(Component)]
+    external: External,
+}

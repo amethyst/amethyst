@@ -1,34 +1,8 @@
 use proc_macro2::TokenStream;
-use syn::{Data, DeriveInput, Generics, Ident, Meta, NestedMeta, Type};
+use syn::{Attribute, Data, DeriveInput, Generics, Ident, Meta, NestedMeta, Type};
 
 pub fn impl_prefab_data(ast: &DeriveInput) -> TokenStream {
-    let mut component = false;
-    for meta in ast
-        .attrs
-        .iter()
-        .filter(|attr| attr.path.segments[0].ident == "prefab")
-        .map(|attr| {
-            attr.interpret_meta()
-                .expect("reader attribute incorrectly defined")
-        }) {
-        match meta {
-            Meta::List(l) => {
-                for nested_meta in l.nested.iter() {
-                    match *nested_meta {
-                        NestedMeta::Meta(Meta::Word(ref word)) => {
-                            if word == "Component" {
-                                component = true;
-                            }
-                        }
-                        _ => panic!("reader attribute does not contain a single name"),
-                    }
-                }
-            }
-            _ => (),
-        };
-    }
-
-    if component {
+    if have_component_attribute(&ast.attrs[..]) {
         impl_prefab_data_component(ast)
     } else {
         impl_prefab_data_aggregate(ast)
@@ -49,7 +23,7 @@ fn impl_prefab_data_component(ast: &DeriveInput) -> TokenStream {
             fn add_to_entity(&self,
                              entity: Entity,
                              system_data: &mut Self::SystemData,
-                             _: &[Entity]) -> Result<(), PrefabError> {
+                             _: &[Entity]) -> ::std::result::Result<(), PrefabError> {
                 system_data.insert(entity, self.clone()).map(|_| ())
             }
         }
@@ -58,34 +32,43 @@ fn impl_prefab_data_component(ast: &DeriveInput) -> TokenStream {
 
 fn impl_prefab_data_aggregate(ast: &DeriveInput) -> TokenStream {
     let base = &ast.ident;
-    let tys = collect_field_types(&ast.data);
-    let tys = &tys;
-    let names = collect_field_names(&ast.data);
-    let names = &names;
+    let data = collect_field_data(&ast.data);
 
-    let system_datas: Vec<_> = (0..tys.len())
-        .map(|n| {
-            let ty = &tys[n];
+    let system_datas = data.iter().map(|(ty, _, is_component)| {
+        if *is_component {
+            quote! {
+                WriteStorage<'pfd, #ty>
+            }
+        } else {
             quote! {
                 <#ty as PrefabData<'pfd>>::SystemData
             }
-        }).collect();
-    let adds: Vec<_> = (0..tys.len())
-        .map(|n| {
-            let name = &names[n];
+        }
+    });
+    let adds = (0..data.len()).map(|n| {
+        let (_, name, is_component) = &data[n];
+        if *is_component {
+            quote! {
+                system_data.#n.insert(entity, self.#name.clone())?;
+            }
+        } else {
             quote! {
                 self.#name.add_to_entity(entity, &mut system_data.#n, entities)?;
             }
-        }).collect();
-    let subs: Vec<_> = (0..tys.len())
-        .map(|n| {
-            let name = &names[n];
-            quote! {
+        }
+    });
+    let subs = (0..data.len()).filter_map(|n| {
+        let (_, name, is_component) = &data[n];
+        if *is_component {
+            None
+        } else {
+            Some(quote! {
                 if self.#name.load_sub_assets(progress, &mut system_data.#n)? {
                     ret = true;
                 }
-            }
-        }).collect();
+            })
+        }
+    });
 
     let (_, ty_generics, where_clause) = ast.generics.split_for_impl();
     let lf_tokens = gen_def_lt_tokens(&ast.generics);
@@ -101,14 +84,14 @@ fn impl_prefab_data_aggregate(ast: &DeriveInput) -> TokenStream {
             fn add_to_entity(&self,
                              entity: Entity,
                              system_data: &mut Self::SystemData,
-                             entities: &[Entity]) -> Result<(), PrefabError> {
+                             entities: &[Entity]) -> ::std::result::Result<(), PrefabError> {
                 #(#adds)*
                 Ok(())
             }
 
             fn load_sub_assets(&mut self,
                                progress: &mut ProgressCounter,
-                               system_data: &mut Self::SystemData) -> Result<bool, PrefabError> {
+                               system_data: &mut Self::SystemData) -> ::std::result::Result<bool, PrefabError> {
                 let mut ret = false;
                 #(#subs)*
                 Ok(ret)
@@ -117,25 +100,22 @@ fn impl_prefab_data_aggregate(ast: &DeriveInput) -> TokenStream {
     }
 }
 
-fn collect_field_types(ast: &Data) -> Vec<Type> {
-    match *ast {
-        Data::Struct(ref s) => s.fields.iter().map(|f| f.ty.clone()).collect(),
-        _ => panic!("PrefabData derive only support structs"),
-    }
-}
-
-fn collect_field_names(ast: &Data) -> Vec<Ident> {
+fn collect_field_data(ast: &Data) -> Vec<(Type, Ident, bool)> {
     match *ast {
         Data::Struct(ref s) => s
             .fields
             .iter()
             .map(|f| {
-                f.ident
-                    .as_ref()
-                    .expect("PrefabData derive only support named fieldds")
-                    .clone()
+                (
+                    f.ty.clone(),
+                    f.ident
+                        .as_ref()
+                        .expect("PrefabData derive only support named fields")
+                        .clone(),
+                    have_component_attribute(&f.attrs[..]),
+                )
             }).collect(),
-        _ => panic!("PrefabData derive only support structs"),
+        _ => panic!("PrefabData aggregate derive only support structs"),
     }
 }
 
@@ -167,4 +147,31 @@ fn gen_def_ty_params(generics: &Generics) -> TokenStream {
         }).collect();
 
     quote! { #( #ty_params ),* }
+}
+
+fn have_component_attribute(attrs: &[Attribute]) -> bool {
+    for meta in attrs
+        .iter()
+        .filter(|attr| attr.path.segments[0].ident == "prefab")
+        .map(|attr| {
+            attr.interpret_meta()
+                .expect("prefab attribute incorrectly defined")
+        }) {
+        match meta {
+            Meta::List(l) => {
+                for nested_meta in l.nested.iter() {
+                    match *nested_meta {
+                        NestedMeta::Meta(Meta::Word(ref word)) => {
+                            if word == "Component" {
+                                return true;
+                            }
+                        }
+                        _ => panic!("prefab attribute does not contain a single word value"),
+                    }
+                }
+            }
+            _ => (),
+        };
+    }
+    false
 }

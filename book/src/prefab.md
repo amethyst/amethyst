@@ -198,6 +198,87 @@ There are a few special blanket implementations provided by the asset system:
 * `Option<T>` for all `T: PrefabData`.
 * Tuples of types that implemented `PrefabData`, up to a size of 20.
 
+### Deriving `PrefabData` implementations
+
+Amethyst supplies a derive macro for creating the `PrefabData` implementation for the following scenarios:
+
+* Single `Component` 
+* Aggregate `PrefabData` structs which contain other `PrefabData` constructs, and optionally simple data `Component`s
+
+An example of a single `Component` derive:
+
+```rust,no_run,noplaypen
+# #[macro_use] extern crate amethyst;
+# #[macro_use] extern crate serde_derive;
+# use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, PrefabError};
+# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, error::Error as SpecsError, DenseVecStorage, Component};
+# 
+
+#[derive(Clone, PrefabData)]
+#[prefab(Component)]
+pub struct SomeComponent {
+    pub id: u64,
+}
+
+impl Component for SomeComponent {
+    type Storage = DenseVecStorage<Self>; 
+}
+```
+
+This will derive a `PrefabData` implementation that inserts `SomeComponent` on an `Entity` in the `World`.
+
+Lets look at an example of an aggregate struct:
+
+```rust,no_run,noplaypen
+# #[macro_use] extern crate amethyst;
+# #[macro_use] extern crate serde_derive;
+# use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, PrefabError, AssetPrefab};
+# use amethyst::core::Transform;
+# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, error::Error as SpecsError, DenseVecStorage, Component};
+# use amethyst::renderer::{Mesh, ObjFormat};
+
+#[derive(PrefabData)]
+pub struct MyScenePrefab {
+    mesh: AssetPrefab<Mesh, ObjFormat>,
+    transform: Transform,
+}
+```
+
+This can now be used to create `Prefab`s with `Transform` and `Mesh` on entities.
+
+One last example that also adds a custom pure data `Component` into the aggregate `PrefabData`:
+
+```rust,no_run,noplaypen
+# #[macro_use] extern crate amethyst;
+# #[macro_use] extern crate serde_derive;
+# use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, PrefabError, AssetPrefab};
+# use amethyst::core::Transform;
+# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, error::Error as SpecsError, DenseVecStorage, Component};
+# use amethyst::renderer::{Mesh, ObjFormat};
+
+#[derive(PrefabData)]
+pub struct MyScenePrefab {
+    mesh: AssetPrefab<Mesh, ObjFormat>,
+    transform: Transform,
+    
+    #[prefab(Component)]
+    some: SomeComponent,
+}
+
+#[derive(Clone)]
+pub struct SomeComponent {
+    pub id: u64,
+}
+
+impl Component for SomeComponent {
+    type Storage = DenseVecStorage<Self>; 
+}
+```
+
+You might notice here that `SomeComponent` has no `PrefabData` derive on its own, it is simply
+used directly in the aggregate `PrefabData`, and annotated so the derive knows to do a simple
+`WriteStorage` insert.
+
 ## Working with `Prefab`s
 
 So now we know how the `Prefab` system works on the inside, but how do we use it?

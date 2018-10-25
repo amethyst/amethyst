@@ -18,6 +18,7 @@ travis-ci = { repository = "amethyst/amethyst" }
 amethyst_assets = { path = "../amethyst_assets", version = "0.5.0" }
 amethyst_controls = { path = "../amethyst_controls", version = "0.3.0" }
 amethyst_core = { path = "../amethyst_core", version = "0.4.0" }
+amethyst_derive = { path = "../amethyst_derive", version = "0.2.0" }
 amethyst_renderer = { path = "../amethyst_renderer", version = "0.9.0" }
 cgmath = { version = "0.16", features = ["serde", "mint"] }
 log = "0.4"
