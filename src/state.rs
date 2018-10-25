@@ -54,12 +54,13 @@ pub enum Trans<T, E> {
     /// if there are none.
     Pop,
     /// Pause the active state and push a new state onto the stack.
-    Push(Box<State<T, E>>),
+    Push(Box<State<T, E> + Send + Sync>),
     /// Remove the current state on the stack and insert a different one.
-    Switch(Box<State<T, E>>),
+    Switch(Box<State<T, E> + Send + Sync>),
     /// Stop and remove all states and shut down the engine.
     Quit,
 }
+
 
 /// An empty `Trans`. Made to be used with `EmptyState`.
 pub type EmptyTrans = Trans<(), StateEvent>;
@@ -413,7 +414,7 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
 
     /// Performs a state transition, if requested by either update() or
     /// fixed_update().
-    fn transition(&mut self, request: Trans<T, E>, data: StateData<T>) {
+    pub fn transition(&mut self, request: Trans<T, E>, data: StateData<T>) {
         if self.running {
             match request {
                 Trans::None => (),
