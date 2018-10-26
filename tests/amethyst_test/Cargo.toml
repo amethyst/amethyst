@@ -1,0 +1,19 @@
+[package]
+name = "amethyst_test"
+version = "0.1.0"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+
+[dependencies]
+amethyst = { path = "../.." }
+boxfnonce = "0.1"
+derivative = "1.0"
+derive-new = "0.5"
+hetseq = "0.2"
+lazy_static = "1.1"
+
+[features]
+default = []
+nightly = ["amethyst/nightly"]
+
+# Used to tag tests that need a display (e.g. X) to run.
+graphics = []
