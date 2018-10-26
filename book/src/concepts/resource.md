@@ -85,6 +85,7 @@ If you want to change a resource that is already inside of `Resources`:
                              .expect("No MyResource present in Resources");
   assert_eq!(fetched.game_score, 0);
   fetched.game_score = 10;
+  assert_eq!(fetched.game_score, 10);
 # }
 ```
 
