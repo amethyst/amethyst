@@ -14,7 +14,7 @@ mod sprite_sheet_loader;
 use amethyst::{
     assets::{AssetStorage, Loader},
     core::{
-        cgmath::{Ortho, Point3, Transform as CgTransform, Vector3},
+        nalgebra::Orthographic3,
         transform::{Transform, TransformBundle},
     },
     ecs::prelude::Entity,
@@ -207,7 +207,7 @@ impl Example {
         };
 
         let mut camera_transform = Transform::default();
-        camera_transform.translation = Vector3::new(0., 0., self.camera_z);
+        camera_transform.set_xyz(0.0, 0.0, self.camera_z);
 
         let camera = world
             .create_entity()
@@ -215,14 +215,14 @@ impl Example {
             // Define the view that the camera can see. It makes sense to keep the `near` value as
             // 0.0, as this means it starts seeing anything that is 0 units in front of it. The
             // `far` value is the distance the camera can see facing the origin.
-            .with(Camera::from(Projection::Orthographic(Ortho {
-                left: 0.0,
-                right: width,
-                top: height,
-                bottom: 0.0,
-                near: 0.0,
-                far: self.camera_depth_vision,
-            }))).build();
+            .with(Camera::from(Projection::Orthographic(Orthographic3::new(
+                0.0,
+                width,
+                0.0,
+                height,
+                0.0,
+                self.camera_depth_vision,
+            )))).build();
 
         self.camera = Some(camera);
     }
@@ -256,7 +256,7 @@ impl Example {
         };
         // This `Transform` moves the sprites to the middle of the window
         let mut common_transform = Transform::default();
-        common_transform.translation = Vector3::new(width / 2. - sprite_offset_x, height / 2., 0.);
+        common_transform.set_xyz(width / 2.0 - sprite_offset_x, height / 2.0, 0.0);
 
         self.draw_sprites(world, &common_transform);
     }
@@ -282,13 +282,10 @@ impl Example {
             } else {
                 i as f32
             };
-            sprite_transform.translation =
-                Vector3::new(i as f32 * sprite_w * SPRITE_SPACING_RATIO, z, z);
+            sprite_transform.set_xyz(i as f32 * sprite_w * SPRITE_SPACING_RATIO, z, z);
 
             // This combines multiple `Transform`ations.
-            // You need to `use amethyst::core::cgmath::Transform`;
-
-            CgTransform::<Point3<f32>>::concat_self(&mut sprite_transform, &common_transform);
+            sprite_transform.concat(&common_transform);
 
             let sprite_render = SpriteRender {
                 sprite_sheet: sprite_sheet_handle.clone(),

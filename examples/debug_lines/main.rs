@@ -6,7 +6,7 @@ use amethyst::{
     controls::{FlyControlBundle, FlyControlTag},
     core::Time,
     core::{
-        cgmath::{Deg, Point3, Vector3},
+        nalgebra::{Point3, Vector3},
         transform::{Transform, TransformBundle},
     },
     ecs::{Read, System, Write},

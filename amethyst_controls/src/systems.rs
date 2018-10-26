@@ -70,10 +70,10 @@ where
         let y = get_input_axis_simple(&self.up_input_axis, &input);
         let z = get_input_axis_simple(&self.forward_input_axis, &input);
 
-        let dir = Unit::new_normalize(Vector3::new(x, y, z));
-
-        for (transform, _) in (&mut transform, &tag).join() {
-            transform.move_along_local(dir, time.delta_seconds() * self.speed);
+        if let Some(dir) = Unit::try_new(Vector3::new(x, y, z), 1.0e-6) {
+            for (transform, _) in (&mut transform, &tag).join() {
+                transform.move_along_local(dir, time.delta_seconds() * self.speed);
+            }
         }
     }
 }

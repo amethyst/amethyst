@@ -35,9 +35,12 @@ impl<'s> System<'s> for PaddleSystem {
                     paddle.velocity * time.delta_seconds() * movement as f32;
 
                 // We make sure the paddle remains in the arena.
-                (*transform.translation_mut())[1] = transform.translation()[1]
-                    .max(paddle.height * 0.5)
-                    .min(ARENA_HEIGHT - paddle.height * 0.5);
+                let paddle_y = transform.translation().y;
+                transform.set_y(
+                    paddle_y
+                        .max(paddle.height * 0.5)
+                        .min(ARENA_HEIGHT - paddle.height * 0.5),
+                );
             }
         }
     }
