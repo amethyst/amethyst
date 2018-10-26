@@ -334,8 +334,7 @@ where
                                         .iter()
                                         .filter(|b| {
                                             b != &&Button::Controller(controller_id, button)
-                                        })
-                                        .all(|b| self.button_is_down(*b))
+                                        }).all(|b| self.button_is_down(*b))
                                 {
                                     event_handler.single_write(ActionReleased(action.clone()));
                                 }
@@ -510,8 +509,7 @@ where
                     } else {
                         0.0
                     }
-                })
-                .unwrap_or(0.0),
+                }).unwrap_or(0.0),
         })
     }
 
