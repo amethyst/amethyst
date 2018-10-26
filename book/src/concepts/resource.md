@@ -39,7 +39,7 @@ Fetching a resource can be done like this:
 # struct MyResource;
 # fn main() {
 #   let mut resources = Resources::new();
-// Returns a Option<MyResource>
+  // try_fetch returns a Option<<Fetch<MyResource>>
   let fetched = resources.try_fetch::<MyResource>()
                        .expect("No MyResource present in Resources");
 # }
@@ -66,6 +66,7 @@ If you want to change a resource that is already inside of `Resources`:
 # struct MyResource;
 # fn main() {
 #   let mut resources = Resources::new();
+  // try_fetch_mut returns a Option<<FetchMut<MyResource>>
   let mut fetched = resources.try_fetch_mut::<MyResource>()
                              .expect("No MyResource present in Resources");
 # }
