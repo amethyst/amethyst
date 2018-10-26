@@ -2,6 +2,10 @@ use amethyst::renderer::{Sprite, SpriteSheet, TextureCoordinates};
 
 use sprite;
 
+// Please note that this is the advanced way to load a SpriteSheet in Amethyst.
+// Please consult the `pong` example if you would prefer an easier solution.
+// Alternatively, the Amethyst book documents all the loading methods available.
+
 /// Loads a sprite sheet from the assets folder.
 ///
 /// # Parameters:

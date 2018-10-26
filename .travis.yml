@@ -1,59 +1,70 @@
-# Set up the Rust toolchain.
+sudo: required
+
 language: rust
-rust:
-  - stable
-  - beta
-  - nightly
 
-# Allow for occasional compiler breakage on nightly Rust.
-matrix:
-  allow_failures:
-    - rust: nightly
-
-# Build the Bors staging and trying branches, plus PRs to master, and
-# the latest release branch.
-branches:
-  only:
-    - staging
-    - trying
-    - develop
-    - master
-    - /release-.*/
-
-# Test on Linux - OSX builds take in excess of 5 hours to start as of 2017-09-19.
-os:
-  - linux
-  - osx
-
-# Install ALSA development libraries before compiling on Linux.
 addons:
   apt:
     packages:
-      - libasound2-dev
-      - libsdl2-dev
+    - libasound2-dev
+    - libsdl2-dev
 
-# Install SDL development libraries from homebrew on macOS
+os:
+- linux
+- osx
+- windows
+
+rust:
+- stable
+- beta
+- nightly
+
+matrix:
+  fast_finish: true
+  allow_failures:
+  - rust: nightly
+
+branches:
+  only:
+  - staging
+  - trying
+
 before_install:
- - "if [ ${TRAVIS_OS_NAME} = 'osx' ]; then brew update && brew install sdl2; fi"
+- |
+  if [ ${TRAVIS_OS_NAME} == "windows" ]
+  then
+    wget --no-check-certificate https://www.libsdl.org/release/SDL2-devel-2.0.8-VC.zip
+    7z x SDL2-devel-2.0.8-VC.zip
+    cp SDL2-2.0.8/lib/x64/*.lib ${HOME}/.rustup/toolchains/${TRAVIS_RUST_VERSION}-x86_64-pc-windows-msvc/lib/rustlib/x86_64-pc-windows-msvc/lib
+    cp SDL2-2.0.8/lib/x64/*.dll .
+    rm SDL2-devel-2.0.8-VC.zip
+  elif [ ${TRAVIS_OS_NAME} == "osx" ]
+  then
+    brew update && brew install sdl2
+  else
+    export MDBOOK_RELEASE="v0.2.1/mdbook-v0.2.1-x86_64-unknown-linux-gnu.tar.gz"
+    curl -L -o mdbook.tar.gz https://github.com/rust-lang-nursery/mdBook/releases/download/${MDBOOK_RELEASE}
+    tar -xvf mdbook.tar.gz -C ./
+    rm mdbook.tar.gz
+  fi
 
-# This build doesn't require sudo, but turning it on gives us more disk space
-# We need the extra space as we keep running out.
-sudo: required
-
-# Force third-party crates to persist from previous builds and update only when
-# needed.
-cache: 
-  - cargo
-
-# Allow binaries installed from Cargo.
 before_script:
-  - export PATH=$PATH:/home/travis/.cargo/bin
+- export PATH=$PATH:/home/travis/.cargo/bin
+- export RUSTFLAGS="-D warnings"
 
 # Generate documentation, compile the engine, run tests.
-script: bash travis.sh
-
-# Push notifications to `amethyst/general` and `amethyst/engine` Gitter chats.
-notifications:
-  webhooks:
-    urls:
-      - https://webhooks.gitter.im/e/9735c01977c1df3de5cb
+script:
+- |
+  echo "Build and test"
+  cargo test --all || exit 1
+- |
+  if [ ${TRAVIS_RUST_VERSION} == "stable" ] && [ ${TRAVIS_OS_NAME} == "linux" ]
+  then
+    echo "Test book"
+    ./mdbook test book -L target/debug/deps
+  fi
+- |
+  if [ ${TRAVIS_RUST_VERSION} == "stable" ]
+  then
+    echo "Check common features"
+    cargo check --all --features sdl_controller,profiler
+  fi

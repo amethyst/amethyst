@@ -40,5 +40,28 @@ In case you're doing this with `cargo`, here's what you need to do:
 * Create a `resources` folder and put a `display_config.ron` in it.
 * (Optional) Copy the code from one of amethyst's examples.
 
+### Important note on versioning
 
+Amethyst is divided in two major versions:
+* The Release version, which is the latest version available on crates.io
+* The Git version, which is the unreleased future version of Amethyst available on [Github][agit]
+
+Depending on the book version that you choose to read, make sure that the amethyst version in your Cargo.toml matches that.
+
+For the Release version, you should have something like this:
+```rust,ignore
+[dependencies]
+amethyst = "LATEST_CRATES.IO_VERSION"
+```
+The latest crates.io version can be found [here](https://crates.io/crates/amethyst).
+
+If you want to use the latest unreleased changes, your Cargo.toml file should look like this:
+```rust,ignore
+[dependencies]
+amethyst = { git = "https://github.com/amethyst/amethyst", rev = "COMMIT_HASH" }
+```
+
+The commit hash part is optional. It indicates which specific commit your project uses, to prevent unexpected breakage when we make changes to the git version.
+
+[agit]: https://github.com/amethyst/amethyst
 [cl]: https://github.com/amethyst/tools

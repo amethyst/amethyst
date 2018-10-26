@@ -47,6 +47,7 @@ extern crate image;
 #[macro_use]
 extern crate log;
 extern crate rayon;
+extern crate ron;
 #[macro_use]
 extern crate serde;
 extern crate shred;
@@ -99,8 +100,8 @@ pub use light::{DirectionalLight, Light, LightPrefab, PointLight, SpotLight, Sun
 pub use mesh::{vertex_data, Mesh, MeshBuilder, MeshHandle, VertexBuffer};
 pub use mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset};
 pub use pass::{
-    get_camera, set_vertex_args, DrawDebugLines, DebugLinesParams, DrawFlat, DrawFlatSeparate, DrawPbm,
-    DrawPbmSeparate, DrawShaded, DrawShadedSeparate, DrawSprite,
+    get_camera, set_vertex_args, DebugLinesParams, DrawDebugLines, DrawFlat, DrawFlatSeparate,
+    DrawPbm, DrawPbmSeparate, DrawShaded, DrawShadedSeparate, DrawSprite,
 };
 pub use pipe::{
     ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder, Init, Meta, NewEffect,
@@ -115,7 +116,8 @@ pub use skinning::{
     JointTransformsPrefab, JointWeights,
 };
 pub use sprite::{
-    Sprite, SpriteRender, SpriteSheet, SpriteSheetHandle, SpriteSheetSet, TextureCoordinates,
+    Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, SpriteSheetSet,
+    TextureCoordinates,
 };
 pub use sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem};
 pub use system::RenderSystem;

@@ -7,8 +7,18 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [kc]: http://keepachangelog.com/
 [sv]: http://semver.org/
 
-## Unreleased
+## [Unreleased]
+
 ### Added
+
+* `amethyst_test` test framework for ergonomic testing of Amethyst applications ([#1000])
+
+[#1000]: https://github.com/amethyst/amethyst/pull/1000
+
+## [0.9.0] - 2018-10
+
+### Added
+
 * Added base networking implementation and the `amethyst_network` crate. ([#969])
 * Support for debug lines using `DebugLines` pass, and `DebugLines` component or resource. ([#917], [#957])
 * Added JsonFormat ([#950]).
@@ -28,16 +38,20 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * New vertices() method on MeshCreator trait. ([#946])
 * Support for text alignment (align left, center, right). ([#965])
 * Support for multiline text. ([#965])
+* Added custom aspect ratio to OrthoCamera. ([#983])
 * Added AntiStorage documentation to the book. ([#997])
 * You can now stop the rotation of the FreeRotationSystem by setting HideCursor.hide value to false. ([#997])
 * Support for logging to file, toggle for logging to stdout. ([#976], [#994])
 * Added a `Hidden` Component, that hides a single entity, and a HideHierarchySystem that toggles `Hidden` on all children when used. ([#1001])
 * Documentation for drawing sprites. ([#971])
 * Added `shadow_update()` and `shadow_fixed_update()` to the `State` trait. ([#1006])
-* Added configurable width for debug lines ([#1016])
-* Added `TextureMetadata::srgb_scale()` for default texture metadata with nearest filter ([#1023])
+* Added configurable width for debug lines. ([#1016])
+* Added `TextureMetadata::srgb_scale()` for default texture metadata with nearest filter. ([#1023])
+* Added motivation to use Amethyst over gluing the building blocks yourself in the book. ([#1057])
+* Added `Config::load_bytes` for reading configuration from raw bytes. ([#1067])
 
 ### Changed
+
 * Sprites contain their dimensions and offsets to render them with the right size and desired position. ([#829], [#830])
 * Texture coordinates for sprites are 1.0 at the top of the texture and 0.0 at the bottom. ([#829], [#830])
 * Made get_camera public. ([#878)]
@@ -61,15 +75,17 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * The z in UiTransformBuilder now defaults to 1 instead of 0, allowing to skip defining the z in the ui prefabs. ([#946])
 * Added comments to ui prefab. ([#946])
 * Summarized all `use amethyst::` statements to allow collapsing in IDE's. ([#974])
-* `Application` now uses `EventReader`s to determine what events to send to the `State`s, more information in the `State` 
+* `Application` now uses `EventReader`s to determine what events to send to the `State`s, more information in the `State`
   book chapter ([#996])
 * Breaking: Refactor `TextureMetadata` so filter method and clamping can be configured more easily ([#981])
 * Renamed `PrefabData` functions to be easier to understand ([#1008])
 
 ### Removed
+
 * `LMenu` and `RMenu` key codes, following the `winit` update. ([#906])
 
 ### Fixed
+
 * Material ids in GLTF loader caused multiple GLTF files to get incorrect materials applied. ([#915])
 * Fix render gamma for most textures. ([#868])
 * Joint entities can only be part of a single skin: Materials are not swapped anymore. ([#933])
@@ -81,6 +97,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `AssetPrefab` loaded files at an incorrect time ([#1020])
 * Removed unreachable code in `TexturePrefab` ([#1020])
 * Fix OpenGL not rendering on window creation due to `glutin` bug ([#972])
+* Fix debug lines panic when no lines are rendered ([#1049])
 
 [#829]: https://github.com/amethyst/amethyst/issues/829
 [#830]: https://github.com/amethyst/amethyst/pull/830
@@ -89,6 +106,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#887]: https://github.com/amethyst/amethyst/pull/887
 [#892]: https://github.com/amethyst/amethyst/pull/892
 [#877]: https://github.com/amethyst/amethyst/pull/877
+[#878]: https://github.com/amethyst/amethyst/pull/878
 [#896]: https://github.com/amethyst/amethyst/pull/896
 [#831]: https://github.com/amethyst/amethyst/pull/831
 [#902]: https://github.com/amethyst/amethyst/pull/902
@@ -96,6 +114,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#920]: https://github.com/amethyst/amethyst/pull/920
 [#903]: https://github.com/amethyst/amethyst/issues/903
 [#904]: https://github.com/amethyst/amethyst/pull/904
+[#906]: https://github.com/amethyst/amethyst/pull/906
 [#915]: https://github.com/amethyst/amethyst/pull/915
 [#868]: https://github.com/amethyst/amethyst/pull/868
 [#917]: https://github.com/amethyst/amethyst/issues/917
@@ -109,6 +128,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#964]: https://github.com/amethyst/amethyst/pull/964
 [#965]: https://github.com/amethyst/amethyst/pull/965
 [#969]: https://github.com/amethyst/amethyst/pull/969
+[#983]: https://github.com/amethyst/amethyst/pull/983
 [#971]: https://github.com/amethyst/amethyst/pull/971
 [#972]: https://github.com/amethyst/amethyst/issue/972
 [#974]: https://github.com/amethyst/amethyst/pull/974
@@ -126,12 +146,16 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1024]: https://github.com/amethyst/amethyst/pull/1024
 [#1020]: https://github.com/amethyst/amethyst/pull/1020
 [#1023]: https://github.com/amethyst/amethyst/pull/1023
+[#1057]: https://github.com/amethyst/amethyst/pull/1057
+[#1049]: https://github.com/amethyst/amethyst/pull/1049
+[#1067]: https://github.com/amethyst/amethyst/pull/1067
 [winit_017]: https://github.com/tomaka/winit/blob/master/CHANGELOG.md#version-0172-2018-08-19
 [glutin_018]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0180-2018-08-03
 
-
 ## [0.8.0] - 2018-08
+
 ### Added
+
 * UI `ScaleMode` is now functional, permitting percentage based `UiTransform`s. ([#774])
 * Add serde trait derives to many core components ([#760])
 * Add a generic asset `Format` for `ron` files ([#760])
@@ -157,6 +181,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Promote `UiButton` to a fundamental Ui component ([#798])
 
 ### Changed
+
 * UI systems will now never overwrite your local `UiTransform` values ([#774])
 * Global `UiTransform` values are no longer writable ([#774])
 * `UiResize` refactored to be more user friendly and more helpful ([#774])
@@ -177,9 +202,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Loosen up generic type bounds for InputBundle. ([#808])
 
 ### Removed
+
 * Remove `amethyst_input::{KeyCodes, ScanCodes, MouseButtons, Buttons}` in favor of `impl trait` ([#816])
 
 ### Fixed
+
 * Resizing fixed on OSX ([#767])
 * Fix color format ([#766])
 * Remove individual example READMEs ([#758])
@@ -231,7 +258,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#825]: https://github.com/amethyst/amethyst/pull/825
 
 ## [0.7.0] - 2018-05
+
 ### Added
+
 * Documentation for Animation crate ([#631]).
 * Support for rendering sprites ([#638]).
 * Fly Camera ([#578]).
@@ -249,6 +278,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Add arc ball camera ([#700])
 
 ### Changed
+
 * Update dependencies to the newest versions: cgmath, winit, glutin, gfx, gfx_glyph ([#527]), ([#572]), ([#648])
 * Rodio updated to 0.7 ([#676])
 * Refactored bundles to only contain `System`s ([#675])
@@ -258,6 +288,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Disable multisampling on all examples, and add a single example with multisampling on ([#671])
 
 ### Fixed
+
 * Asset loading tolerates paths constructed using back slashes ([#623]).
 * Pong text alignment ([#621]).
 * Updated book introduction ([#588]).
@@ -310,10 +341,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Fix syntax highlighting in documentation.
 
 ## [0.5.0] - 2017-08-29
+
 ### Added
+
 * Add audio support ([#265])
 
 ### Changed
+
 * Asset management rewrite (pull request [#244]).
 * Use RON as config format ([#269])
 * Overhaul input system ([#247]), ([#261]), and ([#274])
@@ -327,10 +361,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#274]: https://github.com/amethyst/amethyst/pull/274
 [#285]: https://github.com/amethyst/amethyst/pull/285
 
-
-
 ## [0.4.3] - 2017-06-03
+
 ### Added
+
 * Add mouse button events to `InputHandler` (pull request [#181]).
 * Built-in application profiler using [`thread_profiler`][tp] (pull request
   [#212]).
@@ -338,10 +372,12 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Pre-commit hook to automate local testing for commits (pull request [#228]).
 
 ### Changed
+
 * Changes to `CONTRIBUTING.md` (pull requests [#206], [#226]).
 * Update to `specs` 0.8.1 (pull request [#219]).
 
 ### Fixed
+
 * Fix deferred rendering in renderable example (pull request [#211]).
 * Fix AppVeyor curl command (pull request [#217]).
 * Ignore IntelliJ IDEA project files (pull request [#218]).
@@ -365,17 +401,21 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [tp]: https://github.com/glennw/thread_profiler
 
 ## [0.4.2] - 2017-03-07
+
 ### Added
+
 * Allow loading configuration files directly from strings.
 * Add `#[derive(Default)]` for some types in ECS module.
 * Add Ilya Bogdanov, Konstantin Zverev, and Scott Corbeil to `AUTHORS.md`.
 
 ### Changed
+
 * Implement some clippy suggestions.
 * Use `FnvHasher` instead of Rust's default SipHash implementation for better
   performance.
 
 ### Fixed
+
 * Correct the quick example given in `README.md`.
 * Replace constant paddle width with actual value in Pong example.
 * Minor fix of line numbers in link in `CONTRIBUTING.md`.
@@ -384,13 +424,16 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Fix AppVeyor build failures due to `timing.rs` test failure.
 
 ## [0.4.1] - 2017-02-10
+
 ### Added
+
 * Make `CONTRIBUTING.md` have teeth by enabling `#[deny(missing_docs)]`.
 * Add lots of shiny new API documentation.
 * Convert `amethyst` crate into a workspace.
 * Add Travis and Appveyor badges to Cargo manifests.
 
 ### Changed
+
 * Bump `amethyst` to version 0.4.1, `amethyst_renderer` to 0.4.1, and
   `amethyst_config` to 0.2.1.
 * Temporarily disable `cargo fmt` checking in Travis due to panics.
@@ -413,12 +456,15 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Improve wording and formatting in `CONTRIBUTING.md` and in `README.md`.
 
 ### Removed
+
 * Delete `rustfmt.toml` from `amethyst_renderer`.
 * Delete outdated example from `amethyst_renderer`.
 * Delete redundant `extern crate` directives outside of `lib.rs`.
 
 ## [0.4.0] - 2017-02-07
+
 ### Added
+
 * Add transform system, transform components, light components, `specs`
   resources (camera, input handler, game time counter, screen dimensions, event
   handling).
@@ -438,6 +484,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [pg]: examples/pong/
 
 ### Changed
+
 * Relicense under the terms of both MIT/Apache-2.0.
 * Revamp `amethyst_renderer`
   * Graphics backend chosen at compile time using features.
@@ -451,13 +498,16 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Update dependency versions.
 
 ### Removed
+
 * Remove `amethyst_ecs` crate in favor of using `specs` directly.
 * Remove `amethyst_context` and refactor to greatly improve performance.
 * Remove unused lights from included forward and deferred renderer pipelines.
 * Remove dependency on `time` crate.
 
 ## [0.3.1] - 2016-09-07
+
 ### Fixed
+
 * Fixed broken API reference link in `README.md`.
 * amethyst.rs book: link to API reference broken (issue [#86]).
 * Master branch no longer builds on beta/nightly Rust (issue [#94]).
@@ -466,16 +516,20 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#94]: https://github.com/amethyst/amethyst/issues/94
 
 ## 0.3.0 - 2016-03-31
+
 ### Added
+
 * Initial version of `amethyst_ecs` crate (issue [#37]).
 * Add Gitter webhooks support to Travis (issue [#27]).
 
 ### Changed
+
 * Update `amethyst_renderer` crate slightly (issue [#37]).
 * Remove `publish.sh` script since website repo handles docs now (issue [#27]).
 * Updated contribution guidelines on submitting code (issue [#37]).
 
 ### Fixed
+
 * Update broken links for website, wiki, chat, and blog (issue [#27]).
 
 [#27]: https://github.com/amethyst/amethyst/issues/27
@@ -483,15 +537,18 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## 0.2.1 (2016-01-27)
 ### Changed
+
 * Add keywords to sub-crates.
 * Remove reference to missing README file from `amethyst_engine`
 
 ## 0.2.0 (2016-01-27) [YANKED]
 ### Added
+
 * Pass slice references to functions instead of `&Vec<T>`.
 * Add state machine unit tests (issue [#9], pull request [#15])
 
 ### Changed
+
 * Mention nightly Rust in "Hello World" tutorial (issue [#11], pull request
   [#12])
 * Split amethyst` into separate sub-crates (issue [#13], pull request [#14])
@@ -507,24 +564,30 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#15]: https://github.com/amethyst/amethyst/issues/15
 
 ## 0.1.4 - 2016-01-10
+
 ### Added
+
 * Stabilize state machine API (pull request [#6]).
   * Implement pushdown automaton state machine.
   * Implement state transitions.
 
 ### Changed
+
 * Remove standardized `State` constructor (pull request [#6]).
 * Update book and doc comments.
 
 [#6]: https://github.com/amethyst/amethyst/issues/6
 
 ### Fixed
+
 * Fix unreachable shutdown statement bug (issue [#5]).
 
 [#5]: https://github.com/amethyst/amethyst/issues/5
 
 ## 0.1.3 - 2016-01-09
+
 ### Changed
+
 * Clean up use statements.
 * Renderer design progress (issue [#7]).
   * Split `ir.rs` and `frontend.rs` into separate files.
@@ -542,18 +605,25 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#7]: https://github.com/amethyst/amethyst/issues/7
 
 ## 0.1.1 - 2016-01-06
+
 ### Added
+
 * Add `Frame::with_data` constructor to renderer.
 
 ### Changed
+
 * Hide engine submodule, reexport desired contents as public.
 * Updated hello_world.rs to new API.
 * Significantly expanded Amethyst book and doc comments.
 
 ## 0.1.0 - 2016-01-03
+
 * Initial release
 
-[Unreleased]: https://github.com/amethyst/amethyst/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/amethyst/amethyst/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/amethyst/amethyst/compare/v0.8.0...v0.9.0
+[0.8.0]: https://github.com/amethyst/amethyst/compare/v0.7.0...v0.8.0
+[0.7.0]: https://github.com/amethyst/amethyst/compare/v0.5.1...v0.7.0
 [0.5.1]: https://github.com/amethyst/amethyst/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/amethyst/amethyst/compare/v0.4.3...v0.5.0
 [0.4.3]: https://github.com/amethyst/amethyst/compare/v0.4.2...v0.4.3
