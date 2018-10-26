@@ -222,8 +222,7 @@ impl Example {
                 bottom: 0.0,
                 near: 0.0,
                 far: self.camera_depth_vision,
-            })))
-            .build();
+            }))).build();
 
         self.camera = Some(camera);
     }
