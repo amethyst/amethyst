@@ -89,18 +89,17 @@ impl<'a> PrefabData<'a> for Transform {
 ```
 
 First, we specify a `SystemData` type, this is the data required from `World` in order to load and
-instantiate this `PrefabData`. Here we want to write to both `Transform` and `GlobalTransform`, 
-because `Transform` won't work without a companion `GlobalTransform`.
+instantiate this `PrefabData`. Here we only need to write to `Transform`.
 
 Second, we specify what result the `add_to_entity` function returns. In our case this is unit `()`, for 
 other implementations it could return a `Handle` etc. For an example of this, look at the `TexturePrefab`
 in the renderer crate. 
 
-Next we defined the `add_to_entity` function, which is used to actually instantiate data. In our case here,
-we insert a default `GlobalTransform` and the local `Transform` data on the referenced `Entity`. In this
-scenario we aren't using the third parameter to the function. This parameter contains a list of all `Entity`s
-affected by the `Prefab`, the first entry in the list will be the main `Entity`, and the rest will be the 
-`Entity`s that were created for all the entries in the data list inside the `Prefab`.
+Next, we define the `add_to_entity` function, which is used to actually instantiate data. In our case here,
+we insert the local `Transform` data on the referenced `Entity`. In this scenario we aren't using the third
+parameter to the function. This parameter contains a list of all entities affected by the `Prefab`, the first
+entry in the list will be the main `Entity`, and the rest will be the entities that were created for all the
+entries in the data list inside the `Prefab`.
 
 Last of all, we can see that this does not implement `load_sub_assets`, which is because there
 are no secondary assets to load from `Source` here.
