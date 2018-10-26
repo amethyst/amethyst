@@ -90,8 +90,11 @@ where
     }
 
     /// Removes an action binding that was assigned previously.
-    pub fn remove_action_binding<T: Hash + Eq + ?Sized>(&mut self, id: &T, binding: SmallVec<[Button; 2]>)
-    where
+    pub fn remove_action_binding<T: Hash + Eq + ?Sized>(
+        &mut self,
+        id: &T,
+        binding: SmallVec<[Button; 2]>,
+    ) where
         AC: Borrow<T>,
     {
         let mut kill_it = false;
