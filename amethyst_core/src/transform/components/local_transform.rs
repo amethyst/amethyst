@@ -89,38 +89,45 @@ impl Transform {
         self.iso.to_homogeneous() * Matrix4::new_nonuniform_scaling(&self.scale)
     }
 
+    /// Returns a reference to the translation vector.
     #[inline]
     pub fn translation(&self) -> &Vector3<f32> {
         &self.iso.translation.vector
     }
 
+    /// Returns a mutable reference to the translation vector.
     #[inline]
     pub fn translation_mut(&mut self) -> &mut Vector3<f32> {
         &mut self.iso.translation.vector
     }
 
+    /// Returns a reference to the rotation quaternion.
     #[inline]
     pub fn rotation(&self) -> &UnitQuaternion<f32> {
         &self.iso.rotation
     }
 
+    /// Returns a mutable reference to the rotation quaternion.
     #[inline]
     pub fn rotation_mut(&mut self) -> &mut UnitQuaternion<f32> {
         &mut self.iso.rotation
     }
 
+    /// Returns a reference to the isometry of the transform (translation and rotation combined).
     #[inline]
     pub fn isometry(&self) -> &Isometry3<f32> {
         &self.iso
     }
 
+    /// Returns a mutable reference to the isometry of the transform (translation and rotation
+    /// combined).
     #[inline]
     pub fn isometry_mut(&mut self) -> &mut Isometry3<f32> {
         &mut self.iso
     }
 
     /// Convert this transform's rotation into an Orientation, guaranteed to be 3 unit orthogonal
-    /// vectors
+    /// vectors.
     pub fn orientation(&self) -> Orientation {
         Orientation::from(*self.iso.rotation.to_rotation_matrix().matrix())
     }
@@ -196,39 +203,45 @@ impl Transform {
         self.move_local(Vector3::new(0.0, -amount, 0.0))
     }
 
+    /// Adds the specified amount to the translation vectors x component.
     #[inline]
     pub fn add_x(&mut self, amount: f32) -> &mut Self {
         self.iso.translation.vector.x += amount;
         self
     }
 
+    /// Adds the specified amount to the translation vectors y component.
     #[inline]
     pub fn add_y(&mut self, amount: f32) -> &mut Self {
         self.iso.translation.vector.y += amount;
         self
     }
 
+    /// Adds the specified amount to the translation vectors z component.
     #[inline]
     pub fn add_z(&mut self, amount: f32) -> &mut Self {
         self.iso.translation.vector.z += amount;
         self
     }
 
+    /// Sets the translation vectors x component to the specified value.
     #[inline]
-    pub fn set_x(&mut self, amount: f32) -> &mut Self {
-        self.iso.translation.vector.x = amount;
+    pub fn set_x(&mut self, value: f32) -> &mut Self {
+        self.iso.translation.vector.x = value;
         self
     }
 
+    /// Sets the translation vectors y component to the specified value.
     #[inline]
-    pub fn set_y(&mut self, amount: f32) -> &mut Self {
-        self.iso.translation.vector.y = amount;
+    pub fn set_y(&mut self, value: f32) -> &mut Self {
+        self.iso.translation.vector.y = value;
         self
     }
 
+    /// Sets the translation vectors z component to the specified value.
     #[inline]
-    pub fn set_z(&mut self, amount: f32) -> &mut Self {
-        self.iso.translation.vector.z = amount;
+    pub fn set_z(&mut self, value: f32) -> &mut Self {
+        self.iso.translation.vector.z = value;
         self
     }
 
@@ -290,10 +303,20 @@ impl Transform {
         self
     }
 
+    /// Adds the specified amounts to the translation vector.
+    pub fn add_xyz(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
+        self.add_x(x);
+        self.add_y(y);
+        self.add_z(z);
+        self
+    }
+
+    /// Sets the specified values of the translation vector.
     pub fn set_xyz(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
         self.set_position(Vector3::new(x, y, z))
     }
 
+    /// Sets the rotation of the transform.
     pub fn set_rotation(&mut self, rotation: UnitQuaternion<f32>) -> &mut Self {
         self.iso.rotation = rotation;
         self
@@ -311,6 +334,7 @@ impl Transform {
         self
     }
 
+    /// Concatenates another transform onto `self`.
     pub fn concat(&mut self, other: &Self) -> &mut Self {
         self.scale.component_mul_assign(&other.scale);
         self.iso.rotation *= other.iso.rotation;
