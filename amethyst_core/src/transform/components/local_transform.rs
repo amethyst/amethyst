@@ -155,8 +155,7 @@ impl Transform {
     /// It will not move in the case where the axis is zero, for any distance.
     #[inline]
     pub fn move_along_local(&mut self, direction: Unit<Vector3<f32>>, distance: f32) -> &mut Self {
-        self.iso.translation.vector +=
-            self.iso.rotation * direction.as_ref() * distance;
+        self.iso.translation.vector += self.iso.rotation * direction.as_ref() * distance;
         self
     }
 
@@ -195,6 +194,42 @@ impl Transform {
     #[inline]
     pub fn move_down(&mut self, amount: f32) -> &mut Self {
         self.move_local(Vector3::new(0.0, -amount, 0.0))
+    }
+
+    #[inline]
+    pub fn add_x(&mut self, amount: f32) -> &mut Self {
+        self.iso.translation.vector.x += amount;
+        self
+    }
+
+    #[inline]
+    pub fn add_y(&mut self, amount: f32) -> &mut Self {
+        self.iso.translation.vector.y += amount;
+        self
+    }
+
+    #[inline]
+    pub fn add_z(&mut self, amount: f32) -> &mut Self {
+        self.iso.translation.vector.z += amount;
+        self
+    }
+
+    #[inline]
+    pub fn set_x(&mut self, amount: f32) -> &mut Self {
+        self.iso.translation.vector.x = amount;
+        self
+    }
+
+    #[inline]
+    pub fn set_y(&mut self, amount: f32) -> &mut Self {
+        self.iso.translation.vector.y = amount;
+        self
+    }
+
+    #[inline]
+    pub fn set_z(&mut self, amount: f32) -> &mut Self {
+        self.iso.translation.vector.z = amount;
+        self
     }
 
     /// Pitch relatively to the world.
@@ -253,6 +288,10 @@ impl Transform {
     pub fn set_position(&mut self, position: Vector3<f32>) -> &mut Self {
         self.iso.translation.vector = position;
         self
+    }
+
+    pub fn set_xyz(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
+        self.set_position(Vector3::new(x, y, z))
     }
 
     pub fn set_rotation(&mut self, rotation: UnitQuaternion<f32>) -> &mut Self {
