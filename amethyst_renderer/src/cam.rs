@@ -149,14 +149,14 @@ mod serde_ortho {
 
     use serde::{
         de::{self, Deserializer, MapAccess, SeqAccess, Visitor},
-        ser::{Serializer, Serialize},
+        ser::{Serialize, Serializer},
     };
 
     use amethyst_core::nalgebra::Orthographic3;
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Orthographic3<f32>, D::Error>
-        where
-            D: Deserializer<'de>,
+    where
+        D: Deserializer<'de>,
     {
         #[derive(Deserialize)]
         #[serde(field_identifier, rename_all = "lowercase")]
@@ -179,8 +179,8 @@ mod serde_ortho {
             }
 
             fn visit_seq<V>(self, mut seq: V) -> Result<Self::Value, V::Error>
-                where
-                    V: SeqAccess<'de>,
+            where
+                V: SeqAccess<'de>,
             {
                 let left = seq
                     .next_element()?
@@ -205,8 +205,8 @@ mod serde_ortho {
             }
 
             fn visit_map<V>(self, mut map: V) -> Result<Self::Value, V::Error>
-                where
-                    V: MapAccess<'de>,
+            where
+                V: MapAccess<'de>,
             {
                 let mut left = None;
                 let mut right = None;
@@ -272,8 +272,8 @@ mod serde_ortho {
     }
 
     pub fn serialize<S>(proj: &Orthographic3<f32>, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
+    where
+        S: Serializer,
     {
         #[derive(Serialize)]
         struct OrthographicValues {
@@ -285,14 +285,17 @@ mod serde_ortho {
             zfar: f32,
         }
 
-        Serialize::serialize(&OrthographicValues {
-            left: proj.left(),
-            right: proj.right(),
-            bottom: proj.bottom(),
-            top: proj.top(),
-            znear: proj.znear(),
-            zfar: proj.zfar(),
-        }, serializer)
+        Serialize::serialize(
+            &OrthographicValues {
+                left: proj.left(),
+                right: proj.right(),
+                bottom: proj.bottom(),
+                top: proj.top(),
+                znear: proj.znear(),
+                zfar: proj.zfar(),
+            },
+            serializer,
+        )
     }
 }
 
@@ -301,14 +304,14 @@ mod serde_persp {
 
     use serde::{
         de::{self, Deserializer, MapAccess, SeqAccess, Visitor},
-        ser::{Serializer, Serialize},
+        ser::{Serialize, Serializer},
     };
 
     use amethyst_core::nalgebra::Perspective3;
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Perspective3<f32>, D::Error>
-        where
-            D: Deserializer<'de>,
+    where
+        D: Deserializer<'de>,
     {
         #[derive(Deserialize)]
         #[serde(field_identifier, rename_all = "lowercase")]
@@ -329,8 +332,8 @@ mod serde_persp {
             }
 
             fn visit_seq<V>(self, mut seq: V) -> Result<Self::Value, V::Error>
-                where
-                    V: SeqAccess<'de>,
+            where
+                V: SeqAccess<'de>,
             {
                 let aspect = seq
                     .next_element()?
@@ -349,8 +352,8 @@ mod serde_persp {
             }
 
             fn visit_map<V>(self, mut map: V) -> Result<Self::Value, V::Error>
-                where
-                    V: MapAccess<'de>,
+            where
+                V: MapAccess<'de>,
             {
                 let mut aspect = None;
                 let mut fovy = None;
@@ -394,14 +397,13 @@ mod serde_persp {
             }
         }
 
-        const FIELDS: &'static [&'static str] =
-            &["aspect", "fovy", "znear", "zfar"];
+        const FIELDS: &'static [&'static str] = &["aspect", "fovy", "znear", "zfar"];
         deserializer.deserialize_struct("Perspective", FIELDS, PerspectiveVisitor)
     }
 
     pub fn serialize<S>(proj: &Perspective3<f32>, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
+    where
+        S: Serializer,
     {
         #[derive(Serialize)]
         struct PerspectiveValues {
@@ -411,11 +413,14 @@ mod serde_persp {
             zfar: f32,
         }
 
-        Serialize::serialize(&PerspectiveValues {
-            aspect: proj.aspect(),
-            fovy: proj.fovy(),
-            znear: proj.znear(),
-            zfar: proj.zfar(),
-        }, serializer)
+        Serialize::serialize(
+            &PerspectiveValues {
+                aspect: proj.aspect(),
+                fovy: proj.fovy(),
+                znear: proj.znear(),
+                zfar: proj.zfar(),
+            },
+            serializer,
+        )
     }
 }
