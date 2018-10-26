@@ -29,6 +29,8 @@
     * [`SpriteRender` Component](./sprites/sprite_render_component.md)
     * [Orthographic Camera](./sprites/orthographic_camera.md)
 * [Prefabs](./prefab.md)
+* [Testing](./testing.md)
+    * [Test Examples](./testing/test_examples.md)
 * [Glossary](./glossary.md)
 * [Appendix A: Config Files](./appendices/a_config_files.md)
     * [Adding an Arena Config](./appendices/a_config_files/arena_config.md)

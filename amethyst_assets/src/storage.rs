@@ -453,6 +453,7 @@ where
 )]
 pub struct Handle<A: ?Sized> {
     id: Arc<u32>,
+    #[derivative(Debug = "ignore")]
     marker: PhantomData<A>,
 }
 
