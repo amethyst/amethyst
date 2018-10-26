@@ -15,7 +15,7 @@ where
     AC: Hash + Eq,
 {
     pub(super) axes: HashMap<AX, Axis>,
-    pub(super) actions: HashMap<AC, SmallVec<[Vec<Button>; 4]>>,
+    pub(super) actions: HashMap<AC, SmallVec<[SmallVec<[Button; 2]>; 4]>>,
 }
 
 impl<AX, AC> Bindings<AX, AC>
@@ -66,7 +66,7 @@ where
     /// Add a button to an action.
     ///
     /// This will insert a new binding between this action and the button.
-    pub fn insert_action_binding<A>(&mut self, id: A, binding: Vec<Button>)
+    pub fn insert_action_binding<A, B: IntoIterator<Item = Button>>(&mut self, id: A, binding: B)
     where
         A: Hash + Eq + Into<AC>,
         AC: Borrow<A>,
