@@ -85,8 +85,12 @@ impl<'a> System<'a> for VisibilitySortingSystem {
         self.centroids.extend(
             (&*entities, &global, !&hidden, !&hidden_prop)
                 .join()
-                .map(|(entity, global, _, _)| (entity, global.0.fixed_resize::<na::U3, na::U3>(0.0) * origin))
-                .map(|(entity, centroid)| Internals {
+                .map(|(entity, global, _, _)| {
+                    (
+                        entity,
+                        global.0.fixed_resize::<na::U3, na::U3>(0.0) * origin,
+                    )
+                }).map(|(entity, centroid)| Internals {
                     entity,
                     transparent: transparent.contains(entity),
                     centroid,

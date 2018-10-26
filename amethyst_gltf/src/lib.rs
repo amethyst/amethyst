@@ -75,7 +75,8 @@ impl GltfPrefab {
     /// Move the scene so the center of the bounding box is at the given `target` location.
     pub fn move_to(&mut self, target: Point3<f32>) {
         if let Some(ref extent) = self.extent {
-            *self.transform
+            *self
+                .transform
                 .get_or_insert_with(Transform::default)
                 .translation_mut() += target - extent.centroid();
         }
