@@ -85,8 +85,8 @@ impl UiTransformBuilder {
         self
     }
 
-    /// Adds a [`HiddenPropagate`](../amethyst_renderer/struct.HiddenPropagate.html) component to the entity
-    pub fn hidden(mut self) -> Self {
+    /// Hides an entity by adding a [`HiddenPropagate`](../amethyst_renderer/struct.HiddenPropagate.html) component
+    pub fn hide(mut self) -> Self {
         self.hidden = true;
         self
     }
