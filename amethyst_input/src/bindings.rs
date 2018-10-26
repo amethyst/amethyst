@@ -15,7 +15,7 @@ where
     AC: Hash + Eq,
 {
     pub(super) axes: HashMap<AX, Axis>,
-    pub(super) actions: HashMap<AC, SmallVec<[Vec<Button>; 4]>>,
+    pub(super) actions: HashMap<AC, SmallVec<[SmallVec<[Button; 2]>; 4]>>,
 }
 
 impl<AX, AC> Bindings<AX, AC>
