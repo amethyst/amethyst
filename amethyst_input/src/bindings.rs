@@ -66,7 +66,7 @@ where
     /// Add a button to an action.
     ///
     /// This will insert a new binding between this action and the button.
-    pub fn insert_action_binding<A, B: IntoIterator<Item = Button>>(&mut self, id: A, binding: B)
+    pub fn insert_action_binding<A>(&mut self, id: A, binding: SmallVec<[Button; 2]>)
     where
         A: Hash + Eq + Into<AC>,
         AC: Borrow<A>,
@@ -90,7 +90,7 @@ where
     }
 
     /// Removes an action binding that was assigned previously.
-    pub fn remove_action_binding<T: Hash + Eq + ?Sized>(&mut self, id: &T, binding: Vec<Button>)
+    pub fn remove_action_binding<T: Hash + Eq + ?Sized>(&mut self, id: &T, binding: SmallVec<[Button; 2]>)
     where
         AC: Borrow<T>,
     {
@@ -108,7 +108,7 @@ where
     }
 
     /// Returns an action's bindings.
-    pub fn action_bindings<T: Hash + Eq + ?Sized>(&self, id: &T) -> Option<&[Vec<Button>]>
+    pub fn action_bindings<T: Hash + Eq + ?Sized>(&self, id: &T) -> Option<&[SmallVec<[Button; 2]>]>
     where
         AC: Borrow<T>,
     {

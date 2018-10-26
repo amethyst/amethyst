@@ -120,10 +120,18 @@ where
                         );
                         for (action, combinations) in self.bindings.actions.iter() {
                             for combination in combinations {
-                                if combination.contains(&Button::Key(key_code)) {
+                                if combination.contains(&Button::Key(key_code)) &&
+                                    combination
+                                        .iter()
+                                        .filter(|b| b != &&Button::Key(key_code))
+                                        .all(|b| self.button_is_down(*b)) {
                                     event_handler.single_write(ActionReleased(action.clone()));
                                 }
-                                if combination.contains(&Button::ScanCode(scancode)) {
+                                if combination.contains(&Button::ScanCode(scancode)) &&
+                                    combination
+                                        .iter()
+                                        .filter(|b| b != &&Button::ScanCode(scancode))
+                                        .all(|b| self.button_is_down(*b)) {
                                     event_handler.single_write(ActionReleased(action.clone()));
                                 }
                             }
@@ -181,7 +189,11 @@ where
                         );
                         for (action, combinations) in self.bindings.actions.iter() {
                             for combination in combinations {
-                                if combination.contains(&Button::Mouse(mouse_button)) {
+                                if combination.contains(&Button::Mouse(mouse_button)) &&
+                                    combination
+                                        .iter()
+                                        .filter(|b| b != &&Button::Mouse(mouse_button))
+                                        .all(|b| self.button_is_down(*b)) {
                                     event_handler.single_write(ActionReleased(action.clone()));
                                 }
                             }
@@ -299,7 +311,11 @@ where
                         );
                         for (action, combinations) in self.bindings.actions.iter() {
                             for combination in combinations {
-                                if combination.contains(&Button::Controller(controller_id, button)) {
+                                if  combination.contains(&Button::Controller(controller_id, button)) &&
+                                    combination
+                                        .iter()
+                                        .filter(|b| b != &&Button::Controller(controller_id, button))
+                                        .all(|b| self.button_is_down(*b)) {
                                     event_handler.single_write(ActionReleased(action.clone()));
                                 }
                             }
