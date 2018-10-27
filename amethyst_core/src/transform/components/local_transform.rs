@@ -39,18 +39,18 @@ impl Transform {
     ///
     /// ```rust,no_run
     /// # use amethyst_core::transform::components::Transform;
-    /// # use amethyst_core::cgmath::{Quaternion, One, Vector3, Point3, Matrix3};
+    /// # use amethyst_core::nalgebra::{UnitQuaternion, Quaternion, Vector3};
     /// let mut t = Transform::default();
     /// // No rotation by default
-    /// assert_eq!(t.rotation, Quaternion::one());
+    /// assert_eq!(*t.iso.rotation.quaternion(), Quaternion::identity());
     /// // look up with up pointing backwards
-    /// t.look_at(Point3::new(0.0, 1.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
+    /// t.look_at(Vector3::new(0.0, 1.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
     /// // our rotation should match the angle from straight ahead to straight up
-    /// let rotation = Quaternion::from_arc(
-    ///     Vector3::new(0.0, 0.0, -1.0),
-    ///     Vector3::new(0.0, 1.0, 0.0),
-    ///     None);
-    /// assert_eq!(t.rotation, rotation);
+    /// let rotation = UnitQuaternion::rotation_between(
+    ///     &Vector3::new(0.0, 0.0, -1.0),
+    ///     &Vector3::new(0.0, 1.0, 0.0),
+    /// ).unwrap();
+    /// assert_eq!(t.iso.rotation, rotation);
     /// ```
     // FIXME doctest
     // TODO: fix example
@@ -319,6 +319,14 @@ impl Transform {
     /// Sets the rotation of the transform.
     pub fn set_rotation(&mut self, rotation: UnitQuaternion<f32>) -> &mut Self {
         self.iso.rotation = rotation;
+        self
+    }
+
+    /// Sets the scale of the transform.
+    pub fn set_scale(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
+        self.scale.x = x;
+        self.scale.y = y;
+        self.scale.z = z;
         self
     }
 

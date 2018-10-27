@@ -1,5 +1,5 @@
 use amethyst::{
-    core::{nalgebra::Vector3, timing::Time, transform::Transform},
+    core::{timing::Time, transform::Transform},
     ecs::prelude::{Join, Read, System, WriteStorage},
 };
 use Ball;
