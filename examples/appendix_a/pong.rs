@@ -1,9 +1,6 @@
 use amethyst::{
     assets::Loader,
-    core::{
-        cgmath::{Matrix4, Vector3},
-        transform::{GlobalTransform, Transform},
-    },
+    core::{cgmath::Vector3, Transform},
     ecs::prelude::World,
     prelude::*,
     renderer::{
@@ -38,6 +35,9 @@ fn initialise_camera(world: &mut World) {
         let config = &world.read_resource::<ArenaConfig>();
         (config.height, config.width)
     };
+
+    let mut transform = Transform::default();
+    transform.translation.z = 1.0;
     world
         .create_entity()
         .with(Camera::from(Projection::orthographic(
@@ -45,9 +45,8 @@ fn initialise_camera(world: &mut World) {
             arena_width,
             arena_height,
             0.0,
-        ))).with(GlobalTransform(
-            Matrix4::from_translation(Vector3::new(0.0, 0.0, 1.0)).into(),
-        )).build();
+        ))).with(transform)
+        .build();
 }
 
 /// Hide the cursor, so it's invisible while playing.
@@ -127,8 +126,7 @@ fn initialise_paddles(world: &mut World) {
             height: left_height,
             width: left_width,
             velocity: left_velocity,
-        }).with(GlobalTransform::default())
-        .with(left_transform)
+        }).with(left_transform)
         .build();
     // Create right paddle
     world
@@ -140,8 +138,7 @@ fn initialise_paddles(world: &mut World) {
             height: right_height,
             width: right_width,
             velocity: right_velocity,
-        }).with(GlobalTransform::default())
-        .with(right_transform)
+        }).with(right_transform)
         .build();
 }
 
@@ -175,7 +172,6 @@ fn initialise_balls(world: &mut World) {
             radius: radius,
             velocity: [velocity_x, velocity_y],
         }).with(local_transform)
-        .with(GlobalTransform::default())
         .build();
 }
 

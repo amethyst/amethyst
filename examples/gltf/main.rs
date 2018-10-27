@@ -14,7 +14,7 @@ use amethyst::assets::{
     ProgressCounter, RonFormat,
 };
 use amethyst::controls::{ControlTagPrefab, FlyControlBundle};
-use amethyst::core::transform::{GlobalTransform, Transform, TransformBundle};
+use amethyst::core::{Transform, TransformBundle};
 use amethyst::ecs::error::Error;
 use amethyst::ecs::prelude::{Entity, ReadStorage, Write, WriteStorage};
 use amethyst::input::{is_close_requested, is_key_down};
@@ -152,11 +152,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                         .unwrap()
                         .clone();
 
-                    data.world
-                        .create_entity()
-                        .with(scene_handle)
-                        .with(GlobalTransform::default())
-                        .build();
+                    data.world.create_entity().with(scene_handle).build();
 
                     true
                 }
