@@ -53,7 +53,7 @@ impl<'s> System<'s> for BounceSystem {
                 // To determine whether the ball has collided with a paddle, we create a larger
                 // rectangle around the current one, by subtracting the ball radius from the
                 // lowest coordinates, and adding the ball radius to the highest ones. The ball
-                // is than within the paddle if its centre is within the larger wrapper
+                // is then within the paddle if its centre is within the larger wrapper
                 // rectangle.
                 if point_in_rect(
                     ball_x,
@@ -77,7 +77,7 @@ impl<'s> System<'s> for BounceSystem {
 }
 
 // A point is in a box when its coordinates are smaller or equal than the top
-// right, but larger or equal than the bottom left.
+// right and larger or equal than the bottom left.
 fn point_in_rect(x: f32, y: f32, left: f32, bottom: f32, right: f32, top: f32) -> bool {
     x >= left && x <= right && y >= bottom && y <= top
 }
