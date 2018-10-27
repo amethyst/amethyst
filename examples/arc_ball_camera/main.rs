@@ -112,11 +112,7 @@ fn main() -> Result<(), Error> {
             CameraDistanceSystem::<String>::new(),
             "camera_distance_system",
             &["input_system"],
-        ).with_basic_renderer(
-            display_config_path,
-            DrawShaded::<PosNormTex>::new(),
-            false,
-        )?;
+        ).with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
     let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
     game.run();
     Ok(())
