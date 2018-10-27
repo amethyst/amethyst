@@ -106,8 +106,8 @@ pub struct GltfNodeExtent {
 impl Default for GltfNodeExtent {
     fn default() -> Self {
         Self {
-            start: Point3::from_coordinates(Vector3::from_element(std::f32::MAX)),
-            end: Point3::from_coordinates(Vector3::from_element(std::f32::MIN)),
+            start: Point3::from(Vector3::from_element(std::f32::MAX)),
+            end: Point3::from(Vector3::from_element(std::f32::MIN)),
         }
     }
 }

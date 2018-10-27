@@ -46,7 +46,10 @@ impl AnimationSampling for Transform {
         use self::TransformChannel::*;
         match channel {
             Translation => SamplerPrimitive::Vec3((*self.translation()).into()),
-            Rotation => SamplerPrimitive::Vec4(self.rotation().as_ref().coords.into()),
+            Rotation => SamplerPrimitive::Vec4({
+                let c = self.rotation().as_ref().coords;
+                [c.w, c.x, c.y, c.z]
+            }),
             Scale => SamplerPrimitive::Vec3(self.scale.into()),
         }
     }
