@@ -1,7 +1,7 @@
 use amethyst::{
     assets::Loader,
     core::{
-        nalgebra::{Translation, Vector3},
+        nalgebra::{Translation3, Vector3},
         transform::Transform,
     },
     ecs::prelude::World,

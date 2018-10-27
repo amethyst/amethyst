@@ -1,9 +1,6 @@
 use amethyst::{
     assets::{AssetStorage, Loader},
-    core::{
-        nalgebra::{Translation3, Vector3},
-        transform::{GlobalTransform, Transform},
-    },
+    core::transform::Transform,
     ecs::prelude::World,
     prelude::*,
     renderer::{
@@ -74,7 +71,7 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
 /// Initialise the camera.
 fn initialise_camera(world: &mut World) {
     let mut transform = Transform::default();
-    transform.translation.z = 1.0;
+    transform.set_z(1.0);
     world
         .create_entity()
         .with(Camera::from(Projection::orthographic(
