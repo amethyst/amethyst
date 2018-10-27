@@ -5,7 +5,7 @@ use amethyst_assets::{
 };
 use amethyst_audio::{AudioFormat, Source as Audio};
 use amethyst_core::specs::prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage};
-use amethyst_renderer::{Texture, TextureFormat, TextureMetadata, TexturePrefab};
+use amethyst_renderer::{HiddenPropagate, Texture, TextureFormat, TextureMetadata, TexturePrefab};
 use serde::de::DeserializeOwned;
 
 /// Loadable `UiTransform` data.
@@ -25,6 +25,7 @@ pub struct UiTransformBuilder {
     stretch: Option<Stretch>,
     anchor: Anchor,
     mouse_reactive: bool,
+    hidden: bool,
 }
 
 impl Default for UiTransformBuilder {
@@ -42,6 +43,7 @@ impl Default for UiTransformBuilder {
             stretch: None,
             anchor: Anchor::Middle,
             mouse_reactive: false,
+            hidden: false,
         }
     }
 }
@@ -83,6 +85,12 @@ impl UiTransformBuilder {
         self
     }
 
+    /// Hides an entity by adding a [`HiddenPropagate`](../amethyst_renderer/struct.HiddenPropagate.html) component
+    pub fn hide(mut self) -> Self {
+        self.hidden = true;
+        self
+    }
+
     /// Add mouse reactive
     pub fn reactive(mut self) -> Self {
         self.mouse_reactive = true;
@@ -106,6 +114,7 @@ impl<'a> PrefabData<'a> for UiTransformBuilder {
     type SystemData = (
         WriteStorage<'a, UiTransform>,
         WriteStorage<'a, MouseReactive>,
+        WriteStorage<'a, HiddenPropagate>,
     );
     type Result = ();
 
@@ -137,6 +146,10 @@ impl<'a> PrefabData<'a> for UiTransformBuilder {
         system_data.0.insert(entity, transform)?;
         if self.mouse_reactive {
             system_data.1.insert(entity, MouseReactive)?;
+        }
+
+        if self.hidden {
+            system_data.2.insert(entity, HiddenPropagate)?;
         }
 
         Ok(())

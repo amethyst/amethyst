@@ -12,13 +12,28 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Added
 
 * `amethyst_test` test framework for ergonomic testing of Amethyst applications ([#1000])
+* combinations of buttons triggering actions ([#1043])
 
 [#1000]: https://github.com/amethyst/amethyst/pull/1000
+[#1043]: https://github.com/amethyst/amethyst/pull/1043
 
 ## [0.9.0] - 2018-10
 
 ### Added
+* `UiPrefab` field `hidden: bool` to hide entities ([#1051])
 
+### Changed
+
+### Removed
+
+### Fixed
+
+
+
+[#1051]: https://github.com/amethyst/amethyst/pull/1051
+
+## [0.9.0] - 2018-10
+### Added
 * Added base networking implementation and the `amethyst_network` crate. ([#969])
 * Support for debug lines using `DebugLines` pass, and `DebugLines` component or resource. ([#917], [#957])
 * Added JsonFormat ([#950]).

@@ -7,6 +7,8 @@ use std::borrow::Borrow;
 use std::hash::Hash;
 
 /// Used for saving and loading input settings.
+///
+/// An action can either be a single button or a combination of them.
 #[derive(Derivative, Serialize, Deserialize, Clone)]
 #[derivative(Default(bound = ""))]
 pub struct Bindings<AX, AC>
@@ -63,9 +65,9 @@ where
         self.axes.keys().cloned().collect::<Vec<AX>>()
     }
 
-    /// Add a button to an action.
+    /// Add a button or button combination to an action.
     ///
-    /// This will insert a new binding between this action and the button.
+    /// This will insert a new binding between this action and the button(s).
     pub fn insert_action_binding<A>(&mut self, id: A, binding: SmallVec<[Button; 2]>)
     where
         A: Hash + Eq + Into<AC>,

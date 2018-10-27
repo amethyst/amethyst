@@ -513,7 +513,9 @@ where
         })
     }
 
-    /// Returns true if any of the action keys are down.
+    /// Returns true if any of the actions bindings is down.
+    ///
+    /// If a binding represents a combination of buttons, all of them need to be down.
     pub fn action_is_down<T: Hash + Eq + ?Sized>(&self, action: &T) -> Option<bool>
     where
         AC: Borrow<T>,
