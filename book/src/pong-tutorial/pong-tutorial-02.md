@@ -28,7 +28,7 @@ Then, in `main.rs` declare a module:
 mod pong;
 ```
 
-And in main.rs, at the top of the file, add this import:
+And in main.rs, below the module declaration and before main, add this import:
 
 ```rust,ignore
 use pong::Pong;
@@ -252,7 +252,7 @@ general as it makes operations like rotation easier.
 # }
 # struct Paddle;
 # impl amethyst::ecs::Component for Paddle {
-#   type Storage = amethyst::ecs::VecStorage<Paddle>;    
+#   type Storage = amethyst::ecs::VecStorage<Paddle>;
 # }
 # impl Paddle {
 #   fn new(side: Side) -> Paddle { Paddle }
@@ -337,7 +337,7 @@ this by adding the following line before `initialise_paddles(world)` in the
 # extern crate amethyst;
 # struct Paddle;
 # impl amethyst::ecs::Component for Paddle {
-#   type Storage = amethyst::ecs::VecStorage<Paddle>;    
+#   type Storage = amethyst::ecs::VecStorage<Paddle>;
 # }
 # fn register() {
 #   let mut world = amethyst::ecs::World::new();
@@ -484,7 +484,7 @@ Heading back to the code, we need to add this snippet after loading the texture.
 #           &texture_storage,
 #       )
 #   };
-// `texture_id` is a application defined ID given to the texture to store in
+// `texture_id` is an application-defined ID given to the texture to store in
 // the `World`. This is needed to link the texture to the sprite_sheet.
 let texture_id = 0;
 let mut material_texture_set = world.write_resource::<MaterialTextureSet>();
@@ -493,7 +493,7 @@ material_texture_set.insert(texture_id, texture_handle);
 ```
 
 The `MaterialTextureSet` is yet another `resource`, which is a bi-directional
-map between an application defined texture ID and the handle of the loaded
+map between an application-defined texture ID and the handle of the loaded
 texture. In other words, this allows us to associate a specific global ID to
 our texture. As you will see in a moment, `SpriteSheet`s are linked to textures
 through this ID. Since we only have one sprite sheet, we can just use `0` as the
@@ -539,7 +539,7 @@ file containing the sprites' positions and the texture ID, and create a
 nicely packaged `SpriteSheet` struct. It is this struct that we will be using
 to actually draw stuff on the screen.
 
-Please note that the order of sprites declared in the sprite sheet file 
+Please note that the order of sprites declared in the sprite sheet file
 is also significant, as sprites are referenced by the index in
 the vector. If you're wondering about the ball sprite, it does exist on the
 image, but we will get to it in a later part of the tutorial.
@@ -630,7 +630,7 @@ all together in the `on_start()` method:
 # use amethyst::ecs::World;
 # struct Paddle;
 # impl amethyst::ecs::Component for Paddle {
-#   type Storage = amethyst::ecs::VecStorage<Paddle>;    
+#   type Storage = amethyst::ecs::VecStorage<Paddle>;
 # }
 # fn initialise_paddles(world: &mut World, spritesheet: SpriteSheetHandle) { }
 # fn initialise_camera(world: &mut World) { }
