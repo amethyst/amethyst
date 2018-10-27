@@ -15,36 +15,39 @@ resources:
     repository: amethyst/amethyst
     access_token: ((repo_github_token))
 
+- name: amethyst-dependencies
+  type: docker-image
+  source: { repository: magnonellie/amethyst-dependencies }
+
 jobs:
 - name: linux-rust-stable
-  max_in_flight: 1
+  max_in_flight: 2
   public: true
   interruptible: true
   plan:
-  - get: amethyst
-    resource: pull-request
-    trigger: true
-    version: every
+  - aggregate:
+    - get: amethyst
+      resource: pull-request
+      trigger: true
+      version: every
+    - get: amethyst-dependencies
 
   - put: pull-request
     params: { path: amethyst, status: pending, context: linux-tests }
-  - put: pull-request
-    params: { path: amethyst, status: pending, context: linux-book-tests }
-
   - task: tests
-    input_mapping: { amethyst: pull-request }
+    image: amethyst-dependencies
     file: amethyst/.concourse/tasks/linux-test.yml
     on_failure:
       do:
       - put: pull-request
-        params: { path: amethyst, status: failure, context: linux-test }
-      - put: pull-request
-        params: { path: amethyst, status: failure, context: linux-book-tests }
+        params: { path: amethyst, status: failure, context: linux-tests }
   - put: pull-request
     params: { path: amethyst, status: success, context: linux-tests }
 
+  - put: pull-request
+    params: { path: amethyst, status: pending, context: linux-book-tests }
   - task: book
-    input_mapping: { amethyst: pull-request }
+    image: amethyst-dependencies
     file: amethyst/.concourse/tasks/linux-book.yml
     on_failure:
       put: pull-request
@@ -55,14 +58,17 @@ jobs:
 - name: linux-rustfmt
   public: true
   plan:
-  - get: amethyst
-    resource: pull-request
-    trigger: true
-    version: every
+  - aggregate:
+    - get: amethyst
+      resource: pull-request
+      trigger: true
+      version: every
+    - get: amethyst-dependencies
 
   - put: pull-request
     params: { path: amethyst, status: pending, context: rustfmt }
   - task: check
+    image: amethyst-dependencies
     file: amethyst/.concourse/tasks/linux-rustfmt.yml
     on_failure: # TODO: We should also send an actual message with a helpful hint here.
       put: pull-request
