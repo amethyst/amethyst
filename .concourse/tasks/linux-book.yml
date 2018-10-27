@@ -1,12 +1,6 @@
 ---
 platform: linux
 
-image_resource:
-  type: docker-image
-  source:
-    repository: magnonellie/amethyst-dependencies
-    tag: stable
-
 inputs:
 - name: amethyst
 - name: target
@@ -16,4 +10,7 @@ run:
   dir: amethyst
   args:
   - -exc
-  - mdbook test book -L ../target/debug/deps
+  - |
+    rustc --version
+    mdbook --version
+    mdbook test book -L ../target/debug/deps
