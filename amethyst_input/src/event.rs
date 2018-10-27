@@ -93,7 +93,7 @@ pub enum InputEvent<T> {
     ActionPressed(T),
     /// The associated action had any related button or combination released.
     ///
-    /// If a combiantion is bound to an action, it will be released
+    /// If a combination is bound to an action, it will be released
     /// if any of the buttons within is released while all others are pressed.
     ActionReleased(T),
     /// The associated action has its mouse wheel moved.

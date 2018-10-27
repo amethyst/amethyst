@@ -68,16 +68,18 @@ where
     /// Add a button or button combination to an action.
     ///
     /// This will insert a new binding between this action and the button(s).
-    pub fn insert_action_binding<A>(&mut self, id: A, binding: SmallVec<[Button; 2]>)
+    pub fn insert_action_binding<A, B: IntoIterator<Item = Button>>(&mut self, id: A, binding: B)
     where
         A: Hash + Eq + Into<AC>,
         AC: Borrow<A>,
     {
+        let bind: SmallVec<[Button; 2]> = binding.into_iter().collect();
+
         let mut make_new = false;
         match self.actions.get_mut(&id) {
             Some(action_bindings) => {
-                if action_bindings.iter().all(|b| b != &binding) {
-                    action_bindings.push(binding.clone());
+                if action_bindings.iter().all(|b| b != &bind) {
+                    action_bindings.push(bind.clone());
                 }
             }
             None => {
@@ -86,7 +88,7 @@ where
         }
         if make_new {
             let mut bindings = SmallVec::new();
-            bindings.push(binding.clone());
+            bindings.push(bind.clone());
             self.actions.insert(id.into(), bindings);
         }
     }
