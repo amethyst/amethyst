@@ -47,9 +47,13 @@ Fetching a resource can be done like this:
 #   };
 #   resources.insert(my);
   // try_fetch returns a Option<Fetch<MyResource>>
-  let fetched = resources.try_fetch::<MyResource>()
-                       .expect("No MyResource present in Resources");
-  assert_eq!(*fetched, MyResource{ game_score: 0, });
+  let fetched = resources.try_fetch::<MyResource>();
+  if let Some(fetched_resource) = fetched {
+      //dereference Fetch<MyResource> to access data
+      assert_eq!(*fetched_resource, MyResource{ game_score: 0, });
+  } else {
+      println!("No MyResource present in Resources");
+  }
 # }
 ```
 
@@ -81,11 +85,14 @@ If you want to change a resource that is already inside of `Resources`:
 #   };
 #   resources.insert(my);
   // try_fetch_mut returns a Option<FetchMut<MyResource>>
-  let mut fetched = resources.try_fetch_mut::<MyResource>()
-                             .expect("No MyResource present in Resources");
-  assert_eq!(fetched.game_score, 0);
-  fetched.game_score = 10;
-  assert_eq!(fetched.game_score, 10);
+  let fetched = resources.try_fetch_mut::<MyResource>();
+  if let Some(mut fetched_resource) = fetched {
+    assert_eq!(fetched_resource.game_score, 0);
+    fetched_resource.game_score = 10;
+    assert_eq!(fetched_resource.game_score, 10);
+  } else {
+    println!("No MyResource present in Resources");
+  }
 # }
 ```
 
