@@ -16,13 +16,14 @@
 [li]: COPYING
 [di]: https://discord.gg/GnP5Whs
 
-## What is Amethyst?!
+## What is Amethyst?
 
-Amethyst is a game engine aiming to be fast and as configurable as possible.
+Amethyst is a data-driven and data-oriented game engine aiming to be fast and as
+configurable as possible.
 
 ## Principles
 
-These principles are what make amethyst unique and competitive in the world of game engines.
+These principles are what make Amethyst unique and competitive in the world of game engines.
 
 * Massively parallel architecture.
 * Powered by a correct [Entity Component System][ecs] model.
