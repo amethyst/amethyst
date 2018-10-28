@@ -191,5 +191,9 @@ path = "examples/prefab/main.rs"
 name = "debug_lines"
 path = "examples/debug_lines/main.rs"
 
+[[example]]
+name = "spotlights"
+path = "examples/spotlights/main.rs"
+
 [workspace]
 members = ["amethyst_gltf", "tests/amethyst_test"]
