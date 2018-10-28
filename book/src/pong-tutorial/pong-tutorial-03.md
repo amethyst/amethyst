@@ -268,8 +268,9 @@ This is our first attempt at moving the paddles: we take the movement, and
 scale it by some factor to make the motion seem smooth. In a real game, we
 would use the time elapsed between frames to determine how far to move the
 paddle, so that the behavior of the game would not be tied to the game's
-framerate, but this will do for now. If you run the game now, you'll notice
-the paddles are able to "fall" off the edges of the game area.
+framerate. Amethyst provides you with [`amethyst::core::timing::Time`][doc_time]
+for that purpose, but for now current approach should suffice.
+If you run the game now, you'll notice the paddles are able to "fall" off the edges of the game area.
 
 To fix this, we'll make sure the paddle's anchor point never gets out of the
 arena. But as the anchor point is in the middle of the sprite, we also need
@@ -327,9 +328,50 @@ Our run function should now look something like this:
 Note: For the above to work, we'll have to mark `PADDLE_HEIGHT` and `ARENA_HEIGHT`
 as being public in `pong.rs`, and then import it in `paddle.rs`.
 
+## Automatic set up of resources by system.
+
+You might remember, that we had troubles because
+amethyst required to set up storage for `Paddle` before
+we could use it.
+
+Now that we have a system in place that uses `Paddle` component
+we no longer need to manually register it with the world.
+Instead, as the `Paddle` is used by our system, the storage will
+be set up by it.
+
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::prelude::*;
+# use amethyst::renderer::{TextureHandle, SpriteSheetHandle};
+# use amethyst::ecs::World;
+# struct Paddle;
+# impl amethyst::ecs::Component for Paddle {
+#   type Storage = amethyst::ecs::VecStorage<Paddle>;
+# }
+# fn initialise_paddles(world: &mut World, spritesheet: SpriteSheetHandle) { }
+# fn initialise_camera(world: &mut World) { }
+# fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle { unimplemented!() }
+# struct MyState;
+# impl<'a, 'b> SimpleState<'a, 'b> for MyState {
+fn on_start(&mut self, data: StateData<GameData>) {
+    let world = data.world;
+
+    // Load the spritesheet necessary to render the graphics.
+    let sprite_sheet_handle = load_sprite_sheet(world);
+
+    world.register::<Paddle>(); // <<-- No longer needed
+
+    initialise_paddles(world, sprite_sheet_handle);
+    initialise_camera(world);
+}
+# }
+```
+
 ## Summary
 In this chapter, we added an input handler to our game, so that we
 could capture keypresses. We then created a system that would interpret these
 keypresses, and move our game's paddles accordingly. In the next chapter, we'll
 explore another key concept in real-time games: time. We'll make our game aware
 of time, and add a ball for our paddles to bounce back and forth.
+
+[doc_time]: https://www.amethyst.rs/doc/master/doc/amethyst_core/timing/struct.Time.html
