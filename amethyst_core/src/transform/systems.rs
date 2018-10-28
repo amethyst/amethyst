@@ -61,18 +61,23 @@ impl<'a> System<'a> for TransformSystem {
         self.global_modified.clear();
 
         locals.populate_inserted(
-            self.inserted_local_id.as_mut().unwrap(),
+            self.inserted_local_id
+                .as_mut()
+                .expect("`TransformSystem::setup` was not called before `TransformSystem::run`"),
             &mut self.local_modified,
         );
         locals.populate_modified(
-            self.modified_local_id.as_mut().unwrap(),
+            self.modified_local_id
+                .as_mut()
+                .expect("`TransformSystem::setup` was not called before `TransformSystem::run`"),
             &mut self.local_modified,
         );
 
-        for event in hierarchy
-            .changed()
-            .read(self.parent_events_id.as_mut().unwrap())
-        {
+        for event in hierarchy.changed().read(
+            self.parent_events_id
+                .as_mut()
+                .expect("`TransformSystem::setup` was not called before `TransformSystem::run`"),
+        ) {
             match *event {
                 HierarchyEvent::Removed(entity) => {
                     // Sometimes the user may have already deleted the entity.
