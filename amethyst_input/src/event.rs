@@ -86,9 +86,15 @@ pub enum InputEvent<T> {
         /// The id for the controller disconnected.
         which: u32,
     },
-    /// The associated action had one of its keys pressed.
+    /// The associated action had any related button or combination pressed.
+    ///
+    /// If a combination is bound to an action, it will be pressed
+    /// if all buttons within are pressed.
     ActionPressed(T),
-    /// The associated action had one of its keys released.
+    /// The associated action had any related button or combination released.
+    ///
+    /// If a combination is bound to an action, it will be released
+    /// if any of the buttons within is released while all others are pressed.
     ActionReleased(T),
     /// The associated action has its mouse wheel moved.
     ActionWheelMoved(T),

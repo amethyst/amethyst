@@ -87,13 +87,16 @@ where
                                 .iter()
                                 .cloned(),
                         );
-                        for (k, v) in self.bindings.actions.iter() {
-                            for &button in v {
-                                if Button::Key(key_code) == button {
-                                    event_handler.single_write(ActionPressed(k.clone()));
-                                }
-                                if Button::ScanCode(scancode) == button {
-                                    event_handler.single_write(ActionPressed(k.clone()));
+                        for (action, combinations) in self.bindings.actions.iter() {
+                            for combination in combinations.iter().filter(|c| {
+                                c.contains(&Button::Key(key_code))
+                                    || c.contains(&Button::ScanCode(scancode))
+                            }) {
+                                if combination
+                                    .iter()
+                                    .all(|button| self.button_is_down(*button))
+                                {
+                                    event_handler.single_write(ActionPressed(action.clone()));
                                 }
                             }
                         }
@@ -121,13 +124,21 @@ where
                                 .iter()
                                 .cloned(),
                         );
-                        for (k, v) in self.bindings.actions.iter() {
-                            for &button in v {
-                                if Button::Key(key_code) == button {
-                                    event_handler.single_write(ActionReleased(k.clone()));
+                        for (action, combinations) in self.bindings.actions.iter() {
+                            for combination in combinations {
+                                if combination.contains(&Button::Key(key_code)) && combination
+                                    .iter()
+                                    .filter(|b| b != &&Button::Key(key_code))
+                                    .all(|b| self.button_is_down(*b))
+                                {
+                                    event_handler.single_write(ActionReleased(action.clone()));
                                 }
-                                if Button::ScanCode(scancode) == button {
-                                    event_handler.single_write(ActionReleased(k.clone()));
+                                if combination.contains(&Button::ScanCode(scancode)) && combination
+                                    .iter()
+                                    .filter(|b| b != &&Button::ScanCode(scancode))
+                                    .all(|b| self.button_is_down(*b))
+                                {
+                                    event_handler.single_write(ActionReleased(action.clone()));
                                 }
                             }
                         }
@@ -153,10 +164,16 @@ where
                                 .iter()
                                 .cloned(),
                         );
-                        for (k, v) in self.bindings.actions.iter() {
-                            for &button in v {
-                                if Button::Mouse(mouse_button) == button {
-                                    event_handler.single_write(ActionPressed(k.clone()));
+                        for (action, combinations) in self.bindings.actions.iter() {
+                            for combination in combinations
+                                .iter()
+                                .filter(|c| c.contains(&Button::Mouse(mouse_button)))
+                            {
+                                if combination
+                                    .iter()
+                                    .all(|button| self.button_is_down(*button))
+                                {
+                                    event_handler.single_write(ActionPressed(action.clone()));
                                 }
                             }
                         }
@@ -182,10 +199,14 @@ where
                                 .iter()
                                 .cloned(),
                         );
-                        for (k, v) in self.bindings.actions.iter() {
-                            for &button in v {
-                                if Button::Mouse(mouse_button) == button {
-                                    event_handler.single_write(ActionReleased(k.clone()));
+                        for (action, combinations) in self.bindings.actions.iter() {
+                            for combination in combinations {
+                                if combination.contains(&Button::Mouse(mouse_button)) && combination
+                                    .iter()
+                                    .filter(|b| b != &&Button::Mouse(mouse_button))
+                                    .all(|b| self.button_is_down(*b))
+                                {
+                                    event_handler.single_write(ActionReleased(action.clone()));
                                 }
                             }
                         }
@@ -274,10 +295,16 @@ where
                                 .iter()
                                 .cloned(),
                         );
-                        for (k, v) in self.bindings.actions.iter() {
-                            for &b in v {
-                                if Button::Controller(controller_id, button) == b {
-                                    event_handler.single_write(ActionPressed(k.clone()));
+                        for (action, combinations) in self.bindings.actions.iter() {
+                            for combination in combinations
+                                .iter()
+                                .filter(|c| c.contains(&Button::Controller(controller_id, button)))
+                            {
+                                if combination
+                                    .iter()
+                                    .all(|button| self.button_is_down(*button))
+                                {
+                                    event_handler.single_write(ActionPressed(action.clone()));
                                 }
                             }
                         }
@@ -300,10 +327,16 @@ where
                                 .iter()
                                 .cloned(),
                         );
-                        for (k, v) in self.bindings.actions.iter() {
-                            for &b in v {
-                                if Button::Controller(controller_id, button) == b {
-                                    event_handler.single_write(ActionReleased(k.clone()));
+                        for (action, combinations) in self.bindings.actions.iter() {
+                            for combination in combinations {
+                                if combination.contains(&Button::Controller(controller_id, button))
+                                    && combination
+                                        .iter()
+                                        .filter(|b| {
+                                            b != &&Button::Controller(controller_id, button)
+                                        }).all(|b| self.button_is_down(*b))
+                                {
+                                    event_handler.single_write(ActionReleased(action.clone()));
                                 }
                             }
                         }
@@ -477,15 +510,20 @@ where
         })
     }
 
-    /// Returns true if any of the action keys are down.
+    /// Returns true if any of the actions bindings is down.
+    ///
+    /// If a binding represents a combination of buttons, all of them need to be down.
     pub fn action_is_down<T: Hash + Eq + ?Sized>(&self, action: &T) -> Option<bool>
     where
         AC: Borrow<T>,
     {
-        self.bindings
-            .actions
-            .get(action)
-            .map(|ref buttons| buttons.iter().any(|&b| self.button_is_down(b)))
+        self.bindings.actions.get(action).map(|combinations| {
+            combinations.iter().any(|combination| {
+                combination
+                    .iter()
+                    .all(|button| self.button_is_down(*button))
+            })
+        })
     }
 
     /// Retrieve next free controller number to allocate new controller to
@@ -548,16 +586,24 @@ where
         };
 
         // check for actions being bound to any invoked mouse wheel
-        for (k, v) in self.bindings.actions.iter() {
-            for &button in v {
+        for (action, combinations) in self.bindings.actions.iter() {
+            for ref combination in combinations {
                 if let Some(dir) = dir_x {
-                    if button == Button::MouseWheel(dir) {
-                        events.push(ActionWheelMoved(k.clone()));
+                    if combination.contains(&Button::MouseWheel(dir)) && combination
+                        .iter()
+                        .filter(|b| **b != Button::MouseWheel(dir))
+                        .all(|b| self.button_is_down(*b))
+                    {
+                        events.push(ActionWheelMoved(action.clone()));
                     }
                 }
                 if let Some(dir) = dir_y {
-                    if button == Button::MouseWheel(dir) {
-                        events.push(ActionWheelMoved(k.clone()));
+                    if combination.contains(&Button::MouseWheel(dir)) && combination
+                        .iter()
+                        .filter(|b| **b != Button::MouseWheel(dir))
+                        .all(|b| self.button_is_down(*b))
+                    {
+                        events.push(ActionWheelMoved(action.clone()));
                     }
                 }
             }

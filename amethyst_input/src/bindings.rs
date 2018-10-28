@@ -7,6 +7,8 @@ use std::borrow::Borrow;
 use std::hash::Hash;
 
 /// Used for saving and loading input settings.
+///
+/// An action can either be a single button or a combination of them.
 #[derive(Derivative, Serialize, Deserialize, Clone)]
 #[derivative(Default(bound = ""))]
 pub struct Bindings<AX, AC>
@@ -15,7 +17,7 @@ where
     AC: Hash + Eq,
 {
     pub(super) axes: HashMap<AX, Axis>,
-    pub(super) actions: HashMap<AC, SmallVec<[Button; 4]>>,
+    pub(super) actions: HashMap<AC, SmallVec<[SmallVec<[Button; 2]>; 4]>>,
 }
 
 impl<AX, AC> Bindings<AX, AC>
@@ -63,19 +65,21 @@ where
         self.axes.keys().cloned().collect::<Vec<AX>>()
     }
 
-    /// Add a button to an action.
+    /// Add a button or button combination to an action.
     ///
-    /// This will insert a new binding between this action and the button.
-    pub fn insert_action_binding<A>(&mut self, id: A, binding: Button)
+    /// This will insert a new binding between this action and the button(s).
+    pub fn insert_action_binding<A, B: IntoIterator<Item = Button>>(&mut self, id: A, binding: B)
     where
         A: Hash + Eq + Into<AC>,
         AC: Borrow<A>,
     {
+        let bind: SmallVec<[Button; 2]> = binding.into_iter().collect();
+
         let mut make_new = false;
         match self.actions.get_mut(&id) {
             Some(action_bindings) => {
-                if action_bindings.iter().all(|&b| b != binding) {
-                    action_bindings.push(binding);
+                if action_bindings.iter().all(|b| b != &bind) {
+                    action_bindings.push(bind.clone());
                 }
             }
             None => {
@@ -84,19 +88,22 @@ where
         }
         if make_new {
             let mut bindings = SmallVec::new();
-            bindings.push(binding);
+            bindings.push(bind.clone());
             self.actions.insert(id.into(), bindings);
         }
     }
 
     /// Removes an action binding that was assigned previously.
-    pub fn remove_action_binding<T: Hash + Eq + ?Sized>(&mut self, id: &T, binding: Button)
-    where
+    pub fn remove_action_binding<T: Hash + Eq + ?Sized>(
+        &mut self,
+        id: &T,
+        binding: SmallVec<[Button; 2]>,
+    ) where
         AC: Borrow<T>,
     {
         let mut kill_it = false;
         if let Some(action_bindings) = self.actions.get_mut(id) {
-            let index = action_bindings.iter().position(|&b| b == binding);
+            let index = action_bindings.iter().position(|b| b == &binding);
             if let Some(index) = index {
                 action_bindings.swap_remove(index);
             }
@@ -108,7 +115,7 @@ where
     }
 
     /// Returns an action's bindings.
-    pub fn action_bindings<T: Hash + Eq + ?Sized>(&self, id: &T) -> Option<&[Button]>
+    pub fn action_bindings<T: Hash + Eq + ?Sized>(&self, id: &T) -> Option<&[SmallVec<[Button; 2]>]>
     where
         AC: Borrow<T>,
     {
