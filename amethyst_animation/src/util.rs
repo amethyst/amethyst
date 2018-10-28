@@ -121,16 +121,13 @@ where
     fn dot(&self, other: &Self) -> f32 {
         use self::SamplerPrimitive::*;
         match (*self, *other) {
-            (Scalar(ref s), Scalar(ref o)) => (*s * *o).to_f32().unwrap(),
-            (Vec2(ref s), Vec2(ref o)) => (s[0] * o[0] + s[1] * o[1]).to_f32().unwrap(),
-            (Vec3(ref s), Vec3(ref o)) => {
-                (s[0] * o[0] + s[1] * o[1] + s[2] * o[2]).to_f32().unwrap()
-            }
-            (Vec4(ref s), Vec4(ref o)) => (s[0] * o[0] + s[1] * o[1] + s[2] * o[2] + s[3] * o[3])
-                .to_f32()
-                .unwrap(),
+            (Scalar(ref s), Scalar(ref o)) => (*s * *o),
+            (Vec2(ref s), Vec2(ref o)) => (s[0] * o[0] + s[1] * o[1]),
+            (Vec3(ref s), Vec3(ref o)) => (s[0] * o[0] + s[1] * o[1] + s[2] * o[2]),
+            (Vec4(ref s), Vec4(ref o)) => (s[0] * o[0] + s[1] * o[1] + s[2] * o[2] + s[3] * o[3]),
             _ => panic!("Interpolation can not be done between primitives of different types"),
-        }
+        }.to_f32()
+        .expect("Unexpected error when converting primitive to f32, possibly under/overflow")
     }
 
     fn magnitude2(&self) -> f32 {
@@ -140,7 +137,9 @@ where
     fn magnitude(&self) -> f32 {
         use self::SamplerPrimitive::*;
         match *self {
-            Scalar(ref s) => s.to_f32().unwrap(),
+            Scalar(ref s) => s.to_f32().expect(
+                "Unexpected error when converting primitive to f32, possibly under/overflow",
+            ),
             Vec2(_) | Vec3(_) | Vec4(_) => self.magnitude2().sqrt(),
         }
     }
@@ -158,5 +157,9 @@ fn mul_f32<T>(s: T, scalar: f32) -> T
 where
     T: BaseNum,
 {
-    NumCast::from(s.to_f32().unwrap() * scalar).unwrap()
+    NumCast::from(
+        s.to_f32()
+            .expect("Unexpected error when converting primitive to f32, possibly under/overflow")
+            * scalar,
+    ).expect("Unexpected error when converting f32 to primitive, possibly under/overflow")
 }

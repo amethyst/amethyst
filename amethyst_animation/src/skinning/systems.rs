@@ -43,18 +43,16 @@ impl<'a> System<'a> for VertexSkinningSystem {
         self.updated.clear();
 
         global_transforms.populate_modified(
-            &mut self
-                .updated_id
-                .as_mut()
-                .expect("VertexSkinningSystem missing updated_id."),
+            &mut self.updated_id.as_mut().expect(
+                "'VertexSkinningSystem::setup' was not called before 'VertexSkinningSystem::run'",
+            ),
             &mut self.updated,
         );
 
         global_transforms.populate_inserted(
-            &mut self
-                .inserted_id
-                .as_mut()
-                .expect("VertexSkinningSystem missing inserted_id."),
+            &mut self.inserted_id.as_mut().expect(
+                "'VertexSkinningSystem::setup' was not called before 'VertexSkinningSystem::run'",
+            ),
             &mut self.updated,
         );
 
@@ -108,13 +106,19 @@ impl<'a> System<'a> for VertexSkinningSystem {
             (&self.updated, &global_transforms, &mut matrices).join()
         {
             if let Some(global_inverse) = mesh_global.0.invert() {
-                let skin = skins.get(joint_transform.skin).unwrap();
-                joint_transform.matrices.clear();
-                joint_transform
-                    .matrices
-                    .extend(skin.joint_matrices.iter().map(|joint_matrix| {
-                        Into::<[[f32; 4]; 4]>::into(global_inverse * joint_matrix)
-                    }));
+                if let Some(skin) = skins.get(joint_transform.skin) {
+                    joint_transform.matrices.clear();
+                    joint_transform
+                        .matrices
+                        .extend(skin.joint_matrices.iter().map(|joint_matrix| {
+                            Into::<[[f32; 4]; 4]>::into(global_inverse * joint_matrix)
+                        }));
+                } else {
+                    error!(
+                        "Missing `Skin` Component for join transform entity {:?}",
+                        joint_transform.skin
+                    );
+                }
             }
         }
     }
