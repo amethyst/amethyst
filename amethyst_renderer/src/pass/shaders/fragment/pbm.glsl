@@ -5,6 +5,7 @@
 layout (std140) uniform FragmentArgs {
     int point_light_count;
     int directional_light_count;
+    int spot_light_count;
 };
 
 struct PointLight {
@@ -25,6 +26,20 @@ struct DirectionalLight {
 
 layout (std140) uniform DirectionalLights {
     DirectionalLight dlight[16];
+};
+
+struct SpotLight {
+    vec3 position;
+    vec3 color;
+    vec3 direction;
+    float angle;
+    float intensity;
+    float range;
+    float smoothness;
+};
+
+layout (std140) uniform SpotLights {
+    SpotLight slight[128];
 };
 
 uniform vec3 ambient_color;
@@ -209,6 +224,58 @@ void main() {
                                    metallic,
                                    fresnel_base);
 
+        lighted += light;
+    }
+
+    for (int i = 0; i < spot_light_count; i++) {
+        vec3 light_vec = slight[i].position - vertex.position;
+        vec3 normalized_light_vec = normalize(light_vec);
+
+        // The distance between the current fragment and the "core" of the light
+        float light_length = length(light_vec);
+
+        // The allowed "length", everything after this won't be lit.
+        // Later on we are dividing by this range, so it can't be 0
+        float range = max(slight[i].range, 0.00001);
+
+        // get normalized range, so everything 0..1 could be lit, everything else can't.
+        float normalized_range = light_length / max(0.00001, range);
+
+        // The attenuation for the "range". If we would only consider this, we'd have a
+        // point light instead, so we need to also check for the spot angle and direction.
+        float range_attenuation = max(0.0, 1.0 - normalized_range);
+
+        // this is actually the cosine of the angle, so it can be compared with the
+        // "dotted" frag_angle below a lot cheaper.
+        float spot_angle = max(slight[i].angle, 0.00001);
+        vec3 spot_direction = normalize(slight[i].direction);
+        float smoothness = 1.0 - slight[i].smoothness;
+
+        // Here we check if the current fragment is within the "ring" of the spotlight.
+        float frag_angle = dot(spot_direction, -normalized_light_vec);
+
+        // so that the ring_attenuation won't be > 1
+        frag_angle = max(frag_angle, spot_angle);
+
+        // How much is this outside of the ring? (let's call it "rim")
+        // Also smooth this out.
+        float rim_attenuation = pow(max((1.0 - frag_angle) / (1.0 - spot_angle), 0.00001), smoothness);
+
+        // How much is this inside the "ring"?
+        float ring_attenuation = 1.0 - rim_attenuation;
+
+        // combine the attenuations and intensity
+        float attenuation = range_attenuation * ring_attenuation * slight[i].intensity;
+
+        vec3 light = compute_light(vec3(attenuation),
+                                   slight[i].color,
+                                   view_direction,
+                                   normalize(light_vec),
+                                   albedo,
+                                   normal,
+                                   roughness2,
+                                   metallic,
+                                   fresnel_base);
         lighted += light;
     }
 
