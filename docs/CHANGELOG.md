@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * combinations of buttons triggering actions ([#1043])
 * `UiPrefab` field `hidden: bool` to hide entities ([#1051])
 * `PrefabData` can now be derived for many situations, see the book for more information ([#1035])
+* Support for DirectionalLight and SpotLight in PBM pass. ([#1074], [#1081])
 
 ### Changed
 
@@ -26,6 +27,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1043]: https://github.com/amethyst/amethyst/pull/1043
 [#1051]: https://github.com/amethyst/amethyst/pull/1051
 [#1035]: https://github.com/amethyst/amethyst/pull/1035
+[#1074]: https://github.com/amethyst/amethyst/pull/1074
+[#1081]: https://github.com/amethyst/amethyst/pull/1081
 
 ## [0.9.0] - 2018-10
 ### Added
