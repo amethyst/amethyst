@@ -63,7 +63,7 @@ where
     ) -> Result<bool, PrefabError> {
         let (loader, _, mesh_storage) = system_data;
         self.handle = Some(loader.load_from_data(
-            self.shape.generate::<V>(self.shape_scale.clone()),
+            self.shape.generate::<V>(self.shape_scale),
             progress,
             &mesh_storage,
         ));
@@ -189,7 +189,7 @@ impl Shape {
             ),
             Shape::IcoSphere(divide) => generate_vertices(
                 divide
-                    .map(|d| IcoSphere::subdivide(d))
+                    .map(IcoSphere::subdivide)
                     .unwrap_or_else(IcoSphere::new),
                 scale,
             ),

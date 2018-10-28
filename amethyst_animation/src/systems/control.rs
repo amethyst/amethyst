@@ -214,8 +214,8 @@ fn get_running_duration<T>(
 where
     T: AnimationSampling,
 {
-    match &control.state {
-        &ControlState::Running(_) => find_max_duration(
+    match control.state {
+        ControlState::Running(_) => find_max_duration(
             control.id,
             samplers.get(
                 *hierarchy
@@ -387,7 +387,7 @@ where
         (&ControlState::Running(..), _) => {
             if check_termination(control.id, hierarchy, &samplers) {
                 // Do termination
-                for (_, node_entity) in &hierarchy.nodes {
+                for node_entity in hierarchy.nodes.values() {
                     let empty = samplers
                         .get_mut(*node_entity)
                         .map(|sampler| {
@@ -459,7 +459,7 @@ where
 
     // setup sampler tree
     for &(ref node_index, ref channel, ref sampler_handle) in &animation.nodes {
-        let node_entity = hierarchy.nodes.get(node_index).unwrap();
+        let node_entity = &hierarchy.nodes[node_index];
         let component = rest_states
             .get(*node_entity)
             .map(|r| r.state())
@@ -502,7 +502,7 @@ fn pause_animation<T>(
 ) where
     T: AnimationSampling,
 {
-    for (_, node_entity) in &hierarchy.nodes {
+    for node_entity in hierarchy.nodes.values() {
         if let Some(ref mut s) = samplers.get_mut(*node_entity) {
             s.pause(control_id);
         }
@@ -516,7 +516,7 @@ fn unpause_animation<T>(
 ) where
     T: AnimationSampling,
 {
-    for (_, node_entity) in &hierarchy.nodes {
+    for node_entity in hierarchy.nodes.values() {
         if let Some(ref mut s) = samplers.get_mut(*node_entity) {
             s.unpause(control_id);
         }
@@ -532,7 +532,7 @@ fn step_animation<T>(
 ) where
     T: AnimationSampling,
 {
-    for (_, node_entity) in &hierarchy.nodes {
+    for node_entity in hierarchy.nodes.values() {
         if let Some(ref mut s) = controls.get_mut(*node_entity) {
             s.step(control_id, sampler_storage, direction);
         }
@@ -547,7 +547,7 @@ fn set_animation_input<T>(
 ) where
     T: AnimationSampling,
 {
-    for (_, node_entity) in &hierarchy.nodes {
+    for node_entity in hierarchy.nodes.values() {
         if let Some(ref mut s) = controls.get_mut(*node_entity) {
             s.set_input(control_id, input);
         }
@@ -579,7 +579,7 @@ fn update_animation_rate<T>(
 ) where
     T: AnimationSampling,
 {
-    for (_, node_entity) in &hierarchy.nodes {
+    for node_entity in hierarchy.nodes.values() {
         if let Some(ref mut s) = samplers.get_mut(*node_entity) {
             s.set_rate_multiplier(control_id, rate_multiplier);
         }
@@ -599,7 +599,7 @@ where
     // Check for termination
     if check_termination(control_id, hierarchy, &samplers) {
         // Do termination
-        for (_, node_entity) in &hierarchy.nodes {
+        for node_entity in hierarchy.nodes.values() {
             let empty = samplers
                 .get_mut(*node_entity)
                 .map(|sampler| {
@@ -613,7 +613,7 @@ where
         true
     } else {
         // Request termination of samplers
-        for (_, node_entity) in &hierarchy.nodes {
+        for node_entity in hierarchy.nodes.values() {
             if let Some(ref mut s) = samplers.get_mut(*node_entity) {
                 s.abort(control_id);
             }

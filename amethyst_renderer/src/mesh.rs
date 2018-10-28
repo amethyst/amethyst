@@ -288,7 +288,7 @@ where
         };
 
         Ok(Mesh {
-            slice: slice,
+            slice,
             transform: self.transform,
             vbufs: self.vertices.build(fac)?.collect(),
         })

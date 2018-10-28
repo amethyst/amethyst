@@ -55,9 +55,8 @@ where
             if let Some(config) = config.to_owned() {
                 renderer.with_config(config);
             }
-            let renderer = renderer.build()?;
 
-            renderer
+            renderer.build()?
         };
 
         match renderer.create_pipe(pipe) {
@@ -240,11 +239,11 @@ fn create_default_mat(res: &mut Resources) -> Material {
 fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
     match new_event {
         Event::WindowEvent { ref event, .. } => match event {
-            &WindowEvent::CursorMoved { .. } => {
+            WindowEvent::CursorMoved { .. } => {
                 let mut iter = vec.iter_mut();
                 while let Some(stored_event) = iter.next_back() {
                     match stored_event {
-                        &mut Event::WindowEvent {
+                        Event::WindowEvent {
                             event: WindowEvent::CursorMoved { .. },
                             ..
                         } => {
@@ -252,12 +251,12 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
                             return;
                         }
 
-                        &mut Event::WindowEvent {
+                        Event::WindowEvent {
                             event: WindowEvent::AxisMotion { .. },
                             ..
                         } => {}
 
-                        &mut Event::DeviceEvent {
+                        Event::DeviceEvent {
                             event: DeviceEvent::Motion { .. },
                             ..
                         } => {}
@@ -269,7 +268,7 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
                 }
             }
 
-            &WindowEvent::AxisMotion {
+            WindowEvent::AxisMotion {
                 device_id,
                 axis,
                 value,
@@ -277,7 +276,7 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
                 let mut iter = vec.iter_mut();
                 while let Some(stored_event) = iter.next_back() {
                     match stored_event {
-                        &mut Event::WindowEvent {
+                        Event::WindowEvent {
                             event:
                                 WindowEvent::AxisMotion {
                                     axis: stored_axis,
@@ -292,12 +291,12 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
                             }
                         }
 
-                        &mut Event::WindowEvent {
+                        Event::WindowEvent {
                             event: WindowEvent::CursorMoved { .. },
                             ..
                         } => {}
 
-                        &mut Event::DeviceEvent {
+                        Event::DeviceEvent {
                             event: DeviceEvent::Motion { .. },
                             ..
                         } => {}
@@ -319,7 +318,7 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
             let mut iter = vec.iter_mut();
             while let Some(stored_event) = iter.next_back() {
                 match stored_event {
-                    &mut Event::DeviceEvent {
+                    Event::DeviceEvent {
                         device_id: stored_device,
                         event:
                             DeviceEvent::Motion {
@@ -327,18 +326,18 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
                                 value: ref mut stored_value,
                             },
                     } => {
-                        if device_id == stored_device && axis == stored_axis {
+                        if device_id == *stored_device && axis == *stored_axis {
                             *stored_value += value;
                             return;
                         }
                     }
 
-                    &mut Event::WindowEvent {
+                    Event::WindowEvent {
                         event: WindowEvent::CursorMoved { .. },
                         ..
                     } => {}
 
-                    &mut Event::WindowEvent {
+                    Event::WindowEvent {
                         event: WindowEvent::AxisMotion { .. },
                         ..
                     } => {}

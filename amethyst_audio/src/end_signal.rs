@@ -31,7 +31,9 @@ where
         let next = self.input.next();
         if next.is_none() {
             let f = mem::replace(&mut self.f, None);
-            f.map(|f| f());
+            if let Some(f) = f {
+                f()
+            }
         }
         next
     }

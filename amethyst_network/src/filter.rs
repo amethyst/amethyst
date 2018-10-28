@@ -32,8 +32,8 @@ where
     /// Note: This is not usable currently.
     fn allow(&mut self, _source: &SocketAddr, event: &NetEvent<T>) -> bool {
         match event {
-            &NetEvent::Connect { client_uuid: _ } => true,
-            &NetEvent::Connected { server_uuid: _ } => true,
+            NetEvent::Connect { .. } => true,
+            NetEvent::Connected { .. } => true,
             _ => false,
         }
     }

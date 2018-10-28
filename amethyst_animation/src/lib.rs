@@ -46,10 +46,13 @@
 //! [ex_gltf]: https://github.com/amethyst/amethyst/tree/master/examples/gltf
 
 #![warn(missing_docs)]
+#![cfg_attr(feature = "cargo-clippy", allow(type_complexity))] // complex project
 
 extern crate amethyst_assets;
 extern crate amethyst_core;
 extern crate amethyst_renderer;
+#[macro_use]
+extern crate derivative;
 extern crate fnv;
 extern crate hibitset;
 extern crate itertools;

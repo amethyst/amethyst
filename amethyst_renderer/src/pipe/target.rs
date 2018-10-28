@@ -42,7 +42,7 @@ impl Target {
         Target {
             color_bufs: vec![cb],
             depth_buf: Some(db),
-            size: size,
+            size,
         }
     }
 
@@ -103,7 +103,7 @@ impl Target {
     #[cfg(feature = "opengl")]
     pub fn resize_main_target(&mut self, window: &Window) {
         if let Some(depth_buf) = self.depth_buf.as_mut() {
-            for ref mut color_buf in &mut self.color_bufs {
+            for color_buf in &mut self.color_bufs {
                 use gfx_window_glutin as win;
                 win::update_views(window, &mut color_buf.as_output, &mut depth_buf.as_output);
             }
@@ -164,7 +164,6 @@ impl TargetBuilder {
         let size = self.custom_size.unwrap_or(size);
 
         let color_bufs = (0..self.num_color_bufs)
-            .into_iter()
             .map(|_| {
                 let (w, h) = (size.0 as u16, size.1 as u16);
                 let (_, res, rt) = fac.create_render_target(w, h)?;
@@ -187,11 +186,10 @@ impl TargetBuilder {
         };
 
         let target = Target {
-            color_bufs: color_bufs,
-            depth_buf: depth_buf,
-            size: size,
+            color_bufs,
+            depth_buf,
+            size,
         };
-
         Ok((self.name, target))
     }
 }

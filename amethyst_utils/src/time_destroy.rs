@@ -54,7 +54,7 @@ impl<'a> System<'a> for TimedDestroySystem {
                     error!("Failed to delete entity: {:?}", err);
                 }
             }
-            d.timer -= time.delta_seconds() as f64;
+            d.timer -= f64::from(time.delta_seconds());
         }
     }
 }

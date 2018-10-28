@@ -107,7 +107,7 @@ impl AnimationSampling for SpriteRender {
         use self::SpriteRenderChannel as Channel;
         use self::SpriteRenderPrimitive as Primitive;
 
-        const ERR_MSG: &'static str = "Unable to get requested spritesheet from SpriteSheetSet.";
+        const ERR_MSG: &str = "Unable to get requested spritesheet from SpriteSheetSet.";
 
         match *channel {
             Channel::SpriteSheet => {

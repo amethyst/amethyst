@@ -64,12 +64,10 @@ impl<A: Asset> AssetStorage<A> {
 
     fn allocate_new(&self) -> Handle<A> {
         let id = self.handle_alloc.next_id() as u32;
-        let handle = Handle {
+        Handle {
             id: Arc::new(id),
             marker: PhantomData,
-        };
-
-        handle
+        }
     }
 
     /// When cloning an asset handle, you'll get another handle,

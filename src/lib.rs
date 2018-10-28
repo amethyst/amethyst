@@ -53,8 +53,9 @@
 //! }
 //! ```
 
-#![warn(missing_docs)]
 #![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
+#![warn(missing_docs)]
+#![cfg_attr(feature = "cargo-clippy", allow(type_complexity))] // complex project
 
 #[macro_use]
 #[cfg(feature = "profiler")]

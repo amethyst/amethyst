@@ -417,10 +417,7 @@ where
             .pressed_mouse_buttons
             .iter()
             .map(|&mb| Button::Mouse(mb));
-        let keys = self
-            .pressed_keys
-            .iter()
-            .flat_map(|v| KeyThenCode::new(v.clone()));
+        let keys = self.pressed_keys.iter().flat_map(|v| KeyThenCode::new(*v));
         let controller_buttons = self
             .pressed_controller_buttons
             .iter()
@@ -445,8 +442,8 @@ where
     where
         AX: Borrow<T>,
     {
-        self.bindings.axes.get(id).map(|a| match a {
-            &Axis::Emulated { pos, neg, .. } => {
+        self.bindings.axes.get(id).map(|a| match *a {
+            Axis::Emulated { pos, neg, .. } => {
                 let pos = self.button_is_down(pos);
                 let neg = self.button_is_down(neg);
                 if pos == neg {
@@ -457,7 +454,7 @@ where
                     -1.0
                 }
             }
-            &Axis::Controller {
+            Axis::Controller {
                 controller_id,
                 axis,
                 invert,

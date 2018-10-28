@@ -225,7 +225,7 @@ impl SpriteBatch {
         self.sprites.push(SpriteDrawData {
             texture: texture_handle,
             render: sprite_render.clone(),
-            transform: global.unwrap().clone(),
+            transform: *global.unwrap(),
         });
     }
 

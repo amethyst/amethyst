@@ -9,7 +9,7 @@ pub struct CircularBuffer<A> {
 
 impl<A> CircularBuffer<A> {
     ///Creates a new CircularBuffer with fixed size
-    pub fn new<B>(size: usize) -> CircularBuffer<B> {
+    pub fn new(size: usize) -> Self {
         CircularBuffer {
             queue: VecDeque::with_capacity(size),
         }
@@ -18,11 +18,13 @@ impl<A> CircularBuffer<A> {
     ///Add a value to the CircularBuffer
     ///Returns the popped value if the buffer is full
     pub fn push(&mut self, elem: A) -> Option<A> {
-        let mut out: Option<A> = None;
-        if self.queue.len() == self.queue.capacity() {
+        let out = if self.queue.len() == self.queue.capacity() {
             //front to back <-> oldest to newest
-            out = self.queue.pop_front();
-        }
+            self.queue.pop_front()
+        } else {
+            None
+        };
+
         self.queue.push_back(elem);
         out
     }

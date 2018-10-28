@@ -67,7 +67,7 @@ where
                     process_sampler(control, sampler, &time, &mut self.inner);
                 }
             }
-            if self.inner.len() > 0 {
+            if !self.inner.is_empty() {
                 self.channels.clear();
                 self.channels
                     .extend(self.inner.iter().map(|o| &o.1).unique().cloned());
@@ -190,7 +190,7 @@ where
         Requested => (Running(Duration::from_secs(0)), None),
 
         // deferred start that should start now
-        Deferred(dur) => (Running(dur.clone()), None),
+        Deferred(dur) => (Running(dur), None),
 
         // abort sampling => end interpolating
         Abort => (Done, None),

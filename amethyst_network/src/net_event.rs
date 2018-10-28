@@ -45,8 +45,8 @@ pub enum NetEvent<T> {
 impl<T> NetEvent<T> {
     /// Tries to convert a NetEvent to a custom event type.
     pub fn custom(&self) -> Option<&T> {
-        if let &NetEvent::Custom(ref t) = self {
-            Some(&t)
+        if let NetEvent::Custom(ref t) = self {
+            Some(t)
         } else {
             None
         }

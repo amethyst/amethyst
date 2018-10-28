@@ -1,7 +1,8 @@
 //! Provides components and systems to create an in game user interface.
 
-#![warn(missing_docs)]
 #![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
+#![warn(missing_docs)]
+#![cfg_attr(feature = "cargo-clippy", allow(type_complexity))] // complex project
 
 extern crate amethyst_assets;
 extern crate amethyst_audio;

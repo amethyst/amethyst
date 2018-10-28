@@ -44,7 +44,7 @@ impl fmt::Display for ConfigError {
             ConfigError::Extension(ref path) => {
                 let found = match path.extension() {
                     Some(extension) => format!("{:?}", extension),
-                    None => format!("a directory."),
+                    None => "a directory.".to_string(),
                 };
 
                 write!(
@@ -164,7 +164,7 @@ where
         use std::io::Write;
 
         let s = to_string_pretty(self, Default::default())?;
-        File::create(path)?.write(s.as_bytes())?;
+        File::create(path)?.write_all(s.as_bytes())?;
 
         Ok(())
     }

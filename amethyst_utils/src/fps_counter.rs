@@ -50,7 +50,7 @@ impl FPSCounter {
 
     ///Get the average fps over the samplesize frames.
     pub fn sampled_fps(&self) -> f32 {
-        if self.sum == 0 || self.buf.queue().len() == 0 {
+        if self.sum == 0 || self.buf.queue().is_empty() {
             return 0.0;
         }
         1.0e9 * self.buf.queue().len() as f32 / self.sum as f32

@@ -96,19 +96,15 @@ where
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, PrefabError> {
-        let mut ret = false;
-        if match self.mesh {
+        let load_mesh = match self.mesh {
             MeshPrefab::Asset(ref mut m) => m.load_sub_assets(progress, &mut system_data.0)?,
             MeshPrefab::Shape(ref mut s) => s.load_sub_assets(progress, &mut system_data.0)?,
-        } {
-            ret = true;
-        }
-        if self
+        };
+
+        let load_material = self
             .material
-            .load_sub_assets(progress, &mut system_data.1)?
-        {
-            ret = true;
-        }
-        Ok(ret)
+            .load_sub_assets(progress, &mut system_data.1)?;
+
+        Ok(load_mesh || load_material)
     }
 }

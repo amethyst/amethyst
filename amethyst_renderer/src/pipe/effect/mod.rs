@@ -6,6 +6,7 @@ pub use self::pso::{Data, Init, Meta};
 use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
 use gfx::buffer::{Info as BufferInfo, Role as BufferRole};
+use gfx::handle::{Buffer, RawBuffer};
 use gfx::memory::{Bind, Usage};
 use gfx::preset::depth::{LESS_EQUAL_TEST, LESS_EQUAL_WRITE};
 use gfx::pso::buffer::{ElemStride, InstanceRate};
@@ -16,7 +17,6 @@ use gfx::traits::Pod;
 use gfx::{Primitive, ShaderSet};
 use glsl_layout::Std140;
 use pipe::Target;
-use std::mem;
 use types::{Encoder, Factory, PipelineState, Resources, Slice};
 use vertex::Attributes;
 
@@ -43,22 +43,18 @@ impl<'a> ProgramSource<'a> {
         match *self {
             ProgramSource::Simple(ref vs, ref ps) => fac
                 .create_shader_set(vs, ps)
-                .map_err(|e| Error::ProgramCreation(e)),
+                .map_err(Error::ProgramCreation),
             ProgramSource::Geometry(ref vs, ref gs, ref ps) => {
-                let v = fac
-                    .create_shader_vertex(vs)
-                    .map_err(|e| ProgramError::Vertex(e))?;
+                let v = fac.create_shader_vertex(vs).map_err(ProgramError::Vertex)?;
                 let g = fac
                     .create_shader_geometry(gs)
                     .expect("Geometry shader creation failed");
-                let p = fac
-                    .create_shader_pixel(ps)
-                    .map_err(|e| ProgramError::Pixel(e))?;
+                let p = fac.create_shader_pixel(ps).map_err(ProgramError::Pixel)?;
                 Ok(ShaderSet::Geometry(v, g, p))
             }
             ProgramSource::Tessellated(ref vs, ref hs, ref ds, ref ps) => fac
                 .create_shader_set_tessellation(vs, hs, ds, ps)
-                .map_err(|e| Error::ProgramCreation(e)),
+                .map_err(Error::ProgramCreation),
         }
     }
 }
@@ -94,8 +90,11 @@ impl Effect {
         match self.const_bufs.get(name.as_ref()) {
             Some(i) => {
                 let raw = &self.data.const_bufs[*i];
-                enc.update_buffer::<T>(unsafe { mem::transmute(raw) }, &data[..], 0)
-                    .expect("Failed to update buffer (TODO: replace expect)");
+                enc.update_buffer::<T>(
+                    unsafe { &*(raw as *const RawBuffer<_> as *const Buffer<_, _>) },
+                    &data[..],
+                    0,
+                ).expect("Failed to update buffer (TODO: replace expect)");
             }
             None => {
                 warn!(
@@ -115,7 +114,10 @@ impl Effect {
         match self.const_bufs.get(name.as_ref()) {
             Some(i) => {
                 let raw = &self.data.const_bufs[*i];
-                enc.update_constant_buffer::<T>(unsafe { mem::transmute(raw) }, &data)
+                enc.update_constant_buffer::<T>(
+                    unsafe { &*(raw as *const RawBuffer<_> as *const Buffer<_, _>) },
+                    &data,
+                )
             }
             None => {
                 warn!(
@@ -191,7 +193,7 @@ impl<'a> EffectBuilder<'a> {
         }
         EffectBuilder {
             factory: fac,
-            out: out,
+            out,
             init: Init::default(),
             prim: Primitive::TriangleList,
             rast,
@@ -323,11 +325,11 @@ impl<'a> EffectBuilder<'a> {
 
         debug!("Building effect");
         debug!("Compiling shaders");
-        let ref mut fac = self.factory;
+        let fac = &mut self.factory;
         let prog = self.prog.compile(fac)?;
+
         debug!("Creating pipeline state");
         let pso = fac.create_pipeline_state(&prog, self.prim, self.rast, self.init.clone())?;
-
         let mut data = Data::default();
 
         debug!("Creating raw constant buffers");
