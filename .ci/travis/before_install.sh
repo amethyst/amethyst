@@ -40,7 +40,7 @@ install_sccache(){
     SCCACHE_TOOLCHAIN="x86_64-pc-windows-msvc"
     SCCACHE_EXECUTABLE_NAME="sccache.exe" 
     ;;
-  mac)
+  osx)
     SCCACHE_TOOLCHAIN="x86_64-apple-darwin"
     SCCACHE_EXECUTABLE_NAME="sccache" 
     ;;
