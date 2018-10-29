@@ -34,7 +34,7 @@ branches:
   - ci/use-sccache
 
 before_install:
-- ./ci/travis/before_install.sh
+- ./.ci/travis/before_install.sh
 
 before_script:
 - export PATH=$PATH:/home/travis/.cargo/bin
