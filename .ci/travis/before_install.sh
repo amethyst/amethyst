@@ -3,14 +3,7 @@
 set -exuo pipefail
 
 MDBOOK_VERSION="v0.2.1"
-
 SCCACHE_VERSION="0.2.7"
-declare -A SCCACHE_TOOLCHAINS=(
-  [windows]="x86_64-pc-windows-msvc"
-  [osx]="x86_64-apple-darwin"
-  [linux]="x86_64-unknown-linux-musl"
-)
-
 
 install_libsdl2(){
   case ${TRAVIS_OS_NAME} in
@@ -42,12 +35,28 @@ install_mdbook(){
 }
 
 install_sccache(){
-  SCCACHE_TOOLCHAIN=${SCCACHE_TOOLCHAINS[$TRAVIS_OS_NAME]}
-  SCCACHE_FILENAME="sccache-${SCCACHE_VERSION}-${SCCACHE_TOOLCHAIN}"
-  SCCACHE_URL="https://github.com/mozilla/sccache/releases/download/${SCCACHE_VERSION}/${SCCACHE_FILENAME}.tar.gz"
+  case ${TRAVIS_OS_NAME} in
+  windows)
+    SCCACHE_TOOLCHAIN="x86_64-pc-windows-msvc"
+    SCCACHE_EXECUTABLE_NAME="sccache.exe" 
+    ;;
+  mac)
+    SCCACHE_TOOLCHAIN="x86_64-apple-darwin"
+    SCCACHE_EXECUTABLE_NAME="sccache" 
+    ;;
+  linux)
+    SCCACHE_TOOLCHAIN="x86_64-unknown-linux-musl"
+    SCCACHE_EXECUTABLE_NAME="sccache" 
+    ;;
+  esac
+
+  SCCACHE_RELEASE="sccache-${SCCACHE_VERSION}-${SCCACHE_TOOLCHAIN}"
+  SCCACHE_ARCHIVE_NAME="${SCCACHE_RELEASE}.tar.gz"
+  SCCACHE_URL="https://github.com/mozilla/sccache/releases/download/${SCCACHE_VERSION}/${SCCACHE_ARCHIVE_NAME}"
+
   curl -L -O ${SCCACHE_URL} 
-  tar -xvf ${SCCACHE_FILENAME}.tar.gz -C ./ --strip=1 ${SCCACHE_FILENAME}/sccache
-  rm ${SCCACHE_FILENAME}.tar.gz
+  tar -xvf ${SCCACHE_ARCHIVE_NAME} -C ./ --strip=1 ${SCCACHE_RELEASE}/${SCCACHE_EXECUTABLE_NAME}
+  rm ${SCCACHE_ARCHIVE_NAME}
 }
 
 install_libsdl2
