@@ -6,7 +6,7 @@ This chapter will reuse all the knowledge we acquired through the
 previous chapters to add a new object to our game: a ball that moves
 and bounces around!
 
-First, let's define some other useful constants for this chapter:
+First, let's define some other useful constants for this chapter in `pong.rs`:
 
 ```rust,no_run,noplaypen
 pub const BALL_VELOCITY_X: f32 = 75.0;
@@ -253,9 +253,9 @@ impl<'s> System<'s> for BounceSystem {
             let ball_y = transform.translation().y;
 
             // Bounce at the top or the bottom of the arena.
-            if ball_y <= ball.radius && ball.velocity[1] < 0.0 {
+            if ball_y >= ARENA_HEIGHT - ball.radius && ball.velocity[1] > 0.0 {
                 ball.velocity[1] = -ball.velocity[1];
-            } else if ball_y >= ARENA_HEIGHT - ball.radius && ball.velocity[1] > 0.0 {
+            } else if ball_y <= ball.radius && ball.velocity[1] < 0.0 {
                 ball.velocity[1] = -ball.velocity[1];
             }
 
@@ -294,6 +294,8 @@ fn point_in_rect(x: f32, y: f32, left: f32, bottom: f32, right: f32, top: f32) -
     x >= left && x <= right && y >= bottom && y <= top
 }
 ```
+
+Note: You will also need to `use pong::{Ball, Side, Paddle, ARENA_HEIGHT};`.
 
 The following image illustrates how collisions with paddles are checked.
 
