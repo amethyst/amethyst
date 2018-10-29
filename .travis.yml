@@ -31,6 +31,7 @@ branches:
   only:
   - staging
   - trying
+  - ci/use-sccache
 
 before_install:
 - ./ci/travis/before_install.sh
