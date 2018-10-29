@@ -123,8 +123,7 @@ fn on_start(&mut self, data: StateData<GameData>) {
     // Load the spritesheet necessary to render the graphics.
     let sprite_sheet_handle = load_sprite_sheet(world);
 
-    world.register::<Paddle>();
-    world.register::<Ball>(); // <- add this line
+    world.register::<Ball>(); // <- add this line temporarily
 
     initialise_ball(world, sprite_sheet_handle.clone()); // <- add this line
     initialise_paddles(world, sprite_sheet_handle);

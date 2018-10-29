@@ -154,9 +154,7 @@ fn on_start(&mut self, data: StateData<GameData>) {
 # }
 ```
 
-If you run the game now, you will see... a blank window. Unfortunately this will
-be the case until we get to the end of this part of the tutorial, but it gets
-much better from then on, we promise!
+Now that our camera is set and ready, it is time to add our own component.
 
 ## Our first Component
 
