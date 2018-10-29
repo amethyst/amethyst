@@ -50,19 +50,20 @@ axes we defined. Let's make the following changes to `main.rs`.
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;
-# use amethyst::utils::application_root_dir;
 # use amethyst::renderer::{DisplayConfig, DrawFlat, Event, Pipeline,
 #                        PosTex, RenderBundle, Stage, VirtualKeyCode};
 # macro_rules! env { ($x:expr) => ("") }
 # fn main() -> amethyst::Result<()> {
 use amethyst::input::InputBundle;
+use amethyst::utils::application_root_dir;
 
 let binding_path = format!(
     "{}/resources/bindings_config.ron",
     application_root_dir()
 );
 
-let input_bundle = InputBundle::<String, String>::new().with_bindings_from_file(binding_path)?;
+let input_bundle = InputBundle::<String, String>::new()
+    .with_bindings_from_file(binding_path)?;
 
 # let path = "./resources/display_config.ron";
 # let config = DisplayConfig::load(&path);
@@ -327,9 +328,6 @@ Our run function should now look something like this:
   }
 # }
 ```
-
-Note: For the above to work, we'll have to mark `PADDLE_HEIGHT` and `ARENA_HEIGHT`
-as being public in `pong.rs`, and then import it in `paddle.rs`.
 
 ## Automatic set up of resources by system.
 
