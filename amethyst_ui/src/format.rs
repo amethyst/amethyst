@@ -1,6 +1,6 @@
 use amethyst_assets::{Asset, Error, Handle, ProcessingState, ResultExt, SimpleFormat};
 use amethyst_core::specs::prelude::VecStorage;
-use gfx_glyph::Font;
+pub use gfx_glyph::Font;
 
 /// A loaded set of fonts from a file.
 #[derive(Clone)]

@@ -59,7 +59,7 @@ pub use self::font::default::get_default_font;
 pub use self::font::systemfont::{
     default_system_font, get_all_font_handles, list_system_font_families,
 };
-pub use self::format::{FontAsset, FontFormat, FontHandle, OtfFormat, TtfFormat};
+pub use self::format::{Font, FontAsset, FontFormat, FontHandle, OtfFormat, TtfFormat};
 pub use self::image::UiImage;
 pub use self::layout::{Anchor, ScaleMode, Stretch, UiTransformSystem};
 pub use self::pass::DrawUi;
