@@ -42,11 +42,11 @@ install_mdbook(){
 }
 
 install_sccache(){
-  SCCACHE_TOOLCHAIN=${SCCACHE_TOOLCHAIN[$TRAVIS_OS_NAME]}
-  SCCACHE_URL="https://github.com/mozilla/sccache/releases/download/${SCCACHE_VERSION}/sccache-${SCCACHE_VERSION}-${SCCACHE_TOOLCHAIN}.tar.gz"
-  curl -L -o sccache.tar.gz ${SCCACHE_URL}
-  tar -xvf sccache.tar.gz -C ./ sccache
-  rm sccache.tar.gz
+  SCCACHE_TOOLCHAIN=${SCCACHE_TOOLCHAINS[$TRAVIS_OS_NAME]}
+  SCCACHE_FILENAME="sccache-${SCCACHE_VERSION}-${SCCACHE_TOOLCHAIN}"
+  SCCACHE_URL="https://github.com/mozilla/sccache/releases/download/${SCCACHE_VERSION}/${SCCACHE_FILENAME}.tar.gz"
+  curl -L -O ${SCCACHE_URL} 
+  tar -xvf ${SCCACHE_FILENAME} -C ./ --strip=1 ${SCCACHE_FILENAME}/sccache
 }
 
 install_libsdl2
