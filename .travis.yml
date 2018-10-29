@@ -8,6 +8,10 @@ addons:
     - libasound2-dev
     - libsdl2-dev
 
+cache:
+  directories:
+    - "/home/travis/.cache/sccache"
+
 os:
 - linux
 - osx
@@ -35,6 +39,7 @@ before_script:
 - export PATH=$PATH:/home/travis/.cargo/bin
 - export RUSTFLAGS="-D warnings"
 - export RUSTC_WRAPPER="./sccache"
+- export SCCACHE_DIR="/home/travis/.cache/sccache"
 
 # Generate documentation, compile the engine, run tests.
 script:
