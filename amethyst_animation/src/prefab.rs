@@ -181,23 +181,6 @@ where
     }
 }
 
-impl<'a, T> PrefabData<'a> for RestState<T>
-where
-    T: AnimationSampling + Clone,
-{
-    type SystemData = WriteStorage<'a, RestState<T>>;
-    type Result = ();
-
-    fn add_to_entity(
-        &self,
-        entity: Entity,
-        storage: &mut Self::SystemData,
-        _: &[Entity],
-    ) -> Result<(), PrefabError> {
-        storage.insert(entity, self.clone()).map(|_| ())
-    }
-}
-
 /// `PrefabData` for loading `AnimationHierarchy`.
 ///
 /// ### Type parameters
@@ -242,13 +225,14 @@ where
 ///
 /// - `I`: Id type of `Animation`s in `AnimationSet`s
 /// - `T`: The animatable `Component`
-#[derive(Default, Clone, Debug, Deserialize, Serialize)]
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PrefabData)]
 #[serde(default)]
 pub struct AnimatablePrefab<I, T>
 where
-    T: AnimationSampling,
+    T: AnimationSampling + Clone,
     T::Channel: for<'a> Deserialize<'a> + Serialize,
     T::Primitive: Debug + for<'a> Deserialize<'a> + Serialize,
+    I: Clone + Hash + Eq + Send + Sync + 'static,
 {
     /// Place an `AnimationSet` on the `Entity`
     pub animation_set: Option<AnimationSetPrefab<I, T>>,
@@ -256,49 +240,4 @@ where
     pub hierarchy: Option<AnimationHierarchyPrefab<T>>,
     /// Place a `RestState` on the `Entity`
     pub rest_state: Option<RestState<T>>,
-}
-
-impl<'a, I, T> PrefabData<'a> for AnimatablePrefab<I, T>
-where
-    T: AnimationSampling + Clone,
-    T::Channel: for<'b> Deserialize<'b> + Serialize,
-    T::Primitive: Debug + for<'b> Deserialize<'b> + Serialize,
-    I: Clone + Hash + Eq + Send + Sync + 'static,
-{
-    type SystemData = (
-        <AnimationSetPrefab<I, T> as PrefabData<'a>>::SystemData,
-        <AnimationHierarchyPrefab<T> as PrefabData<'a>>::SystemData,
-        <RestState<T> as PrefabData<'a>>::SystemData,
-    );
-    type Result = ();
-
-    fn add_to_entity(
-        &self,
-        entity: Entity,
-        system_data: &mut <Self as PrefabData>::SystemData,
-        entities: &[Entity],
-    ) -> Result<<Self as PrefabData>::Result, PrefabError> {
-        if let Some(ref prefab) = self.animation_set {
-            prefab.add_to_entity(entity, &mut system_data.0, entities)?;
-        }
-        if let Some(ref prefab) = self.hierarchy {
-            prefab.add_to_entity(entity, &mut system_data.1, entities)?;
-        }
-        if let Some(ref prefab) = self.rest_state {
-            prefab.add_to_entity(entity, &mut system_data.2, entities)?;
-        }
-        Ok(())
-    }
-
-    fn load_sub_assets(
-        &mut self,
-        progress: &mut ProgressCounter,
-        system_data: &mut Self::SystemData,
-    ) -> Result<bool, PrefabError> {
-        if let Some(ref mut prefab) = self.animation_set {
-            prefab.load_sub_assets(progress, &mut system_data.0)
-        } else {
-            Ok(false)
-        }
-    }
 }

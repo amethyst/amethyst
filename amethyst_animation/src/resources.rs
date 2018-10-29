@@ -1,4 +1,6 @@
-use amethyst_assets::{Asset, AssetStorage, Handle, ProcessingState, Result};
+use amethyst_assets::{
+    Asset, AssetStorage, Handle, PrefabData, PrefabError, ProcessingState, Result,
+};
 use amethyst_core::shred::SystemData;
 use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage};
 use amethyst_core::timing::{duration_to_secs, secs_to_duration};
@@ -107,12 +109,19 @@ where
 }
 
 /// Define the rest state for a component on an entity
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct RestState<T> {
+#[derive(Debug, Clone, Deserialize, Serialize, PrefabData)]
+#[prefab(Component)]
+pub struct RestState<T>
+where
+    T: AnimationSampling + Clone,
+{
     state: T,
 }
 
-impl<T> RestState<T> {
+impl<T> RestState<T>
+where
+    T: AnimationSampling + Clone,
+{
     /// Create new rest state
     pub fn new(t: T) -> Self {
         RestState { state: t }
@@ -126,7 +135,7 @@ impl<T> RestState<T> {
 
 impl<T> Component for RestState<T>
 where
-    T: AnimationSampling,
+    T: AnimationSampling + Clone,
 {
     type Storage = DenseVecStorage<Self>;
 }
@@ -179,7 +188,7 @@ where
     /// entity in the hierarchy.
     pub fn rest_state<F>(&self, get_component: F, states: &mut WriteStorage<RestState<T>>)
     where
-        T: AnimationSampling,
+        T: AnimationSampling + Clone,
         F: Fn(Entity) -> Option<T>,
     {
         for entity in self.nodes.values() {

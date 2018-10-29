@@ -7,13 +7,20 @@ use amethyst_core::specs::prelude::{
 use std::marker::PhantomData;
 
 /// Tag component that can be used with a custom type to tag entities for processing
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PrefabData)]
 #[serde(default)]
-pub struct Tag<T> {
+#[prefab(Component)]
+pub struct Tag<T>
+where
+    T: Clone + Send + Sync + 'static,
+{
     _m: PhantomData<T>,
 }
 
-impl<T> Default for Tag<T> {
+impl<T> Default for Tag<T>
+where
+    T: Clone + Send + Sync + 'static,
+{
     fn default() -> Self {
         Tag { _m: PhantomData }
     }
@@ -21,33 +28,16 @@ impl<T> Default for Tag<T> {
 
 impl<T> Component for Tag<T>
 where
-    T: Send + Sync + 'static,
-{
-    type Storage = NullStorage<Self>;
-}
-
-impl<'a, T> PrefabData<'a> for Tag<T>
-where
     T: Clone + Send + Sync + 'static,
 {
-    type SystemData = WriteStorage<'a, Tag<T>>;
-    type Result = ();
-
-    fn add_to_entity(
-        &self,
-        entity: Entity,
-        storage: &mut Self::SystemData,
-        _: &[Entity],
-    ) -> Result<(), PrefabError> {
-        storage.insert(entity, self.clone()).map(|_| ())
-    }
+    type Storage = NullStorage<Self>;
 }
 
 /// Utility lookup for tag components
 #[derive(SystemData)]
 pub struct TagFinder<'a, T>
 where
-    T: Send + Sync + 'static,
+    T: Clone + Send + Sync + 'static,
 {
     /// The `EntitiesRes` from the ECS used to lookup tags.
     pub entities: Entities<'a>,
@@ -57,7 +47,7 @@ where
 
 impl<'a, T> TagFinder<'a, T>
 where
-    T: Send + Sync + 'static,
+    T: Clone + Send + Sync + 'static,
 {
     /// Returns the first entity found with the tag in question.
     pub fn find(&self) -> Option<Entity> {

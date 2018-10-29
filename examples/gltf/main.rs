@@ -1,5 +1,6 @@
 //! Displays a 2D GLTF scene
 
+#[macro_use]
 extern crate amethyst;
 extern crate amethyst_gltf;
 #[macro_use]
@@ -10,12 +11,11 @@ use amethyst::animation::{
     EndControl, VertexSkinningBundle,
 };
 use amethyst::assets::{
-    AssetPrefab, Completion, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem,
-    ProgressCounter, RonFormat,
+    AssetPrefab, Completion, Handle, Prefab, PrefabData, PrefabError, PrefabLoader,
+    PrefabLoaderSystem, ProgressCounter, RonFormat,
 };
 use amethyst::controls::{ControlTagPrefab, FlyControlBundle};
-use amethyst::core::{Transform, TransformBundle};
-use amethyst::ecs::error::Error;
+use amethyst::core::transform::{Transform, TransformBundle};
 use amethyst::ecs::prelude::{Entity, ReadStorage, Write, WriteStorage};
 use amethyst::input::{is_close_requested, is_key_down};
 use amethyst::prelude::*;
@@ -40,7 +40,7 @@ struct Scene {
     animation_index: usize,
 }
 
-#[derive(Default, Deserialize, Serialize)]
+#[derive(Default, Deserialize, Serialize, PrefabData)]
 #[serde(default)]
 struct ScenePrefabData {
     transform: Option<Transform>,
@@ -49,50 +49,6 @@ struct ScenePrefabData {
     light: Option<LightPrefab>,
     tag: Option<Tag<AnimationMarker>>,
     fly_tag: Option<ControlTagPrefab>,
-}
-
-impl<'a> PrefabData<'a> for ScenePrefabData {
-    type SystemData = (
-        <Option<Transform> as PrefabData<'a>>::SystemData,
-        <Option<AssetPrefab<GltfSceneAsset, GltfSceneFormat>> as PrefabData<'a>>::SystemData,
-        <Option<CameraPrefab> as PrefabData<'a>>::SystemData,
-        <Option<LightPrefab> as PrefabData<'a>>::SystemData,
-        <Option<Tag<AnimationMarker>> as PrefabData<'a>>::SystemData,
-        <Option<ControlTagPrefab> as PrefabData<'a>>::SystemData,
-    );
-    type Result = ();
-
-    fn add_to_entity(
-        &self,
-        entity: Entity,
-        system_data: &mut Self::SystemData,
-        entities: &[Entity],
-    ) -> Result<(), Error> {
-        let (
-            ref mut transforms,
-            ref mut gltfs,
-            ref mut cameras,
-            ref mut lights,
-            ref mut tags,
-            ref mut control_tags,
-        ) = system_data;
-        self.transform.add_to_entity(entity, transforms, entities)?;
-        self.gltf.add_to_entity(entity, gltfs, entities)?;
-        self.camera.add_to_entity(entity, cameras, entities)?;
-        self.light.add_to_entity(entity, lights, entities)?;
-        self.tag.add_to_entity(entity, tags, entities)?;
-        self.fly_tag.add_to_entity(entity, control_tags, entities)?;
-        Ok(())
-    }
-
-    fn load_sub_assets(
-        &mut self,
-        progress: &mut ProgressCounter,
-        system_data: &mut Self::SystemData,
-    ) -> Result<bool, Error> {
-        let (_, ref mut gltfs, _, _, _, _) = system_data;
-        self.gltf.load_sub_assets(progress, gltfs)
-    }
 }
 
 impl<'a, 'b> SimpleState<'a, 'b> for Example {
