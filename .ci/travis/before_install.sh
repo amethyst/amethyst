@@ -46,7 +46,8 @@ install_sccache(){
   SCCACHE_FILENAME="sccache-${SCCACHE_VERSION}-${SCCACHE_TOOLCHAIN}"
   SCCACHE_URL="https://github.com/mozilla/sccache/releases/download/${SCCACHE_VERSION}/${SCCACHE_FILENAME}.tar.gz"
   curl -L -O ${SCCACHE_URL} 
-  tar -xvf ${SCCACHE_FILENAME} -C ./ --strip=1 ${SCCACHE_FILENAME}/sccache
+  tar -xvf ${SCCACHE_FILENAME}.tar.gz -C ./ --strip=1 ${SCCACHE_FILENAME}/sccache
+  rm ${SCCACHE_FILENAME}.tar.gz
 }
 
 install_libsdl2
