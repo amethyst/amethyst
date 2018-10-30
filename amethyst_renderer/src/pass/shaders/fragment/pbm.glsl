@@ -119,6 +119,36 @@ vec3 fresnel(float HdotV, vec3 fresnel_base) {
     return fresnel_base + (1.0 - fresnel_base) * pow(1.0 - HdotV, 5.0);
 }
 
+vec3 compute_light(vec3 attenuation,
+                   vec3 light_color,
+                   vec3 view_direction,
+                   vec3 light_direction,
+                   vec3 albedo,
+                   vec3 normal,
+                   float roughness2,
+                   float metallic,
+                   vec3 fresnel_base) {
+
+    vec3 halfway = normalize(view_direction + light_direction);
+    float normal_distribution = normal_distribution(normal, halfway, roughness2);
+
+    float NdotV = max(dot(normal, view_direction), 0.0);
+    float NdotL = max(dot(normal, light_direction), 0.0);
+    float HdotV = max(dot(halfway, view_direction), 0.0);
+    float geometry = geometry(NdotV, NdotL, roughness2);
+
+    vec3 fresnel = fresnel(HdotV, fresnel_base);
+    vec3 diffuse = vec3(1.0) - fresnel;
+    diffuse *= 1.0 - metallic;
+
+    vec3 nominator = normal_distribution * geometry * fresnel;
+    float denominator = 4 * NdotV * NdotL + 0.0001;
+    vec3 specular = nominator / denominator;
+
+    vec3 resulting_light = (diffuse * albedo / PI + specular) * light_color * attenuation * NdotL;
+    return resulting_light;
+}
+
 void main() {
     vec4 albedo_alpha       = texture(albedo, tex_coords(vertex.tex_coord, albedo_offset.u_offset, albedo_offset.v_offset)).rgba;
 
@@ -146,29 +176,40 @@ void main() {
     normal = normalize(vertex_basis * normal);
 
 
+    vec3 view_direction = normalize(camera_position - vertex.position);
     vec3 lighted = vec3(0.0);
     for (int i = 0; i < point_light_count; i++) {
-        vec3 view_direction = normalize(camera_position - vertex.position);
         vec3 light_direction = normalize(plight[i].position - vertex.position);
-        float intensity = plight[i].intensity / dot(light_direction, light_direction);
+        float attenuation = plight[i].intensity / dot(light_direction, light_direction);
 
-        vec3 halfway = normalize(view_direction + light_direction);
-        float normal_distribution = normal_distribution(normal, halfway, roughness2);
+        vec3 light = compute_light(vec3(attenuation),
+                                   plight[i].color,
+                                   view_direction,
+                                   light_direction,
+                                   albedo,
+                                   normal,
+                                   roughness2,
+                                   metallic,
+                                   fresnel_base);
 
-        float NdotV = max(dot(normal, view_direction), 0.0);
-        float NdotL = max(dot(normal, light_direction), 0.0);
-        float HdotV = max(dot(halfway, view_direction), 0.0);
-        float geometry = geometry(NdotV, NdotL, roughness2);
+        lighted += light;
+    }
 
-        vec3 fresnel = fresnel(HdotV, fresnel_base);
-        vec3 diffuse = vec3(1.0) - fresnel;
-        diffuse *= 1.0 - metallic;
+    for (int i = 0; i < directional_light_count; i++) {
+        vec3 light_direction = -normalize(dlight[i].direction);
+        float attenuation = 1.0;
 
-        vec3 nominator = normal_distribution * geometry * fresnel;
-        float denominator = 4 * NdotV * NdotL + 0.0001;
-        vec3 specular = nominator / denominator;
+        vec3 light = compute_light(vec3(attenuation),
+                                   dlight[i].color,
+                                   view_direction,
+                                   light_direction,
+                                   albedo,
+                                   normal,
+                                   roughness2,
+                                   metallic,
+                                   fresnel_base);
 
-        lighted += (diffuse * albedo / PI + specular) * plight[i].color * intensity * NdotL;
+        lighted += light;
     }
 
     vec3 ambient = ambient_color * albedo * ambient_occlusion;
