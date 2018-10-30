@@ -12,6 +12,7 @@ use types::Encoder;
 pub(crate) struct FragmentArgs {
     point_light_count: uint,
     directional_light_count: uint,
+    spot_light_count: uint,
 }
 
 #[derive(Clone, Copy, Debug, Uniform)]
@@ -26,6 +27,17 @@ pub(crate) struct PointLightPod {
 pub(crate) struct DirectionalLightPod {
     color: vec3,
     direction: vec3,
+}
+
+#[derive(Clone, Copy, Debug, Uniform)]
+pub(crate) struct SpotLightPod {
+    position: vec3,
+    color: vec3,
+    direction: vec3,
+    angle: float,
+    intensity: float,
+    range: float,
+    smoothness: float,
 }
 
 pub(crate) fn set_light_args(
@@ -68,14 +80,36 @@ pub(crate) fn set_light_args(
             }
         }).collect();
 
+    let spot_lights: Vec<_> = (light, global)
+        .join()
+        .filter_map(|(light, transform)| {
+            if let Light::Spot(ref light) = *light {
+                Some(
+                    SpotLightPod {
+                        position: transform.0.w.truncate().into(),
+                        color: light.color.into(),
+                        direction: light.direction.into(),
+                        angle: light.angle.to_radians().cos(),
+                        intensity: light.intensity,
+                        range: light.range,
+                        smoothness: light.smoothness,
+                    }.std140(),
+                )
+            } else {
+                None
+            }
+        }).collect();
+
     let fragment_args = FragmentArgs {
         point_light_count: point_lights.len() as u32,
         directional_light_count: directional_lights.len() as u32,
+        spot_light_count: spot_lights.len() as u32,
     };
 
     effect.update_constant_buffer("FragmentArgs", &fragment_args.std140(), encoder);
     effect.update_buffer("PointLights", &point_lights[..], encoder);
     effect.update_buffer("DirectionalLights", &directional_lights[..], encoder);
+    effect.update_buffer("SpotLights", &spot_lights[..], encoder);
 
     effect.update_global("ambient_color", Into::<[f32; 3]>::into(*ambient.as_ref()));
 
@@ -102,6 +136,10 @@ pub(crate) fn setup_light_buffers(builder: &mut EffectBuilder) {
             "DirectionalLights",
             mem::size_of::<<DirectionalLightPod as Uniform>::Std140>(),
             16,
+        ).with_raw_constant_buffer(
+            "SpotLights",
+            mem::size_of::<<SpotLightPod as Uniform>::Std140>(),
+            128,
         ).with_raw_global("ambient_color")
         .with_raw_global("camera_position");
 }
