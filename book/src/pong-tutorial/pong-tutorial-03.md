@@ -99,19 +99,31 @@ We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
+#
+# mod pong {
+#     use amethyst::ecs::prelude::*;
+#
+#     pub enum Side {
+#       Left,
+#       Right,
+#     }
+#     pub struct Paddle {
+#       pub side: Side,
+#     }
+#     impl Component for Paddle {
+#       type Storage = VecStorage<Self>;
+#     }
+#
+#     pub const ARENA_HEIGHT: f32 = 100.0;
+#     pub const PADDLE_HEIGHT: f32 = 16.0;
+# }
+#
 use amethyst::core::Transform;
 use amethyst::ecs::{Join, Read, ReadStorage, System, WriteStorage};
 use amethyst::input::InputHandler;
-# pub enum Side {
-#   Left,
-#   Right,
-# }
-# pub struct Paddle {
-#   side: Side,
-# }
-# impl amethyst::ecs::Component for Paddle {
-#   type Storage = amethyst::ecs::VecStorage<Paddle>;
-# }
+
+// You'll have to mark PADDLE_HEIGHT as public in pong.rs
+use pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 
 pub struct PaddleSystem;
 
@@ -140,12 +152,8 @@ impl<'s> System<'s> for PaddleSystem {
     }
   }
 }
-```
-Note: You will also need to add a `use` statement to bring in `Paddle` and
-`Side` from pong.rs, as well as mark `PADDLE_HEIGHT` as public:
-
-```rust,ignore
-use pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
+#
+# fn main() {}
 ```
 
 Now lets add this system to our `GameDataBuilder` in `main.rs`:
