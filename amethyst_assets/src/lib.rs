@@ -41,6 +41,7 @@ pub use error::{Error, ErrorKind, Result, ResultExt};
 #[cfg(feature = "json")]
 pub use formats::JsonFormat;
 pub use formats::RonFormat;
+pub use helper::AssetLoadHelper;
 pub use loader::Loader;
 pub use prefab::{AssetPrefab, Prefab, PrefabData, PrefabError, PrefabLoader, PrefabLoaderSystem};
 pub use progress::{Completion, Progress, ProgressCounter, Tracker};
@@ -52,6 +53,7 @@ mod asset;
 mod cache;
 mod error;
 mod formats;
+mod helper;
 mod loader;
 mod prefab;
 mod progress;
