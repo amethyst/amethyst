@@ -20,11 +20,13 @@ mod net_event;
 mod network_socket;
 mod test;
 
-pub use bundle::NetworkBundle;
-pub use connection::{ConnectionState, NetConnection, NetIdentity};
-pub use filter::{FilterConnected, NetFilter};
-pub use net_event::NetEvent;
-pub use network_socket::NetSocketSystem;
+pub use {
+    bundle::NetworkBundle,
+    connection::{ConnectionState, NetConnection, NetIdentity},
+    filter::{FilterConnected, NetFilter},
+    net_event::NetEvent,
+    network_socket::NetSocketSystem,
+};
 
 use std::net::{SocketAddr, UdpSocket};
 

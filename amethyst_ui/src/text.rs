@@ -1,22 +1,25 @@
-use super::*;
-use amethyst_core::shrev::{EventChannel, ReaderId};
-use amethyst_core::specs::prelude::{
-    Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage, Resources,
-    System, Write, WriteStorage,
-};
-use amethyst_core::timing::Time;
-use amethyst_renderer::ScreenDimensions;
+use std::{cmp::Ordering, ops::Range};
+
 use clipboard::{ClipboardContext, ClipboardProvider};
 use gfx_glyph::{Point, PositionedGlyph};
 use hibitset::BitSet;
-use std::cmp::Ordering;
-use std::ops::Range;
-use unicode_normalization::char::is_combining_mark;
-use unicode_normalization::UnicodeNormalization;
+use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 use unicode_segmentation::UnicodeSegmentation;
 use winit::{
     ElementState, Event, KeyboardInput, ModifiersState, MouseButton, VirtualKeyCode, WindowEvent,
 };
+
+use amethyst_core::{
+    shrev::{EventChannel, ReaderId},
+    specs::prelude::{
+        Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
+        Resources, System, Write, WriteStorage,
+    },
+    timing::Time,
+};
+use amethyst_renderer::ScreenDimensions;
+
+use super::*;
 
 /// How lines should behave when they are longer than the maximum line length.
 #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]

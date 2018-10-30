@@ -1,10 +1,10 @@
 //! Provides a automatically resized orthographic camera.
 
-use amethyst_core::cgmath::Ortho;
-use amethyst_core::specs::{
-    Component, DenseVecStorage, Join, ReadExpect, ReadStorage, System, WriteStorage,
+use amethyst_core::{
+    cgmath::Ortho,
+    specs::{Component, DenseVecStorage, Join, ReadExpect, ReadStorage, System, WriteStorage},
+    Axis2,
 };
-use amethyst_core::Axis2;
 use amethyst_renderer::{Camera, ScreenDimensions};
 
 /// The coordinates that `CameraOrtho` will keep visible in the window
@@ -235,8 +235,9 @@ impl<'a> System<'a> for CameraOrthoSystem {
 
 #[cfg(test)]
 mod test {
-    use super::Axis2;
     use ortho_camera::{CameraNormalizeMode, CameraOrtho, CameraOrthoWorldCoordinates};
+
+    use super::Axis2;
 
     // TODO: Disabled until someone fixes the formula (if possible).
     /*#[test]

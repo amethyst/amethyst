@@ -1,29 +1,32 @@
 //! The core engine framework.
 
-use amethyst_ui::UiEvent;
-use assets::{Loader, Source};
-use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
-use core::shrev::{EventChannel, ReaderId};
-use core::timing::{Stopwatch, Time};
-use core::{EventReader, Named};
-use ecs::common::Errors;
-use ecs::prelude::{Component, Read, World, Write};
-use error::{Error, Result};
-use game_data::DataInit;
+use std::{error::Error as StdError, marker::PhantomData, path::Path, sync::Arc, time::Duration};
+
 use log::Level;
 use rayon::ThreadPoolBuilder;
 use shred::Resource;
-use state::{State, StateData, StateMachine};
-use state_event::StateEvent;
-use state_event::StateEventReader;
-use std::error::Error as StdError;
-use std::marker::PhantomData;
-use std::path::Path;
-use std::sync::Arc;
-use std::time::Duration;
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use winit::Event;
+
+use {
+    assets::{Loader, Source},
+    core::{
+        frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy},
+        shrev::{EventChannel, ReaderId},
+        timing::{Stopwatch, Time},
+        EventReader, Named,
+    },
+    ecs::{
+        common::Errors,
+        prelude::{Component, Read, World, Write},
+    },
+    error::{Error, Result},
+    game_data::DataInit,
+    state::{State, StateData, StateMachine},
+    state_event::{StateEvent, StateEventReader},
+    ui::UiEvent,
+};
 
 /// `CoreApplication` is the application implementation for the game engine. This is fully generic
 /// over the state type and event type.

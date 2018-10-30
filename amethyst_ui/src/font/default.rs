@@ -1,7 +1,11 @@
-use amethyst_assets::{AssetStorage, Loader, SimpleFormat};
-use font::systemfont::default_system_font;
 use font_kit::handle::Handle as FontKitHandle;
-use format::{FontAsset, FontHandle, TtfFormat};
+
+use amethyst_assets::{AssetStorage, Loader, SimpleFormat};
+
+use {
+    font::systemfont::default_system_font,
+    format::{FontAsset, FontHandle, TtfFormat},
+};
 
 /// Get the system default fonts.
 /// If unable to, gets the local square.ttf font.

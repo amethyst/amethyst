@@ -1,13 +1,16 @@
 //! ECS rendering bundle
 
-use super::*;
+use std::{hash::Hash, marker::PhantomData};
+
 use amethyst_assets::Processor;
 use amethyst_audio::AudioFormat;
-use amethyst_core::bundle::{Result, SystemBundle};
-use amethyst_core::specs::prelude::DispatcherBuilder;
+use amethyst_core::{
+    bundle::{Result, SystemBundle},
+    specs::prelude::DispatcherBuilder,
+};
 use amethyst_renderer::TextureFormat;
-use std::hash::Hash;
-use std::marker::PhantomData;
+
+use super::*;
 
 /// UI bundle
 ///

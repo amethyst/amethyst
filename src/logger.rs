@@ -1,7 +1,8 @@
 pub use log::LevelFilter;
 
-use fern;
 use std::{env, io, path::PathBuf, str::FromStr};
+
+use fern;
 
 /// An enum that contains options for logging to the terminal.
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]

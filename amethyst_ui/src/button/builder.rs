@@ -1,13 +1,16 @@
+use shred::SystemData;
+
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_audio::SourceHandle;
-use amethyst_core::specs::prelude::{Entities, Entity, Read, ReadExpect, World, WriteStorage};
-use amethyst_core::Parent;
+use amethyst_core::{
+    specs::prelude::{Entities, Entity, Read, ReadExpect, World, WriteStorage},
+    Parent,
+};
 use amethyst_renderer::{Texture, TextureHandle};
-use font::default::get_default_font;
-use shred::SystemData;
+
 use {
-    Anchor, FontAsset, FontHandle, MouseReactive, OnUiActionImage, OnUiActionSound, Stretch,
-    UiButton, UiImage, UiText, UiTransform,
+    font::default::get_default_font, Anchor, FontAsset, FontHandle, MouseReactive, OnUiActionImage,
+    OnUiActionSound, Stretch, UiButton, UiImage, UiText, UiTransform,
 };
 
 const DEFAULT_Z: f32 = 1.0;

@@ -27,15 +27,18 @@ compile_error!("the cfg flag \"no_threading\" is required when building for emsc
 
 use std::sync::Arc;
 
+pub use {
+    bundle::{Error, ErrorKind, Result, SystemBundle},
+    event::EventReader,
+    orientation::Orientation,
+    timing::*,
+    transform::*,
+};
+
 pub use self::{
     axis::{Axis2, Axis3},
     named::{Named, WithNamed},
 };
-pub use bundle::{Error, ErrorKind, Result, SystemBundle};
-pub use event::EventReader;
-pub use orientation::Orientation;
-pub use timing::*;
-pub use transform::*;
 
 mod axis;
 pub mod bundle;

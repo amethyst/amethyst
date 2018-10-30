@@ -1,4 +1,5 @@
-use super::*;
+use serde::de::DeserializeOwned;
+
 use amethyst_assets::{
     AssetPrefab, AssetStorage, Format, Handle, Loader, Prefab, PrefabData, PrefabError,
     PrefabLoaderSystem, Progress, ProgressCounter, Result as AssetResult, ResultExt, SimpleFormat,
@@ -6,7 +7,8 @@ use amethyst_assets::{
 use amethyst_audio::{AudioFormat, Source as Audio};
 use amethyst_core::specs::prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage};
 use amethyst_renderer::{HiddenPropagate, Texture, TextureFormat, TextureMetadata, TexturePrefab};
-use serde::de::DeserializeOwned;
+
+use super::*;
 
 /// Loadable `UiTransform` data.
 /// By default z is equal to one.
