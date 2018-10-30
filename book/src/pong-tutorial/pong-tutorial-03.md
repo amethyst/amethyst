@@ -50,12 +50,12 @@ axes we defined. Let's make the following changes to `main.rs`.
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;
+# use amethyst::utils::application_root_dir;
 # use amethyst::renderer::{DisplayConfig, DrawFlat, Event, Pipeline,
 #                        PosTex, RenderBundle, Stage, VirtualKeyCode};
 # macro_rules! env { ($x:expr) => ("") }
 # fn main() -> amethyst::Result<()> {
 use amethyst::input::InputBundle;
-use amethyst::utils::application_root_dir;
 
 let binding_path = format!(
     "{}/resources/bindings_config.ron",
