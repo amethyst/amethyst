@@ -93,8 +93,12 @@ where
             &**pool,
             strategy,
         );
-        prefab_handles
-            .populate_inserted(self.insert_reader.as_mut().unwrap(), &mut self.to_process);
+        prefab_handles.populate_inserted(
+            self.insert_reader.as_mut().expect(
+                "`PrefabLoaderSystem::setup` was not called before `PrefabLoaderSystem::run`",
+            ),
+            &mut self.to_process,
+        );
         self.finished.clear();
         for (root_entity, handle, _) in (&*entities, &prefab_handles, &self.to_process).join() {
             if let Some(prefab) = prefab_storage.get(handle) {
@@ -112,10 +116,16 @@ where
                                 Parent {
                                     entity: self.entities[parent],
                                 },
-                            ).unwrap();
+                            ).expect("Unable to insert `Parent` for prefab");
                     }
-                    tags.insert(new_entity, PrefabTag::new(prefab.tag.unwrap()))
-                        .unwrap();
+                    tags.insert(
+                        new_entity,
+                        PrefabTag::new(
+                            prefab.tag.expect(
+                                "Unreachable: Every loaded prefab should have a `PrefabTag`",
+                            ),
+                        ),
+                    ).expect("Unable to insert `PrefabTag` for prefab entity");
                 }
                 // create components
                 for (index, entity_data) in prefab.entities.iter().enumerate() {
@@ -125,7 +135,7 @@ where
                                 self.entities[index],
                                 &mut prefab_system_data,
                                 &self.entities,
-                            ).unwrap();
+                            ).expect("Unable to add prefab system data to entity");
                     }
                 }
             }

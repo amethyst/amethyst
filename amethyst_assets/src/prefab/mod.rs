@@ -247,9 +247,11 @@ impl<T> Prefab<T> {
     ///
     /// ### Panics
     ///
-    /// If sub asset loading have not been triggered
+    /// If sub asset loading has not been triggered.
     pub fn progress(&self) -> &ProgressCounter {
-        self.counter.as_ref().unwrap()
+        self.counter
+            .as_ref()
+            .expect("Sub asset loading has not been triggered")
     }
 
     /// Trigger sub asset loading for the asset
