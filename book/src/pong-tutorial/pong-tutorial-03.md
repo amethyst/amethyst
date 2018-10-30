@@ -141,7 +141,8 @@ impl<'s> System<'s> for PaddleSystem {
   }
 }
 ```
-Note: You will also need to add a `use` statement to bring in `Paddle` and `Side` from pong.rs:
+Note: You will also need to add a `use` statement to bring in `Paddle` and
+`Side` from pong.rs, as well as mark `PADDLE_HEIGHT` as public:
 
 ```rust,ignore
 use pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};

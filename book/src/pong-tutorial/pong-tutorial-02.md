@@ -220,7 +220,7 @@ to a parent, if one exists.
 Let's also define some constants for convenience:
 
 ```rust,no_run,noplaypen
-pub const PADDLE_HEIGHT: f32 = 16.0;
+const PADDLE_HEIGHT: f32 = 16.0;
 const PADDLE_WIDTH: f32 = 4.0;
 ```
 
