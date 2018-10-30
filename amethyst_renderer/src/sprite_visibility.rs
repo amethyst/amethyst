@@ -68,7 +68,7 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
     fn run(
         &mut self,
         (entities, mut visibility, hidden, hidden_prop, active, camera, transparent, global): Self::SystemData,
-){
+    ) {
         let origin = Point3::origin();
 
         // The camera position is used to determine culling, but the sprites are ordered based on
@@ -80,19 +80,15 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
             .map(|c| c.0.column(2).xyz().into())
             .unwrap_or_else(Vector3::z);
         let camera_centroid = camera
-            .map(|g| g.0.fixed_resize::<na::U3, na::U3>(0.0) * origin)
+            .map(|g| g.0.transform_point(&origin))
             .unwrap_or_else(|| origin);
 
         self.centroids.clear();
         self.centroids.extend(
             (&*entities, &global, !&hidden, !&hidden_prop)
                 .join()
-                .map(|(entity, global, _, _)| {
-                    (
-                        entity,
-                        global.0.fixed_resize::<na::U3, na::U3>(0.0) * origin,
-                    )
-                }).map(|(entity, centroid)| Internals {
+                .map(|(entity, global, _, _)| (entity, global.0.transform_point(&origin)))
+                .map(|(entity, centroid)| Internals {
                     entity,
                     transparent: transparent.contains(entity),
                     centroid,
