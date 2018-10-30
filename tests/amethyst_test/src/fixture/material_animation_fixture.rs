@@ -20,9 +20,12 @@ impl MaterialAnimationFixture {
     pub fn effect(world: &mut World) {
         // Load the animation.
         let animation_handle = {
+            let loader = world.read_resource::<Loader>();
+            let tex_handle = loader.load_from_data([0.5; 4].into(), (), &world.read_resource());
+
             let texture_sampler = Sampler {
                 input: vec![0.0],
-                output: vec![MaterialPrimitive::Texture(0)],
+                output: vec![MaterialPrimitive::Texture(tex_handle)],
                 function: InterpolationFunction::Step,
             };
             let sprite_offset_sampler = Sampler {
@@ -31,7 +34,6 @@ impl MaterialAnimationFixture {
                 function: InterpolationFunction::Step,
             };
 
-            let loader = world.read_resource::<Loader>();
             let texture_animation_handle =
                 loader.load_from_data(texture_sampler, (), &world.read_resource());
             let sampler_animation_handle =
