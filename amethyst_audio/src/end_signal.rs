@@ -1,7 +1,6 @@
+use std::{iter::Iterator, mem, time::Duration};
+
 use rodio::{Sample, Source};
-use std::iter::Iterator;
-use std::mem;
-use std::time::Duration;
 
 // Wraps a source and calls the given closure when the source ends.
 pub struct EndSignalSource<I: Source, F: FnOnce()>

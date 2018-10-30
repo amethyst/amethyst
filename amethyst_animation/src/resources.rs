@@ -1,16 +1,16 @@
+use std::{cmp::Ordering, fmt::Debug, hash::Hash, marker, time::Duration};
+
+use fnv::FnvHashMap;
+use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
+
 use amethyst_assets::{
     Asset, AssetStorage, Handle, PrefabData, PrefabError, ProcessingState, Result,
 };
-use amethyst_core::shred::SystemData;
-use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage};
-use amethyst_core::timing::{duration_to_secs, secs_to_duration};
-use fnv::FnvHashMap;
-use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
-use std::cmp::Ordering;
-use std::fmt::Debug;
-use std::hash::Hash;
-use std::marker;
-use std::time::Duration;
+use amethyst_core::{
+    shred::SystemData,
+    specs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage},
+    timing::{duration_to_secs, secs_to_duration},
+};
 
 /// Blend method for sampler blending
 #[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Eq, Hash)]

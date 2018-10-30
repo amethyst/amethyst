@@ -1,11 +1,15 @@
-use super::UiTransform;
-use amethyst_core::specs::prelude::{
-    BitSet, InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage, ReaderId, Resources, System,
-    WriteStorage,
-};
-use amethyst_core::{HierarchyEvent, Parent, ParentHierarchy};
-use amethyst_renderer::ScreenDimensions;
 use gfx_glyph::{HorizontalAlign, VerticalAlign};
+
+use amethyst_core::{
+    specs::prelude::{
+        BitSet, InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage, ReaderId, Resources,
+        System, WriteStorage,
+    },
+    HierarchyEvent, Parent, ParentHierarchy,
+};
+use amethyst_renderer::ScreenDimensions;
+
+use super::UiTransform;
 
 /// Indicates if the position and margins should be calculated in pixel or
 /// relative to their parent size.

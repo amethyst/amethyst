@@ -67,25 +67,24 @@ extern crate serde;
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
-pub use self::bundle::{AnimationBundle, SamplingBundle, VertexSkinningBundle};
-pub use self::material::{MaterialChannel, MaterialPrimitive};
-pub use self::prefab::{
-    AnimatablePrefab, AnimationHierarchyPrefab, AnimationPrefab, AnimationSetPrefab,
+pub use self::{
+    bundle::{AnimationBundle, SamplingBundle, VertexSkinningBundle},
+    material::{MaterialChannel, MaterialPrimitive},
+    prefab::{AnimatablePrefab, AnimationHierarchyPrefab, AnimationPrefab, AnimationSetPrefab},
+    resources::{
+        Animation, AnimationCommand, AnimationControl, AnimationControlSet, AnimationHierarchy,
+        AnimationSampling, AnimationSet, ApplyData, BlendMethod, ControlState, DeferStartRelation,
+        EndControl, RestState, Sampler, SamplerControl, SamplerControlSet, StepDirection,
+    },
+    skinning::{Joint, JointPrefab, Skin, SkinPrefab, SkinnablePrefab, VertexSkinningSystem},
+    sprite::{SpriteRenderChannel, SpriteRenderPrimitive},
+    systems::{
+        AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem, SamplerProcessor,
+    },
+    transform::TransformChannel,
+    util::{get_animation_set, SamplerPrimitive},
 };
-pub use self::resources::{
-    Animation, AnimationCommand, AnimationControl, AnimationControlSet, AnimationHierarchy,
-    AnimationSampling, AnimationSet, ApplyData, BlendMethod, ControlState, DeferStartRelation,
-    EndControl, RestState, Sampler, SamplerControl, SamplerControlSet, StepDirection,
-};
-pub use self::skinning::{
-    Joint, JointPrefab, Skin, SkinPrefab, SkinnablePrefab, VertexSkinningSystem,
-};
-pub use self::sprite::{SpriteRenderChannel, SpriteRenderPrimitive};
-pub use self::systems::{
-    AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem, SamplerProcessor,
-};
-pub use self::transform::TransformChannel;
-pub use self::util::{get_animation_set, SamplerPrimitive};
+
 pub use minterpolate::{InterpolationFunction, InterpolationPrimitive};
 
 mod bundle;

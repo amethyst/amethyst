@@ -1,10 +1,12 @@
 //! `amethyst` rendering ecs resources
+//!
+use smallvec::SmallVec;
+use winit::Window;
 
 use amethyst_assets::{PrefabData, PrefabError};
 use amethyst_core::specs::{Entity, Write};
+
 use color::Rgba;
-use smallvec::SmallVec;
-use winit::Window;
 
 /// The ambient color of a scene
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]

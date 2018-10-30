@@ -1,16 +1,29 @@
-use amethyst_core::specs::prelude::{Component, Read, ReadExpect, System, VecStorage, Write};
-use amethyst_core::specs::storage::UnprotectedStorage;
-use amethyst_core::Time;
-use asset::{Asset, FormatValue};
+use std::{
+    marker::PhantomData,
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc, Mutex, Weak,
+    },
+};
+
 use crossbeam::queue::MsQueue;
-use error::{Error, ErrorKind, Result, ResultExt};
 use hibitset::BitSet;
-use progress::Tracker;
 use rayon::ThreadPool;
-use reload::{HotReloadStrategy, Reload};
-use std::marker::PhantomData;
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex, Weak};
+
+use amethyst_core::{
+    specs::{
+        prelude::{Component, Read, ReadExpect, System, VecStorage, Write},
+        storage::UnprotectedStorage,
+    },
+    Time,
+};
+
+use {
+    asset::{Asset, FormatValue},
+    error::{Error, ErrorKind, Result, ResultExt},
+    progress::Tracker,
+    reload::{HotReloadStrategy, Reload},
+};
 
 /// An `Allocator`, holding a counter for producing unique IDs.
 #[derive(Debug, Default)]

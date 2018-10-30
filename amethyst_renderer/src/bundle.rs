@@ -1,15 +1,20 @@
 //! ECS rendering bundle
 
 use amethyst_assets::Processor;
-use amethyst_core::bundle::{Result, ResultExt, SystemBundle};
-use amethyst_core::specs::prelude::DispatcherBuilder;
-use config::DisplayConfig;
-use pipe::{PipelineBuild, PolyPipeline};
-use sprite::SpriteSheet;
-use sprite_visibility::SpriteVisibilitySortingSystem;
-use system::RenderSystem;
-use visibility::VisibilitySortingSystem;
-use HideHierarchySystem;
+use amethyst_core::{
+    bundle::{Result, ResultExt, SystemBundle},
+    specs::prelude::DispatcherBuilder,
+};
+
+use {
+    config::DisplayConfig,
+    pipe::{PipelineBuild, PolyPipeline},
+    sprite::SpriteSheet,
+    sprite_visibility::SpriteVisibilitySortingSystem,
+    system::RenderSystem,
+    visibility::VisibilitySortingSystem,
+    HideHierarchySystem,
+};
 
 /// Rendering bundle
 ///

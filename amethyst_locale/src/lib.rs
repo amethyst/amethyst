@@ -7,9 +7,10 @@ extern crate amethyst_assets;
 extern crate amethyst_core;
 extern crate fluent;
 
+use fluent::bundle::FluentBundle;
+
 use amethyst_assets::{Asset, Handle, ProcessingState, Result, SimpleFormat};
 use amethyst_core::specs::prelude::VecStorage;
-use fluent::bundle::FluentBundle;
 
 /// Loads the strings from localisation files.
 #[derive(Clone)]

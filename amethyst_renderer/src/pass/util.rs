@@ -1,19 +1,25 @@
 use std::mem;
 
-use amethyst_assets::AssetStorage;
-use amethyst_core::cgmath::{Matrix4, One, SquareMatrix};
-use amethyst_core::specs::prelude::{Join, Read, ReadStorage};
-use amethyst_core::GlobalTransform;
-use cam::{ActiveCamera, Camera};
 use glsl_layout::*;
-use mesh::Mesh;
-use mtl::{Material, MaterialDefaults, TextureOffset};
-use pass::set_skinning_buffers;
-use pipe::{Effect, EffectBuilder};
-use skinning::JointTransforms;
-use tex::Texture;
-use types::Encoder;
-use vertex::Attributes;
+
+use amethyst_assets::AssetStorage;
+use amethyst_core::{
+    cgmath::{Matrix4, One, SquareMatrix},
+    specs::prelude::{Join, Read, ReadStorage},
+    GlobalTransform,
+};
+
+use {
+    cam::{ActiveCamera, Camera},
+    mesh::Mesh,
+    mtl::{Material, MaterialDefaults, TextureOffset},
+    pass::set_skinning_buffers,
+    pipe::{Effect, EffectBuilder},
+    skinning::JointTransforms,
+    tex::Texture,
+    types::Encoder,
+    vertex::Attributes,
+};
 
 pub(crate) enum TextureType {
     Albedo,

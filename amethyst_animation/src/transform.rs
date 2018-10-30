@@ -1,7 +1,12 @@
-use amethyst_core::cgmath::{InnerSpace, Quaternion, Vector3};
-use amethyst_core::Transform;
-use resources::{AnimationSampling, ApplyData, BlendMethod};
-use util::SamplerPrimitive;
+use amethyst_core::{
+    cgmath::{InnerSpace, Quaternion, Vector3},
+    Transform,
+};
+
+use {
+    resources::{AnimationSampling, ApplyData, BlendMethod},
+    util::SamplerPrimitive,
+};
 
 /// Channels that can be animated on `Transform`
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, Serialize, Deserialize)]
@@ -23,8 +28,10 @@ impl AnimationSampling for Transform {
     type Channel = TransformChannel;
 
     fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<f32>, _: &()) {
-        use self::TransformChannel::*;
         use util::SamplerPrimitive::*;
+
+        use self::TransformChannel::*;
+
         match (channel, *data) {
             (&Translation, Vec3(ref d)) => self.translation = Vector3::from(*d),
             (&Rotation, Vec4(ref d)) => self.rotation = Quaternion::from(*d).normalize(),

@@ -1,8 +1,13 @@
-use core::specs::prelude::{Dispatcher, DispatcherBuilder, System, World};
-use core::{ArcThreadPool, SystemBundle};
-use error::{Error, Result};
-use renderer::pipe::pass::Pass;
 use std::path::Path;
+
+use {
+    core::{
+        specs::prelude::{Dispatcher, DispatcherBuilder, System, World},
+        ArcThreadPool, SystemBundle,
+    },
+    error::{Error, Result},
+    renderer::pipe::pass::Pass,
+};
 
 /// Initialise trait for game data
 pub trait DataInit<T> {
@@ -229,9 +234,11 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
         A: AsRef<Path>,
         P: Pass + 'b,
     {
-        use config::Config;
-        use renderer::{DisplayConfig, Pipeline, RenderBundle, Stage};
-        use ui::DrawUi;
+        use {
+            config::Config,
+            renderer::{DisplayConfig, Pipeline, RenderBundle, Stage},
+            ui::DrawUi,
+        };
         let config = DisplayConfig::load(path);
         if with_ui {
             let pipe = Pipeline::build().with_stage(

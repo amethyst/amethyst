@@ -1,7 +1,6 @@
 //! Provides the directory of the executable.
 
-use std::env;
-use std::fs;
+use std::{env, fs};
 
 /// Returns the cargo manifest directory when running the executable with cargo
 /// or the directory in which the executable resides otherwise,

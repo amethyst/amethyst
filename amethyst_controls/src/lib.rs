@@ -19,10 +19,12 @@ mod components;
 mod resources;
 mod systems;
 
-pub use self::bundles::{ArcBallControlBundle, FlyControlBundle};
-pub use self::components::{ArcBallControlTag, ControlTagPrefab, FlyControlTag};
-pub use self::resources::{HideCursor, WindowFocus};
-pub use self::systems::{
-    ArcBallRotationSystem, CursorHideSystem, FlyMovementSystem, FreeRotationSystem,
-    MouseFocusUpdateSystem,
+pub use self::{
+    bundles::{ArcBallControlBundle, FlyControlBundle},
+    components::{ArcBallControlTag, ControlTagPrefab, FlyControlTag},
+    resources::{HideCursor, WindowFocus},
+    systems::{
+        ArcBallRotationSystem, CursorHideSystem, FlyMovementSystem, FreeRotationSystem,
+        MouseFocusUpdateSystem,
+    },
 };

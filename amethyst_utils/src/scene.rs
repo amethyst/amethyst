@@ -1,17 +1,18 @@
 //! Provides utilities for building and describing scenes in your game.
 
+use std::fmt::Debug;
+
+use serde::{de::DeserializeOwned, Serialize};
+
 use amethyst_assets::{Format, PrefabData, PrefabError, ProgressCounter};
 use amethyst_controls::ControlTagPrefab;
-use amethyst_core::specs::prelude::Entity;
-use amethyst_core::Transform;
+use amethyst_core::{specs::prelude::Entity, Transform};
 use amethyst_renderer::{
     CameraPrefab, GraphicsPrefab, InternalShape, LightPrefab, Mesh, MeshData, ObjFormat,
     TextureFormat,
 };
+
 use removal::Removal;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use std::fmt::Debug;
 
 /// Basic `Prefab` scene node, meant to be used for fast prototyping, and most likely replaced
 /// for more complex scenarios.

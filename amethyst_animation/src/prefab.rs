@@ -1,12 +1,18 @@
+use std::{
+    error::Error,
+    fmt::{Debug, Display, Formatter, Result as FmtResult},
+    hash::Hash,
+    marker::PhantomData,
+};
+
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
+
 use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, PrefabError, ProgressCounter};
-use amethyst_core::specs::error::BoxedErr;
-use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, WriteStorage};
-use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
-use std::error::Error;
-use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
-use std::hash::Hash;
-use std::marker::PhantomData;
+use amethyst_core::specs::{
+    error::BoxedErr,
+    prelude::{Entity, Read, ReadExpect, WriteStorage},
+};
+
 use {Animation, AnimationHierarchy, AnimationSampling, AnimationSet, RestState, Sampler};
 
 /// `PrefabData` for loading a single `Animation`

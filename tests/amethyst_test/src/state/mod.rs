@@ -1,7 +1,9 @@
-pub use self::custom_dispatcher_state::{CustomDispatcherState, CustomDispatcherStateBuilder};
-pub use self::function_state::FunctionState;
-pub use self::pop_state::PopState;
-pub use self::sequencer_state::SequencerState;
+pub use self::{
+    custom_dispatcher_state::{CustomDispatcherState, CustomDispatcherStateBuilder},
+    function_state::FunctionState,
+    pop_state::PopState,
+    sequencer_state::SequencerState,
+};
 
 mod custom_dispatcher_state;
 mod function_state;

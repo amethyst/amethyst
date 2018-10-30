@@ -1,6 +1,7 @@
+use minterpolate::InterpolationPrimitive;
+
 use amethyst_core::specs::prelude::Read;
 use amethyst_renderer::{SpriteRender, SpriteSheetSet};
-use minterpolate::InterpolationPrimitive;
 
 use {AnimationSampling, ApplyData, BlendMethod};
 
@@ -67,8 +68,7 @@ impl AnimationSampling for SpriteRender {
         data: &Self::Primitive,
         sprite_sheet_set: &Read<SpriteSheetSet>,
     ) {
-        use self::SpriteRenderChannel as Channel;
-        use self::SpriteRenderPrimitive as Primitive;
+        use self::{SpriteRenderChannel as Channel, SpriteRenderPrimitive as Primitive};
         match (*channel, *data) {
             (Channel::SpriteSheet, Primitive::SpriteSheet(i)) => {
                 if let Some(handle) = sprite_sheet_set.handle(i) {
@@ -104,8 +104,7 @@ impl AnimationSampling for SpriteRender {
         channel: &Self::Channel,
         sprite_sheet_set: &Read<SpriteSheetSet>,
     ) -> Self::Primitive {
-        use self::SpriteRenderChannel as Channel;
-        use self::SpriteRenderPrimitive as Primitive;
+        use self::{SpriteRenderChannel as Channel, SpriteRenderPrimitive as Primitive};
 
         const ERR_MSG: &str = "Unable to get requested spritesheet from SpriteSheetSet.";
 

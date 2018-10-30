@@ -1,21 +1,30 @@
 //! Debug lines pass
 
-use super::*;
-use amethyst_core::cgmath::{Matrix4, One};
-use amethyst_core::specs::{Join, Read, ReadStorage, Write, WriteStorage};
-use amethyst_core::transform::GlobalTransform;
-use cam::{ActiveCamera, Camera};
-use debug_drawing::{DebugLine, DebugLines, DebugLinesComponent};
-use error::Result;
-use gfx::pso::buffer::ElemStride;
-use gfx::Primitive;
-use mesh::Mesh;
-use pass::util::{get_camera, set_attribute_buffers, set_vertex_args, setup_vertex_args};
-use pipe::pass::{Pass, PassData};
-use pipe::{DepthMode, Effect, NewEffect};
 use std::marker::PhantomData;
-use types::{Encoder, Factory};
-use vertex::{Color, Normal, Position, Query};
+
+use gfx::{pso::buffer::ElemStride, Primitive};
+
+use amethyst_core::{
+    cgmath::{Matrix4, One},
+    specs::{Join, Read, ReadStorage, Write, WriteStorage},
+    transform::GlobalTransform,
+};
+
+use {
+    cam::{ActiveCamera, Camera},
+    debug_drawing::{DebugLine, DebugLines, DebugLinesComponent},
+    error::Result,
+    mesh::Mesh,
+    pass::util::{get_camera, set_attribute_buffers, set_vertex_args, setup_vertex_args},
+    pipe::{
+        pass::{Pass, PassData},
+        DepthMode, Effect, NewEffect,
+    },
+    types::{Encoder, Factory},
+    vertex::{Color, Normal, Position, Query},
+};
+
+use super::*;
 
 /// Parameters for renderer of debug lines. The params affect all lines.
 pub struct DebugLinesParams {

@@ -1,27 +1,34 @@
 //! Flat forward drawing pass that mimics a blit.
 
-use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::cgmath::Vector4;
-use amethyst_core::specs::prelude::{Join, Read, ReadStorage};
-use amethyst_core::transform::GlobalTransform;
-
+use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
 
+use amethyst_assets::{AssetStorage, Handle};
+use amethyst_core::{
+    cgmath::Vector4,
+    specs::prelude::{Join, Read, ReadStorage},
+    transform::GlobalTransform,
+};
+
+use {
+    cam::{ActiveCamera, Camera},
+    error::Result,
+    hidden::{Hidden, HiddenPropagate},
+    mtl::MaterialTextureSet,
+    pass::util::{add_texture, get_camera, set_view_args, setup_textures, ViewArgs},
+    pipe::{
+        pass::{Pass, PassData},
+        DepthMode, Effect, NewEffect,
+    },
+    sprite::{SpriteRender, SpriteSheet},
+    sprite_visibility::SpriteVisibility,
+    tex::Texture,
+    types::{Encoder, Factory, Slice},
+    vertex::{Attributes, Query, VertexFormat},
+};
+
 use super::*;
-use cam::{ActiveCamera, Camera};
-use error::Result;
-use gfx::pso::buffer::ElemStride;
-use hidden::{Hidden, HiddenPropagate};
-use mtl::MaterialTextureSet;
-use pass::util::{add_texture, get_camera, set_view_args, setup_textures, ViewArgs};
-use pipe::pass::{Pass, PassData};
-use pipe::{DepthMode, Effect, NewEffect};
-use sprite::{SpriteRender, SpriteSheet};
-use sprite_visibility::SpriteVisibility;
-use tex::Texture;
-use types::{Encoder, Factory, Slice};
-use vertex::{Attributes, Query, VertexFormat};
 
 /// Draws sprites on a 2D quad.
 #[derive(Derivative, Clone, Debug)]
@@ -245,9 +252,11 @@ impl SpriteBatch {
         sprite_sheet_storage: &AssetStorage<SpriteSheet>,
         tex_storage: &AssetStorage<Texture>,
     ) {
-        use gfx::buffer;
-        use gfx::memory::{Bind, Typed};
-        use gfx::Factory;
+        use gfx::{
+            buffer,
+            memory::{Bind, Typed},
+            Factory,
+        };
 
         if self.sprites.is_empty() {
             return;

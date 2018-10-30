@@ -1,15 +1,18 @@
 //! The network send and receive System
 
-use super::{deserialize_event, send_event, ConnectionState, NetConnection, NetEvent, NetFilter};
+use std::{
+    clone::Clone,
+    io::{Error, ErrorKind},
+    net::{SocketAddr, UdpSocket},
+    sync::mpsc::{channel, Receiver, Sender},
+    thread,
+};
+
+use serde::{de::DeserializeOwned, Serialize};
+
 use amethyst_core::specs::{Join, Resources, System, SystemData, WriteStorage};
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use std::clone::Clone;
-use std::io::{Error, ErrorKind};
-use std::net::SocketAddr;
-use std::net::UdpSocket;
-use std::sync::mpsc::{channel, Receiver, Sender};
-use std::thread;
+
+use super::{deserialize_event, send_event, ConnectionState, NetConnection, NetEvent, NetFilter};
 
 enum InternalSocketEvent<E> {
     SendEvents {

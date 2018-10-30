@@ -1,10 +1,11 @@
+use fnv::FnvHashMap;
+use ron::de::from_bytes as from_ron_bytes;
+
 use amethyst_assets::{
     Asset, Error as AssetsError, ErrorKind as AssetsErrorKind, Handle, ProcessingState,
     Result as AssetsResult, SimpleFormat,
 };
 use amethyst_core::specs::prelude::{Component, VecStorage};
-use fnv::FnvHashMap;
-use ron::de::from_bytes as from_ron_bytes;
 
 /// An asset handle to sprite sheet metadata.
 pub type SpriteSheetHandle = Handle<SpriteSheet>;

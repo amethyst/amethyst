@@ -2,12 +2,16 @@ pub use self::interleaved::DrawSprite;
 
 mod interleaved;
 
-use pass::util::TextureType;
+use gfx::{
+    format::{ChannelType, Format, SurfaceType},
+    pso::buffer::Element,
+    traits::Pod,
+};
 
-use gfx::format::{ChannelType, Format, SurfaceType};
-use gfx::pso::buffer::Element;
-use gfx::traits::Pod;
-use vertex::{Attribute, AttributeFormat, Attributes, VertexFormat, With};
+use {
+    pass::util::TextureType,
+    vertex::{Attribute, AttributeFormat, Attributes, VertexFormat, With},
+};
 
 static VERT_SRC: &[u8] = include_bytes!("../shaders/vertex/sprite.glsl");
 static FRAG_SRC: &[u8] = include_bytes!("../shaders/fragment/sprite.glsl");

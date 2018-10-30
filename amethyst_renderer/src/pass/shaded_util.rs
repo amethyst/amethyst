@@ -1,12 +1,19 @@
-use amethyst_core::specs::prelude::{Join, ReadStorage};
-use amethyst_core::GlobalTransform;
-use cam::Camera;
-use glsl_layout::*;
-use light::Light;
-use pipe::{Effect, EffectBuilder};
-use resources::AmbientColor;
 use std::mem;
-use types::Encoder;
+
+use glsl_layout::*;
+
+use amethyst_core::{
+    specs::prelude::{Join, ReadStorage},
+    GlobalTransform,
+};
+
+use {
+    cam::Camera,
+    light::Light,
+    pipe::{Effect, EffectBuilder},
+    resources::AmbientColor,
+    types::Encoder,
+};
 
 #[derive(Clone, Copy, Debug, Uniform)]
 pub(crate) struct FragmentArgs {

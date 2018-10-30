@@ -1,11 +1,13 @@
 //! Provides structures used to load audio files.
+//!
+use std::result::Result as StdResult;
 
 use amethyst_assets::{
     Asset, AssetStorage, Handle, Loader, PrefabData, PrefabError, ProcessingState, Result,
 };
 use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, VecStorage};
+
 use formats::AudioData;
-use std::result::Result as StdResult;
 
 /// A handle to a source asset.
 pub type SourceHandle = Handle<Source>;

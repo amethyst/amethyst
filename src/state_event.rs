@@ -1,10 +1,12 @@
-use core::{
-    shrev::{EventChannel, ReaderId},
-    specs::{Read, Resources, SystemData},
-    EventReader,
+use {
+    core::{
+        shrev::{EventChannel, ReaderId},
+        specs::{Read, Resources, SystemData},
+        EventReader,
+    },
+    renderer::Event,
+    ui::UiEvent,
 };
-use renderer::Event;
-use ui::UiEvent;
 
 /// The enum holding the different types of event that can be received in a `State` in the handle_event method.
 #[derive(Clone, EventReader)]

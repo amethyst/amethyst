@@ -1,9 +1,11 @@
 //! Provides utilities to remove large amounts of entities with a single command.
 
-use amethyst_assets::{PrefabData, PrefabError};
-use amethyst_core::specs::world::EntitiesRes;
-use amethyst_core::specs::{Component, DenseVecStorage, Entity, Join, ReadStorage, WriteStorage};
 use std::fmt::Debug;
+
+use amethyst_assets::{PrefabData, PrefabError};
+use amethyst_core::specs::{
+    world::EntitiesRes, Component, DenseVecStorage, Entity, Join, ReadStorage, WriteStorage,
+};
 
 /// A marker `Component` used to remove entities and clean up your scene.
 /// The generic parameter `I` is the type of id you want to use.

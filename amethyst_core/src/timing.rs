@@ -254,9 +254,9 @@ impl Stopwatch {
 // Unit tests
 #[cfg(test)]
 mod tests {
+    use std::{thread, time::Duration};
+
     use super::Stopwatch;
-    use std::thread;
-    use std::time::Duration;
 
     #[test]
     fn elapsed() {

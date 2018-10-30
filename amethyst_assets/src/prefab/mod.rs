@@ -1,10 +1,13 @@
-pub use self::system::PrefabLoaderSystem;
-pub use amethyst_core::specs::error::Error as PrefabError;
+use std::marker::PhantomData;
+
 use amethyst_core::specs::prelude::{
     Component, DenseVecStorage, Entity, FlaggedStorage, Read, ReadExpect, SystemData, WriteStorage,
 };
-use std::marker::PhantomData;
+
 use {Asset, AssetStorage, Format, Handle, Loader, Progress, ProgressCounter};
+
+pub use self::system::PrefabLoaderSystem;
+pub use amethyst_core::specs::error::Error as PrefabError;
 
 mod impls;
 mod system;
@@ -434,12 +437,18 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use amethyst_core::specs::{Builder, RunNow, World};
-    use amethyst_core::{GlobalTransform, Time, Transform};
-    use rayon::ThreadPoolBuilder;
     use std::sync::Arc;
+
+    use rayon::ThreadPoolBuilder;
+
+    use amethyst_core::{
+        specs::{Builder, RunNow, World},
+        GlobalTransform, Time, Transform,
+    };
+
     use Loader;
+
+    use super::*;
 
     type MyPrefab = Transform;
 

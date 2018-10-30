@@ -317,14 +317,17 @@ extern crate hetseq;
 #[macro_use]
 extern crate lazy_static;
 
-pub use amethyst_application::{AmethystApplication, HIDPI, SCREEN_HEIGHT, SCREEN_WIDTH};
-pub use effect_return::EffectReturn;
-pub use fixture::{MaterialAnimationFixture, SpriteRenderAnimationFixture};
-pub use game_update::GameUpdate;
-pub use state::{
-    CustomDispatcherState, CustomDispatcherStateBuilder, FunctionState, PopState, SequencerState,
-};
 pub(crate) use system_injection_bundle::SystemInjectionBundle;
+pub use {
+    amethyst_application::{AmethystApplication, HIDPI, SCREEN_HEIGHT, SCREEN_WIDTH},
+    effect_return::EffectReturn,
+    fixture::{MaterialAnimationFixture, SpriteRenderAnimationFixture},
+    game_update::GameUpdate,
+    state::{
+        CustomDispatcherState, CustomDispatcherStateBuilder, FunctionState, PopState,
+        SequencerState,
+    },
+};
 
 mod amethyst_application;
 mod effect_return;

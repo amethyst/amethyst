@@ -1,10 +1,11 @@
-use super::*;
 use amethyst_core::shrev::ReaderId;
 use amethyst_core::specs::prelude::{
     BitSet, Component, FlaggedStorage, InsertedFlag, Join, ModifiedFlag, ReadExpect, Resources,
     System, WriteStorage,
 };
 use amethyst_renderer::ScreenDimensions;
+
+use super::*;
 
 /// Whenever the window is resized the function in this component will be called on this
 /// entity's UiTransform, along with the new width and height of the window.

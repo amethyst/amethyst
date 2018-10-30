@@ -1,14 +1,18 @@
-use super::{get_image_data, Buffers, GltfError, ImageFormat};
-use assets::Source;
-use gfx::texture::SamplerInfo;
-use gltf;
-use gltf::material::AlphaMode;
-use itertools::Itertools;
-use renderer::{
-    JpgFormat, MaterialPrefab, PngFormat, TextureData, TextureFormat, TextureMetadata,
-    TexturePrefab,
-};
 use std::sync::Arc;
+
+use gfx::texture::SamplerInfo;
+use gltf::{self, material::AlphaMode};
+use itertools::Itertools;
+
+use {
+    assets::Source,
+    renderer::{
+        JpgFormat, MaterialPrefab, PngFormat, TextureData, TextureFormat, TextureMetadata,
+        TexturePrefab,
+    },
+};
+
+use super::{get_image_data, Buffers, GltfError, ImageFormat};
 
 // Load a single material, and transform into a format usable by the engine
 pub fn load_material(

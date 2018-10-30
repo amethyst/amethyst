@@ -19,18 +19,20 @@ extern crate sdl2;
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
-pub use self::axis::Axis;
-pub use self::bindings::Bindings;
-pub use self::bundle::InputBundle;
-pub use self::button::Button;
-pub use self::controller::{ControllerAxis, ControllerButton};
-pub use self::event::InputEvent;
-pub use self::input_handler::InputHandler;
-pub use self::scroll_direction::ScrollDirection;
 #[cfg(feature = "sdl_controller")]
 pub use self::sdl_events_system::SdlEventsSystem;
-pub use self::system::InputSystem;
-pub use self::util::{get_input_axis_simple, get_key, is_close_requested, is_key_down};
+pub use self::{
+    axis::Axis,
+    bindings::Bindings,
+    bundle::InputBundle,
+    button::Button,
+    controller::{ControllerAxis, ControllerButton},
+    event::InputEvent,
+    input_handler::InputHandler,
+    scroll_direction::ScrollDirection,
+    system::InputSystem,
+    util::{get_input_axis_simple, get_key, is_close_requested, is_key_down},
+};
 
 use std::iter::Iterator;
 use winit::VirtualKeyCode;

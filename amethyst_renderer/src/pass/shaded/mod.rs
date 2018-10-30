@@ -1,5 +1,4 @@
-pub use self::interleaved::DrawShaded;
-pub use self::separate::DrawShadedSeparate;
+pub use self::{interleaved::DrawShaded, separate::DrawShadedSeparate};
 
 mod interleaved;
 mod separate;

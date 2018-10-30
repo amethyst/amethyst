@@ -1,25 +1,29 @@
 //! Rendering system.
 //!
 
-use amethyst_assets::{AssetStorage, HotReloadStrategy};
-use amethyst_core::shrev::EventChannel;
-use amethyst_core::specs::prelude::{
-    Read, ReadExpect, Resources, RunNow, SystemData, Write, WriteExpect,
-};
-use amethyst_core::Time;
-use config::DisplayConfig;
-use error::Result;
-use formats::{create_mesh_asset, create_texture_asset};
-use mesh::Mesh;
-use mtl::{Material, MaterialDefaults};
-use pipe::{PipelineBuild, PipelineData, PolyPipeline};
-use rayon::ThreadPool;
-use renderer::Renderer;
-use resources::{ScreenDimensions, WindowMessages};
-use std::mem;
-use std::sync::Arc;
-use tex::Texture;
+use std::{mem, sync::Arc};
+
 use winit::{DeviceEvent, Event, WindowEvent};
+
+use amethyst_assets::{AssetStorage, HotReloadStrategy};
+use amethyst_core::{
+    shrev::EventChannel,
+    specs::prelude::{Read, ReadExpect, Resources, RunNow, SystemData, Write, WriteExpect},
+    Time,
+};
+
+use {
+    config::DisplayConfig,
+    error::Result,
+    formats::{create_mesh_asset, create_texture_asset},
+    mesh::Mesh,
+    mtl::{Material, MaterialDefaults},
+    pipe::{PipelineBuild, PipelineData, PolyPipeline},
+    rayon::ThreadPool,
+    renderer::Renderer,
+    resources::{ScreenDimensions, WindowMessages},
+    tex::Texture,
+};
 
 /// Rendering system.
 #[derive(Derivative)]
@@ -190,8 +194,9 @@ where
 }
 
 fn create_default_mat(res: &mut Resources) -> Material {
-    use amethyst_assets::Loader;
     use mtl::TextureOffset;
+
+    use amethyst_assets::Loader;
 
     let loader = res.fetch::<Loader>();
 

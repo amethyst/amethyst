@@ -1,8 +1,11 @@
-use amethyst_assets::{PrefabData, PrefabError, ProgressCounter};
-use amethyst_core::cgmath::{Matrix4, SquareMatrix};
-use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage};
-use amethyst_renderer::JointTransformsPrefab;
 use hibitset::BitSet;
+
+use amethyst_assets::{PrefabData, PrefabError, ProgressCounter};
+use amethyst_core::{
+    cgmath::{Matrix4, SquareMatrix},
+    specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage},
+};
+use amethyst_renderer::JointTransformsPrefab;
 
 /// Joint, attach to an entity with a `Transform`
 #[derive(Debug, Clone)]

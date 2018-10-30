@@ -1,11 +1,13 @@
 use amethyst_assets::AssetStorage;
-use amethyst_audio::output::Output;
-use amethyst_audio::Source;
-use amethyst_core::shrev::{EventChannel, ReaderId};
-use amethyst_core::specs::{
-    Entity, Read, ReadExpect, ReadStorage, Resources, System, SystemData, Write, WriteStorage,
+use amethyst_audio::{output::Output, Source};
+use amethyst_core::{
+    shrev::{EventChannel, ReaderId},
+    specs::{
+        Entity, Read, ReadExpect, ReadStorage, Resources, System, SystemData, Write, WriteStorage,
+    },
+    ParentHierarchy,
 };
-use amethyst_core::ParentHierarchy;
+
 use {OnUiActionImage, OnUiActionSound, UiButton, UiEvent, UiEventType::*, UiImage, UiText};
 
 /// This system manages button mouse events.  It changes images and text colors, as well as playing audio

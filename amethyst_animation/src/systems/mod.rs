@@ -1,7 +1,8 @@
-pub use self::control::AnimationControlSystem;
-pub use self::sampling::SamplerInterpolationSystem;
 use amethyst_assets::Processor;
+
 use resources::{Animation, Sampler};
+
+pub use self::{control::AnimationControlSystem, sampling::SamplerInterpolationSystem};
 
 mod control;
 mod sampling;
