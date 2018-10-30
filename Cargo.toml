@@ -168,6 +168,10 @@ name = "pong_tutorial_04"
 path = "examples/pong_tutorial_04/main.rs"
 
 [[example]]
+name = "pong_tutorial_05"
+path = "examples/pong_tutorial_05/main.rs"
+
+[[example]]
 name = "net_client"
 path = "examples/net_client/main.rs"
 
