@@ -3,7 +3,9 @@ use std::{cmp::Ordering, fmt::Debug, hash::Hash, marker, time::Duration};
 use fnv::FnvHashMap;
 use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
 
-use amethyst_assets::{Asset, AssetStorage, Handle, ProcessingState, Result};
+use amethyst_assets::{
+    Asset, AssetStorage, Handle, PrefabData, PrefabError, ProcessingState, Result,
+};
 use amethyst_core::{
     shred::SystemData,
     specs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage},
@@ -107,12 +109,19 @@ where
 }
 
 /// Define the rest state for a component on an entity
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct RestState<T> {
+#[derive(Debug, Clone, Deserialize, Serialize, PrefabData)]
+#[prefab(Component)]
+pub struct RestState<T>
+where
+    T: AnimationSampling + Clone,
+{
     state: T,
 }
 
-impl<T> RestState<T> {
+impl<T> RestState<T>
+where
+    T: AnimationSampling + Clone,
+{
     /// Create new rest state
     pub fn new(t: T) -> Self {
         RestState { state: t }
@@ -126,7 +135,7 @@ impl<T> RestState<T> {
 
 impl<T> Component for RestState<T>
 where
-    T: AnimationSampling,
+    T: AnimationSampling + Clone,
 {
     type Storage = DenseVecStorage<Self>;
 }
@@ -134,7 +143,8 @@ where
 /// Defines the hierarchy of nodes that a single animation can control.
 /// Attached to the root entity that an animation can be defined for.
 /// Only required for animations which target more than a single node or entity.
-#[derive(Debug, Clone)]
+#[derive(Derivative, Debug, Clone)]
+#[derivative(Default(bound = ""))]
 pub struct AnimationHierarchy<T> {
     /// A mapping between indices and entities
     pub nodes: FnvHashMap<usize, Entity>,
@@ -155,10 +165,7 @@ where
 {
     /// Create a new hierarchy
     pub fn new() -> Self {
-        AnimationHierarchy {
-            nodes: FnvHashMap::default(),
-            m: marker::PhantomData,
-        }
+        Self::default()
     }
 
     /// Create a new hierarchy containing a single given entity
@@ -181,7 +188,7 @@ where
     /// entity in the hierarchy.
     pub fn rest_state<F>(&self, get_component: F, states: &mut WriteStorage<RestState<T>>)
     where
-        T: AnimationSampling,
+        T: AnimationSampling + Clone,
         F: Fn(Entity) -> Option<T>,
     {
         for entity in self.nodes.values() {
@@ -501,8 +508,14 @@ where
         self.samplers
             .iter_mut()
             .filter(|t| t.control_id == control_id && t.state != ControlState::Done)
-            .map(|c| (samplers.get(&c.sampler).expect("Referring to a missing sampler"), c))
-            .for_each(|(s, c)| {
+            .map(|c| {
+                (
+                    samplers
+                        .get(&c.sampler)
+                        .expect("Referring to a missing sampler"),
+                    c,
+                )
+            }).for_each(|(s, c)| {
                 set_step_state(c, s, direction);
             });
     }
@@ -801,7 +814,7 @@ where
         rate_multiplier: f32,
         command: AnimationCommand<T>,
     ) {
-        if let Some(_) = self.animations.iter().find(|a| a.0 == id) {
+        if self.animations.iter().any(|a| a.0 == id) {
             return;
         }
         self.animations.push((
@@ -827,7 +840,7 @@ where
         wait_for: I,
         wait_deferred_for: DeferStartRelation,
     ) {
-        if let Some(_) = self.animations.iter().find(|a| a.0 == id) {
+        if self.animations.iter().any(|a| a.0 == id) {
             return;
         }
         self.deferred_animations.push(DeferredStart {
@@ -845,7 +858,7 @@ where
 
     /// Insert an animation directly
     pub fn insert(&mut self, id: I, control: AnimationControl<T>) {
-        if let Some(_) = self.animations.iter().find(|a| a.0 == id) {
+        if self.animations.iter().any(|a| a.0 == id) {
             return;
         }
         self.animations.push((id, control));
@@ -853,11 +866,7 @@ where
 
     /// Check if there is an animation with the given id in the set
     pub fn has_animation(&mut self, id: I) -> bool {
-        if let Some(_) = self.animations.iter().find(|a| a.0 == id) {
-            true
-        } else {
-            false
-        }
+        self.animations.iter().any(|a| a.0 == id)
     }
 }
 

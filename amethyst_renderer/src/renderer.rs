@@ -1,14 +1,17 @@
-use config::DisplayConfig;
-use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
 use gfx::memory::Pod;
-use mesh::{Mesh, MeshBuilder, VertexDataSet};
-use pipe::{
-    ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, Target, TargetBuilder,
-};
-use tex::{Texture, TextureBuilder};
-use types::{ColorFormat, DepthFormat, Device, Encoder, Factory, Window};
 use winit::{dpi::LogicalSize, EventsLoop, Window as WinitWindow, WindowBuilder};
+
+use {
+    config::DisplayConfig,
+    error::{Error, Result},
+    mesh::{Mesh, MeshBuilder, VertexDataSet},
+    pipe::{
+        ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, Target, TargetBuilder,
+    },
+    tex::{Texture, TextureBuilder},
+    types::{ColorFormat, DepthFormat, Device, Encoder, Factory, Window},
+};
 
 /// Generic renderer.
 pub struct Renderer {

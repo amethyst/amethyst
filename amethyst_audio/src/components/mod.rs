@@ -1,10 +1,13 @@
 //! `amethyst` audio ecs components
 
-pub use self::audio_emitter::AudioEmitter;
-pub use self::audio_listener::AudioListener;
+pub use self::{audio_emitter::AudioEmitter, audio_listener::AudioListener};
+
 use amethyst_assets::{PrefabData, PrefabError};
-use amethyst_core::cgmath::Point3;
-use amethyst_core::specs::prelude::{Entity, Read, WriteStorage};
+use amethyst_core::{
+    cgmath::Point3,
+    specs::prelude::{Entity, Read, WriteStorage},
+};
+
 use output::Output;
 
 mod audio_emitter;

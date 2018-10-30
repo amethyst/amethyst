@@ -1,8 +1,11 @@
+use std::{hash::Hash, marker::PhantomData};
+
+use amethyst_core::{
+    bundle::{Result, SystemBundle},
+    specs::prelude::DispatcherBuilder,
+};
+
 use super::*;
-use amethyst_core::bundle::{Result, SystemBundle};
-use amethyst_core::specs::prelude::DispatcherBuilder;
-use std::hash::Hash;
-use std::marker::PhantomData;
 
 /// The bundle that creates a flying movement system.
 /// Note: Will not actually create a moving entity. It will only register the needed resources and systems.

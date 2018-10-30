@@ -26,13 +26,10 @@ pub use filter::{FilterConnected, NetFilter};
 pub use net_event::NetEvent;
 pub use network_socket::NetSocketSystem;
 
-use bincode::ErrorKind;
-use bincode::{deserialize, serialize};
+use std::net::{SocketAddr, UdpSocket};
 
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use std::net::SocketAddr;
-use std::net::UdpSocket;
+use bincode::{deserialize, serialize, ErrorKind};
+use serde::{de::DeserializeOwned, Serialize};
 
 /// Sends an event to the target NetConnection using the provided network Socket.
 /// The socket has to be bound.

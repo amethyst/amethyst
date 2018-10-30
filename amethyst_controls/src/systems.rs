@@ -1,17 +1,21 @@
-use amethyst_core::cgmath::{Deg, Vector3};
-use amethyst_core::shrev::{EventChannel, ReaderId};
-use amethyst_core::specs::prelude::{
-    Join, Read, ReadStorage, Resources, System, Write, WriteStorage,
+use std::{hash::Hash, marker::PhantomData};
+
+use winit::{DeviceEvent, Event, WindowEvent};
+
+use amethyst_core::{
+    cgmath::{Deg, Vector3},
+    shrev::{EventChannel, ReaderId},
+    specs::prelude::{Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
+    timing::Time,
+    transform::Transform,
 };
-use amethyst_core::timing::Time;
-use amethyst_core::transform::Transform;
 use amethyst_input::{get_input_axis_simple, InputHandler};
 use amethyst_renderer::WindowMessages;
-use components::{ArcBallControlTag, FlyControlTag};
-use resources::{HideCursor, WindowFocus};
-use std::hash::Hash;
-use std::marker::PhantomData;
-use winit::{DeviceEvent, Event, WindowEvent};
+
+use {
+    components::{ArcBallControlTag, FlyControlTag},
+    resources::{HideCursor, WindowFocus},
+};
 
 /// The system that manages the fly movement.
 /// Generic parameters are the parameters for the InputHandler.

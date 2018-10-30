@@ -1,11 +1,16 @@
-use super::{Buffers, GltfError};
-use animation::{JointPrefab, SkinPrefab, SkinnablePrefab};
-use assets::Prefab;
-use core::cgmath::{Matrix4, SquareMatrix};
-use gltf;
-use renderer::JointTransformsPrefab;
 use std::collections::HashMap;
+
+use gltf;
 use GltfPrefab;
+
+use {
+    animation::{JointPrefab, SkinPrefab, SkinnablePrefab},
+    assets::Prefab,
+    core::cgmath::{Matrix4, SquareMatrix},
+    renderer::JointTransformsPrefab,
+};
+
+use super::{Buffers, GltfError};
 
 pub fn load_skin(
     skin: &gltf::Skin,

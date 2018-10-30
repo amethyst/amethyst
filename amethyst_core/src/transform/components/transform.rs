@@ -1,8 +1,9 @@
 //! Global transform component.
 
+use std::borrow::Borrow;
+
 use cgmath::{Matrix4, One};
 use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
-use std::borrow::Borrow;
 
 /// Performs a global transformation on the entity (transform from origin).
 ///

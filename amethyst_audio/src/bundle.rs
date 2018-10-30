@@ -1,12 +1,16 @@
 //! ECS audio bundles
 
-use amethyst_assets::Processor;
-use amethyst_core::bundle::{Result, SystemBundle};
-use amethyst_core::specs::prelude::DispatcherBuilder;
-use rodio::default_output_device;
-use source::*;
 use std::marker::PhantomData;
-use systems::DjSystem;
+
+use rodio::default_output_device;
+
+use amethyst_assets::Processor;
+use amethyst_core::{
+    bundle::{Result, SystemBundle},
+    specs::prelude::DispatcherBuilder,
+};
+
+use {source::*, systems::DjSystem};
 
 /// Audio bundle
 ///

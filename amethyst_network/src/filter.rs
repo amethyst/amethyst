@@ -1,7 +1,8 @@
 //! The network filter base trait
+
+use std::{marker::PhantomData, net::SocketAddr};
+
 use super::NetEvent;
-use std::marker::PhantomData;
-use std::net::SocketAddr;
 
 /// Network filter base trait providing an event filtering interface.
 pub trait NetFilter<T>: Send + Sync

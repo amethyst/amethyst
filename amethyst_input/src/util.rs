@@ -1,6 +1,8 @@
-use input_handler::InputHandler;
 use std::hash::Hash;
+
 use winit::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+
+use input_handler::InputHandler;
 
 /// If this event was for manipulating a keyboard key then this will return the `VirtualKeyCode`
 /// and the new state.

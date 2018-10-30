@@ -5,7 +5,7 @@ use skinning::VertexSkinningSystem;
 
 use amethyst_core::{
     specs::prelude::{Component, DispatcherBuilder},
-    {Result, SystemBundle},
+    Result, SystemBundle,
 };
 
 use systems::{

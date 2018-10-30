@@ -1,11 +1,19 @@
-use amethyst_assets::AssetStorage;
-use amethyst_core::shred::{Resource, Resources};
-use amethyst_core::specs::common::Errors;
-use amethyst_core::specs::prelude::{Read, System, WriteExpect};
-use output::init_output;
-use sink::AudioSink;
-use source::{Source, SourceHandle};
 use std::marker::PhantomData;
+
+use amethyst_assets::AssetStorage;
+use amethyst_core::{
+    shred::{Resource, Resources},
+    specs::{
+        common::Errors,
+        prelude::{Read, System, WriteExpect},
+    },
+};
+
+use {
+    output::init_output,
+    sink::AudioSink,
+    source::{Source, SourceHandle},
+};
 
 /// Calls a closure if the `AudioSink` is empty.
 pub struct DjSystem<F, R> {

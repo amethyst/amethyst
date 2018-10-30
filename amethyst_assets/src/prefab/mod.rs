@@ -437,12 +437,18 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use amethyst_core::specs::{Builder, RunNow, World};
-    use amethyst_core::{GlobalTransform, Time, Transform};
-    use rayon::ThreadPoolBuilder;
     use std::sync::Arc;
+
+    use rayon::ThreadPoolBuilder;
+
+    use amethyst_core::{
+        specs::{Builder, RunNow, World},
+        GlobalTransform, Time, Transform,
+    };
+
     use Loader;
+
+    use super::*;
 
     type MyPrefab = Transform;
 

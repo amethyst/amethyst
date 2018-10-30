@@ -22,16 +22,23 @@ extern crate serde;
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
-use animation::{AnimatablePrefab, SkinnablePrefab};
-use assets::{Handle, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter};
-use core::cgmath::{Array, EuclideanSpace, Point3, Vector3};
-use core::specs::error::Error;
-use core::specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage};
-use core::transform::Transform;
-use core::Named;
-pub use format::GltfSceneFormat;
-use renderer::{MaterialPrefab, Mesh, MeshData, TextureFormat};
 use std::ops::Range;
+
+pub use format::GltfSceneFormat;
+use {
+    animation::{AnimatablePrefab, SkinnablePrefab},
+    assets::{Handle, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter},
+    core::{
+        cgmath::{Array, EuclideanSpace, Point3, Vector3},
+        specs::{
+            error::Error,
+            prelude::{Component, DenseVecStorage, Entity, WriteStorage},
+        },
+        transform::Transform,
+        Named,
+    },
+    renderer::{MaterialPrefab, Mesh, MeshData, TextureFormat},
+};
 
 mod format;
 

@@ -1,20 +1,23 @@
+use std::{fmt::Debug, result::Result as StdResult};
+
 use amethyst_assets::{
     Asset, AssetStorage, Error, Loader, PrefabData, PrefabError, ProcessingState, Result,
     ResultExt, SimpleFormat,
 };
-use amethyst_core::cgmath::{InnerSpace, Vector3};
-use amethyst_core::specs::prelude::{
-    Component, Entity, Read, ReadExpect, VecStorage, WriteStorage,
+use amethyst_core::{
+    cgmath::{InnerSpace, Vector3},
+    specs::prelude::{Component, Entity, Read, ReadExpect, VecStorage, WriteStorage},
 };
-use mesh::{Mesh, MeshBuilder, MeshHandle};
-use std::fmt::Debug;
-use std::result::Result as StdResult;
-use vertex::*;
-use wavefront_obj::obj::{
-    parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex, TextureIndex, Vertex,
-    VertexIndex,
+
+use {
+    mesh::{Mesh, MeshBuilder, MeshHandle},
+    vertex::*,
+    wavefront_obj::obj::{
+        parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex, TextureIndex, Vertex,
+        VertexIndex,
+    },
+    Renderer,
 };
-use Renderer;
 
 /// Mesh data for loading
 #[derive(Debug, Clone, Serialize, Deserialize)]

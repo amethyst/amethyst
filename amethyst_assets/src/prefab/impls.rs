@@ -1,6 +1,6 @@
 use amethyst_core::{
     specs::{Entity, WriteStorage},
-    {GlobalTransform, Named, Transform},
+    GlobalTransform, Named, Transform,
 };
 
 use {PrefabData, PrefabError, ProgressCounter};

@@ -1,9 +1,16 @@
-use gfx::pso::buffer::{RawConstantBuffer, RawGlobal, RawVertexBuffer};
-use gfx::pso::resource::{RawShaderResource, Sampler};
-use gfx::pso::target;
-use gfx::pso::{DataBind, DataLink, Descriptor, InitError, PipelineData, PipelineInit};
-use gfx::shade::core::{BaseType, ContainerType, OutputVar, ProgramInfo};
-use gfx::{handle, pso};
+use gfx::{
+    handle,
+    pso::{
+        self,
+        {
+            buffer::{RawConstantBuffer, RawGlobal, RawVertexBuffer},
+            resource::{RawShaderResource, Sampler},
+            target, DataBind, DataLink, Descriptor, InitError, PipelineData, PipelineInit,
+        },
+    },
+    shade::core::{BaseType, ContainerType, OutputVar, ProgramInfo},
+};
+
 use types::{ColorFormat, DepthFormat, Resources};
 
 type AccessInfo = pso::AccessInfo<Resources>;

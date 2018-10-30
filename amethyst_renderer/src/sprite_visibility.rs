@@ -1,13 +1,18 @@
 use std::cmp::Ordering;
 
-use amethyst_core::cgmath::{EuclideanSpace, InnerSpace, Point3, Transform, Vector3};
-use amethyst_core::specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write};
-use amethyst_core::GlobalTransform;
 use hibitset::BitSet;
 
-use cam::{ActiveCamera, Camera};
-use hidden::{Hidden, HiddenPropagate};
-use transparent::Transparent;
+use amethyst_core::{
+    cgmath::{EuclideanSpace, InnerSpace, Point3, Transform, Vector3},
+    specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
+    GlobalTransform,
+};
+
+use {
+    cam::{ActiveCamera, Camera},
+    hidden::{Hidden, HiddenPropagate},
+    transparent::Transparent,
+};
 
 /// Resource for controlling what entities should be rendered, and whether to draw them ordered or
 /// not, which is useful for transparent surfaces.

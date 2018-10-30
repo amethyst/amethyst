@@ -1,5 +1,6 @@
-use super::Source as Audio;
 use amethyst_assets::*;
+
+use super::Source as Audio;
 
 #[derive(Clone)]
 pub struct AudioData(pub Vec<u8>);

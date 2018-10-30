@@ -1,10 +1,15 @@
-use super::NetSocketSystem;
-use amethyst_core::bundle::{Result, SystemBundle};
-use amethyst_core::shred::DispatcherBuilder;
-use filter::NetFilter;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 use std::net::SocketAddr;
+
+use serde::{de::DeserializeOwned, Serialize};
+
+use amethyst_core::{
+    bundle::{Result, SystemBundle},
+    shred::DispatcherBuilder,
+};
+
+use filter::NetFilter;
+
+use super::NetSocketSystem;
 
 /// A convenience bundle to create the infrastructure needed to send and receive network messages.
 pub struct NetworkBundle<T> {

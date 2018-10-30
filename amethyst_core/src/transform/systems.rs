@@ -5,6 +5,7 @@ use specs::prelude::{
     Entities, Entity, InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage, ReaderId,
     Resources, System, WriteStorage,
 };
+
 use transform::{GlobalTransform, HierarchyEvent, Parent, ParentHierarchy, Transform};
 
 /// Handles updating `GlobalTransform` components based on the `Transform`
@@ -142,6 +143,7 @@ mod tests {
     use shred::RunNow;
     use specs::prelude::{Builder, World};
     use specs_hierarchy::{Hierarchy, HierarchySystem};
+
     use transform::{GlobalTransform, Parent, Transform, TransformSystem};
 
     // If this works, then all other tests should work.

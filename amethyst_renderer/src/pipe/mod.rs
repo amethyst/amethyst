@@ -16,12 +16,12 @@
 //!     .expect("Could not build pipeline");
 //! ```
 
-pub use self::effect::{Data, DepthMode, Effect, EffectBuilder, Init, Meta, NewEffect};
-pub use self::pipe::{
-    Pipeline, PipelineBuild, PipelineBuilder, PipelineData, PolyPipeline, PolyStages,
+pub use self::{
+    effect::{Data, DepthMode, Effect, EffectBuilder, Init, Meta, NewEffect},
+    pipe::{Pipeline, PipelineBuild, PipelineBuilder, PipelineData, PolyPipeline, PolyStages},
+    stage::{PolyStage, Stage, StageBuilder},
+    target::{ColorBuffer, DepthBuffer, Target, TargetBuilder, Targets},
 };
-pub use self::stage::{PolyStage, Stage, StageBuilder};
-pub use self::target::{ColorBuffer, DepthBuffer, Target, TargetBuilder, Targets};
 
 pub mod pass;
 

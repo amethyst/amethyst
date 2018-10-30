@@ -18,10 +18,11 @@
 //! # Examples
 //!
 //! ```
+//! use std::time::Duration;
+//!
 //! # extern crate amethyst;
 //! use amethyst::prelude::*;
 //! use amethyst::core::frame_limiter::FrameRateLimitStrategy;
-//! use std::time::Duration;
 //!
 //! # struct GameState;
 //! # impl<'a, 'b> SimpleState<'a, 'b> for GameState {}
@@ -67,8 +68,10 @@
 //! [`thread::yield_now`]: https://doc.rust-lang.org/std/thread/fn.yield_now.html
 //! [`thread::sleep`]: https://doc.rust-lang.org/stable/std/thread/fn.sleep.html
 
-use std::thread::{sleep, yield_now};
-use std::time::{Duration, Instant};
+use std::{
+    thread::{sleep, yield_now},
+    time::{Duration, Instant},
+};
 
 const ZERO: Duration = Duration::from_millis(0);
 

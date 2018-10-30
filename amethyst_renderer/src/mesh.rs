@@ -1,13 +1,20 @@
 //! Mesh resource.
 
+use std::{
+    iter::{once, Chain, Once},
+    marker::PhantomData,
+};
+
+use gfx::Primitive;
+
 use amethyst_assets::Handle;
 use amethyst_core::cgmath::{Deg, Matrix4, Point3, Transform, Vector3};
-use error::Result;
-use gfx::Primitive;
-use std::iter::{once, Chain, Once};
-use std::marker::PhantomData;
-use types::{Factory, RawBuffer, Slice};
-use vertex::{Attributes, VertexFormat};
+
+use {
+    error::Result,
+    types::{Factory, RawBuffer, Slice},
+    vertex::{Attributes, VertexFormat},
+};
 
 /// Raw buffer with its attributes
 #[derive(Clone, Debug)]
@@ -49,9 +56,11 @@ where
     }
 
     fn build(&self, factory: &mut Factory) -> Result<VertexBuffer> {
-        use gfx::buffer::Role;
-        use gfx::memory::{cast_slice, Bind};
-        use gfx::Factory;
+        use gfx::{
+            buffer::Role,
+            memory::{cast_slice, Bind},
+            Factory,
+        };
 
         let verts = self.0.as_ref();
         let slice = cast_slice(verts);

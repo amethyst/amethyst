@@ -1,8 +1,10 @@
 //! Built-in vertex formats.
 
-use gfx::format::{ChannelType, Format, SurfaceType};
-use gfx::pso::buffer::Element;
-use gfx::traits::Pod;
+use gfx::{
+    format::{ChannelType, Format, SurfaceType},
+    pso::buffer::Element,
+    traits::Pod,
+};
 
 /// Format for vertex attribute
 pub type AttributeFormat = Element<Format>;

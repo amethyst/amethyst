@@ -1,9 +1,12 @@
 //! Types for constructing render passes.
 
 use amethyst_core::specs::prelude::SystemData;
-use error::Result;
-use pipe::{Effect, NewEffect, Target};
-use types::{Encoder, Factory};
+
+use {
+    error::Result,
+    pipe::{Effect, NewEffect, Target},
+    types::{Encoder, Factory},
+};
 
 /// Used to fetch data from the game world for rendering in the pass.
 pub trait PassData<'a> {

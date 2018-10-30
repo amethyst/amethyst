@@ -1,15 +1,14 @@
 //! Provides texture formats
 //!
 
-pub use self::mesh::*;
-pub use self::mtl::*;
-pub use self::texture::*;
+pub use self::{mesh::*, mtl::*, texture::*};
+
+use serde::{de::DeserializeOwned, Serialize};
+
 use amethyst_assets::{AssetPrefab, Format, PrefabData, PrefabError, ProgressCounter};
 use amethyst_core::specs::prelude::Entity;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use shape::InternalShape;
-use {Mesh, ShapePrefab, Texture};
+
+use {shape::InternalShape, Mesh, ShapePrefab, Texture};
 
 mod mesh;
 mod mtl;

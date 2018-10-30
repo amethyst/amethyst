@@ -72,9 +72,11 @@ impl Source for Directory {
 
 #[cfg(test)]
 mod test {
-    use super::Directory;
-    use source::Source;
     use std::path::Path;
+
+    use source::Source;
+
+    use super::Directory;
 
     #[test]
     fn loads_asset_from_assets_directory() {

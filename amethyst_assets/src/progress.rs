@@ -4,6 +4,7 @@ use std::sync::{
 };
 
 use parking_lot::Mutex;
+
 use Error;
 
 /// Completion status, returned by `ProgressCounter::complete`.

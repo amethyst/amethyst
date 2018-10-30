@@ -1,18 +1,23 @@
-use image::{DynamicImage, ImageFormat, RgbaImage};
-
 use std::result::Result as StdResult;
+
+use gfx::{
+    format::{ChannelType, SurfaceType, SurfaceTyped},
+    texture::SamplerInfo,
+    traits::Pod,
+};
+use image::{DynamicImage, ImageFormat, RgbaImage};
 
 use amethyst_assets::{
     AssetStorage, Format, Handle, Loader, PrefabData, PrefabError, ProcessingState,
     ProgressCounter, Result, ResultExt, SimpleFormat,
 };
 use amethyst_core::specs::prelude::{Entity, Read, ReadExpect};
-use gfx::format::{ChannelType, SurfaceType, SurfaceTyped};
-use gfx::texture::SamplerInfo;
-use gfx::traits::Pod;
-use tex::{FilterMethod, Texture, TextureBuilder};
-use types::SurfaceFormat;
-use Renderer;
+
+use {
+    tex::{FilterMethod, Texture, TextureBuilder},
+    types::SurfaceFormat,
+    Renderer,
+};
 
 /// Additional texture metadata that can be passed to the asset loader or added to the prefab.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -513,8 +518,9 @@ impl SimpleFormat<Texture> for TextureFormat {
 }
 
 mod serde_helper {
-    use super::SamplerInfo;
     use tex::{FilterMethod, WrapMode};
+
+    use super::SamplerInfo;
 
     fn default_filter() -> FilterMethod {
         FilterMethod::Trilinear
