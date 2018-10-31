@@ -1,4 +1,4 @@
-# Amethyst Networking
+# Amethyst™ Networking
 
 The networking crate for the `amethyst` game engine. The main engine can be found at https://amethyst.rs.
 

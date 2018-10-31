@@ -6,7 +6,7 @@
 ## Presentation
 
 Howdy! This book will teach you everything you need to know about building video
-games and interactive simulations with the Amethyst game engine. This engine is
+games and interactive simulations with the Amethyst™ game engine. This engine is
 written entirely in [Rust][rs], a safe and fast systems programming language,
 and sports a clean and modern design. More correctly, though, Amethyst is
 actually a collection of separate libraries and tools that collectively make up a

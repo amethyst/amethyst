@@ -1,4 +1,4 @@
-# Amethyst - Rendering Engine
+# Amethyst™ - Rendering Engine
 
 [![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![MIT/Apache][s3]][li] [![Join us on Discord][s4]][di]
 

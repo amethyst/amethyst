@@ -1,6 +1,6 @@
 # amethyst_assets
 
-This crate is used for asset management in Amethyst, however
+This crate is used for asset management in Amethyst™, however
 it is designed to be also usable without other parts of Amethyst,
 as to attract more developers to it and to promote collaboration
 (instead of duplication).
@@ -17,5 +17,5 @@ MIT/Apache-2.
 
 ## License
 
-`amethyst_assets` is distributed under the terms of both the MIT 
+`amethyst_assets` is distributed under the terms of both the MIT
 license and the Apache License (Version 2.0).
