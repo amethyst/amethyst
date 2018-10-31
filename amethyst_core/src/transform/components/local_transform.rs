@@ -86,7 +86,9 @@ impl Transform {
         //     w.x, w.y, w.z, w.w, // Column 4
         // )
 
-        self.iso.to_homogeneous() * Matrix4::new_nonuniform_scaling(&self.scale)
+        self.iso
+            .to_homogeneous()
+            .prepend_nonuniform_scaling(&self.scale)
     }
 
     /// Returns a reference to the translation vector.
@@ -421,7 +423,7 @@ impl<'de> Deserialize<'de> for Transform {
                     .ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
                 let iso = Isometry3::from_parts(
-                    Translation3::from_vector(translation.into()),
+                    Translation3::new(translation[0], translation[1], translation[2]),
                     Unit::new_normalize(Quaternion::new(
                         rotation[0],
                         rotation[1],
@@ -469,7 +471,7 @@ impl<'de> Deserialize<'de> for Transform {
                 let scale: [f32; 3] = scale.unwrap_or([1.0; 3]);
 
                 let iso = Isometry3::from_parts(
-                    Translation3::from_vector(translation.into()),
+                    Translation3::new(translation[0], translation[1], translation[2]),
                     Unit::new_normalize(Quaternion::new(
                         rotation[0],
                         rotation[1],

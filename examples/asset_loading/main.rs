@@ -6,10 +6,7 @@ extern crate rayon;
 
 use amethyst::{
     assets::{Loader, Result as AssetResult, SimpleFormat},
-    core::{
-        nalgebra::Vector3,
-        Transform, TransformBundle,
-    },
+    core::{nalgebra::Vector3, Transform, TransformBundle},
     input::InputBundle,
     prelude::*,
     renderer::{

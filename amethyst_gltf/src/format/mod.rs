@@ -10,7 +10,7 @@ use {
         Error as AssetError, Format, FormatValue, Prefab, Result as AssetResult, ResultExt, Source,
     },
     core::{
-        nalgebra::{Unit, Quaternion},
+        nalgebra::{Quaternion, Unit},
         transform::Transform,
     },
 };

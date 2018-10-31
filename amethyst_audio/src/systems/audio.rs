@@ -10,7 +10,6 @@ use std::{
 use rodio::SpatialSink;
 
 use amethyst_core::{
-    nalgebra as na,
     specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, WriteStorage},
     transform::GlobalTransform,
 };
