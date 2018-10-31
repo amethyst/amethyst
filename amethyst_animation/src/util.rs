@@ -1,5 +1,5 @@
-use num_traits::cast::{NumCast, ToPrimitive};
 use minterpolate::InterpolationPrimitive;
+use num_traits::cast::{NumCast, ToPrimitive};
 
 use amethyst_core::{
     nalgebra::Real,

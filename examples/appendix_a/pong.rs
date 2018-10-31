@@ -1,9 +1,6 @@
 use amethyst::{
     assets::Loader,
-    core::{
-        nalgebra::{Translation3, Vector3},
-        transform::Transform,
-    },
+    core::transform::Transform,
     ecs::prelude::World,
     prelude::*,
     renderer::{

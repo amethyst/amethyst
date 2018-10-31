@@ -4,10 +4,7 @@ extern crate amethyst;
 
 use amethyst::{
     assets::Loader,
-    core::{
-        nalgebra::Vector3,
-        Transform, TransformBundle,
-    },
+    core::{nalgebra::Vector3, Transform, TransformBundle},
     prelude::*,
     renderer::*,
     utils::application_root_dir,
@@ -43,11 +40,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                 let metallic = 1.0f32 * (j as f32 / 4.0f32);
 
                 let mut pos = Transform::default();
-                pos.set_xyz(
-                    2.0f32 * (i - 2) as f32,
-                    2.0f32 * (j - 2) as f32,
-                    0.0,
-                );
+                pos.set_xyz(2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0);
 
                 let metallic = [metallic, metallic, metallic, 1.0].into();
                 let roughness = [roughness, roughness, roughness, 1.0].into();

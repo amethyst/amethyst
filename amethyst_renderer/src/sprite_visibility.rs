@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 use hibitset::BitSet;
 
 use amethyst_core::{
-    nalgebra::{self as na, Point3, Vector3},
+    nalgebra::{Point3, Vector3},
     specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
     GlobalTransform,
 };
@@ -68,7 +68,7 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
     fn run(
         &mut self,
         (entities, mut visibility, hidden, hidden_prop, active, camera, transparent, global): Self::SystemData,
-    ) {
+){
         let origin = Point3::origin();
 
         // The camera position is used to determine culling, but the sprites are ordered based on
