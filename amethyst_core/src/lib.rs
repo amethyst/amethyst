@@ -3,6 +3,7 @@
 #![warn(missing_docs)]
 
 pub extern crate nalgebra;
+pub extern crate nalgebra_glm;
 pub extern crate shred;
 pub extern crate shrev;
 pub extern crate specs;

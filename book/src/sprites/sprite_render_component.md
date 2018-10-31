@@ -70,7 +70,6 @@ Cool, finally we have all the parts, let's build a `SpriteRender` and attach it 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::assets::{AssetStorage, Loader};
-use amethyst::core::cgmath::Vector3;
 use amethyst::core::transform::Transform;
 # use amethyst::prelude::*;
 use amethyst::renderer::{
@@ -127,7 +126,7 @@ impl ExampleState {
 
         // Move the sprite to the middle of the window
         let mut sprite_transform = Transform::default();
-        sprite_transform.translation = Vector3::new(width / 2., height / 2., 0.);
+        sprite_transform.set_xyz(width / 2., height / 2., 0.);
 
         let sprite_render = SpriteRender {
             sprite_sheet: sprite_sheet_handle,

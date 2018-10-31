@@ -77,8 +77,8 @@ fn initialise_camera(world: &mut World) {
         .with(Camera::from(Projection::orthographic(
             0.0,
             ARENA_WIDTH,
-            ARENA_HEIGHT,
             0.0,
+            ARENA_HEIGHT,
         ))).with(transform)
         .build();
 }

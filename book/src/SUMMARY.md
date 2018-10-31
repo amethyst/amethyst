@@ -17,6 +17,7 @@
     * [Moving the paddles](./pong-tutorial/pong-tutorial-03.md)
     * [Making a ball move and bounce](./pong-tutorial/pong-tutorial-04.md)
     * [Call for contribution](./pong-tutorial/contribution.md)
+* [Math](./math.md)
 * [Animation](./animation.md)
     * [Interpolation](./animation/interpolation.md)
     * [Channel](./animation/channel.md)
