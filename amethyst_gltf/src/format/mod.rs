@@ -10,7 +10,7 @@ use {
         Error as AssetError, Format, FormatValue, Prefab, Result as AssetResult, ResultExt, Source,
     },
     core::{
-        nalgebra::{Unit, Quaternion},
+        nalgebra::{Quaternion, Unit},
         transform::Transform,
     },
 };
@@ -302,7 +302,7 @@ fn load_node(
         rotation[1],
         rotation[2],
     ));
-    local_transform.scale = scale.into();
+    *local_transform.scale_mut() = scale.into();
     prefab.data_or_default(entity_index).transform = Some(local_transform);
 
     // check for skinning

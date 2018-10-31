@@ -92,12 +92,13 @@ pub(crate) fn set_light_args(
         .join()
         .filter_map(|(light, transform)| {
             if let Light::Spot(ref light) = *light {
+                let position: [f32; 3] = transform.0.column(3).xyz().into();
                 Some(
                     SpotLightPod {
-                        position: transform.0.w.truncate().into(),
+                        position: position.into(),
                         color: light.color.into(),
                         direction: light.direction.into(),
-                        angle: light.angle.to_radians().cos(),
+                        angle: light.angle.cos(),
                         intensity: light.intensity,
                         range: light.range,
                         smoothness: light.smoothness,

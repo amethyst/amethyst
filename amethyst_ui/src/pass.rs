@@ -18,9 +18,8 @@ use hibitset::BitSet;
 use unicode_segmentation::UnicodeSegmentation;
 
 use amethyst_assets::{AssetStorage, Loader};
-use amethyst_core::{
-    cgmath::vec2 as cg_vec2,
-    specs::prelude::{Entities, Entity, Join, Read, ReadExpect, ReadStorage, WriteStorage},
+use amethyst_core::specs::prelude::{
+    Entities, Entity, Join, Read, ReadExpect, ReadStorage, WriteStorage,
 };
 use amethyst_renderer::{
     error::Result,

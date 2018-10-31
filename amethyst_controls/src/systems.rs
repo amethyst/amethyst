@@ -155,9 +155,8 @@ where
                 if let Event::DeviceEvent { ref event, .. } = *event {
                     if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
                         for (transform, _) in (&mut transform, &tag).join() {
-                            use std::f32::consts::PI;
-                            transform.pitch_local(-y as f32 * self.sensitivity_y * PI / 180.0);
-                            transform.yaw_global(-x as f32 * self.sensitivity_x * PI / 180.0);
+                            transform.pitch_local((-y as f32 * self.sensitivity_y).to_radians());
+                            transform.yaw_global((-x as f32 * self.sensitivity_x).to_radians());
                         }
                     }
                 }

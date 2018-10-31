@@ -10,7 +10,6 @@ use std::{
 use rodio::SpatialSink;
 
 use amethyst_core::{
-    nalgebra as na,
     specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, WriteStorage},
     transform::GlobalTransform,
 };
@@ -62,9 +61,15 @@ impl<'a> System<'a> for AudioSystem {
                 .and_then(|sl| transform.get(sl.0))
                 .or_else(|| transform.get(entity))
             {
-                let listener_transform = listener_transform.0.column(3).xyz();
-                let left_ear_position = listener_transform + listener.left_ear;
-                let right_ear_position = listener_transform + listener.right_ear;
+                let listener_transform = listener_transform.0;
+                let left_ear_position = listener_transform
+                    .transform_point(&listener.left_ear)
+                    .to_homogeneous()
+                    .xyz();
+                let right_ear_position = listener_transform
+                    .transform_point(&listener.right_ear)
+                    .to_homogeneous()
+                    .xyz();
                 for (transform, mut audio_emitter) in (&transform, &mut audio_emitter).join() {
                     let x = transform.0[(0, 3)];
                     let y = transform.0[(1, 3)];

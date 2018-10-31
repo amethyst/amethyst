@@ -48,7 +48,6 @@ Then let's add a `initialise_ball` function the same way we wrote the
 #                          TextureCoordinates, Sprite, SpriteSheet, SpriteSheetHandle, TextureMetadata};
 # use amethyst::ecs::World;
 # use amethyst::core::transform::Transform;
-# use amethyst::core::cgmath::Vector3;
 # use amethyst::ecs::prelude::{Component, DenseVecStorage};
 # pub struct Ball {
 #    pub velocity: [f32; 2],
@@ -69,7 +68,7 @@ Then let's add a `initialise_ball` function the same way we wrote the
 fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
     // Create the translation.
     let mut local_transform = Transform::default();
-    local_transform.translation = Vector3::new(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
+    local_transform.set_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 
     // Assign the sprite for the ball
     let sprite_render = SpriteRender {
@@ -171,8 +170,8 @@ impl<'s> System<'s> for MoveBallsSystem {
     fn run(&mut self, (balls, mut locals, time): Self::SystemData) {
         // Move every ball according to its speed, and the time passed.
         for (ball, local) in (&balls, &mut locals).join() {
-            local.translation[0] += ball.velocity[0] * time.delta_seconds();
-            local.translation[1] += ball.velocity[1] * time.delta_seconds();
+            local.translate_x(ball.velocity[0] * time.delta_seconds());
+            local.translate_y(ball.velocity[1] * time.delta_seconds());
         }
     }
 }
@@ -250,8 +249,8 @@ impl<'s> System<'s> for BounceSystem {
         // We also check for the velocity of the ball every time, to prevent multiple collisions
         // from occurring.
         for (ball, transform) in (&mut balls, &transforms).join() {
-            let ball_x = transform.translation[0];
-            let ball_y = transform.translation[1];
+            let ball_x = transform.translation().x;
+            let ball_y = transform.translation().y;
 
             // Bounce at the top or the bottom of the arena.
             if ball_y <= ball.radius && ball.velocity[1] < 0.0 {
@@ -262,8 +261,8 @@ impl<'s> System<'s> for BounceSystem {
 
             // Bounce at the paddles.
             for (paddle, paddle_transform) in (&paddles, &transforms).join() {
-                let paddle_x = paddle_transform.translation[0] - paddle.width * 0.5;
-                let paddle_y = paddle_transform.translation[1] - paddle.height * 0.5;
+                let paddle_x = paddle_transform.translation().x - paddle.width * 0.5;
+                let paddle_y = paddle_transform.translation().y - paddle.height * 0.5;
 
                 // To determine whether the ball has collided with a paddle, we create a larger
                 // rectangle around the current one, by subtracting the ball radius from the

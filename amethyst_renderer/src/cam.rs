@@ -22,14 +22,14 @@ pub enum Projection {
 }
 
 impl Projection {
-    /// Creates an orthographic projection with the given left, right, top, and
-    /// bottom plane distances.
-    pub fn orthographic(l: f32, r: f32, t: f32, b: f32) -> Projection {
+    /// Creates an orthographic projection with the given left, right, bottom, and
+    /// top plane distances.
+    pub fn orthographic(l: f32, r: f32, b: f32, t: f32) -> Projection {
         Projection::Orthographic(Orthographic3::new(l, r, b, t, 0.1, 2000.0))
     }
 
     /// Creates a perspective projection with the given aspect ratio and
-    /// field-of-view. `fov` is specified in degrees.
+    /// field-of-view. `fov` is specified in radians.
     pub fn perspective(aspect: f32, fov: f32) -> Projection {
         Projection::Perspective(Perspective3::new(aspect, fov, 0.1, 2000.0))
     }
@@ -59,17 +59,19 @@ impl Camera {
     /// upper right (1., 1.).
     /// View transformation will be multiplicative identity.
     pub fn standard_2d() -> Self {
-        Self::from(Projection::orthographic(-1., 1., 1., -1.))
+        Self::from(Projection::orthographic(-1., 1., -1., 1.))
     }
 
     /// Create a standard camera for 3D.
     ///
     /// Will use a perspective projection with aspect from the given screen dimensions and a field
-    /// of view of 60 degrees.
+    /// of view of π/3 radians (60 degrees).
     /// View transformation will be multiplicative identity.
     pub fn standard_3d(width: f32, height: f32) -> Self {
-        use std::f32::consts::PI;
-        Self::from(Projection::perspective(width / height, 60.0 * PI / 180.0))
+        Self::from(Projection::perspective(
+            width / height,
+            std::f32::consts::FRAC_PI_3,
+        ))
     }
 }
 
@@ -159,7 +161,7 @@ mod serde_ortho {
         D: Deserializer<'de>,
     {
         #[derive(Deserialize)]
-        #[serde(field_identifier, rename_all = "lowercase")]
+        #[serde(field_identifier, rename_all = "snake_case")]
         enum Field {
             Left,
             Right,
@@ -256,11 +258,11 @@ mod serde_ortho {
                     }
                 }
                 let left = left.ok_or_else(|| de::Error::missing_field("left"))?;
-                let right = right.ok_or_else(|| de::Error::missing_field("left"))?;
-                let bottom = bottom.ok_or_else(|| de::Error::missing_field("left"))?;
-                let top = top.ok_or_else(|| de::Error::missing_field("left"))?;
-                let znear = znear.ok_or_else(|| de::Error::missing_field("left"))?;
-                let zfar = zfar.ok_or_else(|| de::Error::missing_field("left"))?;
+                let right = right.ok_or_else(|| de::Error::missing_field("right"))?;
+                let bottom = bottom.ok_or_else(|| de::Error::missing_field("bottom"))?;
+                let top = top.ok_or_else(|| de::Error::missing_field("top"))?;
+                let znear = znear.ok_or_else(|| de::Error::missing_field("znear"))?;
+                let zfar = zfar.ok_or_else(|| de::Error::missing_field("zfar"))?;
 
                 Ok(Orthographic3::new(left, right, bottom, top, znear, zfar))
             }
@@ -314,7 +316,7 @@ mod serde_persp {
         D: Deserializer<'de>,
     {
         #[derive(Deserialize)]
-        #[serde(field_identifier, rename_all = "lowercase")]
+        #[serde(field_identifier, rename_all = "snake_case")]
         enum Field {
             Aspect,
             Fovy,
@@ -390,8 +392,8 @@ mod serde_persp {
                 }
                 let aspect = aspect.ok_or_else(|| de::Error::missing_field("aspect"))?;
                 let fovy = fovy.ok_or_else(|| de::Error::missing_field("fovy"))?;
-                let znear = znear.ok_or_else(|| de::Error::missing_field("left"))?;
-                let zfar = zfar.ok_or_else(|| de::Error::missing_field("left"))?;
+                let znear = znear.ok_or_else(|| de::Error::missing_field("znear"))?;
+                let zfar = zfar.ok_or_else(|| de::Error::missing_field("zfar"))?;
 
                 Ok(Perspective3::new(aspect, fovy, znear, zfar))
             }

@@ -88,8 +88,9 @@ impl GltfPrefab {
             let distance = extent.distance();
             let max = distance.x.max(distance.y).max(distance.z);
             let scale = max_distance / max;
-            self.transform.get_or_insert_with(Transform::default).scale =
-                Vector3::from_element(scale);
+            self.transform
+                .get_or_insert_with(Transform::default)
+                .set_scale(scale, scale, scale);
         }
     }
 }

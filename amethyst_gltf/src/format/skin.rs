@@ -6,7 +6,7 @@ use GltfPrefab;
 use {
     animation::{JointPrefab, SkinPrefab, SkinnablePrefab},
     assets::Prefab,
-    core::cgmath::{Matrix4, SquareMatrix},
+    core::nalgebra::Matrix4,
     renderer::JointTransformsPrefab,
 };
 

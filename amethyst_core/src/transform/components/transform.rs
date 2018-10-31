@@ -18,7 +18,7 @@ pub struct GlobalTransform(pub Matrix4<f32>);
 impl GlobalTransform {
     /// Checks whether each `f32` of the `GlobalTransform` is finite (not NaN or inf).
     pub fn is_finite(&self) -> bool {
-        !self.0.as_slice().iter().any(|f| !f32::is_finite(*f))
+        self.0.as_slice().iter().all(|f| f32::is_finite(*f))
     }
 }
 
@@ -60,5 +60,19 @@ impl AsRef<[[f32; 4]; 4]> for GlobalTransform {
 impl Borrow<[[f32; 4]; 4]> for GlobalTransform {
     fn borrow(&self) -> &[[f32; 4]; 4] {
         self.0.as_ref()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use GlobalTransform;
+
+    #[test]
+    fn is_finite() {
+        let mut transform = GlobalTransform::default();
+        assert!(transform.is_finite());
+
+        transform.0.fill_row(2, std::f32::NAN);
+        assert!(!transform.is_finite());
     }
 }

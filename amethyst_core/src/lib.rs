@@ -2,6 +2,7 @@
 
 #![warn(missing_docs)]
 
+pub extern crate approx;
 pub extern crate nalgebra;
 pub extern crate shred;
 pub extern crate shrev;
@@ -29,7 +30,6 @@ use std::sync::Arc;
 pub use {
     bundle::{Error, ErrorKind, Result, SystemBundle},
     event::EventReader,
-    orientation::Orientation,
     timing::*,
     transform::*,
 };
@@ -44,7 +44,6 @@ pub mod bundle;
 mod event;
 pub mod frame_limiter;
 mod named;
-mod orientation;
 pub mod timing;
 pub mod transform;
 

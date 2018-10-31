@@ -12,7 +12,7 @@ use amethyst_assets::{
     AssetStorage, Handle, Loader, PrefabData, PrefabError, Progress, ProgressCounter,
 };
 use amethyst_core::{
-    nalgebra::Vector3,
+    nalgebra::{Vector2, Vector3},
     specs::prelude::{Entity, Read, ReadExpect, WriteStorage},
 };
 
@@ -259,8 +259,8 @@ impl From<InternalShape> for Vec<PosTex> {
             .0
             .iter()
             .map(|v| PosTex {
-                position: v.0,
-                tex_coord: v.2,
+                position: Vector3::new(v.0[0], v.0[1], v.0[2]),
+                tex_coord: Vector2::new(v.2[0], v.2[1]),
             }).collect()
     }
 }
@@ -271,9 +271,9 @@ impl From<InternalShape> for Vec<PosNormTex> {
             .0
             .iter()
             .map(|v| PosNormTex {
-                position: v.0,
-                tex_coord: v.2,
-                normal: v.1,
+                position: Vector3::new(v.0[0], v.0[1], v.0[2]),
+                tex_coord: Vector2::new(v.2[0], v.2[1]),
+                normal: Vector3::new(v.1[0], v.1[1], v.1[2]),
             }).collect()
     }
 }
@@ -284,10 +284,10 @@ impl From<InternalShape> for Vec<PosNormTangTex> {
             .0
             .iter()
             .map(|v| PosNormTangTex {
-                position: v.0,
-                tex_coord: v.2,
-                normal: v.1,
-                tangent: v.3,
+                position: Vector3::new(v.0[0], v.0[1], v.0[2]),
+                tex_coord: Vector2::new(v.2[0], v.2[1]),
+                normal: Vector3::new(v.1[0], v.1[1], v.1[2]),
+                tangent: Vector3::new(v.3[0], v.3[1], v.3[2]),
             }).collect()
     }
 }
