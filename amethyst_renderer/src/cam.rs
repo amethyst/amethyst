@@ -22,9 +22,9 @@ pub enum Projection {
 }
 
 impl Projection {
-    /// Creates an orthographic projection with the given left, right, top, and
-    /// bottom plane distances.
-    pub fn orthographic(l: f32, r: f32, t: f32, b: f32) -> Projection {
+    /// Creates an orthographic projection with the given left, right, bottom, and
+    /// top plane distances.
+    pub fn orthographic(l: f32, r: f32, b: f32, t: f32) -> Projection {
         Projection::Orthographic(Orthographic3::new(l, r, b, t, 0.1, 2000.0))
     }
 
@@ -59,7 +59,7 @@ impl Camera {
     /// upper right (1., 1.).
     /// View transformation will be multiplicative identity.
     pub fn standard_2d() -> Self {
-        Self::from(Projection::orthographic(-1., 1., 1., -1.))
+        Self::from(Projection::orthographic(-1., 1., -1., 1.))
     }
 
     /// Create a standard camera for 3D.
