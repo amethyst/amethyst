@@ -205,6 +205,10 @@ Amethyst supplies a derive macro for creating the `PrefabData` implementation fo
 * Single `Component` 
 * Aggregate `PrefabData` structs which contain other `PrefabData` constructs, and optionally simple data `Component`s
 
+In addition, deriving a `Prefab` requires that `amethyst::ecs::Entity` and
+ `amethyst:assets::{PrefabData, PrefabError, ProgressCounter}` are imported
+ and visible in the current scope. This is due to how Rust macros work.
+
 An example of a single `Component` derive:
 
 ```rust,no_run,noplaypen

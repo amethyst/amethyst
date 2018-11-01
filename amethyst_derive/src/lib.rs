@@ -20,6 +20,9 @@ pub fn event_reader_derive(input: TokenStream) -> TokenStream {
     gen.into()
 }
 
+/// Deriving a `Prefab` requires that `amethyst::ecs::Entity` and
+/// `amethyst:assets::{PrefabData, PrefabError, ProgressCounter}` are imported
+/// and visible in the current scope. This is due to how Rust macros work.
 #[proc_macro_derive(PrefabData, attributes(prefab))]
 pub fn prefab_data_derive(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
