@@ -81,7 +81,7 @@ where
                                 .inner
                                 .iter()
                                 .filter(|p| p.1 == *channel)
-                                .map(|p| p.2)
+                                .map(|p| p.2.clone())
                                 .last()
                             {
                                 comp.apply_sample(channel, &p, &apply_data);
@@ -141,7 +141,11 @@ fn process_sampler<T>(
         }
         Done => {
             if let EndControl::Normal = control.end {
-                output.push((control.blend_weight, control.channel.clone(), control.after));
+                output.push((
+                    control.blend_weight,
+                    control.channel.clone(),
+                    control.after.clone(),
+                ));
             }
             if let EndControl::Stay = control.end {
                 let last_frame = sampler.input.last().cloned().unwrap_or(0.);
