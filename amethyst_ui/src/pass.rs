@@ -416,12 +416,14 @@ impl Pass for DrawUi {
                 };
 
                 // Render background highlight
-                let brush = &mut self
-                    .glyph_brushes
-                    .get_mut(&ui_text.brush_id
-                        .expect("Unreachable: `ui_text.brush_id` is guarenteed to be set earlier in this function")
-                    ).expect("Unable to get brush from `glyph_brushes`-map");
-
+                let brush = {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("ui_pass_draw_uitext_backgroundhighlight");
+                    &mut self
+                        .glyph_brushes
+                        .get_mut(&ui_text.brush_id.expect("Unreachable: `ui_text.brush_id` is guarenteed to be set earlier in this function"))
+                        .expect("Unable to get brush from `glyph_brushes`-map")
+                };
                 // Maintain the glyph cache (used by the input code).
                 ui_text.cached_glyphs.clear();
                 ui_text
@@ -454,6 +456,8 @@ impl Pass for DrawUi {
                         .map(|tex| (tex, (start, end)))
                 }) {
                     // Text selection rendering
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("ui_pass_draw_uitext_rendertextselection");
 
                     effect.data.textures.push(texture.view().clone());
                     effect.data.samplers.push(texture.sampler().clone());
@@ -491,18 +495,17 @@ impl Pass for DrawUi {
                     effect.data.samplers.clear();
                 }
                 // Render text
-                brush.queue(section.clone());
-                if let Err(err) = brush.draw_queued(
-                    encoder,
-                    &effect.data.out_blends[0],
-                    &effect
-                        .data
-                        .out_depth
-                        .as_ref()
-                        .expect("Unable to get depth of effect")
-                        .0,
-                ) {
-                    error!("Unable to draw text! Error: {:?}", err);
+                {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("ui_pass_draw_uitext_rendertext");
+                    brush.queue(section.clone());
+                    if let Err(err) = brush.draw_queued(
+                        encoder,
+                        &effect.data.out_blends[0],
+                        &effect.data.out_depth.as_ref().expect("Unable to get depth of effect").0,
+                    ) {
+                        error!("Unable to draw text! Error: {:?}", err);
+                    }
                 }
                 // Render cursor
                 if focused.entity == Some(entity) {
@@ -516,6 +519,8 @@ impl Pass for DrawUi {
                             ))
                             .map(|tex| (tex, ed))
                     }) {
+                        #[cfg(feature = "profiler")]
+                        profile_scope!("ui_pass_draw_uitext_rendercursor");
                         let blink_on = editing.cursor_blink_timer < 0.5 / CURSOR_BLINK_RATE;
                         if editing.use_block_cursor || blink_on {
                             effect.data.textures.push(texture.view().clone());

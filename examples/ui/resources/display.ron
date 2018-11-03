@@ -6,5 +6,5 @@
   multisampling: 0,
   title: "UI example",
   visibility: true,
-  vsync: true,
+  vsync: false,
 )
