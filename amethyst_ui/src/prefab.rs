@@ -175,7 +175,7 @@ where
     /// Font color
     pub color: [f32; 4],
     /// Font
-    pub font: AssetPrefab<FontAsset, F>,
+    pub font: Option<AssetPrefab<FontAsset, F>>,
     /// Should the text be shown as dots instead of the proper characters?
     #[serde(default)]
     pub password: bool,
@@ -235,7 +235,11 @@ where
         _: &[Entity],
     ) -> Result<(), PrefabError> {
         let (ref mut texts, ref mut editables, ref mut fonts, ref mut focused) = system_data;
-        let font_handle = self.font.add_to_entity(entity, fonts, &[])?;
+        let font_handle = self
+            .font
+            .as_ref()
+            .expect("did not load sub assets")
+            .add_to_entity(entity, fonts, &[])?;
         let mut ui_text = UiText::new(font_handle, self.text.clone(), self.color, self.font_size);
         ui_text.password = self.password;
 
@@ -271,7 +275,12 @@ where
         system_data: &mut Self::SystemData,
     ) -> Result<bool, PrefabError> {
         let (_, _, ref mut fonts, _) = system_data;
-        self.font.load_sub_assets(progress, fonts)
+        if self.font.is_none() {
+            let (ref loader, _, ref storage) = fonts;
+            self.font = Some(AssetPrefab::Handle(get_default_font(loader, storage)));
+        }
+
+        self.font.as_mut().unwrap().load_sub_assets(progress, fonts)
     }
 }
 
@@ -344,7 +353,7 @@ where
     /// Font size
     pub font_size: f32,
     /// Font
-    pub font: AssetPrefab<FontAsset, FF>,
+    pub font: Option<AssetPrefab<FontAsset, FF>>,
     /// Default text color
     pub normal_text_color: [f32; 4],
     /// Default image
