@@ -1,3 +1,6 @@
+use std::io::{self, Read};
+use std::fs::File;
+
 use font_kit::handle::Handle as FontKitHandle;
 
 use amethyst_assets::{AssetStorage, Loader, SimpleFormat};
@@ -7,6 +10,12 @@ use {
     format::{FontAsset, FontHandle, TtfFormat},
 };
 
+fn read_file(mut file: File) -> Result<Vec<u8>, io::Error>  {
+    let mut buffer = Vec::new();
+    file.read_to_end(&mut buffer)?;
+    Ok(buffer)
+}
+
 /// Get the system default fonts.
 /// If unable to, gets the local square.ttf font.
 pub fn get_default_font(loader: &Loader, storage: &AssetStorage<FontAsset>) -> FontHandle {
@@ -14,16 +23,32 @@ pub fn get_default_font(loader: &Loader, storage: &AssetStorage<FontAsset>) -> F
 
     match system_font {
         Ok(handle) => match handle {
-            FontKitHandle::Path { .. } => unimplemented!(
-                "Default system font was provided as a path, this is not yet supported.
-				If you see this message, open an issue so that we know we need to implement it."
-            ),
+            FontKitHandle::Path { path, .. } => if let Some(file_name) = path.file_name().and_then(|file_name| file_name.to_str()) {
+                let format = if file_name.ends_with(".ttf") || file_name.ends_with(".otf") {
+                    Some(TtfFormat)
+                } else {
+                    warn!("System font '{}' has unknown format", file_name);
+                    None
+                };
+
+                if let Some(format) = format {
+                    match File::open(&path).and_then(read_file) {
+                        Ok(bytes) => match format.import(bytes, ()) {
+                            Ok(data) => return loader.load_from_data(data, (), storage),
+                            Err(err) => warn!("System font at '{}' cannot be loaded. Fallback to default. Error: {}", path.display(), err),
+                        },
+                        Err(err) => warn!("System font at '{}' is not available for use. Fallback to default. Error: {}", path.display(), err)
+                    }
+                }
+            } else {
+                warn!("Unable to get system font name");
+            },
             FontKitHandle::Memory { bytes, .. } => {
                 let font_data = TtfFormat.import(bytes.to_vec(), ());
                 match font_data {
-					Ok(data) => return loader.load_from_data(data, (), storage),
-					Err(e) => warn!("Failed to load default system font from bytes. Falling back to built-in.\nError: {:?}", e),
-				}
+                    Ok(data) => return loader.load_from_data(data, (), storage),
+                    Err(e) => warn!("Failed to load default system font from bytes. Falling back to built-in.\nError: {:?}", e),
+                }
             }
         },
         Err(e) => warn!(
