@@ -3,7 +3,6 @@
 extern crate amethyst;
 #[macro_use]
 extern crate serde_derive;
-extern crate ron;
 
 mod audio;
 mod bundle;
@@ -13,9 +12,7 @@ mod systems;
 
 use amethyst::{
     audio::AudioBundle,
-    core::{
-        frame_limiter::FrameRateLimitStrategy, transform::Transform, transform::TransformBundle,
-    },
+    core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle},
     ecs::prelude::{Component, DenseVecStorage},
     input::InputBundle,
     prelude::*,
@@ -67,8 +64,6 @@ fn main() -> amethyst::Result<()> {
         .with_resource(pong_config.ball)
         .with_resource(pong_config.paddles)
         .build(game_data)?;
-
-    println!("{}", ron::ser::to_string(&Transform::default()).unwrap());
 
     game.run();
     Ok(())

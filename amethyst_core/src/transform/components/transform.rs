@@ -62,3 +62,17 @@ impl Borrow<[[f32; 4]; 4]> for GlobalTransform {
         self.0.as_ref()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use GlobalTransform;
+
+    #[test]
+    fn is_finite() {
+        let mut transform = GlobalTransform::default();
+        assert!(transform.is_finite());
+
+        transform.0.fill_row(2, std::f32::NAN);
+        assert!(!transform.is_finite());
+    }
+}
