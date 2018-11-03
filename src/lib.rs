@@ -95,7 +95,7 @@ pub use self::{
     app::{Application, ApplicationBuilder, CoreApplication},
     error::{Error, Result},
     game_data::{DataInit, GameData, GameDataBuilder},
-    logger::{start_logger, LevelFilter as LogLevelFilter, LoggerConfig, StdoutLog},
+    logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
     state::{
         EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, StateMachine, Trans,
     },
