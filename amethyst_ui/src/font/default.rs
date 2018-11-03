@@ -16,26 +16,28 @@ pub fn get_default_font(loader: &Loader, storage: &AssetStorage<FontAsset>) -> F
 
     match system_font {
         Ok(handle) => match handle {
-            FontKitHandle::Path { path, .. } => if let Some(file_name) = path.file_name().and_then(|file_name| file_name.to_str()) {
-                let format = if file_name.ends_with(".ttf") || file_name.ends_with(".otf") {
-                    Some(TtfFormat)
-                } else {
-                    error!("System font '{}' has unknown format", file_name);
-                    None
-                };
+            FontKitHandle::Path { path, .. } => {
+                if let Some(file_name) = path.file_name().and_then(|file_name| file_name.to_str()) {
+                    let format = if file_name.ends_with(".ttf") || file_name.ends_with(".otf") {
+                        Some(TtfFormat)
+                    } else {
+                        error!("System font '{}' has unknown format", file_name);
+                        None
+                    };
 
-                if let Some(format) = format {
-                    match fs::read(&path) {
+                    if let Some(format) = format {
+                        match fs::read(&path) {
                         Ok(bytes) => match format.import(bytes, ()) {
                             Ok(data) => return loader.load_from_data(data, (), storage),
                             Err(err) => warn!("System font at '{}' cannot be loaded. Fallback to default. Error: {}", path.display(), err),
                         },
                         Err(err) => warn!("System font at '{}' is not available for use. Fallback to default. Error: {}", path.display(), err)
                     }
+                    }
+                } else {
+                    warn!("Unable to get system font name");
                 }
-            } else {
-                warn!("Unable to get system font name");
-            },
+            }
             FontKitHandle::Memory { bytes, .. } => {
                 let font_data = TtfFormat.import(bytes.to_vec(), ());
                 match font_data {
