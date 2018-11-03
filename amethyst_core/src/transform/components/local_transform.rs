@@ -53,7 +53,6 @@ impl Transform {
     /// assert_eq!(t.iso.rotation, rotation);
     /// ```
     // FIXME doctest
-    // TODO: fix example
     #[inline]
     pub fn look_at(&mut self, target: Vector3<f32>, up: Vector3<f32>) -> &mut Self {
         self.iso.rotation =
@@ -67,25 +66,6 @@ impl Transform {
     /// the global (or world) matrix for the current entity.
     #[inline]
     pub fn matrix(&self) -> Matrix4<f32> {
-        // This is a hot function, so manually implement the matrix-multiply to avoid a load of
-        // unnecessary +0s.
-        // Note: Not benchmarked
-
-        // let quat = self.rotation.to_rotation_matrix();
-        // let s = quat.matrix().as_slice();
-
-        // let x: Vector4<f32> = Vector4::new(s[0], s[1], s[2], 0.0) * self.scale.x;
-        // let y: Vector4<f32> = Vector4::new(s[3], s[4], s[5], 0.0) * self.scale.x;
-        // let z: Vector4<f32> = Vector4::new(s[6], s[7], s[8], 0.0) * self.scale.x;
-        // let w: Vector4<f32> = self.translation.insert_row(3, 0.0);
-
-        // Matrix4::new(
-        //     x.x, x.y, x.z, x.w, // Column 1
-        //     y.x, y.y, y.z, y.w, // Column 2
-        //     z.x, z.y, z.z, z.w, // Column 3
-        //     w.x, w.y, w.z, w.w, // Column 4
-        // )
-
         self.iso
             .to_homogeneous()
             .prepend_nonuniform_scaling(&self.scale)
@@ -480,8 +460,6 @@ impl<'de> Deserialize<'de> for Transform {
                     )),
                 );
                 let scale = scale.into();
-
-                eprintln!("iso, scale = {:?} {:?}", iso, scale);
 
                 Ok(Transform { iso, scale })
             }

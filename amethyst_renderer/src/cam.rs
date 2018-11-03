@@ -68,8 +68,10 @@ impl Camera {
     /// of view of 60 degrees.
     /// View transformation will be multiplicative identity.
     pub fn standard_3d(width: f32, height: f32) -> Self {
-        use std::f32::consts::PI;
-        Self::from(Projection::perspective(width / height, 60.0 * PI / 180.0))
+        Self::from(Projection::perspective(
+            width / height,
+            60.0_f32.to_radians(),
+        ))
     }
 }
 
