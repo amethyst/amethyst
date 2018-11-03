@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `UiPrefab` field `hidden: bool` to hide entities ([#1051])
 * `PrefabData` can now be derived for many situations, see the book for more information ([#1035])
 * Support for DirectionalLight and SpotLight in PBM pass. ([#1074], [#1081])
+* `amethyst_ui::get_default_font` supports loading system font from Path. ([#1108])
 
 ### Changed
 
@@ -29,6 +30,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1035]: https://github.com/amethyst/amethyst/pull/1035
 [#1074]: https://github.com/amethyst/amethyst/pull/1074
 [#1081]: https://github.com/amethyst/amethyst/pull/1081
+[#1108]: https://github.com/amethyst/amethyst/pull/1108
 
 ## [0.9.0] - 2018-10
 ### Added
