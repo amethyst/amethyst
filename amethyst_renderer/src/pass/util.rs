@@ -119,9 +119,6 @@ pub(crate) fn add_textures(
 ) {
     use self::TextureType::*;
 
-    #[cfg(feature = "profiler")]
-    profile_scope!("render_addtextures");
-
     for ty in types {
         let texture = match *ty {
             Albedo => storage
@@ -206,9 +203,6 @@ pub(crate) fn set_texture_offsets(
 ) {
     use self::TextureType::*;
 
-    #[cfg(feature = "profiler")]
-    profile_scope!("render_settextureoffsets");
-
     for ty in types {
         match *ty {
             Albedo => effect.update_constant_buffer(
@@ -268,9 +262,6 @@ pub fn set_vertex_args(
     camera: Option<(&Camera, &GlobalTransform)>,
     global: &GlobalTransform,
 ) {
-    #[cfg(feature = "profiler")]
-    profile_scope!("render_setvertexargs");
-
     let vertex_args = camera
         .as_ref()
         .map(|&(ref cam, ref transform)| {

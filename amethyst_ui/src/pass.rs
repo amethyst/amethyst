@@ -118,6 +118,8 @@ impl<'a> PassData<'a> for DrawUi {
 
 impl Pass for DrawUi {
     fn compile(&mut self, mut effect: NewEffect<'_>) -> Result<Effect> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("ui_pass_build");
         // Initialize a single unit quad, we'll use this mesh when drawing quads later.
         // Centered around (0,0) and of size 2
         let data = Shape::Plane(None).generate_vertices::<Vec<PosTex>>(None);
@@ -158,8 +160,13 @@ impl Pass for DrawUi {
             hidden_prop,
         ): <Self as PassData<'_>>::Data,
     ) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("ui_pass_apply");
+
         // Populate and update the draw order cache.
         {
+            #[cfg(feature = "profiler")]
+            profile_scope!("ui_pass_populatebitset");
             let bitset = &mut self.cached_draw_order.cached;
             self.cached_draw_order.cache.retain(|&(_z, entity)| {
                 let keep = ui_transform.contains(entity);
@@ -181,6 +188,8 @@ impl Pass for DrawUi {
         // the sorting step.
         let transform_set = ui_transform.mask().clone();
         {
+            #[cfg(feature = "profiler")]
+            profile_scope!("ui_pass_insertsorted");
             // Create a bitset containing only the new indices.
             let new = (&transform_set ^ &self.cached_draw_order.cached) & &transform_set;
             for (entity, transform, _new) in (&*entities, &ui_transform, &new).join() {
@@ -206,9 +215,13 @@ impl Pass for DrawUi {
         // Sort from largest z value to smallest z value.
         // Most of the time this shouldn't do anything but you still need it for if the z values
         // change.
-        self.cached_draw_order
-            .cache
-            .sort_unstable_by(|&(z1, _), &(z2, _)| z1.partial_cmp(&z2).unwrap_or(Ordering::Equal));
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("ui_pass_sortz");
+            self.cached_draw_order
+                .cache
+                .sort_unstable_by(|&(z1, _), &(z2, _)| z1.partial_cmp(&z2).unwrap_or(Ordering::Equal));
+        }
 
         // Inverted screen dimensions. Used to scale from pixel coordinates to the opengl coordinates in the vertex shader.
         let invert_window_size = [
@@ -235,11 +248,17 @@ impl Pass for DrawUi {
             .map(|(id, _)| *id)
             .collect::<HashSet<_>>();
 
-        let highest_abs_z = (&ui_transform,)
-            .join()
-            .map(|t| t.0.global_z)
-            .fold(1.0, |highest, current| current.abs().max(highest));
+        let highest_abs_z = {
+            #[cfg(feature = "profiler")]
+            profile_scope!("ui_pass_findhighestz");
+            (&ui_transform,)
+                .join()
+                .map(|t| t.0.global_z)
+                .fold(1.0, |highest, current| current.abs().max(highest))
+        };
         for &(_z, entity) in &self.cached_draw_order.cache {
+            #[cfg(feature = "profiler")]
+            profile_scope!("ui_pass_draw_singleentity");
             // Do not render hidden entities.
             if hidden.contains(entity) || hidden_prop.contains(entity) {
                 ui_text
@@ -255,6 +274,8 @@ impl Pass for DrawUi {
                 .get(entity)
                 .and_then(|image| tex_storage.get(&image.texture))
             {
+                #[cfg(feature = "profiler")]
+                profile_scope!("ui_pass_draw_uiimage");
                 let vertex_args = VertexArgs {
                     invert_window_size: invert_window_size.into(),
                     // Coordinates are middle centered. It makes it easier to do layouting in most cases.
@@ -271,6 +292,8 @@ impl Pass for DrawUi {
             }
 
             if let Some(ui_text) = ui_text.get_mut(entity) {
+                #[cfg(feature = "profiler")]
+                profile_scope!("ui_pass_draw_uitext");
                 // Maintain glyph brushes.
                 if ui_text.brush_id.is_none() || ui_text.font != ui_text.cached_font {
                     let font = match font_storage.get(&ui_text.font) {
