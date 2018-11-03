@@ -1,5 +1,4 @@
-use std::io::{self, Read};
-use std::fs::File;
+use std::fs;
 
 use font_kit::handle::Handle as FontKitHandle;
 
@@ -9,12 +8,6 @@ use {
     font::systemfont::default_system_font,
     format::{FontAsset, FontHandle, TtfFormat},
 };
-
-fn read_file(mut file: File) -> Result<Vec<u8>, io::Error>  {
-    let mut buffer = Vec::new();
-    file.read_to_end(&mut buffer)?;
-    Ok(buffer)
-}
 
 /// Get the system default fonts.
 /// If unable to, gets the local square.ttf font.
@@ -27,12 +20,12 @@ pub fn get_default_font(loader: &Loader, storage: &AssetStorage<FontAsset>) -> F
                 let format = if file_name.ends_with(".ttf") || file_name.ends_with(".otf") {
                     Some(TtfFormat)
                 } else {
-                    warn!("System font '{}' has unknown format", file_name);
+                    error!("System font '{}' has unknown format", file_name);
                     None
                 };
 
                 if let Some(format) = format {
-                    match File::open(&path).and_then(read_file) {
+                    match fs::read(&path) {
                         Ok(bytes) => match format.import(bytes, ()) {
                             Ok(data) => return loader.load_from_data(data, (), storage),
                             Err(err) => warn!("System font at '{}' cannot be loaded. Fallback to default. Error: {}", path.display(), err),
