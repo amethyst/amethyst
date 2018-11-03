@@ -17,11 +17,11 @@ pub fn get_default_font(loader: &Loader, storage: &AssetStorage<FontAsset>) -> F
     match system_font {
         Ok(handle) => match handle {
             FontKitHandle::Path { path, .. } => {
-                if let Some(file_name) = path.file_name().and_then(|file_name| file_name.to_str()) {
-                    let format = if file_name.ends_with(".ttf") || file_name.ends_with(".otf") {
+                if let Some(file_extension) = path.extension() {
+                    let format = if file_extension == "ttf" || file_extension == "otf" {
                         Some(TtfFormat)
                     } else {
-                        error!("System font '{}' has unknown format", file_name);
+                        error!("System font '{}' has unknown format", path.display());
                         None
                     };
 
@@ -35,7 +35,7 @@ pub fn get_default_font(loader: &Loader, storage: &AssetStorage<FontAsset>) -> F
                     }
                     }
                 } else {
-                    warn!("Unable to get system font name");
+                    warn!("System font has no file extension!");
                 }
             }
             FontKitHandle::Memory { bytes, .. } => {
