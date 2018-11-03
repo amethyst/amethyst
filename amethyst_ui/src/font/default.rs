@@ -31,8 +31,8 @@ pub fn get_default_font(loader: &Loader, storage: &AssetStorage<FontAsset>) -> F
                                 Ok(data) => return loader.load_from_data(data, (), storage),
                                 Err(err) => warn!("System font at '{}' cannot be loaded. Fallback to default. Error: {}", path.display(), err),
                             },
-                        Err(err) => warn!("System font at '{}' is not available for use. Fallback to default. Error: {}", path.display(), err)
-                    }
+                            Err(err) => warn!("System font at '{}' is not available for use. Fallback to default. Error: {}", path.display(), err)
+                        }
                     }
                 } else {
                     warn!("System font has no file extension!");
