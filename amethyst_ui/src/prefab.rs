@@ -5,7 +5,10 @@ use amethyst_assets::{
     PrefabLoaderSystem, Progress, ProgressCounter, Result as AssetResult, ResultExt, SimpleFormat,
 };
 use amethyst_audio::{AudioFormat, Source as Audio};
-use amethyst_core::specs::prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage};
+use amethyst_core::specs::{
+    error::BoxedErr,
+    prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage},
+};
 use amethyst_renderer::{HiddenPropagate, Texture, TextureFormat, TextureMetadata, TexturePrefab};
 
 use super::*;
@@ -238,7 +241,7 @@ where
         let font_handle = self
             .font
             .as_ref()
-            .expect("did not load sub assets")
+            .ok_or_else(|| PrefabError::Custom(BoxedErr(Box::from("did not load sub assets"))))?
             .add_to_entity(entity, fonts, &[])?;
         let mut ui_text = UiText::new(font_handle, self.text.clone(), self.color, self.font_size);
         ui_text.password = self.password;
