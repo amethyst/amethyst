@@ -39,12 +39,22 @@ impl Default for LoggerConfig {
     }
 }
 
+/// Allows the creation of a logger with a set of custom configurations. If no custom configuration
+/// is required [`start_logger`] can be used instead.
+///
+/// # Examples
+/// ```
+/// amethyst::Logger::from_config(amethyst::LoggerConfig::default())
+///     .level_for("gfx_device_gl", log::LevelFilter::Warn)
+///     .level_for("gfx_glyph", log::LevelFilter::Error)
+///     .start();
+/// ```
 pub struct Logger {
     dispatch: fern::Dispatch,
 }
 
 impl Logger {
-    pub fn new() -> Self {
+    fn new() -> Self {
         let dispatch = fern::Dispatch::new().format(|out, message, record| {
             out.finish(format_args!(
                 "[{level}][{target}] {message}",
@@ -56,6 +66,7 @@ impl Logger {
         Logger { dispatch }
     }
 
+    /// Create a new Logger from [`LoggerConfig`]
     pub fn from_config(mut config: LoggerConfig) -> Self {
         if config.allow_env_override {
             env_var_override(&mut config);
@@ -67,9 +78,9 @@ impl Logger {
         match config.stdout {
             StdoutLog::Plain => logger.dispatch = logger.dispatch.chain(io::stdout()),
             StdoutLog::Colored => {
-                logger.dispatch = logger.dispatch.chain(Logger::colored_stdout(
-                    fern::colors::ColoredLevelConfig::new(),
-                ))
+                logger.dispatch = logger
+                    .dispatch
+                    .chain(colored_stdout(fern::colors::ColoredLevelConfig::new()))
             }
             StdoutLog::Off => {}
         }
@@ -84,28 +95,21 @@ impl Logger {
         logger
     }
 
-    pub fn colored_stdout(color_config: fern::colors::ColoredLevelConfig) -> fern::Dispatch {
-        fern::Dispatch::new()
-            .chain(io::stdout())
-            .format(move |out, message, record| {
-                let color = color_config.get_color(&record.level());
-                out.finish(format_args!(
-                    "{color}{message}{color_reset}",
-                    color = format!("\x1B[{}m", color.to_fg_str()),
-                    message = message,
-                    color_reset = "\x1B[0m",
-                ))
-            })
+    /// Set individual log levels for modules.
+    pub fn level_for<T: Into<std::borrow::Cow<'static, str>>>(
+        mut self,
+        module: T,
+        level: LevelFilter,
+    ) -> Self {
+        self.dispatch = self.dispatch.level_for(module, level);
+        self
     }
 
+    /// Starts [`Logger`] by consuming it.
     pub fn start(self) {
         self.dispatch.apply().unwrap_or_else(|_| {
             debug!("Global logger already set, default Amethyst logger will not be used")
         });
-    }
-
-    pub fn get_dispatch(self) -> fern::Dispatch {
-        self.dispatch
     }
 }
 
@@ -139,4 +143,18 @@ fn env_var_override(config: &mut LoggerConfig) {
     if let Ok(path) = env::var("AMETHYST_LOG_FILE_PATH") {
         config.log_file = Some(PathBuf::from(path));
     }
+}
+
+fn colored_stdout(color_config: fern::colors::ColoredLevelConfig) -> fern::Dispatch {
+    fern::Dispatch::new()
+        .chain(io::stdout())
+        .format(move |out, message, record| {
+            let color = color_config.get_color(&record.level());
+            out.finish(format_args!(
+                "{color}{message}{color_reset}",
+                color = format!("\x1B[{}m", color.to_fg_str()),
+                message = message,
+                color_reset = "\x1B[0m",
+            ))
+        })
 }
