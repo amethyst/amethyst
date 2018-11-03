@@ -275,12 +275,12 @@ where
         system_data: &mut Self::SystemData,
     ) -> Result<bool, PrefabError> {
         let (_, _, ref mut fonts, _) = system_data;
-        if self.font.is_none() {
-            let (ref loader, _, ref storage) = fonts;
-            self.font = Some(AssetPrefab::Handle(get_default_font(loader, storage)));
-        }
 
-        self.font.as_mut().unwrap().load_sub_assets(progress, fonts)
+        self.font
+            .get_or_insert_with(|| {
+                let (ref loader, _, ref storage) = fonts;
+                AssetPrefab::Handle(get_default_font(loader, storage))
+            }).load_sub_assets(progress, fonts)
     }
 }
 
