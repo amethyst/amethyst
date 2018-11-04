@@ -7,7 +7,7 @@ separately.
 To prepare for our `BallConfig`, add the following line to the top of `config.rs`:
 
 ```rust,ignore
-use amethyst::core::cgmath::Vector2;
+use amethyst::core::nalgebra::Vector2;
 ```
 
 The `BallConfig` will replace the `BALL_VELOCITY_X`, `BALL_VELOCITY_Y`, `BALL_RADIUS`, and `BALL_COLOR` 
@@ -140,4 +140,4 @@ very easy with RON; we just add an additional level of nesting.
 This configuration sets the ball to be orange, while retaining the same size and velocity as the original 
 example.
 
-[vec2]: https://docs.rs/cgmath/0.16.0/cgmath/struct.Vector2.html
+[vec2]: https://nalgebra.org/rustdoc/nalgebra/base/type.Vector2.html

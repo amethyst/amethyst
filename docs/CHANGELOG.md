@@ -19,6 +19,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 
+* `nalgebra` is now the math library used by the engine ([#1066])
+
 ### Removed
 
 ### Fixed
@@ -29,6 +31,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1035]: https://github.com/amethyst/amethyst/pull/1035
 [#1074]: https://github.com/amethyst/amethyst/pull/1074
 [#1081]: https://github.com/amethyst/amethyst/pull/1081
+[#1066]: https://github.com/amethyst/amethyst/pull/1066
 
 ## [0.9.0] - 2018-10
 ### Added

@@ -252,7 +252,7 @@ where
         self
     }
 
-    /// Rotates the mesh a certain number of degrees around the given axis.
+    /// Rotates the mesh around the given axis. `angle` is specified in radians.
     pub fn with_rotation(mut self, axis: Unit<Vector3<f32>>, angle: f32) -> Self {
         let rot = Rotation3::from_axis_angle(&axis, angle);
         self.transform *= rot.to_homogeneous();
