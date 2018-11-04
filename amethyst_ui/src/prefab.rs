@@ -16,19 +16,38 @@ use super::*;
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(default)]
 pub struct UiTransformBuilder {
-    id: String,
-    x: f32,
-    y: f32,
-    z: f32,
-    width: f32,
-    height: f32,
-    tab_order: i32,
-    opaque: bool,
-    percent: bool,
-    stretch: Option<Stretch>,
-    anchor: Anchor,
-    mouse_reactive: bool,
-    hidden: bool,
+    /// An identifier. Serves no purpose other than to help you distinguish between UI elements.
+    pub id: String,
+    /// X coordinate
+    pub x: f32,
+    /// Y coordinate
+    pub y: f32,
+    /// Z coordinate, defaults to one.
+    pub z: f32,
+    /// The width of this UI element.
+    pub width: f32,
+    /// The height of this UI element.
+    pub height: f32,
+    /// The UI element tab order.  When the player presses tab the UI focus will shift to the
+    /// UI element with the next highest tab order, or if another element with the same tab_order
+    /// as this one exists they are ordered according to Entity creation order.  Shift-tab walks
+    /// this ordering backwards.
+    pub tab_order: i32,
+    /// Indicates if actions on the ui can go through this element.
+    /// If set to false, the element will behaves as if it was transparent and will let events go to
+    /// the next element (for example, the text on a button).
+    pub opaque: bool,
+    /// Renders this UI element by evaluating transform as a percentage of the parent size,
+    /// rather than rendering it with pixel units.
+    pub percent: bool,
+    /// If a child ui element needs to fill its parent this can be used to stretch it to the appropriate size.
+    pub stretch: Option<Stretch>,
+    /// Indicates where the element sits, relative to the parent (or to the screen, if there is no parent)
+    pub anchor: Anchor,
+    /// Allow mouse events on this UI element.
+    pub mouse_reactive: bool,
+    /// Hides an entity by adding a [`HiddenPropagate`](../amethyst_renderer/struct.HiddenPropagate.html) component
+    pub hidden: bool,
 }
 
 impl Default for UiTransformBuilder {
