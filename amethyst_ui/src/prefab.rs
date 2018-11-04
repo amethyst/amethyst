@@ -496,6 +496,64 @@ where
     Custom(Box<C>),
 }
 
+impl<A, I, F, C> UiWidget<A, I, F, C>
+where
+    A: Format<Audio, Options = ()>,
+    I: Format<Texture, Options = TextureMetadata>,
+    F: Format<FontAsset, Options = ()>,
+    C: ToNativeWidget<A, I, F>,
+{
+    /// Convenience function to access widgets `UiTransformBuilder`
+    pub fn transform(&self) -> Option<&UiTransformBuilder> {
+        match self {
+            UiWidget::Container { ref transform, .. } => Some(transform),
+            UiWidget::Image { ref transform, .. } => Some(transform),
+            UiWidget::Text { ref transform, .. } => Some(transform),
+            UiWidget::Button { ref transform, .. } => Some(transform),
+            UiWidget::Custom(_) => None,
+        }
+    }
+
+    /// Convenience function to access widgets `UiTransformBuilder`
+    pub fn transform_mut(&mut self) -> Option<&mut UiTransformBuilder> {
+        match self {
+            UiWidget::Container {
+                ref mut transform, ..
+            } => Some(transform),
+            UiWidget::Image {
+                ref mut transform, ..
+            } => Some(transform),
+            UiWidget::Text {
+                ref mut transform, ..
+            } => Some(transform),
+            UiWidget::Button {
+                ref mut transform, ..
+            } => Some(transform),
+            UiWidget::Custom(_) => None,
+        }
+    }
+
+    /// Convenience function to access widgets `UiImageBuilder`
+    pub fn image(&self) -> Option<&UiImageBuilder<I>> {
+        match self {
+            UiWidget::Container { ref background, .. } => background.as_ref(),
+            UiWidget::Image { ref image, .. } => Some(image),
+            _ => None,
+        }
+    }
+
+    /// Convenience function to access widgets `UiImageBuilder`
+    pub fn image_mut(&mut self) -> Option<&mut UiImageBuilder<I>> {
+        match self {
+            UiWidget::Container {
+                ref mut background, ..
+            } => background.as_mut(),
+            UiWidget::Image { ref mut image, .. } => Some(image),
+            _ => None,
+        }
+    }
+}
+
 /// Create native `UiWidget` from custom UI
 pub trait ToNativeWidget<A = AudioFormat, I = TextureFormat, F = FontFormat>
 where
