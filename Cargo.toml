@@ -136,6 +136,10 @@ name = "ui"
 path = "examples/ui/main.rs"
 
 [[example]]
+name = "custom_ui"
+path = "examples/custom_ui/main.rs"
+
+[[example]]
 name = "animation"
 path = "examples/animation/main.rs"
 
