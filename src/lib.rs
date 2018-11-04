@@ -89,7 +89,7 @@ extern crate rustc_version_runtime;
 #[macro_use]
 extern crate serde_derive;
 
-pub use core::{nalgebra_glm as math, shred, shrev, specs as ecs};
+pub use core::{shred, shrev, specs as ecs};
 
 pub use self::{
     app::{Application, ApplicationBuilder, CoreApplication},

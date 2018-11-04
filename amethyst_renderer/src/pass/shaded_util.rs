@@ -98,7 +98,7 @@ pub(crate) fn set_light_args(
                         position: position.into(),
                         color: light.color.into(),
                         direction: light.direction.into(),
-                        angle: light.angle.to_radians().cos(),
+                        angle: light.angle.cos(),
                         intensity: light.intensity,
                         range: light.range,
                         smoothness: light.smoothness,

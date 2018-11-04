@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 * `Material` animations now directly use `Handle<Texture>` instead of using indirection. ([#1089])
 * `SpriteRenderPrimitive::SpriteSheet` now takes `Handle<SpriteSheet>` instead of a `u64` ID. ([#1089])
+* `nalgebra` is now the math library used by the engine ([#1066])
 
 ### Removed
 
@@ -41,6 +42,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1112]: https://github.com/amethyst/amethyst/pull/1112
 [#1089]: https://github.com/amethyst/amethyst/pull/1089
 [#1108]: https://github.com/amethyst/amethyst/pull/1108
+[#1066]: https://github.com/amethyst/amethyst/pull/1066
 
 ## [0.9.0] - 2018-10
 ### Added

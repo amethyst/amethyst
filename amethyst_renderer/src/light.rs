@@ -34,7 +34,7 @@ pub struct DirectionalLight {
     /// Color of the light in RGBA8 format.
     pub color: Rgba,
     /// Direction that the light is pointing.
-    pub direction: [f32; 3], //TODO: Replace with a cgmath type when gfx version > 0.16
+    pub direction: [f32; 3], //TODO: Replace with a nalgebra type
 }
 
 impl Default for DirectionalLight {
@@ -111,12 +111,12 @@ impl From<PointLight> for Light {
 #[derive(Clone, ConstantBuffer, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(default)]
 pub struct SpotLight {
-    /// Opening angle of the light cone in degrees.
-    pub angle: f32, //TODO: Replace with a cgmath type when gfx version > 0.16
+    /// Opening angle of the light cone in radians.
+    pub angle: f32,
     /// Color of the light in RGBA8 format.
     pub color: Rgba,
     /// Direction that the light is pointing.
-    pub direction: [f32; 3], //TODO: Replace with a cgmath type when gfx version > 0.16
+    pub direction: [f32; 3], //TODO: Replace with a nalgebra type
     /// Brightness of the light source, in lumens.
     pub intensity: f32,
     /// Range/length of the light source.
@@ -129,7 +129,7 @@ pub struct SpotLight {
 impl Default for SpotLight {
     fn default() -> Self {
         SpotLight {
-            angle: 60.0,
+            angle: std::f32::consts::FRAC_PI_3,
             color: Rgba::default(),
             direction: [0.0, -1.0, 0.0],
             intensity: 10.0,
@@ -150,12 +150,12 @@ impl From<SpotLight> for Light {
 #[derive(Clone, ConstantBuffer, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(default)]
 pub struct SunLight {
-    /// The sun's angular radius in degrees.
-    pub ang_rad: f32, //TODO: Replace with a cgmath type when gfx version > 0.16
+    /// The sun's angular radius in radians.
+    pub ang_rad: f32,
     /// Color of the light in RGBA8 format.
     pub color: Rgba,
     /// Direction that the light is pointing.
-    pub direction: [f32; 3], //TODO: Replace with a cgmath type when gfx version > 0.16
+    pub direction: [f32; 3], //TODO: Replace with a nalgebra type
     /// Brightness of the sun light, in lux.
     pub intensity: f32,
 }
@@ -163,7 +163,7 @@ pub struct SunLight {
 impl Default for SunLight {
     fn default() -> Self {
         SunLight {
-            ang_rad: 0.0093,
+            ang_rad: 0.0093_f32.to_radians(),
             color: Rgba::default(),
             direction: [-1.0, -1.0, -1.0],
             intensity: 64_000.0,

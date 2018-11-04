@@ -22,7 +22,7 @@ derivative = "1.0"
 fnv = "1"
 gfx = { version = "0.17", features = ["serialize"] }
 gfx_glyph = "0.13.0"
-glsl-layout = { version = "0.1.1", features = ["cgmath", "gfx"] }
+glsl-layout = { version = "0.1.1", features = ["gfx"] }
 hibitset = { version = "0.5.1", features = ["parallel"] }
 ron = "0.4"
 serde = { version = "1.0", features = ["derive"] }

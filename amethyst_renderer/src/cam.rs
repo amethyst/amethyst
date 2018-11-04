@@ -29,7 +29,7 @@ impl Projection {
     }
 
     /// Creates a perspective projection with the given aspect ratio and
-    /// field-of-view. `fov` is specified in degrees.
+    /// field-of-view. `fov` is specified in radians.
     pub fn perspective(aspect: f32, fov: f32) -> Projection {
         Projection::Perspective(Perspective3::new(aspect, fov, 0.1, 2000.0))
     }
@@ -65,12 +65,12 @@ impl Camera {
     /// Create a standard camera for 3D.
     ///
     /// Will use a perspective projection with aspect from the given screen dimensions and a field
-    /// of view of 60 degrees.
+    /// of view of π/3 radians (60 degrees).
     /// View transformation will be multiplicative identity.
     pub fn standard_3d(width: f32, height: f32) -> Self {
         Self::from(Projection::perspective(
             width / height,
-            60.0_f32.to_radians(),
+            std::f32::consts::FRAC_PI_3,
         ))
     }
 }
