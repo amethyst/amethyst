@@ -7,6 +7,7 @@ pub use self::{
     shaded::*,
     skinning::set_skinning_buffers,
     sprite::*,
+    skybox::*,
     util::{get_camera, set_vertex_args},
 };
 
@@ -18,3 +19,4 @@ mod shaded_util;
 mod skinning;
 mod sprite;
 mod util;
+mod skybox;

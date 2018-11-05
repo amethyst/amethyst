@@ -108,7 +108,7 @@ pub use {
     mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset},
     pass::{
         get_camera, set_vertex_args, DebugLinesParams, DrawDebugLines, DrawFlat, DrawFlatSeparate,
-        DrawPbm, DrawPbmSeparate, DrawShaded, DrawShadedSeparate, DrawSprite,
+        DrawPbm, DrawPbmSeparate, DrawShaded, DrawShadedSeparate, DrawSprite, DrawSkybox
     },
     pipe::{
         ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder, Init, Meta, NewEffect,
