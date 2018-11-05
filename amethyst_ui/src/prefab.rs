@@ -584,6 +584,9 @@ where
     /// Additional data used when loading UI prefab
     type PrefabData: for<'a> PrefabData<'a> + Default + Send + Sync + 'static;
     /// Create native `UiWidget` and custom prefab data from custom UI
+    ///
+    /// Returning `UiWidget::Custom` will cause recursion.
+    /// Please make sure that the recursion is finite.
     fn to_native_widget(
         self,
         parent_data: Self::PrefabData,
@@ -621,13 +624,13 @@ type UiPrefabData<
     A = AudioFormat,
     I = TextureFormat,
     F = FontFormat,
-    CD = <NoCustomUi as ToNativeWidget>::PrefabData,
+    D = <NoCustomUi as ToNativeWidget>::PrefabData,
 > = (
     Option<UiTransformBuilder>,
     Option<UiImageBuilder<I>>,
     Option<UiTextBuilder<F>>,
     Option<UiButtonBuilder<A, I, F>>,
-    CD,
+    D,
 );
 
 /// Ui prefab
@@ -637,12 +640,13 @@ type UiPrefabData<
 /// - `A`: `Format` used for loading sounds
 /// - `I`: `Format` used for loading `Texture`s
 /// - `F`: `Format` used for loading `FontAsset`
+/// - `D`: `ToNativeWidget::PrefabData` data used by custom UI
 pub type UiPrefab<
     A = AudioFormat,
     I = TextureFormat,
     F = FontFormat,
-    CD = <NoCustomUi as ToNativeWidget>::PrefabData,
-> = Prefab<UiPrefabData<A, I, F, CD>>;
+    D = <NoCustomUi as ToNativeWidget>::PrefabData,
+> = Prefab<UiPrefabData<A, I, F, D>>;
 
 /// Ui format.
 ///
