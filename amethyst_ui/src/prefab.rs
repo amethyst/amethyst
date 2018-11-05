@@ -584,7 +584,10 @@ where
     /// Additional data used when loading UI prefab
     type PrefabData: for<'a> PrefabData<'a> + Default + Send + Sync + 'static;
     /// Create native `UiWidget` and custom prefab data from custom UI
-    fn to_native_widget(self) -> (UiWidget<A, I, F, Self>, Self::PrefabData);
+    fn to_native_widget(
+        self,
+        parent_data: Self::PrefabData,
+    ) -> (UiWidget<A, I, F, Self>, Self::PrefabData);
 }
 
 /// Type used when no custom ui is desired
@@ -598,7 +601,10 @@ where
     F: Format<FontAsset, Options = ()>,
 {
     type PrefabData = ();
-    fn to_native_widget(self) -> (UiWidget<A, I, F, NoCustomUi>, Self::PrefabData) {
+    fn to_native_widget(
+        self,
+        _: Self::PrefabData,
+    ) -> (UiWidget<A, I, F, NoCustomUi>, Self::PrefabData) {
         unreachable!()
     }
 }
@@ -683,7 +689,7 @@ fn walk_ui_tree<A, I, F, C>(
 {
     match widget {
         UiWidget::Custom(custom) => {
-            let (widget, custom_data) = custom.to_native_widget();
+            let (widget, custom_data) = custom.to_native_widget(custom_data);
             walk_ui_tree(widget, current_index, prefab, custom_data);
         }
 

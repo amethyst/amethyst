@@ -32,6 +32,7 @@ impl ToNativeWidget for CustomUi {
     type PrefabData = ();
     fn to_native_widget(
         self,
+        _: (),
     ) -> (
         UiWidget<AudioFormat, TextureFormat, FontFormat, CustomUi>,
         Self::PrefabData,
