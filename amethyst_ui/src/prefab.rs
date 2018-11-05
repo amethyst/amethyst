@@ -605,6 +605,7 @@ where
         self,
         _: Self::PrefabData,
     ) -> (UiWidget<A, I, F, NoCustomUi>, Self::PrefabData) {
+        // self can not exist
         unreachable!()
     }
 }
