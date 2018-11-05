@@ -190,7 +190,10 @@ fn load_scene(
     name: &str,
     prefab: &mut Prefab<GltfPrefab>,
 ) -> Result<(), GltfError> {
-    let scene = gltf.scenes().nth(scene_index).unwrap();
+    let scene = gltf
+        .scenes()
+        .nth(scene_index)
+        .expect("Tried to load a scene which does not exist");
     let mut node_map = HashMap::new();
     let mut skin_map = HashMap::new();
     let mut bounding_box = GltfNodeExtent::default();
@@ -198,7 +201,10 @@ fn load_scene(
     if scene.nodes().len() == 1 {
         load_node(
             gltf,
-            &scene.nodes().next().unwrap(),
+            &scene
+                .nodes()
+                .next()
+                .expect("Unreachable: Length of nodes in scene is checked to be equal to one"),
             0,
             buffers,
             options,
@@ -237,9 +243,13 @@ fn load_scene(
     // load skins
     for (node_index, skin_info) in skin_map {
         load_skin(
-            &gltf.skins().nth(skin_info.skin_index).unwrap(),
+            &gltf.skins().nth(skin_info.skin_index).expect(
+                "Unreachable: `skin_map` is initialized with indexes from the `Gltf` object",
+            ),
             buffers,
-            *node_map.get(&node_index).unwrap(),
+            *node_map
+                .get(&node_index)
+                .expect("Unreachable: `node_map` should contain all nodes present in `skin_map`"),
             &node_map,
             skin_info.mesh_indices,
             prefab,
@@ -325,7 +335,7 @@ fn load_node(
             // single primitive can be loaded directly onto the node
             let (mesh, material_index, bounds) = graphics.remove(0);
             bounding_box.extend_range(&bounds);
-            let prefab_data = prefab.entity(entity_index).unwrap().data_or_default();
+            let prefab_data = prefab.data_or_default(entity_index);
             prefab_data.mesh = Some(mesh);
             if let Some((material_id, material)) =
                 material_index.and_then(|index| gltf.materials().nth(index).map(|m| (index, m)))
@@ -347,7 +357,7 @@ fn load_node(
             // we need to add each primitive as a child entity to the node
             for (mesh, material_index, bounds) in graphics {
                 let mesh_entity = prefab.add(Some(entity_index), None);
-                let prefab_data = prefab.entity(mesh_entity).unwrap().data_or_default();
+                let prefab_data = prefab.data_or_default(entity_index);
                 prefab_data.transform = Some(Transform::default());
                 prefab_data.mesh = Some(mesh);
                 if let Some((material_id, material)) =
