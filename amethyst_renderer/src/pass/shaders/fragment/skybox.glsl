@@ -10,10 +10,11 @@ in VertexData {
 
 out vec4 out_color;
 
-vec3 zenith_color = vec3(0.75, 1.0, 1.0);
-vec3 nadir_color = vec3(0.2, 0.4, 0.45);
+uniform vec3 zenith_color;
+uniform vec3 nadir_color;
 
 void main() {
-    vec3 horizon_color = mix(nadir_color, zenith_color, smoothstep(-1., 1., vertex.position.y));
+    vec3 normalized_position = normalize(vertex.position.xyz);
+    vec3 horizon_color = mix(nadir_color, zenith_color, smoothstep(-1., 1., normalized_position.y));
     out_color = vec4(horizon_color, 1.0f);
 }

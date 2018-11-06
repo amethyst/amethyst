@@ -20,7 +20,7 @@ use gfx::pso::buffer::ElemStride;
 use glsl_layout::{mat4, Uniform};
 use std::marker::PhantomData;
 
-use super::{VERT_SRC, FRAG_SRC};
+use super::{VERT_SRC, FRAG_SRC, SkyboxColor};
 
 #[repr(C, align(16))]
 #[derive(Clone, Copy, Debug, Uniform)]
@@ -62,6 +62,7 @@ where
         Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, GlobalTransform>,
+        Read<'a, SkyboxColor>,
     );
 }
 
@@ -85,6 +86,8 @@ where
                 PosNormTex::ATTRIBUTES, PosNormTex::size() as ElemStride, 0
             )
             .with_raw_global("camera_position")
+            .with_raw_global("zenith_color")
+            .with_raw_global("nadir_color")
             .with_output("color", Some(DepthMode::LessEqualWrite))
             .build()
     }
@@ -94,7 +97,7 @@ where
         encoder: &mut Encoder,
         effect: &mut Effect,
         mut _factory: Factory,
-        (active, camera, global): <Self as PassData<'a>>::Data,
+        (active, camera, global, skybox_color): <Self as PassData<'a>>::Data,
     ) {
         let camera = get_camera(active, &camera, &global);
 
@@ -110,6 +113,8 @@ where
             return;
         }
 
+        effect.update_global("zenith_color", Into::<[f32; 3]>::into(skybox_color.zenith));
+        effect.update_global("nadir_color", Into::<[f32; 3]>::into(skybox_color.nadir));
         effect.draw(mesh.slice(), encoder);
         effect.clear();
     }
