@@ -6,16 +6,19 @@ use amethyst_assets::{
 };
 use amethyst_core::specs::prelude::{Component, VecStorage};
 
+use Texture;
+use TexturePrefab;
+
 /// An asset handle to sprite sheet metadata.
 pub type SpriteSheetHandle = Handle<SpriteSheet>;
 
 /// Meta data for a sprite sheet texture.
 ///
 /// Contains a handle to the texture and the sprite coordinates on the texture.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct SpriteSheet {
     /// Index into `MaterialTextureSet` of the texture for this sprite sheet.
-    pub texture_id: u64,
+    pub texture: Handle<Texture>,
     /// A list of sprites in this sprite sheet.
     pub sprites: Vec<Sprite>,
 }
@@ -274,9 +277,9 @@ pub struct SpriteSheetFormat;
 impl SimpleFormat<SpriteSheet> for SpriteSheetFormat {
     const NAME: &'static str = "SPRITE_SHEET";
 
-    type Options = u64;
+    type Options = Handle<Texture>;
 
-    fn import(&self, bytes: Vec<u8>, texture_id: Self::Options) -> AssetsResult<SpriteSheet> {
+    fn import(&self, bytes: Vec<u8>, texture: Self::Options) -> AssetsResult<SpriteSheet> {
         let sheet: SerializedSpriteSheet = from_ron_bytes(&bytes).map_err(|_| {
             AssetsError::from_kind(AssetsErrorKind::Format(
                 "Failed to parse Ron file for SpriteSheet",
@@ -296,10 +299,7 @@ impl SimpleFormat<SpriteSheet> for SpriteSheetFormat {
                 },
             });
         }
-        Ok(SpriteSheet {
-            texture_id,
-            sprites,
-        })
+        Ok(SpriteSheet { texture, sprites })
     }
 }
 

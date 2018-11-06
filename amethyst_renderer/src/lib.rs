@@ -105,7 +105,7 @@ pub use {
     },
     light::{DirectionalLight, Light, LightPrefab, PointLight, SpotLight, SunLight},
     mesh::{vertex_data, Mesh, MeshBuilder, MeshHandle, VertexBuffer},
-    mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset},
+    mtl::{Material, MaterialDefaults, TextureOffset},
     pass::{
         get_camera, set_vertex_args, DebugLinesParams, DrawDebugLines, DrawFlat, DrawFlatSeparate,
         DrawPbm, DrawPbmSeparate, DrawShaded, DrawShadedSeparate, DrawSprite,

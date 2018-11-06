@@ -4,8 +4,8 @@ use amethyst::{
     ecs::prelude::{Component, DenseVecStorage},
     prelude::*,
     renderer::{
-        Camera, MaterialTextureSet, PngFormat, Projection, SpriteRender, SpriteSheet,
-        SpriteSheetFormat, SpriteSheetHandle, Texture, TextureMetadata,
+        Camera, PngFormat, Projection, SpriteRender, SpriteSheet, SpriteSheetFormat,
+        SpriteSheetHandle, Texture, TextureMetadata,
     },
 };
 
@@ -76,18 +76,12 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
         )
     };
 
-    // `texture_id` is a application defined ID given to the texture to store in the `World`.
-    // This is needed to link the texture to the sprite_sheet.
-    let texture_id = 0;
-    let mut material_texture_set = world.write_resource::<MaterialTextureSet>();
-    material_texture_set.insert(texture_id, texture_handle);
-
     let loader = world.read_resource::<Loader>();
     let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
     loader.load(
         "texture/pong_spritesheet.ron", // Here we load the associated ron file
         SpriteSheetFormat,
-        texture_id, // We pass it the ID of the texture we want it to use
+        texture_handle, // We pass it the texture we want it to use
         (),
         &sprite_sheet_store,
     )
