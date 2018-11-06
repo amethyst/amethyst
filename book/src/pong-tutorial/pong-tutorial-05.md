@@ -85,11 +85,11 @@ impl<'s> System<'s> for WinnerSystem {
 
 Here, we're creating a new system, joining on all `Entities` that have a `Ball`
 and a `Transform` component, and then checking each ball to see if it has
-reached either the left or right boundary of the arena. If so, then we reverse
+reached either the left or right boundary of the arena. If so, we reverse
 its direction and put it back in the middle of the screen.
 
 Now, we just need to add our new system to `main.rs`, and we should be able to
-keep playing after someone scores, and log who got the point.
+keep playing after someone scores and log who got the point.
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
@@ -165,8 +165,8 @@ We have a pretty functional Pong game now! At this point, the least fun thing
 about the game is just that players have to keep track of the score themselves.
 Our game should be able to do that for us.
 
-Here, we'll set up UI rendering for our game and create a scoreboard to display
-our players scores.
+In this section, we'll set up UI rendering for our game and create a scoreboard
+to display our players scores.
 
 First, let's add the UI rendering in `main.rs`:
 
@@ -244,7 +244,7 @@ fn main() -> amethyst::Result<()> {
 }
 ```
 
-Here, we're adding `DrawUi` as an additional render pass to our `Pipeline`, and
+We're adding `DrawUi` as an additional render pass to our `Pipeline`, and
 we're also adding the `UiBundle` to our game data. This allows us to start
 rendering UI visuals to our game in addition to the existing background and
 sprites.
@@ -462,10 +462,10 @@ pub struct ScoreText {
 ```
 
 `ScoreBoard` is just a container that will allow us to keep track of each
-player's score. We'll use this later in another module, so we've gone ahead and
-marked it as public (same with `ScoreText`). `ScoreText` is also a container,
-but this one holds the UI `component`s that will be rendered to the screen.
-We'll do that next:
+player's score. We'll use this in another module later in this chapter, so we've
+gone ahead and marked it as public (same with `ScoreText`). `ScoreText` is also
+a container, but this one holds handles to the UI `Entity`s that will be
+rendered to the screen. We'll create those next:
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
@@ -473,8 +473,8 @@ We'll do that next:
 use amethyst::{
 #     assets::{AssetStorage, Loader},
 #     core::{cgmath::Vector3, transform::Transform},
+#     ecs::prelude::{Component, DenseVecStorage, Entity},
     // --snip--
-    ecs::prelude::{Component, DenseVecStorage, Entity},
 #     prelude::*,
 #     renderer::{
 #         Camera, MaterialTextureSet, PngFormat, Projection, SpriteRender,
@@ -482,7 +482,6 @@ use amethyst::{
 #         TextureMetadata,
 #     },
     ui::{Anchor, TtfFormat, UiText, UiTransform},
-    utils::application_root_dir,
 };
  
 # pub const ARENA_HEIGHT: f32 = 100.0;
@@ -550,19 +549,19 @@ impl<'a, 'b> SimpleState<'a, 'b> for Pong {
 #     type Storage = DenseVecStorage<Self>;
 # }
 #
-/// ScoreBoard contains the actual score data
-#[derive(Default)]
-pub struct ScoreBoard {
-    pub score_left: i32,
-    pub score_right: i32,
-}
-
-/// ScoreText contains the ui text elements that display the score
-pub struct ScoreText {
-    pub p1_score: Entity,
-    pub p2_score: Entity,
-}
-
+# /// ScoreBoard contains the actual score data
+# #[derive(Default)]
+# pub struct ScoreBoard {
+#     pub score_left: i32,
+#     pub score_right: i32,
+# }
+#
+# /// ScoreText contains the ui text elements that display the score
+# pub struct ScoreText {
+#     pub p1_score: Entity,
+#     pub p2_score: Entity,
+# }
+#
 # fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
 #     // Load the sprite sheet necessary to render the graphics.
 #     // The texture is the pixel data
@@ -678,6 +677,8 @@ pub struct ScoreText {
 #         .build();
 # }
 #
+// --snip--
+
 /// Initialises a ui scoreboard
 fn initialise_scoreboard(world: &mut World) {
     let font = world.read_resource::<Loader>().load(
@@ -718,35 +719,33 @@ fn initialise_scoreboard(world: &mut World) {
 
     world.add_resource(ScoreText { p1_score, p2_score });
 }
-
-// --snip--
 ```
 
 Here, we add some UI imports and create a new `initialise_scoreboard` function,
 which we'll call in the `on_start` method of the `Pong` gamestate.
 
 Inside `initialise_scoreboard`, we're first going to load up a font which we've
-saved to `font/square.ttf` ([Download][font-download]) in the app root. We pull
+saved to `font/square.ttf` ([download][font-download]) in the app root. We pull
 in the `TtfFormat` to match this font type, load the font as a resource in the
-world, and then save the handle to our `font` variable (which we'll use for our
-UI `component`s).
+world, and then save the handle to a `font` variable (which we'll use to create
+our `UiText` components).
 
 Next, we create a transform for each of our two scores by giving them a unique
 id (`P1` and `P2`), a UI `Anchor` at the top middle of our window, and then
 adjust their global `x`, `y`, and `z` coordinates, `width`, `height`, and
 `tab-order`.
 
-After creating the `font` and `transform`s, we'll create a UI `component` in the
-world for each of our player's scores, with their `transform`, and a `UiText`
-component (with our `font` handle, initial `text`, `color`, and `font_size`).
+After creating the `font` and `transform`s, we'll create an `Entity` in the
+world for each of our players' scores, with their `transform` and a `UiText`
+component (with a `font` handle, initial `text`, `color`, and `font_size`).
 
-Finally, we initialize a `ScoreText` structure with each of our UI `component`s
-and add it as a resource to the world so we can access it from our `System`s
-later.
+Finally, we initialize a `ScoreText` structure containing each of our UI
+`Entity`s and add it as a resource to the world so we can access it from our
+`System`s later.
 
 If we've done everything right so far, we should see `0` `0` at the top of our
 game window. You'll notice that the scores don't update yet when the ball makes
-it to either side, so we'll add that next.
+it to either side, so we'll add that next!
 
 [font-download]: https://github.com/amethyst/amethyst/raw/master/examples/assets/font/square.ttf
 
@@ -859,18 +858,20 @@ impl<'s> System<'s> for WinnerSystem {
 ```
 
 We've added a fair few changes here, so let's go through them. First, we want to
-be able to read and write our scores, so we bring in the `UiText` storage which
-holds all `UiText` components. We'll want to select our players' scores from
-that, so we also bring in `ScoreText` which holds handles to the `UiText`
-components. Finally, we bring in the `ScoreBoard` resource so we can keep track
-of the actual score data.
+be able to read and write our scores, so we add the `UiText` storage, which
+holds all `UiText` components, to our `SystemData`. We'll want to select our
+players' scores from that, so we also add the `ScoreText` structure which holds
+handles to the `UiText` components that we want. Finally, we add the
+`ScoreBoard` resource so we can keep track of the actual score data.
 
-Inside our `run` method (after updating the signature)), we replace the
-`println!` statements with code that will update our `UiText` components. We
-first update the score stored in `score_board` by adding 1 to it and clamping it
-to not exceed `999`. Then, we get a mutable reference from our `UiText`
-component handle that we stored in our `ScoreText` resource. Lastly, we set the
-text of the `UiText` component to the player's score (converted to a string).
+Inside our `run` method (after updating the signature to match our `SystemData`
+changes), we replace the `println!` statements with code that will update our
+`UiText` components. We first update the score stored in `score_board` by
+adding 1 to it and clamping it to not exceed `999` (mostly because we don't want
+our scores to overlap each other in the window). Then, we use the `UiText`
+`Entity` handle that we stored in our `ScoreText` resource to get a mutable
+reference to our `UiText` component. Lastly, we set the text of the `UiText`
+component to the player's score, after converting it to a string.
 
 
 ## Summary
@@ -878,5 +879,9 @@ text of the `UiText` component to the player's score (converted to a string).
 And that's it! Our game now keeps track of the score for us and displays it at
 the top of our window.
 
+![Pong Game with Scores][pong-screenshot]
+
 Now don't go just yet, because in the next chapter, we'll make our Pong game
 even better by adding sound effects and even some music!
+
+[pong-screenshot]: ../images/pong_tutorial/pong_05.png
