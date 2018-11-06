@@ -1,16 +1,16 @@
 use minterpolate::InterpolationPrimitive;
 
-use amethyst_core::specs::prelude::Read;
-use amethyst_renderer::{SpriteRender, SpriteSheetSet};
+use amethyst_assets::Handle;
+use amethyst_renderer::{SpriteRender, SpriteSheet};
 
 use {AnimationSampling, ApplyData, BlendMethod};
 
 /// Sampler primitive for SpriteRender animations
 /// Note that sprites can only ever be animated with `Step`, or a panic will occur.
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum SpriteRenderPrimitive {
     /// A spritesheet id
-    SpriteSheet(u64),
+    SpriteSheet(Handle<SpriteSheet>),
     /// An index into a spritesheet
     SpriteIndex(usize),
 }
@@ -55,30 +55,22 @@ pub enum SpriteRenderChannel {
 }
 
 impl<'a> ApplyData<'a> for SpriteRender {
-    type ApplyData = Read<'a, SpriteSheetSet>;
+    type ApplyData = ();
 }
 
 impl AnimationSampling for SpriteRender {
     type Primitive = SpriteRenderPrimitive;
     type Channel = SpriteRenderChannel;
 
-    fn apply_sample(
-        &mut self,
-        channel: &Self::Channel,
-        data: &Self::Primitive,
-        sprite_sheet_set: &Read<SpriteSheetSet>,
-    ) {
-        use self::{SpriteRenderChannel as Channel, SpriteRenderPrimitive as Primitive};
-        match (*channel, *data) {
-            (Channel::SpriteSheet, Primitive::SpriteSheet(i)) => {
-                if let Some(handle) = sprite_sheet_set.handle(i) {
-                    self.sprite_sheet = handle;
-                } else {
-                    warn!("No sprite sheet handle found for ID: `{}`", i);
-                }
+    fn apply_sample(&mut self, channel: &Self::Channel, data: &Self::Primitive, _: &()) {
+        use self::SpriteRenderChannel as Channel;
+        use self::SpriteRenderPrimitive as Primitive;
+        match (channel, data) {
+            (Channel::SpriteSheet, Primitive::SpriteSheet(handle)) => {
+                self.sprite_sheet = handle.clone();
             }
             (Channel::SpriteIndex, Primitive::SpriteIndex(index)) => {
-                self.sprite_number = index;
+                self.sprite_number = *index;
             }
 
             // Error cases
@@ -99,19 +91,12 @@ impl AnimationSampling for SpriteRender {
         }
     }
 
-    fn current_sample(
-        &self,
-        channel: &Self::Channel,
-        sprite_sheet_set: &Read<SpriteSheetSet>,
-    ) -> Self::Primitive {
-        use self::{SpriteRenderChannel as Channel, SpriteRenderPrimitive as Primitive};
+    fn current_sample(&self, channel: &Self::Channel, _: &()) -> Self::Primitive {
+        use self::SpriteRenderChannel as Channel;
+        use self::SpriteRenderPrimitive as Primitive;
 
-        const ERR_MSG: &str = "Unable to get requested spritesheet from SpriteSheetSet.";
-
-        match *channel {
-            Channel::SpriteSheet => {
-                Primitive::SpriteSheet(sprite_sheet_set.id(&self.sprite_sheet).expect(ERR_MSG))
-            }
+        match channel {
+            Channel::SpriteSheet => Primitive::SpriteSheet(self.sprite_sheet.clone()),
             Channel::SpriteIndex => Primitive::SpriteIndex(self.sprite_number),
         }
     }

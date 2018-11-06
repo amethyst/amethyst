@@ -20,7 +20,12 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 
+* `Material` animations now directly use `Handle<Texture>` instead of using indirection. ([#1089])
+* `SpriteRenderPrimitive::SpriteSheet` now takes `Handle<SpriteSheet>` instead of a `u64` ID. ([#1089])
+
 ### Removed
+
+* `SpriteSheetSet` is removed as it is no longer needed. ([#1089])
 
 ### Fixed
 
@@ -30,6 +35,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1035]: https://github.com/amethyst/amethyst/pull/1035
 [#1074]: https://github.com/amethyst/amethyst/pull/1074
 [#1081]: https://github.com/amethyst/amethyst/pull/1081
+[#1089]: https://github.com/amethyst/amethyst/pull/1089
 [#1108]: https://github.com/amethyst/amethyst/pull/1108
 
 ## [0.9.0] - 2018-10

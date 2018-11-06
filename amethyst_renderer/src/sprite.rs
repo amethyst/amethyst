@@ -1,4 +1,3 @@
-use fnv::FnvHashMap;
 use ron::de::from_bytes as from_ron_bytes;
 
 use amethyst_assets::{
@@ -182,67 +181,6 @@ pub struct SpriteRender {
 
 impl Component for SpriteRender {
     type Storage = VecStorage<Self>;
-}
-
-/// Sprite sheets used by sprite render animations
-///
-/// In sprite animations, it is plausible to switch the `SpriteSheet` during the animation.
-/// `Animation`s require their primitives to be `Copy`. However, `Handle<SpriteSheet>`s are `Clone`
-/// but not `Copy`. Therefore, to allow switching of the `SpriteSheet`, we use a `Copy` ID, and map
-/// that to the sprite sheet handle so that it can be looked up when being sampled in the animation.
-#[derive(Debug, Default)]
-pub struct SpriteSheetSet {
-    sprite_sheets: FnvHashMap<u64, SpriteSheetHandle>,
-    sprite_sheet_inverse: FnvHashMap<SpriteSheetHandle, u64>,
-}
-
-impl SpriteSheetSet {
-    /// Create new sprite sheet set
-    pub fn new() -> Self {
-        SpriteSheetSet {
-            sprite_sheets: FnvHashMap::default(),
-            sprite_sheet_inverse: FnvHashMap::default(),
-        }
-    }
-
-    /// Retrieve the handle for a given index
-    pub fn handle(&self, id: u64) -> Option<SpriteSheetHandle> {
-        self.sprite_sheets.get(&id).cloned()
-    }
-
-    /// Retrieve the index for a given handle
-    pub fn id(&self, handle: &SpriteSheetHandle) -> Option<u64> {
-        self.sprite_sheet_inverse.get(handle).cloned()
-    }
-
-    /// Insert a sprite sheet handle at the given index
-    pub fn insert(&mut self, id: u64, handle: SpriteSheetHandle) {
-        self.sprite_sheets.insert(id, handle.clone());
-        self.sprite_sheet_inverse.insert(handle, id);
-    }
-
-    /// Remove the given index
-    pub fn remove(&mut self, id: u64) {
-        if let Some(handle) = self.sprite_sheets.remove(&id) {
-            self.sprite_sheet_inverse.remove(&handle);
-        }
-    }
-
-    /// Get number of sprite sheets in the set
-    pub fn len(&self) -> usize {
-        self.sprite_sheets.len()
-    }
-
-    /// Returns whether the set contains any sprite sheets
-    pub fn is_empty(&self) -> bool {
-        self.sprite_sheets.is_empty()
-    }
-
-    /// Remove all sprite sheet handles in the set
-    pub fn clear(&mut self) {
-        self.sprite_sheets.clear();
-        self.sprite_sheet_inverse.clear();
-    }
 }
 
 /// Structure acting as scaffolding for serde when loading a spritesheet file.
