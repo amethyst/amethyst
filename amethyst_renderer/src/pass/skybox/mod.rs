@@ -7,9 +7,12 @@ mod interleaved;
 static VERT_SRC: &[u8] = include_bytes!("../shaders/vertex/skybox.glsl");
 static FRAG_SRC: &[u8] = include_bytes!("../shaders/fragment/skybox.glsl");
 
+/// Colors used for the gradient skybox
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SkyboxColor {
+    /// The color directly above the viewer
     pub zenith: Rgba,
+    /// The color directly below the viewer
     pub nadir: Rgba,
 }
 

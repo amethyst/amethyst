@@ -12,10 +12,7 @@ use amethyst::{
     ecs::prelude::{Join, Read, ReadStorage, Resources, System, SystemData, WriteStorage},
     input::{InputBundle, InputEvent, ScrollDirection},
     prelude::*,
-    renderer::{
-        DrawShaded, PosNormTex, Pipeline, Stage, DrawSkybox, DisplayConfig,
-        RenderBundle
-    },
+    renderer::{DisplayConfig, DrawShaded, DrawSkybox, Pipeline, PosNormTex, RenderBundle, Stage},
     utils::{application_root_dir, scene::BasicScenePrefab},
     Error,
 };
@@ -112,7 +109,7 @@ fn main() -> Result<(), Error> {
             Stage::with_backbuffer()
                 .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
                 .with_pass(DrawShaded::<PosNormTex>::new())
-                .with_pass(DrawSkybox::<PosNormTex>::new())
+                .with_pass(DrawSkybox::<PosNormTex>::new()),
         );
         RenderBundle::new(pipe, Some(display_config))
     };

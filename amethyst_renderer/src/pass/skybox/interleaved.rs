@@ -5,22 +5,22 @@ use amethyst_core::{
     specs::{Read, ReadStorage},
     transform::GlobalTransform,
 };
+use gfx::pso::buffer::ElemStride;
+use glsl_layout::{mat4, Uniform};
+use std::marker::PhantomData;
 use {
     error::Result,
     get_camera,
+    pass::util::set_attribute_buffers,
     pipe::{
         pass::{Pass, PassData},
         DepthMode, Effect, NewEffect,
     },
-    pass::util::set_attribute_buffers,
-    set_vertex_args, ActiveCamera, Camera, Encoder, Factory, Mesh, Normal,
-    PosNormTex, Position, Query, Shape, TexCoord, VertexFormat,
+    set_vertex_args, ActiveCamera, Camera, Encoder, Factory, Mesh, Normal, PosNormTex, Position,
+    Query, Shape, TexCoord, VertexFormat,
 };
-use gfx::pso::buffer::ElemStride;
-use glsl_layout::{mat4, Uniform};
-use std::marker::PhantomData;
 
-use super::{VERT_SRC, FRAG_SRC, SkyboxColor};
+use super::{SkyboxColor, FRAG_SRC, VERT_SRC};
 
 #[repr(C, align(16))]
 #[derive(Clone, Copy, Debug, Uniform)]
@@ -80,11 +80,8 @@ where
             .with_raw_constant_buffer(
                 "VertexArgs",
                 std::mem::size_of::<<VertexArgs as Uniform>::Std140>(),
-                1
-            )
-            .with_raw_vertex_buffer(
-                PosNormTex::ATTRIBUTES, PosNormTex::size() as ElemStride, 0
-            )
+                1,
+            ).with_raw_vertex_buffer(PosNormTex::ATTRIBUTES, PosNormTex::size() as ElemStride, 0)
             .with_raw_global("camera_position")
             .with_raw_global("zenith_color")
             .with_raw_global("nadir_color")
