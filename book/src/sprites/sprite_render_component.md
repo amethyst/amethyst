@@ -25,7 +25,7 @@ In the previous section you wrote a function that returns a `SpriteSheet`. This 
 use amethyst::assets::{AssetStorage, Loader};
 # use amethyst::prelude::*;
 use amethyst::renderer::{
-    MaterialTextureSet, SpriteSheet, SpriteSheetHandle, TextureHandle,
+    SpriteSheet, SpriteSheetHandle, TextureHandle,
 };
 
 # pub fn load_texture<N>(name: N, world: &World) -> TextureHandle
@@ -35,7 +35,7 @@ use amethyst::renderer::{
 #     unimplemented!();
 # }
 #
-# pub fn load_sprite_sheet(texture_id: u64) -> SpriteSheet {
+# pub fn load_sprite_sheet(texture: TextureHandle) -> SpriteSheet {
 #     unimplemented!();
 # }
 #[derive(Debug)]
@@ -44,13 +44,9 @@ struct ExampleState;
 impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
     fn on_start(&mut self, mut data: StateData<GameData>) {
 #         let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
-#         let texture_id = 0;
-#         data.world
-#             .write_resource::<MaterialTextureSet>()
-#             .insert(texture_id, texture_handle);
         // ...
 
-        let sprite_sheet = load_sprite_sheet(texture_id);
+        let sprite_sheet = load_sprite_sheet(texture_handle);
         let sprite_sheet_handle = {
             let loader = data.world.read_resource::<Loader>();
             loader.load_from_data(
@@ -73,7 +69,7 @@ Cool, finally we have all the parts, let's build a `SpriteRender` and attach it 
 use amethyst::core::transform::Transform;
 # use amethyst::prelude::*;
 use amethyst::renderer::{
-    MaterialTextureSet, ScreenDimensions, SpriteRender, SpriteSheet,
+    ScreenDimensions, SpriteRender, SpriteSheet,
     SpriteSheetHandle, TextureHandle, Transparent
 };
 
@@ -84,7 +80,7 @@ use amethyst::renderer::{
 #     unimplemented!();
 # }
 #
-# pub fn load_sprite_sheet(texture_id: u64) -> SpriteSheet {
+# pub fn load_sprite_sheet(texture: TextureHandle) -> SpriteSheet {
 #     unimplemented!();
 # }
 #[derive(Debug)]
@@ -93,12 +89,8 @@ struct ExampleState;
 impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
     fn on_start(&mut self, mut data: StateData<GameData>) {
 #         let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
-#         let texture_id = 0;
-#         data.world
-#             .write_resource::<MaterialTextureSet>()
-#             .insert(texture_id, texture_handle);
 # 
-#         let sprite_sheet = load_sprite_sheet(texture_id);
+#         let sprite_sheet = load_sprite_sheet(texture_handle);
 #         let sprite_sheet_handle = {
 #             let loader = data.world.read_resource::<Loader>();
 #             loader.load_from_data(

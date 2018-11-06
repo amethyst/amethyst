@@ -6,16 +6,18 @@ use amethyst_assets::{
 };
 use amethyst_core::specs::prelude::{Component, VecStorage};
 
+use Texture;
+
 /// An asset handle to sprite sheet metadata.
 pub type SpriteSheetHandle = Handle<SpriteSheet>;
 
 /// Meta data for a sprite sheet texture.
 ///
 /// Contains a handle to the texture and the sprite coordinates on the texture.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct SpriteSheet {
-    /// Index into `MaterialTextureSet` of the texture for this sprite sheet.
-    pub texture_id: u64,
+    /// `Texture` handle of the spritesheet texture
+    pub texture: Handle<Texture>,
     /// A list of sprites in this sprite sheet.
     pub sprites: Vec<Sprite>,
 }
@@ -245,24 +247,30 @@ struct SerializedSpriteSheet {
 /// )
 /// ```
 ///
-/// Such a spritesheet description can be loaded using a `Loader` by passing it the ID of the corresponding loaded texture in the MaterialTextureSet.
+/// Such a spritesheet description can be loaded using a `Loader` by passing it the handle of the corresponding loaded texture.
 /// ```rust,no_run
 /// # extern crate amethyst_assets;
 /// # extern crate amethyst_core;
 /// # extern crate amethyst_renderer;
 /// # use amethyst_assets::{Loader, AssetStorage};
-/// # use amethyst_renderer::{SpriteSheetFormat, SpriteSheet};
-/// #
-/// # const SPRITESHEET_TEXTURE_ID: u64 = 0;
+/// # use amethyst_renderer::{SpriteSheetFormat, SpriteSheet, Texture, PngFormat, TextureMetadata};
 /// #
 /// # fn load_sprite_sheet() {
 /// #   let world = amethyst_core::specs::World::new(); // Normally, you would use Amethyst's world
 /// #   let loader = world.read_resource::<Loader>();
 /// #   let spritesheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
+/// #   let texture_storage = world.read_resource::<AssetStorage<Texture>>();
+/// let texture_handle = loader.load(
+///     "my_texture.png",
+///     PngFormat,
+///     TextureMetadata::srgb(),
+///     (),
+///     &texture_storage,
+/// );
 /// let spritesheet_handle = loader.load(
 ///     "my_spritesheet.ron",
 ///     SpriteSheetFormat,
-///     SPRITESHEET_TEXTURE_ID,
+///     texture_handle,
 ///     (),
 ///     &spritesheet_storage,
 /// );
@@ -274,9 +282,9 @@ pub struct SpriteSheetFormat;
 impl SimpleFormat<SpriteSheet> for SpriteSheetFormat {
     const NAME: &'static str = "SPRITE_SHEET";
 
-    type Options = u64;
+    type Options = Handle<Texture>;
 
-    fn import(&self, bytes: Vec<u8>, texture_id: Self::Options) -> AssetsResult<SpriteSheet> {
+    fn import(&self, bytes: Vec<u8>, texture: Self::Options) -> AssetsResult<SpriteSheet> {
         let sheet: SerializedSpriteSheet = from_ron_bytes(&bytes).map_err(|_| {
             AssetsError::from_kind(AssetsErrorKind::Format(
                 "Failed to parse Ron file for SpriteSheet",
@@ -296,10 +304,7 @@ impl SimpleFormat<SpriteSheet> for SpriteSheetFormat {
                 },
             });
         }
-        Ok(SpriteSheet {
-            texture_id,
-            sprites,
-        })
+        Ok(SpriteSheet { texture, sprites })
     }
 }
 
