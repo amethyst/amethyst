@@ -151,7 +151,7 @@ let game_data = GameDataBuilder::default()
 #        "collision_system",
 #        &["paddle_system", "ball_system"],
 #    )
-    // ...other systems...
+    // --snip--
     .with(systems::WinnerSystem, "winner_system", &["ball_system"]);
 #
 # Ok(())
@@ -161,8 +161,591 @@ let game_data = GameDataBuilder::default()
 
 ## Adding a Scoreboard
 
-[//]: # "TODO: Setup UiBundle in main.rs"
-[//]: # "TODO: Initialize scoreboard in pong.rs"
+We have a pretty functional Pong game now! At this point, the least fun thing
+about the game is just that players have to keep track of the score themselves.
+Our game should be able to do that for us.
+
+Here, we'll set up UI rendering for our game and create a scoreboard to display
+our players scores.
+
+First, let's add the UI rendering in `main.rs`:
+
+```rust,no_run,noplaypen
+# extern crate amethyst;
+#
+use amethyst::{
+#     prelude::*,
+#     core::transform::TransformBundle,
+#     renderer::{
+#         DisplayConfig,
+#         DrawSprite,
+#         Pipeline,
+#         RenderBundle,
+#         Stage,
+#     },
+    // --snip--
+    ui::{DrawUi, UiBundle},
+};
+#
+# mod systems {
+#     use amethyst;
+#     pub struct PaddleSystem;
+#     impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
+#         type SystemData = ();
+#         fn run(&mut self, _: Self::SystemData) { }
+#     }
+#     pub struct MoveBallsSystem;
+#     impl<'a> amethyst::ecs::System<'a> for MoveBallsSystem {
+#         type SystemData = ();
+#         fn run(&mut self, _: Self::SystemData) { }
+#     }
+#     pub struct BounceSystem;
+#     impl<'a> amethyst::ecs::System<'a> for BounceSystem {
+#         type SystemData = ();
+#         fn run(&mut self, _: Self::SystemData) { }
+#     }
+#     pub struct WinnerSystem;
+#     impl<'a> amethyst::ecs::System<'a> for WinnerSystem {
+#         type SystemData = ();
+#         fn run(&mut self, _: Self::SystemData) { }
+#     }
+# }
+
+fn main() -> amethyst::Result<()> {
+    // --snip--
+
+#     let path = "./resources/display_config.ron";
+#     let config = DisplayConfig::load(&path);
+    let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
+          .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+          .with_pass(DrawSprite::new())
+          .with_pass(DrawUi::new()), // <-- Add me
+    );
+#     let input_bundle = amethyst::input::InputBundle::<String, String>::new();
+#
+    let game_data = GameDataBuilder::default()
+        .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
+        .with_bundle(TransformBundle::new())?
+        .with_bundle(input_bundle)?
+        .with_bundle(UiBundle::<String, String>::new())? // <-- Add me
+
+    // --snip--
+#         .with(systems::PaddleSystem, "paddle_system", &["input_system"])
+#         .with(systems::MoveBallsSystem, "ball_system", &[])
+#         .with(
+#             systems::BounceSystem,
+#             "collision_system",
+#             &["paddle_system", "ball_system"],
+#         )
+#         .with(systems::WinnerSystem, "winner_system", &["ball_system"]);
+# 
+#     Ok(())
+}
+```
+
+Here, we're adding `DrawUi` as an additional render pass to our `Pipeline`, and
+we're also adding the `UiBundle` to our game data. This allows us to start
+rendering UI visuals to our game in addition to the existing background and
+sprites.
+
+Now we have everything set up so we can start rendering a scoreboard in our
+game. We'll start by creating some structures in `pong.rs`:
+
+```rust,no_run,noplaypen
+# extern crate amethyst
+#
+use amethyst::{
+#     assets::{AssetStorage, Loader},
+#     core::{cgmath::Vector3, transform::Transform},
+    // --snip--
+    ecs::prelude::{Component, DenseVecStorage, Entity},
+#     prelude::*,
+#     renderer::{
+#         Camera, MaterialTextureSet, PngFormat, Projection, SpriteRender,
+#         SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, Texture,
+#         TextureMetadata,
+#     },
+};
+ 
+# pub const ARENA_HEIGHT: f32 = 100.0;
+# pub const ARENA_WIDTH: f32 = 100.0;
+# 
+# pub const PADDLE_HEIGHT: f32 = 16.0;
+# pub const PADDLE_WIDTH: f32 = 4.0;
+# 
+# pub const BALL_VELOCITY_X: f32 = 75.0;
+# pub const BALL_VELOCITY_Y: f32 = 50.0;
+# pub const BALL_RADIUS: f32 = 2.0;
+# 
+# pub struct Pong;
+# 
+# impl<'a, 'b> SimpleState<'a, 'b> for Pong {
+#     fn on_start(&mut self, data: StateData<GameData>) {
+#         let world = data.world;
+# 
+#         // Load the spritesheet necessary to render the graphics.
+#         // `spritesheet` is the layout of the sprites on the image;
+#         // `texture` is the pixel data.
+#         let sprite_sheet_handle = load_sprite_sheet(world);
+# 
+#         initialise_ball(world, sprite_sheet_handle.clone());
+#         initialise_paddles(world, sprite_sheet_handle);
+#         initialise_camera(world);
+#     }
+# }
+# 
+# #[derive(PartialEq, Eq)]
+# pub enum Side {
+#     Left,
+#     Right,
+# }
+# 
+# pub struct Paddle {
+#     pub side: Side,
+#     pub width: f32,
+#     pub height: f32,
+# }
+# 
+# impl Paddle {
+#     fn new(side: Side) -> Paddle {
+#         Paddle {
+#             side: side,
+#             width: 1.0,
+#             height: 1.0,
+#         }
+#     }
+# }
+# 
+# impl Component for Paddle {
+#     type Storage = DenseVecStorage<Self>;
+# }
+# 
+# pub struct Ball {
+#     pub velocity: [f32; 2],
+#     pub radius: f32,
+# }
+# 
+# impl Component for Ball {
+#     type Storage = DenseVecStorage<Self>;
+# }
+#
+/// ScoreBoard contains the actual score data
+#[derive(Default)]
+pub struct ScoreBoard {
+    pub score_left: i32,
+    pub score_right: i32,
+}
+
+/// ScoreText contains the ui text elements that display the score
+pub struct ScoreText {
+    pub p1_score: Entity,
+    pub p2_score: Entity,
+}
+
+// --snip--
+# 
+# fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
+#     // Load the sprite sheet necessary to render the graphics.
+#     // The texture is the pixel data
+#     // `sprite_sheet` is the layout of the sprites on the image
+#     // `texture_handle` is a cloneable reference to the texture
+#     let texture_handle = {
+#         let loader = world.read_resource::<Loader>();
+#         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
+#         loader.load(
+#             "texture/pong_spritesheet.png",
+#             PngFormat,
+#             TextureMetadata::srgb_scale(),
+#             (),
+#             &texture_storage,
+#         )
+#     };
+# 
+#     // `texture_id` is a application defined ID given to the texture to store in the `World`.
+#     // This is needed to link the texture to the sprite_sheet.
+#     let texture_id = 0;
+#     let mut material_texture_set = world.write_resource::<MaterialTextureSet>();
+#     material_texture_set.insert(texture_id, texture_handle);
+# 
+#     let loader = world.read_resource::<Loader>();
+#     let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
+#     loader.load(
+#         "texture/pong_spritesheet.ron", // Here we load the associated ron file
+#         SpriteSheetFormat,
+#         texture_id, // We pass it the ID of the texture we want it to use
+#         (),
+#         &sprite_sheet_store,
+#     )
+# }
+# 
+# /// Initialise the camera.
+# fn initialise_camera(world: &mut World) {
+#     let mut transform = Transform::default();
+#     transform.translation.z = 1.0;
+#     world
+#         .create_entity()
+#         .with(Camera::from(Projection::orthographic(
+#             0.0,
+#             ARENA_WIDTH,
+#             ARENA_HEIGHT,
+#             0.0,
+#         ))).with(transform)
+#         .build();
+# }
+# 
+# /// Initialises one paddle on the left, and one paddle on the right.
+# fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
+#     let mut left_transform = Transform::default();
+#     let mut right_transform = Transform::default();
+# 
+#     // Correctly position the paddles.
+#     let y = ARENA_HEIGHT / 2.0;
+#     left_transform.translation = Vector3::new(PADDLE_WIDTH * 0.5, y, 0.0);
+#     right_transform.translation = Vector3::new(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
+# 
+#     // Assign the sprites for the paddles
+#     let sprite_render_left = SpriteRender {
+#         sprite_sheet: sprite_sheet_handle.clone(),
+#         sprite_number: 0, // paddle is the first sprite in the sprite_sheet
+#         flip_horizontal: false,
+#         flip_vertical: false,
+#     };
+# 
+#     let sprite_render_right = SpriteRender {
+#         sprite_sheet: sprite_sheet_handle,
+#         sprite_number: 0,
+#         flip_horizontal: true,
+#         flip_vertical: false,
+#     };
+# 
+#     // Create a left plank entity.
+#     world
+#         .create_entity()
+#         .with(sprite_render_left)
+#         .with(Paddle::new(Side::Left))
+#         .with(left_transform)
+#         .build();
+# 
+#     // Create right plank entity.
+#     world
+#         .create_entity()
+#         .with(sprite_render_right)
+#         .with(Paddle::new(Side::Right))
+#         .with(right_transform)
+#         .build();
+# }
+# 
+# /// Initialises one ball in the middle-ish of the arena.
+# fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
+#     // Create the translation.
+#     let mut local_transform = Transform::default();
+#     local_transform.translation = Vector3::new(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
+# 
+#     // Assign the sprite for the ball
+#     let sprite_render = SpriteRender {
+#         sprite_sheet: sprite_sheet_handle,
+#         sprite_number: 1, // ball is the second sprite on the sprite sheet
+#         flip_horizontal: false,
+#         flip_vertical: false,
+#     };
+# 
+#     world
+#         .create_entity()
+#         .with(sprite_render)
+#         .with(Ball {
+#             radius: BALL_RADIUS,
+#             velocity: [BALL_VELOCITY_X, BALL_VELOCITY_Y],
+#         }).with(local_transform)
+#         .build();
+# }
+```
+
+`ScoreBoard` is just a container that will allow us to keep track of each
+player's score. `ScoreText` is also a container, but this one holds the UI
+`Entity`s that will be rendered to the screen. We'll do that next:
+
+```rust,no_run,noplaypen
+# extern crate amethyst
+#
+use amethyst::{
+#     assets::{AssetStorage, Loader},
+#     core::{cgmath::Vector3, transform::Transform},
+    // --snip--
+    ecs::prelude::{Component, DenseVecStorage, Entity},
+#     prelude::*,
+#     renderer::{
+#         Camera, MaterialTextureSet, PngFormat, Projection, SpriteRender,
+#         SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, Texture,
+#         TextureMetadata,
+#     },
+    ui::{Anchor, TtfFormat, UiText, UiTransform},
+    utils::application_root_dir,
+};
+ 
+# pub const ARENA_HEIGHT: f32 = 100.0;
+# pub const ARENA_WIDTH: f32 = 100.0;
+# 
+# pub const PADDLE_HEIGHT: f32 = 16.0;
+# pub const PADDLE_WIDTH: f32 = 4.0;
+# 
+# pub const BALL_VELOCITY_X: f32 = 75.0;
+# pub const BALL_VELOCITY_Y: f32 = 50.0;
+# pub const BALL_RADIUS: f32 = 2.0;
+# 
+# pub struct Pong;
+# 
+impl<'a, 'b> SimpleState<'a, 'b> for Pong {
+    fn on_start(&mut self, data: StateData<GameData>) {
+#         let world = data.world;
+#
+#         // Load the spritesheet necessary to render the graphics.
+#         // `spritesheet` is the layout of the sprites on the image;
+#         // `texture` is the pixel data.
+#         let sprite_sheet_handle = load_sprite_sheet(world);
+#
+#         initialise_ball(world, sprite_sheet_handle.clone());
+#         initialise_paddles(world, sprite_sheet_handle);
+#         initialise_camera(world);
+        // --snip--
+
+        initialise_scoreboard(world);
+    }
+}
+ 
+# #[derive(PartialEq, Eq)]
+# pub enum Side {
+#     Left,
+#     Right,
+# }
+# 
+# pub struct Paddle {
+#     pub side: Side,
+#     pub width: f32,
+#     pub height: f32,
+# }
+# 
+# impl Paddle {
+#     fn new(side: Side) -> Paddle {
+#         Paddle {
+#             side: side,
+#             width: 1.0,
+#             height: 1.0,
+#         }
+#     }
+# }
+# 
+# impl Component for Paddle {
+#     type Storage = DenseVecStorage<Self>;
+# }
+# 
+# pub struct Ball {
+#     pub velocity: [f32; 2],
+#     pub radius: f32,
+# }
+# 
+# impl Component for Ball {
+#     type Storage = DenseVecStorage<Self>;
+# }
+#
+/// ScoreBoard contains the actual score data
+#[derive(Default)]
+pub struct ScoreBoard {
+    pub score_left: i32,
+    pub score_right: i32,
+}
+
+/// ScoreText contains the ui text elements that display the score
+pub struct ScoreText {
+    pub p1_score: Entity,
+    pub p2_score: Entity,
+}
+
+# fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
+#     // Load the sprite sheet necessary to render the graphics.
+#     // The texture is the pixel data
+#     // `sprite_sheet` is the layout of the sprites on the image
+#     // `texture_handle` is a cloneable reference to the texture
+#     let texture_handle = {
+#         let loader = world.read_resource::<Loader>();
+#         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
+#         loader.load(
+#             "texture/pong_spritesheet.png",
+#             PngFormat,
+#             TextureMetadata::srgb_scale(),
+#             (),
+#             &texture_storage,
+#         )
+#     };
+# 
+#     // `texture_id` is a application defined ID given to the texture to store in the `World`.
+#     // This is needed to link the texture to the sprite_sheet.
+#     let texture_id = 0;
+#     let mut material_texture_set = world.write_resource::<MaterialTextureSet>();
+#     material_texture_set.insert(texture_id, texture_handle);
+# 
+#     let loader = world.read_resource::<Loader>();
+#     let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
+#     loader.load(
+#         "texture/pong_spritesheet.ron", // Here we load the associated ron file
+#         SpriteSheetFormat,
+#         texture_id, // We pass it the ID of the texture we want it to use
+#         (),
+#         &sprite_sheet_store,
+#     )
+# }
+# 
+# /// Initialise the camera.
+# fn initialise_camera(world: &mut World) {
+#     let mut transform = Transform::default();
+#     transform.translation.z = 1.0;
+#     world
+#         .create_entity()
+#         .with(Camera::from(Projection::orthographic(
+#             0.0,
+#             ARENA_WIDTH,
+#             ARENA_HEIGHT,
+#             0.0,
+#         ))).with(transform)
+#         .build();
+# }
+# 
+# /// Initialises one paddle on the left, and one paddle on the right.
+# fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
+#     let mut left_transform = Transform::default();
+#     let mut right_transform = Transform::default();
+# 
+#     // Correctly position the paddles.
+#     let y = ARENA_HEIGHT / 2.0;
+#     left_transform.translation = Vector3::new(PADDLE_WIDTH * 0.5, y, 0.0);
+#     right_transform.translation = Vector3::new(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
+# 
+#     // Assign the sprites for the paddles
+#     let sprite_render_left = SpriteRender {
+#         sprite_sheet: sprite_sheet_handle.clone(),
+#         sprite_number: 0, // paddle is the first sprite in the sprite_sheet
+#         flip_horizontal: false,
+#         flip_vertical: false,
+#     };
+# 
+#     let sprite_render_right = SpriteRender {
+#         sprite_sheet: sprite_sheet_handle,
+#         sprite_number: 0,
+#         flip_horizontal: true,
+#         flip_vertical: false,
+#     };
+# 
+#     // Create a left plank entity.
+#     world
+#         .create_entity()
+#         .with(sprite_render_left)
+#         .with(Paddle::new(Side::Left))
+#         .with(left_transform)
+#         .build();
+# 
+#     // Create right plank entity.
+#     world
+#         .create_entity()
+#         .with(sprite_render_right)
+#         .with(Paddle::new(Side::Right))
+#         .with(right_transform)
+#         .build();
+# }
+# 
+# /// Initialises one ball in the middle-ish of the arena.
+# fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
+#     // Create the translation.
+#     let mut local_transform = Transform::default();
+#     local_transform.translation = Vector3::new(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
+# 
+#     // Assign the sprite for the ball
+#     let sprite_render = SpriteRender {
+#         sprite_sheet: sprite_sheet_handle,
+#         sprite_number: 1, // ball is the second sprite on the sprite sheet
+#         flip_horizontal: false,
+#         flip_vertical: false,
+#     };
+# 
+#     world
+#         .create_entity()
+#         .with(sprite_render)
+#         .with(Ball {
+#             radius: BALL_RADIUS,
+#             velocity: [BALL_VELOCITY_X, BALL_VELOCITY_Y],
+#         }).with(local_transform)
+#         .build();
+# }
+#
+/// Initialises a ui scoreboard
+fn initialise_scoreboard(world: &mut World) {
+    let font = world.read_resource::<Loader>().load(
+        "font/square.ttf",
+        TtfFormat,
+        Default::default(),
+        (),
+        &world.read_resource(),
+    );
+    let p1_transform = UiTransform::new(
+        "P1".to_string(), Anchor::TopMiddle,
+        -50., -50., 1., 200., 50., 0,
+    );
+    let p2_transform = UiTransform::new(
+        "P2".to_string(), Anchor::TopMiddle,
+        50., -50., 1., 200., 50., 0,
+    );
+
+    let p1_score = world
+        .create_entity()
+        .with(p1_transform)
+        .with(UiText::new(
+            font.clone(),
+            "0".to_string(),
+            [1., 1., 1., 1.],
+            50.,
+        )).build();
+
+    let p2_score = world
+        .create_entity()
+        .with(p2_transform)
+        .with(UiText::new(
+            font.clone(),
+            "0".to_string(),
+            [1., 1., 1., 1.],
+            50.,
+        )).build();
+
+    world.add_resource(ScoreText { p1_score, p2_score });
+}
+
+// --snip--
+```
+
+Here, we add some UI imports and create a new `initialise_scoreboard` function,
+which we'll call in the `on_start` method of the `Pong` gamestate.
+
+Inside `initialise_scoreboard`, we're first going to load up a font which we've
+saved to `font/square.ttf` ([Download][font-download]) in the app root. We pull
+in the `TtfFormat` to match this font type, load the font as a resource in the
+world, and then save the handle to our `font` variable (which we'll use for our
+UI `Entity`s).
+
+Next, we create a transform for each of our two scores by giving them a unique
+id (`P1` and `P2`), a UI `Anchor` at the top middle of our window, and then
+adjust their global `x`, `y`, and `z` coordinates, `width`, `height`, and
+`tab-order`.
+
+After creating the `font` and `transform`s, we'll create a UI `Entity` in the
+world for each of our player's scores, with their `transform`, and a `UiText`
+component (with our `font` handle, initial `text`, `color`, and `font_size`).
+
+Finally, we initialize a `ScoreText` structure with each of our UI `Entity`s
+and add it as a resource to the world so we can access it from our `System`s
+later.
+
+If we've done everything right so far, we should see `0` `0` at the top of our
+game window. You'll notice that the scores don't update yet when the ball makes
+it to either side, so we'll add that next.
+
+[font-download]: https://github.com/amethyst/amethyst/raw/master/examples/assets/font/square.ttf
 
 
 ## Updating the Scoreboard
