@@ -224,7 +224,8 @@ fn main() -> amethyst::Result<()> {
 #     let input_bundle = amethyst::input::InputBundle::<String, String>::new();
 #
     let game_data = GameDataBuilder::default()
-        .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
+        .with_bundle(RenderBundle::new(pipe, Some(config))
+        .with_sprite_sheet_processor())?
         .with_bundle(TransformBundle::new())?
         .with_bundle(input_bundle)?
         .with_bundle(UiBundle::<String, String>::new())? // <-- Add me
@@ -252,7 +253,7 @@ Now we have everything set up so we can start rendering a scoreboard in our
 game. We'll start by creating some structures in `pong.rs`:
 
 ```rust,no_run,noplaypen
-# extern crate amethyst
+# extern crate amethyst;
 #
 use amethyst::{
 #     assets::{AssetStorage, Loader},
@@ -336,7 +337,7 @@ pub struct ScoreBoard {
     pub score_right: i32,
 }
 
-/// ScoreText contains the ui text elements that display the score
+/// ScoreText contains the ui text components that display the score
 pub struct ScoreText {
     pub p1_score: Entity,
     pub p2_score: Entity,
@@ -461,11 +462,13 @@ pub struct ScoreText {
 ```
 
 `ScoreBoard` is just a container that will allow us to keep track of each
-player's score. `ScoreText` is also a container, but this one holds the UI
-`Entity`s that will be rendered to the screen. We'll do that next:
+player's score. We'll use this later in another module, so we've gone ahead and
+marked it as public (same with `ScoreText`). `ScoreText` is also a container,
+but this one holds the UI `component`s that will be rendered to the screen.
+We'll do that next:
 
 ```rust,no_run,noplaypen
-# extern crate amethyst
+# extern crate amethyst;
 #
 use amethyst::{
 #     assets::{AssetStorage, Loader},
@@ -726,18 +729,18 @@ Inside `initialise_scoreboard`, we're first going to load up a font which we've
 saved to `font/square.ttf` ([Download][font-download]) in the app root. We pull
 in the `TtfFormat` to match this font type, load the font as a resource in the
 world, and then save the handle to our `font` variable (which we'll use for our
-UI `Entity`s).
+UI `component`s).
 
 Next, we create a transform for each of our two scores by giving them a unique
 id (`P1` and `P2`), a UI `Anchor` at the top middle of our window, and then
 adjust their global `x`, `y`, and `z` coordinates, `width`, `height`, and
 `tab-order`.
 
-After creating the `font` and `transform`s, we'll create a UI `Entity` in the
+After creating the `font` and `transform`s, we'll create a UI `component` in the
 world for each of our player's scores, with their `transform`, and a `UiText`
 component (with our `font` handle, initial `text`, `color`, and `font_size`).
 
-Finally, we initialize a `ScoreText` structure with each of our UI `Entity`s
+Finally, we initialize a `ScoreText` structure with each of our UI `component`s
 and add it as a resource to the world so we can access it from our `System`s
 later.
 
@@ -750,10 +753,130 @@ it to either side, so we'll add that next.
 
 ## Updating the Scoreboard
 
-[//]: # "TODO: Update player scores in WinnerSystem"
+All that's left for us to do now is update the UI whenever a player scores a
+point. You'll see just how easy this is with our `ECS` design. All we have to do
+is modify our `WinnerSystem` to access the players' scores and update them
+accordingly:
+
+```rust,no_run,noplaypen
+# extern crate amethyst;
+#
+# mod pong {
+#     use amethyst::ecs::prelude::*;
+#
+#     pub struct Ball {
+#         pub radius: f32,
+#         pub velocity: [f32; 2],
+#     }
+#     impl Component for Ball {
+#         type Storage = DenseVecStorage<Self>;
+#     }
+#
+#     #[derive(Default)]
+#     pub struct ScoreBoard {
+#         pub score_left: i32,
+#         pub score_right: i32,
+#     }
+#
+#     pub struct ScoreText {
+#         pub p1_score: Entity,
+#         pub p2_score: Entity,
+#     }
+#
+#     pub const ARENA_WIDTH: f32 = 100.0;
+# }
+#
+use amethyst::{
+#     core::transform::Transform,
+    // --snip--
+    ecs::prelude::{Join, ReadExpect, System, Write, WriteStorage},
+    ui::UiText,
+};
+
+use pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH};
+
+pub struct WinnerSystem;
+
+impl<'s> System<'s> for WinnerSystem {
+    type SystemData = (
+        WriteStorage<'s, Ball>,
+        WriteStorage<'s, Transform>,
+        WriteStorage<'s, UiText>,
+        Write<'s, ScoreBoard>,
+        ReadExpect<'s, ScoreText>,
+    );
+
+    fn run(&mut self, (
+        mut balls,
+        mut locals,
+        mut ui_text,
+        mut scores,
+        score_text
+    ): Self::SystemData) {
+        for (ball, transform) in (&mut balls, &mut locals).join() {
+#             let ball_x = transform.translation[0];
+            // --snip--
+
+            let did_hit = if ball_x <= ball.radius {
+                // Right player scored on the left side.
+                // We top the score at 999 to avoid text overlap.
+                scores.score_right = (scores.score_right + 1)
+                    .min(999);
+
+                if let Some(text) = ui_text.get_mut(score_text.p2_score) {
+                    text.text = scores.score_right.to_string();
+                }
+                true
+            } else if ball_x >= ARENA_WIDTH - ball.radius {
+                // Left player scored on the right side.
+                // We top the score at 999 to avoid text overlap.
+                scores.score_left = (scores.score_left + 1)
+                    .min(999);
+                if let Some(text) = ui_text.get_mut(score_text.p1_score) {
+                    text.text = scores.score_left.to_string();
+                }
+                true
+            } else {
+                false
+            };
+
+            if did_hit {
+#                 ball.velocity[0] = -ball.velocity[0]; // Reverse Direction
+#                 transform.translation[0] = ARENA_WIDTH / 2.0; // Reset Position
+                // --snip--
+
+                // Print the score board.
+                println!(
+                    "Score: | {:^3} | {:^3} |",
+                    scores.score_left, scores.score_right
+                );
+            }
+        }
+    }
+}
+#
+# fn main() {}
+```
+
+We've added a fair few changes here, so let's go through them. First, we want to
+be able to read and write our scores, so we bring in the `UiText` storage which
+holds all `UiText` components. We'll want to select our players' scores from
+that, so we also bring in `ScoreText` which holds handles to the `UiText`
+components. Finally, we bring in the `ScoreBoard` resource so we can keep track
+of the actual score data.
+
+Inside our `run` method (after updating the signature)), we replace the
+`println!` statements with code that will update our `UiText` components. We
+first update the score stored in `score_board` by adding 1 to it and clamping it
+to not exceed `999`. Then, we get a mutable reference from our `UiText`
+component handle that we stored in our `ScoreText` resource. Lastly, we set the
+text of the `UiText` component to the player's score (converted to a string).
 
 
 ## Summary
 
-[//]: # "TODO: Go over main additions"
-[//]: # "TODO: Introduce next chapter (likely music/audio?)"
+And that's it! Our game now keeps track of the score for us and displays it at
+the top of our window.
+
+Now don't go just yet, because in the next chapter, we'll make our Pong game
+even better by adding sound effects and even some music!
