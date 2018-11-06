@@ -1,11 +1,11 @@
 # Winning Rounds and Keeping Score
 
 Our last chapter ended on a bit of a cliffhanger. What happens when our ball
-reaches the left or right edge of the screen? It just keeps going!
+reaches the left or right edge of the screen? It just keeps going! 😦
 
 In this chapter, we'll fix that by putting the ball back into play after it
 leaves either side of the arena. We'll also add a scoreboard and keep track of
-who's winning and losing!
+who's winning and losing.
 
 
 ## Winning and Losing Rounds
@@ -13,7 +13,7 @@ who's winning and losing!
 So let's fix the big current issue; having a game that only works for one
 round isn't very fun. We'll add a new system that will check if the ball has
 reached either edge of the arena and reset its position and velocity. We'll also
-make a note of who got the point for the round!
+make a note of who got the point for the round.
 
 First, we'll add a new module to `systems/mod.rs`
 ```rust,no_run,noplaypen,ignore
@@ -89,7 +89,7 @@ reached either the left or right boundary of the arena. If so, then we reverse
 its direction and put it back in the middle of the screen.
 
 Now, we just need to add our new system to `main.rs`, and we should be able to
-keep playing after someone scores, and log who got the point!
+keep playing after someone scores, and log who got the point.
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
