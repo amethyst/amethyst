@@ -2,6 +2,7 @@
 
 extern crate amethyst;
 
+use std::marker::PhantomData;
 use amethyst::ecs::{Dispatcher, DispatcherBuilder};
 use amethyst::prelude::*;
 use amethyst::Error;
@@ -16,24 +17,26 @@ impl SimpleState<'static, 'static> for StateA {
         data.world
             .write_resource::<TransQueue<GameData<'static, 'static>, StateEvent>>()
             .push_back(Box::new(|| Trans::Push(Box::new(StateB::default()))));
-        Trans::None
+        Trans::Push(Box::new(StateB::default()))
     }
 }
 
 /// StateB isn't Send + Sync
-struct StateB {
+struct StateB<'a> {
     dispatcher: Dispatcher<'static, 'static>,
+    _phantom: &'a PhantomData<()>,
 }
 
-impl Default for StateB {
+impl<'a> Default for StateB<'a> {
     fn default() -> Self {
         StateB {
             dispatcher: DispatcherBuilder::new().build(),
+            _phantom: &PhantomData,
         }
     }
 }
 
-impl SimpleState<'static, 'static> for StateB {
+impl<'a> SimpleState<'static, 'static> for StateB<'a> {
     fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'static, 'static> {
         println!("StateB::update()");
         self.dispatcher.dispatch(&mut data.world.res);
