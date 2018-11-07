@@ -200,7 +200,7 @@ trait for it. The trait specifies the lifetime of the components on which it
 operates. Inside the implementation, we define the `SystemData` the system
 operates on, a tuple of `WriteStorage`, `ReadStorage`, and `Read`. More
 specifically, the generic types we've used here tell us that the `PaddleSystem`
-mutates `LocalTransform` components, `WriteStorage<'s, LocalTransform>`, it
+mutates `Transform` components, `WriteStorage<'s, Transform>`, it
 reads `Paddle` components, `ReadStorage<'s, Paddle>`, and also accesses the
 `InputHandler<String, String>` resource we created earlier, using the `Read`
 structure.
