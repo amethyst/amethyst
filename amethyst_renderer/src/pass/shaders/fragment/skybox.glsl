@@ -4,7 +4,6 @@
 
 in VertexData {
     vec3 position;
-    vec3 normal;
     vec2 tex_coord;
 } vertex;
 

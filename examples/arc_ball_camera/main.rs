@@ -109,7 +109,7 @@ fn main() -> Result<(), Error> {
             Stage::with_backbuffer()
                 .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
                 .with_pass(DrawShaded::<PosNormTex>::new())
-                .with_pass(DrawSkybox::<PosNormTex>::new()),
+                .with_pass(DrawSkybox::new()),
         );
         RenderBundle::new(pipe, Some(display_config))
     };

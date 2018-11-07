@@ -7,17 +7,14 @@ use amethyst_core::{
 };
 use gfx::pso::buffer::ElemStride;
 use glsl_layout::{mat4, Uniform};
-use std::marker::PhantomData;
 use {
     error::Result,
     get_camera,
-    pass::util::set_attribute_buffers,
     pipe::{
         pass::{Pass, PassData},
         DepthMode, Effect, NewEffect,
     },
-    set_vertex_args, ActiveCamera, Camera, Encoder, Factory, Mesh, Normal, PosNormTex, Position,
-    Query, Shape, TexCoord, VertexFormat,
+    set_vertex_args, ActiveCamera, Camera, Encoder, Factory, Mesh, PosTex, Shape, VertexFormat,
 };
 
 use super::{SkyboxColor, FRAG_SRC, VERT_SRC};
@@ -31,33 +28,19 @@ pub(crate) struct VertexArgs {
 }
 
 /// Draw a simple gradient skybox
-///
-/// # Type Parameters:
-///
-/// * `V`: `VertexFormat`
 #[derive(Clone, Debug)]
-pub struct DrawSkybox<V> {
-    _marker: PhantomData<V>,
+pub struct DrawSkybox {
     mesh: Option<Mesh>,
 }
 
-impl<V> DrawSkybox<V>
-where
-    V: Query<(Position, Normal, TexCoord)>,
-{
+impl DrawSkybox {
     /// Create instance of `DrawSkybox` pass
     pub fn new() -> Self {
-        DrawSkybox {
-            _marker: PhantomData {},
-            mesh: None,
-        }
+        DrawSkybox { mesh: None }
     }
 }
 
-impl<'a, V> PassData<'a> for DrawSkybox<V>
-where
-    V: Query<(Position, Normal, TexCoord)>,
-{
+impl<'a> PassData<'a> for DrawSkybox {
     type Data = (
         Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
@@ -66,12 +49,9 @@ where
     );
 }
 
-impl<V> Pass for DrawSkybox<V>
-where
-    V: Query<(Position, Normal, TexCoord)>,
-{
+impl Pass for DrawSkybox {
     fn compile(&mut self, mut effect: NewEffect) -> Result<Effect> {
-        let verts = Shape::Cube.generate_vertices::<Vec<PosNormTex>>(None);
+        let verts = Shape::Cube.generate_vertices::<Vec<PosTex>>(None);
         self.mesh = Some(Mesh::build(verts).build(&mut effect.factory)?);
 
         effect
@@ -81,7 +61,7 @@ where
                 "VertexArgs",
                 std::mem::size_of::<<VertexArgs as Uniform>::Std140>(),
                 1,
-            ).with_raw_vertex_buffer(PosNormTex::ATTRIBUTES, PosNormTex::size() as ElemStride, 0)
+            ).with_raw_vertex_buffer(PosTex::ATTRIBUTES, PosTex::size() as ElemStride, 0)
             .with_raw_global("camera_position")
             .with_raw_global("zenith_color")
             .with_raw_global("nadir_color")
@@ -105,7 +85,9 @@ where
 
         set_vertex_args(effect, encoder, camera, &GlobalTransform(Matrix4::one()));
 
-        if !set_attribute_buffers(effect, &mesh, &[V::QUERIED_ATTRIBUTES]) {
+        if let Some(vbuf) = mesh.buffer(PosTex::ATTRIBUTES) {
+            effect.data.vertex_bufs.push(vbuf.clone());
+        } else {
             effect.clear();
             return;
         }
