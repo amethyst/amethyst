@@ -86,6 +86,7 @@ impl<'a> PrefabData<'a> for Named {
 
 macro_rules! impl_data {
     ( $($ty:ident:$i:tt),* ) => {
+        #[allow(unused)]
         impl<'a, $($ty),*> PrefabData<'a> for ( $( $ty , )* )
             where $( $ty : PrefabData<'a> ),*
         {
@@ -126,6 +127,7 @@ macro_rules! impl_data {
     };
 }
 
+impl_data!();
 impl_data!(A:0);
 impl_data!(A:0, B:1);
 impl_data!(A:0, B:1, C:2);
