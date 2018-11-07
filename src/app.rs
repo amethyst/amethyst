@@ -1,6 +1,13 @@
 //! The core engine framework.
 
-use std::{error::Error as StdError, marker::PhantomData, path::Path, sync::Arc, time::Duration};
+use std::{
+    error::Error as StdError,
+    marker::PhantomData,
+    path::Path,
+    sync::Arc,
+    time::Duration,
+    collections::VecDeque,
+};
 
 use log::Level;
 use rayon::ThreadPoolBuilder;
