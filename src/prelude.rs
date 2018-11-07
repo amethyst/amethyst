@@ -6,6 +6,8 @@ pub use {
     core::WithNamed,
     ecs::prelude::{Builder, World},
     game_data::{DataInit, GameData, GameDataBuilder},
-    state::{EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, Trans, TransQueue},
+    state::{
+        EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, Trans, TransQueue,
+    },
     state_event::StateEvent,
 };
