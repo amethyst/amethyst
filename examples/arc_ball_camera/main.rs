@@ -12,7 +12,7 @@ use amethyst::{
     ecs::prelude::{Join, Read, ReadStorage, Resources, System, SystemData, WriteStorage},
     input::{InputBundle, InputEvent, ScrollDirection},
     prelude::*,
-    renderer::{DrawShaded, PosNormTex},
+    renderer::{DisplayConfig, DrawShaded, DrawSkybox, Pipeline, PosNormTex, RenderBundle, Stage},
     utils::{application_root_dir, scene::BasicScenePrefab},
     Error,
 };
@@ -95,12 +95,24 @@ fn main() -> Result<(), Error> {
 
     let resources_directory = format!("{}/examples/assets", app_root);
 
-    let display_config_path = format!(
-        "{}/examples/arc_ball_camera/resources/display_config.ron",
-        app_root
-    );
-
     let key_bindings_path = format!("{}/examples/arc_ball_camera/resources/input.ron", app_root);
+
+    let render_bundle = {
+        let display_config = {
+            let path = format!(
+                "{}/examples/arc_ball_camera/resources/display_config.ron",
+                app_root
+            );
+            DisplayConfig::load(&path)
+        };
+        let pipe = Pipeline::build().with_stage(
+            Stage::with_backbuffer()
+                .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+                .with_pass(DrawShaded::<PosNormTex>::new())
+                .with_pass(DrawSkybox::new()),
+        );
+        RenderBundle::new(pipe, Some(display_config))
+    };
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
@@ -108,11 +120,12 @@ fn main() -> Result<(), Error> {
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
         )?.with_bundle(ArcBallControlBundle::<String, String>::new())?
+        .with_bundle(render_bundle)?
         .with(
             CameraDistanceSystem::<String>::new(),
             "camera_distance_system",
             &["input_system"],
-        ).with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
+        );
     let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
     game.run();
     Ok(())
