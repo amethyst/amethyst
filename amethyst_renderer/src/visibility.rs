@@ -1,11 +1,18 @@
-use amethyst_core::cgmath::{EuclideanSpace, InnerSpace, MetricSpace, Point3, Transform, Vector3};
-use amethyst_core::specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write};
-use amethyst_core::GlobalTransform;
-use cam::{ActiveCamera, Camera};
-use hibitset::BitSet;
-use hidden::{Hidden, HiddenPropagate};
 use std::cmp::Ordering;
-use transparent::Transparent;
+
+use hibitset::BitSet;
+
+use amethyst_core::{
+    cgmath::{EuclideanSpace, InnerSpace, MetricSpace, Point3, Transform, Vector3},
+    specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
+    GlobalTransform,
+};
+
+use {
+    cam::{ActiveCamera, Camera},
+    hidden::{Hidden, HiddenPropagate},
+    transparent::Transparent,
+};
 
 /// Resource for controlling what entities should be rendered, and whether to draw them ordered or
 /// not, which is useful for transparent surfaces.
@@ -69,10 +76,10 @@ impl<'a> System<'a> for VisibilitySortingSystem {
             .or_else(|| (&camera, &global).join().map(|cg| cg.1).next());
         let camera_backward = camera
             .map(|c| c.0.z.truncate())
-            .unwrap_or(Vector3::unit_z());
+            .unwrap_or_else(Vector3::unit_z);
         let camera_centroid = camera
             .map(|g| g.0.transform_point(origin))
-            .unwrap_or(origin.clone());
+            .unwrap_or(origin);
 
         self.centroids.clear();
         self.centroids.extend(

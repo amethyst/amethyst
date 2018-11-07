@@ -1,12 +1,6 @@
 ---
 platform: linux
 
-image_resource:
-  type: docker-image
-  source:
-    repository: magnonellie/amethyst-dependencies
-    tag: stable
-
 inputs:
 - name: amethyst
 
@@ -20,6 +14,7 @@ run:
   args:
   - -exc
   - |
+    rustc --version
     export RUSTFLAGS="-D warnings"
     cargo check --all --features sdl_controller,profiler
     export CARGO_TARGET_DIR="../target"

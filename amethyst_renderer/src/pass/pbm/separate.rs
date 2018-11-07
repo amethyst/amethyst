@@ -1,28 +1,39 @@
 //! Forward physically-based drawing pass.
 
-use super::*;
-use amethyst_assets::AssetStorage;
-use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage};
-use amethyst_core::transform::GlobalTransform;
-use cam::{ActiveCamera, Camera};
-use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
-use hidden::{Hidden, HiddenPropagate};
-use light::Light;
-use mesh::{Mesh, MeshHandle};
-use mtl::{Material, MaterialDefaults};
-use pass::shaded_util::{set_light_args, setup_light_buffers};
-use pass::skinning::{create_skinning_effect, setup_skinning_buffers};
-use pass::util::{draw_mesh, get_camera, setup_textures, setup_vertex_args};
-use pipe::pass::{Pass, PassData};
-use pipe::{DepthMode, Effect, NewEffect};
-use resources::AmbientColor;
-use skinning::JointTransforms;
-use tex::Texture;
-use types::{Encoder, Factory};
-use vertex::{Attributes, Normal, Position, Separate, Tangent, TexCoord, VertexFormat};
-use visibility::Visibility;
+
+use amethyst_assets::AssetStorage;
+use amethyst_core::{
+    specs::prelude::{Join, Read, ReadExpect, ReadStorage},
+    transform::GlobalTransform,
+};
+
+use {
+    cam::{ActiveCamera, Camera},
+    error::Result,
+    hidden::{Hidden, HiddenPropagate},
+    light::Light,
+    mesh::{Mesh, MeshHandle},
+    mtl::{Material, MaterialDefaults},
+    pass::{
+        shaded_util::{set_light_args, setup_light_buffers},
+        skinning::{create_skinning_effect, setup_skinning_buffers},
+        util::{draw_mesh, get_camera, setup_textures, setup_vertex_args},
+    },
+    pipe::{
+        pass::{Pass, PassData},
+        DepthMode, Effect, NewEffect,
+    },
+    resources::AmbientColor,
+    skinning::JointTransforms,
+    tex::Texture,
+    types::{Encoder, Factory},
+    vertex::{Attributes, Normal, Position, Separate, Tangent, TexCoord, VertexFormat},
+    visibility::Visibility,
+};
+
+use super::*;
 
 static ATTRIBUTES: [Attributes<'static>; 4] = [
     Separate::<Position>::ATTRIBUTES,

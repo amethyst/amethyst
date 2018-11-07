@@ -30,6 +30,7 @@ nightly = [ "amethyst_core/nightly" ]
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.5.0" }
 amethyst_core = { path = "../amethyst_core", version = "0.4.0" }
+amethyst_derive = { path = "../amethyst_derive", version = "0.2.0" }
 derivative = "1.0"
 error-chain = "0.12"
 fnv = "1.0"

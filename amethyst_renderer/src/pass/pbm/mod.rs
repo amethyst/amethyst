@@ -1,5 +1,4 @@
-pub use self::interleaved::DrawPbm;
-pub use self::separate::DrawPbmSeparate;
+pub use self::{interleaved::DrawPbm, separate::DrawPbmSeparate};
 
 mod interleaved;
 mod separate;

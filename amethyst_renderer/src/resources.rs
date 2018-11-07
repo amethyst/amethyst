@@ -1,10 +1,12 @@
 //! `amethyst` rendering ecs resources
+//!
+use smallvec::SmallVec;
+use winit::Window;
 
 use amethyst_assets::{PrefabData, PrefabError};
 use amethyst_core::specs::{Entity, Write};
+
 use color::Rgba;
-use smallvec::SmallVec;
-use winit::Window;
 
 /// The ambient color of a scene
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -26,7 +28,7 @@ impl<'a> PrefabData<'a> for AmbientColor {
         ambient: &mut Self::SystemData,
         _: &[Entity],
     ) -> Result<(), PrefabError> {
-        ambient.0 = self.0.clone();
+        ambient.0 = self.0;
         Ok(())
     }
 }
@@ -77,7 +79,7 @@ pub struct ScreenDimensions {
 
 impl ScreenDimensions {
     /// Creates a new screen dimensions object with the given width and height.
-    pub fn new(w: u32, h: u32, hidpi: f64) -> ScreenDimensions {
+    pub fn new(w: u32, h: u32, hidpi: f64) -> Self {
         ScreenDimensions {
             w: w as f32,
             h: h as f32,

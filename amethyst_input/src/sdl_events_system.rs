@@ -1,15 +1,21 @@
-use super::controller::{ControllerAxis, ControllerButton, ControllerEvent};
-use super::{InputEvent, InputHandler};
-use amethyst_core::shrev::EventChannel;
-use amethyst_core::specs::prelude::{Resources, RunNow, SystemData, Write};
-use sdl2;
-use sdl2::controller::{AddMappingError, Axis, Button, GameController};
-use sdl2::event::Event;
-use sdl2::{EventPump, GameControllerSubsystem, Sdl};
-use std::fmt;
-use std::hash::Hash;
-use std::marker::PhantomData;
-use std::path::PathBuf;
+use std::{fmt, hash::Hash, marker::PhantomData, path::PathBuf};
+
+use sdl2::{
+    self,
+    controller::{AddMappingError, Axis, Button, GameController},
+    event::Event,
+    EventPump, GameControllerSubsystem, Sdl,
+};
+
+use amethyst_core::{
+    shrev::EventChannel,
+    specs::prelude::{Resources, RunNow, SystemData, Write},
+};
+
+use super::{
+    controller::{ControllerAxis, ControllerButton, ControllerEvent},
+    InputEvent, InputHandler,
+};
 
 /// A collection of errors that can occur in the SDL system.
 #[derive(Debug)]

@@ -1,8 +1,11 @@
-use amethyst_assets::{PrefabData, PrefabError};
-use amethyst_core::cgmath::{Matrix4, SquareMatrix};
-use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage};
-use amethyst_renderer::JointTransformsPrefab;
 use hibitset::BitSet;
+
+use amethyst_assets::{PrefabData, PrefabError, ProgressCounter};
+use amethyst_core::{
+    cgmath::{Matrix4, SquareMatrix},
+    specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage},
+};
+use amethyst_renderer::JointTransformsPrefab;
 
 /// Joint, attach to an entity with a `Transform`
 #[derive(Debug, Clone)]
@@ -121,7 +124,7 @@ impl<'a> PrefabData<'a> for SkinPrefab {
 }
 
 /// `PrefabData` for full skinning support
-#[derive(Clone, Default, Debug, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, Serialize, Deserialize, PrefabData)]
 #[serde(default)]
 pub struct SkinnablePrefab {
     /// Place `Skin` on the `Entity`
@@ -130,31 +133,4 @@ pub struct SkinnablePrefab {
     pub joint: Option<JointPrefab>,
     /// Place `JointTransforms` on the `Entity`
     pub joint_transforms: Option<JointTransformsPrefab>,
-}
-
-impl<'a> PrefabData<'a> for SkinnablePrefab {
-    type SystemData = (
-        <SkinPrefab as PrefabData<'a>>::SystemData,
-        <JointPrefab as PrefabData<'a>>::SystemData,
-        <JointTransformsPrefab as PrefabData<'a>>::SystemData,
-    );
-    type Result = ();
-
-    fn add_to_entity(
-        &self,
-        entity: Entity,
-        system_data: &mut Self::SystemData,
-        entities: &[Entity],
-    ) -> Result<(), PrefabError> {
-        if let Some(ref prefab) = self.skin {
-            prefab.add_to_entity(entity, &mut system_data.0, entities)?;
-        }
-        if let Some(ref prefab) = self.joint {
-            prefab.add_to_entity(entity, &mut system_data.1, entities)?;
-        }
-        if let Some(ref prefab) = self.joint_transforms {
-            prefab.add_to_entity(entity, &mut system_data.2, entities)?;
-        }
-        Ok(())
-    }
 }

@@ -1,12 +1,16 @@
-use super::{Prefab, PrefabData, PrefabTag};
-use amethyst_core::specs::{
-    BitSet, Entities, Entity, InsertedFlag, Join, Read, ReadExpect, ReadStorage, ReaderId,
-    Resources, System, Write, WriteStorage,
+use std::{marker::PhantomData, ops::Deref};
+
+use amethyst_core::{
+    specs::{
+        BitSet, Entities, Entity, InsertedFlag, Join, Read, ReadExpect, ReadStorage, ReaderId,
+        Resources, System, Write, WriteStorage,
+    },
+    ArcThreadPool, Parent, Time,
 };
-use amethyst_core::{ArcThreadPool, Parent, Time};
-use std::marker::PhantomData;
-use std::ops::Deref;
+
 use {AssetStorage, Completion, Handle, HotReloadStrategy, ProcessingState, ResultExt};
+
+use super::{Prefab, PrefabData, PrefabTag};
 
 /// System that load `Prefab`s for `PrefabData` `T`.
 ///

@@ -1,6 +1,8 @@
-use input_handler::InputHandler;
 use std::hash::Hash;
+
 use winit::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+
+use input_handler::InputHandler;
 
 /// If this event was for manipulating a keyboard key then this will return the `VirtualKeyCode`
 /// and the new state.
@@ -25,11 +27,11 @@ pub fn get_key(event: &Event) -> Option<(VirtualKeyCode, ElementState)> {
 /// Returns true if the event passed in is a key down event for the
 /// provided `VirtualKeyCode`.
 pub fn is_key_down(event: &Event, key_code: VirtualKeyCode) -> bool {
-    let op = get_key(event);
-    if let Some((key, state)) = op {
+    if let Some((key, state)) = get_key(event) {
         return key == key_code && state == ElementState::Pressed;
     }
-    return false;
+
+    false
 }
 
 /// Returns true if the event passed in is a request to close the game window.

@@ -1,9 +1,13 @@
-use amethyst_core::specs::prelude::{Component, DispatcherBuilder};
-use amethyst_core::{Result, SystemBundle};
+use std::{hash::Hash, marker};
+
 use resources::AnimationSampling;
 use skinning::VertexSkinningSystem;
-use std::hash::Hash;
-use std::marker;
+
+use amethyst_core::{
+    specs::prelude::{Component, DispatcherBuilder},
+    Result, SystemBundle,
+};
+
 use systems::{
     AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem, SamplerProcessor,
 };

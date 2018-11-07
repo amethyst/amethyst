@@ -1,5 +1,4 @@
-pub use self::resources::*;
-pub use self::systems::*;
+pub use self::{resources::*, systems::*};
 
 mod resources;
 mod systems;

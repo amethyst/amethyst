@@ -1,8 +1,12 @@
-use super::{Texture, TextureMetadata, TexturePrefab};
 use amethyst_assets::{Format, Handle, PrefabData, PrefabError, ProgressCounter};
 use amethyst_core::specs::prelude::{Entity, ReadExpect, Write, WriteStorage};
-use mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset};
-use transparent::Transparent;
+
+use {
+    mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset},
+    transparent::Transparent,
+};
+
+use super::{Texture, TextureMetadata, TexturePrefab};
 
 /// `PrefabData` for loading `Material`s
 ///
@@ -116,7 +120,7 @@ where
             if let (&Some(ref index), &Some(ref handle)) = (&index, &handle) {
                 texture_set.insert(*index, handle.clone());
             }
-            handle.unwrap_or(def.clone())
+            handle.unwrap_or_else(|| def.clone())
         })
 }
 

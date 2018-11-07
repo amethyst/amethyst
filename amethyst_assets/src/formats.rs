@@ -1,9 +1,12 @@
-use error::{Error, ResultExt};
 use serde::Deserialize;
-use {Asset, SimpleFormat};
+
+use {
+    error::{Error, ResultExt},
+    Asset, SimpleFormat,
+};
 
 /// Format for loading from Ron files.
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct RonFormat;
 
 impl<T> SimpleFormat<T> for RonFormat

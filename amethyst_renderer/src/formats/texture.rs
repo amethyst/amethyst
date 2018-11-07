@@ -1,18 +1,23 @@
-use image::{DynamicImage, ImageFormat, RgbaImage};
-
 use std::result::Result as StdResult;
+
+use gfx::{
+    format::{ChannelType, SurfaceType, SurfaceTyped},
+    texture::SamplerInfo,
+    traits::Pod,
+};
+use image::{DynamicImage, ImageFormat, RgbaImage};
 
 use amethyst_assets::{
     AssetStorage, Format, Handle, Loader, PrefabData, PrefabError, ProcessingState,
     ProgressCounter, Result, ResultExt, SimpleFormat,
 };
 use amethyst_core::specs::prelude::{Entity, Read, ReadExpect};
-use gfx::format::{ChannelType, SurfaceType, SurfaceTyped};
-use gfx::texture::SamplerInfo;
-use gfx::traits::Pod;
-use tex::{FilterMethod, Texture, TextureBuilder};
-use types::SurfaceFormat;
-use Renderer;
+
+use {
+    tex::{FilterMethod, Texture, TextureBuilder},
+    types::SurfaceFormat,
+    Renderer,
+};
 
 /// Additional texture metadata that can be passed to the asset loader or added to the prefab.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -438,7 +443,7 @@ pub fn create_texture_asset(
                 .chain_err(|| "Failed to build texture")
         }
     };
-    t.map(|t| ProcessingState::Loaded(t))
+    t.map(ProcessingState::Loaded)
 }
 
 fn apply_options<D, T>(tb: TextureBuilder<D, T>, metadata: TextureMetadata) -> TextureBuilder<D, T>
@@ -463,7 +468,7 @@ fn create_texture_asset_from_image(
     let rgba = image.rgba;
     let w = rgba.width();
     let h = rgba.height();
-    if w > u16::max_value() as u32 || h > u16::max_value() as u32 {
+    if w > u32::from(u16::max_value()) || h > u32::from(u16::max_value()) {
         bail!(
             "Unsupported texture size (expected: ({}, {}), got: ({}, {})",
             u16::max_value(),
@@ -513,8 +518,9 @@ impl SimpleFormat<Texture> for TextureFormat {
 }
 
 mod serde_helper {
-    use super::SamplerInfo;
     use tex::{FilterMethod, WrapMode};
+
+    use super::SamplerInfo;
 
     fn default_filter() -> FilterMethod {
         FilterMethod::Trilinear

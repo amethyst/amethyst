@@ -1,9 +1,12 @@
 //! Types for constructing render passes.
 
 use amethyst_core::specs::prelude::SystemData;
-use error::Result;
-use pipe::{Effect, NewEffect, Target};
-use types::{Encoder, Factory};
+
+use {
+    error::Result,
+    pipe::{Effect, NewEffect, Target},
+    types::{Encoder, Factory},
+};
 
 /// Used to fetch data from the game world for rendering in the pass.
 pub trait PassData<'a> {
@@ -16,6 +19,7 @@ pub trait Pass: for<'a> PassData<'a> {
     /// The pass is given an opportunity to compile shaders and store them in an `Effect`
     /// which is then passed to the pass in `apply`.
     fn compile(&mut self, effect: NewEffect) -> Result<Effect>;
+
     /// Called whenever the renderer is ready to apply the pass.  Feed commands into the
     /// encoder here.
     fn apply<'a, 'b: 'a>(

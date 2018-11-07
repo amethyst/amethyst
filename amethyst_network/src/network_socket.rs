@@ -1,15 +1,18 @@
 //! The network send and receive System
 
-use super::{deserialize_event, send_event, ConnectionState, NetConnection, NetEvent, NetFilter};
+use std::{
+    clone::Clone,
+    io::{Error, ErrorKind},
+    net::{SocketAddr, UdpSocket},
+    sync::mpsc::{channel, Receiver, Sender},
+    thread,
+};
+
+use serde::{de::DeserializeOwned, Serialize};
+
 use amethyst_core::specs::{Join, Resources, System, SystemData, WriteStorage};
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use std::clone::Clone;
-use std::io::{Error, ErrorKind};
-use std::net::SocketAddr;
-use std::net::UdpSocket;
-use std::sync::mpsc::{channel, Receiver, Sender};
-use std::thread;
+
+use super::{deserialize_event, send_event, ConnectionState, NetConnection, NetEvent, NetFilter};
 
 enum InternalSocketEvent<E> {
     SendEvents {
@@ -53,10 +56,7 @@ where
     E: Serialize + PartialEq + Send + 'static,
 {
     /// Creates a `NetSocketSystem` and binds the Socket on the ip and port added in parameters.
-    pub fn new(
-        addr: SocketAddr,
-        filters: Vec<Box<NetFilter<E>>>,
-    ) -> Result<NetSocketSystem<E>, Error> {
+    pub fn new(addr: SocketAddr, filters: Vec<Box<NetFilter<E>>>) -> Result<Self, Error> {
         if addr.port() < 1024 {
             // Just warning the user here, just in case they want to use the root port.
             warn!("Using a port below 1024, this will require root permission and should not be done.");
@@ -99,7 +99,7 @@ where
                             receive_queue
                                 .send(RawEvent {
                                     byte_count: amt,
-                                    data: buf[..amt].iter().cloned().collect(),
+                                    data: buf[..amt].to_vec(),
                                     source: src,
                                 }).unwrap();
                         }
@@ -135,7 +135,7 @@ where
 
     fn run(&mut self, mut net_connections: Self::SystemData) {
         for mut net_connection in (&mut net_connections).join() {
-            let target = net_connection.target.clone();
+            let target = net_connection.target;
 
             if net_connection.state == ConnectionState::Connected
                 || net_connection.state == ConnectionState::Connecting

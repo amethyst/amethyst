@@ -1,13 +1,21 @@
+use std::marker::PhantomData;
+
+use genmesh::{
+    generators::{
+        Circle, Cone, Cube, Cylinder, IcoSphere, IndexedPolygon, Plane, SharedVertex, SphereUv,
+        Torus,
+    },
+    EmitTriangles, MapVertex, Triangulate, Vertex, Vertices,
+};
+
 use amethyst_assets::{
     AssetStorage, Handle, Loader, PrefabData, PrefabError, Progress, ProgressCounter,
 };
-use amethyst_core::cgmath::{InnerSpace, Vector3};
-use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, WriteStorage};
-use genmesh::generators::{
-    Circle, Cone, Cube, Cylinder, IcoSphere, IndexedPolygon, Plane, SharedVertex, SphereUv, Torus,
+use amethyst_core::{
+    cgmath::{InnerSpace, Vector3},
+    specs::prelude::{Entity, Read, ReadExpect, WriteStorage},
 };
-use genmesh::{EmitTriangles, MapVertex, Triangulate, Vertex, Vertices};
-use std::marker::PhantomData;
+
 use {
     ComboMeshCreator, Mesh, MeshData, MeshHandle, Normal, PosNormTangTex, PosNormTex, PosTex,
     Position, Separate, Tangent, TexCoord,
@@ -63,7 +71,7 @@ where
     ) -> Result<bool, PrefabError> {
         let (loader, _, mesh_storage) = system_data;
         self.handle = Some(loader.load_from_data(
-            self.shape.generate::<V>(self.shape_scale.clone()),
+            self.shape.generate::<V>(self.shape_scale),
             progress,
             &mesh_storage,
         ));
@@ -189,7 +197,7 @@ impl Shape {
             ),
             Shape::IcoSphere(divide) => generate_vertices(
                 divide
-                    .map(|d| IcoSphere::subdivide(d))
+                    .map(IcoSphere::subdivide)
                     .unwrap_or_else(IcoSphere::new),
                 scale,
             ),

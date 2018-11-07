@@ -5,6 +5,7 @@ use specs::prelude::{
     Entities, Entity, InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage, ReaderId,
     Resources, System, WriteStorage,
 };
+
 use transform::{GlobalTransform, HierarchyEvent, Parent, ParentHierarchy, Transform};
 
 /// Handles updating `GlobalTransform` components based on the `Transform`
@@ -106,24 +107,21 @@ impl<'a> System<'a> for TransformSystem {
         // Compute transforms with parents.
         for entity in hierarchy.all() {
             let self_dirty = self.local_modified.contains(entity.id());
-            match (parents.get(*entity), locals.get(*entity)) {
-                (Some(parent), Some(local)) => {
-                    let parent_dirty = self.global_modified.contains(parent.entity.id());
-                    if parent_dirty || self_dirty {
-                        let combined_transform =
-                            if let Some(parent_global) = globals.get(parent.entity) {
-                                (parent_global.0 * local.matrix()).into()
-                            } else {
-                                local.matrix()
-                            };
+            if let (Some(parent), Some(local)) = (parents.get(*entity), locals.get(*entity)) {
+                let parent_dirty = self.global_modified.contains(parent.entity.id());
+                if parent_dirty || self_dirty {
+                    let combined_transform = if let Some(parent_global) = globals.get(parent.entity)
+                    {
+                        (parent_global.0 * local.matrix())
+                    } else {
+                        local.matrix()
+                    };
 
-                        if let Some(global) = globals.get_mut(*entity) {
-                            self.global_modified.add(entity.id());
-                            global.0 = combined_transform.into();
-                        }
+                    if let Some(global) = globals.get_mut(*entity) {
+                        self.global_modified.add(entity.id());
+                        global.0 = combined_transform;
                     }
                 }
-                _ => (),
             }
         }
     }
@@ -145,6 +143,7 @@ mod tests {
     use shred::RunNow;
     use specs::prelude::{Builder, World};
     use specs_hierarchy::{Hierarchy, HierarchySystem};
+
     use transform::{GlobalTransform, Parent, Transform, TransformSystem};
 
     // If this works, then all other tests should work.

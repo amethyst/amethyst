@@ -1,8 +1,10 @@
-use font_kit::error::SelectionError;
-use font_kit::family_name::FamilyName;
-use font_kit::handle::Handle;
-use font_kit::properties::{Properties, Style};
-use font_kit::source::SystemSource;
+use font_kit::{
+    error::SelectionError,
+    family_name::FamilyName,
+    handle::Handle,
+    properties::{Properties, Style},
+    source::SystemSource,
+};
 
 /// Lists all installed font families on the system.
 pub fn list_system_font_families() -> Result<Vec<String>, SelectionError> {

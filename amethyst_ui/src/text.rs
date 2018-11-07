@@ -1,22 +1,25 @@
-use super::*;
-use amethyst_core::shrev::{EventChannel, ReaderId};
-use amethyst_core::specs::prelude::{
-    Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage, Resources,
-    System, Write, WriteStorage,
-};
-use amethyst_core::timing::Time;
-use amethyst_renderer::ScreenDimensions;
+use std::{cmp::Ordering, ops::Range};
+
 use clipboard::{ClipboardContext, ClipboardProvider};
 use gfx_glyph::{Point, PositionedGlyph};
 use hibitset::BitSet;
-use std::cmp::Ordering;
-use std::ops::Range;
-use unicode_normalization::char::is_combining_mark;
-use unicode_normalization::UnicodeNormalization;
+use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 use unicode_segmentation::UnicodeSegmentation;
 use winit::{
     ElementState, Event, KeyboardInput, ModifiersState, MouseButton, VirtualKeyCode, WindowEvent,
 };
+
+use amethyst_core::{
+    shrev::{EventChannel, ReaderId},
+    specs::prelude::{
+        Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
+        Resources, System, Write, WriteStorage,
+    },
+    timing::Time,
+};
+use amethyst_renderer::ScreenDimensions;
+
+use super::*;
 
 /// How lines should behave when they are longer than the maximum line length.
 #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
@@ -240,7 +243,7 @@ impl<'a> System<'a> for UiKeyboardSystem {
             });
 
         for text in (&mut text).join() {
-            if (*text.text).chars().any(|c| is_combining_mark(c)) {
+            if (*text.text).chars().any(is_combining_mark) {
                 let normalized = text.text.nfd().collect::<String>();
                 text.text = normalized;
             }
@@ -282,7 +285,7 @@ impl<'a> System<'a> for UiKeyboardSystem {
                             .enumerate()
                             .find(|&(_i, &(_, entity))| entity == *focused)
                         {
-                            if self.tab_order_cache.cache.len() != 0 {
+                            if !self.tab_order_cache.cache.is_empty() {
                                 if modifiers.shift {
                                     if i == 0 {
                                         let new_i = self.tab_order_cache.cache.len() - 1;
@@ -571,7 +574,7 @@ impl<'a> System<'a> for UiKeyboardSystem {
                         VirtualKeyCode::X => {
                             if ctrl_or_cmd(&modifiers) {
                                 let new_clip = extract_highlighted(focused_edit, focused_text);
-                                if new_clip.len() > 0 {
+                                if !new_clip.is_empty() {
                                     let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
                                     ctx.set_contents(new_clip).unwrap();
                                 }
@@ -580,7 +583,7 @@ impl<'a> System<'a> for UiKeyboardSystem {
                         VirtualKeyCode::C => {
                             if ctrl_or_cmd(&modifiers) {
                                 let new_clip = read_highlighted(focused_edit, focused_text);
-                                if new_clip.len() > 0 {
+                                if !new_clip.is_empty() {
                                     let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
                                     ctx.set_contents(new_clip.to_owned()).unwrap();
                                 }
@@ -638,7 +641,8 @@ fn should_advance_to_end(
             }
         }
     }
-    return false;
+
+    false
 }
 
 fn zip_options<T1, T2>(o1: Option<T1>, o2: Option<T2>) -> Option<(T1, T2)> {
@@ -702,7 +706,7 @@ fn cursor_byte_index(edit: &TextEditing, text: &UiText) -> usize {
         .grapheme_indices(true)
         .nth(edit.cursor_position as usize)
         .map(|i| i.0)
-        .unwrap_or(text.text.len())
+        .unwrap_or_else(|| text.text.len())
 }
 
 /// Returns the byte indices that are highlighted in the string.
@@ -718,12 +722,12 @@ fn highlighted_bytes(edit: &TextEditing, text: &UiText) -> Range<usize> {
         .grapheme_indices(true)
         .nth(start)
         .map(|i| i.0)
-        .unwrap_or(text.text.len());
+        .unwrap_or_else(|| text.text.len());
     let end_byte = text
         .text
         .grapheme_indices(true)
         .nth(end)
         .map(|i| i.0)
-        .unwrap_or(text.text.len());
+        .unwrap_or_else(|| text.text.len());
     start_byte..end_byte
 }

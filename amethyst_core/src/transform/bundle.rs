@@ -1,9 +1,12 @@
 //! ECS transform bundle
 
-use bundle::{Result, SystemBundle};
 use specs::prelude::DispatcherBuilder;
 use specs_hierarchy::HierarchySystem;
-use transform::*;
+
+use {
+    bundle::{Result, SystemBundle},
+    transform::*,
+};
 
 /// Transform bundle
 ///

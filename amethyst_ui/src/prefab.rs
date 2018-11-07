@@ -1,12 +1,17 @@
-use super::*;
+use serde::de::DeserializeOwned;
+
 use amethyst_assets::{
     AssetPrefab, AssetStorage, Format, Handle, Loader, Prefab, PrefabData, PrefabError,
     PrefabLoaderSystem, Progress, ProgressCounter, Result as AssetResult, ResultExt, SimpleFormat,
 };
 use amethyst_audio::{AudioFormat, Source as Audio};
-use amethyst_core::specs::prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage};
-use amethyst_renderer::{Texture, TextureFormat, TextureMetadata, TexturePrefab};
-use serde::de::DeserializeOwned;
+use amethyst_core::specs::{
+    error::BoxedErr,
+    prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage},
+};
+use amethyst_renderer::{HiddenPropagate, Texture, TextureFormat, TextureMetadata, TexturePrefab};
+
+use super::*;
 
 /// Loadable `UiTransform` data.
 /// By default z is equal to one.
@@ -25,6 +30,7 @@ pub struct UiTransformBuilder {
     stretch: Option<Stretch>,
     anchor: Anchor,
     mouse_reactive: bool,
+    hidden: bool,
 }
 
 impl Default for UiTransformBuilder {
@@ -42,6 +48,7 @@ impl Default for UiTransformBuilder {
             stretch: None,
             anchor: Anchor::Middle,
             mouse_reactive: false,
+            hidden: false,
         }
     }
 }
@@ -83,6 +90,12 @@ impl UiTransformBuilder {
         self
     }
 
+    /// Hides an entity by adding a [`HiddenPropagate`](../amethyst_renderer/struct.HiddenPropagate.html) component
+    pub fn hide(mut self) -> Self {
+        self.hidden = true;
+        self
+    }
+
     /// Add mouse reactive
     pub fn reactive(mut self) -> Self {
         self.mouse_reactive = true;
@@ -106,6 +119,7 @@ impl<'a> PrefabData<'a> for UiTransformBuilder {
     type SystemData = (
         WriteStorage<'a, UiTransform>,
         WriteStorage<'a, MouseReactive>,
+        WriteStorage<'a, HiddenPropagate>,
     );
     type Result = ();
 
@@ -139,6 +153,10 @@ impl<'a> PrefabData<'a> for UiTransformBuilder {
             system_data.1.insert(entity, MouseReactive)?;
         }
 
+        if self.hidden {
+            system_data.2.insert(entity, HiddenPropagate)?;
+        }
+
         Ok(())
     }
 }
@@ -160,7 +178,7 @@ where
     /// Font color
     pub color: [f32; 4],
     /// Font
-    pub font: AssetPrefab<FontAsset, F>,
+    pub font: Option<AssetPrefab<FontAsset, F>>,
     /// Should the text be shown as dots instead of the proper characters?
     #[serde(default)]
     pub password: bool,
@@ -220,7 +238,11 @@ where
         _: &[Entity],
     ) -> Result<(), PrefabError> {
         let (ref mut texts, ref mut editables, ref mut fonts, ref mut focused) = system_data;
-        let font_handle = self.font.add_to_entity(entity, fonts, &[])?;
+        let font_handle = self
+            .font
+            .as_ref()
+            .ok_or_else(|| PrefabError::Custom(BoxedErr(Box::from("did not load sub assets"))))?
+            .add_to_entity(entity, fonts, &[])?;
         let mut ui_text = UiText::new(font_handle, self.text.clone(), self.color, self.font_size);
         ui_text.password = self.password;
 
@@ -256,7 +278,12 @@ where
         system_data: &mut Self::SystemData,
     ) -> Result<bool, PrefabError> {
         let (_, _, ref mut fonts, _) = system_data;
-        self.font.load_sub_assets(progress, fonts)
+
+        self.font
+            .get_or_insert_with(|| {
+                let (ref loader, _, ref storage) = fonts;
+                AssetPrefab::Handle(get_default_font(loader, storage))
+            }).load_sub_assets(progress, fonts)
     }
 }
 
@@ -329,7 +356,7 @@ where
     /// Font size
     pub font_size: f32,
     /// Font
-    pub font: AssetPrefab<FontAsset, FF>,
+    pub font: Option<AssetPrefab<FontAsset, FF>>,
     /// Default text color
     pub normal_text_color: [f32; 4],
     /// Default image

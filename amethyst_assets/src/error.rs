@@ -1,5 +1,4 @@
-use std::str::Utf8Error;
-use std::string::FromUtf8Error;
+use std::{str::Utf8Error, string::FromUtf8Error};
 
 error_chain! {
     foreign_links {

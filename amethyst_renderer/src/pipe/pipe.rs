@@ -1,11 +1,14 @@
-use super::stage::*;
-use super::target::*;
-use amethyst_core::specs::prelude::SystemData;
-// use color::Rgba;
-use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
 use hetseq::*;
-use types::{Encoder, Factory};
+
+use amethyst_core::specs::prelude::SystemData;
+
+use {
+    error::{Error, Result},
+    types::{Encoder, Factory},
+};
+
+use super::{stage::*, target::*};
 
 /// Defines how the rendering pipeline should be configured.
 #[derive(Clone, Debug)]

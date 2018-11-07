@@ -1,9 +1,14 @@
 //! Input system
 
-use amethyst_core::shrev::{EventChannel, ReaderId};
-use amethyst_core::specs::prelude::{Read, Resources, System, Write};
 use std::hash::Hash;
+
 use winit::Event;
+
+use amethyst_core::{
+    shrev::{EventChannel, ReaderId},
+    specs::prelude::{Read, Resources, System, Write},
+};
+
 use {Bindings, InputEvent, InputHandler};
 
 /// Input system

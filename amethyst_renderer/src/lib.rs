@@ -24,11 +24,14 @@
 //! [gh]: https://github.com/amethyst/amethyst/tree/master/src/renderer
 //! [bk]: https://www.amethyst.rs/book/master/
 
-#![warn(missing_docs)]
 #![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
+#![warn(missing_docs)]
+#![cfg_attr(feature = "cargo-clippy", allow(type_complexity))] // complex project
 
 extern crate amethyst_assets;
 extern crate amethyst_core;
+#[macro_use]
+extern crate amethyst_derive;
 #[macro_use]
 extern crate derivative;
 #[macro_use]
@@ -83,60 +86,60 @@ extern crate gfx_device_vulkan;
 #[cfg(feature = "vulkan")]
 extern crate gfx_window_vulkan;
 
-pub use bundle::RenderBundle;
-pub use cam::{ActiveCamera, ActiveCameraPrefab, Camera, CameraPrefab, Projection};
-pub use color::Rgba;
-pub use config::DisplayConfig;
-pub use debug_drawing::{DebugLines, DebugLinesComponent};
-pub use formats::{
-    build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat, ComboMeshCreator,
-    GraphicsPrefab, ImageData, JpgFormat, MaterialPrefab, MeshCreator, MeshData, ObjFormat,
-    PngFormat, TextureData, TextureFormat, TextureMetadata, TexturePrefab, TgaFormat,
-};
-pub use input::{
-    DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent,
-};
-pub use light::{DirectionalLight, Light, LightPrefab, PointLight, SpotLight, SunLight};
-pub use mesh::{vertex_data, Mesh, MeshBuilder, MeshHandle, VertexBuffer};
-pub use mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset};
-pub use pass::{
-    get_camera, set_vertex_args, DebugLinesParams, DrawDebugLines, DrawFlat, DrawFlatSeparate,
-    DrawPbm, DrawPbmSeparate, DrawShaded, DrawShadedSeparate, DrawSprite,
-};
-pub use pipe::{
-    ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder, Init, Meta, NewEffect,
-    Pipeline, PipelineBuild, PipelineBuilder, PipelineData, PolyPipeline, PolyStage, PolyStages,
-    Stage, StageBuilder, Target, TargetBuilder, Targets,
-};
-pub use renderer::Renderer;
-pub use resources::{AmbientColor, ScreenDimensions, WindowMessages};
-pub use shape::{InternalShape, Shape, ShapePrefab, ShapeUpload};
-pub use skinning::{
-    AnimatedComboMeshCreator, AnimatedVertexBufferCombination, JointIds, JointTransforms,
-    JointTransformsPrefab, JointWeights,
-};
-pub use sprite::{
-    Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, SpriteSheetSet,
-    TextureCoordinates,
-};
-pub use sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem};
-pub use system::RenderSystem;
-pub use tex::{
-    FilterMethod, SamplerInfo, SurfaceType, Texture, TextureBuilder, TextureHandle, WrapMode,
-};
-pub use transparent::{
-    Blend, BlendChannel, BlendValue, ColorMask, Equation, Factor, Transparent, ALPHA, REPLACE,
-};
-pub use types::{Encoder, Factory, PipelineState, Resources};
-pub use vertex::{
-    Attribute, AttributeFormat, Attributes, Color, Normal, PosColor, PosColorNorm, PosNormTangTex,
-    PosNormTex, PosTex, Position, Query, Separate, Tangent, TexCoord, VertexBufferCombination,
-    VertexFormat, With,
-};
-pub use visibility::{Visibility, VisibilitySortingSystem};
 pub use {
+    bundle::RenderBundle,
+    cam::{ActiveCamera, ActiveCameraPrefab, Camera, CameraPrefab, Projection},
+    color::Rgba,
+    config::DisplayConfig,
+    debug_drawing::{DebugLines, DebugLinesComponent},
+    formats::{
+        build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat,
+        ComboMeshCreator, GraphicsPrefab, ImageData, JpgFormat, MaterialPrefab, MeshCreator,
+        MeshData, ObjFormat, PngFormat, TextureData, TextureFormat, TextureMetadata, TexturePrefab,
+        TgaFormat,
+    },
     hidden::{Hidden, HiddenPropagate},
     hide_system::HideHierarchySystem,
+    input::{
+        DeviceEvent, ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent,
+    },
+    light::{DirectionalLight, Light, LightPrefab, PointLight, SpotLight, SunLight},
+    mesh::{vertex_data, Mesh, MeshBuilder, MeshHandle, VertexBuffer},
+    mtl::{Material, MaterialDefaults, MaterialTextureSet, TextureOffset},
+    pass::{
+        get_camera, set_vertex_args, DebugLinesParams, DrawDebugLines, DrawFlat, DrawFlatSeparate,
+        DrawPbm, DrawPbmSeparate, DrawShaded, DrawShadedSeparate, DrawSprite,
+    },
+    pipe::{
+        ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder, Init, Meta, NewEffect,
+        Pipeline, PipelineBuild, PipelineBuilder, PipelineData, PolyPipeline, PolyStage,
+        PolyStages, Stage, StageBuilder, Target, TargetBuilder, Targets,
+    },
+    renderer::Renderer,
+    resources::{AmbientColor, ScreenDimensions, WindowMessages},
+    shape::{InternalShape, Shape, ShapePrefab, ShapeUpload},
+    skinning::{
+        AnimatedComboMeshCreator, AnimatedVertexBufferCombination, JointIds, JointTransforms,
+        JointTransformsPrefab, JointWeights,
+    },
+    sprite::{
+        Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, TextureCoordinates,
+    },
+    sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem},
+    system::RenderSystem,
+    tex::{
+        FilterMethod, SamplerInfo, SurfaceType, Texture, TextureBuilder, TextureHandle, WrapMode,
+    },
+    transparent::{
+        Blend, BlendChannel, BlendValue, ColorMask, Equation, Factor, Transparent, ALPHA, REPLACE,
+    },
+    types::{Encoder, Factory, PipelineState, Resources},
+    vertex::{
+        Attribute, AttributeFormat, Attributes, Color, Normal, PosColor, PosColorNorm,
+        PosNormTangTex, PosNormTex, PosTex, Position, Query, Separate, Tangent, TexCoord,
+        VertexBufferCombination, VertexFormat, With,
+    },
+    visibility::{Visibility, VisibilitySortingSystem},
 };
 
 pub mod error;

@@ -1,16 +1,19 @@
-use amethyst_assets::AssetStorage;
-use amethyst_core::specs::prelude::{Component, Join, Read, System, WriteStorage};
-use amethyst_core::{
-    duration_to_nanos, duration_to_secs, nanos_to_duration, secs_to_duration, Time,
-};
+use std::{marker, time::Duration};
+
 use itertools::Itertools;
 use minterpolate::InterpolationPrimitive;
+
+use amethyst_assets::AssetStorage;
+use amethyst_core::{
+    duration_to_nanos, duration_to_secs, nanos_to_duration, secs_to_duration,
+    specs::prelude::{Component, Join, Read, System, WriteStorage},
+    Time,
+};
+
 use resources::{
     AnimationSampling, ApplyData, BlendMethod, ControlState, EndControl, Sampler, SamplerControl,
     SamplerControlSet,
 };
-use std::marker;
-use std::time::Duration;
 
 /// System for interpolating active samplers.
 ///
@@ -67,7 +70,7 @@ where
                     process_sampler(control, sampler, &time, &mut self.inner);
                 }
             }
-            if self.inner.len() > 0 {
+            if !self.inner.is_empty() {
                 self.channels.clear();
                 self.channels
                     .extend(self.inner.iter().map(|o| &o.1).unique().cloned());
@@ -78,7 +81,7 @@ where
                                 .inner
                                 .iter()
                                 .filter(|p| p.1 == *channel)
-                                .map(|p| p.2)
+                                .map(|p| p.2.clone())
                                 .last()
                             {
                                 comp.apply_sample(channel, &p, &apply_data);
@@ -138,7 +141,11 @@ fn process_sampler<T>(
         }
         Done => {
             if let EndControl::Normal = control.end {
-                output.push((control.blend_weight, control.channel.clone(), control.after));
+                output.push((
+                    control.blend_weight,
+                    control.channel.clone(),
+                    control.after.clone(),
+                ));
             }
             if let EndControl::Stay = control.end {
                 let last_frame = sampler.input.last().cloned().unwrap_or(0.);
@@ -190,7 +197,7 @@ where
         Requested => (Running(Duration::from_secs(0)), None),
 
         // deferred start that should start now
-        Deferred(dur) => (Running(dur.clone()), None),
+        Deferred(dur) => (Running(dur), None),
 
         // abort sampling => end interpolating
         Abort => (Done, None),

@@ -1,11 +1,12 @@
+use std::{borrow::Borrow, hash::Hash, path::PathBuf, sync::Arc};
+
 use fnv::FnvHashMap;
 use rayon::ThreadPool;
-use std::borrow::Borrow;
-use std::hash::Hash;
-use std::path::PathBuf;
-use std::sync::Arc;
-use storage::{AssetStorage, Handle, Processed};
-use {Asset, Directory, ErrorKind, Format, FormatValue, Progress, ResultExt, Source};
+
+use {
+    storage::{AssetStorage, Handle, Processed},
+    Asset, Directory, ErrorKind, Format, FormatValue, Progress, ResultExt, Source,
+};
 
 /// The asset loader, holding the sources and a reference to the `ThreadPool`.
 pub struct Loader {

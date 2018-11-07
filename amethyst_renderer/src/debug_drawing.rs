@@ -1,7 +1,9 @@
-use amethyst_core::cgmath::{Point3, Vector3};
-use amethyst_core::specs::{Component, DenseVecStorage};
-use color::Rgba;
-use vertex::PosColorNorm;
+use amethyst_core::{
+    cgmath::{Point3, Vector3},
+    specs::{Component, DenseVecStorage},
+};
+
+use {color::Rgba, vertex::PosColorNorm};
 
 /// Debug lines are stored as a position, a direction and a color.
 ///

@@ -1,22 +1,26 @@
 //! GLTF format
 
-use self::animation::load_animations;
-use self::importer::{get_image_data, import, Buffers, ImageFormat};
-use self::material::load_material;
-use self::mesh::load_mesh;
-use self::skin::load_skin;
-use super::*;
-use animation::AnimationHierarchyPrefab;
-use assets::{
-    Error as AssetError, Format, FormatValue, Prefab, Result as AssetResult, ResultExt, Source,
+use std::{collections::HashMap, error::Error as StdError, fmt, sync::Arc};
+
+use gltf::{self, Gltf};
+
+use {
+    animation::AnimationHierarchyPrefab,
+    assets::{
+        Error as AssetError, Format, FormatValue, Prefab, Result as AssetResult, ResultExt, Source,
+    },
+    core::transform::Transform,
 };
-use core::transform::Transform;
-use gltf;
-use gltf::Gltf;
-use std::collections::HashMap;
-use std::error::Error as StdError;
-use std::fmt;
-use std::sync::Arc;
+
+use super::*;
+
+use self::{
+    animation::load_animations,
+    importer::{get_image_data, import, Buffers, ImageFormat},
+    material::load_material,
+    mesh::load_mesh,
+    skin::load_skin,
+};
 
 mod animation;
 mod importer;
@@ -84,8 +88,10 @@ impl StdError for GltfError {
 
 impl fmt::Display for GltfError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use self::GltfError::*;
         use std::error::Error;
+
+        use self::GltfError::*;
+
         match *self {
             GltfImporterError(ref err) => {
                 write!(f, "{}: {}", self.description(), err.description())

@@ -1,26 +1,37 @@
 //! Simple flat forward drawing pass.
 
-use super::*;
-use amethyst_assets::AssetStorage;
-use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage};
-use amethyst_core::transform::GlobalTransform;
-use cam::{ActiveCamera, Camera};
-use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
-use hidden::{Hidden, HiddenPropagate};
-use mesh::{Mesh, MeshHandle};
-use mtl::{Material, MaterialDefaults};
-use pass::skinning::{create_skinning_effect, setup_skinning_buffers};
-use pass::util::{draw_mesh, get_camera, setup_textures, VertexArgs};
-use pipe::pass::{Pass, PassData};
-use pipe::{DepthMode, Effect, NewEffect};
-use skinning::JointTransforms;
-use tex::Texture;
-use types::{Encoder, Factory};
-use vertex::{Attributes, Position, Separate, TexCoord, VertexFormat};
-use visibility::Visibility;
+
+use amethyst_assets::AssetStorage;
+use amethyst_core::{
+    specs::prelude::{Join, Read, ReadExpect, ReadStorage},
+    transform::GlobalTransform,
+};
+
+use {
+    cam::{ActiveCamera, Camera},
+    error::Result,
+    hidden::{Hidden, HiddenPropagate},
+    mesh::{Mesh, MeshHandle},
+    mtl::{Material, MaterialDefaults},
+    pass::{
+        skinning::{create_skinning_effect, setup_skinning_buffers},
+        util::{draw_mesh, get_camera, setup_textures, VertexArgs},
+    },
+    pipe::{
+        pass::{Pass, PassData},
+        DepthMode, Effect, NewEffect,
+    },
+    skinning::JointTransforms,
+    tex::Texture,
+    types::{Encoder, Factory},
+    vertex::{Attributes, Position, Separate, TexCoord, VertexFormat},
+    visibility::Visibility,
+};
+
+use super::*;
 
 static ATTRIBUTES: [Attributes<'static>; 2] = [
     Separate::<Position>::ATTRIBUTES,

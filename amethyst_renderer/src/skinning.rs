@@ -1,14 +1,19 @@
+use std::result::Result as StdResult;
+
+use gfx::format::{ChannelType, Format, SurfaceType};
+
 use amethyst_assets::{PrefabData, PrefabError};
 use amethyst_core::specs::prelude::{
     Component, DenseVecStorage, Entity, FlaggedStorage, WriteStorage,
 };
-use error::Result;
-use formats::MeshCreator;
-use gfx::format::{ChannelType, Format, SurfaceType};
-use mesh::{Mesh, MeshBuilder};
-use renderer::Renderer;
-use std::result::Result as StdResult;
-use vertex::{Attribute, Color, Normal, Position, Separate, Tangent, TexCoord};
+
+use {
+    error::Result,
+    formats::MeshCreator,
+    mesh::{Mesh, MeshBuilder},
+    renderer::Renderer,
+    vertex::{Attribute, Color, Normal, Position, Separate, Tangent, TexCoord},
+};
 
 /// Type for joint weights attribute of vertex
 #[derive(Clone, Debug)]

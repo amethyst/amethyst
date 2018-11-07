@@ -1,25 +1,29 @@
 //! Rendering system.
 //!
 
-use amethyst_assets::{AssetStorage, HotReloadStrategy};
-use amethyst_core::shrev::EventChannel;
-use amethyst_core::specs::prelude::{
-    Read, ReadExpect, Resources, RunNow, SystemData, Write, WriteExpect,
-};
-use amethyst_core::Time;
-use config::DisplayConfig;
-use error::Result;
-use formats::{create_mesh_asset, create_texture_asset};
-use mesh::Mesh;
-use mtl::{Material, MaterialDefaults};
-use pipe::{PipelineBuild, PipelineData, PolyPipeline};
-use rayon::ThreadPool;
-use renderer::Renderer;
-use resources::{ScreenDimensions, WindowMessages};
-use std::mem;
-use std::sync::Arc;
-use tex::Texture;
+use std::{mem, sync::Arc};
+
 use winit::{DeviceEvent, Event, WindowEvent};
+
+use amethyst_assets::{AssetStorage, HotReloadStrategy};
+use amethyst_core::{
+    shrev::EventChannel,
+    specs::prelude::{Read, ReadExpect, Resources, RunNow, SystemData, Write, WriteExpect},
+    Time,
+};
+
+use {
+    config::DisplayConfig,
+    error::Result,
+    formats::{create_mesh_asset, create_texture_asset},
+    mesh::Mesh,
+    mtl::{Material, MaterialDefaults},
+    pipe::{PipelineBuild, PipelineData, PolyPipeline},
+    rayon::ThreadPool,
+    renderer::Renderer,
+    resources::{ScreenDimensions, WindowMessages},
+    tex::Texture,
+};
 
 /// Rendering system.
 #[derive(Derivative)]
@@ -55,9 +59,8 @@ where
             if let Some(config) = config.to_owned() {
                 renderer.with_config(config);
             }
-            let renderer = renderer.build()?;
 
-            renderer
+            renderer.build()?
         };
 
         match renderer.create_pipe(pipe) {
@@ -191,8 +194,9 @@ where
 }
 
 fn create_default_mat(res: &mut Resources) -> Material {
-    use amethyst_assets::Loader;
     use mtl::TextureOffset;
+
+    use amethyst_assets::Loader;
 
     let loader = res.fetch::<Loader>();
 
@@ -240,11 +244,11 @@ fn create_default_mat(res: &mut Resources) -> Material {
 fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
     match new_event {
         Event::WindowEvent { ref event, .. } => match event {
-            &WindowEvent::CursorMoved { .. } => {
+            WindowEvent::CursorMoved { .. } => {
                 let mut iter = vec.iter_mut();
                 while let Some(stored_event) = iter.next_back() {
                     match stored_event {
-                        &mut Event::WindowEvent {
+                        Event::WindowEvent {
                             event: WindowEvent::CursorMoved { .. },
                             ..
                         } => {
@@ -252,12 +256,12 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
                             return;
                         }
 
-                        &mut Event::WindowEvent {
+                        Event::WindowEvent {
                             event: WindowEvent::AxisMotion { .. },
                             ..
                         } => {}
 
-                        &mut Event::DeviceEvent {
+                        Event::DeviceEvent {
                             event: DeviceEvent::Motion { .. },
                             ..
                         } => {}
@@ -269,7 +273,7 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
                 }
             }
 
-            &WindowEvent::AxisMotion {
+            WindowEvent::AxisMotion {
                 device_id,
                 axis,
                 value,
@@ -277,7 +281,7 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
                 let mut iter = vec.iter_mut();
                 while let Some(stored_event) = iter.next_back() {
                     match stored_event {
-                        &mut Event::WindowEvent {
+                        Event::WindowEvent {
                             event:
                                 WindowEvent::AxisMotion {
                                     axis: stored_axis,
@@ -292,12 +296,12 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
                             }
                         }
 
-                        &mut Event::WindowEvent {
+                        Event::WindowEvent {
                             event: WindowEvent::CursorMoved { .. },
                             ..
                         } => {}
 
-                        &mut Event::DeviceEvent {
+                        Event::DeviceEvent {
                             event: DeviceEvent::Motion { .. },
                             ..
                         } => {}
@@ -319,7 +323,7 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
             let mut iter = vec.iter_mut();
             while let Some(stored_event) = iter.next_back() {
                 match stored_event {
-                    &mut Event::DeviceEvent {
+                    Event::DeviceEvent {
                         device_id: stored_device,
                         event:
                             DeviceEvent::Motion {
@@ -327,18 +331,18 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
                                 value: ref mut stored_value,
                             },
                     } => {
-                        if device_id == stored_device && axis == stored_axis {
+                        if device_id == *stored_device && axis == *stored_axis {
                             *stored_value += value;
                             return;
                         }
                     }
 
-                    &mut Event::WindowEvent {
+                    Event::WindowEvent {
                         event: WindowEvent::CursorMoved { .. },
                         ..
                     } => {}
 
-                    &mut Event::WindowEvent {
+                    Event::WindowEvent {
                         event: WindowEvent::AxisMotion { .. },
                         ..
                     } => {}

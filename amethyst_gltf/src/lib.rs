@@ -22,16 +22,23 @@ extern crate serde;
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
-use animation::{AnimatablePrefab, SkinnablePrefab};
-use assets::{Handle, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter};
-use core::cgmath::{Array, EuclideanSpace, Point3, Vector3};
-use core::specs::error::Error;
-use core::specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage};
-use core::transform::Transform;
-use core::Named;
-pub use format::GltfSceneFormat;
-use renderer::{MaterialPrefab, Mesh, MeshData, TextureFormat};
 use std::ops::Range;
+
+pub use format::GltfSceneFormat;
+use {
+    animation::{AnimatablePrefab, SkinnablePrefab},
+    assets::{Handle, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter},
+    core::{
+        cgmath::{Array, EuclideanSpace, Point3, Vector3},
+        specs::{
+            error::Error,
+            prelude::{Component, DenseVecStorage, Entity, WriteStorage},
+        },
+        transform::Transform,
+        Named,
+    },
+    renderer::{MaterialPrefab, Mesh, MeshData, TextureFormat},
+};
 
 mod format;
 
@@ -51,7 +58,7 @@ pub struct GltfPrefab {
     pub mesh: Option<MeshData>,
     /// Mesh handle after sub asset loading is done
     pub mesh_handle: Option<Handle<Mesh>>,
-    /// `MeshData` is placed on all `Entity`s with graphics primitives with material
+    /// `Material` is placed on all `Entity`s with graphics primitives with material
     pub material: Option<MaterialPrefab<TextureFormat>>,
     /// Loaded animations, if applicable, will always only be placed on the main `Entity`
     pub animatable: Option<AnimatablePrefab<usize, Transform>>,

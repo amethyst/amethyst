@@ -2,14 +2,16 @@
 //!
 //! TODO: Remove redundant padding once `#[repr(align(...))]` stabilizes.
 
-use amethyst_assets::{PrefabData, PrefabError};
-use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, Write, WriteStorage};
-use color::Rgba;
 use gfx;
-use resources::AmbientColor;
+
+use amethyst_assets::{PrefabData, PrefabError, ProgressCounter};
+use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage};
+
+use {color::Rgba, resources::AmbientColor};
 
 /// A light source.
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize, PrefabData)]
+#[prefab(Component)]
 pub enum Light {
     /// An area light.
     /// FIXME: Missing implementation!
@@ -111,16 +113,14 @@ impl From<PointLight> for Light {
 pub struct SpotLight {
     /// Opening angle of the light cone in degrees.
     pub angle: f32, //TODO: Replace with a cgmath type when gfx version > 0.16
-    /// Location of the light source in three dimensional space.
-    pub center: [f32; 3], //TODO: Replace with a cgmath type when gfx version > 0.16
     /// Color of the light in RGBA8 format.
     pub color: Rgba,
     /// Direction that the light is pointing.
     pub direction: [f32; 3], //TODO: Replace with a cgmath type when gfx version > 0.16
     /// Brightness of the light source, in lumens.
     pub intensity: f32,
-    /// Maximum radius of the point light's affected area.
-    pub radius: f32,
+    /// Range/length of the light source.
+    pub range: f32,
     /// Smoothness of the light-to-dark transition from the center to the
     /// radius.
     pub smoothness: f32,
@@ -130,11 +130,10 @@ impl Default for SpotLight {
     fn default() -> Self {
         SpotLight {
             angle: 60.0,
-            center: [0.0, 1.0, 0.0],
             color: Rgba::default(),
             direction: [0.0, -1.0, 0.0],
             intensity: 10.0,
-            radius: 10.0,
+            range: 10.0,
             smoothness: 4.0,
         }
     }
@@ -182,47 +181,10 @@ impl Component for Light {
     type Storage = DenseVecStorage<Self>;
 }
 
-impl<'a> PrefabData<'a> for Light {
-    type SystemData = WriteStorage<'a, Light>;
-    type Result = ();
-
-    fn add_to_entity(
-        &self,
-        entity: Entity,
-        storage: &mut Self::SystemData,
-        _: &[Entity],
-    ) -> Result<(), PrefabError> {
-        storage.insert(entity, self.clone()).map(|_| ())
-    }
-}
-
 /// Prefab for lighting
-#[derive(Default, Clone, Serialize, Deserialize)]
+#[derive(Default, Clone, Serialize, Deserialize, PrefabData)]
 #[serde(default)]
 pub struct LightPrefab {
     light: Option<Light>,
     ambient_color: Option<AmbientColor>,
-}
-
-impl<'a> PrefabData<'a> for LightPrefab {
-    type SystemData = (
-        <Light as PrefabData<'a>>::SystemData,
-        Write<'a, AmbientColor>,
-    );
-    type Result = ();
-
-    fn add_to_entity(
-        &self,
-        entity: Entity,
-        system_data: &mut Self::SystemData,
-        _: &[Entity],
-    ) -> Result<(), PrefabError> {
-        if let Some(ref light) = self.light {
-            light.add_to_entity(entity, &mut system_data.0, &[])?;
-        }
-        if let Some(ref ambient_color) = self.ambient_color {
-            *system_data.1 = ambient_color.clone();
-        }
-        Ok(())
-    }
 }

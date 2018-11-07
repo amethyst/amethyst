@@ -1,10 +1,10 @@
 //! Provides a automatically resized orthographic camera.
 
-use amethyst_core::cgmath::Ortho;
-use amethyst_core::specs::{
-    Component, DenseVecStorage, Join, ReadExpect, ReadStorage, System, WriteStorage,
+use amethyst_core::{
+    cgmath::Ortho,
+    specs::{Component, DenseVecStorage, Join, ReadExpect, ReadStorage, System, WriteStorage},
+    Axis2,
 };
-use amethyst_core::Axis2;
 use amethyst_renderer::{Camera, ScreenDimensions};
 
 /// The coordinates that `CameraOrtho` will keep visible in the window
@@ -132,13 +132,13 @@ impl CameraNormalizeMode {
         desired_coordinates: &CameraOrthoWorldCoordinates,
     ) -> (f32, f32, f32, f32) {
         match self {
-            &CameraNormalizeMode::Lossy {
+            CameraNormalizeMode::Lossy {
                 ref stretch_direction,
             } => match stretch_direction {
                 Axis2::X => CameraNormalizeMode::lossy_x(window_aspect_ratio, desired_coordinates),
                 Axis2::Y => CameraNormalizeMode::lossy_y(window_aspect_ratio, desired_coordinates),
             },
-            &CameraNormalizeMode::Contain => {
+            CameraNormalizeMode::Contain => {
                 let desired_aspect_ratio = desired_coordinates.aspect_ratio();
                 if window_aspect_ratio > desired_aspect_ratio {
                     CameraNormalizeMode::lossy_x(window_aspect_ratio, desired_coordinates)
@@ -206,8 +206,11 @@ impl<'a> System<'a> for CameraOrthoSystem {
         WriteStorage<'a, Camera>,
         ReadStorage<'a, CameraOrtho>,
     );
+
+    #[cfg_attr(feature = "cargo-clippy", allow(float_cmp))] // cmp just used to recognize change
     fn run(&mut self, (dimensions, mut cameras, ortho_cameras): Self::SystemData) {
         let aspect = dimensions.aspect_ratio();
+
         if aspect != self.aspect_ratio_cache {
             self.aspect_ratio_cache = aspect;
 
@@ -232,8 +235,9 @@ impl<'a> System<'a> for CameraOrthoSystem {
 
 #[cfg(test)]
 mod test {
-    use super::Axis2;
     use ortho_camera::{CameraNormalizeMode, CameraOrtho, CameraOrthoWorldCoordinates};
+
+    use super::Axis2;
 
     // TODO: Disabled until someone fixes the formula (if possible).
     /*#[test]

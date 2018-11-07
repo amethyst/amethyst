@@ -1,12 +1,15 @@
 //! Renderer error types.
 
-use amethyst_core;
+use std::{
+    error::Error as StdError,
+    fmt::{Display, Formatter, Result as FmtResult},
+    result::Result as StdResult,
+};
+
 use gfx;
 use gfx_core;
-use std::error::Error as StdError;
-use std::fmt::Result as FmtResult;
-use std::fmt::{Display, Formatter};
-use std::result::Result as StdResult;
+
+use amethyst_core;
 
 /// Renderer result type.
 pub type Result<T> = StdResult<T, Error>;

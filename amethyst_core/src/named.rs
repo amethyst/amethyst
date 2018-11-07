@@ -1,6 +1,6 @@
-use specs::world::LazyBuilder;
-use specs::{Component, DenseVecStorage, EntityBuilder, WriteStorage};
 use std::borrow::Cow;
+
+use specs::{world::LazyBuilder, Component, DenseVecStorage, EntityBuilder, WriteStorage};
 
 /// A component that gives a name to an [`Entity`].
 ///

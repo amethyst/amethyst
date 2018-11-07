@@ -1,6 +1,10 @@
+use std::sync::{
+    atomic::{AtomicUsize, Ordering},
+    Arc,
+};
+
 use parking_lot::Mutex;
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::Arc;
+
 use Error;
 
 /// Completion status, returned by `ProgressCounter::complete`.
@@ -34,9 +38,7 @@ impl Progress for () {
 
     fn add_assets(&mut self, _: usize) {}
 
-    fn create_tracker(self) -> () {
-        ()
-    }
+    fn create_tracker(self) {}
 }
 
 /// A progress tracker which is passed to the `Loader`

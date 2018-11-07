@@ -13,13 +13,14 @@ extern crate serde;
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
-use ron::de::Error as DeError;
-use ron::ser::Error as SerError;
+use std::{
+    error::Error,
+    fmt, io,
+    path::{Path, PathBuf},
+};
+
+use ron::{de::Error as DeError, ser::Error as SerError};
 use serde::{Deserialize, Serialize};
-use std::error::Error;
-use std::fmt;
-use std::io;
-use std::path::{Path, PathBuf};
 
 /// Error related to anything that manages/creates configurations as well as
 /// "workspace"-related things.
@@ -44,7 +45,7 @@ impl fmt::Display for ConfigError {
             ConfigError::Extension(ref path) => {
                 let found = match path.extension() {
                     Some(extension) => format!("{:?}", extension),
-                    None => format!("a directory."),
+                    None => "a directory.".to_string(),
                 };
 
                 write!(
@@ -164,7 +165,7 @@ where
         use std::io::Write;
 
         let s = to_string_pretty(self, Default::default())?;
-        File::create(path)?.write(s.as_bytes())?;
+        File::create(path)?.write_all(s.as_bytes())?;
 
         Ok(())
     }

@@ -1,18 +1,10 @@
 //! Simple flat forward drawing pass.
 
-use super::*;
-use amethyst_assets::{AssetStorage, Loader};
-use amethyst_core::cgmath::vec2 as cg_vec2;
-use amethyst_core::specs::prelude::{
-    Entities, Entity, Join, Read, ReadExpect, ReadStorage, WriteStorage,
+use std::{
+    cmp::{Ordering, PartialOrd},
+    hash::{Hash, Hasher},
 };
-use amethyst_renderer::error::Result;
-use amethyst_renderer::pipe::pass::{Pass, PassData};
-use amethyst_renderer::pipe::{Effect, NewEffect};
-use amethyst_renderer::{
-    Encoder, Factory, Hidden, HiddenPropagate, Mesh, PosTex, Resources, ScreenDimensions, Shape,
-    Texture, TextureData, TextureHandle, TextureMetadata, VertexFormat,
-};
+
 use fnv::FnvHashMap as HashMap;
 use gfx::preset::blend;
 use gfx::pso::buffer::ElemStride;
@@ -23,9 +15,24 @@ use gfx_glyph::{
 };
 use glsl_layout::{vec2, Uniform};
 use hibitset::BitSet;
-use std::cmp::{Ordering, PartialOrd};
-use std::hash::{Hash, Hasher};
 use unicode_segmentation::UnicodeSegmentation;
+
+use amethyst_assets::{AssetStorage, Loader};
+use amethyst_core::{
+    cgmath::vec2 as cg_vec2,
+    specs::prelude::{Entities, Entity, Join, Read, ReadExpect, ReadStorage, WriteStorage},
+};
+use amethyst_renderer::{
+    error::Result,
+    pipe::{
+        pass::{Pass, PassData},
+        Effect, NewEffect,
+    },
+    Encoder, Factory, Hidden, HiddenPropagate, Mesh, PosTex, Resources, ScreenDimensions, Shape,
+    Texture, TextureData, TextureHandle, TextureMetadata, VertexFormat,
+};
+
+use super::*;
 
 const VERT_SRC: &[u8] = include_bytes!("shaders/vertex.glsl");
 const FRAG_SRC: &[u8] = include_bytes!("shaders/frag.glsl");
@@ -295,7 +302,7 @@ impl Pass for DrawUi {
                             .grapheme_indices(true)
                             .nth(end)
                             .map(|i| i.0)
-                            .unwrap_or(rendered_string.len());
+                            .unwrap_or_else(|| rendered_string.len());
                         start_byte.map(|start_byte| (editing, (start_byte, end_byte)))
                     }).map(|(editing, (start_byte, end_byte))| {
                         vec![
@@ -318,12 +325,14 @@ impl Pass for DrawUi {
                                 font_id: FontId(0),
                             },
                         ]
-                    }).unwrap_or(vec![SectionText {
-                        text: rendered_string,
-                        scale: scale,
-                        color: ui_text.color,
-                        font_id: FontId(0),
-                    }]);
+                    }).unwrap_or_else(|| {
+                        vec![SectionText {
+                            text: rendered_string,
+                            scale: scale,
+                            color: ui_text.color,
+                            font_id: FontId(0),
+                        }]
+                    });
 
                 let layout = match ui_text.line_mode {
                     LineMode::Single => Layout::SingleLine {
@@ -487,19 +496,17 @@ impl Pass for DrawUi {
                                     false,
                                 )
                             };
-                            let height;
-                            let width;
-                            if editing.use_block_cursor {
-                                height = if blink_on {
+                            let (height, width) = if editing.use_block_cursor {
+                                let height = if blink_on {
                                     ui_text.font_size
                                 } else {
                                     ui_text.font_size / 10.0
                                 };
-                                width = space_width;
+
+                                (height, space_width)
                             } else {
-                                height = ui_text.font_size;
-                                width = 2.0;
-                            }
+                                (ui_text.font_size, 2.0)
+                            };
 
                             let mut pos = glyph.map(|g| g.position()).unwrap_or(Point {
                                 x: ui_transform.pixel_x

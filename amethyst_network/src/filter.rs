@@ -1,7 +1,8 @@
 //! The network filter base trait
+
+use std::{marker::PhantomData, net::SocketAddr};
+
 use super::NetEvent;
-use std::marker::PhantomData;
-use std::net::SocketAddr;
 
 /// Network filter base trait providing an event filtering interface.
 pub trait NetFilter<T>: Send + Sync
@@ -32,8 +33,8 @@ where
     /// Note: This is not usable currently.
     fn allow(&mut self, _source: &SocketAddr, event: &NetEvent<T>) -> bool {
         match event {
-            &NetEvent::Connect { client_uuid: _ } => true,
-            &NetEvent::Connected { server_uuid: _ } => true,
+            NetEvent::Connect { .. } => true,
+            NetEvent::Connected { .. } => true,
             _ => false,
         }
     }

@@ -1,15 +1,14 @@
 //! Provides texture formats
 //!
 
-pub use self::mesh::*;
-pub use self::mtl::*;
-pub use self::texture::*;
+pub use self::{mesh::*, mtl::*, texture::*};
+
+use serde::{de::DeserializeOwned, Serialize};
+
 use amethyst_assets::{AssetPrefab, Format, PrefabData, PrefabError, ProgressCounter};
 use amethyst_core::specs::prelude::Entity;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use shape::InternalShape;
-use {Mesh, ShapePrefab, Texture};
+
+use {shape::InternalShape, Mesh, ShapePrefab, Texture};
 
 mod mesh;
 mod mtl;
@@ -96,19 +95,15 @@ where
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, PrefabError> {
-        let mut ret = false;
-        if match self.mesh {
+        let load_mesh = match self.mesh {
             MeshPrefab::Asset(ref mut m) => m.load_sub_assets(progress, &mut system_data.0)?,
             MeshPrefab::Shape(ref mut s) => s.load_sub_assets(progress, &mut system_data.0)?,
-        } {
-            ret = true;
-        }
-        if self
+        };
+
+        let load_material = self
             .material
-            .load_sub_assets(progress, &mut system_data.1)?
-        {
-            ret = true;
-        }
-        Ok(ret)
+            .load_sub_assets(progress, &mut system_data.1)?;
+
+        Ok(load_mesh || load_material)
     }
 }

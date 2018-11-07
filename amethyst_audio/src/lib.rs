@@ -1,4 +1,5 @@
 #![warn(missing_docs)]
+#![cfg_attr(feature = "cargo-clippy", allow(type_complexity))] // complex project
 
 //! Loading and playing of audio files.
 extern crate amethyst_assets;
@@ -15,17 +16,21 @@ extern crate smallvec;
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
-pub use self::bundle::AudioBundle;
-pub use self::components::*;
-pub use self::formats::{AudioFormat, FlacFormat, Mp3Format, OggFormat, WavFormat};
-pub use self::sink::AudioSink;
-pub use self::source::{Source, SourceHandle};
-pub use self::systems::*;
+pub use self::{
+    bundle::AudioBundle,
+    components::*,
+    formats::{AudioFormat, FlacFormat, Mp3Format, OggFormat, WavFormat},
+    sink::AudioSink,
+    source::{Source, SourceHandle},
+    systems::*,
+};
 
 pub mod output;
 
-use std::error::Error;
-use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::{
+    error::Error,
+    fmt::{Display, Formatter, Result as FmtResult},
+};
 
 mod bundle;
 mod components;

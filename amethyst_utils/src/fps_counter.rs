@@ -1,8 +1,11 @@
 //! Util Resources
 
-use amethyst_core::specs::prelude::{DispatcherBuilder, Read, System, Write};
-use amethyst_core::timing::{duration_to_nanos, Time};
-use amethyst_core::{Result, SystemBundle};
+use amethyst_core::{
+    specs::prelude::{DispatcherBuilder, Read, System, Write},
+    timing::{duration_to_nanos, Time},
+    {Result, SystemBundle},
+};
+
 use circular_buffer::CircularBuffer;
 
 /// The FPSCounter resource needed by the FPSCounterSystem.
@@ -50,7 +53,7 @@ impl FPSCounter {
 
     ///Get the average fps over the samplesize frames.
     pub fn sampled_fps(&self) -> f32 {
-        if self.sum == 0 || self.buf.queue().len() == 0 {
+        if self.sum == 0 || self.buf.queue().is_empty() {
             return 0.0;
         }
         1.0e9 * self.buf.queue().len() as f32 / self.sum as f32

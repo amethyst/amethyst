@@ -1,11 +1,16 @@
-use super::{Buffers, GltfError};
-use animation::{
-    AnimationPrefab, AnimationSetPrefab, InterpolationFunction, InterpolationPrimitive, Sampler,
-    SamplerPrimitive, TransformChannel,
-};
-use core::Transform;
-use gltf;
 use std::collections::HashMap;
+
+use gltf;
+
+use {
+    animation::{
+        AnimationPrefab, AnimationSetPrefab, InterpolationFunction, InterpolationPrimitive,
+        Sampler, SamplerPrimitive, TransformChannel,
+    },
+    core::Transform,
+};
+
+use super::{Buffers, GltfError};
 
 pub fn load_animations(
     gltf: &gltf::Gltf,

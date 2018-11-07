@@ -1,10 +1,13 @@
 //! Defines the `Reload` trait.
 
+use std::{sync::Arc, time::Instant};
+
 use amethyst_core as core;
-use amethyst_core::specs::prelude::{DispatcherBuilder, Read, Resources, System, Write};
-use amethyst_core::{SystemBundle, Time};
-use std::sync::Arc;
-use std::time::Instant;
+use amethyst_core::{
+    specs::prelude::{DispatcherBuilder, Read, Resources, System, Write},
+    SystemBundle, Time,
+};
+
 use {Asset, Format, FormatValue, Loader, Result, Source};
 
 /// This bundle activates hot reload for the `Loader`,
@@ -159,7 +162,7 @@ impl<'a> System<'a> for HotReloadSystem {
                 ref mut last,
                 ref mut frame_number,
             } => {
-                if last.elapsed().as_secs() > interval as u64 {
+                if last.elapsed().as_secs() > u64::from(interval) {
                     *frame_number = time.frame_number() + 1;
                     *last = Instant::now();
                 }

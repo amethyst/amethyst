@@ -1,10 +1,12 @@
 #[cfg(test)]
 mod test {
-    use amethyst_core::shred::{Dispatcher, DispatcherBuilder, SystemData};
-    use amethyst_core::specs::{Builder, Join, World, WriteStorage};
-    use std::net::SocketAddr;
-    use std::thread::sleep;
-    use std::time::Duration;
+    use std::{net::SocketAddr, thread::sleep, time::Duration};
+
+    use amethyst_core::{
+        shred::{Dispatcher, DispatcherBuilder, SystemData},
+        specs::{Builder, Join, World, WriteStorage},
+    };
+
     use {NetConnection, NetEvent, NetSocketSystem};
 
     #[test]

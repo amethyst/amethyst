@@ -1,12 +1,18 @@
 //! A stage in the rendering pipeline.
 
-use amethyst_core::specs::prelude::SystemData;
-use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
 use hetseq::*;
-use pipe::pass::{CompiledPass, Pass, PassData};
-use pipe::{Target, Targets};
-use types::{Encoder, Factory};
+
+use amethyst_core::specs::prelude::SystemData;
+
+use {
+    error::{Error, Result},
+    pipe::{
+        pass::{CompiledPass, Pass, PassData},
+        Target, Targets,
+    },
+    types::{Encoder, Factory},
+};
 
 /// A stage in the rendering pipeline.
 #[derive(Clone, Debug)]
@@ -158,10 +164,13 @@ where
         factory: Factory,
         data: <L as PassesData<'b>>::Data,
     ) {
-        self.clear_color
-            .map(|c| self.target.clear_color(encoder, c));
-        self.clear_depth
-            .map(|d| self.target.clear_depth_stencil(encoder, d));
+        if let Some(color) = self.clear_color {
+            self.target.clear_color(encoder, color);
+        }
+
+        if let Some(depth) = self.clear_depth {
+            self.target.clear_depth_stencil(encoder, depth);
+        }
 
         self.passes.apply(encoder, factory, data);
     }
@@ -237,7 +246,7 @@ impl<Q> StageBuilder<Q> {
         let out = targets
             .get(&self.target_name)
             .cloned()
-            .ok_or(Error::NoSuchTarget(self.target_name.clone()))?;
+            .ok_or_else(|| Error::NoSuchTarget(self.target_name.clone()))?;
 
         let passes = self
             .passes

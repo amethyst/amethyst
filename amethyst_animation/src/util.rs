@@ -1,8 +1,13 @@
-use amethyst_core::cgmath::num_traits::NumCast;
-use amethyst_core::cgmath::BaseNum;
-use amethyst_core::specs::prelude::{Entity, WriteStorage};
 use minterpolate::InterpolationPrimitive;
+
+use amethyst_core::{
+    cgmath::{num_traits::NumCast, BaseNum},
+    specs::prelude::{Entity, WriteStorage},
+};
+
 use resources::{AnimationControlSet, AnimationSampling};
+
+use self::SamplerPrimitive::*;
 
 /// Get the animation set for an entity. If none exists, one will be added. If entity is invalid,
 /// (eg. removed before) None will be returned.
@@ -74,7 +79,6 @@ where
     S: BaseNum,
 {
     fn add(&self, other: &Self) -> Self {
-        use self::SamplerPrimitive::*;
         match (*self, *other) {
             (Scalar(ref s), Scalar(ref o)) => Scalar(*s + *o),
             (Vec2(ref s), Vec2(ref o)) => Vec2([s[0] + o[0], s[1] + o[1]]),
@@ -87,7 +91,6 @@ where
     }
 
     fn sub(&self, other: &Self) -> Self {
-        use self::SamplerPrimitive::*;
         match (*self, *other) {
             (Scalar(ref s), Scalar(ref o)) => Scalar(*s - *o),
             (Vec2(ref s), Vec2(ref o)) => Vec2([s[0] - o[0], s[1] - o[1]]),
@@ -100,7 +103,6 @@ where
     }
 
     fn mul(&self, scalar: f32) -> Self {
-        use self::SamplerPrimitive::*;
         match *self {
             Scalar(ref s) => Scalar(mul_f32(*s, scalar)),
             Vec2(ref s) => Vec2([mul_f32(s[0], scalar), mul_f32(s[1], scalar)]),
@@ -119,7 +121,6 @@ where
     }
 
     fn dot(&self, other: &Self) -> f32 {
-        use self::SamplerPrimitive::*;
         match (*self, *other) {
             (Scalar(ref s), Scalar(ref o)) => (*s * *o).to_f32().unwrap(),
             (Vec2(ref s), Vec2(ref o)) => (s[0] * o[0] + s[1] * o[1]).to_f32().unwrap(),
@@ -138,7 +139,6 @@ where
     }
 
     fn magnitude(&self) -> f32 {
-        use self::SamplerPrimitive::*;
         match *self {
             Scalar(ref s) => s.to_f32().unwrap(),
             Vec2(_) | Vec3(_) | Vec4(_) => self.magnitude2().sqrt(),
@@ -146,7 +146,6 @@ where
     }
 
     fn normalize(&self) -> Self {
-        use self::SamplerPrimitive::*;
         match *self {
             Scalar(_) => *self,
             Vec2(_) | Vec3(_) | Vec4(_) => self.mul(1. / self.magnitude()),
