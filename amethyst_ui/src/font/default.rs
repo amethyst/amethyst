@@ -1,3 +1,5 @@
+use std::fs;
+
 use font_kit::handle::Handle as FontKitHandle;
 
 use amethyst_assets::{AssetStorage, Loader, SimpleFormat};
@@ -14,16 +16,34 @@ pub fn get_default_font(loader: &Loader, storage: &AssetStorage<FontAsset>) -> F
 
     match system_font {
         Ok(handle) => match handle {
-            FontKitHandle::Path { .. } => unimplemented!(
-                "Default system font was provided as a path, this is not yet supported.
-				If you see this message, open an issue so that we know we need to implement it."
-            ),
+            FontKitHandle::Path { path, .. } => {
+                if let Some(file_extension) = path.extension() {
+                    let format = if file_extension == "ttf" || file_extension == "otf" {
+                        Some(TtfFormat)
+                    } else {
+                        error!("System font '{}' has unknown format", path.display());
+                        None
+                    };
+
+                    if let Some(format) = format {
+                        match fs::read(&path) {
+                            Ok(bytes) => match format.import(bytes, ()) {
+                                Ok(data) => return loader.load_from_data(data, (), storage),
+                                Err(err) => warn!("System font at '{}' cannot be loaded. Fallback to default. Error: {}", path.display(), err),
+                            },
+                            Err(err) => warn!("System font at '{}' is not available for use. Fallback to default. Error: {}", path.display(), err)
+                        }
+                    }
+                } else {
+                    warn!("System font has no file extension!");
+                }
+            }
             FontKitHandle::Memory { bytes, .. } => {
                 let font_data = TtfFormat.import(bytes.to_vec(), ());
                 match font_data {
-					Ok(data) => return loader.load_from_data(data, (), storage),
-					Err(e) => warn!("Failed to load default system font from bytes. Falling back to built-in.\nError: {:?}", e),
-				}
+                    Ok(data) => return loader.load_from_data(data, (), storage),
+                    Err(e) => warn!("Failed to load default system font from bytes. Falling back to built-in.\nError: {:?}", e),
+                }
             }
         },
         Err(e) => warn!(

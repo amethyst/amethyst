@@ -123,8 +123,7 @@ pub use {
         JointTransformsPrefab, JointWeights,
     },
     sprite::{
-        Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, SpriteSheetSet,
-        TextureCoordinates,
+        Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, TextureCoordinates,
     },
     sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem},
     system::RenderSystem,

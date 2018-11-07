@@ -51,7 +51,7 @@ pub enum SomeEvent {{
     let reads : Vec<_> = (0..tys.len()).map(|n| {
         let variant = &names[n];
         quote! {
-            events.extend(data.#n.read(self.#n.as_mut().expect("ReaderId undefined, has setup been run?")).cloned().map(|e| #event_name::#variant(e)));
+            events.extend(data.#n.read(self.#n.as_mut().expect("ReaderId undefined, has setup been run?")).cloned().map(#event_name::#variant));
         }
     }).collect();
     let setups: Vec<_> = (0..tys.len())

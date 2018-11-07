@@ -1,16 +1,16 @@
 use minterpolate::InterpolationPrimitive;
 
-use amethyst_core::specs::prelude::Read;
-use amethyst_renderer::{Material, MaterialTextureSet, Sprite, TextureOffset};
+use amethyst_assets::Handle;
+use amethyst_renderer::{Material, Sprite, Texture, TextureOffset};
 
 use {AnimationSampling, ApplyData, BlendMethod};
 
 /// Sampler primitive for Material animations
 /// Note that material can only ever be animated with `Step`, or a panic will occur.
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum MaterialPrimitive {
     /// Dynamically altering the texture rendered
-    Texture(u64),
+    Texture(Handle<Texture>),
     /// Dynamically altering the section of the texture rendered.
     Offset((f32, f32), (f32, f32)),
 }
@@ -99,7 +99,7 @@ pub enum MaterialChannel {
 }
 
 impl<'a> ApplyData<'a> for Material {
-    type ApplyData = Read<'a, MaterialTextureSet>;
+    type ApplyData = ();
 }
 
 fn offset(offset: &TextureOffset) -> MaterialPrimitive {
@@ -114,104 +114,67 @@ impl AnimationSampling for Material {
     type Primitive = MaterialPrimitive;
     type Channel = MaterialChannel;
 
-    fn apply_sample(
-        &mut self,
-        channel: &Self::Channel,
-        data: &Self::Primitive,
-        extra: &Read<MaterialTextureSet>,
-    ) {
-        match (*channel, *data) {
+    fn apply_sample(&mut self, channel: &Self::Channel, data: &Self::Primitive, _: &()) {
+        match (channel, data) {
             (MaterialChannel::AlbedoTexture, MaterialPrimitive::Texture(i)) => {
-                if let Some(handle) = extra.handle(i) {
-                    self.albedo = handle;
-                }
+                self.albedo = i.clone();
             }
             (MaterialChannel::EmissionTexture, MaterialPrimitive::Texture(i)) => {
-                if let Some(handle) = extra.handle(i) {
-                    self.emission = handle;
-                }
+                self.emission = i.clone();
             }
             (MaterialChannel::NormalTexture, MaterialPrimitive::Texture(i)) => {
-                if let Some(handle) = extra.handle(i) {
-                    self.normal = handle;
-                }
+                self.normal = i.clone();
             }
             (MaterialChannel::MetallicTexture, MaterialPrimitive::Texture(i)) => {
-                if let Some(handle) = extra.handle(i) {
-                    self.metallic = handle;
-                }
+                self.metallic = i.clone();
             }
             (MaterialChannel::RoughnessTexture, MaterialPrimitive::Texture(i)) => {
-                if let Some(handle) = extra.handle(i) {
-                    self.roughness = handle;
-                }
+                self.roughness = i.clone();
             }
             (MaterialChannel::AmbientOcclusionTexture, MaterialPrimitive::Texture(i)) => {
-                if let Some(handle) = extra.handle(i) {
-                    self.ambient_occlusion = handle;
-                }
+                self.ambient_occlusion = i.clone();
             }
             (MaterialChannel::CaveatTexture, MaterialPrimitive::Texture(i)) => {
-                if let Some(handle) = extra.handle(i) {
-                    self.caveat = handle;
-                }
+                self.caveat = i.clone();
             }
 
             (MaterialChannel::AlbedoOffset, MaterialPrimitive::Offset(u, v)) => {
-                self.albedo_offset = texture_offset(u, v)
+                self.albedo_offset = texture_offset(*u, *v)
             }
             (MaterialChannel::EmissionOffset, MaterialPrimitive::Offset(u, v)) => {
-                self.emission_offset = texture_offset(u, v)
+                self.emission_offset = texture_offset(*u, *v)
             }
             (MaterialChannel::NormalOffset, MaterialPrimitive::Offset(u, v)) => {
-                self.normal_offset = texture_offset(u, v)
+                self.normal_offset = texture_offset(*u, *v)
             }
             (MaterialChannel::MetallicOffset, MaterialPrimitive::Offset(u, v)) => {
-                self.metallic_offset = texture_offset(u, v)
+                self.metallic_offset = texture_offset(*u, *v)
             }
             (MaterialChannel::RoughnessOffset, MaterialPrimitive::Offset(u, v)) => {
-                self.roughness_offset = texture_offset(u, v)
+                self.roughness_offset = texture_offset(*u, *v)
             }
             (MaterialChannel::AmbientOcclusionOffset, MaterialPrimitive::Offset(u, v)) => {
-                self.ambient_occlusion_offset = texture_offset(u, v)
+                self.ambient_occlusion_offset = texture_offset(*u, *v)
             }
             (MaterialChannel::CaveatOffset, MaterialPrimitive::Offset(u, v)) => {
-                self.caveat_offset = texture_offset(u, v)
+                self.caveat_offset = texture_offset(*u, *v)
             }
 
             _ => panic!("Bad combination of data in Material animation"),
         }
     }
 
-    fn current_sample(
-        &self,
-        channel: &Self::Channel,
-        extra: &Read<MaterialTextureSet>,
-    ) -> Self::Primitive {
-        const ERR_MSG: &str = "Unable to get requested channel from MaterialTextureSet.";
-
+    fn current_sample(&self, channel: &Self::Channel, _: &()) -> Self::Primitive {
         match *channel {
-            MaterialChannel::AlbedoTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.albedo).expect(ERR_MSG))
-            }
-            MaterialChannel::EmissionTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.emission).expect(ERR_MSG))
-            }
-            MaterialChannel::NormalTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.normal).expect(ERR_MSG))
-            }
-            MaterialChannel::MetallicTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.metallic).expect(ERR_MSG))
-            }
-            MaterialChannel::RoughnessTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.roughness).expect(ERR_MSG))
-            }
+            MaterialChannel::AlbedoTexture => MaterialPrimitive::Texture(self.albedo.clone()),
+            MaterialChannel::EmissionTexture => MaterialPrimitive::Texture(self.emission.clone()),
+            MaterialChannel::NormalTexture => MaterialPrimitive::Texture(self.normal.clone()),
+            MaterialChannel::MetallicTexture => MaterialPrimitive::Texture(self.metallic.clone()),
+            MaterialChannel::RoughnessTexture => MaterialPrimitive::Texture(self.roughness.clone()),
             MaterialChannel::AmbientOcclusionTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.ambient_occlusion).expect(ERR_MSG))
+                MaterialPrimitive::Texture(self.ambient_occlusion.clone())
             }
-            MaterialChannel::CaveatTexture => {
-                MaterialPrimitive::Texture(extra.id(&self.caveat).expect(ERR_MSG))
-            }
+            MaterialChannel::CaveatTexture => MaterialPrimitive::Texture(self.caveat.clone()),
             MaterialChannel::AlbedoOffset => offset(&self.albedo_offset),
             MaterialChannel::EmissionOffset => offset(&self.emission_offset),
             MaterialChannel::NormalOffset => offset(&self.normal_offset),
