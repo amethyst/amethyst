@@ -42,6 +42,7 @@ pub use {
     cache::Cache,
     error::{Error, ErrorKind, Result, ResultExt},
     formats::RonFormat,
+    helper::AssetLoaderSystemData,
     loader::Loader,
     prefab::{AssetPrefab, Prefab, PrefabData, PrefabError, PrefabLoader, PrefabLoaderSystem},
     progress::{Completion, Progress, ProgressCounter, Tracker},
@@ -54,6 +55,7 @@ mod asset;
 mod cache;
 mod error;
 mod formats;
+mod helper;
 mod loader;
 mod prefab;
 mod progress;
