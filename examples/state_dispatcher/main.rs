@@ -2,10 +2,10 @@
 
 extern crate amethyst;
 
-use std::marker::PhantomData;
 use amethyst::ecs::{Dispatcher, DispatcherBuilder};
 use amethyst::prelude::*;
 use amethyst::Error;
+use std::marker::PhantomData;
 
 struct StateA;
 
