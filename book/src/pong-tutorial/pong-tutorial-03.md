@@ -191,7 +191,7 @@ a system alone. We provide an instance of the system, a string representing its 
 and a list of dependencies. The dependencies are the names of the systems that
 must be ran before our newly added system. Here, we require the `input_system` to be
 ran as we will use the user's input to move the paddles, so we need to have this
-data be prepared.
+data be prepared. The `input_system` key itself is defined in the standard InputBundle.
 
 Back in `paddle.rs`, let's review what our system does, because there's quite a bit there.
 
