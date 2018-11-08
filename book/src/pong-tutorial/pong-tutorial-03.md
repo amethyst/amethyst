@@ -191,7 +191,7 @@ a system alone. We provide an instance of the system, a string representing its 
 and a list of dependencies. The dependencies are the names of the systems that
 must be ran before our newly added system. Here, we require the `input_system` to be
 ran as we will use the user's input to move the paddles, so we need to have this
-data be prepared.
+data be prepared. The `input_system` key itself is defined in the standard InputBundle.
 
 Back in `paddle.rs`, let's review what our system does, because there's quite a bit there.
 
@@ -200,7 +200,7 @@ trait for it. The trait specifies the lifetime of the components on which it
 operates. Inside the implementation, we define the `SystemData` the system
 operates on, a tuple of `WriteStorage`, `ReadStorage`, and `Read`. More
 specifically, the generic types we've used here tell us that the `PaddleSystem`
-mutates `LocalTransform` components, `WriteStorage<'s, LocalTransform>`, it
+mutates `Transform` components, `WriteStorage<'s, Transform>`, it
 reads `Paddle` components, `ReadStorage<'s, Paddle>`, and also accesses the
 `InputHandler<String, String>` resource we created earlier, using the `Read`
 structure.
