@@ -258,11 +258,11 @@ mod serde_ortho {
                     }
                 }
                 let left = left.ok_or_else(|| de::Error::missing_field("left"))?;
-                let right = right.ok_or_else(|| de::Error::missing_field("left"))?;
-                let bottom = bottom.ok_or_else(|| de::Error::missing_field("left"))?;
-                let top = top.ok_or_else(|| de::Error::missing_field("left"))?;
-                let znear = znear.ok_or_else(|| de::Error::missing_field("left"))?;
-                let zfar = zfar.ok_or_else(|| de::Error::missing_field("left"))?;
+                let right = right.ok_or_else(|| de::Error::missing_field("right"))?;
+                let bottom = bottom.ok_or_else(|| de::Error::missing_field("bottom"))?;
+                let top = top.ok_or_else(|| de::Error::missing_field("top"))?;
+                let znear = znear.ok_or_else(|| de::Error::missing_field("znear"))?;
+                let zfar = zfar.ok_or_else(|| de::Error::missing_field("zfar"))?;
 
                 Ok(Orthographic3::new(left, right, bottom, top, znear, zfar))
             }
@@ -392,8 +392,8 @@ mod serde_persp {
                 }
                 let aspect = aspect.ok_or_else(|| de::Error::missing_field("aspect"))?;
                 let fovy = fovy.ok_or_else(|| de::Error::missing_field("fovy"))?;
-                let znear = znear.ok_or_else(|| de::Error::missing_field("left"))?;
-                let zfar = zfar.ok_or_else(|| de::Error::missing_field("left"))?;
+                let znear = znear.ok_or_else(|| de::Error::missing_field("znear"))?;
+                let zfar = zfar.ok_or_else(|| de::Error::missing_field("zfar"))?;
 
                 Ok(Perspective3::new(aspect, fovy, znear, zfar))
             }

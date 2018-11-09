@@ -493,18 +493,18 @@ fn test_mul() {
     let mut first = Transform::default();
     first.set_xyz(20., 10., -3.);
     first.set_scale(2., 2., 2.);
-    first.set_rotation(UnitQuaternion::rotation_between(
-        &Vector3::new(-1., 1., 2.),
-        &Vector3::new(1., 0., 0.),
-    ).unwrap());
+    first.set_rotation(
+        UnitQuaternion::rotation_between(&Vector3::new(-1., 1., 2.), &Vector3::new(1., 0., 0.))
+            .unwrap(),
+    );
 
     let mut second = Transform::default();
     second.set_xyz(2., 1., -3.);
     second.set_scale(1., 1., 1.);
-    second.set_rotation(UnitQuaternion::rotation_between(
-        &Vector3::new(7., -1., 3.),
-        &Vector3::new(2., 1., 1.),
-    ).unwrap());
+    second.set_rotation(
+        UnitQuaternion::rotation_between(&Vector3::new(7., -1., 3.), &Vector3::new(2., 1., 1.))
+            .unwrap(),
+    );
 
     // check Mat(first * second) == Mat(first) * Mat(second)
     assert_ulps_eq!(
