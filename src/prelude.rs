@@ -7,7 +7,7 @@ pub use {
     ecs::prelude::{Builder, World},
     game_data::{DataInit, GameData, GameDataBuilder},
     state::{
-        EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, Trans, TransQueue,
+        EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, Trans, TransEvent,
     },
     state_event::StateEvent,
 };

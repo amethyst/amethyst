@@ -2,6 +2,7 @@
 
 extern crate amethyst;
 
+use amethyst::shrev::EventChannel;
 use amethyst::ecs::{Dispatcher, DispatcherBuilder};
 use amethyst::prelude::*;
 use amethyst::Error;
@@ -15,9 +16,14 @@ impl SimpleState<'static, 'static> for StateA {
         // Shows how to push a `Trans` through the event queue.
         // If you do use TransQueue, you will be forced to use the 'static lifetime on your states.
         data.world
-            .write_resource::<TransQueue<GameData<'static, 'static>, StateEvent>>()
-            .push_back(Box::new(|| Trans::Push(Box::new(StateB::default()))));
-        Trans::Push(Box::new(StateB::default()))
+            .write_resource::<EventChannel<TransEvent<GameData<'static, 'static>, StateEvent>>>()
+            .single_write(Box::new(|| Trans::Push(Box::new(StateB::default()))));
+
+        // You can also use normal Trans at the same time!
+        // Those will be executed before the ones in the EventChannel
+        // Trans::Push(Box::new(StateB::default()))
+
+        Trans::None
     }
 }
 

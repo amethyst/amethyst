@@ -1,7 +1,7 @@
 //! The core engine framework.
 
 use std::{
-    collections::VecDeque, error::Error as StdError, marker::PhantomData, path::Path, sync::Arc,
+    error::Error as StdError, marker::PhantomData, path::Path, sync::Arc,
     time::Duration,
 };
 
@@ -27,7 +27,7 @@ use {
     },
     error::{Error, Result},
     game_data::DataInit,
-    state::{State, StateData, StateMachine, TransQueue},
+    state::{State, StateData, StateMachine, TransEvent},
     state_event::{StateEvent, StateEventReader},
     ui::UiEvent,
 };
@@ -45,7 +45,11 @@ use {
 /// - `R`: `EventReader` implementation for the given event type `E`
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct CoreApplication<'a, T, E = StateEvent, R = StateEventReader> {
+pub struct CoreApplication<'a, T, E = StateEvent, R = StateEventReader> 
+where
+    T: 'static,
+    E: 'static
+{
     /// The world
     #[derivative(Debug = "ignore")]
     world: World,
@@ -54,6 +58,8 @@ pub struct CoreApplication<'a, T, E = StateEvent, R = StateEventReader> {
     #[derivative(Debug = "ignore")]
     events: Vec<E>,
     event_reader_id: ReaderId<Event>,
+    #[derivative(Debug = "ignore")]
+    trans_reader_id: ReaderId<TransEvent<T, E>>,
     states: StateMachine<'a, T, E>,
     ignore_window_close: bool,
     data: T,
@@ -299,14 +305,22 @@ where
 
         // Read the Trans queue and apply changes.
         {
-            let trans = {
+            /*let trans = {
                 let mut v = self.world.write_resource::<TransQueue<T, E>>();
                 let x = v.drain(..).collect::<VecDeque<_>>();
                 x
-            };
+            };*/
+            let mut world = &mut self.world;
             let states = &mut self.states;
-            for tr in trans.into_iter() {
-                states.transition(tr(), StateData::new(&mut self.world, &mut self.data));
+            let reader = &mut self.trans_reader_id;
+
+            /*let trans = world.exec(|ev: Read<EventChannel<TransEvent<T, E>>>| {
+                ev.read(reader)
+            });*/
+            let trans = world.read_resource::<EventChannel<TransEvent<T, E>>>().read(reader).map(|e| e()).collect::<Vec<_>>();
+            for tr in trans {
+                //let t = tr();
+                states.transition(tr, StateData::new(&mut world, &mut self.data));
             }
         }
 
@@ -489,7 +503,7 @@ where
         world.add_resource(pool);
         world.add_resource(EventChannel::<Event>::with_capacity(2000));
         world.add_resource(EventChannel::<UiEvent>::with_capacity(40));
-        world.add_resource(TransQueue::<T, StateEvent>::with_capacity(2));
+        world.add_resource(EventChannel::<TransEvent<T, StateEvent>>::with_capacity(2));
         world.add_resource(Errors::default());
         world.add_resource(FrameLimiter::default());
         world.add_resource(Stopwatch::default());
@@ -779,6 +793,10 @@ where
             .world
             .exec(|mut ev: Write<EventChannel<Event>>| ev.register_reader());
 
+        let trans_reader_id = self
+            .world
+            .exec(|mut ev: Write<EventChannel<TransEvent<T, E>>>| ev.register_reader());
+
         Ok(CoreApplication {
             world: self.world,
             states: StateMachine::new(self.initial_state),
@@ -787,6 +805,7 @@ where
             ignore_window_close: self.ignore_window_close,
             data,
             event_reader_id,
+            trans_reader_id,
         })
     }
 }
