@@ -18,7 +18,7 @@ pub struct GlobalTransform(pub Matrix4<f32>);
 impl GlobalTransform {
     /// Checks whether each `f32` of the `GlobalTransform` is finite (not NaN or inf).
     pub fn is_finite(&self) -> bool {
-        !self.0.as_slice().iter().any(|f| !f32::is_finite(*f))
+        self.0.as_slice().iter().all(|f| f32::is_finite(*f))
     }
 }
 
