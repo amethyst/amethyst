@@ -2,6 +2,9 @@
 
 #![warn(missing_docs)]
 
+#[allow(unused_imports)]
+#[macro_use]
+pub extern crate approx;
 pub extern crate nalgebra;
 pub extern crate shred;
 pub extern crate shrev;

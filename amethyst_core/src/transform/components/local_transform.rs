@@ -326,10 +326,12 @@ impl Transform {
 
     /// Concatenates another transform onto `self`.
     pub fn concat(&mut self, other: &Self) -> &mut Self {
-        self.scale.component_mul_assign(&other.scale);
-        self.iso.rotation *= other.iso.rotation;
+        // The order of these is somewhat important as the translation relies on the rotation and
+        // scaling not having been modified already.
         self.iso.translation.vector +=
             self.iso.rotation * other.iso.translation.vector.component_mul(&self.scale);
+        self.scale.component_mul_assign(&other.scale);
+        self.iso.rotation *= other.iso.rotation;
         self
     }
 
@@ -491,4 +493,35 @@ impl Serialize for Transform {
             serializer,
         )
     }
+}
+
+/// Sanity test for concat operation
+#[test]
+fn test_mul() {
+    // For the condition to hold both scales must be uniform
+    let mut first = Transform::default();
+    first.set_xyz(20., 10., -3.);
+    first.set_scale(2., 2., 2.);
+    first.set_rotation(UnitQuaternion::rotation_between(
+        &Vector3::new(-1., 1., 2.),
+        &Vector3::new(1., 0., 0.),
+    ).unwrap());
+
+    let mut second = Transform::default();
+    second.set_xyz(2., 1., -3.);
+    second.set_scale(1., 1., 1.);
+    second.set_rotation(UnitQuaternion::rotation_between(
+        &Vector3::new(7., -1., 3.),
+        &Vector3::new(2., 1., 1.),
+    ).unwrap());
+
+    // check Mat(first * second) == Mat(first) * Mat(second)
+    assert_ulps_eq!(
+        first.matrix() * second.matrix(),
+        first.concat(&second).matrix()
+    );
+    assert_ulps_eq!(
+        first.matrix() * second.matrix(),
+        first.concat(&second).matrix()
+    );
 }
