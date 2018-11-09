@@ -64,7 +64,7 @@ pub enum Trans<T, E> {
 /// Event queue to trigger state `Trans` from other places than a `State`'s methods.
 /// # Example:
 /// ```rust, ignore
-/// world.write_resource::<TransQueue<MyGameData, StateEvent>>().push_back(Box::new(|| Trans::Quit));
+/// world.write_resource::<EventChannel<TransQueue<MyGameData, StateEvent>>>().single_write(Box::new(|| Trans::Quit));
 /// ```
 pub type TransEvent<T, E> = Box<Fn() -> Trans<T, E> + Send + Sync + 'static>;
 
