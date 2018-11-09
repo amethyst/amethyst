@@ -1,9 +1,6 @@
 //! The core engine framework.
 
-use std::{
-    error::Error as StdError, marker::PhantomData, path::Path, sync::Arc,
-    time::Duration,
-};
+use std::{error::Error as StdError, marker::PhantomData, path::Path, sync::Arc, time::Duration};
 
 use log::Level;
 use rayon::ThreadPoolBuilder;
@@ -45,10 +42,10 @@ use {
 /// - `R`: `EventReader` implementation for the given event type `E`
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct CoreApplication<'a, T, E = StateEvent, R = StateEventReader> 
+pub struct CoreApplication<'a, T, E = StateEvent, R = StateEventReader>
 where
     T: 'static,
-    E: 'static
+    E: 'static,
 {
     /// The world
     #[derivative(Debug = "ignore")]
@@ -317,7 +314,11 @@ where
             /*let trans = world.exec(|ev: Read<EventChannel<TransEvent<T, E>>>| {
                 ev.read(reader)
             });*/
-            let trans = world.read_resource::<EventChannel<TransEvent<T, E>>>().read(reader).map(|e| e()).collect::<Vec<_>>();
+            let trans = world
+                .read_resource::<EventChannel<TransEvent<T, E>>>()
+                .read(reader)
+                .map(|e| e())
+                .collect::<Vec<_>>();
             for tr in trans {
                 //let t = tr();
                 states.transition(tr, StateData::new(&mut world, &mut self.data));

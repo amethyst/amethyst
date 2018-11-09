@@ -2,9 +2,9 @@
 
 extern crate amethyst;
 
-use amethyst::shrev::EventChannel;
 use amethyst::ecs::{Dispatcher, DispatcherBuilder};
 use amethyst::prelude::*;
+use amethyst::shrev::EventChannel;
 use amethyst::Error;
 use std::marker::PhantomData;
 
