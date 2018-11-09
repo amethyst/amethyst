@@ -2,8 +2,8 @@ use gfx_glyph::{HorizontalAlign, VerticalAlign};
 
 use amethyst_core::{
     specs::prelude::{
-        BitSet, InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage, ReaderId, Resources,
-        System, WriteStorage,
+        BitSet, ComponentEvent, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
+        WriteStorage,
     },
     HierarchyEvent, Parent, ParentHierarchy,
 };
@@ -125,8 +125,7 @@ pub enum Stretch {
 pub struct UiTransformSystem {
     transform_modified: BitSet,
 
-    inserted_transform_id: Option<ReaderId<InsertedFlag>>,
-    modified_transform_id: Option<ReaderId<ModifiedFlag>>,
+    transform_events_id: Option<ReaderId<ComponentEvent>>,
 
     parent_events_id: Option<ReaderId<HierarchyEvent>>,
 
@@ -147,14 +146,19 @@ impl<'a> System<'a> for UiTransformSystem {
 
         self.transform_modified.clear();
 
-        transforms.populate_inserted(
-            &mut self.inserted_transform_id.as_mut().unwrap(),
-            &mut self.transform_modified,
-        );
-        transforms.populate_modified(
-            &mut self.modified_transform_id.as_mut().unwrap(),
-            &mut self.transform_modified,
-        );
+        transforms
+            .channel()
+            .read(
+                self.transform_events_id
+                    .as_mut()
+                    .expect("UiTransformSystem missing transform_events_id."),
+            )
+            .for_each(|event| match event {
+                ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
+                    self.transform_modified.add(*id);
+                }
+                ComponentEvent::Removed(_id) => {}
+            });
 
         for event in hierarchy
             .changed()
@@ -183,10 +187,18 @@ impl<'a> System<'a> for UiTransformSystem {
         }
 
         // Populate the modifications we just did.
-        transforms.populate_modified(
-            &mut self.modified_transform_id.as_mut().unwrap(),
-            &mut self.transform_modified,
-        );
+        transforms
+            .channel()
+            .read(
+                self.transform_events_id
+                    .as_mut()
+                    .expect("UiTransformSystem missing transform_events_id."),
+            )
+            .for_each(|event| {
+                if let ComponentEvent::Modified(id) = event {
+                    self.transform_modified.add(*id);
+                }
+            });
 
         // Compute transforms with parents.
         for entity in hierarchy.all() {
@@ -247,21 +259,34 @@ impl<'a> System<'a> for UiTransformSystem {
                 }
             }
             // Populate the modifications we just did.
-            transforms.populate_modified(
-                &mut self.modified_transform_id.as_mut().unwrap(),
-                &mut self.transform_modified,
-            );
+            transforms
+                .channel()
+                .read(
+                    self.transform_events_id
+                        .as_mut()
+                        .expect("UiTransformSystem missing transform_events_id."),
+                )
+                .for_each(|event| {
+                    if let ComponentEvent::Modified(id) = event {
+                        self.transform_modified.add(*id);
+                    }
+                });
         }
         // We need to treat any changes done inside the system as non-modifications, so we read out
         // any events that were generated during the system run
-        transforms.populate_inserted(
-            &mut self.inserted_transform_id.as_mut().unwrap(),
-            &mut self.transform_modified,
-        );
-        transforms.populate_modified(
-            &mut self.modified_transform_id.as_mut().unwrap(),
-            &mut self.transform_modified,
-        );
+        transforms
+            .channel()
+            .read(
+                self.transform_events_id
+                    .as_mut()
+                    .expect("UiTransformSystem missing transform_events_id."),
+            )
+            .for_each(|event| match event {
+                ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
+                    self.transform_modified.add(*id);
+                }
+                ComponentEvent::Removed(_id) => {}
+            });
     }
 
     fn setup(&mut self, res: &mut Resources) {
@@ -269,8 +294,7 @@ impl<'a> System<'a> for UiTransformSystem {
         Self::SystemData::setup(res);
         self.parent_events_id = Some(res.fetch_mut::<ParentHierarchy>().track());
         let mut transforms = WriteStorage::<UiTransform>::fetch(res);
-        self.inserted_transform_id = Some(transforms.track_inserted());
-        self.modified_transform_id = Some(transforms.track_modified());
+        self.transform_events_id = Some(transforms.register_reader());
     }
 }
 

@@ -2,8 +2,8 @@ use std::{marker::PhantomData, ops::Deref};
 
 use amethyst_core::{
     specs::{
-        BitSet, Entities, Entity, InsertedFlag, Join, Read, ReadExpect, ReadStorage, ReaderId,
-        Resources, System, Write, WriteStorage,
+        storage::ComponentEvent, BitSet, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
+        ReaderId, Resources, System, Write, WriteStorage,
     },
     ArcThreadPool, Parent, Time,
 };
@@ -22,7 +22,7 @@ pub struct PrefabLoaderSystem<T> {
     entities: Vec<Entity>,
     finished: Vec<Entity>,
     to_process: BitSet,
-    insert_reader: Option<ReaderId<InsertedFlag>>,
+    insert_reader: Option<ReaderId<ComponentEvent>>,
     next_tag: u64,
 }
 
@@ -94,7 +94,17 @@ where
             strategy,
         );
         prefab_handles
-            .populate_inserted(self.insert_reader.as_mut().unwrap(), &mut self.to_process);
+            .channel()
+            .read(
+                self.insert_reader
+                    .as_mut()
+                    .expect("PrefabLoaderSystem missing insert_reader."),
+            )
+            .for_each(|event| {
+                if let ComponentEvent::Inserted(id) = event {
+                    self.to_process.add(*id);
+                }
+            });
         self.finished.clear();
         for (root_entity, handle, _) in (&*entities, &prefab_handles, &self.to_process).join() {
             if let Some(prefab) = prefab_storage.get(handle) {
@@ -112,7 +122,8 @@ where
                                 Parent {
                                     entity: self.entities[parent],
                                 },
-                            ).unwrap();
+                            )
+                            .unwrap();
                     }
                     tags.insert(new_entity, PrefabTag::new(prefab.tag.unwrap()))
                         .unwrap();
@@ -125,7 +136,8 @@ where
                                 self.entities[index],
                                 &mut prefab_system_data,
                                 &self.entities,
-                            ).unwrap();
+                            )
+                            .unwrap();
                     }
                 }
             }
@@ -139,6 +151,6 @@ where
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::specs::prelude::SystemData;
         Self::SystemData::setup(res);
-        self.insert_reader = Some(WriteStorage::<Handle<Prefab<T>>>::fetch(&res).track_inserted());
+        self.insert_reader = Some(WriteStorage::<Handle<Prefab<T>>>::fetch(&res).register_reader());
     }
 }
