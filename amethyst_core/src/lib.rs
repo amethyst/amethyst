@@ -32,7 +32,6 @@ use std::sync::Arc;
 pub use {
     bundle::{Error, ErrorKind, Result, SystemBundle},
     event::EventReader,
-    orientation::Orientation,
     timing::*,
     transform::*,
 };
@@ -47,7 +46,6 @@ pub mod bundle;
 mod event;
 pub mod frame_limiter;
 mod named;
-mod orientation;
 pub mod timing;
 pub mod transform;
 

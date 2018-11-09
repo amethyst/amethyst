@@ -10,8 +10,6 @@ use serde::{
 };
 use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 
-use orientation::Orientation;
-
 /// Local position, rotation, and scale (from parent if it exists).
 ///
 /// Used for rendering position and orientation.
@@ -37,7 +35,7 @@ impl Transform {
     ///
     /// # Examples
     ///
-    /// ```rust,no_run
+    /// ```rust
     /// # use amethyst_core::transform::components::Transform;
     /// # use amethyst_core::nalgebra::{UnitQuaternion, Quaternion, Vector3};
     /// let mut t = Transform::default();
@@ -47,12 +45,11 @@ impl Transform {
     /// t.look_at(Vector3::new(0.0, 1.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
     /// // our rotation should match the angle from straight ahead to straight up
     /// let rotation = UnitQuaternion::rotation_between(
-    ///     &Vector3::new(0.0, 0.0, -1.0),
     ///     &Vector3::new(0.0, 1.0, 0.0),
+    ///     &Vector3::new(0.0, 0.0, -1.0),
     /// ).unwrap();
     /// assert_eq!(t.iso.rotation, rotation);
     /// ```
-    // FIXME doctest
     #[inline]
     pub fn look_at(&mut self, target: Vector3<f32>, up: Vector3<f32>) -> &mut Self {
         self.iso.rotation =
@@ -106,12 +103,6 @@ impl Transform {
     #[inline]
     pub fn isometry_mut(&mut self) -> &mut Isometry3<f32> {
         &mut self.iso
-    }
-
-    /// Convert this transform's rotation into an Orientation, guaranteed to be 3 unit orthogonal
-    /// vectors.
-    pub fn orientation(&self) -> Orientation {
-        Orientation::from(*self.iso.rotation.to_rotation_matrix().matrix())
     }
 
     /// Move relatively to its current position.
@@ -185,42 +176,42 @@ impl Transform {
         self.move_local(Vector3::new(0.0, -amount, 0.0))
     }
 
-    /// Adds the specified amount to the translation vectors x component.
+    /// Adds the specified amount to the translation vector's x component.
     #[inline]
     pub fn add_x(&mut self, amount: f32) -> &mut Self {
         self.iso.translation.vector.x += amount;
         self
     }
 
-    /// Adds the specified amount to the translation vectors y component.
+    /// Adds the specified amount to the translation vector's y component.
     #[inline]
     pub fn add_y(&mut self, amount: f32) -> &mut Self {
         self.iso.translation.vector.y += amount;
         self
     }
 
-    /// Adds the specified amount to the translation vectors z component.
+    /// Adds the specified amount to the translation vector's z component.
     #[inline]
     pub fn add_z(&mut self, amount: f32) -> &mut Self {
         self.iso.translation.vector.z += amount;
         self
     }
 
-    /// Sets the translation vectors x component to the specified value.
+    /// Sets the translation vector's x component to the specified value.
     #[inline]
     pub fn set_x(&mut self, value: f32) -> &mut Self {
         self.iso.translation.vector.x = value;
         self
     }
 
-    /// Sets the translation vectors y component to the specified value.
+    /// Sets the translation vector's y component to the specified value.
     #[inline]
     pub fn set_y(&mut self, value: f32) -> &mut Self {
         self.iso.translation.vector.y = value;
         self
     }
 
-    /// Sets the translation vectors z component to the specified value.
+    /// Sets the translation vector's z component to the specified value.
     #[inline]
     pub fn set_z(&mut self, value: f32) -> &mut Self {
         self.iso.translation.vector.z = value;
@@ -374,7 +365,7 @@ impl<'de> Deserialize<'de> for Transform {
         D: Deserializer<'de>,
     {
         #[derive(Deserialize)]
-        #[serde(field_identifier, rename_all = "lowercase")]
+        #[serde(field_identifier, rename_all = "snake_case")]
         enum Field {
             Translation,
             Rotation,
