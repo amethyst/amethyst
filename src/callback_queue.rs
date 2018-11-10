@@ -1,6 +1,5 @@
-
-use crossbeam_channel::{Sender, Receiver};
 use core::specs::World;
+use crossbeam_channel::{Receiver, Sender};
 
 /// The type of a callback.
 /// This is meant to be created from within asynchonous functions (`Future` for example).
@@ -23,29 +22,25 @@ pub type Callback = Box<Fn(&mut World) + Send>;
 /// });
 /// ```
 pub struct CallbackQueue {
-	sender: Sender<Callback>,
-	pub(crate) receiver: Receiver<Callback>,
+    sender: Sender<Callback>,
+    pub(crate) receiver: Receiver<Callback>,
 }
 
 impl CallbackQueue {
+    /// Creates a new `CallbackQueue`.
+    pub fn new() -> Self {
+        Default::default()
+    }
 
-	/// Creates a new `CallbackQueue`.
-	pub fn new() -> Self {
-		Default::default()
-	}
-
-	/// Creates a new handle that allows sending `Callback`s to the `CallbackQueue`.
-	pub fn send_handle(&self) -> Sender<Callback> {
-		self.sender.clone()
-	}
+    /// Creates a new handle that allows sending `Callback`s to the `CallbackQueue`.
+    pub fn send_handle(&self) -> Sender<Callback> {
+        self.sender.clone()
+    }
 }
 
 impl Default for CallbackQueue {
-	fn default() -> Self {
-		let (sender, receiver) = crossbeam_channel::unbounded();
-		CallbackQueue {
-			sender,
-			receiver,
-		}
-	}
+    fn default() -> Self {
+        let (sender, receiver) = crossbeam_channel::unbounded();
+        CallbackQueue { sender, receiver }
+    }
 }
