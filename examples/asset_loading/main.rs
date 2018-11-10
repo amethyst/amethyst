@@ -91,7 +91,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for AssetsExample {
 
         let mut trans = Transform::default();
         trans.set_xyz(-5.0, 0.0, 0.0);
-        trans.scale = Vector3::repeat(2.0);
+        trans.set_scale(2.0, 2.0, 2.0);
         world
             .create_entity()
             .with(mesh)

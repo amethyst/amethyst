@@ -154,8 +154,8 @@ mod tests {
         transform.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.0, 0.0, 0.0)));
         transform.set_scale(2.0, 2.0, 2.0);
 
-        let combined = Matrix4::new_translation(&transform.iso.translation.vector)
-            * transform.iso.rotation.to_rotation_matrix().to_homogeneous()
+        let combined = Matrix4::new_translation(transform.translation())
+            * transform.rotation().to_rotation_matrix().to_homogeneous()
             * Matrix4::new_scaling(2.0);
 
         assert_eq!(transform.matrix(), combined);

@@ -18,9 +18,9 @@ use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 #[derive(Clone, Debug, PartialEq)]
 pub struct Transform {
     /// Translation + rotation value
-    pub iso: Isometry3<f32>,
+    iso: Isometry3<f32>,
     /// Scale vector
-    pub scale: Vector3<f32>,
+    scale: Vector3<f32>,
 }
 
 impl Transform {
@@ -40,7 +40,7 @@ impl Transform {
     /// # use amethyst_core::nalgebra::{UnitQuaternion, Quaternion, Vector3};
     /// let mut t = Transform::default();
     /// // No rotation by default
-    /// assert_eq!(*t.iso.rotation.quaternion(), Quaternion::identity());
+    /// assert_eq!(*t.rotation().quaternion(), Quaternion::identity());
     /// // look up with up pointing backwards
     /// t.look_at(Vector3::new(0.0, 1.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
     /// // our rotation should match the angle from straight ahead to straight up
@@ -48,7 +48,7 @@ impl Transform {
     ///     &Vector3::new(0.0, 1.0, 0.0),
     ///     &Vector3::new(0.0, 0.0, -1.0),
     /// ).unwrap();
-    /// assert_eq!(t.iso.rotation, rotation);
+    /// assert_eq!(*t.rotation(), rotation);
     /// ```
     #[inline]
     pub fn look_at(&mut self, target: Vector3<f32>, up: Vector3<f32>) -> &mut Self {
@@ -90,6 +90,18 @@ impl Transform {
     #[inline]
     pub fn rotation_mut(&mut self) -> &mut UnitQuaternion<f32> {
         &mut self.iso.rotation
+    }
+
+    /// Returns a reference to the scale vector.
+    #[inline]
+    pub fn scale(&self) -> &Vector3<f32> {
+        &self.scale
+    }
+
+    /// Returns a mutable reference to the scale vector.
+    #[inline]
+    pub fn scale_mut(&mut self) -> &mut Vector3<f32> {
+        &mut self.scale
     }
 
     /// Returns a reference to the isometry of the transform (translation and rotation combined).
