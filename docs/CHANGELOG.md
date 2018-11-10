@@ -30,7 +30,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Removed
 
 * `SpriteSheetSet` is removed as it is no longer needed. ([#1089])
-* `amethyst::core::orientation` has been removed because of limited use. ([#1066])
+* `amethyst::core::Orientation` has been removed because of limited use. ([#1066])
 
 ### Fixed
 
