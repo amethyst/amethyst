@@ -2,6 +2,7 @@
 
 pub use {
     app::{Application, ApplicationBuilder, CoreApplication},
+    callback_queue::{Callback, CallbackQueue},
     config::Config,
     core::WithNamed,
     ecs::prelude::{Builder, World},
