@@ -302,18 +302,10 @@ where
 
         // Read the Trans queue and apply changes.
         {
-            /*let trans = {
-                let mut v = self.world.write_resource::<TransQueue<T, E>>();
-                let x = v.drain(..).collect::<VecDeque<_>>();
-                x
-            };*/
             let mut world = &mut self.world;
             let states = &mut self.states;
             let reader = &mut self.trans_reader_id;
 
-            /*let trans = world.exec(|ev: Read<EventChannel<TransEvent<T, E>>>| {
-                ev.read(reader)
-            });*/
             let trans = world
                 .read_resource::<EventChannel<TransEvent<T, E>>>()
                 .read(reader)
