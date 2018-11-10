@@ -169,7 +169,10 @@ impl Pass for DrawUi {
         }
 
         for &mut (ref mut z, entity) in &mut self.cached_draw_order.cache {
-            *z = ui_transform.get(entity).unwrap().global_z;
+            *z = ui_transform
+                .get(entity)
+                .expect("Unreachable: Enities are collected from a cache of prepopulate entities")
+                .global_z;
         }
 
         // Attempt to insert the new entities in sorted position. Should reduce work during
@@ -211,7 +214,10 @@ impl Pass for DrawUi {
             1. / screen_dimensions.height(),
         ];
 
-        let mesh = self.mesh.as_ref().unwrap();
+        let mesh = self
+            .mesh
+            .as_ref()
+            .expect("`DrawUi::compile` was not called before `DrawUi::apply`");
 
         let vbuf = match mesh.buffer(PosTex::ATTRIBUTES) {
             Some(vbuf) => vbuf.clone(),
@@ -228,8 +234,9 @@ impl Pass for DrawUi {
             if hidden.contains(entity) || hidden_prop.contains(entity) {
                 continue;
             }
-            // This won't panic as we guaranteed earlier these entities are present.
-            let ui_transform = ui_transform.get(entity).unwrap();
+            let ui_transform = ui_transform
+                .get(entity)
+                .expect("Unreachable: Entity is guaranteed to be present based on earlier actions");
             if let Some(image) = ui_image
                 .get(entity)
                 .and_then(|image| tex_storage.get(&image.texture))
@@ -372,8 +379,10 @@ impl Pass for DrawUi {
                 // Render background highlight
                 let brush = &mut self
                     .glyph_brushes
-                    .get_mut(&ui_text.brush_id.unwrap())
-                    .unwrap();
+                    .get_mut(&ui_text.brush_id
+                        .expect("Unreachable: `ui_text.brush_id` is guarenteed to be set earlier in this function")
+                    ).expect("Unable to get brush from `glyph_brushes`-map");
+
                 // Maintain the glyph cache (used by the input code).
                 ui_text.cached_glyphs.clear();
                 ui_text
@@ -412,7 +421,7 @@ impl Pass for DrawUi {
                     let ascent = brush
                         .fonts()
                         .get(0)
-                        .unwrap()
+                        .expect("Unable to get first font of brush")
                         .v_metrics(Scale::uniform(ui_text.font_size))
                         .ascent;
                     for glyph in brush
@@ -447,7 +456,12 @@ impl Pass for DrawUi {
                 if let Err(err) = brush.draw_queued(
                     encoder,
                     &effect.data.out_blends[0],
-                    &effect.data.out_depth.as_ref().unwrap().0,
+                    &effect
+                        .data
+                        .out_depth
+                        .as_ref()
+                        .expect("Unable to get depth of effect")
+                        .0,
                 ) {
                     error!("Unable to draw text! Error: {:?}", err);
                 }
@@ -471,7 +485,7 @@ impl Pass for DrawUi {
                                 brush
                                     .fonts()
                                     .get(0)
-                                    .unwrap()
+                                    .expect("Unable to get first font of brush")
                                     .glyph(' ')
                                     .scaled(Scale::uniform(ui_text.font_size))
                                     .h_metrics()
@@ -483,7 +497,7 @@ impl Pass for DrawUi {
                             let ascent = brush
                                 .fonts()
                                 .get(0)
-                                .unwrap()
+                                .expect("Unable to get first font of brush")
                                 .v_metrics(Scale::uniform(ui_text.font_size))
                                 .ascent;
                             let glyph_len = brush.glyphs(&section).count();
