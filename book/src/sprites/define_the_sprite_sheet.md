@@ -38,6 +38,7 @@ Here is an example of such a definition file:
     ],
 )
 ```
+`offsets: Some((0.0, 0.0)),` can be replaced by `offsets: (0.0, 0.0),` if the line `#![enable(implicit_some)]` is added at the top of the definition file.
 
 Then, you can load it using the texture ID of the sheet's image you loaded earlier:
 
