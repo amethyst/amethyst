@@ -1,6 +1,9 @@
 use amethyst::{
     assets::Loader,
-    core::transform::Transform,
+    core::{
+        nalgebra::{Vector2, Vector3},
+        Transform,
+    },
     ecs::prelude::World,
     prelude::*,
     renderer::{
@@ -259,15 +262,15 @@ fn generate_circle_vertices(radius: f32, resolution: usize) -> Vec<PosTex> {
         let x = angle.cos();
         let y = angle.sin();
         PosTex {
-            position: [x * radius, y * radius, 0.0],
-            tex_coord: [x, y],
+            position: Vector3::new(x * radius, y * radius, 0.0),
+            tex_coord: Vector2::new(x, y),
         }
     };
 
     for index in 0..resolution {
         vertices.push(PosTex {
-            position: [0.0, 0.0, 0.0],
-            tex_coord: [0.0, 0.0],
+            position: Vector3::new(0.0, 0.0, 0.0),
+            tex_coord: Vector2::new(0.0, 0.0),
         });
 
         vertices.push(generate_vertex(angle_offset * index as f32));
@@ -281,28 +284,28 @@ fn generate_circle_vertices(radius: f32, resolution: usize) -> Vec<PosTex> {
 fn generate_rectangle_vertices(left: f32, bottom: f32, right: f32, top: f32) -> Vec<PosTex> {
     vec![
         PosTex {
-            position: [left, bottom, 0.],
-            tex_coord: [0.0, 0.0],
+            position: Vector3::new(left, bottom, 0.0),
+            tex_coord: Vector2::new(0.0, 0.0),
         },
         PosTex {
-            position: [right, bottom, 0.0],
-            tex_coord: [1.0, 0.0],
+            position: Vector3::new(right, bottom, 0.0),
+            tex_coord: Vector2::new(1.0, 0.0),
         },
         PosTex {
-            position: [left, top, 0.0],
-            tex_coord: [1.0, 1.0],
+            position: Vector3::new(left, top, 0.0),
+            tex_coord: Vector2::new(1.0, 1.0),
         },
         PosTex {
-            position: [right, top, 0.],
-            tex_coord: [1.0, 1.0],
+            position: Vector3::new(right, top, 0.0),
+            tex_coord: Vector2::new(1.0, 1.0),
         },
         PosTex {
-            position: [left, top, 0.],
-            tex_coord: [0.0, 1.0],
+            position: Vector3::new(left, top, 0.0),
+            tex_coord: Vector2::new(0.0, 1.0),
         },
         PosTex {
-            position: [right, bottom, 0.0],
-            tex_coord: [0.0, 0.0],
+            position: Vector3::new(right, bottom, 0.0),
+            tex_coord: Vector2::new(0.0, 0.0),
         },
     ]
 }

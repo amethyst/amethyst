@@ -6,7 +6,10 @@ extern crate rayon;
 
 use amethyst::{
     assets::{Loader, Result as AssetResult, SimpleFormat},
-    core::{nalgebra::Vector3, Transform, TransformBundle},
+    core::{
+        nalgebra::{Vector2, Vector3},
+        Transform, TransformBundle,
+    },
     input::InputBundle,
     prelude::*,
     renderer::{
@@ -36,22 +39,22 @@ impl SimpleFormat<Mesh> for Custom {
         for line in trimmed {
             let nums: Vec<&str> = line.split_whitespace().collect();
 
-            let position = [
+            let position = Vector3::new(
                 nums[0].parse::<f32>().unwrap(),
                 nums[1].parse::<f32>().unwrap(),
                 nums[2].parse::<f32>().unwrap(),
-            ];
+            );
 
-            let normal = [
+            let normal = Vector3::new(
                 nums[3].parse::<f32>().unwrap(),
                 nums[4].parse::<f32>().unwrap(),
                 nums[5].parse::<f32>().unwrap(),
-            ];
+            );
 
             result.push(PosNormTex {
                 position,
                 normal,
-                tex_coord: [0.0, 0.0],
+                tex_coord: Vector2::new(0.0, 0.0),
             });
         }
         Ok(result.into())
