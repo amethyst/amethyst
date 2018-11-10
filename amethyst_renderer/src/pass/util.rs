@@ -136,7 +136,7 @@ pub(crate) fn add_textures(
                 .get(&material.caveat)
                 .or_else(|| storage.get(&default.caveat)),
         };
-        add_texture(effect, texture.unwrap());
+        add_texture(effect, texture.expect("Texture missing in asset storage"));
     }
     set_texture_offsets(effect, encoder, material, types);
 }
@@ -251,7 +251,11 @@ pub fn set_vertex_args(
         .as_ref()
         .map(|&(ref cam, ref transform)| {
             let proj: [[f32; 4]; 4] = cam.proj.into();
-            let view: [[f32; 4]; 4] = transform.0.try_inverse().unwrap().into();
+            let view: [[f32; 4]; 4] = transform
+                .0
+                .try_inverse()
+                .expect("Unable to get inverse of camera transform")
+                .into();
             let model: [[f32; 4]; 4] = global.0.into();
             VertexArgs {
                 proj: proj.into(),
@@ -280,7 +284,11 @@ pub fn set_view_args(
         .as_ref()
         .map(|&(ref cam, ref transform)| {
             let proj: [[f32; 4]; 4] = cam.proj.into();
-            let view: [[f32; 4]; 4] = transform.0.try_inverse().unwrap().into();
+            let view: [[f32; 4]; 4] = transform
+                .0
+                .try_inverse()
+                .expect("Unable to get inverse of camera transform")
+                .into();
             ViewArgs {
                 proj: proj.into(),
                 view: view.into(),
@@ -309,13 +317,12 @@ pub(crate) fn draw_mesh(
     attributes: &[Attributes<'static>],
     textures: &[TextureType],
 ) {
-    let mesh = match mesh {
-        Some(mesh) => mesh,
-        None => return,
+    // Return straight away if some parameters are none
+    // Consider changing function signature?
+    let (mesh, material, global) = match (mesh, material, global) {
+        (Some(v1), Some(v2), Some(v3)) => (v1, v2, v3),
+        _ => return,
     };
-    if material.is_none() || global.is_none() {
-        return;
-    }
 
     if !set_attribute_buffers(effect, mesh, attributes)
         || (skinning && !set_skinning_buffers(effect, mesh))
@@ -324,7 +331,7 @@ pub(crate) fn draw_mesh(
         return;
     }
 
-    set_vertex_args(effect, encoder, camera, global.unwrap());
+    set_vertex_args(effect, encoder, camera, global);
 
     if skinning {
         if let Some(joint) = joint {
@@ -336,7 +343,7 @@ pub(crate) fn draw_mesh(
         effect,
         encoder,
         &tex_storage,
-        material.unwrap(),
+        material,
         &material_defaults.0,
         textures,
     );

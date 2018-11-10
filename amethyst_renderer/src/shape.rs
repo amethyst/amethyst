@@ -59,9 +59,10 @@ where
         _: &[Entity],
     ) -> Result<(), PrefabError> {
         let (_, ref mut meshes, _) = system_data;
-        meshes
-            .insert(entity, self.handle.as_ref().unwrap().clone())
-            .map(|_| ())
+        let self_handle = self.handle.as_ref().expect(
+            "`ShapePrefab::load_sub_assets` was not called before `ShapePrefab::add_to_entity`",
+        );
+        meshes.insert(entity, self_handle.clone()).map(|_| ())
     }
 
     fn load_sub_assets(
