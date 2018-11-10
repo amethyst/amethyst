@@ -178,21 +178,21 @@ impl Transform {
 
     /// Adds the specified amount to the translation vector's x component.
     #[inline]
-    pub fn add_x(&mut self, amount: f32) -> &mut Self {
+    pub fn translate_x(&mut self, amount: f32) -> &mut Self {
         self.iso.translation.vector.x += amount;
         self
     }
 
     /// Adds the specified amount to the translation vector's y component.
     #[inline]
-    pub fn add_y(&mut self, amount: f32) -> &mut Self {
+    pub fn translate_y(&mut self, amount: f32) -> &mut Self {
         self.iso.translation.vector.y += amount;
         self
     }
 
     /// Adds the specified amount to the translation vector's z component.
     #[inline]
-    pub fn add_z(&mut self, amount: f32) -> &mut Self {
+    pub fn translate_z(&mut self, amount: f32) -> &mut Self {
         self.iso.translation.vector.z += amount;
         self
     }
@@ -218,43 +218,43 @@ impl Transform {
         self
     }
 
-    /// Pitch relatively to the world.
+    /// Pitch relatively to the world. `angle` is specified in radians.
     #[inline]
     pub fn pitch_global(&mut self, angle: f32) -> &mut Self {
         self.rotate_global(Vector3::x_axis(), angle)
     }
 
-    /// Pitch relatively to its own rotation.
+    /// Pitch relatively to its own rotation. `angle` is specified in radians.
     #[inline]
     pub fn pitch_local(&mut self, angle: f32) -> &mut Self {
         self.rotate_local(Vector3::x_axis(), angle)
     }
 
-    /// Yaw relatively to the world.
+    /// Yaw relatively to the world. `angle` is specified in radians.
     #[inline]
     pub fn yaw_global(&mut self, angle: f32) -> &mut Self {
         self.rotate_global(Vector3::y_axis(), angle)
     }
 
-    /// Yaw relatively to its own rotation.
+    /// Yaw relatively to its own rotation. `angle` is specified in radians.
     #[inline]
     pub fn yaw_local(&mut self, angle: f32) -> &mut Self {
         self.rotate_local(Vector3::y_axis(), angle)
     }
 
-    /// Roll relatively to the world.
+    /// Roll relatively to the world. `angle` is specified in radians.
     #[inline]
     pub fn roll_global(&mut self, angle: f32) -> &mut Self {
         self.rotate_global(-Vector3::z_axis(), angle)
     }
 
-    /// Roll relatively to its own rotation.
+    /// Roll relatively to its own rotation. `angle` is specified in radians.
     #[inline]
     pub fn roll_local(&mut self, angle: f32) -> &mut Self {
         self.rotate_local(-Vector3::z_axis(), angle)
     }
 
-    /// Rotate relatively to the world
+    /// Rotate relatively to the world. `angle` is specified in radians.
     #[inline]
     pub fn rotate_global(&mut self, axis: Unit<Vector3<f32>>, angle: f32) -> &mut Self {
         let q = UnitQuaternion::from_axis_angle(&axis, angle);
@@ -262,11 +262,10 @@ impl Transform {
         self
     }
 
-    /// Rotate relatively to the current orientation
+    /// Rotate relatively to the current orientation. `angle` is specified in radians.
     #[inline]
     pub fn rotate_local(&mut self, axis: Unit<Vector3<f32>>, angle: f32) -> &mut Self {
-        let q = UnitQuaternion::from_axis_angle(&axis, angle);
-        self.iso.rotation = self.iso.rotation * q;
+        self.iso.rotation *= UnitQuaternion::from_axis_angle(&axis, angle);
         self
     }
 
@@ -277,10 +276,10 @@ impl Transform {
     }
 
     /// Adds the specified amounts to the translation vector.
-    pub fn add_xyz(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
-        self.add_x(x);
-        self.add_y(y);
-        self.add_z(z);
+    pub fn translate_xyz(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
+        self.translate_x(x);
+        self.translate_y(y);
+        self.translate_z(z);
         self
     }
 
@@ -305,6 +304,8 @@ impl Transform {
 
     /// Set the rotation using Euler x, y, z.
     ///
+    /// All angles are specified in radians.
+    ///
     /// # Arguments
     ///
     ///  - x - The angle to apply around the x axis. Also known as the pitch.
@@ -316,6 +317,9 @@ impl Transform {
     }
 
     /// Concatenates another transform onto `self`.
+    ///
+    /// Concatenating is roughly equivalent to doing matrix multiplication except for the fact that
+    /// it's done on `Transform` which is decomposed.
     pub fn concat(&mut self, other: &Self) -> &mut Self {
         // The order of these is somewhat important as the translation relies on the rotation and
         // scaling not having been modified already.
@@ -330,8 +334,12 @@ impl Transform {
     ///
     /// We can exploit the extra information we have to perform this inverse faster than `O(n^3)`.
     pub fn view_matrix(&self) -> Matrix4<f32> {
-        // todo
-        self.matrix().try_inverse().unwrap()
+        // TODO: check if this actually is faster
+        let inv_scale = Vector3::new(1.0 / self.scale.x, 1.0 / self.scale.y, 1.0 / self.scale.z);
+        self.iso
+            .inverse()
+            .to_homogeneous()
+            .append_nonuniform_scaling(&inv_scale)
     }
 }
 
@@ -486,33 +494,58 @@ impl Serialize for Transform {
     }
 }
 
-/// Sanity test for concat operation
-#[test]
-fn test_mul() {
-    // For the condition to hold both scales must be uniform
-    let mut first = Transform::default();
-    first.set_xyz(20., 10., -3.);
-    first.set_scale(2., 2., 2.);
-    first.set_rotation(
-        UnitQuaternion::rotation_between(&Vector3::new(-1., 1., 2.), &Vector3::new(1., 0., 0.))
-            .unwrap(),
-    );
+#[cfg(test)]
+mod tests {
+    use {
+        approx::*,
+        nalgebra::{UnitQuaternion, Vector3},
+        Transform,
+    };
 
-    let mut second = Transform::default();
-    second.set_xyz(2., 1., -3.);
-    second.set_scale(1., 1., 1.);
-    second.set_rotation(
-        UnitQuaternion::rotation_between(&Vector3::new(7., -1., 3.), &Vector3::new(2., 1., 1.))
-            .unwrap(),
-    );
+    /// Sanity test for concat operation
+    #[test]
+    fn test_mul() {
+        // For the condition to hold both scales must be uniform
+        let mut first = Transform::default();
+        first.set_xyz(20., 10., -3.);
+        first.set_scale(2., 2., 2.);
+        first.set_rotation(
+            UnitQuaternion::rotation_between(&Vector3::new(-1., 1., 2.), &Vector3::new(1., 0., 0.))
+                .unwrap(),
+        );
 
-    // check Mat(first * second) == Mat(first) * Mat(second)
-    assert_ulps_eq!(
-        first.matrix() * second.matrix(),
-        first.concat(&second).matrix()
-    );
-    assert_ulps_eq!(
-        first.matrix() * second.matrix(),
-        first.concat(&second).matrix()
-    );
+        let mut second = Transform::default();
+        second.set_xyz(2., 1., -3.);
+        second.set_scale(1., 1., 1.);
+        second.set_rotation(
+            UnitQuaternion::rotation_between(&Vector3::new(7., -1., 3.), &Vector3::new(2., 1., 1.))
+                .unwrap(),
+        );
+
+        // check Mat(first * second) == Mat(first) * Mat(second)
+        assert_ulps_eq!(
+            first.matrix() * second.matrix(),
+            first.concat(&second).matrix(),
+        );
+        assert_ulps_eq!(
+            first.matrix() * second.matrix(),
+            first.concat(&second).matrix(),
+        );
+    }
+
+    #[test]
+    fn test_view_matrix() {
+        let mut transform = Transform::default();
+        transform.set_xyz(5.0, 70.1, 43.7);
+        transform.set_scale(1.0, 5.0, 8.9);
+        transform.set_rotation(
+            UnitQuaternion::rotation_between(&Vector3::new(-1., 1., 2.), &Vector3::new(1., 0., 0.))
+                .unwrap(),
+        );
+
+        assert_ulps_eq!(
+            transform.matrix().try_inverse().unwrap(),
+            transform.view_matrix(),
+        );
+    }
 }

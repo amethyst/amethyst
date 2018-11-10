@@ -257,7 +257,7 @@ component of the transform's translation.
       };
       if let Some(mv_amount) = movement {
         let scaled_amount = 1.2 * mv_amount as f32;
-        transform.add_y(scaled_amount);
+        transform.translate_y(scaled_amount);
       }
     }
   }

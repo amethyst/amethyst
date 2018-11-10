@@ -24,7 +24,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 * `Material` animations now directly use `Handle<Texture>` instead of using indirection. ([#1089])
 * `SpriteRenderPrimitive::SpriteSheet` now takes `Handle<SpriteSheet>` instead of a `u64` ID. ([#1089])
-* `nalgebra` is now the math library used by the engine ([#1066])
+* `nalgebra` is now the math library used by the engine. ([#1066])
+* The `amethyst::renderer::Projection::orthographic` function has had its parameter order changed to match that of `nalgebra` ([#1066])
 
 ### Removed
 
