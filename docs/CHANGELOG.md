@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `UiWidget` variant `Custom` for custom composited widgets ([#1112])
 * `AssetLoaderSystemData` abstracts resources needed from `World` to do asset loading ([#1090])
 * `amethyst_ui::get_default_font` supports loading system font from Path. ([#1108])
+* Added render utilities to easily create `Material` and `Handle<Texture>`. ([#1126])
 
 ### Changed
 
@@ -41,6 +42,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1112]: https://github.com/amethyst/amethyst/pull/1112
 [#1089]: https://github.com/amethyst/amethyst/pull/1089
 [#1108]: https://github.com/amethyst/amethyst/pull/1108
+[#1126]: https://github.com/amethyst/amethyst/pull/1126
 
 ## [0.9.0] - 2018-10
 ### Added
