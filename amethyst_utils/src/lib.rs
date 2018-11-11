@@ -14,8 +14,10 @@ extern crate amethyst_renderer;
 #[allow(unused_imports)]
 #[macro_use]
 extern crate cgmath;
+extern crate dirty;
 #[macro_use]
 extern crate log;
+extern crate ron;
 #[macro_use]
 extern crate serde;
 extern crate shred;
@@ -26,6 +28,7 @@ extern crate shred_derive;
 extern crate thread_profiler;
 
 pub mod app_root_dir;
+pub mod autosave;
 pub mod circular_buffer;
 pub mod fps_counter;
 pub mod ortho_camera;
