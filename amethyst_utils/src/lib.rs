@@ -29,6 +29,7 @@ pub mod app_root_dir;
 pub mod circular_buffer;
 pub mod fps_counter;
 pub mod ortho_camera;
+pub mod render;
 pub mod removal;
 pub mod scene;
 pub mod tag;
