@@ -10,7 +10,6 @@ use std::{
 use rodio::SpatialSink;
 
 use amethyst_core::{
-    cgmath::Transform,
     specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, WriteStorage},
     transform::GlobalTransform,
 };
@@ -63,22 +62,25 @@ impl<'a> System<'a> for AudioSystem {
                 .or_else(|| transform.get(entity))
             {
                 let listener_transform = listener_transform.0;
-                let left_ear_position =
-                    listener_transform.transform_point(listener.left_ear).into();
+                let left_ear_position = listener_transform
+                    .transform_point(&listener.left_ear)
+                    .to_homogeneous()
+                    .xyz();
                 let right_ear_position = listener_transform
-                    .transform_point(listener.right_ear)
-                    .into();
+                    .transform_point(&listener.right_ear)
+                    .to_homogeneous()
+                    .xyz();
                 for (transform, mut audio_emitter) in (&transform, &mut audio_emitter).join() {
-                    let x = transform.0[3][0];
-                    let y = transform.0[3][1];
-                    let z = transform.0[3][2];
+                    let x = transform.0[(0, 3)];
+                    let y = transform.0[(1, 3)];
+                    let z = transform.0[(2, 3)];
                     let emitter_position = [x, y, z];
                     // Remove all sinks whose sounds have ended.
                     audio_emitter.sinks.retain(|s| !s.1.load(Ordering::Relaxed));
                     for &mut (ref mut sink, _) in &mut audio_emitter.sinks {
                         sink.set_emitter_position(emitter_position);
-                        sink.set_left_ear_position(left_ear_position);
-                        sink.set_right_ear_position(right_ear_position);
+                        sink.set_left_ear_position(left_ear_position.into());
+                        sink.set_right_ear_position(right_ear_position.into());
                     }
                     if audio_emitter.sinks.is_empty() {
                         if let Some(mut picker) = replace(&mut audio_emitter.picker, None) {
@@ -91,8 +93,8 @@ impl<'a> System<'a> for AudioSystem {
                         let sink = SpatialSink::new(
                             &listener.output.device,
                             emitter_position,
-                            left_ear_position,
-                            right_ear_position,
+                            left_ear_position.into(),
+                            right_ear_position.into(),
                         );
                         let atomic_bool = Arc::new(AtomicBool::new(false));
                         let clone = atomic_bool.clone();

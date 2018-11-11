@@ -33,8 +33,8 @@ impl<'s> System<'s> for BounceSystem {
         for (ball, transform) in (&mut balls, &transforms).join() {
             use ARENA_HEIGHT;
 
-            let ball_x = transform.translation[0];
-            let ball_y = transform.translation[1];
+            let ball_x = transform.translation().x;
+            let ball_y = transform.translation().y;
 
             // Bounce at the top or the bottom of the arena.
             if ball_y <= ball.radius && ball.velocity[1] < 0.0 {
@@ -47,8 +47,8 @@ impl<'s> System<'s> for BounceSystem {
 
             // Bounce at the paddles.
             for (paddle, paddle_transform) in (&paddles, &transforms).join() {
-                let paddle_x = paddle_transform.translation[0] - paddle.width * 0.5;
-                let paddle_y = paddle_transform.translation[1] - paddle.height * 0.5;
+                let paddle_x = paddle_transform.translation().x - paddle.width * 0.5;
+                let paddle_y = paddle_transform.translation().y - paddle.height * 0.5;
 
                 // To determine whether the ball has collided with a paddle, we create a larger
                 // rectangle around the current one, by subtracting the ball radius from the

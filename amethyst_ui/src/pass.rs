@@ -18,9 +18,8 @@ use hibitset::BitSet;
 use unicode_segmentation::UnicodeSegmentation;
 
 use amethyst_assets::{AssetStorage, Loader};
-use amethyst_core::{
-    cgmath::vec2 as cg_vec2,
-    specs::prelude::{Entities, Entity, Join, Read, ReadExpect, ReadStorage, WriteStorage},
+use amethyst_core::specs::prelude::{
+    Entities, Entity, Join, Read, ReadExpect, ReadStorage, WriteStorage,
 };
 use amethyst_renderer::{
     error::Result,
@@ -207,10 +206,10 @@ impl Pass for DrawUi {
             .sort_unstable_by(|&(z1, _), &(z2, _)| z1.partial_cmp(&z2).unwrap_or(Ordering::Equal));
 
         // Inverted screen dimensions. Used to scale from pixel coordinates to the opengl coordinates in the vertex shader.
-        let invert_window_size = cg_vec2(
+        let invert_window_size = [
             1. / screen_dimensions.width(),
             1. / screen_dimensions.height(),
-        );
+        ];
 
         let mesh = self.mesh.as_ref().unwrap();
 

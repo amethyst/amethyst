@@ -5,10 +5,7 @@ extern crate amethyst_assets;
 
 use amethyst::{
     assets::AssetLoaderSystemData,
-    core::{
-        cgmath::{Deg, Vector3},
-        Transform, TransformBundle,
-    },
+    core::{nalgebra::Vector3, Transform, TransformBundle},
     prelude::*,
     renderer::*,
     utils::application_root_dir,
@@ -43,11 +40,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                 let metallic = 1.0f32 * (j as f32 / 4.0f32);
 
                 let mut pos = Transform::default();
-                pos.set_position(Vector3::new(
-                    2.0f32 * (i - 2) as f32,
-                    2.0f32 * (j - 2) as f32,
-                    0.0,
-                ));
+                pos.set_xyz(2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0);
 
                 let metallic = [metallic, metallic, metallic, 1.0].into();
                 let roughness = [roughness, roughness, roughness, 1.0].into();
@@ -83,7 +76,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
         }.into();
 
         let mut light1_transform = Transform::default();
-        light1_transform.set_position(Vector3::new(6.0, 6.0, -6.0));
+        light1_transform.set_xyz(6.0, 6.0, -6.0);
 
         let light2: Light = PointLight {
             intensity: 5.0,
@@ -92,7 +85,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
         }.into();
 
         let mut light2_transform = Transform::default();
-        light2_transform.set_position(Vector3::new(6.0, -6.0, -6.0));
+        light2_transform.set_xyz(6.0, -6.0, -6.0);
 
         world
             .create_entity()
@@ -109,13 +102,15 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
         println!("Put camera");
 
         let mut transform = Transform::default();
-        transform.set_position(Vector3::new(0.0, 0.0, -12.0));
-        transform.set_rotation(Deg(0.0), Deg(180.0), Deg(0.0));
+        transform.set_xyz(0.0, 0.0, -12.0);
+        transform.rotate_local(Vector3::y_axis(), std::f32::consts::PI);
 
         world
             .create_entity()
-            .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
-            .with(transform)
+            .with(Camera::from(Projection::perspective(
+                1.3,
+                std::f32::consts::FRAC_PI_3,
+            ))).with(transform)
             .build();
     }
 }

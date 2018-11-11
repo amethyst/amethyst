@@ -6,7 +6,7 @@ use glsl_layout::Uniform;
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
-    cgmath::Vector4,
+    nalgebra::Vector4,
     specs::prelude::{Join, Read, ReadStorage},
     transform::GlobalTransform,
 };
@@ -294,8 +294,8 @@ impl SpriteBatch {
 
             let transform = &sprite.transform.0;
 
-            let dir_x = transform.x * sprite_data.width;
-            let dir_y = transform.y * sprite_data.height;
+            let dir_x = transform.column(0) * sprite_data.width;
+            let dir_y = transform.column(1) * sprite_data.height;
 
             // The offsets are negated to shift the sprite left and down relative to the entity, in
             // regards to pivot points. This is the convention adopted in:

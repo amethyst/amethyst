@@ -1,6 +1,9 @@
 use amethyst::{
     assets::Loader,
-    core::{cgmath::Vector3, Transform},
+    core::{
+        nalgebra::{Vector2, Vector3},
+        Transform,
+    },
     ecs::prelude::World,
     prelude::*,
     renderer::{
@@ -37,14 +40,14 @@ fn initialise_camera(world: &mut World) {
     };
 
     let mut transform = Transform::default();
-    transform.translation.z = 1.0;
+    transform.set_z(1.0);
     world
         .create_entity()
         .with(Camera::from(Projection::orthographic(
             0.0,
             arena_width,
-            arena_height,
             0.0,
+            arena_height,
         ))).with(transform)
         .build();
 }
@@ -102,8 +105,8 @@ fn initialise_paddles(world: &mut World) {
 
     let left_y = (arena_height - left_height) / 2.0;
     let right_y = (arena_height - right_height) / 2.0;
-    left_transform.translation = Vector3::new(0.0, left_y, 0.0);
-    right_transform.translation = Vector3::new(arena_width - right_width, right_y, 0.0);
+    left_transform.set_xyz(0.0, left_y, 0.0);
+    right_transform.set_xyz(arena_width - right_width, right_y, 0.0);
 
     let left_mesh = create_mesh(
         world,
@@ -162,7 +165,7 @@ fn initialise_balls(world: &mut World) {
     let mesh = create_mesh(world, generate_circle_vertices(radius, 16));
     let material = create_colour_material(world, colour);
     let mut local_transform = Transform::default();
-    local_transform.translation = Vector3::new(arena_width / 2.0, arena_height / 2.0, 0.0);
+    local_transform.set_xyz(arena_width / 2.0, arena_height / 2.0, 0.0);
 
     world
         .create_entity()
@@ -259,15 +262,15 @@ fn generate_circle_vertices(radius: f32, resolution: usize) -> Vec<PosTex> {
         let x = angle.cos();
         let y = angle.sin();
         PosTex {
-            position: [x * radius, y * radius, 0.0],
-            tex_coord: [x, y],
+            position: Vector3::new(x * radius, y * radius, 0.0),
+            tex_coord: Vector2::new(x, y),
         }
     };
 
     for index in 0..resolution {
         vertices.push(PosTex {
-            position: [0.0, 0.0, 0.0],
-            tex_coord: [0.0, 0.0],
+            position: Vector3::new(0.0, 0.0, 0.0),
+            tex_coord: Vector2::new(0.0, 0.0),
         });
 
         vertices.push(generate_vertex(angle_offset * index as f32));
@@ -281,28 +284,28 @@ fn generate_circle_vertices(radius: f32, resolution: usize) -> Vec<PosTex> {
 fn generate_rectangle_vertices(left: f32, bottom: f32, right: f32, top: f32) -> Vec<PosTex> {
     vec![
         PosTex {
-            position: [left, bottom, 0.],
-            tex_coord: [0.0, 0.0],
+            position: Vector3::new(left, bottom, 0.0),
+            tex_coord: Vector2::new(0.0, 0.0),
         },
         PosTex {
-            position: [right, bottom, 0.0],
-            tex_coord: [1.0, 0.0],
+            position: Vector3::new(right, bottom, 0.0),
+            tex_coord: Vector2::new(1.0, 0.0),
         },
         PosTex {
-            position: [left, top, 0.0],
-            tex_coord: [1.0, 1.0],
+            position: Vector3::new(left, top, 0.0),
+            tex_coord: Vector2::new(1.0, 1.0),
         },
         PosTex {
-            position: [right, top, 0.],
-            tex_coord: [1.0, 1.0],
+            position: Vector3::new(right, top, 0.0),
+            tex_coord: Vector2::new(1.0, 1.0),
         },
         PosTex {
-            position: [left, top, 0.],
-            tex_coord: [0.0, 1.0],
+            position: Vector3::new(left, top, 0.0),
+            tex_coord: Vector2::new(0.0, 1.0),
         },
         PosTex {
-            position: [right, bottom, 0.0],
-            tex_coord: [0.0, 0.0],
+            position: Vector3::new(right, bottom, 0.0),
+            tex_coord: Vector2::new(0.0, 0.0),
         },
     ]
 }

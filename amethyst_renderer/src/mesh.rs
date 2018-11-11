@@ -8,7 +8,7 @@ use std::{
 use gfx::Primitive;
 
 use amethyst_assets::Handle;
-use amethyst_core::cgmath::{Deg, Matrix4, Point3, Transform, Vector3};
+use amethyst_core::nalgebra::{Matrix4, Point3, Rotation3, Translation3, Unit, Vector3};
 
 use {
     error::Result,
@@ -210,7 +210,6 @@ where
 {
     /// Creates a new `MeshBuilder` with the given vertices.
     pub fn new(verts: D) -> Self {
-        use amethyst_core::cgmath::SquareMatrix;
         assert!(check_attributes_are_sorted(V::ATTRIBUTES));
         MeshBuilder {
             prim: Primitive::TriangleList,
@@ -247,29 +246,23 @@ where
     }
 
     /// Sets the position of the mesh in 3D space.
-    pub fn with_position<P: Into<Point3<f32>>>(mut self, pos: P) -> Self {
-        use amethyst_core::cgmath::EuclideanSpace;
-
-        let trans = Matrix4::from_translation(pos.into().to_vec());
-        self.transform.concat_self(&trans);
+    pub fn with_position(mut self, pos: Point3<f32>) -> Self {
+        let trans = Translation3::new(pos.x, pos.y, pos.z);
+        self.transform *= trans.to_homogeneous();
         self
     }
 
-    /// Rotates the mesh a certain number of degrees around the given axis.
-    pub fn with_rotation<Ax, An>(mut self, axis: Ax, angle: An) -> Self
-    where
-        Ax: Into<Vector3<f32>>,
-        An: Into<Deg<f32>>,
-    {
-        let rot = Matrix4::from_axis_angle(axis.into(), angle.into());
-        self.transform.concat_self(&rot);
+    /// Rotates the mesh around the given axis. `angle` is specified in radians.
+    pub fn with_rotation(mut self, axis: Unit<Vector3<f32>>, angle: f32) -> Self {
+        let rot = Rotation3::from_axis_angle(&axis, angle);
+        self.transform *= rot.to_homogeneous();
         self
     }
 
     /// Scales the mesh size according to the given value.
     pub fn with_scale(mut self, val: f32) -> Self {
-        let scale = Matrix4::from_scale(val);
-        self.transform.concat_self(&scale);
+        let scale = Matrix4::new_scaling(val);
+        self.transform *= scale;
         self
     }
 

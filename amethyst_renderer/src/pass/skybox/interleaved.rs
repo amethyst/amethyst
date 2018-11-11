@@ -1,7 +1,7 @@
 //! Skybox pass
 
 use amethyst_core::{
-    cgmath::{Matrix4, One},
+    nalgebra as na,
     specs::{Read, ReadStorage},
     transform::GlobalTransform,
 };
@@ -83,7 +83,7 @@ impl Pass for DrawSkybox {
             .as_ref()
             .expect("Pass doesn't seem to be compiled.");
 
-        set_vertex_args(effect, encoder, camera, &GlobalTransform(Matrix4::one()));
+        set_vertex_args(effect, encoder, camera, &GlobalTransform(na::one()));
 
         if let Some(vbuf) = mesh.buffer(PosTex::ATTRIBUTES) {
             effect.data.vertex_bufs.push(vbuf.clone());
