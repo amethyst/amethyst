@@ -26,7 +26,7 @@ configurable as possible.
 These principles are what make Amethyst unique and competitive in the world of game engines.
 
 * Massively parallel architecture.
-* Powered by a correct [Entity Component System][ecs] model.
+* Powered by a correct [Entity Component System][ECS] model.
 * Rapid prototyping with [RON][ron] files for prefabs and an abstract scripting API.
 * Strong focus on encouraging reusability and clean interfaces.
 
@@ -37,7 +37,7 @@ These principles are what make Amethyst unique and competitive in the world of g
 
 ### Extreme Multithreading
 
-Amethyst is based over a very powerful parallel [ecs] called specs.
+Amethyst is based over a very powerful parallel [ECS][ecs] called Specs.
 This allows games built with Amethyst to maximize the processing power usage to make it run as smooth and as fast as possible, without the headache of multithread programming.
 
 ### Clean
@@ -45,7 +45,7 @@ This allows games built with Amethyst to maximize the processing power usage to 
 By design, the amethyst engine encourages you to write clean and reusable code for your behaviours and data structures, allowing engine users to easily
 share useful components, thus reducing development time and cost.
 
-Using the [ecs] architecture, the code of games can be cleanly divided between data and behaviour, making it easy to understand what is going on,
+Using the [ECS][ecs] architecture, the code of games can be cleanly divided between data and behaviour, making it easy to understand what is going on,
 even if the game is running on a massive 64 cores processor.
 
 ### Community
@@ -58,13 +58,23 @@ Please visit the [features page][feat] for a list of features Amethyst provides.
 
 [feat]: docs/FEATURES.md
 
+## Navigation
+
+* [**Link to the book (latest release)**][bkr]
+* [**Link to the book (master)**][bkm]
+* [**Link to the examples (latest release)**][exr]
+* [**Link to the examples (master)**][exm]
+
+[bkr]: https://www.amethyst.rs/book/latest/
+[bkm]: https://www.amethyst.rs/book/master/
+[exr]: https://github.com/amethyst/amethyst/tree/v0.9.0/examples
+[exm]: https://github.com/amethyst/amethyst/tree/master/examples
+
 ## Usage
 
-While the engine can be hard to use at times, we made a lot of [documentation][bk] that will teach you everything you need to use amethyst comfortably!
+While the engine can be hard to use at times, we made a lot of [documentation][bkr] that will teach you everything you need to use Amethyst comfortably!
 
-If you don't understand a part of the documentation, please let us know. Join us on discord or open an issue, we are always happy to help!
-
-[bk]: https://www.amethyst.rs/book/latest/
+If you don't understand a part of the documentation, please let us know. Join us on Discord or open an issue, we are always happy to help!
 
 ## Getting started
 
@@ -74,7 +84,7 @@ To compile any of the examples run:
 $ cargo run --example name_of_example
 ```
 
-All available examples are listed under [examples][ex].
+All available examples are listed under [examples][exr].
 
 Our most advanced example is currently called pong. It is a pong game, as you may have guessed it.
 
@@ -88,7 +98,6 @@ While we create this list, feel free to join our discord and ask about which pro
 For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chapter
 in the book.
 
-[ex]: examples/
 [gs]: https://www.amethyst.rs/book/latest/
 
 ## Dependencies
