@@ -79,8 +79,6 @@ impl Renderer {
         use gfx::Device;
         #[cfg(feature = "opengl")]
         use glutin::dpi::PhysicalSize;
-        #[cfg(feature = "opengl")]
-        use glutin::GlContext;
 
         if let Some(size) = self.window().get_inner_size() {
             let hidpi_factor = self.window().get_hidpi_factor();
