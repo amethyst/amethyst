@@ -8,6 +8,7 @@ extern crate amethyst_controls;
 extern crate amethyst_core;
 #[macro_use]
 extern crate amethyst_derive;
+extern crate amethyst_input;
 extern crate amethyst_renderer;
 
 // Used for tests.
@@ -28,6 +29,7 @@ extern crate thread_profiler;
 pub mod app_root_dir;
 pub mod circular_buffer;
 pub mod fps_counter;
+pub mod follow_mouse;
 pub mod ortho_camera;
 pub mod removal;
 pub mod scene;
