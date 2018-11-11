@@ -41,7 +41,6 @@ statements to make it through this chapter:
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 use amethyst::assets::{AssetStorage, Loader};
-use amethyst::core::cgmath::Vector3;
 use amethyst::core::transform::Transform;
 use amethyst::ecs::prelude::{Component, DenseVecStorage};
 use amethyst::prelude::*;
@@ -106,14 +105,14 @@ the entire arena. Let's do it!
 # use amethyst::core::Transform;
 fn initialise_camera(world: &mut World) {
     let mut transform = Transform::default();
-    transform.translation.z = 1.0;
+    transform.set_z(1.0);
     world
         .create_entity()
         .with(Camera::from(Projection::orthographic(
             0.0,
             ARENA_WIDTH,
-            ARENA_HEIGHT,
             0.0,
+            ARENA_HEIGHT,
         )))
         .with(transform)
         .build();
@@ -207,16 +206,12 @@ entities in our game. For more on storage types, check out the
 Now that we have a Paddle component, let's define some paddle entities that
 include that component and add them to our `World`.
 
-First let's look at our math imports:
+First let's look at our imports:
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
-use amethyst::core::cgmath::Vector3;
 use amethyst::core::transform::Transform;
 ```
-
-Amethyst uses the [cgmath crate][cg] under the hood and exposes it for our use.
-Today we just grabbed the `Vector3` type, which is a very good math thing to have.
 
 `Transform` is an Amethyst ECS component which carry
 position and orientation information. It is relative
@@ -242,7 +237,6 @@ general as it makes operations like rotation easier.
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::core::Transform;
-# use amethyst::core::cgmath::Vector3;
 # use amethyst::ecs::World;
 # enum Side {
 #   Left,
@@ -266,8 +260,8 @@ fn initialise_paddles(world: &mut World) {
 
     // Correctly position the paddles.
     let y = ARENA_HEIGHT / 2.0;
-    left_transform.translation = Vector3::new(PADDLE_WIDTH * 0.5, y, 0.0);
-    right_transform.translation = Vector3::new(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
+    left_transform.set_xyz(PADDLE_WIDTH * 0.5, y, 0.0);
+    right_transform.set_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 
     // Create a left plank entity.
     world
@@ -660,5 +654,4 @@ moving!
 
 [sb]: https://slide-rs.github.io/specs/
 [sb-storage]: https://slide-rs.github.io/specs/05_storages.html#densevecstorage
-[cg]: https://docs.rs/cgmath/0.15.0/cgmath/
 [2d]: https://www.amethyst.rs/doc/master/doc/amethyst_renderer/struct.Camera.html#method.standard_2d

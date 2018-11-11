@@ -141,7 +141,7 @@ impl<'a> System<'a> for TransformSystem {
 
 #[cfg(test)]
 mod tests {
-    use cgmath::{Decomposed, Matrix4, One, Quaternion, Vector3, Zero};
+    use nalgebra::{Matrix4, Quaternion, Unit};
     use shred::RunNow;
     use specs::prelude::{Builder, World};
     use specs_hierarchy::{Hierarchy, HierarchySystem};
@@ -152,20 +152,15 @@ mod tests {
     #[test]
     fn transform_matrix() {
         let mut transform = Transform::default();
-        transform.translation = Vector3::new(5.0, 2.0, -0.5);
-        transform.rotation = Quaternion::new(1.0, 0.0, 0.0, 0.0);
-        transform.scale = Vector3::new(2.0, 2.0, 2.0);
+        transform.set_xyz(5.0, 2.0, -0.5);
+        transform.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.0, 0.0, 0.0)));
+        transform.set_scale(2.0, 2.0, 2.0);
 
-        let decomposed = Decomposed {
-            rot: transform.rotation,
-            disp: transform.translation,
-            scale: 2.0,
-        };
+        let combined = Matrix4::new_translation(transform.translation())
+            * transform.rotation().to_rotation_matrix().to_homogeneous()
+            * Matrix4::new_scaling(2.0);
 
-        let matrix = transform.matrix();
-        let cg_matrix: Matrix4<f32> = decomposed.into();
-
-        assert_eq!(matrix, cg_matrix);
+        assert_eq!(transform.matrix(), combined);
     }
 
     #[test]
@@ -203,9 +198,7 @@ mod tests {
     fn zeroed() {
         let (mut world, mut hs, mut system) = transform_world();
 
-        let mut transform = Transform::default();
-        transform.translation = Vector3::zero();
-        transform.rotation = Quaternion::one();
+        let transform = Transform::default();
 
         let e1 = world
             .create_entity()
@@ -234,8 +227,8 @@ mod tests {
         let (mut world, mut hs, mut system) = transform_world();
 
         let mut local = Transform::default();
-        local.translation = Vector3::new(5.0, 5.0, 5.0);
-        local.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
+        local.set_xyz(5.0, 5.0, 5.0);
+        local.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e1 = world
             .create_entity()
@@ -262,8 +255,8 @@ mod tests {
         let (mut world, mut hs, mut system) = transform_world();
 
         let mut local1 = Transform::default();
-        local1.translation = Vector3::new(5.0, 5.0, 5.0);
-        local1.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
+        local1.set_xyz(5.0, 5.0, 5.0);
+        local1.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e1 = world
             .create_entity()
@@ -272,8 +265,8 @@ mod tests {
             .build();
 
         let mut local2 = Transform::default();
-        local2.translation = Vector3::new(5.0, 5.0, 5.0);
-        local2.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
+        local2.set_xyz(5.0, 5.0, 5.0);
+        local2.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e2 = world
             .create_entity()
@@ -283,8 +276,8 @@ mod tests {
             .build();
 
         let mut local3 = Transform::default();
-        local3.translation = Vector3::new(5.0, 5.0, 5.0);
-        local3.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
+        local3.set_xyz(5.0, 5.0, 5.0);
+        local3.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e3 = world
             .create_entity()
@@ -330,8 +323,8 @@ mod tests {
         let (mut world, mut hs, mut system) = transform_world();
 
         let mut local3 = Transform::default();
-        local3.translation = Vector3::new(5.0, 5.0, 5.0);
-        local3.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
+        local3.set_xyz(5.0, 5.0, 5.0);
+        local3.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e3 = world
             .create_entity()
@@ -340,8 +333,8 @@ mod tests {
             .build();
 
         let mut local2 = Transform::default();
-        local2.translation = Vector3::new(5.0, 5.0, 5.0);
-        local2.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
+        local2.set_xyz(5.0, 5.0, 5.0);
+        local2.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e2 = world
             .create_entity()
@@ -350,8 +343,8 @@ mod tests {
             .build();
 
         let mut local1 = Transform::default();
-        local1.translation = Vector3::new(5.0, 5.0, 5.0);
-        local1.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
+        local1.set_xyz(5.0, 5.0, 5.0);
+        local1.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e1 = world
             .create_entity()
@@ -403,7 +396,7 @@ mod tests {
 
         let mut local = Transform::default();
         // Release the indeterminate forms!
-        local.translation = Vector3::new(0.0 / 0.0, 0.0 / 0.0, 0.0 / 0.0);
+        local.set_xyz(0.0 / 0.0, 0.0 / 0.0, 0.0 / 0.0);
 
         world
             .create_entity()
@@ -423,7 +416,7 @@ mod tests {
 
         let mut local = Transform::default();
         // Release the indeterminate forms!
-        local.translation = Vector3::new(1.0 / 0.0, 1.0 / 0.0, 1.0 / 0.0);
+        local.set_xyz(1.0 / 0.0, 1.0 / 0.0, 1.0 / 0.0);
         world
             .create_entity()
             .with(local.clone())
