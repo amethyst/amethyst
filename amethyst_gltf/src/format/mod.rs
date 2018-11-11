@@ -194,6 +194,7 @@ fn load_scene(
     let mut node_map = HashMap::new();
     let mut skin_map = HashMap::new();
     let mut bounding_box = GltfNodeExtent::default();
+    let mut material_set = GltfMaterialSet::default();
     if scene.nodes().len() == 1 {
         load_node(
             gltf,
@@ -207,6 +208,7 @@ fn load_scene(
             &mut node_map,
             &mut skin_map,
             &mut bounding_box,
+            &mut material_set,
         )?;
     } else {
         for node in scene.nodes() {
@@ -223,12 +225,14 @@ fn load_scene(
                 &mut node_map,
                 &mut skin_map,
                 &mut bounding_box,
+                &mut material_set,
             )?;
         }
         if bounding_box.valid() {
             prefab.data_or_default(0).extent = Some(bounding_box.clone());
         }
     }
+    prefab.data_or_default(0).materials = Some(material_set);
 
     // load skins
     for (node_index, skin_info) in skin_map {
@@ -283,6 +287,7 @@ fn load_node(
     node_map: &mut HashMap<usize, usize>,
     skin_map: &mut HashMap<usize, SkinInfo>,
     parent_bounding_box: &mut GltfNodeExtent,
+    material_set: &mut GltfMaterialSet,
 ) -> Result<(), GltfError> {
     node_map.insert(node.index(), entity_index);
 
@@ -322,9 +327,16 @@ fn load_node(
             bounding_box.extend_range(&bounds);
             let prefab_data = prefab.entity(entity_index).unwrap().data_or_default();
             prefab_data.mesh = Some(mesh);
-            if let Some(material) = material_index.and_then(|index| gltf.materials().nth(index)) {
-                prefab_data.material =
-                    Some(load_material(&material, buffers, source.clone(), name)?);
+            if let Some((material_id, material)) =
+                material_index.and_then(|index| gltf.materials().nth(index).map(|m| (index, m)))
+            {
+                if !material_set.materials.contains_key(&material_id) {
+                    material_set.materials.insert(
+                        material_id,
+                        load_material(&material, buffers, source.clone(), name)?,
+                    );
+                }
+                prefab_data.material_id = Some(material_id);
             }
             // if we have a skin we need to track the mesh entities
             if let Some(ref mut skin) = skin {
@@ -338,10 +350,16 @@ fn load_node(
                 let prefab_data = prefab.entity(mesh_entity).unwrap().data_or_default();
                 prefab_data.transform = Some(Transform::default());
                 prefab_data.mesh = Some(mesh);
-                if let Some(material) = material_index.and_then(|index| gltf.materials().nth(index))
+                if let Some((material_id, material)) =
+                    material_index.and_then(|index| gltf.materials().nth(index).map(|m| (index, m)))
                 {
-                    prefab_data.material =
-                        Some(load_material(&material, buffers, source.clone(), name)?);
+                    if !material_set.materials.contains_key(&material_id) {
+                        material_set.materials.insert(
+                            material_id,
+                            load_material(&material, buffers, source.clone(), name)?,
+                        );
+                    }
+                    prefab_data.material_id = Some(material_id);
                 }
 
                 // if we have a skin we need to track the mesh entities
@@ -371,6 +389,7 @@ fn load_node(
             node_map,
             skin_map,
             &mut bounding_box,
+            material_set,
         )?;
     }
     if bounding_box.valid() {
