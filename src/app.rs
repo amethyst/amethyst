@@ -312,7 +312,6 @@ where
                 .map(|e| e())
                 .collect::<Vec<_>>();
             for tr in trans {
-                //let t = tr();
                 states.transition(tr, StateData::new(&mut world, &mut self.data));
             }
         }
