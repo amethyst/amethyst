@@ -81,6 +81,8 @@ pub struct CoreApplication<'a, T, E = StateEvent, R = StateEventReader> {
 /// impl EmptyState for NullState {}
 ///
 /// fn main() -> amethyst::Result<()> {
+///     amethyst::start_logger(Default::default());
+///
 ///     // Build the application instance to initialize the default logger.
 ///     let mut game = Application::build("assets/", NullState)?
 ///         .build(())?;
