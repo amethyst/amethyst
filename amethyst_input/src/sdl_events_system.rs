@@ -78,7 +78,10 @@ where
     fn run_now(&mut self, res: &'a Resources) {
         let (mut handler, mut output) = SdlEventsData::fetch(res);
 
-        let mut event_pump = self.event_pump.take().unwrap();
+        let mut event_pump = self
+            .event_pump
+            .take()
+            .expect("Unreachable: `event_pump` is always reinserted after `take`");
         for event in event_pump.poll_iter() {
             // handle appropriate events locally
             self.handle_sdl_event(&event, &mut handler, &mut output);

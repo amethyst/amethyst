@@ -61,7 +61,12 @@ where
     );
 
     fn run(&mut self, (input, mut handler, mut output): Self::SystemData) {
-        for event in input.read(&mut self.reader.as_mut().unwrap()) {
+        for event in input.read(
+            &mut self
+                .reader
+                .as_mut()
+                .expect("`InputSystem::setup` was not called before `InputSystem::run`"),
+        ) {
             Self::process_event(event, &mut *handler, &mut *output);
         }
     }

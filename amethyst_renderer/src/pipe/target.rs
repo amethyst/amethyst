@@ -193,6 +193,7 @@ impl TargetBuilder {
             depth_buf,
             size,
         };
+
         Ok((self.name, target))
     }
 }

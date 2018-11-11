@@ -67,11 +67,14 @@ where
 
 fn read_to_end<P: AsRef<Path>>(source: Arc<AssetSource>, path: P) -> AssetResult<Vec<u8>> {
     let path = path.as_ref();
-    Ok(source.load(path.to_str().unwrap())?)
+    source.load(
+        path.to_str()
+            .expect("Path contains invalid UTF-8 charcters"),
+    )
 }
 
 fn parse_data_uri(uri: &str) -> Result<Vec<u8>, Error> {
-    let encoded = uri.split(",").nth(1).unwrap();
+    let encoded = uri.split(",").nth(1).expect("URI does not contain ','");
     let decoded = base64::decode(&encoded)?;
     Ok(decoded)
 }
@@ -94,7 +97,9 @@ fn load_external_buffers(
                     read_to_end(source.clone(), &path)?
                 }
             }
-            Source::Bin => bin.take().unwrap(),
+            Source::Bin => bin
+                .take()
+                .expect("`BIN` section of binary glTF file is empty or used by another buffer"),
         };
 
         if data.len() < buffer.length() {
@@ -141,7 +146,9 @@ pub fn get_image_data(
     use gltf::image::Source;
     match image.source() {
         Source::View { view, mime_type } => {
-            let data = buffers.view(&view).unwrap();
+            let data = buffers
+                .view(&view)
+                .expect("`view` of image data points to a buffer which does not exist");
             Ok((data.to_vec(), ImageFormat::from_mime_type(mime_type)))
         }
 
@@ -154,18 +161,21 @@ pub fn get_image_data(
                     let mimetype = uri
                         .split(',')
                         .nth(0)
-                        .unwrap()
+                        .expect("Unreachable: `split` will always return at least one element")
                         .split(':')
                         .nth(1)
-                        .unwrap()
+                        .expect("URI does not contain ':'")
                         .split(';')
                         .nth(0)
-                        .unwrap();
+                        .expect("Unreachable: `split` will always return at least one element");
                     Ok((data, ImageFormat::from_mime_type(mimetype)))
                 }
             } else {
                 let path = base_path.parent().unwrap_or(Path::new("./")).join(uri);
-                let data = source.load(path.to_str().unwrap())?;
+                let data = source.load(
+                    path.to_str()
+                        .expect("Path contains invalid UTF-8 characters"),
+                )?;
                 if let Some(ty) = mime_type {
                     Ok((data, ImageFormat::from_mime_type(ty)))
                 } else {
