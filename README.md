@@ -61,9 +61,9 @@ Please visit the [features page][feat] for a list of features Amethyst provides.
 ## Navigation
 
 * [**Link to the book (latest release)**][bkr]
-* [**Link to the book (master)**](bkm)
-* [**Link to the examples (latest release)**](exr)
-* [**Link to the examples (master)**](exm)
+* [**Link to the book (master)**][bkm]
+* [**Link to the examples (latest release)**][exr]
+* [**Link to the examples (master)**][exm]
 
 [bkr]: https://www.amethyst.rs/book/latest/
 [bkm]: https://www.amethyst.rs/book/master/
