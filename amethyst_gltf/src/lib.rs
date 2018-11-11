@@ -22,17 +22,17 @@ extern crate serde;
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
-use std::ops::Range;
+use std::{collections::HashMap, ops::Range};
 
 pub use format::GltfSceneFormat;
 use {
     animation::{AnimatablePrefab, SkinnablePrefab},
     assets::{Handle, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter},
     core::{
-        cgmath::{Array, EuclideanSpace, Point3, Vector3},
+        nalgebra::{Point3, Vector3},
         specs::{
             error::Error,
-            prelude::{Component, DenseVecStorage, Entity, WriteStorage},
+            prelude::{Component, DenseVecStorage, Entity, Write, WriteStorage},
         },
         transform::Transform,
         Named,
@@ -69,15 +69,18 @@ pub struct GltfPrefab {
     pub extent: Option<GltfNodeExtent>,
     /// Node name
     pub name: Option<Named>,
+    pub(crate) materials: Option<GltfMaterialSet>,
+    pub(crate) material_id: Option<usize>,
 }
 
 impl GltfPrefab {
     /// Move the scene so the center of the bounding box is at the given `target` location.
     pub fn move_to(&mut self, target: Point3<f32>) {
         if let Some(ref extent) = self.extent {
-            self.transform
+            *self
+                .transform
                 .get_or_insert_with(Transform::default)
-                .translation += target - extent.centroid();
+                .translation_mut() += target - extent.centroid();
         }
     }
 
@@ -87,8 +90,9 @@ impl GltfPrefab {
             let distance = extent.distance();
             let max = distance.x.max(distance.y).max(distance.z);
             let scale = max_distance / max;
-            self.transform.get_or_insert_with(Transform::default).scale =
-                Vector3::from_value(scale);
+            self.transform
+                .get_or_insert_with(Transform::default)
+                .set_scale(scale, scale, scale);
         }
     }
 }
@@ -105,8 +109,8 @@ pub struct GltfNodeExtent {
 impl Default for GltfNodeExtent {
     fn default() -> Self {
         Self {
-            start: Point3::from_value(std::f32::MAX),
-            end: Point3::from_value(std::f32::MIN),
+            start: Point3::from(Vector3::from_element(std::f32::MAX)),
+            end: Point3::from(Vector3::from_element(std::f32::MIN)),
         }
     }
 }
@@ -138,7 +142,7 @@ impl GltfNodeExtent {
 
     /// Returns the centroid of this extent
     pub fn centroid(&self) -> Point3<f32> {
-        (self.start + self.end.to_vec()) / 2.
+        (self.start + self.end.coords) / 2.
     }
 
     /// Returns the 3 dimensional distance between the start and end of this.
@@ -170,6 +174,12 @@ impl Component for GltfNodeExtent {
     type Storage = DenseVecStorage<Self>;
 }
 
+/// Used during gltf loading to contain the materials used from scenes in the file
+#[derive(Default, Clone, Debug)]
+pub struct GltfMaterialSet {
+    pub(crate) materials: HashMap<usize, MaterialPrefab<TextureFormat>>,
+}
+
 /// Options used when loading a GLTF file
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
@@ -196,6 +206,7 @@ impl<'a> PrefabData<'a> for GltfPrefab {
         WriteStorage<'a, GltfNodeExtent>,
         // TODO make optional after prefab refactor. We need a way to pass options to decide to enable this or not, but without touching the prefab.
         WriteStorage<'a, MeshData>,
+        Write<'a, GltfMaterialSet>,
     );
     type Result = ();
 
@@ -214,6 +225,7 @@ impl<'a> PrefabData<'a> for GltfPrefab {
             ref mut skinnables,
             ref mut extents,
             ref mut mesh_data,
+            _,
         ) = system_data;
         if let Some(ref transform) = self.transform {
             transform.add_to_entity(entity, transforms, entities)?;
@@ -247,8 +259,27 @@ impl<'a> PrefabData<'a> for GltfPrefab {
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        let (_, ref mut meshes, _, ref mut materials, ref mut animatables, _, _, _) = system_data;
+        let (
+            _,
+            ref mut meshes,
+            _,
+            ref mut materials,
+            ref mut animatables,
+            _,
+            _,
+            _,
+            ref mut mat_set,
+        ) = system_data;
         let mut ret = false;
+        if let Some(ref mut mats) = self.materials {
+            mat_set.materials.clear();
+            for (id, mut material) in mats.materials.iter_mut() {
+                if material.load_sub_assets(progress, materials)? {
+                    ret = true;
+                }
+                mat_set.materials.insert(*id, material.clone());
+            }
+        }
         if let Some(ref mesh) = self.mesh {
             self.mesh_handle = Some(meshes.0.load_from_data(
                 mesh.clone(),
@@ -257,9 +288,18 @@ impl<'a> PrefabData<'a> for GltfPrefab {
             ));
             ret = true;
         }
-        if let Some(ref mut material) = self.material {
-            if material.load_sub_assets(progress, materials)? {
-                ret = true;
+        match self.material_id {
+            Some(material_id) => {
+                if let Some(mat) = mat_set.materials.get(&material_id) {
+                    self.material = Some(mat.clone());
+                }
+            }
+            None => {
+                if let Some(ref mut material) = self.material {
+                    if material.load_sub_assets(progress, materials)? {
+                        ret = true;
+                    }
+                }
             }
         }
         if let Some(ref mut animatable) = self.animatable {

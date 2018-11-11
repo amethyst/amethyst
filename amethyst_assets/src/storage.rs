@@ -154,7 +154,10 @@ impl<A: Asset> AssetStorage<A> {
         F: FnMut(A::Data) -> Result<ProcessingState<A>>,
     {
         {
-            let requeue = self.requeue.get_mut().unwrap();
+            let requeue = self
+                .requeue
+                .get_mut()
+                .expect("The mutex of `requeue` in `AssetStorage` was poisoned");
             while let Some(processed) = self.processed.try_pop() {
                 let assets = &mut self.assets;
                 let bitset = &mut self.bitset;

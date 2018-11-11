@@ -6,7 +6,7 @@ use glsl_layout::Uniform;
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
-    cgmath::Vector4,
+    nalgebra::Vector4,
     specs::prelude::{Join, Read, ReadStorage},
     transform::GlobalTransform,
 };
@@ -195,9 +195,10 @@ impl SpriteBatch {
         material_texture_set: &MaterialTextureSet,
         tex_storage: &AssetStorage<Texture>,
     ) {
-        if global.is_none() {
-            return;
-        }
+        let global = match global {
+            Some(v) => v,
+            None => return,
+        };
 
         let texture_handle = match sprite_sheet_storage.get(&sprite_render.sprite_sheet) {
             Some(sprite_sheet) => match material_texture_set.handle(sprite_sheet.texture_id) {
@@ -232,7 +233,7 @@ impl SpriteBatch {
         self.sprites.push(SpriteDrawData {
             texture: texture_handle,
             render: sprite_render.clone(),
-            transform: *global.unwrap(),
+            transform: *global,
         });
     }
 
@@ -270,12 +271,16 @@ impl SpriteBatch {
         let num_sprites = self.sprites.len();
 
         for (i, sprite) in self.sprites.iter().enumerate() {
-            // `unwrap` checked when collecting the sprites.
+            // `unwrap`
             let sprite_sheet = sprite_sheet_storage
                 .get(&sprite.render.sprite_sheet)
-                .unwrap();
+                .expect(
+                    "Unreachable: Existence of sprite sheet checked when collecting the sprites",
+                );
 
-            let texture = tex_storage.get(&sprite.texture).unwrap();
+            let texture = tex_storage
+                .get(&sprite.texture)
+                .expect("Unable to get texture of sprite");
 
             // Append sprite to instance data.
             let sprite_data = &sprite_sheet.sprites[sprite.render.sprite_number];
@@ -294,8 +299,8 @@ impl SpriteBatch {
 
             let transform = &sprite.transform.0;
 
-            let dir_x = transform.x * sprite_data.width;
-            let dir_y = transform.y * sprite_data.height;
+            let dir_x = transform.column(0) * sprite_data.width;
+            let dir_y = transform.column(1) * sprite_data.height;
 
             // The offsets are negated to shift the sprite left and down relative to the entity, in
             // regards to pivot points. This is the convention adopted in:
@@ -323,7 +328,7 @@ impl SpriteBatch {
 
                 let vbuf = factory
                     .create_buffer_immutable(&instance_data, buffer::Role::Vertex, Bind::empty())
-                    .unwrap();
+                    .expect("Unable to create immutable buffer for `SpriteBatch`");
 
                 for _ in DrawSprite::attributes() {
                     effect.data.vertex_bufs.push(vbuf.raw().clone());

@@ -59,7 +59,10 @@ impl<'s> System<'s> for UiButtonSystem {
             hierarchy,
         ): Self::SystemData,
     ) {
-        let event_reader = self.event_reader.as_mut().unwrap();
+        let event_reader = self
+            .event_reader
+            .as_mut()
+            .expect("`UiButtonSystem::setup` was not called before `UiButtonSystem::run`");
 
         for event in events.read(event_reader) {
             let button = button_storage.get(event.target);

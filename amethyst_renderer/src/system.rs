@@ -74,7 +74,11 @@ where
 
     /// Create a new render system
     pub fn new(pipe: P, renderer: Renderer) -> Self {
-        let cached_size = renderer.window().get_inner_size().unwrap().into();
+        let cached_size = renderer
+            .window()
+            .get_inner_size()
+            .expect("Window no longer exists")
+            .into();
         Self {
             pipe,
             renderer,

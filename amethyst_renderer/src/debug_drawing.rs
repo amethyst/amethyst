@@ -1,5 +1,5 @@
 use amethyst_core::{
-    cgmath::{Point3, Vector3},
+    nalgebra::{Point3, Vector3},
     specs::{Component, DenseVecStorage},
 };
 
@@ -40,7 +40,7 @@ impl DebugLinesComponent {
     /// Adds a line to be rendered by giving a position and a direction.
     pub fn add_direction(&mut self, position: Point3<f32>, direction: Vector3<f32>, color: Rgba) {
         let vertex = DebugLine {
-            position: position.into(),
+            position: position.to_homogeneous().xyz().into(),
             color: color.into(),
             normal: direction.into(),
         };
@@ -51,7 +51,7 @@ impl DebugLinesComponent {
     /// Adds a line to be rendered by giving a start and an end position.
     pub fn add_line(&mut self, start: Point3<f32>, end: Point3<f32>, color: Rgba) {
         let vertex = DebugLine {
-            position: start.into(),
+            position: start.to_homogeneous().xyz().into(),
             color: color.into(),
             normal: (end - start).into(),
         };
@@ -92,7 +92,7 @@ impl DebugLines {
     /// Submits a line to be rendered by giving a position and a direction.
     pub fn draw_direction(&mut self, position: Point3<f32>, direction: Vector3<f32>, color: Rgba) {
         let vertex = DebugLine {
-            position: position.into(),
+            position: position.to_homogeneous().xyz().into(),
             color: color.into(),
             normal: direction.into(),
         };
@@ -103,7 +103,7 @@ impl DebugLines {
     /// Submits a line to be rendered by giving a start and an end position.
     pub fn draw_line(&mut self, start: Point3<f32>, end: Point3<f32>, color: Rgba) {
         let vertex = DebugLine {
-            position: start.into(),
+            position: start.to_homogeneous().xyz().into(),
             color: color.into(),
             normal: (end - start).into(),
         };

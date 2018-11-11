@@ -59,14 +59,19 @@ impl<'a> System<'a> for ResizeSystem {
 
     fn run(&mut self, (mut transform, mut resize, dimensions): Self::SystemData) {
         self.local_modified.clear();
-        resize.populate_inserted(
-            self.component_insert_reader.as_mut().unwrap(),
-            &mut self.local_modified,
-        );
-        resize.populate_modified(
-            self.component_modify_reader.as_mut().unwrap(),
-            &mut self.local_modified,
-        );
+
+        let self_component_insert_reader = self
+            .component_insert_reader
+            .as_mut()
+            .expect("`ResizeSystem::setup` was not called before `ResizeSystem::run`");
+
+        let self_component_modify_reader = self
+            .component_modify_reader
+            .as_mut()
+            .expect("`ResizeSystem::setup` was not called before `ResizeSystem::run`");
+
+        resize.populate_inserted(self_component_insert_reader, &mut self.local_modified);
+        resize.populate_modified(self_component_modify_reader, &mut self.local_modified);
         let screen_size = (dimensions.width() as f32, dimensions.height() as f32);
         if self.screen_size != screen_size {
             self.screen_size = screen_size;
@@ -82,14 +87,8 @@ impl<'a> System<'a> for ResizeSystem {
 
         // We need to treat any changes done inside the system as non-modifications, so we read out
         // any events that were generated during the system run
-        resize.populate_inserted(
-            self.component_insert_reader.as_mut().unwrap(),
-            &mut self.local_modified,
-        );
-        resize.populate_modified(
-            self.component_modify_reader.as_mut().unwrap(),
-            &mut self.local_modified,
-        );
+        resize.populate_inserted(self_component_insert_reader, &mut self.local_modified);
+        resize.populate_modified(self_component_modify_reader, &mut self.local_modified);
     }
 
     fn setup(&mut self, res: &mut Resources) {

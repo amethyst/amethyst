@@ -15,8 +15,8 @@ Prefab (
         (
             data: (
                 transform: (
-                    translation: (x: 2.0, y: 2.0, z: -2.0),
-                    rotation: (s: 0.0, v: (x: 0.0, y: 1.0, z: 0.0),),
+                    translation: (2.0, 2.0, -2.0),
+                    rotation: (0.0, 0.0, 1.0, 0.0),
                 ),
                 light: (
                     ambient_color: (Rgba(0.01, 0.01, 0.01, 1.0)),
@@ -31,14 +31,14 @@ Prefab (
         (
             data: (
                 transform: (
-                    translation: (x: 0.0, y: 0.0, z: -4.0),
-                    rotation: (s: 0.0, v: (x: 0.0, y: 1.0, z: 0.0),),
+                    translation: (0.0, 0.0, -4.0),
+                    rotation: (0.0, 0.0, 1.0, 0.0),
                 ),
                 camera: Perspective((
-                    fovy: Rad (1.0471975512),
                     aspect: 1.3,
-                    near: 0.1,
-                    far: 2000.0,
+                    fovy: 1.0471975512,
+                    znear: 0.1,
+                    zfar: 2000.0,
                 )),
             ),
         ),

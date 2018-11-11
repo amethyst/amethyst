@@ -6,7 +6,7 @@ use GltfPrefab;
 use {
     animation::{JointPrefab, SkinPrefab, SkinnablePrefab},
     assets::Prefab,
-    core::cgmath::{Matrix4, SquareMatrix},
+    core::nalgebra::Matrix4,
     renderer::JointTransformsPrefab,
 };
 
@@ -22,8 +22,11 @@ pub fn load_skin(
 ) -> Result<(), GltfError> {
     let joints = skin
         .joints()
-        .map(|j| node_map.get(&j.index()).cloned().unwrap())
-        .collect::<Vec<_>>();
+        .map(|j| {
+            node_map.get(&j.index()).cloned().expect(
+                "Unreachable: `node_map` is initialized with the indexes from the `Gltf` object",
+            )
+        }).collect::<Vec<_>>();
 
     let reader = skin.reader(|buffer| buffers.buffer(&buffer));
 

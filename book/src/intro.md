@@ -30,6 +30,7 @@ This book is split into several sections, with this introduction being the first
 * [Getting Started][gs] – Prepare your computer for Amethyst development.
 * [Concepts][cc] – An overview of the concepts used in Amethyst. Recommended.
 * [Pong Tutorial][pt] – Build a basic pong game in Rust.
+* [Math][math] – A quick introduction to doing math with Amethyst.
 * [Animation][anim] – Explains the architecture of the `amethyst_animation` crate.
 * [Custom `GameData`][gad] – Shows you how to structure more complex games that need to change the system graph.
 * [Glossary][gl] – Defines special terms used throughout the book.
@@ -38,6 +39,7 @@ This book is split into several sections, with this introduction being the first
 [gs]: ./getting-started.html
 [cc]: ./concepts/intro.html
 [pt]: ./pong-tutorial.html
+[math]: ./math.html
 [anim]: ./animation.html
 [gad]: ./game-data.html
 [gl]: ./glossary.html
