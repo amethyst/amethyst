@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 * `SpriteSheetSet` is removed as it is no longer needed. ([#1089])
 * `amethyst::core::Orientation` has been removed because of limited use. ([#1066])
+* `TimedDestroySystem` has been split into `DestroyAtTimeSystem` and `DestroyInTimeSystem`. ([#1129])
 
 ### Fixed
 
@@ -45,6 +46,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1089]: https://github.com/amethyst/amethyst/pull/1089
 [#1108]: https://github.com/amethyst/amethyst/pull/1108
 [#1066]: https://github.com/amethyst/amethyst/pull/1066
+[#1129]: https://github.com/amethyst/amethyst/pull/1129
 
 ## [0.9.0] - 2018-10
 ### Added
