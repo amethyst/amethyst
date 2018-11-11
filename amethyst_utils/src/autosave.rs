@@ -1,18 +1,14 @@
 //! Module containing the `AutoSaveSystem`.
 
-use amethyst_core::specs::{System, Write, Resources, SystemData};
+use amethyst_core::specs::{Resources, System, SystemData, Write};
 // It is really dirty
 use dirty::Dirty;
-use serde::{
-	Serialize,
-	de::DeserializeOwned,
-};
+use serde::{de::DeserializeOwned, Serialize};
 use std::{
-	fs::File,
-	io::{Read, Write as WriteIo},
-	marker::PhantomData,
+    fs::File,
+    io::{Read, Write as WriteIo},
+    marker::PhantomData,
 };
-
 
 /// System used to automatically save a Resource T to a file.
 /// On load, it will attempt to load it from the file and if it fails, it will use T::default().
@@ -81,15 +77,16 @@ where
                     if res.is_err() {
                         error!(
                             "Failed to write serialized save data to the file. Error: {:?}",
-                            res.err().expect("unreachable: We know there is an error from the if clause.")
+                            res.err().expect(
+                                "unreachable: We know there is an error from the if clause."
+                            )
                         );
                     }
-                },
+                }
                 Err(e) => {
                     error!(
                         "Failed to create or load the save file \"{}\". Error: {:?}",
-                        &self.save_path,
-                        e
+                        &self.save_path, e
                     );
                 }
             }
