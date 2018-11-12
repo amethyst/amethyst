@@ -15,7 +15,6 @@ use {
     cam::{ActiveCamera, Camera},
     error::Result,
     hidden::{Hidden, HiddenPropagate},
-    mtl::MaterialTextureSet,
     pass::util::{add_texture, get_camera, set_view_args, setup_textures, ViewArgs},
     pipe::{
         pass::{Pass, PassData},
@@ -69,7 +68,6 @@ impl<'a> PassData<'a> for DrawSprite {
         ReadStorage<'a, Camera>,
         Read<'a, AssetStorage<SpriteSheet>>,
         Read<'a, AssetStorage<Texture>>,
-        Read<'a, MaterialTextureSet>,
         Option<Read<'a, SpriteVisibility>>,
         ReadStorage<'a, Hidden>,
         ReadStorage<'a, HiddenPropagate>,
@@ -108,7 +106,6 @@ impl Pass for DrawSprite {
             camera,
             sprite_sheet_storage,
             tex_storage,
-            material_texture_set,
             visibility,
             hidden,
             hidden_prop,
@@ -127,7 +124,6 @@ impl Pass for DrawSprite {
                         sprite_render,
                         Some(global),
                         &sprite_sheet_storage,
-                        &material_texture_set,
                         &tex_storage,
                     );
                 }
@@ -141,7 +137,6 @@ impl Pass for DrawSprite {
                         sprite_render,
                         Some(global),
                         &sprite_sheet_storage,
-                        &material_texture_set,
                         &tex_storage,
                     );
                 }
@@ -155,7 +150,6 @@ impl Pass for DrawSprite {
                             sprite_render,
                             global.get(*entity),
                             &sprite_sheet_storage,
-                            &material_texture_set,
                             &tex_storage,
                         );
                     }
@@ -192,7 +186,6 @@ impl SpriteBatch {
         sprite_render: &SpriteRender,
         global: Option<&GlobalTransform>,
         sprite_sheet_storage: &AssetStorage<SpriteSheet>,
-        material_texture_set: &MaterialTextureSet,
         tex_storage: &AssetStorage<Texture>,
     ) {
         let global = match global {
@@ -201,26 +194,17 @@ impl SpriteBatch {
         };
 
         let texture_handle = match sprite_sheet_storage.get(&sprite_render.sprite_sheet) {
-            Some(sprite_sheet) => match material_texture_set.handle(sprite_sheet.texture_id) {
-                Some(texture_handle) => {
-                    if tex_storage.get(&texture_handle).is_none() {
-                        warn!(
-                            "Texture not loaded for texture id: `{}`.",
-                            sprite_sheet.texture_id
-                        );
-                        return;
-                    }
-
-                    texture_handle
-                }
-                None => {
+            Some(sprite_sheet) => {
+                if tex_storage.get(&sprite_sheet.texture).is_none() {
                     warn!(
-                        "Texture handle not found for texture id: `{}`.",
-                        sprite_sheet.texture_id
+                        "Texture not loaded for texture: `{:?}`.",
+                        sprite_sheet.texture
                     );
                     return;
                 }
-            },
+
+                sprite_sheet.texture.clone()
+            }
             None => {
                 warn!(
                     "Sprite sheet not loaded for sprite_render: `{:?}`.",

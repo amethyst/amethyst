@@ -44,7 +44,7 @@ Then let's add a `initialise_ball` function the same way we wrote the
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::assets::{Loader, AssetStorage};
-# use amethyst::renderer::{Texture, PngFormat, TextureHandle, MaterialTextureSet, SpriteRender,
+# use amethyst::renderer::{Texture, PngFormat, TextureHandle, SpriteRender,
 #                          TextureCoordinates, Sprite, SpriteSheet, SpriteSheetHandle, TextureMetadata};
 # use amethyst::ecs::World;
 # use amethyst::core::transform::Transform;
