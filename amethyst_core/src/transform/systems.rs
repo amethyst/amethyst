@@ -61,11 +61,10 @@ impl<'a> System<'a> for TransformSystem {
         locals
             .channel()
             .read(
-                self.locals_events_id
-                    .as_mut()
-                    .expect("`TransformSystem::setup` was not called before `TransformSystem::run`"),
-            )
-            .for_each(|event| match event {
+                self.locals_events_id.as_mut().expect(
+                    "`TransformSystem::setup` was not called before `TransformSystem::run`",
+                ),
+            ).for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
                     self.local_modified.add(*id);
                 }

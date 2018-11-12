@@ -95,12 +95,9 @@ where
         );
         prefab_handles
             .channel()
-            .read(
-                self.insert_reader
-                    .as_mut()
-                    .expect("`PrefabLoaderSystem::setup` was not called before `PrefabLoaderSystem::run`"),
-            )
-            .for_each(|event| {
+            .read(self.insert_reader.as_mut().expect(
+                "`PrefabLoaderSystem::setup` was not called before `PrefabLoaderSystem::run`",
+            )).for_each(|event| {
                 if let ComponentEvent::Inserted(id) = event {
                     self.to_process.add(*id);
                 }
@@ -122,8 +119,7 @@ where
                                 Parent {
                                     entity: self.entities[parent],
                                 },
-                            )
-                            .expect("Unable to insert `Parent` for prefab");
+                            ).expect("Unable to insert `Parent` for prefab");
                     }
                     tags.insert(
                         new_entity,
@@ -142,8 +138,7 @@ where
                                 self.entities[index],
                                 &mut prefab_system_data,
                                 &self.entities,
-                            )
-                            .expect("Unable to add prefab system data to entity");
+                            ).expect("Unable to add prefab system data to entity");
                     }
                 }
             }
