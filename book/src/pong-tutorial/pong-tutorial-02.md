@@ -405,8 +405,10 @@ Hooray!
 This section will finally allow us to see something.
 
 The first thing we will have to do is load the sprite sheet we will use for all
-our graphics in the game. Here, it is located in `texture/pong_spritesheet.png`.
-We will perform the loading in a new function in `pong.rs` called `load_sprite_sheet`.
+our graphics in the game. Create a `texture` folder in the root of the project.
+This will contain the [spritesheet texture][ss] `pong_spritesheet.png` we will
+need to render the elements of the game.  We will perform the loading in a new
+function in `pong.rs` called `load_sprite_sheet`.
 
 First, let's declare the function and load the spritesheet's image.
 
@@ -456,7 +458,32 @@ This handle "points" to the place where the asset will be loaded. In Rust terms,
 equivalent to a reference-counted option. It is extremely useful, especially as cloning
 the handle does not clone the asset in memory, so many things can use the same asset at once.
 
-Finally, we load the file containing the position of each sprites on the sheet.
+Alongside our spritesheet texture, we need a file describing where the sprites
+are on the sheet. Let's create, right next to it, a file called
+`pong_spritesheet.ron`. It will contain the following sprite sheet definition:
+
+```text,ignore
+(
+    spritesheet_width: 8.0,
+    spritesheet_height: 16.0,
+    sprites: [
+        (
+            x: 0.0,
+            y: 0.0,
+            width: 4.0,
+            height: 16.0,
+        ),
+        (
+            x: 4.0,
+            y: 0.0,
+            width: 4.0,
+            height: 4.0,
+        ),
+    ],
+)
+```
+
+Finally, we load the file containing the position of each sprite on the sheet.
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
@@ -617,3 +644,4 @@ moving!
 [sb]: https://slide-rs.github.io/specs/
 [sb-storage]: https://slide-rs.github.io/specs/05_storages.html#densevecstorage
 [2d]: https://www.amethyst.rs/doc/master/doc/amethyst_renderer/struct.Camera.html#method.standard_2d
+[ss]: ../images/pong_tutorial/pong_spritesheet.png
