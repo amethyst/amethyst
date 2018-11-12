@@ -58,9 +58,11 @@ impl<'a> System<'a> for ResizeSystem {
 
     fn run(&mut self, (mut transform, mut resize, dimensions): Self::SystemData) {
         self.local_modified.clear();
-      
+
+        let self_local_modified = &mut self.local_modified;
+
         let self_resize_events_id = self
-            .component_insert_reader
+            .resize_events_id
             .as_mut()
             .expect("`ResizeSystem::setup` was not called before `ResizeSystem::run`");
         resize
@@ -68,19 +70,21 @@ impl<'a> System<'a> for ResizeSystem {
             .read(self_resize_events_id)
             .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
-                    self.local_modified.add(*id);
+                    self_local_modified.add(*id);
                 }
                 ComponentEvent::Removed(_id) => {}
             });
 
-      let screen_size = (dimensions.width() as f32, dimensions.height() as f32);
+        let screen_size = (dimensions.width() as f32, dimensions.height() as f32);
         if self.screen_size != screen_size {
             self.screen_size = screen_size;
             for (transform, resize) in (&mut transform, &mut resize).join() {
                 (resize.function)(transform, screen_size);
             }
         } else {
-            for (transform, resize, _) in (&mut transform, &mut resize, &self.local_modified).join()
+            // Immutable borrow
+            let self_local_modified = &*self_local_modified;
+            for (transform, resize, _) in (&mut transform, &mut resize, self_local_modified).join()
             {
                 (resize.function)(transform, screen_size);
             }
@@ -93,7 +97,7 @@ impl<'a> System<'a> for ResizeSystem {
             .read(self_resize_events_id)
             .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
-                    self.local_modified.add(*id);
+                    self_local_modified.add(*id);
                 }
                 ComponentEvent::Removed(_id) => {}
             });

@@ -146,17 +146,19 @@ impl<'a> System<'a> for UiTransformSystem {
 
         self.transform_modified.clear();
 
+        let self_transform_modified = &mut self.transform_modified;
+
         let self_transform_events_id = &mut self
-            .inserted_transform_id
+            .transform_events_id
             .as_mut()
             .expect("`UiTransformSystem::setup` was not called before `UiTransformSystem::run`");
-      
+
         transforms
             .channel()
             .read(self_transform_events_id)
             .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
-                    self.transform_modified.add(*id);
+                    self_transform_modified.add(*id);
                 }
                 ComponentEvent::Removed(_id) => {}
             });
@@ -168,7 +170,7 @@ impl<'a> System<'a> for UiTransformSystem {
                     "`UiTransformSystem::setup` was not called before `UiTransformSystem::run`",
                 )) {
             if let HierarchyEvent::Modified(entity) = *event {
-                self.transform_modified.add(entity.id());
+                self_transform_modified.add(entity.id());
             }
         }
 
@@ -181,8 +183,10 @@ impl<'a> System<'a> for UiTransformSystem {
                 &*screen_dim,
             );
         } else {
+            // Immutable borrow
+            let self_transform_modified = &*self_transform_modified;
             process_root_iter(
-                (&mut transforms, !&parents, &self.transform_modified)
+                (&mut transforms, !&parents, self_transform_modified)
                     .join()
                     .map(|i| i.0),
                 &*screen_dim,
@@ -195,20 +199,21 @@ impl<'a> System<'a> for UiTransformSystem {
             .read(self_transform_events_id)
             .for_each(|event| {
                 if let ComponentEvent::Modified(id) = event {
-                    self.transform_modified.add(*id);
+                    self_transform_modified.add(*id);
                 }
             });
 
         // Compute transforms with parents.
         for entity in hierarchy.all() {
             {
-                let self_dirty = self.transform_modified.contains(entity.id());
+                let self_dirty = self_transform_modified.contains(entity.id());
                 let parent_entity = parents
                     .get(*entity)
                     .expect(
                         "Unreachable: All entities in `ParentHierarchy` should also be in `Parent`",
-                    ).entity;
-                let parent_dirty = self.transform_modified.contains(parent_entity.id());
+                    )
+                    .entity;
+                let parent_dirty = self_transform_modified.contains(parent_entity.id());
                 if parent_dirty || self_dirty || screen_resized {
                     let parent_transform_copy = transforms.get(parent_entity).cloned();
                     let transform = transforms.get_mut(*entity);
@@ -269,7 +274,7 @@ impl<'a> System<'a> for UiTransformSystem {
                 .read(self_transform_events_id)
                 .for_each(|event| {
                     if let ComponentEvent::Modified(id) = event {
-                        self.transform_modified.add(*id);
+                        self_transform_modified.add(*id);
                     }
                 });
         }
@@ -280,7 +285,7 @@ impl<'a> System<'a> for UiTransformSystem {
             .read(self_transform_events_id)
             .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
-                    self.transform_modified.add(*id);
+                    self_transform_modified.add(*id);
                 }
                 ComponentEvent::Removed(_id) => {}
             });

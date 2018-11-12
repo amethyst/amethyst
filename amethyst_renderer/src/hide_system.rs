@@ -32,16 +32,18 @@ impl<'a> System<'a> for HideHierarchySystem {
 
         self.marked_as_modified.clear();
 
+        // Borrow multiple parts of self as mutable
         let self_hidden_events_id = &mut self.hidden_events_id.as_mut().expect(
             "`HideHierarchySystem::setup` was not called before `HideHierarchySystem::run`",
         );
-      
+        let self_marked_as_modified = &mut self.marked_as_modified;
+
         hidden
             .channel()
             .read(self_hidden_events_id)
             .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Removed(id) => {
-                    self.marked_as_modified.add(*id);
+                    self_marked_as_modified.add(*id);
                 }
                 ComponentEvent::Modified(_id) => {}
             });
@@ -53,11 +55,11 @@ impl<'a> System<'a> for HideHierarchySystem {
             )) {
             match *event {
                 HierarchyEvent::Removed(entity) => {
-                    self.marked_as_modified.add(entity.id());
+                    self_marked_as_modified.add(entity.id());
                 }
                 HierarchyEvent::Modified(entity) => {
                     // HierarchyEvent::Modified includes insertion of new components to the storage.
-                    self.marked_as_modified.add(entity.id());
+                    self_marked_as_modified.add(entity.id());
                 }
             }
         }
@@ -65,10 +67,10 @@ impl<'a> System<'a> for HideHierarchySystem {
         // Compute hide status with parents.
         for entity in hierarchy.all() {
             {
-                let self_dirty = self.marked_as_modified.contains(entity.id());
+                let self_dirty = self_marked_as_modified.contains(entity.id());
 
                 let parent_entity = parents.get(*entity).expect("Unreachable: All entities in `ParentHierarchy` should also be in `Parents`").entity;
-                let parent_dirty = self.marked_as_modified.contains(parent_entity.id());
+                let parent_dirty = self_marked_as_modified.contains(parent_entity.id());
                 if parent_dirty {
                     if hidden.contains(parent_entity) {
                         for child in hierarchy.all_children_iter(parent_entity) {
@@ -105,7 +107,7 @@ impl<'a> System<'a> for HideHierarchySystem {
                 .read(self_hidden_events_id)
                 .for_each(|event| match event {
                     ComponentEvent::Inserted(id) | ComponentEvent::Removed(id) => {
-                        self.marked_as_modified.add(*id);
+                        self_marked_as_modified.add(*id);
                     }
                     ComponentEvent::Modified(_id) => {}
                 });
