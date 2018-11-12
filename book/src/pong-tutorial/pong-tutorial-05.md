@@ -249,6 +249,12 @@ we're also adding the `UiBundle` to our game data. This allows us to start
 rendering UI visuals to our game in addition to the existing background and
 sprites.
 
+_Note_: We're using a `UiBundle` with type `<String, String>` here because the
+`UiBundle` needs to know what types our `InputHandler` is using to map `actions`
+and `axes`. So just know that your `UiBundle` type should match your
+`InputHandler` type. You can read more about those here: [UiBundle][ui-bundle],
+[InputHandler][input-handler].
+
 Now we have everything set up so we can start rendering a scoreboard in our
 game. We'll start by creating some structures in `pong.rs`:
 
@@ -747,7 +753,10 @@ If we've done everything right so far, we should see `0` `0` at the top of our
 game window. You'll notice that the scores don't update yet when the ball makes
 it to either side, so we'll add that next!
 
+
 [font-download]: https://github.com/amethyst/amethyst/raw/master/examples/assets/font/square.ttf
+[input-handler]: https://www.amethyst.rs/doc/latest/doc/amethyst_input/struct.InputHandler.html
+[ui-bundle]: https://www.amethyst.rs/doc/latest/doc/amethyst_ui/struct.UiBundle.html
 
 
 ## Updating the Scoreboard
@@ -863,6 +872,20 @@ holds all `UiText` components, to our `SystemData`. We'll want to select our
 players' scores from that, so we also add the `ScoreText` structure which holds
 handles to the `UiText` components that we want. Finally, we add the
 `ScoreBoard` resource so we can keep track of the actual score data.
+
+We're using `Write` here to pull in the `ScoreBoard` instead of with
+`WriteStorage` because we want mutable access to `ScoreBoard`, which is not a
+collection of components but rather a single resource item. This item is
+strictly required in all cases, but if it we didn't want it to always be
+required to exist, we could use `Option<Write<'s, ScoreBoard>>`.
+
+We also use `ReadExpect` to access the `ScoreText` resource immutably. Again,
+`ScoreText` is a single resource item rather than a collection of components.
+With `ReadExpect`, we are asserting that `ScoreText` must already exist and will
+panic if it does not. We do this instead of just using `Read` because we are
+manually adding the `ScoreText` resource to the game in
+`pong.rs > initialise_scoreboard` instead of having the system create this
+resource for us automatically.
 
 Inside our `run` method (after updating the signature to match our `SystemData`
 changes), we replace the `println!` statements with code that will update our
