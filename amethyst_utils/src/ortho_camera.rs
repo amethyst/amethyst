@@ -253,7 +253,6 @@ mod test {
         let y = mat4.w.z; // c3r2
         let near = (y + 1.0) / x;
         let far = (x - 1.0) / y;
-
         assert_ulps_eq!((near as f32 * 100.0).round() / 100.0, 0.1);
         assert_ulps_eq!((far as f32 * 100.0).round() / 100.0, 2000.0);
     }*/

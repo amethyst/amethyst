@@ -46,7 +46,7 @@ impl<'a> System<'a> for VertexSkinningSystem {
             .read(
                 self.updated_id
                     .as_mut()
-                    .expect("VertexSkinningSystem missing updated_id."),
+                    .expect("`VertexSkinningSystem::setup` was not called before `VertexSkinningSystem::run`"),
             )
             .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
@@ -106,13 +106,19 @@ impl<'a> System<'a> for VertexSkinningSystem {
             (&self.updated, &global_transforms, &mut matrices).join()
         {
             if let Some(global_inverse) = mesh_global.0.try_inverse() {
-                let skin = skins.get(joint_transform.skin).unwrap();
-                joint_transform.matrices.clear();
-                joint_transform
-                    .matrices
-                    .extend(skin.joint_matrices.iter().map(|joint_matrix| {
-                        Into::<[[f32; 4]; 4]>::into(global_inverse * joint_matrix)
-                    }));
+                if let Some(skin) = skins.get(joint_transform.skin) {
+                    joint_transform.matrices.clear();
+                    joint_transform
+                        .matrices
+                        .extend(skin.joint_matrices.iter().map(|joint_matrix| {
+                            Into::<[[f32; 4]; 4]>::into(global_inverse * joint_matrix)
+                        }));
+                } else {
+                    error!(
+                        "Missing `Skin` Component for join transform entity {:?}",
+                        joint_transform.skin
+                    );
+                }
             }
         }
     }

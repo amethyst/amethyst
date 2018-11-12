@@ -26,7 +26,7 @@ Here is an example of such a definition file:
             // Height of the sprite
             height: 16.0, 
             // Number of pixels to shift the sprite to the left and down relative to the entity holding it when rendering
-            offsets: (0.0, 0.0), // This is optional and defaults to (0.0, 0.0)
+            offsets: Some((0.0, 0.0)), // This is optional and defaults to (0.0, 0.0)
         ),
         (
             x: 16.0,
@@ -38,6 +38,7 @@ Here is an example of such a definition file:
     ],
 )
 ```
+`offsets: Some((0.0, 0.0)),` can be replaced by `offsets: (0.0, 0.0),` if the line `#![enable(implicit_some)]` is added at the top of the definition file.
 
 Then, you can load it using the texture ID of the sheet's image you loaded earlier:
 

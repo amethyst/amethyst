@@ -58,20 +58,22 @@ impl<'a> System<'a> for ResizeSystem {
 
     fn run(&mut self, (mut transform, mut resize, dimensions): Self::SystemData) {
         self.local_modified.clear();
+      
+        let self_resize_events_id = self
+            .component_insert_reader
+            .as_mut()
+            .expect("`ResizeSystem::setup` was not called before `ResizeSystem::run`");
         resize
             .channel()
-            .read(
-                self.resize_events_id
-                    .as_mut()
-                    .expect("ResizeSystem missing resize_events_id."),
-            )
+            .read(self_resize_events_id)
             .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
                     self.local_modified.add(*id);
                 }
                 ComponentEvent::Removed(_id) => {}
             });
-        let screen_size = (dimensions.width() as f32, dimensions.height() as f32);
+
+      let screen_size = (dimensions.width() as f32, dimensions.height() as f32);
         if self.screen_size != screen_size {
             self.screen_size = screen_size;
             for (transform, resize) in (&mut transform, &mut resize).join() {
@@ -88,11 +90,7 @@ impl<'a> System<'a> for ResizeSystem {
         // any events that were generated during the system run
         resize
             .channel()
-            .read(
-                self.resize_events_id
-                    .as_mut()
-                    .expect("ResizeSystem missing resize_events_id."),
-            )
+            .read(self_resize_events_id)
             .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
                     self.local_modified.add(*id);

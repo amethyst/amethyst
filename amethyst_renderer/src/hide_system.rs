@@ -32,13 +32,13 @@ impl<'a> System<'a> for HideHierarchySystem {
 
         self.marked_as_modified.clear();
 
+        let self_hidden_events_id = &mut self.hidden_events_id.as_mut().expect(
+            "`HideHierarchySystem::setup` was not called before `HideHierarchySystem::run`",
+        );
+      
         hidden
             .channel()
-            .read(
-                self.hidden_events_id
-                    .as_mut()
-                    .expect("HideHierarchySystem missing hidden_events_id."),
-            )
+            .read(self_hidden_events_id)
             .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Removed(id) => {
                     self.marked_as_modified.add(*id);
@@ -48,8 +48,9 @@ impl<'a> System<'a> for HideHierarchySystem {
 
         for event in hierarchy
             .changed()
-            .read(&mut self.parent_events_id.as_mut().unwrap())
-        {
+            .read(&mut self.parent_events_id.as_mut().expect(
+                "`HideHierarchySystem::setup` was not called before `HideHierarchySystem::run`",
+            )) {
             match *event {
                 HierarchyEvent::Removed(entity) => {
                     self.marked_as_modified.add(entity.id());
@@ -66,16 +67,13 @@ impl<'a> System<'a> for HideHierarchySystem {
             {
                 let self_dirty = self.marked_as_modified.contains(entity.id());
 
-                let parent_entity = parents.get(*entity).unwrap().entity;
+                let parent_entity = parents.get(*entity).expect("Unreachable: All entities in `ParentHierarchy` should also be in `Parents`").entity;
                 let parent_dirty = self.marked_as_modified.contains(parent_entity.id());
                 if parent_dirty {
                     if hidden.contains(parent_entity) {
                         for child in hierarchy.all_children_iter(parent_entity) {
                             if let Err(e) = hidden.insert(child, HiddenPropagate::default()) {
-                                error!(
-                                    "Failed to automatically add HiddenPropagate, error: {:?}",
-                                    e
-                                );
+                                error!("Failed to automatically add `HiddenPropagate`: {:?}", e);
                             };
                         }
                     } else {
@@ -89,10 +87,7 @@ impl<'a> System<'a> for HideHierarchySystem {
                     if hidden.contains(*entity) {
                         for child in hierarchy.all_children_iter(*entity) {
                             if let Err(e) = hidden.insert(child, HiddenPropagate::default()) {
-                                error!(
-                                    "Failed to automatically add HiddenPropagate, error: {:?}",
-                                    e
-                                );
+                                error!("Failed to automatically add `HiddenPropagate`: {:?}", e);
                             };
                         }
                     } else {
@@ -107,11 +102,7 @@ impl<'a> System<'a> for HideHierarchySystem {
             // instead of on the next `system.run()`
             hidden
                 .channel()
-                .read(
-                    self.hidden_events_id
-                        .as_mut()
-                        .expect("HideHierarchySystem missing hidden_events_id."),
-                )
+                .read(self_hidden_events_id)
                 .for_each(|event| match event {
                     ComponentEvent::Inserted(id) | ComponentEvent::Removed(id) => {
                         self.marked_as_modified.add(*id);

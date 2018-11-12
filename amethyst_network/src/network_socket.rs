@@ -64,7 +64,9 @@ where
 
         let socket = UdpSocket::bind(addr)?;
 
-        socket.set_nonblocking(true).unwrap();
+        socket
+            .set_nonblocking(true)
+            .expect("Unable to set `UdpSocket` to non-blocking mode");
 
         // this -> thread
         let (tx1, rx1) = channel();
@@ -96,12 +98,14 @@ where
                     match socket.recv_from(&mut buf) {
                         // Data received
                         Ok((amt, src)) => {
-                            receive_queue
-                                .send(RawEvent {
-                                    byte_count: amt,
-                                    data: buf[..amt].to_vec(),
-                                    source: src,
-                                }).unwrap();
+                            if let Err(_) = receive_queue.send(RawEvent {
+                                byte_count: amt,
+                                data: buf[..amt].to_vec(),
+                                source: src,
+                            }) {
+                                error!("`NetworkSocketSystem` was dropped");
+                                break 'outer;
+                            }
                         }
                         Err(e) => {
                             if e.kind() == ErrorKind::WouldBlock {
@@ -144,9 +148,11 @@ where
                     .send(InternalSocketEvent::SendEvents {
                         target,
                         events: net_connection.send_buffer_early_read().cloned().collect(),
-                    }).unwrap();
+                    }).expect("Unreachable: Channel will be alive until a stop event is sent");
             } else if net_connection.state == ConnectionState::Disconnected {
-                self.tx.send(InternalSocketEvent::Stop).unwrap();
+                self.tx
+                    .send(InternalSocketEvent::Stop)
+                    .expect("Already sent a stop event to the channel");
             }
         }
 

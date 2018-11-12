@@ -200,7 +200,10 @@ impl<'a> System<'a> for UiKeyboardSystem {
         }
 
         for &mut (ref mut t, entity) in &mut self.tab_order_cache.cache {
-            *t = transform.get(entity).unwrap().tab_order;
+            *t = transform
+                .get(entity)
+                .expect("Unreachable: Entities are collected from a prepopulated cache")
+                .tab_order;
         }
 
         // Attempt to insert the new entities in sorted position.  Should reduce work during
@@ -260,7 +263,11 @@ impl<'a> System<'a> for UiKeyboardSystem {
                 }
             }
         }
-        for event in events.read(self.reader.as_mut().unwrap()) {
+        for event in events.read(
+            self.reader
+                .as_mut()
+                .expect("`UiKeyboardSystem::setup` was not called before `UiKeyboardSystem::run`"),
+        ) {
             // Process events for the whole UI.
             match *event {
                 Event::WindowEvent {
@@ -575,8 +582,11 @@ impl<'a> System<'a> for UiKeyboardSystem {
                             if ctrl_or_cmd(&modifiers) {
                                 let new_clip = extract_highlighted(focused_edit, focused_text);
                                 if !new_clip.is_empty() {
-                                    let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
-                                    ctx.set_contents(new_clip).unwrap();
+                                    if let Err(e) = ClipboardProvider::new().and_then(
+                                        |mut ctx: ClipboardContext| ctx.set_contents(new_clip),
+                                    ) {
+                                        error!("Error occured when cutting to clipboard: {:?}", e);
+                                    }
                                 }
                             }
                         }
@@ -584,29 +594,43 @@ impl<'a> System<'a> for UiKeyboardSystem {
                             if ctrl_or_cmd(&modifiers) {
                                 let new_clip = read_highlighted(focused_edit, focused_text);
                                 if !new_clip.is_empty() {
-                                    let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
-                                    ctx.set_contents(new_clip.to_owned()).unwrap();
+                                    if let Err(e) = ClipboardProvider::new().and_then(
+                                        |mut ctx: ClipboardContext| {
+                                            ctx.set_contents(new_clip.to_owned())
+                                        },
+                                    ) {
+                                        error!("Error occured when copying to clipboard: {:?}", e);
+                                    }
                                 }
                             }
                         }
                         VirtualKeyCode::V => {
                             if ctrl_or_cmd(&modifiers) {
                                 delete_highlighted(focused_edit, focused_text);
-                                let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
-                                if let Ok(contents) = ctx.get_contents() {
-                                    let index = cursor_byte_index(focused_edit, focused_text);
-                                    let empty_space = focused_edit.max_length
-                                        - focused_text.text.graphemes(true).count();
-                                    let contents = contents.graphemes(true).take(empty_space).fold(
-                                        String::new(),
-                                        |mut init, new| {
-                                            init.push_str(new);
-                                            init
-                                        },
-                                    );
-                                    focused_text.text.insert_str(index, &contents);
-                                    focused_edit.cursor_position +=
-                                        contents.graphemes(true).count() as isize;
+
+                                match ClipboardProvider::new()
+                                    .and_then(|mut ctx: ClipboardContext| ctx.get_contents())
+                                {
+                                    Ok(contents) => {
+                                        let index = cursor_byte_index(focused_edit, focused_text);
+                                        let empty_space =
+                                            focused_edit.max_length
+                                                - focused_text.text.graphemes(true).count();
+                                        let contents = contents
+                                            .graphemes(true)
+                                            .take(empty_space)
+                                            .fold(String::new(), |mut init, new| {
+                                                init.push_str(new);
+                                                init
+                                            });
+                                        focused_text.text.insert_str(index, &contents);
+                                        focused_edit.cursor_position +=
+                                            contents.graphemes(true).count() as isize;
+                                    }
+                                    Err(e) => error!(
+                                        "Error occured when pasting contents of clipboard: {:?}",
+                                        e
+                                    ),
                                 }
                             }
                         }

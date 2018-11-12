@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `UiWidget` variant `Custom` for custom composited widgets ([#1112])
 * `AssetLoaderSystemData` abstracts resources needed from `World` to do asset loading ([#1090])
 * `amethyst_ui::get_default_font` supports loading system font from Path. ([#1108])
+* Added Trans event queue. Used to trigger state transitions from systems. Also used to trigger multiple state transitions at once. (For example, to `Trans::Pop` two states.) ([#1069])
 
 ### Changed
 
@@ -32,6 +33,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 * `SpriteSheetSet` is removed as it is no longer needed. ([#1089])
 * `amethyst::core::Orientation` has been removed because of limited use. ([#1066])
+* `TimedDestroySystem` has been split into `DestroyAtTimeSystem` and `DestroyInTimeSystem`. ([#1129])
 
 ### Fixed
 
@@ -39,6 +41,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1043]: https://github.com/amethyst/amethyst/pull/1043
 [#1051]: https://github.com/amethyst/amethyst/pull/1051
 [#1035]: https://github.com/amethyst/amethyst/pull/1035
+[#1069]: https://github.com/amethyst/amethyst/pull/1069
 [#1074]: https://github.com/amethyst/amethyst/pull/1074
 [#1081]: https://github.com/amethyst/amethyst/pull/1081
 [#1090]: https://github.com/amethyst/amethyst/pull/1090
@@ -47,6 +50,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1108]: https://github.com/amethyst/amethyst/pull/1108
 [#1066]: https://github.com/amethyst/amethyst/pull/1066
 [#1122]: https://github.com/amethyst/amethyst/pull/1122
+[#1129]: https://github.com/amethyst/amethyst/pull/1129
+
 
 ## [0.9.0] - 2018-10
 ### Added

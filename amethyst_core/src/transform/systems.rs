@@ -63,7 +63,7 @@ impl<'a> System<'a> for TransformSystem {
             .read(
                 self.locals_events_id
                     .as_mut()
-                    .expect("TransformSystem missing locals_events_id."),
+                    .expect("`TransformSystem::setup` was not called before `TransformSystem::run`"),
             )
             .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
@@ -72,10 +72,11 @@ impl<'a> System<'a> for TransformSystem {
                 ComponentEvent::Removed(_id) => {}
             });
 
-        for event in hierarchy
-            .changed()
-            .read(self.parent_events_id.as_mut().unwrap())
-        {
+        for event in hierarchy.changed().read(
+            self.parent_events_id
+                .as_mut()
+                .expect("`TransformSystem::setup` was not called before `TransformSystem::run`"),
+        ) {
             match *event {
                 HierarchyEvent::Removed(entity) => {
                     // Sometimes the user may have already deleted the entity.

@@ -711,23 +711,17 @@ fn walk_ui_tree<A, I, F, C>(
         }
 
         UiWidget::Image { transform, image } => {
-            prefab.entity(current_index).unwrap().set_data((
-                Some(transform),
-                Some(image),
-                None,
-                None,
-                custom_data,
-            ));
+            prefab
+                .entity(current_index)
+                .expect("Unreachable: `Prefab` entity should always be set when walking ui tree")
+                .set_data((Some(transform), Some(image), None, None, custom_data));
         }
 
         UiWidget::Text { transform, text } => {
-            prefab.entity(current_index).unwrap().set_data((
-                Some(transform),
-                None,
-                Some(text),
-                None,
-                custom_data,
-            ));
+            prefab
+                .entity(current_index)
+                .expect("Unreachable: `Prefab` entity should always be set when walking ui tree")
+                .set_data((Some(transform), None, Some(text), None, custom_data));
         }
 
         UiWidget::Container {
@@ -735,13 +729,11 @@ fn walk_ui_tree<A, I, F, C>(
             background,
             children,
         } => {
-            prefab.entity(current_index).unwrap().set_data((
-                Some(transform),
-                background,
-                None,
-                None,
-                custom_data,
-            ));
+            prefab
+                .entity(current_index)
+                .expect("Unreachable: `Prefab` entity should always be set when walking ui tree")
+                .set_data((Some(transform), background, None, None, custom_data));
+
             for child_widget in children {
                 let child_index = prefab.add(Some(current_index), None);
                 walk_ui_tree(child_widget, child_index, prefab, Default::default());
@@ -760,15 +752,20 @@ fn walk_ui_tree<A, I, F, C>(
                 text: button.text.clone(),
                 font_size: button.font_size,
             };
-            prefab.entity(current_index).unwrap().set_data((
-                Some(transform),
-                button.normal_image.as_ref().map(|image| UiImageBuilder {
-                    image: image.clone(),
-                }),
-                None,
-                Some(button),
-                custom_data,
-            ));
+
+            prefab
+                .entity(current_index)
+                .expect("Unreachable: `Prefab` entity should always be set when walking ui tree")
+                .set_data((
+                    Some(transform),
+                    button.normal_image.as_ref().map(|image| UiImageBuilder {
+                        image: image.clone(),
+                    }),
+                    None,
+                    Some(button),
+                    custom_data,
+                ));
+
             prefab.add(
                 Some(current_index),
                 Some((
@@ -887,7 +884,9 @@ where
     {
         let entity = self.entities.create();
         let handle = self.loader.load(name, progress);
-        self.handles.insert(entity, handle).unwrap(); // safe because we just created the entity
+        self.handles
+            .insert(entity, handle)
+            .expect("Unreachable: We just created the entity");
         entity
     }
 }

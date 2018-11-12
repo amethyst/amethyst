@@ -150,7 +150,10 @@ where
 
     fn run(&mut self, (events, mut transform, tag, focus, hide): Self::SystemData) {
         let focused = focus.is_focused;
-        for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
+        for event in
+            events.read(&mut self.event_reader.as_mut().expect(
+                "`FreeRotationSystem::setup` was not called before `FreeRotationSystem::run`",
+            )) {
             if focused && hide.hide {
                 if let Event::DeviceEvent { ref event, .. } = *event {
                     if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
@@ -188,7 +191,9 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
     type SystemData = (Read<'a, EventChannel<Event>>, Write<'a, WindowFocus>);
 
     fn run(&mut self, (events, mut focus): Self::SystemData) {
-        for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
+        for event in events.read(&mut self.event_reader.as_mut().expect(
+            "`MouseFocusUpdateSystem::setup` was not called before `MouseFocusUpdateSystem::run`",
+        )) {
             if let Event::WindowEvent { ref event, .. } = *event {
                 if let WindowEvent::Focused(focused) = *event {
                     focus.is_focused = focused;

@@ -146,13 +146,14 @@ impl<'a> System<'a> for UiTransformSystem {
 
         self.transform_modified.clear();
 
+        let self_transform_events_id = &mut self
+            .inserted_transform_id
+            .as_mut()
+            .expect("`UiTransformSystem::setup` was not called before `UiTransformSystem::run`");
+      
         transforms
             .channel()
-            .read(
-                self.transform_events_id
-                    .as_mut()
-                    .expect("UiTransformSystem missing transform_events_id."),
-            )
+            .read(self_transform_events_id)
             .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
                     self.transform_modified.add(*id);
@@ -160,10 +161,12 @@ impl<'a> System<'a> for UiTransformSystem {
                 ComponentEvent::Removed(_id) => {}
             });
 
-        for event in hierarchy
-            .changed()
-            .read(&mut self.parent_events_id.as_mut().unwrap())
-        {
+        for event in
+            hierarchy
+                .changed()
+                .read(&mut self.parent_events_id.as_mut().expect(
+                    "`UiTransformSystem::setup` was not called before `UiTransformSystem::run`",
+                )) {
             if let HierarchyEvent::Modified(entity) = *event {
                 self.transform_modified.add(entity.id());
             }
@@ -189,11 +192,7 @@ impl<'a> System<'a> for UiTransformSystem {
         // Populate the modifications we just did.
         transforms
             .channel()
-            .read(
-                self.transform_events_id
-                    .as_mut()
-                    .expect("UiTransformSystem missing transform_events_id."),
-            )
+            .read(self_transform_events_id)
             .for_each(|event| {
                 if let ComponentEvent::Modified(id) = event {
                     self.transform_modified.add(*id);
@@ -204,16 +203,22 @@ impl<'a> System<'a> for UiTransformSystem {
         for entity in hierarchy.all() {
             {
                 let self_dirty = self.transform_modified.contains(entity.id());
-                let parent_entity = parents.get(*entity).unwrap().entity;
+                let parent_entity = parents
+                    .get(*entity)
+                    .expect(
+                        "Unreachable: All entities in `ParentHierarchy` should also be in `Parent`",
+                    ).entity;
                 let parent_dirty = self.transform_modified.contains(parent_entity.id());
                 if parent_dirty || self_dirty || screen_resized {
                     let parent_transform_copy = transforms.get(parent_entity).cloned();
                     let transform = transforms.get_mut(*entity);
-                    if parent_transform_copy.is_none() || transform.is_none() {
-                        continue;
-                    }
-                    let parent_transform_copy = parent_transform_copy.unwrap();
-                    let mut transform = transform.unwrap();
+
+                    let (transform, parent_transform_copy) =
+                        match (transform, parent_transform_copy) {
+                            (Some(v1), Some(v2)) => (v1, v2),
+                            _ => continue,
+                        };
+
                     let norm = transform.anchor.norm_offset();
                     transform.pixel_x =
                         parent_transform_copy.pixel_x + parent_transform_copy.pixel_width * norm.0;
@@ -261,11 +266,7 @@ impl<'a> System<'a> for UiTransformSystem {
             // Populate the modifications we just did.
             transforms
                 .channel()
-                .read(
-                    self.transform_events_id
-                        .as_mut()
-                        .expect("UiTransformSystem missing transform_events_id."),
-                )
+                .read(self_transform_events_id)
                 .for_each(|event| {
                     if let ComponentEvent::Modified(id) = event {
                         self.transform_modified.add(*id);
@@ -276,11 +277,7 @@ impl<'a> System<'a> for UiTransformSystem {
         // any events that were generated during the system run
         transforms
             .channel()
-            .read(
-                self.transform_events_id
-                    .as_mut()
-                    .expect("UiTransformSystem missing transform_events_id."),
-            )
+            .read(self_transform_events_id)
             .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
                     self.transform_modified.add(*id);
