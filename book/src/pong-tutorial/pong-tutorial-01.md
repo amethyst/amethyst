@@ -92,7 +92,9 @@ and load it.
 # use amethyst::prelude::*;
 # use amethyst::renderer::DisplayConfig;
 # fn main() {
-let path = "./resources/display_config.ron";
+use amethyst::utils::application_root_dir;
+
+let path = format!("{}/resources/display_config.ron", application_root_dir());
 
 let config = DisplayConfig::load(&path);
 # }

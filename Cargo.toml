@@ -160,16 +160,24 @@ name = "pong_tutorial_02"
 path = "examples/pong_tutorial_02/main.rs"
 
 [[example]]
+name = "pong_tutorial_03"
+path = "examples/pong_tutorial_03/main.rs"
+
+[[example]]
+name = "pong_tutorial_04"
+path = "examples/pong_tutorial_04/main.rs"
+
+[[example]]
+name = "pong_tutorial_05"
+path = "examples/pong_tutorial_05/main.rs"
+
+[[example]]
 name = "net_client"
 path = "examples/net_client/main.rs"
 
 [[example]]
 name = "net_server"
 path = "examples/net_server/main.rs"
-
-[[example]]
-name = "pong_tutorial_03"
-path = "examples/pong_tutorial_03/main.rs"
 
 [[example]]
 name = "appendix_a"

@@ -21,7 +21,7 @@ of how Amethyst works, especially if you're new to ECS.
 ## A quick refactor
 
 Let's create a new file called `pong.rs` to hold our core game logic. We can
-move the `Pong` struct over here, and the `impl State for Pong` block as well.
+move the `Pong` struct over here, and the `impl SimpleState for Pong` block as well.
 Then, in `main.rs` declare a module:
 
 ```rust,ignore
@@ -176,7 +176,7 @@ pub struct Paddle {
 impl Paddle {
     fn new(side: Side) -> Paddle {
         Paddle {
-            side: side,
+            side,
             width: 1.0,
             height: 1.0,
         }
@@ -341,7 +341,7 @@ This is rather inconvenient &mdash; to need to manually register each component
 before it can be used. There *must* be a better way. **Hint:** there is.
 
 When we add systems to our application, any component that a `System` uses is
-automatically registered. However, as we haven't got any `System`s we have to
+automatically registered. However, as we haven't got any `System`s, we have to
 live with registering the `Paddle` component manually.
 
 Let's run the game again.
@@ -406,7 +406,7 @@ This section will finally allow us to see something.
 
 The first thing we will have to do is load the sprite sheet we will use for all
 our graphics in the game. Here, it is located in `texture/pong_spritesheet.png`.
-We will perform the loading in a new function called `load_sprite_sheet`.
+We will perform the loading in a new function in `pong.rs` called `load_sprite_sheet`.
 
 First, let's declare the function and load the spritesheet's image.
 
