@@ -1,7 +1,6 @@
 use amethyst_core::{
     specs::prelude::{
-        BitSet, InsertedFlag, Join, ModifiedFlag, ReadStorage, ReaderId, Resources, System,
-        WriteStorage,
+        BitSet, ComponentEvent, Join, ReadStorage, ReaderId, Resources, System, WriteStorage,
     },
     GlobalTransform,
 };
@@ -17,8 +16,7 @@ pub struct VertexSkinningSystem {
     updated: BitSet,
     updated_skins: BitSet,
     /// Used for tracking modifications to global transforms
-    updated_id: Option<ReaderId<ModifiedFlag>>,
-    inserted_id: Option<ReaderId<InsertedFlag>>,
+    updated_id: Option<ReaderId<ComponentEvent>>,
 }
 
 impl VertexSkinningSystem {
@@ -27,7 +25,6 @@ impl VertexSkinningSystem {
         Self {
             updated: BitSet::new(),
             updated_skins: BitSet::new(),
-            inserted_id: None,
             updated_id: None,
         }
     }
@@ -44,19 +41,16 @@ impl<'a> System<'a> for VertexSkinningSystem {
     fn run(&mut self, (joints, global_transforms, mut skins, mut matrices): Self::SystemData) {
         self.updated.clear();
 
-        global_transforms.populate_modified(
-            &mut self.updated_id.as_mut().expect(
+        global_transforms
+            .channel()
+            .read(self.updated_id.as_mut().expect(
                 "`VertexSkinningSystem::setup` was not called before `VertexSkinningSystem::run`",
-            ),
-            &mut self.updated,
-        );
-
-        global_transforms.populate_inserted(
-            &mut self.inserted_id.as_mut().expect(
-                "`VertexSkinningSystem::setup` was not called before `VertexSkinningSystem::run`",
-            ),
-            &mut self.updated,
-        );
+            )).for_each(|event| match event {
+                ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
+                    self.updated.add(*id);
+                }
+                ComponentEvent::Removed(_id) => {}
+            });
 
         self.updated_skins.clear();
 
@@ -129,7 +123,6 @@ impl<'a> System<'a> for VertexSkinningSystem {
         use amethyst_core::specs::prelude::SystemData;
         Self::SystemData::setup(res);
         let mut transform = WriteStorage::<GlobalTransform>::fetch(res);
-        self.updated_id = Some(transform.track_modified());
-        self.inserted_id = Some(transform.track_inserted());
+        self.updated_id = Some(transform.register_reader());
     }
 }

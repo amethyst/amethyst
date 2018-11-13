@@ -2,8 +2,8 @@ use gfx_glyph::{HorizontalAlign, VerticalAlign};
 
 use amethyst_core::{
     specs::prelude::{
-        BitSet, InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage, ReaderId, Resources,
-        System, WriteStorage,
+        BitSet, ComponentEvent, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
+        WriteStorage,
     },
     HierarchyEvent, Parent, ParentHierarchy,
 };
@@ -125,8 +125,7 @@ pub enum Stretch {
 pub struct UiTransformSystem {
     transform_modified: BitSet,
 
-    inserted_transform_id: Option<ReaderId<InsertedFlag>>,
-    modified_transform_id: Option<ReaderId<ModifiedFlag>>,
+    transform_events_id: Option<ReaderId<ComponentEvent>>,
 
     parent_events_id: Option<ReaderId<HierarchyEvent>>,
 
@@ -147,18 +146,22 @@ impl<'a> System<'a> for UiTransformSystem {
 
         self.transform_modified.clear();
 
-        let self_inserted_transform_id = &mut self
-            .inserted_transform_id
+        let self_transform_modified = &mut self.transform_modified;
+
+        let self_transform_events_id = &mut self
+            .transform_events_id
             .as_mut()
             .expect("`UiTransformSystem::setup` was not called before `UiTransformSystem::run`");
 
-        let self_modified_transform_id = &mut self
-            .modified_transform_id
-            .as_mut()
-            .expect("`UiTransformSystem::setup` was not called before `UiTransformSystem::run`");
-
-        transforms.populate_inserted(self_inserted_transform_id, &mut self.transform_modified);
-        transforms.populate_modified(self_modified_transform_id, &mut self.transform_modified);
+        transforms
+            .channel()
+            .read(self_transform_events_id)
+            .for_each(|event| match event {
+                ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
+                    self_transform_modified.add(*id);
+                }
+                ComponentEvent::Removed(_id) => {}
+            });
 
         for event in
             hierarchy
@@ -167,7 +170,7 @@ impl<'a> System<'a> for UiTransformSystem {
                     "`UiTransformSystem::setup` was not called before `UiTransformSystem::run`",
                 )) {
             if let HierarchyEvent::Modified(entity) = *event {
-                self.transform_modified.add(entity.id());
+                self_transform_modified.add(entity.id());
             }
         }
 
@@ -180,26 +183,36 @@ impl<'a> System<'a> for UiTransformSystem {
                 &*screen_dim,
             );
         } else {
+            // Immutable borrow
+            let self_transform_modified = &*self_transform_modified;
             process_root_iter(
-                (&mut transforms, !&parents, &self.transform_modified)
+                (&mut transforms, !&parents, self_transform_modified)
                     .join()
                     .map(|i| i.0),
                 &*screen_dim,
             );
         }
 
-        transforms.populate_modified(self_modified_transform_id, &mut self.transform_modified);
+        // Populate the modifications we just did.
+        transforms
+            .channel()
+            .read(self_transform_events_id)
+            .for_each(|event| {
+                if let ComponentEvent::Modified(id) = event {
+                    self_transform_modified.add(*id);
+                }
+            });
 
         // Compute transforms with parents.
         for entity in hierarchy.all() {
             {
-                let self_dirty = self.transform_modified.contains(entity.id());
+                let self_dirty = self_transform_modified.contains(entity.id());
                 let parent_entity = parents
                     .get(*entity)
                     .expect(
                         "Unreachable: All entities in `ParentHierarchy` should also be in `Parent`",
                     ).entity;
-                let parent_dirty = self.transform_modified.contains(parent_entity.id());
+                let parent_dirty = self_transform_modified.contains(parent_entity.id());
                 if parent_dirty || self_dirty || screen_resized {
                     let parent_transform_copy = transforms.get(parent_entity).cloned();
                     let transform = transforms.get_mut(*entity);
@@ -255,12 +268,26 @@ impl<'a> System<'a> for UiTransformSystem {
                 }
             }
             // Populate the modifications we just did.
-            transforms.populate_modified(self_modified_transform_id, &mut self.transform_modified);
+            transforms
+                .channel()
+                .read(self_transform_events_id)
+                .for_each(|event| {
+                    if let ComponentEvent::Modified(id) = event {
+                        self_transform_modified.add(*id);
+                    }
+                });
         }
         // We need to treat any changes done inside the system as non-modifications, so we read out
         // any events that were generated during the system run
-        transforms.populate_inserted(self_inserted_transform_id, &mut self.transform_modified);
-        transforms.populate_modified(self_modified_transform_id, &mut self.transform_modified);
+        transforms
+            .channel()
+            .read(self_transform_events_id)
+            .for_each(|event| match event {
+                ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
+                    self_transform_modified.add(*id);
+                }
+                ComponentEvent::Removed(_id) => {}
+            });
     }
 
     fn setup(&mut self, res: &mut Resources) {
@@ -268,8 +295,7 @@ impl<'a> System<'a> for UiTransformSystem {
         Self::SystemData::setup(res);
         self.parent_events_id = Some(res.fetch_mut::<ParentHierarchy>().track());
         let mut transforms = WriteStorage::<UiTransform>::fetch(res);
-        self.inserted_transform_id = Some(transforms.track_inserted());
-        self.modified_transform_id = Some(transforms.track_modified());
+        self.transform_events_id = Some(transforms.register_reader());
     }
 }
 

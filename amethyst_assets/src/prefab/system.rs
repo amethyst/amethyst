@@ -2,8 +2,8 @@ use std::{marker::PhantomData, ops::Deref};
 
 use amethyst_core::{
     specs::{
-        BitSet, Entities, Entity, InsertedFlag, Join, Read, ReadExpect, ReadStorage, ReaderId,
-        Resources, System, Write, WriteStorage,
+        storage::ComponentEvent, BitSet, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
+        ReaderId, Resources, System, Write, WriteStorage,
     },
     ArcThreadPool, Parent, Time,
 };
@@ -22,7 +22,7 @@ pub struct PrefabLoaderSystem<T> {
     entities: Vec<Entity>,
     finished: Vec<Entity>,
     to_process: BitSet,
-    insert_reader: Option<ReaderId<InsertedFlag>>,
+    insert_reader: Option<ReaderId<ComponentEvent>>,
     next_tag: u64,
 }
 
@@ -93,12 +93,15 @@ where
             &**pool,
             strategy,
         );
-        prefab_handles.populate_inserted(
-            self.insert_reader.as_mut().expect(
+        prefab_handles
+            .channel()
+            .read(self.insert_reader.as_mut().expect(
                 "`PrefabLoaderSystem::setup` was not called before `PrefabLoaderSystem::run`",
-            ),
-            &mut self.to_process,
-        );
+            )).for_each(|event| {
+                if let ComponentEvent::Inserted(id) = event {
+                    self.to_process.add(*id);
+                }
+            });
         self.finished.clear();
         for (root_entity, handle, _) in (&*entities, &prefab_handles, &self.to_process).join() {
             if let Some(prefab) = prefab_storage.get(handle) {
@@ -149,6 +152,6 @@ where
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::specs::prelude::SystemData;
         Self::SystemData::setup(res);
-        self.insert_reader = Some(WriteStorage::<Handle<Prefab<T>>>::fetch(&res).track_inserted());
+        self.insert_reader = Some(WriteStorage::<Handle<Prefab<T>>>::fetch(&res).register_reader());
     }
 }
