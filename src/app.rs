@@ -2,15 +2,15 @@
 
 use std::{error::Error as StdError, marker::PhantomData, path::Path, sync::Arc, time::Duration};
 
+use crate::shred::Resource;
 use log::Level;
 use rayon::ThreadPoolBuilder;
-use shred::Resource;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use winit::Event;
 
-use {
+use crate::{
     assets::{Loader, Source},
     callback_queue::CallbackQueue,
     core::{
@@ -260,10 +260,10 @@ where
         if self.ignore_window_close {
             false
         } else {
-            use renderer::WindowEvent;
+            use crate::renderer::WindowEvent;
             let world = &mut self.world;
             let reader_id = &mut self.event_reader_id;
-            world.exec(|ev: Read<EventChannel<Event>>| {
+            world.exec(|ev: Read<'_, EventChannel<Event>>| {
                 ev.read(reader_id).any(|e| {
                     if cfg!(target_os = "ios") {
                         if let Event::WindowEvent {
@@ -387,7 +387,7 @@ where
 impl<'a, T, E, R> Drop for CoreApplication<'a, T, E, R> {
     fn drop(&mut self) {
         // TODO: Specify filename in config.
-        use utils::application_root_dir;
+        use crate::utils::application_root_dir;
         let path = format!("{}/thread_profile.json", application_root_dir());
         write_profile(path.as_str());
     }
@@ -797,11 +797,11 @@ where
         let data = init.build(&mut self.world);
         let event_reader_id = self
             .world
-            .exec(|mut ev: Write<EventChannel<Event>>| ev.register_reader());
+            .exec(|mut ev: Write<'_, EventChannel<Event>>| ev.register_reader());
 
         let trans_reader_id = self
             .world
-            .exec(|mut ev: Write<EventChannel<TransEvent<T, E>>>| ev.register_reader());
+            .exec(|mut ev: Write<'_, EventChannel<TransEvent<T, E>>>| ev.register_reader());
 
         Ok(CoreApplication {
             world: self.world,

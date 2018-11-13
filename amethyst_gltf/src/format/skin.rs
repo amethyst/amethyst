@@ -1,19 +1,19 @@
 use std::collections::HashMap;
 
 use gltf;
-use GltfPrefab;
 
-use {
+use crate::{
     animation::{JointPrefab, SkinPrefab, SkinnablePrefab},
     assets::Prefab,
     core::nalgebra::Matrix4,
     renderer::JointTransformsPrefab,
+    GltfPrefab,
 };
 
 use super::{Buffers, GltfError};
 
 pub fn load_skin(
-    skin: &gltf::Skin,
+    skin: &gltf::Skin<'_>,
     buffers: &Buffers,
     skin_entity: usize,
     node_map: &HashMap<usize, usize>,

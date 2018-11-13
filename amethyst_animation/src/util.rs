@@ -6,7 +6,7 @@ use amethyst_core::{
     specs::prelude::{Entity, WriteStorage},
 };
 
-use resources::{AnimationControlSet, AnimationSampling};
+use crate::resources::{AnimationControlSet, AnimationSampling};
 
 use self::SamplerPrimitive::*;
 
@@ -19,7 +19,7 @@ use self::SamplerPrimitive::*;
 ///        with the same id
 /// - `T`: the component type that the animation applies to
 pub fn get_animation_set<'a, I, T>(
-    controls: &'a mut WriteStorage<AnimationControlSet<I, T>>,
+    controls: &'a mut WriteStorage<'_, AnimationControlSet<I, T>>,
     entity: Entity,
 ) -> Option<&'a mut AnimationControlSet<I, T>>
 where

@@ -12,7 +12,7 @@ use amethyst_core::{
     transform::GlobalTransform,
 };
 
-use {
+use crate::{
     cam::{ActiveCamera, Camera},
     error::Result,
     hidden::{Hidden, HiddenPropagate},
@@ -91,7 +91,7 @@ impl<V> Pass for DrawFlat<V>
 where
     V: Query<(Position, TexCoord)>,
 {
-    fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect> {
         use std::mem;
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);
         builder

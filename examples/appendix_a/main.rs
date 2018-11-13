@@ -20,9 +20,7 @@ use amethyst::{
     ui::UiBundle,
     utils::application_root_dir,
 };
-use audio::Music;
-use bundle::PongBundle;
-use config::PongConfig;
+use crate::{audio::Music, bundle::PongBundle, config::PongConfig};
 use std::time::Duration;
 
 const AUDIO_MUSIC: &'static [&'static str] = &[
@@ -35,7 +33,7 @@ const AUDIO_SCORE: &'static str = "audio/score.ogg";
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    use pong::Pong;
+    use crate::pong::Pong;
 
     let app_root = application_root_dir();
 

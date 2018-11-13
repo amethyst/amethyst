@@ -6,7 +6,7 @@ use amethyst_core::{
     {Result, SystemBundle},
 };
 
-use circular_buffer::CircularBuffer;
+use crate::circular_buffer::CircularBuffer;
 
 /// The FPSCounter resource needed by the FPSCounterSystem.
 ///

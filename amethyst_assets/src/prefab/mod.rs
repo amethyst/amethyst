@@ -4,7 +4,7 @@ use amethyst_core::specs::prelude::{
     Component, DenseVecStorage, Entity, FlaggedStorage, Read, ReadExpect, SystemData, WriteStorage,
 };
 
-use {Asset, AssetStorage, Format, Handle, Loader, Progress, ProgressCounter};
+use crate::{Asset, AssetStorage, Format, Handle, Loader, Progress, ProgressCounter};
 
 pub use self::system::PrefabLoaderSystem;
 pub use amethyst_core::specs::error::Error as PrefabError;
@@ -448,7 +448,7 @@ mod tests {
         GlobalTransform, Time, Transform,
     };
 
-    use Loader;
+    use crate::Loader;
 
     use super::*;
 

@@ -1,4 +1,4 @@
-use Result;
+use crate::Result;
 
 pub use self::dir::Directory;
 

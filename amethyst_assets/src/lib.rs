@@ -7,8 +7,7 @@
 //! * asynchronous & parallel using rayon
 //! * allow different sources
 
-#![warn(missing_docs)]
-#![cfg_attr(feature = "cargo-clippy", allow(type_complexity))] // complex project
+#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 extern crate amethyst_core;
 extern crate crossbeam;
@@ -35,9 +34,7 @@ extern crate shred_derive;
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
-#[cfg(feature = "json")]
-pub use formats::JsonFormat;
-pub use {
+pub use crate::{
     asset::{Asset, Format, FormatValue, SimpleFormat},
     cache::Cache,
     error::{Error, ErrorKind, Result, ResultExt},
@@ -50,6 +47,8 @@ pub use {
     source::{Directory, Source},
     storage::{AssetStorage, Handle, ProcessingState, Processor, WeakHandle},
 };
+#[cfg(feature = "json")]
+pub use formats::JsonFormat;
 
 mod asset;
 mod cache;

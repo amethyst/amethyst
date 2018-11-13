@@ -9,7 +9,7 @@ use amethyst_core::{
     GlobalTransform,
 };
 
-use {
+use crate::{
     cam::{ActiveCamera, Camera},
     mesh::Mesh,
     mtl::{Material, MaterialDefaults, TextureOffset},
@@ -87,7 +87,7 @@ pub(crate) fn add_texture(effect: &mut Effect, texture: &Texture) {
     effect.data.samplers.push(texture.sampler().clone());
 }
 
-pub(crate) fn setup_textures(builder: &mut EffectBuilder, types: &[TextureType]) {
+pub(crate) fn setup_textures(builder: &mut EffectBuilder<'_>, types: &[TextureType]) {
     use self::TextureType::*;
     for ty in types {
         match *ty {
@@ -141,7 +141,7 @@ pub(crate) fn add_textures(
     set_texture_offsets(effect, encoder, material, types);
 }
 
-pub(crate) fn setup_texture_offsets(builder: &mut EffectBuilder, types: &[TextureType]) {
+pub(crate) fn setup_texture_offsets(builder: &mut EffectBuilder<'_>, types: &[TextureType]) {
     use self::TextureType::*;
     for ty in types {
         match *ty {
@@ -232,7 +232,7 @@ pub(crate) fn set_texture_offsets(
     }
 }
 
-pub(crate) fn setup_vertex_args(builder: &mut EffectBuilder) {
+pub(crate) fn setup_vertex_args(builder: &mut EffectBuilder<'_>) {
     builder.with_raw_constant_buffer(
         "VertexArgs",
         mem::size_of::<<VertexArgs as Uniform>::Std140>(),
@@ -355,8 +355,8 @@ pub(crate) fn draw_mesh(
 /// Returns the main camera and its `GlobalTransform`
 pub fn get_camera<'a>(
     active: Option<Read<'a, ActiveCamera>>,
-    camera: &'a ReadStorage<Camera>,
-    global: &'a ReadStorage<GlobalTransform>,
+    camera: &'a ReadStorage<'a, Camera>,
+    global: &'a ReadStorage<'a, GlobalTransform>,
 ) -> Option<(&'a Camera, &'a GlobalTransform)> {
     active
         .and_then(|a| {

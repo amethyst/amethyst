@@ -5,8 +5,7 @@ use amethyst::{
     ecs::prelude::{Entity, Join, Read, ReadExpect, System, Write, WriteStorage},
     ui::UiText,
 };
-use audio::Sounds;
-use {Ball, ScoreBoard};
+use crate::{audio::Sounds, Ball, ScoreBoard};
 
 /// This system is responsible for checking if a ball has moved into a left or
 /// a right edge. Points are distributed to the player on the other side, and
@@ -39,7 +38,7 @@ impl<'s> System<'s> for WinnerSystem {
         ): Self::SystemData,
     ) {
         for (ball, transform) in (&mut balls, &mut transforms).join() {
-            use ARENA_WIDTH;
+            use crate::ARENA_WIDTH;
 
             let ball_x = transform.translation().x;
 

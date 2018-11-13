@@ -10,7 +10,7 @@ use amethyst_core::{
     Time,
 };
 
-use resources::{
+use crate::resources::{
     AnimationSampling, ApplyData, BlendMethod, ControlState, EndControl, Sampler, SamplerControl,
     SamplerControlSet,
 };
@@ -116,7 +116,7 @@ fn process_sampler<T>(
 ) where
     T: AnimationSampling,
 {
-    use resources::ControlState::*;
+    use crate::resources::ControlState::*;
 
     let (new_state, new_end) = update_duration_and_check(&control, sampler, time);
 
@@ -189,7 +189,7 @@ fn update_duration_and_check<T>(
 where
     T: AnimationSampling,
 {
-    use resources::ControlState::*;
+    use crate::resources::ControlState::*;
     // Update state with new duration
     // Check duration for end of sampling
     match control.state {

@@ -1,6 +1,6 @@
 use amethyst::prelude::*;
 
-use GameUpdate;
+use crate::GameUpdate;
 
 /// Runs a function in `.update()` then `Pop`s itself.
 ///

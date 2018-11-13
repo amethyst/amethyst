@@ -8,7 +8,7 @@ use amethyst_core::{
     specs::prelude::{Entity, Read, WriteStorage},
 };
 
-use output::Output;
+use crate::output::Output;
 
 mod audio_emitter;
 mod audio_listener;

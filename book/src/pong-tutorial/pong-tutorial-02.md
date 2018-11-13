@@ -31,7 +31,7 @@ mod pong;
 And in main.rs, below the module declaration and before main, add this import:
 
 ```rust,ignore
-use pong::Pong;
+use crate::pong::Pong;
 ```
 
 Now you can just delete various `main.rs` use statements until the Rust compiler

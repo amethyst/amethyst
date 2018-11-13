@@ -1,10 +1,7 @@
 //! ECS input bundle
 
-use std::{hash::Hash, path::Path, result::Result as StdResult};
-
-#[cfg(feature = "sdl_controller")]
-use sdl_events_system::ControllerMappings;
 use serde::{de::DeserializeOwned, Serialize};
+use std::{hash::Hash, path::Path, result::Result as StdResult};
 
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::{
@@ -12,7 +9,10 @@ use amethyst_core::{
     specs::prelude::DispatcherBuilder,
 };
 
-use {Bindings, InputSystem};
+use crate::{Bindings, InputSystem};
+
+#[cfg(feature = "sdl_controller")]
+use crate::sdl_events_system::ControllerMappings;
 
 /// Bundle for adding the `InputHandler`.
 ///

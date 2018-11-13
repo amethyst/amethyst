@@ -3,7 +3,7 @@ use amethyst_core::{
     specs::{Component, DenseVecStorage},
 };
 
-use {color::Rgba, vertex::PosColorNorm};
+use crate::{color::Rgba, vertex::PosColorNorm};
 
 /// Debug lines are stored as a position, a direction and a color.
 ///

@@ -29,7 +29,7 @@ pub enum SdlSystemError {
 }
 
 impl fmt::Display for SdlSystemError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             SdlSystemError::ContextInit(ref msg) => write!(f, "Failed to initialize SDL: {}", msg),
             SdlSystemError::ControllerSubsystemInit(ref msg) => {
@@ -221,7 +221,7 @@ where
         handler: &mut InputHandler<AX, AC>,
         output: &mut EventChannel<InputEvent<AC>>,
     ) {
-        use controller::ControllerEvent::ControllerConnected;
+        use crate::controller::ControllerEvent::ControllerConnected;
 
         if let Ok(available) = self.controller_subsystem.num_joysticks() {
             for id in 0..available {

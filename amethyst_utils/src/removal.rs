@@ -39,7 +39,7 @@ where
 /// Removes all entities that have the `Removal<I>` component with the specified removal_id.
 pub fn exec_removal<I>(
     entities: &EntitiesRes,
-    removal_storage: &ReadStorage<Removal<I>>,
+    removal_storage: &ReadStorage<'_, Removal<I>>,
     removal_id: I,
 ) where
     I: Debug + Clone + PartialEq + Send + Sync + 'static,

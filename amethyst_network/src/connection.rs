@@ -52,7 +52,7 @@ impl<E: Send + Sync + 'static> NetConnection<E> {
     ///
     /// The downside of this is that you are forced to take NetConnection mutably inside of NetSocketSystem.
     /// If someone finds a better solution, please open a PR.
-    pub fn send_buffer_early_read(&mut self) -> EventIterator<NetEvent<E>> {
+    pub fn send_buffer_early_read(&mut self) -> EventIterator<'_, NetEvent<E>> {
         self.send_buffer.read(&mut self.send_reader)
     }
 }

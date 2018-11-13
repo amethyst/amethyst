@@ -4,7 +4,7 @@ use std::mem;
 
 use gfx::pso::buffer::ElemStride;
 
-use {
+use crate::{
     mesh::Mesh,
     pass::util::set_attribute_buffers,
     pipe::{Effect, EffectBuilder, NewEffect},

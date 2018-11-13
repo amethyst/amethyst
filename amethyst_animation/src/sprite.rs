@@ -3,7 +3,7 @@ use minterpolate::InterpolationPrimitive;
 use amethyst_assets::Handle;
 use amethyst_renderer::{SpriteRender, SpriteSheet};
 
-use {AnimationSampling, ApplyData, BlendMethod};
+use crate::{AnimationSampling, ApplyData, BlendMethod};
 
 /// Sampler primitive for SpriteRender animations
 /// Note that sprites can only ever be animated with `Step`, or a panic will occur.

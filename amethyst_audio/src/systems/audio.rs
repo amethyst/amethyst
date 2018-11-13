@@ -14,7 +14,7 @@ use amethyst_core::{
     transform::GlobalTransform,
 };
 
-use {
+use crate::{
     components::{AudioEmitter, AudioListener},
     end_signal::EndSignalSource,
 };

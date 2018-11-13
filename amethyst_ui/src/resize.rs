@@ -14,7 +14,7 @@ use super::*;
 /// `ResizeSystem` when either the component is attached, or the function is changed.
 pub struct UiResize {
     /// The core function of this component
-    pub function: Box<FnMut(&mut UiTransform, (f32, f32)) + Send + Sync>,
+    pub function: Box<dyn FnMut(&mut UiTransform, (f32, f32)) + Send + Sync>,
 }
 
 impl UiResize {

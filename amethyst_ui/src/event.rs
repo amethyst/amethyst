@@ -10,7 +10,7 @@ use amethyst_core::{
 use amethyst_input::InputHandler;
 use amethyst_renderer::{MouseButton, ScreenDimensions};
 
-use transform::UiTransform;
+use crate::transform::UiTransform;
 
 /// The type of ui event.
 /// Click happens if you start and stop clicking on the same ui element.

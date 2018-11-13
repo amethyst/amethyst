@@ -15,7 +15,7 @@ use gfx::{
 use amethyst_assets::{Asset, Handle};
 use amethyst_core::specs::prelude::DenseVecStorage;
 
-use {
+use crate::{
     error::Result,
     formats::TextureData,
     types::{ChannelFormat, Factory, RawShaderResourceView, RawTexture, Sampler, SurfaceFormat},
@@ -182,7 +182,7 @@ where
                     w * h * pixel_width,
                     data.len()
                 );
-                bail!(::error::Error::PixelDataMismatch(error))
+                bail!(crate::error::Error::PixelDataMismatch(error))
             }
             for y in 0..h {
                 for x in 0..(w * pixel_width) {

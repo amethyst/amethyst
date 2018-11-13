@@ -3,7 +3,7 @@ use minterpolate::InterpolationPrimitive;
 use amethyst_assets::Handle;
 use amethyst_renderer::{Material, Sprite, Texture, TextureOffset};
 
-use {AnimationSampling, ApplyData, BlendMethod};
+use crate::{AnimationSampling, ApplyData, BlendMethod};
 
 /// Sampler primitive for Material animations
 /// Note that material can only ever be animated with `Step`, or a panic will occur.

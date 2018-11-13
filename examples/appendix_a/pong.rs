@@ -11,16 +11,18 @@ use amethyst::{
     },
     ui::{Anchor, TtfFormat, UiText, UiTransform},
 };
-use config::{ArenaConfig, BallConfig, PaddlesConfig};
-use systems::ScoreText;
-use {Ball, Paddle, Side};
+use crate::{
+    config::{ArenaConfig, BallConfig, PaddlesConfig},
+    systems::ScoreText,
+    Ball, Paddle, Side,
+};
 
 pub struct Pong;
 
 impl<'a, 'b> SimpleState<'a, 'b> for Pong {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
-        use audio::initialise_audio;
+        use crate::audio::initialise_audio;
 
         // Setup our game.
         initialise_paddles(world);

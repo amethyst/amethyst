@@ -5,7 +5,7 @@ use amethyst::{
     renderer::Material,
 };
 
-use EffectReturn;
+use crate::EffectReturn;
 
 /// Fixture to test material animation loading.
 #[derive(Debug)]

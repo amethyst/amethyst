@@ -18,8 +18,7 @@ use amethyst::{
     utils::application_root_dir,
 };
 
-use audio::Music;
-use bundle::PongBundle;
+use crate::{audio::Music, bundle::PongBundle};
 use std::time::Duration;
 
 const ARENA_HEIGHT: f32 = 100.0;
@@ -42,7 +41,7 @@ const AUDIO_SCORE: &'static str = "audio/score.ogg";
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    use pong::Pong;
+    use crate::pong::Pong;
 
     let app_root = application_root_dir();
 

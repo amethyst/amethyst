@@ -3,7 +3,7 @@ use std::hash::Hash;
 
 use amethyst_core::specs::{Read, ReadExpect};
 
-use {Asset, AssetStorage, Format, Handle, Loader, Progress};
+use crate::{Asset, AssetStorage, Format, Handle, Loader, Progress};
 
 /// Helper type for loading assets
 #[derive(SystemData)]

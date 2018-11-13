@@ -3,7 +3,7 @@ use amethyst_core::{
     Transform,
 };
 
-use {
+use crate::{
     resources::{AnimationSampling, ApplyData, BlendMethod},
     util::SamplerPrimitive,
 };
@@ -28,7 +28,7 @@ impl AnimationSampling for Transform {
     type Channel = TransformChannel;
 
     fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<f32>, _: &()) {
-        use util::SamplerPrimitive::*;
+        use crate::util::SamplerPrimitive::*;
 
         use self::TransformChannel::*;
 

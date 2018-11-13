@@ -4,7 +4,7 @@ use gfx::texture::SamplerInfo;
 use gltf::{self, material::AlphaMode};
 use itertools::Itertools;
 
-use {
+use crate::{
     assets::Source,
     renderer::{
         JpgFormat, MaterialPrefab, PngFormat, TextureData, TextureFormat, TextureMetadata,
@@ -16,9 +16,9 @@ use super::{get_image_data, Buffers, GltfError, ImageFormat};
 
 // Load a single material, and transform into a format usable by the engine
 pub fn load_material(
-    material: &gltf::Material,
+    material: &gltf::Material<'_>,
     buffers: &Buffers,
-    source: Arc<Source>,
+    source: Arc<dyn Source>,
     name: &str,
 ) -> Result<MaterialPrefab<TextureFormat>, GltfError> {
     let mut prefab = MaterialPrefab::default();
@@ -154,10 +154,10 @@ fn deconstruct_image(data: &TextureData, offset: usize, step: usize) -> TextureD
 }
 
 fn load_texture_with_factor(
-    texture: Option<gltf::texture::Info>,
+    texture: Option<gltf::texture::Info<'_>>,
     factor: [f32; 4],
     buffers: &Buffers,
-    source: Arc<Source>,
+    source: Arc<dyn Source>,
     name: &str,
     srgb: bool,
 ) -> Result<(TextureData, [f32; 4]), GltfError> {
@@ -171,9 +171,9 @@ fn load_texture_with_factor(
 }
 
 fn load_texture(
-    texture: &gltf::Texture,
+    texture: &gltf::Texture<'_>,
     buffers: &Buffers,
-    source: Arc<Source>,
+    source: Arc<dyn Source>,
     name: &str,
     srgb: bool,
 ) -> Result<TextureData, GltfError> {
@@ -190,7 +190,7 @@ fn load_texture(
     }?)
 }
 
-fn load_sampler_info(sampler: &gltf::texture::Sampler) -> SamplerInfo {
+fn load_sampler_info(sampler: &gltf::texture::Sampler<'_>) -> SamplerInfo {
     use gfx::texture::{FilterMethod, WrapMode};
     use gltf::texture::{MagFilter, WrappingMode};
     // gfx only have support for a single filter, therefore we use mag filter, and ignore min filter

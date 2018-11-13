@@ -5,7 +5,7 @@ use std::sync::{
 
 use parking_lot::Mutex;
 
-use Error;
+use crate::Error;
 
 /// Completion status, returned by `ProgressCounter::complete`.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

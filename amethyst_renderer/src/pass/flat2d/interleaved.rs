@@ -11,7 +11,7 @@ use amethyst_core::{
     transform::GlobalTransform,
 };
 
-use {
+use crate::{
     cam::{ActiveCamera, Camera},
     error::Result,
     hidden::{Hidden, HiddenPropagate},
@@ -81,7 +81,7 @@ impl<'a> PassData<'a> for DrawFlat2D {
 }
 
 impl Pass for DrawFlat2D {
-    fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect> {
         use std::mem;
 
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);

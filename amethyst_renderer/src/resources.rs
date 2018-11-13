@@ -6,7 +6,7 @@ use winit::Window;
 use amethyst_assets::{PrefabData, PrefabError};
 use amethyst_core::specs::{Entity, Write};
 
-use color::Rgba;
+use crate::color::Rgba;
 
 /// The ambient color of a scene
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -44,7 +44,7 @@ pub struct WindowMessages {
     // NOTE TO FUTURE AUTHORS: This could be an FnOnce but that's not possible
     // right now as of 2017-10-02 because FnOnce isn't object safe.  It might
     // be possible as soon as FnBox stabilizes.  For now I'll use FnMut instead.
-    pub(crate) queue: SmallVec<[Box<FnMut(&Window) + Send + Sync + 'static>; 2]>,
+    pub(crate) queue: SmallVec<[Box<dyn FnMut(&Window) + Send + Sync + 'static>; 2]>,
 }
 
 impl WindowMessages {

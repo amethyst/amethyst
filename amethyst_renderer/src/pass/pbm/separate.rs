@@ -9,7 +9,7 @@ use amethyst_core::{
     transform::GlobalTransform,
 };
 
-use {
+use crate::{
     cam::{ActiveCamera, Camera},
     error::Result,
     hidden::{Hidden, HiddenPropagate},
@@ -96,7 +96,7 @@ impl<'a> PassData<'a> for DrawPbmSeparate {
 }
 
 impl Pass for DrawPbmSeparate {
-    fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect> {
         let mut builder = if self.skinning {
             create_skinning_effect(effect, FRAG_SRC)
         } else {

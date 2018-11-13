@@ -6,7 +6,7 @@ use amethyst_assets::{
 };
 use amethyst_core::specs::prelude::{Component, DenseVecStorage, VecStorage};
 
-use Texture;
+use crate::Texture;
 
 /// An asset handle to sprite sheet metadata.
 pub type SpriteSheetHandle = Handle<SpriteSheet>;

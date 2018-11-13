@@ -1,6 +1,6 @@
 pub use self::interleaved::DrawSkybox;
 
-use color::Rgba;
+use crate::color::Rgba;
 
 mod interleaved;
 

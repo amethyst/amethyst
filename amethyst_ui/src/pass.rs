@@ -116,7 +116,7 @@ impl<'a> PassData<'a> for DrawUi {
 }
 
 impl Pass for DrawUi {
-    fn compile(&mut self, mut effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, mut effect: NewEffect<'_>) -> Result<Effect> {
         // Initialize a single unit quad, we'll use this mesh when drawing quads later.
         // Centered around (0,0) and of size 2
         let data = Shape::Plane(None).generate_vertices::<Vec<PosTex>>(None);
@@ -154,7 +154,7 @@ impl Pass for DrawUi {
             editing,
             hidden,
             hidden_prop,
-        ): <Self as PassData>::Data,
+        ): <Self as PassData<'_>>::Data,
     ) {
         // Populate and update the draw order cache.
         {

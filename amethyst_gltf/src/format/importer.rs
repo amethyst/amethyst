@@ -7,7 +7,7 @@ use gltf::{
     Gltf,
 };
 
-use assets::{Error as AssetError, Result as AssetResult, Source as AssetSource};
+use crate::assets::{Error as AssetError, Result as AssetResult, Source as AssetSource};
 
 #[derive(Debug)]
 pub enum ImageFormat {
@@ -32,12 +32,12 @@ pub struct Buffers(Vec<Vec<u8>>);
 #[allow(unused)]
 impl Buffers {
     /// Obtain the contents of a loaded buffer.
-    pub fn buffer(&self, buffer: &gltf::Buffer) -> Option<&[u8]> {
+    pub fn buffer(&self, buffer: &gltf::Buffer<'_>) -> Option<&[u8]> {
         self.0.get(buffer.index()).map(Vec::as_slice)
     }
 
     /// Obtain the contents of a loaded buffer view.
-    pub fn view(&self, view: &gltf::buffer::View) -> Option<&[u8]> {
+    pub fn view(&self, view: &gltf::buffer::View<'_>) -> Option<&[u8]> {
         self.buffer(&view.buffer()).map(|data| {
             let begin = view.offset();
             let end = begin + view.length();
@@ -52,7 +52,7 @@ impl Buffers {
 }
 
 /// Imports glTF 2.0
-pub fn import<P>(source: Arc<AssetSource>, path: P) -> Result<(Gltf, Buffers), Error>
+pub fn import<P>(source: Arc<dyn AssetSource>, path: P) -> Result<(Gltf, Buffers), Error>
 where
     P: AsRef<Path>,
 {
@@ -65,7 +65,7 @@ where
     }
 }
 
-fn read_to_end<P: AsRef<Path>>(source: Arc<AssetSource>, path: P) -> AssetResult<Vec<u8>> {
+fn read_to_end<P: AsRef<Path>>(source: Arc<dyn AssetSource>, path: P) -> AssetResult<Vec<u8>> {
     let path = path.as_ref();
     source.load(
         path.to_str()
@@ -80,7 +80,7 @@ fn parse_data_uri(uri: &str) -> Result<Vec<u8>, Error> {
 }
 
 fn load_external_buffers(
-    source: Arc<AssetSource>,
+    source: Arc<dyn AssetSource>,
     base_path: &Path,
     gltf: &Gltf,
     mut bin: Option<Vec<u8>>,
@@ -113,7 +113,7 @@ fn load_external_buffers(
 
 fn import_standard(
     data: &[u8],
-    source: Arc<AssetSource>,
+    source: Arc<dyn AssetSource>,
     base_path: &Path,
 ) -> Result<(Gltf, Buffers), Error> {
     let gltf = Gltf::from_slice(data)?;
@@ -123,7 +123,7 @@ fn import_standard(
 
 fn import_binary(
     data: &[u8],
-    source: Arc<AssetSource>,
+    source: Arc<dyn AssetSource>,
     base_path: &Path,
 ) -> Result<(Gltf, Buffers), Error> {
     let gltf::binary::Glb {
@@ -138,9 +138,9 @@ fn import_binary(
 }
 
 pub fn get_image_data(
-    image: &gltf::Image,
+    image: &gltf::Image<'_>,
     buffers: &Buffers,
-    source: Arc<AssetSource>,
+    source: Arc<dyn AssetSource>,
     base_path: &Path,
 ) -> Result<(Vec<u8>, ImageFormat), Error> {
     use gltf::image::Source;
@@ -270,7 +270,7 @@ impl From<base64::DecodeError> for Error {
 }
 
 impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use std::error::Error;
         write!(f, "{}", self.description())
     }
@@ -293,7 +293,7 @@ impl StdError for Error {
         }
     }
 
-    fn cause(&self) -> Option<&StdError> {
+    fn cause(&self) -> Option<&dyn StdError> {
         use self::Error::*;
         match *self {
             MalformedJson(ref err) => Some(err),

@@ -1,4 +1,4 @@
-use {
+use crate::{
     core::{
         shrev::{EventChannel, ReaderId},
         specs::{Read, Resources, SystemData},

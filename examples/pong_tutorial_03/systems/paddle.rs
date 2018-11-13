@@ -3,7 +3,7 @@ use amethyst::{
     ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
     input::InputHandler,
 };
-use pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
+use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 
 pub struct PaddleSystem;
 

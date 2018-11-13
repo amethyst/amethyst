@@ -16,7 +16,7 @@ use amethyst_core::{
     specs::prelude::{Entity, Read, ReadExpect, WriteStorage},
 };
 
-use {
+use crate::{
     ComboMeshCreator, Mesh, MeshData, MeshHandle, Normal, PosNormTangTex, PosNormTex, PosTex,
     Position, Separate, Tangent, TexCoord,
 };
@@ -68,7 +68,7 @@ where
     fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
-        system_data: &mut <Self as PrefabData>::SystemData,
+        system_data: &mut <Self as PrefabData<'_>>::SystemData,
     ) -> Result<bool, PrefabError> {
         let (loader, _, mesh_storage) = system_data;
         self.handle = Some(loader.load_from_data(
@@ -134,7 +134,7 @@ impl Shape {
     pub fn upload<V, P>(
         &self,
         scale: Option<(f32, f32, f32)>,
-        upload: ShapeUpload,
+        upload: ShapeUpload<'_>,
         progress: P,
     ) -> MeshHandle
     where

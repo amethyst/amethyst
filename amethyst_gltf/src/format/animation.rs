@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use gltf;
 
-use {
+use crate::{
     animation::{
         AnimationPrefab, AnimationSetPrefab, InterpolationFunction, InterpolationPrimitive,
         Sampler, SamplerPrimitive, TransformChannel,
@@ -32,7 +32,7 @@ pub fn load_animations(
 }
 
 fn load_animation(
-    animation: &gltf::Animation,
+    animation: &gltf::Animation<'_>,
     buffers: &Buffers,
 ) -> Result<AnimationPrefab<Transform>, GltfError> {
     let mut a = AnimationPrefab::default();
@@ -44,7 +44,7 @@ fn load_animation(
 }
 
 fn load_channel(
-    channel: &gltf::animation::Channel,
+    channel: &gltf::animation::Channel<'_>,
     buffers: &Buffers,
 ) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<f32>>), GltfError> {
     use gltf::animation::util::ReadOutputs::*;

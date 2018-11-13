@@ -9,7 +9,7 @@ use amethyst_core::{
     specs::prelude::{Read, Resources, System, Write},
 };
 
-use {Bindings, InputEvent, InputHandler};
+use crate::{Bindings, InputEvent, InputHandler};
 
 /// Input system
 ///

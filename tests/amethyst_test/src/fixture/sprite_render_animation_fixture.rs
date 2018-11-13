@@ -7,7 +7,7 @@ use amethyst::{
     renderer::{Sprite, SpriteRender, SpriteSheet, Texture},
 };
 
-use EffectReturn;
+use crate::EffectReturn;
 
 /// Fixture to test sprite render animation loading.
 #[derive(Debug)]

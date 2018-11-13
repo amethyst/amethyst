@@ -8,7 +8,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use amethyst_assets::{AssetPrefab, Format, PrefabData, PrefabError, ProgressCounter};
 use amethyst_core::specs::prelude::Entity;
 
-use {shape::InternalShape, Mesh, ShapePrefab, Texture};
+use crate::{shape::InternalShape, Mesh, ShapePrefab, Texture};
 
 mod mesh;
 mod mtl;
@@ -74,7 +74,7 @@ where
     fn add_to_entity(
         &self,
         entity: Entity,
-        system_data: &mut <Self as PrefabData>::SystemData,
+        system_data: &mut <Self as PrefabData<'_>>::SystemData,
         entities: &[Entity],
     ) -> Result<(), PrefabError> {
         match self.mesh {

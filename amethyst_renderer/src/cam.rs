@@ -176,7 +176,7 @@ mod serde_ortho {
         impl<'de> Visitor<'de> for OrthographicVisitor {
             type Value = Orthographic3<f32>;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str("struct Orthographic")
             }
 
@@ -329,7 +329,7 @@ mod serde_persp {
         impl<'de> Visitor<'de> for PerspectiveVisitor {
             type Value = Perspective3<f32>;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str("struct Perspective")
             }
 

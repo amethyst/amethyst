@@ -317,8 +317,8 @@ extern crate hetseq;
 #[macro_use]
 extern crate lazy_static;
 
-pub(crate) use system_injection_bundle::SystemInjectionBundle;
-pub use {
+pub(crate) use crate::system_injection_bundle::SystemInjectionBundle;
+pub use crate::{
     amethyst_application::{AmethystApplication, HIDPI, SCREEN_HEIGHT, SCREEN_WIDTH},
     effect_return::EffectReturn,
     fixture::{MaterialAnimationFixture, SpriteRenderAnimationFixture},
