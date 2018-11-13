@@ -12,6 +12,7 @@ use winit::Event;
 
 use {
     assets::{Loader, Source},
+    callback_queue::CallbackQueue,
     core::{
         frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy},
         shrev::{EventChannel, ReaderId},
@@ -320,6 +321,16 @@ where
 
         {
             #[cfg(feature = "profiler")]
+            profile_scope!("run_callback_queue");
+            let mut world = &mut self.world;
+            let receiver = world.read_resource::<CallbackQueue>().receiver.clone();
+            while let Ok(func) = receiver.try_recv() {
+                func(&mut world);
+            }
+        }
+
+        {
+            #[cfg(feature = "profiler")]
             profile_scope!("handle_event");
 
             {
@@ -502,6 +513,7 @@ where
         world.add_resource(FrameLimiter::default());
         world.add_resource(Stopwatch::default());
         world.add_resource(Time::default());
+        world.add_resource(CallbackQueue::default());
 
         world.register::<Named>();
 

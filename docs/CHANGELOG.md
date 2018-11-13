@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `UiWidget` variant `Custom` for custom composited widgets ([#1112])
 * `AssetLoaderSystemData` abstracts resources needed from `World` to do asset loading ([#1090])
 * `amethyst_ui::get_default_font` supports loading system font from Path. ([#1108])
+* Added `Callback` and `CallbackQueue` for use in asynchronous contexts. ([#1125])
 * Added Trans event queue. Used to trigger state transitions from systems. Also used to trigger multiple state transitions at once. (For example, to `Trans::Pop` two states.) ([#1069])
 * `sprite_camera_follow` example showing how to use a Camera that has a sprite Parent ([#1099])
 
@@ -52,6 +53,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1089]: https://github.com/amethyst/amethyst/pull/1089
 [#1099]: https://github.com/amethyst/amethyst/pull/1099
 [#1108]: https://github.com/amethyst/amethyst/pull/1108
+[#1125]: https://github.com/amethyst/amethyst/pull/1125
 [#1066]: https://github.com/amethyst/amethyst/pull/1066
 [#1117]: https://github.com/amethyst/amethyst/pull/1117
 [#1122]: https://github.com/amethyst/amethyst/pull/1122
