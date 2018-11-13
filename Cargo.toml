@@ -203,6 +203,9 @@ path = "examples/state_dispatcher/main.rs"
 name = "spotlights"
 path = "examples/spotlights/main.rs"
 
+[[example]]
+name = "sprite_camera_follow"
+path = "examples/sprite_camera_follow/main.rs"
 
 [workspace]
 members = ["amethyst_gltf", "tests/amethyst_test"]

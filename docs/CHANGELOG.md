@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `AssetLoaderSystemData` abstracts resources needed from `World` to do asset loading ([#1090])
 * `amethyst_ui::get_default_font` supports loading system font from Path. ([#1108])
 * Added Trans event queue. Used to trigger state transitions from systems. Also used to trigger multiple state transitions at once. (For example, to `Trans::Pop` two states.) ([#1069])
+* `sprite_camera_follow` example showing how to use a Camera that has a sprite Parent ([#1099])
 
 ### Changed
 
@@ -48,6 +49,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1090]: https://github.com/amethyst/amethyst/pull/1090
 [#1112]: https://github.com/amethyst/amethyst/pull/1112
 [#1089]: https://github.com/amethyst/amethyst/pull/1089
+[#1099]: https://github.com/amethyst/amethyst/pull/1099
 [#1108]: https://github.com/amethyst/amethyst/pull/1108
 [#1066]: https://github.com/amethyst/amethyst/pull/1066
 [#1117]: https://github.com/amethyst/amethyst/pull/1117
