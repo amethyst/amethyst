@@ -1,11 +1,11 @@
 use amethyst::{
     assets::{AssetStorage, Loader},
-    core::{cgmath::Vector3, transform::Transform},
+    core::transform::Transform,
     ecs::prelude::{Component, DenseVecStorage, Entity},
     prelude::*,
     renderer::{
-        Camera, MaterialTextureSet, PngFormat, Projection, SpriteRender, SpriteSheet,
-        SpriteSheetFormat, SpriteSheetHandle, Texture, TextureMetadata,
+        Camera, PngFormat, Projection, SpriteRender, SpriteSheet, SpriteSheetFormat,
+        SpriteSheetHandle, Texture, TextureMetadata,
     },
     ui::{Anchor, TtfFormat, UiText, UiTransform},
 };
@@ -103,18 +103,12 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
         )
     };
 
-    // `texture_id` is a application defined ID given to the texture to store in the `World`.
-    // This is needed to link the texture to the sprite_sheet.
-    let texture_id = 0;
-    let mut material_texture_set = world.write_resource::<MaterialTextureSet>();
-    material_texture_set.insert(texture_id, texture_handle);
-
     let loader = world.read_resource::<Loader>();
     let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
     loader.load(
         "texture/pong_spritesheet.ron", // Here we load the associated ron file
         SpriteSheetFormat,
-        texture_id, // We pass it the ID of the texture we want it to use
+        texture_handle, // We pass it the texture we want it to use
         (),
         &sprite_sheet_store,
     )
@@ -123,7 +117,7 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
 /// Initialise the camera.
 fn initialise_camera(world: &mut World) {
     let mut transform = Transform::default();
-    transform.translation.z = 1.0;
+    transform.set_z(1.0);
     world
         .create_entity()
         .with(Camera::from(Projection::orthographic(
@@ -142,8 +136,8 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
 
     // Correctly position the paddles.
     let y = ARENA_HEIGHT / 2.0;
-    left_transform.translation = Vector3::new(PADDLE_WIDTH * 0.5, y, 0.0);
-    right_transform.translation = Vector3::new(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
+    left_transform.set_xyz(PADDLE_WIDTH * 0.5, y, 0.0);
+    right_transform.set_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 
     // Assign the sprites for the paddles
     let sprite_render_left = SpriteRender {
@@ -181,7 +175,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
 fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
     // Create the translation.
     let mut local_transform = Transform::default();
-    local_transform.translation = Vector3::new(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
+    local_transform.set_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 
     // Assign the sprite for the ball
     let sprite_render = SpriteRender {
