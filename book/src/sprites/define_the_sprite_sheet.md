@@ -40,23 +40,26 @@ Here is an example of such a definition file:
 ```
 `offsets: Some((0.0, 0.0)),` can be replaced by `offsets: (0.0, 0.0),` if the line `#![enable(implicit_some)]` is added at the top of the definition file.
 
-Then, you can load it using the texture ID of the sheet's image you loaded earlier:
+Then, you can load it using the texture handle of the sheet's image you loaded earlier:
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::assets::{Loader, AssetStorage};
-# use amethyst::renderer::{SpriteSheetFormat, SpriteSheet};
-# 
-# const SPRITESHEET_TEXTURE_ID: u64 = 0;
+# use amethyst::renderer::{SpriteSheetFormat, SpriteSheet, TextureHandle};
+#
+# fn load_texture() -> TextureHandle {
+#    unimplemented!()
+# }
 # 
 # fn load_sprite_sheet() {
 #   let world = amethyst::ecs::World::new(); // Normally, you would use Amethyst's world
 #   let loader = world.read_resource::<Loader>();
+#   let texture_handle = load_texture();
 #   let spritesheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
 let spritesheet_handle = loader.load(
     "my_spritesheet.ron",
     SpriteSheetFormat,
-    SPRITESHEET_TEXTURE_ID,
+    texture_handle,
     (),
     &spritesheet_storage,
 );
@@ -86,14 +89,14 @@ The following snippet shows you how to naively define a `SpriteSheet`. In a real
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
-use amethyst::renderer::{Sprite, SpriteSheet, TextureCoordinates};
+use amethyst::renderer::{Sprite, SpriteSheet, TextureCoordinates, TextureHandle};
 
 /// Returns a `SpriteSheet`.
 ///
 /// # Parameters
 ///
-/// * `texture_id`: ID of the texture in the `MaterialTextureSet`.
-pub fn load_sprite_sheet(texture_id: u64) -> SpriteSheet {
+/// * `texture`: Handle of the texture.
+pub fn load_sprite_sheet(texture: TextureHandle) -> SpriteSheet {
     let sprite_count = 1; // number of sprites
     let mut sprites = Vec::with_capacity(sprite_count);
 
@@ -113,7 +116,7 @@ pub fn load_sprite_sheet(texture_id: u64) -> SpriteSheet {
     sprites.push(sprite);
 
     SpriteSheet {
-        texture_id,
+        texture,
         sprites,
     }
 }
