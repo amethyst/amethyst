@@ -62,6 +62,7 @@ mod test {
         sleep(Duration::from_millis(50));
         {
             let mut sto = WriteStorage::<NetConnection<()>>::fetch(&world_cl.res);
+
             for mut cmp in (&mut sto).join() {
                 for _i in 0..100 {
                     cmp.send_buffer.single_write(test_event.clone());

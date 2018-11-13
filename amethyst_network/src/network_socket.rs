@@ -3,14 +3,16 @@
 use std::{
     clone::Clone,
     io::{Error, ErrorKind},
-    net::{SocketAddr, UdpSocket},
+    net::SocketAddr,
     sync::mpsc::{channel, Receiver, Sender},
     thread,
 };
 
-use serde::{de::DeserializeOwned, Serialize};
-
 use amethyst_core::specs::{Join, Resources, System, SystemData, WriteStorage};
+use laminar::error;
+use laminar::net::UdpSocket;
+use laminar::{DeliveryMethod, NetworkConfig, Packet};
+use serde::{de::DeserializeOwned, Serialize};
 
 use super::{deserialize_event, send_event, ConnectionState, NetConnection, NetEvent, NetFilter};
 
@@ -26,6 +28,28 @@ struct RawEvent {
     pub byte_count: usize,
     pub data: Vec<u8>,
     pub source: SocketAddr,
+    pub delivery_method: DeliveryMethod,
+}
+
+impl From<Packet> for RawEvent {
+    fn from(packet: Packet) -> Self {
+        RawEvent {
+            byte_count: packet.payload().len(),
+            data: packet.payload().to_vec(),
+            source: packet.addr(),
+            delivery_method: packet.delivery_method(),
+        }
+    }
+}
+
+impl From<RawEvent> for Packet {
+    fn from(raw_event: RawEvent) -> Self {
+        Packet::new(
+            raw_event.source,
+            raw_event.data.into_boxed_slice(),
+            raw_event.delivery_method,
+        )
+    }
 }
 
 // If a client sends both a connect event and other events,
@@ -62,7 +86,8 @@ where
             warn!("Using a port below 1024, this will require root permission and should not be done.");
         }
 
-        let socket = UdpSocket::bind(addr)?;
+        let mut socket = UdpSocket::bind(addr, NetworkConfig::default())
+            .map_err(|x| Error::new(ErrorKind::Other, x.to_string()))?;
 
         socket
             .set_nonblocking(true)
@@ -77,7 +102,7 @@ where
             //rx1,tx2
             let send_queue = rx1;
             let receive_queue = tx2;
-            let socket = socket;
+            let mut socket = socket;
 
             'outer: loop {
                 // send
@@ -85,7 +110,7 @@ where
                     match control_event {
                         InternalSocketEvent::SendEvents { target, events } => {
                             for ev in events {
-                                send_event(&ev, &target, &socket);
+                                send_event(&ev, &target, &mut socket);
                             }
                         }
                         InternalSocketEvent::Stop => break 'outer,
@@ -93,27 +118,28 @@ where
                 }
 
                 // receive
-                let mut buf = [0 as u8; 2048];
                 loop {
-                    match socket.recv_from(&mut buf) {
+                    match socket.recv() {
                         // Data received
-                        Ok((amt, src)) => {
-                            if let Err(_) = receive_queue.send(RawEvent {
-                                byte_count: amt,
-                                data: buf[..amt].to_vec(),
-                                source: src,
-                            }) {
+                        Ok(Some(packet)) => {
+                            if let Err(_) = receive_queue.send(RawEvent::from(packet)) {
                                 error!("`NetworkSocketSystem` was dropped");
                                 break 'outer;
                             }
                         }
-                        Err(e) => {
-                            if e.kind() == ErrorKind::WouldBlock {
-                                break;
-                            } else {
-                                error!("Could not receive datagram: {}", e);
+                        Err(e) => match e.kind() {
+                            error::NetworkErrorKind::IOError(io_error) => {
+                                if io_error.kind() == ErrorKind::WouldBlock {
+                                    break;
+                                } else {
+                                    error!("Could not receive datagram: {}", e);
+                                }
                             }
-                        }
+                            _ => {
+                                error!("Could not receive datagram: {:?}", e);
+                            }
+                        },
+                        Ok(None) => {}
                     }
                 }
             }
