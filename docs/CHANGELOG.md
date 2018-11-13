@@ -20,6 +20,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `AssetLoaderSystemData` abstracts resources needed from `World` to do asset loading ([#1090])
 * `amethyst_ui::get_default_font` supports loading system font from Path. ([#1108])
 * Added `Callback` and `CallbackQueue` for use in asynchronous contexts. ([#1125])
+* Added Trans event queue. Used to trigger state transitions from systems. Also used to trigger multiple state transitions at once. (For example, to `Trans::Pop` two states.) ([#1069])
+* `sprite_camera_follow` example showing how to use a Camera that has a sprite Parent ([#1099])
 
 ### Changed
 
@@ -27,11 +29,15 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `SpriteRenderPrimitive::SpriteSheet` now takes `Handle<SpriteSheet>` instead of a `u64` ID. ([#1089])
 * `nalgebra` is now the math library used by the engine. ([#1066])
 * The `amethyst::renderer::Projection::orthographic` function has had its parameter order changed to match that of `nalgebra` ([#1066])
+* `SpriteSheet` now use `TextureHandle` directly instead of a `u64` ID coupled with `MaterialTextureSet`. ([#1117])
+* Updated `specs` to `0.14` and `specs-hierarchy` to `0.3`. ([#1122])
 
 ### Removed
 
 * `SpriteSheetSet` is removed as it is no longer needed. ([#1089])
+* `MaterialTextureSet` is removed as it is no longer needed. ([#1117])
 * `amethyst::core::Orientation` has been removed because of limited use. ([#1066])
+* `TimedDestroySystem` has been split into `DestroyAtTimeSystem` and `DestroyInTimeSystem`. ([#1129])
 
 ### Fixed
 
@@ -39,14 +45,20 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1043]: https://github.com/amethyst/amethyst/pull/1043
 [#1051]: https://github.com/amethyst/amethyst/pull/1051
 [#1035]: https://github.com/amethyst/amethyst/pull/1035
+[#1069]: https://github.com/amethyst/amethyst/pull/1069
 [#1074]: https://github.com/amethyst/amethyst/pull/1074
 [#1081]: https://github.com/amethyst/amethyst/pull/1081
 [#1090]: https://github.com/amethyst/amethyst/pull/1090
 [#1112]: https://github.com/amethyst/amethyst/pull/1112
 [#1089]: https://github.com/amethyst/amethyst/pull/1089
+[#1099]: https://github.com/amethyst/amethyst/pull/1099
 [#1108]: https://github.com/amethyst/amethyst/pull/1108
 [#1125]: https://github.com/amethyst/amethyst/pull/1125
 [#1066]: https://github.com/amethyst/amethyst/pull/1066
+[#1117]: https://github.com/amethyst/amethyst/pull/1117
+[#1122]: https://github.com/amethyst/amethyst/pull/1122
+[#1129]: https://github.com/amethyst/amethyst/pull/1129
+
 
 ## [0.9.0] - 2018-10
 ### Added

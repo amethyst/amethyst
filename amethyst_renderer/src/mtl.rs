@@ -1,11 +1,8 @@
 //! Physically-based material.
 
-use fnv::FnvHashMap;
-
-use amethyst_assets::Handle;
 use amethyst_core::specs::prelude::{Component, DenseVecStorage};
 
-use tex::{Texture, TextureHandle};
+use tex::TextureHandle;
 
 /// Material reference this part of the texture
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
@@ -71,54 +68,3 @@ impl Component for Material {
 /// `Material` you don't want to specify.
 #[derive(Clone)]
 pub struct MaterialDefaults(pub Material);
-
-/// Textures used by texture animations
-#[derive(Debug, Default)]
-pub struct MaterialTextureSet {
-    textures: FnvHashMap<u64, Handle<Texture>>,
-    texture_inverse: FnvHashMap<Handle<Texture>, u64>,
-}
-
-impl MaterialTextureSet {
-    /// Create new texture set
-    pub fn new() -> Self {
-        MaterialTextureSet {
-            textures: FnvHashMap::default(),
-            texture_inverse: FnvHashMap::default(),
-        }
-    }
-
-    /// Retrieve the handle for a given index
-    pub fn handle(&self, id: u64) -> Option<Handle<Texture>> {
-        self.textures.get(&id).cloned()
-    }
-
-    /// Retrieve the index for a given handle
-    pub fn id(&self, handle: &Handle<Texture>) -> Option<u64> {
-        self.texture_inverse.get(handle).cloned()
-    }
-
-    /// Insert a texture handle at the given index
-    pub fn insert(&mut self, id: u64, handle: Handle<Texture>) {
-        self.textures.insert(id, handle.clone());
-        self.texture_inverse.insert(handle, id);
-    }
-
-    /// Remove the given index
-    pub fn remove(&mut self, id: u64) {
-        if let Some(handle) = self.textures.remove(&id) {
-            self.texture_inverse.remove(&handle);
-        }
-    }
-
-    /// Get number of textures in the set
-    pub fn len(&self) -> usize {
-        self.textures.len()
-    }
-
-    /// Remove all texture handles in the set
-    pub fn clear(&mut self) {
-        self.textures.clear();
-        self.texture_inverse.clear();
-    }
-}

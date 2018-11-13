@@ -4,12 +4,10 @@ use amethyst::{
     },
     assets::{AssetStorage, Handle, Loader},
     ecs::prelude::*,
-    renderer::{MaterialTextureSet, Sprite, SpriteRender, SpriteSheet, Texture},
+    renderer::{Sprite, SpriteRender, SpriteSheet, Texture},
 };
 
 use EffectReturn;
-
-const TEXTURE_ID: u64 = 0;
 
 /// Fixture to test sprite render animation loading.
 #[derive(Debug)]
@@ -31,13 +29,10 @@ impl SpriteRenderAnimationFixture {
                 (),
                 &world.read_resource::<AssetStorage<Texture>>(),
             );
-            world
-                .write_resource::<MaterialTextureSet>()
-                .insert(TEXTURE_ID, tex_handle);
 
             let loader = world.read_resource::<Loader>();
             let sprite_sheet_handle =
-                loader.load_from_data(Self::sprite_sheet(), (), &world.read_resource());
+                loader.load_from_data(Self::sprite_sheet(tex_handle), (), &world.read_resource());
             let sprite_sheet_sampler = Sampler {
                 input: vec![0.0],
                 output: vec![SpriteRenderPrimitive::SpriteSheet(sprite_sheet_handle)],
@@ -93,9 +88,9 @@ impl SpriteRenderAnimationFixture {
         assert!(store.get(animation_handle).is_some());
     }
 
-    fn sprite_sheet() -> SpriteSheet {
+    fn sprite_sheet(texture: Handle<Texture>) -> SpriteSheet {
         SpriteSheet {
-            texture_id: TEXTURE_ID,
+            texture,
             sprites: vec![Sprite {
                 width: 10.0,
                 height: 10.0,

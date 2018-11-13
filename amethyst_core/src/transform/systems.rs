@@ -2,8 +2,8 @@
 
 use hibitset::BitSet;
 use specs::prelude::{
-    Entities, Entity, InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage, ReaderId,
-    Resources, System, WriteStorage,
+    ComponentEvent, Entities, Entity, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
+    WriteStorage,
 };
 
 use transform::{GlobalTransform, HierarchyEvent, Parent, ParentHierarchy, Transform};
@@ -14,8 +14,7 @@ pub struct TransformSystem {
     local_modified: BitSet,
     global_modified: BitSet,
 
-    inserted_local_id: Option<ReaderId<InsertedFlag>>,
-    modified_local_id: Option<ReaderId<ModifiedFlag>>,
+    locals_events_id: Option<ReaderId<ComponentEvent>>,
 
     parent_events_id: Option<ReaderId<HierarchyEvent>>,
 
@@ -26,8 +25,7 @@ impl TransformSystem {
     /// Creates a new transform processor.
     pub fn new() -> TransformSystem {
         TransformSystem {
-            inserted_local_id: None,
-            modified_local_id: None,
+            locals_events_id: None,
             parent_events_id: None,
             local_modified: BitSet::default(),
             global_modified: BitSet::default(),
@@ -60,18 +58,18 @@ impl<'a> System<'a> for TransformSystem {
         self.local_modified.clear();
         self.global_modified.clear();
 
-        locals.populate_inserted(
-            self.inserted_local_id
-                .as_mut()
-                .expect("`TransformSystem::setup` was not called before `TransformSystem::run`"),
-            &mut self.local_modified,
-        );
-        locals.populate_modified(
-            self.modified_local_id
-                .as_mut()
-                .expect("`TransformSystem::setup` was not called before `TransformSystem::run`"),
-            &mut self.local_modified,
-        );
+        locals
+            .channel()
+            .read(
+                self.locals_events_id.as_mut().expect(
+                    "`TransformSystem::setup` was not called before `TransformSystem::run`",
+                ),
+            ).for_each(|event| match event {
+                ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
+                    self.local_modified.add(*id);
+                }
+                ComponentEvent::Removed(_id) => {}
+            });
 
         for event in hierarchy.changed().read(
             self.parent_events_id
@@ -137,8 +135,7 @@ impl<'a> System<'a> for TransformSystem {
         let mut hierarchy = res.fetch_mut::<ParentHierarchy>();
         let mut locals = WriteStorage::<Transform>::fetch(res);
         self.parent_events_id = Some(hierarchy.track());
-        self.inserted_local_id = Some(locals.track_inserted());
-        self.modified_local_id = Some(locals.track_modified());
+        self.locals_events_id = Some(locals.register_reader());
     }
 }
 

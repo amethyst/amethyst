@@ -45,7 +45,7 @@ use amethyst::core::transform::Transform;
 use amethyst::ecs::prelude::{Component, DenseVecStorage};
 use amethyst::prelude::*;
 use amethyst::renderer::{
-    Camera, MaterialTextureSet, PngFormat, Projection, SpriteRender, SpriteSheet,
+    Camera, PngFormat, Projection, SpriteRender, SpriteSheet,
     SpriteSheetFormat, SpriteSheetHandle, Texture, TextureMetadata,
 };
 ```
@@ -456,48 +456,13 @@ This handle "points" to the place where the asset will be loaded. In Rust terms,
 equivalent to a reference-counted option. It is extremely useful, especially as cloning
 the handle does not clone the asset in memory, so many things can use the same asset at once.
 
-Heading back to the code, we need to add this snippet after loading the texture.
-
-```rust,no_run,noplaypen
-# extern crate amethyst;
-# use amethyst::prelude::*;
-# use amethyst::assets::{Loader, AssetStorage};
-# use amethyst::renderer::{Texture, PngFormat, TextureHandle, MaterialTextureSet, SpriteSheetHandle, TextureMetadata};
-# use amethyst::ecs::World;
-# fn load_sprite_sheet(world: &mut World) {
-#   let texture_handle = {
-#       let loader = world.read_resource::<Loader>();
-#       let texture_storage = world.read_resource::<AssetStorage<Texture>>();
-#       loader.load(
-#           "texture/pong_spritesheet.png",
-#           PngFormat,
-#           TextureMetadata::srgb_scale(),
-#           (),
-#           &texture_storage,
-#       )
-#   };
-// `texture_id` is an application-defined ID given to the texture to store in
-// the `World`. This is needed to link the texture to the sprite_sheet.
-let texture_id = 0;
-let mut material_texture_set = world.write_resource::<MaterialTextureSet>();
-material_texture_set.insert(texture_id, texture_handle);
-# }
-```
-
-The `MaterialTextureSet` is yet another `resource`, which is a bi-directional
-map between an application-defined texture ID and the handle of the loaded
-texture. In other words, this allows us to associate a specific global ID to
-our texture. As you will see in a moment, `SpriteSheet`s are linked to textures
-through this ID. Since we only have one sprite sheet, we can just use `0` as the
-ID.
-
 Finally, we load the file containing the position of each sprites on the sheet.
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::assets::{Loader, AssetStorage};
-# use amethyst::renderer::{Texture, PngFormat, TextureHandle, MaterialTextureSet, SpriteSheetHandle, SpriteSheetFormat, SpriteSheet, TextureMetadata};
+# use amethyst::renderer::{Texture, PngFormat, TextureHandle, SpriteSheetHandle, SpriteSheetFormat, SpriteSheet, TextureMetadata};
 # use amethyst::ecs::World;
 # fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
 #   let texture_handle = {
@@ -511,23 +476,20 @@ Finally, we load the file containing the position of each sprites on the sheet.
 #           &texture_storage,
 #       )
 #   };
-#   let texture_id = 0;
-#   let mut material_texture_set = world.write_resource::<MaterialTextureSet>();
-#   material_texture_set.insert(texture_id, texture_handle);
 let loader = world.read_resource::<Loader>();
 let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
 loader.load(
     "texture/pong_spritesheet.ron", // Here we load the associated ron file
     SpriteSheetFormat,
-    texture_id, // We pass it the ID of the texture we want it to use
+    texture_handle, // We pass it the handle of the texture we want it to use
     (),
     &sprite_sheet_store,
 )
 # }
 ```
 
-This is where we have to use the associated ID. The `Loader` will take the
-file containing the sprites' positions and the texture ID, and create a
+This is where we have to use the texture handle. The `Loader` will take the
+file containing the sprites' positions and the texture handle, and create a
 nicely packaged `SpriteSheet` struct. It is this struct that we will be using
 to actually draw stuff on the screen.
 
