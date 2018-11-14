@@ -1,5 +1,5 @@
 <div style="display:inline-block;width:100%">
-    <img src="./images/amethyst_thumb.png" alt="Logo" width="96px" style="float:left;margin-right:15px"/>
+    <img src="./images/amethyst_emblem.png" alt="Logo" width="96px" style="float:left;margin-right:15px"/>
     <h1>The Amethyst Engine</h1>
 </div>
 

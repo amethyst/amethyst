@@ -8,7 +8,7 @@ Container(
         height: 20.,
     ),
     background: (
-        image: Data(Rgba((0.36, 0.10, 0.57, 1.0), (channel: Srgb))),
+        image: Data(Rgba((1.0, 1.0, 1.0, 1.0), (channel: Srgb))),
     ),
     children: [
         // Parenting test
@@ -153,7 +153,7 @@ Container(
                 text: "N/A",
                 font: File("font/square.ttf", Ttf, ()),
                 font_size: 25.,
-                color: (1.0, 1.0, 1.0, 1.0),
+                color: (0.498, 0.254, 0.937, 1.0),
             )
         ),
 
