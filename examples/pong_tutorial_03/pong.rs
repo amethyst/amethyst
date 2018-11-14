@@ -4,7 +4,7 @@ use amethyst::{
     ecs::prelude::{Component, DenseVecStorage},
     prelude::*,
     renderer::{
-        Camera, PngFormat, Projection, SpriteRender, SpriteSheet, SpriteSheetFormat,
+        Camera, Flipped, PngFormat, Projection, SpriteRender, SpriteSheet, SpriteSheetFormat,
         SpriteSheetHandle, Texture, TextureMetadata,
     },
 };
@@ -114,24 +114,15 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
     right_transform.set_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 
     // Assign the sprites for the paddles
-    let sprite_render_left = SpriteRender {
+    let sprite_render = SpriteRender {
         sprite_sheet: sprite_sheet_handle.clone(),
         sprite_number: 0, // paddle is the first sprite in the sprite_sheet
-        flip_horizontal: false,
-        flip_vertical: false,
-    };
-
-    let sprite_render_right = SpriteRender {
-        sprite_sheet: sprite_sheet_handle,
-        sprite_number: 0,
-        flip_horizontal: true,
-        flip_vertical: false,
     };
 
     // Create a left plank entity.
     world
         .create_entity()
-        .with(sprite_render_left)
+        .with(sprite_render.clone())
         .with(Paddle::new(Side::Left))
         .with(left_transform)
         .build();
@@ -139,7 +130,8 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
     // Create right plank entity.
     world
         .create_entity()
-        .with(sprite_render_right)
+        .with(sprite_render.clone())
+        .with(Flipped::Horizontal)
         .with(Paddle::new(Side::Right))
         .with(right_transform)
         .build();

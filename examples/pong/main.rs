@@ -13,7 +13,7 @@ use amethyst::{
     ecs::prelude::{Component, DenseVecStorage},
     input::InputBundle,
     prelude::*,
-    renderer::{DisplayConfig, DrawSprite, Pipeline, RenderBundle, Stage},
+    renderer::{DisplayConfig, DrawFlat2D, Pipeline, RenderBundle, Stage},
     ui::{DrawUi, UiBundle},
     utils::application_root_dir,
 };
@@ -52,7 +52,7 @@ fn main() -> amethyst::Result<()> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawSprite::new())
+            .with_pass(DrawFlat2D::new())
             .with_pass(DrawUi::new()),
     );
 

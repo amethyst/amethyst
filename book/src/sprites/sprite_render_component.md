@@ -9,14 +9,10 @@ pub struct SpriteRender {
     pub sprite_sheet: SpriteSheetHandle,
     /// Index of the sprite on the sprite sheet
     pub sprite_number: usize,
-    /// Whether the sprite should be flipped horizontally
-    pub flip_horizontal: bool,
-    /// Whether the sprite should be flipped vertically
-    pub flip_vertical: bool,
 }
 ```
 
-The `flip_*` fields indicate whether the sprite to be drawn should be flipped. The sprite number is the index of the sprite loaded in the sprite sheet. What's left is the `SpriteSheetHandle`.
+The sprite number is the index of the sprite loaded in the sprite sheet. What's left is the `SpriteSheetHandle`.
 
 In the previous section you wrote a function that returns a `SpriteSheet`. This can be turned into a `SpriteSheetHandle` using the `Loader` resource as follows:
 
@@ -123,8 +119,6 @@ impl ExampleState {
         let sprite_render = SpriteRender {
             sprite_sheet: sprite_sheet_handle,
             sprite_number: 0, // First sprite
-            flip_horizontal: false,
-            flip_vertical: false,
         };
 
         world

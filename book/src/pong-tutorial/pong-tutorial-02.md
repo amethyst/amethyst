@@ -372,14 +372,14 @@ the pattern and add the `TransformBundle`.
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;
-# use amethyst::renderer::{DisplayConfig, DrawSprite, Event, Pipeline,
+# use amethyst::renderer::{DisplayConfig, DrawFlat2D, Event, Pipeline,
 #                        RenderBundle, Stage, VirtualKeyCode};
 # fn main() -> amethyst::Result<()> {
 # let path = "./resources/display_config.ron";
 # let config = DisplayConfig::load(&path);
 # let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
 #       .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-#       .with_pass(DrawSprite::new()),
+#       .with_pass(DrawFlat2D::new()),
 # );
 # struct Pong;
 # impl<'a, 'b> SimpleState<'a, 'b> for Pong { }
@@ -537,7 +537,9 @@ fn initialise_paddles(world: &mut World, sprite_sheet: SpriteSheetHandle)
 # { }
 ```
 
-Inside `initialise_paddles`, we construct a `SpriteRender` for each paddle.
+Inside `initialise_paddles`, we construct a `SpriteRender` for a paddle. We
+only need one here, since the only difference between the two paddles is that
+the right one is flipped horizontally.
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
@@ -545,18 +547,9 @@ Inside `initialise_paddles`, we construct a `SpriteRender` for each paddle.
 # use amethyst::renderer::{SpriteSheetHandle, SpriteRender};
 # fn initialise_paddles(world: &mut World, sprite_sheet: SpriteSheetHandle) {
 // Assign the sprites for the paddles
-let sprite_render_left = SpriteRender {
+let sprite_render = SpriteRender {
     sprite_sheet: sprite_sheet.clone(),
     sprite_number: 0, // paddle is the first sprite in the sprite_sheet
-    flip_horizontal: false,
-    flip_vertical: false,
-};
-
-let sprite_render_right = SpriteRender {
-    sprite_sheet: sprite_sheet,
-    sprite_number: 0,
-    flip_horizontal: true,
-    flip_vertical: false,
 };
 # }
 ```
@@ -564,38 +557,33 @@ let sprite_render_right = SpriteRender {
 `SpriteRender` is the `Component` that indicates which sprite of which sprite
 sheet should be drawn for a particular entity. Since the paddle is the first
 sprite in the sprite sheet, we use `0` for the `sprite_number`.
+Additionally, we'll add a `Flipped` component to the right paddle to indicate
+that we want it to be flipped horizontally.
 
 Next we simply add the components to the paddle entities:
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::World;
-# use amethyst::renderer::{SpriteSheetHandle, SpriteRender};
+# use amethyst::renderer::{SpriteSheetHandle, SpriteRender, Flipped};
 # use amethyst::prelude::*;
 # fn initialise_paddles(world: &mut World, sprite_sheet: SpriteSheetHandle) {
-# let sprite_render_left = SpriteRender {
+# let sprite_render = SpriteRender {
 #   sprite_sheet: sprite_sheet.clone(),
 #   sprite_number: 0, // paddle is the first sprite in the sprite_sheet
-#   flip_horizontal: false,
-#   flip_vertical: false,
-# };
-# let sprite_render_right = SpriteRender {
-#   sprite_sheet: sprite_sheet,
-#   sprite_number: 0,
-#   flip_horizontal: true,
-#   flip_vertical: false,
 # };
 // Create a left plank entity.
 world
     .create_entity()
-    .with(sprite_render_left)
+    .with(sprite_render.clone())
     // ... other components
     .build();
 
 // Create right plank entity.
 world
     .create_entity()
-    .with(sprite_render_right)
+    .with(sprite_render.clone())
+    .with(Flipped::Horizontal)
     // ... other components
     .build();
 # }

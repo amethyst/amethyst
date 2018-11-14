@@ -18,7 +18,7 @@ functionality ourselves so we're sure we know what's going on.
 extern crate amethyst;
 
 use amethyst::prelude::*;
-use amethyst::renderer::{DisplayConfig, DrawSprite, Event, Pipeline,
+use amethyst::renderer::{DisplayConfig, DrawFlat2D, Event, Pipeline,
                          RenderBundle, Stage, VirtualKeyCode};
 ```
 
@@ -127,12 +127,12 @@ in this tutorial.
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::renderer::{Pipeline, DrawFlat, PosTex, Stage, DrawSprite};
+# use amethyst::renderer::{Pipeline, DrawFlat, PosTex, Stage, DrawFlat2D};
 # fn main() {
 let pipe = Pipeline::build().with_stage(
     Stage::with_backbuffer()
         .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-        .with_pass(DrawSprite::new()),
+        .with_pass(DrawFlat2D::new()),
 );
 # }
 ```
@@ -148,14 +148,14 @@ Now let's pack everything up and run it:
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
-# use amethyst::renderer::{DisplayConfig, DrawSprite, Pipeline,
+# use amethyst::renderer::{DisplayConfig, DrawFlat2D, Pipeline,
 #                        RenderBundle, Stage};
 # fn main() -> amethyst::Result<()> {
 # let path = "./resources/display_config.ron";
 # let config = DisplayConfig::load(&path);
 # let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
 #       .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-#       .with_pass(DrawSprite::new()),
+#       .with_pass(DrawFlat2D::new()),
 # );
 # struct Pong;
 # impl<'a, 'b> SimpleState<'a,'b> for Pong { }

@@ -22,6 +22,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Added `Callback` and `CallbackQueue` for use in asynchronous contexts. ([#1125])
 * Added Trans event queue. Used to trigger state transitions from systems. Also used to trigger multiple state transitions at once. (For example, to `Trans::Pop` two states.) ([#1069])
 * `sprite_camera_follow` example showing how to use a Camera that has a sprite Parent ([#1099])
+* Added capabilities for the `DrawFlat2D` pass to draw `TextureHandle`s by themselves. Also added a simple example for this. ([#1153])
+* Added a `Flipped` component which allows flipping sprites or images horizontally and vertically. ([#1153])
 
 ### Changed
 
@@ -34,6 +36,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Updated `specs` to `0.14` and `specs-hierarchy` to `0.3`. ([#1122])
 * Updated `winit` to `0.18` (see [Winit's changelog][winit_018]). ([#1131])
 * Updated `glutin` to `0.19` (see [Glutin's changelog][glutin_019]). ([#1131])
+* Renamed the `DrawSprite` pass to `DrawFlat2D` as it now handles both sprites and images without spritesheets. ([#1153])
 
 ### Removed
 
@@ -62,6 +65,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1122]: https://github.com/amethyst/amethyst/pull/1122
 [#1129]: https://github.com/amethyst/amethyst/pull/1129
 [#1131]: https://github.com/amethyst/amethyst/pull/1131
+[#1153]: https://github.com/amethyst/amethyst/pull/1153
 [winit_018]: https://github.com/tomaka/winit/blob/v0.18.0/CHANGELOG.md#version-0180-2018-11-07
 [glutin_019]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0190-2018-11-09
 
