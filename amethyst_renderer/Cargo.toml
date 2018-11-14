@@ -48,7 +48,7 @@ serde = { version = "1", features = ["serde_derive"] }
 shred-derive = "0.5"
 shred = "0.7"
 wavefront_obj = "5.1"
-winit = "0.18"
+winit = { version = "0.18", features = ["serde"] }
 
 thread_profiler = { version = "0.3", optional = true }
 
