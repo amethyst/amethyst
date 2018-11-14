@@ -9,6 +9,7 @@ extern crate log;
 extern crate serde;
 extern crate bincode;
 extern crate fern;
+extern crate laminar;
 extern crate shred;
 extern crate shrev;
 extern crate uuid;
@@ -28,14 +29,16 @@ pub use {
     network_socket::NetSocketSystem,
 };
 
-use std::net::{SocketAddr, UdpSocket};
+use std::net::SocketAddr;
 
 use bincode::{deserialize, serialize, ErrorKind};
+use laminar::net::UdpSocket;
+use laminar::Packet;
 use serde::{de::DeserializeOwned, Serialize};
 
 /// Sends an event to the target NetConnection using the provided network Socket.
 /// The socket has to be bound.
-pub fn send_event<T>(event: &NetEvent<T>, target: &SocketAddr, socket: &UdpSocket)
+pub fn send_event<T>(event: &NetEvent<T>, addr: &SocketAddr, socket: &mut UdpSocket)
 where
     T: Serialize,
 {
@@ -43,7 +46,8 @@ where
     match ser {
         Ok(s) => {
             let slice = s.as_slice();
-            match socket.send_to(slice, target) {
+            // send an unreliable `Packet` from laminar which is basically just a bare UDP packet.
+            match socket.send(&Packet::unreliable(*addr, slice.to_vec())) {
                 Ok(_qty) => {}
                 Err(e) => error!("Failed to send data to network socket: {}", e),
             }
