@@ -53,7 +53,7 @@ impl Transform {
     #[inline]
     pub fn look_at(&mut self, target: Vector3<f32>, up: Vector3<f32>) -> &mut Self {
         self.iso.rotation =
-            UnitQuaternion::look_at_rh(&(target - self.iso.translation.vector), &up);
+            UnitQuaternion::new_observer_frame(&(self.iso.translation.vector - target), &up);
         self
     }
 
