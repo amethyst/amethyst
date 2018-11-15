@@ -48,13 +48,13 @@ serde = { version = "1", features = ["serde_derive"] }
 shred-derive = "0.5"
 shred = "0.7"
 wavefront_obj = "5.1"
-winit = "0.17"
+winit = { version = "0.18", features = ["serde"] }
 
 thread_profiler = { version = "0.3", optional = true }
 
 gfx_device_gl = { version = "0.15", optional = true }
-gfx_window_glutin = { version = "0.26.0", optional = true }
-glutin = { version = "0.18", optional = true }
+gfx_window_glutin = { version = "0.27.0", optional = true }
+glutin = { version = "0.19", optional = true }
 
 [target.'cfg(not(target_os = "macos"))'.dependencies]
 gfx_device_vulkan = { version = "0.1", optional = true }
@@ -66,7 +66,7 @@ gfx_window_metal = { version = "0.6", optional = true }
 
 [target.'cfg(windows)'.dependencies]
 gfx_device_dx11 = { version = "0.7", optional = true }
-gfx_window_dxgi = { version = "0.16", optional = true }
+gfx_window_dxgi = { version = "0.17", optional = true }
 
 [dependencies.hetseq]
 version = "0.2.0"

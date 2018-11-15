@@ -79,8 +79,6 @@ impl Renderer {
         use gfx::Device;
         #[cfg(feature = "opengl")]
         use glutin::dpi::PhysicalSize;
-        #[cfg(feature = "opengl")]
-        use glutin::GlContext;
 
         if let Some(size) = self.window().get_inner_size() {
             let hidpi_factor = self.window().get_hidpi_factor();
@@ -326,7 +324,7 @@ fn init_backend(wb: WindowBuilder, el: &mut EventsLoop, config: &DisplayConfig) 
 #[cfg(all(feature = "opengl", target_os = "macos"))]
 fn init_backend(wb: WindowBuilder, el: &mut EventsLoop, config: &DisplayConfig) -> Result<Backend> {
     use gfx_window_glutin as win;
-    use glutin::{self, GlContext, GlProfile, GlRequest};
+    use glutin::{self, GlProfile, GlRequest};
 
     let ctx = glutin::ContextBuilder::new()
         .with_multisampling(config.multisampling)

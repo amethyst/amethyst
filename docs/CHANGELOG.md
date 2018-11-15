@@ -31,6 +31,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * The `amethyst::renderer::Projection::orthographic` function has had its parameter order changed to match that of `nalgebra` ([#1066])
 * `SpriteSheet` now use `TextureHandle` directly instead of a `u64` ID coupled with `MaterialTextureSet`. ([#1117])
 * Updated `specs` to `0.14` and `specs-hierarchy` to `0.3`. ([#1122])
+* Updated `winit` to `0.18` (see [Winit's changelog][winit_018]). ([#1131])
+* Updated `glutin` to `0.19` (see [Glutin's changelog][glutin_019]). ([#1131])
 
 ### Removed
 
@@ -58,6 +60,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1117]: https://github.com/amethyst/amethyst/pull/1117
 [#1122]: https://github.com/amethyst/amethyst/pull/1122
 [#1129]: https://github.com/amethyst/amethyst/pull/1129
+[#1131]: https://github.com/amethyst/amethyst/pull/1131
+[winit_018]: https://github.com/tomaka/winit/blob/v0.18.0/CHANGELOG.md#version-0180-2018-11-07
+[glutin_019]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0190-2018-11-09
 
 
 ## [0.9.0] - 2018-10

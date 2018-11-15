@@ -30,7 +30,7 @@ shred-derive = "0.5"
 shred = "0.7"
 unicode-normalization = "0.1"
 unicode-segmentation = "1.2"
-winit = "0.17"
+winit = { version = "0.18", features = ["serde"] }
 log = "0.4"
 font-kit = "0.1"
 

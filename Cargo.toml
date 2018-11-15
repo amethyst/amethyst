@@ -77,7 +77,7 @@ fern = { version = "0.5", features = ["colored"] }
 log = { version = "0.4", features = ["serde"] }
 rayon = "1.0.2"
 rustc_version_runtime = "0.1"
-winit = "0.17"
+winit = { version = "0.18", features = ["serde"] }
 serde = "1.0"
 serde_derive = "1.0"
 
