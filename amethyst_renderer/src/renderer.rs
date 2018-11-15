@@ -324,7 +324,7 @@ fn init_backend(wb: WindowBuilder, el: &mut EventsLoop, config: &DisplayConfig) 
 #[cfg(all(feature = "opengl", target_os = "macos"))]
 fn init_backend(wb: WindowBuilder, el: &mut EventsLoop, config: &DisplayConfig) -> Result<Backend> {
     use gfx_window_glutin as win;
-    use glutin::{self, GlContext, GlProfile, GlRequest};
+    use glutin::{self, GlProfile, GlRequest};
 
     let ctx = glutin::ContextBuilder::new()
         .with_multisampling(config.multisampling)
