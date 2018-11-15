@@ -290,6 +290,153 @@ write_storage.remove(entity);
 
 Keep in mind that inserting a component on an entity that already has a component of the same type **will overwrite the previous one**.
 
+## Changing states through resources
+
+In a previous section we talked about [`States`][s], and how they are used to organize your game
+into different logical sections.
+Since systems are responsible for processing user input, they must somehow also be responsible for
+causing a switch in states.
+
+So how can we effect states from systems?
+There are a couple of ways, but this section will detail the easiest one: using a [`Resource`][r].
+
+Before that, let's just quickly remind ourselves what a resource is:
+
+> A [`Resource`][r] is any type that stores data that you might need for your game AND that is not
+> specific to an entity.
+
+The data in a resource is available both to systems and resources.
+We can use this to our advantage!
+
+Let's say you have the following two states:
+
+ * `MainMenuState` - which starts the game by transitioning into the GameplayState.
+ * `GameplayState` - which we enter after the main menu, while the game is running.
+
+The following example shows how to keep track of which state we are currently in.
+This allows us to do a bit of conditional logic in our systems to determine what to do depending on
+which state is currently active. And manipulating the states by setting flags:
+
+```rust,no_run,noplaypen
+use amethyst::prelude::*;
+
+#[derive(Clone, Copy)]
+enum CurrentState {
+    MainMenu,
+    Gameplay,
+}
+
+impl Default for CurrentState {
+    fn default() -> Self {
+        CurrentState::Gameplay
+    }
+}
+
+#[derive(Default)]
+struct Game {
+    continue_game: bool,
+    quit_game: bool,
+    open_menu: bool,
+    current_state: CurrentState,
+}
+
+struct GameplayState;
+
+impl<'a,'b> SimpleState<'a,'b> for GameplayState {
+    fn update(&mut self, data: StateData<GameData>) {
+        // If the `Game` resource has been set up to go back to the menu, pop the state so that
+        // we go back.
+
+        {
+            let gameplay = data.world.write_resource::<Game>();
+
+            if gameplay.open_menu {
+                // Reset the flag to prevent immediately open the menu the next time it's opened.
+                gameplay.open_menu = false;
+                return Trans::Push(Box::new(MainMenuState));
+            }
+        }
+
+        Trans::None
+    }
+
+    fn on_resume(&mut self, data: StateData<GameData>) {
+        // mark that the current state is a gameplay state.
+        data.world.write_resource::<Game>().current = CurrentState::Gameplay;
+    }
+}
+
+struct MainMenuState;
+
+impl<'a,'b> SimpleState<'a,'b> for MainMenuState {
+    fn update(&mut self, data: StateData<GameData>) {
+        {
+            let game = data.world.write_resource::<Game>();
+
+            // Continuing the game simply means popping back to the gameplay state.
+            if game.continue_game {
+                // Reset the flag to prevent immediately closing the menu the next time it's
+                // opened.
+                game.continue_game = false;
+                return Trans::Pop;
+            }
+
+            if game.quit_game {
+                // Note: no need to clean up :)
+                return Trans::Quit;
+            }
+        }
+
+        Trans::None
+    }
+
+    fn on_resume(&mut self, data: StateData<GameData>) {
+        // mark that the current state is a main menu state.
+        data.world.write_resource::<Game>().current = CurrentState::MainMenu;
+    }
+}
+```
+
+Let's say we want the player to be able to press escape to enter the menu.
+We modify our input handler to map the `open_menu` action to `Esc`, and we write the following
+system:
+
+```rust,no_run,noplaypen
+use amethyst::{
+    prelude::*,
+    ecs::{System, prelude::*},
+    input::InputHandler,
+};
+
+struct MyFirstSystem;
+
+impl<'s> System<'s> for MyFirstSystem {
+    type SystemData = (
+        Read<'s, InputHandler<String, String>>,
+        Write<'s, Gameplay>,
+    );
+
+    fn run(&mut self, (input, gameplay): Self::SystemData) {
+        match game.current_state {
+            CurrentState::Gameplay => {
+                // Toggle the `open_menu` variable to signal the state to transition.
+                if input.action_is_down("open_menu") && !gameplay.open_menu {
+                    gameplay.open_menu = true;
+                }
+            }
+            // do nothing for other states.
+            _ => {}
+        }
+    }
+}
+```
+
+Now whenever you are playing the game and you press the button associated with the `open_menu`
+action, the `MenuState` will resume and the the `GameplayState` will pause.
+
+[s]: ./state.md
+[r]: ./resource.md
+
 ## The SystemData trait
 
 While this is rarely useful, it is possible to create custom `SystemData` types.
