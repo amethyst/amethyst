@@ -11,4 +11,5 @@ pub use {
         EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, Trans, TransEvent,
     },
     state_event::StateEvent,
+    system_extra::SystemExtra,
 };
