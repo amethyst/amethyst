@@ -58,7 +58,7 @@ pub trait SystemExtra {
     /// assert_eq!(1, *world.read_resource::<u32>());
     ///
     /// *world.write_resource() = 0u32;
-    /// *world.write_resource::<State>() = State::Enabled;
+    /// *world.write_resource() = State::Enabled;
     /// dispatcher.dispatch(&mut world.res);
     /// assert_eq!(1 + 2, *world.read_resource::<u32>());
     /// ```
