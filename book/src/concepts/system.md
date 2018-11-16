@@ -297,7 +297,7 @@ into different logical sections.
 Since systems are responsible for processing user input, they must somehow also be responsible for
 causing a switch in states.
 
-So how can we effect states from systems?
+So how can we affect states from systems?
 There are a couple of ways, but this section will detail the easiest one: using a [`Resource`][r].
 
 Before that, let's just quickly remind ourselves what a resource is:
@@ -310,8 +310,8 @@ We can use this to our advantage!
 
 Let's say you have the following two states:
 
- * `MainMenuState` - which starts the game by transitioning into the GameplayState.
- * `GameplayState` - which we enter after the main menu, while the game is running.
+* `GameplayState`: State in which the game is running.
+* `GameMenuState`: State where the game is paused and we interact with a game menu.
 
 The following example shows how to keep track of which state we are currently in.
 This allows us to do a bit of conditional logic in our systems to determine what to do depending on
@@ -353,7 +353,7 @@ impl<'a,'b> SimpleState<'a,'b> for GameplayState {
             if game.open_menu {
                 // Reset the flag to prevent immediately open the menu the next time it's opened.
                 game.open_menu = false;
-                return Trans::Push(Box::new(MainMenuState));
+                return Trans::Push(Box::new(GameMenuState));
             }
         }
 
@@ -366,9 +366,9 @@ impl<'a,'b> SimpleState<'a,'b> for GameplayState {
     }
 }
 
-struct MainMenuState;
+struct GameMenuState;
 
-impl<'a,'b> SimpleState<'a,'b> for MainMenuState {
+impl<'a,'b> SimpleState<'a,'b> for GameMenuState {
     fn update(&mut self, data: StateData<GameData>) {
         {
             let game = data.world.write_resource::<Game>();
@@ -432,7 +432,7 @@ impl<'s> System<'s> for MyFirstSystem {
 ```
 
 Now whenever you are playing the game and you press the button associated with the `open_menu`
-action, the `MenuState` will resume and the the `GameplayState` will pause.
+action, the `GameMenuState` will resume and the `GameplayState` will pause.
 
 [s]: ./state.md
 [r]: ./resource.md
