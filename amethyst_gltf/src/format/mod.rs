@@ -357,7 +357,7 @@ fn load_node(
             // we need to add each primitive as a child entity to the node
             for (mesh, material_index, bounds) in graphics {
                 let mesh_entity = prefab.add(Some(entity_index), None);
-                let prefab_data = prefab.data_or_default(entity_index);
+                let prefab_data = prefab.data_or_default(mesh_entity);
                 prefab_data.transform = Some(Transform::default());
                 prefab_data.mesh = Some(mesh);
                 if let Some((material_id, material)) =
