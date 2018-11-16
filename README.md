@@ -1,4 +1,4 @@
-<img align="left" width="64px" src="book/src/images/amethyst_thumb.png" />
+<img align="left" width="64px" src="book/src/images/amethyst_emblem.png" />
 
 # Amethyst
 
