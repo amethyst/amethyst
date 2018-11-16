@@ -348,11 +348,11 @@ impl<'a,'b> SimpleState<'a,'b> for GameplayState {
         // we go back.
 
         {
-            let gameplay = data.world.write_resource::<Game>();
+            let game = data.world.write_resource::<Game>();
 
-            if gameplay.open_menu {
+            if game.open_menu {
                 // Reset the flag to prevent immediately open the menu the next time it's opened.
-                gameplay.open_menu = false;
+                game.open_menu = false;
                 return Trans::Push(Box::new(MainMenuState));
             }
         }
@@ -413,15 +413,15 @@ struct MyFirstSystem;
 impl<'s> System<'s> for MyFirstSystem {
     type SystemData = (
         Read<'s, InputHandler<String, String>>,
-        Write<'s, Gameplay>,
+        Write<'s, Game>,
     );
 
-    fn run(&mut self, (input, gameplay): Self::SystemData) {
+    fn run(&mut self, (input, game): Self::SystemData) {
         match game.current_state {
             CurrentState::Gameplay => {
                 // Toggle the `open_menu` variable to signal the state to transition.
-                if input.action_is_down("open_menu") && !gameplay.open_menu {
-                    gameplay.open_menu = true;
+                if input.action_is_down("open_menu") && !game.open_menu {
+                    game.open_menu = true;
                 }
             }
             // do nothing for other states.
