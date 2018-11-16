@@ -8,7 +8,6 @@ extern crate log;
 #[macro_use]
 extern crate serde;
 extern crate bincode;
-extern crate fern;
 extern crate laminar;
 extern crate shred;
 extern crate shrev;
