@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 
+* `Transform::look_at` renamed to `Transform::face_towards` and behavior fixed. ([#1142])
 * `Material` animations now directly use `Handle<Texture>` instead of using indirection. ([#1089])
 * `SpriteRenderPrimitive::SpriteSheet` now takes `Handle<SpriteSheet>` instead of a `u64` ID. ([#1089])
 * `nalgebra` is now the math library used by the engine. ([#1066])

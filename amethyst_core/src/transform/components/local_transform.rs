@@ -42,18 +42,22 @@ impl Transform {
     /// // No rotation by default
     /// assert_eq!(*t.rotation().quaternion(), Quaternion::identity());
     /// // look up with up pointing backwards
-    /// t.look_at(Vector3::new(0.0, 1.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
+    /// t.face_towards(Vector3::new(0.0, 1.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
     /// // our rotation should match the angle from straight ahead to straight up
     /// let rotation = UnitQuaternion::rotation_between(
     ///     &Vector3::new(0.0, 1.0, 0.0),
-    ///     &Vector3::new(0.0, 0.0, -1.0),
+    ///     &Vector3::new(0.0, 0.0, 1.0),
     /// ).unwrap();
     /// assert_eq!(*t.rotation(), rotation);
+    /// // now if we move forwards by 1.0, we'll end up at the point we are facing
+    /// // (modulo some floating point error)
+    /// t.move_forward(1.0);
+    /// assert!((*t.translation() - Vector3::new(0.0, 1.0, 0.0)).magnitude() <= 0.0001);
     /// ```
     #[inline]
-    pub fn look_at(&mut self, target: Vector3<f32>, up: Vector3<f32>) -> &mut Self {
+    pub fn face_towards(&mut self, target: Vector3<f32>, up: Vector3<f32>) -> &mut Self {
         self.iso.rotation =
-            UnitQuaternion::look_at_rh(&(target - self.iso.translation.vector), &up);
+            UnitQuaternion::new_observer_frame(&(self.iso.translation.vector - target), &up);
         self
     }
 
