@@ -28,6 +28,8 @@ struct Example {
     fps_display: Option<Entity>,
 }
 
+const BACKGROUND: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
+
 impl<'a, 'b> SimpleState<'a, 'b> for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
@@ -40,6 +42,22 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
         world.exec(|mut creator: UiCreator| {
             creator.create("ui/example.ron", ());
         });
+
+        //We can use raw Texture as UI element
+        //In this case let's make simple black background
+        let background: amethyst::renderer::TextureHandle = world.read_resource::<amethyst::assets::Loader>().load_from_data(BACKGROUND.into(), (), &world.read_resource());
+        let mut overlay_transform = amethyst::ui::UiTransform::new(
+            "Background".to_string(),
+            amethyst::ui::Anchor::Middle,
+            0.0, 0.0, 1.5,
+            1.0, 1.0,
+            0
+        );
+        overlay_transform.stretch = amethyst::ui::Stretch::XY {
+            x_margin: 0.0,
+            y_margin: 0.0,
+        };
+        world.create_entity().with(overlay_transform).with(background).build();
     }
 
     fn handle_event(&mut self, _: StateData<GameData>, event: StateEvent) -> SimpleTrans<'a, 'b> {
