@@ -63,7 +63,7 @@ pub use self::{
     layout::{Anchor, ScaleMode, Stretch, UiTransformSystem},
     pass::DrawUi,
     prefab::{
-        NoCustomUi, ToNativeWidget, UiCreator, UiFormat, UiImageBuilder, UiLoader, UiLoaderSystem,
+        NoCustomUi, ToNativeWidget, UiCreator, UiFormat, UiImagePrefab, UiLoader, UiLoaderSystem,
         UiPrefab, UiTextBuilder, UiTransformBuilder, UiWidget,
     },
     resize::{ResizeSystem, UiResize},

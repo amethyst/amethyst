@@ -313,7 +313,7 @@ where
 ///
 /// - `F`: `Format` used for loading `Texture`s
 #[derive(Clone, Deserialize, Serialize)]
-pub struct UiImageBuilder<F = TextureFormat>
+pub struct UiImagePrefab<F = TextureFormat>
 where
     F: Format<Texture, Options = TextureMetadata>,
 {
@@ -321,7 +321,7 @@ where
     pub image: TexturePrefab<F>,
 }
 
-impl<'a, F> PrefabData<'a> for UiImageBuilder<F>
+impl<'a, F> PrefabData<'a> for UiImagePrefab<F>
 where
     F: Format<Texture, Options = TextureMetadata> + Clone + Sync,
 {
@@ -496,7 +496,7 @@ where
         transform: UiTransformBuilder,
         /// Background image
         #[serde(default = "default_container_image")]
-        background: Option<UiImageBuilder<I>>,
+        background: Option<UiImagePrefab<I>>,
         /// Child widgets
         children: Vec<UiWidget<A, I, F, C>>,
     },
@@ -505,7 +505,7 @@ where
         /// Spatial information
         transform: UiTransformBuilder,
         /// Image
-        image: UiImageBuilder<I>,
+        image: UiImagePrefab<I>,
     },
     /// Text component
     Text {
@@ -562,8 +562,8 @@ where
         }
     }
 
-    /// Convenience function to access widgets `UiImageBuilder`
-    pub fn image(&self) -> Option<&UiImageBuilder<I>> {
+    /// Convenience function to access widgets `UiImagePrefab`
+    pub fn image(&self) -> Option<&UiImagePrefab<I>> {
         match self {
             UiWidget::Container { ref background, .. } => background.as_ref(),
             UiWidget::Image { ref image, .. } => Some(image),
@@ -571,8 +571,8 @@ where
         }
     }
 
-    /// Convenience function to access widgets `UiImageBuilder`
-    pub fn image_mut(&mut self) -> Option<&mut UiImageBuilder<I>> {
+    /// Convenience function to access widgets `UiImagePrefab`
+    pub fn image_mut(&mut self) -> Option<&mut UiImagePrefab<I>> {
         match self {
             UiWidget::Container {
                 ref mut background, ..
@@ -623,7 +623,7 @@ where
     }
 }
 
-fn default_container_image<I>() -> Option<UiImageBuilder<I>>
+fn default_container_image<I>() -> Option<UiImagePrefab<I>>
 where
     I: Format<Texture, Options = TextureMetadata>,
 {
@@ -637,7 +637,7 @@ type UiPrefabData<
     D = <NoCustomUi as ToNativeWidget>::PrefabData,
 > = (
     Option<UiTransformBuilder>,
-    Option<UiImageBuilder<I>>,
+    Option<UiImagePrefab<I>>,
     Option<UiTextBuilder<F>>,
     Option<UiButtonBuilder<A, I, F>>,
     D,
@@ -756,7 +756,7 @@ fn walk_ui_tree<A, I, F, C>(
                 .expect("Unreachable: `Prefab` entity should always be set when walking ui tree")
                 .set_data((
                     Some(transform),
-                    button.normal_image.as_ref().map(|image| UiImageBuilder {
+                    button.normal_image.as_ref().map(|image| UiImagePrefab {
                         image: image.clone(),
                     }),
                     None,
