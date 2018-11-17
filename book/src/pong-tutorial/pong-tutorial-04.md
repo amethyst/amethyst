@@ -74,8 +74,6 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
     let sprite_render = SpriteRender {
         sprite_sheet: sprite_sheet_handle,
         sprite_number: 1, // ball is the second sprite on the sprite sheet
-        flip_horizontal: false,
-        flip_vertical: false,
     };
 
     world

@@ -216,5 +216,9 @@ path = "examples/spotlights/main.rs"
 name = "sprite_camera_follow"
 path = "examples/sprite_camera_follow/main.rs"
 
+[[example]]
+name = "simple_image"
+path = "examples/simple_image/main.rs"
+
 [workspace]
 members = ["amethyst_gltf", "tests/amethyst_test"]

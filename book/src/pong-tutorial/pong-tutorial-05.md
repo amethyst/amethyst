@@ -99,7 +99,7 @@ keep playing after someone scores and log who got the point.
 #    core::transform::TransformBundle,
 #    renderer::{
 #        DisplayConfig,
-#        DrawSprite,
+#        DrawFlat2D,
 #        Pipeline,
 #        RenderBundle,
 #        Stage,
@@ -136,7 +136,7 @@ keep playing after someone scores and log who got the point.
 # let config = DisplayConfig::load(&path);
 # let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
 #       .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-#       .with_pass(DrawSprite::new()),
+#       .with_pass(DrawFlat2D::new()),
 # );
 # let input_bundle = amethyst::input::InputBundle::<String, String>::new();
 #
@@ -178,7 +178,7 @@ use amethyst::{
 #     core::transform::TransformBundle,
 #     renderer::{
 #         DisplayConfig,
-#         DrawSprite,
+#         DrawFlat2D,
 #         Pipeline,
 #         RenderBundle,
 #         Stage,
@@ -218,7 +218,7 @@ fn main() -> amethyst::Result<()> {
 #     let config = DisplayConfig::load(&path);
     let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
           .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-          .with_pass(DrawSprite::new())
+          .with_pass(DrawFlat2D::new())
           .with_pass(DrawUi::new()), // <-- Add me
     );
 #     let input_bundle = amethyst::input::InputBundle::<String, String>::new();
@@ -268,7 +268,7 @@ use amethyst::{
     ecs::prelude::{Component, DenseVecStorage, Entity},
 #     prelude::*,
 #     renderer::{
-#         Camera, PngFormat, Projection, SpriteRender,
+#         Camera, Flipped, PngFormat, Projection, SpriteRender,
 #         SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, Texture,
 #         TextureMetadata,
 #     },
@@ -405,24 +405,15 @@ pub struct ScoreText {
 #     right_transform.set_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 # 
 #     // Assign the sprites for the paddles
-#     let sprite_render_left = SpriteRender {
+#     let sprite_render = SpriteRender {
 #         sprite_sheet: sprite_sheet_handle.clone(),
 #         sprite_number: 0, // paddle is the first sprite in the sprite_sheet
-#         flip_horizontal: false,
-#         flip_vertical: false,
-#     };
-# 
-#     let sprite_render_right = SpriteRender {
-#         sprite_sheet: sprite_sheet_handle,
-#         sprite_number: 0,
-#         flip_horizontal: true,
-#         flip_vertical: false,
 #     };
 # 
 #     // Create a left plank entity.
 #     world
 #         .create_entity()
-#         .with(sprite_render_left)
+#         .with(sprite_render.clone())
 #         .with(Paddle::new(Side::Left))
 #         .with(left_transform)
 #         .build();
@@ -430,7 +421,8 @@ pub struct ScoreText {
 #     // Create right plank entity.
 #     world
 #         .create_entity()
-#         .with(sprite_render_right)
+#         .with(sprite_render.clone())
+#         .with(Flipped::Horizontal)
 #         .with(Paddle::new(Side::Right))
 #         .with(right_transform)
 #         .build();
@@ -446,8 +438,6 @@ pub struct ScoreText {
 #     let sprite_render = SpriteRender {
 #         sprite_sheet: sprite_sheet_handle,
 #         sprite_number: 1, // ball is the second sprite on the sprite sheet
-#         flip_horizontal: false,
-#         flip_vertical: false,
 #     };
 # 
 #     world
@@ -477,7 +467,7 @@ use amethyst::{
     // --snip--
 #     prelude::*,
 #     renderer::{
-#         Camera, PngFormat, Projection, SpriteRender,
+#         Camera, Flipped, PngFormat, Projection, SpriteRender,
 #         SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, Texture,
 #         TextureMetadata,
 #     },
@@ -616,24 +606,15 @@ impl<'a, 'b> SimpleState<'a, 'b> for Pong {
 #     right_transform.set_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 # 
 #     // Assign the sprites for the paddles
-#     let sprite_render_left = SpriteRender {
+#     let sprite_render = SpriteRender {
 #         sprite_sheet: sprite_sheet_handle.clone(),
 #         sprite_number: 0, // paddle is the first sprite in the sprite_sheet
-#         flip_horizontal: false,
-#         flip_vertical: false,
-#     };
-# 
-#     let sprite_render_right = SpriteRender {
-#         sprite_sheet: sprite_sheet_handle,
-#         sprite_number: 0,
-#         flip_horizontal: true,
-#         flip_vertical: false,
 #     };
 # 
 #     // Create a left plank entity.
 #     world
 #         .create_entity()
-#         .with(sprite_render_left)
+#         .with(sprite_render.clone())
 #         .with(Paddle::new(Side::Left))
 #         .with(left_transform)
 #         .build();
@@ -641,7 +622,8 @@ impl<'a, 'b> SimpleState<'a, 'b> for Pong {
 #     // Create right plank entity.
 #     world
 #         .create_entity()
-#         .with(sprite_render_right)
+#         .with(sprite_render.clone())
+#         .with(Flipped::Horizontal)
 #         .with(Paddle::new(Side::Right))
 #         .with(right_transform)
 #         .build();
@@ -657,8 +639,6 @@ impl<'a, 'b> SimpleState<'a, 'b> for Pong {
 #     let sprite_render = SpriteRender {
 #         sprite_sheet: sprite_sheet_handle,
 #         sprite_number: 1, // ball is the second sprite on the sprite sheet
-#         flip_horizontal: false,
-#         flip_vertical: false,
 #     };
 # 
 #     world

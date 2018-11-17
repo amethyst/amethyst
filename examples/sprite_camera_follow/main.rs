@@ -7,7 +7,7 @@ use amethyst::{
     input::{InputBundle, InputHandler},
     prelude::*,
     renderer::{
-        Camera, ColorMask, DepthMode, DisplayConfig, DrawSprite, Pipeline, PngFormat, Projection,
+        Camera, ColorMask, DepthMode, DisplayConfig, DrawFlat2D, Pipeline, PngFormat, Projection,
         RenderBundle, SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, Stage,
         Texture, TextureMetadata, Transparent, ALPHA,
     },
@@ -71,8 +71,6 @@ fn init_background_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -
     let sprite = SpriteRender {
         sprite_sheet: sprite_sheet.clone(),
         sprite_number: 0,
-        flip_horizontal: false,
-        flip_vertical: false,
     };
     world.create_entity().with(transform).with(sprite).build()
 }
@@ -85,8 +83,6 @@ fn init_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) ->
     let sprite = SpriteRender {
         sprite_sheet: sprite_sheet.clone(),
         sprite_number: 0,
-        flip_horizontal: false,
-        flip_vertical: false,
     };
     world
         .create_entity()
@@ -103,8 +99,6 @@ fn init_player(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
     let sprite = SpriteRender {
         sprite_sheet: sprite_sheet.clone(),
         sprite_number: 1,
-        flip_horizontal: false,
-        flip_vertical: false,
     };
     world
         .create_entity()
@@ -155,7 +149,7 @@ fn main() -> amethyst::Result<()> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.1, 0.1, 0.1, 1.0], 1.0)
-            .with_pass(DrawSprite::new().with_transparency(
+            .with_pass(DrawFlat2D::new().with_transparency(
                 ColorMask::all(),
                 ALPHA,
                 Some(DepthMode::LessEqualWrite), // Tells the pipeline to respect sprite z-depth

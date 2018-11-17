@@ -4,7 +4,7 @@ use amethyst_assets::{
     Asset, Error as AssetsError, ErrorKind as AssetsErrorKind, Handle, ProcessingState,
     Result as AssetsResult, SimpleFormat,
 };
-use amethyst_core::specs::prelude::{Component, VecStorage};
+use amethyst_core::specs::prelude::{Component, DenseVecStorage, VecStorage};
 
 use Texture;
 
@@ -32,6 +32,24 @@ impl From<SpriteSheet> for AssetsResult<ProcessingState<SpriteSheet>> {
     fn from(sprite_sheet: SpriteSheet) -> AssetsResult<ProcessingState<SpriteSheet>> {
         Ok(ProcessingState::Loaded(sprite_sheet))
     }
+}
+
+/// Information about whether or not a texture should be flipped
+/// when rendering.
+#[derive(Clone, Debug)]
+pub enum Flipped {
+    /// Don't flip the texture
+    None,
+    /// Flip the texture horizontally
+    Horizontal,
+    /// Flip the texture vertically
+    Vertical,
+    /// Flip the texture in both orientations
+    Both,
+}
+
+impl Component for Flipped {
+    type Storage = DenseVecStorage<Self>;
 }
 
 /// Dimensions and texture coordinates of each sprite in a sprite sheet.
@@ -168,17 +186,13 @@ impl From<[f32; 4]> for TextureCoordinates {
 /// Information for rendering a sprite.
 ///
 /// Instead of using a `Mesh` on a `DrawFlat` render pass, we can use a simpler set of shaders to
-/// render sprites. This struct carries the information necessary for the sprite pass.
+/// render textures to quads. This struct carries the information necessary for the draw2dflat pass.
 #[derive(Clone, Debug, PartialEq)]
 pub struct SpriteRender {
     /// Handle to the sprite sheet of the sprite
     pub sprite_sheet: SpriteSheetHandle,
     /// Index of the sprite on the sprite sheet
     pub sprite_number: usize,
-    /// Whether the sprite should be flipped horizontally
-    pub flip_horizontal: bool,
-    /// Whether the sprite should be flipped vertically
-    pub flip_vertical: bool,
 }
 
 impl Component for SpriteRender {
