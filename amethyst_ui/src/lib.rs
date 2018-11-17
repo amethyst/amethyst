@@ -42,7 +42,6 @@ mod event;
 mod focused;
 mod font;
 mod format;
-mod image;
 mod layout;
 mod pass;
 mod prefab;
@@ -61,7 +60,6 @@ pub use self::{
         systemfont::{default_system_font, get_all_font_handles, list_system_font_families},
     },
     format::{FontAsset, FontFormat, FontHandle, OtfFormat, TtfFormat},
-    image::UiImage,
     layout::{Anchor, ScaleMode, Stretch, UiTransformSystem},
     pass::DrawUi,
     prefab::{

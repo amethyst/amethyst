@@ -10,7 +10,7 @@ use amethyst_core::specs::{
     error::BoxedErr,
     prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage},
 };
-use amethyst_renderer::{HiddenPropagate, Texture, TextureFormat, TextureMetadata, TexturePrefab};
+use amethyst_renderer::{HiddenPropagate, Texture, TextureFormat, TextureMetadata, TexturePrefab, TextureHandle};
 
 use super::*;
 
@@ -307,7 +307,7 @@ where
     }
 }
 
-/// Loadable `UiImage` data
+/// Loadable `Texture` data for UI element
 ///
 /// ### Type parameters:
 ///
@@ -326,7 +326,7 @@ where
     F: Format<Texture, Options = TextureMetadata> + Clone + Sync,
 {
     type SystemData = (
-        WriteStorage<'a, UiImage>,
+        WriteStorage<'a, TextureHandle>,
         <TexturePrefab<F> as PrefabData<'a>>::SystemData,
     );
     type Result = ();
@@ -341,9 +341,7 @@ where
         let texture_handle = self.image.add_to_entity(entity, textures, entities)?;
         images.insert(
             entity,
-            UiImage {
-                texture: texture_handle,
-            },
+            texture_handle,
         )?;
         Ok(())
     }

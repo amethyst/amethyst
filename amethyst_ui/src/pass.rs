@@ -106,7 +106,7 @@ impl<'a> PassData<'a> for DrawUi {
         Read<'a, AssetStorage<Texture>>,
         Read<'a, AssetStorage<FontAsset>>,
         Read<'a, UiFocused>,
-        ReadStorage<'a, UiImage>,
+        ReadStorage<'a, TextureHandle>,
         ReadStorage<'a, UiTransform>,
         WriteStorage<'a, UiText>,
         ReadStorage<'a, TextEditing>,
@@ -239,7 +239,7 @@ impl Pass for DrawUi {
                 .expect("Unreachable: Entity is guaranteed to be present based on earlier actions");
             if let Some(image) = ui_image
                 .get(entity)
-                .and_then(|image| tex_storage.get(&image.texture))
+                .and_then(|image| tex_storage.get(&image))
             {
                 let vertex_args = VertexArgs {
                     invert_window_size: invert_window_size.into(),

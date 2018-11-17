@@ -10,7 +10,7 @@ use amethyst_renderer::{Texture, TextureHandle};
 
 use {
     font::default::get_default_font, Anchor, FontAsset, FontHandle, MouseReactive, OnUiActionImage,
-    OnUiActionSound, Stretch, UiButton, UiImage, UiText, UiTransform,
+    OnUiActionSound, Stretch, UiButton, UiText, UiTransform,
 };
 
 const DEFAULT_Z: f32 = 1.0;
@@ -27,7 +27,7 @@ pub struct UiButtonBuilderResources<'a> {
     texture_asset: Read<'a, AssetStorage<Texture>>,
     loader: ReadExpect<'a, Loader>,
     entities: Entities<'a>,
-    image: WriteStorage<'a, UiImage>,
+    image: WriteStorage<'a, TextureHandle>,
     mouse_reactive: WriteStorage<'a, MouseReactive>,
     parent: WriteStorage<'a, Parent>,
     text: WriteStorage<'a, UiText>,
@@ -133,7 +133,7 @@ impl UiButtonBuilder {
         self
     }
 
-    /// Replace the default UiImage with `image`.
+    /// Replace the default TextureHandle with `image`.
     pub fn with_image(mut self, image: TextureHandle) -> Self {
         self.image = Some(image);
         self
@@ -255,9 +255,7 @@ impl UiButtonBuilder {
         res.image
             .insert(
                 image_entity,
-                UiImage {
-                    texture: image_handle.clone(),
-                },
+                image_handle.clone(),
             ).expect("Unreachable: Inserting newly created entity");
         res.mouse_reactive
             .insert(image_entity, MouseReactive)
