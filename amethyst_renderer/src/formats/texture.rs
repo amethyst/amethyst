@@ -364,6 +364,7 @@ impl SimpleFormat<Texture> for BmpFormat {
 }
 
 /// Allows loading of TGA files.
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct TgaFormat;
 
 impl TgaFormat {
