@@ -253,10 +253,8 @@ impl UiButtonBuilder {
         });
 
         res.image
-            .insert(
-                image_entity,
-                image_handle.clone(),
-            ).expect("Unreachable: Inserting newly created entity");
+            .insert(image_entity, image_handle.clone())
+            .expect("Unreachable: Inserting newly created entity");
         res.mouse_reactive
             .insert(image_entity, MouseReactive)
             .expect("Unreachable: Inserting newly created entity");

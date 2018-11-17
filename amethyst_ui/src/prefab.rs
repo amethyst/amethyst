@@ -10,7 +10,9 @@ use amethyst_core::specs::{
     error::BoxedErr,
     prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage},
 };
-use amethyst_renderer::{HiddenPropagate, Texture, TextureFormat, TextureMetadata, TexturePrefab, TextureHandle};
+use amethyst_renderer::{
+    HiddenPropagate, Texture, TextureFormat, TextureHandle, TextureMetadata, TexturePrefab,
+};
 
 use super::*;
 
@@ -339,10 +341,7 @@ where
     ) -> Result<(), PrefabError> {
         let (ref mut images, ref mut textures) = system_data;
         let texture_handle = self.image.add_to_entity(entity, textures, entities)?;
-        images.insert(
-            entity,
-            texture_handle,
-        )?;
+        images.insert(entity, texture_handle)?;
         Ok(())
     }
 

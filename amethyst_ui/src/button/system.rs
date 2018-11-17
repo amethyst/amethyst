@@ -73,10 +73,7 @@ impl<'s> System<'s> for UiButtonSystem {
                 ClickStart => {
                     if let Some(action_image) = action_image {
                         if let Some(press_image) = action_image.press_image.as_ref() {
-                            let _ = image_storage.insert(
-                                event.target,
-                                press_image.clone(),
-                            );
+                            let _ = image_storage.insert(event.target, press_image.clone());
                         } else {
                             image_storage.remove(event.target);
                         }
@@ -113,19 +110,13 @@ impl<'s> System<'s> for UiButtonSystem {
                     if let Some(action_image) = action_image {
                         if Some(event.target) == self.hovered {
                             if let Some(hover_texture) = action_image.hover_image.as_ref() {
-                                let _ = image_storage.insert(
-                                    event.target,
-                                    hover_texture.clone(),
-                                );
+                                let _ = image_storage.insert(event.target, hover_texture.clone());
                             } else {
                                 image_storage.remove(event.target);
                             }
                         } else {
                             if let Some(normal_image) = action_image.normal_image.as_ref() {
-                                let _ = image_storage.insert(
-                                    event.target,
-                                    normal_image.clone(),
-                                );
+                                let _ = image_storage.insert(event.target, normal_image.clone());
                             } else {
                                 image_storage.remove(event.target);
                             }
@@ -177,10 +168,7 @@ impl<'s> System<'s> for UiButtonSystem {
                     self.hovered = None;
                     if let Some(action_image) = action_image {
                         if let Some(normal_image) = action_image.normal_image.as_ref() {
-                            let _ = image_storage.insert(
-                                event.target,
-                                normal_image.clone(),
-                            );
+                            let _ = image_storage.insert(event.target, normal_image.clone());
                         } else {
                             image_storage.remove(event.target);
                         }
