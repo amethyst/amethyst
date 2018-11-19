@@ -12,7 +12,7 @@
     * [Dispatcher](./concepts/dispatcher.md)
     * [Event Channel](./concepts/event-channel.md)
 * [Pong Tutorial](pong-tutorial.md)
-    * [Opening (and Closing!) a Window](./pong-tutorial/pong-tutorial-01.md)
+    * [Creating a Window](./pong-tutorial/pong-tutorial-01.md)
     * [Drawing the Paddles](./pong-tutorial/pong-tutorial-02.md)
     * [Moving the Paddles](./pong-tutorial/pong-tutorial-03.md)
     * [Making a Ball Move and Bounce](./pong-tutorial/pong-tutorial-04.md)

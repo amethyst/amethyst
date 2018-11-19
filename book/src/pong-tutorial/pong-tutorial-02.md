@@ -4,9 +4,9 @@ Now let's do some drawing! But to draw something, we need something to draw. In
 Amethyst, those "somethings" are called Entities, which are described by
 Components.
 
-Amethyst uses Specs for its ECS (Entity-component system), which is a parallel
-Entity-component system written in Rust. You can learn more about Specs in the
-[The Specs Book][sb]. Here's a basic explanation of ECS from there:
+Amethyst uses an Entity-component system (ECS) called **specs**, also written
+in Rust. You can learn more about Specs in the [The Specs Book][sb].
+Here's a basic explanation of ECS from the **specs** documentation:
 
 > The term ECS is a shorthand for Entity-component system. These are the three
 > core concepts. Each entity is associated with some components. Those entities
@@ -22,15 +22,11 @@ of how Amethyst works, especially if you're new to ECS.
 
 Let's create a new file called `pong.rs` to hold our core game logic. We can
 move the `Pong` struct over here, and the `impl SimpleState for Pong` block as well.
-Then, in `main.rs` declare a module:
+Then, in `main.rs` declare it as a module and import it:
 
 ```rust,ignore
 mod pong;
-```
 
-And in main.rs, below the module declaration and before main, add this import:
-
-```rust,ignore
 use crate::pong::Pong;
 ```
 
@@ -93,7 +89,7 @@ pub const ARENA_WIDTH: f32 = 100.0;
 
 These constants will determine the size of our arena.
 So, as we're making a pong game, we want to create a camera that will cover
-the entire arena. Let's do it!
+the entire arena. Let's do it in a new function `initialise_camera`!
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
@@ -122,9 +118,9 @@ fn initialise_camera(world: &mut World) {
 We create an entity that will carry our camera, with an orthographic projection
 of the size of our arena (as we want it to cover it all). We attach it a
 `Transform` component, representing its position in the world. Notice that
-we moved that transform a bit back on the z axis: this is to make sure the camera
-can see properly the sprites that will, for the duration of this tutorial, sit
-on the XY plane.
+we moved that transform a bit back on the **z** axis: this is to make sure that
+the camera can see properly the sprites that will, for the duration of this
+tutorial, sit on the **XY** plane.
 
 ![Illustrating the camera move](../images/pong_tutorial/camera.png)
 
@@ -136,7 +132,8 @@ Note that as the origin of our camera is in the bottom left corner, we set
 > useful in games without actual 3D, like our pong example. Perspective projections
 > are another way of displaying graphics, more useful in 3D scenes.
 
-To finish setting up the camera, let's call it in our State's `on_start` method:
+To finish setting up the camera, we need to call `initialise_camera` from
+our State's `on_start` method:
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
@@ -153,7 +150,7 @@ fn on_start(&mut self, data: StateData<GameData>) {
 # }
 ```
 
-Now that our camera is set and ready, it is time to add our own component.
+Now that our camera is set and ready, it's time to add our own component.
 
 ## Our first Component
 
@@ -231,7 +228,7 @@ our canvas is from `0.0` to `ARENA_WIDTH` in the horizontal dimension and
 from `0.0` to `ARENA_HEIGHT` in the vertical dimension.
 Keep in mind that the anchor point of our entities will be in the middle of the
 image we will want to render on top of them. This is a good rule to follow in
-general as it makes operations like rotation easier.
+general, as it makes operations like rotation easier.
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
@@ -366,15 +363,19 @@ to bring into the context of the `World`. For simplicity, these have been
 wrapped up into "Bundles" which include related systems and resources. We can
 add these to our Application's `GameData` using the `with_bundle` method. We
 already have one of these in `main.rs`: the `RenderBundle`. We can just follow
-the pattern and add the `TransformBundle`.
+the pattern and add the `TransformBundle` after importing it:
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
-# use amethyst::core::transform::TransformBundle;
+use amethyst::core::transform::TransformBundle;
+// --snip--
+
 # use amethyst::renderer::{DisplayConfig, DrawFlat2D, Event, Pipeline,
 #                        RenderBundle, Stage, VirtualKeyCode};
-# fn main() -> amethyst::Result<()> {
+fn main() -> amethyst::Result<()> {
+// --snip--
+
 # let path = "./resources/display_config.ron";
 # let config = DisplayConfig::load(&path);
 # let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
@@ -383,18 +384,14 @@ the pattern and add the `TransformBundle`.
 # );
 # struct Pong;
 # impl<'a, 'b> SimpleState<'a, 'b> for Pong { }
-let game_data = GameDataBuilder::default()
-    .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
-    .with_bundle(TransformBundle::new())?;
+    let game_data = GameDataBuilder::default()
+        .with_bundle(
+          RenderBundle::new(pipe, Some(config))
+            .with_sprite_sheet_processor()
+        )?
+        .with_bundle(TransformBundle::new())?;
 # Ok(())
-# }
-```
-
-Also we'll need to import it:
-
-```rust,no_run,noplaypen
-# extern crate amethyst;
-use amethyst::core::transform::TransformBundle;
+}
 ```
 
 This time, when you run the game you should see the familiar black screen.
