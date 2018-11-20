@@ -16,7 +16,6 @@ extern crate fnv;
 extern crate font_kit;
 extern crate gfx;
 extern crate gfx_glyph;
-#[macro_use]
 extern crate glsl_layout;
 extern crate hibitset;
 #[macro_use]
