@@ -1,4 +1,4 @@
-//! Extra system utilities.
+//! Extension system utilities.
 //!
 //! This modules contains an extension trait for the System trait which adds useful transformation
 //! functions.
@@ -6,8 +6,8 @@
 use shred::{RunningTime, SystemData};
 use specs::prelude::{Read, System};
 
-/// Extra functionality associated systems.
-pub trait SystemExtra {
+/// Extension functionality associated systems.
+pub trait SystemExt {
     /// Make a system pausable by tying it to a specific value of a resource.
     ///
     /// # Examples
@@ -69,7 +69,7 @@ pub trait SystemExtra {
         V: Send + Sync + Default + Eq;
 }
 
-impl<'s, S> SystemExtra for S
+impl<'s, S> SystemExt for S
 where
     S: System<'s>,
 {

@@ -4,7 +4,7 @@ pub use {
     app::{Application, ApplicationBuilder, CoreApplication},
     callback_queue::{Callback, CallbackQueue},
     config::Config,
-    core::{SystemExtra, WithNamed},
+    core::{SystemExt, WithNamed},
     ecs::prelude::{Builder, World},
     game_data::{DataInit, GameData, GameDataBuilder},
     state::{
