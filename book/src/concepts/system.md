@@ -294,8 +294,9 @@ Keep in mind that inserting a component on an entity that already has a componen
 
 In a previous section we talked about [`States`][s], and how they are used to organize your game
 into different logical sections.
-Since systems are responsible for processing user input, they must somehow also be responsible for
-causing a switch in states.
+Sometimes we want to trigger a state transition from a system.
+For example, if a player dies we might want to remove their entity and signal to the state machine
+to push a state that shows a "You Died" screen.
 
 So how can we affect states from systems?
 There are a couple of ways, but this section will detail the easiest one: using a [`Resource`][r].
