@@ -37,6 +37,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Updated `winit` to `0.18` (see [Winit's changelog][winit_018]). ([#1131])
 * Updated `glutin` to `0.19` (see [Glutin's changelog][glutin_019]). ([#1131])
 * Renamed the `DrawSprite` pass to `DrawFlat2D` as it now handles both sprites and images without spritesheets. ([#1153])
+* `BasicScenePrefab` deserialization now returns an error on invalid fields. ([#1164])
 
 ### Removed
 
@@ -66,6 +67,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1129]: https://github.com/amethyst/amethyst/pull/1129
 [#1131]: https://github.com/amethyst/amethyst/pull/1131
 [#1153]: https://github.com/amethyst/amethyst/pull/1153
+[#1164]: https://github.com/amethyst/amethyst/pull/1164
 [winit_018]: https://github.com/tomaka/winit/blob/v0.18.0/CHANGELOG.md#version-0180-2018-11-07
 [glutin_019]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0190-2018-11-09
 

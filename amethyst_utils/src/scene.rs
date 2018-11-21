@@ -19,15 +19,16 @@ use removal::Removal;
 ///
 /// ### Type parameters:
 ///
-/// `V`: Vertex format to use for generated `Mesh`es, must to be one of:
+/// - `V`: Vertex format to use for generated `Mesh`es, must to be one of:
 ///     * `Vec<PosTex>`
 ///     * `Vec<PosNormTex>`
 ///     * `Vec<PosNormTangTex>`
 ///     * `ComboMeshCreator`
-/// `R`: The type of id used by the Removal component.
+/// - `R`: The type of id used by the Removal component.
 /// - `M`: `Format` to use for loading `Mesh`es from file
 #[derive(Deserialize, Serialize, PrefabData)]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct BasicScenePrefab<V, R = (), M = ObjFormat>
 where
     M: Format<Mesh> + Clone,
