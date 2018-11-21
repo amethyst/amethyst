@@ -68,6 +68,8 @@ A `State` contains methods that reflect the most common of those events:
 * shadow_update: This method is called as often as possible by the engine on all `State`s which are on the `StateMachines` stack, including the active `State`. Unlike `update`, this does not return a `Trans`.
 * shadow_fixed_update: This method is called at a fixed time interval (1/60th second by default) on all `State`s which are on the `StateMachines` stack, including the active `State`. Unlike `fixed_update`, this does not return a `Trans`.
 
+If you aren't using `SimpleState` or `EmptyState`, you *must* implement the `update` method to call `data.data.update(&mut data.world)`.
+
 ## Game Data
 
 `State`s can have arbitrary data associated with them.
