@@ -306,7 +306,7 @@ Before that, let's just quickly remind ourselves what a resource is:
 > A [`Resource`][r] is any type that stores data that you might need for your game AND that is not
 > specific to an entity.
 
-The data in a resource is available both to systems and resources.
+The data in a resource is available both to systems and states.
 We can use this to our advantage!
 
 Let's say you have the following two states:
