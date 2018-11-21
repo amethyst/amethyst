@@ -316,7 +316,7 @@ Let's say you have the following two states:
 
 The following example shows how to keep track of which state we are currently in.
 This allows us to do a bit of conditional logic in our systems to determine what to do depending on
-which state is currently active. And manipulating the states by setting flags:
+which state is currently active, and manipulating the states by setting flags:
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
