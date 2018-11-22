@@ -24,8 +24,13 @@ impl<'a> MaterialCreator<'a> {
         self.material_from_texture(albedo)
     }
 
-    /// Generate a `Material` from a path pointing to a png image.
-    pub fn material_from_png<T: Progress>(&self, path: String, progress_counter: T) -> Material {
+    /// Generate a `Material` from a filesystem path pointing to a png image.
+    /// Uses the "resource path" provided at Amethyst's initialization.
+    pub fn material_from_png<T: Progress, S: Into<String>>(
+        &self,
+        path: S,
+        progress_counter: T,
+    ) -> Material {
         self.material_from_texture(self.loader.load(
             path,
             PngFormat,
