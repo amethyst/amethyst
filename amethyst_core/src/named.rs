@@ -1,9 +1,36 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, ops::Deref};
 
 use fnv::FnvHashMap as HashMap;
-use specs::{world::LazyBuilder, Component, storage::ComponentEvent, DenseVecStorage, Entity,
-            EntityBuilder, shred::RunningTime, Resources, System, WriteStorage};
 use shrev::ReaderId;
+use specs::{
+    shred::RunningTime,
+    storage::{ComponentEvent, MaskedStorage},
+    world::LazyBuilder,
+    Component, DenseVecStorage, Entities, Entity, EntityBuilder, Resources, Storage, System,
+    WriteStorage,
+};
+
+use util::{Cache, CachedStorage};
+
+pub trait FindNamed {
+    fn find<S>(&self, s: S) -> Option<Entity>
+    where
+        S: AsRef<Cow<'static, str>>;
+}
+
+impl<'e, D> FindNamed for Storage<'e, Named, D>
+where
+    D: Deref<Target = MaskedStorage<Named>>,
+{
+    fn find<S>(&self, s: S) -> Option<Entity>
+    where
+        S: AsRef<Cow<'static, str>>,
+    {
+        let entities = self.fetched_entities();
+
+        self.unprotected_storage().cache.map.get(s.as_ref()).map(|i| entities.get(i))
+    }
+}
 
 /// A component that gives a name to an [`Entity`].
 ///
@@ -120,7 +147,7 @@ impl Named {
 }
 
 impl Component for Named {
-    type Storage = DenseVecStorage<Self>;
+    type Storage = CachedStorage<NameCache, DenseVecStorage<Self>, Self>;
 }
 
 /// An easy way to name an `Entity` and give it a `Named` `Component`.
@@ -162,4 +189,16 @@ pub struct NameCache {
     map: HashMap<Cow<'static, str>, u32>,
 }
 
+impl Cache<Named> for NameCache {
+    fn on_get(&self, _: u32, _: &Named) {}
 
+    fn on_update(&mut self, id: u32, val: &Named) {
+        self.map.insert(val.name.clone(), id);
+    }
+
+    fn on_remove(&mut self, id: u32, val: Named) -> Named {
+        self.map.remove(&val.name);
+
+        val
+    }
+}
