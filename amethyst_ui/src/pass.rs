@@ -228,7 +228,11 @@ impl Pass for DrawUi {
 
         //Gather unused glyph brushes
         //These that are currently in use will be removed from this set.
-        let mut unused_glyph_brushes = self.glyph_brushes.iter().map(|(id, _)| *id).collect::<HashSet<_>>();
+        let mut unused_glyph_brushes = self
+            .glyph_brushes
+            .iter()
+            .map(|(id, _)| *id)
+            .collect::<HashSet<_>>();
 
         let highest_abs_z = (&ui_transform,)
             .join()
@@ -572,7 +576,6 @@ impl Pass for DrawUi {
         for id in unused_glyph_brushes.drain() {
             self.glyph_brushes.remove(&id);
         }
-
     }
 }
 
