@@ -4,6 +4,14 @@ use amethyst_assets::{AssetStorage, Handle, Loader, Progress};
 use amethyst_core::specs::{Read, ReadExpect};
 use amethyst_renderer::{Material, MaterialDefaults, PngFormat, Texture, TextureMetadata};
 
+/// SystemData used to create `Material` instances in various ways.
+///
+/// # Example
+/// ```rust, ignore
+/// let mat = world.exec(|creator: MaterialCreator|
+///     creator.material_from_color([0.0, 1.0, 0.0, 1.0], ())
+/// );
+/// ```
 #[derive(SystemData)]
 pub struct MaterialCreator<'a> {
     loader: ReadExpect<'a, Loader>,
