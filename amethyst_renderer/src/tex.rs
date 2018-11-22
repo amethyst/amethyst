@@ -176,11 +176,19 @@ where
             let (w, h, _, _) = self.info.kind.get_dimensions();
             let w = w as usize;
             let h = h as usize;
+            if w * h * pixel_width != data.len() {
+                let error = format!(
+                    "Texture size mismatch: Expected pixel data vector of length {:?} (actual: {:?})",
+                    w * h * pixel_width,
+                    data.len()
+                );
+                bail!(::error::Error::PixelDataMismatch(error))
+            }
             for y in 0..h {
                 for x in 0..(w * pixel_width) {
                     v_flip_buffer.push(data[x + (h - y - 1) * w * pixel_width]);
                     // Uncomment this if you need to debug this.
-                    //println!("x: {}, y: {}, w: {}, h: {}, pw: {}", x, y, w, h, pixel_width);
+                    // println!("x: {}, y: {}, w: {}, h: {}, pw: {}", x, y, w, h, pixel_width);
                 }
             }
             data = &v_flip_buffer;
