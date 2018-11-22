@@ -46,6 +46,7 @@ mod named;
 mod system_ext;
 pub mod timing;
 pub mod transform;
+mod util;
 
 /// A rayon thread pool wrapped in an `Arc`. This should be used as resource in `World`.
 pub type ArcThreadPool = Arc<rayon::ThreadPool>;

@@ -1,6 +1,9 @@
 use std::borrow::Cow;
 
-use specs::{world::LazyBuilder, Component, DenseVecStorage, EntityBuilder, WriteStorage};
+use fnv::FnvHashMap as HashMap;
+use specs::{world::LazyBuilder, Component, storage::ComponentEvent, DenseVecStorage, Entity,
+            EntityBuilder, shred::RunningTime, Resources, System, WriteStorage};
+use shrev::ReaderId;
 
 /// A component that gives a name to an [`Entity`].
 ///
@@ -154,3 +157,9 @@ impl<'a> WithNamed for LazyBuilder<'a> {
         self
     }
 }
+
+pub struct NameCache {
+    map: HashMap<Cow<'static, str>, u32>,
+}
+
+

@@ -6,7 +6,7 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use amethyst_assets::{Format, PrefabData, PrefabError, ProgressCounter};
 use amethyst_controls::ControlTagPrefab;
-use amethyst_core::{specs::prelude::Entity, Transform};
+use amethyst_core::{specs::prelude::Entity, Named, Transform};
 use amethyst_renderer::{
     CameraPrefab, GraphicsPrefab, InternalShape, LightPrefab, Mesh, MeshData, ObjFormat,
     TextureFormat,
@@ -42,6 +42,7 @@ where
     camera: Option<CameraPrefab>,
     control_tag: Option<ControlTagPrefab>,
     removal: Option<Removal<R>>,
+    named: Option<Named>,
 }
 
 impl<V, R, M> Default for BasicScenePrefab<V, R, M>
@@ -59,6 +60,7 @@ where
             camera: None,
             control_tag: None,
             removal: None,
+            named: None,
         }
     }
 }
