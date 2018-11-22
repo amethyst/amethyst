@@ -1,57 +1,36 @@
 //! Module containing utility methods to easily create `Material` and `Texture` handles using a minimal amount of code.
 
-use amethyst_assets::{AssetStorage, Handle, Loader};
-use amethyst_core::specs::World;
+use amethyst_assets::{AssetStorage, Handle, Loader, Progress};
+use amethyst_core::specs::{Read, ReadExpect};
 use amethyst_renderer::{Material, MaterialDefaults, PngFormat, Texture, TextureMetadata};
 
-/// Generate a `Material` from a color.
-pub fn material_from_color(
-    color: [f32; 4],
-    loader: &Loader,
-    storage: &AssetStorage<Texture>,
-    material_defaults: &MaterialDefaults,
-) -> Material {
-    let albedo = loader.load_from_data(color.into(), (), &storage);
-    material_from_texture(albedo, material_defaults)
+#[derive(SystemData)]
+pub struct MaterialCreator<'a> {
+    loader: ReadExpect<'a, Loader>,
+    storage: Read<'a, AssetStorage<Texture>>,
+    defaults: ReadExpect<'a, MaterialDefaults>,
 }
 
-/// Generate a `Material` from a texture handle.
-pub fn material_from_texture(texture: Handle<Texture>, defaults: &MaterialDefaults) -> Material {
-    Material {
-        albedo: texture,
-        ..defaults.0.clone()
+impl<'a> MaterialCreator<'a> {
+
+    /// Generate a `Material` from a color.
+    pub fn material_from_color<T: Progress>(&self, color: [f32; 4], progress_counter: T) -> Material {
+        let albedo = self.loader.load_from_data(color.into(), progress_counter, &self.storage);
+        self.material_from_texture(albedo)
     }
-}
 
-/// Generate a `Material` from a path pointing to a png image.
-pub fn material_from_png(
-    path: String,
-    loader: &Loader,
-    storage: &AssetStorage<Texture>,
-    material_defaults: &MaterialDefaults,
-) -> Material {
-    material_from_texture(
-        loader.load(path, PngFormat, TextureMetadata::srgb(), (), &storage),
-        material_defaults,
-    )
-}
+    /// Generate a `Material` from a path pointing to a png image.
+    pub fn material_from_png<T: Progress>(&self, path: String, progress_counter: T) -> Material {
+        self.material_from_texture(
+            self.loader.load(path, PngFormat, TextureMetadata::srgb(), progress_counter, &self.storage)
+        )
+    }
 
-/// Generate a `Material` from a color.
-pub fn world_material_from_color(color: [f32; 4], world: &World) -> Material {
-    material_from_color(
-        color,
-        &world.read_resource(),
-        &world.read_resource(),
-        &world.read_resource(),
-    )
-}
-
-/// Generate a `Material` from a path pointing to a png image.
-pub fn world_material_from_png(path: String, world: &World) -> Material {
-    material_from_png(
-        path,
-        &world.read_resource(),
-        &world.read_resource(),
-        &world.read_resource(),
-    )
+    /// Generate a `Material` from a texture handle.
+    pub fn material_from_texture(&self, texture: Handle<Texture>) -> Material {
+        Material {
+            albedo: texture,
+            ..self.defaults.0.clone()
+        }
+    }
 }
