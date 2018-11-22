@@ -78,6 +78,7 @@ pub extern crate amethyst_utils as utils;
 pub extern crate winit;
 
 extern crate amethyst_ui;
+extern crate crossbeam_channel;
 #[macro_use]
 extern crate derivative;
 extern crate fern;
@@ -93,11 +94,13 @@ pub use core::{shred, shrev, specs as ecs};
 
 pub use self::{
     app::{Application, ApplicationBuilder, CoreApplication},
+    callback_queue::{Callback, CallbackQueue},
     error::{Error, Result},
     game_data::{DataInit, GameData, GameDataBuilder},
-    logger::{start_logger, LevelFilter as LogLevelFilter, LoggerConfig, StdoutLog},
+    logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
     state::{
         EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, StateMachine, Trans,
+        TransEvent,
     },
     state_event::{StateEvent, StateEventReader},
 };
@@ -108,6 +111,7 @@ pub use derive::*;
 pub mod prelude;
 
 mod app;
+mod callback_queue;
 mod error;
 mod game_data;
 mod logger;

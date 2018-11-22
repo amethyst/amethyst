@@ -61,6 +61,15 @@ pub enum Trans<T, E> {
     Quit,
 }
 
+/// Event queue to trigger state `Trans` from other places than a `State`'s methods.
+/// # Example:
+/// ```rust, ignore
+/// world.write_resource::<EventChannel<TransEvent<MyGameData, StateEvent>>>().single_write(Box::new(|| Trans::Quit));
+/// ```
+///
+/// Transitions will be executed sequentially by Amethyst's `CoreApplication` update loop.
+pub type TransEvent<T, E> = Box<Fn() -> Trans<T, E> + Send + Sync + 'static>;
+
 /// An empty `Trans`. Made to be used with `EmptyState`.
 pub type EmptyTrans = Trans<(), StateEvent>;
 
@@ -411,9 +420,12 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
         }
     }
 
-    /// Performs a state transition, if requested by either update() or
-    /// fixed_update().
-    fn transition(&mut self, request: Trans<T, E>, data: StateData<T>) {
+    /// Performs a state transition.
+    /// Usually called by update or fixed_update by the user's defined `State`.
+    /// This method can also be called when there are one or multiple `Trans` stored in the
+    /// global `EventChannel<TransEvent<T, E>>`. Such `Trans` will be passed to this method
+    /// sequentially in the order of insertion.
+    pub fn transition(&mut self, request: Trans<T, E>, data: StateData<T>) {
         if self.running {
             match request {
                 Trans::None => (),

@@ -21,6 +21,7 @@ rust:
 matrix:
   fast_finish: true
   allow_failures:
+  - os: windows
   - rust: nightly
 
 branches:

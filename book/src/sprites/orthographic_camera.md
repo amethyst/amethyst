@@ -6,7 +6,7 @@ The following snippet demonstrates how to set up a `Camera` that sees entities w
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
-use amethyst::core::cgmath::{Ortho, Vector3};
+use amethyst::core::nalgebra::Orthographic3;
 use amethyst::core::transform::Transform;
 # use amethyst::prelude::*;
 use amethyst::renderer::{
@@ -34,19 +34,19 @@ impl ExampleState {
         // Translate the camera to Z coordinate 10.0, and it looks back toward
         // the origin with depth 20.0
         let mut transform = Transform::default();
-        transform.translation = Vector3::new(0., 0., 10.);
+        transform.set_xyz(0., 0., 10.);
 
         let camera = world
             .create_entity()
             .with(transform)
-            .with(Camera::from(Projection::Orthographic(Ortho {
-                left: 0.0,
-                right: width,
-                top: height,
-                bottom: 0.0,
-                near: 0.0,
-                far: 20.0,
-            })))
+            .with(Camera::from(Projection::Orthographic(Orthographic3::new(
+                0.0,
+                width,
+                0.0,
+                height,
+                0.0,
+                20.0,
+            ))))
             .build();
     }
 }

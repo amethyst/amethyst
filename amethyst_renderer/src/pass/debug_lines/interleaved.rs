@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 use gfx::{pso::buffer::ElemStride, Primitive};
 
 use amethyst_core::{
-    cgmath::{Matrix4, One},
+    nalgebra as na,
     specs::{Join, Read, ReadStorage, Write, WriteStorage},
     transform::GlobalTransform,
 };
@@ -130,7 +130,7 @@ where
             "camera_position",
             camera
                 .as_ref()
-                .map(|&(_, ref trans)| [trans.0[3][0], trans.0[3][1], trans.0[3][2]])
+                .map(|&(_, ref trans)| trans.0.column(3).xyz().into())
                 .unwrap_or([0.0; 3]),
         );
 
@@ -145,7 +145,7 @@ where
             return;
         }
 
-        set_vertex_args(effect, encoder, camera, &GlobalTransform(Matrix4::one()));
+        set_vertex_args(effect, encoder, camera, &GlobalTransform(na::one()));
 
         effect.draw(mesh.slice(), encoder);
         effect.clear();

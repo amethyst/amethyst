@@ -4,7 +4,9 @@ use amethyst_assets::{
     Asset, Error as AssetsError, ErrorKind as AssetsErrorKind, Handle, ProcessingState,
     Result as AssetsResult, SimpleFormat,
 };
-use amethyst_core::specs::prelude::{Component, VecStorage};
+use amethyst_core::specs::prelude::{Component, DenseVecStorage, VecStorage};
+
+use Texture;
 
 /// An asset handle to sprite sheet metadata.
 pub type SpriteSheetHandle = Handle<SpriteSheet>;
@@ -12,10 +14,10 @@ pub type SpriteSheetHandle = Handle<SpriteSheet>;
 /// Meta data for a sprite sheet texture.
 ///
 /// Contains a handle to the texture and the sprite coordinates on the texture.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct SpriteSheet {
-    /// Index into `MaterialTextureSet` of the texture for this sprite sheet.
-    pub texture_id: u64,
+    /// `Texture` handle of the spritesheet texture
+    pub texture: Handle<Texture>,
     /// A list of sprites in this sprite sheet.
     pub sprites: Vec<Sprite>,
 }
@@ -30,6 +32,24 @@ impl From<SpriteSheet> for AssetsResult<ProcessingState<SpriteSheet>> {
     fn from(sprite_sheet: SpriteSheet) -> AssetsResult<ProcessingState<SpriteSheet>> {
         Ok(ProcessingState::Loaded(sprite_sheet))
     }
+}
+
+/// Information about whether or not a texture should be flipped
+/// when rendering.
+#[derive(Clone, Debug)]
+pub enum Flipped {
+    /// Don't flip the texture
+    None,
+    /// Flip the texture horizontally
+    Horizontal,
+    /// Flip the texture vertically
+    Vertical,
+    /// Flip the texture in both orientations
+    Both,
+}
+
+impl Component for Flipped {
+    type Storage = DenseVecStorage<Self>;
 }
 
 /// Dimensions and texture coordinates of each sprite in a sprite sheet.
@@ -166,17 +186,13 @@ impl From<[f32; 4]> for TextureCoordinates {
 /// Information for rendering a sprite.
 ///
 /// Instead of using a `Mesh` on a `DrawFlat` render pass, we can use a simpler set of shaders to
-/// render sprites. This struct carries the information necessary for the sprite pass.
+/// render textures to quads. This struct carries the information necessary for the draw2dflat pass.
 #[derive(Clone, Debug, PartialEq)]
 pub struct SpriteRender {
     /// Handle to the sprite sheet of the sprite
     pub sprite_sheet: SpriteSheetHandle,
     /// Index of the sprite on the sprite sheet
     pub sprite_number: usize,
-    /// Whether the sprite should be flipped horizontally
-    pub flip_horizontal: bool,
-    /// Whether the sprite should be flipped vertically
-    pub flip_vertical: bool,
 }
 
 impl Component for SpriteRender {
@@ -245,24 +261,30 @@ struct SerializedSpriteSheet {
 /// )
 /// ```
 ///
-/// Such a spritesheet description can be loaded using a `Loader` by passing it the ID of the corresponding loaded texture in the MaterialTextureSet.
+/// Such a spritesheet description can be loaded using a `Loader` by passing it the handle of the corresponding loaded texture.
 /// ```rust,no_run
 /// # extern crate amethyst_assets;
 /// # extern crate amethyst_core;
 /// # extern crate amethyst_renderer;
 /// # use amethyst_assets::{Loader, AssetStorage};
-/// # use amethyst_renderer::{SpriteSheetFormat, SpriteSheet};
-/// #
-/// # const SPRITESHEET_TEXTURE_ID: u64 = 0;
+/// # use amethyst_renderer::{SpriteSheetFormat, SpriteSheet, Texture, PngFormat, TextureMetadata};
 /// #
 /// # fn load_sprite_sheet() {
 /// #   let world = amethyst_core::specs::World::new(); // Normally, you would use Amethyst's world
 /// #   let loader = world.read_resource::<Loader>();
 /// #   let spritesheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
+/// #   let texture_storage = world.read_resource::<AssetStorage<Texture>>();
+/// let texture_handle = loader.load(
+///     "my_texture.png",
+///     PngFormat,
+///     TextureMetadata::srgb(),
+///     (),
+///     &texture_storage,
+/// );
 /// let spritesheet_handle = loader.load(
 ///     "my_spritesheet.ron",
 ///     SpriteSheetFormat,
-///     SPRITESHEET_TEXTURE_ID,
+///     texture_handle,
 ///     (),
 ///     &spritesheet_storage,
 /// );
@@ -274,9 +296,9 @@ pub struct SpriteSheetFormat;
 impl SimpleFormat<SpriteSheet> for SpriteSheetFormat {
     const NAME: &'static str = "SPRITE_SHEET";
 
-    type Options = u64;
+    type Options = Handle<Texture>;
 
-    fn import(&self, bytes: Vec<u8>, texture_id: Self::Options) -> AssetsResult<SpriteSheet> {
+    fn import(&self, bytes: Vec<u8>, texture: Self::Options) -> AssetsResult<SpriteSheet> {
         let sheet: SerializedSpriteSheet = from_ron_bytes(&bytes).map_err(|_| {
             AssetsError::from_kind(AssetsErrorKind::Format(
                 "Failed to parse Ron file for SpriteSheet",
@@ -296,10 +318,7 @@ impl SimpleFormat<SpriteSheet> for SpriteSheetFormat {
                 },
             });
         }
-        Ok(SpriteSheet {
-            texture_id,
-            sprites,
-        })
+        Ok(SpriteSheet { texture, sprites })
     }
 }
 

@@ -42,7 +42,7 @@ impl<'s> System<'s> for WinnerSystem {
         ): Self::SystemData,
     ) {
         for (ball, transform) in (&mut balls, &mut transforms).join() {
-            let ball_x = transform.translation[0];
+            let ball_x = transform.translation().x;
 
             let did_hit = if ball_x <= ball.radius {
                 // Right player scored on the left side.
@@ -65,7 +65,7 @@ impl<'s> System<'s> for WinnerSystem {
             if did_hit {
                 // Reset the ball.
                 ball.velocity[0] = -ball.velocity[0];
-                transform.translation[0] = arena_config.width / 2.0;
+                transform.set_x(arena_config.width / 2.0);
 
                 // Print the score board.
                 println!(

@@ -2,7 +2,7 @@ use hibitset::BitSet;
 
 use amethyst_assets::{PrefabData, PrefabError, ProgressCounter};
 use amethyst_core::{
-    cgmath::{Matrix4, SquareMatrix},
+    nalgebra::Matrix4,
     specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage},
 };
 use amethyst_renderer::JointTransformsPrefab;

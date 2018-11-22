@@ -28,4 +28,4 @@ bincode = "1.0"
 log = "0.4"
 uuid = { version = "0.7.1", features = ["v4","serde"] }
 thread_profiler = { version = "0.3" , optional = true }
-fern = "0.5"
+laminar = "0.1"

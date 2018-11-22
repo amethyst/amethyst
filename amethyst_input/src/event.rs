@@ -3,8 +3,6 @@ use winit::{MouseButton, VirtualKeyCode};
 use super::{
     button::Button,
     controller::{ControllerAxis, ControllerButton},
-    local_mouse_button::LocalMouseButton,
-    local_virtual_key_code::LocalVirtualKeyCode,
     scroll_direction::ScrollDirection,
 };
 
@@ -17,7 +15,6 @@ pub enum InputEvent<T> {
     /// A key was pressed down, sent exactly once per key press.
     KeyPressed {
         /// The `VirtualKeyCode`, used for semantic info. i.e. "W" was pressed
-        #[serde(with = "LocalVirtualKeyCode")]
         key_code: VirtualKeyCode,
         /// The scancode, used for positional info. i.e. The third key on the first row was pressed.
         scancode: u32,
@@ -25,7 +22,6 @@ pub enum InputEvent<T> {
     /// A key was released, sent exactly once per key release.
     KeyReleased {
         /// The `VirtualKeyCode`, used for semantic info. i.e. "W" was released
-        #[serde(with = "LocalVirtualKeyCode")]
         key_code: VirtualKeyCode,
         /// The scancode, used for positional info. i.e. The third key on the first row was released.
         scancode: u32,
@@ -33,9 +29,9 @@ pub enum InputEvent<T> {
     /// A unicode character was received by the window.  Good for typing.
     KeyTyped(char),
     /// A mouse button was pressed down, sent exactly once per press.
-    MouseButtonPressed(#[serde(with = "LocalMouseButton")] MouseButton),
+    MouseButtonPressed(MouseButton),
     /// A mouse button was released, sent exactly once per release.
-    MouseButtonReleased(#[serde(with = "LocalMouseButton")] MouseButton),
+    MouseButtonReleased(MouseButton),
     /// A button was pressed.
     ButtonPressed(Button),
     /// A button was released.

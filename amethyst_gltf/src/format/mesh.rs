@@ -57,7 +57,7 @@ pub fn load_mesh(
                 }
                 None => normals.collect(),
             }).unwrap_or_else(|| {
-                use core::cgmath::Point3;
+                use core::nalgebra::Point3;
                 use std::iter::once;
                 let f = faces
                     .as_ref()
@@ -68,7 +68,7 @@ pub fn load_mesh(
                         let a = Point3::from(positions[chunk[0]]);
                         let ab = Point3::from(positions[chunk[1]]) - a;
                         let ac = Point3::from(positions[chunk[2]]) - a;
-                        let normal: [f32; 3] = ab.cross(ac).into();
+                        let normal: [f32; 3] = ab.cross(&ac).into();
                         once(normal.clone())
                             .chain(once(normal.clone()))
                             .chain(once(normal))

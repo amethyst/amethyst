@@ -1,4 +1,4 @@
-pub use self::interleaved::DrawSprite;
+pub use self::interleaved::DrawFlat2D;
 
 mod interleaved;
 

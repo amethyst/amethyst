@@ -1,4 +1,7 @@
-use amethyst::renderer::{Sprite, SpriteSheet, TextureCoordinates};
+use amethyst::{
+    assets::Handle,
+    renderer::{Sprite, SpriteSheet, Texture, TextureCoordinates},
+};
 
 use sprite;
 
@@ -10,9 +13,9 @@ use sprite;
 ///
 /// # Parameters:
 ///
-/// * `texture_id`: Id of the sprite sheet's texture in the `MaterialTextureSet`.
+/// * `texture`: Sprite sheet's texture handle
 /// * `definition`: Definition of the sprite layout on the sprite sheet.
-pub fn load(texture_id: u64, definition: &sprite::SpriteSheetDefinition) -> SpriteSheet {
+pub fn load(texture: Handle<Texture>, definition: &sprite::SpriteSheetDefinition) -> SpriteSheet {
     let mut sprites = Vec::with_capacity(definition.row_count * definition.column_count);
     let (offset_w, offset_h) = offset_distances(&definition);
     let (image_w, image_h) = (
@@ -47,10 +50,7 @@ pub fn load(texture_id: u64, definition: &sprite::SpriteSheetDefinition) -> Spri
         }
     }
 
-    SpriteSheet {
-        texture_id,
-        sprites,
-    }
+    SpriteSheet { texture, sprites }
 }
 
 /// Returns the pixel offset distances per sprite.

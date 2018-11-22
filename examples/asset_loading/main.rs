@@ -7,7 +7,7 @@ extern crate rayon;
 use amethyst::{
     assets::{Loader, Result as AssetResult, SimpleFormat},
     core::{
-        cgmath::{Array, Deg, Vector3},
+        nalgebra::{Vector2, Vector3},
         Transform, TransformBundle,
     },
     input::InputBundle,
@@ -39,22 +39,22 @@ impl SimpleFormat<Mesh> for Custom {
         for line in trimmed {
             let nums: Vec<&str> = line.split_whitespace().collect();
 
-            let position = [
+            let position = Vector3::new(
                 nums[0].parse::<f32>().unwrap(),
                 nums[1].parse::<f32>().unwrap(),
                 nums[2].parse::<f32>().unwrap(),
-            ];
+            );
 
-            let normal = [
+            let normal = Vector3::new(
                 nums[3].parse::<f32>().unwrap(),
                 nums[4].parse::<f32>().unwrap(),
                 nums[5].parse::<f32>().unwrap(),
-            ];
+            );
 
             result.push(PosNormTex {
                 position,
                 normal,
-                tex_coord: [0.0, 0.0],
+                tex_coord: Vector2::new(0.0, 0.0),
             });
         }
         Ok(result.into())
@@ -90,8 +90,8 @@ impl<'a, 'b> SimpleState<'a, 'b> for AssetsExample {
         };
 
         let mut trans = Transform::default();
-        trans.translation = Vector3::new(-5.0, 0.0, 0.0);
-        trans.scale = Vector3::from_value(2.);
+        trans.set_xyz(-5.0, 0.0, 0.0);
+        trans.set_scale(2.0, 2.0, 2.0);
         world
             .create_entity()
             .with(mesh)
@@ -126,13 +126,15 @@ fn main() -> Result<(), Error> {
 
 fn initialise_camera(world: &mut World) {
     let mut transform = Transform::default();
-    transform.set_position(Vector3::new(0.0, -20.0, 10.0));
-    transform.set_rotation(Deg(75.96), Deg(0.0), Deg(0.0));
+    transform.set_xyz(0.0, -20.0, 10.0);
+    transform.rotate_local(Vector3::x_axis(), 1.3257521);
 
     world
         .create_entity()
-        .with(Camera::from(Projection::perspective(1.0, Deg(60.0))))
-        .with(transform)
+        .with(Camera::from(Projection::perspective(
+            1.0,
+            std::f32::consts::FRAC_PI_3,
+        ))).with(transform)
         .build();
 }
 
@@ -146,7 +148,7 @@ fn initialise_lights(world: &mut World) {
     }.into();
 
     let mut transform = Transform::default();
-    transform.set_position(Vector3::new(5.0, -20.0, 15.0));
+    transform.set_xyz(5.0, -20.0, 15.0);
 
     // Add point light.
     world.create_entity().with(light).with(transform).build();

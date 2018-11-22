@@ -1,7 +1,7 @@
 use super::DemoState;
 use amethyst::{
     core::{
-        cgmath::{Quaternion, Rad, Rotation, Rotation3},
+        nalgebra::{UnitQuaternion, Vector3},
         Time, Transform,
     },
     ecs::prelude::{Entity, Join, Read, ReadStorage, System, WriteExpect, WriteStorage},
@@ -39,14 +39,13 @@ impl<'a> System<'a> for ExampleSystem {
         state.light_angle += light_angular_velocity * time.delta_seconds();
         state.camera_angle += camera_angular_velocity * time.delta_seconds();
 
-        let delta_rot =
-            Quaternion::from_angle_z(Rad(camera_angular_velocity * time.delta_seconds()));
+        let delta_rot = UnitQuaternion::from_axis_angle(
+            &Vector3::z_axis(),
+            camera_angular_velocity * time.delta_seconds(),
+        );
         for (_, transform) in (&camera, &mut transforms).join() {
-            // rotate the camera, using the origin as a pivot point
-            transform.translation = delta_rot.rotate_vector(transform.translation);
-            // add the delta rotation for the frame to the total rotation (quaternion multiplication
-            // is the same as rotational addition)
-            transform.rotation = (delta_rot * Quaternion::from(transform.rotation)).into();
+            // Append the delta rotation to the current transform.
+            *transform.isometry_mut() = delta_rot * transform.isometry();
         }
 
         for (point_light, transform) in
@@ -59,9 +58,11 @@ impl<'a> System<'a> for ExampleSystem {
                         None
                     }
                 }) {
-            transform.translation.x = light_orbit_radius * state.light_angle.cos();
-            transform.translation.y = light_orbit_radius * state.light_angle.sin();
-            transform.translation.z = light_z;
+            transform.set_xyz(
+                light_orbit_radius * state.light_angle.cos(),
+                light_orbit_radius * state.light_angle.sin(),
+                light_z,
+            );
 
             point_light.color = state.light_color.into();
         }

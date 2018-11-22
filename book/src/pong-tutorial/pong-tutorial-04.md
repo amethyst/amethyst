@@ -6,7 +6,7 @@ This chapter will reuse all the knowledge we acquired through the
 previous chapters to add a new object to our game: a ball that moves
 and bounces around!
 
-First, let's define some other useful constants for this chapter:
+First, let's define some other useful constants for this chapter in `pong.rs`:
 
 ```rust,no_run,noplaypen
 pub const BALL_VELOCITY_X: f32 = 75.0;
@@ -44,11 +44,10 @@ Then let's add a `initialise_ball` function the same way we wrote the
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::assets::{Loader, AssetStorage};
-# use amethyst::renderer::{Texture, PngFormat, TextureHandle, MaterialTextureSet, SpriteRender,
+# use amethyst::renderer::{Texture, PngFormat, TextureHandle, SpriteRender,
 #                          TextureCoordinates, Sprite, SpriteSheet, SpriteSheetHandle, TextureMetadata};
 # use amethyst::ecs::World;
 # use amethyst::core::transform::Transform;
-# use amethyst::core::cgmath::Vector3;
 # use amethyst::ecs::prelude::{Component, DenseVecStorage};
 # pub struct Ball {
 #    pub velocity: [f32; 2],
@@ -69,14 +68,12 @@ Then let's add a `initialise_ball` function the same way we wrote the
 fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
     // Create the translation.
     let mut local_transform = Transform::default();
-    local_transform.translation = Vector3::new(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
+    local_transform.set_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 
     // Assign the sprite for the ball
     let sprite_render = SpriteRender {
         sprite_sheet: sprite_sheet_handle,
         sprite_number: 1, // ball is the second sprite on the sprite sheet
-        flip_horizontal: false,
-        flip_vertical: false,
     };
 
     world
@@ -145,19 +142,26 @@ We're now ready to implement the `MoveBallsSystem` in `systems/move_balls.rs`:
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::prelude::{Component, DenseVecStorage};
-# pub struct Ball {
-#    pub velocity: [f32; 2],
-#    pub radius: f32,
+#
+# mod pong {
+#     use amethyst::ecs::prelude::*;
+#
+#     pub struct Ball {
+#        pub velocity: [f32; 2],
+#        pub radius: f32,
+#     }
+#     impl Component for Ball {
+#        type Storage = DenseVecStorage<Self>;
+#     }
 # }
-# impl Component for Ball {
-#    type Storage = DenseVecStorage<Self>;
-# }
-
+#
 use amethyst::{
     core::timing::Time,
     core::transform::Transform,
     ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
 };
+
+use pong::Ball;
 
 pub struct MoveBallsSystem;
 
@@ -171,14 +175,14 @@ impl<'s> System<'s> for MoveBallsSystem {
     fn run(&mut self, (balls, mut locals, time): Self::SystemData) {
         // Move every ball according to its speed, and the time passed.
         for (ball, local) in (&balls, &mut locals).join() {
-            local.translation[0] += ball.velocity[0] * time.delta_seconds();
-            local.translation[1] += ball.velocity[1] * time.delta_seconds();
+            local.translate_x(ball.velocity[0] * time.delta_seconds());
+            local.translate_y(ball.velocity[1] * time.delta_seconds());
         }
     }
 }
+#
+# fn main() {}
 ```
-
-Note: You will need to add a `use` statement to bring in `Ball` from `pong.rs`.
 
 This system is responsible for moving all balls according to their speed and
 the elapsed time. Notice how the `join()` method is used to iterate over all
@@ -202,38 +206,42 @@ by negating the velocity of the `Ball` component on the `x` or `y` axis.
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::prelude::{Component, DenseVecStorage};
-# pub struct Ball {
-#    pub velocity: [f32; 2],
-#    pub radius: f32,
+#
+# mod pong {
+#     use amethyst::ecs::prelude::*;
+#
+#     pub struct Ball {
+#        pub velocity: [f32; 2],
+#        pub radius: f32,
+#     }
+#     impl Component for Ball {
+#        type Storage = DenseVecStorage<Self>;
+#     }
+#
+#     #[derive(PartialEq, Eq)]
+#     pub enum Side {
+#       Left,
+#       Right,
+#     }
+#
+#     pub struct Paddle {
+#       pub side: Side,
+#       pub width: f32,
+#       pub height: f32,
+#     }
+#     impl Component for Paddle {
+#       type Storage = VecStorage<Self>;
+#     }
+#
+#     pub const ARENA_HEIGHT: f32 = 100.0;
 # }
-# impl Component for Ball {
-#    type Storage = DenseVecStorage<Self>;
-# }
-# #[derive(PartialEq, Eq)]
-# pub enum Side {
-#   Left,
-#   Right,
-# }
-# pub struct Paddle {
-#   side: Side,
-#   width: f32,
-#   height: f32,
-# }
-# impl amethyst::ecs::Component for Paddle {
-#   type Storage = amethyst::ecs::VecStorage<Paddle>;
-# }
-# const PADDLE_HEIGHT: f32 = 16.0;
-# const PADDLE_WIDTH: f32 = 4.0;
-# const SPRITESHEET_SIZE: (f32, f32) = (8.0, 16.0);
-# const BALL_RADIUS: f32 = 2.0;
-# const BALL_VELOCITY_X: f32 = 75.0;
-# const BALL_VELOCITY_Y: f32 = 50.0;
-# const ARENA_HEIGHT: f32 = 100.0;
-# const ARENA_WIDTH: f32 = 100.0;
+#
 use amethyst::{
     core::transform::Transform,
     ecs::prelude::{Join, ReadStorage, System, WriteStorage},
 };
+
+use pong::{Ball, Side, Paddle, ARENA_HEIGHT};
 
 pub struct BounceSystem;
 
@@ -250,20 +258,20 @@ impl<'s> System<'s> for BounceSystem {
         // We also check for the velocity of the ball every time, to prevent multiple collisions
         // from occurring.
         for (ball, transform) in (&mut balls, &transforms).join() {
-            let ball_x = transform.translation[0];
-            let ball_y = transform.translation[1];
+            let ball_x = transform.translation().x;
+            let ball_y = transform.translation().y;
 
             // Bounce at the top or the bottom of the arena.
-            if ball_y <= ball.radius && ball.velocity[1] < 0.0 {
+            if ball_y >= ARENA_HEIGHT - ball.radius && ball.velocity[1] > 0.0 {
                 ball.velocity[1] = -ball.velocity[1];
-            } else if ball_y >= ARENA_HEIGHT - ball.radius && ball.velocity[1] > 0.0 {
+            } else if ball_y <= ball.radius && ball.velocity[1] < 0.0 {
                 ball.velocity[1] = -ball.velocity[1];
             }
 
             // Bounce at the paddles.
             for (paddle, paddle_transform) in (&paddles, &transforms).join() {
-                let paddle_x = paddle_transform.translation[0] - paddle.width * 0.5;
-                let paddle_y = paddle_transform.translation[1] - paddle.height * 0.5;
+                let paddle_x = paddle_transform.translation().x - paddle.width * 0.5;
+                let paddle_y = paddle_transform.translation().y - paddle.height * 0.5;
 
                 // To determine whether the ball has collided with a paddle, we create a larger
                 // rectangle around the current one, by subtracting the ball radius from the
@@ -294,6 +302,8 @@ impl<'s> System<'s> for BounceSystem {
 fn point_in_rect(x: f32, y: f32, left: f32, bottom: f32, right: f32, top: f32) -> bool {
     x >= left && x <= right && y >= bottom && y <= top
 }
+#
+# fn main() {}
 ```
 
 The following image illustrates how collisions with paddles are checked.

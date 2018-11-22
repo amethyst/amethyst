@@ -79,8 +79,6 @@ impl Renderer {
         use gfx::Device;
         #[cfg(feature = "opengl")]
         use glutin::dpi::PhysicalSize;
-        #[cfg(feature = "opengl")]
-        use glutin::GlContext;
 
         if let Some(size) = self.window().get_inner_size() {
             let hidpi_factor = self.window().get_hidpi_factor();
@@ -120,7 +118,7 @@ impl Renderer {
                 .with_num_color_bufs(value.color_bufs().len())
                 .with_depth_buf(value.depth_buf().is_some())
                 .build(&mut self.factory, new_size)
-                .unwrap();
+                .expect("Unable to create new target when resizing");
             targets.insert(key, target);
         }
         pipe.new_targets(targets);
@@ -241,7 +239,8 @@ fn init_backend(wb: WindowBuilder, el: &mut EventsLoop, config: &DisplayConfig) 
     use gfx_window_dxgi as win;
 
     // FIXME: vsync + multisampling from config
-    let (win, dev, mut fac, color) = win::init::<ColorFormat>(wb, el).unwrap();
+    let (win, dev, mut fac, color) =
+        win::init::<ColorFormat>(wb, el).expect("Unable to initialize window (d3d11 backend)");
     let dev = gfx_device_dx11::Deferred::from(dev);
 
     let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
@@ -267,7 +266,8 @@ fn init_backend(wb: WindowBuilder, el: &mut EventsLoop, config: &DisplayConfig) 
     use gfx_window_metal as win;
 
     // FIXME: vsync + multisampling from config
-    let (win, dev, mut fac, color) = win::init::<ColorFormat>(wb, el).unwrap();
+    let (win, dev, mut fac, color) =
+        win::init::<ColorFormat>(wb, el).expect("Unable to initialize window (metal backend)");
 
     let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
     let (w, h) = (size.0 as u16, size.1 as u16);
@@ -324,7 +324,7 @@ fn init_backend(wb: WindowBuilder, el: &mut EventsLoop, config: &DisplayConfig) 
 #[cfg(all(feature = "opengl", target_os = "macos"))]
 fn init_backend(wb: WindowBuilder, el: &mut EventsLoop, config: &DisplayConfig) -> Result<Backend> {
     use gfx_window_glutin as win;
-    use glutin::{self, GlContext, GlProfile, GlRequest};
+    use glutin::{self, GlProfile, GlRequest};
 
     let ctx = glutin::ContextBuilder::new()
         .with_multisampling(config.multisampling)

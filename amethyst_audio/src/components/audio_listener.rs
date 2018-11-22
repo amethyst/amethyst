@@ -1,5 +1,5 @@
 use amethyst_core::{
-    cgmath::Point3,
+    nalgebra::Point3,
     specs::{prelude::Component, storage::HashMapStorage},
 };
 

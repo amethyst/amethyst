@@ -231,7 +231,6 @@ impl UiButtonBuilder {
 
     /// Build this with the `UiButtonBuilderResources`.
     pub fn build(mut self, mut res: UiButtonBuilderResources) -> Entity {
-        // unwraps are safe because we create the entities inside
         let mut id = self.name.clone();
         let image_entity = res.entities.create();
         res.transform
@@ -247,7 +246,7 @@ impl UiButtonBuilder {
                     self.height,
                     self.tab_order,
                 ).with_stretch(self.stretch),
-            ).unwrap();
+            ).expect("Unreachable: Inserting newly created entity");
         let image_handle = self.image.unwrap_or_else(|| {
             res.loader
                 .load_from_data(DEFAULT_BKGD_COLOR.into(), (), &res.texture_asset)
@@ -259,14 +258,14 @@ impl UiButtonBuilder {
                 UiImage {
                     texture: image_handle.clone(),
                 },
-            ).unwrap();
+            ).expect("Unreachable: Inserting newly created entity");
         res.mouse_reactive
             .insert(image_entity, MouseReactive)
-            .unwrap();
+            .expect("Unreachable: Inserting newly created entity");
         if let Some(parent) = self.parent.take() {
             res.parent
                 .insert(image_entity, Parent { entity: parent })
-                .unwrap();
+                .expect("Unreachable: Inserting newly created entity");
         }
 
         id.push_str("_btn_txt");
@@ -280,7 +279,7 @@ impl UiButtonBuilder {
                         x_margin: 0.,
                         y_margin: 0.,
                     }),
-            ).unwrap();
+            ).expect("Unreachable: Inserting newly created entity");
         let font_handle = self
             .font
             .unwrap_or_else(|| get_default_font(&res.loader, &res.font_asset));
@@ -288,14 +287,14 @@ impl UiButtonBuilder {
             .insert(
                 text_entity,
                 UiText::new(font_handle, self.text, self.text_color, self.font_size),
-            ).unwrap();
+            ).expect("Unreachable: Inserting newly created entity");
         res.parent
             .insert(
                 text_entity,
                 Parent {
                     entity: image_entity,
                 },
-            ).unwrap();
+            ).expect("Unreachable: Inserting newly created entity");
 
         res.button
             .insert(
@@ -305,13 +304,13 @@ impl UiButtonBuilder {
                     hover_text_color: self.hover_text_color,
                     press_text_color: self.press_text_color,
                 },
-            ).unwrap();
+            ).expect("Unreachable: Inserting newly created entity");
         if self.hover_image.is_some() || self.press_image.is_some() {
             res.action_image
                 .insert(
                     image_entity,
                     OnUiActionImage::new(Some(image_handle), self.hover_image, self.press_image),
-                ).unwrap();
+                ).expect("Unreachable: Inserting newly created entity");
         }
 
         if self.hover_sound.is_some() || self.press_sound.is_some() || self.release_sound.is_some()
@@ -320,7 +319,7 @@ impl UiButtonBuilder {
                 .insert(
                     image_entity,
                     OnUiActionSound::new(self.hover_sound, self.press_sound, self.release_sound),
-                ).unwrap();
+                ).expect("Unreachable: Inserting newly created entity");
         }
         image_entity
     }

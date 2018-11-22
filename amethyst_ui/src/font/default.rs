@@ -55,7 +55,7 @@ pub fn get_default_font(loader: &Loader, storage: &AssetStorage<FontAsset>) -> F
     return loader.load_from_data(
         TtfFormat
             .import(include_bytes!("./square.ttf").to_vec(), ())
-            .unwrap(),
+            .expect("Unable to import fallback font './square.ttf'"),
         (),
         storage,
     );

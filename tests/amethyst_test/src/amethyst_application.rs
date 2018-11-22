@@ -11,7 +11,7 @@ use amethyst::{
     input::InputBundle,
     prelude::*,
     renderer::{
-        ColorMask, DepthMode, DisplayConfig, DrawSprite, Material, Pipeline, PipelineBuilder,
+        ColorMask, DepthMode, DisplayConfig, DrawFlat2D, Material, Pipeline, PipelineBuilder,
         RenderBundle, ScreenDimensions, SpriteRender, Stage, StageBuilder, ALPHA,
     },
     shred::Resource,
@@ -51,7 +51,7 @@ type FnState<T, E> = SendBoxFnOnce<'static, (), Box<State<T, E>>>;
 type DefaultPipeline = PipelineBuilder<
     Queue<(
         Queue<()>,
-        StageBuilder<Queue<(Queue<(Queue<()>, DrawSprite)>, DrawUi)>>,
+        StageBuilder<Queue<(Queue<(Queue<()>, DrawFlat2D)>, DrawUi)>>,
     )>,
 >;
 
@@ -631,7 +631,7 @@ where
     /// The pipeline is built from the following:
     ///
     /// * Black clear target.
-    /// * `DrawSprite` pass with transparency.
+    /// * `DrawFlat2D` pass with transparency.
     /// * `DrawUi` pass.
     ///
     /// This is exposed to allow external crates a convenient way of obtaining a render pipeline.
@@ -639,7 +639,7 @@ where
         Pipeline::build().with_stage(
             Stage::with_backbuffer()
                 .clear_target([0., 0., 0., 0.], 0.)
-                .with_pass(DrawSprite::new().with_transparency(
+                .with_pass(DrawFlat2D::new().with_transparency(
                     ColorMask::all(),
                     ALPHA,
                     Some(DepthMode::LessEqualWrite),
