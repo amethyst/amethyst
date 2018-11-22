@@ -316,16 +316,23 @@ Let's say you have the following two states:
 
 The following example shows how to keep track of which state we are currently in.
 This allows us to do a bit of conditional logic in our systems to determine what to do depending on
-which state is currently active, and manipulating the states by setting flags:
+which state is currently active, and manipulating the states by tracking user actions:
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 use amethyst::prelude::*;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum CurrentState {
     MainMenu,
     Gameplay,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum UserAction {
+    OpenMenu,
+    ResumeGame,
+    Quit,
 }
 
 impl Default for CurrentState {
@@ -334,31 +341,31 @@ impl Default for CurrentState {
     }
 }
 
-#[derive(Default)]
 struct Game {
-    continue_game: bool,
-    quit_game: bool,
-    open_menu: bool,
+    user_action: Option<UserAction>,
     current_state: CurrentState,
+}
+
+impl Default for Game {
+    fn default() -> Self {
+        Game {
+            user_action: None,
+            current_state: CurrentState::default(),
+        }
+    }
 }
 
 struct GameplayState;
 
 impl<'a, 'b> SimpleState<'a, 'b> for GameplayState {
-    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b>
-    {
+    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
         // If the `Game` resource has been set up to go back to the menu, pop
         // the state so that we go back.
 
-        {
-            let mut game = data.world.write_resource::<Game>();
+        let mut game = data.world.write_resource::<Game>();
 
-            if game.open_menu {
-                // Reset the flag to prevent immediately open the menu the next
-                // time it's opened.
-                game.open_menu = false;
-                return Trans::Push(Box::new(GameMenuState));
-            }
+        if let Some(UserAction::OpenMenu) = game.user_action.take() {
+            return Trans::Push(Box::new(GameMenuState));
         }
 
         Trans::None
@@ -373,27 +380,17 @@ impl<'a, 'b> SimpleState<'a, 'b> for GameplayState {
 struct GameMenuState;
 
 impl<'a, 'b> SimpleState<'a, 'b> for GameMenuState {
-    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b>
-    {
-        {
-            let mut game = data.world.write_resource::<Game>();
+    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
+        let mut game = data.world.write_resource::<Game>();
 
-            // Continuing the game simply means popping back to the gameplay
-            // state.
-            if game.continue_game {
-                // Reset the flag to prevent immediately closing the menu the
-                // next time it's opened.
-                game.continue_game = false;
-                return Trans::Pop;
-            }
-
-            if game.quit_game {
+        match game.user_action.take() {
+            Some(UserAction::ResumeGame) => Trans::Pop,
+            Some(UserAction::Quit) => {
                 // Note: no need to clean up :)
-                return Trans::Quit;
-            }
+                Trans::Quit
+            },
+            _ => Trans::None,
         }
-
-        Trans::None
     }
 
     fn on_resume(&mut self, mut data: StateData<GameData>) {
@@ -410,7 +407,7 @@ system:
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 #
-# #[derive(Clone, Copy)]
+# #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 # enum CurrentState {
 #     MainMenu,
 #     Gameplay,
@@ -418,11 +415,27 @@ system:
 #
 # impl Default for CurrentState { fn default() -> Self { CurrentState::Gameplay } }
 #
-# #[derive(Default)]
+# #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+# enum UserAction {
+#     OpenMenu,
+#     ResumeGame,
+#     Quit,
+# }
+#
 # struct Game {
-#     open_menu: bool,
+#     user_action: Option<UserAction>,
 #     current_state: CurrentState,
 # }
+#
+# impl Default for Game {
+#     fn default() -> Self {
+#         Game {
+#             user_action: None,
+#             current_state: CurrentState::default(),
+#         }
+#     }
+# }
+#
 use amethyst::{
     prelude::*,
     ecs::{System, prelude::*},
@@ -446,8 +459,8 @@ impl<'s> System<'s> for MyGameplaySystem {
 
                 // Toggle the `open_menu` variable to signal the state to
                 // transition.
-                if open_menu && !game.open_menu {
-                    game.open_menu = true;
+                if open_menu {
+                    game.user_action = Some(UserAction::OpenMenu);
                 }
             }
             // do nothing for other states.
@@ -477,7 +490,7 @@ Please note that tuples of structs implementing `SystemData` are themselves `Sys
 # extern crate amethyst;
 # extern crate shred;
 # #[macro_use] extern crate shred_derive;
-# 
+#
 # use amethyst::ecs::{ReadStorage, WriteStorage, SystemData, Component, VecStorage, System, Join};
 #
 # struct FooComponent {
@@ -486,19 +499,19 @@ Please note that tuples of structs implementing `SystemData` are themselves `Sys
 # impl Component for FooComponent {
 #   type Storage = VecStorage<FooComponent>;
 # }
-# 
+#
 # struct BarComponent {
 #   stuff: f32,
 # }
 # impl Component for BarComponent {
 #   type Storage = VecStorage<BarComponent>;
 # }
-# 
+#
 # #[derive(SystemData)]
 # struct BazSystemData<'a> {
 #  field: ReadStorage<'a, FooComponent>,
 # }
-# 
+#
 # impl<'a> BazSystemData<'a> {
 #   fn should_process(&self) -> bool {
 #       true
@@ -521,7 +534,7 @@ impl<'a> System<'a> for MyFirstSystem {
         if data.baz.should_process() {
             for (foo, mut bar) in (&data.foo, &mut data.bar).join() {
                 bar.stuff += foo.stuff;
-            } 
+            }
         }
     }
 }
