@@ -20,7 +20,7 @@ pub trait SystemExt {
     ///     prelude::*,
     /// };
     ///
-    /// #[derive(PartialEq, Eq)]
+    /// #[derive(PartialEq)]
     /// enum CurrentState {
     ///     Disabled,
     ///     Enabled,
@@ -66,7 +66,7 @@ pub trait SystemExt {
     fn pausable<V: 'static>(self, value: V) -> Pausable<Self, V>
     where
         Self: Sized,
-        V: Send + Sync + Default + Eq;
+        V: Send + Sync + Default + PartialEq;
 }
 
 impl<'s, S> SystemExt for S
@@ -76,7 +76,7 @@ where
     fn pausable<V: 'static>(self, value: V) -> Pausable<Self, V>
     where
         Self: Sized,
-        V: Send + Sync + Default + Eq,
+        V: Send + Sync + Default + PartialEq,
     {
         Pausable {
             system: self,
@@ -95,7 +95,7 @@ impl<'s, S, V: 'static> System<'s> for Pausable<S, V>
 where
     S::SystemData: SystemData<'s>,
     S: System<'s>,
-    V: Send + Sync + Default + Eq,
+    V: Send + Sync + Default + PartialEq,
 {
     type SystemData = (Read<'s, V>, S::SystemData);
 
