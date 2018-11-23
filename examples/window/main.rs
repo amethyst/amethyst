@@ -3,14 +3,28 @@
 extern crate amethyst;
 
 use amethyst::{
+    input::is_key_down,
     prelude::*,
     renderer::{DisplayConfig, DrawFlat, Pipeline, PosNormTex, RenderBundle, Stage},
     utils::application_root_dir,
+    winit::VirtualKeyCode,
 };
 
 struct Example;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {}
+impl<'a, 'b> SimpleState<'a, 'b> for Example {
+    fn handle_event(&mut self, _: StateData<GameData>, event: StateEvent) -> SimpleTrans<'a, 'b> {
+        if let StateEvent::Window(event) = event {
+            if is_key_down(&event, VirtualKeyCode::Escape) {
+                Trans::Quit
+            } else {
+                Trans::None
+            }
+        } else {
+            Trans::None
+        }
+    }
+}
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
