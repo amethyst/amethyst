@@ -91,7 +91,7 @@ where
 
         socket
             .set_nonblocking(true)
-            .expect("Unable to set `UdpSocket` to non-blocking mode");
+            .map_err(|_| Error::new(ErrorKind::Other, "Unable to set `UdpSocket` to non-blocking mode".to_owned()))?;
 
         // this -> thread
         let (tx1, rx1) = channel();
