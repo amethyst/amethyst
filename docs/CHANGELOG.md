@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Added
 
+* `SystemExt::pausable` for better ergonomics when pausing systems for specific states ([#1146]).
 * `amethyst_test` test framework for ergonomic testing of Amethyst applications ([#1000])
 * combinations of buttons triggering actions ([#1043])
 * `UiPrefab` field `hidden: bool` to hide entities ([#1051])
@@ -48,6 +49,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Fixed
 
+[#1146]: https://github.com/amethyst/amethyst/pull/1146
 [#1144]: https://github.com/amethyst/amethyst/pull/1144
 [#1000]: https://github.com/amethyst/amethyst/pull/1000
 [#1043]: https://github.com/amethyst/amethyst/pull/1043

@@ -30,6 +30,7 @@ use std::sync::Arc;
 pub use {
     bundle::{Error, ErrorKind, Result, SystemBundle},
     event::EventReader,
+    system_ext::{Pausable, SystemExt},
     timing::*,
     transform::*,
 };
@@ -44,6 +45,7 @@ pub mod bundle;
 mod event;
 pub mod frame_limiter;
 mod named;
+mod system_ext;
 pub mod timing;
 pub mod transform;
 
