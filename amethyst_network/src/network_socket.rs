@@ -92,7 +92,7 @@ where
         socket.set_nonblocking(true).map_err(|_| {
             Error::new(
                 ErrorKind::Other,
-                "Unable to set `UdpSocket` to non-blocking mode".to_owned(),
+                "Unable to set `UdpSocket` to non-blocking mode",
             )
         })?;
 
