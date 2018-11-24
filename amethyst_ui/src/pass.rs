@@ -241,6 +241,10 @@ impl Pass for DrawUi {
         for &(_z, entity) in &self.cached_draw_order.cache {
             // Do not render hidden entities.
             if hidden.contains(entity) || hidden_prop.contains(entity) {
+                ui_text
+                    .get_mut(entity)
+                    .and_then(|ui_text| ui_text.brush_id)
+                    .map(|brush_id| unused_glyph_brushes.remove(&brush_id));
                 continue;
             }
             let ui_transform = ui_transform
