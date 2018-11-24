@@ -89,9 +89,12 @@ where
         let mut socket = UdpSocket::bind(addr, NetworkConfig::default())
             .map_err(|x| Error::new(ErrorKind::Other, x.to_string()))?;
 
-        socket
-            .set_nonblocking(true)
-            .map_err(|_| Error::new(ErrorKind::Other, "Unable to set `UdpSocket` to non-blocking mode".to_owned()))?;
+        socket.set_nonblocking(true).map_err(|_| {
+            Error::new(
+                ErrorKind::Other,
+                "Unable to set `UdpSocket` to non-blocking mode".to_owned(),
+            )
+        })?;
 
         // this -> thread
         let (tx1, rx1) = channel();
