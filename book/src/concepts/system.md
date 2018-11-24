@@ -290,6 +290,192 @@ write_storage.remove(entity);
 
 Keep in mind that inserting a component on an entity that already has a component of the same type **will overwrite the previous one**.
 
+## Changing states through resources
+
+In a previous section we talked about [`States`][s], and how they are used to organize your game
+into different logical sections.
+Sometimes we want to trigger a state transition from a system.
+For example, if a player dies we might want to remove their entity and signal to the state machine
+to push a state that shows a "You Died" screen.
+
+So how can we affect states from systems?
+There are a couple of ways, but this section will detail the easiest one: using a [`Resource`][r].
+
+Before that, let's just quickly remind ourselves what a resource is:
+
+> A [`Resource`][r] is any type that stores data that you might need for your game AND that is not
+> specific to an entity.
+
+The data in a resource is available both to systems and states.
+We can use this to our advantage!
+
+Let's say you have the following two states:
+
+* `GameplayState`: State in which the game is running.
+* `GameMenuState`: State where the game is paused and we interact with a game menu.
+
+The following example shows how to keep track of which state we are currently in.
+This allows us to do a bit of conditional logic in our systems to determine what to do depending on
+which state is currently active, and manipulating the states by tracking user actions:
+
+```rust,no_run,noplaypen
+# extern crate amethyst;
+use amethyst::prelude::*;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum CurrentState {
+    MainMenu,
+    Gameplay,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum UserAction {
+    OpenMenu,
+    ResumeGame,
+    Quit,
+}
+
+impl Default for CurrentState {
+    fn default() -> Self {
+        CurrentState::Gameplay
+    }
+}
+
+struct Game {
+    user_action: Option<UserAction>,
+    current_state: CurrentState,
+}
+
+impl Default for Game {
+    fn default() -> Self {
+        Game {
+            user_action: None,
+            current_state: CurrentState::default(),
+        }
+    }
+}
+
+struct GameplayState;
+
+impl<'a, 'b> SimpleState<'a, 'b> for GameplayState {
+    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
+        // If the `Game` resource has been set up to go back to the menu, pop
+        // the state so that we go back.
+
+        let mut game = data.world.write_resource::<Game>();
+
+        if let Some(UserAction::OpenMenu) = game.user_action.take() {
+            return Trans::Push(Box::new(GameMenuState));
+        }
+
+        Trans::None
+    }
+
+    fn on_resume(&mut self, mut data: StateData<GameData>) {
+        // mark that the current state is a gameplay state.
+        data.world.write_resource::<Game>().current_state = CurrentState::Gameplay;
+    }
+}
+
+struct GameMenuState;
+
+impl<'a, 'b> SimpleState<'a, 'b> for GameMenuState {
+    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
+        let mut game = data.world.write_resource::<Game>();
+
+        match game.user_action.take() {
+            Some(UserAction::ResumeGame) => Trans::Pop,
+            Some(UserAction::Quit) => {
+                // Note: no need to clean up :)
+                Trans::Quit
+            },
+            _ => Trans::None,
+        }
+    }
+
+    fn on_resume(&mut self, mut data: StateData<GameData>) {
+        // mark that the current state is a main menu state.
+        data.world.write_resource::<Game>().current_state = CurrentState::MainMenu;
+    }
+}
+```
+
+Let's say we want the player to be able to press escape to enter the menu.
+We modify our input handler to map the `open_menu` action to `Esc`, and we write the following
+system:
+
+```rust,no_run,noplaypen
+# extern crate amethyst;
+#
+# #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+# enum CurrentState {
+#     MainMenu,
+#     Gameplay,
+# }
+#
+# impl Default for CurrentState { fn default() -> Self { CurrentState::Gameplay } }
+#
+# #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+# enum UserAction {
+#     OpenMenu,
+#     ResumeGame,
+#     Quit,
+# }
+#
+# struct Game {
+#     user_action: Option<UserAction>,
+#     current_state: CurrentState,
+# }
+#
+# impl Default for Game {
+#     fn default() -> Self {
+#         Game {
+#             user_action: None,
+#             current_state: CurrentState::default(),
+#         }
+#     }
+# }
+#
+use amethyst::{
+    prelude::*,
+    ecs::{System, prelude::*},
+    input::InputHandler,
+};
+
+struct MyGameplaySystem;
+
+impl<'s> System<'s> for MyGameplaySystem {
+    type SystemData = (
+        Read<'s, InputHandler<String, String>>,
+        Write<'s, Game>,
+    );
+
+    fn run(&mut self, (input, mut game): Self::SystemData) {
+        match game.current_state {
+            CurrentState::Gameplay => {
+                let open_menu = input
+                    .action_is_down("open_menu")
+                    .unwrap_or(false);
+
+                // Toggle the `open_menu` variable to signal the state to
+                // transition.
+                if open_menu {
+                    game.user_action = Some(UserAction::OpenMenu);
+                }
+            }
+            // do nothing for other states.
+            _ => {}
+        }
+    }
+}
+```
+
+Now whenever you are playing the game and you press the button associated with the `open_menu`
+action, the `GameMenuState` will resume and the `GameplayState` will pause.
+
+[s]: ./state.md
+[r]: ./resource.md
+
 ## The SystemData trait
 
 While this is rarely useful, it is possible to create custom `SystemData` types.
@@ -304,7 +490,7 @@ Please note that tuples of structs implementing `SystemData` are themselves `Sys
 # extern crate amethyst;
 # extern crate shred;
 # #[macro_use] extern crate shred_derive;
-# 
+#
 # use amethyst::ecs::{ReadStorage, WriteStorage, SystemData, Component, VecStorage, System, Join};
 #
 # struct FooComponent {
@@ -313,19 +499,19 @@ Please note that tuples of structs implementing `SystemData` are themselves `Sys
 # impl Component for FooComponent {
 #   type Storage = VecStorage<FooComponent>;
 # }
-# 
+#
 # struct BarComponent {
 #   stuff: f32,
 # }
 # impl Component for BarComponent {
 #   type Storage = VecStorage<BarComponent>;
 # }
-# 
+#
 # #[derive(SystemData)]
 # struct BazSystemData<'a> {
 #  field: ReadStorage<'a, FooComponent>,
 # }
-# 
+#
 # impl<'a> BazSystemData<'a> {
 #   fn should_process(&self) -> bool {
 #       true
@@ -348,7 +534,7 @@ impl<'a> System<'a> for MyFirstSystem {
         if data.baz.should_process() {
             for (foo, mut bar) in (&data.foo, &mut data.bar).join() {
                 bar.stuff += foo.stuff;
-            } 
+            }
         }
     }
 }
