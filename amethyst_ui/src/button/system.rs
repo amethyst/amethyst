@@ -8,7 +8,7 @@ use amethyst_core::{
     ParentHierarchy,
 };
 
-use {OnUiActionImage, OnUiActionSound, UiButton, UiEvent, UiEventType::*, UiImage, UiText};
+use crate::{OnUiActionImage, OnUiActionSound, UiButton, UiEvent, UiEventType::*, UiImage, UiText};
 
 /// This system manages button mouse events.  It changes images and text colors, as well as playing audio
 /// when necessary.

@@ -8,7 +8,7 @@ use gfx::{
     traits::Pod,
 };
 
-use {
+use crate::{
     pass::util::TextureType,
     vertex::{Attribute, AttributeFormat, Attributes, VertexFormat, With},
 };

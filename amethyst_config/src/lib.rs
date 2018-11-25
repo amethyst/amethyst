@@ -3,15 +3,12 @@
 
 #![crate_name = "amethyst_config"]
 #![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
-#![warn(missing_docs)]
+#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 #[macro_use]
 extern crate log;
 extern crate ron;
 extern crate serde;
-
-#[cfg(feature = "profiler")]
-extern crate thread_profiler;
 
 use std::{
     error::Error,
@@ -37,7 +34,7 @@ pub enum ConfigError {
 }
 
 impl fmt::Display for ConfigError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             ConfigError::File(ref err) => write!(f, "{}", err),
             ConfigError::Parser(ref msg) => write!(f, "{}", msg),
@@ -87,7 +84,7 @@ impl Error for ConfigError {
         }
     }
 
-    fn cause(&self) -> Option<&Error> {
+    fn cause(&self) -> Option<&dyn Error> {
         match *self {
             ConfigError::File(ref err) => Some(err),
             _ => None,

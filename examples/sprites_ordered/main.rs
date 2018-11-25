@@ -28,7 +28,7 @@ use amethyst::{
     utils::application_root_dir,
 };
 
-use sprite::SpriteSheetDefinition;
+use crate::sprite::SpriteSheetDefinition;
 
 const SPRITE_SPACING_RATIO: f32 = 0.7;
 

@@ -10,7 +10,7 @@ use amethyst_core::{
     specs::prelude::DispatcherBuilder,
 };
 
-use {source::*, systems::DjSystem};
+use crate::{source::*, systems::DjSystem};
 
 /// Audio bundle
 ///

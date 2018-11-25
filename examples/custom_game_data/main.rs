@@ -22,8 +22,10 @@ use amethyst::{
     utils::{application_root_dir, fps_counter::FPSCounterBundle, scene::BasicScenePrefab},
     Error,
 };
-use example_system::ExampleSystem;
-use game_data::{CustomGameData, CustomGameDataBuilder};
+use crate::{
+    example_system::ExampleSystem,
+    game_data::{CustomGameData, CustomGameDataBuilder},
+};
 
 mod example_system;
 mod game_data;

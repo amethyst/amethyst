@@ -2,7 +2,7 @@ use fnv::FnvHashMap as HashMap;
 use gfx::memory::Pod;
 use winit::{dpi::LogicalSize, EventsLoop, Window as WinitWindow, WindowBuilder};
 
-use {
+use crate::{
     config::DisplayConfig,
     error::{Error, Result},
     mesh::{Mesh, MeshBuilder, VertexDataSet},

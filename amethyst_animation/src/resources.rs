@@ -186,7 +186,7 @@ where
 
     /// Create rest state for the hierarchy. Will copy the values from the base components for each
     /// entity in the hierarchy.
-    pub fn rest_state<F>(&self, get_component: F, states: &mut WriteStorage<RestState<T>>)
+    pub fn rest_state<F>(&self, get_component: F, states: &mut WriteStorage<'_, RestState<T>>)
     where
         T: AnimationSampling + Clone,
         F: Fn(Entity) -> Option<T>,

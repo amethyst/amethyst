@@ -13,7 +13,7 @@ use amethyst_assets::{
 };
 use amethyst_core::specs::prelude::{Entity, Read, ReadExpect};
 
-use {
+use crate::{
     tex::{FilterMethod, Texture, TextureBuilder},
     types::SurfaceFormat,
     Renderer,
@@ -525,7 +525,7 @@ impl SimpleFormat<Texture> for TextureFormat {
 }
 
 mod serde_helper {
-    use tex::{FilterMethod, WrapMode};
+    use crate::tex::{FilterMethod, WrapMode};
 
     use super::SamplerInfo;
 

@@ -7,7 +7,7 @@ use gfx;
 use amethyst_assets::{PrefabData, PrefabError, ProgressCounter};
 use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage};
 
-use {color::Rgba, resources::AmbientColor};
+use crate::{color::Rgba, resources::AmbientColor};
 
 /// A light source.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize, PrefabData)]

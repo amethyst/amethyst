@@ -7,7 +7,7 @@ use amethyst_core::{
     GlobalTransform,
 };
 
-use {
+use crate::{
     cam::Camera,
     light::Light,
     pipe::{Effect, EffectBuilder},
@@ -50,8 +50,8 @@ pub(crate) struct SpotLightPod {
 pub(crate) fn set_light_args(
     effect: &mut Effect,
     encoder: &mut Encoder,
-    light: &ReadStorage<Light>,
-    global: &ReadStorage<GlobalTransform>,
+    light: &ReadStorage<'_, Light>,
+    global: &ReadStorage<'_, GlobalTransform>,
     ambient: &AmbientColor,
     camera: Option<(&Camera, &GlobalTransform)>,
 ) {
@@ -131,7 +131,7 @@ pub(crate) fn set_light_args(
     );
 }
 
-pub(crate) fn setup_light_buffers(builder: &mut EffectBuilder) {
+pub(crate) fn setup_light_buffers(builder: &mut EffectBuilder<'_>) {
     builder
         .with_raw_constant_buffer(
             "FragmentArgs",

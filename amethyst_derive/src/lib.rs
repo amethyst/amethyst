@@ -1,4 +1,5 @@
 #![recursion_limit = "256"]
+#![warn(rust_2018_idioms, rust_2018_compatibility)]
 
 extern crate proc_macro;
 extern crate proc_macro2;

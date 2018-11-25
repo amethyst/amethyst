@@ -11,7 +11,7 @@ use amethyst_core::{
     transform::GlobalTransform,
 };
 
-use {
+use crate::{
     cam::{ActiveCamera, Camera},
     error::Result,
     hidden::{Hidden, HiddenPropagate},
@@ -96,7 +96,7 @@ impl<V> Pass for DrawPbm<V>
 where
     V: Query<(Position, Normal, Tangent, TexCoord)>,
 {
-    fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect> {
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);
         builder.with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0);
         setup_vertex_args(&mut builder);

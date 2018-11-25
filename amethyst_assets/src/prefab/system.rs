@@ -8,7 +8,7 @@ use amethyst_core::{
     ArcThreadPool, Parent, Time,
 };
 
-use {AssetStorage, Completion, Handle, HotReloadStrategy, ProcessingState, ResultExt};
+use crate::{AssetStorage, Completion, Handle, HotReloadStrategy, ProcessingState, ResultExt};
 
 use super::{Prefab, PrefabData, PrefabTag};
 

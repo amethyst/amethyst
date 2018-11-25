@@ -5,7 +5,7 @@ use amethyst_core::{
     transform::components::{HierarchyEvent, Parent, ParentHierarchy},
 };
 
-use HiddenPropagate;
+use crate::HiddenPropagate;
 
 // Based on the [UiTransformSystem](struct.UiTransformSystem.html).
 /// This system adds a [HiddenPropagate](struct.HiddenPropagate.html)-component to all children.

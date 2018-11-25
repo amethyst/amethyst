@@ -4,7 +4,7 @@ use std::{
     time::UNIX_EPOCH,
 };
 
-use {source::Source, ErrorKind, Result, ResultExt};
+use crate::{source::Source, ErrorKind, Result, ResultExt};
 
 /// Directory source.
 ///
@@ -74,7 +74,7 @@ impl Source for Directory {
 mod test {
     use std::path::Path;
 
-    use source::Source;
+    use crate::source::Source;
 
     use super::Directory;
 

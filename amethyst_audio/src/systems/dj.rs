@@ -9,7 +9,7 @@ use amethyst_core::{
     },
 };
 
-use {
+use crate::{
     output::init_output,
     sink::AudioSink,
     source::{Source, SourceHandle},

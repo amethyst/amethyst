@@ -4,7 +4,7 @@ use font_kit::handle::Handle as FontKitHandle;
 
 use amethyst_assets::{AssetStorage, Loader, SimpleFormat};
 
-use {
+use crate::{
     font::systemfont::default_system_font,
     format::{FontAsset, FontHandle, TtfFormat},
 };

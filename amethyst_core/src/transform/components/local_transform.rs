@@ -401,7 +401,7 @@ impl<'de> Deserialize<'de> for Transform {
         impl<'de> Visitor<'de> for TransformVisitor {
             type Value = Transform;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str("struct Transform")
             }
 
@@ -512,7 +512,7 @@ impl Serialize for Transform {
 
 #[cfg(test)]
 mod tests {
-    use {
+    use crate::{
         approx::*,
         nalgebra::{UnitQuaternion, Vector3},
         Transform,

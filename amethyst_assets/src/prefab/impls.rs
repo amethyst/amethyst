@@ -3,7 +3,7 @@ use amethyst_core::{
     GlobalTransform, Named, Transform,
 };
 
-use {PrefabData, PrefabError, ProgressCounter};
+use crate::{PrefabData, PrefabError, ProgressCounter};
 
 impl<'a, T> PrefabData<'a> for Option<T>
 where

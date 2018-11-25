@@ -233,7 +233,7 @@ impl<'a> System<'a> for CameraOrthoSystem {
 
 #[cfg(test)]
 mod test {
-    use ortho_camera::{CameraNormalizeMode, CameraOrtho, CameraOrthoWorldCoordinates};
+    use crate::ortho_camera::{CameraNormalizeMode, CameraOrtho, CameraOrthoWorldCoordinates};
 
     use super::Axis2;
 

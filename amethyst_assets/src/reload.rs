@@ -8,7 +8,7 @@ use amethyst_core::{
     SystemBundle, Time,
 };
 
-use {Asset, Format, FormatValue, Loader, Result, Source};
+use crate::{Asset, Format, FormatValue, Loader, Result, Source};
 
 /// This bundle activates hot reload for the `Loader`,
 /// adds a `HotReloadStrategy` and the `HotReloadSystem`.
@@ -192,7 +192,7 @@ pub trait Reload<A: Asset>: ReloadClone<A> + Send + Sync + 'static {
 }
 
 pub trait ReloadClone<A> {
-    fn cloned(&self) -> Box<Reload<A>>;
+    fn cloned(&self) -> Box<dyn Reload<A>>;
 }
 
 impl<A, T> ReloadClone<A> for T
@@ -200,12 +200,12 @@ where
     A: Asset,
     T: Clone + Reload<A>,
 {
-    fn cloned(&self) -> Box<Reload<A>> {
+    fn cloned(&self) -> Box<dyn Reload<A>> {
         Box::new(self.clone())
     }
 }
 
-impl<A: Asset> Clone for Box<Reload<A>> {
+impl<A: Asset> Clone for Box<dyn Reload<A>> {
     fn clone(&self) -> Self {
         self.cloned()
     }
@@ -218,7 +218,7 @@ pub struct SingleFile<A: Asset, F: Format<A>> {
     modified: u64,
     options: F::Options,
     path: String,
-    source: Arc<Source>,
+    source: Arc<dyn Source>,
 }
 
 impl<A: Asset, F: Format<A>> SingleFile<A, F> {
@@ -228,7 +228,7 @@ impl<A: Asset, F: Format<A>> SingleFile<A, F> {
         modified: u64,
         options: F::Options,
         path: String,
-        source: Arc<Source>,
+        source: Arc<dyn Source>,
     ) -> Self {
         SingleFile {
             format,

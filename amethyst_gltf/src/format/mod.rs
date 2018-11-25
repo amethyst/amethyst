@@ -4,7 +4,7 @@ use std::{collections::HashMap, error::Error as StdError, fmt, sync::Arc};
 
 use gltf::{self, Gltf};
 
-use {
+use crate::{
     animation::AnimationHierarchyPrefab,
     assets::{
         Error as AssetError, Format, FormatValue, Prefab, Result as AssetResult, ResultExt, Source,
@@ -80,7 +80,7 @@ impl StdError for GltfError {
         }
     }
 
-    fn cause(&self) -> Option<&StdError> {
+    fn cause(&self) -> Option<&dyn StdError> {
         match *self {
             GltfError::GltfImporterError(ref err) => Some(err),
             GltfError::Asset(ref err) => Some(err),
@@ -90,7 +90,7 @@ impl StdError for GltfError {
 }
 
 impl fmt::Display for GltfError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use std::error::Error;
 
         use self::GltfError::*;
@@ -128,7 +128,7 @@ impl Format<Prefab<GltfPrefab>> for GltfSceneFormat {
     fn import(
         &self,
         name: String,
-        source: Arc<Source>,
+        source: Arc<dyn Source>,
         options: GltfSceneOptions,
         _create_reload: bool,
     ) -> AssetResult<FormatValue<Prefab<GltfPrefab>>> {
@@ -139,7 +139,7 @@ impl Format<Prefab<GltfPrefab>> for GltfSceneFormat {
 }
 
 fn load_gltf(
-    source: Arc<Source>,
+    source: Arc<dyn Source>,
     name: &str,
     options: GltfSceneOptions,
 ) -> Result<Prefab<GltfPrefab>, GltfError> {
@@ -153,7 +153,7 @@ fn load_data(
     gltf: &Gltf,
     buffers: &Buffers,
     options: &GltfSceneOptions,
-    source: Arc<Source>,
+    source: Arc<dyn Source>,
     name: &str,
 ) -> Result<Prefab<GltfPrefab>, GltfError> {
     let scene_index = get_scene_index(gltf, options)?;
@@ -186,7 +186,7 @@ fn load_scene(
     scene_index: usize,
     buffers: &Buffers,
     options: &GltfSceneOptions,
-    source: Arc<Source>,
+    source: Arc<dyn Source>,
     name: &str,
     prefab: &mut Prefab<GltfPrefab>,
 ) -> Result<(), GltfError> {
@@ -287,11 +287,11 @@ struct SkinInfo {
 
 fn load_node(
     gltf: &Gltf,
-    node: &gltf::Node,
+    node: &gltf::Node<'_>,
     entity_index: usize,
     buffers: &Buffers,
     options: &GltfSceneOptions,
-    source: Arc<Source>,
+    source: Arc<dyn Source>,
     name: &str,
     prefab: &mut Prefab<GltfPrefab>,
     node_map: &mut HashMap<usize, usize>,

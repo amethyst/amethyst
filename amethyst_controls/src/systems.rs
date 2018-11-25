@@ -12,7 +12,7 @@ use amethyst_core::{
 use amethyst_input::{get_input_axis_simple, InputHandler};
 use amethyst_renderer::WindowMessages;
 
-use {
+use crate::{
     components::{ArcBallControlTag, FlyControlTag},
     resources::{HideCursor, WindowFocus},
 };

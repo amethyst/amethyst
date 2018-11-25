@@ -1,6 +1,6 @@
 //! A collection of structures and functions useful across the entire amethyst project.
 
-#![warn(missing_docs)]
+#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 pub extern crate approx;
 pub extern crate nalgebra;
@@ -10,9 +10,7 @@ pub extern crate specs;
 
 #[macro_use]
 extern crate error_chain;
-extern crate fnv;
 extern crate hibitset;
-extern crate log;
 extern crate rayon;
 #[macro_use]
 extern crate serde;
@@ -27,7 +25,7 @@ compile_error!("the cfg flag \"no_threading\" is required when building for emsc
 
 use std::sync::Arc;
 
-pub use {
+pub use crate::{
     bundle::{Error, ErrorKind, Result, SystemBundle},
     event::EventReader,
     system_ext::{Pausable, SystemExt},

@@ -1,5 +1,8 @@
 use gfx_glyph::{HorizontalAlign, VerticalAlign};
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use amethyst_core::{
     specs::prelude::{
         BitSet, ComponentEvent, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,

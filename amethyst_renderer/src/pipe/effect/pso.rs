@@ -11,7 +11,7 @@ use gfx::{
     shade::core::{BaseType, ContainerType, OutputVar, ProgramInfo},
 };
 
-use types::{ColorFormat, DepthFormat, Resources};
+use crate::types::{ColorFormat, DepthFormat, Resources};
 
 type AccessInfo = pso::AccessInfo<Resources>;
 type DepthStencilTarget = target::DepthStencilTarget<DepthFormat>;

@@ -10,7 +10,7 @@ use amethyst_core::{
     transform::GlobalTransform,
 };
 
-use {
+use crate::{
     cam::{ActiveCamera, Camera},
     debug_drawing::{DebugLine, DebugLines, DebugLinesComponent},
     error::Result,
@@ -82,7 +82,7 @@ impl<V> Pass for DrawDebugLines<V>
 where
     V: Query<(Position, Color, Normal)>,
 {
-    fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect> {
         debug!("Building debug lines pass");
         let mut builder = effect.geom(VERT_SRC, GEOM_SRC, FRAG_SRC);
 

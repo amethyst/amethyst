@@ -6,7 +6,7 @@ use specs::prelude::{
     WriteStorage,
 };
 
-use transform::{GlobalTransform, HierarchyEvent, Parent, ParentHierarchy, Transform};
+use crate::transform::{GlobalTransform, HierarchyEvent, Parent, ParentHierarchy, Transform};
 
 /// Handles updating `GlobalTransform` components based on the `Transform`
 /// component and parents.
@@ -146,7 +146,7 @@ mod tests {
     use specs::prelude::{Builder, World};
     use specs_hierarchy::{Hierarchy, HierarchySystem};
 
-    use transform::{GlobalTransform, Parent, Transform, TransformSystem};
+    use crate::transform::{GlobalTransform, Parent, Transform, TransformSystem};
 
     // If this works, then all other tests should work.
     #[test]

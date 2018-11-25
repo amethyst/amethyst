@@ -684,7 +684,7 @@ where
 {
     i.enumerate()
         .min_by(|(_, g1), (_, g2)| {
-            let dist = |g: &PositionedGlyph| {
+            let dist = |g: &PositionedGlyph<'_>| {
                 let Point { x, y } = g.position();
                 ((x - mouse_x).powi(2) + (y - mouse_y).powi(2)).sqrt()
             };

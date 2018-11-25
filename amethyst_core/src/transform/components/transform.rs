@@ -65,7 +65,7 @@ impl Borrow<[[f32; 4]; 4]> for GlobalTransform {
 
 #[cfg(test)]
 mod tests {
-    use GlobalTransform;
+    use crate::GlobalTransform;
 
     #[test]
     fn is_finite() {

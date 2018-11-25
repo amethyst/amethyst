@@ -8,7 +8,7 @@ use amethyst_core::{
     GlobalTransform,
 };
 
-use {
+use crate::{
     cam::{ActiveCamera, Camera},
     hidden::{Hidden, HiddenPropagate},
     transparent::Transparent,

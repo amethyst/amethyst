@@ -2,7 +2,7 @@
 
 use fnv::FnvHashMap as HashMap;
 
-use {
+use crate::{
     error::Result,
     types::{DepthStencilView, Encoder, Factory, RenderTargetView, ShaderResourceView, Window},
 };

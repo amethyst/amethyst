@@ -9,16 +9,14 @@ use amethyst::{
     },
     ui::{Anchor, TtfFormat, UiText, UiTransform},
 };
-use systems::ScoreText;
-use {Ball, Paddle, Side};
-use {ARENA_HEIGHT, ARENA_WIDTH};
+use crate::{systems::ScoreText, Ball, Paddle, Side, ARENA_HEIGHT, ARENA_WIDTH};
 
 pub struct Pong;
 
 impl<'a, 'b> SimpleState<'a, 'b> for Pong {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
-        use audio::initialise_audio;
+        use crate::audio::initialise_audio;
 
         // Load the spritesheet necessary to render the graphics.
         // `spritesheet` is the layout of the sprites on the image;
@@ -79,7 +77,7 @@ fn initialise_camera(world: &mut World) {
 
 /// Initialises one paddle on the left, and one paddle on the right.
 fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
-    use {PADDLE_HEIGHT, PADDLE_VELOCITY, PADDLE_WIDTH};
+    use crate::{PADDLE_HEIGHT, PADDLE_VELOCITY, PADDLE_WIDTH};
 
     let mut left_transform = Transform::default();
     let mut right_transform = Transform::default();
@@ -123,7 +121,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
 
 /// Initialises one ball in the middle-ish of the arena.
 fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
-    use {ARENA_HEIGHT, ARENA_WIDTH, BALL_RADIUS, BALL_VELOCITY_X, BALL_VELOCITY_Y};
+    use crate::{ARENA_HEIGHT, ARENA_WIDTH, BALL_RADIUS, BALL_VELOCITY_X, BALL_VELOCITY_Y};
 
     // Create the translation.
     let mut local_transform = Transform::default();

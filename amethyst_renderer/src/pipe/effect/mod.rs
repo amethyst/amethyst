@@ -18,7 +18,7 @@ use gfx::{
 };
 use glsl_layout::Std140;
 
-use {
+use crate::{
     error::{Error, Result},
     pipe::Target,
     types::{Encoder, Factory, PipelineState, Resources, Slice},

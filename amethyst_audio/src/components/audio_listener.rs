@@ -3,7 +3,7 @@ use amethyst_core::{
     specs::{prelude::Component, storage::HashMapStorage},
 };
 
-use output::Output;
+use crate::output::Output;
 
 /// An audio listener, add this component to the local player character.
 #[derive(Debug)]

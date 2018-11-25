@@ -7,7 +7,7 @@ use amethyst_assets::{
 };
 use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, VecStorage};
 
-use formats::AudioData;
+use crate::formats::AudioData;
 
 /// A handle to a source asset.
 pub type SourceHandle = Handle<Source>;

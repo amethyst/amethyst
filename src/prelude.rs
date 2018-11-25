@@ -1,6 +1,6 @@
 //! Contains common types that can be glob-imported (`*`) for convenience.
 
-pub use {
+pub use crate::{
     app::{Application, ApplicationBuilder, CoreApplication},
     callback_queue::{Callback, CallbackQueue},
     config::Config,

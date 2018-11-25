@@ -12,7 +12,7 @@ use amethyst_core::{
     Time,
 };
 
-use {
+use crate::{
     config::DisplayConfig,
     error::Result,
     formats::{create_mesh_asset, create_texture_asset},
@@ -89,7 +89,7 @@ where
 
     fn asset_loading(
         &mut self,
-        (time, pool, strategy, mut mesh_storage, mut texture_storage): AssetLoadingData,
+        (time, pool, strategy, mut mesh_storage, mut texture_storage): AssetLoadingData<'_>,
     ) {
         use std::ops::Deref;
 
@@ -110,7 +110,7 @@ where
         );
     }
 
-    fn window_management(&mut self, (mut window_messages, mut screen_dimensions): WindowData) {
+    fn window_management(&mut self, (mut window_messages, mut screen_dimensions): WindowData<'_>) {
         // Process window commands
         for mut command in window_messages.queue.drain() {
             command(self.renderer.window());
@@ -142,7 +142,7 @@ where
         screen_dimensions.update_hidpi_factor(self.renderer.window().get_hidpi_factor());
     }
 
-    fn render(&mut self, (mut event_handler, data): RenderData<P>) {
+    fn render(&mut self, (mut event_handler, data): RenderData<'_, P>) {
         self.renderer.draw(&mut self.pipe, data);
         let events = &mut self.event_vec;
         self.renderer.events_mut().poll_events(|new_event| {
@@ -198,7 +198,7 @@ where
 }
 
 fn create_default_mat(res: &mut Resources) -> Material {
-    use mtl::TextureOffset;
+    use crate::mtl::TextureOffset;
 
     use amethyst_assets::Loader;
 

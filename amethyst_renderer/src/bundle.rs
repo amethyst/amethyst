@@ -6,7 +6,7 @@ use amethyst_core::{
     specs::prelude::DispatcherBuilder,
 };
 
-use {
+use crate::{
     config::DisplayConfig,
     pipe::{PipelineBuild, PolyPipeline},
     sprite::SpriteSheet,

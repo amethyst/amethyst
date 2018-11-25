@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use {
+use crate::{
     core::{
         specs::prelude::{Dispatcher, DispatcherBuilder, System, World},
         ArcThreadPool, SystemBundle,
@@ -234,7 +234,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
         A: AsRef<Path>,
         P: Pass + 'b,
     {
-        use {
+        use crate::{
             config::Config,
             renderer::{DisplayConfig, Pipeline, RenderBundle, Stage},
             ui::DrawUi,

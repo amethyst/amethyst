@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Added
 
+* Partially migrate the project to Rust 2018.  Full migration will be completed at some point after 2019-01-31 ([#1098])
 * `SystemExt::pausable` for better ergonomics when pausing systems for specific states ([#1146]).
 * `amethyst_test` test framework for ergonomic testing of Amethyst applications ([#1000])
 * combinations of buttons triggering actions ([#1043])
@@ -61,6 +62,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1090]: https://github.com/amethyst/amethyst/pull/1090
 [#1112]: https://github.com/amethyst/amethyst/pull/1112
 [#1089]: https://github.com/amethyst/amethyst/pull/1089
+[#1098]: https://github.com/amethyst/amethyst/pull/1098
 [#1099]: https://github.com/amethyst/amethyst/pull/1099
 [#1108]: https://github.com/amethyst/amethyst/pull/1108
 [#1125]: https://github.com/amethyst/amethyst/pull/1125

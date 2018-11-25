@@ -61,7 +61,7 @@ impl StdError for Error {
         }
     }
 
-    fn cause(&self) -> Option<&StdError> {
+    fn cause(&self) -> Option<&dyn StdError> {
         match *self {
             Error::BufferCreation(ref e) => Some(e),
             Error::PassInit(ref e) => Some(e),
@@ -77,7 +77,7 @@ impl StdError for Error {
 }
 
 impl Display for Error {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         match *self {
             Error::BufferCreation(ref e) => write!(fmt, "Buffer creation failed: {}", e),
             Error::NoSuchTarget(ref e) => write!(fmt, "Nonexistent target: {}", e),

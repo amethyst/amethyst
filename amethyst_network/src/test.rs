@@ -7,7 +7,7 @@ mod test {
         specs::{Builder, Join, World, WriteStorage},
     };
 
-    use {NetConnection, NetEvent, NetSocketSystem};
+    use crate::{NetConnection, NetEvent, NetSocketSystem};
 
     #[test]
     fn single_packet_early() {

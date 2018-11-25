@@ -22,11 +22,9 @@ use amethyst::{
 use boxfnonce::SendBoxFnOnce;
 use hetseq::Queue;
 
-use CustomDispatcherStateBuilder;
-use FunctionState;
-use GameUpdate;
-use SequencerState;
-use SystemInjectionBundle;
+use crate::{
+    CustomDispatcherStateBuilder, FunctionState, GameUpdate, SequencerState, SystemInjectionBundle,
+};
 
 type BundleAddFn = SendBoxFnOnce<
     'static,
@@ -663,11 +661,9 @@ mod test {
     };
 
     use super::AmethystApplication;
-    use EffectReturn;
-    use FunctionState;
+    use crate::{EffectReturn, FunctionState, PopState};
     #[cfg(feature = "graphics")]
     use MaterialAnimationFixture;
-    use PopState;
     #[cfg(feature = "graphics")]
     use SpriteRenderAnimationFixture;
 
