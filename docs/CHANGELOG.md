@@ -40,6 +40,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Updated `glutin` to `0.19` (see [Glutin's changelog][glutin_019]). ([#1131])
 * Renamed the `DrawSprite` pass to `DrawFlat2D` as it now handles both sprites and images without spritesheets. ([#1153])
 * `BasicScenePrefab` deserialization now returns an error on invalid fields. ([#1164])
+* Reordered arguments for `Transform::set_rotation_euler` to match nalgebra's Euler angles. ([#1052])
 
 ### Removed
 
