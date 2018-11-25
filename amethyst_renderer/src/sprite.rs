@@ -306,17 +306,18 @@ impl SimpleFormat<SpriteSheet> for SpriteSheetFormat {
         })?;
         let mut sprites: Vec<Sprite> = Vec::with_capacity(sheet.sprites.len());
         for sp in sheet.sprites {
-            sprites.push(Sprite {
-                width: sp.width,
-                height: sp.height,
-                offsets: sp.offsets.unwrap_or([0.0, 0.0]),
-                tex_coords: TextureCoordinates {
-                    left: sp.x / sheet.spritesheet_width,
-                    right: (sp.x + sp.width) / sheet.spritesheet_width,
-                    top: 1.0 - sp.y / sheet.spritesheet_height,
-                    bottom: 1.0 - (sp.y + sp.height) / sheet.spritesheet_height,
-                },
-            });
+            let sprite = Sprite::from_pixel_values(
+                sheet.spritesheet_width as u32,
+                sheet.spritesheet_height as u32,
+                sp.width as u32,
+                sp.height as u32,
+                sp.x as u32,
+                sp.y as u32,
+                sp.offsets
+                    .map(|offsets| [offsets[0] as i32, offsets[1] as i32])
+                    .unwrap_or([0, 0]),
+            );
+            sprites.push(sprite);
         }
         Ok(SpriteSheet { texture, sprites })
     }
