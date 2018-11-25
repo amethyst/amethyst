@@ -12,7 +12,11 @@ use amethyst_core::specs::{
 };
 use amethyst_renderer::{HiddenPropagate, Texture, TextureFormat, TextureMetadata, TexturePrefab};
 
-use super::*;
+use crate::{
+    get_default_font, Anchor, FontAsset, FontFormat, LineMode, MouseReactive, Stretch, TextEditing,
+    UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionType, UiFocused, UiImage,
+    UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform,
+};
 
 /// Loadable `UiTransform` data.
 /// By default z is equal to one.
@@ -365,6 +369,7 @@ where
 ///
 /// - `TF`: `Format` used for loading `Texture`s
 /// - `AF`: `Format` used for loading sounds
+/// - `FF`: `Format` used for loading fonts
 #[derive(Deserialize, Serialize, Clone)]
 pub struct UiButtonBuilder<AF = AudioFormat, TF = TextureFormat, FF = FontFormat>
 where
@@ -406,8 +411,8 @@ where
 {
     type SystemData = (
         WriteStorage<'a, UiButton>,
-        WriteStorage<'a, OnUiActionImage>,
-        WriteStorage<'a, OnUiActionSound>,
+        WriteStorage<'a, UiSoundRetrigger>,
+        WriteStorage<'a, UiButtonActionRetrigger>,
         <TexturePrefab<TF> as PrefabData<'a>>::SystemData,
         <AssetPrefab<Audio, AF> as PrefabData<'a>>::SystemData,
     );
@@ -421,12 +426,13 @@ where
     ) -> Result<(), PrefabError> {
         let (
             ref mut buttons,
-            ref mut action_image,
-            ref mut action_sound,
+            ref mut sound_retrigger,
+            ref mut button_action_retrigger,
             ref mut textures,
             ref mut sounds,
         ) = system_data;
-        let normal_image = self
+
+        let _normal_image = self
             .normal_image
             .add_to_entity(entity, textures, entity_set)?;
         let hover_image = self
@@ -435,31 +441,94 @@ where
         let press_image = self
             .press_image
             .add_to_entity(entity, textures, entity_set)?;
+
         let hover_sound = self.hover_sound.add_to_entity(entity, sounds, entity_set)?;
         let press_sound = self.press_sound.add_to_entity(entity, sounds, entity_set)?;
         let release_sound = self
             .release_sound
             .add_to_entity(entity, sounds, entity_set)?;
-        buttons.insert(
-            entity,
-            UiButton::new(
-                self.normal_text_color,
-                self.hover_text_color,
-                self.press_text_color,
-            ),
-        )?;
-        if hover_image.is_some() || press_image.is_some() {
-            action_image.insert(
-                entity,
-                OnUiActionImage::new(normal_image, hover_image, press_image),
-            )?;
+
+        buttons.insert(entity, UiButton::new(self.normal_text_color))?;
+
+        let mut on_click_start = Vec::new();
+        let mut on_click_stop = Vec::new();
+        let mut on_hover_start = Vec::new();
+        let mut on_hover_stop = Vec::new();
+
+        if let Some(press_image) = press_image {
+            on_click_start.push(UiButtonAction {
+                target: entity.clone(),
+                event_type: UiButtonActionType::SetTexture(press_image.clone()),
+            });
+
+            on_click_stop.push(UiButtonAction {
+                target: entity.clone(),
+                event_type: UiButtonActionType::UnsetTexture(press_image.clone()),
+            });
         }
+
+        if let Some(hover_image) = hover_image {
+            on_hover_start.push(UiButtonAction {
+                target: entity.clone(),
+                event_type: UiButtonActionType::SetTexture(hover_image.clone()),
+            });
+
+            on_hover_stop.push(UiButtonAction {
+                target: entity.clone(),
+                event_type: UiButtonActionType::UnsetTexture(hover_image.clone()),
+            });
+        }
+
+        if let Some(press_text_color) = self.press_text_color {
+            on_click_start.push(UiButtonAction {
+                target: entity.clone(),
+                event_type: UiButtonActionType::SetTextColor(press_text_color),
+            });
+
+            on_click_stop.push(UiButtonAction {
+                target: entity.clone(),
+                event_type: UiButtonActionType::UnsetTextColor(press_text_color),
+            });
+        }
+
+        if let Some(hover_text_color) = self.hover_text_color {
+            on_hover_start.push(UiButtonAction {
+                target: entity.clone(),
+                event_type: UiButtonActionType::SetTextColor(hover_text_color),
+            });
+
+            on_hover_stop.push(UiButtonAction {
+                target: entity.clone(),
+                event_type: UiButtonActionType::UnsetTextColor(hover_text_color),
+            });
+        }
+
+        if !on_click_start.is_empty()
+            || !on_click_stop.is_empty()
+            || !on_hover_start.is_empty()
+            || !on_hover_stop.is_empty()
+        {
+            let retrigger = UiButtonActionRetrigger {
+                on_click_start,
+                on_click_stop,
+                on_hover_start,
+                on_hover_stop,
+            };
+
+            button_action_retrigger.insert(entity, retrigger)?;
+        }
+
         if hover_sound.is_some() || press_sound.is_some() || release_sound.is_some() {
-            action_sound.insert(
-                entity,
-                OnUiActionSound::new(hover_sound, press_sound, release_sound),
-            )?;
+            let retrigger = UiSoundRetrigger {
+                on_click_start: press_sound.map(|it| UiPlaySoundAction(it)),
+                on_click_stop: release_sound.map(|it| UiPlaySoundAction(it)),
+                on_hover_start: hover_sound.map(|it| UiPlaySoundAction(it)),
+                on_hover_stop: None,
+            };
+
+            sound_retrigger.insert(entity, retrigger)?;
         }
+
         Ok(())
     }
 
