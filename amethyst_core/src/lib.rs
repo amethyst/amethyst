@@ -35,7 +35,7 @@ pub use crate::{
 
 pub use self::{
     axis::{Axis2, Axis3},
-    named::{Named, WithNamed},
+    named::{FindNamed, Named, WithNamed},
 };
 
 mod axis;

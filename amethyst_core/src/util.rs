@@ -1,5 +1,5 @@
 use hibitset::BitSetLike;
-use specs::{Component, Entity, storage::UnprotectedStorage};
+use specs::{storage::UnprotectedStorage, Component};
 
 pub trait Cache<T> {
     fn on_get(&self, id: u32, val: &T);
@@ -8,14 +8,21 @@ pub trait Cache<T> {
 }
 
 #[derive(Debug, Default)]
-pub struct CachedStorage<C, I, T> {
+pub struct CachedStorage<C, I> {
     pub cache: C,
     pub inner: I,
 }
 
-impl<C, I, T> UnprotectedStorage for CachedStorage<C, I, T> where C: Cache<T::Com>, I: UnprotectedStorage<>, T: Component {
-    unsafe fn clean<B>(&mut self, has: B) where
-        B: BitSetLike {
+impl<C, I, T> UnprotectedStorage<T> for CachedStorage<C, I>
+where
+    C: Cache<T> + Default,
+    I: UnprotectedStorage<T> + Default,
+    T: Component,
+{
+    unsafe fn clean<B>(&mut self, has: B)
+    where
+        B: BitSetLike,
+    {
         self.inner.clean(has);
     }
 
@@ -27,8 +34,8 @@ impl<C, I, T> UnprotectedStorage for CachedStorage<C, I, T> where C: Cache<T::Co
     }
 
     unsafe fn get_mut(&mut self, id: u32) -> &mut T {
-        let val = self.inner.get(id);
-        self.cache.on_update(id, val);
+        let val = self.inner.get_mut(id);
+        self.cache.on_update(id, &*val);
 
         val
     }
