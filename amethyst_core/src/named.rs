@@ -75,6 +75,15 @@ pub trait FindNamed {
     ///     num: usize,
     /// }
     ///
+    /// /// Allows to use `into()` in the `for_each` closure.
+    /// impl From<usize> for NumChars {
+    ///     fn from(u: usize) -> Self {
+    ///         NumChars {
+    ///             num: u,
+    ///         }
+    ///     }
+    /// }
+    ///
     /// impl Component for NumChars {
     ///     type Storage = VecStorage<Self>;
     /// }
@@ -86,22 +95,29 @@ pub trait FindNamed {
     ///     type SystemData = (Entities<'a>, ReadStorage<'a, Named>, WriteStorage<'a, NumChars>);
     ///
     ///     fn run(&mut self, (entities, named, mut num_chars): Self::SystemData) {
-    ///         let filter = |name| name.is_lowercase();
-    ///
-    ///         (&*entities, named)
+    ///         (&*entities, &named)
     ///             .join()
-    ///             .filter(|&(_, named)| filter(named.name()))
-    ///             .for_each(|(entity, name)|
-    ///                 num_chars.insert(entity, name.name().chars().count()
-    ///                     .expect("Unreachable: Entity is valid because it was joined over"));
+    ///             .filter(|&(_, named)| is_lowercase(named.name()))
+    ///             .for_each(|(entity, name)| {
+    ///                 num_chars.insert(entity, name.name().chars().count().into())
+    ///                     .expect("Unreachable: Entity is valid because it was joined over");
+    ///             });
     ///     }
+    /// }
+    ///
+    /// fn is_lowercase(name: &str) -> bool {
+    ///     name
+    ///         .chars()
+    ///         .next()
+    ///         .map(|c| c.is_lowercase())
+    ///         .unwrap_or(false)
     /// }
     /// ```
     ///
     /// # Examples
     ///
     /// ```
-    ///
+    /// TODO: leaving this empty until it's clear which path we're going
     /// ```
     fn find_with_name<F>(&self, matcher: F, buffer: &mut Vec<Entity>)
     where
@@ -205,9 +221,7 @@ where
 /// pub struct NameSystem;
 ///
 /// impl<'s> System<'s> for NameSystem {
-///     type SystemData = (
-///         ReadStorage<'s, Named>,
-///     );
+///     type SystemData = ReadStorage<'s, Named>;
 ///
 ///     fn run(&mut self, names: Self::SystemData) {
 ///         if let Some(robot) = names.find_named("Robot") {
@@ -316,7 +330,12 @@ impl Cache<Named> for NameCache {
     fn on_get(&self, _: u32, _: &Named) {}
 
     fn on_update(&mut self, id: u32, val: &Named) {
-        self.map.insert(val.name.clone(), id);
+        let old = self.map.insert(val.name.clone(), id);
+
+        // TODO: decision needed whether duplicates should be discouraged or not
+        if old.is_some() {
+            warn!("Duplicated name found ({:?})", val.name());
+        }
     }
 
     fn on_remove(&mut self, _: u32, val: Named) -> Named {
@@ -363,7 +382,7 @@ mod tests {
             assert_eq!(storage.find_named("B"), Some(b));
         }
 
-        world.delete_entity(a);
+        world.delete_entity(a).unwrap();
         let a = world.create_entity().build();
 
         // Let's make sure we used the same id.
@@ -375,7 +394,7 @@ mod tests {
             assert_eq!(storage.find_named("B"), Some(b));
         }
 
-        world.delete_entity(a);
+        world.delete_entity(a).unwrap();
         let a = world.create_entity().named("A").build();
 
         {
