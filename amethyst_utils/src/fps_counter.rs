@@ -1,9 +1,12 @@
 //! Util Resources
 
-use amethyst_core::specs::prelude::{DispatcherBuilder, Read, System, Write};
-use amethyst_core::timing::{duration_to_nanos, Time};
-use amethyst_core::{Result, SystemBundle};
-use circular_buffer::CircularBuffer;
+use amethyst_core::{
+    specs::prelude::{DispatcherBuilder, Read, System, Write},
+    timing::{duration_to_nanos, Time},
+    {Result, SystemBundle},
+};
+
+use crate::circular_buffer::CircularBuffer;
 
 /// The FPSCounter resource needed by the FPSCounterSystem.
 ///

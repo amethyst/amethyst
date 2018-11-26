@@ -1,5 +1,6 @@
+use crate::Result;
+
 pub use self::dir::Directory;
-use Result;
 
 mod dir;
 

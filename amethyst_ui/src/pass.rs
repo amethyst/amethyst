@@ -1,18 +1,10 @@
 //! Simple flat forward drawing pass.
 
-use super::*;
-use amethyst_assets::{AssetStorage, Loader};
-use amethyst_core::cgmath::vec2 as cg_vec2;
-use amethyst_core::specs::prelude::{
-    Entities, Entity, Join, Read, ReadExpect, ReadStorage, WriteStorage,
+use std::{
+    cmp::{Ordering, PartialOrd},
+    hash::{Hash, Hasher},
 };
-use amethyst_renderer::error::Result;
-use amethyst_renderer::pipe::pass::{Pass, PassData};
-use amethyst_renderer::pipe::{Effect, NewEffect};
-use amethyst_renderer::{
-    Encoder, Factory, Hidden, HiddenPropagate, Mesh, PosTex, Resources, ScreenDimensions, Shape,
-    Texture, TextureData, TextureHandle, TextureMetadata, VertexFormat,
-};
+
 use fnv::FnvHashMap as HashMap;
 use gfx::preset::blend;
 use gfx::pso::buffer::ElemStride;
@@ -23,9 +15,23 @@ use gfx_glyph::{
 };
 use glsl_layout::{vec2, Uniform};
 use hibitset::BitSet;
-use std::cmp::{Ordering, PartialOrd};
-use std::hash::{Hash, Hasher};
 use unicode_segmentation::UnicodeSegmentation;
+
+use amethyst_assets::{AssetStorage, Loader};
+use amethyst_core::specs::prelude::{
+    Entities, Entity, Join, Read, ReadExpect, ReadStorage, WriteStorage,
+};
+use amethyst_renderer::{
+    error::Result,
+    pipe::{
+        pass::{Pass, PassData},
+        Effect, NewEffect,
+    },
+    Encoder, Factory, Hidden, HiddenPropagate, Mesh, PosTex, Resources, ScreenDimensions, Shape,
+    Texture, TextureData, TextureHandle, TextureMetadata, VertexFormat,
+};
+
+use super::*;
 
 const VERT_SRC: &[u8] = include_bytes!("shaders/vertex.glsl");
 const FRAG_SRC: &[u8] = include_bytes!("shaders/frag.glsl");
@@ -110,7 +116,7 @@ impl<'a> PassData<'a> for DrawUi {
 }
 
 impl Pass for DrawUi {
-    fn compile(&mut self, mut effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, mut effect: NewEffect<'_>) -> Result<Effect> {
         // Initialize a single unit quad, we'll use this mesh when drawing quads later.
         // Centered around (0,0) and of size 2
         let data = Shape::Plane(None).generate_vertices::<Vec<PosTex>>(None);
@@ -148,7 +154,7 @@ impl Pass for DrawUi {
             editing,
             hidden,
             hidden_prop,
-        ): <Self as PassData>::Data,
+        ): <Self as PassData<'_>>::Data,
     ) {
         // Populate and update the draw order cache.
         {
@@ -163,7 +169,10 @@ impl Pass for DrawUi {
         }
 
         for &mut (ref mut z, entity) in &mut self.cached_draw_order.cache {
-            *z = ui_transform.get(entity).unwrap().global_z;
+            *z = ui_transform
+                .get(entity)
+                .expect("Unreachable: Enities are collected from a cache of prepopulate entities")
+                .global_z;
         }
 
         // Attempt to insert the new entities in sorted position. Should reduce work during
@@ -200,12 +209,15 @@ impl Pass for DrawUi {
             .sort_unstable_by(|&(z1, _), &(z2, _)| z1.partial_cmp(&z2).unwrap_or(Ordering::Equal));
 
         // Inverted screen dimensions. Used to scale from pixel coordinates to the opengl coordinates in the vertex shader.
-        let invert_window_size = cg_vec2(
+        let invert_window_size = [
             1. / screen_dimensions.width(),
             1. / screen_dimensions.height(),
-        );
+        ];
 
-        let mesh = self.mesh.as_ref().unwrap();
+        let mesh = self
+            .mesh
+            .as_ref()
+            .expect("`DrawUi::compile` was not called before `DrawUi::apply`");
 
         let vbuf = match mesh.buffer(PosTex::ATTRIBUTES) {
             Some(vbuf) => vbuf.clone(),
@@ -222,8 +234,9 @@ impl Pass for DrawUi {
             if hidden.contains(entity) || hidden_prop.contains(entity) {
                 continue;
             }
-            // This won't panic as we guaranteed earlier these entities are present.
-            let ui_transform = ui_transform.get(entity).unwrap();
+            let ui_transform = ui_transform
+                .get(entity)
+                .expect("Unreachable: Entity is guaranteed to be present based on earlier actions");
             if let Some(image) = ui_image
                 .get(entity)
                 .and_then(|image| tex_storage.get(&image.texture))
@@ -366,8 +379,10 @@ impl Pass for DrawUi {
                 // Render background highlight
                 let brush = &mut self
                     .glyph_brushes
-                    .get_mut(&ui_text.brush_id.unwrap())
-                    .unwrap();
+                    .get_mut(&ui_text.brush_id
+                        .expect("Unreachable: `ui_text.brush_id` is guarenteed to be set earlier in this function")
+                    ).expect("Unable to get brush from `glyph_brushes`-map");
+
                 // Maintain the glyph cache (used by the input code).
                 ui_text.cached_glyphs.clear();
                 ui_text
@@ -406,7 +421,7 @@ impl Pass for DrawUi {
                     let ascent = brush
                         .fonts()
                         .get(0)
-                        .unwrap()
+                        .expect("Unable to get first font of brush")
                         .v_metrics(Scale::uniform(ui_text.font_size))
                         .ascent;
                     for glyph in brush
@@ -441,7 +456,12 @@ impl Pass for DrawUi {
                 if let Err(err) = brush.draw_queued(
                     encoder,
                     &effect.data.out_blends[0],
-                    &effect.data.out_depth.as_ref().unwrap().0,
+                    &effect
+                        .data
+                        .out_depth
+                        .as_ref()
+                        .expect("Unable to get depth of effect")
+                        .0,
                 ) {
                     error!("Unable to draw text! Error: {:?}", err);
                 }
@@ -465,7 +485,7 @@ impl Pass for DrawUi {
                                 brush
                                     .fonts()
                                     .get(0)
-                                    .unwrap()
+                                    .expect("Unable to get first font of brush")
                                     .glyph(' ')
                                     .scaled(Scale::uniform(ui_text.font_size))
                                     .h_metrics()
@@ -477,7 +497,7 @@ impl Pass for DrawUi {
                             let ascent = brush
                                 .fonts()
                                 .get(0)
-                                .unwrap()
+                                .expect("Unable to get first font of brush")
                                 .v_metrics(Scale::uniform(ui_text.font_size))
                                 .ascent;
                             let glyph_len = brush.glyphs(&section).count();

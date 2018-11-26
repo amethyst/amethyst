@@ -14,21 +14,21 @@ mod sprite_sheet_loader;
 use amethyst::{
     assets::{AssetStorage, Loader},
     core::{
-        cgmath::{Ortho, Point3, Transform as CgTransform, Vector3},
+        nalgebra::Orthographic3,
         transform::{Transform, TransformBundle},
     },
     ecs::prelude::Entity,
     input::{get_key, is_close_requested, is_key_down},
     prelude::*,
     renderer::{
-        Camera, ColorMask, DepthMode, DisplayConfig, DrawSprite, ElementState, Hidden,
-        MaterialTextureSet, Pipeline, Projection, RenderBundle, ScreenDimensions, SpriteRender,
-        SpriteSheet, SpriteSheetHandle, Stage, Transparent, VirtualKeyCode, ALPHA,
+        Camera, ColorMask, DepthMode, DisplayConfig, DrawFlat2D, ElementState, Hidden, Pipeline,
+        Projection, RenderBundle, ScreenDimensions, SpriteRender, SpriteSheet, SpriteSheetHandle,
+        Stage, Transparent, VirtualKeyCode, ALPHA,
     },
     utils::application_root_dir,
 };
 
-use sprite::SpriteSheetDefinition;
+use crate::sprite::SpriteSheetDefinition;
 
 const SPRITE_SPACING_RATIO: f32 = 0.7;
 
@@ -207,7 +207,7 @@ impl Example {
         };
 
         let mut camera_transform = Transform::default();
-        camera_transform.translation = Vector3::new(0., 0., self.camera_z);
+        camera_transform.set_xyz(0.0, 0.0, self.camera_z);
 
         let camera = world
             .create_entity()
@@ -215,14 +215,14 @@ impl Example {
             // Define the view that the camera can see. It makes sense to keep the `near` value as
             // 0.0, as this means it starts seeing anything that is 0 units in front of it. The
             // `far` value is the distance the camera can see facing the origin.
-            .with(Camera::from(Projection::Orthographic(Ortho {
-                left: 0.0,
-                right: width,
-                top: height,
-                bottom: 0.0,
-                near: 0.0,
-                far: self.camera_depth_vision,
-            }))).build();
+            .with(Camera::from(Projection::Orthographic(Orthographic3::new(
+                0.0,
+                width,
+                0.0,
+                height,
+                0.0,
+                self.camera_depth_vision,
+            )))).build();
 
         self.camera = Some(camera);
     }
@@ -256,7 +256,7 @@ impl Example {
         };
         // This `Transform` moves the sprites to the middle of the window
         let mut common_transform = Transform::default();
-        common_transform.translation = Vector3::new(width / 2. - sprite_offset_x, height / 2., 0.);
+        common_transform.set_xyz(width / 2.0 - sprite_offset_x, height / 2.0, 0.0);
 
         self.draw_sprites(world, &common_transform);
     }
@@ -282,19 +282,14 @@ impl Example {
             } else {
                 i as f32
             };
-            sprite_transform.translation =
-                Vector3::new(i as f32 * sprite_w * SPRITE_SPACING_RATIO, z, z);
+            sprite_transform.set_xyz(i as f32 * sprite_w * SPRITE_SPACING_RATIO, z, z);
 
             // This combines multiple `Transform`ations.
-            // You need to `use amethyst::core::cgmath::Transform`;
-
-            CgTransform::<Point3<f32>>::concat_self(&mut sprite_transform, &common_transform);
+            sprite_transform.concat(&common_transform);
 
             let sprite_render = SpriteRender {
                 sprite_sheet: sprite_sheet_handle.clone(),
                 sprite_number: i,
-                flip_horizontal: false,
-                flip_vertical: false,
             };
 
             let mut entity_builder = world
@@ -326,20 +321,12 @@ impl Example {
 /// * texture: the pixel data
 /// * `SpriteSheet`: the layout information of the sprites on the image
 fn load_sprite_sheet(world: &mut World) -> LoadedSpriteSheet {
-    let sprite_sheet_index = 0;
-
-    // Store texture in the world's `MaterialTextureSet` resource (singleton hash map)
-    // This is used by the `DrawSprite` pass to look up the texture from the `SpriteSheet`
     let texture = png_loader::load("texture/bat_semi_transparent.png", world);
-    world
-        .write_resource::<MaterialTextureSet>()
-        .insert(sprite_sheet_index, texture);
-
     let sprite_w = 32.;
     let sprite_h = 32.;
     let sprite_sheet_definition = SpriteSheetDefinition::new(sprite_w, sprite_h, 2, 6, false);
 
-    let sprite_sheet = sprite_sheet_loader::load(sprite_sheet_index, &sprite_sheet_definition);
+    let sprite_sheet = sprite_sheet_loader::load(texture, &sprite_sheet_definition);
     let sprite_count = sprite_sheet.sprites.len();
 
     let sprite_sheet_handle = {
@@ -372,7 +359,7 @@ fn main() -> amethyst::Result<()> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0., 0., 0., 1.], 5.)
-            .with_pass(DrawSprite::new().with_transparency(
+            .with_pass(DrawFlat2D::new().with_transparency(
                 ColorMask::all(),
                 ALPHA,
                 Some(DepthMode::LessEqualWrite),

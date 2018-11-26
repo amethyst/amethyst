@@ -1,8 +1,10 @@
 //! Components for the transform processor.
 
-pub use self::local_transform::Transform;
-pub use self::parent::{HierarchyEvent, Parent, ParentHierarchy};
-pub use self::transform::GlobalTransform;
+pub use self::{
+    local_transform::Transform,
+    parent::{HierarchyEvent, Parent, ParentHierarchy},
+    transform::GlobalTransform,
+};
 
 mod local_transform;
 mod parent;

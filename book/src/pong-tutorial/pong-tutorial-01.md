@@ -18,7 +18,7 @@ functionality ourselves so we're sure we know what's going on.
 extern crate amethyst;
 
 use amethyst::prelude::*;
-use amethyst::renderer::{DisplayConfig, DrawSprite, Event, Pipeline,
+use amethyst::renderer::{DisplayConfig, DrawFlat2D, Event, Pipeline,
                          RenderBundle, Stage, VirtualKeyCode};
 ```
 
@@ -92,7 +92,9 @@ and load it.
 # use amethyst::prelude::*;
 # use amethyst::renderer::DisplayConfig;
 # fn main() {
-let path = "./resources/display_config.ron";
+use amethyst::utils::application_root_dir;
+
+let path = format!("{}/resources/display_config.ron", application_root_dir());
 
 let config = DisplayConfig::load(&path);
 # }
@@ -125,12 +127,12 @@ in this tutorial.
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::renderer::{Pipeline, DrawFlat, PosTex, Stage, DrawSprite};
+# use amethyst::renderer::{Pipeline, DrawFlat, PosTex, Stage, DrawFlat2D};
 # fn main() {
 let pipe = Pipeline::build().with_stage(
     Stage::with_backbuffer()
         .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-        .with_pass(DrawSprite::new()),
+        .with_pass(DrawFlat2D::new()),
 );
 # }
 ```
@@ -146,14 +148,14 @@ Now let's pack everything up and run it:
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
-# use amethyst::renderer::{DisplayConfig, DrawSprite, Pipeline,
+# use amethyst::renderer::{DisplayConfig, DrawFlat2D, Pipeline,
 #                        RenderBundle, Stage};
 # fn main() -> amethyst::Result<()> {
 # let path = "./resources/display_config.ron";
 # let config = DisplayConfig::load(&path);
 # let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
 #       .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-#       .with_pass(DrawSprite::new()),
+#       .with_pass(DrawFlat2D::new()),
 # );
 # struct Pong;
 # impl<'a, 'b> SimpleState<'a,'b> for Pong { }
@@ -177,34 +179,6 @@ Then we call `.run()` on `game` which begins the gameloop. The game will
 continue to run until our `State` returns `Trans::Quit`, or when all states have
 been popped off the state machine's stack.
 
-Finally, let's create a `texture` folder in the root of the project. This
-will contain the [spritesheet texture][ss] `pong_spritesheet.png` we will need
-to render the elements of the game. To go with it, we need a file describing
-where the sprites are on the sheet. Let's create, right next to it, a file
-called `pong_spritesheet.ron`. It will contain the following sprite sheet
-definition:
-
-```text,ignore
-(
-    spritesheet_width: 8.0,
-    spritesheet_height: 16.0,
-    sprites: [
-        (
-            x: 0.0,
-            y: 0.0,
-            width: 4.0,
-            height: 16.0,
-        ),
-        (
-            x: 4.0,
-            y: 0.0,
-            width: 4.0,
-            height: 4.0,
-        ),
-    ],
-)
-```
-
 Success! Now we should be able to compile and run this code and get a window.
 It should look something like this:
 
@@ -214,4 +188,3 @@ It should look something like this:
 [st]: https://www.amethyst.rs/doc/master/doc/amethyst/trait.State.html
 [ap]: https://www.amethyst.rs/doc/master/doc/amethyst/struct.Application.html
 [gs]: ../getting-started.html
-[ss]: ../images/pong_tutorial/pong_spritesheet.png

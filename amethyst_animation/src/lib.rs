@@ -45,11 +45,12 @@
 //! [ex_ani]: https://github.com/amethyst/amethyst/tree/master/examples/animation
 //! [ex_gltf]: https://github.com/amethyst/amethyst/tree/master/examples/gltf
 
-#![warn(missing_docs)]
-#![cfg_attr(feature = "cargo-clippy", allow(type_complexity))] // complex project
+#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 extern crate amethyst_assets;
 extern crate amethyst_core;
+#[macro_use]
+extern crate amethyst_derive;
 extern crate amethyst_renderer;
 #[macro_use]
 extern crate derivative;
@@ -59,31 +60,28 @@ extern crate itertools;
 #[macro_use]
 extern crate log;
 extern crate minterpolate;
+extern crate num_traits;
 #[macro_use]
 extern crate serde;
 
-#[cfg(feature = "profiler")]
-extern crate thread_profiler;
+pub use self::{
+    bundle::{AnimationBundle, SamplingBundle, VertexSkinningBundle},
+    material::{MaterialChannel, MaterialPrimitive},
+    prefab::{AnimatablePrefab, AnimationHierarchyPrefab, AnimationPrefab, AnimationSetPrefab},
+    resources::{
+        Animation, AnimationCommand, AnimationControl, AnimationControlSet, AnimationHierarchy,
+        AnimationSampling, AnimationSet, ApplyData, BlendMethod, ControlState, DeferStartRelation,
+        EndControl, RestState, Sampler, SamplerControl, SamplerControlSet, StepDirection,
+    },
+    skinning::{Joint, JointPrefab, Skin, SkinPrefab, SkinnablePrefab, VertexSkinningSystem},
+    sprite::{SpriteRenderChannel, SpriteRenderPrimitive},
+    systems::{
+        AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem, SamplerProcessor,
+    },
+    transform::TransformChannel,
+    util::{get_animation_set, SamplerPrimitive},
+};
 
-pub use self::bundle::{AnimationBundle, SamplingBundle, VertexSkinningBundle};
-pub use self::material::{MaterialChannel, MaterialPrimitive};
-pub use self::prefab::{
-    AnimatablePrefab, AnimationHierarchyPrefab, AnimationPrefab, AnimationSetPrefab,
-};
-pub use self::resources::{
-    Animation, AnimationCommand, AnimationControl, AnimationControlSet, AnimationHierarchy,
-    AnimationSampling, AnimationSet, ApplyData, BlendMethod, ControlState, DeferStartRelation,
-    EndControl, RestState, Sampler, SamplerControl, SamplerControlSet, StepDirection,
-};
-pub use self::skinning::{
-    Joint, JointPrefab, Skin, SkinPrefab, SkinnablePrefab, VertexSkinningSystem,
-};
-pub use self::sprite::{SpriteRenderChannel, SpriteRenderPrimitive};
-pub use self::systems::{
-    AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem, SamplerProcessor,
-};
-pub use self::transform::TransformChannel;
-pub use self::util::{get_animation_set, SamplerPrimitive};
 pub use minterpolate::{InterpolationFunction, InterpolationPrimitive};
 
 mod bundle;

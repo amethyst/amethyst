@@ -2,7 +2,7 @@ use amethyst::{
     core::{timing::Time, transform::Transform},
     ecs::prelude::{Join, Read, System, WriteStorage},
 };
-use Ball;
+use crate::Ball;
 
 /// This system is responsible for moving all balls according to their speed
 /// and the time passed.
@@ -18,8 +18,8 @@ impl<'s> System<'s> for MoveBallsSystem {
     fn run(&mut self, (mut balls, mut locals, time): Self::SystemData) {
         // Move every ball according to its speed, and the time passed.
         for (ball, local) in (&mut balls, &mut locals).join() {
-            local.translation[0] += ball.velocity[0] * time.delta_seconds();
-            local.translation[1] += ball.velocity[1] * time.delta_seconds();
+            local.translate_x(ball.velocity[0] * time.delta_seconds());
+            local.translate_y(ball.velocity[1] * time.delta_seconds());
         }
     }
 }

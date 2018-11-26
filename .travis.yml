@@ -25,6 +25,7 @@ rust:
 matrix:
   fast_finish: true
   allow_failures:
+  - os: windows
   - rust: nightly
 
 branches:
@@ -38,9 +39,13 @@ before_install:
 
 before_script:
 - export PATH=$PATH:/home/travis/.cargo/bin
-- export RUSTFLAGS="-D warnings"
 - export RUSTC_WRAPPER="./sccache"
 - export SCCACHE_DIR="/home/travis/.cache/sccache"
+- |
+  if [ ${TRAVIS_RUST_VERSION} == "stable" ]
+  then
+    export RUSTFLAGS="-D warnings"
+  fi
 
 # Generate documentation, compile the engine, run tests.
 script:

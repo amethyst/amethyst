@@ -1,15 +1,16 @@
 //! # amethyst_locale
 //!
 //! Localisation binding a `Fluent` file to an Asset<Locale> via the use of amethyst_assets.
-#![warn(missing_docs)]
+#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 extern crate amethyst_assets;
 extern crate amethyst_core;
 extern crate fluent;
 
+use fluent::bundle::FluentBundle;
+
 use amethyst_assets::{Asset, Handle, ProcessingState, Result, SimpleFormat};
 use amethyst_core::specs::prelude::VecStorage;
-use fluent::bundle::FluentBundle;
 
 /// Loads the strings from localisation files.
 #[derive(Clone)]

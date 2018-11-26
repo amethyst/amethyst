@@ -54,8 +54,7 @@
 //! ```
 
 #![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
-#![warn(missing_docs)]
-#![cfg_attr(feature = "cargo-clippy", allow(type_complexity))] // complex project
+#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 #[macro_use]
 #[cfg(feature = "profiler")]
@@ -77,7 +76,7 @@ pub extern crate amethyst_ui as ui;
 pub extern crate amethyst_utils as utils;
 pub extern crate winit;
 
-extern crate amethyst_ui;
+extern crate crossbeam_channel;
 #[macro_use]
 extern crate derivative;
 extern crate fern;
@@ -89,24 +88,28 @@ extern crate rustc_version_runtime;
 #[macro_use]
 extern crate serde_derive;
 
-pub use self::app::{Application, ApplicationBuilder, CoreApplication};
-pub use self::error::{Error, Result};
-pub use self::game_data::{DataInit, GameData, GameDataBuilder};
-pub use self::logger::{start_logger, LevelFilter as LogLevelFilter, LoggerConfig, StdoutLog};
-pub use self::state::{
-    EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, StateMachine, Trans,
+pub use crate::core::{shred, shrev, specs as ecs};
+
+pub use self::{
+    app::{Application, ApplicationBuilder, CoreApplication},
+    callback_queue::{Callback, CallbackQueue},
+    error::{Error, Result},
+    game_data::{DataInit, GameData, GameDataBuilder},
+    logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
+    state::{
+        EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, StateMachine, Trans,
+        TransEvent,
+    },
+    state_event::{StateEvent, StateEventReader},
 };
-pub use self::state_event::{StateEvent, StateEventReader};
-pub use core::shred;
-pub use core::shrev;
-pub use core::specs as ecs;
 
 #[doc(hidden)]
-pub use derive::*;
+pub use crate::derive::*;
 
 pub mod prelude;
 
 mod app;
+mod callback_queue;
 mod error;
 mod game_data;
 mod logger;

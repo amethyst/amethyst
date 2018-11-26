@@ -1,15 +1,20 @@
 //! The network send and receive System
 
-use super::{deserialize_event, send_event, ConnectionState, NetConnection, NetEvent, NetFilter};
+use std::{
+    clone::Clone,
+    io::{Error, ErrorKind},
+    net::SocketAddr,
+    sync::mpsc::{channel, Receiver, Sender},
+    thread,
+};
+
 use amethyst_core::specs::{Join, Resources, System, SystemData, WriteStorage};
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use std::clone::Clone;
-use std::io::{Error, ErrorKind};
-use std::net::SocketAddr;
-use std::net::UdpSocket;
-use std::sync::mpsc::{channel, Receiver, Sender};
-use std::thread;
+use laminar::error;
+use laminar::net::UdpSocket;
+use laminar::{DeliveryMethod, NetworkConfig, Packet};
+use serde::{de::DeserializeOwned, Serialize};
+
+use super::{deserialize_event, send_event, ConnectionState, NetConnection, NetEvent, NetFilter};
 
 enum InternalSocketEvent<E> {
     SendEvents {
@@ -23,6 +28,28 @@ struct RawEvent {
     pub byte_count: usize,
     pub data: Vec<u8>,
     pub source: SocketAddr,
+    pub delivery_method: DeliveryMethod,
+}
+
+impl From<Packet> for RawEvent {
+    fn from(packet: Packet) -> Self {
+        RawEvent {
+            byte_count: packet.payload().len(),
+            data: packet.payload().to_vec(),
+            source: packet.addr(),
+            delivery_method: packet.delivery_method(),
+        }
+    }
+}
+
+impl From<RawEvent> for Packet {
+    fn from(raw_event: RawEvent) -> Self {
+        Packet::new(
+            raw_event.source,
+            raw_event.data.into_boxed_slice(),
+            raw_event.delivery_method,
+        )
+    }
 }
 
 // If a client sends both a connect event and other events,
@@ -42,7 +69,7 @@ where
     E: PartialEq,
 {
     /// The list of filters applied on the events received.
-    pub filters: Vec<Box<NetFilter<E>>>,
+    pub filters: Vec<Box<dyn NetFilter<E>>>,
 
     tx: Sender<InternalSocketEvent<E>>,
     rx: Receiver<RawEvent>,
@@ -53,15 +80,18 @@ where
     E: Serialize + PartialEq + Send + 'static,
 {
     /// Creates a `NetSocketSystem` and binds the Socket on the ip and port added in parameters.
-    pub fn new(addr: SocketAddr, filters: Vec<Box<NetFilter<E>>>) -> Result<Self, Error> {
+    pub fn new(addr: SocketAddr, filters: Vec<Box<dyn NetFilter<E>>>) -> Result<Self, Error> {
         if addr.port() < 1024 {
             // Just warning the user here, just in case they want to use the root port.
             warn!("Using a port below 1024, this will require root permission and should not be done.");
         }
 
-        let socket = UdpSocket::bind(addr)?;
+        let mut socket = UdpSocket::bind(addr, NetworkConfig::default())
+            .map_err(|x| Error::new(ErrorKind::Other, x.to_string()))?;
 
-        socket.set_nonblocking(true).unwrap();
+        socket
+            .set_nonblocking(true)
+            .expect("Unable to set `UdpSocket` to non-blocking mode");
 
         // this -> thread
         let (tx1, rx1) = channel();
@@ -72,7 +102,7 @@ where
             //rx1,tx2
             let send_queue = rx1;
             let receive_queue = tx2;
-            let socket = socket;
+            let mut socket = socket;
 
             'outer: loop {
                 // send
@@ -80,7 +110,7 @@ where
                     match control_event {
                         InternalSocketEvent::SendEvents { target, events } => {
                             for ev in events {
-                                send_event(&ev, &target, &socket);
+                                send_event(&ev, &target, &mut socket);
                             }
                         }
                         InternalSocketEvent::Stop => break 'outer,
@@ -88,25 +118,28 @@ where
                 }
 
                 // receive
-                let mut buf = [0 as u8; 2048];
                 loop {
-                    match socket.recv_from(&mut buf) {
+                    match socket.recv() {
                         // Data received
-                        Ok((amt, src)) => {
-                            receive_queue
-                                .send(RawEvent {
-                                    byte_count: amt,
-                                    data: buf[..amt].to_vec(),
-                                    source: src,
-                                }).unwrap();
-                        }
-                        Err(e) => {
-                            if e.kind() == ErrorKind::WouldBlock {
-                                break;
-                            } else {
-                                error!("Could not receive datagram: {}", e);
+                        Ok(Some(packet)) => {
+                            if let Err(_) = receive_queue.send(RawEvent::from(packet)) {
+                                error!("`NetworkSocketSystem` was dropped");
+                                break 'outer;
                             }
                         }
+                        Err(e) => match e.kind() {
+                            error::NetworkErrorKind::IOError(io_error) => {
+                                if io_error.kind() == ErrorKind::WouldBlock {
+                                    break;
+                                } else {
+                                    error!("Could not receive datagram: {}", e);
+                                }
+                            }
+                            _ => {
+                                error!("Could not receive datagram: {:?}", e);
+                            }
+                        },
+                        Ok(None) => {}
                     }
                 }
             }
@@ -141,9 +174,11 @@ where
                     .send(InternalSocketEvent::SendEvents {
                         target,
                         events: net_connection.send_buffer_early_read().cloned().collect(),
-                    }).unwrap();
+                    }).expect("Unreachable: Channel will be alive until a stop event is sent");
             } else if net_connection.state == ConnectionState::Disconnected {
-                self.tx.send(InternalSocketEvent::Stop).unwrap();
+                self.tx
+                    .send(InternalSocketEvent::Stop)
+                    .expect("Already sent a stop event to the channel");
             }
         }
 

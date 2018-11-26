@@ -1,11 +1,16 @@
-use amethyst_core::specs::prelude::{Component, DispatcherBuilder};
-use amethyst_core::{Result, SystemBundle};
-use resources::AnimationSampling;
-use skinning::VertexSkinningSystem;
-use std::hash::Hash;
-use std::marker;
-use systems::{
-    AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem, SamplerProcessor,
+use std::{hash::Hash, marker};
+
+use crate::{
+    resources::AnimationSampling,
+    skinning::VertexSkinningSystem,
+    systems::{
+        AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem, SamplerProcessor,
+    },
+};
+
+use amethyst_core::{
+    specs::prelude::{Component, DispatcherBuilder},
+    Result, SystemBundle,
 };
 
 /// Bundle for vertex skinning

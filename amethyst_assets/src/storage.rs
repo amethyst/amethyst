@@ -1,16 +1,29 @@
-use amethyst_core::specs::prelude::{Component, Read, ReadExpect, System, VecStorage, Write};
-use amethyst_core::specs::storage::UnprotectedStorage;
-use amethyst_core::Time;
-use asset::{Asset, FormatValue};
+use std::{
+    marker::PhantomData,
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc, Mutex, Weak,
+    },
+};
+
 use crossbeam::queue::MsQueue;
-use error::{Error, ErrorKind, Result, ResultExt};
 use hibitset::BitSet;
-use progress::Tracker;
 use rayon::ThreadPool;
-use reload::{HotReloadStrategy, Reload};
-use std::marker::PhantomData;
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex, Weak};
+
+use amethyst_core::{
+    specs::{
+        prelude::{Component, Read, ReadExpect, System, VecStorage, Write},
+        storage::UnprotectedStorage,
+    },
+    Time,
+};
+
+use crate::{
+    asset::{Asset, FormatValue},
+    error::{Error, ErrorKind, Result, ResultExt},
+    progress::Tracker,
+    reload::{HotReloadStrategy, Reload},
+};
 
 /// An `Allocator`, holding a counter for producing unique IDs.
 #[derive(Debug, Default)]
@@ -33,7 +46,7 @@ pub struct AssetStorage<A: Asset> {
     handles: Vec<Handle<A>>,
     handle_alloc: Allocator,
     pub(crate) processed: Arc<MsQueue<Processed<A>>>,
-    reloads: Vec<(WeakHandle<A>, Box<Reload<A>>)>,
+    reloads: Vec<(WeakHandle<A>, Box<dyn Reload<A>>)>,
     unused_handles: MsQueue<Handle<A>>,
     requeue: Mutex<Vec<Processed<A>>>,
 }
@@ -141,7 +154,10 @@ impl<A: Asset> AssetStorage<A> {
         F: FnMut(A::Data) -> Result<ProcessingState<A>>,
     {
         {
-            let requeue = self.requeue.get_mut().unwrap();
+            let requeue = self
+                .requeue
+                .get_mut()
+                .expect("The mutex of `requeue` in `AssetStorage` was poisoned");
             while let Some(processed) = self.processed.try_pop() {
                 let assets = &mut self.assets;
                 let bitset = &mut self.bitset;
@@ -339,7 +355,7 @@ impl<A: Asset> AssetStorage<A> {
             .iter()
             .position(|&(_, ref rel)| rel.needs_reload())
         {
-            let (handle, rel): (WeakHandle<_>, Box<Reload<_>>) = self.reloads.swap_remove(p);
+            let (handle, rel): (WeakHandle<_>, Box<dyn Reload<_>>) = self.reloads.swap_remove(p);
 
             let name = rel.name();
             let format = rel.format();
@@ -489,13 +505,13 @@ pub(crate) enum Processed<A: Asset> {
         data: Result<FormatValue<A>>,
         handle: Handle<A>,
         name: String,
-        tracker: Box<Tracker>,
+        tracker: Box<dyn Tracker>,
     },
     HotReload {
         data: Result<FormatValue<A>>,
         handle: Handle<A>,
         name: String,
-        old_reload: Box<Reload<A>>,
+        old_reload: Box<dyn Reload<A>>,
     },
 }
 

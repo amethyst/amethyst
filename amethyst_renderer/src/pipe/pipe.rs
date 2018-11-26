@@ -1,11 +1,14 @@
-use super::stage::*;
-use super::target::*;
-use amethyst_core::specs::prelude::SystemData;
-// use color::Rgba;
-use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
 use hetseq::*;
-use types::{Encoder, Factory};
+
+use amethyst_core::specs::prelude::SystemData;
+
+use crate::{
+    error::{Error, Result},
+    types::{Encoder, Factory},
+};
+
+use super::{stage::*, target::*};
 
 /// Defines how the rendering pipeline should be configured.
 #[derive(Clone, Debug)]
@@ -230,11 +233,13 @@ where
 
         targets.insert("".into(), out.clone());
 
+        // TODO: Remove this attribute when rustfmt plays nice.
+        #[rustfmt::skip] // try is a reserved keyword in Rust 2018, must preserve keyword escape.
         let stages = self
             .stages
             .into_list()
             .fmap(BuildStage::new(fac, &targets, multisampling))
-            .try()?;
+            .r#try()?;
 
         Ok(Pipeline { stages, targets })
     }

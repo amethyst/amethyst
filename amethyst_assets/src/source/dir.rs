@@ -1,8 +1,10 @@
-use source::Source;
-use std::fs::File;
-use std::path::{Path, PathBuf};
-use std::time::UNIX_EPOCH;
-use {ErrorKind, Result, ResultExt};
+use std::{
+    fs::File,
+    path::{Path, PathBuf},
+    time::UNIX_EPOCH,
+};
+
+use crate::{source::Source, ErrorKind, Result, ResultExt};
 
 /// Directory source.
 ///
@@ -40,13 +42,13 @@ impl Source for Directory {
 
         let path = self.path(path);
 
-        Ok(metadata(&path)
+        metadata(&path)
             .chain_err(|| format!("Failed to fetch metadata for {:?}", path))?
             .modified()
             .chain_err(|| "Could not get modification time")?
             .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs())
+            .chain_err(|| "Anomalies with the system clock caused `duration_since` to fail")
+            .map(|d| d.as_secs())
     }
 
     fn load(&self, path: &str) -> Result<Vec<u8>> {
@@ -70,9 +72,11 @@ impl Source for Directory {
 
 #[cfg(test)]
 mod test {
-    use super::Directory;
-    use source::Source;
     use std::path::Path;
+
+    use crate::source::Source;
+
+    use super::Directory;
 
     #[test]
     fn loads_asset_from_assets_directory() {

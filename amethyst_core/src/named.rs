@@ -1,6 +1,6 @@
-use specs::world::LazyBuilder;
-use specs::{Component, DenseVecStorage, EntityBuilder, WriteStorage};
 use std::borrow::Cow;
+
+use specs::{world::LazyBuilder, Component, DenseVecStorage, EntityBuilder, WriteStorage};
 
 /// A component that gives a name to an [`Entity`].
 ///
@@ -136,12 +136,11 @@ impl<'a> WithNamed for EntityBuilder<'a> {
     where
         S: Into<Cow<'static, str>>,
     {
-        // Unwrap: The only way this can fail is if the entity is invalid and this is used while creating the entity.
         self.world
             .system_data::<(WriteStorage<'a, Named>,)>()
             .0
             .insert(self.entity, Named::new(name))
-            .unwrap();
+            .expect("Unreachable: Entities should always be valid when just created");
         self
     }
 }

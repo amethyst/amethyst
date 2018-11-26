@@ -1,12 +1,18 @@
 //! A stage in the rendering pipeline.
 
-use amethyst_core::specs::prelude::SystemData;
-use error::{Error, Result};
 use fnv::FnvHashMap as HashMap;
 use hetseq::*;
-use pipe::pass::{CompiledPass, Pass, PassData};
-use pipe::{Target, Targets};
-use types::{Encoder, Factory};
+
+use amethyst_core::specs::prelude::SystemData;
+
+use crate::{
+    error::{Error, Result},
+    pipe::{
+        pass::{CompiledPass, Pass, PassData},
+        Target, Targets,
+    },
+    types::{Encoder, Factory},
+};
 
 /// A stage in the rendering pipeline.
 #[derive(Clone, Debug)]
@@ -242,11 +248,13 @@ impl<Q> StageBuilder<Q> {
             .cloned()
             .ok_or_else(|| Error::NoSuchTarget(self.target_name.clone()))?;
 
+        // TODO: Remove this attribute when rustfmt plays nice.
+        #[rustfmt::skip] // try is a reserved keyword in Rust 2018, must preserve keyword escape.
         let passes = self
             .passes
             .into_list()
             .fmap(CompilePass::new(fac, &out, multisampling))
-            .try()?;
+            .r#try()?;
 
         Ok(Stage {
             clear_color: self.clear_color,

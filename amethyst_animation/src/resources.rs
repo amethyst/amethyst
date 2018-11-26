@@ -1,14 +1,16 @@
-use amethyst_assets::{Asset, AssetStorage, Handle, ProcessingState, Result};
-use amethyst_core::shred::SystemData;
-use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage};
-use amethyst_core::timing::{duration_to_secs, secs_to_duration};
+use std::{cmp::Ordering, fmt::Debug, hash::Hash, marker, time::Duration};
+
 use fnv::FnvHashMap;
 use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
-use std::cmp::Ordering;
-use std::fmt::Debug;
-use std::hash::Hash;
-use std::marker;
-use std::time::Duration;
+
+use amethyst_assets::{
+    Asset, AssetStorage, Handle, PrefabData, PrefabError, ProcessingState, Result,
+};
+use amethyst_core::{
+    shred::SystemData,
+    specs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage},
+    timing::{duration_to_secs, secs_to_duration},
+};
 
 /// Blend method for sampler blending
 #[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Eq, Hash)]
@@ -26,7 +28,7 @@ pub trait ApplyData<'a> {
 /// Master trait used to define animation sampling on a component
 pub trait AnimationSampling: Send + Sync + 'static + for<'b> ApplyData<'b> {
     /// The interpolation primitive
-    type Primitive: InterpolationPrimitive + Clone + Copy + Send + Sync + 'static;
+    type Primitive: InterpolationPrimitive + Clone + Send + Sync + 'static;
     /// An independent grouping or type of functions that operate on attributes of a component
     ///
     /// For example, `translation`, `scaling` and `rotation` are transformation channels independent
@@ -107,12 +109,19 @@ where
 }
 
 /// Define the rest state for a component on an entity
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct RestState<T> {
+#[derive(Debug, Clone, Deserialize, Serialize, PrefabData)]
+#[prefab(Component)]
+pub struct RestState<T>
+where
+    T: AnimationSampling + Clone,
+{
     state: T,
 }
 
-impl<T> RestState<T> {
+impl<T> RestState<T>
+where
+    T: AnimationSampling + Clone,
+{
     /// Create new rest state
     pub fn new(t: T) -> Self {
         RestState { state: t }
@@ -126,7 +135,7 @@ impl<T> RestState<T> {
 
 impl<T> Component for RestState<T>
 where
-    T: AnimationSampling,
+    T: AnimationSampling + Clone,
 {
     type Storage = DenseVecStorage<Self>;
 }
@@ -177,9 +186,9 @@ where
 
     /// Create rest state for the hierarchy. Will copy the values from the base components for each
     /// entity in the hierarchy.
-    pub fn rest_state<F>(&self, get_component: F, states: &mut WriteStorage<RestState<T>>)
+    pub fn rest_state<F>(&self, get_component: F, states: &mut WriteStorage<'_, RestState<T>>)
     where
-        T: AnimationSampling,
+        T: AnimationSampling + Clone,
         F: Fn(Entity) -> Option<T>,
     {
         for entity in self.nodes.values() {

@@ -1,10 +1,13 @@
-pub use self::system::PrefabLoaderSystem;
-pub use amethyst_core::specs::error::Error as PrefabError;
+use std::marker::PhantomData;
+
 use amethyst_core::specs::prelude::{
     Component, DenseVecStorage, Entity, FlaggedStorage, Read, ReadExpect, SystemData, WriteStorage,
 };
-use std::marker::PhantomData;
-use {Asset, AssetStorage, Format, Handle, Loader, Progress, ProgressCounter};
+
+use crate::{Asset, AssetStorage, Format, Handle, Loader, Progress, ProgressCounter};
+
+pub use self::system::PrefabLoaderSystem;
+pub use amethyst_core::specs::error::Error as PrefabError;
 
 mod impls;
 mod system;
@@ -244,9 +247,11 @@ impl<T> Prefab<T> {
     ///
     /// ### Panics
     ///
-    /// If sub asset loading have not been triggered
+    /// If sub asset loading has not been triggered.
     pub fn progress(&self) -> &ProgressCounter {
-        self.counter.as_ref().unwrap()
+        self.counter
+            .as_ref()
+            .expect("Sub asset loading has not been triggered")
     }
 
     /// Trigger sub asset loading for the asset
@@ -434,12 +439,18 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use amethyst_core::specs::{Builder, RunNow, World};
-    use amethyst_core::{GlobalTransform, Time, Transform};
-    use rayon::ThreadPoolBuilder;
     use std::sync::Arc;
-    use Loader;
+
+    use rayon::ThreadPoolBuilder;
+
+    use amethyst_core::{
+        specs::{Builder, RunNow, World},
+        GlobalTransform, Time, Transform,
+    };
+
+    use crate::Loader;
+
+    use super::*;
 
     type MyPrefab = Transform;
 

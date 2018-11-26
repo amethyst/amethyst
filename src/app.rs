@@ -1,29 +1,34 @@
 //! The core engine framework.
 
-use amethyst_ui::UiEvent;
-use assets::{Loader, Source};
-use core::frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy};
-use core::shrev::{EventChannel, ReaderId};
-use core::timing::{Stopwatch, Time};
-use core::{EventReader, Named};
-use ecs::common::Errors;
-use ecs::prelude::{Component, Read, World, Write};
-use error::{Error, Result};
-use game_data::DataInit;
+use std::{error::Error as StdError, marker::PhantomData, path::Path, sync::Arc, time::Duration};
+
+use crate::shred::Resource;
 use log::Level;
 use rayon::ThreadPoolBuilder;
-use shred::Resource;
-use state::{State, StateData, StateMachine};
-use state_event::StateEvent;
-use state_event::StateEventReader;
-use std::error::Error as StdError;
-use std::marker::PhantomData;
-use std::path::Path;
-use std::sync::Arc;
-use std::time::Duration;
+
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use winit::Event;
+
+use crate::{
+    assets::{Loader, Source},
+    callback_queue::CallbackQueue,
+    core::{
+        frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy},
+        shrev::{EventChannel, ReaderId},
+        timing::{Stopwatch, Time},
+        EventReader, Named,
+    },
+    ecs::{
+        common::Errors,
+        prelude::{Component, Read, World, Write},
+    },
+    error::{Error, Result},
+    game_data::DataInit,
+    state::{State, StateData, StateMachine, TransEvent},
+    state_event::{StateEvent, StateEventReader},
+    ui::UiEvent,
+};
 
 /// `CoreApplication` is the application implementation for the game engine. This is fully generic
 /// over the state type and event type.
@@ -38,7 +43,11 @@ use winit::Event;
 /// - `R`: `EventReader` implementation for the given event type `E`
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct CoreApplication<'a, T, E = StateEvent, R = StateEventReader> {
+pub struct CoreApplication<'a, T, E = StateEvent, R = StateEventReader>
+where
+    T: 'static,
+    E: 'static,
+{
     /// The world
     #[derivative(Debug = "ignore")]
     world: World,
@@ -47,6 +56,8 @@ pub struct CoreApplication<'a, T, E = StateEvent, R = StateEventReader> {
     #[derivative(Debug = "ignore")]
     events: Vec<E>,
     event_reader_id: ReaderId<Event>,
+    #[derivative(Debug = "ignore")]
+    trans_reader_id: ReaderId<TransEvent<T, E>>,
     states: StateMachine<'a, T, E>,
     ignore_window_close: bool,
     data: T,
@@ -78,6 +89,8 @@ pub struct CoreApplication<'a, T, E = StateEvent, R = StateEventReader> {
 /// impl EmptyState for NullState {}
 ///
 /// fn main() -> amethyst::Result<()> {
+///     amethyst::start_logger(Default::default());
+///
 ///     // Build the application instance to initialize the default logger.
 ///     let mut game = Application::build("assets/", NullState)?
 ///         .build(())?;
@@ -125,6 +138,7 @@ pub type Application<'a, T> = CoreApplication<'a, T, StateEvent, StateEventReade
 
 impl<'a, T, E, R> CoreApplication<'a, T, E, R>
 where
+    T: 'static,
     E: Clone + Send + Sync + 'static,
 {
     /// Creates a new Application with the given initial game state.
@@ -190,7 +204,7 @@ where
     ///
     /// This is identical in function to
     /// [ApplicationBuilder::new](struct.ApplicationBuilder.html#method.new).
-    pub fn build<P, S>(path: P, initial_state: S) -> Result<ApplicationBuilder<S, E, R>>
+    pub fn build<P, S>(path: P, initial_state: S) -> Result<ApplicationBuilder<S, T, E, R>>
     where
         P: AsRef<Path>,
         S: State<T, E> + 'a,
@@ -246,10 +260,10 @@ where
         if self.ignore_window_close {
             false
         } else {
-            use renderer::WindowEvent;
+            use crate::renderer::WindowEvent;
             let world = &mut self.world;
             let reader_id = &mut self.event_reader_id;
-            world.exec(|ev: Read<EventChannel<Event>>| {
+            world.exec(|ev: Read<'_, EventChannel<Event>>| {
                 ev.read(reader_id).any(|e| {
                     if cfg!(target_os = "ios") {
                         if let Event::WindowEvent {
@@ -287,6 +301,32 @@ where
             let world = &mut self.world;
             let states = &mut self.states;
             states.stop(StateData::new(world, &mut self.data));
+        }
+
+        // Read the Trans queue and apply changes.
+        {
+            let mut world = &mut self.world;
+            let states = &mut self.states;
+            let reader = &mut self.trans_reader_id;
+
+            let trans = world
+                .read_resource::<EventChannel<TransEvent<T, E>>>()
+                .read(reader)
+                .map(|e| e())
+                .collect::<Vec<_>>();
+            for tr in trans {
+                states.transition(tr, StateData::new(&mut world, &mut self.data));
+            }
+        }
+
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("run_callback_queue");
+            let mut world = &mut self.world;
+            let receiver = world.read_resource::<CallbackQueue>().receiver.clone();
+            while let Ok(func) = receiver.try_recv() {
+                func(&mut world);
+            }
         }
 
         {
@@ -347,7 +387,7 @@ where
 impl<'a, T, E, R> Drop for CoreApplication<'a, T, E, R> {
     fn drop(&mut self) {
         // TODO: Specify filename in config.
-        use utils::application_root_dir;
+        use crate::utils::application_root_dir;
         let path = format!("{}/thread_profile.json", application_root_dir());
         write_profile(path.as_str());
     }
@@ -358,16 +398,19 @@ impl<'a, T, E, R> Drop for CoreApplication<'a, T, E, R> {
 /// using a custom set of configuration. This is the normal way an
 /// [`Application`](struct.Application.html)
 /// object is created.
-pub struct ApplicationBuilder<S, E, R> {
+pub struct ApplicationBuilder<S, T, E, R> {
     // config: Config,
     initial_state: S,
     /// Used by bundles to access the world directly
     pub world: World,
     ignore_window_close: bool,
-    phantom: PhantomData<(E, R)>,
+    phantom: PhantomData<(T, E, R)>,
 }
 
-impl<S, E, X> ApplicationBuilder<S, E, X> {
+impl<S, T, E, X> ApplicationBuilder<S, T, E, X>
+where
+    T: 'static,
+{
     /// Creates a new [ApplicationBuilder](struct.ApplicationBuilder.html) instance
     /// that wraps the initial_state. This is the more verbose way of initializing
     /// your application if you require specific configuration details to be changed
@@ -465,10 +508,12 @@ impl<S, E, X> ApplicationBuilder<S, E, X> {
         world.add_resource(pool);
         world.add_resource(EventChannel::<Event>::with_capacity(2000));
         world.add_resource(EventChannel::<UiEvent>::with_capacity(40));
+        world.add_resource(EventChannel::<TransEvent<T, StateEvent>>::with_capacity(2));
         world.add_resource(Errors::default());
         world.add_resource(FrameLimiter::default());
         world.add_resource(Stopwatch::default());
         world.add_resource(Time::default());
+        world.add_resource(CallbackQueue::default());
 
         world.register::<Named>();
 
@@ -732,7 +777,7 @@ impl<S, E, X> ApplicationBuilder<S, E, X> {
     ///
     /// See the [example show for `ApplicationBuilder::new()`](struct.ApplicationBuilder.html#examples)
     /// for an example on how this method is used.
-    pub fn build<'a, T, I>(mut self, init: I) -> Result<CoreApplication<'a, T, E, X>>
+    pub fn build<'a, I>(mut self, init: I) -> Result<CoreApplication<'a, T, E, X>>
     where
         S: State<T, E> + 'a,
         I: DataInit<T>,
@@ -752,7 +797,11 @@ impl<S, E, X> ApplicationBuilder<S, E, X> {
         let data = init.build(&mut self.world);
         let event_reader_id = self
             .world
-            .exec(|mut ev: Write<EventChannel<Event>>| ev.register_reader());
+            .exec(|mut ev: Write<'_, EventChannel<Event>>| ev.register_reader());
+
+        let trans_reader_id = self
+            .world
+            .exec(|mut ev: Write<'_, EventChannel<TransEvent<T, E>>>| ev.register_reader());
 
         Ok(CoreApplication {
             world: self.world,
@@ -762,6 +811,7 @@ impl<S, E, X> ApplicationBuilder<S, E, X> {
             ignore_window_close: self.ignore_window_close,
             data,
             event_reader_id,
+            trans_reader_id,
         })
     }
 }

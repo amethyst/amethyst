@@ -1,4 +1,4 @@
-use event::InputEvent;
+use crate::event::InputEvent;
 
 /// Controller axes matching SDL controller model
 #[derive(Eq, PartialEq, Debug, Copy, Clone, Serialize, Deserialize)]

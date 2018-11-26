@@ -1,11 +1,11 @@
 use amethyst_core::{
     specs::prelude::{
-        BitSet, InsertedFlag, ReadExpect, ReadStorage, ReaderId, RemovedFlag, Resources, System,
-        WriteStorage,
+        BitSet, ComponentEvent, ReadExpect, ReadStorage, ReaderId, Resources, System, WriteStorage,
     },
     transform::components::{HierarchyEvent, Parent, ParentHierarchy},
 };
-use HiddenPropagate;
+
+use crate::HiddenPropagate;
 
 // Based on the [UiTransformSystem](struct.UiTransformSystem.html).
 /// This system adds a [HiddenPropagate](struct.HiddenPropagate.html)-component to all children.
@@ -15,8 +15,7 @@ use HiddenPropagate;
 pub struct HideHierarchySystem {
     marked_as_modified: BitSet,
 
-    inserted_hidden_id: Option<ReaderId<InsertedFlag>>,
-    removed_hidden_id: Option<ReaderId<RemovedFlag>>,
+    hidden_events_id: Option<ReaderId<ComponentEvent>>,
 
     parent_events_id: Option<ReaderId<HierarchyEvent>>,
 }
@@ -33,26 +32,34 @@ impl<'a> System<'a> for HideHierarchySystem {
 
         self.marked_as_modified.clear();
 
-        hidden.populate_inserted(
-            &mut self.inserted_hidden_id.as_mut().unwrap(),
-            &mut self.marked_as_modified,
+        // Borrow multiple parts of self as mutable
+        let self_hidden_events_id = &mut self.hidden_events_id.as_mut().expect(
+            "`HideHierarchySystem::setup` was not called before `HideHierarchySystem::run`",
         );
-        hidden.populate_removed(
-            &mut self.removed_hidden_id.as_mut().unwrap(),
-            &mut self.marked_as_modified,
-        );
+        let self_marked_as_modified = &mut self.marked_as_modified;
+
+        hidden
+            .channel()
+            .read(self_hidden_events_id)
+            .for_each(|event| match event {
+                ComponentEvent::Inserted(id) | ComponentEvent::Removed(id) => {
+                    self_marked_as_modified.add(*id);
+                }
+                ComponentEvent::Modified(_id) => {}
+            });
 
         for event in hierarchy
             .changed()
-            .read(&mut self.parent_events_id.as_mut().unwrap())
-        {
+            .read(&mut self.parent_events_id.as_mut().expect(
+                "`HideHierarchySystem::setup` was not called before `HideHierarchySystem::run`",
+            )) {
             match *event {
                 HierarchyEvent::Removed(entity) => {
-                    self.marked_as_modified.add(entity.id());
+                    self_marked_as_modified.add(entity.id());
                 }
                 HierarchyEvent::Modified(entity) => {
                     // HierarchyEvent::Modified includes insertion of new components to the storage.
-                    self.marked_as_modified.add(entity.id());
+                    self_marked_as_modified.add(entity.id());
                 }
             }
         }
@@ -60,18 +67,15 @@ impl<'a> System<'a> for HideHierarchySystem {
         // Compute hide status with parents.
         for entity in hierarchy.all() {
             {
-                let self_dirty = self.marked_as_modified.contains(entity.id());
+                let self_dirty = self_marked_as_modified.contains(entity.id());
 
-                let parent_entity = parents.get(*entity).unwrap().entity;
-                let parent_dirty = self.marked_as_modified.contains(parent_entity.id());
+                let parent_entity = parents.get(*entity).expect("Unreachable: All entities in `ParentHierarchy` should also be in `Parents`").entity;
+                let parent_dirty = self_marked_as_modified.contains(parent_entity.id());
                 if parent_dirty {
                     if hidden.contains(parent_entity) {
                         for child in hierarchy.all_children_iter(parent_entity) {
                             if let Err(e) = hidden.insert(child, HiddenPropagate::default()) {
-                                error!(
-                                    "Failed to automatically add HiddenPropagate, error: {:?}",
-                                    e
-                                );
+                                error!("Failed to automatically add `HiddenPropagate`: {:?}", e);
                             };
                         }
                     } else {
@@ -85,10 +89,7 @@ impl<'a> System<'a> for HideHierarchySystem {
                     if hidden.contains(*entity) {
                         for child in hierarchy.all_children_iter(*entity) {
                             if let Err(e) = hidden.insert(child, HiddenPropagate::default()) {
-                                error!(
-                                    "Failed to automatically add HiddenPropagate, error: {:?}",
-                                    e
-                                );
+                                error!("Failed to automatically add `HiddenPropagate`: {:?}", e);
                             };
                         }
                     } else {
@@ -101,14 +102,15 @@ impl<'a> System<'a> for HideHierarchySystem {
             // Populate the modifications we just did.
             // Happens inside the for-loop, so that the changes are picked up in the next iteration already,
             // instead of on the next `system.run()`
-            hidden.populate_inserted(
-                &mut self.inserted_hidden_id.as_mut().unwrap(),
-                &mut self.marked_as_modified,
-            );
-            hidden.populate_removed(
-                &mut self.removed_hidden_id.as_mut().unwrap(),
-                &mut self.marked_as_modified,
-            );
+            hidden
+                .channel()
+                .read(self_hidden_events_id)
+                .for_each(|event| match event {
+                    ComponentEvent::Inserted(id) | ComponentEvent::Removed(id) => {
+                        self_marked_as_modified.add(*id);
+                    }
+                    ComponentEvent::Modified(_id) => {}
+                });
         }
     }
 
@@ -118,7 +120,6 @@ impl<'a> System<'a> for HideHierarchySystem {
         // This fetch_mut panics if `ParentHierarchy` is not set up yet, hence the dependency on "parent_hierarchy_system"
         self.parent_events_id = Some(res.fetch_mut::<ParentHierarchy>().track());
         let mut hidden = WriteStorage::<HiddenPropagate>::fetch(res);
-        self.inserted_hidden_id = Some(hidden.track_inserted());
-        self.removed_hidden_id = Some(hidden.track_removed());
+        self.hidden_events_id = Some(hidden.register_reader());
     }
 }

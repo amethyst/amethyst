@@ -9,34 +9,47 @@ use glsl_layout::{vec3, vec4};
 pub struct Rgba(pub f32, pub f32, pub f32, pub f32);
 
 impl Rgba {
+    /// Solid black color value.
+    pub const BLACK: Rgba = Rgba(0.0, 0.0, 0.0, 1.0);
+    /// Solid blue color value.
+    pub const BLUE: Rgba = Rgba(0.0, 0.0, 1.0, 1.0);
+    /// Solid green color value.
+    pub const GREEN: Rgba = Rgba(0.0, 1.0, 0.0, 1.0);
+    /// Solid red color value.
+    pub const RED: Rgba = Rgba(1.0, 0.0, 0.0, 1.0);
+    /// Transparent color value.
+    pub const TRANSPARENT: Rgba = Rgba(0.0, 0.0, 0.0, 0.0);
+    /// Solid white color value.
+    pub const WHITE: Rgba = Rgba(1.0, 1.0, 1.0, 1.0);
+
     /// Returns a solid black color value.
     pub fn black() -> Rgba {
-        Rgba(0.0, 0.0, 0.0, 1.0)
+        Rgba::BLACK
     }
 
     /// Returns a solid blue color value.
     pub fn blue() -> Rgba {
-        Rgba(0.0, 0.0, 1.0, 1.0)
+        Rgba::BLUE
     }
 
     /// Returns a solid green color value.
     pub fn green() -> Rgba {
-        Rgba(0.0, 1.0, 0.0, 1.0)
+        Rgba::GREEN
     }
 
     /// Returns a solid red color value.
     pub fn red() -> Rgba {
-        Rgba(1.0, 0.0, 0.0, 1.0)
+        Rgba::RED
     }
 
     /// Returns a transparent color value.
     pub fn transparent() -> Rgba {
-        Rgba(0.0, 0.0, 0.0, 0.0)
+        Rgba::TRANSPARENT
     }
 
     /// Returns a solid white color value.
     pub fn white() -> Rgba {
-        Rgba(1.0, 1.0, 1.0, 1.0)
+        Rgba::WHITE
     }
 }
 

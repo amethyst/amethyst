@@ -1,13 +1,13 @@
 //! Engine error types.
 
-use config::ConfigError;
-use core;
-use renderer;
-use state::StateError;
-use std::error::Error as StdError;
-use std::fmt::Result as FmtResult;
-use std::fmt::{Display, Formatter};
-use std::result::Result as StdResult;
+use std::{
+    error::Error as StdError,
+    fmt::Result as FmtResult,
+    fmt::{Display, Formatter},
+    result::Result as StdResult,
+};
+
+use crate::{config::ConfigError, core, renderer, state::StateError};
 
 /// Engine result type.
 pub type Result<T> = StdResult<T, Error>;
@@ -37,7 +37,7 @@ impl StdError for Error {
         }
     }
 
-    fn cause(&self) -> Option<&StdError> {
+    fn cause(&self) -> Option<&dyn StdError> {
         match *self {
             Error::Config(ref e) => Some(e),
             _ => None,
@@ -46,7 +46,7 @@ impl StdError for Error {
 }
 
 impl Display for Error {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         match *self {
             Error::Application => write!(fmt, "Application initialization failed!"),
             Error::Config(ref e) => write!(fmt, "Configuration loading failed: {}", e),

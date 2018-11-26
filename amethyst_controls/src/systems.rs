@@ -1,17 +1,21 @@
-use amethyst_core::cgmath::{Deg, Vector3};
-use amethyst_core::shrev::{EventChannel, ReaderId};
-use amethyst_core::specs::prelude::{
-    Join, Read, ReadStorage, Resources, System, Write, WriteStorage,
+use std::{hash::Hash, marker::PhantomData};
+
+use winit::{DeviceEvent, Event, WindowEvent};
+
+use amethyst_core::{
+    nalgebra::{Unit, Vector3},
+    shrev::{EventChannel, ReaderId},
+    specs::prelude::{Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
+    timing::Time,
+    transform::Transform,
 };
-use amethyst_core::timing::Time;
-use amethyst_core::transform::Transform;
 use amethyst_input::{get_input_axis_simple, InputHandler};
 use amethyst_renderer::WindowMessages;
-use components::{ArcBallControlTag, FlyControlTag};
-use resources::{HideCursor, WindowFocus};
-use std::hash::Hash;
-use std::marker::PhantomData;
-use winit::{DeviceEvent, Event, WindowEvent};
+
+use crate::{
+    components::{ArcBallControlTag, FlyControlTag},
+    resources::{HideCursor, WindowFocus},
+};
 
 /// The system that manages the fly movement.
 /// Generic parameters are the parameters for the InputHandler.
@@ -66,10 +70,10 @@ where
         let y = get_input_axis_simple(&self.up_input_axis, &input);
         let z = get_input_axis_simple(&self.forward_input_axis, &input);
 
-        let dir = Vector3::new(x, y, z);
-
-        for (transform, _) in (&mut transform, &tag).join() {
-            transform.move_along_local(dir, time.delta_seconds() * self.speed);
+        if let Some(dir) = Unit::try_new(Vector3::new(x, y, z), 1.0e-6) {
+            for (transform, _) in (&mut transform, &tag).join() {
+                transform.move_along_local(dir, time.delta_seconds() * self.speed);
+            }
         }
     }
 }
@@ -91,14 +95,14 @@ impl<'a> System<'a> for ArcBallRotationSystem {
     fn run(&mut self, (mut transforms, tags): Self::SystemData) {
         let mut position = None;
         for (transform, arc_ball_camera_tag) in (&transforms, &tags).join() {
-            let pos_vec = transform.rotation * -Vector3::unit_z() * arc_ball_camera_tag.distance;
+            let pos_vec = transform.rotation() * -Vector3::z() * arc_ball_camera_tag.distance;
             if let Some(target_transform) = transforms.get(arc_ball_camera_tag.target) {
-                position = Some(target_transform.translation - pos_vec);
+                position = Some(target_transform.translation() - pos_vec);
             }
         }
         if let Some(new_pos) = position {
             for (transform, _) in (&mut transforms, &tags).join() {
-                transform.translation = new_pos;
+                *transform.translation_mut() = new_pos;
             }
         }
     }
@@ -146,13 +150,16 @@ where
 
     fn run(&mut self, (events, mut transform, tag, focus, hide): Self::SystemData) {
         let focused = focus.is_focused;
-        for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
+        for event in
+            events.read(&mut self.event_reader.as_mut().expect(
+                "`FreeRotationSystem::setup` was not called before `FreeRotationSystem::run`",
+            )) {
             if focused && hide.hide {
                 if let Event::DeviceEvent { ref event, .. } = *event {
                     if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
                         for (transform, _) in (&mut transform, &tag).join() {
-                            transform.pitch_local(Deg((-1.0) * y as f32 * self.sensitivity_y));
-                            transform.yaw_global(Deg((-1.0) * x as f32 * self.sensitivity_x));
+                            transform.pitch_local((-y as f32 * self.sensitivity_y).to_radians());
+                            transform.yaw_global((-x as f32 * self.sensitivity_x).to_radians());
                         }
                     }
                 }
@@ -184,7 +191,9 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
     type SystemData = (Read<'a, EventChannel<Event>>, Write<'a, WindowFocus>);
 
     fn run(&mut self, (events, mut focus): Self::SystemData) {
-        for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
+        for event in events.read(&mut self.event_reader.as_mut().expect(
+            "`MouseFocusUpdateSystem::setup` was not called before `MouseFocusUpdateSystem::run`",
+        )) {
             if let Event::WindowEvent { ref event, .. } = *event {
                 if let WindowEvent::Focused(focused) = *event {
                     focus.is_focused = focused;

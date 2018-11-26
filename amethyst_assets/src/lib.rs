@@ -7,8 +7,7 @@
 //! * asynchronous & parallel using rayon
 //! * allow different sources
 
-#![warn(missing_docs)]
-#![cfg_attr(feature = "cargo-clippy", allow(type_complexity))] // complex project
+#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 extern crate amethyst_core;
 extern crate crossbeam;
@@ -35,23 +34,27 @@ extern crate shred_derive;
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
-pub use asset::{Asset, Format, FormatValue, SimpleFormat};
-pub use cache::Cache;
-pub use error::{Error, ErrorKind, Result, ResultExt};
+pub use crate::{
+    asset::{Asset, Format, FormatValue, SimpleFormat},
+    cache::Cache,
+    error::{Error, ErrorKind, Result, ResultExt},
+    formats::RonFormat,
+    helper::AssetLoaderSystemData,
+    loader::Loader,
+    prefab::{AssetPrefab, Prefab, PrefabData, PrefabError, PrefabLoader, PrefabLoaderSystem},
+    progress::{Completion, Progress, ProgressCounter, Tracker},
+    reload::{HotReloadBundle, HotReloadStrategy, HotReloadSystem, Reload, SingleFile},
+    source::{Directory, Source},
+    storage::{AssetStorage, Handle, ProcessingState, Processor, WeakHandle},
+};
 #[cfg(feature = "json")]
 pub use formats::JsonFormat;
-pub use formats::RonFormat;
-pub use loader::Loader;
-pub use prefab::{AssetPrefab, Prefab, PrefabData, PrefabError, PrefabLoader, PrefabLoaderSystem};
-pub use progress::{Completion, Progress, ProgressCounter, Tracker};
-pub use reload::{HotReloadBundle, HotReloadStrategy, HotReloadSystem, Reload, SingleFile};
-pub use source::{Directory, Source};
-pub use storage::{AssetStorage, Handle, ProcessingState, Processor, WeakHandle};
 
 mod asset;
 mod cache;
 mod error;
 mod formats;
+mod helper;
 mod loader;
 mod prefab;
 mod progress;

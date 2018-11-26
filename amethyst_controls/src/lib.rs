@@ -1,7 +1,6 @@
 //! Amethyst control crate.
 
-#![warn(missing_docs)]
-#![cfg_attr(feature = "cargo-clippy", allow(type_complexity))] // complex project
+#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 extern crate amethyst_assets;
 extern crate amethyst_core;
@@ -11,18 +10,17 @@ extern crate amethyst_renderer;
 extern crate serde;
 extern crate winit;
 
-#[cfg(feature = "profiler")]
-extern crate thread_profiler;
-
 mod bundles;
 mod components;
 mod resources;
 mod systems;
 
-pub use self::bundles::{ArcBallControlBundle, FlyControlBundle};
-pub use self::components::{ArcBallControlTag, ControlTagPrefab, FlyControlTag};
-pub use self::resources::{HideCursor, WindowFocus};
-pub use self::systems::{
-    ArcBallRotationSystem, CursorHideSystem, FlyMovementSystem, FreeRotationSystem,
-    MouseFocusUpdateSystem,
+pub use self::{
+    bundles::{ArcBallControlBundle, FlyControlBundle},
+    components::{ArcBallControlTag, ControlTagPrefab, FlyControlTag},
+    resources::{HideCursor, WindowFocus},
+    systems::{
+        ArcBallRotationSystem, CursorHideSystem, FlyMovementSystem, FreeRotationSystem,
+        MouseFocusUpdateSystem,
+    },
 };

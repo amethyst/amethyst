@@ -1,16 +1,19 @@
-use amethyst_assets::AssetStorage;
-use amethyst_core::specs::prelude::{Component, Join, Read, System, WriteStorage};
-use amethyst_core::{
-    duration_to_nanos, duration_to_secs, nanos_to_duration, secs_to_duration, Time,
-};
+use std::{marker, time::Duration};
+
 use itertools::Itertools;
 use minterpolate::InterpolationPrimitive;
-use resources::{
+
+use amethyst_assets::AssetStorage;
+use amethyst_core::{
+    duration_to_nanos, duration_to_secs, nanos_to_duration, secs_to_duration,
+    specs::prelude::{Component, Join, Read, System, WriteStorage},
+    Time,
+};
+
+use crate::resources::{
     AnimationSampling, ApplyData, BlendMethod, ControlState, EndControl, Sampler, SamplerControl,
     SamplerControlSet,
 };
-use std::marker;
-use std::time::Duration;
 
 /// System for interpolating active samplers.
 ///
@@ -78,7 +81,7 @@ where
                                 .inner
                                 .iter()
                                 .filter(|p| p.1 == *channel)
-                                .map(|p| p.2)
+                                .map(|p| p.2.clone())
                                 .last()
                             {
                                 comp.apply_sample(channel, &p, &apply_data);
@@ -113,7 +116,7 @@ fn process_sampler<T>(
 ) where
     T: AnimationSampling,
 {
-    use resources::ControlState::*;
+    use crate::resources::ControlState::*;
 
     let (new_state, new_end) = update_duration_and_check(&control, sampler, time);
 
@@ -138,7 +141,11 @@ fn process_sampler<T>(
         }
         Done => {
             if let EndControl::Normal = control.end {
-                output.push((control.blend_weight, control.channel.clone(), control.after));
+                output.push((
+                    control.blend_weight,
+                    control.channel.clone(),
+                    control.after.clone(),
+                ));
             }
             if let EndControl::Stay = control.end {
                 let last_frame = sampler.input.last().cloned().unwrap_or(0.);
@@ -182,7 +189,7 @@ fn update_duration_and_check<T>(
 where
     T: AnimationSampling,
 {
-    use resources::ControlState::*;
+    use crate::resources::ControlState::*;
     // Update state with new duration
     // Check duration for end of sampling
     match control.state {

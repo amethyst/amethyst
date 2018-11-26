@@ -1,8 +1,12 @@
 //! Built-in vertex formats.
 
-use gfx::format::{ChannelType, Format, SurfaceType};
-use gfx::pso::buffer::Element;
-use gfx::traits::Pod;
+use gfx::{
+    format::{ChannelType, Format, SurfaceType},
+    pso::buffer::Element,
+    traits::Pod,
+};
+
+use amethyst_core::nalgebra::{Vector2, Vector3};
 
 /// Format for vertex attribute
 pub type AttributeFormat = Element<Format>;
@@ -150,7 +154,7 @@ where
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PosColor {
     /// Position of the vertex in 3D space.
-    pub position: [f32; 3],
+    pub position: Vector3<f32>,
     /// RGBA color value of the vertex.
     pub color: [f32; 4],
 }
@@ -183,11 +187,11 @@ impl With<Color> for PosColor {
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PosColorNorm {
     /// Position of the vertex in 3D space.
-    pub position: [f32; 3],
+    pub position: Vector3<f32>,
     /// RGBA color value of the vertex.
     pub color: [f32; 4],
     /// Normal vector of the vertex.
-    pub normal: [f32; 3],
+    pub normal: Vector3<f32>,
 }
 
 unsafe impl Pod for PosColorNorm {}
@@ -226,9 +230,9 @@ impl With<Normal> for PosColorNorm {
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PosTex {
     /// Position of the vertex in 3D space.
-    pub position: [f32; 3],
+    pub position: Vector3<f32>,
     /// UV texture coordinates used by the vertex.
-    pub tex_coord: [f32; 2],
+    pub tex_coord: Vector2<f32>,
 }
 
 unsafe impl Pod for PosTex {}
@@ -259,11 +263,11 @@ impl With<TexCoord> for PosTex {
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PosNormTex {
     /// Position of the vertex in 3D space.
-    pub position: [f32; 3],
+    pub position: Vector3<f32>,
     /// Normal vector of the vertex.
-    pub normal: [f32; 3],
+    pub normal: Vector3<f32>,
     /// UV texture coordinates used by the vertex.
-    pub tex_coord: [f32; 2],
+    pub tex_coord: Vector2<f32>,
 }
 
 unsafe impl Pod for PosNormTex {}
@@ -302,13 +306,13 @@ impl With<TexCoord> for PosNormTex {
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PosNormTangTex {
     /// Position of the vertex in 3D space.
-    pub position: [f32; 3],
+    pub position: Vector3<f32>,
     /// Normal vector of the vertex.
-    pub normal: [f32; 3],
+    pub normal: Vector3<f32>,
     /// Tangent vector of the vertex.
-    pub tangent: [f32; 3],
+    pub tangent: Vector3<f32>,
     /// UV texture coordinates used by the vertex.
-    pub tex_coord: [f32; 2],
+    pub tex_coord: Vector2<f32>,
 }
 
 unsafe impl Pod for PosNormTangTex {}

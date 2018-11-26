@@ -6,7 +6,7 @@ use amethyst::{
     controls::{FlyControlBundle, FlyControlTag},
     core::Time,
     core::{
-        cgmath::{Deg, Point3, Vector3},
+        nalgebra::{Point3, Vector3},
         transform::{Transform, TransformBundle},
     },
     ecs::{Read, System, Write},
@@ -133,8 +133,10 @@ impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
         data.world
             .create_entity()
             .with(FlyControlTag)
-            .with(Camera::from(Projection::perspective(1.33333, Deg(90.0))))
-            .with(local_transform)
+            .with(Camera::from(Projection::perspective(
+                1.33333,
+                std::f32::consts::FRAC_PI_2,
+            ))).with(local_transform)
             .build();
     }
 }

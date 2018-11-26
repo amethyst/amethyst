@@ -1,6 +1,6 @@
 use amethyst::{ecs::prelude::*, prelude::*};
 
-use GameUpdate;
+use crate::GameUpdate;
 
 /// State with a custom dispatcher.
 ///

@@ -1,12 +1,14 @@
 use amethyst_assets::AssetStorage;
-use amethyst_audio::output::Output;
-use amethyst_audio::Source;
-use amethyst_core::shrev::{EventChannel, ReaderId};
-use amethyst_core::specs::{
-    Entity, Read, ReadExpect, ReadStorage, Resources, System, SystemData, Write, WriteStorage,
+use amethyst_audio::{output::Output, Source};
+use amethyst_core::{
+    shrev::{EventChannel, ReaderId},
+    specs::{
+        Entity, Read, ReadExpect, ReadStorage, Resources, System, SystemData, Write, WriteStorage,
+    },
+    ParentHierarchy,
 };
-use amethyst_core::ParentHierarchy;
-use {OnUiActionImage, OnUiActionSound, UiButton, UiEvent, UiEventType::*, UiImage, UiText};
+
+use crate::{OnUiActionImage, OnUiActionSound, UiButton, UiEvent, UiEventType::*, UiImage, UiText};
 
 /// This system manages button mouse events.  It changes images and text colors, as well as playing audio
 /// when necessary.
@@ -57,7 +59,10 @@ impl<'s> System<'s> for UiButtonSystem {
             hierarchy,
         ): Self::SystemData,
     ) {
-        let event_reader = self.event_reader.as_mut().unwrap();
+        let event_reader = self
+            .event_reader
+            .as_mut()
+            .expect("`UiButtonSystem::setup` was not called before `UiButtonSystem::run`");
 
         for event in events.read(event_reader) {
             let button = button_storage.get(event.target);

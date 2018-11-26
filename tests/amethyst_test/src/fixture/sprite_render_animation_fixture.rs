@@ -4,10 +4,10 @@ use amethyst::{
     },
     assets::{AssetStorage, Handle, Loader},
     ecs::prelude::*,
-    renderer::SpriteRender,
+    renderer::{Sprite, SpriteRender, SpriteSheet, Texture},
 };
 
-use EffectReturn;
+use crate::EffectReturn;
 
 /// Fixture to test sprite render animation loading.
 #[derive(Debug)]
@@ -22,9 +22,20 @@ impl SpriteRenderAnimationFixture {
     pub fn effect(world: &mut World) {
         // Load the animation.
         let animation_handle = {
+            // This invocation sequence of read_resource / write_resource is to satisfy the borrow
+            // checker, since we don't have NLL yet.
+            let tex_handle = world.read_resource::<Loader>().load_from_data(
+                [0.5; 4].into(),
+                (),
+                &world.read_resource::<AssetStorage<Texture>>(),
+            );
+
+            let loader = world.read_resource::<Loader>();
+            let sprite_sheet_handle =
+                loader.load_from_data(Self::sprite_sheet(tex_handle), (), &world.read_resource());
             let sprite_sheet_sampler = Sampler {
                 input: vec![0.0],
-                output: vec![SpriteRenderPrimitive::SpriteSheet(0)],
+                output: vec![SpriteRenderPrimitive::SpriteSheet(sprite_sheet_handle)],
                 function: InterpolationFunction::Step,
             };
             let sprite_index_sampler = Sampler {
@@ -33,7 +44,6 @@ impl SpriteRenderAnimationFixture {
                 function: InterpolationFunction::Step,
             };
 
-            let loader = world.read_resource::<Loader>();
             let sprite_sheet_animation_handle =
                 loader.load_from_data(sprite_sheet_sampler, (), &world.read_resource());
             let sprite_index_animation_handle =
@@ -76,5 +86,17 @@ impl SpriteRenderAnimationFixture {
 
         let store = world.read_resource::<AssetStorage<Animation<SpriteRender>>>();
         assert!(store.get(animation_handle).is_some());
+    }
+
+    fn sprite_sheet(texture: Handle<Texture>) -> SpriteSheet {
+        SpriteSheet {
+            texture,
+            sprites: vec![Sprite {
+                width: 10.0,
+                height: 10.0,
+                offsets: [5.; 2],
+                tex_coords: [0.0, 1.0, 0.0, 1.0].into(),
+            }],
+        }
     }
 }

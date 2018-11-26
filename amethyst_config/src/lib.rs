@@ -3,23 +3,21 @@
 
 #![crate_name = "amethyst_config"]
 #![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
-#![warn(missing_docs)]
+#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 #[macro_use]
 extern crate log;
 extern crate ron;
 extern crate serde;
 
-#[cfg(feature = "profiler")]
-extern crate thread_profiler;
+use std::{
+    error::Error,
+    fmt, io,
+    path::{Path, PathBuf},
+};
 
-use ron::de::Error as DeError;
-use ron::ser::Error as SerError;
+use ron::{de::Error as DeError, ser::Error as SerError};
 use serde::{Deserialize, Serialize};
-use std::error::Error;
-use std::fmt;
-use std::io;
-use std::path::{Path, PathBuf};
 
 /// Error related to anything that manages/creates configurations as well as
 /// "workspace"-related things.
@@ -36,7 +34,7 @@ pub enum ConfigError {
 }
 
 impl fmt::Display for ConfigError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             ConfigError::File(ref err) => write!(f, "{}", err),
             ConfigError::Parser(ref msg) => write!(f, "{}", msg),
@@ -86,7 +84,7 @@ impl Error for ConfigError {
         }
     }
 
-    fn cause(&self) -> Option<&Error> {
+    fn cause(&self) -> Option<&dyn Error> {
         match *self {
             ConfigError::File(ref err) => Some(err),
             _ => None,

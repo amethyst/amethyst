@@ -1,16 +1,18 @@
 //! ECS input bundle
 
+use serde::{de::DeserializeOwned, Serialize};
+use std::{hash::Hash, path::Path, result::Result as StdResult};
+
 use amethyst_config::{Config, ConfigError};
-use amethyst_core::bundle::{Result, SystemBundle};
-use amethyst_core::specs::prelude::DispatcherBuilder;
+use amethyst_core::{
+    bundle::{Result, SystemBundle},
+    specs::prelude::DispatcherBuilder,
+};
+
+use crate::{Bindings, InputSystem};
+
 #[cfg(feature = "sdl_controller")]
-use sdl_events_system::ControllerMappings;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use std::hash::Hash;
-use std::path::Path;
-use std::result::Result as StdResult;
-use {Bindings, InputSystem};
+use crate::sdl_events_system::ControllerMappings;
 
 /// Bundle for adding the `InputHandler`.
 ///

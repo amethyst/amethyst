@@ -1,6 +1,9 @@
-use amethyst_core::specs::{Entity, WriteStorage};
-use amethyst_core::{GlobalTransform, Named, Transform};
-use {PrefabData, PrefabError, ProgressCounter};
+use amethyst_core::{
+    specs::{Entity, WriteStorage},
+    GlobalTransform, Named, Transform,
+};
+
+use crate::{PrefabData, PrefabError, ProgressCounter};
 
 impl<'a, T> PrefabData<'a> for Option<T>
 where
@@ -83,6 +86,7 @@ impl<'a> PrefabData<'a> for Named {
 
 macro_rules! impl_data {
     ( $($ty:ident:$i:tt),* ) => {
+        #[allow(unused)]
         impl<'a, $($ty),*> PrefabData<'a> for ( $( $ty , )* )
             where $( $ty : PrefabData<'a> ),*
         {
@@ -123,6 +127,7 @@ macro_rules! impl_data {
     };
 }
 
+impl_data!();
 impl_data!(A:0);
 impl_data!(A:0, B:1);
 impl_data!(A:0, B:1, C:2);

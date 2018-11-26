@@ -1,6 +1,8 @@
-use amethyst_core::specs::storage::UnprotectedStorage;
 use std::sync::Arc;
-use {ErrorKind, Handle, Reload, Result, ResultExt, SingleFile, Source};
+
+use amethyst_core::specs::storage::UnprotectedStorage;
+
+use crate::{ErrorKind, Handle, Reload, Result, ResultExt, SingleFile, Source};
 
 /// One of the three core traits of this crate.
 ///
@@ -49,7 +51,7 @@ pub trait Format<A: Asset>: Send + 'static {
     fn import(
         &self,
         name: String,
-        source: Arc<Source>,
+        source: Arc<dyn Source>,
         options: Self::Options,
         create_reload: bool,
     ) -> Result<FormatValue<A>>;
@@ -60,7 +62,7 @@ pub struct FormatValue<A: Asset> {
     /// The format data.
     pub data: A::Data,
     /// An optional reload structure
-    pub reload: Option<Box<Reload<A>>>,
+    pub reload: Option<Box<dyn Reload<A>>>,
 }
 
 impl<A: Asset> FormatValue<A> {
@@ -98,7 +100,7 @@ where
     fn import(
         &self,
         name: String,
-        source: Arc<Source>,
+        source: Arc<dyn Source>,
         options: Self::Options,
         create_reload: bool,
     ) -> Result<FormatValue<A>> {
@@ -110,7 +112,7 @@ where
                 .chain_err(|| ErrorKind::Source)?;
             let data = T::import(&self, b, options.clone())?;
             let reload = SingleFile::new(self.clone(), m, options, name, source);
-            let reload = Some(Box::new(reload) as Box<Reload<A>>);
+            let reload = Some(Box::new(reload) as Box<dyn Reload<A>>);
             Ok(FormatValue { data, reload })
         } else {
             let b = source.load(&name).chain_err(|| ErrorKind::Source)?;

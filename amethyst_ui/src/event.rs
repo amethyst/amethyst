@@ -1,17 +1,20 @@
-use amethyst_core::shrev::EventChannel;
-use amethyst_core::specs::prelude::{
-    Component, Entities, Entity, Join, Read, ReadExpect, ReadStorage, System, Write,
+use std::{hash::Hash, marker::PhantomData};
+
+use amethyst_core::{
+    shrev::EventChannel,
+    specs::prelude::{
+        Component, Entities, Entity, Join, Read, ReadExpect, ReadStorage, System, Write,
+    },
+    specs::storage::NullStorage,
 };
-use amethyst_core::specs::storage::NullStorage;
 use amethyst_input::InputHandler;
 use amethyst_renderer::{MouseButton, ScreenDimensions};
-use std::hash::Hash;
-use std::marker::PhantomData;
-use transform::UiTransform;
+
+use crate::transform::UiTransform;
 
 /// The type of ui event.
 /// Click happens if you start and stop clicking on the same ui element.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UiEventType {
     /// When an element is clicked normally.
     Click,

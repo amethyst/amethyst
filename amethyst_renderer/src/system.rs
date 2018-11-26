@@ -1,25 +1,29 @@
 //! Rendering system.
 //!
 
-use amethyst_assets::{AssetStorage, HotReloadStrategy};
-use amethyst_core::shrev::EventChannel;
-use amethyst_core::specs::prelude::{
-    Read, ReadExpect, Resources, RunNow, SystemData, Write, WriteExpect,
-};
-use amethyst_core::Time;
-use config::DisplayConfig;
-use error::Result;
-use formats::{create_mesh_asset, create_texture_asset};
-use mesh::Mesh;
-use mtl::{Material, MaterialDefaults};
-use pipe::{PipelineBuild, PipelineData, PolyPipeline};
-use rayon::ThreadPool;
-use renderer::Renderer;
-use resources::{ScreenDimensions, WindowMessages};
-use std::mem;
-use std::sync::Arc;
-use tex::Texture;
+use std::{mem, sync::Arc};
+
 use winit::{DeviceEvent, Event, WindowEvent};
+
+use amethyst_assets::{AssetStorage, HotReloadStrategy};
+use amethyst_core::{
+    shrev::EventChannel,
+    specs::prelude::{Read, ReadExpect, Resources, RunNow, SystemData, Write, WriteExpect},
+    Time,
+};
+
+use crate::{
+    config::DisplayConfig,
+    error::Result,
+    formats::{create_mesh_asset, create_texture_asset},
+    mesh::Mesh,
+    mtl::{Material, MaterialDefaults},
+    pipe::{PipelineBuild, PipelineData, PolyPipeline},
+    rayon::ThreadPool,
+    renderer::Renderer,
+    resources::{ScreenDimensions, WindowMessages},
+    tex::Texture,
+};
 
 /// Rendering system.
 #[derive(Derivative)]
@@ -70,7 +74,11 @@ where
 
     /// Create a new render system
     pub fn new(pipe: P, renderer: Renderer) -> Self {
-        let cached_size = renderer.window().get_inner_size().unwrap().into();
+        let cached_size = renderer
+            .window()
+            .get_inner_size()
+            .expect("Window no longer exists")
+            .into();
         Self {
             pipe,
             renderer,
@@ -81,7 +89,7 @@ where
 
     fn asset_loading(
         &mut self,
-        (time, pool, strategy, mut mesh_storage, mut texture_storage): AssetLoadingData,
+        (time, pool, strategy, mut mesh_storage, mut texture_storage): AssetLoadingData<'_>,
     ) {
         use std::ops::Deref;
 
@@ -102,7 +110,7 @@ where
         );
     }
 
-    fn window_management(&mut self, (mut window_messages, mut screen_dimensions): WindowData) {
+    fn window_management(&mut self, (mut window_messages, mut screen_dimensions): WindowData<'_>) {
         // Process window commands
         for mut command in window_messages.queue.drain() {
             command(self.renderer.window());
@@ -134,7 +142,7 @@ where
         screen_dimensions.update_hidpi_factor(self.renderer.window().get_hidpi_factor());
     }
 
-    fn render(&mut self, (mut event_handler, data): RenderData<P>) {
+    fn render(&mut self, (mut event_handler, data): RenderData<'_, P>) {
         self.renderer.draw(&mut self.pipe, data);
         let events = &mut self.event_vec;
         self.renderer.events_mut().poll_events(|new_event| {
@@ -190,8 +198,9 @@ where
 }
 
 fn create_default_mat(res: &mut Resources) -> Material {
+    use crate::mtl::TextureOffset;
+
     use amethyst_assets::Loader;
-    use mtl::TextureOffset;
 
     let loader = res.fetch::<Loader>();
 

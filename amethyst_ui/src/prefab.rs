@@ -1,31 +1,56 @@
-use super::*;
+use serde::de::DeserializeOwned;
+use std::marker::PhantomData;
+
 use amethyst_assets::{
     AssetPrefab, AssetStorage, Format, Handle, Loader, Prefab, PrefabData, PrefabError,
     PrefabLoaderSystem, Progress, ProgressCounter, Result as AssetResult, ResultExt, SimpleFormat,
 };
 use amethyst_audio::{AudioFormat, Source as Audio};
-use amethyst_core::specs::prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage};
+use amethyst_core::specs::{
+    error::BoxedErr,
+    prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage},
+};
 use amethyst_renderer::{HiddenPropagate, Texture, TextureFormat, TextureMetadata, TexturePrefab};
-use serde::de::DeserializeOwned;
+
+use super::*;
 
 /// Loadable `UiTransform` data.
 /// By default z is equal to one.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(default)]
 pub struct UiTransformBuilder {
-    id: String,
-    x: f32,
-    y: f32,
-    z: f32,
-    width: f32,
-    height: f32,
-    tab_order: i32,
-    opaque: bool,
-    percent: bool,
-    stretch: Option<Stretch>,
-    anchor: Anchor,
-    mouse_reactive: bool,
-    hidden: bool,
+    /// An identifier. Serves no purpose other than to help you distinguish between UI elements.
+    pub id: String,
+    /// X coordinate
+    pub x: f32,
+    /// Y coordinate
+    pub y: f32,
+    /// Z coordinate, defaults to one.
+    pub z: f32,
+    /// The width of this UI element.
+    pub width: f32,
+    /// The height of this UI element.
+    pub height: f32,
+    /// The UI element tab order.  When the player presses tab the UI focus will shift to the
+    /// UI element with the next highest tab order, or if another element with the same tab_order
+    /// as this one exists they are ordered according to Entity creation order.  Shift-tab walks
+    /// this ordering backwards.
+    pub tab_order: i32,
+    /// Indicates if actions on the ui can go through this element.
+    /// If set to false, the element will behaves as if it was transparent and will let events go to
+    /// the next element (for example, the text on a button).
+    pub opaque: bool,
+    /// Renders this UI element by evaluating transform as a percentage of the parent size,
+    /// rather than rendering it with pixel units.
+    pub percent: bool,
+    /// If a child ui element needs to fill its parent this can be used to stretch it to the appropriate size.
+    pub stretch: Option<Stretch>,
+    /// Indicates where the element sits, relative to the parent (or to the screen, if there is no parent)
+    pub anchor: Anchor,
+    /// Allow mouse events on this UI element.
+    pub mouse_reactive: bool,
+    /// Hides an entity by adding a [`HiddenPropagate`](../amethyst_renderer/struct.HiddenPropagate.html) component
+    pub hidden: bool,
 }
 
 impl Default for UiTransformBuilder {
@@ -161,7 +186,7 @@ impl<'a> PrefabData<'a> for UiTransformBuilder {
 /// ### Type parameters:
 ///
 /// - `F`: `Format` used for loading `FontAsset`
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct UiTextBuilder<F = FontFormat>
 where
     F: Format<FontAsset, Options = ()>,
@@ -173,7 +198,7 @@ where
     /// Font color
     pub color: [f32; 4],
     /// Font
-    pub font: AssetPrefab<FontAsset, F>,
+    pub font: Option<AssetPrefab<FontAsset, F>>,
     /// Should the text be shown as dots instead of the proper characters?
     #[serde(default)]
     pub password: bool,
@@ -233,7 +258,11 @@ where
         _: &[Entity],
     ) -> Result<(), PrefabError> {
         let (ref mut texts, ref mut editables, ref mut fonts, ref mut focused) = system_data;
-        let font_handle = self.font.add_to_entity(entity, fonts, &[])?;
+        let font_handle = self
+            .font
+            .as_ref()
+            .ok_or_else(|| PrefabError::Custom(BoxedErr(Box::from("did not load sub assets"))))?
+            .add_to_entity(entity, fonts, &[])?;
         let mut ui_text = UiText::new(font_handle, self.text.clone(), self.color, self.font_size);
         ui_text.password = self.password;
 
@@ -269,7 +298,12 @@ where
         system_data: &mut Self::SystemData,
     ) -> Result<bool, PrefabError> {
         let (_, _, ref mut fonts, _) = system_data;
-        self.font.load_sub_assets(progress, fonts)
+
+        self.font
+            .get_or_insert_with(|| {
+                let (ref loader, _, ref storage) = fonts;
+                AssetPrefab::Handle(get_default_font(loader, storage))
+            }).load_sub_assets(progress, fonts)
     }
 }
 
@@ -330,7 +364,7 @@ where
 ///
 /// - `TF`: `Format` used for loading `Texture`s
 /// - `AF`: `Format` used for loading sounds
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct UiButtonBuilder<AF = AudioFormat, TF = TextureFormat, FF = FontFormat>
 where
     TF: Format<Texture, Options = TextureMetadata>,
@@ -342,7 +376,7 @@ where
     /// Font size
     pub font_size: f32,
     /// Font
-    pub font: AssetPrefab<FontAsset, FF>,
+    pub font: Option<AssetPrefab<FontAsset, FF>>,
     /// Default text color
     pub normal_text_color: [f32; 4],
     /// Default image
@@ -450,12 +484,13 @@ where
 /// - `A`: `Format` used for loading sounds
 /// - `I`: `Format` used for loading `Texture`s
 /// - `F`: `Format` used for loading `FontAsset`
-#[derive(Serialize, Deserialize)]
-pub enum UiWidget<A = AudioFormat, I = TextureFormat, F = FontFormat>
+#[derive(Serialize, Deserialize, Clone)]
+pub enum UiWidget<A = AudioFormat, I = TextureFormat, F = FontFormat, C = NoCustomUi>
 where
     A: Format<Audio, Options = ()>,
     I: Format<Texture, Options = TextureMetadata>,
     F: Format<FontAsset, Options = ()>,
+    C: ToNativeWidget<A, I, F>,
 {
     /// Container component
     Container {
@@ -465,7 +500,7 @@ where
         #[serde(default = "default_container_image")]
         background: Option<UiImageBuilder<I>>,
         /// Child widgets
-        children: Vec<UiWidget<A, I, F>>,
+        children: Vec<UiWidget<A, I, F, C>>,
     },
     /// Image component
     Image {
@@ -488,6 +523,106 @@ where
         /// Button
         button: UiButtonBuilder<A, I, F>,
     },
+    /// Custom UI widget
+    Custom(Box<C>),
+}
+
+impl<A, I, F, C> UiWidget<A, I, F, C>
+where
+    A: Format<Audio, Options = ()>,
+    I: Format<Texture, Options = TextureMetadata>,
+    F: Format<FontAsset, Options = ()>,
+    C: ToNativeWidget<A, I, F>,
+{
+    /// Convenience function to access widgets `UiTransformBuilder`
+    pub fn transform(&self) -> Option<&UiTransformBuilder> {
+        match self {
+            UiWidget::Container { ref transform, .. } => Some(transform),
+            UiWidget::Image { ref transform, .. } => Some(transform),
+            UiWidget::Text { ref transform, .. } => Some(transform),
+            UiWidget::Button { ref transform, .. } => Some(transform),
+            UiWidget::Custom(_) => None,
+        }
+    }
+
+    /// Convenience function to access widgets `UiTransformBuilder`
+    pub fn transform_mut(&mut self) -> Option<&mut UiTransformBuilder> {
+        match self {
+            UiWidget::Container {
+                ref mut transform, ..
+            } => Some(transform),
+            UiWidget::Image {
+                ref mut transform, ..
+            } => Some(transform),
+            UiWidget::Text {
+                ref mut transform, ..
+            } => Some(transform),
+            UiWidget::Button {
+                ref mut transform, ..
+            } => Some(transform),
+            UiWidget::Custom(_) => None,
+        }
+    }
+
+    /// Convenience function to access widgets `UiImageBuilder`
+    pub fn image(&self) -> Option<&UiImageBuilder<I>> {
+        match self {
+            UiWidget::Container { ref background, .. } => background.as_ref(),
+            UiWidget::Image { ref image, .. } => Some(image),
+            _ => None,
+        }
+    }
+
+    /// Convenience function to access widgets `UiImageBuilder`
+    pub fn image_mut(&mut self) -> Option<&mut UiImageBuilder<I>> {
+        match self {
+            UiWidget::Container {
+                ref mut background, ..
+            } => background.as_mut(),
+            UiWidget::Image { ref mut image, .. } => Some(image),
+            _ => None,
+        }
+    }
+}
+
+/// Create native `UiWidget` from custom UI
+pub trait ToNativeWidget<A = AudioFormat, I = TextureFormat, F = FontFormat>
+where
+    A: Format<Audio, Options = ()>,
+    I: Format<Texture, Options = TextureMetadata>,
+    F: Format<FontAsset, Options = ()>,
+    Self: Sized,
+{
+    /// Additional data used when loading UI prefab
+    type PrefabData: for<'a> PrefabData<'a> + Default + Send + Sync + 'static;
+    /// Create native `UiWidget` and custom prefab data from custom UI
+    ///
+    /// Returning `UiWidget::Custom` will cause recursion.
+    /// Please make sure that the recursion is finite.
+    fn to_native_widget(
+        self,
+        parent_data: Self::PrefabData,
+    ) -> (UiWidget<A, I, F, Self>, Self::PrefabData);
+}
+
+/// Type used when no custom ui is desired
+#[derive(Serialize, Deserialize)]
+pub enum NoCustomUi {}
+
+impl<A, I, F> ToNativeWidget<A, I, F> for NoCustomUi
+where
+    A: Format<Audio, Options = ()>,
+    I: Format<Texture, Options = TextureMetadata>,
+    F: Format<FontAsset, Options = ()>,
+{
+    type PrefabData = ();
+    fn to_native_widget(
+        self,
+        _: Self::PrefabData,
+    ) -> (UiWidget<A, I, F, NoCustomUi>, Self::PrefabData) {
+        // self can not exist
+        unreachable!()
+    }
 }
 
 fn default_container_image<I>() -> Option<UiImageBuilder<I>>
@@ -497,11 +632,17 @@ where
     None
 }
 
-type UiPrefabData<A = AudioFormat, I = TextureFormat, F = FontFormat> = (
+type UiPrefabData<
+    A = AudioFormat,
+    I = TextureFormat,
+    F = FontFormat,
+    D = <NoCustomUi as ToNativeWidget>::PrefabData,
+> = (
     Option<UiTransformBuilder>,
     Option<UiImageBuilder<I>>,
     Option<UiTextBuilder<F>>,
     Option<UiButtonBuilder<A, I, F>>,
+    D,
 );
 
 /// Ui prefab
@@ -511,66 +652,76 @@ type UiPrefabData<A = AudioFormat, I = TextureFormat, F = FontFormat> = (
 /// - `A`: `Format` used for loading sounds
 /// - `I`: `Format` used for loading `Texture`s
 /// - `F`: `Format` used for loading `FontAsset`
-pub type UiPrefab<A = AudioFormat, I = TextureFormat, F = FontFormat> =
-    Prefab<UiPrefabData<A, I, F>>;
+/// - `D`: `ToNativeWidget::PrefabData` data used by custom UI
+pub type UiPrefab<
+    A = AudioFormat,
+    I = TextureFormat,
+    F = FontFormat,
+    D = <NoCustomUi as ToNativeWidget>::PrefabData,
+> = Prefab<UiPrefabData<A, I, F, D>>;
 
 /// Ui format.
 ///
 /// Load `UiPrefab` from `ron` file.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct UiFormat;
+#[derive(Serialize, Deserialize, Derivative)]
+#[derivative(Clone(bound = ""), Debug(bound = ""), Default(bound = ""))]
+pub struct UiFormat<C>(PhantomData<C>);
 
-impl<A, I, F> SimpleFormat<UiPrefab<A, I, F>> for UiFormat
+impl<A, I, F, C> SimpleFormat<UiPrefab<A, I, F, C::PrefabData>> for UiFormat<C>
 where
     A: Format<Audio, Options = ()> + Sync + DeserializeOwned,
     I: Format<Texture, Options = TextureMetadata> + Sync + DeserializeOwned + Clone,
     F: Format<FontAsset, Options = ()> + Sync + DeserializeOwned + Clone,
+    C: ToNativeWidget<A, I, F> + for<'de> serde::Deserialize<'de>,
 {
     const NAME: &'static str = "Ui";
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> AssetResult<UiPrefab<A, I, F>> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> AssetResult<UiPrefab<A, I, F, C::PrefabData>> {
         use ron::de::Deserializer;
         use serde::Deserialize;
         let mut d =
             Deserializer::from_bytes(&bytes).chain_err(|| "Failed deserializing Ron file")?;
-        let root: UiWidget<A, I, F> =
+        let root: UiWidget<A, I, F, C> =
             UiWidget::deserialize(&mut d).chain_err(|| "Failed parsing Ron file")?;
         d.end().chain_err(|| "Failed parsing Ron file")?;
 
         let mut prefab = Prefab::new();
-        walk_ui_tree(root, 0, &mut prefab);
+        walk_ui_tree(root, 0, &mut prefab, Default::default());
 
         Ok(prefab)
     }
 }
 
-fn walk_ui_tree<A, I, F>(
-    widget: UiWidget<A, I, F>,
+fn walk_ui_tree<A, I, F, C>(
+    widget: UiWidget<A, I, F, C>,
     current_index: usize,
-    prefab: &mut Prefab<UiPrefabData<A, I, F>>,
+    prefab: &mut Prefab<UiPrefabData<A, I, F, C::PrefabData>>,
+    custom_data: C::PrefabData,
 ) where
     A: Format<Audio, Options = ()>,
     I: Format<Texture, Options = TextureMetadata> + Clone,
     F: Format<FontAsset, Options = ()> + Clone,
+    C: ToNativeWidget<A, I, F>,
 {
     match widget {
+        UiWidget::Custom(custom) => {
+            let (widget, custom_data) = custom.to_native_widget(custom_data);
+            walk_ui_tree(widget, current_index, prefab, custom_data);
+        }
+
         UiWidget::Image { transform, image } => {
-            prefab.entity(current_index).unwrap().set_data((
-                Some(transform),
-                Some(image),
-                None,
-                None,
-            ));
+            prefab
+                .entity(current_index)
+                .expect("Unreachable: `Prefab` entity should always be set when walking ui tree")
+                .set_data((Some(transform), Some(image), None, None, custom_data));
         }
 
         UiWidget::Text { transform, text } => {
-            prefab.entity(current_index).unwrap().set_data((
-                Some(transform),
-                None,
-                Some(text),
-                None,
-            ));
+            prefab
+                .entity(current_index)
+                .expect("Unreachable: `Prefab` entity should always be set when walking ui tree")
+                .set_data((Some(transform), None, Some(text), None, custom_data));
         }
 
         UiWidget::Container {
@@ -578,15 +729,14 @@ fn walk_ui_tree<A, I, F>(
             background,
             children,
         } => {
-            prefab.entity(current_index).unwrap().set_data((
-                Some(transform),
-                background,
-                None,
-                None,
-            ));
+            prefab
+                .entity(current_index)
+                .expect("Unreachable: `Prefab` entity should always be set when walking ui tree")
+                .set_data((Some(transform), background, None, None, custom_data));
+
             for child_widget in children {
                 let child_index = prefab.add(Some(current_index), None);
-                walk_ui_tree(child_widget, child_index, prefab);
+                walk_ui_tree(child_widget, child_index, prefab, Default::default());
             }
         }
 
@@ -602,17 +752,29 @@ fn walk_ui_tree<A, I, F>(
                 text: button.text.clone(),
                 font_size: button.font_size,
             };
-            prefab.entity(current_index).unwrap().set_data((
-                Some(transform),
-                button.normal_image.as_ref().map(|image| UiImageBuilder {
-                    image: image.clone(),
-                }),
-                None,
-                Some(button),
-            ));
+
+            prefab
+                .entity(current_index)
+                .expect("Unreachable: `Prefab` entity should always be set when walking ui tree")
+                .set_data((
+                    Some(transform),
+                    button.normal_image.as_ref().map(|image| UiImageBuilder {
+                        image: image.clone(),
+                    }),
+                    None,
+                    Some(button),
+                    custom_data,
+                ));
+
             prefab.add(
                 Some(current_index),
-                Some((Some(button_text_transform(id)), None, Some(text), None)),
+                Some((
+                    Some(button_text_transform(id)),
+                    None,
+                    Some(text),
+                    None,
+                    Default::default(),
+                )),
             );
         }
     }
@@ -635,30 +797,32 @@ fn walk_ui_tree<A, I, F>(
 /// });
 /// ```
 #[derive(SystemData)]
-pub struct UiLoader<'a, A = AudioFormat, I = TextureFormat, F = FontFormat>
+pub struct UiLoader<'a, A = AudioFormat, I = TextureFormat, F = FontFormat, C = NoCustomUi>
 where
     A: Format<Audio, Options = ()> + Sync,
     I: Format<Texture, Options = TextureMetadata> + Sync,
     F: Format<FontAsset, Options = ()> + Sync,
+    C: ToNativeWidget<A, I, F>,
 {
     loader: ReadExpect<'a, Loader>,
-    storage: Read<'a, AssetStorage<UiPrefab<A, I, F>>>,
+    storage: Read<'a, AssetStorage<UiPrefab<A, I, F, C::PrefabData>>>,
 }
 
-impl<'a, A, I, F> UiLoader<'a, A, I, F>
+impl<'a, A, I, F, C> UiLoader<'a, A, I, F, C>
 where
     A: Format<Audio, Options = ()> + Sync + DeserializeOwned,
     I: Format<Texture, Options = TextureMetadata> + Sync + DeserializeOwned + Clone,
     F: Format<FontAsset, Options = ()> + Sync + DeserializeOwned + Clone,
+    C: ToNativeWidget<A, I, F> + for<'de> serde::Deserialize<'de> + Send + Sync + 'static,
 {
     /// Load ui from disc
-    pub fn load<N, P>(&self, name: N, progress: P) -> Handle<UiPrefab<A, I, F>>
+    pub fn load<N, P>(&self, name: N, progress: P) -> Handle<UiPrefab<A, I, F, C::PrefabData>>
     where
         N: Into<String>,
         P: Progress,
     {
         self.loader
-            .load(name, UiFormat, (), progress, &self.storage)
+            .load(name, UiFormat::<C>::default(), (), progress, &self.storage)
     }
 }
 
@@ -668,8 +832,10 @@ where
 ///
 /// ### Type parameters:
 ///
+/// - `A`: `Format` used for loading sounds
 /// - `I`: `Format` used for loading `Texture`s
 /// - `F`: `Format` used for loading `FontAsset`
+/// - `C`: custom UI widget
 ///
 /// ### Example:
 ///
@@ -679,22 +845,24 @@ where
 /// });
 /// ```
 #[derive(SystemData)]
-pub struct UiCreator<'a, A = AudioFormat, I = TextureFormat, F = FontFormat>
+pub struct UiCreator<'a, A = AudioFormat, I = TextureFormat, F = FontFormat, C = NoCustomUi>
 where
     A: Format<Audio, Options = ()> + Sync,
     I: Format<Texture, Options = TextureMetadata> + Sync,
     F: Format<FontAsset, Options = ()> + Sync,
+    C: ToNativeWidget<A, I, F>,
 {
-    loader: UiLoader<'a, A, I, F>,
+    loader: UiLoader<'a, A, I, F, C>,
     entities: Entities<'a>,
-    handles: WriteStorage<'a, Handle<UiPrefab<A, I, F>>>,
+    handles: WriteStorage<'a, Handle<UiPrefab<A, I, F, C::PrefabData>>>,
 }
 
-impl<'a, A, I, F> UiCreator<'a, A, I, F>
+impl<'a, A, I, F, C> UiCreator<'a, A, I, F, C>
 where
     A: Format<Audio, Options = ()> + Sync + DeserializeOwned + Clone,
     I: Format<Texture, Options = TextureMetadata> + Sync + DeserializeOwned + Clone,
     F: Format<FontAsset, Options = ()> + Sync + DeserializeOwned + Clone,
+    C: ToNativeWidget<A, I, F> + for<'de> serde::Deserialize<'de> + Send + Sync + 'static,
 {
     /// Create a UI.
     ///
@@ -716,7 +884,9 @@ where
     {
         let entity = self.entities.create();
         let handle = self.loader.load(name, progress);
-        self.handles.insert(entity, handle).unwrap(); // safe because we just created the entity
+        self.handles
+            .insert(entity, handle)
+            .expect("Unreachable: We just created the entity");
         entity
     }
 }
@@ -728,7 +898,8 @@ where
 /// - `A`: `Format` used for loading sounds
 /// - `I`: `Format` used for loading `Texture`s
 /// - `F`: `Format` used for loading `FontAsset`
-pub type UiLoaderSystem<A, I, F> = PrefabLoaderSystem<UiPrefabData<A, I, F>>;
+/// - `CD`: prefab data from custom UI, see `ToNativeWidget::PrefabData`
+pub type UiLoaderSystem<A, I, F, CD> = PrefabLoaderSystem<UiPrefabData<A, I, F, CD>>;
 
 fn button_text_transform(mut id: String) -> UiTransformBuilder {
     id.push_str("_btn_txt");

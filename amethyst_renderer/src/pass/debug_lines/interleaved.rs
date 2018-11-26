@@ -1,21 +1,30 @@
 //! Debug lines pass
 
-use super::*;
-use amethyst_core::cgmath::{Matrix4, One};
-use amethyst_core::specs::{Join, Read, ReadStorage, Write, WriteStorage};
-use amethyst_core::transform::GlobalTransform;
-use cam::{ActiveCamera, Camera};
-use debug_drawing::{DebugLine, DebugLines, DebugLinesComponent};
-use error::Result;
-use gfx::pso::buffer::ElemStride;
-use gfx::Primitive;
-use mesh::Mesh;
-use pass::util::{get_camera, set_attribute_buffers, set_vertex_args, setup_vertex_args};
-use pipe::pass::{Pass, PassData};
-use pipe::{DepthMode, Effect, NewEffect};
 use std::marker::PhantomData;
-use types::{Encoder, Factory};
-use vertex::{Color, Normal, Position, Query};
+
+use gfx::{pso::buffer::ElemStride, Primitive};
+
+use amethyst_core::{
+    nalgebra as na,
+    specs::{Join, Read, ReadStorage, Write, WriteStorage},
+    transform::GlobalTransform,
+};
+
+use crate::{
+    cam::{ActiveCamera, Camera},
+    debug_drawing::{DebugLine, DebugLines, DebugLinesComponent},
+    error::Result,
+    mesh::Mesh,
+    pass::util::{get_camera, set_attribute_buffers, set_vertex_args, setup_vertex_args},
+    pipe::{
+        pass::{Pass, PassData},
+        DepthMode, Effect, NewEffect,
+    },
+    types::{Encoder, Factory},
+    vertex::{Color, Normal, Position, Query},
+};
+
+use super::*;
 
 /// Parameters for renderer of debug lines. The params affect all lines.
 pub struct DebugLinesParams {
@@ -73,7 +82,7 @@ impl<V> Pass for DrawDebugLines<V>
 where
     V: Query<(Position, Color, Normal)>,
 {
-    fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect> {
         debug!("Building debug lines pass");
         let mut builder = effect.geom(VERT_SRC, GEOM_SRC, FRAG_SRC);
 
@@ -121,7 +130,7 @@ where
             "camera_position",
             camera
                 .as_ref()
-                .map(|&(_, ref trans)| [trans.0[3][0], trans.0[3][1], trans.0[3][2]])
+                .map(|&(_, ref trans)| trans.0.column(3).xyz().into())
                 .unwrap_or([0.0; 3]),
         );
 
@@ -136,7 +145,7 @@ where
             return;
         }
 
-        set_vertex_args(effect, encoder, camera, &GlobalTransform(Matrix4::one()));
+        set_vertex_args(effect, encoder, camera, &GlobalTransform(na::one()));
 
         effect.draw(mesh.slice(), encoder);
         effect.clear();

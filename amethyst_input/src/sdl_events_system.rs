@@ -1,15 +1,21 @@
-use super::controller::{ControllerAxis, ControllerButton, ControllerEvent};
-use super::{InputEvent, InputHandler};
-use amethyst_core::shrev::EventChannel;
-use amethyst_core::specs::prelude::{Resources, RunNow, SystemData, Write};
-use sdl2;
-use sdl2::controller::{AddMappingError, Axis, Button, GameController};
-use sdl2::event::Event;
-use sdl2::{EventPump, GameControllerSubsystem, Sdl};
-use std::fmt;
-use std::hash::Hash;
-use std::marker::PhantomData;
-use std::path::PathBuf;
+use std::{fmt, hash::Hash, marker::PhantomData, path::PathBuf};
+
+use sdl2::{
+    self,
+    controller::{AddMappingError, Axis, Button, GameController},
+    event::Event,
+    EventPump, GameControllerSubsystem, Sdl,
+};
+
+use amethyst_core::{
+    shrev::EventChannel,
+    specs::prelude::{Resources, RunNow, SystemData, Write},
+};
+
+use super::{
+    controller::{ControllerAxis, ControllerButton, ControllerEvent},
+    InputEvent, InputHandler,
+};
 
 /// A collection of errors that can occur in the SDL system.
 #[derive(Debug)]
@@ -23,7 +29,7 @@ pub enum SdlSystemError {
 }
 
 impl fmt::Display for SdlSystemError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             SdlSystemError::ContextInit(ref msg) => write!(f, "Failed to initialize SDL: {}", msg),
             SdlSystemError::ControllerSubsystemInit(ref msg) => {
@@ -72,7 +78,10 @@ where
     fn run_now(&mut self, res: &'a Resources) {
         let (mut handler, mut output) = SdlEventsData::fetch(res);
 
-        let mut event_pump = self.event_pump.take().unwrap();
+        let mut event_pump = self
+            .event_pump
+            .take()
+            .expect("Unreachable: `event_pump` is always reinserted after `take`");
         for event in event_pump.poll_iter() {
             // handle appropriate events locally
             self.handle_sdl_event(&event, &mut handler, &mut output);
@@ -212,7 +221,7 @@ where
         handler: &mut InputHandler<AX, AC>,
         output: &mut EventChannel<InputEvent<AC>>,
     ) {
-        use controller::ControllerEvent::ControllerConnected;
+        use crate::controller::ControllerEvent::ControllerConnected;
 
         if let Ok(available) = self.controller_subsystem.num_joysticks() {
             for id in 0..available {

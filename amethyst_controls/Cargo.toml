@@ -20,7 +20,7 @@ amethyst_core = { path = "../amethyst_core", version = "0.4.0" }
 amethyst_input = { path = "../amethyst_input", version = "0.5.0" }
 amethyst_renderer = { path = "../amethyst_renderer", version = "0.9.0" }
 serde = { version = "1.0", features = ["derive"] }
-winit = "0.17"
+winit = { version = "0.18", features = ["serde"] }
 
 thread_profiler = { version = "0.3", optional = true }
 

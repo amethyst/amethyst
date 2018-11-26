@@ -1,8 +1,11 @@
 //! Render target used for storing 2D pixel representations of 3D scenes.
 
-use error::Result;
 use fnv::FnvHashMap as HashMap;
-use types::{DepthStencilView, Encoder, Factory, RenderTargetView, ShaderResourceView, Window};
+
+use crate::{
+    error::Result,
+    types::{DepthStencilView, Encoder, Factory, RenderTargetView, ShaderResourceView, Window},
+};
 
 /// Target color buffer.
 #[derive(Clone, Debug, PartialEq)]
@@ -190,6 +193,7 @@ impl TargetBuilder {
             depth_buf,
             size,
         };
+
         Ok((self.name, target))
     }
 }

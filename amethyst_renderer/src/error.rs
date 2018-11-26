@@ -1,12 +1,15 @@
 //! Renderer error types.
 
-use amethyst_core;
+use std::{
+    error::Error as StdError,
+    fmt::{Display, Formatter, Result as FmtResult},
+    result::Result as StdResult,
+};
+
 use gfx;
 use gfx_core;
-use std::error::Error as StdError;
-use std::fmt::Result as FmtResult;
-use std::fmt::{Display, Formatter};
-use std::result::Result as StdResult;
+
+use amethyst_core;
 
 /// Renderer result type.
 pub type Result<T> = StdResult<T, Error>;
@@ -34,6 +37,8 @@ pub enum Error {
     TargetCreation(gfx::CombinedError),
     /// Failed to create a texture resource.
     TextureCreation(gfx::texture::CreationError),
+    /// The given pixel data and metadata do not match.
+    PixelDataMismatch(String),
     /// The window handle associated with the renderer has been destroyed.
     WindowDestroyed,
 }
@@ -51,11 +56,12 @@ impl StdError for Error {
             Error::SpecsError(_) => "Failed to interact with the ECS!",
             Error::TargetCreation(_) => "Failed to create render target!",
             Error::TextureCreation(_) => "Failed to create texture!",
+            Error::PixelDataMismatch(_) => "Pixel data and metadata do not match!",
             Error::WindowDestroyed => "Window has been destroyed!",
         }
     }
 
-    fn cause(&self) -> Option<&StdError> {
+    fn cause(&self) -> Option<&dyn StdError> {
         match *self {
             Error::BufferCreation(ref e) => Some(e),
             Error::PassInit(ref e) => Some(e),
@@ -71,7 +77,7 @@ impl StdError for Error {
 }
 
 impl Display for Error {
-    fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
         match *self {
             Error::BufferCreation(ref e) => write!(fmt, "Buffer creation failed: {}", e),
             Error::NoSuchTarget(ref e) => write!(fmt, "Nonexistent target: {}", e),
@@ -83,6 +89,9 @@ impl Display for Error {
             Error::SpecsError(ref e) => write!(fmt, "Interaction with ECS failed: {}", e),
             Error::TargetCreation(ref e) => write!(fmt, "Target creation failed: {}", e),
             Error::TextureCreation(ref e) => write!(fmt, "Texture creation failed: {}", e),
+            Error::PixelDataMismatch(ref e) => {
+                write!(fmt, "Pixel data and metadata do not match: {}", e)
+            }
             Error::WindowDestroyed => write!(fmt, "Window has been destroyed"),
         }
     }
