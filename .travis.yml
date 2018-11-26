@@ -41,6 +41,7 @@ before_script:
 - export PATH=$PATH:/home/travis/.cargo/bin
 - export RUSTC_WRAPPER="./sccache"
 - export SCCACHE_DIR="/home/travis/.cache/sccache"
+- export OPENSSL_STATIC=yes
 - |
   if [ ${TRAVIS_RUST_VERSION} == "stable" ]
   then
