@@ -1,8 +1,11 @@
 //! Provides a automatically resized orthographic camera.
 
+use amethyst_assets::{PrefabData, PrefabError};
 use amethyst_core::{
     nalgebra::Orthographic3,
-    specs::{Component, DenseVecStorage, Join, ReadExpect, ReadStorage, System, WriteStorage},
+    specs::{
+        Component, DenseVecStorage, Entity, Join, ReadExpect, ReadStorage, System, WriteStorage,
+    },
     Axis2,
 };
 use amethyst_renderer::{Camera, ScreenDimensions};
@@ -59,7 +62,8 @@ impl Default for CameraOrthoWorldCoordinates {
 /// to preferences in the "mode" and "world_coordinates" fields.
 /// It adjusts the camera so that the camera's world coordinates are always visible.
 /// You must add the `CameraNormalOrthoSystem` to your dispatcher for this to take effect (no dependencies required).
-#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, PrefabData)]
+#[prefab(Component)]
 pub struct CameraOrtho {
     /// How the camera's matrix is changed when the window's aspect ratio changes.
     /// See `CameraNormalizeMode` for more info.
