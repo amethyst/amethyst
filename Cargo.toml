@@ -19,6 +19,7 @@ appveyor = { repository = "amethyst/amethyst", branch = "master" }
 travis-ci = { repository = "amethyst/amethyst", branch = "master" }
 
 [features]
+default = ["dynamic_app"]
 profiler = [
     "thread_profiler",
     "thread_profiler/thread_profiler",
@@ -56,6 +57,7 @@ json = [
 saveload = [
     "amethyst_core/saveload"
 ]
+dynamic_app = []
 
 [dependencies]
 amethyst_animation = { path = "amethyst_animation", version = "0.4.0" }
@@ -80,6 +82,8 @@ rustc_version_runtime = "0.1"
 winit = { version = "0.18", features = ["serde"] }
 serde = "1.0"
 serde_derive = "1.0"
+smallvec = "0.6"
+hashbrown = "0.1"
 
 thread_profiler = { version = "0.3", optional = true }
 
@@ -188,9 +192,10 @@ path = "examples/appendix_a/main.rs"
 name = "locale"
 path = "examples/locale/main.rs"
 
-[[example]]
-name = "custom_game_data"
-path = "examples/custom_game_data/main.rs"
+# Note: example is defunct
+# [[example]]
+# name = "custom_game_data"
+# path = "examples/custom_game_data/main.rs"
 
 [[example]]
 name = "arc_ball_camera"

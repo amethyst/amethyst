@@ -1,5 +1,6 @@
 //! Custom UI example
 
+#[macro_use]
 extern crate amethyst;
 extern crate serde;
 #[macro_use]
@@ -73,11 +74,15 @@ impl ToNativeWidget for CustomUi {
     }
 }
 
+#[derive(State, Debug, Clone)]
+enum State {
+    Example,
+}
+
 struct Example;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
-        let StateData { world, .. } = data;
+impl<S, E> StateCallback<S, E> for Example {
+    fn on_start(&mut self, world: &mut World) {
         // Initialise the scene with an object, a light and a camera.
         let handle = world.exec(|loader: PrefabLoader<MyPrefabData>| {
             loader.load("prefab/sphere.ron", RonFormat, (), ())
@@ -107,7 +112,12 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(TransformBundle::new())?
         .with_bundle(UiBundle::<String, String, CustomUi>::new())?
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), true)?;
-    let mut game = Application::new(resources, Example, game_data)?;
+
+    let mut game = Application::build(resources)?
+        .with_defaults()
+        .with_state(State::Example, Example)?
+        .build(game_data)?;
+
     game.run();
     Ok(())
 }

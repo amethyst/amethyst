@@ -12,10 +12,10 @@ use amethyst::{
 
 struct Example;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
-    fn handle_event(&mut self, _: StateData<GameData>, event: StateEvent) -> SimpleTrans<'a, 'b> {
+impl<S> StateCallback<S, StateEvent> for Example {
+    fn handle_event(&mut self, _: &mut World, event: &StateEvent) -> Trans<S> {
         if let StateEvent::Window(event) = event {
-            if is_key_down(&event, VirtualKeyCode::Escape) {
+            if is_key_down(event, VirtualKeyCode::Escape) {
                 Trans::Quit
             } else {
                 Trans::None
@@ -43,9 +43,11 @@ fn main() -> amethyst::Result<()> {
 
     let game_data =
         GameDataBuilder::default().with_bundle(RenderBundle::new(pipe, Some(config)))?;
-    let mut game = Application::new("./", Example, game_data)?;
+
+    let mut game = Application::build("./")?
+        .with_state((), Example)?
+        .build(game_data)?;
 
     game.run();
-
     Ok(())
 }

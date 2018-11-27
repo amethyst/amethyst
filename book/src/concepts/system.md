@@ -319,13 +319,13 @@ This allows us to do a bit of conditional logic in our systems to determine what
 which state is currently active, and manipulating the states by tracking user actions:
 
 ```rust,no_run,noplaypen
-# extern crate amethyst;
+# #[macro_use] extern crate amethyst;
 use amethyst::prelude::*;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum CurrentState {
-    MainMenu,
+#[derive(State, Debug, Clone)]
+enum State {
     Gameplay,
+    MainMenu,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -335,53 +335,40 @@ enum UserAction {
     Quit,
 }
 
-impl Default for CurrentState {
-    fn default() -> Self {
-        CurrentState::Gameplay
-    }
-}
-
 struct Game {
     user_action: Option<UserAction>,
-    current_state: CurrentState,
 }
 
 impl Default for Game {
     fn default() -> Self {
         Game {
             user_action: None,
-            current_state: CurrentState::default(),
         }
     }
 }
 
 struct GameplayState;
 
-impl<'a, 'b> SimpleState<'a, 'b> for GameplayState {
-    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
+impl<E> StateCallback<State, E> for GameplayState {
+    fn update(&mut self, world: &mut World) -> Trans<State> {
         // If the `Game` resource has been set up to go back to the menu, pop
         // the state so that we go back.
 
-        let mut game = data.world.write_resource::<Game>();
+        let mut game = world.write_resource::<Game>();
 
         if let Some(UserAction::OpenMenu) = game.user_action.take() {
-            return Trans::Push(Box::new(GameMenuState));
+            return Trans::Push(State::MainMenu);
         }
 
         Trans::None
-    }
-
-    fn on_resume(&mut self, mut data: StateData<GameData>) {
-        // mark that the current state is a gameplay state.
-        data.world.write_resource::<Game>().current_state = CurrentState::Gameplay;
     }
 }
 
 struct GameMenuState;
 
-impl<'a, 'b> SimpleState<'a, 'b> for GameMenuState {
-    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
-        let mut game = data.world.write_resource::<Game>();
+impl<E> StateCallback<State, E> for GameMenuState {
+    fn update(&mut self, world: &mut World) -> Trans<State> {
+        let mut game = world.write_resource::<Game>();
 
         match game.user_action.take() {
             Some(UserAction::ResumeGame) => Trans::Pop,
@@ -392,11 +379,6 @@ impl<'a, 'b> SimpleState<'a, 'b> for GameMenuState {
             _ => Trans::None,
         }
     }
-
-    fn on_resume(&mut self, mut data: StateData<GameData>) {
-        // mark that the current state is a main menu state.
-        data.world.write_resource::<Game>().current_state = CurrentState::MainMenu;
-    }
 }
 ```
 
@@ -405,15 +387,13 @@ We modify our input handler to map the `open_menu` action to `Esc`, and we write
 system:
 
 ```rust,no_run,noplaypen
-# extern crate amethyst;
+# #[macro_use] extern crate amethyst;
 #
-# #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-# enum CurrentState {
-#     MainMenu,
+# #[derive(State, Debug, Clone)]
+# enum State {
 #     Gameplay,
+#     MainMenu,
 # }
-#
-# impl Default for CurrentState { fn default() -> Self { CurrentState::Gameplay } }
 #
 # #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 # enum UserAction {
@@ -424,14 +404,12 @@ system:
 #
 # struct Game {
 #     user_action: Option<UserAction>,
-#     current_state: CurrentState,
 # }
 #
 # impl Default for Game {
 #     fn default() -> Self {
 #         Game {
 #             user_action: None,
-#             current_state: CurrentState::default(),
 #         }
 #     }
 # }
@@ -447,12 +425,13 @@ struct MyGameplaySystem;
 impl<'s> System<'s> for MyGameplaySystem {
     type SystemData = (
         Read<'s, InputHandler<String, String>>,
+        Read<'s, State>,
         Write<'s, Game>,
     );
 
-    fn run(&mut self, (input, mut game): Self::SystemData) {
-        match game.current_state {
-            CurrentState::Gameplay => {
+    fn run(&mut self, (input, state, mut game): Self::SystemData) {
+        match *state {
+            State::Gameplay => {
                 let open_menu = input
                     .action_is_down("open_menu")
                     .unwrap_or(false);

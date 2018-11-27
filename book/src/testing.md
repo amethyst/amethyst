@@ -32,15 +32,9 @@ The following shows a simple example of testing a `State`. More examples are in 
 #     }
 # }
 #
-# impl<'a, 'b, E> State<GameData<'a, 'b>, E> for LoadingState
-# where
-#     E: Send + Sync + 'static,
-# {
-#     fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>, E> {
-#         data.data.update(&data.world);
-#
-#         data.world.add_resource(LoadResource);
-#
+# impl<S, E> StateCallback<S, E> for LoadingState {
+#     fn update(&mut self, world: &mut World) -> Trans<S> {
+#         world.add_resource(LoadResource);
 #         Trans::Pop
 #     }
 # }
@@ -49,8 +43,9 @@ The following shows a simple example of testing a `State`. More examples are in 
 fn loading_state_adds_load_resource() {
     assert!(
         AmethystApplication::blank()
-            .with_state(|| LoadingState::new())
-            .with_assertion(|world| {
+            .with_state("loading", LoadingState::new())
+            .do_wait(1)
+            .do_fn(|world| {
                 world.read_resource::<LoadResource>();
             })
             .run()
@@ -113,9 +108,8 @@ fn test_name() {
         // These are run in the order they are invoked.
         // You may invoke them multiple times.
         .with_setup(|world| { /* do something */ })
-        .with_state(|| MyState::new())
-        .with_effect(|world| { /* do something */ })
-        .with_assertion(|world| { /* do something */ })
+        .with_state("mystate", MyState::new())
+        .do_fn(|world| { /* do something */ })
          // ...
 }
 ```

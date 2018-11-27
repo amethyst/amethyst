@@ -25,9 +25,10 @@
 //! use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 //!
 //! # struct GameState;
-//! # impl<'a, 'b> SimpleState<'a, 'b> for GameState {}
+//! # impl<S, E> StateCallback<S, E> for GameState {}
 //! # fn main() -> amethyst::Result<()> {
-//! let mut game = Application::build("./", GameState)?
+//! let mut game = Application::build("./")?
+//!     .with_state((), GameState)?
 //!     .with_frame_limit(
 //!         FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
 //!         144,

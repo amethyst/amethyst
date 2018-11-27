@@ -21,7 +21,7 @@ of how Amethyst works, especially if you're new to ECS.
 ## A quick refactor
 
 Let's create a new file called `pong.rs` to hold our core game logic. We can
-move the `Pong` struct over here, and the `impl SimpleState for Pong` block as well.
+move the `Pong` struct over here, and the `impl<S, E> StateCallback<S, E> for Pong` block as well.
 Then, in `main.rs` declare it as a module and import it:
 
 ```rust,ignore
@@ -56,8 +56,8 @@ We will leave it empty for now, but it will become useful later down the line.
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # struct MyState;
-# impl<'a, 'b> SimpleState<'a, 'b> for MyState {
-fn on_start(&mut self, data: StateData<GameData>) {
+# impl<S, E> StateCallback<S, E> for MyState {
+fn on_start(&mut self, world: &mut World) {
 
 }
 # }
@@ -141,10 +141,8 @@ our State's `on_start` method:
 # use amethyst::ecs::World;
 # fn initialise_camera(world: &mut World) { }
 # struct MyState;
-# impl<'a, 'b> SimpleState<'a, 'b> for MyState {
-fn on_start(&mut self, data: StateData<GameData>) {
-    let world = data.world;
-
+# impl<S, E> StateCallback<S, E> for MyState {
+fn on_start(&mut self, world: &mut World) {
     initialise_camera(world);
 }
 # }
@@ -289,10 +287,8 @@ compiles. Update the `on_start` method to the following:
 # fn initialise_paddles(world: &mut World) { }
 # fn initialise_camera(world: &mut World) { }
 # struct MyState;
-# impl<'a, 'b> SimpleState<'a, 'b> for MyState {
-fn on_start(&mut self, data: StateData<GameData>) {
-    let world = data.world;
-
+# impl<S, E> StateCallback<S, E> for MyState {
+fn on_start(&mut self, world: &mut World) {
     initialise_paddles(world);
     initialise_camera(world);
 }
@@ -382,8 +378,6 @@ fn main() -> amethyst::Result<()> {
 #       .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
 #       .with_pass(DrawFlat2D::new()),
 # );
-# struct Pong;
-# impl<'a, 'b> SimpleState<'a, 'b> for Pong { }
     let game_data = GameDataBuilder::default()
         .with_bundle(
           RenderBundle::new(pipe, Some(config))
@@ -601,11 +595,9 @@ all together in the `on_start()` method:
 # fn initialise_paddles(world: &mut World, spritesheet: SpriteSheetHandle) { }
 # fn initialise_camera(world: &mut World) { }
 # fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle { unimplemented!() }
-# struct MyState;
-# impl<'a, 'b> SimpleState<'a, 'b> for MyState {
-fn on_start(&mut self, data: StateData<GameData>) {
-    let world = data.world;
-
+# struct Pong;
+# impl<S, E> StateCallback<S, E> for Pong {
+fn on_start(&mut self, world: &mut World) {
     // Load the spritesheet necessary to render the graphics.
     let sprite_sheet_handle = load_sprite_sheet(world);
 

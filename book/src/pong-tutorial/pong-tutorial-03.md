@@ -76,12 +76,14 @@ let input_bundle = InputBundle::<String, String>::new()
 #       .with_pass(DrawFlat::<PosTex>::new()),
 # );
 # struct Pong;
-# impl<'a, 'b> SimpleState<'a, 'b> for Pong { }
+# impl<S, E> StateCallback<S, E> for Pong { }
 let game_data = GameDataBuilder::default()
     .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
     .with_bundle(TransformBundle::new())?
     .with_bundle(input_bundle)?;
-let mut game = Application::new("./", Pong, game_data)?;
+let mut game = Application::build("./")?
+    .with_state((), Pong)?
+    .build(game_data)?;
 game.run();
 # Ok(())
 # }
@@ -370,10 +372,8 @@ will take care of that for us, as well as set up the storage.
 # fn initialise_camera(world: &mut World) { }
 # fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle { unimplemented!() }
 # struct MyState;
-# impl<'a, 'b> SimpleState<'a, 'b> for MyState {
-fn on_start(&mut self, data: StateData<GameData>) {
-    let world = data.world;
-
+# impl<S, E> StateCallback<S, E> for MyState {
+fn on_start(&mut self, world: &mut World) {
     // Load the spritesheet necessary to render the graphics.
     let sprite_sheet_handle = load_sprite_sheet(world);
 

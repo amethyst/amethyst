@@ -44,13 +44,12 @@ impl<'s> System<'s> for ExampleLinesSystem {
 }
 
 struct ExampleState;
-impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
-    fn on_start(&mut self, data: StateData<GameData>) {
+impl<S, E> StateCallback<S, E> for ExampleState {
+    fn on_start(&mut self, world: &mut World) {
         // Setup debug lines as a resource
-        data.world
-            .add_resource(DebugLines::new().with_capacity(100));
+        world.add_resource(DebugLines::new().with_capacity(100));
         // Configure width of lines. Optional step
-        data.world.add_resource(DebugLinesParams {
+        world.add_resource(DebugLinesParams {
             line_width: 1.0 / 400.0,
         });
 
@@ -121,16 +120,13 @@ impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
                 }
             }
         }
-        data.world.register::<DebugLinesComponent>();
-        data.world
-            .create_entity()
-            .with(debug_lines_component)
-            .build();
+        world.register::<DebugLinesComponent>();
+        world.create_entity().with(debug_lines_component).build();
 
         // Setup camera
         let mut local_transform = Transform::default();
         local_transform.set_position([0.0, 0.5, 2.0].into());
-        data.world
+        world
             .create_entity()
             .with(FlyControlTag)
             .with(Camera::from(Projection::perspective(
@@ -172,7 +168,11 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_bundle(RenderBundle::new(pipe, Some(config)))?;
 
-    let mut game = Application::new(resources, ExampleState, game_data)?;
+    let mut game = Application::build(resources)?
+        .with_defaults()
+        .with_state((), ExampleState)?
+        .build(game_data)?;
+
     game.run();
     Ok(())
 }

@@ -1,7 +1,5 @@
 use amethyst::{ecs::prelude::*, prelude::*};
 
-use crate::GameUpdate;
-
 /// State with a custom dispatcher.
 ///
 /// This allows you to specify which systems you want to run within the state. This should be
@@ -49,23 +47,22 @@ impl<'a, 'b> CustomDispatcherState<'a, 'b> {
     }
 }
 
-impl<'a, 'b, T, E> State<T, E> for CustomDispatcherState<'a, 'b>
+impl<'a, 'b, S, E> StateCallback<S, E> for CustomDispatcherState<'a, 'b>
 where
-    T: GameUpdate,
     E: Send + Sync + 'static,
 {
-    fn on_start(&mut self, mut data: StateData<T>) {
-        self.initialize_dispatcher(&mut data.world);
+    fn on_start(&mut self, world: &mut World) {
+        self.initialize_dispatcher(world);
     }
 
-    fn on_stop(&mut self, _data: StateData<T>) {
+    fn on_stop(&mut self, _: &mut World) {
         self.terminate_dispatcher();
     }
 
-    fn update(&mut self, data: StateData<T>) -> Trans<T, E> {
-        data.data.update(&data.world);
-        self.dispatcher.as_mut().unwrap().dispatch(&data.world.res);
-
+    fn update(&mut self, world: &mut World) -> Trans<S> {
+        // NB: no need to call parent dispatcher.
+        // data.data.update(world);
+        self.dispatcher.as_mut().unwrap().dispatch(&world.res);
         Trans::Pop
     }
 }

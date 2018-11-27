@@ -13,9 +13,8 @@ use crate::{systems::ScoreText, Ball, Paddle, Side, ARENA_HEIGHT, ARENA_WIDTH};
 
 pub struct Pong;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Pong {
-    fn on_start(&mut self, data: StateData<GameData>) {
-        let StateData { world, .. } = data;
+impl<S, E> StateCallback<S, E> for Pong {
+    fn on_start(&mut self, world: &mut World) {
         use crate::audio::initialise_audio;
 
         // Load the spritesheet necessary to render the graphics.

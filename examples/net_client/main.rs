@@ -20,20 +20,23 @@ fn main() -> Result<()> {
             vec![],
         ))?.with(SpamSystem::new(), "spam", &[])
         .with(ReaderSystem::new(), "reader", &[]);
-    let mut game = Application::build("./", State1)?
+
+    let mut game = Application::build("./")?
+        .with_state((), State1)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,
         ).build(game_data)?;
+
     game.run();
     Ok(())
 }
 
 /// Default empty state
 pub struct State1;
-impl<'a, 'b> SimpleState<'a, 'b> for State1 {
-    fn on_start(&mut self, data: StateData<GameData>) {
-        data.world
+impl<S, E> StateCallback<S, E> for State1 {
+    fn on_start(&mut self, world: &mut World) {
+        world
             .create_entity()
             .with(NetConnection::<()>::new("127.0.0.1:3456".parse().unwrap()))
             .build();

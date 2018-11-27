@@ -44,9 +44,9 @@ impl<'a, 'b> SystemBundle<'a, 'b> for MyBundle {
 // #[test]
 fn bundle_registers_system_with_resource() {
     assert!(
-        AmethystApplication::blank()
+        AmethystApplication::<(), _, _>::blank()
             .with_bundle(MyBundle)
-            .with_assertion(|world| {
+            .do_fn(|world| {
                 // The next line would panic if the resource wasn't added.
                 world.read_resource::<ApplicationResource>();
             })
@@ -92,13 +92,13 @@ impl<'s> System<'s> for MySystem {
 // #[test]
 fn system_increases_component_value_by_one() {
     assert!(
-        AmethystApplication::blank()
+        AmethystApplication::<(), _, _>::blank()
             .with_system(MySystem, "my_system", &[])
-            .with_effect(|world| {
+            .do_fn(|world| {
                 let entity = world.create_entity().with(MyComponent(0)).build();
                 world.add_resource(EffectReturn(entity));
             })
-            .with_assertion(|world| {
+            .do_fn(|world| {
                 let entity = world.read_resource::<EffectReturn<Entity>>().0.clone();
 
                 let my_component_storage = world.read_storage::<MyComponent>();
@@ -151,11 +151,13 @@ impl<'s> System<'s> for MySystem {
 fn system_increases_resource_value_by_one() {
     assert!(
         AmethystApplication::blank()
-            .with_setup(|world| {
+            .with_state_system("state", MySystem, "my_system", &[])
+            .do_fn(|world| {
                 world.add_resource(MyResource(0));
             })
-            .with_system_single(MySystem, "my_system", &[])
-            .with_assertion(|world| {
+            .do_state("state")
+            .do_state("")
+            .do_fn(|world| {
                 let my_resource = world.read_resource::<MyResource>();
 
                 // If the system ran, the value in the `MyResource` should be 1.

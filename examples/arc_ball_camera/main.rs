@@ -1,5 +1,6 @@
 //! Demonstrates how to use the fly camera
 
+#[macro_use]
 extern crate amethyst;
 
 use amethyst::{
@@ -20,14 +21,19 @@ use std::hash::Hash;
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
+#[derive(State, Debug, Clone)]
+enum State {
+    Example,
+}
+
 struct ExampleState;
 
-impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
-    fn on_start(&mut self, data: StateData<GameData>) {
-        let prefab_handle = data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
+impl<S, E> StateCallback<S, E> for ExampleState {
+    fn on_start(&mut self, world: &mut World) {
+        let prefab_handle = world.exec(|loader: PrefabLoader<MyPrefabData>| {
             loader.load("prefab/arc_ball_camera.ron", RonFormat, (), ())
         });
-        data.world.create_entity().with(prefab_handle).build();
+        world.create_entity().with(prefab_handle).build();
     }
 }
 
@@ -126,7 +132,12 @@ fn main() -> Result<(), Error> {
             "camera_distance_system",
             &["input_system"],
         );
-    let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
+
+    let mut game = Application::build(resources_directory)?
+        .with_defaults()
+        .with_state(State::Example, ExampleState)?
+        .build(game_data)?;
+
     game.run();
     Ok(())
 }

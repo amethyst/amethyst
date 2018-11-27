@@ -37,18 +37,18 @@ use amethyst::renderer::{
 #[derive(Debug)]
 struct ExampleState;
 
-impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
-    fn on_start(&mut self, mut data: StateData<GameData>) {
-#         let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
+impl<S, E> StateCallback<S, E> for ExampleState {
+    fn on_start(&mut self, world: &mut World) {
+#         let texture_handle = load_texture("texture/sprite_sheet.png", world);
         // ...
 
         let sprite_sheet = load_sprite_sheet(texture_handle);
         let sprite_sheet_handle = {
-            let loader = data.world.read_resource::<Loader>();
+            let loader = world.read_resource::<Loader>();
             loader.load_from_data(
                 sprite_sheet,
                 (),
-                &data.world.read_resource::<AssetStorage<SpriteSheet>>(),
+                &world.read_resource::<AssetStorage<SpriteSheet>>(),
             )
         };
     }
@@ -82,22 +82,22 @@ use amethyst::renderer::{
 #[derive(Debug)]
 struct ExampleState;
 
-impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
-    fn on_start(&mut self, mut data: StateData<GameData>) {
-#         let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
+impl<S, E> StateCallback<S, E> for ExampleState {
+    fn on_start(&mut self, world: &mut World) {
+#         let texture_handle = load_texture("texture/sprite_sheet.png", world);
 # 
 #         let sprite_sheet = load_sprite_sheet(texture_handle);
 #         let sprite_sheet_handle = {
-#             let loader = data.world.read_resource::<Loader>();
+#             let loader = world.read_resource::<Loader>();
 #             loader.load_from_data(
 #                 sprite_sheet,
 #                 (),
-#                 &data.world.read_resource::<AssetStorage<SpriteSheet>>(),
+#                 &world.read_resource::<AssetStorage<SpriteSheet>>(),
 #             )
 #         };
         // ...
 
-        self.initialize_sprite(&mut data.world, sprite_sheet_handle);
+        self.initialize_sprite(world, sprite_sheet_handle);
     }
 }
 

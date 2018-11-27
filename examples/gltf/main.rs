@@ -51,10 +51,8 @@ struct ScenePrefabData {
     fly_tag: Option<ControlTagPrefab>,
 }
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
-        let StateData { world, .. } = data;
-
+impl<S> StateCallback<S, StateEvent> for Example {
+    fn on_start(&mut self, world: &mut World) {
         self.progress = Some(ProgressCounter::default());
 
         world.exec(
@@ -69,12 +67,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
         );
     }
 
-    fn handle_event(
-        &mut self,
-        data: StateData<GameData>,
-        event: StateEvent,
-    ) -> SimpleTrans<'a, 'b> {
-        let StateData { world, .. } = data;
+    fn handle_event(&mut self, world: &mut World, event: &StateEvent) -> Trans<S> {
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
                 Trans::Quit
@@ -94,21 +87,20 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
         }
     }
 
-    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
+    fn update(&mut self, world: &mut World) -> Trans<S> {
         if !self.initialised {
             let remove = match self.progress.as_ref().map(|p| p.complete()) {
                 None | Some(Completion::Loading) => false,
 
                 Some(Completion::Complete) => {
-                    let scene_handle = data
-                        .world
+                    let scene_handle = world
                         .read_resource::<Scene>()
                         .handle
                         .as_ref()
                         .unwrap()
                         .clone();
 
-                    data.world.create_entity().with(scene_handle).build();
+                    world.create_entity().with(scene_handle).build();
 
                     true
                 }
@@ -122,9 +114,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                 self.progress = None;
             }
             if self.entity.is_none() {
-                if let Some(entity) = data
-                    .world
-                    .exec(|finder: TagFinder<AnimationMarker>| finder.find())
+                if let Some(entity) = world.exec(|finder: TagFinder<AnimationMarker>| finder.find())
                 {
                     self.entity = Some(entity);
                     self.initialised = true;
@@ -206,7 +196,10 @@ fn main() -> Result<(), amethyst::Error> {
             "sampler_interpolation",
         ]))?;
 
-    let mut game = Application::build(resources_directory, Example::default())?.build(game_data)?;
+    let mut game = Application::build(resources_directory)?
+        .with_state((), Example::default())?
+        .build(game_data)?;
+
     game.run();
     Ok(())
 }

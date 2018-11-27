@@ -68,8 +68,6 @@ A `State` contains methods that reflect the most common of those events:
 * shadow_update: This method is called as often as possible by the engine on all `State`s which are on the `StateMachines` stack, including the active `State`. Unlike `update`, this does not return a `Trans`.
 * shadow_fixed_update: This method is called at a fixed time interval (1/60th second by default) on all `State`s which are on the `StateMachines` stack, including the active `State`. Unlike `fixed_update`, this does not return a `Trans`.
 
-If you aren't using `SimpleState` or `EmptyState`, you *must* implement the `update` method to call `data.data.update(&mut data.world)`.
-
 ## Game Data
 
 `State`s can have arbitrary data associated with them.
@@ -102,8 +100,8 @@ struct GameplayState {
     player_count: u8,
 }
 
-impl<'a,'b> SimpleState<'a,'b> for GameplayState {
-    fn on_start(&mut self, _data: StateData<GameData>) {
+impl<S, E> StateCallback<S, E> for GameplayState {
+    fn on_start(&mut self, _: &mut World) {
         println!("Number of players: {}", self.player_count);
     }
 }
@@ -115,8 +113,7 @@ We first declare the `State`'s struct `GameplayState`.
 
 In this case, we give it some data: `player_count`, a byte.
 
-Then, we implement the `SimpleState` trait for our `GameplayState`.
-`SimpleState` is a shorthand for `State<GameData<'a, 'b>, ()>` where `GameData` is the internal shared data between states.
+Then, we implement the `StateCallback` trait for our `GameplayState`.
 
 ### Switching State
 
@@ -132,40 +129,43 @@ Those are:
 Let's use handle_event to go to the `PausedState` and come back by pressing the "Escape" key.
 
 ```rust,no_run,noplaypen
-extern crate amethyst;
+# #[macro_use] extern crate amethyst;
 use amethyst::prelude::*;
 use amethyst::renderer::VirtualKeyCode;
 use amethyst::input::is_key_down;
 
+#[derive(State, Debug, Clone)]
+enum State {
+    Gameplay,
+    Paused,
+}
+
 struct GameplayState;
 struct PausedState;
 
-// This time around, we are using () instead of GameData, because we don't have any `System`s that need to be updated.
-// (They are covered in the dedicated section of the book.)
-// Instead of writing `State<(), StateEvent>`, we can instead use `EmptyState`.
-impl EmptyState for GameplayState {
-    fn handle_event(&mut self, _data: StateData<()>, event: StateEvent) -> EmptyTrans {
+impl StateCallback<State, StateEvent> for GameplayState {
+    fn handle_event(&mut self, _: &mut World, event: &StateEvent) -> Trans<State> {
         if let StateEvent::Window(event) = &event {
             if is_key_down(&event, VirtualKeyCode::Escape) {
-                // Pause the game by going to the `PausedState`.
-                return Trans::Push(Box::new(PausedState));
+                // Pause the game by going to the `Paused` state.
+                return Trans::Push(State::Paused);
             }
         }
-        
+
         // Escape isn't pressed, so we stay in this `State`.
         Trans::None
     }
 }
 
-impl EmptyState for PausedState {
-    fn handle_event(&mut self, _data: StateData<()>, event: StateEvent) -> EmptyTrans {
+impl StateCallback<State, StateEvent> for PausedState {
+    fn handle_event(&mut self, _: &mut World, event: &StateEvent) -> Trans<State> {
         if let StateEvent::Window(event) = &event {
             if is_key_down(&event, VirtualKeyCode::Escape) {
-                // Go back to the `GameplayState`.
+                // Go back to the `Gameplay` state.
                 return Trans::Pop;
             }
         }
-        
+
         // Escape isn't pressed, so we stay in this `State`.
         Trans::None
     }
@@ -189,8 +189,8 @@ To change the set of events that the state receives, you create a new event enum
 
 // These imports are required for the #[derive(EventReader)] code to build
 use amethyst::core::{
-    specs::{Read, SystemData, Resources}, 
-    shrev::{ReaderId, EventChannel}, 
+    specs::{Read, SystemData, Resources},
+    shrev::{ReaderId, EventChannel},
     EventReader
 };
 
@@ -209,14 +209,14 @@ pub enum MyEvent {
 
 struct GameplayState;
 
-impl State<(), MyEvent> for GameplayState {
-    fn handle_event(&mut self, _data: StateData<()>, event: MyEvent) -> Trans<(), MyEvent> {
+impl StateCallback<(), MyEvent> for GameplayState {
+    fn handle_event(&mut self, _: &mut World, event: &MyEvent) -> Trans<()> {
         match event {
             MyEvent::Window(_) => {}, // Events related to the window and inputs.
             MyEvent::Ui(_) => {}, // Ui event. Button presses, mouse hover, etc...
             MyEvent::App(ev) => println!("Got an app event: {:?}", ev),
         };
-        
+
         Trans::None
     }
 }

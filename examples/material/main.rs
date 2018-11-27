@@ -13,9 +13,8 @@ use amethyst::{
 
 struct Example;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
-        let StateData { world, .. } = data;
+impl<S, E> StateCallback<S, E> for Example {
+    fn on_start(&mut self, world: &mut World) {
         let mat_defaults = world.read_resource::<MaterialDefaults>().0.clone();
 
         println!("Load mesh");
@@ -130,7 +129,11 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
         .with_basic_renderer(path, DrawPbm::<PosNormTangTex>::new(), false)?;
-    let mut game = Application::new(&resources, Example, game_data)?;
+
+    let mut game = Application::build(&resources)?
+        .with_state((), Example)?
+        .build(game_data)?;
+
     game.run();
     Ok(())
 }

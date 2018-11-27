@@ -14,9 +14,8 @@ use amethyst::{
 
 struct Example;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
-        let world = data.world;
+impl<S, E> StateCallback<S, E> for Example {
+    fn on_start(&mut self, world: &mut World) {
         let texture_handle = load_texture(world, "logo.png");
         let _image = init_image(world, &texture_handle);
 
@@ -43,9 +42,11 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(TransformBundle::new())?
         .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?;
 
-    let mut game = Application::build(resources, Example)?.build(game_data)?;
-    game.run();
+    let mut game = Application::build(resources)?
+        .with_state((), Example)?
+        .build(game_data)?;
 
+    game.run();
     Ok(())
 }
 

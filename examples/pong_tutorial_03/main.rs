@@ -47,7 +47,11 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(TransformBundle::new())?
         .with_bundle(input_bundle)?
         .with(systems::PaddleSystem, "paddle_system", &["input_system"]);
-    let mut game = Application::new(assets_dir, Pong, game_data)?;
+
+    let mut game = Application::build(assets_dir)?
+        .with_state((), Pong)?
+        .build(game_data)?;
+
     game.run();
     Ok(())
 }

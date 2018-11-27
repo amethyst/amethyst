@@ -19,13 +19,13 @@
 //!
 //! struct GameState;
 //!
-//! impl EmptyState for GameState {
-//!     fn on_start(&mut self, _: StateData<()>) {
+//! impl<S> StateCallback<S, StateEvent> for GameState {
+//!     fn on_start(&mut self, _: &mut World) {
 //!         println!("Starting game!");
 //!     }
 //!
-//!     fn handle_event(&mut self, _: StateData<()>, event: StateEvent) -> EmptyTrans {
-//!         if let StateEvent::Window(event) = &event {
+//!     fn handle_event(&mut self, _: &mut World, event: &StateEvent) -> Trans<S> {
+//!         if let StateEvent::Window(event) = event {
 //!             match event {
 //!                  Event::WindowEvent { event, .. } => match event {
 //!                     WindowEvent::KeyboardInput {
@@ -41,15 +41,19 @@
 //!         }
 //!     }
 //!
-//!     fn update(&mut self, _: StateData<()>) -> EmptyTrans {
+//!     fn update(&mut self, _: &mut World) -> Trans<S> {
 //!         println!("Computing some more whoop-ass...");
 //!         Trans::Quit
 //!     }
 //! }
 //!
-//! fn main() {
-//!     let mut game = Application::new("assets/", GameState, ()).expect("Fatal error");
+//! fn main() -> amethyst::Result<()> {
+//!     let mut game = Application::build("assets/")?
+//!         .with_state((), GameState)?
+//!         .build(GameDataBuilder::default())?;
+//!
 //!     game.run();
+//!     Ok(())
 //! }
 //! ```
 
@@ -87,31 +91,43 @@ extern crate rayon;
 extern crate rustc_version_runtime;
 #[macro_use]
 extern crate serde_derive;
+extern crate hashbrown;
+extern crate smallvec;
 
 pub use crate::core::{shred, shrev, specs as ecs};
 
 pub use self::{
-    app::{Application, ApplicationBuilder, CoreApplication},
     callback_queue::{Callback, CallbackQueue},
     error::{Error, Result},
-    game_data::{DataInit, GameData, GameDataBuilder},
     logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
+    state_event::{StateEvent, StateEventReader},
+};
+
+#[cfg(not(feature = "dynamic_app"))]
+pub use self::{
+    app::{Application, ApplicationBuilder, CoreApplication},
+    game_data::{DataInit, GameData, GameDataBuilder},
     state::{
         EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, StateMachine, Trans,
         TransEvent,
     },
-    state_event::{StateEvent, StateEventReader},
 };
+
+#[cfg(feature = "dynamic_app")]
+pub use self::dynamic::*;
 
 #[doc(hidden)]
 pub use crate::derive::*;
 
 pub mod prelude;
 
+#[cfg(not(feature = "dynamic_app"))]
 mod app;
 mod callback_queue;
+mod dynamic;
 mod error;
 mod game_data;
 mod logger;
+#[cfg(not(feature = "dynamic_app"))]
 mod state;
 mod state_event;

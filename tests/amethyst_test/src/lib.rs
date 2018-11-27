@@ -42,15 +42,9 @@
 //! #     }
 //! # }
 //! #
-//! # impl<'a, 'b, E> State<GameData<'a, 'b>, E> for LoadingState
-//! # where
-//! #     E: Send + Sync + 'static,
-//! # {
-//! #     fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>, E> {
-//! #         data.data.update(&data.world);
-//! #
-//! #         data.world.add_resource(LoadResource);
-//! #
+//! # impl<S, E> StateCallback<S, E> for LoadingState {
+//! #     fn update(&mut self, world: &mut World) -> Trans<S> {
+//! #         world.add_resource(LoadResource);
 //! #         Trans::Pop
 //! #     }
 //! # }
@@ -59,8 +53,10 @@
 //! fn loading_state_adds_load_resource() {
 //!     assert!(
 //!         AmethystApplication::blank()
-//!             .with_state(|| LoadingState::new())
-//!             .with_assertion(|world| {
+//!             .with_state("loading", LoadingState::new())
+//!             .do_state("loading")
+//!             .do_wait(1)
+//!             .do_fn(|world| {
 //!                 world.read_resource::<LoadResource>();
 //!             })
 //!             .run()
@@ -114,10 +110,10 @@
 //!
 //!         // These are run in the order they are invoked.
 //!         // You may invoke them multiple times.
-//!         .with_setup(|world| { /* do something */ })
-//!         .with_state(|| MyState::new())
-//!         .with_effect(|world| { /* do something */ })
-//!         .with_assertion(|world| { /* do something */ })
+//!         .do_fn(|world| { /* do something */ })
+//!         .with_state("mystate", MyState::new())
+//!         .do_fn(|world| { /* do something */ })
+//!         .do_fn(|world| { /* do something */ })
 //!          // ...
 //! }
 //! ```
@@ -182,9 +178,9 @@
 //! // #[test]
 //! fn bundle_registers_system_with_resource() {
 //!     assert!(
-//!         AmethystApplication::blank()
+//!         AmethystApplication::<(), _, _>::blank()
 //!             .with_bundle(MyBundle)
-//!             .with_assertion(|world| { world.read_resource::<ApplicationResource>(); })
+//!             .do_fn(|world| { world.read_resource::<ApplicationResource>(); })
 //!             .run()
 //!             .is_ok()
 //!     );
@@ -229,13 +225,13 @@
 //! // #[test]
 //! fn system_increases_component_value_by_one() {
 //!     assert!(
-//!         AmethystApplication::blank()
+//!         AmethystApplication::<(), _, _>::blank()
 //!             .with_system(MySystem, "my_system", &[])
-//!             .with_effect(|world| {
+//!             .do_fn(|world| {
 //!                 let entity = world.create_entity().with(MyComponent(0)).build();
 //!                 world.add_resource(EffectReturn(entity));
 //!             })
-//!             .with_assertion(|world| {
+//!             .do_fn(|world| {
 //!                 let entity = world.read_resource::<EffectReturn<Entity>>().0.clone();
 //!
 //!                 let my_component_storage = world.read_storage::<MyComponent>();
@@ -287,11 +283,12 @@
 //! fn system_increases_resource_value_by_one() {
 //!     assert!(
 //!         AmethystApplication::blank()
-//!             .with_setup(|world| {
+//!             .with_state_system("system", MySystem, "my_system", &[])
+//!             .do_state("system")
+//!             .do_fn(|world| {
 //!                 world.add_resource(MyResource(0));
 //!             })
-//!             .with_system_single(MySystem, "my_system", &[])
-//!             .with_assertion(|world| {
+//!             .do_fn(|world| {
 //!                 let my_resource = world.read_resource::<MyResource>();
 //!
 //!                 // If the system ran, the value in the `MyResource` should be 1.
@@ -324,8 +321,7 @@ pub use crate::{
     fixture::{MaterialAnimationFixture, SpriteRenderAnimationFixture},
     game_update::GameUpdate,
     state::{
-        CustomDispatcherState, CustomDispatcherStateBuilder, FunctionState, PopState,
-        SequencerState,
+        CustomDispatcherState, CustomDispatcherStateBuilder, FunctionState, ReturnState, Sequencer,
     },
 };
 

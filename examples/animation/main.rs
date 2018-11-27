@@ -1,5 +1,6 @@
 //! Displays a shaded sphere to the user.
 
+#[macro_use]
 extern crate amethyst;
 #[macro_use]
 extern crate serde;
@@ -30,6 +31,11 @@ enum AnimationId {
     Translate,
 }
 
+#[derive(State, Clone, Debug)]
+enum State {
+    Example,
+}
+
 struct Example {
     pub sphere: Option<Entity>,
     rate: f32,
@@ -46,9 +52,8 @@ impl Default for Example {
     }
 }
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
-        let StateData { world, .. } = data;
+impl<S> StateCallback<S, StateEvent> for Example {
+    fn on_start(&mut self, world: &mut World) {
         // Initialise the scene with an object, a light and a camera.
         let prefab_handle = world.exec(|loader: PrefabLoader<MyPrefabData>| {
             loader.load("prefab/animation.ron", RonFormat, (), ())
@@ -56,12 +61,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
         self.sphere = Some(world.create_entity().with(prefab_handle).build());
     }
 
-    fn handle_event(
-        &mut self,
-        data: StateData<GameData>,
-        event: StateEvent,
-    ) -> SimpleTrans<'a, 'b> {
-        let StateData { world, .. } = data;
+    fn handle_event(&mut self, world: &mut World, event: &StateEvent) -> Trans<S> {
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
                 return Trans::Quit;
@@ -186,9 +186,12 @@ fn main() -> amethyst::Result<()> {
             "sampler_interpolation_system",
         ))?.with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
-    let mut game = Application::new(resources, Example::default(), game_data)?;
-    game.run();
 
+    let mut game = Application::build(resources)?
+        .with_state(State::Example, Example::default())?
+        .build(game_data)?;
+
+    game.run();
     Ok(())
 }
 

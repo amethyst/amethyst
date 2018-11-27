@@ -17,11 +17,6 @@ use amethyst::renderer::{
 # use amethyst::ui::UiBundle;
 # use amethyst::utils::application_root_dir;
 #
-# #[derive(Debug, Default)]
-# struct ExampleState;
-#
-# impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {}
-
 fn main() -> amethyst::Result<()> {
 #     amethyst::start_logger(Default::default());
 #     let app_root = application_root_dir();
@@ -50,7 +45,8 @@ fn main() -> amethyst::Result<()> {
 #         .with_bundle(UiBundle::<String, String>::new())?;
     // ...
 #     let assets_directory = format!("{}/examples/assets/", app_root);
-#     let mut game = Application::new(assets_directory, ExampleState::default(), game_data)?;
+#     let mut game = Application::<()>::build(assets_directory)?
+#         .build(game_data)?;
 #     game.run();
 #
 #     Ok(())

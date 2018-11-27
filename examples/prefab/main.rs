@@ -16,12 +16,12 @@ type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 struct AssetsExample;
 
-impl<'a, 'b> SimpleState<'a, 'b> for AssetsExample {
-    fn on_start(&mut self, data: StateData<GameData>) {
-        let prefab_handle = data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
+impl<S, E> StateCallback<S, E> for AssetsExample {
+    fn on_start(&mut self, world: &mut World) {
+        let prefab_handle = world.exec(|loader: PrefabLoader<MyPrefabData>| {
             loader.load("prefab/example.ron", RonFormat, (), ())
         });
-        data.world.create_entity().with(prefab_handle).build();
+        world.create_entity().with(prefab_handle).build();
     }
 }
 
@@ -41,7 +41,10 @@ fn main() -> Result<(), Error> {
         .with_bundle(TransformBundle::new())?
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
 
-    let mut game = Application::new(resources_directory, AssetsExample, game_data)?;
+    let mut game = Application::build(resources_directory)?
+        .with_state((), AssetsExample)?
+        .build(game_data)?;
+
     game.run();
     Ok(())
 }

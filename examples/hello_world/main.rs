@@ -6,23 +6,28 @@ use amethyst::prelude::*;
 
 struct Example;
 
-impl EmptyState for Example {
-    fn on_start(&mut self, _: StateData<()>) {
+impl<S, E> StateCallback<S, E> for Example {
+    fn on_start(&mut self, _: &mut World) {
         println!("Begin!");
     }
 
-    fn on_stop(&mut self, _: StateData<()>) {
+    fn on_stop(&mut self, _: &mut World) {
         println!("End!");
     }
 
-    fn update(&mut self, _: StateData<()>) -> EmptyTrans {
+    fn update(&mut self, _: &mut World) -> Trans<S> {
         println!("Hello from Amethyst!");
         Trans::Quit
     }
 }
 
-fn main() {
+fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
-    let mut game = Application::new("./", Example, ()).expect("Fatal error");
+
+    let mut game = Application::build("./")?
+        .with_state((), Example)?
+        .build(GameDataBuilder::default())?;
+
     game.run();
+    Ok(())
 }

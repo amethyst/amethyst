@@ -54,7 +54,9 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(UiBundle::<String, String>::new())?
         .with_basic_renderer(display_config_path, DrawFlat::<PosTex>::new(), true)?;
 
-    let mut game = Application::build(assets_dir, Pong)?
+    let mut game = Application::build(assets_dir)?
+        .with_defaults()
+        .with_state((), Pong)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,

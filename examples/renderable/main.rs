@@ -3,6 +3,7 @@
 //!
 //! TODO: Rewrite for new renderer.
 
+#[macro_use]
 extern crate amethyst;
 
 use amethyst::{
@@ -30,6 +31,12 @@ use amethyst::{
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
+#[derive(State, Debug, Clone)]
+enum State {
+    Loading,
+    Example,
+}
+
 #[derive(Default)]
 struct Loading {
     progress: ProgressCounter,
@@ -40,19 +47,19 @@ struct Example {
     scene: Handle<Prefab<MyPrefabData>>,
 }
 
-impl<'a, 'b> SimpleState<'a, 'b> for Loading {
-    fn on_start(&mut self, data: StateData<GameData>) {
-        self.prefab = Some(data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
+impl StateCallback<State, StateEvent> for Loading {
+    fn on_start(&mut self, world: &mut World) {
+        self.prefab = Some(world.exec(|loader: PrefabLoader<MyPrefabData>| {
             loader.load("prefab/renderable.ron", RonFormat, (), &mut self.progress)
         }));
 
-        data.world.exec(|mut creator: UiCreator| {
+        world.exec(|mut creator: UiCreator| {
             creator.create("ui/fps.ron", &mut self.progress);
             creator.create("ui/loading.ron", &mut self.progress);
         });
     }
 
-    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
+    fn update(&mut self, world: &mut World) -> Trans<State> {
         match self.progress.complete() {
             Completion::Failed => {
                 println!("Failed loading assets: {:?}", self.progress.errors());
@@ -60,59 +67,58 @@ impl<'a, 'b> SimpleState<'a, 'b> for Loading {
             }
             Completion::Complete => {
                 println!("Assets loaded, swapping state");
-                if let Some(entity) = data.world.exec(|finder: UiFinder| finder.find("loading")) {
-                    let _ = data.world.delete_entity(entity);
+                if let Some(entity) = world.exec(|finder: UiFinder| finder.find("loading")) {
+                    let _ = world.delete_entity(entity);
                 }
-                Trans::Switch(Box::new(Example {
-                    scene: self.prefab.as_ref().unwrap().clone(),
-                }))
+
+                world.write_resource::<States<_, _>>().new_state(
+                    State::Example,
+                    Example {
+                        scene: self.prefab.as_ref().unwrap().clone(),
+                    },
+                );
+
+                Trans::Push(State::Example)
             }
             Completion::Loading => Trans::None,
         }
     }
 }
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
-        let StateData { world, .. } = data;
-
+impl StateCallback<State, StateEvent> for Example {
+    fn on_start(&mut self, world: &mut World) {
         world.create_entity().with(self.scene.clone()).build();
     }
 
-    fn handle_event(
-        &mut self,
-        data: StateData<GameData>,
-        event: StateEvent,
-    ) -> SimpleTrans<'a, 'b> {
-        let w = data.world;
-        if let StateEvent::Window(event) = &event {
+    fn handle_event(&mut self, world: &mut World, event: &StateEvent) -> Trans<State> {
+        if let StateEvent::Window(event) = event {
             // Exit if user hits Escape or closes the window
-            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+            if is_close_requested(event) || is_key_down(event, VirtualKeyCode::Escape) {
                 return Trans::Quit;
             }
-            match get_key(&event) {
+            match get_key(event) {
                 Some((VirtualKeyCode::R, ElementState::Pressed)) => {
-                    w.exec(|mut state: Write<DemoState>| {
+                    world.exec(|mut state: Write<DemoState>| {
                         state.light_color = [0.8, 0.2, 0.2, 1.0];
                     });
                 }
                 Some((VirtualKeyCode::G, ElementState::Pressed)) => {
-                    w.exec(|mut state: Write<DemoState>| {
+                    world.exec(|mut state: Write<DemoState>| {
                         state.light_color = [0.2, 0.8, 0.2, 1.0];
                     });
                 }
                 Some((VirtualKeyCode::B, ElementState::Pressed)) => {
-                    w.exec(|mut state: Write<DemoState>| {
+                    world.exec(|mut state: Write<DemoState>| {
                         state.light_color = [0.2, 0.2, 0.8, 1.0];
                     });
                 }
                 Some((VirtualKeyCode::W, ElementState::Pressed)) => {
-                    w.exec(|mut state: Write<DemoState>| {
+                    world.exec(|mut state: Write<DemoState>| {
                         state.light_color = [1.0, 1.0, 1.0, 1.0];
                     });
                 }
                 Some((VirtualKeyCode::A, ElementState::Pressed)) => {
-                    w.exec(
+                    world.exec(
                         |(mut state, mut color): (Write<DemoState>, Write<AmbientColor>)| {
                             if state.ambient_light {
                                 state.ambient_light = false;
@@ -125,7 +131,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                     );
                 }
                 Some((VirtualKeyCode::D, ElementState::Pressed)) => {
-                    w.exec(
+                    world.exec(
                         |(mut state, mut lights): (Write<DemoState>, WriteStorage<Light>)| {
                             if state.directional_light {
                                 state.directional_light = false;
@@ -146,7 +152,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                     );
                 }
                 Some((VirtualKeyCode::P, ElementState::Pressed)) => {
-                    w.exec(|mut state: Write<DemoState>| {
+                    world.exec(|mut state: Write<DemoState>| {
                         if state.point_light {
                             state.point_light = false;
                             state.light_color = [0.0; 4].into();
@@ -185,7 +191,11 @@ fn main() -> Result<(), Error> {
         .with_bundle(FPSCounterBundle::default())?
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), true)?
         .with_bundle(InputBundle::<String, String>::new())?;
-    let mut game = Application::build(resources_directory, Loading::default())?.build(game_data)?;
+
+    let mut game = Application::build(resources_directory)?
+        .with_state(State::Loading, Loading::default())?
+        .build(game_data)?;
+
     game.run();
     Ok(())
 }

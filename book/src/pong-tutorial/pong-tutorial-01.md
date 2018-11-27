@@ -33,7 +33,7 @@ Now we create our core game struct:
 pub struct Pong;
 ```
 
-We'll be implementing the [`SimpleState`][st] trait on this struct, which is used by
+We'll be implementing the [`StateCallback`][sc] trait on this struct, which is used by
 Amethyst's state machine to start, stop, and update the game. But for now we'll
 just implement two methods:
 
@@ -44,11 +44,11 @@ just implement two methods:
 # use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline,
 #                          PosTex, RenderBundle, Stage};
 # struct Pong;
-impl<'a, 'b> SimpleState<'a, 'b> for Pong {
+impl<S, E> StateCallback<S, E> for Pong {
 }
 ```
 
-The `SimpleState` already implements a bunch of stuff for us, like the `update` 
+The `StateCallback` already implements a bunch of stuff for us, like the `update` 
 and `handle_event` methods that you would have to implement yourself were you 
 using just a regular `State`. In particular, the default implementation for
 `handle_event` returns `Trans::Quit` when a close signal is received
@@ -165,8 +165,6 @@ Now let's pack everything up and run it:
 # fn main() -> amethyst::Result<()> {
 # let path = "./resources/display_config.ron";
 # let config = DisplayConfig::load(&path);
-# struct Pong;
-# impl<'a, 'b> SimpleState<'a,'b> for Pong { }
 let pipe = Pipeline::build()
     .with_stage(
 #        Stage::with_backbuffer()
@@ -181,7 +179,8 @@ let game_data = GameDataBuilder::default()
         .with_sprite_sheet_processor()
     )?;
 
-let mut game = Application::new("./", Pong, game_data)?;
+let mut game = Application::<()>::build("./")?
+    .build(game_data)?;
 
 game.run();
 # Ok(())
@@ -197,7 +196,7 @@ along with our config, and building. There is also a helper function
 function is used in the full `pong` example in the `Amethyst` repository.
 
 Then we call `.run()` on `game` which begins the gameloop. The game will
-continue to run until our `SimpleState` returns `Trans::Quit`, or when all states
+continue to run until our `StateCallback` returns `Trans::Quit`, or when all states
 have been popped off the state machine's stack.
 
 Success! Now we should be able to compile and run this code and get a window.
@@ -207,7 +206,7 @@ It should look something like this:
 
 
 [ron]: https://github.com/ron-rs/ron
-[st]: https://www.amethyst.rs/doc/master/doc/amethyst/prelude/trait.SimpleState.html
+[sc]: https://www.amethyst.rs/doc/master/doc/amethyst/prelude/trait.StateCallback.html
 [ap]: https://www.amethyst.rs/doc/master/doc/amethyst/struct.Application.html
 [gs]: ../getting-started.html
 [displayconf]: https://www.amethyst.rs/doc/master/doc/amethyst_renderer/struct.DisplayConfig.html

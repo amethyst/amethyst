@@ -35,7 +35,10 @@ fn main() -> amethyst::Result<()> {
     // of the git repository. It only is a different location to load the assets from.
     let assets_dir = format!("{}/examples/assets/", app_root);
 
-    let mut game = Application::new(assets_dir, Pong, game_data)?;
+    let mut game = Application::build(assets_dir)?
+        .with_state((), Pong)?
+        .build(game_data)?;
+
     game.run();
     Ok(())
 }

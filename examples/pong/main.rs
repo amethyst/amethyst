@@ -73,7 +73,8 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
         .with_bundle(AudioBundle::new(|music: &mut Music| music.music.next()))?
         .with_bundle(UiBundle::<String, String>::new())?;
-    let mut game = Application::build(assets_dir, Pong)?
+    let mut game = Application::build(assets_dir)?
+        .with_state((), Pong)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,

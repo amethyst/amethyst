@@ -86,27 +86,21 @@ impl Example {
     }
 }
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
-        let StateData { world, .. } = data;
-
+impl<S> StateCallback<S, StateEvent> for Example {
+    fn on_start(&mut self, world: &mut World) {
         self.loaded_sprite_sheet = Some(load_sprite_sheet(world));
 
         self.initialise_camera(world);
         self.redraw_sprites(world);
     }
 
-    fn handle_event(
-        &mut self,
-        mut data: StateData<GameData>,
-        event: StateEvent,
-    ) -> SimpleTrans<'a, 'b> {
-        if let StateEvent::Window(event) = &event {
-            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+    fn handle_event(&mut self, world: &mut World, event: &StateEvent) -> Trans<S> {
+        if let StateEvent::Window(event) = event {
+            if is_close_requested(event) || is_key_down(event, VirtualKeyCode::Escape) {
                 return Trans::Quit;
             };
 
-            match get_key(&event) {
+            match get_key(event) {
                 Some((VirtualKeyCode::T, ElementState::Pressed)) => {
                     self.transparent = !self.transparent;
                     info!(
@@ -117,7 +111,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                             "disabled"
                         }
                     );
-                    self.redraw_sprites(&mut data.world);
+                    self.redraw_sprites(world);
                 }
 
                 Some((VirtualKeyCode::R, ElementState::Pressed)) => {
@@ -130,7 +124,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                             "normal. Left most sprite has Z: 0, increasing to the right."
                         }
                     );
-                    self.redraw_sprites(&mut data.world);
+                    self.redraw_sprites(world);
                 }
 
                 Some((VirtualKeyCode::E, ElementState::Pressed)) => {
@@ -139,35 +133,35 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                         "Sprites are {}",
                         if self.hidden { "hidden" } else { "visible" }
                     );
-                    self.redraw_sprites(&mut data.world);
+                    self.redraw_sprites(world);
                 }
 
                 Some((VirtualKeyCode::Up, ElementState::Pressed)) => {
                     self.camera_z -= 1.0;
                     info!("Camera Z position is: {}", self.camera_z);
-                    self.adjust_camera(&mut data.world);
-                    self.redraw_sprites(&mut data.world);
+                    self.adjust_camera(world);
+                    self.redraw_sprites(world);
                 }
 
                 Some((VirtualKeyCode::Down, ElementState::Pressed)) => {
                     self.camera_z += 1.0;
                     info!("Camera Z position is: {}", self.camera_z);
-                    self.adjust_camera(&mut data.world);
-                    self.redraw_sprites(&mut data.world);
+                    self.adjust_camera(world);
+                    self.redraw_sprites(world);
                 }
 
                 Some((VirtualKeyCode::Left, ElementState::Pressed)) => {
                     self.camera_depth_vision -= 1.0;
                     info!("Camera depth vision: {}", self.camera_depth_vision);
-                    self.adjust_camera(&mut data.world);
-                    self.redraw_sprites(&mut data.world);
+                    self.adjust_camera(world);
+                    self.redraw_sprites(world);
                 }
 
                 Some((VirtualKeyCode::Right, ElementState::Pressed)) => {
                     self.camera_depth_vision += 1.0;
                     info!("Camera depth vision: {}", self.camera_depth_vision);
-                    self.adjust_camera(&mut data.world);
-                    self.redraw_sprites(&mut data.world);
+                    self.adjust_camera(world);
+                    self.redraw_sprites(world);
                 }
 
                 _ => {}
@@ -376,8 +370,10 @@ fn main() -> amethyst::Result<()> {
                 .with_sprite_visibility_sorting(&["transform_system"]),
         )?;
 
-    let mut game = Application::new(assets_directory, Example::new(), game_data)?;
-    game.run();
+    let mut game = Application::build(assets_directory)?
+        .with_state((), Example::new())?
+        .build(game_data)?;
 
+    game.run();
     Ok(())
 }

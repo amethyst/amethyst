@@ -2,7 +2,7 @@
 
 use amethyst_input::is_close_requested;
 
-use crate::{ecs::prelude::World, GameData, StateEvent};
+use crate::{ecs::prelude::World, game_data::GameData, StateEvent};
 
 use std::fmt::Result as FmtResult;
 use std::fmt::{Display, Formatter};
@@ -10,7 +10,10 @@ use std::fmt::{Display, Formatter};
 /// Error type for errors occurring in StateMachine
 #[derive(Debug)]
 pub enum StateError {
+    /// Error raised when no states are present.
     NoStatesPresent,
+    /// Conflicting handler for state.
+    CallbackConflict,
 }
 
 impl Display for StateError {
@@ -20,6 +23,9 @@ impl Display for StateError {
                 fmt,
                 "Tried to start state machine without any states present"
             ),
+            StateError::CallbackConflict => {
+                write!(fmt, "Tried to register conflicting callback for state.")
+            }
         }
     }
 }
