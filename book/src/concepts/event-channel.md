@@ -211,7 +211,7 @@ Finally, you can read events from your `System`.
 # }
 # impl<'a> amethyst::ecs::System<'a> for MySystem {
 #   type SystemData = Read<'a, EventChannel<MyEvent>>;
-    fn run (&mut self, my_event_channel: Self::SystemData) {
+    fn run(&mut self, my_event_channel: Self::SystemData) {
         for event in my_event_channel.read(self.reader.as_mut().unwrap()) {
             println!("Received an event: {:?}", event);
         }
