@@ -152,22 +152,22 @@ impl Pass for DrawFlatColorSeparate {
                     !&hidden_prop,
                 )
                     .join()
-                    {
-                        draw_mesh(
-                            encoder,
-                            effect,
-                            self.skinning,
-                            mesh_storage.get(mesh),
-                            joint,
-                            &tex_storage,
-                            Some(material),
-                            &material_defaults,
-                            camera,
-                            Some(global),
-                            &ATTRIBUTES,
-                            &[],
-                        );
-                    }
+                {
+                    draw_mesh(
+                        encoder,
+                        effect,
+                        self.skinning,
+                        mesh_storage.get(mesh),
+                        joint,
+                        &tex_storage,
+                        Some(material),
+                        &material_defaults,
+                        camera,
+                        Some(global),
+                        &ATTRIBUTES,
+                        &[],
+                    );
+                }
             }
             Some(ref visibility) => {
                 for (joint, mesh, material, global, _) in (
@@ -178,22 +178,22 @@ impl Pass for DrawFlatColorSeparate {
                     &visibility.visible_unordered,
                 )
                     .join()
-                    {
-                        draw_mesh(
-                            encoder,
-                            effect,
-                            self.skinning,
-                            mesh_storage.get(mesh),
-                            joint,
-                            &tex_storage,
-                            Some(material),
-                            &material_defaults,
-                            camera,
-                            Some(global),
-                            &ATTRIBUTES,
-                            &[],
-                        );
-                    }
+                {
+                    draw_mesh(
+                        encoder,
+                        effect,
+                        self.skinning,
+                        mesh_storage.get(mesh),
+                        joint,
+                        &tex_storage,
+                        Some(material),
+                        &material_defaults,
+                        camera,
+                        Some(global),
+                        &ATTRIBUTES,
+                        &[],
+                    );
+                }
 
                 for entity in &visibility.visible_ordered {
                     if let Some(mesh) = mesh.get(*entity) {
