@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use serde::{de::DeserializeOwned, Serialize};
 
 use amethyst_core::{
-    bundle::{Result, SystemBundle},
+    bundle::{Result, ResultExt, SystemBundle},
     shred::DispatcherBuilder,
 };
 
@@ -33,7 +33,7 @@ where
 {
     fn build(self, builder: &mut DispatcherBuilder<'_, '_>) -> Result<()> {
         let socket_system = NetSocketSystem::<T>::new(self.addr, self.filters)
-            .expect("Failed to open network system.");
+            .chain_err(|| "Failed to open network system.")?;
 
         builder.add(socket_system, "net_socket", &[]);
 
