@@ -191,6 +191,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#969]: https://github.com/amethyst/amethyst/pull/969
 [#983]: https://github.com/amethyst/amethyst/pull/983
 [#971]: https://github.com/amethyst/amethyst/pull/971
+[#972]: https://github.com/amethyst/amethyst/issue/972
 [#974]: https://github.com/amethyst/amethyst/pull/974
 [#976]: https://github.com/amethyst/amethyst/pull/976
 [#981]: https://github.com/amethyst/amethyst/pull/981
