@@ -361,9 +361,10 @@ let game_data = GameDataBuilder::default()
 # }
 ```
 
-You should now have a ball moving and bouncing off paddles and off the top and bottom
-of the screen. However, you will quickly notice that if the ball goes out of the screen
-on the right or the left, it never comes back and the game is over...
+You should now have a ball moving and bouncing off paddles and off the top
+and bottom of the screen. However, you will quickly notice that if the ball
+goes out of the screen on the right or the left, it never comes back
+and the game is over...
 
 ## Summary
 
