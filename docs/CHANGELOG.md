@@ -48,7 +48,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `MaterialTextureSet` is removed as it is no longer needed. ([#1117])
 * `amethyst::core::Orientation` has been removed because of limited use. ([#1066])
 * `TimedDestroySystem` has been split into `DestroyAtTimeSystem` and `DestroyInTimeSystem`. ([#1129])
-* Reverted [MacOS OpenGL workaround][972] in favor of the upstream fix in `glutin`. ([#1184])
+* Reverted [MacOS OpenGL workaround][#972] in favor of the upstream fix in `glutin`. ([#1184])
 
 ### Fixed
 
