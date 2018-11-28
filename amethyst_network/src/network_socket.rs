@@ -9,12 +9,11 @@ use std::{
 };
 
 use amethyst_core::specs::{Join, Resources, System, SystemData, WriteStorage};
-use laminar::error;
-use laminar::net::UdpSocket;
-use laminar::{DeliveryMethod, NetworkConfig, Packet};
+use laminar::{error, net::UdpSocket, DeliveryMethod, NetworkConfig, Packet};
+use log::{error, warn};
 use serde::{de::DeserializeOwned, Serialize};
 
-use super::{deserialize_event, send_event, ConnectionState, NetConnection, NetEvent, NetFilter};
+use crate::{deserialize_event, send_event, ConnectionState, NetConnection, NetEvent, NetFilter};
 
 enum InternalSocketEvent<E> {
     SendEvents {

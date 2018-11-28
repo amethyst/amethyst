@@ -2,7 +2,7 @@
 
 use std::{marker::PhantomData, net::SocketAddr};
 
-use super::NetEvent;
+use crate::NetEvent;
 
 /// Network filter base trait providing an event filtering interface.
 pub trait NetFilter<T>: Send + Sync
