@@ -173,7 +173,11 @@ impl CameraNormalizeMode {
         desired_coordinates: &CameraOrthoWorldCoordinates,
     ) -> (f32, f32, f32, f32) {
         // If bottom is higher than top (common in 2D graphics), we flip the offset
-        let sign = if desired_coordinates.bottom > desired_coordinates.top { -1.0 } else { 1.0 };
+        let sign = if desired_coordinates.bottom > desired_coordinates.top {
+            -1.0
+        } else {
+            1.0
+        };
         let offset = (desired_coordinates.width() / window_aspect_ratio
             - desired_coordinates.height())
             / 2.0
@@ -240,7 +244,7 @@ mod test {
     // TODO: Disabled until someone fixes the formula (if possible).
     /*#[test]
     fn near_far_from_camera() {
-    	use amethyst_core::cgmath::{Ortho, Matrix4};
+        use amethyst_core::cgmath::{Ortho, Matrix4};
         let mat4 = Matrix4::from(Ortho {
             left: 0.0,
             right: 1.0,
