@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `sprite_camera_follow` example showing how to use a Camera that has a sprite Parent ([#1099])
 * Added capabilities for the `DrawFlat2D` pass to draw `TextureHandle`s by themselves. Also added a simple example for this. ([#1153])
 * Added a `Flipped` component which allows flipping sprites or images horizontally and vertically. ([#1153])
+* Added transform constructor function `Transform::new()`. ([#1187])
 
 ### Changed
 
@@ -75,7 +76,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1131]: https://github.com/amethyst/amethyst/pull/1131
 [#1153]: https://github.com/amethyst/amethyst/pull/1153
 [#1164]: https://github.com/amethyst/amethyst/pull/1164
+[#1142]: https://github.com/amethyst/amethyst/pull/1142
+[#1052]: https://github.com/amethyst/amethyst/pull/1052
 [#1184]: https://github.com/amethyst/amethyst/pull/1184
+[#1187]: https://github.com/amethyst/amethyst/pull/1187
 [winit_018]: https://github.com/tomaka/winit/blob/v0.18.0/CHANGELOG.md#version-0180-2018-11-07
 [glutin_019]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0190-2018-11-09
 

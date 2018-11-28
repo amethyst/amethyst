@@ -24,6 +24,32 @@ pub struct Transform {
 }
 
 impl Transform {
+    /// Create a new Transform.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use amethyst_core::transform::components::Transform;
+    /// # use amethyst_core::nalgebra::{Isometry3, Translation3, UnitQuaternion, Vector3};
+    /// let position = Translation3::new(0.0, 2.0, 4.0);
+    /// let rotation = UnitQuaternion::from_euler_angles(0.4, 0.2, 0.0);
+    /// let scale = Vector3::new(1.0, 1.0, 1.0);
+    ///
+    /// let t = Transform::new(position, rotation, scale);
+    ///
+    /// assert_eq!(t.translation().y, 2.0);
+    /// ```
+    pub fn new(
+        position: Translation3<f32>,
+        rotation: UnitQuaternion<f32>,
+        scale: Vector3<f32>,
+    ) -> Self {
+        Transform {
+            iso: Isometry3::from_parts(position, rotation),
+            scale,
+        }
+    }
+
     /// Makes the entity point towards `position`.
     ///
     /// `up` says which direction the entity should be 'rolled' to once it is pointing at
