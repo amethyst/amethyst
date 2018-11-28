@@ -49,6 +49,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `MaterialTextureSet` is removed as it is no longer needed. ([#1117])
 * `amethyst::core::Orientation` has been removed because of limited use. ([#1066])
 * `TimedDestroySystem` has been split into `DestroyAtTimeSystem` and `DestroyInTimeSystem`. ([#1129])
+* Reverted [MacOS OpenGL workaround][#972] in favor of the upstream fix in `glutin`. ([#1184])
 
 ### Fixed
 
@@ -77,6 +78,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1164]: https://github.com/amethyst/amethyst/pull/1164
 [#1142]: https://github.com/amethyst/amethyst/pull/1142
 [#1052]: https://github.com/amethyst/amethyst/pull/1052
+[#1184]: https://github.com/amethyst/amethyst/pull/1184
 [#1187]: https://github.com/amethyst/amethyst/pull/1187
 [winit_018]: https://github.com/tomaka/winit/blob/v0.18.0/CHANGELOG.md#version-0180-2018-11-07
 [glutin_019]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0190-2018-11-09
