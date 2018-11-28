@@ -7,7 +7,8 @@ use amethyst_core::{
 };
 use amethyst_renderer::{Camera, ScreenDimensions};
 
-/// The coordinates that `CameraOrtho` will keep visible in the window
+/// The coordinates that `CameraOrtho` will keep visible in the window.
+/// `bottom` can be a higher value than `top`, as is common in 2D coordinates
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Copy)]
 pub struct CameraOrthoWorldCoordinates {
     /// Left x coordinate
