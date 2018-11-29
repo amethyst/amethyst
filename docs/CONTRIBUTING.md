@@ -189,8 +189,10 @@ faster, stronger, and more efficient.
 
 Documentation improvements are always welcome! A solid project needs to have
 solid documentation to go with it. You can search for documentation-related
-issues on any of our GitHub trackers by filtering by the orange `note: doc`
+issues on any of our GitHub trackers by filtering by the green [`projects: docs`][pd]
 label.
+
+[pd]: https://github.com/amethyst/amethyst/issues?q=is%3Aopen+is%3Aissue+label%3A"project%3A+docs"
 
 There are two types of documentation in Amethyst you can work on:
 
