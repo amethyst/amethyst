@@ -7,7 +7,8 @@ use amethyst_core::{
 };
 use amethyst_renderer::{Camera, ScreenDimensions};
 
-/// The coordinates that `CameraOrtho` will keep visible in the window
+/// The coordinates that `CameraOrtho` will keep visible in the window.
+/// `bottom` can be a higher value than `top`, as is common in 2D coordinates
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Copy)]
 pub struct CameraOrthoWorldCoordinates {
     /// Left x coordinate
@@ -43,7 +44,8 @@ impl CameraOrthoWorldCoordinates {
 
     /// Returns size of the y-axis.
     pub fn height(&self) -> f32 {
-        self.top - self.bottom
+        // abs is in case you're using upside-down coordinates
+        (self.top - self.bottom).abs()
     }
 }
 
@@ -140,17 +142,12 @@ impl CameraNormalizeMode {
             },
             CameraNormalizeMode::Contain => {
                 let desired_aspect_ratio = desired_coordinates.aspect_ratio();
+                // We don't need an == case because lossy handles it just fine
                 if window_aspect_ratio > desired_aspect_ratio {
+                    // The window is wide, bars should be on X
                     CameraNormalizeMode::lossy_x(window_aspect_ratio, desired_coordinates)
-                } else if window_aspect_ratio < desired_aspect_ratio {
-                    CameraNormalizeMode::lossy_y(window_aspect_ratio, desired_coordinates)
                 } else {
-                    (
-                        desired_coordinates.left,
-                        desired_coordinates.right,
-                        desired_coordinates.bottom,
-                        desired_coordinates.top,
-                    )
+                    CameraNormalizeMode::lossy_y(window_aspect_ratio, desired_coordinates)
                 }
             }
         }
@@ -175,9 +172,16 @@ impl CameraNormalizeMode {
         window_aspect_ratio: f32,
         desired_coordinates: &CameraOrthoWorldCoordinates,
     ) -> (f32, f32, f32, f32) {
+        // If bottom is higher than top (common in 2D graphics), we flip the offset
+        let sign = if desired_coordinates.bottom > desired_coordinates.top {
+            -1.0
+        } else {
+            1.0
+        };
         let offset = (desired_coordinates.width() / window_aspect_ratio
             - desired_coordinates.height())
-            / 2.0;
+            / 2.0
+            * sign;
         (
             desired_coordinates.left,
             desired_coordinates.right,
@@ -240,7 +244,7 @@ mod test {
     // TODO: Disabled until someone fixes the formula (if possible).
     /*#[test]
     fn near_far_from_camera() {
-    	use amethyst_core::cgmath::{Ortho, Matrix4};
+        use amethyst_core::cgmath::{Ortho, Matrix4};
         let mat4 = Matrix4::from(Ortho {
             left: 0.0,
             right: 1.0,
@@ -330,6 +334,21 @@ mod test {
         let aspect = 1.0 / 1.0;
         let cam = CameraOrtho::normalized(CameraNormalizeMode::Contain);
         assert_eq!((0.0, 1.0, 0.0, 1.0), cam.camera_offsets(aspect));
+    }
+
+    #[test]
+    fn flipped_y_lossy_vertical() {
+        let aspect = 1.0 / 2.0;
+        let cam = CameraOrtho {
+            mode: CameraNormalizeMode::Contain,
+            world_coordinates: CameraOrthoWorldCoordinates {
+                left: 0.0,
+                right: 1.0,
+                top: 0.0,
+                bottom: 1.0,
+            },
+        };
+        assert_eq!((0.0, 1.0, 1.5, -0.5), cam.camera_offsets(aspect));
     }
 
     #[test]
