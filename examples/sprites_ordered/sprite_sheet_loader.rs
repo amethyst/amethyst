@@ -1,6 +1,6 @@
 use amethyst::{
     assets::Handle,
-    renderer::{Sprite, SpriteSheet, Texture, TextureCoordinates},
+    renderer::{Sprite, SpriteSheet, Texture},
 };
 
 use crate::sprite;
@@ -16,11 +16,11 @@ use crate::sprite;
 /// * `texture`: Sprite sheet's texture handle
 /// * `definition`: Definition of the sprite layout on the sprite sheet.
 pub fn load(texture: Handle<Texture>, definition: &sprite::SpriteSheetDefinition) -> SpriteSheet {
-    let mut sprites = Vec::with_capacity(definition.row_count * definition.column_count);
+    let mut sprites = Vec::with_capacity((definition.row_count * definition.column_count) as usize);
     let (offset_w, offset_h) = offset_distances(&definition);
     let (image_w, image_h) = (
-        offset_w * definition.column_count as f32,
-        offset_h * definition.row_count as f32,
+        offset_w * definition.column_count,
+        offset_h * definition.row_count,
     );
 
     for row in 0..definition.row_count {
@@ -32,15 +32,16 @@ pub fn load(texture: Handle<Texture>, definition: &sprite::SpriteSheetDefinition
             // 10 11 12 13 14
             // 15 16 17 18 19
 
-            let offset_x = offset_w * col as f32;
-            let offset_y = offset_h * row as f32;
-            let sprite = create_sprite(
+            let pixel_left = offset_w * col;
+            let pixel_top = offset_h * row;
+            let sprite = Sprite::from_pixel_values(
                 image_w,
                 image_h,
                 definition.sprite_w,
                 definition.sprite_h,
-                offset_x,
-                offset_y,
+                pixel_left,
+                pixel_top,
+                [0.0; 2],
             );
 
             let sprite_number = row * definition.column_count + col;
@@ -62,55 +63,10 @@ pub fn load(texture: Handle<Texture>, definition: &sprite::SpriteSheetDefinition
 /// # Parameters
 ///
 /// * `definition`: Sprite sheet definition.
-fn offset_distances(definition: &sprite::SpriteSheetDefinition) -> (f32, f32) {
+fn offset_distances(definition: &sprite::SpriteSheetDefinition) -> (u32, u32) {
     if definition.has_border {
-        (definition.sprite_w + 1., definition.sprite_h + 1.)
+        (definition.sprite_w + 1, definition.sprite_h + 1)
     } else {
         (definition.sprite_w, definition.sprite_h)
-    }
-}
-
-/// Returns a set of vertices that make up a rectangular mesh of the given size.
-///
-/// This function expects pixel coordinates -- starting from the top left of the image. X increases
-/// to the right, Y increases downwards.
-///
-/// # Parameters
-///
-/// * `image_w`: Width of the full sprite sheet.
-/// * `image_h`: Height of the full sprite sheet.
-/// * `sprite_w`: Width of the sprite.
-/// * `sprite_h`: Height of the sprite.
-/// * `pixel_left`: Pixel X coordinate of the left side of the sprite.
-/// * `pixel_top`: Pixel Y coordinate of the top of the sprite.
-fn create_sprite(
-    image_w: f32,
-    image_h: f32,
-    sprite_w: f32,
-    sprite_h: f32,
-    pixel_left: f32,
-    pixel_top: f32,
-) -> Sprite {
-    let pixel_right = pixel_left + sprite_w;
-    let pixel_bottom = pixel_top + sprite_h;
-
-    // Texture coordinates are expressed as fractions of the position on the image.
-    let left = pixel_left / image_w;
-    let right = pixel_right / image_w;
-    let top = 1.0 - pixel_top / image_h;
-    let bottom = 1.0 - pixel_bottom / image_h;
-
-    let tex_coords = TextureCoordinates {
-        left,
-        right,
-        bottom,
-        top,
-    };
-
-    Sprite {
-        width: sprite_w,
-        height: sprite_h,
-        offsets: [sprite_w / 2.0, sprite_h / 2.0],
-        tex_coords,
     }
 }

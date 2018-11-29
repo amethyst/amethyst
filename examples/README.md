@@ -122,12 +122,6 @@ This example shows how to use the Fly Camera.
 
 This example shows how to use the Arc Ball Camera.
 
-### Sprites
-
-Demonstrates how to use `SpriteSheet`s.
-
-![example animation](sprites/example.gif)
-
 ### Sprites Ordered
 
 Draws sprites ordered by Z coordinate. Entities with larger Z coordinates will have their sprites drawn in front of entities with smaller Z coordinates.
