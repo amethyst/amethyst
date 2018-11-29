@@ -18,7 +18,11 @@ use crate::{
 };
 
 /// The system that manages the fly movement.
-/// Generic parameters are the parameters for the InputHandler.
+///
+/// # Generic parameters
+///
+/// * `A`: This is the key the `InputHandler` is using for axes. Often, this is a `String`.
+/// * `B`: This is the key the `InputHandler` is using for actions. Often, this is a `String`.
 pub struct FlyMovementSystem<A, B> {
     /// The movement speed of the movement in units per second.
     speed: f32,
