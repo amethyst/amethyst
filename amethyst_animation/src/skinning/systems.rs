@@ -1,6 +1,7 @@
 use amethyst_core::{
     specs::prelude::{
-        BitSet, ComponentEvent, Join, ReadStorage, ReaderId, Resources, System, WriteStorage,
+        BitSet, ComponentEvent, Join, ReadStorage, ReaderId, Resources, System, WriteExpect,
+        WriteStorage,
     },
     GlobalTransform,
 };
@@ -11,21 +12,24 @@ use super::resources::*;
 /// System for performing vertex skinning.
 ///
 /// Needs to run after global transforms have been updated for the current frame.
-pub struct VertexSkinningSystem {
+pub struct VertexSkinningSystem;
+
+/// A resource for `VertexSkinningSystem`.  Automatically created and managed by `VertexSkinningSystem`.
+pub struct VertexSkinningSystemData {
     /// Also scratch space, used while determining which skins need to be updated.
     updated: BitSet,
     updated_skins: BitSet,
     /// Used for tracking modifications to global transforms
-    updated_id: Option<ReaderId<ComponentEvent>>,
+    updated_id: ReaderId<ComponentEvent>,
 }
 
-impl VertexSkinningSystem {
-    /// Creates a new `VertexSkinningSystem`
-    pub fn new() -> Self {
-        Self {
-            updated: BitSet::new(),
-            updated_skins: BitSet::new(),
-            updated_id: None,
+impl VertexSkinningSystemData {
+    pub fn populate_updated_skins(&mut self, joints: &ReadStorage<'_, Joint>) {
+        self.updated_skins.clear();
+        for (_, joint) in (&self.updated, joints).join() {
+            for skin in &joint.skins {
+                self.updated_skins.add(skin.id());
+            }
         }
     }
 }
@@ -36,31 +40,28 @@ impl<'a> System<'a> for VertexSkinningSystem {
         ReadStorage<'a, GlobalTransform>,
         WriteStorage<'a, Skin>,
         WriteStorage<'a, JointTransforms>,
+        WriteExpect<'a, VertexSkinningSystemData>,
     );
 
-    fn run(&mut self, (joints, global_transforms, mut skins, mut matrices): Self::SystemData) {
-        self.updated.clear();
+    fn run(
+        &mut self,
+        (joints, global_transforms, mut skins, mut matrices, mut data): Self::SystemData,
+    ) {
+        data.updated.clear();
 
         global_transforms
             .channel()
-            .read(self.updated_id.as_mut().expect(
-                "`VertexSkinningSystem::setup` was not called before `VertexSkinningSystem::run`",
-            )).for_each(|event| match event {
+            .read(&mut data.updated_id)
+            .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
-                    self.updated.add(*id);
+                    data.updated.add(*id);
                 }
                 ComponentEvent::Removed(_id) => {}
             });
 
-        self.updated_skins.clear();
+        data.populate_updated_skins(&joints);
 
-        for (_, joint) in (&self.updated, &joints).join() {
-            for skin in &joint.skins {
-                self.updated_skins.add(skin.id());
-            }
-        }
-
-        for (_id, skin) in (&self.updated_skins, &mut skins).join() {
+        for (_id, skin) in (&data.updated_skins, &mut skins).join() {
             // Compute the joint global_transforms
             skin.joint_matrices.clear();
             let bind_shape = skin.bind_shape_matrix;
@@ -99,7 +100,7 @@ impl<'a> System<'a> for VertexSkinningSystem {
         }
 
         for (_, mesh_global, mut joint_transform) in
-            (&self.updated, &global_transforms, &mut matrices).join()
+            (&data.updated, &global_transforms, &mut matrices).join()
         {
             if let Some(global_inverse) = mesh_global.0.try_inverse() {
                 if let Some(skin) = skins.get(joint_transform.skin) {
@@ -122,7 +123,11 @@ impl<'a> System<'a> for VertexSkinningSystem {
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::specs::prelude::SystemData;
         Self::SystemData::setup(res);
-        let mut transform = WriteStorage::<GlobalTransform>::fetch(res);
-        self.updated_id = Some(transform.register_reader());
+        let updated_id = WriteStorage::<GlobalTransform>::fetch(res).register_reader();
+        res.insert(VertexSkinningSystemData {
+            updated_id,
+            updated: BitSet::new(),
+            updated_skins: BitSet::new(),
+        });
     }
 }

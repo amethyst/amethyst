@@ -3,7 +3,8 @@ use amethyst_audio::{output::Output, Source};
 use amethyst_core::{
     shrev::{EventChannel, ReaderId},
     specs::{
-        Entity, Read, ReadExpect, ReadStorage, Resources, System, SystemData, Write, WriteStorage,
+        Entity, Read, ReadExpect, ReadStorage, Resources, System, SystemData, Write, WriteExpect,
+        WriteStorage,
     },
     ParentHierarchy,
 };
@@ -14,17 +15,12 @@ use crate::{OnUiActionImage, OnUiActionSound, UiButton, UiEvent, UiEventType::*,
 /// when necessary.
 ///
 /// It's automatically registered with the `UiBundle`.
-#[derive(Default)]
-pub struct UiButtonSystem {
-    event_reader: Option<ReaderId<UiEvent>>,
-    hovered: Option<Entity>,
-}
+pub struct UiButtonSystem;
 
-impl UiButtonSystem {
-    /// Creates a new instance of this structure
-    pub fn new() -> Self {
-        Self::default()
-    }
+/// A resource for `UiButtonSystem` which is automatically created and managed by `UiButtonSystem`.
+pub struct UiButtonSystemData {
+    event_reader: ReaderId<UiEvent>,
+    hovered: Option<Entity>,
 }
 
 impl<'s> System<'s> for UiButtonSystem {
@@ -38,11 +34,16 @@ impl<'s> System<'s> for UiButtonSystem {
         Read<'s, AssetStorage<Source>>,
         Option<Read<'s, Output>>,
         ReadExpect<'s, ParentHierarchy>,
+        WriteExpect<'s, UiButtonSystemData>,
     );
 
     fn setup(&mut self, res: &mut Resources) {
         Self::SystemData::setup(res);
-        self.event_reader = Some(res.fetch_mut::<EventChannel<UiEvent>>().register_reader());
+        let event_reader = res.fetch_mut::<EventChannel<UiEvent>>().register_reader();
+        res.insert(UiButtonSystemData {
+            event_reader,
+            hovered: None,
+        });
     }
 
     fn run(
@@ -57,14 +58,10 @@ impl<'s> System<'s> for UiButtonSystem {
             audio_storage,
             audio_output,
             hierarchy,
+            mut data,
         ): Self::SystemData,
     ) {
-        let event_reader = self
-            .event_reader
-            .as_mut()
-            .expect("`UiButtonSystem::setup` was not called before `UiButtonSystem::run`");
-
-        for event in events.read(event_reader) {
+        for event in events.read(&mut data.event_reader) {
             let button = button_storage.get(event.target);
             let action_image = action_image.get(event.target);
             let action_sound = action_sound.get(event.target);
@@ -112,7 +109,7 @@ impl<'s> System<'s> for UiButtonSystem {
                 }
                 ClickStop => {
                     if let Some(action_image) = action_image {
-                        if Some(event.target) == self.hovered {
+                        if Some(event.target) == data.hovered {
                             if let Some(hover_texture) = action_image.hover_image.as_ref() {
                                 let _ = image_storage.insert(
                                     event.target,
@@ -140,7 +137,7 @@ impl<'s> System<'s> for UiButtonSystem {
                     if let Some(button) = button {
                         for &child in hierarchy.children(event.target) {
                             if let Some(text) = text_storage.get_mut(child) {
-                                if Some(event.target) == self.hovered {
+                                if Some(event.target) == data.hovered {
                                     if let Some(hover_color) = button.hover_text_color {
                                         text.color = hover_color;
                                     } else {
@@ -154,7 +151,7 @@ impl<'s> System<'s> for UiButtonSystem {
                     }
                 }
                 HoverStart => {
-                    self.hovered = Some(event.target);
+                    data.hovered = Some(event.target);
                     if let (Some(hover_sound), Some(audio_output)) = (
                         action_sound
                             .and_then(|s| s.hover_sound.as_ref())
@@ -179,7 +176,7 @@ impl<'s> System<'s> for UiButtonSystem {
                     }
                 }
                 HoverStop => {
-                    self.hovered = None;
+                    data.hovered = None;
                     if let Some(action_image) = action_image {
                         if let Some(normal_image) = action_image.normal_image.as_ref() {
                             let _ = image_storage.insert(

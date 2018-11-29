@@ -47,7 +47,7 @@ impl<'a, 'b, 'c> SystemBundle<'a, 'b> for TransformBundle<'c> {
             self.dep,
         );
         builder.add(
-            TransformSystem::new(),
+            TransformSystem,
             "transform_system",
             &["parent_hierarchy_system"],
         );

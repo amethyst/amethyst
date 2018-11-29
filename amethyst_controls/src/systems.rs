@@ -5,7 +5,9 @@ use winit::{DeviceEvent, Event, WindowEvent};
 use amethyst_core::{
     nalgebra::{Unit, Vector3},
     shrev::{EventChannel, ReaderId},
-    specs::prelude::{Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
+    specs::prelude::{
+        Join, Read, ReadStorage, Resources, System, Write, WriteExpect, WriteStorage,
+    },
     timing::Time,
     transform::Transform,
 };
@@ -117,20 +119,20 @@ impl<'a> System<'a> for ArcBallRotationSystem {
 pub struct FreeRotationSystem<A, B> {
     sensitivity_x: f32,
     sensitivity_y: f32,
-    _marker1: PhantomData<A>,
-    _marker2: PhantomData<B>,
-    event_reader: Option<ReaderId<Event>>,
+    _marker: PhantomData<(A, B)>,
+}
+
+pub struct FreeRotationSystemEventReader {
+    event_reader: ReaderId<Event>,
 }
 
 impl<A, B> FreeRotationSystem<A, B> {
-    /// Builds a new `FreeRotationSystem` with the specified mouse sensitivity values.
+    /// Builds a new `FreeRotationSystem`
     pub fn new(sensitivity_x: f32, sensitivity_y: f32) -> Self {
         FreeRotationSystem {
             sensitivity_x,
             sensitivity_y,
-            _marker1: PhantomData,
-            _marker2: PhantomData,
-            event_reader: None,
+            _marker: PhantomData,
         }
     }
 }
@@ -146,14 +148,12 @@ where
         ReadStorage<'a, FlyControlTag>,
         Read<'a, WindowFocus>,
         Read<'a, HideCursor>,
+        WriteExpect<'a, FreeRotationSystemEventReader>,
     );
 
-    fn run(&mut self, (events, mut transform, tag, focus, hide): Self::SystemData) {
+    fn run(&mut self, (events, mut transform, tag, focus, hide, mut reader): Self::SystemData) {
         let focused = focus.is_focused;
-        for event in
-            events.read(&mut self.event_reader.as_mut().expect(
-                "`FreeRotationSystem::setup` was not called before `FreeRotationSystem::run`",
-            )) {
+        for event in events.read(&mut reader.event_reader) {
             if focused && hide.hide {
                 if let Event::DeviceEvent { ref event, .. } = *event {
                     if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
@@ -171,29 +171,29 @@ where
         use amethyst_core::specs::prelude::SystemData;
 
         Self::SystemData::setup(res);
-        self.event_reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
+        let event_reader = res.fetch_mut::<EventChannel<Event>>().register_reader();
+        res.insert(FreeRotationSystemEventReader { event_reader });
     }
 }
 
 /// A system which reads Events and saves if a window has lost focus in a WindowFocus resource
-pub struct MouseFocusUpdateSystem {
-    event_reader: Option<ReaderId<Event>>,
-}
+pub struct MouseFocusUpdateSystem;
 
-impl MouseFocusUpdateSystem {
-    /// Builds a new MouseFocusUpdateSystem.
-    pub fn new() -> MouseFocusUpdateSystem {
-        MouseFocusUpdateSystem { event_reader: None }
-    }
+/// A resource for `MouseFocusUpdateSystem` which is automatically created and managed by
+/// `MouseFocusUpdateSystem`.
+pub struct MouseFocusUpdateSystemEventReader {
+    event_reader: ReaderId<Event>,
 }
 
 impl<'a> System<'a> for MouseFocusUpdateSystem {
-    type SystemData = (Read<'a, EventChannel<Event>>, Write<'a, WindowFocus>);
+    type SystemData = (
+        Read<'a, EventChannel<Event>>,
+        Write<'a, WindowFocus>,
+        WriteExpect<'a, MouseFocusUpdateSystemEventReader>,
+    );
 
-    fn run(&mut self, (events, mut focus): Self::SystemData) {
-        for event in events.read(&mut self.event_reader.as_mut().expect(
-            "`MouseFocusUpdateSystem::setup` was not called before `MouseFocusUpdateSystem::run`",
-        )) {
+    fn run(&mut self, (events, mut focus, mut reader): Self::SystemData) {
+        for event in events.read(&mut reader.event_reader) {
             if let Event::WindowEvent { ref event, .. } = *event {
                 if let WindowEvent::Focused(focused) = *event {
                     focus.is_focused = focused;
@@ -205,7 +205,8 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::specs::prelude::SystemData;
         Self::SystemData::setup(res);
-        self.event_reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
+        let event_reader = res.fetch_mut::<EventChannel<Event>>().register_reader();
+        res.insert(MouseFocusUpdateSystemEventReader { event_reader });
     }
 }
 

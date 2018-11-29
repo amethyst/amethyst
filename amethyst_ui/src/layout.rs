@@ -6,7 +6,7 @@ use thread_profiler::profile_scope;
 use amethyst_core::{
     specs::prelude::{
         BitSet, ComponentEvent, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
-        WriteStorage,
+        WriteExpect, WriteStorage,
     },
     HierarchyEvent, Parent, ParentHierarchy,
 };
@@ -124,14 +124,14 @@ pub enum Stretch {
 /// Manages the `Parent` component on entities having `UiTransform`
 /// It does almost the same as the `TransformSystem`, but with some differences,
 /// like `UiTransform` alignment and stretching.
-#[derive(Default)]
-pub struct UiTransformSystem {
+pub struct UiTransformSystem;
+
+/// A resource for `UiTransformSystem` which is automatically created and managed by
+/// `UiTransformSystem`.
+pub struct UiTransformSystemData {
     transform_modified: BitSet,
-
-    transform_events_id: Option<ReaderId<ComponentEvent>>,
-
-    parent_events_id: Option<ReaderId<HierarchyEvent>>,
-
+    transform_events_id: ReaderId<ComponentEvent>,
+    parent_events_id: ReaderId<HierarchyEvent>,
     screen_size: (f32, f32),
 }
 
@@ -141,45 +141,34 @@ impl<'a> System<'a> for UiTransformSystem {
         ReadStorage<'a, Parent>,
         ReadExpect<'a, ScreenDimensions>,
         ReadExpect<'a, ParentHierarchy>,
+        WriteExpect<'a, UiTransformSystemData>,
     );
     fn run(&mut self, data: Self::SystemData) {
-        let (mut transforms, parents, screen_dim, hierarchy) = data;
+        let (mut transforms, parents, screen_dim, hierarchy, mut data) = data;
         #[cfg(feature = "profiler")]
         profile_scope!("ui_parent_system");
 
-        self.transform_modified.clear();
-
-        let self_transform_modified = &mut self.transform_modified;
-
-        let self_transform_events_id = &mut self
-            .transform_events_id
-            .as_mut()
-            .expect("`UiTransformSystem::setup` was not called before `UiTransformSystem::run`");
+        data.transform_modified.clear();
 
         transforms
             .channel()
-            .read(self_transform_events_id)
+            .read(&mut data.transform_events_id)
             .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
-                    self_transform_modified.add(*id);
+                    data.transform_modified.add(*id);
                 }
                 ComponentEvent::Removed(_id) => {}
             });
 
-        for event in
-            hierarchy
-                .changed()
-                .read(&mut self.parent_events_id.as_mut().expect(
-                    "`UiTransformSystem::setup` was not called before `UiTransformSystem::run`",
-                )) {
+        for event in hierarchy.changed().read(&mut data.parent_events_id) {
             if let HierarchyEvent::Modified(entity) = *event {
-                self_transform_modified.add(entity.id());
+                data.transform_modified.add(entity.id());
             }
         }
 
         let current_screen_size = (screen_dim.width(), screen_dim.height());
-        let screen_resized = current_screen_size != self.screen_size;
-        self.screen_size = current_screen_size;
+        let screen_resized = current_screen_size != data.screen_size;
+        data.screen_size = current_screen_size;
         if screen_resized {
             process_root_iter(
                 (&mut transforms, !&parents).join().map(|i| i.0),
@@ -187,9 +176,8 @@ impl<'a> System<'a> for UiTransformSystem {
             );
         } else {
             // Immutable borrow
-            let self_transform_modified = &*self_transform_modified;
             process_root_iter(
-                (&mut transforms, !&parents, self_transform_modified)
+                (&mut transforms, !&parents, &data.transform_modified)
                     .join()
                     .map(|i| i.0),
                 &*screen_dim,
@@ -199,23 +187,23 @@ impl<'a> System<'a> for UiTransformSystem {
         // Populate the modifications we just did.
         transforms
             .channel()
-            .read(self_transform_events_id)
+            .read(&mut data.transform_events_id)
             .for_each(|event| {
                 if let ComponentEvent::Modified(id) = event {
-                    self_transform_modified.add(*id);
+                    data.transform_modified.add(*id);
                 }
             });
 
         // Compute transforms with parents.
         for entity in hierarchy.all() {
             {
-                let self_dirty = self_transform_modified.contains(entity.id());
+                let self_dirty = data.transform_modified.contains(entity.id());
                 let parent_entity = parents
                     .get(*entity)
                     .expect(
                         "Unreachable: All entities in `ParentHierarchy` should also be in `Parent`",
                     ).entity;
-                let parent_dirty = self_transform_modified.contains(parent_entity.id());
+                let parent_dirty = data.transform_modified.contains(parent_entity.id());
                 if parent_dirty || self_dirty || screen_resized {
                     let parent_transform_copy = transforms.get(parent_entity).cloned();
                     let transform = transforms.get_mut(*entity);
@@ -273,10 +261,10 @@ impl<'a> System<'a> for UiTransformSystem {
             // Populate the modifications we just did.
             transforms
                 .channel()
-                .read(self_transform_events_id)
+                .read(&mut data.transform_events_id)
                 .for_each(|event| {
                     if let ComponentEvent::Modified(id) = event {
-                        self_transform_modified.add(*id);
+                        data.transform_modified.add(*id);
                     }
                 });
         }
@@ -284,10 +272,10 @@ impl<'a> System<'a> for UiTransformSystem {
         // any events that were generated during the system run
         transforms
             .channel()
-            .read(self_transform_events_id)
+            .read(&mut data.transform_events_id)
             .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
-                    self_transform_modified.add(*id);
+                    data.transform_modified.add(*id);
                 }
                 ComponentEvent::Removed(_id) => {}
             });
@@ -296,9 +284,14 @@ impl<'a> System<'a> for UiTransformSystem {
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::specs::prelude::SystemData;
         Self::SystemData::setup(res);
-        self.parent_events_id = Some(res.fetch_mut::<ParentHierarchy>().track());
-        let mut transforms = WriteStorage::<UiTransform>::fetch(res);
-        self.transform_events_id = Some(transforms.register_reader());
+        let parent_events_id = res.fetch_mut::<ParentHierarchy>().track();
+        let transform_events_id = WriteStorage::<UiTransform>::fetch(res).register_reader();
+        res.insert(UiTransformSystemData {
+            parent_events_id,
+            transform_events_id,
+            screen_size: (0.0, 0.0),
+            transform_modified: BitSet::new(),
+        })
     }
 }
 

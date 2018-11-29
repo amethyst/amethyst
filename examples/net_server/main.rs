@@ -4,10 +4,10 @@ extern crate log;
 
 use amethyst::{
     core::frame_limiter::FrameRateLimitStrategy,
-    ecs::{Join, System, WriteStorage},
+    ecs::{Join, Resources, System, SystemData, WriteExpect, WriteStorage},
     network::*,
     prelude::*,
-    shrev::ReaderId,
+    shrev::{EventChannel, ReaderId},
     Result,
 };
 use std::time::Duration;
@@ -18,7 +18,7 @@ fn main() -> Result<()> {
         .with_bundle(NetworkBundle::<()>::new(
             "127.0.0.1:3456".parse().unwrap(),
             vec![Box::new(FilterConnected::<()>::new())],
-        ))?.with(SpamReceiveSystem::new(), "rcv", &[]);
+        ))?.with(SpamReceiveSystem, "rcv", &[]);
     let mut game = Application::build("./", State1)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
@@ -40,25 +40,21 @@ impl<'a, 'b> SimpleState<'a, 'b> for State1 {
 }
 
 /// A simple system that receives a ton of network events.
-struct SpamReceiveSystem {
-    pub reader: Option<ReaderId<NetEvent<()>>>,
-}
+struct SpamReceiveSystem;
 
-impl SpamReceiveSystem {
-    pub fn new() -> Self {
-        SpamReceiveSystem { reader: None }
-    }
+struct SpamReceiveSystemData {
+    pub reader: ReaderId<NetEvent<()>>,
 }
 
 impl<'a> System<'a> for SpamReceiveSystem {
-    type SystemData = (WriteStorage<'a, NetConnection<()>>,);
-    fn run(&mut self, (mut connections,): Self::SystemData) {
+    type SystemData = (
+        WriteStorage<'a, NetConnection<()>>,
+        WriteExpect<'a, SpamReceiveSystemData>,
+    );
+    fn run(&mut self, (mut connections, mut data): Self::SystemData) {
         let mut count = 0;
         for (mut conn,) in (&mut connections,).join() {
-            if self.reader.is_none() {
-                self.reader = Some(conn.receive_buffer.register_reader());
-            }
-            for ev in conn.receive_buffer.read(self.reader.as_mut().unwrap()) {
+            for ev in conn.receive_buffer.read(&mut data.reader) {
                 count += 1;
                 match ev {
                     &NetEvent::TextMessage { ref msg } => info!("{}", msg),
@@ -67,5 +63,13 @@ impl<'a> System<'a> for SpamReceiveSystem {
             }
         }
         info!("Received {} messages this frame", count);
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        Self::SystemData::setup(res);
+        let reader = res
+            .fetch_mut::<EventChannel<NetEvent<()>>>()
+            .register_reader();
+        res.insert(SpamReceiveSystemData { reader });
     }
 }

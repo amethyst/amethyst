@@ -37,11 +37,7 @@ impl<'a> VertexSkinningBundle<'a> {
 
 impl<'a, 'b, 'c> SystemBundle<'a, 'b> for VertexSkinningBundle<'c> {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
-        builder.add(
-            VertexSkinningSystem::new(),
-            "vertex_skinning_system",
-            self.dep,
-        );
+        builder.add(VertexSkinningSystem, "vertex_skinning_system", self.dep);
         Ok(())
     }
 }

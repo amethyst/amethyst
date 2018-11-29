@@ -3,34 +3,32 @@
 use hibitset::BitSet;
 use specs::prelude::{
     ComponentEvent, Entities, Entity, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
-    WriteStorage,
+    WriteExpect, WriteStorage,
 };
 
 use crate::transform::{GlobalTransform, HierarchyEvent, Parent, ParentHierarchy, Transform};
 
 /// Handles updating `GlobalTransform` components based on the `Transform`
 /// component and parents.
-pub struct TransformSystem {
+pub struct TransformSystem;
+
+/// A resource for `TransformSystem`.  Automatically created and managed by `TransformSystem`.
+pub struct TransformSystemData {
     local_modified: BitSet,
     global_modified: BitSet,
 
-    locals_events_id: Option<ReaderId<ComponentEvent>>,
+    locals_events_id: ReaderId<ComponentEvent>,
 
-    parent_events_id: Option<ReaderId<HierarchyEvent>>,
+    parent_events_id: ReaderId<HierarchyEvent>,
 
     scratch: Vec<Entity>,
 }
 
-impl TransformSystem {
-    /// Creates a new transform processor.
-    pub fn new() -> TransformSystem {
-        TransformSystem {
-            locals_events_id: None,
-            parent_events_id: None,
-            local_modified: BitSet::default(),
-            global_modified: BitSet::default(),
-            scratch: Vec::new(),
-        }
+impl TransformSystemData {
+    /// This function exists as a workaround for the borrow checker not letting us have multiple
+    /// aliasing.
+    fn borrow_parts(&mut self) -> (&BitSet, &mut BitSet) {
+        (&self.local_modified, &mut self.global_modified)
     }
 }
 
@@ -41,41 +39,38 @@ impl<'a> System<'a> for TransformSystem {
         ReadStorage<'a, Transform>,
         ReadStorage<'a, Parent>,
         WriteStorage<'a, GlobalTransform>,
+        WriteExpect<'a, TransformSystemData>,
     );
-    fn run(&mut self, (entities, hierarchy, locals, parents, mut globals): Self::SystemData) {
+    fn run(
+        &mut self,
+        (entities, hierarchy, locals, parents, mut globals, mut data): Self::SystemData,
+    ) {
         #[cfg(feature = "profiler")]
         profile_scope!("transform_system");
 
-        self.scratch.clear();
-        self.scratch
+        data.scratch.clear();
+        data.scratch
             .extend((&*entities, &locals, !&globals).join().map(|d| d.0));
-        for entity in &self.scratch {
+        for entity in &data.scratch {
             globals
                 .insert(*entity, GlobalTransform::default())
                 .expect("unreachable");
         }
 
-        self.local_modified.clear();
-        self.global_modified.clear();
+        data.local_modified.clear();
+        data.global_modified.clear();
 
         locals
             .channel()
-            .read(
-                self.locals_events_id.as_mut().expect(
-                    "`TransformSystem::setup` was not called before `TransformSystem::run`",
-                ),
-            ).for_each(|event| match event {
+            .read(&mut data.locals_events_id)
+            .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
-                    self.local_modified.add(*id);
+                    data.local_modified.add(*id);
                 }
                 ComponentEvent::Removed(_id) => {}
             });
 
-        for event in hierarchy.changed().read(
-            self.parent_events_id
-                .as_mut()
-                .expect("`TransformSystem::setup` was not called before `TransformSystem::run`"),
-        ) {
+        for event in hierarchy.changed().read(&mut data.parent_events_id) {
             match *event {
                 HierarchyEvent::Removed(entity) => {
                     // Sometimes the user may have already deleted the entity.
@@ -84,34 +79,31 @@ impl<'a> System<'a> for TransformSystem {
                     let _ = entities.delete(entity);
                 }
                 HierarchyEvent::Modified(entity) => {
-                    self.local_modified.add(entity.id());
+                    data.local_modified.add(entity.id());
                 }
             }
         }
 
-        // Compute transforms without parents.
-        for (entity, _, local, global, _) in (
-            &*entities,
-            &self.local_modified,
-            &locals,
-            &mut globals,
-            !&parents,
-        )
-            .join()
         {
-            self.global_modified.add(entity.id());
-            global.0 = local.matrix();
-            debug_assert!(
-                global.is_finite(),
-                format!("Entity {:?} had a non-finite `Transform`", entity)
-            );
+            let (local_modified, global_modified) = data.borrow_parts();
+            // Compute transforms without parents.
+            for (entity, _, local, global, _) in
+                (&*entities, local_modified, &locals, &mut globals, !&parents).join()
+            {
+                global_modified.add(entity.id());
+                global.0 = local.matrix();
+                debug_assert!(
+                    global.is_finite(),
+                    format!("Entity {:?} had a non-finite `Transform`", entity)
+                );
+            }
         }
 
         // Compute transforms with parents.
         for entity in hierarchy.all() {
-            let self_dirty = self.local_modified.contains(entity.id());
+            let self_dirty = data.local_modified.contains(entity.id());
             if let (Some(parent), Some(local)) = (parents.get(*entity), locals.get(*entity)) {
-                let parent_dirty = self.global_modified.contains(parent.entity.id());
+                let parent_dirty = data.global_modified.contains(parent.entity.id());
                 if parent_dirty || self_dirty {
                     let combined_transform = if let Some(parent_global) = globals.get(parent.entity)
                     {
@@ -121,7 +113,7 @@ impl<'a> System<'a> for TransformSystem {
                     };
 
                     if let Some(global) = globals.get_mut(*entity) {
-                        self.global_modified.add(entity.id());
+                        data.global_modified.add(entity.id());
                         global.0 = combined_transform;
                     }
                 }
@@ -132,10 +124,15 @@ impl<'a> System<'a> for TransformSystem {
     fn setup(&mut self, res: &mut Resources) {
         use specs::prelude::SystemData;
         Self::SystemData::setup(res);
-        let mut hierarchy = res.fetch_mut::<ParentHierarchy>();
-        let mut locals = WriteStorage::<Transform>::fetch(res);
-        self.parent_events_id = Some(hierarchy.track());
-        self.locals_events_id = Some(locals.register_reader());
+        let parent_events_id = res.fetch_mut::<ParentHierarchy>().track();
+        let locals_events_id = WriteStorage::<Transform>::fetch(res).register_reader();
+        res.insert(TransformSystemData {
+            parent_events_id,
+            locals_events_id,
+            local_modified: BitSet::new(),
+            global_modified: BitSet::new(),
+            scratch: Vec::new(),
+        });
     }
 }
 
@@ -182,7 +179,7 @@ mod tests {
     fn transform_world<'a, 'b>() -> (World, HierarchySystem<Parent>, TransformSystem) {
         let mut world = World::new();
         let mut hs = HierarchySystem::<Parent>::new();
-        let mut ts = TransformSystem::new();
+        let mut ts = TransformSystem;
         hs.setup(&mut world.res);
         ts.setup(&mut world.res);
 

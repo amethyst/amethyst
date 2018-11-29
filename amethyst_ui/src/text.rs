@@ -13,7 +13,7 @@ use amethyst_core::{
     shrev::{EventChannel, ReaderId},
     specs::prelude::{
         Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
-        Resources, System, Write, WriteStorage,
+        Resources, System, Write, WriteExpect, WriteStorage,
     },
     timing::Time,
 };
@@ -144,10 +144,72 @@ struct CachedTabOrder {
     pub cache: Vec<(i32, Entity)>,
 }
 
+impl CachedTabOrder {
+    pub fn update_cache(
+        &mut self,
+        transform: &ReadStorage<'_, UiTransform>,
+        entities: &Entities<'_>,
+    ) {
+        // Populate and update the tab order cache.
+        {
+            let bitset = &mut self.cached;
+            let cache = &mut self.cache;
+            cache.retain(|&(_t, entity)| {
+                let keep = transform.contains(entity);
+                if !keep {
+                    bitset.remove(entity.id());
+                }
+                keep
+            });
+        }
+
+        for &mut (ref mut t, entity) in &mut self.cache {
+            *t = transform
+                .get(entity)
+                .expect("Unreachable: Entities are collected from a prepopulated cache")
+                .tab_order;
+        }
+
+        // Attempt to insert the new entities in sorted position.  Should reduce work during
+        // the sorting step.
+        let transform_set = transform.mask().clone();
+        {
+            // Create a bitset containing only the new indices.
+            let new = (&transform_set ^ &self.cached) & &transform_set;
+            for (entity, transform, _new) in (&*entities, transform, &new).join() {
+                let pos = self
+                    .cache
+                    .iter()
+                    .position(|&(cached_t, _)| transform.tab_order < cached_t);
+                match pos {
+                    Some(pos) => self.cache.insert(pos, (transform.tab_order, entity)),
+                    None => self.cache.push((transform.tab_order, entity)),
+                }
+            }
+        }
+        self.cached = transform_set;
+
+        // Sort from smallest tab order to largest tab order, then by entity creation time.
+        // Most of the time this shouldn't do anything but you still need it for if the tab orders
+        // change.
+        self.cache.sort_unstable_by(|&(t1, ref e1), &(t2, ref e2)| {
+            let ret = t1.cmp(&t2);
+            if ret == Ordering::Equal {
+                return e1.cmp(e2);
+            }
+            ret
+        });
+    }
+}
+
 /// This system processes the underlying UI data as needed.
-pub struct UiKeyboardSystem {
+pub struct UiKeyboardSystem;
+
+/// A resource for `UiKeyboardSystem` which is automatically created and managed by
+/// `UiKeyboardSystem`.
+pub struct UiKeyboardSystemData {
     /// A reader for winit events.
-    reader: Option<ReaderId<Event>>,
+    reader: ReaderId<Event>,
     /// A cache sorted by tab order, and then by Entity.
     tab_order_cache: CachedTabOrder,
     /// This is set to true while the left mouse button is pressed.
@@ -156,11 +218,11 @@ pub struct UiKeyboardSystem {
     mouse_position: (f32, f32),
 }
 
-impl UiKeyboardSystem {
+impl UiKeyboardSystemData {
     /// Creates a new instance of this system
-    pub fn new() -> Self {
+    pub fn new(reader: ReaderId<Event>) -> Self {
         Self {
-            reader: None,
+            reader,
             tab_order_cache: CachedTabOrder {
                 cached: BitSet::new(),
                 cache: Vec::new(),
@@ -181,70 +243,24 @@ impl<'a> System<'a> for UiKeyboardSystem {
         Read<'a, EventChannel<Event>>,
         Read<'a, Time>,
         ReadExpect<'a, ScreenDimensions>,
+        WriteExpect<'a, UiKeyboardSystemData>,
     );
 
     fn run(
         &mut self,
-        (entities, mut text, mut editable, transform, mut focused, events, time, screen_dimensions): Self::SystemData,
-){
-        // Populate and update the tab order cache.
-        {
-            let bitset = &mut self.tab_order_cache.cached;
-            self.tab_order_cache.cache.retain(|&(_t, entity)| {
-                let keep = transform.contains(entity);
-                if !keep {
-                    bitset.remove(entity.id());
-                }
-                keep
-            });
-        }
-
-        for &mut (ref mut t, entity) in &mut self.tab_order_cache.cache {
-            *t = transform
-                .get(entity)
-                .expect("Unreachable: Entities are collected from a prepopulated cache")
-                .tab_order;
-        }
-
-        // Attempt to insert the new entities in sorted position.  Should reduce work during
-        // the sorting step.
-        let transform_set = transform.mask().clone();
-        {
-            // Create a bitset containing only the new indices.
-            let new = (&transform_set ^ &self.tab_order_cache.cached) & &transform_set;
-            for (entity, transform, _new) in (&*entities, &transform, &new).join() {
-                let pos = self
-                    .tab_order_cache
-                    .cache
-                    .iter()
-                    .position(|&(cached_t, _)| transform.tab_order < cached_t);
-                match pos {
-                    Some(pos) => self
-                        .tab_order_cache
-                        .cache
-                        .insert(pos, (transform.tab_order, entity)),
-                    None => self
-                        .tab_order_cache
-                        .cache
-                        .push((transform.tab_order, entity)),
-                }
-            }
-        }
-        self.tab_order_cache.cached = transform_set;
-
-        // Sort from smallest tab order to largest tab order, then by entity creation time.
-        // Most of the time this shouldn't do anything but you still need it for if the tab orders
-        // change.
-        self.tab_order_cache
-            .cache
-            .sort_unstable_by(|&(t1, ref e1), &(t2, ref e2)| {
-                let ret = t1.cmp(&t2);
-                if ret == Ordering::Equal {
-                    return e1.cmp(e2);
-                }
-                ret
-            });
-
+        (
+            entities,
+            mut text,
+            mut editable,
+            transform,
+            mut focused,
+            events,
+            time,
+            screen_dimensions,
+            mut data,
+        ): Self::SystemData,
+    ) {
+        data.tab_order_cache.update_cache(&transform, &entities);
         for text in (&mut text).join() {
             if (*text.text).chars().any(is_combining_mark) {
                 let normalized = text.text.nfd().collect::<String>();
@@ -263,11 +279,7 @@ impl<'a> System<'a> for UiKeyboardSystem {
                 }
             }
         }
-        for event in events.read(
-            self.reader
-                .as_mut()
-                .expect("`UiKeyboardSystem::setup` was not called before `UiKeyboardSystem::run`"),
-        ) {
+        for event in events.read(&mut data.reader) {
             // Process events for the whole UI.
             match *event {
                 Event::WindowEvent {
@@ -285,26 +297,26 @@ impl<'a> System<'a> for UiKeyboardSystem {
                     ..
                 } => {
                     if let Some(focused) = focused.entity.as_mut() {
-                        if let Some((i, _)) = self
+                        if let Some((i, _)) = data
                             .tab_order_cache
                             .cache
                             .iter()
                             .enumerate()
                             .find(|&(_i, &(_, entity))| entity == *focused)
                         {
-                            if !self.tab_order_cache.cache.is_empty() {
+                            if !data.tab_order_cache.cache.is_empty() {
                                 if modifiers.shift {
                                     if i == 0 {
-                                        let new_i = self.tab_order_cache.cache.len() - 1;
-                                        *focused = self.tab_order_cache.cache[new_i].1;
+                                        let new_i = data.tab_order_cache.cache.len() - 1;
+                                        *focused = data.tab_order_cache.cache[new_i].1;
                                     } else {
-                                        *focused = self.tab_order_cache.cache[i - 1].1;
+                                        *focused = data.tab_order_cache.cache[i - 1].1;
                                     }
                                 } else {
-                                    if i + 1 == self.tab_order_cache.cache.len() {
-                                        *focused = self.tab_order_cache.cache[0].1;
+                                    if i + 1 == data.tab_order_cache.cache.len() {
+                                        *focused = data.tab_order_cache.cache[0].1;
                                     } else {
-                                        *focused = self.tab_order_cache.cache[i + 1].1;
+                                        *focused = data.tab_order_cache.cache[i + 1].1;
                                     }
                                 }
                             }
@@ -316,18 +328,18 @@ impl<'a> System<'a> for UiKeyboardSystem {
                     ..
                 } => {
                     let hidpi = screen_dimensions.hidpi_factor() as f32;
-                    self.mouse_position = (
+                    data.mouse_position = (
                         position.x as f32 * hidpi,
                         (screen_dimensions.height() - position.y as f32) * hidpi,
                     );
-                    if self.left_mouse_button_pressed {
+                    if data.left_mouse_button_pressed {
                         let mut focused_text_edit = focused.entity.and_then(|entity| {
                             zip_options(text.get_mut(entity), editable.get_mut(entity))
                         });
                         if let Some((ref mut focused_text, ref mut focused_edit)) =
                             focused_text_edit
                         {
-                            let (mouse_x, mouse_y) = self.mouse_position;
+                            let (mouse_x, mouse_y) = data.mouse_position;
                             focused_edit.highlight_vector = closest_glyph_index_to_mouse(
                                 mouse_x,
                                 mouse_y,
@@ -354,15 +366,15 @@ impl<'a> System<'a> for UiKeyboardSystem {
                 } => {
                     match state {
                         ElementState::Pressed => {
-                            self.left_mouse_button_pressed = true;
+                            data.left_mouse_button_pressed = true;
 
                             focused.entity = (&*entities, &transform)
                                 .join()
                                 .filter(|&(_, t)| {
-                                    t.pixel_x - t.width / 2.0 <= self.mouse_position.0
-                                        && t.pixel_x + t.width / 2.0 >= self.mouse_position.0
-                                        && t.pixel_y - t.height / 2.0 <= self.mouse_position.1
-                                        && t.pixel_y + t.height / 2.0 >= self.mouse_position.1
+                                    t.pixel_x - t.width / 2.0 <= data.mouse_position.0
+                                        && t.pixel_x + t.width / 2.0 >= data.mouse_position.0
+                                        && t.pixel_y - t.height / 2.0 <= data.mouse_position.1
+                                        && t.pixel_y + t.height / 2.0 >= data.mouse_position.1
                                 }).map(|(e, t)| (e, t.global_z))
                                 // In instances of ambiguity we want to select the element with the
                                 // highest Z order, so we need to find the highest Z order value among
@@ -377,7 +389,7 @@ impl<'a> System<'a> for UiKeyboardSystem {
                             if let Some((ref mut focused_text, ref mut focused_edit)) =
                                 focused_text_edit
                             {
-                                let (mouse_x, mouse_y) = self.mouse_position;
+                                let (mouse_x, mouse_y) = data.mouse_position;
                                 focused_edit.highlight_vector = 0;
                                 focused_edit.cursor_position = closest_glyph_index_to_mouse(
                                     mouse_x,
@@ -395,7 +407,7 @@ impl<'a> System<'a> for UiKeyboardSystem {
                             }
                         }
                         ElementState::Released => {
-                            self.left_mouse_button_pressed = false;
+                            data.left_mouse_button_pressed = false;
                         }
                     }
                 }
@@ -645,7 +657,8 @@ impl<'a> System<'a> for UiKeyboardSystem {
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::specs::prelude::SystemData;
         Self::SystemData::setup(res);
-        self.reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
+        let reader = res.fetch_mut::<EventChannel<Event>>().register_reader();
+        res.insert(UiKeyboardSystemData::new(reader));
     }
 }
 

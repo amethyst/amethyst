@@ -75,11 +75,7 @@ where
             "free_rotation",
             &[],
         );
-        builder.add(
-            MouseFocusUpdateSystem::new(),
-            "mouse_focus",
-            &["free_rotation"],
-        );
+        builder.add(MouseFocusUpdateSystem, "mouse_focus", &["free_rotation"]);
         builder.add(CursorHideSystem::new(), "cursor_hide", &["mouse_focus"]);
         Ok(())
     }
@@ -128,11 +124,7 @@ where
             "free_rotation",
             &[],
         );
-        builder.add(
-            MouseFocusUpdateSystem::new(),
-            "mouse_focus",
-            &["free_rotation"],
-        );
+        builder.add(MouseFocusUpdateSystem, "mouse_focus", &["free_rotation"]);
         builder.add(CursorHideSystem::new(), "cursor_hide", &["mouse_focus"]);
         Ok(())
     }

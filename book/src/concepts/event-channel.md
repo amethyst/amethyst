@@ -1,6 +1,6 @@
 # Event Channel
 
-This chapter will be easier than the previous ones. 
+This chapter will be easier than the previous ones.
 
 While it is not essential to understand it to use amethyst, it can make your life much much easier in a lot of situations where using only data would make your code too complex.
 
@@ -24,13 +24,13 @@ Super simple!
         A,
         B,
     }
-    
+
     let mut channel = EventChannel::<MyEvent>::new();
 ```
 
 ## Writing events to the event channel
 
-Single: 
+Single:
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # #[derive(Debug)]
@@ -44,7 +44,7 @@ Single:
 # }
 ```
 
-Multiple: 
+Multiple:
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # #[derive(Debug)]
@@ -143,6 +143,9 @@ type SystemData = Write<'a, EventChannel<MyEvent>>;
 ```
 
 In the **receiver** `System`s, you need to store the `ReaderId` somewhere.
+
+A good place for this would be in a resource initialized during setup, since
+we can't register the `ReaderId` until setup is called anyways.
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::shrev::ReaderId;
@@ -151,15 +154,17 @@ In the **receiver** `System`s, you need to store the `ReaderId` somewhere.
 #   A,
 #   B,
 # }
-struct ReceiverSystem {
+struct ReceiverSystem;
+
+struct ReceiverSystemData {
     // The type inside of ReaderId should be the type of the event you are using.
-    reader: Option<ReaderId<MyEvent>>,
+    reader: ReaderId<MyEvent>,
 }
 ```
 and you also need to get read access:
 ```rust,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::ecs::Read;
+# use amethyst::ecs::{Read, WriteExpect};
 # use amethyst::shrev::EventChannel;
 # #[derive(Debug)]
 # pub enum MyEvent {
@@ -167,8 +172,12 @@ and you also need to get read access:
 #   B,
 # }
 # struct MySystem;
+# struct ReceiverSystemData;
 # impl<'a> amethyst::ecs::System<'a> for MySystem {
-    type SystemData = Read<'a, EventChannel<MyEvent>>;
+    type SystemData = (
+        Read<'a, EventChannel<MyEvent>>,
+        WriteExpect<'a, ReceiverSystemData>,
+    );
 #   fn run(&mut self, _: Self::SystemData) { }
 # }
 ```
@@ -183,14 +192,18 @@ Then, in the `System`'s setup method:
 #   A,
 #   B,
 # }
-# struct MySystem { reader: Option<ReaderId<MyEvent>>, }
+# struct MySystem;
+# struct ReceiverSystemData { reader: ReaderId<MyEvent>, }
 # impl<'a> amethyst::ecs::System<'a> for MySystem {
 #   type SystemData = ();
 #   fn run(&mut self, _: Self::SystemData) { }
 #   fn setup(&mut self, res: &mut amethyst::ecs::Resources) {
     // IMPORTANT: You need to setup your system data BEFORE you try to fetch the resource. Especially if you plan use `Default` to create your resource.
     Self::SystemData::setup(res);
-    self.reader = Some(res.fetch_mut::<EventChannel<MyEvent>>().register_reader());
+    let reader = res.fetch_mut::<EventChannel<MyEvent>>().register_reader();
+    res.insert(ReceiverSystemData {
+      reader
+    });
 #   }
 # }
 
@@ -199,20 +212,22 @@ Then, in the `System`'s setup method:
 Finally, you can read events from your `System`.
 ```rust,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::ecs::Read;
-# use amethyst::shrev::EventChannel;
+# use amethyst::ecs::{Read, WriteExpect};
+# use amethyst::shrev::{EventChannel, ReaderId};
 # #[derive(Debug)]
 # pub enum MyEvent {
 #   A,
 #   B,
 # }
-# struct MySystem {
-#   reader: Option<amethyst::shrev::ReaderId<MyEvent>>,
-# }
+# struct MySystem;
+# struct ReceiverSystemData { reader: ReaderId<MyEvent>, }
 # impl<'a> amethyst::ecs::System<'a> for MySystem {
-#   type SystemData = Read<'a, EventChannel<MyEvent>>;
-    fn run(&mut self, my_event_channel: Self::SystemData) {
-        for event in my_event_channel.read(self.reader.as_mut().unwrap()) {
+#   type SystemData = (
+#     Read<'a, EventChannel<MyEvent>>,
+#     WriteExpect<'a, ReceiverSystemData>,
+#   );
+    fn run(&mut self, (my_event_channel, mut data): Self::SystemData) {
+        for event in my_event_channel.read(&mut data.reader) {
             println!("Received an event: {:?}", event);
         }
     }

@@ -9,7 +9,9 @@ use amethyst::{
         shrev::{EventChannel, ReaderId},
         transform::{Transform, TransformBundle},
     },
-    ecs::prelude::{Join, Read, ReadStorage, Resources, System, SystemData, WriteStorage},
+    ecs::prelude::{
+        Join, Read, ReadStorage, Resources, System, SystemData, WriteExpect, WriteStorage,
+    },
     input::{InputBundle, InputEvent, ScrollDirection},
     prelude::*,
     renderer::{DisplayConfig, DrawShaded, DrawSkybox, Pipeline, PosNormTex, RenderBundle, Stage},
@@ -17,6 +19,7 @@ use amethyst::{
     Error,
 };
 use std::hash::Hash;
+use std::marker::PhantomData;
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
@@ -35,7 +38,7 @@ struct CameraDistanceSystem<AC>
 where
     AC: Hash + Eq + 'static,
 {
-    event_reader: Option<ReaderId<InputEvent<AC>>>,
+    _marker: PhantomData<AC>,
 }
 
 impl<AC> CameraDistanceSystem<AC>
@@ -43,8 +46,17 @@ where
     AC: Hash + Eq + 'static,
 {
     pub fn new() -> Self {
-        CameraDistanceSystem { event_reader: None }
+        Self {
+            _marker: PhantomData,
+        }
     }
+}
+
+struct CameraDistanceSystemEventReader<AC>
+where
+    AC: Hash + Eq + 'static,
+{
+    event_reader: ReaderId<InputEvent<AC>>,
 }
 
 impl<'a, AC> System<'a> for CameraDistanceSystem<AC>
@@ -55,10 +67,11 @@ where
         Read<'a, EventChannel<InputEvent<AC>>>,
         ReadStorage<'a, Transform>,
         WriteStorage<'a, ArcBallControlTag>,
+        WriteExpect<'a, CameraDistanceSystemEventReader<AC>>,
     );
 
-    fn run(&mut self, (events, transforms, mut tags): Self::SystemData) {
-        for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
+    fn run(&mut self, (events, transforms, mut tags, mut reader): Self::SystemData) {
+        for event in events.read(&mut reader.event_reader) {
             match *event {
                 InputEvent::MouseWheelMoved(direction) => match direction {
                     ScrollDirection::ScrollUp => {
@@ -80,11 +93,10 @@ where
 
     fn setup(&mut self, res: &mut Resources) {
         Self::SystemData::setup(res);
-
-        self.event_reader = Some(
-            res.fetch_mut::<EventChannel<InputEvent<AC>>>()
-                .register_reader(),
-        );
+        let event_reader = res
+            .fetch_mut::<EventChannel<InputEvent<AC>>>()
+            .register_reader();
+        res.insert(CameraDistanceSystemEventReader { event_reader });
     }
 }
 

@@ -6,7 +6,7 @@ use winit::Event;
 
 use amethyst_core::{
     shrev::{EventChannel, ReaderId},
-    specs::prelude::{Read, Resources, System, Write},
+    specs::prelude::{Read, Resources, System, Write, WriteExpect},
 };
 
 use crate::{Bindings, InputEvent, InputHandler};
@@ -20,8 +20,13 @@ where
     AX: Hash + Eq,
     AC: Hash + Eq,
 {
-    reader: Option<ReaderId<Event>>,
     bindings: Option<Bindings<AX, AC>>,
+}
+
+/// A resource for `InputSystem` which is automatically created and managed by
+/// `InputSystem`.
+pub struct InputSystemEventReader {
+    event_reader: ReaderId<Event>,
 }
 
 impl<AX, AC> InputSystem<AX, AC>
@@ -31,10 +36,7 @@ where
 {
     /// Create a new input system. Needs a reader id for `EventHandler<winit::Event>`.
     pub fn new(bindings: Option<Bindings<AX, AC>>) -> Self {
-        InputSystem {
-            reader: None,
-            bindings,
-        }
+        InputSystem { bindings }
     }
 
     fn process_event(
@@ -58,15 +60,11 @@ where
         Read<'a, EventChannel<Event>>,
         Write<'a, InputHandler<AX, AC>>,
         Write<'a, EventChannel<InputEvent<AC>>>,
+        WriteExpect<'a, InputSystemEventReader>,
     );
 
-    fn run(&mut self, (input, mut handler, mut output): Self::SystemData) {
-        for event in input.read(
-            &mut self
-                .reader
-                .as_mut()
-                .expect("`InputSystem::setup` was not called before `InputSystem::run`"),
-        ) {
+    fn run(&mut self, (input, mut handler, mut output, mut reader): Self::SystemData) {
+        for event in input.read(&mut reader.event_reader) {
             Self::process_event(event, &mut *handler, &mut *output);
         }
     }
@@ -74,7 +72,8 @@ where
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::specs::prelude::SystemData;
         Self::SystemData::setup(res);
-        self.reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
+        let event_reader = res.fetch_mut::<EventChannel<Event>>().register_reader();
+        res.insert(InputSystemEventReader { event_reader });
         if let Some(ref bindings) = self.bindings {
             res.fetch_mut::<InputHandler<AX, AC>>().bindings = bindings.clone();
         }

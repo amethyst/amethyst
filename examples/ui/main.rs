@@ -8,7 +8,7 @@ use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, Processor, RonFormat},
     audio::{output::init_output, Source},
     core::{transform::TransformBundle, Time},
-    ecs::prelude::{Entity, System, Write},
+    ecs::prelude::{Entity, Read, Resources, System, SystemData, WriteExpect},
     input::{is_close_requested, is_key_down, InputBundle},
     prelude::*,
     renderer::{DrawShaded, PosNormTex},
@@ -97,7 +97,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(TransformBundle::new())?
         .with_bundle(UiBundle::<String, String>::new())?
         .with(Processor::<Source>::new(), "source_processor", &[])
-        .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
+        .with(UiEventHandlerSystem, "ui_event_handler", &[])
         .with_bundle(FPSCounterBundle::default())?
         .with_bundle(InputBundle::<String, String>::new())?
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), true)?;
@@ -107,27 +107,30 @@ fn main() -> amethyst::Result<()> {
 }
 
 /// This shows how to handle UI events.
-pub struct UiEventHandlerSystem {
-    reader_id: Option<ReaderId<UiEvent>>,
-}
+pub struct UiEventHandlerSystem;
 
-impl UiEventHandlerSystem {
-    pub fn new() -> Self {
-        UiEventHandlerSystem { reader_id: None }
-    }
+/// A resource for `UiEventHandlerSystem`.  Automatically created and managed by
+/// `UiEventHandlerSystem`.
+pub struct UiEventHandlerSystemData {
+    reader_id: ReaderId<UiEvent>,
 }
 
 impl<'a> System<'a> for UiEventHandlerSystem {
-    type SystemData = Write<'a, EventChannel<UiEvent>>;
+    type SystemData = (
+        Read<'a, EventChannel<UiEvent>>,
+        WriteExpect<'a, UiEventHandlerSystemData>,
+    );
 
-    fn run(&mut self, mut events: Self::SystemData) {
-        if self.reader_id.is_none() {
-            self.reader_id = Some(events.register_reader());
-        }
-
+    fn run(&mut self, (events, mut data): Self::SystemData) {
         // Reader id was just initialized above if empty
-        for ev in events.read(self.reader_id.as_mut().unwrap()) {
+        for ev in events.read(&mut data.reader_id) {
             info!("[SYSTEM] You just interacted with a ui element: {:?}", ev);
         }
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        Self::SystemData::setup(res);
+        let reader_id = res.fetch_mut::<EventChannel<UiEvent>>().register_reader();
+        res.insert(UiEventHandlerSystemData { reader_id });
     }
 }

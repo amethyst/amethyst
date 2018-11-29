@@ -53,27 +53,15 @@ where
             "font_processor",
             &["ui_loader"],
         );
-        builder.add(
-            UiKeyboardSystem::new(),
-            "ui_keyboard_system",
-            &["font_processor"],
-        );
-        builder.add(ResizeSystem::new(), "ui_resize_system", &[]);
-        builder.add(
-            UiTransformSystem::default(),
-            "ui_transform",
-            &["transform_system"],
-        );
+        builder.add(UiKeyboardSystem, "ui_keyboard_system", &["font_processor"]);
+        builder.add(ResizeSystem, "ui_resize_system", &[]);
+        builder.add(UiTransformSystem, "ui_transform", &["transform_system"]);
         builder.add(
             UiMouseSystem::<A, B>::new(),
             "ui_mouse_system",
             &["ui_transform"],
         );
-        builder.add(
-            UiButtonSystem::new(),
-            "ui_button_system",
-            &["ui_mouse_system"],
-        );
+        builder.add(UiButtonSystem, "ui_button_system", &["ui_mouse_system"]);
         Ok(())
     }
 }
