@@ -461,20 +461,20 @@ are on the sheet. Let's create, right next to it, a file called
 
 ```text,ignore
 (
-    spritesheet_width: 8.0,
-    spritesheet_height: 16.0,
+    spritesheet_width: 8,
+    spritesheet_height: 16,
     sprites: [
         (
-            x: 0.0,
-            y: 0.0,
-            width: 4.0,
-            height: 16.0,
+            x: 0,
+            y: 0,
+            width: 4,
+            height: 16,
         ),
         (
-            x: 4.0,
-            y: 0.0,
-            width: 4.0,
-            height: 4.0,
+            x: 4,
+            y: 0,
+            width: 4,
+            height: 4,
         ),
     ],
 )

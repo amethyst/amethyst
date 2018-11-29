@@ -53,6 +53,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Fixed
 
+* `SpriteSheetFormat` converts pixel coordinates to texture coordinates on load. ([#1181])
+
 [#1146]: https://github.com/amethyst/amethyst/pull/1146
 [#1144]: https://github.com/amethyst/amethyst/pull/1144
 [#1000]: https://github.com/amethyst/amethyst/pull/1000
@@ -78,6 +80,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1164]: https://github.com/amethyst/amethyst/pull/1164
 [#1142]: https://github.com/amethyst/amethyst/pull/1142
 [#1052]: https://github.com/amethyst/amethyst/pull/1052
+[#1181]: https://github.com/amethyst/amethyst/pull/1181
 [#1184]: https://github.com/amethyst/amethyst/pull/1184
 [#1187]: https://github.com/amethyst/amethyst/pull/1187
 [winit_018]: https://github.com/tomaka/winit/blob/v0.18.0/CHANGELOG.md#version-0180-2018-11-07

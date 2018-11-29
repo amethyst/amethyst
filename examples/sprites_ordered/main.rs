@@ -35,9 +35,9 @@ const SPRITE_SPACING_RATIO: f32 = 0.7;
 #[derive(Debug, Clone)]
 struct LoadedSpriteSheet {
     sprite_sheet_handle: SpriteSheetHandle,
-    sprite_count: usize,
-    sprite_w: f32,
-    sprite_h: f32,
+    sprite_count: u32,
+    sprite_w: u32,
+    sprite_h: u32,
 }
 
 #[derive(Debug, Default)]
@@ -248,7 +248,7 @@ impl Example {
         //
         // The X offset needs to be multiplied because we are drawing the sprites across the window;
         // we don't need to multiply the Y offset because we are only drawing the sprites in 1 row.
-        let sprite_offset_x = sprite_count as f32 * sprite_w * SPRITE_SPACING_RATIO / 2.;
+        let sprite_offset_x = (sprite_count * sprite_w) as f32 * SPRITE_SPACING_RATIO / 2.;
 
         let (width, height) = {
             let dim = world.read_resource::<ScreenDimensions>();
@@ -282,14 +282,14 @@ impl Example {
             } else {
                 i as f32
             };
-            sprite_transform.set_xyz(i as f32 * sprite_w * SPRITE_SPACING_RATIO, z, z);
+            sprite_transform.set_xyz((i * sprite_w) as f32 * SPRITE_SPACING_RATIO, z, z);
 
             // This combines multiple `Transform`ations.
             sprite_transform.concat(&common_transform);
 
             let sprite_render = SpriteRender {
                 sprite_sheet: sprite_sheet_handle.clone(),
-                sprite_number: i,
+                sprite_number: i as usize,
             };
 
             let mut entity_builder = world
@@ -322,12 +322,12 @@ impl Example {
 /// * `SpriteSheet`: the layout information of the sprites on the image
 fn load_sprite_sheet(world: &mut World) -> LoadedSpriteSheet {
     let texture = png_loader::load("texture/bat_semi_transparent.png", world);
-    let sprite_w = 32.;
-    let sprite_h = 32.;
+    let sprite_w = 32;
+    let sprite_h = 32;
     let sprite_sheet_definition = SpriteSheetDefinition::new(sprite_w, sprite_h, 2, 6, false);
 
     let sprite_sheet = sprite_sheet_loader::load(texture, &sprite_sheet_definition);
-    let sprite_count = sprite_sheet.sprites.len();
+    let sprite_count = sprite_sheet.sprites.len() as u32;
 
     let sprite_sheet_handle = {
         let loader = world.read_resource::<Loader>();
