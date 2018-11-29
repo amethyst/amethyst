@@ -44,7 +44,7 @@ just implement two methods:
 # use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline,
 #                          PosTex, RenderBundle, Stage};
 # struct Pong;
-impl<'a, 'b> SimpleState<'a, 'b> for Pong {
+impl SimpleState for Pong {
 }
 ```
 

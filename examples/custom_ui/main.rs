@@ -75,7 +75,7 @@ impl ToNativeWidget for CustomUi {
 
 struct Example;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
+impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
         // Initialise the scene with an object, a light and a camera.

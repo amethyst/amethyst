@@ -14,7 +14,7 @@ type MyPrefabData = BasicScenePrefab<ComboMeshCreator>;
 
 struct Example;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
+impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let handle = data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
             loader.load("prefab/sphere.ron", RonFormat, (), ())

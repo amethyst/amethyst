@@ -44,7 +44,7 @@ fn init_image(world: &mut World, texture_handle: &TextureHandle) {
 #[derive(Debug)]
 struct ExampleState;
 
-impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
+impl SimpleState for ExampleState {
     fn on_start(&mut self, data: StateData<GameData>) {
         let world = data.world;
         let texture_handle = load_texture("texture/sprite_sheet.png", world);

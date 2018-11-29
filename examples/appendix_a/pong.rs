@@ -19,7 +19,7 @@ use crate::{
 
 pub struct Pong;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Pong {
+impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
         use crate::audio::initialise_audio;

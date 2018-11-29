@@ -14,7 +14,7 @@ type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 struct Example;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
+impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         // Initialise the scene with an object, a light and a camera.
         let handle = data.world.exec(|loader: PrefabLoader<MyPrefabData>| {

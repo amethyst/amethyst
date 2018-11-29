@@ -286,7 +286,7 @@ use amethyst::{
 # 
 # pub struct Pong;
 # 
-# impl<'a, 'b> SimpleState<'a, 'b> for Pong {
+# impl SimpleState for Pong {
 #     fn on_start(&mut self, data: StateData<GameData>) {
 #         let world = data.world;
 # 
@@ -487,7 +487,7 @@ use amethyst::{
 # 
 # pub struct Pong;
 # 
-impl<'a, 'b> SimpleState<'a, 'b> for Pong {
+impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<GameData>) {
 #         let world = data.world;
 #

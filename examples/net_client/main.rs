@@ -31,7 +31,7 @@ fn main() -> Result<()> {
 
 /// Default empty state
 pub struct State1;
-impl<'a, 'b> SimpleState<'a, 'b> for State1 {
+impl SimpleState for State1 {
     fn on_start(&mut self, data: StateData<GameData>) {
         data.world
             .create_entity()

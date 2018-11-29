@@ -44,7 +44,7 @@ impl<'s> System<'s> for ExampleLinesSystem {
 }
 
 struct ExampleState;
-impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
+impl SimpleState for ExampleState {
     fn on_start(&mut self, data: StateData<GameData>) {
         // Setup debug lines as a resource
         data.world

@@ -14,7 +14,7 @@ use amethyst::{
 
 struct Example;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
+impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let world = data.world;
         let texture_handle = load_texture(world, "logo.png");

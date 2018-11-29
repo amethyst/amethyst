@@ -27,7 +27,7 @@ impl Example {
     }
 }
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
+impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         data.world.add_resource(AssetStorage::<Locale>::new());
         let mut progress_counter = ProgressCounter::default();
@@ -56,7 +56,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
         self.progress_counter = Some(progress_counter);
     }
 
-    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
+    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans {
         // Check if the locale has been loaded.
         if self.progress_counter.as_ref().unwrap().is_complete() {
             let store = data.world.read_resource::<AssetStorage<Locale>>();

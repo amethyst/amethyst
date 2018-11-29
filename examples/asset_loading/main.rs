@@ -63,7 +63,7 @@ impl SimpleFormat<Mesh> for Custom {
 
 struct AssetsExample;
 
-impl<'a, 'b> SimpleState<'a, 'b> for AssetsExample {
+impl SimpleState for AssetsExample {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
         world.add_resource(0usize);

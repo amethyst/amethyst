@@ -17,7 +17,7 @@ const PADDLE_WIDTH: f32 = 4.0;
 
 pub struct Pong;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Pong {
+impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<GameData>) {
         let world = data.world;
 
