@@ -32,14 +32,6 @@ pub struct PrefabLoaderSystemData<T> {
     next_tag: u64,
 }
 
-impl<T> PrefabLoaderSystemData<T> {
-    /// This function exists as a workaround for the borrow checker not letting us have multiple
-    /// aliasing.
-    fn borrow_parts(&mut self) -> (&mut Vec<Entity>, &mut Vec<Entity>, &mut BitSet) {
-        (&mut self.entities, &mut self.finished, &mut self.to_process)
-    }
-}
-
 impl<'a, T> System<'a> for PrefabLoaderSystem<T>
 where
     T: PrefabData<'a> + Send + Sync + 'static,
@@ -105,7 +97,12 @@ where
                 }
             });
         data.finished.clear();
-        let (data_entities, finished, to_process) = data.borrow_parts();
+        let PrefabLoaderSystemData::<T> {
+            entities: ref mut data_entities,
+            ref mut finished,
+            ref mut to_process,
+            ..
+        } = *data;
         for (root_entity, handle, _) in (&*entities, &prefab_handles, &*to_process).join() {
             if let Some(prefab) = prefab_storage.get(handle) {
                 finished.push(root_entity);

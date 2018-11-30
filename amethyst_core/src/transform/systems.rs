@@ -24,14 +24,6 @@ pub struct TransformSystemData {
     scratch: Vec<Entity>,
 }
 
-impl TransformSystemData {
-    /// This function exists as a workaround for the borrow checker not letting us have multiple
-    /// aliasing.
-    fn borrow_parts(&mut self) -> (&BitSet, &mut BitSet) {
-        (&self.local_modified, &mut self.global_modified)
-    }
-}
-
 impl<'a> System<'a> for TransformSystem {
     type SystemData = (
         Entities<'a>,
@@ -85,7 +77,11 @@ impl<'a> System<'a> for TransformSystem {
         }
 
         {
-            let (local_modified, global_modified) = data.borrow_parts();
+            let TransformSystemData {
+                ref local_modified,
+                ref mut global_modified,
+                ..
+            } = *data;
             // Compute transforms without parents.
             for (entity, _, local, global, _) in
                 (&*entities, local_modified, &locals, &mut globals, !&parents).join()
