@@ -23,17 +23,6 @@ pub struct VertexSkinningSystemData {
     updated_id: ReaderId<ComponentEvent>,
 }
 
-impl VertexSkinningSystemData {
-    pub fn populate_updated_skins(&mut self, joints: &ReadStorage<'_, Joint>) {
-        self.updated_skins.clear();
-        for (_, joint) in (&self.updated, joints).join() {
-            for skin in &joint.skins {
-                self.updated_skins.add(skin.id());
-            }
-        }
-    }
-}
-
 impl<'a> System<'a> for VertexSkinningSystem {
     type SystemData = (
         ReadStorage<'a, Joint>,
@@ -59,8 +48,19 @@ impl<'a> System<'a> for VertexSkinningSystem {
                 ComponentEvent::Removed(_id) => {}
             });
 
-        data.populate_updated_skins(&joints);
-
+        {
+            let VertexSkinningSystemData {
+                ref updated,
+                ref mut updated_skins,
+                ..
+            } = *data;
+            updated_skins.clear();
+            for (_, joint) in (updated, &joints).join() {
+                for skin in &joint.skins {
+                    updated_skins.add(skin.id());
+                }
+            }
+        }
         for (_id, skin) in (&data.updated_skins, &mut skins).join() {
             // Compute the joint global_transforms
             skin.joint_matrices.clear();
