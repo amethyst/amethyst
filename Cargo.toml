@@ -19,7 +19,6 @@ appveyor = { repository = "amethyst/amethyst", branch = "master" }
 travis-ci = { repository = "amethyst/amethyst", branch = "master" }
 
 [features]
-default = ["dynamic_app"]
 profiler = [
     "thread_profiler",
     "thread_profiler/thread_profiler",
@@ -57,7 +56,6 @@ json = [
 saveload = [
     "amethyst_core/saveload"
 ]
-dynamic_app = []
 
 [dependencies]
 amethyst_animation = { path = "amethyst_animation", version = "0.4.0" }

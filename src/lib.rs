@@ -97,37 +97,25 @@ extern crate smallvec;
 pub use crate::core::{shred, shrev, specs as ecs};
 
 pub use self::{
+    app::{Application, ApplicationBuilder, CoreApplication, CoreApplicationBuilder},
     callback_queue::{Callback, CallbackQueue},
     error::{Error, Result},
     logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
+    state::{GlobalCallback, State, StateCallback, StateError, StateMachine, StateStorage, States},
     state_event::{StateEvent, StateEventReader},
+    trans::{Trans, TransEvent},
 };
-
-#[cfg(not(feature = "dynamic_app"))]
-pub use self::{
-    app::{Application, ApplicationBuilder, CoreApplication},
-    game_data::{DataInit, GameData, GameDataBuilder},
-    state::{
-        EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, StateMachine, Trans,
-        TransEvent,
-    },
-};
-
-#[cfg(feature = "dynamic_app")]
-pub use self::dynamic::*;
 
 #[doc(hidden)]
 pub use crate::derive::*;
 
 pub mod prelude;
 
-#[cfg(not(feature = "dynamic_app"))]
 mod app;
 mod callback_queue;
-mod dynamic;
 mod error;
 mod game_data;
 mod logger;
-#[cfg(not(feature = "dynamic_app"))]
 mod state;
 mod state_event;
+mod trans;
