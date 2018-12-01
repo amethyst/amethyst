@@ -28,8 +28,8 @@ use crate::{
 
 type BundleAddFn = SendBoxFnOnce<
     'static,
-    (GameDataBuilder<'static, 'static>,),
-    Result<GameDataBuilder<'static, 'static>>,
+    (GameDataBuilder<'static, 'static, 'static>,),
+    Result<GameDataBuilder<'static, 'static, 'static>>,
 >;
 // Hack: Ideally we want a `SendBoxFnOnce`. However implementing it got too crazy:
 //
@@ -232,7 +232,7 @@ where
 
     fn build_application<S>(
         first_state: S,
-        game_data: GameDataBuilder<'static, 'static>,
+        game_data: GameDataBuilder<'static, 'static, 'static>,
         resource_add_fns: Vec<FnResourceAdd>,
     ) -> Result<CoreApplication<'static, GameData<'static, 'static>, E, R>>
     where
@@ -360,7 +360,7 @@ where
         //
         // See <https://users.rust-lang.org/t/move-a-boxed-function-inside-a-closure/18199>
         self.bundle_add_fns.push(SendBoxFnOnce::from(
-            |game_data: GameDataBuilder<'static, 'static>| game_data.with_bundle(bundle),
+            |game_data: GameDataBuilder<'static, 'static, 'static>| game_data.with_bundle(bundle),
         ));
         self
     }
@@ -385,7 +385,7 @@ where
         B: SystemBundle<'static, 'static> + 'static,
     {
         self.bundle_add_fns.push(SendBoxFnOnce::from(
-            move |game_data: GameDataBuilder<'static, 'static>| {
+            move |game_data: GameDataBuilder<'static, 'static, 'static>| {
                 game_data.with_bundle(bundle_function())
             },
         ));
