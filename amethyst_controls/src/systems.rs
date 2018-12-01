@@ -19,7 +19,7 @@ use crate::{
 
 /// The system that manages the fly movement.
 ///
-/// # Generic parameters
+/// # Type parameters
 ///
 /// * `A`: This is the key the `InputHandler` is using for axes. Often, this is a `String`.
 /// * `B`: This is the key the `InputHandler` is using for actions. Often, this is a `String`.
@@ -120,7 +120,7 @@ impl<'a> System<'a> for ArcBallRotationSystem {
 /// Can be manually disabled by making the mouse visible using the `HideCursor` resource:
 /// `HideCursor.hide = false`
 ///
-/// # Generic parameters
+/// # Type parameters
 ///
 /// * `A`: This is the key the `InputHandler` is using for axes. Often, this is a `String`.
 /// * `B`: This is the key the `InputHandler` is using for actions. Often, this is a `String`.

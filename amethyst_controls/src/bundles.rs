@@ -16,7 +16,7 @@ use super::*;
 /// `TransformSystem` in order to apply changes made by these systems in the same frame.
 /// Adding this bundle will grab the mouse, hide it and keep it centered.
 ///
-/// # Generic parameters
+/// # Type parameters
 ///
 /// * `A`: This is the key the `InputHandler` is using for axes. Often, this is a `String`.
 /// * `B`: This is the key the `InputHandler` is using for actions. Often, this is a `String`.
