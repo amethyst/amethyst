@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Added
 
+* Derive PrefabData for CameraOrtho component ([#1188])
 * Partially migrate the project to Rust 2018.  Full migration will be completed at some point after 2019-01-31 ([#1098])
 * `SystemExt::pausable` for better ergonomics when pausing systems for specific states ([#1146]).
 * `amethyst_test` test framework for ergonomic testing of Amethyst applications ([#1000])
@@ -83,6 +84,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1181]: https://github.com/amethyst/amethyst/pull/1181
 [#1184]: https://github.com/amethyst/amethyst/pull/1184
 [#1187]: https://github.com/amethyst/amethyst/pull/1187
+[#1188]: https://github.com/amethyst/amethyst/pull/1188
 [winit_018]: https://github.com/tomaka/winit/blob/v0.18.0/CHANGELOG.md#version-0180-2018-11-07
 [glutin_019]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0190-2018-11-09
 
