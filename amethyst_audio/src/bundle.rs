@@ -7,7 +7,7 @@ use rodio::default_output_device;
 use amethyst_assets::Processor;
 use amethyst_core::{
     bundle::{Result, SystemBundle},
-    specs::prelude::DispatcherBuilder,
+    SimpleDispatcherBuilder,
 };
 
 use crate::{source::*, systems::DjSystem};
@@ -50,12 +50,13 @@ impl<'a, F, R> AudioBundle<'a, F, R> {
     }
 }
 
-impl<'a, 'b, 'c, F, R> SystemBundle<'a, 'b> for AudioBundle<'c, F, R>
+impl<'a, 'b, 'c, F, R, D> SystemBundle<'a, 'b, 'c, D> for AudioBundle<'c, F, R>
 where
     F: FnMut(&mut R) -> Option<SourceHandle> + Send + 'static,
     R: Send + Sync + 'static,
+    D: SimpleDispatcherBuilder<'a, 'b, 'c>,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut D) -> Result<()> {
         builder.add(Processor::<Source>::new(), "source_processor", &[]);
         if default_output_device().is_some() {
             builder.add(DjSystem::new(self.picker), "dj_system", self.dep);

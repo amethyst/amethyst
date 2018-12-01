@@ -6,7 +6,7 @@ use amethyst_assets::Processor;
 use amethyst_audio::AudioFormat;
 use amethyst_core::{
     bundle::{Result, SystemBundle},
-    specs::prelude::DispatcherBuilder,
+    SimpleDispatcherBuilder,
 };
 use amethyst_renderer::TextureFormat;
 
@@ -31,13 +31,14 @@ impl<A, B, C> UiBundle<A, B, C> {
     }
 }
 
-impl<'a, 'b, A, B, C> SystemBundle<'a, 'b> for UiBundle<A, B, C>
+impl<'a, 'b, 'c, A, B, C, D> SystemBundle<'a, 'b, 'c, D> for UiBundle<A, B, C>
 where
     A: Send + Sync + Eq + Hash + Clone + 'static,
     B: Send + Sync + Eq + Hash + Clone + 'static,
     C: ToNativeWidget,
+    D: SimpleDispatcherBuilder<'a, 'b, 'c>,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut D) -> Result<()> {
         builder.add(
             UiLoaderSystem::<
                 AudioFormat,

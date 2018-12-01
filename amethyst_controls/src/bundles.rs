@@ -2,7 +2,7 @@ use std::{hash::Hash, marker::PhantomData};
 
 use amethyst_core::{
     bundle::{Result, SystemBundle},
-    specs::prelude::DispatcherBuilder,
+    SimpleDispatcherBuilder,
 };
 
 use super::*;
@@ -54,12 +54,13 @@ impl<A, B> FlyControlBundle<A, B> {
     }
 }
 
-impl<'a, 'b, A, B> SystemBundle<'a, 'b> for FlyControlBundle<A, B>
+impl<'a, 'b, 'c, A, B, D> SystemBundle<'a, 'b, 'c, D> for FlyControlBundle<A, B>
 where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
+    D: SimpleDispatcherBuilder<'a, 'b, 'c>,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut D) -> Result<()> {
         builder.add(
             FlyMovementSystem::<A, B>::new(
                 self.speed,
@@ -116,12 +117,13 @@ impl<A, B> ArcBallControlBundle<A, B> {
     }
 }
 
-impl<'a, 'b, A, B> SystemBundle<'a, 'b> for ArcBallControlBundle<A, B>
+impl<'a, 'b, 'c, A, B, D> SystemBundle<'a, 'b, 'c, D> for ArcBallControlBundle<A, B>
 where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
+    D: SimpleDispatcherBuilder<'a, 'b, 'c>,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut D) -> Result<()> {
         builder.add(ArcBallRotationSystem::default(), "arc_ball_rotation", &[]);
         builder.add(
             FreeRotationSystem::<A, B>::new(self.sensitivity_x, self.sensitivity_y),

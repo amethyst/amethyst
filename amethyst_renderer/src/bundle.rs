@@ -3,7 +3,7 @@
 use amethyst_assets::Processor;
 use amethyst_core::{
     bundle::{Result, ResultExt, SystemBundle},
-    specs::prelude::DispatcherBuilder,
+    SimpleDispatcherBuilder,
 };
 
 use crate::{
@@ -25,20 +25,20 @@ use crate::{
 /// Will register `TransparentSortingSystem`, with name `transparent_sorting_system` if sorting is
 /// requested.
 ///
-pub struct RenderBundle<'a, B, P>
+pub struct RenderBundle<'a: 'b, 'b, B, P>
 where
     B: PipelineBuild<Pipeline = P>,
     P: PolyPipeline,
 {
     pipe: B,
     config: Option<DisplayConfig>,
-    visibility_sorting: Option<&'a [&'a str]>,
-    sprite_visibility_sorting: Option<&'a [&'a str]>,
+    visibility_sorting: Option<&'b [&'a str]>,
+    sprite_visibility_sorting: Option<&'b [&'a str]>,
     sprite_sheet_processor_enabled: bool,
     hide_hierarchy_system_enabled: bool,
 }
 
-impl<'a, B, P> RenderBundle<'a, B, P>
+impl<'a, 'b, B, P> RenderBundle<'a, 'b, B, P>
 where
     B: PipelineBuild<Pipeline = P>,
     P: PolyPipeline,
@@ -56,13 +56,13 @@ where
     }
 
     /// Enable transparent mesh sorting, with the given dependencies
-    pub fn with_visibility_sorting(mut self, dep: &'a [&'a str]) -> Self {
+    pub fn with_visibility_sorting(mut self, dep: &'b [&'a str]) -> Self {
         self.visibility_sorting = Some(dep);
         self
     }
 
     /// Enable transparent sprite sorting, with the given dependencies
-    pub fn with_sprite_visibility_sorting(mut self, dep: &'a [&'a str]) -> Self {
+    pub fn with_sprite_visibility_sorting(mut self, dep: &'b [&'a str]) -> Self {
         self.sprite_visibility_sorting = Some(dep);
         self
     }
@@ -84,10 +84,13 @@ where
     }
 }
 
-impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> SystemBundle<'a, 'b>
-    for RenderBundle<'c, B, P>
+impl<'a, 'b, 'c, 'd, B, P, D> SystemBundle<'a, 'b, 'c, D> for RenderBundle<'c, 'd, B, P>
+where
+    P: 'b + 'c + PolyPipeline,
+    B: PipelineBuild<Pipeline = P>,
+    D: SimpleDispatcherBuilder<'a, 'b, 'c>,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut D) -> Result<()> {
         if let Some(dep) = self.visibility_sorting {
             builder.add(
                 VisibilitySortingSystem::new(),

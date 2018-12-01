@@ -8,35 +8,35 @@ use crate::{
     },
 };
 
-use amethyst_core::{
-    specs::prelude::{Component, DispatcherBuilder},
-    Result, SystemBundle,
-};
+use amethyst_core::{specs::prelude::Component, Result, SimpleDispatcherBuilder, SystemBundle};
 
 /// Bundle for vertex skinning
 ///
 /// This registers `VertexSkinningSystem`.
 /// Note that the user must make sure this system runs after `TransformSystem`
 #[derive(Default)]
-pub struct VertexSkinningBundle<'a> {
-    dep: &'a [&'a str],
+pub struct VertexSkinningBundle<'a: 'b, 'b> {
+    dep: &'b [&'a str],
 }
 
-impl<'a> VertexSkinningBundle<'a> {
+impl<'a, 'b> VertexSkinningBundle<'a, 'b> {
     /// Create a new sampling bundle
     pub fn new() -> Self {
         Default::default()
     }
 
     /// Set dependencies for the `VertexSkinningSystem`
-    pub fn with_dep(mut self, dep: &'a [&'a str]) -> Self {
+    pub fn with_dep(mut self, dep: &'b [&'a str]) -> Self {
         self.dep = dep;
         self
     }
 }
 
-impl<'a, 'b, 'c> SystemBundle<'a, 'b> for VertexSkinningBundle<'c> {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+impl<'a, 'b, 'c, 'd, D> SystemBundle<'a, 'b, 'c, D> for VertexSkinningBundle<'c, 'd>
+where
+    D: SimpleDispatcherBuilder<'a, 'b, 'c>,
+{
+    fn build(self, builder: &mut D) -> Result<()> {
         builder.add(
             VertexSkinningSystem::new(),
             "vertex_skinning_system",
@@ -55,13 +55,13 @@ impl<'a, 'b, 'c> SystemBundle<'a, 'b> for VertexSkinningBundle<'c> {
 ///
 /// - `T`: the component type that sampling should be applied to
 #[derive(Default)]
-pub struct SamplingBundle<'a, T> {
+pub struct SamplingBundle<'a: 'b, 'b, T> {
     name: &'a str,
-    dep: &'a [&'a str],
+    dep: &'b [&'a str],
     m: marker::PhantomData<T>,
 }
 
-impl<'a, T> SamplingBundle<'a, T> {
+impl<'a, 'b, T> SamplingBundle<'a, 'b, T> {
     /// Create a new sampling bundle
     ///
     /// ### Parameters:
@@ -76,17 +76,18 @@ impl<'a, T> SamplingBundle<'a, T> {
     }
 
     /// Set dependencies for the `SamplerInterpolationSystem`
-    pub fn with_dep(mut self, dep: &'a [&'a str]) -> Self {
+    pub fn with_dep(mut self, dep: &'b [&'a str]) -> Self {
         self.dep = dep;
         self
     }
 }
 
-impl<'a, 'b, 'c, T> SystemBundle<'a, 'b> for SamplingBundle<'c, T>
+impl<'a, 'b, 'c, 'd, T, D> SystemBundle<'a, 'b, 'c, D> for SamplingBundle<'c, 'd, T>
 where
     T: AnimationSampling + Component,
+    D: SimpleDispatcherBuilder<'a, 'b, 'c>,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut D) -> Result<()> {
         builder.add(SamplerProcessor::<T::Primitive>::new(), "", &[]);
         builder.add(SamplerInterpolationSystem::<T>::new(), self.name, self.dep);
         Ok(())
@@ -106,14 +107,14 @@ where
 ///        with the same id (per entity)
 /// - `T`: the component type that sampling should be applied to
 #[derive(Default)]
-pub struct AnimationBundle<'a, I, T> {
+pub struct AnimationBundle<'a: 'b, 'b, I, T> {
     animation_name: &'a str,
     sampling_name: &'a str,
-    dep: &'a [&'a str],
+    dep: &'b [&'a str],
     m: marker::PhantomData<(I, T)>,
 }
 
-impl<'a, I, T> AnimationBundle<'a, I, T> {
+impl<'a, 'b, I, T> AnimationBundle<'a, 'b, I, T> {
     /// Create a new animation bundle
     ///
     /// ### Parameters:
@@ -130,18 +131,19 @@ impl<'a, I, T> AnimationBundle<'a, I, T> {
     }
 
     /// Set dependencies for the `AnimationControlSystem`
-    pub fn with_dep(mut self, dep: &'a [&'a str]) -> Self {
+    pub fn with_dep(mut self, dep: &'b [&'a str]) -> Self {
         self.dep = dep;
         self
     }
 }
 
-impl<'a, 'b, 'c, I, T> SystemBundle<'a, 'b> for AnimationBundle<'c, I, T>
+impl<'a, 'b, 'c, 'd, I, T, D> SystemBundle<'a, 'b, 'c, D> for AnimationBundle<'c, 'd, I, T>
 where
     I: PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
     T: AnimationSampling + Component + Clone,
+    D: SimpleDispatcherBuilder<'a, 'b, 'c>,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut D) -> Result<()> {
         builder.add(AnimationProcessor::<T>::new(), "", &[]);
         builder.add(
             AnimationControlSystem::<I, T>::new(),

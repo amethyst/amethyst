@@ -27,6 +27,7 @@ use std::sync::Arc;
 
 pub use crate::{
     bundle::{Error, ErrorKind, Result, SystemBundle},
+    dispatcher_builder::*,
     event::EventReader,
     system_ext::{Pausable, SystemExt},
     timing::*,
@@ -40,6 +41,7 @@ pub use self::{
 
 mod axis;
 pub mod bundle;
+mod dispatcher_builder;
 mod event;
 pub mod frame_limiter;
 mod named;

@@ -4,7 +4,7 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use amethyst_core::{
     bundle::{Result, ResultExt, SystemBundle},
-    shred::DispatcherBuilder,
+    SimpleDispatcherBuilder,
 };
 
 use crate::filter::NetFilter;
@@ -27,11 +27,12 @@ impl<T> NetworkBundle<T> {
     }
 }
 
-impl<'a, 'b, T> SystemBundle<'a, 'b> for NetworkBundle<T>
+impl<'a, 'b, 'c, T, D> SystemBundle<'a, 'b, 'c, D> for NetworkBundle<T>
 where
     T: Send + Sync + PartialEq + Serialize + Clone + DeserializeOwned + 'static,
+    D: SimpleDispatcherBuilder<'a, 'b, 'c>,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'_, '_>) -> Result<()> {
+    fn build(self, builder: &mut D) -> Result<()> {
         let socket_system = NetSocketSystem::<T>::new(self.addr, self.filters)
             .chain_err(|| "Failed to open network system.")?;
 

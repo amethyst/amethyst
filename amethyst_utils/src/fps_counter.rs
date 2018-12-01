@@ -1,9 +1,9 @@
 //! Util Resources
 
 use amethyst_core::{
-    specs::prelude::{DispatcherBuilder, Read, System, Write},
+    specs::prelude::{Read, System, Write},
     timing::{duration_to_nanos, Time},
-    {Result, SystemBundle},
+    SimpleDispatcherBuilder, {Result, SystemBundle},
 };
 
 use crate::circular_buffer::CircularBuffer;
@@ -77,8 +77,11 @@ impl<'a> System<'a> for FPSCounterSystem {
 #[derive(Default)]
 pub struct FPSCounterBundle;
 
-impl<'a, 'b> SystemBundle<'a, 'b> for FPSCounterBundle {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+impl<'a, 'b, 'c, D> SystemBundle<'a, 'b, 'c, D> for FPSCounterBundle
+where
+    D: SimpleDispatcherBuilder<'a, 'b, 'c>,
+{
+    fn build(self, builder: &mut D) -> Result<()> {
         builder.add(FPSCounterSystem, "fps_counter_system", &[]);
         Ok(())
     }

@@ -6,7 +6,7 @@ use std::{hash::Hash, path::Path, result::Result as StdResult};
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::{
     bundle::{Result, SystemBundle},
-    specs::prelude::DispatcherBuilder,
+    SimpleDispatcherBuilder,
 };
 
 use crate::{Bindings, InputSystem};
@@ -89,12 +89,13 @@ where
     }
 }
 
-impl<'a, 'b, AX, AC> SystemBundle<'a, 'b> for InputBundle<AX, AC>
+impl<'a, 'b, 'c, AX, AC, D> SystemBundle<'a, 'b, 'c, D> for InputBundle<AX, AC>
 where
     AX: Hash + Eq + Clone + Send + Sync + 'static,
     AC: Hash + Eq + Clone + Send + Sync + 'static,
+    D: SimpleDispatcherBuilder<'a, 'b, 'c>,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut D) -> Result<()> {
         #[cfg(feature = "sdl_controller")]
         {
             use super::SdlEventsSystem;
