@@ -115,7 +115,7 @@ fn main() -> Result<(), Error> {
     };
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
+        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[], &[])
         .with_bundle(TransformBundle::new().with_dep(&[]))?
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
@@ -125,6 +125,7 @@ fn main() -> Result<(), Error> {
             CameraDistanceSystem::<String>::new(),
             "camera_distance_system",
             &["input_system"],
+            &[],
         );
     let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
     game.run();

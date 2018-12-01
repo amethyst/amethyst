@@ -78,7 +78,7 @@ fn main() -> Result<(), Error> {
 
     let resources_directory = format!("{}/examples/assets", application_root_dir());
 
-    let game_data = GameDataBuilder::default().with(Processor::<Locale>::new(), "proc", &[]);
+    let game_data = GameDataBuilder::default().with(Processor::<Locale>::new(), "proc", &[], &[]);
 
     let mut game = Application::new(resources_directory, Example::new(), game_data)?;
     game.run();

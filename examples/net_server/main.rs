@@ -18,7 +18,7 @@ fn main() -> Result<()> {
         .with_bundle(NetworkBundle::<()>::new(
             "127.0.0.1:3456".parse().unwrap(),
             vec![Box::new(FilterConnected::<()>::new())],
-        ))?.with(SpamReceiveSystem::new(), "rcv", &[]);
+        ))?.with(SpamReceiveSystem::new(), "rcv", &[], &[]);
     let mut game = Application::build("./", State1)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),

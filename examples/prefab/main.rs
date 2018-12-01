@@ -37,7 +37,7 @@ fn main() -> Result<(), Error> {
     let display_config_path = format!("{}/examples/prefab/resources/display_config.ron", app_root);
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
+        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[], &[])
         .with_bundle(TransformBundle::new())?
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
 

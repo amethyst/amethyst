@@ -161,7 +161,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(
             InputBundle::<String, String>::new()
                 .with_bindings_from_file(format!("{}/input.ron", root))?,
-        )?.with(MovementSystem, "movement", &[])
+        )?.with(MovementSystem, "movement", &[], &[])
         .with_bundle(
             RenderBundle::new(pipe, Some(config))
                 .with_sprite_sheet_processor()

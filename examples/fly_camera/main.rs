@@ -45,7 +45,7 @@ fn main() -> Result<(), Error> {
     let key_bindings_path = format!("{}/examples/fly_camera/resources/input.ron", app_root);
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
+        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[], &[])
         .with_bundle(
             FlyControlBundle::<String, String>::new(
                 Some(String::from("move_x")),

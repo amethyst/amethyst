@@ -180,7 +180,7 @@ fn main() -> amethyst::Result<()> {
     let resources = format!("{}/examples/assets/", app_root);
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
+        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[], &[])
         .with_bundle(AnimationBundle::<AnimationId, Transform>::new(
             "animation_control_system",
             "sampler_interpolation_system",

@@ -46,9 +46,9 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
         self
     }
 
-    pub fn with_base_bundle<B>(mut self, bundle: B) -> Result<Self>
+    pub fn with_base_bundle<'c, B>(mut self, bundle: B) -> Result<Self>
     where
-        B: SystemBundle<'a, 'b>,
+        B: SystemBundle<'a, 'b, 'c, DispatcherBuilder<'a, 'b>>,
     {
         bundle
             .build(&mut self.base)

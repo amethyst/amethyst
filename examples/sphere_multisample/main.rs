@@ -37,7 +37,7 @@ fn main() -> amethyst::Result<()> {
     let resources = format!("{}/examples/assets/", app_root);
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
+        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[], &[])
         .with_bundle(TransformBundle::new())?
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
     let mut game = Application::new(resources, Example, game_data)?;

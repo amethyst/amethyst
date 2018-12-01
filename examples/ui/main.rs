@@ -93,11 +93,11 @@ fn main() -> amethyst::Result<()> {
     let resources = format!("{}/examples/assets", app_root);
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
+        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[], &[])
         .with_bundle(TransformBundle::new())?
         .with_bundle(UiBundle::<String, String>::new())?
-        .with(Processor::<Source>::new(), "source_processor", &[])
-        .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
+        .with(Processor::<Source>::new(), "source_processor", &[], &[])
+        .with(UiEventHandlerSystem::new(), "ui_event_handler", &[], &[])
         .with_bundle(FPSCounterBundle::default())?
         .with_bundle(InputBundle::<String, String>::new())?
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), true)?;
