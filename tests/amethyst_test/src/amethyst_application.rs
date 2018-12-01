@@ -340,7 +340,9 @@ where
     /// * `bundle`: Bundle to add.
     pub fn with_bundle<B>(mut self, bundle: B) -> Self
     where
-        B: SystemBundle<'static, 'static, 'static, GameDataBuilder<'static, 'static, 'static>> + Send + 'static,
+        B: SystemBundle<'static, 'static, 'static, GameDataBuilder<'static, 'static, 'static>>
+            + Send
+            + 'static,
     {
         // We need to use `SendBoxFnOnce` because:
         //
@@ -382,7 +384,8 @@ where
     pub fn with_bundle_fn<FnBundle, B>(mut self, bundle_function: FnBundle) -> Self
     where
         FnBundle: FnOnce() -> B + Send + 'static,
-        B: SystemBundle<'static, 'static, 'static, GameDataBuilder<'static, 'static, 'static>> + 'static,
+        B: SystemBundle<'static, 'static, 'static, GameDataBuilder<'static, 'static, 'static>>
+            + 'static,
     {
         self.bundle_add_fns.push(SendBoxFnOnce::from(
             move |game_data: GameDataBuilder<'static, 'static, 'static>| {
@@ -482,7 +485,12 @@ where
     /// * `system`: The `System` to register.
     /// * `name`: Name to register the system with, used for dependency ordering.
     /// * `deps`: Names of systems that must run before this system.
-    pub fn with_system<Sys>(self, system: Sys, name: &'static str, deps: &'static [&'static str]) -> Self
+    pub fn with_system<Sys>(
+        self,
+        system: Sys,
+        name: &'static str,
+        deps: &'static [&'static str],
+    ) -> Self
     where
         Sys: for<'sys_local> System<'sys_local> + Send + 'static,
     {
@@ -1169,7 +1177,9 @@ mod test {
     // === Bundles === //
     #[derive(Debug)]
     struct BundleZero;
-    impl<'a, 'b, 'c, D: SimpleDispatcherBuilder<'a, 'b, 'c>> SystemBundle<'a, 'b, 'c, D> for BundleZero {
+    impl<'a, 'b, 'c, D: SimpleDispatcherBuilder<'a, 'b, 'c>> SystemBundle<'a, 'b, 'c, D>
+        for BundleZero
+    {
         fn build(self, builder: &mut D) -> bundle::Result<()> {
             builder.add(SystemZero, "system_zero", &[]);
             Ok(())
@@ -1188,7 +1198,9 @@ mod test {
 
     #[derive(Debug)]
     struct BundleAsset;
-    impl<'a, 'b, 'c, D: SimpleDispatcherBuilder<'a, 'b, 'c>> SystemBundle<'a, 'b, 'c, D> for BundleAsset {
+    impl<'a, 'b, 'c, D: SimpleDispatcherBuilder<'a, 'b, 'c>> SystemBundle<'a, 'b, 'c, D>
+        for BundleAsset
+    {
         fn build(self, builder: &mut D) -> bundle::Result<()> {
             builder.add(Processor::<AssetZero>::new(), "asset_zero_processor", &[]);
             Ok(())

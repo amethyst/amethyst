@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
-use amethyst::core::SimpleDispatcherBuilder;
 use amethyst::core::bundle::{Result, SystemBundle};
+use amethyst::core::SimpleDispatcherBuilder;
 use amethyst::ecs::prelude::*;
 
 /// Adds a specified `System` to the dispatcher.
@@ -27,11 +27,7 @@ where
     D: SimpleDispatcherBuilder<'a, 'b, 'c>,
 {
     fn build(self, builder: &mut D) -> Result<()> {
-        builder.add(
-            self.system,
-            &self.system_name,
-            &self.system_dependencies,
-        );
+        builder.add(self.system, &self.system_name, &self.system_dependencies);
         Ok(())
     }
 }
