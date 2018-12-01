@@ -190,15 +190,16 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
     ///     // It is legal to register a system with an empty name
     ///     .with(NopSystem, "", &[], &[]);
     /// ~~~
-    pub fn with<S>(
+    pub fn with<'i, S>(
         mut self,
         system: S,
         name: &'c str,
-        dependencies: &[&'c str],
-        reverse_dependencies: &[&'c str],
+        dependencies: impl IntoIterator<Item = &'i &'c str>,
+        reverse_dependencies: impl IntoIterator<Item = &'i &'c str>,
     ) -> Self
     where
         for<'d> S: System<'d> + Send + 'a + 'c,
+        'c: 'i,
     {
         self.add(system, name, dependencies, reverse_dependencies);
         self
@@ -298,14 +299,15 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
     ///
     /// If two system are added that share an identical name, this function will panic.
     /// Empty names are permitted, and this function will not panic if more then two are added.
-    pub fn add<S>(
+    pub fn add<'i, S>(
         &mut self,
         system: S,
         name: &'c str,
-        dependencies: &[&'c str],
-        reverse_dependencies: &[&'c str],
+        dependencies: impl IntoIterator<Item = &'i &'c str>,
+        reverse_dependencies: impl IntoIterator<Item = &'i &'c str>,
     ) where
         for<'d> S: System<'d> + Send + 'a + 'c,
+        'c: 'i,
     {
         struct AddSystem<'c, S> {
             system: S,
@@ -328,14 +330,17 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
             panic!("multiple systems with name `{}`", name);
         }
 
+        let dependencies = dependencies.into_iter().map(|d| *d);
+
         let dependencies = if name == "" {
-            Rc::new(RefCell::new(dependencies.to_owned()))
+            Rc::new(RefCell::new(dependencies.collect()))
         } else {
-            self.dependencies
+            let deps = self
+                .dependencies
                 .entry(name)
-                .and_modify(|deps| deps.borrow_mut().extend(dependencies))
-                .or_insert_with(|| Rc::new(RefCell::new(dependencies.to_owned())))
-                .clone()
+                .or_insert_with(|| Rc::new(RefCell::new(Vec::new())));
+            deps.borrow_mut().extend(dependencies);
+            deps.clone()
         };
 
         self.commands.push(Box::new(AddSystem {
@@ -346,8 +351,8 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
 
         for reverse_dependency in reverse_dependencies {
             self.dependencies
-                .entry(reverse_dependency)
-                .and_modify(|dependencies| dependencies.borrow_mut().push(name))
+                .entry(*reverse_dependency)
+                .and_modify(|deps| deps.borrow_mut().push(name))
                 .or_insert_with(|| Rc::new(RefCell::new(vec![name].into())));
         }
     }
