@@ -15,7 +15,9 @@ The main difference between real game code and the example code is where the
 
 For instance, in the pong_tutorial_01 example we have:
 
-```rust,ignore
+```rust,norun
+use amethyst::utils::application_root_dir;
+
 let app_root = application_root_dir();
 
 let path = format!(
@@ -26,9 +28,17 @@ let path = format!(
 
 But for your own project you'll probably want something like this:
 
-```rust,ignore
+```rust,norun
 let path = "./resources/display_config.ron";
 ```
+
+The reason `application_root_dir` is used in our examples is that the
+required resources are not in the working directory, but rather somewhere
+in the `examples` folder. However, in an actual game it would be bad to
+hardcode the path of the resources to the directory that was used to compile
+the application, because then the game cannot be moved (or else it wouldn't
+find the resources). That's why you should stick to a relative path for your
+game, as shown above.
 
 [pong]: https://github.com/amethyst/amethyst/tree/master/examples/pong
 
