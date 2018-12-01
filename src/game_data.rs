@@ -1,9 +1,12 @@
+use std::cell::RefCell;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
+use std::rc::Rc;
 
 use crate::{
     core::{
-        specs::prelude::{Dispatcher, DispatcherBuilder, System, World},
-        ArcThreadPool, SystemBundle,
+        specs::prelude::{Dispatcher, DispatcherBuilder, System, World, RunNow},
+        ArcThreadPool, SystemBundle, SimpleDispatcherBuilder
     },
     error::{Error, Result},
     renderer::pipe::pass::Pass,
@@ -32,22 +35,70 @@ impl<'a, 'b> GameData<'a, 'b> {
     }
 }
 
-/// Builder for default game data
-pub struct GameDataBuilder<'a, 'b> {
-    disp_builder: DispatcherBuilder<'a, 'b>,
+trait BuildGameData<'a, 'b> {
+    fn build(self: Box<Self>, disp_builder: &mut DispatcherBuilder<'a, 'b>);
 }
 
-impl<'a, 'b> Default for GameDataBuilder<'a, 'b> {
+struct AddBarrier;
+
+impl<'a, 'b> BuildGameData<'a, 'b> for AddBarrier {
+    fn build(self: Box<Self>, disp_builder: &mut DispatcherBuilder<'a, 'b>) {
+        disp_builder.add_barrier();
+    }
+}
+
+struct AddSystem<'c, S> {
+    system: S,
+    name: &'c str,
+    dependencies: Rc<RefCell<Vec<&'c str>>>,
+}
+
+impl<'a, 'b, 'c, S> BuildGameData<'a, 'b> for AddSystem<'c, S>
+where
+    for<'d> S: System<'d> + Send + 'a,
+{
+    fn build(self: Box<Self>, disp_builder: &mut DispatcherBuilder<'a, 'b>) {
+        let dependencies = self.dependencies.clone();
+        let AddSystem { name, system, .. } = *self;
+        disp_builder.add(system, name, &dependencies.borrow());
+    }
+}
+
+struct AddThreadLocal<S> {
+    system: S,
+}
+
+impl<'a, 'b, S> BuildGameData<'a, 'b> for AddThreadLocal<S>
+where
+    for<'d> S: RunNow<'d> + 'b,
+{
+    fn build(self: Box<Self>, disp_builder: &mut DispatcherBuilder<'a, 'b>) {
+        disp_builder.add_thread_local(self.system);
+    }
+}
+
+/// Builder for default game data
+pub struct GameDataBuilder<'a, 'b, 'c> {
+    disp_builder: DispatcherBuilder<'a, 'b>,
+    commands: Vec<Box<dyn BuildGameData<'a, 'b> + 'c>>,
+    dependencies: HashMap<&'c str, Rc<RefCell<Vec<&'c str>>>>,
+    added_names: HashSet<&'c str>,
+}
+
+impl<'a, 'b, 'c> Default for GameDataBuilder<'a, 'b, 'c> {
     fn default() -> Self {
         GameDataBuilder::new()
     }
 }
 
-impl<'a, 'b> GameDataBuilder<'a, 'b> {
+impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
     /// Create new builder
     pub fn new() -> Self {
         GameDataBuilder {
             disp_builder: DispatcherBuilder::new(),
+            commands: Vec::new(),
+            dependencies: HashMap::new(),
+            added_names: HashSet::new(),
         }
     }
 
@@ -78,13 +129,13 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// // systems will both run in parallel. Only after both cat systems have
     /// // run is the "doggo" system permitted to run them.
     /// GameDataBuilder::default()
-    ///     .with(NopSystem, "tabby cat", &[])
-    ///     .with(NopSystem, "tom cat", &[])
+    ///     .with(NopSystem, "tabby cat", &[], &[])
+    ///     .with(NopSystem, "tom cat", &[], &[])
     ///     .with_barrier()
-    ///     .with(NopSystem, "doggo", &[]);
+    ///     .with(NopSystem, "doggo", &[], &[]);
     /// ~~~
     pub fn with_barrier(mut self) -> Self {
-        self.disp_builder.add_barrier();
+        self.add_barrier();
         self
     }
 
@@ -101,6 +152,9 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// - `dependencies`: A list of named system that _must_ have completed running
     ///                 before this system is permitted to run.
     ///                 This may be an empty list if there is no dependencies.
+    /// - `reverse_dependencies`: A list of named system that _must not_ start running
+    ///                         before this system have completed running.
+    ///                         This may be an empty list if there is no dependencies.
     ///
     /// # Returns
     ///
@@ -114,9 +168,6 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     ///
     /// If two system are added that share an identical name, this function will panic.
     /// Empty names are permitted, and this function will not panic if more then two are added.
-    ///
-    /// If a dependency is referenced (by name), but has not previously been added this
-    /// function will panic.
     ///
     /// # Examples
     ///
@@ -133,18 +184,90 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// GameDataBuilder::default()
     ///     // This will add the "foo" system to the game loop, in this case
     ///     // the "foo" system will not depend on any systems.
-    ///     .with(NopSystem, "foo", &[])
+    ///     .with(NopSystem, "foo", &[], &[])
     ///     // The "bar" system will only run after the "foo" system has completed
-    ///     .with(NopSystem, "bar", &["foo"])
+    ///     .with(NopSystem, "bar", &["foo"], &[])
+    ///     // The "baz" system will only run after the "foo" system has completed
+    ///     // and the "bar" system will run only after "baz" system has completed
+    ///     .with(NopSystem, "baz", &["foo"], &["bar"])
     ///     // It is legal to register a system with an empty name
-    ///     .with(NopSystem, "", &[]);
+    ///     .with(NopSystem, "", &[], &[]);
     /// ~~~
-    pub fn with<S>(mut self, system: S, name: &str, dependencies: &[&str]) -> Self
+    pub fn with<S>(
+        mut self,
+        system: S,
+        name: &'c str,
+        dependencies: &[&'c str],
+        reverse_dependencies: &[&'c str],
+    ) -> Self
     where
-        for<'c> S: System<'c> + Send + 'a,
+        for<'d> S: System<'d> + Send + 'a + 'c,
     {
-        self.disp_builder.add(system, name, dependencies);
+        self.add(system, name, dependencies, reverse_dependencies);
         self
+    }
+
+    /// Adds a given system.
+    ///
+    /// __Note:__ all dependencies must be added before you add the system.
+    ///
+    /// # Parameters
+    ///
+    /// - `system`: The system that is to be added to the game loop.
+    /// - `name`: A unique string to identify the system by. This is used for
+    ///         dependency tracking. This name may be empty `""` string in which
+    ///         case it cannot be referenced as a dependency.
+    /// - `dependencies`: A list of named system that _must_ have completed running
+    ///                 before this system is permitted to run.
+    ///                 This may be an empty list if there is no dependencies.
+    ///                 This may be an empty list if there is no dependencies.
+    /// - `reverse_dependencies`: A list of named system that _must not_ start running
+    ///                         before this system have completed running.
+    ///                         This may be an empty list if there is no dependencies.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `S`: A type that implements the `System` trait.
+    ///
+    /// # Panics
+    ///
+    /// If two system are added that share an identical name, this function will panic.
+    /// Empty names are permitted, and this function will not panic if more then two are added.
+    pub fn add<S>(
+        &mut self,
+        system: S,
+        name: &'c str,
+        dependencies: &[&'c str],
+        reverse_dependencies: &[&'c str],
+    ) where
+        for<'d> S: System<'d> + Send + 'a + 'c,
+    {
+        if name != "" && !self.added_names.insert(name) {
+            panic!("multiple systems with name `{}`", name);
+        }
+
+        let dependencies = if name == "" {
+            Rc::new(RefCell::new(dependencies.to_owned()))
+        } else {
+            self.dependencies
+                .entry(name)
+                .and_modify(|deps| deps.borrow_mut().extend(dependencies))
+                .or_insert_with(|| Rc::new(RefCell::new(dependencies.to_owned())))
+                .clone()
+        };
+
+        self.commands.push(Box::new(AddSystem {
+            system,
+            name,
+            dependencies,
+        }));
+
+        for reverse_dependency in reverse_dependencies {
+            self.dependencies
+                .entry(reverse_dependency)
+                .and_modify(|dependencies| dependencies.borrow_mut().push(name))
+                .or_insert_with(|| Rc::new(RefCell::new(vec![name].into())));
+        }
     }
 
     /// Add a given thread-local system.
@@ -187,9 +310,9 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// ~~~
     pub fn with_thread_local<S>(mut self, system: S) -> Self
     where
-        for<'c> S: System<'c> + 'b,
+        for<'d> S: System<'d> + 'b + 'c,
     {
-        self.disp_builder.add_thread_local(system);
+        self.add_thread_local(system);
         self
     }
 
@@ -214,9 +337,9 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     ///
     pub fn with_bundle<B>(mut self, bundle: B) -> Result<Self>
     where
-        B: SystemBundle<'a, 'b>,
+        B: SystemBundle<'a, 'b, 'c, Self>,
     {
-        bundle.build(&mut self.disp_builder).map_err(Error::Core)?;
+        bundle.build(&mut self).map_err(Error::Core)?;
         Ok(self)
     }
 
@@ -232,7 +355,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     pub fn with_basic_renderer<A, P>(self, path: A, pass: P, with_ui: bool) -> Result<Self>
     where
         A: AsRef<Path>,
-        P: Pass + 'b,
+        P: Pass + 'b + 'c,
     {
         use crate::{
             config::Config,
@@ -259,8 +382,46 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     }
 }
 
-impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
-    fn build(self, world: &mut World) -> GameData<'a, 'b> {
+impl<'a, 'b, 'c> SimpleDispatcherBuilder<'a, 'b, 'c> for GameDataBuilder<'a, 'b, 'c> {
+    fn add<T>(&mut self, system: T, name: &'c str, dep: &[&'c str])
+    where
+        T: for<'d> System<'d> + Send + 'a + 'c,
+    {
+        GameDataBuilder::add(self, system, name, dep, &[]);
+    }
+
+    fn add_thread_local<T>(&mut self, system: T)
+    where
+        T: for<'d> RunNow<'d> + 'b + 'c,
+    {
+        self.commands.push(Box::new(AddThreadLocal { system }));
+    }
+
+    fn add_barrier(&mut self) {
+        self.commands.push(Box::new(AddBarrier));
+    }
+}
+
+impl<'a, 'b, 'c> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b, 'c> {
+    fn build(mut self, world: &mut World) -> GameData<'a, 'b> {
+        if cfg!(debug_assertions) {
+            let unresolved_dependencies = self
+                .dependencies
+                .keys()
+                .filter(|name| !self.added_names.contains(*name))
+                .collect::<Vec<_>>();
+            assert_eq!(
+                unresolved_dependencies.len(),
+                0,
+                "unresolved dependencies: {:?}",
+                unresolved_dependencies
+            );
+        }
+
+        for command in self.commands.drain(..) {
+            command.build(&mut self.disp_builder);
+        }
+
         #[cfg(not(no_threading))]
         let pool = world.read_resource::<ArcThreadPool>().clone();
 
