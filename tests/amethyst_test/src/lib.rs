@@ -148,7 +148,10 @@
 //! #
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
-//! #     core::bundle::{self, SystemBundle},
+//! #     core::{
+//! #         bundle::{self, SystemBundle},
+//! #         SimpleDispatcherBuilder,
+//! #     },
 //! #     ecs::prelude::*,
 //! #     prelude::*,
 //! # };
@@ -172,8 +175,8 @@
 //! #
 //! # #[derive(Debug)]
 //! # struct MyBundle;
-//! # impl<'a, 'b> SystemBundle<'a, 'b> for MyBundle {
-//! #     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> bundle::Result<()> {
+//! # impl<'a, 'b, 'c, D: SimpleDispatcherBuilder<'a, 'b, 'c>> SystemBundle<'a, 'b, 'c, D> for MyBundle {
+//! #     fn build(self, builder: &mut D) -> bundle::Result<()> {
 //! #         builder.add(MySystem, "my_system", &[]);
 //! #         Ok(())
 //! #     }
