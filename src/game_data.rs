@@ -77,6 +77,20 @@ where
     }
 }
 
+/// Automatic dependencies for system
+/// 
+/// See `GameDataBuilder::with_auto` for more details.
+pub trait AutoAddSystem: for<'a> System<'a> {
+    /// System dependencies
+    /// 
+    /// See `GameDataBuilder::with_auto` for more details.
+    const DEPENDENCIES: &'static [&'static str];
+    /// System reverse dependencies
+    /// 
+    /// See `GameDataBuilder::with_auto` for more details.
+    const REVERSE_DEPENDENCIES: &'static [&'static str];
+}
+
 /// Builder for default game data
 pub struct GameDataBuilder<'a, 'b, 'c> {
     disp_builder: DispatcherBuilder<'a, 'b>,
@@ -140,8 +154,6 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
     }
 
     /// Adds a given system.
-    ///
-    /// __Note:__ all dependencies must be added before you add the system.
     ///
     /// # Parameters
     ///
@@ -207,9 +219,79 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
         self
     }
 
-    /// Adds a given system.
+    /// Adds a given system with automatic dependencies
     ///
-    /// __Note:__ all dependencies must be added before you add the system.
+    /// # Parameters
+    ///
+    /// - `system`: The system that is to be added to the game loop.
+    /// - `name`: A unique string to identify the system by. This is used for
+    ///         dependency tracking. This name may be empty `""` string in which
+    ///         case it cannot be referenced as a dependency.
+    /// - `dependencies`: A list of named system that _must_ have completed running
+    ///                 before this system is permitted to run.
+    ///                 This may be an empty list if there is no dependencies.
+    /// - `reverse_dependencies`: A list of named system that _must not_ start running
+    ///                         before this system have completed running.
+    ///                         This may be an empty list if there is no dependencies.
+    ///
+    /// # Returns
+    ///
+    /// This function returns GameDataBuilder after it has modified it.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `S`: A type that implements the `System` trait.
+    ///
+    /// # Panics
+    ///
+    /// If two system are added that share an identical name, this function will panic.
+    /// Empty names are permitted, and this function will not panic if more then two are added.
+    ///
+    /// # Examples
+    ///
+    /// ~~~no_run
+    /// use amethyst::prelude::*;
+    /// use amethyst::ecs::prelude::System;
+    ///
+    /// struct NopSystem;
+    /// impl<'a> System<'a> for NopSystem {
+    ///     type SystemData = ();
+    ///     fn run(&mut self, _: Self::SystemData) {}
+    /// }
+    /// 
+    /// impl AutoAddSystem {
+    ///     // If this system is added using GameDataBuilder::with_auto it will only run 
+    ///     // after the "foo" system has completed
+    ///     const DEPENDENCIES: &'static [&'static str] = &["foo"];
+    ///     // and the "bar" system will run only after this system has completed
+    ////    const REVERSE_DEPENDENCIES: &'static [&'static str] = &["bar"];
+    /// }
+    ///
+    /// GameDataBuilder::default()
+    ///     // This will add the "foo" system to the game loop, in this case
+    ///     // the "foo" system will not depend on any systems.
+    ///     .with(NopSystem, "foo", &[], &[])
+    ///     // The "bar" system will only run after the "foo" system has completed
+    ///     .with(NopSystem, "bar", &["foo"], &[])
+    ///     // Adds `NopSystem` with automatic dependencies
+    ///     .with_auto(NopSystem, "baz")
+    ///     // It is legal to register a system with an empty name
+    ///     .with(NopSystem, "", &[], &[]);
+    /// ~~~
+    pub fn with_auto<S>(
+        mut self,
+        system: S,
+        name: &'c str,
+    ) -> Self
+    where
+        for<'d> S: System<'d> + Send + 'a + 'c,
+        S: AutoAddSystem,
+    {
+        self.add(system, name, S::DEPENDENCIES, S::REVERSE_DEPENDENCIES);
+        self
+    }
+
+    /// Adds a given system.
     ///
     /// # Parameters
     ///
@@ -233,7 +315,7 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
     ///
     /// If two system are added that share an identical name, this function will panic.
     /// Empty names are permitted, and this function will not panic if more then two are added.
-    pub fn add<S>(
+    fn add<S>(
         &mut self,
         system: S,
         name: &'c str,
