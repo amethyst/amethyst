@@ -120,7 +120,7 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
     /// barrier are executed before the ones after this barrier.
     ///
     /// Does nothing if there were no systems added since the last call to
-    /// `with_barrier()`. Thread-local systems are not affected by barriers;
+    /// `with_barrier()` or `add_barrier()`. Thread-local systems are not affected by barriers;
     /// they're always executed at the end.
     ///
     /// # Returns
@@ -151,6 +151,18 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
     pub fn with_barrier(mut self) -> Self {
         self.add_barrier();
         self
+    }
+
+    /// Inserts a barrier which assures that all systems added before the
+    /// barrier are executed before the ones after this barrier.
+    ///
+    /// Does nothing if there were no systems added since the last call to
+    /// `with_barrier()` or `add_barrier()`. Thread-local systems are not affected by barriers;
+    /// they're always executed at the end.
+    /// 
+    /// See `with_barrier` for example.
+    pub fn add_barrier(&mut self) {
+        self.commands.push(Box::new(AddBarrier));
     }
 
     /// Adds a given system.
@@ -292,6 +304,8 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
     }
 
     /// Adds a given system.
+    /// 
+    /// See `with` for example.
     ///
     /// # Parameters
     ///
@@ -315,7 +329,7 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
     ///
     /// If two system are added that share an identical name, this function will panic.
     /// Empty names are permitted, and this function will not panic if more then two are added.
-    fn add<S>(
+    pub fn add<S>(
         &mut self,
         system: S,
         name: &'c str,
@@ -372,7 +386,7 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
     ///
     /// # Type Parameters
     ///
-    /// - `S`: A type that implements the `System` trait.
+    /// - `S`: A type that implements the `RunNow` trait. This trait is implemented for all `System`s.
     ///
     /// # Examples
     ///
@@ -392,10 +406,36 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
     /// ~~~
     pub fn with_thread_local<S>(mut self, system: S) -> Self
     where
-        for<'d> S: System<'d> + 'b + 'c,
+        for<'d> S: RunNow<'d> + 'b + 'c,
     {
         self.add_thread_local(system);
         self
+    }
+
+    /// Add a given thread-local system.
+    /// 
+    /// See `with_thread_local` for example.
+    ///
+    /// A thread-local system is one that _must_ run on the main thread of the
+    /// game. A thread-local system would be necessary typically to work
+    /// around vendor APIs that have thread dependent designs; an example
+    /// being OpenGL which uses a thread-local state machine to function.
+    ///
+    /// All thread-local systems are executed sequentially after all
+    /// non-thread-local systems.
+    ///
+    /// # Parameters
+    ///
+    /// - `system`: The system that is to be added to the game loop.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `S`: A type that implements the `RunNow` trait. This trait is implemented for all `System`s.
+    pub fn add_thread_local<S>(&mut self, system: S)
+    where
+        for<'d> S: RunNow<'d> + 'b + 'c,
+    {
+        self.commands.push(Box::new(AddThreadLocal { system }));
     }
 
     /// Add a given ECS bundle to the game loop.
@@ -476,11 +516,11 @@ impl<'a, 'b, 'c> SimpleDispatcherBuilder<'a, 'b, 'c> for GameDataBuilder<'a, 'b,
     where
         T: for<'d> RunNow<'d> + 'b + 'c,
     {
-        self.commands.push(Box::new(AddThreadLocal { system }));
+        GameDataBuilder::add_thread_local(self, system);
     }
 
     fn add_barrier(&mut self) {
-        self.commands.push(Box::new(AddBarrier));
+        GameDataBuilder::add_barrier(self);
     }
 }
 
