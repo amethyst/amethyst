@@ -5,8 +5,8 @@ use std::rc::Rc;
 
 use crate::{
     core::{
-        specs::prelude::{Dispatcher, DispatcherBuilder, System, World, RunNow},
-        ArcThreadPool, SystemBundle, SimpleDispatcherBuilder
+        specs::prelude::{Dispatcher, DispatcherBuilder, RunNow, System, World},
+        ArcThreadPool, SimpleDispatcherBuilder, SystemBundle,
     },
     error::{Error, Result},
     renderer::pipe::pass::Pass,
@@ -35,58 +35,23 @@ impl<'a, 'b> GameData<'a, 'b> {
     }
 }
 
+/// Implementation detail
+///
+/// See `GameDataBuilder::commands`
 trait BuildGameData<'a, 'b> {
     fn build(self: Box<Self>, disp_builder: &mut DispatcherBuilder<'a, 'b>);
 }
 
-struct AddBarrier;
-
-impl<'a, 'b> BuildGameData<'a, 'b> for AddBarrier {
-    fn build(self: Box<Self>, disp_builder: &mut DispatcherBuilder<'a, 'b>) {
-        disp_builder.add_barrier();
-    }
-}
-
-struct AddSystem<'c, S> {
-    system: S,
-    name: &'c str,
-    dependencies: Rc<RefCell<Vec<&'c str>>>,
-}
-
-impl<'a, 'b, 'c, S> BuildGameData<'a, 'b> for AddSystem<'c, S>
-where
-    for<'d> S: System<'d> + Send + 'a,
-{
-    fn build(self: Box<Self>, disp_builder: &mut DispatcherBuilder<'a, 'b>) {
-        let dependencies = self.dependencies.clone();
-        let AddSystem { name, system, .. } = *self;
-        disp_builder.add(system, name, &dependencies.borrow());
-    }
-}
-
-struct AddThreadLocal<S> {
-    system: S,
-}
-
-impl<'a, 'b, S> BuildGameData<'a, 'b> for AddThreadLocal<S>
-where
-    for<'d> S: RunNow<'d> + 'b,
-{
-    fn build(self: Box<Self>, disp_builder: &mut DispatcherBuilder<'a, 'b>) {
-        disp_builder.add_thread_local(self.system);
-    }
-}
-
 /// Automatic dependencies for system
-/// 
+///
 /// See `GameDataBuilder::with_auto` for more details.
 pub trait AutoAddSystem: for<'a> System<'a> {
     /// System dependencies
-    /// 
+    ///
     /// See `GameDataBuilder::with_auto` for more details.
     const DEPENDENCIES: &'static [&'static str];
     /// System reverse dependencies
-    /// 
+    ///
     /// See `GameDataBuilder::with_auto` for more details.
     const REVERSE_DEPENDENCIES: &'static [&'static str];
 }
@@ -159,9 +124,17 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
     /// Does nothing if there were no systems added since the last call to
     /// `with_barrier()` or `add_barrier()`. Thread-local systems are not affected by barriers;
     /// they're always executed at the end.
-    /// 
+    ///
     /// See `with_barrier` for example.
     pub fn add_barrier(&mut self) {
+        struct AddBarrier;
+
+        impl<'a, 'b> BuildGameData<'a, 'b> for AddBarrier {
+            fn build(self: Box<Self>, disp_builder: &mut DispatcherBuilder<'a, 'b>) {
+                disp_builder.add_barrier();
+            }
+        }
+
         self.commands.push(Box::new(AddBarrier));
     }
 
@@ -270,9 +243,9 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
     ///     type SystemData = ();
     ///     fn run(&mut self, _: Self::SystemData) {}
     /// }
-    /// 
+    ///
     /// impl AutoAddSystem {
-    ///     // If this system is added using GameDataBuilder::with_auto it will only run 
+    ///     // If this system is added using GameDataBuilder::with_auto it will only run
     ///     // after the "foo" system has completed
     ///     const DEPENDENCIES: &'static [&'static str] = &["foo"];
     ///     // and the "bar" system will run only after this system has completed
@@ -290,11 +263,7 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
     ///     // It is legal to register a system with an empty name
     ///     .with(NopSystem, "", &[], &[]);
     /// ~~~
-    pub fn with_auto<S>(
-        mut self,
-        system: S,
-        name: &'c str,
-    ) -> Self
+    pub fn with_auto<S>(mut self, system: S, name: &'c str) -> Self
     where
         for<'d> S: System<'d> + Send + 'a + 'c,
         S: AutoAddSystem,
@@ -304,7 +273,7 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
     }
 
     /// Adds a given system.
-    /// 
+    ///
     /// See `with` for example.
     ///
     /// # Parameters
@@ -338,6 +307,23 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
     ) where
         for<'d> S: System<'d> + Send + 'a + 'c,
     {
+        struct AddSystem<'c, S> {
+            system: S,
+            name: &'c str,
+            dependencies: Rc<RefCell<Vec<&'c str>>>,
+        }
+
+        impl<'a, 'b, 'c, S> BuildGameData<'a, 'b> for AddSystem<'c, S>
+        where
+            for<'d> S: System<'d> + Send + 'a,
+        {
+            fn build(self: Box<Self>, disp_builder: &mut DispatcherBuilder<'a, 'b>) {
+                let dependencies = self.dependencies.clone();
+                let AddSystem { name, system, .. } = *self;
+                disp_builder.add(system, name, &dependencies.borrow());
+            }
+        }
+
         if name != "" && !self.added_names.insert(name) {
             panic!("multiple systems with name `{}`", name);
         }
@@ -413,7 +399,7 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
     }
 
     /// Add a given thread-local system.
-    /// 
+    ///
     /// See `with_thread_local` for example.
     ///
     /// A thread-local system is one that _must_ run on the main thread of the
@@ -435,6 +421,19 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
     where
         for<'d> S: RunNow<'d> + 'b + 'c,
     {
+        struct AddThreadLocal<S> {
+            system: S,
+        }
+
+        impl<'a, 'b, S> BuildGameData<'a, 'b> for AddThreadLocal<S>
+        where
+            for<'d> S: RunNow<'d> + 'b,
+        {
+            fn build(self: Box<Self>, disp_builder: &mut DispatcherBuilder<'a, 'b>) {
+                disp_builder.add_thread_local(self.system);
+            }
+        }
+
         self.commands.push(Box::new(AddThreadLocal { system }));
     }
 
