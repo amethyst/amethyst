@@ -238,6 +238,7 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
     /// ~~~no_run
     /// use amethyst::prelude::*;
     /// use amethyst::ecs::prelude::System;
+    /// use amethyst::AutoAddSystem;
     ///
     /// struct NopSystem;
     /// impl<'a> System<'a> for NopSystem {
@@ -245,12 +246,12 @@ impl<'a, 'b, 'c> GameDataBuilder<'a, 'b, 'c> {
     ///     fn run(&mut self, _: Self::SystemData) {}
     /// }
     ///
-    /// impl AutoAddSystem {
+    /// impl AutoAddSystem for NopSystem {
     ///     // If this system is added using GameDataBuilder::with_auto it will only run
     ///     // after the "foo" system has completed
     ///     const DEPENDENCIES: &'static [&'static str] = &["foo"];
     ///     // and the "bar" system will run only after this system has completed
-    ////    const REVERSE_DEPENDENCIES: &'static [&'static str] = &["bar"];
+    ///    const REVERSE_DEPENDENCIES: &'static [&'static str] = &["bar"];
     /// }
     ///
     /// GameDataBuilder::default()
