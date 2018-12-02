@@ -10,6 +10,15 @@ use specs::prelude::{Read, System};
 pub trait SystemExt {
     /// Make a system pausable by tying it to a specific value of a resource.
     ///
+    /// When the value of the resource differs from `value` the system is considered "paused",
+    /// and the `run` method of the pausable system will not be called.
+    ///
+    /// # Notes
+    ///
+    /// Special care must be taken not to read from an `EventChannel` with pausable systems.
+    /// Since `run` is never called, there is no way to consume the reader side of a channel, and
+    /// it may grow indefinitely leaking memory while the system is paused.
+    ///
     /// # Examples
     ///
     /// ```rust
