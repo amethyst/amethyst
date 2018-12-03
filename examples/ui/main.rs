@@ -61,7 +61,7 @@ impl SimpleState for Example {
         }
     }
 
-    fn update(&mut self, state_data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
+    fn update(&mut self, state_data: &mut StateData<GameData>) -> SimpleTrans {
         let StateData { world, .. } = state_data;
         if self.fps_display.is_none() {
             world.exec(|finder: UiFinder| {
