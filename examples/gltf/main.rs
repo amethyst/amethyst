@@ -168,11 +168,10 @@ fn toggle_or_cycle_animation(
 fn main() -> Result<(), amethyst::Error> {
     amethyst::start_logger(Default::default());
 
-    let app_root = application_root_dir();
+    let app_root = application_root_dir()?;
 
-    let path = format!("{}/examples/gltf/resources/display_config.ron", app_root);
-
-    let resources_directory = format!("{}/examples/assets/", app_root);
+    let path = app_root.join("examples/gltf/resources/display_config.ron");
+    let resources_directory = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
         .with(

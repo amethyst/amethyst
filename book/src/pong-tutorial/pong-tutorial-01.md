@@ -124,12 +124,13 @@ In `main()` in `main.rs`, we will load the configuration from the file:
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::renderer::DisplayConfig;
-# fn main() {
+# fn main() -> amethyst::Result<()> {
 use amethyst::utils::application_root_dir;
 
-let path = format!("{}/resources/display_config.ron", application_root_dir());
+let path = application_root_dir()?.join("resources/display_config.ron");
 
 let config = DisplayConfig::load(&path);
+# Ok(())
 # }
 ```
 

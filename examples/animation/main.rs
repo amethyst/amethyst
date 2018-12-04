@@ -175,14 +175,9 @@ impl SimpleState for Example {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let app_root = application_root_dir();
-
-    let display_config_path = format!(
-        "{}/examples/animation/resources/display_config.ron",
-        app_root
-    );
-
-    let resources = format!("{}/examples/assets/", app_root);
+    let app_root = application_root_dir()?;
+    let display_config_path = app_root.join("examples/animation/resources/display_config.ron");
+    let resources = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])

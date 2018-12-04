@@ -121,14 +121,11 @@ impl SimpleState for Example {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let app_root = application_root_dir();
+    let app_root = application_root_dir()?;
 
-    let path = format!(
-        "{}/examples/material/resources/display_config.ron",
-        app_root
-    );
+    let path = app_root.join("examples/material/resources/display_config.ron");
 
-    let resources = format!("{}/examples/assets/", app_root);
+    let resources = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?

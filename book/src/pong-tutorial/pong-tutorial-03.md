@@ -61,10 +61,7 @@ axes we defined. Let's make the following changes to `main.rs`.
 # fn main() -> amethyst::Result<()> {
 use amethyst::input::InputBundle;
 
-let binding_path = format!(
-    "{}/resources/bindings_config.ron",
-    application_root_dir()
-);
+let binding_path = application_root_dir()?.join("resources/bindings_config.ron");
 
 let input_bundle = InputBundle::<String, String>::new()
     .with_bindings_from_file(binding_path)?;

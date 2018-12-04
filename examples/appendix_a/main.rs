@@ -35,13 +35,13 @@ fn main() -> amethyst::Result<()> {
 
     use crate::pong::Pong;
 
-    let app_root = application_root_dir();
+    let app_root = application_root_dir()?;
 
-    let display_config_path = format!("{}/examples/appendix_a/resources/display.ron", app_root);
-    let key_bindings_path = format!("{}/examples/appendix_a/resources/input.ron", app_root);
+    let display_config_path = app_root.join("examples/appendix_a/resources/display.ron");
+    let key_bindings_path = app_root.join("examples/appendix_a/resources/input.ron");
 
-    let config = format!("{}/examples/appendix_a/resources/config.ron", app_root);
-    let assets_dir = format!("{}/examples/assets/", app_root);
+    let config = app_root.join("examples/appendix_a/resources/config.ron");
+    let assets_dir = app_root.join("examples/assets/");
 
     let pong_config = PongConfig::load(&config);
 

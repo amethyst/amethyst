@@ -350,12 +350,10 @@ fn load_sprite_sheet(world: &mut World) -> LoadedSpriteSheet {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let app_root = application_root_dir();
+    let app_root = application_root_dir()?;
 
-    let display_config = DisplayConfig::load(format!(
-        "{}/examples/sprites_ordered/resources/display_config.ron",
-        app_root
-    ));
+    let display_config =
+        DisplayConfig::load(app_root.join("examples/sprites_ordered/resources/display_config.ron"));
 
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
@@ -367,7 +365,7 @@ fn main() -> amethyst::Result<()> {
             )),
     );
 
-    let assets_directory = format!("{}/examples/assets/", app_root);
+    let assets_directory = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?

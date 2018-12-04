@@ -24,11 +24,8 @@ use amethyst::renderer::{
 
 fn main() -> amethyst::Result<()> {
 #     amethyst::start_logger(Default::default());
-#     let app_root = application_root_dir();
-#     let display_config = DisplayConfig::load(format!(
-#         "{}/examples/sprites/resources/display_config.ron",
-#         app_root
-#     ));
+#     let app_root = application_root_dir()?;
+#     let display_config = DisplayConfig::load(app_root.join("examples/sprites/resources/display_config.ron"));
 #
     // ...
 
@@ -49,7 +46,7 @@ fn main() -> amethyst::Result<()> {
 #         .with_bundle(InputBundle::<String, String>::new())?
 #         .with_bundle(UiBundle::<String, String>::new())?;
     // ...
-#     let assets_directory = format!("{}/examples/assets/", app_root);
+#     let assets_directory = app_root.join("examples/assets/");
 #     let mut game = Application::new(assets_directory, ExampleState::default(), game_data)?;
 #     game.run();
 #
