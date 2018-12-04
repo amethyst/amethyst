@@ -94,7 +94,7 @@ impl ScreenDimensions {
     /// This is returned as a float for user convenience, as this is typically used with other
     /// float values.  This will only ever be a non-negative integer though.
     pub fn width(&self) -> f32 {
-        self.w
+        self.w * self.hidpi_factor() as f32
     }
 
     /// Returns the current height of the window.
@@ -102,7 +102,7 @@ impl ScreenDimensions {
     /// This is returned as a float for user convenience, as this is typically used with other
     /// float values.  This will only ever be a non-negative integer though.
     pub fn height(&self) -> f32 {
-        self.h
+        self.h * self.hidpi_factor() as f32
     }
 
     /// Returns the current aspect ratio of the window.

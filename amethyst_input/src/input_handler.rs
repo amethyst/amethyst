@@ -63,7 +63,12 @@ where
     ///
     /// The Amethyst game engine will automatically call this if the InputHandler is attached to
     /// the world as a resource with id 0.
-    pub fn send_event(&mut self, event: &Event, event_handler: &mut EventChannel<InputEvent<AC>>) {
+    pub fn send_event(
+        &mut self,
+        event: &Event,
+        event_handler: &mut EventChannel<InputEvent<AC>>,
+        hidpi: f64,
+    ) {
         match *event {
             Event::WindowEvent { ref event, .. } => match *event {
                 WindowEvent::ReceivedCharacter(c) => {
@@ -221,11 +226,11 @@ where
                 } => {
                     if let Some((old_x, old_y)) = self.mouse_position {
                         event_handler.single_write(CursorMoved {
-                            delta_x: x - old_x,
-                            delta_y: y - old_y,
+                            delta_x: x * hidpi - old_x,
+                            delta_y: y * hidpi - old_y,
                         });
                     }
-                    self.mouse_position = Some((x, y));
+                    self.mouse_position = Some((x * hidpi, y * hidpi));
                 }
                 WindowEvent::Focused(false) => {
                     self.pressed_keys.clear();

@@ -316,12 +316,10 @@ impl<'a> System<'a> for UiKeyboardSystem {
                     ..
                 } => {
                     let hidpi = screen_dimensions.hidpi_factor() as f32;
-                    info!("ScreenDimensions: {:?}", screen_dimensions);
                     self.mouse_position = (
                         position.x as f32 * hidpi,
-                        (screen_dimensions.height() - position.y as f32) * hidpi,
+                        (screen_dimensions.height() - position.y as f32 * hidpi),
                     );
-                    info!("Mouse Position: {:?}", self.mouse_position);
                     if self.left_mouse_button_pressed {
                         let mut focused_text_edit = focused.entity.and_then(|entity| {
                             zip_options(text.get_mut(entity), editable.get_mut(entity))

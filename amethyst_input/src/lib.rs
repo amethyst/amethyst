@@ -4,6 +4,7 @@
 
 extern crate amethyst_config;
 extern crate amethyst_core;
+extern crate amethyst_renderer;
 #[macro_use]
 extern crate derivative;
 extern crate fnv;
