@@ -22,7 +22,7 @@ type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 struct ExampleState;
 
-impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
+impl SimpleState for ExampleState {
     fn on_start(&mut self, data: StateData<GameData>) {
         let prefab_handle = data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
             loader.load("prefab/arc_ball_camera.ron", RonFormat, (), ())

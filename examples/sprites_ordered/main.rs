@@ -86,7 +86,7 @@ impl Example {
     }
 }
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
+impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
 
@@ -96,11 +96,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
         self.redraw_sprites(world);
     }
 
-    fn handle_event(
-        &mut self,
-        mut data: StateData<GameData>,
-        event: StateEvent,
-    ) -> SimpleTrans<'a, 'b> {
+    fn handle_event(&mut self, mut data: StateData<GameData>, event: StateEvent) -> SimpleTrans {
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
                 return Trans::Quit;

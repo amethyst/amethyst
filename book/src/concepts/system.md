@@ -357,8 +357,8 @@ impl Default for Game {
 
 struct GameplayState;
 
-impl<'a, 'b> SimpleState<'a, 'b> for GameplayState {
-    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
+impl SimpleState for GameplayState {
+    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans {
         // If the `Game` resource has been set up to go back to the menu, pop
         // the state so that we go back.
 
@@ -379,8 +379,8 @@ impl<'a, 'b> SimpleState<'a, 'b> for GameplayState {
 
 struct GameMenuState;
 
-impl<'a, 'b> SimpleState<'a, 'b> for GameMenuState {
-    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
+impl SimpleState for GameMenuState {
+    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans {
         let mut game = data.world.write_resource::<Game>();
 
         match game.user_action.take() {

@@ -28,7 +28,7 @@ struct Example {
     fps_display: Option<Entity>,
 }
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
+impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
         // Initialise the scene with an object, a light and a camera.
@@ -42,7 +42,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
         });
     }
 
-    fn handle_event(&mut self, _: StateData<GameData>, event: StateEvent) -> SimpleTrans<'a, 'b> {
+    fn handle_event(&mut self, _: StateData<GameData>, event: StateEvent) -> SimpleTrans {
         match &event {
             StateEvent::Window(event) => {
                 if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
@@ -61,7 +61,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
         }
     }
 
-    fn update(&mut self, state_data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
+    fn update(&mut self, state_data: &mut StateData<GameData>) -> SimpleTrans {
         let StateData { world, .. } = state_data;
         if self.fps_display.is_none() {
             world.exec(|finder: UiFinder| {

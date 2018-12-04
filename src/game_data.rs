@@ -15,7 +15,10 @@ pub trait DataInit<T> {
     fn build(self, world: &mut World) -> T;
 }
 
-/// Default game data
+/// Default game data.
+///
+/// The lifetimes are for the systems inside and can be `'static` unless a system has a borrowed
+/// field.
 pub struct GameData<'a, 'b> {
     dispatcher: Dispatcher<'a, 'b>,
 }

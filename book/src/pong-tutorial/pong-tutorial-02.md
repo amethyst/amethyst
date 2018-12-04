@@ -56,7 +56,7 @@ We will leave it empty for now, but it will become useful later down the line.
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # struct MyState;
-# impl<'a, 'b> SimpleState<'a, 'b> for MyState {
+# impl SimpleState for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
 
 }
@@ -141,7 +141,7 @@ our State's `on_start` method:
 # use amethyst::ecs::World;
 # fn initialise_camera(world: &mut World) { }
 # struct MyState;
-# impl<'a, 'b> SimpleState<'a, 'b> for MyState {
+# impl SimpleState for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
     let world = data.world;
 
@@ -289,7 +289,7 @@ compiles. Update the `on_start` method to the following:
 # fn initialise_paddles(world: &mut World) { }
 # fn initialise_camera(world: &mut World) { }
 # struct MyState;
-# impl<'a, 'b> SimpleState<'a, 'b> for MyState {
+# impl SimpleState for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
     let world = data.world;
 
@@ -383,7 +383,7 @@ fn main() -> amethyst::Result<()> {
 #       .with_pass(DrawFlat2D::new()),
 # );
 # struct Pong;
-# impl<'a, 'b> SimpleState<'a, 'b> for Pong { }
+# impl SimpleState for Pong { }
     let game_data = GameDataBuilder::default()
         .with_bundle(
           RenderBundle::new(pipe, Some(config))
@@ -602,7 +602,7 @@ all together in the `on_start()` method:
 # fn initialise_camera(world: &mut World) { }
 # fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle { unimplemented!() }
 # struct MyState;
-# impl<'a, 'b> SimpleState<'a, 'b> for MyState {
+# impl SimpleState for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
     let world = data.world;
 

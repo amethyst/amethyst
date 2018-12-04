@@ -674,7 +674,7 @@ where
     ///     .run();
     ///
     /// struct LoadingState;
-    /// impl<'a, 'b> SimpleState<'a, 'b> for LoadingState {
+    /// impl SimpleState for LoadingState {
     ///     fn on_start(&mut self, data: StateData<GameData>) {
     ///         let storage = data.world.read_resource();
     ///

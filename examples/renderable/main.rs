@@ -40,7 +40,7 @@ struct Example {
     scene: Handle<Prefab<MyPrefabData>>,
 }
 
-impl<'a, 'b> SimpleState<'a, 'b> for Loading {
+impl SimpleState for Loading {
     fn on_start(&mut self, data: StateData<GameData>) {
         self.prefab = Some(data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
             loader.load("prefab/renderable.ron", RonFormat, (), &mut self.progress)
@@ -52,7 +52,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Loading {
         });
     }
 
-    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
+    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans {
         match self.progress.complete() {
             Completion::Failed => {
                 println!("Failed loading assets: {:?}", self.progress.errors());
@@ -72,18 +72,14 @@ impl<'a, 'b> SimpleState<'a, 'b> for Loading {
     }
 }
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
+impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
 
         world.create_entity().with(self.scene.clone()).build();
     }
 
-    fn handle_event(
-        &mut self,
-        data: StateData<GameData>,
-        event: StateEvent,
-    ) -> SimpleTrans<'a, 'b> {
+    fn handle_event(&mut self, data: StateData<GameData>, event: StateEvent) -> SimpleTrans {
         let w = data.world;
         if let StateEvent::Window(event) = &event {
             // Exit if user hits Escape or closes the window

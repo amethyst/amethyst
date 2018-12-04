@@ -13,7 +13,7 @@ use amethyst::{
 
 struct Example;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
+impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<GameData>) {
         let StateData { world, .. } = data;
         let mat_defaults = world.read_resource::<MaterialDefaults>().0.clone();

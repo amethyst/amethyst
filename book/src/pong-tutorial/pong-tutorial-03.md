@@ -76,7 +76,7 @@ let input_bundle = InputBundle::<String, String>::new()
 #       .with_pass(DrawFlat::<PosTex>::new()),
 # );
 # struct Pong;
-# impl<'a, 'b> SimpleState<'a, 'b> for Pong { }
+# impl SimpleState for Pong { }
 let game_data = GameDataBuilder::default()
     .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
     .with_bundle(TransformBundle::new())?
@@ -370,7 +370,7 @@ will take care of that for us, as well as set up the storage.
 # fn initialise_camera(world: &mut World) { }
 # fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle { unimplemented!() }
 # struct MyState;
-# impl<'a, 'b> SimpleState<'a, 'b> for MyState {
+# impl SimpleState for MyState {
 fn on_start(&mut self, data: StateData<GameData>) {
     let world = data.world;
 

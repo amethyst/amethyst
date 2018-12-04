@@ -16,7 +16,7 @@ type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 struct AssetsExample;
 
-impl<'a, 'b> SimpleState<'a, 'b> for AssetsExample {
+impl SimpleState for AssetsExample {
     fn on_start(&mut self, data: StateData<GameData>) {
         let prefab_handle = data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
             loader.load("prefab/example.ron", RonFormat, (), ())

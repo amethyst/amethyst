@@ -8,7 +8,7 @@ use amethyst::{
 
 pub struct Pong;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Pong {}
+impl SimpleState for Pong {}
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());

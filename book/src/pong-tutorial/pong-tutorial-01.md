@@ -44,7 +44,7 @@ just implement two methods:
 # use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline,
 #                          PosTex, RenderBundle, Stage};
 # struct Pong;
-impl<'a, 'b> SimpleState<'a, 'b> for Pong {
+impl SimpleState for Pong {
 }
 ```
 
@@ -166,7 +166,7 @@ Now let's pack everything up and run it:
 # let path = "./resources/display_config.ron";
 # let config = DisplayConfig::load(&path);
 # struct Pong;
-# impl<'a, 'b> SimpleState<'a,'b> for Pong { }
+# impl SimpleState for Pong { }
 let pipe = Pipeline::build()
     .with_stage(
 #        Stage::with_backbuffer()

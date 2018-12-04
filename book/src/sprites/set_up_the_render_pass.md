@@ -20,7 +20,7 @@ use amethyst::renderer::{
 # #[derive(Debug, Default)]
 # struct ExampleState;
 #
-# impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {}
+# impl SimpleState for ExampleState {}
 
 fn main() -> amethyst::Result<()> {
 #     amethyst::start_logger(Default::default());
