@@ -440,8 +440,25 @@ mod tests {
         let e = res.expect_err("no error");
 
         let messages = e.causes().map(|e| e.to_string()).collect::<Vec<_>>();
+        assert_eq!(messages, vec!["top", "wrapped"]);
+    }
 
-        assert_eq!(vec!["top", "wrapped"], messages);
+    #[test]
+    fn test_try_compat() {
+        use std::io;
+
+        fn foo() -> Result<u32, io::Error> {
+            Err(io::Error::new(io::ErrorKind::Other, "foo"))
+        }
+
+        fn bar() -> Result<u32, Error> {
+            let v = foo().with_context(|_| Error::from_string("bar"))?;
+            Ok(v + 1)
+        }
+
+        let e = bar().expect_err("no error");
+        let messages = e.causes().map(|e| e.to_string()).collect::<Vec<_>>();
+        assert_eq!(messages, vec!["bar", "foo"]);
     }
 
     #[test]
