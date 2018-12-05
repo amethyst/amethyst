@@ -4,6 +4,8 @@
 
 pub use self::pso::{Data, Init, Meta};
 
+use amethyst_error::{Error, ResultExt};
+
 use derivative::Derivative;
 use fnv::FnvHashMap as HashMap;
 use gfx::{
@@ -22,7 +24,7 @@ use log::{debug, warn};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    error::{Error, Result},
+    error,
     pipe::Target,
     types::{Encoder, Factory, PipelineState, Resources, Slice},
     vertex::Attributes,
@@ -44,13 +46,13 @@ pub(crate) enum ProgramSource<'a> {
 }
 
 impl<'a> ProgramSource<'a> {
-    pub fn compile(&self, fac: &mut Factory) -> Result<ShaderSet<Resources>> {
+    pub fn compile(&self, fac: &mut Factory) -> Result<ShaderSet<Resources>, Error> {
         use gfx::{traits::FactoryExt, Factory};
 
         match *self {
             ProgramSource::Simple(ref vs, ref ps) => fac
                 .create_shader_set(vs, ps)
-                .map_err(Error::ProgramCreation),
+                .with_context(|_| error::Error::ProgramCreation),
             ProgramSource::Geometry(ref vs, ref gs, ref ps) => {
                 let v = fac.create_shader_vertex(vs).map_err(ProgramError::Vertex)?;
                 let g = fac
@@ -61,7 +63,7 @@ impl<'a> ProgramSource<'a> {
             }
             ProgramSource::Tessellated(ref vs, ref hs, ref ds, ref ps) => fac
                 .create_shader_set_tessellation(vs, hs, ds, ps)
-                .map_err(Error::ProgramCreation),
+                .with_context(|_| error::Error::ProgramCreation),
         }
     }
 }
@@ -327,7 +329,7 @@ impl<'a> EffectBuilder<'a> {
     }
 
     /// TODO: Support render targets as inputs.
-    pub fn build(&mut self) -> Result<Effect> {
+    pub fn build(&mut self) -> Result<Effect, Error> {
         use gfx::{traits::FactoryExt, Factory};
 
         debug!("Building effect");
@@ -351,7 +353,7 @@ impl<'a> EffectBuilder<'a> {
                 data.const_bufs.push(cbuf);
                 Ok((name.to_string(), i))
             })
-            .collect::<Result<HashMap<_, _>>>()?;
+            .collect::<Result<HashMap<_, _>, Error>>()?;
 
         debug!("Set global uniforms");
         let globals = self

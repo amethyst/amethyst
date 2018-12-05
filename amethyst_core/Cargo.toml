@@ -18,7 +18,7 @@ travis-ci = { repository = "amethyst/amethyst" }
 [dependencies]
 nalgebra = { version = "0.16.7", features = ["serde-serialize", "mint"] }
 approx = "0.3"
-error-chain = "0.12"
+amethyst_error = { path = "../amethyst_error", version = "0.1.0" }
 fnv = "1"
 hibitset = { version = "0.5.2", features = ["parallel"] }
 log = "0.4.6"

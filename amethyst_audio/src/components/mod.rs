@@ -2,11 +2,12 @@
 
 pub use self::{audio_emitter::AudioEmitter, audio_listener::AudioListener};
 
-use amethyst_assets::{PrefabData, PrefabError};
+use amethyst_assets::PrefabData;
 use amethyst_core::{
     nalgebra::Point3,
     specs::prelude::{Entity, Read, WriteStorage},
 };
+use amethyst_error::Error;
 
 use serde::{Deserialize, Serialize};
 
@@ -38,7 +39,7 @@ impl<'a> PrefabData<'a> for AudioPrefab {
         entity: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         if self.emitter {
             system_data.0.insert(entity, AudioEmitter::default())?;
         }

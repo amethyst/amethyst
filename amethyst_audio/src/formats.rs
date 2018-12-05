@@ -1,4 +1,5 @@
 use amethyst_assets::*;
+use amethyst_error::Error;
 
 use serde::{Deserialize, Serialize};
 
@@ -16,7 +17,7 @@ impl SimpleFormat<Audio> for WavFormat {
 
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData, Error> {
         Ok(AudioData(bytes))
     }
 }
@@ -30,7 +31,7 @@ impl SimpleFormat<Audio> for OggFormat {
 
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData, Error> {
         Ok(AudioData(bytes))
     }
 }
@@ -44,7 +45,7 @@ impl SimpleFormat<Audio> for FlacFormat {
 
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData, Error> {
         Ok(AudioData(bytes))
     }
 }
@@ -58,7 +59,7 @@ impl SimpleFormat<Audio> for Mp3Format {
 
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData, Error> {
         Ok(AudioData(bytes))
     }
 }
@@ -80,7 +81,7 @@ impl SimpleFormat<Audio> for AudioFormat {
 
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, options: ()) -> Result<AudioData> {
+    fn import(&self, bytes: Vec<u8>, options: ()) -> Result<AudioData, Error> {
         match *self {
             AudioFormat::Ogg => SimpleFormat::import(&OggFormat, bytes, options),
             AudioFormat::Wav => SimpleFormat::import(&WavFormat, bytes, options),

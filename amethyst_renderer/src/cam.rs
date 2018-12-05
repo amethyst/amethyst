@@ -1,10 +1,11 @@
 //! Camera type with support for perspective and orthographic projections.
 
-use amethyst_assets::{PrefabData, PrefabError};
+use amethyst_assets::PrefabData;
 use amethyst_core::{
     nalgebra::{Matrix4, Orthographic3, Perspective3},
     specs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
 };
+use amethyst_error::Error;
 
 use serde::{Deserialize, Serialize};
 
@@ -117,13 +118,14 @@ impl<'a> PrefabData<'a> for CameraPrefab {
         entity: Entity,
         storage: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         let proj = match *self {
             CameraPrefab::Matrix(mat) => mat,
             CameraPrefab::Orthographic(ortho) => ortho.to_homogeneous(),
             CameraPrefab::Perspective(perspective) => perspective.to_homogeneous(),
         };
-        storage.insert(entity, Camera { proj }).map(|_| ())
+        storage.insert(entity, Camera { proj }).map(|_| ())?;
+        Ok(())
     }
 }
 
@@ -139,7 +141,7 @@ impl<'a> PrefabData<'a> for ActiveCameraPrefab {
         _: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         system_data.0.entity = Some(entities[self.0]);
         // TODO: if no `ActiveCamera` insert using `LazyUpdate`, require changes to `specs`
         Ok(())

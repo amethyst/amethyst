@@ -11,11 +11,11 @@ use amethyst_core::{
     specs::{Join, Read, ReadStorage, Write, WriteStorage},
     transform::GlobalTransform,
 };
+use amethyst_error::Error;
 
 use crate::{
     cam::{ActiveCamera, Camera},
     debug_drawing::{DebugLine, DebugLines, DebugLinesComponent},
-    error::Result,
     mesh::Mesh,
     pass::util::{get_camera, set_attribute_buffers, set_vertex_args, setup_vertex_args},
     pipe::{
@@ -85,7 +85,7 @@ impl<V> Pass for DrawDebugLines<V>
 where
     V: Query<(Position, Color, Normal)>,
 {
-    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         debug!("Building debug lines pass");
         let mut builder = effect.geom(VERT_SRC, GEOM_SRC, FRAG_SRC);
 

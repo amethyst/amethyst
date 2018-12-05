@@ -1,9 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    error::{Error, ResultExt},
-    Asset, SimpleFormat,
-};
+use crate::{Asset, SimpleFormat};
+use amethyst_error::{format_err, Error, ResultExt};
 
 /// Format for loading from Ron files.
 #[derive(Default, Clone, Debug, Serialize, Deserialize)]
@@ -19,10 +17,12 @@ where
 
     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<T::Data, Error> {
         use ron::de::Deserializer;
-        let mut d =
-            Deserializer::from_bytes(&bytes).chain_err(|| "Failed deserializing Ron file")?;
-        let val = T::Data::deserialize(&mut d).chain_err(|| "Failed parsing Ron file")?;
-        d.end().chain_err(|| "Failed parsing Ron file")?;
+        let mut d = Deserializer::from_bytes(&bytes)
+            .with_context(|_| format_err!("Failed deserializing Ron file"))?;
+        let val = T::Data::deserialize(&mut d)
+            .with_context(|_| format_err!("Failed parsing Ron file"))?;
+        d.end()
+            .with_context(|_| format_err!("Failed parsing Ron file"))?;
 
         Ok(val)
     }

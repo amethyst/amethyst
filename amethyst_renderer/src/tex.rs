@@ -1,6 +1,5 @@
 //! Texture resource.
 
-use error_chain::bail;
 pub use gfx::{
     format::{ChannelType, SurfaceType},
     texture::{FilterMethod, Info, Mipmap, SamplerInfo, WrapMode},
@@ -12,9 +11,10 @@ use std::marker::PhantomData;
 
 use amethyst_assets::{Asset, Handle};
 use amethyst_core::specs::prelude::DenseVecStorage;
+use amethyst_error::Error;
 
 use crate::{
-    error::Result,
+    error,
     formats::TextureData,
     types::{ChannelFormat, Factory, RawShaderResourceView, RawTexture, Sampler, SurfaceFormat},
 };
@@ -158,7 +158,7 @@ where
     }
 
     /// Builds and returns the new texture.
-    pub fn build(self, fac: &mut Factory) -> Result<Texture> {
+    pub fn build(self, fac: &mut Factory) -> Result<Texture, Error> {
         use std::mem::size_of;
 
         use gfx::{format::Swizzle, memory::cast_slice, texture::ResourceDesc, Factory};
@@ -180,7 +180,7 @@ where
                     w * h * pixel_width,
                     data.len()
                 );
-                bail!(crate::error::Error::PixelDataMismatch(error))
+                return Err(error::Error::PixelDataMismatch(error).into());
             }
             for y in 0..h {
                 for x in 0..(w * pixel_width) {

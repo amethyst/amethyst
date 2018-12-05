@@ -1,11 +1,12 @@
 use std::sync::Arc;
 
 use amethyst_core::specs::storage::UnprotectedStorage;
+use amethyst_error::{Error, ResultExt};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-use crate::{ErrorKind, Handle, Reload, Result, ResultExt, SingleFile, Source};
+use crate::{Handle, Reload, SingleFile, Source};
 
 /// One of the three core traits of this crate.
 ///
@@ -57,7 +58,7 @@ pub trait Format<A: Asset>: Send + 'static {
         source: Arc<dyn Source>,
         options: Self::Options,
         create_reload: bool,
-    ) -> Result<FormatValue<A>>;
+    ) -> Result<FormatValue<A>, Error>;
 }
 
 /// The `Ok` return value of `Format::import` for a given asset type `A`.
@@ -89,7 +90,7 @@ pub trait SimpleFormat<A: Asset> {
     type Options: Clone + Send + Sync + 'static;
 
     /// Produces asset data from given bytes.
-    fn import(&self, bytes: Vec<u8>, options: Self::Options) -> Result<A::Data>;
+    fn import(&self, bytes: Vec<u8>, options: Self::Options) -> Result<A::Data, Error>;
 }
 
 impl<A, T> Format<A> for T
@@ -106,19 +107,21 @@ where
         source: Arc<dyn Source>,
         options: Self::Options,
         create_reload: bool,
-    ) -> Result<FormatValue<A>> {
+    ) -> Result<FormatValue<A>, Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("import_asset");
         if create_reload {
             let (b, m) = source
                 .load_with_metadata(&name)
-                .chain_err(|| ErrorKind::Source)?;
+                .with_context(|_| crate::error::Error::Source)?;
             let data = T::import(&self, b, options.clone())?;
             let reload = SingleFile::new(self.clone(), m, options, name, source);
             let reload = Some(Box::new(reload) as Box<dyn Reload<A>>);
             Ok(FormatValue { data, reload })
         } else {
-            let b = source.load(&name).chain_err(|| ErrorKind::Source)?;
+            let b = source
+                .load(&name)
+                .with_context(|_| crate::error::Error::Source)?;
             let data = T::import(&self, b, options)?;
 
             Ok(FormatValue::data(data))

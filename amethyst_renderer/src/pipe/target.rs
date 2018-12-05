@@ -1,14 +1,14 @@
 //! Render target used for storing 2D pixel representations of 3D scenes.
 
+use amethyst_error::Error;
 use fnv::FnvHashMap as HashMap;
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-use crate::{
-    error::Result,
-    types::{DepthStencilView, Encoder, Factory, RenderTargetView, ShaderResourceView, Window},
+use crate::types::{
+    DepthStencilView, Encoder, Factory, RenderTargetView, ShaderResourceView, Window,
 };
 
 /// Target color buffer.
@@ -99,12 +99,12 @@ impl Target {
 
     /// Creates the Direct3D 11 backend.
     #[cfg(all(feature = "d3d11", target_os = "windows"))]
-    pub fn resize_main_target(window: &Window) -> Result<(Device, Factory, Target)> {
+    pub fn resize_main_target(window: &Window) -> Result<(Device, Factory, Target), Error> {
         unimplemented!()
     }
 
     #[cfg(all(feature = "metal", target_os = "macos"))]
-    pub fn resize_main_target(window: &Window) -> Result<(Device, Factory, Target)> {
+    pub fn resize_main_target(window: &Window) -> Result<(Device, Factory, Target), Error> {
         unimplemented!()
     }
 
@@ -172,7 +172,11 @@ impl TargetBuilder {
     }
 
     /// Builds and returns the new render target.
-    pub(crate) fn build(self, fac: &mut Factory, size: (u32, u32)) -> Result<(String, Target)> {
+    pub(crate) fn build(
+        self,
+        fac: &mut Factory,
+        size: (u32, u32),
+    ) -> Result<(String, Target), Error> {
         use gfx::Factory;
 
         #[cfg(feature = "profiler")]
@@ -189,7 +193,7 @@ impl TargetBuilder {
                     as_output: rt,
                 })
             })
-            .collect::<Result<_>>()?;
+            .collect::<Result<_, Error>>()?;
 
         let depth_buf = if self.has_depth_buf {
             let (w, h) = (size.0 as u16, size.1 as u16);

@@ -1,5 +1,6 @@
-use amethyst_assets::{PrefabData, PrefabError};
+use amethyst_assets::PrefabData;
 use amethyst_core::specs::prelude::{Component, Entity, HashMapStorage, NullStorage, WriteStorage};
+use amethyst_error::Error;
 
 use serde::{Deserialize, Serialize};
 
@@ -49,7 +50,7 @@ impl<'a> PrefabData<'a> for ControlTagPrefab {
         entity: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         system_data.0.insert(entity, FlyControlTag)?;
         if let Some((index, distance)) = self.arc_ball {
             system_data.1.insert(

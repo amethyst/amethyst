@@ -106,7 +106,8 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     # extern crate serde_derive;
     #
     # use amethyst::{
-    #     assets::{Asset, Error, Handle, ProcessingState, Result},
+    #     error::Error,
+    #     assets::{Asset, Handle, ProcessingState},
     #     ecs::VecStorage,
     # };
     # use serde_derive::{Deserialize, Serialize};
@@ -140,9 +141,9 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     #     Version2 { hp_damage: u32, mp_damage: u32 },
     # }
     #
-    impl From<EnergyBlastData> for Result<ProcessingState<EnergyBlast>> {
+    impl From<EnergyBlastData> for Result<ProcessingState<EnergyBlast>, Error> {
         fn from(energy_blast_data: EnergyBlastData)
-            -> Result<ProcessingState<EnergyBlast>> {
+            -> Result<ProcessingState<EnergyBlast>, Error> {
 
             match energy_blast_data {
                 EnergyBlastData::Version1 { hp_damage } => {
@@ -169,7 +170,8 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     # extern crate serde_derive;
     #
     # use amethyst::{
-    #     assets::{self, AssetStorage, Loader, ProcessingState, ProgressCounter, RonFormat},
+    #     error::Error,
+    #     assets::{AssetStorage, Loader, ProcessingState, ProgressCounter, RonFormat},
     #     prelude::*,
     #     utils::application_root_dir,
     # };
@@ -209,9 +211,9 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     #     type HandleStorage = VecStorage<EnergyBlastHandle>;
     # }
     #
-    # impl From<EnergyBlastData> for assets::Result<ProcessingState<EnergyBlast>> {
+    # impl From<EnergyBlastData> for Result<ProcessingState<EnergyBlast>, Error> {
     #     fn from(energy_blast_data: EnergyBlastData)
-    #         -> assets::Result<ProcessingState<EnergyBlast>> {
+    #         -> Result<ProcessingState<EnergyBlast>, Error> {
     #
     #         use self::EnergyBlastData::*;
     #         match energy_blast_data {

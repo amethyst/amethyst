@@ -16,7 +16,6 @@ use std::{net::SocketAddr, sync::mpsc::SyncSender};
 
 use bincode::{deserialize, serialize};
 use laminar::Packet;
-use log::error;
 use serde::{de::DeserializeOwned, Serialize};
 
 mod bundle;
@@ -44,10 +43,10 @@ where
                 slice.to_owned(),
             ))) {
                 Ok(_qty) => {}
-                Err(e) => error!("Failed to send data to network socket: {}", e),
+                Err(e) => panic!("Failed to send data to network socket: {}", e),
             }
         }
-        Err(e) => error!("Failed to serialize the event: {}", e),
+        Err(e) => panic!("Failed to serialize the event: {}", e),
     }
 }
 

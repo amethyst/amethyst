@@ -56,7 +56,7 @@ where
 
 /// An enum of possible errors that can occur when binding an action or axis.
 #[derive(Debug, Clone, PartialEq)]
-pub enum BindingError<AX, AC> {
+pub enum BindingError<AX: 'static, AC: 'static> {
     /// Combo provided for action binding has two (or more) of the same button.
     ComboContainsDuplicates(AC),
     /// Combo provided was already bound to contained action.
@@ -72,7 +72,7 @@ pub enum BindingError<AX, AC> {
     ControllerAxisAlreadyBound(AX),
 }
 
-impl<AX, AC> Display for BindingError<AX, AC>
+impl<AX: 'static, AC: 'static> Display for BindingError<AX, AC>
 where
     AX: Display,
     AC: Display,

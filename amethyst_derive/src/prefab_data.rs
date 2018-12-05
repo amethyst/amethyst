@@ -24,8 +24,9 @@ fn impl_prefab_data_component(ast: &DeriveInput) -> TokenStream {
             fn add_to_entity(&self,
                              entity: Entity,
                              system_data: &mut Self::SystemData,
-                             _: &[Entity]) -> ::std::result::Result<(), PrefabError> {
-                system_data.insert(entity, self.clone()).map(|_| ())
+                             _: &[Entity]) -> ::std::result::Result<(), Error> {
+                system_data.insert(entity, self.clone()).map(|_| ())?;
+                Ok(())
             }
         }
     }
@@ -85,14 +86,14 @@ fn impl_prefab_data_aggregate(ast: &DeriveInput) -> TokenStream {
             fn add_to_entity(&self,
                              entity: Entity,
                              system_data: &mut Self::SystemData,
-                             entities: &[Entity]) -> ::std::result::Result<(), PrefabError> {
+                             entities: &[Entity]) -> ::std::result::Result<(), Error> {
                 #(#adds)*
                 Ok(())
             }
 
             fn load_sub_assets(&mut self,
                                progress: &mut ProgressCounter,
-                               system_data: &mut Self::SystemData) -> ::std::result::Result<bool, PrefabError> {
+                               system_data: &mut Self::SystemData) -> ::std::result::Result<bool, Error> {
                 let mut ret = false;
                 #(#subs)*
                 Ok(ret)

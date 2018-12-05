@@ -5,6 +5,7 @@ use amethyst::{
     animation::AnimationBundle,
     core::{transform::TransformBundle, EventReader, SystemBundle},
     ecs::prelude::*,
+    error::Error,
     input::InputBundle,
     prelude::*,
     renderer::{
@@ -14,7 +15,7 @@ use amethyst::{
     shred::Resource,
     ui::{DrawUi, UiBundle},
     utils::application_root_dir,
-    Result, StateEventReader,
+    StateEventReader,
 };
 use boxfnonce::SendBoxFnOnce;
 use derivative::Derivative;
@@ -28,7 +29,7 @@ use crate::{
 type BundleAddFn = SendBoxFnOnce<
     'static,
     (GameDataBuilder<'static, 'static>,),
-    Result<GameDataBuilder<'static, 'static>>,
+    Result<GameDataBuilder<'static, 'static>, Error>,
 >;
 // Hack: Ideally we want a `SendBoxFnOnce`. However implementing it got too crazy:
 //
@@ -170,7 +171,7 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
     }
 
     /// Returns a `String` to `<crate_dir>/assets`.
-    pub fn assets_dir() -> amethyst::Result<PathBuf> {
+    pub fn assets_dir() -> Result<PathBuf, Error> {
         Ok(application_root_dir()?.join("assets"))
     }
 }
@@ -191,7 +192,7 @@ where
     /// separate thread and waits for it to end before returning.
     ///
     /// See <https://users.rust-lang.org/t/trouble-identifying-cause-of-segfault/18096>
-    pub fn build(self) -> Result<CoreApplication<'static, GameData<'static, 'static>, E, R>>
+    pub fn build(self) -> Result<CoreApplication<'static, GameData<'static, 'static>, E, R>, Error>
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
@@ -213,13 +214,13 @@ where
             Vec<FnResourceAdd>,
             Vec<FnState<GameData<'static, 'static>, E>>,
         ),
-    ) -> Result<CoreApplication<'static, GameData<'static, 'static>, E, R>>
+    ) -> Result<CoreApplication<'static, GameData<'static, 'static>, E, R>, Error>
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
         let game_data = bundle_add_fns.into_iter().fold(
             Ok(GameDataBuilder::default()),
-            |game_data: Result<GameDataBuilder<'_, '_>>, function: BundleAddFn| {
+            |game_data: Result<GameDataBuilder<'_, '_>, Error>, function: BundleAddFn| {
                 game_data.and_then(|game_data| function.call(game_data))
             },
         )?;
@@ -236,7 +237,7 @@ where
         first_state: S,
         game_data: GameDataBuilder<'static, 'static>,
         resource_add_fns: Vec<FnResourceAdd>,
-    ) -> Result<CoreApplication<'static, GameData<'static, 'static>, E, R>>
+    ) -> Result<CoreApplication<'static, GameData<'static, 'static>, E, R>, Error>
     where
         S: State<GameData<'static, 'static>, E> + 'static,
         for<'b> R: EventReader<'b, Event = E>,
@@ -256,7 +257,7 @@ where
     ///
     /// This method should be called instead of the `.build()` method if the application is to be
     /// run, as this avoids a segfault on Linux when using the GL software renderer.
-    pub fn run(self) -> Result<()>
+    pub fn run(self) -> Result<(), Error>
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
@@ -266,7 +267,7 @@ where
 
         // Run in a sub thread due to mesa's threading issues with GL software rendering
         // See: <https://users.rust-lang.org/t/trouble-identifying-cause-of-segfault/18096>
-        thread::spawn(move || -> Result<()> {
+        thread::spawn(move || -> Result<(), Error> {
             amethyst::start_logger(Default::default());
 
             if render {
@@ -656,10 +657,10 @@ mod test {
     use std::marker::PhantomData;
 
     use amethyst::{
-        self,
-        assets::{self, Asset, AssetStorage, Handle, Loader, ProcessingState, Processor},
-        core::bundle::{self, SystemBundle},
+        assets::{Asset, AssetStorage, Handle, Loader, ProcessingState, Processor},
+        core::bundle::SystemBundle,
         ecs::prelude::*,
+        error::Error,
         prelude::*,
         renderer::ScreenDimensions,
         ui::FontAsset,
@@ -1146,7 +1147,7 @@ mod test {
     #[derive(Debug)]
     struct BundleZero;
     impl<'a, 'b> SystemBundle<'a, 'b> for BundleZero {
-        fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> bundle::Result<()> {
+        fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
             builder.add(SystemZero, "system_zero", &[]);
             Ok(())
         }
@@ -1155,7 +1156,7 @@ mod test {
     #[derive(Debug)]
     struct BundleOne;
     impl<'a, 'b> SystemBundle<'a, 'b> for BundleOne {
-        fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> bundle::Result<()> {
+        fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
             builder.add(SystemOne, "system_one", &["system_zero"]);
             builder.add(SystemNonDefault, "system_non_default", &[]);
             Ok(())
@@ -1165,7 +1166,7 @@ mod test {
     #[derive(Debug)]
     struct BundleAsset;
     impl<'a, 'b> SystemBundle<'a, 'b> for BundleAsset {
-        fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> bundle::Result<()> {
+        fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
             builder.add(Processor::<AssetZero>::new(), "asset_zero_processor", &[]);
             Ok(())
         }
@@ -1182,8 +1183,8 @@ mod test {
     impl Component for AssetZero {
         type Storage = DenseVecStorage<Self>;
     }
-    impl From<AssetZero> for Result<ProcessingState<AssetZero>, assets::Error> {
-        fn from(asset_zero: AssetZero) -> Result<ProcessingState<AssetZero>, assets::Error> {
+    impl From<AssetZero> for Result<ProcessingState<AssetZero>, Error> {
+        fn from(asset_zero: AssetZero) -> Result<ProcessingState<AssetZero>, Error> {
             Ok(ProcessingState::Loaded(asset_zero))
         }
     }
@@ -1192,7 +1193,7 @@ mod test {
     // === System delegates === //
     struct AssetZeroLoader;
     impl AssetZeroLoader {
-        fn load(world: &World, asset_zero: AssetZero) -> Result<AssetZeroHandle, amethyst::Error> {
+        fn load(world: &World, asset_zero: AssetZero) -> Result<AssetZeroHandle, Error> {
             let loader = world.read_resource::<Loader>();
             Ok(loader.load_from_data(
                 asset_zero,
