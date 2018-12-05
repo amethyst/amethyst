@@ -87,7 +87,7 @@ Those principles are:
 
 While there are a lot of [great building blocks][awg] in the Rust ecosystem, using the Amethyst engine instead of building your own game engine definitely has a lot of advantages.
 
-First of all, the engine is based on the [Specs][specs] library, which is a common base on which the engine's concepts are built. Those are described in the [concepts](./concepts/intro.md) section of the book.
+First of all, the engine is based on the [Specs][specs] library, which is a common base on which the engine's concepts are built. For a great introduction to game development with Rust and an Entity Component System, see this [great talk by Catherine West](https://kyren.github.io/2018/09/14/rustconf-talk.html). Amethyst's take on ECS is described in the [concepts](./concepts/intro.md) section of the book.
 A lot of features have been glued together using those:
 
 There are the obvious ones:
