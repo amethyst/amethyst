@@ -21,49 +21,12 @@ use std::fmt;
 use std::result;
 
 /// Internal parts of `Error`.
-pub enum ErrorKind {
-    /// Error is a simple message.
-    Message(Cow<'static, str>),
-    /// Error is a boxed error.
-    Error(Box<dyn error::Error + Send + Sync>),
-}
-
-impl error::Error for ErrorKind {}
-
-impl fmt::Display for ErrorKind {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            ErrorKind::Message(ref message) => message.fmt(fmt),
-            ErrorKind::Error(ref e) => e.fmt(fmt),
-        }
-    }
-}
-
-impl fmt::Debug for ErrorKind {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            ErrorKind::Message(ref message) => fmt::Debug::fmt(message, fmt),
-            ErrorKind::Error(ref e) => fmt::Debug::fmt(e, fmt),
-        }
-    }
-}
-
-impl From<&'static str> for ErrorKind {
-    fn from(message: &'static str) -> Self {
-        ErrorKind::Message(Cow::from(message))
-    }
-}
-
-impl From<String> for ErrorKind {
-    fn from(message: String) -> Self {
-        ErrorKind::Message(Cow::from(message))
-    }
-}
-
-impl From<Box<dyn error::Error + Send + Sync>> for ErrorKind {
-    fn from(error: Box<dyn error::Error + Send + Sync>) -> Self {
-        ErrorKind::Error(error)
-    }
+#[derive(Debug)]
+struct Inner<T: ?Sized> {
+    source: Option<Box<Error>>,
+    #[cfg(all(feature = "backtrace", feature = "std"))]
+    backtrace: Option<Backtrace>,
+    error: T,
 }
 
 /// The error type used by Amethyst.
@@ -71,10 +34,7 @@ impl From<Box<dyn error::Error + Send + Sync>> for ErrorKind {
 /// Wraps error diagnostics like messages and other errors, and keeps track of causal chains and
 /// backtraces.
 pub struct Error {
-    error_impl: ErrorKind,
-    source: Option<Box<Error>>,
-    #[cfg(all(feature = "backtrace", feature = "std"))]
-    backtrace: Option<Backtrace>,
+    inner: Box<Inner<dyn error::Error + Send + Sync>>,
 }
 
 impl Error {
@@ -86,10 +46,12 @@ impl Error {
         E: 'static + error::Error + Send + Sync,
     {
         Self {
-            error_impl: ErrorKind::Error(Box::new(error)),
-            source: None,
-            #[cfg(all(feature = "backtrace", feature = "std"))]
-            backtrace: self::internal::bt::new(),
+            inner: Box::new(Inner {
+                source: None,
+                #[cfg(all(feature = "backtrace", feature = "std"))]
+                backtrace: self::internal::bt::new(),
+                error: Box::new(error),
+            }),
         }
     }
 
@@ -98,11 +60,25 @@ impl Error {
     where
         M: Into<Cow<'static, str>>,
     {
+        /// Wrapper for string errors.
+        #[derive(Debug)]
+        struct StringError(Cow<'static, str>);
+
+        impl fmt::Display for StringError {
+            fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+                self.0.fmt(fmt)
+            }
+        }
+
+        impl error::Error for StringError {}
+
         Self {
-            error_impl: ErrorKind::Message(message.into()),
-            source: None,
-            #[cfg(all(feature = "backtrace", feature = "std"))]
-            backtrace: self::internal::bt::new(),
+            inner: Box::new(Inner {
+                source: None,
+                #[cfg(all(feature = "backtrace", feature = "std"))]
+                backtrace: self::internal::bt::new(),
+                error: Box::new(StringError(message.into())),
+            }),
         }
     }
 
@@ -140,7 +116,7 @@ impl Error {
     /// assert_eq!("wrapped", e.source().expect("no source").to_string());
     /// ```
     pub fn source(&self) -> Option<&Error> {
-        self.source.as_ref().map(|e| &**e)
+        self.inner.source.as_ref().map(|e| &**e)
     }
 
     /// Iterate over all causes, including this one.
@@ -169,31 +145,14 @@ impl Error {
         }
     }
 
-    /// Convert into a sized `std::error::Error`.
+    /// Access the internal `std::error::Error` as a trait.
     ///
     /// This can be useful for integrating with systems that operate on `std::error::Error`.
     ///
     /// **Warning:** This erases most diagnostics in favor of returning only the top error.
     /// `std::error::Error` is expanded further.
-    ///
-    /// ```rust
-    /// # extern crate amethyst_error;
-    /// # extern crate failure;
-    ///
-    /// use amethyst_error::Error;
-    /// use failure;
-    ///
-    /// fn foo() -> Result<u32, Error> {
-    ///     Ok(0)
-    /// }
-    ///
-    /// fn bar() -> Result<u32, failure::Error> {
-    ///     let v = foo().map_err(Error::into_error)?;
-    ///     Ok(v + 1)
-    /// }
-    /// ```
-    pub fn into_error(self) -> ErrorKind {
-        self.error_impl
+    pub fn as_error(&self) -> &dyn error::Error {
+        &self.inner.error
     }
 }
 
@@ -211,15 +170,14 @@ where
 
 impl fmt::Display for Error {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.error_impl.fmt(fmt)
+        fmt::Display::fmt(&self.inner.error, fmt)
     }
 }
 
 impl fmt::Debug for Error {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt.debug_struct("Error")
-            .field("error_impl", &self.error_impl)
-            .field("source", &self.source)
+            .field("inner", &self.inner)
             .finish()
     }
 }
@@ -272,7 +230,7 @@ where
             Err(e) => {
                 let e = e.into();
                 let mut new = chain(&e).into();
-                new.source = Some(Box::new(e));
+                new.inner.source = Some(Box::new(e));
                 Err(new)
             }
             Ok(value) => Ok(value),
@@ -402,8 +360,6 @@ mod internal {
 
 #[cfg(test)]
 mod tests {
-    extern crate failure;
-
     use super::{Error, ResultExt};
 
     #[test]
@@ -462,24 +418,5 @@ mod tests {
         let e = bar().expect_err("no error");
         let messages = e.causes().map(|e| e.to_string()).collect::<Vec<_>>();
         assert_eq!(messages, vec!["bar", "foo"]);
-    }
-
-    #[test]
-    fn test_failure_compat() {
-        fn foo() -> Result<u32, Error> {
-            Ok(0)
-        }
-
-        #[allow(unused)]
-        fn bar() -> Result<u32, failure::Error> {
-            let v = foo().map_err(Error::into_error)?;
-            Ok(v + 1)
-        }
-
-        let a = Error::from_string("foo");
-
-        // Note: has to be `Send + Sync` for this to work.
-        // Also loses all error information _except_ the top error.
-        failure::Error::from(a.into_error());
     }
 }
