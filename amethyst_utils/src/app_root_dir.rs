@@ -34,3 +34,11 @@ pub fn application_root_dir() -> Result<path::PathBuf, io::Error> {
         "Failed to find an application root",
     ))
 }
+
+/// Same as `application_root_dir`, but extends the root directory with the given path.
+pub fn application_dir<P>(path: P) -> Result<path::PathBuf, io::Error>
+where
+    P: AsRef<path::Path>,
+{
+    Ok(application_root_dir()?.join(path))
+}
