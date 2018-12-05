@@ -132,9 +132,7 @@ where
 
             // Send window size changes to the resource
             if (window_width, window_height) != (width, height) {
-                info!("resized. screendim {} {} winsize {} {}.", width, height, window_width, window_height);
                 screen_dimensions.update(window_width, window_height);
-                info!("done resizing {} {}", screen_dimensions.w, screen_dimensions.h);
 
                 // We don't need to send the updated size of the window back to the window itself,
                 // so set dirty to false.
