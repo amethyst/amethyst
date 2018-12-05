@@ -79,10 +79,10 @@ pub struct ScreenDimensions {
 
 impl ScreenDimensions {
     /// Creates a new screen dimensions object with the given width and height.
-    pub fn new(w: f64, h: f64, hidpi: f64) -> Self {
+    pub fn new(w: u32, h: u32, hidpi: f64) -> Self {
         ScreenDimensions {
-            w,
-            h,
+            w: w as f64,
+            h: h as f64,
             aspect_ratio: w as f32 / h as f32,
             hidpi,
             dirty: false,
