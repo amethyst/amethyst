@@ -382,11 +382,11 @@ mod internal {
     fn new() -> Option<Backtrace> {
         static ENABLED: atomic::AtomicUsize = atomic::ATOMIC_USIZE_INIT;
 
-        match ENABLED.load(atomic::Ordering::SeqCst) {
+        match ENABLED.load(atomic::Ordering::Relaxed) {
             0 => {
                 let enabled = is_backtrace_enabled(|var| env::var_os(var));
 
-                ENABLED.store(enabled as usize + 1, atomic::Ordering::SeqCst);
+                ENABLED.store(enabled as usize + 1, atomic::Ordering::Relaxed);
 
                 if !enabled {
                     return None;
