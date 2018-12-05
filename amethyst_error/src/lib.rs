@@ -5,16 +5,17 @@
 //! type as an opaque [`std::error::Error`].
 //!
 //! [`std::error::Error`]: https://doc.rust-lang.org/std/error/trait.Error.html
-use self::internal::{Backtrace, HAS_BACKTRACE};
+
+#[cfg(all(feature = "backtrace", feature = "std"))]
+extern crate backtrace;
+
+use self::internal::Backtrace;
 use std::borrow::Cow;
-use std::env;
 use std::error;
-use std::ffi;
 use std::fmt;
 use std::result;
-use std::sync::atomic;
 
-/// Private
+/// Internal parts of `Error`.
 enum ErrorImpl {
     Message(Cow<'static, str>),
     Error(Box<dyn error::Error + Send + Sync>),
@@ -54,6 +55,7 @@ impl From<Box<dyn error::Error + Send + Sync>> for ErrorImpl {
 pub struct Error {
     error_impl: ErrorImpl,
     source: Option<Box<Error>>,
+    #[cfg(all(feature = "backtrace", feature = "std"))]
     backtrace: Option<Backtrace>,
 }
 
@@ -68,7 +70,8 @@ impl Error {
         Self {
             error_impl: ErrorImpl::Error(Box::new(error)),
             source: None,
-            backtrace: new_backtrace(),
+            #[cfg(all(feature = "backtrace", feature = "std"))]
+            backtrace: self::internal::bt::new(),
         }
     }
 
@@ -80,13 +83,22 @@ impl Error {
         Self {
             error_impl: ErrorImpl::Message(message.into()),
             source: None,
-            backtrace: new_backtrace(),
+            #[cfg(all(feature = "backtrace", feature = "std"))]
+            backtrace: self::internal::bt::new(),
         }
     }
 
     /// Get backtrace.
     pub fn backtrace(&self) -> Option<&Backtrace> {
-        self.backtrace.as_ref()
+        #[cfg(all(feature = "backtrace", feature = "std"))]
+        {
+            self.backtrace.as_ref()
+        }
+
+        #[cfg(not(all(feature = "backtrace", feature = "std")))]
+        {
+            None
+        }
     }
 
     /// Get the source of the error.
@@ -292,66 +304,54 @@ where
     }
 }
 
-/// Test if backtracing is enabled.
-fn is_backtrace_enabled<F: Fn(&str) -> Option<ffi::OsString>>(get_var: F) -> bool {
-    match get_var(RUST_BACKTRACE) {
-        Some(ref val) if val != "0" => true,
-        _ => false,
-    }
-}
-
-fn new_backtrace() -> Option<Backtrace> {
-    if !HAS_BACKTRACE {
-        return None;
-    }
-
-    static ENABLED: atomic::AtomicUsize = atomic::ATOMIC_USIZE_INIT;
-
-    match ENABLED.load(atomic::Ordering::SeqCst) {
-        0 => {
-            let enabled = is_backtrace_enabled(|var| env::var_os(var));
-
-            ENABLED.store(enabled as usize + 1, atomic::Ordering::SeqCst);
-
-            if !enabled {
-                return None;
-            }
-        }
-        1 => return None,
-        _ => {}
-    }
-
-    Some(Backtrace::new())
-}
-
-const RUST_BACKTRACE: &str = "RUST_BACKTRACE";
-
-#[cfg(all(feature = "backtrace", feature = "std"))]
-mod internal {
-    pub const HAS_BACKTRACE: bool = true;
-
-    pub use backtrace::Backtrace;
-}
-
 #[cfg(not(all(feature = "backtrace", feature = "std")))]
 mod internal {
-    pub const HAS_BACKTRACE: bool = false;
-
     use std::fmt;
 
     /// Fake internal representation.
     pub struct Backtrace(());
 
-    impl Backtrace {
-        pub fn new() -> Backtrace {
-            Backtrace(())
-        }
-    }
-
     impl fmt::Debug for Backtrace {
         fn fmt(&self, _fmt: &mut fmt::Formatter) -> fmt::Result {
             Ok(())
         }
+    }
+}
+
+#[cfg(all(feature = "backtrace", feature = "std"))]
+mod internal {
+    pub use backtrace::Backtrace;
+    use std::{env, ffi, sync::atomic};
+
+    const RUST_BACKTRACE: &str = "RUST_BACKTRACE";
+
+    /// Test if backtracing is enabled.
+    pub fn is_backtrace_enabled<F: Fn(&str) -> Option<ffi::OsString>>(get_var: F) -> bool {
+        match get_var(RUST_BACKTRACE) {
+            Some(ref val) if val != "0" => true,
+            _ => false,
+        }
+    }
+
+    /// Constructs a new backtrace, if backtraces are enabled.
+    fn new() -> Option<Backtrace> {
+        static ENABLED: atomic::AtomicUsize = atomic::ATOMIC_USIZE_INIT;
+
+        match ENABLED.load(atomic::Ordering::SeqCst) {
+            0 => {
+                let enabled = is_backtrace_enabled(|var| env::var_os(var));
+
+                ENABLED.store(enabled as usize + 1, atomic::Ordering::SeqCst);
+
+                if !enabled {
+                    return None;
+                }
+            }
+            1 => return None,
+            _ => {}
+        }
+
+        Some(Backtrace::new())
     }
 }
 
