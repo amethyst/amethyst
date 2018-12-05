@@ -5,7 +5,6 @@
 //! type as an opaque [`std::error::Error`].
 //!
 //! [`std::error::Error`]: https://doc.rust-lang.org/std/error/trait.Error.html
-//!
 
 // Parts copied from failure:
 // https://github.com/rust-lang-nursery/failure
