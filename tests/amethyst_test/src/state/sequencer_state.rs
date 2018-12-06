@@ -13,14 +13,14 @@ where
 {
     /// States to switch through, in reverse order.
     #[derivative(Debug = "ignore")]
-    states: Vec<Box<State<T, E>>>,
+    states: Vec<Box<dyn State<T, E>>>,
 }
 
 impl<T, E> State<T, E> for SequencerState<T, E>
 where
     E: Send + Sync + 'static,
 {
-    fn update(&mut self, _data: StateData<T>) -> Trans<T, E> {
+    fn update(&mut self, _data: StateData<'_, T>) -> Trans<T, E> {
         if let Some(state) = self.states.pop() {
             Trans::Push(state)
         } else {

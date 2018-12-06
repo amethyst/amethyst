@@ -7,7 +7,7 @@ use amethyst::ecs::prelude::*;
 #[derive(Debug, new)]
 pub(crate) struct SystemInjectionBundle<'a, Sys>
 where
-    Sys: for<'s> System<'s> + Send + 'a,
+    Sys: for<'s> System<'s> + Send,
 {
     /// `System` to add to the dispatcher.
     system: Sys,

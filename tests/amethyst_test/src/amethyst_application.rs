@@ -43,8 +43,8 @@ type BundleAddFn = SendBoxFnOnce<
 //   In addition, it requires the `World` (and hence the `ApplicationBuilder`) to be instantiated
 //   in a scope greater than the `AmethystApplication`'s lifetime, which detracts from the
 //   ergonomics of this test harness.
-type FnResourceAdd = Box<FnMut(&mut World) + Send>;
-type FnState<T, E> = SendBoxFnOnce<'static, (), Box<State<T, E>>>;
+type FnResourceAdd = Box<dyn FnMut(&mut World) + Send>;
+type FnState<T, E> = SendBoxFnOnce<'static, (), Box<dyn State<T, E>>>;
 
 type DefaultPipeline = PipelineBuilder<
     Queue<(
@@ -220,12 +220,12 @@ where
     {
         let game_data = bundle_add_fns.into_iter().fold(
             Ok(GameDataBuilder::default()),
-            |game_data: Result<GameDataBuilder>, function: BundleAddFn| {
+            |game_data: Result<GameDataBuilder<'_, '_>>, function: BundleAddFn| {
                 game_data.and_then(|game_data| function.call(game_data))
             },
         )?;
 
-        let mut states = Vec::<Box<State<GameData<'static, 'static>, E>>>::new();
+        let mut states = Vec::<Box<dyn State<GameData<'static, 'static>, E>>>::new();
         state_fns
             .into_iter()
             .rev()
@@ -474,7 +474,7 @@ where
         FnStateLocal: FnOnce() -> S + Send + Sync + 'static,
     {
         // Box up the state
-        let closure = move || Box::new((state_fn)()) as Box<State<T, E>>;
+        let closure = move || Box::new((state_fn)()) as Box<dyn State<T, E>>;
         self.state_fns.push(SendBoxFnOnce::from(closure));
         self
     }
@@ -1047,7 +1047,7 @@ mod test {
         E: Send + Sync + 'static,
     {
         next_state: Option<S>,
-        state_data: PhantomData<State<GameData<'a, 'b>, E>>,
+        state_data: PhantomData<dyn State<GameData<'a, 'b>, E>>,
     }
     impl<'a, 'b, S, E> LoadingState<'a, 'b, S, E>
     where
@@ -1066,7 +1066,7 @@ mod test {
         S: State<GameData<'a, 'b>, E> + 'static,
         E: Send + Sync + 'static,
     {
-        fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>, E> {
+        fn update(&mut self, data: StateData<'_, GameData<'_, '_>>) -> Trans<GameData<'a, 'b>, E> {
             data.data.update(&data.world);
             data.world.add_resource(LoadResource);
             Trans::Switch(Box::new(self.next_state.take().unwrap()))
@@ -1098,7 +1098,7 @@ mod test {
         S: State<T, E> + 'static,
         E: Send + Sync + 'static,
     {
-        fn update(&mut self, _data: StateData<T>) -> Trans<T, E> {
+        fn update(&mut self, _data: StateData<'_, T>) -> Trans<T, E> {
             Trans::Switch(Box::new(self.next_state.take().unwrap()))
         }
     }

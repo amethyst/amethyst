@@ -55,15 +55,15 @@ where
     T: GameUpdate,
     E: Send + Sync + 'static,
 {
-    fn on_start(&mut self, mut data: StateData<T>) {
+    fn on_start(&mut self, mut data: StateData<'_, T>) {
         self.initialize_dispatcher(&mut data.world);
     }
 
-    fn on_stop(&mut self, _data: StateData<T>) {
+    fn on_stop(&mut self, _data: StateData<'_, T>) {
         self.terminate_dispatcher();
     }
 
-    fn update(&mut self, data: StateData<T>) -> Trans<T, E> {
+    fn update(&mut self, data: StateData<'_, T>) -> Trans<T, E> {
         data.data.update(&data.world);
         self.dispatcher.as_mut().unwrap().dispatch(&data.world.res);
 

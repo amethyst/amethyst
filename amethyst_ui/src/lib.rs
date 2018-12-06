@@ -44,8 +44,6 @@ mod resize;
 mod text;
 mod transform;
 
-
-
 pub use self::{
     action_components::{OnUiActionImage, OnUiActionSound},
     bundle::UiBundle,
