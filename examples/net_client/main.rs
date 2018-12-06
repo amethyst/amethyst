@@ -1,4 +1,4 @@
-extern crate amethyst;
+use amethyst;
 #[macro_use]
 extern crate log;
 
@@ -32,7 +32,7 @@ fn main() -> Result<()> {
 /// Default empty state
 pub struct State1;
 impl SimpleState for State1 {
-    fn on_start(&mut self, data: StateData<GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         data.world
             .create_entity()
             .with(NetConnection::<()>::new("127.0.0.1:3456".parse().unwrap()))
@@ -53,7 +53,7 @@ impl SpamSystem {
 impl<'a> System<'a> for SpamSystem {
     type SystemData = (WriteStorage<'a, NetConnection<()>>, Read<'a, Time>);
     fn run(&mut self, (mut connections, time): Self::SystemData) {
-        for mut conn in (&mut connections).join() {
+        for conn in (&mut connections).join() {
             info!("Sending 10k messages.");
             for i in 0..10000 {
                 let ev = NetEvent::TextMessage {

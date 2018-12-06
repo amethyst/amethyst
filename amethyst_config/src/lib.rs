@@ -7,8 +7,8 @@
 
 #[macro_use]
 extern crate log;
-extern crate ron;
-extern crate serde;
+use ron;
+
 
 use std::{
     error::Error,

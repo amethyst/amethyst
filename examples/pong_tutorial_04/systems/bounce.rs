@@ -3,7 +3,7 @@ use amethyst::{
     ecs::prelude::{Join, ReadStorage, System, WriteStorage},
 };
 
-use pong::{Ball, Paddle, Side, ARENA_HEIGHT};
+use crate::pong::{Ball, Paddle, Side, ARENA_HEIGHT};
 
 pub struct BounceSystem;
 

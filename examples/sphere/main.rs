@@ -1,6 +1,6 @@
 //! Displays a shaded sphere to the user.
 
-extern crate amethyst;
+use amethyst;
 
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
@@ -15,9 +15,9 @@ type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 struct Example;
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         // Initialise the scene with an object, a light and a camera.
-        let handle = data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
+        let handle = data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/sphere.ron", RonFormat, (), ())
         });
         data.world.create_entity().with(handle).build();

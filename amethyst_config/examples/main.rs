@@ -1,4 +1,4 @@
-extern crate amethyst_config;
+
 #[macro_use]
 extern crate serde_derive;
 

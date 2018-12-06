@@ -1,8 +1,8 @@
 //! Defining a custom asset and format.
 
-extern crate amethyst_assets;
-extern crate amethyst_core;
-extern crate rayon;
+
+
+
 
 use std::{str::from_utf8, sync::Arc, thread::sleep, time::Duration};
 
@@ -30,7 +30,7 @@ impl Format<DummyAsset> for DummyFormat {
     fn import(
         &self,
         name: String,
-        source: Arc<Source>,
+        source: Arc<dyn Source>,
         _: (),
         _create_reload: bool,
     ) -> Result<FormatValue<DummyAsset>> {

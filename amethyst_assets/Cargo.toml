@@ -3,6 +3,7 @@ name = "amethyst_assets"
 version = "0.5.0"
 authors = ["torkleyy <torkleyy@gmail.com>"]
 readme = "README.md"
+edition = "2018"
 description = """
 Asynchronous asset management for games.
 """

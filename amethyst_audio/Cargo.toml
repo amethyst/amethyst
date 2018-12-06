@@ -2,6 +2,7 @@
 name = "amethyst_audio"
 version = "0.4.0"
 authors = ["Xaeroxe <kieseljake@gmail.com>"]
+edition = "2018"
 description = "Audio support for Amethyst"
 exclude = ["examples/*"]
 keywords = ["game", "engine", "audio","amethyst"]

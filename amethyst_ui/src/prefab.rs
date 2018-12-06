@@ -741,7 +741,7 @@ fn walk_ui_tree<A, I, F, C>(
         }
 
         UiWidget::Button { transform, button } => {
-            let mut id = transform.id.clone();
+            let id = transform.id.clone();
             let text = UiTextBuilder {
                 color: button.normal_text_color,
                 editable: None,

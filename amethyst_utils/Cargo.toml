@@ -2,6 +2,7 @@
 name = "amethyst_utils"
 version = "0.4.0"
 authors = ["Simon Rönnberg <seamonr@gmail.com>", "Joël Lupien <jojolepromain@gmail.com>"]
+edition = "2018"
 description = "Amethyst utils"
 
 documentation = "https://www.amethyst.rs/doc/master/doc/amethyst_utils/"

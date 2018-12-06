@@ -1,21 +1,21 @@
 //! The simplest Amethyst example.
 
-extern crate amethyst;
+use amethyst;
 
 use amethyst::prelude::*;
 
 struct Example;
 
 impl EmptyState for Example {
-    fn on_start(&mut self, _: StateData<()>) {
+    fn on_start(&mut self, _: StateData<'_, ()>) {
         println!("Begin!");
     }
 
-    fn on_stop(&mut self, _: StateData<()>) {
+    fn on_stop(&mut self, _: StateData<'_, ()>) {
         println!("End!");
     }
 
-    fn update(&mut self, _: StateData<()>) -> EmptyTrans {
+    fn update(&mut self, _: StateData<'_, ()>) -> EmptyTrans {
         println!("Hello from Amethyst!");
         Trans::Quit
     }

@@ -37,7 +37,7 @@ pub fn load_mesh(
             });
 
         trace!("Loading positions");
-        let mut positions = reader
+        let positions = reader
             .read_positions()
             .map(|positions| match faces {
                 Some(ref faces) => {

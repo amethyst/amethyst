@@ -1,6 +1,6 @@
 //! Displays a shaded sphere to the user.
 
-extern crate amethyst;
+use amethyst;
 #[macro_use]
 extern crate serde;
 
@@ -47,16 +47,16 @@ impl Default for Example {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
         // Initialise the scene with an object, a light and a camera.
-        let prefab_handle = world.exec(|loader: PrefabLoader<MyPrefabData>| {
+        let prefab_handle = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/animation.ron", RonFormat, (), ())
         });
         self.sphere = Some(world.create_entity().with(prefab_handle).build());
     }
 
-    fn handle_event(&mut self, data: StateData<GameData>, event: StateEvent) -> SimpleTrans {
+    fn handle_event(&mut self, data: StateData<'_, GameData<'_, '_>>, event: StateEvent) -> SimpleTrans {
         let StateData { world, .. } = data;
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {

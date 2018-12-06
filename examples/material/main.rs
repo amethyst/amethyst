@@ -1,7 +1,7 @@
 //! Displays spheres with physically based materials.
 
-extern crate amethyst;
-extern crate amethyst_assets;
+use amethyst;
+
 
 use amethyst::{
     assets::AssetLoaderSystemData,
@@ -14,19 +14,19 @@ use amethyst::{
 struct Example;
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
         let mat_defaults = world.read_resource::<MaterialDefaults>().0.clone();
 
         println!("Load mesh");
         let (mesh, albedo) = {
-            let mesh = world.exec(|loader: AssetLoaderSystemData<Mesh>| {
+            let mesh = world.exec(|loader: AssetLoaderSystemData<'_, Mesh>| {
                 loader.load_from_data(
                     Shape::Sphere(32, 32).generate::<Vec<PosNormTangTex>>(None),
                     (),
                 )
             });
-            let albedo = world.exec(|loader: AssetLoaderSystemData<Texture>| {
+            let albedo = world.exec(|loader: AssetLoaderSystemData<'_, Texture>| {
                 loader.load_from_data([1.0, 1.0, 1.0, 1.0].into(), ())
             });
 
@@ -45,7 +45,7 @@ impl SimpleState for Example {
                 let metallic = [metallic, metallic, metallic, 1.0].into();
                 let roughness = [roughness, roughness, roughness, 1.0].into();
 
-                let (metallic, roughness) = world.exec(|loader: AssetLoaderSystemData<Texture>| {
+                let (metallic, roughness) = world.exec(|loader: AssetLoaderSystemData<'_, Texture>| {
                     (
                         loader.load_from_data(metallic, ()),
                         loader.load_from_data(roughness, ()),

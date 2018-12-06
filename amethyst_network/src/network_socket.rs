@@ -167,7 +167,7 @@ where
     }
 
     fn run(&mut self, mut net_connections: Self::SystemData) {
-        for mut net_connection in (&mut net_connections).join() {
+        for net_connection in (&mut net_connections).join() {
             let target = net_connection.target;
 
             if net_connection.state == ConnectionState::Connected
@@ -188,7 +188,7 @@ where
         for raw_event in self.rx.try_iter() {
             let mut matched = false;
             // Get the NetConnection from the source
-            for mut net_connection in (&mut net_connections).join() {
+            for net_connection in (&mut net_connections).join() {
                 // We found the origin
                 if net_connection.target == raw_event.source {
                     matched = true;

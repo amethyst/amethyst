@@ -98,7 +98,7 @@ impl<'a> System<'a> for VertexSkinningSystem {
             }
         }
 
-        for (_, mesh_global, mut joint_transform) in
+        for (_, mesh_global, joint_transform) in
             (&self.updated, &global_transforms, &mut matrices).join()
         {
             if let Some(global_inverse) = mesh_global.0.try_inverse() {

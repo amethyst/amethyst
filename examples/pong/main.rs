@@ -1,6 +1,6 @@
 //! TODO: Rewrite for new renderer.
 
-extern crate amethyst;
+use amethyst;
 
 mod audio;
 mod bundle;

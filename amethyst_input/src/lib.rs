@@ -2,16 +2,16 @@
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-extern crate amethyst_config;
-extern crate amethyst_core;
-extern crate amethyst_renderer;
+
+use amethyst_core;
+
 #[macro_use]
 extern crate derivative;
-extern crate fnv;
+
 #[macro_use]
 extern crate serde;
-extern crate smallvec;
-extern crate winit;
+use smallvec;
+use winit;
 
 #[cfg(feature = "sdl_controller")]
 extern crate sdl2;

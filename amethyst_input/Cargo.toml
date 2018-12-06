@@ -2,6 +2,7 @@
 name = "amethyst_input"
 version = "0.5.0"
 authors = ["Rhuagh <seamonr@gmail.com>", "Xaeroxe <kieseljake@gmail.com>"]
+edition = "2018"
 description = "Input rebinding "
 
 documentation = "https://www.amethyst.rs/doc/master/doc/amethyst_input/"

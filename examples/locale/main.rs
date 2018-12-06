@@ -1,6 +1,6 @@
 //! Example showing how to load a Locale file as an Asset using the Loader.
 
-extern crate amethyst;
+use amethyst;
 
 use amethyst::{
     assets::{AssetStorage, Handle, Loader, Processor, ProgressCounter},
@@ -28,11 +28,11 @@ impl Example {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         data.world.add_resource(AssetStorage::<Locale>::new());
         let mut progress_counter = ProgressCounter::default();
         self.handle_en = Some(data.world.exec(
-            |(loader, storage): (ReadExpect<Loader>, Read<AssetStorage<Locale>>)| {
+            |(loader, storage): (ReadExpect<'_, Loader>, Read<'_, AssetStorage<Locale>>)| {
                 loader.load(
                     "locale/locale_en.ftl",
                     LocaleFormat,
@@ -43,7 +43,7 @@ impl SimpleState for Example {
             },
         ));
         self.handle_fr = Some(data.world.exec(
-            |(loader, storage): (ReadExpect<Loader>, Read<AssetStorage<Locale>>)| {
+            |(loader, storage): (ReadExpect<'_, Loader>, Read<'_, AssetStorage<Locale>>)| {
                 loader.load(
                     "locale/locale_fr.ftl",
                     LocaleFormat,
@@ -56,7 +56,7 @@ impl SimpleState for Example {
         self.progress_counter = Some(progress_counter);
     }
 
-    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans {
+    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         // Check if the locale has been loaded.
         if self.progress_counter.as_ref().unwrap().is_complete() {
             let store = data.world.read_resource::<AssetStorage<Locale>>();

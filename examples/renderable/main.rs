@@ -3,7 +3,7 @@
 //!
 //! TODO: Rewrite for new renderer.
 
-extern crate amethyst;
+use amethyst;
 
 use amethyst::{
     assets::{
@@ -41,18 +41,18 @@ struct Example {
 }
 
 impl SimpleState for Loading {
-    fn on_start(&mut self, data: StateData<GameData>) {
-        self.prefab = Some(data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        self.prefab = Some(data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/renderable.ron", RonFormat, (), &mut self.progress)
         }));
 
-        data.world.exec(|mut creator: UiCreator| {
+        data.world.exec(|mut creator: UiCreator<'_>| {
             creator.create("ui/fps.ron", &mut self.progress);
             creator.create("ui/loading.ron", &mut self.progress);
         });
     }
 
-    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans {
+    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         match self.progress.complete() {
             Completion::Failed => {
                 println!("Failed loading assets: {:?}", self.progress.errors());
@@ -60,7 +60,7 @@ impl SimpleState for Loading {
             }
             Completion::Complete => {
                 println!("Assets loaded, swapping state");
-                if let Some(entity) = data.world.exec(|finder: UiFinder| finder.find("loading")) {
+                if let Some(entity) = data.world.exec(|finder: UiFinder<'_>| finder.find("loading")) {
                     let _ = data.world.delete_entity(entity);
                 }
                 Trans::Switch(Box::new(Example {
@@ -73,13 +73,13 @@ impl SimpleState for Loading {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
 
         world.create_entity().with(self.scene.clone()).build();
     }
 
-    fn handle_event(&mut self, data: StateData<GameData>, event: StateEvent) -> SimpleTrans {
+    fn handle_event(&mut self, data: StateData<'_, GameData<'_, '_>>, event: StateEvent) -> SimpleTrans {
         let w = data.world;
         if let StateEvent::Window(event) = &event {
             // Exit if user hits Escape or closes the window
@@ -88,28 +88,28 @@ impl SimpleState for Example {
             }
             match get_key(&event) {
                 Some((VirtualKeyCode::R, ElementState::Pressed)) => {
-                    w.exec(|mut state: Write<DemoState>| {
+                    w.exec(|mut state: Write<'_, DemoState>| {
                         state.light_color = [0.8, 0.2, 0.2, 1.0];
                     });
                 }
                 Some((VirtualKeyCode::G, ElementState::Pressed)) => {
-                    w.exec(|mut state: Write<DemoState>| {
+                    w.exec(|mut state: Write<'_, DemoState>| {
                         state.light_color = [0.2, 0.8, 0.2, 1.0];
                     });
                 }
                 Some((VirtualKeyCode::B, ElementState::Pressed)) => {
-                    w.exec(|mut state: Write<DemoState>| {
+                    w.exec(|mut state: Write<'_, DemoState>| {
                         state.light_color = [0.2, 0.2, 0.8, 1.0];
                     });
                 }
                 Some((VirtualKeyCode::W, ElementState::Pressed)) => {
-                    w.exec(|mut state: Write<DemoState>| {
+                    w.exec(|mut state: Write<'_, DemoState>| {
                         state.light_color = [1.0, 1.0, 1.0, 1.0];
                     });
                 }
                 Some((VirtualKeyCode::A, ElementState::Pressed)) => {
                     w.exec(
-                        |(mut state, mut color): (Write<DemoState>, Write<AmbientColor>)| {
+                        |(mut state, mut color): (Write<'_, DemoState>, Write<'_, AmbientColor>)| {
                             if state.ambient_light {
                                 state.ambient_light = false;
                                 color.0 = [0.0; 3].into();
@@ -122,7 +122,7 @@ impl SimpleState for Example {
                 }
                 Some((VirtualKeyCode::D, ElementState::Pressed)) => {
                     w.exec(
-                        |(mut state, mut lights): (Write<DemoState>, WriteStorage<Light>)| {
+                        |(mut state, mut lights): (Write<'_, DemoState>, WriteStorage<'_, Light>)| {
                             if state.directional_light {
                                 state.directional_light = false;
                                 for light in (&mut lights).join() {
@@ -142,7 +142,7 @@ impl SimpleState for Example {
                     );
                 }
                 Some((VirtualKeyCode::P, ElementState::Pressed)) => {
-                    w.exec(|mut state: Write<DemoState>| {
+                    w.exec(|mut state: Write<'_, DemoState>| {
                         if state.point_light {
                             state.point_light = false;
                             state.light_color = [0.0; 4].into();

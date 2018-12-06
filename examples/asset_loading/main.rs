@@ -1,8 +1,8 @@
 //! Demonstrates loading custom assets using the Amethyst engine.
 // TODO: Add asset loader directory store for the meshes.
 
-extern crate amethyst;
-extern crate rayon;
+use amethyst;
+
 
 use amethyst::{
     assets::{Loader, Result as AssetResult, SimpleFormat},
@@ -64,7 +64,7 @@ impl SimpleFormat<Mesh> for Custom {
 struct AssetsExample;
 
 impl SimpleState for AssetsExample {
-    fn on_start(&mut self, data: StateData<GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
         world.add_resource(0usize);
 

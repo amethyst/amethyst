@@ -1,6 +1,6 @@
 //! TODO: Rewrite for new renderer.
 
-extern crate amethyst;
+use amethyst;
 #[macro_use]
 extern crate serde_derive;
 

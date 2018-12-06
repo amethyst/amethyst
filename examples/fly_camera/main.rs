@@ -1,6 +1,6 @@
 //! Demonstrates how to use the fly camera
 
-extern crate amethyst;
+use amethyst;
 
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
@@ -18,8 +18,8 @@ type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 struct ExampleState;
 
 impl SimpleState for ExampleState {
-    fn on_start(&mut self, data: StateData<GameData>) {
-        let prefab_handle = data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        let prefab_handle = data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/fly_camera.ron", RonFormat, (), ())
         });
         data.world

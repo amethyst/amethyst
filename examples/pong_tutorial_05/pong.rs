@@ -23,7 +23,7 @@ pub const BALL_RADIUS: f32 = 2.0;
 pub struct Pong;
 
 impl SimpleState for Pong {
-    fn on_start(&mut self, data: StateData<GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
 
         // Load the spritesheet necessary to render the graphics.

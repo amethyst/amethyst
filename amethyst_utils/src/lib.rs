@@ -2,18 +2,18 @@
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-extern crate amethyst_assets;
-extern crate amethyst_controls;
-extern crate amethyst_core;
+
+
+
 #[macro_use]
 extern crate amethyst_derive;
-extern crate amethyst_renderer;
+
 
 #[macro_use]
 extern crate log;
 #[macro_use]
 extern crate serde;
-extern crate shred;
+use shred;
 #[macro_use]
 extern crate shred_derive;
 

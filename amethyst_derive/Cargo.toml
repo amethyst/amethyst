@@ -2,6 +2,7 @@
 name = "amethyst_derive"
 version = "0.2.0"
 authors = ["Simon Rönnberg <seamonr@gmail.com>"]
+edition = "2018"
 description = "Amethyst derive"
 
 documentation = "https://www.amethyst.rs/doc/master/doc/amethyst_derive/"

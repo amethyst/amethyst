@@ -1,4 +1,4 @@
-extern crate amethyst;
+use amethyst;
 
 mod pong;
 mod systems;

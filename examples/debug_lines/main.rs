@@ -1,6 +1,6 @@
 //! Displays several lines with both methods.
 
-extern crate amethyst;
+use amethyst;
 
 use amethyst::{
     controls::{FlyControlBundle, FlyControlTag},
@@ -45,7 +45,7 @@ impl<'s> System<'s> for ExampleLinesSystem {
 
 struct ExampleState;
 impl SimpleState for ExampleState {
-    fn on_start(&mut self, data: StateData<GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         // Setup debug lines as a resource
         data.world
             .add_resource(DebugLines::new().with_capacity(100));
