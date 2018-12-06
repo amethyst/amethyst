@@ -49,6 +49,11 @@ where
             &[],
         );
         builder.add(
+            UiTransformSystem::default(),
+            "ui_transform",
+            &["transform_system"],
+        );
+        builder.add(
             Processor::<FontAsset>::new(),
             "font_processor",
             &["ui_loader"],
@@ -60,14 +65,9 @@ where
         );
         builder.add(ResizeSystem::new(), "ui_resize_system", &[]);
         builder.add(
-            UiTransformSystem::default(),
-            "ui_transform",
-            &["transform_system"],
-        );
-        builder.add(
             UiMouseSystem::<A, B>::new(),
             "ui_mouse_system",
-            &["ui_transform"],
+            &["ui_transform", "ui_keyboard_system"],
         );
         builder.add(
             UiButtonSystem::new(),

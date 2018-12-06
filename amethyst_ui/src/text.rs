@@ -318,7 +318,7 @@ impl<'a> System<'a> for UiKeyboardSystem {
                     let hidpi = screen_dimensions.hidpi_factor() as f32;
                     self.mouse_position = (
                         position.x as f32 * hidpi,
-                        (screen_dimensions.height() - position.y as f32) * hidpi,
+                        (screen_dimensions.height() - position.y as f32 * hidpi),
                     );
                     if self.left_mouse_button_pressed {
                         let mut focused_text_edit = focused.entity.and_then(|entity| {

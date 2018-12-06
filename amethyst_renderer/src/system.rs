@@ -32,7 +32,7 @@ pub struct RenderSystem<P> {
     pipe: P,
     #[derivative(Debug = "ignore")]
     renderer: Renderer,
-    cached_size: (u32, u32),
+    cached_size: (f64, f64),
     // This only exists to allow the system to re-use a vec allocation
     // during event compression.  It's length 0 except during `fn render`.
     event_vec: Vec<Event>,
@@ -116,8 +116,8 @@ where
             command(self.renderer.window());
         }
 
-        let width = screen_dimensions.width() as u32;
-        let height = screen_dimensions.height() as u32;
+        let width = screen_dimensions.w;
+        let height = screen_dimensions.h;
 
         // Send resource size changes to the window
         if screen_dimensions.dirty {
@@ -128,7 +128,7 @@ where
         }
 
         if let Some(size) = self.renderer.window().get_inner_size() {
-            let (window_width, window_height): (u32, u32) = size.into();
+            let (window_width, window_height): (f64, f64) = size.into();
 
             // Send window size changes to the resource
             if (window_width, window_height) != (width, height) {
