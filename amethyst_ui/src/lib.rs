@@ -44,8 +44,7 @@ mod resize;
 mod text;
 mod transform;
 
-#[cfg(feature = "profiler")]
-extern crate thread_profiler;
+
 
 pub use self::{
     action_components::{OnUiActionImage, OnUiActionSound},
