@@ -10,7 +10,6 @@ pub use specs;
 
 #[macro_use]
 extern crate error_chain;
-
 use rayon;
 #[macro_use]
 extern crate serde;

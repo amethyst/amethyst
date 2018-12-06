@@ -9,7 +9,6 @@
 extern crate log;
 use ron;
 
-
 use std::{
     error::Error,
     fmt, io,

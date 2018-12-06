@@ -2,7 +2,6 @@
 
 use amethyst;
 
-
 use amethyst::{
     assets::AssetLoaderSystemData,
     core::{nalgebra::Vector3, Transform, TransformBundle},

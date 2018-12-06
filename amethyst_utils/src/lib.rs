@@ -1,14 +1,8 @@
 //! A collection of useful amethyst utilities, designed to make your game dev life easier.
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
-
-
-
-
 #[macro_use]
 extern crate amethyst_derive;
-
-
 #[macro_use]
 extern crate log;
 #[macro_use]

@@ -1,9 +1,5 @@
 //! Defining a custom asset and format.
 
-
-
-
-
 use std::{str::from_utf8, sync::Arc, thread::sleep, time::Duration};
 
 use rayon::ThreadPoolBuilder;

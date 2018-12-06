@@ -1,5 +1,3 @@
-
-
 use vergen::{ConstantsFlags, Vergen};
 
 fn main() {

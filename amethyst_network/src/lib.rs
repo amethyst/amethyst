@@ -2,15 +2,10 @@
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-
 #[macro_use]
 extern crate log;
 #[macro_use]
 extern crate serde;
-
-
-
-
 
 mod bundle;
 mod connection;

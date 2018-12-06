@@ -1,8 +1,6 @@
 //! A collection of abstractions for various input devices to be used with Amethyst.
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
-
-
 use amethyst_core;
 
 #[macro_use]

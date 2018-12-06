@@ -1,15 +1,11 @@
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 //! Loading and playing of audio files.
-
-
-
 #[macro_use]
 extern crate log;
 
 #[macro_use]
 extern crate serde;
-
 
 #[macro_use]
 #[cfg(feature = "profiler")]

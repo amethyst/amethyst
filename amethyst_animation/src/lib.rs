@@ -46,21 +46,12 @@
 //! [ex_gltf]: https://github.com/amethyst/amethyst/tree/master/examples/gltf
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
-
-
-
 #[macro_use]
 extern crate amethyst_derive;
-
 #[macro_use]
 extern crate derivative;
-
-
-
 #[macro_use]
 extern crate log;
-
-
 #[macro_use]
 extern crate serde;
 

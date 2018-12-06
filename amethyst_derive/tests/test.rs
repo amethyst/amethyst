@@ -1,8 +1,6 @@
 #[macro_use]
 extern crate amethyst_derive;
 
-
-
 use amethyst_assets::{PrefabData, PrefabError, ProgressCounter};
 use amethyst_core::{
     shrev::{EventChannel, ReaderId},
