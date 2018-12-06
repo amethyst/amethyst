@@ -63,7 +63,8 @@ impl Pass for DrawSkybox {
                 "VertexArgs",
                 std::mem::size_of::<<VertexArgs as Uniform>::Std140>(),
                 1,
-            ).with_raw_vertex_buffer(PosTex::ATTRIBUTES, PosTex::size() as ElemStride, 0)
+            )
+            .with_raw_vertex_buffer(PosTex::ATTRIBUTES, PosTex::size() as ElemStride, 0)
             .with_raw_global("camera_position")
             .with_raw_global("zenith_color")
             .with_raw_global("nadir_color")

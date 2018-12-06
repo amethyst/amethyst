@@ -177,7 +177,8 @@ where
                     .send(InternalSocketEvent::SendEvents {
                         target,
                         events: net_connection.send_buffer_early_read().cloned().collect(),
-                    }).expect("Unreachable: Channel will be alive until a stop event is sent");
+                    })
+                    .expect("Unreachable: Channel will be alive until a stop event is sent");
             } else if net_connection.state == ConnectionState::Disconnected {
                 self.tx
                     .send(InternalSocketEvent::Stop)

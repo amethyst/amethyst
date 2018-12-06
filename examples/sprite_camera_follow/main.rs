@@ -116,7 +116,8 @@ fn init_camera(world: &mut World, parent: Entity) {
         .create_entity()
         .with(Camera::from(Projection::orthographic(
             -250.0, 250.0, -250.0, 250.0,
-        ))).with(Parent { entity: parent })
+        )))
+        .with(Parent { entity: parent })
         .with(transform)
         .build();
 }
@@ -161,7 +162,8 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(
             InputBundle::<String, String>::new()
                 .with_bindings_from_file(format!("{}/input.ron", root))?,
-        )?.with(MovementSystem, "movement", &[])
+        )?
+        .with(MovementSystem, "movement", &[])
         .with_bundle(
             RenderBundle::new(pipe, Some(config))
                 .with_sprite_sheet_processor()

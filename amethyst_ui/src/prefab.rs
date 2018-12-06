@@ -303,7 +303,8 @@ where
             .get_or_insert_with(|| {
                 let (ref loader, _, ref storage) = fonts;
                 AssetPrefab::Handle(get_default_font(loader, storage))
-            }).load_sub_assets(progress, fonts)
+            })
+            .load_sub_assets(progress, fonts)
     }
 }
 
@@ -911,5 +912,6 @@ fn button_text_transform(mut id: String) -> UiTransformBuilder {
         .with_stretch(Stretch::XY {
             x_margin: 0.,
             y_margin: 0.,
-        }).transparent()
+        })
+        .transparent()
 }

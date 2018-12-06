@@ -99,7 +99,8 @@ impl Effect {
                     unsafe { &*(raw as *const RawBuffer<_> as *const Buffer<_, _>) },
                     &data[..],
                     0,
-                ).expect("Failed to update buffer (TODO: replace expect)");
+                )
+                .expect("Failed to update buffer (TODO: replace expect)");
             }
             None => {
                 warn!(
@@ -348,7 +349,8 @@ impl<'a> EffectBuilder<'a> {
                 let cbuf = fac.create_buffer_raw(info)?;
                 data.const_bufs.push(cbuf);
                 Ok((name.to_string(), i))
-            }).collect::<Result<HashMap<_, _>>>()?;
+            })
+            .collect::<Result<HashMap<_, _>>>()?;
 
         debug!("Set global uniforms");
         let globals = self
@@ -360,7 +362,8 @@ impl<'a> EffectBuilder<'a> {
                 // Insert placeholder value until updated by user.
                 data.globals.push(UniformValue::F32Vector4([0.0; 4]));
                 (name.to_string(), i)
-            }).collect::<HashMap<_, _>>();
+            })
+            .collect::<HashMap<_, _>>();
 
         debug!("Process Color/Depth/Blend outputs");
         data.out_colors.extend(

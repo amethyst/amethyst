@@ -163,7 +163,8 @@ where
         for event in
             events.read(&mut self.event_reader.as_mut().expect(
                 "`FreeRotationSystem::setup` was not called before `FreeRotationSystem::run`",
-            )) {
+            ))
+        {
             if focused && hide.hide {
                 if let Event::DeviceEvent { ref event, .. } = *event {
                     if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {

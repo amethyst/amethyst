@@ -45,7 +45,8 @@ impl<'a> System<'a> for VertexSkinningSystem {
             .channel()
             .read(self.updated_id.as_mut().expect(
                 "`VertexSkinningSystem::setup` was not called before `VertexSkinningSystem::run`",
-            )).for_each(|event| match event {
+            ))
+            .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
                     self.updated.add(*id);
                 }
@@ -78,7 +79,8 @@ impl<'a> System<'a> for VertexSkinningSystem {
                             );
                             None
                         }
-                    }).flatten()
+                    })
+                    .flatten()
                     .map(|(global, inverse_bind_matrix)| {
                         (global.0 * inverse_bind_matrix * bind_shape)
                     }),

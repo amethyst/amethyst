@@ -69,7 +69,11 @@ impl SimpleState for Example {
         );
     }
 
-    fn handle_event(&mut self, data: StateData<'_, GameData<'_, '_>>, event: StateEvent) -> SimpleTrans {
+    fn handle_event(
+        &mut self,
+        data: StateData<'_, GameData<'_, '_>>,
+        event: StateEvent,
+    ) -> SimpleTrans {
         let StateData { world, .. } = data;
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
@@ -175,28 +179,34 @@ fn main() -> Result<(), amethyst::Error> {
             PrefabLoaderSystem::<ScenePrefabData>::default(),
             "scene_loader",
             &[],
-        ).with(
+        )
+        .with(
             GltfSceneLoaderSystem::default(),
             "gltf_loader",
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
-        ).with_basic_renderer(
+        )
+        .with_basic_renderer(
             path,
             DrawPbmSeparate::new()
                 .with_vertex_skinning()
                 .with_transparency(ColorMask::all(), ALPHA, Some(DepthMode::LessEqualWrite)),
             false,
-        )?.with_bundle(
+        )?
+        .with_bundle(
             AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
                 .with_dep(&["gltf_loader"]),
-        )?.with_bundle(
+        )?
+        .with_bundle(
             FlyControlBundle::<String, String>::new(None, None, None)
                 .with_sensitivity(0.1, 0.1)
                 .with_speed(5.),
-        )?.with_bundle(TransformBundle::new().with_dep(&[
+        )?
+        .with_bundle(TransformBundle::new().with_dep(&[
             "animation_control",
             "sampler_interpolation",
             "fly_movement",
-        ]))?.with_bundle(VertexSkinningBundle::new().with_dep(&[
+        ]))?
+        .with_bundle(VertexSkinningBundle::new().with_dep(&[
             "transform_system",
             "animation_control",
             "sampler_interpolation",

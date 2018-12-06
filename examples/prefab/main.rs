@@ -2,7 +2,6 @@
 
 use amethyst;
 
-
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
     core::TransformBundle,

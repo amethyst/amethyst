@@ -1,9 +1,9 @@
+use crate::{config::ArenaConfig, Paddle};
 use amethyst::{
     core::{timing::Time, transform::Transform},
     ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
     input::InputHandler,
 };
-use crate::{config::ArenaConfig, Paddle};
 /// This system is responsible for moving all the paddles according to the user
 /// provided input.
 pub struct PaddleSystem;

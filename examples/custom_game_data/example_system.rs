@@ -57,7 +57,8 @@ impl<'a> System<'a> for ExampleSystem {
                     } else {
                         None
                     }
-                }) {
+                })
+        {
             transform.set_xyz(
                 light_orbit_radius * state.light_angle.cos(),
                 light_orbit_radius * state.light_angle.sin(),

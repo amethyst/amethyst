@@ -52,7 +52,8 @@ impl<'a> System<'a> for HideHierarchySystem {
             .changed()
             .read(&mut self.parent_events_id.as_mut().expect(
                 "`HideHierarchySystem::setup` was not called before `HideHierarchySystem::run`",
-            )) {
+            ))
+        {
             match *event {
                 HierarchyEvent::Removed(entity) => {
                     self_marked_as_modified.add(entity.id());

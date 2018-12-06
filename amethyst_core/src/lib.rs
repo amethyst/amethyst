@@ -14,7 +14,6 @@ use rayon;
 #[macro_use]
 extern crate serde;
 
-
 #[macro_use]
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;

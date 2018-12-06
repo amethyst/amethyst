@@ -60,7 +60,8 @@ impl ToNativeWidget for CustomUi {
                         pos.0 += x_move;
                         pos.1 += y_move;
                         widget
-                    }).take(count)
+                    })
+                    .take(count)
                     .collect();
                 let widget = UiWidget::Container {
                     background: None,

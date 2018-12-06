@@ -240,7 +240,8 @@ where
                 let normal = scale
                     .map(|(x, y, z)| {
                         Vector3::new(v.normal.x * x, v.normal.y * y, v.normal.z * z).normalize()
-                    }).unwrap_or_else(|| Vector3::from(v.normal));
+                    })
+                    .unwrap_or_else(|| Vector3::from(v.normal));
                 let up = Vector3::y();
                 let tangent = normal.cross(&up).cross(&normal);
                 (
@@ -250,7 +251,8 @@ where
                     tangent.into(),
                 )
             })
-        }).vertices()
+        })
+        .vertices()
         .collect::<Vec<_>>()
 }
 
@@ -262,7 +264,8 @@ impl From<InternalShape> for Vec<PosTex> {
             .map(|v| PosTex {
                 position: Vector3::new(v.0[0], v.0[1], v.0[2]),
                 tex_coord: Vector2::new(v.2[0], v.2[1]),
-            }).collect()
+            })
+            .collect()
     }
 }
 
@@ -275,7 +278,8 @@ impl From<InternalShape> for Vec<PosNormTex> {
                 position: Vector3::new(v.0[0], v.0[1], v.0[2]),
                 tex_coord: Vector2::new(v.2[0], v.2[1]),
                 normal: Vector3::new(v.1[0], v.1[1], v.1[2]),
-            }).collect()
+            })
+            .collect()
     }
 }
 
@@ -289,7 +293,8 @@ impl From<InternalShape> for Vec<PosNormTangTex> {
                 tex_coord: Vector2::new(v.2[0], v.2[1]),
                 normal: Vector3::new(v.1[0], v.1[1], v.1[2]),
                 tangent: Vector3::new(v.3[0], v.3[1], v.3[2]),
-            }).collect()
+            })
+            .collect()
     }
 }
 

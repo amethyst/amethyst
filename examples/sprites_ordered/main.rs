@@ -96,7 +96,11 @@ impl SimpleState for Example {
         self.redraw_sprites(world);
     }
 
-    fn handle_event(&mut self, mut data: StateData<'_, GameData<'_, '_>>, event: StateEvent) -> SimpleTrans {
+    fn handle_event(
+        &mut self,
+        mut data: StateData<'_, GameData<'_, '_>>,
+        event: StateEvent,
+    ) -> SimpleTrans {
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
                 return Trans::Quit;
@@ -218,7 +222,8 @@ impl Example {
                 height,
                 0.0,
                 self.camera_depth_vision,
-            )))).build();
+            ))))
+            .build();
 
         self.camera = Some(camera);
     }

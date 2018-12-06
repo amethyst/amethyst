@@ -128,7 +128,8 @@ where
             (Vec3(ref s), Vec3(ref o)) => (s[0] * o[0] + s[1] * o[1] + s[2] * o[2]),
             (Vec4(ref s), Vec4(ref o)) => (s[0] * o[0] + s[1] * o[1] + s[2] * o[2] + s[3] * o[3]),
             _ => panic!("Interpolation can not be done between primitives of different types"),
-        }.to_f32()
+        }
+        .to_f32()
         .expect("Unexpected error when converting primitive to f32, possibly under/overflow")
     }
 
@@ -161,5 +162,6 @@ where
         s.to_f32()
             .expect("Unexpected error when converting primitive to f32, possibly under/overflow")
             * scalar,
-    ).expect("Unexpected error when converting f32 to primitive, possibly under/overflow")
+    )
+    .expect("Unexpected error when converting f32 to primitive, possibly under/overflow")
 }

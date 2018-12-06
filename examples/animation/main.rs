@@ -56,7 +56,11 @@ impl SimpleState for Example {
         self.sphere = Some(world.create_entity().with(prefab_handle).build());
     }
 
-    fn handle_event(&mut self, data: StateData<'_, GameData<'_, '_>>, event: StateEvent) -> SimpleTrans {
+    fn handle_event(
+        &mut self,
+        data: StateData<'_, GameData<'_, '_>>,
+        event: StateEvent,
+    ) -> SimpleTrans {
         let StateData { world, .. } = data;
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
@@ -105,7 +109,8 @@ impl SimpleState for Example {
                     get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
-                    ).unwrap()
+                    )
+                    .unwrap()
                     .step(self.current_animation, StepDirection::Backward);
                 }
 
@@ -113,7 +118,8 @@ impl SimpleState for Example {
                     get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
-                    ).unwrap()
+                    )
+                    .unwrap()
                     .step(self.current_animation, StepDirection::Forward);
                 }
 
@@ -122,7 +128,8 @@ impl SimpleState for Example {
                     get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
-                    ).unwrap()
+                    )
+                    .unwrap()
                     .set_rate(self.current_animation, self.rate);
                 }
 
@@ -131,7 +138,8 @@ impl SimpleState for Example {
                     get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
-                    ).unwrap()
+                    )
+                    .unwrap()
                     .set_rate(self.current_animation, self.rate);
                 }
 
@@ -140,7 +148,8 @@ impl SimpleState for Example {
                     get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
-                    ).unwrap()
+                    )
+                    .unwrap()
                     .set_rate(self.current_animation, self.rate);
                 }
 
@@ -180,7 +189,8 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(AnimationBundle::<AnimationId, Transform>::new(
             "animation_control_system",
             "sampler_interpolation_system",
-        ))?.with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
+        ))?
+        .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
     let mut game = Application::new(resources, Example::default(), game_data)?;
     game.run();

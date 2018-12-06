@@ -1,9 +1,9 @@
+use crate::Ball;
 use amethyst::{
     core::timing::Time,
     core::transform::Transform,
     ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
 };
-use crate::Ball;
 
 /// This system is responsible for moving all balls according to their speed
 /// and the time passed.

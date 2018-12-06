@@ -114,7 +114,8 @@ fn collect_field_data(ast: &Data) -> Vec<(Type, Ident, bool)> {
                         .clone(),
                     have_component_attribute(&f.attrs[..]),
                 )
-            }).collect(),
+            })
+            .collect(),
         _ => panic!("PrefabData aggregate derive only support structs"),
     }
 }
@@ -131,7 +132,8 @@ fn gen_def_lt_tokens(generics: &Generics) -> TokenStream {
             } else {
                 quote! { #lt: #( #bounds )+* }
             }
-        }).collect();
+        })
+        .collect();
 
     quote! { #( #lts ),* }
 }
@@ -144,7 +146,8 @@ fn gen_def_ty_params(generics: &Generics) -> TokenStream {
             let ref bounds = x.bounds;
 
             quote! { #ty: #( #bounds )+* }
-        }).collect();
+        })
+        .collect();
 
     quote! { #( #ty_params ),* }
 }
@@ -156,7 +159,8 @@ fn have_component_attribute(attrs: &[Attribute]) -> bool {
         .map(|attr| {
             attr.interpret_meta()
                 .expect("prefab attribute incorrectly defined")
-        }) {
+        })
+    {
         match meta {
             Meta::List(l) => {
                 for nested_meta in l.nested.iter() {

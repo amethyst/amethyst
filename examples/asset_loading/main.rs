@@ -3,7 +3,6 @@
 
 use amethyst;
 
-
 use amethyst::{
     assets::{Loader, Result as AssetResult, SimpleFormat},
     core::{
@@ -134,7 +133,8 @@ fn initialise_camera(world: &mut World) {
         .with(Camera::from(Projection::perspective(
             1.0,
             std::f32::consts::FRAC_PI_3,
-        ))).with(transform)
+        )))
+        .with(transform)
         .build();
 }
 
@@ -145,7 +145,8 @@ fn initialise_lights(world: &mut World) {
         radius: 1.0,
         color: Rgba::white(),
         ..Default::default()
-    }.into();
+    }
+    .into();
 
     let mut transform = Transform::default();
     transform.set_xyz(5.0, -20.0, 15.0);

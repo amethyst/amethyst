@@ -44,12 +44,13 @@ impl SimpleState for Example {
                 let metallic = [metallic, metallic, metallic, 1.0].into();
                 let roughness = [roughness, roughness, roughness, 1.0].into();
 
-                let (metallic, roughness) = world.exec(|loader: AssetLoaderSystemData<'_, Texture>| {
-                    (
-                        loader.load_from_data(metallic, ()),
-                        loader.load_from_data(roughness, ()),
-                    )
-                });
+                let (metallic, roughness) =
+                    world.exec(|loader: AssetLoaderSystemData<'_, Texture>| {
+                        (
+                            loader.load_from_data(metallic, ()),
+                            loader.load_from_data(roughness, ()),
+                        )
+                    });
 
                 let mtl = Material {
                     albedo: albedo.clone(),
@@ -72,7 +73,8 @@ impl SimpleState for Example {
             intensity: 6.0,
             color: [0.8, 0.0, 0.0].into(),
             ..PointLight::default()
-        }.into();
+        }
+        .into();
 
         let mut light1_transform = Transform::default();
         light1_transform.set_xyz(6.0, 6.0, -6.0);
@@ -81,7 +83,8 @@ impl SimpleState for Example {
             intensity: 5.0,
             color: [0.0, 0.3, 0.7].into(),
             ..PointLight::default()
-        }.into();
+        }
+        .into();
 
         let mut light2_transform = Transform::default();
         light2_transform.set_xyz(6.0, -6.0, -6.0);
@@ -109,7 +112,8 @@ impl SimpleState for Example {
             .with(Camera::from(Projection::perspective(
                 1.3,
                 std::f32::consts::FRAC_PI_3,
-            ))).with(transform)
+            )))
+            .with(transform)
             .build();
     }
 }

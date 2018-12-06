@@ -123,7 +123,7 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
     /// This also adds a `ScreenDimensions` resource to the `World` so that UI calculations can be
     /// done.
     pub fn ui_base<AX, AC>(
-) -> AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader>
+    ) -> AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader>
     where
         AX: Hash + Eq + Clone + Send + Sync + 'static,
         AC: Hash + Eq + Clone + Send + Sync + 'static,
@@ -156,15 +156,18 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
             .with_bundle(AnimationBundle::<u32, Material>::new(
                 "material_animation_control_system",
                 "material_sampler_interpolation_system",
-            )).with_bundle(AnimationBundle::<u32, SpriteRender>::new(
+            ))
+            .with_bundle(AnimationBundle::<u32, SpriteRender>::new(
                 "sprite_render_animation_control_system",
                 "sprite_render_sampler_interpolation_system",
-            )).with_bundle(TransformBundle::new().with_dep(&[
+            ))
+            .with_bundle(TransformBundle::new().with_dep(&[
                 "material_animation_control_system",
                 "material_sampler_interpolation_system",
                 "sprite_render_animation_control_system",
                 "sprite_render_sampler_interpolation_system",
-            ])).with_render_bundle(test_name, visibility)
+            ]))
+            .with_render_bundle(test_name, visibility)
     }
 
     /// Returns a `String` to `<crate_dir>/assets`.
@@ -289,7 +292,8 @@ where
             }
 
             Ok(())
-        }).join()
+        })
+        .join()
         .expect("Failed to run Amethyst application")
     }
 }
@@ -521,7 +525,8 @@ where
                     system,
                     &name,
                     &deps.iter().map(|dep| dep.as_ref()).collect::<Vec<&str>>(),
-                ).build()
+                )
+                .build()
         })
     }
 
@@ -641,7 +646,8 @@ where
                     ColorMask::all(),
                     ALPHA,
                     Some(DepthMode::LessEqualWrite),
-                )).with_pass(DrawUi::new()),
+                ))
+                .with_pass(DrawUi::new()),
         )
     }
 }
@@ -669,23 +675,19 @@ mod test {
 
     #[test]
     fn bundle_build_is_ok() {
-        assert!(
-            AmethystApplication::blank()
-                .with_bundle(BundleZero)
-                .run()
-                .is_ok()
-        );
+        assert!(AmethystApplication::blank()
+            .with_bundle(BundleZero)
+            .run()
+            .is_ok());
     }
 
     #[test]
     fn load_multiple_bundles() {
-        assert!(
-            AmethystApplication::blank()
-                .with_bundle(BundleZero)
-                .with_bundle(BundleOne)
-                .run()
-                .is_ok()
-        );
+        assert!(AmethystApplication::blank()
+            .with_bundle(BundleZero)
+            .with_bundle(BundleOne)
+            .run()
+            .is_ok());
     }
 
     #[test]
@@ -695,14 +697,12 @@ mod test {
             world.read_resource::<ApplicationResourceNonDefault>();
         };
 
-        assert!(
-            AmethystApplication::blank()
-                .with_bundle(BundleZero)
-                .with_bundle(BundleOne)
-                .with_assertion(assertion_fn)
-                .run()
-                .is_ok()
-        );
+        assert!(AmethystApplication::blank()
+            .with_bundle(BundleZero)
+            .with_bundle(BundleOne)
+            .with_assertion(assertion_fn)
+            .run()
+            .is_ok());
     }
 
     #[test]
@@ -713,13 +713,11 @@ mod test {
             world.read_resource::<ApplicationResource>();
         };
 
-        assert!(
-            AmethystApplication::blank()
-                // without BundleOne
-                .with_assertion(assertion_fn)
-                .run()
-                .is_ok()
-        );
+        assert!(AmethystApplication::blank()
+            // without BundleOne
+            .with_assertion(assertion_fn)
+            .run()
+            .is_ok());
     }
 
     #[test]
@@ -734,12 +732,10 @@ mod test {
             LoadingState::new(assertion_state)
         };
 
-        assert!(
-            AmethystApplication::blank()
-                .with_state(state_fns)
-                .run()
-                .is_ok()
-        );
+        assert!(AmethystApplication::blank()
+            .with_state(state_fns)
+            .run()
+            .is_ok());
     }
 
     #[test]
@@ -751,13 +747,11 @@ mod test {
             world.read_resource::<LoadResource>();
         };
 
-        assert!(
-            AmethystApplication::blank()
-                .with_state(state_fns)
-                .with_assertion(assertion_fn)
-                .run()
-                .is_ok()
-        );
+        assert!(AmethystApplication::blank()
+            .with_state(state_fns)
+            .with_assertion(assertion_fn)
+            .run()
+            .is_ok());
     }
 
     #[test]
@@ -771,12 +765,10 @@ mod test {
             SwitchState::new(FunctionState::new(assertion_fn))
         };
 
-        assert!(
-            AmethystApplication::blank()
-                .with_state(state_fns)
-                .run()
-                .is_ok()
-        );
+        assert!(AmethystApplication::blank()
+            .with_state(state_fns)
+            .run()
+            .is_ok());
     }
 
     #[test]
@@ -789,13 +781,11 @@ mod test {
             world.read_resource::<LoadResource>();
         };
 
-        assert!(
-            AmethystApplication::blank()
-                .with_state(state_fns)
-                .with_assertion(assertion_fn)
-                .run()
-                .is_ok()
-        );
+        assert!(AmethystApplication::blank()
+            .with_state(state_fns)
+            .with_assertion(assertion_fn)
+            .run()
+            .is_ok());
     }
 
     #[test]
@@ -816,14 +806,12 @@ mod test {
             assert_eq!(Some(&AssetZero(20)), store.get(&asset_zero_handles[1]));
         };
 
-        assert!(
-            AmethystApplication::blank()
-                .with_bundle(BundleAsset)
-                .with_effect(effect_fn)
-                .with_assertion(assertion_fn)
-                .run()
-                .is_ok()
-        );
+        assert!(AmethystApplication::blank()
+            .with_bundle(BundleAsset)
+            .with_effect(effect_fn)
+            .with_assertion(assertion_fn)
+            .run()
+            .is_ok());
     }
 
     #[test]
@@ -850,16 +838,14 @@ mod test {
             assert_eq!(Some(&AssetZero(10)), store.get(&asset_zero_handles[0]));
         };
 
-        assert!(
-            AmethystApplication::blank()
-                .with_bundle(BundleAsset)
-                .with_setup(setup_fns)
-                .with_state(state_fns)
-                .with_effect(effect_fn)
-                .with_assertion(assertion_fn)
-                .run()
-                .is_ok()
-        );
+        assert!(AmethystApplication::blank()
+            .with_bundle(BundleAsset)
+            .with_setup(setup_fns)
+            .with_state(state_fns)
+            .with_effect(effect_fn)
+            .with_assertion(assertion_fn)
+            .run()
+            .is_ok());
     }
 
     #[test]
@@ -872,40 +858,36 @@ mod test {
             world.read_resource::<ScreenDimensions>();
         };
 
-        assert!(
-            AmethystApplication::ui_base::<String, String>()
-                .with_assertion(assertion_fn)
-                .run()
-                .is_ok()
-        );
+        assert!(AmethystApplication::ui_base::<String, String>()
+            .with_assertion(assertion_fn)
+            .run()
+            .is_ok());
     }
 
     #[test]
     #[cfg(feature = "graphics")]
     fn render_base_application_can_load_material_animations() {
-        assert!(
-            AmethystApplication::render_base(
-                "render_base_application_can_load_material_animations",
-                false
-            ).with_effect(MaterialAnimationFixture::effect)
-            .with_assertion(MaterialAnimationFixture::assertion)
-            .run()
-            .is_ok()
-        );
+        assert!(AmethystApplication::render_base(
+            "render_base_application_can_load_material_animations",
+            false
+        )
+        .with_effect(MaterialAnimationFixture::effect)
+        .with_assertion(MaterialAnimationFixture::assertion)
+        .run()
+        .is_ok());
     }
 
     #[test]
     #[cfg(feature = "graphics")]
     fn render_base_application_can_load_sprite_render_animations() {
-        assert!(
-            AmethystApplication::render_base(
-                "render_base_application_can_load_sprite_render_animations",
-                false
-            ).with_effect(SpriteRenderAnimationFixture::effect)
-            .with_assertion(SpriteRenderAnimationFixture::assertion)
-            .run()
-            .is_ok()
-        );
+        assert!(AmethystApplication::render_base(
+            "render_base_application_can_load_sprite_render_animations",
+            false
+        )
+        .with_effect(SpriteRenderAnimationFixture::effect)
+        .with_assertion(SpriteRenderAnimationFixture::assertion)
+        .run()
+        .is_ok());
     }
 
     #[test]
@@ -927,15 +909,13 @@ mod test {
             component_zero.0
         };
 
-        assert!(
-            AmethystApplication::blank()
-                .with_system(SystemEffect, "system_effect", &[])
-                .with_effect(effect_fn)
-                .with_assertion(|world| assert_eq!(1, get_component_zero_value(world)))
-                .with_assertion(|world| assert_eq!(2, get_component_zero_value(world)))
-                .run()
-                .is_ok()
-        );
+        assert!(AmethystApplication::blank()
+            .with_system(SystemEffect, "system_effect", &[])
+            .with_effect(effect_fn)
+            .with_assertion(|world| assert_eq!(1, get_component_zero_value(world)))
+            .with_assertion(|world| assert_eq!(2, get_component_zero_value(world)))
+            .run()
+            .is_ok());
     }
 
     #[test]
@@ -959,19 +939,18 @@ mod test {
             assert_eq!(1, component_zero.0);
         };
 
-        assert!(
-            AmethystApplication::blank()
-                .with_setup(|world| {
-                    world.register::<ComponentZero>();
+        assert!(AmethystApplication::blank()
+            .with_setup(|world| {
+                world.register::<ComponentZero>();
 
-                    let entity = world.create_entity().with(ComponentZero(0)).build();
-                    world.add_resource(EffectReturn(entity));
-                }).with_system_single(SystemEffect, "system_effect", &[])
-                .with_assertion(assertion_fn)
-                .with_assertion(assertion_fn)
-                .run()
-                .is_ok()
-        );
+                let entity = world.create_entity().with(ComponentZero(0)).build();
+                world.add_resource(EffectReturn(entity));
+            })
+            .with_system_single(SystemEffect, "system_effect", &[])
+            .with_assertion(assertion_fn)
+            .with_assertion(assertion_fn)
+            .run()
+            .is_ok());
     }
 
     // Double usage tests
@@ -979,79 +958,78 @@ mod test {
 
     #[test]
     fn with_setup_invoked_twice_should_run_in_specified_order() {
-        assert!(
-            AmethystApplication::blank()
-                .with_setup(|world| {
-                    world.add_resource(ApplicationResource);
-                }).with_setup(|world| {
-                    world.read_resource::<ApplicationResource>();
-                }).run()
-                .is_ok()
-        );
+        assert!(AmethystApplication::blank()
+            .with_setup(|world| {
+                world.add_resource(ApplicationResource);
+            })
+            .with_setup(|world| {
+                world.read_resource::<ApplicationResource>();
+            })
+            .run()
+            .is_ok());
     }
 
     #[test]
     fn with_effect_invoked_twice_should_run_in_the_specified_order() {
-        assert!(
-            AmethystApplication::blank()
-                .with_effect(|world| {
-                    world.add_resource(ApplicationResource);
-                }).with_effect(|world| {
-                    world.read_resource::<ApplicationResource>();
-                }).run()
-                .is_ok()
-        );
+        assert!(AmethystApplication::blank()
+            .with_effect(|world| {
+                world.add_resource(ApplicationResource);
+            })
+            .with_effect(|world| {
+                world.read_resource::<ApplicationResource>();
+            })
+            .run()
+            .is_ok());
     }
 
     #[test]
     fn with_assertion_invoked_twice_should_run_in_the_specified_order() {
-        assert!(
-            AmethystApplication::blank()
-                .with_assertion(|world| {
-                    world.add_resource(ApplicationResource);
-                }).with_assertion(|world| {
-                    world.read_resource::<ApplicationResource>();
-                }).run()
-                .is_ok()
-        );
+        assert!(AmethystApplication::blank()
+            .with_assertion(|world| {
+                world.add_resource(ApplicationResource);
+            })
+            .with_assertion(|world| {
+                world.read_resource::<ApplicationResource>();
+            })
+            .run()
+            .is_ok());
     }
 
     #[test]
     fn with_state_invoked_twice_should_run_in_the_specified_order() {
-        assert!(
-            AmethystApplication::blank()
-                .with_state(|| FunctionState::new(|world| {
-                    world.add_resource(ApplicationResource);
-                })).with_state(|| FunctionState::new(|world| {
-                    world.read_resource::<ApplicationResource>();
-                })).run()
-                .is_ok()
-        );
+        assert!(AmethystApplication::blank()
+            .with_state(|| FunctionState::new(|world| {
+                world.add_resource(ApplicationResource);
+            }))
+            .with_state(|| FunctionState::new(|world| {
+                world.read_resource::<ApplicationResource>();
+            }))
+            .run()
+            .is_ok());
     }
 
     #[test]
     fn setup_can_be_invoked_after_with_state() {
-        assert!(
-            AmethystApplication::blank()
-                .with_state(|| FunctionState::new(|world| {
-                    world.add_resource(ApplicationResource);
-                })).with_setup(|world| {
-                    world.read_resource::<ApplicationResource>();
-                }).run()
-                .is_ok()
-        );
+        assert!(AmethystApplication::blank()
+            .with_state(|| FunctionState::new(|world| {
+                world.add_resource(ApplicationResource);
+            }))
+            .with_setup(|world| {
+                world.read_resource::<ApplicationResource>();
+            })
+            .run()
+            .is_ok());
     }
 
     #[test]
     fn with_state_invoked_after_with_resource_should_work() {
-        assert!(
-            AmethystApplication::blank()
-                .with_resource(ApplicationResource)
-                .with_state(|| FunctionState::new(|world| {
-                    world.read_resource::<ApplicationResource>();
-                })).run()
-                .is_ok()
-        );
+        assert!(AmethystApplication::blank()
+            .with_resource(ApplicationResource)
+            .with_state(|| FunctionState::new(|world| {
+                world.read_resource::<ApplicationResource>();
+            }))
+            .run()
+            .is_ok());
     }
 
     // === Resources === //

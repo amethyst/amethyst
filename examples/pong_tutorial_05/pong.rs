@@ -125,7 +125,8 @@ fn initialise_camera(world: &mut World) {
             ARENA_WIDTH,
             ARENA_HEIGHT,
             0.0,
-        ))).with(transform)
+        )))
+        .with(transform)
         .build();
 }
 
@@ -181,7 +182,8 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
         .with(Ball {
             radius: BALL_RADIUS,
             velocity: [BALL_VELOCITY_X, BALL_VELOCITY_Y],
-        }).with(local_transform)
+        })
+        .with(local_transform)
         .build();
 }
 
@@ -224,7 +226,8 @@ fn initialise_scoreboard(world: &mut World) {
             "0".to_string(),
             [1., 1., 1., 1.],
             50.,
-        )).build();
+        ))
+        .build();
 
     let p2_score = world
         .create_entity()
@@ -234,7 +237,8 @@ fn initialise_scoreboard(world: &mut World) {
             "0".to_string(),
             [1., 1., 1., 1.],
             50.,
-        )).build();
+        ))
+        .build();
 
     world.add_resource(ScoreText { p1_score, p2_score });
 }

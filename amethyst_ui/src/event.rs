@@ -151,5 +151,6 @@ where
             t1.global_z
                 .partial_cmp(&t2.global_z)
                 .expect("Unexpected NaN")
-        }).and_then(|(e, _, m)| m.map(|_m| e))
+        })
+        .and_then(|(e, _, m)| m.map(|_m| e))
 }

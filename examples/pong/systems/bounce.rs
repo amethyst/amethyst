@@ -1,12 +1,12 @@
+use crate::{
+    audio::{play_bounce, Sounds},
+    Ball, Paddle, Side,
+};
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
     core::transform::Transform,
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, WriteStorage},
-};
-use crate::{
-    audio::{play_bounce, Sounds},
-    Ball, Paddle, Side,
 };
 use std::ops::Deref;
 

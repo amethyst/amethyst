@@ -99,7 +99,8 @@ where
                 "VertexArgs",
                 mem::size_of::<<VertexArgs as Uniform>::Std140>(),
                 1,
-            ).with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0);
+            )
+            .with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0);
         setup_textures(&mut builder, &TEXTURES);
         match self.transparency {
             Some((mask, blend, depth)) => builder.with_blended_output("color", mask, blend, depth),

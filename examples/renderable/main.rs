@@ -60,7 +60,10 @@ impl SimpleState for Loading {
             }
             Completion::Complete => {
                 println!("Assets loaded, swapping state");
-                if let Some(entity) = data.world.exec(|finder: UiFinder<'_>| finder.find("loading")) {
+                if let Some(entity) = data
+                    .world
+                    .exec(|finder: UiFinder<'_>| finder.find("loading"))
+                {
                     let _ = data.world.delete_entity(entity);
                 }
                 Trans::Switch(Box::new(Example {
@@ -79,7 +82,11 @@ impl SimpleState for Example {
         world.create_entity().with(self.scene.clone()).build();
     }
 
-    fn handle_event(&mut self, data: StateData<'_, GameData<'_, '_>>, event: StateEvent) -> SimpleTrans {
+    fn handle_event(
+        &mut self,
+        data: StateData<'_, GameData<'_, '_>>,
+        event: StateEvent,
+    ) -> SimpleTrans {
         let w = data.world;
         if let StateEvent::Window(event) = &event {
             // Exit if user hits Escape or closes the window
@@ -109,7 +116,10 @@ impl SimpleState for Example {
                 }
                 Some((VirtualKeyCode::A, ElementState::Pressed)) => {
                     w.exec(
-                        |(mut state, mut color): (Write<'_, DemoState>, Write<'_, AmbientColor>)| {
+                        |(mut state, mut color): (
+                            Write<'_, DemoState>,
+                            Write<'_, AmbientColor>,
+                        )| {
                             if state.ambient_light {
                                 state.ambient_light = false;
                                 color.0 = [0.0; 3].into();
@@ -122,7 +132,10 @@ impl SimpleState for Example {
                 }
                 Some((VirtualKeyCode::D, ElementState::Pressed)) => {
                     w.exec(
-                        |(mut state, mut lights): (Write<'_, DemoState>, WriteStorage<'_, Light>)| {
+                        |(mut state, mut lights): (
+                            Write<'_, DemoState>,
+                            WriteStorage<'_, Light>,
+                        )| {
                             if state.directional_light {
                                 state.directional_light = false;
                                 for light in (&mut lights).join() {
@@ -255,7 +268,8 @@ impl<'a> System<'a> for ExampleSystem {
                     } else {
                         None
                     }
-                }) {
+                })
+        {
             transform.set_xyz(
                 light_orbit_radius * state.light_angle.cos(),
                 light_orbit_radius * state.light_angle.sin(),

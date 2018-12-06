@@ -76,13 +76,11 @@ pub use amethyst_ui as ui;
 pub use amethyst_utils as utils;
 pub use winit;
 
-
 #[macro_use]
 extern crate derivative;
 use fern;
 #[macro_use]
 extern crate log;
-
 
 use rustc_version_runtime;
 #[macro_use]

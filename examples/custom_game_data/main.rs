@@ -2,7 +2,10 @@
 
 use amethyst;
 
-
+use crate::{
+    example_system::ExampleSystem,
+    game_data::{CustomGameData, CustomGameDataBuilder},
+};
 use amethyst::{
     assets::{
         Completion, Handle, Prefab, PrefabLoader, PrefabLoaderSystem, ProgressCounter, RonFormat,
@@ -21,10 +24,6 @@ use amethyst::{
     ui::{DrawUi, UiBundle, UiCreator, UiLoader, UiPrefab},
     utils::{application_root_dir, fps_counter::FPSCounterBundle, scene::BasicScenePrefab},
     Error,
-};
-use crate::{
-    example_system::ExampleSystem,
-    game_data::{CustomGameData, CustomGameDataBuilder},
 };
 
 mod example_system;

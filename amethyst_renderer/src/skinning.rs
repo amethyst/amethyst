@@ -136,6 +136,7 @@ impl<'a> PrefabData<'a> for JointTransformsPrefab {
                     skin: entities[self.skin],
                     matrices: vec![[[0.; 4]; 4]; self.size],
                 },
-            ).map(|_| ())
+            )
+            .map(|_| ())
     }
 }
