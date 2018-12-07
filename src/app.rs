@@ -675,7 +675,7 @@ where
     ///
     /// struct LoadingState;
     /// impl SimpleState for LoadingState {
-    ///     fn on_start(&mut self, data: StateData<GameData>) {
+    ///     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
     ///         let storage = data.world.read_resource();
     ///
     ///         let loader = data.world.read_resource::<Loader>();

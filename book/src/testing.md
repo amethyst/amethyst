@@ -36,7 +36,7 @@ The following shows a simple example of testing a `State`. More examples are in 
 # where
 #     E: Send + Sync + 'static,
 # {
-#     fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>, E> {
+#     fn update(&mut self, data: StateData<'_, GameData<'_, '_>>) -> Trans<GameData<'a, 'b>, E> {
 #         data.data.update(&data.world);
 #
 #         data.world.add_resource(LoadResource);
