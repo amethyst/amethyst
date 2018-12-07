@@ -1,5 +1,3 @@
-extern crate vergen;
-
 use vergen::{ConstantsFlags, Vergen};
 
 fn main() {

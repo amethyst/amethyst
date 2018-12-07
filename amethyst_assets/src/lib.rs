@@ -9,24 +9,21 @@
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-extern crate amethyst_core;
-extern crate crossbeam;
+use amethyst_core;
+
 #[macro_use]
 extern crate derivative;
 #[macro_use]
 extern crate error_chain;
-extern crate fnv;
-extern crate hibitset;
+
 #[macro_use]
 extern crate log;
-extern crate parking_lot;
-extern crate rayon;
-extern crate ron;
+
 #[macro_use]
 extern crate serde;
 #[cfg(feature = "json")]
 extern crate serde_json;
-extern crate shred;
+use shred;
 #[macro_use]
 extern crate shred_derive;
 

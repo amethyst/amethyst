@@ -1,4 +1,4 @@
-extern crate amethyst;
+use amethyst;
 
 use amethyst::{
     assets::{AssetStorage, Loader},
@@ -15,7 +15,7 @@ use amethyst::{
 struct Example;
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
         let texture_handle = load_texture(world, "logo.png");
         let _image = init_image(world, &texture_handle);
@@ -56,7 +56,8 @@ fn init_camera(world: &mut World) {
         .create_entity()
         .with(Camera::from(Projection::orthographic(
             -250.0, 250.0, -250.0, 250.0,
-        ))).with(transform)
+        )))
+        .with(transform)
         .build();
 }
 

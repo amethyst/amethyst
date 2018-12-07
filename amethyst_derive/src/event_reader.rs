@@ -12,7 +12,8 @@ pub fn impl_event_reader(ast: &DeriveInput) -> TokenStream {
         .map(|attr| {
             attr.interpret_meta()
                 .expect("reader attribute incorrectly defined")
-        }) {
+        })
+    {
         match meta {
             Meta::List(l) => {
                 for nested_meta in l.nested.iter() {
@@ -60,7 +61,8 @@ pub enum SomeEvent {{
             quote! {
                 self.#n = Some(res.fetch_mut::<EventChannel<#ty>>().register_reader());
             }
-        }).collect();
+        })
+        .collect();
     quote! {
         #[allow(missing_docs)]
         #[derive(Default)]
@@ -100,7 +102,8 @@ fn collect_field_types(ast: &Data) -> Vec<Type> {
                 .expect("Event enum variant does not contain an inner event type")
                 .ty
                 .clone()
-        }).collect()
+        })
+        .collect()
 }
 
 fn collect_variant_names(ast: &Data) -> Vec<Ident> {

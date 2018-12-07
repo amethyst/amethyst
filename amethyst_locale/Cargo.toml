@@ -3,6 +3,7 @@ name = "amethyst_locale"
 version = "0.3.0"
 authors = ["Joël Lupien <jojolepromain@gmail.com>"]
 readme = "README.md"
+edition = "2018"
 description = """
 Localisation bindings.
 """

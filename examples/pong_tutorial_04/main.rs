@@ -1,4 +1,4 @@
-extern crate amethyst;
+use amethyst;
 
 mod pong;
 mod systems;
@@ -14,7 +14,7 @@ use amethyst::{
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    use pong::Pong;
+    use crate::pong::Pong;
 
     let app_root = application_root_dir();
 

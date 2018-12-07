@@ -1,4 +1,4 @@
-extern crate amethyst;
+use amethyst;
 #[macro_use]
 extern crate log;
 
@@ -18,12 +18,14 @@ fn main() -> Result<()> {
         .with_bundle(NetworkBundle::<()>::new(
             "127.0.0.1:3456".parse().unwrap(),
             vec![Box::new(FilterConnected::<()>::new())],
-        ))?.with(SpamReceiveSystem::new(), "rcv", &[]);
+        ))?
+        .with(SpamReceiveSystem::new(), "rcv", &[]);
     let mut game = Application::build("./", State1)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             1,
-        ).build(game_data)?;
+        )
+        .build(game_data)?;
     game.run();
     Ok(())
 }
@@ -31,7 +33,7 @@ fn main() -> Result<()> {
 /// Default empty state
 pub struct State1;
 impl SimpleState for State1 {
-    fn on_start(&mut self, data: StateData<GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         data.world
             .create_entity()
             .with(NetConnection::<()>::new("127.0.0.1:3455".parse().unwrap()))
@@ -54,7 +56,7 @@ impl<'a> System<'a> for SpamReceiveSystem {
     type SystemData = (WriteStorage<'a, NetConnection<()>>,);
     fn run(&mut self, (mut connections,): Self::SystemData) {
         let mut count = 0;
-        for (mut conn,) in (&mut connections,).join() {
+        for (conn,) in (&mut connections,).join() {
             if self.reader.is_none() {
                 self.reader = Some(conn.receive_buffer.register_reader());
             }

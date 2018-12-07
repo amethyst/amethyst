@@ -1,6 +1,6 @@
 //! Displays a shaded sphere to the user.
 
-extern crate amethyst;
+use amethyst;
 #[macro_use]
 extern crate log;
 
@@ -29,20 +29,24 @@ struct Example {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
         // Initialise the scene with an object, a light and a camera.
-        let handle = world.exec(|loader: PrefabLoader<MyPrefabData>| {
+        let handle = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/sphere.ron", RonFormat, (), ())
         });
         world.create_entity().with(handle).build();
         init_output(&mut world.res);
-        world.exec(|mut creator: UiCreator| {
+        world.exec(|mut creator: UiCreator<'_>| {
             creator.create("ui/example.ron", ());
         });
     }
 
-    fn handle_event(&mut self, _: StateData<GameData>, event: StateEvent) -> SimpleTrans {
+    fn handle_event(
+        &mut self,
+        _: StateData<'_, GameData<'_, '_>>,
+        event: StateEvent,
+    ) -> SimpleTrans {
         match &event {
             StateEvent::Window(event) => {
                 if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
@@ -61,10 +65,10 @@ impl SimpleState for Example {
         }
     }
 
-    fn update(&mut self, state_data: &mut StateData<GameData>) -> SimpleTrans {
+    fn update(&mut self, state_data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         let StateData { world, .. } = state_data;
         if self.fps_display.is_none() {
-            world.exec(|finder: UiFinder| {
+            world.exec(|finder: UiFinder<'_>| {
                 if let Some(entity) = finder.find("fps") {
                     self.fps_display = Some(entity);
                 }

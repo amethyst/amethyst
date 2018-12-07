@@ -20,7 +20,7 @@ where
     T: GameUpdate,
     E: Send + Sync + 'static,
 {
-    fn update(&mut self, mut data: StateData<T>) -> Trans<T, E> {
+    fn update(&mut self, mut data: StateData<'_, T>) -> Trans<T, E> {
         data.data.update(&data.world);
 
         (self.function)(&mut data.world);

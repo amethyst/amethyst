@@ -97,7 +97,8 @@ where
             .channel()
             .read(self.insert_reader.as_mut().expect(
                 "`PrefabLoaderSystem::setup` was not called before `PrefabLoaderSystem::run`",
-            )).for_each(|event| {
+            ))
+            .for_each(|event| {
                 if let ComponentEvent::Inserted(id) = event {
                     self.to_process.add(*id);
                 }
@@ -119,7 +120,8 @@ where
                                 Parent {
                                     entity: self.entities[parent],
                                 },
-                            ).expect("Unable to insert `Parent` for prefab");
+                            )
+                            .expect("Unable to insert `Parent` for prefab");
                     }
                     tags.insert(
                         new_entity,
@@ -128,7 +130,8 @@ where
                                 "Unreachable: Every loaded prefab should have a `PrefabTag`",
                             ),
                         ),
-                    ).expect("Unable to insert `PrefabTag` for prefab entity");
+                    )
+                    .expect("Unable to insert `PrefabTag` for prefab entity");
                 }
                 // create components
                 for (index, entity_data) in prefab.entities.iter().enumerate() {
@@ -138,7 +141,8 @@ where
                                 self.entities[index],
                                 &mut prefab_system_data,
                                 &self.entities,
-                            ).expect("Unable to add prefab system data to entity");
+                            )
+                            .expect("Unable to add prefab system data to entity");
                     }
                 }
             }

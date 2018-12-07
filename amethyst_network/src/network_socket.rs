@@ -167,7 +167,7 @@ where
     }
 
     fn run(&mut self, mut net_connections: Self::SystemData) {
-        for mut net_connection in (&mut net_connections).join() {
+        for net_connection in (&mut net_connections).join() {
             let target = net_connection.target;
 
             if net_connection.state == ConnectionState::Connected
@@ -177,7 +177,8 @@ where
                     .send(InternalSocketEvent::SendEvents {
                         target,
                         events: net_connection.send_buffer_early_read().cloned().collect(),
-                    }).expect("Unreachable: Channel will be alive until a stop event is sent");
+                    })
+                    .expect("Unreachable: Channel will be alive until a stop event is sent");
             } else if net_connection.state == ConnectionState::Disconnected {
                 self.tx
                     .send(InternalSocketEvent::Stop)
@@ -188,7 +189,7 @@ where
         for raw_event in self.rx.try_iter() {
             let mut matched = false;
             // Get the NetConnection from the source
-            for mut net_connection in (&mut net_connections).join() {
+            for net_connection in (&mut net_connections).join() {
                 // We found the origin
                 if net_connection.target == raw_event.source {
                     matched = true;

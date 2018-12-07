@@ -5,6 +5,7 @@ authors = [
 	"Joël Lupien (Jojolepro) <jojolepromain@gmail.com>",
 	"Lucio Franco (LucioFranco) <luciofranco14@gmail.com>"
 ]
+edition = "2018"
 description = "Amethyst networking crate"
 keywords = ["networking", "specs", "ecs", "amethyst", "serialization"]
 categories = ["game-engines"]

@@ -60,31 +60,29 @@
 #[cfg(feature = "profiler")]
 pub extern crate thread_profiler;
 
-pub extern crate amethyst_animation as animation;
-pub extern crate amethyst_assets as assets;
-pub extern crate amethyst_audio as audio;
-pub extern crate amethyst_config as config;
-pub extern crate amethyst_controls as controls;
-pub extern crate amethyst_core as core;
+pub use amethyst_animation as animation;
+pub use amethyst_assets as assets;
+pub use amethyst_audio as audio;
+pub use amethyst_config as config;
+pub use amethyst_controls as controls;
+pub use amethyst_core as core;
 #[macro_use]
 pub extern crate amethyst_derive as derive;
-pub extern crate amethyst_input as input;
-pub extern crate amethyst_locale as locale;
-pub extern crate amethyst_network as network;
-pub extern crate amethyst_renderer as renderer;
-pub extern crate amethyst_ui as ui;
-pub extern crate amethyst_utils as utils;
-pub extern crate winit;
+pub use amethyst_input as input;
+pub use amethyst_locale as locale;
+pub use amethyst_network as network;
+pub use amethyst_renderer as renderer;
+pub use amethyst_ui as ui;
+pub use amethyst_utils as utils;
+pub use winit;
 
-extern crate crossbeam_channel;
 #[macro_use]
 extern crate derivative;
-extern crate fern;
+use fern;
 #[macro_use]
 extern crate log;
-extern crate amethyst_input;
-extern crate rayon;
-extern crate rustc_version_runtime;
+
+use rustc_version_runtime;
 #[macro_use]
 extern crate serde_derive;
 

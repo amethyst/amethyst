@@ -1,6 +1,6 @@
 //! Opens an empty window.
 
-extern crate amethyst;
+use amethyst;
 
 use amethyst::{
     input::is_key_down,
@@ -13,7 +13,11 @@ use amethyst::{
 struct Example;
 
 impl SimpleState for Example {
-    fn handle_event(&mut self, _: StateData<GameData>, event: StateEvent) -> SimpleTrans {
+    fn handle_event(
+        &mut self,
+        _: StateData<'_, GameData<'_, '_>>,
+        event: StateEvent,
+    ) -> SimpleTrans {
         if let StateEvent::Window(event) = event {
             if is_key_down(&event, VirtualKeyCode::Escape) {
                 Trans::Quit

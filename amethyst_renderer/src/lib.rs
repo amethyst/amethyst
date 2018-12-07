@@ -27,62 +27,36 @@
 #![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-extern crate amethyst_assets;
-extern crate amethyst_core;
+use amethyst_core;
 #[macro_use]
 extern crate amethyst_derive;
 #[macro_use]
 extern crate derivative;
 #[macro_use]
 extern crate error_chain;
-extern crate fnv;
-extern crate genmesh;
-extern crate gfx;
-extern crate gfx_core;
+use gfx;
+use gfx_core;
 #[macro_use]
 extern crate gfx_macros;
-extern crate glsl_layout;
-extern crate hetseq;
-extern crate hibitset;
-extern crate image;
 #[macro_use]
 extern crate log;
-extern crate rayon;
-extern crate ron;
+use rayon;
 #[macro_use]
 extern crate serde;
-extern crate shred;
+use shred;
 #[macro_use]
 extern crate shred_derive;
-extern crate smallvec;
-extern crate wavefront_obj;
-extern crate winit;
-
+use wavefront_obj;
+use winit;
 #[macro_use]
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
-
-#[cfg(all(feature = "d3d11", target_os = "windows"))]
-extern crate gfx_device_dx11;
-#[cfg(all(feature = "d3d11", target_os = "windows"))]
-extern crate gfx_window_dxgi;
-
-#[cfg(all(feature = "metal", target_os = "macos"))]
-extern crate gfx_device_metal;
-#[cfg(all(feature = "metal", target_os = "macos"))]
-extern crate gfx_window_metal;
-
 #[cfg(feature = "opengl")]
-extern crate gfx_device_gl;
+use gfx_device_gl;
 #[cfg(feature = "opengl")]
-extern crate gfx_window_glutin;
+use gfx_window_glutin;
 #[cfg(feature = "opengl")]
-extern crate glutin;
-
-#[cfg(feature = "vulkan")]
-extern crate gfx_device_vulkan;
-#[cfg(feature = "vulkan")]
-extern crate gfx_window_vulkan;
+use glutin;
 
 pub use crate::{
     bundle::RenderBundle,

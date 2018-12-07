@@ -477,11 +477,9 @@ mod tests {
             Some(&Transform::default()),
             world.read_storage().get(root_entity)
         );
-        assert!(
-            world
-                .read_storage::<GlobalTransform>()
-                .get(root_entity)
-                .is_some()
-        );
+        assert!(world
+            .read_storage::<GlobalTransform>()
+            .get(root_entity)
+            .is_some());
     }
 }

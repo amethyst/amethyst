@@ -2,15 +2,10 @@
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-extern crate amethyst_core;
 #[macro_use]
 extern crate log;
 #[macro_use]
 extern crate serde;
-extern crate bincode;
-extern crate laminar;
-extern crate shrev;
-extern crate uuid;
 
 mod bundle;
 mod connection;

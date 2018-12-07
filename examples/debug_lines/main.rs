@@ -1,6 +1,6 @@
 //! Displays several lines with both methods.
 
-extern crate amethyst;
+use amethyst;
 
 use amethyst::{
     controls::{FlyControlBundle, FlyControlTag},
@@ -45,7 +45,7 @@ impl<'s> System<'s> for ExampleLinesSystem {
 
 struct ExampleState;
 impl SimpleState for ExampleState {
-    fn on_start(&mut self, data: StateData<GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         // Setup debug lines as a resource
         data.world
             .add_resource(DebugLines::new().with_capacity(100));
@@ -136,7 +136,8 @@ impl SimpleState for ExampleState {
             .with(Camera::from(Projection::perspective(
                 1.33333,
                 std::f32::consts::FRAC_PI_2,
-            ))).with(local_transform)
+            )))
+            .with(local_transform)
             .build();
     }
 }
@@ -162,12 +163,14 @@ fn main() -> amethyst::Result<()> {
         Some(String::from("move_x")),
         Some(String::from("move_y")),
         Some(String::from("move_z")),
-    ).with_sensitivity(0.1, 0.1);
+    )
+    .with_sensitivity(0.1, 0.1);
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
-        )?.with(ExampleLinesSystem, "example_lines_system", &[])
+        )?
+        .with(ExampleLinesSystem, "example_lines_system", &[])
         .with_bundle(fly_control_bundle)?
         .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_bundle(RenderBundle::new(pipe, Some(config)))?;

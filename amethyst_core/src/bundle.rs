@@ -2,7 +2,7 @@
 
 use specs::prelude::DispatcherBuilder;
 
-error_chain!{}
+error_chain! {}
 
 /// A bundle of ECS components, resources and systems.
 pub trait SystemBundle<'a, 'b> {

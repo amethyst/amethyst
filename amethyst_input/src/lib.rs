@@ -1,17 +1,15 @@
 //! A collection of abstractions for various input devices to be used with Amethyst.
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
+use amethyst_core;
 
-extern crate amethyst_config;
-extern crate amethyst_core;
-extern crate amethyst_renderer;
 #[macro_use]
 extern crate derivative;
-extern crate fnv;
+
 #[macro_use]
 extern crate serde;
-extern crate smallvec;
-extern crate winit;
+use smallvec;
+use winit;
 
 #[cfg(feature = "sdl_controller")]
 extern crate sdl2;

@@ -1,7 +1,7 @@
 //! Custom UI example
 
-extern crate amethyst;
-extern crate serde;
+use amethyst;
+
 #[macro_use]
 extern crate serde_derive;
 
@@ -60,7 +60,8 @@ impl ToNativeWidget for CustomUi {
                         pos.0 += x_move;
                         pos.1 += y_move;
                         widget
-                    }).take(count)
+                    })
+                    .take(count)
                     .collect();
                 let widget = UiWidget::Container {
                     background: None,
@@ -76,17 +77,17 @@ impl ToNativeWidget for CustomUi {
 struct Example;
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
         // Initialise the scene with an object, a light and a camera.
-        let handle = world.exec(|loader: PrefabLoader<MyPrefabData>| {
+        let handle = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/sphere.ron", RonFormat, (), ())
         });
         world.create_entity().with(handle).build();
 
         // Load custom UI prefab
         world.exec(
-            |mut creator: UiCreator<AudioFormat, TextureFormat, FontFormat, CustomUi>| {
+            |mut creator: UiCreator<'_, AudioFormat, TextureFormat, FontFormat, CustomUi>| {
                 creator.create("ui/custom.ron", ());
             },
         );

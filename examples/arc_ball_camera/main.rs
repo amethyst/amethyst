@@ -1,6 +1,6 @@
 //! Demonstrates how to use the fly camera
 
-extern crate amethyst;
+use amethyst;
 
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
@@ -23,8 +23,8 @@ type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 struct ExampleState;
 
 impl SimpleState for ExampleState {
-    fn on_start(&mut self, data: StateData<GameData>) {
-        let prefab_handle = data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        let prefab_handle = data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/arc_ball_camera.ron", RonFormat, (), ())
         });
         data.world.create_entity().with(prefab_handle).build();
@@ -119,7 +119,8 @@ fn main() -> Result<(), Error> {
         .with_bundle(TransformBundle::new().with_dep(&[]))?
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
-        )?.with_bundle(ArcBallControlBundle::<String, String>::new())?
+        )?
+        .with_bundle(ArcBallControlBundle::<String, String>::new())?
         .with_bundle(render_bundle)?
         .with(
             CameraDistanceSystem::<String>::new(),

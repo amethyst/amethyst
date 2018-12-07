@@ -1,3 +1,8 @@
+use crate::{
+    config::{ArenaConfig, BallConfig, PaddlesConfig},
+    systems::ScoreText,
+    Ball, Paddle, Side,
+};
 use amethyst::{
     assets::Loader,
     core::{
@@ -11,16 +16,11 @@ use amethyst::{
     },
     ui::{Anchor, TtfFormat, UiText, UiTransform},
 };
-use crate::{
-    config::{ArenaConfig, BallConfig, PaddlesConfig},
-    systems::ScoreText,
-    Ball, Paddle, Side,
-};
 
 pub struct Pong;
 
 impl SimpleState for Pong {
-    fn on_start(&mut self, data: StateData<GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
         use crate::audio::initialise_audio;
 
@@ -50,7 +50,8 @@ fn initialise_camera(world: &mut World) {
             arena_width,
             0.0,
             arena_height,
-        ))).with(transform)
+        )))
+        .with(transform)
         .build();
 }
 
@@ -131,7 +132,8 @@ fn initialise_paddles(world: &mut World) {
             height: left_height,
             width: left_width,
             velocity: left_velocity,
-        }).with(left_transform)
+        })
+        .with(left_transform)
         .build();
     // Create right paddle
     world
@@ -143,7 +145,8 @@ fn initialise_paddles(world: &mut World) {
             height: right_height,
             width: right_width,
             velocity: right_velocity,
-        }).with(right_transform)
+        })
+        .with(right_transform)
         .build();
 }
 
@@ -176,7 +179,8 @@ fn initialise_balls(world: &mut World) {
         .with(Ball {
             radius: radius,
             velocity: [velocity_x, velocity_y],
-        }).with(local_transform)
+        })
+        .with(local_transform)
         .build();
 }
 
@@ -218,7 +222,8 @@ fn initialise_score(world: &mut World) {
             "0".to_string(),
             [1.0, 1.0, 1.0, 1.0],
             50.,
-        )).build();
+        ))
+        .build();
     let p2_score = world
         .create_entity()
         .with(p2_transform)
@@ -227,7 +232,8 @@ fn initialise_score(world: &mut World) {
             "0".to_string(),
             [1.0, 1.0, 1.0, 1.0],
             50.,
-        )).build();
+        ))
+        .build();
     world.add_resource(ScoreText { p1_score, p2_score });
 }
 

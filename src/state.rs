@@ -25,10 +25,7 @@ impl Display for StateError {
 }
 
 /// State data encapsulates the data sent to all state functions from the application main loop.
-pub struct StateData<'a, T>
-where
-    T: 'a,
-{
+pub struct StateData<'a, T> {
     /// Main `World`
     pub world: &'a mut World,
     /// User defined game data

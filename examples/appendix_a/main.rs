@@ -1,6 +1,6 @@
 //! TODO: Rewrite for new renderer.
 
-extern crate amethyst;
+use amethyst;
 #[macro_use]
 extern crate serde_derive;
 
@@ -10,6 +10,7 @@ mod config;
 mod pong;
 mod systems;
 
+use crate::{audio::Music, bundle::PongBundle, config::PongConfig};
 use amethyst::{
     audio::AudioBundle,
     core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle},
@@ -20,7 +21,6 @@ use amethyst::{
     ui::UiBundle,
     utils::application_root_dir,
 };
-use crate::{audio::Music, bundle::PongBundle, config::PongConfig};
 use std::time::Duration;
 
 const AUDIO_MUSIC: &'static [&'static str] = &[
@@ -48,7 +48,8 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
-        )?.with_bundle(PongBundle::default())?
+        )?
+        .with_bundle(PongBundle::default())?
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
         .with_bundle(AudioBundle::new(|music: &mut Music| music.music.next()))?
         .with_bundle(UiBundle::<String, String>::new())?
@@ -58,7 +59,8 @@ fn main() -> amethyst::Result<()> {
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,
-        ).with_resource(pong_config.arena)
+        )
+        .with_resource(pong_config.arena)
         .with_resource(pong_config.ball)
         .with_resource(pong_config.paddles)
         .build(game_data)?;

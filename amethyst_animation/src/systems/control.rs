@@ -110,7 +110,8 @@ where
                                 &mut self.next_id,
                                 &apply_data,
                             )
-                        }) {
+                        })
+                {
                     control.state = state;
                 }
                 if let AnimationCommand::Step(_) = control.command {
@@ -184,7 +185,8 @@ where
                                 &mut next_id,
                                 &apply_data,
                             )
-                        }) {
+                        })
+                {
                     def.control.state = state;
                 }
                 control_set.insert(id, def.control);
@@ -397,7 +399,8 @@ where
                         .map(|sampler| {
                             sampler.clear(control.id);
                             sampler.is_empty()
-                        }).unwrap_or(false);
+                        })
+                        .unwrap_or(false);
                     if empty {
                         samplers.remove(*node_entity);
                     }
@@ -449,7 +452,8 @@ where
         .any(|&(ref node_index, _, ref sampler_handle)| {
             !hierarchy.nodes.contains_key(node_index)
                 || sampler_storage.get(sampler_handle).is_none()
-        }) {
+        })
+    {
         return false;
     }
 
@@ -613,7 +617,8 @@ where
                 .map(|sampler| {
                     sampler.clear(control_id);
                     sampler.is_empty()
-                }).unwrap_or(false);
+                })
+                .unwrap_or(false);
             if empty {
                 samplers.remove(*node_entity);
             }

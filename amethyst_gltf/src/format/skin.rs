@@ -26,7 +26,8 @@ pub fn load_skin(
             node_map.get(&j.index()).cloned().expect(
                 "Unreachable: `node_map` is initialized with the indexes from the `Gltf` object",
             )
-        }).collect::<Vec<_>>();
+        })
+        .collect::<Vec<_>>();
 
     let reader = skin.reader(|buffer| buffers.buffer(&buffer));
 

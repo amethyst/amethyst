@@ -1,8 +1,11 @@
 //! Demonstrates how to use a custom game data structure
 
-extern crate amethyst;
-extern crate rayon;
+use amethyst;
 
+use crate::{
+    example_system::ExampleSystem,
+    game_data::{CustomGameData, CustomGameDataBuilder},
+};
 use amethyst::{
     assets::{
         Completion, Handle, Prefab, PrefabLoader, PrefabLoaderSystem, ProgressCounter, RonFormat,
@@ -21,10 +24,6 @@ use amethyst::{
     ui::{DrawUi, UiBundle, UiCreator, UiLoader, UiPrefab},
     utils::{application_root_dir, fps_counter::FPSCounterBundle, scene::BasicScenePrefab},
     Error,
-};
-use crate::{
-    example_system::ExampleSystem,
-    game_data::{CustomGameData, CustomGameDataBuilder},
 };
 
 mod example_system;
@@ -61,18 +60,18 @@ impl Component for Tag {
 }
 
 impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Loading {
-    fn on_start(&mut self, data: StateData<CustomGameData>) {
-        self.scene = Some(data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
+    fn on_start(&mut self, data: StateData<'_, CustomGameData<'_, '_>>) {
+        self.scene = Some(data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/renderable.ron", RonFormat, (), &mut self.progress)
         }));
 
-        self.load_ui = Some(data.world.exec(|mut creator: UiCreator| {
+        self.load_ui = Some(data.world.exec(|mut creator: UiCreator<'_>| {
             creator.create("ui/fps.ron", &mut self.progress);
             creator.create("ui/loading.ron", &mut self.progress)
         }));
         self.paused_ui = Some(
             data.world
-                .exec(|loader: UiLoader| loader.load("ui/paused.ron", &mut self.progress)),
+                .exec(|loader: UiLoader<'_>| loader.load("ui/paused.ron", &mut self.progress)),
         );
         data.world.add_resource::<DemoState>(DemoState {
             light_angle: 0.0,
@@ -83,7 +82,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Loading {
 
     fn handle_event(
         &mut self,
-        _: StateData<CustomGameData>,
+        _: StateData<'_, CustomGameData<'_, '_>>,
         event: StateEvent,
     ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         if let StateEvent::Window(event) = event {
@@ -96,7 +95,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Loading {
 
     fn update(
         &mut self,
-        data: StateData<CustomGameData>,
+        data: StateData<'_, CustomGameData<'_, '_>>,
     ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         data.data.update(&data.world, true);
         match self.progress.complete() {
@@ -122,7 +121,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Loading {
 impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Paused {
     fn handle_event(
         &mut self,
-        data: StateData<CustomGameData>,
+        data: StateData<'_, CustomGameData<'_, '_>>,
         event: StateEvent,
     ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         if let StateEvent::Window(event) = &event {
@@ -141,7 +140,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Paused {
 
     fn update(
         &mut self,
-        data: StateData<CustomGameData>,
+        data: StateData<'_, CustomGameData<'_, '_>>,
     ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         data.data.update(&data.world, false);
         Trans::None
@@ -149,13 +148,13 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Paused {
 }
 
 impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Main {
-    fn on_start(&mut self, data: StateData<CustomGameData>) {
+    fn on_start(&mut self, data: StateData<'_, CustomGameData<'_, '_>>) {
         data.world.create_entity().with(self.scene.clone()).build();
     }
 
     fn handle_event(
         &mut self,
-        data: StateData<CustomGameData>,
+        data: StateData<'_, CustomGameData<'_, '_>>,
         event: StateEvent,
     ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         if let StateEvent::Window(event) = &event {
@@ -179,7 +178,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Main {
 
     fn update(
         &mut self,
-        data: StateData<CustomGameData>,
+        data: StateData<'_, CustomGameData<'_, '_>>,
     ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         data.data.update(&data.world, true);
         Trans::None

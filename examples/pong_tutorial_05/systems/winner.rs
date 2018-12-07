@@ -4,7 +4,7 @@ use amethyst::{
     ui::UiText,
 };
 
-use pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH};
+use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH};
 
 pub struct WinnerSystem;
 

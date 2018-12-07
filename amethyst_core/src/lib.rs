@@ -2,19 +2,17 @@
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-pub extern crate approx;
-pub extern crate nalgebra;
-pub extern crate shred;
-pub extern crate shrev;
-pub extern crate specs;
+pub use approx;
+pub use nalgebra;
+pub use shred;
+pub use shrev;
+pub use specs;
 
 #[macro_use]
 extern crate error_chain;
-extern crate hibitset;
-extern crate rayon;
+use rayon;
 #[macro_use]
 extern crate serde;
-extern crate specs_hierarchy;
 
 #[macro_use]
 #[cfg(feature = "profiler")]

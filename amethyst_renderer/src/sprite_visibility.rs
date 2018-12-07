@@ -68,7 +68,7 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
     fn run(
         &mut self,
         (entities, mut visibility, hidden, hidden_prop, active, camera, transparent, global): Self::SystemData,
-){
+    ) {
         let origin = Point3::origin();
 
         // The camera position is used to determine culling, but the sprites are ordered based on

@@ -233,7 +233,8 @@ impl<'a> System<'a> for CameraOrthoSystem {
                     offsets.3,
                     prev.znear(),
                     prev.zfar(),
-                ).to_homogeneous();
+                )
+                .to_homogeneous();
             }
         }
     }

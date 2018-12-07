@@ -2,7 +2,7 @@
 
 #[macro_use]
 extern crate amethyst;
-extern crate amethyst_gltf;
+
 #[macro_use]
 extern crate serde;
 
@@ -52,13 +52,13 @@ struct ScenePrefabData {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
 
         self.progress = Some(ProgressCounter::default());
 
         world.exec(
-            |(loader, mut scene): (PrefabLoader<ScenePrefabData>, Write<Scene>)| {
+            |(loader, mut scene): (PrefabLoader<'_, ScenePrefabData>, Write<'_, Scene>)| {
                 scene.handle = Some(loader.load(
                     "prefab/puffy_scene.ron",
                     RonFormat,
@@ -69,7 +69,11 @@ impl SimpleState for Example {
         );
     }
 
-    fn handle_event(&mut self, data: StateData<GameData>, event: StateEvent) -> SimpleTrans {
+    fn handle_event(
+        &mut self,
+        data: StateData<'_, GameData<'_, '_>>,
+        event: StateEvent,
+    ) -> SimpleTrans {
         let StateData { world, .. } = data;
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
@@ -90,7 +94,7 @@ impl SimpleState for Example {
         }
     }
 
-    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans {
+    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         if !self.initialised {
             let remove = match self.progress.as_ref().map(|p| p.complete()) {
                 None | Some(Completion::Loading) => false,
@@ -120,7 +124,7 @@ impl SimpleState for Example {
             if self.entity.is_none() {
                 if let Some(entity) = data
                     .world
-                    .exec(|finder: TagFinder<AnimationMarker>| finder.find())
+                    .exec(|finder: TagFinder<'_, AnimationMarker>| finder.find())
                 {
                     self.entity = Some(entity);
                     self.initialised = true;
@@ -134,13 +138,13 @@ impl SimpleState for Example {
 fn toggle_or_cycle_animation(
     entity: Option<Entity>,
     scene: &mut Scene,
-    sets: &ReadStorage<AnimationSet<usize, Transform>>,
-    controls: &mut WriteStorage<AnimationControlSet<usize, Transform>>,
+    sets: &ReadStorage<'_, AnimationSet<usize, Transform>>,
+    controls: &mut WriteStorage<'_, AnimationControlSet<usize, Transform>>,
 ) {
     if let Some((entity, Some(animations))) = entity.map(|entity| (entity, sets.get(entity))) {
         if animations.animations.len() > scene.animation_index {
             let animation = animations.animations.get(&scene.animation_index).unwrap();
-            let mut set = get_animation_set::<usize, Transform>(controls, entity).unwrap();
+            let set = get_animation_set::<usize, Transform>(controls, entity).unwrap();
             if set.has_animation(scene.animation_index) {
                 set.toggle(scene.animation_index);
             } else {
@@ -175,28 +179,34 @@ fn main() -> Result<(), amethyst::Error> {
             PrefabLoaderSystem::<ScenePrefabData>::default(),
             "scene_loader",
             &[],
-        ).with(
+        )
+        .with(
             GltfSceneLoaderSystem::default(),
             "gltf_loader",
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
-        ).with_basic_renderer(
+        )
+        .with_basic_renderer(
             path,
             DrawPbmSeparate::new()
                 .with_vertex_skinning()
                 .with_transparency(ColorMask::all(), ALPHA, Some(DepthMode::LessEqualWrite)),
             false,
-        )?.with_bundle(
+        )?
+        .with_bundle(
             AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
                 .with_dep(&["gltf_loader"]),
-        )?.with_bundle(
+        )?
+        .with_bundle(
             FlyControlBundle::<String, String>::new(None, None, None)
                 .with_sensitivity(0.1, 0.1)
                 .with_speed(5.),
-        )?.with_bundle(TransformBundle::new().with_dep(&[
+        )?
+        .with_bundle(TransformBundle::new().with_dep(&[
             "animation_control",
             "sampler_interpolation",
             "fly_movement",
-        ]))?.with_bundle(VertexSkinningBundle::new().with_dep(&[
+        ]))?
+        .with_bundle(VertexSkinningBundle::new().with_dep(&[
             "transform_system",
             "animation_control",
             "sampler_interpolation",

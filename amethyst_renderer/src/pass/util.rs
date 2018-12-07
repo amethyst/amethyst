@@ -262,7 +262,8 @@ pub fn set_vertex_args(
                 view: view.into(),
                 model: model.into(),
             }
-        }).unwrap_or_else(|| {
+        })
+        .unwrap_or_else(|| {
             let proj: [[f32; 4]; 4] = Matrix4::identity().into();
             let view: [[f32; 4]; 4] = Matrix4::identity().into();
             let model: [[f32; 4]; 4] = global.0.into();
@@ -293,7 +294,8 @@ pub fn set_view_args(
                 proj: proj.into(),
                 view: view.into(),
             }
-        }).unwrap_or_else(|| {
+        })
+        .unwrap_or_else(|| {
             let identity: [[f32; 4]; 4] = Matrix4::identity().into();
             ViewArgs {
                 proj: identity.clone().into(),
@@ -363,5 +365,6 @@ pub fn get_camera<'a>(
             let cam = camera.get(a.entity);
             let transform = global.get(a.entity);
             cam.into_iter().zip(transform.into_iter()).next()
-        }).or_else(|| (camera, global).join().next())
+        })
+        .or_else(|| (camera, global).join().next())
 }

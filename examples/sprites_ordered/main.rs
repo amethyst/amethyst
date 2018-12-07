@@ -3,7 +3,7 @@
 //! Sprites are originally from <https://opengameart.org/content/bat-32x32>, edited to show
 //! layering and blending.
 
-extern crate amethyst;
+use amethyst;
 #[macro_use]
 extern crate log;
 
@@ -87,7 +87,7 @@ impl Example {
 }
 
 impl SimpleState for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
 
         self.loaded_sprite_sheet = Some(load_sprite_sheet(world));
@@ -96,7 +96,11 @@ impl SimpleState for Example {
         self.redraw_sprites(world);
     }
 
-    fn handle_event(&mut self, mut data: StateData<GameData>, event: StateEvent) -> SimpleTrans {
+    fn handle_event(
+        &mut self,
+        mut data: StateData<'_, GameData<'_, '_>>,
+        event: StateEvent,
+    ) -> SimpleTrans {
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
                 return Trans::Quit;
@@ -218,7 +222,8 @@ impl Example {
                 height,
                 0.0,
                 self.camera_depth_vision,
-            )))).build();
+            ))))
+            .build();
 
         self.camera = Some(camera);
     }

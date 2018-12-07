@@ -104,7 +104,7 @@ where
         effect: &mut Effect,
         mut factory: Factory,
         (active, camera, global, lines_components, lines_resource, lines_params): <Self as PassData<'a>>::Data,
-){
+    ) {
         trace!("Drawing debug lines pass");
         let debug_lines = {
             let mut lines = Vec::<DebugLine>::new();
