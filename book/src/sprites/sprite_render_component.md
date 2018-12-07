@@ -38,7 +38,7 @@ use amethyst::renderer::{
 struct ExampleState;
 
 impl SimpleState for ExampleState {
-    fn on_start(&mut self, mut data: StateData<GameData>) {
+    fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
 #         let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
         // ...
 
@@ -83,7 +83,7 @@ use amethyst::renderer::{
 struct ExampleState;
 
 impl SimpleState for ExampleState {
-    fn on_start(&mut self, mut data: StateData<GameData>) {
+    fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
 #         let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
 # 
 #         let sprite_sheet = load_sprite_sheet(texture_handle);

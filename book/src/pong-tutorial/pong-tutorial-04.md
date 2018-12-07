@@ -114,7 +114,7 @@ Finally, let's make sure the code is working as intended by updating the `on_sta
 # fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle { unimplemented!() }
 # struct MyState;
 # impl SimpleState for MyState {
-fn on_start(&mut self, data: StateData<GameData>) {
+fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
     let world = data.world;
 
     // Load the spritesheet necessary to render the graphics.
