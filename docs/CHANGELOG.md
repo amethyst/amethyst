@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 
+* Minimum Rust version is now `1.31.0` &ndash; Rust 2018. ([#1224])
 * `Transform::look_at` renamed to `Transform::face_towards` and behavior fixed. ([#1142])
 * `Material` animations now directly use `Handle<Texture>` instead of using indirection. ([#1089])
 * `SpriteRenderPrimitive::SpriteSheet` now takes `Handle<SpriteSheet>` instead of a `u64` ID. ([#1089])
@@ -87,6 +88,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1187]: https://github.com/amethyst/amethyst/pull/1187
 [#1188]: https://github.com/amethyst/amethyst/pull/1188
 [#1198]: https://github.com/amethyst/amethyst/pull/1198
+[#1224]: https://github.com/amethyst/amethyst/pull/1224
 [winit_018]: https://github.com/tomaka/winit/blob/v0.18.0/CHANGELOG.md#version-0180-2018-11-07
 [glutin_019]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0190-2018-11-09
 
