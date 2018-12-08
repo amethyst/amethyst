@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_utils"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Simon Rönnberg <seamonr@gmail.com>", "Joël Lupien <jojolepromain@gmail.com>"]
 edition = "2018"
 description = "Amethyst utils"
@@ -16,11 +16,11 @@ appveyor = { repository = "amethyst/amethyst" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets", version = "0.5.0" }
-amethyst_controls = { path = "../amethyst_controls", version = "0.3.0" }
-amethyst_core = { path = "../amethyst_core", version = "0.4.0" }
-amethyst_derive = { path = "../amethyst_derive", version = "0.2.0" }
-amethyst_renderer = { path = "../amethyst_renderer", version = "0.9.0" }
+amethyst_assets = { path = "../amethyst_assets", version = "0.6.0" }
+amethyst_controls = { path = "../amethyst_controls", version = "0.4.0" }
+amethyst_core = { path = "../amethyst_core", version = "0.5.0" }
+amethyst_derive = { path = "../amethyst_derive", version = "0.3.0" }
+amethyst_renderer = { path = "../amethyst_renderer", version = "0.10.0" }
 log = "0.4"
 shred-derive = "0.5"
 shred = "0.7"

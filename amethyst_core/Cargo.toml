@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_core"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Simon Rönnberg <seamonr@gmail.com>"]
 edition = "2018"
 description = "Amethyst core"
@@ -32,7 +32,7 @@ shrev = "1.0"
 thread_profiler = { version = "0.3" , optional = true }
 
 [dev-dependencies]
-amethyst = { path = "..", version = "0.9.0" }
+amethyst = { path = "..", version = "0.10.0" }
 
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
