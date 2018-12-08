@@ -18,6 +18,10 @@ where
     AC: Hash + Eq,
 {
     pub(super) axes: HashMap<AX, Axis>,
+    // The inner array here is for button combinations, the other is for different possibilities.
+    //
+    // So for example if you want to quit by either "q" or "Ctrl+q" you would have
+    // `[[Q], [Ctrl, Q]]`.
     pub(super) actions: HashMap<AC, SmallVec<[SmallVec<[Button; 2]>; 4]>>,
 }
 
