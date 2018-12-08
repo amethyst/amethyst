@@ -11,6 +11,16 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Added
 
+### Changed
+
+### Removed
+
+### Fixed
+
+## [0.10.0] - 2018-12
+
+### Added
+
 * Derive PrefabData for CameraOrtho component ([#1188])
 * Partially migrate the project to Rust 2018.  Full migration will be completed at some point after 2019-01-31 ([#1098])
 * `SystemExt::pausable` for better ergonomics when pausing systems for specific states ([#1146]).
