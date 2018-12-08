@@ -99,7 +99,7 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir();
 
-    let display_config_path = format!("{}/examples/ui/resources/display.ron", app_root);
+    let display_config_path = format!("{}/examples/custom_ui/resources/display.ron", app_root);
 
     let resources = format!("{}/examples/assets", app_root);
 
