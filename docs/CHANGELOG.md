@@ -10,9 +10,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ## [Unreleased]
 
 ### Added
+
 * Introduce `application_dir` utility ([#1213])
 
 ### Changed
+
 * Make `application_root_dir` return a `Result<Path>` instead of a `String` ([#1213])
 
 ### Removed
