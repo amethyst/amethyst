@@ -258,7 +258,7 @@ Then you can hit load button and choose `thread_profile.json` file.
 ## Useful Resources
 
 * Amethyst
-  * [Amethyst Gitter][gi] - The Amethyst project's public chat room.
+  * [Amethyst Discord][di] - The Amethyst project's public chat room.
 * Design Inspiration
   * [Bitsquid: Behind The Scenes (2013)][bs]
   * [Flexible Rendering for Multiple Platforms (2012)][fr]
@@ -271,6 +271,7 @@ Then you can hit load button and choose `thread_profile.json` file.
     code samples.
   * [The Rust Programming Language][rl] - The canonical online book about Rust.
 
+[di]: https://discord.gg/GnP5Whs
 [bs]: https://www.kth.se/social/upload/5289cb3ff276542440dd668c/bitsquid-behind-the-scenes.pdf
 [fr]: http://twvideo01.ubm-us.net/o1/vault/gdc2012/slides/Programming%20Track/Persson_Tobias_Flexible_Rendering.pdf.pdf
 [ma]: http://www.amd.com/Documents/Mantle-Programming-Guide-and-API-Reference.pdf
