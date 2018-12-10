@@ -33,16 +33,13 @@ impl SimpleState for ExampleState {
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
-    let app_root = application_root_dir();
+    let app_root = application_root_dir()?;
 
-    let resources_directory = format!("{}/examples/assets", app_root);
+    let resources_directory = app_root.join("examples/assets");
 
-    let display_config_path = format!(
-        "{}/examples/fly_camera/resources/display_config.ron",
-        app_root
-    );
+    let display_config_path = app_root.join("examples/fly_camera/resources/display_config.ron");
 
-    let key_bindings_path = format!("{}/examples/fly_camera/resources/input.ron", app_root);
+    let key_bindings_path = app_root.join("examples/fly_camera/resources/input.ron");
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])

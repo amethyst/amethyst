@@ -145,11 +145,11 @@ impl SimpleState for ExampleState {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let app_root = application_root_dir();
+    let app_root = application_root_dir()?;
 
-    let display_config_path = format!("{}/examples/debug_lines/resources/display.ron", app_root);
-    let key_bindings_path = format!("{}/examples/debug_lines/resources/input.ron", app_root);
-    let resources = format!("{}/examples/assets/", app_root);
+    let display_config_path = app_root.join("examples/debug_lines/resources/display.ron");
+    let key_bindings_path = app_root.join("examples/debug_lines/resources/input.ron");
+    let resources = app_root.join("examples/assets/");
 
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()

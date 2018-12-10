@@ -188,15 +188,13 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Main {
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
-    let app_root = application_root_dir();
+    let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let resources_directory = format!("{}/examples/assets", app_root);
+    let resources_directory = app_root.join("examples/assets");
 
-    let display_config_path = format!(
-        "{}/examples/custom_game_data/resources/display_config.ron",
-        app_root
-    );
+    let display_config_path =
+        app_root.join("examples/custom_game_data/resources/display_config.ron");
 
     let display_config = DisplayConfig::load(display_config_path);
     let pipeline_builder = Pipeline::build().with_stage(

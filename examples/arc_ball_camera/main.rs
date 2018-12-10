@@ -91,18 +91,15 @@ where
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
-    let app_root = application_root_dir();
+    let app_root = application_root_dir()?;
 
-    let resources_directory = format!("{}/examples/assets", app_root);
+    let resources_directory = app_root.join("examples/assets");
 
-    let key_bindings_path = format!("{}/examples/arc_ball_camera/resources/input.ron", app_root);
+    let key_bindings_path = app_root.join("examples/arc_ball_camera/resources/input.ron");
 
     let render_bundle = {
         let display_config = {
-            let path = format!(
-                "{}/examples/arc_ball_camera/resources/display_config.ron",
-                app_root
-            );
+            let path = app_root.join("{}/examples/arc_ball_camera/resources/display_config.ron");
             DisplayConfig::load(&path)
         };
         let pipe = Pipeline::build().with_stage(

@@ -142,11 +142,8 @@ impl SimpleState for Example {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let root = format!(
-        "{}/examples/sprite_camera_follow/resources",
-        application_root_dir()
-    );
-    let config = DisplayConfig::load(format!("{}/display_config.ron", root));
+    let root = application_root_dir()?.join("examples/sprite_camera_follow/resources");
+    let config = DisplayConfig::load(root.join("display_config.ron"));
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.1, 0.1, 0.1, 1.0], 1.0)
@@ -160,8 +157,7 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
         .with_bundle(
-            InputBundle::<String, String>::new()
-                .with_bindings_from_file(format!("{}/input.ron", root))?,
+            InputBundle::<String, String>::new().with_bindings_from_file(root.join("input.ron"))?,
         )?
         .with(MovementSystem, "movement", &[])
         .with_bundle(

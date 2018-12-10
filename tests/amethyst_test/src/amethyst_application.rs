@@ -1,5 +1,6 @@
 use std::hash::Hash;
 use std::marker::PhantomData;
+use std::path::PathBuf;
 use std::sync::Mutex;
 use std::thread;
 
@@ -171,8 +172,8 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
     }
 
     /// Returns a `String` to `<crate_dir>/assets`.
-    pub fn assets_dir() -> String {
-        format!("{}/assets", application_root_dir())
+    pub fn assets_dir() -> amethyst::Result<PathBuf> {
+        Ok(application_root_dir()?.join("assets"))
     }
 }
 
@@ -243,7 +244,7 @@ where
         for<'b> R: EventReader<'b, Event = E>,
     {
         let mut application_builder =
-            CoreApplication::build(AmethystApplication::assets_dir(), first_state)?;
+            CoreApplication::build(AmethystApplication::assets_dir()?, first_state)?;
         {
             let world = &mut application_builder.world;
             for mut function in resource_add_fns {

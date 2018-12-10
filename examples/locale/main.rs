@@ -76,7 +76,7 @@ impl SimpleState for Example {
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
-    let resources_directory = format!("{}/examples/assets", application_root_dir());
+    let resources_directory = application_root_dir()?.join("examples/assets");
 
     let game_data = GameDataBuilder::default().with(Processor::<Locale>::new(), "proc", &[]);
 

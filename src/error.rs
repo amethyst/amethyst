@@ -4,6 +4,7 @@ use std::{
     error::Error as StdError,
     fmt::Result as FmtResult,
     fmt::{Display, Formatter},
+    io,
     result::Result as StdResult,
 };
 
@@ -25,6 +26,8 @@ pub enum Error {
     Config(ConfigError),
     /// Core error.
     Core(core::Error),
+    /// I/O Error
+    Io(io::Error),
 }
 
 impl StdError for Error {
@@ -34,6 +37,7 @@ impl StdError for Error {
             Error::Config(_) => "Configuration error!",
             Error::Core(_) => "Core error!",
             Error::StateMachine(_) => "StateMachine error!",
+            Error::Io(_) => "I/O error!",
         }
     }
 
@@ -52,6 +56,7 @@ impl Display for Error {
             Error::Config(ref e) => write!(fmt, "Configuration loading failed: {}", e),
             Error::Core(ref e) => write!(fmt, "System creation failed: {}", e),
             Error::StateMachine(ref e) => write!(fmt, "Error in state machine: {}", e),
+            Error::Io(ref e) => write!(fmt, "I/O Error: {}", e),
         }
     }
 }
@@ -71,5 +76,11 @@ impl From<renderer::error::Error> for Error {
 impl From<ConfigError> for Error {
     fn from(err: ConfigError) -> Self {
         Error::Config(err)
+    }
+}
+
+impl From<io::Error> for Error {
+    fn from(e: io::Error) -> Self {
+        Error::Io(e)
     }
 }

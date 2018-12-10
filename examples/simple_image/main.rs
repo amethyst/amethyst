@@ -27,8 +27,8 @@ impl SimpleState for Example {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let resources = format!("{}/examples/simple_image/resources", application_root_dir());
-    let config = DisplayConfig::load(format!("{}/display_config.ron", resources));
+    let resources = application_root_dir()?.join("examples/simple_image/resources");
+    let config = DisplayConfig::load(resources.join("display_config.ron"));
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.1, 0.1, 0.1, 1.0], 1.0)

@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Added
 
+* Introduce `application_dir` utility ([#1213])
 * Derive PrefabData for CameraOrtho component ([#1188])
 * Partially migrate the project to Rust 2018.  Full migration will be completed at some point after 2019-01-31 ([#1098])
 * `SystemExt::pausable` for better ergonomics when pausing systems for specific states ([#1146]).
@@ -41,6 +42,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 
+* Make `application_root_dir` return a `Result<Path>` instead of a `String` ([#1213])
 * Minimum Rust version is now `1.31.0` &ndash; Rust 2018. ([#1224])
 * `Transform::look_at` renamed to `Transform::face_towards` and behavior fixed. ([#1142])
 * `Material` animations now directly use `Handle<Texture>` instead of using indirection. ([#1089])
@@ -68,6 +70,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 * `SpriteSheetFormat` converts pixel coordinates to texture coordinates on load. ([#1181])
 
+[#1213]: https://github.com/amethyst/amethyst/pull/1213
 [#1146]: https://github.com/amethyst/amethyst/pull/1146
 [#1144]: https://github.com/amethyst/amethyst/pull/1144
 [#1000]: https://github.com/amethyst/amethyst/pull/1000
