@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Added
 
 * Introduce `application_dir` utility ([#1213])
+* Derive `Copy`, `PartialEq`, `Eq`, `Serialize`, `Deserialize` for `Flipped` component. ([#1237])
 
 ### Changed
 
@@ -22,12 +23,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Fixed
 
 [#1213]: https://github.com/amethyst/amethyst/pull/1213
+[#1237]: https://github.com/amethyst/amethyst/pull/1237
 
 ## [0.10.0] - 2018-12
 
 ### Added
 
-* Derive PrefabData for CameraOrtho component ([#1188])
+* Derive `PrefabData` for `CameraOrtho` component ([#1188])
 * Partially migrate the project to Rust 2018.  Full migration will be completed at some point after 2019-01-31 ([#1098])
 * `SystemExt::pausable` for better ergonomics when pausing systems for specific states ([#1146]).
 * `amethyst_test` test framework for ergonomic testing of Amethyst applications ([#1000])
