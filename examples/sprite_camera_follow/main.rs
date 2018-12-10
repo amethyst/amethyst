@@ -157,8 +157,7 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
         .with_bundle(
-            InputBundle::<String, String>::new()
-                .with_bindings_from_file(root.join("input.ron"))?,
+            InputBundle::<String, String>::new().with_bindings_from_file(root.join("input.ron"))?,
         )?
         .with(MovementSystem, "movement", &[])
         .with_bundle(
