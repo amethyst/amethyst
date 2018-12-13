@@ -182,16 +182,18 @@ impl RendererBuilder {
             wb = wb.with_fullscreen(Some(self.events.get_primary_monitor()));
         }
 
+        let hidpi = self.events.get_primary_monitor().get_hidpi_factor();
+
         if let Some(dimensions) = self.config.dimensions {
-            wb = wb.with_dimensions(dimensions.into());
+            wb = wb.with_dimensions(LogicalSize::from_physical(dimensions, hidpi));
         }
 
         if let Some(dimensions) = self.config.min_dimensions {
-            wb = wb.with_min_dimensions(dimensions.into());
+            wb = wb.with_min_dimensions(LogicalSize::from_physical(dimensions, hidpi));
         }
 
         if let Some(dimensions) = self.config.max_dimensions {
-            wb = wb.with_max_dimensions(dimensions.into());
+            wb = wb.with_max_dimensions(LogicalSize::from_physical(dimensions, hidpi));
         }
 
         self.winit_builder = wb;

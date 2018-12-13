@@ -10,6 +10,28 @@ use super::{Axis, Button};
 /// Used for saving and loading input settings.
 ///
 /// An action can either be a single button or a combination of them.
+///
+/// # Examples
+///
+/// Example Ron config file:
+/// ```ron
+/// (
+///     axes: {
+///         "updown": Emulated(
+///             pos: Key(Up),
+///             neg: Key(Down)
+///         ),
+///         "leftright": Emulated(
+///             pos: Key(Right),
+///             neg: Key(Left)
+///         )
+///     },
+///     actions: {
+///         "fire": [ [Mouse(Left)], [Key(X)] ], // Multiple bindings for one action
+///         "reload": [ [Key(LControl), Key(R)] ] // Combinations of multiple bindings possible
+///     }
+/// )
+/// ```
 #[derive(Derivative, Serialize, Deserialize, Clone)]
 #[derivative(Default(bound = ""))]
 pub struct Bindings<AX, AC>

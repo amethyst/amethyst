@@ -187,12 +187,10 @@ where
         }
 
         for raw_event in self.rx.try_iter() {
-            let mut matched = false;
             // Get the NetConnection from the source
             for net_connection in (&mut net_connections).join() {
                 // We found the origin
                 if net_connection.target == raw_event.source {
-                    matched = true;
                     // Get the event
                     let net_event = deserialize_event::<E>(raw_event.data.as_slice());
                     match net_event {
@@ -204,9 +202,8 @@ where
                             e, raw_event.source
                         ),
                     }
-                }
-                if !matched {
-                    println!("Received packet from unknown source");
+                } else {
+                    warn!("Received packet from unknown source");
                 }
             }
         }

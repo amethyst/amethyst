@@ -3,6 +3,22 @@
 use winit::{self, dpi::LogicalSize, WindowBuilder};
 
 /// Structure for holding the renderer configuration.
+///
+/// # Examples
+///
+/// Example Ron config file:
+/// ```ron
+/// (
+///     title: "Game title",
+///     dimensions: Some((640, 480)),
+///     max_dimensions: None,
+///     min_dimensions: None,
+///     fullscreen: false,
+///     multisampling: 0,
+///     visibility: true,
+///     vsync: true
+/// )
+/// ```
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct DisplayConfig {
     /// Name of the application window.

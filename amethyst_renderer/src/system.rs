@@ -127,8 +127,10 @@ where
             screen_dimensions.dirty = false;
         }
 
+        let hidpi = self.renderer.window().get_hidpi_factor();
+
         if let Some(size) = self.renderer.window().get_inner_size() {
-            let (window_width, window_height): (f64, f64) = size.into();
+            let (window_width, window_height): (f64, f64) = size.to_physical(hidpi).into();
 
             // Send window size changes to the resource
             if (window_width, window_height) != (width, height) {
@@ -139,7 +141,7 @@ where
                 screen_dimensions.dirty = false;
             }
         }
-        screen_dimensions.update_hidpi_factor(self.renderer.window().get_hidpi_factor());
+        screen_dimensions.update_hidpi_factor(hidpi);
     }
 
     fn render(&mut self, (mut event_handler, data): RenderData<'_, P>) {
