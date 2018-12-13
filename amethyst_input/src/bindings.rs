@@ -27,8 +27,8 @@ use super::{Axis, Button};
 ///         )
 ///     },
 ///     actions: {
-///         "fire": [ [Mouse(Left)], [Key(X)] ], // Up to four bindings for one action
-///         "reload": [ [Key(LControl), Key(R)] ] // Combinations of two bindings possible
+///         "fire": [ [Mouse(Left)], [Key(X)] ], // Multiple bindings for one action
+///         "reload": [ [Key(LControl), Key(R)] ] // Combinations of multiple bindings possible
 ///     }
 /// )
 /// ```
