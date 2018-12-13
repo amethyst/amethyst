@@ -36,7 +36,7 @@ impl From<SpriteSheet> for AssetsResult<ProcessingState<SpriteSheet>> {
 
 /// Information about whether or not a texture should be flipped
 /// when rendering.
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Flipped {
     /// Don't flip the texture
     None,
