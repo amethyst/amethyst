@@ -127,9 +127,12 @@ where
     {
         let mut kill_it = false;
         if let Some(action_bindings) = self.actions.get_mut(id) {
-            let index = action_bindings
-                .iter()
-                .position(|b| b.iter().eq(binding.iter()));
+            let index = action_bindings.iter().position(|b| {
+                b.len() == binding.len()
+                    // The bindings can be provided in any order, but they must all
+                    // be the same bindings.
+                    && b.iter().all(|b| binding.iter().any(|binding| b == binding))
+            });
             if let Some(index) = index {
                 action_bindings.swap_remove(index);
             }
