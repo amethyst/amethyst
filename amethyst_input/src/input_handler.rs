@@ -62,7 +62,7 @@ where
     /// Updates the input handler with a new engine event.
     ///
     /// The Amethyst game engine will automatically call this if the InputHandler is attached to
-    /// the world as a resource with id 0.
+    /// the world as a resource.
     pub fn send_event(
         &mut self,
         event: &Event,
