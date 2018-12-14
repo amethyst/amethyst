@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 * Introduce `application_dir` utility ([#1213])
 * Derive `Copy`, `PartialEq`, `Eq`, `Serialize`, `Deserialize` for `Flipped` component. ([#1237])
+* "How To" guides for using assets and defining custom assets. ([#1251])
 
 ### Changed
 
@@ -24,6 +25,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 [#1213]: https://github.com/amethyst/amethyst/pull/1213
 [#1237]: https://github.com/amethyst/amethyst/pull/1237
+[#1251]: https://github.com/amethyst/amethyst/pull/1251
 
 ## [0.10.0] - 2018-12
 
