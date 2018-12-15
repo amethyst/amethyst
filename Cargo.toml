@@ -91,7 +91,7 @@ genmesh = "0.6"
 ron = "0.4"
 
 [build-dependencies]
-vergen = "2.0"
+vergen = "3.0"
 
 [[example]]
 name = "hello_world"
