@@ -10,7 +10,7 @@ use super::{
 ///
 /// Type parameter T is the type assigned to your Actions for your
 /// InputBundle or InputHandler.
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 pub enum InputEvent<T> {
     /// A key was pressed down, sent exactly once per key press.
     KeyPressed {

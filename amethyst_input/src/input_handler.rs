@@ -23,7 +23,7 @@ use super::{
 /// that the key is pressed until it is released again.
 #[derive(Derivative)]
 #[derivative(Default(bound = ""))]
-pub struct InputHandler<AX, AC>
+pub struct InputHandler<AX = String, AC = String>
 where
     AX: Hash + Eq,
     AC: Hash + Eq,
@@ -626,5 +626,95 @@ where
 
         // send all collected events
         event_handler.iter_write(events);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::fmt::Debug;
+
+    use super::*;
+    use winit::{
+        DeviceId, ElementState, Event, KeyboardInput, ModifiersState, WindowEvent, WindowId,
+    };
+
+    /// Compares two sets for equality, but not the order
+    fn sets_equal<T>(a: &[T], b: &[T])
+    where
+        T: PartialEq<T> + Clone + Debug,
+    {
+        let mut ret = a.len() == b.len();
+        
+        if ret {
+            let mut a = a.iter().collect::<Vec<_>>();
+            let mut b = b.iter().collect::<Vec<_>>();
+            while let Some(a) = a.pop() {
+                if let Some(i) = b.iter().position(|b| a == *b) {
+                    b.swap_remove(i);
+                } else {
+                    ret = false;
+                    break;
+                }
+            }
+            assert_eq!(a.len(), 0);
+            assert_eq!(b.len(), 0);
+        };
+        if !ret {
+            panic!(
+                "assertion failed: `(left == right)`
+left: `{:?}`
+right: `{:?}`",
+                a, b
+            );
+        }
+    }
+
+    #[test]
+    fn action_response() {
+        let mut handler = InputHandler::<String, String>::new();
+        let mut events = EventChannel::<InputEvent<String>>::new();
+        let mut reader = events.register_reader();
+        handler.bindings.insert_action_binding(
+            String::from("test_key_action"),
+            [Button::Key(VirtualKeyCode::Up)].iter().cloned(),
+        );
+        handler.bindings.insert_action_binding(
+            String::from("test_mouse_action"),
+            [Button::Mouse(MouseButton::Left)].iter().cloned(),
+        );
+        handler.send_event(
+            &Event::WindowEvent {
+                window_id: unsafe { WindowId::dummy() },
+                event: WindowEvent::KeyboardInput {
+                    device_id: unsafe { DeviceId::dummy() },
+                    input: KeyboardInput {
+                        scancode: 104,
+                        state: ElementState::Pressed,
+                        virtual_keycode: Some(VirtualKeyCode::Up),
+                        modifiers: ModifiersState {
+                            shift: false,
+                            ctrl: false,
+                            alt: false,
+                            logo: false,
+                        },
+                    },
+                },
+            },
+            &mut events,
+            1.0,
+        );
+        let events = events.read(&mut reader).cloned().collect::<Vec<_>>();
+        sets_equal(
+            &events,
+            &[
+                InputEvent::ActionPressed(String::from("test_key_action")),
+                InputEvent::KeyPressed {
+                    key_code: VirtualKeyCode::Up,
+                    scancode: 104,
+                },
+                InputEvent::ButtonPressed(Button::Key(VirtualKeyCode::Up)),
+                InputEvent::ButtonPressed(Button::ScanCode(104)),
+            ],
+        );
     }
 }
