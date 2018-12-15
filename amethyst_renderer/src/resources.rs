@@ -33,7 +33,7 @@ impl<'a> PrefabData<'a> for AmbientColor {
     }
 }
 
-/// This specs resource with id 0 permits sending commands to the
+/// This specs resource permits sending commands to the
 /// renderer internal window.
 #[derive(Default)]
 pub struct WindowMessages {

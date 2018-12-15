@@ -121,16 +121,18 @@ where
     }
 
     /// Removes an action binding that was assigned previously.
-    pub fn remove_action_binding<T: Hash + Eq + ?Sized>(
-        &mut self,
-        id: &T,
-        binding: SmallVec<[Button; 2]>,
-    ) where
+    pub fn remove_action_binding<T: Hash + Eq + ?Sized>(&mut self, id: &T, binding: &[Button])
+    where
         AC: Borrow<T>,
     {
         let mut kill_it = false;
         if let Some(action_bindings) = self.actions.get_mut(id) {
-            let index = action_bindings.iter().position(|b| b == &binding);
+            let index = action_bindings.iter().position(|b| {
+                b.len() == binding.len()
+                    // The bindings can be provided in any order, but they must all
+                    // be the same bindings.
+                    && b.iter().all(|b| binding.iter().any(|binding| b == binding))
+            });
             if let Some(index) = index {
                 action_bindings.swap_remove(index);
             }
@@ -142,11 +144,14 @@ where
     }
 
     /// Returns an action's bindings.
-    pub fn action_bindings<T: Hash + Eq + ?Sized>(&self, id: &T) -> Option<&[SmallVec<[Button; 2]>]>
+    pub fn action_bindings<T: Hash + Eq + ?Sized>(
+        &self,
+        id: &T,
+    ) -> Option<impl Iterator<Item = &[Button]>>
     where
         AC: Borrow<T>,
     {
-        self.actions.get(id).map(|a| &**a)
+        self.actions.get(id).map(|a| a.iter().map(|a| a.as_slice()))
     }
 
     /// Gets a list of all action bindings
