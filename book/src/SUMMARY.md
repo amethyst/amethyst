@@ -23,6 +23,7 @@
     * [Formats](./assets/formats.md)
     * [How to Use Assets](./assets/how_to_use_assets.md)
     * [How to Define Custom Assets](./assets/how_to_define_custom_assets.md)
+    * [How to Define Custom Formats](./assets/how_to_define_custom_formats.md)
 * [Animation](./animation.md)
     * [Interpolation](./animation/interpolation.md)
     * [Channel](./animation/channel.md)
