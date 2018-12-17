@@ -19,10 +19,6 @@ check formatting:
   script:
     - cargo fmt --version
     - cargo fmt --all -- --check
-  only:
-    - staging
-    - trying
-    - master
 
 run tests:
   stage: test
@@ -30,7 +26,3 @@ run tests:
     - rustc --version
     - cargo --version
     - cargo test --verbose --all --features sdl_controller,profiler
-  only:
-    - staging
-    - trying
-    - master
