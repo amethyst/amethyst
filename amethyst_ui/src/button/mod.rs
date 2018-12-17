@@ -6,7 +6,7 @@ pub use self::system::UiButtonSystem;
 ///! A clickable button.
 use amethyst_core::specs::prelude::{Component, DenseVecStorage};
 
-/// A clickable button, this must be paired with a `UiImage`
+/// A clickable button, this must be paired with a `TextureHandle`
 /// and this entity must have a child entity with a `UiText`.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct UiButton {

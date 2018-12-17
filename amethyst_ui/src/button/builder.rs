@@ -9,43 +9,47 @@ use amethyst_core::{
 use amethyst_renderer::{Texture, TextureHandle};
 
 use crate::{
-    font::default::get_default_font, Anchor, FontAsset, FontHandle, MouseReactive, OnUiActionImage,
-    OnUiActionSound, Stretch, UiButton, UiImage, UiText, UiTransform,
+    font::default::get_default_font, Anchor, FontAsset, FontHandle, Interactable, OnUiActionImage,
+    OnUiActionSound, Selectable, Stretch, UiButton, UiText, UiTransform,
 };
+
+use std::marker::PhantomData;
 
 const DEFAULT_Z: f32 = 1.0;
 const DEFAULT_WIDTH: f32 = 128.0;
 const DEFAULT_HEIGHT: f32 = 64.0;
-const DEFAULT_TAB_ORDER: i32 = 9;
+const DEFAULT_TAB_ORDER: u32 = 9;
 const DEFAULT_BKGD_COLOR: [f32; 4] = [0.82, 0.83, 0.83, 1.0];
 const DEFAULT_TXT_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
 /// Container for all the resources the builder needs to make a new UiButton.
 #[derive(SystemData)]
-pub struct UiButtonBuilderResources<'a> {
+pub struct UiButtonBuilderResources<'a, G: PartialEq + Send + Sync + 'static> {
     font_asset: Read<'a, AssetStorage<FontAsset>>,
     texture_asset: Read<'a, AssetStorage<Texture>>,
     loader: ReadExpect<'a, Loader>,
     entities: Entities<'a>,
-    image: WriteStorage<'a, UiImage>,
-    mouse_reactive: WriteStorage<'a, MouseReactive>,
+    image: WriteStorage<'a, TextureHandle>,
+    mouse_reactive: WriteStorage<'a, Interactable>,
     parent: WriteStorage<'a, Parent>,
     text: WriteStorage<'a, UiText>,
     transform: WriteStorage<'a, UiTransform>,
     button: WriteStorage<'a, UiButton>,
     action_image: WriteStorage<'a, OnUiActionImage>,
     action_sound: WriteStorage<'a, OnUiActionSound>,
+    selectables: WriteStorage<'a, Selectable<G>>,
 }
 
 /// Convenience structure for building a button
-pub struct UiButtonBuilder {
+#[derive(Debug, Clone)]
+pub struct UiButtonBuilder<G> {
     name: String,
     x: f32,
     y: f32,
     z: f32,
     width: f32,
     height: f32,
-    tab_order: i32,
+    tab_order: u32,
     anchor: Anchor,
     stretch: Stretch,
     text: String,
@@ -61,9 +65,10 @@ pub struct UiButtonBuilder {
     hover_sound: Option<SourceHandle>,
     press_sound: Option<SourceHandle>,
     release_sound: Option<SourceHandle>,
+    _phantom: PhantomData<G>,
 }
 
-impl Default for UiButtonBuilder {
+impl<G> Default for UiButtonBuilder<G> {
     fn default() -> Self {
         UiButtonBuilder {
             name: "".to_string(),
@@ -88,15 +93,16 @@ impl Default for UiButtonBuilder {
             hover_sound: None,
             press_sound: None,
             release_sound: None,
+            _phantom: PhantomData,
         }
     }
 }
 
-impl UiButtonBuilder {
+impl<G: PartialEq + Send + Sync + 'static> UiButtonBuilder<G> {
     /// Construct a new UiButtonBuilder.
     /// This allows easy use of default values for text and button appearance and allows the user
     /// to easily set other UI-related options.
-    pub fn new<N: ToString, S: ToString>(name: N, text: S) -> UiButtonBuilder {
+    pub fn new<N: ToString, S: ToString>(name: N, text: S) -> UiButtonBuilder<G> {
         let mut builder = UiButtonBuilder::default();
         builder.name = name.to_string();
         builder.text = text.to_string();
@@ -133,7 +139,7 @@ impl UiButtonBuilder {
         self
     }
 
-    /// Replace the default UiImage with `image`.
+    /// Replace the default TextureHandle with `image`.
     pub fn with_image(mut self, image: TextureHandle) -> Self {
         self.image = Some(image);
         self
@@ -170,7 +176,7 @@ impl UiButtonBuilder {
     }
 
     /// Set button tab order
-    pub fn with_tab_order(mut self, tab_order: i32) -> Self {
+    pub fn with_tab_order(mut self, tab_order: u32) -> Self {
         self.tab_order = tab_order;
         self
     }
@@ -230,7 +236,7 @@ impl UiButtonBuilder {
     }
 
     /// Build this with the `UiButtonBuilderResources`.
-    pub fn build(mut self, mut res: UiButtonBuilderResources<'_>) -> Entity {
+    pub fn build(mut self, mut res: UiButtonBuilderResources<'_, G>) -> Entity {
         let mut id = self.name.clone();
         let image_entity = res.entities.create();
         res.transform
@@ -244,10 +250,10 @@ impl UiButtonBuilder {
                     self.z,
                     self.width,
                     self.height,
-                    self.tab_order,
-                )
-                .with_stretch(self.stretch),
-            )
+                ).with_stretch(self.stretch),
+            ).expect("Unreachable: Inserting newly created entity");
+        res.selectables
+            .insert(image_entity, Selectable::<G>::new(self.tab_order))
             .expect("Unreachable: Inserting newly created entity");
         let image_handle = self.image.unwrap_or_else(|| {
             res.loader
@@ -255,15 +261,10 @@ impl UiButtonBuilder {
         });
 
         res.image
-            .insert(
-                image_entity,
-                UiImage {
-                    texture: image_handle.clone(),
-                },
-            )
+            .insert(image_entity, image_handle.clone())
             .expect("Unreachable: Inserting newly created entity");
         res.mouse_reactive
-            .insert(image_entity, MouseReactive)
+            .insert(image_entity, Interactable)
             .expect("Unreachable: Inserting newly created entity");
         if let Some(parent) = self.parent.take() {
             res.parent
@@ -276,7 +277,7 @@ impl UiButtonBuilder {
         res.transform
             .insert(
                 text_entity,
-                UiTransform::new(id, Anchor::Middle, 0., 0., 0.01, 0., 0., 10)
+                UiTransform::new(id, Anchor::Middle, 0., 0., 0.01, 0., 0.)
                     .as_transparent()
                     .with_stretch(Stretch::XY {
                         x_margin: 0.,
@@ -335,6 +336,6 @@ impl UiButtonBuilder {
 
     /// Create the UiButton based on provided configuration parameters.
     pub fn build_from_world(self, world: &World) -> Entity {
-        self.build(UiButtonBuilderResources::fetch(&world.res))
+        self.build(UiButtonBuilderResources::<G>::fetch(&world.res))
     }
 }

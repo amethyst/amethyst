@@ -7,8 +7,9 @@ use amethyst_core::{
     },
     ParentHierarchy,
 };
+use amethyst_renderer::TextureHandle;
 
-use crate::{OnUiActionImage, OnUiActionSound, UiButton, UiEvent, UiEventType::*, UiImage, UiText};
+use crate::{OnUiActionImage, OnUiActionSound, UiButton, UiEvent, UiEventType::*, UiText};
 
 /// This system manages button mouse events.  It changes images and text colors, as well as playing audio
 /// when necessary.
@@ -32,7 +33,7 @@ impl<'s> System<'s> for UiButtonSystem {
         ReadStorage<'s, UiButton>,
         ReadStorage<'s, OnUiActionImage>,
         ReadStorage<'s, OnUiActionSound>,
-        WriteStorage<'s, UiImage>,
+        WriteStorage<'s, TextureHandle>,
         WriteStorage<'s, UiText>,
         Write<'s, EventChannel<UiEvent>>,
         Read<'s, AssetStorage<Source>>,
@@ -72,12 +73,7 @@ impl<'s> System<'s> for UiButtonSystem {
                 ClickStart => {
                     if let Some(action_image) = action_image {
                         if let Some(press_image) = action_image.press_image.as_ref() {
-                            let _ = image_storage.insert(
-                                event.target,
-                                UiImage {
-                                    texture: press_image.clone(),
-                                },
-                            );
+                            let _ = image_storage.insert(event.target, press_image.clone());
                         } else {
                             image_storage.remove(event.target);
                         }
@@ -114,23 +110,13 @@ impl<'s> System<'s> for UiButtonSystem {
                     if let Some(action_image) = action_image {
                         if Some(event.target) == self.hovered {
                             if let Some(hover_texture) = action_image.hover_image.as_ref() {
-                                let _ = image_storage.insert(
-                                    event.target,
-                                    UiImage {
-                                        texture: hover_texture.clone(),
-                                    },
-                                );
+                                let _ = image_storage.insert(event.target, hover_texture.clone());
                             } else {
                                 image_storage.remove(event.target);
                             }
                         } else {
                             if let Some(normal_image) = action_image.normal_image.as_ref() {
-                                let _ = image_storage.insert(
-                                    event.target,
-                                    UiImage {
-                                        texture: normal_image.clone(),
-                                    },
-                                );
+                                let _ = image_storage.insert(event.target, normal_image.clone());
                             } else {
                                 image_storage.remove(event.target);
                             }
@@ -165,7 +151,7 @@ impl<'s> System<'s> for UiButtonSystem {
                     }
                     if let Some(image) = image_storage.get_mut(event.target) {
                         if let Some(texture) = action_image.and_then(|i| i.hover_image.as_ref()) {
-                            image.texture = texture.clone();
+                            *image = texture.clone();
                         }
                     }
                     if let Some(button) = button {
@@ -182,12 +168,7 @@ impl<'s> System<'s> for UiButtonSystem {
                     self.hovered = None;
                     if let Some(action_image) = action_image {
                         if let Some(normal_image) = action_image.normal_image.as_ref() {
-                            let _ = image_storage.insert(
-                                event.target,
-                                UiImage {
-                                    texture: normal_image.clone(),
-                                },
-                            );
+                            let _ = image_storage.insert(event.target, normal_image.clone());
                         } else {
                             image_storage.remove(event.target);
                         }
@@ -200,6 +181,7 @@ impl<'s> System<'s> for UiButtonSystem {
                         }
                     }
                 }
+                _ => {}
             }
         }
     }

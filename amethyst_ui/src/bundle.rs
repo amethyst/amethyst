@@ -8,7 +8,7 @@ use amethyst_core::{
     bundle::{Result, SystemBundle},
     specs::prelude::DispatcherBuilder,
 };
-use amethyst_renderer::TextureFormat;
+use amethyst_renderer::{BlinkSystem, TextureFormat};
 
 use super::*;
 
@@ -18,24 +18,18 @@ use super::*;
 /// The generic types A and B represent the A and B generic parameter of the InputHandler<A,B>.
 ///
 /// Will fail with error 'No resource with the given id' if the InputBundle is not added.
-pub struct UiBundle<A, B, C = NoCustomUi> {
-    _marker: PhantomData<(A, B, C)>,
+#[derive(new)]
+pub struct UiBundle<A, B, C = NoCustomUi, G = ()> {
+    #[new(default)]
+    _marker: PhantomData<(A, B, C, G)>,
 }
 
-impl<A, B, C> UiBundle<A, B, C> {
-    /// Create a new UI bundle
-    pub fn new() -> Self {
-        UiBundle {
-            _marker: PhantomData,
-        }
-    }
-}
-
-impl<'a, 'b, A, B, C> SystemBundle<'a, 'b> for UiBundle<A, B, C>
+impl<'a, 'b, A, B, C, G> SystemBundle<'a, 'b> for UiBundle<A, B, C, G>
 where
     A: Send + Sync + Eq + Hash + Clone + 'static,
     B: Send + Sync + Eq + Hash + Clone + 'static,
     C: ToNativeWidget,
+    G: Send + Sync + PartialEq + 'static,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
         builder.add(
@@ -59,21 +53,47 @@ where
             &["ui_loader"],
         );
         builder.add(
-            UiKeyboardSystem::new(),
-            "ui_keyboard_system",
-            &["font_processor"],
+            CacheSelectionOrderSystem::<G>::new(),
+            "selection_order_cache",
+            &[],
+        );
+        builder.add(
+            SelectionMouseSystem::<G, A, B>::new(),
+            "ui_mouse_selection",
+            &[],
+        );
+        builder.add(
+            SelectionKeyboardSystem::<G>::new(),
+            "ui_keyboard_selection",
+            // Because when you press tab, you want to override the previously selected elements.
+            &["ui_mouse_selection"],
+        );
+        builder.add(
+            TextEditingMouseSystem::new(),
+            "ui_text_editing_mouse_system",
+            &["ui_mouse_selection", "ui_keyboard_selection"],
+        );
+        builder.add(
+            TextEditingInputSystem::new(),
+            "ui_text_editing_input_system",
+            // Hard requirement. The system assumes the text to edit is selected.
+            &["ui_mouse_selection", "ui_keyboard_selection"],
         );
         builder.add(ResizeSystem::new(), "ui_resize_system", &[]);
         builder.add(
             UiMouseSystem::<A, B>::new(),
             "ui_mouse_system",
-            &["ui_transform", "ui_keyboard_system"],
+            &["ui_transform"],
         );
         builder.add(
             UiButtonSystem::new(),
             "ui_button_system",
             &["ui_mouse_system"],
         );
+
+        // Required for text editing. You want the cursor image to blink.
+        builder.add(BlinkSystem, "blink_system", &[]);
+
         Ok(())
     }
 }

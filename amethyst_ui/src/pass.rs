@@ -18,7 +18,7 @@ use glsl_layout::{vec2, Uniform};
 use hibitset::BitSet;
 use unicode_segmentation::UnicodeSegmentation;
 
-use amethyst_assets::{AssetStorage, Loader};
+use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::specs::prelude::{
     Entities, Entity, Join, Read, ReadExpect, ReadStorage, WriteStorage,
 };
@@ -46,7 +46,7 @@ struct VertexArgs {
     dimension: vec2,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 struct CachedDrawOrder {
     pub cached: BitSet,
     pub cache: Vec<(f32, Entity)>,
@@ -72,32 +72,22 @@ impl Hash for KeyColor {
     }
 }
 
+#[derive(new)]
 /// Draw Ui elements.  UI won't display without this.  It's recommended this be your last pass.
 pub struct DrawUi {
+    #[new(default)]
     mesh: Option<Mesh>,
+    #[new(default)]
     cached_draw_order: CachedDrawOrder,
+    #[new(default)]
     cached_color_textures: HashMap<KeyColor, TextureHandle>,
+    #[new(default)]
     glyph_brushes: GlyphBrushCache,
+    #[new(default)]
     next_brush_cache_id: u64,
 }
 
 type GlyphBrushCache = HashMap<u64, GlyphBrush<'static, Resources, Factory>>;
-
-impl DrawUi {
-    /// Create instance of `DrawUi` pass
-    pub fn new() -> Self {
-        DrawUi {
-            mesh: None,
-            cached_draw_order: CachedDrawOrder {
-                cached: BitSet::new(),
-                cache: Vec::new(),
-            },
-            cached_color_textures: HashMap::default(),
-            glyph_brushes: HashMap::default(),
-            next_brush_cache_id: 0,
-        }
-    }
-}
 
 impl<'a> PassData<'a> for DrawUi {
     type Data = (
@@ -106,13 +96,13 @@ impl<'a> PassData<'a> for DrawUi {
         ReadExpect<'a, ScreenDimensions>,
         Read<'a, AssetStorage<Texture>>,
         Read<'a, AssetStorage<FontAsset>>,
-        Read<'a, UiFocused>,
-        ReadStorage<'a, UiImage>,
+        ReadStorage<'a, Handle<Texture>>,
         ReadStorage<'a, UiTransform>,
         WriteStorage<'a, UiText>,
         ReadStorage<'a, TextEditing>,
         ReadStorage<'a, Hidden>,
         ReadStorage<'a, HiddenPropagate>,
+        ReadStorage<'a, Selected>,
     );
 }
 
@@ -149,13 +139,13 @@ impl Pass for DrawUi {
             screen_dimensions,
             tex_storage,
             font_storage,
-            focused,
             ui_image,
             ui_transform,
             mut ui_text,
             editing,
             hidden,
             hidden_prop,
+            selecteds,
         ): <Self as PassData<'_>>::Data,
     ) {
         // Populate and update the draw order cache.
@@ -253,7 +243,7 @@ impl Pass for DrawUi {
                 .expect("Unreachable: Entity is guaranteed to be present based on earlier actions");
             if let Some(image) = ui_image
                 .get(entity)
-                .and_then(|image| tex_storage.get(&image.texture))
+                .and_then(|image| tex_storage.get(&image))
             {
                 let vertex_args = VertexArgs {
                     invert_window_size: invert_window_size.into(),
@@ -416,7 +406,7 @@ impl Pass for DrawUi {
                         .cursor_position
                         .max(ed.cursor_position + ed.highlight_vector)
                         as usize;
-                    let color = if focused.entity == Some(entity) {
+                    let color = if selecteds.contains(entity) {
                         ed.selected_background_color
                     } else {
                         [
@@ -482,7 +472,7 @@ impl Pass for DrawUi {
                     error!("Unable to draw text! Error: {:?}", err);
                 }
                 // Render cursor
-                if focused.entity == Some(entity) {
+                if selecteds.contains(entity) {
                     if let Some((texture, editing)) = editing.as_ref().and_then(|ed| {
                         tex_storage
                             .get(&cached_color_texture(
@@ -493,7 +483,7 @@ impl Pass for DrawUi {
                             ))
                             .map(|tex| (tex, ed))
                     }) {
-                        let blink_on = editing.cursor_blink_timer < 0.5 / CURSOR_BLINK_RATE;
+                        let blink_on = editing.cursor_blink_timer < 0.25;
                         if editing.use_block_cursor || blink_on {
                             effect.data.textures.push(texture.view().clone());
                             effect.data.samplers.push(texture.sampler().clone());

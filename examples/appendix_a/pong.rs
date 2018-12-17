@@ -192,27 +192,11 @@ fn initialise_score(world: &mut World) {
         (),
         &world.read_resource(),
     );
-    let p1_transform = UiTransform::new(
-        "P1".to_string(),
-        Anchor::TopMiddle,
-        -50.,
-        50.,
-        1.,
-        55.,
-        50.,
-        0,
-    );
+    let p1_transform =
+        UiTransform::new("P1".to_string(), Anchor::TopMiddle, -50., 50., 1., 55., 50.);
 
-    let p2_transform = UiTransform::new(
-        "P2".to_string(),
-        Anchor::TopMiddle,
-        50.,
-        50.,
-        1.,
-        55.,
-        50.,
-        0,
-    );
+    let p2_transform =
+        UiTransform::new("P2".to_string(), Anchor::TopMiddle, 50., 50., 1., 55., 50.);
 
     let p1_score = world
         .create_entity()

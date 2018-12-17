@@ -59,6 +59,7 @@ use gfx_window_glutin;
 use glutin;
 
 pub use crate::{
+    blink::{Blink, BlinkSystem},
     bundle::RenderBundle,
     cam::{ActiveCamera, ActiveCameraPrefab, Camera, CameraPrefab, Projection},
     color::Rgba,
@@ -123,6 +124,7 @@ pub mod pipe;
 #[macro_use]
 mod macros;
 
+mod blink;
 mod bundle;
 mod cam;
 mod color;
