@@ -168,7 +168,7 @@ impl<'a> System<'a> for TextEditingMouseSystem {
     fn run(
         &mut self,
         (mut texts, mut text_editings, selecteds, events, screen_dimensions, time): Self::SystemData,
-){
+    ) {
         // Normalize text to ensure we can properly count the characters.
         // TODO: Possible improvement to be made if this can be moved only when inserting characters into ui text.
         for text in (&mut texts).join() {
@@ -195,7 +195,8 @@ impl<'a> System<'a> for TextEditingMouseSystem {
             for event in
                 events.read(self.reader.as_mut().expect(
                     "`UiKeyboardSystem::setup` was not called before `UiKeyboardSystem::run`",
-                )) {
+                ))
+            {
                 // Process events for the whole UI.
                 match *event {
                     Event::WindowEvent {

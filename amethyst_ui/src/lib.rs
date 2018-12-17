@@ -50,7 +50,7 @@ pub use self::{
     action_components::{OnUiActionImage, OnUiActionSound},
     bundle::UiBundle,
     button::{UiButton, UiButtonBuilder, UiButtonBuilderResources, UiButtonSystem},
-    event::{Interactable, UiEvent, UiEventType, UiMouseSystem, targeted},
+    event::{targeted, Interactable, UiEvent, UiEventType, UiMouseSystem},
     font::{
         default::get_default_font,
         systemfont::{default_system_font, get_all_font_handles, list_system_font_families},

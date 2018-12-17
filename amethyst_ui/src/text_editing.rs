@@ -5,11 +5,11 @@ use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 use unicode_segmentation::UnicodeSegmentation;
 use winit::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, WindowEvent};
 
+use crate::{Selected, TextEditing, UiText};
 use amethyst_core::{
     shrev::{EventChannel, ReaderId},
     specs::prelude::{Join, Read, ReadStorage, Resources, System, WriteStorage},
 };
-use crate::{Selected, TextEditing, UiText};
 
 /// System managing the keyboard inputs for the editable text fields.
 /// ## Features
@@ -245,9 +245,8 @@ impl<'a> System<'a> for TextEditingInputSystem {
                                 {
                                     Ok(contents) => {
                                         let index = cursor_byte_index(focused_edit, focused_text);
-                                        let empty_space =
-                                            focused_edit.max_length
-                                                - focused_text.text.graphemes(true).count();
+                                        let empty_space = focused_edit.max_length
+                                            - focused_text.text.graphemes(true).count();
                                         let contents = contents
                                             .graphemes(true)
                                             .take(empty_space)

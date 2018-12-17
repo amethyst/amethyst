@@ -250,8 +250,10 @@ impl<G: PartialEq + Send + Sync + 'static> UiButtonBuilder<G> {
                     self.z,
                     self.width,
                     self.height,
-                ).with_stretch(self.stretch),
-            ).expect("Unreachable: Inserting newly created entity");
+                )
+                .with_stretch(self.stretch),
+            )
+            .expect("Unreachable: Inserting newly created entity");
         res.selectables
             .insert(image_entity, Selectable::<G>::new(self.tab_order))
             .expect("Unreachable: Inserting newly created entity");

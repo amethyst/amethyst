@@ -11,9 +11,7 @@ use std::{hash::Hash, marker::PhantomData};
 
 use crate::{CachedSelectionOrder, UiEvent, UiEventType};
 
-
 // TODO: If none selected and there is a Selectable in the World, select the lower ordered one automatically?
-
 
 /// Component indicating that a Ui entity is selectable.
 /// Generic Type:
@@ -73,22 +71,22 @@ where
     );
     fn run(&mut self, (window_events, cached, mut selecteds): Self::SystemData) {
         /*
-		Add clicked elements + shift + ctrl status.
-		If tab or shift-tab
-			remove clicked buf
-			add replace: select higher or lower id closes to previous highest old id
-		if clicked buf isn't empty
-			if check currently highest selected multiselect group
-				// if shift && ctrl -> shift only
-				if shift
-					add multiple
-				else if ctrl || auto_multi_select
-					add single
-				else
-				    add replace
-			else
-				add replace
-		*/
+        Add clicked elements + shift + ctrl status.
+        If tab or shift-tab
+            remove clicked buf
+            add replace: select higher or lower id closes to previous highest old id
+        if clicked buf isn't empty
+            if check currently highest selected multiselect group
+                // if shift && ctrl -> shift only
+                if shift
+                    add multiple
+                else if ctrl || auto_multi_select
+                    add single
+                else
+                    add replace
+            else
+                add replace
+        */
 
         // Checks if tab was pressed.
         // TODO: Controller support/Use InputEvent in addition to keys.
@@ -194,7 +192,6 @@ where
                         let highest = cached.highest_order_selected_index(&selecteds);
 
                         if let Some(highest) = highest {
-
                             let (highest_is_select, auto_multi_select) = {
                                 let highest_multi_select_group = &selectables
                                     .get(cached.cache.get(highest).expect("unreachable: we just got those values from the cache.").1)
