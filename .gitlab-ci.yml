@@ -19,6 +19,9 @@ check formatting:
   script:
     - cargo fmt --version
     - cargo fmt --all -- --check
+  only:
+    - branches
+    - merge_requests
 
 run tests:
   stage: test
@@ -26,3 +29,6 @@ run tests:
     - rustc --version
     - cargo --version
     - cargo test --verbose --all --features sdl_controller,profiler
+  only:
+    - branches
+    - merge_requests
