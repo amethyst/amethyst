@@ -27,11 +27,11 @@ We can separate bottle's properties into `PositionComponent` and `BottleComponen
 
 As you could see from the graph, entities do not store data. Nor do they know any information about their components. They serve the purpose of object identification and tracking object existance. The components store all the data and their connection to entities. 
 
-If you know database systems, this organization looks quite similar to the tables in a database, where entity id serves as the key in each table. In fact, you could even join components or entities like joining tables. For example, to update the position of all the persons, you will need to join the PersonComponent and the PositionComponent. 
+If you know database systems, this organization looks quite similar to the tables in a database, where entity id serves as the key in each table. In fact, you can even join components or entities like joining tables. For example, to update the position of all the persons, you will need to join the PersonComponent and the PositionComponent. 
 
 ## EntitiesRes
 
-Even though the structure of the entity is pretty simple, entity manipulation is very sophisticated and crucial to game preformance. This is why entities are handled exclusively by the struct `EntitiesRes`. `EntitiesRes` provides two ways for creating/deleting entities:
+Even though the structure of the entity is pretty simple, entity manipulation is very sophisticated and crucial to game performance. This is why entities are handled exclusively by the struct `EntitiesRes`. `EntitiesRes` provides two ways for creating/deleting entities:
 
 * Immediate creation/deletion, used for game setup or clean up.
 * Atomic or delayed creation/deletion, used in the game play state. It updates entities in batch at the end of each game loop.
@@ -50,9 +50,11 @@ enum Shape {
     RectangularPrism { height: f32, width: f32, depth: f32 },
 }
 
-/// This `Component` describes the contents of an `Entity`
-pub struct Content {
-    content_name: String,
+/// This `Component` describes the transform of an `Entity`
+pub struct Transform {
+    position: Translation3<f32>,
+    rotation: UnitQuaternion<f32>,
+    scale: Vector3<f32>,
 }
 ```
 
@@ -68,11 +70,11 @@ impl Component for Shape {
     type Storage = DenseVecStorage<Self>;
 }
 
-impl Component for Content {
-    type Storage = DenseVecStorage<Self>;
+impl Component for Transform {
+    type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
 ```
-Defining the Storage type will determine how you store the component, but it will not initiate the storage. Storage is initiated when you register a component in `World`. You will see it in the World chapter. 
+The storage type will determine how you store the component, but it will not initiate the storage. Storage is initiated when you register a component in `World` or when you use that component in a System.
 
 ## Storages
 
@@ -88,9 +90,7 @@ There are a few storage strategies for different usage scenarios. The most commo
 
 For more information, see the [specs storage reference](https://docs.rs/specs/latest/specs/storage/index.html).
 
-There are a bunch more storages, and deciding which one is the best isn't trivial and should be done based on careful
-benchmarking. If you don't know which one you should use, `DenseVecStorage` is a good default. It will need more memory
-than `VecStorage` for pointer-sized components, but it will perform well for most scenarios.
+There are a bunch more storages, and deciding which one is the best isn't trivial and should be done based on careful benchmarking. A general rule is: if your component is used in over 30% of entities, use VecStorage. If you don't know which one you should use, `DenseVecStorage` is a good default. It will need more memory than `VecStorage` for pointer-sized components, but it will perform well for most scenarios.
 
 ## Tags
 
