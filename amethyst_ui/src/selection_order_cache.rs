@@ -14,7 +14,7 @@ use crate::{Selectable, Selected};
 pub struct CachedSelectionOrder {
     /// The cached bitset.
     pub cached: BitSet,
-    /// The cache holding the z position and the corresponding entity.
+    /// The cache holding the selection order and the corresponding entity.
     pub cache: Vec<(u32, Entity)>,
 }
 

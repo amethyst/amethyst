@@ -19,8 +19,7 @@ use crate::Hidden;
 pub struct Blink {
     /// Period of a full blink cycle.
     pub delay: f32,
-    /// Internal timer value.
-    /// Public so it can be reseted or manipulated easily.
+    /// Timer value keeping track of the time during the blink cycle.
     pub timer: f32,
     /// Whether to use the scaled or unscaled time.
     pub absolute_time: bool,
@@ -61,14 +60,14 @@ impl<'a> System<'a> for BlinkSystem {
             // We could cache the division, but that would require a stricter api on Blink.
             let on = blink.timer < blink.delay / 2.0;
 
-            if on && !hiddens.contains(entity) {
-                hiddens.insert(entity, Hidden).expect(&format!(
+            match (on, hiddens.contains(entity)) {
+                (true, false) => hiddens.insert(entity, Hidden).expect(&format!(
                     "Failed to insert Hidden component for {:?}",
                     entity
-                ));
-            } else if !on && hiddens.contains(entity) {
-                hiddens.remove(entity);
-            }
+                )),
+                (false, true) => hiddens.remove(entity),
+                _ => None,
+            };
         }
     }
 }
