@@ -8,6 +8,7 @@ use amethyst_core::{
 };
 
 use crate::filter::NetFilter;
+use crate::metrics::{MetricObserver, NetworkMetricObject, NetworkMetrics};
 
 use super::NetSocketSystem;
 
@@ -18,12 +19,27 @@ pub struct NetworkBundle<T> {
 
     /// The filters applied on received network events.
     filters: Vec<Box<dyn NetFilter<T>>>,
+
+    /// These list of metrics observers, who are capable of observing metrics changes.
+    metrics: Vec<Box<dyn MetricObserver<NetworkMetricObject> + Send + Sync>>,
 }
 
 impl<T> NetworkBundle<T> {
     /// Creates a new NetworkBundle that connects to the `addr`.
     pub fn new(addr: SocketAddr, filters: Vec<Box<dyn NetFilter<T>>>) -> Self {
-        NetworkBundle { addr, filters }
+        NetworkBundle {
+            addr,
+            filters,
+            metrics: Vec::new(),
+        }
+    }
+
+    pub fn with_metric(
+        mut self,
+        metric: Box<dyn MetricObserver<NetworkMetricObject> + Send + Sync>,
+    ) -> NetworkBundle<T> {
+        self.metrics.push(metric);
+        self
     }
 }
 
@@ -32,8 +48,10 @@ where
     T: Send + Sync + PartialEq + Serialize + Clone + DeserializeOwned + 'static,
 {
     fn build(self, builder: &mut DispatcherBuilder<'_, '_>) -> Result<()> {
-        let socket_system = NetSocketSystem::<T>::new(self.addr, self.filters)
+        let mut socket_system = NetSocketSystem::<T>::new(self.addr, self.filters)
             .chain_err(|| "Failed to open network system.")?;
+
+        socket_system.set_metrics(self.metrics);
 
         builder.add(socket_system, "net_socket", &[]);
 

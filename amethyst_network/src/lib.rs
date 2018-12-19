@@ -10,6 +10,7 @@ extern crate serde;
 mod bundle;
 mod connection;
 mod filter;
+pub mod metrics;
 mod net_event;
 mod network_socket;
 mod test;

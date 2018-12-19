@@ -8,6 +8,7 @@ use std::{
     thread,
 };
 
+use crate::metrics::{MetricObserver, NetworkMetricObject, NetworkMetrics};
 use amethyst_core::specs::{Join, Resources, System, SystemData, WriteStorage};
 use laminar::error;
 use laminar::net::UdpSocket;
@@ -73,6 +74,8 @@ where
 
     tx: Sender<InternalSocketEvent<E>>,
     rx: Receiver<RawEvent>,
+
+    metrics: Option<NetworkMetrics>,
 }
 
 impl<E> NetSocketSystem<E>
@@ -152,7 +155,16 @@ where
             filters,
             tx: tx1,
             rx: rx2,
+            metrics: None,
         })
+    }
+
+    /// Set the metrics observers that will watch for any metric changes and who will do the corresponding actions.
+    pub fn set_metrics(
+        &mut self,
+        metrics: Vec<Box<dyn MetricObserver<NetworkMetricObject> + Send + Sync>>,
+    ) {
+        self.metrics = Some(NetworkMetrics::new(metrics));
     }
 }
 
@@ -173,11 +185,15 @@ where
             if net_connection.state == ConnectionState::Connected
                 || net_connection.state == ConnectionState::Connecting
             {
+                let events: Vec<NetEvent<E>> =
+                    net_connection.send_buffer_early_read().cloned().collect();
+
+                if let Some(ref mut metrics) = self.metrics {
+                    metrics.add_outgoing_packets(events.len() as u16);
+                }
+
                 self.tx
-                    .send(InternalSocketEvent::SendEvents {
-                        target,
-                        events: net_connection.send_buffer_early_read().cloned().collect(),
-                    })
+                    .send(InternalSocketEvent::SendEvents { target, events })
                     .expect("Unreachable: Channel will be alive until a stop event is sent");
             } else if net_connection.state == ConnectionState::Disconnected {
                 self.tx
@@ -196,6 +212,10 @@ where
                     match net_event {
                         Ok(ev) => {
                             net_connection.receive_buffer.single_write(ev);
+
+                            if let Some(ref mut metrics) = self.metrics {
+                                metrics.add_incoming_packet(1);
+                            }
                         }
                         Err(e) => error!(
                             "Failed to deserialize an incoming network event: {} From source: {:?}",

@@ -1,0 +1,23 @@
+---
+platform: linux
+
+inputs:
+- name: amethyst
+
+outputs:
+- name: target
+  path: target
+
+run:
+  path: sh
+  dir: amethyst
+  args:
+  - -exc
+  - |
+    rustc --version
+    export RUSTFLAGS="-D warnings"
+    cargo check --all --features sdl_controller,profiler
+    export CARGO_TARGET_DIR="../target"
+    cargo test --all
+caches:
+- path: target

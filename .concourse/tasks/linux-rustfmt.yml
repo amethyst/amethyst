@@ -1,0 +1,14 @@
+---
+platform: linux
+
+inputs:
+- name: amethyst
+
+run:
+  path: sh
+  dir: amethyst
+  args:
+  - -exc
+  - |
+    cargo fmt --version
+    cargo fmt --all -- --check

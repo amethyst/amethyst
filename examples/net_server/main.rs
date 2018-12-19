@@ -5,7 +5,10 @@ extern crate log;
 use amethyst::{
     core::frame_limiter::FrameRateLimitStrategy,
     ecs::{Join, System, WriteStorage},
-    network::*,
+    network::{
+        metrics::{ConsoleMetrics, MetricObserver, NetworkMetricObject},
+        *,
+    },
     prelude::*,
     shrev::ReaderId,
     Result,
@@ -14,11 +17,15 @@ use std::time::Duration;
 
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
+
     let game_data = GameDataBuilder::default()
-        .with_bundle(NetworkBundle::<()>::new(
-            "127.0.0.1:3456".parse().unwrap(),
-            vec![Box::new(FilterConnected::<()>::new())],
-        ))?
+        .with_bundle(
+            NetworkBundle::<()>::new(
+                "127.0.0.1:3456".parse().unwrap(),
+                vec![Box::new(FilterConnected::<()>::new())],
+            )
+            .with_metric(From::from(ConsoleMetrics::new(Duration::from_millis(500)))),
+        )?
         .with(SpamReceiveSystem::new(), "rcv", &[]);
     let mut game = Application::build("./", State1)?
         .with_frame_limit(
@@ -68,6 +75,5 @@ impl<'a> System<'a> for SpamReceiveSystem {
                 }
             }
         }
-        info!("Received {} messages this frame", count);
     }
 }
