@@ -3,6 +3,10 @@ use serde::Serialize;
 use std::fs::File;
 use std::time::{Duration, Instant};
 
+struct Timeout {
+
+}
+
 /// This will handle changing metrics and write them to the console.
 /// Console write interval could be managed by passing in a `Duration` at creation time.
 pub struct ConsoleMetrics {

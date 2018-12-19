@@ -2,14 +2,13 @@
 
 use serde::Serialize;
 use std::time::{Duration, Instant};
+use std::thread;
+
+
 mod console_metrics;
-mod csv_metrics;
-mod influxdb_metrics;
 mod network_metrics;
 
 pub use self::console_metrics::ConsoleMetrics;
-pub use self::csv_metrics::CsvMetrics;
-pub use self::influxdb_metrics::InfluxDBMetrics;
 pub use self::network_metrics::NetworkMetrics;
 
 /// Metrics observer which could be implemented to observe metrics changes.
@@ -22,7 +21,7 @@ pub trait MetricObserver<T: Sync + Send> {
 }
 
 /// Object containing network metrics.
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct NetworkMetricObject {
     /// The throughput in seconds
     pub throughput: u32,
