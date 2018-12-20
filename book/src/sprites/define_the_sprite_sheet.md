@@ -81,7 +81,6 @@ The following table lists the differences between the coordinate systems:
 | Begin at the top left of the image    | Begin at the bottom left of the image     |
 | Increase to the right and down        | Increase to the right and up              |
 | Range from 0 to (width or height - 1) | Range from 0.0 to 1.0                     |
-| Use pixel values at exact coordinates | Takes average value of surrounding pixels |
 
 In Amethyst, pixel dimensions and texture coordinates are stored in the `Sprite` struct. Since texture coordinates can be derived from pixel coordinates, Amethyst provides the `Sprite::from_pixel_values` function to create a `Sprite`.
 

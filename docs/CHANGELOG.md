@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ### Changed
 
 * Make `application_root_dir` return a `Result<Path>` instead of a `String` ([#1213])
+* Remove unnecessary texture coordinates offset in `Sprite::from_pixel_values` ([#1267])
 
 ### Removed
 
@@ -107,6 +108,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1188]: https://github.com/amethyst/amethyst/pull/1188
 [#1198]: https://github.com/amethyst/amethyst/pull/1198
 [#1224]: https://github.com/amethyst/amethyst/pull/1224
+[#1267]: https://github.com/amethyst/amethyst/pull/1267
 [winit_018]: https://github.com/tomaka/winit/blob/v0.18.0/CHANGELOG.md#version-0180-2018-11-07
 [glutin_019]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0190-2018-11-09
 
