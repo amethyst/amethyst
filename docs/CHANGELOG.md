@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 * Introduce `application_dir` utility ([#1213])
 * Derive `Copy`, `PartialEq`, `Eq`, `Serialize`, `Deserialize` for `Flipped` component. ([#1237])
+* A way to change the default `Source` using `set_default_source` and `with_default_source`. ([#1256])
 
 ### Changed
 

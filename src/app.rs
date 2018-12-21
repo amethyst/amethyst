@@ -698,7 +698,7 @@ where
         self
     }
 
-    /// Register the default asset store with the loader logic of the Application.
+    /// Registers the default asset store with the loader logic of the Application.
     ///
     /// # Parameters
     ///
