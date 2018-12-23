@@ -71,7 +71,8 @@ impl<'a> System<'a> for VisibilitySortingSystem {
     ) {
         let origin = Point3::origin();
 
-        let camera: Option<&GlobalTransform> = active.entity
+        let camera: Option<&GlobalTransform> = active
+            .entity
             .and_then(|entity| global.get(entity))
             .or_else(|| (&camera, &global).join().map(|cg| cg.1).next());
         let camera_backward = camera

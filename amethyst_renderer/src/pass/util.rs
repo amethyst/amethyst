@@ -360,7 +360,8 @@ pub fn get_camera<'a>(
     camera: &'a ReadStorage<'a, Camera>,
     global: &'a ReadStorage<'a, GlobalTransform>,
 ) -> Option<(&'a Camera, &'a GlobalTransform)> {
-    active.entity
+    active
+        .entity
         .and_then(|entity| {
             let cam = camera.get(entity);
             let transform = global.get(entity);
