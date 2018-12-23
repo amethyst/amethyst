@@ -356,14 +356,14 @@ pub(crate) fn draw_mesh(
 
 /// Returns the main camera and its `GlobalTransform`
 pub fn get_camera<'a>(
-    active: Option<Read<'a, ActiveCamera>>,
+    active: Read<'a, ActiveCamera>,
     camera: &'a ReadStorage<'a, Camera>,
     global: &'a ReadStorage<'a, GlobalTransform>,
 ) -> Option<(&'a Camera, &'a GlobalTransform)> {
-    active
-        .and_then(|a| {
-            let cam = camera.get(a.entity);
-            let transform = global.get(a.entity);
+    active.entity
+        .and_then(|entity| {
+            let cam = camera.get(entity);
+            let transform = global.get(entity);
             cam.into_iter().zip(transform.into_iter()).next()
         })
         .or_else(|| (camera, global).join().next())

@@ -78,7 +78,7 @@ impl DrawPbmSeparate {
 
 impl<'a> PassData<'a> for DrawPbmSeparate {
     type Data = (
-        Option<Read<'a, ActiveCamera>>,
+        Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         Read<'a, AmbientColor>,
         Read<'a, AssetStorage<Mesh>>,
