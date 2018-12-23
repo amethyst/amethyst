@@ -19,7 +19,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 * Make `application_root_dir` return a `Result<Path>` instead of a `String` ([#1213])
 * Remove unnecessary texture coordinates offset in `Sprite::from_pixel_values` ([#1267])
-* Changed `ActiveCamera` to have the `Option` inside. ([#1277])
+* Changed `ActiveCamera` to have the `Option` inside. ([#1280])
 
 ### Removed
 
@@ -29,7 +29,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1237]: https://github.com/amethyst/amethyst/pull/1237
 [#1256]: https://github.com/amethyst/amethyst/pull/1256
 [#1267]: https://github.com/amethyst/amethyst/pull/1267
-[#1277]: https://github.com/amethyst/amethyst/pull/1277
+[#1277]: https://github.com/amethyst/amethyst/pull/1280
 
 ## [0.10.0] - 2018-12
 
