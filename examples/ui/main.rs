@@ -69,7 +69,7 @@ impl SimpleState for Example {
 
     fn update(&mut self, state_data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         let StateData { world, .. } = state_data;
-        
+
         if self.fps_display.is_none() {
             world.exec(|finder: UiFinder<'_>| {
                 if let Some(entity) = finder.find("fps") {
@@ -109,8 +109,6 @@ impl SimpleState for Example {
             }
         }
 
-
-
         Trans::None
     }
 }
@@ -134,10 +132,7 @@ fn main() -> amethyst::Result<()> {
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), true)?;
     let mut game = Application::build(resources, Example::default())?
         // Unlimited FPS
-        .with_frame_limit(
-                FrameRateLimitStrategy::Unlimited,
-                9999,
-            )
+        .with_frame_limit(FrameRateLimitStrategy::Unlimited, 9999)
         .build(game_data)?;
     game.run();
     Ok(())

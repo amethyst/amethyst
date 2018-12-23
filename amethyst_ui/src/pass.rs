@@ -120,6 +120,7 @@ impl Pass for DrawUi {
     fn compile(&mut self, mut effect: NewEffect<'_>) -> Result<Effect> {
         #[cfg(feature = "profiler")]
         profile_scope!("ui_pass_build");
+        
         // Initialize a single unit quad, we'll use this mesh when drawing quads later.
         // Centered around (0,0) and of size 2
         let data = Shape::Plane(None).generate_vertices::<Vec<PosTex>>(None);
@@ -220,7 +221,9 @@ impl Pass for DrawUi {
             profile_scope!("ui_pass_sortz");
             self.cached_draw_order
                 .cache
-                .sort_unstable_by(|&(z1, _), &(z2, _)| z1.partial_cmp(&z2).unwrap_or(Ordering::Equal));
+                .sort_unstable_by(|&(z1, _), &(z2, _)| {
+                    z1.partial_cmp(&z2).unwrap_or(Ordering::Equal)
+                });
         }
 
         // Inverted screen dimensions. Used to scale from pixel coordinates to the opengl coordinates in the vertex shader.

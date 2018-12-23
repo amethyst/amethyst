@@ -99,7 +99,7 @@ impl Pass for DrawPbmSeparate {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect> {
         #[cfg(feature = "profiler")]
         profile_scope!("render_pass_pbm_compile");
-        
+
         let mut builder = if self.skinning {
             create_skinning_effect(effect, FRAG_SRC)
         } else {
