@@ -1,6 +1,7 @@
 use std::{hash::Hash, marker::PhantomData};
 
 use amethyst_core::{
+    nalgebra::Vector2,
     shrev::EventChannel,
     specs::prelude::{
         Component, Entities, Entity, Join, Read, ReadExpect, ReadStorage, System, Write,
@@ -18,18 +19,31 @@ pub trait TargetedEvent {
 
 /// The type of ui event.
 /// Click happens if you start and stop clicking on the same ui element.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum UiEventType {
     /// When an element is clicked normally.
+    /// Includes touch events.
     Click,
     /// When the element starts being clicked (On left mouse down).
+    /// Includes touch events.
     ClickStart,
     /// When the element stops being clicked (On left mouse up).
+    /// Includes touch events.
     ClickStop,
     /// When the cursor gets over an element.
     HoverStart,
     /// When the cursor stops being over an element.
     HoverStop,
+    /// When dragging a `Draggable` Ui element.
+    Dragging {
+        /// The position of the mouse relative to the center of the transform when the drag started.
+        element_offset: Vector2<f32>,
+    },
+    /// When stopping to drag a `Draggable` Ui element.
+    Dropped {
+        /// The entity on which the dragged object was dropped.
+        dropped_on: Entity,
+    },
 }
 
 /// A ui event instance.
@@ -58,13 +72,13 @@ impl TargetedEvent for UiEvent {
 /// Will only work if the entity has a UiTransform component attached to it.
 /// Without this, the ui element will not generate events.
 #[derive(Default, Serialize, Deserialize, Clone)]
-pub struct MouseReactive;
+pub struct Interactable;
 
-impl Component for MouseReactive {
-    type Storage = NullStorage<MouseReactive>;
+impl Component for Interactable {
+    type Storage = NullStorage<Interactable>;
 }
 
-/// The system that generates events for `MouseReactive` enabled entities.
+/// The system that generates events for `Interactable` enabled entities.
 /// The generic types A and B represent the A and B generic parameter of the InputHandler<A,B>.
 pub struct UiMouseSystem<A, B> {
     was_down: bool,
@@ -93,7 +107,7 @@ where
     type SystemData = (
         Entities<'a>,
         ReadStorage<'a, UiTransform>,
-        ReadStorage<'a, MouseReactive>,
+        ReadStorage<'a, Interactable>,
         Read<'a, InputHandler<A, B>>,
         ReadExpect<'a, ScreenDimensions>,
         Write<'a, EventChannel<UiEvent>>,
@@ -151,9 +165,12 @@ where
     }
 }
 
-fn targeted<'a, I>(pos: (f32, f32), transforms: I) -> Option<Entity>
+/// Checks if an interactable entity is at the position `pos` and doesn't have anything on top blocking the check.
+/// If you have a non-interactable entity over an interactable entity, it will consider the interactable one blocked, depending
+/// on if `pos` is over the non-interactable one or not.
+pub fn targeted<'a, I>(pos: (f32, f32), transforms: I) -> Option<Entity>
 where
-    I: Iterator<Item = (Entity, &'a UiTransform, Option<&'a MouseReactive>)> + 'a,
+    I: Iterator<Item = (Entity, &'a UiTransform, Option<&'a Interactable>)> + 'a,
 {
     transforms
         .filter(|(_e, t, _m)| t.opaque && t.position_inside(pos.0, pos.1))

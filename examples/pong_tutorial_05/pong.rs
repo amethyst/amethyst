@@ -205,7 +205,6 @@ fn initialise_scoreboard(world: &mut World) {
         1.,
         200.,
         50.,
-        0,
     );
     let p2_transform = UiTransform::new(
         "P2".to_string(),
@@ -215,7 +214,6 @@ fn initialise_scoreboard(world: &mut World) {
         1.,
         200.,
         50.,
-        0,
     );
 
     let p1_score = world

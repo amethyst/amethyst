@@ -163,7 +163,6 @@ fn initialise_score(world: &mut World) {
         1.,
         200.,
         50.,
-        0,
     );
 
     let p2_transform = UiTransform::new(
@@ -174,7 +173,6 @@ fn initialise_score(world: &mut World) {
         1.,
         200.,
         50.,
-        0,
     );
 
     let p1_score = world
