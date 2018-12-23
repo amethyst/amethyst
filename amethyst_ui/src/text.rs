@@ -180,7 +180,7 @@ impl<'a> System<'a> for TextEditingMouseSystem {
 
         // TODO: Finish TextEditingCursorSystem and remove this
         {
-            if let Some((text_editing, _)) = (&mut text_editings, &selecteds).join().next() {
+            for (text_editing, _) in (&mut text_editings, &selecteds).join() {
                 text_editing.cursor_blink_timer += time.delta_real_seconds();
                 if text_editing.cursor_blink_timer >= 0.5 {
                     text_editing.cursor_blink_timer = 0.0;
@@ -189,8 +189,8 @@ impl<'a> System<'a> for TextEditingMouseSystem {
         }
 
         // Process only if an editable text is selected.
-        if let Some((ref mut text, ref mut text_editing, _)) =
-            (&mut texts, &mut text_editings, &selecteds).join().next()
+        for (ref mut text, ref mut text_editing, _) in
+            (&mut texts, &mut text_editings, &selecteds).join()
         {
             for event in
                 events.read(self.reader.as_mut().expect(
