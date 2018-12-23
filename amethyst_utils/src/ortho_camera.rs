@@ -61,7 +61,7 @@ impl Default for CameraOrthoWorldCoordinates {
 /// `Component` attached to the camera's entity that allows automatically adjusting the camera's matrix according
 /// to preferences in the "mode" and "world_coordinates" fields.
 /// It adjusts the camera so that the camera's world coordinates are always visible.
-/// You must add the `CameraNormalOrthoSystem` to your dispatcher for this to take effect (no dependencies required).
+/// You must add the `CameraOrthoSystem` to your dispatcher for this to take effect (no dependencies required).
 #[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, PrefabData)]
 #[prefab(Component)]
 pub struct CameraOrtho {

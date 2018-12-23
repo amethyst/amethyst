@@ -698,6 +698,58 @@ where
         self
     }
 
+    /// Registers the default asset store with the loader logic of the Application.
+    ///
+    /// # Parameters
+    ///
+    /// - `store`: The asset store being registered.
+    ///
+    /// # Type Parameters
+    ///
+    /// - `S`: A `Store` asset loader. Typically this is a [`Directory`](../amethyst_assets/struct.Directory.html).
+    ///
+    /// # Returns
+    ///
+    /// This function returns ApplicationBuilder after it has modified it.
+    ///
+    /// # Examples
+    ///
+    /// ~~~no_run
+    /// use amethyst::prelude::*;
+    /// use amethyst::assets::{Directory, Loader};
+    /// use amethyst::renderer::ObjFormat;
+    /// use amethyst::ecs::prelude::World;
+    ///
+    /// let mut game = Application::build("assets/", LoadingState)
+    ///     .expect("Failed to initialize")
+    ///     // Register the directory "custom_directory" as default source for the loader.
+    ///     .with_default_source(Directory::new("custom_directory"))
+    ///     .build(GameDataBuilder::default())
+    ///     .expect("Failed to build game")
+    ///     .run();
+    ///
+    /// struct LoadingState;
+    /// impl SimpleState for LoadingState {
+    ///     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+    ///         let storage = data.world.read_resource();
+    ///
+    ///         let loader = data.world.read_resource::<Loader>();
+    ///         // Load a teapot mesh from the directory that registered above.
+    ///         let mesh = loader.load("teapot", ObjFormat, (), (), &storage);
+    ///     }
+    /// }
+    /// ~~~
+    pub fn with_default_source<O>(self, store: O) -> Self
+    where
+        O: Source,
+    {
+        {
+            let mut loader = self.world.write_resource::<Loader>();
+            loader.set_default_source(store);
+        }
+        self
+    }
+
     /// Sets the maximum frames per second of this game.
     ///
     /// # Parameters

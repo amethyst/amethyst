@@ -20,9 +20,8 @@ check formatting:
     - cargo fmt --version
     - cargo fmt --all -- --check
   only:
-    - staging
-    - trying
-    - master
+    - branches
+    - merge_requests
 
 run tests:
   stage: test
@@ -31,6 +30,5 @@ run tests:
     - cargo --version
     - cargo test --verbose --all --features sdl_controller,profiler
   only:
-    - staging
-    - trying
-    - master
+    - branches
+    - merge_requests

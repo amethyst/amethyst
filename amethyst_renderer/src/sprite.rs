@@ -121,12 +121,15 @@ impl Sprite {
         // Texture coordinates are expressed as fractions of the position on the image.
         // Y axis texture coordinates start at the bottom of the image, so we have to invert them.
         //
-        // The 0.5 offsets is to get pixel perfection. See
+        // For pixel perfect result, the sprite border must be rendered exactly at
+        // screen pixel border or use nearest-neighbor sampling.
         // <http://www.mindcontrol.org/~hplus/graphics/opengl-pixel-perfect.html>
-        let left = (pixel_left + 0.5) / image_w;
-        let right = (pixel_right - 0.5) / image_w;
-        let top = (image_h - (pixel_top + 0.5)) / image_h;
-        let bottom = (image_h - (pixel_bottom - 0.5)) / image_h;
+        // NOTE: Maybe we should provide an option to round coordinates from `Transform`
+        // to nearest integer in `DrawFlat2D` pass before rendering.
+        let left = (pixel_left) / image_w;
+        let right = (pixel_right) / image_w;
+        let top = (image_h - pixel_top) / image_h;
+        let bottom = (image_h - pixel_bottom) / image_h;
 
         let tex_coords = TextureCoordinates {
             left,
@@ -399,9 +402,9 @@ mod test {
 
         assert_eq!(
             Sprite::from((
-                (10., 20.),                                    // Sprite w and h
-                [-5., -10.],                                   // Offsets
-                [0.5 / 30., 9.5 / 30., 0.5 / 40., 19.5 / 40.], // Texture coordinates
+                (10., 20.),                     // Sprite w and h
+                [-5., -10.],                    // Offsets
+                [0., 10. / 30., 0., 20. / 40.], // Texture coordinates
             )),
             Sprite::from_pixel_values(
                 image_w, image_h, sprite_w, sprite_h, pixel_left, pixel_top, offsets

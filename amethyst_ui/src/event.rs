@@ -13,6 +13,10 @@ use amethyst_renderer::{MouseButton, ScreenDimensions};
 
 use crate::transform::UiTransform;
 
+pub trait TargetedEvent {
+    fn get_target(&self) -> Entity;
+}
+
 /// The type of ui event.
 /// Click happens if you start and stop clicking on the same ui element.
 #[derive(Debug, Clone, PartialEq)]
@@ -55,6 +59,12 @@ impl UiEvent {
     /// Creates a new UiEvent.
     pub fn new(event_type: UiEventType, target: Entity) -> Self {
         UiEvent { event_type, target }
+    }
+}
+
+impl TargetedEvent for UiEvent {
+    fn get_target(&self) -> Entity {
+        self.target
     }
 }
 

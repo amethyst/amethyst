@@ -10,7 +10,12 @@ use amethyst_core::{
 };
 use amethyst_renderer::{BlinkSystem, TextureFormat};
 
-use super::*;
+use crate::{
+    FontAsset, FontFormat, NoCustomUi, ResizeSystem, ToNativeWidget, UiButtonActionRetriggerSystem,
+    UiButtonSystem, UiLoaderSystem, UiMouseSystem, UiSoundRetriggerSystem,
+    UiSoundSystem, UiTransformSystem, CacheSelectionOrderSystem, SelectionMouseSystem, 
+    SelectionKeyboardSystem, TextEditingMouseSystem, TextEditingInputSystem,
+};
 
 /// UI bundle
 ///
@@ -89,6 +94,18 @@ where
             UiButtonSystem::new(),
             "ui_button_system",
             &["ui_mouse_system"],
+        );
+
+        builder.add(
+            UiButtonActionRetriggerSystem::new(),
+            "ui_button_action_retrigger_system",
+            &["ui_button_system"],
+        );
+        builder.add(UiSoundSystem::new(), "ui_sound_system", &[]);
+        builder.add(
+            UiSoundRetriggerSystem::new(),
+            "ui_sound_retrigger_system",
+            &["ui_sound_system"],
         );
 
         // Required for text editing. You want the cursor image to blink.

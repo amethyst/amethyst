@@ -112,6 +112,8 @@ Container(
                 font: File("font/square.ttf", Ttf, ()),
                 font_size: 20.,
                 normal_text_color: (0.2, 0.2, 1.0, 1.0),
+                hover_text_color: (0.4, 0.4, 1.0, 1.0),
+                press_text_color: (0.6, 0.6, 1.0, 1.0),
                 normal_image: Data(Rgba((0., 1., 0., 1.), (channel: Srgb))),
                 hover_image: Data(Rgba((0.3, 1., 0.3, 1.), (channel: Srgb))),
                 press_image: Data(Rgba((0.15, 1., 0.15, 1.), (channel: Srgb))),

@@ -26,14 +26,18 @@ extern crate serde;
 use shred;
 #[macro_use]
 extern crate shred_derive;
+
+use winit;
+#[macro_use]
+extern crate smallvec;
+
 use unicode_normalization;
 use unicode_segmentation;
-use winit;
 
-mod action_components;
 mod bundle;
 mod button;
 mod event;
+mod event_retrigger;
 mod font;
 mod format;
 mod layout;
@@ -42,15 +46,19 @@ mod prefab;
 mod resize;
 mod selection;
 mod selection_order_cache;
+mod sound;
 mod text;
 mod text_editing;
 mod transform;
 
 pub use self::{
-    action_components::{OnUiActionImage, OnUiActionSound},
     bundle::UiBundle,
-    button::{UiButton, UiButtonBuilder, UiButtonBuilderResources, UiButtonSystem},
+    button::{
+        UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionRetriggerSystem,
+        UiButtonActionType, UiButtonBuilder, UiButtonBuilderResources, UiButtonSystem,
+    },
     event::{targeted, Interactable, UiEvent, UiEventType, UiMouseSystem},
+    event_retrigger::{EventReceiver, EventRetriggerSystem},
     font::{
         default::get_default_font,
         systemfont::{default_system_font, get_all_font_handles, list_system_font_families},
@@ -67,5 +75,6 @@ pub use self::{
     selection_order_cache::{CacheSelectionOrderSystem, CachedSelectionOrder},
     text::{LineMode, TextEditing, TextEditingMouseSystem, UiText},
     text_editing::TextEditingInputSystem,
+    sound::{UiPlaySoundAction, UiSoundRetrigger, UiSoundRetriggerSystem, UiSoundSystem},
     transform::{UiFinder, UiTransform},
 };
