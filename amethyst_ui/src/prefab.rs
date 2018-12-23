@@ -15,8 +15,8 @@ use amethyst_renderer::{
 };
 
 use crate::{
-    get_default_font, Anchor, FontAsset, FontFormat, LineMode, Interactable, Stretch, TextEditing,
-    UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionType, Selectable,
+    get_default_font, Anchor, FontAsset, FontFormat, Interactable, LineMode, Selectable, Stretch,
+    TextEditing, UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionType,
     UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform,
 };
 

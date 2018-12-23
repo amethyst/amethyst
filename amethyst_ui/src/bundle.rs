@@ -11,10 +11,10 @@ use amethyst_core::{
 use amethyst_renderer::{BlinkSystem, TextureFormat};
 
 use crate::{
-    FontAsset, FontFormat, NoCustomUi, ResizeSystem, ToNativeWidget, UiButtonActionRetriggerSystem,
-    UiButtonSystem, UiLoaderSystem, UiMouseSystem, UiSoundRetriggerSystem,
-    UiSoundSystem, UiTransformSystem, CacheSelectionOrderSystem, SelectionMouseSystem, 
-    SelectionKeyboardSystem, TextEditingMouseSystem, TextEditingInputSystem,
+    CacheSelectionOrderSystem, FontAsset, FontFormat, NoCustomUi, ResizeSystem,
+    SelectionKeyboardSystem, SelectionMouseSystem, TextEditingInputSystem, TextEditingMouseSystem,
+    ToNativeWidget, UiButtonActionRetriggerSystem, UiButtonSystem, UiLoaderSystem, UiMouseSystem,
+    UiSoundRetriggerSystem, UiSoundSystem, UiTransformSystem,
 };
 
 /// UI bundle
