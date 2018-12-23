@@ -25,14 +25,18 @@ extern crate serde;
 use shred;
 #[macro_use]
 extern crate shred_derive;
+
+use winit;
+#[macro_use]
+extern crate smallvec;
+
 use unicode_normalization;
 use unicode_segmentation;
-use winit;
 
-mod action_components;
 mod bundle;
 mod button;
 mod event;
+mod event_retrigger;
 mod focused;
 mod font;
 mod format;
@@ -41,14 +45,18 @@ mod layout;
 mod pass;
 mod prefab;
 mod resize;
+mod sound;
 mod text;
 mod transform;
 
 pub use self::{
-    action_components::{OnUiActionImage, OnUiActionSound},
     bundle::UiBundle,
-    button::{UiButton, UiButtonBuilder, UiButtonBuilderResources, UiButtonSystem},
+    button::{
+        UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionRetriggerSystem,
+        UiButtonActionType, UiButtonBuilder, UiButtonBuilderResources, UiButtonSystem,
+    },
     event::{MouseReactive, UiEvent, UiEventType, UiMouseSystem},
+    event_retrigger::{EventReceiver, EventRetriggerSystem},
     focused::UiFocused,
     font::{
         default::get_default_font,
@@ -63,6 +71,7 @@ pub use self::{
         UiPrefab, UiTextBuilder, UiTransformBuilder, UiWidget,
     },
     resize::{ResizeSystem, UiResize},
+    sound::{UiPlaySoundAction, UiSoundRetrigger, UiSoundRetriggerSystem, UiSoundSystem},
     text::{LineMode, TextEditing, UiKeyboardSystem, UiText},
     transform::{UiFinder, UiTransform},
 };
