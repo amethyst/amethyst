@@ -189,13 +189,13 @@ impl<'a> System<'a> for TextEditingMouseSystem {
         }
 
         // Process only if an editable text is selected.
-        for (ref mut text, ref mut text_editing, _) in
-            (&mut texts, &mut text_editings, &selecteds).join()
-        {
-            for event in
-                events.read(self.reader.as_mut().expect(
-                    "`UiKeyboardSystem::setup` was not called before `UiKeyboardSystem::run`",
-                ))
+        for event in events.read(
+            self.reader
+                .as_mut()
+                .expect("`UiKeyboardSystem::setup` was not called before `UiKeyboardSystem::run`"),
+        ) {
+            for (ref mut text, ref mut text_editing, _) in
+                (&mut texts, &mut text_editings, &selecteds).join()
             {
                 // Process events for the whole UI.
                 match *event {
