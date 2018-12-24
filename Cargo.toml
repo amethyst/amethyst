@@ -118,6 +118,10 @@ name = "pong"
 path = "examples/pong/main.rs"
 
 [[example]]
+name = "asset_custom"
+path = "examples/asset_custom/main.rs"
+
+[[example]]
 name = "asset_loading"
 path = "examples/asset_loading/main.rs"
 
