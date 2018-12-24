@@ -10,6 +10,7 @@ layout (std140) uniform VertexArgs {
     uniform mat4 proj;
     uniform mat4 view;
     uniform mat4 model;
+    uniform vec4 color;
 };
 
 in vec3 position;
@@ -24,6 +25,7 @@ out VertexData {
     vec3 normal;
     vec3 tangent;
     vec2 tex_coord;
+    vec4 color;
 } vertex;
 
 
@@ -40,5 +42,6 @@ void main() {
     vertex.normal = mat3_transform * normal;
     vertex.tangent = mat3_transform * tangent;
     vertex.tex_coord = tex_coord;
+    vertex.color = color;
     gl_Position = proj * view * vertex_position;
 }

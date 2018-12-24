@@ -15,7 +15,13 @@ in float depth;
 in vec2 u_offset;
 in vec2 v_offset;
 
-out vec2 tex_uv;
+in vec4 color;
+
+
+out VertexData {
+    vec2 tex_uv;
+    vec4 color;
+} vertex;
 
 const vec2 positions[6] = vec2[](
     // First triangle
@@ -39,8 +45,8 @@ void main() {
     float tex_v = positions[gl_VertexID][1];
 
     vec2 uv = pos + tex_u * dir_x + tex_v * dir_y;
-    tex_uv = texture_coords(vec2(tex_u, tex_v), u_offset, v_offset);
-
+    vertex.tex_uv = texture_coords(vec2(tex_u, tex_v), u_offset, v_offset);
+    vertex.color = color;
     vec4 vertex = vec4(uv, depth, 1.0);
     gl_Position = proj * view * vertex;
 }

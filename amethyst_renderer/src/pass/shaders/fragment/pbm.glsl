@@ -95,6 +95,7 @@ in VertexData {
     vec3 normal;
     vec3 tangent;
     vec2 tex_coord;
+    vec4 color;
 } vertex;
 
 out vec4 out_color;
@@ -282,5 +283,5 @@ void main() {
     vec3 ambient = ambient_color * albedo * ambient_occlusion;
     vec3 color = ambient + lighted + emission;
 
-    out_color = vec4(color, alpha);
+    out_color = vec4(color, alpha) * vertex.color;
 }

@@ -31,6 +31,7 @@ use crate::{
     types::{Encoder, Factory},
     vertex::{Attributes, Normal, Position, Separate, Tangent, TexCoord, VertexFormat},
     visibility::Visibility,
+    Rgba,
 };
 
 use super::*;
@@ -92,6 +93,7 @@ impl<'a> PassData<'a> for DrawPbmSeparate {
         ReadStorage<'a, GlobalTransform>,
         ReadStorage<'a, Light>,
         ReadStorage<'a, JointTransforms>,
+        ReadStorage<'a, Rgba>,
     );
 }
 
@@ -156,6 +158,7 @@ impl Pass for DrawPbmSeparate {
             global,
             light,
             joints,
+            rgba,
         ): <Self as PassData<'a>>::Data,
     ) {
         let camera = get_camera(active, &camera, &global);
@@ -164,11 +167,12 @@ impl Pass for DrawPbmSeparate {
 
         match visibility {
             None => {
-                for (joint, mesh, material, global, _, _) in (
+                for (joint, mesh, material, global, rgba, _, _) in (
                     joints.maybe(),
                     &mesh,
                     &material,
                     &global,
+                    rgba.maybe(),
                     !&hidden,
                     !&hidden_prop,
                 )
@@ -183,6 +187,7 @@ impl Pass for DrawPbmSeparate {
                         &tex_storage,
                         Some(material),
                         &material_defaults,
+                        rgba,
                         camera,
                         Some(global),
                         &ATTRIBUTES,
@@ -191,11 +196,12 @@ impl Pass for DrawPbmSeparate {
                 }
             }
             Some(ref visibility) => {
-                for (joint, mesh, material, global, _) in (
+                for (joint, mesh, material, global, rgba, _) in (
                     joints.maybe(),
                     &mesh,
                     &material,
                     &global,
+                    rgba.maybe(),
                     &visibility.visible_unordered,
                 )
                     .join()
@@ -209,6 +215,7 @@ impl Pass for DrawPbmSeparate {
                         &tex_storage,
                         Some(material),
                         &material_defaults,
+                        rgba,
                         camera,
                         Some(global),
                         &ATTRIBUTES,
@@ -227,6 +234,7 @@ impl Pass for DrawPbmSeparate {
                             &tex_storage,
                             material.get(*entity),
                             &material_defaults,
+                            rgba.get(*entity),
                             camera,
                             global.get(*entity),
                             &ATTRIBUTES,
