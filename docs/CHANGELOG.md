@@ -14,6 +14,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Introduce `application_dir` utility ([#1213])
 * Derive `Copy`, `PartialEq`, `Eq`, `Serialize`, `Deserialize` for `Flipped` component. ([#1237])
 * A way to change the default `Source` using `set_default_source` and `with_default_source`. ([#1256])
+* "How To" guides for using assets and defining custom assets. ([#1251])
+* `amethyst_renderer::Rgba` is now a `Component` that changes the color and transparency of the entity
+it is attached to. ([#1282])
 
 ### Changed
 
@@ -27,9 +30,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 [#1213]: https://github.com/amethyst/amethyst/pull/1213
 [#1237]: https://github.com/amethyst/amethyst/pull/1237
+[#1251]: https://github.com/amethyst/amethyst/pull/1251
 [#1256]: https://github.com/amethyst/amethyst/pull/1256
 [#1267]: https://github.com/amethyst/amethyst/pull/1267
 [#1280]: https://github.com/amethyst/amethyst/pull/1280
+[#1282]: https://github.com/amethyst/amethyst/pull/1282
 
 ## [0.10.0] - 2018-12
 
@@ -735,4 +740,3 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [0.4.1]: https://github.com/amethyst/amethyst/compare/v0.4...v0.4.1
 [0.4.0]: https://github.com/amethyst/amethyst/compare/v0.3.1...v0.4
 [0.3.1]: https://github.com/amethyst/amethyst/compare/v0.3...v0.3.1
-

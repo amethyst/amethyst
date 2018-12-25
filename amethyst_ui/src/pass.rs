@@ -14,7 +14,7 @@ use gfx_glyph::{
     BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher, Layout, Point, Scale,
     SectionText, VariedSection,
 };
-use glsl_layout::{vec2, Uniform};
+use glsl_layout::{vec2, vec4, Uniform};
 use hibitset::BitSet;
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -28,8 +28,8 @@ use amethyst_renderer::{
         pass::{Pass, PassData},
         Effect, NewEffect,
     },
-    Encoder, Factory, Hidden, HiddenPropagate, Mesh, PosTex, Resources, ScreenDimensions, Shape,
-    Texture, TextureData, TextureHandle, TextureMetadata, VertexFormat,
+    Encoder, Factory, Hidden, HiddenPropagate, Mesh, PosTex, Resources, Rgba, ScreenDimensions,
+    Shape, Texture, TextureData, TextureHandle, TextureMetadata, VertexFormat,
 };
 
 use super::*;
@@ -44,6 +44,7 @@ struct VertexArgs {
     invert_window_size: vec2,
     coord: vec2,
     dimension: vec2,
+    color: vec4,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -103,6 +104,7 @@ impl<'a> PassData<'a> for DrawUi {
         ReadStorage<'a, Hidden>,
         ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, Selected>,
+        ReadStorage<'a, Rgba>,
     );
 }
 
@@ -146,6 +148,7 @@ impl Pass for DrawUi {
             hidden,
             hidden_prop,
             selecteds,
+            rgba,
         ): <Self as PassData<'_>>::Data,
     ) {
         // Populate and update the draw order cache.
@@ -241,6 +244,7 @@ impl Pass for DrawUi {
             let ui_transform = ui_transform
                 .get(entity)
                 .expect("Unreachable: Entity is guaranteed to be present based on earlier actions");
+            let rgba: [f32; 4] = rgba.get(entity).cloned().unwrap_or(Rgba::WHITE).into();
             if let Some(image) = ui_image
                 .get(entity)
                 .and_then(|image| tex_storage.get(&image))
@@ -250,6 +254,7 @@ impl Pass for DrawUi {
                     // Coordinates are middle centered. It makes it easier to do layouting in most cases.
                     coord: [ui_transform.pixel_x, ui_transform.pixel_y].into(),
                     dimension: [ui_transform.pixel_width, ui_transform.pixel_height].into(),
+                    color: rgba.into(),
                 };
 
                 effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
@@ -321,23 +326,24 @@ impl Pass for DrawUi {
                         start_byte.map(|start_byte| (editing, (start_byte, end_byte)))
                     })
                     .map(|(editing, (start_byte, end_byte))| {
+                        let base_color = multiply_colors(ui_text.color, rgba);
                         vec![
                             SectionText {
                                 text: &((rendered_string)[0..start_byte]),
                                 scale: scale,
-                                color: ui_text.color,
+                                color: base_color,
                                 font_id: FontId(0),
                             },
                             SectionText {
                                 text: &((rendered_string)[start_byte..end_byte]),
                                 scale: scale,
-                                color: editing.selected_text_color,
+                                color: multiply_colors(editing.selected_text_color, rgba),
                                 font_id: FontId(0),
                             },
                             SectionText {
                                 text: &((rendered_string)[end_byte..]),
                                 scale: scale,
-                                color: ui_text.color,
+                                color: base_color,
                                 font_id: FontId(0),
                             },
                         ]
@@ -346,7 +352,7 @@ impl Pass for DrawUi {
                         vec![SectionText {
                             text: rendered_string,
                             scale: scale,
-                            color: ui_text.color,
+                            color: multiply_colors(ui_text.color, rgba),
                             font_id: FontId(0),
                         }]
                     });
@@ -406,16 +412,14 @@ impl Pass for DrawUi {
                         .cursor_position
                         .max(ed.cursor_position + ed.highlight_vector)
                         as usize;
-                    let color = if selecteds.contains(entity) {
-                        ed.selected_background_color
-                    } else {
-                        [
-                            ed.selected_background_color[0] * 0.5,
-                            ed.selected_background_color[1] * 0.5,
-                            ed.selected_background_color[2] * 0.5,
-                            ed.selected_background_color[3] * 0.5,
-                        ]
-                    };
+                    let color = multiply_colors(
+                        if selecteds.contains(entity) {
+                            ed.selected_background_color
+                        } else {
+                            multiply_colors(ed.selected_background_color, [0.5, 0.5, 0.5, 0.5])
+                        },
+                        rgba,
+                    );
                     tex_storage
                         .get(&cached_color_texture(cache, color, &loader, &tex_storage))
                         .map(|tex| (tex, (start, end)))
@@ -450,6 +454,7 @@ impl Pass for DrawUi {
                             ]
                             .into(),
                             dimension: [width, height].into(),
+                            color: rgba.into(),
                         };
                         effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
                         effect.draw(mesh.slice(), encoder);
@@ -477,7 +482,7 @@ impl Pass for DrawUi {
                         tex_storage
                             .get(&cached_color_texture(
                                 cache,
-                                ui_text.color,
+                                multiply_colors(ui_text.color, rgba),
                                 &loader,
                                 &tex_storage,
                             ))
@@ -551,6 +556,7 @@ impl Pass for DrawUi {
                                 invert_window_size: invert_window_size.into(),
                                 coord: [x, screen_dimensions.height() - y + ascent / 2.0].into(),
                                 dimension: [width, height].into(),
+                                color: rgba.into(),
                             };
                             effect.update_constant_buffer(
                                 "VertexArgs",
@@ -570,6 +576,10 @@ impl Pass for DrawUi {
             self.glyph_brushes.remove(&id);
         }
     }
+}
+
+fn multiply_colors(a: [f32; 4], b: [f32; 4]) -> [f32; 4] {
+    [a[0] * b[0], a[1] * b[1], a[2] * b[2], a[3] * b[3]]
 }
 
 fn cached_color_texture(

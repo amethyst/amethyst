@@ -51,9 +51,13 @@ Also contains a custom system that move the camera and the scene.
 
 ![renderable example result](assets/img/renderable.png)
 
+### Asset custom
+
+Load a custom asset using a custom format.
+
 ### Asset loading
 
-Create a custom asset format, and use the asset loader to load assets using the format.
+Create a custom format, and use the asset loader to load assets using the format.
 
 ![asset loading example result](assets/img/asset_loading.png)
 

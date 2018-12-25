@@ -6,6 +6,7 @@ layout (std140) uniform VertexArgs {
     uniform mat4 proj;
     uniform mat4 view;
     uniform mat4 model;
+    uniform vec4 color; // Ignored
 };
 
 in vec3 position;

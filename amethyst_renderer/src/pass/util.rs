@@ -19,6 +19,7 @@ use crate::{
     tex::Texture,
     types::Encoder,
     vertex::Attributes,
+    Rgba,
 };
 
 pub(crate) enum TextureType {
@@ -44,6 +45,7 @@ pub(crate) struct VertexArgs {
     proj: mat4,
     view: mat4,
     model: mat4,
+    rgba: vec4,
 }
 
 #[repr(C, align(16))]
@@ -246,6 +248,7 @@ pub fn set_vertex_args(
     encoder: &mut Encoder,
     camera: Option<(&Camera, &GlobalTransform)>,
     global: &GlobalTransform,
+    rgba: Rgba,
 ) {
     let vertex_args = camera
         .as_ref()
@@ -261,6 +264,7 @@ pub fn set_vertex_args(
                 proj: proj.into(),
                 view: view.into(),
                 model: model.into(),
+                rgba: rgba.into(),
             }
         })
         .unwrap_or_else(|| {
@@ -271,6 +275,7 @@ pub fn set_vertex_args(
                 proj: proj.into(),
                 view: view.into(),
                 model: model.into(),
+                rgba: rgba.into(),
             }
         });
     effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
@@ -314,6 +319,7 @@ pub(crate) fn draw_mesh(
     tex_storage: &AssetStorage<Texture>,
     material: Option<&Material>,
     material_defaults: &MaterialDefaults,
+    rgba: Option<&Rgba>,
     camera: Option<(&Camera, &GlobalTransform)>,
     global: Option<&GlobalTransform>,
     attributes: &[Attributes<'static>],
@@ -333,7 +339,13 @@ pub(crate) fn draw_mesh(
         return;
     }
 
-    set_vertex_args(effect, encoder, camera, global);
+    set_vertex_args(
+        effect,
+        encoder,
+        camera,
+        global,
+        rgba.cloned().unwrap_or(Rgba::WHITE),
+    );
 
     if skinning {
         if let Some(joint) = joint {

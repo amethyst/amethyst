@@ -11,6 +11,7 @@ use gfx::{
 use crate::{
     pass::util::TextureType,
     vertex::{Attribute, AttributeFormat, Attributes, VertexFormat, With},
+    Color,
 };
 
 static VERT_SRC: &[u8] = include_bytes!("../shaders/vertex/sprite.glsl");
@@ -81,6 +82,7 @@ struct SpriteInstance {
     pub u_offset: [f32; 2],
     pub v_offset: [f32; 2],
     pub depth: f32,
+    pub color: [f32; 4],
 }
 
 unsafe impl Pod for SpriteInstance {}
@@ -93,6 +95,7 @@ impl VertexFormat for SpriteInstance {
         (OffsetU::NAME, <Self as With<OffsetU>>::FORMAT),
         (OffsetV::NAME, <Self as With<OffsetV>>::FORMAT),
         (Depth::NAME, <Self as With<Depth>>::FORMAT),
+        (Color::NAME, <Self as With<Color>>::FORMAT),
     ];
 }
 
@@ -135,5 +138,12 @@ impl With<Depth> for SpriteInstance {
     const FORMAT: AttributeFormat = Element {
         offset: DirX::SIZE + DirY::SIZE + Pos::SIZE + OffsetU::SIZE + OffsetV::SIZE,
         format: Depth::FORMAT,
+    };
+}
+
+impl With<Color> for SpriteInstance {
+    const FORMAT: AttributeFormat = Element {
+        offset: DirX::SIZE + DirY::SIZE + Pos::SIZE + OffsetU::SIZE + OffsetV::SIZE + Depth::SIZE,
+        format: Color::FORMAT,
     };
 }

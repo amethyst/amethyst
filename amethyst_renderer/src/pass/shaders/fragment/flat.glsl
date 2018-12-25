@@ -14,6 +14,7 @@ in VertexData {
     vec3 normal;
     vec3 tangent;
     vec2 tex_coord;
+    vec4 color;
 } vertex;
 
 out vec4 color;
@@ -27,5 +28,5 @@ vec2 tex_coords(vec2 coord, vec2 u, vec2 v) {
 }
 
 void main() {
-    color = texture(albedo, tex_coords(vertex.tex_coord, albedo_offset.u_offset, albedo_offset.v_offset));
+    color = texture(albedo, tex_coords(vertex.tex_coord, albedo_offset.u_offset, albedo_offset.v_offset)) * vertex.color;
 }
