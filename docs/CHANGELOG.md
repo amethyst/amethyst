@@ -22,6 +22,7 @@ it is attached to. ([#1282])
 
 * Make `application_root_dir` return a `Result<Path>` instead of a `String` ([#1213])
 * Remove unnecessary texture coordinates offset in `Sprite::from_pixel_values` ([#1267])
+* Changed `ActiveCamera` to have the `Option` inside. ([#1280])
 
 ### Removed
 
@@ -32,6 +33,7 @@ it is attached to. ([#1282])
 [#1251]: https://github.com/amethyst/amethyst/pull/1251
 [#1256]: https://github.com/amethyst/amethyst/pull/1256
 [#1267]: https://github.com/amethyst/amethyst/pull/1267
+[#1280]: https://github.com/amethyst/amethyst/pull/1280
 [#1282]: https://github.com/amethyst/amethyst/pull/1282
 
 ## [0.10.0] - 2018-12

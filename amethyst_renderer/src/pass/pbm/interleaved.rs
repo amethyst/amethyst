@@ -77,7 +77,7 @@ where
     V: Query<(Position, Normal, Tangent, TexCoord)>,
 {
     type Data = (
-        Option<Read<'a, ActiveCamera>>,
+        Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         Read<'a, AmbientColor>,
         Read<'a, AssetStorage<Mesh>>,

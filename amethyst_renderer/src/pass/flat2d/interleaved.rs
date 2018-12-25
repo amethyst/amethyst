@@ -66,7 +66,7 @@ where
 
 impl<'a> PassData<'a> for DrawFlat2D {
     type Data = (
-        Option<Read<'a, ActiveCamera>>,
+        Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         Read<'a, AssetStorage<SpriteSheet>>,
         Read<'a, AssetStorage<Texture>>,

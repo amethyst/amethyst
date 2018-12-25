@@ -59,7 +59,7 @@ impl<'a> System<'a> for VisibilitySortingSystem {
         Write<'a, Visibility>,
         ReadStorage<'a, Hidden>,
         ReadStorage<'a, HiddenPropagate>,
-        Option<Read<'a, ActiveCamera>>,
+        Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Transparent>,
         ReadStorage<'a, GlobalTransform>,
@@ -72,7 +72,8 @@ impl<'a> System<'a> for VisibilitySortingSystem {
         let origin = Point3::origin();
 
         let camera: Option<&GlobalTransform> = active
-            .and_then(|a| global.get(a.entity))
+            .entity
+            .and_then(|entity| global.get(entity))
             .or_else(|| (&camera, &global).join().map(|cg| cg.1).next());
         let camera_backward = camera
             .map(|c| c.0.column(2).xyz())

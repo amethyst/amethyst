@@ -59,7 +59,7 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
         Write<'a, SpriteVisibility>,
         ReadStorage<'a, Hidden>,
         ReadStorage<'a, HiddenPropagate>,
-        Option<Read<'a, ActiveCamera>>,
+        Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Transparent>,
         ReadStorage<'a, GlobalTransform>,
@@ -74,7 +74,8 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
         // The camera position is used to determine culling, but the sprites are ordered based on
         // the Z coordinate
         let camera: Option<&GlobalTransform> = active
-            .and_then(|a| global.get(a.entity))
+            .entity
+            .and_then(|entity| global.get(entity))
             .or_else(|| (&camera, &global).join().map(|cg| cg.1).next());
         let camera_backward = camera
             .map(|c| c.0.column(2).xyz().into())

@@ -81,10 +81,10 @@ impl Component for Camera {
 
 /// Active camera resource, used by the renderer to choose which camera to get the view matrix from.
 /// If no active camera is found, the first camera will be used as a fallback.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Default)]
 pub struct ActiveCamera {
     /// Camera entity
-    pub entity: Entity,
+    pub entity: Option<Entity>,
 }
 
 /// Projection prefab
@@ -129,7 +129,7 @@ impl<'a> PrefabData<'a> for CameraPrefab {
 pub struct ActiveCameraPrefab(usize);
 
 impl<'a> PrefabData<'a> for ActiveCameraPrefab {
-    type SystemData = (Option<Write<'a, ActiveCamera>>,);
+    type SystemData = (Write<'a, ActiveCamera>,);
     type Result = ();
 
     fn add_to_entity(
@@ -138,9 +138,7 @@ impl<'a> PrefabData<'a> for ActiveCameraPrefab {
         system_data: &mut Self::SystemData,
         entities: &[Entity],
     ) -> Result<(), PrefabError> {
-        if let Some(ref mut cam) = system_data.0 {
-            cam.entity = entities[self.0];
-        }
+        system_data.0.entity = Some(entities[self.0]);
         // TODO: if no `ActiveCamera` insert using `LazyUpdate`, require changes to `specs`
         Ok(())
     }

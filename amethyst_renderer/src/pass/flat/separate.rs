@@ -83,7 +83,7 @@ where
 
 impl<'a> PassData<'a> for DrawFlatSeparate {
     type Data = (
-        Option<Read<'a, ActiveCamera>>,
+        Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         Read<'a, AssetStorage<Mesh>>,
         Read<'a, AssetStorage<Texture>>,
