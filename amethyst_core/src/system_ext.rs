@@ -94,7 +94,7 @@ where
     }
 }
 
-/// A system that is enabled when `U` has a specific value.
+/// A system that is enabled when `V` has a specific value.
 ///
 /// This is created using the [`SystemExt::pausable`] method.
 ///
