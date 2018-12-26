@@ -151,7 +151,7 @@ impl Error {
     ///
     /// **Warning:** This erases most diagnostics in favor of returning only the top error.
     /// `std::error::Error` is expanded further.
-    pub fn as_error(&self) -> &dyn error::Error {
+    pub fn as_error(&self) -> &(dyn error::Error + 'static) {
         &self.inner.error
     }
 }
