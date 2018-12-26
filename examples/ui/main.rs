@@ -123,12 +123,12 @@ impl<'a> System<'a> for UiEventHandlerSystem {
     type SystemData = Write<'a, EventChannel<UiEvent>>;
 
     fn run(&mut self, mut events: Self::SystemData) {
-        if self.reader_id.is_none() {
-            self.reader_id = Some(events.register_reader());
-        }
+        let reader_id = self
+            .reader_id
+            .get_or_insert_with(|| events.register_reader());
 
         // Reader id was just initialized above if empty
-        for ev in events.read(self.reader_id.as_mut().unwrap()) {
+        for ev in events.read(reader_id) {
             info!("[SYSTEM] You just interacted with a ui element: {:?}", ev);
         }
     }
