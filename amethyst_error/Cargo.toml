@@ -3,6 +3,7 @@ name = "amethyst_error"
 version = "0.1.0"
 authors = ["John-John Tedro <udoprog@tedro.se>"]
 readme = "README.md"
+edition = "2018"
 description = """
 Internal error handling for Amethyst.
 """

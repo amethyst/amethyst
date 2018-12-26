@@ -9,7 +9,7 @@
 // Parts copied from failure:
 // https://github.com/rust-lang-nursery/failure
 
-#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
+#![warn(missing_docs)]
 
 #[cfg(all(feature = "backtrace", feature = "std"))]
 extern crate backtrace;
