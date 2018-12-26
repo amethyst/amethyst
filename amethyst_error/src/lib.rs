@@ -55,6 +55,15 @@ impl Error {
         }
     }
 
+    /// Update the source of an error.
+    pub fn with_source<S>(mut self, source: S) -> Self
+    where
+        S: 'static + Into<Error>,
+    {
+        self.inner.source = Some(Box::new(source.into()));
+        self
+    }
+
     /// Construct a new error from a string.
     pub fn from_string<M>(message: M) -> Self
     where
@@ -229,9 +238,7 @@ where
         match self {
             Err(e) => {
                 let e = e.into();
-                let mut new = chain(&e).into();
-                new.inner.source = Some(Box::new(e));
-                Err(new)
+                Err(chain(&e).into().with_source(e))
             }
             Ok(value) => Ok(value),
         }
@@ -418,5 +425,16 @@ mod tests {
         let e = bar().expect_err("no error");
         let messages = e.causes().map(|e| e.to_string()).collect::<Vec<_>>();
         assert_eq!(messages, vec!["bar", "foo"]);
+    }
+
+    #[test]
+    fn test_with_source() {
+        let e = Error::from_string("foo");
+        assert_eq!(e.to_string(), "foo");
+        assert!(e.source().is_none());
+
+        let e = e.with_source(Error::from_string("bar"));
+        assert_eq!(e.to_string(), "foo");
+        assert_eq!(e.source().map(|e| e.to_string()), Some(String::from("bar")));
     }
 }
