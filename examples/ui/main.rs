@@ -123,7 +123,9 @@ impl<'a> System<'a> for UiEventHandlerSystem {
     type SystemData = Write<'a, EventChannel<UiEvent>>;
 
     fn run(&mut self, mut events: Self::SystemData) {
-        let reader_id = self.reader_id.get_or_insert_with(|| events.register_reader());
+        let reader_id = self
+            .reader_id
+            .get_or_insert_with(|| events.register_reader());
 
         // Reader id was just initialized above if empty
         for ev in events.read(reader_id) {
