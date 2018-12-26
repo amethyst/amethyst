@@ -26,7 +26,7 @@ serde = { version = "1.0.16", features = ["serde_derive"] }
 shrev = "1.0"
 shred = "0.7"
 bincode = "1.0"
-log = "0.4"
+log = "0.4.6"
 uuid = { version = "0.7.1", features = ["v4","serde"] }
 thread_profiler = { version = "0.3" , optional = true }
 laminar = "0.1"

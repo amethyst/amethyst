@@ -27,7 +27,7 @@ derivative = "1.0"
 error-chain = "0.12"
 fnv = "1"
 hibitset = { version = "0.5.1", features = ["parallel"] }
-log = "0.4"
+log = "0.4.6"
 parking_lot = "0.6"
 rayon = "1.0.2"
 serde = { version = "1", features = ["serde_derive"] }

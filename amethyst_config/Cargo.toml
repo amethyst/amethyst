@@ -19,7 +19,7 @@ travis-ci = { repository = "amethyst/amethyst" }
 [dependencies]
 ron = "0.4"
 serde = "1.0"
-log = "0.4"
+log = "0.4.6"
 
 thread_profiler = { version = "0.3", optional = true }
 

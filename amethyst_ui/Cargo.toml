@@ -34,7 +34,7 @@ smallvec = "0.6"
 unicode-normalization = "0.1"
 unicode-segmentation = "1.2"
 winit = { version = "0.18", features = ["serde"] }
-log = "0.4"
+log = "0.4.6"
 font-kit = "0.1"
 
 thread_profiler = { version = "0.3", optional = true }
