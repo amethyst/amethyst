@@ -21,7 +21,7 @@ Consider an example where you have three objects: two bottles and a person.
 |  object  |   x   |   y   |   shape  |  color  |   name  |
 |:--------:|:-----:|:-----:|:--------:|:-------:|:-------:|
 | Bottle A | 150.0 | 202.1 |  "round" |  "red"  |         |
-| Bottle b |  15.0 |  22.0 | "square" | "white" |         |
+| Bottle B | 570.0 | 122.0 | "square" | "white" |         |
 | Person C | 100.5 | 300.8 |          |         | "Peter" |
 
 We can separate bottle's properties into `PositionComponent` and `BottleComponent`, and person's properties into `PositionComponent` and `PersonComponent`. Here's an illustration of how the three objects would be stored.
@@ -92,7 +92,7 @@ There are a few storage strategies for different usage scenarios. The most commo
 
 ![VecStorage](../images/concepts/component_and_entity_vecstorage.svg)
 
-For more information, see the [specs storage reference](https://docs.rs/specs/latest/specs/storage/index.html).
+For more information, see the [specs storage reference](https://docs.rs/specs/latest/specs/storage/index.html)
 and the ["Storages" section](https://slide-rs.github.io/specs/05_storages.html) of the specs book.
 
 There are a bunch more storages, and deciding which one is the best isn't trivial and should be done based on careful benchmarking. A general rule is: if your component is used in over 30% of entities, use `VecStorage`. If you don't know which one you should use, `DenseVecStorage` is a good default. It will need more memory than `VecStorage` for pointer-sized components, but it will perform well for most scenarios.
