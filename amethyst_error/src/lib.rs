@@ -433,4 +433,14 @@ mod tests {
             .find(|n| *n == "a_really_unique_name_42")
             .is_some());
     }
+
+    #[test]
+    fn test_backtrace_disabled() {
+        use super::BACKTRACE_ENABLED;
+        use std::sync::atomic;
+
+        BACKTRACE_ENABLED.store(1, atomic::Ordering::Relaxed);
+
+        assert!(Error::from_string("an error").backtrace().is_none());
+    }
 }
