@@ -1,8 +1,9 @@
 //! Local transform component.
+use std::marker::PhantomData;
 use std::fmt;
 
 use nalgebra::{
-    self as na, Isometry3, Matrix4, Quaternion, Translation3, Unit, UnitQuaternion, Vector3,
+    self as na, Isometry3, Matrix4, Quaternion, Translation3, Unit, UnitQuaternion, Vector3, Real,
 };
 use serde::{
     de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor},
@@ -16,14 +17,14 @@ use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 ///
 /// The transforms are preformed in this order: scale, then rotation, then translation.
 #[derive(Clone, Debug, PartialEq)]
-pub struct Transform {
+pub struct Transform3<N: Real> {
     /// Translation + rotation value
-    iso: Isometry3<f32>,
+    iso: Isometry3<N>,
     /// Scale vector
-    scale: Vector3<f32>,
+    scale: Vector3<N>,
 }
 
-impl Transform {
+impl<N: Real> Transform3<N> {
     /// Create a new Transform.
     ///
     /// # Examples
@@ -31,20 +32,20 @@ impl Transform {
     /// ```rust
     /// # use amethyst_core::transform::components::Transform;
     /// # use amethyst_core::nalgebra::{Isometry3, Translation3, UnitQuaternion, Vector3};
-    /// let position = Translation3::new(0.0, 2.0, 4.0);
-    /// let rotation = UnitQuaternion::from_euler_angles(0.4, 0.2, 0.0);
-    /// let scale = Vector3::new(1.0, 1.0, 1.0);
+    /// let position = Translation3::new(N::zero(), 2.0, 4.0);
+    /// let rotation = UnitQuaternion::from_euler_angles(0.4, 0.2, N::zero());
+    /// let scale = Vector3::new(N::one(), N::one(), N::one());
     ///
     /// let t = Transform::new(position, rotation, scale);
     ///
     /// assert_eq!(t.translation().y, 2.0);
     /// ```
     pub fn new(
-        position: Translation3<f32>,
-        rotation: UnitQuaternion<f32>,
-        scale: Vector3<f32>,
+        position: Translation3<N>,
+        rotation: UnitQuaternion<N>,
+        scale: Vector3<N>,
     ) -> Self {
-        Transform {
+        Transform3 {
             iso: Isometry3::from_parts(position, rotation),
             scale,
         }
@@ -68,20 +69,20 @@ impl Transform {
     /// // No rotation by default
     /// assert_eq!(*t.rotation().quaternion(), Quaternion::identity());
     /// // look up with up pointing backwards
-    /// t.face_towards(Vector3::new(0.0, 1.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
+    /// t.face_towards(Vector3::new(N::zero(), N::one(), N::zero()), Vector3::new(N::zero(), N::zero(), N::one()));
     /// // our rotation should match the angle from straight ahead to straight up
     /// let rotation = UnitQuaternion::rotation_between(
-    ///     &Vector3::new(0.0, 1.0, 0.0),
-    ///     &Vector3::new(0.0, 0.0, 1.0),
+    ///     &Vector3::new(N::zero(), N::one(), N::zero()),
+    ///     &Vector3::new(N::zero(), N::zero(), N::one()),
     /// ).unwrap();
     /// assert_eq!(*t.rotation(), rotation);
-    /// // now if we move forwards by 1.0, we'll end up at the point we are facing
+    /// // now if we move forwards by N::one(), we'll end up at the point we are facing
     /// // (modulo some floating point error)
-    /// t.move_forward(1.0);
-    /// assert!((*t.translation() - Vector3::new(0.0, 1.0, 0.0)).magnitude() <= 0.0001);
+    /// t.move_forward(N::one());
+    /// assert!((*t.translation() - Vector3::new(N::zero(), N::one(), N::zero())).magnitude() <= N::zero()001);
     /// ```
     #[inline]
-    pub fn face_towards(&mut self, target: Vector3<f32>, up: Vector3<f32>) -> &mut Self {
+    pub fn face_towards(&mut self, target: Vector3<N>, up: Vector3<N>) -> &mut Self {
         self.iso.rotation =
             UnitQuaternion::new_observer_frame(&(self.iso.translation.vector - target), &up);
         self
@@ -92,7 +93,7 @@ impl Transform {
     /// Combined with the parent's `GlobalTransform` component it gives
     /// the global (or world) matrix for the current entity.
     #[inline]
-    pub fn matrix(&self) -> Matrix4<f32> {
+    pub fn matrix(&self) -> Matrix4<N> {
         self.iso
             .to_homogeneous()
             .prepend_nonuniform_scaling(&self.scale)
@@ -100,56 +101,56 @@ impl Transform {
 
     /// Returns a reference to the translation vector.
     #[inline]
-    pub fn translation(&self) -> &Vector3<f32> {
+    pub fn translation(&self) -> &Vector3<N> {
         &self.iso.translation.vector
     }
 
     /// Returns a mutable reference to the translation vector.
     #[inline]
-    pub fn translation_mut(&mut self) -> &mut Vector3<f32> {
+    pub fn translation_mut(&mut self) -> &mut Vector3<N> {
         &mut self.iso.translation.vector
     }
 
     /// Returns a reference to the rotation quaternion.
     #[inline]
-    pub fn rotation(&self) -> &UnitQuaternion<f32> {
+    pub fn rotation(&self) -> &UnitQuaternion<N> {
         &self.iso.rotation
     }
 
     /// Returns a mutable reference to the rotation quaternion.
     #[inline]
-    pub fn rotation_mut(&mut self) -> &mut UnitQuaternion<f32> {
+    pub fn rotation_mut(&mut self) -> &mut UnitQuaternion<N> {
         &mut self.iso.rotation
     }
 
     /// Returns a reference to the scale vector.
     #[inline]
-    pub fn scale(&self) -> &Vector3<f32> {
+    pub fn scale(&self) -> &Vector3<N> {
         &self.scale
     }
 
     /// Returns a mutable reference to the scale vector.
     #[inline]
-    pub fn scale_mut(&mut self) -> &mut Vector3<f32> {
+    pub fn scale_mut(&mut self) -> &mut Vector3<N> {
         &mut self.scale
     }
 
     /// Returns a reference to the isometry of the transform (translation and rotation combined).
     #[inline]
-    pub fn isometry(&self) -> &Isometry3<f32> {
+    pub fn isometry(&self) -> &Isometry3<N> {
         &self.iso
     }
 
     /// Returns a mutable reference to the isometry of the transform (translation and rotation
     /// combined).
     #[inline]
-    pub fn isometry_mut(&mut self) -> &mut Isometry3<f32> {
+    pub fn isometry_mut(&mut self) -> &mut Isometry3<N> {
         &mut self.iso
     }
 
     /// Move relatively to its current position.
     #[inline]
-    pub fn move_global(&mut self, translation: Vector3<f32>) -> &mut Self {
+    pub fn move_global(&mut self, translation: Vector3<N>) -> &mut Self {
         self.iso.translation.vector += translation;
         self
     }
@@ -158,7 +159,7 @@ impl Transform {
     ///
     /// Equivalent to rotating the translation before applying.
     #[inline]
-    pub fn move_local(&mut self, translation: Vector3<f32>) -> &mut Self {
+    pub fn move_local(&mut self, translation: Vector3<N>) -> &mut Self {
         self.iso.translation.vector += self.iso.rotation * translation;
         self
     }
@@ -167,7 +168,7 @@ impl Transform {
     ///
     /// It will not move in the case where the axis is zero, for any distance.
     #[inline]
-    pub fn move_along_global(&mut self, direction: Unit<Vector3<f32>>, distance: f32) -> &mut Self {
+    pub fn move_along_global(&mut self, direction: Unit<Vector3<N>>, distance: N) -> &mut Self {
         self.iso.translation.vector += direction.as_ref() * distance;
         self
     }
@@ -176,129 +177,129 @@ impl Transform {
     ///
     /// It will not move in the case where the axis is zero, for any distance.
     #[inline]
-    pub fn move_along_local(&mut self, direction: Unit<Vector3<f32>>, distance: f32) -> &mut Self {
+    pub fn move_along_local(&mut self, direction: Unit<Vector3<N>>, distance: N) -> &mut Self {
         self.iso.translation.vector += self.iso.rotation * direction.as_ref() * distance;
         self
     }
 
     /// Move forward relative to current position and orientation.
     #[inline]
-    pub fn move_forward(&mut self, amount: f32) -> &mut Self {
+    pub fn move_forward(&mut self, amount: N) -> &mut Self {
         // sign is reversed because z comes towards us
-        self.move_local(Vector3::new(0.0, 0.0, -amount))
+        self.move_local(Vector3::new(N::zero(), N::zero(), -amount))
     }
 
     /// Move backward relative to current position and orientation.
     #[inline]
-    pub fn move_backward(&mut self, amount: f32) -> &mut Self {
-        self.move_local(Vector3::new(0.0, 0.0, amount))
+    pub fn move_backward(&mut self, amount: N) -> &mut Self {
+        self.move_local(Vector3::new(N::zero(), N::zero(), amount))
     }
 
     /// Move right relative to current position and orientation.
     #[inline]
-    pub fn move_right(&mut self, amount: f32) -> &mut Self {
-        self.move_local(Vector3::new(amount, 0.0, 0.0))
+    pub fn move_right(&mut self, amount: N) -> &mut Self {
+        self.move_local(Vector3::new(amount, N::zero(), N::zero()))
     }
 
     /// Move left relative to current position and orientation.
     #[inline]
-    pub fn move_left(&mut self, amount: f32) -> &mut Self {
-        self.move_local(Vector3::new(-amount, 0.0, 0.0))
+    pub fn move_left(&mut self, amount: N) -> &mut Self {
+        self.move_local(Vector3::new(-amount, N::zero(), N::zero()))
     }
 
     /// Move up relative to current position and orientation.
     #[inline]
-    pub fn move_up(&mut self, amount: f32) -> &mut Self {
-        self.move_local(Vector3::new(0.0, amount, 0.0))
+    pub fn move_up(&mut self, amount: N) -> &mut Self {
+        self.move_local(Vector3::new(N::zero(), amount, N::zero()))
     }
 
     /// Move down relative to current position and orientation.
     #[inline]
-    pub fn move_down(&mut self, amount: f32) -> &mut Self {
-        self.move_local(Vector3::new(0.0, -amount, 0.0))
+    pub fn move_down(&mut self, amount: N) -> &mut Self {
+        self.move_local(Vector3::new(N::zero(), -amount, N::zero()))
     }
 
     /// Adds the specified amount to the translation vector's x component.
     #[inline]
-    pub fn translate_x(&mut self, amount: f32) -> &mut Self {
+    pub fn translate_x(&mut self, amount: N) -> &mut Self {
         self.iso.translation.vector.x += amount;
         self
     }
 
     /// Adds the specified amount to the translation vector's y component.
     #[inline]
-    pub fn translate_y(&mut self, amount: f32) -> &mut Self {
+    pub fn translate_y(&mut self, amount: N) -> &mut Self {
         self.iso.translation.vector.y += amount;
         self
     }
 
     /// Adds the specified amount to the translation vector's z component.
     #[inline]
-    pub fn translate_z(&mut self, amount: f32) -> &mut Self {
+    pub fn translate_z(&mut self, amount: N) -> &mut Self {
         self.iso.translation.vector.z += amount;
         self
     }
 
     /// Sets the translation vector's x component to the specified value.
     #[inline]
-    pub fn set_x(&mut self, value: f32) -> &mut Self {
+    pub fn set_x(&mut self, value: N) -> &mut Self {
         self.iso.translation.vector.x = value;
         self
     }
 
     /// Sets the translation vector's y component to the specified value.
     #[inline]
-    pub fn set_y(&mut self, value: f32) -> &mut Self {
+    pub fn set_y(&mut self, value: N) -> &mut Self {
         self.iso.translation.vector.y = value;
         self
     }
 
     /// Sets the translation vector's z component to the specified value.
     #[inline]
-    pub fn set_z(&mut self, value: f32) -> &mut Self {
+    pub fn set_z(&mut self, value: N) -> &mut Self {
         self.iso.translation.vector.z = value;
         self
     }
 
     /// Pitch relatively to the world. `angle` is specified in radians.
     #[inline]
-    pub fn pitch_global(&mut self, angle: f32) -> &mut Self {
+    pub fn pitch_global(&mut self, angle: N) -> &mut Self {
         self.rotate_global(Vector3::x_axis(), angle)
     }
 
     /// Pitch relatively to its own rotation. `angle` is specified in radians.
     #[inline]
-    pub fn pitch_local(&mut self, angle: f32) -> &mut Self {
+    pub fn pitch_local(&mut self, angle: N) -> &mut Self {
         self.rotate_local(Vector3::x_axis(), angle)
     }
 
     /// Yaw relatively to the world. `angle` is specified in radians.
     #[inline]
-    pub fn yaw_global(&mut self, angle: f32) -> &mut Self {
+    pub fn yaw_global(&mut self, angle: N) -> &mut Self {
         self.rotate_global(Vector3::y_axis(), angle)
     }
 
     /// Yaw relatively to its own rotation. `angle` is specified in radians.
     #[inline]
-    pub fn yaw_local(&mut self, angle: f32) -> &mut Self {
+    pub fn yaw_local(&mut self, angle: N) -> &mut Self {
         self.rotate_local(Vector3::y_axis(), angle)
     }
 
     /// Roll relatively to the world. `angle` is specified in radians.
     #[inline]
-    pub fn roll_global(&mut self, angle: f32) -> &mut Self {
+    pub fn roll_global(&mut self, angle: N) -> &mut Self {
         self.rotate_global(-Vector3::z_axis(), angle)
     }
 
     /// Roll relatively to its own rotation. `angle` is specified in radians.
     #[inline]
-    pub fn roll_local(&mut self, angle: f32) -> &mut Self {
+    pub fn roll_local(&mut self, angle: N) -> &mut Self {
         self.rotate_local(-Vector3::z_axis(), angle)
     }
 
     /// Rotate relatively to the world. `angle` is specified in radians.
     #[inline]
-    pub fn rotate_global(&mut self, axis: Unit<Vector3<f32>>, angle: f32) -> &mut Self {
+    pub fn rotate_global(&mut self, axis: Unit<Vector3<N>>, angle: N) -> &mut Self {
         let q = UnitQuaternion::from_axis_angle(&axis, angle);
         self.iso.rotation = q * self.iso.rotation;
         self
@@ -306,19 +307,19 @@ impl Transform {
 
     /// Rotate relatively to the current orientation. `angle` is specified in radians.
     #[inline]
-    pub fn rotate_local(&mut self, axis: Unit<Vector3<f32>>, angle: f32) -> &mut Self {
+    pub fn rotate_local(&mut self, axis: Unit<Vector3<N>>, angle: N) -> &mut Self {
         self.iso.rotation *= UnitQuaternion::from_axis_angle(&axis, angle);
         self
     }
 
     /// Set the position.
-    pub fn set_position(&mut self, position: Vector3<f32>) -> &mut Self {
+    pub fn set_position(&mut self, position: Vector3<N>) -> &mut Self {
         self.iso.translation.vector = position;
         self
     }
 
     /// Adds the specified amounts to the translation vector.
-    pub fn translate_xyz(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
+    pub fn translate_xyz(&mut self, x: N, y: N, z: N) -> &mut Self {
         self.translate_x(x);
         self.translate_y(y);
         self.translate_z(z);
@@ -326,18 +327,18 @@ impl Transform {
     }
 
     /// Sets the specified values of the translation vector.
-    pub fn set_xyz(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
+    pub fn set_xyz(&mut self, x: N, y: N, z: N) -> &mut Self {
         self.set_position(Vector3::new(x, y, z))
     }
 
     /// Sets the rotation of the transform.
-    pub fn set_rotation(&mut self, rotation: UnitQuaternion<f32>) -> &mut Self {
+    pub fn set_rotation(&mut self, rotation: UnitQuaternion<N>) -> &mut Self {
         self.iso.rotation = rotation;
         self
     }
 
     /// Sets the scale of the transform.
-    pub fn set_scale(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
+    pub fn set_scale(&mut self, x: N, y: N, z: N) -> &mut Self {
         self.scale.x = x;
         self.scale.y = y;
         self.scale.z = z;
@@ -357,11 +358,11 @@ impl Transform {
     /// # use amethyst_core::transform::components::Transform;
     /// let mut transform = Transform::default();
     ///
-    /// transform.set_rotation_euler(1.0, 0.0, 0.0);
+    /// transform.set_rotation_euler(N::one(), N::zero(), N::zero());
     ///
-    /// assert_eq!(transform.rotation().euler_angles().0, 1.0);
+    /// assert_eq!(transform.rotation().euler_angles().0, N::one());
     /// ```
-    pub fn set_rotation_euler(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
+    pub fn set_rotation_euler(&mut self, x: N, y: N, z: N) -> &mut Self {
         self.iso.rotation = UnitQuaternion::from_euler_angles(x, y, z);
         self
     }
@@ -383,9 +384,9 @@ impl Transform {
     /// Calculates the inverse of this transform, which we need to render.
     ///
     /// We can exploit the extra information we have to perform this inverse faster than `O(n^3)`.
-    pub fn view_matrix(&self) -> Matrix4<f32> {
+    pub fn view_matrix(&self) -> Matrix4<N> {
         // TODO: check if this actually is faster
-        let inv_scale = Vector3::new(1.0 / self.scale.x, 1.0 / self.scale.y, 1.0 / self.scale.z);
+        let inv_scale = Vector3::new(N::one() / self.scale.x, N::one() / self.scale.y, N::one() / self.scale.z);
         self.iso
             .inverse()
             .to_homogeneous()
@@ -393,17 +394,17 @@ impl Transform {
     }
 }
 
-impl Default for Transform {
+impl<N: Real> Default for Transform3<N> {
     /// The default transform does nothing when used to transform an entity.
     fn default() -> Self {
-        Transform {
+        Transform3 {
             iso: Isometry3::identity(),
-            scale: Vector3::from_element(1.0),
+            scale: Vector3::from_element(N::one()),
         }
     }
 }
 
-impl Component for Transform {
+impl<N: Real> Component for Transform3<N> {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
 
@@ -412,21 +413,21 @@ impl Component for Transform {
 /// ```
 /// # use amethyst_core::transform::components::Transform;
 /// # use amethyst_core::nalgebra::Vector3;
-/// let transform = Transform::from(Vector3::new(100.0, 200.0, 300.0));
+/// let transform = Transform::from(Vector3::new(10N::zero(), 20N::zero(), 30N::zero()));
 ///
-/// assert_eq!(transform.translation().x, 100.0);
+/// assert_eq!(transform.translation().x, 10N::zero());
 /// ```
-impl From<Vector3<f32>> for Transform {
-    fn from(translation: Vector3<f32>) -> Self {
-        Transform {
+impl<N: Real> From<Vector3<N>> for Transform3<N> {
+    fn from(translation: Vector3<N>) -> Self {
+        Transform3 {
             iso: Isometry3::new(translation, na::zero()),
             ..Default::default()
         }
     }
 }
 
-impl<'de> Deserialize<'de> for Transform {
-    fn deserialize<D>(deserializer: D) -> Result<Transform, D::Error>
+impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform3<N> {
+    fn deserialize<D>(deserializer: D) -> Result<Transform3<N>, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -438,26 +439,36 @@ impl<'de> Deserialize<'de> for Transform {
             Scale,
         };
 
-        struct TransformVisitor;
+        struct TransformVisitor<N: Real>{
+            _phantom: PhantomData<N>,
+        }
 
-        impl<'de> Visitor<'de> for TransformVisitor {
-            type Value = Transform;
+        impl<N: Real> Default for TransformVisitor<N> {
+            fn default() -> Self {
+                TransformVisitor {
+                    _phantom: PhantomData,
+                }
+            }
+        }
+
+        impl<'de, N: Real + Deserialize<'de>> Visitor<'de> for TransformVisitor<N> {
+            type Value = Transform3<N>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-                formatter.write_str("struct Transform")
+                formatter.write_str("struct Transform3")
             }
 
             fn visit_seq<V>(self, mut seq: V) -> Result<Self::Value, V::Error>
             where
                 V: SeqAccess<'de>,
             {
-                let translation: [f32; 3] = seq
+                let translation: [N; 3] = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(0, &self))?;
-                let rotation: [f32; 4] = seq
+                let rotation: [N; 4] = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(1, &self))?;
-                let scale: [f32; 3] = seq
+                let scale: [N; 3] = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
@@ -472,7 +483,7 @@ impl<'de> Deserialize<'de> for Transform {
                 );
                 let scale = scale.into();
 
-                Ok(Transform { iso, scale })
+                Ok(Transform3 { iso, scale })
             }
 
             fn visit_map<V>(self, mut map: V) -> Result<Self::Value, V::Error>
@@ -505,9 +516,9 @@ impl<'de> Deserialize<'de> for Transform {
                         }
                     }
                 }
-                let translation: [f32; 3] = translation.unwrap_or([0.0; 3]);
-                let rotation: [f32; 4] = rotation.unwrap_or([1.0, 0.0, 0.0, 0.0]);
-                let scale: [f32; 3] = scale.unwrap_or([1.0; 3]);
+                let translation: [N; 3] = translation.unwrap_or([N::zero(); 3]);
+                let rotation: [N; 4] = rotation.unwrap_or([N::one(), N::zero(), N::zero(), N::zero()]);
+                let scale: [N; 3] = scale.unwrap_or([N::one(); 3]);
 
                 let iso = Isometry3::from_parts(
                     Translation3::new(translation[0], translation[1], translation[2]),
@@ -520,25 +531,25 @@ impl<'de> Deserialize<'de> for Transform {
                 );
                 let scale = scale.into();
 
-                Ok(Transform { iso, scale })
+                Ok(Transform3 { iso, scale })
             }
         }
 
         const FIELDS: &'static [&'static str] = &["translation", "rotation", "scale"];
-        deserializer.deserialize_struct("Transform", FIELDS, TransformVisitor)
+        deserializer.deserialize_struct("Transform3", FIELDS, TransformVisitor::<N>::default())
     }
 }
 
-impl Serialize for Transform {
+impl<N: Real + Serialize> Serialize for Transform3<N> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
         #[derive(Serialize)]
-        struct TransformValues {
-            translation: [f32; 3],
-            rotation: [f32; 4],
-            scale: [f32; 3],
+        struct TransformValues<N: Real> {
+            translation: [N; 3],
+            rotation: [N; 4],
+            scale: [N; 3],
         }
 
         Serialize::serialize(
@@ -595,7 +606,7 @@ mod tests {
     fn test_view_matrix() {
         let mut transform = Transform::default();
         transform.set_xyz(5.0, 70.1, 43.7);
-        transform.set_scale(1.0, 5.0, 8.9);
+        transform.set_scale(N::one(), 5.0, 8.9);
         transform.set_rotation(
             UnitQuaternion::rotation_between(&Vector3::new(-1., 1., 2.), &Vector3::new(1., 0., 0.))
                 .unwrap(),

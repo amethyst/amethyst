@@ -13,6 +13,10 @@ extern crate error_chain;
 use rayon;
 #[macro_use]
 extern crate serde;
+#[macro_use]
+extern crate getset;
+#[macro_use]
+extern crate derive_new;
 
 #[macro_use]
 #[cfg(feature = "profiler")]

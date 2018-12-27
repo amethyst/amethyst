@@ -1,11 +1,15 @@
 //! Components for the transform processor.
 
 pub use self::{
-    local_transform::Transform,
+    transform3::Transform3,
+    transform2::Transform2,
     parent::{HierarchyEvent, Parent, ParentHierarchy},
-    transform::GlobalTransform,
+    global_transform3::GlobalTransform3,
+    global_transform2::GlobalTransform2,
 };
 
-mod local_transform;
+mod transform3;
+mod transform2;
 mod parent;
-mod transform;
+mod global_transform3;
+mod global_transform2;

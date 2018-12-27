@@ -2,7 +2,7 @@
 
 use std::borrow::Borrow;
 
-use nalgebra::{self as na, Matrix4};
+use nalgebra::{self as na, Matrix4, Real};
 use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 
 /// Performs a global transformation on the entity (transform from origin).
@@ -13,52 +13,52 @@ use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 /// on the `FlaggedStorage` at the appropriate times (before updating any `Transform` in the frame).
 /// See documentation on `FlaggedStorage` for more information.
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
-pub struct GlobalTransform(pub Matrix4<f32>);
+pub struct GlobalTransform3<N: Real>(pub Matrix4<N>);
 
-impl GlobalTransform {
+impl<N: Real> GlobalTransform3<N> {
     /// Checks whether each `f32` of the `GlobalTransform` is finite (not NaN or inf).
     pub fn is_finite(&self) -> bool {
-        self.0.as_slice().iter().all(|f| f32::is_finite(*f))
+        self.0.as_slice().iter().all(|f| N::is_finite(f))
     }
 }
 
-impl Component for GlobalTransform {
+impl<N: Real> Component for GlobalTransform3<N> {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
 
-impl Default for GlobalTransform {
+impl<N: Real> Default for GlobalTransform3<N> {
     fn default() -> Self {
-        GlobalTransform(na::one())
+        GlobalTransform3(na::one())
     }
 }
 
-impl GlobalTransform {
+impl<N: Real> GlobalTransform3<N> {
     /// Creates a new `GlobalTransform` in the form of an identity matrix.
     pub fn new() -> Self {
         Default::default()
     }
 }
 
-impl From<[[f32; 4]; 4]> for GlobalTransform {
-    fn from(matrix: [[f32; 4]; 4]) -> Self {
-        GlobalTransform(matrix.into())
+impl<N: Real> From<[[N; 4]; 4]> for GlobalTransform3<N> {
+    fn from(matrix: [[N; 4]; 4]) -> Self {
+        GlobalTransform3(matrix.into())
     }
 }
 
-impl Into<[[f32; 4]; 4]> for GlobalTransform {
-    fn into(self) -> [[f32; 4]; 4] {
+impl<N: Real> Into<[[N; 4]; 4]> for GlobalTransform3<N> {
+    fn into(self) -> [[N; 4]; 4] {
         self.0.into()
     }
 }
 
-impl AsRef<[[f32; 4]; 4]> for GlobalTransform {
-    fn as_ref(&self) -> &[[f32; 4]; 4] {
+impl<N: Real> AsRef<[[N; 4]; 4]> for GlobalTransform3<N> {
+    fn as_ref(&self) -> &[[N; 4]; 4] {
         self.0.as_ref()
     }
 }
 
-impl Borrow<[[f32; 4]; 4]> for GlobalTransform {
-    fn borrow(&self) -> &[[f32; 4]; 4] {
+impl<N: Real> Borrow<[[N; 4]; 4]> for GlobalTransform3<N> {
+    fn borrow(&self) -> &[[N; 4]; 4] {
         self.0.as_ref()
     }
 }
