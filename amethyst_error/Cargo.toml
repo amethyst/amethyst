@@ -19,7 +19,4 @@ appveyor = { repository = "amethyst/amethyst", branch = "master" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-backtrace = {version = "0.3.9", optional = true}
-
-[features]
-default = ["backtrace"]
+backtrace = "0.3.13"

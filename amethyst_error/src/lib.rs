@@ -11,20 +11,19 @@
 
 #![warn(missing_docs)]
 
-#[cfg(all(feature = "backtrace", feature = "std"))]
-extern crate backtrace;
-
-use self::internal::Backtrace;
+pub use backtrace::Backtrace;
 use std::borrow::Cow;
 use std::error;
 use std::fmt;
 use std::result;
+use std::{env, ffi, sync::atomic};
+
+const RUST_BACKTRACE: &str = "RUST_BACKTRACE";
 
 /// Internal parts of `Error`.
 #[derive(Debug)]
 struct Inner<T: ?Sized> {
     source: Option<Box<Error>>,
-    #[cfg(all(feature = "backtrace", feature = "std"))]
     backtrace: Option<Backtrace>,
     error: T,
 }
@@ -48,8 +47,7 @@ impl Error {
         Self {
             inner: Box::new(Inner {
                 source: None,
-                #[cfg(all(feature = "backtrace", feature = "std"))]
-                backtrace: self::internal::bt::new(),
+                backtrace: new_backtrace(),
                 error: Box::new(error),
             }),
         }
@@ -84,8 +82,7 @@ impl Error {
         Self {
             inner: Box::new(Inner {
                 source: None,
-                #[cfg(all(feature = "backtrace", feature = "std"))]
-                backtrace: self::internal::bt::new(),
+                backtrace: new_backtrace(),
                 error: Box::new(StringError(message.into())),
             }),
         }
@@ -93,15 +90,7 @@ impl Error {
 
     /// Get backtrace.
     pub fn backtrace(&self) -> Option<&Backtrace> {
-        #[cfg(all(feature = "backtrace", feature = "std"))]
-        {
-            self.backtrace.as_ref()
-        }
-
-        #[cfg(not(all(feature = "backtrace", feature = "std")))]
-        {
-            None
-        }
+        self.inner.backtrace.as_ref()
     }
 
     /// Get the source of the error.
@@ -314,55 +303,33 @@ where
     }
 }
 
-#[cfg(not(all(feature = "backtrace", feature = "std")))]
-mod internal {
-    use std::fmt;
-
-    /// Fake internal representation.
-    pub struct Backtrace(());
-
-    impl fmt::Debug for Backtrace {
-        fn fmt(&self, _fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-            Ok(())
-        }
+/// Test if backtracing is enabled.
+fn is_backtrace_enabled<F: Fn(&str) -> Option<ffi::OsString>>(get_var: F) -> bool {
+    match get_var(RUST_BACKTRACE) {
+        Some(ref val) if val != "0" => true,
+        _ => false,
     }
 }
 
-#[cfg(all(feature = "backtrace", feature = "std"))]
-mod internal {
-    pub use backtrace::Backtrace;
-    use std::{env, ffi, sync::atomic};
+static BACKTRACE_ENABLED: atomic::AtomicUsize = atomic::ATOMIC_USIZE_INIT;
 
-    const RUST_BACKTRACE: &str = "RUST_BACKTRACE";
+/// Constructs a new backtrace, if backtraces are enabled.
+fn new_backtrace() -> Option<Backtrace> {
+    match BACKTRACE_ENABLED.load(atomic::Ordering::Relaxed) {
+        0 => {
+            let enabled = is_backtrace_enabled(|var| env::var_os(var));
 
-    /// Test if backtracing is enabled.
-    pub fn is_backtrace_enabled<F: Fn(&str) -> Option<ffi::OsString>>(get_var: F) -> bool {
-        match get_var(RUST_BACKTRACE) {
-            Some(ref val) if val != "0" => true,
-            _ => false,
-        }
-    }
+            BACKTRACE_ENABLED.store(enabled as usize + 1, atomic::Ordering::Relaxed);
 
-    /// Constructs a new backtrace, if backtraces are enabled.
-    fn new() -> Option<Backtrace> {
-        static ENABLED: atomic::AtomicUsize = atomic::ATOMIC_USIZE_INIT;
-
-        match ENABLED.load(atomic::Ordering::Relaxed) {
-            0 => {
-                let enabled = is_backtrace_enabled(|var| env::var_os(var));
-
-                ENABLED.store(enabled as usize + 1, atomic::Ordering::Relaxed);
-
-                if !enabled {
-                    return None;
-                }
+            if !enabled {
+                return None;
             }
-            1 => return None,
-            _ => {}
         }
-
-        Some(Backtrace::new())
+        1 => return None,
+        _ => {}
     }
+
+    Some(Backtrace::new())
 }
 
 #[cfg(test)]
@@ -436,5 +403,34 @@ mod tests {
         let e = e.with_source(Error::from_string("bar"));
         assert_eq!(e.to_string(), "foo");
         assert_eq!(e.source().map(|e| e.to_string()), Some(String::from("bar")));
+    }
+
+    #[test]
+    fn test_backtrace() {
+        use super::BACKTRACE_ENABLED;
+        use std::sync::atomic;
+
+        BACKTRACE_ENABLED.store(2, atomic::Ordering::Relaxed);
+
+        #[inline(never)]
+        #[no_mangle]
+        fn a_really_unique_name_42() -> Error {
+            Error::from_string("an error")
+        }
+
+        let e = a_really_unique_name_42();
+        let bt = e.backtrace().expect("a backtrace");
+
+        let frame_names = bt
+            .frames()
+            .iter()
+            .flat_map(|f| f.symbols().iter().flat_map(|s| s.name()))
+            .map(|n| n.to_string())
+            .collect::<Vec<_>>();
+
+        assert!(frame_names
+            .iter()
+            .find(|n| *n == "a_really_unique_name_42")
+            .is_some());
     }
 }
