@@ -70,7 +70,7 @@ and then you implement the `Component` trait for them:
 # extern crate amethyst;
 # struct Shape;
 # struct Transform;
-use amethyst::ecs::{Component, DenseVecStorage};
+use amethyst::ecs::{Component, DenseVecStorage, FlaggedStorage};
 
 impl Component for Shape {
     type Storage = DenseVecStorage<Self>;
