@@ -46,6 +46,9 @@ You will see how these methods are used in later chapters.
 To declare a component, you first declare the relevant underlying data:
 
 ```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::core::nalgebra::{Isometry3, Vector3};
+
 /// This `Component` describes the shape of an `Entity`
 enum Shape {
     Sphere { radius: f32 },
@@ -66,7 +69,7 @@ and then you implement the `Component` trait for them:
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # struct Shape;
-# struct Content;
+# struct Transform;
 use amethyst::ecs::{Component, DenseVecStorage};
 
 impl Component for Shape {
