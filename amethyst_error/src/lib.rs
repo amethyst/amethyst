@@ -311,7 +311,10 @@ fn is_backtrace_enabled<F: Fn(&str) -> Option<ffi::OsString>>(get_var: F) -> boo
     }
 }
 
-static BACKTRACE_ENABLED: atomic::AtomicUsize = atomic::ATOMIC_USIZE_INIT;
+// 0: unchecked
+// 1: disabled
+// 2: enabled
+static BACKTRACE_STATUS: atomic::AtomicUsize = atomic::ATOMIC_USIZE_INIT;
 
 /// Constructs a new backtrace, if backtraces are enabled.
 fn new_backtrace() -> Option<Backtrace> {
