@@ -318,11 +318,11 @@ static BACKTRACE_STATUS: atomic::AtomicUsize = atomic::ATOMIC_USIZE_INIT;
 
 /// Constructs a new backtrace, if backtraces are enabled.
 fn new_backtrace() -> Option<Backtrace> {
-    match BACKTRACE_ENABLED.load(atomic::Ordering::Relaxed) {
+    match BACKTRACE_STATUS.load(atomic::Ordering::Relaxed) {
         0 => {
             let enabled = is_backtrace_enabled(|var| env::var_os(var));
 
-            BACKTRACE_ENABLED.store(enabled as usize + 1, atomic::Ordering::Relaxed);
+            BACKTRACE_STATUS.store(enabled as usize + 1, atomic::Ordering::Relaxed);
 
             if !enabled {
                 return None;
@@ -410,10 +410,10 @@ mod tests {
 
     #[test]
     fn test_backtrace() {
-        use super::BACKTRACE_ENABLED;
+        use super::BACKTRACE_STATUS;
         use std::sync::atomic;
 
-        BACKTRACE_ENABLED.store(2, atomic::Ordering::Relaxed);
+        BACKTRACE_STATUS.store(2, atomic::Ordering::Relaxed);
 
         #[inline(never)]
         #[no_mangle]
@@ -439,10 +439,10 @@ mod tests {
 
     #[test]
     fn test_backtrace_disabled() {
-        use super::BACKTRACE_ENABLED;
+        use super::BACKTRACE_STATUS;
         use std::sync::atomic;
 
-        BACKTRACE_ENABLED.store(1, atomic::Ordering::Relaxed);
+        BACKTRACE_STATUS.store(1, atomic::Ordering::Relaxed);
 
         assert!(Error::from_string("an error").backtrace().is_none());
     }
