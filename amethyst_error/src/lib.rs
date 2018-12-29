@@ -283,7 +283,7 @@ struct ErrMsgError<M> {
     message: M,
 }
 
-impl<M> error::Error for ErrMsgError<M> where M: 'static + Send + Sync + fmt::Debug + fmt::Display {}
+impl<M> error::Error for ErrMsgError<M> where M: fmt::Debug + fmt::Display {}
 
 impl<M> fmt::Display for ErrMsgError<M>
 where
