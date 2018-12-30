@@ -225,5 +225,9 @@ path = "examples/sprite_camera_follow/main.rs"
 name = "simple_image"
 path = "examples/simple_image/main.rs"
 
+[[example]]
+name = "auto_fov"
+path = "examples/auto_fov/main.rs"
+
 [workspace]
 members = ["amethyst_gltf", "tests/amethyst_test"]

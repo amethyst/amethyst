@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * "How To" guides for using assets and defining custom assets. ([#1251])
 * `amethyst_renderer::Rgba` is now a `Component` that changes the color and transparency of the entity
 it is attached to. ([#1282])
+* `AutoFov` and `AutoFovSystem` to adjust horizontal FOV to screen aspect ratio. ([#1281])
 
 ### Changed
 
@@ -35,6 +36,7 @@ it is attached to. ([#1282])
 [#1267]: https://github.com/amethyst/amethyst/pull/1267
 [#1280]: https://github.com/amethyst/amethyst/pull/1280
 [#1282]: https://github.com/amethyst/amethyst/pull/1282
+[#1281]: https://github.com/amethyst/amethyst/pull/1281
 
 ## [0.10.0] - 2018-12
 
