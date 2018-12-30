@@ -14,5 +14,5 @@ MIT/Apache-2.
 
 ## License
 
-`amethyst_locale` is distributed under the terms of both the MIT
+`amethyst_error` is distributed under the terms of both the MIT
 license and the Apache License (Version 2.0).
