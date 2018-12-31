@@ -29,6 +29,8 @@ it is attached to. ([#1282])
 
 ### Fixed
 
+* Fixed the "json" feature for amethyst_assets. ([#1302])
+
 [#1213]: https://github.com/amethyst/amethyst/pull/1213
 [#1237]: https://github.com/amethyst/amethyst/pull/1237
 [#1251]: https://github.com/amethyst/amethyst/pull/1251
@@ -37,6 +39,7 @@ it is attached to. ([#1282])
 [#1280]: https://github.com/amethyst/amethyst/pull/1280
 [#1282]: https://github.com/amethyst/amethyst/pull/1282
 [#1281]: https://github.com/amethyst/amethyst/pull/1281
+[#1302]: https://github.com/amethyst/amethyst/pull/1302
 
 ## [0.10.0] - 2018-12
 
