@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Found a bug? Create a report to help us improve!
+about: Found a bug? Create a report and help us improve!
 title: "[BUG] Brief Description Here"
 labels: 'status: needs triage, type: bug'
 assignees: ''
