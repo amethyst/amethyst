@@ -26,7 +26,7 @@ use super::*;
 /// This bundle adds the following systems:
 ///
 /// * `FlyMovementSystem`
-/// * `FlyRotationSystem`
+/// * `FreeRotationSystem`
 /// * `MouseFocusUpdateSystem`
 /// * `CursorHideSystem`
 pub struct FlyControlBundle<A, B> {
