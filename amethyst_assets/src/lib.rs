@@ -21,8 +21,6 @@ extern crate log;
 
 #[macro_use]
 extern crate serde;
-#[cfg(feature = "json")]
-extern crate serde_json;
 use shred;
 #[macro_use]
 extern crate shred_derive;
@@ -45,7 +43,7 @@ pub use crate::{
     storage::{AssetStorage, Handle, ProcessingState, Processor, WeakHandle},
 };
 #[cfg(feature = "json")]
-pub use formats::JsonFormat;
+pub use crate::formats::JsonFormat;
 
 mod asset;
 mod cache;
