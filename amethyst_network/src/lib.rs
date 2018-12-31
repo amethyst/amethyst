@@ -1,9 +1,6 @@
 //! Provides a client-server networking architecture to amethyst.
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
-
-#[macro_use]
-extern crate log;
 #[macro_use]
 extern crate serde;
 
@@ -22,12 +19,11 @@ pub use crate::{
     network_socket::NetSocketSystem,
 };
 
-use std::net::SocketAddr;
-
 use bincode::{deserialize, serialize, ErrorKind};
-use laminar::net::UdpSocket;
-use laminar::Packet;
+use laminar::{net::UdpSocket, Packet};
+use log::error;
 use serde::{de::DeserializeOwned, Serialize};
+use std::net::SocketAddr;
 
 /// Sends an event to the target NetConnection using the provided network Socket.
 /// The socket has to be bound.

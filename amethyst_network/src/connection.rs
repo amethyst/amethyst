@@ -1,13 +1,12 @@
 //! Network Connection and states.
 
-use std::net::SocketAddr;
-
 use shrev::{EventChannel, EventIterator, ReaderId};
+use std::net::SocketAddr;
 use uuid::Uuid;
 
 use amethyst_core::specs::{Component, VecStorage};
 
-use super::NetEvent;
+use crate::NetEvent;
 
 // TODO: Think about relationship between NetConnection and NetIdentity.
 

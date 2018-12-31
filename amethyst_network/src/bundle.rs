@@ -7,9 +7,7 @@ use amethyst_core::{
     shred::DispatcherBuilder,
 };
 
-use crate::filter::NetFilter;
-
-use super::NetSocketSystem;
+use crate::{filter::NetFilter, NetSocketSystem};
 
 /// A convenience bundle to create the infrastructure needed to send and receive network messages.
 pub struct NetworkBundle<T> {
