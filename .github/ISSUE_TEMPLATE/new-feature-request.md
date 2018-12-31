@@ -1,6 +1,6 @@
 ---
 name: New Feature Request
-about: Suggest a new feature for this project
+about: Have an idea that could improve this project? We want to hear it!
 title: "[NEW FEATURE] Title Goes Here"
 labels: 'status: needs triage, type: feature'
 assignees: ''
