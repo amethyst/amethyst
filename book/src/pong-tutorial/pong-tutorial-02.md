@@ -41,7 +41,7 @@ use amethyst::core::transform::Transform;
 use amethyst::ecs::prelude::{Component, DenseVecStorage};
 use amethyst::prelude::*;
 use amethyst::renderer::{
-    Camera, Flipped, PngFormat, Projection, SpriteRender, SpriteSheet,
+    Camera, Flipped, PngFormat, Projection, RenderSpriteSheetFlat2D, SpriteSheet,
     SpriteSheetFormat, SpriteSheetHandle, Texture, TextureMetadata,
 };
 ```
@@ -385,11 +385,12 @@ fn main() -> amethyst::Result<()> {
 # struct Pong;
 # impl SimpleState for Pong { }
     let game_data = GameDataBuilder::default()
+        .with_bundle(TransformBundle::new())?;
         .with_bundle(
           RenderBundle::new(pipe, Some(config))
             .with_sprite_sheet_processor()
+            .with_drawflat2d_encoders(&["transform_system"])
         )?
-        .with_bundle(TransformBundle::new())?;
 # Ok(())
 }
 ```
@@ -534,24 +535,24 @@ fn initialise_paddles(world: &mut World, sprite_sheet: SpriteSheetHandle)
 # { }
 ```
 
-Inside `initialise_paddles`, we construct a `SpriteRender` for a paddle. We
+Inside `initialise_paddles`, we construct a `RenderSpriteSheetFlat2D` for a paddle. We
 only need one here, since the only difference between the two paddles is that
 the right one is flipped horizontally.
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::World;
-# use amethyst::renderer::{SpriteSheetHandle, SpriteRender};
+# use amethyst::renderer::{SpriteSheetHandle, RenderSpriteSheetFlat2D};
 # fn initialise_paddles(world: &mut World, sprite_sheet: SpriteSheetHandle) {
 // Assign the sprites for the paddles
-let sprite_render = SpriteRender {
+let sprite_render = RenderSpriteSheetFlat2D {
     sprite_sheet: sprite_sheet.clone(),
     sprite_number: 0, // paddle is the first sprite in the sprite_sheet
 };
 # }
 ```
 
-`SpriteRender` is the `Component` that indicates which sprite of which sprite
+`RenderSpriteSheetFlat2D` is the `Component` that indicates which sprite of which sprite
 sheet should be drawn for a particular entity. Since the paddle is the first
 sprite in the sprite sheet, we use `0` for the `sprite_number`.
 Additionally, we'll add a `Flipped` component to the right paddle to indicate
@@ -562,10 +563,10 @@ Next we simply add the components to the paddle entities:
 ```rust,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::World;
-# use amethyst::renderer::{SpriteSheetHandle, SpriteRender, Flipped};
+# use amethyst::renderer::{SpriteSheetHandle, RenderSpriteSheetFlat2D, Flipped};
 # use amethyst::prelude::*;
 # fn initialise_paddles(world: &mut World, sprite_sheet: SpriteSheetHandle) {
-# let sprite_render = SpriteRender {
+# let sprite_render = RenderSpriteSheetFlat2D {
 #   sprite_sheet: sprite_sheet.clone(),
 #   sprite_number: 0, // paddle is the first sprite in the sprite_sheet
 # };

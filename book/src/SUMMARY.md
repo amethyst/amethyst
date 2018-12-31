@@ -36,7 +36,7 @@
     * [Load The `Texture`](./sprites/load_the_texture.md)
     * [Display The `Texture`](./sprites/display_the_texture.md)
     * [Define The `SpriteSheet`](./sprites/define_the_sprite_sheet.md)
-    * [`SpriteRender` Component](./sprites/sprite_render_component.md)
+    * [`RenderSpriteSheetFlat2D` Component](./sprites/sprite_render_component.md)
     * [Orthographic Camera](./sprites/orthographic_camera.md)
 * [Testing](./testing.md)
     * [Test Examples](./testing/test_examples.md)

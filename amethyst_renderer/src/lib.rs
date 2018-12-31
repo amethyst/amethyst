@@ -82,7 +82,8 @@ pub use crate::{
     pass::{
         get_camera, set_vertex_args, DebugLinesParams, DrawDebugLines, DrawFlat, DrawFlat2D,
         DrawFlatSeparate, DrawPbm, DrawPbmSeparate, DrawShaded, DrawShadedSeparate, DrawSkybox,
-        SkyboxColor,
+        Flat2DDataSorter, Flat2DImageEncoder, Flat2DSpriteEncoder, Flat2DSpriteSheetEncoder,
+        RenderImageFlat2D, RenderSpriteFlat2D, RenderSpriteSheetFlat2D, SkyboxColor,
     },
     pipe::{
         ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder, Init, Meta, NewEffect,
@@ -97,10 +98,9 @@ pub use crate::{
         JointTransformsPrefab, JointWeights,
     },
     sprite::{
-        Flipped, Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle,
+        Flipped, Sprite, SpriteFrame, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle,
         TextureCoordinates,
     },
-    sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem},
     system::RenderSystem,
     tex::{
         FilterMethod, SamplerInfo, SurfaceType, Texture, TextureBuilder, TextureHandle, WrapMode,
@@ -143,7 +143,6 @@ mod resources;
 mod shape;
 mod skinning;
 mod sprite;
-mod sprite_visibility;
 mod system;
 mod tex;
 mod transparent;

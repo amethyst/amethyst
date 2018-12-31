@@ -19,7 +19,7 @@ pub struct SpriteSheet {
     /// `Texture` handle of the spritesheet texture
     pub texture: Handle<Texture>,
     /// A list of sprites in this sprite sheet.
-    pub sprites: Vec<Sprite>,
+    pub sprites: Vec<SpriteFrame>,
 }
 
 impl Asset for SpriteSheet {
@@ -31,6 +31,29 @@ impl Asset for SpriteSheet {
 impl From<SpriteSheet> for AssetsResult<ProcessingState<SpriteSheet>> {
     fn from(sprite_sheet: SpriteSheet) -> AssetsResult<ProcessingState<SpriteSheet>> {
         Ok(ProcessingState::Loaded(sprite_sheet))
+    }
+}
+
+/// Meta data for a single independent sprite.
+///
+/// Contains a handle to the texture and the sprite coordinates on the texture.
+#[derive(Debug, PartialEq)]
+pub struct Sprite {
+    /// `Texture` handle of the sprite texture
+    pub texture: Handle<Texture>,
+    /// A sprite frame that selects portion of texture to draw as sprite.
+    pub frame: SpriteFrame,
+}
+
+impl Asset for Sprite {
+    const NAME: &'static str = "Sprite";
+    type Data = Self;
+    type HandleStorage = VecStorage<Handle<Self>>;
+}
+
+impl From<Sprite> for AssetsResult<ProcessingState<Sprite>> {
+    fn from(sprite: Sprite) -> AssetsResult<ProcessingState<Sprite>> {
+        Ok(ProcessingState::Loaded(sprite))
     }
 }
 
@@ -54,7 +77,7 @@ impl Component for Flipped {
 
 /// Dimensions and texture coordinates of each sprite in a sprite sheet.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct Sprite {
+pub struct SpriteFrame {
     /// Pixel width of the sprite
     pub width: f32,
     /// Pixel height of the sprite
@@ -83,7 +106,7 @@ pub struct TextureCoordinates {
     pub top: f32,
 }
 
-impl Sprite {
+impl SpriteFrame {
     /// Creates a `Sprite` from pixel values.
     ///
     /// This function expects pixel coordinates -- starting from the top left of the image. X
@@ -108,7 +131,7 @@ impl Sprite {
         pixel_left: u32,
         pixel_top: u32,
         offsets: [f32; 2],
-    ) -> Sprite {
+    ) -> SpriteFrame {
         let image_w = image_w as f32;
         let image_h = image_h as f32;
         let offsets = [offsets[0] as f32, offsets[1] as f32];
@@ -138,7 +161,7 @@ impl Sprite {
             bottom,
         };
 
-        Sprite {
+        SpriteFrame {
             width: sprite_w as f32,
             height: sprite_h as f32,
             offsets,
@@ -147,15 +170,15 @@ impl Sprite {
     }
 }
 
-impl From<((f32, f32), [f32; 4])> for Sprite {
+impl From<((f32, f32), [f32; 4])> for SpriteFrame {
     fn from((dimensions, tex_coords): ((f32, f32), [f32; 4])) -> Self {
         Self::from((dimensions, [0.0; 2], tex_coords))
     }
 }
 
-impl From<((f32, f32), [f32; 2], [f32; 4])> for Sprite {
+impl From<((f32, f32), [f32; 2], [f32; 4])> for SpriteFrame {
     fn from(((width, height), offsets, tex_coords): ((f32, f32), [f32; 2], [f32; 4])) -> Self {
-        Sprite {
+        SpriteFrame {
             width,
             height,
             offsets,
@@ -184,22 +207,6 @@ impl From<[f32; 4]> for TextureCoordinates {
             top: uv[3],
         }
     }
-}
-
-/// Information for rendering a sprite.
-///
-/// Instead of using a `Mesh` on a `DrawFlat` render pass, we can use a simpler set of shaders to
-/// render textures to quads. This struct carries the information necessary for the draw2dflat pass.
-#[derive(Clone, Debug, PartialEq)]
-pub struct SpriteRender {
-    /// Handle to the sprite sheet of the sprite
-    pub sprite_sheet: SpriteSheetHandle,
-    /// Index of the sprite on the sprite sheet
-    pub sprite_number: usize,
-}
-
-impl Component for SpriteRender {
-    type Storage = VecStorage<Self>;
 }
 
 /// Structure acting as scaffolding for serde when loading a spritesheet file.
@@ -307,9 +314,9 @@ impl SimpleFormat<SpriteSheet> for SpriteSheetFormat {
                 "Failed to parse Ron file for SpriteSheet",
             ))
         })?;
-        let mut sprites: Vec<Sprite> = Vec::with_capacity(sheet.sprites.len());
+        let mut sprites: Vec<SpriteFrame> = Vec::with_capacity(sheet.sprites.len());
         for sp in sheet.sprites {
-            let sprite = Sprite::from_pixel_values(
+            let sprite = SpriteFrame::from_pixel_values(
                 sheet.spritesheet_width as u32,
                 sheet.spritesheet_height as u32,
                 sp.width as u32,
@@ -401,12 +408,12 @@ mod test {
         let offsets = [-5.0, -10.0];
 
         assert_eq!(
-            Sprite::from((
+            SpriteFrame::from((
                 (10., 20.),                     // Sprite w and h
                 [-5., -10.],                    // Offsets
                 [0., 10. / 30., 0., 20. / 40.], // Texture coordinates
             )),
-            Sprite::from_pixel_values(
+            SpriteFrame::from_pixel_values(
                 image_w, image_h, sprite_w, sprite_h, pixel_left, pixel_top, offsets
             )
         );

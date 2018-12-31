@@ -22,7 +22,7 @@ use amethyst::{
     prelude::*,
     renderer::{
         Camera, ColorMask, DepthMode, DisplayConfig, DrawFlat2D, ElementState, Hidden, Pipeline,
-        Projection, RenderBundle, ScreenDimensions, SpriteRender, SpriteSheet, SpriteSheetHandle,
+        Projection, RenderBundle, ScreenDimensions, RenderSpriteSheetFlat2D, SpriteSheet, SpriteSheetHandle,
         Stage, Transparent, VirtualKeyCode, ALPHA,
     },
     utils::application_root_dir,
@@ -288,7 +288,7 @@ impl Example {
             // This combines multiple `Transform`ations.
             sprite_transform.concat(&common_transform);
 
-            let sprite_render = SpriteRender {
+            let sprite_render = RenderSpriteSheetFlat2D {
                 sprite_sheet: sprite_sheet_handle.clone(),
                 sprite_number: i as usize,
             };
@@ -372,7 +372,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(
             RenderBundle::new(pipe, Some(display_config))
                 .with_sprite_sheet_processor()
-                .with_sprite_visibility_sorting(&["transform_system"]),
+                .with_drawflat2d_encoders(&["transform_system"]),
         )?;
 
     let mut game = Application::new(assets_directory, Example::new(), game_data)?;

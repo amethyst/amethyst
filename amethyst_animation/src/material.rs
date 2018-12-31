@@ -1,7 +1,7 @@
 use minterpolate::InterpolationPrimitive;
 
 use amethyst_assets::Handle;
-use amethyst_renderer::{Material, Sprite, Texture, TextureOffset};
+use amethyst_renderer::{Material, SpriteFrame, Texture, TextureOffset};
 
 use crate::{AnimationSampling, ApplyData, BlendMethod};
 
@@ -45,9 +45,9 @@ impl InterpolationPrimitive for MaterialPrimitive {
     }
 }
 
-impl From<Sprite> for MaterialPrimitive {
-    fn from(sprite: Sprite) -> Self {
-        let tex_coords = &sprite.tex_coords;
+impl From<SpriteFrame> for MaterialPrimitive {
+    fn from(frame: SpriteFrame) -> Self {
+        let tex_coords = &frame.tex_coords;
         MaterialPrimitive::Offset(
             (tex_coords.left, tex_coords.right),
             (tex_coords.top, tex_coords.bottom),
@@ -55,9 +55,9 @@ impl From<Sprite> for MaterialPrimitive {
     }
 }
 
-impl<'a> From<&'a Sprite> for MaterialPrimitive {
-    fn from(sprite: &'a Sprite) -> Self {
-        let tex_coords = &sprite.tex_coords;
+impl<'a> From<&'a SpriteFrame> for MaterialPrimitive {
+    fn from(frame: &'a SpriteFrame) -> Self {
+        let tex_coords = &frame.tex_coords;
         MaterialPrimitive::Offset(
             (tex_coords.left, tex_coords.right),
             (tex_coords.top, tex_coords.bottom),

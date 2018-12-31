@@ -133,7 +133,7 @@ it is attached to. ([#1282])
 * Added base networking implementation and the `amethyst_network` crate. ([#969])
 * Support for debug lines using `DebugLines` pass, and `DebugLines` component or resource. ([#917], [#957])
 * Added JsonFormat ([#950]).
-* `SpriteRender` pass to draw sprites without using `Material` and `Mesh`. ([#829], [#830])
+* `RenderSpriteSheetFlat2D` pass to draw sprites without using `Material` and `Mesh`. ([#829], [#830])
 * Sprite animation uses the `SpriteRenderChannel`. ([#829], [#830])
 * State::handle_event can now handle multiple types of events. ([#887])
 * Added Named Component. ([#879])([#896])

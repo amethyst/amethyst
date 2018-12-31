@@ -1,7 +1,16 @@
+pub use self::encode_image::{Flat2DImageEncoder, RenderImageFlat2D};
+pub use self::encode_sprite::{Flat2DSpriteEncoder, RenderSpriteFlat2D};
+pub use self::encode_spritesheet::{Flat2DSpriteSheetEncoder, RenderSpriteSheetFlat2D};
 pub use self::interleaved::DrawFlat2D;
+pub use self::sorting::Flat2DDataSorter;
 
+mod encode_image;
+mod encode_sprite;
+mod encode_spritesheet;
 mod interleaved;
+mod sorting;
 
+use amethyst_core::nalgebra::Vector4;
 use gfx::{
     format::{ChannelType, Format, SurfaceType},
     pso::buffer::Element,
@@ -11,7 +20,7 @@ use gfx::{
 use crate::{
     pass::util::TextureType,
     vertex::{Attribute, AttributeFormat, Attributes, VertexFormat, With},
-    Color,
+    Color, Rgba, TextureHandle,
 };
 
 static VERT_SRC: &[u8] = include_bytes!("../shaders/vertex/sprite.glsl");
@@ -19,6 +28,19 @@ static FRAG_SRC: &[u8] = include_bytes!("../shaders/fragment/sprite.glsl");
 
 static TEXTURES: [TextureType; 1] = [TextureType::Albedo];
 
+#[derive(Clone, Debug)]
+pub struct Flat2DData {
+    pub texture: TextureHandle,
+    pub dir_x: Vector4<f32>,
+    pub dir_y: Vector4<f32>,
+    pub pos: Vector4<f32>,
+    pub uv_left: f32,
+    pub uv_right: f32,
+    pub uv_top: f32,
+    pub uv_bottom: f32,
+    pub tint: Rgba,
+    pub transparent: bool,
+}
 #[derive(Clone, Debug)]
 enum DirX {}
 impl Attribute for DirX {
@@ -81,8 +103,8 @@ struct SpriteInstance {
     pub pos: [f32; 2],
     pub u_offset: [f32; 2],
     pub v_offset: [f32; 2],
-    pub depth: f32,
     pub color: [f32; 4],
+    pub depth: f32,
 }
 
 unsafe impl Pod for SpriteInstance {}
@@ -94,8 +116,8 @@ impl VertexFormat for SpriteInstance {
         (Pos::NAME, <Self as With<Pos>>::FORMAT),
         (OffsetU::NAME, <Self as With<OffsetU>>::FORMAT),
         (OffsetV::NAME, <Self as With<OffsetV>>::FORMAT),
-        (Depth::NAME, <Self as With<Depth>>::FORMAT),
         (Color::NAME, <Self as With<Color>>::FORMAT),
+        (Depth::NAME, <Self as With<Depth>>::FORMAT),
     ];
 }
 
@@ -134,16 +156,16 @@ impl With<OffsetV> for SpriteInstance {
     };
 }
 
-impl With<Depth> for SpriteInstance {
+impl With<Color> for SpriteInstance {
     const FORMAT: AttributeFormat = Element {
         offset: DirX::SIZE + DirY::SIZE + Pos::SIZE + OffsetU::SIZE + OffsetV::SIZE,
-        format: Depth::FORMAT,
+        format: Color::FORMAT,
     };
 }
 
-impl With<Color> for SpriteInstance {
+impl With<Depth> for SpriteInstance {
     const FORMAT: AttributeFormat = Element {
-        offset: DirX::SIZE + DirY::SIZE + Pos::SIZE + OffsetU::SIZE + OffsetV::SIZE + Depth::SIZE,
-        format: Color::FORMAT,
+        offset: DirX::SIZE + DirY::SIZE + Pos::SIZE + OffsetU::SIZE + OffsetV::SIZE + Color::SIZE,
+        format: Depth::FORMAT,
     };
 }

@@ -41,7 +41,11 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
-        .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?;
+        .with_bundle(
+            RenderBundle::new(pipe, Some(config))
+                .with_sprite_sheet_processor()
+                .with_drawflat2d_encoders(&["transform_system"])
+        )?;
 
     let mut game = Application::build(resources, Example)?.build(game_data)?;
     game.run();

@@ -8,7 +8,7 @@ use amethyst::{
     prelude::*,
     renderer::{
         Camera, ColorMask, DepthMode, DisplayConfig, DrawFlat2D, Pipeline, PngFormat, Projection,
-        RenderBundle, SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, Stage,
+        RenderBundle, RenderSpriteSheetFlat2D, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, Stage,
         Texture, TextureMetadata, Transparent, ALPHA,
     },
     utils::application_root_dir,
@@ -68,7 +68,7 @@ fn load_sprite_sheet(world: &mut World, png_path: &str, ron_path: &str) -> Sprit
 fn init_background_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
     let mut transform = Transform::default();
     transform.set_z(-10.0);
-    let sprite = SpriteRender {
+    let sprite = RenderSpriteSheetFlat2D {
         sprite_sheet: sprite_sheet.clone(),
         sprite_number: 0,
     };
@@ -80,7 +80,7 @@ fn init_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) ->
     let mut transform = Transform::default();
     transform.set_x(100.0);
     transform.set_y(0.0);
-    let sprite = SpriteRender {
+    let sprite = RenderSpriteSheetFlat2D {
         sprite_sheet: sprite_sheet.clone(),
         sprite_number: 0,
     };
@@ -96,7 +96,7 @@ fn init_player(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
     let mut transform = Transform::default();
     transform.set_x(0.0);
     transform.set_y(0.0);
-    let sprite = SpriteRender {
+    let sprite = RenderSpriteSheetFlat2D {
         sprite_sheet: sprite_sheet.clone(),
         sprite_number: 1,
     };
@@ -155,15 +155,16 @@ fn main() -> amethyst::Result<()> {
     );
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())?
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(root.join("input.ron"))?,
         )?
         .with(MovementSystem, "movement", &[])
+        .with_bundle(TransformBundle::new().with_dep(&["movement"]))?
         .with_bundle(
             RenderBundle::new(pipe, Some(config))
                 .with_sprite_sheet_processor()
-                .with_sprite_visibility_sorting(&[]), // Let's us use the `Transparent` component
+                // Make sure that sprites are rendered after movement is applied
+                .with_drawflat2d_encoders(&["transform_system"]),
         )?;
 
     let mut game = Application::build(root, Example)?.build(game_data)?;

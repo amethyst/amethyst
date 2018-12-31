@@ -75,9 +75,13 @@ let input_bundle = InputBundle::<String, String>::new()
 # struct Pong;
 # impl SimpleState for Pong { }
 let game_data = GameDataBuilder::default()
-    .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
     .with_bundle(TransformBundle::new())?
     .with_bundle(input_bundle)?;
+    .with_bundle(
+      RenderBundle::new(pipe, Some(config))
+        .with_sprite_sheet_processor()
+        .with_drawflat2d_encoders(&["transform_system"])
+      )?
 let mut game = Application::new("./", Pong, game_data)?;
 game.run();
 # Ok(())
@@ -222,9 +226,13 @@ fn main() -> amethyst::Result<()> {
 # }
 # let input_bundle = amethyst::input::InputBundle::<String, String>::new();
   let game_data = GameDataBuilder::default()
-      .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
       .with_bundle(TransformBundle::new())?
       .with_bundle(input_bundle)?
+      .with_bundle(
+        RenderBundle::new(pipe, Some(config))
+          .with_sprite_sheet_processor()
+          .with_drawflat2d_encoders(&["transform_system"])
+      )?
       .with(systems::PaddleSystem, "paddle_system", &["input_system"]); // Add this line
 # Ok(())
 }

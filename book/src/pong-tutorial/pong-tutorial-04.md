@@ -44,7 +44,7 @@ Then let's add a `initialise_ball` function the same way we wrote the
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::assets::{Loader, AssetStorage};
-# use amethyst::renderer::{Texture, PngFormat, TextureHandle, SpriteRender,
+# use amethyst::renderer::{Texture, PngFormat, TextureHandle, RenderSpriteSheetFlat2D,
 #                          TextureCoordinates, Sprite, SpriteSheet, SpriteSheetHandle, TextureMetadata};
 # use amethyst::ecs::World;
 # use amethyst::core::transform::Transform;
@@ -71,7 +71,7 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
     local_transform.set_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 
     // Assign the sprite for the ball
-    let sprite_render = SpriteRender {
+    let sprite_render = RenderSpriteSheetFlat2D {
         sprite_sheet: sprite_sheet_handle,
         sprite_number: 1, // ball is the second sprite on the sprite sheet
     };
@@ -346,7 +346,6 @@ as well as adding our new systems to the game data:
 # }
 # let input_bundle = amethyst::input::InputBundle::<String, String>::new();
 let game_data = GameDataBuilder::default()
-#    .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
 #    .with_bundle(TransformBundle::new())?
 #    .with_bundle(input_bundle)?
 #    .with(systems::PaddleSystem, "paddle_system", &["input_system"])
@@ -356,7 +355,13 @@ let game_data = GameDataBuilder::default()
         systems::BounceSystem,
         "collision_system",
         &["paddle_system", "ball_system"],
-    );
+    )
+#    .with_bundle(
+#        RenderBundle::new(pipe, Some(config))
+#            .with_sprite_sheet_processor()
+#            .with_drawflat2d_encoders(&["transform_system", "collision_system"])
+#    )?;
+
 # Ok(())
 # }
 ```

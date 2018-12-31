@@ -224,23 +224,25 @@ fn main() -> amethyst::Result<()> {
 #     let input_bundle = amethyst::input::InputBundle::<String, String>::new();
 #
     let game_data = GameDataBuilder::default()
-        .with_bundle(RenderBundle::new(pipe, Some(config))
-        .with_sprite_sheet_processor())?
         .with_bundle(TransformBundle::new())?
         .with_bundle(input_bundle)?
         .with_bundle(UiBundle::<String, String>::new())? // <-- Add me
-
     // --snip--
-#         .with(systems::PaddleSystem, "paddle_system", &["input_system"])
-#         .with(systems::MoveBallsSystem, "ball_system", &[])
-#         .with(
-#             systems::BounceSystem,
-#             "collision_system",
-#             &["paddle_system", "ball_system"],
-#         )
-#         .with(systems::WinnerSystem, "winner_system", &["ball_system"]);
-# 
-#     Ok(())
+#        .with(systems::PaddleSystem, "paddle_system", &["input_system"])
+#        .with(systems::MoveBallsSystem, "ball_system", &[])
+#        .with(
+#            systems::BounceSystem,
+#            "collision_system",
+#            &["paddle_system", "ball_system"],
+#        )
+#        .with(systems::WinnerSystem, "winner_system", &["ball_system"])
+#        .with_bundle(
+#            RenderBundle::new(pipe, Some(config))
+#                .with_sprite_sheet_processor()
+#                .with_drawflat2d_encoders(&["transform_system", "ball_system"])
+#        )?;
+#
+#    Ok(())
 }
 ```
 
@@ -268,7 +270,7 @@ use amethyst::{
     ecs::prelude::{Component, DenseVecStorage, Entity},
 #     prelude::*,
 #     renderer::{
-#         Camera, Flipped, PngFormat, Projection, SpriteRender,
+#         Camera, Flipped, PngFormat, Projection, RenderSpriteSheetFlat2D,
 #         SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, Texture,
 #         TextureMetadata,
 #     },
@@ -405,7 +407,7 @@ pub struct ScoreText {
 #     right_transform.set_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 # 
 #     // Assign the sprites for the paddles
-#     let sprite_render = SpriteRender {
+#     let sprite_render = RenderSpriteSheetFlat2D {
 #         sprite_sheet: sprite_sheet_handle.clone(),
 #         sprite_number: 0, // paddle is the first sprite in the sprite_sheet
 #     };
@@ -435,7 +437,7 @@ pub struct ScoreText {
 #     local_transform.set_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 # 
 #     // Assign the sprite for the ball
-#     let sprite_render = SpriteRender {
+#     let sprite_render = RenderSpriteSheetFlat2D {
 #         sprite_sheet: sprite_sheet_handle,
 #         sprite_number: 1, // ball is the second sprite on the sprite sheet
 #     };
@@ -468,7 +470,7 @@ use amethyst::{
     // --snip--
 #     prelude::*,
 #     renderer::{
-#         Camera, Flipped, PngFormat, Projection, SpriteRender,
+#         Camera, Flipped, PngFormat, Projection, RenderSpriteSheetFlat2D,
 #         SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, Texture,
 #         TextureMetadata,
 #     },
@@ -607,7 +609,7 @@ impl SimpleState for Pong {
 #     right_transform.set_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 # 
 #     // Assign the sprites for the paddles
-#     let sprite_render = SpriteRender {
+#     let sprite_render = RenderSpriteSheetFlat2D {
 #         sprite_sheet: sprite_sheet_handle.clone(),
 #         sprite_number: 0, // paddle is the first sprite in the sprite_sheet
 #     };
@@ -637,7 +639,7 @@ impl SimpleState for Pong {
 #     local_transform.set_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 # 
 #     // Assign the sprite for the ball
-#     let sprite_render = SpriteRender {
+#     let sprite_render = RenderSpriteSheetFlat2D {
 #         sprite_sheet: sprite_sheet_handle,
 #         sprite_number: 1, // ball is the second sprite on the sprite sheet
 #     };

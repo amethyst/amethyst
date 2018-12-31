@@ -1,11 +1,11 @@
 use minterpolate::InterpolationPrimitive;
 
 use amethyst_assets::Handle;
-use amethyst_renderer::{SpriteRender, SpriteSheet};
+use amethyst_renderer::{RenderSpriteSheetFlat2D, SpriteSheet};
 
 use crate::{AnimationSampling, ApplyData, BlendMethod};
 
-/// Sampler primitive for SpriteRender animations
+/// Sampler primitive for RenderSpriteSheetFlat2D animations
 /// Note that sprites can only ever be animated with `Step`, or a panic will occur.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SpriteRenderPrimitive {
@@ -45,7 +45,7 @@ impl InterpolationPrimitive for SpriteRenderPrimitive {
     }
 }
 
-/// Channels that are animatable on `SpriteRender`
+/// Channels that are animatable on `RenderSpriteSheetFlat2D`
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum SpriteRenderChannel {
     /// Selecting a spritesheet dynamically
@@ -54,11 +54,11 @@ pub enum SpriteRenderChannel {
     SpriteIndex,
 }
 
-impl<'a> ApplyData<'a> for SpriteRender {
+impl<'a> ApplyData<'a> for RenderSpriteSheetFlat2D {
     type ApplyData = ();
 }
 
-impl AnimationSampling for SpriteRender {
+impl AnimationSampling for RenderSpriteSheetFlat2D {
     type Primitive = SpriteRenderPrimitive;
     type Channel = SpriteRenderChannel;
 
@@ -102,7 +102,7 @@ impl AnimationSampling for SpriteRender {
     }
 
     fn default_primitive(_: &Self::Channel) -> Self::Primitive {
-        panic!("Blending is not applicable to SpriteRender animation")
+        panic!("Blending is not applicable to RenderSpriteSheetFlat2D animation")
     }
 
     fn blend_method(&self, _: &Self::Channel) -> Option<BlendMethod> {

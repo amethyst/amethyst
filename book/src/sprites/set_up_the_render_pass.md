@@ -3,7 +3,7 @@
 Amethyst supports drawing sprites using the `DrawFlat2D` render pass. To enable this you have to do the following:
 
 1. Build a `Pipeline` with the `DrawFlat2D` pass. If your sprites have transparent pixels use the `.with_transparency(..)` method.
-2. Use the `.with_sprite_sheet_processor()` method on the `RenderBundle`.
+2. Use the `.with_sprite_sheet_processor()` and `.with_drawflat2d_encoders(..)` methods on the `RenderBundle`.
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
@@ -38,13 +38,14 @@ fn main() -> amethyst::Result<()> {
     );
 
     let game_data = GameDataBuilder::default()
-#         .with_bundle(TransformBundle::new())?
+        .with_bundle(TransformBundle::new())?
+#        .with_bundle(InputBundle::<String, String>::new())?
+#        .with_bundle(UiBundle::<String, String>::new())?
         .with_bundle(
             RenderBundle::new(pipe, Some(display_config))
-                .with_sprite_sheet_processor())?
-
-#         .with_bundle(InputBundle::<String, String>::new())?
-#         .with_bundle(UiBundle::<String, String>::new())?;
+                .with_sprite_sheet_processor()
+                .with_drawflat2d_encoders(&["transform_system"])
+        )?;
     // ...
 #     let assets_directory = app_root.join("examples/assets/");
 #     let mut game = Application::new(assets_directory, ExampleState::default(), game_data)?;

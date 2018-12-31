@@ -4,7 +4,7 @@ use amethyst::{
     },
     assets::{AssetStorage, Handle, Loader},
     ecs::prelude::*,
-    renderer::{Sprite, SpriteRender, SpriteSheet, Texture},
+    renderer::{Sprite, RenderSpriteSheetFlat2D, SpriteSheet, Texture},
 };
 
 use crate::EffectReturn;
@@ -49,7 +49,7 @@ impl SpriteRenderAnimationFixture {
             let sprite_index_animation_handle =
                 loader.load_from_data(sprite_index_sampler, (), &world.read_resource());
 
-            let animation = Animation::<SpriteRender> {
+            let animation = Animation::<RenderSpriteSheetFlat2D> {
                 nodes: vec![
                     (
                         0,
@@ -64,7 +64,7 @@ impl SpriteRenderAnimationFixture {
                 ],
             };
 
-            loader.load_from_data::<Animation<SpriteRender>, ()>(
+            loader.load_from_data::<Animation<RenderSpriteSheetFlat2D>, ()>(
                 animation,
                 (),
                 &world.read_resource(),
@@ -81,10 +81,10 @@ impl SpriteRenderAnimationFixture {
     pub fn assertion(world: &mut World) {
         // Read the animation.
         let animation_handle = &world
-            .read_resource::<EffectReturn<Handle<Animation<SpriteRender>>>>()
+            .read_resource::<EffectReturn<Handle<Animation<RenderSpriteSheetFlat2D>>>>()
             .0;
 
-        let store = world.read_resource::<AssetStorage<Animation<SpriteRender>>>();
+        let store = world.read_resource::<AssetStorage<Animation<RenderSpriteSheetFlat2D>>>();
         assert!(store.get(animation_handle).is_some());
     }
 

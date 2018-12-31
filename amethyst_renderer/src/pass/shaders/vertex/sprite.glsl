@@ -9,14 +9,13 @@ layout (std140) uniform ViewArgs {
 in vec2 dir_x;
 in vec2 dir_y;
 in vec2 pos;
-in float depth;
 
 // Texture quad.
 in vec2 u_offset;
 in vec2 v_offset;
 
 in vec4 color;
-
+in float depth;
 
 out VertexData {
     vec2 tex_uv;

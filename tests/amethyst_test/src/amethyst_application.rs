@@ -13,7 +13,7 @@ use amethyst::{
     prelude::*,
     renderer::{
         ColorMask, DepthMode, DisplayConfig, DrawFlat2D, Material, Pipeline, PipelineBuilder,
-        RenderBundle, ScreenDimensions, SpriteRender, Stage, StageBuilder, ALPHA,
+        RenderBundle, ScreenDimensions, RenderSpriteSheetFlat2D, Stage, StageBuilder, ALPHA,
     },
     shred::Resource,
     ui::{DrawUi, UiBundle},
@@ -158,7 +158,7 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
                 "material_animation_control_system",
                 "material_sampler_interpolation_system",
             ))
-            .with_bundle(AnimationBundle::<u32, SpriteRender>::new(
+            .with_bundle(AnimationBundle::<u32, RenderSpriteSheetFlat2D>::new(
                 "sprite_render_animation_control_system",
                 "sprite_render_sampler_interpolation_system",
             ))

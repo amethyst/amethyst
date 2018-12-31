@@ -180,6 +180,7 @@ let game_data = GameDataBuilder::default()
     .with_bundle(
       RenderBundle::new(pipe, Some(config))
         .with_sprite_sheet_processor()
+        .with_drawflat2d_encoders(&[])
     )?;
 
 let mut game = Application::new("./", Pong, game_data)?;

@@ -1,6 +1,6 @@
 use amethyst::{
     assets::Handle,
-    renderer::{Sprite, SpriteSheet, Texture},
+    renderer::{SpriteFrame, SpriteSheet, Texture},
 };
 
 use crate::sprite;
@@ -34,7 +34,7 @@ pub fn load(texture: Handle<Texture>, definition: &sprite::SpriteSheetDefinition
 
             let pixel_left = offset_w * col;
             let pixel_top = offset_h * row;
-            let sprite = Sprite::from_pixel_values(
+            let frame = SpriteFrame::from_pixel_values(
                 image_w,
                 image_h,
                 definition.sprite_w,
@@ -45,9 +45,9 @@ pub fn load(texture: Handle<Texture>, definition: &sprite::SpriteSheetDefinition
             );
 
             let sprite_number = row * definition.column_count + col;
-            debug!("{}: Sprite: {:?}", sprite_number, &sprite);
+            debug!("{}: Sprite: {:?}", sprite_number, &frame);
 
-            sprites.push(sprite);
+            sprites.push(frame);
         }
     }
 

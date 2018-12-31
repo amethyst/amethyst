@@ -45,8 +45,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
 
     * `FontAsset` is provided by `amethyst_ui`, `UiBundle` registers `Processor<FontAsset>`.
     * `Source` is provided by `amethyst_audio`, `AudioBundle` registers `Processor<Source>`.
-    * `SpriteSheet` is provided by `amethyst_renderer`, `RenderBundle` registers `Processor<SpriteSheet>` given `.with_sprite_sheet_processor()` is called before adding it to the `GameDataBuilder`.
-
+    * `SpriteSheet` is provided by `amethyst_renderer`, `RenderBundle` registers `Processor<SpriteSheet>` given `.with_sprite_sheet_processor()` is called before adding it to the `GameDataBuilder`.    
     ```rust,no_run,noplaypen
     # extern crate amethyst;
     #
@@ -77,6 +76,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
             .with_bundle(
                 RenderBundle::new(pipeline, Some(display_config))
                     .with_sprite_sheet_processor()
+                    .with_drawflat2d_encoders(&[])
             )?;
 
         // ..
