@@ -14,11 +14,11 @@ Please note this is not for modifications to existing features. There is another
 ## What problem does this solve? What need does it fill?
 A clear and concise description of what the problem/need is. Ex. I'm frustrated when I lose work due to a lack of auto-save.
 
-**Describe the solution you'd like**
+## Describe the solution you'd like
 A clear and concise description of what you want to happen.
 
-**Describe alternatives you've considered**
+## Describe alternatives you've considered
 A clear and concise description of any alternative solutions or features you've considered.
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+## Additional context
+Add any other context, logs, or screenshots about the feature request here.
