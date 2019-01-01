@@ -224,7 +224,7 @@ impl State<(), MyEvent> for GameplayState {
 # fn main() {}
 ```
 
-To make `Application` aware of the change to which events to send to the state, you also need to supply both the 
+To make `Application` aware of the change, and decide to which events the state should be send, you need to supply both the 
 event type, and the `EventReader` type (the name you give in the `#[reader(SomeReader)]` derive attribute) when 
 the `Application` is created. This is done by replacing `Application::build` (or `Application::new`) with 
 `CoreApplication::<_, MyEvent, MyEventReader>::build()` (or `CoreApplication::<_, MyEvent, MyEventReader>::new()`). 
