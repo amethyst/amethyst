@@ -3,16 +3,18 @@
 //! Asset management crate.
 //! Designed with the following goals in mind:
 //!
-//! * extensibility
-//! * asynchronous & parallel using rayon
-//! * allow different sources
+//! * Extensibility
+//! * Asynchronous & Parallel using Rayon
+//! * Allow different sources
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-use amethyst_core;
+#[cfg(feature = "json")]
+pub use crate::formats::JsonFormat;
 
 #[macro_use]
 extern crate derivative;
+
 #[macro_use]
 extern crate error_chain;
 
@@ -21,7 +23,7 @@ extern crate log;
 
 #[macro_use]
 extern crate serde;
-use shred;
+
 #[macro_use]
 extern crate shred_derive;
 
@@ -29,8 +31,6 @@ extern crate shred_derive;
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
 
-#[cfg(feature = "json")]
-pub use crate::formats::JsonFormat;
 pub use crate::{
     asset::{Asset, Format, FormatValue, SimpleFormat},
     cache::Cache,
@@ -44,6 +44,10 @@ pub use crate::{
     source::{Directory, Source},
     storage::{AssetStorage, Handle, ProcessingState, Processor, WeakHandle},
 };
+
+use shred;
+
+use amethyst_core;
 
 mod asset;
 mod cache;

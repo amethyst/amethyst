@@ -1,17 +1,9 @@
 //! Provides a client-server networking architecture to amethyst.
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
+
 #[macro_use]
 extern crate serde;
-
-mod bundle;
-mod connection;
-mod error;
-mod filter;
-mod net_event;
-mod network_socket;
-mod server;
-mod test;
 
 pub use crate::{
     bundle::NetworkBundle,
@@ -23,12 +15,21 @@ pub use crate::{
     server::{Host, ServerConfig, ServerSocketEvent},
 };
 
+use std::{net::SocketAddr, sync::mpsc::SyncSender};
+
 use bincode::{deserialize, serialize};
 use laminar::Packet;
 use log::error;
 use serde::{de::DeserializeOwned, Serialize};
-use std::net::SocketAddr;
-use std::sync::mpsc::SyncSender;
+
+mod bundle;
+mod connection;
+mod error;
+mod filter;
+mod net_event;
+mod network_socket;
+mod server;
+mod test;
 
 /// Sends an event to the target NetConnection using the provided network Socket.
 /// The socket has to be bound.
