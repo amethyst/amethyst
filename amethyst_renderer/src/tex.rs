@@ -203,8 +203,8 @@ where
         let desc = ResourceDesc {
             channel: self.channel_type,
             layer: None,
-            min: 1,
-            max: self.info.levels,
+            min: 0,
+            max: self.info.levels - 1,
             swizzle: Swizzle::new(),
         };
 
