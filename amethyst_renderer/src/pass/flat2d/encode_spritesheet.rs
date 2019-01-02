@@ -8,10 +8,7 @@ use amethyst_core::{
 
 use super::encode_sprite::encode_sprite;
 
-/// Information for rendering a sprite that is embedded in a spritesheet.
-///
-/// Instead of using a `Mesh` on a `DrawFlat` render pass, we can use a simpler set of shaders to
-/// render textures to quads. This struct carries the information necessary for the `DrawFlat2D` pass.
+/// A component that guides `DrawFlat2D` pass encoding for rendering a sprite in a spritesheet.
 #[derive(Clone, Debug)]
 pub struct RenderSpriteSheetFlat2D {
     /// Handle to the sprite sheet of the sprite
@@ -59,7 +56,7 @@ impl<'a> System<'a> for Flat2DSpriteSheetEncoder {
                 encode_sprite(
                     &mut buffer,
                     sprite_sheet.texture.clone(),
-                    &sprite_sheet.sprites[render.sprite_number],
+                    &sprite_sheet.frames[render.sprite_number],
                     &transform,
                     flip,
                     rgba.cloned().unwrap_or(Rgba::WHITE),

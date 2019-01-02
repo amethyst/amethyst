@@ -7,10 +7,7 @@ use amethyst_core::{
     GlobalTransform,
 };
 
-/// Information for rendering a standalone texture as plain image.
-///
-/// Instead of using a `Mesh` on a `DrawFlat` render pass, we can use a simpler set of shaders to
-/// render textures to quads. This struct carries the information necessary for the `DrawFlat2D` pass.
+/// A component that guides `DrawFlat2D` pass encoding for rendering a standalone texture as plain image.
 #[derive(Clone, Debug)]
 pub struct RenderImageFlat2D(pub Handle<Texture>);
 

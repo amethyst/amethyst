@@ -16,7 +16,7 @@ use crate::sprite;
 /// * `texture`: Sprite sheet's texture handle
 /// * `definition`: Definition of the sprite layout on the sprite sheet.
 pub fn load(texture: Handle<Texture>, definition: &sprite::SpriteSheetDefinition) -> SpriteSheet {
-    let mut sprites = Vec::with_capacity((definition.row_count * definition.column_count) as usize);
+    let mut frames = Vec::with_capacity((definition.row_count * definition.column_count) as usize);
     let (offset_w, offset_h) = offset_distances(&definition);
     let (image_w, image_h) = (
         offset_w * definition.column_count,
@@ -47,11 +47,11 @@ pub fn load(texture: Handle<Texture>, definition: &sprite::SpriteSheetDefinition
             let sprite_number = row * definition.column_count + col;
             debug!("{}: Sprite: {:?}", sprite_number, &frame);
 
-            sprites.push(frame);
+            frames.push(frame);
         }
     }
 
-    SpriteSheet { texture, sprites }
+    SpriteSheet { texture, frames }
 }
 
 /// Returns the pixel offset distances per sprite.

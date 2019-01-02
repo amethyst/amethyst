@@ -28,7 +28,9 @@ static FRAG_SRC: &[u8] = include_bytes!("../shaders/fragment/sprite.glsl");
 
 static TEXTURES: [TextureType; 1] = [TextureType::Albedo];
 
-#[derive(Clone, Debug)]
+// This struct carries the information necessary for the DrawFlat2D pass.
+// It is constructed inside encoders, guides sorting and is later the primary
+// source of data for GPU buffers.
 pub struct Flat2DData {
     pub texture: TextureHandle,
     pub dir_x: Vector4<f32>,
@@ -41,6 +43,7 @@ pub struct Flat2DData {
     pub tint: Rgba,
     pub transparent: bool,
 }
+
 #[derive(Clone, Debug)]
 enum DirX {}
 impl Attribute for DirX {

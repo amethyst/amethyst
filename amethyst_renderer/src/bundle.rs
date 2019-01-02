@@ -59,7 +59,9 @@ where
         self
     }
 
-    /// Enable encoders for `DrawFlat2D` render pass.
+    /// Enable default encoders for `DrawFlat2D` render pass. Optionally provide
+    /// their dependencies, so encoders will wait for relevant world changes to occur
+    /// before attempting capturing the data for rendering.
     ///
     /// This has to be enabled for the pass to render anything on the screen.
     pub fn with_drawflat2d_encoders(mut self, dep: &'a [&'a str]) -> Self {
@@ -67,12 +69,9 @@ where
         self
     }
 
-    /// Register additional encoders for `DrawFlat2D` render pass.
+    /// Register additional external encoders as dependencies for `DrawFlat2D` render pass.
     ///
-    /// Requires `with_drawflat2d_encoders` to be configured.
-    ///
-    /// Note that this only sets up the system dependencies.
-    /// You still have to register the systems on your own.
+    /// Requires `with_drawflat2d_encoders` to be enabled first.
     pub fn with_external_drawflat2d_encoders(mut self, dep: &'a [&'a str]) -> Self {
         self.drawflat2d_external_encoders = Some(dep);
         self

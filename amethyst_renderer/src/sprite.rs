@@ -18,8 +18,8 @@ pub type SpriteSheetHandle = Handle<SpriteSheet>;
 pub struct SpriteSheet {
     /// `Texture` handle of the spritesheet texture
     pub texture: Handle<Texture>,
-    /// A list of sprites in this sprite sheet.
-    pub sprites: Vec<SpriteFrame>,
+    /// A list of sprite frames in this sprite sheet.
+    pub frames: Vec<SpriteFrame>,
 }
 
 impl Asset for SpriteSheet {
@@ -107,7 +107,7 @@ pub struct TextureCoordinates {
 }
 
 impl SpriteFrame {
-    /// Creates a `Sprite` from pixel values.
+    /// Creates a `SpriteFrame` from pixel values.
     ///
     /// This function expects pixel coordinates -- starting from the top left of the image. X
     /// increases to the right, Y increases downwards. Texture coordinates are calculated from the
@@ -314,9 +314,9 @@ impl SimpleFormat<SpriteSheet> for SpriteSheetFormat {
                 "Failed to parse Ron file for SpriteSheet",
             ))
         })?;
-        let mut sprites: Vec<SpriteFrame> = Vec::with_capacity(sheet.sprites.len());
+        let mut frames: Vec<SpriteFrame> = Vec::with_capacity(sheet.sprites.len());
         for sp in sheet.sprites {
-            let sprite = SpriteFrame::from_pixel_values(
+            let frame = SpriteFrame::from_pixel_values(
                 sheet.spritesheet_width as u32,
                 sheet.spritesheet_height as u32,
                 sp.width as u32,
@@ -325,9 +325,9 @@ impl SimpleFormat<SpriteSheet> for SpriteSheetFormat {
                 sp.y as u32,
                 sp.offsets.unwrap_or([0.0; 2]),
             );
-            sprites.push(sprite);
+            frames.push(frame);
         }
-        Ok(SpriteSheet { texture, sprites })
+        Ok(SpriteSheet { texture, frames })
     }
 }
 

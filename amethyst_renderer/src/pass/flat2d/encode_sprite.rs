@@ -7,10 +7,7 @@ use amethyst_core::{
     GlobalTransform,
 };
 
-/// Information for rendering a standalone sprite.
-///
-/// Instead of using a `Mesh` on a `DrawFlat` render pass, we can use a simpler set of shaders to
-/// render textures to quads. This struct carries the information necessary for the `DrawFlat2D` pass.
+/// A component that guides `DrawFlat2D` pass encoding for rendering a standalone sprite.
 #[derive(Clone, Debug)]
 pub struct RenderSpriteFlat2D(pub Handle<Sprite>);
 

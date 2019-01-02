@@ -82,7 +82,7 @@ The following table lists the differences between the coordinate systems:
 | Increase to the right and down        | Increase to the right and up              |
 | Range from 0 to (width or height - 1) | Range from 0.0 to 1.0                     |
 
-In Amethyst, pixel dimensions and texture coordinates are stored in the `Sprite` struct. Since texture coordinates can be derived from pixel coordinates, Amethyst provides the `SpriteFrame::from_pixel_values` function to create a `Sprite`.
+In Amethyst, pixel dimensions and texture coordinates are stored in the `SpriteFrame` struct. Since texture coordinates can be derived from pixel coordinates, Amethyst provides the `SpriteFrame::from_pixel_values` function to create a `SpriteFrame`.
 
 The following snippet shows you how to naively define a `SpriteSheet`. In a real application, you would typically use the sprite sheet from file feature, which is much more convenient.
 
@@ -97,7 +97,7 @@ use amethyst::renderer::{Sprite, SpriteSheet, TextureCoordinates, TextureHandle}
 /// * `texture`: Handle of the texture.
 pub fn load_sprite_sheet(texture: TextureHandle) -> SpriteSheet {
     let sprite_count = 1; // number of sprites
-    let mut sprites = Vec::with_capacity(sprite_count);
+    let mut frames = Vec::with_capacity(sprite_count);
 
     let image_w = 100;
     let image_h = 20;
@@ -112,11 +112,11 @@ pub fn load_sprite_sheet(texture: TextureHandle) -> SpriteSheet {
     let frame = SpriteFrame::from_pixel_values(
         image_w, image_h, sprite_w, sprite_h, offset_x, offset_y, offsets,
     );
-    sprites.push(frame);
+    frames.push(frame);
 
     SpriteSheet {
         texture,
-        sprites,
+        frames,
     }
 }
 ```
