@@ -4,12 +4,12 @@ resource_types:
   type: docker-image
   source:
     repository: teliaoss/github-pr-resource
-    tag: v0.7.0
+    tag: v0.10.0
 
 resources:
 - name: pull-request
   type: pull-request
-  check_every: 24h
+  check_every: 1m
   webhook_token: ((webhook_token))
   source:
     repository: amethyst/amethyst
