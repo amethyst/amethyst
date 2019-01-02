@@ -280,7 +280,7 @@ This is all the information Amethyst needs to track and move the paddles in our
 virtual world, but we'll need to do some more work to actually *draw* them.
 
 As a sanity check, let's make sure the code for initialising the paddles
-compiles. Update the `on_start` method to the following:
+successfully runs. Update the `on_start` method to the following:
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
