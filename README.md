@@ -192,7 +192,7 @@ you can look through the [issue tracker][it].
 
 ## Backers
 
-Thank you to all our backers! 🙏 [Become a backer](https://opencollective.com/amethyst#backer)
+Thank you to all our backers! 🙏 [Become a backer](https://www.amethyst-engine.org/donate)
 
 <a href="https://opencollective.com/amethyst#backers" target="_blank"><img src="https://opencollective.com/amethyst/backers.svg?width=890"></a>
 
