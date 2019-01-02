@@ -222,8 +222,8 @@ pub const PADDLE_WIDTH: f32 = 4.0;
 ```
 
 Okay, let's make some entities! We'll define an `initialise_paddles` function
-which will create left and right paddle entities and attach a `Transform`
-component to each to position them in our world. As we defined earlier,
+which will create left and right paddle entities, and attach a `Transform`
+component to each, thereby positioning them in our world. As we defined earlier,
 our canvas is from `0.0` to `ARENA_WIDTH` in the horizontal dimension and
 from `0.0` to `ARENA_HEIGHT` in the vertical dimension.
 Keep in mind that the anchor point of our entities will be in the middle of the
