@@ -339,7 +339,7 @@ pub(crate) fn draw_mesh(
 ) {
     #[cfg(feature = "profiler")]
     profile_scope!("render_drawmesh");
-    
+
     // Return straight away if some parameters are none
     // Consider changing function signature?
     let (mesh, material, global) = match (mesh, material, global) {

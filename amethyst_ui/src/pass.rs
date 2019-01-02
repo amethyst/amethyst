@@ -120,7 +120,7 @@ impl Pass for DrawUi {
     fn compile(&mut self, mut effect: NewEffect<'_>) -> Result<Effect> {
         #[cfg(feature = "profiler")]
         profile_scope!("ui_pass_build");
-        
+
         // Initialize a single unit quad, we'll use this mesh when drawing quads later.
         // Centered around (0,0) and of size 2
         let data = Shape::Plane(None).generate_vertices::<Vec<PosTex>>(None);
@@ -505,7 +505,12 @@ impl Pass for DrawUi {
                     if let Err(err) = brush.draw_queued(
                         encoder,
                         &effect.data.out_blends[0],
-                        &effect.data.out_depth.as_ref().expect("Unable to get depth of effect").0,
+                        &effect
+                            .data
+                            .out_depth
+                            .as_ref()
+                            .expect("Unable to get depth of effect")
+                            .0,
                     ) {
                         error!("Unable to draw text! Error: {:?}", err);
                     }
