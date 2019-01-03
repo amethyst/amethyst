@@ -14,13 +14,14 @@ use std::time::Duration;
 
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
+
     let game_data = GameDataBuilder::default()
         .with_bundle(NetworkBundle::<()>::new(
-            "127.0.0.1:3455".parse().unwrap(),
+            "127.0.0.1:3457".parse().unwrap(),
+            "127.0.0.1:3456".parse().unwrap(),
             vec![],
         ))?
-        .with(SpamSystem::new(), "spam", &[])
-        .with(ReaderSystem::new(), "reader", &[]);
+        .with(SpamSystem::new(), "spam", &[]);
     let mut game = Application::build("./", State1)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
@@ -30,14 +31,16 @@ fn main() -> Result<()> {
     game.run();
     Ok(())
 }
-
 /// Default empty state
 pub struct State1;
 impl SimpleState for State1 {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         data.world
             .create_entity()
-            .with(NetConnection::<()>::new("127.0.0.1:3456".parse().unwrap()))
+            .with(NetConnection::<()>::new(
+                "127.0.0.1:3455".parse().unwrap(),
+                "127.0.0.1:3454".parse().unwrap(),
+            ))
             .build();
     }
 }
@@ -75,11 +78,13 @@ impl<'a> System<'a> for SpamSystem {
 
 /// A simple system reading received events.
 /// Used to see events sent by the net_echo_server example.
+#[allow(unused)]
 struct ReaderSystem {
     pub reader: Option<ReaderId<NetEvent<()>>>,
 }
 
 impl ReaderSystem {
+    #[allow(unused)]
     pub fn new() -> Self {
         ReaderSystem { reader: None }
     }
