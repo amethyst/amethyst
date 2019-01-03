@@ -11,8 +11,9 @@ use amethyst_renderer;
 use clipboard;
 #[macro_use]
 extern crate derivative;
+#[macro_use]
+extern crate derive_new;
 use fnv;
-
 use gfx;
 use gfx_glyph;
 use glsl_layout;
@@ -37,16 +38,17 @@ mod bundle;
 mod button;
 mod event;
 mod event_retrigger;
-mod focused;
 mod font;
 mod format;
-mod image;
 mod layout;
 mod pass;
 mod prefab;
 mod resize;
+mod selection;
+mod selection_order_cache;
 mod sound;
 mod text;
+mod text_editing;
 mod transform;
 
 pub use self::{
@@ -55,26 +57,24 @@ pub use self::{
         UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionRetriggerSystem,
         UiButtonActionType, UiButtonBuilder, UiButtonBuilderResources, UiButtonSystem,
     },
-    event::{MouseReactive, UiEvent, UiEventType, UiMouseSystem},
+    event::{targeted, Interactable, UiEvent, UiEventType, UiMouseSystem},
     event_retrigger::{EventReceiver, EventRetriggerSystem},
-    focused::UiFocused,
     font::{
         default::get_default_font,
         systemfont::{default_system_font, get_all_font_handles, list_system_font_families},
     },
     format::{FontAsset, FontFormat, FontHandle, OtfFormat, TtfFormat},
-    image::UiImage,
     layout::{Anchor, ScaleMode, Stretch, UiTransformSystem},
     pass::DrawUi,
     prefab::{
-        NoCustomUi, ToNativeWidget, UiCreator, UiFormat, UiImageBuilder, UiLoader, UiLoaderSystem,
+        NoCustomUi, ToNativeWidget, UiCreator, UiFormat, UiImagePrefab, UiLoader, UiLoaderSystem,
         UiPrefab, UiTextBuilder, UiTransformBuilder, UiWidget,
     },
     resize::{ResizeSystem, UiResize},
+    selection::{Selectable, Selected, SelectionKeyboardSystem, SelectionMouseSystem},
+    selection_order_cache::{CacheSelectionOrderSystem, CachedSelectionOrder},
     sound::{UiPlaySoundAction, UiSoundRetrigger, UiSoundRetriggerSystem, UiSoundSystem},
-    text::{LineMode, TextEditing, UiKeyboardSystem, UiText},
+    text::{LineMode, TextEditing, TextEditingMouseSystem, UiText},
+    text_editing::TextEditingInputSystem,
     transform::{UiFinder, UiTransform},
 };
-
-/// How many times the cursor blinks per second while editing text.
-const CURSOR_BLINK_RATE: f32 = 2.0;

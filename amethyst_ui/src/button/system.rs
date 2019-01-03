@@ -4,9 +4,10 @@ use amethyst_core::{
     ParentHierarchy,
 };
 use amethyst_renderer::TextureHandle;
+
 use std::collections::HashMap;
 
-use crate::{UiButtonAction, UiButtonActionType::*, UiImage, UiText};
+use crate::{UiButtonAction, UiButtonActionType::*, UiText};
 
 struct ActionChangeStack<T: Clone + PartialEq> {
     initial_value: T,
@@ -73,7 +74,7 @@ impl UiButtonSystem {
 
 impl<'s> System<'s> for UiButtonSystem {
     type SystemData = (
-        WriteStorage<'s, UiImage>,
+        WriteStorage<'s, TextureHandle>,
         WriteStorage<'s, UiText>,
         ReadExpect<'s, ParentHierarchy>,
         Write<'s, EventChannel<UiButtonAction>>,
@@ -137,10 +138,10 @@ impl<'s> System<'s> for UiButtonSystem {
                     if let Some(image) = image_storage.get_mut(event.target) {
                         self.set_textures
                             .entry(event.target)
-                            .or_insert(ActionChangeStack::new(image.texture.clone()))
+                            .or_insert(ActionChangeStack::new(image.clone()))
                             .add(texture_handle.clone());
 
-                        image.texture = texture_handle.clone();
+                        *image = texture_handle.clone();
                     }
                 }
                 UnsetTexture(ref texture_handle) => {
@@ -153,7 +154,7 @@ impl<'s> System<'s> for UiButtonSystem {
                             .get_mut(&event.target)
                             .and_then(|it| it.remove(texture_handle));
 
-                        image.texture = self.set_textures[&event.target].current();
+                        *image = self.set_textures[&event.target].current();
 
                         if self.set_textures[&event.target].is_empty() {
                             self.set_textures.remove(&event.target);

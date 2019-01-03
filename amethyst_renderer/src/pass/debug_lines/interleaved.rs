@@ -22,6 +22,7 @@ use crate::{
     },
     types::{Encoder, Factory},
     vertex::{Color, Normal, Position, Query},
+    Rgba,
 };
 
 use super::*;
@@ -69,7 +70,7 @@ where
     V: Query<(Position, Color, Normal)>,
 {
     type Data = (
-        Option<Read<'a, ActiveCamera>>,
+        Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, GlobalTransform>,
         WriteStorage<'a, DebugLinesComponent>, // DebugLines components
@@ -145,7 +146,13 @@ where
             return;
         }
 
-        set_vertex_args(effect, encoder, camera, &GlobalTransform(na::one()));
+        set_vertex_args(
+            effect,
+            encoder,
+            camera,
+            &GlobalTransform(na::one()),
+            Rgba::WHITE,
+        );
 
         effect.draw(mesh.slice(), encoder);
         effect.clear();

@@ -79,6 +79,8 @@ Container(
                         tab_order: 1,
                         anchor: Middle,
                         stretch: XY(x_margin: 0., y_margin: 0.),
+                        mouse_reactive: true,
+                        selectable: 0,
                     ),
                     text: (
                         text: "Editable",

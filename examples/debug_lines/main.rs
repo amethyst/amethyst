@@ -25,21 +25,19 @@ impl<'s> System<'s> for ExampleLinesSystem {
 
     fn run(&mut self, (mut debug_lines_resource, time): Self::SystemData) {
         // Drawing debug lines, as a resource
-        {
-            let t = (time.absolute_time_seconds() as f32).cos();
+        let t = (time.absolute_time_seconds() as f32).cos();
 
-            debug_lines_resource.draw_direction(
-                [t, 0.0, 0.5].into(),
-                [0.0, 0.3, 0.0].into(),
-                [0.5, 0.05, 0.65, 1.0].into(),
-            );
+        debug_lines_resource.draw_direction(
+            [t, 0.0, 0.5].into(),
+            [0.0, 0.3, 0.0].into(),
+            [0.5, 0.05, 0.65, 1.0].into(),
+        );
 
-            debug_lines_resource.draw_line(
-                [t, 0.0, 0.5].into(),
-                [0.0, 0.0, 0.2].into(),
-                [0.5, 0.05, 0.65, 1.0].into(),
-            );
-        }
+        debug_lines_resource.draw_line(
+            [t, 0.0, 0.5].into(),
+            [0.0, 0.0, 0.2].into(),
+            [0.5, 0.05, 0.65, 1.0].into(),
+        );
     }
 }
 

@@ -13,7 +13,8 @@ use crate::{
         pass::{Pass, PassData},
         DepthMode, Effect, NewEffect,
     },
-    set_vertex_args, ActiveCamera, Camera, Encoder, Factory, Mesh, PosTex, Shape, VertexFormat,
+    set_vertex_args, ActiveCamera, Camera, Encoder, Factory, Mesh, PosTex, Rgba, Shape,
+    VertexFormat,
 };
 
 use gfx::pso::buffer::ElemStride;
@@ -44,7 +45,7 @@ impl DrawSkybox {
 
 impl<'a> PassData<'a> for DrawSkybox {
     type Data = (
-        Option<Read<'a, ActiveCamera>>,
+        Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, GlobalTransform>,
         Read<'a, SkyboxColor>,
@@ -86,7 +87,13 @@ impl Pass for DrawSkybox {
             .as_ref()
             .expect("Pass doesn't seem to be compiled.");
 
-        set_vertex_args(effect, encoder, camera, &GlobalTransform(na::one()));
+        set_vertex_args(
+            effect,
+            encoder,
+            camera,
+            &GlobalTransform(na::one()),
+            Rgba::WHITE,
+        );
 
         if let Some(vbuf) = mesh.buffer(PosTex::ATTRIBUTES) {
             effect.data.vertex_bufs.push(vbuf.clone());

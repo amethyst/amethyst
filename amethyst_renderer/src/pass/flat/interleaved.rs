@@ -27,6 +27,7 @@ use crate::{
     types::{Encoder, Factory},
     vertex::{Position, Query, TexCoord},
     visibility::Visibility,
+    Rgba,
 };
 
 use super::*;
@@ -73,7 +74,7 @@ where
     V: Query<(Position, TexCoord)>,
 {
     type Data = (
-        Option<Read<'a, ActiveCamera>>,
+        Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         Read<'a, AssetStorage<Mesh>>,
         Read<'a, AssetStorage<Texture>>,
@@ -84,6 +85,7 @@ where
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
+        ReadStorage<'a, Rgba>,
     );
 }
 
@@ -126,14 +128,22 @@ where
             mesh,
             material,
             global,
+            rgba,
         ): <Self as PassData<'a>>::Data,
     ) {
         let camera = get_camera(active, &camera, &global);
 
         match visibility {
             None => {
-                for (mesh, material, global, _, _) in
-                    (&mesh, &material, &global, !&hidden, !&hidden_prop).join()
+                for (mesh, material, global, rgba, _, _) in (
+                    &mesh,
+                    &material,
+                    &global,
+                    rgba.maybe(),
+                    !&hidden,
+                    !&hidden_prop,
+                )
+                    .join()
                 {
                     draw_mesh(
                         encoder,
@@ -144,6 +154,7 @@ where
                         &tex_storage,
                         Some(material),
                         &material_defaults,
+                        rgba,
                         camera,
                         Some(global),
                         &[V::QUERIED_ATTRIBUTES],
@@ -152,8 +163,14 @@ where
                 }
             }
             Some(ref visibility) => {
-                for (mesh, material, global, _) in
-                    (&mesh, &material, &global, &visibility.visible_unordered).join()
+                for (mesh, material, global, rgba, _) in (
+                    &mesh,
+                    &material,
+                    &global,
+                    rgba.maybe(),
+                    &visibility.visible_unordered,
+                )
+                    .join()
                 {
                     draw_mesh(
                         encoder,
@@ -164,6 +181,7 @@ where
                         &tex_storage,
                         Some(material),
                         &material_defaults,
+                        rgba,
                         camera,
                         Some(global),
                         &[V::QUERIED_ATTRIBUTES],
@@ -182,6 +200,7 @@ where
                             &tex_storage,
                             material.get(*entity),
                             &material_defaults,
+                            rgba.get(*entity),
                             camera,
                             global.get(*entity),
                             &[V::QUERIED_ATTRIBUTES],

@@ -75,7 +75,7 @@ amethyst_utils = { path = "amethyst_utils", version = "0.5.0" }
 crossbeam-channel = "0.3.1"
 derivative = "1.0"
 fern = { version = "0.5", features = ["colored"] }
-log = { version = "0.4", features = ["serde"] }
+log = { version = "0.4.6", features = ["serde"] }
 rayon = "1.0.2"
 rustc_version_runtime = "0.1"
 winit = { version = "0.18", features = ["serde"] }
@@ -116,6 +116,10 @@ path = "examples/renderable/main.rs"
 [[example]]
 name = "pong"
 path = "examples/pong/main.rs"
+
+[[example]]
+name = "asset_custom"
+path = "examples/asset_custom/main.rs"
 
 [[example]]
 name = "asset_loading"
@@ -220,6 +224,10 @@ path = "examples/sprite_camera_follow/main.rs"
 [[example]]
 name = "simple_image"
 path = "examples/simple_image/main.rs"
+
+[[example]]
+name = "auto_fov"
+path = "examples/auto_fov/main.rs"
 
 [workspace]
 members = ["amethyst_gltf", "tests/amethyst_test"]

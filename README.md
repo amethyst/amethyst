@@ -122,7 +122,7 @@ $ sudo dnf install alsa-lib-devel openssl-devel cmake freetype-devel expat-devel
 
 See your distribution specific installation process for the equivalent dependencies.
 
-Please note that you need to have a functionnal graphics driver installed.
+Please note that you need to have a functional graphics driver installed.
 If you get a panic about the renderer unable to create the context when trying to run an example,
 faulty driver installation can be the issue.
 

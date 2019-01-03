@@ -48,6 +48,7 @@ in VertexData {
     vec3 normal;
     vec3 tangent;
     vec2 tex_coord;
+    vec4 color;
 } vertex;
 
 out vec4 out_color;
@@ -83,5 +84,5 @@ void main() {
         lighting += diffuse;
     }
     lighting += ambient_color;
-    out_color = vec4(lighting, 1.0) * color + ecolor;
+    out_color = (vec4(lighting, 1.0) * color + ecolor) * vertex.color;
 }

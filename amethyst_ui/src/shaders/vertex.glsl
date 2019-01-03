@@ -7,6 +7,7 @@ layout (std140) uniform VertexArgs {
     uniform vec2 invert_window_size;
     uniform vec2 coord;
     uniform vec2 dimension;
+    uniform vec4 color;
 };
 
 // Square [-1.0,1.0]
@@ -16,6 +17,7 @@ in vec2 tex_coord;
 out VertexData {
   vec4 position;
   vec2 tex_coord;
+  vec4 color;
 } vertex;
 
 void main() {
@@ -37,5 +39,6 @@ void main() {
     vertex.position += vec4(-1, -1, 0, 0);
 
     vertex.tex_coord = tex_coord;
+    vertex.color = color;
     gl_Position = vertex.position;
 }

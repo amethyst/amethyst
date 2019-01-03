@@ -12,6 +12,7 @@ use shred;
 extern crate shred_derive;
 
 pub mod app_root_dir;
+pub mod auto_fov;
 pub mod circular_buffer;
 pub mod fps_counter;
 pub mod ortho_camera;
