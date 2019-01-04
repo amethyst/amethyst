@@ -161,7 +161,7 @@ use amethyst::{
     ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
 };
 
-use pong::Ball;
+use crate::pong::Ball;
 
 pub struct MoveBallsSystem;
 
@@ -241,7 +241,7 @@ use amethyst::{
     ecs::prelude::{Join, ReadStorage, System, WriteStorage},
 };
 
-use pong::{Ball, Side, Paddle, ARENA_HEIGHT};
+use crate::pong::{Ball, Side, Paddle, ARENA_HEIGHT};
 
 pub struct BounceSystem;
 
