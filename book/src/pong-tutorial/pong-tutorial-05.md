@@ -46,7 +46,7 @@ use amethyst::{
     ecs::prelude::{Join, System, WriteStorage},
 };
 
-use pong::{Ball, ARENA_WIDTH};
+use crate::pong::{Ball, ARENA_WIDTH};
 
 pub struct WinnerSystem;
 
@@ -770,7 +770,7 @@ use amethyst::{
     ui::UiText,
 };
 
-use pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH};
+use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH};
 
 pub struct WinnerSystem;
 
