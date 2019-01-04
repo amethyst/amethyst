@@ -157,7 +157,12 @@ Now that our camera is set and ready, it's time to add our own component.
 In `pong.rs` let's create our first `Component`, a definition of a paddle. We
 will make `Side` and `Paddle` public for use in other modules later.
 
+Let's also define some constants for convenience:
+
 ```rust,no_run,noplaypen
+pub const PADDLE_HEIGHT: f32 = 16.0;
+pub const PADDLE_WIDTH: f32 = 4.0;
+
 #[derive(PartialEq, Eq)]
 pub enum Side {
     Left,
@@ -174,8 +179,8 @@ impl Paddle {
     fn new(side: Side) -> Paddle {
         Paddle {
             side,
-            width: 1.0,
-            height: 1.0,
+            width: PADDLE_WIDTH,
+            height: PADDLE_HEIGHT,
         }
     }
 }
@@ -213,13 +218,6 @@ use amethyst::core::transform::Transform;
 `Transform` is an Amethyst ECS component which carry
 position and orientation information. It is relative
 to a parent, if one exists.
-
-Let's also define some constants for convenience:
-
-```rust,no_run,noplaypen
-pub const PADDLE_HEIGHT: f32 = 16.0;
-pub const PADDLE_WIDTH: f32 = 4.0;
-```
 
 Okay, let's make some entities! We'll define an `initialise_paddles` function
 which will create left and right paddle entities and attach a `Transform`
