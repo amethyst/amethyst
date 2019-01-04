@@ -123,4 +123,4 @@ To know where to start, we suggest you read our [contribution guidelines](https:
 
 If you want to contribute, or have questions, let us know either on [GitHub][db], or on [Discord][di].
 
-[di]: https://discord.gg/GnP5Whs
+[di]: https://discord.gg/amethyst

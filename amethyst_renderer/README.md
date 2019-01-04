@@ -10,7 +10,7 @@
 [tc]: https://travis-ci.org/amethyst/amethyst/
 [ci]: https://crates.io/crates/amethyst_renderer/
 [li]: https://github.com/amethyst/amethyst/blob/master/COPYING
-[di]: https://discord.gg/GnP5Whs
+[di]: https://discord.gg/amethyst
 
 High-level rendering engine with multiple backends. This project is a *work in
 progress* and is very incomplete. Pardon the dust!
