@@ -3,9 +3,7 @@
 use amethyst_assets::{PrefabData, PrefabError};
 use amethyst_core::{
     nalgebra::Orthographic3,
-    specs::{
-        Component, DenseVecStorage, Entity, Join, ReadExpect, ReadStorage, System, WriteStorage,
-    },
+    specs::{Component, DenseVecStorage, Entity, Join, ReadExpect, System, WriteStorage},
     Axis2,
 };
 use amethyst_renderer::{Camera, ScreenDimensions};
@@ -70,6 +68,7 @@ pub struct CameraOrtho {
     pub mode: CameraNormalizeMode,
     /// The world coordinates that this camera will keep visible as the window size changes
     pub world_coordinates: CameraOrthoWorldCoordinates,
+    aspect_ratio_cache: f32,
 }
 
 impl CameraOrtho {
@@ -78,6 +77,7 @@ impl CameraOrtho {
         CameraOrtho {
             mode,
             world_coordinates: Default::default(),
+            aspect_ratio_cache: 0.0,
         }
     }
 
@@ -204,25 +204,22 @@ impl Default for CameraNormalizeMode {
 /// System that automatically changes the camera matrix according to the settings in
 /// the `CameraOrtho` attached to the camera entity.
 #[derive(Default)]
-pub struct CameraOrthoSystem {
-    aspect_ratio_cache: f32,
-}
+pub struct CameraOrthoSystem;
 
 impl<'a> System<'a> for CameraOrthoSystem {
     type SystemData = (
         ReadExpect<'a, ScreenDimensions>,
         WriteStorage<'a, Camera>,
-        ReadStorage<'a, CameraOrtho>,
+        WriteStorage<'a, CameraOrtho>,
     );
 
     #[cfg_attr(feature = "cargo-clippy", allow(float_cmp))] // cmp just used to recognize change
-    fn run(&mut self, (dimensions, mut cameras, ortho_cameras): Self::SystemData) {
+    fn run(&mut self, (dimensions, mut cameras, mut ortho_cameras): Self::SystemData) {
         let aspect = dimensions.aspect_ratio();
 
-        if aspect != self.aspect_ratio_cache {
-            self.aspect_ratio_cache = aspect;
-
-            for (mut camera, ortho_camera) in (&mut cameras, &ortho_cameras).join() {
+        for (mut camera, mut ortho_camera) in (&mut cameras, &mut ortho_cameras).join() {
+            if aspect != ortho_camera.aspect_ratio_cache {
+                ortho_camera.aspect_ratio_cache = aspect;
                 let offsets = ortho_camera.camera_offsets(aspect);
 
                 let prev = Orthographic3::from_matrix_unchecked(camera.proj);
@@ -352,6 +349,7 @@ mod test {
                 top: 0.0,
                 bottom: 1.0,
             },
+            aspect_ratio_cache: 0.0,
         };
         assert_eq!((0.0, 1.0, 1.5, -0.5), cam.camera_offsets(aspect));
     }
@@ -367,6 +365,7 @@ mod test {
                 top: 2.0,
                 bottom: 0.0,
             },
+            aspect_ratio_cache: 0.0,
         };
         assert_eq!((0.0, 2.0, 0.0, 2.0), cam.camera_offsets(aspect));
     }
@@ -382,6 +381,7 @@ mod test {
                 top: 2.0,
                 bottom: 0.0,
             },
+            aspect_ratio_cache: 0.0,
         };
         assert_eq!((-1.0, 3.0, 0.0, 2.0), cam.camera_offsets(aspect));
     }
@@ -397,6 +397,7 @@ mod test {
                 top: 2.0,
                 bottom: 0.0,
             },
+            aspect_ratio_cache: 0.0,
         };
         assert_eq!((0.0, 2.0, -1.0, 3.0), cam.camera_offsets(aspect));
     }
