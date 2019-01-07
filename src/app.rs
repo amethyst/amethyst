@@ -19,7 +19,7 @@ use crate::{
     },
     ecs::{
         common::Errors,
-        prelude::{Component, Read, World, Write},
+        prelude::{Component, World, Write},
     },
     error::{Error, Result},
     game_data::DataInit,
