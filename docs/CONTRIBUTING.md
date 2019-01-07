@@ -199,7 +199,7 @@ There are two types of documentation in Amethyst you can work on:
 1. [API documentation][ad]
 2. [The Amethyst book][ab]
 
-[ad]: https://www.amethyst.rs/doc/master/doc/amethyst/
+[ad]: https://www.amethyst-engine.org/doc/master/doc/amethyst/
 [ab]: https://www.amethyst.rs/book/master/
 
 Our Rust API documentation is generated directly from source code comments

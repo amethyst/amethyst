@@ -8,7 +8,7 @@ exclude = ["examples/*", "book/*"]
 keywords = ["game", "engine", "sdk", "amethyst"]
 categories = ["game-engines"]
 
-documentation = "https://www.amethyst.rs/doc/master/doc/amethyst"
+documentation = "https://www.amethyst-engine.org/doc/latest/doc/amethyst/"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 

@@ -7,7 +7,7 @@
 [s1]: https://travis-ci.org/amethyst/amethyst.svg?branch=master
 [s2]: https://img.shields.io/crates/v/amethyst.svg
 [docs-badge]: https://img.shields.io/badge/docs-website-blue.svg
-[docs]: https://www.amethyst.rs/doc/
+[docs]: https://www.amethyst-engine.org/doc/
 [s3]: https://img.shields.io/badge/license-MIT%2FApache-blue.svg
 [s4]: https://img.shields.io/discord/425678876929163284.svg?logo=discord
 [s6]: https://tokei.rs/b1/github/amethyst/amethyst?category=code

@@ -47,7 +47,7 @@ This book is split into several sections, with this introduction being the first
 
 Read the crate-level [API documentation][ad] for more details.
 
-[ad]: https://www.amethyst.rs/doc/master/doc/amethyst/index.html
+[ad]: https://www.amethyst-engine.org/doc/master/doc/amethyst/index.html
 
 [db]: https://github.com/amethyst/amethyst/
 

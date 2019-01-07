@@ -374,6 +374,6 @@ In the next chapter, we'll add a system checking when a player loses the game,
 and add a scoring system!
 
 [pong_02_drawing]: pong-tutorial-02.html#drawing
-[doc_time]: https://www.amethyst.rs/doc/master/doc/amethyst_core/timing/struct.Time.html
+[doc_time]: https://www.amethyst-engine.org/doc/master/doc/amethyst_core/timing/struct.Time.html
 [delta_timing]: https://en.wikipedia.org/wiki/Delta_timing
 

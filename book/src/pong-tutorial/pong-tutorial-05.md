@@ -724,8 +724,8 @@ it to either side, so we'll add that next!
 
 
 [font-download]: https://github.com/amethyst/amethyst/raw/master/examples/assets/font/square.ttf
-[input-handler]: https://www.amethyst.rs/doc/latest/doc/amethyst_input/struct.InputHandler.html
-[ui-bundle]: https://www.amethyst.rs/doc/latest/doc/amethyst_ui/struct.UiBundle.html
+[input-handler]: https://www.amethyst-engine.org/doc/latest/doc/amethyst_input/struct.InputHandler.html
+[ui-bundle]: https://www.amethyst-engine.org/doc/latest/doc/amethyst_ui/struct.UiBundle.html
 
 
 ## Updating the Scoreboard
