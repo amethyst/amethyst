@@ -8,8 +8,6 @@ use rayon::ThreadPoolBuilder;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::{register_thread_with_profiler, write_profile};
-use winit::Event;
-
 use crate::{
     assets::{Loader, Source},
     callback_queue::CallbackQueue,
@@ -55,7 +53,6 @@ where
     reader: R,
     #[derivative(Debug = "ignore")]
     events: Vec<E>,
-    event_reader_id: ReaderId<Event>,
     #[derivative(Debug = "ignore")]
     trans_reader_id: ReaderId<TransEvent<T, E>>,
     states: StateMachine<'a, T, E>,
@@ -257,39 +254,8 @@ where
 
     // React to window close events
     fn should_close(&mut self) -> bool {
-        if self.ignore_window_close {
-            false
-        } else {
-            use crate::renderer::WindowEvent;
-            let world = &mut self.world;
-            let reader_id = &mut self.event_reader_id;
-            world.exec(|ev: Read<'_, EventChannel<Event>>| {
-                ev.read(reader_id).any(|e| {
-                    if cfg!(target_os = "ios") {
-                        if let Event::WindowEvent {
-                            event: WindowEvent::Destroyed,
-                            ..
-                        } = e
-                        {
-                            true
-                        } else {
-                            false
-                        }
-                    } else {
-                        if let Event::WindowEvent {
-                            event: WindowEvent::CloseRequested,
-                            ..
-                        } = e
-                        {
-                            true
-                        } else {
-                            false
-                        }
-                    }
-                })
-            })
-        }
-    }
+        false
+    }      
 
     /// Advances the game world by one tick.
     fn advance_frame(&mut self)
@@ -507,7 +473,6 @@ where
             .map_err(|err| Error::Core(err.description().to_string().into()))?;
         world.add_resource(Loader::new(path.as_ref().to_owned(), pool.clone()));
         world.add_resource(pool);
-        world.add_resource(EventChannel::<Event>::with_capacity(2000));
         world.add_resource(EventChannel::<UiEvent>::with_capacity(40));
         world.add_resource(EventChannel::<TransEvent<T, StateEvent>>::with_capacity(2));
         world.add_resource(Errors::default());
@@ -848,9 +813,6 @@ where
         let mut reader = X::default();
         reader.setup(&mut self.world.res);
         let data = init.build(&mut self.world);
-        let event_reader_id = self
-            .world
-            .exec(|mut ev: Write<'_, EventChannel<Event>>| ev.register_reader());
 
         let trans_reader_id = self
             .world
@@ -863,7 +825,6 @@ where
             events: Vec::new(),
             ignore_window_close: self.ignore_window_close,
             data,
-            event_reader_id,
             trans_reader_id,
         })
     }
