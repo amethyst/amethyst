@@ -208,8 +208,8 @@ It should look something like this:
 
 
 [ron]: https://github.com/ron-rs/ron
-[st]: https://www.amethyst.rs/doc/master/doc/amethyst/prelude/trait.SimpleState.html
-[ap]: https://www.amethyst.rs/doc/master/doc/amethyst/struct.Application.html
+[st]: https://www.amethyst.rs/doc/latest/doc/amethyst/prelude/trait.SimpleState.html
+[ap]: https://www.amethyst.rs/doc/latest/doc/amethyst/struct.Application.html
 [gs]: ../getting-started.html
-[displayconf]: https://www.amethyst.rs/doc/master/doc/amethyst_renderer/struct.DisplayConfig.html
+[displayconf]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.DisplayConfig.html
 

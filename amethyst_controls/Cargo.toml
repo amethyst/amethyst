@@ -5,7 +5,7 @@ authors = ["Joël Lupien <jojolepromain@gmail.com>"]
 edition = "2018"
 description = "Amethyst controls"
 
-documentation = "https://www.amethyst.rs/doc/master/doc/amethyst_controls/"
+documentation = "https://www.amethyst.rs/doc/latest/doc/amethyst_controls/"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 

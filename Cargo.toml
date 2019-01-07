@@ -8,7 +8,7 @@ exclude = ["examples/*", "book/*"]
 keywords = ["game", "engine", "sdk", "amethyst"]
 categories = ["game-engines"]
 
-documentation = "https://www.amethyst.rs/doc/master/doc/amethyst"
+documentation = "https://www.amethyst.rs/doc/latest/doc/amethyst"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
@@ -16,7 +16,6 @@ readme = "README.md"
 license = "MIT/Apache-2.0"
 
 [badges]
-appveyor = { repository = "amethyst/amethyst", branch = "master" }
 travis-ci = { repository = "amethyst/amethyst", branch = "master" }
 
 [features]
@@ -230,4 +229,7 @@ name = "auto_fov"
 path = "examples/auto_fov/main.rs"
 
 [workspace]
-members = ["amethyst_gltf", "tests/amethyst_test"]
+members = [
+  "amethyst_gltf",
+  "tests/amethyst_test"
+]
