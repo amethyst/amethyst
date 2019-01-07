@@ -41,6 +41,9 @@ it is attached to. ([#1282])
 [#1281]: https://github.com/amethyst/amethyst/pull/1281
 [#1302]: https://github.com/amethyst/amethyst/pull/1302
 
+* Fixed default system font loading to accept uppercase extension ("TTF") ([#1328])
+[#1328] https://github.com/amethyst/amethyst/pull/1328
+
 ## [0.10.0] - 2018-12
 
 ### Added
