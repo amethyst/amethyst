@@ -20,8 +20,7 @@ pub fn get_default_font(loader: &Loader, storage: &AssetStorage<FontAsset>) -> F
                 if let Some(file_extension) = path.extension() {
                     let format = match file_extension.to_str() {
                         Some(ext) => {
-                            let ext = ext.to_lowercase();
-                            if ext == "ttf" || ext == "otf" {
+                            if ext.eq_ignore_ascii_case("ttf") || ext.eq_ignore_ascii_case("otf") {
                                 Some(TtfFormat)
                             } else {
                                 None
