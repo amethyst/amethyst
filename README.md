@@ -186,7 +186,7 @@ If for some reason we don't have any open PR or good first issues (that would be
 you can look through the [issue tracker][it].
 
 [cm]: docs/CONTRIBUTING.md
-[pr]: https://github.com/amethyst/amethyst/projects
+[pr]: https://github.com/amethyst/amethyst/pulls
 [it]: https://github.com/amethyst/amethyst/issues
 [gfi]: https://github.com/amethyst/amethyst/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
 
