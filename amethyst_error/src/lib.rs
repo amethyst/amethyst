@@ -408,6 +408,8 @@ mod tests {
         assert_eq!(e.source().map(|e| e.to_string()), Some(String::from("bar")));
     }
 
+    // Note: all backtrace tests have to be in the same test case since they
+    // depend on the state of the global `BACKTRACE_STATUS`.
     #[test]
     fn test_backtrace() {
         use super::BACKTRACE_STATUS;
@@ -435,15 +437,9 @@ mod tests {
             .iter()
             .find(|n| n.ends_with("a_really_unique_name_42"))
             .is_some());
-    }
 
-    #[test]
-    fn test_backtrace_disabled() {
-        use super::BACKTRACE_STATUS;
-        use std::sync::atomic;
-
+        // Test disabled.
         BACKTRACE_STATUS.store(1, atomic::Ordering::Relaxed);
-
         assert!(Error::from_string("an error").backtrace().is_none());
     }
 }
