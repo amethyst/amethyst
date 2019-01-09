@@ -27,6 +27,12 @@ pub struct Transform2<N: Real> {
     dimensions: Vector2<N>,
     #[get] #[set] #[get_mut]
     layer: i32,
+    #[get]
+    pub(crate) global_matrix: Matrix3<N>,
+    #[get]
+    pub(crate) global_dimensions: Vector2<N>,
+    #[get]
+    pub(crate) global_layer: i32,
 }
 
 impl<N: Real> Transform2<N> {
@@ -60,14 +66,13 @@ impl<N: Real> Transform2<N> {
     /// t.move_forward(N::one());
     /// assert!((*t.translation() - Vector3::new(N::zero(), N::one(), N::zero())).magnitude() <= N::zero()001);
     /// ```
-    /*#[inline]
+    #[inline]
     pub fn face_towards(&mut self, target: Vector2<N>) -> &mut Self {
-        self.iso.rotation =
-            UnitQuaternion::new_observer_frame(&(self.iso.translation.vector - target), &up);
+        let wanted_direction = Unit::new_normalize(target - self.iso.translation.vector); // NEEDS TO BE UNIT
+        let angle = wanted_direction.y.atan2(wanted_direction.x);
+        self.iso.rotation = UnitComplex::new(angle);
         self
     }
-*/
-//TODO
 
     /// Move relatively to its current position.
     #[inline]
@@ -211,6 +216,11 @@ impl<N: Real> Transform2<N> {
             .to_homogeneous()
             .append_nonuniform_scaling(&inv_scale)
     }
+
+    /// Checks whether each `f32` of the `Transform` is finite (not NaN or inf).
+    pub fn is_finite(&self) -> bool {
+        self.global_matrix.as_slice().iter().all(|f| N::is_finite(f)) && N::is_finite(&self.global_dimensions.x) && N::is_finite(&self.global_dimensions.y)
+    }
 }
 
 impl<N: Real> Default for Transform2<N> {
@@ -221,6 +231,9 @@ impl<N: Real> Default for Transform2<N> {
             scale: Vector2::from_element(N::one()),
             dimensions: Vector2::from_element(N::one()),
             layer: 0,
+            global_matrix: na::one(),
+            global_dimensions: Vector2::new(na::zero(), na::zero()),
+            global_layer: 0,
         }
     }
 }
@@ -308,7 +321,7 @@ impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform2<N> {
                 let scale = scale.into();
                 let dimensions = dimensions.into();
 
-                Ok(Transform2 { iso, scale, dimensions, layer })
+                Ok(Transform2 { iso, scale, dimensions, layer, ..Default::default() })
             }
 
             fn visit_map<V>(self, mut map: V) -> Result<Self::Value, V::Error>
@@ -368,7 +381,7 @@ impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform2<N> {
                 let scale = scale.into();
                 let dimensions = dimensions.into();
 
-                Ok(Transform2 { iso, scale, dimensions, layer })
+                Ok(Transform2 { iso, scale, dimensions, layer, ..Default::default() })
             }
         }
 
@@ -457,5 +470,13 @@ mod tests {
             transform.matrix().try_inverse().unwrap(),
             transform.view_matrix(),
         );
+    }
+
+    fn is_finite() {
+        let mut transform = Transform::default();
+        assert!(transform.is_finite());
+
+        transform.global_matrix.fill_row(2, std::f32::NAN);
+        assert!(!transform.is_finite());
     }
 }

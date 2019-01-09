@@ -16,12 +16,16 @@ use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 /// Used for rendering position and orientation.
 ///
 /// The transforms are preformed in this order: scale, then rotation, then translation.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Getters, Setters, MutGetters, Clone, Debug, PartialEq)]
 pub struct Transform3<N: Real> {
     /// Translation + rotation value
+    #[get] #[set] #[get_mut]
     iso: Isometry3<N>,
     /// Scale vector
+    #[get] #[set] #[get_mut]
     scale: Vector3<N>,
+    #[get]
+    pub(crate) global_matrix: Matrix4<N>,
 }
 
 impl<N: Real> Transform3<N> {
@@ -48,6 +52,7 @@ impl<N: Real> Transform3<N> {
         Transform3 {
             iso: Isometry3::from_parts(position, rotation),
             scale,
+            global_matrix: na::one(),
         }
     }
 
@@ -381,6 +386,10 @@ impl<N: Real> Transform3<N> {
         self
     }
 
+    pub fn is_finite(&self) -> bool {
+        self.global_matrix.as_slice().iter().all(|f| N::is_finite(f))
+    }
+
     /// Calculates the inverse of this transform, which we need to render.
     ///
     /// We can exploit the extra information we have to perform this inverse faster than `O(n^3)`.
@@ -400,6 +409,7 @@ impl<N: Real> Default for Transform3<N> {
         Transform3 {
             iso: Isometry3::identity(),
             scale: Vector3::from_element(N::one()),
+            global_matrix: na::one(),
         }
     }
 }
@@ -483,7 +493,7 @@ impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform3<N> {
                 );
                 let scale = scale.into();
 
-                Ok(Transform3 { iso, scale })
+                Ok(Transform3 { iso, scale, ..Default::default() })
             }
 
             fn visit_map<V>(self, mut map: V) -> Result<Self::Value, V::Error>
@@ -531,7 +541,7 @@ impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform3<N> {
                 );
                 let scale = scale.into();
 
-                Ok(Transform3 { iso, scale })
+                Ok(Transform3 { iso, scale, ..Default::default() })
             }
         }
 
@@ -616,5 +626,14 @@ mod tests {
             transform.matrix().try_inverse().unwrap(),
             transform.view_matrix(),
         );
+    }
+
+    #[test]
+    fn is_finite() {
+        let mut transform = Transform::default();
+        assert!(transform.is_finite());
+
+        transform.global_matrix.fill_row(2, std::f32::NAN);
+        assert!(!transform.is_finite());
     }
 }

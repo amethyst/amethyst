@@ -6,19 +6,16 @@ use specs::prelude::{
     WriteStorage,
 };
 
-use crate::transform::{GlobalTransform3, HierarchyEvent, Parent, ParentHierarchy, Transform3};
+use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform3};
 
 /// Handles updating `GlobalTransform` components based on the `Transform`
 /// component and parents.
 pub struct TransformSystem {
     local_modified: BitSet,
-    global_modified: BitSet,
 
     locals_events_id: Option<ReaderId<ComponentEvent>>,
 
     parent_events_id: Option<ReaderId<HierarchyEvent>>,
-
-    scratch: Vec<Entity>,
 }
 
 impl TransformSystem {
@@ -28,8 +25,6 @@ impl TransformSystem {
             locals_events_id: None,
             parent_events_id: None,
             local_modified: BitSet::default(),
-            global_modified: BitSet::default(),
-            scratch: Vec::new(),
         }
     }
 }
@@ -38,25 +33,14 @@ impl<'a> System<'a> for TransformSystem {
     type SystemData = (
         Entities<'a>,
         ReadExpect<'a, ParentHierarchy>,
-        ReadStorage<'a, Transform3<f32>>,
+        WriteStorage<'a, Transform3<f32>>,
         ReadStorage<'a, Parent>,
-        WriteStorage<'a, GlobalTransform3<f32>>,
     );
-    fn run(&mut self, (entities, hierarchy, locals, parents, mut globals): Self::SystemData) {
+    fn run(&mut self, (entities, hierarchy, mut locals, parents): Self::SystemData) {
         #[cfg(feature = "profiler")]
         profile_scope!("transform_system");
 
-        self.scratch.clear();
-        self.scratch
-            .extend((&*entities, &locals, !&globals).join().map(|d| d.0));
-        for entity in &self.scratch {
-            globals
-                .insert(*entity, GlobalTransform3::default())
-                .expect("unreachable");
-        }
-
         self.local_modified.clear();
-        self.global_modified.clear();
 
         locals
             .channel()
@@ -90,44 +74,44 @@ impl<'a> System<'a> for TransformSystem {
             }
         }
 
+        let mut modified = vec![];
         // Compute transforms without parents.
-        for (entity, _, local, global, _) in (
+        for (entity, _, local, _) in (
             &*entities,
             &self.local_modified,
-            &locals,
-            &mut globals,
+            &mut locals,
             !&parents,
         )
             .join()
         {
-            self.global_modified.add(entity.id());
-            global.0 = local.matrix();
+            modified.push(entity.id());
+            local.global_matrix = local.matrix();
             debug_assert!(
-                global.is_finite(),
+                local.is_finite(),
                 format!("Entity {:?} had a non-finite `Transform`", entity)
             );
         }
+        modified.into_iter().for_each(|id| {self.local_modified.add(id);});
 
+        let mut matrix_changes = vec![];
         // Compute transforms with parents.
         for entity in hierarchy.all() {
             let self_dirty = self.local_modified.contains(entity.id());
             if let (Some(parent), Some(local)) = (parents.get(*entity), locals.get(*entity)) {
-                let parent_dirty = self.global_modified.contains(parent.entity.id());
+                let parent_dirty = self.local_modified.contains(parent.entity.id());
                 if parent_dirty || self_dirty {
-                    let combined_transform = if let Some(parent_global) = globals.get(parent.entity)
+                    let combined_transform = if let Some(parent_global) = locals.get(parent.entity)
                     {
-                        (parent_global.0 * local.matrix())
+                        (parent_global.global_matrix * local.matrix())
                     } else {
                         local.matrix()
                     };
-
-                    if let Some(global) = globals.get_mut(*entity) {
-                        self.global_modified.add(entity.id());
-                        global.0 = combined_transform;
-                    }
+                    self.local_modified.add(entity.id());
+                    matrix_changes.push((entity.clone(), combined_transform));
                 }
             }
         }
+        matrix_changes.into_iter().for_each(|(e,m)| locals.get_mut(e).expect("unreachable: We know this entity has a local because is was just modified.").global_matrix = m);
     }
 
     fn setup(&mut self, res: &mut Resources) {
