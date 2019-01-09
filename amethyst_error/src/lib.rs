@@ -433,7 +433,7 @@ mod tests {
 
         assert!(frame_names
             .iter()
-            .find(|n| *n == "a_really_unique_name_42")
+            .find(|n| n.ends_with("a_really_unique_name_42"))
             .is_some());
     }
 
