@@ -76,13 +76,8 @@ impl<'a> System<'a> for TransformSystem {
 
         let mut modified = vec![];
         // Compute transforms without parents.
-        for (entity, _, local, _) in (
-            &*entities,
-            &self.local_modified,
-            &mut locals,
-            !&parents,
-        )
-            .join()
+        for (entity, _, local, _) in
+            (&*entities, &self.local_modified, &mut locals, !&parents).join()
         {
             modified.push(entity.id());
             local.global_matrix = local.matrix();
@@ -91,7 +86,9 @@ impl<'a> System<'a> for TransformSystem {
                 format!("Entity {:?} had a non-finite `Transform`", entity)
             );
         }
-        modified.into_iter().for_each(|id| {self.local_modified.add(id);});
+        modified.into_iter().for_each(|id| {
+            self.local_modified.add(id);
+        });
 
         let mut matrix_changes = vec![];
         // Compute transforms with parents.
@@ -111,7 +108,14 @@ impl<'a> System<'a> for TransformSystem {
                 }
             }
         }
-        matrix_changes.into_iter().for_each(|(e,m)| locals.get_mut(e).expect("unreachable: We know this entity has a local because is was just modified.").global_matrix = m);
+        matrix_changes.into_iter().for_each(|(e, m)| {
+            locals
+                .get_mut(e)
+                .expect(
+                    "unreachable: We know this entity has a local because is was just modified.",
+                )
+                .global_matrix = m
+        });
     }
 
     fn setup(&mut self, res: &mut Resources) {

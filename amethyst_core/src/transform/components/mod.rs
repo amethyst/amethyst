@@ -1,11 +1,11 @@
 //! Components for the transform processor.
 
 pub use self::{
-    transform3::Transform3,
-    transform2::Transform2,
     parent::{HierarchyEvent, Parent, ParentHierarchy},
+    transform2::Transform2,
+    transform3::Transform3,
 };
 
-mod transform3;
-mod transform2;
 mod parent;
+mod transform2;
+mod transform3;

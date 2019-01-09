@@ -1,11 +1,12 @@
 //! Local transform component.
-use std::marker::PhantomData;
 use std::fmt;
+use std::marker::PhantomData;
 
-use nalgebra::{
-    self as na, Isometry2, Matrix3, Quaternion, Translation2, Unit, UnitQuaternion, Vector2, Real, UnitComplex,
-};
 use nalgebra::num_complex::Complex;
+use nalgebra::{
+    self as na, Isometry2, Matrix3, Quaternion, Real, Translation2, Unit, UnitComplex,
+    UnitQuaternion, Vector2,
+};
 use serde::{
     de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor},
     ser::{Serialize, Serializer},
@@ -19,13 +20,21 @@ use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 /// The transforms are preformed in this order: scale, then rotation, then translation.
 #[derive(Getters, Setters, MutGetters, Clone, Debug, PartialEq, new)]
 pub struct Transform2<N: Real> {
-    #[get] #[set] #[get_mut]
+    #[get]
+    #[set]
+    #[get_mut]
     iso: Isometry2<N>,
-    #[get] #[set] #[get_mut]
+    #[get]
+    #[set]
+    #[get_mut]
     scale: Vector2<N>,
-    #[get] #[set] #[get_mut]
+    #[get]
+    #[set]
+    #[get_mut]
     dimensions: Vector2<N>,
-    #[get] #[set] #[get_mut]
+    #[get]
+    #[set]
+    #[get_mut]
     layer: i32,
     #[get]
     pub(crate) global_matrix: Matrix3<N>,
@@ -219,7 +228,12 @@ impl<N: Real> Transform2<N> {
 
     /// Checks whether each `f32` of the `Transform` is finite (not NaN or inf).
     pub fn is_finite(&self) -> bool {
-        self.global_matrix.as_slice().iter().all(|f| N::is_finite(f)) && N::is_finite(&self.global_dimensions.x) && N::is_finite(&self.global_dimensions.y)
+        self.global_matrix
+            .as_slice()
+            .iter()
+            .all(|f| N::is_finite(f))
+            && N::is_finite(&self.global_dimensions.x)
+            && N::is_finite(&self.global_dimensions.y)
     }
 }
 
@@ -275,7 +289,7 @@ impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform2<N> {
             Layer,
         };
 
-        struct TransformVisitor<N: Real>{
+        struct TransformVisitor<N: Real> {
             _phantom: PhantomData<N>,
         }
 
@@ -321,7 +335,13 @@ impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform2<N> {
                 let scale = scale.into();
                 let dimensions = dimensions.into();
 
-                Ok(Transform2 { iso, scale, dimensions, layer, ..Default::default() })
+                Ok(Transform2 {
+                    iso,
+                    scale,
+                    dimensions,
+                    layer,
+                    ..Default::default()
+                })
             }
 
             fn visit_map<V>(self, mut map: V) -> Result<Self::Value, V::Error>
@@ -381,11 +401,18 @@ impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform2<N> {
                 let scale = scale.into();
                 let dimensions = dimensions.into();
 
-                Ok(Transform2 { iso, scale, dimensions, layer, ..Default::default() })
+                Ok(Transform2 {
+                    iso,
+                    scale,
+                    dimensions,
+                    layer,
+                    ..Default::default()
+                })
             }
         }
 
-        const FIELDS: &'static [&'static str] = &["translation", "rotation", "scale", "dimensions", "layer"];
+        const FIELDS: &'static [&'static str] =
+            &["translation", "rotation", "scale", "dimensions", "layer"];
         deserializer.deserialize_struct("Transform2", FIELDS, TransformVisitor::<N>::default())
     }
 }

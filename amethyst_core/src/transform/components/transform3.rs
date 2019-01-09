@@ -1,9 +1,9 @@
 //! Local transform component.
-use std::marker::PhantomData;
 use std::fmt;
+use std::marker::PhantomData;
 
 use nalgebra::{
-    self as na, Isometry3, Matrix4, Quaternion, Translation3, Unit, UnitQuaternion, Vector3, Real,
+    self as na, Isometry3, Matrix4, Quaternion, Real, Translation3, Unit, UnitQuaternion, Vector3,
 };
 use serde::{
     de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor},
@@ -19,10 +19,14 @@ use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 #[derive(Getters, Setters, MutGetters, Clone, Debug, PartialEq)]
 pub struct Transform3<N: Real> {
     /// Translation + rotation value
-    #[get] #[set] #[get_mut]
+    #[get]
+    #[set]
+    #[get_mut]
     iso: Isometry3<N>,
     /// Scale vector
-    #[get] #[set] #[get_mut]
+    #[get]
+    #[set]
+    #[get_mut]
     scale: Vector3<N>,
     #[get]
     pub(crate) global_matrix: Matrix4<N>,
@@ -44,11 +48,7 @@ impl<N: Real> Transform3<N> {
     ///
     /// assert_eq!(t.translation().y, 2.0);
     /// ```
-    pub fn new(
-        position: Translation3<N>,
-        rotation: UnitQuaternion<N>,
-        scale: Vector3<N>,
-    ) -> Self {
+    pub fn new(position: Translation3<N>, rotation: UnitQuaternion<N>, scale: Vector3<N>) -> Self {
         Transform3 {
             iso: Isometry3::from_parts(position, rotation),
             scale,
@@ -387,7 +387,10 @@ impl<N: Real> Transform3<N> {
     }
 
     pub fn is_finite(&self) -> bool {
-        self.global_matrix.as_slice().iter().all(|f| N::is_finite(f))
+        self.global_matrix
+            .as_slice()
+            .iter()
+            .all(|f| N::is_finite(f))
     }
 
     /// Calculates the inverse of this transform, which we need to render.
@@ -395,7 +398,11 @@ impl<N: Real> Transform3<N> {
     /// We can exploit the extra information we have to perform this inverse faster than `O(n^3)`.
     pub fn view_matrix(&self) -> Matrix4<N> {
         // TODO: check if this actually is faster
-        let inv_scale = Vector3::new(N::one() / self.scale.x, N::one() / self.scale.y, N::one() / self.scale.z);
+        let inv_scale = Vector3::new(
+            N::one() / self.scale.x,
+            N::one() / self.scale.y,
+            N::one() / self.scale.z,
+        );
         self.iso
             .inverse()
             .to_homogeneous()
@@ -449,7 +456,7 @@ impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform3<N> {
             Scale,
         };
 
-        struct TransformVisitor<N: Real>{
+        struct TransformVisitor<N: Real> {
             _phantom: PhantomData<N>,
         }
 
@@ -493,7 +500,11 @@ impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform3<N> {
                 );
                 let scale = scale.into();
 
-                Ok(Transform3 { iso, scale, ..Default::default() })
+                Ok(Transform3 {
+                    iso,
+                    scale,
+                    ..Default::default()
+                })
             }
 
             fn visit_map<V>(self, mut map: V) -> Result<Self::Value, V::Error>
@@ -527,7 +538,8 @@ impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform3<N> {
                     }
                 }
                 let translation: [N; 3] = translation.unwrap_or([N::zero(); 3]);
-                let rotation: [N; 4] = rotation.unwrap_or([N::one(), N::zero(), N::zero(), N::zero()]);
+                let rotation: [N; 4] =
+                    rotation.unwrap_or([N::one(), N::zero(), N::zero(), N::zero()]);
                 let scale: [N; 3] = scale.unwrap_or([N::one(); 3]);
 
                 let iso = Isometry3::from_parts(
@@ -541,7 +553,11 @@ impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform3<N> {
                 );
                 let scale = scale.into();
 
-                Ok(Transform3 { iso, scale, ..Default::default() })
+                Ok(Transform3 {
+                    iso,
+                    scale,
+                    ..Default::default()
+                })
             }
         }
 
