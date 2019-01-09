@@ -53,6 +53,7 @@ mod test {
     }
 
     #[test]
+    #[ignore]
     fn send_receive_100_packets() {
         // server got one socket receiving and one sending
         let server_send: SocketAddr = "127.0.0.1:21204".parse().unwrap();
