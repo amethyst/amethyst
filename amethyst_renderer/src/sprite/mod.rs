@@ -1,3 +1,7 @@
+pub use self::prefab::{
+    SpriteGrid, SpritePrefab, SpriteRenderPrefab, SpriteRepeat, SpriteSheetPrefab, Sprites,
+};
+
 use ron::de::from_bytes as from_ron_bytes;
 
 use amethyst_assets::{
@@ -7,6 +11,8 @@ use amethyst_assets::{
 use amethyst_core::specs::prelude::{Component, DenseVecStorage, VecStorage};
 
 use crate::Texture;
+
+mod prefab;
 
 /// An asset handle to sprite sheet metadata.
 pub type SpriteSheetHandle = Handle<SpriteSheet>;
