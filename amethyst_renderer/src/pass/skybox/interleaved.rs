@@ -18,7 +18,7 @@ use crate::{
 };
 
 use gfx::pso::buffer::ElemStride;
-use glsl_layout::{mat4, Uniform};
+use glsl_layout::{mat4, vec4, Uniform};
 
 use super::{SkyboxColor, FRAG_SRC, VERT_SRC};
 
@@ -28,6 +28,7 @@ pub(crate) struct VertexArgs {
     proj: mat4,
     view: mat4,
     model: mat4,
+    rgba: vec4,
 }
 
 /// Draw a simple gradient skybox

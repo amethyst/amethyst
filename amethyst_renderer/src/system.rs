@@ -176,9 +176,21 @@ where
     fn run_now(&mut self, res: &'a Resources) {
         #[cfg(feature = "profiler")]
         profile_scope!("render_system");
-        self.asset_loading(AssetLoadingData::fetch(res));
-        self.window_management(WindowData::fetch(res));
-        self.render(RenderData::<P>::fetch(res));
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("render_system_assetloading");
+            self.asset_loading(AssetLoadingData::fetch(res));
+        }
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("render_system_windowmanagement");
+            self.window_management(WindowData::fetch(res));
+        }
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("render_system_render");
+            self.render(RenderData::<P>::fetch(res));
+        }
     }
 
     fn setup(&mut self, res: &mut Resources) {

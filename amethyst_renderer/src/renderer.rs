@@ -81,6 +81,8 @@ impl Renderer {
         use glutin::dpi::PhysicalSize;
 
         if let Some(size) = self.window().get_inner_size() {
+            #[cfg(feature = "profiler")]
+            profile_scope!("render_system_draw_size");
             let hidpi_factor = self.window().get_hidpi_factor();
 
             if size != self.cached_size || hidpi_factor != self.cached_hidpi_factor {
@@ -92,15 +94,29 @@ impl Renderer {
                 self.resize(pipe, size.into());
             }
         }
-
-        pipe.apply(&mut self.encoder, self.factory.clone(), data);
-        self.encoder.flush(&mut self.device);
-        self.device.cleanup();
-
-        #[cfg(feature = "opengl")]
-        self.window
-            .swap_buffers()
-            .expect("OpenGL context has been lost");
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("render_system_draw_pipeapply");
+            pipe.apply(&mut self.encoder, self.factory.clone(), data);
+        }
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("render_system_draw_encoderflush");
+            self.encoder.flush(&mut self.device);
+        }
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("render_system_draw_devicecleanup");
+            self.device.cleanup();
+        }
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("render_system_draw_swapbuffers");
+            #[cfg(feature = "opengl")]
+            self.window
+                .swap_buffers()
+                .expect("OpenGL context has been lost");
+        }
     }
 
     /// Retrieve a mutable borrow of the events loop

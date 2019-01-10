@@ -69,6 +69,8 @@ pub(crate) fn set_attribute_buffers(
     mesh: &Mesh,
     attributes: &[Attributes<'static>],
 ) -> bool {
+    #[cfg(feature = "profiler")]
+    profile_scope!("render_setattributebuffers");
     for attr in attributes.iter() {
         match mesh.buffer(attr) {
             Some(vbuf) => effect.data.vertex_bufs.push(vbuf.clone()),
@@ -91,6 +93,10 @@ pub(crate) fn add_texture(effect: &mut Effect, texture: &Texture) {
 
 pub(crate) fn setup_textures(builder: &mut EffectBuilder<'_>, types: &[TextureType]) {
     use self::TextureType::*;
+
+    #[cfg(feature = "profiler")]
+    profile_scope!("render_setuptextures");
+
     for ty in types {
         match *ty {
             Albedo => builder.with_texture("albedo"),
@@ -114,6 +120,7 @@ pub(crate) fn add_textures(
     types: &[TextureType],
 ) {
     use self::TextureType::*;
+
     for ty in types {
         let texture = match *ty {
             Albedo => storage
@@ -145,6 +152,10 @@ pub(crate) fn add_textures(
 
 pub(crate) fn setup_texture_offsets(builder: &mut EffectBuilder<'_>, types: &[TextureType]) {
     use self::TextureType::*;
+
+    #[cfg(feature = "profiler")]
+    profile_scope!("render_setuptextureoffsets");
+
     for ty in types {
         match *ty {
             Albedo => builder.with_raw_constant_buffer(
@@ -193,6 +204,7 @@ pub(crate) fn set_texture_offsets(
     types: &[TextureType],
 ) {
     use self::TextureType::*;
+
     for ty in types {
         match *ty {
             Albedo => effect.update_constant_buffer(
@@ -235,6 +247,9 @@ pub(crate) fn set_texture_offsets(
 }
 
 pub(crate) fn setup_vertex_args(builder: &mut EffectBuilder<'_>) {
+    #[cfg(feature = "profiler")]
+    profile_scope!("render_setupvertexargs");
+
     builder.with_raw_constant_buffer(
         "VertexArgs",
         mem::size_of::<<VertexArgs as Uniform>::Std140>(),
@@ -286,6 +301,9 @@ pub fn set_view_args(
     encoder: &mut Encoder,
     camera: Option<(&Camera, &GlobalTransform)>,
 ) {
+    #[cfg(feature = "profiler")]
+    profile_scope!("render_setviewargs");
+
     let view_args = camera
         .as_ref()
         .map(|&(ref cam, ref transform)| {
@@ -325,6 +343,9 @@ pub(crate) fn draw_mesh(
     attributes: &[Attributes<'static>],
     textures: &[TextureType],
 ) {
+    #[cfg(feature = "profiler")]
+    profile_scope!("render_drawmesh");
+
     // Return straight away if some parameters are none
     // Consider changing function signature?
     let (mesh, material, global) = match (mesh, material, global) {
@@ -372,6 +393,9 @@ pub fn get_camera<'a>(
     camera: &'a ReadStorage<'a, Camera>,
     global: &'a ReadStorage<'a, GlobalTransform>,
 ) -> Option<(&'a Camera, &'a GlobalTransform)> {
+    #[cfg(feature = "profiler")]
+    profile_scope!("render_getcamera");
+
     active
         .entity
         .and_then(|entity| {

@@ -161,6 +161,26 @@ Container(
             )
         ),
 
+        // Random text
+        Text(
+            transform: (
+                id: "random_text",
+                x: 100.,
+                y: -48,
+                width: 300.,
+                height: 25.,
+                tab_order: 2,
+                anchor: TopLeft,
+                transparent: true,
+            ),
+            text: (
+                text: "N/A",
+                font: File("font/square.ttf", Ttf, ()),
+                font_size: 25.,
+                color: (1.0, 1.0, 1.0, 1.0),
+            )
+        ),
+
         Text(
             transform: (
                 id: "multiline",
