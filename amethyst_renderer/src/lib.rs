@@ -65,7 +65,11 @@ pub use crate::{
         AnimatedComboMeshCreator, AnimatedVertexBufferCombination, JointIds, JointTransforms,
         JointTransformsPrefab, JointWeights,
     },
-    sprite::{Flipped, Sprite, SpriteRender, SpriteSheet, SpriteSheetHandle, TextureCoordinates},
+    sprite::{
+        Flipped, Sprite, SpriteGrid, SpriteRender, SpriteRenderPrefab, SpriteScenePrefab,
+        SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, SpriteSheetPrefab, Sprites,
+        TextureCoordinates,
+    },
     sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem},
     system::RenderSystem,
     tex::{
