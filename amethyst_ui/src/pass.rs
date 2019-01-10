@@ -16,6 +16,8 @@ use gfx_glyph::{
 };
 use glsl_layout::{vec2, vec4, Uniform};
 use hibitset::BitSet;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
 use unicode_segmentation::UnicodeSegmentation;
 
 use amethyst_assets::{AssetStorage, Handle, Loader};
