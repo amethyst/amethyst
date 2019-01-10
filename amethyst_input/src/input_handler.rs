@@ -641,7 +641,7 @@ mod tests {
     /// Compares two sets for equality, but not the order
     fn sets_equal<T>(a: &[T], b: &[T])
     where
-        T: PartialEq<T> + Clone + Debug,
+        T: PartialEq<T> + Debug,
     {
         let mut ret = a.len() == b.len();
         
