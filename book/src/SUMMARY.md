@@ -25,6 +25,7 @@
     * [How to Define Custom Formats](./assets/how_to_define_custom_formats.md)
 * [Prefabs](./prefabs.md)
     * [Prefabs in Amethyst](./prefabs/prefabs_in_amethyst.md)
+    * [Prefabs Technical Explanation](./prefabs/prefabs_technical_explanation.md)
 * [Animation](./animation.md)
     * [Interpolation](./animation/interpolation.md)
     * [Channel](./animation/channel.md)
