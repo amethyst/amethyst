@@ -1,0 +1,9 @@
+#![enable(implicit_some)]
+Prefab(
+    entities: [
+        PrefabEntity(
+            // parent: None // Optional
+            data: Position(1.0, 2.0, 3.0),
+        ),
+    ],
+)
