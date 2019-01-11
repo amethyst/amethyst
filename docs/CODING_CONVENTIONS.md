@@ -36,40 +36,29 @@ The error _should_ implement `std::fmt::Debug` through the `Debug` derive (see b
 The error _must_ implement `From<T>` conversion traits for any error it wraps (e.g. `From<io::Error>`).
 The error _must not_ implement conversion methods from non-error types like `u32`.
 
+A lot of this can be implemented using [`err-derive`], as showcased below.
+
+[`err-derive`]: https://crates.io/crates/err-derive
+
 ###### Example
 
 ```rust
 /// crate::error
 
 use std::{fmt, error, io};
+use err_derive::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum Error {
     /// I/O Error.
-    Io(io::Error),
+    #[error(display = "I/O Error")]
+    Io(#[cause] io::Error),
     /// Permission denied.
+    #[error(display = "Permission Denied")]
     PermissionDenied,
+    #[error(display = "Non-exhaustive Error")]
     #[doc(hidden)]
     __Nonexhaustive,
-}
-
-impl error::Error for Error {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match *self {
-            Error::IoError(ref e) => Some(e),
-            _ => None,
-        }
-    }
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, fmt: &mut Formatter<'_>) -> fmt::Result {
-        match *self {
-            Error::IoError(_) => write!(fmt, "I/O Error"),
-            Error::PermissionDenied => write!(fmt, "Permission Denied"),
-            _ => write!(fmt, "Some error has occurred"),
-        }
-    }
 }
 
 impl From<io::Error> for Error {
