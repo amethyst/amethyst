@@ -11,13 +11,13 @@ There are two representations of a prefab:
 * Stored representation, distributed alongside the application.
 * Loaded representation, used at runtime to instantiate entities with components.
 
-The remainder of this page explains these at a conceptual level; subsequent pages contain guides on how to Amethyst applies this at a code level.
+The remainder of this page explains these at a conceptual level; subsequent pages contain guides on how Amethyst applies this at a code level.
 
 ### The Basics
 
 > **Note:** The prefab examples on this page include the [`PrefabData`] type names. These are written out for clarity. However, as per the RON specification, these are not strictly required.
 
-In its stored form, a prefab is a serialized list of entities and their components that should be instantiated together. To begin, we will look at a simple prefab that attaches a simple component to a single entity. We will use the folllowing `Position` component:
+In its stored form, a prefab is a serialized list of entities and their components that should be instantiated together. To begin, we will look at a simple prefab that attaches a simple component to a single entity. We will use the following `Position` component:
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
@@ -46,7 +46,7 @@ pub struct Position(pub f32, pub f32, pub f32);
 
 The important derives are the [`Component`] and `PrefabData` &ndash; [`Component`] means it can be attached to an entity; `PrefabData` means it can be loaded as part of a prefab.
 
-Here is an example of a prefab with an entity with a `Position`:
+Here is an example `.ron` file of a prefab with an entity with a `Position`:
 
 ```rust,ignore
 #![enable(implicit_some)]
