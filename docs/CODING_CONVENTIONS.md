@@ -7,6 +7,19 @@ This document only cover topics which aren't already outlined there.
 
 [Rust API Guidelines]: https://rust-lang-nursery.github.io/api-guidelines/about.html
 
+## Terminology
+
+In this document we use the keywords _must_, _should_, _must not_, and _should not_.
+
+These loosely conform to [RFC 2119]. Here is a summary of the keywords used:
+
+* _must_ indicates something that is required.
+* _should_ is a recommendation, that can be ignored if there is a good reason.
+
+Adding _not_ inverts the meaning of the keywords.
+
+[RFC 2119]: https://www.ietf.org/rfc/rfc2119.txt
+
 ## Error Handling
 
 #### Defining crate-local errors
@@ -33,7 +46,7 @@ use std::{fmt, error, io};
 #[derive(Debug)]
 pub enum Error {
     /// I/O Error.
-    IoError(io::Error),
+    Io(io::Error),
     /// Permission denied.
     PermissionDenied,
     #[doc(hidden)]
@@ -70,7 +83,7 @@ impl From<io::Error> for Error {
 
 Any enum-based error type _should_ include a non-exhaustive error variant.
 
-This prevents consumers of your API from relying on pattern-matching which is not future proof against added error
+This prevents consumers of our API from relying on pattern-matching which is not future proof against added error
 variants.
 
 ###### Example
@@ -86,7 +99,7 @@ pub enum Error {
 }
 ```
 
-It informs users of your API that they should include a catch-all match when matching against the error like this:
+This informs users of the API to include a catch-all arm when matching against the error:
 
 ```rust
 match e {
@@ -96,7 +109,7 @@ match e {
 }
 ```
 
-This in turn guards any matches from being non-exhaustive in case new error variants are added in the future.
+This pattern guards against any matches being non-exhaustive in case new error variants are added in the future.
 
 #### Use `amethyst_error::Error` for compositional APIs
 
@@ -216,14 +229,25 @@ mod c {
 }
 ```
 
-#### Do not overload the default `Result`
+#### Avoid overloading the default `Result`
 
-_Do not_ import a `Result` that overloads the default import.
-If you are using a`Result` alias, use it through a locally imported module.
+We _should not_ import a `Result` that overloads the default import.
+Instead, if we are using a `Result` alias, use it through a module (e.g. `io::Result`).
 
-This is a future-proofing pattern that prevents dealing with conflicting `Result` types during refactoring or code
-re-use.
-This is especially important in cases where multiple modules export their own `Result` types simultaneously.
+This is a future-proofing pattern that prevents having to deal with conflicting `Result` types during refactoring or
+code re-use.
+Overloading `Result` also makes it harder to use the default `Result` when it's needed.
+This is especially useful when multiple modules export their own `Result` types.
+
+If a crate exports its own `Result` type, we _should_ use it through an `error` alias like this:
+
+```rust
+use crate::error;
+
+fn foo() -> error::Result<u32> {
+    Ok(42)
+}
+```
 
 ###### Do
 
