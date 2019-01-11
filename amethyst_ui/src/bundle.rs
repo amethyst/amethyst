@@ -24,7 +24,7 @@ use crate::{
 ///
 /// Will fail with error 'No resource with the given id' if the InputBundle is not added.
 #[derive(new)]
-pub struct UiBundle<A, B, C = NoCustomUi, G = ()> {
+pub struct UiBundle<A = String, B = String, C = NoCustomUi, G = ()> {
     #[new(default)]
     _marker: PhantomData<(A, B, C, G)>,
 }

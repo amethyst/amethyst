@@ -34,7 +34,7 @@ use super::{Axis, Button};
 /// ```
 #[derive(Derivative, Serialize, Deserialize, Clone)]
 #[derivative(Default(bound = ""))]
-pub struct Bindings<AX, AC>
+pub struct Bindings<AX = String, AC = String>
 where
     AX: Hash + Eq,
     AC: Hash + Eq,

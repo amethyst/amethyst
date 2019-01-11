@@ -23,7 +23,7 @@ use super::{
 /// that the key is pressed until it is released again.
 #[derive(Derivative)]
 #[derivative(Default(bound = ""))]
-pub struct InputHandler<AX, AC>
+pub struct InputHandler<AX = String, AC = String>
 where
     AX: Hash + Eq,
     AC: Hash + Eq,
@@ -626,5 +626,515 @@ where
 
         // send all collected events
         event_handler.iter_write(events);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::fmt::Debug;
+
+    use super::*;
+    use winit::{
+        DeviceId, ElementState, Event, KeyboardInput, ModifiersState, WindowEvent, WindowId,
+    };
+
+    /// Compares two sets for equality, but not the order
+    fn sets_are_equal<T>(a: &[T], b: &[T])
+    where
+        T: PartialEq<T> + Debug,
+    {
+        let mut ret = a.len() == b.len();
+
+        if ret {
+            let mut b = b.iter().collect::<Vec<_>>();
+            for a in a.iter() {
+                if let Some(i) = b.iter().position(|b| a == *b) {
+                    b.swap_remove(i);
+                } else {
+                    ret = false;
+                    break;
+                }
+            }
+        };
+        if !ret {
+            panic!(
+                "assertion failed: `(left == right)`
+left: `{:?}`
+right: `{:?}`",
+                a, b
+            );
+        }
+    }
+
+    #[test]
+    fn key_action_response() {
+        // Register an action triggered by a key
+        // Press the key and check for a press event of both the key and the action.
+        // Release the key and check for a release event of both the key and the action.
+
+        let mut handler = InputHandler::<String, String>::new();
+        let mut events = EventChannel::<InputEvent<String>>::new();
+        let mut reader = events.register_reader();
+        handler.bindings.insert_action_binding(
+            String::from("test_key_action"),
+            [Button::Key(VirtualKeyCode::Up)].iter().cloned(),
+        );
+        assert_eq!(handler.action_is_down("test_key_action"), Some(false));
+        handler.send_event(
+            &Event::WindowEvent {
+                window_id: unsafe { WindowId::dummy() },
+                event: WindowEvent::KeyboardInput {
+                    device_id: unsafe { DeviceId::dummy() },
+                    input: KeyboardInput {
+                        scancode: 104,
+                        state: ElementState::Pressed,
+                        virtual_keycode: Some(VirtualKeyCode::Up),
+                        modifiers: ModifiersState {
+                            shift: false,
+                            ctrl: false,
+                            alt: false,
+                            logo: false,
+                        },
+                    },
+                },
+            },
+            &mut events,
+            1.0,
+        );
+        assert_eq!(handler.action_is_down("test_key_action"), Some(true));
+        let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
+        sets_are_equal(
+            &event_vec,
+            &[
+                InputEvent::ActionPressed(String::from("test_key_action")),
+                InputEvent::KeyPressed {
+                    key_code: VirtualKeyCode::Up,
+                    scancode: 104,
+                },
+                InputEvent::ButtonPressed(Button::Key(VirtualKeyCode::Up)),
+                InputEvent::ButtonPressed(Button::ScanCode(104)),
+            ],
+        );
+        handler.send_event(
+            &Event::WindowEvent {
+                window_id: unsafe { WindowId::dummy() },
+                event: WindowEvent::KeyboardInput {
+                    device_id: unsafe { DeviceId::dummy() },
+                    input: KeyboardInput {
+                        scancode: 104,
+                        state: ElementState::Released,
+                        virtual_keycode: Some(VirtualKeyCode::Up),
+                        modifiers: ModifiersState {
+                            shift: false,
+                            ctrl: false,
+                            alt: false,
+                            logo: false,
+                        },
+                    },
+                },
+            },
+            &mut events,
+            1.0,
+        );
+        assert_eq!(handler.action_is_down("test_key_action"), Some(false));
+        let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
+        sets_are_equal(
+            &event_vec,
+            &[
+                InputEvent::ActionReleased(String::from("test_key_action")),
+                InputEvent::KeyReleased {
+                    key_code: VirtualKeyCode::Up,
+                    scancode: 104,
+                },
+                InputEvent::ButtonReleased(Button::Key(VirtualKeyCode::Up)),
+                InputEvent::ButtonReleased(Button::ScanCode(104)),
+            ],
+        );
+    }
+
+    #[test]
+    fn mouse_action_response() {
+        // Register an action triggered by a mouse button
+        // Press the button and check for a press event of both the button and the action.
+        // Release the button and check for a release event of both the button and the action.
+
+        let mut handler = InputHandler::<String, String>::new();
+        let mut events = EventChannel::<InputEvent<String>>::new();
+        let mut reader = events.register_reader();
+        handler.bindings.insert_action_binding(
+            String::from("test_mouse_action"),
+            [Button::Mouse(MouseButton::Left)].iter().cloned(),
+        );
+        assert_eq!(handler.action_is_down("test_mouse_action"), Some(false));
+        handler.send_event(
+            &Event::WindowEvent {
+                window_id: unsafe { WindowId::dummy() },
+                event: WindowEvent::MouseInput {
+                    device_id: unsafe { DeviceId::dummy() },
+                    state: ElementState::Pressed,
+                    button: MouseButton::Left,
+                    modifiers: ModifiersState {
+                        shift: false,
+                        ctrl: false,
+                        alt: false,
+                        logo: false,
+                    },
+                },
+            },
+            &mut events,
+            1.0,
+        );
+        assert_eq!(handler.action_is_down("test_mouse_action"), Some(true));
+        let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
+        sets_are_equal(
+            &event_vec,
+            &[
+                InputEvent::ActionPressed(String::from("test_mouse_action")),
+                InputEvent::MouseButtonPressed(MouseButton::Left),
+                InputEvent::ButtonPressed(Button::Mouse(MouseButton::Left)),
+            ],
+        );
+        handler.send_event(
+            &Event::WindowEvent {
+                window_id: unsafe { WindowId::dummy() },
+                event: WindowEvent::MouseInput {
+                    device_id: unsafe { DeviceId::dummy() },
+                    state: ElementState::Released,
+                    button: MouseButton::Left,
+                    modifiers: ModifiersState {
+                        shift: false,
+                        ctrl: false,
+                        alt: false,
+                        logo: false,
+                    },
+                },
+            },
+            &mut events,
+            1.0,
+        );
+        assert_eq!(handler.action_is_down("test_mouse_action"), Some(false));
+        let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
+        sets_are_equal(
+            &event_vec,
+            &[
+                InputEvent::ActionReleased(String::from("test_mouse_action")),
+                InputEvent::MouseButtonReleased(MouseButton::Left),
+                InputEvent::ButtonReleased(Button::Mouse(MouseButton::Left)),
+            ],
+        );
+    }
+
+    #[test]
+    fn combo_action_response() {
+        // Register a combo
+        // Press one key in the combo, make sure we get the key press but no action event
+        // Press the second key in the combo, we should get both key press and action event
+        // Release first key, we should get key release and action release
+        // Release second key, we should key release and no action release
+
+        let mut handler = InputHandler::<String, String>::new();
+        let mut events = EventChannel::<InputEvent<String>>::new();
+        let mut reader = events.register_reader();
+        handler.bindings.insert_action_binding(
+            String::from("test_combo_action"),
+            [
+                Button::Key(VirtualKeyCode::Up),
+                Button::Key(VirtualKeyCode::Down),
+            ]
+            .iter()
+            .cloned(),
+        );
+        assert_eq!(handler.action_is_down("test_combo_action"), Some(false));
+        handler.send_event(
+            &Event::WindowEvent {
+                window_id: unsafe { WindowId::dummy() },
+                event: WindowEvent::KeyboardInput {
+                    device_id: unsafe { DeviceId::dummy() },
+                    input: KeyboardInput {
+                        scancode: 104,
+                        state: ElementState::Pressed,
+                        virtual_keycode: Some(VirtualKeyCode::Up),
+                        modifiers: ModifiersState {
+                            shift: false,
+                            ctrl: false,
+                            alt: false,
+                            logo: false,
+                        },
+                    },
+                },
+            },
+            &mut events,
+            1.0,
+        );
+        assert_eq!(handler.action_is_down("test_combo_action"), Some(false));
+        let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
+        sets_are_equal(
+            &event_vec,
+            &[
+                InputEvent::KeyPressed {
+                    key_code: VirtualKeyCode::Up,
+                    scancode: 104,
+                },
+                InputEvent::ButtonPressed(Button::Key(VirtualKeyCode::Up)),
+                InputEvent::ButtonPressed(Button::ScanCode(104)),
+            ],
+        );
+        handler.send_event(
+            &Event::WindowEvent {
+                window_id: unsafe { WindowId::dummy() },
+                event: WindowEvent::KeyboardInput {
+                    device_id: unsafe { DeviceId::dummy() },
+                    input: KeyboardInput {
+                        scancode: 112,
+                        state: ElementState::Pressed,
+                        virtual_keycode: Some(VirtualKeyCode::Down),
+                        modifiers: ModifiersState {
+                            shift: false,
+                            ctrl: false,
+                            alt: false,
+                            logo: false,
+                        },
+                    },
+                },
+            },
+            &mut events,
+            1.0,
+        );
+        assert_eq!(handler.action_is_down("test_combo_action"), Some(true));
+        let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
+        sets_are_equal(
+            &event_vec,
+            &[
+                ActionPressed(String::from("test_combo_action")),
+                InputEvent::KeyPressed {
+                    key_code: VirtualKeyCode::Down,
+                    scancode: 112,
+                },
+                InputEvent::ButtonPressed(Button::Key(VirtualKeyCode::Down)),
+                InputEvent::ButtonPressed(Button::ScanCode(112)),
+            ],
+        );
+        handler.send_event(
+            &Event::WindowEvent {
+                window_id: unsafe { WindowId::dummy() },
+                event: WindowEvent::KeyboardInput {
+                    device_id: unsafe { DeviceId::dummy() },
+                    input: KeyboardInput {
+                        scancode: 104,
+                        state: ElementState::Released,
+                        virtual_keycode: Some(VirtualKeyCode::Up),
+                        modifiers: ModifiersState {
+                            shift: false,
+                            ctrl: false,
+                            alt: false,
+                            logo: false,
+                        },
+                    },
+                },
+            },
+            &mut events,
+            1.0,
+        );
+        assert_eq!(handler.action_is_down("test_combo_action"), Some(false));
+        let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
+        sets_are_equal(
+            &event_vec,
+            &[
+                InputEvent::ActionReleased(String::from("test_combo_action")),
+                InputEvent::KeyReleased {
+                    key_code: VirtualKeyCode::Up,
+                    scancode: 104,
+                },
+                InputEvent::ButtonReleased(Button::Key(VirtualKeyCode::Up)),
+                InputEvent::ButtonReleased(Button::ScanCode(104)),
+            ],
+        );
+
+        handler.send_event(
+            &Event::WindowEvent {
+                window_id: unsafe { WindowId::dummy() },
+                event: WindowEvent::KeyboardInput {
+                    device_id: unsafe { DeviceId::dummy() },
+                    input: KeyboardInput {
+                        scancode: 112,
+                        state: ElementState::Released,
+                        virtual_keycode: Some(VirtualKeyCode::Down),
+                        modifiers: ModifiersState {
+                            shift: false,
+                            ctrl: false,
+                            alt: false,
+                            logo: false,
+                        },
+                    },
+                },
+            },
+            &mut events,
+            1.0,
+        );
+        assert_eq!(handler.action_is_down("test_combo_action"), Some(false));
+        let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
+        sets_are_equal(
+            &event_vec,
+            &[
+                InputEvent::KeyReleased {
+                    key_code: VirtualKeyCode::Down,
+                    scancode: 112,
+                },
+                InputEvent::ButtonReleased(Button::Key(VirtualKeyCode::Down)),
+                InputEvent::ButtonReleased(Button::ScanCode(112)),
+            ],
+        );
+    }
+
+    #[test]
+    fn emulated_axis_response() {
+        // Register an axis triggered by two keys
+        // Check that with nothing pressed we return 0.
+        // Press the positive and check for a positive response
+        // Release the positive, press the negative and check for a negative respones
+        // Press both and check for 0.
+        // Release both and check for 0.
+
+        let mut handler = InputHandler::<String, String>::new();
+        let mut events = EventChannel::<InputEvent<String>>::new();
+        handler.bindings.insert_axis(
+            String::from("test_axis"),
+            Axis::Emulated {
+                pos: Button::Key(VirtualKeyCode::Up),
+                neg: Button::Key(VirtualKeyCode::Down),
+            },
+        );
+        assert_eq!(handler.axis_value("test_axis"), Some(0.0));
+        handler.send_event(
+            &Event::WindowEvent {
+                window_id: unsafe { WindowId::dummy() },
+                event: WindowEvent::KeyboardInput {
+                    device_id: unsafe { DeviceId::dummy() },
+                    input: KeyboardInput {
+                        scancode: 104,
+                        state: ElementState::Pressed,
+                        virtual_keycode: Some(VirtualKeyCode::Up),
+                        modifiers: ModifiersState {
+                            shift: false,
+                            ctrl: false,
+                            alt: false,
+                            logo: false,
+                        },
+                    },
+                },
+            },
+            &mut events,
+            1.0,
+        );
+        assert_eq!(handler.axis_value("test_axis"), Some(1.0));
+        handler.send_event(
+            &Event::WindowEvent {
+                window_id: unsafe { WindowId::dummy() },
+                event: WindowEvent::KeyboardInput {
+                    device_id: unsafe { DeviceId::dummy() },
+                    input: KeyboardInput {
+                        scancode: 104,
+                        state: ElementState::Released,
+                        virtual_keycode: Some(VirtualKeyCode::Up),
+                        modifiers: ModifiersState {
+                            shift: false,
+                            ctrl: false,
+                            alt: false,
+                            logo: false,
+                        },
+                    },
+                },
+            },
+            &mut events,
+            1.0,
+        );
+        assert_eq!(handler.axis_value("test_axis"), Some(0.0));
+        handler.send_event(
+            &Event::WindowEvent {
+                window_id: unsafe { WindowId::dummy() },
+                event: WindowEvent::KeyboardInput {
+                    device_id: unsafe { DeviceId::dummy() },
+                    input: KeyboardInput {
+                        scancode: 112,
+                        state: ElementState::Pressed,
+                        virtual_keycode: Some(VirtualKeyCode::Down),
+                        modifiers: ModifiersState {
+                            shift: false,
+                            ctrl: false,
+                            alt: false,
+                            logo: false,
+                        },
+                    },
+                },
+            },
+            &mut events,
+            1.0,
+        );
+        assert_eq!(handler.axis_value("test_axis"), Some(-1.0));
+        handler.send_event(
+            &Event::WindowEvent {
+                window_id: unsafe { WindowId::dummy() },
+                event: WindowEvent::KeyboardInput {
+                    device_id: unsafe { DeviceId::dummy() },
+                    input: KeyboardInput {
+                        scancode: 104,
+                        state: ElementState::Pressed,
+                        virtual_keycode: Some(VirtualKeyCode::Up),
+                        modifiers: ModifiersState {
+                            shift: false,
+                            ctrl: false,
+                            alt: false,
+                            logo: false,
+                        },
+                    },
+                },
+            },
+            &mut events,
+            1.0,
+        );
+        assert_eq!(handler.axis_value("test_axis"), Some(0.0));
+        handler.send_event(
+            &Event::WindowEvent {
+                window_id: unsafe { WindowId::dummy() },
+                event: WindowEvent::KeyboardInput {
+                    device_id: unsafe { DeviceId::dummy() },
+                    input: KeyboardInput {
+                        scancode: 104,
+                        state: ElementState::Released,
+                        virtual_keycode: Some(VirtualKeyCode::Up),
+                        modifiers: ModifiersState {
+                            shift: false,
+                            ctrl: false,
+                            alt: false,
+                            logo: false,
+                        },
+                    },
+                },
+            },
+            &mut events,
+            1.0,
+        );
+        handler.send_event(
+            &Event::WindowEvent {
+                window_id: unsafe { WindowId::dummy() },
+                event: WindowEvent::KeyboardInput {
+                    device_id: unsafe { DeviceId::dummy() },
+                    input: KeyboardInput {
+                        scancode: 112,
+                        state: ElementState::Released,
+                        virtual_keycode: Some(VirtualKeyCode::Down),
+                        modifiers: ModifiersState {
+                            shift: false,
+                            ctrl: false,
+                            alt: false,
+                            logo: false,
+                        },
+                    },
+                },
+            },
+            &mut events,
+            1.0,
+        );
+        assert_eq!(handler.axis_value("test_axis"), Some(0.0));
     }
 }
