@@ -87,9 +87,11 @@ thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
 amethyst_gltf = { path = "amethyst_gltf", version = "0.5.0" }
+derive-new = "0.5"
 env_logger = "0.5.13"
 genmesh = "0.6"
 ron = "0.4"
+specs-derive = "0.4"
 
 [build-dependencies]
 vergen = "3.0"
@@ -205,6 +207,18 @@ path = "examples/arc_ball_camera/main.rs"
 [[example]]
 name = "prefab"
 path = "examples/prefab/main.rs"
+
+[[example]]
+name = "prefab_basic"
+path = "examples/prefab_basic/main.rs"
+
+[[example]]
+name = "prefab_multi"
+path = "examples/prefab_multi/main.rs"
+
+[[example]]
+name = "prefab_custom"
+path = "examples/prefab_custom/main.rs"
 
 [[example]]
 name = "debug_lines"

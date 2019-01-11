@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Derive `Copy`, `PartialEq`, `Eq`, `Serialize`, `Deserialize` for `Flipped` component. ([#1237])
 * A way to change the default `Source` using `set_default_source` and `with_default_source`. ([#1256])
 * "How To" guides for using assets and defining custom assets. ([#1251])
+* Explanation on how prefabs function in Amethyst. ([#1114])
 * `amethyst_renderer::Rgba` is now a `Component` that changes the color and transparency of the entity
 it is attached to. ([#1282])
 * `AutoFov` and `AutoFovSystem` to adjust horizontal FOV to screen aspect ratio. ([#1281])
@@ -32,6 +33,7 @@ it is attached to. ([#1282])
 * Fixed the "json" feature for amethyst_assets. ([#1302])
 * Fixed default system font loading to accept uppercase extension ("TTF"). ([#1328])
 
+[#1114]: https://github.com/amethyst/amethyst/pull/1114
 [#1213]: https://github.com/amethyst/amethyst/pull/1213
 [#1237]: https://github.com/amethyst/amethyst/pull/1237
 [#1251]: https://github.com/amethyst/amethyst/pull/1251
