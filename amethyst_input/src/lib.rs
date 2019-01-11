@@ -21,7 +21,7 @@ pub use self::{
     bindings::Bindings,
     bundle::InputBundle,
     button::Button,
-    controller::{ControllerAxis, ControllerButton},
+    controller::{ControllerAxis, ControllerButton, ControllerEvent},
     event::InputEvent,
     input_handler::InputHandler,
     scroll_direction::ScrollDirection,

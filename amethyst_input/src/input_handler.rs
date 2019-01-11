@@ -839,6 +839,139 @@ mod tests {
         assert_eq!(handler.axis_value("test_axis"), Some(0.0));
     }
 
+    #[test]
+    fn pressed_iter_response() {
+        // Press some buttons and make sure the input handler returns them
+        // in iterators
+
+        let mut handler = InputHandler::<String, String>::new();
+        let mut events = EventChannel::<InputEvent<String>>::new();
+        assert_eq!(handler.keys_that_are_down().next(), None);
+        assert_eq!(handler.scan_codes_that_are_down().next(), None);
+        assert_eq!(handler.mouse_buttons_that_are_down().next(), None);
+        assert_eq!(handler.buttons_that_are_down().next(), None);
+        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events, HIDPI);
+        handler.send_event(&key_press(112, VirtualKeyCode::Down), &mut events, HIDPI);
+        handler.send_event(&key_press(75, VirtualKeyCode::Left), &mut events, HIDPI);
+        handler.send_event(&key_press(109, VirtualKeyCode::Right), &mut events, HIDPI);
+        handler.send_event(&mouse_press(MouseButton::Left), &mut events, HIDPI);
+        handler.send_event(&mouse_press(MouseButton::Right), &mut events, HIDPI);
+        sets_are_equal(
+            &handler.keys_that_are_down().collect::<Vec<_>>(),
+            &[
+                VirtualKeyCode::Up,
+                VirtualKeyCode::Down,
+                VirtualKeyCode::Left,
+                VirtualKeyCode::Right,
+            ],
+        );
+        sets_are_equal(
+            &handler.scan_codes_that_are_down().collect::<Vec<_>>(),
+            &[104, 112, 75, 109],
+        );
+        sets_are_equal(
+            &handler.mouse_buttons_that_are_down().collect::<Vec<_>>(),
+            &[&MouseButton::Left, &MouseButton::Right],
+        );
+        sets_are_equal(
+            &handler.buttons_that_are_down().collect::<Vec<_>>(),
+            &[
+                Button::Key(VirtualKeyCode::Up),
+                Button::Key(VirtualKeyCode::Down),
+                Button::Key(VirtualKeyCode::Left),
+                Button::Key(VirtualKeyCode::Right),
+                Button::ScanCode(104),
+                Button::ScanCode(112),
+                Button::ScanCode(75),
+                Button::ScanCode(109),
+                Button::Mouse(MouseButton::Left),
+                Button::Mouse(MouseButton::Right),
+            ],
+        );
+        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events, HIDPI);
+        sets_are_equal(
+            &handler.keys_that_are_down().collect::<Vec<_>>(),
+            &[
+                VirtualKeyCode::Down,
+                VirtualKeyCode::Left,
+                VirtualKeyCode::Right,
+            ],
+        );
+        sets_are_equal(
+            &handler.scan_codes_that_are_down().collect::<Vec<_>>(),
+            &[112, 75, 109],
+        );
+        handler.send_event(&key_release(109, VirtualKeyCode::Right), &mut events, HIDPI);
+        sets_are_equal(
+            &handler.keys_that_are_down().collect::<Vec<_>>(),
+            &[VirtualKeyCode::Down, VirtualKeyCode::Left],
+        );
+        sets_are_equal(
+            &handler.scan_codes_that_are_down().collect::<Vec<_>>(),
+            &[112, 75],
+        );
+        handler.send_event(&key_release(112, VirtualKeyCode::Down), &mut events, HIDPI);
+        sets_are_equal(
+            &handler.keys_that_are_down().collect::<Vec<_>>(),
+            &[VirtualKeyCode::Left],
+        );
+        sets_are_equal(
+            &handler.scan_codes_that_are_down().collect::<Vec<_>>(),
+            &[75],
+        );
+        handler.send_event(&key_release(75, VirtualKeyCode::Left), &mut events, HIDPI);
+        assert_eq!(handler.keys_that_are_down().next(), None);
+        assert_eq!(handler.scan_codes_that_are_down().next(), None);
+        sets_are_equal(
+            &handler.buttons_that_are_down().collect::<Vec<_>>(),
+            &[
+                Button::Mouse(MouseButton::Left),
+                Button::Mouse(MouseButton::Right),
+            ],
+        );
+        handler.send_event(&mouse_release(MouseButton::Left), &mut events, HIDPI);
+        sets_are_equal(
+            &handler.buttons_that_are_down().collect::<Vec<_>>(),
+            &[Button::Mouse(MouseButton::Right)],
+        );
+        handler.send_event(&mouse_release(MouseButton::Right), &mut events, HIDPI);
+        assert_eq!(handler.buttons_that_are_down().next(), None);
+    }
+
+    #[test]
+    fn basic_key_check() {
+        let mut handler = InputHandler::<String, String>::new();
+        let mut events = EventChannel::<InputEvent<String>>::new();
+        assert!(!handler.key_is_down(VirtualKeyCode::Up));
+        assert!(!handler.scan_code_is_down(104));
+        assert!(!handler.button_is_down(Button::Key(VirtualKeyCode::Up)));
+        assert!(!handler.button_is_down(Button::ScanCode(104)));
+        handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events, HIDPI);
+        assert!(handler.key_is_down(VirtualKeyCode::Up));
+        assert!(handler.scan_code_is_down(104));
+        assert!(handler.button_is_down(Button::Key(VirtualKeyCode::Up)));
+        assert!(handler.button_is_down(Button::ScanCode(104)));
+        handler.send_event(&key_release(104, VirtualKeyCode::Up), &mut events, HIDPI);
+        assert!(!handler.key_is_down(VirtualKeyCode::Up));
+        assert!(!handler.scan_code_is_down(104));
+        assert!(!handler.button_is_down(Button::Key(VirtualKeyCode::Up)));
+        assert!(!handler.button_is_down(Button::ScanCode(104)));
+    }
+
+    #[test]
+    fn basic_mouse_check() {
+        let mut handler = InputHandler::<String, String>::new();
+        let mut events = EventChannel::<InputEvent<String>>::new();
+        assert!(!handler.mouse_button_is_down(MouseButton::Left));
+        assert!(!handler.button_is_down(Button::Mouse(MouseButton::Left)));
+        handler.send_event(&mouse_press(MouseButton::Left), &mut events, HIDPI);
+        assert!(handler.mouse_button_is_down(MouseButton::Left));
+        assert!(handler.button_is_down(Button::Mouse(MouseButton::Left)));
+        handler.send_event(&mouse_release(MouseButton::Left), &mut events, HIDPI);
+        assert!(!handler.mouse_button_is_down(MouseButton::Left));
+        assert!(!handler.button_is_down(Button::Mouse(MouseButton::Left)));
+    }
+
     /// Compares two sets for equality, but not the order
     fn sets_are_equal<T>(a: &[T], b: &[T])
     where
