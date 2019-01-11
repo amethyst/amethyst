@@ -30,17 +30,23 @@ use crate::{source::*, systems::DjSystem};
 pub struct AudioBundle<'a, F, R> {
     dep: &'a [&'a str],
     marker: PhantomData<R>,
-    picker: F,
+    picker: Option<F>,
 }
 
 impl<'a, F, R> AudioBundle<'a, F, R> {
-    /// Create a new DJ bundle
-    pub fn new(picker: F) -> Self {
+    /// Create a new audio bundle
+    pub fn new() -> Self {
         AudioBundle {
             dep: &[],
             marker: PhantomData,
-            picker,
+            picker: None,
         }
+    }
+
+    /// Initialize the DJ system
+    pub fn with_dj_system(mut self, picker: F) -> Self {
+        self.picker = Some(picker);
+        self
     }
 
     /// Set dependencies for the `DjSystem`
@@ -57,8 +63,8 @@ where
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
         builder.add(Processor::<Source>::new(), "source_processor", &[]);
-        if default_output_device().is_some() {
-            builder.add(DjSystem::new(self.picker), "dj_system", self.dep);
+        if default_output_device().is_some() && self.picker.is_some() {
+            builder.add(DjSystem::new(self.picker.unwrap()), "dj_system", self.dep);
         }
         Ok(())
     }
