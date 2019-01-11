@@ -44,7 +44,7 @@ In its stored form, a prefab is a serialized list of entities and their componen
 pub struct Position(pub f32, pub f32, pub f32);
 ```
 
-The important derives are the [`Component`] and `PrefabData` &ndash; [`Component`] means it can be attached to an entity; `PrefabData` means it can be loaded as part of a prefab.
+The important derives are the [`Component`] and [`PrefabData`] &ndash; [`Component`] means it can be attached to an entity; [`PrefabData`] means it can be loaded as part of a prefab. The `#[prefab(Component)]` attribute informs the [`PrefabData`] derive that this type is a [`Component`], as opposed to being composed of fields which implement [`PrefabData`]. This will only be important when implementing a custom prefab.
 
 Here is an example `.ron` file of a prefab with an entity with a `Position`:
 
