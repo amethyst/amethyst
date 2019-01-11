@@ -639,7 +639,7 @@ mod tests {
     };
 
     /// Compares two sets for equality, but not the order
-    fn sets_equal<T>(a: &[T], b: &[T])
+    fn sets_are_equal<T>(a: &[T], b: &[T])
     where
         T: PartialEq<T> + Debug,
     {
@@ -655,7 +655,6 @@ mod tests {
                     break;
                 }
             }
-            assert_eq!(b.len(), 0);
         };
         if !ret {
             panic!(
@@ -704,7 +703,7 @@ right: `{:?}`",
         );
         assert_eq!(handler.action_is_down("test_key_action"), Some(true));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
-        sets_equal(
+        sets_are_equal(
             &event_vec,
             &[
                 InputEvent::ActionPressed(String::from("test_key_action")),
@@ -739,7 +738,7 @@ right: `{:?}`",
         );
         assert_eq!(handler.action_is_down("test_key_action"), Some(false));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
-        sets_equal(
+        sets_are_equal(
             &event_vec,
             &[
                 InputEvent::ActionReleased(String::from("test_key_action")),
@@ -787,7 +786,7 @@ right: `{:?}`",
         );
         assert_eq!(handler.action_is_down("test_mouse_action"), Some(true));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
-        sets_equal(
+        sets_are_equal(
             &event_vec,
             &[
                 InputEvent::ActionPressed(String::from("test_mouse_action")),
@@ -815,7 +814,7 @@ right: `{:?}`",
         );
         assert_eq!(handler.action_is_down("test_mouse_action"), Some(false));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
-        sets_equal(
+        sets_are_equal(
             &event_vec,
             &[
                 InputEvent::ActionReleased(String::from("test_mouse_action")),
@@ -869,7 +868,7 @@ right: `{:?}`",
         );
         assert_eq!(handler.action_is_down("test_combo_action"), Some(false));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
-        sets_equal(
+        sets_are_equal(
             &event_vec,
             &[
                 InputEvent::KeyPressed {
@@ -903,7 +902,7 @@ right: `{:?}`",
         );
         assert_eq!(handler.action_is_down("test_combo_action"), Some(true));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
-        sets_equal(
+        sets_are_equal(
             &event_vec,
             &[
                 ActionPressed(String::from("test_combo_action")),
@@ -938,7 +937,7 @@ right: `{:?}`",
         );
         assert_eq!(handler.action_is_down("test_combo_action"), Some(false));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
-        sets_equal(
+        sets_are_equal(
             &event_vec,
             &[
                 InputEvent::ActionReleased(String::from("test_combo_action")),
@@ -972,9 +971,9 @@ right: `{:?}`",
             &mut events,
             1.0,
         );
-        assert!(!handler.action_is_down("test_combo_action").unwrap());
+        assert_eq!(handler.action_is_down("test_combo_action"), Some(false));
         let event_vec = events.read(&mut reader).cloned().collect::<Vec<_>>();
-        sets_equal(
+        sets_are_equal(
             &event_vec,
             &[
                 InputEvent::KeyReleased {
@@ -1012,7 +1011,7 @@ right: `{:?}`",
                 event: WindowEvent::KeyboardInput {
                     device_id: unsafe { DeviceId::dummy() },
                     input: KeyboardInput {
-                        scancode: 112,
+                        scancode: 104,
                         state: ElementState::Pressed,
                         virtual_keycode: Some(VirtualKeyCode::Up),
                         modifiers: ModifiersState {
@@ -1034,7 +1033,7 @@ right: `{:?}`",
                 event: WindowEvent::KeyboardInput {
                     device_id: unsafe { DeviceId::dummy() },
                     input: KeyboardInput {
-                        scancode: 112,
+                        scancode: 104,
                         state: ElementState::Released,
                         virtual_keycode: Some(VirtualKeyCode::Up),
                         modifiers: ModifiersState {
@@ -1078,7 +1077,7 @@ right: `{:?}`",
                 event: WindowEvent::KeyboardInput {
                     device_id: unsafe { DeviceId::dummy() },
                     input: KeyboardInput {
-                        scancode: 112,
+                        scancode: 104,
                         state: ElementState::Pressed,
                         virtual_keycode: Some(VirtualKeyCode::Up),
                         modifiers: ModifiersState {
@@ -1100,7 +1099,7 @@ right: `{:?}`",
                 event: WindowEvent::KeyboardInput {
                     device_id: unsafe { DeviceId::dummy() },
                     input: KeyboardInput {
-                        scancode: 112,
+                        scancode: 104,
                         state: ElementState::Released,
                         virtual_keycode: Some(VirtualKeyCode::Up),
                         modifiers: ModifiersState {
