@@ -5,10 +5,10 @@ status = [
 
 # Do not allow pull requests with these labels to be merged.
 block_labels = [
-    "status: postponed",
-    "status: stalled",
-    "status: wontfix",
-    "status: working"
+    "status: blocked",
+    "status: discussing",
+    "status: in progress",
+    "status: needs triage"
 ]
 
 # This feature is rarely useful and more often problematic, so we turn it off.
