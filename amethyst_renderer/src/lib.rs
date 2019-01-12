@@ -27,36 +27,30 @@
 #![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-use amethyst_core;
 #[macro_use]
 extern crate amethyst_derive;
+
 #[macro_use]
 extern crate derivative;
+
 #[macro_use]
 extern crate error_chain;
-use gfx;
-use gfx_core;
+
 #[macro_use]
 extern crate gfx_macros;
+
 #[macro_use]
 extern crate log;
-use rayon;
+
 #[macro_use]
 extern crate serde;
-use shred;
+
 #[macro_use]
 extern crate shred_derive;
-use wavefront_obj;
-use winit;
+
 #[macro_use]
 #[cfg(feature = "profiler")]
 extern crate thread_profiler;
-#[cfg(feature = "opengl")]
-use gfx_device_gl;
-#[cfg(feature = "opengl")]
-use gfx_window_glutin;
-#[cfg(feature = "opengl")]
-use glutin;
 
 pub use crate::{
     blink::{Blink, BlinkSystem},
@@ -116,6 +110,24 @@ pub use crate::{
     },
     visibility::{Visibility, VisibilitySortingSystem},
 };
+
+#[cfg(feature = "opengl")]
+use gfx_device_gl;
+
+#[cfg(feature = "opengl")]
+use gfx_window_glutin;
+
+#[cfg(feature = "opengl")]
+use glutin;
+
+use gfx;
+use gfx_core;
+use rayon;
+use shred;
+use wavefront_obj;
+use winit;
+
+use amethyst_core;
 
 pub mod error;
 pub mod mouse;

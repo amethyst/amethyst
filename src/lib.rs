@@ -57,8 +57,22 @@
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 #[macro_use]
+pub extern crate amethyst_derive as derive;
+
+#[macro_use]
+extern crate derivative;
+
+#[macro_use]
+extern crate log;
+
+#[macro_use]
+extern crate serde_derive;
+
+#[macro_use]
 #[cfg(feature = "profiler")]
 pub extern crate thread_profiler;
+
+pub use winit;
 
 pub use amethyst_animation as animation;
 pub use amethyst_assets as assets;
@@ -66,27 +80,16 @@ pub use amethyst_audio as audio;
 pub use amethyst_config as config;
 pub use amethyst_controls as controls;
 pub use amethyst_core as core;
-#[macro_use]
-pub extern crate amethyst_derive as derive;
 pub use amethyst_input as input;
 pub use amethyst_locale as locale;
 pub use amethyst_network as network;
 pub use amethyst_renderer as renderer;
 pub use amethyst_ui as ui;
 pub use amethyst_utils as utils;
-pub use winit;
-
-#[macro_use]
-extern crate derivative;
-use fern;
-#[macro_use]
-extern crate log;
-
-use rustc_version_runtime;
-#[macro_use]
-extern crate serde_derive;
 
 pub use crate::core::{shred, shrev, specs as ecs};
+#[doc(hidden)]
+pub use crate::derive::*;
 
 pub use self::{
     app::{Application, ApplicationBuilder, CoreApplication},
@@ -101,8 +104,8 @@ pub use self::{
     state_event::{StateEvent, StateEventReader},
 };
 
-#[doc(hidden)]
-pub use crate::derive::*;
+use fern;
+use rustc_version_runtime;
 
 pub mod prelude;
 

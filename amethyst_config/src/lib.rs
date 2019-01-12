@@ -1,5 +1,4 @@
 //! Loads RON files into a structure for easy / statically typed usage.
-//!
 
 #![crate_name = "amethyst_config"]
 #![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
@@ -7,7 +6,6 @@
 
 #[macro_use]
 extern crate log;
-use ron;
 
 use std::{
     error::Error,
@@ -15,6 +13,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use ron;
 use ron::{de::Error as DeError, ser::Error as SerError};
 use serde::{Deserialize, Serialize};
 

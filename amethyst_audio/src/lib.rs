@@ -1,6 +1,7 @@
+//! Loading and playing of audio files.
+
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-//! Loading and playing of audio files.
 #[macro_use]
 extern crate log;
 
@@ -20,12 +21,12 @@ pub use self::{
     systems::*,
 };
 
-pub mod output;
-
 use std::{
     error::Error,
     fmt::{Display, Formatter, Result as FmtResult},
 };
+
+pub mod output;
 
 mod bundle;
 mod components;

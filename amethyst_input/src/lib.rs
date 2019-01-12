@@ -1,18 +1,15 @@
 //! A collection of abstractions for various input devices to be used with Amethyst.
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
-use amethyst_core;
 
 #[macro_use]
 extern crate derivative;
 
-#[macro_use]
-extern crate serde;
-use smallvec;
-use winit;
-
 #[cfg(feature = "sdl_controller")]
 extern crate sdl2;
+
+#[macro_use]
+extern crate serde;
 
 #[cfg(feature = "sdl_controller")]
 pub use self::sdl_events_system::SdlEventsSystem;
@@ -30,7 +27,12 @@ pub use self::{
 };
 
 use std::iter::Iterator;
+
+use smallvec;
+use winit;
 use winit::VirtualKeyCode;
+
+use amethyst_core;
 
 mod axis;
 mod bindings;

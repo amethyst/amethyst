@@ -3,53 +3,23 @@
 #![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-use amethyst_assets;
-use amethyst_audio;
-use amethyst_core;
-
-use amethyst_renderer;
-use clipboard;
 #[macro_use]
 extern crate derivative;
+
 #[macro_use]
 extern crate derive_new;
-use fnv;
-use gfx;
-use gfx_glyph;
-use glsl_layout;
-use hibitset;
+
 #[macro_use]
 extern crate log;
-use ron;
+
 #[macro_use]
 extern crate serde;
-use shred;
+
 #[macro_use]
 extern crate shred_derive;
 
-use winit;
 #[macro_use]
 extern crate smallvec;
-
-use unicode_normalization;
-use unicode_segmentation;
-
-mod bundle;
-mod button;
-mod event;
-mod event_retrigger;
-mod font;
-mod format;
-mod layout;
-mod pass;
-mod prefab;
-mod resize;
-mod selection;
-mod selection_order_cache;
-mod sound;
-mod text;
-mod text_editing;
-mod transform;
 
 pub use self::{
     bundle::UiBundle,
@@ -78,3 +48,37 @@ pub use self::{
     text_editing::TextEditingInputSystem,
     transform::{UiFinder, UiTransform},
 };
+
+use clipboard;
+use fnv;
+use gfx;
+use gfx_glyph;
+use glsl_layout;
+use hibitset;
+use ron;
+use shred;
+use unicode_normalization;
+use unicode_segmentation;
+use winit;
+
+use amethyst_assets;
+use amethyst_audio;
+use amethyst_core;
+use amethyst_renderer;
+
+mod bundle;
+mod button;
+mod event;
+mod event_retrigger;
+mod font;
+mod format;
+mod layout;
+mod pass;
+mod prefab;
+mod resize;
+mod selection;
+mod selection_order_cache;
+mod sound;
+mod text;
+mod text_editing;
+mod transform;
