@@ -228,12 +228,13 @@ code re-use.
 Overloading `Result` also makes it harder to use the default `Result` when it's needed.
 This is especially useful when multiple modules export their own `Result` types.
 
-If a crate exports its own `Result` type, we _should_ use it through an `error` alias like this:
+Crates _should not_ define their own `Result`.
+Instead prefer using `Result` directly with the crate-local error type, like this:
 
 ```rust
-use crate::error;
+use crate::error::Error;
 
-fn foo() -> error::Result<u32> {
+fn foo() -> Result<u32, Error> {
     Ok(42)
 }
 ```
