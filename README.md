@@ -50,7 +50,7 @@ even if the game is running on a massive 64 cores processor.
 
 ### Community
 
-While we may not be feature-packed (yet!), we all strongly believe that the community-oriented side of amethyst will thrive as we move forward!
+While we may not be feature-packed (yet!), we all strongly believe that the community-oriented side of Amethyst will thrive as we move forward!
 
 ## Features
 
