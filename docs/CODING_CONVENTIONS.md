@@ -106,7 +106,7 @@ APIs which composes results from multiple crates _should_ use `amethyst_error::E
 This is a generic error type which is capable of boxing any error and annotate it with debugging information.
 
 This must be used when defining APIs which composes errors generically, like with traits.
-This is also required when composing errors from other crates, since It is currently the only mechanism available to
+This is also required when composing errors from other crates, since it is currently the only mechanism available to
 communicate backtraces.
 
 ###### Do
