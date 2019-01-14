@@ -1,5 +1,7 @@
 //! Simple flat forward drawing pass.
 
+use std::marker::PhantomData;
+
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
@@ -19,7 +21,6 @@ use crate::{
     pass::util::{draw_mesh, get_camera, VertexArgs},
     pipe::pass::{Pass, PassData},
     pipe::{DepthMode, Effect, NewEffect},
-    std::marker::PhantomData,
     tex::Texture,
     types::{Encoder, Factory},
     vertex::{Color, Position, Query},
