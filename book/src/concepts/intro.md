@@ -14,8 +14,7 @@ If you don't understand how something works in amethyst, knowing the concepts pr
 
 ## Chapters
 * [State][st]
-* [Component][comp]
-* [Entity][ent]
+* [Entity and Component][ent-comp]
 * [Resource][res]
 * [World][world]
 * [System][sys]
@@ -23,8 +22,7 @@ If you don't understand how something works in amethyst, knowing the concepts pr
 * [EventChannel][evc]
 
 [st]: ./state.html
-[comp]: ./component.html
-[ent]: ./entity.html
+[ent-comp]: ./entity_and_component.html
 [res]: ./resource.html
 [world]: ./world.html
 [sys]: ./system.html

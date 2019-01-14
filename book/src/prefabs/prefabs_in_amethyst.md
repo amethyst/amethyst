@@ -307,7 +307,7 @@ cargo run --example prefab_custom
 
 Phew, that was long! Now that you have an understanding of how prefabs work in Amethyst, the next page covers the technical aspects in more detail.
 
-[assets]: assets.html
+[assets]: ../assets.html
 [`Component`]: https://www.amethyst.rs/doc/latest/doc/specs/trait.Component.html
 [`Entity`]: https://www.amethyst.rs/doc/latest/doc/specs/struct.Entity.html
 [`Named`]: https://www.amethyst.rs/doc/latest/doc/amethyst_core/struct.Named.html
