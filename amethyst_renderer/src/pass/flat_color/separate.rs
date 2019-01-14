@@ -1,26 +1,33 @@
 //! Simple flat forward drawing pass.
 
-use super::*;
-use amethyst_assets::AssetStorage;
-use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage};
-use amethyst_core::transform::GlobalTransform;
-use cam::{ActiveCamera, Camera};
-use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
-use hidden::{Hidden, HiddenPropagate};
-use mesh::{Mesh, MeshHandle};
-use mtl::{Material, MaterialDefaults};
-use pass::skinning::{create_skinning_effect, setup_skinning_buffers};
-use pass::util::{draw_mesh, get_camera, VertexArgs};
-use pipe::pass::{Pass, PassData};
-use pipe::{DepthMode, Effect, NewEffect};
-use skinning::JointTransforms;
-use tex::Texture;
-use types::{Encoder, Factory};
-use vertex::{Attributes, Color, Position, Separate, VertexFormat};
-use visibility::Visibility;
+
+use amethyst_assets::AssetStorage;
+use amethyst_core::{
+    specs::prelude::{Join, Read, ReadExpect, ReadStorage},
+    transform::GlobalTransform,
+};
+
+use crate::{
+    cam::{ActiveCamera, Camera},
+    error::Result,
+    hidden::{Hidden, HiddenPropagate},
+    mesh::{Mesh, MeshHandle},
+    mtl::{Material, MaterialDefaults},
+    pass::skinning::{create_skinning_effect, setup_skinning_buffers},
+    pass::util::{draw_mesh, get_camera, VertexArgs},
+    pipe::pass::{Pass, PassData},
+    pipe::{DepthMode, Effect, NewEffect},
+    skinning::JointTransforms,
+    tex::Texture,
+    types::{Encoder, Factory},
+    vertex::{Attributes, Color, Position, Separate, VertexFormat},
+    visibility::Visibility,
+};
+
+use super::*;
 
 static ATTRIBUTES: [Attributes<'static>; 2] = [
     Separate::<Position>::ATTRIBUTES,
@@ -43,8 +50,8 @@ pub struct DrawFlatColorSeparate {
 }
 
 impl DrawFlatColorSeparate
-    where
-        Self: Pass,
+where
+    Self: Pass,
 {
     /// Create instance of `DrawFlatColor` pass
     pub fn new() -> Self {
@@ -99,11 +106,12 @@ impl Pass for DrawFlatColorSeparate {
                 Separate::<Position>::ATTRIBUTES,
                 Separate::<Position>::size() as ElemStride,
                 0,
-            ).with_raw_vertex_buffer(
-            Separate::<Color>::ATTRIBUTES,
-            Separate::<Color>::size() as ElemStride,
-            0,
-        );
+            )
+            .with_raw_vertex_buffer(
+                Separate::<Color>::ATTRIBUTES,
+                Separate::<Color>::size() as ElemStride,
+                0,
+            );
         if self.skinning {
             setup_skinning_buffers(&mut builder);
         }

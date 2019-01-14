@@ -1,25 +1,32 @@
 //! Simple flat forward drawing pass.
 
-use super::*;
-use amethyst_assets::AssetStorage;
-use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage};
-use amethyst_core::transform::GlobalTransform;
-use cam::{ActiveCamera, Camera};
-use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
-use hidden::{Hidden, HiddenPropagate};
-use mesh::{Mesh, MeshHandle};
-use mtl::{Material, MaterialDefaults};
-use pass::util::{draw_mesh, get_camera, VertexArgs};
-use pipe::pass::{Pass, PassData};
-use pipe::{DepthMode, Effect, NewEffect};
-use std::marker::PhantomData;
-use tex::Texture;
-use types::{Encoder, Factory};
-use vertex::{Position, Query, Color};
-use visibility::Visibility;
+
+use amethyst_assets::AssetStorage;
+use amethyst_core::{
+    specs::prelude::{Join, Read, ReadExpect, ReadStorage},
+    transform::GlobalTransform,
+};
+
+use crate::{
+    cam::{ActiveCamera, Camera},
+    error::Result,
+    hidden::{Hidden, HiddenPropagate},
+    mesh::{Mesh, MeshHandle},
+    mtl::{Material, MaterialDefaults},
+    pass::util::{draw_mesh, get_camera, VertexArgs},
+    pipe::pass::{Pass, PassData},
+    pipe::{DepthMode, Effect, NewEffect},
+    std::marker::PhantomData,
+    tex::Texture,
+    types::{Encoder, Factory},
+    vertex::{Color, Position, Query},
+    visibility::Visibility,
+};
+
+use super::*;
 
 /// Draw mesh without lighting
 ///
@@ -37,9 +44,9 @@ pub struct DrawFlatColor<V> {
 }
 
 impl<V> DrawFlatColor<V>
-    where
-        V: Query<(Position, Color)>,
-        Self: Pass,
+where
+    V: Query<(Position, Color)>,
+    Self: Pass,
 {
     /// Create instance of `DrawFlatColor` pass
     pub fn new() -> Self {
@@ -59,8 +66,8 @@ impl<V> DrawFlatColor<V>
 }
 
 impl<'a, V> PassData<'a> for DrawFlatColor<V>
-    where
-        V: Query<(Position, Color)>,
+where
+    V: Query<(Position, Color)>,
 {
     type Data = (
         Option<Read<'a, ActiveCamera>>,
@@ -78,8 +85,8 @@ impl<'a, V> PassData<'a> for DrawFlatColor<V>
 }
 
 impl<V> Pass for DrawFlatColor<V>
-    where
-        V: Query<(Position, Color)>,
+where
+    V: Query<(Position, Color)>,
 {
     fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
         use std::mem;
@@ -89,7 +96,8 @@ impl<V> Pass for DrawFlatColor<V>
                 "VertexArgs",
                 mem::size_of::<<VertexArgs as Uniform>::Std140>(),
                 1,
-            ).with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0);
+            )
+            .with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0);
         match self.transparency {
             Some((mask, blend, depth)) => builder.with_blended_output("color", mask, blend, depth),
             None => builder.with_output("color", Some(DepthMode::LessEqualWrite)),
@@ -122,42 +130,42 @@ impl<V> Pass for DrawFlatColor<V>
             None => {
                 for (mesh, material, global, _, _) in
                     (&mesh, &material, &global, !&hidden, !&hidden_prop).join()
-                    {
-                        draw_mesh(
-                            encoder,
-                            effect,
-                            false,
-                            mesh_storage.get(mesh),
-                            None,
-                            &tex_storage,
-                            Some(material),
-                            &material_defaults,
-                            camera,
-                            Some(global),
-                            &[V::QUERIED_ATTRIBUTES],
-                            &[],
-                        );
-                    }
+                {
+                    draw_mesh(
+                        encoder,
+                        effect,
+                        false,
+                        mesh_storage.get(mesh),
+                        None,
+                        &tex_storage,
+                        Some(material),
+                        &material_defaults,
+                        camera,
+                        Some(global),
+                        &[V::QUERIED_ATTRIBUTES],
+                        &[],
+                    );
+                }
             }
             Some(ref visibility) => {
                 for (mesh, material, global, _) in
                     (&mesh, &material, &global, &visibility.visible_unordered).join()
-                    {
-                        draw_mesh(
-                            encoder,
-                            effect,
-                            false,
-                            mesh_storage.get(mesh),
-                            None,
-                            &tex_storage,
-                            Some(material),
-                            &material_defaults,
-                            camera,
-                            Some(global),
-                            &[V::QUERIED_ATTRIBUTES],
-                            &[],
-                        );
-                    }
+                {
+                    draw_mesh(
+                        encoder,
+                        effect,
+                        false,
+                        mesh_storage.get(mesh),
+                        None,
+                        &tex_storage,
+                        Some(material),
+                        &material_defaults,
+                        camera,
+                        Some(global),
+                        &[V::QUERIED_ATTRIBUTES],
+                        &[],
+                    );
+                }
 
                 for entity in &visibility.visible_ordered {
                     if let Some(mesh) = mesh.get(*entity) {
