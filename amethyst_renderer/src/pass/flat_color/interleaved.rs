@@ -89,7 +89,7 @@ impl<V> Pass for DrawFlatColor<V>
 where
     V: Query<(Position, Color)>,
 {
-    fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect> {
         use std::mem;
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);
         builder
