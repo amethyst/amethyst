@@ -1,8 +1,11 @@
 //! Defines binding structure used for saving and loading input settings.
 
-use std::error::Error;
-use std::fmt::{Debug, Display, Formatter, Result as FmtResult};
-use std::{borrow::Borrow, hash::Hash};
+use std::{
+    borrow::Borrow,
+    error::Error,
+    fmt::{Debug, Display, Formatter, Result as FmtResult},
+    hash::Hash,
+};
 
 use fnv::FnvHashMap as HashMap;
 use smallvec::SmallVec;
@@ -53,7 +56,7 @@ where
 #[derive(Debug, Clone, PartialEq)]
 pub enum BindingError<AX, AC> {
     /// Combo provided for action binding has two (or more) of the same button.
-    ComboContainsDuplicates,
+    ComboContainsDuplicates(AC),
     /// Combo provided was already bound to contained action.
     ComboAlreadyBound(AC),
     /// A combo of length 1 was provided, and it overlaps with an axis binding.
@@ -67,29 +70,36 @@ pub enum BindingError<AX, AC> {
     ControllerAxisAlreadyBound(AX),
 }
 
-impl<AX, AC> Display for BindingError<AX, AC> {
+impl<AX, AC> Display for BindingError<AX, AC>
+where
+    AX: Display,
+    AC: Display,
+{
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match *self {
-            BindingError::ComboContainsDuplicates => write!(
+            BindingError::ComboContainsDuplicates(ref id) => write!(
                 f,
-                "Combo provided contained two (or more) of the same button"
+                "Combo provided contained two (or more) of the same button: {}",
+                id
             ),
-            BindingError::ComboAlreadyBound(ref _action) => {
-                write!(f, "Combo provided was already bound to another action")
+            BindingError::ComboAlreadyBound(ref action) => {
+                write!(f, "Combo provided was already bound to action {}", action)
             }
-            BindingError::ButtonBoundToAxis(ref _id, ref _axis) => {
-                write!(f, "Button provided was a button in use by an axis")
+            BindingError::ButtonBoundToAxis(ref id, ref _axis) => {
+                write!(f, "Button provided was a button in use by axis {}", id)
             }
-            BindingError::AxisButtonAlreadyBoundToAxis(ref _id, ref _axis) => write!(
+            BindingError::AxisButtonAlreadyBoundToAxis(ref id, ref _axis) => write!(
                 f,
-                "Axis provided contained a button that's already in use by another axis"
+                "Axis provided contained a button that's already in use by axis {}",
+                id
             ),
-            BindingError::AxisButtonAlreadyBoundToAction(ref _id, ref _action) => write!(
+            BindingError::AxisButtonAlreadyBoundToAction(ref id, ref _action) => write!(
                 f,
-                "Axis provided contained a button that's already in use by a single button action"
+                "Axis provided contained a button that's already in use by single button action {}",
+                id
             ),
-            BindingError::ControllerAxisAlreadyBound(ref _id) => {
-                write!(f, "Controller axis provided is already in use")
+            BindingError::ControllerAxisAlreadyBound(ref id) => {
+                write!(f, "Controller axis provided is already in use by {}", id)
             }
         }
     }
@@ -97,18 +107,18 @@ impl<AX, AC> Display for BindingError<AX, AC> {
 
 impl<AX, AC> Error for BindingError<AX, AC>
 where
-    AX: Debug,
-    AC: Debug,
+    AX: Debug + Display,
+    AC: Debug + Display,
 {
 }
 
 /// An enum of possible errors that can occur when removing an action binding.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ActionRemovedError {
-    /// The action has bindings. but this isn't one of them.
+    /// The action has bindings, but this isn't one of them.
     ActionExistsButBindingDoesnt,
     /// The action provided doesn't exist.
-    ActionMissing,
+    ActionNotFound,
     /// Combo provided for action binding has two (or more) of the same button.
     BindingContainsDuplicates,
 }
@@ -119,7 +129,7 @@ impl Display for ActionRemovedError {
             ActionRemovedError::ActionExistsButBindingDoesnt => {
                 write!(f, "Action found, but binding isn't present")
             }
-            ActionRemovedError::ActionMissing => write!(f, "Action not found"),
+            ActionRemovedError::ActionNotFound => write!(f, "Action not found"),
             ActionRemovedError::BindingContainsDuplicates => {
                 write!(f, "Binding removal requested contains duplicate buttons")
             }
@@ -131,8 +141,8 @@ impl Error for ActionRemovedError {}
 
 impl<AX, AC> Bindings<AX, AC>
 where
-    AX: Hash + Eq + Clone,
-    AC: Hash + Eq + Clone,
+    AX: Hash + Eq + Clone + Display,
+    AC: Hash + Eq + Clone + Display,
 {
     /// Creates a new empty Bindings structure
     pub fn new() -> Self {
@@ -142,8 +152,8 @@ where
 
 impl<AX, AC> Bindings<AX, AC>
 where
-    AX: Hash + Eq + Clone,
-    AC: Hash + Eq + Clone,
+    AX: Hash + Eq + Clone + Display,
+    AC: Hash + Eq + Clone + Display,
 {
     /// Assign an axis to an ID value
     ///
@@ -189,7 +199,7 @@ where
         binding: B,
     ) -> Result<(), BindingError<AX, AC>> {
         let bind: SmallVec<[Button; 2]> = binding.into_iter().collect();
-        self.check_action_invariants(bind.as_slice())?;
+        self.check_action_invariants(&id, bind.as_slice())?;
         let mut make_new = false;
         match self.actions.get_mut(&id) {
             Some(action_bindings) => {
@@ -238,7 +248,7 @@ where
             }
             kill_it = action_bindings.is_empty();
         } else {
-            return Err(ActionRemovedError::ActionMissing);
+            return Err(ActionRemovedError::ActionNotFound);
         }
         if kill_it {
             self.actions.remove(id);
@@ -293,12 +303,12 @@ where
         Ok(())
     }
 
-    fn check_action_invariants(&self, bind: &[Button]) -> Result<(), BindingError<AX, AC>> {
+    fn check_action_invariants(&self, id: &AC, bind: &[Button]) -> Result<(), BindingError<AX, AC>> {
         // Guarantee each button is unique.
         for i in 0..bind.len() {
             for j in 0..bind.len() {
                 if i != j && bind[i] == bind[j] {
-                    return Err(BindingError::ComboContainsDuplicates);
+                    return Err(BindingError::ComboContainsDuplicates(id.clone()));
                 }
             }
         }
@@ -485,19 +495,7 @@ mod tests {
             bindings
                 .remove_action_binding("nonsense_action", &[Button::Mouse(MouseButton::Left),],)
                 .unwrap_err(),
-            ActionRemovedError::ActionMissing
-        );
-        assert_eq!(
-            bindings
-                .remove_action_binding(
-                    "test_action",
-                    &[
-                        Button::Mouse(MouseButton::Right),
-                        Button::Mouse(MouseButton::Right),
-                    ],
-                )
-                .unwrap_err(),
-            ActionRemovedError::BindingContainsDuplicates
+            ActionRemovedError::ActionNotFound
         );
         let actions = bindings.actions().collect::<Vec<_>>();
         assert_eq!(actions, vec![&String::from("test_action")]);

@@ -71,8 +71,8 @@ where
         file: P,
     ) -> StdResult<Self, BindingsFileError<AX, AC>>
     where
-        AX: DeserializeOwned + Serialize,
-        AC: DeserializeOwned + Serialize,
+        AX: DeserializeOwned + Serialize + Display,
+        AC: DeserializeOwned + Serialize + Display,
     {
         let mut bindings = Bindings::load_no_fallback(file)?;
         bindings.check_invariants()?;
@@ -133,7 +133,11 @@ pub enum BindingsFileError<AX, AC> {
     BindingError(BindingError<AX, AC>),
 }
 
-impl<AX, AC> Display for BindingsFileError<AX, AC> {
+impl<AX, AC> Display for BindingsFileError<AX, AC>
+where
+    AX: Display,
+    AC: Display,
+{
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self {
             BindingsFileError::ConfigError(ref err) => Display::fmt(err, f),
@@ -144,8 +148,8 @@ impl<AX, AC> Display for BindingsFileError<AX, AC> {
 
 impl<AX, AC> Error for BindingsFileError<AX, AC>
 where
-    AX: Debug,
-    AC: Debug,
+    AX: Debug + Display,
+    AC: Debug + Display,
 {
 }
 

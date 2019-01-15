@@ -85,7 +85,11 @@ impl From<io::Error> for Error {
     }
 }
 
-impl<AX, AC> From<BindingsFileError<AX, AC>> for Error {
+impl<AX, AC> From<BindingsFileError<AX, AC>> for Error
+where
+    AX: Display,
+    AC: Display,
+{
     fn from(e: BindingsFileError<AX, AC>) -> Self {
         match e {
             BindingsFileError::ConfigError(err) => Error::Config(err),
