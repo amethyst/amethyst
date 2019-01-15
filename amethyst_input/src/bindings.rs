@@ -227,8 +227,8 @@ where
         AC: Borrow<T>,
     {
         for i in 0..binding.len() {
-            for j in 0..binding.len() {
-                if i != j && binding[i] == binding[j] {
+            for j in (i + 1)..binding.len() {
+                if binding[i] == binding[j] {
                     return Err(ActionRemovedError::BindingContainsDuplicates);
                 }
             }
@@ -303,11 +303,15 @@ where
         Ok(())
     }
 
-    fn check_action_invariants(&self, id: &AC, bind: &[Button]) -> Result<(), BindingError<AX, AC>> {
+    fn check_action_invariants(
+        &self,
+        id: &AC,
+        bind: &[Button],
+    ) -> Result<(), BindingError<AX, AC>> {
         // Guarantee each button is unique.
         for i in 0..bind.len() {
-            for j in 0..bind.len() {
-                if i != j && bind[i] == bind[j] {
+            for j in (i + 1)..bind.len() {
+                if bind[i] == bind[j] {
                     return Err(BindingError::ComboContainsDuplicates(id.clone()));
                 }
             }
@@ -535,7 +539,7 @@ mod tests {
                     .cloned(),
                 )
                 .unwrap_err(),
-            BindingError::ComboContainsDuplicates
+            BindingError::ComboContainsDuplicates(String::from("test_action"))
         );
         bindings
             .insert_action_binding(
