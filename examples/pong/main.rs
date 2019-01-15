@@ -8,7 +8,7 @@ mod pong;
 mod systems;
 
 use amethyst::{
-    audio::AudioBundle,
+    audio::{AudioBundle, DjSystem},
     core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle},
     ecs::prelude::{Component, DenseVecStorage},
     input::InputBundle,
@@ -72,7 +72,12 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(PongBundle)?
         .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
-        .with_bundle(AudioBundle::new().with_dj_system(|music: &mut Music| music.music.next()))?
+        .with_bundle(AudioBundle)?
+        .with(
+            DjSystem::new(|music: &mut Music| music.music.next()),
+            "dj_system",
+            &[],
+        )
         .with_bundle(UiBundle::<String, String>::new())?;
     let mut game = Application::build(assets_dir, Pong)?
         .with_frame_limit(
