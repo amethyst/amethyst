@@ -25,8 +25,8 @@ use super::{
 #[derivative(Default(bound = ""))]
 pub struct InputHandler<AX = String, AC = String>
 where
-    AX: Hash + Eq,
-    AC: Hash + Eq,
+    AX: Hash + Eq + Clone,
+    AC: Hash + Eq + Clone,
 {
     /// Maps inputs to actions and axes.
     pub bindings: Bindings<AX, AC>,
@@ -45,8 +45,8 @@ where
 
 impl<AX, AC> InputHandler<AX, AC>
 where
-    AX: Hash + Eq,
-    AC: Hash + Eq,
+    AX: Hash + Eq + Clone,
+    AC: Hash + Eq + Clone,
 {
     /// Creates a new input handler.
     pub fn new() -> Self {
@@ -650,10 +650,13 @@ mod tests {
         let mut handler = InputHandler::<String, String>::new();
         let mut events = EventChannel::<InputEvent<String>>::new();
         let mut reader = events.register_reader();
-        handler.bindings.insert_action_binding(
-            String::from("test_key_action"),
-            [Button::Key(VirtualKeyCode::Up)].iter().cloned(),
-        );
+        handler
+            .bindings
+            .insert_action_binding(
+                String::from("test_key_action"),
+                [Button::Key(VirtualKeyCode::Up)].iter().cloned(),
+            )
+            .unwrap();
         assert_eq!(handler.action_is_down("test_key_action"), Some(false));
         handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events, HIDPI);
         assert_eq!(handler.action_is_down("test_key_action"), Some(true));
@@ -696,10 +699,13 @@ mod tests {
         let mut handler = InputHandler::<String, String>::new();
         let mut events = EventChannel::<InputEvent<String>>::new();
         let mut reader = events.register_reader();
-        handler.bindings.insert_action_binding(
-            String::from("test_mouse_action"),
-            [Button::Mouse(MouseButton::Left)].iter().cloned(),
-        );
+        handler
+            .bindings
+            .insert_action_binding(
+                String::from("test_mouse_action"),
+                [Button::Mouse(MouseButton::Left)].iter().cloned(),
+            )
+            .unwrap();
         assert_eq!(handler.action_is_down("test_mouse_action"), Some(false));
         handler.send_event(&mouse_press(MouseButton::Left), &mut events, HIDPI);
         assert_eq!(handler.action_is_down("test_mouse_action"), Some(true));
@@ -736,15 +742,18 @@ mod tests {
         let mut handler = InputHandler::<String, String>::new();
         let mut events = EventChannel::<InputEvent<String>>::new();
         let mut reader = events.register_reader();
-        handler.bindings.insert_action_binding(
-            String::from("test_combo_action"),
-            [
-                Button::Key(VirtualKeyCode::Up),
-                Button::Key(VirtualKeyCode::Down),
-            ]
-            .iter()
-            .cloned(),
-        );
+        handler
+            .bindings
+            .insert_action_binding(
+                String::from("test_combo_action"),
+                [
+                    Button::Key(VirtualKeyCode::Up),
+                    Button::Key(VirtualKeyCode::Down),
+                ]
+                .iter()
+                .cloned(),
+            )
+            .unwrap();
         assert_eq!(handler.action_is_down("test_combo_action"), Some(false));
         handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events, HIDPI);
         assert_eq!(handler.action_is_down("test_combo_action"), Some(false));
@@ -818,13 +827,16 @@ mod tests {
 
         let mut handler = InputHandler::<String, String>::new();
         let mut events = EventChannel::<InputEvent<String>>::new();
-        handler.bindings.insert_axis(
-            String::from("test_axis"),
-            Axis::Emulated {
-                pos: Button::Key(VirtualKeyCode::Up),
-                neg: Button::Key(VirtualKeyCode::Down),
-            },
-        );
+        handler
+            .bindings
+            .insert_axis(
+                String::from("test_axis"),
+                Axis::Emulated {
+                    pos: Button::Key(VirtualKeyCode::Up),
+                    neg: Button::Key(VirtualKeyCode::Down),
+                },
+            )
+            .unwrap();
         assert_eq!(handler.axis_value("test_axis"), Some(0.0));
         handler.send_event(&key_press(104, VirtualKeyCode::Up), &mut events, HIDPI);
         assert_eq!(handler.axis_value("test_axis"), Some(1.0));

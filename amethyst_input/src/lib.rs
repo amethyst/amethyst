@@ -15,8 +15,8 @@ extern crate serde;
 pub use self::sdl_events_system::SdlEventsSystem;
 pub use self::{
     axis::Axis,
-    bindings::Bindings,
-    bundle::InputBundle,
+    bindings::{BindingError, Bindings},
+    bundle::{BindingsFileError, InputBundle},
     button::Button,
     controller::{ControllerAxis, ControllerButton, ControllerEvent},
     event::InputEvent,

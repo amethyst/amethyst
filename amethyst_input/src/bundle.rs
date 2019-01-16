@@ -1,7 +1,14 @@
 //! ECS input bundle
 
 use serde::{de::DeserializeOwned, Serialize};
-use std::{hash::Hash, path::Path, result::Result as StdResult};
+use std::{
+    convert::From,
+    error::Error,
+    fmt::{Debug, Display, Formatter, Result as FmtResult},
+    hash::Hash,
+    path::Path,
+    result::Result as StdResult,
+};
 
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::{
@@ -9,7 +16,7 @@ use amethyst_core::{
     specs::prelude::DispatcherBuilder,
 };
 
-use crate::{Bindings, InputSystem};
+use crate::{BindingError, Bindings, InputSystem};
 
 #[cfg(feature = "sdl_controller")]
 use crate::sdl_events_system::ControllerMappings;
@@ -34,8 +41,8 @@ use crate::sdl_events_system::ControllerMappings;
 #[derivative(Default(bound = ""))]
 pub struct InputBundle<AX, AC>
 where
-    AX: Hash + Eq,
-    AC: Hash + Eq,
+    AX: Hash + Eq + Clone,
+    AC: Hash + Eq + Clone,
 {
     bindings: Option<Bindings<AX, AC>>,
     #[cfg(feature = "sdl_controller")]
@@ -44,8 +51,8 @@ where
 
 impl<AX, AC> InputBundle<AX, AC>
 where
-    AX: Hash + Eq,
-    AC: Hash + Eq,
+    AX: Hash + Eq + Clone,
+    AC: Hash + Eq + Clone,
 {
     /// Create a new input bundle with no bindings
     pub fn new() -> Self {
@@ -59,12 +66,17 @@ where
     }
 
     /// Load bindings from file
-    pub fn with_bindings_from_file<P: AsRef<Path>>(self, file: P) -> StdResult<Self, ConfigError>
+    pub fn with_bindings_from_file<P: AsRef<Path>>(
+        self,
+        file: P,
+    ) -> StdResult<Self, BindingsFileError<AX, AC>>
     where
-        AX: DeserializeOwned + Serialize,
-        AC: DeserializeOwned + Serialize,
+        AX: DeserializeOwned + Serialize + Display,
+        AC: DeserializeOwned + Serialize + Display,
     {
-        Ok(self.with_bindings(Bindings::load_no_fallback(file)?))
+        let mut bindings = Bindings::load_no_fallback(file)?;
+        bindings.check_invariants()?;
+        Ok(self.with_bindings(bindings))
     }
 
     /// Load SDL controller mappings from file
@@ -109,5 +121,46 @@ where
             &[],
         );
         Ok(())
+    }
+}
+
+/// An error occurred while loading the bindings file.
+#[derive(Debug)]
+pub enum BindingsFileError<AX, AC> {
+    /// Problem in amethyst_config
+    ConfigError(ConfigError),
+    /// Problem with the bindings themselves.
+    BindingError(BindingError<AX, AC>),
+}
+
+impl<AX, AC> Display for BindingsFileError<AX, AC>
+where
+    AX: Display,
+    AC: Display,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        match self {
+            BindingsFileError::ConfigError(ref err) => Display::fmt(err, f),
+            BindingsFileError::BindingError(ref err) => Display::fmt(err, f),
+        }
+    }
+}
+
+impl<AX, AC> Error for BindingsFileError<AX, AC>
+where
+    AX: Debug + Display,
+    AC: Debug + Display,
+{
+}
+
+impl<AX, AC> From<BindingError<AX, AC>> for BindingsFileError<AX, AC> {
+    fn from(error: BindingError<AX, AC>) -> Self {
+        BindingsFileError::BindingError(error)
+    }
+}
+
+impl<AX, AC> From<ConfigError> for BindingsFileError<AX, AC> {
+    fn from(error: ConfigError) -> Self {
+        BindingsFileError::ConfigError(error)
     }
 }

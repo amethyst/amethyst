@@ -18,8 +18,8 @@ use crate::{Bindings, InputEvent, InputHandler};
 /// and push the results in `EventHandler<InputEvent>`.
 pub struct InputSystem<AX, AC>
 where
-    AX: Hash + Eq,
-    AC: Hash + Eq,
+    AX: Hash + Eq + Clone,
+    AC: Hash + Eq + Clone,
 {
     reader: Option<ReaderId<Event>>,
     bindings: Option<Bindings<AX, AC>>,
@@ -27,8 +27,8 @@ where
 
 impl<AX, AC> InputSystem<AX, AC>
 where
-    AX: Hash + Eq,
-    AC: Hash + Eq,
+    AX: Hash + Eq + Clone,
+    AC: Hash + Eq + Clone,
 {
     /// Create a new input system. Needs a reader id for `EventHandler<winit::Event>`.
     pub fn new(bindings: Option<Bindings<AX, AC>>) -> Self {
