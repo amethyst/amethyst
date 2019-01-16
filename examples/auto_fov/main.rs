@@ -5,24 +5,28 @@ extern crate log;
 #[macro_use]
 extern crate serde;
 
-use amethyst::assets::{
-    Completion, Handle, Prefab, PrefabData, PrefabError, PrefabLoader, PrefabLoaderSystem,
-    ProgressCounter, RonFormat,
+use amethyst::{
+    assets::{
+        Completion, Handle, Prefab, PrefabData, PrefabError, PrefabLoader, PrefabLoaderSystem,
+        ProgressCounter, RonFormat,
+    },
+    core::{Transform, TransformBundle},
+    ecs::{Entity, ReadExpect, ReadStorage, System, WriteStorage},
+    input::{is_close_requested, is_key_down, InputBundle},
+    prelude::{
+        Application, Builder, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData,
+        StateEvent, Trans,
+    },
+    renderer::{
+        Camera, CameraPrefab, DrawShaded, GraphicsPrefab, LightPrefab, PosNormTex,
+        ScreenDimensions, VirtualKeyCode,
+    },
+    ui::{UiBundle, UiCreator, UiFinder, UiText},
+    utils::{
+        auto_fov::{AutoFov, AutoFovSystem},
+        tag::{Tag, TagFinder},
+    },
 };
-use amethyst::core::{Transform, TransformBundle};
-use amethyst::ecs::{Entity, ReadExpect, ReadStorage, System, WriteStorage};
-use amethyst::input::{is_close_requested, is_key_down, InputBundle};
-use amethyst::prelude::{
-    Application, Builder, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData,
-    StateEvent, Trans,
-};
-use amethyst::renderer::{
-    Camera, CameraPrefab, DrawShaded, GraphicsPrefab, LightPrefab, PosNormTex, ScreenDimensions,
-    VirtualKeyCode,
-};
-use amethyst::ui::{UiBundle, UiCreator, UiFinder, UiText};
-use amethyst::utils::auto_fov::{AutoFov, AutoFovSystem};
-use amethyst::utils::tag::{Tag, TagFinder};
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());

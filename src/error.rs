@@ -2,8 +2,7 @@
 
 use std::{
     error::Error as StdError,
-    fmt::Result as FmtResult,
-    fmt::{Display, Formatter},
+    fmt::{Display, Formatter, Result as FmtResult},
     io,
     result::Result as StdResult,
 };

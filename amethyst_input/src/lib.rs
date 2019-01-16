@@ -29,8 +29,7 @@ pub use self::{
 use std::iter::Iterator;
 
 use smallvec;
-use winit;
-use winit::VirtualKeyCode;
+use winit::{self, VirtualKeyCode};
 
 use amethyst_core;
 

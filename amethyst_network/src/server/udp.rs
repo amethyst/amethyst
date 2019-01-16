@@ -7,12 +7,13 @@ use crate::{
         ServerSocketEvent,
     },
 };
-use laminar::net::UdpSocket;
-use laminar::NetworkConfig;
+use laminar::{net::UdpSocket, NetworkConfig};
 use log::{error, warn};
-use std::net::SocketAddr;
-use std::sync::mpsc::{self, Receiver, Sender};
-use std::thread;
+use std::{
+    net::SocketAddr,
+    sync::mpsc::{self, Receiver, Sender},
+    thread,
+};
 
 /// An UDP receiver, wrapper for starting the UDP-receiving thread.
 pub struct UdpReceiver {

@@ -5,11 +5,13 @@ mod send_handler;
 mod server_socket_event;
 mod udp;
 
-pub use self::config::ServerConfig;
-pub use self::host::Host;
-pub use self::receive_handler::ReceiveHandler;
-pub use self::send_handler::SendHandler;
-pub use self::udp::{UdpReceiver, UdpSender};
+pub use self::{
+    config::ServerConfig,
+    host::Host,
+    receive_handler::ReceiveHandler,
+    send_handler::SendHandler,
+    udp::{UdpReceiver, UdpSender},
+};
 
 pub use self::server_socket_event::{ClientEvent, ServerSocketEvent};
 use std::sync::mpsc::{Receiver, Sender};

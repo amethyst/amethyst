@@ -12,11 +12,7 @@
 #![warn(missing_docs)]
 
 pub use backtrace::Backtrace;
-use std::borrow::Cow;
-use std::error;
-use std::fmt;
-use std::result;
-use std::{env, ffi, sync::atomic};
+use std::{borrow::Cow, env, error, ffi, fmt, result, sync::atomic};
 
 const RUST_BACKTRACE: &str = "RUST_BACKTRACE";
 

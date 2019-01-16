@@ -5,11 +5,8 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-use fnv::FnvHashMap as HashMap;
-use fnv::FnvHashSet as HashSet;
-use gfx::preset::blend;
-use gfx::pso::buffer::ElemStride;
-use gfx::state::ColorMask;
+use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
+use gfx::{preset::blend, pso::buffer::ElemStride, state::ColorMask};
 use gfx_glyph::{
     BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher, Layout, Point, Scale,
     SectionText, VariedSection,
