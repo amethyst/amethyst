@@ -4,10 +4,10 @@ use amethyst;
 
 use amethyst::{
     controls::{FlyControlBundle, FlyControlTag},
-    core::Time,
     core::{
         nalgebra::{Point3, Vector3},
         transform::{Transform, TransformBundle},
+        Time,
     },
     ecs::{Read, System, Write},
     input::InputBundle,

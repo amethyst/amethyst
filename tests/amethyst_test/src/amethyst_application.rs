@@ -1,8 +1,4 @@
-use std::hash::Hash;
-use std::marker::PhantomData;
-use std::path::PathBuf;
-use std::sync::Mutex;
-use std::thread;
+use std::{hash::Hash, marker::PhantomData, path::PathBuf, sync::Mutex, thread};
 
 use amethyst::{
     self,

@@ -10,9 +10,11 @@ use amethyst_core::{
 use amethyst_renderer::{Texture, TextureHandle};
 
 use crate::{
-    font::default::get_default_font, Anchor, FontAsset, FontHandle, Interactable, Selectable,
-    Stretch, UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionType,
-    UiButtonActionType::*, UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform,
+    font::default::get_default_font,
+    Anchor, FontAsset, FontHandle, Interactable, Selectable, Stretch, UiButton, UiButtonAction,
+    UiButtonActionRetrigger,
+    UiButtonActionType::{self, *},
+    UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform,
 };
 
 use std::marker::PhantomData;

@@ -7,8 +7,7 @@ mod test {
         specs::{Builder, Join, World, WriteStorage},
     };
 
-    use crate::server::ServerConfig;
-    use crate::*;
+    use crate::{server::ServerConfig, *};
 
     #[test]
     fn single_packet_early() {

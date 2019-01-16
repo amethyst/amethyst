@@ -3,7 +3,7 @@
 use amethyst_core::{
     specs::prelude::{DispatcherBuilder, Read, System, Write},
     timing::{duration_to_nanos, Time},
-    {Result, SystemBundle},
+    Result, SystemBundle,
 };
 
 use crate::circular_buffer::CircularBuffer;

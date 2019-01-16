@@ -403,8 +403,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::button::*;
-    use crate::controller::ControllerAxis;
+    use crate::{button::*, controller::ControllerAxis};
     use winit::{MouseButton, VirtualKeyCode};
 
     #[test]

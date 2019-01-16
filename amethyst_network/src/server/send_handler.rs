@@ -1,10 +1,8 @@
 //! The send handler is used to communicate between a sending thread and it's owner.
 //! The `SendHandler` communicates via `mpsc::channel`s.
 
-use crate::error::Result;
-use crate::server::ServerSocketEvent;
-use std::sync::mpsc::SyncSender;
-use std::thread::JoinHandle;
+use crate::{error::Result, server::ServerSocketEvent};
+use std::{sync::mpsc::SyncSender, thread::JoinHandle};
 
 /// Handler to access the internals of a sending socket.
 pub struct SendHandler {

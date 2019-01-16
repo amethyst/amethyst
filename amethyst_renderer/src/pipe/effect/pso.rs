@@ -2,11 +2,9 @@ use gfx::{
     handle,
     pso::{
         self,
-        {
-            buffer::{RawConstantBuffer, RawGlobal, RawVertexBuffer},
-            resource::{RawShaderResource, Sampler},
-            target, DataBind, DataLink, Descriptor, InitError, PipelineData, PipelineInit,
-        },
+        buffer::{RawConstantBuffer, RawGlobal, RawVertexBuffer},
+        resource::{RawShaderResource, Sampler},
+        target, DataBind, DataLink, Descriptor, InitError, PipelineData, PipelineInit,
     },
     shade::core::{BaseType, ContainerType, OutputVar, ProgramInfo},
 };

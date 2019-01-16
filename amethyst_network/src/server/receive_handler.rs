@@ -2,8 +2,10 @@
 //! The `ReceiveHandler` communicates via `mpsc::channel`s.
 
 use crate::server::ServerSocketEvent;
-use std::sync::mpsc::{Iter, Receiver};
-use std::thread::JoinHandle;
+use std::{
+    sync::mpsc::{Iter, Receiver},
+    thread::JoinHandle,
+};
 
 /// Handler to access the internals of a receiving socket.
 pub struct ReceiveHandler {

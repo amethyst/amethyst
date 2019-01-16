@@ -3,10 +3,12 @@ mod builder;
 mod retrigger;
 mod system;
 
-pub use self::actions::{UiButtonAction, UiButtonActionType};
-pub use self::builder::{UiButtonBuilder, UiButtonBuilderResources};
-pub use self::retrigger::{UiButtonActionRetrigger, UiButtonActionRetriggerSystem};
-pub use self::system::UiButtonSystem;
+pub use self::{
+    actions::{UiButtonAction, UiButtonActionType},
+    builder::{UiButtonBuilder, UiButtonBuilderResources},
+    retrigger::{UiButtonActionRetrigger, UiButtonActionRetriggerSystem},
+    system::UiButtonSystem,
+};
 ///! A clickable button.
 use amethyst_core::specs::prelude::{Component, DenseVecStorage};
 

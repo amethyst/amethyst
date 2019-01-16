@@ -1,5 +1,4 @@
-use laminar::error::NetworkError;
-use laminar::{Event, Packet};
+use laminar::{error::NetworkError, Event, Packet};
 
 /// Net event which occurred on the network.
 pub enum ServerSocketEvent {
