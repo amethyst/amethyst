@@ -5,10 +5,8 @@ pub use self::{audio_emitter::AudioEmitter, audio_listener::AudioListener};
 use amethyst_assets::{PrefabData, PrefabError};
 use amethyst_core::{
     nalgebra::Point3,
-    specs::prelude::{Entity, Read, WriteStorage},
+    specs::prelude::{Entity, WriteStorage},
 };
-
-use crate::output::Output;
 
 mod audio_emitter;
 mod audio_listener;
@@ -27,7 +25,6 @@ impl<'a> PrefabData<'a> for AudioPrefab {
     type SystemData = (
         WriteStorage<'a, AudioEmitter>,
         WriteStorage<'a, AudioListener>,
-        Option<Read<'a, Output>>,
     );
     type Result = ();
 
@@ -40,11 +37,10 @@ impl<'a> PrefabData<'a> for AudioPrefab {
         if self.emitter {
             system_data.0.insert(entity, AudioEmitter::default())?;
         }
-        if let (Some((left_ear, right_ear)), Some(output)) = (self.listener, &system_data.2) {
+        if let Some((left_ear, right_ear)) = self.listener {
             system_data.1.insert(
                 entity,
                 AudioListener {
-                    output: (*output).clone(),
                     left_ear,
                     right_ear,
                 },

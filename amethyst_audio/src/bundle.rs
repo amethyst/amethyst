@@ -6,11 +6,14 @@ use amethyst_core::{
     specs::prelude::DispatcherBuilder,
 };
 
-use crate::source::*;
+use crate::{
+    source::*,
+    systems::AudioSystem,
+};
 
 /// Audio bundle
 ///
-/// This will only add the asset processor for `Source`.
+/// This will only add the `AudioSystem` and the asset processor for `Source`.
 ///
 /// `DjSystem` must be added separately if you want to use our background music system.
 ///
@@ -18,6 +21,7 @@ pub struct AudioBundle;
 
 impl<'a, 'b> SystemBundle<'a, 'b> for AudioBundle {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(AudioSystem::new(), "audio_system", &[]);
         builder.add(Processor::<Source>::new(), "source_processor", &[]);
         Ok(())
     }

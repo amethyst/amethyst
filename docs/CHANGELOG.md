@@ -27,6 +27,7 @@ it is attached to. ([#1282])
 * Remove unnecessary texture coordinates offset in `Sprite::from_pixel_values` ([#1267])
 * Changed `ActiveCamera` to have the `Option` inside. ([#1280])
 * `AudioBundle::new()` no longer exists, as `AudioBundle` is now a unit type. It also no longer initializes the `DjSystem` ([#1356])
+* Add `Default` implementation for `AudioListener` that sets sensible `left_ear` and `right_ear` coordinates ([#1359])
 
 ### Removed
 
@@ -47,6 +48,7 @@ it is attached to. ([#1282])
 [#1302]: https://github.com/amethyst/amethyst/pull/1302
 [#1328]: https://github.com/amethyst/amethyst/pull/1328
 [#1356]: https://github.com/amethyst/amethyst/pull/1356
+[#1359]: https://github.com/amethyst/amethyst/pull/1359
 
 ## [0.10.0] - 2018-12
 
