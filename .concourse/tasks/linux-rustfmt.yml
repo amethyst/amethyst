@@ -5,10 +5,22 @@ inputs:
 - name: amethyst
 
 run:
-  path: sh
+  path: bash
   dir: amethyst
   args:
   - -exc
   - |
+    #! /bin/bash
     cargo fmt --version
-    cargo fmt --all -- --check
+
+    # Ignore Rustfmt warnings
+    function rustfmt_nowarn {
+      exec 3<> >(grep -vF "Warning: can't set \`merge_imports = true\`, unstable features are only available in nightly channel" 1>&2)
+
+      cargo fmt --all -- --check; result=$?
+
+      exec 3<&- # Close 3
+      return $result
+    }
+
+    rustfmt_nowarn
