@@ -10,23 +10,25 @@ use std::{
 use rodio::SpatialSink;
 
 use amethyst_core::{
-    specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, WriteStorage},
+    specs::prelude::{Entities, Entity, Join, Read, Resources, ReadStorage, System, SystemData, WriteStorage},
     transform::GlobalTransform,
 };
 
 use crate::{
+    AudioSink,
     components::{AudioEmitter, AudioListener},
     end_signal::EndSignalSource,
+    output::Output,
 };
 
 /// Syncs 3D transform data with the audio engine to provide 3D audio.
 #[derive(Default)]
-pub struct AudioSystem;
+pub struct AudioSystem(Output);
 
 impl AudioSystem {
     /// Produces a new AudioSystem that uses the given listener.
-    pub fn new() -> AudioSystem {
-        Default::default()
+    pub fn new(output: Output) -> AudioSystem {
+        AudioSystem(output)
     }
 }
 
@@ -106,5 +108,12 @@ impl<'a> System<'a> for AudioSystem {
                 }
             }
         }
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        Self::SystemData::setup(res);
+        let sink = AudioSink::new(&self.0);
+        res.insert(sink);
+        res.insert(self.0.clone());
     }
 }

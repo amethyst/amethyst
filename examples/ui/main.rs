@@ -6,7 +6,7 @@ extern crate log;
 
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, Processor, RonFormat},
-    audio::{output::init_output, Source},
+    audio::{AudioBundle, Source},
     core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle, Time},
     ecs::prelude::{Entity, System, Write},
     input::{is_close_requested, is_key_down, InputBundle},
@@ -38,7 +38,6 @@ impl SimpleState for Example {
             loader.load("prefab/sphere.ron", RonFormat, (), ())
         });
         world.create_entity().with(handle).build();
-        init_output(&mut world.res);
         world.exec(|mut creator: UiCreator<'_>| {
             creator.create("ui/example.ron", ());
         });
@@ -124,8 +123,8 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
+        .with_bundle(AudioBundle::default())?
         .with_bundle(UiBundle::<String, String>::new())?
-        .with(Processor::<Source>::new(), "source_processor", &[])
         .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
         .with_bundle(FPSCounterBundle::default())?
         .with_bundle(InputBundle::<String, String>::new())?

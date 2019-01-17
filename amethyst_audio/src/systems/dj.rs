@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    shred::{Resource, Resources},
+    shred::Resource,
     specs::{
         common::Errors,
         prelude::{Read, System, WriteExpect},
@@ -10,7 +10,6 @@ use amethyst_core::{
 };
 
 use crate::{
-    output::init_output,
     sink::AudioSink,
     source::{Source, SourceHandle},
 };
@@ -56,11 +55,5 @@ where
                 }
             }
         }
-    }
-
-    fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
-        Self::SystemData::setup(res);
-        init_output(res);
     }
 }
