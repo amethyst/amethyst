@@ -21,7 +21,7 @@ check formatting:
     - |
       # Ignore Rustfmt warnings
       function rustfmt_nowarn {
-        exec 3<> >(grep -vF "Warning: can't set \`merge_imports = true\`, unstable features are only available in nightly channel")
+        exec 3<> >(grep -vF "Warning: can't set \`merge_imports = true\`, unstable features are only available in nightly channel" 1>&2)
 
         cargo fmt --all -- --check; result=$?
 
