@@ -17,12 +17,12 @@
 //!
 //! struct GameState;
 //!
-//! impl EmptyState for GameState {
-//!     fn on_start(&mut self, _: StateData<()>) {
+//! impl SimpleState for GameState {
+//!     fn on_start(&mut self, _: StateData<'_, GameData<'_, '_>>) {
 //!         println!("Starting game!");
 //!     }
 //!
-//!     fn handle_event(&mut self, _: StateData<()>, event: StateEvent) -> EmptyTrans {
+//!     fn handle_event(&mut self, _: StateData<'_, GameData<'_, '_>>, event: StateEvent) -> SimpleTrans {
 //!         if let StateEvent::Window(event) = &event {
 //!             match event {
 //!                  Event::WindowEvent { event, .. } => match event {
@@ -39,14 +39,15 @@
 //!         }
 //!     }
 //!
-//!     fn update(&mut self, _: StateData<()>) -> EmptyTrans {
+//!     fn update(&mut self, _: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
 //!         println!("Computing some more whoop-ass...");
 //!         Trans::Quit
 //!     }
 //! }
 //!
 //! fn main() {
-//!     let mut game = Application::new("assets/", GameState, ()).expect("Fatal error");
+//!     let mut game = Application::new("assets/", GameState, GameDataBuilder::default())
+//!         .expect("Fatal error");
 //!     game.run();
 //! }
 //! ```
