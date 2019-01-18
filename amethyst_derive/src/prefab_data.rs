@@ -1,4 +1,5 @@
 use proc_macro2::TokenStream;
+use quote::quote;
 use syn::{Attribute, Data, DeriveInput, Generics, Ident, Meta, NestedMeta, Type};
 
 pub fn impl_prefab_data(ast: &DeriveInput) -> TokenStream {

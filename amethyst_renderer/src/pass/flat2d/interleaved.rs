@@ -1,8 +1,10 @@
 //! Flat forward drawing pass that mimics a blit.
 
+use derivative::Derivative;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
+use log::warn;
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{

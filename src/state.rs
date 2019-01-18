@@ -2,6 +2,8 @@
 
 use amethyst_input::is_close_requested;
 
+use derivative::Derivative;
+
 use crate::{ecs::prelude::World, GameData, StateEvent};
 
 use std::fmt::{Display, Formatter, Result as FmtResult};

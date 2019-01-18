@@ -1,10 +1,11 @@
 use std::ops::Range;
 
-use crate::GltfSceneOptions;
-use gltf;
-use mikktspace;
+use log::trace;
 
-use crate::renderer::{AnimatedComboMeshCreator, Attribute, MeshData, Separate};
+use crate::{
+    renderer::{AnimatedComboMeshCreator, Attribute, MeshData, Separate},
+    GltfSceneOptions,
+};
 
 use super::{Buffers, GltfError};
 

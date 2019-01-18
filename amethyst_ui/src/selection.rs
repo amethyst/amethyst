@@ -9,6 +9,9 @@ use amethyst_input::InputHandler;
 use amethyst_renderer::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use std::{hash::Hash, marker::PhantomData};
 
+use derive_new::new;
+use serde::{Deserialize, Serialize};
+
 use crate::{CachedSelectionOrder, UiEvent, UiEventType};
 
 // TODO: If none selected and there is a Selectable in the World, select the lower ordered one automatically?

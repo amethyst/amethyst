@@ -5,6 +5,8 @@ use amethyst_core::{
     specs::prelude::{Component, Read, ReadStorage, Resources, System, SystemData, Write},
 };
 
+use derivative::Derivative;
+
 use crate::event::TargetedEvent;
 
 /// Describes anything that can receive events one by one or in batches. This

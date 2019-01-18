@@ -3,6 +3,7 @@
 use std::{collections::HashMap, error::Error as StdError, fmt, sync::Arc};
 
 use gltf::{self, Gltf};
+use log::debug;
 
 use crate::{
     animation::AnimationHierarchyPrefab,

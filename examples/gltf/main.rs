@@ -1,11 +1,5 @@
 //! Displays a 2D GLTF scene
 
-#[macro_use]
-extern crate amethyst;
-
-#[macro_use]
-extern crate serde;
-
 use amethyst::{
     animation::{
         get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSet, AnimationSet,
@@ -17,6 +11,7 @@ use amethyst::{
     },
     controls::{ControlTagPrefab, FlyControlBundle},
     core::transform::{Transform, TransformBundle},
+    derive::PrefabData,
     ecs::prelude::{Entity, ReadStorage, Write, WriteStorage},
     input::{is_close_requested, is_key_down},
     prelude::*,
@@ -27,6 +22,8 @@ use amethyst::{
     },
 };
 use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem};
+
+use serde::{Deserialize, Serialize};
 
 #[derive(Default)]
 struct Example {

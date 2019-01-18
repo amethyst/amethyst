@@ -3,7 +3,7 @@
 
 pub use self::{mesh::*, mtl::*, texture::*};
 
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use amethyst_assets::{AssetPrefab, Format, PrefabData, PrefabError, ProgressCounter};
 use amethyst_core::specs::prelude::Entity;

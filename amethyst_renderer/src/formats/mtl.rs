@@ -1,6 +1,8 @@
 use amethyst_assets::{Format, Handle, PrefabData, PrefabError, ProgressCounter};
 use amethyst_core::specs::prelude::{Entity, ReadExpect, WriteStorage};
 
+use serde::{Deserialize, Serialize};
+
 use crate::{
     mtl::{Material, MaterialDefaults, TextureOffset},
     transparent::Transparent,

@@ -2,8 +2,8 @@
 
 use std::{sync::Arc, time::Instant};
 
-use amethyst_core as core;
 use amethyst_core::{
+    self as core,
     specs::prelude::{DispatcherBuilder, Read, Resources, System, Write},
     SystemBundle, Time,
 };
@@ -36,9 +36,6 @@ impl<'a, 'b> SystemBundle<'a, 'b> for HotReloadBundle {
 /// ## Examples
 ///
 /// ```
-/// # extern crate amethyst_assets;
-/// # extern crate amethyst_core;
-/// #
 /// # use amethyst_assets::HotReloadStrategy;
 /// # use amethyst_core::specs::prelude::World;
 /// #

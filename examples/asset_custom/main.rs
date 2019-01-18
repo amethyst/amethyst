@@ -9,8 +9,7 @@ use amethyst::{
 };
 use log::info;
 use ron::de::Deserializer;
-use serde::Deserialize as DeserializeTrait;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 /// Custom asset representing an energy blast.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
@@ -50,7 +49,7 @@ pub struct MyLangFormat;
 impl<A> SimpleFormat<A> for MyLangFormat
 where
     A: Asset,
-    A::Data: for<'a> DeserializeTrait<'a> + Send + Sync + 'static,
+    A::Data: for<'a> Deserialize<'a> + Send + Sync + 'static,
 {
     const NAME: &'static str = "MyLang";
 

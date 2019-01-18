@@ -1,5 +1,7 @@
 use amethyst_assets::*;
 
+use serde::{Deserialize, Serialize};
+
 use super::Source as Audio;
 
 #[derive(Clone)]

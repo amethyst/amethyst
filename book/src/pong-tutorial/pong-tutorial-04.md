@@ -23,7 +23,6 @@ keeping it simple.
 In `pong.rs`, let's create the `Ball` Component.
 
 ```rust,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::prelude::{Component, DenseVecStorage};
 pub struct Ball {
     pub velocity: [f32; 2],
@@ -41,7 +40,6 @@ Then let's add a `initialise_ball` function the same way we wrote the
 `initialise_paddles` function.
 
 ```rust,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::assets::{Loader, AssetStorage};
 # use amethyst::renderer::{Texture, PngFormat, TextureHandle, SpriteRender,
@@ -96,7 +94,6 @@ second one, whose index is `1`.
 Finally, let's make sure the code is working as intended by updating the `on_start` method:
 
 ```rust,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::renderer::{TextureHandle, SpriteSheetHandle};
 # use amethyst::ecs::World;
@@ -140,7 +137,6 @@ in the center. In the next section, we're going to make this ball actually move!
 We're now ready to implement the `MoveBallsSystem` in `systems/move_balls.rs`:
 
 ```rust,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::prelude::{Component, DenseVecStorage};
 #
 # mod pong {
@@ -204,7 +200,6 @@ If a collision is detected, the ball bounces off. This is done
 by negating the velocity of the `Ball` component on the `x` or `y` axis.
 
 ```rust,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::prelude::{Component, DenseVecStorage};
 #
 # mod pong {
@@ -314,7 +309,6 @@ Also, don't forget to add `mod move_balls` and `mod bounce` in `systems/mod.rs`
 as well as adding our new systems to the game data:
 
 ```rust,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;
 # use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline,
@@ -327,7 +321,6 @@ as well as adding our new systems to the game data:
 #       .with_pass(DrawFlat::<PosTex>::new()),
 # );
 # mod systems {
-# use amethyst;
 # pub struct PaddleSystem;
 # impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
 # type SystemData = ();

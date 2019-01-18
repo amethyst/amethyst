@@ -1,9 +1,5 @@
 //! TODO: Rewrite for new renderer.
 
-use amethyst;
-#[macro_use]
-extern crate serde_derive;
-
 mod audio;
 mod bundle;
 mod config;

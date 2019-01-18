@@ -1,4 +1,5 @@
 use ron::de::from_bytes as from_ron_bytes;
+use serde::{Deserialize, Serialize};
 
 use amethyst_assets::{
     Asset, Error as AssetsError, ErrorKind as AssetsErrorKind, Handle, ProcessingState,
@@ -266,9 +267,6 @@ struct SerializedSpriteSheet {
 ///
 /// Such a spritesheet description can be loaded using a `Loader` by passing it the handle of the corresponding loaded texture.
 /// ```rust,no_run
-/// # extern crate amethyst_assets;
-/// # extern crate amethyst_core;
-/// # extern crate amethyst_renderer;
 /// # use amethyst_assets::{Loader, AssetStorage};
 /// # use amethyst_renderer::{SpriteSheetFormat, SpriteSheet, Texture, PngFormat, TextureMetadata};
 /// #

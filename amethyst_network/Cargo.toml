@@ -22,7 +22,7 @@ nightly = [ "amethyst_core/nightly" ]
 
 [dependencies]
 amethyst_core = { path = "../amethyst_core", version = "0.5" }
-serde = { version = "1.0.16", features = ["serde_derive"] }
+serde = { version = "1", features = ["derive"] }
 shrev = "1.0"
 shred = "0.7"
 bincode = "1.0"

@@ -8,6 +8,8 @@ use amethyst_core::{
     specs::prelude::{Entity, Read, WriteStorage},
 };
 
+use serde::{Deserialize, Serialize};
+
 use crate::output::Output;
 
 mod audio_emitter;

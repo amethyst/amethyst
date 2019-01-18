@@ -6,11 +6,6 @@ use std::{
     result::Result as StdResult,
 };
 
-use gfx;
-use gfx_core;
-
-use amethyst_core;
-
 /// Renderer result type.
 pub type Result<T> = StdResult<T, Error>;
 

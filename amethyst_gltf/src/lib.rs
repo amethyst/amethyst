@@ -2,23 +2,11 @@
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-#[macro_use]
-#[cfg(feature = "profiler")]
-extern crate thread_profiler;
-
-#[macro_use]
-extern crate log;
-
-#[macro_use]
-extern crate serde;
+use serde::{Deserialize, Serialize};
 
 pub use crate::format::GltfSceneFormat;
 
 use std::{collections::HashMap, ops::Range};
-
-use base64;
-use gltf;
-use mikktspace;
 
 use amethyst_animation as animation;
 use amethyst_assets as assets;

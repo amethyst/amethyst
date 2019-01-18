@@ -2,6 +2,8 @@
 
 use amethyst_core::specs::prelude::{Component, DenseVecStorage};
 
+use serde::{Deserialize, Serialize};
+
 use crate::tex::TextureHandle;
 
 /// Material reference this part of the texture

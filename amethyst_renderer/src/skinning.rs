@@ -1,6 +1,7 @@
 use std::result::Result as StdResult;
 
 use gfx::format::{ChannelType, Format, SurfaceType};
+use serde::{Deserialize, Serialize};
 
 use amethyst_assets::{PrefabData, PrefabError};
 use amethyst_core::specs::prelude::{

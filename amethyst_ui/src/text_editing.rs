@@ -1,6 +1,7 @@
 use std::ops::Range;
 
 use clipboard::{ClipboardContext, ClipboardProvider};
+use log::error;
 use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 use unicode_segmentation::UnicodeSegmentation;
 use winit::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, WindowEvent};

@@ -3,24 +3,6 @@
 #![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-#[macro_use]
-extern crate derivative;
-
-#[macro_use]
-extern crate derive_new;
-
-#[macro_use]
-extern crate log;
-
-#[macro_use]
-extern crate serde;
-
-#[macro_use]
-extern crate shred_derive;
-
-#[macro_use]
-extern crate smallvec;
-
 pub use self::{
     bundle::UiBundle,
     button::{
@@ -48,23 +30,6 @@ pub use self::{
     text_editing::TextEditingInputSystem,
     transform::{UiFinder, UiTransform},
 };
-
-use clipboard;
-use fnv;
-use gfx;
-use gfx_glyph;
-use glsl_layout;
-use hibitset;
-use ron;
-use shred;
-use unicode_normalization;
-use unicode_segmentation;
-use winit;
-
-use amethyst_assets;
-use amethyst_audio;
-use amethyst_core;
-use amethyst_renderer;
 
 mod bundle;
 mod button;

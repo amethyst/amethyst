@@ -1,5 +1,6 @@
 //! `amethyst` rendering ecs resources
 //!
+use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 use winit::Window;
 

@@ -12,6 +12,7 @@ use amethyst_core::specs::{
     error::BoxedErr,
     prelude::{Entity, Read, ReadExpect, WriteStorage},
 };
+use amethyst_derive::PrefabData;
 
 use crate::{Animation, AnimationHierarchy, AnimationSampling, AnimationSet, RestState, Sampler};
 

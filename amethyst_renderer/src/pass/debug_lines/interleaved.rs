@@ -2,7 +2,9 @@
 
 use std::marker::PhantomData;
 
+use derivative::Derivative;
 use gfx::{pso::buffer::ElemStride, Primitive};
+use log::{debug, trace};
 
 use amethyst_core::{
     nalgebra as na,

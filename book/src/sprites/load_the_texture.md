@@ -5,7 +5,6 @@ The first part of loading sprites into Amethyst is to read the image into memory
 The following snippet shows how to load a PNG image:
 
 ```rust,no_run,noplaypen
-# extern crate amethyst;
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::prelude::*;
 use amethyst::renderer::{PngFormat, Texture, TextureMetadata, TextureHandle};

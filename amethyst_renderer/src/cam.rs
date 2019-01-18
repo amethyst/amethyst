@@ -6,6 +6,8 @@ use amethyst_core::{
     specs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
 };
 
+use serde::{Deserialize, Serialize};
+
 /// The projection mode of a `Camera`.
 ///
 /// TODO: Remove and integrate with `Camera`.
@@ -149,7 +151,8 @@ mod serde_ortho {
 
     use serde::{
         de::{self, Deserializer, MapAccess, SeqAccess, Visitor},
-        ser::{Serialize, Serializer},
+        ser::Serializer,
+        Deserialize, Serialize,
     };
 
     use amethyst_core::nalgebra::Orthographic3;
@@ -304,7 +307,8 @@ mod serde_persp {
 
     use serde::{
         de::{self, Deserializer, MapAccess, SeqAccess, Visitor},
-        ser::{Serialize, Serializer},
+        ser::Serializer,
+        Deserialize, Serialize,
     };
 
     use amethyst_core::nalgebra::Perspective3;

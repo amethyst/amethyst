@@ -254,11 +254,9 @@ struct Backend(pub Device, pub Factory, pub Target, pub Window);
 /// Creates the Direct3D 11 backend.
 #[cfg(all(feature = "d3d11", target_os = "windows"))]
 fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> Result<Backend> {
-    use gfx_window_dxgi as win;
-
     // FIXME: vsync + multisampling from config
-    let (win, dev, mut fac, color) =
-        win::init::<ColorFormat>(wb, el).expect("Unable to initialize window (d3d11 backend)");
+    let (win, dev, mut fac, color) = gfx_window_dxgi::init::<ColorFormat>(wb, el)
+        .expect("Unable to initialize window (d3d11 backend)");
     let dev = gfx_device_dx11::Deferred::from(dev);
 
     let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
@@ -281,11 +279,9 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> R
 
 #[cfg(all(feature = "metal", target_os = "macos"))]
 fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> Result<Backend> {
-    use gfx_window_metal as win;
-
     // FIXME: vsync + multisampling from config
-    let (win, dev, mut fac, color) =
-        win::init::<ColorFormat>(wb, el).expect("Unable to initialize window (metal backend)");
+    let (win, dev, mut fac, color) = gfx_window_metal::init::<ColorFormat>(wb, el)
+        .expect("Unable to initialize window (metal backend)");
 
     let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
     let (w, h) = (size.0 as u16, size.1 as u16);
@@ -308,8 +304,6 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> R
 /// Creates the OpenGL backend.
 #[cfg(feature = "opengl")]
 fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> Result<Backend> {
-    use gfx_window_glutin as win;
-    use glutin;
     #[cfg(target_os = "macos")]
     use glutin::{GlProfile, GlRequest};
 
@@ -321,7 +315,8 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> R
         .with_gl_profile(GlProfile::Core)
         .with_gl(GlRequest::Latest);
 
-    let (win, dev, fac, color, depth) = win::init::<ColorFormat, DepthFormat>(wb, ctx, el);
+    let (win, dev, fac, color, depth) =
+        gfx_window_glutin::init::<ColorFormat, DepthFormat>(wb, ctx, el);
     let size = win.get_inner_size().ok_or(Error::WindowDestroyed)?.into();
     let main_target = Target::new(
         ColorBuffer {

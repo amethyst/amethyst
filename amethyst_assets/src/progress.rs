@@ -3,6 +3,7 @@ use std::sync::{
     Arc,
 };
 
+use log::error;
 use parking_lot::Mutex;
 
 use crate::Error;

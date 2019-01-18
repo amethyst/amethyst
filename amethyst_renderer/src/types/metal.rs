@@ -1,8 +1,5 @@
 //! OpenGL backend types.
 
-use gfx_device_metal;
-use gfx_window_metal;
-
 /// Command buffer type.
 pub type CommandBuffer = gfx_device_metal::CommandBuffer;
 

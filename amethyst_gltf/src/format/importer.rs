@@ -1,6 +1,5 @@
 use std::{self, error::Error as StdError, fmt, path::Path, sync::Arc};
 
-use base64;
 use gltf::{
     self,
     json::{self, validation},

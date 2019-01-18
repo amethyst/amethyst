@@ -5,9 +5,6 @@ This guide explains how to define a new asset type to be used in an Amethyst app
 1. Define the type and handle for your asset.
 
     ```rust,no_run,noplaypen
-    # extern crate amethyst;
-    # extern crate serde_derive;
-    #
     use amethyst::{
         assets::Handle,
         ecs::VecStorage,
@@ -40,8 +37,6 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     * An enum with different variants &ndash; each for a different data layout:
 
         ```rust,no_run,noplaypen
-        # extern crate serde_derive;
-        #
         # use serde_derive::{Deserialize, Serialize};
 
         /// Separate serializable type to support different versions
@@ -58,9 +53,6 @@ This guide explains how to define a new asset type to be used in an Amethyst app
 3. Implement the [`Asset`][doc_asset] trait on the asset type.
 
     ```rust,no_run,noplaypen
-    # extern crate amethyst;
-    # extern crate serde_derive;
-    #
     # use amethyst::{
     #     assets::{Asset, Handle},
     #     ecs::VecStorage,
@@ -102,9 +94,6 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     The [`Processor<A>` system][doc_processor_system] uses this function to convert the deserialized asset data into the asset.
 
     ```rust,no_run,noplaypen
-    # extern crate amethyst;
-    # extern crate serde_derive;
-    #
     # use amethyst::{
     #     assets::{Asset, Error, Handle, ProcessingState, Result},
     #     ecs::VecStorage,
@@ -165,9 +154,6 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     If your asset is stored using one of the existing supported formats such as RON or JSON, it can now be used:
 
     ```rust,no_run,noplaypen
-    # extern crate amethyst;
-    # extern crate serde_derive;
-    #
     # use amethyst::{
     #     assets::{self, AssetStorage, Loader, ProcessingState, ProgressCounter, RonFormat},
     #     prelude::*,

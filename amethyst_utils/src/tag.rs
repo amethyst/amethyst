@@ -6,6 +6,10 @@ use amethyst_assets::{PrefabData, PrefabError};
 use amethyst_core::specs::prelude::{
     Component, Entities, Entity, Join, NullStorage, ReadStorage, WriteStorage,
 };
+use amethyst_derive::PrefabData;
+
+use serde::{Deserialize, Serialize};
+use shred_derive::SystemData;
 
 /// Tag component that can be used with a custom type to tag entities for processing
 #[derive(Clone, Debug, Serialize, Deserialize, PrefabData)]

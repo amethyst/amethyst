@@ -3,6 +3,9 @@
 
 use std::{mem, sync::Arc};
 
+use derivative::Derivative;
+use log::error;
+use rayon::ThreadPool;
 use winit::{DeviceEvent, Event, WindowEvent};
 
 use amethyst_assets::{AssetStorage, HotReloadStrategy};
@@ -19,7 +22,6 @@ use crate::{
     mesh::Mesh,
     mtl::{Material, MaterialDefaults},
     pipe::{PipelineBuild, PipelineData, PolyPipeline},
-    rayon::ThreadPool,
     renderer::Renderer,
     resources::{ScreenDimensions, WindowMessages},
     tex::Texture,

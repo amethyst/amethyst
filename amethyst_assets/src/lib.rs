@@ -11,26 +11,6 @@
 
 #[cfg(feature = "json")]
 pub use crate::formats::JsonFormat;
-
-#[macro_use]
-extern crate derivative;
-
-#[macro_use]
-extern crate error_chain;
-
-#[macro_use]
-extern crate log;
-
-#[macro_use]
-extern crate serde;
-
-#[macro_use]
-extern crate shred_derive;
-
-#[macro_use]
-#[cfg(feature = "profiler")]
-extern crate thread_profiler;
-
 pub use crate::{
     asset::{Asset, Format, FormatValue, SimpleFormat},
     cache::Cache,
@@ -44,10 +24,6 @@ pub use crate::{
     source::{Directory, Source},
     storage::{AssetStorage, Handle, ProcessingState, Processor, WeakHandle},
 };
-
-use shred;
-
-use amethyst_core;
 
 mod asset;
 mod cache;

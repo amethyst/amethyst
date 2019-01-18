@@ -1,7 +1,5 @@
 //! Displays several lines with both methods.
 
-use amethyst;
-
 use amethyst::{
     controls::{FlyControlBundle, FlyControlTag},
     core::{

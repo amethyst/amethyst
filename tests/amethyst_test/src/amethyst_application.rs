@@ -17,7 +17,9 @@ use amethyst::{
     Result, StateEventReader,
 };
 use boxfnonce::SendBoxFnOnce;
+use derivative::Derivative;
 use hetseq::Queue;
+use lazy_static::lazy_static;
 
 use crate::{
     CustomDispatcherStateBuilder, FunctionState, GameUpdate, SequencerState, SystemInjectionBundle,
@@ -665,10 +667,6 @@ mod test {
 
     use super::AmethystApplication;
     use crate::{EffectReturn, FunctionState, PopState};
-    #[cfg(feature = "graphics")]
-    use MaterialAnimationFixture;
-    #[cfg(feature = "graphics")]
-    use SpriteRenderAnimationFixture;
 
     #[test]
     fn bundle_build_is_ok() {

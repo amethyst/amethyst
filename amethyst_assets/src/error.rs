@@ -1,5 +1,7 @@
 use std::{str::Utf8Error, string::FromUtf8Error};
 
+use error_chain::*;
+
 error_chain! {
     foreign_links {
         FromUtf8(FromUtf8Error) #[doc = "Wraps a UTF-8 error"];

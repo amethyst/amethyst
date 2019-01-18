@@ -20,7 +20,6 @@
 //! ```
 //! use std::time::Duration;
 //!
-//! # extern crate amethyst;
 //! use amethyst::prelude::*;
 //! use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 //!
@@ -73,6 +72,8 @@ use std::{
     time::{Duration, Instant},
 };
 
+use serde::{Deserialize, Serialize};
+
 const ZERO: Duration = Duration::from_millis(0);
 
 /// Frame rate limiting strategy.
@@ -113,7 +114,6 @@ impl Default for FrameRateLimitStrategy {
 /// # Examples
 ///
 /// ```no_run
-/// # extern crate amethyst;
 /// use amethyst::prelude::*;
 /// use amethyst::core::frame_limiter::FrameRateLimitConfig;
 ///

@@ -19,9 +19,6 @@
 //! [Examples](#Examples) section.
 //!
 //! ```rust
-//! # extern crate amethyst;
-//! # extern crate amethyst_test;
-//! #
 //! # use std::marker::PhantomData;
 //! #
 //! # use amethyst_test::prelude::*;
@@ -77,8 +74,6 @@
 //! different set of bundles:
 //!
 //! ```rust,no_run
-//! extern crate amethyst_test;
-//!
 //! use amethyst_test::prelude::*;
 //!
 //! #[test]
@@ -143,9 +138,6 @@
 //! Testing a bundle:
 //!
 //! ```rust
-//! # extern crate amethyst;
-//! # extern crate amethyst_test;
-//! #
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
 //! #     core::bundle::{self, SystemBundle},
@@ -198,9 +190,6 @@
 //! Testing a system:
 //!
 //! ```rust
-//! # extern crate amethyst;
-//! # extern crate amethyst_test;
-//! #
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
 //! #     ecs::prelude::*,
@@ -260,9 +249,6 @@
 //! setup has been done:
 //!
 //! ```rust
-//! # extern crate amethyst;
-//! # extern crate amethyst_test;
-//! #
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
 //! #     ecs::prelude::*,
@@ -306,16 +292,6 @@
 //! #     system_increases_resource_value_by_one();
 //! # }
 //! ```
-
-use amethyst;
-
-#[macro_use]
-extern crate derivative;
-#[macro_use]
-extern crate derive_new;
-
-#[macro_use]
-extern crate lazy_static;
 
 pub(crate) use crate::system_injection_bundle::SystemInjectionBundle;
 pub use crate::{

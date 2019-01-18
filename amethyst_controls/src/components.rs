@@ -1,6 +1,8 @@
 use amethyst_assets::{PrefabData, PrefabError};
 use amethyst_core::specs::prelude::{Component, Entity, HashMapStorage, NullStorage, WriteStorage};
 
+use serde::{Deserialize, Serialize};
+
 /// Add this to a camera if you want it to be a fly camera.
 /// You need to add the FlyControlBundle or the required systems for it to work.
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]

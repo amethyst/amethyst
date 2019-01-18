@@ -2,6 +2,7 @@
 
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
+use log::{debug, trace};
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{

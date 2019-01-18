@@ -5,6 +5,8 @@ use amethyst::{
     ecs::prelude::*,
 };
 
+use derive_new::new;
+
 /// Adds a specified `System` to the dispatcher.
 #[derive(Debug, new)]
 pub(crate) struct SystemInjectionBundle<'a, Sys>

@@ -12,7 +12,6 @@ Normally you don't create a `Resources` instance yourself. It is usually made by
 
 Adding a resource to a `Resources` instance is done like this:
 ```rust,no_run,noplaypen
-# extern crate amethyst;
 use amethyst::ecs::{Resources};
 
 struct MyResource {
@@ -34,7 +33,6 @@ fn main() {
 
 Fetching a resource can be done like this:
 ```rust,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::{Resources};
 # #[derive(Debug, PartialEq)]
 # struct MyResource {
@@ -59,7 +57,6 @@ Fetching a resource can be done like this:
 
 If you want to get a resource and create it if it doesn't exist:
 ```rust,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::{Resources};
 # struct MyResource;
 # fn main() {
@@ -73,7 +70,6 @@ let fetched = resources.entry::<MyResource>().or_insert_with(|| my);
 
 If you want to change a resource that is already inside of `Resources`:
 ```rust,no_run,noplaypen
-# extern crate amethyst;
 # use amethyst::ecs::{Resources};
 # struct MyResource {
 #   pub game_score: i32,

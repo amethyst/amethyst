@@ -1,7 +1,5 @@
 //! Opens an empty window.
 
-use amethyst;
-
 use amethyst::{
     input::is_key_down,
     prelude::*,

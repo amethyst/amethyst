@@ -8,7 +8,6 @@ pub use self::metal::{CommandBuffer, Device, Factory, Resources, Window};
 pub use self::opengl::{CommandBuffer, Device, Factory, Resources, Window};
 #[cfg(feature = "vulkan")]
 pub use self::vulkan::{CommandBuffer, Device, Factory, Resources, Window};
-use gfx;
 
 #[cfg(all(feature = "d3d11", target_os = "windows"))]
 mod d3d11;

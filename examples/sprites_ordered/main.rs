@@ -3,10 +3,6 @@
 //! Sprites are originally from <https://opengameart.org/content/bat-32x32>, edited to show
 //! layering and blending.
 
-use amethyst;
-#[macro_use]
-extern crate log;
-
 mod png_loader;
 mod sprite;
 mod sprite_sheet_loader;
@@ -27,6 +23,8 @@ use amethyst::{
     },
     utils::application_root_dir,
 };
+
+use log::info;
 
 use crate::sprite::SpriteSheetDefinition;
 

@@ -9,13 +9,15 @@ use amethyst_core::{
     specs::prelude::{Component, Entity, Read, ReadExpect, VecStorage, WriteStorage},
 };
 
+use serde::{Deserialize, Serialize};
+use wavefront_obj::obj::{
+    parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex, TextureIndex, Vertex,
+    VertexIndex,
+};
+
 use crate::{
     mesh::{Mesh, MeshBuilder, MeshHandle},
     vertex::*,
-    wavefront_obj::obj::{
-        parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex, TextureIndex, Vertex,
-        VertexIndex,
-    },
     Renderer,
 };
 

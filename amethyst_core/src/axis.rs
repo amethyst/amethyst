@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 /// A two dimensional axis.
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Axis2 {

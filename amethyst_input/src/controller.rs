@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use crate::event::InputEvent;
 
 /// Controller axes matching SDL controller model

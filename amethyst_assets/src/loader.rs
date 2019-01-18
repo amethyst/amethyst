@@ -1,6 +1,7 @@
 use std::{borrow::Borrow, hash::Hash, path::PathBuf, sync::Arc};
 
 use fnv::FnvHashMap;
+use log::debug;
 use rayon::ThreadPool;
 
 use crate::{

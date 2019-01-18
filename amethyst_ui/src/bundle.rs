@@ -2,6 +2,8 @@
 
 use std::{hash::Hash, marker::PhantomData};
 
+use derive_new::new;
+
 use amethyst_assets::Processor;
 use amethyst_audio::AudioFormat;
 use amethyst_core::{

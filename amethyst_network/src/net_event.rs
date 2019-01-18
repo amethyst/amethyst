@@ -2,6 +2,7 @@
 //! NetEvent are passed through the network
 //! NetOwnedEvent are passed through the ECS, and contains the event's source (remote connection, usually).
 
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 /// The basic network events shipped with amethyst.

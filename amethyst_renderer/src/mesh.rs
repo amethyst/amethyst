@@ -6,6 +6,7 @@ use std::{
 };
 
 use gfx::Primitive;
+use serde::{Deserialize, Serialize};
 
 use amethyst_assets::Handle;
 use amethyst_core::nalgebra::{Matrix4, Point3, Rotation3, Translation3, Unit, Vector3};

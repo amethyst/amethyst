@@ -1,9 +1,5 @@
 //! Displays a shaded sphere to the user.
 
-use amethyst;
-#[macro_use]
-extern crate log;
-
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, Processor, RonFormat},
     audio::{output::init_output, Source},
@@ -21,6 +17,8 @@ use amethyst::{
     },
     winit::VirtualKeyCode,
 };
+
+use log::info;
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 

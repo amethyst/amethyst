@@ -1,10 +1,12 @@
 use hibitset::BitSet;
+use serde::{Deserialize, Serialize};
 
 use amethyst_assets::{PrefabData, PrefabError, ProgressCounter};
 use amethyst_core::{
     nalgebra::Matrix4,
     specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage},
 };
+use amethyst_derive::PrefabData;
 use amethyst_renderer::JointTransformsPrefab;
 
 /// Joint, attach to an entity with a `Transform`

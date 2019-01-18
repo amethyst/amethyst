@@ -5,6 +5,7 @@ use std::{
     hash::{Hash, Hasher},
 };
 
+use derive_new::new;
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use gfx::{preset::blend, pso::buffer::ElemStride, state::ColorMask};
 use gfx_glyph::{
@@ -13,8 +14,7 @@ use gfx_glyph::{
 };
 use glsl_layout::{vec2, vec4, Uniform};
 use hibitset::BitSet;
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
+use log::error;
 use unicode_segmentation::UnicodeSegmentation;
 
 use amethyst_assets::{AssetStorage, Handle, Loader};

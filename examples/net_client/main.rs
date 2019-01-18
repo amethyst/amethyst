@@ -1,7 +1,3 @@
-use amethyst;
-#[macro_use]
-extern crate log;
-
 use amethyst::{
     core::{frame_limiter::FrameRateLimitStrategy, Time},
     ecs::{Join, Read, System, WriteStorage},
@@ -10,6 +6,7 @@ use amethyst::{
     shrev::ReaderId,
     Result,
 };
+use log::info;
 use std::time::Duration;
 
 fn main() -> Result<()> {

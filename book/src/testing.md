@@ -9,9 +9,6 @@ The `amethyst_test` crate provides support to write tests ergonomically and expr
 The following shows a simple example of testing a `State`. More examples are in following pages.
 
 ```rust,no_run,noplaypen
-# extern crate amethyst;
-# extern crate amethyst_test;
-#
 # use std::marker::PhantomData;
 #
 # use amethyst_test::prelude::*;
@@ -64,8 +61,6 @@ fn loading_state_adds_load_resource() {
 The Amethyst application is initialized with one of the following functions, each providing a different set of bundles:
 
 ```rust,no_run,noplaypen
-extern crate amethyst_test;
-
 use amethyst_test::prelude::*;
 
 #[test]
@@ -124,8 +119,6 @@ Finally, call `.run()` to run the application. This returns `amethyst::Result<()
 wrap it in an `assert!(..);`:
 
 ```rust,no_run,noplaypen
-# extern crate amethyst_test;
-#
 # use amethyst_test::prelude::*;
 #
 #[test]

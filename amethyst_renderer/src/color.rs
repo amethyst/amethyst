@@ -5,6 +5,7 @@ use amethyst_core::specs::{Component, DenseVecStorage};
 use gfx::shade::{Formatted, ToUniform};
 use gfx_core::shade::{BaseType, ContainerType, UniformValue};
 use glsl_layout::{vec3, vec4};
+use serde::{Deserialize, Serialize};
 
 /// An RGBA color value.
 ///
