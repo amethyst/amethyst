@@ -17,6 +17,9 @@ use hibitset::BitSet;
 use log::error;
 use unicode_segmentation::UnicodeSegmentation;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::specs::prelude::{
     Entities, Entity, Join, Read, ReadExpect, ReadStorage, WriteStorage,

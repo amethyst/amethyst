@@ -4,6 +4,9 @@ use fnv::FnvHashMap;
 use log::debug;
 use rayon::ThreadPool;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{
     storage::{AssetStorage, Handle, Processed},
     Asset, Directory, ErrorKind, Format, FormatValue, Progress, ResultExt, Source,

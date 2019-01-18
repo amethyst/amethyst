@@ -8,6 +8,9 @@ use amethyst_core::{
     SystemBundle, Time,
 };
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{Asset, Format, FormatValue, Loader, Result, Source};
 
 /// This bundle activates hot reload for the `Loader`,

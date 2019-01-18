@@ -3,6 +3,9 @@ use std::mem;
 use glsl_layout::*;
 use log::error;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     nalgebra::Matrix4,

@@ -5,6 +5,9 @@ use amethyst_core::{
     transform::components::{HierarchyEvent, Parent, ParentHierarchy},
 };
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use log::error;
 
 use crate::HiddenPropagate;

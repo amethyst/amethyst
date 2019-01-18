@@ -3,6 +3,9 @@
 use fnv::FnvHashMap as HashMap;
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{
     error::Result,
     types::{DepthStencilView, Encoder, Factory, RenderTargetView, ShaderResourceView, Window},

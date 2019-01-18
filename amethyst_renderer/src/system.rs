@@ -8,6 +8,9 @@ use log::error;
 use rayon::ThreadPool;
 use winit::{DeviceEvent, Event, WindowEvent};
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use amethyst_assets::{AssetStorage, HotReloadStrategy};
 use amethyst_core::{
     shrev::EventChannel,

@@ -2,6 +2,9 @@ use fnv::FnvHashMap as HashMap;
 use gfx::memory::Pod;
 use winit::{dpi::LogicalSize, EventsLoop, Window as WinitWindow, WindowBuilder};
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{
     config::DisplayConfig,
     error::{Error, Result},

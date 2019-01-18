@@ -2,6 +2,9 @@ use std::sync::Arc;
 
 use amethyst_core::specs::storage::UnprotectedStorage;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{ErrorKind, Handle, Reload, Result, ResultExt, SingleFile, Source};
 
 /// One of the three core traits of this crate.

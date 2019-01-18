@@ -6,10 +6,10 @@ use crate::shred::Resource;
 use derivative::Derivative;
 use log::{info, log_enabled, trace, Level};
 use rayon::ThreadPoolBuilder;
+use winit::Event;
 
 #[cfg(feature = "profiler")]
-use thread_profiler::{register_thread_with_profiler, write_profile};
-use winit::Event;
+use thread_profiler::{register_thread_with_profiler, profile_scope, write_profile};
 
 use crate::{
     assets::{Loader, Source},

@@ -2,6 +2,9 @@ use crate::Result;
 
 pub use self::dir::Directory;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 mod dir;
 
 /// A trait for asset sources, which provides
