@@ -30,7 +30,7 @@ hibitset = { version = "0.5.1", features = ["parallel"] }
 log = "0.4.6"
 parking_lot = "0.6"
 rayon = "1.0.2"
-serde = { version = "1", features = ["serde_derive"] }
+serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", optional = true }
 shred = { version = "0.7" }
 shred-derive = { version = "0.5" }

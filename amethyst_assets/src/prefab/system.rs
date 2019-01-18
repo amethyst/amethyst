@@ -1,5 +1,7 @@
 use std::{marker::PhantomData, ops::Deref};
 
+use log::error;
+
 use amethyst_core::{
     specs::{
         storage::ComponentEvent, BitSet, Entities, Entity, Join, Read, ReadExpect, ReadStorage,

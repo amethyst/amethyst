@@ -1,7 +1,5 @@
 //! The simplest Amethyst example.
 
-use amethyst;
-
 use amethyst::prelude::*;
 
 struct Example;

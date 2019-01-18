@@ -1,8 +1,5 @@
 //! Direct3D 11 backend types.
 
-use gfx_device_dx11::{self, DeferredContext};
-use gfx_window_dxgi;
-
 /// Command buffer type.
 pub type CommandBuffer = gfx_device_dx11::CommandBuffer<DeferredContext>;
 

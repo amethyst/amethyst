@@ -1,5 +1,7 @@
 use amethyst::core::nalgebra::Vector2;
 
+use serde::{Deserialize, Serialize};
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ArenaConfig {
     /// Height of the arena. Used to define Y axis coordinate scheme

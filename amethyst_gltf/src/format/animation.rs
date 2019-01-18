@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 
-use gltf;
-
 use crate::{
     animation::{
         AnimationPrefab, AnimationSetPrefab, InterpolationFunction, InterpolationPrimitive,

@@ -1,7 +1,11 @@
 use std::{borrow::Borrow, hash::Hash, path::PathBuf, sync::Arc};
 
 use fnv::FnvHashMap;
+use log::debug;
 use rayon::ThreadPool;
+
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
 
 use crate::{
     storage::{AssetStorage, Handle, Processed},

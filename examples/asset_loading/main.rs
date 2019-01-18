@@ -1,8 +1,6 @@
 //! Demonstrates loading custom assets using the Amethyst engine.
 // TODO: Add asset loader directory store for the meshes.
 
-use amethyst;
-
 use amethyst::{
     assets::{Loader, Result as AssetResult, SimpleFormat},
     core::{

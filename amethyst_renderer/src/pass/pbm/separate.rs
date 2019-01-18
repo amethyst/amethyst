@@ -3,6 +3,9 @@
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},

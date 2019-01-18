@@ -1,4 +1,6 @@
+use derivative::Derivative;
 use serde::de::DeserializeOwned;
+use shred_derive::SystemData;
 use std::marker::PhantomData;
 
 use amethyst_assets::{
@@ -13,6 +15,8 @@ use amethyst_core::specs::{
 use amethyst_renderer::{
     HiddenPropagate, Texture, TextureFormat, TextureHandle, TextureMetadata, TexturePrefab,
 };
+
+use serde::{Deserialize, Serialize};
 
 use crate::{
     get_default_font, Anchor, FontAsset, FontFormat, Interactable, LineMode, Selectable, Stretch,

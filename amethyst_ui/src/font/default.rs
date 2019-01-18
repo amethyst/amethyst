@@ -1,6 +1,7 @@
 use std::fs;
 
 use font_kit::handle::Handle as FontKitHandle;
+use log::{error, warn};
 
 use amethyst_assets::{AssetStorage, Loader, SimpleFormat};
 

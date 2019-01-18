@@ -15,7 +15,7 @@ we just opened before reading on.
 **In `src` there's a `main.rs` file. Delete everything in that file, then
 add these imports:**
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 extern crate amethyst;
 
 use amethyst::prelude::*;
@@ -29,7 +29,7 @@ includes the basic (and most important) types like `Application`, `World`, and
 
 Now we create our core game struct:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 pub struct Pong;
 ```
 
@@ -37,7 +37,7 @@ We'll be implementing the [`SimpleState`][st] trait on this struct, which is use
 Amethyst's state machine to start, stop, and update the game. But for now we'll
 just implement two methods:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::input::{is_close_requested, is_key_down};
 # use amethyst::prelude::*;
@@ -62,7 +62,7 @@ started! We'll start with our `main` function, and we'll have it return a
 `Result` so that we can use `?`. This will allow us to automatically exit
 if any errors occur during setup.
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
 fn main() -> amethyst::Result<()> {
@@ -76,7 +76,7 @@ fn main() -> amethyst::Result<()> {
 Inside `main()` we first start the amethyst logger with a default `LoggerConfig`
 so we can see errors, warnings and debug messages while the program is running.
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # fn main() -> amethyst::Result<()> {
@@ -120,7 +120,7 @@ say "Pong!" instead of the sad, lowercase default of "pong".
 
 In `main()` in `main.rs`, we will load the configuration from the file:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::renderer::DisplayConfig;
@@ -137,7 +137,7 @@ let config = DisplayConfig::load(&path);
 Now, let's copy and paste some rendering code so we can keep moving. 
 We'll cover rendering in more depth later in this tutorial.
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::renderer::{Pipeline, DrawFlat, PosTex, Stage, DrawFlat2D};
 # fn main() {
@@ -158,7 +158,7 @@ color we started with back then, for instance, you can try
 
 Now let's pack everything up and run it:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::renderer::{DisplayConfig, DrawFlat2D, Pipeline,

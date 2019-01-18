@@ -4,6 +4,7 @@
 
 pub use self::pso::{Data, Init, Meta};
 
+use derivative::Derivative;
 use fnv::FnvHashMap as HashMap;
 use gfx::{
     buffer::{Info as BufferInfo, Role as BufferRole},
@@ -17,6 +18,8 @@ use gfx::{
     Primitive, ShaderSet,
 };
 use glsl_layout::Std140;
+use log::{debug, warn};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     error::{Error, Result},

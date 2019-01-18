@@ -5,8 +5,9 @@ use nalgebra::{
     self as na, Isometry3, Matrix4, Quaternion, Translation3, Unit, UnitQuaternion, Vector3,
 };
 use serde::{
-    de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor},
-    ser::{Serialize, Serializer},
+    de::{self, Deserializer, MapAccess, SeqAccess, Visitor},
+    ser::Serializer,
+    Deserialize, Serialize,
 };
 use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 

@@ -1,5 +1,3 @@
-use amethyst;
-
 mod pong;
 mod systems;
 

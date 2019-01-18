@@ -1,5 +1,6 @@
 //! Renderer configuration.
 
+use serde::{Deserialize, Serialize};
 use winit::{self, dpi::LogicalSize, WindowBuilder};
 
 /// Structure for holding the renderer configuration.

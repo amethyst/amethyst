@@ -8,6 +8,7 @@ use gfx::{
     },
     shade::core::{BaseType, ContainerType, OutputVar, ProgramInfo},
 };
+use serde::Serialize;
 
 use crate::types::{ColorFormat, DepthFormat, Resources};
 

@@ -1,11 +1,13 @@
 use std::result::Result as StdResult;
 
+use error_chain::bail;
 use gfx::{
     format::{ChannelType, SurfaceType, SurfaceTyped},
     texture::SamplerInfo,
     traits::Pod,
 };
 use image::{DynamicImage, ImageFormat, RgbaImage};
+use serde::{Deserialize, Serialize};
 
 use amethyst_assets::{
     AssetStorage, Format, Handle, Loader, PrefabData, PrefabError, ProcessingState,

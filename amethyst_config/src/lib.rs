@@ -4,15 +4,13 @@
 #![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-#[macro_use]
-extern crate log;
-
 use std::{
     error::Error,
     fmt, io,
     path::{Path, PathBuf},
 };
 
+use log::error;
 use ron::{self, de::Error as DeError, ser::Error as SerError};
 use serde::{Deserialize, Serialize};
 

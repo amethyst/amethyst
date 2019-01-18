@@ -5,6 +5,7 @@ use gfx::{
     pso::buffer::Element,
     traits::Pod,
 };
+use serde::{Deserialize, Serialize};
 
 use amethyst_core::nalgebra::{Vector2, Vector3};
 

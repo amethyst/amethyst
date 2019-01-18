@@ -1,16 +1,10 @@
-#[macro_use]
-extern crate amethyst;
-#[macro_use]
-extern crate log;
-#[macro_use]
-extern crate serde;
-
 use amethyst::{
     assets::{
         Completion, Handle, Prefab, PrefabData, PrefabError, PrefabLoader, PrefabLoaderSystem,
         ProgressCounter, RonFormat,
     },
     core::{Transform, TransformBundle},
+    derive::PrefabData,
     ecs::{Entity, ReadExpect, ReadStorage, System, WriteStorage},
     input::{is_close_requested, is_key_down, InputBundle},
     prelude::{
@@ -27,6 +21,9 @@ use amethyst::{
         tag::{Tag, TagFinder},
     },
 };
+
+use log::{error, info};
+use serde::{Deserialize, Serialize};
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());

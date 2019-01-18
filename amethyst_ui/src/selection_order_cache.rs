@@ -1,6 +1,7 @@
 use amethyst_core::specs::{
     storage::GenericReadStorage, Entities, Entity, Join, ReadStorage, System, Write,
 };
+use derive_new::new;
 use hibitset::BitSet;
 use std::{cmp::Ordering, marker::PhantomData};
 

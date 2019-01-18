@@ -1,4 +1,5 @@
 use gfx_glyph::{HorizontalAlign, VerticalAlign};
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;

@@ -4,6 +4,9 @@ use std::{
     time::UNIX_EPOCH,
 };
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{source::Source, ErrorKind, Result, ResultExt};
 
 /// Directory source.

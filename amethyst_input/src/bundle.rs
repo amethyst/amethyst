@@ -1,5 +1,6 @@
 //! ECS input bundle
 
+use derivative::Derivative;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
     convert::From,

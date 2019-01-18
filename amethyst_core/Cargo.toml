@@ -23,7 +23,7 @@ fnv = "1"
 hibitset = { version = "0.5.2", features = ["parallel"] }
 log = "0.4.6"
 rayon = "1.0.2"
-serde = { version = "1", features = ["serde_derive"] }
+serde = { version = "1", features = ["derive"] }
 shred = { version = "0.7" }
 specs = { version = "0.14", features = ["common"] }
 specs-hierarchy = { version = "0.3" }

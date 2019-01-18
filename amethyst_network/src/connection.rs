@@ -1,5 +1,6 @@
 //! Network Connection and states.
 
+use serde::{Deserialize, Serialize};
 use shrev::{EventChannel, EventIterator, ReaderId};
 use std::net::SocketAddr;
 use uuid::Uuid;

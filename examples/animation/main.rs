@@ -1,9 +1,5 @@
 //! Displays a shaded sphere to the user.
 
-use amethyst;
-#[macro_use]
-extern crate serde;
-
 use amethyst::{
     animation::{
         get_animation_set, AnimationBundle, AnimationCommand, AnimationSet, AnimationSetPrefab,
@@ -17,6 +13,8 @@ use amethyst::{
     renderer::{DrawShaded, ElementState, PosNormTex, VirtualKeyCode},
     utils::{application_root_dir, scene::BasicScenePrefab},
 };
+
+use serde::{Deserialize, Serialize};
 
 type MyPrefabData = (
     Option<BasicScenePrefab<Vec<PosNormTex>>>,

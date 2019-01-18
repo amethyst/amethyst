@@ -1,5 +1,6 @@
 use shred::SystemData;
-use smallvec::SmallVec;
+use shred_derive::SystemData;
+use smallvec::{smallvec, SmallVec};
 
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_audio::SourceHandle;

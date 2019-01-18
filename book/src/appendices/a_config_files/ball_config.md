@@ -86,7 +86,7 @@ add each resource separately so systems can use only what they want.
 
 First, we need to change what `main.rs` is using. Change
 
-```rust, ignore
+```rust,ignore
 use crate::config::ArenaConfig;
 ```
 
@@ -98,7 +98,7 @@ use crate::config::PongConfig;
 
 Now, modify the `run()` function, from
 
-```rust, ignore
+```rust,ignore
 let arena_config = ArenaConfig::load(&config);
 [..]
     .with_resource(arena_config)
@@ -107,7 +107,7 @@ let arena_config = ArenaConfig::load(&config);
 
 to
 
-```rust, ignore
+```rust,ignore
 let pong_config = PongConfig::load(&config);
 [..]
     .with_resource(pong_config.arena)

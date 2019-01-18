@@ -45,7 +45,7 @@ image = "0.20"
 log = "0.4.6"
 rayon = "1.0.2"
 ron = "0.4"
-serde = { version = "1", features = ["serde_derive"] }
+serde = { version = "1", features = ["derive"] }
 shred-derive = "0.5"
 shred = "0.7"
 wavefront_obj = "5.1"

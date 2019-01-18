@@ -3,6 +3,8 @@ use amethyst_core::{
     Transform,
 };
 
+use serde::{Deserialize, Serialize};
+
 use crate::{
     resources::{AnimationSampling, ApplyData, BlendMethod},
     util::SamplerPrimitive,

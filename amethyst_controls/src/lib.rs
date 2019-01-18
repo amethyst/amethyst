@@ -2,9 +2,6 @@
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-#[macro_use]
-extern crate serde;
-
 pub use self::{
     bundles::{ArcBallControlBundle, FlyControlBundle},
     components::{ArcBallControlTag, ControlTagPrefab, FlyControlTag},

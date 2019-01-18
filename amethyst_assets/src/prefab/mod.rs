@@ -1,5 +1,8 @@
 use std::marker::PhantomData;
 
+use serde::{Deserialize, Serialize};
+use shred_derive::SystemData;
+
 use amethyst_core::specs::prelude::{
     Component, DenseVecStorage, Entity, FlaggedStorage, Read, ReadExpect, SystemData, WriteStorage,
 };

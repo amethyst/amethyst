@@ -6,7 +6,10 @@ use amethyst_core::{
     specs::{Component, DenseVecStorage, Entity, Join, ReadExpect, System, WriteStorage},
     Axis2,
 };
+use amethyst_derive::PrefabData;
 use amethyst_renderer::{Camera, ScreenDimensions};
+
+use serde::{Deserialize, Serialize};
 
 /// The coordinates that `CameraOrtho` will keep visible in the window.
 /// `bottom` can be a higher value than `top`, as is common in 2D coordinates

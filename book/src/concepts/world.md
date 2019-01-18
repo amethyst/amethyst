@@ -7,7 +7,7 @@ This chapter will showcase those functions and their usage.
 
 ## Adding a resource
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 use amethyst::ecs::World;
 
@@ -29,7 +29,7 @@ fn main() {
 ## Fetching a resource
 
 Here's how to fetch a read-only resource. Be aware that this method panics if the resource isn't inserted into `Resources`.
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # struct MyResource;
 # fn main() {
@@ -39,7 +39,7 @@ Here's how to fetch a read-only resource. Be aware that this method panics if th
 ```
 
 If you are not sure that the resource will be present, use the methods available on `Resources`, as shown in the resource chapter.
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # struct MyResource;
 # fn main() {
@@ -50,7 +50,7 @@ If you are not sure that the resource will be present, use the methods available
 
 ## Modifying a resource
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # struct MyResource;
 # fn main() {
@@ -66,7 +66,7 @@ Then, you can add components to your entity.
 Finally, you call the build() method on the entity builder to get the actual entity.
 Please note that **in order to use this syntax, you need to import the ``amethyst::prelude::Builder`` trait.**
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # struct MyComponent;
 # impl amethyst::ecs::Component for MyComponent {
@@ -83,7 +83,7 @@ Please note that **in order to use this syntax, you need to import the ``amethys
 ```
 
 Shorter version:
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # struct MyComponent;
 # impl amethyst::ecs::Component for MyComponent {
@@ -104,7 +104,7 @@ Internally, the `World` interacts with `EntitiesRes`, which is a resource holdin
 
 ## Accessing a `Component`
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::Builder;
 # struct MyComponent;
@@ -129,7 +129,7 @@ Internally, the `World` interacts with `EntitiesRes`, which is a resource holdin
 
 This is almost the same as accessing a component:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::Builder;
 # struct MyComponent;
@@ -148,7 +148,7 @@ This is almost the same as accessing a component:
 
 It is pretty rare to use this, but can be useful in some occasions.
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # fn main() {
 #   let mut world = amethyst::ecs::World::new();
@@ -160,7 +160,7 @@ It is pretty rare to use this, but can be useful in some occasions.
 ## Delete an entity
 
 Single:
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::Builder;
 # fn main() {
@@ -171,7 +171,7 @@ Single:
 ```
 
 Multiple:
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::Builder;
 # fn main() {
@@ -182,7 +182,7 @@ Multiple:
 ```
 
 All:
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # fn main() {
 #   let mut world = amethyst::ecs::World::new();
@@ -194,7 +194,7 @@ __Note: Entities are lazily deleted, which means that deletion only happens at t
 
 ## Check if the entity was deleted
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::Builder;
 # fn main() {
@@ -212,7 +212,7 @@ __Note: Entities are lazily deleted, which means that deletion only happens at t
 Sometimes, you will want to create an entity where you need to fetch resources to create the correct components for it.
 There is a function that acts as a shorthand for this:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::ReadExpect;
 # struct Dummy;

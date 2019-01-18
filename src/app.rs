@@ -3,12 +3,13 @@
 use std::{error::Error as StdError, marker::PhantomData, path::Path, sync::Arc, time::Duration};
 
 use crate::shred::Resource;
-use log::Level;
+use derivative::Derivative;
+use log::{info, log_enabled, trace, Level};
 use rayon::ThreadPoolBuilder;
+use winit::Event;
 
 #[cfg(feature = "profiler")]
-use thread_profiler::{register_thread_with_profiler, write_profile};
-use winit::Event;
+use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
 
 use crate::{
     assets::{Loader, Source},
@@ -77,13 +78,11 @@ where
 /// this and use the logging macros in `log` once you've created your `Application` instance:
 ///
 /// ```
-/// extern crate amethyst;
-/// #[macro_use]
-/// extern crate log;
-///
 /// use amethyst::prelude::*;
 /// use amethyst::core::transform::{Parent, Transform};
 /// use amethyst::ecs::prelude::System;
+///
+/// use log::{info, warn};
 ///
 /// struct NullState;
 /// impl EmptyState for NullState {}
@@ -107,11 +106,6 @@ where
 /// [log], and it will be used instead of the default logger:
 ///
 /// ```
-/// extern crate amethyst;
-/// #[macro_use]
-/// extern crate log;
-/// extern crate env_logger;
-///
 /// use amethyst::prelude::*;
 /// use amethyst::core::transform::{Parent, Transform};
 /// use amethyst::ecs::prelude::System;
@@ -473,8 +467,6 @@ where
     /// game.run();
     /// ~~~
     pub fn new<P: AsRef<Path>>(path: P, initial_state: S) -> Result<Self> {
-        use rustc_version_runtime;
-
         if !log_enabled!(Level::Error) {
             eprintln!(
                 "WARNING: No logger detected! Did you forget to call `amethyst::start_logger()`?"

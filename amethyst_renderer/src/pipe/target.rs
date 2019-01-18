@@ -1,6 +1,10 @@
 //! Render target used for storing 2D pixel representations of 3D scenes.
 
 use fnv::FnvHashMap as HashMap;
+use serde::{Deserialize, Serialize};
+
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
 
 use crate::{
     error::Result,
@@ -111,8 +115,11 @@ impl Target {
         profile_scope!("render_target_resizemaintarget");
         if let Some(depth_buf) = self.depth_buf.as_mut() {
             for color_buf in &mut self.color_bufs {
-                use gfx_window_glutin as win;
-                win::update_views(window, &mut color_buf.as_output, &mut depth_buf.as_output);
+                gfx_window_glutin::update_views(
+                    window,
+                    &mut color_buf.as_output,
+                    &mut depth_buf.as_output,
+                );
             }
         }
     }

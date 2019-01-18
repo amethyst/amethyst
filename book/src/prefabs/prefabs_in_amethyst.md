@@ -19,7 +19,7 @@ The remainder of this page explains these at a conceptual level; subsequent page
 
 In its stored form, a prefab is a serialized list of entities and their components that should be instantiated together. To begin, we will look at a simple prefab that attaches a simple component to a single entity. We will use the following `Position` component:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # extern crate derivative;
 # extern crate serde;
@@ -96,7 +96,7 @@ cargo run --example prefab_basic
 
 If there are attach multiple components to be attached to the entity, then we need a type that aggregates the [`Component`]s:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # extern crate derivative;
 # extern crate serde;
@@ -191,7 +191,7 @@ Prefab(
 
 Instead, the components have to be moved up to a top level [`PrefabData`] type, with components wrapped in an [`Option`]. In the following snippet, the top level [`PrefabData`] is `CustomPrefabData`:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # extern crate derivative;
 # extern crate serde;

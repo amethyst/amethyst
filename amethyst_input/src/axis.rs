@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use super::{Button, ControllerAxis};
 
 /// Represents any input represented by a float value from -1 to 1.

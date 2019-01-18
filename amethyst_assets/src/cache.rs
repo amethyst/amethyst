@@ -1,5 +1,6 @@
 use std::{borrow::Borrow, hash::Hash};
 
+use derivative::Derivative;
 use fnv::FnvHashMap;
 
 use crate::{Handle, WeakHandle};

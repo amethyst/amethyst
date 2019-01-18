@@ -1,7 +1,5 @@
 //! Displays a shaded sphere to the user.
 
-use amethyst;
-
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
     core::transform::TransformBundle,

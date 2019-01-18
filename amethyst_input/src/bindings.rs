@@ -7,7 +7,9 @@ use std::{
     hash::Hash,
 };
 
+use derivative::Derivative;
 use fnv::FnvHashMap as HashMap;
+use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 
 use super::{Axis, Button};

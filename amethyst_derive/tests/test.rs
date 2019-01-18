@@ -1,5 +1,4 @@
-#[macro_use]
-extern crate amethyst_derive;
+use amethyst_derive::{EventReader, PrefabData};
 
 use amethyst_assets::{PrefabData, PrefabError, ProgressCounter};
 use amethyst_core::{

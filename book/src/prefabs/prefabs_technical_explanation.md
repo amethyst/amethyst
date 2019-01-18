@@ -61,7 +61,7 @@ Ok, so what would a simple implementation of `PrefabData` look like?
 
 Let's take a look at the implementation for `Transform`, which is a core concept in Amethyst:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::assets::PrefabData;
 # use amethyst::ecs::{WriteStorage, Entity, Component, NullStorage, error::Error as SpecsError};
@@ -107,7 +107,7 @@ are no secondary assets to load from `Source` here.
 Let's look at a slightly more complex implementation, the `AssetPrefab`. This `PrefabData` is used to
 load extra `Asset`s as part of a `Prefab`:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # #[macro_use] extern crate serde_derive;
 # use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter};
@@ -211,13 +211,20 @@ In addition, deriving a `Prefab` requires that `amethyst::ecs::Entity` and
 
 An example of a single `Component` derive:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # #[macro_use] extern crate amethyst;
 # #[macro_use] extern crate serde_derive;
-# use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, PrefabError};
-# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, error::Error as SpecsError, DenseVecStorage, Component};
+# use amethyst::{
+#     assets::{
+#         Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, PrefabError
+#     },
+#     derive::PrefabData,
+#     ecs::{
+#         error::Error as SpecsError,
+#         Component, DenseVecStorage, Entity, Read, ReadExpect, WriteStorage,
+#     },
+# };
 #
-
 #[derive(Clone, PrefabData)]
 #[prefab(Component)]
 pub struct SomeComponent {
@@ -233,7 +240,7 @@ This will derive a `PrefabData` implementation that inserts `SomeComponent` on a
 
 Lets look at an example of an aggregate struct:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # #[macro_use] extern crate amethyst;
 # #[macro_use] extern crate serde_derive;
 # use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, PrefabError, AssetPrefab};
@@ -252,7 +259,7 @@ This can now be used to create `Prefab`s with `Transform` and `Mesh` on entities
 
 One last example that also adds a custom pure data `Component` into the aggregate `PrefabData`:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # #[macro_use] extern crate amethyst;
 # #[macro_use] extern crate serde_derive;
 # use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, PrefabError, AssetPrefab};

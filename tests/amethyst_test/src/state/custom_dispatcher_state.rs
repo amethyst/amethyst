@@ -1,5 +1,8 @@
 use amethyst::{ecs::prelude::*, prelude::*};
 
+use derivative::Derivative;
+use derive_new::new;
+
 use crate::GameUpdate;
 
 /// State with a custom dispatcher.

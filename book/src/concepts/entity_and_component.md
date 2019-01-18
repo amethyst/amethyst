@@ -8,7 +8,7 @@ An `Entity` represents a single object in your world. `Component` represents one
 
 In an inheritance design, entity usually contains components. All the data and methods related to an entity are stored within. However, in the ECS design, entity is just a general purpose object. In fact, the implementation of `Entity` in Amethyst is simply:
 
-```rust,no_run,noplaypen,ignore
+```rust,ignore
 struct Entity(u32, Generation);
 ```
 
@@ -45,7 +45,7 @@ You will see how these methods are used in later chapters.
 
 To declare a component, you first declare the relevant underlying data:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::core::nalgebra::{Isometry3, Vector3};
 
@@ -66,7 +66,7 @@ pub struct Transform {
 
 and then you implement the `Component` trait for them:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # struct Shape;
 # struct Transform;

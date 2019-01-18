@@ -1,4 +1,5 @@
 use proc_macro2::TokenStream;
+use quote::quote;
 use syn::{Data, DeriveInput, Ident, Meta, NestedMeta, Type};
 
 pub fn impl_event_reader(ast: &DeriveInput) -> TokenStream {

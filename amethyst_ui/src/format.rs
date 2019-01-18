@@ -1,4 +1,5 @@
 use gfx_glyph::Font;
+use serde::{Deserialize, Serialize};
 
 use amethyst_assets::{Asset, Error, Handle, ProcessingState, ResultExt, SimpleFormat};
 use amethyst_core::specs::prelude::VecStorage;

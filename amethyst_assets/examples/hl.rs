@@ -2,16 +2,10 @@
 
 #![allow(unused)]
 
-extern crate amethyst_assets;
-extern crate amethyst_core;
-extern crate rayon;
-extern crate ron;
-#[macro_use]
-extern crate serde;
-
 use std::sync::Arc;
 
 use rayon::{ThreadPool, ThreadPoolBuilder};
+use serde::Deserialize;
 
 use amethyst_assets::*;
 use amethyst_core::{

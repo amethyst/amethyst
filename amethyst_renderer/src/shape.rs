@@ -7,6 +7,8 @@ use genmesh::{
     },
     EmitTriangles, MapVertex, Triangulate, Vertex, Vertices,
 };
+use serde::{Deserialize, Serialize};
+use shred_derive::SystemData;
 
 use amethyst_assets::{
     AssetStorage, Handle, Loader, PrefabData, PrefabError, Progress, ProgressCounter,

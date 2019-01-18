@@ -2,7 +2,7 @@
 
 ## Testing a `Bundle`
 
-```rust
+```rust,edition2018
 # extern crate amethyst;
 # extern crate amethyst_test;
 #
@@ -21,7 +21,7 @@
 #
 # impl<'s> System<'s> for MySystem {
 #     type SystemData = ReadExpect<'s, ApplicationResource>;
-# 
+#
 #     fn run(&mut self, _: Self::SystemData) {}
 #
 #     fn setup(&mut self, res: &mut Resources) {
@@ -62,7 +62,7 @@ fn bundle_registers_system_with_resource() {
 
 ## Testing a `System`
 
-```rust
+```rust,edition2018
 # extern crate amethyst;
 # extern crate amethyst_test;
 #
@@ -123,7 +123,7 @@ fn system_increases_component_value_by_one() {
 
 This is useful when your system must run *after* some setup has been done, for example adding a resource:
 
-```rust
+```rust,edition2018
 # extern crate amethyst;
 # extern crate amethyst_test;
 #

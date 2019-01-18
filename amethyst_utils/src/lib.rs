@@ -2,21 +2,7 @@
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-#[macro_use]
-extern crate amethyst_derive;
-
-#[macro_use]
-extern crate log;
-
-#[macro_use]
-extern crate serde;
-
-#[macro_use]
-extern crate shred_derive;
-
 pub use self::app_root_dir::*;
-
-use shred;
 
 pub mod app_root_dir;
 pub mod auto_fov;

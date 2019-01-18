@@ -16,7 +16,7 @@ The sprite number is the index of the sprite loaded in the sprite sheet. What's 
 
 In the previous section you wrote a function that returns a `SpriteSheet`. This can be turned into a `SpriteSheetHandle` using the `Loader` resource as follows:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 use amethyst::assets::{AssetStorage, Loader};
 # use amethyst::prelude::*;
@@ -59,7 +59,7 @@ impl SimpleState for ExampleState {
 
 Cool, finally we have all the parts, let's build a `SpriteRender` and attach it to an entity:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::transform::Transform;

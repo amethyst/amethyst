@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 
-use gltf;
-
 use crate::{
     animation::{JointPrefab, SkinPrefab, SkinnablePrefab},
     assets::Prefab,

@@ -1,7 +1,9 @@
 //! A stage in the rendering pipeline.
 
+use derivative::Derivative;
 use fnv::FnvHashMap as HashMap;
 use hetseq::*;
+use log::error;
 
 use amethyst_core::specs::prelude::SystemData;
 

@@ -4,6 +4,9 @@ use amethyst_core::specs::prelude::{
     Component, DenseVecStorage, Entities, Entity, FlaggedStorage, Join, ReadStorage,
 };
 
+use serde::{Deserialize, Serialize};
+use shred_derive::SystemData;
+
 use super::{Anchor, ScaleMode, Stretch};
 
 /// Utility `SystemData` for finding UI entities based on `UiTransform` id

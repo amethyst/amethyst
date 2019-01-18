@@ -7,6 +7,7 @@ use std::{
 };
 
 use cpal::OutputDevices;
+use log::error;
 use rodio::{default_output_device, output_devices, Decoder, Device, Sink, Source as RSource};
 
 use amethyst_core::shred::Resources;

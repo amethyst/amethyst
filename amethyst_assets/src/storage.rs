@@ -7,7 +7,9 @@ use std::{
 };
 
 use crossbeam::queue::MsQueue;
+use derivative::Derivative;
 use hibitset::BitSet;
+use log::{debug, error, trace, warn};
 use rayon::ThreadPool;
 
 use amethyst_core::{

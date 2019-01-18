@@ -22,7 +22,6 @@ pub trait SystemExt {
     /// # Examples
     ///
     /// ```rust
-    /// # extern crate amethyst;
     /// use amethyst::{
     ///     ecs::{System, Write},
     ///     shred::DispatcherBuilder,

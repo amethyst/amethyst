@@ -2,11 +2,12 @@
 
 use std::fmt::Debug;
 
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use amethyst_assets::{Format, PrefabData, PrefabError, ProgressCounter};
 use amethyst_controls::ControlTagPrefab;
 use amethyst_core::{specs::prelude::Entity, Transform};
+use amethyst_derive::PrefabData;
 use amethyst_renderer::{
     CameraPrefab, GraphicsPrefab, InternalShape, LightPrefab, Mesh, MeshData, ObjFormat,
     TextureFormat,

@@ -34,7 +34,7 @@ Now you can just delete various `main.rs` use statements until the Rust compiler
 stops complaining about unused imports. In the `pong.rs` file we'll need these use
 statements to make it through this chapter:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::transform::Transform;
@@ -52,7 +52,7 @@ First, in `pong.rs`, let's add a new method to our State implementation: `on_sta
 This method is called, as you probably guessed, when the State starts.
 We will leave it empty for now, but it will become useful later down the line.
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # struct MyState;
@@ -82,7 +82,7 @@ moved around at will.
 First, let's define some constants. We will make them public for use in other
 modules later:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 pub const ARENA_HEIGHT: f32 = 100.0;
 pub const ARENA_WIDTH: f32 = 100.0;
 ```
@@ -91,7 +91,7 @@ These constants will determine the size of our arena.
 So, as we're making a pong game, we want to create a camera that will cover
 the entire arena. Let's do it in a new function `initialise_camera`!
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # const ARENA_HEIGHT: f32 = 100.0;
 # const ARENA_WIDTH: f32 = 100.0;
@@ -135,7 +135,7 @@ Note that as the origin of our camera is in the bottom left corner, we set
 To finish setting up the camera, we need to call `initialise_camera` from
 our State's `on_start` method:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::ecs::World;
@@ -159,7 +159,7 @@ will make `Side` and `Paddle` public for use in other modules later.
 
 Let's also define some constants for convenience:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 pub const PADDLE_HEIGHT: f32 = 16.0;
 pub const PADDLE_WIDTH: f32 = 4.0;
 
@@ -189,7 +189,7 @@ impl Paddle {
 "But that just looks like a regular struct!" you might say. And you're right,
 here's the special sauce:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::{Component, DenseVecStorage};
 # struct Paddle;
@@ -210,7 +210,7 @@ include that component and add them to our `World`.
 
 First let's look at our imports:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 use amethyst::core::transform::Transform;
 ```
@@ -228,7 +228,7 @@ Keep in mind that the anchor point of our entities will be in the middle of the
 image we will want to render on top of them. This is a good rule to follow in
 general, as it makes operations like rotation easier.
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::core::Transform;
@@ -280,7 +280,7 @@ virtual world, but we'll need to do some more work to actually *draw* them.
 As a sanity check, let's make sure the code for initialising the paddles
 compiles. Update the `on_start` method to the following:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::ecs::World;
@@ -320,7 +320,7 @@ set up in the `World`. The error message above means we have registered the
 this by adding the following line before `initialise_paddles(world)` in the
 `on_start` method:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # struct Paddle;
 # impl amethyst::ecs::Component for Paddle {
@@ -363,7 +363,7 @@ add these to our Application's `GameData` using the `with_bundle` method. We
 already have one of these in `main.rs`: the `RenderBundle`. We can just follow
 the pattern and add the `TransformBundle` after importing it:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
 use amethyst::core::transform::TransformBundle;
@@ -407,7 +407,7 @@ function in `pong.rs` called `load_sprite_sheet`.
 
 First, let's declare the function and load the spritesheet's image.
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::assets::{Loader, AssetStorage};
@@ -480,7 +480,7 @@ are on the sheet. Let's create, right next to it, a file called
 
 Finally, we load the file containing the position of each sprite on the sheet.
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::assets::{Loader, AssetStorage};
@@ -524,7 +524,7 @@ So far, so good. We have a sprite sheet loaded, now we need to link the sprites
 to the paddles. We update the `initialise_paddle` function by changing its
 signature to:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::World;
 # use amethyst::renderer::SpriteSheetHandle;
@@ -536,7 +536,7 @@ Inside `initialise_paddles`, we construct a `SpriteRender` for a paddle. We
 only need one here, since the only difference between the two paddles is that
 the right one is flipped horizontally.
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::World;
 # use amethyst::renderer::{SpriteSheetHandle, SpriteRender};
@@ -557,7 +557,7 @@ that we want it to be flipped horizontally.
 
 Next we simply add the components to the paddle entities:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::World;
 # use amethyst::renderer::{SpriteSheetHandle, SpriteRender, Flipped};
@@ -587,7 +587,7 @@ world
 We're nearly there, we just have to wire up the sprite to the paddles. We put it
 all together in the `on_start()` method:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::renderer::{TextureHandle, SpriteSheetHandle};
