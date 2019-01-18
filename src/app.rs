@@ -9,7 +9,7 @@ use rayon::ThreadPoolBuilder;
 use winit::Event;
 
 #[cfg(feature = "profiler")]
-use thread_profiler::{register_thread_with_profiler, profile_scope, write_profile};
+use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
 
 use crate::{
     assets::{Loader, Source},
