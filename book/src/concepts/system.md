@@ -487,6 +487,10 @@ This is rather complicated trait to implement, fortunately Amethyst provides a d
 Please note that tuples of structs implementing `SystemData` are themselves `SystemData`. This is very useful when you need to request multiple `SystemData` at once quickly.
 
 ```rust,no_run,noplaypen
+# extern crate amethyst;
+# extern crate shred;
+# #[macro_use] extern crate shred_derive;
+#
 # use amethyst::ecs::{ReadStorage, WriteStorage, SystemData, Component, VecStorage, System, Join};
 #
 # struct FooComponent {

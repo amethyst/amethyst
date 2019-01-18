@@ -25,6 +25,8 @@ pub use self::winner::WinnerSystem;
 Then, we'll create `systems/winner.rs`:
 
 ```rust,no_run,noplaypen
+# extern crate amethyst;
+#
 # mod pong {
 #     use amethyst::ecs::prelude::*;
 #
@@ -90,6 +92,8 @@ Now, we just need to add our new system to `main.rs`, and we should be able to
 keep playing after someone scores and log who got the point.
 
 ```rust,no_run,noplaypen
+# extern crate amethyst;
+#
 # use amethyst::{
 #    prelude::*,
 #    core::transform::TransformBundle,
@@ -103,6 +107,7 @@ keep playing after someone scores and log who got the point.
 # };
 #
 # mod systems {
+#     use amethyst;
 #     pub struct PaddleSystem;
 #     impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
 #         type SystemData = ();
@@ -166,6 +171,8 @@ to display our players scores.
 First, let's add the UI rendering in `main.rs`:
 
 ```rust,no_run,noplaypen
+# extern crate amethyst;
+#
 use amethyst::{
 #     prelude::*,
 #     core::transform::TransformBundle,
@@ -181,6 +188,7 @@ use amethyst::{
 };
 #
 # mod systems {
+#     use amethyst;
 #     pub struct PaddleSystem;
 #     impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
 #         type SystemData = ();
@@ -251,6 +259,8 @@ Now we have everything set up so we can start rendering a scoreboard in our
 game. We'll start by creating some structures in `pong.rs`:
 
 ```rust,no_run,noplaypen
+# extern crate amethyst;
+#
 use amethyst::{
 #     assets::{AssetStorage, Loader},
 #     core::transform::Transform,
@@ -449,6 +459,8 @@ a container, but this one holds handles to the UI `Entity`s that will be
 rendered to the screen. We'll create those next:
 
 ```rust,no_run,noplaypen
+# extern crate amethyst;
+#
 use amethyst::{
 #     assets::{AssetStorage, Loader},
 #     core::transform::Transform,
@@ -724,6 +736,8 @@ is modify our `WinnerSystem` to access the players' scores and update them
 accordingly:
 
 ```rust,no_run,noplaypen
+# extern crate amethyst;
+#
 # mod pong {
 #     use amethyst::ecs::prelude::*;
 #

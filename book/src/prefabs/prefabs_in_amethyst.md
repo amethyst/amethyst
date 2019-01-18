@@ -97,6 +97,11 @@ cargo run --example prefab_basic
 If there are attach multiple components to be attached to the entity, then we need a type that aggregates the [`Component`]s:
 
 ```rust,no_run,noplaypen
+# extern crate amethyst;
+# extern crate derivative;
+# extern crate serde;
+# extern crate specs_derive;
+#
 # use amethyst::{
 #     assets::{Prefab, PrefabData, PrefabError, ProgressCounter},
 #     core::Named,
@@ -187,6 +192,11 @@ Prefab(
 Instead, the components have to be moved up to a top level [`PrefabData`] type, with components wrapped in an [`Option`]. In the following snippet, the top level [`PrefabData`] is `CustomPrefabData`:
 
 ```rust,no_run,noplaypen
+# extern crate amethyst;
+# extern crate derivative;
+# extern crate serde;
+# extern crate specs_derive;
+#
 # use amethyst::{
 #     assets::{Prefab, PrefabData, PrefabError, ProgressCounter},
 #     core::Named,

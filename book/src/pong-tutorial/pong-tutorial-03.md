@@ -51,6 +51,7 @@ contains an `InputHandler` system which captures inputs, and maps them to the
 axes we defined. Let's make the following changes to `main.rs`.
 
 ```rust,no_run,noplaypen
+# extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;
 # use amethyst::utils::application_dir;
@@ -102,6 +103,8 @@ pub use self::paddle::PaddleSystem;
 We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 
 ```rust,no_run,noplaypen
+# extern crate amethyst;
+#
 # mod pong {
 #     use amethyst::ecs::prelude::*;
 #
@@ -195,6 +198,7 @@ Let's add this system to our `GameDataBuilder` in `main.rs`:
 mod systems; // Import the module
 // --snip--
 
+# extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;
 # use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline,
@@ -209,6 +213,7 @@ fn main() -> amethyst::Result<()> {
 #       .with_pass(DrawFlat::<PosTex>::new()),
 # );
 # mod systems {
+# use amethyst;
 # pub struct PaddleSystem;
 # impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
 # type SystemData = ();
@@ -239,6 +244,7 @@ make it update the position of the paddle. To do this, we'll modify the y
 component of the transform's translation.
 
 ```rust,no_run,noplaypen
+# extern crate amethyst;
 # use amethyst::core::Transform;
 # use amethyst::ecs::{Join, Read, ReadStorage, System, WriteStorage};
 # use amethyst::input::InputHandler;
@@ -294,6 +300,7 @@ to `PADDLE_HEIGHT * 0.5` (the bottom of the arena plus the offset).
 Our run function should now look something like this:
 
 ```rust,no_run,noplaypen
+# extern crate amethyst;
 # use amethyst::core::Transform;
 # use amethyst::ecs::{Join, Read, ReadStorage, System, WriteStorage};
 # use amethyst::input::InputHandler;
@@ -348,6 +355,7 @@ we no longer need to manually register it with the `world`: the system
 will take care of that for us, as well as set up the storage.
 
 ```rust,no_run,noplaypen
+# extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::renderer::{TextureHandle, SpriteSheetHandle};
 # use amethyst::ecs::World;

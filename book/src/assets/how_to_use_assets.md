@@ -13,6 +13,8 @@ This guide covers the basic usage of assets into Amethyst for existing supported
 1. Instantiate the Amethyst application with the assets directory.
 
     ```rust,no_run,noplaypen
+    # extern crate amethyst;
+    #
     use amethyst::{
         prelude::*,
         utils::application_root_dir,
@@ -46,6 +48,8 @@ This guide covers the basic usage of assets into Amethyst for existing supported
     * `SpriteSheet` is provided by `amethyst_renderer`, `RenderBundle` registers `Processor<SpriteSheet>` given `.with_sprite_sheet_processor()` is called before adding it to the `GameDataBuilder`.
 
     ```rust,no_run,noplaypen
+    # extern crate amethyst;
+    #
     # use amethyst::{
     #     prelude::*,
     #     renderer::{DisplayConfig, Pipeline, RenderBundle, Stage},
@@ -86,6 +90,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
 3. Use the [`Loader`][doc_loader] resource to load the asset.
 
     ```rust,no_run,noplaypen
+    # extern crate amethyst;
     # use amethyst::{
     #     assets::{AssetStorage, Loader, ProgressCounter},
     #     prelude::*,
@@ -139,6 +144,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
     When [`loader.load(..)`][doc_load] is used to load an [`Asset`][doc_asset], the method returns immediately with a handle for the asset. The asset loading is handled asynchronously in the background, so if the handle is used to retrieve the asset, such as with [`world.read_resource::<AssetStorage<Texture>>()`][doc_read_resource][`.get(texture_handle)`][doc_asset_get], it will return `None` until the `Texture` has finished loading.
 
     ```rust,no_run,noplaypen
+    # extern crate amethyst;
     # use amethyst::{
     #     assets::ProgressCounter,
     #     prelude::*,
@@ -183,6 +189,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
    The asset handle can now be used:
 
     ```rust,no_run,noplaypen
+    # extern crate amethyst;
     # use amethyst::{
     #     prelude::*,
     #     renderer::TextureHandle,

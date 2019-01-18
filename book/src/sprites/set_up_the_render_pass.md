@@ -6,6 +6,8 @@ Amethyst supports drawing sprites using the `DrawFlat2D` render pass. To enable 
 2. Use the `.with_sprite_sheet_processor()` method on the `RenderBundle`.
 
 ```rust,no_run,noplaypen
+# extern crate amethyst;
+#
 # use amethyst::core::transform::TransformBundle;
 # use amethyst::input::InputBundle;
 # use amethyst::prelude::*;
