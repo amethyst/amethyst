@@ -151,7 +151,7 @@ impl EmptyState for GameplayState {
                 return Trans::Push(Box::new(PausedState));
             }
         }
-        
+
         // Escape isn't pressed, so we stay in this `State`.
         Trans::None
     }
@@ -165,7 +165,7 @@ impl EmptyState for PausedState {
                 return Trans::Pop;
             }
         }
-        
+
         // Escape isn't pressed, so we stay in this `State`.
         Trans::None
     }
@@ -189,8 +189,8 @@ To change the set of events that the state receives, you create a new event enum
 
 // These imports are required for the #[derive(EventReader)] code to build
 use amethyst::core::{
-    specs::{Read, SystemData, Resources}, 
-    shrev::{ReaderId, EventChannel}, 
+    specs::{Read, SystemData, Resources},
+    shrev::{ReaderId, EventChannel},
     EventReader
 };
 
@@ -216,7 +216,7 @@ impl State<(), MyEvent> for GameplayState {
             MyEvent::Ui(_) => {}, // Ui event. Button presses, mouse hover, etc...
             MyEvent::App(ev) => println!("Got an app event: {:?}", ev),
         };
-        
+
         Trans::None
     }
 }
@@ -224,10 +224,10 @@ impl State<(), MyEvent> for GameplayState {
 # fn main() {}
 ```
 
-To make `Application` aware of the change to which events to send to the state, you also need to supply both the 
-event type, and the `EventReader` type (the name you give in the `#[reader(SomeReader)]` derive attribute) when 
-the `Application` is created. This is done by replacing `Application::build` (or `Application::new`) with 
-`CoreApplication::<_, MyEvent, MyEventReader>::build()` (or `CoreApplication::<_, MyEvent, MyEventReader>::new()`). 
+To make `Application` aware of the change to which events to send to the state, you also need to supply both the
+event type, and the `EventReader` type (the name you give in the `#[reader(SomeReader)]` derive attribute) when
+the `Application` is created. This is done by replacing `Application::build` (or `Application::new`) with
+`CoreApplication::<_, MyEvent, MyEventReader>::build()` (or `CoreApplication::<_, MyEvent, MyEventReader>::new()`).
 
 
 *Note: Events are gathered from `EventChannel`s. `EventChannel`s are covered in the dedicated book section.*

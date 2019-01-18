@@ -214,10 +214,17 @@ An example of a single `Component` derive:
 ```rust,edition2018,no_run,noplaypen
 # #[macro_use] extern crate amethyst;
 # #[macro_use] extern crate serde_derive;
-# use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, PrefabError};
-# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, error::Error as SpecsError, DenseVecStorage, Component};
+# use amethyst::{
+#     assets::{
+#         Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, PrefabError
+#     },
+#     derive::PrefabData,
+#     ecs::{
+#         error::Error as SpecsError,
+#         Component, DenseVecStorage, Entity, Read, ReadExpect, WriteStorage,
+#     },
+# };
 #
-
 #[derive(Clone, PrefabData)]
 #[prefab(Component)]
 pub struct SomeComponent {
