@@ -42,7 +42,7 @@ Here is an example of such a definition file:
 
 Then, you can load it using the texture handle of the sheet's image you loaded earlier:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::assets::{Loader, AssetStorage};
 # use amethyst::renderer::{SpriteSheetFormat, SpriteSheet, TextureHandle};
@@ -86,7 +86,7 @@ In Amethyst, pixel dimensions and texture coordinates are stored in the `Sprite`
 
 The following snippet shows you how to naively define a `SpriteSheet`. In a real application, you would typically use the sprite sheet from file feature, which is much more convenient.
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 use amethyst::renderer::{Sprite, SpriteSheet, TextureCoordinates, TextureHandle};
 
