@@ -12,7 +12,7 @@ use amethyst::{
 const ARENA_HEIGHT: f32 = 100.0;
 const ARENA_WIDTH: f32 = 100.0;
 
-const _PADDLE_HEIGHT: f32 = 16.0; // As this constant is not used yet, we introduce the `_` so that we don't get a warning
+const PADDLE_HEIGHT: f32 = 16.0;
 const PADDLE_WIDTH: f32 = 4.0;
 
 pub struct Pong;
@@ -49,8 +49,8 @@ impl Paddle {
     fn new(side: Side) -> Paddle {
         Paddle {
             side: side,
-            width: 1.0,
-            height: 1.0,
+            width: PADDLE_WIDTH,
+            height: PADDLE_HEIGHT,
         }
     }
 }
