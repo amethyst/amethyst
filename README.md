@@ -194,8 +194,6 @@ you can look through the [issue tracker][it].
 
 Thank you to all our backers! 🙏 [Become a backer](https://www.amethyst-engine.org/donate)
 
-<a href="https://opencollective.com/amethyst#backers" target="_blank"><img src="https://opencollective.com/amethyst/backers.svg?width=890"></a>
-
 ## Sponsors
 Amethyst is supported by:
 <p>
