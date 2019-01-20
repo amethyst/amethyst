@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 
 use amethyst_assets::{Asset, Handle};
-use amethyst_core::specs::prelude::DenseVecStorage;
+use amethyst_core::specs::{Component, DenseVecStorage};
 
 use crate::{
     error::Result,
@@ -215,4 +215,58 @@ where
             view,
         })
     }
+}
+
+/// `TextureOffset` controls what part of a texture the texture coordinates refer to.
+/// An example: A vertex that refer to texture coordinates (0.5, 0.5), and `TextureOffset` as below,
+/// the vertex will get the actual texture coordinates (0.25, 0.25).
+///
+/// ```
+/// # use amethyst_renderer::TextureOffset;
+/// TextureOffset {
+///     u: (0.0, 0.5),
+///     v: (0.0, 0.5),
+/// };
+/// ```
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+pub struct TextureOffset {
+    /// Start and end offset for U coordinate
+    pub u: (f32, f32),
+    /// Start and end offset for V coordinate
+    pub v: (f32, f32),
+}
+
+impl Default for TextureOffset {
+    fn default() -> Self {
+        TextureOffset {
+            u: (0., 1.),
+            v: (0., 1.),
+        }
+    }
+}
+
+/// `TextureView` encapsulates a texture and what part of the texture the texture coordinates refer
+/// to. This can be used in many ways:
+///
+/// * As a `Component` directly, as part of the `DrawFlat2D` pass.
+/// * As a part of `Material` in the other passes.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TextureView {
+    /// Texture
+    pub texture: TextureHandle,
+    /// Texture offset
+    pub offset: TextureOffset,
+}
+
+impl From<TextureHandle> for TextureView {
+    fn from(texture: TextureHandle) -> Self {
+        TextureView {
+            texture,
+            offset: TextureOffset::default(),
+        }
+    }
+}
+
+impl Component for TextureView {
+    type Storage = DenseVecStorage<Self>;
 }

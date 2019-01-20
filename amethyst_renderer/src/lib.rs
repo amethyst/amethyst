@@ -47,7 +47,7 @@ pub use crate::{
     },
     light::{DirectionalLight, Light, LightPrefab, PointLight, SpotLight, SunLight},
     mesh::{vertex_data, Mesh, MeshBuilder, MeshHandle, VertexBuffer},
-    mtl::{Material, MaterialDefaults, TextureOffset},
+    mtl::{Material, MaterialDefaults},
     pass::{
         get_camera, set_vertex_args, DebugLinesParams, DrawDebugLines, DrawFlat, DrawFlat2D,
         DrawFlatSeparate, DrawPbm, DrawPbmSeparate, DrawShaded, DrawShadedSeparate, DrawSkybox,
@@ -72,7 +72,8 @@ pub use crate::{
     sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem},
     system::RenderSystem,
     tex::{
-        FilterMethod, SamplerInfo, SurfaceType, Texture, TextureBuilder, TextureHandle, WrapMode,
+        FilterMethod, SamplerInfo, SurfaceType, Texture, TextureBuilder, TextureHandle,
+        TextureOffset, TextureView, WrapMode,
     },
     transparent::{
         Blend, BlendChannel, BlendValue, ColorMask, Equation, Factor, Transparent, ALPHA, REPLACE,

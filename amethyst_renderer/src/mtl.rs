@@ -2,27 +2,7 @@
 
 use amethyst_core::specs::prelude::{Component, DenseVecStorage};
 
-use serde::{Deserialize, Serialize};
-
-use crate::tex::TextureHandle;
-
-/// Material reference this part of the texture
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
-pub struct TextureOffset {
-    /// Start and end offset for U coordinate
-    pub u: (f32, f32),
-    /// Start and end offset for V coordinate
-    pub v: (f32, f32),
-}
-
-impl Default for TextureOffset {
-    fn default() -> Self {
-        TextureOffset {
-            u: (0., 1.),
-            v: (0., 1.),
-        }
-    }
-}
+use crate::tex::TextureView;
 
 /// Material struct.
 #[derive(Clone, PartialEq)]
@@ -30,33 +10,19 @@ pub struct Material {
     /// Alpha cutoff: the value at which we do not draw the pixel
     pub alpha_cutoff: f32,
     /// Diffuse map.
-    pub albedo: TextureHandle,
-    /// Diffuse texture offset
-    pub albedo_offset: TextureOffset,
+    pub albedo: TextureView,
     /// Emission map.
-    pub emission: TextureHandle,
-    /// Emission texture offset
-    pub emission_offset: TextureOffset,
+    pub emission: TextureView,
     /// Normal map.
-    pub normal: TextureHandle,
-    /// Normal texture offset
-    pub normal_offset: TextureOffset,
+    pub normal: TextureView,
     /// Metallic map.
-    pub metallic: TextureHandle,
-    /// Metallic texture offset
-    pub metallic_offset: TextureOffset,
+    pub metallic: TextureView,
     /// Roughness map.
-    pub roughness: TextureHandle,
-    /// Roughness texture offset
-    pub roughness_offset: TextureOffset,
+    pub roughness: TextureView,
     /// Ambient occlusion map.
-    pub ambient_occlusion: TextureHandle,
-    /// Ambient occlusion texture offset
-    pub ambient_occlusion_offset: TextureOffset,
+    pub ambient_occlusion: TextureView,
     /// Caveat map.
-    pub caveat: TextureHandle,
-    /// Caveat texture offset
-    pub caveat_offset: TextureOffset,
+    pub caveat: TextureView,
 }
 
 impl Component for Material {

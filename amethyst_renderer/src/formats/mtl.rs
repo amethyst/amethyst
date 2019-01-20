@@ -1,14 +1,26 @@
-use amethyst_assets::{Format, Handle, PrefabData, PrefabError, ProgressCounter};
+use amethyst_assets::{Format, PrefabData, PrefabError, ProgressCounter};
 use amethyst_core::specs::prelude::{Entity, ReadExpect, WriteStorage};
 
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    mtl::{Material, MaterialDefaults, TextureOffset},
+    mtl::{Material, MaterialDefaults},
     transparent::Transparent,
 };
 
-use super::{Texture, TextureMetadata, TexturePrefab};
+use crate::{Texture, TextureMetadata, TextureOffset, TexturePrefab, TextureView};
+
+/// Encapsulates texture + texture offset for material prefabs.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct TextureViewPrefab<F>
+where
+    F: Format<Texture, Options = TextureMetadata>,
+{
+    /// Texture prefab
+    pub texture: TexturePrefab<F>,
+    /// Texture offset
+    pub offset: TextureOffset,
+}
 
 /// `PrefabData` for loading `Material`s
 ///
@@ -22,33 +34,19 @@ where
     F: Format<Texture, Options = TextureMetadata>,
 {
     /// Diffuse map.
-    pub albedo: Option<TexturePrefab<F>>,
-    /// Diffuse texture offset
-    pub albedo_offset: TextureOffset,
+    pub albedo: Option<TextureViewPrefab<F>>,
     /// Emission map.
-    pub emission: Option<TexturePrefab<F>>,
-    /// Emission texture offset
-    pub emission_offset: TextureOffset,
+    pub emission: Option<TextureViewPrefab<F>>,
     /// Normal map.
-    pub normal: Option<TexturePrefab<F>>,
-    /// Normal texture offset
-    pub normal_offset: TextureOffset,
+    pub normal: Option<TextureViewPrefab<F>>,
     /// Metallic map.
-    pub metallic: Option<TexturePrefab<F>>,
-    /// Metallic texture offset
-    pub metallic_offset: TextureOffset,
+    pub metallic: Option<TextureViewPrefab<F>>,
     /// Roughness map.
-    pub roughness: Option<TexturePrefab<F>>,
-    /// Roughness texture offset
-    pub roughness_offset: TextureOffset,
+    pub roughness: Option<TextureViewPrefab<F>>,
     /// Ambient occlusion map.
-    pub ambient_occlusion: Option<TexturePrefab<F>>,
-    /// Ambient occlusion texture offset
-    pub ambient_occlusion_offset: TextureOffset,
+    pub ambient_occlusion: Option<TextureViewPrefab<F>>,
     /// Caveat map.
-    pub caveat: Option<TexturePrefab<F>>,
-    /// Caveat texture offset
-    pub caveat_offset: TextureOffset,
+    pub caveat: Option<TextureViewPrefab<F>>,
     /// Set material as `Transparent`
     pub transparent: bool,
     /// Alpha cutoff: the value below which we do not draw the pixel
@@ -62,38 +60,37 @@ where
     fn default() -> Self {
         MaterialPrefab {
             albedo: None,
-            albedo_offset: TextureOffset::default(),
             emission: None,
-            emission_offset: TextureOffset::default(),
             normal: None,
-            normal_offset: TextureOffset::default(),
             metallic: None,
-            metallic_offset: TextureOffset::default(),
             roughness: None,
-            roughness_offset: TextureOffset::default(),
             ambient_occlusion: None,
-            ambient_occlusion_offset: TextureOffset::default(),
             caveat: None,
-            caveat_offset: TextureOffset::default(),
             transparent: false,
             alpha_cutoff: 0.01,
         }
     }
 }
 
-fn load_handle<F>(
+fn load_texture_view<F>(
     entity: Entity,
-    prefab: &Option<TexturePrefab<F>>,
+    prefab: &Option<TextureViewPrefab<F>>,
     tp_data: &mut <TexturePrefab<F> as PrefabData<'_>>::SystemData,
-    def: &Handle<Texture>,
-) -> Handle<Texture>
+    def: &TextureView,
+) -> TextureView
 where
     F: Format<Texture, Options = TextureMetadata> + Sync + Clone,
 {
-    prefab
-        .as_ref()
-        .and_then(|tp| tp.add_to_entity(entity, tp_data, &[]).ok())
-        .unwrap_or_else(|| def.clone())
+    TextureView {
+        texture: prefab
+            .as_ref()
+            .and_then(|p| p.texture.add_to_entity(entity, tp_data, &[]).ok())
+            .unwrap_or_else(|| def.texture.clone()),
+        offset: prefab
+            .as_ref()
+            .map(|p| p.offset.clone())
+            .unwrap_or_else(|| TextureOffset::default()),
+    }
 }
 
 impl<'a, F> PrefabData<'a> for MaterialPrefab<F>
@@ -117,25 +114,23 @@ where
         let &mut (ref mut material, ref mat_default, ref mut tp_data, ref mut transparent) =
             system_data;
         let mtl = Material {
-            albedo: load_handle(entity, &self.albedo, tp_data, &mat_default.0.albedo),
-            albedo_offset: self.albedo_offset.clone(),
-            emission: load_handle(entity, &self.emission, tp_data, &mat_default.0.emission),
-            emission_offset: self.emission_offset.clone(),
-            normal: load_handle(entity, &self.normal, tp_data, &mat_default.0.normal),
-            normal_offset: self.normal_offset.clone(),
-            metallic: load_handle(entity, &self.metallic, tp_data, &mat_default.0.metallic),
-            metallic_offset: self.metallic_offset.clone(),
-            roughness: load_handle(entity, &self.roughness, tp_data, &mat_default.0.roughness),
-            roughness_offset: self.roughness_offset.clone(),
-            ambient_occlusion: load_handle(
+            albedo: load_texture_view(entity, &self.albedo, tp_data, &mat_default.0.albedo),
+            emission: load_texture_view(entity, &self.emission, tp_data, &mat_default.0.emission),
+            normal: load_texture_view(entity, &self.normal, tp_data, &mat_default.0.normal),
+            metallic: load_texture_view(entity, &self.metallic, tp_data, &mat_default.0.metallic),
+            roughness: load_texture_view(
+                entity,
+                &self.roughness,
+                tp_data,
+                &mat_default.0.roughness,
+            ),
+            ambient_occlusion: load_texture_view(
                 entity,
                 &self.ambient_occlusion,
                 tp_data,
                 &mat_default.0.ambient_occlusion,
             ),
-            ambient_occlusion_offset: self.ambient_occlusion_offset.clone(),
-            caveat: load_handle(entity, &self.caveat, tp_data, &mat_default.0.caveat),
-            caveat_offset: self.caveat_offset.clone(),
+            caveat: load_texture_view(entity, &self.caveat, tp_data, &mat_default.0.caveat),
             alpha_cutoff: self.alpha_cutoff,
         };
         material.insert(entity, mtl)?;
@@ -153,37 +148,37 @@ where
         let &mut (_, _, ref mut tp_data, _) = system_data;
         let mut ret = false;
         if let Some(ref mut texture) = self.albedo {
-            if texture.load_sub_assets(progress, tp_data)? {
+            if texture.texture.load_sub_assets(progress, tp_data)? {
                 ret = true;
             }
         }
         if let Some(ref mut texture) = self.emission {
-            if texture.load_sub_assets(progress, tp_data)? {
+            if texture.texture.load_sub_assets(progress, tp_data)? {
                 ret = true;
             }
         }
         if let Some(ref mut texture) = self.normal {
-            if texture.load_sub_assets(progress, tp_data)? {
+            if texture.texture.load_sub_assets(progress, tp_data)? {
                 ret = true;
             }
         }
         if let Some(ref mut texture) = self.metallic {
-            if texture.load_sub_assets(progress, tp_data)? {
+            if texture.texture.load_sub_assets(progress, tp_data)? {
                 ret = true;
             }
         }
         if let Some(ref mut texture) = self.roughness {
-            if texture.load_sub_assets(progress, tp_data)? {
+            if texture.texture.load_sub_assets(progress, tp_data)? {
                 ret = true;
             }
         }
         if let Some(ref mut texture) = self.ambient_occlusion {
-            if texture.load_sub_assets(progress, tp_data)? {
+            if texture.texture.load_sub_assets(progress, tp_data)? {
                 ret = true;
             }
         }
         if let Some(ref mut texture) = self.caveat {
-            if texture.load_sub_assets(progress, tp_data)? {
+            if texture.texture.load_sub_assets(progress, tp_data)? {
                 ret = true;
             }
         }

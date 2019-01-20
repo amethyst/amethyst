@@ -16,11 +16,11 @@ use amethyst_core::{
 use crate::{
     cam::{ActiveCamera, Camera},
     mesh::Mesh,
-    mtl::{Material, MaterialDefaults, TextureOffset},
+    mtl::{Material, MaterialDefaults},
     pass::set_skinning_buffers,
     pipe::{Effect, EffectBuilder},
     skinning::JointTransforms,
-    tex::Texture,
+    tex::{Texture, TextureOffset},
     types::Encoder,
     vertex::Attributes,
     Rgba,
@@ -128,26 +128,26 @@ pub(crate) fn add_textures(
     for ty in types {
         let texture = match *ty {
             Albedo => storage
-                .get(&material.albedo)
-                .or_else(|| storage.get(&default.albedo)),
+                .get(&material.albedo.texture)
+                .or_else(|| storage.get(&default.albedo.texture)),
             Emission => storage
-                .get(&material.emission)
-                .or_else(|| storage.get(&default.emission)),
+                .get(&material.emission.texture)
+                .or_else(|| storage.get(&default.emission.texture)),
             Normal => storage
-                .get(&material.normal)
-                .or_else(|| storage.get(&default.normal)),
+                .get(&material.normal.texture)
+                .or_else(|| storage.get(&default.normal.texture)),
             Metallic => storage
-                .get(&material.metallic)
-                .or_else(|| storage.get(&default.metallic)),
+                .get(&material.metallic.texture)
+                .or_else(|| storage.get(&default.metallic.texture)),
             Roughness => storage
-                .get(&material.roughness)
-                .or_else(|| storage.get(&default.roughness)),
+                .get(&material.roughness.texture)
+                .or_else(|| storage.get(&default.roughness.texture)),
             AmbientOcclusion => storage
-                .get(&material.ambient_occlusion)
-                .or_else(|| storage.get(&default.ambient_occlusion)),
+                .get(&material.ambient_occlusion.texture)
+                .or_else(|| storage.get(&default.ambient_occlusion.texture)),
             Caveat => storage
-                .get(&material.caveat)
-                .or_else(|| storage.get(&default.caveat)),
+                .get(&material.caveat.texture)
+                .or_else(|| storage.get(&default.caveat.texture)),
         };
         add_texture(effect, texture.expect("Texture missing in asset storage"));
     }
@@ -213,37 +213,37 @@ pub(crate) fn set_texture_offsets(
         match *ty {
             Albedo => effect.update_constant_buffer(
                 "AlbedoOffset",
-                &TextureOffsetPod::from_offset(&material.albedo_offset).std140(),
+                &TextureOffsetPod::from_offset(&material.albedo.offset).std140(),
                 encoder,
             ),
             Emission => effect.update_constant_buffer(
                 "EmissionOffset",
-                &TextureOffsetPod::from_offset(&material.emission_offset).std140(),
+                &TextureOffsetPod::from_offset(&material.emission.offset).std140(),
                 encoder,
             ),
             Normal => effect.update_constant_buffer(
                 "NormalOffset",
-                &TextureOffsetPod::from_offset(&material.normal_offset).std140(),
+                &TextureOffsetPod::from_offset(&material.normal.offset).std140(),
                 encoder,
             ),
             Metallic => effect.update_constant_buffer(
                 "MetallicOffset",
-                &TextureOffsetPod::from_offset(&material.metallic_offset).std140(),
+                &TextureOffsetPod::from_offset(&material.metallic.offset).std140(),
                 encoder,
             ),
             Roughness => effect.update_constant_buffer(
                 "RoughnessOffset",
-                &TextureOffsetPod::from_offset(&material.roughness_offset).std140(),
+                &TextureOffsetPod::from_offset(&material.roughness.offset).std140(),
                 encoder,
             ),
             AmbientOcclusion => effect.update_constant_buffer(
                 "AmbientOcclusionOffset",
-                &TextureOffsetPod::from_offset(&material.ambient_occlusion_offset).std140(),
+                &TextureOffsetPod::from_offset(&material.ambient_occlusion.offset).std140(),
                 encoder,
             ),
             Caveat => effect.update_constant_buffer(
                 "CaveatOffset",
-                &TextureOffsetPod::from_offset(&material.caveat_offset).std140(),
+                &TextureOffsetPod::from_offset(&material.caveat.offset).std140(),
                 encoder,
             ),
         };

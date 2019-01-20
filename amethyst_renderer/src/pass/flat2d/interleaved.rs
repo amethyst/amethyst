@@ -25,7 +25,7 @@ use crate::{
     },
     sprite::{Flipped, SpriteRender, SpriteSheet},
     sprite_visibility::SpriteVisibility,
-    tex::{Texture, TextureHandle},
+    tex::{Texture, TextureHandle, TextureOffset, TextureView},
     types::{Encoder, Factory, Slice},
     vertex::{Attributes, Query, VertexFormat},
     Color, Rgba,
@@ -81,6 +81,7 @@ impl<'a> PassData<'a> for DrawFlat2D {
         ReadStorage<'a, Flipped>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Rgba>,
+        ReadStorage<'a, TextureView>,
     );
 }
 
@@ -124,6 +125,7 @@ impl Pass for DrawFlat2D {
             flipped,
             mesh,
             rgba,
+            texture_view,
         ): <Self as PassData<'a>>::Data,
     ) {
         let camera = get_camera(active, &camera, &global);
@@ -161,8 +163,35 @@ impl Pass for DrawFlat2D {
                 )
                     .join()
                 {
-                    self.batch
-                        .add_image(image_render, Some(global), flipped, rgba, &tex_storage);
+                    self.batch.add_image(
+                        image_render,
+                        Some(global),
+                        flipped,
+                        rgba,
+                        None,
+                        &tex_storage,
+                    );
+                }
+
+                for (texture_view, global, flipped, rgba, _, _, _) in (
+                    &texture_view,
+                    &global,
+                    flipped.maybe(),
+                    rgba.maybe(),
+                    !&hidden,
+                    !&hidden_prop,
+                    !&mesh,
+                )
+                    .join()
+                {
+                    self.batch.add_image(
+                        &texture_view.texture,
+                        Some(global),
+                        flipped,
+                        rgba,
+                        Some(&texture_view.offset),
+                        &tex_storage,
+                    );
                 }
 
                 self.batch.sort();
@@ -197,9 +226,35 @@ impl Pass for DrawFlat2D {
                 )
                     .join()
                 {
-                    self.batch
-                        .add_image(image_render, Some(global), flipped, rgba, &tex_storage);
+                    self.batch.add_image(
+                        image_render,
+                        Some(global),
+                        flipped,
+                        rgba,
+                        None,
+                        &tex_storage,
+                    );
                 }
+
+                for (texture_view, global, flipped, rgba, _, _) in (
+                    &texture_view,
+                    &global,
+                    flipped.maybe(),
+                    rgba.maybe(),
+                    &visibility.visible_unordered,
+                    !&mesh,
+                )
+                    .join()
+                    {
+                        self.batch.add_image(
+                            &texture_view.texture,
+                            Some(global),
+                            flipped,
+                            rgba,
+                            Some(&texture_view.offset),
+                            &tex_storage,
+                        );
+                    }
 
                 // We are free to optimize the order of the opaque sprites.
                 self.batch.sort();
@@ -220,8 +275,18 @@ impl Pass for DrawFlat2D {
                             global.get(*entity),
                             flipped.get(*entity),
                             rgba.get(*entity),
+                            None,
                             &tex_storage,
                         )
+                    } else if let Some(texture_view) = texture_view.get(*entity) {
+                        self.batch.add_image(
+                            &texture_view.texture,
+                            global.get(*entity),
+                            flipped.get(*entity),
+                            rgba.get(*entity),
+                            Some(&texture_view.offset),
+                            &tex_storage,
+                        );
                     }
                 }
             }
@@ -252,6 +317,7 @@ enum TextureDrawData {
         transform: GlobalTransform,
         flipped: Option<Flipped>,
         rgba: Option<Rgba>,
+        offset: Option<TextureOffset>,
         width: usize,
         height: usize,
     },
@@ -292,6 +358,7 @@ impl TextureBatch {
         global: Option<&GlobalTransform>,
         flipped: Option<&Flipped>,
         rgba: Option<&Rgba>,
+        offset: Option<&TextureOffset>,
         tex_storage: &AssetStorage<Texture>,
     ) {
         let global = match global {
@@ -314,6 +381,7 @@ impl TextureBatch {
             rgba: rgba.cloned(),
             width: texture_dims.0,
             height: texture_dims.1,
+            offset: offset.cloned(),
         });
     }
 
@@ -461,17 +529,20 @@ impl TextureBatch {
                     width,
                     height,
                     rgba,
+                    offset,
                     ..
                 } => {
+                    let (uv_left, uv_right) = offset.as_ref().map(|to| to.u).unwrap_or((0., 1.));
                     let (uv_left, uv_right) = if flip_horizontal {
-                        (1.0, 0.0)
+                        (uv_right, uv_left)
                     } else {
-                        (0.0, 1.0)
+                        (uv_left, uv_right)
                     };
+                    let (uv_bottom, uv_top) = offset.as_ref().map(|to| to.v).unwrap_or((0., 1.));
                     let (uv_bottom, uv_top) = if flip_vertical {
-                        (1.0, 0.0)
+                        (uv_top, uv_bottom)
                     } else {
-                        (0.0, 1.0)
+                        (uv_bottom, uv_top)
                     };
 
                     let transform = &transform.0;

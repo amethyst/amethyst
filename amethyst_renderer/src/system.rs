@@ -27,7 +27,7 @@ use crate::{
     pipe::{PipelineBuild, PipelineData, PolyPipeline},
     renderer::Renderer,
     resources::{ScreenDimensions, WindowMessages},
-    tex::Texture,
+    tex::{Texture, TextureView},
 };
 
 /// Rendering system.
@@ -217,8 +217,6 @@ where
 }
 
 fn create_default_mat(res: &mut Resources) -> Material {
-    use crate::mtl::TextureOffset;
-
     use amethyst_assets::Loader;
 
     let loader = res.fetch::<Loader>();
@@ -243,20 +241,13 @@ fn create_default_mat(res: &mut Resources) -> Material {
 
     Material {
         alpha_cutoff: 0.01,
-        albedo,
-        albedo_offset: TextureOffset::default(),
-        emission,
-        emission_offset: TextureOffset::default(),
-        normal,
-        normal_offset: TextureOffset::default(),
-        metallic,
-        metallic_offset: TextureOffset::default(),
-        roughness,
-        roughness_offset: TextureOffset::default(),
-        ambient_occlusion,
-        ambient_occlusion_offset: TextureOffset::default(),
-        caveat,
-        caveat_offset: TextureOffset::default(),
+        albedo: TextureView::from(albedo),
+        emission: TextureView::from(emission),
+        normal: TextureView::from(normal),
+        metallic: TextureView::from(metallic),
+        roughness: TextureView::from(roughness),
+        ambient_occlusion: TextureView::from(ambient_occlusion),
+        caveat: TextureView::from(caveat),
     }
 }
 
