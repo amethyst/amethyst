@@ -1,6 +1,6 @@
 # How to Define Prefabs: Simple
 
-This guide explains how to enable a [`Component`] to be used in a [`Prefab`]. This guide can be applied where the [`Component`] type itself is completely serializable &ndash; the data is self-contained:
+This guide explains how to enable a [`Component`] to be used in a [`Prefab`]. This can be applied where the [`Component`] type itself is completely serializable &ndash; the data is self-contained:
 
 ```rust,no_run,noplaypen
 # extern crate amethyst;
