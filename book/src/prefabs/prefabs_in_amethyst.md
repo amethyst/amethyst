@@ -94,7 +94,7 @@ cargo run --example prefab_basic
 
 ### Multiple Components
 
-If there are attach multiple components to be attached to the entity, then we need a type that aggregates the [`Component`]s:
+If there are multiple components to be attached to the entity, then we need a type that aggregates the [`Component`]s:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
