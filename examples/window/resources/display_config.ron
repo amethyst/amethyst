@@ -1,5 +1,6 @@
 (
   title: "Windowing example",
+  icon: Some("examples/window/resources/logo.png"),
   dimensions: None,
   max_dimensions: None,
   min_dimensions: None,
