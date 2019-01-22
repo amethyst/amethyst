@@ -623,6 +623,7 @@ where
             dimensions: Some((SCREEN_WIDTH, SCREEN_HEIGHT)),
             min_dimensions: Some((SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)),
             max_dimensions: None,
+            icon: None,
             vsync: true,
             multisampling: 0, // Must be multiple of 2, use 0 to disable
             visibility,
