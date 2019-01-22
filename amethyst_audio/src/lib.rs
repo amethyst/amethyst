@@ -1,5 +1,4 @@
 //! Loading and playing of audio files.
-
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 pub use self::{

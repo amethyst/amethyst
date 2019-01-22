@@ -12,10 +12,10 @@ use amethyst_core::{
     specs::prelude::{Join, Read, ReadStorage},
     transform::GlobalTransform,
 };
+use amethyst_error::Error;
 
 use crate::{
     cam::{ActiveCamera, Camera},
-    error::Result,
     hidden::{Hidden, HiddenPropagate},
     mesh::MeshHandle,
     pass::util::{add_texture, get_camera, set_view_args, setup_textures, ViewArgs},
@@ -85,7 +85,7 @@ impl<'a> PassData<'a> for DrawFlat2D {
 }
 
 impl Pass for DrawFlat2D {
-    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         use std::mem;
 
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);

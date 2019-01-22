@@ -140,7 +140,7 @@
 //! ```rust
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
-//! #     core::bundle::{self, SystemBundle},
+//! #     core::bundle::SystemBundle,
 //! #     ecs::prelude::*,
 //! #     prelude::*,
 //! # };
@@ -165,7 +165,7 @@
 //! # #[derive(Debug)]
 //! # struct MyBundle;
 //! # impl<'a, 'b> SystemBundle<'a, 'b> for MyBundle {
-//! #     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> bundle::Result<()> {
+//! #     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> amethyst::Result<()> {
 //! #         builder.add(MySystem, "my_system", &[]);
 //! #         Ok(())
 //! #     }

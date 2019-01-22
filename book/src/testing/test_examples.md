@@ -8,7 +8,8 @@
 #
 # use amethyst_test::prelude::*;
 # use amethyst::{
-#     core::bundle::{self, SystemBundle},
+#     error::Error,
+#     core::bundle::SystemBundle,
 #     ecs::prelude::*,
 #     prelude::*,
 # };
@@ -34,7 +35,7 @@
 struct MyBundle;
 
 impl<'a, 'b> SystemBundle<'a, 'b> for MyBundle {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> bundle::Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         // System that adds `ApplicationResource` to the `World`
         builder.add(MySystem, "my_system", &[]);
         Ok(())

@@ -5,8 +5,9 @@ pub use self::{mesh::*, mtl::*, texture::*};
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-use amethyst_assets::{AssetPrefab, Format, PrefabData, PrefabError, ProgressCounter};
+use amethyst_assets::{AssetPrefab, Format, PrefabData, ProgressCounter};
 use amethyst_core::specs::prelude::Entity;
+use amethyst_error::Error;
 
 use crate::{shape::InternalShape, Mesh, ShapePrefab, Texture};
 
@@ -76,7 +77,7 @@ where
         entity: Entity,
         system_data: &mut <Self as PrefabData<'_>>::SystemData,
         entities: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         match self.mesh {
             MeshPrefab::Asset(ref m) => {
                 m.add_to_entity(entity, &mut system_data.0, entities)?;
@@ -94,7 +95,7 @@ where
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
-    ) -> Result<bool, PrefabError> {
+    ) -> Result<bool, Error> {
         let load_mesh = match self.mesh {
             MeshPrefab::Asset(ref mut m) => m.load_sub_assets(progress, &mut system_data.0)?,
             MeshPrefab::Shape(ref mut s) => s.load_sub_assets(progress, &mut system_data.0)?,

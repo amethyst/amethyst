@@ -62,6 +62,7 @@ pub use amethyst_config as config;
 pub use amethyst_controls as controls;
 pub use amethyst_core as core;
 pub use amethyst_derive as derive;
+pub use amethyst_error as error;
 pub use amethyst_input as input;
 pub use amethyst_locale as locale;
 pub use amethyst_network as network;
@@ -77,7 +78,7 @@ pub use crate::derive::*;
 pub use self::{
     app::{Application, ApplicationBuilder, CoreApplication},
     callback_queue::{Callback, CallbackQueue},
-    error::{Error, Result},
+    error::Error,
     game_data::{DataInit, GameData, GameDataBuilder},
     logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
     state::{
@@ -87,11 +88,13 @@ pub use self::{
     state_event::{StateEvent, StateEventReader},
 };
 
+/// Convenience alias for use in main functions that uses Amethyst.
+pub type Result<T> = std::result::Result<T, error::Error>;
+
 pub mod prelude;
 
 mod app;
 mod callback_queue;
-mod error;
 mod game_data;
 mod logger;
 mod state;

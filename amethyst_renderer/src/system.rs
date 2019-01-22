@@ -17,10 +17,10 @@ use amethyst_core::{
     specs::prelude::{Read, ReadExpect, Resources, RunNow, SystemData, Write, WriteExpect},
     Time,
 };
+use amethyst_error::Error;
 
 use crate::{
     config::DisplayConfig,
-    error::Result,
     formats::{create_mesh_asset, create_texture_asset},
     mesh::Mesh,
     mtl::{Material, MaterialDefaults},
@@ -48,7 +48,7 @@ where
     P: PolyPipeline,
 {
     /// Build a new `RenderSystem` from the given pipeline builder and config
-    pub fn build<B>(pipe: B, config: Option<DisplayConfig>) -> Result<Self>
+    pub fn build<B>(pipe: B, config: Option<DisplayConfig>) -> Result<Self, Error>
     where
         B: PipelineBuild<Pipeline = P>,
     {

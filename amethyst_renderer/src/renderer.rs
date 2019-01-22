@@ -1,3 +1,4 @@
+use amethyst_error::Error;
 use fnv::FnvHashMap as HashMap;
 use gfx::memory::Pod;
 use winit::{dpi::LogicalSize, EventsLoop, Window as WinitWindow, WindowBuilder};
@@ -7,7 +8,7 @@ use thread_profiler::profile_scope;
 
 use crate::{
     config::DisplayConfig,
-    error::{Error, Result},
+    error,
     mesh::{Mesh, MeshBuilder, VertexDataSet},
     pipe::{
         ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, Target, TargetBuilder,
@@ -33,7 +34,7 @@ pub struct Renderer {
 
 impl Renderer {
     /// Creates a `Renderer` with default window settings.
-    pub fn new() -> Result<Self> {
+    pub fn new() -> Result<Self, Error> {
         Self::build().build()
     }
 
@@ -48,7 +49,7 @@ impl Renderer {
     }
 
     /// Builds a new mesh from the given vertices.
-    pub fn create_mesh<T>(&mut self, mb: MeshBuilder<T>) -> Result<Mesh>
+    pub fn create_mesh<T>(&mut self, mb: MeshBuilder<T>) -> Result<Mesh, Error>
     where
         T: VertexDataSet,
     {
@@ -56,7 +57,7 @@ impl Renderer {
     }
 
     /// Builds a new texture resource.
-    pub fn create_texture<D, T>(&mut self, tb: TextureBuilder<D, T>) -> Result<Texture>
+    pub fn create_texture<D, T>(&mut self, tb: TextureBuilder<D, T>) -> Result<Texture, Error>
     where
         D: AsRef<[T]>,
         T: Pod + Copy,
@@ -65,7 +66,7 @@ impl Renderer {
     }
 
     /// Builds a new renderer pipeline.
-    pub fn create_pipe<B, P>(&mut self, pb: B) -> Result<P>
+    pub fn create_pipe<B, P>(&mut self, pb: B) -> Result<P, Error>
     where
         P: PolyPipeline,
         B: PipelineBuild<Pipeline = P>,
@@ -226,7 +227,7 @@ impl RendererBuilder {
     }
 
     /// Consumes the builder and creates the new `Renderer`.
-    pub fn build(self) -> Result<Renderer> {
+    pub fn build(self) -> Result<Renderer, Error> {
         let Backend(device, mut factory, main_target, window) =
             init_backend(self.winit_builder.clone(), &self.events, &self.config)?;
 
@@ -256,13 +257,19 @@ struct Backend(pub Device, pub Factory, pub Target, pub Window);
 
 /// Creates the Direct3D 11 backend.
 #[cfg(all(feature = "d3d11", target_os = "windows"))]
-fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> Result<Backend> {
+fn init_backend(
+    wb: WindowBuilder,
+    el: &EventsLoop,
+    config: &DisplayConfig,
+) -> Result<Backend, Error> {
     // FIXME: vsync + multisampling from config
     let (win, dev, mut fac, color) = gfx_window_dxgi::init::<ColorFormat>(wb, el)
         .expect("Unable to initialize window (d3d11 backend)");
     let dev = gfx_device_dx11::Deferred::from(dev);
 
-    let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
+    let size = win
+        .get_inner_size_points()
+        .ok_or(error::Error::WindowDestroyed)?;
     let (w, h) = (size.0 as u16, size.1 as u16);
     let depth = fac.create_depth_stencil_view_only::<DepthFormat>(w, h)?;
     let main_target = Target::new(
@@ -281,12 +288,18 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> R
 }
 
 #[cfg(all(feature = "metal", target_os = "macos"))]
-fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> Result<Backend> {
+fn init_backend(
+    wb: WindowBuilder,
+    el: &EventsLoop,
+    config: &DisplayConfig,
+) -> Result<Backend, Error> {
     // FIXME: vsync + multisampling from config
     let (win, dev, mut fac, color) = gfx_window_metal::init::<ColorFormat>(wb, el)
         .expect("Unable to initialize window (metal backend)");
 
-    let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
+    let size = win
+        .get_inner_size_points()
+        .ok_or(error::Error::WindowDestroyed)?;
     let (w, h) = (size.0 as u16, size.1 as u16);
     let depth = fac.create_depth_stencil_view_only::<DepthFormat>(w, h)?;
     let main_target = Target::new(
@@ -306,7 +319,11 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> R
 
 /// Creates the OpenGL backend.
 #[cfg(feature = "opengl")]
-fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> Result<Backend> {
+fn init_backend(
+    wb: WindowBuilder,
+    el: &EventsLoop,
+    config: &DisplayConfig,
+) -> Result<Backend, Error> {
     #[cfg(target_os = "macos")]
     use glutin::{GlProfile, GlRequest};
 
@@ -320,7 +337,10 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> R
 
     let (win, dev, fac, color, depth) =
         gfx_window_glutin::init::<ColorFormat, DepthFormat>(wb, ctx, el);
-    let size = win.get_inner_size().ok_or(Error::WindowDestroyed)?.into();
+    let size = win
+        .get_inner_size()
+        .ok_or(error::Error::WindowDestroyed)?
+        .into();
     let main_target = Target::new(
         ColorBuffer {
             as_input: None,

@@ -2,11 +2,12 @@
 
 use std::marker::PhantomData;
 
-use amethyst_assets::{PrefabData, PrefabError};
+use amethyst_assets::PrefabData;
 use amethyst_core::specs::prelude::{
     Component, Entities, Entity, Join, NullStorage, ReadStorage, WriteStorage,
 };
 use amethyst_derive::PrefabData;
+use amethyst_error::Error;
 
 use serde::{Deserialize, Serialize};
 use shred_derive::SystemData;

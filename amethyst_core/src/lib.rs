@@ -16,7 +16,7 @@ use rayon;
 use std::sync::Arc;
 
 pub use crate::{
-    bundle::{Error, ErrorKind, Result, SystemBundle},
+    bundle::SystemBundle,
     event::EventReader,
     system_ext::{Pausable, SystemExt},
     timing::*,

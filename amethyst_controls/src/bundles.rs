@@ -1,9 +1,7 @@
 use std::{hash::Hash, marker::PhantomData};
 
-use amethyst_core::{
-    bundle::{Result, SystemBundle},
-    specs::prelude::DispatcherBuilder,
-};
+use amethyst_core::{bundle::SystemBundle, specs::prelude::DispatcherBuilder};
+use amethyst_error::Error;
 
 use super::*;
 
@@ -76,7 +74,7 @@ where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
             FlyMovementSystem::<A, B>::new(
                 self.speed,
@@ -138,7 +136,7 @@ where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(ArcBallRotationSystem::default(), "arc_ball_rotation", &[]);
         builder.add(
             FreeRotationSystem::<A, B>::new(self.sensitivity_x, self.sensitivity_y),

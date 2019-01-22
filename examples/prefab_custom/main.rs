@@ -4,7 +4,7 @@ use std::fmt::Debug;
 
 use amethyst::{
     assets::{
-        AssetStorage, Handle, Prefab, PrefabData, PrefabError, PrefabLoader, PrefabLoaderSystem,
+        AssetStorage, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem,
         ProgressCounter, RonFormat,
     },
     core::{Named, Parent},

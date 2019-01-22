@@ -2,8 +2,9 @@ use amethyst_core::{
     specs::{Entity, WriteStorage},
     GlobalTransform, Named, Transform,
 };
+use amethyst_error::Error;
 
-use crate::{PrefabData, PrefabError, ProgressCounter};
+use crate::{PrefabData, ProgressCounter};
 
 impl<'a, T> PrefabData<'a> for Option<T>
 where
@@ -17,7 +18,7 @@ where
         entity: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
-    ) -> Result<Self::Result, PrefabError> {
+    ) -> Result<Self::Result, Error> {
         if let Some(ref prefab) = self {
             Ok(Some(prefab.add_to_entity(entity, system_data, entities)?))
         } else {
@@ -29,7 +30,7 @@ where
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
-    ) -> Result<bool, PrefabError> {
+    ) -> Result<bool, Error> {
         if let Some(ref mut prefab) = self {
             prefab.load_sub_assets(progress, system_data)
         } else {
@@ -47,8 +48,9 @@ impl<'a> PrefabData<'a> for GlobalTransform {
         entity: Entity,
         storage: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<(), PrefabError> {
-        storage.insert(entity, self.clone()).map(|_| ())
+    ) -> Result<(), Error> {
+        storage.insert(entity, self.clone()).map(|_| ())?;
+        Ok(())
     }
 }
 
@@ -64,9 +66,10 @@ impl<'a> PrefabData<'a> for Transform {
         entity: Entity,
         storages: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         storages.1.insert(entity, GlobalTransform::default())?;
-        storages.0.insert(entity, self.clone()).map(|_| ())
+        storages.0.insert(entity, self.clone()).map(|_| ())?;
+        Ok(())
     }
 }
 
@@ -79,8 +82,9 @@ impl<'a> PrefabData<'a> for Named {
         entity: Entity,
         storages: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<(), PrefabError> {
-        storages.0.insert(entity, self.clone()).map(|_| ())
+    ) -> Result<(), Error> {
+        storages.0.insert(entity, self.clone()).map(|_| ())?;
+        Ok(())
     }
 }
 
@@ -102,7 +106,7 @@ macro_rules! impl_data {
                 entity: Entity,
                 system_data: &mut Self::SystemData,
                 entities: &[Entity],
-            ) -> Result<(), PrefabError> {
+            ) -> Result<(), Error> {
                 #![allow(unused_variables)]
                 $(
                     self.$i.add_to_entity(entity, &mut system_data.$i, entities)?;
@@ -114,7 +118,7 @@ macro_rules! impl_data {
                 &mut self, progress:
                 &mut ProgressCounter,
                 system_data: &mut Self::SystemData
-            ) -> Result<bool, PrefabError> {
+            ) -> Result<bool, Error> {
                 let mut ret = false;
                 $(
                     if self.$i.load_sub_assets(progress, &mut system_data.$i)? {

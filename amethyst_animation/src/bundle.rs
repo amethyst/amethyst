@@ -7,10 +7,11 @@ use crate::{
         AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem, SamplerProcessor,
     },
 };
+use amethyst_error::Error;
 
 use amethyst_core::{
     specs::prelude::{Component, DispatcherBuilder},
-    Result, SystemBundle,
+    SystemBundle,
 };
 
 /// Bundle for vertex skinning
@@ -36,7 +37,7 @@ impl<'a> VertexSkinningBundle<'a> {
 }
 
 impl<'a, 'b, 'c> SystemBundle<'a, 'b> for VertexSkinningBundle<'c> {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
             VertexSkinningSystem::new(),
             "vertex_skinning_system",
@@ -86,7 +87,7 @@ impl<'a, 'b, 'c, T> SystemBundle<'a, 'b> for SamplingBundle<'c, T>
 where
     T: AnimationSampling + Component,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(SamplerProcessor::<T::Primitive>::new(), "", &[]);
         builder.add(SamplerInterpolationSystem::<T>::new(), self.name, self.dep);
         Ok(())
@@ -141,7 +142,7 @@ where
     I: PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
     T: AnimationSampling + Component + Clone,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(AnimationProcessor::<T>::new(), "", &[]);
         builder.add(
             AnimationControlSystem::<I, T>::new(),

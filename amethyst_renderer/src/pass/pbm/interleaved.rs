@@ -11,10 +11,10 @@ use amethyst_core::{
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::GlobalTransform,
 };
+use amethyst_error::Error;
 
 use crate::{
     cam::{ActiveCamera, Camera},
-    error::Result,
     hidden::{Hidden, HiddenPropagate},
     light::Light,
     mesh::{Mesh, MeshHandle},
@@ -99,7 +99,7 @@ impl<V> Pass for DrawPbm<V>
 where
     V: Query<(Position, Normal, Tangent, TexCoord)>,
 {
-    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);
         builder.with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0);
         setup_vertex_args(&mut builder);

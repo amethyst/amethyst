@@ -22,6 +22,7 @@ nightly = [ "amethyst_core/nightly" ]
 
 [dependencies]
 amethyst_core = { path = "../amethyst_core", version = "0.5" }
+amethyst_error = { path = "../amethyst_error", version = "0.1.0" }
 serde = { version = "1", features = ["derive"] }
 shrev = "1.0"
 shred = "0.7"
@@ -30,3 +31,4 @@ log = "0.4.6"
 uuid = { version = "0.7.1", features = ["v4","serde"] }
 thread_profiler = { version = "0.3" , optional = true }
 laminar = "0.1"
+err-derive = "0.1"
