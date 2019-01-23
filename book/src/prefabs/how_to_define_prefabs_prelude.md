@@ -20,7 +20,7 @@ Component     | Serialized representation             | Example(s)            | 
 
     This is where the `Component` type itself is completely serializable &ndash; the data is self-contained.
 
-    ```rust,no_run,noplaypen
+    ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # extern crate serde;
     # extern crate specs_derive;
@@ -39,7 +39,7 @@ Component     | Serialized representation             | Example(s)            | 
 
     This is where are multiple ways to construct the component, and a user should be able to choose which one to use.
 
-    ```rust,no_run,noplaypen
+    ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # extern crate serde;
     # extern crate specs_derive;
@@ -71,7 +71,7 @@ Component     | Serialized representation             | Example(s)            | 
 
     This is where most of the component is serializable, but there is also data that is only accessible at runtime, such as a device ID or an asset handle.
 
-    ```rust,no_run,noplaypen
+    ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst_audio;
     # extern crate amethyst_core;
     # extern crate specs_derive;
@@ -110,7 +110,7 @@ Component     | Serialized representation             | Example(s)            | 
 
     This is where the `Component` itself stores `Handle<_>`s.
 
-    ```rust,no_run,noplaypen
+    ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     #
     # use amethyst::{
