@@ -1,7 +1,7 @@
 use amethyst_error::Error;
 use fnv::FnvHashMap as HashMap;
 use gfx::memory::Pod;
-use winit::{dpi::LogicalSize, EventsLoop, Window as WinitWindow, WindowBuilder};
+use winit::{dpi::LogicalSize, EventsLoop, Icon, Window as WinitWindow, WindowBuilder};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -214,6 +214,10 @@ impl RendererBuilder {
 
         if let Some(dimensions) = self.config.max_dimensions {
             wb = wb.with_max_dimensions(LogicalSize::from_physical(dimensions, hidpi));
+        }
+
+        if let Some(ref icon) = self.config.icon {
+            wb = wb.with_window_icon(Icon::from_path(icon).ok());
         }
 
         self.winit_builder = wb;
