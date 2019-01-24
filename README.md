@@ -80,13 +80,7 @@ To compile any of the examples run:
 $ cargo run --example name_of_example
 ```
 
-All available examples are listed under [examples][exr].
-
-Our most advanced example is currently called pong. It is a pong game, as you may have guessed it.
-
-```
-$ cargo run --example pong
-```
+All available examples are listed under the [examples][exr] directory.
 
 There are quite a few prototype games that were made with Amethyst. A list will be available soon. While we create this list, feel free to join our Discord and ask about which projects are currently being made with Amethyst.
 
