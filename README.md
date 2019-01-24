@@ -82,11 +82,13 @@ $ cargo run --example name_of_example
 
 All available examples are listed under the [examples][exr] directory.
 
-There are quite a few prototype games that were made with Amethyst. A list will be available soon. While we create this list, feel free to join our Discord and ask about which projects are currently being made with Amethyst.
-
 For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chapter in the book.
 
 [gs]: https://www.amethyst.rs/book/latest/getting-started.html
+
+There are also many open source games and prototypes being made with Amethyst. See our showcase in the regularly updated [Games Made With Amethyst][gmwa] thread on the community forum for some good sources of inspiration.
+
+[gmwa]: https://community.amethyst-engine.org/t/games-made-with-amethyst/134
 
 ## Dependencies
 
