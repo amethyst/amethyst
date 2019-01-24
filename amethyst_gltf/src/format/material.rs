@@ -4,15 +4,14 @@ use gfx::texture::SamplerInfo;
 use gltf::{self, material::AlphaMode};
 use itertools::Itertools;
 
-use crate::{
-    assets::Source,
-    renderer::{
-        JpgFormat, MaterialPrefab, PngFormat, TextureData, TextureFormat, TextureMetadata,
-        TexturePrefab,
-    },
+use amethyst_assets::Source;
+use amethyst_error::Error;
+use amethyst_renderer::{
+    JpgFormat, MaterialPrefab, PngFormat, TextureData, TextureFormat, TextureMetadata,
+    TexturePrefab,
 };
 
-use super::{get_image_data, Buffers, GltfError, ImageFormat};
+use super::{get_image_data, Buffers, ImageFormat};
 
 // Load a single material, and transform into a format usable by the engine
 pub fn load_material(
@@ -20,7 +19,7 @@ pub fn load_material(
     buffers: &Buffers,
     source: Arc<dyn Source>,
     name: &str,
-) -> Result<MaterialPrefab<TextureFormat>, GltfError> {
+) -> Result<MaterialPrefab<TextureFormat>, Error> {
     let mut prefab = MaterialPrefab::default();
     prefab.albedo = Some(
         load_texture_with_factor(
@@ -165,7 +164,7 @@ fn load_texture_with_factor(
     source: Arc<dyn Source>,
     name: &str,
     srgb: bool,
-) -> Result<(TextureData, [f32; 4]), GltfError> {
+) -> Result<(TextureData, [f32; 4]), Error> {
     match texture {
         Some(info) => Ok((
             load_texture(&info.texture(), buffers, source, name, srgb)?,
@@ -181,7 +180,7 @@ fn load_texture(
     source: Arc<dyn Source>,
     name: &str,
     srgb: bool,
-) -> Result<TextureData, GltfError> {
+) -> Result<TextureData, Error> {
     let (data, format) = get_image_data(&texture.source(), buffers, source, name.as_ref())?;
 
     let metadata = match srgb {

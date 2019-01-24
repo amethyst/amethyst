@@ -1,19 +1,17 @@
 use std::ops::Range;
 
+use amethyst_error::Error;
+use amethyst_renderer::{AnimatedComboMeshCreator, Attribute, MeshData, Separate};
 use log::trace;
 
-use crate::{
-    renderer::{AnimatedComboMeshCreator, Attribute, MeshData, Separate},
-    GltfSceneOptions,
-};
-
-use super::{Buffers, GltfError};
+use super::Buffers;
+use crate::{error, GltfSceneOptions};
 
 pub fn load_mesh(
     mesh: &gltf::Mesh<'_>,
     buffers: &Buffers,
     options: &GltfSceneOptions,
-) -> Result<Vec<(MeshData, Option<usize>, Range<[f32; 3]>)>, GltfError> {
+) -> Result<Vec<(MeshData, Option<usize>, Range<[f32; 3]>)>, Error> {
     trace!("Loading mesh");
     let mut primitives = vec![];
 
@@ -47,7 +45,7 @@ pub fn load_mesh(
                 }
                 None => positions.collect(),
             })
-            .ok_or(GltfError::MissingPositions)?;
+            .ok_or(error::Error::MissingPositions)?;
 
         trace!("Loading normals");
         let normals = reader
@@ -60,7 +58,7 @@ pub fn load_mesh(
                 None => normals.collect(),
             })
             .unwrap_or_else(|| {
-                use crate::core::nalgebra::Point3;
+                use amethyst_core::nalgebra::Point3;
                 use std::iter::once;
                 let f = faces
                     .as_ref()

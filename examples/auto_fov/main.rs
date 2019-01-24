@@ -1,7 +1,7 @@
 use amethyst::{
     assets::{
-        Completion, Handle, Prefab, PrefabData, PrefabError, PrefabLoader, PrefabLoaderSystem,
-        ProgressCounter, RonFormat,
+        Completion, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem, ProgressCounter,
+        RonFormat,
     },
     core::{Transform, TransformBundle},
     derive::PrefabData,
@@ -20,12 +20,13 @@ use amethyst::{
         auto_fov::{AutoFov, AutoFovSystem},
         tag::{Tag, TagFinder},
     },
+    Error,
 };
 
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 
-fn main() -> amethyst::Result<()> {
+fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
     let app_dir = amethyst::utils::application_dir("examples")?;

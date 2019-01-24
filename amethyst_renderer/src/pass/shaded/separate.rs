@@ -9,10 +9,10 @@ use amethyst_core::{
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::GlobalTransform,
 };
+use amethyst_error::Error;
 
 use crate::{
     cam::{ActiveCamera, Camera},
-    error::Result,
     hidden::{Hidden, HiddenPropagate},
     light::Light,
     mesh::{Mesh, MeshHandle},
@@ -98,7 +98,7 @@ impl<'a> PassData<'a> for DrawShadedSeparate {
 }
 
 impl Pass for DrawShadedSeparate {
-    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         debug!("Building shaded pass");
         let mut builder = if self.skinning {
             create_skinning_effect(effect, FRAG_SRC)

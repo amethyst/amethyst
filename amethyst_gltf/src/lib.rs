@@ -8,26 +8,18 @@ pub use crate::format::GltfSceneFormat;
 
 use std::{collections::HashMap, ops::Range};
 
-use amethyst_animation as animation;
-use amethyst_assets as assets;
-use amethyst_core as core;
-use amethyst_renderer as renderer;
-
-use crate::{
-    animation::{AnimatablePrefab, SkinnablePrefab},
-    assets::{Handle, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter},
-    core::{
-        nalgebra::{Point3, Vector3},
-        specs::{
-            error::Error,
-            prelude::{Component, DenseVecStorage, Entity, Write, WriteStorage},
-        },
-        transform::Transform,
-        Named,
-    },
-    renderer::{MaterialPrefab, Mesh, MeshData, TextureFormat},
+use amethyst_animation::{AnimatablePrefab, SkinnablePrefab};
+use amethyst_assets::{Handle, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter};
+use amethyst_core::{
+    nalgebra::{Point3, Vector3},
+    specs::prelude::{Component, DenseVecStorage, Entity, Write, WriteStorage},
+    transform::Transform,
+    Named,
 };
+use amethyst_error::Error;
+use amethyst_renderer::{MaterialPrefab, Mesh, MeshData, TextureFormat};
 
+mod error;
 mod format;
 
 /// Load `GltfSceneAsset`s

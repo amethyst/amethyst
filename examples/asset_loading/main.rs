@@ -2,11 +2,12 @@
 // TODO: Add asset loader directory store for the meshes.
 
 use amethyst::{
-    assets::{Loader, Result as AssetResult, SimpleFormat},
+    assets::{Loader, SimpleFormat},
     core::{
         nalgebra::{Vector2, Vector3},
         Transform, TransformBundle,
     },
+    error::Error,
     input::InputBundle,
     prelude::*,
     renderer::{
@@ -14,7 +15,6 @@ use amethyst::{
         PosNormTex, Projection, Rgba,
     },
     utils::application_root_dir,
-    Error,
 };
 
 #[derive(Clone)]
@@ -26,7 +26,7 @@ impl SimpleFormat<Mesh> for Custom {
     type Options = ();
 
     /// Reads the given bytes and produces asset data.
-    fn import(&self, bytes: Vec<u8>, _: ()) -> AssetResult<MeshData> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<MeshData, Error> {
         let data: String = String::from_utf8(bytes)?;
 
         let trimmed: Vec<&str> = data.lines().filter(|line| line.len() >= 1).collect();

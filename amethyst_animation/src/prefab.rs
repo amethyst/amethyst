@@ -1,5 +1,5 @@
 use std::{
-    error::Error,
+    error,
     fmt::{Debug, Display, Formatter, Result as FmtResult},
     hash::Hash,
     marker::PhantomData,
@@ -7,12 +7,10 @@ use std::{
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, PrefabError, ProgressCounter};
-use amethyst_core::specs::{
-    error::BoxedErr,
-    prelude::{Entity, Read, ReadExpect, WriteStorage},
-};
+use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, ProgressCounter};
+use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, WriteStorage};
 use amethyst_derive::PrefabData;
+use amethyst_error::Error;
 
 use crate::{Animation, AnimationHierarchy, AnimationSampling, AnimationSet, RestState, Sampler};
 
@@ -63,19 +61,14 @@ pub struct MissingAssetHandle;
 
 impl Display for MissingAssetHandle {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(f, "{:?}", self)
+        write!(
+            f,
+            "AnimationPrefab was not populated with an asset handle prior to calling load_prefab."
+        )
     }
 }
 
-impl Error for MissingAssetHandle {
-    fn description(&self) -> &str {
-        "AnimationPrefab was not populated with an asset handle prior to calling load_prefab."
-    }
-
-    fn cause(&self) -> Option<&dyn Error> {
-        None
-    }
-}
+impl error::Error for MissingAssetHandle {}
 
 impl<'a, T> PrefabData<'a> for AnimationPrefab<T>
 where
@@ -95,18 +88,19 @@ where
         _: Entity,
         _: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<Handle<Animation<T>>, PrefabError> {
-        self.handle
+    ) -> Result<Handle<Animation<T>>, Error> {
+        Ok(self
+            .handle
             .as_ref()
             .cloned()
-            .ok_or_else(|| PrefabError::Custom(BoxedErr::new(MissingAssetHandle)))
+            .ok_or_else(|| MissingAssetHandle)?)
     }
 
     fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         &mut (ref loader, ref sampler_storage, ref animation_storage): &mut Self::SystemData,
-    ) -> Result<bool, PrefabError> {
+    ) -> Result<bool, Error> {
         let animation = Animation::<T> {
             nodes: self
                 .samplers
@@ -160,7 +154,7 @@ where
         entity: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         let set = system_data
             .0
             .entry(entity)?
@@ -178,7 +172,7 @@ where
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
-    ) -> Result<bool, PrefabError> {
+    ) -> Result<bool, Error> {
         let mut ret = false;
         for (_, animation_prefab) in &mut self.animations {
             if animation_prefab.load_sub_assets(progress, &mut system_data.1)? {
@@ -213,7 +207,7 @@ where
         entity: Entity,
         storage: &mut Self::SystemData,
         entities: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         storage
             .insert(
                 entity,
@@ -224,7 +218,9 @@ where
                         .collect(),
                 ),
             )
-            .map(|_| ())
+            .map(|_| ())?;
+
+        Ok(())
     }
 }
 

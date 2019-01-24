@@ -2,9 +2,10 @@
 //!
 //! TODO: Remove redundant padding once `#[repr(align(...))]` stabilizes.
 
-use amethyst_assets::{PrefabData, PrefabError, ProgressCounter};
+use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage};
 use amethyst_derive::PrefabData;
+use amethyst_error::Error;
 
 use gfx_macros::ConstantBuffer;
 use serde::{Deserialize, Serialize};

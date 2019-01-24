@@ -6,8 +6,8 @@ use amethyst::{
         EndControl, VertexSkinningBundle,
     },
     assets::{
-        AssetPrefab, Completion, Handle, Prefab, PrefabData, PrefabError, PrefabLoader,
-        PrefabLoaderSystem, ProgressCounter, RonFormat,
+        AssetPrefab, Completion, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem,
+        ProgressCounter, RonFormat,
     },
     controls::{ControlTagPrefab, FlyControlBundle},
     core::transform::{Transform, TransformBundle},
@@ -20,6 +20,7 @@ use amethyst::{
         application_root_dir,
         tag::{Tag, TagFinder},
     },
+    Error,
 };
 use amethyst_gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem};
 

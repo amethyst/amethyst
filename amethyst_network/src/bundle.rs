@@ -2,14 +2,10 @@ use std::net::SocketAddr;
 
 use serde::{de::DeserializeOwned, Serialize};
 
-use amethyst_core::{
-    bundle::{Result, ResultExt, SystemBundle},
-    shred::DispatcherBuilder,
-};
+use amethyst_core::{bundle::SystemBundle, shred::DispatcherBuilder};
+use amethyst_error::{Error, ResultExt};
 
-use crate::{filter::NetFilter, server::ServerConfig};
-
-use super::NetSocketSystem;
+use crate::{filter::NetFilter, server::ServerConfig, NetSocketSystem};
 
 /// A convenience bundle to create the infrastructure needed to send and receive network messages.
 pub struct NetworkBundle<T> {
@@ -45,9 +41,9 @@ where
     T: Send + Sync + PartialEq + Serialize + Clone + DeserializeOwned + 'static,
 {
     /// Build the networking bundle by adding the networking system to the application.
-    fn build(self, builder: &mut DispatcherBuilder<'_, '_>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'_, '_>) -> Result<(), Error> {
         let socket_system = NetSocketSystem::<T>::new(self.config, self.filters)
-            .chain_err(|| "Failed to open network system.")?;
+            .with_context(|_| Error::from_string("Failed to open network system."))?;
 
         builder.add(socket_system, "net_socket", &[]);
 

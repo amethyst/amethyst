@@ -1,22 +1,20 @@
 //! GLTF format
 
-use std::{collections::HashMap, error::Error as StdError, fmt, sync::Arc};
+use std::{collections::HashMap, sync::Arc};
 
 use gltf::{self, Gltf};
 use log::debug;
+use serde::{Deserialize, Serialize};
 
-use crate::{
-    animation::AnimationHierarchyPrefab,
-    assets::{
-        Error as AssetError, Format, FormatValue, Prefab, Result as AssetResult, ResultExt, Source,
-    },
-    core::{
-        nalgebra::{Quaternion, Unit},
-        transform::Transform,
-    },
+use amethyst_animation::AnimationHierarchyPrefab;
+use amethyst_assets::{Format, FormatValue, Prefab, Source};
+use amethyst_core::{
+    nalgebra::{Quaternion, Unit},
+    transform::Transform,
 };
+use amethyst_error::{format_err, Error, ResultExt};
 
-use super::*;
+use crate::{error, GltfMaterialSet, GltfNodeExtent, GltfPrefab, GltfSceneOptions, Named};
 
 use self::{
     animation::load_animations,
@@ -42,85 +40,6 @@ mod skin;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct GltfSceneFormat;
 
-/// Format errors
-#[derive(Debug)]
-pub enum GltfError {
-    /// Importer failed to load the json file
-    GltfImporterError(self::importer::Error),
-
-    /// GLTF have no default scene and the number of scenes is not 1
-    InvalidSceneGltf(usize),
-
-    /// GLTF primitive missing positions
-    MissingPositions,
-
-    /// GLTF animation channel missing input
-    MissingInputs,
-
-    /// GLTF animation channel missing output
-    MissingOutputs,
-
-    /// External file failed loading
-    Asset(AssetError),
-
-    /// Not implemented yet
-    NotImplemented,
-}
-
-impl StdError for GltfError {
-    fn description(&self) -> &str {
-        use self::GltfError::*;
-        match *self {
-            GltfImporterError(_) => "Gltf import error",
-            InvalidSceneGltf(_) => "Gltf has no default scene, and the number of scenes is not 1",
-            MissingPositions => "Primitive missing positions",
-            MissingInputs => "Channel missing inputs",
-            MissingOutputs => "Channel missing outputs",
-            Asset(_) => "File loading error",
-            NotImplemented => "Not implemented",
-        }
-    }
-
-    fn cause(&self) -> Option<&dyn StdError> {
-        match *self {
-            GltfError::GltfImporterError(ref err) => Some(err),
-            GltfError::Asset(ref err) => Some(err),
-            _ => None,
-        }
-    }
-}
-
-impl fmt::Display for GltfError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use std::error::Error;
-
-        use self::GltfError::*;
-
-        match *self {
-            GltfImporterError(ref err) => {
-                write!(f, "{}: {}", self.description(), err.description())
-            }
-            Asset(ref err) => write!(f, "{}: {}", self.description(), err.description()),
-            InvalidSceneGltf(size) => write!(f, "{}: {}", self.description(), size),
-            MissingPositions | NotImplemented | MissingInputs | MissingOutputs => {
-                write!(f, "{}", self.description())
-            }
-        }
-    }
-}
-
-impl From<self::importer::Error> for GltfError {
-    fn from(err: self::importer::Error) -> Self {
-        GltfError::GltfImporterError(err)
-    }
-}
-
-impl From<AssetError> for GltfError {
-    fn from(err: AssetError) -> Self {
-        GltfError::Asset(err)
-    }
-}
-
 impl Format<Prefab<GltfPrefab>> for GltfSceneFormat {
     const NAME: &'static str = "GLTFScene";
 
@@ -132,9 +51,10 @@ impl Format<Prefab<GltfPrefab>> for GltfSceneFormat {
         source: Arc<dyn Source>,
         options: GltfSceneOptions,
         _create_reload: bool,
-    ) -> AssetResult<FormatValue<Prefab<GltfPrefab>>> {
+    ) -> Result<FormatValue<Prefab<GltfPrefab>>, Error> {
         Ok(FormatValue::data(
-            load_gltf(source, &name, options).chain_err(|| "Failed to import gltf scene")?,
+            load_gltf(source, &name, options)
+                .with_context(|_| format_err!("Failed to import gltf scene"))?,
         ))
     }
 }
@@ -143,11 +63,13 @@ fn load_gltf(
     source: Arc<dyn Source>,
     name: &str,
     options: GltfSceneOptions,
-) -> Result<Prefab<GltfPrefab>, GltfError> {
+) -> Result<Prefab<GltfPrefab>, Error> {
     debug!("Loading GLTF scene {}", name);
     import(source.clone(), name)
-        .map_err(GltfError::GltfImporterError)
-        .and_then(|(gltf, buffers)| load_data(&gltf, &buffers, &options, source, name))
+        .with_context(|_| error::Error::GltfImporterError)
+        .and_then(|(gltf, buffers)| {
+            load_data(&gltf, &buffers, &options, source, name).map_err(Into::into)
+        })
 }
 
 fn load_data(
@@ -156,7 +78,7 @@ fn load_data(
     options: &GltfSceneOptions,
     source: Arc<dyn Source>,
     name: &str,
-) -> Result<Prefab<GltfPrefab>, GltfError> {
+) -> Result<Prefab<GltfPrefab>, Error> {
     let scene_index = get_scene_index(gltf, options)?;
     let mut prefab = Prefab::<GltfPrefab>::new();
     load_scene(
@@ -171,13 +93,15 @@ fn load_data(
     Ok(prefab)
 }
 
-fn get_scene_index(gltf: &Gltf, options: &GltfSceneOptions) -> Result<usize, GltfError> {
+fn get_scene_index(gltf: &Gltf, options: &GltfSceneOptions) -> Result<usize, Error> {
     let num_scenes = gltf.scenes().len();
     match (options.scene_index, gltf.default_scene()) {
-        (Some(index), _) if index >= num_scenes => Err(GltfError::InvalidSceneGltf(num_scenes)),
+        (Some(index), _) if index >= num_scenes => {
+            Err(error::Error::InvalidSceneGltf(num_scenes).into())
+        }
         (Some(index), _) => Ok(index),
         (None, Some(scene)) => Ok(scene.index()),
-        (None, _) if num_scenes > 1 => Err(GltfError::InvalidSceneGltf(num_scenes)),
+        (None, _) if num_scenes > 1 => Err(error::Error::InvalidSceneGltf(num_scenes).into()),
         (None, _) => Ok(0),
     }
 }
@@ -190,7 +114,7 @@ fn load_scene(
     source: Arc<dyn Source>,
     name: &str,
     prefab: &mut Prefab<GltfPrefab>,
-) -> Result<(), GltfError> {
+) -> Result<(), Error> {
     let scene = gltf
         .scenes()
         .nth(scene_index)
@@ -299,7 +223,7 @@ fn load_node(
     skin_map: &mut HashMap<usize, SkinInfo>,
     parent_bounding_box: &mut GltfNodeExtent,
     material_set: &mut GltfMaterialSet,
-) -> Result<(), GltfError> {
+) -> Result<(), Error> {
     node_map.insert(node.index(), entity_index);
 
     // Load node name.

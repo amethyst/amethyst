@@ -2,20 +2,11 @@
 
 use derivative::Derivative;
 use serde::{de::DeserializeOwned, Serialize};
-use std::{
-    convert::From,
-    error::Error,
-    fmt::{Debug, Display, Formatter, Result as FmtResult},
-    hash::Hash,
-    path::Path,
-    result::Result as StdResult,
-};
+use std::{error, fmt, hash::Hash, path::Path};
 
 use amethyst_config::{Config, ConfigError};
-use amethyst_core::{
-    bundle::{Result, SystemBundle},
-    specs::prelude::DispatcherBuilder,
-};
+use amethyst_core::{bundle::SystemBundle, specs::prelude::DispatcherBuilder};
+use amethyst_error::Error;
 
 use crate::{BindingError, Bindings, InputSystem};
 
@@ -70,10 +61,10 @@ where
     pub fn with_bindings_from_file<P: AsRef<Path>>(
         self,
         file: P,
-    ) -> StdResult<Self, BindingsFileError<AX, AC>>
+    ) -> Result<Self, BindingsFileError<AX, AC>>
     where
-        AX: DeserializeOwned + Serialize + Display,
-        AC: DeserializeOwned + Serialize + Display,
+        AX: DeserializeOwned + Serialize + fmt::Display,
+        AC: DeserializeOwned + Serialize + fmt::Display,
     {
         let mut bindings = Bindings::load_no_fallback(file)?;
         bindings.check_invariants()?;
@@ -107,7 +98,7 @@ where
     AX: Hash + Eq + Clone + Send + Sync + 'static,
     AC: Hash + Eq + Clone + Send + Sync + 'static,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         #[cfg(feature = "sdl_controller")]
         {
             use super::SdlEventsSystem;
@@ -127,40 +118,46 @@ where
 
 /// An error occurred while loading the bindings file.
 #[derive(Debug)]
-pub enum BindingsFileError<AX, AC> {
+pub enum BindingsFileError<AX: 'static, AC: 'static> {
     /// Problem in amethyst_config
     ConfigError(ConfigError),
     /// Problem with the bindings themselves.
     BindingError(BindingError<AX, AC>),
 }
 
-impl<AX, AC> Display for BindingsFileError<AX, AC>
+impl<AX: 'static, AC: 'static> fmt::Display for BindingsFileError<AX, AC>
 where
-    AX: Display,
-    AC: Display,
+    AX: fmt::Display,
+    AC: fmt::Display,
 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            BindingsFileError::ConfigError(ref err) => Display::fmt(err, f),
-            BindingsFileError::BindingError(ref err) => Display::fmt(err, f),
+            BindingsFileError::ConfigError(..) => write!(f, "Configuration error"),
+            BindingsFileError::BindingError(..) => write!(f, "Binding error"),
         }
     }
 }
 
-impl<AX, AC> Error for BindingsFileError<AX, AC>
+impl<AX: 'static, AC: 'static> error::Error for BindingsFileError<AX, AC>
 where
-    AX: Debug + Display,
-    AC: Debug + Display,
+    AX: fmt::Debug + fmt::Display,
+    AC: fmt::Debug + fmt::Display,
 {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            BindingsFileError::ConfigError(ref e) => Some(e),
+            BindingsFileError::BindingError(ref e) => Some(e),
+        }
+    }
 }
 
-impl<AX, AC> From<BindingError<AX, AC>> for BindingsFileError<AX, AC> {
+impl<AX: 'static, AC: 'static> From<BindingError<AX, AC>> for BindingsFileError<AX, AC> {
     fn from(error: BindingError<AX, AC>) -> Self {
         BindingsFileError::BindingError(error)
     }
 }
 
-impl<AX, AC> From<ConfigError> for BindingsFileError<AX, AC> {
+impl<AX: 'static, AC: 'static> From<ConfigError> for BindingsFileError<AX, AC> {
     fn from(error: ConfigError) -> Self {
         BindingsFileError::ConfigError(error)
     }

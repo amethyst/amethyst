@@ -10,10 +10,10 @@ use amethyst_core::{
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::GlobalTransform,
 };
+use amethyst_error::Error;
 
 use crate::{
     cam::{ActiveCamera, Camera},
-    error::Result,
     hidden::{Hidden, HiddenPropagate},
     mesh::{Mesh, MeshHandle},
     mtl::{Material, MaterialDefaults},
@@ -101,7 +101,7 @@ impl<'a> PassData<'a> for DrawFlatSeparate {
 }
 
 impl Pass for DrawFlatSeparate {
-    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         use std::mem;
         let mut builder = if self.skinning {
             create_skinning_effect(effect, FRAG_SRC)

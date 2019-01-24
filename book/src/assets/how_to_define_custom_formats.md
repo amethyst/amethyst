@@ -30,7 +30,8 @@ If you are defining a new format that may be useful to others, [please send us a
     # extern crate serde;
     #
     use amethyst::{
-        assets::{self, Asset, ResultExt, SimpleFormat},
+        error::Error,
+        assets::{Asset, SimpleFormat},
     };
     use serde::Deserialize;
     use ron::de::Deserializer; // Replace this in your implementation.
@@ -50,11 +51,10 @@ If you are defining a new format that may be useful to others, [please send us a
         // the parameter type may be specified here.
         type Options = ();
 
-        fn import(&self, bytes: Vec<u8>, _: ()) -> Result<A::Data, assets::Error> {
-            let mut deserializer =
-                Deserializer::from_bytes(&bytes).chain_err(|| "Failed deserializing MyLang file")?;
-            let val = A::Data::deserialize(&mut deserializer).chain_err(|| "Failed parsing MyLang file")?;
-            deserializer.end().chain_err(|| "Failed parsing MyLang file")?;
+        fn import(&self, bytes: Vec<u8>, _: ()) -> Result<A::Data, Error> {
+            let mut deserializer = Deserializer::from_bytes(&bytes)?;
+            let val = A::Data::deserialize(&mut deserializer)?;
+            deserializer.end()?;
 
             Ok(val)
         }
@@ -70,9 +70,10 @@ If you are defining a new format that may be useful to others, [please send us a
     # extern crate serde_derive;
     #
     # use amethyst::{
+    #     error::Error,
     #     assets::{
-    #         self, Asset, AssetStorage, Handle, Loader, Processor, ProgressCounter,
-    #         ProcessingState, ResultExt, SimpleFormat,
+    #         Asset, AssetStorage, Handle, Loader, Processor, ProgressCounter,
+    #         ProcessingState, SimpleFormat,
     #     },
     #     ecs::VecStorage,
     #     prelude::*,
@@ -100,8 +101,8 @@ If you are defining a new format that may be useful to others, [please send us a
     #     type HandleStorage = VecStorage<EnergyBlastHandle>;
     # }
     #
-    # impl From<EnergyBlast> for assets::Result<ProcessingState<EnergyBlast>> {
-    #     fn from(energy_blast: EnergyBlast) -> assets::Result<ProcessingState<EnergyBlast>> {
+    # impl From<EnergyBlast> for Result<ProcessingState<EnergyBlast>, Error> {
+    #     fn from(energy_blast: EnergyBlast) -> Result<ProcessingState<EnergyBlast>, Error> {
     #       Ok(ProcessingState::Loaded(energy_blast))
     #     }
     # }
@@ -128,12 +129,10 @@ If you are defining a new format that may be useful to others, [please send us a
     #     // the parameter type may be specified here.
     #     type Options = ();
     #
-    #     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<A::Data, assets::Error> {
-    #         let mut deserializer = Deserializer::from_bytes(&bytes)
-    #             .chain_err(|| "Failed deserializing MyLang file")?;
-    #         let val = A::Data::deserialize(&mut deserializer)
-    #             .chain_err(|| "Failed parsing MyLang file")?;
-    #         deserializer.end().chain_err(|| "Failed parsing MyLang file")?;
+    #     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<A::Data, Error> {
+    #         let mut deserializer = Deserializer::from_bytes(&bytes)?;
+    #         let val = A::Data::deserialize(&mut deserializer)?;
+    #         deserializer.end()?;
     #
     #         Ok(val)
     #     }

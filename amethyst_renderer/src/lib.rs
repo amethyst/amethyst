@@ -86,7 +86,7 @@ pub use crate::{
     visibility::{Visibility, VisibilitySortingSystem},
 };
 
-pub mod error;
+mod error;
 pub mod mouse;
 pub mod pipe;
 
