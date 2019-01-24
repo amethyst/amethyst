@@ -83,7 +83,7 @@ on Discord or open an issue; we are always happy to help!
 
 [bkr]: https://www.amethyst.rs/book/latest/
 [bkm]: https://www.amethyst.rs/book/master/
-[exr]: https://github.com/amethyst/amethyst/tree/v0.9.0/examples
+[exr]: https://github.com/amethyst/amethyst/tree/v0.10.0/examples
 [exm]: https://github.com/amethyst/amethyst/tree/master/examples
 
 ## Getting started
