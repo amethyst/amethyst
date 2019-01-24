@@ -23,9 +23,10 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
 
     ```rust,ignore
     use amethyst::{
-        assets::{PrefabData, PrefabError, ProgressCounter},
+        assets::{PrefabData, ProgressCounter},
         derive::PrefabData,
         ecs::Entity,
+        Error,
     };
     use serde::{Deserialize, Serialize};
     ```
@@ -43,7 +44,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
         # extern crate specs_derive;
         #
         # use amethyst::{
-        #     assets::{PrefabData, PrefabError, ProgressCounter},
+        #     assets::{PrefabData, ProgressCounter},
         #     core::Named,
         #     derive::PrefabData,
         #     ecs::{
@@ -51,6 +52,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
         #         Component, Entity, WriteStorage,
         #     },
         #     prelude::*,
+        #     Error,
         # };
         # use derivative::Derivative;
         # use serde::{Deserialize, Serialize};
@@ -94,7 +96,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
         # extern crate specs_derive;
         #
         # use amethyst::{
-        #     assets::{PrefabData, PrefabError, ProgressCounter},
+        #     assets::{PrefabData, ProgressCounter},
         #     core::Named,
         #     derive::PrefabData,
         #     ecs::{
@@ -102,6 +104,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
         #         Component, Entity, WriteStorage,
         #     },
         #     prelude::*,
+        #     Error,
         # };
         # use derivative::Derivative;
         # use serde::{Deserialize, Serialize};

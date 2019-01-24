@@ -31,9 +31,10 @@ If you are attempting to adapt a more complex type, please choose the appropriat
 
     ```rust,ignore
     use amethyst::{
-        assets::{PrefabData, PrefabError, ProgressCounter},
+        assets::{PrefabData, ProgressCounter},
         derive::PrefabData,
         ecs::Entity,
+        Error,
     };
     use serde::{Deserialize, Serialize};
     ```
@@ -56,13 +57,14 @@ If you are attempting to adapt a more complex type, please choose the appropriat
     # extern crate specs_derive;
     #
     # use amethyst::{
-    #     assets::{Prefab, PrefabData, PrefabError},
+    #     assets::{Prefab, PrefabData},
     #     derive::PrefabData,
     #     ecs::{
     #         storage::DenseVecStorage,
     #         Component, Entity, WriteStorage,
     #     },
     #     prelude::*,
+    #     Error,
     # };
     # use derivative::Derivative;
     # use serde::{Deserialize, Serialize};
