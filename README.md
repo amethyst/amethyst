@@ -23,11 +23,13 @@ configurable as possible.
 
 ## Principles
 
-These principles are what make Amethyst unique and competitive in the world of game engines.
+These principles are what makes Amethyst unique and competitive in the world of
+game engines:
 
 * Massively parallel architecture.
 * Powered by a correct [Entity Component System][ECS] model.
-* Rapid prototyping with [RON][ron] files for prefabs and an abstract scripting API.
+* Rapid prototyping with [RON][ron] files for prefabs and an abstract scripting
+  API.
 * Strong focus on encouraging reusability and clean interfaces.
 
 [ecs]: https://en.wikipedia.org/wiki/Entity–component–system
@@ -37,20 +39,25 @@ These principles are what make Amethyst unique and competitive in the world of g
 
 ### Extreme Multithreading
 
-Amethyst is based over a very powerful parallel [ECS][ecs] called Specs.
-This allows games built with Amethyst to maximize the processing power usage to make it run as smooth and as fast as possible, without the headache of multithread programming.
+Amethyst is based over a very powerful parallel [ECS][ecs] called Specs. This
+allows games built with Amethyst to maximize the available processing power to
+run as smoothly and as quickly as possible, without the headaches of
+multi-threaded programming.
 
 ### Clean
 
-By design, the amethyst engine encourages you to write clean and reusable code for your behaviours and data structures, allowing engine users to easily
+By design, the Amethyst engine encourages you to write clean and reusable code
+for your behaviours and data structures. This allows engine users to easily
 share useful components, thus reducing development time and cost.
 
-Using the [ECS][ecs] architecture, the code of games can be cleanly divided between data and behaviour, making it easy to understand what is going on,
-even if the game is running on a massive 64 cores processor.
+Using the [ECS][ecs] architecture, the code of games can be cleanly divided
+between data and behaviour, making it easy to understand what is going on, even
+if the game is running on a massive 64 cores processor.
 
 ### Community
 
-While we may not be feature-packed (yet!), we all strongly believe that the community-oriented side of Amethyst will thrive as we move forward!
+While we may not be feature-packed (yet!), we all strongly believe that the
+community-oriented side of Amethyst will thrive as we move forward!
 
 ## Features
 
@@ -65,16 +72,19 @@ Please visit the [features page][feat] for a list of features Amethyst provides.
 * [**Link to the examples (latest release)**][exr]
 * [**Link to the examples (master)**][exm]
 
+## Usage
+
+While the engine can be hard to use at times, we made a lot of
+[documentation][bkr] that will teach you everything you need to use Amethyst
+comfortably!
+
+If you don't understand a part of the documentation, please let us know. Join us
+on Discord or open an issue; we are always happy to help!
+
 [bkr]: https://www.amethyst.rs/book/latest/
 [bkm]: https://www.amethyst.rs/book/master/
 [exr]: https://github.com/amethyst/amethyst/tree/v0.9.0/examples
 [exm]: https://github.com/amethyst/amethyst/tree/master/examples
-
-## Usage
-
-While the engine can be hard to use at times, we made a lot of [documentation][bkr] that will teach you everything you need to use Amethyst comfortably!
-
-If you don't understand a part of the documentation, please let us know. Join us on Discord or open an issue, we are always happy to help!
 
 ## Getting started
 
@@ -86,25 +96,28 @@ $ cargo run --example name_of_example
 
 All available examples are listed under [examples][exr].
 
-Our most advanced example is currently called pong. It is a pong game, as you may have guessed it.
+Our most advanced example is currently called pong. It is a pong game, as you
+may have guessed it.
 
 ```
 $ cargo run --example pong
 ```
 
-There are quite a few prototype games that were made with Amethyst. A list will be available soon.
-While we create this list, feel free to join our discord and ask about which projects are currently being made with Amethyst.
+There are quite a few prototype games that were made with Amethyst. A list will
+be available soon. While we create this list, feel free to join our Discord and
+ask about which projects are currently being made with Amethyst.
 
-For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chapter
-in the book.
+For a full-blown "Hello World" tutorial check out the [Getting Started][gs]
+chapter in the book.
 
-[gs]: https://www.amethyst.rs/book/latest/
+[gs]: https://www.amethyst.rs/book/latest/getting-started.html
 
 ## Dependencies
 
-If you are compiling on Linux make sure to install the dependencies below.
+If you are compiling on Linux, make sure to install the dependencies below.
 
-Additionally, make sure you have EGL installed. Since the package depends on your drivers, we cannot list it here.
+Additionally, make sure you have EGL installed. Since the package depends on
+your drivers, we cannot list it here.
 
 ### Debian/Ubuntu
 
@@ -120,11 +133,12 @@ $ sudo dnf install alsa-lib-devel openssl-devel cmake freetype-devel expat-devel
 
 ### Other
 
-See your distribution specific installation process for the equivalent dependencies.
+See your distribution-specific installation process for the equivalent
+dependencies.
 
-Please note that you need to have a functional graphics driver installed.
-If you get a panic about the renderer unable to create the context when trying to run an example,
-faulty driver installation can be the issue.
+Please note that you need to have a functional graphics driver installed. If
+you get a panic about the renderer unable to create the context when trying to
+run an example, a faulty driver installation could be the issue.
 
 ## Building Documentation
 
@@ -135,16 +149,17 @@ $ cargo install mdbook
 $ mdbook build book
 ```
 
-If you're actively editing the documentation, it's easiest to run:
+If you're actively editing the book, it's easiest to run:
 
 ```
 $ mdbook serve book
 ```
 
-and go to `http://localhost:3000`. For more information, see the [mdBook project](https://github.com/rust-lang-nursery/mdBook).
+and navigate to `http://localhost:3000`. The text itself can be found in
+`book/html/index.html`. For more information, please see the
+[mdBook project](https://github.com/rust-lang-nursery/mdBook).
 
-The text can be found in `book/html/index.html`. To generate the API
-documentation locally, do:
+To generate the API documentation locally, do:
 
 ```
 $ cargo doc
@@ -152,15 +167,17 @@ $ cargo doc
 
 The API reference can be found in `target/doc/amethyst/index.html`.
 
-## Questions / Help
+## Questions/Help
 
-We do not support anything other than the most recent Rust stable release. Use nightly and beta channels with this project at your own risk.
+Amethyst supports _only_ the latest stable release of Rust. Use the nightly and
+beta channels with this project at your own risk.
 
-Please check out the [FAQ][faq] before asking.
+If you have a question, please check out the [FAQ][faq] before asking. Chances
+are, the solution to your problem is already present there. If you still need
+help, feel free to ask on our [Discord server][di].
 
-If you have a question, feel free to ask on our [Discord server][di] and we'll help you.
-
-Other places you may want to check out are [r/rust_gamedev][rg] and [#rust-gamedev IRC][irc].
+Other places you might want to check out are [r/rust_gamedev][rg] and the
+[#rust-gamedev IRC][irc].
 
 [faq]: https://github.com/amethyst/amethyst/wiki/Frequently-Asked-Questions
 [di]: https://discord.gg/amethyst
@@ -169,21 +186,22 @@ Other places you may want to check out are [r/rust_gamedev][rg] and [#rust-gamed
 
 ## Contributing
 
-We are a community project that welcomes contributions from anyone.
+Amethyst is a community-based project that welcomes contributions from anyone.
+If you're interested in helping out, please read the
+[contribution guidelines][cm] before getting started.
 
-If you're interested in helping out, please read the [contribution guidelines][cm]
-file before getting started.
+We have a [good first issue][gfi] category that groups all issues or feature
+requests that can be made without having an extensive knowledge of Rust or
+Amethyst. Working on those issues is a good, if not the best, way to learn.
 
-We have a [good first issue][gfi] category that groups all issues or feature request
-that can be made without having an extensive knowledge of rust or amethyst.
-Working on those issues is a good, if not the best way to learn.
+If you think you are not ready to code yet, you can still contribute by
+reviewing code written by other members of the community. Code reviews ensure
+that code merged into Amethyst is of the highest quality as possible. Pull
+requests that are available for reviews can be found [here][pr].
 
-If you think you are not ready to code yet, you can still contribute by reviewing code written by other members of the community.
-In fact, code reviews ensures that the code that gets added to amethyst is of the highest quality as possible.
-Pull requests available for reviews are [here][pr].
-
-If for some reason we don't have any open PR or good first issues (that would be a good thing),
-you can look through the [issue tracker][it].
+If for some reason we don't have any open PRs in need of a review nor any good
+first issues (that would be a good thing), feel free to consult our
+[issue tracker][it].
 
 [cm]: docs/CONTRIBUTING.md
 [pr]: https://github.com/amethyst/amethyst/pulls
@@ -194,9 +212,12 @@ you can look through the [issue tracker][it].
 
 Thank you to all our backers! 🙏 [Become a backer](https://www.amethyst-engine.org/donate)
 
-<a href="https://opencollective.com/amethyst#backers" target="_blank"><img src="https://opencollective.com/amethyst/backers.svg?width=890"></a>
+<a href="https://opencollective.com/amethyst#backers" target="_blank">
+  <img src="https://opencollective.com/amethyst/backers.svg?width=890">
+</a>
 
 ## Sponsors
+
 Amethyst is supported by:
 <p>
   <a href="https://www.digitalocean.com?utm_medium=opensource&utm_source=amethyst/">
