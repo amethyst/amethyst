@@ -17,7 +17,7 @@ use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 ///
 /// The transforms are preformed in this order: scale, then rotation, then translation.
 #[derive(Getters, Setters, MutGetters, Clone, Debug, PartialEq)]
-pub struct Transform3<N: Real> {
+pub struct Transform<N: Real> {
     /// Translation + rotation value
     #[get]
     #[set]
@@ -32,7 +32,7 @@ pub struct Transform3<N: Real> {
     pub(crate) global_matrix: Matrix4<N>,
 }
 
-impl<N: Real> Transform3<N> {
+impl<N: Real> Transform<N> {
     /// Create a new Transform.
     ///
     /// # Examples
@@ -49,12 +49,21 @@ impl<N: Real> Transform3<N> {
     /// assert_eq!(t.translation().y, 2.0);
     /// ```
     pub fn new(position: Translation3<N>, rotation: UnitQuaternion<N>, scale: Vector3<N>) -> Self {
-        Transform3 {
+        Transform {
             iso: Isometry3::from_parts(position, rotation),
             scale,
             global_matrix: na::one(),
         }
     }
+
+    // TODO!!!!!!!!!!!!!!-----------------------------------------
+    /*#[inline]
+    pub fn face_towards_2d(&mut self, target: Vector2<N>) -> &mut Self {
+        let wanted_direction = Unit::new_normalize(target - self.iso.translation.vector); // NEEDS TO BE UNIT
+        let angle = wanted_direction.y.atan2(wanted_direction.x);
+        self.iso.rotation = UnitComplex::new(angle);
+        self
+    }*/
 
     /// Makes the entity point towards `position`.
     ///
@@ -267,36 +276,42 @@ impl<N: Real> Transform3<N> {
     }
 
     /// Pitch relatively to the world. `angle` is specified in radians.
+    /// Rotation relative to the Vector3::x_axis() axis.
     #[inline]
     pub fn pitch_global(&mut self, angle: N) -> &mut Self {
         self.rotate_global(Vector3::x_axis(), angle)
     }
 
     /// Pitch relatively to its own rotation. `angle` is specified in radians.
+    /// Rotation relative to the Vector3::x_axis() axis.
     #[inline]
     pub fn pitch_local(&mut self, angle: N) -> &mut Self {
         self.rotate_local(Vector3::x_axis(), angle)
     }
 
     /// Yaw relatively to the world. `angle` is specified in radians.
+    /// Rotation relative to the Vector3::y_axis() axis.
     #[inline]
     pub fn yaw_global(&mut self, angle: N) -> &mut Self {
         self.rotate_global(Vector3::y_axis(), angle)
     }
 
     /// Yaw relatively to its own rotation. `angle` is specified in radians.
+    /// Rotation relative to the Vector3::y_axis() axis.
     #[inline]
     pub fn yaw_local(&mut self, angle: N) -> &mut Self {
         self.rotate_local(Vector3::y_axis(), angle)
     }
 
     /// Roll relatively to the world. `angle` is specified in radians.
+    /// Rotation relative to the Vector3::z_axis() axis.
     #[inline]
     pub fn roll_global(&mut self, angle: N) -> &mut Self {
         self.rotate_global(-Vector3::z_axis(), angle)
     }
 
     /// Roll relatively to its own rotation. `angle` is specified in radians.
+    /// Rotation relative to the Vector3::z_axis() axis.
     #[inline]
     pub fn roll_local(&mut self, angle: N) -> &mut Self {
         self.rotate_local(-Vector3::z_axis(), angle)
@@ -410,10 +425,10 @@ impl<N: Real> Transform3<N> {
     }
 }
 
-impl<N: Real> Default for Transform3<N> {
+impl<N: Real> Default for Transform<N> {
     /// The default transform does nothing when used to transform an entity.
     fn default() -> Self {
-        Transform3 {
+        Transform {
             iso: Isometry3::identity(),
             scale: Vector3::from_element(N::one()),
             global_matrix: na::one(),
@@ -421,7 +436,7 @@ impl<N: Real> Default for Transform3<N> {
     }
 }
 
-impl<N: Real> Component for Transform3<N> {
+impl<N: Real> Component for Transform<N> {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
 
@@ -434,17 +449,17 @@ impl<N: Real> Component for Transform3<N> {
 ///
 /// assert_eq!(transform.translation().x, 10N::zero());
 /// ```
-impl<N: Real> From<Vector3<N>> for Transform3<N> {
+impl<N: Real> From<Vector3<N>> for Transform<N> {
     fn from(translation: Vector3<N>) -> Self {
-        Transform3 {
+        Transform {
             iso: Isometry3::new(translation, na::zero()),
             ..Default::default()
         }
     }
 }
 
-impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform3<N> {
-    fn deserialize<D>(deserializer: D) -> Result<Transform3<N>, D::Error>
+impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform<N> {
+    fn deserialize<D>(deserializer: D) -> Result<Transform<N>, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -469,10 +484,10 @@ impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform3<N> {
         }
 
         impl<'de, N: Real + Deserialize<'de>> Visitor<'de> for TransformVisitor<N> {
-            type Value = Transform3<N>;
+            type Value = Transform<N>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-                formatter.write_str("struct Transform3")
+                formatter.write_str("struct Transform")
             }
 
             fn visit_seq<V>(self, mut seq: V) -> Result<Self::Value, V::Error>
@@ -500,7 +515,7 @@ impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform3<N> {
                 );
                 let scale = scale.into();
 
-                Ok(Transform3 {
+                Ok(Transform {
                     iso,
                     scale,
                     ..Default::default()
@@ -553,7 +568,7 @@ impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform3<N> {
                 );
                 let scale = scale.into();
 
-                Ok(Transform3 {
+                Ok(Transform {
                     iso,
                     scale,
                     ..Default::default()
@@ -562,11 +577,11 @@ impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform3<N> {
         }
 
         const FIELDS: &'static [&'static str] = &["translation", "rotation", "scale"];
-        deserializer.deserialize_struct("Transform3", FIELDS, TransformVisitor::<N>::default())
+        deserializer.deserialize_struct("Transform", FIELDS, TransformVisitor::<N>::default())
     }
 }
 
-impl<N: Real + Serialize> Serialize for Transform3<N> {
+impl<N: Real + Serialize> Serialize for Transform<N> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,

@@ -6,7 +6,7 @@ use specs::prelude::{
     WriteStorage,
 };
 
-use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform3};
+use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform};
 
 /// Handles updating `GlobalTransform` components based on the `Transform`
 /// component and parents.
@@ -33,7 +33,7 @@ impl<'a> System<'a> for TransformSystem {
     type SystemData = (
         Entities<'a>,
         ReadExpect<'a, ParentHierarchy>,
-        WriteStorage<'a, Transform3<f32>>,
+        WriteStorage<'a, Transform<f32>>,
         ReadStorage<'a, Parent>,
     );
     fn run(&mut self, (entities, hierarchy, mut locals, parents): Self::SystemData) {
@@ -122,7 +122,7 @@ impl<'a> System<'a> for TransformSystem {
         use specs::prelude::SystemData;
         Self::SystemData::setup(res);
         let mut hierarchy = res.fetch_mut::<ParentHierarchy>();
-        let mut locals = WriteStorage::<Transform3<f32>>::fetch(res);
+        let mut locals = WriteStorage::<Transform<f32>>::fetch(res);
         self.parent_events_id = Some(hierarchy.track());
         self.locals_events_id = Some(locals.register_reader());
     }
