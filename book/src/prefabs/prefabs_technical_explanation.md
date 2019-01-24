@@ -64,7 +64,8 @@ Let's take a look at the implementation for `Transform`, which is a core concept
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::assets::PrefabData;
-# use amethyst::ecs::{WriteStorage, Entity, Component, NullStorage, error::Error as SpecsError};
+# use amethyst::ecs::{WriteStorage, Entity, Component, NullStorage};
+# use amethyst::Error;
 #
 # // We declare that struct for the sake of automated testing.
 # #[derive(Default, Clone)]
@@ -82,8 +83,9 @@ impl<'a> PrefabData<'a> for Transform {
         entity: Entity,
         storage: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<(), SpecsError> {
-        storage.insert(entity, self.clone()).map(|_| ())
+    ) -> Result<(), Error> {
+        storage.insert(entity, self.clone())?;
+        Ok(())
     }
 }
 ```
@@ -112,7 +114,8 @@ load extra `Asset`s as part of a `Prefab`:
 # #[macro_use] extern crate serde_derive;
 # use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter};
 # use amethyst::assets::PrefabData;
-# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, error::Error as SpecsError};
+# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity};
+# use amethyst::Error;
 #
 #[derive(Deserialize, Serialize)]
 pub enum AssetPrefab<A, F>
@@ -147,7 +150,7 @@ where
         entity: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<Handle<A>, SpecsError> {
+    ) -> Result<Handle<A>, Error> {
         let handle = match *self {
             AssetPrefab::Handle(ref handle) => handle.clone(),
             AssetPrefab::File(ref name, ref format, ref options) => system_data.0.load(
@@ -158,14 +161,14 @@ where
                 &system_data.2,
             ),
         };
-        system_data.1.insert(entity, handle.clone()).map(|_| handle)
+        Ok(system_data.1.insert(entity, handle.clone())?.unwrap())
     }
 
     fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
-    ) -> Result<bool, SpecsError> {
+    ) -> Result<bool, Error> {
         let handle = match *self {
             AssetPrefab::File(ref name, ref format, ref options) => Some(system_data.0.load(
                 name.as_ref(),
@@ -205,8 +208,8 @@ Amethyst supplies a derive macro for creating the `PrefabData` implementation fo
 * Single `Component`
 * Aggregate `PrefabData` structs which contain other `PrefabData` constructs, and optionally simple data `Component`s
 
-In addition, deriving a `Prefab` requires that `amethyst::ecs::Entity` and
- `amethyst:assets::{PrefabData, PrefabError, ProgressCounter}` are imported
+In addition, deriving a `Prefab` requires that `amethyst::Error`, `amethyst::ecs::Entity` and
+ `amethyst:assets::{PrefabData, ProgressCounter}` are imported
  and visible in the current scope. This is due to how Rust macros work.
 
 An example of a single `Component` derive:
@@ -216,13 +219,13 @@ An example of a single `Component` derive:
 # #[macro_use] extern crate serde_derive;
 # use amethyst::{
 #     assets::{
-#         Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, PrefabError
+#         Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData
 #     },
 #     derive::PrefabData,
 #     ecs::{
-#         error::Error as SpecsError,
 #         Component, DenseVecStorage, Entity, Read, ReadExpect, WriteStorage,
 #     },
+#     Error,
 # };
 #
 #[derive(Clone, PrefabData)]
@@ -243,10 +246,11 @@ Lets look at an example of an aggregate struct:
 ```rust,edition2018,no_run,noplaypen
 # #[macro_use] extern crate amethyst;
 # #[macro_use] extern crate serde_derive;
-# use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, PrefabError, AssetPrefab};
+# use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
 # use amethyst::core::Transform;
-# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, error::Error as SpecsError, DenseVecStorage, Component};
+# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, DenseVecStorage, Component};
 # use amethyst::renderer::{Mesh, ObjFormat};
+# use amethyst::Error;
 
 #[derive(PrefabData)]
 pub struct MyScenePrefab {
@@ -262,10 +266,11 @@ One last example that also adds a custom pure data `Component` into the aggregat
 ```rust,edition2018,no_run,noplaypen
 # #[macro_use] extern crate amethyst;
 # #[macro_use] extern crate serde_derive;
-# use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, PrefabError, AssetPrefab};
+# use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
 # use amethyst::core::Transform;
-# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, error::Error as SpecsError, DenseVecStorage, Component};
+# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, DenseVecStorage, Component};
 # use amethyst::renderer::{Mesh, ObjFormat};
+# use amethyst::Error;
 
 #[derive(PrefabData)]
 pub struct MyScenePrefab {

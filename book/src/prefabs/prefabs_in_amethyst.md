@@ -26,13 +26,14 @@ In its stored form, a prefab is a serialized list of entities and their componen
 # extern crate specs_derive;
 #
 # use amethyst::{
-#     assets::{Prefab, PrefabData, PrefabError},
+#     assets::{Prefab, PrefabData},
 #     derive::PrefabData,
 #     ecs::{
 #         storage::DenseVecStorage,
 #         Component, Entity, WriteStorage,
 #     },
 #     prelude::*,
+#     Error,
 # };
 # use derivative::Derivative;
 # use serde::{Deserialize, Serialize};
@@ -94,7 +95,7 @@ cargo run --example prefab_basic
 
 ### Multiple Components
 
-If there are attach multiple components to be attached to the entity, then we need a type that aggregates the [`Component`]s:
+If there are multiple components to be attached to the entity, then we need a type that aggregates the [`Component`]s:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
@@ -103,7 +104,7 @@ If there are attach multiple components to be attached to the entity, then we ne
 # extern crate specs_derive;
 #
 # use amethyst::{
-#     assets::{Prefab, PrefabData, PrefabError, ProgressCounter},
+#     assets::{Prefab, PrefabData, ProgressCounter},
 #     core::Named,
 #     derive::PrefabData,
 #     ecs::{
@@ -111,6 +112,7 @@ If there are attach multiple components to be attached to the entity, then we ne
 #         Component, Entity, WriteStorage,
 #     },
 #     prelude::*,
+#     Error,
 # };
 # use derivative::Derivative;
 # use serde::{Deserialize, Serialize};
@@ -198,7 +200,7 @@ Instead, the components have to be moved up to a top level [`PrefabData`] type, 
 # extern crate specs_derive;
 #
 # use amethyst::{
-#     assets::{Prefab, PrefabData, PrefabError, ProgressCounter},
+#     assets::{Prefab, PrefabData, ProgressCounter},
 #     core::Named,
 #     derive::PrefabData,
 #     ecs::{
