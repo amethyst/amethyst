@@ -146,6 +146,10 @@ Keybindings:
 
 Shows how to load data using the `Prefab` system.
 
+### Prefab Adapter
+
+Shows how to create a `PrefabData` using the adapter pattern.
+
 ### Prefab Basic
 
 Shows how to create a trivial `PrefabData` and instantiate an entity using the `Prefab` system.

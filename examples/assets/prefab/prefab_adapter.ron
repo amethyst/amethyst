@@ -1,0 +1,11 @@
+#![enable(implicit_some)]
+Prefab(
+    entities: [
+        PrefabEntity(
+            data: Pos3f(x: 1.0, y: 2.0, z: 3.0),
+        ),
+        PrefabEntity(
+            data: Pos3i(x: 4, y: 5, z: 6),
+        ),
+    ],
+)
