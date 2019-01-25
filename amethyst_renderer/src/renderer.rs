@@ -1,7 +1,7 @@
 use amethyst_error::Error;
 use fnv::FnvHashMap as HashMap;
 use gfx::memory::Pod;
-use winit::{dpi::LogicalSize, EventsLoop, Icon, Window as WinitWindow, WindowBuilder};
+use winit::{dpi::LogicalSize, EventsLoop, Window as WinitWindow, WindowBuilder};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
