@@ -302,7 +302,7 @@ impl With<TexCoord> for PosNormTex {
     };
 }
 
-/// Vertex format with position, normal, and UV texture coordinate attributes.
+/// Vertex format with position, normal, tangent, and UV texture coordinate attributes.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PosNormTangTex {

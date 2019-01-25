@@ -36,6 +36,7 @@ it is attached to. ([#1282])
 * Fixed the "json" feature for amethyst_assets. ([#1302])
 * Fixed default system font loading to accept uppercase extension ("TTF"). ([#1328])
 * Set width and height of Pong Paddles ([#1363])
+* Fix omission in `PosNormTangTex` documentation. ([#1371])
 
 [#1114]: https://github.com/amethyst/amethyst/pull/1114
 [#1213]: https://github.com/amethyst/amethyst/pull/1213
@@ -51,6 +52,7 @@ it is attached to. ([#1282])
 [#1356]: https://github.com/amethyst/amethyst/pull/1356
 [#1363]: https://github.com/amethyst/amethyst/pull/1363
 [#1365]: https://github.com/amethyst/amethyst/pull/1365
+[#1371]: https://github.com/amethyst/amethyst/pull/1371
 
 ## [0.10.0] - 2018-12
 
