@@ -28,6 +28,7 @@ it is attached to. ([#1282])
 * Changed `ActiveCamera` to have the `Option` inside. ([#1280])
 * `AudioBundle::new()` no longer exists, as `AudioBundle` is now a unit type. It also no longer initializes the `DjSystem` ([#1356])
 * Convert everything to use err-derive and amethyst_error ([#1365])
+* Removed redundant code in `renderer.rs` ([#1375])
 
 ### Removed
 
