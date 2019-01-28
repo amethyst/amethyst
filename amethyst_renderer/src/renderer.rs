@@ -1,4 +1,4 @@
-use amethyst_error::Error;
+use amethyst_error::{format_err, Error};
 use fnv::FnvHashMap as HashMap;
 use gfx::memory::Pod;
 use winit::{dpi::LogicalSize, EventsLoop, Window as WinitWindow, WindowBuilder};
@@ -175,42 +175,42 @@ impl Drop for Renderer {
 pub struct RendererBuilder {
     config: DisplayConfig,
     events: EventsLoop,
-    winit_builder: WindowBuilder,
+    window_builder: WindowBuilder,
 }
 
 impl RendererBuilder {
     /// Creates a new `RendererBuilder`.
     pub fn new(el: EventsLoop) -> Self {
+        let config = DisplayConfig::default();
         RendererBuilder {
-            config: DisplayConfig::default(),
+            config: config.clone(),
+            window_builder: config.to_windowbuilder(el.get_primary_monitor()),
             events: el,
-            winit_builder: WindowBuilder::new()
-                .with_title("Amethyst")
-                .with_dimensions(LogicalSize::new(600.0, 500.0)),
         }
     }
 
-    /// Applies configuration from `Config`
+    /// Applies configuration from the provided `Config`.
     pub fn with_config(&mut self, config: DisplayConfig) -> &mut Self {
         self.config = config.clone();
-        self.winit_builder = config.to_windowbuilder(&self.events);
+        self.window_builder = config.to_windowbuilder(self.events.get_primary_monitor());
         self
     }
 
-    /// Applies window settings from the given `glutin::WindowBuilder`.
-    pub fn use_winit_builder(&mut self, wb: WindowBuilder) -> &mut Self {
-        self.winit_builder = wb;
+    /// Applies configuraiton from the provided `WindowBuilder`.
+    pub fn with_window_builder(&mut self, wb: WindowBuilder) -> &mut Self {
+        self.window_builder = wb.clone();
+        self.config = wb.into();
         self
     }
 
     /// Consumes the builder and creates the new `Renderer`.
     pub fn build(self) -> Result<Renderer, Error> {
         let Backend(device, mut factory, main_target, window) =
-            init_backend(self.winit_builder.clone(), &self.events, &self.config)?;
+            init_backend(self.window_builder, &self.events, &self.config)?;
 
         let cached_size = window
             .get_inner_size()
-            .expect("Unable to fetch window size, as the window went away!");
+            .ok_or_else(|| format_err!("Unable to fetch window size, as the window went away."))?;
 
         let cached_hidpi_factor = window.get_hidpi_factor();
 
