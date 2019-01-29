@@ -608,6 +608,12 @@ where
     /// * `vsync`: `true`
     /// * `multisampling`: `0` (disabled)
     /// * `visibility`: As provided.
+    /// * always_on_top: false
+    /// * decorations: true
+    /// * maximized: false
+    /// * multitouch: true
+    /// * resizable: true
+    /// * transparent: true
     ///
     /// This is exposed to allow external crates a convenient way of obtaining display
     /// configuration.
@@ -627,6 +633,12 @@ where
             vsync: true,
             multisampling: 0, // Must be multiple of 2, use 0 to disable
             visibility,
+            always_on_top: false,
+            decorations: true,
+            maximized: false,
+            multitouch: true,
+            resizable: true,
+            transparent: true,
         }
     }
 
