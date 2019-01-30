@@ -401,7 +401,7 @@ where
 ///
 /// ```rust,ignore
 /// let prefab_handle = world.exec(|loader: PrefabLoader<SomePrefab>| {
-///     loader.load("prefab.ron", RonFormat, (), ()
+///     loader.load("prefab.ron", RonFormat, (), ());
 /// });
 /// ```
 #[derive(SystemData)]
