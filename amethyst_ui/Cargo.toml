@@ -24,7 +24,10 @@ derivative = "1.0"
 derive-new = "0.5.6"
 fnv = "1"
 gfx = { version = "0.17", features = ["serialize"] }
-gfx_glyph = "0.13.0"
+
+# Remove once the patched version of gfx_glyph is published.
+gfx_glyph = { git = "https://github.com/alexheretic/glyph-brush", rev = "64f0c7e4269c8cebcb5456965a8e45c934f17fa6" }
+
 glsl-layout = { version = "0.1.1", features = ["gfx"] }
 hibitset = { version = "0.5.1", features = ["parallel"] }
 ron = "0.4"
