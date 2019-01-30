@@ -78,17 +78,19 @@ pub trait PrefabData<'a> {
 ///
 /// ### Example:
 ///
-/// If the prefab contains 3 new entities `A`, `B` and `C`, and the main `Entity` that the `Handle`
-/// is placed on is `E`, and we want the graph to be `A -> E`, `B -> E`, `C -> B` (parent links),
-/// the data will be as follows:
+/// If we want to give the existing Baker entity a Knife and a Plate with a
+/// Cake on it.  The prefab contains 3 new entities `Knife`, `Plate`,
+/// and `Cake`, and the main `Entity` that the `Handle` is placed on is the
+/// `Baker`.  We want the graph to be `Knife on Baker`, `Plate on Baker`,
+/// `Cake on Plate` using parent links. The data will be as follows:
 ///
 /// ```rust,ignore
 /// Prefab {
 ///     entities: vec![
-///         PrefabEntity { parent: None /* not used */, .. },
-///         PrefabEntity { parent: Some(0), .. },
-///         PrefabEntity { parent: Some(0), .. },
-///         PrefabEntity { parent: Some(2), .. },
+///         PrefabEntity { parent: None, .. },    /* #0 Baker, parent is not used */
+///         PrefabEntity { parent: Some(0), .. }, /* #1 Knife parented to Baker #0 */
+///         PrefabEntity { parent: Some(0), .. }, /* #2 Plate parented to Baker #0 */
+///         PrefabEntity { parent: Some(2), .. }, /* #3 Cake parented to Plate #2 */
 ///     ],
 /// }
 /// ```
