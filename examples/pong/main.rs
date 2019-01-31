@@ -70,7 +70,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(PongBundle)?
         .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
-        .with_bundle(AudioBundle)?
+        .with_bundle(AudioBundle::default())?
         .with(
             DjSystem::new(|music: &mut Music| music.music.next()),
             "dj_system",
