@@ -19,7 +19,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `amethyst_renderer::Rgba` is now a `Component` that changes the color and transparency of the entity
 it is attached to. ([#1282])
 * `AutoFov` and `AutoFovSystem` to adjust horizontal FOV to screen aspect ratio. ([#1281])
-
+* Add `icon` to `DisplayConfig` to set a window icon using a path to a file ([#1373])
 
 ### Changed
 
@@ -54,6 +54,7 @@ it is attached to. ([#1282])
 [#1363]: https://github.com/amethyst/amethyst/pull/1363
 [#1365]: https://github.com/amethyst/amethyst/pull/1365
 [#1371]: https://github.com/amethyst/amethyst/pull/1371
+[#1373]: https://github.com/amethyst/amethyst/pull/1373
 
 ## [0.10.0] - 2018-12
 
