@@ -54,6 +54,7 @@ it is attached to. ([#1282])
 [#1363]: https://github.com/amethyst/amethyst/pull/1363
 [#1365]: https://github.com/amethyst/amethyst/pull/1365
 [#1371]: https://github.com/amethyst/amethyst/pull/1371
+[#1373]: https://github.com/amethyst/amethyst/pull/1373
 
 ## [0.10.0] - 2018-12
 
