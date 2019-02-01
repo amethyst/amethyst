@@ -170,7 +170,7 @@ where
                     if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
                         for (transform, _) in (&mut transform, &tag).join() {
                             transform.pitch_local((-y as f32 * self.sensitivity_y).to_radians());
-                            transform.yaw_global((-x as f32 * self.sensitivity_x).to_radians());
+                            transform.yaw_local((-x as f32 * self.sensitivity_x).to_radians());
                         }
                     }
                 }
