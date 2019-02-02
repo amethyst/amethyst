@@ -1,6 +1,5 @@
 pipeline {
-    agent { docker { image 'magnonellie/amethyst-dependencies
-:stable' } }
+    agent { docker { image 'magnonellie/amethyst-dependencies:stable' } }
     stages {
         stage('build') {
             steps {
