@@ -733,7 +733,6 @@ where
 
     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<UiPrefab<A, I, F, C::PrefabData>, Error> {
         use ron::de::Deserializer;
-        use serde::Deserialize;
         let mut d = Deserializer::from_bytes(&bytes)
             .with_context(|_| format_err!("Failed deserializing Ron file"))?;
         let root: UiWidget<A, I, F, C> = UiWidget::deserialize(&mut d)
