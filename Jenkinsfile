@@ -6,6 +6,11 @@ pipeline {
         } 
     }
     stages {
+        stage('fmt') {
+            steps {
+                sh 'cargo fmt --all -- --check'
+            }
+        }
         stage('test') {
             steps {
                 sh 'cargo test --all'
