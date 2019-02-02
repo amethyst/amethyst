@@ -1,7 +1,9 @@
 pipeline {
-    agent { 
-        label 'linux'
-        docker { image 'magnonellie/amethyst-dependencies:stable' } 
+    agent {
+        docker {
+            image 'magnonellie/amethyst-dependencies:stable'
+            label 'linux'
+        } 
     }
     stages {
         stage('build') {
