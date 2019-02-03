@@ -135,7 +135,7 @@ impl<A: Asset> AssetStorage<A> {
         pool: &ThreadPool,
         strategy: Option<&HotReloadStrategy>,
     ) where
-        F: FnMut(A::Data) -> Result<ProcessingState<A>>,
+        F: FnMut(Handle<A>, A::Data) -> Result<ProcessingState<A>>,
     {
         self.process_custom_drop(f, |_| {}, frame_number, pool, strategy);
     }
@@ -151,7 +151,7 @@ impl<A: Asset> AssetStorage<A> {
         strategy: Option<&HotReloadStrategy>,
     ) where
         D: FnMut(A),
-        F: FnMut(A::Data) -> Result<ProcessingState<A>>,
+        F: FnMut(Handle<A>, A::Data) -> Result<ProcessingState<A>>,
     {
         {
             let requeue = self
@@ -174,7 +174,7 @@ impl<A: Asset> AssetStorage<A> {
                     } => {
                         let (asset, reload_obj) = match data
                             .map(|FormatValue { data, reload }| (data, reload))
-                            .and_then(|(d, rel)| f(d).map(|a| (a, rel)))
+                            .and_then(|(d, rel)| f(handle.clone(), d).map(|a| (a, rel)))
                             .chain_err(|| ErrorKind::Asset(name.clone()))
                         {
                             Ok((ProcessingState::Loaded(x), r)) => {
@@ -253,7 +253,7 @@ impl<A: Asset> AssetStorage<A> {
                     } => {
                         let (asset, reload_obj) = match data
                             .map(|FormatValue { data, reload }| (data, reload))
-                            .and_then(|(d, rel)| f(d).map(|a| (a, rel)))
+                            .and_then(|(d, rel)| f(handle.clone(), d).map(|a| (a, rel)))
                             .chain_err(|| ErrorKind::Asset(name.clone()))
                         {
                             Ok((ProcessingState::Loaded(x), r)) => (x, r),
@@ -446,7 +446,7 @@ where
         use std::ops::Deref;
 
         storage.process(
-            Into::into,
+            |_, h| Into::into(h),
             time.frame_number(),
             &**pool,
             strategy.as_ref().map(Deref::deref),

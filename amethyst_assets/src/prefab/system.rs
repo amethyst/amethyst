@@ -69,7 +69,7 @@ where
         ) = data;
         let strategy = strategy.as_ref().map(Deref::deref);
         prefab_storage.process(
-            |mut d| {
+            |_, mut d| {
                 d.tag = Some(self.next_tag);
                 self.next_tag += 1;
                 if !d.loading() {

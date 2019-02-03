@@ -3,12 +3,13 @@
 
 use std::{mem, sync::Arc};
 
+
 use winit::{DeviceEvent, Event, WindowEvent};
 
-use amethyst_assets::{AssetStorage, HotReloadStrategy};
+use amethyst_assets::{AssetStorage, HotReloadStrategy, ProcessingState};
 use amethyst_core::{
     shrev::EventChannel,
-    specs::prelude::{Read, ReadExpect, Resources, RunNow, SystemData, Write, WriteExpect},
+    specs::prelude::{Entities, Join, Read, ReadExpect, ReadStorage, Resources, RunNow, SystemData, Write, WriteExpect, WriteStorage},
     Time,
 };
 
@@ -16,13 +17,14 @@ use crate::{
     config::DisplayConfig,
     error::Result,
     formats::{create_mesh_asset, create_texture_asset},
-    mesh::Mesh,
+    mesh::{Mesh, MeshHandle},
     mtl::{Material, MaterialDefaults},
     pipe::{PipelineBuild, PipelineData, PolyPipeline},
     rayon::ThreadPool,
     renderer::Renderer,
     resources::{ScreenDimensions, WindowMessages},
     tex::Texture,
+    MeshData,
 };
 
 /// Rendering system.
@@ -89,21 +91,29 @@ where
 
     fn asset_loading(
         &mut self,
-        (time, pool, strategy, mut mesh_storage, mut texture_storage): AssetLoadingData<'_>,
+        (entities, time, pool, strategy, mut mesh_storage, mut texture_storage, mesh_handle_storage, mut mesh_data_storage): AssetLoadingData<'_>,
     ) {
         use std::ops::Deref;
 
         let strategy = strategy.as_ref().map(Deref::deref);
 
         mesh_storage.process(
-            |d| create_mesh_asset(d, &mut self.renderer),
+            |handle, d| {
+                let asset_res = create_mesh_asset(&d, &mut self.renderer);
+                if let Ok(ProcessingState::Loaded(_)) = asset_res {
+                    if let Some((ent, _)) = (&entities, &mesh_handle_storage).join().find(|(_, mh)| mh == &&handle) {
+                        mesh_data_storage.insert(ent, d).unwrap();
+                    }
+                }
+                asset_res
+            },
             time.frame_number(),
             &**pool,
             strategy,
         );
 
         texture_storage.process(
-            |d| create_texture_asset(d, &mut self.renderer),
+            |_, d| create_texture_asset(d, &mut self.renderer),
             time.frame_number(),
             &**pool,
             strategy,
@@ -153,11 +163,14 @@ where
 }
 
 type AssetLoadingData<'a> = (
+    Entities<'a>,
     Read<'a, Time>,
     ReadExpect<'a, Arc<ThreadPool>>,
     Option<Read<'a, HotReloadStrategy>>,
     Write<'a, AssetStorage<Mesh>>,
     Write<'a, AssetStorage<Texture>>,
+    ReadStorage<'a,  MeshHandle>,
+    WriteStorage<'a, MeshData>,
 );
 
 type WindowData<'a> = (Write<'a, WindowMessages>, WriteExpect<'a, ScreenDimensions>);

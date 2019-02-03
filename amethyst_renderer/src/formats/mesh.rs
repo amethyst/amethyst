@@ -196,7 +196,7 @@ fn from_data(obj_set: ObjSet) -> Vec<PosNormTex> {
 }
 
 /// Create mesh
-pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> Result<ProcessingState<Mesh>> {
+pub fn create_mesh_asset(data: &MeshData, renderer: &mut Renderer) -> Result<ProcessingState<Mesh>> {
     let data = match data {
         MeshData::PosColor(ref vertices) => {
             let mb = MeshBuilder::new(vertices);
@@ -218,7 +218,7 @@ pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> Result<Proc
             let mb = MeshBuilder::new(vertices);
             renderer.create_mesh(mb)
         }
-        MeshData::Creator(creator) => creator.build(renderer),
+        MeshData::Creator(creator) => creator.clone().build(renderer),
     };
 
     data.map(ProcessingState::Loaded)
