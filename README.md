@@ -99,7 +99,7 @@ Additionally, make sure you have EGL installed. Since the package depends on you
 ### Debian/Ubuntu
 
 ```
-$ sudo apt install libasound2-dev libx11-xcb-dev libssl-dev cmake libfreetype6-dev libexpat1-dev libxcb1-dev
+$ sudo apt install pkg-config libasound2-dev libx11-xcb-dev libssl-dev cmake libfreetype6-dev libexpat1-dev libxcb1-dev
 ```
 
 ### Fedora
