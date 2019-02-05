@@ -91,10 +91,12 @@ developer, it will be merged into the source tree.
 The following rules shall be applied strictly for the `amethyst` repository. For other repositories of this organization,
 thorough review would be desirable, but no strict application is required there due to lower activity and less influence.
 
-* Pull Requests shall not be merged before at least 24 hours have passed.
 * Pull Requests shall be approved by at least two members (two approvals from contributors can count as one member approval.)
-* Merging a PR shall be done with `bors r+`
-* If a member self-requested a review, the PR shall not be merged until they reviewed the PR (exception: the member becomes inactive)
+* Pull Requests opened by organization members may be merged if approved by one member.
+* Merging a PR shall be done with `bors r+`, if possible. If there is more than one reviewer the preferred format is `bors r=@reviewer1, @reviewer2`. You can read more about this [here](https://bors.tech/documentation/).
+* You may only block merging of a PR if the changes in it are relevant to an org team you have joined. This doesn't mean you can't
+make comments, but it does mean that team may ignore your comments if they so choose. Please do not use the "Request Changes" feature if
+the PR is not relevant to your team.
 
 Everyone is welcome to review pull requests that they find interesting. It helps save time and improve the code quality for everyone, as well as gaining experience while doing so.
 
