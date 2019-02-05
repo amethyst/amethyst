@@ -29,6 +29,7 @@ it is attached to. ([#1282])
 * `AudioBundle::new()` no longer exists, as `AudioBundle` is now a unit type. It also no longer initializes the `DjSystem` ([#1356])
 * Convert everything to use err-derive and amethyst_error ([#1365])
 * Removed redundant code in `renderer.rs` ([#1375])
+* Changed argument types of `exec_removal` to allow use of both Read and Write Storages. ([#1397])
 
 ### Removed
 
@@ -55,6 +56,7 @@ it is attached to. ([#1282])
 [#1365]: https://github.com/amethyst/amethyst/pull/1365
 [#1371]: https://github.com/amethyst/amethyst/pull/1371
 [#1373]: https://github.com/amethyst/amethyst/pull/1373
+[#1397]: https://github.com/amethyst/amethyst/pull/1397
 
 ## [0.10.0] - 2018-12
 
