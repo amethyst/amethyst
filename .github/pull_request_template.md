@@ -17,10 +17,10 @@ Add a brief summary of your PR here, between one sentence and two paragraphs
 
 ## PR Checklist
 
-By placing an x in the boxes I certify that I have
+By placing an x in the boxes I certify that I have:
 
-- [ ] Run `cargo test --all` locally if this modified any rs files
-- [ ] Run `cargo fmt --all` locally if this modified any rs files
+- [ ] Ran `cargo test --all` locally if this modified any rs files.
+- [ ] Ran `cargo fmt --all` locally if this modified any rs files.
 - [ ] Updated the content of the book if this PR would make the book outdated.
-- [ ] Added a changelog entry if this will impact users
+- [ ] Added a changelog entry if this will impact users.
 - [ ] Acknowledged that by making this pull request I release this code under an MIT/Apache 2.0 dual licensing scheme.
