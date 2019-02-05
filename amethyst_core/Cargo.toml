@@ -16,7 +16,7 @@ appveyor = { repository = "amethyst/amethyst" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-nalgebra = { version = "0.16.7", features = ["serde-serialize", "mint"] }
+nalgebra = { version = "0.17", features = ["serde-serialize", "mint"] }
 approx = "0.3"
 amethyst_error = { path = "../amethyst_error", version = "0.1.0" }
 fnv = "1"

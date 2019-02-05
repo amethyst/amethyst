@@ -84,7 +84,7 @@ impl Transform {
     #[inline]
     pub fn face_towards(&mut self, target: Vector3<f32>, up: Vector3<f32>) -> &mut Self {
         self.iso.rotation =
-            UnitQuaternion::new_observer_frame(&(self.iso.translation.vector - target), &up);
+            UnitQuaternion::face_towards(&(self.iso.translation.vector - target), &up);
         self
     }
 
