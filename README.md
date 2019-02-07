@@ -171,10 +171,6 @@ If for some reason we don't have any open PRs in need of a review nor any good f
 
 Thank you to all our backers! 🙏 [Become a backer](https://www.amethyst-engine.org/donate)
 
-<a href="https://opencollective.com/amethyst#backers" target="_blank">
-  <img src="https://opencollective.com/amethyst/backers.svg?width=890">
-</a>
-
 ## Sponsors
 
 Amethyst is supported by:
