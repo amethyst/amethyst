@@ -1,12 +1,12 @@
-#[macro_use]
-extern crate amethyst_derive;
+use amethyst_derive::{EventReader, PrefabData};
 
-use amethyst_assets::{PrefabData, PrefabError, ProgressCounter};
+use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_core::{
     shrev::{EventChannel, ReaderId},
     specs::{Component, DenseVecStorage, Entity, Read, Resources, SystemData, WriteStorage},
     EventReader,
 };
+use amethyst_error::Error;
 
 #[derive(Clone)]
 pub struct TestEvent1;

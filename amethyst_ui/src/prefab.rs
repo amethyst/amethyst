@@ -1,18 +1,20 @@
+use derivative::Derivative;
 use serde::de::DeserializeOwned;
+use shred_derive::SystemData;
 use std::marker::PhantomData;
 
 use amethyst_assets::{
-    AssetPrefab, AssetStorage, Format, Handle, Loader, Prefab, PrefabData, PrefabError,
-    PrefabLoaderSystem, Progress, ProgressCounter, Result as AssetResult, ResultExt, SimpleFormat,
+    AssetPrefab, AssetStorage, Format, Handle, Loader, Prefab, PrefabData, PrefabLoaderSystem,
+    Progress, ProgressCounter, SimpleFormat,
 };
 use amethyst_audio::{AudioFormat, Source as Audio};
-use amethyst_core::specs::{
-    error::BoxedErr,
-    prelude::{Entities, Entity, Read, ReadExpect, WriteStorage},
-};
+use amethyst_core::specs::prelude::{Entities, Entity, Read, ReadExpect, WriteStorage};
+use amethyst_error::{format_err, Error, ResultExt};
 use amethyst_renderer::{
     HiddenPropagate, Texture, TextureFormat, TextureHandle, TextureMetadata, TexturePrefab,
 };
+
+use serde::{Deserialize, Serialize};
 
 use crate::{
     get_default_font, Anchor, FontAsset, FontFormat, Interactable, LineMode, Selectable, Stretch,
@@ -141,7 +143,7 @@ where
         entity: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         let mut transform = UiTransform::new(
             self.id.clone(),
             self.anchor.clone(),
@@ -249,12 +251,12 @@ where
         entity: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         let (ref mut texts, ref mut editables, ref mut fonts) = system_data;
         let font_handle = self
             .font
             .as_ref()
-            .ok_or_else(|| PrefabError::Custom(BoxedErr(Box::from("did not load sub assets"))))?
+            .ok_or_else(|| format_err!("did not load sub assets"))?
             .add_to_entity(entity, fonts, &[])?;
         let mut ui_text = UiText::new(font_handle, self.text.clone(), self.color, self.font_size);
         ui_text.password = self.password;
@@ -286,7 +288,7 @@ where
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
-    ) -> Result<bool, PrefabError> {
+    ) -> Result<bool, Error> {
         let (_, _, ref mut fonts) = system_data;
 
         self.font
@@ -327,7 +329,7 @@ where
         entity: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         let (ref mut images, ref mut textures) = system_data;
         let texture_handle = self.image.add_to_entity(entity, textures, entities)?;
         images.insert(entity, texture_handle)?;
@@ -338,7 +340,7 @@ where
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
-    ) -> Result<bool, PrefabError> {
+    ) -> Result<bool, Error> {
         let (_, ref mut textures) = system_data;
         self.image.load_sub_assets(progress, textures)
     }
@@ -404,7 +406,7 @@ where
         entity: Entity,
         system_data: &mut Self::SystemData,
         entity_set: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         let (
             ref mut buttons,
             ref mut sound_retrigger,
@@ -517,7 +519,7 @@ where
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
-    ) -> Result<bool, PrefabError> {
+    ) -> Result<bool, Error> {
         let (_, _, _, ref mut textures, ref mut sounds) = system_data;
         self.normal_image.load_sub_assets(progress, textures)?;
         self.hover_image.load_sub_assets(progress, textures)?;
@@ -729,14 +731,15 @@ where
     const NAME: &'static str = "Ui";
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> AssetResult<UiPrefab<A, I, F, C::PrefabData>> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<UiPrefab<A, I, F, C::PrefabData>, Error> {
         use ron::de::Deserializer;
         use serde::Deserialize;
-        let mut d =
-            Deserializer::from_bytes(&bytes).chain_err(|| "Failed deserializing Ron file")?;
-        let root: UiWidget<A, I, F, C> =
-            UiWidget::deserialize(&mut d).chain_err(|| "Failed parsing Ron file")?;
-        d.end().chain_err(|| "Failed parsing Ron file")?;
+        let mut d = Deserializer::from_bytes(&bytes)
+            .with_context(|_| format_err!("Failed deserializing Ron file"))?;
+        let root: UiWidget<A, I, F, C> = UiWidget::deserialize(&mut d)
+            .with_context(|_| format_err!("Failed parsing Ron file"))?;
+        d.end()
+            .with_context(|_| format_err!("Failed parsing Ron file"))?;
 
         let mut prefab = Prefab::new();
         walk_ui_tree(root, 0, &mut prefab, Default::default());

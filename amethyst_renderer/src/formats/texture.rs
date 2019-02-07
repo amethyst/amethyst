@@ -1,19 +1,20 @@
-use std::result::Result as StdResult;
-
 use gfx::{
     format::{ChannelType, SurfaceType, SurfaceTyped},
     texture::SamplerInfo,
     traits::Pod,
 };
 use image::{DynamicImage, ImageFormat, RgbaImage};
+use serde::{Deserialize, Serialize};
 
 use amethyst_assets::{
-    AssetStorage, Format, Handle, Loader, PrefabData, PrefabError, ProcessingState,
-    ProgressCounter, Result, ResultExt, SimpleFormat,
+    AssetStorage, Format, Handle, Loader, PrefabData, ProcessingState, ProgressCounter,
+    SimpleFormat,
 };
 use amethyst_core::specs::prelude::{Entity, Read, ReadExpect};
+use amethyst_error::{Error, ResultExt};
 
 use crate::{
+    error,
     tex::{FilterMethod, Texture, TextureBuilder},
     types::SurfaceFormat,
     Renderer,
@@ -188,7 +189,7 @@ impl<'a> PrefabData<'a> for TextureData {
         _: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
-    ) -> StdResult<Handle<Texture>, PrefabError> {
+    ) -> Result<Handle<Texture>, Error> {
         Ok(system_data
             .0
             .load_from_data(self.clone(), (), &system_data.1))
@@ -231,7 +232,7 @@ where
         _: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
-    ) -> StdResult<Handle<Texture>, PrefabError> {
+    ) -> Result<Handle<Texture>, Error> {
         let handle = match *self {
             TexturePrefab::Data(ref data) => {
                 system_data
@@ -250,7 +251,7 @@ where
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
-    ) -> StdResult<bool, PrefabError> {
+    ) -> Result<bool, Error> {
         let handle = match *self {
             TexturePrefab::Data(ref data) => Some(system_data.0.load_from_data(
                 data.clone(),
@@ -288,7 +289,7 @@ fn load_into_rgba8_from_memory(
     data: &[u8],
     options: TextureMetadata,
     format: ImageFormat,
-) -> Result<TextureData> {
+) -> Result<TextureData, Error> {
     use image::load_from_memory_with_format;
     load_from_memory_with_format(data, format)
         .map(|image| {
@@ -302,7 +303,7 @@ fn load_into_rgba8_from_memory(
         })
         .map(|rgba| TextureData::Image(ImageData { rgba }, options))
         // TODO: Add more context? File path or containing gltf archive?
-        .chain_err(|| "Image decoding failed")
+        .with_context(|_| error::Error::DecodeImageError)
 }
 
 /// Allows loading of jpg or jpeg files.
@@ -311,7 +312,7 @@ pub struct JpgFormat;
 
 impl JpgFormat {
     /// Load Jpg from memory buffer
-    pub fn from_data(data: &[u8], options: TextureMetadata) -> Result<TextureData> {
+    pub fn from_data(data: &[u8], options: TextureMetadata) -> Result<TextureData, Error> {
         load_into_rgba8_from_memory(data, options, ImageFormat::JPEG)
     }
 }
@@ -321,7 +322,7 @@ impl SimpleFormat<Texture> for JpgFormat {
 
     type Options = TextureMetadata;
 
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
+    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData, Error> {
         JpgFormat::from_data(&bytes, options)
     }
 }
@@ -332,7 +333,7 @@ pub struct PngFormat;
 
 impl PngFormat {
     /// Load Png from memory buffer
-    pub fn from_data(data: &[u8], options: TextureMetadata) -> Result<TextureData> {
+    pub fn from_data(data: &[u8], options: TextureMetadata) -> Result<TextureData, Error> {
         load_into_rgba8_from_memory(data, options, ImageFormat::PNG)
     }
 }
@@ -342,7 +343,7 @@ impl SimpleFormat<Texture> for PngFormat {
 
     type Options = TextureMetadata;
 
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
+    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData, Error> {
         PngFormat::from_data(&bytes, options)
     }
 }
@@ -356,7 +357,7 @@ impl SimpleFormat<Texture> for BmpFormat {
 
     type Options = TextureMetadata;
 
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
+    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData, Error> {
         // TODO: consider reading directly into GPU-visible memory
         // TODO: as noted by @omni-viral.
         load_into_rgba8_from_memory(&bytes, options, ImageFormat::BMP)
@@ -369,7 +370,7 @@ pub struct TgaFormat;
 
 impl TgaFormat {
     /// Loads a TGA image from a byte slice.
-    pub fn from_data(data: &[u8], options: TextureMetadata) -> Result<TextureData> {
+    pub fn from_data(data: &[u8], options: TextureMetadata) -> Result<TextureData, Error> {
         load_into_rgba8_from_memory(data, options, ImageFormat::TGA)
     }
 }
@@ -379,7 +380,7 @@ impl SimpleFormat<Texture> for TgaFormat {
 
     type Options = TextureMetadata;
 
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
+    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData, Error> {
         TgaFormat::from_data(&bytes, options)
     }
 }
@@ -388,7 +389,7 @@ impl SimpleFormat<Texture> for TgaFormat {
 pub fn create_texture_asset(
     data: TextureData,
     renderer: &mut Renderer,
-) -> Result<ProcessingState<Texture>> {
+) -> Result<ProcessingState<Texture>, Error> {
     use self::TextureData::*;
     let t = match data {
         Image(image_data, options) => {
@@ -399,49 +400,49 @@ pub fn create_texture_asset(
             let tb = apply_options(Texture::from_color_val(color), options);
             renderer
                 .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+                .with_context(|_| error::Error::BuildTextureError)
         }
 
         F32(data, options) => {
             let tb = apply_options(TextureBuilder::new(data), options);
             renderer
                 .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+                .with_context(|_| error::Error::BuildTextureError)
         }
 
         F64(data, options) => {
             let tb = apply_options(TextureBuilder::new(data), options);
             renderer
                 .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+                .with_context(|_| error::Error::BuildTextureError)
         }
 
         U8(data, options) => {
             let tb = apply_options(TextureBuilder::new(data), options);
             renderer
                 .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+                .with_context(|_| error::Error::BuildTextureError)
         }
 
         U16(data, options) => {
             let tb = apply_options(TextureBuilder::new(data), options);
             renderer
                 .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+                .with_context(|_| error::Error::BuildTextureError)
         }
 
         U32(data, options) => {
             let tb = apply_options(TextureBuilder::new(data), options);
             renderer
                 .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+                .with_context(|_| error::Error::BuildTextureError)
         }
 
         U64(data, options) => {
             let tb = apply_options(TextureBuilder::new(data), options);
             renderer
                 .create_texture(tb)
-                .chain_err(|| "Failed to build texture")
+                .with_context(|_| error::Error::BuildTextureError)
         }
     };
     t.map(ProcessingState::Loaded)
@@ -469,20 +470,14 @@ fn create_texture_asset_from_image(
     image: ImageData,
     options: TextureMetadata,
     renderer: &mut Renderer,
-) -> Result<Texture> {
+) -> Result<Texture, Error> {
     let fmt = SurfaceType::R8_G8_B8_A8;
     let chan = options.channel;
     let rgba = image.rgba;
     let w = rgba.width();
     let h = rgba.height();
     if w > u32::from(u16::max_value()) || h > u32::from(u16::max_value()) {
-        bail!(
-            "Unsupported texture size (expected: ({}, {}), got: ({}, {})",
-            u16::max_value(),
-            u16::max_value(),
-            w,
-            h
-        );
+        return Err(Error::from(error::Error::UnsupportedTextureSize(w, h)));
     }
     let tb = apply_options(
         TextureBuilder::new(rgba.into_raw())
@@ -493,7 +488,7 @@ fn create_texture_asset_from_image(
     );
     renderer
         .create_texture(tb)
-        .chain_err(|| "Failed to create texture from texture data")
+        .with_context(|_| error::Error::CreateTextureError)
 }
 
 /// Aggregate texture format
@@ -514,7 +509,7 @@ impl SimpleFormat<Texture> for TextureFormat {
 
     type Options = TextureMetadata;
 
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData> {
+    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData, Error> {
         match *self {
             TextureFormat::Jpg => SimpleFormat::import(&JpgFormat, bytes, options),
             TextureFormat::Png => SimpleFormat::import(&PngFormat, bytes, options),

@@ -2,16 +2,10 @@
 
 #![allow(unused)]
 
-extern crate amethyst_assets;
-extern crate amethyst_core;
-extern crate rayon;
-extern crate ron;
-#[macro_use]
-extern crate serde;
-
 use std::sync::Arc;
 
 use rayon::{ThreadPool, ThreadPoolBuilder};
+use serde::Deserialize;
 
 use amethyst_assets::*;
 use amethyst_core::{
@@ -24,6 +18,7 @@ use amethyst_core::{
     },
     Time,
 };
+use amethyst_error::{format_err, Error, ResultExt};
 
 struct App {
     dispatcher: Dispatcher<'static, 'static>,
@@ -95,13 +90,13 @@ impl SimpleFormat<MeshAsset> for Ron {
 
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<VertexData> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<VertexData, Error> {
         use ron::de::from_str;
         use std::str::from_utf8;
 
         let s = from_utf8(&bytes)?;
 
-        from_str(s).chain_err(|| "Failed to decode mesh file")
+        from_str(s).with_context(|_| format_err!("Failed to decode mesh file"))
     }
 }
 
@@ -164,7 +159,7 @@ impl State {
                     eprintln!("-- Errors --");
                     progress.errors().iter().enumerate().for_each(|(n, e)| {
                         eprintln!("{}: error: {}", n, e.error);
-                        for cause in e.error.iter().skip(1) {
+                        for cause in e.error.causes().skip(1) {
                             eprintln!("{}: caused by: {}", n, cause);
                         }
                     });

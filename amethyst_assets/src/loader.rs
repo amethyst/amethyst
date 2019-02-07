@@ -1,11 +1,17 @@
 use std::{borrow::Borrow, hash::Hash, path::PathBuf, sync::Arc};
 
 use fnv::FnvHashMap;
+use log::debug;
 use rayon::ThreadPool;
 
+use amethyst_error::ResultExt;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{
+    error::Error,
     storage::{AssetStorage, Handle, Processed},
-    Asset, Directory, ErrorKind, Format, FormatValue, Progress, ResultExt, Source,
+    Asset, Directory, Format, FormatValue, Progress, Source,
 };
 
 /// The asset loader, holding the sources and a reference to the `ThreadPool`.
@@ -160,7 +166,7 @@ impl Loader {
             profile_scope!("load_asset_from_worker");
             let data = format
                 .import(name.clone(), source, options, hot_reload)
-                .chain_err(|| ErrorKind::Format(F::NAME));
+                .with_context(|_| Error::Format(F::NAME));
             let tracker = Box::new(tracker) as Box<dyn Tracker>;
 
             processed.push(Processed::NewAsset {

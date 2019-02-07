@@ -1,12 +1,16 @@
 //! Provides a automatically resized orthographic camera.
 
-use amethyst_assets::{PrefabData, PrefabError};
+use amethyst_assets::PrefabData;
 use amethyst_core::{
     nalgebra::Orthographic3,
     specs::{Component, DenseVecStorage, Entity, Join, ReadExpect, System, WriteStorage},
     Axis2,
 };
+use amethyst_derive::PrefabData;
+use amethyst_error::Error;
 use amethyst_renderer::{Camera, ScreenDimensions};
+
+use serde::{Deserialize, Serialize};
 
 /// The coordinates that `CameraOrtho` will keep visible in the window.
 /// `bottom` can be a higher value than `top`, as is common in 2D coordinates

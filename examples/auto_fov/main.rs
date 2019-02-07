@@ -1,16 +1,10 @@
-#[macro_use]
-extern crate amethyst;
-#[macro_use]
-extern crate log;
-#[macro_use]
-extern crate serde;
-
 use amethyst::{
     assets::{
-        Completion, Handle, Prefab, PrefabData, PrefabError, PrefabLoader, PrefabLoaderSystem,
-        ProgressCounter, RonFormat,
+        Completion, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem, ProgressCounter,
+        RonFormat,
     },
     core::{Transform, TransformBundle},
+    derive::PrefabData,
     ecs::{Entity, ReadExpect, ReadStorage, System, WriteStorage},
     input::{is_close_requested, is_key_down, InputBundle},
     prelude::{
@@ -26,9 +20,13 @@ use amethyst::{
         auto_fov::{AutoFov, AutoFovSystem},
         tag::{Tag, TagFinder},
     },
+    Error,
 };
 
-fn main() -> amethyst::Result<()> {
+use log::{error, info};
+use serde::{Deserialize, Serialize};
+
+fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
     let app_dir = amethyst::utils::application_dir("examples")?;

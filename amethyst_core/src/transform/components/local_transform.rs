@@ -5,8 +5,9 @@ use nalgebra::{
     self as na, Isometry3, Matrix4, Quaternion, Translation3, Unit, UnitQuaternion, Vector3,
 };
 use serde::{
-    de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor},
-    ser::{Serialize, Serializer},
+    de::{self, Deserializer, MapAccess, SeqAccess, Visitor},
+    ser::Serializer,
+    Deserialize, Serialize,
 };
 use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 
@@ -83,7 +84,7 @@ impl Transform {
     #[inline]
     pub fn face_towards(&mut self, target: Vector3<f32>, up: Vector3<f32>) -> &mut Self {
         self.iso.rotation =
-            UnitQuaternion::new_observer_frame(&(self.iso.translation.vector - target), &up);
+            UnitQuaternion::face_towards(&(self.iso.translation.vector - target), &up);
         self
     }
 

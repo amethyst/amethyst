@@ -1,5 +1,3 @@
-use amethyst;
-
 use amethyst::{
     prelude::*,
     renderer::{DisplayConfig, DrawFlat2D, Pipeline, RenderBundle, Stage},

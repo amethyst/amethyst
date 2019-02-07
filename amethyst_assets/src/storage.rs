@@ -7,7 +7,9 @@ use std::{
 };
 
 use crossbeam::queue::MsQueue;
+use derivative::Derivative;
 use hibitset::BitSet;
+use log::{debug, error, trace, warn};
 use rayon::ThreadPool;
 
 use amethyst_core::{
@@ -17,10 +19,11 @@ use amethyst_core::{
     },
     Time,
 };
+use amethyst_error::{Error, ResultExt};
 
 use crate::{
     asset::{Asset, FormatValue},
-    error::{Error, ErrorKind, Result, ResultExt},
+    error,
     progress::Tracker,
     reload::{HotReloadStrategy, Reload},
 };
@@ -135,7 +138,7 @@ impl<A: Asset> AssetStorage<A> {
         pool: &ThreadPool,
         strategy: Option<&HotReloadStrategy>,
     ) where
-        F: FnMut(A::Data) -> Result<ProcessingState<A>>,
+        F: FnMut(A::Data) -> Result<ProcessingState<A>, Error>,
     {
         self.process_custom_drop(f, |_| {}, frame_number, pool, strategy);
     }
@@ -151,7 +154,7 @@ impl<A: Asset> AssetStorage<A> {
         strategy: Option<&HotReloadStrategy>,
     ) where
         D: FnMut(A),
-        F: FnMut(A::Data) -> Result<ProcessingState<A>>,
+        F: FnMut(A::Data) -> Result<ProcessingState<A>, Error>,
     {
         {
             let requeue = self
@@ -175,7 +178,7 @@ impl<A: Asset> AssetStorage<A> {
                         let (asset, reload_obj) = match data
                             .map(|FormatValue { data, reload }| (data, reload))
                             .and_then(|(d, rel)| f(d).map(|a| (a, rel)))
-                            .chain_err(|| ErrorKind::Asset(name.clone()))
+                            .with_context(|_| error::Error::Asset(name.clone()))
                         {
                             Ok((ProcessingState::Loaded(x), r)) => {
                                 debug!(
@@ -196,7 +199,7 @@ impl<A: Asset> AssetStorage<A> {
                                         handle.id(),
                                         A::NAME,
                                         name,
-                                        Error::from_kind(ErrorKind::UnusedHandle),
+                                        Error::from(error::Error::UnusedHandle),
                                     );
                                 } else {
                                     tracker.success();
@@ -254,7 +257,7 @@ impl<A: Asset> AssetStorage<A> {
                         let (asset, reload_obj) = match data
                             .map(|FormatValue { data, reload }| (data, reload))
                             .and_then(|(d, rel)| f(d).map(|a| (a, rel)))
-                            .chain_err(|| ErrorKind::Asset(name.clone()))
+                            .with_context(|_| error::Error::Asset(name.clone()))
                         {
                             Ok((ProcessingState::Loaded(x), r)) => (x, r),
                             Ok((ProcessingState::Loading(x), r)) => {
@@ -373,7 +376,7 @@ impl<A: Asset> AssetStorage<A> {
                 let processed = self.processed.clone();
                 pool.spawn(move || {
                     let old_reload = rel.clone();
-                    let data = rel.reload().chain_err(|| ErrorKind::Format(format));
+                    let data = rel.reload().with_context(|_| error::Error::Format(format));
 
                     let p = Processed::HotReload {
                         data,
@@ -433,7 +436,7 @@ impl<A> Processor<A> {
 impl<'a, A> System<'a> for Processor<A>
 where
     A: Asset,
-    A::Data: Into<Result<ProcessingState<A>>>,
+    A::Data: Into<Result<ProcessingState<A>, Error>>,
 {
     type SystemData = (
         Write<'a, AssetStorage<A>>,
@@ -502,13 +505,13 @@ where
 
 pub(crate) enum Processed<A: Asset> {
     NewAsset {
-        data: Result<FormatValue<A>>,
+        data: Result<FormatValue<A>, Error>,
         handle: Handle<A>,
         name: String,
         tracker: Box<dyn Tracker>,
     },
     HotReload {
-        data: Result<FormatValue<A>>,
+        data: Result<FormatValue<A>, Error>,
         handle: Handle<A>,
         name: String,
         old_reload: Box<dyn Reload<A>>,

@@ -1,7 +1,5 @@
 //! TODO: Rewrite for new renderer.
 
-use amethyst;
-
 mod audio;
 mod bundle;
 mod pong;

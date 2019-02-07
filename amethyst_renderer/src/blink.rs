@@ -61,10 +61,9 @@ impl<'a> System<'a> for BlinkSystem {
             let on = blink.timer < blink.delay / 2.0;
 
             match (on, hiddens.contains(entity)) {
-                (true, false) => hiddens.insert(entity, Hidden).expect(&format!(
-                    "Failed to insert Hidden component for {:?}",
-                    entity
-                )),
+                (true, false) => hiddens.insert(entity, Hidden).unwrap_or_else(|_| {
+                    panic!("Failed to insert Hidden component for {:?}", entity)
+                }),
                 (false, true) => hiddens.remove(entity),
                 _ => None,
             };

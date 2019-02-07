@@ -13,6 +13,8 @@ use amethyst_core::{
 use amethyst_input::InputHandler;
 use amethyst_renderer::{MouseButton, ScreenDimensions};
 
+use serde::{Deserialize, Serialize};
+
 use crate::transform::UiTransform;
 
 pub trait TargetedEvent {

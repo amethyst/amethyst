@@ -6,6 +6,9 @@ use specs::prelude::{
     WriteStorage,
 };
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::transform::{GlobalTransform, HierarchyEvent, Parent, ParentHierarchy, Transform};
 
 /// Handles updating `GlobalTransform` components based on the `Transform`

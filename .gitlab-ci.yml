@@ -18,7 +18,19 @@ check formatting:
   stage: fmt
   script:
     - cargo fmt --version
-    - cargo fmt --all -- --check
+    - |
+      # Ignore Rustfmt warnings
+      function rustfmt_nowarn {
+        exec 3<> >(grep -v "Warning: can't set .\+, unstable features are only available in nightly channel" 1>&2)
+
+        cargo fmt --all -- --check 2>&3; result=$?
+
+        exec 3<&- # Close 3
+        return $result
+      }
+
+      rustfmt_nowarn
+
   only:
     - branches
     - merge_requests

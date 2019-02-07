@@ -1,8 +1,5 @@
 //! OpenGL backend types.
 
-use gfx_device_gl;
-use glutin;
-
 /// Command buffer type.
 pub type CommandBuffer = gfx_device_gl::CommandBuffer;
 

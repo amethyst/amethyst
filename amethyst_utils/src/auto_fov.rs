@@ -1,10 +1,14 @@
 //! Utility to adjust the aspect ratio of cameras automatically
 
-use amethyst_assets::{PrefabData, PrefabError};
+use amethyst_assets::PrefabData;
 use amethyst_core::specs::{
     Component, Entity, HashMapStorage, Join, ReadExpect, ReadStorage, System, WriteStorage,
 };
+use amethyst_derive::PrefabData;
+use amethyst_error::Error;
 use amethyst_renderer::{Camera, ScreenDimensions};
+
+use serde::{Deserialize, Serialize};
 
 /// A component describing the behavior of the camera in accordance with the screen dimensions
 #[derive(Clone, Deserialize, PrefabData, Serialize)]

@@ -1,10 +1,13 @@
 use hibitset::BitSet;
+use serde::{Deserialize, Serialize};
 
-use amethyst_assets::{PrefabData, PrefabError, ProgressCounter};
+use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_core::{
     nalgebra::Matrix4,
     specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage},
 };
+use amethyst_derive::PrefabData;
+use amethyst_error::Error;
 use amethyst_renderer::JointTransformsPrefab;
 
 /// Joint, attach to an entity with a `Transform`
@@ -71,7 +74,7 @@ impl<'a> PrefabData<'a> for JointPrefab {
         entity: Entity,
         storage: &mut Self::SystemData,
         entities: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         storage
             .insert(
                 entity,
@@ -79,7 +82,9 @@ impl<'a> PrefabData<'a> for JointPrefab {
                     skins: self.skins.iter().map(|i| entities[*i]).collect(),
                 },
             )
-            .map(|_| ())
+            .map(|_| ())?;
+
+        Ok(())
     }
 }
 
@@ -105,7 +110,7 @@ impl<'a> PrefabData<'a> for SkinPrefab {
         entity: Entity,
         storage: &mut Self::SystemData,
         entities: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         storage
             .insert(
                 entity,
@@ -121,7 +126,9 @@ impl<'a> PrefabData<'a> for SkinPrefab {
                     joint_matrices: Vec::with_capacity(self.joints.len()),
                 },
             )
-            .map(|_| ())
+            .map(|_| ())?;
+
+        Ok(())
     }
 }
 

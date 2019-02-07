@@ -5,6 +5,7 @@ use std::{
     hash::{Hash, Hasher},
 };
 
+use derive_new::new;
 use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
 use gfx::{preset::blend, pso::buffer::ElemStride, state::ColorMask};
 use gfx_glyph::{
@@ -13,16 +14,18 @@ use gfx_glyph::{
 };
 use glsl_layout::{vec2, vec4, Uniform};
 use hibitset::BitSet;
+use log::error;
+use unicode_segmentation::UnicodeSegmentation;
+
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
-use unicode_segmentation::UnicodeSegmentation;
 
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::specs::prelude::{
     Entities, Entity, Join, Read, ReadExpect, ReadStorage, WriteStorage,
 };
+use amethyst_error::Error;
 use amethyst_renderer::{
-    error::Result,
     pipe::{
         pass::{Pass, PassData},
         Effect, NewEffect,
@@ -108,7 +111,7 @@ impl<'a> PassData<'a> for DrawUi {
 }
 
 impl Pass for DrawUi {
-    fn compile(&mut self, mut effect: NewEffect<'_>) -> Result<Effect> {
+    fn compile(&mut self, mut effect: NewEffect<'_>) -> Result<Effect, Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("ui_pass_build");
 

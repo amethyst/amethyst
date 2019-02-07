@@ -2,13 +2,16 @@
 
 use std::{sync::Arc, time::Instant};
 
-use amethyst_core as core;
 use amethyst_core::{
     specs::prelude::{DispatcherBuilder, Read, Resources, System, Write},
     SystemBundle, Time,
 };
+use amethyst_error::Error;
 
-use crate::{Asset, Format, FormatValue, Loader, Result, Source};
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
+use crate::{Asset, Format, FormatValue, Loader, Source};
 
 /// This bundle activates hot reload for the `Loader`,
 /// adds a `HotReloadStrategy` and the `HotReloadSystem`.
@@ -25,7 +28,7 @@ impl HotReloadBundle {
 }
 
 impl<'a, 'b> SystemBundle<'a, 'b> for HotReloadBundle {
-    fn build(self, dispatcher: &mut DispatcherBuilder<'a, 'b>) -> core::Result<()> {
+    fn build(self, dispatcher: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         dispatcher.add(HotReloadSystem::new(self.strategy), "hot_reload", &[]);
         Ok(())
     }
@@ -36,9 +39,6 @@ impl<'a, 'b> SystemBundle<'a, 'b> for HotReloadBundle {
 /// ## Examples
 ///
 /// ```
-/// # extern crate amethyst_assets;
-/// # extern crate amethyst_core;
-/// #
 /// # use amethyst_assets::HotReloadStrategy;
 /// # use amethyst_core::specs::prelude::World;
 /// #
@@ -188,7 +188,7 @@ pub trait Reload<A: Asset>: ReloadClone<A> + Send + Sync + 'static {
     /// Returns the format name.
     fn format(&self) -> &'static str;
     /// Reloads the asset.
-    fn reload(self: Box<Self>) -> Result<FormatValue<A>>;
+    fn reload(self: Box<Self>) -> Result<FormatValue<A>, Error>;
 }
 
 pub trait ReloadClone<A> {
@@ -275,7 +275,7 @@ where
         F::NAME
     }
 
-    fn reload(self: Box<Self>) -> Result<FormatValue<A>> {
+    fn reload(self: Box<Self>) -> Result<FormatValue<A>, Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("reload_single_file");
 

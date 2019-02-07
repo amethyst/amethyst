@@ -5,9 +5,9 @@ use amethyst_core::{
     specs::{Read, ReadStorage},
     transform::GlobalTransform,
 };
+use amethyst_error::Error;
 
 use crate::{
-    error::Result,
     get_camera,
     pipe::{
         pass::{Pass, PassData},
@@ -54,7 +54,7 @@ impl<'a> PassData<'a> for DrawSkybox {
 }
 
 impl Pass for DrawSkybox {
-    fn compile(&mut self, mut effect: NewEffect<'_>) -> Result<Effect> {
+    fn compile(&mut self, mut effect: NewEffect<'_>) -> Result<Effect, Error> {
         let verts = Shape::Cube.generate_vertices::<Vec<PosTex>>(None);
         self.mesh = Some(Mesh::build(verts).build(&mut effect.factory)?);
 

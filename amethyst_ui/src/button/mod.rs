@@ -12,6 +12,8 @@ pub use self::{
 ///! A clickable button.
 use amethyst_core::specs::prelude::{Component, DenseVecStorage};
 
+use serde::{Deserialize, Serialize};
+
 /// A clickable button, this must be paired with a `TextureHandle`
 /// and this entity must have a child entity with a `UiText`.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]

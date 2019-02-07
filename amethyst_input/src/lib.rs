@@ -2,15 +2,6 @@
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-#[macro_use]
-extern crate derivative;
-
-#[cfg(feature = "sdl_controller")]
-extern crate sdl2;
-
-#[macro_use]
-extern crate serde;
-
 #[cfg(feature = "sdl_controller")]
 pub use self::sdl_events_system::SdlEventsSystem;
 pub use self::{
@@ -28,10 +19,7 @@ pub use self::{
 
 use std::iter::Iterator;
 
-use smallvec;
 use winit::{self, VirtualKeyCode};
-
-use amethyst_core;
 
 mod axis;
 mod bindings;

@@ -9,6 +9,9 @@ use std::{
 
 use rodio::SpatialSink;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use amethyst_core::{
     specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, WriteStorage},
     transform::GlobalTransform,

@@ -1,16 +1,16 @@
 use amethyst::{
     assets::{
-        self, Asset, AssetStorage, Handle, Loader, ProcessingState, Processor, ProgressCounter,
-        ResultExt, SimpleFormat,
+        Asset, AssetStorage, Handle, Loader, ProcessingState, Processor, ProgressCounter,
+        SimpleFormat, Source,
     },
     ecs::VecStorage,
+    error::{format_err, Error, ResultExt},
     prelude::*,
     utils::application_root_dir,
 };
 use log::info;
 use ron::de::Deserializer;
-use serde::Deserialize as DeserializeTrait;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 /// Custom asset representing an energy blast.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
@@ -30,8 +30,8 @@ impl Asset for EnergyBlast {
     type HandleStorage = VecStorage<EnergyBlastHandle>;
 }
 
-impl From<EnergyBlast> for assets::Result<ProcessingState<EnergyBlast>> {
-    fn from(energy_blast: EnergyBlast) -> assets::Result<ProcessingState<EnergyBlast>> {
+impl From<EnergyBlast> for Result<ProcessingState<EnergyBlast>, Error> {
+    fn from(energy_blast: EnergyBlast) -> Result<ProcessingState<EnergyBlast>, Error> {
         Ok(ProcessingState::Loaded(energy_blast))
     }
 }
@@ -50,7 +50,7 @@ pub struct MyLangFormat;
 impl<A> SimpleFormat<A> for MyLangFormat
 where
     A: Asset,
-    A::Data: for<'a> DeserializeTrait<'a> + Send + Sync + 'static,
+    A::Data: for<'a> Deserialize<'a> + Send + Sync + 'static,
 {
     const NAME: &'static str = "MyLang";
 
@@ -58,14 +58,14 @@ where
     // the parameter type may be specified here.
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<A::Data, assets::Error> {
-        let mut deserializer =
-            Deserializer::from_bytes(&bytes).chain_err(|| "Failed deserializing MyLang file")?;
-        let val =
-            A::Data::deserialize(&mut deserializer).chain_err(|| "Failed parsing MyLang file")?;
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<A::Data, Error> {
+        let mut deserializer = Deserializer::from_bytes(&bytes)
+            .with_context(|_| format_err!("Failed deserializing MyLang file"))?;
+        let val = A::Data::deserialize(&mut deserializer)
+            .with_context(|_| format_err!("Failed parsing MyLang file"))?;
         deserializer
             .end()
-            .chain_err(|| "Failed parsing MyLang file")?;
+            .with_context(|_| format_err!("Failed parsing MyLang file"))?;
 
         Ok(val)
     }
@@ -74,11 +74,11 @@ where
 #[derive(Debug)]
 struct CodeSource;
 
-impl assets::Source for CodeSource {
-    fn modified(&self, _path: &str) -> assets::Result<u64> {
+impl Source for CodeSource {
+    fn modified(&self, _path: &str) -> Result<u64, Error> {
         Ok(0)
     }
-    fn load(&self, _path: &str) -> assets::Result<Vec<u8>> {
+    fn load(&self, _path: &str) -> Result<Vec<u8>, Error> {
         let bytes = "EnergyBlast(hp_damage: 10, mp_damage: 10)"
             .as_bytes()
             .to_vec();

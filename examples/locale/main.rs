@@ -1,7 +1,5 @@
 //! Example showing how to load a Locale file as an Asset using the Loader.
 
-use amethyst;
-
 use amethyst::{
     assets::{AssetStorage, Handle, Loader, Processor, ProgressCounter},
     ecs::{Read, ReadExpect},

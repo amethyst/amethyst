@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use winit::{MouseButton, VirtualKeyCode};
 
 use super::{controller::ControllerButton, scroll_direction::ScrollDirection};

@@ -1,7 +1,5 @@
 //! An example showing how to create a dispatcher inside of a State.
 
-use amethyst;
-
 use amethyst::{
     ecs::{Dispatcher, DispatcherBuilder},
     prelude::*,

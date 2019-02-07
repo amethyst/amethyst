@@ -1,5 +1,8 @@
 use amethyst::prelude::*;
 
+use derivative::Derivative;
+use derive_new::new;
+
 /// `Push`es each `State` onto the Amethyst state stack in reverse order (LIFO).
 ///
 /// This implementation does not override the `Trans`ition returned by the `State` that is pushed

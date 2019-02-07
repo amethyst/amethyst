@@ -1,14 +1,15 @@
 //! The core engine framework.
 
-use std::{error::Error as StdError, marker::PhantomData, path::Path, sync::Arc, time::Duration};
+use std::{marker::PhantomData, path::Path, sync::Arc, time::Duration};
 
 use crate::shred::Resource;
-use log::Level;
+use derivative::Derivative;
+use log::{info, log_enabled, trace, Level};
 use rayon::ThreadPoolBuilder;
+use winit::Event;
 
 #[cfg(feature = "profiler")]
-use thread_profiler::{register_thread_with_profiler, write_profile};
-use winit::Event;
+use thread_profiler::{profile_scope, register_thread_with_profiler, write_profile};
 
 use crate::{
     assets::{Loader, Source},
@@ -23,7 +24,7 @@ use crate::{
         common::Errors,
         prelude::{Component, Read, World, Write},
     },
-    error::{Error, Result},
+    error::Error,
     game_data::DataInit,
     state::{State, StateData, StateMachine, TransEvent},
     state_event::{StateEvent, StateEventReader},
@@ -77,13 +78,11 @@ where
 /// this and use the logging macros in `log` once you've created your `Application` instance:
 ///
 /// ```
-/// extern crate amethyst;
-/// #[macro_use]
-/// extern crate log;
-///
 /// use amethyst::prelude::*;
 /// use amethyst::core::transform::{Parent, Transform};
 /// use amethyst::ecs::prelude::System;
+///
+/// use log::{info, warn};
 ///
 /// struct NullState;
 /// impl EmptyState for NullState {}
@@ -107,11 +106,6 @@ where
 /// [log], and it will be used instead of the default logger:
 ///
 /// ```
-/// extern crate amethyst;
-/// #[macro_use]
-/// extern crate log;
-/// extern crate env_logger;
-///
 /// use amethyst::prelude::*;
 /// use amethyst::core::transform::{Parent, Transform};
 /// use amethyst::ecs::prelude::System;
@@ -189,7 +183,7 @@ where
     /// let mut game = Application::new("assets/", NullState, ()).expect("Failed to initialize");
     /// game.run();
     /// ~~~
-    pub fn new<P, S, I>(path: P, initial_state: S, init: I) -> Result<Self>
+    pub fn new<P, S, I>(path: P, initial_state: S, init: I) -> Result<Self, Error>
     where
         P: AsRef<Path>,
         S: State<T, E> + 'a,
@@ -204,7 +198,7 @@ where
     ///
     /// This is identical in function to
     /// [ApplicationBuilder::new](struct.ApplicationBuilder.html#method.new).
-    pub fn build<P, S>(path: P, initial_state: S) -> Result<ApplicationBuilder<S, T, E, R>>
+    pub fn build<P, S>(path: P, initial_state: S) -> Result<ApplicationBuilder<S, T, E, R>, Error>
     where
         P: AsRef<Path>,
         S: State<T, E> + 'a,
@@ -472,9 +466,7 @@ where
     /// // the game instance can now be run, this exits only when the game is done
     /// game.run();
     /// ~~~
-    pub fn new<P: AsRef<Path>>(path: P, initial_state: S) -> Result<Self> {
-        use rustc_version_runtime;
-
+    pub fn new<P: AsRef<Path>>(path: P, initial_state: S) -> Result<Self, Error> {
         if !log_enabled!(Level::Error) {
             eprintln!(
                 "WARNING: No logger detected! Did you forget to call `amethyst::start_logger()`?"
@@ -501,10 +493,7 @@ where
         let thread_pool_builder = thread_pool_builder.start_handler(|_index| {
             register_thread_with_profiler();
         });
-        let pool = thread_pool_builder
-            .build()
-            .map(Arc::new)
-            .map_err(|err| Error::Core(err.description().to_string().into()))?;
+        let pool = thread_pool_builder.build().map(Arc::new)?;
         world.add_resource(Loader::new(path.as_ref().to_owned(), pool.clone()));
         world.add_resource(pool);
         world.add_resource(EventChannel::<Event>::with_capacity(2000));
@@ -830,7 +819,7 @@ where
     ///
     /// See the [example show for `ApplicationBuilder::new()`](struct.ApplicationBuilder.html#examples)
     /// for an example on how this method is used.
-    pub fn build<'a, I>(mut self, init: I) -> Result<CoreApplication<'a, T, E, X>>
+    pub fn build<'a, I>(mut self, init: I) -> Result<CoreApplication<'a, T, E, X>, Error>
     where
         S: State<T, E> + 'a,
         I: DataInit<T>,

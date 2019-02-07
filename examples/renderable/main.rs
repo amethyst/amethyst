@@ -3,8 +3,6 @@
 //!
 //! TODO: Rewrite for new renderer.
 
-use amethyst;
-
 use amethyst::{
     assets::{
         Completion, Handle, HotReloadBundle, Prefab, PrefabLoader, PrefabLoaderSystem,

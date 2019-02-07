@@ -1,5 +1,6 @@
 use minterpolate::InterpolationPrimitive;
 use num_traits::cast::{NumCast, ToPrimitive};
+use serde::{Deserialize, Serialize};
 
 use amethyst_core::{
     nalgebra::Real,

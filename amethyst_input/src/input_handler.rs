@@ -2,6 +2,7 @@
 
 use std::{borrow::Borrow, hash::Hash};
 
+use derivative::Derivative;
 use smallvec::SmallVec;
 use winit::{
     dpi::LogicalPosition, DeviceEvent, ElementState, Event, KeyboardInput, MouseButton,

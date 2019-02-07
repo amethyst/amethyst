@@ -7,14 +7,15 @@ use genmesh::{
     },
     EmitTriangles, MapVertex, Triangulate, Vertex, Vertices,
 };
+use serde::{Deserialize, Serialize};
+use shred_derive::SystemData;
 
-use amethyst_assets::{
-    AssetStorage, Handle, Loader, PrefabData, PrefabError, Progress, ProgressCounter,
-};
+use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, Progress, ProgressCounter};
 use amethyst_core::{
     nalgebra::{Vector2, Vector3},
     specs::prelude::{Entity, Read, ReadExpect, WriteStorage},
 };
+use amethyst_error::Error;
 
 use crate::{
     ComboMeshCreator, Mesh, MeshData, MeshHandle, Normal, PosNormTangTex, PosNormTex, PosTex,
@@ -57,19 +58,20 @@ where
         entity: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         let (_, ref mut meshes, _) = system_data;
         let self_handle = self.handle.as_ref().expect(
             "`ShapePrefab::load_sub_assets` was not called before `ShapePrefab::add_to_entity`",
         );
-        meshes.insert(entity, self_handle.clone()).map(|_| ())
+        meshes.insert(entity, self_handle.clone()).map(|_| ())?;
+        Ok(())
     }
 
     fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut <Self as PrefabData<'_>>::SystemData,
-    ) -> Result<bool, PrefabError> {
+    ) -> Result<bool, Error> {
         let (loader, _, mesh_storage) = system_data;
         self.handle = Some(loader.load_from_data(
             self.shape.generate::<V>(self.shape_scale),

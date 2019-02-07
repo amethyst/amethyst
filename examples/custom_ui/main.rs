@@ -1,10 +1,5 @@
 //! Custom UI example
 
-use amethyst;
-
-#[macro_use]
-extern crate serde_derive;
-
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
     audio::AudioFormat,
@@ -14,6 +9,8 @@ use amethyst::{
     ui::{FontFormat, ToNativeWidget, UiBundle, UiCreator, UiTransformBuilder, UiWidget},
     utils::{application_root_dir, scene::BasicScenePrefab},
 };
+
+use serde::Deserialize;
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 

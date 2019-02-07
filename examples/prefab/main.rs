@@ -1,7 +1,5 @@
 //! Demonstrates loading prefabs using the Amethyst engine.
 
-use amethyst;
-
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
     core::TransformBundle,
