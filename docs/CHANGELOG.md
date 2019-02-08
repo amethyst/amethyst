@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 it is attached to. ([#1282])
 * `AutoFov` and `AutoFovSystem` to adjust horizontal FOV to screen aspect ratio. ([#1281])
 * Add `icon` to `DisplayConfig` to set a window icon using a path to a file ([#1373])
+* Add `loaded_icon` to `DisplayConfig` to set a window icon programatically ([#1405])
 
 ### Changed
 
@@ -57,6 +58,7 @@ it is attached to. ([#1282])
 [#1371]: https://github.com/amethyst/amethyst/pull/1371
 [#1373]: https://github.com/amethyst/amethyst/pull/1373
 [#1397]: https://github.com/amethyst/amethyst/pull/1397
+[#1405]: https://github.com/amethyst/amethyst/pull/1405
 
 ## [0.10.0] - 2018-12
 
