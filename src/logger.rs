@@ -90,7 +90,9 @@ impl Logger {
         }
 
         if let Some(log_gfx_device_level) = config.log_gfx_device_level {
-            logger.dispatch = logger.dispatch.level_for("gfx_device_gl", log_gfx_device_level);
+            logger.dispatch = logger
+                .dispatch
+                .level_for("gfx_device_gl", log_gfx_device_level);
         }
 
         if let Some(path) = config.log_file {
