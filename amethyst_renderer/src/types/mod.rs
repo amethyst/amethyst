@@ -1,22 +1,10 @@
 //! Compile-time graphics API types.
 
-#[cfg(all(feature = "d3d11", target_os = "windows"))]
-pub use self::d3d11::{CommandBuffer, Device, Factory, Resources, Window};
-#[cfg(all(feature = "metal", target_os = "macos"))]
-pub use self::metal::{CommandBuffer, Device, Factory, Resources, Window};
 #[cfg(feature = "opengl")]
 pub use self::opengl::{CommandBuffer, Device, Factory, Resources, Window};
-#[cfg(feature = "vulkan")]
-pub use self::vulkan::{CommandBuffer, Device, Factory, Resources, Window};
 
-#[cfg(all(feature = "d3d11", target_os = "windows"))]
-mod d3d11;
-#[cfg(all(feature = "metal", target_os = "macos"))]
-mod metal;
 #[cfg(feature = "opengl")]
 mod opengl;
-#[cfg(feature = "vulkan")]
-mod vulkan;
 
 // /// Handle to a typed GPU buffer.
 // pub type Buffer<V> = gfx::handle::Buffer<Resources, V>;
@@ -25,12 +13,6 @@ mod vulkan;
 pub type SurfaceFormat = gfx::format::R8_G8_B8_A8;
 pub type ChannelFormat = gfx::format::Unorm;
 pub type ColorFormat = (SurfaceFormat, ChannelFormat);
-
-/// Depth buffer format.
-#[cfg(feature = "metal")]
-pub type DepthFormat = gfx::format::Depth32F;
-/// Depth buffer format.
-#[cfg(not(feature = "metal"))]
 pub type DepthFormat = gfx::format::DepthStencil;
 
 /// Depth-stencil view type.

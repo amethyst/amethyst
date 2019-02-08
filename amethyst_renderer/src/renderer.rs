@@ -151,17 +151,6 @@ impl Renderer {
     pub fn window(&self) -> &WinitWindow {
         self.window.window()
     }
-
-    #[cfg(feature = "metal")]
-    #[cfg(feature = "vulkan")]
-    pub fn window(&self) -> &WinitWindow {
-        &self.window.0
-    }
-
-    #[cfg(feature = "d3d11")]
-    pub fn window(&self) -> &WinitWindow {
-        &*self.window.0
-    }
 }
 
 impl Drop for Renderer {
@@ -232,68 +221,6 @@ impl RendererBuilder {
 /// Represents a graphics backend for the renderer.
 struct Backend(pub Device, pub Factory, pub Target, pub Window);
 
-/// Creates the Direct3D 11 backend.
-#[cfg(all(feature = "d3d11", target_os = "windows"))]
-fn init_backend(
-    wb: WindowBuilder,
-    el: &EventsLoop,
-    config: &DisplayConfig,
-) -> Result<Backend, Error> {
-    // FIXME: vsync + multisampling from config
-    let (win, dev, mut fac, color) = gfx_window_dxgi::init::<ColorFormat>(wb, el)
-        .expect("Unable to initialize window (d3d11 backend)");
-    let dev = gfx_device_dx11::Deferred::from(dev);
-
-    let size = win
-        .get_inner_size_points()
-        .ok_or(error::Error::WindowDestroyed)?;
-    let (w, h) = (size.0 as u16, size.1 as u16);
-    let depth = fac.create_depth_stencil_view_only::<DepthFormat>(w, h)?;
-    let main_target = Target::new(
-        ColorBuffer {
-            as_input: None,
-            as_output: color,
-        },
-        DepthBuffer {
-            as_input: None,
-            as_output: depth,
-        },
-        size,
-    );
-
-    Ok(Backend(dev, fac, main_target, win))
-}
-
-#[cfg(all(feature = "metal", target_os = "macos"))]
-fn init_backend(
-    wb: WindowBuilder,
-    el: &EventsLoop,
-    config: &DisplayConfig,
-) -> Result<Backend, Error> {
-    // FIXME: vsync + multisampling from config
-    let (win, dev, mut fac, color) = gfx_window_metal::init::<ColorFormat>(wb, el)
-        .expect("Unable to initialize window (metal backend)");
-
-    let size = win
-        .get_inner_size_points()
-        .ok_or(error::Error::WindowDestroyed)?;
-    let (w, h) = (size.0 as u16, size.1 as u16);
-    let depth = fac.create_depth_stencil_view_only::<DepthFormat>(w, h)?;
-    let main_target = Target::new(
-        ColorBuffer {
-            as_input: None,
-            as_output: color,
-        },
-        DepthBuffer {
-            as_input: None,
-            as_output: depth,
-        },
-        size,
-    );
-
-    Ok(Backend(dev, fac, main_target, win))
-}
-
 /// Creates the OpenGL backend.
 #[cfg(feature = "opengl")]
 fn init_backend(
@@ -314,10 +241,13 @@ fn init_backend(
 
     let (win, dev, fac, color, depth) =
         gfx_window_glutin::init::<ColorFormat, DepthFormat>(wb, ctx, el);
+    let hidpi = win.get_hidpi_factor();
     let size = win
         .get_inner_size()
+        .map(|s| s.to_physical(hidpi))
         .ok_or(error::Error::WindowDestroyed)?
         .into();
+
     let main_target = Target::new(
         ColorBuffer {
             as_input: None,

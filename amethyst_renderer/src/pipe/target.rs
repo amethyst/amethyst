@@ -97,17 +97,6 @@ impl Target {
         self.depth_buf.as_ref()
     }
 
-    /// Creates the Direct3D 11 backend.
-    #[cfg(all(feature = "d3d11", target_os = "windows"))]
-    pub fn resize_main_target(window: &Window) -> Result<(Device, Factory, Target), Error> {
-        unimplemented!()
-    }
-
-    #[cfg(all(feature = "metal", target_os = "macos"))]
-    pub fn resize_main_target(window: &Window) -> Result<(Device, Factory, Target), Error> {
-        unimplemented!()
-    }
-
     /// Creates the OpenGL backend.
     #[cfg(feature = "opengl")]
     pub fn resize_main_target(&mut self, window: &Window) {
