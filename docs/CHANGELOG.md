@@ -20,7 +20,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 it is attached to. ([#1282])
 * `AutoFov` and `AutoFovSystem` to adjust horizontal FOV to screen aspect ratio. ([#1281])
 * Add `icon` to `DisplayConfig` to set a window icon using a path to a file ([#1373])
-* Added setting to disable/enable gfx_device_gl logging, and set it disabled by default. ([#1404])
+* Added setting to control gfx_device_gl logging level separately, and set it to Warn by default. ([#1404])
 
 ### Changed
 
