@@ -27,8 +27,8 @@ pub struct LoggerConfig {
     pub log_file: Option<PathBuf>,
     /// If set, allows the config values to be overriden via the corresponding environmental variables.
     pub allow_env_override: bool,
-    /// If false gfx_device_gl won't be logged.
-    pub log_gfx_device: bool,
+    /// Sets a different level for gfx_device_gl if Some
+    pub log_gfx_device_level: Option<LevelFilter>,
 }
 
 impl Default for LoggerConfig {
@@ -38,7 +38,7 @@ impl Default for LoggerConfig {
             level_filter: LevelFilter::Info,
             log_file: None,
             allow_env_override: true,
-            log_gfx_device: false,
+            log_gfx_device_level: Some(LevelFilter::Warn),
         }
     }
 }
@@ -89,10 +89,8 @@ impl Logger {
             StdoutLog::Off => {}
         }
 
-        if !config.log_gfx_device {
-            logger.dispatch = logger
-                .dispatch
-                .filter(|m| !m.target().starts_with("gfx_device_gl"));
+        if let Some(log_gfx_device_level) = config.log_gfx_device_level {
+            logger.dispatch = logger.dispatch.level_for("gfx_device_gl", log_gfx_device_level);
         }
 
         if let Some(path) = config.log_file {
