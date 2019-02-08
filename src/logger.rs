@@ -27,15 +27,18 @@ pub struct LoggerConfig {
     pub log_file: Option<PathBuf>,
     /// If set, allows the config values to be overriden via the corresponding environmental variables.
     pub allow_env_override: bool,
+    /// If false gfx_device_gl won't be logged.
+    pub log_gfx_device: bool,
 }
 
 impl Default for LoggerConfig {
     fn default() -> LoggerConfig {
         LoggerConfig {
             stdout: StdoutLog::Colored,
-            level_filter: LevelFilter::Debug,
+            level_filter: LevelFilter::Info,
             log_file: None,
             allow_env_override: true,
+            log_gfx_device: false,
         }
     }
 }
@@ -84,6 +87,12 @@ impl Logger {
                     .chain(colored_stdout(fern::colors::ColoredLevelConfig::new()))
             }
             StdoutLog::Off => {}
+        }
+
+        if !config.log_gfx_device {
+            logger.dispatch = logger
+                .dispatch
+                .filter(|m| !m.target().starts_with("gfx_device_gl"));
         }
 
         if let Some(path) = config.log_file {
