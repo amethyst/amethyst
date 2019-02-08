@@ -34,10 +34,7 @@ fn main() -> amethyst::Result<()> {
     let path = application_root_dir()?.join("examples/custom_icon/resources/display_config.ron");
     let mut config = DisplayConfig::load(&path);
     let mut icon = Vec::new();
-    for _ in 0..(128 * 128 / 4) {
-        icon.extend(vec![255, 0, 0, 255]);
-        icon.extend(vec![255, 0, 0, 255]);
-        icon.extend(vec![255, 0, 0, 255]);
+    for _ in 0..(128 * 128) {
         icon.extend(vec![255, 0, 0, 255]);
     }
     config.loaded_icon = Some(Icon::from_rgba(icon, 128, 128).unwrap());
