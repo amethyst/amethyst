@@ -870,7 +870,7 @@ where
     }
 
     /// Check if there is an animation with the given id in the set
-    pub fn has_animation(&mut self, id: I) -> bool {
+    pub fn has_animation(&self, id: I) -> bool {
         self.animations.iter().any(|a| a.0 == id)
     }
 }
