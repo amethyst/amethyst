@@ -1,6 +1,9 @@
-use amethyst::core::{ArcThreadPool, SystemBundle};
-use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World};
-use amethyst::{DataInit, Error, Result};
+use amethyst::{
+    core::{ArcThreadPool, SystemBundle},
+    ecs::prelude::{Dispatcher, DispatcherBuilder, System, World},
+    error::Error,
+    DataInit,
+};
 
 pub struct CustomGameData<'a, 'b> {
     pub base: Dispatcher<'a, 'b>,
@@ -44,13 +47,11 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
         self
     }
 
-    pub fn with_base_bundle<B>(mut self, bundle: B) -> Result<Self>
+    pub fn with_base_bundle<B>(mut self, bundle: B) -> Result<Self, Error>
     where
         B: SystemBundle<'a, 'b>,
     {
-        bundle
-            .build(&mut self.base)
-            .map_err(|err| Error::Core(err))?;
+        bundle.build(&mut self.base)?;
         Ok(self)
     }
 

@@ -1,15 +1,15 @@
 //! Provides texture formats
 //!
 
-pub use self::mesh::*;
-pub use self::mtl::*;
-pub use self::texture::*;
-use amethyst_assets::{AssetPrefab, Format, PrefabData, PrefabError, ProgressCounter};
+pub use self::{mesh::*, mtl::*, texture::*};
+
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
+
+use amethyst_assets::{AssetPrefab, Format, PrefabData, ProgressCounter};
 use amethyst_core::specs::prelude::Entity;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use shape::InternalShape;
-use {Mesh, ShapePrefab, Texture};
+use amethyst_error::Error;
+
+use crate::{shape::InternalShape, Mesh, ShapePrefab, Texture};
 
 mod mesh;
 mod mtl;
@@ -72,43 +72,39 @@ where
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
-        system_data: &mut <Self as PrefabData>::SystemData,
+        system_data: &mut <Self as PrefabData<'_>>::SystemData,
         entities: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         match self.mesh {
             MeshPrefab::Asset(ref m) => {
-                m.load_prefab(entity, &mut system_data.0, entities)?;
+                m.add_to_entity(entity, &mut system_data.0, entities)?;
             }
             MeshPrefab::Shape(ref s) => {
-                s.load_prefab(entity, &mut system_data.0, entities)?;
+                s.add_to_entity(entity, &mut system_data.0, entities)?;
             }
         }
         self.material
-            .load_prefab(entity, &mut system_data.1, entities)?;
+            .add_to_entity(entity, &mut system_data.1, entities)?;
         Ok(())
     }
 
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
-    ) -> Result<bool, PrefabError> {
-        let mut ret = false;
-        if match self.mesh {
-            MeshPrefab::Asset(ref mut m) => m.trigger_sub_loading(progress, &mut system_data.0)?,
-            MeshPrefab::Shape(ref mut s) => s.trigger_sub_loading(progress, &mut system_data.0)?,
-        } {
-            ret = true;
-        }
-        if self
+    ) -> Result<bool, Error> {
+        let load_mesh = match self.mesh {
+            MeshPrefab::Asset(ref mut m) => m.load_sub_assets(progress, &mut system_data.0)?,
+            MeshPrefab::Shape(ref mut s) => s.load_sub_assets(progress, &mut system_data.0)?,
+        };
+
+        let load_material = self
             .material
-            .trigger_sub_loading(progress, &mut system_data.1)?
-        {
-            ret = true;
-        }
-        Ok(ret)
+            .load_sub_assets(progress, &mut system_data.1)?;
+
+        Ok(load_mesh || load_material)
     }
 }

@@ -1,32 +1,25 @@
-extern crate amethyst_config;
-extern crate amethyst_core;
-#[macro_use]
-extern crate derivative;
-extern crate fnv;
-#[macro_use]
-extern crate serde;
-extern crate smallvec;
-extern crate winit;
+//! A collection of abstractions for various input devices to be used with Amethyst.
 
-#[cfg(feature = "sdl_controller")]
-extern crate sdl2;
+#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-#[cfg(feature = "profiler")]
-extern crate thread_profiler;
-
-pub use self::axis::Axis;
-pub use self::bindings::Bindings;
-pub use self::bundle::InputBundle;
-pub use self::button::Button;
-pub use self::controller::{ControllerAxis, ControllerButton};
-pub use self::event::InputEvent;
-pub use self::input_handler::InputHandler;
 #[cfg(feature = "sdl_controller")]
 pub use self::sdl_events_system::SdlEventsSystem;
-pub use self::system::InputSystem;
-pub use self::util::{get_input_axis_simple, get_key, is_close_requested, is_key_down};
+pub use self::{
+    axis::Axis,
+    bindings::{BindingError, Bindings},
+    bundle::{BindingsFileError, InputBundle},
+    button::Button,
+    controller::{ControllerAxis, ControllerButton, ControllerEvent},
+    event::InputEvent,
+    input_handler::InputHandler,
+    scroll_direction::ScrollDirection,
+    system::InputSystem,
+    util::{get_input_axis_simple, get_key, is_close_requested, is_key_down},
+};
+
 use std::iter::Iterator;
-use winit::VirtualKeyCode;
+
+use winit::{self, VirtualKeyCode};
 
 mod axis;
 mod bindings;
@@ -35,8 +28,7 @@ mod button;
 mod controller;
 mod event;
 mod input_handler;
-mod local_mouse_button;
-mod local_virtual_key_code;
+mod scroll_direction;
 mod system;
 mod util;
 

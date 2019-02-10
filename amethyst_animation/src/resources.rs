@@ -1,18 +1,24 @@
-use amethyst_assets::{Asset, AssetStorage, Handle, ProcessingState, Result};
-use amethyst_core::shred::SystemData;
-use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage};
-use amethyst_core::timing::{duration_to_secs, secs_to_duration};
+use std::{cmp::Ordering, fmt::Debug, hash::Hash, marker, time::Duration};
+
+use derivative::Derivative;
 use fnv::FnvHashMap;
+use log::error;
 use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
-use std::cmp::Ordering;
-use std::fmt::Debug;
-use std::hash::Hash;
-use std::marker;
-use std::time::Duration;
+use serde::{Deserialize, Serialize};
+
+use amethyst_assets::{Asset, AssetStorage, Handle, PrefabData, ProcessingState};
+use amethyst_core::{
+    shred::SystemData,
+    specs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage},
+    timing::{duration_to_secs, secs_to_duration},
+};
+use amethyst_derive::PrefabData;
+use amethyst_error::Error;
 
 /// Blend method for sampler blending
 #[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Eq, Hash)]
 pub enum BlendMethod {
+    /// Simple linear blending
     Linear,
 }
 
@@ -25,7 +31,7 @@ pub trait ApplyData<'a> {
 /// Master trait used to define animation sampling on a component
 pub trait AnimationSampling: Send + Sync + 'static + for<'b> ApplyData<'b> {
     /// The interpolation primitive
-    type Primitive: InterpolationPrimitive + Clone + Copy + Send + Sync + 'static;
+    type Primitive: InterpolationPrimitive + Clone + Send + Sync + 'static;
     /// An independent grouping or type of functions that operate on attributes of a component
     ///
     /// For example, `translation`, `scaling` and `rotation` are transformation channels independent
@@ -96,22 +102,29 @@ where
     type HandleStorage = VecStorage<Handle<Self>>;
 }
 
-impl<T> Into<Result<ProcessingState<Sampler<T>>>> for Sampler<T>
+impl<T> Into<Result<ProcessingState<Sampler<T>>, Error>> for Sampler<T>
 where
     T: InterpolationPrimitive + Send + Sync + 'static,
 {
-    fn into(self) -> Result<ProcessingState<Sampler<T>>> {
+    fn into(self) -> Result<ProcessingState<Sampler<T>>, Error> {
         Ok(ProcessingState::Loaded(self))
     }
 }
 
 /// Define the rest state for a component on an entity
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct RestState<T> {
+#[derive(Debug, Clone, Deserialize, Serialize, PrefabData)]
+#[prefab(Component)]
+pub struct RestState<T>
+where
+    T: AnimationSampling + Clone,
+{
     state: T,
 }
 
-impl<T> RestState<T> {
+impl<T> RestState<T>
+where
+    T: AnimationSampling + Clone,
+{
     /// Create new rest state
     pub fn new(t: T) -> Self {
         RestState { state: t }
@@ -125,7 +138,7 @@ impl<T> RestState<T> {
 
 impl<T> Component for RestState<T>
 where
-    T: AnimationSampling,
+    T: AnimationSampling + Clone,
 {
     type Storage = DenseVecStorage<Self>;
 }
@@ -133,8 +146,10 @@ where
 /// Defines the hierarchy of nodes that a single animation can control.
 /// Attached to the root entity that an animation can be defined for.
 /// Only required for animations which target more than a single node or entity.
-#[derive(Debug, Clone)]
+#[derive(Derivative, Debug, Clone)]
+#[derivative(Default(bound = ""))]
 pub struct AnimationHierarchy<T> {
+    /// A mapping between indices and entities
     pub nodes: FnvHashMap<usize, Entity>,
     m: marker::PhantomData<T>,
 }
@@ -153,10 +168,7 @@ where
 {
     /// Create a new hierarchy
     pub fn new() -> Self {
-        AnimationHierarchy {
-            nodes: FnvHashMap::default(),
-            m: marker::PhantomData,
-        }
+        Self::default()
     }
 
     /// Create a new hierarchy containing a single given entity
@@ -177,9 +189,9 @@ where
 
     /// Create rest state for the hierarchy. Will copy the values from the base components for each
     /// entity in the hierarchy.
-    pub fn rest_state<F>(&self, get_component: F, states: &mut WriteStorage<RestState<T>>)
+    pub fn rest_state<F>(&self, get_component: F, states: &mut WriteStorage<'_, RestState<T>>)
     where
-        T: AnimationSampling,
+        T: AnimationSampling + Clone,
         F: Fn(Entity) -> Option<T>,
     {
         for entity in self.nodes.values() {
@@ -276,11 +288,11 @@ where
     type HandleStorage = VecStorage<Handle<Self>>;
 }
 
-impl<T> Into<Result<ProcessingState<Animation<T>>>> for Animation<T>
+impl<T> Into<Result<ProcessingState<Animation<T>>, Error>> for Animation<T>
 where
     T: AnimationSampling,
 {
-    fn into(self) -> Result<ProcessingState<Animation<T>>> {
+    fn into(self) -> Result<ProcessingState<Animation<T>>, Error> {
         Ok(ProcessingState::Loaded(self))
     }
 }
@@ -373,6 +385,7 @@ pub struct SamplerControlSet<T>
 where
     T: AnimationSampling,
 {
+    /// The samplers in this set.
     pub samplers: Vec<SamplerControl<T>>,
 }
 
@@ -497,9 +510,15 @@ where
     ) {
         self.samplers
             .iter_mut()
-            .filter(|t| t.control_id == control_id)
-            .filter(|t| t.state != ControlState::Done)
-            .map(|c| (samplers.get(&c.sampler).unwrap(), c))
+            .filter(|t| t.control_id == control_id && t.state != ControlState::Done)
+            .map(|c| {
+                (
+                    samplers
+                        .get(&c.sampler)
+                        .expect("Referring to a missing sampler"),
+                    c,
+                )
+            })
             .for_each(|(s, c)| {
                 set_step_state(c, s, direction);
             });
@@ -526,7 +545,8 @@ where
                 } else {
                     0.
                 }
-            }).max_by(|a, b| a.partial_cmp(&b).unwrap_or(Ordering::Equal))
+            })
+            .max_by(|a, b| a.partial_cmp(&b).unwrap_or(Ordering::Equal))
     }
 }
 
@@ -624,6 +644,7 @@ impl<T> AnimationControl<T>
 where
     T: AnimationSampling,
 {
+    /// Creates a new `AnimationControl`
     pub fn new(
         animation: Handle<Animation<T>>,
         end: EndControl,
@@ -685,6 +706,7 @@ pub struct AnimationControlSet<I, T>
 where
     T: AnimationSampling,
 {
+    /// The animation set.
     pub animations: Vec<(I, AnimationControl<T>)>,
     pub(crate) deferred_animations: Vec<DeferredStart<I, T>>,
 }
@@ -797,7 +819,7 @@ where
         rate_multiplier: f32,
         command: AnimationCommand<T>,
     ) {
-        if let Some(_) = self.animations.iter().find(|a| a.0 == id) {
+        if self.animations.iter().any(|a| a.0 == id) {
             return;
         }
         self.animations.push((
@@ -823,7 +845,7 @@ where
         wait_for: I,
         wait_deferred_for: DeferStartRelation,
     ) {
-        if let Some(_) = self.animations.iter().find(|a| a.0 == id) {
+        if self.animations.iter().any(|a| a.0 == id) {
             return;
         }
         self.deferred_animations.push(DeferredStart {
@@ -841,19 +863,15 @@ where
 
     /// Insert an animation directly
     pub fn insert(&mut self, id: I, control: AnimationControl<T>) {
-        if let Some(_) = self.animations.iter().find(|a| a.0 == id) {
+        if self.animations.iter().any(|a| a.0 == id) {
             return;
         }
         self.animations.push((id, control));
     }
 
     /// Check if there is an animation with the given id in the set
-    pub fn has_animation(&mut self, id: I) -> bool {
-        if let Some(_) = self.animations.iter().find(|a| a.0 == id) {
-            true
-        } else {
-            false
-        }
+    pub fn has_animation(&self, id: I) -> bool {
+        self.animations.iter().any(|a| a.0 == id)
     }
 }
 
@@ -876,6 +894,7 @@ where
     I: Eq + Hash,
     T: AnimationSampling,
 {
+    /// The mapping between `I` and the animation handles.
     pub animations: FnvHashMap<I, Handle<Animation<T>>>,
 }
 

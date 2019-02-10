@@ -1,9 +1,9 @@
-use amethyst::assets::{AssetStorage, Loader};
-use amethyst::audio::output::Output;
-use amethyst::audio::{AudioSink, Source, SourceHandle};
-use amethyst::ecs::prelude::World;
-use std::iter::Cycle;
-use std::vec::IntoIter;
+use amethyst::{
+    assets::{AssetStorage, Loader},
+    audio::{output::Output, AudioSink, OggFormat, Source, SourceHandle},
+    ecs::prelude::World,
+};
+use std::{iter::Cycle, vec::IntoIter};
 
 pub struct Sounds {
     pub score_sfx: SourceHandle,
@@ -16,15 +16,13 @@ pub struct Music {
 
 /// Loads an ogg audio track.
 fn load_audio_track(loader: &Loader, world: &World, file: &str) -> SourceHandle {
-    use amethyst::audio::OggFormat;
-
     loader.load(file, OggFormat, (), (), &world.read_resource())
 }
 
 /// Initialise audio in the world. This includes the background track and the
 /// sound effects.
 pub fn initialise_audio(world: &mut World) {
-    use {AUDIO_BOUNCE, AUDIO_MUSIC, AUDIO_SCORE};
+    use crate::{AUDIO_BOUNCE, AUDIO_MUSIC, AUDIO_SCORE};
 
     let (sound_effects, music) = {
         let loader = world.read_resource::<Loader>();

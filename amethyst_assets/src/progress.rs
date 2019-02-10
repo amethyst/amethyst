@@ -1,7 +1,11 @@
+use std::sync::{
+    atomic::{AtomicUsize, Ordering},
+    Arc,
+};
+
+use amethyst_error::Error;
+use log::error;
 use parking_lot::Mutex;
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::Arc;
-use Error;
 
 /// Completion status, returned by `ProgressCounter::complete`.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -34,9 +38,7 @@ impl Progress for () {
 
     fn add_assets(&mut self, _: usize) {}
 
-    fn create_tracker(self) -> () {
-        ()
-    }
+    fn create_tracker(self) {}
 }
 
 /// A progress tracker which is passed to the `Loader`
@@ -197,7 +199,7 @@ fn show_error(handle_id: u32, asset_type_name: &'static str, asset_name: &String
         handle_id, asset_type_name, asset_name, error
     );
     error
-        .iter()
+        .causes()
         .skip(1)
         .for_each(|e| err_out.push_str(&format!("\r\ncaused by: {:?}", e)));
     error!("{}", err_out);

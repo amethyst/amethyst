@@ -1,8 +1,15 @@
-use source::Source;
-use std::fs::File;
-use std::path::{Path, PathBuf};
-use std::time::UNIX_EPOCH;
-use {ErrorKind, Result, ResultExt};
+use std::{
+    fs::File,
+    path::{Path, PathBuf},
+    time::UNIX_EPOCH,
+};
+
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
+use amethyst_error::{format_err, Error, ResultExt};
+
+use crate::{error, source::Source};
 
 /// Directory source.
 ///
@@ -33,23 +40,25 @@ impl Directory {
 }
 
 impl Source for Directory {
-    fn modified(&self, path: &str) -> Result<u64> {
+    fn modified(&self, path: &str) -> Result<u64, Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("dir_modified_asset");
         use std::fs::metadata;
 
         let path = self.path(path);
 
-        Ok(metadata(&path)
-            .chain_err(|| format!("Failed to fetch metadata for {:?}", path))?
+        metadata(&path)
+            .with_context(|_| format_err!("Failed to fetch metadata for {:?}", path))?
             .modified()
-            .chain_err(|| "Could not get modification time")?
+            .with_context(|_| format_err!("Could not get modification time"))?
             .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs())
+            .with_context(|_| {
+                format_err!("Anomalies with the system clock caused `duration_since` to fail")
+            })
+            .map(|d| d.as_secs())
     }
 
-    fn load(&self, path: &str) -> Result<Vec<u8>> {
+    fn load(&self, path: &str) -> Result<Vec<u8>, Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("dir_load_asset");
         use std::io::Read;
@@ -58,11 +67,11 @@ impl Source for Directory {
 
         let mut v = Vec::new();
         let mut file = File::open(&path)
-            .chain_err(|| format!("Failed to open file {:?}", path))
-            .chain_err(|| ErrorKind::Source)?;
+            .with_context(|_| format_err!("Failed to open file {:?}", path))
+            .with_context(|_| error::Error::Source)?;
         file.read_to_end(&mut v)
-            .chain_err(|| format!("Failed to read file {:?}", path))
-            .chain_err(|| ErrorKind::Source)?;
+            .with_context(|_| format_err!("Failed to read file {:?}", path))
+            .with_context(|_| error::Error::Source)?;
 
         Ok(v)
     }
@@ -70,9 +79,11 @@ impl Source for Directory {
 
 #[cfg(test)]
 mod test {
-    use super::Directory;
-    use source::Source;
     use std::path::Path;
+
+    use crate::source::Source;
+
+    use super::Directory;
 
     #[test]
     fn loads_asset_from_assets_directory() {

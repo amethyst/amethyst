@@ -1,4 +1,4 @@
-use amethyst_core::cgmath::Matrix4;
+use amethyst_core::nalgebra::Matrix4;
 
 #[derive(Debug, Clone)]
 pub enum XRRenderInfo {

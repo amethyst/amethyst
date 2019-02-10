@@ -1,15 +1,25 @@
-use config::DisplayConfig;
-use error::{Error, Result};
+use amethyst_error::{format_err, Error};
 use fnv::FnvHashMap as HashMap;
 use gfx::memory::Pod;
 use gfx::texture::AaMode;
-use mesh::{Mesh, MeshBuilder, VertexDataSet};
-use pipe::{
-    ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, Target, TargetBuilder,
-};
-use tex::{Texture, TextureBuilder};
-use types::{ColorFormat, DepthFormat, Device, Encoder, Factory, Window};
+
+use gfx_core::Device as Device2;
+
 use winit::{dpi::LogicalSize, EventsLoop, Window as WinitWindow, WindowBuilder};
+
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
+use crate::{
+    config::DisplayConfig,
+    error,
+    mesh::{Mesh, MeshBuilder, VertexDataSet},
+    pipe::{
+        ColorBuffer, DepthBuffer, PipelineBuild, PipelineData, PolyPipeline, Target, TargetBuilder,
+    },
+    tex::{Texture, TextureBuilder},
+    types::{ColorFormat, DepthFormat, Device, Encoder, Factory, Window},
+};
 
 /// Generic renderer.
 pub struct Renderer {
@@ -24,11 +34,12 @@ pub struct Renderer {
     events: EventsLoop,
     multisampling: u16,
     cached_size: LogicalSize,
+    cached_hidpi_factor: f64,
 }
 
 impl Renderer {
     /// Creates a `Renderer` with default window settings.
-    pub fn new() -> Result<Renderer> {
+    pub fn new() -> Result<Self, Error> {
         Self::build().build()
     }
 
@@ -43,7 +54,7 @@ impl Renderer {
     }
 
     /// Builds a new mesh from the given vertices.
-    pub fn create_mesh<T>(&mut self, mb: MeshBuilder<T>) -> Result<Mesh>
+    pub fn create_mesh<T>(&mut self, mb: MeshBuilder<T>) -> Result<Mesh, Error>
     where
         T: VertexDataSet,
     {
@@ -51,7 +62,7 @@ impl Renderer {
     }
 
     /// Builds a new texture resource.
-    pub fn create_texture<D, T>(&mut self, tb: TextureBuilder<D, T>) -> Result<Texture>
+    pub fn create_texture<D, T>(&mut self, tb: TextureBuilder<D, T>) -> Result<Texture, Error>
     where
         D: AsRef<[T]>,
         T: Pod + Copy,
@@ -60,7 +71,7 @@ impl Renderer {
     }
 
     /// Builds a new renderer pipeline.
-    pub fn create_pipe<B, P>(&mut self, pb: B) -> Result<P>
+    pub fn create_pipe<B, P>(&mut self, pb: B) -> Result<P, Error>
     where
         P: PolyPipeline,
         B: PipelineBuild<Pipeline = P>,
@@ -69,29 +80,52 @@ impl Renderer {
     }
 
     /// Draws a scene with the given pipeline.
+    #[cfg_attr(feature = "cargo-clippy", allow(float_cmp))] // cmp just used to recognize change
     pub fn draw_to_window<'a, P>(&mut self, pipe: &mut P, data: <P as PipelineData<'a>>::Data)
     where
         P: PolyPipeline,
     {
         #[cfg(feature = "opengl")]
         use glutin::dpi::PhysicalSize;
-        #[cfg(feature = "opengl")]
-        use glutin::GlContext;
 
         if let Some(size) = self.window().get_inner_size() {
-            if size != self.cached_size {
-                self.cached_size = size.into();
+            #[cfg(feature = "profiler")]
+            profile_scope!("render_system_draw_size");
+            let hidpi_factor = self.window().get_hidpi_factor();
+
+            if size != self.cached_size || hidpi_factor != self.cached_hidpi_factor {
+                self.cached_size = size;
+                self.cached_hidpi_factor = hidpi_factor;
                 #[cfg(feature = "opengl")]
-                self.window.resize(PhysicalSize::from_logical(
-                    size,
-                    self.window().get_hidpi_factor(),
-                ));
+                self.window
+                    .resize(PhysicalSize::from_logical(size, hidpi_factor));
                 self.resize(pipe, size.into());
             }
         }
-
         pipe.update_target("", self.main_target.clone());
-        pipe.apply(&mut self.encoder, self.factory.clone(), data);
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("render_system_draw_pipeapply");
+            pipe.apply(&mut self.encoder, self.factory.clone(), data);
+        }
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("render_system_draw_encoderflush");
+            self.encoder.flush(&mut self.device);
+        }
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("render_system_draw_devicecleanup");
+            self.device.cleanup();
+        }
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("render_system_draw_swapbuffers");
+            #[cfg(feature = "opengl")]
+            self.window
+                .swap_buffers()
+                .expect("OpenGL context has been lost");
+        }
     }
 
     ///
@@ -145,7 +179,7 @@ impl Renderer {
                 .with_num_color_bufs(value.color_bufs().len())
                 .with_depth_buf(value.depth_buf().is_some())
                 .build(&mut self.factory, new_size)
-                .unwrap();
+                .expect("Unable to create new target when resizing");
             targets.insert(key, target);
         }
         pipe.new_targets(targets);
@@ -194,67 +228,45 @@ impl Drop for Renderer {
 pub struct RendererBuilder {
     config: DisplayConfig,
     events: EventsLoop,
-    winit_builder: WindowBuilder,
+    window_builder: WindowBuilder,
 }
 
 impl RendererBuilder {
     /// Creates a new `RendererBuilder`.
     pub fn new(el: EventsLoop) -> Self {
+        let config = DisplayConfig::default();
         RendererBuilder {
-            config: DisplayConfig::default(),
+            config: config.clone(),
+            window_builder: config.to_windowbuilder(el.get_primary_monitor()),
             events: el,
-            winit_builder: WindowBuilder::new().with_title("Amethyst"),
         }
     }
 
-    /// Applies configuration from `Config`
+    /// Applies configuration from the provided `Config`.
     pub fn with_config(&mut self, config: DisplayConfig) -> &mut Self {
-        self.config = config;
-        let mut wb = self.winit_builder.clone();
-        wb = wb
-            .with_title(self.config.title.clone())
-            .with_visibility(self.config.visibility);
-
-        if self.config.fullscreen {
-            wb = wb.with_fullscreen(Some(self.events.get_primary_monitor()));
-        }
-        match self.config.dimensions {
-            Some(dimensions) => {
-                wb = wb.with_dimensions(dimensions.into());
-            }
-            _ => (),
-        }
-        match self.config.min_dimensions {
-            Some(dimensions) => {
-                wb = wb.with_min_dimensions(dimensions.into());
-            }
-            _ => (),
-        }
-        match self.config.max_dimensions {
-            Some(dimensions) => {
-                wb = wb.with_max_dimensions(dimensions.into());
-            }
-            _ => (),
-        }
-        self.winit_builder = wb;
+        self.config = config.clone();
+        self.window_builder = config.to_windowbuilder(self.events.get_primary_monitor());
         self
     }
 
-    /// Applies window settings from the given `glutin::WindowBuilder`.
-    pub fn use_winit_builder(&mut self, wb: WindowBuilder) -> &mut Self {
-        self.winit_builder = wb;
+    /// Applies configuraiton from the provided `WindowBuilder`.
+    pub fn with_window_builder(&mut self, wb: WindowBuilder) -> &mut Self {
+        self.window_builder = wb.clone();
+        self.config = wb.into();
         self
     }
 
     /// Consumes the builder and creates the new `Renderer`.
-    pub fn build(self) -> Result<Renderer> {
+    pub fn build(self) -> Result<Renderer, Error> {
         let Backend(device, mut factory, main_target, window) =
-            init_backend(self.winit_builder.clone(), &self.events, &self.config)?;
+            init_backend(self.window_builder, &self.events, &self.config)?;
 
         let cached_size = window
             .get_inner_size()
-            .expect("Unable to fetch window size, as the window went away!")
-            .into();
+            .ok_or_else(|| format_err!("Unable to fetch window size, as the window went away."))?;
+
+        let cached_hidpi_factor = window.get_hidpi_factor();
+
         let encoder = factory.create_command_buffer().into();
         Ok(Renderer {
             device,
@@ -266,6 +278,7 @@ impl RendererBuilder {
             events: self.events,
             multisampling: self.config.multisampling,
             cached_size,
+            cached_hidpi_factor,
         })
     }
 }
@@ -275,14 +288,19 @@ struct Backend(pub Device, pub Factory, pub Target, pub Window);
 
 /// Creates the Direct3D 11 backend.
 #[cfg(all(feature = "d3d11", target_os = "windows"))]
-fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> Result<Backend> {
-    use gfx_window_dxgi as win;
-
+fn init_backend(
+    wb: WindowBuilder,
+    el: &EventsLoop,
+    config: &DisplayConfig,
+) -> Result<Backend, Error> {
     // FIXME: vsync + multisampling from config
-    let (win, dev, mut fac, color) = win::init::<ColorFormat>(wb, el).unwrap();
+    let (win, dev, mut fac, color) = gfx_window_dxgi::init::<ColorFormat>(wb, el)
+        .expect("Unable to initialize window (d3d11 backend)");
     let dev = gfx_device_dx11::Deferred::from(dev);
 
-    let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
+    let size = win
+        .get_inner_size_points()
+        .ok_or(error::Error::WindowDestroyed)?;
     let (w, h) = (size.0 as u16, size.1 as u16);
     let depth = fac.create_depth_stencil_view_only::<DepthFormat>(w, h)?;
     let main_target = Target::new(
@@ -301,13 +319,18 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> R
 }
 
 #[cfg(all(feature = "metal", target_os = "macos"))]
-fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> Result<Backend> {
-    use gfx_window_metal as win;
-
+fn init_backend(
+    wb: WindowBuilder,
+    el: &EventsLoop,
+    config: &DisplayConfig,
+) -> Result<Backend, Error> {
     // FIXME: vsync + multisampling from config
-    let (win, dev, mut fac, color) = win::init::<ColorFormat>(wb, el).unwrap();
+    let (win, dev, mut fac, color) = gfx_window_metal::init::<ColorFormat>(wb, el)
+        .expect("Unable to initialize window (metal backend)");
 
-    let size = win.get_inner_size_points().ok_or(Error::WindowDestroyed)?;
+    let size = win
+        .get_inner_size_points()
+        .ok_or(error::Error::WindowDestroyed)?;
     let (w, h) = (size.0 as u16, size.1 as u16);
     let depth = fac.create_depth_stencil_view_only::<DepthFormat>(w, h)?;
     let main_target = Target::new(
@@ -327,18 +350,28 @@ fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> R
 
 /// Creates the OpenGL backend.
 #[cfg(feature = "opengl")]
-fn init_backend(wb: WindowBuilder, el: &EventsLoop, config: &DisplayConfig) -> Result<Backend> {
-    use gfx_window_glutin as win;
-    use glutin::{self, GlProfile, GlRequest};
+fn init_backend(
+    wb: WindowBuilder,
+    el: &EventsLoop,
+    config: &DisplayConfig,
+) -> Result<Backend, Error> {
+    #[cfg(target_os = "macos")]
+    use glutin::{GlProfile, GlRequest};
 
     let ctx = glutin::ContextBuilder::new()
         .with_multisampling(config.multisampling)
-        .with_vsync(config.vsync)
+        .with_vsync(config.vsync);
+    #[cfg(target_os = "macos")]
+    let ctx = ctx
         .with_gl_profile(GlProfile::Core)
         .with_gl(GlRequest::Latest);
 
-    let (win, dev, fac, color, depth) = win::init::<ColorFormat, DepthFormat>(wb, ctx, el);
-    let size = win.get_inner_size().ok_or(Error::WindowDestroyed)?.into();
+    let (win, dev, fac, color, depth) =
+        gfx_window_glutin::init::<ColorFormat, DepthFormat>(wb, ctx, el);
+    let size = win
+        .get_inner_size()
+        .ok_or(error::Error::WindowDestroyed)?
+        .into();
     let main_target = Target::new(
         ColorBuffer {
             as_input: None,

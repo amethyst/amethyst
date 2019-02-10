@@ -2,10 +2,14 @@
 
 use hibitset::BitSet;
 use specs::prelude::{
-    Entities, Entity, InsertedFlag, Join, ModifiedFlag, ReadExpect, ReadStorage, ReaderId,
-    Resources, System, WriteStorage,
+    ComponentEvent, Entities, Entity, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
+    WriteStorage,
 };
-use transform::{GlobalTransform, HierarchyEvent, Parent, ParentHierarchy, Transform};
+
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
+use crate::transform::{GlobalTransform, HierarchyEvent, Parent, ParentHierarchy, Transform};
 
 /// Handles updating `GlobalTransform` components based on the `Transform`
 /// component and parents.
@@ -13,8 +17,7 @@ pub struct TransformSystem {
     local_modified: BitSet,
     global_modified: BitSet,
 
-    inserted_local_id: Option<ReaderId<InsertedFlag>>,
-    modified_local_id: Option<ReaderId<ModifiedFlag>>,
+    locals_events_id: Option<ReaderId<ComponentEvent>>,
 
     parent_events_id: Option<ReaderId<HierarchyEvent>>,
 
@@ -25,8 +28,7 @@ impl TransformSystem {
     /// Creates a new transform processor.
     pub fn new() -> TransformSystem {
         TransformSystem {
-            inserted_local_id: None,
-            modified_local_id: None,
+            locals_events_id: None,
             parent_events_id: None,
             local_modified: BitSet::default(),
             global_modified: BitSet::default(),
@@ -59,19 +61,25 @@ impl<'a> System<'a> for TransformSystem {
         self.local_modified.clear();
         self.global_modified.clear();
 
-        locals.populate_inserted(
-            self.inserted_local_id.as_mut().unwrap(),
-            &mut self.local_modified,
-        );
-        locals.populate_modified(
-            self.modified_local_id.as_mut().unwrap(),
-            &mut self.local_modified,
-        );
+        locals
+            .channel()
+            .read(
+                self.locals_events_id.as_mut().expect(
+                    "`TransformSystem::setup` was not called before `TransformSystem::run`",
+                ),
+            )
+            .for_each(|event| match event {
+                ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
+                    self.local_modified.add(*id);
+                }
+                ComponentEvent::Removed(_id) => {}
+            });
 
-        for event in hierarchy
-            .changed()
-            .read(self.parent_events_id.as_mut().unwrap())
-        {
+        for event in hierarchy.changed().read(
+            self.parent_events_id
+                .as_mut()
+                .expect("`TransformSystem::setup` was not called before `TransformSystem::run`"),
+        ) {
             match *event {
                 HierarchyEvent::Removed(entity) => {
                     // Sometimes the user may have already deleted the entity.
@@ -106,24 +114,21 @@ impl<'a> System<'a> for TransformSystem {
         // Compute transforms with parents.
         for entity in hierarchy.all() {
             let self_dirty = self.local_modified.contains(entity.id());
-            match (parents.get(*entity), locals.get(*entity)) {
-                (Some(parent), Some(local)) => {
-                    let parent_dirty = self.global_modified.contains(parent.entity.id());
-                    if parent_dirty || self_dirty {
-                        let combined_transform =
-                            if let Some(parent_global) = globals.get(parent.entity) {
-                                (parent_global.0 * local.matrix()).into()
-                            } else {
-                                local.matrix()
-                            };
+            if let (Some(parent), Some(local)) = (parents.get(*entity), locals.get(*entity)) {
+                let parent_dirty = self.global_modified.contains(parent.entity.id());
+                if parent_dirty || self_dirty {
+                    let combined_transform = if let Some(parent_global) = globals.get(parent.entity)
+                    {
+                        (parent_global.0 * local.matrix())
+                    } else {
+                        local.matrix()
+                    };
 
-                        if let Some(global) = globals.get_mut(*entity) {
-                            self.global_modified.add(entity.id());
-                            global.0 = combined_transform.into();
-                        }
+                    if let Some(global) = globals.get_mut(*entity) {
+                        self.global_modified.add(entity.id());
+                        global.0 = combined_transform;
                     }
                 }
-                _ => (),
             }
         }
     }
@@ -134,37 +139,32 @@ impl<'a> System<'a> for TransformSystem {
         let mut hierarchy = res.fetch_mut::<ParentHierarchy>();
         let mut locals = WriteStorage::<Transform>::fetch(res);
         self.parent_events_id = Some(hierarchy.track());
-        self.inserted_local_id = Some(locals.track_inserted());
-        self.modified_local_id = Some(locals.track_modified());
+        self.locals_events_id = Some(locals.register_reader());
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use cgmath::{Decomposed, Matrix4, One, Quaternion, Vector3, Zero};
+    use nalgebra::{Matrix4, Quaternion, Unit};
     use shred::RunNow;
     use specs::prelude::{Builder, World};
     use specs_hierarchy::{Hierarchy, HierarchySystem};
-    use transform::{GlobalTransform, Parent, Transform, TransformSystem};
+
+    use crate::transform::{GlobalTransform, Parent, Transform, TransformSystem};
 
     // If this works, then all other tests should work.
     #[test]
     fn transform_matrix() {
         let mut transform = Transform::default();
-        transform.translation = Vector3::new(5.0, 2.0, -0.5);
-        transform.rotation = Quaternion::new(1.0, 0.0, 0.0, 0.0);
-        transform.scale = Vector3::new(2.0, 2.0, 2.0);
+        transform.set_xyz(5.0, 2.0, -0.5);
+        transform.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.0, 0.0, 0.0)));
+        transform.set_scale(2.0, 2.0, 2.0);
 
-        let decomposed = Decomposed {
-            rot: transform.rotation,
-            disp: transform.translation,
-            scale: 2.0,
-        };
+        let combined = Matrix4::new_translation(transform.translation())
+            * transform.rotation().to_rotation_matrix().to_homogeneous()
+            * Matrix4::new_scaling(2.0);
 
-        let matrix = transform.matrix();
-        let cg_matrix: Matrix4<f32> = decomposed.into();
-
-        assert_eq!(matrix, cg_matrix);
+        assert_eq!(transform.matrix(), combined);
     }
 
     #[test]
@@ -202,9 +202,7 @@ mod tests {
     fn zeroed() {
         let (mut world, mut hs, mut system) = transform_world();
 
-        let mut transform = Transform::default();
-        transform.translation = Vector3::zero();
-        transform.rotation = Quaternion::one();
+        let transform = Transform::default();
 
         let e1 = world
             .create_entity()
@@ -233,8 +231,8 @@ mod tests {
         let (mut world, mut hs, mut system) = transform_world();
 
         let mut local = Transform::default();
-        local.translation = Vector3::new(5.0, 5.0, 5.0);
-        local.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
+        local.set_xyz(5.0, 5.0, 5.0);
+        local.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e1 = world
             .create_entity()
@@ -261,8 +259,8 @@ mod tests {
         let (mut world, mut hs, mut system) = transform_world();
 
         let mut local1 = Transform::default();
-        local1.translation = Vector3::new(5.0, 5.0, 5.0);
-        local1.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
+        local1.set_xyz(5.0, 5.0, 5.0);
+        local1.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e1 = world
             .create_entity()
@@ -271,8 +269,8 @@ mod tests {
             .build();
 
         let mut local2 = Transform::default();
-        local2.translation = Vector3::new(5.0, 5.0, 5.0);
-        local2.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
+        local2.set_xyz(5.0, 5.0, 5.0);
+        local2.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e2 = world
             .create_entity()
@@ -282,8 +280,8 @@ mod tests {
             .build();
 
         let mut local3 = Transform::default();
-        local3.translation = Vector3::new(5.0, 5.0, 5.0);
-        local3.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
+        local3.set_xyz(5.0, 5.0, 5.0);
+        local3.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e3 = world
             .create_entity()
@@ -329,8 +327,8 @@ mod tests {
         let (mut world, mut hs, mut system) = transform_world();
 
         let mut local3 = Transform::default();
-        local3.translation = Vector3::new(5.0, 5.0, 5.0);
-        local3.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
+        local3.set_xyz(5.0, 5.0, 5.0);
+        local3.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e3 = world
             .create_entity()
@@ -339,8 +337,8 @@ mod tests {
             .build();
 
         let mut local2 = Transform::default();
-        local2.translation = Vector3::new(5.0, 5.0, 5.0);
-        local2.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
+        local2.set_xyz(5.0, 5.0, 5.0);
+        local2.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e2 = world
             .create_entity()
@@ -349,8 +347,8 @@ mod tests {
             .build();
 
         let mut local1 = Transform::default();
-        local1.translation = Vector3::new(5.0, 5.0, 5.0);
-        local1.rotation = Quaternion::new(1.0, 0.5, 0.5, 0.0);
+        local1.set_xyz(5.0, 5.0, 5.0);
+        local1.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e1 = world
             .create_entity()
@@ -396,12 +394,13 @@ mod tests {
 
     #[test]
     #[should_panic]
+    #[cfg(debug_assertions)]
     fn nan_transform() {
         let (mut world, mut hs, mut system) = transform_world();
 
         let mut local = Transform::default();
         // Release the indeterminate forms!
-        local.translation = Vector3::new(0.0 / 0.0, 0.0 / 0.0, 0.0 / 0.0);
+        local.set_xyz(0.0 / 0.0, 0.0 / 0.0, 0.0 / 0.0);
 
         world
             .create_entity()
@@ -415,12 +414,13 @@ mod tests {
 
     #[test]
     #[should_panic]
+    #[cfg(debug_assertions)]
     fn is_finite_transform() {
         let (mut world, mut hs, mut system) = transform_world();
 
         let mut local = Transform::default();
         // Release the indeterminate forms!
-        local.translation = Vector3::new(1.0 / 0.0, 1.0 / 0.0, 1.0 / 0.0);
+        local.set_xyz(1.0 / 0.0, 1.0 / 0.0, 1.0 / 0.0);
         world
             .create_entity()
             .with(local.clone())

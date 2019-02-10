@@ -1,8 +1,6 @@
 //! Vulkan backend types.
 
 use super::ColorFormat;
-use gfx_device_vulkan;
-use gfx_window_vulkan;
 
 /// Command buffer type.
 pub type CommandBuffer = gfx_device_vulkan::CommandBuffer;

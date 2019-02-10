@@ -1,0 +1,25 @@
+#![enable(implicit_some)]
+Custom(
+    Repeat(
+        count: 11,
+        x_move: 75.,
+        y_move: -50.,
+        item: Text(
+            transform: (
+                id: "paused",
+                anchor: TopLeft,
+                x: 60.,
+                y: -25.,
+                width: 200.,
+                height: 50.,
+                transparent: true,
+            ),
+            text: (
+                text: "Repeated Text",
+                font_size: 25.,
+                color: (1., 1., 1., 1.),
+                font: File("font/square.ttf", Ttf, ()),
+            ),
+        )
+    )
+)

@@ -1,5 +1,6 @@
 extern crate amethyst_assets;
 extern crate amethyst_core;
+extern crate amethyst_error;
 
 pub mod components;
 mod systems;
@@ -7,9 +8,10 @@ mod systems;
 use std::collections::BTreeMap;
 use std::sync::{Mutex, MutexGuard};
 
-use amethyst_core::bundle::{Result, SystemBundle};
-use amethyst_core::cgmath::{Quaternion, Vector3, Matrix4};
+use amethyst_core::bundle::SystemBundle;
+use amethyst_core::nalgebra::{UnitQuaternion, Vector3, Matrix4};
 use amethyst_core::specs::prelude::DispatcherBuilder;
+use amethyst_error::Error;
 
 use amethyst_assets::Loader;
 
@@ -40,7 +42,7 @@ pub enum XREvent {
 #[derive(Debug, Clone)]
 pub struct TrackerPositionData {
     pub position: Vector3<f32>,
-    pub rotation: Quaternion<f32>,
+    pub rotation: UnitQuaternion<f32>,
     pub velocity: Vector3<f32>,
     pub angular_velocity: Vector3<f32>,
     pub valid: bool,
@@ -102,7 +104,7 @@ impl<'a> XRBundle<'a> {
 }
 
 impl<'a, 'b, 'c> SystemBundle<'a, 'b> for XRBundle<'c> {
-    fn build(self, dispatcher: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, dispatcher: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         dispatcher.add(
             systems::XRSystem {
                 backend: Some(self.backend),

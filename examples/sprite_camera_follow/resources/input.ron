@@ -1,0 +1,13 @@
+(
+    axes: {
+        "entity_x": Emulated(
+            pos: Key(D),
+            neg: Key(A),
+        ),
+        "entity_y": Emulated(
+            pos: Key(W),
+            neg: Key(S),
+        ),
+    },
+    actions: {},
+)

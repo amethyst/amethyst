@@ -1,14 +1,18 @@
 //! ECS rendering bundle
 
 use amethyst_assets::Processor;
-use amethyst_core::bundle::{Result, ResultExt, SystemBundle};
-use amethyst_core::specs::prelude::DispatcherBuilder;
-use config::DisplayConfig;
-use pipe::{PipelineBuild, PolyPipeline};
-use sprite::SpriteSheet;
-use sprite_visibility::SpriteVisibilitySortingSystem;
-use system::RenderSystem;
-use visibility::VisibilitySortingSystem;
+use amethyst_core::{bundle::SystemBundle, specs::prelude::DispatcherBuilder};
+use amethyst_error::{format_err, Error, ResultExt};
+
+use crate::{
+    config::DisplayConfig,
+    pipe::{PipelineBuild, PolyPipeline},
+    sprite::SpriteSheet,
+    sprite_visibility::SpriteVisibilitySortingSystem,
+    system::RenderSystem,
+    visibility::VisibilitySortingSystem,
+    HideHierarchySystem,
+};
 
 /// Rendering bundle
 ///
@@ -29,6 +33,7 @@ where
     visibility_sorting: Option<&'a [&'a str]>,
     sprite_visibility_sorting: Option<&'a [&'a str]>,
     sprite_sheet_processor_enabled: bool,
+    hide_hierarchy_system_enabled: bool,
 }
 
 impl<'a, B, P> RenderBundle<'a, B, P>
@@ -44,6 +49,7 @@ where
             visibility_sorting: None,
             sprite_visibility_sorting: None,
             sprite_sheet_processor_enabled: false,
+            hide_hierarchy_system_enabled: false,
         }
     }
 
@@ -67,12 +73,19 @@ where
         self.sprite_sheet_processor_enabled = true;
         self
     }
+
+    /// Enable the [hierarchical hiding system](struct.HideHierarchySystem.html).
+    /// Requires the `"parent_hierarchy_system"` to be used, which is a default part of TransformBundle.
+    pub fn with_hide_hierarchy_system(mut self) -> Self {
+        self.hide_hierarchy_system_enabled = true;
+        self
+    }
 }
 
 impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> SystemBundle<'a, 'b>
     for RenderBundle<'c, B, P>
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         if let Some(dep) = self.visibility_sorting {
             builder.add(
                 VisibilitySortingSystem::new(),
@@ -94,8 +107,16 @@ impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> SystemBun
                 &[],
             );
         }
+        if self.hide_hierarchy_system_enabled {
+            builder.add(
+                HideHierarchySystem::default(),
+                "hide_hierarchy_system",
+                &["parent_hierarchy_system"],
+            );
+        }
         builder.add_thread_local(
-            RenderSystem::build(self.pipe, self.config).chain_err(|| "Renderer error!")?,
+            RenderSystem::build(self.pipe, self.config)
+                .with_context(|_| format_err!("Renderer error!"))?,
         );
         Ok(())
     }

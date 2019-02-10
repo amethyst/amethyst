@@ -1,2 +1,2 @@
 reorder_imports = true
-wrap_comments = false
+merge_imports = true

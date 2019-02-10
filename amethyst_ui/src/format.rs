@@ -1,6 +1,9 @@
-use amethyst_assets::{Asset, Error, Handle, ProcessingState, ResultExt, SimpleFormat};
-use amethyst_core::specs::prelude::VecStorage;
 use gfx_glyph::Font;
+use serde::{Deserialize, Serialize};
+
+use amethyst_assets::{Asset, Handle, ProcessingState, SimpleFormat};
+use amethyst_core::specs::prelude::VecStorage;
+use amethyst_error::{format_err, Error, ResultExt};
 
 /// A loaded set of fonts from a file.
 #[derive(Clone)]
@@ -47,8 +50,8 @@ impl SimpleFormat<FontAsset> for TtfFormat {
 
     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<FontData, Error> {
         Font::from_bytes(bytes)
-            .map(|f| FontData(f))
-            .chain_err(|| "Font parsing error")
+            .map(FontData)
+            .with_context(|_| format_err!("Font parsing error"))
     }
 }
 

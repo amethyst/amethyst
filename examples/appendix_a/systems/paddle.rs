@@ -1,9 +1,9 @@
-use amethyst::core::timing::Time;
-use amethyst::core::transform::Transform;
-use amethyst::ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage};
-use amethyst::input::InputHandler;
-use config::ArenaConfig;
-use Paddle;
+use crate::{config::ArenaConfig, Paddle};
+use amethyst::{
+    core::{timing::Time, transform::Transform},
+    ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
+    input::InputHandler,
+};
 /// This system is responsible for moving all the paddles according to the user
 /// provided input.
 pub struct PaddleSystem;
@@ -18,7 +18,7 @@ impl<'s> System<'s> for PaddleSystem {
     );
 
     fn run(&mut self, (paddles, mut transforms, time, input, arena_config): Self::SystemData) {
-        use Side;
+        use crate::Side;
 
         // Iterate over all planks and move them according to the input the user
         // provided.
@@ -29,13 +29,11 @@ impl<'s> System<'s> for PaddleSystem {
             };
 
             if let Some(movement) = opt_movement {
-                transform.translation[1] +=
-                    paddle.velocity * time.delta_seconds() * movement as f32;
+                transform.translate_y(paddle.velocity * time.delta_seconds() * movement as f32);
 
                 // We make sure the paddle remains in the arena.
-                transform.translation[1] = transform.translation[1]
-                    .max(0.0)
-                    .min(arena_config.height - paddle.height);
+                let paddle_y = transform.translation().y;
+                transform.set_y(paddle_y.max(0.0).min(arena_config.height - paddle.height));
             }
         }
     }

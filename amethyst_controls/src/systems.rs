@@ -1,20 +1,28 @@
-use amethyst_core::cgmath::{Deg, Vector3};
-use amethyst_core::shrev::{EventChannel, ReaderId};
-use amethyst_core::specs::prelude::{
-    Join, Read, ReadStorage, Resources, System, Write, WriteStorage,
-};
-use amethyst_core::timing::Time;
-use amethyst_core::transform::Transform;
-use amethyst_input::{get_input_axis_simple, InputHandler};
-use amethyst_renderer::WindowMessages;
-use components::{ArcBallControlTag, FlyControlTag};
-use resources::{HideCursor, WindowFocus};
-use std::hash::Hash;
-use std::marker::PhantomData;
+use std::{hash::Hash, marker::PhantomData};
+
 use winit::{DeviceEvent, Event, WindowEvent};
 
+use amethyst_core::{
+    nalgebra::{Unit, Vector3},
+    shrev::{EventChannel, ReaderId},
+    specs::prelude::{Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
+    timing::Time,
+    transform::Transform,
+};
+use amethyst_input::{get_input_axis_simple, InputHandler};
+use amethyst_renderer::WindowMessages;
+
+use crate::{
+    components::{ArcBallControlTag, FlyControlTag},
+    resources::{HideCursor, WindowFocus},
+};
+
 /// The system that manages the fly movement.
-/// Generic parameters are the parameters for the InputHandler.
+///
+/// # Type parameters
+///
+/// * `A`: This is the key the `InputHandler` is using for axes. Often, this is a `String`.
+/// * `B`: This is the key the `InputHandler` is using for actions. Often, this is a `String`.
 pub struct FlyMovementSystem<A, B> {
     /// The movement speed of the movement in units per second.
     speed: f32,
@@ -32,6 +40,7 @@ where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
+    /// Builds a new `FlyMovementSystem` using the provided speeds and axis controls.
     pub fn new(
         speed: f32,
         right_input_axis: Option<A>,
@@ -65,19 +74,20 @@ where
         let y = get_input_axis_simple(&self.up_input_axis, &input);
         let z = get_input_axis_simple(&self.forward_input_axis, &input);
 
-        let dir = Vector3::new(x, y, z);
-
-        for (transform, _) in (&mut transform, &tag).join() {
-            transform.move_along_local(dir, time.delta_seconds() * self.speed);
+        if let Some(dir) = Unit::try_new(Vector3::new(x, y, z), 1.0e-6) {
+            for (transform, _) in (&mut transform, &tag).join() {
+                transform.move_along_local(dir, time.delta_seconds() * self.speed);
+            }
         }
     }
 }
 
 /// The system that manages the arc ball movement;
-/// In essence, the system will allign the camera with its target while keeping the distance to it
+/// In essence, the system will align the camera with its target while keeping the distance to it
 /// and while keeping the orientation of the camera.
+///
 /// To modify the orientation of the camera in accordance with the mouse input, please use the
-/// FreeRotationSystem.
+/// `FreeRotationSystem`.
 #[derive(Default)]
 pub struct ArcBallRotationSystem;
 
@@ -90,14 +100,14 @@ impl<'a> System<'a> for ArcBallRotationSystem {
     fn run(&mut self, (mut transforms, tags): Self::SystemData) {
         let mut position = None;
         for (transform, arc_ball_camera_tag) in (&transforms, &tags).join() {
-            let pos_vec = transform.rotation * -Vector3::unit_z() * arc_ball_camera_tag.distance;
+            let pos_vec = transform.rotation() * -Vector3::z() * arc_ball_camera_tag.distance;
             if let Some(target_transform) = transforms.get(arc_ball_camera_tag.target) {
-                position = Some(target_transform.translation - pos_vec);
+                position = Some(target_transform.translation() - pos_vec);
             }
         }
         if let Some(new_pos) = position {
             for (transform, _) in (&mut transforms, &tags).join() {
-                transform.translation = new_pos;
+                *transform.translation_mut() = new_pos;
             }
         }
     }
@@ -105,6 +115,15 @@ impl<'a> System<'a> for ArcBallRotationSystem {
 
 /// The system that manages the view rotation.
 /// Controlled by the mouse.
+/// Goes into an inactive state if the window is not focused (`WindowFocus` resource).
+///
+/// Can be manually disabled by making the mouse visible using the `HideCursor` resource:
+/// `HideCursor.hide = false`
+///
+/// # Type parameters
+///
+/// * `A`: This is the key the `InputHandler` is using for axes. Often, this is a `String`.
+/// * `B`: This is the key the `InputHandler` is using for actions. Often, this is a `String`.
 pub struct FreeRotationSystem<A, B> {
     sensitivity_x: f32,
     sensitivity_y: f32,
@@ -114,6 +133,7 @@ pub struct FreeRotationSystem<A, B> {
 }
 
 impl<A, B> FreeRotationSystem<A, B> {
+    /// Builds a new `FreeRotationSystem` with the specified mouse sensitivity values.
     pub fn new(sensitivity_x: f32, sensitivity_y: f32) -> Self {
         FreeRotationSystem {
             sensitivity_x,
@@ -135,23 +155,24 @@ where
         WriteStorage<'a, Transform>,
         ReadStorage<'a, FlyControlTag>,
         Read<'a, WindowFocus>,
+        Read<'a, HideCursor>,
     );
 
-    fn run(&mut self, (events, mut transform, tag, focus): Self::SystemData) {
+    fn run(&mut self, (events, mut transform, tag, focus, hide): Self::SystemData) {
         let focused = focus.is_focused;
-        for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
-            if focused {
-                match *event {
-                    Event::DeviceEvent { ref event, .. } => match *event {
-                        DeviceEvent::MouseMotion { delta: (x, y) } => {
-                            for (transform, _) in (&mut transform, &tag).join() {
-                                transform.pitch_local(Deg((-1.0) * y as f32 * self.sensitivity_y));
-                                transform.yaw_global(Deg((-1.0) * x as f32 * self.sensitivity_x));
-                            }
+        for event in
+            events.read(&mut self.event_reader.as_mut().expect(
+                "`FreeRotationSystem::setup` was not called before `FreeRotationSystem::run`",
+            ))
+        {
+            if focused && hide.hide {
+                if let Event::DeviceEvent { ref event, .. } = *event {
+                    if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
+                        for (transform, _) in (&mut transform, &tag).join() {
+                            transform.pitch_local((-y as f32 * self.sensitivity_y).to_radians());
+                            transform.yaw_global((-x as f32 * self.sensitivity_x).to_radians());
                         }
-                        _ => (),
-                    },
-                    _ => (),
+                    }
                 }
             }
         }
@@ -171,6 +192,7 @@ pub struct MouseFocusUpdateSystem {
 }
 
 impl MouseFocusUpdateSystem {
+    /// Builds a new MouseFocusUpdateSystem.
     pub fn new() -> MouseFocusUpdateSystem {
         MouseFocusUpdateSystem { event_reader: None }
     }
@@ -180,15 +202,13 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
     type SystemData = (Read<'a, EventChannel<Event>>, Write<'a, WindowFocus>);
 
     fn run(&mut self, (events, mut focus): Self::SystemData) {
-        for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
-            match event {
-                &Event::WindowEvent { ref event, .. } => match event {
-                    &WindowEvent::Focused(focused) => {
-                        focus.is_focused = focused;
-                    }
-                    _ => (),
-                },
-                _ => (),
+        for event in events.read(&mut self.event_reader.as_mut().expect(
+            "`MouseFocusUpdateSystem::setup` was not called before `MouseFocusUpdateSystem::run`",
+        )) {
+            if let Event::WindowEvent { ref event, .. } = *event {
+                if let WindowEvent::Focused(focused) = *event {
+                    focus.is_focused = focused;
+                }
             }
         }
     }
@@ -207,6 +227,7 @@ pub struct CursorHideSystem {
 }
 
 impl CursorHideSystem {
+    /// Constructs a new CursorHideSystem
     pub fn new() -> CursorHideSystem {
         CursorHideSystem { is_hidden: false }
     }

@@ -1,6 +1,7 @@
-use specs::world::LazyBuilder;
-use specs::{Component, DenseVecStorage, EntityBuilder, WriteStorage};
 use std::borrow::Cow;
+
+use serde::{Deserialize, Serialize};
+use specs::{world::LazyBuilder, Component, DenseVecStorage, EntityBuilder, WriteStorage};
 
 /// A component that gives a name to an [`Entity`].
 ///
@@ -26,7 +27,6 @@ use std::borrow::Cow;
 /// Creating a name from string constant:
 ///
 /// ```
-/// # extern crate amethyst;
 /// use amethyst::core::{Named, WithNamed};
 /// use amethyst::ecs::prelude::*;
 ///
@@ -42,7 +42,6 @@ use std::borrow::Cow;
 /// Creating a name from a dynamically generated string:
 ///
 /// ```
-/// # extern crate amethyst;
 /// use amethyst::core::{Named, WithNamed};
 /// use amethyst::ecs::prelude::*;
 ///
@@ -60,7 +59,6 @@ use std::borrow::Cow;
 /// Accessing a named entity in a system:
 ///
 /// ```
-/// # extern crate amethyst;
 /// use amethyst::core::Named;
 /// use amethyst::ecs::prelude::*;
 ///
@@ -81,6 +79,7 @@ use std::borrow::Cow;
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Named {
+    /// The name of the entity this component is attached to.
     pub name: Cow<'static, str>,
 }
 
@@ -92,7 +91,6 @@ impl Named {
     /// From a string constant:
     ///
     /// ```
-    /// # extern crate amethyst;
     /// use amethyst::core::Named;
     ///
     /// let name_component = Named::new("Super Cool Entity");
@@ -101,7 +99,6 @@ impl Named {
     /// From a dynamic string:
     ///
     /// ```
-    /// # extern crate amethyst;
     /// use amethyst::core::Named;
     ///
     /// let entity_num = 7;
@@ -135,12 +132,11 @@ impl<'a> WithNamed for EntityBuilder<'a> {
     where
         S: Into<Cow<'static, str>>,
     {
-        // Unwrap: The only way this can fail is if the entity is invalid and this is used while creating the entity.
         self.world
             .system_data::<(WriteStorage<'a, Named>,)>()
             .0
             .insert(self.entity, Named::new(name))
-            .unwrap();
+            .expect("Unreachable: Entities should always be valid when just created");
         self
     }
 }

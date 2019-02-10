@@ -1,25 +1,39 @@
 //! Simple flat forward drawing pass.
 
-use super::*;
-use amethyst_assets::AssetStorage;
-use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage};
-use amethyst_core::transform::GlobalTransform;
-use cam::{ActiveCamera, Camera};
-use error::Result;
+use std::marker::PhantomData;
+
+use derivative::Derivative;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
-use mesh::{Mesh, MeshHandle};
-use mtl::{Material, MaterialDefaults};
-use pass::util::{draw_mesh, get_camera, setup_textures, VertexArgs};
-use pipe::pass::{Pass, PassData};
-use pipe::{DepthMode, Effect, NewEffect};
-use std::marker::PhantomData;
-use tex::Texture;
-use types::{Encoder, Factory};
-use vertex::{Position, Query, TexCoord};
-use visibility::Visibility;
-use xr::XRRenderInfo;
+
+use crate::xr::XRRenderInfo;
+
+use amethyst_assets::AssetStorage;
+use amethyst_core::{
+    specs::prelude::{Join, Read, ReadExpect, ReadStorage},
+    transform::GlobalTransform,
+};
+use amethyst_error::Error;
+
+use crate::{
+    cam::{ActiveCamera, Camera},
+    hidden::{Hidden, HiddenPropagate},
+    mesh::{Mesh, MeshHandle},
+    mtl::{Material, MaterialDefaults},
+    pass::util::{draw_mesh, get_camera, setup_textures, VertexArgs},
+    pipe::{
+        pass::{Pass, PassData},
+        DepthMode, Effect, NewEffect,
+    },
+    tex::Texture,
+    types::{Encoder, Factory},
+    vertex::{Position, Query, TexCoord},
+    visibility::Visibility,
+    Rgba,
+};
+
+use super::*;
 
 /// Draw mesh without lighting
 ///
@@ -63,15 +77,18 @@ where
     V: Query<(Position, TexCoord)>,
 {
     type Data = (
-        Option<Read<'a, ActiveCamera>>,
+        Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         Read<'a, AssetStorage<Mesh>>,
         Read<'a, AssetStorage<Texture>>,
         ReadExpect<'a, MaterialDefaults>,
         Option<Read<'a, Visibility>>,
+        ReadStorage<'a, Hidden>,
+        ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
+        ReadStorage<'a, Rgba>,
         Option<Read<'a, XRRenderInfo>>,
     );
 }
@@ -80,7 +97,7 @@ impl<V> Pass for DrawFlat<V>
 where
     V: Query<(Position, TexCoord)>,
 {
-    fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         use std::mem;
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);
         builder
@@ -88,7 +105,8 @@ where
                 "VertexArgs",
                 mem::size_of::<<VertexArgs as Uniform>::Std140>(),
                 1,
-            ).with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0);
+            )
+            .with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0);
         setup_textures(&mut builder, &TEXTURES);
         match self.transparency {
             Some((mask, blend, depth)) => builder.with_blended_output("out_color", mask, blend, depth),
@@ -109,9 +127,12 @@ where
             tex_storage,
             material_defaults,
             visibility,
+            hidden,
+            hidden_prop,
             mesh,
             material,
             global,
+            rgba,
             xr_info,
         ): <Self as PassData<'a>>::Data,
     ) {
@@ -119,26 +140,16 @@ where
         let xr_camera = xr_info.as_ref().and_then(|i| i.camera_reference());
 
         match visibility {
-            None => for (mesh, material, global) in (&mesh, &material, &global).join() {
-                draw_mesh(
-                    encoder,
-                    effect,
-                    false,
-                    mesh_storage.get(mesh),
-                    None,
-                    &tex_storage,
-                    Some(material),
-                    &material_defaults,
-                    camera,
-                    Some(global),
-                    &[V::QUERIED_ATTRIBUTES],
-                    &TEXTURES,
-                    &xr_camera,
-                );
-            },
-            Some(ref visibility) => {
-                for (mesh, material, global, _) in
-                    (&mesh, &material, &global, &visibility.visible_unordered).join()
+            None => {
+                for (mesh, material, global, rgba, _, _) in (
+                    &mesh,
+                    &material,
+                    &global,
+                    rgba.maybe(),
+                    !&hidden,
+                    !&hidden_prop,
+                )
+                    .join()
                 {
                     draw_mesh(
                         encoder,
@@ -149,6 +160,35 @@ where
                         &tex_storage,
                         Some(material),
                         &material_defaults,
+                        rgba,
+                        camera,
+                        Some(global),
+                        &[V::QUERIED_ATTRIBUTES],
+                        &TEXTURES,
+                        &xr_camera,
+                    );
+                }
+            }
+            Some(ref visibility) => {
+                for (mesh, material, global, rgba, _) in (
+                    &mesh,
+                    &material,
+                    &global,
+                    rgba.maybe(),
+                    &visibility.visible_unordered,
+                )
+                    .join()
+                {
+                    draw_mesh(
+                        encoder,
+                        effect,
+                        false,
+                        mesh_storage.get(mesh),
+                        None,
+                        &tex_storage,
+                        Some(material),
+                        &material_defaults,
+                        rgba,
                         camera,
                         Some(global),
                         &[V::QUERIED_ATTRIBUTES],
@@ -168,6 +208,7 @@ where
                             &tex_storage,
                             material.get(*entity),
                             &material_defaults,
+                            rgba.get(*entity),
                             camera,
                             global.get(*entity),
                             &[V::QUERIED_ATTRIBUTES],

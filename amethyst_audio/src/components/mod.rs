@@ -1,11 +1,17 @@
 //! `amethyst` audio ecs components
 
-pub use self::audio_emitter::AudioEmitter;
-pub use self::audio_listener::AudioListener;
-use amethyst_assets::{PrefabData, PrefabError};
-use amethyst_core::cgmath::Point3;
-use amethyst_core::specs::prelude::{Entity, Read, WriteStorage};
-use output::Output;
+pub use self::{audio_emitter::AudioEmitter, audio_listener::AudioListener};
+
+use amethyst_assets::PrefabData;
+use amethyst_core::{
+    nalgebra::Point3,
+    specs::prelude::{Entity, Read, WriteStorage},
+};
+use amethyst_error::Error;
+
+use serde::{Deserialize, Serialize};
+
+use crate::output::Output;
 
 mod audio_emitter;
 mod audio_listener;
@@ -28,12 +34,12 @@ impl<'a> PrefabData<'a> for AudioPrefab {
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         if self.emitter {
             system_data.0.insert(entity, AudioEmitter::default())?;
         }

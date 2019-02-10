@@ -1,14 +1,23 @@
-use amethyst_assets::{
-    AssetStorage, Handle, Loader, PrefabData, PrefabError, Progress, ProgressCounter,
-};
-use amethyst_core::cgmath::{InnerSpace, Vector3};
-use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, WriteStorage};
-use genmesh::generators::{
-    Circle, Cone, Cube, Cylinder, IcoSphere, IndexedPolygon, Plane, SharedVertex, SphereUv, Torus,
-};
-use genmesh::{EmitTriangles, MapVertex, Triangulate, Vertex, Vertices};
 use std::marker::PhantomData;
-use {
+
+use genmesh::{
+    generators::{
+        Circle, Cone, Cube, Cylinder, IcoSphere, IndexedPolygon, Plane, SharedVertex, SphereUv,
+        Torus,
+    },
+    EmitTriangles, MapVertex, Triangulate, Vertex, Vertices,
+};
+use serde::{Deserialize, Serialize};
+use shred_derive::SystemData;
+
+use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, Progress, ProgressCounter};
+use amethyst_core::{
+    nalgebra::{Vector2, Vector3},
+    specs::prelude::{Entity, Read, ReadExpect, WriteStorage},
+};
+use amethyst_error::Error;
+
+use crate::{
     ComboMeshCreator, Mesh, MeshData, MeshHandle, Normal, PosNormTangTex, PosNormTex, PosTex,
     Position, Separate, Tangent, TexCoord,
 };
@@ -44,26 +53,28 @@ where
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         let (_, ref mut meshes, _) = system_data;
-        meshes
-            .insert(entity, self.handle.as_ref().unwrap().clone())
-            .map(|_| ())
+        let self_handle = self.handle.as_ref().expect(
+            "`ShapePrefab::load_sub_assets` was not called before `ShapePrefab::add_to_entity`",
+        );
+        meshes.insert(entity, self_handle.clone()).map(|_| ())?;
+        Ok(())
     }
 
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
-        system_data: &mut <Self as PrefabData>::SystemData,
-    ) -> Result<bool, PrefabError> {
+        system_data: &mut <Self as PrefabData<'_>>::SystemData,
+    ) -> Result<bool, Error> {
         let (loader, _, mesh_storage) = system_data;
         self.handle = Some(loader.load_from_data(
-            self.shape.generate::<V>(self.shape_scale.clone()),
+            self.shape.generate::<V>(self.shape_scale),
             progress,
             &mesh_storage,
         ));
@@ -125,7 +136,7 @@ impl Shape {
     pub fn upload<V, P>(
         &self,
         scale: Option<(f32, f32, f32)>,
-        upload: ShapeUpload,
+        upload: ShapeUpload<'_>,
         progress: P,
     ) -> MeshHandle
     where
@@ -189,7 +200,7 @@ impl Shape {
             ),
             Shape::IcoSphere(divide) => generate_vertices(
                 divide
-                    .map(|d| IcoSphere::subdivide(d))
+                    .map(IcoSphere::subdivide)
                     .unwrap_or_else(IcoSphere::new),
                 scale,
             ),
@@ -231,9 +242,10 @@ where
                 let normal = scale
                     .map(|(x, y, z)| {
                         Vector3::new(v.normal.x * x, v.normal.y * y, v.normal.z * z).normalize()
-                    }).unwrap_or_else(|| Vector3::from(v.normal));
-                let up = Vector3::from([0.0, 1.0, 0.0]);
-                let tangent = normal.cross(up).cross(normal);
+                    })
+                    .unwrap_or_else(|| Vector3::from(v.normal));
+                let up = Vector3::y();
+                let tangent = normal.cross(&up).cross(&normal);
                 (
                     pos.into(),
                     normal.into(),
@@ -241,7 +253,8 @@ where
                     tangent.into(),
                 )
             })
-        }).vertices()
+        })
+        .vertices()
         .collect::<Vec<_>>()
 }
 
@@ -251,9 +264,10 @@ impl From<InternalShape> for Vec<PosTex> {
             .0
             .iter()
             .map(|v| PosTex {
-                position: v.0,
-                tex_coord: v.2,
-            }).collect()
+                position: Vector3::new(v.0[0], v.0[1], v.0[2]),
+                tex_coord: Vector2::new(v.2[0], v.2[1]),
+            })
+            .collect()
     }
 }
 
@@ -263,10 +277,11 @@ impl From<InternalShape> for Vec<PosNormTex> {
             .0
             .iter()
             .map(|v| PosNormTex {
-                position: v.0,
-                tex_coord: v.2,
-                normal: v.1,
-            }).collect()
+                position: Vector3::new(v.0[0], v.0[1], v.0[2]),
+                tex_coord: Vector2::new(v.2[0], v.2[1]),
+                normal: Vector3::new(v.1[0], v.1[1], v.1[2]),
+            })
+            .collect()
     }
 }
 
@@ -276,11 +291,12 @@ impl From<InternalShape> for Vec<PosNormTangTex> {
             .0
             .iter()
             .map(|v| PosNormTangTex {
-                position: v.0,
-                tex_coord: v.2,
-                normal: v.1,
-                tangent: v.3,
-            }).collect()
+                position: Vector3::new(v.0[0], v.0[1], v.0[2]),
+                tex_coord: Vector2::new(v.2[0], v.2[1]),
+                normal: Vector3::new(v.1[0], v.1[1], v.1[2]),
+                tangent: Vector3::new(v.3[0], v.3[1], v.3[2]),
+            })
+            .collect()
     }
 }
 

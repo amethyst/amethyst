@@ -1,8 +1,13 @@
-use core::specs::prelude::{Dispatcher, DispatcherBuilder, System, World};
-use core::{ArcThreadPool, SystemBundle};
-use error::{Error, Result};
-use renderer::pipe::pass::Pass;
 use std::path::Path;
+
+use crate::{
+    core::{
+        specs::prelude::{Dispatcher, DispatcherBuilder, System, World},
+        ArcThreadPool, SystemBundle,
+    },
+    error::Error,
+    renderer::pipe::pass::Pass,
+};
 
 /// Initialise trait for game data
 pub trait DataInit<T> {
@@ -10,7 +15,10 @@ pub trait DataInit<T> {
     fn build(self, world: &mut World) -> T;
 }
 
-/// Default game data
+/// Default game data.
+///
+/// The lifetimes are for the systems inside and can be `'static` unless a system has a borrowed
+/// field.
 pub struct GameData<'a, 'b> {
     dispatcher: Dispatcher<'a, 'b>,
 }
@@ -207,13 +215,11 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// could result in any number of errors.
     /// See each individual bundle for a description of the errors it could produce.
     ///
-    pub fn with_bundle<B>(mut self, bundle: B) -> Result<Self>
+    pub fn with_bundle<B>(mut self, bundle: B) -> Result<Self, Error>
     where
         B: SystemBundle<'a, 'b>,
     {
-        bundle
-            .build(&mut self.disp_builder)
-            .map_err(|err| Error::Core(err))?;
+        bundle.build(&mut self.disp_builder)?;
         Ok(self)
     }
 
@@ -226,14 +232,16 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// - `path`: Path to the `DisplayConfig` configuration file
     /// - `pass`: The single pass in the render graph
     /// - `with_ui`: If set to true, will add the UI render pass
-    pub fn with_basic_renderer<A, P>(self, path: A, pass: P, with_ui: bool) -> Result<Self>
+    pub fn with_basic_renderer<A, P>(self, path: A, pass: P, with_ui: bool) -> Result<Self, Error>
     where
         A: AsRef<Path>,
         P: Pass + 'b,
     {
-        use config::Config;
-        use renderer::{DisplayConfig, Pipeline, RenderBundle, Stage};
-        use ui::DrawUi;
+        use crate::{
+            config::Config,
+            renderer::{DisplayConfig, Pipeline, RenderBundle, Stage},
+            ui::DrawUi,
+        };
         let config = DisplayConfig::load(path);
         if with_ui {
             let pipe = Pipeline::build().with_stage(
@@ -269,7 +277,5 @@ impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
 }
 
 impl DataInit<()> for () {
-    fn build(self, _: &mut World) -> () {
-        ()
-    }
+    fn build(self, _: &mut World) {}
 }

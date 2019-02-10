@@ -1,22 +1,50 @@
 //! Debug lines pass
 
-use super::*;
-use amethyst_core::cgmath::{Matrix4, One};
-use amethyst_core::specs::{Join, Read, ReadStorage, Write, WriteStorage};
-use amethyst_core::transform::GlobalTransform;
-use cam::{ActiveCamera, Camera};
-use debug_drawing::{DebugLine, DebugLines, DebugLinesComponent};
-use error::Result;
-use gfx::pso::buffer::ElemStride;
-use gfx::Primitive;
-use mesh::Mesh;
-use pass::util::{get_camera, set_attribute_buffers, set_vertex_args, setup_vertex_args};
-use pipe::pass::{Pass, PassData};
-use pipe::{DepthMode, Effect, NewEffect};
 use std::marker::PhantomData;
-use types::{Encoder, Factory};
-use vertex::{Color, Normal, Position, Query};
-use xr::XRRenderInfo;
+
+use derivative::Derivative;
+use gfx::{pso::buffer::ElemStride, Primitive};
+use log::{debug, trace};
+
+use amethyst_core::{
+    nalgebra as na,
+    specs::{Join, Read, ReadStorage, Write, WriteStorage},
+    transform::GlobalTransform,
+};
+use amethyst_error::Error;
+
+use crate::{
+    cam::{ActiveCamera, Camera},
+    debug_drawing::{DebugLine, DebugLines, DebugLinesComponent},
+    mesh::Mesh,
+    pass::util::{get_camera, set_attribute_buffers, set_vertex_args, setup_vertex_args},
+    pipe::{
+        pass::{Pass, PassData},
+        DepthMode, Effect, NewEffect,
+    },
+    types::{Encoder, Factory},
+    vertex::{Color, Normal, Position, Query},
+    Rgba,
+};
+
+use crate::xr::XRRenderInfo;
+
+use super::*;
+
+/// Parameters for renderer of debug lines. The params affect all lines.
+pub struct DebugLinesParams {
+    /// Width of lines in units, default is 1.0 / 400.0 units
+    pub line_width: f32,
+}
+
+impl Default for DebugLinesParams {
+    fn default() -> Self {
+        DebugLinesParams {
+            line_width: 1.0 / 400.0,
+        }
+    }
+}
+
 
 /// Draw several simple lines for debugging
 ///
@@ -47,11 +75,12 @@ where
     V: Query<(Position, Color, Normal)>,
 {
     type Data = (
-        Option<Read<'a, ActiveCamera>>,
+        Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, GlobalTransform>,
         WriteStorage<'a, DebugLinesComponent>, // DebugLines components
         Option<Write<'a, DebugLines>>,         // DebugLines resource
+        Read<'a, DebugLinesParams>,
         Option<Read<'a, XRRenderInfo>>,
     );
 }
@@ -60,7 +89,7 @@ impl<V> Pass for DrawDebugLines<V>
 where
     V: Query<(Position, Color, Normal)>,
 {
-    fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         debug!("Building debug lines pass");
         let mut builder = effect.geom(VERT_SRC, GEOM_SRC, FRAG_SRC);
 
@@ -69,6 +98,7 @@ where
 
         setup_vertex_args(&mut builder);
         builder.with_raw_global("camera_position");
+        builder.with_raw_global("line_width");
         builder.with_primitive_type(Primitive::PointList);
         builder.with_output("color", Some(DepthMode::LessEqualWrite));
 
@@ -80,9 +110,7 @@ where
         encoder: &mut Encoder,
         effect: &mut Effect,
         mut factory: Factory,
-        (active, camera, global, lines_components, lines_resource, xr_info): <Self as PassData<
-            'a,
-        >>::Data,
+        (active, camera, global, lines_components, lines_resource, lines_params, xr_info): <Self as PassData<'a>>::Data,
     ) {
         trace!("Drawing debug lines pass");
         let debug_lines = {
@@ -99,14 +127,21 @@ where
             lines
         };
 
+        if debug_lines.len() == 0 {
+            effect.clear();
+            return;
+        }
+
         let camera = get_camera(active, &camera, &global);
         effect.update_global(
             "camera_position",
             camera
                 .as_ref()
-                .map(|&(_, ref trans)| [trans.0[3][0], trans.0[3][1], trans.0[3][2]])
+                .map(|&(_, ref trans)| trans.0.column(3).xyz().into())
                 .unwrap_or([0.0; 3]),
         );
+
+        effect.update_global("line_width", lines_params.line_width);
 
         let mesh = Mesh::build(debug_lines)
             .build(&mut factory)
@@ -121,8 +156,9 @@ where
             effect,
             encoder,
             camera,
+            &GlobalTransform(na::one()),
+            Rgba::WHITE,
             &xr_info.as_ref().and_then(|i| i.camera_reference()),
-            &GlobalTransform(Matrix4::one()),
         );
 
         effect.draw(mesh.slice(), encoder);

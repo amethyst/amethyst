@@ -1,0 +1,22 @@
+[package]
+name = "amethyst_error"
+version = "0.1.0"
+authors = ["John-John Tedro <udoprog@tedro.se>"]
+readme = "README.md"
+edition = "2018"
+description = """
+Internal error handling for Amethyst.
+"""
+keywords = ["game", "error", "amethyst"]
+categories = ["error"]
+
+documentation = "https://www.amethyst.rs/doc/master/doc/amethyst/"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
+
+[badges]
+appveyor = { repository = "amethyst/amethyst", branch = "master" }
+travis-ci = { repository = "amethyst/amethyst" }
+
+[dependencies]
+backtrace = "0.3.13"

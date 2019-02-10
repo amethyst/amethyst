@@ -1,28 +1,45 @@
 //! Forward physically-based drawing pass.
 
-use super::*;
-use amethyst_assets::AssetStorage;
-use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage};
-use amethyst_core::transform::GlobalTransform;
-use cam::{ActiveCamera, Camera};
-use error::Result;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
-use light::Light;
-use mesh::{Mesh, MeshHandle};
-use mtl::{Material, MaterialDefaults};
-use pass::shaded_util::{set_light_args, setup_light_buffers};
-use pass::skinning::{create_skinning_effect, setup_skinning_buffers};
-use pass::util::{draw_mesh, get_camera, setup_textures, setup_vertex_args};
-use pipe::pass::{Pass, PassData};
-use pipe::{DepthMode, Effect, NewEffect};
-use resources::AmbientColor;
-use skinning::JointTransforms;
-use tex::Texture;
-use types::{Encoder, Factory};
-use vertex::{Attributes, Normal, Position, Separate, Tangent, TexCoord, VertexFormat};
-use visibility::Visibility;
-use xr::XRRenderInfo;
+
+use crate::xr::XRRenderInfo;
+
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
+use amethyst_assets::AssetStorage;
+use amethyst_core::{
+    specs::prelude::{Join, Read, ReadExpect, ReadStorage},
+    transform::GlobalTransform,
+};
+use amethyst_error::Error;
+
+use crate::{
+    cam::{ActiveCamera, Camera},
+    hidden::{Hidden, HiddenPropagate},
+    light::Light,
+    mesh::{Mesh, MeshHandle},
+    mtl::{Material, MaterialDefaults},
+    pass::{
+        shaded_util::{set_light_args, setup_light_buffers},
+        skinning::{create_skinning_effect, setup_skinning_buffers},
+        util::{draw_mesh, get_camera, setup_textures, setup_vertex_args},
+    },
+    pipe::{
+        pass::{Pass, PassData},
+        DepthMode, Effect, NewEffect,
+    },
+    resources::AmbientColor,
+    skinning::JointTransforms,
+    tex::Texture,
+    types::{Encoder, Factory},
+    vertex::{Attributes, Normal, Position, Separate, Tangent, TexCoord, VertexFormat},
+    visibility::Visibility,
+    Rgba,
+};
+
+use super::*;
 
 static ATTRIBUTES: [Attributes<'static>; 4] = [
     Separate::<Position>::ATTRIBUTES,
@@ -67,24 +84,30 @@ impl DrawPbmSeparate {
 
 impl<'a> PassData<'a> for DrawPbmSeparate {
     type Data = (
-        Option<Read<'a, ActiveCamera>>,
+        Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         Read<'a, AmbientColor>,
         Read<'a, AssetStorage<Mesh>>,
         Read<'a, AssetStorage<Texture>>,
         ReadExpect<'a, MaterialDefaults>,
         Option<Read<'a, Visibility>>,
+        ReadStorage<'a, Hidden>,
+        ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
         ReadStorage<'a, Light>,
         ReadStorage<'a, JointTransforms>,
+        ReadStorage<'a, Rgba>,
         Option<Read<'a, XRRenderInfo>>,
     );
 }
 
 impl Pass for DrawPbmSeparate {
-    fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("render_pass_pbm_compile");
+
         let mut builder = if self.skinning {
             create_skinning_effect(effect, FRAG_SRC)
         } else {
@@ -95,15 +118,18 @@ impl Pass for DrawPbmSeparate {
                 Separate::<Position>::ATTRIBUTES,
                 Separate::<Position>::size() as ElemStride,
                 0,
-            ).with_raw_vertex_buffer(
+            )
+            .with_raw_vertex_buffer(
                 Separate::<Normal>::ATTRIBUTES,
                 Separate::<Normal>::size() as ElemStride,
                 0,
-            ).with_raw_vertex_buffer(
+            )
+            .with_raw_vertex_buffer(
                 Separate::<Tangent>::ATTRIBUTES,
                 Separate::<Tangent>::size() as ElemStride,
                 0,
-            ).with_raw_vertex_buffer(
+            )
+            .with_raw_vertex_buffer(
                 Separate::<TexCoord>::ATTRIBUTES,
                 Separate::<TexCoord>::size() as ElemStride,
                 0,
@@ -134,45 +160,63 @@ impl Pass for DrawPbmSeparate {
             tex_storage,
             material_defaults,
             visibility,
+            hidden,
+            hidden_prop,
             mesh,
             material,
             global,
             light,
             joints,
+            rgba,
             xr_info,
         ): <Self as PassData<'a>>::Data,
     ) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("render_pass_pbm_apply");
+
         let camera = get_camera(active, &camera, &global);
         let xr_camera = xr_info.as_ref().and_then(|i| i.camera_reference());
 
         set_light_args(effect, encoder, &light, &global, &ambient, camera);
 
         match visibility {
-            None => for (joint, mesh, material, global) in
-                (joints.maybe(), &mesh, &material, &global).join()
-            {
-                draw_mesh(
-                    encoder,
-                    effect,
-                    self.skinning,
-                    mesh_storage.get(mesh),
-                    joint,
-                    &tex_storage,
-                    Some(material),
-                    &material_defaults,
-                    camera,
-                    Some(global),
-                    &ATTRIBUTES,
-                    &TEXTURES,
-                    &xr_camera,
-                );
-            },
-            Some(ref visibility) => {
-                for (joint, mesh, material, global, _) in (
+            None => {
+                for (joint, mesh, material, global, rgba, _, _) in (
                     joints.maybe(),
                     &mesh,
                     &material,
                     &global,
+                    rgba.maybe(),
+                    !&hidden,
+                    !&hidden_prop,
+                )
+                    .join()
+                {
+                    draw_mesh(
+                        encoder,
+                        effect,
+                        self.skinning,
+                        mesh_storage.get(mesh),
+                        joint,
+                        &tex_storage,
+                        Some(material),
+                        &material_defaults,
+                        rgba,
+                        camera,
+                        Some(global),
+                        &ATTRIBUTES,
+                        &TEXTURES,
+                        &xr_camera,
+                    );
+                }
+            }
+            Some(ref visibility) => {
+                for (joint, mesh, material, global, rgba, _) in (
+                    joints.maybe(),
+                    &mesh,
+                    &material,
+                    &global,
+                    rgba.maybe(),
                     &visibility.visible_unordered,
                 )
                     .join()
@@ -186,6 +230,7 @@ impl Pass for DrawPbmSeparate {
                         &tex_storage,
                         Some(material),
                         &material_defaults,
+                        rgba,
                         camera,
                         Some(global),
                         &ATTRIBUTES,
@@ -205,6 +250,7 @@ impl Pass for DrawPbmSeparate {
                             &tex_storage,
                             material.get(*entity),
                             &material_defaults,
+                            rgba.get(*entity),
                             camera,
                             global.get(*entity),
                             &ATTRIBUTES,

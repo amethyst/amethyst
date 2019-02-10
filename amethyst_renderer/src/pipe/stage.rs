@@ -1,12 +1,21 @@
 //! A stage in the rendering pipeline.
 
-use amethyst_core::specs::prelude::SystemData;
-use error::{Error, Result};
+use derivative::Derivative;
 use fnv::FnvHashMap as HashMap;
 use hetseq::*;
-use pipe::pass::{CompiledPass, Pass, PassData};
-use pipe::{Target, Targets};
-use types::{Encoder, Factory};
+use log::error;
+
+use amethyst_core::specs::prelude::SystemData;
+use amethyst_error::Error;
+
+use crate::{
+    error,
+    pipe::{
+        pass::{CompiledPass, Pass, PassData},
+        Target, Targets,
+    },
+    types::{Encoder, Factory},
+};
 
 /// A stage in the rendering pipeline.
 #[derive(Clone, Debug)]
@@ -158,10 +167,13 @@ where
         factory: Factory,
         data: <L as PassesData<'b>>::Data,
     ) {
-        self.clear_color
-            .map(|c| self.target.clear_color(encoder, c));
-        self.clear_depth
-            .map(|d| self.target.clear_depth_stencil(encoder, d));
+        if let Some(color) = self.clear_color {
+            self.target.clear_color(encoder, color);
+        }
+
+        if let Some(depth) = self.clear_depth {
+            self.target.clear_depth_stencil(encoder, depth);
+        }
 
         self.passes.apply(encoder, factory, data);
     }
@@ -227,7 +239,7 @@ impl<Q> StageBuilder<Q> {
         fac: &'a mut Factory,
         targets: &'a Targets,
         multisampling: u16,
-    ) -> Result<Stage<R>>
+    ) -> Result<Stage<R>, Error>
     where
         Q: IntoList<List = L>,
         L: for<'b> Functor<CompilePass<'b>, Output = Z>,
@@ -237,13 +249,15 @@ impl<Q> StageBuilder<Q> {
         let out = targets
             .get(&self.target_name)
             .cloned()
-            .ok_or(Error::NoSuchTarget(self.target_name.clone()))?;
+            .ok_or_else(|| error::Error::NoSuchTarget(self.target_name.clone()))?;
 
+        // TODO: Remove this attribute when rustfmt plays nice.
+        #[rustfmt::skip] // try is a reserved keyword in Rust 2018, must preserve keyword escape.
         let passes = self
             .passes
             .into_list()
             .fmap(CompilePass::new(fac, &out, multisampling))
-            .try()?;
+            .r#try()?;
 
         Ok(Stage {
             clear_color: self.clear_color,
@@ -289,8 +303,8 @@ impl<'a, P> HetFnOnce<(P,)> for CompilePass<'a>
 where
     P: Pass,
 {
-    type Output = Result<CompiledPass<P>>;
-    fn call_once(self, (pass,): (P,)) -> Result<CompiledPass<P>> {
+    type Output = Result<CompiledPass<P>, Error>;
+    fn call_once(self, (pass,): (P,)) -> Result<CompiledPass<P>, Error> {
         CompiledPass::compile(pass, self.factory, self.target, self.multisampling)
     }
 }
@@ -298,7 +312,7 @@ impl<'a, P> HetFnMut<(P,)> for CompilePass<'a>
 where
     P: Pass,
 {
-    fn call_mut(&mut self, (pass,): (P,)) -> Result<CompiledPass<P>> {
+    fn call_mut(&mut self, (pass,): (P,)) -> Result<CompiledPass<P>, Error> {
         CompiledPass::compile(pass, self.factory, self.target, self.multisampling)
     }
 }

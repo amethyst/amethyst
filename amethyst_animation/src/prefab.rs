@@ -1,11 +1,18 @@
-use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, PrefabError, ProgressCounter};
+use std::{
+    error,
+    fmt::{Debug, Display, Formatter, Result as FmtResult},
+    hash::Hash,
+    marker::PhantomData,
+};
+
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
+
+use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, ProgressCounter};
 use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, WriteStorage};
-use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
-use std::fmt::Debug;
-use std::hash::Hash;
-use std::marker::PhantomData;
-use {Animation, AnimationHierarchy, AnimationSampling, AnimationSet, RestState, Sampler};
+use amethyst_derive::PrefabData;
+use amethyst_error::Error;
+
+use crate::{Animation, AnimationHierarchy, AnimationSampling, AnimationSet, RestState, Sampler};
 
 /// `PrefabData` for loading a single `Animation`
 ///
@@ -49,6 +56,20 @@ where
     }
 }
 
+#[derive(Debug)]
+pub struct MissingAssetHandle;
+
+impl Display for MissingAssetHandle {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(
+            f,
+            "AnimationPrefab was not populated with an asset handle prior to calling load_prefab."
+        )
+    }
+}
+
+impl error::Error for MissingAssetHandle {}
+
 impl<'a, T> PrefabData<'a> for AnimationPrefab<T>
 where
     T: AnimationSampling,
@@ -62,20 +83,24 @@ where
     );
     type Result = Handle<Animation<T>>;
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         _: Entity,
         _: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<Handle<Animation<T>>, PrefabError> {
-        Ok(self.handle.as_ref().unwrap().clone())
+    ) -> Result<Handle<Animation<T>>, Error> {
+        Ok(self
+            .handle
+            .as_ref()
+            .cloned()
+            .ok_or_else(|| MissingAssetHandle)?)
     }
 
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         &mut (ref loader, ref sampler_storage, ref animation_storage): &mut Self::SystemData,
-    ) -> Result<bool, PrefabError> {
+    ) -> Result<bool, Error> {
         let animation = Animation::<T> {
             nodes: self
                 .samplers
@@ -86,7 +111,8 @@ where
                         channel.clone(),
                         loader.load_from_data(sampler.clone(), &mut *progress, sampler_storage),
                     )
-                }).collect(),
+                })
+                .collect(),
         };
         self.handle = Some(loader.load_from_data(animation, progress, animation_storage));
         Ok(true)
@@ -123,12 +149,12 @@ where
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         let set = system_data
             .0
             .entry(entity)?
@@ -136,41 +162,24 @@ where
         for (id, animation_prefab) in &self.animations {
             set.insert(
                 id.clone(),
-                animation_prefab.load_prefab(entity, &mut system_data.1, entities)?,
+                animation_prefab.add_to_entity(entity, &mut system_data.1, entities)?,
             );
         }
         Ok(())
     }
 
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
-    ) -> Result<bool, PrefabError> {
+    ) -> Result<bool, Error> {
         let mut ret = false;
         for (_, animation_prefab) in &mut self.animations {
-            if animation_prefab.trigger_sub_loading(progress, &mut system_data.1)? {
+            if animation_prefab.load_sub_assets(progress, &mut system_data.1)? {
                 ret = true;
             }
         }
         Ok(ret)
-    }
-}
-
-impl<'a, T> PrefabData<'a> for RestState<T>
-where
-    T: AnimationSampling + Clone,
-{
-    type SystemData = WriteStorage<'a, RestState<T>>;
-    type Result = ();
-
-    fn load_prefab(
-        &self,
-        entity: Entity,
-        storage: &mut Self::SystemData,
-        _: &[Entity],
-    ) -> Result<(), PrefabError> {
-        storage.insert(entity, self.clone()).map(|_| ())
     }
 }
 
@@ -181,6 +190,7 @@ where
 /// - `T`: The animatable `Component`
 #[derive(Clone, Debug, Deserialize, Serialize, Default)]
 pub struct AnimationHierarchyPrefab<T> {
+    /// A vec of the node index and the entity index.
     pub nodes: Vec<(usize, usize)>,
     _m: PhantomData<T>,
 }
@@ -192,12 +202,12 @@ where
     type SystemData = WriteStorage<'a, AnimationHierarchy<T>>;
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         storage: &mut Self::SystemData,
         entities: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         storage
             .insert(
                 entity,
@@ -207,7 +217,10 @@ where
                         .map(|(node_index, entity_index)| (*node_index, entities[*entity_index]))
                         .collect(),
                 ),
-            ).map(|_| ())
+            )
+            .map(|_| ())?;
+
+        Ok(())
     }
 }
 
@@ -217,13 +230,14 @@ where
 ///
 /// - `I`: Id type of `Animation`s in `AnimationSet`s
 /// - `T`: The animatable `Component`
-#[derive(Default, Clone, Debug, Deserialize, Serialize)]
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PrefabData)]
 #[serde(default)]
 pub struct AnimatablePrefab<I, T>
 where
-    T: AnimationSampling,
+    T: AnimationSampling + Clone,
     T::Channel: for<'a> Deserialize<'a> + Serialize,
     T::Primitive: Debug + for<'a> Deserialize<'a> + Serialize,
+    I: Clone + Hash + Eq + Send + Sync + 'static,
 {
     /// Place an `AnimationSet` on the `Entity`
     pub animation_set: Option<AnimationSetPrefab<I, T>>,
@@ -231,49 +245,4 @@ where
     pub hierarchy: Option<AnimationHierarchyPrefab<T>>,
     /// Place a `RestState` on the `Entity`
     pub rest_state: Option<RestState<T>>,
-}
-
-impl<'a, I, T> PrefabData<'a> for AnimatablePrefab<I, T>
-where
-    T: AnimationSampling + Clone,
-    T::Channel: for<'b> Deserialize<'b> + Serialize,
-    T::Primitive: Debug + for<'b> Deserialize<'b> + Serialize,
-    I: Clone + Hash + Eq + Send + Sync + 'static,
-{
-    type SystemData = (
-        <AnimationSetPrefab<I, T> as PrefabData<'a>>::SystemData,
-        <AnimationHierarchyPrefab<T> as PrefabData<'a>>::SystemData,
-        <RestState<T> as PrefabData<'a>>::SystemData,
-    );
-    type Result = ();
-
-    fn load_prefab(
-        &self,
-        entity: Entity,
-        system_data: &mut <Self as PrefabData>::SystemData,
-        entities: &[Entity],
-    ) -> Result<<Self as PrefabData>::Result, PrefabError> {
-        if let Some(ref prefab) = self.animation_set {
-            prefab.load_prefab(entity, &mut system_data.0, entities)?;
-        }
-        if let Some(ref prefab) = self.hierarchy {
-            prefab.load_prefab(entity, &mut system_data.1, entities)?;
-        }
-        if let Some(ref prefab) = self.rest_state {
-            prefab.load_prefab(entity, &mut system_data.2, entities)?;
-        }
-        Ok(())
-    }
-
-    fn trigger_sub_loading(
-        &mut self,
-        progress: &mut ProgressCounter,
-        system_data: &mut Self::SystemData,
-    ) -> Result<bool, PrefabError> {
-        if let Some(ref mut prefab) = self.animation_set {
-            prefab.trigger_sub_loading(progress, &mut system_data.0)
-        } else {
-            Ok(false)
-        }
-    }
 }

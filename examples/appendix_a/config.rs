@@ -1,4 +1,6 @@
-use amethyst::core::cgmath::Vector2;
+use amethyst::core::nalgebra::Vector2;
+
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ArenaConfig {

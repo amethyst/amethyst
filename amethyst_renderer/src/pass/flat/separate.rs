@@ -1,26 +1,43 @@
 //! Simple flat forward drawing pass.
 
-use super::*;
-use amethyst_assets::AssetStorage;
-use amethyst_core::specs::prelude::{Join, Read, ReadExpect, ReadStorage};
-use amethyst_core::transform::GlobalTransform;
-use cam::{ActiveCamera, Camera};
-use error::Result;
+use derivative::Derivative;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
-use mesh::{Mesh, MeshHandle};
-use mtl::{Material, MaterialDefaults};
-use pass::skinning::{create_skinning_effect, setup_skinning_buffers};
-use pass::util::{draw_mesh, get_camera, setup_textures, VertexArgs};
-use pipe::pass::{Pass, PassData};
-use pipe::{DepthMode, Effect, NewEffect};
-use skinning::JointTransforms;
-use tex::Texture;
-use types::{Encoder, Factory};
-use vertex::{Attributes, Position, Separate, TexCoord, VertexFormat};
-use visibility::Visibility;
-use xr::XRRenderInfo;
+
+
+use crate::xr::XRRenderInfo;
+
+use amethyst_assets::AssetStorage;
+use amethyst_core::{
+    specs::prelude::{Join, Read, ReadExpect, ReadStorage},
+    transform::GlobalTransform,
+};
+use amethyst_error::Error;
+
+use crate::{
+    cam::{ActiveCamera, Camera},
+    hidden::{Hidden, HiddenPropagate},
+    mesh::{Mesh, MeshHandle},
+    mtl::{Material, MaterialDefaults},
+    pass::{
+        skinning::{create_skinning_effect, setup_skinning_buffers},
+        util::{draw_mesh, get_camera, setup_textures, VertexArgs},
+    },
+    pipe::{
+        pass::{Pass, PassData},
+        DepthMode, Effect, NewEffect,
+    },
+    skinning::JointTransforms,
+    tex::Texture,
+    types::{Encoder, Factory},
+    vertex::{Attributes, Position, Separate, TexCoord, VertexFormat},
+    visibility::Visibility,
+    Rgba,
+};
+
+use super::*;
+
 
 static ATTRIBUTES: [Attributes<'static>; 2] = [
     Separate::<Position>::ATTRIBUTES,
@@ -71,22 +88,25 @@ where
 
 impl<'a> PassData<'a> for DrawFlatSeparate {
     type Data = (
-        Option<Read<'a, ActiveCamera>>,
+        Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         Read<'a, AssetStorage<Mesh>>,
         Read<'a, AssetStorage<Texture>>,
         ReadExpect<'a, MaterialDefaults>,
         Option<Read<'a, Visibility>>,
+        ReadStorage<'a, Hidden>,
+        ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
         ReadStorage<'a, JointTransforms>,
+        ReadStorage<'a, Rgba>,
         Option<Read<'a, XRRenderInfo>>,
     );
 }
 
 impl Pass for DrawFlatSeparate {
-    fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         use std::mem;
         let mut builder = if self.skinning {
             create_skinning_effect(effect, FRAG_SRC)
@@ -98,7 +118,8 @@ impl Pass for DrawFlatSeparate {
                 Separate::<Position>::ATTRIBUTES,
                 Separate::<Position>::size() as ElemStride,
                 0,
-            ).with_raw_vertex_buffer(
+            )
+            .with_raw_vertex_buffer(
                 Separate::<TexCoord>::ATTRIBUTES,
                 Separate::<TexCoord>::size() as ElemStride,
                 0,
@@ -131,10 +152,13 @@ impl Pass for DrawFlatSeparate {
             tex_storage,
             material_defaults,
             visibility,
+            hidden,
+            hidden_prop,
             mesh,
             material,
             global,
             joints,
+            rgba,
             xr_info,
         ): <Self as PassData<'a>>::Data,
     ) {
@@ -142,31 +166,43 @@ impl Pass for DrawFlatSeparate {
         let xr_camera = xr_info.as_ref().and_then(|i| i.camera_reference());
 
         match visibility {
-            None => for (joint, mesh, material, global) in
-                (joints.maybe(), &mesh, &material, &global).join()
-            {
-                draw_mesh(
-                    encoder,
-                    effect,
-                    self.skinning,
-                    mesh_storage.get(mesh),
-                    joint,
-                    &tex_storage,
-                    Some(material),
-                    &material_defaults,
-                    camera,
-                    Some(global),
-                    &ATTRIBUTES,
-                    &TEXTURES,
-                    &xr_camera,
-                );
-            },
-            Some(ref visibility) => {
-                for (joint, mesh, material, global, _) in (
+            None => {
+                for (joint, mesh, material, global, rgba, _, _) in (
                     joints.maybe(),
                     &mesh,
                     &material,
                     &global,
+                    rgba.maybe(),
+                    !&hidden,
+                    !&hidden_prop,
+                )
+                    .join()
+                {
+                    draw_mesh(
+                        encoder,
+                        effect,
+                        self.skinning,
+                        mesh_storage.get(mesh),
+                        joint,
+                        &tex_storage,
+                        Some(material),
+                        &material_defaults,
+                        rgba,
+                        camera,
+                        Some(global),
+                        &ATTRIBUTES,
+                        &TEXTURES,
+                        &xr_camera,
+                    );
+                }
+            }
+            Some(ref visibility) => {
+                for (joint, mesh, material, global, rgba, _) in (
+                    joints.maybe(),
+                    &mesh,
+                    &material,
+                    &global,
+                    rgba.maybe(),
                     &visibility.visible_unordered,
                 )
                     .join()
@@ -180,6 +216,7 @@ impl Pass for DrawFlatSeparate {
                         &tex_storage,
                         Some(material),
                         &material_defaults,
+                        rgba,
                         camera,
                         Some(global),
                         &ATTRIBUTES,
@@ -199,6 +236,7 @@ impl Pass for DrawFlatSeparate {
                             &tex_storage,
                             material.get(*entity),
                             &material_defaults,
+                            rgba.get(*entity),
                             camera,
                             global.get(*entity),
                             &ATTRIBUTES,

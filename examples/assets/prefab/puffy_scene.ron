@@ -27,21 +27,21 @@ Prefab (
             parent: 2,
             data: (
                 transform: (
-                    translation: (x: 0., y: 0., z: 10.0),
+                    translation: (0., 0., 10.0),
                 ),
                 camera: Perspective((
-                    fovy: Rad (1.0471975512),
                     aspect: 1.33333333333333333333,
-                    near: 0.1,
-                    far: 2000.0,
+                    fovy: 1.0471975512,
+                    znear: 0.1,
+                    zfar: 2000.0,
                 )),
             ),
         ),
         (
             data: (
                 transform: (
-                    translation: (x: 6.0, y: 6.0, z: -6.0),
-                    rotation: (s: 0.0, v: (x: 0.0, y: 1.0, z: 0.0),),
+                    translation: (6.0, 6.0, -6.0),
+                    rotation: (0.0, 0.0, 1.0, 0.0),
                 ),
                 light: (
                     light: Point((
@@ -54,8 +54,8 @@ Prefab (
         (
             data: (
                 transform: (
-                    translation: (x: 0.0, y: 4.0, z: 4.0),
-                    rotation: (s: 0.0, v: (x: 0.0, y: 1.0, z: 0.0),),
+                    translation: (0.0, 4.0, 4.0),
+                    rotation: (0.0, 0.0, 1.0, 0.0),
                 ),
                 light: (
                     light: Point((

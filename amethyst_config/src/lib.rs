@@ -1,24 +1,18 @@
 //! Loads RON files into a structure for easy / statically typed usage.
-//!
 
 #![crate_name = "amethyst_config"]
 #![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
+#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-#[macro_use]
-extern crate log;
-extern crate ron;
-extern crate serde;
+use std::{
+    error::Error,
+    fmt, io,
+    path::{Path, PathBuf},
+};
 
-#[cfg(feature = "profiler")]
-extern crate thread_profiler;
-
-use ron::de::Error as DeError;
-use ron::ser::Error as SerError;
+use log::error;
+use ron::{self, de::Error as DeError, ser::Error as SerError};
 use serde::{Deserialize, Serialize};
-use std::error::Error;
-use std::fmt;
-use std::io;
-use std::path::{Path, PathBuf};
 
 /// Error related to anything that manages/creates configurations as well as
 /// "workspace"-related things.
@@ -35,7 +29,7 @@ pub enum ConfigError {
 }
 
 impl fmt::Display for ConfigError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             ConfigError::File(ref err) => write!(f, "{}", err),
             ConfigError::Parser(ref msg) => write!(f, "{}", msg),
@@ -43,7 +37,7 @@ impl fmt::Display for ConfigError {
             ConfigError::Extension(ref path) => {
                 let found = match path.extension() {
                     Some(extension) => format!("{:?}", extension),
-                    None => format!("a directory."),
+                    None => "a directory.".to_string(),
                 };
 
                 write!(
@@ -85,7 +79,7 @@ impl Error for ConfigError {
         }
     }
 
-    fn cause(&self) -> Option<&Error> {
+    fn cause(&self) -> Option<&dyn Error> {
         match *self {
             ConfigError::File(ref err) => Some(err),
             _ => None,
@@ -104,6 +98,9 @@ where
 
     /// Loads a configuration structure from a file.
     fn load_no_fallback<P: AsRef<Path>>(path: P) -> Result<Self, ConfigError>;
+
+    /// Loads configuration structure from raw bytes.
+    fn load_bytes(bytes: &[u8]) -> Result<Self, ConfigError>;
 
     /// Writes a configuration structure to a file.
     fn write<P: AsRef<Path>>(&self, path: P) -> Result<(), ConfigError>;
@@ -126,9 +123,7 @@ where
     }
 
     fn load_no_fallback<P: AsRef<Path>>(path: P) -> Result<Self, ConfigError> {
-        use ron::de::Deserializer;
-        use std::fs::File;
-        use std::io::Read;
+        use std::{fs::File, io::Read};
 
         let path = path.as_ref();
 
@@ -141,23 +136,26 @@ where
         };
 
         if path.extension().and_then(|e| e.to_str()) == Some("ron") {
-            let mut d = Deserializer::from_bytes(&content)?;
-            let val = T::deserialize(&mut d)?;
-            d.end()?;
-
-            Ok(val)
+            Self::load_bytes(&content)
         } else {
             Err(ConfigError::Extension(path.to_path_buf()))
         }
     }
 
+    fn load_bytes(bytes: &[u8]) -> Result<Self, ConfigError> {
+        let mut de = ron::de::Deserializer::from_bytes(bytes)?;
+        let val = T::deserialize(&mut de)?;
+        de.end()?;
+
+        Ok(val)
+    }
+
     fn write<P: AsRef<Path>>(&self, path: P) -> Result<(), ConfigError> {
         use ron::ser::to_string_pretty;
-        use std::fs::File;
-        use std::io::Write;
+        use std::{fs::File, io::Write};
 
         let s = to_string_pretty(self, Default::default())?;
-        File::create(path)?.write(s.as_bytes())?;
+        File::create(path)?.write_all(s.as_bytes())?;
 
         Ok(())
     }

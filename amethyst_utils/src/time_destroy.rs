@@ -1,7 +1,12 @@
-use amethyst_core::specs::{
-    Component, DenseVecStorage, Entities, Join, Read, ReadStorage, System, WriteStorage,
+//! Allows you to automatically delete an entity after a set time has elapsed.
+
+use amethyst_core::{
+    specs::{Component, DenseVecStorage, Entities, Join, Read, ReadStorage, System, WriteStorage},
+    timing::Time,
 };
-use amethyst_core::timing::Time;
+
+use log::error;
+use serde::{Deserialize, Serialize};
 
 /// Destroys the entity to which this is attached at the specified time (in seconds).
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -27,32 +32,39 @@ impl Component for DestroyInTime {
     type Storage = DenseVecStorage<Self>;
 }
 
-/// The system in charge of destroying entities with the `DestroyAtTime` or `DestroyInTime` components.
-pub struct TimedDestroySystem;
+/// The system in charge of destroying entities with the `DestroyAtTime` component.
+pub struct DestroyAtTimeSystem;
 
-impl<'a> System<'a> for TimedDestroySystem {
-    type SystemData = (
-        Entities<'a>,
-        ReadStorage<'a, DestroyAtTime>,
-        WriteStorage<'a, DestroyInTime>,
-        Read<'a, Time>,
-    );
-    fn run(&mut self, (entities, dat, mut dit, time): Self::SystemData) {
-        for (e, d) in (&*entities, &dat).join() {
+impl<'a> System<'a> for DestroyAtTimeSystem {
+    type SystemData = (Entities<'a>, ReadStorage<'a, DestroyAtTime>, Read<'a, Time>);
+    fn run(&mut self, (entities, dat, time): Self::SystemData) {
+        for (e, d) in (&entities, &dat).join() {
             if time.absolute_time_seconds() > d.time {
                 if let Err(err) = entities.delete(e) {
                     error!("Failed to delete entity: {:?}", err);
                 }
             }
         }
+    }
+}
 
-        for (e, mut d) in (&*entities, &mut dit).join() {
+/// The system in charge of destroying entities with the `DestroyInTime` component.
+pub struct DestroyInTimeSystem;
+
+impl<'a> System<'a> for DestroyInTimeSystem {
+    type SystemData = (
+        Entities<'a>,
+        WriteStorage<'a, DestroyInTime>,
+        Read<'a, Time>,
+    );
+    fn run(&mut self, (entities, mut dit, time): Self::SystemData) {
+        for (e, d) in (&entities, &mut dit).join() {
             if d.timer <= 0.0 {
                 if let Err(err) = entities.delete(e) {
                     error!("Failed to delete entity: {:?}", err);
                 }
             }
-            d.timer -= time.delta_seconds() as f64;
+            d.timer -= f64::from(time.delta_seconds());
         }
     }
 }

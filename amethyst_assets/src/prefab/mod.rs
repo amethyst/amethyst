@@ -1,10 +1,16 @@
-pub use self::system::PrefabLoaderSystem;
-pub use amethyst_core::specs::error::Error as PrefabError;
+use std::marker::PhantomData;
+
+use serde::{Deserialize, Serialize};
+use shred_derive::SystemData;
+
 use amethyst_core::specs::prelude::{
     Component, DenseVecStorage, Entity, FlaggedStorage, Read, ReadExpect, SystemData, WriteStorage,
 };
-use std::marker::PhantomData;
-use {Asset, AssetStorage, Format, Handle, Loader, Progress, ProgressCounter};
+use amethyst_error::Error;
+
+use crate::{Asset, AssetStorage, Format, Handle, Loader, Progress, ProgressCounter};
+
+pub use self::system::PrefabLoaderSystem;
 
 mod impls;
 mod system;
@@ -17,7 +23,7 @@ pub trait PrefabData<'a> {
     /// The result type returned by the load operation
     type Result;
 
-    /// Load the data for this prefab onto the given `Entity`
+    /// Add the data for this prefab onto the given `Entity`
     ///
     /// This can also be used to load resources, the recommended way of doing so is to put the
     /// resources on the main `Entity` of the `Prefab`
@@ -28,12 +34,12 @@ pub trait PrefabData<'a> {
     /// - `system_data`: `SystemData` needed to do the loading
     /// - `entities`: Some components need access to the entities that was created as part of the
     ///               full prefab, for linking purposes, so this contains all those `Entity`s.
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
-    ) -> Result<Self::Result, PrefabError>;
+    ) -> Result<Self::Result, Error>;
 
     /// Trigger asset loading for any sub assets.
     ///
@@ -52,11 +58,11 @@ pub trait PrefabData<'a> {
     /// ### Type parameters:
     ///
     /// - `P`: Progress tracker
-    fn trigger_sub_loading(
+    fn load_sub_assets(
         &mut self,
         _progress: &mut ProgressCounter,
         _system_data: &mut Self::SystemData,
-    ) -> Result<bool, PrefabError> {
+    ) -> Result<bool, Error> {
         Ok(false)
     }
 }
@@ -72,17 +78,19 @@ pub trait PrefabData<'a> {
 ///
 /// ### Example:
 ///
-/// If the prefab contains 3 new entities `A`, `B` and `C`, and the main `Entity` that the `Handle`
-/// is placed on is `E`, and we want the graph to be `A -> E`, `B -> E`, `C -> B` (parent links),
-/// the data will be as follows:
+/// If we want to give the existing Baker entity a Knife and a Plate with a
+/// Cake on it.  The prefab contains 3 new entities `Knife`, `Plate`,
+/// and `Cake`, and the main `Entity` that the `Handle` is placed on is the
+/// `Baker`.  We want the graph to be `Knife on Baker`, `Plate on Baker`,
+/// `Cake on Plate` using parent links. The data will be as follows:
 ///
 /// ```rust,ignore
 /// Prefab {
 ///     entities: vec![
-///         PrefabEntity { parent: None /* not used */, .. },
-///         PrefabEntity { parent: Some(0), .. },
-///         PrefabEntity { parent: Some(0), .. },
-///         PrefabEntity { parent: Some(2), .. },
+///         PrefabEntity { parent: None, .. },    /* #0 Baker, parent is not used */
+///         PrefabEntity { parent: Some(0), .. }, /* #1 Knife parented to Baker #0 */
+///         PrefabEntity { parent: Some(0), .. }, /* #2 Plate parented to Baker #0 */
+///         PrefabEntity { parent: Some(2), .. }, /* #3 Cake parented to Plate #2 */
 ///     ],
 /// }
 /// ```
@@ -154,16 +162,16 @@ impl<T> PrefabEntity<T> {
     }
 
     /// Trigger sub asset loading for the prefab entity
-    pub fn trigger_sub_loading<'a>(
+    pub fn load_sub_assets<'a>(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut <T as PrefabData<'a>>::SystemData,
-    ) -> Result<bool, PrefabError>
+    ) -> Result<bool, Error>
     where
         T: PrefabData<'a>,
     {
         if let Some(ref mut data) = self.data {
-            data.trigger_sub_loading(progress, system_data)
+            data.load_sub_assets(progress, system_data)
         } else {
             Ok(false)
         }
@@ -217,7 +225,7 @@ impl<T> Prefab<T> {
     }
 
     /// Get immutable access to all entities in the prefab
-    pub fn entities<'a>(&'a self) -> impl Iterator<Item = &'a PrefabEntity<T>> {
+    pub fn entities(&self) -> impl Iterator<Item = &PrefabEntity<T>> {
         self.entities.iter()
     }
 
@@ -232,7 +240,7 @@ impl<T> Prefab<T> {
     where
         T: Default,
     {
-        self.entities.get_mut(index).unwrap().data_or_default()
+        self.entities[index].data_or_default()
     }
 
     /// Check if sub asset loading have been triggered
@@ -244,23 +252,25 @@ impl<T> Prefab<T> {
     ///
     /// ### Panics
     ///
-    /// If sub asset loading have not been triggered
+    /// If sub asset loading has not been triggered.
     pub fn progress(&self) -> &ProgressCounter {
-        self.counter.as_ref().unwrap()
+        self.counter
+            .as_ref()
+            .expect("Sub asset loading has not been triggered")
     }
 
     /// Trigger sub asset loading for the asset
-    pub fn trigger_sub_loading<'a>(
+    pub fn load_sub_assets<'a>(
         &mut self,
         system_data: &mut <T as PrefabData<'a>>::SystemData,
-    ) -> Result<bool, PrefabError>
+    ) -> Result<bool, Error>
     where
         T: PrefabData<'a>,
     {
         let mut ret = false;
         let mut progress = ProgressCounter::default();
         for entity in &mut self.entities {
-            if entity.trigger_sub_loading(&mut progress, system_data)? {
+            if entity.load_sub_assets(&mut progress, system_data)? {
                 ret = true;
             }
         }
@@ -344,23 +354,44 @@ where
 
     type Result = Handle<A>;
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<Handle<A>, PrefabError> {
+    ) -> Result<Handle<A>, Error> {
         let handle = match *self {
             AssetPrefab::Handle(ref handle) => handle.clone(),
-            AssetPrefab::File(ref name, ref format, ref options) => system_data.0.load(
+            AssetPrefab::File(..) => unreachable!(),
+        };
+        Ok(system_data
+            .1
+            .insert(entity, handle.clone())
+            .map(|_| handle)?)
+    }
+
+    fn load_sub_assets(
+        &mut self,
+        progress: &mut ProgressCounter,
+        system_data: &mut Self::SystemData,
+    ) -> Result<bool, Error> {
+        let handle = if let AssetPrefab::File(ref name, ref format, ref options) = *self {
+            Some(system_data.0.load(
                 name.as_ref(),
                 format.clone(),
                 options.clone(),
-                (),
+                progress,
                 &system_data.2,
-            ),
+            ))
+        } else {
+            None
         };
-        system_data.1.insert(entity, handle.clone()).map(|_| handle)
+        if let Some(handle) = handle {
+            *self = AssetPrefab::Handle(handle);
+            Ok(true)
+        } else {
+            Ok(false)
+        }
     }
 }
 
@@ -372,7 +403,7 @@ where
 ///
 /// ```rust,ignore
 /// let prefab_handle = world.exec(|loader: PrefabLoader<SomePrefab>| {
-///     loader.load("prefab.ron", RonFormat, (), ()
+///     loader.load("prefab.ron", RonFormat, (), ());
 /// });
 /// ```
 #[derive(SystemData)]
@@ -416,12 +447,18 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use amethyst_core::specs::{Builder, RunNow, World};
-    use amethyst_core::{GlobalTransform, Time, Transform};
-    use rayon::ThreadPoolBuilder;
     use std::sync::Arc;
-    use Loader;
+
+    use rayon::ThreadPoolBuilder;
+
+    use amethyst_core::{
+        specs::{Builder, RunNow, World},
+        GlobalTransform, Time, Transform,
+    };
+
+    use crate::Loader;
+
+    use super::*;
 
     type MyPrefab = Transform;
 
@@ -448,11 +485,9 @@ mod tests {
             Some(&Transform::default()),
             world.read_storage().get(root_entity)
         );
-        assert!(
-            world
-                .read_storage::<GlobalTransform>()
-                .get(root_entity)
-                .is_some()
-        );
+        assert!(world
+            .read_storage::<GlobalTransform>()
+            .get(root_entity)
+            .is_some());
     }
 }

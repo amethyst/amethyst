@@ -1,13 +1,21 @@
 //! Mesh resource.
 
-use amethyst_assets::Handle;
-use amethyst_core::cgmath::{Deg, Matrix4, Point3, Transform, Vector3};
-use error::Result;
+use std::{
+    iter::{once, Chain, Once},
+    marker::PhantomData,
+};
+
 use gfx::Primitive;
-use std::iter::{once, Chain, Once};
-use std::marker::PhantomData;
-use types::{Factory, RawBuffer, Slice};
-use vertex::{Attributes, VertexFormat};
+use serde::{Deserialize, Serialize};
+
+use amethyst_assets::Handle;
+use amethyst_core::nalgebra::{Matrix4, Point3, Rotation3, Translation3, Unit, Vector3};
+use amethyst_error::Error;
+
+use crate::{
+    types::{Factory, RawBuffer, Slice},
+    vertex::{Attributes, VertexFormat},
+};
 
 /// Raw buffer with its attributes
 #[derive(Clone, Debug)]
@@ -25,7 +33,7 @@ pub trait VertexData {
     fn len(&self) -> usize;
 
     /// Build `VertexBuffer`
-    fn build(&self, factory: &mut Factory) -> Result<VertexBuffer>;
+    fn build(&self, factory: &mut Factory) -> Result<VertexBuffer, Error>;
 }
 
 /// Construct new vertex data from raw data and vertex format
@@ -48,10 +56,12 @@ where
         self.0.as_ref().len()
     }
 
-    fn build(&self, factory: &mut Factory) -> Result<VertexBuffer> {
-        use gfx::buffer::Role;
-        use gfx::memory::{cast_slice, Bind};
-        use gfx::Factory;
+    fn build(&self, factory: &mut Factory) -> Result<VertexBuffer, Error> {
+        use gfx::{
+            buffer::Role,
+            memory::{cast_slice, Bind},
+            Factory,
+        };
 
         let verts = self.0.as_ref();
         let slice = cast_slice(verts);
@@ -77,7 +87,7 @@ pub trait VertexDataSet {
     fn len(&self) -> usize;
 
     /// Build `VertexBuffer`s
-    fn build(&self, factory: &mut Factory) -> Result<Self::VertexBufferIter>;
+    fn build(&self, factory: &mut Factory) -> Result<Self::VertexBufferIter, Error>;
 }
 
 impl<H> VertexDataSet for (H, ())
@@ -90,7 +100,7 @@ where
         self.0.len()
     }
 
-    fn build(&self, factory: &mut Factory) -> Result<Self::VertexBufferIter> {
+    fn build(&self, factory: &mut Factory) -> Result<Self::VertexBufferIter, Error> {
         let (ref head, _) = *self;
         Ok(once(head.build(factory)?))
     }
@@ -108,7 +118,7 @@ where
         min(self.0.len(), self.1.len())
     }
 
-    fn build(&self, factory: &mut Factory) -> Result<Self::VertexBufferIter> {
+    fn build(&self, factory: &mut Factory) -> Result<Self::VertexBufferIter, Error> {
         let (ref head, ref tail) = *self;
         Ok(once(head.build(factory)?).chain(tail.build(factory)?))
     }
@@ -136,7 +146,7 @@ impl Mesh {
     }
 
     /// Returns the mesh's vertex buffer which matches requested attributes
-    pub fn buffer(&self, attributes: Attributes) -> Option<&RawBuffer> {
+    pub fn buffer(&self, attributes: Attributes<'_>) -> Option<&RawBuffer> {
         for vbuf in self.vbufs.iter() {
             let mut find = attributes.iter();
             let mut next = find.next();
@@ -201,7 +211,6 @@ where
 {
     /// Creates a new `MeshBuilder` with the given vertices.
     pub fn new(verts: D) -> Self {
-        use amethyst_core::cgmath::SquareMatrix;
         assert!(check_attributes_are_sorted(V::ATTRIBUTES));
         MeshBuilder {
             prim: Primitive::TriangleList,
@@ -238,29 +247,23 @@ where
     }
 
     /// Sets the position of the mesh in 3D space.
-    pub fn with_position<P: Into<Point3<f32>>>(mut self, pos: P) -> Self {
-        use amethyst_core::cgmath::EuclideanSpace;
-
-        let trans = Matrix4::from_translation(pos.into().to_vec());
-        self.transform.concat_self(&trans);
+    pub fn with_position(mut self, pos: Point3<f32>) -> Self {
+        let trans = Translation3::new(pos.x, pos.y, pos.z);
+        self.transform *= trans.to_homogeneous();
         self
     }
 
-    /// Rotates the mesh a certain number of degrees around the given axis.
-    pub fn with_rotation<Ax, An>(mut self, axis: Ax, angle: An) -> Self
-    where
-        Ax: Into<Vector3<f32>>,
-        An: Into<Deg<f32>>,
-    {
-        let rot = Matrix4::from_axis_angle(axis.into(), angle.into());
-        self.transform.concat_self(&rot);
+    /// Rotates the mesh around the given axis. `angle` is specified in radians.
+    pub fn with_rotation(mut self, axis: Unit<Vector3<f32>>, angle: f32) -> Self {
+        let rot = Rotation3::from_axis_angle(&axis, angle);
+        self.transform *= rot.to_homogeneous();
         self
     }
 
     /// Scales the mesh size according to the given value.
     pub fn with_scale(mut self, val: f32) -> Self {
-        let scale = Matrix4::from_scale(val);
-        self.transform.concat_self(&scale);
+        let scale = Matrix4::new_scaling(val);
+        self.transform *= scale;
         self
     }
 
@@ -275,7 +278,7 @@ where
     }
 
     /// Builds and returns the new mesh.
-    pub fn build(self, fac: &mut Factory) -> Result<Mesh> {
+    pub fn build(self, fac: &mut Factory) -> Result<Mesh, Error> {
         use gfx::IndexBuffer;
         let count = self.vertices.len();
 
@@ -288,7 +291,7 @@ where
         };
 
         Ok(Mesh {
-            slice: slice,
+            slice,
             transform: self.transform,
             vbufs: self.vertices.build(fac)?.collect(),
         })
@@ -296,7 +299,7 @@ where
 }
 
 /// Check that attributes are sorted
-fn check_attributes_are_sorted(attrs: Attributes) -> bool {
+fn check_attributes_are_sorted(attrs: Attributes<'_>) -> bool {
     let mut last = 0;
     for attr in attrs {
         if last > attr.1.offset {

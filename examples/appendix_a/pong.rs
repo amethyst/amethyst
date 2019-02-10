@@ -1,20 +1,28 @@
-use amethyst::assets::Loader;
-use amethyst::core::cgmath::Vector3;
-use amethyst::core::transform::{GlobalTransform, Transform};
-use amethyst::ecs::prelude::World;
-use amethyst::prelude::*;
-use amethyst::renderer::{Camera, Material, MeshHandle, PosTex, Projection, WindowMessages};
-use amethyst::ui::{Anchor, TtfFormat, UiText, UiTransform};
-use config::{ArenaConfig, BallConfig, PaddlesConfig};
-use systems::ScoreText;
-use {Ball, Paddle, Side};
+use crate::{
+    config::{ArenaConfig, BallConfig, PaddlesConfig},
+    systems::ScoreText,
+    Ball, Paddle, Side,
+};
+use amethyst::{
+    assets::Loader,
+    core::{
+        nalgebra::{Vector2, Vector3},
+        Transform,
+    },
+    ecs::prelude::World,
+    prelude::*,
+    renderer::{
+        Camera, Material, MaterialDefaults, MeshHandle, PosTex, Projection, WindowMessages,
+    },
+    ui::{Anchor, TtfFormat, UiText, UiTransform},
+};
 
 pub struct Pong;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Pong {
-    fn on_start(&mut self, data: StateData<GameData>) {
+impl SimpleState for Pong {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
-        use audio::initialise_audio;
+        use crate::audio::initialise_audio;
 
         // Setup our game.
         initialise_paddles(world);
@@ -28,21 +36,23 @@ impl<'a, 'b> SimpleState<'a, 'b> for Pong {
 
 /// Initialise the camera.
 fn initialise_camera(world: &mut World) {
-    use amethyst::core::cgmath::{Matrix4, Vector3};
     let (arena_height, arena_width) = {
         let config = &world.read_resource::<ArenaConfig>();
         (config.height, config.width)
     };
+
+    let mut transform = Transform::default();
+    transform.set_z(1.0);
     world
         .create_entity()
         .with(Camera::from(Projection::orthographic(
             0.0,
             arena_width,
-            arena_height,
             0.0,
-        ))).with(GlobalTransform(
-            Matrix4::from_translation(Vector3::new(0.0, 0.0, 1.0)).into(),
-        )).build();
+            arena_height,
+        )))
+        .with(transform)
+        .build();
 }
 
 /// Hide the cursor, so it's invisible while playing.
@@ -98,8 +108,8 @@ fn initialise_paddles(world: &mut World) {
 
     let left_y = (arena_height - left_height) / 2.0;
     let right_y = (arena_height - right_height) / 2.0;
-    left_transform.translation = Vector3::new(0.0, left_y, 0.0);
-    right_transform.translation = Vector3::new(arena_width - right_width, right_y, 0.0);
+    left_transform.set_xyz(0.0, left_y, 0.0);
+    right_transform.set_xyz(arena_width - right_width, right_y, 0.0);
 
     let left_mesh = create_mesh(
         world,
@@ -122,7 +132,7 @@ fn initialise_paddles(world: &mut World) {
             height: left_height,
             width: left_width,
             velocity: left_velocity,
-        }).with(GlobalTransform::default())
+        })
         .with(left_transform)
         .build();
     // Create right paddle
@@ -135,7 +145,7 @@ fn initialise_paddles(world: &mut World) {
             height: right_height,
             width: right_width,
             velocity: right_velocity,
-        }).with(GlobalTransform::default())
+        })
         .with(right_transform)
         .build();
 }
@@ -160,7 +170,7 @@ fn initialise_balls(world: &mut World) {
     let mesh = create_mesh(world, generate_circle_vertices(radius, 16));
     let material = create_colour_material(world, colour);
     let mut local_transform = Transform::default();
-    local_transform.translation = Vector3::new(arena_width / 2.0, arena_height / 2.0, 0.0);
+    local_transform.set_xyz(arena_width / 2.0, arena_height / 2.0, 0.0);
 
     world
         .create_entity()
@@ -169,8 +179,8 @@ fn initialise_balls(world: &mut World) {
         .with(Ball {
             radius: radius,
             velocity: [velocity_x, velocity_y],
-        }).with(local_transform)
-        .with(GlobalTransform::default())
+        })
+        .with(local_transform)
         .build();
 }
 
@@ -182,27 +192,11 @@ fn initialise_score(world: &mut World) {
         (),
         &world.read_resource(),
     );
-    let p1_transform = UiTransform::new(
-        "P1".to_string(),
-        Anchor::TopMiddle,
-        -50.,
-        50.,
-        1.,
-        55.,
-        50.,
-        0,
-    );
+    let p1_transform =
+        UiTransform::new("P1".to_string(), Anchor::TopMiddle, -50., 50., 1., 55., 50.);
 
-    let p2_transform = UiTransform::new(
-        "P2".to_string(),
-        Anchor::TopMiddle,
-        50.,
-        50.,
-        1.,
-        55.,
-        50.,
-        0,
-    );
+    let p2_transform =
+        UiTransform::new("P2".to_string(), Anchor::TopMiddle, 50., 50., 1., 55., 50.);
 
     let p1_score = world
         .create_entity()
@@ -212,7 +206,8 @@ fn initialise_score(world: &mut World) {
             "0".to_string(),
             [1.0, 1.0, 1.0, 1.0],
             50.,
-        )).build();
+        ))
+        .build();
     let p2_score = world
         .create_entity()
         .with(p2_transform)
@@ -221,7 +216,8 @@ fn initialise_score(world: &mut World) {
             "0".to_string(),
             [1.0, 1.0, 1.0, 1.0],
             50.,
-        )).build();
+        ))
+        .build();
     world.add_resource(ScoreText { p1_score, p2_score });
 }
 
@@ -234,9 +230,6 @@ fn create_mesh(world: &World, vertices: Vec<PosTex>) -> MeshHandle {
 /// Creates a solid material of the specified colour.
 fn create_colour_material(world: &World, colour: [f32; 4]) -> Material {
     // TODO: optimize
-
-    use amethyst::renderer::MaterialDefaults;
-
     let mat_defaults = world.read_resource::<MaterialDefaults>();
     let loader = world.read_resource::<Loader>();
 
@@ -261,15 +254,15 @@ fn generate_circle_vertices(radius: f32, resolution: usize) -> Vec<PosTex> {
         let x = angle.cos();
         let y = angle.sin();
         PosTex {
-            position: [x * radius, y * radius, 0.0],
-            tex_coord: [x, y],
+            position: Vector3::new(x * radius, y * radius, 0.0),
+            tex_coord: Vector2::new(x, y),
         }
     };
 
     for index in 0..resolution {
         vertices.push(PosTex {
-            position: [0.0, 0.0, 0.0],
-            tex_coord: [0.0, 0.0],
+            position: Vector3::new(0.0, 0.0, 0.0),
+            tex_coord: Vector2::new(0.0, 0.0),
         });
 
         vertices.push(generate_vertex(angle_offset * index as f32));
@@ -283,28 +276,28 @@ fn generate_circle_vertices(radius: f32, resolution: usize) -> Vec<PosTex> {
 fn generate_rectangle_vertices(left: f32, bottom: f32, right: f32, top: f32) -> Vec<PosTex> {
     vec![
         PosTex {
-            position: [left, bottom, 0.],
-            tex_coord: [0.0, 0.0],
+            position: Vector3::new(left, bottom, 0.0),
+            tex_coord: Vector2::new(0.0, 0.0),
         },
         PosTex {
-            position: [right, bottom, 0.0],
-            tex_coord: [1.0, 0.0],
+            position: Vector3::new(right, bottom, 0.0),
+            tex_coord: Vector2::new(1.0, 0.0),
         },
         PosTex {
-            position: [left, top, 0.0],
-            tex_coord: [1.0, 1.0],
+            position: Vector3::new(left, top, 0.0),
+            tex_coord: Vector2::new(1.0, 1.0),
         },
         PosTex {
-            position: [right, top, 0.],
-            tex_coord: [1.0, 1.0],
+            position: Vector3::new(right, top, 0.0),
+            tex_coord: Vector2::new(1.0, 1.0),
         },
         PosTex {
-            position: [left, top, 0.],
-            tex_coord: [0.0, 1.0],
+            position: Vector3::new(left, top, 0.0),
+            tex_coord: Vector2::new(0.0, 1.0),
         },
         PosTex {
-            position: [right, bottom, 0.0],
-            tex_coord: [0.0, 0.0],
+            position: Vector3::new(right, bottom, 0.0),
+            tex_coord: Vector2::new(0.0, 0.0),
         },
     ]
 }

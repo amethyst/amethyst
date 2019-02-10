@@ -16,12 +16,7 @@ The main difference between real game code and the example code is where the
 For instance, in the pong_tutorial_01 example we have:
 
 ```rust,ignore
-let app_root = application_root_dir();
-
-let path = format!(
-    "{}/examples/pong_tutorial_01/resources/display_config.ron",
-    app_root
-);
+let path = application_dir("examples/pong_tutorial_01/resources/display_config.ron")?;
 ```
 
 But for your own project you'll probably want something like this:

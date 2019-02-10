@@ -1,11 +1,14 @@
-use super::resources::*;
-use amethyst_core::cgmath::SquareMatrix;
-use amethyst_core::specs::prelude::{
-    BitSet, InsertedFlag, Join, ModifiedFlag, ReadStorage, ReaderId, Resources, System,
-    WriteStorage,
+use amethyst_core::{
+    specs::prelude::{
+        BitSet, ComponentEvent, Join, ReadStorage, ReaderId, Resources, System, WriteStorage,
+    },
+    GlobalTransform,
 };
-use amethyst_core::GlobalTransform;
 use amethyst_renderer::JointTransforms;
+
+use log::error;
+
+use super::resources::*;
 
 /// System for performing vertex skinning.
 ///
@@ -15,16 +18,15 @@ pub struct VertexSkinningSystem {
     updated: BitSet,
     updated_skins: BitSet,
     /// Used for tracking modifications to global transforms
-    updated_id: Option<ReaderId<ModifiedFlag>>,
-    inserted_id: Option<ReaderId<InsertedFlag>>,
+    updated_id: Option<ReaderId<ComponentEvent>>,
 }
 
 impl VertexSkinningSystem {
+    /// Creates a new `VertexSkinningSystem`
     pub fn new() -> Self {
         Self {
             updated: BitSet::new(),
             updated_skins: BitSet::new(),
-            inserted_id: None,
             updated_id: None,
         }
     }
@@ -40,11 +42,21 @@ impl<'a> System<'a> for VertexSkinningSystem {
 
     fn run(&mut self, (joints, global_transforms, mut skins, mut matrices): Self::SystemData) {
         self.updated.clear();
+
         global_transforms
-            .populate_modified(&mut self.updated_id.as_mut().unwrap(), &mut self.updated);
-        global_transforms
-            .populate_inserted(&mut self.inserted_id.as_mut().unwrap(), &mut self.updated);
+            .channel()
+            .read(self.updated_id.as_mut().expect(
+                "`VertexSkinningSystem::setup` was not called before `VertexSkinningSystem::run`",
+            ))
+            .for_each(|event| match event {
+                ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
+                    self.updated.add(*id);
+                }
+                ComponentEvent::Removed(_id) => {}
+            });
+
         self.updated_skins.clear();
+
         for (_, joint) in (&self.updated, &joints).join() {
             for skin in &joint.skins {
                 self.updated_skins.add(skin.id());
@@ -69,7 +81,8 @@ impl<'a> System<'a> for VertexSkinningSystem {
                             );
                             None
                         }
-                    }).flatten()
+                    })
+                    .flatten()
                     .map(|(global, inverse_bind_matrix)| {
                         (global.0 * inverse_bind_matrix * bind_shape)
                     }),
@@ -78,7 +91,7 @@ impl<'a> System<'a> for VertexSkinningSystem {
             // update the joint matrices in all referenced mesh entities
             for (_, mesh_global, matrix) in (&skin.meshes, &global_transforms, &mut matrices).join()
             {
-                if let Some(global_inverse) = mesh_global.0.invert() {
+                if let Some(global_inverse) = mesh_global.0.try_inverse() {
                     matrix.matrices.clear();
                     matrix
                         .matrices
@@ -89,17 +102,23 @@ impl<'a> System<'a> for VertexSkinningSystem {
             }
         }
 
-        for (_, mesh_global, mut joint_transform) in
+        for (_, mesh_global, joint_transform) in
             (&self.updated, &global_transforms, &mut matrices).join()
         {
-            if let Some(global_inverse) = mesh_global.0.invert() {
-                let skin = skins.get(joint_transform.skin).unwrap();
-                joint_transform.matrices.clear();
-                joint_transform
-                    .matrices
-                    .extend(skin.joint_matrices.iter().map(|joint_matrix| {
-                        Into::<[[f32; 4]; 4]>::into(global_inverse * joint_matrix)
-                    }));
+            if let Some(global_inverse) = mesh_global.0.try_inverse() {
+                if let Some(skin) = skins.get(joint_transform.skin) {
+                    joint_transform.matrices.clear();
+                    joint_transform
+                        .matrices
+                        .extend(skin.joint_matrices.iter().map(|joint_matrix| {
+                            Into::<[[f32; 4]; 4]>::into(global_inverse * joint_matrix)
+                        }));
+                } else {
+                    error!(
+                        "Missing `Skin` Component for join transform entity {:?}",
+                        joint_transform.skin
+                    );
+                }
             }
         }
     }
@@ -108,7 +127,6 @@ impl<'a> System<'a> for VertexSkinningSystem {
         use amethyst_core::specs::prelude::SystemData;
         Self::SystemData::setup(res);
         let mut transform = WriteStorage::<GlobalTransform>::fetch(res);
-        self.updated_id = Some(transform.track_modified());
-        self.inserted_id = Some(transform.track_inserted());
+        self.updated_id = Some(transform.register_reader());
     }
 }

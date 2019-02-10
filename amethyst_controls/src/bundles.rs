@@ -1,14 +1,32 @@
+use std::{hash::Hash, marker::PhantomData};
+
+use amethyst_core::{bundle::SystemBundle, specs::prelude::DispatcherBuilder};
+use amethyst_error::Error;
+
 use super::*;
-use amethyst_core::bundle::{Result, SystemBundle};
-use amethyst_core::specs::prelude::DispatcherBuilder;
-use std::hash::Hash;
-use std::marker::PhantomData;
 
 /// The bundle that creates a flying movement system.
-/// Note: Will not actually create a moving entity. It will only register the needed resources and systems.
-/// The generic parameters A and B are the ones used in InputHandler<A,B>.
-/// You might want to add "fly_movement" and "free_rotation" as dependencies of the TransformSystem.
+///
+/// Note: Will not actually create a moving entity. It will only register the needed resources and
+/// systems. The generic parameters `A` and `B` are the ones used in `InputHandler<A,B>`.
+///
+/// You might want to add `"fly_movement"` and `"free_rotation"` as dependencies of the
+/// `TransformSystem` in order to apply changes made by these systems in the same frame.
 /// Adding this bundle will grab the mouse, hide it and keep it centered.
+///
+/// # Type parameters
+///
+/// * `A`: This is the key the `InputHandler` is using for axes. Often, this is a `String`.
+/// * `B`: This is the key the `InputHandler` is using for actions. Often, this is a `String`.
+///
+/// # Systems
+///
+/// This bundle adds the following systems:
+///
+/// * `FlyMovementSystem`
+/// * `FreeRotationSystem`
+/// * `MouseFocusUpdateSystem`
+/// * `CursorHideSystem`
 pub struct FlyControlBundle<A, B> {
     sensitivity_x: f32,
     sensitivity_y: f32,
@@ -20,6 +38,7 @@ pub struct FlyControlBundle<A, B> {
 }
 
 impl<A, B> FlyControlBundle<A, B> {
+    /// Builds a new fly control bundle using the provided axes as controls.
     pub fn new(
         right_input_axis: Option<A>,
         up_input_axis: Option<A>,
@@ -36,12 +55,14 @@ impl<A, B> FlyControlBundle<A, B> {
         }
     }
 
+    /// Alters the mouse sensitivy on this `FlyControlBundle`
     pub fn with_sensitivity(mut self, x: f32, y: f32) -> Self {
         self.sensitivity_x = x;
         self.sensitivity_y = y;
         self
     }
 
+    /// Alters the speed on this `FlyControlBundle`.
     pub fn with_speed(mut self, speed: f32) -> Self {
         self.speed = speed;
         self
@@ -53,7 +74,7 @@ where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
             FlyMovementSystem::<A, B>::new(
                 self.speed,
@@ -93,6 +114,7 @@ pub struct ArcBallControlBundle<A, B> {
 }
 
 impl<A, B> ArcBallControlBundle<A, B> {
+    /// Builds a new `ArcBallControlBundle` with a default sensitivity of 1.0
     pub fn new() -> Self {
         ArcBallControlBundle {
             sensitivity_x: 1.0,
@@ -101,6 +123,7 @@ impl<A, B> ArcBallControlBundle<A, B> {
         }
     }
 
+    /// Builds a new `ArcBallControlBundle` with the provided mouse sensitivity values.
     pub fn with_sensitivity(mut self, x: f32, y: f32) -> Self {
         self.sensitivity_x = x;
         self.sensitivity_y = y;
@@ -113,7 +136,7 @@ where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(ArcBallRotationSystem::default(), "arc_ball_rotation", &[]);
         builder.add(
             FreeRotationSystem::<A, B>::new(self.sensitivity_x, self.sensitivity_y),

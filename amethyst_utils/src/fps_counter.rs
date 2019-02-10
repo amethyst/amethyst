@@ -1,13 +1,17 @@
 //! Util Resources
 
-use amethyst_core::specs::prelude::{DispatcherBuilder, Read, System, Write};
-use amethyst_core::timing::{duration_to_nanos, Time};
-use amethyst_core::{Result, SystemBundle};
-use circular_buffer::CircularBuffer;
+use amethyst_core::{
+    specs::prelude::{DispatcherBuilder, Read, System, Write},
+    timing::{duration_to_nanos, Time},
+    SystemBundle,
+};
+use amethyst_error::Error;
+
+use crate::circular_buffer::CircularBuffer;
 
 /// The FPSCounter resource needed by the FPSCounterSystem.
 ///
-/// Add it to your resources with id 0 to be able to use the FPSCounterSystem.
+/// Add it to your resources to be able to use the FPSCounterSystem.
 ///
 /// ## Usage:
 /// Get the FPSCounter resource from the world then call either `frame_fps` or `sampled_fps` to
@@ -50,7 +54,7 @@ impl FPSCounter {
 
     ///Get the average fps over the samplesize frames.
     pub fn sampled_fps(&self) -> f32 {
-        if self.sum == 0 || self.buf.queue().len() == 0 {
+        if self.sum == 0 || self.buf.queue().is_empty() {
             return 0.0;
         }
         1.0e9 * self.buf.queue().len() as f32 / self.sum as f32
@@ -75,7 +79,7 @@ impl<'a> System<'a> for FPSCounterSystem {
 pub struct FPSCounterBundle;
 
 impl<'a, 'b> SystemBundle<'a, 'b> for FPSCounterBundle {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(FPSCounterSystem, "fps_counter_system", &[]);
         Ok(())
     }

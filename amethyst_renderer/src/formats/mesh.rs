@@ -1,20 +1,23 @@
-use amethyst_assets::{
-    Asset, AssetStorage, Error, Loader, PrefabData, PrefabError, ProcessingState, Result,
-    ResultExt, SimpleFormat,
-};
-use amethyst_core::cgmath::{InnerSpace, Vector3};
-use amethyst_core::specs::prelude::{
-    Component, Entity, Read, ReadExpect, VecStorage, WriteStorage,
-};
-use mesh::{Mesh, MeshBuilder, MeshHandle};
 use std::fmt::Debug;
-use std::result::Result as StdResult;
-use vertex::*;
+
+use amethyst_assets::{Asset, AssetStorage, Loader, PrefabData, ProcessingState, SimpleFormat};
+use amethyst_core::{
+    nalgebra::{Vector2, Vector3},
+    specs::prelude::{Component, Entity, Read, ReadExpect, VecStorage, WriteStorage},
+};
+use amethyst_error::{format_err, Error, ResultExt};
+
+use serde::{Deserialize, Serialize};
 use wavefront_obj::obj::{
     parse, Normal, NormalIndex, ObjSet, Object, Primitive, TVertex, TextureIndex, Vertex,
     VertexIndex,
 };
-use Renderer;
+
+use crate::{
+    mesh::{Mesh, MeshBuilder, MeshHandle},
+    vertex::*,
+    Renderer,
+};
 
 /// Mesh data for loading
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -36,7 +39,7 @@ pub enum MeshData {
 
     /// Create a mesh from a given creator
     #[serde(skip)]
-    Creator(Box<MeshCreator>),
+    Creator(Box<dyn MeshCreator>),
 }
 
 impl Component for MeshData {
@@ -96,16 +99,17 @@ impl<'a> PrefabData<'a> for MeshData {
     );
     type Result = ();
 
-    fn load_prefab(
+    fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
-    ) -> StdResult<(), PrefabError> {
+    ) -> Result<(), Error> {
         let handle = system_data
             .0
             .load_from_data(self.clone(), (), &system_data.2);
-        system_data.1.insert(entity, handle).map(|_| ())
+        system_data.1.insert(entity, handle).map(|_| ())?;
+        Ok(())
     }
 }
 
@@ -119,14 +123,15 @@ impl SimpleFormat<Mesh> for ObjFormat {
 
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<MeshData> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<MeshData, Error> {
         String::from_utf8(bytes)
             .map_err(Into::into)
             .and_then(|string| {
                 parse(string)
-                    .map_err(|e| Error::from(format!("In line {}: {:?}", e.line_number, e.message)))
-                    .chain_err(|| "Failed to parse OBJ")
-            }).map(|set| from_data(set).into())
+                    .map_err(|e| format_err!("In line {}: {:?}", e.line_number, e.message))
+                    .with_context(|_| format_err!("Failed to parse OBJ"))
+            })
+            .map(|set| from_data(set).into())
     }
 }
 
@@ -139,20 +144,20 @@ fn convert(
     PosNormTex {
         position: {
             let vertex: Vertex = object.vertices[vi];
-            [vertex.x as f32, vertex.y as f32, vertex.z as f32]
+            Vector3::new(vertex.x as f32, vertex.y as f32, vertex.z as f32)
         },
         normal: ni
             .map(|i| {
                 let normal: Normal = object.normals[i];
-                Vector3::from([normal.x as f32, normal.y as f32, normal.z as f32])
-                    .normalize()
-                    .into()
-            }).unwrap_or([0.0, 0.0, 0.0]),
+                Vector3::from([normal.x as f32, normal.y as f32, normal.z as f32]).normalize()
+            })
+            .unwrap_or(Vector3::new(0.0, 0.0, 0.0)),
         tex_coord: ti
             .map(|i| {
                 let tvertex: TVertex = object.tex_vertices[i];
-                [tvertex.u as f32, tvertex.v as f32]
-            }).unwrap_or([0.0, 0.0]),
+                Vector2::new(tvertex.u as f32, tvertex.v as f32)
+            })
+            .unwrap_or(Vector2::new(0.0, 0.0)),
     }
 }
 
@@ -192,7 +197,10 @@ fn from_data(obj_set: ObjSet) -> Vec<PosNormTex> {
 }
 
 /// Create mesh
-pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> Result<ProcessingState<Mesh>> {
+pub fn create_mesh_asset(
+    data: MeshData,
+    renderer: &mut Renderer,
+) -> Result<ProcessingState<Mesh>, Error> {
     let data = match data {
         MeshData::PosColor(ref vertices) => {
             let mb = MeshBuilder::new(vertices);
@@ -217,15 +225,15 @@ pub fn create_mesh_asset(data: MeshData, renderer: &mut Renderer) -> Result<Proc
         MeshData::Creator(creator) => creator.build(renderer),
     };
 
-    data.map(|m| ProcessingState::Loaded(m))
-        .chain_err(|| "Failed to build mesh")
+    data.map(ProcessingState::Loaded)
+        .with_context(|_| format_err!("Failed to build mesh"))
 }
 
 /// Build Mesh with vertex buffer combination
 pub fn build_mesh_with_combo(
     combo: VertexBufferCombination,
     renderer: &mut Renderer,
-) -> ::error::Result<Mesh> {
+) -> Result<Mesh, Error> {
     build_mesh_with_some!(
         MeshBuilder::new(combo.0),
         renderer,
@@ -244,17 +252,17 @@ pub fn build_mesh_with_combo(
 /// pass.
 pub trait MeshCreator: Send + Sync + Debug + 'static {
     /// Build a mesh given a `Renderer`
-    fn build(self: Box<Self>, renderer: &mut Renderer) -> ::error::Result<Mesh>;
+    fn build(self: Box<Self>, renderer: &mut Renderer) -> Result<Mesh, Error>;
 
     /// Returns the vertices contained in the MeshCreator.
     fn vertices(&self) -> &Vec<Separate<Position>>;
 
     /// Clone a boxed version of this object
-    fn box_clone(&self) -> Box<MeshCreator>;
+    fn box_clone(&self) -> Box<dyn MeshCreator>;
 }
 
-impl Clone for Box<MeshCreator> {
-    fn clone(&self) -> Box<MeshCreator> {
+impl Clone for Box<dyn MeshCreator> {
+    fn clone(&self) -> Box<dyn MeshCreator> {
         self.box_clone()
     }
 }
@@ -273,7 +281,7 @@ impl ComboMeshCreator {
 }
 
 impl MeshCreator for ComboMeshCreator {
-    fn build(self: Box<Self>, renderer: &mut Renderer) -> ::error::Result<Mesh> {
+    fn build(self: Box<Self>, renderer: &mut Renderer) -> Result<Mesh, Error> {
         build_mesh_with_combo(self.combo, renderer)
     }
 
@@ -281,7 +289,7 @@ impl MeshCreator for ComboMeshCreator {
         &self.combo.0
     }
 
-    fn box_clone(&self) -> Box<MeshCreator> {
+    fn box_clone(&self) -> Box<dyn MeshCreator> {
         Box::new((*self).clone())
     }
 }

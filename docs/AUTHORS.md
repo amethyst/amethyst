@@ -7,6 +7,7 @@
 * Dzmitry Malyshau
 * Emil Gardström
 * Eyal Kalderon
+* happenslol (Hilmar Wiegand)
 * Hittherhod
 * Ilya Bogdanov
 * Joël Lupien
@@ -15,7 +16,9 @@
 * Lucio Franco
 * Lukas Schmierer
 * Matthias Schuster
+* Moxinilian (Théo Degioanni)
 * msiglreith
+* NCrashed (Anton Gushcha)
 * Nikita Chashchinskii
 * Oflor
 * Robbie Cooper
@@ -24,3 +27,4 @@
 * Thomas Schaller
 * White-Oak
 * Xaeroxe (Jacob Kiesel)
+* Telzhaak

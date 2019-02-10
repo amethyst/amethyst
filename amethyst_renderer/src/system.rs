@@ -1,27 +1,36 @@
 //! Rendering system.
 //!
 
-use amethyst_assets::{AssetStorage, HotReloadStrategy};
-use amethyst_core::shrev::EventChannel;
-use amethyst_core::specs::prelude::{
-    Read, ReadExpect, Resources, RunNow, SystemData, Write, WriteExpect,
-};
-use amethyst_core::Time;
 use amethyst_xr::XRInfo;
-use xr::{XRRenderInfo, XRTargetInfo};
-use config::DisplayConfig;
-use error::Result;
-use formats::{create_mesh_asset, create_texture_asset};
-use mesh::Mesh;
-use mtl::{Material, MaterialDefaults};
-use pipe::{PipelineBuild, PipelineData, PolyPipeline};
+use crate::xr::{XRRenderInfo, XRTargetInfo};
+use std::{mem, sync::Arc};
+
+use derivative::Derivative;
+use log::error;
 use rayon::ThreadPool;
-use renderer::Renderer;
-use resources::{ScreenDimensions, WindowMessages};
-use std::mem;
-use std::sync::Arc;
-use tex::Texture;
 use winit::{DeviceEvent, Event, WindowEvent};
+
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
+use amethyst_assets::{AssetStorage, HotReloadStrategy};
+use amethyst_core::{
+    shrev::EventChannel,
+    specs::prelude::{Read, ReadExpect, Resources, RunNow, SystemData, Write, WriteExpect},
+    Time,
+};
+use amethyst_error::Error;
+
+use crate::{
+    config::DisplayConfig,
+    formats::{create_mesh_asset, create_texture_asset},
+    mesh::Mesh,
+    mtl::{Material, MaterialDefaults},
+    pipe::{PipelineBuild, PipelineData, PolyPipeline},
+    renderer::Renderer,
+    resources::{ScreenDimensions, WindowMessages},
+    tex::Texture,
+};
 
 /// Rendering system.
 #[derive(Derivative)]
@@ -30,7 +39,7 @@ pub struct RenderSystem<P> {
     pipe: P,
     #[derivative(Debug = "ignore")]
     renderer: Renderer,
-    cached_size: (u32, u32),
+    cached_size: (f64, f64),
     // This only exists to allow the system to re-use a vec allocation
     // during event compression.  It's length 0 except during `fn render`.
     event_vec: Vec<Event>,
@@ -41,19 +50,24 @@ where
     P: PolyPipeline,
 {
     /// Build a new `RenderSystem` from the given pipeline builder and config
-    pub fn build<B>(pipe: B, config: Option<DisplayConfig>) -> Result<Self>
+    pub fn build<B>(pipe: B, config: Option<DisplayConfig>) -> Result<Self, Error>
     where
         B: PipelineBuild<Pipeline = P>,
     {
+        use std::env;
+
+        // ask winit explicitly to use X11 since Wayland causes several issues
+        // see https://github.com/amethyst/amethyst/issues/890
+        env::set_var("WINIT_UNIX_BACKEND", "x11");
+
         let mut renderer = {
             let mut renderer = Renderer::build();
 
             if let Some(config) = config.to_owned() {
                 renderer.with_config(config);
             }
-            let renderer = renderer.build()?;
 
-            renderer
+            renderer.build()?
         };
 
         match renderer.create_pipe(pipe) {
@@ -67,7 +81,11 @@ where
 
     /// Create a new render system
     pub fn new(pipe: P, renderer: Renderer) -> Self {
-        let cached_size = renderer.window().get_inner_size().unwrap().into();
+        let cached_size = renderer
+            .window()
+            .get_inner_size()
+            .expect("Window no longer exists")
+            .into();
         Self {
             pipe,
             renderer,
@@ -78,7 +96,7 @@ where
 
     fn asset_loading(
         &mut self,
-        (time, pool, strategy, mut mesh_storage, mut texture_storage): AssetLoadingData,
+        (time, pool, strategy, mut mesh_storage, mut texture_storage): AssetLoadingData<'_>,
     ) {
         use std::ops::Deref;
 
@@ -99,14 +117,14 @@ where
         );
     }
 
-    fn window_management(&mut self, (mut window_messages, mut screen_dimensions): WindowData) {
+    fn window_management(&mut self, (mut window_messages, mut screen_dimensions): WindowData<'_>) {
         // Process window commands
         for mut command in window_messages.queue.drain() {
             command(self.renderer.window());
         }
 
-        let width = screen_dimensions.width() as u32;
-        let height = screen_dimensions.height() as u32;
+        let width = screen_dimensions.w;
+        let height = screen_dimensions.h;
 
         // Send resource size changes to the window
         if screen_dimensions.dirty {
@@ -116,8 +134,10 @@ where
             screen_dimensions.dirty = false;
         }
 
+        let hidpi = self.renderer.window().get_hidpi_factor();
+
         if let Some(size) = self.renderer.window().get_inner_size() {
-            let (window_width, window_height): (u32, u32) = size.into();
+            let (window_width, window_height): (f64, f64) = size.to_physical(hidpi).into();
 
             // Send window size changes to the resource
             if (window_width, window_height) != (width, height) {
@@ -128,32 +148,10 @@ where
                 screen_dimensions.dirty = false;
             }
         }
-        screen_dimensions.update_hidpi_factor(self.renderer.window().get_hidpi_factor());
+        screen_dimensions.update_hidpi_factor(hidpi);
     }
-}
 
-type AssetLoadingData<'a> = (
-    Read<'a, Time>,
-    ReadExpect<'a, Arc<ThreadPool>>,
-    Option<Read<'a, HotReloadStrategy>>,
-    Write<'a, AssetStorage<Mesh>>,
-    Write<'a, AssetStorage<Texture>>,
-);
-
-type WindowData<'a> = (Write<'a, WindowMessages>, WriteExpect<'a, ScreenDimensions>);
-
-type RenderData<'a, P> = <P as PipelineData<'a>>::Data;
-
-impl<'a, P> RunNow<'a> for RenderSystem<P>
-where
-    P: PolyPipeline,
-{
-    fn run_now(&mut self, res: &'a Resources) {
-        #[cfg(feature = "profiler")]
-        profile_scope!("render_system");
-        self.asset_loading(AssetLoadingData::fetch(res));
-        self.window_management(WindowData::fetch(res));
-
+    fn render(&mut self, res: &'_ Resources) {
         if let Some(mut xr_info) = res.try_fetch_mut::<XRInfo>() {
             {
                 let mut targets = self.renderer.xr_targets().len();
@@ -200,8 +198,45 @@ where
         self.renderer.events_mut().poll_events(|new_event| {
             compress_events(events, new_event);
         });
-        res.fetch_mut::<EventChannel<Event>>()
-            .iter_write(events.drain(..));
+        res.fetch_mut::<EventChannel<Event>>().iter_write(events.drain(..));
+    }
+}
+
+type AssetLoadingData<'a> = (
+    Read<'a, Time>,
+    ReadExpect<'a, Arc<ThreadPool>>,
+    Option<Read<'a, HotReloadStrategy>>,
+    Write<'a, AssetStorage<Mesh>>,
+    Write<'a, AssetStorage<Texture>>,
+);
+
+type WindowData<'a> = (Write<'a, WindowMessages>, WriteExpect<'a, ScreenDimensions>);
+
+type RenderData<'a, P> = <P as PipelineData<'a>>::Data;
+
+impl<'a, P> RunNow<'a> for RenderSystem<P>
+where
+    P: PolyPipeline,
+{
+    fn run_now(&mut self, res: &'a Resources) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("render_system");
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("render_system_assetloading");
+            self.asset_loading(AssetLoadingData::fetch(res));
+        }
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("render_system_windowmanagement");
+            self.window_management(WindowData::fetch(res));
+        }
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("render_system_render");
+            //self.render(RenderData::<P>::fetch(res));
+            self.render(res);
+        }
     }
 
     fn setup(&mut self, res: &mut Resources) {
@@ -225,8 +260,9 @@ where
 }
 
 fn create_default_mat(res: &mut Resources) -> Material {
+    use crate::mtl::TextureOffset;
+
     use amethyst_assets::Loader;
-    use mtl::TextureOffset;
 
     let loader = res.fetch::<Loader>();
 
@@ -274,11 +310,11 @@ fn create_default_mat(res: &mut Resources) -> Material {
 fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
     match new_event {
         Event::WindowEvent { ref event, .. } => match event {
-            &WindowEvent::CursorMoved { .. } => {
+            WindowEvent::CursorMoved { .. } => {
                 let mut iter = vec.iter_mut();
                 while let Some(stored_event) = iter.next_back() {
                     match stored_event {
-                        &mut Event::WindowEvent {
+                        Event::WindowEvent {
                             event: WindowEvent::CursorMoved { .. },
                             ..
                         } => {
@@ -286,12 +322,12 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
                             return;
                         }
 
-                        &mut Event::WindowEvent {
+                        Event::WindowEvent {
                             event: WindowEvent::AxisMotion { .. },
                             ..
                         } => {}
 
-                        &mut Event::DeviceEvent {
+                        Event::DeviceEvent {
                             event: DeviceEvent::Motion { .. },
                             ..
                         } => {}
@@ -303,7 +339,7 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
                 }
             }
 
-            &WindowEvent::AxisMotion {
+            WindowEvent::AxisMotion {
                 device_id,
                 axis,
                 value,
@@ -311,7 +347,7 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
                 let mut iter = vec.iter_mut();
                 while let Some(stored_event) = iter.next_back() {
                     match stored_event {
-                        &mut Event::WindowEvent {
+                        Event::WindowEvent {
                             event:
                                 WindowEvent::AxisMotion {
                                     axis: stored_axis,
@@ -319,17 +355,19 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
                                     value: ref mut stored_value,
                                 },
                             ..
-                        } => if device_id == stored_device && axis == stored_axis {
-                            *stored_value += value;
-                            return;
-                        },
+                        } => {
+                            if device_id == stored_device && axis == stored_axis {
+                                *stored_value += value;
+                                return;
+                            }
+                        }
 
-                        &mut Event::WindowEvent {
+                        Event::WindowEvent {
                             event: WindowEvent::CursorMoved { .. },
                             ..
                         } => {}
 
-                        &mut Event::DeviceEvent {
+                        Event::DeviceEvent {
                             event: DeviceEvent::Motion { .. },
                             ..
                         } => {}
@@ -351,24 +389,26 @@ fn compress_events(vec: &mut Vec<Event>, new_event: Event) {
             let mut iter = vec.iter_mut();
             while let Some(stored_event) = iter.next_back() {
                 match stored_event {
-                    &mut Event::DeviceEvent {
+                    Event::DeviceEvent {
                         device_id: stored_device,
                         event:
                             DeviceEvent::Motion {
                                 axis: stored_axis,
                                 value: ref mut stored_value,
                             },
-                    } => if device_id == stored_device && axis == stored_axis {
-                        *stored_value += value;
-                        return;
-                    },
+                    } => {
+                        if device_id == *stored_device && axis == *stored_axis {
+                            *stored_value += value;
+                            return;
+                        }
+                    }
 
-                    &mut Event::WindowEvent {
+                    Event::WindowEvent {
                         event: WindowEvent::CursorMoved { .. },
                         ..
                     } => {}
 
-                    &mut Event::WindowEvent {
+                    Event::WindowEvent {
                         event: WindowEvent::AxisMotion { .. },
                         ..
                     } => {}

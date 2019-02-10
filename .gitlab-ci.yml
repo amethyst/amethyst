@@ -1,0 +1,46 @@
+image: 'rust:latest'
+
+stages:
+  - fmt
+  - test
+
+variables:
+  CARGO_HOME: $CI_PROJECT_DIR/cargo
+  APT_CACHE_DIR: $CI_PROJECT_DIR/apt
+  RUSTFLAGS: "-D warnings"
+
+before_script:
+  - apt-get update -yq
+  - rustup component add rustfmt
+  - apt-get install -o dir::cache::archives="$APT_CACHE_DIR" -y alsa-utils libasound2-dev cmake git libasound2-dev libx11-xcb-dev libssl-dev cmake libfreetype6-dev libexpat1-dev libxcb1-dev python3 build-essential libsdl2-dev
+
+check formatting:
+  stage: fmt
+  script:
+    - cargo fmt --version
+    - |
+      # Ignore Rustfmt warnings
+      function rustfmt_nowarn {
+        exec 3<> >(grep -v "Warning: can't set .\+, unstable features are only available in nightly channel" 1>&2)
+
+        cargo fmt --all -- --check 2>&3; result=$?
+
+        exec 3<&- # Close 3
+        return $result
+      }
+
+      rustfmt_nowarn
+
+  only:
+    - branches
+    - merge_requests
+
+run tests:
+  stage: test
+  script:
+    - rustc --version
+    - cargo --version
+    - cargo test --verbose --all --features sdl_controller,profiler
+  only:
+    - branches
+    - merge_requests

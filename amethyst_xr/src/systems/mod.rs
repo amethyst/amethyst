@@ -44,8 +44,8 @@ impl<'a> System<'a> for XRSystem {
             // Set position and rotation
             let tracker_position_data = backend.get_tracker_position(tracker.id());
 
-            transform.translation = tracker_position_data.position;
-            transform.rotation = tracker_position_data.rotation;
+            *transform.translation_mut() = tracker_position_data.position;
+            *transform.rotation_mut() = tracker_position_data.rotation;
         }
     }
 

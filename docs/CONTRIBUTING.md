@@ -1,3 +1,5 @@
+**Note:** Any interaction with the Amethyst project is subject to our [Code of Conduct](https://github.com/amethyst/amethyst/blob/master/CODE_OF_CONDUCT.md).
+
 # Contributing to Amethyst
 
 Amethyst is an open-source project that values community contribution. We could
@@ -42,7 +44,7 @@ So, you want to write some code? Great!
 
 To begin hacking, fork the repository to your account and `git clone` the forked
 copy to your local machine. On clone you will be on the *master* branch. This
-is the branch that contains all new work that has not been released yet. If you 
+is the branch that contains all new work that has not been released yet. If you
 are adding a new feature to amethyst then you want to base your work off of this
 branch. Otherwise, if you are attemping to fix something in an older release you
 will have to base your work off of a released tag. This can be done after a clone
@@ -88,10 +90,15 @@ developer, it will be merged into the source tree.
 
 ### Protocol for merging pull requests
 
-* Pull Requests shall not be merged before at least 24 hours have passed.
+The following rules shall be applied strictly for the `amethyst` repository. For other repositories of this organization,
+thorough review would be desirable, but no strict application is required there due to lower activity and less influence.
+
 * Pull Requests shall be approved by at least two members (two approvals from contributors can count as one member approval.)
-* Merging a PR shall be done with `bors r+`
-* If a member self-requested a review, the PR shall not be merged until they reviewed the PR (exception: the member becomes inactive)
+* Pull Requests opened by organization members may be merged if approved by one member.
+* Merging a PR shall be done with `bors r+`, if possible. If there is more than one reviewer the preferred format is `bors r=@reviewer1, @reviewer2`. You can read more about this [here](https://bors.tech/documentation/).
+* You may only block merging of a PR if the changes in it are relevant to an org team you have joined. This doesn't mean you can't
+make comments, but it does mean that team may ignore your comments if they so choose. Please do not use the "Request Changes" feature if
+the PR is not relevant to your team.
 
 Everyone is welcome to review pull requests that they find interesting. It helps save time and improve the code quality for everyone, as well as gaining experience while doing so.
 
@@ -103,16 +110,6 @@ Note: The author of a PR cannot approve their own PR.
 
 * If something went wrong (like a broken version has been released, the website doesn't work at all, ..) no approval is required for merging
 * Merging can be performed instant (but still with bors)
-
-###### Grammar fixes, style improvements, ..
-
-* Same here, no approval is required for merging
-* There is no reason to wait 24 hours here
-
-###### Documentation, tests, benchmarks
-
-* Unless it's a major rewrite in our testing / benchmarking architecture, one review is sufficient.
-* Please still wait one day before merging the PR
 
 ###### Experimental branches
 
@@ -169,7 +166,7 @@ $ git rebase upstream/<branch-to-sync-with>
 
 If any errors occur, Git will try to guess what happened. If you can't figure
 out how to solve your problem, a quick Google search can help, or you can hit us
-up on our [Gitter][gi] chat.
+up on our [Discord][di] chat.
 
 If needed, abort with `git rebase --abort` and also sometimes
 `git merge --abort`.
@@ -186,7 +183,7 @@ $ git merge --ff-only --no-commit upstream
 Then you can decide to do a FF rebase. This way, our commit logs remain nice
 and clean, and we'll be grateful.
 
-[gi]: https://gitter.im/orgs/amethyst/rooms
+[di]: https://discord.gg/amethyst
 [rb]: https://github.com/edx/edx-platform/wiki/How-to-Rebase-a-Pull-Request#how-do-i-rebase
 
 Thank you so much for your contribution! Now Amethyst will be a little bit
@@ -196,16 +193,18 @@ faster, stronger, and more efficient.
 
 Documentation improvements are always welcome! A solid project needs to have
 solid documentation to go with it. You can search for documentation-related
-issues on any of our GitHub trackers by filtering by the orange `note: doc`
+issues on any of our GitHub trackers by filtering by the green [`projects: docs`][pd]
 label.
+
+[pd]: https://github.com/amethyst/amethyst/issues?q=is%3Aopen+is%3Aissue+label%3A"project%3A+docs"
 
 There are two types of documentation in Amethyst you can work on:
 
 1. [API documentation][ad]
 2. [The Amethyst book][ab]
 
-[ad]: https://www.amethyst.rs/doc/doc/amethyst/index.html
-[ab]: https://www.amethyst.rs/book/
+[ad]: https://www.amethyst.rs/doc/master/doc/amethyst/
+[ab]: https://www.amethyst.rs/book/master/
 
 Our Rust API documentation is generated directly from source code comments
 marked with either `///` or `//!` using  a tool called Rustdoc. See
@@ -263,7 +262,7 @@ Then you can hit load button and choose `thread_profile.json` file.
 ## Useful Resources
 
 * Amethyst
-  * [Amethyst Gitter][gi] - The Amethyst project's public chat room.
+  * [Amethyst Discord][di] - The Amethyst project's public chat room.
 * Design Inspiration
   * [Bitsquid: Behind The Scenes (2013)][bs]
   * [Flexible Rendering for Multiple Platforms (2012)][fr]
@@ -276,6 +275,7 @@ Then you can hit load button and choose `thread_profile.json` file.
     code samples.
   * [The Rust Programming Language][rl] - The canonical online book about Rust.
 
+[di]: https://discord.gg/amethyst
 [bs]: https://www.kth.se/social/upload/5289cb3ff276542440dd668c/bitsquid-behind-the-scenes.pdf
 [fr]: http://twvideo01.ubm-us.net/o1/vault/gdc2012/slides/Programming%20Track/Persson_Tobias_Flexible_Rendering.pdf.pdf
 [ma]: http://www.amd.com/Documents/Mantle-Programming-Guide-and-API-Reference.pdf

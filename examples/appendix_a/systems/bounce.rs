@@ -1,11 +1,14 @@
-use amethyst::assets::AssetStorage;
-use amethyst::audio::output::Output;
-use amethyst::audio::Source;
-use amethyst::core::transform::Transform;
-use amethyst::ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, WriteStorage};
-use audio::{play_bounce, Sounds};
-use config::ArenaConfig;
-use {Ball, Paddle, Side};
+use crate::{
+    audio::{play_bounce, Sounds},
+    config::ArenaConfig,
+    Ball, Paddle, Side,
+};
+use amethyst::{
+    assets::AssetStorage,
+    audio::{output::Output, Source},
+    core::transform::Transform,
+    ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, WriteStorage},
+};
 
 /// This system is responsible for detecting collisions between balls and
 /// paddles, as well as balls and the top and bottom edges of the arena.
@@ -29,8 +32,8 @@ impl<'s> System<'s> for BounceSystem {
         // We also check for the velocity of the ball every time, to prevent multiple collisions
         // from occurring.
         for (ball, transform) in (&mut balls, &transforms).join() {
-            let ball_x = transform.translation[0];
-            let ball_y = transform.translation[1];
+            let ball_x = transform.translation().x;
+            let ball_y = transform.translation().y;
 
             // Bounce at the top or the bottom of the arena.
             if ball_y <= ball.radius && ball.velocity[1] < 0.0 {
@@ -43,8 +46,8 @@ impl<'s> System<'s> for BounceSystem {
 
             // Bounce at the paddles.
             for (paddle, paddle_transform) in (&paddles, &transforms).join() {
-                let paddle_x = paddle_transform.translation[0];
-                let paddle_y = paddle_transform.translation[1];
+                let paddle_x = paddle_transform.translation().x;
+                let paddle_y = paddle_transform.translation().y;
 
                 // To determine whether the ball has collided with a paddle, we create a larger
                 // rectangle around the current one, by subtracting the ball radius from the

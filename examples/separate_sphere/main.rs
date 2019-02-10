@@ -1,21 +1,20 @@
 //! Displays a shaded sphere to the user.
 
-extern crate amethyst;
-
-use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
-use amethyst::core::transform::TransformBundle;
-use amethyst::prelude::*;
-use amethyst::renderer::*;
-use amethyst::utils::application_root_dir;
-use amethyst::utils::scene::BasicScenePrefab;
+use amethyst::{
+    assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
+    core::transform::TransformBundle,
+    prelude::*,
+    renderer::*,
+    utils::{application_root_dir, scene::BasicScenePrefab},
+};
 
 type MyPrefabData = BasicScenePrefab<ComboMeshCreator>;
 
 struct Example;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
-        let handle = data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
+impl SimpleState for Example {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        let handle = data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/sphere.ron", RonFormat, (), ())
         });
         data.world.create_entity().with(handle).build();
@@ -25,14 +24,11 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let app_root = application_root_dir();
+    let app_root = application_root_dir()?;
 
-    let display_config_path = format!(
-        "{}/examples/separate_sphere/resources/display.ron",
-        app_root
-    );
+    let display_config_path = app_root.join("examples/separate_sphere/resources/display.ron");
 
-    let resources = format!("{}/examples/assets/", app_root);
+    let resources = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])

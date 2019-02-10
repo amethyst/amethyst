@@ -1,11 +1,16 @@
-use amethyst::assets::{Loader, ProgressCounter};
-use amethyst::core::cgmath::{Array, Deg, Euler, Quaternion, Rotation3, Vector3};
-use amethyst::core::{GlobalTransform, Transform};
-use amethyst::ecs::prelude::World;
-use amethyst::renderer::{AmbientColor, Camera, DirectionalLight, Light, Material,
-                         MaterialDefaults, MeshHandle, ObjFormat, PngFormat, PointLight,
-                         Projection, Rgba};
-use amethyst::ui::{FontHandle, TtfFormat};
+use amethyst::{
+    assets::{Loader, ProgressCounter},
+    core::{
+        cgmath::{Array, Deg, Euler, Quaternion, Rotation3, Vector3},
+        Transform,
+    },
+    ecs::prelude::World,
+    renderer::{
+        AmbientColor, Camera, DirectionalLight, Light, Material, MaterialDefaults, MeshHandle,
+        ObjFormat, PngFormat, PointLight, Projection, Rgba,
+    },
+    ui::{FontHandle, TtfFormat},
+};
 
 #[derive(Clone)]
 pub struct Assets {
@@ -36,7 +41,6 @@ pub fn add_graphics_to_world(world: &mut World) {
             .with(mesh)
             .with(assets.red.clone())
             .with(trans)
-            .with(GlobalTransform::default())
             .build();
     }
 
@@ -50,7 +54,6 @@ pub fn add_graphics_to_world(world: &mut World) {
         .with(assets.cube.clone())
         .with(assets.logo.clone())
         .with(trans)
-        .with(GlobalTransform::default())
         .build();
 
     // Add cone to scene
@@ -63,7 +66,6 @@ pub fn add_graphics_to_world(world: &mut World) {
         .with(assets.cone.clone())
         .with(assets.white.clone())
         .with(trans)
-        .with(GlobalTransform::default())
         .build();
 
     // Add custom cube object to scene
@@ -74,7 +76,6 @@ pub fn add_graphics_to_world(world: &mut World) {
         .with(assets.cube.clone())
         .with(assets.red.clone())
         .with(trans)
-        .with(GlobalTransform::default())
         .build();
 
     // Create base rectangle as floor
@@ -86,7 +87,6 @@ pub fn add_graphics_to_world(world: &mut World) {
         .with(assets.rectangle.clone())
         .with(assets.white.clone())
         .with(trans)
-        .with(GlobalTransform::default())
         .build();
 
     let light: Light = PointLight {
@@ -94,12 +94,12 @@ pub fn add_graphics_to_world(world: &mut World) {
         intensity: 50.0,
         ..PointLight::default()
     }.into();
-    
+
     // Add lights to scene
-    world.create_entity()
+    world
+        .create_entity()
         .with(light)
         .with(Transform::default())
-        .with(GlobalTransform::default())
         .build();
 
     let light: Light = DirectionalLight {
@@ -119,7 +119,6 @@ fn initialise_camera(world: &mut World) {
         .create_entity()
         .with(Camera::from(Projection::perspective(1.3, Deg(60.0))))
         .with(local)
-        .with(GlobalTransform::default())
         .build();
 }
 

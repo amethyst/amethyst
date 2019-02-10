@@ -1,12 +1,20 @@
 //! Render target used for storing 2D pixel representations of 3D scenes.
 
-use error::Result;
+use amethyst_error::Error;
 use fnv::FnvHashMap as HashMap;
-use types::{ColorFormat, DepthFormat, DepthStencilView, Encoder, Factory, RenderTargetView, ShaderResourceView, Window};
+
 use gfx::texture;
 use gfx::texture::AaMode;
 use gfx::format::{Swizzle, Formatted, ChannelTyped};
 use gfx::memory::{Bind, Usage};
+use serde::{Deserialize, Serialize};
+
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
+use crate::types::{
+    ColorFormat, DepthFormat, DepthStencilView, Encoder, Factory, RenderTargetView, ShaderResourceView, Window,
+};
 
 /// Target color buffer.
 #[derive(Clone, Debug, PartialEq)]
@@ -46,7 +54,7 @@ impl Target {
         Target {
             color_bufs: vec![cb],
             depth_buf: Some(db),
-            size: size,
+            size,
         }
     }
 
@@ -57,6 +65,8 @@ impl Target {
 
     /// Clears all color buffers to the given value.
     pub fn clear_color<V: Into<[f32; 4]>>(&self, enc: &mut Encoder, value: V) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("render_target_clearcolor");
         let val = value.into();
         for buf in self.color_bufs.iter() {
             enc.clear(&buf.as_output, val);
@@ -94,22 +104,27 @@ impl Target {
 
     /// Creates the Direct3D 11 backend.
     #[cfg(all(feature = "d3d11", target_os = "windows"))]
-    pub fn resize_main_target(window: &Window) -> Result<(Device, Factory, Target)> {
+    pub fn resize_main_target(window: &Window) -> Result<(Device, Factory, Target), Error> {
         unimplemented!()
     }
 
     #[cfg(all(feature = "metal", target_os = "macos"))]
-    pub fn resize_main_target(window: &Window) -> Result<(Device, Factory, Target)> {
+    pub fn resize_main_target(window: &Window) -> Result<(Device, Factory, Target), Error> {
         unimplemented!()
     }
 
     /// Creates the OpenGL backend.
     #[cfg(feature = "opengl")]
     pub fn resize_main_target(&mut self, window: &Window) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("render_target_resizemaintarget");
         if let Some(depth_buf) = self.depth_buf.as_mut() {
-            for ref mut color_buf in &mut self.color_bufs {
-                use gfx_window_glutin as win;
-                win::update_views(window, &mut color_buf.as_output, &mut depth_buf.as_output);
+            for color_buf in &mut self.color_bufs {
+                gfx_window_glutin::update_views(
+                    window,
+                    &mut color_buf.as_output,
+                    &mut depth_buf.as_output,
+                );
             }
         }
     }
@@ -170,13 +185,19 @@ impl TargetBuilder {
     }
 
     /// Builds and returns the new render target.
-    pub(crate) fn build(self, fac: &mut Factory, size: (u32, u32)) -> Result<(String, Target)> {
+    pub(crate) fn build(
+        self,
+        fac: &mut Factory,
+        size: (u32, u32),
+    ) -> Result<(String, Target), Error> {
         use gfx::Factory;
+
+        #[cfg(feature = "profiler")]
+        profile_scope!("render_target_build");
 
         let size = self.custom_size.unwrap_or(size);
 
         let color_bufs = (0..self.num_color_bufs)
-            .into_iter()
             .map(|_| {
                 let (w, h) = (size.0 as u16, size.1 as u16);
 
@@ -191,7 +212,8 @@ impl TargetBuilder {
                     as_input: Some(res),
                     as_output: rt,
                 })
-            }).collect::<Result<_>>()?;
+            })
+            .collect::<Result<_, Error>>()?;
 
         let depth_buf = if self.has_depth_buf {
             let (w, h) = (size.0 as u16, size.1 as u16);
@@ -212,9 +234,9 @@ impl TargetBuilder {
         };
 
         let target = Target {
-            color_bufs: color_bufs,
-            depth_buf: depth_buf,
-            size: size,
+            color_bufs,
+            depth_buf,
+            size,
         };
 
         Ok((self.name, target))

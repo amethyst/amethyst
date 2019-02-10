@@ -1,50 +1,48 @@
 //! Provides a client-server networking architecture to amethyst.
 
-#![warn(missing_docs)]
+#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-extern crate amethyst_core;
-#[macro_use]
-extern crate log;
-#[macro_use]
-extern crate serde;
-extern crate bincode;
-extern crate fern;
-extern crate shred;
-extern crate shrev;
-extern crate uuid;
+pub use crate::{
+    bundle::NetworkBundle,
+    connection::{ConnectionState, NetConnection, NetIdentity},
+    error::Result,
+    filter::{FilterConnected, NetFilter},
+    net_event::NetEvent,
+    network_socket::NetSocketSystem,
+    server::{Host, ServerConfig, ServerSocketEvent},
+};
+
+use std::{net::SocketAddr, sync::mpsc::SyncSender};
+
+use bincode::{deserialize, serialize};
+use laminar::Packet;
+use log::error;
+use serde::{de::DeserializeOwned, Serialize};
 
 mod bundle;
 mod connection;
+mod error;
 mod filter;
 mod net_event;
 mod network_socket;
+mod server;
 mod test;
-
-pub use bundle::NetworkBundle;
-pub use connection::{ConnectionState, NetConnection, NetIdentity};
-pub use filter::{FilterConnected, NetFilter};
-pub use net_event::NetEvent;
-pub use network_socket::NetSocketSystem;
-
-use bincode::internal::ErrorKind;
-use bincode::{deserialize, serialize, Infinite};
-
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use std::net::SocketAddr;
-use std::net::UdpSocket;
 
 /// Sends an event to the target NetConnection using the provided network Socket.
 /// The socket has to be bound.
-pub fn send_event<T>(event: &NetEvent<T>, target: &SocketAddr, socket: &UdpSocket)
+pub fn send_event<T>(event: NetEvent<T>, addr: SocketAddr, sender: &SyncSender<ServerSocketEvent>)
 where
     T: Serialize,
 {
-    let ser = serialize(event, Infinite);
+    let ser = serialize(&event);
     match ser {
         Ok(s) => {
             let slice = s.as_slice();
-            match socket.send_to(slice, target) {
+            // send an unreliable `Packet` from laminar which is basically just a bare UDP packet.
+            match sender.send(ServerSocketEvent::Packet(Packet::unreliable(
+                addr,
+                slice.to_owned(),
+            ))) {
                 Ok(_qty) => {}
                 Err(e) => error!("Failed to send data to network socket: {}", e),
             }
@@ -53,10 +51,10 @@ where
     }
 }
 
-/// Attempts to deserialize an event from the raw byte data.
-fn deserialize_event<T>(data: &[u8]) -> Result<NetEvent<T>, Box<ErrorKind>>
+// Attempts to deserialize an event from the raw byte data.
+fn deserialize_event<T>(data: &[u8]) -> Result<NetEvent<T>>
 where
     T: DeserializeOwned,
 {
-    deserialize::<NetEvent<T>>(data)
+    Ok(deserialize::<NetEvent<T>>(data)?)
 }

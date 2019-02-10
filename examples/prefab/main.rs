@@ -1,23 +1,21 @@
 //! Demonstrates loading prefabs using the Amethyst engine.
 
-extern crate amethyst;
-extern crate rayon;
-
-use amethyst::assets::{PrefabLoader, PrefabLoaderSystem, RonFormat};
-use amethyst::core::TransformBundle;
-use amethyst::prelude::*;
-use amethyst::renderer::{DrawShaded, PosNormTex};
-use amethyst::utils::application_root_dir;
-use amethyst::utils::scene::BasicScenePrefab;
-use amethyst::Error;
+use amethyst::{
+    assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
+    core::TransformBundle,
+    prelude::*,
+    renderer::{DrawShaded, PosNormTex},
+    utils::{application_root_dir, scene::BasicScenePrefab},
+    Error,
+};
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 struct AssetsExample;
 
-impl<'a, 'b> SimpleState<'a, 'b> for AssetsExample {
-    fn on_start(&mut self, data: StateData<GameData>) {
-        let prefab_handle = data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
+impl SimpleState for AssetsExample {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        let prefab_handle = data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/example.ron", RonFormat, (), ())
         });
         data.world.create_entity().with(prefab_handle).build();
@@ -28,12 +26,12 @@ impl<'a, 'b> SimpleState<'a, 'b> for AssetsExample {
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
-    let app_root = application_root_dir();
+    let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let resources_directory = format!("{}/examples/assets", app_root);
+    let resources_directory = app_root.join("examples/assets");
 
-    let display_config_path = format!("{}/examples/prefab/resources/display_config.ron", app_root);
+    let display_config_path = app_root.join("examples/prefab/resources/display_config.ron");
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])

@@ -1,14 +1,14 @@
-# Test suite must pass on both Travis and AppVeyor before merging into `master`.
+# Test suite must pass on both Travis and GitLab before merging into `master`.
 status = [
-    "continuous-integration/travis-ci/push"
+    "continuous-integration/travis-ci/push",
 ]
 
 # Do not allow pull requests with these labels to be merged.
 block_labels = [
-    "status: postponed",
-    "status: stalled",
-    "status: wontfix",
-    "status: working"
+    "status: blocked",
+    "status: discussing",
+    "status: in progress",
+    "status: needs triage"
 ]
 
 # This feature is rarely useful and more often problematic, so we turn it off.

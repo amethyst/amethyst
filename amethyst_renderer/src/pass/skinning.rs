@@ -1,12 +1,16 @@
 //! Utilities for skinning
 
-use gfx::pso::buffer::ElemStride;
-use mesh::Mesh;
-use pass::util::set_attribute_buffers;
-use pipe::{Effect, EffectBuilder, NewEffect};
-use skinning::{JointIds, JointWeights};
 use std::mem;
-use vertex::{Attributes, Separate, VertexFormat};
+
+use gfx::pso::buffer::ElemStride;
+
+use crate::{
+    mesh::Mesh,
+    pass::util::set_attribute_buffers,
+    pipe::{Effect, EffectBuilder, NewEffect},
+    skinning::{JointIds, JointWeights},
+    vertex::{Attributes, Separate, VertexFormat},
+};
 
 static VERT_SKIN_SRC: &[u8] = include_bytes!("shaders/vertex/skinned.glsl");
 static ATTRIBUTES: [Attributes<'static>; 2] = [
@@ -27,11 +31,13 @@ pub(crate) fn setup_skinning_buffers<'a>(builder: &mut EffectBuilder<'a>) {
             Separate::<JointIds>::ATTRIBUTES,
             Separate::<JointIds>::size() as ElemStride,
             0,
-        ).with_raw_vertex_buffer(
+        )
+        .with_raw_vertex_buffer(
             Separate::<JointWeights>::ATTRIBUTES,
             Separate::<JointWeights>::size() as ElemStride,
             0,
-        ).with_raw_constant_buffer("JointTransforms", mem::size_of::<[[f32; 4]; 4]>(), 100);
+        )
+        .with_raw_constant_buffer("JointTransforms", mem::size_of::<[[f32; 4]; 4]>(), 100);
 }
 
 pub fn set_skinning_buffers(effect: &mut Effect, mesh: &Mesh) -> bool {

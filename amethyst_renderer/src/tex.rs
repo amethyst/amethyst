@@ -1,15 +1,23 @@
 //! Texture resource.
 
+pub use gfx::{
+    format::{ChannelType, SurfaceType},
+    texture::{FilterMethod, Info, Mipmap, SamplerInfo, WrapMode},
+    traits::Pod,
+};
+use serde::{Deserialize, Serialize};
+
+use std::marker::PhantomData;
+
 use amethyst_assets::{Asset, Handle};
 use amethyst_core::specs::prelude::DenseVecStorage;
-use error::Result;
-use formats::TextureData;
-use gfx::format::{ChannelType, SurfaceType};
-pub use gfx::texture::{FilterMethod, WrapMode};
-use gfx::texture::{Info, Mipmap, SamplerInfo};
-use gfx::traits::Pod;
-use std::marker::PhantomData;
-use types::{ChannelFormat, Factory, RawShaderResourceView, RawTexture, Sampler, SurfaceFormat};
+use amethyst_error::Error;
+
+use crate::{
+    error,
+    formats::TextureData,
+    types::{ChannelFormat, Factory, RawShaderResourceView, RawTexture, Sampler, SurfaceFormat},
+};
 
 /// A handle to a `Texture` asset.
 pub type TextureHandle = Handle<Texture>;
@@ -88,13 +96,14 @@ where
 {
     /// Creates a new `TextureBuilder` with the given raw texture data.
     pub fn new(data: D) -> Self {
-        use gfx::format::{ChannelTyped, SurfaceTyped};
-        use gfx::memory::Bind;
-        use gfx::memory::Usage;
-        use gfx::texture::{AaMode, Kind};
+        use gfx::{
+            format::{ChannelTyped, SurfaceTyped},
+            memory::{Bind, Usage},
+            texture::{AaMode, Kind},
+        };
 
         TextureBuilder {
-            data: data,
+            data,
             info: Info {
                 kind: Kind::D2(1, 1, AaMode::Single),
                 levels: 1,
@@ -149,12 +158,10 @@ where
     }
 
     /// Builds and returns the new texture.
-    pub fn build(self, fac: &mut Factory) -> Result<Texture> {
-        use gfx::format::Swizzle;
-        use gfx::memory::cast_slice;
-        use gfx::texture::ResourceDesc;
-        use gfx::Factory;
+    pub fn build(self, fac: &mut Factory) -> Result<Texture, Error> {
         use std::mem::size_of;
+
+        use gfx::{format::Swizzle, memory::cast_slice, texture::ResourceDesc, Factory};
 
         // This variable has to live here to make sure the flipped
         // buffer lives long enough. (If one exists)
@@ -167,11 +174,19 @@ where
             let (w, h, _, _) = self.info.kind.get_dimensions();
             let w = w as usize;
             let h = h as usize;
+            if w * h * pixel_width != data.len() {
+                let error = format!(
+                    "Texture size mismatch: Expected pixel data vector of length {:?} (actual: {:?})",
+                    w * h * pixel_width,
+                    data.len()
+                );
+                return Err(error::Error::PixelDataMismatch(error).into());
+            }
             for y in 0..h {
                 for x in 0..(w * pixel_width) {
                     v_flip_buffer.push(data[x + (h - y - 1) * w * pixel_width]);
                     // Uncomment this if you need to debug this.
-                    //println!("x: {}, y: {}, w: {}, h: {}, pw: {}", x, y, w, h, pixel_width);
+                    // println!("x: {}, y: {}, w: {}, h: {}, pw: {}", x, y, w, h, pixel_width);
                 }
             }
             data = &v_flip_buffer;
@@ -186,8 +201,8 @@ where
         let desc = ResourceDesc {
             channel: self.channel_type,
             layer: None,
-            min: 1,
-            max: self.info.levels,
+            min: 0,
+            max: self.info.levels - 1,
             swizzle: Swizzle::new(),
         };
 
@@ -195,9 +210,9 @@ where
         let sampler = fac.create_sampler(self.sampler);
 
         Ok(Texture {
-            sampler: sampler,
+            sampler,
             texture: tex,
-            view: view,
+            view,
         })
     }
 }
