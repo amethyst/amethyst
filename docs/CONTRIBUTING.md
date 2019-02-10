@@ -1,3 +1,5 @@
+**Note:** Any interaction with the Amethyst project is subject to our [Code of Conduct](https://github.com/amethyst/amethyst/blob/master/CODE_OF_CONDUCT.md).
+
 # Contributing to Amethyst
 
 Amethyst is an open-source project that values community contribution. We could

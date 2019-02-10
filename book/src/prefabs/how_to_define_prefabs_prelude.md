@@ -10,7 +10,7 @@ Component     | Serialized representation             | Example(s)            | 
 ------------- | ------------------------------------- | --------------------- | ------------------ | ---
 `YourType`    | `Self` &ndash; `YourType`             | `Position`            | `Position`         | [Simple]
 `YourType`    | Multiple &ndash; `V1(..)`, `V2(..)`   | [`Camera`]            | [`CameraPrefab`]   | [Adapter]
-`YourType`    | Subset of `YourType`                  | [`AudioListener`]     | [`AudioPrefab`]    | [Adapter]
+`YourType`    | Subset of `YourType`                  | [`AudioListener`]     | [`AudioPrefab`]    | [Asset]
 `Handle<A>`   | Loaded from `A::Data`                 | [`Mesh`], [`Texture`] | [`MeshData`], [`TexturePrefab`] | [Asset]
 `ManyHandles` | Data that component stores handles of | [`Material`]          | [`MaterialPrefab`] | [Multi-Handle]
 
@@ -20,7 +20,7 @@ Component     | Serialized representation             | Example(s)            | 
 
     This is where the `Component` type itself is completely serializable &ndash; the data is self-contained.
 
-    ```rust,no_run,noplaypen
+    ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # extern crate serde;
     # extern crate specs_derive;
@@ -39,30 +39,33 @@ Component     | Serialized representation             | Example(s)            | 
 
     This is where are multiple ways to construct the component, and a user should be able to choose which one to use.
 
-    ```rust,no_run,noplaypen
+    ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # extern crate serde;
     # extern crate specs_derive;
     #
-    # use amethyst::{
-    #     core::nalgebra::{Orthographic3, Perspective3},
-    #     ecs::{storage::DenseVecStorage, Component},
-    # };
+    # use amethyst::ecs::{storage::DenseVecStorage, Component};
     # use serde::{Deserialize, Serialize};
     # use specs_derive::Component;
     #
-    #[derive(Component, /* .. */)]
-    pub struct Camera { /* .. */ }
-
-    #[derive(Clone, Deserialize, PartialEq, Serialize)]
-    pub enum Projection {
-        Orthographic(Orthographic3<f32>),
-        Perspective(Perspective3<f32>),
+    # #[derive(Component, Debug, Deserialize, Serialize /* .. */)]
+    # pub struct Position(pub f32, pub f32, pub f32);
+    #
+    impl From<(i32, i32, i32)> for Position {
+        fn from((x, y, z): (i32, i32, i32)) -> Position {
+            Position {
+                x: x as f32,
+                y: y as f32,
+                z: z as f32,
+            }
+        }
     }
 
-    // Camera can be constructed from multiple variants
-    impl From<Projection> for Camera /* { .. } */
-    # { fn from(proj: Projection) -> Self { unimplemented!() } }
+    impl From<(f32, f32, f32)> for Position {
+        fn from((x, y, z): (f32, f32, f32)) -> Position {
+            Position { x, y, z }
+        }
+    }
     ```
 
     Applicable guide: [How to Define Prefabs: Adapter][Adapter].
@@ -71,7 +74,7 @@ Component     | Serialized representation             | Example(s)            | 
 
     This is where most of the component is serializable, but there is also data that is only accessible at runtime, such as a device ID or an asset handle.
 
-    ```rust,no_run,noplaypen
+    ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst_audio;
     # extern crate amethyst_core;
     # extern crate specs_derive;
@@ -96,7 +99,7 @@ Component     | Serialized representation             | Example(s)            | 
     }
     ```
 
-    Applicable guide: [How to Define Prefabs: Adapter][Adapter].
+    Applicable guide: [How to Define Prefabs: Asset][Asset].
 
 * **Asset**
 
@@ -110,7 +113,7 @@ Component     | Serialized representation             | Example(s)            | 
 
     This is where the `Component` itself stores `Handle<_>`s.
 
-    ```rust,no_run,noplaypen
+    ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     #
     # use amethyst::{

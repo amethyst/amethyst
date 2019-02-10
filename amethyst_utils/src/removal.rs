@@ -1,7 +1,6 @@
 //! Provides utilities to remove large amounts of entities with a single command.
 
-use std::fmt::Debug;
-use std::ops::Deref;
+use std::{fmt::Debug, ops::Deref};
 
 use amethyst_assets::PrefabData;
 use amethyst_core::specs::{

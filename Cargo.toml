@@ -207,6 +207,10 @@ name = "prefab"
 path = "examples/prefab/main.rs"
 
 [[example]]
+name = "prefab_adapter"
+path = "examples/prefab_adapter/main.rs"
+
+[[example]]
 name = "prefab_basic"
 path = "examples/prefab_basic/main.rs"
 
