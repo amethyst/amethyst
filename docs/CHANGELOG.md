@@ -32,6 +32,7 @@ it is attached to. ([#1282])
 * Removed redundant code in `renderer.rs` ([#1375])
 * Changed argument types of `exec_removal` to allow use of both Read and Write Storages. ([#1397])
 * Changed default log level to Info. ([#1404])
+* Remove unnecessary `mut` from `AnimationControlSet::has_animation` ([#1408])
 
 ### Removed
 
@@ -60,6 +61,7 @@ it is attached to. ([#1282])
 [#1373]: https://github.com/amethyst/amethyst/pull/1373
 [#1397]: https://github.com/amethyst/amethyst/pull/1397
 [#1404]: https://github.com/amethyst/amethyst/pull/1404
+[#1408]: https://github.com/amethyst/amethyst/pull/1408
 
 ## [0.10.0] - 2018-12
 
