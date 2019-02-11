@@ -4,7 +4,7 @@ use amethyst_assets::Processor;
 use amethyst_core::{bundle::SystemBundle, specs::prelude::DispatcherBuilder};
 use amethyst_error::Error;
 
-use crate::{source::*, systems::AudioSystem};
+use crate::{output::Output, source::*, systems::AudioSystem};
 
 /// Audio bundle
 ///
@@ -12,11 +12,12 @@ use crate::{source::*, systems::AudioSystem};
 ///
 /// `DjSystem` must be added separately if you want to use our background music system.
 ///
-pub struct AudioBundle;
+#[derive(Default)]
+pub struct AudioBundle(Output);
 
 impl<'a, 'b> SystemBundle<'a, 'b> for AudioBundle {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
-        builder.add(AudioSystem::new(), "audio_system", &[]);
+        builder.add(AudioSystem::new(self.0), "audio_system", &[]);
         builder.add(Processor::<Source>::new(), "source_processor", &[]);
         Ok(())
     }

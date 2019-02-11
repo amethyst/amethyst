@@ -22,6 +22,19 @@ pub struct Output {
     pub(crate) device: Device,
 }
 
+/// Convenience method for opening the default output device.
+///
+/// Since most modern hardware features audio output, this implementation fails if a device can't
+/// be initialized. Use an alternative initialization scheme if running on hardware without an
+/// integrated audio chip.
+impl Default for Output {
+    fn default() -> Self {
+        default_output_device()
+            .map(|re| Output { device: re })
+            .expect("No default output device")
+    }
+}
+
 impl Output {
     /// Gets the name of the output
     pub fn name(&self) -> String {
