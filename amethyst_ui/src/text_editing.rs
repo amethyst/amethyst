@@ -9,7 +9,7 @@ use winit::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, 
 use crate::{Selected, TextEditing, UiText};
 use amethyst_core::{
     shrev::{EventChannel, ReaderId},
-    specs::prelude::{Join, Read, ReadStorage, Resources, System, WriteStorage},
+    ecs::prelude::{Join, Read, ReadStorage, Resources, System, WriteStorage},
 };
 
 /// System managing the keyboard inputs for the editable text fields.
@@ -275,7 +275,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         self.reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
     }

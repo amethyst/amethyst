@@ -2,7 +2,7 @@ use std::default::Default;
 
 use amethyst_core::{
     shrev::{Event, EventChannel, ReaderId},
-    specs::prelude::{Component, Read, ReadStorage, Resources, System, SystemData, Write},
+    ecs::prelude::{Component, Read, ReadStorage, Resources, System, SystemData, Write},
 };
 
 use derivative::Derivative;

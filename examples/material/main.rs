@@ -2,7 +2,7 @@
 
 use amethyst::{
     assets::AssetLoaderSystemData,
-    core::{nalgebra::Vector3, Transform, TransformBundle},
+    core::{math::Vector3, Transform, TransformBundle},
     prelude::*,
     renderer::*,
     utils::application_root_dir,

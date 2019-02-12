@@ -6,7 +6,7 @@ use minterpolate::InterpolationPrimitive;
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
-    specs::prelude::{
+    ecs::prelude::{
         Component, Entities, Entity, Join, Read, ReadStorage, Resources, System, SystemData,
         WriteStorage,
     },

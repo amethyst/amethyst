@@ -1,6 +1,6 @@
 use amethyst_core::{
     shrev::{EventChannel, ReaderId},
-    specs::{Entity, ReadExpect, Resources, System, SystemData, Write, WriteStorage},
+    ecs::{Entity, ReadExpect, Resources, System, SystemData, Write, WriteStorage},
     ParentHierarchy,
 };
 use amethyst_renderer::TextureHandle;

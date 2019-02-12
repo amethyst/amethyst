@@ -4,7 +4,7 @@ mod test {
 
     use amethyst_core::{
         shred::{Dispatcher, DispatcherBuilder, SystemData},
-        specs::{Builder, Join, World, WriteStorage},
+        ecs::{Builder, Join, World, WriteStorage},
     };
 
     use crate::{server::ServerConfig, *};

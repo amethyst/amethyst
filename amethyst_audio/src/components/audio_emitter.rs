@@ -6,7 +6,7 @@ use std::{
 use rodio::{Decoder, SpatialSink};
 use smallvec::SmallVec;
 
-use amethyst_core::specs::{prelude::Component, storage::BTreeStorage};
+use amethyst_core::ecs::{prelude::Component, storage::BTreeStorage};
 
 use crate::{source::Source, DecoderError};
 

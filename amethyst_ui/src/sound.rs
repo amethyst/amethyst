@@ -2,7 +2,7 @@ use amethyst_assets::AssetStorage;
 use amethyst_audio::{output::Output, Source, SourceHandle};
 use amethyst_core::{
     shrev::{EventChannel, ReaderId},
-    specs::{
+    ecs::{
         prelude::{Component, DenseVecStorage},
         Read, Resources, System, SystemData, Write,
     },

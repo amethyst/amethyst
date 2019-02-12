@@ -9,7 +9,7 @@ use sdl2::{
 
 use amethyst_core::{
     shrev::EventChannel,
-    specs::prelude::{Resources, RunNow, SystemData, Write},
+    ecs::prelude::{Resources, RunNow, SystemData, Write},
 };
 
 use super::{

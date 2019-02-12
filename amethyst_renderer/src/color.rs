@@ -1,6 +1,6 @@
 //! Color value types.
 
-use amethyst_core::specs::{Component, DenseVecStorage};
+use amethyst_core::ecs::{Component, DenseVecStorage};
 
 use gfx::shade::{Formatted, ToUniform};
 use gfx_core::shade::{BaseType, ContainerType, UniformValue};

@@ -1,5 +1,5 @@
 use amethyst_assets::PrefabData;
-use amethyst_core::specs::prelude::{Component, Entity, HashMapStorage, NullStorage, WriteStorage};
+use amethyst_core::ecs::prelude::{Component, Entity, HashMapStorage, NullStorage, WriteStorage};
 use amethyst_error::Error;
 
 use serde::{Deserialize, Serialize};

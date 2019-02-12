@@ -3,7 +3,7 @@ use std::mem;
 use glsl_layout::*;
 
 use amethyst_core::{
-    specs::prelude::{Join, ReadStorage},
+    ecs::prelude::{Join, ReadStorage},
     GlobalTransform,
 };
 

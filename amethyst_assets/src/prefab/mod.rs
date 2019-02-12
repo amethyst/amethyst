@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use serde::{Deserialize, Serialize};
 use shred_derive::SystemData;
 
-use amethyst_core::specs::prelude::{
+use amethyst_core::ecs::prelude::{
     Component, DenseVecStorage, Entity, FlaggedStorage, Read, ReadExpect, SystemData, WriteStorage,
 };
 use amethyst_error::Error;
@@ -452,7 +452,7 @@ mod tests {
     use rayon::ThreadPoolBuilder;
 
     use amethyst_core::{
-        specs::{Builder, RunNow, World},
+        ecs::{Builder, RunNow, World},
         GlobalTransform, Time, Transform,
     };
 

@@ -6,7 +6,7 @@ use log::{debug, trace};
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    specs::prelude::{Join, Read, ReadExpect, ReadStorage},
+    ecs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::GlobalTransform,
 };
 use amethyst_error::Error;

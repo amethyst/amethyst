@@ -10,7 +10,7 @@ use std::{
     thread,
 };
 
-use amethyst_core::specs::{Join, Resources, System, SystemData, WriteStorage};
+use amethyst_core::ecs::{Join, Resources, System, SystemData, WriteStorage};
 
 use laminar::Packet;
 use log::{error, warn};

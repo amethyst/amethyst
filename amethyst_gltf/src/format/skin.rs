@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use amethyst_animation::{JointPrefab, SkinPrefab, SkinnablePrefab};
 use amethyst_assets::Prefab;
-use amethyst_core::nalgebra::Matrix4;
+use amethyst_core::math::Matrix4;
 use amethyst_error::Error;
 use amethyst_renderer::JointTransformsPrefab;
 

@@ -6,7 +6,7 @@ The following snippet demonstrates how to set up a `Camera` that sees entities w
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-use amethyst::core::nalgebra::Orthographic3;
+use amethyst::core::math::Orthographic3;
 use amethyst::core::transform::Transform;
 # use amethyst::prelude::*;
 use amethyst::renderer::{

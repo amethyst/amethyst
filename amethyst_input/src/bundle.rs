@@ -5,7 +5,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::{error, fmt, hash::Hash, path::Path};
 
 use amethyst_config::{Config, ConfigError};
-use amethyst_core::{bundle::SystemBundle, specs::prelude::DispatcherBuilder};
+use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder};
 use amethyst_error::Error;
 
 use crate::{BindingError, Bindings, InputSystem};

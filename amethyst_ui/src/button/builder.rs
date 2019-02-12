@@ -5,7 +5,7 @@ use smallvec::{smallvec, SmallVec};
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_audio::SourceHandle;
 use amethyst_core::{
-    specs::prelude::{Entities, Entity, Read, ReadExpect, World, WriteStorage},
+    ecs::prelude::{Entities, Entity, Read, ReadExpect, World, WriteStorage},
     Parent,
 };
 use amethyst_renderer::{Texture, TextureHandle};

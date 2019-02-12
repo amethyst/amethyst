@@ -8,7 +8,7 @@ use std::{
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, ProgressCounter};
-use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, WriteStorage};
+use amethyst_core::ecs::prelude::{Entity, Read, ReadExpect, WriteStorage};
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
 

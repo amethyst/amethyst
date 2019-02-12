@@ -1,7 +1,7 @@
 use crate::{
     core::{
         shrev::{EventChannel, ReaderId},
-        specs::{Read, Resources, SystemData},
+        ecs::{Read, Resources, SystemData},
         EventReader,
     },
     derive::EventReader,

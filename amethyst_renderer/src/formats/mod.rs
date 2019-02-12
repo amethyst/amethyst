@@ -6,7 +6,7 @@ pub use self::{mesh::*, mtl::*, texture::*};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use amethyst_assets::{AssetPrefab, Format, PrefabData, ProgressCounter};
-use amethyst_core::specs::prelude::Entity;
+use amethyst_core::ecs::prelude::Entity;
 use amethyst_error::Error;
 
 use crate::{shape::InternalShape, Mesh, ShapePrefab, Texture};

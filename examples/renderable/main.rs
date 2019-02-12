@@ -9,7 +9,7 @@ use amethyst::{
         ProgressCounter, RonFormat,
     },
     core::{
-        nalgebra::{UnitQuaternion, Vector3},
+        math::{UnitQuaternion, Vector3},
         timing::Time,
         transform::{Transform, TransformBundle},
     },

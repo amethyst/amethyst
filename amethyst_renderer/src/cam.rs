@@ -2,8 +2,8 @@
 
 use amethyst_assets::PrefabData;
 use amethyst_core::{
-    nalgebra::{Matrix4, Orthographic3, Perspective3},
-    specs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
+    math::{Matrix4, Orthographic3, Perspective3},
+    ecs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
 };
 use amethyst_error::Error;
 
@@ -157,7 +157,7 @@ mod serde_ortho {
         Deserialize, Serialize,
     };
 
-    use amethyst_core::nalgebra::Orthographic3;
+    use amethyst_core::math::Orthographic3;
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Orthographic3<f32>, D::Error>
     where
@@ -313,7 +313,7 @@ mod serde_persp {
         Deserialize, Serialize,
     };
 
-    use amethyst_core::nalgebra::Perspective3;
+    use amethyst_core::math::Perspective3;
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Perspective3<f32>, D::Error>
     where

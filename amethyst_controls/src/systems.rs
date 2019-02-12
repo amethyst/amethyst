@@ -3,9 +3,9 @@ use std::{hash::Hash, marker::PhantomData};
 use winit::{DeviceEvent, Event, WindowEvent};
 
 use amethyst_core::{
-    nalgebra::{Unit, Vector3},
+    math::{Unit, Vector3},
     shrev::{EventChannel, ReaderId},
-    specs::prelude::{Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
+    ecs::prelude::{Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
     timing::Time,
     transform::Transform,
 };
@@ -179,7 +179,7 @@ where
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_core::ecs::prelude::SystemData;
 
         Self::SystemData::setup(res);
         self.event_reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
@@ -214,7 +214,7 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         self.event_reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
     }
@@ -260,7 +260,7 @@ impl<'a> System<'a> for CursorHideSystem {
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_core::ecs::prelude::SystemData;
         use amethyst_renderer::mouse::*;
 
         Self::SystemData::setup(res);

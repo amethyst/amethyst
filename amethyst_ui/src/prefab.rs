@@ -8,7 +8,7 @@ use amethyst_assets::{
     Progress, ProgressCounter, SimpleFormat,
 };
 use amethyst_audio::{AudioFormat, Source as Audio};
-use amethyst_core::specs::prelude::{Entities, Entity, Read, ReadExpect, WriteStorage};
+use amethyst_core::ecs::prelude::{Entities, Entity, Read, ReadExpect, WriteStorage};
 use amethyst_error::{format_err, Error, ResultExt};
 use amethyst_renderer::{
     HiddenPropagate, Texture, TextureFormat, TextureHandle, TextureMetadata, TexturePrefab,

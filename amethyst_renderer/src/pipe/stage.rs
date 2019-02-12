@@ -5,7 +5,7 @@ use fnv::FnvHashMap as HashMap;
 use hetseq::*;
 use log::error;
 
-use amethyst_core::specs::prelude::SystemData;
+use amethyst_core::ecs::prelude::SystemData;
 use amethyst_error::Error;
 
 use crate::{
@@ -131,7 +131,7 @@ where
     }
 }
 
-/// Data requested by the pass from the specs::World.
+/// Data requested by the pass from the ecs::World.
 pub trait StageData<'a> {
     type Data: SystemData<'a> + Send;
 }

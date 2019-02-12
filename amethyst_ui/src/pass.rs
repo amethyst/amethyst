@@ -21,7 +21,7 @@ use unicode_segmentation::UnicodeSegmentation;
 use thread_profiler::profile_scope;
 
 use amethyst_assets::{AssetStorage, Handle, Loader};
-use amethyst_core::specs::prelude::{
+use amethyst_core::ecs::prelude::{
     Entities, Entity, Join, Read, ReadExpect, ReadStorage, WriteStorage,
 };
 use amethyst_error::Error;

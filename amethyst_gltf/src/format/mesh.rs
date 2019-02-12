@@ -58,7 +58,7 @@ pub fn load_mesh(
                 None => normals.collect(),
             })
             .unwrap_or_else(|| {
-                use amethyst_core::nalgebra::Point3;
+                use amethyst_core::math::Point3;
                 use std::iter::once;
                 let f = faces
                     .as_ref()

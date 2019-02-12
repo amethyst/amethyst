@@ -6,7 +6,7 @@ use crate::{
 use amethyst::{
     assets::Loader,
     core::{
-        nalgebra::{Vector2, Vector3},
+        math::{Vector2, Vector3},
         Transform,
     },
     ecs::prelude::World,

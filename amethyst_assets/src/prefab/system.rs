@@ -3,7 +3,7 @@ use std::{marker::PhantomData, ops::Deref};
 use log::error;
 
 use amethyst_core::{
-    specs::{
+    ecs::{
         storage::ComponentEvent, BitSet, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
         ReaderId, Resources, System, Write, WriteStorage,
     },
@@ -157,7 +157,7 @@ where
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         self.insert_reader = Some(WriteStorage::<Handle<Prefab<T>>>::fetch(&res).register_reader());
     }

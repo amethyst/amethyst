@@ -4,7 +4,7 @@
 use amethyst::{
     assets::{Loader, SimpleFormat},
     core::{
-        nalgebra::{Vector2, Vector3},
+        math::{Vector2, Vector3},
         Transform, TransformBundle,
     },
     error::Error,

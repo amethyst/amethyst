@@ -4,7 +4,7 @@
 //! functions.
 
 use shred::{RunningTime, SystemData};
-use specs::prelude::{Read, System};
+use ecs::prelude::{Read, System};
 
 /// Extension functionality associated systems.
 pub trait SystemExt {

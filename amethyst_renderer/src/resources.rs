@@ -5,7 +5,7 @@ use smallvec::SmallVec;
 use winit::Window;
 
 use amethyst_assets::PrefabData;
-use amethyst_core::specs::{Entity, Write};
+use amethyst_core::ecs::{Entity, Write};
 use amethyst_error::Error;
 
 use crate::color::Rgba;

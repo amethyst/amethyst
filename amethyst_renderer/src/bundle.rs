@@ -1,7 +1,7 @@
 //! ECS rendering bundle
 
 use amethyst_assets::Processor;
-use amethyst_core::{bundle::SystemBundle, specs::prelude::DispatcherBuilder};
+use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder};
 use amethyst_error::{format_err, Error, ResultExt};
 
 use crate::{

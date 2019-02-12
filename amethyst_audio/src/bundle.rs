@@ -1,7 +1,7 @@
 //! ECS audio bundles
 
 use amethyst_assets::Processor;
-use amethyst_core::{bundle::SystemBundle, specs::prelude::DispatcherBuilder};
+use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder};
 use amethyst_error::Error;
 
 use crate::{output::Output, source::*, systems::AudioSystem};

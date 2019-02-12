@@ -553,7 +553,7 @@ where
     ///     // There are a few common containers, VecStorage and HashMapStorage
     ///     // are the most common used.
     ///     //
-    ///     // See the documentation on the specs::Storage trait for more information.
+    ///     // See the documentation on the ecs::Storage trait for more information.
     ///     // https://docs.rs/specs/0.9.5/specs/struct.Storage.html
     ///     type Storage = HashMapStorage<Velocity>;
     /// }

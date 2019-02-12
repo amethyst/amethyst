@@ -1,5 +1,5 @@
 use amethyst_core::{
-    specs::{Entity, WriteStorage},
+    ecs::{Entity, WriteStorage},
     GlobalTransform, Named, Transform,
 };
 use amethyst_error::Error;

@@ -1,6 +1,6 @@
 use amethyst_core::{
-    nalgebra::{Point3, Vector3},
-    specs::{Component, DenseVecStorage},
+    math::{Point3, Vector3},
+    ecs::{Component, DenseVecStorage},
 };
 
 use crate::{color::Rgba, vertex::PosColorNorm};

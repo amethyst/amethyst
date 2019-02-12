@@ -6,7 +6,7 @@ use winit::Event;
 
 use amethyst_core::{
     shrev::{EventChannel, ReaderId},
-    specs::prelude::{Read, ReadExpect, Resources, System, Write},
+    ecs::prelude::{Read, ReadExpect, Resources, System, Write},
 };
 use amethyst_renderer::ScreenDimensions;
 
@@ -80,7 +80,7 @@ where
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         self.reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
         if let Some(ref bindings) = self.bindings {

@@ -2,7 +2,7 @@
 
 use amethyst_core::{
     nalgebra as na,
-    specs::{Read, ReadStorage},
+    ecs::{Read, ReadStorage},
     transform::GlobalTransform,
 };
 use amethyst_error::Error;

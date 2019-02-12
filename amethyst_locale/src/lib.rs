@@ -7,7 +7,7 @@
 use fluent::bundle::FluentBundle;
 
 use amethyst_assets::{Asset, Handle, ProcessingState, SimpleFormat};
-use amethyst_core::specs::prelude::VecStorage;
+use amethyst_core::ecs::prelude::VecStorage;
 use amethyst_error::Error;
 
 /// Loads the strings from localisation files.

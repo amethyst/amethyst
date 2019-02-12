@@ -1,4 +1,4 @@
-use specs::{Resources, SystemData, World};
+use ecs::{Resources, SystemData, World};
 
 /// Read events generically
 pub trait EventReader<'a> {
@@ -24,7 +24,7 @@ pub trait EventReader<'a> {
 #[cfg(test)]
 mod tests {
     use shrev::{EventChannel, ReaderId};
-    use specs::Read;
+    use ecs::Read;
 
     use super::*;
 

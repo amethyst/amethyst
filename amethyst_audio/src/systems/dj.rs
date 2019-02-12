@@ -6,7 +6,7 @@ use thread_profiler::profile_scope;
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     shred::{Resource, Resources},
-    specs::{
+    ecs::{
         common::Errors,
         prelude::{Read, System, WriteExpect},
     },
@@ -62,7 +62,7 @@ where
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         init_output(res);
     }

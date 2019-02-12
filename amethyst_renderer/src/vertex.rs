@@ -7,7 +7,7 @@ use gfx::{
 };
 use serde::{Deserialize, Serialize};
 
-use amethyst_core::nalgebra::{Vector2, Vector3};
+use amethyst_core::math::{Vector2, Vector3};
 
 /// Format for vertex attribute
 pub type AttributeFormat = Element<Format>;

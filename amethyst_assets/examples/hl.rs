@@ -9,7 +9,7 @@ use serde::Deserialize;
 
 use amethyst_assets::*;
 use amethyst_core::{
-    specs::{
+    ecs::{
         common::Errors,
         prelude::{
             Builder, Dispatcher, DispatcherBuilder, Read, ReadExpect, System, VecStorage, World,

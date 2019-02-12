@@ -19,17 +19,17 @@ Many types retain the same type name, just under the `nalgebra` namespace:
 
 ```patch
 -use amethyst::core::cgmath::{Vector2, Vector3, Matrix4};
-+use amethyst::core::nalgebra::{Vector2, Vector3, Matrix4};
++use amethyst::core::math::{Vector2, Vector3, Matrix4};
 ```
 
 We will not list the names of every type with the same simple name, but will try to list the changes for types whose simple names are different:
 
 ```patch
 -cgmath::Ortho
-+nalgebra::Orthographic3
++math::Orthographic3
 
 -cgmath::PerspectiveFov
-+nalgebra::Perspective3
++math::Perspective3
 ```
 
 ## Logic Changes
@@ -87,7 +87,7 @@ We will not list the names of every type with the same simple name, but will try
 
         // Rotations
         -transform.rotation = [1.0, 0.0, 0.0, 0.0].into();
-        +use amethyst::core::nalgebra::{Quaternion, Unit};
+        +use amethyst::core::math::{Quaternion, Unit};
         +
         +*transform.rotation_mut() = Unit::new_normalize(Quaternion::new(
         +    1.0, // w
@@ -152,7 +152,7 @@ We will not list the names of every type with the same simple name, but will try
      }
     ```
 
-* `amethyst::core::nalgebra::Matrix4` construction.
+* `amethyst::core::math::Matrix4` construction.
 
     ```patch
     -Matrix4::from_translation(Vector3::new(x, y, z))
@@ -160,7 +160,7 @@ We will not list the names of every type with the same simple name, but will try
 
     // OR
 
-    +use amethyst::core::nalgebra::Translation3;
+    +use amethyst::core::math::Translation3;
     +
     +Translation3::new(x, y, z).to_homogeneous()
     ```
@@ -180,7 +180,7 @@ We will not list the names of every type with the same simple name, but will try
     -use amethyst::core::cgmath::Ortho;
     -
     -Ortho { left, right, top, bottom, near, far }
-    +use amethyst::core::nalgebra::Orthographic3;
+    +use amethyst::core::math::Orthographic3;
     +
     +Orthographic3::new(left, right, bottom, top, near, far)
     ```

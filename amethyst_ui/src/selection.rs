@@ -1,6 +1,6 @@
 use amethyst_core::{
     shrev::EventChannel,
-    specs::{
+    ecs::{
         Component, DenseVecStorage, FlaggedStorage, Read, ReadStorage, ReaderId, Resources, System,
         SystemData, WriteStorage,
     },
