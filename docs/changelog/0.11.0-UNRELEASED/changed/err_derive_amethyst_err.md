@@ -1,0 +1,1 @@
+* Convert everything to use err-derive and amethyst_error ([#1365])

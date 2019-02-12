@@ -1,0 +1,5 @@
+(
+    // This will be used to insert links for `[#123]` entries
+    // `[#123]` becomes `[#123](https://github.com/amethyst/amethyst/issues/123)`
+    pull_request_prefix: "https://github.com/amethyst/amethyst/issues/",
+)

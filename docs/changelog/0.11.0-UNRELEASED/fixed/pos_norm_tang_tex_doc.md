@@ -1,0 +1,1 @@
+* Fix omission in `PosNormTangTex` documentation. ([#1371])

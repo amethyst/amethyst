@@ -1,0 +1,1 @@
+* Set width and height of Pong Paddles ([#1363])

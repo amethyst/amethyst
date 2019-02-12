@@ -1,0 +1,1 @@
+* Changed `ActiveCamera` to have the `Option` inside. ([#1280])

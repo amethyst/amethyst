@@ -1,0 +1,1 @@
+* Fixed the "json" feature for amethyst_assets. ([#1302])

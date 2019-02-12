@@ -1,0 +1,1 @@
+* Remove unnecessary texture coordinates offset in `Sprite::from_pixel_values` ([#1267])

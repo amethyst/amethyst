@@ -1,0 +1,1 @@
+* Remove unnecessary `mut` from `AnimationControlSet::has_animation` ([#1408])

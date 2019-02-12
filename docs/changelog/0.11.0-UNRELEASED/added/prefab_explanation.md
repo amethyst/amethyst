@@ -1,0 +1,1 @@
+* Explanation on how prefabs function in Amethyst. ([#1114])

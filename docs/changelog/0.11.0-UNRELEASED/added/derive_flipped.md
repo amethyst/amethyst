@@ -1,0 +1,1 @@
+* Derive `Copy`, `PartialEq`, `Eq`, `Serialize`, `Deserialize` for `Flipped` component. ([#1237])

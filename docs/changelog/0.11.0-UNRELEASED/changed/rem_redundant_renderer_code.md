@@ -1,0 +1,1 @@
+* Removed redundant code in `renderer.rs` ([#1375])

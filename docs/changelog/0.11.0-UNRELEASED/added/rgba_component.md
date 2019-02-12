@@ -1,0 +1,1 @@
+* `amethyst_renderer::Rgba` is now a `Component` that changes the color and transparency of the entity it is attached to. ([#1282])

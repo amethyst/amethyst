@@ -1,0 +1,1 @@
+* Fixed default system font loading to accept uppercase extension ("TTF"). ([#1328])

@@ -1,0 +1,1 @@
+* Make `application_root_dir` return a `Result<Path>` instead of a `String` ([#1213])

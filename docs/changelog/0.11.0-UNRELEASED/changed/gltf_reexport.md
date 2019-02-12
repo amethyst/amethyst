@@ -1,0 +1,1 @@
+* Re-exported amethyst_gltf by amethyst as amethyst::gltf. (#1411)

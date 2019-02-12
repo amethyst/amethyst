@@ -1,0 +1,1 @@
+* Added setting to control gfx_device_gl logging level separately, and set it to Warn by default. ([#1404])

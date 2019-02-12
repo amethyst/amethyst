@@ -1,0 +1,1 @@
+* `AudioBundle::new()` no longer exists, as `AudioBundle` is now a unit type. It also no longer initializes the `DjSystem` ([#1356])

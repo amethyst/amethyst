@@ -1,0 +1,1 @@
+* Changed default log level to Info. ([#1404])

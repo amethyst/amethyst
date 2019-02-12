@@ -1,0 +1,1 @@
+* Add `icon` to `DisplayConfig` to set a window icon using a path to a file ([#1373])

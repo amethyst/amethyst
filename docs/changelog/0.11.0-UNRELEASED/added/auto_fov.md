@@ -1,0 +1,1 @@
+* `AutoFov` and `AutoFovSystem` to adjust horizontal FOV to screen aspect ratio. ([#1281])

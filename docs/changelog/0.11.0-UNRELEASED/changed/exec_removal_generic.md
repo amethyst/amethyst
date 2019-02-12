@@ -1,0 +1,1 @@
+* Changed argument types of `exec_removal` to allow use of both Read and Write Storages. ([#1397])
