@@ -2,16 +2,17 @@
 
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
+use log::{debug, trace};
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::GlobalTransform,
 };
+use amethyst_error::Error;
 
-use {
+use crate::{
     cam::{ActiveCamera, Camera},
-    error::Result,
     hidden::{Hidden, HiddenPropagate},
     light::Light,
     mesh::{Mesh, MeshHandle},
@@ -31,6 +32,7 @@ use {
     types::{Encoder, Factory},
     vertex::{Attributes, Normal, Position, Separate, TexCoord, VertexFormat},
     visibility::Visibility,
+    Rgba,
 };
 
 use super::*;
@@ -77,7 +79,7 @@ impl DrawShadedSeparate {
 
 impl<'a> PassData<'a> for DrawShadedSeparate {
     type Data = (
-        Option<Read<'a, ActiveCamera>>,
+        Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         Read<'a, AmbientColor>,
         Read<'a, AssetStorage<Mesh>>,
@@ -91,11 +93,12 @@ impl<'a> PassData<'a> for DrawShadedSeparate {
         ReadStorage<'a, GlobalTransform>,
         ReadStorage<'a, Light>,
         ReadStorage<'a, JointTransforms>,
+        ReadStorage<'a, Rgba>,
     );
 }
 
 impl Pass for DrawShadedSeparate {
-    fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         debug!("Building shaded pass");
         let mut builder = if self.skinning {
             create_skinning_effect(effect, FRAG_SRC)
@@ -108,11 +111,13 @@ impl Pass for DrawShadedSeparate {
                 Separate::<Position>::ATTRIBUTES,
                 Separate::<Position>::size() as ElemStride,
                 0,
-            ).with_raw_vertex_buffer(
+            )
+            .with_raw_vertex_buffer(
                 Separate::<Normal>::ATTRIBUTES,
                 Separate::<Normal>::size() as ElemStride,
                 0,
-            ).with_raw_vertex_buffer(
+            )
+            .with_raw_vertex_buffer(
                 Separate::<TexCoord>::ATTRIBUTES,
                 Separate::<TexCoord>::size() as ElemStride,
                 0,
@@ -150,6 +155,7 @@ impl Pass for DrawShadedSeparate {
             global,
             light,
             joints,
+            rgba,
         ): <Self as PassData<'a>>::Data,
     ) {
         trace!("Drawing shaded pass");
@@ -159,11 +165,12 @@ impl Pass for DrawShadedSeparate {
 
         match visibility {
             None => {
-                for (joint, mesh, material, global, _, _) in (
+                for (joint, mesh, material, global, rgba, _, _) in (
                     joints.maybe(),
                     &mesh,
                     &material,
                     &global,
+                    rgba.maybe(),
                     !&hidden,
                     !&hidden_prop,
                 )
@@ -178,6 +185,7 @@ impl Pass for DrawShadedSeparate {
                         &tex_storage,
                         Some(material),
                         &material_defaults,
+                        rgba,
                         camera,
                         Some(global),
                         &ATTRIBUTES,
@@ -186,11 +194,12 @@ impl Pass for DrawShadedSeparate {
                 }
             }
             Some(ref visibility) => {
-                for (joint, mesh, material, global, _) in (
+                for (joint, mesh, material, global, rgba, _) in (
                     joints.maybe(),
                     &mesh,
                     &material,
                     &global,
+                    rgba.maybe(),
                     &visibility.visible_unordered,
                 )
                     .join()
@@ -204,6 +213,7 @@ impl Pass for DrawShadedSeparate {
                         &tex_storage,
                         Some(material),
                         &material_defaults,
+                        rgba,
                         camera,
                         Some(global),
                         &ATTRIBUTES,
@@ -222,6 +232,7 @@ impl Pass for DrawShadedSeparate {
                             &tex_storage,
                             material.get(*entity),
                             &material_defaults,
+                            rgba.get(*entity),
                             camera,
                             global.get(*entity),
                             &ATTRIBUTES,

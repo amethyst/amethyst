@@ -1,17 +1,32 @@
 use std::{hash::Hash, marker::PhantomData};
 
-use amethyst_core::{
-    bundle::{Result, SystemBundle},
-    specs::prelude::DispatcherBuilder,
-};
+use amethyst_core::{bundle::SystemBundle, specs::prelude::DispatcherBuilder};
+use amethyst_error::Error;
 
 use super::*;
 
 /// The bundle that creates a flying movement system.
-/// Note: Will not actually create a moving entity. It will only register the needed resources and systems.
-/// The generic parameters A and B are the ones used in InputHandler<A,B>.
-/// You might want to add "fly_movement" and "free_rotation" as dependencies of the TransformSystem.
+///
+/// Note: Will not actually create a moving entity. It will only register the needed resources and
+/// systems. The generic parameters `A` and `B` are the ones used in `InputHandler<A,B>`.
+///
+/// You might want to add `"fly_movement"` and `"free_rotation"` as dependencies of the
+/// `TransformSystem` in order to apply changes made by these systems in the same frame.
 /// Adding this bundle will grab the mouse, hide it and keep it centered.
+///
+/// # Type parameters
+///
+/// * `A`: This is the key the `InputHandler` is using for axes. Often, this is a `String`.
+/// * `B`: This is the key the `InputHandler` is using for actions. Often, this is a `String`.
+///
+/// # Systems
+///
+/// This bundle adds the following systems:
+///
+/// * `FlyMovementSystem`
+/// * `FreeRotationSystem`
+/// * `MouseFocusUpdateSystem`
+/// * `CursorHideSystem`
 pub struct FlyControlBundle<A, B> {
     sensitivity_x: f32,
     sensitivity_y: f32,
@@ -59,7 +74,7 @@ where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
             FlyMovementSystem::<A, B>::new(
                 self.speed,
@@ -121,7 +136,7 @@ where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(ArcBallRotationSystem::default(), "arc_ball_rotation", &[]);
         builder.add(
             FreeRotationSystem::<A, B>::new(self.sensitivity_x, self.sensitivity_y),

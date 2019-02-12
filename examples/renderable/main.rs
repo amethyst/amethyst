@@ -3,8 +3,6 @@
 //!
 //! TODO: Rewrite for new renderer.
 
-extern crate amethyst;
-
 use amethyst::{
     assets::{
         Completion, Handle, HotReloadBundle, Prefab, PrefabLoader, PrefabLoaderSystem,
@@ -40,19 +38,19 @@ struct Example {
     scene: Handle<Prefab<MyPrefabData>>,
 }
 
-impl<'a, 'b> SimpleState<'a, 'b> for Loading {
-    fn on_start(&mut self, data: StateData<GameData>) {
-        self.prefab = Some(data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
+impl SimpleState for Loading {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        self.prefab = Some(data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/renderable.ron", RonFormat, (), &mut self.progress)
         }));
 
-        data.world.exec(|mut creator: UiCreator| {
+        data.world.exec(|mut creator: UiCreator<'_>| {
             creator.create("ui/fps.ron", &mut self.progress);
             creator.create("ui/loading.ron", &mut self.progress);
         });
     }
 
-    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'a, 'b> {
+    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         match self.progress.complete() {
             Completion::Failed => {
                 println!("Failed loading assets: {:?}", self.progress.errors());
@@ -60,7 +58,10 @@ impl<'a, 'b> SimpleState<'a, 'b> for Loading {
             }
             Completion::Complete => {
                 println!("Assets loaded, swapping state");
-                if let Some(entity) = data.world.exec(|finder: UiFinder| finder.find("loading")) {
+                if let Some(entity) = data
+                    .world
+                    .exec(|finder: UiFinder<'_>| finder.find("loading"))
+                {
                     let _ = data.world.delete_entity(entity);
                 }
                 Trans::Switch(Box::new(Example {
@@ -72,8 +73,8 @@ impl<'a, 'b> SimpleState<'a, 'b> for Loading {
     }
 }
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
+impl SimpleState for Example {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
 
         world.create_entity().with(self.scene.clone()).build();
@@ -81,9 +82,9 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
 
     fn handle_event(
         &mut self,
-        data: StateData<GameData>,
+        data: StateData<'_, GameData<'_, '_>>,
         event: StateEvent,
-    ) -> SimpleTrans<'a, 'b> {
+    ) -> SimpleTrans {
         let w = data.world;
         if let StateEvent::Window(event) = &event {
             // Exit if user hits Escape or closes the window
@@ -92,28 +93,31 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
             }
             match get_key(&event) {
                 Some((VirtualKeyCode::R, ElementState::Pressed)) => {
-                    w.exec(|mut state: Write<DemoState>| {
+                    w.exec(|mut state: Write<'_, DemoState>| {
                         state.light_color = [0.8, 0.2, 0.2, 1.0];
                     });
                 }
                 Some((VirtualKeyCode::G, ElementState::Pressed)) => {
-                    w.exec(|mut state: Write<DemoState>| {
+                    w.exec(|mut state: Write<'_, DemoState>| {
                         state.light_color = [0.2, 0.8, 0.2, 1.0];
                     });
                 }
                 Some((VirtualKeyCode::B, ElementState::Pressed)) => {
-                    w.exec(|mut state: Write<DemoState>| {
+                    w.exec(|mut state: Write<'_, DemoState>| {
                         state.light_color = [0.2, 0.2, 0.8, 1.0];
                     });
                 }
                 Some((VirtualKeyCode::W, ElementState::Pressed)) => {
-                    w.exec(|mut state: Write<DemoState>| {
+                    w.exec(|mut state: Write<'_, DemoState>| {
                         state.light_color = [1.0, 1.0, 1.0, 1.0];
                     });
                 }
                 Some((VirtualKeyCode::A, ElementState::Pressed)) => {
                     w.exec(
-                        |(mut state, mut color): (Write<DemoState>, Write<AmbientColor>)| {
+                        |(mut state, mut color): (
+                            Write<'_, DemoState>,
+                            Write<'_, AmbientColor>,
+                        )| {
                             if state.ambient_light {
                                 state.ambient_light = false;
                                 color.0 = [0.0; 3].into();
@@ -126,7 +130,10 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                 }
                 Some((VirtualKeyCode::D, ElementState::Pressed)) => {
                     w.exec(
-                        |(mut state, mut lights): (Write<DemoState>, WriteStorage<Light>)| {
+                        |(mut state, mut lights): (
+                            Write<'_, DemoState>,
+                            WriteStorage<'_, Light>,
+                        )| {
                             if state.directional_light {
                                 state.directional_light = false;
                                 for light in (&mut lights).join() {
@@ -146,7 +153,7 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                     );
                 }
                 Some((VirtualKeyCode::P, ElementState::Pressed)) => {
-                    w.exec(|mut state: Write<DemoState>| {
+                    w.exec(|mut state: Write<'_, DemoState>| {
                         if state.point_light {
                             state.point_light = false;
                             state.light_color = [0.0; 4].into();
@@ -166,15 +173,12 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
-    let app_root = application_root_dir();
+    let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let resources_directory = format!("{}/examples/assets/", app_root);
+    let resources_directory = app_root.join("examples/assets/");
 
-    let display_config_path = format!(
-        "{}/examples/renderable/resources/display_config.ron",
-        app_root
-    );
+    let display_config_path = app_root.join("examples/renderable/resources/display_config.ron");
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
@@ -259,7 +263,8 @@ impl<'a> System<'a> for ExampleSystem {
                     } else {
                         None
                     }
-                }) {
+                })
+        {
             transform.set_xyz(
                 light_orbit_radius * state.light_angle.cos(),
                 light_orbit_radius * state.light_angle.sin(),

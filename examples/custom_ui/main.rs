@@ -1,10 +1,5 @@
 //! Custom UI example
 
-extern crate amethyst;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
     audio::AudioFormat,
@@ -14,6 +9,8 @@ use amethyst::{
     ui::{FontFormat, ToNativeWidget, UiBundle, UiCreator, UiTransformBuilder, UiWidget},
     utils::{application_root_dir, scene::BasicScenePrefab},
 };
+
+use serde::Deserialize;
 
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
@@ -60,7 +57,8 @@ impl ToNativeWidget for CustomUi {
                         pos.0 += x_move;
                         pos.1 += y_move;
                         widget
-                    }).take(count)
+                    })
+                    .take(count)
                     .collect();
                 let widget = UiWidget::Container {
                     background: None,
@@ -75,18 +73,18 @@ impl ToNativeWidget for CustomUi {
 
 struct Example;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
+impl SimpleState for Example {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
         // Initialise the scene with an object, a light and a camera.
-        let handle = world.exec(|loader: PrefabLoader<MyPrefabData>| {
+        let handle = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/sphere.ron", RonFormat, (), ())
         });
         world.create_entity().with(handle).build();
 
         // Load custom UI prefab
         world.exec(
-            |mut creator: UiCreator<AudioFormat, TextureFormat, FontFormat, CustomUi>| {
+            |mut creator: UiCreator<'_, AudioFormat, TextureFormat, FontFormat, CustomUi>| {
                 creator.create("ui/custom.ron", ());
             },
         );
@@ -96,11 +94,9 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let app_root = application_root_dir();
-
-    let display_config_path = format!("{}/examples/ui/resources/display.ron", app_root);
-
-    let resources = format!("{}/examples/assets", app_root);
+    let app_root = application_root_dir()?;
+    let display_config_path = app_root.join("examples/custom_ui/resources/display.ron");
+    let resources = app_root.join("examples/assets");
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])

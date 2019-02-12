@@ -1,15 +1,15 @@
-# Prefabs
+# Prefabs Technical Explanation
 
-A `Prefab` in Amethyst is at the core a simple list of future entities, where each entry in 
+A `Prefab` in Amethyst is at the core a simple list of future entities, where each entry in
 the list consists of two pieces of optional data:
 
 * a parent index that refers to a different entry in the list
 * a data collection implementing the trait `PrefabData`
 
-To instantiate a `Prefab`, we put a `Handle<Prefab<T>>` on an `Entity`. The `Entity` we put 
-the `Handle` on is referred to as the main `Entity`, and the first entry in the list inside a 
-`Prefab` refers to this `Entity`. All other entries in the list will spawn a new `Entity` on 
-instantiation. 
+To instantiate a `Prefab`, we put a `Handle<Prefab<T>>` on an `Entity`. The `Entity` we put
+the `Handle` on is referred to as the main `Entity`, and the first entry in the list inside a
+`Prefab` refers to this `Entity`. All other entries in the list will spawn a new `Entity` on
+instantiation.
 
 NOTE: This means that we currently cannot target multiple existing entities from a single `Prefab`.
 This restriction is likely to be removed in the future.
@@ -18,14 +18,14 @@ The lifetime of a `Prefab` can roughly be divided into three distinct parts:
 
 **Loading**
 
-This is the same as for all assets in Amethyst, the user initiates a load using `Loader`, a 
+This is the same as for all assets in Amethyst, the user initiates a load using `Loader`, a
 `Source` and a `Format`. The `Format` returns a `Prefab`, and the user is handed a `Handle<Prefab<T>>`,
 for some `T` that implements `PrefabData`.
 
 **Sub asset loading**
 
 A `PrefabData` implementation could refer to other assets that need to be loaded asynchronously, and
-we don't want the user get a `Complete` notification on their `Progress` before everything has been 
+we don't want the user get a `Complete` notification on their `Progress` before everything has been
 loaded.
 
 Because of this, once the `Format` have loaded the `Prefab` from the `Source`, and a `PrefabLoaderSystem`
@@ -45,15 +45,15 @@ a `Complete` signal will be sent upwards.
 
 **Prefab instantiation**
 
-This stage happens after the `Prefab` has been fully loaded and `Complete` has been signaled, and the 
-`Handle<Prefab<T>>` is put on an `Entity`. At this point we know that all internal data has been loaded, 
-and all sub assets have been processed. The `PrefabLoaderSystem` will then walk through the `Prefab` data 
-immutably and create a new `Entity` for all but the first entry in the list, and then for each instance 
+This stage happens after the `Prefab` has been fully loaded and `Complete` has been signaled, and the
+`Handle<Prefab<T>>` is put on an `Entity`. At this point we know that all internal data has been loaded,
+and all sub assets have been processed. The `PrefabLoaderSystem` will then walk through the `Prefab` data
+immutably and create a new `Entity` for all but the first entry in the list, and then for each instance
 of `PrefabData` call the `add_to_entity` function.
 
-Note that for prefabs that reference other prefabs, to make instantiation be performed inside a single frame, 
-lower level `PrefabLoaderSystem`s need to depend on the higher level ones. To see how this works out check the gltf 
-example, where we have a scene prefab, and the gltf loader (which use the prefab system internally). 
+Note that for prefabs that reference other prefabs, to make instantiation be performed inside a single frame,
+lower level `PrefabLoaderSystem`s need to depend on the higher level ones. To see how this works out check the gltf
+example, where we have a scene prefab, and the gltf loader (which use the prefab system internally).
 
 ## `PrefabData`
 
@@ -61,11 +61,12 @@ Ok, so what would a simple implementation of `PrefabData` look like?
 
 Let's take a look at the implementation for `Transform`, which is a core concept in Amethyst:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::assets::PrefabData;
-# use amethyst::ecs::{WriteStorage, Entity, Component, NullStorage, error::Error as SpecsError};
-# 
+# use amethyst::ecs::{WriteStorage, Entity, Component, NullStorage};
+# use amethyst::Error;
+#
 # // We declare that struct for the sake of automated testing.
 # #[derive(Default, Clone)]
 # struct Transform;
@@ -82,8 +83,9 @@ impl<'a> PrefabData<'a> for Transform {
         entity: Entity,
         storage: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<(), SpecsError> {
-        storage.insert(entity, self.clone()).map(|_| ())
+    ) -> Result<(), Error> {
+        storage.insert(entity, self.clone())?;
+        Ok(())
     }
 }
 ```
@@ -91,9 +93,9 @@ impl<'a> PrefabData<'a> for Transform {
 First, we specify a `SystemData` type, this is the data required from `World` in order to load and
 instantiate this `PrefabData`. Here we only need to write to `Transform`.
 
-Second, we specify what result the `add_to_entity` function returns. In our case this is unit `()`, for 
+Second, we specify what result the `add_to_entity` function returns. In our case this is unit `()`, for
 other implementations it could return a `Handle` etc. For an example of this, look at the `TexturePrefab`
-in the renderer crate. 
+in the renderer crate.
 
 Next, we define the `add_to_entity` function, which is used to actually instantiate data. In our case here,
 we insert the local `Transform` data on the referenced `Entity`. In this scenario we aren't using the third
@@ -107,13 +109,14 @@ are no secondary assets to load from `Source` here.
 Let's look at a slightly more complex implementation, the `AssetPrefab`. This `PrefabData` is used to
 load extra `Asset`s as part of a `Prefab`:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # #[macro_use] extern crate serde_derive;
 # use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter};
 # use amethyst::assets::PrefabData;
-# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, error::Error as SpecsError};
-# 
+# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity};
+# use amethyst::Error;
+#
 #[derive(Deserialize, Serialize)]
 pub enum AssetPrefab<A, F>
 where
@@ -147,7 +150,7 @@ where
         entity: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<Handle<A>, SpecsError> {
+    ) -> Result<Handle<A>, Error> {
         let handle = match *self {
             AssetPrefab::Handle(ref handle) => handle.clone(),
             AssetPrefab::File(ref name, ref format, ref options) => system_data.0.load(
@@ -158,14 +161,14 @@ where
                 &system_data.2,
             ),
         };
-        system_data.1.insert(entity, handle.clone()).map(|_| handle)
+        Ok(system_data.1.insert(entity, handle.clone())?.unwrap())
     }
 
     fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
-    ) -> Result<bool, SpecsError> {
+    ) -> Result<bool, Error> {
         let handle = match *self {
             AssetPrefab::File(ref name, ref format, ref options) => Some(system_data.0.load(
                 name.as_ref(),
@@ -186,7 +189,7 @@ where
 
 So, there are two main differences to this `PrefabData` compared the `Transform` example.
 The first difference is that the `add_to_entity` function now return a `Handle<A>`.
-The second difference is that `load_sub_assets` is implemented, this is because we load 
+The second difference is that `load_sub_assets` is implemented, this is because we load
 a sub asset. The `load_sub_assets` function here will do the actual loading, and morph the
 internal representation to the `AssetPrefab::Handle` variant, so when `add_to_entity` runs later
 it will straight up use the internally stored `Handle`.
@@ -202,22 +205,29 @@ There are a few special blanket implementations provided by the asset system:
 
 Amethyst supplies a derive macro for creating the `PrefabData` implementation for the following scenarios:
 
-* Single `Component` 
+* Single `Component`
 * Aggregate `PrefabData` structs which contain other `PrefabData` constructs, and optionally simple data `Component`s
 
-In addition, deriving a `Prefab` requires that `amethyst::ecs::Entity` and
- `amethyst:assets::{PrefabData, PrefabError, ProgressCounter}` are imported
+In addition, deriving a `Prefab` requires that `amethyst::Error`, `amethyst::ecs::Entity` and
+ `amethyst:assets::{PrefabData, ProgressCounter}` are imported
  and visible in the current scope. This is due to how Rust macros work.
 
 An example of a single `Component` derive:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # #[macro_use] extern crate amethyst;
 # #[macro_use] extern crate serde_derive;
-# use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, PrefabError};
-# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, error::Error as SpecsError, DenseVecStorage, Component};
-# 
-
+# use amethyst::{
+#     assets::{
+#         Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData
+#     },
+#     derive::PrefabData,
+#     ecs::{
+#         Component, DenseVecStorage, Entity, Read, ReadExpect, WriteStorage,
+#     },
+#     Error,
+# };
+#
 #[derive(Clone, PrefabData)]
 #[prefab(Component)]
 pub struct SomeComponent {
@@ -225,7 +235,7 @@ pub struct SomeComponent {
 }
 
 impl Component for SomeComponent {
-    type Storage = DenseVecStorage<Self>; 
+    type Storage = DenseVecStorage<Self>;
 }
 ```
 
@@ -233,13 +243,14 @@ This will derive a `PrefabData` implementation that inserts `SomeComponent` on a
 
 Lets look at an example of an aggregate struct:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # #[macro_use] extern crate amethyst;
 # #[macro_use] extern crate serde_derive;
-# use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, PrefabError, AssetPrefab};
+# use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
 # use amethyst::core::Transform;
-# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, error::Error as SpecsError, DenseVecStorage, Component};
+# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, DenseVecStorage, Component};
 # use amethyst::renderer::{Mesh, ObjFormat};
+# use amethyst::Error;
 
 #[derive(PrefabData)]
 pub struct MyScenePrefab {
@@ -252,19 +263,20 @@ This can now be used to create `Prefab`s with `Transform` and `Mesh` on entities
 
 One last example that also adds a custom pure data `Component` into the aggregate `PrefabData`:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # #[macro_use] extern crate amethyst;
 # #[macro_use] extern crate serde_derive;
-# use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, PrefabError, AssetPrefab};
+# use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
 # use amethyst::core::Transform;
-# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, error::Error as SpecsError, DenseVecStorage, Component};
+# use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, DenseVecStorage, Component};
 # use amethyst::renderer::{Mesh, ObjFormat};
+# use amethyst::Error;
 
 #[derive(PrefabData)]
 pub struct MyScenePrefab {
     mesh: AssetPrefab<Mesh, ObjFormat>,
     transform: Transform,
-    
+
     #[prefab(Component)]
     some: SomeComponent,
 }
@@ -275,7 +287,7 @@ pub struct SomeComponent {
 }
 
 impl Component for SomeComponent {
-    type Storage = DenseVecStorage<Self>; 
+    type Storage = DenseVecStorage<Self>;
 }
 ```
 
@@ -287,7 +299,7 @@ used directly in the aggregate `PrefabData`, and annotated so the derive knows t
 
 So now we know how the `Prefab` system works on the inside, but how do we use it?
 
-From the point of the user, there are a few parts to using a `Prefab`: 
+From the point of the user, there are a few parts to using a `Prefab`:
 
 * Loading it, using `Loader` + `AssetStorage`, or using the helper `PrefabLoader`, which is a
  simple wrapper around the former. For this to work we need a `Format` that returns `Prefab`s.
@@ -299,7 +311,7 @@ From the point of the user, there are a few parts to using a `Prefab`:
 
 There are a few provided formats that create `Prefab`s, some with very specific `PrefabData`, and
  two that are generic:
- 
+
 * `RonFormat` - this format can be used to load `Prefab`s in `ron` format with any `PrefabData`
  that also implements `serde::Deserialize`.
 * `JsonFormat` - this format can be used to load `Prefab`s in `Json` format with any `PrefabData`
@@ -309,7 +321,7 @@ There are a few provided formats that create `Prefab`s, some with very specific 
 
 For an example of a `Prefab` in `ron` format, look at `examples/assets/prefab/example.ron`. The
 `PrefabData` for this is:
- 
+
 ```rust,ignore
 (
     Option<GraphicsPrefab<ObjFormat, TextureFormat>>,
@@ -319,5 +331,5 @@ For an example of a `Prefab` in `ron` format, look at `examples/assets/prefab/ex
 )
 ```
 
-For a more advanced example, and also a custom `PrefabData` implementation, look at the `gltf` example 
+For a more advanced example, and also a custom `PrefabData` implementation, look at the `gltf` example
 and `examples/assets/prefab/puffy_scene.ron`.

@@ -2,13 +2,16 @@
 
 use std::{sync::Arc, time::Instant};
 
-use amethyst_core as core;
 use amethyst_core::{
     specs::prelude::{DispatcherBuilder, Read, Resources, System, Write},
     SystemBundle, Time,
 };
+use amethyst_error::Error;
 
-use {Asset, Format, FormatValue, Loader, Result, Source};
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
+use crate::{Asset, Format, FormatValue, Loader, Source};
 
 /// This bundle activates hot reload for the `Loader`,
 /// adds a `HotReloadStrategy` and the `HotReloadSystem`.
@@ -25,7 +28,7 @@ impl HotReloadBundle {
 }
 
 impl<'a, 'b> SystemBundle<'a, 'b> for HotReloadBundle {
-    fn build(self, dispatcher: &mut DispatcherBuilder<'a, 'b>) -> core::Result<()> {
+    fn build(self, dispatcher: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         dispatcher.add(HotReloadSystem::new(self.strategy), "hot_reload", &[]);
         Ok(())
     }
@@ -36,9 +39,6 @@ impl<'a, 'b> SystemBundle<'a, 'b> for HotReloadBundle {
 /// ## Examples
 ///
 /// ```
-/// # extern crate amethyst_assets;
-/// # extern crate amethyst_core;
-/// #
 /// # use amethyst_assets::HotReloadStrategy;
 /// # use amethyst_core::specs::prelude::World;
 /// #
@@ -188,11 +188,11 @@ pub trait Reload<A: Asset>: ReloadClone<A> + Send + Sync + 'static {
     /// Returns the format name.
     fn format(&self) -> &'static str;
     /// Reloads the asset.
-    fn reload(self: Box<Self>) -> Result<FormatValue<A>>;
+    fn reload(self: Box<Self>) -> Result<FormatValue<A>, Error>;
 }
 
 pub trait ReloadClone<A> {
-    fn cloned(&self) -> Box<Reload<A>>;
+    fn cloned(&self) -> Box<dyn Reload<A>>;
 }
 
 impl<A, T> ReloadClone<A> for T
@@ -200,12 +200,12 @@ where
     A: Asset,
     T: Clone + Reload<A>,
 {
-    fn cloned(&self) -> Box<Reload<A>> {
+    fn cloned(&self) -> Box<dyn Reload<A>> {
         Box::new(self.clone())
     }
 }
 
-impl<A: Asset> Clone for Box<Reload<A>> {
+impl<A: Asset> Clone for Box<dyn Reload<A>> {
     fn clone(&self) -> Self {
         self.cloned()
     }
@@ -218,7 +218,7 @@ pub struct SingleFile<A: Asset, F: Format<A>> {
     modified: u64,
     options: F::Options,
     path: String,
-    source: Arc<Source>,
+    source: Arc<dyn Source>,
 }
 
 impl<A: Asset, F: Format<A>> SingleFile<A, F> {
@@ -228,7 +228,7 @@ impl<A: Asset, F: Format<A>> SingleFile<A, F> {
         modified: u64,
         options: F::Options,
         path: String,
-        source: Arc<Source>,
+        source: Arc<dyn Source>,
     ) -> Self {
         SingleFile {
             format,
@@ -275,7 +275,7 @@ where
         F::NAME
     }
 
-    fn reload(self: Box<Self>) -> Result<FormatValue<A>> {
+    fn reload(self: Box<Self>) -> Result<FormatValue<A>, Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("reload_single_file");
 

@@ -2,32 +2,35 @@
 
 use std::fmt::Debug;
 
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-use amethyst_assets::{Format, PrefabData, PrefabError, ProgressCounter};
+use amethyst_assets::{Format, PrefabData, ProgressCounter};
 use amethyst_controls::ControlTagPrefab;
 use amethyst_core::{specs::prelude::Entity, Transform};
+use amethyst_derive::PrefabData;
+use amethyst_error::Error;
 use amethyst_renderer::{
     CameraPrefab, GraphicsPrefab, InternalShape, LightPrefab, Mesh, MeshData, ObjFormat,
     TextureFormat,
 };
 
-use removal::Removal;
+use crate::removal::Removal;
 
 /// Basic `Prefab` scene node, meant to be used for fast prototyping, and most likely replaced
 /// for more complex scenarios.
 ///
 /// ### Type parameters:
 ///
-/// `V`: Vertex format to use for generated `Mesh`es, must to be one of:
+/// - `V`: Vertex format to use for generated `Mesh`es, must to be one of:
 ///     * `Vec<PosTex>`
 ///     * `Vec<PosNormTex>`
 ///     * `Vec<PosNormTangTex>`
 ///     * `ComboMeshCreator`
-/// `R`: The type of id used by the Removal component.
+/// - `R`: The type of id used by the Removal component.
 /// - `M`: `Format` to use for loading `Mesh`es from file
 #[derive(Deserialize, Serialize, PrefabData)]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct BasicScenePrefab<V, R = (), M = ObjFormat>
 where
     M: Format<Mesh> + Clone,

@@ -1,76 +1,49 @@
 //! Provides components and systems to create an in game user interface.
 
 #![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
-#![warn(missing_docs)]
-#![cfg_attr(feature = "cargo-clippy", allow(type_complexity))] // complex project
-
-extern crate amethyst_assets;
-extern crate amethyst_audio;
-extern crate amethyst_core;
-extern crate amethyst_input;
-extern crate amethyst_renderer;
-extern crate clipboard;
-#[macro_use]
-extern crate derivative;
-extern crate fnv;
-extern crate font_kit;
-extern crate gfx;
-extern crate gfx_glyph;
-extern crate glsl_layout;
-extern crate hibitset;
-#[macro_use]
-extern crate log;
-extern crate ron;
-#[macro_use]
-extern crate serde;
-extern crate shred;
-#[macro_use]
-extern crate shred_derive;
-extern crate unicode_normalization;
-extern crate unicode_segmentation;
-extern crate winit;
-
-#[macro_use]
-#[cfg(feature = "profiler")]
-extern crate thread_profiler;
-
-mod action_components;
-mod bundle;
-mod button;
-mod event;
-mod focused;
-mod font;
-mod format;
-mod image;
-mod layout;
-mod pass;
-mod prefab;
-mod resize;
-mod text;
-mod transform;
+#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 pub use self::{
-    action_components::{OnUiActionImage, OnUiActionSound},
     bundle::UiBundle,
-    button::{UiButton, UiButtonBuilder, UiButtonBuilderResources, UiButtonSystem},
-    event::{MouseReactive, UiEvent, UiEventType, UiMouseSystem},
-    focused::UiFocused,
+    button::{
+        UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionRetriggerSystem,
+        UiButtonActionType, UiButtonBuilder, UiButtonBuilderResources, UiButtonSystem,
+    },
+    event::{targeted, Interactable, UiEvent, UiEventType, UiMouseSystem},
+    event_retrigger::{EventReceiver, EventRetriggerSystem},
     font::{
         default::get_default_font,
         systemfont::{default_system_font, get_all_font_handles, list_system_font_families},
     },
     format::{FontAsset, FontFormat, FontHandle, OtfFormat, TtfFormat},
-    image::UiImage,
     layout::{Anchor, ScaleMode, Stretch, UiTransformSystem},
     pass::DrawUi,
     prefab::{
-        NoCustomUi, ToNativeWidget, UiCreator, UiFormat, UiImageBuilder, UiLoader, UiLoaderSystem,
+        NoCustomUi, ToNativeWidget, UiCreator, UiFormat, UiImagePrefab, UiLoader, UiLoaderSystem,
         UiPrefab, UiTextBuilder, UiTransformBuilder, UiWidget,
     },
     resize::{ResizeSystem, UiResize},
-    text::{LineMode, TextEditing, UiKeyboardSystem, UiText},
+    selection::{Selectable, Selected, SelectionKeyboardSystem, SelectionMouseSystem},
+    selection_order_cache::{CacheSelectionOrderSystem, CachedSelectionOrder},
+    sound::{UiPlaySoundAction, UiSoundRetrigger, UiSoundRetriggerSystem, UiSoundSystem},
+    text::{LineMode, TextEditing, TextEditingMouseSystem, UiText},
+    text_editing::TextEditingInputSystem,
     transform::{UiFinder, UiTransform},
 };
 
-/// How many times the cursor blinks per second while editing text.
-const CURSOR_BLINK_RATE: f32 = 2.0;
+mod bundle;
+mod button;
+mod event;
+mod event_retrigger;
+mod font;
+mod format;
+mod layout;
+mod pass;
+mod prefab;
+mod resize;
+mod selection;
+mod selection_order_cache;
+mod sound;
+mod text;
+mod text_editing;
+mod transform;

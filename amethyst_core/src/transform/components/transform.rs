@@ -3,6 +3,7 @@
 use std::borrow::Borrow;
 
 use nalgebra::{self as na, Matrix4};
+use serde::{Deserialize, Serialize};
 use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 
 /// Performs a global transformation on the entity (transform from origin).
@@ -65,7 +66,7 @@ impl Borrow<[[f32; 4]; 4]> for GlobalTransform {
 
 #[cfg(test)]
 mod tests {
-    use GlobalTransform;
+    use crate::GlobalTransform;
 
     #[test]
     fn is_finite() {

@@ -1,6 +1,7 @@
 use std::{hash::Hash, marker, time::Duration};
 
 use fnv::FnvHashMap;
+use log::error;
 use minterpolate::InterpolationPrimitive;
 
 use amethyst_assets::{AssetStorage, Handle};
@@ -12,7 +13,7 @@ use amethyst_core::{
     timing::secs_to_duration,
 };
 
-use resources::{
+use crate::resources::{
     Animation, AnimationCommand, AnimationControl, AnimationControlSet, AnimationHierarchy,
     AnimationSampling, AnimationSet, ApplyData, ControlState, DeferStartRelation, RestState,
     Sampler, SamplerControl, SamplerControlSet, StepDirection,
@@ -110,7 +111,8 @@ where
                                 &mut self.next_id,
                                 &apply_data,
                             )
-                        }) {
+                        })
+                {
                     control.state = state;
                 }
                 if let AnimationCommand::Step(_) = control.command {
@@ -184,7 +186,8 @@ where
                                 &mut next_id,
                                 &apply_data,
                             )
-                        }) {
+                        })
+                {
                     def.control.state = state;
                 }
                 control_set.insert(id, def.control);
@@ -213,7 +216,7 @@ fn get_running_duration<T>(
     entity: &Entity,
     control: &AnimationControl<T>,
     hierarchy: Option<&AnimationHierarchy<T>>,
-    samplers: &WriteStorage<SamplerControlSet<T>>,
+    samplers: &WriteStorage<'_, SamplerControlSet<T>>,
 ) -> f32
 where
     T: AnimationSampling,
@@ -281,12 +284,12 @@ fn process_animation_control<T>(
     control: &mut AnimationControl<T>,
     hierarchy: Option<&AnimationHierarchy<T>>,
     sampler_storage: &AssetStorage<Sampler<T::Primitive>>,
-    samplers: &mut WriteStorage<SamplerControlSet<T>>,
-    rest_states: &mut WriteStorage<RestState<T>>,
-    targets: &ReadStorage<T>,
+    samplers: &mut WriteStorage<'_, SamplerControlSet<T>>,
+    rest_states: &mut WriteStorage<'_, RestState<T>>,
+    targets: &ReadStorage<'_, T>,
     remove: &mut bool,
     next_id: &mut u64,
-    apply_data: &<T as ApplyData>::ApplyData,
+    apply_data: &<T as ApplyData<'_>>::ApplyData,
 ) -> Option<ControlState>
 where
     T: AnimationSampling + Component + Clone,
@@ -397,7 +400,8 @@ where
                         .map(|sampler| {
                             sampler.clear(control.id);
                             sampler.is_empty()
-                        }).unwrap_or(false);
+                        })
+                        .unwrap_or(false);
                     if empty {
                         samplers.remove(*node_entity);
                     }
@@ -434,10 +438,10 @@ fn start_animation<T>(
     sampler_storage: &AssetStorage<Sampler<T::Primitive>>,
     control: &AnimationControl<T>,
     hierarchy: &AnimationHierarchy<T>,
-    samplers: &mut WriteStorage<SamplerControlSet<T>>,
-    rest_states: &mut WriteStorage<RestState<T>>,
-    targets: &ReadStorage<T>, // for rest state
-    apply_data: &<T as ApplyData>::ApplyData,
+    samplers: &mut WriteStorage<'_, SamplerControlSet<T>>,
+    rest_states: &mut WriteStorage<'_, RestState<T>>,
+    targets: &ReadStorage<'_, T>, // for rest state
+    apply_data: &<T as ApplyData<'_>>::ApplyData,
 ) -> bool
 where
     T: AnimationSampling + Component + Clone,
@@ -449,7 +453,8 @@ where
         .any(|&(ref node_index, _, ref sampler_handle)| {
             !hierarchy.nodes.contains_key(node_index)
                 || sampler_storage.get(sampler_handle).is_none()
-        }) {
+        })
+    {
         return false;
     }
 
@@ -506,7 +511,7 @@ where
 fn pause_animation<T>(
     control_id: u64,
     hierarchy: &AnimationHierarchy<T>,
-    samplers: &mut WriteStorage<SamplerControlSet<T>>,
+    samplers: &mut WriteStorage<'_, SamplerControlSet<T>>,
 ) where
     T: AnimationSampling,
 {
@@ -520,7 +525,7 @@ fn pause_animation<T>(
 fn unpause_animation<T>(
     control_id: u64,
     hierarchy: &AnimationHierarchy<T>,
-    samplers: &mut WriteStorage<SamplerControlSet<T>>,
+    samplers: &mut WriteStorage<'_, SamplerControlSet<T>>,
 ) where
     T: AnimationSampling,
 {
@@ -534,7 +539,7 @@ fn unpause_animation<T>(
 fn step_animation<T>(
     control_id: u64,
     hierarchy: &AnimationHierarchy<T>,
-    controls: &mut WriteStorage<SamplerControlSet<T>>,
+    controls: &mut WriteStorage<'_, SamplerControlSet<T>>,
     sampler_storage: &AssetStorage<Sampler<T::Primitive>>,
     direction: &StepDirection,
 ) where
@@ -550,7 +555,7 @@ fn step_animation<T>(
 fn set_animation_input<T>(
     control_id: u64,
     hierarchy: &AnimationHierarchy<T>,
-    controls: &mut WriteStorage<SamplerControlSet<T>>,
+    controls: &mut WriteStorage<'_, SamplerControlSet<T>>,
     input: f32,
 ) where
     T: AnimationSampling,
@@ -565,7 +570,7 @@ fn set_animation_input<T>(
 fn set_blend_weights<T>(
     control_id: u64,
     hierarchy: &AnimationHierarchy<T>,
-    controls: &mut WriteStorage<SamplerControlSet<T>>,
+    controls: &mut WriteStorage<'_, SamplerControlSet<T>>,
     weights: &Vec<(usize, T::Channel, f32)>,
 ) where
     T: AnimationSampling,
@@ -582,7 +587,7 @@ fn set_blend_weights<T>(
 fn update_animation_rate<T>(
     control_id: u64,
     hierarchy: &AnimationHierarchy<T>,
-    samplers: &mut WriteStorage<SamplerControlSet<T>>,
+    samplers: &mut WriteStorage<'_, SamplerControlSet<T>>,
     rate_multiplier: f32,
 ) where
     T: AnimationSampling,
@@ -599,7 +604,7 @@ fn update_animation_rate<T>(
 fn check_and_terminate_animation<T>(
     control_id: u64,
     hierarchy: &AnimationHierarchy<T>,
-    samplers: &mut WriteStorage<SamplerControlSet<T>>,
+    samplers: &mut WriteStorage<'_, SamplerControlSet<T>>,
 ) -> bool
 where
     T: AnimationSampling,
@@ -613,7 +618,8 @@ where
                 .map(|sampler| {
                     sampler.clear(control_id);
                     sampler.is_empty()
-                }).unwrap_or(false);
+                })
+                .unwrap_or(false);
             if empty {
                 samplers.remove(*node_entity);
             }
@@ -634,7 +640,7 @@ where
 fn check_termination<T>(
     control_id: u64,
     hierarchy: &AnimationHierarchy<T>,
-    samplers: &WriteStorage<SamplerControlSet<T>>,
+    samplers: &WriteStorage<'_, SamplerControlSet<T>>,
 ) -> bool
 where
     T: AnimationSampling,

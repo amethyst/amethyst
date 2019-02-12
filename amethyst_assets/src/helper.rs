@@ -1,9 +1,9 @@
-use std::borrow::Borrow;
-use std::hash::Hash;
+use std::{borrow::Borrow, hash::Hash};
 
 use amethyst_core::specs::{Read, ReadExpect};
+use shred_derive::SystemData;
 
-use {Asset, AssetStorage, Format, Handle, Loader, Progress};
+use crate::{Asset, AssetStorage, Format, Handle, Loader, Progress};
 
 /// Helper type for loading assets
 #[derive(SystemData)]

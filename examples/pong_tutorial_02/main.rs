@@ -1,5 +1,3 @@
-extern crate amethyst;
-
 mod pong;
 
 use amethyst::{
@@ -12,14 +10,11 @@ use amethyst::{
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    use pong::Pong;
+    use crate::pong::Pong;
 
-    let app_root = application_root_dir();
+    let app_root = application_root_dir()?;
 
-    let path = format!(
-        "{}/examples/pong_tutorial_02/resources/display_config.ron",
-        app_root
-    );
+    let path = app_root.join("examples/pong_tutorial_02/resources/display_config.ron");
     let config = DisplayConfig::load(&path);
 
     let pipe = Pipeline::build().with_stage(
@@ -33,7 +28,7 @@ fn main() -> amethyst::Result<()> {
 
     // This line is not mentioned in the pong tutorial as it is specific to the context
     // of the git repository. It only is a different location to load the assets from.
-    let assets_dir = format!("{}/examples/assets/", app_root);
+    let assets_dir = app_root.join("examples/assets/");
 
     let mut game = Application::new(assets_dir, Pong, game_data)?;
     game.run();

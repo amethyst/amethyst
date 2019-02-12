@@ -1,10 +1,9 @@
+use crate::{config::ArenaConfig, Paddle};
 use amethyst::{
     core::{timing::Time, transform::Transform},
     ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
     input::InputHandler,
 };
-use config::ArenaConfig;
-use Paddle;
 /// This system is responsible for moving all the paddles according to the user
 /// provided input.
 pub struct PaddleSystem;
@@ -19,7 +18,7 @@ impl<'s> System<'s> for PaddleSystem {
     );
 
     fn run(&mut self, (paddles, mut transforms, time, input, arena_config): Self::SystemData) {
-        use Side;
+        use crate::Side;
 
         // Iterate over all planks and move them according to the input the user
         // provided.

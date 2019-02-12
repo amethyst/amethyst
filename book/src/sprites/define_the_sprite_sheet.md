@@ -11,28 +11,28 @@ Here is an example of such a definition file:
 ```text,ignore
 (
     // Width of the sprite sheet
-    spritesheet_width: 48.0,
+    spritesheet_width: 48,
     // Height of the sprite sheet
-    spritesheet_height: 16.0,
+    spritesheet_height: 16,
     // List of sprites the sheet holds
     sprites: [
         (
             // Horizontal position of the sprite in the sprite sheet
-            x: 0.0,
+            x: 0,
             // Vertical position of the sprite in the sprite sheet
-            y: 0.0,
+            y: 0,
             // Width of the sprite
-            width: 16.0, 
+            width: 16,
             // Height of the sprite
-            height: 16.0, 
+            height: 16,
             // Number of pixels to shift the sprite to the left and down relative to the entity holding it when rendering
             offsets: Some((0.0, 0.0)), // This is optional and defaults to (0.0, 0.0)
         ),
         (
-            x: 16.0,
-            y: 0.0,
-            width: 32.0,
-            height: 16.0,
+            x: 16,
+            y: 0,
+            width: 32,
+            height: 16,
         ),
         // etc...
     ],
@@ -42,7 +42,7 @@ Here is an example of such a definition file:
 
 Then, you can load it using the texture handle of the sheet's image you loaded earlier:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::assets::{Loader, AssetStorage};
 # use amethyst::renderer::{SpriteSheetFormat, SpriteSheet, TextureHandle};
@@ -50,7 +50,7 @@ Then, you can load it using the texture handle of the sheet's image you loaded e
 # fn load_texture() -> TextureHandle {
 #    unimplemented!()
 # }
-# 
+#
 # fn load_sprite_sheet() {
 #   let world = amethyst::ecs::World::new(); // Normally, you would use Amethyst's world
 #   let loader = world.read_resource::<Loader>();
@@ -81,13 +81,12 @@ The following table lists the differences between the coordinate systems:
 | Begin at the top left of the image    | Begin at the bottom left of the image     |
 | Increase to the right and down        | Increase to the right and up              |
 | Range from 0 to (width or height - 1) | Range from 0.0 to 1.0                     |
-| Use pixel values at exact coordinates | Takes average value of surrounding pixels |
 
 In Amethyst, pixel dimensions and texture coordinates are stored in the `Sprite` struct. Since texture coordinates can be derived from pixel coordinates, Amethyst provides the `Sprite::from_pixel_values` function to create a `Sprite`.
 
 The following snippet shows you how to naively define a `SpriteSheet`. In a real application, you would typically use the sprite sheet from file feature, which is much more convenient.
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 use amethyst::renderer::{Sprite, SpriteSheet, TextureCoordinates, TextureHandle};
 
@@ -108,7 +107,7 @@ pub fn load_sprite_sheet(texture: TextureHandle) -> SpriteSheet {
     // Here we are loading the 5th sprite on the bottom row.
     let offset_x = 50; // 5th sprite * 10 pixel sprite width
     let offset_y = 10; // Second row (1) * 10 pixel sprite height
-    let offsets = [5; 2]; // Align the sprite with the middle of the entity.
+    let offsets = [5.0; 2]; // Align the sprite with the middle of the entity.
 
     let sprite = Sprite::from_pixel_values(
         image_w, image_h, sprite_w, sprite_h, offset_x, offset_y, offsets,

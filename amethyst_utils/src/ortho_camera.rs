@@ -1,13 +1,19 @@
 //! Provides a automatically resized orthographic camera.
 
+use amethyst_assets::PrefabData;
 use amethyst_core::{
     nalgebra::Orthographic3,
-    specs::{Component, DenseVecStorage, Join, ReadExpect, ReadStorage, System, WriteStorage},
+    specs::{Component, DenseVecStorage, Entity, Join, ReadExpect, System, WriteStorage},
     Axis2,
 };
+use amethyst_derive::PrefabData;
+use amethyst_error::Error;
 use amethyst_renderer::{Camera, ScreenDimensions};
 
-/// The coordinates that `CameraOrtho` will keep visible in the window
+use serde::{Deserialize, Serialize};
+
+/// The coordinates that `CameraOrtho` will keep visible in the window.
+/// `bottom` can be a higher value than `top`, as is common in 2D coordinates
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Copy)]
 pub struct CameraOrthoWorldCoordinates {
     /// Left x coordinate
@@ -43,7 +49,8 @@ impl CameraOrthoWorldCoordinates {
 
     /// Returns size of the y-axis.
     pub fn height(&self) -> f32 {
-        self.top - self.bottom
+        // abs is in case you're using upside-down coordinates
+        (self.top - self.bottom).abs()
     }
 }
 
@@ -56,14 +63,16 @@ impl Default for CameraOrthoWorldCoordinates {
 /// `Component` attached to the camera's entity that allows automatically adjusting the camera's matrix according
 /// to preferences in the "mode" and "world_coordinates" fields.
 /// It adjusts the camera so that the camera's world coordinates are always visible.
-/// You must add the `CameraNormalOrthoSystem` to your dispatcher for this to take effect (no dependencies required).
-#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// You must add the `CameraOrthoSystem` to your dispatcher for this to take effect (no dependencies required).
+#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, PrefabData)]
+#[prefab(Component)]
 pub struct CameraOrtho {
     /// How the camera's matrix is changed when the window's aspect ratio changes.
     /// See `CameraNormalizeMode` for more info.
     pub mode: CameraNormalizeMode,
     /// The world coordinates that this camera will keep visible as the window size changes
     pub world_coordinates: CameraOrthoWorldCoordinates,
+    aspect_ratio_cache: f32,
 }
 
 impl CameraOrtho {
@@ -72,6 +81,7 @@ impl CameraOrtho {
         CameraOrtho {
             mode,
             world_coordinates: Default::default(),
+            aspect_ratio_cache: 0.0,
         }
     }
 
@@ -140,17 +150,12 @@ impl CameraNormalizeMode {
             },
             CameraNormalizeMode::Contain => {
                 let desired_aspect_ratio = desired_coordinates.aspect_ratio();
+                // We don't need an == case because lossy handles it just fine
                 if window_aspect_ratio > desired_aspect_ratio {
+                    // The window is wide, bars should be on X
                     CameraNormalizeMode::lossy_x(window_aspect_ratio, desired_coordinates)
-                } else if window_aspect_ratio < desired_aspect_ratio {
-                    CameraNormalizeMode::lossy_y(window_aspect_ratio, desired_coordinates)
                 } else {
-                    (
-                        desired_coordinates.left,
-                        desired_coordinates.right,
-                        desired_coordinates.bottom,
-                        desired_coordinates.top,
-                    )
+                    CameraNormalizeMode::lossy_y(window_aspect_ratio, desired_coordinates)
                 }
             }
         }
@@ -175,9 +180,16 @@ impl CameraNormalizeMode {
         window_aspect_ratio: f32,
         desired_coordinates: &CameraOrthoWorldCoordinates,
     ) -> (f32, f32, f32, f32) {
+        // If bottom is higher than top (common in 2D graphics), we flip the offset
+        let sign = if desired_coordinates.bottom > desired_coordinates.top {
+            -1.0
+        } else {
+            1.0
+        };
         let offset = (desired_coordinates.width() / window_aspect_ratio
             - desired_coordinates.height())
-            / 2.0;
+            / 2.0
+            * sign;
         (
             desired_coordinates.left,
             desired_coordinates.right,
@@ -196,25 +208,22 @@ impl Default for CameraNormalizeMode {
 /// System that automatically changes the camera matrix according to the settings in
 /// the `CameraOrtho` attached to the camera entity.
 #[derive(Default)]
-pub struct CameraOrthoSystem {
-    aspect_ratio_cache: f32,
-}
+pub struct CameraOrthoSystem;
 
 impl<'a> System<'a> for CameraOrthoSystem {
     type SystemData = (
         ReadExpect<'a, ScreenDimensions>,
         WriteStorage<'a, Camera>,
-        ReadStorage<'a, CameraOrtho>,
+        WriteStorage<'a, CameraOrtho>,
     );
 
     #[cfg_attr(feature = "cargo-clippy", allow(float_cmp))] // cmp just used to recognize change
-    fn run(&mut self, (dimensions, mut cameras, ortho_cameras): Self::SystemData) {
+    fn run(&mut self, (dimensions, mut cameras, mut ortho_cameras): Self::SystemData) {
         let aspect = dimensions.aspect_ratio();
 
-        if aspect != self.aspect_ratio_cache {
-            self.aspect_ratio_cache = aspect;
-
-            for (mut camera, ortho_camera) in (&mut cameras, &ortho_cameras).join() {
+        for (mut camera, mut ortho_camera) in (&mut cameras, &mut ortho_cameras).join() {
+            if aspect != ortho_camera.aspect_ratio_cache {
+                ortho_camera.aspect_ratio_cache = aspect;
                 let offsets = ortho_camera.camera_offsets(aspect);
 
                 let prev = Orthographic3::from_matrix_unchecked(camera.proj);
@@ -225,7 +234,8 @@ impl<'a> System<'a> for CameraOrthoSystem {
                     offsets.3,
                     prev.znear(),
                     prev.zfar(),
-                ).to_homogeneous();
+                )
+                .to_homogeneous();
             }
         }
     }
@@ -233,14 +243,14 @@ impl<'a> System<'a> for CameraOrthoSystem {
 
 #[cfg(test)]
 mod test {
-    use ortho_camera::{CameraNormalizeMode, CameraOrtho, CameraOrthoWorldCoordinates};
+    use crate::ortho_camera::{CameraNormalizeMode, CameraOrtho, CameraOrthoWorldCoordinates};
 
     use super::Axis2;
 
     // TODO: Disabled until someone fixes the formula (if possible).
     /*#[test]
     fn near_far_from_camera() {
-    	use amethyst_core::cgmath::{Ortho, Matrix4};
+        use amethyst_core::cgmath::{Ortho, Matrix4};
         let mat4 = Matrix4::from(Ortho {
             left: 0.0,
             right: 1.0,
@@ -333,6 +343,22 @@ mod test {
     }
 
     #[test]
+    fn flipped_y_lossy_vertical() {
+        let aspect = 1.0 / 2.0;
+        let cam = CameraOrtho {
+            mode: CameraNormalizeMode::Contain,
+            world_coordinates: CameraOrthoWorldCoordinates {
+                left: 0.0,
+                right: 1.0,
+                top: 0.0,
+                bottom: 1.0,
+            },
+            aspect_ratio_cache: 0.0,
+        };
+        assert_eq!((0.0, 1.0, 1.5, -0.5), cam.camera_offsets(aspect));
+    }
+
+    #[test]
     fn camera_square_contain() {
         let aspect = 1.0 / 1.0;
         let cam = CameraOrtho {
@@ -343,6 +369,7 @@ mod test {
                 top: 2.0,
                 bottom: 0.0,
             },
+            aspect_ratio_cache: 0.0,
         };
         assert_eq!((0.0, 2.0, 0.0, 2.0), cam.camera_offsets(aspect));
     }
@@ -358,6 +385,7 @@ mod test {
                 top: 2.0,
                 bottom: 0.0,
             },
+            aspect_ratio_cache: 0.0,
         };
         assert_eq!((-1.0, 3.0, 0.0, 2.0), cam.camera_offsets(aspect));
     }
@@ -373,6 +401,7 @@ mod test {
                 top: 2.0,
                 bottom: 0.0,
             },
+            aspect_ratio_cache: 0.0,
         };
         assert_eq!((0.0, 2.0, -1.0, 3.0), cam.camera_offsets(aspect));
     }

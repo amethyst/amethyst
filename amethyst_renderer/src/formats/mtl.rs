@@ -1,7 +1,10 @@
-use amethyst_assets::{Format, Handle, PrefabData, PrefabError, ProgressCounter};
+use amethyst_assets::{Format, Handle, PrefabData, ProgressCounter};
 use amethyst_core::specs::prelude::{Entity, ReadExpect, WriteStorage};
+use amethyst_error::Error;
 
-use {
+use serde::{Deserialize, Serialize};
+
+use crate::{
     mtl::{Material, MaterialDefaults, TextureOffset},
     transparent::Transparent,
 };
@@ -82,7 +85,7 @@ where
 fn load_handle<F>(
     entity: Entity,
     prefab: &Option<TexturePrefab<F>>,
-    tp_data: &mut <TexturePrefab<F> as PrefabData>::SystemData,
+    tp_data: &mut <TexturePrefab<F> as PrefabData<'_>>::SystemData,
     def: &Handle<Texture>,
 ) -> Handle<Texture>
 where
@@ -111,7 +114,7 @@ where
         entity: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         let &mut (ref mut material, ref mat_default, ref mut tp_data, ref mut transparent) =
             system_data;
         let mtl = Material {
@@ -147,7 +150,7 @@ where
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
-    ) -> Result<bool, PrefabError> {
+    ) -> Result<bool, Error> {
         let &mut (_, _, ref mut tp_data, _) = system_data;
         let mut ret = false;
         if let Some(ref mut texture) = self.albedo {

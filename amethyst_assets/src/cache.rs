@@ -1,8 +1,9 @@
 use std::{borrow::Borrow, hash::Hash};
 
+use derivative::Derivative;
 use fnv::FnvHashMap;
 
-use {Handle, WeakHandle};
+use crate::{Handle, WeakHandle};
 
 /// A simple cache for asset handles of type `A`.
 /// This stores `WeakHandle`, so it doesn't keep the assets alive.

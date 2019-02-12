@@ -1,8 +1,10 @@
 //! Flat forward drawing pass that mimics a blit.
 
+use derivative::Derivative;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
+use log::warn;
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
@@ -10,10 +12,10 @@ use amethyst_core::{
     specs::prelude::{Join, Read, ReadStorage},
     transform::GlobalTransform,
 };
+use amethyst_error::Error;
 
-use {
+use crate::{
     cam::{ActiveCamera, Camera},
-    error::Result,
     hidden::{Hidden, HiddenPropagate},
     mesh::MeshHandle,
     pass::util::{add_texture, get_camera, set_view_args, setup_textures, ViewArgs},
@@ -26,6 +28,7 @@ use {
     tex::{Texture, TextureHandle},
     types::{Encoder, Factory, Slice},
     vertex::{Attributes, Query, VertexFormat},
+    Color, Rgba,
 };
 
 use super::*;
@@ -59,13 +62,13 @@ where
     }
 
     fn attributes() -> Attributes<'static> {
-        <SpriteInstance as Query<(DirX, DirY, Pos, OffsetU, OffsetV, Depth)>>::QUERIED_ATTRIBUTES
+        <SpriteInstance as Query<(DirX, DirY, Pos, OffsetU, OffsetV, Depth, Color)>>::QUERIED_ATTRIBUTES
     }
 }
 
 impl<'a> PassData<'a> for DrawFlat2D {
     type Data = (
-        Option<Read<'a, ActiveCamera>>,
+        Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         Read<'a, AssetStorage<SpriteSheet>>,
         Read<'a, AssetStorage<Texture>>,
@@ -77,11 +80,12 @@ impl<'a> PassData<'a> for DrawFlat2D {
         ReadStorage<'a, TextureHandle>,
         ReadStorage<'a, Flipped>,
         ReadStorage<'a, MeshHandle>,
+        ReadStorage<'a, Rgba>,
     );
 }
 
 impl Pass for DrawFlat2D {
-    fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         use std::mem;
 
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);
@@ -91,7 +95,8 @@ impl Pass for DrawFlat2D {
                 "ViewArgs",
                 mem::size_of::<<ViewArgs as Uniform>::Std140>(),
                 1,
-            ).with_raw_vertex_buffer(Self::attributes(), SpriteInstance::size() as ElemStride, 1);
+            )
+            .with_raw_vertex_buffer(Self::attributes(), SpriteInstance::size() as ElemStride, 1);
         setup_textures(&mut builder, &TEXTURES);
         match self.transparency {
             Some((mask, blend, depth)) => builder.with_blended_output("color", mask, blend, depth),
@@ -118,16 +123,18 @@ impl Pass for DrawFlat2D {
             texture_handle,
             flipped,
             mesh,
+            rgba,
         ): <Self as PassData<'a>>::Data,
     ) {
         let camera = get_camera(active, &camera, &global);
 
         match visibility {
             None => {
-                for (sprite_render, global, flipped, _, _) in (
+                for (sprite_render, global, flipped, rgba, _, _) in (
                     &sprite_render,
                     &global,
                     flipped.maybe(),
+                    rgba.maybe(),
                     !&hidden,
                     !&hidden_prop,
                 )
@@ -137,15 +144,17 @@ impl Pass for DrawFlat2D {
                         sprite_render,
                         Some(global),
                         flipped,
+                        rgba,
                         &sprite_sheet_storage,
                         &tex_storage,
                     );
                 }
 
-                for (image_render, global, flipped, _, _, _) in (
+                for (image_render, global, flipped, rgba, _, _, _) in (
                     &texture_handle,
                     &global,
                     flipped.maybe(),
+                    rgba.maybe(),
                     !&hidden,
                     !&hidden_prop,
                     !&mesh,
@@ -153,16 +162,17 @@ impl Pass for DrawFlat2D {
                     .join()
                 {
                     self.batch
-                        .add_image(image_render, Some(global), flipped, &tex_storage);
+                        .add_image(image_render, Some(global), flipped, rgba, &tex_storage);
                 }
 
                 self.batch.sort();
             }
             Some(ref visibility) => {
-                for (sprite_render, global, flipped, _) in (
+                for (sprite_render, global, flipped, rgba, _) in (
                     &sprite_render,
                     &global,
                     flipped.maybe(),
+                    rgba.maybe(),
                     &visibility.visible_unordered,
                 )
                     .join()
@@ -171,22 +181,24 @@ impl Pass for DrawFlat2D {
                         sprite_render,
                         Some(global),
                         flipped,
+                        rgba,
                         &sprite_sheet_storage,
                         &tex_storage,
                     );
                 }
 
-                for (image_render, global, flipped, _, _) in (
+                for (image_render, global, flipped, rgba, _, _) in (
                     &texture_handle,
                     &global,
                     flipped.maybe(),
+                    rgba.maybe(),
                     &visibility.visible_unordered,
                     !&mesh,
                 )
                     .join()
                 {
                     self.batch
-                        .add_image(image_render, Some(global), flipped, &tex_storage);
+                        .add_image(image_render, Some(global), flipped, rgba, &tex_storage);
                 }
 
                 // We are free to optimize the order of the opaque sprites.
@@ -198,6 +210,7 @@ impl Pass for DrawFlat2D {
                             sprite_render,
                             global.get(*entity),
                             flipped.get(*entity),
+                            rgba.get(*entity),
                             &sprite_sheet_storage,
                             &tex_storage,
                         );
@@ -206,6 +219,7 @@ impl Pass for DrawFlat2D {
                             texture_handle,
                             global.get(*entity),
                             flipped.get(*entity),
+                            rgba.get(*entity),
                             &tex_storage,
                         )
                     }
@@ -230,12 +244,14 @@ enum TextureDrawData {
         texture_handle: Handle<Texture>,
         render: SpriteRender,
         flipped: Option<Flipped>,
+        rgba: Option<Rgba>,
         transform: GlobalTransform,
     },
     Image {
         texture_handle: Handle<Texture>,
         transform: GlobalTransform,
         flipped: Option<Flipped>,
+        rgba: Option<Rgba>,
         width: usize,
         height: usize,
     },
@@ -275,6 +291,7 @@ impl TextureBatch {
         texture_handle: &TextureHandle,
         global: Option<&GlobalTransform>,
         flipped: Option<&Flipped>,
+        rgba: Option<&Rgba>,
         tex_storage: &AssetStorage<Texture>,
     ) {
         let global = match global {
@@ -293,7 +310,8 @@ impl TextureBatch {
         self.textures.push(TextureDrawData::Image {
             texture_handle: texture_handle.clone(),
             transform: *global,
-            flipped: flipped.map(|it| it.clone()),
+            flipped: flipped.cloned(),
+            rgba: rgba.cloned(),
             width: texture_dims.0,
             height: texture_dims.1,
         });
@@ -304,6 +322,7 @@ impl TextureBatch {
         sprite_render: &SpriteRender,
         global: Option<&GlobalTransform>,
         flipped: Option<&Flipped>,
+        rgba: Option<&Rgba>,
         sprite_sheet_storage: &AssetStorage<SpriteSheet>,
         tex_storage: &AssetStorage<Texture>,
     ) {
@@ -336,7 +355,8 @@ impl TextureBatch {
         self.textures.push(TextureDrawData::Sprite {
             texture_handle,
             render: sprite_render.clone(),
-            flipped: flipped.map(|it| it.clone()),
+            flipped: flipped.cloned(),
+            rgba: rgba.cloned(),
             transform: *global,
         });
     }
@@ -391,9 +411,12 @@ impl TextureBatch {
                 _ => (false, false),
             };
 
-            let (dir_x, dir_y, pos, uv_left, uv_right, uv_top, uv_bottom) = match quad {
+            let (dir_x, dir_y, pos, uv_left, uv_right, uv_top, uv_bottom, rgba) = match quad {
                 TextureDrawData::Sprite {
-                    render, transform, ..
+                    render,
+                    transform,
+                    rgba,
+                    ..
                 } => {
                     let sprite_sheet = sprite_sheet_storage
                         .get(&render.sprite_sheet)
@@ -426,21 +449,18 @@ impl TextureBatch {
                     //
                     // * libgdx: <https://gamedev.stackexchange.com/q/22553>
                     // * godot: <https://godotengine.org/qa/9784>
-                    let pos =
-                        transform
-                            * Vector4::new(
-                                -sprite_data.offsets[0],
-                                -sprite_data.offsets[1],
-                                0.0,
-                                1.0,
-                            );
+                    let pos = transform
+                        * Vector4::new(-sprite_data.offsets[0], -sprite_data.offsets[1], 0.0, 1.0);
 
-                    (dir_x, dir_y, pos, uv_left, uv_right, uv_top, uv_bottom)
+                    (
+                        dir_x, dir_y, pos, uv_left, uv_right, uv_top, uv_bottom, rgba,
+                    )
                 }
                 TextureDrawData::Image {
                     transform,
                     width,
                     height,
+                    rgba,
                     ..
                 } => {
                     let (uv_left, uv_right) = if flip_horizontal {
@@ -461,13 +481,15 @@ impl TextureBatch {
 
                     let pos = transform * Vector4::new(1.0, 1.0, 0.0, 1.0);
 
-                    (dir_x, dir_y, pos, uv_left, uv_right, uv_top, uv_bottom)
+                    (
+                        dir_x, dir_y, pos, uv_left, uv_right, uv_top, uv_bottom, rgba,
+                    )
                 }
             };
-
+            let rgba = rgba.unwrap_or(Rgba::WHITE);
             instance_data.extend(&[
                 dir_x.x, dir_x.y, dir_y.x, dir_y.y, pos.x, pos.y, uv_left, uv_right, uv_bottom,
-                uv_top, pos.z,
+                uv_top, pos.z, rgba.0, rgba.1, rgba.2, rgba.3,
             ]);
             num_instances += 1;
 

@@ -21,8 +21,8 @@ pub const BALL_RADIUS: f32 = 2.0;
 
 pub struct Pong;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Pong {
-    fn on_start(&mut self, data: StateData<GameData>) {
+impl SimpleState for Pong {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
 
         // Load the spritesheet necessary to render the graphics.
@@ -52,8 +52,8 @@ impl Paddle {
     fn new(side: Side) -> Paddle {
         Paddle {
             side: side,
-            width: 1.0,
-            height: 1.0,
+            width: PADDLE_WIDTH,
+            height: PADDLE_HEIGHT,
         }
     }
 }
@@ -110,7 +110,8 @@ fn initialise_camera(world: &mut World) {
             ARENA_WIDTH,
             ARENA_HEIGHT,
             0.0,
-        ))).with(transform)
+        )))
+        .with(transform)
         .build();
 }
 
@@ -166,6 +167,7 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
         .with(Ball {
             radius: BALL_RADIUS,
             velocity: [BALL_VELOCITY_X, BALL_VELOCITY_Y],
-        }).with(local_transform)
+        })
+        .with(local_transform)
         .build();
 }

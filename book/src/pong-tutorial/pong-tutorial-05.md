@@ -16,7 +16,7 @@ reached either edge of the arena and reset its position and velocity. We'll also
 make a note of who got the point for the round.
 
 First, we'll add a new module to `systems/mod.rs`
-```rust,no_run,noplaypen,ignore
+```rust,ignore
 mod winner;
 
 pub use self::winner::WinnerSystem;
@@ -24,7 +24,7 @@ pub use self::winner::WinnerSystem;
 
 Then, we'll create `systems/winner.rs`:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 #
 # mod pong {
@@ -46,7 +46,7 @@ use amethyst::{
     ecs::prelude::{Join, System, WriteStorage},
 };
 
-use pong::{Ball, ARENA_WIDTH};
+use crate::pong::{Ball, ARENA_WIDTH};
 
 pub struct WinnerSystem;
 
@@ -91,7 +91,7 @@ its direction and put it back in the middle of the screen.
 Now, we just need to add our new system to `main.rs`, and we should be able to
 keep playing after someone scores and log who got the point.
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 #
 # use amethyst::{
@@ -170,7 +170,7 @@ to display our players scores.
 
 First, let's add the UI rendering in `main.rs`:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 #
 use amethyst::{
@@ -258,7 +258,7 @@ and `axes`. So just know that your `UiBundle` type should match your
 Now we have everything set up so we can start rendering a scoreboard in our
 game. We'll start by creating some structures in `pong.rs`:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 #
 use amethyst::{
@@ -286,8 +286,8 @@ use amethyst::{
 # 
 # pub struct Pong;
 # 
-# impl<'a, 'b> SimpleState<'a, 'b> for Pong {
-#     fn on_start(&mut self, data: StateData<GameData>) {
+# impl SimpleState for Pong {
+#     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
 #         let world = data.world;
 # 
 #         // Load the spritesheet necessary to render the graphics.
@@ -450,6 +450,7 @@ pub struct ScoreText {
 #         .build();
 # }
 ```
+> Don't glimpse over the `#[derive(Default)]` annotation for the `ScoreBoard` struct!
 
 `ScoreBoard` is just a container that will allow us to keep track of each
 player's score. We'll use this in another module later in this chapter, so we've
@@ -457,7 +458,7 @@ gone ahead and marked it as public (same with `ScoreText`). `ScoreText` is also
 a container, but this one holds handles to the UI `Entity`s that will be
 rendered to the screen. We'll create those next:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 #
 use amethyst::{
@@ -486,8 +487,8 @@ use amethyst::{
 # 
 # pub struct Pong;
 # 
-impl<'a, 'b> SimpleState<'a, 'b> for Pong {
-    fn on_start(&mut self, data: StateData<GameData>) {
+impl SimpleState for Pong {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
 #         let world = data.world;
 #
 #         // Load the spritesheet necessary to render the graphics.
@@ -664,11 +665,11 @@ fn initialise_scoreboard(world: &mut World) {
     );
     let p1_transform = UiTransform::new(
         "P1".to_string(), Anchor::TopMiddle,
-        -50., -50., 1., 200., 50., 0,
+        -50., -50., 1., 200., 50.,
     );
     let p2_transform = UiTransform::new(
         "P2".to_string(), Anchor::TopMiddle,
-        50., -50., 1., 200., 50., 0,
+        50., -50., 1., 200., 50.,
     );
 
     let p1_score = world
@@ -734,7 +735,7 @@ point. You'll see just how easy this is with our `ECS` design. All we have to do
 is modify our `WinnerSystem` to access the players' scores and update them
 accordingly:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 #
 # mod pong {
@@ -769,7 +770,7 @@ use amethyst::{
     ui::UiText,
 };
 
-use pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH};
+use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH};
 
 pub struct WinnerSystem;
 
@@ -844,8 +845,8 @@ handles to the `UiText` components that we want. Finally, we add the
 We're using `Write` here to pull in the `ScoreBoard` instead of with
 `WriteStorage` because we want mutable access to `ScoreBoard`, which is not a
 collection of components but rather a single resource item. This item is
-strictly required in all cases, but if it we didn't want it to always be
-required to exist, we could use `Option<Write<'s, ScoreBoard>>`.
+strictly required in all cases, but if we wanted it to be optional we could
+use `Option<Write<'s, ScoreBoard>>` instead.
 
 We also use `ReadExpect` to access the `ScoreText` resource immutably. Again,
 `ScoreText` is a single resource item rather than a collection of components.

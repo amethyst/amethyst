@@ -1,8 +1,9 @@
 //! Demonstrates how to use a custom game data structure
 
-extern crate amethyst;
-extern crate rayon;
-
+use crate::{
+    example_system::ExampleSystem,
+    game_data::{CustomGameData, CustomGameDataBuilder},
+};
 use amethyst::{
     assets::{
         Completion, Handle, Prefab, PrefabLoader, PrefabLoaderSystem, ProgressCounter, RonFormat,
@@ -22,8 +23,6 @@ use amethyst::{
     utils::{application_root_dir, fps_counter::FPSCounterBundle, scene::BasicScenePrefab},
     Error,
 };
-use example_system::ExampleSystem;
-use game_data::{CustomGameData, CustomGameDataBuilder};
 
 mod example_system;
 mod game_data;
@@ -59,18 +58,18 @@ impl Component for Tag {
 }
 
 impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Loading {
-    fn on_start(&mut self, data: StateData<CustomGameData>) {
-        self.scene = Some(data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
+    fn on_start(&mut self, data: StateData<'_, CustomGameData<'_, '_>>) {
+        self.scene = Some(data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/renderable.ron", RonFormat, (), &mut self.progress)
         }));
 
-        self.load_ui = Some(data.world.exec(|mut creator: UiCreator| {
+        self.load_ui = Some(data.world.exec(|mut creator: UiCreator<'_>| {
             creator.create("ui/fps.ron", &mut self.progress);
             creator.create("ui/loading.ron", &mut self.progress)
         }));
         self.paused_ui = Some(
             data.world
-                .exec(|loader: UiLoader| loader.load("ui/paused.ron", &mut self.progress)),
+                .exec(|loader: UiLoader<'_>| loader.load("ui/paused.ron", &mut self.progress)),
         );
         data.world.add_resource::<DemoState>(DemoState {
             light_angle: 0.0,
@@ -81,7 +80,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Loading {
 
     fn handle_event(
         &mut self,
-        _: StateData<CustomGameData>,
+        _: StateData<'_, CustomGameData<'_, '_>>,
         event: StateEvent,
     ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         if let StateEvent::Window(event) = event {
@@ -94,7 +93,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Loading {
 
     fn update(
         &mut self,
-        data: StateData<CustomGameData>,
+        data: StateData<'_, CustomGameData<'_, '_>>,
     ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         data.data.update(&data.world, true);
         match self.progress.complete() {
@@ -120,7 +119,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Loading {
 impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Paused {
     fn handle_event(
         &mut self,
-        data: StateData<CustomGameData>,
+        data: StateData<'_, CustomGameData<'_, '_>>,
         event: StateEvent,
     ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         if let StateEvent::Window(event) = &event {
@@ -139,7 +138,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Paused {
 
     fn update(
         &mut self,
-        data: StateData<CustomGameData>,
+        data: StateData<'_, CustomGameData<'_, '_>>,
     ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         data.data.update(&data.world, false);
         Trans::None
@@ -147,13 +146,13 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Paused {
 }
 
 impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Main {
-    fn on_start(&mut self, data: StateData<CustomGameData>) {
+    fn on_start(&mut self, data: StateData<'_, CustomGameData<'_, '_>>) {
         data.world.create_entity().with(self.scene.clone()).build();
     }
 
     fn handle_event(
         &mut self,
-        data: StateData<CustomGameData>,
+        data: StateData<'_, CustomGameData<'_, '_>>,
         event: StateEvent,
     ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         if let StateEvent::Window(event) = &event {
@@ -177,7 +176,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Main {
 
     fn update(
         &mut self,
-        data: StateData<CustomGameData>,
+        data: StateData<'_, CustomGameData<'_, '_>>,
     ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         data.data.update(&data.world, true);
         Trans::None
@@ -187,15 +186,13 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Main {
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
-    let app_root = application_root_dir();
+    let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let resources_directory = format!("{}/examples/assets", app_root);
+    let resources_directory = app_root.join("examples/assets");
 
-    let display_config_path = format!(
-        "{}/examples/custom_game_data/resources/display_config.ron",
-        app_root
-    );
+    let display_config_path =
+        app_root.join("examples/custom_game_data/resources/display_config.ron");
 
     let display_config = DisplayConfig::load(display_config_path);
     let pipeline_builder = Pipeline::build().with_stage(

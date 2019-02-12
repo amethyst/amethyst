@@ -4,7 +4,7 @@ use std::mem;
 
 use gfx::pso::buffer::ElemStride;
 
-use {
+use crate::{
     mesh::Mesh,
     pass::util::set_attribute_buffers,
     pipe::{Effect, EffectBuilder, NewEffect},
@@ -31,11 +31,13 @@ pub(crate) fn setup_skinning_buffers<'a>(builder: &mut EffectBuilder<'a>) {
             Separate::<JointIds>::ATTRIBUTES,
             Separate::<JointIds>::size() as ElemStride,
             0,
-        ).with_raw_vertex_buffer(
+        )
+        .with_raw_vertex_buffer(
             Separate::<JointWeights>::ATTRIBUTES,
             Separate::<JointWeights>::size() as ElemStride,
             0,
-        ).with_raw_constant_buffer("JointTransforms", mem::size_of::<[[f32; 4]; 4]>(), 100);
+        )
+        .with_raw_constant_buffer("JointTransforms", mem::size_of::<[[f32; 4]; 4]>(), 100);
 }
 
 pub fn set_skinning_buffers(effect: &mut Effect, mesh: &Mesh) -> bool {

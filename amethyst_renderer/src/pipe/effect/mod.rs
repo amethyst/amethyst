@@ -4,6 +4,9 @@
 
 pub use self::pso::{Data, Init, Meta};
 
+use amethyst_error::{Error, ResultExt};
+
+use derivative::Derivative;
 use fnv::FnvHashMap as HashMap;
 use gfx::{
     buffer::{Info as BufferInfo, Role as BufferRole},
@@ -17,9 +20,11 @@ use gfx::{
     Primitive, ShaderSet,
 };
 use glsl_layout::Std140;
+use log::{debug, warn};
+use serde::{Deserialize, Serialize};
 
-use {
-    error::{Error, Result},
+use crate::{
+    error,
     pipe::Target,
     types::{Encoder, Factory, PipelineState, Resources, Slice},
     vertex::Attributes,
@@ -41,14 +46,13 @@ pub(crate) enum ProgramSource<'a> {
 }
 
 impl<'a> ProgramSource<'a> {
-    pub fn compile(&self, fac: &mut Factory) -> Result<ShaderSet<Resources>> {
-        use gfx::traits::FactoryExt;
-        use gfx::Factory;
+    pub fn compile(&self, fac: &mut Factory) -> Result<ShaderSet<Resources>, Error> {
+        use gfx::{traits::FactoryExt, Factory};
 
         match *self {
             ProgramSource::Simple(ref vs, ref ps) => fac
                 .create_shader_set(vs, ps)
-                .map_err(Error::ProgramCreation),
+                .with_context(|_| error::Error::ProgramCreation),
             ProgramSource::Geometry(ref vs, ref gs, ref ps) => {
                 let v = fac.create_shader_vertex(vs).map_err(ProgramError::Vertex)?;
                 let g = fac
@@ -59,7 +63,7 @@ impl<'a> ProgramSource<'a> {
             }
             ProgramSource::Tessellated(ref vs, ref hs, ref ds, ref ps) => fac
                 .create_shader_set_tessellation(vs, hs, ds, ps)
-                .map_err(Error::ProgramCreation),
+                .with_context(|_| error::Error::ProgramCreation),
         }
     }
 }
@@ -99,7 +103,8 @@ impl Effect {
                     unsafe { &*(raw as *const RawBuffer<_> as *const Buffer<_, _>) },
                     &data[..],
                     0,
-                ).expect("Failed to update buffer (TODO: replace expect)");
+                )
+                .expect("Failed to update buffer (TODO: replace expect)");
             }
             None => {
                 warn!(
@@ -324,9 +329,8 @@ impl<'a> EffectBuilder<'a> {
     }
 
     /// TODO: Support render targets as inputs.
-    pub fn build(&mut self) -> Result<Effect> {
-        use gfx::traits::FactoryExt;
-        use gfx::Factory;
+    pub fn build(&mut self) -> Result<Effect, Error> {
+        use gfx::{traits::FactoryExt, Factory};
 
         debug!("Building effect");
         debug!("Compiling shaders");
@@ -348,7 +352,8 @@ impl<'a> EffectBuilder<'a> {
                 let cbuf = fac.create_buffer_raw(info)?;
                 data.const_bufs.push(cbuf);
                 Ok((name.to_string(), i))
-            }).collect::<Result<HashMap<_, _>>>()?;
+            })
+            .collect::<Result<HashMap<_, _>, Error>>()?;
 
         debug!("Set global uniforms");
         let globals = self
@@ -360,7 +365,8 @@ impl<'a> EffectBuilder<'a> {
                 // Insert placeholder value until updated by user.
                 data.globals.push(UniformValue::F32Vector4([0.0; 4]));
                 (name.to_string(), i)
-            }).collect::<HashMap<_, _>>();
+            })
+            .collect::<HashMap<_, _>>();
 
         debug!("Process Color/Depth/Blend outputs");
         data.out_colors.extend(

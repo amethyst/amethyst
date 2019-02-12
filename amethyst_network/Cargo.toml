@@ -1,16 +1,17 @@
 [package]
 name = "amethyst_network"
-version = "0.2.0"
+version = "0.3.0"
 authors = [
 	"Joël Lupien (Jojolepro) <jojolepromain@gmail.com>",
 	"Lucio Franco (LucioFranco) <luciofranco14@gmail.com>"
 ]
+edition = "2018"
 description = "Amethyst networking crate"
 keywords = ["networking", "specs", "ecs", "amethyst", "serialization"]
 categories = ["game-engines"]
 
 readme = "README.md"
-documentation = "https://www.amethyst.rs/doc/master/doc/amethyst_network/index.html"
+documentation = "https://www.amethyst.rs/doc/latest/doc/amethyst_network/index.html"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 license = "MIT/Apache-2.0"
@@ -20,12 +21,14 @@ profiler = [ "thread_profiler/thread_profiler" ]
 nightly = [ "amethyst_core/nightly" ]
 
 [dependencies]
-amethyst_core = { path = "../amethyst_core", version = "0.4" }
-serde = { version = "1.0.16", features = ["serde_derive"] }
+amethyst_core = { path = "../amethyst_core", version = "0.5" }
+amethyst_error = { path = "../amethyst_error", version = "0.1.0" }
+serde = { version = "1", features = ["derive"] }
 shrev = "1.0"
 shred = "0.7"
 bincode = "1.0"
-log = "0.4"
+log = "0.4.6"
 uuid = { version = "0.7.1", features = ["v4","serde"] }
 thread_profiler = { version = "0.3" , optional = true }
 laminar = "0.1"
+err-derive = "0.1"

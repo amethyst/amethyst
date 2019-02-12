@@ -1,11 +1,11 @@
 use std::path::Path;
 
-use {
+use crate::{
     core::{
         specs::prelude::{Dispatcher, DispatcherBuilder, System, World},
         ArcThreadPool, SystemBundle,
     },
-    error::{Error, Result},
+    error::Error,
     renderer::pipe::pass::Pass,
 };
 
@@ -15,7 +15,10 @@ pub trait DataInit<T> {
     fn build(self, world: &mut World) -> T;
 }
 
-/// Default game data
+/// Default game data.
+///
+/// The lifetimes are for the systems inside and can be `'static` unless a system has a borrowed
+/// field.
 pub struct GameData<'a, 'b> {
     dispatcher: Dispatcher<'a, 'b>,
 }
@@ -212,11 +215,11 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// could result in any number of errors.
     /// See each individual bundle for a description of the errors it could produce.
     ///
-    pub fn with_bundle<B>(mut self, bundle: B) -> Result<Self>
+    pub fn with_bundle<B>(mut self, bundle: B) -> Result<Self, Error>
     where
         B: SystemBundle<'a, 'b>,
     {
-        bundle.build(&mut self.disp_builder).map_err(Error::Core)?;
+        bundle.build(&mut self.disp_builder)?;
         Ok(self)
     }
 
@@ -229,12 +232,12 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// - `path`: Path to the `DisplayConfig` configuration file
     /// - `pass`: The single pass in the render graph
     /// - `with_ui`: If set to true, will add the UI render pass
-    pub fn with_basic_renderer<A, P>(self, path: A, pass: P, with_ui: bool) -> Result<Self>
+    pub fn with_basic_renderer<A, P>(self, path: A, pass: P, with_ui: bool) -> Result<Self, Error>
     where
         A: AsRef<Path>,
         P: Pass + 'b,
     {
-        use {
+        use crate::{
             config::Config,
             renderer::{DisplayConfig, Pipeline, RenderBundle, Stage},
             ui::DrawUi,

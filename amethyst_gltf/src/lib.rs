@@ -1,45 +1,25 @@
 //! A crate for loading GLTF format scenes into Amethyst
 
-#![warn(missing_docs)]
+#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-extern crate amethyst_animation as animation;
-extern crate amethyst_assets as assets;
-extern crate amethyst_core as core;
-extern crate amethyst_renderer as renderer;
-extern crate base64;
-extern crate fnv;
-extern crate gfx;
-extern crate gltf;
-extern crate hibitset;
-extern crate itertools;
-#[macro_use]
-extern crate log;
-extern crate mikktspace;
-#[macro_use]
-extern crate serde;
+use serde::{Deserialize, Serialize};
 
-#[macro_use]
-#[cfg(feature = "profiler")]
-extern crate thread_profiler;
+pub use crate::format::GltfSceneFormat;
 
 use std::{collections::HashMap, ops::Range};
 
-pub use format::GltfSceneFormat;
-use {
-    animation::{AnimatablePrefab, SkinnablePrefab},
-    assets::{Handle, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter},
-    core::{
-        nalgebra::{Point3, Vector3},
-        specs::{
-            error::Error,
-            prelude::{Component, DenseVecStorage, Entity, Write, WriteStorage},
-        },
-        transform::Transform,
-        Named,
-    },
-    renderer::{MaterialPrefab, Mesh, MeshData, TextureFormat},
+use amethyst_animation::{AnimatablePrefab, SkinnablePrefab};
+use amethyst_assets::{Handle, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter};
+use amethyst_core::{
+    nalgebra::{Point3, Vector3},
+    specs::prelude::{Component, DenseVecStorage, Entity, Write, WriteStorage},
+    transform::Transform,
+    Named,
 };
+use amethyst_error::Error;
+use amethyst_renderer::{MaterialPrefab, Mesh, MeshData, TextureFormat};
 
+mod error;
 mod format;
 
 /// Load `GltfSceneAsset`s
@@ -273,7 +253,7 @@ impl<'a> PrefabData<'a> for GltfPrefab {
         let mut ret = false;
         if let Some(ref mut mats) = self.materials {
             mat_set.materials.clear();
-            for (id, mut material) in mats.materials.iter_mut() {
+            for (id, material) in mats.materials.iter_mut() {
                 if material.load_sub_assets(progress, materials)? {
                     ret = true;
                 }

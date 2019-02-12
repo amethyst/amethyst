@@ -20,12 +20,11 @@
 //! ```
 //! use std::time::Duration;
 //!
-//! # extern crate amethyst;
 //! use amethyst::prelude::*;
 //! use amethyst::core::frame_limiter::FrameRateLimitStrategy;
 //!
 //! # struct GameState;
-//! # impl<'a, 'b> SimpleState<'a, 'b> for GameState {}
+//! # impl SimpleState for GameState {}
 //! # fn main() -> amethyst::Result<()> {
 //! let mut game = Application::build("./", GameState)?
 //!     .with_frame_limit(
@@ -73,6 +72,8 @@ use std::{
     time::{Duration, Instant},
 };
 
+use serde::{Deserialize, Serialize};
+
 const ZERO: Duration = Duration::from_millis(0);
 
 /// Frame rate limiting strategy.
@@ -113,7 +114,6 @@ impl Default for FrameRateLimitStrategy {
 /// # Examples
 ///
 /// ```no_run
-/// # extern crate amethyst;
 /// use amethyst::prelude::*;
 /// use amethyst::core::frame_limiter::FrameRateLimitConfig;
 ///

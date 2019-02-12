@@ -5,6 +5,9 @@ use amethyst_core::{
     timing::Time,
 };
 
+use log::error;
+use serde::{Deserialize, Serialize};
+
 /// Destroys the entity to which this is attached at the specified time (in seconds).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DestroyAtTime {

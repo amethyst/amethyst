@@ -1,5 +1,8 @@
 use std::marker::PhantomData;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     shred::{Resource, Resources},
@@ -9,7 +12,7 @@ use amethyst_core::{
     },
 };
 
-use {
+use crate::{
     output::init_output,
     sink::AudioSink,
     source::{Source, SourceHandle},

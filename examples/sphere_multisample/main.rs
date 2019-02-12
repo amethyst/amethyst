@@ -1,7 +1,5 @@
 //! Displays a shaded sphere to the user, using multisampling.
 
-extern crate amethyst;
-
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
     core::transform::TransformBundle,
@@ -14,10 +12,10 @@ type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 struct Example;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
+impl SimpleState for Example {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         // Initialise the scene with an object, a light and a camera.
-        let handle = data.world.exec(|loader: PrefabLoader<MyPrefabData>| {
+        let handle = data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/sphere.ron", RonFormat, (), ())
         });
         data.world.create_entity().with(handle).build();
@@ -27,14 +25,12 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let app_root = application_root_dir();
+    let app_root = application_root_dir()?;
 
-    let display_config_path = format!(
-        "{}/examples/sphere_multisample/resources/display_config.ron",
-        app_root
-    );
+    let display_config_path =
+        app_root.join("examples/sphere_multisample/resources/display_config.ron");
 
-    let resources = format!("{}/examples/assets/", app_root);
+    let resources = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])

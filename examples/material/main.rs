@@ -1,8 +1,5 @@
 //! Displays spheres with physically based materials.
 
-extern crate amethyst;
-extern crate amethyst_assets;
-
 use amethyst::{
     assets::AssetLoaderSystemData,
     core::{nalgebra::Vector3, Transform, TransformBundle},
@@ -13,20 +10,20 @@ use amethyst::{
 
 struct Example;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
+impl SimpleState for Example {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
         let mat_defaults = world.read_resource::<MaterialDefaults>().0.clone();
 
         println!("Load mesh");
         let (mesh, albedo) = {
-            let mesh = world.exec(|loader: AssetLoaderSystemData<Mesh>| {
+            let mesh = world.exec(|loader: AssetLoaderSystemData<'_, Mesh>| {
                 loader.load_from_data(
                     Shape::Sphere(32, 32).generate::<Vec<PosNormTangTex>>(None),
                     (),
                 )
             });
-            let albedo = world.exec(|loader: AssetLoaderSystemData<Texture>| {
+            let albedo = world.exec(|loader: AssetLoaderSystemData<'_, Texture>| {
                 loader.load_from_data([1.0, 1.0, 1.0, 1.0].into(), ())
             });
 
@@ -45,12 +42,13 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
                 let metallic = [metallic, metallic, metallic, 1.0].into();
                 let roughness = [roughness, roughness, roughness, 1.0].into();
 
-                let (metallic, roughness) = world.exec(|loader: AssetLoaderSystemData<Texture>| {
-                    (
-                        loader.load_from_data(metallic, ()),
-                        loader.load_from_data(roughness, ()),
-                    )
-                });
+                let (metallic, roughness) =
+                    world.exec(|loader: AssetLoaderSystemData<'_, Texture>| {
+                        (
+                            loader.load_from_data(metallic, ()),
+                            loader.load_from_data(roughness, ()),
+                        )
+                    });
 
                 let mtl = Material {
                     albedo: albedo.clone(),
@@ -73,7 +71,8 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
             intensity: 6.0,
             color: [0.8, 0.0, 0.0].into(),
             ..PointLight::default()
-        }.into();
+        }
+        .into();
 
         let mut light1_transform = Transform::default();
         light1_transform.set_xyz(6.0, 6.0, -6.0);
@@ -82,7 +81,8 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
             intensity: 5.0,
             color: [0.0, 0.3, 0.7].into(),
             ..PointLight::default()
-        }.into();
+        }
+        .into();
 
         let mut light2_transform = Transform::default();
         light2_transform.set_xyz(6.0, -6.0, -6.0);
@@ -110,7 +110,8 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
             .with(Camera::from(Projection::perspective(
                 1.3,
                 std::f32::consts::FRAC_PI_3,
-            ))).with(transform)
+            )))
+            .with(transform)
             .build();
     }
 }
@@ -118,14 +119,11 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let app_root = application_root_dir();
+    let app_root = application_root_dir()?;
 
-    let path = format!(
-        "{}/examples/material/resources/display_config.ron",
-        app_root
-    );
+    let path = app_root.join("examples/material/resources/display_config.ron");
 
-    let resources = format!("{}/examples/assets/", app_root);
+    let resources = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?

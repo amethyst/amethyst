@@ -2,15 +2,20 @@
 
 use std::{hash::Hash, marker::PhantomData};
 
+use derive_new::new;
+
 use amethyst_assets::Processor;
 use amethyst_audio::AudioFormat;
-use amethyst_core::{
-    bundle::{Result, SystemBundle},
-    specs::prelude::DispatcherBuilder,
-};
-use amethyst_renderer::TextureFormat;
+use amethyst_core::{bundle::SystemBundle, specs::prelude::DispatcherBuilder};
+use amethyst_error::Error;
+use amethyst_renderer::{BlinkSystem, TextureFormat};
 
-use super::*;
+use crate::{
+    CacheSelectionOrderSystem, FontAsset, FontFormat, NoCustomUi, ResizeSystem,
+    SelectionKeyboardSystem, SelectionMouseSystem, TextEditingInputSystem, TextEditingMouseSystem,
+    ToNativeWidget, UiButtonActionRetriggerSystem, UiButtonSystem, UiLoaderSystem, UiMouseSystem,
+    UiSoundRetriggerSystem, UiSoundSystem, UiTransformSystem,
+};
 
 /// UI bundle
 ///
@@ -18,26 +23,20 @@ use super::*;
 /// The generic types A and B represent the A and B generic parameter of the InputHandler<A,B>.
 ///
 /// Will fail with error 'No resource with the given id' if the InputBundle is not added.
-pub struct UiBundle<A, B, C = NoCustomUi> {
-    _marker: PhantomData<(A, B, C)>,
+#[derive(new)]
+pub struct UiBundle<A = String, B = String, C = NoCustomUi, G = ()> {
+    #[new(default)]
+    _marker: PhantomData<(A, B, C, G)>,
 }
 
-impl<A, B, C> UiBundle<A, B, C> {
-    /// Create a new UI bundle
-    pub fn new() -> Self {
-        UiBundle {
-            _marker: PhantomData,
-        }
-    }
-}
-
-impl<'a, 'b, A, B, C> SystemBundle<'a, 'b> for UiBundle<A, B, C>
+impl<'a, 'b, A, B, C, G> SystemBundle<'a, 'b> for UiBundle<A, B, C, G>
 where
     A: Send + Sync + Eq + Hash + Clone + 'static,
     B: Send + Sync + Eq + Hash + Clone + 'static,
     C: ToNativeWidget,
+    G: Send + Sync + PartialEq + 'static,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
             UiLoaderSystem::<
                 AudioFormat,
@@ -49,21 +48,43 @@ where
             &[],
         );
         builder.add(
+            UiTransformSystem::default(),
+            "ui_transform",
+            &["transform_system"],
+        );
+        builder.add(
             Processor::<FontAsset>::new(),
             "font_processor",
             &["ui_loader"],
         );
         builder.add(
-            UiKeyboardSystem::new(),
-            "ui_keyboard_system",
-            &["font_processor"],
+            CacheSelectionOrderSystem::<G>::new(),
+            "selection_order_cache",
+            &[],
+        );
+        builder.add(
+            SelectionMouseSystem::<G, A, B>::new(),
+            "ui_mouse_selection",
+            &[],
+        );
+        builder.add(
+            SelectionKeyboardSystem::<G>::new(),
+            "ui_keyboard_selection",
+            // Because when you press tab, you want to override the previously selected elements.
+            &["ui_mouse_selection"],
+        );
+        builder.add(
+            TextEditingMouseSystem::new(),
+            "ui_text_editing_mouse_system",
+            &["ui_mouse_selection", "ui_keyboard_selection"],
+        );
+        builder.add(
+            TextEditingInputSystem::new(),
+            "ui_text_editing_input_system",
+            // Hard requirement. The system assumes the text to edit is selected.
+            &["ui_mouse_selection", "ui_keyboard_selection"],
         );
         builder.add(ResizeSystem::new(), "ui_resize_system", &[]);
-        builder.add(
-            UiTransformSystem::default(),
-            "ui_transform",
-            &["transform_system"],
-        );
         builder.add(
             UiMouseSystem::<A, B>::new(),
             "ui_mouse_system",
@@ -74,6 +95,22 @@ where
             "ui_button_system",
             &["ui_mouse_system"],
         );
+
+        builder.add(
+            UiButtonActionRetriggerSystem::new(),
+            "ui_button_action_retrigger_system",
+            &["ui_button_system"],
+        );
+        builder.add(UiSoundSystem::new(), "ui_sound_system", &[]);
+        builder.add(
+            UiSoundRetriggerSystem::new(),
+            "ui_sound_retrigger_system",
+            &["ui_sound_system"],
+        );
+
+        // Required for text editing. You want the cursor image to blink.
+        builder.add(BlinkSystem, "blink_system", &[]);
+
         Ok(())
     }
 }

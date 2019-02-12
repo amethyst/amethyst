@@ -50,7 +50,11 @@ before_install:
 
 before_script:
 - export PATH=$PATH:/home/travis/.cargo/bin
-- export RUSTFLAGS="-D warnings"
+- |
+  if [ ${TRAVIS_RUST_VERSION} == "stable" ]
+  then
+    export RUSTFLAGS="-D warnings"
+  fi
 
 # Generate documentation, compile the engine, run tests.
 script:

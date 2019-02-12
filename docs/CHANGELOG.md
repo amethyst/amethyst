@@ -11,6 +11,69 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Added
 
+* Introduce `application_dir` utility ([#1213])
+* Derive `Copy`, `PartialEq`, `Eq`, `Serialize`, `Deserialize` for `Flipped` component. ([#1237])
+* A way to change the default `Source` using `set_default_source` and `with_default_source`. ([#1256])
+* "How To" guides for using assets and defining custom assets. ([#1251])
+* Explanation on how prefabs function in Amethyst. ([#1114])
+* `amethyst_renderer::Rgba` is now a `Component` that changes the color and transparency of the entity
+it is attached to. ([#1282])
+* `AutoFov` and `AutoFovSystem` to adjust horizontal FOV to screen aspect ratio. ([#1281])
+* Add `icon` to `DisplayConfig` to set a window icon using a path to a file ([#1373])
+* Added setting to control gfx_device_gl logging level separately, and set it to Warn by default. ([#1404])
+* Add `loaded_icon` to `DisplayConfig` to set a window icon programatically ([#1405])
+
+### Changed
+
+* Make `application_root_dir` return a `Result<Path>` instead of a `String` ([#1213])
+* Remove unnecessary texture coordinates offset in `Sprite::from_pixel_values` ([#1267])
+* Changed `ActiveCamera` to have the `Option` inside. ([#1280])
+* `AudioBundle::new()` no longer exists, as `AudioBundle` is now a unit type. It also no longer initializes the `DjSystem` ([#1356])
+* Convert everything to use err-derive and amethyst_error ([#1365])
+* Removed redundant code in `renderer.rs` ([#1375])
+* Refactored audio initialization to be more bundle-centric ([#1388])
+* Changed argument types of `exec_removal` to allow use of both Read and Write Storages. ([#1397])
+* Changed default log level to Info. ([#1404])
+* Remove unnecessary `mut` from `AnimationControlSet::has_animation` ([#1408])
+
+### Removed
+
+### Fixed
+
+* Fixed the "json" feature for amethyst_assets. ([#1302])
+* Fixed default system font loading to accept uppercase extension ("TTF"). ([#1328])
+* Set width and height of Pong Paddles ([#1363])
+* Fix omission in `PosNormTangTex` documentation. ([#1371])
+
+[#1114]: https://github.com/amethyst/amethyst/pull/1114
+[#1213]: https://github.com/amethyst/amethyst/pull/1213
+[#1237]: https://github.com/amethyst/amethyst/pull/1237
+[#1251]: https://github.com/amethyst/amethyst/pull/1251
+[#1256]: https://github.com/amethyst/amethyst/pull/1256
+[#1267]: https://github.com/amethyst/amethyst/pull/1267
+[#1280]: https://github.com/amethyst/amethyst/pull/1280
+[#1282]: https://github.com/amethyst/amethyst/pull/1282
+[#1281]: https://github.com/amethyst/amethyst/pull/1281
+[#1302]: https://github.com/amethyst/amethyst/pull/1302
+[#1328]: https://github.com/amethyst/amethyst/pull/1328
+[#1356]: https://github.com/amethyst/amethyst/pull/1356
+[#1363]: https://github.com/amethyst/amethyst/pull/1363
+[#1365]: https://github.com/amethyst/amethyst/pull/1365
+[#1371]: https://github.com/amethyst/amethyst/pull/1371
+[#1373]: https://github.com/amethyst/amethyst/pull/1373
+[#1388]: https://github.com/amethyst/amethyst/pull/1388
+[#1397]: https://github.com/amethyst/amethyst/pull/1397
+[#1404]: https://github.com/amethyst/amethyst/pull/1404
+[#1408]: https://github.com/amethyst/amethyst/pull/1408
+[#1405]: https://github.com/amethyst/amethyst/pull/1405
+
+## [0.10.0] - 2018-12
+
+### Added
+
+* Derive `PrefabData` for `CameraOrtho` component ([#1188])
+* Partially migrate the project to Rust 2018.  Full migration will be completed at some point after 2019-01-31 ([#1098])
+* `SystemExt::pausable` for better ergonomics when pausing systems for specific states ([#1146]).
 * `amethyst_test` test framework for ergonomic testing of Amethyst applications ([#1000])
 * combinations of buttons triggering actions ([#1043])
 * `UiPrefab` field `hidden: bool` to hide entities ([#1051])
@@ -25,9 +88,12 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `sprite_camera_follow` example showing how to use a Camera that has a sprite Parent ([#1099])
 * Added capabilities for the `DrawFlat2D` pass to draw `TextureHandle`s by themselves. Also added a simple example for this. ([#1153])
 * Added a `Flipped` component which allows flipping sprites or images horizontally and vertically. ([#1153])
+* Added transform constructor function `Transform::new()`. ([#1187])
+* Implement generic `EventRetriggerSystem`, which enables dispatching new events as a reaction to other events ([#1189])
 
 ### Changed
 
+* Minimum Rust version is now `1.31.0` &ndash; Rust 2018. ([#1224])
 * `Transform::look_at` renamed to `Transform::face_towards` and behavior fixed. ([#1142])
 * `Material` animations now directly use `Handle<Texture>` instead of using indirection. ([#1089])
 * `SpriteRenderPrimitive::SpriteSheet` now takes `Handle<SpriteSheet>` instead of a `u64` ID. ([#1089])
@@ -38,6 +104,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Updated `winit` to `0.18` (see [Winit's changelog][winit_018]). ([#1131])
 * Updated `glutin` to `0.19` (see [Glutin's changelog][glutin_019]). ([#1131])
 * Renamed the `DrawSprite` pass to `DrawFlat2D` as it now handles both sprites and images without spritesheets. ([#1153])
+* `BasicScenePrefab` deserialization now returns an error on invalid fields. ([#1164])
+* Reordered arguments for `Transform::set_rotation_euler` to match nalgebra's Euler angles. ([#1052])
+* Remove lifetimes from `SimpleState` ([#1198])
+* Button interactions are now handled through an `EventRetriggerSystem`, specifically hover/click sounds and image/color changes ([#1189])
 
 ### Removed
 
@@ -45,9 +115,15 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * `MaterialTextureSet` is removed as it is no longer needed. ([#1117])
 * `amethyst::core::Orientation` has been removed because of limited use. ([#1066])
 * `TimedDestroySystem` has been split into `DestroyAtTimeSystem` and `DestroyInTimeSystem`. ([#1129])
+* Reverted [MacOS OpenGL workaround][#972] in favor of the upstream fix in `glutin`. ([#1184])
+* `OnUiActionImage` and `OnUiActionSound` have been removed as they now work through `EventRetrigger`s ([#1189])
 
 ### Fixed
 
+* `SpriteSheetFormat` converts pixel coordinates to texture coordinates on load. ([#1181])
+
+[#1146]: https://github.com/amethyst/amethyst/pull/1146
+[#1144]: https://github.com/amethyst/amethyst/pull/1144
 [#1000]: https://github.com/amethyst/amethyst/pull/1000
 [#1043]: https://github.com/amethyst/amethyst/pull/1043
 [#1051]: https://github.com/amethyst/amethyst/pull/1051
@@ -58,6 +134,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1090]: https://github.com/amethyst/amethyst/pull/1090
 [#1112]: https://github.com/amethyst/amethyst/pull/1112
 [#1089]: https://github.com/amethyst/amethyst/pull/1089
+[#1098]: https://github.com/amethyst/amethyst/pull/1098
 [#1099]: https://github.com/amethyst/amethyst/pull/1099
 [#1108]: https://github.com/amethyst/amethyst/pull/1108
 [#1126]: https://github.com/amethyst/amethyst/pull/1126
@@ -68,6 +145,16 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [#1129]: https://github.com/amethyst/amethyst/pull/1129
 [#1131]: https://github.com/amethyst/amethyst/pull/1131
 [#1153]: https://github.com/amethyst/amethyst/pull/1153
+[#1164]: https://github.com/amethyst/amethyst/pull/1164
+[#1142]: https://github.com/amethyst/amethyst/pull/1142
+[#1052]: https://github.com/amethyst/amethyst/pull/1052
+[#1181]: https://github.com/amethyst/amethyst/pull/1181
+[#1184]: https://github.com/amethyst/amethyst/pull/1184
+[#1187]: https://github.com/amethyst/amethyst/pull/1187
+[#1188]: https://github.com/amethyst/amethyst/pull/1188
+[#1198]: https://github.com/amethyst/amethyst/pull/1198
+[#1224]: https://github.com/amethyst/amethyst/pull/1224
+[#1189]: https://github.com/amethyst/amethyst/pull/1189
 [winit_018]: https://github.com/tomaka/winit/blob/v0.18.0/CHANGELOG.md#version-0180-2018-11-07
 [glutin_019]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0190-2018-11-09
 

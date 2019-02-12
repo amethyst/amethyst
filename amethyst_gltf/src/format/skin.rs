@@ -1,32 +1,30 @@
 use std::collections::HashMap;
 
-use gltf;
-use GltfPrefab;
+use amethyst_animation::{JointPrefab, SkinPrefab, SkinnablePrefab};
+use amethyst_assets::Prefab;
+use amethyst_core::nalgebra::Matrix4;
+use amethyst_error::Error;
+use amethyst_renderer::JointTransformsPrefab;
 
-use {
-    animation::{JointPrefab, SkinPrefab, SkinnablePrefab},
-    assets::Prefab,
-    core::nalgebra::Matrix4,
-    renderer::JointTransformsPrefab,
-};
-
-use super::{Buffers, GltfError};
+use super::Buffers;
+use crate::GltfPrefab;
 
 pub fn load_skin(
-    skin: &gltf::Skin,
+    skin: &gltf::Skin<'_>,
     buffers: &Buffers,
     skin_entity: usize,
     node_map: &HashMap<usize, usize>,
     meshes: Vec<usize>,
     prefab: &mut Prefab<GltfPrefab>,
-) -> Result<(), GltfError> {
+) -> Result<(), Error> {
     let joints = skin
         .joints()
         .map(|j| {
             node_map.get(&j.index()).cloned().expect(
                 "Unreachable: `node_map` is initialized with the indexes from the `Gltf` object",
             )
-        }).collect::<Vec<_>>();
+        })
+        .collect::<Vec<_>>();
 
     let reader = skin.reader(|buffer| buffers.buffer(&buffer));
 

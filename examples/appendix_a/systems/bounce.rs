@@ -1,12 +1,14 @@
+use crate::{
+    audio::{play_bounce, Sounds},
+    config::ArenaConfig,
+    Ball, Paddle, Side,
+};
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
     core::transform::Transform,
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, WriteStorage},
 };
-use audio::{play_bounce, Sounds};
-use config::ArenaConfig;
-use {Ball, Paddle, Side};
 
 /// This system is responsible for detecting collisions between balls and
 /// paddles, as well as balls and the top and bottom edges of the arena.

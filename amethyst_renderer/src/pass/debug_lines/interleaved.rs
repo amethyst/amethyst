@@ -2,18 +2,20 @@
 
 use std::marker::PhantomData;
 
+use derivative::Derivative;
 use gfx::{pso::buffer::ElemStride, Primitive};
+use log::{debug, trace};
 
 use amethyst_core::{
     nalgebra as na,
     specs::{Join, Read, ReadStorage, Write, WriteStorage},
     transform::GlobalTransform,
 };
+use amethyst_error::Error;
 
-use {
+use crate::{
     cam::{ActiveCamera, Camera},
     debug_drawing::{DebugLine, DebugLines, DebugLinesComponent},
-    error::Result,
     mesh::Mesh,
     pass::util::{get_camera, set_attribute_buffers, set_vertex_args, setup_vertex_args},
     pipe::{
@@ -22,6 +24,7 @@ use {
     },
     types::{Encoder, Factory},
     vertex::{Color, Normal, Position, Query},
+    Rgba,
 };
 
 use super::*;
@@ -69,7 +72,7 @@ where
     V: Query<(Position, Color, Normal)>,
 {
     type Data = (
-        Option<Read<'a, ActiveCamera>>,
+        Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, GlobalTransform>,
         WriteStorage<'a, DebugLinesComponent>, // DebugLines components
@@ -82,7 +85,7 @@ impl<V> Pass for DrawDebugLines<V>
 where
     V: Query<(Position, Color, Normal)>,
 {
-    fn compile(&mut self, effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         debug!("Building debug lines pass");
         let mut builder = effect.geom(VERT_SRC, GEOM_SRC, FRAG_SRC);
 
@@ -104,7 +107,7 @@ where
         effect: &mut Effect,
         mut factory: Factory,
         (active, camera, global, lines_components, lines_resource, lines_params): <Self as PassData<'a>>::Data,
-){
+    ) {
         trace!("Drawing debug lines pass");
         let debug_lines = {
             let mut lines = Vec::<DebugLine>::new();
@@ -145,7 +148,13 @@ where
             return;
         }
 
-        set_vertex_args(effect, encoder, camera, &GlobalTransform(na::one()));
+        set_vertex_args(
+            effect,
+            encoder,
+            camera,
+            &GlobalTransform(na::one()),
+            Rgba::WHITE,
+        );
 
         effect.draw(mesh.slice(), encoder);
         effect.clear();

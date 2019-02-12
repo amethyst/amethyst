@@ -1,10 +1,13 @@
 //! Camera type with support for perspective and orthographic projections.
 
-use amethyst_assets::{PrefabData, PrefabError};
+use amethyst_assets::PrefabData;
 use amethyst_core::{
     nalgebra::{Matrix4, Orthographic3, Perspective3},
     specs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
 };
+use amethyst_error::Error;
+
+use serde::{Deserialize, Serialize};
 
 /// The projection mode of a `Camera`.
 ///
@@ -81,10 +84,10 @@ impl Component for Camera {
 
 /// Active camera resource, used by the renderer to choose which camera to get the view matrix from.
 /// If no active camera is found, the first camera will be used as a fallback.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Default)]
 pub struct ActiveCamera {
     /// Camera entity
-    pub entity: Entity,
+    pub entity: Option<Entity>,
 }
 
 /// Projection prefab
@@ -115,13 +118,14 @@ impl<'a> PrefabData<'a> for CameraPrefab {
         entity: Entity,
         storage: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         let proj = match *self {
             CameraPrefab::Matrix(mat) => mat,
             CameraPrefab::Orthographic(ortho) => ortho.to_homogeneous(),
             CameraPrefab::Perspective(perspective) => perspective.to_homogeneous(),
         };
-        storage.insert(entity, Camera { proj }).map(|_| ())
+        storage.insert(entity, Camera { proj }).map(|_| ())?;
+        Ok(())
     }
 }
 
@@ -129,7 +133,7 @@ impl<'a> PrefabData<'a> for CameraPrefab {
 pub struct ActiveCameraPrefab(usize);
 
 impl<'a> PrefabData<'a> for ActiveCameraPrefab {
-    type SystemData = (Option<Write<'a, ActiveCamera>>,);
+    type SystemData = (Write<'a, ActiveCamera>,);
     type Result = ();
 
     fn add_to_entity(
@@ -137,10 +141,8 @@ impl<'a> PrefabData<'a> for ActiveCameraPrefab {
         _: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
-    ) -> Result<(), PrefabError> {
-        if let Some(ref mut cam) = system_data.0 {
-            cam.entity = entities[self.0];
-        }
+    ) -> Result<(), Error> {
+        system_data.0.entity = Some(entities[self.0]);
         // TODO: if no `ActiveCamera` insert using `LazyUpdate`, require changes to `specs`
         Ok(())
     }
@@ -151,7 +153,8 @@ mod serde_ortho {
 
     use serde::{
         de::{self, Deserializer, MapAccess, SeqAccess, Visitor},
-        ser::{Serialize, Serializer},
+        ser::Serializer,
+        Deserialize, Serialize,
     };
 
     use amethyst_core::nalgebra::Orthographic3;
@@ -176,7 +179,7 @@ mod serde_ortho {
         impl<'de> Visitor<'de> for OrthographicVisitor {
             type Value = Orthographic3<f32>;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str("struct Orthographic")
             }
 
@@ -306,7 +309,8 @@ mod serde_persp {
 
     use serde::{
         de::{self, Deserializer, MapAccess, SeqAccess, Visitor},
-        ser::{Serialize, Serializer},
+        ser::Serializer,
+        Deserialize, Serialize,
     };
 
     use amethyst_core::nalgebra::Perspective3;
@@ -329,7 +333,7 @@ mod serde_persp {
         impl<'de> Visitor<'de> for PerspectiveVisitor {
             type Value = Perspective3<f32>;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str("struct Perspective")
             }
 

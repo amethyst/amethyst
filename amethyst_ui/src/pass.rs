@@ -5,30 +5,33 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-use fnv::FnvHashMap as HashMap;
-use gfx::preset::blend;
-use gfx::pso::buffer::ElemStride;
-use gfx::state::ColorMask;
+use derive_new::new;
+use fnv::{FnvHashMap as HashMap, FnvHashSet as HashSet};
+use gfx::{preset::blend, pso::buffer::ElemStride, state::ColorMask};
 use gfx_glyph::{
     BuiltInLineBreaker, FontId, GlyphBrush, GlyphBrushBuilder, GlyphCruncher, Layout, Point, Scale,
     SectionText, VariedSection,
 };
-use glsl_layout::{vec2, Uniform};
+use glsl_layout::{vec2, vec4, Uniform};
 use hibitset::BitSet;
+use log::error;
 use unicode_segmentation::UnicodeSegmentation;
 
-use amethyst_assets::{AssetStorage, Loader};
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
+use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::specs::prelude::{
     Entities, Entity, Join, Read, ReadExpect, ReadStorage, WriteStorage,
 };
+use amethyst_error::Error;
 use amethyst_renderer::{
-    error::Result,
     pipe::{
         pass::{Pass, PassData},
         Effect, NewEffect,
     },
-    Encoder, Factory, Hidden, HiddenPropagate, Mesh, PosTex, Resources, ScreenDimensions, Shape,
-    Texture, TextureData, TextureHandle, TextureMetadata, VertexFormat,
+    Encoder, Factory, Hidden, HiddenPropagate, Mesh, PosTex, Resources, Rgba, ScreenDimensions,
+    Shape, Texture, TextureData, TextureHandle, TextureMetadata, VertexFormat,
 };
 
 use super::*;
@@ -43,9 +46,10 @@ struct VertexArgs {
     invert_window_size: vec2,
     coord: vec2,
     dimension: vec2,
+    color: vec4,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 struct CachedDrawOrder {
     pub cached: BitSet,
     pub cache: Vec<(f32, Entity)>,
@@ -71,32 +75,22 @@ impl Hash for KeyColor {
     }
 }
 
+#[derive(new)]
 /// Draw Ui elements.  UI won't display without this.  It's recommended this be your last pass.
 pub struct DrawUi {
+    #[new(default)]
     mesh: Option<Mesh>,
+    #[new(default)]
     cached_draw_order: CachedDrawOrder,
+    #[new(default)]
     cached_color_textures: HashMap<KeyColor, TextureHandle>,
+    #[new(default)]
     glyph_brushes: GlyphBrushCache,
+    #[new(default)]
     next_brush_cache_id: u64,
 }
 
 type GlyphBrushCache = HashMap<u64, GlyphBrush<'static, Resources, Factory>>;
-
-impl DrawUi {
-    /// Create instance of `DrawUi` pass
-    pub fn new() -> Self {
-        DrawUi {
-            mesh: None,
-            cached_draw_order: CachedDrawOrder {
-                cached: BitSet::new(),
-                cache: Vec::new(),
-            },
-            cached_color_textures: HashMap::default(),
-            glyph_brushes: HashMap::default(),
-            next_brush_cache_id: 0,
-        }
-    }
-}
 
 impl<'a> PassData<'a> for DrawUi {
     type Data = (
@@ -105,18 +99,22 @@ impl<'a> PassData<'a> for DrawUi {
         ReadExpect<'a, ScreenDimensions>,
         Read<'a, AssetStorage<Texture>>,
         Read<'a, AssetStorage<FontAsset>>,
-        Read<'a, UiFocused>,
-        ReadStorage<'a, UiImage>,
+        ReadStorage<'a, Handle<Texture>>,
         ReadStorage<'a, UiTransform>,
         WriteStorage<'a, UiText>,
         ReadStorage<'a, TextEditing>,
         ReadStorage<'a, Hidden>,
         ReadStorage<'a, HiddenPropagate>,
+        ReadStorage<'a, Selected>,
+        ReadStorage<'a, Rgba>,
     );
 }
 
 impl Pass for DrawUi {
-    fn compile(&mut self, mut effect: NewEffect) -> Result<Effect> {
+    fn compile(&mut self, mut effect: NewEffect<'_>) -> Result<Effect, Error> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("ui_pass_build");
+
         // Initialize a single unit quad, we'll use this mesh when drawing quads later.
         // Centered around (0,0) and of size 2
         let data = Shape::Plane(None).generate_vertices::<Vec<PosTex>>(None);
@@ -130,7 +128,8 @@ impl Pass for DrawUi {
                 "VertexArgs",
                 mem::size_of::<<VertexArgs as Uniform>::Std140>(),
                 1,
-            ).with_raw_vertex_buffer(PosTex::ATTRIBUTES, PosTex::size() as ElemStride, 0)
+            )
+            .with_raw_vertex_buffer(PosTex::ATTRIBUTES, PosTex::size() as ElemStride, 0)
             .with_texture("albedo")
             .with_blended_output("color", ColorMask::all(), blend::ALPHA, None)
             .build()
@@ -147,17 +146,23 @@ impl Pass for DrawUi {
             screen_dimensions,
             tex_storage,
             font_storage,
-            focused,
             ui_image,
             ui_transform,
             mut ui_text,
             editing,
             hidden,
             hidden_prop,
-        ): <Self as PassData>::Data,
+            selecteds,
+            rgba,
+        ): <Self as PassData<'_>>::Data,
     ) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("ui_pass_apply");
+
         // Populate and update the draw order cache.
         {
+            #[cfg(feature = "profiler")]
+            profile_scope!("ui_pass_populatebitset");
             let bitset = &mut self.cached_draw_order.cached;
             self.cached_draw_order.cache.retain(|&(_z, entity)| {
                 let keep = ui_transform.contains(entity);
@@ -179,6 +184,8 @@ impl Pass for DrawUi {
         // the sorting step.
         let transform_set = ui_transform.mask().clone();
         {
+            #[cfg(feature = "profiler")]
+            profile_scope!("ui_pass_insertsorted");
             // Create a bitset containing only the new indices.
             let new = (&transform_set ^ &self.cached_draw_order.cached) & &transform_set;
             for (entity, transform, _new) in (&*entities, &ui_transform, &new).join() {
@@ -204,9 +211,15 @@ impl Pass for DrawUi {
         // Sort from largest z value to smallest z value.
         // Most of the time this shouldn't do anything but you still need it for if the z values
         // change.
-        self.cached_draw_order
-            .cache
-            .sort_unstable_by(|&(z1, _), &(z2, _)| z1.partial_cmp(&z2).unwrap_or(Ordering::Equal));
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("ui_pass_sortz");
+            self.cached_draw_order
+                .cache
+                .sort_unstable_by(|&(z1, _), &(z2, _)| {
+                    z1.partial_cmp(&z2).unwrap_or(Ordering::Equal)
+                });
+        }
 
         // Inverted screen dimensions. Used to scale from pixel coordinates to the opengl coordinates in the vertex shader.
         let invert_window_size = [
@@ -225,27 +238,49 @@ impl Pass for DrawUi {
         };
         effect.data.vertex_bufs.push(vbuf);
 
-        let highest_abs_z = (&ui_transform,)
-            .join()
-            .map(|t| t.0.global_z)
-            .fold(1.0, |highest, current| current.abs().max(highest));
+        //Gather unused glyph brushes
+        //These that are currently in use will be removed from this set.
+        let mut unused_glyph_brushes = self
+            .glyph_brushes
+            .iter()
+            .map(|(id, _)| *id)
+            .collect::<HashSet<_>>();
+
+        let highest_abs_z = {
+            #[cfg(feature = "profiler")]
+            profile_scope!("ui_pass_findhighestz");
+            (&ui_transform,)
+                .join()
+                .map(|t| t.0.global_z)
+                .fold(1.0, |highest, current| current.abs().max(highest))
+        };
         for &(_z, entity) in &self.cached_draw_order.cache {
+            #[cfg(feature = "profiler")]
+            profile_scope!("ui_pass_draw_singleentity");
             // Do not render hidden entities.
             if hidden.contains(entity) || hidden_prop.contains(entity) {
+                ui_text
+                    .get_mut(entity)
+                    .and_then(|ui_text| ui_text.brush_id)
+                    .map(|brush_id| unused_glyph_brushes.remove(&brush_id));
                 continue;
             }
             let ui_transform = ui_transform
                 .get(entity)
                 .expect("Unreachable: Entity is guaranteed to be present based on earlier actions");
+            let rgba: [f32; 4] = rgba.get(entity).cloned().unwrap_or(Rgba::WHITE).into();
             if let Some(image) = ui_image
                 .get(entity)
-                .and_then(|image| tex_storage.get(&image.texture))
+                .and_then(|image| tex_storage.get(&image))
             {
+                #[cfg(feature = "profiler")]
+                profile_scope!("ui_pass_draw_uiimage");
                 let vertex_args = VertexArgs {
                     invert_window_size: invert_window_size.into(),
                     // Coordinates are middle centered. It makes it easier to do layouting in most cases.
                     coord: [ui_transform.pixel_x, ui_transform.pixel_y].into(),
                     dimension: [ui_transform.pixel_width, ui_transform.pixel_height].into(),
+                    color: rgba.into(),
                 };
 
                 effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
@@ -257,20 +292,27 @@ impl Pass for DrawUi {
             }
 
             if let Some(ui_text) = ui_text.get_mut(entity) {
+                #[cfg(feature = "profiler")]
+                profile_scope!("ui_pass_draw_uitext");
                 // Maintain glyph brushes.
                 if ui_text.brush_id.is_none() || ui_text.font != ui_text.cached_font {
                     let font = match font_storage.get(&ui_text.font) {
                         Some(font) => font,
                         None => continue,
                     };
+
                     self.glyph_brushes.insert(
                         self.next_brush_cache_id,
                         GlyphBrushBuilder::using_font(font.0.clone()).build(factory.clone()),
                     );
+
                     ui_text.brush_id = Some(self.next_brush_cache_id);
                     ui_text.cached_font = ui_text.font.clone();
                     self.next_brush_cache_id += 1;
+                } else if let Some(brush_id) = ui_text.brush_id {
+                    unused_glyph_brushes.remove(&brush_id);
                 }
+
                 // Build text sections.
                 let editing = editing.get(entity);
                 let password_string = if ui_text.password {
@@ -285,7 +327,7 @@ impl Pass for DrawUi {
                 };
                 let rendered_string = password_string.as_ref().unwrap_or(&ui_text.text);
                 let hidpi = screen_dimensions.hidpi_factor() as f32;
-                let size = ui_text.font_size * hidpi;
+                let size = ui_text.font_size;
                 let scale = Scale::uniform(size);
                 let text = editing
                     .and_then(|editing| {
@@ -310,32 +352,35 @@ impl Pass for DrawUi {
                             .map(|i| i.0)
                             .unwrap_or_else(|| rendered_string.len());
                         start_byte.map(|start_byte| (editing, (start_byte, end_byte)))
-                    }).map(|(editing, (start_byte, end_byte))| {
+                    })
+                    .map(|(editing, (start_byte, end_byte))| {
+                        let base_color = multiply_colors(ui_text.color, rgba);
                         vec![
                             SectionText {
                                 text: &((rendered_string)[0..start_byte]),
                                 scale: scale,
-                                color: ui_text.color,
+                                color: base_color,
                                 font_id: FontId(0),
                             },
                             SectionText {
                                 text: &((rendered_string)[start_byte..end_byte]),
                                 scale: scale,
-                                color: editing.selected_text_color,
+                                color: multiply_colors(editing.selected_text_color, rgba),
                                 font_id: FontId(0),
                             },
                             SectionText {
                                 text: &((rendered_string)[end_byte..]),
                                 scale: scale,
-                                color: ui_text.color,
+                                color: base_color,
                                 font_id: FontId(0),
                             },
                         ]
-                    }).unwrap_or_else(|| {
+                    })
+                    .unwrap_or_else(|| {
                         vec![SectionText {
                             text: rendered_string,
                             scale: scale,
-                            color: ui_text.color,
+                            color: multiply_colors(ui_text.color, rgba),
                             font_id: FontId(0),
                         }]
                     });
@@ -358,18 +403,13 @@ impl Pass for DrawUi {
                     // instead of the expected [0,1]
                     screen_position: (
                         (ui_transform.pixel_x
-                            + ui_transform.pixel_width * ui_text.align.norm_offset().0)
-                            * hidpi,
+                            + ui_transform.pixel_width * ui_text.align.norm_offset().0),
                         // invert y because gfx-glyph inverts it back
                         (screen_dimensions.height()
                             - ui_transform.pixel_y
-                            - ui_transform.pixel_height * ui_text.align.norm_offset().1)
-                            * hidpi,
+                            - ui_transform.pixel_height * ui_text.align.norm_offset().1),
                     ),
-                    bounds: (
-                        ui_transform.pixel_width * hidpi,
-                        ui_transform.pixel_height * hidpi,
-                    ),
+                    bounds: (ui_transform.pixel_width, ui_transform.pixel_height),
                     // Invert z because of gfx-glyph using z+ forward
                     z: ui_transform.global_z / highest_abs_z,
                     layout,
@@ -377,12 +417,14 @@ impl Pass for DrawUi {
                 };
 
                 // Render background highlight
-                let brush = &mut self
-                    .glyph_brushes
-                    .get_mut(&ui_text.brush_id
-                        .expect("Unreachable: `ui_text.brush_id` is guarenteed to be set earlier in this function")
-                    ).expect("Unable to get brush from `glyph_brushes`-map");
-
+                let brush = {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("ui_pass_draw_uitext_backgroundhighlight");
+                    &mut self
+                        .glyph_brushes
+                        .get_mut(&ui_text.brush_id.expect("Unreachable: `ui_text.brush_id` is guarenteed to be set earlier in this function"))
+                        .expect("Unable to get brush from `glyph_brushes`-map")
+                };
                 // Maintain the glyph cache (used by the input code).
                 ui_text.cached_glyphs.clear();
                 ui_text
@@ -400,21 +442,21 @@ impl Pass for DrawUi {
                         .cursor_position
                         .max(ed.cursor_position + ed.highlight_vector)
                         as usize;
-                    let color = if focused.entity == Some(entity) {
-                        ed.selected_background_color
-                    } else {
-                        [
-                            ed.selected_background_color[0] * 0.5,
-                            ed.selected_background_color[1] * 0.5,
-                            ed.selected_background_color[2] * 0.5,
-                            ed.selected_background_color[3] * 0.5,
-                        ]
-                    };
+                    let color = multiply_colors(
+                        if selecteds.contains(entity) {
+                            ed.selected_background_color
+                        } else {
+                            multiply_colors(ed.selected_background_color, [0.5, 0.5, 0.5, 0.5])
+                        },
+                        rgba,
+                    );
                     tex_storage
                         .get(&cached_color_texture(cache, color, &loader, &tex_storage))
                         .map(|tex| (tex, (start, end)))
                 }) {
                     // Text selection rendering
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("ui_pass_draw_uitext_rendertextselection");
 
                     effect.data.textures.push(texture.view().clone());
                     effect.data.samplers.push(texture.sampler().clone());
@@ -442,8 +484,9 @@ impl Pass for DrawUi {
                                 pos.x + width / 2.0,
                                 screen_dimensions.height() - pos.y + ascent / 2.0,
                             ]
-                                .into(),
+                            .into(),
                             dimension: [width, height].into(),
+                            color: rgba.into(),
                         };
                         effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
                         effect.draw(mesh.slice(), encoder);
@@ -452,31 +495,38 @@ impl Pass for DrawUi {
                     effect.data.samplers.clear();
                 }
                 // Render text
-                brush.queue(section.clone());
-                if let Err(err) = brush.draw_queued(
-                    encoder,
-                    &effect.data.out_blends[0],
-                    &effect
-                        .data
-                        .out_depth
-                        .as_ref()
-                        .expect("Unable to get depth of effect")
-                        .0,
-                ) {
-                    error!("Unable to draw text! Error: {:?}", err);
+                {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("ui_pass_draw_uitext_rendertext");
+                    brush.queue(section.clone());
+                    if let Err(err) = brush.draw_queued(
+                        encoder,
+                        &effect.data.out_blends[0],
+                        &effect
+                            .data
+                            .out_depth
+                            .as_ref()
+                            .expect("Unable to get depth of effect")
+                            .0,
+                    ) {
+                        error!("Unable to draw text! Error: {:?}", err);
+                    }
                 }
                 // Render cursor
-                if focused.entity == Some(entity) {
+                if selecteds.contains(entity) {
                     if let Some((texture, editing)) = editing.as_ref().and_then(|ed| {
                         tex_storage
                             .get(&cached_color_texture(
                                 cache,
-                                ui_text.color,
+                                multiply_colors(ui_text.color, rgba),
                                 &loader,
                                 &tex_storage,
-                            )).map(|tex| (tex, ed))
+                            ))
+                            .map(|tex| (tex, ed))
                     }) {
-                        let blink_on = editing.cursor_blink_timer < 0.5 / CURSOR_BLINK_RATE;
+                        #[cfg(feature = "profiler")]
+                        profile_scope!("ui_pass_draw_uitext_rendercursor");
+                        let blink_on = editing.cursor_blink_timer < 0.25;
                         if editing.use_block_cursor || blink_on {
                             effect.data.textures.push(texture.view().clone());
                             effect.data.samplers.push(texture.sampler().clone());
@@ -530,10 +580,10 @@ impl Pass for DrawUi {
                             pos.y =
                                 screen_dimensions.height() - ui_transform.pixel_y + ascent / 2.0;
 
-                            let mut x = pos.x / hidpi;
+                            let mut x = pos.x;
                             if let Some(glyph) = glyph {
                                 if at_end {
-                                    x += glyph.unpositioned().h_metrics().advance_width / hidpi;
+                                    x += glyph.unpositioned().h_metrics().advance_width;
                                 }
                             }
                             let mut y = pos.y;
@@ -544,6 +594,7 @@ impl Pass for DrawUi {
                                 invert_window_size: invert_window_size.into(),
                                 coord: [x, screen_dimensions.height() - y + ascent / 2.0].into(),
                                 dimension: [width, height].into(),
+                                color: rgba.into(),
                             };
                             effect.update_constant_buffer(
                                 "VertexArgs",
@@ -558,7 +609,15 @@ impl Pass for DrawUi {
                 }
             }
         }
+
+        for id in unused_glyph_brushes.drain() {
+            self.glyph_brushes.remove(&id);
+        }
     }
+}
+
+fn multiply_colors(a: [f32; 4], b: [f32; 4]) -> [f32; 4] {
+    [a[0] * b[0], a[1] * b[1], a[2] * b[2], a[3] * b[3]]
 }
 
 fn cached_color_texture(
@@ -582,5 +641,6 @@ fn cached_color_texture(
             let meta = TextureMetadata::srgb();
             let texture_data = TextureData::Rgba(color, meta);
             loader.load_from_data(texture_data, (), storage)
-        }).clone()
+        })
+        .clone()
 }

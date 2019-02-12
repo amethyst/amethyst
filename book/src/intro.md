@@ -47,7 +47,7 @@ This book is split into several sections, with this introduction being the first
 
 Read the crate-level [API documentation][ad] for more details.
 
-[ad]: https://www.amethyst.rs/doc/master/doc/amethyst/index.html
+[ad]: https://www.amethyst.rs/doc/latest/doc/amethyst/index.html
 
 [db]: https://github.com/amethyst/amethyst/
 
@@ -87,7 +87,7 @@ Those principles are:
 
 While there are a lot of [great building blocks][awg] in the Rust ecosystem, using the Amethyst engine instead of building your own game engine definitely has a lot of advantages.
 
-First of all, the engine is based on the [Specs][specs] library, which is a common base on which the engine's concepts are built. Those are described in the [concepts](./concepts/intro.md) section of the book.
+First of all, the engine is based on the [Specs][specs] library, which is a common base on which the engine's concepts are built. For a great introduction to game development with Rust and an Entity Component System, see this [great talk by Catherine West](https://kyren.github.io/2018/09/14/rustconf-talk.html). Amethyst's take on ECS is described in the [concepts](./concepts/intro.md) section of the book.
 A lot of features have been glued together using those:
 
 There are the obvious ones:
@@ -123,4 +123,4 @@ To know where to start, we suggest you read our [contribution guidelines](https:
 
 If you want to contribute, or have questions, let us know either on [GitHub][db], or on [Discord][di].
 
-[di]: https://discord.gg/GnP5Whs
+[di]: https://discord.gg/amethyst

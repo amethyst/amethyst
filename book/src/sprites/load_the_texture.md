@@ -4,7 +4,7 @@ The first part of loading sprites into Amethyst is to read the image into memory
 
 The following snippet shows how to load a PNG image:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::prelude::*;
@@ -27,8 +27,8 @@ where
 #[derive(Debug)]
 struct ExampleState;
 
-impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
-    fn on_start(&mut self, data: StateData<GameData>) {
+impl SimpleState for ExampleState {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
     }
 }

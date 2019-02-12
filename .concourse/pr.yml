@@ -4,16 +4,16 @@ resource_types:
   type: docker-image
   source:
     repository: teliaoss/github-pr-resource
-    tag: v0.7.0
+    tag: v0.10.0
 
 resources:
 - name: pull-request
   type: pull-request
-  check_every: 24h
+  check_every: 1m
   webhook_token: ((webhook_token))
   source:
     repository: amethyst/amethyst
-    access_token: ((repo_github_token))
+    access_token: ((access_token))
 
 - name: amethyst-dependencies
   type: docker-image
@@ -43,17 +43,6 @@ jobs:
         params: { path: amethyst, status: failure, context: linux-tests }
   - put: pull-request
     params: { path: amethyst, status: success, context: linux-tests }
-
-  - put: pull-request
-    params: { path: amethyst, status: pending, context: linux-book-tests }
-  - task: book
-    image: amethyst-dependencies
-    file: amethyst/.concourse/tasks/linux-book.yml
-    on_failure:
-      put: pull-request
-      params: { path: amethyst, status: failure, context: linux-book-tests }
-  - put: pull-request
-    params: { path: amethyst, status: success, context: linux-book-tests }
 
 - name: linux-rustfmt
   public: true

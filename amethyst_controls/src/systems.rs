@@ -12,13 +12,17 @@ use amethyst_core::{
 use amethyst_input::{get_input_axis_simple, InputHandler};
 use amethyst_renderer::WindowMessages;
 
-use {
+use crate::{
     components::{ArcBallControlTag, FlyControlTag},
     resources::{HideCursor, WindowFocus},
 };
 
 /// The system that manages the fly movement.
-/// Generic parameters are the parameters for the InputHandler.
+///
+/// # Type parameters
+///
+/// * `A`: This is the key the `InputHandler` is using for axes. Often, this is a `String`.
+/// * `B`: This is the key the `InputHandler` is using for actions. Often, this is a `String`.
 pub struct FlyMovementSystem<A, B> {
     /// The movement speed of the movement in units per second.
     speed: f32,
@@ -79,10 +83,11 @@ where
 }
 
 /// The system that manages the arc ball movement;
-/// In essence, the system will allign the camera with its target while keeping the distance to it
+/// In essence, the system will align the camera with its target while keeping the distance to it
 /// and while keeping the orientation of the camera.
+///
 /// To modify the orientation of the camera in accordance with the mouse input, please use the
-/// FreeRotationSystem.
+/// `FreeRotationSystem`.
 #[derive(Default)]
 pub struct ArcBallRotationSystem;
 
@@ -114,6 +119,11 @@ impl<'a> System<'a> for ArcBallRotationSystem {
 ///
 /// Can be manually disabled by making the mouse visible using the `HideCursor` resource:
 /// `HideCursor.hide = false`
+///
+/// # Type parameters
+///
+/// * `A`: This is the key the `InputHandler` is using for axes. Often, this is a `String`.
+/// * `B`: This is the key the `InputHandler` is using for actions. Often, this is a `String`.
 pub struct FreeRotationSystem<A, B> {
     sensitivity_x: f32,
     sensitivity_y: f32,
@@ -153,7 +163,8 @@ where
         for event in
             events.read(&mut self.event_reader.as_mut().expect(
                 "`FreeRotationSystem::setup` was not called before `FreeRotationSystem::run`",
-            )) {
+            ))
+        {
             if focused && hide.hide {
                 if let Event::DeviceEvent { ref event, .. } = *event {
                     if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {

@@ -1,12 +1,13 @@
 use minterpolate::InterpolationPrimitive;
 use num_traits::cast::{NumCast, ToPrimitive};
+use serde::{Deserialize, Serialize};
 
 use amethyst_core::{
     nalgebra::Real,
     specs::prelude::{Entity, WriteStorage},
 };
 
-use resources::{AnimationControlSet, AnimationSampling};
+use crate::resources::{AnimationControlSet, AnimationSampling};
 
 use self::SamplerPrimitive::*;
 
@@ -19,7 +20,7 @@ use self::SamplerPrimitive::*;
 ///        with the same id
 /// - `T`: the component type that the animation applies to
 pub fn get_animation_set<'a, I, T>(
-    controls: &'a mut WriteStorage<AnimationControlSet<I, T>>,
+    controls: &'a mut WriteStorage<'_, AnimationControlSet<I, T>>,
     entity: Entity,
 ) -> Option<&'a mut AnimationControlSet<I, T>>
 where
@@ -128,7 +129,8 @@ where
             (Vec3(ref s), Vec3(ref o)) => (s[0] * o[0] + s[1] * o[1] + s[2] * o[2]),
             (Vec4(ref s), Vec4(ref o)) => (s[0] * o[0] + s[1] * o[1] + s[2] * o[2] + s[3] * o[3]),
             _ => panic!("Interpolation can not be done between primitives of different types"),
-        }.to_f32()
+        }
+        .to_f32()
         .expect("Unexpected error when converting primitive to f32, possibly under/overflow")
     }
 
@@ -161,5 +163,6 @@ where
         s.to_f32()
             .expect("Unexpected error when converting primitive to f32, possibly under/overflow")
             * scalar,
-    ).expect("Unexpected error when converting f32 to primitive, possibly under/overflow")
+    )
+    .expect("Unexpected error when converting f32 to primitive, possibly under/overflow")
 }

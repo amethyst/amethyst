@@ -1,5 +1,7 @@
 use std::{marker::PhantomData, ops::Deref};
 
+use log::error;
+
 use amethyst_core::{
     specs::{
         storage::ComponentEvent, BitSet, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
@@ -7,8 +9,9 @@ use amethyst_core::{
     },
     ArcThreadPool, Parent, Time,
 };
+use amethyst_error::{format_err, Error, ResultExt};
 
-use {AssetStorage, Completion, Handle, HotReloadStrategy, ProcessingState, ResultExt};
+use crate::{AssetStorage, Completion, Handle, HotReloadStrategy, ProcessingState};
 
 use super::{Prefab, PrefabData, PrefabTag};
 
@@ -75,7 +78,7 @@ where
                 if !d.loading() {
                     if !d
                         .load_sub_assets(&mut prefab_system_data)
-                        .chain_err(|| "Failed starting sub asset loading")?
+                        .with_context(|_| format_err!("Failed starting sub asset loading"))?
                     {
                         return Ok(ProcessingState::Loaded(d));
                     }
@@ -84,7 +87,7 @@ where
                     Completion::Complete => Ok(ProcessingState::Loaded(d)),
                     Completion::Failed => {
                         error!("Failed loading sub asset: {:?}", d.progress().errors());
-                        Err("Failed loading sub asset")?
+                        return Err(Error::from_string("Failed loading sub asset"));
                     }
                     Completion::Loading => Ok(ProcessingState::Loading(d)),
                 }
@@ -97,7 +100,8 @@ where
             .channel()
             .read(self.insert_reader.as_mut().expect(
                 "`PrefabLoaderSystem::setup` was not called before `PrefabLoaderSystem::run`",
-            )).for_each(|event| {
+            ))
+            .for_each(|event| {
                 if let ComponentEvent::Inserted(id) = event {
                     self.to_process.add(*id);
                 }
@@ -119,7 +123,8 @@ where
                                 Parent {
                                     entity: self.entities[parent],
                                 },
-                            ).expect("Unable to insert `Parent` for prefab");
+                            )
+                            .expect("Unable to insert `Parent` for prefab");
                     }
                     tags.insert(
                         new_entity,
@@ -128,7 +133,8 @@ where
                                 "Unreachable: Every loaded prefab should have a `PrefabTag`",
                             ),
                         ),
-                    ).expect("Unable to insert `PrefabTag` for prefab entity");
+                    )
+                    .expect("Unable to insert `PrefabTag` for prefab entity");
                 }
                 // create components
                 for (index, entity_data) in prefab.entities.iter().enumerate() {
@@ -138,7 +144,8 @@ where
                                 self.entities[index],
                                 &mut prefab_system_data,
                                 &self.entities,
-                            ).expect("Unable to add prefab system data to entity");
+                            )
+                            .expect("Unable to add prefab system data to entity");
                     }
                 }
             }

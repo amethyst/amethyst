@@ -1,6 +1,8 @@
 pub use self::interleaved::DrawSkybox;
 
-use color::Rgba;
+use serde::{Deserialize, Serialize};
+
+use crate::color::Rgba;
 
 mod interleaved;
 

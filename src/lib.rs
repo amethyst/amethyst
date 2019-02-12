@@ -12,19 +12,17 @@
 //! # Example
 //!
 //! ```rust,no_run
-//! extern crate amethyst;
-//!
 //! use amethyst::prelude::*;
 //! use amethyst::renderer::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 //!
 //! struct GameState;
 //!
-//! impl EmptyState for GameState {
-//!     fn on_start(&mut self, _: StateData<()>) {
+//! impl SimpleState for GameState {
+//!     fn on_start(&mut self, _: StateData<'_, GameData<'_, '_>>) {
 //!         println!("Starting game!");
 //!     }
 //!
-//!     fn handle_event(&mut self, _: StateData<()>, event: StateEvent) -> EmptyTrans {
+//!     fn handle_event(&mut self, _: StateData<'_, GameData<'_, '_>>, event: StateEvent) -> SimpleTrans {
 //!         if let StateEvent::Window(event) = &event {
 //!             match event {
 //!                  Event::WindowEvent { event, .. } => match event {
@@ -41,61 +39,46 @@
 //!         }
 //!     }
 //!
-//!     fn update(&mut self, _: StateData<()>) -> EmptyTrans {
+//!     fn update(&mut self, _: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
 //!         println!("Computing some more whoop-ass...");
 //!         Trans::Quit
 //!     }
 //! }
 //!
 //! fn main() {
-//!     let mut game = Application::new("assets/", GameState, ()).expect("Fatal error");
+//!     let mut game = Application::new("assets/", GameState, GameDataBuilder::default())
+//!         .expect("Fatal error");
 //!     game.run();
 //! }
 //! ```
 
 #![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
-#![warn(missing_docs)]
-#![cfg_attr(feature = "cargo-clippy", allow(type_complexity))] // complex project
+#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-#[macro_use]
-#[cfg(feature = "profiler")]
-pub extern crate thread_profiler;
+pub use amethyst_animation as animation;
+pub use amethyst_assets as assets;
+pub use amethyst_audio as audio;
+pub use amethyst_config as config;
+pub use amethyst_controls as controls;
+pub use amethyst_core as core;
+pub use amethyst_derive as derive;
+pub use amethyst_error as error;
+pub use amethyst_input as input;
+pub use amethyst_locale as locale;
+pub use amethyst_network as network;
+pub use amethyst_renderer as renderer;
+pub use amethyst_ui as ui;
+pub use amethyst_utils as utils;
+pub use winit;
 
-pub extern crate amethyst_animation as animation;
-pub extern crate amethyst_assets as assets;
-pub extern crate amethyst_audio as audio;
-pub extern crate amethyst_config as config;
-pub extern crate amethyst_controls as controls;
-pub extern crate amethyst_core as core;
-#[macro_use]
-pub extern crate amethyst_derive as derive;
-pub extern crate amethyst_input as input;
-pub extern crate amethyst_locale as locale;
-pub extern crate amethyst_network as network;
-pub extern crate amethyst_renderer as renderer;
-pub extern crate amethyst_ui as ui;
-pub extern crate amethyst_utils as utils;
-pub extern crate winit;
-
-extern crate amethyst_ui;
-extern crate crossbeam_channel;
-#[macro_use]
-extern crate derivative;
-extern crate fern;
-#[macro_use]
-extern crate log;
-extern crate amethyst_input;
-extern crate rayon;
-extern crate rustc_version_runtime;
-#[macro_use]
-extern crate serde_derive;
-
-pub use core::{shred, shrev, specs as ecs};
+pub use crate::core::{shred, shrev, specs as ecs};
+#[doc(hidden)]
+pub use crate::derive::*;
 
 pub use self::{
     app::{Application, ApplicationBuilder, CoreApplication},
     callback_queue::{Callback, CallbackQueue},
-    error::{Error, Result},
+    error::Error,
     game_data::{DataInit, GameData, GameDataBuilder},
     logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
     state::{
@@ -105,14 +88,13 @@ pub use self::{
     state_event::{StateEvent, StateEventReader},
 };
 
-#[doc(hidden)]
-pub use derive::*;
+/// Convenience alias for use in main functions that uses Amethyst.
+pub type Result<T> = std::result::Result<T, error::Error>;
 
 pub mod prelude;
 
 mod app;
 mod callback_queue;
-mod error;
 mod game_data;
 mod logger;
 mod state;

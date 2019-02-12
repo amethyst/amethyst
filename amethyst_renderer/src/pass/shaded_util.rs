@@ -7,7 +7,7 @@ use amethyst_core::{
     GlobalTransform,
 };
 
-use {
+use crate::{
     cam::Camera,
     light::Light,
     pipe::{Effect, EffectBuilder},
@@ -50,8 +50,8 @@ pub(crate) struct SpotLightPod {
 pub(crate) fn set_light_args(
     effect: &mut Effect,
     encoder: &mut Encoder,
-    light: &ReadStorage<Light>,
-    global: &ReadStorage<GlobalTransform>,
+    light: &ReadStorage<'_, Light>,
+    global: &ReadStorage<'_, GlobalTransform>,
     ambient: &AmbientColor,
     camera: Option<(&Camera, &GlobalTransform)>,
 ) {
@@ -66,12 +66,14 @@ pub(crate) fn set_light_args(
                         color: light.color.into(),
                         intensity: light.intensity,
                         pad: 0.0,
-                    }.std140(),
+                    }
+                    .std140(),
                 )
             } else {
                 None
             }
-        }).collect();
+        })
+        .collect();
 
     let directional_lights: Vec<_> = light
         .join()
@@ -81,12 +83,14 @@ pub(crate) fn set_light_args(
                     DirectionalLightPod {
                         color: light.color.into(),
                         direction: light.direction.into(),
-                    }.std140(),
+                    }
+                    .std140(),
                 )
             } else {
                 None
             }
-        }).collect();
+        })
+        .collect();
 
     let spot_lights: Vec<_> = (light, global)
         .join()
@@ -102,12 +106,14 @@ pub(crate) fn set_light_args(
                         intensity: light.intensity,
                         range: light.range,
                         smoothness: light.smoothness,
-                    }.std140(),
+                    }
+                    .std140(),
                 )
             } else {
                 None
             }
-        }).collect();
+        })
+        .collect();
 
     let fragment_args = FragmentArgs {
         point_light_count: point_lights.len() as u32,
@@ -131,24 +137,28 @@ pub(crate) fn set_light_args(
     );
 }
 
-pub(crate) fn setup_light_buffers(builder: &mut EffectBuilder) {
+pub(crate) fn setup_light_buffers(builder: &mut EffectBuilder<'_>) {
     builder
         .with_raw_constant_buffer(
             "FragmentArgs",
             mem::size_of::<<FragmentArgs as Uniform>::Std140>(),
             1,
-        ).with_raw_constant_buffer(
+        )
+        .with_raw_constant_buffer(
             "PointLights",
             mem::size_of::<<PointLightPod as Uniform>::Std140>(),
             128,
-        ).with_raw_constant_buffer(
+        )
+        .with_raw_constant_buffer(
             "DirectionalLights",
             mem::size_of::<<DirectionalLightPod as Uniform>::Std140>(),
             16,
-        ).with_raw_constant_buffer(
+        )
+        .with_raw_constant_buffer(
             "SpotLights",
             mem::size_of::<<SpotLightPod as Uniform>::Std140>(),
             128,
-        ).with_raw_global("ambient_color")
+        )
+        .with_raw_global("ambient_color")
         .with_raw_global("camera_position");
 }

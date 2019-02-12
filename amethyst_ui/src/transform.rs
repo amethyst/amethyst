@@ -4,6 +4,9 @@ use amethyst_core::specs::prelude::{
     Component, DenseVecStorage, Entities, Entity, FlaggedStorage, Join, ReadStorage,
 };
 
+use serde::{Deserialize, Serialize};
+use shred_derive::SystemData;
+
 use super::{Anchor, ScaleMode, Stretch};
 
 /// Utility `SystemData` for finding UI entities based on `UiTransform` id
@@ -51,11 +54,6 @@ pub struct UiTransform {
     pub width: f32,
     /// The height of this UI element.
     pub height: f32,
-    /// The UI element tab order.  When the player presses tab the UI focus will shift to the
-    /// UI element with the next highest tab order, or if another element with the same tab_order
-    /// as this one exists they are ordered according to Entity creation order.  Shift-tab walks
-    /// this ordering backwards.
-    pub tab_order: i32,
     /// Global x position set by the `UiTransformSystem`.
     pub(crate) pixel_x: f32,
     /// Global y position set by the `UiTransformSystem`.
@@ -87,7 +85,6 @@ impl UiTransform {
         z: f32,
         width: f32,
         height: f32,
-        tab_order: i32,
     ) -> UiTransform {
         UiTransform {
             id,
@@ -98,7 +95,6 @@ impl UiTransform {
             local_z: z,
             width,
             height,
-            tab_order,
             pixel_x: x,
             pixel_y: y,
             global_z: z,
@@ -170,7 +166,7 @@ mod tests {
     use super::*;
     #[test]
     fn inside_local() {
-        let tr = UiTransform::new("".to_string(), Anchor::TopLeft, 0.0, 0.0, 0.0, 1.0, 1.0, 0);
+        let tr = UiTransform::new("".to_string(), Anchor::TopLeft, 0.0, 0.0, 0.0, 1.0, 1.0);
         let pos = (-0.49, 0.20);
         assert!(tr.position_inside_local(pos.0, pos.1));
         let pos = (-1.49, 1.20);
@@ -179,7 +175,7 @@ mod tests {
 
     #[test]
     fn inside_global() {
-        let tr = UiTransform::new("".to_string(), Anchor::TopLeft, 0.0, 0.0, 0.0, 1.0, 1.0, 0);
+        let tr = UiTransform::new("".to_string(), Anchor::TopLeft, 0.0, 0.0, 0.0, 1.0, 1.0);
         let pos = (-0.49, 0.20);
         assert!(tr.position_inside(pos.0, pos.1));
         let pos = (-1.49, 1.20);

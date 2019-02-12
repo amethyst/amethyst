@@ -1,17 +1,8 @@
 //! Loads RON files into a structure for easy / statically typed usage.
-//!
 
 #![crate_name = "amethyst_config"]
 #![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
-#![warn(missing_docs)]
-
-#[macro_use]
-extern crate log;
-extern crate ron;
-extern crate serde;
-
-#[cfg(feature = "profiler")]
-extern crate thread_profiler;
+#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 use std::{
     error::Error,
@@ -19,7 +10,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use ron::{de::Error as DeError, ser::Error as SerError};
+use log::error;
+use ron::{self, de::Error as DeError, ser::Error as SerError};
 use serde::{Deserialize, Serialize};
 
 /// Error related to anything that manages/creates configurations as well as
@@ -37,7 +29,7 @@ pub enum ConfigError {
 }
 
 impl fmt::Display for ConfigError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             ConfigError::File(ref err) => write!(f, "{}", err),
             ConfigError::Parser(ref msg) => write!(f, "{}", msg),
@@ -87,7 +79,7 @@ impl Error for ConfigError {
         }
     }
 
-    fn cause(&self) -> Option<&Error> {
+    fn cause(&self) -> Option<&dyn Error> {
         match *self {
             ConfigError::File(ref err) => Some(err),
             _ => None,
@@ -131,8 +123,7 @@ where
     }
 
     fn load_no_fallback<P: AsRef<Path>>(path: P) -> Result<Self, ConfigError> {
-        use std::fs::File;
-        use std::io::Read;
+        use std::{fs::File, io::Read};
 
         let path = path.as_ref();
 
@@ -161,8 +152,7 @@ where
 
     fn write<P: AsRef<Path>>(&self, path: P) -> Result<(), ConfigError> {
         use ron::ser::to_string_pretty;
-        use std::fs::File;
-        use std::io::Write;
+        use std::{fs::File, io::Write};
 
         let s = to_string_pretty(self, Default::default())?;
         File::create(path)?.write_all(s.as_bytes())?;

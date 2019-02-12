@@ -1,7 +1,5 @@
 //! An example showing how to create a dispatcher inside of a State.
 
-extern crate amethyst;
-
 use amethyst::{
     ecs::{Dispatcher, DispatcherBuilder},
     prelude::*,
@@ -13,8 +11,8 @@ use std::marker::PhantomData;
 
 struct StateA;
 
-impl SimpleState<'static, 'static> for StateA {
-    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'static, 'static> {
+impl SimpleState for StateA {
+    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         println!("StateA::update()");
         // Shows how to push a `Trans` through the event queue.
         // If you do use TransQueue, you will be forced to use the 'static lifetime on your states.
@@ -45,8 +43,8 @@ impl<'a> Default for StateB<'a> {
     }
 }
 
-impl<'a> SimpleState<'static, 'static> for StateB<'a> {
-    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans<'static, 'static> {
+impl<'a> SimpleState for StateB<'a> {
+    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         println!("StateB::update()");
         self.dispatcher.dispatch(&mut data.world.res);
         Trans::Quit

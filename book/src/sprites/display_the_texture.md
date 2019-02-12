@@ -4,7 +4,7 @@ With a [`DrawFlat2D`][doc_drawflat2d] render pass set up and a loaded texture, i
 
 For anything rendered by the [`DrawFlat2D`][doc_drawflat2d] pass, it's also possible to optionally attach a [`Flipped`][doc_flipped] component to the entity, which will signal to the renderer that you want to flip your texture horizontally or vertically when rendering.
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 use amethyst::assets::{AssetStorage, Loader};
 use amethyst::core::Transform;
@@ -44,8 +44,8 @@ fn init_image(world: &mut World, texture_handle: &TextureHandle) {
 #[derive(Debug)]
 struct ExampleState;
 
-impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
-    fn on_start(&mut self, data: StateData<GameData>) {
+impl SimpleState for ExampleState {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
         let texture_handle = load_texture("texture/sprite_sheet.png", world);
 

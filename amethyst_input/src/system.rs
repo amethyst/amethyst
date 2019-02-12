@@ -6,10 +6,11 @@ use winit::Event;
 
 use amethyst_core::{
     shrev::{EventChannel, ReaderId},
-    specs::prelude::{Read, Resources, System, Write},
+    specs::prelude::{Read, ReadExpect, Resources, System, Write},
 };
+use amethyst_renderer::ScreenDimensions;
 
-use {Bindings, InputEvent, InputHandler};
+use crate::{Bindings, InputEvent, InputHandler};
 
 /// Input system
 ///
@@ -17,8 +18,8 @@ use {Bindings, InputEvent, InputHandler};
 /// and push the results in `EventHandler<InputEvent>`.
 pub struct InputSystem<AX, AC>
 where
-    AX: Hash + Eq,
-    AC: Hash + Eq,
+    AX: Hash + Eq + Clone,
+    AC: Hash + Eq + Clone,
 {
     reader: Option<ReaderId<Event>>,
     bindings: Option<Bindings<AX, AC>>,
@@ -26,8 +27,8 @@ where
 
 impl<AX, AC> InputSystem<AX, AC>
 where
-    AX: Hash + Eq,
-    AC: Hash + Eq,
+    AX: Hash + Eq + Clone,
+    AC: Hash + Eq + Clone,
 {
     /// Create a new input system. Needs a reader id for `EventHandler<winit::Event>`.
     pub fn new(bindings: Option<Bindings<AX, AC>>) -> Self {
@@ -41,11 +42,12 @@ where
         event: &Event,
         handler: &mut InputHandler<AX, AC>,
         output: &mut EventChannel<InputEvent<AC>>,
+        hidpi: f64,
     ) where
         AX: Hash + Eq + Clone + Send + Sync + 'static,
         AC: Hash + Eq + Clone + Send + Sync + 'static,
     {
-        handler.send_event(event, output);
+        handler.send_event(event, output, hidpi);
     }
 }
 
@@ -58,16 +60,22 @@ where
         Read<'a, EventChannel<Event>>,
         Write<'a, InputHandler<AX, AC>>,
         Write<'a, EventChannel<InputEvent<AC>>>,
+        ReadExpect<'a, ScreenDimensions>,
     );
 
-    fn run(&mut self, (input, mut handler, mut output): Self::SystemData) {
+    fn run(&mut self, (input, mut handler, mut output, screen_dimensions): Self::SystemData) {
         for event in input.read(
             &mut self
                 .reader
                 .as_mut()
                 .expect("`InputSystem::setup` was not called before `InputSystem::run`"),
         ) {
-            Self::process_event(event, &mut *handler, &mut *output);
+            Self::process_event(
+                event,
+                &mut *handler,
+                &mut *output,
+                screen_dimensions.hidpi_factor(),
+            );
         }
     }
 

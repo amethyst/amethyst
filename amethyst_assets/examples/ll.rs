@@ -1,15 +1,12 @@
 //! Defining a custom asset and format.
 
-extern crate amethyst_assets;
-extern crate amethyst_core;
-extern crate rayon;
-
 use std::{str::from_utf8, sync::Arc, thread::sleep, time::Duration};
 
 use rayon::ThreadPoolBuilder;
 
 use amethyst_assets::*;
 use amethyst_core::specs::prelude::VecStorage;
+use amethyst_error::Error;
 
 #[derive(Clone, Debug)]
 struct DummyAsset(String);
@@ -30,10 +27,10 @@ impl Format<DummyAsset> for DummyFormat {
     fn import(
         &self,
         name: String,
-        source: Arc<Source>,
+        source: Arc<dyn Source>,
         _: (),
         _create_reload: bool,
-    ) -> Result<FormatValue<DummyAsset>> {
+    ) -> Result<FormatValue<DummyAsset>, Error> {
         let dummy = from_utf8(source.load(&name)?.as_slice()).map(|s| s.to_owned())?;
 
         Ok(FormatValue::data(dummy))

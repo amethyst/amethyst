@@ -1,8 +1,9 @@
 [package]
 name = "amethyst_locale"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Joël Lupien <jojolepromain@gmail.com>"]
 readme = "README.md"
+edition = "2018"
 description = """
 Localisation bindings.
 """
@@ -11,7 +12,7 @@ license = "MIT/Apache-2.0"
 keywords = ["game", "localisation", "resource", "management", "amethyst"]
 categories = ["filesystem,localisation"]
 
-documentation = "https://www.amethyst.rs/doc/master/doc/amethyst/"
+documentation = "https://www.amethyst.rs/doc/latest/doc/amethyst_locale/"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
@@ -20,8 +21,9 @@ appveyor = { repository = "amethyst/amethyst", branch = "master" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets", version = "0.5.0" }
-amethyst_core = { path = "../amethyst_core", version = "0.4.0" }
+amethyst_assets = { path = "../amethyst_assets", version = "0.6.0" }
+amethyst_core = { path = "../amethyst_core", version = "0.5.0" }
+amethyst_error = { path = "../amethyst_error", version = "0.1.0" }
 fluent = "0.4.3"
 
 thread_profiler = { version = "0.3", optional = true }

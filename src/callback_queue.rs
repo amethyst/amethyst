@@ -1,10 +1,10 @@
-use core::specs::World;
+use crate::core::specs::World;
 use crossbeam_channel::{Receiver, Sender};
 
 /// The type of a callback.
 /// This is meant to be created from within asynchonous functions (`Future` for example).
 /// See `CallbackQueue` for more details.
-pub type Callback = Box<Fn(&mut World) + Send>;
+pub type Callback = Box<dyn Fn(&mut World) + Send>;
 
 /// A simple `Callback` queue.
 /// Using the `Sender` you can get using the `send_handle` method, you

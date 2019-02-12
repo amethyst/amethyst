@@ -1,10 +1,11 @@
 [package]
 name = "amethyst_gltf"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Rhuagh <seamonr@gmail.com>"]
+edition = "2018"
 description = "GLTF asset loading"
 
-documentation = "https://www.amethyst.rs/doc/master/doc/amethyst_gltf/"
+documentation = "https://www.amethyst.rs/doc/latest/doc/amethyst_gltf/"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
@@ -15,17 +16,19 @@ appveyor = { repository = "amethyst/amethyst" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-amethyst_assets = { path = "../amethyst_assets/", version = "0.5.0" }
-amethyst_animation = { path = "../amethyst_animation/", version = "0.4.0" }
-amethyst_renderer = { path = "../amethyst_renderer/", version = "0.9.0" }
-amethyst_core = { path = "../amethyst_core/", version = "0.4.0" }
+amethyst_assets = { path = "../amethyst_assets/", version = "0.6.0" }
+amethyst_animation = { path = "../amethyst_animation/", version = "0.5.0" }
+amethyst_renderer = { path = "../amethyst_renderer/", version = "0.10.0" }
+amethyst_core = { path = "../amethyst_core/", version = "0.5.0" }
+amethyst_error = { path = "../amethyst_error/", version = "0.1.0" }
+err-derive = "0.1"
 base64 = "0.9"
 fnv = "1"
 gltf = "0.11"
 gfx = "0.17"
 hibitset = { version = "0.5.1", features = ["parallel"] }
 itertools = "0.7"
-log = "0.4"
+log = "0.4.6"
 mikktspace = { version = "0.1" }
 serde = { version = "1.0", features = ["derive"] }
 

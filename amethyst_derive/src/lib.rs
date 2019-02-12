@@ -1,14 +1,10 @@
 #![recursion_limit = "256"]
+#![warn(rust_2018_idioms, rust_2018_compatibility)]
 
 extern crate proc_macro;
-extern crate proc_macro2;
-#[macro_use]
-extern crate syn;
-#[macro_use]
-extern crate quote;
 
 use proc_macro::TokenStream;
-use syn::DeriveInput;
+use syn::{parse_macro_input, DeriveInput};
 
 mod event_reader;
 mod prefab_data;

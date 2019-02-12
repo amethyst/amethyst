@@ -1,12 +1,10 @@
 //! ECS rendering bundle
 
 use amethyst_assets::Processor;
-use amethyst_core::{
-    bundle::{Result, ResultExt, SystemBundle},
-    specs::prelude::DispatcherBuilder,
-};
+use amethyst_core::{bundle::SystemBundle, specs::prelude::DispatcherBuilder};
+use amethyst_error::{format_err, Error, ResultExt};
 
-use {
+use crate::{
     config::DisplayConfig,
     pipe::{PipelineBuild, PolyPipeline},
     sprite::SpriteSheet,
@@ -87,7 +85,7 @@ where
 impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> SystemBundle<'a, 'b>
     for RenderBundle<'c, B, P>
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         if let Some(dep) = self.visibility_sorting {
             builder.add(
                 VisibilitySortingSystem::new(),
@@ -117,7 +115,8 @@ impl<'a, 'b, 'c, B: PipelineBuild<Pipeline = P>, P: 'b + PolyPipeline> SystemBun
             );
         }
         builder.add_thread_local(
-            RenderSystem::build(self.pipe, self.config).chain_err(|| "Renderer error!")?,
+            RenderSystem::build(self.pipe, self.config)
+                .with_context(|_| format_err!("Renderer error!"))?,
         );
         Ok(())
     }

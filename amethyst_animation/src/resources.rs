@@ -1,16 +1,19 @@
 use std::{cmp::Ordering, fmt::Debug, hash::Hash, marker, time::Duration};
 
+use derivative::Derivative;
 use fnv::FnvHashMap;
+use log::error;
 use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
+use serde::{Deserialize, Serialize};
 
-use amethyst_assets::{
-    Asset, AssetStorage, Handle, PrefabData, PrefabError, ProcessingState, Result,
-};
+use amethyst_assets::{Asset, AssetStorage, Handle, PrefabData, ProcessingState};
 use amethyst_core::{
     shred::SystemData,
     specs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage},
     timing::{duration_to_secs, secs_to_duration},
 };
+use amethyst_derive::PrefabData;
+use amethyst_error::Error;
 
 /// Blend method for sampler blending
 #[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Eq, Hash)]
@@ -99,11 +102,11 @@ where
     type HandleStorage = VecStorage<Handle<Self>>;
 }
 
-impl<T> Into<Result<ProcessingState<Sampler<T>>>> for Sampler<T>
+impl<T> Into<Result<ProcessingState<Sampler<T>>, Error>> for Sampler<T>
 where
     T: InterpolationPrimitive + Send + Sync + 'static,
 {
-    fn into(self) -> Result<ProcessingState<Sampler<T>>> {
+    fn into(self) -> Result<ProcessingState<Sampler<T>>, Error> {
         Ok(ProcessingState::Loaded(self))
     }
 }
@@ -186,7 +189,7 @@ where
 
     /// Create rest state for the hierarchy. Will copy the values from the base components for each
     /// entity in the hierarchy.
-    pub fn rest_state<F>(&self, get_component: F, states: &mut WriteStorage<RestState<T>>)
+    pub fn rest_state<F>(&self, get_component: F, states: &mut WriteStorage<'_, RestState<T>>)
     where
         T: AnimationSampling + Clone,
         F: Fn(Entity) -> Option<T>,
@@ -285,11 +288,11 @@ where
     type HandleStorage = VecStorage<Handle<Self>>;
 }
 
-impl<T> Into<Result<ProcessingState<Animation<T>>>> for Animation<T>
+impl<T> Into<Result<ProcessingState<Animation<T>>, Error>> for Animation<T>
 where
     T: AnimationSampling,
 {
-    fn into(self) -> Result<ProcessingState<Animation<T>>> {
+    fn into(self) -> Result<ProcessingState<Animation<T>>, Error> {
         Ok(ProcessingState::Loaded(self))
     }
 }
@@ -515,7 +518,8 @@ where
                         .expect("Referring to a missing sampler"),
                     c,
                 )
-            }).for_each(|(s, c)| {
+            })
+            .for_each(|(s, c)| {
                 set_step_state(c, s, direction);
             });
     }
@@ -541,7 +545,8 @@ where
                 } else {
                     0.
                 }
-            }).max_by(|a, b| a.partial_cmp(&b).unwrap_or(Ordering::Equal))
+            })
+            .max_by(|a, b| a.partial_cmp(&b).unwrap_or(Ordering::Equal))
     }
 }
 
@@ -865,7 +870,7 @@ where
     }
 
     /// Check if there is an animation with the given id in the set
-    pub fn has_animation(&mut self, id: I) -> bool {
+    pub fn has_animation(&self, id: I) -> bool {
         self.animations.iter().any(|a| a.0 == id)
     }
 }

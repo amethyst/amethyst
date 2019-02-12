@@ -1,13 +1,14 @@
 use std::marker::PhantomData;
 
-use amethyst::core::bundle::{Result, SystemBundle};
-use amethyst::ecs::prelude::*;
+use amethyst::{core::bundle::SystemBundle, ecs::prelude::*, error::Error};
+
+use derive_new::new;
 
 /// Adds a specified `System` to the dispatcher.
 #[derive(Debug, new)]
 pub(crate) struct SystemInjectionBundle<'a, Sys>
 where
-    Sys: for<'s> System<'s> + Send + 'a,
+    Sys: for<'s> System<'s> + Send,
 {
     /// `System` to add to the dispatcher.
     system: Sys,
@@ -24,7 +25,7 @@ impl<'a, 'b, Sys> SystemBundle<'a, 'b> for SystemInjectionBundle<'a, Sys>
 where
     Sys: for<'s> System<'s> + Send + 'a,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
             self.system,
             &self.system_name,

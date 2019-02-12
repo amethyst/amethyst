@@ -79,6 +79,8 @@ Container(
                         tab_order: 1,
                         anchor: Middle,
                         stretch: XY(x_margin: 0., y_margin: 0.),
+                        mouse_reactive: true,
+                        selectable: 0,
                     ),
                     text: (
                         text: "Editable",
@@ -110,6 +112,8 @@ Container(
                 font: File("font/square.ttf", Ttf, ()),
                 font_size: 20.,
                 normal_text_color: (0.2, 0.2, 1.0, 1.0),
+                hover_text_color: (0.4, 0.4, 1.0, 1.0),
+                press_text_color: (0.6, 0.6, 1.0, 1.0),
                 normal_image: Data(Rgba((0., 1., 0., 1.), (channel: Srgb))),
                 hover_image: Data(Rgba((0.3, 1., 0.3, 1.), (channel: Srgb))),
                 press_image: Data(Rgba((0.15, 1., 0.15, 1.), (channel: Srgb))),
@@ -154,6 +158,26 @@ Container(
                 font: File("font/square.ttf", Ttf, ()),
                 font_size: 25.,
                 color: (0.498, 0.254, 0.937, 1.0),
+            )
+        ),
+
+        // Random text
+        Text(
+            transform: (
+                id: "random_text",
+                x: 100.,
+                y: -48,
+                width: 300.,
+                height: 25.,
+                tab_order: 2,
+                anchor: TopLeft,
+                transparent: true,
+            ),
+            text: (
+                text: "N/A",
+                font: File("font/square.ttf", Ttf, ()),
+                font_size: 25.,
+                color: (1.0, 1.0, 1.0, 1.0),
             )
         ),
 

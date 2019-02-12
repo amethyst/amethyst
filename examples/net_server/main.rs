@@ -1,7 +1,3 @@
-extern crate amethyst;
-#[macro_use]
-extern crate log;
-
 use amethyst::{
     core::frame_limiter::FrameRateLimitStrategy,
     ecs::{Join, System, WriteStorage},
@@ -10,31 +6,41 @@ use amethyst::{
     shrev::ReaderId,
     Result,
 };
+
+use log::info;
+
 use std::time::Duration;
 
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
+
     let game_data = GameDataBuilder::default()
         .with_bundle(NetworkBundle::<()>::new(
-            "127.0.0.1:3456".parse().unwrap(),
+            "127.0.0.1:3455".parse().unwrap(),
+            "127.0.0.1:3454".parse().unwrap(),
             vec![Box::new(FilterConnected::<()>::new())],
-        ))?.with(SpamReceiveSystem::new(), "rcv", &[]);
+        ))?
+        .with(SpamReceiveSystem::new(), "rcv", &[]);
     let mut game = Application::build("./", State1)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             1,
-        ).build(game_data)?;
+        )
+        .build(game_data)?;
     game.run();
     Ok(())
 }
 
 /// Default empty state
 pub struct State1;
-impl<'a, 'b> SimpleState<'a, 'b> for State1 {
-    fn on_start(&mut self, data: StateData<GameData>) {
+impl SimpleState for State1 {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         data.world
             .create_entity()
-            .with(NetConnection::<()>::new("127.0.0.1:3455".parse().unwrap()))
+            .with(NetConnection::<()>::new(
+                "127.0.0.1:3457".parse().unwrap(),
+                "127.0.0.1:3456".parse().unwrap(),
+            ))
             .build();
     }
 }
@@ -54,7 +60,7 @@ impl<'a> System<'a> for SpamReceiveSystem {
     type SystemData = (WriteStorage<'a, NetConnection<()>>,);
     fn run(&mut self, (mut connections,): Self::SystemData) {
         let mut count = 0;
-        for (mut conn,) in (&mut connections,).join() {
+        for (conn,) in (&mut connections,).join() {
             if self.reader.is_none() {
                 self.reader = Some(conn.receive_buffer.register_reader());
             }

@@ -1,13 +1,11 @@
 //! Displays several lines with both methods.
 
-extern crate amethyst;
-
 use amethyst::{
     controls::{FlyControlBundle, FlyControlTag},
-    core::Time,
     core::{
         nalgebra::{Point3, Vector3},
         transform::{Transform, TransformBundle},
+        Time,
     },
     ecs::{Read, System, Write},
     input::InputBundle,
@@ -25,27 +23,25 @@ impl<'s> System<'s> for ExampleLinesSystem {
 
     fn run(&mut self, (mut debug_lines_resource, time): Self::SystemData) {
         // Drawing debug lines, as a resource
-        {
-            let t = (time.absolute_time_seconds() as f32).cos();
+        let t = (time.absolute_time_seconds() as f32).cos();
 
-            debug_lines_resource.draw_direction(
-                [t, 0.0, 0.5].into(),
-                [0.0, 0.3, 0.0].into(),
-                [0.5, 0.05, 0.65, 1.0].into(),
-            );
+        debug_lines_resource.draw_direction(
+            [t, 0.0, 0.5].into(),
+            [0.0, 0.3, 0.0].into(),
+            [0.5, 0.05, 0.65, 1.0].into(),
+        );
 
-            debug_lines_resource.draw_line(
-                [t, 0.0, 0.5].into(),
-                [0.0, 0.0, 0.2].into(),
-                [0.5, 0.05, 0.65, 1.0].into(),
-            );
-        }
+        debug_lines_resource.draw_line(
+            [t, 0.0, 0.5].into(),
+            [0.0, 0.0, 0.2].into(),
+            [0.5, 0.05, 0.65, 1.0].into(),
+        );
     }
 }
 
 struct ExampleState;
-impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
-    fn on_start(&mut self, data: StateData<GameData>) {
+impl SimpleState for ExampleState {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         // Setup debug lines as a resource
         data.world
             .add_resource(DebugLines::new().with_capacity(100));
@@ -136,7 +132,8 @@ impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
             .with(Camera::from(Projection::perspective(
                 1.33333,
                 std::f32::consts::FRAC_PI_2,
-            ))).with(local_transform)
+            )))
+            .with(local_transform)
             .build();
     }
 }
@@ -144,11 +141,11 @@ impl<'a, 'b> SimpleState<'a, 'b> for ExampleState {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let app_root = application_root_dir();
+    let app_root = application_root_dir()?;
 
-    let display_config_path = format!("{}/examples/debug_lines/resources/display.ron", app_root);
-    let key_bindings_path = format!("{}/examples/debug_lines/resources/input.ron", app_root);
-    let resources = format!("{}/examples/assets/", app_root);
+    let display_config_path = app_root.join("examples/debug_lines/resources/display.ron");
+    let key_bindings_path = app_root.join("examples/debug_lines/resources/input.ron");
+    let resources = app_root.join("examples/assets/");
 
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
@@ -162,12 +159,14 @@ fn main() -> amethyst::Result<()> {
         Some(String::from("move_x")),
         Some(String::from("move_y")),
         Some(String::from("move_z")),
-    ).with_sensitivity(0.1, 0.1);
+    )
+    .with_sensitivity(0.1, 0.1);
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
-        )?.with(ExampleLinesSystem, "example_lines_system", &[])
+        )?
+        .with(ExampleLinesSystem, "example_lines_system", &[])
         .with_bundle(fly_control_bundle)?
         .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_bundle(RenderBundle::new(pipe, Some(config)))?;

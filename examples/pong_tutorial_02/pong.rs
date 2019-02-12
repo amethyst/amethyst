@@ -12,13 +12,13 @@ use amethyst::{
 const ARENA_HEIGHT: f32 = 100.0;
 const ARENA_WIDTH: f32 = 100.0;
 
-const _PADDLE_HEIGHT: f32 = 16.0; // As this constant is not used yet, we introduce the `_` so that we don't get a warning
+const PADDLE_HEIGHT: f32 = 16.0;
 const PADDLE_WIDTH: f32 = 4.0;
 
 pub struct Pong;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Pong {
-    fn on_start(&mut self, data: StateData<GameData>) {
+impl SimpleState for Pong {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
 
         // Load the spritesheet necessary to render the graphics.
@@ -49,8 +49,8 @@ impl Paddle {
     fn new(side: Side) -> Paddle {
         Paddle {
             side: side,
-            width: 1.0,
-            height: 1.0,
+            width: PADDLE_WIDTH,
+            height: PADDLE_HEIGHT,
         }
     }
 }
@@ -99,7 +99,8 @@ fn initialise_camera(world: &mut World) {
             ARENA_WIDTH,
             0.0,
             ARENA_HEIGHT,
-        ))).with(transform)
+        )))
+        .with(transform)
         .build();
 }
 

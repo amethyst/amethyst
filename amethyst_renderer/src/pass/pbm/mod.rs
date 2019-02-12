@@ -3,7 +3,7 @@ pub use self::{interleaved::DrawPbm, separate::DrawPbmSeparate};
 mod interleaved;
 mod separate;
 
-use pass::util::TextureType;
+use crate::pass::util::TextureType;
 
 static VERT_SRC: &[u8] = include_bytes!("../shaders/vertex/basic.glsl");
 static FRAG_SRC: &[u8] = include_bytes!("../shaders/fragment/pbm.glsl");

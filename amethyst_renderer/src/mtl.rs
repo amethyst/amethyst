@@ -2,7 +2,9 @@
 
 use amethyst_core::specs::prelude::{Component, DenseVecStorage};
 
-use tex::TextureHandle;
+use serde::{Deserialize, Serialize};
+
+use crate::tex::TextureHandle;
 
 /// Material reference this part of the texture
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]

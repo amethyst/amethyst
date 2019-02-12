@@ -1,18 +1,17 @@
 use std::ops::Range;
 
-use gltf;
-use mikktspace;
-use GltfSceneOptions;
+use amethyst_error::Error;
+use amethyst_renderer::{AnimatedComboMeshCreator, Attribute, MeshData, Separate};
+use log::trace;
 
-use renderer::{AnimatedComboMeshCreator, Attribute, MeshData, Separate};
-
-use super::{Buffers, GltfError};
+use super::Buffers;
+use crate::{error, GltfSceneOptions};
 
 pub fn load_mesh(
-    mesh: &gltf::Mesh,
+    mesh: &gltf::Mesh<'_>,
     buffers: &Buffers,
     options: &GltfSceneOptions,
-) -> Result<Vec<(MeshData, Option<usize>, Range<[f32; 3]>)>, GltfError> {
+) -> Result<Vec<(MeshData, Option<usize>, Range<[f32; 3]>)>, Error> {
     trace!("Loading mesh");
     let mut primitives = vec![];
 
@@ -37,7 +36,7 @@ pub fn load_mesh(
             });
 
         trace!("Loading positions");
-        let mut positions = reader
+        let positions = reader
             .read_positions()
             .map(|positions| match faces {
                 Some(ref faces) => {
@@ -45,7 +44,8 @@ pub fn load_mesh(
                     faces.iter().map(|i| vertices[*i]).collect::<Vec<_>>()
                 }
                 None => positions.collect(),
-            }).ok_or(GltfError::MissingPositions)?;
+            })
+            .ok_or(error::Error::MissingPositions)?;
 
         trace!("Loading normals");
         let normals = reader
@@ -56,8 +56,9 @@ pub fn load_mesh(
                     faces.iter().map(|i| normals[*i]).collect()
                 }
                 None => normals.collect(),
-            }).unwrap_or_else(|| {
-                use core::nalgebra::Point3;
+            })
+            .unwrap_or_else(|| {
+                use amethyst_core::nalgebra::Point3;
                 use std::iter::once;
                 let f = faces
                     .as_ref()
@@ -72,7 +73,8 @@ pub fn load_mesh(
                         once(normal.clone())
                             .chain(once(normal.clone()))
                             .chain(once(normal))
-                    }).collect::<Vec<_>>()
+                    })
+                    .collect::<Vec<_>>()
             });
 
         trace!("Loading texture coordinates");
@@ -108,7 +110,8 @@ pub fn load_mesh(
                         .collect()
                 }
                 None => tangents.map(|t| [t[0], t[1], t[2]]).collect(),
-            }).unwrap_or_else(|| {
+            })
+            .unwrap_or_else(|| {
                 let f = faces
                     .as_ref()
                     .map(|f| f.clone())

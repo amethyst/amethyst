@@ -5,7 +5,12 @@ use amethyst_core::{
     transform::components::{HierarchyEvent, Parent, ParentHierarchy},
 };
 
-use HiddenPropagate;
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
+use log::error;
+
+use crate::HiddenPropagate;
 
 // Based on the [UiTransformSystem](struct.UiTransformSystem.html).
 /// This system adds a [HiddenPropagate](struct.HiddenPropagate.html)-component to all children.
@@ -52,7 +57,8 @@ impl<'a> System<'a> for HideHierarchySystem {
             .changed()
             .read(&mut self.parent_events_id.as_mut().expect(
                 "`HideHierarchySystem::setup` was not called before `HideHierarchySystem::run`",
-            )) {
+            ))
+        {
             match *event {
                 HierarchyEvent::Removed(entity) => {
                     self_marked_as_modified.add(entity.id());

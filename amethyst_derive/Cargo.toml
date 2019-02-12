@@ -1,10 +1,11 @@
 [package]
 name = "amethyst_derive"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Simon Rönnberg <seamonr@gmail.com>"]
+edition = "2018"
 description = "Amethyst derive"
 
-documentation = "https://www.amethyst.rs/doc/master/doc/amethyst_derive/"
+documentation = "https://www.amethyst.rs/doc/latest/doc/amethyst_derive/"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
@@ -20,8 +21,9 @@ quote = "0.6"
 proc-macro2 = "0.4"
 
 [dev-dependencies]
-amethyst_core = { path = "../amethyst_core", version = "0.4.0" }
-amethyst_assets = { path = "../amethyst_assets", version = "0.5.0" }
+amethyst_core = { path = "../amethyst_core", version = "0.5.0" }
+amethyst_assets = { path = "../amethyst_assets", version = "0.6.0" }
+amethyst_error = { path = "../amethyst_error", version = "0.1.0" }
 
 [lib]
 name = "amethyst_derive"

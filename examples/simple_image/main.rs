@@ -1,5 +1,3 @@
-extern crate amethyst;
-
 use amethyst::{
     assets::{AssetStorage, Loader},
     core::{Transform, TransformBundle},
@@ -14,8 +12,8 @@ use amethyst::{
 
 struct Example;
 
-impl<'a, 'b> SimpleState<'a, 'b> for Example {
-    fn on_start(&mut self, data: StateData<GameData>) {
+impl SimpleState for Example {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
         let texture_handle = load_texture(world, "logo.png");
         let _image = init_image(world, &texture_handle);
@@ -27,8 +25,8 @@ impl<'a, 'b> SimpleState<'a, 'b> for Example {
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let resources = format!("{}/examples/simple_image/resources", application_root_dir());
-    let config = DisplayConfig::load(format!("{}/display_config.ron", resources));
+    let resources = application_root_dir()?.join("examples/simple_image/resources");
+    let config = DisplayConfig::load(resources.join("display_config.ron"));
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.1, 0.1, 0.1, 1.0], 1.0)
@@ -56,7 +54,8 @@ fn init_camera(world: &mut World) {
         .create_entity()
         .with(Camera::from(Projection::orthographic(
             -250.0, 250.0, -250.0, 250.0,
-        ))).with(transform)
+        )))
+        .with(transform)
         .build();
 }
 

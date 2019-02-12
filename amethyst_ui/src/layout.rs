@@ -1,4 +1,8 @@
 use gfx_glyph::{HorizontalAlign, VerticalAlign};
+use serde::{Deserialize, Serialize};
+
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
 
 use amethyst_core::{
     specs::prelude::{
@@ -168,7 +172,8 @@ impl<'a> System<'a> for UiTransformSystem {
                 .changed()
                 .read(&mut self.parent_events_id.as_mut().expect(
                     "`UiTransformSystem::setup` was not called before `UiTransformSystem::run`",
-                )) {
+                ))
+        {
             if let HierarchyEvent::Modified(entity) = *event {
                 self_transform_modified.add(entity.id());
             }
@@ -211,7 +216,8 @@ impl<'a> System<'a> for UiTransformSystem {
                     .get(*entity)
                     .expect(
                         "Unreachable: All entities in `ParentHierarchy` should also be in `Parent`",
-                    ).entity;
+                    )
+                    .entity;
                 let parent_dirty = self_transform_modified.contains(parent_entity.id());
                 if parent_dirty || self_dirty || screen_resized {
                     let parent_transform_copy = transforms.get(parent_entity).cloned();

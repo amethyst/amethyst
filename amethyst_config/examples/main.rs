@@ -1,8 +1,6 @@
-extern crate amethyst_config;
-#[macro_use]
-extern crate serde_derive;
-
 use amethyst_config::Config;
+
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct DisplayConfig {

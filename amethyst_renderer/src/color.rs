@@ -1,10 +1,23 @@
 //! Color value types.
 
+use amethyst_core::specs::{Component, DenseVecStorage};
+
 use gfx::shade::{Formatted, ToUniform};
 use gfx_core::shade::{BaseType, ContainerType, UniformValue};
 use glsl_layout::{vec3, vec4};
+use serde::{Deserialize, Serialize};
 
 /// An RGBA color value.
+///
+/// ## As a Component
+/// If you attach this as a component to an entity then passes should multiply any rendered pixels
+/// in the component with this color.  Please note alpha multiplication will only produce
+/// transparency if the rendering pass would normally be capable of rendering that entity
+/// transparently.
+///
+/// ## More than a Component
+/// This structure has more uses than just as a component, and you'll find it in other places
+/// throughout the `amethyst_renderer` API.
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, PartialOrd, Serialize)]
 pub struct Rgba(pub f32, pub f32, pub f32, pub f32);
 
@@ -57,6 +70,10 @@ impl Default for Rgba {
     fn default() -> Rgba {
         Rgba::black()
     }
+}
+
+impl Component for Rgba {
+    type Storage = DenseVecStorage<Self>;
 }
 
 impl From<[f32; 3]> for Rgba {

@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use winit::{MouseButton, VirtualKeyCode};
 
 use super::{controller::ControllerButton, scroll_direction::ScrollDirection};
@@ -10,7 +11,7 @@ pub enum Button {
     Key(VirtualKeyCode),
 
     /// Scan code from keyboard, use this when the position of the key matters
-    /// more than letter on the key.
+    /// more than the letter on the key.
     ScanCode(u32),
 
     /// Mouse buttons
