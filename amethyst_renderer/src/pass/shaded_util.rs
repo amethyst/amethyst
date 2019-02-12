@@ -1,3 +1,4 @@
+use gfx::memory::Pod;
 use std::mem;
 
 use glsl_layout::*;
@@ -36,6 +37,7 @@ pub(crate) struct DirectionalLightPod {
     direction: vec3,
 }
 
+
 #[derive(Clone, Copy, Debug, Uniform)]
 pub(crate) struct SpotLightPod {
     position: vec3,
@@ -46,6 +48,10 @@ pub(crate) struct SpotLightPod {
     range: float,
     smoothness: float,
 }
+
+pub(crate) struct Std140Pod<T: Std140>(T);
+
+unsafe impl<T: Std140> Pod for Std140Pod<T>{}
 
 pub(crate) fn set_light_args(
     effect: &mut Effect,
@@ -61,13 +67,13 @@ pub(crate) fn set_light_args(
             if let Light::Point(ref light) = *light {
                 let position: [f32; 3] = transform.0.column(3).xyz().into();
                 Some(
-                    PointLightPod {
+                    Std140Pod(PointLightPod {
                         position: position.into(),
                         color: light.color.into(),
                         intensity: light.intensity,
                         pad: 0.0,
                     }
-                    .std140(),
+                    .std140()),
                 )
             } else {
                 None
@@ -80,11 +86,11 @@ pub(crate) fn set_light_args(
         .filter_map(|light| {
             if let Light::Directional(ref light) = *light {
                 Some(
-                    DirectionalLightPod {
+                    Std140Pod(DirectionalLightPod {
                         color: light.color.into(),
                         direction: light.direction.into(),
                     }
-                    .std140(),
+                    .std140()),
                 )
             } else {
                 None
@@ -98,7 +104,7 @@ pub(crate) fn set_light_args(
             if let Light::Spot(ref light) = *light {
                 let position: [f32; 3] = transform.0.column(3).xyz().into();
                 Some(
-                    SpotLightPod {
+                    Std140Pod(SpotLightPod {
                         position: position.into(),
                         color: light.color.into(),
                         direction: light.direction.into(),
@@ -107,7 +113,7 @@ pub(crate) fn set_light_args(
                         range: light.range,
                         smoothness: light.smoothness,
                     }
-                    .std140(),
+                    .std140()),
                 )
             } else {
                 None

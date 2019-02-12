@@ -25,7 +25,10 @@ err-derive = "0.1"
 base64 = "0.9"
 fnv = "1"
 gltf = "0.11"
-gfx = "0.17"
+
+#gfx = "0.17"
+gfx = { git = "https://github.com/gfx-rs/gfx", features = ["serialize"], branch="pre-ll" }
+
 hibitset = { version = "0.5.1", features = ["parallel"] }
 itertools = "0.7"
 log = "0.4.6"

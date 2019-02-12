@@ -37,10 +37,18 @@ amethyst_xr = { path = "../amethyst_xr", version = "0.1.0" }
 derivative = "1.0"
 fnv = "1.0"
 genmesh = "0.6"
-gfx = { version = "0.17.1", features = ["serialize"] }
-gfx_core = { version = "0.8.3", features = ["serialize"] }
-gfx_macros = "0.2"
-glsl-layout = { version = "0.1.1", features = ["gfx"] }
+#gfx = { version = "0.17.1", features = ["serialize"] }
+#gfx_core = { version = "0.8.3", features = ["serialize"] }
+
+gfx = { git = "https://github.com/gfx-rs/gfx", features = ["serialize"], branch="pre-ll" }
+gfx_core = { git = "https://github.com/gfx-rs/gfx", features = ["serialize"], branch="pre-ll" }
+
+#gfx_macros = "0.2"
+gfx_macros = { git = "https://github.com/gfx-rs/gfx", branch="pre-ll" }
+
+glsl-layout = { version = "0.2.0" }
+#glsl-layout = { git = "https://github.com/gfx-rs/gfx", features = ["gfx"], branch="pre-ll" }
+
 hibitset = { version = "0.5.1", features = ["parallel"] }
 image = "0.20"
 log = "0.4.6"
@@ -54,8 +62,13 @@ winit = { version = "0.18", features = ["serde", "icon_loading"] }
 
 thread_profiler = { version = "0.3", optional = true }
 
-gfx_device_gl = { version = "0.15", optional = true }
-gfx_window_glutin = { version = "0.27.0", optional = true }
+#gfx_device_gl = { version = "0.15", optional = true }
+gfx_device_gl = { git = "https://github.com/gfx-rs/gfx", branch="pre-ll", optional = true }
+
+#gfx_window_glutin = { version = "0.27.0", optional = true }
+gfx_window_glutin = { git = "https://github.com/gfx-rs/gfx", branch="pre-ll", optional = true }
+
+
 glutin = { version = "0.19", optional = true }
 
 [target.'cfg(not(target_os = "macos"))'.dependencies]

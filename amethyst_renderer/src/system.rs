@@ -154,7 +154,7 @@ where
     fn render(&mut self, res: &'_ Resources) {
         if let Some(mut xr_info) = res.try_fetch_mut::<XRInfo>() {
             {
-                let mut targets = self.renderer.xr_targets().len();
+                let targets = self.renderer.xr_targets().len();
                 let target_infos = xr_info.targets();
 
                 if targets != target_infos.len() {

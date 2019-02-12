@@ -23,12 +23,13 @@ clipboard = "0.5"
 derivative = "1.0"
 derive-new = "0.5.6"
 fnv = "1"
-gfx = { version = "0.17", features = ["serialize"] }
+
+gfx = { git = "https://github.com/gfx-rs/gfx", features = ["serialize"], branch="pre-ll" }
 
 # Remove once the patched version of gfx_glyph is published.
-gfx_glyph = { git = "https://github.com/alexheretic/glyph-brush", rev = "64f0c7e4269c8cebcb5456965a8e45c934f17fa6" }
+gfx_glyph = { git = "https://github.com/jojolepro/glyph-brush", branch="gfxgit" }
 
-glsl-layout = { version = "0.1.1", features = ["gfx"] }
+glsl-layout = { version = "0.2.0" }
 hibitset = { version = "0.5.1", features = ["parallel"] }
 ron = "0.4"
 serde = { version = "1.0", features = ["derive"] }
