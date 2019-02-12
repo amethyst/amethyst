@@ -35,6 +35,8 @@ it is attached to. ([#1282])
 * Changed argument types of `exec_removal` to allow use of both Read and Write Storages. ([#1397])
 * Changed default log level to Info. ([#1404])
 * Remove unnecessary `mut` from `AnimationControlSet::has_animation` ([#1408])
+* Moved amethyst_gltf from development workspace to be like the other amethyst_* subcrates. ([#1411])
+* Re-exported amethyst_gltf by amethyst as amethyst::gltf. ([#1411])
 
 ### Removed
 
@@ -66,6 +68,7 @@ it is attached to. ([#1282])
 [#1404]: https://github.com/amethyst/amethyst/pull/1404
 [#1408]: https://github.com/amethyst/amethyst/pull/1408
 [#1405]: https://github.com/amethyst/amethyst/pull/1405
+[#1411]: https://github.com/amethyst/amethyst/pull/1411
 
 ## [0.10.0] - 2018-12
 
