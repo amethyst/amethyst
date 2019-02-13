@@ -71,5 +71,11 @@ script:
   if [ ${TRAVIS_RUST_VERSION} == "stable" ]
   then
     echo "Check common features"
-    cargo check --all --features sdl_controller,profiler
+    cargo check --all --features sdl_controller,profiler,json
+  fi
+- |
+  if [ ${TRAVIS_RUST_VERSION} == "nightly" ]
+  then
+    echo "Check common features"
+    cargo check --all --all-features
   fi
