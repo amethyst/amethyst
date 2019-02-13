@@ -130,8 +130,18 @@ impl Logger {
 ///
 /// Configuration of the logger can also be controlled via environment variables:
 /// * AMETHYST_LOG_STDOUT - determines the output to the terminal
+///     * "no" / "off" disables logging to stdout
+///     * "plain" / "yes" enables logging to stdout
+///     * "colored" enables logging and makes it colored
 /// * AMETHYST_LOG_LEVEL_FILTER - sets the log level
+///     * "off" disables all logging
+///     * "error" enables only error logging
+///     * "warn" only errors and warnings are emitted
+///     * "info" only error, warning and info messages
+///     * "debug" everything except trace
+///     * "trace" everything
 /// * AMETHYST_LOG_FILE_PATH - if set, enables logging to the file at the path
+///     * the value is expected to be a path to the logging file
 pub fn start_logger(config: LoggerConfig) {
     Logger::from_config(config).start();
 }
@@ -139,8 +149,8 @@ pub fn start_logger(config: LoggerConfig) {
 fn env_var_override(config: &mut LoggerConfig) {
     if let Ok(var) = env::var("AMETHYST_LOG_STDOUT") {
         match var.to_lowercase().as_ref() {
-            "off" => config.stdout = StdoutLog::Off,
-            "plain" => config.stdout = StdoutLog::Plain,
+            "off" | "no" => config.stdout = StdoutLog::Off,
+            "plain" | "yes" => config.stdout = StdoutLog::Plain,
             "colored" => config.stdout = StdoutLog::Colored,
             _ => {}
         }
