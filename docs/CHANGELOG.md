@@ -20,6 +20,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 it is attached to. ([#1282])
 * `AutoFov` and `AutoFovSystem` to adjust horizontal FOV to screen aspect ratio. ([#1281])
 * Add `icon` to `DisplayConfig` to set a window icon using a path to a file ([#1373])
+* Added setting to control gfx_device_gl logging level separately, and set it to Warn by default. ([#1404])
+* Add `loaded_icon` to `DisplayConfig` to set a window icon programatically ([#1405])
 
 ### Changed
 
@@ -29,6 +31,12 @@ it is attached to. ([#1282])
 * `AudioBundle::new()` no longer exists, as `AudioBundle` is now a unit type. It also no longer initializes the `DjSystem` ([#1356])
 * Convert everything to use err-derive and amethyst_error ([#1365])
 * Removed redundant code in `renderer.rs` ([#1375])
+* Refactored audio initialization to be more bundle-centric ([#1388])
+* Changed argument types of `exec_removal` to allow use of both Read and Write Storages. ([#1397])
+* Changed default log level to Info. ([#1404])
+* Remove unnecessary `mut` from `AnimationControlSet::has_animation` ([#1408])
+* Moved amethyst_gltf from development workspace to be like the other amethyst_* subcrates. ([#1411])
+* Re-exported amethyst_gltf by amethyst as amethyst::gltf. ([#1411])
 
 ### Removed
 
@@ -55,6 +63,12 @@ it is attached to. ([#1282])
 [#1365]: https://github.com/amethyst/amethyst/pull/1365
 [#1371]: https://github.com/amethyst/amethyst/pull/1371
 [#1373]: https://github.com/amethyst/amethyst/pull/1373
+[#1388]: https://github.com/amethyst/amethyst/pull/1388
+[#1397]: https://github.com/amethyst/amethyst/pull/1397
+[#1404]: https://github.com/amethyst/amethyst/pull/1404
+[#1408]: https://github.com/amethyst/amethyst/pull/1408
+[#1405]: https://github.com/amethyst/amethyst/pull/1405
+[#1411]: https://github.com/amethyst/amethyst/pull/1411
 
 ## [0.10.0] - 2018-12
 

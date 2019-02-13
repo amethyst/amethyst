@@ -63,6 +63,7 @@ pub use amethyst_controls as controls;
 pub use amethyst_core as core;
 pub use amethyst_derive as derive;
 pub use amethyst_error as error;
+pub use amethyst_gltf as gltf;
 pub use amethyst_input as input;
 pub use amethyst_locale as locale;
 pub use amethyst_network as network;

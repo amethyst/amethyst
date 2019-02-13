@@ -66,6 +66,7 @@ amethyst_core = { path = "amethyst_core", version = "0.5.0" }
 amethyst_error = { path = "amethyst_error", version = "0.1.0" }
 amethyst_controls = { path = "amethyst_controls", version = "0.4.0" }
 amethyst_derive = { path = "amethyst_derive", version = "0.3.0" }
+amethyst_gltf = { path = "amethyst_gltf", version = "0.5.0" }
 amethyst_network = { path = "amethyst_network", version = "0.3.0" }
 amethyst_locale = { path = "amethyst_locale", version = "0.4.0" }
 amethyst_renderer = { path = "amethyst_renderer", version = "0.10.0" }
@@ -84,7 +85,6 @@ serde = { version = "1.0", features = ["derive"] }
 thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
-amethyst_gltf = { path = "amethyst_gltf", version = "0.5.0" }
 derive-new = "0.5"
 env_logger = "0.5.13"
 genmesh = "0.6"
@@ -207,6 +207,10 @@ name = "prefab"
 path = "examples/prefab/main.rs"
 
 [[example]]
+name = "prefab_adapter"
+path = "examples/prefab_adapter/main.rs"
+
+[[example]]
 name = "prefab_basic"
 path = "examples/prefab_basic/main.rs"
 
@@ -244,6 +248,5 @@ path = "examples/auto_fov/main.rs"
 
 [workspace]
 members = [
-  "amethyst_gltf",
   "tests/amethyst_test"
 ]

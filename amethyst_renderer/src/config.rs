@@ -47,6 +47,10 @@ pub struct DisplayConfig {
     /// Path to window icon.
     pub icon: Option<String>,
 
+    /// Window icon. This must be set before render initialization and takes precedence over `icon`.
+    #[serde(skip)]
+    pub loaded_icon: Option<Icon>,
+
     /// Enables or disables vertical synchronization.
     pub vsync: bool,
 
@@ -85,6 +89,7 @@ impl Default for DisplayConfig {
             dimensions: Some((640, 480)),
             fullscreen: false,
             icon: None,
+            loaded_icon: None,
             max_dimensions: None,
             maximized: false,
             min_dimensions: None,
@@ -127,7 +132,9 @@ impl DisplayConfig {
             builder = builder.with_fullscreen(Some(monitor_id));
         }
 
-        if let Some(icon) = self.icon {
+        if self.loaded_icon.is_some() {
+            builder = builder.with_window_icon(self.loaded_icon);
+        } else if let Some(icon) = self.icon {
             builder = builder.with_window_icon(Icon::from_path(icon).ok());
         }
 
