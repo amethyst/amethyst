@@ -877,6 +877,8 @@ mod test {
     #[test]
     #[cfg(feature = "graphics")]
     fn render_base_application_can_load_material_animations() {
+        use crate::MaterialAnimationFixture;
+
         assert!(AmethystApplication::render_base(
             "render_base_application_can_load_material_animations",
             false
@@ -890,6 +892,8 @@ mod test {
     #[test]
     #[cfg(feature = "graphics")]
     fn render_base_application_can_load_sprite_render_animations() {
+        use crate::SpriteRenderAnimationFixture;
+
         assert!(AmethystApplication::render_base(
             "render_base_application_can_load_sprite_render_animations",
             false
