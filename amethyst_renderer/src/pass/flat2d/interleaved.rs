@@ -18,7 +18,9 @@ use crate::{
     cam::{ActiveCamera, Camera},
     hidden::{Hidden, HiddenPropagate},
     mesh::MeshHandle,
-    pass::util::{add_texture, get_camera, set_view_args, setup_textures, ViewArgs},
+    pass::util::{
+        add_texture, default_transparency, get_camera, set_view_args, setup_textures, ViewArgs,
+    },
     pipe::{
         pass::{Pass, PassData},
         DepthMode, Effect, NewEffect,
@@ -37,6 +39,7 @@ use super::*;
 #[derive(Derivative, Clone, Debug)]
 #[derivative(Default(bound = "Self: Pass"))]
 pub struct DrawFlat2D {
+    #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
     batch: TextureBatch,
 }
@@ -50,8 +53,24 @@ where
         Default::default()
     }
 
-    /// Enable transparency
-    pub fn with_transparency(
+    /// Transparency is enabled by default.
+    /// If you pass false to this function transparency will be disabled.
+    ///
+    /// If you pass true and this was disabled previously default settings will be reinstated.
+    /// If you pass true and this was already enabled this will do nothing.
+    pub fn with_transparency(mut self, input: bool) -> Self {
+        if input {
+            if self.transparency.is_none() {
+                self.transparency = default_transparency();
+            }
+        } else {
+            self.transparency = None;
+        }
+        self
+    }
+
+    /// Set transparency settings to custom values.
+    pub fn with_transparency_settings(
         mut self,
         mask: ColorMask,
         blend: Blend,
