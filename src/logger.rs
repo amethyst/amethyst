@@ -178,3 +178,21 @@ fn colored_stdout(color_config: fern::colors::ColoredLevelConfig) -> fern::Dispa
             ))
         })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::env;
+
+    #[test]
+    fn check_stdout_override() {
+        let mut config = LoggerConfig::default();
+        assert_eq!(config.stdout, StdoutLog::Colored);
+
+        env::set_var("AMETHYST_LOG_STDOUT", "pLaIn");
+        env_var_override(&mut config);
+        env::remove_var("AMETHYST_LOG_STDOUT");
+
+        assert_eq!(config.stdout, StdoutLog::Plain);
+    }
+}
