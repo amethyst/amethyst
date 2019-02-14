@@ -60,7 +60,7 @@ before_script:
 script:
 - |
   echo "Build and test"
-  cargo test --all || exit 1
+  cargo test --all --tests --benches --features sdl_controller,profiler,json,saveload  || exit 1
 - |
   if [ ${TRAVIS_RUST_VERSION} == "stable" ] && [ ${TRAVIS_OS_NAME} == "linux" ]
   then
@@ -77,5 +77,7 @@ script:
   if [ ${TRAVIS_RUST_VERSION} == "nightly" ]
   then
     echo "Check common features"
+    cargo check --all --no-default-features
+    cargo check --all
     cargo check --all --all-features
   fi
