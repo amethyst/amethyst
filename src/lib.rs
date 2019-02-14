@@ -52,7 +52,7 @@
 //! }
 //! ```
 
-#![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
+#![doc(html_logo_url = "https://www.amethyst.rs/brand/logo-standard.svg")]
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 pub use amethyst_animation as animation;

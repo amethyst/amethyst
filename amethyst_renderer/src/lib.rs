@@ -24,7 +24,6 @@
 //! [gh]: https://github.com/amethyst/amethyst/tree/master/src/renderer
 //! [bk]: https://www.amethyst.rs/book/master/
 
-#![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 pub use crate::{
