@@ -1,6 +1,5 @@
 //! Provides components and systems to create an in game user interface.
 
-#![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 pub use self::{
