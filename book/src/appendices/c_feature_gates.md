@@ -9,7 +9,7 @@ To reduce compilation times, you can disable features that are not needed for yo
 
 When compiling, you can use the following Cargo parameters:
 
-```
+```ignore
 cargo (build/test/run) --no-default-features --features feature1,feature2,feature3
 ```
 
@@ -28,7 +28,7 @@ The available features might change from time to time.
 
 To enable the profiler, you can use the following feature:
 
-```
+```ignore
 cargo (build/test/run) --features profiler
 ```
 
@@ -41,7 +41,7 @@ Enabling the nightly feature adds a bit of debug information when running into r
 
 Here is how to enable it:
 
-```
+```ignore
 cargo (build/test/run) --features nightly
 ```
 
@@ -51,7 +51,7 @@ The most common use of this feature is to find out the type name of the resource
 
 When using Amethyst as a dependency of your project, you can use the following to disable default features and enable other ones.
 
-```
+```ignore
 [dependencies.amethyst]
 version = "*"
 default-features = false 
