@@ -85,6 +85,7 @@ it is attached to. ([#1282])
 * `UiWidget` variant `Custom` for custom composited widgets ([#1112])
 * `AssetLoaderSystemData` abstracts resources needed from `World` to do asset loading ([#1090])
 * `amethyst_ui::get_default_font` supports loading system font from Path. ([#1108])
+* Added render utilities to easily create `Material` and `Handle<Texture>`. ([#1126])
 * Added `Callback` and `CallbackQueue` for use in asynchronous contexts. ([#1125])
 * Added Trans event queue. Used to trigger state transitions from systems. Also used to trigger multiple state transitions at once. (For example, to `Trans::Pop` two states.) ([#1069])
 * `sprite_camera_follow` example showing how to use a Camera that has a sprite Parent ([#1099])
@@ -139,6 +140,7 @@ it is attached to. ([#1282])
 [#1098]: https://github.com/amethyst/amethyst/pull/1098
 [#1099]: https://github.com/amethyst/amethyst/pull/1099
 [#1108]: https://github.com/amethyst/amethyst/pull/1108
+[#1126]: https://github.com/amethyst/amethyst/pull/1126
 [#1125]: https://github.com/amethyst/amethyst/pull/1125
 [#1066]: https://github.com/amethyst/amethyst/pull/1066
 [#1117]: https://github.com/amethyst/amethyst/pull/1117
@@ -158,7 +160,6 @@ it is attached to. ([#1282])
 [#1189]: https://github.com/amethyst/amethyst/pull/1189
 [winit_018]: https://github.com/tomaka/winit/blob/v0.18.0/CHANGELOG.md#version-0180-2018-11-07
 [glutin_019]: https://github.com/tomaka/glutin/blob/master/CHANGELOG.md#version-0190-2018-11-09
-
 
 ## [0.9.0] - 2018-10
 ### Added

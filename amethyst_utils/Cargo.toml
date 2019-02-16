@@ -26,6 +26,7 @@ log = "0.4.6"
 shred-derive = "0.5"
 shred = "0.7"
 serde = { version = "1.0", features = ["derive"] }
+specs-derive = "0.4.0"
 specs-hierarchy = { version = "0.3" }
 
 thread_profiler = { version = "0.3", optional = true }
