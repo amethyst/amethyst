@@ -2,8 +2,6 @@
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-extern crate specs_derive;
-
 pub use self::app_root_dir::*;
 
 pub mod app_root_dir;
