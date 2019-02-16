@@ -4,6 +4,8 @@ use amethyst_assets::{AssetStorage, Handle, Loader, Progress};
 use amethyst_core::specs::{Read, ReadExpect};
 use amethyst_renderer::{Material, MaterialDefaults, PngFormat, Texture, TextureMetadata};
 
+use shred_derive::SystemData;
+
 /// SystemData used to create `Material` instances in various ways.
 ///
 /// # Example
