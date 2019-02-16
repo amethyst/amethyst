@@ -2,11 +2,9 @@ use fnv::FnvHashMap as HashMap;
 use hetseq::*;
 
 use amethyst_core::specs::prelude::SystemData;
+use amethyst_error::Error;
 
-use crate::{
-    error::{Error, Result},
-    types::{Encoder, Factory},
-};
+use crate::types::{Encoder, Factory};
 
 use super::{stage::*, target::*};
 
@@ -213,7 +211,12 @@ pub trait PipelineBuild {
     type Pipeline: PolyPipeline;
 
     /// Build pipeline
-    fn build(self, fac: &mut Factory, out: &Target, multisampling: u16) -> Result<Self::Pipeline>;
+    fn build(
+        self,
+        fac: &mut Factory,
+        out: &Target,
+        multisampling: u16,
+    ) -> Result<Self::Pipeline, Error>;
 }
 
 impl<L, Z, R, Q> PipelineBuild for PipelineBuilder<Q>
@@ -224,12 +227,17 @@ where
     R: PolyStages,
 {
     type Pipeline = Pipeline<R>;
-    fn build(mut self, fac: &mut Factory, out: &Target, multisampling: u16) -> Result<Pipeline<R>> {
+    fn build(
+        mut self,
+        fac: &mut Factory,
+        out: &Target,
+        multisampling: u16,
+    ) -> Result<Pipeline<R>, Error> {
         let mut targets = self
             .targets
             .drain(..)
             .map(|tb| tb.build(fac, out.size()))
-            .collect::<Result<Targets>>()?;
+            .collect::<Result<Targets, Error>>()?;
 
         targets.insert("".into(), out.clone());
 
@@ -268,8 +276,8 @@ where
     Z: Try<Error, Ok = R>,
     R: Passes,
 {
-    type Output = Result<Stage<R>>;
-    fn call_once(self, (stage,): (StageBuilder<Q>,)) -> Result<Stage<R>> {
+    type Output = Result<Stage<R>, Error>;
+    fn call_once(self, (stage,): (StageBuilder<Q>,)) -> Result<Stage<R>, Error> {
         stage.build(self.factory, self.targets, self.multisampling)
     }
 }
@@ -281,7 +289,7 @@ where
     Z: Try<Error, Ok = R>,
     R: Passes,
 {
-    fn call_mut(&mut self, (stage,): (StageBuilder<Q>,)) -> Result<Stage<R>> {
+    fn call_mut(&mut self, (stage,): (StageBuilder<Q>,)) -> Result<Stage<R>, Error> {
         stage.build(self.factory, self.targets, self.multisampling)
     }
 }

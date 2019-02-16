@@ -1,5 +1,6 @@
 //! Util functions that change how the mouse moves and looks.
 
+use log::error;
 use winit::MouseCursor;
 
 use super::WindowMessages;

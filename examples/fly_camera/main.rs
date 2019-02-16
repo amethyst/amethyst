@@ -1,7 +1,5 @@
 //! Demonstrates how to use the fly camera
 
-use amethyst;
-
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
     controls::FlyControlBundle,

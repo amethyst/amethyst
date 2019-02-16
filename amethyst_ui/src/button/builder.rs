@@ -1,5 +1,6 @@
 use shred::SystemData;
-use smallvec::SmallVec;
+use shred_derive::SystemData;
+use smallvec::{smallvec, SmallVec};
 
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_audio::SourceHandle;
@@ -10,9 +11,11 @@ use amethyst_core::{
 use amethyst_renderer::{Texture, TextureHandle};
 
 use crate::{
-    font::default::get_default_font, Anchor, FontAsset, FontHandle, Interactable, Selectable,
-    Stretch, UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionType,
-    UiButtonActionType::*, UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform,
+    font::default::get_default_font,
+    Anchor, FontAsset, FontHandle, Interactable, Selectable, Stretch, UiButton, UiButtonAction,
+    UiButtonActionRetrigger,
+    UiButtonActionType::{self, *},
+    UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform,
 };
 
 use std::marker::PhantomData;

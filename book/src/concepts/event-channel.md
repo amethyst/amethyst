@@ -15,7 +15,7 @@ In most cases, the `EventChannel` should be stored in a global resource for ease
 
 Super simple!
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::shrev::EventChannel;
     // In the following examples, we are going to use `MyEvent` values as events.
@@ -31,7 +31,7 @@ Super simple!
 ## Writing events to the event channel
 
 Single: 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # #[derive(Debug)]
 # pub enum MyEvent {
@@ -45,7 +45,7 @@ Single:
 ```
 
 Multiple: 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # #[derive(Debug)]
 # pub enum MyEvent {
@@ -64,7 +64,7 @@ This is the part where it becomes tricky.
 To be able to track where each of the receiver's reading is at, the `EventChannel` needs to be aware of their presence.
 This is done by registering a `ReaderId`.
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # #[derive(Debug)]
 # pub enum MyEvent {
@@ -79,7 +79,7 @@ This is done by registering a `ReaderId`.
 
 Then, when you want to read the events:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # #[derive(Debug)]
 # pub enum MyEvent {
@@ -108,7 +108,7 @@ When using the event channel, we usually re-use the same pattern over and over a
 It goes as follow:
 
 Create the event channel and add it to to the world during `State` creation:
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::shrev::EventChannel;
 # #[derive(Debug)]
@@ -126,7 +126,7 @@ world.add_resource(
 _Note: You can also derive `Default`, this way you don't have to manually create your resource and add it. Resources implementing `Default` are automatically added to `Resources` when a `System` uses them (`Read` or `Write` in `SystemData`)._
 
 In the **producer** `System`, get a mutable reference to your resource:
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::Write;
 # use amethyst::shrev::EventChannel;
@@ -143,7 +143,7 @@ type SystemData = Write<'a, EventChannel<MyEvent>>;
 ```
 
 In the **receiver** `System`s, you need to store the `ReaderId` somewhere.
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::shrev::ReaderId;
 # #[derive(Debug)]
@@ -157,7 +157,7 @@ struct ReceiverSystem {
 }
 ```
 and you also need to get read access:
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::Read;
 # use amethyst::shrev::EventChannel;
@@ -174,7 +174,7 @@ and you also need to get read access:
 ```
 
 Then, in the `System`'s setup method:
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::shrev::{EventChannel, ReaderId};
 # use amethyst::ecs::SystemData;
@@ -197,7 +197,7 @@ Then, in the `System`'s setup method:
 ```
 
 Finally, you can read events from your `System`.
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::Read;
 # use amethyst::shrev::EventChannel;

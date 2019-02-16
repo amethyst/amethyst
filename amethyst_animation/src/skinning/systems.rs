@@ -6,6 +6,8 @@ use amethyst_core::{
 };
 use amethyst_renderer::JointTransforms;
 
+use log::error;
+
 use super::resources::*;
 
 /// System for performing vertex skinning.

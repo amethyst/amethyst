@@ -1,10 +1,12 @@
 //! `amethyst` rendering ecs resources
 //!
+use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 use winit::Window;
 
-use amethyst_assets::{PrefabData, PrefabError};
+use amethyst_assets::PrefabData;
 use amethyst_core::specs::{Entity, Write};
+use amethyst_error::Error;
 
 use crate::color::Rgba;
 
@@ -27,7 +29,7 @@ impl<'a> PrefabData<'a> for AmbientColor {
         _: Entity,
         ambient: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         ambient.0 = self.0;
         Ok(())
     }

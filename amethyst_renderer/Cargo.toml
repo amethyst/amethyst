@@ -8,7 +8,7 @@ exclude = ["examples/*"]
 keywords = ["game", "engine", "renderer", "3d", "amethyst"]
 categories = ["rendering", "rendering::engine"]
 
-documentation = "https://www.amethyst.rs/doc/master/doc/amethyst_renderer/"
+documentation = "https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
@@ -31,9 +31,9 @@ nightly = [ "amethyst_core/nightly" ]
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.6.0" }
 amethyst_core = { path = "../amethyst_core", version = "0.5.0" }
+amethyst_error = { path = "../amethyst_error", version = "0.1.0" }
 amethyst_derive = { path = "../amethyst_derive", version = "0.3.0" }
 derivative = "1.0"
-error-chain = "0.12"
 fnv = "1.0"
 genmesh = "0.6"
 gfx = { version = "0.17.1", features = ["serialize"] }
@@ -45,11 +45,11 @@ image = "0.20"
 log = "0.4.6"
 rayon = "1.0.2"
 ron = "0.4"
-serde = { version = "1", features = ["serde_derive"] }
+serde = { version = "1", features = ["derive"] }
 shred-derive = "0.5"
 shred = "0.7"
 wavefront_obj = "5.1"
-winit = { version = "0.18", features = ["serde"] }
+winit = { version = "0.18", features = ["serde", "icon_loading"] }
 
 thread_profiler = { version = "0.3", optional = true }
 

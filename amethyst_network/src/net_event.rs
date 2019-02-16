@@ -2,6 +2,7 @@
 //! NetEvent are passed through the network
 //! NetOwnedEvent are passed through the ECS, and contains the event's source (remote connection, usually).
 
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 /// The basic network events shipped with amethyst.
@@ -46,7 +47,7 @@ impl<T> NetEvent<T> {
     /// Tries to convert a NetEvent to a custom event type.
     pub fn custom(&self) -> Option<&T> {
         if let NetEvent::Custom(ref t) = self {
-            Some(t)
+            Some(&t)
         } else {
             None
         }

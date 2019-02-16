@@ -2,12 +2,12 @@
 
 use std::{hash::Hash, marker::PhantomData};
 
+use derive_new::new;
+
 use amethyst_assets::Processor;
 use amethyst_audio::AudioFormat;
-use amethyst_core::{
-    bundle::{Result, SystemBundle},
-    specs::prelude::DispatcherBuilder,
-};
+use amethyst_core::{bundle::SystemBundle, specs::prelude::DispatcherBuilder};
+use amethyst_error::Error;
 use amethyst_renderer::{BlinkSystem, TextureFormat};
 
 use crate::{
@@ -24,7 +24,7 @@ use crate::{
 ///
 /// Will fail with error 'No resource with the given id' if the InputBundle is not added.
 #[derive(new)]
-pub struct UiBundle<A, B, C = NoCustomUi, G = ()> {
+pub struct UiBundle<A = String, B = String, C = NoCustomUi, G = ()> {
     #[new(default)]
     _marker: PhantomData<(A, B, C, G)>,
 }
@@ -36,7 +36,7 @@ where
     C: ToNativeWidget,
     G: Send + Sync + PartialEq + 'static,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
             UiLoaderSystem::<
                 AudioFormat,

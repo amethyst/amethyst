@@ -5,7 +5,7 @@ authors = ["Joël Lupien <jojolepromain@gmail.com>"]
 edition = "2018"
 description = "Amethyst controls"
 
-documentation = "https://www.amethyst.rs/doc/master/doc/amethyst_controls/"
+documentation = "https://www.amethyst.rs/doc/latest/doc/amethyst_controls/"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
@@ -18,6 +18,7 @@ travis-ci = { repository = "amethyst/amethyst" }
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.6.0" }
 amethyst_core = { path = "../amethyst_core", version = "0.5.0" }
+amethyst_error = { path = "../amethyst_error", version = "0.1.0" }
 amethyst_input = { path = "../amethyst_input", version = "0.6.0" }
 amethyst_renderer = { path = "../amethyst_renderer", version = "0.10.0" }
 serde = { version = "1.0", features = ["derive"] }

@@ -3,13 +3,17 @@ use std::{hash::Hash, marker::PhantomData};
 use amethyst_core::{
     nalgebra::Vector2,
     shrev::EventChannel,
-    specs::prelude::{
-        Component, Entities, Entity, Join, Read, ReadExpect, ReadStorage, System, Write,
+    specs::{
+        prelude::{
+            Component, Entities, Entity, Join, Read, ReadExpect, ReadStorage, System, Write,
+        },
+        storage::NullStorage,
     },
-    specs::storage::NullStorage,
 };
 use amethyst_input::InputHandler;
 use amethyst_renderer::{MouseButton, ScreenDimensions};
+
+use serde::{Deserialize, Serialize};
 
 use crate::transform::UiTransform;
 

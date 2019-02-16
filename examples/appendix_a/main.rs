@@ -1,9 +1,5 @@
 //! TODO: Rewrite for new renderer.
 
-use amethyst;
-#[macro_use]
-extern crate serde_derive;
-
 mod audio;
 mod bundle;
 mod config;
@@ -12,7 +8,7 @@ mod systems;
 
 use crate::{audio::Music, bundle::PongBundle, config::PongConfig};
 use amethyst::{
-    audio::AudioBundle,
+    audio::{AudioBundle, DjSystem},
     core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle},
     ecs::prelude::{Component, DenseVecStorage},
     input::InputBundle,
@@ -51,7 +47,12 @@ fn main() -> amethyst::Result<()> {
         )?
         .with_bundle(PongBundle::default())?
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
-        .with_bundle(AudioBundle::new(|music: &mut Music| music.music.next()))?
+        .with_bundle(AudioBundle::default())?
+        .with(
+            DjSystem::new(|music: &mut Music| music.music.next()),
+            "dj_system",
+            &[],
+        )
         .with_bundle(UiBundle::<String, String>::new())?
         .with_basic_renderer(display_config_path, DrawFlat::<PosTex>::new(), true)?;
 

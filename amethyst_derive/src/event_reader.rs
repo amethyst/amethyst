@@ -1,4 +1,5 @@
 use proc_macro2::TokenStream;
+use quote::quote;
 use syn::{Data, DeriveInput, Ident, Meta, NestedMeta, Type};
 
 pub fn impl_event_reader(ast: &DeriveInput) -> TokenStream {
@@ -29,8 +30,9 @@ pub fn impl_event_reader(ast: &DeriveInput) -> TokenStream {
         };
     }
 
-    let reader_name = reader_name.expect(&format!(
-        r#"
+    let reader_name = reader_name.unwrap_or_else(|| {
+        panic!(
+            r#"
 #[derive(EventReader)] requested for {}, but #[reader(SomeEventReader)] attribute is missing
 
 Example usage:
@@ -41,8 +43,9 @@ pub enum SomeEvent {{
     Two(Event2),
 }}
 "#,
-        event_name
-    ));
+            event_name
+        )
+    });
 
     let tys = collect_field_types(&ast.data);
     let tys = &tys;

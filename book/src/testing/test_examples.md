@@ -2,13 +2,14 @@
 
 ## Testing a `Bundle`
 
-```rust
+```rust,edition2018
 # extern crate amethyst;
 # extern crate amethyst_test;
 #
 # use amethyst_test::prelude::*;
 # use amethyst::{
-#     core::bundle::{self, SystemBundle},
+#     error::Error,
+#     core::bundle::SystemBundle,
 #     ecs::prelude::*,
 #     prelude::*,
 # };
@@ -21,7 +22,7 @@
 #
 # impl<'s> System<'s> for MySystem {
 #     type SystemData = ReadExpect<'s, ApplicationResource>;
-# 
+#
 #     fn run(&mut self, _: Self::SystemData) {}
 #
 #     fn setup(&mut self, res: &mut Resources) {
@@ -34,7 +35,7 @@
 struct MyBundle;
 
 impl<'a, 'b> SystemBundle<'a, 'b> for MyBundle {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> bundle::Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         // System that adds `ApplicationResource` to the `World`
         builder.add(MySystem, "my_system", &[]);
         Ok(())
@@ -62,7 +63,7 @@ fn bundle_registers_system_with_resource() {
 
 ## Testing a `System`
 
-```rust
+```rust,edition2018
 # extern crate amethyst;
 # extern crate amethyst_test;
 #
@@ -123,7 +124,7 @@ fn system_increases_component_value_by_one() {
 
 This is useful when your system must run *after* some setup has been done, for example adding a resource:
 
-```rust
+```rust,edition2018
 # extern crate amethyst;
 # extern crate amethyst_test;
 #

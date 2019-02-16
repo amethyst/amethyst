@@ -1,7 +1,9 @@
-use amethyst_core::shrev::ReaderId;
-use amethyst_core::specs::prelude::{
-    BitSet, Component, ComponentEvent, FlaggedStorage, Join, ReadExpect, Resources, System,
-    WriteStorage,
+use amethyst_core::{
+    shrev::ReaderId,
+    specs::prelude::{
+        BitSet, Component, ComponentEvent, FlaggedStorage, Join, ReadExpect, Resources, System,
+        WriteStorage,
+    },
 };
 use amethyst_renderer::ScreenDimensions;
 

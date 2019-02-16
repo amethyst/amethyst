@@ -3,15 +3,18 @@
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::GlobalTransform,
 };
+use amethyst_error::Error;
 
 use crate::{
     cam::{ActiveCamera, Camera},
-    error::Result,
     hidden::{Hidden, HiddenPropagate},
     light::Light,
     mesh::{Mesh, MeshHandle},
@@ -98,7 +101,10 @@ impl<'a> PassData<'a> for DrawPbmSeparate {
 }
 
 impl Pass for DrawPbmSeparate {
-    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("render_pass_pbm_compile");
+
         let mut builder = if self.skinning {
             create_skinning_effect(effect, FRAG_SRC)
         } else {
@@ -161,6 +167,9 @@ impl Pass for DrawPbmSeparate {
             rgba,
         ): <Self as PassData<'a>>::Data,
     ) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("render_pass_pbm_apply");
+
         let camera = get_camera(active, &camera, &global);
 
         set_light_args(effect, encoder, &light, &global, &ambient, camera);

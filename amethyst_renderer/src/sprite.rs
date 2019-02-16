@@ -1,12 +1,11 @@
 use ron::de::from_bytes as from_ron_bytes;
+use serde::{Deserialize, Serialize};
 
-use amethyst_assets::{
-    Asset, Error as AssetsError, ErrorKind as AssetsErrorKind, Handle, ProcessingState,
-    Result as AssetsResult, SimpleFormat,
-};
+use amethyst_assets::{Asset, Handle, ProcessingState, SimpleFormat};
 use amethyst_core::specs::prelude::{Component, DenseVecStorage, VecStorage};
+use amethyst_error::Error;
 
-use crate::Texture;
+use crate::{error, Texture};
 
 /// An asset handle to sprite sheet metadata.
 pub type SpriteSheetHandle = Handle<SpriteSheet>;
@@ -28,8 +27,8 @@ impl Asset for SpriteSheet {
     type HandleStorage = VecStorage<Handle<Self>>;
 }
 
-impl From<SpriteSheet> for AssetsResult<ProcessingState<SpriteSheet>> {
-    fn from(sprite_sheet: SpriteSheet) -> AssetsResult<ProcessingState<SpriteSheet>> {
+impl From<SpriteSheet> for Result<ProcessingState<SpriteSheet>, Error> {
+    fn from(sprite_sheet: SpriteSheet) -> Result<ProcessingState<SpriteSheet>, Error> {
         Ok(ProcessingState::Loaded(sprite_sheet))
     }
 }
@@ -266,9 +265,6 @@ struct SerializedSpriteSheet {
 ///
 /// Such a spritesheet description can be loaded using a `Loader` by passing it the handle of the corresponding loaded texture.
 /// ```rust,no_run
-/// # extern crate amethyst_assets;
-/// # extern crate amethyst_core;
-/// # extern crate amethyst_renderer;
 /// # use amethyst_assets::{Loader, AssetStorage};
 /// # use amethyst_renderer::{SpriteSheetFormat, SpriteSheet, Texture, PngFormat, TextureMetadata};
 /// #
@@ -301,12 +297,10 @@ impl SimpleFormat<SpriteSheet> for SpriteSheetFormat {
 
     type Options = Handle<Texture>;
 
-    fn import(&self, bytes: Vec<u8>, texture: Self::Options) -> AssetsResult<SpriteSheet> {
-        let sheet: SerializedSpriteSheet = from_ron_bytes(&bytes).map_err(|_| {
-            AssetsError::from_kind(AssetsErrorKind::Format(
-                "Failed to parse Ron file for SpriteSheet",
-            ))
-        })?;
+    fn import(&self, bytes: Vec<u8>, texture: Self::Options) -> Result<SpriteSheet, Error> {
+        let sheet: SerializedSpriteSheet =
+            from_ron_bytes(&bytes).map_err(|_| error::Error::LoadSpritesheetError)?;
+
         let mut sprites: Vec<Sprite> = Vec::with_capacity(sheet.sprites.len());
         for sp in sheet.sprites {
             let sprite = Sprite::from_pixel_values(

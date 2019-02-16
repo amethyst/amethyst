@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+use serde::{Deserialize, Serialize};
 use specs::{world::LazyBuilder, Component, DenseVecStorage, EntityBuilder, WriteStorage};
 
 /// A component that gives a name to an [`Entity`].
@@ -26,7 +27,6 @@ use specs::{world::LazyBuilder, Component, DenseVecStorage, EntityBuilder, Write
 /// Creating a name from string constant:
 ///
 /// ```
-/// # extern crate amethyst;
 /// use amethyst::core::{Named, WithNamed};
 /// use amethyst::ecs::prelude::*;
 ///
@@ -42,7 +42,6 @@ use specs::{world::LazyBuilder, Component, DenseVecStorage, EntityBuilder, Write
 /// Creating a name from a dynamically generated string:
 ///
 /// ```
-/// # extern crate amethyst;
 /// use amethyst::core::{Named, WithNamed};
 /// use amethyst::ecs::prelude::*;
 ///
@@ -60,7 +59,6 @@ use specs::{world::LazyBuilder, Component, DenseVecStorage, EntityBuilder, Write
 /// Accessing a named entity in a system:
 ///
 /// ```
-/// # extern crate amethyst;
 /// use amethyst::core::Named;
 /// use amethyst::ecs::prelude::*;
 ///
@@ -93,7 +91,6 @@ impl Named {
     /// From a string constant:
     ///
     /// ```
-    /// # extern crate amethyst;
     /// use amethyst::core::Named;
     ///
     /// let name_component = Named::new("Super Cool Entity");
@@ -102,7 +99,6 @@ impl Named {
     /// From a dynamic string:
     ///
     /// ```
-    /// # extern crate amethyst;
     /// use amethyst::core::Named;
     ///
     /// let entity_num = 7;

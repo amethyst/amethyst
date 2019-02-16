@@ -3,8 +3,7 @@ use amethyst::{
     audio::{output::Output, AudioSink, OggFormat, Source, SourceHandle},
     ecs::prelude::World,
 };
-use std::iter::Cycle;
-use std::vec::IntoIter;
+use std::{iter::Cycle, vec::IntoIter};
 
 pub struct Sounds {
     pub score_sfx: SourceHandle,

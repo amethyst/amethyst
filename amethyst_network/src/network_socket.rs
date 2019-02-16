@@ -2,19 +2,27 @@
 
 use std::{
     clone::Clone,
-    io::{Error, ErrorKind},
     net::SocketAddr,
-    sync::mpsc::{channel, Receiver, Sender},
+    sync::{
+        mpsc::{self, Receiver, Sender},
+        Arc, Mutex,
+    },
     thread,
 };
 
 use amethyst_core::specs::{Join, Resources, System, SystemData, WriteStorage};
-use laminar::error;
-use laminar::net::UdpSocket;
-use laminar::{DeliveryMethod, NetworkConfig, Packet};
+
+use laminar::Packet;
+use log::{error, warn};
 use serde::{de::DeserializeOwned, Serialize};
 
-use super::{deserialize_event, send_event, ConnectionState, NetConnection, NetEvent, NetFilter};
+use super::{
+    deserialize_event,
+    error::Result,
+    send_event,
+    server::{Host, ReceiveHandler, SendHandler, ServerConfig, ServerSocketEvent},
+    ConnectionState, NetConnection, NetEvent, NetFilter,
+};
 
 enum InternalSocketEvent<E> {
     SendEvents {
@@ -22,34 +30,6 @@ enum InternalSocketEvent<E> {
         events: Vec<NetEvent<E>>,
     },
     Stop,
-}
-
-struct RawEvent {
-    pub byte_count: usize,
-    pub data: Vec<u8>,
-    pub source: SocketAddr,
-    pub delivery_method: DeliveryMethod,
-}
-
-impl From<Packet> for RawEvent {
-    fn from(packet: Packet) -> Self {
-        RawEvent {
-            byte_count: packet.payload().len(),
-            data: packet.payload().to_vec(),
-            source: packet.addr(),
-            delivery_method: packet.delivery_method(),
-        }
-    }
-}
-
-impl From<RawEvent> for Packet {
-    fn from(raw_event: RawEvent) -> Self {
-        Packet::new(
-            raw_event.source,
-            raw_event.data.into_boxed_slice(),
-            raw_event.delivery_method,
-        )
-    }
 }
 
 // If a client sends both a connect event and other events,
@@ -70,9 +50,11 @@ where
 {
     /// The list of filters applied on the events received.
     pub filters: Vec<Box<dyn NetFilter<E>>>,
-
-    tx: Sender<InternalSocketEvent<E>>,
-    rx: Receiver<RawEvent>,
+    // sender on which you can queue packets to send to some endpoint.
+    transport_sender: Sender<InternalSocketEvent<E>>,
+    // receiver from which you can read received packets.
+    transport_receiver: Receiver<Packet>,
+    config: ServerConfig,
 }
 
 impl<E> NetSocketSystem<E>
@@ -80,79 +62,83 @@ where
     E: Serialize + PartialEq + Send + 'static,
 {
     /// Creates a `NetSocketSystem` and binds the Socket on the ip and port added in parameters.
-    pub fn new(addr: SocketAddr, filters: Vec<Box<dyn NetFilter<E>>>) -> Result<Self, Error> {
-        if addr.port() < 1024 {
+    pub fn new(config: ServerConfig, filters: Vec<Box<dyn NetFilter<E>>>) -> Result<Self> {
+        if config.udp_recv_addr.port() < 1024 {
             // Just warning the user here, just in case they want to use the root port.
             warn!("Using a port below 1024, this will require root permission and should not be done.");
         }
 
-        let mut socket = UdpSocket::bind(addr, NetworkConfig::default())
-            .map_err(|x| Error::new(ErrorKind::Other, x.to_string()))?;
+        let server = Host::run(&config)?;
 
-        socket.set_nonblocking(true).map_err(|_| {
-            Error::new(
-                ErrorKind::Other,
-                "Unable to set `UdpSocket` to non-blocking mode",
-            )
-        })?;
+        let udp_send_handle = server.udp_send_handle();
+        let udp_receive_handle = server.udp_receive_handle();
 
-        // this -> thread
-        let (tx1, rx1) = channel();
-        // thread -> this
-        let (tx2, rx2) = channel();
+        let server_sender = NetSocketSystem::<E>::start_sending(udp_send_handle);
+        let server_receiver = NetSocketSystem::<E>::start_receiving(udp_receive_handle);
 
-        thread::spawn(move || {
-            //rx1,tx2
-            let send_queue = rx1;
-            let receive_queue = tx2;
-            let mut socket = socket;
+        Ok(NetSocketSystem {
+            filters,
+            transport_sender: server_sender,
+            transport_receiver: server_receiver,
+            config,
+        })
+    }
 
-            'outer: loop {
-                // send
-                for control_event in send_queue.try_iter() {
-                    match control_event {
-                        InternalSocketEvent::SendEvents { target, events } => {
-                            for ev in events {
-                                send_event(&ev, &target, &mut socket);
-                            }
+    /// Start a thread to send all queued packets.
+    fn start_sending(sender: Arc<SendHandler>) -> Sender<InternalSocketEvent<E>> {
+        let (tx, send_queue) = mpsc::channel();
+
+        thread::spawn(move || loop {
+            for control_event in send_queue.try_iter() {
+                match control_event {
+                    InternalSocketEvent::SendEvents { target, events } => {
+                        for ev in events {
+                            send_event(ev, target, &sender.get_sender());
                         }
-                        InternalSocketEvent::Stop => break 'outer,
                     }
-                }
-
-                // receive
-                loop {
-                    match socket.recv() {
-                        // Data received
-                        Ok(Some(packet)) => {
-                            if let Err(_) = receive_queue.send(RawEvent::from(packet)) {
-                                error!("`NetworkSocketSystem` was dropped");
-                                break 'outer;
-                            }
-                        }
-                        Err(e) => match e.kind() {
-                            error::NetworkErrorKind::IOError(io_error) => {
-                                if io_error.kind() == ErrorKind::WouldBlock {
-                                    break;
-                                } else {
-                                    error!("Could not receive datagram: {}", e);
-                                }
-                            }
-                            _ => {
-                                error!("Could not receive datagram: {:?}", e);
-                            }
-                        },
-                        Ok(None) => {}
+                    InternalSocketEvent::Stop => {
+                        break;
                     }
                 }
             }
         });
 
-        Ok(NetSocketSystem {
-            filters,
-            tx: tx1,
-            rx: rx2,
-        })
+        tx
+    }
+
+    /// Starts a thread which receives incoming packets and sends them onto the 'Receiver' channel.
+    fn start_receiving(receiver: Arc<Mutex<ReceiveHandler>>) -> Receiver<Packet> {
+        let (receive_queue, rx) = mpsc::channel();
+
+        thread::spawn(move || {
+            // take note that this lock will be there as long this thread lives.
+            // We only have one receiver, if one tries to have two receivers the program should panic.
+            // Why is there one receiver? This is because how a channel works. Once we read the messages it will be removed from the channel.
+            match receiver.try_lock() {
+                Ok(receiver) => loop {
+                    for event in receiver.iter() {
+                        match event {
+                            ServerSocketEvent::Packet(packet) => {
+                                if let Err(error) = receive_queue.send(packet.clone()) {
+                                    error!(
+                                        "`NetworkSocketSystem` was dropped. Reason: {:?}",
+                                        error
+                                    );
+                                    break;
+                                }
+                            }
+                            ServerSocketEvent::Error(error) => error!("{:?}", error),
+                            _ => error!("Event not supported"),
+                        }
+                    }
+                },
+                Err(_) => {
+                    panic!("Two packet receivers can't run at the same time");
+                }
+            }
+        });
+
+        rx
     }
 }
 
@@ -162,50 +148,56 @@ where
 {
     type SystemData = (WriteStorage<'a, NetConnection<E>>);
 
-    fn setup(&mut self, res: &mut Resources) {
-        Self::SystemData::setup(res);
-    }
-
     fn run(&mut self, mut net_connections: Self::SystemData) {
         for net_connection in (&mut net_connections).join() {
-            let target = net_connection.target;
+            let target = net_connection.target_receiver;
 
             if net_connection.state == ConnectionState::Connected
                 || net_connection.state == ConnectionState::Connecting
             {
-                self.tx
+                self.transport_sender
                     .send(InternalSocketEvent::SendEvents {
                         target,
                         events: net_connection.send_buffer_early_read().cloned().collect(),
                     })
                     .expect("Unreachable: Channel will be alive until a stop event is sent");
             } else if net_connection.state == ConnectionState::Disconnected {
-                self.tx
+                self.transport_sender
                     .send(InternalSocketEvent::Stop)
                     .expect("Already sent a stop event to the channel");
             }
         }
 
-        for raw_event in self.rx.try_iter() {
+        for (counter, raw_event) in self.transport_receiver.try_iter().enumerate() {
             // Get the NetConnection from the source
             for net_connection in (&mut net_connections).join() {
-                // We found the origin
-                if net_connection.target == raw_event.source {
+                if net_connection.target_sender == raw_event.addr() {
                     // Get the event
-                    let net_event = deserialize_event::<E>(raw_event.data.as_slice());
-                    match net_event {
+                    match deserialize_event::<E>(raw_event.payload()) {
                         Ok(ev) => {
                             net_connection.receive_buffer.single_write(ev);
                         }
                         Err(e) => error!(
                             "Failed to deserialize an incoming network event: {} From source: {:?}",
-                            e, raw_event.source
+                            e,
+                            raw_event.addr()
                         ),
                     }
                 } else {
                     warn!("Received packet from unknown source");
                 }
             }
+
+            // this will prevent our system to be stuck in the iterator.
+            // After 10000 packets we will continue and leave the other packets for the next run.
+            // eventually some congestion prevention should be done.
+            if counter >= self.config.max_throughput as usize {
+                break;
+            }
         }
+    }
+
+    fn setup(&mut self, res: &mut Resources) {
+        Self::SystemData::setup(res);
     }
 }

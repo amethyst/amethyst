@@ -1,11 +1,14 @@
 //! # amethyst_locale
 //!
 //! Localisation binding a `Fluent` file to an Asset<Locale> via the use of amethyst_assets.
+
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
+
 use fluent::bundle::FluentBundle;
 
-use amethyst_assets::{Asset, Handle, ProcessingState, Result, SimpleFormat};
+use amethyst_assets::{Asset, Handle, ProcessingState, SimpleFormat};
 use amethyst_core::specs::prelude::VecStorage;
+use amethyst_error::Error;
 
 /// Loads the strings from localisation files.
 #[derive(Clone)]
@@ -16,7 +19,7 @@ impl SimpleFormat<Locale> for LocaleFormat {
 
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<Locale> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<Locale, Error> {
         let s = String::from_utf8(bytes)?;
 
         let mut bundle = FluentBundle::new::<&'static str>(&[]);
@@ -27,8 +30,8 @@ impl SimpleFormat<Locale> for LocaleFormat {
     }
 }
 
-impl Into<Result<ProcessingState<Locale>>> for Locale {
-    fn into(self) -> Result<ProcessingState<Locale>> {
+impl Into<Result<ProcessingState<Locale>, Error>> for Locale {
+    fn into(self) -> Result<ProcessingState<Locale>, Error> {
         Ok(ProcessingState::Loaded(self))
     }
 }

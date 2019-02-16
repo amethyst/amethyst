@@ -1,6 +1,7 @@
 use std::fs;
 
 use font_kit::handle::Handle as FontKitHandle;
+use log::{error, warn};
 
 use amethyst_assets::{AssetStorage, Loader, SimpleFormat};
 
@@ -18,11 +19,15 @@ pub fn get_default_font(loader: &Loader, storage: &AssetStorage<FontAsset>) -> F
         Ok(handle) => match handle {
             FontKitHandle::Path { path, .. } => {
                 if let Some(file_extension) = path.extension() {
-                    let format = if file_extension == "ttf" || file_extension == "otf" {
-                        Some(TtfFormat)
-                    } else {
-                        error!("System font '{}' has unknown format", path.display());
-                        None
+                    let format = match file_extension.to_str() {
+                        Some(ext) => {
+                            if ext.eq_ignore_ascii_case("ttf") || ext.eq_ignore_ascii_case("otf") {
+                                Some(TtfFormat)
+                            } else {
+                                None
+                            }
+                        }
+                        None => None,
                     };
 
                     if let Some(format) = format {
@@ -33,6 +38,8 @@ pub fn get_default_font(loader: &Loader, storage: &AssetStorage<FontAsset>) -> F
                             },
                             Err(err) => warn!("System font at '{}' is not available for use. Fallback to default. Error: {}", path.display(), err)
                         }
+                    } else {
+                        error!("System font '{}' has unknown format", path.display());
                     }
                 } else {
                     warn!("System font has no file extension!");

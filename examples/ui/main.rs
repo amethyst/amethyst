@@ -1,13 +1,9 @@
 //! Displays a shaded sphere to the user.
 
-use amethyst;
-#[macro_use]
-extern crate log;
-
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, Processor, RonFormat},
     audio::{output::init_output, Source},
-    core::{transform::TransformBundle, Time},
+    core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle, Time},
     ecs::prelude::{Entity, System, Write},
     input::{is_close_requested, is_key_down, InputBundle},
     prelude::*,
@@ -22,10 +18,14 @@ use amethyst::{
     winit::VirtualKeyCode,
 };
 
+use log::info;
+
 type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
+#[derive(Default)]
 struct Example {
     fps_display: Option<Entity>,
+    random_text: Option<Entity>,
 }
 
 impl SimpleState for Example {
@@ -67,6 +67,7 @@ impl SimpleState for Example {
 
     fn update(&mut self, state_data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         let StateData { world, .. } = state_data;
+
         if self.fps_display.is_none() {
             world.exec(|finder: UiFinder<'_>| {
                 if let Some(entity) = finder.find("fps") {
@@ -74,11 +75,35 @@ impl SimpleState for Example {
                 }
             });
         }
+        if self.random_text.is_none() {
+            world.exec(|finder: UiFinder| {
+                if let Some(entity) = finder.find("random_text") {
+                    self.random_text = Some(entity);
+                }
+            });
+        }
+
         let mut ui_text = world.write_storage::<UiText>();
-        if let Some(fps_display) = self.fps_display.and_then(|entity| ui_text.get_mut(entity)) {
-            if world.read_resource::<Time>().frame_number() % 20 == 0 {
-                let fps = world.read_resource::<FPSCounter>().sampled_fps();
-                fps_display.text = format!("FPS: {:.*}", 2, fps);
+        {
+            if let Some(fps_display) = self.fps_display.and_then(|entity| ui_text.get_mut(entity)) {
+                if world.read_resource::<Time>().frame_number() % 20 == 0 {
+                    let fps = world.read_resource::<FPSCounter>().sampled_fps();
+                    fps_display.text = format!("FPS: {:.*}", 2, fps);
+                }
+            }
+        }
+
+        {
+            if let Some(random_text) = self.random_text.and_then(|entity| ui_text.get_mut(entity)) {
+                if let Ok(value) = random_text.text.parse::<i32>() {
+                    let mut new_value = value * 10;
+                    if new_value > 100000 {
+                        new_value = 1;
+                    }
+                    random_text.text = new_value.to_string();
+                } else {
+                    random_text.text = String::from("1");
+                }
             }
         }
 
@@ -103,7 +128,10 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(FPSCounterBundle::default())?
         .with_bundle(InputBundle::<String, String>::new())?
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), true)?;
-    let mut game = Application::new(resources, Example { fps_display: None }, game_data)?;
+    let mut game = Application::build(resources, Example::default())?
+        // Unlimited FPS
+        .with_frame_limit(FrameRateLimitStrategy::Unlimited, 9999)
+        .build(game_data)?;
     game.run();
     Ok(())
 }
@@ -123,12 +151,12 @@ impl<'a> System<'a> for UiEventHandlerSystem {
     type SystemData = Write<'a, EventChannel<UiEvent>>;
 
     fn run(&mut self, mut events: Self::SystemData) {
-        if self.reader_id.is_none() {
-            self.reader_id = Some(events.register_reader());
-        }
+        let reader_id = self
+            .reader_id
+            .get_or_insert_with(|| events.register_reader());
 
         // Reader id was just initialized above if empty
-        for ev in events.read(self.reader_id.as_mut().unwrap()) {
+        for ev in events.read(reader_id) {
             info!("[SYSTEM] You just interacted with a ui element: {:?}", ev);
         }
     }

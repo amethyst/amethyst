@@ -1,8 +1,9 @@
 pub use log::LevelFilter;
 
-use std::{env, io, path::PathBuf, str::FromStr};
+use log::debug;
+use serde::{Deserialize, Serialize};
 
-use fern;
+use std::{env, io, path::PathBuf, str::FromStr};
 
 /// An enum that contains options for logging to the terminal.
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -26,15 +27,18 @@ pub struct LoggerConfig {
     pub log_file: Option<PathBuf>,
     /// If set, allows the config values to be overriden via the corresponding environmental variables.
     pub allow_env_override: bool,
+    /// Sets a different level for gfx_device_gl if Some
+    pub log_gfx_device_level: Option<LevelFilter>,
 }
 
 impl Default for LoggerConfig {
     fn default() -> LoggerConfig {
         LoggerConfig {
             stdout: StdoutLog::Colored,
-            level_filter: LevelFilter::Debug,
+            level_filter: LevelFilter::Info,
             log_file: None,
             allow_env_override: true,
+            log_gfx_device_level: Some(LevelFilter::Warn),
         }
     }
 }
@@ -85,6 +89,12 @@ impl Logger {
             StdoutLog::Off => {}
         }
 
+        if let Some(log_gfx_device_level) = config.log_gfx_device_level {
+            logger.dispatch = logger
+                .dispatch
+                .level_for("gfx_device_gl", log_gfx_device_level);
+        }
+
         if let Some(path) = config.log_file {
             match fern::log_file(path) {
                 Ok(log_file) => logger.dispatch = logger.dispatch.chain(log_file),
@@ -120,8 +130,18 @@ impl Logger {
 ///
 /// Configuration of the logger can also be controlled via environment variables:
 /// * AMETHYST_LOG_STDOUT - determines the output to the terminal
+///     * "no" / "off" / "0" disables logging to stdout
+///     * "plain" / "yes" / "1" enables logging to stdout
+///     * "colored" / "2" enables logging and makes it colored
 /// * AMETHYST_LOG_LEVEL_FILTER - sets the log level
+///     * "off" disables all logging
+///     * "error" enables only error logging
+///     * "warn" only errors and warnings are emitted
+///     * "info" only error, warning and info messages
+///     * "debug" everything except trace
+///     * "trace" everything
 /// * AMETHYST_LOG_FILE_PATH - if set, enables logging to the file at the path
+///     * the value is expected to be a path to the logging file
 pub fn start_logger(config: LoggerConfig) {
     Logger::from_config(config).start();
 }
@@ -129,9 +149,9 @@ pub fn start_logger(config: LoggerConfig) {
 fn env_var_override(config: &mut LoggerConfig) {
     if let Ok(var) = env::var("AMETHYST_LOG_STDOUT") {
         match var.to_lowercase().as_ref() {
-            "off" => config.stdout = StdoutLog::Off,
-            "plain" => config.stdout = StdoutLog::Plain,
-            "colored" => config.stdout = StdoutLog::Colored,
+            "off" | "no" | "0" => config.stdout = StdoutLog::Off,
+            "plain" | "yes" | "1" => config.stdout = StdoutLog::Plain,
+            "colored" | "2" => config.stdout = StdoutLog::Colored,
             _ => {}
         }
     }
@@ -157,4 +177,22 @@ fn colored_stdout(color_config: fern::colors::ColoredLevelConfig) -> fern::Dispa
                 color_reset = "\x1B[0m",
             ))
         })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::env;
+
+    #[test]
+    fn check_stdout_override() {
+        let mut config = LoggerConfig::default();
+        assert_eq!(config.stdout, StdoutLog::Colored);
+
+        env::set_var("AMETHYST_LOG_STDOUT", "pLaIn");
+        env_var_override(&mut config);
+        env::remove_var("AMETHYST_LOG_STDOUT");
+
+        assert_eq!(config.stdout, StdoutLog::Plain);
+    }
 }

@@ -1,1 +1,2 @@
 reorder_imports = true
+merge_imports = true

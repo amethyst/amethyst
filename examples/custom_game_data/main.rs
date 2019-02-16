@@ -1,7 +1,5 @@
 //! Demonstrates how to use a custom game data structure
 
-use amethyst;
-
 use crate::{
     example_system::ExampleSystem,
     game_data::{CustomGameData, CustomGameDataBuilder},

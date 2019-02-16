@@ -9,6 +9,7 @@ use serde::{
     de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor},
     ser::{Serialize, Serializer},
 };
+
 use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 
 /// Local position, rotation, and scale (from parent if it exists).
@@ -98,7 +99,7 @@ impl<N: Real> Transform<N> {
     #[inline]
     pub fn face_towards(&mut self, target: Vector3<N>, up: Vector3<N>) -> &mut Self {
         self.iso.rotation =
-            UnitQuaternion::new_observer_frame(&(self.iso.translation.vector - target), &up);
+            UnitQuaternion::face_towards(&(self.iso.translation.vector - target), &up);
         self
     }
 
@@ -401,6 +402,7 @@ impl<N: Real> Transform<N> {
         self
     }
 
+    /// Verifies that the global `Matrix4` doesn't contain any NaN values.
     pub fn is_finite(&self) -> bool {
         self.global_matrix
             .as_slice()

@@ -1,0 +1,66 @@
+---
+resource_types:
+- name: pull-request
+  type: docker-image
+  source:
+    repository: teliaoss/github-pr-resource
+    tag: v0.10.0
+
+resources:
+- name: pull-request
+  type: pull-request
+  check_every: 1m
+  webhook_token: ((webhook_token))
+  source:
+    repository: amethyst/amethyst
+    access_token: ((access_token))
+
+- name: amethyst-dependencies
+  type: docker-image
+  source: { repository: magnonellie/amethyst-dependencies }
+
+jobs:
+- name: linux-rust-stable
+  max_in_flight: 2
+  public: true
+  interruptible: true
+  plan:
+  - aggregate:
+    - get: amethyst
+      resource: pull-request
+      trigger: true
+      version: every
+    - get: amethyst-dependencies
+
+  - put: pull-request
+    params: { path: amethyst, status: pending, context: linux-tests }
+  - task: tests
+    image: amethyst-dependencies
+    file: amethyst/.concourse/tasks/linux-test.yml
+    on_failure:
+      do:
+      - put: pull-request
+        params: { path: amethyst, status: failure, context: linux-tests }
+  - put: pull-request
+    params: { path: amethyst, status: success, context: linux-tests }
+
+- name: linux-rustfmt
+  public: true
+  plan:
+  - aggregate:
+    - get: amethyst
+      resource: pull-request
+      trigger: true
+      version: every
+    - get: amethyst-dependencies
+
+  - put: pull-request
+    params: { path: amethyst, status: pending, context: rustfmt }
+  - task: check
+    image: amethyst-dependencies
+    file: amethyst/.concourse/tasks/linux-rustfmt.yml
+    on_failure: # TODO: We should also send an actual message with a helpful hint here.
+      put: pull-request
+      params: { path: amethyst, status: failure, context: rustfmt }
+  - put: pull-request
+    params: { path: amethyst, status: success, context: rustfmt }

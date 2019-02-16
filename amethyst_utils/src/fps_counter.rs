@@ -3,8 +3,9 @@
 use amethyst_core::{
     specs::prelude::{DispatcherBuilder, Read, System, Write},
     timing::{duration_to_nanos, Time},
-    {Result, SystemBundle},
+    SystemBundle,
 };
+use amethyst_error::Error;
 
 use crate::circular_buffer::CircularBuffer;
 
@@ -78,7 +79,7 @@ impl<'a> System<'a> for FPSCounterSystem {
 pub struct FPSCounterBundle;
 
 impl<'a, 'b> SystemBundle<'a, 'b> for FPSCounterBundle {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(FPSCounterSystem, "fps_counter_system", &[]);
         Ok(())
     }

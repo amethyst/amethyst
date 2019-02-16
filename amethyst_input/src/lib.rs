@@ -1,27 +1,15 @@
 //! A collection of abstractions for various input devices to be used with Amethyst.
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
-use amethyst_core;
-
-#[macro_use]
-extern crate derivative;
-
-#[macro_use]
-extern crate serde;
-use smallvec;
-use winit;
-
-#[cfg(feature = "sdl_controller")]
-extern crate sdl2;
 
 #[cfg(feature = "sdl_controller")]
 pub use self::sdl_events_system::SdlEventsSystem;
 pub use self::{
     axis::Axis,
-    bindings::Bindings,
-    bundle::InputBundle,
+    bindings::{BindingError, Bindings},
+    bundle::{BindingsFileError, InputBundle},
     button::Button,
-    controller::{ControllerAxis, ControllerButton},
+    controller::{ControllerAxis, ControllerButton, ControllerEvent},
     event::InputEvent,
     input_handler::InputHandler,
     scroll_direction::ScrollDirection,
@@ -30,7 +18,8 @@ pub use self::{
 };
 
 use std::iter::Iterator;
-use winit::VirtualKeyCode;
+
+use winit::{self, VirtualKeyCode};
 
 mod axis;
 mod bindings;

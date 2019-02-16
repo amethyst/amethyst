@@ -2,10 +2,11 @@
 
 use amethyst_input::is_close_requested;
 
+use derivative::Derivative;
+
 use crate::{ecs::prelude::World, GameData, StateEvent};
 
-use std::fmt::Result as FmtResult;
-use std::fmt::{Display, Formatter};
+use std::fmt::{Display, Formatter, Result as FmtResult};
 
 /// Error type for errors occurring in StateMachine
 #[derive(Debug)]

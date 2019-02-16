@@ -4,6 +4,7 @@ use crate::{
         specs::{Read, Resources, SystemData},
         EventReader,
     },
+    derive::EventReader,
     renderer::Event,
     ui::UiEvent,
 };

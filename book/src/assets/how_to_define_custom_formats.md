@@ -12,7 +12,7 @@ If you are defining a new format that may be useful to others, [please send us a
 
     In most cases a unit struct is sufficient. When possible, this should implement `Clone` and `Copy` for ergonomic usage.
 
-    ```rust,no_run,noplaypen
+    ```rust,edition2018,no_run,noplaypen
     /// Format for loading from `.mylang` files.
     #[derive(Clone, Copy, Debug, Default)]
     pub struct MyLangFormat;
@@ -24,13 +24,14 @@ If you are defining a new format that may be useful to others, [please send us a
 
     In this example the RON deserializer is used, though it is [already a supported format][doc_ron_format].
 
-    ```rust,no_run,noplaypen
+    ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # extern crate ron;
     # extern crate serde;
     #
     use amethyst::{
-        assets::{self, Asset, ResultExt, SimpleFormat},
+        error::Error,
+        assets::{Asset, SimpleFormat},
     };
     use serde::Deserialize;
     use ron::de::Deserializer; // Replace this in your implementation.
@@ -50,11 +51,10 @@ If you are defining a new format that may be useful to others, [please send us a
         // the parameter type may be specified here.
         type Options = ();
 
-        fn import(&self, bytes: Vec<u8>, _: ()) -> Result<A::Data, assets::Error> {
-            let mut deserializer =
-                Deserializer::from_bytes(&bytes).chain_err(|| "Failed deserializing MyLang file")?;
-            let val = A::Data::deserialize(&mut deserializer).chain_err(|| "Failed parsing MyLang file")?;
-            deserializer.end().chain_err(|| "Failed parsing MyLang file")?;
+        fn import(&self, bytes: Vec<u8>, _: ()) -> Result<A::Data, Error> {
+            let mut deserializer = Deserializer::from_bytes(&bytes)?;
+            let val = A::Data::deserialize(&mut deserializer)?;
+            deserializer.end()?;
 
             Ok(val)
         }
@@ -63,16 +63,17 @@ If you are defining a new format that may be useful to others, [please send us a
 
     The custom format can now be used:
 
-    ```rust,no_run,noplaypen
+    ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # extern crate ron;
     # extern crate serde;
     # extern crate serde_derive;
     #
     # use amethyst::{
+    #     error::Error,
     #     assets::{
-    #         self, Asset, AssetStorage, Handle, Loader, Processor, ProgressCounter,
-    #         ProcessingState, ResultExt, SimpleFormat,
+    #         Asset, AssetStorage, Handle, Loader, Processor, ProgressCounter,
+    #         ProcessingState, SimpleFormat,
     #     },
     #     ecs::VecStorage,
     #     prelude::*,
@@ -100,8 +101,8 @@ If you are defining a new format that may be useful to others, [please send us a
     #     type HandleStorage = VecStorage<EnergyBlastHandle>;
     # }
     #
-    # impl From<EnergyBlast> for assets::Result<ProcessingState<EnergyBlast>> {
-    #     fn from(energy_blast: EnergyBlast) -> assets::Result<ProcessingState<EnergyBlast>> {
+    # impl From<EnergyBlast> for Result<ProcessingState<EnergyBlast>, Error> {
+    #     fn from(energy_blast: EnergyBlast) -> Result<ProcessingState<EnergyBlast>, Error> {
     #       Ok(ProcessingState::Loaded(energy_blast))
     #     }
     # }
@@ -128,12 +129,10 @@ If you are defining a new format that may be useful to others, [please send us a
     #     // the parameter type may be specified here.
     #     type Options = ();
     #
-    #     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<A::Data, assets::Error> {
-    #         let mut deserializer = Deserializer::from_bytes(&bytes)
-    #             .chain_err(|| "Failed deserializing MyLang file")?;
-    #         let val = A::Data::deserialize(&mut deserializer)
-    #             .chain_err(|| "Failed parsing MyLang file")?;
-    #         deserializer.end().chain_err(|| "Failed parsing MyLang file")?;
+    #     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<A::Data, Error> {
+    #         let mut deserializer = Deserializer::from_bytes(&bytes)?;
+    #         let val = A::Data::deserialize(&mut deserializer)?;
+    #         deserializer.end()?;
     #
     #         Ok(val)
     #     }
@@ -182,7 +181,7 @@ If you are defining a new format that may be useful to others, [please send us a
     # }
     ```
 
-[bk_custom_assets]: assets/how_to_define_custom_assets.html
+[bk_custom_assets]: how_to_define_custom_assets.html
 [doc_hrs]: https://www.amethyst.rs/doc/latest/doc/amethyst_assets/struct.HotReloadStrategy.html
 [doc_ron_format]: https://www.amethyst.rs/doc/latest/doc/amethyst_assets/struct.RonFormat.html
 [gh_contributing]: https://github.com/amethyst/amethyst/blob/master/docs/CONTRIBUTING.md

@@ -2,6 +2,7 @@
 
 use std::marker::PhantomData;
 
+use derivative::Derivative;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
@@ -11,10 +12,10 @@ use amethyst_core::{
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::GlobalTransform,
 };
+use amethyst_error::Error;
 
 use crate::{
     cam::{ActiveCamera, Camera},
-    error::Result,
     hidden::{Hidden, HiddenPropagate},
     mesh::{Mesh, MeshHandle},
     mtl::{Material, MaterialDefaults},
@@ -93,7 +94,7 @@ impl<V> Pass for DrawFlat<V>
 where
     V: Query<(Position, TexCoord)>,
 {
-    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect> {
+    fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         use std::mem;
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);
         builder

@@ -7,6 +7,7 @@ use gfx::{
     pso::buffer::Element,
     traits::Pod,
 };
+use serde::{Deserialize, Serialize};
 
 use crate::{
     pass::util::TextureType,

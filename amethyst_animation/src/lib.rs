@@ -46,14 +46,8 @@
 //! [ex_gltf]: https://github.com/amethyst/amethyst/tree/master/examples/gltf
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
-#[macro_use]
-extern crate amethyst_derive;
-#[macro_use]
-extern crate derivative;
-#[macro_use]
-extern crate log;
-#[macro_use]
-extern crate serde;
+
+pub use minterpolate::{InterpolationFunction, InterpolationPrimitive};
 
 pub use self::{
     bundle::{AnimationBundle, SamplingBundle, VertexSkinningBundle},
@@ -72,8 +66,6 @@ pub use self::{
     transform::TransformChannel,
     util::{get_animation_set, SamplerPrimitive},
 };
-
-pub use minterpolate::{InterpolationFunction, InterpolationPrimitive};
 
 mod bundle;
 mod material;

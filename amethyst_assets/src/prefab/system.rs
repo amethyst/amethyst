@@ -1,5 +1,7 @@
 use std::{marker::PhantomData, ops::Deref};
 
+use log::error;
+
 use amethyst_core::{
     specs::{
         storage::ComponentEvent, BitSet, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
@@ -7,8 +9,9 @@ use amethyst_core::{
     },
     ArcThreadPool, Parent, Time,
 };
+use amethyst_error::{format_err, Error, ResultExt};
 
-use crate::{AssetStorage, Completion, Handle, HotReloadStrategy, ProcessingState, ResultExt};
+use crate::{AssetStorage, Completion, Handle, HotReloadStrategy, ProcessingState};
 
 use super::{Prefab, PrefabData, PrefabTag};
 
@@ -75,7 +78,7 @@ where
                 if !d.loading() {
                     if !d
                         .load_sub_assets(&mut prefab_system_data)
-                        .chain_err(|| "Failed starting sub asset loading")?
+                        .with_context(|_| format_err!("Failed starting sub asset loading"))?
                     {
                         return Ok(ProcessingState::Loaded(d));
                     }
@@ -84,7 +87,7 @@ where
                     Completion::Complete => Ok(ProcessingState::Loaded(d)),
                     Completion::Failed => {
                         error!("Failed loading sub asset: {:?}", d.progress().errors());
-                        Err("Failed loading sub asset")?
+                        return Err(Error::from_string("Failed loading sub asset"));
                     }
                     Completion::Loading => Ok(ProcessingState::Loading(d)),
                 }

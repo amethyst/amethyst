@@ -1,13 +1,16 @@
 use std::marker::PhantomData;
 
+use serde::{Deserialize, Serialize};
+use shred_derive::SystemData;
+
 use amethyst_core::specs::prelude::{
     Component, DenseVecStorage, Entity, FlaggedStorage, Read, ReadExpect, SystemData, WriteStorage,
 };
+use amethyst_error::Error;
 
 use crate::{Asset, AssetStorage, Format, Handle, Loader, Progress, ProgressCounter};
 
 pub use self::system::PrefabLoaderSystem;
-pub use amethyst_core::specs::error::Error as PrefabError;
 
 mod impls;
 mod system;
@@ -36,7 +39,7 @@ pub trait PrefabData<'a> {
         entity: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
-    ) -> Result<Self::Result, PrefabError>;
+    ) -> Result<Self::Result, Error>;
 
     /// Trigger asset loading for any sub assets.
     ///
@@ -59,7 +62,7 @@ pub trait PrefabData<'a> {
         &mut self,
         _progress: &mut ProgressCounter,
         _system_data: &mut Self::SystemData,
-    ) -> Result<bool, PrefabError> {
+    ) -> Result<bool, Error> {
         Ok(false)
     }
 }
@@ -75,17 +78,19 @@ pub trait PrefabData<'a> {
 ///
 /// ### Example:
 ///
-/// If the prefab contains 3 new entities `A`, `B` and `C`, and the main `Entity` that the `Handle`
-/// is placed on is `E`, and we want the graph to be `A -> E`, `B -> E`, `C -> B` (parent links),
-/// the data will be as follows:
+/// If we want to give the existing Baker entity a Knife and a Plate with a
+/// Cake on it.  The prefab contains 3 new entities `Knife`, `Plate`,
+/// and `Cake`, and the main `Entity` that the `Handle` is placed on is the
+/// `Baker`.  We want the graph to be `Knife on Baker`, `Plate on Baker`,
+/// `Cake on Plate` using parent links. The data will be as follows:
 ///
 /// ```rust,ignore
 /// Prefab {
 ///     entities: vec![
-///         PrefabEntity { parent: None /* not used */, .. },
-///         PrefabEntity { parent: Some(0), .. },
-///         PrefabEntity { parent: Some(0), .. },
-///         PrefabEntity { parent: Some(2), .. },
+///         PrefabEntity { parent: None, .. },    /* #0 Baker, parent is not used */
+///         PrefabEntity { parent: Some(0), .. }, /* #1 Knife parented to Baker #0 */
+///         PrefabEntity { parent: Some(0), .. }, /* #2 Plate parented to Baker #0 */
+///         PrefabEntity { parent: Some(2), .. }, /* #3 Cake parented to Plate #2 */
 ///     ],
 /// }
 /// ```
@@ -161,7 +166,7 @@ impl<T> PrefabEntity<T> {
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut <T as PrefabData<'a>>::SystemData,
-    ) -> Result<bool, PrefabError>
+    ) -> Result<bool, Error>
     where
         T: PrefabData<'a>,
     {
@@ -258,7 +263,7 @@ impl<T> Prefab<T> {
     pub fn load_sub_assets<'a>(
         &mut self,
         system_data: &mut <T as PrefabData<'a>>::SystemData,
-    ) -> Result<bool, PrefabError>
+    ) -> Result<bool, Error>
     where
         T: PrefabData<'a>,
     {
@@ -354,19 +359,22 @@ where
         entity: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
-    ) -> Result<Handle<A>, PrefabError> {
+    ) -> Result<Handle<A>, Error> {
         let handle = match *self {
             AssetPrefab::Handle(ref handle) => handle.clone(),
             AssetPrefab::File(..) => unreachable!(),
         };
-        system_data.1.insert(entity, handle.clone()).map(|_| handle)
+        Ok(system_data
+            .1
+            .insert(entity, handle.clone())
+            .map(|_| handle)?)
     }
 
     fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
-    ) -> Result<bool, PrefabError> {
+    ) -> Result<bool, Error> {
         let handle = if let AssetPrefab::File(ref name, ref format, ref options) = *self {
             Some(system_data.0.load(
                 name.as_ref(),
@@ -395,7 +403,7 @@ where
 ///
 /// ```rust,ignore
 /// let prefab_handle = world.exec(|loader: PrefabLoader<SomePrefab>| {
-///     loader.load("prefab.ron", RonFormat, (), ()
+///     loader.load("prefab.ron", RonFormat, (), ());
 /// });
 /// ```
 #[derive(SystemData)]

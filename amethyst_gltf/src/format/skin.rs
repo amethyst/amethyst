@@ -1,16 +1,13 @@
 use std::collections::HashMap;
 
-use gltf;
+use amethyst_animation::{JointPrefab, SkinPrefab, SkinnablePrefab};
+use amethyst_assets::Prefab;
+use amethyst_core::nalgebra::Matrix4;
+use amethyst_error::Error;
+use amethyst_renderer::JointTransformsPrefab;
 
-use crate::{
-    animation::{JointPrefab, SkinPrefab, SkinnablePrefab},
-    assets::Prefab,
-    core::nalgebra::Matrix4,
-    renderer::JointTransformsPrefab,
-    GltfPrefab,
-};
-
-use super::{Buffers, GltfError};
+use super::Buffers;
+use crate::GltfPrefab;
 
 pub fn load_skin(
     skin: &gltf::Skin<'_>,
@@ -19,7 +16,7 @@ pub fn load_skin(
     node_map: &HashMap<usize, usize>,
     meshes: Vec<usize>,
     prefab: &mut Prefab<GltfPrefab>,
-) -> Result<(), GltfError> {
+) -> Result<(), Error> {
     let joints = skin
         .joints()
         .map(|j| {

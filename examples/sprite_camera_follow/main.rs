@@ -1,5 +1,3 @@
-use amethyst;
-
 use amethyst::{
     assets::{AssetStorage, Loader},
     core::{Parent, Transform, TransformBundle},

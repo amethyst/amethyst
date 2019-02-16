@@ -7,21 +7,32 @@ mod test {
         specs::{Builder, Join, World, WriteStorage},
     };
 
-    use crate::{NetConnection, NetEvent, NetSocketSystem};
+    use crate::{server::ServerConfig, *};
 
     #[test]
     fn single_packet_early() {
-        let addr1: SocketAddr = "127.0.0.1:21200".parse().unwrap();
-        let addr2: SocketAddr = "127.0.0.1:21201".parse().unwrap();
-        let (mut world_cl, mut cl_dispatch, mut world_sv, mut sv_dispatch) =
-            build(addr1.clone(), addr2.clone());
+        // server got one socket receiving and one sending
+        let server_send: SocketAddr = "127.0.0.1:21200".parse().unwrap();
+        let server_receive: SocketAddr = "127.0.0.1:21201".parse().unwrap();
 
-        let mut conn_to_server = NetConnection::<()>::new(addr2);
-        let mut conn_to_client = NetConnection::<()>::new(addr1);
+        // client got one socket receiving and one sending
+        let client_send: SocketAddr = "127.0.0.1:21202".parse().unwrap();
+        let client_receive: SocketAddr = "127.0.0.1:21203".parse().unwrap();
+
+        let (mut world_cl, mut cl_dispatch, mut world_sv, mut sv_dispatch) = build(
+            server_send.clone(),
+            server_receive.clone(),
+            client_send.clone(),
+            client_receive.clone(),
+        );
+
+        let mut conn_to_server = NetConnection::<()>::new(server_receive, server_send);
+        let mut conn_to_client = NetConnection::<()>::new(client_receive, client_send);
 
         let test_event = NetEvent::TextMessage {
             msg: "1".to_string(),
         };
+
         conn_to_server.send_buffer.single_write(test_event.clone());
         world_cl.create_entity().with(conn_to_server).build();
 
@@ -29,7 +40,7 @@ mod test {
         let conn_to_client_entity = world_sv.create_entity().with(conn_to_client).build();
 
         cl_dispatch.dispatch(&mut world_cl.res);
-        sleep(Duration::from_millis(1000));
+        sleep(Duration::from_millis(500));
         sv_dispatch.dispatch(&mut world_sv.res);
 
         let storage = world_sv.read_storage::<NetConnection<()>>();
@@ -41,14 +52,27 @@ mod test {
     }
 
     #[test]
+    #[ignore]
     fn send_receive_100_packets() {
-        let addr1: SocketAddr = "127.0.0.1:21205".parse().unwrap();
-        let addr2: SocketAddr = "127.0.0.1:21204".parse().unwrap();
-        let (mut world_cl, mut cl_dispatch, mut world_sv, mut sv_dispatch) =
-            build(addr1.clone(), addr2.clone());
+        // server got one socket receiving and one sending
+        let server_send: SocketAddr = "127.0.0.1:21204".parse().unwrap();
+        let server_receive: SocketAddr = "127.0.0.1:21205".parse().unwrap();
 
-        let conn_to_server = NetConnection::<()>::new(addr2);
-        let mut conn_to_client = NetConnection::<()>::new(addr1);
+        // client got one socket receiving and one sending
+        let client_send: SocketAddr = "127.0.0.1:21206".parse().unwrap();
+        let client_receive: SocketAddr = "127.0.0.1:21207".parse().unwrap();
+
+        // setup world for client and server
+        let (mut world_cl, mut cl_dispatch, mut world_sv, mut sv_dispatch) = build(
+            server_send.clone(),
+            server_receive.clone(),
+            client_send.clone(),
+            client_receive.clone(),
+        );
+
+        // setup connections from client -> server and server -> client
+        let conn_to_server = NetConnection::<()>::new(server_receive, server_send);
+        let mut conn_to_client = NetConnection::<()>::new(client_receive, client_send);
 
         let test_event = NetEvent::TextMessage {
             msg: "Test Message From Client1".to_string(),
@@ -70,23 +94,40 @@ mod test {
             }
         }
         cl_dispatch.dispatch(&mut world_cl.res);
-        sleep(Duration::from_millis(500));
+        sleep(Duration::from_millis(100));
         sv_dispatch.dispatch(&mut world_sv.res);
+
         let storage = world_sv.read_storage::<NetConnection<()>>();
         let comp = storage.get(conn_to_client_entity).unwrap();
         assert_eq!(comp.receive_buffer.read(&mut rcv).count(), 100);
     }
 
     fn build<'a, 'b>(
-        addr1: SocketAddr,
-        addr2: SocketAddr,
+        server_send: SocketAddr,
+        server_receive: SocketAddr,
+        client_send: SocketAddr,
+        client_receive: SocketAddr,
     ) -> (World, Dispatcher<'a, 'b>, World, Dispatcher<'a, 'b>) {
         let mut world_cl = World::new();
         let mut world_sv = World::new();
 
+        // client config
+        let client_config = ServerConfig {
+            udp_send_addr: client_send,
+            udp_recv_addr: client_receive,
+            max_throughput: 10000,
+        };
+
+        // server config
+        let server_config = ServerConfig {
+            udp_send_addr: server_send,
+            udp_recv_addr: server_receive,
+            max_throughput: 10000,
+        };
+
         let mut cl_dispatch = DispatcherBuilder::new()
             .with(
-                NetSocketSystem::<()>::new(addr1, Vec::new()).unwrap(),
+                NetSocketSystem::<()>::new(client_config, Vec::new()).unwrap(),
                 "s",
                 &[],
             )
@@ -94,7 +135,7 @@ mod test {
         cl_dispatch.setup(&mut world_cl.res);
         let mut sv_dispatch = DispatcherBuilder::new()
             .with(
-                NetSocketSystem::<()>::new(addr2, Vec::new()).unwrap(),
+                NetSocketSystem::<()>::new(server_config, Vec::new()).unwrap(),
                 "s",
                 &[],
             )

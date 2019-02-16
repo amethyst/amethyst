@@ -1,22 +1,21 @@
 use std::collections::HashMap;
 
-use gltf;
+use amethyst_error::Error;
 
-use crate::{
-    animation::{
-        AnimationPrefab, AnimationSetPrefab, InterpolationFunction, InterpolationPrimitive,
-        Sampler, SamplerPrimitive, TransformChannel,
-    },
-    core::Transform,
+use amethyst_animation::{
+    AnimationPrefab, AnimationSetPrefab, InterpolationFunction, InterpolationPrimitive, Sampler,
+    SamplerPrimitive, TransformChannel,
 };
+use amethyst_core::Transform;
 
-use super::{Buffers, GltfError};
+use super::Buffers;
+use crate::error;
 
 pub fn load_animations(
     gltf: &gltf::Gltf,
     buffers: &Buffers,
     node_map: &HashMap<usize, usize>,
-) -> Result<AnimationSetPrefab<usize, Transform>, GltfError> {
+) -> Result<AnimationSetPrefab<usize, Transform>, Error> {
     let mut prefab = AnimationSetPrefab::default();
     for animation in gltf.animations() {
         let anim = load_animation(&animation, buffers)?;
@@ -34,19 +33,19 @@ pub fn load_animations(
 fn load_animation(
     animation: &gltf::Animation<'_>,
     buffers: &Buffers,
-) -> Result<AnimationPrefab<Transform>, GltfError> {
+) -> Result<AnimationPrefab<Transform>, Error> {
     let mut a = AnimationPrefab::default();
     a.samplers = animation
         .channels()
         .map(|ref channel| load_channel(channel, buffers))
-        .collect::<Result<Vec<_>, GltfError>>()?;
+        .collect::<Result<Vec<_>, Error>>()?;
     Ok(a)
 }
 
 fn load_channel(
     channel: &gltf::animation::Channel<'_>,
     buffers: &Buffers,
-) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<f32>>), GltfError> {
+) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<f32>>), Error> {
     use gltf::animation::util::ReadOutputs::*;
     let sampler = channel.sampler();
     let target = channel.target();
@@ -54,11 +53,11 @@ fn load_channel(
     let reader = channel.reader(|buffer| buffers.buffer(&buffer));
     let input = reader
         .read_inputs()
-        .ok_or(GltfError::MissingInputs)?
+        .ok_or(error::Error::MissingInputs)?
         .collect();
     let node_index = target.node().index();
 
-    match reader.read_outputs().ok_or(GltfError::MissingOutputs)? {
+    match reader.read_outputs().ok_or(error::Error::MissingOutputs)? {
         Translations(translations) => Ok((
             node_index,
             TransformChannel::Translation,
@@ -98,7 +97,7 @@ fn load_channel(
                 output: scales.map(|s| s.into()).collect(),
             },
         )),
-        MorphTargetWeights(_) => Err(GltfError::NotImplemented),
+        MorphTargetWeights(_) => Err(error::Error::NotImplemented.into()),
     }
 }
 

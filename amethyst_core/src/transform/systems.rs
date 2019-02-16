@@ -2,11 +2,14 @@
 
 use hibitset::BitSet;
 use specs::prelude::{
-    ComponentEvent, Entities, Entity, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
+    ComponentEvent, Entities, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
     WriteStorage,
 };
 
 use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform};
+
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
 
 /// Handles updating `GlobalTransform` components based on the `Transform`
 /// component and parents.

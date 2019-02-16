@@ -1,6 +1,8 @@
 //! Module holding the components related to text and text editing.
 
+use derivative::Derivative;
 use gfx_glyph::{Point, PositionedGlyph};
+use serde::{Deserialize, Serialize};
 use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 use winit::{ElementState, Event, MouseButton, WindowEvent};
 

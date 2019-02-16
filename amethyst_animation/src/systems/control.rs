@@ -1,6 +1,7 @@
 use std::{hash::Hash, marker, time::Duration};
 
 use fnv::FnvHashMap;
+use log::error;
 use minterpolate::InterpolationPrimitive;
 
 use amethyst_assets::{AssetStorage, Handle};

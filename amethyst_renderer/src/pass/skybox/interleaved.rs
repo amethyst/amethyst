@@ -5,9 +5,9 @@ use amethyst_core::{
     specs::{Read, ReadStorage},
     transform::GlobalTransform,
 };
+use amethyst_error::Error;
 
 use crate::{
-    error::Result,
     get_camera,
     pipe::{
         pass::{Pass, PassData},
@@ -18,7 +18,7 @@ use crate::{
 };
 
 use gfx::pso::buffer::ElemStride;
-use glsl_layout::{mat4, Uniform};
+use glsl_layout::{mat4, vec4, Uniform};
 
 use super::{SkyboxColor, FRAG_SRC, VERT_SRC};
 
@@ -28,6 +28,7 @@ pub(crate) struct VertexArgs {
     proj: mat4,
     view: mat4,
     model: mat4,
+    rgba: vec4,
 }
 
 /// Draw a simple gradient skybox
@@ -53,7 +54,7 @@ impl<'a> PassData<'a> for DrawSkybox {
 }
 
 impl Pass for DrawSkybox {
-    fn compile(&mut self, mut effect: NewEffect<'_>) -> Result<Effect> {
+    fn compile(&mut self, mut effect: NewEffect<'_>) -> Result<Effect, Error> {
         let verts = Shape::Cube.generate_vertices::<Vec<PosTex>>(None);
         self.mesh = Some(Mesh::build(verts).build(&mut effect.factory)?);
 

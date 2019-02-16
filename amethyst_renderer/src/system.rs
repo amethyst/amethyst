@@ -3,7 +3,13 @@
 
 use std::{mem, sync::Arc};
 
+use derivative::Derivative;
+use log::error;
+use rayon::ThreadPool;
 use winit::{DeviceEvent, Event, WindowEvent};
+
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
 
 use amethyst_assets::{AssetStorage, HotReloadStrategy};
 use amethyst_core::{
@@ -11,15 +17,14 @@ use amethyst_core::{
     specs::prelude::{Read, ReadExpect, Resources, RunNow, SystemData, Write, WriteExpect},
     Time,
 };
+use amethyst_error::Error;
 
 use crate::{
     config::DisplayConfig,
-    error::Result,
     formats::{create_mesh_asset, create_texture_asset},
     mesh::Mesh,
     mtl::{Material, MaterialDefaults},
     pipe::{PipelineBuild, PipelineData, PolyPipeline},
-    rayon::ThreadPool,
     renderer::Renderer,
     resources::{ScreenDimensions, WindowMessages},
     tex::Texture,
@@ -43,7 +48,7 @@ where
     P: PolyPipeline,
 {
     /// Build a new `RenderSystem` from the given pipeline builder and config
-    pub fn build<B>(pipe: B, config: Option<DisplayConfig>) -> Result<Self>
+    pub fn build<B>(pipe: B, config: Option<DisplayConfig>) -> Result<Self, Error>
     where
         B: PipelineBuild<Pipeline = P>,
     {
@@ -176,9 +181,21 @@ where
     fn run_now(&mut self, res: &'a Resources) {
         #[cfg(feature = "profiler")]
         profile_scope!("render_system");
-        self.asset_loading(AssetLoadingData::fetch(res));
-        self.window_management(WindowData::fetch(res));
-        self.render(RenderData::<P>::fetch(res));
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("render_system_assetloading");
+            self.asset_loading(AssetLoadingData::fetch(res));
+        }
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("render_system_windowmanagement");
+            self.window_management(WindowData::fetch(res));
+        }
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("render_system_render");
+            self.render(RenderData::<P>::fetch(res));
+        }
     }
 
     fn setup(&mut self, res: &mut Resources) {

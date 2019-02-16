@@ -1,13 +1,10 @@
-use std::{self, error::Error as StdError, fmt, path::Path, sync::Arc};
+use std::{path::Path, sync::Arc};
 
-use base64;
-use gltf::{
-    self,
-    json::{self, validation},
-    Gltf,
-};
+use amethyst_assets::Source as AssetSource;
+use amethyst_error::Error;
+use gltf::{self, json, Gltf};
 
-use crate::assets::{Error as AssetError, Result as AssetResult, Source as AssetSource};
+use crate::error;
 
 #[derive(Debug)]
 pub enum ImageFormat {
@@ -65,7 +62,7 @@ where
     }
 }
 
-fn read_to_end<P: AsRef<Path>>(source: Arc<dyn AssetSource>, path: P) -> AssetResult<Vec<u8>> {
+fn read_to_end<P: AsRef<Path>>(source: Arc<dyn AssetSource>, path: P) -> Result<Vec<u8>, Error> {
     let path = path.as_ref();
     source.load(
         path.to_str()
@@ -104,7 +101,7 @@ fn load_external_buffers(
 
         if data.len() < buffer.length() {
             let path = json::Path::new().field("buffers").index(index);
-            return Err(Error::BufferLength(path));
+            return Err(error::Error::BufferLength(path).into());
         }
         buffers.push(data);
     }
@@ -191,114 +188,6 @@ pub fn get_image_data(
                     Ok((data, format))
                 }
             }
-        }
-    }
-}
-
-/// Error encountered when importing a glTF 2.0 asset.
-#[allow(unused)]
-#[derive(Debug)]
-pub enum Error {
-    /// A loaded glTF buffer is not of the required length.
-    BufferLength(json::Path),
-
-    /// Base 64 decoding error.
-    Base64Decoding(base64::DecodeError),
-
-    /// A glTF extension required by the asset has not been enabled by the user.
-    ExtensionDisabled(String),
-
-    /// A glTF extension required by the asset is not supported by the library.
-    ExtensionUnsupported(String),
-
-    /// The glTF version of the asset is incompatible with the importer.
-    IncompatibleVersion(String),
-
-    /// Standard I/O error.
-    Io(std::io::Error),
-
-    /// `gltf` crate error.
-    Gltf(gltf::Error),
-
-    /// Failure when deserializing .gltf or .glb JSON.
-    MalformedJson(json::Error),
-
-    /// The .gltf data is invalid.
-    Validation(Vec<(json::Path, validation::Error)>),
-
-    /// Asset error
-    Asset(AssetError),
-}
-
-impl From<AssetError> for Error {
-    fn from(err: AssetError) -> Self {
-        Error::Asset(err)
-    }
-}
-
-impl From<json::Error> for Error {
-    fn from(err: json::Error) -> Error {
-        Error::MalformedJson(err)
-    }
-}
-
-impl From<std::io::Error> for Error {
-    fn from(err: std::io::Error) -> Error {
-        Error::Io(err)
-    }
-}
-
-impl From<Vec<(json::Path, validation::Error)>> for Error {
-    fn from(errs: Vec<(json::Path, validation::Error)>) -> Error {
-        Error::Validation(errs)
-    }
-}
-
-impl From<gltf::Error> for Error {
-    fn from(err: gltf::Error) -> Error {
-        match err {
-            gltf::Error::Validation(errs) => Error::Validation(errs),
-            _ => Error::Gltf(err),
-        }
-    }
-}
-
-impl From<base64::DecodeError> for Error {
-    fn from(err: base64::DecodeError) -> Error {
-        Error::Base64Decoding(err)
-    }
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use std::error::Error;
-        write!(f, "{}", self.description())
-    }
-}
-
-impl StdError for Error {
-    fn description(&self) -> &str {
-        use self::Error::*;
-        match *self {
-            Base64Decoding(_) => "Base 64 decoding failed",
-            BufferLength(_) => "Loaded buffer does not match required length",
-            ExtensionDisabled(_) => "Asset requires a disabled extension",
-            ExtensionUnsupported(_) => "Assets requires an unsupported extension",
-            IncompatibleVersion(_) => "Asset is not glTF version 2.0",
-            Io(_) => "I/O error",
-            Gltf(_) => "Error from gltf crate",
-            MalformedJson(_) => "Malformed .gltf / .glb JSON",
-            Validation(_) => "Asset failed validation tests",
-            Asset(_) => "Failed loading file from source",
-        }
-    }
-
-    fn cause(&self) -> Option<&dyn StdError> {
-        use self::Error::*;
-        match *self {
-            MalformedJson(ref err) => Some(err),
-            Io(ref err) => Some(err),
-            _ => None,
         }
     }
 }

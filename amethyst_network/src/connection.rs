@@ -1,13 +1,13 @@
 //! Network Connection and states.
 
-use std::net::SocketAddr;
-
+use serde::{Deserialize, Serialize};
 use shrev::{EventChannel, EventIterator, ReaderId};
+use std::net::SocketAddr;
 use uuid::Uuid;
 
 use amethyst_core::specs::{Component, VecStorage};
 
-use super::NetEvent;
+use crate::NetEvent;
 
 // TODO: Think about relationship between NetConnection and NetIdentity.
 
@@ -15,8 +15,10 @@ use super::NetEvent;
 #[derive(Serialize)]
 #[serde(bound = "")]
 pub struct NetConnection<E: 'static> {
-    /// The remote socket address of this connection.
-    pub target: SocketAddr,
+    /// The target remote socket address who is listening for incoming packets.
+    pub target_receiver: SocketAddr,
+    /// The target remote socket address who is sending packets to us.
+    pub target_sender: SocketAddr,
     /// The state of the connection.
     pub state: ConnectionState,
     /// The buffer of events to be sent.
@@ -32,12 +34,13 @@ pub struct NetConnection<E: 'static> {
 
 impl<E: Send + Sync + 'static> NetConnection<E> {
     /// Construct a new NetConnection. `SocketAddr` is the address that will be connected to.
-    pub fn new(target: SocketAddr) -> Self {
+    pub fn new(target_receiver: SocketAddr, target_sender: SocketAddr) -> Self {
         let mut send_buffer = EventChannel::new();
         let send_reader = send_buffer.register_reader();
 
         NetConnection {
-            target,
+            target_receiver,
+            target_sender,
             state: ConnectionState::Connecting,
             send_buffer,
             receive_buffer: EventChannel::<NetEvent<E>>::new(),
@@ -59,7 +62,10 @@ impl<E: Send + Sync + 'static> NetConnection<E> {
 
 impl<E> PartialEq for NetConnection<E> {
     fn eq(&self, other: &Self) -> bool {
-        self.target == other.target && self.state == other.state
+        self.target_receiver == other.target_receiver
+            && self.state == other.state
+            && self.target_sender == other.target_sender
+            && self.state == other.state
     }
 }
 

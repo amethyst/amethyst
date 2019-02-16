@@ -8,7 +8,7 @@ exclude = ["examples/*", "book/*"]
 keywords = ["game", "engine", "sdk", "amethyst"]
 categories = ["game-engines"]
 
-documentation = "https://www.amethyst.rs/doc/master/doc/amethyst"
+documentation = "https://www.amethyst.rs/doc/latest/doc/amethyst"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
@@ -16,7 +16,6 @@ readme = "README.md"
 license = "MIT/Apache-2.0"
 
 [badges]
-appveyor = { repository = "amethyst/amethyst", branch = "master" }
 travis-ci = { repository = "amethyst/amethyst", branch = "master" }
 
 [features]
@@ -64,8 +63,10 @@ amethyst_assets = { path = "amethyst_assets", version = "0.6.0" }
 amethyst_audio = { path = "amethyst_audio", version = "0.5.0" }
 amethyst_config = { path = "amethyst_config", version = "0.9.0" }
 amethyst_core = { path = "amethyst_core", version = "0.5.0" }
+amethyst_error = { path = "amethyst_error", version = "0.1.0" }
 amethyst_controls = { path = "amethyst_controls", version = "0.4.0" }
 amethyst_derive = { path = "amethyst_derive", version = "0.3.0" }
+amethyst_gltf = { path = "amethyst_gltf", version = "0.5.0" }
 amethyst_network = { path = "amethyst_network", version = "0.3.0" }
 amethyst_locale = { path = "amethyst_locale", version = "0.4.0" }
 amethyst_renderer = { path = "amethyst_renderer", version = "0.10.0" }
@@ -78,17 +79,17 @@ fern = { version = "0.5", features = ["colored"] }
 log = { version = "0.4.6", features = ["serde"] }
 rayon = "1.0.2"
 rustc_version_runtime = "0.1"
-winit = { version = "0.18", features = ["serde"] }
-serde = "1.0"
-serde_derive = "1.0"
+winit = { version = "0.18", features = ["serde", "icon_loading"] }
+serde = { version = "1.0", features = ["derive"] }
 
 thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
-amethyst_gltf = { path = "amethyst_gltf", version = "0.5.0" }
+derive-new = "0.5"
 env_logger = "0.5.13"
 genmesh = "0.6"
 ron = "0.4"
+specs-derive = "0.4"
 
 [build-dependencies]
 vergen = "3.0"
@@ -206,6 +207,22 @@ name = "prefab"
 path = "examples/prefab/main.rs"
 
 [[example]]
+name = "prefab_adapter"
+path = "examples/prefab_adapter/main.rs"
+
+[[example]]
+name = "prefab_basic"
+path = "examples/prefab_basic/main.rs"
+
+[[example]]
+name = "prefab_multi"
+path = "examples/prefab_multi/main.rs"
+
+[[example]]
+name = "prefab_custom"
+path = "examples/prefab_custom/main.rs"
+
+[[example]]
 name = "debug_lines"
 path = "examples/debug_lines/main.rs"
 
@@ -225,5 +242,11 @@ path = "examples/sprite_camera_follow/main.rs"
 name = "simple_image"
 path = "examples/simple_image/main.rs"
 
+[[example]]
+name = "auto_fov"
+path = "examples/auto_fov/main.rs"
+
 [workspace]
-members = ["amethyst_gltf", "tests/amethyst_test"]
+members = [
+  "tests/amethyst_test"
+]
