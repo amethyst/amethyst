@@ -14,7 +14,7 @@ pipeline {
         stage('test') {
             steps {
                 sh 'rustup install nightly'
-                sh 'cargo +nightly test --all-features --all'
+                sh 'cargo +nightly test --all'
             }
         }
     }
