@@ -13,7 +13,7 @@ pipeline {
         }
         stage('test') {
             steps {
-                sh 'cargo test --all'
+                sh 'cargo test --all-features --all'
             }
         }
     }
