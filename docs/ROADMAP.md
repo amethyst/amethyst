@@ -5,6 +5,7 @@
 - 2D/3D Rendering
 - ECS
 - Audio
+- Asset loading
 - Basic physics
 - Basic Networking
 - Configuration management
@@ -13,6 +14,7 @@
 - Keyboard and Gamepad input
 - Asset loading
 - glTF support 
+- Testing utilities
 
 ## Planned Features
 
