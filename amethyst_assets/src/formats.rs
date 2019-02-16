@@ -45,8 +45,10 @@ where
     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<T::Data, Error> {
         use serde_json::de::Deserializer;
         let mut d = Deserializer::from_slice(&bytes);
-        let val = T::Data::deserialize(&mut d).chain_err(|| "Failed deserializing Json file")?;
-        d.end().chain_err(|| "Failed parsing Json file")?;
+        let val = T::Data::deserialize(&mut d)
+            .with_context(|_| format_err!("Failed deserializing Ron file"))?;
+        d.end()
+            .with_context(|_| format_err!("Failed deserializing Ron file"))?;
 
         Ok(val)
     }

@@ -17,9 +17,9 @@ use amethyst::{
     input::{get_key, is_close_requested, is_key_down},
     prelude::*,
     renderer::{
-        Camera, ColorMask, DepthMode, DisplayConfig, DrawFlat2D, ElementState, Hidden, Pipeline,
-        Projection, RenderBundle, ScreenDimensions, SpriteRender, SpriteSheet, SpriteSheetHandle,
-        Stage, Transparent, VirtualKeyCode, ALPHA,
+        Camera, DisplayConfig, DrawFlat2D, ElementState, Hidden, Pipeline, Projection,
+        RenderBundle, ScreenDimensions, SpriteRender, SpriteSheet, SpriteSheetHandle, Stage,
+        Transparent, VirtualKeyCode,
     },
     utils::application_root_dir,
 };
@@ -356,11 +356,7 @@ fn main() -> amethyst::Result<()> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0., 0., 0., 1.], 5.)
-            .with_pass(DrawFlat2D::new().with_transparency(
-                ColorMask::all(),
-                ALPHA,
-                Some(DepthMode::LessEqualWrite),
-            )),
+            .with_pass(DrawFlat2D::new()),
     );
 
     let assets_directory = app_root.join("examples/assets/");

@@ -9,8 +9,8 @@ use amethyst::{
     input::InputBundle,
     prelude::*,
     renderer::{
-        ColorMask, DepthMode, DisplayConfig, DrawFlat2D, Material, Pipeline, PipelineBuilder,
-        RenderBundle, ScreenDimensions, SpriteRender, Stage, StageBuilder, ALPHA,
+        DisplayConfig, DrawFlat2D, Material, Pipeline, PipelineBuilder, RenderBundle,
+        ScreenDimensions, SpriteRender, Stage, StageBuilder,
     },
     shred::Resource,
     ui::{DrawUi, UiBundle},
@@ -656,11 +656,7 @@ where
         Pipeline::build().with_stage(
             Stage::with_backbuffer()
                 .clear_target([0., 0., 0., 0.], 0.)
-                .with_pass(DrawFlat2D::new().with_transparency(
-                    ColorMask::all(),
-                    ALPHA,
-                    Some(DepthMode::LessEqualWrite),
-                ))
+                .with_pass(DrawFlat2D::new())
                 .with_pass(DrawUi::new()),
         )
     }
@@ -877,6 +873,8 @@ mod test {
     #[test]
     #[cfg(feature = "graphics")]
     fn render_base_application_can_load_material_animations() {
+        use crate::MaterialAnimationFixture;
+
         assert!(AmethystApplication::render_base(
             "render_base_application_can_load_material_animations",
             false
@@ -890,6 +888,8 @@ mod test {
     #[test]
     #[cfg(feature = "graphics")]
     fn render_base_application_can_load_sprite_render_animations() {
+        use crate::SpriteRenderAnimationFixture;
+
         assert!(AmethystApplication::render_base(
             "render_base_application_can_load_sprite_render_animations",
             false

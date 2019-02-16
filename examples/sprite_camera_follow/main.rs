@@ -5,9 +5,9 @@ use amethyst::{
     input::{InputBundle, InputHandler},
     prelude::*,
     renderer::{
-        Camera, ColorMask, DepthMode, DisplayConfig, DrawFlat2D, Pipeline, PngFormat, Projection,
-        RenderBundle, SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, Stage,
-        Texture, TextureMetadata, Transparent, ALPHA,
+        Camera, DisplayConfig, DrawFlat2D, Pipeline, PngFormat, Projection, RenderBundle,
+        SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, Stage, Texture,
+        TextureMetadata, Transparent,
     },
     utils::application_root_dir,
 };
@@ -145,11 +145,7 @@ fn main() -> amethyst::Result<()> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.1, 0.1, 0.1, 1.0], 1.0)
-            .with_pass(DrawFlat2D::new().with_transparency(
-                ColorMask::all(),
-                ALPHA,
-                Some(DepthMode::LessEqualWrite), // Tells the pipeline to respect sprite z-depth
-            )),
+            .with_pass(DrawFlat2D::new()),
     );
 
     let game_data = GameDataBuilder::default()

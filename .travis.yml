@@ -55,12 +55,14 @@ before_script:
   then
     export RUSTFLAGS="-D warnings"
   fi
+- export ALL_FEATURES="sdl_controller,profiler,json,saveload" # all except nightly
 
 # Generate documentation, compile the engine, run tests.
 script:
 - |
   echo "Build and test"
-  cargo test --all || exit 1
+  cargo test --all --tests --benches --features $ALL_FEATURES  || exit 1
+  cargo test --all --doc --features $ALL_FEATURES
 - |
   if [ ${TRAVIS_RUST_VERSION} == "stable" ] && [ ${TRAVIS_OS_NAME} == "linux" ]
   then
@@ -71,5 +73,13 @@ script:
   if [ ${TRAVIS_RUST_VERSION} == "stable" ]
   then
     echo "Check common features"
-    cargo check --all --features sdl_controller,profiler
+    cargo check --all --features sdl_controller,profiler,json
+  fi
+- |
+  if [ ${TRAVIS_RUST_VERSION} == "nightly" ]
+  then
+    echo "Check common features"
+    cargo check --all --no-default-features
+    cargo check --all
+    cargo check --all --all-features
   fi
