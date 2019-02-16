@@ -22,6 +22,7 @@ it is attached to. ([#1282])
 * Add `icon` to `DisplayConfig` to set a window icon using a path to a file ([#1373])
 * Added setting to control gfx_device_gl logging level separately, and set it to Warn by default. ([#1404])
 * Add `loaded_icon` to `DisplayConfig` to set a window icon programatically ([#1405])
+* Added optional feature gates which will reduce compilation times when used. ([#1412])
 * Several passes got `with_transparency_settings` which changes the transparency settings for the pass. ([#1419])
 
 ### Changed
@@ -72,6 +73,7 @@ it is attached to. ([#1282])
 [#1408]: https://github.com/amethyst/amethyst/pull/1408
 [#1405]: https://github.com/amethyst/amethyst/pull/1405
 [#1411]: https://github.com/amethyst/amethyst/pull/1411
+[#1412]: https://github.com/amethyst/amethyst/pull/1412
 [#1419]: https://github.com/amethyst/amethyst/pull/1419
 
 ## [0.10.0] - 2018-12

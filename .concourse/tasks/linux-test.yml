@@ -16,8 +16,9 @@ run:
   - |
     rustc --version
     export RUSTFLAGS="-D warnings"
-    cargo check --all --features sdl_controller,profiler
+    cargo check --all --features sdl_controller,profiler,gltf
+    cargo check --all --no-default-features
     export CARGO_TARGET_DIR="../target"
-    cargo test --all
+    cargo test --all --features gltf
 caches:
 - path: target
