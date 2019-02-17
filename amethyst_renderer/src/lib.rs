@@ -60,6 +60,7 @@ pub use crate::{
     renderer::Renderer,
     resources::{AmbientColor, ScreenDimensions, WindowMessages},
     shape::{InternalShape, Shape, ShapePrefab, ShapeUpload},
+    screen_space::ScreenSpace,
     skinning::{
         AnimatedComboMeshCreator, AnimatedVertexBufferCombination, JointIds, JointTransforms,
         JointTransformsPrefab, JointWeights,
@@ -108,6 +109,7 @@ mod mtl;
 mod pass;
 mod renderer;
 mod resources;
+mod screen_space;
 mod shape;
 mod skinning;
 mod sprite;

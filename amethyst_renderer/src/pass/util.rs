@@ -9,7 +9,7 @@ use thread_profiler::profile_scope;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    nalgebra::Matrix4,
+    nalgebra::{Matrix4, Orthographic3, Vector3, Isometry3},
     specs::prelude::{Join, Read, ReadStorage},
     GlobalTransform,
 };
@@ -20,6 +20,7 @@ use crate::{
     mtl::{Material, MaterialDefaults, TextureOffset},
     pass::set_skinning_buffers,
     pipe::{DepthMode, Effect, EffectBuilder},
+    resources::ScreenDimensions,
     skinning::JointTransforms,
     tex::Texture,
     types::Encoder,
@@ -330,6 +331,28 @@ pub fn set_view_args(
                 view: identity.into(),
             }
         });
+    effect.update_constant_buffer("ViewArgs", &view_args.std140(), encoder);
+}
+
+pub fn set_view_args_screen(
+    effect: &mut Effect,
+    encoder: &mut Encoder,
+    screen_dimensions: &ScreenDimensions,
+) {
+    #[cfg(feature = "profiler")]
+    profile_scope!("render_setviewargsscreen");
+
+    let translation = Vector3::<f32>::new(0.0, 0.0, 1000.0);
+    let iso = Isometry3::new(translation, amethyst_core::nalgebra::zero());
+
+    //let pos: [[f32; 4]; 4] = iso.to_homogeneous().try_inverse().unwrap().into();
+    let pos: [[f32; 4]; 4] = iso.inverse().to_homogeneous().into();
+    //let pos: [[f32; 4]; 4] = Matrix4::identity().into();
+    let proj: [[f32; 4]; 4] = Orthographic3::new(0.0, screen_dimensions.width(), 0.0, screen_dimensions.height(), 0.1, 2000.0).to_homogeneous().into();
+    let view_args = ViewArgs {
+        proj: proj.into(),
+        view: pos.into(),
+    };
     effect.update_constant_buffer("ViewArgs", &view_args.std140(), encoder);
 }
 

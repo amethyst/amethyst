@@ -7,7 +7,7 @@ use amethyst::{
     renderer::{
         Camera, DisplayConfig, DrawFlat2D, Pipeline, PngFormat, Projection, RenderBundle,
         SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, Stage, Texture,
-        TextureMetadata, Transparent,
+        TextureMetadata, Transparent, ScreenSpace,
     },
     utils::application_root_dir,
 };
@@ -90,6 +90,25 @@ fn init_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) ->
         .build()
 }
 
+// Initialize a sprite as a reference point using a screen position
+fn init_screen_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
+    let mut transform = Transform::default();
+    transform.set_x(60.0);
+    transform.set_y(10.0);
+    transform.set_z(50.0);
+    let sprite = SpriteRender {
+        sprite_sheet: sprite_sheet.clone(),
+        sprite_number: 0,
+    };
+    world
+        .create_entity()
+        .with(transform)
+        .with(sprite)
+        .with(Transparent)
+        .with(ScreenSpace)
+        .build()
+}
+
 fn init_player(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
     let mut transform = Transform::default();
     transform.set_x(0.0);
@@ -132,6 +151,7 @@ impl SimpleState for Example {
 
         let _background = init_background_sprite(world, &background_sprite_sheet_handle);
         let _reference = init_reference_sprite(world, &circle_sprite_sheet_handle);
+        let _reference_screen = init_screen_reference_sprite(world, &circle_sprite_sheet_handle);
         let parent = init_player(world, &circle_sprite_sheet_handle);
         init_camera(world, parent);
     }
