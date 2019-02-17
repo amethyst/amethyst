@@ -15,6 +15,7 @@
 - glTF support 
 - Testing utilities
 - Windows, macOS, Linux compatibility
+- Profiler
 
 ## Planned Features
 - A scripting language
@@ -26,3 +27,4 @@
 - Compatibility with PS4, Xbox One, Switch
 - Compatibility with iOS and Android
 - Server-Client Networking architecture
+- Debugging console/terminal
