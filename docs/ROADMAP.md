@@ -15,7 +15,7 @@
 - glTF support 
 - Testing utilities
 - Windows, macOS, Linux compatibility
-- Profiler
+- Thread Profiling
 
 ## Planned Features
 - A scripting language
