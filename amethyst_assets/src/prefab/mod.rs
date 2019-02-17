@@ -453,14 +453,14 @@ mod tests {
 
     use amethyst_core::{
         specs::{Builder, RunNow, World},
-        GlobalTransform, Time, Transform,
+        Time, Transform,
     };
 
     use crate::Loader;
 
     use super::*;
 
-    type MyPrefab = Transform;
+    type MyPrefab = Transform<f32>;
 
     #[test]
     fn test_prefab_load() {
@@ -482,11 +482,11 @@ mod tests {
         let root_entity = world.create_entity().with(handle).build();
         system.run_now(&world.res);
         assert_eq!(
-            Some(&Transform::default()),
+            Some(&Transform::<f32>::default()),
             world.read_storage().get(root_entity)
         );
         assert!(world
-            .read_storage::<GlobalTransform>()
+            .read_storage::<Transform<f32>>()
             .get(root_entity)
             .is_some());
     }
