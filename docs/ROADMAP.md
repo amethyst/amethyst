@@ -6,7 +6,6 @@
 - ECS
 - Audio
 - Asset loading
-- Basic physics
 - Basic Networking
 - Configuration management
 - Animation
@@ -21,7 +20,7 @@
 - A scripting language
 - Fully featured and extensible UI Library.
 - An editor
-- Physics
+- 2D/3D Physics
 - Graphical capabilities on par with the most popular engines (shoot for Unity/Godot)
 - Pixel-perfect 2D capabilities (Godot-level quality)
 - Compatibility with PS4, Xbox One, Switch
