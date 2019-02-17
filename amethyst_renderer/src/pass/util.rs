@@ -348,7 +348,7 @@ pub fn set_view_args_screen(
     //let pos: [[f32; 4]; 4] = iso.to_homogeneous().try_inverse().unwrap().into();
     //let pos: [[f32; 4]; 4] = iso.inverse().to_homogeneous().into();
     let pos: [[f32; 4]; 4] = Matrix4::identity().into();
-    let proj: [[f32; 4]; 4] = Orthographic3::new(0.0, screen_dimensions.width(), 0.0, screen_dimensions.height(), -1000.0, 1000.0).to_homogeneous().into();
+    let proj: [[f32; 4]; 4] = Orthographic3::new(0.0, screen_dimensions.width(), 0.0, screen_dimensions.height(), 1000.0, -1000.0).to_homogeneous().into();
     let view_args = ViewArgs {
         proj: proj.into(),
         view: pos.into(),
