@@ -237,6 +237,7 @@ impl Pass for DrawFlat2D {
 
                 for entity in &visibility.visible_ordered {
                     let screen = screens.contains(*entity);
+                    println!("visibility.visible_ordered screen: {}", screen);
                     if let Some(sprite_render) = sprite_render.get(*entity) {
                         self.batch.add_sprite(
                             sprite_render,
@@ -441,6 +442,7 @@ impl TextureBatch {
         if !self.textures_screen.is_empty() {
             // Draw to screen
             set_view_args_screen(effect, encoder, screen_dimensions);
+            println!("drawing shit to screen pos");
             TextureBatch::encode_vec(&self.textures_screen, encoder, factory, effect, sprite_sheet_storage, tex_storage);
         }
     }
