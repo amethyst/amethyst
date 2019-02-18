@@ -1,7 +1,7 @@
 use amethyst_core::{
+    nalgebra::Real,
     specs::{Entity, WriteStorage},
     Named, Transform,
-    nalgebra::Real
 };
 use amethyst_error::Error;
 
@@ -41,7 +41,7 @@ where
 }
 
 impl<'a, N: Real> PrefabData<'a> for Transform<N> {
-    type SystemData =  WriteStorage<'a, Transform<N>>;
+    type SystemData = WriteStorage<'a, Transform<N>>;
     type Result = ();
 
     fn add_to_entity(
