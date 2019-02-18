@@ -105,7 +105,7 @@ impl<N: Real> Transform<N> {
 
     /// Returns the local object matrix for the transform.
     ///
-    /// Combined with the parent's `GlobalTransform` component it gives
+    /// Combined with the `global_matrix` field from the parent's `Transform` component it gives
     /// the global (or world) matrix for the current entity.
     #[inline]
     pub fn matrix(&self) -> Matrix4<N> {
