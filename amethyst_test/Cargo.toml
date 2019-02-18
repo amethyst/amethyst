@@ -5,7 +5,7 @@ authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-amethyst = { path = "../..", version = "0.10.0" }
+amethyst = { path = "..", version = "0.10.0" }
 boxfnonce = "0.1"
 derivative = "1.0"
 derive-new = "0.5"
