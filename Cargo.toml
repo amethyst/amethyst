@@ -76,6 +76,11 @@ saveload = [
     "amethyst_core/saveload"
 ]
 
+[workspace]
+members = [
+  "amethyst_test"
+]
+
 [dependencies]
 amethyst_animation = { path = "amethyst_animation", version = "0.5.0", optional = true }
 amethyst_assets = { path = "amethyst_assets", version = "0.6.0" }
@@ -278,8 +283,3 @@ path = "examples/simple_image/main.rs"
 [[example]]
 name = "auto_fov"
 path = "examples/auto_fov/main.rs"
-
-[workspace]
-members = [
-  "tests/amethyst_test"
-]
