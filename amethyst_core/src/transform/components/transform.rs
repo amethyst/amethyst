@@ -29,7 +29,7 @@ pub struct Transform<N: Real> {
     #[set]
     #[get_mut]
     scale: Vector3<N>,
-    #[get]
+    #[get = "pub"]
     pub(crate) global_matrix: Matrix4<N>,
 }
 

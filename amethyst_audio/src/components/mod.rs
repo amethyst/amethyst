@@ -4,7 +4,7 @@ pub use self::{audio_emitter::AudioEmitter, audio_listener::AudioListener};
 
 use amethyst_assets::PrefabData;
 use amethyst_core::{
-    nalgebra::Point3,
+    nalgebra::{Point3, Real},
     specs::prelude::{Entity, Read, WriteStorage},
 };
 use amethyst_error::Error;
@@ -20,16 +20,16 @@ mod audio_listener;
 ///
 /// For `AudioListener`, the currently registered `Output` in the `World` will be used.
 #[derive(Clone, Default, Deserialize, Serialize)]
-pub struct AudioPrefab {
+pub struct AudioPrefab<N: Real> {
     emitter: bool,
     /// Left, Right
-    listener: Option<(Point3<f32>, Point3<f32>)>,
+    listener: Option<(Point3<N>, Point3<N>)>,
 }
 
-impl<'a> PrefabData<'a> for AudioPrefab {
+impl<'a, N: Real> PrefabData<'a> for AudioPrefab<N> {
     type SystemData = (
         WriteStorage<'a, AudioEmitter>,
-        WriteStorage<'a, AudioListener>,
+        WriteStorage<'a, AudioListener<N>>,
         Option<Read<'a, Output>>,
     );
     type Result = ();
