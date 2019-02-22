@@ -54,3 +54,4 @@
     * [Adding Paddle Configs](./appendices/a_config_files/paddle_configs.md)
 * [Appendix B: Migration Notes](./appendices/b_migration_notes.md)
     * [`cgmath` to `nalgebra`](./appendices/b_migration_notes/cgmath_to_nalgebra.md)
+* [Appendix C: Feature Gates](./appendices/c_feature_gates.md)
