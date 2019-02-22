@@ -4,7 +4,7 @@ use glsl_layout::*;
 
 use amethyst_core::{
     specs::prelude::{Join, ReadStorage},
-    GlobalTransform,
+    Transform,
 };
 
 use crate::{
@@ -51,15 +51,15 @@ pub(crate) fn set_light_args(
     effect: &mut Effect,
     encoder: &mut Encoder,
     light: &ReadStorage<'_, Light>,
-    global: &ReadStorage<'_, GlobalTransform>,
+    global: &ReadStorage<'_, Transform>,
     ambient: &AmbientColor,
-    camera: Option<(&Camera, &GlobalTransform)>,
+    camera: Option<(&Camera, &Transform)>,
 ) {
     let point_lights: Vec<_> = (light, global)
         .join()
         .filter_map(|(light, transform)| {
             if let Light::Point(ref light) = *light {
-                let position: [f32; 3] = transform.0.column(3).xyz().into();
+                let position: [f32; 3] = transform.global_matrix().column(3).xyz().into();
                 Some(
                     PointLightPod {
                         position: position.into(),
@@ -96,7 +96,7 @@ pub(crate) fn set_light_args(
         .join()
         .filter_map(|(light, transform)| {
             if let Light::Spot(ref light) = *light {
-                let position: [f32; 3] = transform.0.column(3).xyz().into();
+                let position: [f32; 3] = transform.global_matrix().column(3).xyz().into();
                 Some(
                     SpotLightPod {
                         position: position.into(),

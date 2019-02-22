@@ -5,7 +5,7 @@ use hibitset::BitSet;
 use amethyst_core::{
     nalgebra::{self as na, Point3, Vector3},
     specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
-    GlobalTransform,
+    Transform,
 };
 
 use crate::{
@@ -62,7 +62,7 @@ impl<'a> System<'a> for VisibilitySortingSystem {
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Transparent>,
-        ReadStorage<'a, GlobalTransform>,
+        ReadStorage<'a, Transform>,
     );
 
     fn run(
@@ -71,7 +71,7 @@ impl<'a> System<'a> for VisibilitySortingSystem {
     ) {
         let origin = Point3::origin();
 
-        let camera: Option<&GlobalTransform> = active
+        let camera: Option<&Transform> = active
             .entity
             .and_then(|entity| global.get(entity))
             .or_else(|| (&camera, &global).join().map(|cg| cg.1).next());
@@ -79,14 +79,14 @@ impl<'a> System<'a> for VisibilitySortingSystem {
             .map(|c| c.0.column(2).xyz())
             .unwrap_or_else(Vector3::z);
         let camera_centroid = camera
-            .map(|g| g.0.transform_point(&origin))
+            .map(|g| g.global_matrix().transform_point(&origin))
             .unwrap_or(origin);
 
         self.centroids.clear();
         self.centroids.extend(
             (&*entities, &global, !&hidden, !&hidden_prop)
                 .join()
-                .map(|(entity, global, _, _)| (entity, global.0.transform_point(&origin)))
+                .map(|(entity, global, _, _)| (entity, global.global_matrix().transform_point(&origin)))
                 .map(|(entity, centroid)| Internals {
                     entity,
                     transparent: transparent.contains(entity),

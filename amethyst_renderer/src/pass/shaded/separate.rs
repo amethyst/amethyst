@@ -8,7 +8,7 @@ use log::{debug, trace};
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
-    transform::GlobalTransform,
+    transform::Transform,
 };
 use amethyst_error::Error;
 
@@ -109,7 +109,7 @@ impl<'a> PassData<'a> for DrawShadedSeparate {
         ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
-        ReadStorage<'a, GlobalTransform>,
+        ReadStorage<'a, Transform>,
         ReadStorage<'a, Light>,
         ReadStorage<'a, JointTransforms>,
         ReadStorage<'a, Rgba>,

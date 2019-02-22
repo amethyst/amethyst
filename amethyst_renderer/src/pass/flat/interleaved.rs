@@ -10,7 +10,7 @@ use glsl_layout::Uniform;
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
-    transform::GlobalTransform,
+    transform::Transform,
 };
 use amethyst_error::Error;
 
@@ -102,7 +102,7 @@ where
         ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
-        ReadStorage<'a, GlobalTransform>,
+        ReadStorage<'a, Transform>,
         ReadStorage<'a, Rgba>,
     );
 }

@@ -11,7 +11,7 @@ use amethyst_assets::AssetStorage;
 use amethyst_core::{
     nalgebra::Matrix4,
     specs::prelude::{Join, Read, ReadStorage},
-    GlobalTransform,
+    Transform,
 };
 
 use crate::{
@@ -266,8 +266,8 @@ pub(crate) fn setup_vertex_args(builder: &mut EffectBuilder<'_>) {
 pub fn set_vertex_args(
     effect: &mut Effect,
     encoder: &mut Encoder,
-    camera: Option<(&Camera, &GlobalTransform)>,
-    global: &GlobalTransform,
+    camera: Option<(&Camera, &Matrix4<f32>)>,
+    global: &Transform,
     rgba: Rgba,
 ) {
     let vertex_args = camera
@@ -275,11 +275,11 @@ pub fn set_vertex_args(
         .map(|&(ref cam, ref transform)| {
             let proj: [[f32; 4]; 4] = cam.proj.into();
             let view: [[f32; 4]; 4] = transform
-                .0
+                .global_matrix()
                 .try_inverse()
                 .expect("Unable to get inverse of camera transform")
                 .into();
-            let model: [[f32; 4]; 4] = global.0.into();
+            let model: [[f32; 4]; 4] = global.into();
             VertexArgs {
                 proj: proj.into(),
                 view: view.into(),
@@ -290,7 +290,7 @@ pub fn set_vertex_args(
         .unwrap_or_else(|| {
             let proj: [[f32; 4]; 4] = Matrix4::identity().into();
             let view: [[f32; 4]; 4] = Matrix4::identity().into();
-            let model: [[f32; 4]; 4] = global.0.into();
+            let model: [[f32; 4]; 4] = global.into();
             VertexArgs {
                 proj: proj.into(),
                 view: view.into(),
@@ -304,7 +304,7 @@ pub fn set_vertex_args(
 pub fn set_view_args(
     effect: &mut Effect,
     encoder: &mut Encoder,
-    camera: Option<(&Camera, &GlobalTransform)>,
+    camera: Option<(&Camera, &Transform)>,
 ) {
     #[cfg(feature = "profiler")]
     profile_scope!("render_setviewargs");
@@ -314,7 +314,7 @@ pub fn set_view_args(
         .map(|&(ref cam, ref transform)| {
             let proj: [[f32; 4]; 4] = cam.proj.into();
             let view: [[f32; 4]; 4] = transform
-                .0
+                .global_matrix()
                 .try_inverse()
                 .expect("Unable to get inverse of camera transform")
                 .into();
@@ -343,8 +343,8 @@ pub(crate) fn draw_mesh(
     material: Option<&Material>,
     material_defaults: &MaterialDefaults,
     rgba: Option<&Rgba>,
-    camera: Option<(&Camera, &GlobalTransform)>,
-    global: Option<&GlobalTransform>,
+    camera: Option<(&Camera, &Transform)>,
+    global: Option<&Transform>,
     attributes: &[Attributes<'static>],
     textures: &[TextureType],
 ) {
@@ -369,7 +369,7 @@ pub(crate) fn draw_mesh(
         effect,
         encoder,
         camera,
-        global,
+        global.map(|g| g.global_matrix()),
         rgba.cloned().unwrap_or(Rgba::WHITE),
     );
 
@@ -392,12 +392,12 @@ pub(crate) fn draw_mesh(
     effect.clear();
 }
 
-/// Returns the main camera and its `GlobalTransform`
+/// Returns the main camera and its `Transform`
 pub fn get_camera<'a>(
     active: Read<'a, ActiveCamera>,
     camera: &'a ReadStorage<'a, Camera>,
-    global: &'a ReadStorage<'a, GlobalTransform>,
-) -> Option<(&'a Camera, &'a GlobalTransform)> {
+    global: &'a ReadStorage<'a, Transform>,
+) -> Option<(&'a Camera, &'a Transform)> {
     #[cfg(feature = "profiler")]
     profile_scope!("render_getcamera");
 

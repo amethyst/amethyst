@@ -10,7 +10,7 @@ use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     nalgebra::Vector4,
     specs::prelude::{Join, Read, ReadStorage},
-    transform::GlobalTransform,
+    transform::Transform,
 };
 use amethyst_error::Error;
 
@@ -95,7 +95,7 @@ impl<'a> PassData<'a> for DrawFlat2D {
         ReadStorage<'a, Hidden>,
         ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, SpriteRender>,
-        ReadStorage<'a, GlobalTransform>,
+        ReadStorage<'a, Transform>,
         ReadStorage<'a, TextureHandle>,
         ReadStorage<'a, Flipped>,
         ReadStorage<'a, MeshHandle>,
@@ -264,11 +264,11 @@ enum TextureDrawData {
         render: SpriteRender,
         flipped: Option<Flipped>,
         rgba: Option<Rgba>,
-        transform: GlobalTransform,
+        transform: Transform,
     },
     Image {
         texture_handle: Handle<Texture>,
-        transform: GlobalTransform,
+        transform: Transform,
         flipped: Option<Flipped>,
         rgba: Option<Rgba>,
         width: usize,
@@ -308,7 +308,7 @@ impl TextureBatch {
     pub fn add_image(
         &mut self,
         texture_handle: &TextureHandle,
-        global: Option<&GlobalTransform>,
+        global: Option<&Transform>,
         flipped: Option<&Flipped>,
         rgba: Option<&Rgba>,
         tex_storage: &AssetStorage<Texture>,
@@ -339,7 +339,7 @@ impl TextureBatch {
     pub fn add_sprite(
         &mut self,
         sprite_render: &SpriteRender,
-        global: Option<&GlobalTransform>,
+        global: Option<&Transform>,
         flipped: Option<&Flipped>,
         rgba: Option<&Rgba>,
         sprite_sheet_storage: &AssetStorage<SpriteSheet>,
@@ -391,7 +391,7 @@ impl TextureBatch {
         encoder: &mut Encoder,
         factory: &mut Factory,
         effect: &mut Effect,
-        camera: Option<(&Camera, &GlobalTransform)>,
+        camera: Option<(&Camera, &Transform)>,
         sprite_sheet_storage: &AssetStorage<SpriteSheet>,
         tex_storage: &AssetStorage<Texture>,
     ) {

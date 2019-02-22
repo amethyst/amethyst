@@ -9,7 +9,7 @@ use log::{debug, trace};
 use amethyst_core::{
     nalgebra as na,
     specs::{Join, Read, ReadStorage, Write, WriteStorage},
-    transform::GlobalTransform,
+    transform::Transform,
 };
 use amethyst_error::Error;
 
@@ -74,7 +74,7 @@ where
     type Data = (
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
-        ReadStorage<'a, GlobalTransform>,
+        ReadStorage<'a, Transform>,
         WriteStorage<'a, DebugLinesComponent>, // DebugLines components
         Option<Write<'a, DebugLines>>,         // DebugLines resource
         Read<'a, DebugLinesParams>,
@@ -128,7 +128,7 @@ where
             return;
         }
 
-        let camera = get_camera(active, &camera, &global);
+        let camera = get_camera(active, &camera, &global.global_matrix());
         effect.update_global(
             "camera_position",
             camera
@@ -152,7 +152,7 @@ where
             effect,
             encoder,
             camera,
-            &GlobalTransform(na::one()),
+            &na::one(),
             Rgba::WHITE,
         );
 

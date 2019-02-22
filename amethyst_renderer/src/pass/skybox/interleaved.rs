@@ -3,7 +3,7 @@
 use amethyst_core::{
     nalgebra as na,
     specs::{Read, ReadStorage},
-    transform::GlobalTransform,
+    transform::Transform,
 };
 use amethyst_error::Error;
 
@@ -48,7 +48,7 @@ impl<'a> PassData<'a> for DrawSkybox {
     type Data = (
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
-        ReadStorage<'a, GlobalTransform>,
+        ReadStorage<'a, Transform>,
         Read<'a, SkyboxColor>,
     );
 }
@@ -92,7 +92,7 @@ impl Pass for DrawSkybox {
             effect,
             encoder,
             camera,
-            &GlobalTransform(na::one()),
+            &na::one(),
             Rgba::WHITE,
         );
 
