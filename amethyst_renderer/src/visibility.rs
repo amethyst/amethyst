@@ -1,9 +1,9 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, marker::PhantomData};
 
 use hibitset::BitSet;
 
 use amethyst_core::{
-    nalgebra::{self as na, Point3, Vector3},
+    nalgebra::{self as na, Point3, Real, Vector3},
     specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
     Transform,
 };
@@ -29,9 +29,10 @@ pub struct Visibility {
 ///
 /// Note that this should run after `GlobalTransform` has been updated for the current frame, and
 /// before rendering occurs.
-pub struct VisibilitySortingSystem {
+pub struct VisibilitySortingSystem<N> {
     centroids: Vec<Internals>,
     transparent: Vec<Internals>,
+    _pd: PhantomData<N>,
 }
 
 #[derive(Clone)]
@@ -43,7 +44,7 @@ struct Internals {
     from_camera: Vector3<f32>,
 }
 
-impl VisibilitySortingSystem {
+impl<N> VisibilitySortingSystem<N> {
     /// Create new sorting system
     pub fn new() -> Self {
         VisibilitySortingSystem {
@@ -53,7 +54,7 @@ impl VisibilitySortingSystem {
     }
 }
 
-impl<'a> System<'a> for VisibilitySortingSystem {
+impl<'a, N: Real> System<'a> for VisibilitySortingSystem<N> {
     type SystemData = (
         Entities<'a>,
         Write<'a, Visibility>,
@@ -62,19 +63,19 @@ impl<'a> System<'a> for VisibilitySortingSystem {
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Transparent>,
-        ReadStorage<'a, Transform>,
+        ReadStorage<'a, Transform<N>>,
     );
 
     fn run(
         &mut self,
-        (entities, mut visibility, hidden, hidden_prop, active, camera, transparent, global): Self::SystemData,
+        (entities, mut visibility, hidden, hidden_prop, active, camera, transparent, transform): Self::SystemData,
     ) {
         let origin = Point3::origin();
 
-        let camera: Option<&Transform> = active
+        let camera: Option<&Transform<N>> = active
             .entity
-            .and_then(|entity| global.get(entity))
-            .or_else(|| (&camera, &global).join().map(|cg| cg.1).next());
+            .and_then(|entity| transform.get(entity))
+            .or_else(|| (&camera, &transform).join().map(|cg| cg.1).next());
         let camera_backward = camera
             .map(|c| c.0.column(2).xyz())
             .unwrap_or_else(Vector3::z);
@@ -84,9 +85,11 @@ impl<'a> System<'a> for VisibilitySortingSystem {
 
         self.centroids.clear();
         self.centroids.extend(
-            (&*entities, &global, !&hidden, !&hidden_prop)
+            (&*entities, &transform, !&hidden, !&hidden_prop)
                 .join()
-                .map(|(entity, global, _, _)| (entity, global.global_matrix().transform_point(&origin)))
+                .map(|(entity, transform, _, _)| {
+                    (entity, transform.global_matrix().transform_point(&origin))
+                })
                 .map(|(entity, centroid)| Internals {
                     entity,
                     transparent: transparent.contains(entity),

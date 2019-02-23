@@ -3,12 +3,14 @@
 use derivative::Derivative;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
+use std::marker::PhantomData;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
+    nalgebra::Real,
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::Transform,
 };
@@ -51,15 +53,20 @@ static ATTRIBUTES: [Attributes<'static>; 4] = [
 ///
 /// See the [crate level documentation](index.html) for information about interleaved and separate
 /// passes.
+///
+/// # Type Parameters:
+///
+/// * `N`: `RealBound` (f32, f64)
 #[derive(Derivative, Clone, Debug, PartialEq)]
 #[derivative(Default)]
-pub struct DrawPbmSeparate {
+pub struct DrawPbmSeparate<N> {
+    _ph: PhantomData<N>,
     skinning: bool,
     #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
 }
 
-impl DrawPbmSeparate {
+impl<N> DrawPbmSeparate<N> {
     /// Create instance of `DrawPbm` pass
     pub fn new() -> Self {
         Default::default()
@@ -99,7 +106,7 @@ impl DrawPbmSeparate {
     }
 }
 
-impl<'a> PassData<'a> for DrawPbmSeparate {
+impl<'a, N: Real> PassData<'a> for DrawPbmSeparate<N> {
     type Data = (
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
@@ -112,14 +119,14 @@ impl<'a> PassData<'a> for DrawPbmSeparate {
         ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
-        ReadStorage<'a, Transform>,
+        ReadStorage<'a, Transform<N>>,
         ReadStorage<'a, Light>,
         ReadStorage<'a, JointTransforms>,
         ReadStorage<'a, Rgba>,
     );
 }
 
-impl Pass for DrawPbmSeparate {
+impl<N: Real> Pass for DrawPbmSeparate<N> {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("render_pass_pbm_compile");
@@ -180,7 +187,7 @@ impl Pass for DrawPbmSeparate {
             hidden_prop,
             mesh,
             material,
-            global,
+            transform,
             light,
             joints,
             rgba,
@@ -189,17 +196,17 @@ impl Pass for DrawPbmSeparate {
         #[cfg(feature = "profiler")]
         profile_scope!("render_pass_pbm_apply");
 
-        let camera = get_camera(active, &camera, &global);
+        let camera = get_camera(active, &camera, &transform);
 
-        set_light_args(effect, encoder, &light, &global, &ambient, camera);
+        set_light_args(effect, encoder, &light, &transform, &ambient, camera);
 
         match visibility {
             None => {
-                for (joint, mesh, material, global, rgba, _, _) in (
+                for (joint, mesh, material, transform, rgba, _, _) in (
                     joints.maybe(),
                     &mesh,
                     &material,
-                    &global,
+                    &transform,
                     rgba.maybe(),
                     !&hidden,
                     !&hidden_prop,
@@ -217,18 +224,18 @@ impl Pass for DrawPbmSeparate {
                         &material_defaults,
                         rgba,
                         camera,
-                        Some(global),
+                        Some(transform),
                         &ATTRIBUTES,
                         &TEXTURES,
                     );
                 }
             }
             Some(ref visibility) => {
-                for (joint, mesh, material, global, rgba, _) in (
+                for (joint, mesh, material, transform, rgba, _) in (
                     joints.maybe(),
                     &mesh,
                     &material,
-                    &global,
+                    &transform,
                     rgba.maybe(),
                     &visibility.visible_unordered,
                 )
@@ -245,7 +252,7 @@ impl Pass for DrawPbmSeparate {
                         &material_defaults,
                         rgba,
                         camera,
-                        Some(global),
+                        Some(transform),
                         &ATTRIBUTES,
                         &TEXTURES,
                     );
@@ -264,7 +271,7 @@ impl Pass for DrawPbmSeparate {
                             &material_defaults,
                             rgba.get(*entity),
                             camera,
-                            global.get(*entity),
+                            transform.get(*entity),
                             &ATTRIBUTES,
                             &TEXTURES,
                         );
