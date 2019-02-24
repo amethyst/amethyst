@@ -97,7 +97,7 @@ fn main() -> Result<(), Error> {
 
     let render_bundle = {
         let display_config = {
-            let path = app_root.join("{}/examples/arc_ball_camera/resources/display_config.ron");
+            let path = app_root.join("examples/arc_ball_camera/resources/display_config.ron");
             DisplayConfig::load(&path)
         };
         let pipe = Pipeline::build().with_stage(
