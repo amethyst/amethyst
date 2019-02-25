@@ -1,0 +1,32 @@
+[package]
+name = "amethyst_rendy"
+version = "0.10.1"
+authors = []
+edition = "2018"
+description = "High-level rendering engine with multiple backends"
+keywords = ["game", "engine", "renderer", "3d", "amethyst"]
+categories = ["rendering", "rendering::engine"]
+
+[features]
+dx12 = ["rendy/dx12"]
+metal = ["rendy/metal"]
+vulkan = ["rendy/vulkan"]
+
+[dependencies]
+amethyst_assets = { version = "0.6", path = "../amethyst_assets" }
+amethyst_core = { version = "0.5", path = "../amethyst_core" }
+amethyst_derive = { version = "0.3", path = "../amethyst_derive" }
+amethyst_error = { version = "0.1", path = "../amethyst_error" }
+failure = "0.1"
+genmesh = "*"
+glsl-layout = "0.3"
+hibitset = { version = "0.5" }
+lazy_static = "1.0"
+log = "0.4"
+palette = { version = "0.4", features = ["serde"] }
+rendy = { "version" = "0.1", features = ["full", "empty"], git = "https://github.com/omni-viral/rendy.git" }
+ron = "0.4"
+serde = { version = "1", features = ["serde_derive"] }
+shred = { version = "0.7" }
+shred-derive = { version = "0.5" }
+winit = "*"

@@ -78,7 +78,8 @@ saveload = [
 
 [workspace]
 members = [
-  "amethyst_test"
+  "amethyst_test",
+  "amethyst_rendy",
 ]
 
 [dependencies]
