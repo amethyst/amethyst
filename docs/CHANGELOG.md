@@ -42,6 +42,8 @@ it is attached to. ([#1282])
 * `Default::default` now returns a pass with transparency enabled for all applicable passes. ([#1419])
 * Several passes had a function named `with_transparency` changed to accept a boolean. ([#1419])
 * `FrameRateLimitConfig` has a `new` constructor, and its fields are made public. ([#1436])
+* derive `Deserialize, Serialize` for `MaterialPrimitive` and `SpriteRenderPrimitive`, remove
+extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 
 ### Removed
 
@@ -76,6 +78,7 @@ it is attached to. ([#1282])
 [#1411]: https://github.com/amethyst/amethyst/pull/1411
 [#1412]: https://github.com/amethyst/amethyst/pull/1412
 [#1419]: https://github.com/amethyst/amethyst/pull/1419
+[#1435]: https://github.com/amethyst/amethyst/pull/1435
 
 ## [0.10.0] - 2018-12
 
