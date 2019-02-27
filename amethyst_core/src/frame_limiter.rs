@@ -72,6 +72,7 @@ use std::{
     time::{Duration, Instant},
 };
 
+use derive_new::new;
 use serde::{Deserialize, Serialize};
 
 const ZERO: Duration = Duration::from_millis(0);
@@ -122,10 +123,12 @@ impl Default for FrameRateLimitStrategy {
 ///
 /// [`FrameLimiter`]: ./struct.FrameLimiter.html
 /// [`Config`]: ../../amethyst_config/trait.Config.html
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, new)]
 pub struct FrameRateLimitConfig {
-    strategy: FrameRateLimitStrategy,
-    fps: u32,
+    /// Frame rate limiting strategy.
+    pub strategy: FrameRateLimitStrategy,
+    /// The FPS to limit the game loop execution.
+    pub fps: u32,
 }
 
 impl Default for FrameRateLimitConfig {
