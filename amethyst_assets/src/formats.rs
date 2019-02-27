@@ -46,9 +46,9 @@ where
         use serde_json::de::Deserializer;
         let mut d = Deserializer::from_slice(&bytes);
         let val = T::Data::deserialize(&mut d)
-            .with_context(|_| format_err!("Failed deserializing Ron file"))?;
+            .with_context(|_| format_err!("Failed deserializing Json file"))?;
         d.end()
-            .with_context(|_| format_err!("Failed deserializing Ron file"))?;
+            .with_context(|_| format_err!("Failed deserializing Json file"))?;
 
         Ok(val)
     }
