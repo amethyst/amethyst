@@ -41,6 +41,7 @@ it is attached to. ([#1282])
 * Re-exported amethyst_gltf by amethyst as amethyst::gltf. ([#1411])
 * `Default::default` now returns a pass with transparency enabled for all applicable passes. ([#1419])
 * Several passes had a function named `with_transparency` changed to accept a boolean. ([#1419])
+* `FrameRateLimitConfig` has a `new` constructor, and its fields are made public. ([#1436])
 
 ### Removed
 
