@@ -1,7 +1,7 @@
 //! Skybox pass
 
 use amethyst_core::{
-    nalgebra as na,
+    math as na,
     ecs::{Read, ReadStorage},
     transform::GlobalTransform,
 };

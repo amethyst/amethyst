@@ -71,7 +71,7 @@ pub use amethyst_ui as ui;
 pub use amethyst_utils as utils;
 pub use winit;
 
-pub use crate::core::{shred, shrev, specs as ecs};
+pub use crate::core::{shred, shrev, ecs};
 #[doc(hidden)]
 pub use crate::derive::*;
 

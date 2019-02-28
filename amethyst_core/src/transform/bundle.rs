@@ -1,7 +1,7 @@
 //! ECS transform bundle
 
 use amethyst_error::Error;
-use ecs::prelude::DispatcherBuilder;
+use crate::ecs::prelude::DispatcherBuilder;
 use specs_hierarchy::HierarchySystem;
 
 use crate::{bundle::SystemBundle, transform::*};

@@ -1,7 +1,7 @@
 //! Scene graph system and types
 
 use hibitset::BitSet;
-use ecs::prelude::{
+use crate::ecs::prelude::{
     ComponentEvent, Entities, Entity, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
     WriteStorage,
 };
@@ -134,7 +134,7 @@ impl<'a> System<'a> for TransformSystem {
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use ecs::prelude::SystemData;
+        use crate::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         let mut hierarchy = res.fetch_mut::<ParentHierarchy>();
         let mut locals = WriteStorage::<Transform>::fetch(res);
@@ -145,9 +145,9 @@ impl<'a> System<'a> for TransformSystem {
 
 #[cfg(test)]
 mod tests {
-    use math::{Matrix4, Quaternion, Unit};
+    use crate::math::{Matrix4, Quaternion, Unit};
     use shred::RunNow;
-    use ecs::prelude::{Builder, World};
+    use crate::ecs::prelude::{Builder, World};
     use specs_hierarchy::{Hierarchy, HierarchySystem};
 
     use crate::transform::{GlobalTransform, Parent, Transform, TransformSystem};

@@ -1,7 +1,7 @@
 //! Local transform component.
 use std::fmt;
 
-use math::{
+use crate::math::{
     self as na, Isometry3, Matrix4, Quaternion, Translation3, Unit, UnitQuaternion, Vector3,
 };
 use serde::{
@@ -9,7 +9,7 @@ use serde::{
     ser::Serializer,
     Deserialize, Serialize,
 };
-use ecs::prelude::{Component, DenseVecStorage, FlaggedStorage};
+use crate::ecs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 
 /// Local position, rotation, and scale (from parent if it exists).
 ///
