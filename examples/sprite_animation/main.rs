@@ -7,115 +7,21 @@ use amethyst::{
         get_animation_set, AnimationBundle, AnimationCommand, AnimationSet, AnimationSetPrefab,
         EndControl,
     },
-    assets::{AssetStorage, JsonFormat, Loader, PrefabData, PrefabLoaderSystem, ProgressCounter},
+    assets::{JsonFormat, PrefabData, PrefabLoader, PrefabLoaderSystem, ProgressCounter},
     config::Config,
     core::transform::{Transform, TransformBundle},
     derive::PrefabData,
-    ecs::{prelude::Entity, Read, ReadExpect, WriteStorage},
+    ecs::prelude::Entity,
     error::Error,
     prelude::{Builder, World},
     renderer::{
         Camera, DisplayConfig, DrawFlat2D, Pipeline, Projection, RenderBundle, ScreenDimensions,
-        Sprite, SpriteRender, SpriteSheet, Stage, TextureFormat, TexturePrefab,
+        SpriteRender, SpriteRenderPrefab, Stage,
     },
     utils::application_root_dir,
     Application, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData, Trans,
 };
-use amethyst_assets::PrefabLoader;
 use serde::{Deserialize, Serialize};
-
-/// Information about position of the sprite in the sprite sheet
-/// Positions originate in the top-left corner (bitmap image convention).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-struct SpritePosition {
-    /// Horizontal position of the sprite in the sprite sheet
-    pub x: u32,
-    /// Vertical position of the sprite in the sprite sheet
-    pub y: u32,
-    /// Width of the sprite
-    pub width: u32,
-    /// Height of the sprite
-    pub height: u32,
-    /// Number of pixels to shift the sprite to the left and down relative to the entity holding it
-    pub offsets: Option<[f32; 2]>,
-}
-
-/// Represent `amethyst_renderer::SpriteSheetFormat`
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-struct SpriteSheetLoader {
-    pub spritesheet_width: u32,
-    pub spritesheet_height: u32,
-    pub sprites: Vec<SpritePosition>,
-}
-
-/// `PrefabData` for loading `SpriteRender`.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-struct SpriteRenderPrefab {
-    /// Spritesheet texture
-    pub texture: TexturePrefab<TextureFormat>,
-    /// Spritesheet
-    pub sprite_sheet: SpriteSheetLoader,
-    /// Index of the default sprite on the sprite sheet
-    pub sprite_number: usize,
-}
-
-impl<'a> PrefabData<'a> for SpriteRenderPrefab {
-    type SystemData = (
-        <TexturePrefab<TextureFormat> as PrefabData<'a>>::SystemData,
-        ReadExpect<'a, Loader>,
-        Read<'a, AssetStorage<SpriteSheet>>,
-        WriteStorage<'a, SpriteRender>,
-    );
-    type Result = ();
-
-    /// Add loaded SpriteRender to entity
-    fn add_to_entity(
-        &self,
-        entity: Entity,
-        (tex_data, loader, sheet_storage, render_storage): &mut Self::SystemData,
-        entities: &[Entity],
-    ) -> Result<(), Error> {
-        // Creates a Sprite from pixel values
-        let mut sprites: Vec<Sprite> = Vec::with_capacity(self.sprite_sheet.sprites.len());
-        for sp in &self.sprite_sheet.sprites {
-            let sprite = Sprite::from_pixel_values(
-                self.sprite_sheet.spritesheet_width as u32,
-                self.sprite_sheet.spritesheet_height as u32,
-                sp.width as u32,
-                sp.height as u32,
-                sp.x as u32,
-                sp.y as u32,
-                sp.offsets.unwrap_or([0.0; 2]),
-            );
-            sprites.push(sprite);
-        }
-
-        // Get texture handle from TexturePrefab
-        let texture = self.texture.add_to_entity(entity, tex_data, entities)?;
-
-        // Load SpriteSheet and get handle
-        let sheet = SpriteSheet { texture, sprites };
-        let sheet_handle = loader.load_from_data(sheet, (), sheet_storage);
-
-        // Add SpriteRender to entity
-        let render = SpriteRender {
-            sprite_sheet: sheet_handle,
-            sprite_number: self.sprite_number,
-        };
-        render_storage.insert(entity, render)?;
-
-        Ok(())
-    }
-
-    /// Load TexturePrefab
-    fn load_sub_assets(
-        &mut self,
-        progress: &mut ProgressCounter,
-        (tex_data, _, _, _): &mut Self::SystemData,
-    ) -> Result<bool, Error> {
-        self.texture.load_sub_assets(progress, tex_data)
-    }
-}
 
 /// Animation ids used in a AnimationSet
 #[derive(Eq, PartialOrd, PartialEq, Hash, Debug, Copy, Clone, Deserialize, Serialize)]
@@ -152,6 +58,7 @@ impl SimpleState for Example {
         let prefab_handle = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load(
                 // FIXME: deserialization of untagged enum in `ron` is buggy
+                // change this to "prefab/sprite_animation.ron" after fix
                 "prefab/sprite_animation.json",
                 JsonFormat,
                 (),
