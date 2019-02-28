@@ -24,6 +24,7 @@ it is attached to. ([#1282])
 * Add `loaded_icon` to `DisplayConfig` to set a window icon programatically ([#1405])
 * Added optional feature gates which will reduce compilation times when used. ([#1412])
 * Several passes got `with_transparency_settings` which changes the transparency settings for the pass. ([#1419])
+* Add `SpriteRenderPrefab`. ([#1435])
 
 ### Changed
 
@@ -42,7 +43,7 @@ it is attached to. ([#1282])
 * `Default::default` now returns a pass with transparency enabled for all applicable passes. ([#1419])
 * Several passes had a function named `with_transparency` changed to accept a boolean. ([#1419])
 * `FrameRateLimitConfig` has a `new` constructor, and its fields are made public. ([#1436])
-* derive `Deserialize, Serialize` for `MaterialPrimitive` and `SpriteRenderPrimitive`, remove
+* Derive `Deserialize, Serialize` for `MaterialPrimitive` and `SpriteRenderPrimitive`, remove
 extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 
 ### Removed
