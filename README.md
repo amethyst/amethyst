@@ -171,7 +171,7 @@ If for some reason we don't have any open PRs in need of a review nor any good f
 
 ## Backers
 
-Thank you to all our backers! 🙏 [Become a backer](https://www.amethyst-engine.org/donate)
+Thank you to all our backers! 🙏 [Become a backer](https://www.amethyst.rs/donate)
 
 ## Sponsors
 

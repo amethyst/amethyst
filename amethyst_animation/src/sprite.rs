@@ -9,9 +9,11 @@ use crate::{AnimationSampling, ApplyData, BlendMethod};
 
 /// Sampler primitive for SpriteRender animations
 /// Note that sprites can only ever be animated with `Step`, or a panic will occur.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[serde(untagged)]
 pub enum SpriteRenderPrimitive {
     /// A spritesheet id
+    #[serde(skip)]
     SpriteSheet(Handle<SpriteSheet>),
     /// An index into a spritesheet
     SpriteIndex(usize),

@@ -24,7 +24,6 @@
 //! [gh]: https://github.com/amethyst/amethyst/tree/master/src/renderer
 //! [bk]: https://www.amethyst.rs/book/master/
 
-#![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 pub use crate::{
@@ -37,8 +36,8 @@ pub use crate::{
     formats::{
         build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat,
         ComboMeshCreator, GraphicsPrefab, ImageData, JpgFormat, MaterialPrefab, MeshCreator,
-        MeshData, ObjFormat, PngFormat, TextureData, TextureFormat, TextureMetadata, TexturePrefab,
-        TgaFormat,
+        MeshData, ObjFormat, PngFormat, SpriteRenderPrefab, SpriteSheetFormat, TextureData,
+        TextureFormat, TextureMetadata, TexturePrefab, TgaFormat,
     },
     hidden::{Hidden, HiddenPropagate},
     hide_system::HideHierarchySystem,
@@ -65,10 +64,7 @@ pub use crate::{
         AnimatedComboMeshCreator, AnimatedVertexBufferCombination, JointIds, JointTransforms,
         JointTransformsPrefab, JointWeights,
     },
-    sprite::{
-        Flipped, Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle,
-        TextureCoordinates,
-    },
+    sprite::{Flipped, Sprite, SpriteRender, SpriteSheet, SpriteSheetHandle, TextureCoordinates},
     sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem},
     system::RenderSystem,
     tex::{

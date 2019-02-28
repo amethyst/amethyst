@@ -52,19 +52,25 @@
 //! }
 //! ```
 
-#![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
+#![doc(html_logo_url = "https://www.amethyst.rs/brand/logo-standard.svg")]
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
+#[cfg(feature = "animation")]
 pub use amethyst_animation as animation;
 pub use amethyst_assets as assets;
+#[cfg(feature = "audio")]
 pub use amethyst_audio as audio;
 pub use amethyst_config as config;
 pub use amethyst_controls as controls;
 pub use amethyst_core as core;
 pub use amethyst_derive as derive;
 pub use amethyst_error as error;
+#[cfg(feature = "gltf")]
+pub use amethyst_gltf as gltf;
 pub use amethyst_input as input;
+#[cfg(feature = "locale")]
 pub use amethyst_locale as locale;
+#[cfg(feature = "network")]
 pub use amethyst_network as network;
 pub use amethyst_renderer as renderer;
 pub use amethyst_ui as ui;

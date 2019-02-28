@@ -186,13 +186,7 @@ fn main() -> Result<(), amethyst::Error> {
             "gltf_loader",
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
         )
-        .with_basic_renderer(
-            path,
-            DrawPbmSeparate::new()
-                .with_vertex_skinning()
-                .with_transparency(ColorMask::all(), ALPHA, Some(DepthMode::LessEqualWrite)),
-            false,
-        )?
+        .with_basic_renderer(path, DrawPbmSeparate::new().with_vertex_skinning(), false)?
         .with_bundle(
             AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
                 .with_dep(&["gltf_loader"]),

@@ -19,7 +19,7 @@ use crate::{
     hidden::{Hidden, HiddenPropagate},
     mesh::{Mesh, MeshHandle},
     mtl::{Material, MaterialDefaults},
-    pass::util::{draw_mesh, get_camera, setup_textures, VertexArgs},
+    pass::util::{default_transparency, draw_mesh, get_camera, setup_textures, VertexArgs},
     pipe::{
         pass::{Pass, PassData},
         DepthMode, Effect, NewEffect,
@@ -45,6 +45,7 @@ use super::*;
 #[derivative(Default(bound = "V: Query<(Position, TexCoord)>, Self: Pass"))]
 pub struct DrawFlat<V> {
     _pd: PhantomData<V>,
+    #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
 }
 
@@ -58,8 +59,24 @@ where
         Default::default()
     }
 
-    /// Enable transparency
-    pub fn with_transparency(
+    /// Transparency is enabled by default.
+    /// If you pass false to this function transparency will be disabled.
+    ///
+    /// If you pass true and this was disabled previously default settings will be reinstated.
+    /// If you pass true and this was already enabled this will do nothing.
+    pub fn with_transparency(mut self, input: bool) -> Self {
+        if input {
+            if self.transparency.is_none() {
+                self.transparency = default_transparency();
+            }
+        } else {
+            self.transparency = None;
+        }
+        self
+    }
+
+    /// Set transparency settings to custom values.
+    pub fn with_transparency_settings(
         mut self,
         mask: ColorMask,
         blend: Blend,

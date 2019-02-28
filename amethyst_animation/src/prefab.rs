@@ -126,6 +126,7 @@ where
 /// - `I`: Id type
 /// - `T`: The animatable `Component`
 #[derive(Clone, Debug, Deserialize, Serialize, Default)]
+#[serde(bound = "I: for<'a> Deserialize<'a> + Serialize")]
 pub struct AnimationSetPrefab<I, T>
 where
     T: AnimationSampling,
@@ -240,6 +241,7 @@ where
     I: Clone + Hash + Eq + Send + Sync + 'static,
 {
     /// Place an `AnimationSet` on the `Entity`
+    #[serde(bound = "I: for<'a> Deserialize<'a> + Serialize")]
     pub animation_set: Option<AnimationSetPrefab<I, T>>,
     /// Place an `AnimationHierarchy` on the `Entity`
     pub hierarchy: Option<AnimationHierarchyPrefab<T>>,

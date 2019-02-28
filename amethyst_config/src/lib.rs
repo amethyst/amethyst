@@ -1,7 +1,6 @@
 //! Loads RON files into a structure for easy / statically typed usage.
 
 #![crate_name = "amethyst_config"]
-#![doc(html_logo_url = "https://www.amethyst.rs/assets/amethyst.svg")]
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 use std::{

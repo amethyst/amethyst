@@ -1,5 +1,6 @@
 //! Forward physically-based drawing pass.
 
+use derivative::Derivative;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 
@@ -22,7 +23,7 @@ use crate::{
     pass::{
         shaded_util::{set_light_args, setup_light_buffers},
         skinning::{create_skinning_effect, setup_skinning_buffers},
-        util::{draw_mesh, get_camera, setup_textures, setup_vertex_args},
+        util::{default_transparency, draw_mesh, get_camera, setup_textures, setup_vertex_args},
     },
     pipe::{
         pass::{Pass, PassData},
@@ -50,9 +51,11 @@ static ATTRIBUTES: [Attributes<'static>; 4] = [
 ///
 /// See the [crate level documentation](index.html) for information about interleaved and separate
 /// passes.
-#[derive(Default, Clone, Debug, PartialEq)]
+#[derive(Derivative, Clone, Debug, PartialEq)]
+#[derivative(Default)]
 pub struct DrawPbmSeparate {
     skinning: bool,
+    #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
 }
 
@@ -68,8 +71,24 @@ impl DrawPbmSeparate {
         self
     }
 
-    /// Enable transparency
-    pub fn with_transparency(
+    /// Transparency is enabled by default.
+    /// If you pass false to this function transparency will be disabled.
+    ///
+    /// If you pass true and this was disabled previously default settings will be reinstated.
+    /// If you pass true and this was already enabled this will do nothing.
+    pub fn with_transparency(mut self, input: bool) -> Self {
+        if input {
+            if self.transparency.is_none() {
+                self.transparency = default_transparency();
+            }
+        } else {
+            self.transparency = None;
+        }
+        self
+    }
+
+    /// Set transparency settings to custom values.
+    pub fn with_transparency_settings(
         mut self,
         mask: ColorMask,
         blend: Blend,

@@ -1,5 +1,6 @@
 use std::mem;
 
+use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::*;
 use log::error;
 
@@ -18,7 +19,7 @@ use crate::{
     mesh::Mesh,
     mtl::{Material, MaterialDefaults, TextureOffset},
     pass::set_skinning_buffers,
-    pipe::{Effect, EffectBuilder},
+    pipe::{DepthMode, Effect, EffectBuilder},
     skinning::JointTransforms,
     tex::Texture,
     types::Encoder,
@@ -408,4 +409,12 @@ pub fn get_camera<'a>(
             cam.into_iter().zip(transform.into_iter()).next()
         })
         .or_else(|| (camera, global).join().next())
+}
+
+pub fn default_transparency() -> Option<(ColorMask, Blend, Option<DepthMode>)> {
+    Some((
+        ColorMask::all(),
+        crate::ALPHA,
+        Some(DepthMode::LessEqualWrite),
+    ))
 }

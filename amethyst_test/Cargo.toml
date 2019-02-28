@@ -3,9 +3,17 @@ name = "amethyst_test"
 version = "0.1.0"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2018"
+description = "Amethyst test utilities crate"
+keywords = ["test", "amethyst"]
+categories = ["game-engines"]
+
+documentation = "https://www.amethyst.rs/doc/latest/doc/amethyst_test/"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
+license = "MIT/Apache-2.0"
 
 [dependencies]
-amethyst = { path = "../..", version = "0.10.0" }
+amethyst = { path = "..", version = "0.10.0" }
 boxfnonce = "0.1"
 derivative = "1.0"
 derive-new = "0.5"

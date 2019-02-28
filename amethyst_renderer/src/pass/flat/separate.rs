@@ -19,7 +19,7 @@ use crate::{
     mtl::{Material, MaterialDefaults},
     pass::{
         skinning::{create_skinning_effect, setup_skinning_buffers},
-        util::{draw_mesh, get_camera, setup_textures, VertexArgs},
+        util::{default_transparency, draw_mesh, get_camera, setup_textures, VertexArgs},
     },
     pipe::{
         pass::{Pass, PassData},
@@ -52,6 +52,7 @@ static ATTRIBUTES: [Attributes<'static>; 2] = [
 #[derivative(Default(bound = "Self: Pass"))]
 pub struct DrawFlatSeparate {
     skinning: bool,
+    #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
 }
 
@@ -70,8 +71,24 @@ where
         self
     }
 
-    /// Enable transparency
-    pub fn with_transparency(
+    /// Transparency is enabled by default.
+    /// If you pass false to this function transparency will be disabled.
+    ///
+    /// If you pass true and this was disabled previously default settings will be reinstated.
+    /// If you pass true and this was already enabled this will do nothing.
+    pub fn with_transparency(mut self, input: bool) -> Self {
+        if input {
+            if self.transparency.is_none() {
+                self.transparency = default_transparency();
+            }
+        } else {
+            self.transparency = None;
+        }
+        self
+    }
+
+    /// Set transparency settings to custom values.
+    pub fn with_transparency_settings(
         mut self,
         mask: ColorMask,
         blend: Blend,
