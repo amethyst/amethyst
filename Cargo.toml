@@ -184,6 +184,11 @@ name = "fly_camera"
 path = "examples/fly_camera/main.rs"
 
 [[example]]
+name = "sprite_animation"
+path = "examples/sprite_animation/main.rs"
+required-features = ["animation", "json"]
+
+[[example]]
 name = "sprites_ordered"
 path = "examples/sprites_ordered/main.rs"
 
