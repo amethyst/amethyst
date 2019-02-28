@@ -5,8 +5,8 @@ use std::hash::Hash;
 use winit::Event;
 
 use amethyst_core::{
-    shrev::{EventChannel, ReaderId},
     ecs::prelude::{Read, ReadExpect, Resources, System, Write},
+    shrev::{EventChannel, ReaderId},
 };
 use amethyst_renderer::ScreenDimensions;
 

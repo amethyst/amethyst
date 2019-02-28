@@ -7,11 +7,11 @@ use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 use winit::{ElementState, Event, MouseButton, WindowEvent};
 
 use amethyst_core::{
-    shrev::{EventChannel, ReaderId},
     ecs::prelude::{
         Component, DenseVecStorage, Join, Read, ReadExpect, ReadStorage, Resources, System,
         WriteStorage,
     },
+    shrev::{EventChannel, ReaderId},
     timing::Time,
 };
 use amethyst_renderer::ScreenDimensions;

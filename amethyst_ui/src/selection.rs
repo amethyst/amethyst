@@ -1,9 +1,9 @@
 use amethyst_core::{
-    shrev::EventChannel,
     ecs::{
         Component, DenseVecStorage, FlaggedStorage, Read, ReadStorage, ReaderId, Resources, System,
         SystemData, WriteStorage,
     },
+    shrev::EventChannel,
 };
 use amethyst_input::InputHandler;
 use amethyst_renderer::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};

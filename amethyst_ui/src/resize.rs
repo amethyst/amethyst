@@ -1,9 +1,9 @@
 use amethyst_core::{
-    shrev::ReaderId,
     ecs::prelude::{
         BitSet, Component, ComponentEvent, FlaggedStorage, Join, ReadExpect, Resources, System,
         WriteStorage,
     },
+    shrev::ReaderId,
 };
 use amethyst_renderer::ScreenDimensions;
 

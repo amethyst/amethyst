@@ -3,9 +3,9 @@ use std::{hash::Hash, marker::PhantomData};
 use winit::{DeviceEvent, Event, WindowEvent};
 
 use amethyst_core::{
+    ecs::prelude::{Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
     math::{Unit, Vector3},
     shrev::{EventChannel, ReaderId},
-    ecs::prelude::{Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
     timing::Time,
     transform::Transform,
 };

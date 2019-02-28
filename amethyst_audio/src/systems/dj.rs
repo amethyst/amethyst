@@ -5,11 +5,11 @@ use thread_profiler::profile_scope;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    shred::{Resource, Resources},
     ecs::{
         common::Errors,
         prelude::{Read, System, WriteExpect},
     },
+    shred::{Resource, Resources},
 };
 
 use crate::{

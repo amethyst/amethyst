@@ -2,8 +2,8 @@ use std::fmt::Debug;
 
 use amethyst_assets::{Asset, AssetStorage, Loader, PrefabData, ProcessingState, SimpleFormat};
 use amethyst_core::{
-    math::{Vector2, Vector3},
     ecs::prelude::{Component, Entity, Read, ReadExpect, VecStorage, WriteStorage},
+    math::{Vector2, Vector3},
 };
 use amethyst_error::{format_err, Error, ResultExt};
 

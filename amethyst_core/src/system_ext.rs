@@ -3,8 +3,8 @@
 //! This modules contains an extension trait for the System trait which adds useful transformation
 //! functions.
 
-use shred::{RunningTime, SystemData};
 use crate::ecs::prelude::{Read, System};
+use shred::{RunningTime, SystemData};
 
 /// Extension functionality associated systems.
 pub trait SystemExt {

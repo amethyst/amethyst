@@ -8,8 +8,8 @@ use winit::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, 
 
 use crate::{Selected, TextEditing, UiText};
 use amethyst_core::{
-    shrev::{EventChannel, ReaderId},
     ecs::prelude::{Join, Read, ReadStorage, Resources, System, WriteStorage},
+    shrev::{EventChannel, ReaderId},
 };
 
 /// System managing the keyboard inputs for the editable text fields.

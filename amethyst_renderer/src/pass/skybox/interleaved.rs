@@ -1,8 +1,8 @@
 //! Skybox pass
 
 use amethyst_core::{
-    math as na,
     ecs::{Read, ReadStorage},
+    math as na,
     transform::GlobalTransform,
 };
 use amethyst_error::Error;

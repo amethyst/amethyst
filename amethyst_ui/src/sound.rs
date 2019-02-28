@@ -1,11 +1,11 @@
 use amethyst_assets::AssetStorage;
 use amethyst_audio::{output::Output, Source, SourceHandle};
 use amethyst_core::{
-    shrev::{EventChannel, ReaderId},
     ecs::{
         prelude::{Component, DenseVecStorage},
         Read, Resources, System, SystemData, Write,
     },
+    shrev::{EventChannel, ReaderId},
 };
 
 use crate::{

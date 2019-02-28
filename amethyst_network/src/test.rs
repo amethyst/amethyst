@@ -3,8 +3,8 @@ mod test {
     use std::{net::SocketAddr, thread::sleep, time::Duration};
 
     use amethyst_core::{
-        shred::{Dispatcher, DispatcherBuilder, SystemData},
         ecs::{Builder, Join, World, WriteStorage},
+        shred::{Dispatcher, DispatcherBuilder, SystemData},
     };
 
     use crate::{server::ServerConfig, *};

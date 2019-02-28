@@ -1,14 +1,14 @@
 use std::{hash::Hash, marker::PhantomData};
 
 use amethyst_core::{
-    math::Vector2,
-    shrev::EventChannel,
     ecs::{
         prelude::{
             Component, Entities, Entity, Join, Read, ReadExpect, ReadStorage, System, Write,
         },
         storage::NullStorage,
     },
+    math::Vector2,
+    shrev::EventChannel,
 };
 use amethyst_input::InputHandler;
 use amethyst_renderer::{MouseButton, ScreenDimensions};

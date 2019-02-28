@@ -1,10 +1,10 @@
 //! Scene graph system and types
 
-use hibitset::BitSet;
 use crate::ecs::prelude::{
     ComponentEvent, Entities, Entity, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
     WriteStorage,
 };
+use hibitset::BitSet;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -145,9 +145,9 @@ impl<'a> System<'a> for TransformSystem {
 
 #[cfg(test)]
 mod tests {
+    use crate::ecs::prelude::{Builder, World};
     use crate::math::{Matrix4, Quaternion, Unit};
     use shred::RunNow;
-    use crate::ecs::prelude::{Builder, World};
     use specs_hierarchy::{Hierarchy, HierarchySystem};
 
     use crate::transform::{GlobalTransform, Parent, Transform, TransformSystem};

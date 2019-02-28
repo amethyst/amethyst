@@ -8,8 +8,8 @@ use sdl2::{
 };
 
 use amethyst_core::{
-    shrev::EventChannel,
     ecs::prelude::{Resources, RunNow, SystemData, Write},
+    shrev::EventChannel,
 };
 
 use super::{

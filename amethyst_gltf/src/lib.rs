@@ -11,8 +11,8 @@ use std::{collections::HashMap, ops::Range};
 use amethyst_animation::{AnimatablePrefab, SkinnablePrefab};
 use amethyst_assets::{Handle, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter};
 use amethyst_core::{
-    math::{Point3, Vector3},
     ecs::prelude::{Component, DenseVecStorage, Entity, Write, WriteStorage},
+    math::{Point3, Vector3},
     transform::Transform,
     Named,
 };

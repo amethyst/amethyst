@@ -2,8 +2,8 @@
 
 use amethyst_assets::PrefabData;
 use amethyst_core::{
-    math::{Matrix4, Orthographic3, Perspective3},
     ecs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
+    math::{Matrix4, Orthographic3, Perspective3},
 };
 use amethyst_error::Error;
 

@@ -1,6 +1,6 @@
 use amethyst_core::{
-    math::Point3,
     ecs::{prelude::Component, storage::HashMapStorage},
+    math::Point3,
 };
 
 /// An audio listener, add this component to the local player character.

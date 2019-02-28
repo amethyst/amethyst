@@ -13,8 +13,8 @@ use thread_profiler::profile_scope;
 
 use amethyst_assets::{AssetStorage, HotReloadStrategy};
 use amethyst_core::{
-    shrev::EventChannel,
     ecs::prelude::{Read, ReadExpect, Resources, RunNow, SystemData, Write, WriteExpect},
+    shrev::EventChannel,
     Time,
 };
 use amethyst_error::Error;

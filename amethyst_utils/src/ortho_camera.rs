@@ -2,8 +2,8 @@
 
 use amethyst_assets::PrefabData;
 use amethyst_core::{
-    math::Orthographic3,
     ecs::{Component, DenseVecStorage, Entity, Join, ReadExpect, System, WriteStorage},
+    math::Orthographic3,
     Axis2,
 };
 use amethyst_derive::PrefabData;

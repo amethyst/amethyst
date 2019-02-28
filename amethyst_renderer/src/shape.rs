@@ -12,8 +12,8 @@ use shred_derive::SystemData;
 
 use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, Progress, ProgressCounter};
 use amethyst_core::{
-    math::{Vector2, Vector3},
     ecs::prelude::{Entity, Read, ReadExpect, WriteStorage},
+    math::{Vector2, Vector3},
 };
 use amethyst_error::Error;
 
