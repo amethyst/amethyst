@@ -6,8 +6,8 @@ use amethyst::{
     prelude::*,
     renderer::{
         Camera, DisplayConfig, DrawFlat2D, Pipeline, PngFormat, Projection, RenderBundle,
-        SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, Stage, Texture,
-        TextureMetadata, Transparent, ScreenSpace, 
+        ScreenSpace, SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, Stage,
+        Texture, TextureMetadata, Transparent,
     },
     utils::application_root_dir,
 };

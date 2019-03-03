@@ -1,7 +1,7 @@
+use derive_new::new;
 use specs::prelude::{Component, DenseVecStorage, Entity, FlaggedStorage};
 pub use specs_hierarchy::HierarchyEvent;
 use specs_hierarchy::{Hierarchy, Parent as HParent};
-use derive_new::new;
 
 /// An alias to tie `specs-hierarchy` `Hierarchy` structure to our `Parent` component.
 pub type ParentHierarchy = Hierarchy<Parent>;

@@ -9,7 +9,7 @@ use log::warn;
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     nalgebra::Vector4,
-    specs::prelude::{Join, Read, ReadStorage, ReadExpect},
+    specs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::GlobalTransform,
 };
 use amethyst_error::Error;
@@ -19,7 +19,8 @@ use crate::{
     hidden::{Hidden, HiddenPropagate},
     mesh::MeshHandle,
     pass::util::{
-        add_texture, default_transparency, get_camera, set_view_args, set_view_args_screen, setup_textures, ViewArgs,
+        add_texture, default_transparency, get_camera, set_view_args, set_view_args_screen,
+        setup_textures, ViewArgs,
     },
     pipe::{
         pass::{Pass, PassData},
@@ -162,7 +163,7 @@ impl Pass for DrawFlat2D {
                     rgba.maybe(),
                     !&hidden,
                     !&hidden_prop,
-                    screens.maybe()
+                    screens.maybe(),
                 )
                     .join()
                 {
@@ -185,12 +186,18 @@ impl Pass for DrawFlat2D {
                     !&hidden,
                     !&hidden_prop,
                     !&mesh,
-                    screens.maybe()
+                    screens.maybe(),
                 )
                     .join()
                 {
-                    self.batch
-                        .add_image(image_render, Some(global), flipped, rgba, &tex_storage, screen_maybe.is_some());
+                    self.batch.add_image(
+                        image_render,
+                        Some(global),
+                        flipped,
+                        rgba,
+                        &tex_storage,
+                        screen_maybe.is_some(),
+                    );
                 }
 
                 self.batch.sort();
@@ -202,7 +209,7 @@ impl Pass for DrawFlat2D {
                     flipped.maybe(),
                     rgba.maybe(),
                     &visibility.visible_unordered,
-                    screens.maybe()
+                    screens.maybe(),
                 )
                     .join()
                 {
@@ -213,7 +220,7 @@ impl Pass for DrawFlat2D {
                         rgba,
                         &sprite_sheet_storage,
                         &tex_storage,
-                        screen_maybe.is_some()
+                        screen_maybe.is_some(),
                     );
                 }
 
@@ -224,12 +231,18 @@ impl Pass for DrawFlat2D {
                     rgba.maybe(),
                     &visibility.visible_unordered,
                     !&mesh,
-                    screens.maybe()
+                    screens.maybe(),
                 )
                     .join()
                 {
-                    self.batch
-                        .add_image(image_render, Some(global), flipped, rgba, &tex_storage, screen_maybe.is_some());
+                    self.batch.add_image(
+                        image_render,
+                        Some(global),
+                        flipped,
+                        rgba,
+                        &tex_storage,
+                        screen_maybe.is_some(),
+                    );
                 }
 
                 // We are free to optimize the order of the opaque sprites.
@@ -246,7 +259,7 @@ impl Pass for DrawFlat2D {
                             rgba.get(*entity),
                             &sprite_sheet_storage,
                             &tex_storage,
-                            screen
+                            screen,
                         );
                     } else if let Some(texture_handle) = texture_handle.get(*entity) {
                         self.batch.add_image(
@@ -255,7 +268,7 @@ impl Pass for DrawFlat2D {
                             flipped.get(*entity),
                             rgba.get(*entity),
                             &tex_storage,
-                            screen
+                            screen,
                         )
                     }
                 }
@@ -355,7 +368,7 @@ impl TextureBatch {
             width: texture_dims.0,
             height: texture_dims.1,
             screen,
-        };        
+        };
         if screen {
             self.textures_screen.push(data);
         } else {
@@ -419,7 +432,8 @@ impl TextureBatch {
     pub fn sort(&mut self) {
         // Only takes the texture into account for now.
         self.textures.sort_by(|a, b| a.tex_id().cmp(&b.tex_id()));
-        self.textures_screen.sort_by(|a, b| a.tex_id().cmp(&b.tex_id()));
+        self.textures_screen
+            .sort_by(|a, b| a.tex_id().cmp(&b.tex_id()));
     }
 
     pub fn encode(
@@ -432,11 +446,17 @@ impl TextureBatch {
         tex_storage: &AssetStorage<Texture>,
         screen_dimensions: &ScreenDimensions,
     ) {
-
         if !self.textures.is_empty() {
             // Draw to world
             set_view_args(effect, encoder, camera);
-            TextureBatch::encode_vec(&self.textures, encoder, factory, effect, sprite_sheet_storage, tex_storage);
+            TextureBatch::encode_vec(
+                &self.textures,
+                encoder,
+                factory,
+                effect,
+                sprite_sheet_storage,
+                tex_storage,
+            );
         }
         if let Some(depth_data) = &effect.data.out_depth {
             encoder.clear_depth(&depth_data.0, 1.0);
@@ -444,7 +464,14 @@ impl TextureBatch {
         if !self.textures_screen.is_empty() {
             // Draw to screen
             set_view_args_screen(effect, encoder, screen_dimensions);
-            TextureBatch::encode_vec(&self.textures_screen, encoder, factory, effect, sprite_sheet_storage, tex_storage);
+            TextureBatch::encode_vec(
+                &self.textures_screen,
+                encoder,
+                factory,
+                effect,
+                sprite_sheet_storage,
+                tex_storage,
+            );
         }
     }
 

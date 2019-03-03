@@ -9,7 +9,7 @@ use thread_profiler::profile_scope;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    nalgebra::{Matrix4, Orthographic3, Vector3, Isometry3},
+    nalgebra::{Isometry3, Matrix4, Orthographic3, Vector3},
     specs::prelude::{Join, Read, ReadStorage},
     GlobalTransform,
 };
@@ -348,7 +348,16 @@ pub fn set_view_args_screen(
     let iso = Isometry3::new(translation, amethyst_core::nalgebra::zero());
 
     let pos: [[f32; 4]; 4] = iso.inverse().to_homogeneous().into();
-    let proj: [[f32; 4]; 4] = Orthographic3::new(0.0, screen_dimensions.width(), 0.0, screen_dimensions.height(), 0.1, 2000.0).to_homogeneous().into();
+    let proj: [[f32; 4]; 4] = Orthographic3::new(
+        0.0,
+        screen_dimensions.width(),
+        0.0,
+        screen_dimensions.height(),
+        0.1,
+        2000.0,
+    )
+    .to_homogeneous()
+    .into();
     let view_args = ViewArgs {
         proj: proj.into(),
         view: pos.into(),
