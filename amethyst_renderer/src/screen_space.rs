@@ -14,7 +14,8 @@ impl Component for ScreenSpace {
 }
 
 /// The ScreenSpace projection settings.
-/// The maximum visible sprites will be from z between -max_depth/2 + 0.1 to max_depth/2.
+/// Only entities with a z value between -max_depth/2 + 0.1 and max_depth/2 will be visible.
+/// The default max_depth value is 2000.
 #[derive(Debug, Clone)]
 pub struct ScreenSpaceSettings {
     pub(crate) max_depth: f32,
