@@ -25,6 +25,7 @@ it is attached to. ([#1282])
 * Added optional feature gates which will reduce compilation times when used. ([#1412])
 * Several passes got `with_transparency_settings` which changes the transparency settings for the pass. ([#1419])
 * Add `SpriteRenderPrefab`. ([#1435])
+* Add `ScreenSpace` component. Draws entities using the screen coordinates. ([#1424])
 
 ### Changed
 
@@ -79,6 +80,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1411]: https://github.com/amethyst/amethyst/pull/1411
 [#1412]: https://github.com/amethyst/amethyst/pull/1412
 [#1419]: https://github.com/amethyst/amethyst/pull/1419
+[#1424]: https://github.com/amethyst/amethyst/pull/1424
 [#1435]: https://github.com/amethyst/amethyst/pull/1435
 
 ## [0.10.0] - 2018-12
