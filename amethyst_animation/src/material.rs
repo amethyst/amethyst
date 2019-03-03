@@ -8,9 +8,11 @@ use crate::{AnimationSampling, ApplyData, BlendMethod};
 
 /// Sampler primitive for Material animations
 /// Note that material can only ever be animated with `Step`, or a panic will occur.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[serde(untagged)]
 pub enum MaterialPrimitive {
     /// Dynamically altering the texture rendered
+    #[serde(skip)]
     Texture(Handle<Texture>),
     /// Dynamically altering the section of the texture rendered.
     Offset((f32, f32), (f32, f32)),

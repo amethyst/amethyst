@@ -1,0 +1,10 @@
+(
+  dimensions: Some((400, 75)),
+  max_dimensions: None,
+  min_dimensions: None,
+  fullscreen: false,
+  multisampling: 0,
+  title: "Sprite animation example",
+  visibility: true,
+  vsync: true,
+)
