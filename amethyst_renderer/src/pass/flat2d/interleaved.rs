@@ -27,7 +27,7 @@ use crate::{
         DepthMode, Effect, NewEffect,
     },
     resources::ScreenDimensions,
-    screen_space::ScreenSpace,
+    screen_space::{ScreenSpace, ScreenSpaceSettings},
     sprite::{Flipped, SpriteRender, SpriteSheet},
     sprite_visibility::SpriteVisibility,
     tex::{Texture, TextureHandle},
@@ -105,6 +105,7 @@ impl<'a> PassData<'a> for DrawFlat2D {
         ReadStorage<'a, Rgba>,
         ReadStorage<'a, ScreenSpace>,
         ReadExpect<'a, ScreenDimensions>,
+        Read<'a, ScreenSpaceSettings>,
     );
 }
 
@@ -150,6 +151,7 @@ impl Pass for DrawFlat2D {
             rgba,
             screens,
             screen_dimensions,
+            screen_space_settings,
         ): <Self as PassData<'a>>::Data,
     ) {
         let camera = get_camera(active, &camera, &global);
@@ -250,7 +252,6 @@ impl Pass for DrawFlat2D {
 
                 for entity in &visibility.visible_ordered {
                     let screen = screens.contains(*entity);
-                    println!("visibility.visible_ordered screen: {}", screen);
                     if let Some(sprite_render) = sprite_render.get(*entity) {
                         self.batch.add_sprite(
                             sprite_render,
@@ -282,6 +283,7 @@ impl Pass for DrawFlat2D {
             &sprite_sheet_storage,
             &tex_storage,
             &screen_dimensions,
+            &screen_space_settings,
         );
         self.batch.reset();
     }
@@ -445,6 +447,7 @@ impl TextureBatch {
         sprite_sheet_storage: &AssetStorage<SpriteSheet>,
         tex_storage: &AssetStorage<Texture>,
         screen_dimensions: &ScreenDimensions,
+        screen_space_settings: &ScreenSpaceSettings,
     ) {
         if !self.textures.is_empty() {
             // Draw to world
@@ -458,12 +461,13 @@ impl TextureBatch {
                 tex_storage,
             );
         }
-        if let Some(depth_data) = &effect.data.out_depth {
-            encoder.clear_depth(&depth_data.0, 1.0);
-        }
+
         if !self.textures_screen.is_empty() {
+            if let Some(depth_data) = &effect.data.out_depth {
+                encoder.clear_depth(&depth_data.0, 1.0);
+            }
             // Draw to screen
-            set_view_args_screen(effect, encoder, screen_dimensions);
+            set_view_args_screen(effect, encoder, screen_dimensions, screen_space_settings);
             TextureBatch::encode_vec(
                 &self.textures_screen,
                 encoder,
@@ -476,7 +480,7 @@ impl TextureBatch {
     }
 
     fn encode_vec(
-        elems: &Vec<TextureDrawData>,
+        textures: &Vec<TextureDrawData>,
         encoder: &mut Encoder,
         factory: &mut Factory,
         effect: &mut Effect,
@@ -497,9 +501,9 @@ impl TextureBatch {
         // doing the allocations.
         let mut instance_data = Vec::<f32>::new();
         let mut num_instances = 0;
-        let num_quads = elems.len();
+        let num_quads = textures.len();
 
-        for (i, quad) in elems.iter().enumerate() {
+        for (i, quad) in textures.iter().enumerate() {
             let texture = tex_storage
                 .get(&quad.texture_handle())
                 .expect("Unable to get texture of sprite");
@@ -598,7 +602,7 @@ impl TextureBatch {
             // 1. We are at the last sprite and want to submit all pending work.
             // 2. The next sprite will use a different texture triggering a flush.
             let need_flush = i >= num_quads - 1
-                || elems[i + 1].texture_handle().id() != quad.texture_handle().id();
+                || textures[i + 1].texture_handle().id() != quad.texture_handle().id();
 
             if need_flush {
                 add_texture(effect, texture);
@@ -632,5 +636,6 @@ impl TextureBatch {
 
     pub fn reset(&mut self) {
         self.textures.clear();
+        self.textures_screen.clear();
     }
 }

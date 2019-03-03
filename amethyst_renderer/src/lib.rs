@@ -59,7 +59,7 @@ pub use crate::{
     },
     renderer::Renderer,
     resources::{AmbientColor, ScreenDimensions, WindowMessages},
-    screen_space::ScreenSpace,
+    screen_space::{ScreenSpace, ScreenSpaceSettings},
     shape::{InternalShape, Shape, ShapePrefab, ShapeUpload},
     skinning::{
         AnimatedComboMeshCreator, AnimatedVertexBufferCombination, JointIds, JointTransforms,

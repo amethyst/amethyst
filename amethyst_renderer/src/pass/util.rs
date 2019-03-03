@@ -9,7 +9,7 @@ use thread_profiler::profile_scope;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    nalgebra::{Isometry3, Matrix4, Orthographic3, Vector3},
+    nalgebra::{Matrix4, Orthographic3},
     specs::prelude::{Join, Read, ReadStorage},
     GlobalTransform,
 };
@@ -21,6 +21,7 @@ use crate::{
     pass::set_skinning_buffers,
     pipe::{DepthMode, Effect, EffectBuilder},
     resources::ScreenDimensions,
+    screen_space::ScreenSpaceSettings,
     skinning::JointTransforms,
     tex::Texture,
     types::Encoder,
@@ -340,27 +341,24 @@ pub fn set_view_args_screen(
     effect: &mut Effect,
     encoder: &mut Encoder,
     screen_dimensions: &ScreenDimensions,
+    settings: &ScreenSpaceSettings,
 ) {
     #[cfg(feature = "profiler")]
     profile_scope!("render_setviewargsscreen");
 
-    let translation = Vector3::<f32>::new(0.0, 0.0, 1000.0);
-    let iso = Isometry3::new(translation, amethyst_core::nalgebra::zero());
-
-    let pos: [[f32; 4]; 4] = iso.inverse().to_homogeneous().into();
     let proj: [[f32; 4]; 4] = Orthographic3::new(
         0.0,
         screen_dimensions.width(),
         0.0,
         screen_dimensions.height(),
         0.1,
-        2000.0,
+        settings.max_depth,
     )
     .to_homogeneous()
     .into();
     let view_args = ViewArgs {
         proj: proj.into(),
-        view: pos.into(),
+        view: settings.view_matrix.into(),
     };
     effect.update_constant_buffer("ViewArgs", &view_args.std140(), encoder);
 }
