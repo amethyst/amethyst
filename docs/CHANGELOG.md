@@ -45,7 +45,7 @@ it is attached to. ([#1282])
 * `FrameRateLimitConfig` has a `new` constructor, and its fields are made public. ([#1436])
 * Derive `Deserialize, Serialize` for `MaterialPrimitive` and `SpriteRenderPrimitive`, remove
 extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
-* Renamed amethyst_core::specs to amethyst_core::ecs and amethyst_core::nalgebra to amethyst_core::math. ([#1410])
+* Renamed `amethyst_core::specs` to `amethyst_core::ecs` and `amethyst_core::nalgebra` to `amethyst_core::math`. ([#1410])
 
 ### Removed
 

@@ -1,15 +1,16 @@
 //! Scene graph system and types
 
-use crate::ecs::prelude::{
-    ComponentEvent, Entities, Entity, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
-    WriteStorage,
+use crate::{
+    ecs::prelude::{
+        ComponentEvent, Entities, Entity, Join, ReadExpect, ReadStorage, ReaderId, Resources,
+        System, WriteStorage,
+    },
+    transform::{GlobalTransform, HierarchyEvent, Parent, ParentHierarchy, Transform},
 };
 use hibitset::BitSet;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
-
-use crate::transform::{GlobalTransform, HierarchyEvent, Parent, ParentHierarchy, Transform};
 
 /// Handles updating `GlobalTransform` components based on the `Transform`
 /// component and parents.

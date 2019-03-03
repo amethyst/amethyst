@@ -2,8 +2,10 @@
 
 use std::borrow::Borrow;
 
-use crate::ecs::prelude::{Component, DenseVecStorage, FlaggedStorage};
-use crate::math::{self as na, Matrix4};
+use crate::{
+    ecs::prelude::{Component, DenseVecStorage, FlaggedStorage},
+    math::{self as na, Matrix4},
+};
 use serde::{Deserialize, Serialize};
 
 /// Performs a global transformation on the entity (transform from origin).
