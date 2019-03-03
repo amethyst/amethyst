@@ -438,11 +438,12 @@ impl TextureBatch {
             set_view_args(effect, encoder, camera);
             TextureBatch::encode_vec(&self.textures, encoder, factory, effect, sprite_sheet_storage, tex_storage);
         }
-
+        if let Some(depth_data) = &effect.data.out_depth {
+            encoder.clear_depth(&depth_data.0, 1.0);
+        }
         if !self.textures_screen.is_empty() {
             // Draw to screen
             set_view_args_screen(effect, encoder, screen_dimensions);
-            println!("drawing shit to screen pos");
             TextureBatch::encode_vec(&self.textures_screen, encoder, factory, effect, sprite_sheet_storage, tex_storage);
         }
     }
