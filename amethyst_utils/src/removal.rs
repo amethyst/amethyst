@@ -60,3 +60,16 @@ pub fn exec_removal<I, D>(
         }
     }
 }
+
+/// Adds a `Removal` component with the specified id to the specified entity.
+/// Usually used with prefabs, when you want to add a `Removal` component at the root of the loaded prefab.
+pub fn add_removal_to_entity<T: PartialEq + Clone + Debug + Send + Sync + 'static>(
+    entity: Entity,
+    id: T,
+    storage: &mut WriteStorage<'_, Removal<T>>,
+) {
+    storage.insert(entity, Removal::new(id)).expect(&format!(
+        "Failed to insert removalid to entity {:?}.",
+        entity
+    ));
+}
