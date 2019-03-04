@@ -29,6 +29,7 @@ it is attached to. ([#1282])
 
 ### Changed
 
+* Make `frame_limiter::do_sleep` calculate the amount of time to sleep instead of calling `sleep(0)` ([#780])
 * Make `application_root_dir` return a `Result<Path>` instead of a `String` ([#1213])
 * Remove unnecessary texture coordinates offset in `Sprite::from_pixel_values` ([#1267])
 * Changed `ActiveCamera` to have the `Option` inside. ([#1280])
