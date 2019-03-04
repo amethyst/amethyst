@@ -5,10 +5,11 @@ use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
 use log::warn;
+use std::marker::PhantomData;
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
-    nalgebra::Vector4,
+    nalgebra::{alga::general::SubsetOf, convert, one, zero, Real, Vector4},
     specs::prelude::{Join, Read, ReadStorage},
     transform::Transform,
 };
@@ -36,17 +37,26 @@ use crate::{
 use super::*;
 
 /// Draws sprites on a 2D quad.
+///
+/// # Type Parameters:
+///
+/// * `N`: `RealBound` (f32, f64)
 #[derive(Derivative, Clone, Debug)]
 #[derivative(Default(bound = "Self: Pass"))]
-pub struct DrawFlat2D {
+pub struct DrawFlat2D<N>
+where
+    N: Real,
+{
     #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
-    batch: TextureBatch,
+    batch: TextureBatch<N>,
+    _pd: PhantomData<N>,
 }
 
-impl DrawFlat2D
+impl<N> DrawFlat2D<N>
 where
     Self: Pass,
+    N: Real,
 {
     /// Create instance of `DrawFlat2D` pass
     pub fn new() -> Self {
@@ -85,7 +95,7 @@ where
     }
 }
 
-impl<'a> PassData<'a> for DrawFlat2D {
+impl<'a, N: Real> PassData<'a> for DrawFlat2D<N> {
     type Data = (
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
@@ -95,7 +105,7 @@ impl<'a> PassData<'a> for DrawFlat2D {
         ReadStorage<'a, Hidden>,
         ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, SpriteRender>,
-        ReadStorage<'a, Transform>,
+        ReadStorage<'a, Transform<N>>,
         ReadStorage<'a, TextureHandle>,
         ReadStorage<'a, Flipped>,
         ReadStorage<'a, MeshHandle>,
@@ -103,7 +113,7 @@ impl<'a> PassData<'a> for DrawFlat2D {
     );
 }
 
-impl Pass for DrawFlat2D {
+impl<N: Real> Pass for DrawFlat2D<N> {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         use std::mem;
 
@@ -138,20 +148,20 @@ impl Pass for DrawFlat2D {
             hidden,
             hidden_prop,
             sprite_render,
-            global,
+            transform,
             texture_handle,
             flipped,
             mesh,
             rgba,
         ): <Self as PassData<'a>>::Data,
     ) {
-        let camera = get_camera(active, &camera, &global);
+        let camera = get_camera(active, &camera, &transform);
 
         match visibility {
             None => {
-                for (sprite_render, global, flipped, rgba, _, _) in (
+                for (sprite_render, transform, flipped, rgba, _, _) in (
                     &sprite_render,
-                    &global,
+                    &transform,
                     flipped.maybe(),
                     rgba.maybe(),
                     !&hidden,
@@ -161,7 +171,7 @@ impl Pass for DrawFlat2D {
                 {
                     self.batch.add_sprite(
                         sprite_render,
-                        Some(global),
+                        Some(transform),
                         flipped,
                         rgba,
                         &sprite_sheet_storage,
@@ -169,9 +179,9 @@ impl Pass for DrawFlat2D {
                     );
                 }
 
-                for (image_render, global, flipped, rgba, _, _, _) in (
+                for (image_render, transform, flipped, rgba, _, _, _) in (
                     &texture_handle,
-                    &global,
+                    &transform,
                     flipped.maybe(),
                     rgba.maybe(),
                     !&hidden,
@@ -180,16 +190,21 @@ impl Pass for DrawFlat2D {
                 )
                     .join()
                 {
-                    self.batch
-                        .add_image(image_render, Some(global), flipped, rgba, &tex_storage);
+                    self.batch.add_image(
+                        image_render,
+                        Some(transform),
+                        flipped,
+                        rgba,
+                        &tex_storage,
+                    );
                 }
 
                 self.batch.sort();
             }
             Some(ref visibility) => {
-                for (sprite_render, global, flipped, rgba, _) in (
+                for (sprite_render, transform, flipped, rgba, _) in (
                     &sprite_render,
-                    &global,
+                    &transform,
                     flipped.maybe(),
                     rgba.maybe(),
                     &visibility.visible_unordered,
@@ -198,7 +213,7 @@ impl Pass for DrawFlat2D {
                 {
                     self.batch.add_sprite(
                         sprite_render,
-                        Some(global),
+                        Some(transform),
                         flipped,
                         rgba,
                         &sprite_sheet_storage,
@@ -206,9 +221,9 @@ impl Pass for DrawFlat2D {
                     );
                 }
 
-                for (image_render, global, flipped, rgba, _, _) in (
+                for (image_render, transform, flipped, rgba, _, _) in (
                     &texture_handle,
-                    &global,
+                    &transform,
                     flipped.maybe(),
                     rgba.maybe(),
                     &visibility.visible_unordered,
@@ -216,8 +231,13 @@ impl Pass for DrawFlat2D {
                 )
                     .join()
                 {
-                    self.batch
-                        .add_image(image_render, Some(global), flipped, rgba, &tex_storage);
+                    self.batch.add_image(
+                        image_render,
+                        Some(transform),
+                        flipped,
+                        rgba,
+                        &tex_storage,
+                    );
                 }
 
                 // We are free to optimize the order of the opaque sprites.
@@ -227,7 +247,7 @@ impl Pass for DrawFlat2D {
                     if let Some(sprite_render) = sprite_render.get(*entity) {
                         self.batch.add_sprite(
                             sprite_render,
-                            global.get(*entity),
+                            transform.get(*entity),
                             flipped.get(*entity),
                             rgba.get(*entity),
                             &sprite_sheet_storage,
@@ -236,7 +256,7 @@ impl Pass for DrawFlat2D {
                     } else if let Some(texture_handle) = texture_handle.get(*entity) {
                         self.batch.add_image(
                             texture_handle,
-                            global.get(*entity),
+                            transform.get(*entity),
                             flipped.get(*entity),
                             rgba.get(*entity),
                             &tex_storage,
@@ -258,17 +278,17 @@ impl Pass for DrawFlat2D {
 }
 
 #[derive(Clone, Debug)]
-enum TextureDrawData {
+enum TextureDrawData<N: Real> {
     Sprite {
         texture_handle: Handle<Texture>,
         render: SpriteRender,
         flipped: Option<Flipped>,
         rgba: Option<Rgba>,
-        transform: Transform,
+        transform: Transform<N>,
     },
     Image {
         texture_handle: Handle<Texture>,
-        transform: Transform,
+        transform: Transform<N>,
         flipped: Option<Flipped>,
         rgba: Option<Rgba>,
         width: usize,
@@ -276,7 +296,7 @@ enum TextureDrawData {
     },
 }
 
-impl TextureDrawData {
+impl<N: Real> TextureDrawData<N> {
     pub fn texture_handle(&self) -> &Handle<Texture> {
         match self {
             TextureDrawData::Sprite { texture_handle, .. } => texture_handle,
@@ -300,20 +320,20 @@ impl TextureDrawData {
 }
 
 #[derive(Clone, Default, Debug)]
-struct TextureBatch {
-    textures: Vec<TextureDrawData>,
+struct TextureBatch<N: Real> {
+    textures: Vec<TextureDrawData<N>>,
 }
 
-impl TextureBatch {
+impl<N: Real> TextureBatch<N> {
     pub fn add_image(
         &mut self,
         texture_handle: &TextureHandle,
-        global: Option<&Transform>,
+        transform: Option<&Transform<N>>,
         flipped: Option<&Flipped>,
         rgba: Option<&Rgba>,
         tex_storage: &AssetStorage<Texture>,
     ) {
-        let global = match global {
+        let transform = match transform {
             Some(v) => v,
             None => return,
         };
@@ -328,7 +348,7 @@ impl TextureBatch {
 
         self.textures.push(TextureDrawData::Image {
             texture_handle: texture_handle.clone(),
-            transform: *global,
+            transform: *transform,
             flipped: flipped.cloned(),
             rgba: rgba.cloned(),
             width: texture_dims.0,
@@ -339,13 +359,13 @@ impl TextureBatch {
     pub fn add_sprite(
         &mut self,
         sprite_render: &SpriteRender,
-        global: Option<&Transform>,
+        transform: Option<&Transform<N>>,
         flipped: Option<&Flipped>,
         rgba: Option<&Rgba>,
         sprite_sheet_storage: &AssetStorage<SpriteSheet>,
         tex_storage: &AssetStorage<Texture>,
     ) {
-        let global = match global {
+        let transform = match transform {
             Some(v) => v,
             None => return,
         };
@@ -376,7 +396,7 @@ impl TextureBatch {
             render: sprite_render.clone(),
             flipped: flipped.cloned(),
             rgba: rgba.cloned(),
-            transform: *global,
+            transform: *transform,
         });
     }
 
@@ -391,7 +411,7 @@ impl TextureBatch {
         encoder: &mut Encoder,
         factory: &mut Factory,
         effect: &mut Effect,
-        camera: Option<(&Camera, &Transform)>,
+        camera: Option<(&Camera, &Transform<N>)>,
         sprite_sheet_storage: &AssetStorage<SpriteSheet>,
         tex_storage: &AssetStorage<Texture>,
     ) {
@@ -458,17 +478,17 @@ impl TextureBatch {
                         (tex_coords.bottom, tex_coords.top)
                     };
 
-                    let transform = &transform.0;
+                    let global_matrix = &transform.global_matrix();
 
-                    let dir_x = transform.column(0) * sprite_data.width;
-                    let dir_y = transform.column(1) * sprite_data.height;
+                    let dir_x = global_matrix.column(0) * sprite_data.width;
+                    let dir_y = global_matrix.column(1) * sprite_data.height;
 
                     // The offsets are negated to shift the sprite left and down relative to the entity, in
                     // regards to pivot points. This is the convention adopted in:
                     //
                     // * libgdx: <https://gamedev.stackexchange.com/q/22553>
                     // * godot: <https://godotengine.org/qa/9784>
-                    let pos = transform
+                    let pos = global_matrix
                         * Vector4::new(-sprite_data.offsets[0], -sprite_data.offsets[1], 0.0, 1.0);
 
                     (
@@ -493,12 +513,12 @@ impl TextureBatch {
                         (0.0, 1.0)
                     };
 
-                    let transform = &transform.0;
+                    let global_matrix = &transform.global_matrix();
 
-                    let dir_x = transform.column(0) * (*width as f32);
-                    let dir_y = transform.column(1) * (*height as f32);
+                    let dir_x = global_matrix.column(0) * (*width as f32);
+                    let dir_y = global_matrix.column(1) * (*height as f32);
 
-                    let pos = transform * Vector4::new(1.0, 1.0, 0.0, 1.0);
+                    let pos = global_matrix * Vector4::<N>::new(one(), one(), zero(), one());
 
                     (
                         dir_x, dir_y, pos, uv_left, uv_right, uv_top, uv_bottom, rgba,

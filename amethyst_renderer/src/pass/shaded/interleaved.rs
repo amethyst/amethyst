@@ -8,6 +8,7 @@ use gfx_core::state::{Blend, ColorMask};
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
+    nalgebra::Real,
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::Transform,
 };
@@ -45,15 +46,17 @@ use super::*;
 /// # Type Parameters:
 ///
 /// * `V`: `VertexFormat`
+/// * `N`: `RealBound` (f32, f64)
 #[derive(Derivative, Clone, Debug, PartialEq)]
 #[derivative(Default(bound = "V: Query<(Position, Normal, TexCoord)>"))]
-pub struct DrawShaded<V> {
+pub struct DrawShaded<V, N> {
     _pd: PhantomData<V>,
+    _pd2: PhantomData<N>,
     #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
 }
 
-impl<V> DrawShaded<V>
+impl<V, N> DrawShaded<V, N>
 where
     V: Query<(Position, Normal, TexCoord)>,
 {
@@ -90,9 +93,10 @@ where
     }
 }
 
-impl<'a, V> PassData<'a> for DrawShaded<V>
+impl<'a, V, N> PassData<'a> for DrawShaded<V, N>
 where
     V: Query<(Position, Normal, TexCoord)>,
+    N: Real,
 {
     type Data = (
         Read<'a, ActiveCamera>,
@@ -106,15 +110,16 @@ where
         ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
-        ReadStorage<'a, Transform>,
+        ReadStorage<'a, Transform<N>>,
         ReadStorage<'a, Light>,
         ReadStorage<'a, Rgba>,
     );
 }
 
-impl<V> Pass for DrawShaded<V>
+impl<V, N> Pass for DrawShaded<V, N>
 where
     V: Query<(Position, Normal, TexCoord)>,
+    N: Real,
 {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);

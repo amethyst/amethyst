@@ -9,7 +9,7 @@ use thread_profiler::profile_scope;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    nalgebra::Matrix4,
+    nalgebra::{Matrix4, Real},
     specs::prelude::{Join, Read, ReadStorage},
     Transform,
 };
@@ -263,11 +263,11 @@ pub(crate) fn setup_vertex_args(builder: &mut EffectBuilder<'_>) {
 }
 
 /// Sets the vertex argument in the constant buffer.
-pub fn set_vertex_args(
+pub fn set_vertex_args<N: Real>(
     effect: &mut Effect,
     encoder: &mut Encoder,
-    camera: Option<(&Camera, &Matrix4<f32>)>,
-    global: &Transform,
+    camera: Option<(&Camera, &Transform<N>)>,
+    transform: &Transform<N>,
     rgba: Rgba,
 ) {
     let vertex_args = camera
@@ -279,7 +279,7 @@ pub fn set_vertex_args(
                 .try_inverse()
                 .expect("Unable to get inverse of camera transform")
                 .into();
-            let model: [[f32; 4]; 4] = global.into();
+            let model: [[f32; 4]; 4] = transform.global_matrix().into();
             VertexArgs {
                 proj: proj.into(),
                 view: view.into(),
@@ -290,7 +290,7 @@ pub fn set_vertex_args(
         .unwrap_or_else(|| {
             let proj: [[f32; 4]; 4] = Matrix4::identity().into();
             let view: [[f32; 4]; 4] = Matrix4::identity().into();
-            let model: [[f32; 4]; 4] = global.into();
+            let model: [[f32; 4]; 4] = transform.global_matrix().into();
             VertexArgs {
                 proj: proj.into(),
                 view: view.into(),
@@ -301,11 +301,13 @@ pub fn set_vertex_args(
     effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
 }
 
-pub fn set_view_args(
+pub fn set_view_args<N>(
     effect: &mut Effect,
     encoder: &mut Encoder,
-    camera: Option<(&Camera, &Transform)>,
-) {
+    camera: Option<(&Camera, &Transform<N>)>,
+) where
+    N: Real,
+{
     #[cfg(feature = "profiler")]
     profile_scope!("render_setviewargs");
 
@@ -333,7 +335,7 @@ pub fn set_view_args(
     effect.update_constant_buffer("ViewArgs", &view_args.std140(), encoder);
 }
 
-pub(crate) fn draw_mesh(
+pub(crate) fn draw_mesh<N>(
     encoder: &mut Encoder,
     effect: &mut Effect,
     skinning: bool,
@@ -343,17 +345,19 @@ pub(crate) fn draw_mesh(
     material: Option<&Material>,
     material_defaults: &MaterialDefaults,
     rgba: Option<&Rgba>,
-    camera: Option<(&Camera, &Transform)>,
-    global: Option<&Transform>,
+    camera: Option<(&Camera, &Transform<N>)>,
+    transform: Option<&Transform<N>>,
     attributes: &[Attributes<'static>],
     textures: &[TextureType],
-) {
+) where
+    N: Real,
+{
     #[cfg(feature = "profiler")]
     profile_scope!("render_drawmesh");
 
     // Return straight away if some parameters are none
     // Consider changing function signature?
-    let (mesh, material, global) = match (mesh, material, global) {
+    let (mesh, material, transform) = match (mesh, material, transform) {
         (Some(v1), Some(v2), Some(v3)) => (v1, v2, v3),
         _ => return,
     };
@@ -369,7 +373,7 @@ pub(crate) fn draw_mesh(
         effect,
         encoder,
         camera,
-        global.map(|g| g.global_matrix()),
+        transform,
         rgba.cloned().unwrap_or(Rgba::WHITE),
     );
 
@@ -392,12 +396,15 @@ pub(crate) fn draw_mesh(
     effect.clear();
 }
 
-/// Returns the main camera and its `Transform`
-pub fn get_camera<'a>(
+/// Returns the main camera and its `Transform<N>`
+pub fn get_camera<'a, N>(
     active: Read<'a, ActiveCamera>,
     camera: &'a ReadStorage<'a, Camera>,
-    global: &'a ReadStorage<'a, Transform>,
-) -> Option<(&'a Camera, &'a Transform)> {
+    transform: &'a ReadStorage<'a, Transform<N>>,
+) -> Option<(&'a Camera, &'a Transform<N>)>
+where
+    N: Real,
+{
     #[cfg(feature = "profiler")]
     profile_scope!("render_getcamera");
 
@@ -405,10 +412,10 @@ pub fn get_camera<'a>(
         .entity
         .and_then(|entity| {
             let cam = camera.get(entity);
-            let transform = global.get(entity);
+            let transform = transform.get(entity);
             cam.into_iter().zip(transform.into_iter()).next()
         })
-        .or_else(|| (camera, global).join().next())
+        .or_else(|| (camera, transform).join().next())
 }
 
 pub fn default_transparency() -> Option<(ColorMask, Blend, Option<DepthMode>)> {

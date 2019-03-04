@@ -9,6 +9,7 @@ use glsl_layout::Uniform;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
+    nalgebra::Real,
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::Transform,
 };
@@ -41,17 +42,20 @@ use super::*;
 /// # Type Parameters
 ///
 /// * `V`: `VertexFormat`
+/// * `N`: `RealBound` (f32, f64)
 #[derive(Derivative, Clone, Debug, PartialEq)]
 #[derivative(Default(bound = "V: Query<(Position, TexCoord)>, Self: Pass"))]
-pub struct DrawFlat<V> {
+pub struct DrawFlat<V, N> {
     _pd: PhantomData<V>,
+    _pd2: PhantomData<N>,
     #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
 }
 
-impl<V> DrawFlat<V>
+impl<V, N> DrawFlat<V, N>
 where
     V: Query<(Position, TexCoord)>,
+    N: Real,
     Self: Pass,
 {
     /// Create instance of `DrawFlat` pass
@@ -87,9 +91,10 @@ where
     }
 }
 
-impl<'a, V> PassData<'a> for DrawFlat<V>
+impl<'a, V, N> PassData<'a> for DrawFlat<V, N>
 where
     V: Query<(Position, TexCoord)>,
+    N: Real,
 {
     type Data = (
         Read<'a, ActiveCamera>,
@@ -102,14 +107,15 @@ where
         ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
-        ReadStorage<'a, Transform>,
+        ReadStorage<'a, Transform<N>>,
         ReadStorage<'a, Rgba>,
     );
 }
 
-impl<V> Pass for DrawFlat<V>
+impl<V, N> Pass for DrawFlat<V, N>
 where
     V: Query<(Position, TexCoord)>,
+    N: Real,
 {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         use std::mem;
@@ -145,18 +151,18 @@ where
             hidden_prop,
             mesh,
             material,
-            global,
+            transform,
             rgba,
         ): <Self as PassData<'a>>::Data,
     ) {
-        let camera = get_camera(active, &camera, &global);
+        let camera = get_camera(active, &camera, &transform);
 
         match visibility {
             None => {
-                for (mesh, material, global, rgba, _, _) in (
+                for (mesh, material, transform, rgba, _, _) in (
                     &mesh,
                     &material,
-                    &global,
+                    &transform,
                     rgba.maybe(),
                     !&hidden,
                     !&hidden_prop,
@@ -174,17 +180,17 @@ where
                         &material_defaults,
                         rgba,
                         camera,
-                        Some(global),
+                        Some(transform),
                         &[V::QUERIED_ATTRIBUTES],
                         &TEXTURES,
                     );
                 }
             }
             Some(ref visibility) => {
-                for (mesh, material, global, rgba, _) in (
+                for (mesh, material, transform, rgba, _) in (
                     &mesh,
                     &material,
-                    &global,
+                    &transform,
                     rgba.maybe(),
                     &visibility.visible_unordered,
                 )
@@ -201,7 +207,7 @@ where
                         &material_defaults,
                         rgba,
                         camera,
-                        Some(global),
+                        Some(transform),
                         &[V::QUERIED_ATTRIBUTES],
                         &TEXTURES,
                     );
@@ -220,7 +226,7 @@ where
                             &material_defaults,
                             rgba.get(*entity),
                             camera,
-                            global.get(*entity),
+                            transform.get(*entity),
                             &[V::QUERIED_ATTRIBUTES],
                             &TEXTURES,
                         );

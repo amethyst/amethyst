@@ -1,9 +1,9 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, marker::PhantomData};
 
 use hibitset::BitSet;
 
 use amethyst_core::{
-    nalgebra::{Point3, Vector3},
+    nalgebra::{Point3, Real, Vector3},
     specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
     Transform,
 };
@@ -32,10 +32,15 @@ pub struct SpriteVisibility {
 ///
 /// Note that this should run after `GlobalTransform` has been updated for the current frame, and
 /// before rendering occurs.
+///
+/// # Type Parameters:
+///
+/// * `N`: `RealBound` (f32, f64)
 #[derive(Default)]
-pub struct SpriteVisibilitySortingSystem {
+pub struct SpriteVisibilitySortingSystem<N> {
     centroids: Vec<Internals>,
     transparent: Vec<Internals>,
+    _pd: PhantomData<N>,
 }
 
 #[derive(Clone)]
@@ -46,14 +51,14 @@ struct Internals {
     from_camera: Vector3<f32>,
 }
 
-impl SpriteVisibilitySortingSystem {
+impl<N> SpriteVisibilitySortingSystem<N> {
     /// Returns a new sprite visibility sorting system
     pub fn new() -> Self {
         Default::default()
     }
 }
 
-impl<'a> System<'a> for SpriteVisibilitySortingSystem {
+impl<'a, N: Real> System<'a> for SpriteVisibilitySortingSystem<N> {
     type SystemData = (
         Entities<'a>,
         Write<'a, SpriteVisibility>,
@@ -62,21 +67,21 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Transparent>,
-        ReadStorage<'a, Transform>,
+        ReadStorage<'a, Transform<N>>,
     );
 
     fn run(
         &mut self,
-        (entities, mut visibility, hidden, hidden_prop, active, camera, transparent, global): Self::SystemData,
+        (entities, mut visibility, hidden, hidden_prop, active, camera, transparent, transform): Self::SystemData,
     ) {
         let origin = Point3::origin();
 
         // The camera position is used to determine culling, but the sprites are ordered based on
         // the Z coordinate
-        let camera: Option<&Transform> = active
+        let camera: Option<&Transform<N>> = active
             .entity
-            .and_then(|entity| global.get(entity))
-            .or_else(|| (&camera, &global).join().map(|cg| cg.1).next());
+            .and_then(|entity| transform.get(entity))
+            .or_else(|| (&camera, &transform).join().map(|cg| cg.1).next());
         let camera_backward = camera
             .map(|c| c.0.column(2).xyz().into())
             .unwrap_or_else(Vector3::z);
@@ -86,9 +91,11 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
 
         self.centroids.clear();
         self.centroids.extend(
-            (&*entities, &global, !&hidden, !&hidden_prop)
+            (&*entities, &transform, !&hidden, !&hidden_prop)
                 .join()
-                .map(|(entity, global, _, _)| (entity, global.global_matrix().transform_point(&origin)))
+                .map(|(entity, transform, _, _)| {
+                    (entity, transform.global_matrix().transform_point(&origin))
+                })
                 .map(|(entity, centroid)| Internals {
                     entity,
                     transparent: transparent.contains(entity),

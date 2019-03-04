@@ -3,6 +3,7 @@ use std::mem;
 use glsl_layout::*;
 
 use amethyst_core::{
+    nalgebra::Real,
     specs::prelude::{Join, ReadStorage},
     Transform,
 };
@@ -47,15 +48,15 @@ pub(crate) struct SpotLightPod {
     smoothness: float,
 }
 
-pub(crate) fn set_light_args(
+pub(crate) fn set_light_args<N: Real>(
     effect: &mut Effect,
     encoder: &mut Encoder,
     light: &ReadStorage<'_, Light>,
-    global: &ReadStorage<'_, Transform>,
+    transform: &ReadStorage<'_, Transform<N>>,
     ambient: &AmbientColor,
-    camera: Option<(&Camera, &Transform)>,
+    camera: Option<(&Camera, &Transform<N>)>,
 ) {
-    let point_lights: Vec<_> = (light, global)
+    let point_lights: Vec<_> = (light, transform)
         .join()
         .filter_map(|(light, transform)| {
             if let Light::Point(ref light) = *light {
@@ -92,7 +93,7 @@ pub(crate) fn set_light_args(
         })
         .collect();
 
-    let spot_lights: Vec<_> = (light, global)
+    let spot_lights: Vec<_> = (light, transform)
         .join()
         .filter_map(|(light, transform)| {
             if let Light::Spot(ref light) = *light {

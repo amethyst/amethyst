@@ -1,5 +1,7 @@
 //! Simple shaded pass
 
+use std::marker::PhantomData;
+
 use derivative::Derivative;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
@@ -7,6 +9,7 @@ use log::{debug, trace};
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
+    nalgebra::Real,
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::Transform,
 };
@@ -48,15 +51,20 @@ static ATTRIBUTES: [Attributes<'static>; 3] = [
 ///
 /// See the [crate level documentation](index.html) for information about interleaved and separate
 /// passes.
+///
+/// # Type Parameters:
+///
+/// * `N`: `RealBound` (f32, f64)
 #[derive(Derivative, Clone, Debug, PartialEq)]
 #[derivative(Default)]
-pub struct DrawShadedSeparate {
+pub struct DrawShadedSeparate<N> {
     skinning: bool,
     #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
+    _pd: PhantomData<N>,
 }
 
-impl DrawShadedSeparate {
+impl<N> DrawShadedSeparate<N> {
     /// Create instance of `DrawShaded` pass
     pub fn new() -> Self {
         Default::default()
@@ -96,7 +104,10 @@ impl DrawShadedSeparate {
     }
 }
 
-impl<'a> PassData<'a> for DrawShadedSeparate {
+impl<'a, N> PassData<'a> for DrawShadedSeparate<N>
+where
+    N: Real,
+{
     type Data = (
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
@@ -109,14 +120,17 @@ impl<'a> PassData<'a> for DrawShadedSeparate {
         ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
-        ReadStorage<'a, Transform>,
+        ReadStorage<'a, Transform<N>>,
         ReadStorage<'a, Light>,
         ReadStorage<'a, JointTransforms>,
         ReadStorage<'a, Rgba>,
     );
 }
 
-impl Pass for DrawShadedSeparate {
+impl<N> Pass for DrawShadedSeparate<N>
+where
+    N: Real,
+{
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         debug!("Building shaded pass");
         let mut builder = if self.skinning {
@@ -171,24 +185,24 @@ impl Pass for DrawShadedSeparate {
             hidden_prop,
             mesh,
             material,
-            global,
+            transform,
             light,
             joints,
             rgba,
         ): <Self as PassData<'a>>::Data,
     ) {
         trace!("Drawing shaded pass");
-        let camera = get_camera(active, &camera, &global);
+        let camera = get_camera(active, &camera, &transform);
 
-        set_light_args(effect, encoder, &light, &global, &ambient, camera);
+        set_light_args(effect, encoder, &light, &transform, &ambient, camera);
 
         match visibility {
             None => {
-                for (joint, mesh, material, global, rgba, _, _) in (
+                for (joint, mesh, material, transform, rgba, _, _) in (
                     joints.maybe(),
                     &mesh,
                     &material,
-                    &global,
+                    &transform,
                     rgba.maybe(),
                     !&hidden,
                     !&hidden_prop,
@@ -206,18 +220,18 @@ impl Pass for DrawShadedSeparate {
                         &material_defaults,
                         rgba,
                         camera,
-                        Some(global),
+                        Some(transform),
                         &ATTRIBUTES,
                         &TEXTURES,
                     );
                 }
             }
             Some(ref visibility) => {
-                for (joint, mesh, material, global, rgba, _) in (
+                for (joint, mesh, material, transform, rgba, _) in (
                     joints.maybe(),
                     &mesh,
                     &material,
-                    &global,
+                    &transform,
                     rgba.maybe(),
                     &visibility.visible_unordered,
                 )
@@ -234,7 +248,7 @@ impl Pass for DrawShadedSeparate {
                         &material_defaults,
                         rgba,
                         camera,
-                        Some(global),
+                        Some(transform),
                         &ATTRIBUTES,
                         &TEXTURES,
                     );
@@ -253,7 +267,7 @@ impl Pass for DrawShadedSeparate {
                             &material_defaults,
                             rgba.get(*entity),
                             camera,
-                            global.get(*entity),
+                            transform.get(*entity),
                             &ATTRIBUTES,
                             &TEXTURES,
                         );
