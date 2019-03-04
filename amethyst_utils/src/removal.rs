@@ -68,8 +68,12 @@ pub fn add_removal_to_entity<T: PartialEq + Clone + Debug + Send + Sync + 'stati
     id: T,
     storage: &mut WriteStorage<'_, Removal<T>>,
 ) {
-    storage.insert(entity, Removal::new(id)).expect(&format!(
-        "Failed to insert removalid to entity {:?}.",
-        entity
-    ));
+    storage
+        .insert(entity, Removal::new(id))
+        .unwrap_or_else(|_| {
+            panic!(
+                "Failed to insert `Removal` component id to entity {:?}.",
+                entity,
+            )
+        });
 }
