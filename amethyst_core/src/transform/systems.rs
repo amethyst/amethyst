@@ -157,7 +157,7 @@ mod tests {
     #[test]
     fn transform_matrix() {
         let mut transform = Transform::default();
-        transform.set_xyz(5.0, 2.0, -0.5);
+        transform.set_translation_xyz(5.0, 2.0, -0.5);
         transform.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.0, 0.0, 0.0)));
         transform.set_scale(2.0, 2.0, 2.0);
 
@@ -232,7 +232,7 @@ mod tests {
         let (mut world, mut hs, mut system) = transform_world();
 
         let mut local = Transform::default();
-        local.set_xyz(5.0, 5.0, 5.0);
+        local.set_translation_xyz(5.0, 5.0, 5.0);
         local.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e1 = world
@@ -260,7 +260,7 @@ mod tests {
         let (mut world, mut hs, mut system) = transform_world();
 
         let mut local1 = Transform::default();
-        local1.set_xyz(5.0, 5.0, 5.0);
+        local1.set_translation_xyz(5.0, 5.0, 5.0);
         local1.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e1 = world
@@ -270,7 +270,7 @@ mod tests {
             .build();
 
         let mut local2 = Transform::default();
-        local2.set_xyz(5.0, 5.0, 5.0);
+        local2.set_translation_xyz(5.0, 5.0, 5.0);
         local2.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e2 = world
@@ -281,7 +281,7 @@ mod tests {
             .build();
 
         let mut local3 = Transform::default();
-        local3.set_xyz(5.0, 5.0, 5.0);
+        local3.set_translation_xyz(5.0, 5.0, 5.0);
         local3.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e3 = world
@@ -328,7 +328,7 @@ mod tests {
         let (mut world, mut hs, mut system) = transform_world();
 
         let mut local3 = Transform::default();
-        local3.set_xyz(5.0, 5.0, 5.0);
+        local3.set_translation_xyz(5.0, 5.0, 5.0);
         local3.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e3 = world
@@ -338,7 +338,7 @@ mod tests {
             .build();
 
         let mut local2 = Transform::default();
-        local2.set_xyz(5.0, 5.0, 5.0);
+        local2.set_translation_xyz(5.0, 5.0, 5.0);
         local2.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e2 = world
@@ -348,7 +348,7 @@ mod tests {
             .build();
 
         let mut local1 = Transform::default();
-        local1.set_xyz(5.0, 5.0, 5.0);
+        local1.set_translation_xyz(5.0, 5.0, 5.0);
         local1.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e1 = world
@@ -401,7 +401,7 @@ mod tests {
 
         let mut local = Transform::default();
         // Release the indeterminate forms!
-        local.set_xyz(0.0 / 0.0, 0.0 / 0.0, 0.0 / 0.0);
+        local.set_translation_xyz(0.0 / 0.0, 0.0 / 0.0, 0.0 / 0.0);
 
         world
             .create_entity()
@@ -421,7 +421,7 @@ mod tests {
 
         let mut local = Transform::default();
         // Release the indeterminate forms!
-        local.set_xyz(1.0 / 0.0, 1.0 / 0.0, 1.0 / 0.0);
+        local.set_translation_xyz(1.0 / 0.0, 1.0 / 0.0, 1.0 / 0.0);
         world
             .create_entity()
             .with(local.clone())

@@ -109,7 +109,7 @@ fn initialise_camera(world: &mut World) {
     };
 
     let mut camera_transform = Transform::default();
-    camera_transform.set_z(1.0);
+    camera_transform.set_translation_z(1.0);
 
     world
         .create_entity()

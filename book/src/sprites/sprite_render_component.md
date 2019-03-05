@@ -114,7 +114,7 @@ impl ExampleState {
 
         // Move the sprite to the middle of the window
         let mut sprite_transform = Transform::default();
-        sprite_transform.set_xyz(width / 2., height / 2., 0.);
+        sprite_transform.set_translation_xyz(width / 2., height / 2., 0.);
 
         let sprite_render = SpriteRender {
             sprite_sheet: sprite_sheet_handle,

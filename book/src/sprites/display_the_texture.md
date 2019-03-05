@@ -30,8 +30,8 @@ use amethyst::renderer::{Flipped, PngFormat, Texture, TextureMetadata, TextureHa
 fn init_image(world: &mut World, texture_handle: &TextureHandle) {
     // Add a transform component to give the image a position
     let mut transform = Transform::default();
-    transform.set_x(0.0);
-    transform.set_y(0.0);
+    transform.set_translation_x(0.0);
+    transform.set_translation_y(0.0);
 
     world
         .create_entity()

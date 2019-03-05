@@ -76,7 +76,7 @@ where
 
         if let Some(dir) = Unit::try_new(Vector3::new(x, y, z), 1.0e-6) {
             for (transform, _) in (&mut transform, &tag).join() {
-                transform.move_along_local(dir, time.delta_seconds() * self.speed);
+                transform.append_translation_along(dir, time.delta_seconds() * self.speed);
             }
         }
     }
@@ -169,8 +169,12 @@ where
                 if let Event::DeviceEvent { ref event, .. } = *event {
                     if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
                         for (transform, _) in (&mut transform, &tag).join() {
-                            transform.pitch_local((-y as f32 * self.sensitivity_y).to_radians());
-                            transform.yaw_global((-x as f32 * self.sensitivity_x).to_radians());
+                            transform.prepend_rotation_x_axis(
+                                (-y as f32 * self.sensitivity_y).to_radians(),
+                            );
+                            transform.prepend_rotation_y_axis(
+                                (-x as f32 * self.sensitivity_x).to_radians(),
+                            );
                         }
                     }
                 }

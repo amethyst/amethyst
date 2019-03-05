@@ -49,6 +49,7 @@ it is attached to. ([#1282])
 extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Renamed `amethyst_core::specs` to `amethyst_core::ecs` and `amethyst_core::nalgebra` to `amethyst_core::math`. ([#1410])
 * Simplified some of the conditionals in the Pong tutorial ([#1439])
+* Changed the names of many Transform functions to better reflect their actual function and reduce potential semantic confusion ([#1451])
 
 ### Removed
 
@@ -88,6 +89,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1410]: https://github.com/amethyst/amethyst/pull/1410
 [#1439]: https://github.com/amethyst/amethyst/pull/1439
 [#1445]: https://github.com/amethyst/amethyst/pull/1445
+[#1451]: https://github.com/amethyst/amethyst/pull/1451
 
 ## [0.10.0] - 2018-12
 

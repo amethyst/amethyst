@@ -68,7 +68,7 @@ Then let's add a `initialise_ball` function the same way we wrote the
 fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
     // Create the translation.
     let mut local_transform = Transform::default();
-    local_transform.set_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
+    local_transform.set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 
     // Assign the sprite for the ball
     let sprite_render = SpriteRender {
@@ -175,8 +175,8 @@ impl<'s> System<'s> for MoveBallsSystem {
     fn run(&mut self, (balls, mut locals, time): Self::SystemData) {
         // Move every ball according to its speed, and the time passed.
         for (ball, local) in (&balls, &mut locals).join() {
-            local.translate_x(ball.velocity[0] * time.delta_seconds());
-            local.translate_y(ball.velocity[1] * time.delta_seconds());
+            local.prepend_translation_x(ball.velocity[0] * time.delta_seconds());
+            local.prepend_translation_y(ball.velocity[1] * time.delta_seconds());
         }
     }
 }

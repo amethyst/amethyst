@@ -63,7 +63,7 @@ impl<'s> System<'s> for WinnerSystem {
             if did_hit {
                 // Reset the ball.
                 ball.velocity[0] = -ball.velocity[0];
-                transform.set_x(arena_config.width / 2.0);
+                transform.set_translation_x(arena_config.width / 2.0);
 
                 // Print the score board.
                 println!(

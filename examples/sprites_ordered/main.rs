@@ -205,7 +205,7 @@ impl Example {
         };
 
         let mut camera_transform = Transform::default();
-        camera_transform.set_xyz(0.0, 0.0, self.camera_z);
+        camera_transform.set_translation_xyz(0.0, 0.0, self.camera_z);
 
         let camera = world
             .create_entity()
@@ -255,7 +255,7 @@ impl Example {
         };
         // This `Transform` moves the sprites to the middle of the window
         let mut common_transform = Transform::default();
-        common_transform.set_xyz(width / 2.0 - sprite_offset_x, height / 2.0, 0.0);
+        common_transform.set_translation_xyz(width / 2.0 - sprite_offset_x, height / 2.0, 0.0);
 
         self.draw_sprites(world, &common_transform);
     }
@@ -281,7 +281,11 @@ impl Example {
             } else {
                 i as f32
             };
-            sprite_transform.set_xyz((i * sprite_w) as f32 * SPRITE_SPACING_RATIO, z, z);
+            sprite_transform.set_translation_xyz(
+                (i * sprite_w) as f32 * SPRITE_SPACING_RATIO,
+                z,
+                z,
+            );
 
             // This combines multiple `Transform`ations.
             sprite_transform.concat(&common_transform);
