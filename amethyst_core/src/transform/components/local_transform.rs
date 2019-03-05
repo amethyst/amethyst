@@ -345,15 +345,19 @@ impl Transform {
         self
     }
 
-    /// Set the rotation using Euler x, y, z.
+    /// Set the rotation using Euler roll, pitch, yaw. 
+    ///
+    /// Note that the *order* of arguments is different than you may be used
+    /// to thinking about Euler angle transforms, and does not directly match
+    /// the customary x,y,z axis ordering.
     ///
     /// All angles are specified in radians. Euler order is roll → pitch → yaw.
     ///
     /// # Arguments
     ///
-    ///  - x - The angle to apply around the x axis. Also known as the roll.
-    ///  - y - The angle to apply around the y axis. Also known as the pitch.
-    ///  - z - The angle to apply around the z axis. Also known as the yaw.
+    ///  - roll - The angle to apply around the Z axis. Also known as the roll.
+    ///  - pitch - The angle to apply around the X axis. Also known as the pitch.
+    ///  - yaw - The angle to apply around the Y axis. Also known as the yaw.
     /// ```
     /// # use amethyst_core::transform::components::Transform;
     /// let mut transform = Transform::default();
@@ -362,8 +366,8 @@ impl Transform {
     ///
     /// assert_eq!(transform.rotation().euler_angles().0, 1.0);
     /// ```
-    pub fn set_rotation_euler(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
-        self.iso.rotation = UnitQuaternion::from_euler_angles(x, y, z);
+    pub fn set_rotation_euler(&mut self, roll: f32, pitch: f32, yaw: f32) -> &mut Self {
+        self.iso.rotation = UnitQuaternion::from_euler_angles(roll, pitch, yaw);
         self
     }
 
