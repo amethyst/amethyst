@@ -345,11 +345,11 @@ impl Transform {
         self
     }
 
-    /// Set the rotation using Euler roll, pitch, yaw. 
+    /// Set the rotation using Euler roll, pitch, yaw.
     ///
     /// Note that the *order* of arguments is different than you may be used
     /// to thinking about Euler angle transforms, and does not directly match
-    /// the customary x,y,z axis ordering.
+    /// the customary x, y, z axis ordering.
     ///
     /// All angles are specified in radians. Euler order is roll → pitch → yaw.
     ///

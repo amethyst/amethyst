@@ -56,6 +56,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Fixed default system font loading to accept uppercase extension ("TTF"). ([#1328])
 * Set width and height of Pong Paddles ([#1363])
 * Fix omission in `PosNormTangTex` documentation. ([#1371])
+* Corrected the argument names and and documentation of `Transform::set_euler_angles`. Behavior is the same, only names changed ([#1449])
 
 [#1114]: https://github.com/amethyst/amethyst/pull/1114
 [#1213]: https://github.com/amethyst/amethyst/pull/1213
@@ -84,6 +85,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1424]: https://github.com/amethyst/amethyst/pull/1424
 [#1435]: https://github.com/amethyst/amethyst/pull/1435
 [#1439]: https://github.com/amethyst/amethyst/pull/1439
+[#1449]: https://github.com/amethyst/amethyst/pull/1449
 
 ## [0.10.0] - 2018-12
 
