@@ -119,11 +119,4 @@ mod types;
 mod vertex;
 mod visibility;
 
-use amethyst_core::nalgebra::{Matrix4, Real, convert};
-
-pub fn conv<N: Real>() {
-    let original = Matrix4::<N>::identity();
-    let middle: Matrix4<f32> = convert(original);
-    let res: [[f32; 4]; 4] = middle.into();
-}
 
