@@ -10,7 +10,7 @@ use thread_profiler::profile_scope;
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     ecs::prelude::{Join, Read, ReadStorage},
-    math::Matrix4,
+    math::{Matrix4, Orthographic3},
     GlobalTransform,
 };
 
@@ -20,6 +20,8 @@ use crate::{
     mtl::{Material, MaterialDefaults, TextureOffset},
     pass::set_skinning_buffers,
     pipe::{DepthMode, Effect, EffectBuilder},
+    resources::ScreenDimensions,
+    screen_space::ScreenSpaceSettings,
     skinning::JointTransforms,
     tex::Texture,
     types::Encoder,
@@ -301,6 +303,7 @@ pub fn set_vertex_args(
     effect.update_constant_buffer("VertexArgs", &vertex_args.std140(), encoder);
 }
 
+/// Sets the view arguments in the contant buffer.
 pub fn set_view_args(
     effect: &mut Effect,
     encoder: &mut Encoder,
@@ -330,6 +333,33 @@ pub fn set_view_args(
                 view: identity.into(),
             }
         });
+    effect.update_constant_buffer("ViewArgs", &view_args.std140(), encoder);
+}
+
+/// Sets the view arguments in the constant buffer using the screen dimensions.
+pub fn set_view_args_screen(
+    effect: &mut Effect,
+    encoder: &mut Encoder,
+    screen_dimensions: &ScreenDimensions,
+    settings: &ScreenSpaceSettings,
+) {
+    #[cfg(feature = "profiler")]
+    profile_scope!("render_setviewargsscreen");
+
+    let proj: [[f32; 4]; 4] = Orthographic3::new(
+        0.0,
+        screen_dimensions.width(),
+        0.0,
+        screen_dimensions.height(),
+        0.1,
+        settings.max_depth,
+    )
+    .to_homogeneous()
+    .into();
+    let view_args = ViewArgs {
+        proj: proj.into(),
+        view: settings.view_matrix.into(),
+    };
     effect.update_constant_buffer("ViewArgs", &view_args.std140(), encoder);
 }
 
