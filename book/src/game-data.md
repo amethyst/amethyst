@@ -15,7 +15,10 @@ are essential (like rendering, input and UI).
 
 Let's start by creating the `GameData` structure:
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::prelude::Dispatcher;
+#
 pub struct CustomGameData<'a, 'b> {
     core_dispatcher: Dispatcher<'a, 'b>,
     running_dispatcher: Dispatcher<'a, 'b>,
@@ -24,7 +27,15 @@ pub struct CustomGameData<'a, 'b> {
 
 We also add a utility function for performing dispatch:
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::ecs::prelude::{Dispatcher, World};
+#
+# pub struct CustomGameData<'a, 'b> {
+#     core_dispatcher: Dispatcher<'a, 'b>,
+#     running_dispatcher: Dispatcher<'a, 'b>,
+# }
+#
 impl<'a, 'b> CustomGameData<'a, 'b> {
     /// Update game data
     pub fn update(&mut self, world: &World, running: bool) {
@@ -40,7 +51,18 @@ To be able to use this structure with `Amethyst`s `Application` we need to creat
 a builder that implements `DataInit`. This is the only requirement placed on the
 `GameData` structure.
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+#
+# use amethyst::ecs::prelude::{Dispatcher, DispatcherBuilder, System, World};
+# use amethyst::core::SystemBundle;
+# use amethyst::{Error, DataInit};
+#
+# pub struct CustomGameData<'a, 'b> {
+#     core_dispatcher: Dispatcher<'a, 'b>,
+#     running_dispatcher: Dispatcher<'a, 'b>,
+# }
+#
 use amethyst::core::ArcThreadPool;
 
 pub struct CustomGameDataBuilder<'a, 'b> {
@@ -62,13 +84,11 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
         }
     }
 
-    pub fn with_base_bundle<B>(mut self, bundle: B) -> Result<Self>
+    pub fn with_base_bundle<B>(mut self, bundle: B) -> Result<Self, Error>
     where
         B: SystemBundle<'a, 'b>,
     {
-        bundle
-            .build(&mut self.core)
-            .map_err(|err| Error::Core(err))?;
+        bundle.build(&mut self.core)?;
         Ok(self)
     }
 
@@ -99,7 +119,33 @@ impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> 
 We can now use `CustomGameData` in place of the provided `GameData` when building
 our `Application`, but first we should create some `State`s.
 
-```rust,ignore
+```rust,no_run,noplaypen
+# extern crate amethyst;
+#
+# use amethyst::ecs::prelude::{Dispatcher, World};
+# use amethyst::prelude::{State, StateData, StateEvent, Trans};
+# use amethyst::input::{is_close_requested, is_key_down};
+# use amethyst::renderer::VirtualKeyCode;
+#
+# pub struct CustomGameData<'a, 'b> {
+#     core_dispatcher: Dispatcher<'a, 'b>,
+#     running_dispatcher: Dispatcher<'a, 'b>,
+# }
+#
+# impl<'a, 'b> CustomGameData<'a, 'b> {
+#     /// Update game data
+#     pub fn update(&mut self, world: &World, running: bool) {
+#         if running {
+#             self.running_dispatcher.dispatch(&world.res);
+#         }
+#         self.core_dispatcher.dispatch(&world.res);
+#     }
+# }
+#
+# fn initialise(world: &World) {}
+# fn create_paused_ui(world: &World) {}
+# fn delete_paused_ui(world: &World) {}
+#
 struct Main;
 struct Paused;
 
@@ -111,7 +157,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Paused {
     fn handle_event(
         &mut self,
         data: StateData<CustomGameData>,
-        event: StateEvent>,
+        event: StateEvent,
     ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
@@ -167,15 +213,15 @@ The only thing that remains now is to use our `CustomGameDataBuilder` when build
 `Application`.
 
 ```rust,ignore
-    let game_data = CustomGameDataBuilder::default()
-        .with_running::<ExampleSystem>(ExampleSystem, "example_system", &[])
-        .with_base_bundle(TransformBundle::new())?
-        .with_base_bundle(UiBundle::<String, String>::new())?
-        .with_base_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
-        .with_base_bundle(InputBundle::<String, String>::new())?;
+let game_data = CustomGameDataBuilder::default()
+    .with_running(ExampleSystem, "example_system", &[])
+    .with_base_bundle(TransformBundle::new())?
+    .with_base_bundle(UiBundle::<String, String>::new())?
+    .with_base_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
+    .with_base_bundle(InputBundle::<String, String>::new())?;
 
-    let mut game = Application::new(resources_directory, Main, game_data)?;
-    game.run();
+let mut game = Application::new(resources_directory, Main, game_data)?;
+game.run();
 ```
 
 Those are the basics of creating a custom `GameData` structure. Now get out there and
