@@ -169,7 +169,7 @@ where
                 if let Event::DeviceEvent { ref event, .. } = *event {
                     if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
                         for (transform, _) in (&mut transform, &tag).join() {
-                            transform.prepend_rotation_x_axis(
+                            transform.append_rotation_x_axis(
                                 (-y as f32 * self.sensitivity_y).to_radians(),
                             );
                             transform.prepend_rotation_y_axis(

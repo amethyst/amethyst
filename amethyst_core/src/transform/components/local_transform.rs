@@ -152,6 +152,11 @@ impl Transform {
 
     /// Move relatively to its current position, but the parent's (or
     /// global, if no parent exists) orientation.
+    ///
+    /// For example, if the object is rotated 45 degrees about its Y axis,
+    /// then you *prepend* a translation along the Z axis, it will still
+    /// move along the parent's Z axis rather than its local Z axis (which
+    /// is rotated 45 degrees).
     #[inline]
     pub fn prepend_translation(&mut self, translation: Vector3<f32>) -> &mut Self {
         self.iso.translation.vector += translation;
@@ -159,6 +164,11 @@ impl Transform {
     }
 
     /// Move relatively to its current position and orientation.
+    ///
+    /// For example, if the object is rotated 45 degrees about its Y axis,
+    /// then you append a translation along the Z axis, that Z axis is now
+    /// rotated 45 degrees, and so the appended translation will go along that
+    /// rotated Z axis.
     ///
     /// Equivalent to rotating the translation by the transform's current
     /// rotation before applying.
@@ -170,6 +180,11 @@ impl Transform {
 
     /// Move a distance along an axis relative to the parent's orientation
     /// (or the global orientation if no parent exists).
+    ///
+    /// For example, if the object is rotated 45 degrees about its Y axis,
+    /// then you *prepend* a translation along the Z axis, it will still
+    /// move along the parent's Z axis rather than its local Z axis (which
+    /// is rotated 45 degrees).
     #[inline]
     pub fn prepend_translation_along(
         &mut self,
