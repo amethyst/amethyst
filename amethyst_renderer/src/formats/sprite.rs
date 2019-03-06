@@ -75,7 +75,7 @@ pub struct SerializedSpriteSheet {
 /// # use amethyst_renderer::{SpriteSheetFormat, SpriteSheet, Texture, PngFormat, TextureMetadata};
 /// #
 /// # fn load_sprite_sheet() {
-/// #   let world = amethyst_core::specs::World::new(); // Normally, you would use Amethyst's world
+/// #   let world = amethyst_core::ecs::World::new(); // Normally, you would use Amethyst's world
 /// #   let loader = world.read_resource::<Loader>();
 /// #   let spritesheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
 /// #   let texture_storage = world.read_resource::<AssetStorage<Texture>>();
