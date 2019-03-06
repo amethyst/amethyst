@@ -26,6 +26,7 @@ it is attached to. ([#1282])
 * Several passes got `with_transparency_settings` which changes the transparency settings for the pass. ([#1419])
 * Add `SpriteRenderPrefab`. ([#1435])
 * Add `ScreenSpace` component. Draws entities using the screen coordinates. ([#1424])
+* Add `add_removal_to_entity` function. ([#1445])
 
 ### Changed
 
@@ -84,6 +85,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1424]: https://github.com/amethyst/amethyst/pull/1424
 [#1435]: https://github.com/amethyst/amethyst/pull/1435
 [#1439]: https://github.com/amethyst/amethyst/pull/1439
+[#1445]: https://github.com/amethyst/amethyst/pull/1445
 
 ## [0.10.0] - 2018-12
 
