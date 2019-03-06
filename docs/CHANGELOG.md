@@ -47,6 +47,7 @@ it is attached to. ([#1282])
 * `FrameRateLimitConfig` has a `new` constructor, and its fields are made public. ([#1436])
 * Derive `Deserialize, Serialize` for `MaterialPrimitive` and `SpriteRenderPrimitive`, remove
 extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
+* Simplified some of the conditionals in the Pong tutorial ([#1439])
 
 ### Removed
 
@@ -83,6 +84,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1419]: https://github.com/amethyst/amethyst/pull/1419
 [#1424]: https://github.com/amethyst/amethyst/pull/1424
 [#1435]: https://github.com/amethyst/amethyst/pull/1435
+[#1439]: https://github.com/amethyst/amethyst/pull/1439
 [#1445]: https://github.com/amethyst/amethyst/pull/1445
 
 ## [0.10.0] - 2018-12

@@ -7,7 +7,7 @@ use amethyst::{
         get_animation_set, AnimationBundle, AnimationCommand, AnimationSet, AnimationSetPrefab,
         EndControl,
     },
-    assets::{JsonFormat, PrefabData, PrefabLoader, PrefabLoaderSystem, ProgressCounter},
+    assets::{PrefabData, PrefabLoader, PrefabLoaderSystem, ProgressCounter, RonFormat},
     config::Config,
     core::transform::{Transform, TransformBundle},
     derive::PrefabData,
@@ -57,10 +57,8 @@ impl SimpleState for Example {
         // Starts asset loading
         let prefab_handle = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load(
-                // FIXME: deserialization of untagged enum in `ron` is buggy
-                // change this to "prefab/sprite_animation.ron" after fix
-                "prefab/sprite_animation.json",
-                JsonFormat,
+                "prefab/sprite_animation.ron",
+                RonFormat,
                 (),
                 self.progress_counter.as_mut().unwrap(),
             )
