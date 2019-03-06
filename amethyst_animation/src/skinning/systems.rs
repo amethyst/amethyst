@@ -1,5 +1,5 @@
 use amethyst_core::{
-    specs::prelude::{
+    ecs::prelude::{
         BitSet, ComponentEvent, Join, ReadStorage, ReaderId, Resources, System, WriteStorage,
     },
     GlobalTransform,
@@ -124,7 +124,7 @@ impl<'a> System<'a> for VertexSkinningSystem {
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         let mut transform = WriteStorage::<GlobalTransform>::fetch(res);
         self.updated_id = Some(transform.register_reader());

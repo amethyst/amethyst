@@ -6,10 +6,10 @@
 compile_error!("the cfg flag \"no_threading\" is required when building for emscripten");
 
 pub use approx;
-pub use nalgebra;
+pub use nalgebra as math;
 pub use shred;
 pub use shrev;
-pub use specs;
+pub use specs as ecs;
 
 use rayon;
 

@@ -3,7 +3,7 @@
 use std::{fmt::Debug, ops::Deref};
 
 use amethyst_assets::PrefabData;
-use amethyst_core::specs::{
+use amethyst_core::ecs::{
     storage::MaskedStorage, world::EntitiesRes, Component, DenseVecStorage, Entity, Join, Storage,
     WriteStorage,
 };

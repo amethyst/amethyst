@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use thread_profiler::profile_scope;
 
 use amethyst_core::{
-    specs::prelude::{
+    ecs::prelude::{
         BitSet, ComponentEvent, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
         WriteStorage,
     },
@@ -297,7 +297,7 @@ impl<'a> System<'a> for UiTransformSystem {
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         self.parent_events_id = Some(res.fetch_mut::<ParentHierarchy>().track());
         let mut transforms = WriteStorage::<UiTransform>::fetch(res);

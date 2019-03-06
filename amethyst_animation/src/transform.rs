@@ -1,5 +1,5 @@
 use amethyst_core::{
-    nalgebra::{Quaternion, Unit},
+    math::{Quaternion, Unit},
     Transform,
 };
 

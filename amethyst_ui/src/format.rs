@@ -2,7 +2,7 @@ use gfx_glyph::Font;
 use serde::{Deserialize, Serialize};
 
 use amethyst_assets::{Asset, Handle, ProcessingState, SimpleFormat};
-use amethyst_core::specs::prelude::VecStorage;
+use amethyst_core::ecs::prelude::VecStorage;
 use amethyst_error::{format_err, Error, ResultExt};
 
 /// A loaded set of fonts from a file.

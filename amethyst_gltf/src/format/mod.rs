@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use amethyst_animation::AnimationHierarchyPrefab;
 use amethyst_assets::{Format, FormatValue, Prefab, Source};
 use amethyst_core::{
-    nalgebra::{Quaternion, Unit},
+    math::{Quaternion, Unit},
     transform::Transform,
 };
 use amethyst_error::{format_err, Error, ResultExt};

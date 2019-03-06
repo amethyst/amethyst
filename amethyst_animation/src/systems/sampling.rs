@@ -5,9 +5,9 @@ use minterpolate::InterpolationPrimitive;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    duration_to_nanos, duration_to_secs, nanos_to_duration, secs_to_duration,
-    specs::prelude::{Component, Join, Read, System, WriteStorage},
-    Time,
+    duration_to_nanos, duration_to_secs,
+    ecs::prelude::{Component, Join, Read, System, WriteStorage},
+    nanos_to_duration, secs_to_duration, Time,
 };
 
 use crate::resources::{

@@ -8,8 +8,8 @@ use log::warn;
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
-    nalgebra::Vector4,
-    specs::prelude::{Join, Read, ReadExpect, ReadStorage},
+    ecs::prelude::{Join, Read, ReadExpect, ReadStorage},
+    math::Vector4,
     transform::GlobalTransform,
 };
 use amethyst_error::Error;

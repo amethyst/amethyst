@@ -1,7 +1,7 @@
 use super::DemoState;
 use amethyst::{
     core::{
-        nalgebra::{UnitQuaternion, Vector3},
+        math::{UnitQuaternion, Vector3},
         Time, Transform,
     },
     ecs::prelude::{Entity, Join, Read, ReadStorage, System, WriteExpect, WriteStorage},

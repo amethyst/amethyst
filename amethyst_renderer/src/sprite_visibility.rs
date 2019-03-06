@@ -3,8 +3,8 @@ use std::cmp::Ordering;
 use hibitset::BitSet;
 
 use amethyst_core::{
-    nalgebra::{Point3, Vector3},
-    specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
+    ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
+    math::{Point3, Vector3},
     GlobalTransform,
 };
 

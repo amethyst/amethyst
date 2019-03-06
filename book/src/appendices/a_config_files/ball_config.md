@@ -7,7 +7,7 @@ separately.
 To prepare for our `BallConfig`, add the following line to the top of `config.rs`:
 
 ```rust,ignore
-use amethyst::core::nalgebra::Vector2;
+use amethyst::core::math::Vector2;
 ```
 
 The `BallConfig` will replace the `BALL_VELOCITY_X`, `BALL_VELOCITY_Y`, `BALL_RADIUS`, and `BALL_COLOR`

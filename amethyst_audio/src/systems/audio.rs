@@ -13,7 +13,7 @@ use rodio::SpatialSink;
 use thread_profiler::profile_scope;
 
 use amethyst_core::{
-    specs::prelude::{
+    ecs::prelude::{
         Entities, Entity, Join, Read, ReadStorage, Resources, System, SystemData, WriteStorage,
     },
     transform::GlobalTransform,

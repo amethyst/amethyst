@@ -1,15 +1,17 @@
 //! Local transform component.
 use std::fmt;
 
-use nalgebra::{
-    self as na, Isometry3, Matrix4, Quaternion, Translation3, Unit, UnitQuaternion, Vector3,
+use crate::{
+    ecs::prelude::{Component, DenseVecStorage, FlaggedStorage},
+    math::{
+        self as na, Isometry3, Matrix4, Quaternion, Translation3, Unit, UnitQuaternion, Vector3,
+    },
 };
 use serde::{
     de::{self, Deserializer, MapAccess, SeqAccess, Visitor},
     ser::Serializer,
     Deserialize, Serialize,
 };
-use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 
 /// Local position, rotation, and scale (from parent if it exists).
 ///
@@ -31,7 +33,7 @@ impl Transform {
     ///
     /// ```rust
     /// # use amethyst_core::transform::components::Transform;
-    /// # use amethyst_core::nalgebra::{Isometry3, Translation3, UnitQuaternion, Vector3};
+    /// # use amethyst_core::math::{Isometry3, Translation3, UnitQuaternion, Vector3};
     /// let position = Translation3::new(0.0, 2.0, 4.0);
     /// let rotation = UnitQuaternion::from_euler_angles(0.4, 0.2, 0.0);
     /// let scale = Vector3::new(1.0, 1.0, 1.0);
@@ -64,7 +66,7 @@ impl Transform {
     ///
     /// ```rust
     /// # use amethyst_core::transform::components::Transform;
-    /// # use amethyst_core::nalgebra::{UnitQuaternion, Quaternion, Vector3};
+    /// # use amethyst_core::math::{UnitQuaternion, Quaternion, Vector3};
     /// let mut t = Transform::default();
     /// // No rotation by default
     /// assert_eq!(*t.rotation().quaternion(), Quaternion::identity());
@@ -412,7 +414,7 @@ impl Component for Transform {
 ///
 /// ```
 /// # use amethyst_core::transform::components::Transform;
-/// # use amethyst_core::nalgebra::Vector3;
+/// # use amethyst_core::math::Vector3;
 /// let transform = Transform::from(Vector3::new(100.0, 200.0, 300.0));
 ///
 /// assert_eq!(transform.translation().x, 100.0);
@@ -557,7 +559,7 @@ impl Serialize for Transform {
 mod tests {
     use crate::{
         approx::*,
-        nalgebra::{UnitQuaternion, Vector3},
+        math::{UnitQuaternion, Vector3},
         Transform,
     };
 

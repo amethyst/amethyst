@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use amethyst_assets::{Asset, Handle, ProcessingState};
-use amethyst_core::specs::prelude::{Component, DenseVecStorage, VecStorage};
+use amethyst_core::ecs::prelude::{Component, DenseVecStorage, VecStorage};
 use amethyst_error::Error;
 
 use crate::Texture;

@@ -3,7 +3,7 @@
 use amethyst::{
     controls::{FlyControlBundle, FlyControlTag},
     core::{
-        nalgebra::{Point3, Vector3},
+        math::{Point3, Vector3},
         transform::{Transform, TransformBundle},
         Time,
     },

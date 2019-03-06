@@ -1,6 +1,6 @@
 use std::{borrow::Borrow, hash::Hash};
 
-use amethyst_core::specs::{Read, ReadExpect};
+use amethyst_core::ecs::{Read, ReadExpect};
 use shred_derive::SystemData;
 
 use crate::{Asset, AssetStorage, Format, Handle, Loader, Progress};

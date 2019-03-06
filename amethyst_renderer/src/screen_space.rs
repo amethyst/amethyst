@@ -1,6 +1,6 @@
 use amethyst_core::{
-    nalgebra::{Isometry3, Vector3},
-    specs::{Component, NullStorage},
+    ecs::{Component, NullStorage},
+    math::{Isometry3, Vector3},
 };
 /// Indicates that the entity on which this is placed should use the coordinates
 /// of the window instead of the coordinates relative to the `Camera`.
@@ -26,7 +26,7 @@ impl ScreenSpaceSettings {
     /// Creates a new ScreenSpaceSettings with the specified maximal visible depth.
     pub fn new(max_depth: f32) -> Self {
         let translation = Vector3::<f32>::new(0.0, 0.0, max_depth / 2.0);
-        let iso = Isometry3::new(translation, amethyst_core::nalgebra::zero());
+        let iso = Isometry3::new(translation, amethyst_core::math::zero());
         let pos: [[f32; 4]; 4] = iso.inverse().to_homogeneous().into();
         ScreenSpaceSettings {
             max_depth,

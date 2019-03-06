@@ -8,8 +8,8 @@ use serde::{Deserialize, Serialize};
 
 use amethyst_assets::{Asset, AssetStorage, Handle, PrefabData, ProcessingState};
 use amethyst_core::{
+    ecs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage},
     shred::SystemData,
-    specs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage},
     timing::{duration_to_secs, secs_to_duration},
 };
 use amethyst_derive::PrefabData;

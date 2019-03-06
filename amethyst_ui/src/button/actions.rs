@@ -1,4 +1,4 @@
-use amethyst_core::specs::prelude::Entity;
+use amethyst_core::ecs::prelude::Entity;
 use amethyst_renderer::TextureHandle;
 
 /// Describes an action targeted at a `UiButton`.

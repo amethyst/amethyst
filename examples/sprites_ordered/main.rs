@@ -10,7 +10,7 @@ mod sprite_sheet_loader;
 use amethyst::{
     assets::{AssetStorage, Loader},
     core::{
-        nalgebra::Orthographic3,
+        math::Orthographic3,
         transform::{Transform, TransformBundle},
     },
     ecs::prelude::Entity,

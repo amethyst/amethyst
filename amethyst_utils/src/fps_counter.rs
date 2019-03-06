@@ -1,7 +1,7 @@
 //! Util Resources
 
 use amethyst_core::{
-    specs::prelude::{DispatcherBuilder, Read, System, Write},
+    ecs::prelude::{DispatcherBuilder, Read, System, Write},
     timing::{duration_to_nanos, Time},
     SystemBundle,
 };

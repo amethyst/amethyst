@@ -1,4 +1,4 @@
-use specs::{Resources, SystemData, World};
+use crate::ecs::{Resources, SystemData, World};
 
 /// Read events generically
 pub trait EventReader<'a> {
@@ -23,8 +23,8 @@ pub trait EventReader<'a> {
 
 #[cfg(test)]
 mod tests {
+    use crate::ecs::Read;
     use shrev::{EventChannel, ReaderId};
-    use specs::Read;
 
     use super::*;
 

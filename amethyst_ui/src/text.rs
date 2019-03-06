@@ -7,11 +7,11 @@ use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 use winit::{ElementState, Event, MouseButton, WindowEvent};
 
 use amethyst_core::{
-    shrev::{EventChannel, ReaderId},
-    specs::prelude::{
+    ecs::prelude::{
         Component, DenseVecStorage, Join, Read, ReadExpect, ReadStorage, Resources, System,
         WriteStorage,
     },
+    shrev::{EventChannel, ReaderId},
     timing::Time,
 };
 use amethyst_renderer::ScreenDimensions;
@@ -269,7 +269,7 @@ impl<'a> System<'a> for TextEditingMouseSystem {
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         self.reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
     }

@@ -1,7 +1,7 @@
 //! Module containing utility methods to easily create `Material` and `Texture` handles using a minimal amount of code.
 
 use amethyst_assets::{AssetStorage, Handle, Loader, Progress};
-use amethyst_core::specs::{Read, ReadExpect};
+use amethyst_core::ecs::{Read, ReadExpect};
 use amethyst_renderer::{Material, MaterialDefaults, PngFormat, Texture, TextureMetadata};
 
 use shred_derive::SystemData;

@@ -81,8 +81,8 @@ Component     | Serialized representation             | Example(s)            | 
     #
     # use amethyst_audio::output::Output;
     # use amethyst_core::{
-    #     nalgebra::Point3,
-    #     specs::{prelude::Component, storage::HashMapStorage},
+    #     math::Point3,
+    #     ecs::{prelude::Component, storage::HashMapStorage},
     # };
     # use specs_derive::Component;
     #

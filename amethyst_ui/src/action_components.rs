@@ -1,5 +1,5 @@
 use amethyst_audio::SourceHandle;
-use amethyst_core::specs::prelude::{Component, DenseVecStorage};
+use amethyst_core::ecs::prelude::{Component, DenseVecStorage};
 use amethyst_renderer::TextureHandle;
 
 /// When this component is added to a UI element with a `TextureHandle`

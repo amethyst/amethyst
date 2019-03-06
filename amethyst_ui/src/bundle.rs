@@ -6,7 +6,7 @@ use derive_new::new;
 
 use amethyst_assets::Processor;
 use amethyst_audio::AudioFormat;
-use amethyst_core::{bundle::SystemBundle, specs::prelude::DispatcherBuilder};
+use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder};
 use amethyst_error::Error;
 use amethyst_renderer::{BlinkSystem, TextureFormat};
 
