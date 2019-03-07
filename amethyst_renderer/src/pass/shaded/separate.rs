@@ -9,7 +9,7 @@ use log::{debug, trace};
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    nalgebra::Real,
+    nalgebra::{alga::general::SubsetOf, Real},
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::Transform,
 };
@@ -127,10 +127,7 @@ where
     );
 }
 
-impl<N> Pass for DrawShadedSeparate<N>
-where
-    N: Real,
-{
+impl<N: Real + SubsetOf<f32>> Pass for DrawShadedSeparate<N> {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         debug!("Building shaded pass");
         let mut builder = if self.skinning {

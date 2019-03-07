@@ -3,7 +3,7 @@ use std::mem;
 use glsl_layout::*;
 
 use amethyst_core::{
-    nalgebra::Real,
+    nalgebra::{alga::general::SubsetOf, convert, Matrix4, Real},
     specs::prelude::{Join, ReadStorage},
     Transform,
 };
@@ -48,7 +48,7 @@ pub(crate) struct SpotLightPod {
     smoothness: float,
 }
 
-pub(crate) fn set_light_args<N: Real>(
+pub(crate) fn set_light_args<N: Real + SubsetOf<f32>>(
     effect: &mut Effect,
     encoder: &mut Encoder,
     light: &ReadStorage<'_, Light>,
@@ -60,7 +60,11 @@ pub(crate) fn set_light_args<N: Real>(
         .join()
         .filter_map(|(light, transform)| {
             if let Light::Point(ref light) = *light {
-                let position: [f32; 3] = transform.global_matrix().column(3).xyz().into();
+                let position: [f32; 3] =
+                    convert::<Matrix4<N>, Matrix4<f32>>(*transform.global_matrix())
+                        .column(3)
+                        .xyz()
+                        .into();
                 Some(
                     PointLightPod {
                         position: position.into(),
@@ -97,7 +101,11 @@ pub(crate) fn set_light_args<N: Real>(
         .join()
         .filter_map(|(light, transform)| {
             if let Light::Spot(ref light) = *light {
-                let position: [f32; 3] = transform.global_matrix().column(3).xyz().into();
+                let position: [f32; 3] =
+                    convert::<Matrix4<N>, Matrix4<f32>>(*transform.global_matrix())
+                        .column(3)
+                        .xyz()
+                        .into();
                 Some(
                     SpotLightPod {
                         position: position.into(),
@@ -133,7 +141,12 @@ pub(crate) fn set_light_args<N: Real>(
         "camera_position",
         camera
             .as_ref()
-            .map(|&(_, ref trans)| trans.0.column(3).xyz().into())
+            .map(|&(_, ref trans)| {
+                convert::<Matrix4<N>, Matrix4<f32>>(*trans.global_matrix())
+                    .column(3)
+                    .xyz()
+                    .into()
+            })
             .unwrap_or([0.0; 3]),
     );
 }

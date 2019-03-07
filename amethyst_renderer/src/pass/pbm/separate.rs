@@ -10,7 +10,7 @@ use thread_profiler::profile_scope;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    nalgebra::Real,
+    nalgebra::{alga::general::SubsetOf, Real},
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::Transform,
 };
@@ -126,7 +126,7 @@ impl<'a, N: Real> PassData<'a> for DrawPbmSeparate<N> {
     );
 }
 
-impl<N: Real> Pass for DrawPbmSeparate<N> {
+impl<N: Real + SubsetOf<f32>> Pass for DrawPbmSeparate<N> {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("render_pass_pbm_compile");

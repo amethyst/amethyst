@@ -118,5 +118,3 @@ mod transparent;
 mod types;
 mod vertex;
 mod visibility;
-
-

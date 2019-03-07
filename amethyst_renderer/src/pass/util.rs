@@ -9,7 +9,7 @@ use thread_profiler::profile_scope;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    nalgebra::{Matrix4, Real},
+    nalgebra::{alga::general::SubsetOf, convert, Matrix4, Real},
     specs::prelude::{Join, Read, ReadStorage},
     Transform,
 };
@@ -263,23 +263,26 @@ pub(crate) fn setup_vertex_args(builder: &mut EffectBuilder<'_>) {
 }
 
 /// Sets the vertex argument in the constant buffer.
-pub fn set_vertex_args<N: Real>(
+pub fn set_vertex_args<N: Real + SubsetOf<f32>>(
     effect: &mut Effect,
     encoder: &mut Encoder,
     camera: Option<(&Camera, &Transform<N>)>,
-    transform: &Transform<N>,
+    global_matrix: &Matrix4<N>,
     rgba: Rgba,
 ) {
+    let model: [[f32; 4]; 4] = convert::<Matrix4<N>, Matrix4<f32>>(*global_matrix).into();
+
     let vertex_args = camera
         .as_ref()
-        .map(|&(ref cam, ref transform)| {
+        .map(|&(ref cam, ref cam_transform)| {
             let proj: [[f32; 4]; 4] = cam.proj.into();
-            let view: [[f32; 4]; 4] = transform
-                .global_matrix()
-                .try_inverse()
-                .expect("Unable to get inverse of camera transform")
-                .into();
-            let model: [[f32; 4]; 4] = transform.global_matrix().into();
+            let view: [[f32; 4]; 4] = convert::<_, Matrix4<f32>>(
+                cam_transform
+                    .global_matrix()
+                    .try_inverse()
+                    .expect("Unable to get inverse of camera transform"),
+            )
+            .into();
             VertexArgs {
                 proj: proj.into(),
                 view: view.into(),
@@ -290,7 +293,6 @@ pub fn set_vertex_args<N: Real>(
         .unwrap_or_else(|| {
             let proj: [[f32; 4]; 4] = Matrix4::identity().into();
             let view: [[f32; 4]; 4] = Matrix4::identity().into();
-            let model: [[f32; 4]; 4] = transform.global_matrix().into();
             VertexArgs {
                 proj: proj.into(),
                 view: view.into(),
@@ -306,7 +308,7 @@ pub fn set_view_args<N>(
     encoder: &mut Encoder,
     camera: Option<(&Camera, &Transform<N>)>,
 ) where
-    N: Real,
+    N: Real + SubsetOf<f32>,
 {
     #[cfg(feature = "profiler")]
     profile_scope!("render_setviewargs");
@@ -315,11 +317,13 @@ pub fn set_view_args<N>(
         .as_ref()
         .map(|&(ref cam, ref transform)| {
             let proj: [[f32; 4]; 4] = cam.proj.into();
-            let view: [[f32; 4]; 4] = transform
-                .global_matrix()
-                .try_inverse()
-                .expect("Unable to get inverse of camera transform")
-                .into();
+            let view: [[f32; 4]; 4] = convert::<_, Matrix4<f32>>(
+                transform
+                    .global_matrix()
+                    .try_inverse()
+                    .expect("Unable to get inverse of camera transform"),
+            )
+            .into();
             ViewArgs {
                 proj: proj.into(),
                 view: view.into(),
@@ -350,7 +354,7 @@ pub(crate) fn draw_mesh<N>(
     attributes: &[Attributes<'static>],
     textures: &[TextureType],
 ) where
-    N: Real,
+    N: Real + SubsetOf<f32>,
 {
     #[cfg(feature = "profiler")]
     profile_scope!("render_drawmesh");
@@ -373,7 +377,7 @@ pub(crate) fn draw_mesh<N>(
         effect,
         encoder,
         camera,
-        transform,
+        transform.global_matrix(),
         rgba.cloned().unwrap_or(Rgba::WHITE),
     );
 
