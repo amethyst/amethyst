@@ -1,4 +1,4 @@
-use amethyst_core::specs::{
+use amethyst_core::ecs::{
     prelude::Component,
     storage::{FlaggedStorage, NullStorage},
 };

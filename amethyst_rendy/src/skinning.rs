@@ -1,8 +1,8 @@
 use {
     amethyst_assets::PrefabData,
     amethyst_core::{
-        nalgebra::Matrix4,
-        specs::prelude::{Component, DenseVecStorage, Entity, FlaggedStorage, WriteStorage},
+        math::Matrix4,
+        ecs::prelude::{Component, DenseVecStorage, Entity, FlaggedStorage, WriteStorage},
     },
     amethyst_error::Error,
     rendy::{hal::format::Format, mesh::AsAttribute},

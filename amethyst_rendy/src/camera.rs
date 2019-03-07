@@ -3,8 +3,8 @@
 use {
     amethyst_assets::PrefabData,
     amethyst_core::{
-        nalgebra::{Matrix4, Orthographic3, Perspective3},
-        specs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
+        math::{Matrix4, Orthographic3, Perspective3},
+        ecs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
     },
     amethyst_error::Error,
 };
@@ -156,7 +156,7 @@ mod serde_ortho {
         ser::{Serialize, Serializer},
     };
 
-    use amethyst_core::nalgebra::Orthographic3;
+    use amethyst_core::math::Orthographic3;
 
     #[derive(serde::Deserialize, serde::Serialize)]
     struct Orthographic {
@@ -207,7 +207,7 @@ mod serde_persp {
         ser::{Serialize, Serializer},
     };
 
-    use amethyst_core::nalgebra::Perspective3;
+    use amethyst_core::math::Perspective3;
 
     #[derive(serde::Deserialize, serde::Serialize)]
     struct Perspective {

@@ -3,7 +3,7 @@
 
 use {
     amethyst_assets::PrefabData,
-    amethyst_core::specs::{Entity, Write},
+    amethyst_core::ecs::{Entity, Write},
     amethyst_error::Error,
 };
 

@@ -6,8 +6,8 @@ use {
     crate::resources::AmbientColor,
     amethyst_assets::{PrefabData, ProgressCounter},
     amethyst_core::{
-        nalgebra::Vector3,
-        specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage},
+        math::Vector3,
+        ecs::prelude::{Component, DenseVecStorage, Entity, WriteStorage},
     },
     amethyst_error::Error,
 };

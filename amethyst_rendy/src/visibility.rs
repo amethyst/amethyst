@@ -5,8 +5,8 @@ use {
         transparent::Transparent,
     },
     amethyst_core::{
-        nalgebra::{self as na, Point3, Vector3},
-        specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
+        math::{distance_squared, Point3, Vector3},
+        ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
         GlobalTransform,
     },
     hibitset::BitSet,
@@ -89,7 +89,7 @@ impl<'a> System<'a> for VisibilitySortingSystem {
                     entity,
                     transparent: transparent.contains(entity),
                     centroid,
-                    camera_distance: na::distance_squared(&centroid, &camera_centroid),
+                    camera_distance: distance_squared(&centroid, &camera_centroid),
                     from_camera: centroid - camera_centroid,
                 })
                 .filter(|c| c.from_camera.dot(&camera_backward) < 0.), // filter entities behind the camera

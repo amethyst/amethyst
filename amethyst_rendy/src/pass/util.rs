@@ -9,8 +9,8 @@ use {
     },
     amethyst_assets::AssetStorage,
     amethyst_core::{
-        nalgebra::Matrix4,
-        specs::prelude::{Join, Read, ReadStorage},
+        math::Matrix4,
+        ecs::prelude::{Join, Read, ReadStorage},
         GlobalTransform,
     },
     glsl_layout::*,
