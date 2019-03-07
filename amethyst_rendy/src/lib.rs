@@ -8,6 +8,7 @@ pub mod pass;
 
 pub mod camera;
 pub mod config;
+pub mod formats;
 pub mod hidden;
 pub mod light;
 pub mod mtl;
