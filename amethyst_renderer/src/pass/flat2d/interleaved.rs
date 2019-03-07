@@ -9,7 +9,7 @@ use std::marker::PhantomData;
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
-    nalgebra::{alga::general::SubsetOf, convert, one, zero, Real, Vector4},
+    nalgebra::{alga::general::SubsetOf, convert, one, zero, Matrix4, Real, Vector4},
     specs::prelude::{Join, Read, ReadStorage},
     transform::Transform,
 };
@@ -45,7 +45,7 @@ use super::*;
 #[derivative(Default(bound = "Self: Pass"))]
 pub struct DrawFlat2D<N>
 where
-    N: Real,
+    N: Real + Default,
 {
     #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
@@ -56,7 +56,7 @@ where
 impl<N> DrawFlat2D<N>
 where
     Self: Pass,
-    N: Real,
+    N: Real + Default,
 {
     /// Create instance of `DrawFlat2D` pass
     pub fn new() -> Self {
@@ -95,7 +95,7 @@ where
     }
 }
 
-impl<'a, N: Real> PassData<'a> for DrawFlat2D<N> {
+impl<'a, N: Real + Default> PassData<'a> for DrawFlat2D<N> {
     type Data = (
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
@@ -113,7 +113,7 @@ impl<'a, N: Real> PassData<'a> for DrawFlat2D<N> {
     );
 }
 
-impl<N: Real> Pass for DrawFlat2D<N> {
+impl<N: Real + Default + SubsetOf<f32>> Pass for DrawFlat2D<N> {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         use std::mem;
 
@@ -324,7 +324,7 @@ struct TextureBatch<N: Real> {
     textures: Vec<TextureDrawData<N>>,
 }
 
-impl<N: Real> TextureBatch<N> {
+impl<N: Real + SubsetOf<f32>> TextureBatch<N> {
     pub fn add_image(
         &mut self,
         texture_handle: &TextureHandle,
@@ -478,7 +478,8 @@ impl<N: Real> TextureBatch<N> {
                         (tex_coords.bottom, tex_coords.top)
                     };
 
-                    let global_matrix = &transform.global_matrix();
+                    let global_matrix =
+                        convert::<Matrix4<N>, Matrix4<f32>>(*transform.global_matrix());
 
                     let dir_x = global_matrix.column(0) * sprite_data.width;
                     let dir_y = global_matrix.column(1) * sprite_data.height;
@@ -513,12 +514,13 @@ impl<N: Real> TextureBatch<N> {
                         (0.0, 1.0)
                     };
 
-                    let global_matrix = &transform.global_matrix();
+                    let global_matrix =
+                        convert::<Matrix4<N>, Matrix4<f32>>(*transform.global_matrix());
 
                     let dir_x = global_matrix.column(0) * (*width as f32);
                     let dir_y = global_matrix.column(1) * (*height as f32);
 
-                    let pos = global_matrix * Vector4::<N>::new(one(), one(), zero(), one());
+                    let pos = global_matrix * Vector4::<f32>::new(one(), one(), zero(), one());
 
                     (
                         dir_x, dir_y, pos, uv_left, uv_right, uv_top, uv_bottom, rgba,

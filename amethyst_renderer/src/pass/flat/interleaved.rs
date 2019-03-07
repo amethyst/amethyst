@@ -9,7 +9,7 @@ use glsl_layout::Uniform;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    nalgebra::Real,
+    nalgebra::{alga::general::SubsetOf, Real},
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::Transform,
 };
@@ -115,7 +115,7 @@ where
 impl<V, N> Pass for DrawFlat<V, N>
 where
     V: Query<(Position, TexCoord)>,
-    N: Real,
+    N: Real + SubsetOf<f32>,
 {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         use std::mem;

@@ -8,7 +8,7 @@ use gfx_core::state::{Blend, ColorMask};
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    nalgebra::Real,
+    nalgebra::{alga::general::SubsetOf, Real},
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::Transform,
 };
@@ -119,7 +119,7 @@ where
 impl<V, N> Pass for DrawPbm<V, N>
 where
     V: Query<(Position, Normal, Tangent, TexCoord)>,
-    N: Real,
+    N: Real + SubsetOf<f32>,
 {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);

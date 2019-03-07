@@ -7,7 +7,7 @@ use gfx::{pso::buffer::ElemStride, Primitive};
 use log::{debug, trace};
 
 use amethyst_core::{
-    nalgebra as na,
+    nalgebra::{self as na, alga::general::SubsetOf},
     specs::{Join, Read, ReadStorage, Write, WriteStorage},
     transform::Transform,
 };
@@ -88,7 +88,7 @@ where
 impl<V, N> Pass for DrawDebugLines<V, N>
 where
     V: Query<(Position, Color, Normal)>,
-    N: na::Real,
+    N: na::Real + SubsetOf<f32>,
 {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         debug!("Building debug lines pass");
@@ -138,7 +138,12 @@ where
             "camera_position",
             camera
                 .as_ref()
-                .map(|&(_, ref trans)| trans.global_matrix().column(3).xyz().into())
+                .map(|&(_, ref trans)| {
+                    na::convert::<na::Matrix4<N>, na::Matrix4<f32>>(*trans.global_matrix())
+                        .column(3)
+                        .xyz()
+                        .into()
+                })
                 .unwrap_or([0.0; 3]),
         );
 

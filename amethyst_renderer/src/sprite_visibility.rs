@@ -1,9 +1,9 @@
-use std::{cmp::Ordering, marker::PhantomData};
+use std::cmp::Ordering;
 
 use hibitset::BitSet;
 
 use amethyst_core::{
-    nalgebra::{Point3, Real, Vector3},
+    nalgebra::{zero, Point3, Real, Vector3},
     specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
     Transform,
 };
@@ -37,21 +37,20 @@ pub struct SpriteVisibility {
 ///
 /// * `N`: `RealBound` (f32, f64)
 #[derive(Default)]
-pub struct SpriteVisibilitySortingSystem<N> {
-    centroids: Vec<Internals>,
-    transparent: Vec<Internals>,
-    _pd: PhantomData<N>,
+pub struct SpriteVisibilitySortingSystem<N: Real> {
+    centroids: Vec<Internals<N>>,
+    transparent: Vec<Internals<N>>,
 }
 
 #[derive(Clone)]
-struct Internals {
+struct Internals<N: Real> {
     entity: Entity,
     transparent: bool,
-    centroid: Point3<f32>,
-    from_camera: Vector3<f32>,
+    centroid: Point3<N>,
+    from_camera: Vector3<N>,
 }
 
-impl<N> SpriteVisibilitySortingSystem<N> {
+impl<N: Real + Default> SpriteVisibilitySortingSystem<N> {
     /// Returns a new sprite visibility sorting system
     pub fn new() -> Self {
         Default::default()
@@ -83,7 +82,7 @@ impl<'a, N: Real> System<'a> for SpriteVisibilitySortingSystem<N> {
             .and_then(|entity| transform.get(entity))
             .or_else(|| (&camera, &transform).join().map(|cg| cg.1).next());
         let camera_backward = camera
-            .map(|c| c.0.column(2).xyz().into())
+            .map(|c| c.global_matrix().column(2).xyz().into())
             .unwrap_or_else(Vector3::z);
         let camera_centroid = camera
             .map(|g| g.global_matrix().transform_point(&origin))
@@ -103,7 +102,7 @@ impl<'a, N: Real> System<'a> for SpriteVisibilitySortingSystem<N> {
                     from_camera: centroid - camera_centroid,
                 })
                 // filter entities behind the camera
-                .filter(|c| c.from_camera.dot(&camera_backward) < 0.),
+                .filter(|c| c.from_camera.dot(&camera_backward) < zero()),
         );
         self.transparent.clear();
         self.transparent

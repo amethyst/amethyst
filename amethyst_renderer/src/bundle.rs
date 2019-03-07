@@ -94,7 +94,7 @@ impl<'a, 'b, 'c, B, P, N> SystemBundle<'a, 'b> for RenderBundle<'c, B, P, N>
 where
     B: PipelineBuild<Pipeline = P>,
     P: 'b + PolyPipeline,
-    N: Real,
+    N: Real + Default,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         if let Some(dep) = self.visibility_sorting {

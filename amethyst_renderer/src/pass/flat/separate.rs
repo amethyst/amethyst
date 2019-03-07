@@ -8,7 +8,7 @@ use std::marker::PhantomData;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    nalgebra::Real,
+    nalgebra::{alga::general::SubsetOf, Real},
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::Transform,
 };
@@ -121,7 +121,7 @@ impl<'a, N: Real> PassData<'a> for DrawFlatSeparate<N> {
     );
 }
 
-impl<N: Real> Pass for DrawFlatSeparate<N> {
+impl<N: Real + SubsetOf<f32>> Pass for DrawFlatSeparate<N> {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         use std::mem;
         let mut builder = if self.skinning {
