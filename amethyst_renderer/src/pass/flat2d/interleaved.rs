@@ -284,11 +284,11 @@ enum TextureDrawData<N: Real> {
         render: SpriteRender,
         flipped: Option<Flipped>,
         rgba: Option<Rgba>,
-        transform: Transform<N>,
+        transform: Matrix4<N>,
     },
     Image {
         texture_handle: Handle<Texture>,
-        transform: Transform<N>,
+        transform: Matrix4<N>,
         flipped: Option<Flipped>,
         rgba: Option<Rgba>,
         width: usize,
@@ -324,7 +324,7 @@ struct TextureBatch<N: Real> {
     textures: Vec<TextureDrawData<N>>,
 }
 
-impl<N: Real + SubsetOf<f32>> TextureBatch<N> {
+impl<N: Real + Default + SubsetOf<f32>> TextureBatch<N> {
     pub fn add_image(
         &mut self,
         texture_handle: &TextureHandle,
@@ -348,7 +348,7 @@ impl<N: Real + SubsetOf<f32>> TextureBatch<N> {
 
         self.textures.push(TextureDrawData::Image {
             texture_handle: texture_handle.clone(),
-            transform: *transform,
+            transform: *transform.global_matrix(),
             flipped: flipped.cloned(),
             rgba: rgba.cloned(),
             width: texture_dims.0,
@@ -396,7 +396,7 @@ impl<N: Real + SubsetOf<f32>> TextureBatch<N> {
             render: sprite_render.clone(),
             flipped: flipped.cloned(),
             rgba: rgba.cloned(),
-            transform: *transform,
+            transform: *transform.global_matrix(),
         });
     }
 
@@ -479,7 +479,7 @@ impl<N: Real + SubsetOf<f32>> TextureBatch<N> {
                     };
 
                     let global_matrix =
-                        convert::<Matrix4<N>, Matrix4<f32>>(*transform.global_matrix());
+                        convert::<Matrix4<N>, Matrix4<f32>>(*transform);
 
                     let dir_x = global_matrix.column(0) * sprite_data.width;
                     let dir_y = global_matrix.column(1) * sprite_data.height;
@@ -515,7 +515,7 @@ impl<N: Real + SubsetOf<f32>> TextureBatch<N> {
                     };
 
                     let global_matrix =
-                        convert::<Matrix4<N>, Matrix4<f32>>(*transform.global_matrix());
+                        convert::<Matrix4<N>, Matrix4<f32>>(*transform);
 
                     let dir_x = global_matrix.column(0) * (*width as f32);
                     let dir_y = global_matrix.column(1) * (*height as f32);
@@ -548,7 +548,7 @@ impl<N: Real + SubsetOf<f32>> TextureBatch<N> {
                     .create_buffer_immutable(&instance_data, buffer::Role::Vertex, Bind::empty())
                     .expect("Unable to create immutable buffer for `TextureBatch`");
 
-                for _ in DrawFlat2D::attributes() {
+                for _ in DrawFlat2D::<N>::attributes() {
                     effect.data.vertex_bufs.push(vbuf.raw().clone());
                 }
 
