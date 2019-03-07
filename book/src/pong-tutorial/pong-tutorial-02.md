@@ -101,7 +101,7 @@ the entire arena. Let's do it in a new function `initialise_camera`!
 # use amethyst::core::Transform;
 fn initialise_camera(world: &mut World) {
     let mut transform = Transform::default();
-    transform.set_z(1.0);
+    transform.set_translation_z(1.0);
     world
         .create_entity()
         .with(Camera::from(Projection::orthographic(
@@ -255,8 +255,8 @@ fn initialise_paddles(world: &mut World) {
 
     // Correctly position the paddles.
     let y = ARENA_HEIGHT / 2.0;
-    left_transform.set_xyz(PADDLE_WIDTH * 0.5, y, 0.0);
-    right_transform.set_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
+    left_transform.set_translation_xyz(PADDLE_WIDTH * 0.5, y, 0.0);
+    right_transform.set_translation_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 
     // Create a left plank entity.
     world

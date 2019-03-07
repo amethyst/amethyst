@@ -42,7 +42,7 @@ fn initialise_camera(world: &mut World) {
     };
 
     let mut transform = Transform::default();
-    transform.set_z(1.0);
+    transform.set_translation_z(1.0);
     world
         .create_entity()
         .with(Camera::from(Projection::orthographic(
@@ -108,8 +108,8 @@ fn initialise_paddles(world: &mut World) {
 
     let left_y = (arena_height - left_height) / 2.0;
     let right_y = (arena_height - right_height) / 2.0;
-    left_transform.set_xyz(0.0, left_y, 0.0);
-    right_transform.set_xyz(arena_width - right_width, right_y, 0.0);
+    left_transform.set_translation_xyz(0.0, left_y, 0.0);
+    right_transform.set_translation_xyz(arena_width - right_width, right_y, 0.0);
 
     let left_mesh = create_mesh(
         world,
@@ -170,7 +170,7 @@ fn initialise_balls(world: &mut World) {
     let mesh = create_mesh(world, generate_circle_vertices(radius, 16));
     let material = create_colour_material(world, colour);
     let mut local_transform = Transform::default();
-    local_transform.set_xyz(arena_width / 2.0, arena_height / 2.0, 0.0);
+    local_transform.set_translation_xyz(arena_width / 2.0, arena_height / 2.0, 0.0);
 
     world
         .create_entity()

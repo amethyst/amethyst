@@ -33,8 +33,8 @@ impl<'s> System<'s> for MovementSystem {
         let y_move = input.axis_value("entity_y").unwrap();
 
         for (_, transform) in (&players, &mut transforms).join() {
-            transform.translate_x(x_move as f32 * 5.0);
-            transform.translate_y(y_move as f32 * 5.0);
+            transform.prepend_translation_x(x_move as f32 * 5.0);
+            transform.prepend_translation_y(y_move as f32 * 5.0);
         }
     }
 }
@@ -65,7 +65,7 @@ fn load_sprite_sheet(world: &mut World, png_path: &str, ron_path: &str) -> Sprit
 // Initialize a background
 fn init_background_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
     let mut transform = Transform::default();
-    transform.set_z(-10.0);
+    transform.set_translation_z(-10.0);
     let sprite = SpriteRender {
         sprite_sheet: sprite_sheet.clone(),
         sprite_number: 0,
@@ -76,8 +76,7 @@ fn init_background_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -
 // Initialize a sprite as a reference point at a fixed location
 fn init_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
     let mut transform = Transform::default();
-    transform.set_x(100.0);
-    transform.set_y(0.0);
+    transform.set_translation_xyz(100.0, 0.0, 0.0);
     let sprite = SpriteRender {
         sprite_sheet: sprite_sheet.clone(),
         sprite_number: 0,
@@ -93,9 +92,7 @@ fn init_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) ->
 // Initialize a sprite as a reference point using a screen position
 fn init_screen_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
     let mut transform = Transform::default();
-    transform.set_x(60.0);
-    transform.set_y(10.0);
-    transform.set_z(-20.0);
+    transform.set_translation_xyz(60.0, 10.0, -20.0);
     let sprite = SpriteRender {
         sprite_sheet: sprite_sheet.clone(),
         sprite_number: 0,
@@ -111,8 +108,7 @@ fn init_screen_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHan
 
 fn init_player(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
     let mut transform = Transform::default();
-    transform.set_x(0.0);
-    transform.set_y(0.0);
+    transform.set_translation_xyz(0.0, 0.0, 0.0);
     let sprite = SpriteRender {
         sprite_sheet: sprite_sheet.clone(),
         sprite_number: 1,
@@ -128,7 +124,7 @@ fn init_player(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
 
 fn init_camera(world: &mut World, parent: Entity) -> Entity {
     let mut transform = Transform::default();
-    transform.set_z(1.0);
+    transform.set_translation_z(1.0);
     world
         .create_entity()
         .with(Camera::from(Projection::orthographic(
