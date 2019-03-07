@@ -1,9 +1,10 @@
 use amethyst_core::{
-    nalgebra::{Quaternion, Unit},
+    nalgebra::{Quaternion, Unit, Real, zero},
     Transform,
 };
 
 use serde::{Deserialize, Serialize};
+use num_traits::NumCast;
 
 use crate::{
     resources::{AnimationSampling, ApplyData, BlendMethod},
@@ -21,15 +22,15 @@ pub enum TransformChannel {
     Scale,
 }
 
-impl<'a> ApplyData<'a> for Transform {
+impl<'a, N: Real> ApplyData<'a> for Transform<N> {
     type ApplyData = ();
 }
 
-impl AnimationSampling for Transform {
-    type Primitive = SamplerPrimitive<f32>;
+impl<N: Real + NumCast> AnimationSampling for Transform<N> {
+    type Primitive = SamplerPrimitive<N>;
     type Channel = TransformChannel;
 
-    fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<f32>, _: &()) {
+    fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<N>, _: &()) {
         use crate::util::SamplerPrimitive::*;
 
         use self::TransformChannel::*;
@@ -48,7 +49,7 @@ impl AnimationSampling for Transform {
         }
     }
 
-    fn current_sample(&self, channel: &Self::Channel, _: &()) -> SamplerPrimitive<f32> {
+    fn current_sample(&self, channel: &Self::Channel, _: &()) -> SamplerPrimitive<N> {
         use self::TransformChannel::*;
         match channel {
             Translation => SamplerPrimitive::Vec3((*self.translation()).into()),
@@ -62,9 +63,9 @@ impl AnimationSampling for Transform {
     fn default_primitive(channel: &Self::Channel) -> Self::Primitive {
         use self::TransformChannel::*;
         match channel {
-            Translation => SamplerPrimitive::Vec3([0.; 3]),
-            Rotation => SamplerPrimitive::Vec4([0.; 4]),
-            Scale => SamplerPrimitive::Vec3([0.; 3]),
+            Translation => SamplerPrimitive::Vec3([zero(); 3]),
+            Rotation => SamplerPrimitive::Vec4([zero(); 4]),
+            Scale => SamplerPrimitive::Vec3([zero(); 3]),
         }
     }
 
