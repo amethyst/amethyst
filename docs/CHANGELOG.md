@@ -55,6 +55,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 
 ### Fixed
 
+* Optimize loading of wavefront obj mesh assets by getting rid of unnecessary allocations. ([#1454])
 * Fixed the "json" feature for amethyst_assets. ([#1302])
 * Fixed default system font loading to accept uppercase extension ("TTF"). ([#1328])
 * Set width and height of Pong Paddles ([#1363])
@@ -90,6 +91,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1439]: https://github.com/amethyst/amethyst/pull/1439
 [#1445]: https://github.com/amethyst/amethyst/pull/1445
 [#1451]: https://github.com/amethyst/amethyst/pull/1451
+[#1454]: https://github.com/amethyst/amethyst/pull/1454
 
 ## [0.10.0] - 2018-12
 
