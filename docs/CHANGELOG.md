@@ -27,6 +27,7 @@ it is attached to. ([#1282])
 * Add `SpriteRenderPrefab`. ([#1435])
 * Add `ScreenSpace` component. Draws entities using the screen coordinates. ([#1424])
 * Add `add_removal_to_entity` function. ([#1445])
+* Add `position_from_screen` to `Camera`. Transforms position from screen space to camera space. ([#1442])
 
 ### Changed
 
@@ -92,6 +93,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1445]: https://github.com/amethyst/amethyst/pull/1445
 [#1451]: https://github.com/amethyst/amethyst/pull/1451
 [#1454]: https://github.com/amethyst/amethyst/pull/1454
+[#1442]: https://github.com/amethyst/amethyst/pull/1442
 
 ## [0.10.0] - 2018-12
 
