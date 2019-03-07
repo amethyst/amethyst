@@ -1,7 +1,7 @@
 use {
     crate::types::Texture,
     amethyst_assets::{Asset, Handle, ProcessingState, SimpleFormat},
-    amethyst_core::specs::prelude::{Component, DenseVecStorage, VecStorage},
+    amethyst_core::ecs::prelude::{Component, DenseVecStorage, VecStorage},
     amethyst_error::Error,
     ron::de::from_bytes as from_ron_bytes,
 };

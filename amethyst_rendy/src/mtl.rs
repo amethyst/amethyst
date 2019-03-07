@@ -3,7 +3,7 @@
 use {
     crate::types::Texture,
     amethyst_assets::Handle,
-    amethyst_core::specs::prelude::{Component, DenseVecStorage},
+    amethyst_core::ecs::prelude::{Component, DenseVecStorage},
 };
 
 /// Material reference this part of the texture

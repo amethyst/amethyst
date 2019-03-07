@@ -1,6 +1,6 @@
 //! Renderer system
 use {
-    amethyst_core::specs::{Resources, RunNow},
+    amethyst_core::ecs::{Resources, RunNow},
     rendy::{command::Families, factory::Factory, graph::Graph, hal::Backend},
 };
 

@@ -1,6 +1,6 @@
 use {
     amethyst_assets::{Asset, Handle},
-    amethyst_core::specs::VecStorage,
+    amethyst_core::ecs::VecStorage,
 };
 
 #[cfg(feature = "dx12")]

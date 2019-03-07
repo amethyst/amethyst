@@ -1,4 +1,4 @@
-use amethyst_core::specs::{prelude::Component, storage::NullStorage};
+use amethyst_core::ecs::{prelude::Component, storage::NullStorage};
 
 /// Transparent mesh component
 #[derive(Clone, Debug, Default)]

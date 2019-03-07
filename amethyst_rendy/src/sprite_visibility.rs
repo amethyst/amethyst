@@ -5,8 +5,8 @@ use {
         transparent::Transparent,
     },
     amethyst_core::{
-        nalgebra::{Point3, Vector3},
-        specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
+        math::{Point3, Vector3},
+        ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
         GlobalTransform,
     },
     hibitset::BitSet,

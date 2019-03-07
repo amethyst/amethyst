@@ -10,7 +10,7 @@ use {
     },
     amethyst_assets::{AssetStorage, Handle},
     amethyst_core::{
-        specs::{Entity, Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
+        ecs::{Entity, Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
         transform::GlobalTransform,
     },
     rendy::{
@@ -64,7 +64,7 @@ impl SimpleGraphicsPipelineDesc<Backend, Resources> for DrawFlatDesc {
 
     fn load_shader_set<'a>(
         &self,
-        storage: &'a mut Vec<Backend::ShaderModule>,
+        storage: &'a mut Vec<<Backend as rendy::hal::Backend>::ShaderModule>,
         factory: &mut Factory<Backend>,
         _aux: &mut Resources,
     ) -> GraphicsShaderSet<'a, Backend> {
@@ -113,7 +113,7 @@ impl SimpleGraphicsPipelineDesc<Backend, Resources> for DrawFlatDesc {
         _resources: &mut Resources,
         _buffers: Vec<NodeBuffer<'a, Backend>>,
         _images: Vec<NodeImage<'a, Backend>>,
-        _set_layouts: &[Backend::DescriptorSetLayout],
+        _set_layouts: &[<Backend as rendy::hal::Backend>::DescriptorSetLayout],
     ) -> Result<DrawFlat, failure::Error> {
         let buffer = factory.create_buffer(1, 1024, rendy::resource::buffer::UniformBuffer)?;
 

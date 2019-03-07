@@ -2,8 +2,8 @@ use {
     crate::types::Mesh,
     amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, Progress, ProgressCounter},
     amethyst_core::{
-        nalgebra::Vector3,
-        specs::prelude::{Entity, Read, ReadExpect, WriteStorage},
+        math::Vector3,
+        ecs::prelude::{Entity, Read, ReadExpect, WriteStorage},
     },
     amethyst_error::Error,
     genmesh::{
