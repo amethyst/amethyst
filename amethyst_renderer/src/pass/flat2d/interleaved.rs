@@ -407,7 +407,10 @@ impl TextureBatch {
             }
             None => {
                 warn!(
-                    "Sprite sheet not loaded for sprite_render: `{:?}`.",
+                    "Sprite sheet not loaded for sprite_render: `{:?}`. \
+                     Ensure that `RenderBundle::new(..).with_sprite_sheet_processor()` has been \
+                     called and that the corresponding `SpriteSheet` asset has loaded \
+                     successfully.",
                     sprite_render
                 );
                 return;
