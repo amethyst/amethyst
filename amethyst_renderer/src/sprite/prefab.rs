@@ -31,9 +31,11 @@ pub struct SpritePosition {
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct SpriteList {
     /// Width of the sprite sheet
-    pub spritesheet_width: u32,
+    #[serde(rename = "spritesheet_width")]
+    pub width: u32,
     /// Height of the sprite sheet
-    pub spritesheet_height: u32,
+    #[serde(rename = "spritesheet_height")]
+    pub height: u32,
     /// Description of the sprites
     pub sprites: Vec<SpritePosition>,
 }
@@ -56,8 +58,10 @@ pub struct SpriteList {
 #[derive(Clone, Debug, Deserialize, Serialize, Default)]
 pub struct SpriteGrid {
     /// Height of the spritesheet in pixels.
+    #[serde(rename = "spritesheet_width")]
     pub width: u32,
     /// Width of the spritesheet in pixels.
+    #[serde(rename = "spritesheet_height")]
     pub height: u32,
     /// Specifies the number of columns in the spritesheet, this value must always be given.
     pub columns: u32,
@@ -71,6 +75,9 @@ pub struct SpriteGrid {
     /// given it will be calculated using the spritesheet size, `columns` and `rows`.
     /// Tuple order is `(width, height)`.
     pub cell_size: Option<(u32, u32)>,
+    /// Specifies the position of the grid on a texture. If this is not given it will be set to (0, 0).
+    /// Positions originate in the top-left corner (bitmap image convention).
+    pub position: Option<(u32, u32)>,
 }
 
 /// Defined the sprites that are part of a `SpriteSheetPrefab`.
@@ -96,7 +103,7 @@ pub enum SpriteSheetPrefab {
         /// This texture contains the images for the spritesheet
         texture: TexturePrefab<TextureFormat>,
         /// The sprites in the spritesheet
-        sprites: Sprites,
+        sprites: Vec<Sprites>,
     },
 }
 
@@ -131,9 +138,10 @@ impl<'a> PrefabData<'a> for SpriteSheetPrefab {
                     TexturePrefab::Handle(handle) => handle.clone(),
                     _ => unreachable!(),
                 };
+                let sprites = sprites.iter().flat_map(|s| s.build_sprites()).collect();
                 let spritesheet = SpriteSheet {
                     texture: texture_handle,
-                    sprites: sprites.build_sprites(),
+                    sprites,
                 };
                 Some(
                     (system_data.0)
@@ -214,7 +222,7 @@ impl<'a> PrefabData<'a> for SpriteRenderPrefab {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct SpriteScenePrefab {
     /// Sprite sheets
-    pub sheets: Option<Vec<SpriteSheetPrefab>>,
+    pub sheet: Option<SpriteSheetPrefab>,
     /// Add `SpriteRender` to the `Entity`
     pub render: Option<SpriteRenderPrefab>,
     /// Add `Transform` to the `Entity`
@@ -250,18 +258,15 @@ impl<'a> PrefabData<'a> for SpriteScenePrefab {
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
         let mut ret = false;
-        if let Some(ref mut sheets) = &mut self.sheets {
-            ((system_data.1).1).0.clear();
-            for sheet in sheets {
-                if sheet.load_sub_assets(progress, &mut system_data.0)? {
-                    ret = true;
-                }
-                let sheet = match sheet {
-                    SpriteSheetPrefab::Handle(handle) => handle.clone(),
-                    _ => unreachable!(),
-                };
-                ((system_data.1).1).0.push(sheet);
+        if let Some(ref mut sheet) = &mut self.sheet {
+            if sheet.load_sub_assets(progress, &mut system_data.0)? {
+                ret = true;
             }
+            let sheet = match sheet {
+                SpriteSheetPrefab::Handle(handle) => handle.clone(),
+                _ => unreachable!(),
+            };
+            ((system_data.1).1).0.push(sheet);
         }
         if let Some(ref mut render) = &mut self.render {
             render.load_sub_assets(progress, &mut system_data.1)?;
@@ -285,12 +290,12 @@ impl SpriteList {
             .iter()
             .map(|pos| {
                 Sprite::from_pixel_values(
-                    self.spritesheet_width as u32,
-                    self.spritesheet_height as u32,
-                    pos.width as u32,
-                    pos.height as u32,
-                    pos.x as u32,
-                    pos.y as u32,
+                    self.width,
+                    self.height,
+                    pos.width,
+                    pos.height,
+                    pos.x,
+                    pos.y,
                     pos.offsets.unwrap_or([0.0; 2]),
                 )
             })
@@ -299,6 +304,14 @@ impl SpriteList {
 }
 
 impl SpriteGrid {
+    fn width(&self) -> u32 {
+        self.width - self.position().0
+    }
+
+    fn height(&self) -> u32 {
+        self.height - self.position().1
+    }
+
     fn rows(&self) -> u32 {
         self.rows.unwrap_or_else(|| {
             self.count
@@ -309,7 +322,7 @@ impl SpriteGrid {
                         (c / self.columns) + 1
                     }
                 })
-                .or_else(|| self.cell_size.map(|(_, y)| (self.height / y)))
+                .or_else(|| self.cell_size.map(|(_, y)| (self.height() / y)))
                 .unwrap_or(1)
         })
     }
@@ -320,31 +333,42 @@ impl SpriteGrid {
 
     fn cell_size(&self) -> (u32, u32) {
         self.cell_size
-            .unwrap_or_else(|| ((self.width / self.columns), (self.height / self.rows())))
+            .unwrap_or_else(|| ((self.width() / self.columns), (self.height() / self.rows())))
+    }
+
+    fn position(&self) -> (u32, u32) {
+        self.position.unwrap_or((0, 0))
     }
 
     fn build_sprites(&self) -> Vec<Sprite> {
         let rows = self.rows();
         let count = self.count();
         let cell_size = self.cell_size();
-        if (self.columns * cell_size.0) > self.width {
-            warn!("Grid spritesheet contain more columns than can fit in the given width: {} * {} > {}",
-                  self.columns,
-                  cell_size.0,
-                  self.width);
-        }
-        if (rows * cell_size.1) > self.height {
+        let position = self.position();
+        if (self.columns * cell_size.0) > self.width() {
             warn!(
-                "Grid spritesheet contain more rows than can fit in the given height: {} * {} > {}",
-                rows, cell_size.1, self.height
+                "Grid spritesheet contain more columns than can fit in the given width: {} * {} > {} - {}",
+                self.columns,
+                cell_size.0,
+                self.width,
+                position.0
+            );
+        }
+        if (rows * cell_size.1) > self.height() {
+            warn!(
+                "Grid spritesheet contain more rows than can fit in the given height: {} * {} > {} - {}",
+                rows,
+                cell_size.1,
+                self.height,
+                position.1
             );
         }
         (0..count)
             .map(|cell| {
                 let row = cell / self.columns;
                 let column = cell - (row * self.columns);
-                let x = column * cell_size.0;
-                let y = row * cell_size.1;
+                let x = column * cell_size.0 + position.0;
+                let y = row * cell_size.1 + position.1;
                 Sprite::from_pixel_values(
                     self.width,
                     self.height,
@@ -413,11 +437,11 @@ mod tests {
         let mut world = setup_sprite_world();
         let texture = add_texture(&mut world);
         let mut prefab = SpriteSheetPrefab::Sheet {
-            sprites: Sprites::List(SpriteList {
-                spritesheet_width: 0,
-                spritesheet_height: 0,
+            sprites: vec![Sprites::List(SpriteList {
+                width: 0,
+                height: 0,
                 sprites: vec![],
-            }),
+            })],
             texture: TexturePrefab::Handle(texture.clone()),
         };
         prefab
@@ -522,6 +546,36 @@ mod tests {
         assert_eq!(0.6666667, sprites[9].tex_coords.right);
         assert_eq!(0.5, sprites[9].tex_coords.top);
         assert_eq!(0.0, sprites[9].tex_coords.bottom);
+    }
+
+    #[test]
+    fn grid_position() {
+        let sprites = SpriteGrid {
+            width: 192,
+            height: 64,
+            columns: 5,
+            rows: Some(1),
+            position: Some((32, 32)),
+            ..Default::default()
+        }
+        .build_sprites();
+
+        assert_eq!(5, sprites.len());
+        for sprite in &sprites {
+            assert_eq!(32.0, sprite.height);
+            assert_eq!(32.0, sprite.width);
+            assert_eq!([0.0, 0.0], sprite.offsets);
+        }
+
+        assert_eq!(0.16666667, sprites[0].tex_coords.left);
+        assert_eq!(0.33333334, sprites[0].tex_coords.right);
+        assert_eq!(0.5, sprites[0].tex_coords.top);
+        assert_eq!(0.0, sprites[0].tex_coords.bottom);
+
+        assert_eq!(0.8333333, sprites[4].tex_coords.left);
+        assert_eq!(1.0, sprites[4].tex_coords.right);
+        assert_eq!(0.5, sprites[4].tex_coords.top);
+        assert_eq!(0.0, sprites[4].tex_coords.bottom);
     }
 
     #[test]
