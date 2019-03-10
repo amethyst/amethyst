@@ -314,6 +314,8 @@ thread 'main' panicked at 'Tried to fetch a resource of type "amethyst::ecs::sto
 Try adding the resource by inserting it manually or using the `setup` method.'
 ```
 
+To turn on the `nightly` feature, run: `cargo +nightly run --features nightly`.
+
 For a `Component` to be used, there must be a `Storage<ComponentType>` resource
 set up in the `World`. The error message above means we have registered the
 `Paddle` component on an entity, but have not set up the `Storage`. We can fix
