@@ -36,8 +36,8 @@ pub use crate::{
     formats::{
         build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat,
         ComboMeshCreator, GraphicsPrefab, ImageData, JpgFormat, MaterialPrefab, MeshCreator,
-        MeshData, ObjFormat, PngFormat, SpriteRenderPrefab, SpriteSheetFormat, TextureData,
-        TextureFormat, TextureMetadata, TexturePrefab, TgaFormat,
+        MeshData, ObjFormat, PngFormat, TextureData, TextureFormat, TextureMetadata, TexturePrefab,
+        TgaFormat,
     },
     hidden::{Hidden, HiddenPropagate},
     hide_system::HideHierarchySystem,
@@ -66,9 +66,9 @@ pub use crate::{
         JointTransformsPrefab, JointWeights,
     },
     sprite::{
-        Flipped, Sprite, SpriteGrid, SpriteRender, SpriteRenderPrefab, SpriteScenePrefab,
-        SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, SpriteSheetPrefab, Sprites,
-        TextureCoordinates,
+        Flipped, Sprite, SpriteGrid, SpriteList, SpritePosition, SpriteRender, SpriteRenderPrefab,
+        SpriteScenePrefab, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, SpriteSheetPrefab,
+        Sprites, TextureCoordinates,
     },
     sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem},
     system::RenderSystem,

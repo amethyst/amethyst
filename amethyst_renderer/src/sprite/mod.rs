@@ -1,15 +1,16 @@
 pub use self::prefab::{
-    SpriteGrid, SpriteRenderPrefab, SpriteScenePrefab, SpriteSheetPrefab, Sprites,
+    SpriteGrid, SpriteList, SpritePosition, SpriteRenderPrefab, SpriteScenePrefab,
+    SpriteSheetPrefab, Sprites,
 };
 
 use ron::de::from_bytes as from_ron_bytes;
 use serde::{Deserialize, Serialize};
 
-use amethyst_assets::{Asset, Handle, ProcessingState};
+use amethyst_assets::{Asset, Handle, ProcessingState, SimpleFormat};
 use amethyst_core::ecs::prelude::{Component, DenseVecStorage, VecStorage};
 use amethyst_error::Error;
 
-use crate::Texture;
+use crate::{error, Texture};
 
 mod prefab;
 
@@ -205,6 +206,86 @@ pub struct SpriteRender {
 
 impl Component for SpriteRender {
     type Storage = VecStorage<Self>;
+}
+
+/// Allows loading of sprite sheets in RON format.
+///
+/// This format allows to conveniently load a sprite sheet from a RON file.
+///
+/// Example:
+/// ```text,ignore
+/// (
+///     // Width of the sprite sheet
+///     spritesheet_width: 48,
+///     // Height of the sprite sheet
+///     spritesheet_height: 16,
+///     // List of sprites the sheet holds
+///     sprites: [
+///         (
+///             // Horizontal position of the sprite in the sprite sheet
+///             x: 0,
+///             // Vertical position of the sprite in the sprite sheet
+///             y: 0,
+///             // Width of the sprite
+///             width: 16,
+///             // Height of the sprite
+///             height: 16,
+///             // Number of pixels to shift the sprite to the left and down relative to the entity holding it when rendering
+///             offsets: (0.0, 0.0), // This is optional and defaults to (0.0, 0.0)
+///         ),
+///         (
+///             x: 16,
+///             y: 0,
+///             width: 32,
+///             height: 16,
+///         ),
+///     ],
+/// )
+/// ```
+///
+/// Such a spritesheet description can be loaded using a `Loader` by passing it the handle of the corresponding loaded texture.
+/// ```rust,no_run
+/// # use amethyst_assets::{Loader, AssetStorage};
+/// # use amethyst_renderer::{SpriteSheetFormat, SpriteSheet, Texture, PngFormat, TextureMetadata};
+/// #
+/// # fn load_sprite_sheet() {
+/// #   let world = amethyst_core::ecs::World::new(); // Normally, you would use Amethyst's world
+/// #   let loader = world.read_resource::<Loader>();
+/// #   let spritesheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
+/// #   let texture_storage = world.read_resource::<AssetStorage<Texture>>();
+/// let texture_handle = loader.load(
+///     "my_texture.png",
+///     PngFormat,
+///     TextureMetadata::srgb(),
+///     (),
+///     &texture_storage,
+/// );
+/// let spritesheet_handle = loader.load(
+///     "my_spritesheet.ron",
+///     SpriteSheetFormat,
+///     texture_handle,
+///     (),
+///     &spritesheet_storage,
+/// );
+/// # }
+/// ```
+#[derive(Clone, Deserialize, Serialize)]
+pub struct SpriteSheetFormat;
+
+impl SimpleFormat<SpriteSheet> for SpriteSheetFormat {
+    const NAME: &'static str = "SPRITE_SHEET";
+
+    type Options = Handle<Texture>;
+
+    fn import(&self, bytes: Vec<u8>, texture: Self::Options) -> Result<SpriteSheet, Error> {
+        let sprite_list: SpriteList =
+            from_ron_bytes(&bytes).map_err(|_| error::Error::LoadSpritesheetError)?;
+
+        Ok(SpriteSheet {
+            texture,
+            sprites: sprite_list.build_sprites(),
+        })
+    }
 }
 
 #[cfg(test)]

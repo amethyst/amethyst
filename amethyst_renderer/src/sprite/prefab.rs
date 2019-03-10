@@ -1,11 +1,42 @@
 use log::warn;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-use amethyst_assets::{AssetStorage, PrefabData, PrefabError, ProgressCounter};
-use amethyst_core::specs::{Entity, Read, Write, WriteStorage};
-use amethyst_core::Transform;
+use amethyst_assets::{AssetStorage, PrefabData, ProgressCounter};
+use amethyst_core::{
+    ecs::{Entity, Read, Write, WriteStorage},
+    Transform,
+};
+use amethyst_error::Error;
 
 use crate::{Sprite, SpriteRender, SpriteSheet, SpriteSheetHandle, TextureFormat, TexturePrefab};
+
+/// Represents one sprite in `SpriteList`.
+/// Positions originate in the top-left corner (bitmap image convention).
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct SpritePosition {
+    /// Horizontal position of the sprite in the sprite sheet
+    pub x: u32,
+    /// Vertical position of the sprite in the sprite sheet
+    pub y: u32,
+    /// Width of the sprite
+    pub width: u32,
+    /// Height of the sprite
+    pub height: u32,
+    /// Number of pixels to shift the sprite to the left and down relative to the entity holding it
+    pub offsets: Option<[f32; 2]>,
+}
+
+/// `SpriteList` controls how a sprite list is generated when using `Sprites::List` in a
+/// `SpriteSheetPrefab`.
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct SpriteList {
+    /// Width of the sprite sheet
+    pub spritesheet_width: u32,
+    /// Height of the sprite sheet
+    pub spritesheet_height: u32,
+    /// Description of the sprites
+    pub sprites: Vec<SpritePosition>,
+}
 
 /// `SpriteGrid` controls how a sprite grid is generated when using `Sprites::Grid` in a
 /// `SpriteSheetPrefab`.
@@ -22,7 +53,7 @@ use crate::{Sprite, SpriteRender, SpriteSheet, SpriteSheetHandle, TextureFormat,
 /// | 4 | 5 | 6 | 7 |
 /// |---|---|---|---|
 /// ```
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
 pub struct SpriteGrid {
     /// Height of the spritesheet in pixels.
     pub width: u32,
@@ -43,10 +74,10 @@ pub struct SpriteGrid {
 }
 
 /// Defined the sprites that are part of a `SpriteSheetPrefab`.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum Sprites {
-    /// A manually constructed list of sprites
-    Sprites(Vec<Sprite>),
+    /// A list of sprites
+    List(SpriteList),
     /// Generate a grid sprite list, see `SpriteGrid` for more information.
     Grid(SpriteGrid),
 }
@@ -54,8 +85,8 @@ pub enum Sprites {
 /// Defines a spritesheet prefab. Note that this prefab will only load the spritesheet in storage,
 /// no components will be added to entities. The `add_to_entity` will return the
 /// `Handle<SpriteSheet>`. For this reason it is recommended that this prefab is only used as part
-/// of other `PrefabData` or in specialised formats. See `SpritePrefab` for an example of this.
-#[derive(Clone, Debug, Deserialize)]
+/// of other `PrefabData` or in specialised formats. See `SpriteScenePrefab` for an example of this.
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum SpriteSheetPrefab {
     /// Spritesheet handle, normally not used outside the prefab system.
     #[serde(skip)]
@@ -81,7 +112,7 @@ impl<'a> PrefabData<'a> for SpriteSheetPrefab {
         _entity: Entity,
         _system_data: &mut Self::SystemData,
         _entities: &[Entity],
-    ) -> Result<Self::Result, PrefabError> {
+    ) -> Result<Self::Result, Error> {
         match self {
             SpriteSheetPrefab::Handle(handle) => Ok(handle.clone()),
             _ => unreachable!(),
@@ -92,7 +123,7 @@ impl<'a> PrefabData<'a> for SpriteSheetPrefab {
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
-    ) -> Result<bool, PrefabError> {
+    ) -> Result<bool, Error> {
         let handle = match self {
             SpriteSheetPrefab::Sheet { texture, sprites } => {
                 texture.load_sub_assets(progress, &mut system_data.0)?;
@@ -102,7 +133,7 @@ impl<'a> PrefabData<'a> for SpriteSheetPrefab {
                 };
                 let spritesheet = SpriteSheet {
                     texture: texture_handle,
-                    sprites: sprites.build_sprite_list(),
+                    sprites: sprites.build_sprites(),
                 };
                 Some(
                     (system_data.0)
@@ -122,13 +153,16 @@ impl<'a> PrefabData<'a> for SpriteSheetPrefab {
     }
 }
 
+#[derive(Default, Clone, Debug)]
+pub struct SpriteSheetLoadedSet(pub Vec<SpriteSheetHandle>);
+
 /// Prefab used to add a sprite to an `Entity`.
 ///
 /// This prefab is special in that it will lookup the spritesheet in the resource
 /// `SpriteSheetLoadedSet` by index during loading. Just like with `SpriteSheetPrefab` this means
 /// that this prefab should only be used as part of other prefabs or in specialised formats. Look at
-/// `SpritePrefab` for an example.
-#[derive(Clone, Debug, Deserialize, Default)]
+/// `SpriteScenePrefab` for an example.
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
 pub struct SpriteRenderPrefab {
     /// Index of the sprite sheet in the prefab
     pub sheet: usize,
@@ -151,24 +185,22 @@ impl<'a> PrefabData<'a> for SpriteRenderPrefab {
         entity: Entity,
         system_data: &mut <Self as PrefabData<'a>>::SystemData,
         _: &[Entity],
-    ) -> Result<(), PrefabError> {
-        system_data
-            .0
-            .insert(
-                entity,
-                SpriteRender {
-                    sprite_sheet: self.handle.as_ref().unwrap().clone(),
-                    sprite_number: self.sprite_number,
-                },
-            )
-            .map(|_| ())
+    ) -> Result<(), Error> {
+        system_data.0.insert(
+            entity,
+            SpriteRender {
+                sprite_sheet: self.handle.as_ref().unwrap().clone(),
+                sprite_number: self.sprite_number,
+            },
+        )?;
+        Ok(())
     }
 
     fn load_sub_assets(
         &mut self,
         _: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
-    ) -> Result<bool, PrefabError> {
+    ) -> Result<bool, Error> {
         self.handle = Some((system_data.1).0.get(self.sheet).cloned().unwrap());
         Ok(false)
     }
@@ -179,7 +211,7 @@ impl<'a> PrefabData<'a> for SpriteRenderPrefab {
 /// When a `render` is encountered during the processing of this prefab, the sheet index
 /// in that will be loaded from the last encountered `sheets`. It is therefore recommended that
 /// all sheets used in the prefab be loaded on the first entity only.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct SpriteScenePrefab {
     /// Sprite sheets
     pub sheets: Option<Vec<SpriteSheetPrefab>>,
@@ -202,7 +234,7 @@ impl<'a> PrefabData<'a> for SpriteScenePrefab {
         entity: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
-    ) -> Result<(), PrefabError> {
+    ) -> Result<(), Error> {
         if let Some(render) = &self.render {
             render.add_to_entity(entity, &mut system_data.1, entities)?;
         }
@@ -216,7 +248,7 @@ impl<'a> PrefabData<'a> for SpriteScenePrefab {
         &mut self,
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
-    ) -> Result<bool, PrefabError> {
+    ) -> Result<bool, Error> {
         let mut ret = false;
         if let Some(ref mut sheets) = &mut self.sheets {
             ((system_data.1).1).0.clear();
@@ -239,11 +271,30 @@ impl<'a> PrefabData<'a> for SpriteScenePrefab {
 }
 
 impl Sprites {
-    fn build_sprite_list(&self) -> Vec<Sprite> {
+    fn build_sprites(&self) -> Vec<Sprite> {
         match self {
-            Sprites::Sprites(s) => s.clone(),
-            Sprites::Grid(grid) => grid.build_sprite_list(),
+            Sprites::List(list) => list.build_sprites(),
+            Sprites::Grid(grid) => grid.build_sprites(),
         }
+    }
+}
+
+impl SpriteList {
+    pub(crate) fn build_sprites(&self) -> Vec<Sprite> {
+        self.sprites
+            .iter()
+            .map(|pos| {
+                Sprite::from_pixel_values(
+                    self.spritesheet_width as u32,
+                    self.spritesheet_height as u32,
+                    pos.width as u32,
+                    pos.height as u32,
+                    pos.x as u32,
+                    pos.y as u32,
+                    pos.offsets.unwrap_or([0.0; 2]),
+                )
+            })
+            .collect()
     }
 }
 
@@ -263,19 +314,19 @@ impl SpriteGrid {
         })
     }
 
-    fn count(&self, rows: u32) -> u32 {
-        self.count.unwrap_or_else(|| self.columns * rows)
+    fn count(&self) -> u32 {
+        self.count.unwrap_or_else(|| self.columns * self.rows())
     }
 
-    fn cell_size(&self, rows: u32) -> (u32, u32) {
+    fn cell_size(&self) -> (u32, u32) {
         self.cell_size
-            .unwrap_or_else(|| ((self.width / self.columns), (self.height / rows)))
+            .unwrap_or_else(|| ((self.width / self.columns), (self.height / self.rows())))
     }
 
-    fn build_sprite_list(&self) -> Vec<Sprite> {
+    fn build_sprites(&self) -> Vec<Sprite> {
         let rows = self.rows();
-        let count = self.count(rows);
-        let cell_size = self.cell_size(rows);
+        let count = self.count();
+        let cell_size = self.cell_size();
         if (self.columns * cell_size.0) > self.width {
             warn!("Grid spritesheet contain more columns than can fit in the given width: {} * {} > {}",
                   self.columns,
@@ -290,7 +341,7 @@ impl SpriteGrid {
         }
         (0..count)
             .map(|cell| {
-                let row = cell / rows;
+                let row = cell / self.columns;
                 let column = cell - (row * self.columns);
                 let x = column * cell_size.0;
                 let y = row * cell_size.1;
@@ -301,22 +352,19 @@ impl SpriteGrid {
                     cell_size.1,
                     x,
                     y,
-                    [0., 0.],
+                    [0.0; 2],
                 )
             })
             .collect()
     }
 }
 
-#[derive(Default, Clone, Debug)]
-pub struct SpriteSheetLoadedSet(pub Vec<SpriteSheetHandle>);
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::Texture;
     use amethyst_assets::{Handle, Loader};
-    use amethyst_core::specs::{Builder, Read, ReadExpect, World};
+    use amethyst_core::ecs::{Builder, Read, ReadExpect, World};
     use rayon::ThreadPoolBuilder;
     use std::sync::Arc;
 
@@ -365,7 +413,11 @@ mod tests {
         let mut world = setup_sprite_world();
         let texture = add_texture(&mut world);
         let mut prefab = SpriteSheetPrefab::Sheet {
-            sprites: Sprites::Sprites(vec![]),
+            sprites: Sprites::List(SpriteList {
+                spritesheet_width: 0,
+                spritesheet_height: 0,
+                sprites: vec![],
+            }),
             texture: TexturePrefab::Handle(texture.clone()),
         };
         prefab
@@ -418,8 +470,8 @@ mod tests {
             rows: Some(4),
             ..Default::default()
         }
-        .build_sprite_list();
-        println!("{:?}", sprites);
+        .build_sprites();
+
         assert_eq!(16, sprites.len());
         for sprite in &sprites {
             assert_eq!(50., sprite.height);
@@ -440,6 +492,36 @@ mod tests {
         assert_eq!(0.5, sprites[9].tex_coords.right);
         assert_eq!(0.5, sprites[9].tex_coords.top);
         assert_eq!(0.25, sprites[9].tex_coords.bottom);
+
+        let sprites = SpriteGrid {
+            width: 192,
+            height: 64,
+            columns: 6,
+            rows: Some(2),
+            ..Default::default()
+        }
+        .build_sprites();
+
+        assert_eq!(12, sprites.len());
+        for sprite in &sprites {
+            assert_eq!(32.0, sprite.height);
+            assert_eq!(32.0, sprite.width);
+            assert_eq!([0.0, 0.0], sprite.offsets);
+        }
+        assert_eq!(0.0, sprites[0].tex_coords.left);
+        assert_eq!(0.16666667, sprites[0].tex_coords.right);
+        assert_eq!(1.0, sprites[0].tex_coords.top);
+        assert_eq!(0.5, sprites[0].tex_coords.bottom);
+
+        assert_eq!(0.16666667, sprites[7].tex_coords.left);
+        assert_eq!(0.33333334, sprites[7].tex_coords.right);
+        assert_eq!(0.5, sprites[7].tex_coords.top);
+        assert_eq!(0.0, sprites[7].tex_coords.bottom);
+
+        assert_eq!(0.5, sprites[9].tex_coords.left);
+        assert_eq!(0.6666667, sprites[9].tex_coords.right);
+        assert_eq!(0.5, sprites[9].tex_coords.top);
+        assert_eq!(0.0, sprites[9].tex_coords.bottom);
     }
 
     #[test]
@@ -453,7 +535,7 @@ mod tests {
                 cell_size: Some((100, 100)),
                 ..Default::default()
             }
-            .cell_size(4)
+            .cell_size()
         );
     }
 
@@ -465,9 +547,10 @@ mod tests {
                 width: 200,
                 height: 400,
                 columns: 4,
+                rows: Some(4),
                 ..Default::default()
             }
-            .cell_size(4)
+            .cell_size()
         );
     }
 
@@ -482,7 +565,7 @@ mod tests {
                 count: Some(12),
                 ..Default::default()
             }
-            .count(2)
+            .count()
         );
     }
 
@@ -494,9 +577,10 @@ mod tests {
                 width: 200,
                 height: 400,
                 columns: 5,
+                rows: Some(2),
                 ..Default::default()
             }
-            .count(2)
+            .count()
         );
     }
 

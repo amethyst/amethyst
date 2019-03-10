@@ -1,7 +1,7 @@
 //! Provides texture formats
 //!
 
-pub use self::{mesh::*, mtl::*, sprite::*, texture::*};
+pub use self::{mesh::*, mtl::*, texture::*};
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
@@ -13,7 +13,6 @@ use crate::{shape::InternalShape, Mesh, ShapePrefab, Texture};
 
 mod mesh;
 mod mtl;
-mod sprite;
 mod texture;
 
 /// Internal mesh loading
