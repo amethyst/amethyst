@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 
 use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_core::{
-    nalgebra::Matrix4,
-    specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage},
+    ecs::prelude::{Component, DenseVecStorage, Entity, WriteStorage},
+    math::Matrix4,
 };
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;

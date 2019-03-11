@@ -3,9 +3,9 @@ use std::{hash::Hash, marker::PhantomData};
 use winit::{DeviceEvent, Event, WindowEvent};
 
 use amethyst_core::{
-    nalgebra::{Unit, Vector3},
+    ecs::prelude::{Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
+    math::{Unit, Vector3},
     shrev::{EventChannel, ReaderId},
-    specs::prelude::{Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
     timing::Time,
     transform::Transform,
 };
@@ -76,7 +76,7 @@ where
 
         if let Some(dir) = Unit::try_new(Vector3::new(x, y, z), 1.0e-6) {
             for (transform, _) in (&mut transform, &tag).join() {
-                transform.move_along_local(dir, time.delta_seconds() * self.speed);
+                transform.append_translation_along(dir, time.delta_seconds() * self.speed);
             }
         }
     }
@@ -169,8 +169,12 @@ where
                 if let Event::DeviceEvent { ref event, .. } = *event {
                     if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
                         for (transform, _) in (&mut transform, &tag).join() {
-                            transform.pitch_local((-y as f32 * self.sensitivity_y).to_radians());
-                            transform.yaw_global((-x as f32 * self.sensitivity_x).to_radians());
+                            transform.append_rotation_x_axis(
+                                (-y as f32 * self.sensitivity_y).to_radians(),
+                            );
+                            transform.prepend_rotation_y_axis(
+                                (-x as f32 * self.sensitivity_x).to_radians(),
+                            );
                         }
                     }
                 }
@@ -179,7 +183,7 @@ where
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_core::ecs::prelude::SystemData;
 
         Self::SystemData::setup(res);
         self.event_reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
@@ -214,7 +218,7 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         self.event_reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
     }
@@ -260,7 +264,7 @@ impl<'a> System<'a> for CursorHideSystem {
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_core::ecs::prelude::SystemData;
         use amethyst_renderer::mouse::*;
 
         Self::SystemData::setup(res);

@@ -1,5 +1,5 @@
 use amethyst_core::{
-    nalgebra::{Quaternion, Unit},
+    math::{Quaternion, Unit},
     Transform,
 };
 
@@ -36,7 +36,7 @@ impl AnimationSampling for Transform {
 
         match (channel, *data) {
             (&Translation, Vec3(ref d)) => {
-                self.set_xyz(d[0], d[1], d[2]);
+                self.set_translation_xyz(d[0], d[1], d[2]);
             }
             (&Rotation, Vec4(ref d)) => {
                 *self.rotation_mut() = Unit::new_normalize(Quaternion::new(d[0], d[1], d[2], d[3]));

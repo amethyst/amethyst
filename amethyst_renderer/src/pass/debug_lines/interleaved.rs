@@ -7,8 +7,8 @@ use gfx::{pso::buffer::ElemStride, Primitive};
 use log::{debug, trace};
 
 use amethyst_core::{
-    nalgebra as na,
-    specs::{Join, Read, ReadStorage, Write, WriteStorage},
+    ecs::{Join, Read, ReadStorage, Write, WriteStorage},
+    math as na,
     transform::GlobalTransform,
 };
 use amethyst_error::Error;

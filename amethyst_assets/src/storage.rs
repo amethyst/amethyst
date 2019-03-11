@@ -13,7 +13,7 @@ use log::{debug, error, trace, warn};
 use rayon::ThreadPool;
 
 use amethyst_core::{
-    specs::{
+    ecs::{
         prelude::{Component, Read, ReadExpect, System, VecStorage, Write},
         storage::UnprotectedStorage,
     },

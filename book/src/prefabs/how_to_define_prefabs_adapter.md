@@ -70,7 +70,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
     # extern crate amethyst;
     # extern crate serde;
     #
-    # use amethyst::core::nalgebra::{Orthographic3, Perspective3};
+    # use amethyst::core::math::{Orthographic3, Perspective3};
     # use serde::{Deserialize, Serialize};
     #
     #[derive(Clone, Deserialize, PartialEq, Serialize)]

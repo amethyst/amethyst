@@ -1,6 +1,6 @@
 use std::{hash::Hash, marker::PhantomData};
 
-use amethyst_core::{bundle::SystemBundle, specs::prelude::DispatcherBuilder};
+use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder};
 use amethyst_error::Error;
 
 use super::*;

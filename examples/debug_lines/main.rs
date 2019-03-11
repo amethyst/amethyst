@@ -3,7 +3,7 @@
 use amethyst::{
     controls::{FlyControlBundle, FlyControlTag},
     core::{
-        nalgebra::{Point3, Vector3},
+        math::{Point3, Vector3},
         transform::{Transform, TransformBundle},
         Time,
     },
@@ -125,7 +125,7 @@ impl SimpleState for ExampleState {
 
         // Setup camera
         let mut local_transform = Transform::default();
-        local_transform.set_position([0.0, 0.5, 2.0].into());
+        local_transform.set_translation_xyz(0.0, 0.5, 2.0);
         data.world
             .create_entity()
             .with(FlyControlTag)

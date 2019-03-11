@@ -189,7 +189,7 @@ To change the set of events that the state receives, you create a new event enum
 
 // These imports are required for the #[derive(EventReader)] code to build
 use amethyst::core::{
-    specs::{Read, SystemData, Resources},
+    ecs::{Read, SystemData, Resources},
     shrev::{ReaderId, EventChannel},
     EventReader
 };

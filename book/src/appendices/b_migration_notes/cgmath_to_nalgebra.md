@@ -19,17 +19,17 @@ Many types retain the same type name, just under the `nalgebra` namespace:
 
 ```patch
 -use amethyst::core::cgmath::{Vector2, Vector3, Matrix4};
-+use amethyst::core::nalgebra::{Vector2, Vector3, Matrix4};
++use amethyst::core::math::{Vector2, Vector3, Matrix4};
 ```
 
 We will not list the names of every type with the same simple name, but will try to list the changes for types whose simple names are different:
 
 ```patch
 -cgmath::Ortho
-+nalgebra::Orthographic3
++math::Orthographic3
 
 -cgmath::PerspectiveFov
-+nalgebra::Perspective3
++math::Perspective3
 ```
 
 ## Logic Changes
@@ -55,7 +55,7 @@ We will not list the names of every type with the same simple name, but will try
         -transform.translation = Vector3::new(5.0, 2.0, -0.5);
         -transform.scale = Vector3::new(2.0, 2.0, 2.0);
         -transform.rotation = Quaternion::new(1.0, 0.0, 0.0, 0.0);
-        +transform.set_xyz(5.0, 2.0, -0.5);
+        +transform.set_translation_xyz(5.0, 2.0, -0.5);
         +transform.set_scale(2.0, 2.0, 2.0);
         +transform.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.0, 0.0, 0.0)));
 
@@ -67,12 +67,12 @@ We will not list the names of every type with the same simple name, but will try
         +transform_0.translation() - transform_1.translation()
 
         -transform.translation[0] = x;
-        +transform.set_x(position.x);
+        +transform.set_translation_x(position.x);
 
         -translation.x += 0.1;
         -translation.y -= 0.1;
-        +transform.translate_x(0.1);
-        +transform.translate_y(-0.1);
+        +transform.prepend_translation_x(0.1);
+        +transform.prepend_translation_y(-0.1);
         // or
         +transform.translation_mut().x += 0.1;
         +transform.translation_mut().y -= 0.1;
@@ -81,13 +81,13 @@ We will not list the names of every type with the same simple name, but will try
         +let ball_x = transform.translation().x;
 
         -transform.set_position(Vector3::new(6.0, 6.0, -6.0));
-        +transform.set_xyz(6.0, 6.0, -6.0);
+        +transform.set_translation_xyz(6.0, 6.0, -6.0);
         // or
         *transform.translation_mut() = Vector3::new(6.0, 6.0, -6.0);
 
         // Rotations
         -transform.rotation = [1.0, 0.0, 0.0, 0.0].into();
-        +use amethyst::core::nalgebra::{Quaternion, Unit};
+        +use amethyst::core::math::{Quaternion, Unit};
         +
         +*transform.rotation_mut() = Unit::new_normalize(Quaternion::new(
         +    1.0, // w
@@ -99,7 +99,9 @@ We will not list the names of every type with the same simple name, but will try
         -use amethyst::core::cgmath::Deg;
         -
         -transform.set_rotation(Deg(75.96), Deg(0.0), Deg(0.0));
-        +transform.rotate_local(Vector3::x_axis(), 1.3257521);
+        +transform.set_rotation_x_axis(1.3257521);
+        // or
+        +transform.set_rotation_euler(1.3257521, 0.0, 0.0);
 
         // Scaling
         -transform.scale = Vector3::new(1.0, 1.0, 1.0);
@@ -152,7 +154,7 @@ We will not list the names of every type with the same simple name, but will try
      }
     ```
 
-* `amethyst::core::nalgebra::Matrix4` construction.
+* `amethyst::core::math::Matrix4` construction.
 
     ```patch
     -Matrix4::from_translation(Vector3::new(x, y, z))
@@ -160,7 +162,7 @@ We will not list the names of every type with the same simple name, but will try
 
     // OR
 
-    +use amethyst::core::nalgebra::Translation3;
+    +use amethyst::core::math::Translation3;
     +
     +Translation3::new(x, y, z).to_homogeneous()
     ```
@@ -180,7 +182,7 @@ We will not list the names of every type with the same simple name, but will try
     -use amethyst::core::cgmath::Ortho;
     -
     -Ortho { left, right, top, bottom, near, far }
-    +use amethyst::core::nalgebra::Orthographic3;
+    +use amethyst::core::math::Orthographic3;
     +
     +Orthographic3::new(left, right, bottom, top, near, far)
     ```

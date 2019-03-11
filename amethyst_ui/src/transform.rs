@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use amethyst_core::specs::prelude::{
+use amethyst_core::ecs::prelude::{
     Component, DenseVecStorage, Entities, Entity, FlaggedStorage, Join, ReadStorage,
 };
 

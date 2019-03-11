@@ -10,7 +10,7 @@ pub use self::{
     system::UiButtonSystem,
 };
 ///! A clickable button.
-use amethyst_core::specs::prelude::{Component, DenseVecStorage};
+use amethyst_core::ecs::prelude::{Component, DenseVecStorage};
 
 use serde::{Deserialize, Serialize};
 

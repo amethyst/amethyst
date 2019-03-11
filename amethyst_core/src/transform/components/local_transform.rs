@@ -1,15 +1,17 @@
 //! Local transform component.
 use std::fmt;
 
-use nalgebra::{
-    self as na, Isometry3, Matrix4, Quaternion, Translation3, Unit, UnitQuaternion, Vector3,
+use crate::{
+    ecs::prelude::{Component, DenseVecStorage, FlaggedStorage},
+    math::{
+        self as na, Isometry3, Matrix4, Quaternion, Translation3, Unit, UnitQuaternion, Vector3,
+    },
 };
 use serde::{
     de::{self, Deserializer, MapAccess, SeqAccess, Visitor},
     ser::Serializer,
     Deserialize, Serialize,
 };
-use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 
 /// Local position, rotation, and scale (from parent if it exists).
 ///
@@ -31,7 +33,7 @@ impl Transform {
     ///
     /// ```rust
     /// # use amethyst_core::transform::components::Transform;
-    /// # use amethyst_core::nalgebra::{Isometry3, Translation3, UnitQuaternion, Vector3};
+    /// # use amethyst_core::math::{Isometry3, Translation3, UnitQuaternion, Vector3};
     /// let position = Translation3::new(0.0, 2.0, 4.0);
     /// let rotation = UnitQuaternion::from_euler_angles(0.4, 0.2, 0.0);
     /// let scale = Vector3::new(1.0, 1.0, 1.0);
@@ -64,7 +66,7 @@ impl Transform {
     ///
     /// ```rust
     /// # use amethyst_core::transform::components::Transform;
-    /// # use amethyst_core::nalgebra::{UnitQuaternion, Quaternion, Vector3};
+    /// # use amethyst_core::math::{UnitQuaternion, Quaternion, Vector3};
     /// let mut t = Transform::default();
     /// // No rotation by default
     /// assert_eq!(*t.rotation().quaternion(), Quaternion::identity());
@@ -148,36 +150,58 @@ impl Transform {
         &mut self.iso
     }
 
-    /// Move relatively to its current position.
+    /// Move relatively to its current position, but the parent's (or
+    /// global, if no parent exists) orientation.
+    ///
+    /// For example, if the object is rotated 45 degrees about its Y axis,
+    /// then you *prepend* a translation along the Z axis, it will still
+    /// move along the parent's Z axis rather than its local Z axis (which
+    /// is rotated 45 degrees).
     #[inline]
-    pub fn move_global(&mut self, translation: Vector3<f32>) -> &mut Self {
+    pub fn prepend_translation(&mut self, translation: Vector3<f32>) -> &mut Self {
         self.iso.translation.vector += translation;
         self
     }
 
     /// Move relatively to its current position and orientation.
     ///
-    /// Equivalent to rotating the translation before applying.
+    /// For example, if the object is rotated 45 degrees about its Y axis,
+    /// then you append a translation along the Z axis, that Z axis is now
+    /// rotated 45 degrees, and so the appended translation will go along that
+    /// rotated Z axis.
+    ///
+    /// Equivalent to rotating the translation by the transform's current
+    /// rotation before applying.
     #[inline]
-    pub fn move_local(&mut self, translation: Vector3<f32>) -> &mut Self {
+    pub fn append_translation(&mut self, translation: Vector3<f32>) -> &mut Self {
         self.iso.translation.vector += self.iso.rotation * translation;
         self
     }
 
-    /// Move a distance along an axis.
+    /// Move a distance along an axis relative to the parent's orientation
+    /// (or the global orientation if no parent exists).
     ///
-    /// It will not move in the case where the axis is zero, for any distance.
+    /// For example, if the object is rotated 45 degrees about its Y axis,
+    /// then you *prepend* a translation along the Z axis, it will still
+    /// move along the parent's Z axis rather than its local Z axis (which
+    /// is rotated 45 degrees).
     #[inline]
-    pub fn move_along_global(&mut self, direction: Unit<Vector3<f32>>, distance: f32) -> &mut Self {
+    pub fn prepend_translation_along(
+        &mut self,
+        direction: Unit<Vector3<f32>>,
+        distance: f32,
+    ) -> &mut Self {
         self.iso.translation.vector += direction.as_ref() * distance;
         self
     }
 
-    /// Move a distance along an axis.
-    ///
-    /// It will not move in the case where the axis is zero, for any distance.
+    /// Move a distance along an axis relative to the local orientation.
     #[inline]
-    pub fn move_along_local(&mut self, direction: Unit<Vector3<f32>>, distance: f32) -> &mut Self {
+    pub fn append_translation_along(
+        &mut self,
+        direction: Unit<Vector3<f32>>,
+        distance: f32,
+    ) -> &mut Self {
         self.iso.translation.vector += self.iso.rotation * direction.as_ref() * distance;
         self
     }
@@ -186,149 +210,225 @@ impl Transform {
     #[inline]
     pub fn move_forward(&mut self, amount: f32) -> &mut Self {
         // sign is reversed because z comes towards us
-        self.move_local(Vector3::new(0.0, 0.0, -amount))
+        self.append_translation(Vector3::new(0.0, 0.0, -amount))
     }
 
     /// Move backward relative to current position and orientation.
     #[inline]
     pub fn move_backward(&mut self, amount: f32) -> &mut Self {
-        self.move_local(Vector3::new(0.0, 0.0, amount))
+        self.append_translation(Vector3::new(0.0, 0.0, amount))
     }
 
     /// Move right relative to current position and orientation.
     #[inline]
     pub fn move_right(&mut self, amount: f32) -> &mut Self {
-        self.move_local(Vector3::new(amount, 0.0, 0.0))
+        self.append_translation(Vector3::new(amount, 0.0, 0.0))
     }
 
     /// Move left relative to current position and orientation.
     #[inline]
     pub fn move_left(&mut self, amount: f32) -> &mut Self {
-        self.move_local(Vector3::new(-amount, 0.0, 0.0))
+        self.append_translation(Vector3::new(-amount, 0.0, 0.0))
     }
 
     /// Move up relative to current position and orientation.
     #[inline]
     pub fn move_up(&mut self, amount: f32) -> &mut Self {
-        self.move_local(Vector3::new(0.0, amount, 0.0))
+        self.append_translation(Vector3::new(0.0, amount, 0.0))
     }
 
     /// Move down relative to current position and orientation.
     #[inline]
     pub fn move_down(&mut self, amount: f32) -> &mut Self {
-        self.move_local(Vector3::new(0.0, -amount, 0.0))
+        self.append_translation(Vector3::new(0.0, -amount, 0.0))
     }
 
     /// Adds the specified amount to the translation vector's x component.
+    /// i.e. move relative to the parent's (or global, if no parent exists)
+    /// x axis.
     #[inline]
-    pub fn translate_x(&mut self, amount: f32) -> &mut Self {
+    pub fn prepend_translation_x(&mut self, amount: f32) -> &mut Self {
         self.iso.translation.vector.x += amount;
         self
     }
 
     /// Adds the specified amount to the translation vector's y component.
+    /// i.e. move relative to the parent's (or global, if no parent exists)
+    /// y axis.
     #[inline]
-    pub fn translate_y(&mut self, amount: f32) -> &mut Self {
+    pub fn prepend_translation_y(&mut self, amount: f32) -> &mut Self {
         self.iso.translation.vector.y += amount;
         self
     }
 
     /// Adds the specified amount to the translation vector's z component.
+    /// i.e. move relative to the parent's (or global, if no parent exists)
+    /// z axis.
     #[inline]
-    pub fn translate_z(&mut self, amount: f32) -> &mut Self {
+    pub fn prepend_translation_z(&mut self, amount: f32) -> &mut Self {
         self.iso.translation.vector.z += amount;
         self
     }
 
     /// Sets the translation vector's x component to the specified value.
     #[inline]
-    pub fn set_x(&mut self, value: f32) -> &mut Self {
+    pub fn set_translation_x(&mut self, value: f32) -> &mut Self {
         self.iso.translation.vector.x = value;
         self
     }
 
     /// Sets the translation vector's y component to the specified value.
     #[inline]
-    pub fn set_y(&mut self, value: f32) -> &mut Self {
+    pub fn set_translation_y(&mut self, value: f32) -> &mut Self {
         self.iso.translation.vector.y = value;
         self
     }
 
     /// Sets the translation vector's z component to the specified value.
     #[inline]
-    pub fn set_z(&mut self, value: f32) -> &mut Self {
+    pub fn set_translation_z(&mut self, value: f32) -> &mut Self {
         self.iso.translation.vector.z = value;
         self
     }
 
-    /// Pitch relatively to the world. `angle` is specified in radians.
+    /// Premultiply a rotation about the x axis, i.e. perform a rotation about
+    /// the parent's x axis (or the global x axis if no parent exists).
+    ///
+    /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn pitch_global(&mut self, angle: f32) -> &mut Self {
-        self.rotate_global(Vector3::x_axis(), angle)
+    pub fn prepend_rotation_x_axis(&mut self, delta_angle: f32) -> &mut Self {
+        self.prepend_rotation(Vector3::x_axis(), delta_angle)
     }
 
-    /// Pitch relatively to its own rotation. `angle` is specified in radians.
+    /// Postmultiply a rotation about the x axis, i.e. perform a rotation about
+    /// the *local* x-axis, including any prior rotations that have been performed.
+    ///
+    /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn pitch_local(&mut self, angle: f32) -> &mut Self {
-        self.rotate_local(Vector3::x_axis(), angle)
+    pub fn append_rotation_x_axis(&mut self, delta_angle: f32) -> &mut Self {
+        self.append_rotation(Vector3::x_axis(), delta_angle)
     }
 
-    /// Yaw relatively to the world. `angle` is specified in radians.
+    /// Set the rotation about the parent's x axis (or the global x axis
+    /// if no parent exists). This will *clear any other rotations that have
+    /// previously been performed*!
+    ///
+    /// `angle` is specified in radians.
     #[inline]
-    pub fn yaw_global(&mut self, angle: f32) -> &mut Self {
-        self.rotate_global(Vector3::y_axis(), angle)
+    pub fn set_rotation_x_axis(&mut self, angle: f32) -> &mut Self {
+        self.set_rotation_euler(angle, 0.0, 0.0)
     }
 
-    /// Yaw relatively to its own rotation. `angle` is specified in radians.
+    /// Premultiply a rotation about the y axis, i.e. perform a rotation about
+    /// the parent's y axis (or the global y axis if no parent exists).
+    ///
+    /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn yaw_local(&mut self, angle: f32) -> &mut Self {
-        self.rotate_local(Vector3::y_axis(), angle)
+    pub fn prepend_rotation_y_axis(&mut self, delta_angle: f32) -> &mut Self {
+        self.prepend_rotation(Vector3::y_axis(), delta_angle)
     }
 
-    /// Roll relatively to the world. `angle` is specified in radians.
+    /// Postmultiply a rotation about the y axis, i.e. perform a rotation about
+    /// the *local* y-axis, including any prior rotations that have been performed.
+    ///
+    /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn roll_global(&mut self, angle: f32) -> &mut Self {
-        self.rotate_global(-Vector3::z_axis(), angle)
+    pub fn append_rotation_y_axis(&mut self, delta_angle: f32) -> &mut Self {
+        self.append_rotation(Vector3::y_axis(), delta_angle)
     }
 
-    /// Roll relatively to its own rotation. `angle` is specified in radians.
+    /// Set the rotation about the parent's y axis (or the global y axis
+    /// if no parent exists). This will *clear any other rotations that have
+    /// previously been performed*!
+    ///
+    /// `angle` is specified in radians.
     #[inline]
-    pub fn roll_local(&mut self, angle: f32) -> &mut Self {
-        self.rotate_local(-Vector3::z_axis(), angle)
+    pub fn set_rotation_y_axis(&mut self, angle: f32) -> &mut Self {
+        self.set_rotation_euler(0.0, angle, 0.0)
     }
 
-    /// Rotate relatively to the world. `angle` is specified in radians.
+    /// Premultiply a rotation about the z axis, i.e. perform a rotation about
+    /// the parent's z axis (or the global z axis if no parent exists).
+    ///
+    /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn rotate_global(&mut self, axis: Unit<Vector3<f32>>, angle: f32) -> &mut Self {
-        let q = UnitQuaternion::from_axis_angle(&axis, angle);
+    pub fn prepend_rotation_z_axis(&mut self, delta_angle: f32) -> &mut Self {
+        self.prepend_rotation(-Vector3::z_axis(), delta_angle)
+    }
+
+    /// Postmultiply a rotation about the z axis, i.e. perform a rotation about
+    /// the *local* z-axis, including any prior rotations that have been performed.
+    ///
+    /// `delta_angle` is specified in radians.
+    #[inline]
+    pub fn append_rotation_z_axis(&mut self, delta_angle: f32) -> &mut Self {
+        self.append_rotation(-Vector3::z_axis(), delta_angle)
+    }
+
+    /// Set the rotation about the parent's z axis (or the global z axis
+    /// if no parent exists). This will *clear any other rotations that have
+    /// previously been performed*!
+    ///
+    /// `angle` is specified in radians.
+    #[inline]
+    pub fn set_rotation_z_axis(&mut self, angle: f32) -> &mut Self {
+        self.set_rotation_euler(0.0, 0.0, angle)
+    }
+
+    /// Perform a rotation about the axis perpendicular to X and Y,
+    /// i.e. the most common way to rotate an object in a 2d game.
+    ///
+    /// `delta_angle` is specified in radians.
+    #[inline]
+    pub fn rotate_2d(&mut self, delta_angle: f32) -> &mut Self {
+        self.prepend_rotation_z_axis(delta_angle)
+    }
+
+    /// Set the rotation about the axis perpendicular to X and Y,
+    /// i.e. the most common way to rotate an object in a 2d game.
+    ///
+    /// `angle` is specified in radians.
+    #[inline]
+    pub fn set_rotation_2d(&mut self, angle: f32) -> &mut Self {
+        self.set_rotation_euler(0.0, 0.0, angle)
+    }
+
+    /// Premultiply a rotation, i.e. rotate relatively to the parent's orientation
+    /// (or the global orientation if no parent exists), about a specified axis.
+    ///
+    /// `delta_angle` is specified in radians.
+    #[inline]
+    pub fn prepend_rotation(&mut self, axis: Unit<Vector3<f32>>, delta_angle: f32) -> &mut Self {
+        let q = UnitQuaternion::from_axis_angle(&axis, delta_angle);
         self.iso.rotation = q * self.iso.rotation;
         self
     }
 
-    /// Rotate relatively to the current orientation. `angle` is specified in radians.
+    /// Postmultiply a rotation, i.e. rotate relatively to the local orientation (the
+    /// currently applied rotations), about a specified axis.
+    ///
+    /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn rotate_local(&mut self, axis: Unit<Vector3<f32>>, angle: f32) -> &mut Self {
-        self.iso.rotation *= UnitQuaternion::from_axis_angle(&axis, angle);
+    pub fn append_rotation(&mut self, axis: Unit<Vector3<f32>>, delta_angle: f32) -> &mut Self {
+        self.iso.rotation *= UnitQuaternion::from_axis_angle(&axis, delta_angle);
         self
     }
 
     /// Set the position.
-    pub fn set_position(&mut self, position: Vector3<f32>) -> &mut Self {
+    pub fn set_translation(&mut self, position: Vector3<f32>) -> &mut Self {
         self.iso.translation.vector = position;
         self
     }
 
     /// Adds the specified amounts to the translation vector.
-    pub fn translate_xyz(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
-        self.translate_x(x);
-        self.translate_y(y);
-        self.translate_z(z);
+    pub fn append_translation_xyz(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
+        self.append_translation(Vector3::new(x, y, z));
         self
     }
 
     /// Sets the specified values of the translation vector.
-    pub fn set_xyz(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
-        self.set_position(Vector3::new(x, y, z))
+    pub fn set_translation_xyz(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
+        self.set_translation(Vector3::new(x, y, z))
     }
 
     /// Sets the rotation of the transform.
@@ -345,15 +445,30 @@ impl Transform {
         self
     }
 
-    /// Set the rotation using Euler x, y, z.
+    /// Set the rotation using x, y, z Euler axes.
     ///
-    /// All angles are specified in radians. Euler order is roll → pitch → yaw.
+    /// All angles are specified in radians. Euler order is x → y → z.
     ///
     /// # Arguments
     ///
-    ///  - x - The angle to apply around the x axis. Also known as the roll.
-    ///  - y - The angle to apply around the y axis. Also known as the pitch.
-    ///  - z - The angle to apply around the z axis. Also known as the yaw.
+    ///  - x - The angle to apply around the x axis.
+    ///  - y - The angle to apply around the y axis.
+    ///  - z - The angle to apply around the z axis.
+    ///
+    /// # Note on Euler angle semantics and `nalgebra`
+    ///
+    /// `nalgebra` has a few methods related to Euler angles, and they use
+    /// roll, pitch, and yaw as arguments instead of x, y, and z axes specifically.
+    /// Yaw has the semantic meaning of rotation about the "up" axis, roll about the
+    /// "forward axis", and pitch about the "right" axis respectively. However, `nalgebra`
+    /// assumes a +Z = up coordinate system for its roll, pitch, and yaw semantics, while
+    /// Amethyst uses a +Y = up coordinate system. Therefore, the `nalgebra` Euler angle
+    /// methods are slightly confusing to use in concert with Amethyst, and so we've
+    /// provided our own with semantics that match the rest of Amethyst. If you do end up
+    /// using `nalgebra`'s `euler_angles` or `from_euler_angles` methods, be aware that
+    /// 'roll' in that context will mean rotation about the x axis, 'pitch' will mean
+    /// rotation about the y axis, and 'yaw' will mean rotation about the z axis.
+    ///
     /// ```
     /// # use amethyst_core::transform::components::Transform;
     /// let mut transform = Transform::default();
@@ -365,6 +480,27 @@ impl Transform {
     pub fn set_rotation_euler(&mut self, x: f32, y: f32, z: f32) -> &mut Self {
         self.iso.rotation = UnitQuaternion::from_euler_angles(x, y, z);
         self
+    }
+
+    /// Get the Euler angles of the current rotation. Returns
+    /// in a tuple of the form (x, y, z), where `x`, `y`, and `z`
+    /// are the current rotation about that axis in radians.
+    ///
+    /// # Note on Euler angle semantics and `nalgebra`
+    ///
+    /// `nalgebra` has a few methods related to Euler angles, and they use
+    /// roll, pitch, and yaw as arguments instead of x, y, and z axes specifically.
+    /// Yaw has the semantic meaning of rotation about the "up" axis, roll about the
+    /// "forward axis", and pitch about the "right" axis respectively. However, `nalgebra`
+    /// assumes a +Z = up coordinate system for its roll, pitch, and yaw semantics, while
+    /// Amethyst uses a +Y = up coordinate system. Therefore, the `nalgebra` Euler angle
+    /// methods are slightly confusing to use in concert with Amethyst, and so we've
+    /// provided our own with semantics that match the rest of Amethyst. If you do end up
+    /// using `nalgebra`'s `euler_angles` or `from_euler_angles` methods, be aware that
+    /// 'roll' in that context will mean rotation about the x axis, 'pitch' will mean
+    /// rotation about the y axis, and 'yaw' will mean rotation about the z axis.
+    pub fn euler_angles(&self) -> (f32, f32, f32) {
+        self.iso.rotation.euler_angles()
     }
 
     /// Concatenates another transform onto `self`.
@@ -412,7 +548,7 @@ impl Component for Transform {
 ///
 /// ```
 /// # use amethyst_core::transform::components::Transform;
-/// # use amethyst_core::nalgebra::Vector3;
+/// # use amethyst_core::math::Vector3;
 /// let transform = Transform::from(Vector3::new(100.0, 200.0, 300.0));
 ///
 /// assert_eq!(transform.translation().x, 100.0);
@@ -557,7 +693,7 @@ impl Serialize for Transform {
 mod tests {
     use crate::{
         approx::*,
-        nalgebra::{UnitQuaternion, Vector3},
+        math::{UnitQuaternion, Vector3},
         Transform,
     };
 
@@ -566,7 +702,7 @@ mod tests {
     fn test_mul() {
         // For the condition to hold both scales must be uniform
         let mut first = Transform::default();
-        first.set_xyz(20., 10., -3.);
+        first.set_translation_xyz(20., 10., -3.);
         first.set_scale(2., 2., 2.);
         first.set_rotation(
             UnitQuaternion::rotation_between(&Vector3::new(-1., 1., 2.), &Vector3::new(1., 0., 0.))
@@ -574,7 +710,7 @@ mod tests {
         );
 
         let mut second = Transform::default();
-        second.set_xyz(2., 1., -3.);
+        second.set_translation_xyz(2., 1., -3.);
         second.set_scale(1., 1., 1.);
         second.set_rotation(
             UnitQuaternion::rotation_between(&Vector3::new(7., -1., 3.), &Vector3::new(2., 1., 1.))
@@ -595,7 +731,7 @@ mod tests {
     #[test]
     fn test_view_matrix() {
         let mut transform = Transform::default();
-        transform.set_xyz(5.0, 70.1, 43.7);
+        transform.set_translation_xyz(5.0, 70.1, 43.7);
         transform.set_scale(1.0, 5.0, 8.9);
         transform.set_rotation(
             UnitQuaternion::rotation_between(&Vector3::new(-1., 1., 2.), &Vector3::new(1., 0., 0.))

@@ -2,8 +2,8 @@ use amethyst_derive::{EventReader, PrefabData};
 
 use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_core::{
+    ecs::{Component, DenseVecStorage, Entity, Read, Resources, SystemData, WriteStorage},
     shrev::{EventChannel, ReaderId},
-    specs::{Component, DenseVecStorage, Entity, Read, Resources, SystemData, WriteStorage},
     EventReader,
 };
 use amethyst_error::Error;

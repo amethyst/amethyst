@@ -101,7 +101,7 @@ the entire arena. Let's do it in a new function `initialise_camera`!
 # use amethyst::core::Transform;
 fn initialise_camera(world: &mut World) {
     let mut transform = Transform::default();
-    transform.set_z(1.0);
+    transform.set_translation_z(1.0);
     world
         .create_entity()
         .with(Camera::from(Projection::orthographic(
@@ -255,8 +255,8 @@ fn initialise_paddles(world: &mut World) {
 
     // Correctly position the paddles.
     let y = ARENA_HEIGHT / 2.0;
-    left_transform.set_xyz(PADDLE_WIDTH * 0.5, y, 0.0);
-    right_transform.set_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
+    left_transform.set_translation_xyz(PADDLE_WIDTH * 0.5, y, 0.0);
+    right_transform.set_translation_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 
     // Create a left plank entity.
     world
@@ -310,7 +310,7 @@ If you are using a `nightly` compiler and enable the `nightly` feature of
 Amethyst, you will receive a more informative error message:
 
 ```text,ignore
-thread 'main' panicked at 'Tried to fetch a resource of type "amethyst::specs::storage::MaskedStorage<pong::Paddle>", but the resource does not exist.
+thread 'main' panicked at 'Tried to fetch a resource of type "amethyst::ecs::storage::MaskedStorage<pong::Paddle>", but the resource does not exist.
 Try adding the resource by inserting it manually or using the `setup` method.'
 ```
 
@@ -349,7 +349,7 @@ Try adding the resource by inserting it manually or using the `setup` method.
 Ah, oops. We forgot something. Turning on the `nightly` feature, we get:
 
 ```text_ignore
-thread 'main' panicked at 'Tried to fetch a resource of type "specs::storage::MaskedStorage<transform::components::local_transform::Transform>", but the resource does not exist.
+thread 'main' panicked at 'Tried to fetch a resource of type "ecs::storage::MaskedStorage<transform::components::local_transform::Transform>", but the resource does not exist.
 Try adding the resource by inserting it manually or using the `setup` method.'
 ```
 

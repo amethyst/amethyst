@@ -9,7 +9,7 @@ use gfx::Primitive;
 use serde::{Deserialize, Serialize};
 
 use amethyst_assets::Handle;
-use amethyst_core::nalgebra::{Matrix4, Point3, Rotation3, Translation3, Unit, Vector3};
+use amethyst_core::math::{Matrix4, Point3, Rotation3, Translation3, Unit, Vector3};
 use amethyst_error::Error;
 
 use crate::{

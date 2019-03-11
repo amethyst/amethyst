@@ -1,7 +1,7 @@
 use fnv::FnvHashMap as HashMap;
 use hetseq::*;
 
-use amethyst_core::specs::prelude::SystemData;
+use amethyst_core::ecs::prelude::SystemData;
 use amethyst_error::Error;
 
 use crate::types::{Encoder, Factory};
@@ -107,7 +107,7 @@ where
     }
 }
 
-/// The data requested from the `specs::World` by the Pipeline.
+/// The data requested from the `ecs::World` by the Pipeline.
 pub trait PipelineData<'a> {
     /// The data itself
     type Data: SystemData<'a> + Send;

@@ -1,6 +1,6 @@
 //! Physically-based material.
 
-use amethyst_core::specs::prelude::{Component, DenseVecStorage};
+use amethyst_core::ecs::prelude::{Component, DenseVecStorage};
 
 use serde::{Deserialize, Serialize};
 

@@ -10,7 +10,7 @@ use crate::{
 use amethyst_error::Error;
 
 use amethyst_core::{
-    specs::prelude::{Component, DispatcherBuilder},
+    ecs::prelude::{Component, DispatcherBuilder},
     SystemBundle,
 };
 

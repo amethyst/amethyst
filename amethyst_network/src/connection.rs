@@ -5,7 +5,7 @@ use shrev::{EventChannel, EventIterator, ReaderId};
 use std::net::SocketAddr;
 use uuid::Uuid;
 
-use amethyst_core::specs::{Component, VecStorage};
+use amethyst_core::ecs::{Component, VecStorage};
 
 use crate::NetEvent;
 

@@ -2,12 +2,15 @@
 
 use amethyst_assets::PrefabData;
 use amethyst_core::{
-    nalgebra::{Matrix4, Orthographic3, Perspective3},
-    specs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
+    ecs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
+    math::{Matrix4, Orthographic3, Perspective3, Point2, Point3},
+    GlobalTransform,
 };
 use amethyst_error::Error;
 
 use serde::{Deserialize, Serialize};
+
+use crate::ScreenDimensions;
 
 /// The projection mode of a `Camera`.
 ///
@@ -75,6 +78,27 @@ impl Camera {
             width / height,
             std::f32::consts::FRAC_PI_3,
         ))
+    }
+
+    /// Transforms position from screen space to camera space
+    pub fn position_from_screen(
+        &self,
+        screen_position: Point2<f32>,
+        camera_transform: &GlobalTransform,
+        screen_dimensions: &ScreenDimensions,
+    ) -> Point3<f32> {
+        let screen_x = 2.0 * screen_position.x / screen_dimensions.width() - 1.0;
+        let screen_y = 1.0 - 2.0 * screen_position.y / screen_dimensions.height();
+        let screen_point = Point3::new(screen_x, screen_y, 0.0).to_homogeneous();
+
+        let vector = camera_transform.0
+            * self
+                .proj
+                .try_inverse()
+                .expect("Camera projection matrix is not invertible")
+            * screen_point;
+
+        Point3::from_homogeneous(vector).expect("Vector is not homogeneous")
     }
 }
 
@@ -157,7 +181,7 @@ mod serde_ortho {
         Deserialize, Serialize,
     };
 
-    use amethyst_core::nalgebra::Orthographic3;
+    use amethyst_core::math::Orthographic3;
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Orthographic3<f32>, D::Error>
     where
@@ -313,7 +337,7 @@ mod serde_persp {
         Deserialize, Serialize,
     };
 
-    use amethyst_core::nalgebra::Perspective3;
+    use amethyst_core::math::Perspective3;
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Perspective3<f32>, D::Error>
     where

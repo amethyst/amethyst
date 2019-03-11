@@ -26,6 +26,8 @@ it is attached to. ([#1282])
 * Several passes got `with_transparency_settings` which changes the transparency settings for the pass. ([#1419])
 * Add `SpriteRenderPrefab`. ([#1435])
 * Add `ScreenSpace` component. Draws entities using the screen coordinates. ([#1424])
+* Add `add_removal_to_entity` function. ([#1445])
+* Add `position_from_screen` to `Camera`. Transforms position from screen space to camera space. ([#1442])
 
 ### Changed
 
@@ -47,12 +49,16 @@ it is attached to. ([#1282])
 * `FrameRateLimitConfig` has a `new` constructor, and its fields are made public. ([#1436])
 * Derive `Deserialize, Serialize` for `MaterialPrimitive` and `SpriteRenderPrimitive`, remove
 extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
-* Simplified some of the conditionals in the Pong tutorial ([#1439])
+* Renamed `amethyst_core::specs` to `amethyst_core::ecs` and `amethyst_core::nalgebra` to `amethyst_core::math`. ([#1410])
+* Simplified some of the conditionals in the Pong tutorial. ([#1439])
+* Changed the names of many Transform functions to better reflect their actual function and reduce potential semantic confusion ([#1451])
+* `ProgressCounter#num_loading()` no longer includes failed assets. ([#1452])
 
 ### Removed
 
 ### Fixed
 
+* Optimize loading of wavefront obj mesh assets by getting rid of unnecessary allocations. ([#1454])
 * Fixed the "json" feature for amethyst_assets. ([#1302])
 * Fixed default system font loading to accept uppercase extension ("TTF"). ([#1328])
 * Set width and height of Pong Paddles ([#1363])
@@ -84,8 +90,14 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1419]: https://github.com/amethyst/amethyst/pull/1419
 [#1424]: https://github.com/amethyst/amethyst/pull/1424
 [#1435]: https://github.com/amethyst/amethyst/pull/1435
+[#1410]: https://github.com/amethyst/amethyst/pull/1410
 [#1439]: https://github.com/amethyst/amethyst/pull/1439
+[#1445]: https://github.com/amethyst/amethyst/pull/1445
 [#1446]: https://github.com/amethyst/amethyst/pull/1446
+[#1451]: https://github.com/amethyst/amethyst/pull/1451
+[#1452]: https://github.com/amethyst/amethyst/pull/1452
+[#1454]: https://github.com/amethyst/amethyst/pull/1454
+[#1442]: https://github.com/amethyst/amethyst/pull/1442
 
 ## [0.10.0] - 2018-12
 

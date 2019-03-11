@@ -1,4 +1,4 @@
-use crate::core::specs::World;
+use crate::core::ecs::World;
 use crossbeam_channel::{Receiver, Sender};
 
 /// The type of a callback.

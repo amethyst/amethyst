@@ -1,7 +1,7 @@
 //! Provides structures used to load audio files.
 //!
 use amethyst_assets::{Asset, AssetStorage, Handle, Loader, PrefabData, ProcessingState};
-use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, VecStorage};
+use amethyst_core::ecs::prelude::{Entity, Read, ReadExpect, VecStorage};
 use amethyst_error::Error;
 
 use crate::formats::AudioData;

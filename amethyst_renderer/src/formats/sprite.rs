@@ -2,7 +2,7 @@ use ron::de::from_bytes as from_ron_bytes;
 use serde::{Deserialize, Serialize};
 
 use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, ProgressCounter, SimpleFormat};
-use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, WriteStorage};
+use amethyst_core::ecs::prelude::{Entity, Read, ReadExpect, WriteStorage};
 use amethyst_error::Error;
 
 use crate::{error, Sprite, SpriteRender, SpriteSheet, Texture, TextureFormat, TexturePrefab};
@@ -75,7 +75,7 @@ pub struct SerializedSpriteSheet {
 /// # use amethyst_renderer::{SpriteSheetFormat, SpriteSheet, Texture, PngFormat, TextureMetadata};
 /// #
 /// # fn load_sprite_sheet() {
-/// #   let world = amethyst_core::specs::World::new(); // Normally, you would use Amethyst's world
+/// #   let world = amethyst_core::ecs::World::new(); // Normally, you would use Amethyst's world
 /// #   let loader = world.read_resource::<Loader>();
 /// #   let spritesheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
 /// #   let texture_storage = world.read_resource::<AssetStorage<Texture>>();

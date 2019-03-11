@@ -9,7 +9,7 @@ use amethyst::{
         ProgressCounter, RonFormat,
     },
     core::{
-        nalgebra::{UnitQuaternion, Vector3},
+        math::{UnitQuaternion, Vector3},
         timing::Time,
         transform::{Transform, TransformBundle},
     },
@@ -265,7 +265,7 @@ impl<'a> System<'a> for ExampleSystem {
                     }
                 })
         {
-            transform.set_xyz(
+            transform.set_translation_xyz(
                 light_orbit_radius * state.light_angle.cos(),
                 light_orbit_radius * state.light_angle.sin(),
                 light_z,

@@ -8,8 +8,8 @@ use log::warn;
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
-    nalgebra::Vector4,
-    specs::prelude::{Join, Read, ReadExpect, ReadStorage},
+    ecs::prelude::{Join, Read, ReadExpect, ReadStorage},
+    math::Vector4,
     transform::GlobalTransform,
 };
 use amethyst_error::Error;
@@ -407,7 +407,10 @@ impl TextureBatch {
             }
             None => {
                 warn!(
-                    "Sprite sheet not loaded for sprite_render: `{:?}`.",
+                    "Sprite sheet not loaded for sprite_render: `{:?}`. \
+                     Ensure that `RenderBundle::new(..).with_sprite_sheet_processor()` has been \
+                     called and that the corresponding `SpriteSheet` asset has loaded \
+                     successfully.",
                     sprite_render
                 );
                 return;

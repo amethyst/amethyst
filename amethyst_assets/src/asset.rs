@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use amethyst_core::specs::storage::UnprotectedStorage;
+use amethyst_core::ecs::storage::UnprotectedStorage;
 use amethyst_error::{Error, ResultExt};
 
 #[cfg(feature = "profiler")]

@@ -23,7 +23,7 @@ impl<'s> System<'s> for PaddleSystem {
             if let Some(mv_amount) = movement {
                 let scaled_amount = 1.2 * mv_amount as f32;
                 let paddle_y = transform.translation().y;
-                transform.set_y(
+                transform.set_translation_y(
                     (paddle_y + scaled_amount)
                         .min(ARENA_HEIGHT - PADDLE_HEIGHT * 0.5)
                         .max(PADDLE_HEIGHT * 0.5),

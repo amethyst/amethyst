@@ -1,5 +1,5 @@
 use amethyst_assets::{Format, Handle, PrefabData, ProgressCounter};
-use amethyst_core::specs::prelude::{Entity, ReadExpect, WriteStorage};
+use amethyst_core::ecs::prelude::{Entity, ReadExpect, WriteStorage};
 use amethyst_error::Error;
 
 use serde::{Deserialize, Serialize};

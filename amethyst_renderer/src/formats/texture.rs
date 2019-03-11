@@ -10,7 +10,7 @@ use amethyst_assets::{
     AssetStorage, Format, Handle, Loader, PrefabData, ProcessingState, ProgressCounter,
     SimpleFormat,
 };
-use amethyst_core::specs::prelude::{Entity, Read, ReadExpect};
+use amethyst_core::ecs::prelude::{Entity, Read, ReadExpect};
 use amethyst_error::{Error, ResultExt};
 
 use crate::{
