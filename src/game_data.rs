@@ -2,7 +2,7 @@ use std::path::Path;
 
 use crate::{
     core::{
-        ecs::prelude::{Dispatcher, DispatcherBuilder, System, World},
+        ecs::prelude::{Dispatcher, DispatcherBuilder, RunNow, System, World},
         ArcThreadPool, SystemBundle,
     },
     error::Error,
@@ -190,7 +190,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// ~~~
     pub fn with_thread_local<S>(mut self, system: S) -> Self
     where
-        for<'c> S: System<'c> + 'b,
+        for<'c> S: RunNow<'c> + 'b,
     {
         self.disp_builder.add_thread_local(system);
         self

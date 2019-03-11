@@ -24,6 +24,8 @@ pub use crate::{
     storage::{AssetStorage, Handle, ProcessingState, Processor, WeakHandle},
 };
 
+pub use rayon::ThreadPool;
+
 mod asset;
 mod cache;
 mod error;

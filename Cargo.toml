@@ -115,6 +115,7 @@ env_logger = "0.6.1"
 genmesh = "0.6"
 ron = "0.4.2"
 specs-derive = "0.4"
+amethyst_rendy = { path = "amethyst_rendy", features = ["vulkan"] }
 
 [build-dependencies]
 vergen = "3.0"

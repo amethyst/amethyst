@@ -1,10 +1,8 @@
-use {
-    crate::types::Texture,
-    amethyst_assets::{Asset, Handle, ProcessingState, SimpleFormat},
-    amethyst_core::ecs::prelude::{Component, DenseVecStorage, VecStorage},
-    amethyst_error::Error,
-    ron::de::from_bytes as from_ron_bytes,
-};
+use crate::types::Texture;
+use amethyst_assets::{Asset, Handle, ProcessingState, SimpleFormat};
+use amethyst_core::ecs::prelude::{Component, DenseVecStorage, VecStorage};
+use amethyst_error::Error;
+use ron::de::from_bytes as from_ron_bytes;
 
 /// An asset handle to sprite sheet metadata.
 pub type SpriteSheetHandle = Handle<SpriteSheet>;

@@ -78,7 +78,7 @@ impl DisplayConfig {
     /// Creates a `winit::WindowBuilder` using the values set in the DisplayConfig
     ///
     /// The EventsLoop is needed to configure a fullscreen window
-    pub fn to_windowbuilder(self, el: winit::EventsLoop) -> WindowBuilder {
+    pub fn to_windowbuilder(self, el: &winit::EventsLoop) -> WindowBuilder {
         use winit::WindowAttributes;
         let attrs = WindowAttributes {
             dimensions: self.dimensions.map(into_logical_size),

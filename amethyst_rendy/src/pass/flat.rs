@@ -1,32 +1,32 @@
-use {
-    super::util::*,
-    crate::{
-        camera::{ActiveCamera, Camera},
-        hidden::Hidden,
-        mtl::{Material, MaterialDefaults},
-        skinning::JointTransforms,
-        types::{Backend, Mesh, Texture},
-        visibility::Visibility,
+use super::util::*;
+use crate::{
+    camera::{ActiveCamera, Camera},
+    hidden::Hidden,
+    mtl::{Material, MaterialDefaults},
+    skinning::JointTransforms,
+    types::{Mesh, Texture},
+    visibility::Visibility,
+};
+use amethyst_assets::{AssetStorage, Handle};
+use amethyst_core::{
+    ecs::{Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
+    transform::GlobalTransform,
+};
+use rendy::{
+    command::{QueueId, RenderPassEncoder},
+    factory::Factory,
+    graph::{
+        render::{PrepareResult, SimpleGraphicsPipeline, SimpleGraphicsPipelineDesc},
+        NodeBuffer, NodeImage,
     },
-    amethyst_assets::{AssetStorage, Handle},
-    amethyst_core::{
-        ecs::{Entity, Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
-        transform::GlobalTransform,
-    },
-    rendy::{
-        command::{QueueId, RenderPassEncoder},
-        factory::Factory,
-        graph::{
-            render::{PrepareResult, SimpleGraphicsPipeline, SimpleGraphicsPipelineDesc},
-            NodeBuffer, NodeImage,
-        },
-        hal::pso::{
+    hal::{
+        pso::{
             BlendState, ColorBlendDesc, ColorMask, DepthStencilDesc, EntryPoint, GraphicsShaderSet,
             Specialization,
         },
-        shader::Shader,
+        Backend,
     },
-    std::collections::HashMap,
+    shader::Shader,
 };
 
 /// Draw mesh without lighting
@@ -59,15 +59,15 @@ impl DrawFlatDesc {
     }
 }
 
-impl SimpleGraphicsPipelineDesc<Backend, Resources> for DrawFlatDesc {
-    type Pipeline = DrawFlat;
+impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawFlatDesc {
+    type Pipeline = DrawFlat<B>;
 
     fn load_shader_set<'a>(
         &self,
-        storage: &'a mut Vec<<Backend as rendy::hal::Backend>::ShaderModule>,
-        factory: &mut Factory<Backend>,
+        storage: &'a mut Vec<B::ShaderModule>,
+        factory: &mut Factory<B>,
         _aux: &mut Resources,
-    ) -> GraphicsShaderSet<'a, Backend> {
+    ) -> GraphicsShaderSet<'a, B> {
         storage.clear();
 
         if self.skinning {
@@ -108,13 +108,13 @@ impl SimpleGraphicsPipelineDesc<Backend, Resources> for DrawFlatDesc {
 
     fn build<'a>(
         self,
-        factory: &mut Factory<Backend>,
+        factory: &mut Factory<B>,
         _queue: QueueId,
         _resources: &mut Resources,
-        _buffers: Vec<NodeBuffer<'a, Backend>>,
-        _images: Vec<NodeImage<'a, Backend>>,
-        _set_layouts: &[<Backend as rendy::hal::Backend>::DescriptorSetLayout],
-    ) -> Result<DrawFlat, failure::Error> {
+        _buffers: Vec<NodeBuffer<'a, B>>,
+        _images: Vec<NodeImage<'a, B>>,
+        _set_layouts: &[B::DescriptorSetLayout],
+    ) -> Result<DrawFlat<B>, failure::Error> {
         let buffer = factory.create_buffer(1, 1024, rendy::resource::buffer::UniformBuffer)?;
 
         Ok(DrawFlat {
@@ -125,19 +125,19 @@ impl SimpleGraphicsPipelineDesc<Backend, Resources> for DrawFlatDesc {
 }
 
 #[derive(Debug)]
-pub struct DrawFlat {
+pub struct DrawFlat<B: Backend> {
     skinning: bool,
-    buffer: rendy::resource::Buffer<Backend>,
+    buffer: rendy::resource::Buffer<B>,
 }
 
-impl SimpleGraphicsPipeline<Backend, Resources> for DrawFlat {
+impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat<B> {
     type Desc = DrawFlatDesc;
 
     fn prepare(
         &mut self,
-        _factory: &Factory<Backend>,
+        _factory: &Factory<B>,
         _queue: QueueId,
-        _set_layouts: &[<Backend as rendy::hal::Backend>::DescriptorSetLayout],
+        _set_layouts: &[B::DescriptorSetLayout],
         _index: usize,
         resources: &Resources,
     ) -> PrepareResult {
@@ -192,7 +192,8 @@ impl SimpleGraphicsPipeline<Backend, Resources> for DrawFlat {
                     let offset = vertex_args.len() * std::mem::size_of::<VertexArgs>();
                     vertex_args.push(VertexArgs::from_camera_and_object(camera, global));
                 }
-                unimplemented!()
+                // unimplemented!()
+                PrepareResult::DrawRecord
             }
             Some(ref visibility) => {
                 for (joint, mesh, material, global, _) in (
@@ -211,23 +212,23 @@ impl SimpleGraphicsPipeline<Backend, Resources> for DrawFlat {
                     let material = materials.get(entity).unwrap();
                     let global = globals.get(entity).unwrap();
                 }
-
-                unimplemented!()
+                // unimplemented!()
+                PrepareResult::DrawRecord
             }
         }
     }
 
     fn draw(
         &mut self,
-        layout: &<Backend as rendy::hal::Backend>::PipelineLayout,
-        encoder: RenderPassEncoder<'_, Backend>,
-        index: usize,
-        aux: &Resources,
+        _layout: &B::PipelineLayout,
+        _encoder: RenderPassEncoder<'_, B>,
+        _index: usize,
+        _aux: &Resources,
     ) {
-        unimplemented!()
+        // unimplemented!()
     }
 
-    fn dispose(self, factory: &mut Factory<Backend>, aux: &mut Resources) {
+    fn dispose(self, _factory: &mut Factory<B>, _aux: &mut Resources) {
         unimplemented!()
     }
 }

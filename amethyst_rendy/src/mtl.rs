@@ -1,10 +1,8 @@
 //! Physically-based material.
 
-use {
-    crate::types::Texture,
-    amethyst_assets::Handle,
-    amethyst_core::ecs::prelude::{Component, DenseVecStorage},
-};
+use crate::types::Texture;
+use amethyst_assets::Handle;
+use amethyst_core::ecs::prelude::{Component, DenseVecStorage};
 
 /// Material reference this part of the texture
 #[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]

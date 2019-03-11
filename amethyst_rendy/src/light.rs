@@ -2,15 +2,13 @@
 //!
 //! TODO: Remove redundant padding once `#[repr(align(...))]` stabilizes.
 
-use {
-    crate::resources::AmbientColor,
-    amethyst_assets::{PrefabData, ProgressCounter},
-    amethyst_core::{
-        math::Vector3,
-        ecs::prelude::{Component, DenseVecStorage, Entity, WriteStorage},
-    },
-    amethyst_error::Error,
+use crate::resources::AmbientColor;
+use amethyst_assets::{PrefabData, ProgressCounter};
+use amethyst_core::{
+    ecs::prelude::{Component, DenseVecStorage, Entity, WriteStorage},
+    math::Vector3,
 };
+use amethyst_error::Error;
 
 /// A light source.
 #[derive(Clone, Debug, serde::Deserialize, PartialEq, serde::Serialize, PrefabData)]

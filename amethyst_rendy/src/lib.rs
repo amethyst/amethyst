@@ -1,8 +1,15 @@
+// this is temporary
+#![allow(dead_code)]
+#![allow(unused_variables)]
+
 #[macro_use]
 extern crate amethyst_derive;
 
 #[macro_use]
 extern crate shred_derive;
+
+pub use palette;
+pub use rendy;
 
 pub mod pass;
 

@@ -1,9 +1,7 @@
 mod flat;
 mod util;
 
-pub use self::{
-    flat::*,
-};
+pub use self::flat::*;
 
 use rendy::shader::{ShaderKind, SourceLanguage, StaticShaderInfo};
 
