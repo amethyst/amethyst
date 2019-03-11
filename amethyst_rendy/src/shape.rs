@@ -1,23 +1,21 @@
-use {
-    crate::types::Mesh,
-    amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, Progress, ProgressCounter},
-    amethyst_core::{
-        math::Vector3,
-        ecs::prelude::{Entity, Read, ReadExpect, WriteStorage},
-    },
-    amethyst_error::Error,
-    genmesh::{
-        generators::{
-            Circle, Cone, Cube, Cylinder, IcoSphere, IndexedPolygon, Plane, SharedVertex, SphereUv,
-            Torus,
-        },
-        EmitTriangles, MapVertex, Triangulate, Vertex, Vertices,
-    },
-    rendy::mesh::{
-        MeshBuilder, Normal, PosNormTangTex, PosNormTex, PosTex, Position, Tangent, TexCoord,
-    },
-    std::marker::PhantomData,
+use crate::types::Mesh;
+use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, Progress, ProgressCounter};
+use amethyst_core::{
+    ecs::prelude::{Entity, Read, ReadExpect, WriteStorage},
+    math::Vector3,
 };
+use amethyst_error::Error;
+use genmesh::{
+    generators::{
+        Circle, Cone, Cube, Cylinder, IcoSphere, IndexedPolygon, Plane, SharedVertex, SphereUv,
+        Torus,
+    },
+    EmitTriangles, MapVertex, Triangulate, Vertex, Vertices,
+};
+use rendy::mesh::{
+    MeshBuilder, Normal, PosNormTangTex, PosNormTex, PosTex, Position, Tangent, TexCoord,
+};
+use std::marker::PhantomData;
 
 /// Prefab for generating `Mesh` from basic shapes
 ///

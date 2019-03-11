@@ -1,13 +1,11 @@
 //! Camera type with support for perspective and orthographic projections.
 
-use {
-    amethyst_assets::PrefabData,
-    amethyst_core::{
-        math::{Matrix4, Orthographic3, Perspective3},
-        ecs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
-    },
-    amethyst_error::Error,
+use amethyst_assets::PrefabData;
+use amethyst_core::{
+    ecs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
+    math::{Matrix4, Orthographic3, Perspective3},
 };
+use amethyst_error::Error;
 
 /// The projection mode of a `Camera`.
 ///

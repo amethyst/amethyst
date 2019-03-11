@@ -1,22 +1,9 @@
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-use {
-    crate::{
-        camera::{ActiveCamera, Camera},
-        mtl::{Material, MaterialDefaults},
-        types::{Mesh, Texture},
-    },
-    amethyst_assets::AssetStorage,
-    amethyst_core::{
-        math::Matrix4,
-        ecs::prelude::{Join, Read, ReadStorage},
-        GlobalTransform,
-    },
-    glsl_layout::*,
-    log::error,
-    std::mem,
-};
+use crate::camera::Camera;
+use amethyst_core::GlobalTransform;
+use glsl_layout::*;
 
 pub(crate) enum TextureType {
     Albedo,

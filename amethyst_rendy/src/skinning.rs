@@ -1,13 +1,11 @@
-use {
-    amethyst_assets::PrefabData,
-    amethyst_core::{
-        math::Matrix4,
-        ecs::prelude::{Component, DenseVecStorage, Entity, FlaggedStorage, WriteStorage},
-    },
-    amethyst_error::Error,
-    rendy::{hal::format::Format, mesh::AsAttribute},
-    std::result::Result as StdResult,
+use amethyst_assets::PrefabData;
+use amethyst_core::{
+    ecs::prelude::{Component, DenseVecStorage, Entity, FlaggedStorage, WriteStorage},
+    math::Matrix4,
 };
+use amethyst_error::Error;
+use rendy::{hal::format::Format, mesh::AsAttribute};
+use std::result::Result as StdResult;
 
 /// Type for joint weights attribute of vertex
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]

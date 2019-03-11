@@ -3,7 +3,7 @@ use amethyst_assets::SimpleFormat;
 use amethyst_error::Error;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct ObjFormat;
 
 impl SimpleFormat<Mesh> for ObjFormat {
@@ -11,6 +11,6 @@ impl SimpleFormat<Mesh> for ObjFormat {
     type Options = ();
 
     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<rendy::mesh::MeshBuilder<'static>, Error> {
-        rendy::mesh::obj::load_from_obj(&bytes, ()).map_err(|e| e.compat().into())
+        rendy::mesh::obj::load_from_obj(&bytes).map_err(|e| e.compat().into())
     }
 }

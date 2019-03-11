@@ -1,11 +1,9 @@
 //! `amethyst` rendering ecs resources
 //!
 
-use {
-    amethyst_assets::PrefabData,
-    amethyst_core::ecs::{Entity, Write},
-    amethyst_error::Error,
-};
+use amethyst_assets::PrefabData;
+use amethyst_core::ecs::{Entity, Write};
+use amethyst_error::Error;
 
 /// The ambient color of a scene
 #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]

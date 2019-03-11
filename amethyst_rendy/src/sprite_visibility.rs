@@ -1,17 +1,15 @@
-use {
-    crate::{
-        camera::{ActiveCamera, Camera},
-        hidden::{Hidden, HiddenPropagate},
-        transparent::Transparent,
-    },
-    amethyst_core::{
-        math::{Point3, Vector3},
-        ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
-        GlobalTransform,
-    },
-    hibitset::BitSet,
-    std::cmp::Ordering,
+use crate::{
+    camera::{ActiveCamera, Camera},
+    hidden::{Hidden, HiddenPropagate},
+    transparent::Transparent,
 };
+use amethyst_core::{
+    ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
+    math::{Point3, Vector3},
+    GlobalTransform,
+};
+use hibitset::BitSet;
+use std::cmp::Ordering;
 
 /// Resource for controlling what entities should be rendered, and whether to draw them ordered or
 /// not, which is useful for transparent surfaces.
