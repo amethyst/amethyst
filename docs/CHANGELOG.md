@@ -31,6 +31,7 @@ it is attached to. ([#1282])
 
 ### Changed
 
+* Make `frame_limiter::do_sleep` calculate the amount of time to sleep instead of calling `sleep(0)` ([#1446])
 * Make `application_root_dir` return a `Result<Path>` instead of a `String` ([#1213])
 * Remove unnecessary texture coordinates offset in `Sprite::from_pixel_values` ([#1267])
 * Changed `ActiveCamera` to have the `Option` inside. ([#1280])
@@ -92,6 +93,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1410]: https://github.com/amethyst/amethyst/pull/1410
 [#1439]: https://github.com/amethyst/amethyst/pull/1439
 [#1445]: https://github.com/amethyst/amethyst/pull/1445
+[#1446]: https://github.com/amethyst/amethyst/pull/1446
 [#1451]: https://github.com/amethyst/amethyst/pull/1451
 [#1452]: https://github.com/amethyst/amethyst/pull/1452
 [#1454]: https://github.com/amethyst/amethyst/pull/1454

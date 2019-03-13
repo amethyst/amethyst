@@ -225,8 +225,13 @@ impl FrameLimiter {
 
     fn do_sleep(&self, stop_on_remaining: Duration) {
         let frame_duration = self.frame_duration - stop_on_remaining;
-        while Instant::now() - self.last_call < frame_duration {
-            sleep(ZERO);
+        loop {
+            let elapsed = Instant::now() - self.last_call;
+            if elapsed >= frame_duration {
+                break;
+            } else {
+                sleep(frame_duration - elapsed);
+            }
         }
     }
 }
