@@ -234,7 +234,6 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawPbmDesc {
         .unwrap();
 
         let environment_set = unsafe {
-            dbg!(&set_layouts[2]);
             let set = env_desc_pool.allocate_set(&set_layouts[2]).unwrap();
             factory.write_descriptor_sets(vec![
                 DescriptorSetWrite {
@@ -751,6 +750,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
         .unwrap();
 
         let unprotected_transforms = global_transforms.unprotected_storage();
+        let mut obj_idx = 0;
         for material in &self.material_data {
             if material.desc_set.is_none() {
                 continue;
@@ -758,8 +758,8 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
 
             for (i, entity_id) in (&material.bit_set).iter().enumerate() {
                 let transform = unsafe { unprotected_transforms.get(entity_id) };
-
-                let offset = vertex_arg_step * i as u64;
+                let offset = vertex_arg_step * obj_idx as u64;
+                obj_idx += 1;
                 let obj = VertexArgs::from_camera_and_object(camera, transform).std140();
                 (&mut vertex_args[offset as usize..(offset + vertex_arg_step) as usize])
                     .write(glsl_layout::as_bytes(&obj))
@@ -855,6 +855,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
                 }
             }
         }
+        assert!(obj_data_iter.next().is_none());
     }
 
     fn dispose(mut self, factory: &mut Factory<B>, _aux: &mut Resources) {
@@ -892,7 +893,7 @@ where
     T::Std140: Sized,
 {
     let size = std::mem::size_of::<T::Std140>() as u64;
-    (size as u64 + align - 1) & !(align - 1)
+    ((size + align - 1) / align) * align
 }
 
 fn ensure_buffer<B: Backend>(
