@@ -1,3 +1,4 @@
+use crate::storage::ProcessingState;
 use std::sync::Arc;
 
 use amethyst_core::ecs::storage::UnprotectedStorage;
@@ -29,8 +30,21 @@ pub trait Asset: Send + Sync + 'static {
     /// The `Data` type the asset can be created from.
     type Data: Send + Sync + 'static;
 
-    /// The ECS storage type to be used. You'll want to use `VecStorage` in most cases.
+    /// The ECS storage type to be used. You'll want to use `DenseVecStorage` in most cases.
     type HandleStorage: UnprotectedStorage<Handle<Self>> + Send + Sync;
+}
+
+/// Defines a way to process asset's data into the asset. This allows
+/// using default `Processor` system to process assets that implement that type.
+pub trait ProcessableAsset: Asset + Sized {
+    /// Processes asset data into asset during loading.
+    fn process(data: Self::Data) -> Result<ProcessingState<Self>, Error>;
+}
+
+impl<T: Asset<Data = T>> ProcessableAsset for T {
+    fn process(data: Self::Data) -> Result<ProcessingState<Self>, Error> {
+        Ok(ProcessingState::Loaded(data))
+    }
 }
 
 /// A format, providing a conversion from bytes to asset data, which is then

@@ -20,7 +20,7 @@ amethyst_error = { path = "../amethyst_error", version = "0.1" }
 failure = "0.1"
 genmesh = "*"
 glsl-layout = "0.3"
-hibitset = { version = "0.5" }
+hibitset = "0.5.4"
 lazy_static = "1.0"
 log = "0.4"
 palette = { version = "0.4", features = ["serde"] }
@@ -32,3 +32,5 @@ serde = { version = "1", features = ["serde_derive"] }
 shred = { version = "0.7" }
 shred-derive = { version = "0.5" }
 winit = "*"
+fnv = "1"
+derivative = "1.0.2"

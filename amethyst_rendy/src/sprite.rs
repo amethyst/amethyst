@@ -1,33 +1,28 @@
 use crate::types::Texture;
-use amethyst_assets::{Asset, Handle, ProcessingState, SimpleFormat};
+use amethyst_assets::{Asset, Handle, SimpleFormat};
 use amethyst_core::ecs::prelude::{Component, DenseVecStorage, VecStorage};
 use amethyst_error::Error;
+use rendy::hal::Backend;
 use ron::de::from_bytes as from_ron_bytes;
 
 /// An asset handle to sprite sheet metadata.
-pub type SpriteSheetHandle = Handle<SpriteSheet>;
+pub type SpriteSheetHandle<B> = Handle<SpriteSheet<B>>;
 
 /// Meta data for a sprite sheet texture.
 ///
 /// Contains a handle to the texture and the sprite coordinates on the texture.
 #[derive(Clone, Debug, PartialEq)]
-pub struct SpriteSheet {
+pub struct SpriteSheet<B: Backend> {
     /// `Texture` handle of the spritesheet texture
-    pub texture: Handle<Texture>,
+    pub texture: Handle<Texture<B>>,
     /// A list of sprites in this sprite sheet.
     pub sprites: Vec<Sprite>,
 }
 
-impl Asset for SpriteSheet {
+impl<B: Backend> Asset for SpriteSheet<B> {
     const NAME: &'static str = "renderer::SpriteSheet";
     type Data = Self;
     type HandleStorage = VecStorage<Handle<Self>>;
-}
-
-impl From<SpriteSheet> for Result<ProcessingState<SpriteSheet>, Error> {
-    fn from(sprite_sheet: SpriteSheet) -> Result<ProcessingState<SpriteSheet>, Error> {
-        Ok(ProcessingState::Loaded(sprite_sheet))
-    }
 }
 
 /// Information about whether or not a texture should be flipped
@@ -187,14 +182,14 @@ impl From<[f32; 4]> for TextureCoordinates {
 /// Instead of using a `Mesh` on a `DrawFlat` render pass, we can use a simpler set of shaders to
 /// render textures to quads. This struct carries the information necessary for the draw2dflat pass.
 #[derive(Clone, Debug, PartialEq)]
-pub struct SpriteRender {
+pub struct SpriteRender<B: Backend> {
     /// Handle to the sprite sheet of the sprite
-    pub sprite_sheet: SpriteSheetHandle,
+    pub sprite_sheet: SpriteSheetHandle<B>,
     /// Index of the sprite on the sprite sheet
     pub sprite_number: usize,
 }
 
-impl Component for SpriteRender {
+impl<B: Backend> Component for SpriteRender<B> {
     type Storage = VecStorage<Self>;
 }
 
@@ -289,12 +284,12 @@ struct SerializedSpriteSheet {
 #[derive(Clone, serde::Deserialize, serde::Serialize)]
 pub struct SpriteSheetFormat;
 
-impl SimpleFormat<SpriteSheet> for SpriteSheetFormat {
+impl<B: Backend> SimpleFormat<SpriteSheet<B>> for SpriteSheetFormat {
     const NAME: &'static str = "SPRITE_SHEET";
 
-    type Options = Handle<Texture>;
+    type Options = Handle<Texture<B>>;
 
-    fn import(&self, bytes: Vec<u8>, texture: Self::Options) -> Result<SpriteSheet, Error> {
+    fn import(&self, bytes: Vec<u8>, texture: Self::Options) -> Result<SpriteSheet<B>, Error> {
         let sheet: SerializedSpriteSheet = from_ron_bytes(&bytes)
             .map_err(|err| Error::from_string("Spritesheet loading error").with_source(err))?;
 

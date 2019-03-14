@@ -78,8 +78,8 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawFlatDesc {
             storage.push(super::BASIC_VERTEX.module(factory).unwrap());
         };
 
-        log::trace!("Loading shader module '{:#?}'", *super::FLAT_FRAGMEN);
-        storage.push(super::FLAT_FRAGMEN.module(factory).unwrap());
+        log::trace!("Loading shader module '{:#?}'", *super::FLAT_FRAGMENT);
+        storage.push(super::FLAT_FRAGMENT.module(factory).unwrap());
 
         GraphicsShaderSet {
             vertex: EntryPoint {
@@ -156,13 +156,13 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat<B> {
         ) = <(
             Option<Read<'_, ActiveCamera>>,
             ReadStorage<'_, Camera>,
-            Read<'_, AssetStorage<Mesh>>,
-            Read<'_, AssetStorage<Texture>>,
-            ReadExpect<'_, MaterialDefaults>,
+            Read<'_, AssetStorage<Mesh<B>>>,
+            Read<'_, AssetStorage<Texture<B>>>,
+            ReadExpect<'_, MaterialDefaults<B>>,
             Option<Read<'_, Visibility>>,
             ReadStorage<'_, Hidden>,
-            ReadStorage<'_, Handle<Mesh>>,
-            ReadStorage<'_, Material>,
+            ReadStorage<'_, Handle<Mesh<B>>>,
+            ReadStorage<'_, Handle<Material<B>>>,
             ReadStorage<'_, GlobalTransform>,
             ReadStorage<'_, JointTransforms>,
         ) as SystemData>::fetch(resources);
@@ -192,7 +192,6 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat<B> {
                     let offset = vertex_args.len() * std::mem::size_of::<VertexArgs>();
                     vertex_args.push(VertexArgs::from_camera_and_object(camera, global));
                 }
-                // unimplemented!()
                 PrepareResult::DrawRecord
             }
             Some(ref visibility) => {
@@ -212,8 +211,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat<B> {
                     let material = materials.get(entity).unwrap();
                     let global = globals.get(entity).unwrap();
                 }
-                // unimplemented!()
-                PrepareResult::DrawRecord
+                unimplemented!()
             }
         }
     }
@@ -225,7 +223,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat<B> {
         _index: usize,
         _aux: &Resources,
     ) {
-        // unimplemented!()
+        unimplemented!()
     }
 
     fn dispose(self, _factory: &mut Factory<B>, _aux: &mut Resources) {

@@ -1,31 +1,14 @@
-// TODO: Needs documentation.
-
-#version 150 core
-
-layout (std140) uniform FragmentArgs {
-    int point_light_count;
-    int directional_light_count;
-    int spot_light_count;
-};
+#version 450
 
 struct PointLight {
     vec3 position;
     vec3 color;
-    float pad; // Workaround for bug in mac's implementation of opengl (loads garbage when accessing members of structures in arrays with dynamic indices).
     float intensity;
-};
-
-layout (std140) uniform PointLights {
-    PointLight plight[128];
 };
 
 struct DirectionalLight {
     vec3 color;
     vec3 direction;
-};
-
-layout (std140) uniform DirectionalLights {
-    DirectionalLight dlight[16];
 };
 
 struct SpotLight {
@@ -38,66 +21,58 @@ struct SpotLight {
     float smoothness;
 };
 
-layout (std140) uniform SpotLights {
+layout(set = 2, binding = 0) uniform Environment {
+    vec3 ambient_color;
+    vec3 camera_position;
+    int point_light_count;
+    int directional_light_count;
+    int spot_light_count;
+};
+
+layout(set = 2, binding = 1) uniform PointLights {
+    PointLight plight[128];
+};
+
+layout(set = 2, binding = 2) uniform DirectionalLights {
+    DirectionalLight dlight[16];
+};
+
+layout(set = 2, binding = 3) uniform SpotLights {
     SpotLight slight[128];
 };
 
-uniform vec3 ambient_color;
-uniform vec3 camera_position;
-
-uniform float alpha_cutoff;
-
-uniform sampler2D albedo;
-uniform sampler2D emission;
-uniform sampler2D normal;
-uniform sampler2D metallic;
-uniform sampler2D roughness;
-uniform sampler2D ambient_occlusion;
-uniform sampler2D caveat;
-
-layout (std140) uniform AlbedoOffset {
+struct UvOffset {
     vec2 u_offset;
     vec2 v_offset;
-} albedo_offset;
+};
 
-layout (std140) uniform EmissionOffset {
-    vec2 u_offset;
-    vec2 v_offset;
-} emission_offset;
+layout(set = 1, binding = 0) uniform Material {
+    float alpha_cutoff;
+    UvOffset albedo_offset;
+    UvOffset emission_offset;
+    UvOffset normal_offset;
+    UvOffset metallic_offset;
+    UvOffset roughness_offset;
+    UvOffset ambient_occlusion_offset;
+    UvOffset caveat_offset;
+};
 
-layout (std140) uniform NormalOffset {
-    vec2 u_offset;
-    vec2 v_offset;
-} normal_offset;
+layout(set = 1, binding = 1) uniform sampler2D albedo;
+layout(set = 1, binding = 2) uniform sampler2D emission;
+layout(set = 1, binding = 3) uniform sampler2D normal;
+layout(set = 1, binding = 4) uniform sampler2D metallic;
+layout(set = 1, binding = 5) uniform sampler2D roughness;
+layout(set = 1, binding = 6) uniform sampler2D ambient_occlusion;
+layout(set = 1, binding = 7) uniform sampler2D caveat;
 
-layout (std140) uniform MetallicOffset {
-    vec2 u_offset;
-    vec2 v_offset;
-} metallic_offset;
-
-layout (std140) uniform RoughnessOffset {
-    vec2 u_offset;
-    vec2 v_offset;
-} roughness_offset;
-
-layout (std140) uniform AmbientOcclusionOffset {
-    vec2 u_offset;
-    vec2 v_offset;
-} ambient_occlusion_offset;
-
-layout (std140) uniform CaveatOffset {
-    vec2 u_offset;
-    vec2 v_offset;
-} caveat_offset;
-
-in VertexData {
+layout(location = 0) in VertexData {
     vec3 position;
     vec3 normal;
     vec3 tangent;
     vec2 tex_coord;
 } vertex;
 
-out vec4 out_color;
+layout(location = 0) out vec4 out_color;
 
 const float PI = 3.14159265359;
 

@@ -8,7 +8,9 @@ use crate::{
     types::{Mesh, Texture},
     visibility::Visibility,
 };
-use amethyst_assets::{AssetStorage, Handle, HotReloadStrategy, ProcessingState, ThreadPool};
+use amethyst_assets::{
+    AssetStorage, Handle, HotReloadStrategy, ProcessableAsset, ProcessingState, ThreadPool,
+};
 use amethyst_core::{
     ecs::{Read, ReadExpect, ReadStorage, Resources, RunNow, SystemData, Write, WriteExpect},
     timing::Time,
@@ -17,12 +19,8 @@ use palette::Srgba;
 use rendy::{
     command::{Families, QueueId},
     factory::{Factory, ImageState},
-    graph::{
-        present::{PresentBuilder, PresentNode},
-        Graph, GraphBuilder,
-    },
+    graph::{Graph, GraphBuilder},
     hal::{queue::QueueFamilyId, Backend},
-    memory::MemoryUsageValue,
     texture::palette::load_from_srgba,
 };
 use std::sync::Arc;
@@ -56,12 +54,13 @@ type AssetLoadingData<'a, B> = (
     WriteExpect<'a, Factory<B>>,
     Write<'a, AssetStorage<Mesh<B>>>,
     Write<'a, AssetStorage<Texture<B>>>,
+    Write<'a, AssetStorage<Material<B>>>,
 );
 
 type SetupData<'a, B> = (
     ReadStorage<'a, Handle<Mesh<B>>>,
     ReadStorage<'a, Handle<Texture<B>>>,
-    ReadStorage<'a, Material>,
+    ReadStorage<'a, Handle<Material<B>>>,
     ReadStorage<'a, Light>,
     ReadStorage<'a, Camera>,
     ReadStorage<'a, Hidden>,
@@ -86,7 +85,15 @@ where
 {
     fn asset_loading(
         &mut self,
-        (time, pool, strategy, mut factory, mut mesh_storage, mut texture_storage): AssetLoadingData<'_, B>,
+        (
+            time,
+            pool,
+            strategy,
+            mut factory,
+            mut mesh_storage,
+            mut texture_storage,
+            mut material_storage,
+        ): AssetLoadingData<'_, B>,
     ) {
         use std::ops::Deref;
 
@@ -125,6 +132,13 @@ where
             &**pool,
             strategy,
         );
+
+        material_storage.process(
+            ProcessableAsset::process,
+            time.frame_number(),
+            &**pool,
+            strategy,
+        );
     }
 }
 
@@ -138,6 +152,7 @@ where
 
         let mut factory = res.fetch_mut::<Factory<B>>();
         let mut families = res.fetch_mut::<Families<B>>();
+        factory.maintain(&mut families);
         self.graph
             .as_mut()
             .unwrap()
@@ -161,12 +176,12 @@ where
         AssetLoadingData::<B>::setup(res);
         SetupData::<B>::setup(res);
 
-        let mat = create_default_mat(res);
+        let mat = create_default_mat::<B>(res);
         res.insert(MaterialDefaults(mat));
     }
 }
 
-fn create_default_mat(res: &mut Resources) -> Material {
+fn create_default_mat<B: Backend>(res: &mut Resources) -> Material<B> {
     use crate::mtl::TextureOffset;
 
     use amethyst_assets::Loader;
