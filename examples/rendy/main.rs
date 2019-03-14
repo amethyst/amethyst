@@ -209,7 +209,7 @@ fn build_graph<B: Backend>(
         factory.get_surface_format(&surface),
         MemoryUsageValue::Data,
         Some(ClearValue::Color(
-            [1.0, 0.0, 1.0, 1.0].into(),
+            [1.0, 1.0, 1.0, 1.0].into(),
         )),
     );
     
