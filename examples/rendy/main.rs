@@ -29,23 +29,26 @@ use amethyst_rendy::{
     types::{Mesh, Texture, DefaultBackend},
 };
 use std::sync::Arc;
+use std::marker::PhantomData;
 
-struct Example;
+struct Example<B: Backend>(PhantomData<B>);
+impl<B: Backend> Example<B> {
+    pub fn new() -> Self { Self(PhantomData) }
+}
 
-impl SimpleState for Example {
+impl<B: Backend> SimpleState for Example<B> {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
-        let mat_defaults = world.read_resource::<MaterialDefaults>().0.clone();
+        let mat_defaults = world.read_resource::<MaterialDefaults<B>>().0.clone();
 
-        println!("Load mesh");
         let (mesh, albedo) = {
-            let mesh = world.exec(|loader: AssetLoaderSystemData<'_, Mesh>| {
+            let mesh = world.exec(|loader: AssetLoaderSystemData<'_, Mesh<B>>| {
                 loader.load_from_data(
                     Shape::Sphere(32, 32).generate::<Vec<PosNormTangTex>>(None),
                     (),
                 )
             });
-            let albedo = world.exec(|loader: AssetLoaderSystemData<'_, Texture>| {
+            let albedo = world.exec(|loader: AssetLoaderSystemData<'_, Texture<B>>| {
                 loader.load_from_data(
                     load_from_linear_rgba(LinSrgb::new(1.0, 1.0, 1.0).into()),
                     (),
@@ -65,7 +68,7 @@ impl SimpleState for Example {
                 pos.set_translation_xyz(2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0);
 
                 let (metallic, roughness) =
-                    world.exec(|loader: AssetLoaderSystemData<'_, Texture>| {
+                    world.exec(|loader: AssetLoaderSystemData<'_, Texture<B>>| {
                         (
                             loader.load_from_data(
                                 load_from_linear_rgba(LinLuma::new(metallic).into()),
@@ -78,12 +81,17 @@ impl SimpleState for Example {
                         )
                     });
 
-                let mtl = Material {
-                    albedo: albedo.clone(),
-                    metallic,
-                    roughness,
-                    ..mat_defaults.clone()
-                };
+                let mtl = world.exec(|loader: AssetLoaderSystemData<'_, Material<B>>| {
+                    loader.load_from_data(
+                        Material {
+                        albedo: albedo.clone(),
+                        metallic,
+                        roughness,
+                        ..mat_defaults.clone()
+                    },
+                        (),
+                    )
+                });
 
                 world
                     .create_entity()
@@ -127,8 +135,6 @@ impl SimpleState for Example {
             .with(light2_transform)
             .build();
 
-        println!("Put camera");
-
         let mut transform = Transform::default();
         transform.set_translation_xyz(0.0, 0.0, -12.0);
         transform.prepend_rotation_y_axis(std::f32::consts::PI);
@@ -149,7 +155,7 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let path = app_root.join("examples/material/resources/display_config.ron");
+    let path = app_root.join("examples/rendy/resources/display_config.ron");
     let resources = app_root.join("examples/assets/");
     let config = DisplayConfig::load(&path);
 
@@ -164,7 +170,7 @@ fn main() -> amethyst::Result<()> {
         .with_thread_local(RendererSystem::<DefaultBackend, _>::new(|f| build_graph(window, f)))
         .with_thread_local(EventsLoopPoller::new(event_loop));
 
-    let mut game = Application::new(&resources, Example, game_data)?;
+    let mut game = Application::new(&resources, Example::<DefaultBackend>::new(), game_data)?;
     game.run();
     Ok(())
 }
@@ -189,7 +195,7 @@ fn build_graph<B: Backend>(
                 format::Format,
             }
         },
-        pass::DrawFlat
+        pass::DrawPbm
     };
 
     let surface = factory.create_surface(Arc::new(window));
@@ -218,7 +224,7 @@ fn build_graph<B: Backend>(
     );
 
     let pass = graph_builder.add_node(
-        DrawFlat::builder()
+        DrawPbm::builder()
             .into_subpass()
             .with_color(color)
             .with_depth_stencil(depth)

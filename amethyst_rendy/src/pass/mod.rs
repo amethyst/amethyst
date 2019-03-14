@@ -1,7 +1,8 @@
 mod flat;
+mod pbm;
 mod util;
 
-pub use self::flat::*;
+pub use self::{flat::*, pbm::*};
 
 use rendy::shader::{ShaderKind, SourceLanguage, StaticShaderInfo};
 
@@ -13,8 +14,15 @@ lazy_static::lazy_static! {
         "main",
     );
 
-    static ref FLAT_FRAGMEN: StaticShaderInfo = StaticShaderInfo::new(
+    static ref FLAT_FRAGMENT: StaticShaderInfo = StaticShaderInfo::new(
         concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/fragment/flat.glsl"),
+        ShaderKind::Fragment,
+        SourceLanguage::GLSL,
+        "main",
+    );
+
+    static ref PBM_FRAGMENT: StaticShaderInfo = StaticShaderInfo::new(
+        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/fragment/pbm.glsl"),
         ShaderKind::Fragment,
         SourceLanguage::GLSL,
         "main",

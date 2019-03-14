@@ -6,7 +6,7 @@
 
 use fluent::bundle::FluentBundle;
 
-use amethyst_assets::{Asset, Handle, ProcessingState, SimpleFormat};
+use amethyst_assets::{Asset, Handle, SimpleFormat};
 use amethyst_core::ecs::prelude::VecStorage;
 use amethyst_error::Error;
 
@@ -27,12 +27,6 @@ impl SimpleFormat<Locale> for LocaleFormat {
             .add_messages(&s)
             .expect("Error creating fluent bundle!");
         Ok(Locale { bundle })
-    }
-}
-
-impl Into<Result<ProcessingState<Locale>, Error>> for Locale {
-    fn into(self) -> Result<ProcessingState<Locale>, Error> {
-        Ok(ProcessingState::Loaded(self))
     }
 }
 

@@ -1,7 +1,7 @@
 use gfx_glyph::Font;
 use serde::{Deserialize, Serialize};
 
-use amethyst_assets::{Asset, Handle, ProcessingState, SimpleFormat};
+use amethyst_assets::{Asset, ProcessableAsset, Handle, ProcessingState, SimpleFormat};
 use amethyst_core::ecs::prelude::VecStorage;
 use amethyst_error::{format_err, Error, ResultExt};
 
@@ -21,9 +21,9 @@ impl Asset for FontAsset {
     type HandleStorage = VecStorage<Handle<Self>>;
 }
 
-impl Into<Result<ProcessingState<FontAsset>, Error>> for FontData {
-    fn into(self) -> Result<ProcessingState<FontAsset>, Error> {
-        Ok(ProcessingState::Loaded(FontAsset(self.0)))
+impl ProcessableAsset for FontAsset {
+    fn process(data: FontData) -> Result<ProcessingState<FontAsset>, Error> {
+        Ok(ProcessingState::Loaded(FontAsset(data.0)))
     }
 }
 

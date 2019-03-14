@@ -12,7 +12,7 @@
 #[cfg(feature = "json")]
 pub use crate::formats::JsonFormat;
 pub use crate::{
-    asset::{Asset, Format, FormatValue, SimpleFormat},
+    asset::{Asset, ProcessableAsset, Format, FormatValue, SimpleFormat},
     cache::Cache,
     formats::RonFormat,
     helper::AssetLoaderSystemData,

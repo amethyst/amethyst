@@ -1,16 +1,19 @@
 use crate::types::Texture;
 use amethyst_assets::SimpleFormat;
 use amethyst_error::Error;
-use rendy::texture::{
-    image::{load_from_image, ImageTextureConfig},
-    TextureBuilder,
+use rendy::{
+    hal::Backend,
+    texture::{
+        image::{load_from_image, ImageTextureConfig},
+        TextureBuilder,
+    },
 };
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct ImageFormat;
 
-impl SimpleFormat<Texture> for ImageFormat {
+impl<B: Backend> SimpleFormat<Texture<B>> for ImageFormat {
     const NAME: &'static str = "IMAGE";
     type Options = ImageTextureConfig;
 

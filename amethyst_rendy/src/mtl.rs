@@ -1,8 +1,9 @@
 //! Physically-based material.
 
 use crate::types::Texture;
-use amethyst_assets::Handle;
-use amethyst_core::ecs::prelude::{Component, DenseVecStorage};
+use amethyst_assets::{Asset, Handle};
+use amethyst_core::ecs::prelude::DenseVecStorage;
+use rendy::hal::Backend;
 
 /// Material reference this part of the texture
 #[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
@@ -24,41 +25,43 @@ impl Default for TextureOffset {
 
 /// Material struct.
 #[derive(Clone, PartialEq)]
-pub struct Material {
+pub struct Material<B: Backend> {
     /// Alpha cutoff: the value at which we do not draw the pixel
     pub alpha_cutoff: f32,
     /// Diffuse map.
-    pub albedo: Handle<Texture>,
+    pub albedo: Handle<Texture<B>>,
     /// Diffuse texture offset
     pub albedo_offset: TextureOffset,
     /// Emission map.
-    pub emission: Handle<Texture>,
+    pub emission: Handle<Texture<B>>,
     /// Emission texture offset
     pub emission_offset: TextureOffset,
     /// Normal map.
-    pub normal: Handle<Texture>,
+    pub normal: Handle<Texture<B>>,
     /// Normal texture offset
     pub normal_offset: TextureOffset,
     /// Metallic map.
-    pub metallic: Handle<Texture>,
+    pub metallic: Handle<Texture<B>>,
     /// Metallic texture offset
     pub metallic_offset: TextureOffset,
     /// Roughness map.
-    pub roughness: Handle<Texture>,
+    pub roughness: Handle<Texture<B>>,
     /// Roughness texture offset
     pub roughness_offset: TextureOffset,
     /// Ambient occlusion map.
-    pub ambient_occlusion: Handle<Texture>,
+    pub ambient_occlusion: Handle<Texture<B>>,
     /// Ambient occlusion texture offset
     pub ambient_occlusion_offset: TextureOffset,
     /// Caveat map.
-    pub caveat: Handle<Texture>,
+    pub caveat: Handle<Texture<B>>,
     /// Caveat texture offset
     pub caveat_offset: TextureOffset,
 }
 
-impl Component for Material {
-    type Storage = DenseVecStorage<Self>;
+impl<B: Backend> Asset for Material<B> {
+    const NAME: &'static str = "renderer::Material";
+    type Data = Self;
+    type HandleStorage = DenseVecStorage<Handle<Self>>;
 }
 
 /// A resource providing default textures for `Material`.
@@ -67,4 +70,4 @@ impl Component for Material {
 /// Additionally, you can use it to fill up the fields of
 /// `Material` you don't want to specify.
 #[derive(Clone)]
-pub struct MaterialDefaults(pub Material);
+pub struct MaterialDefaults<B: Backend>(pub Material<B>);

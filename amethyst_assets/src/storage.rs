@@ -22,7 +22,7 @@ use amethyst_core::{
 use amethyst_error::{Error, ResultExt};
 
 use crate::{
-    asset::{Asset, FormatValue},
+    asset::{Asset, FormatValue, ProcessableAsset},
     error,
     progress::Tracker,
     reload::{HotReloadStrategy, Reload},
@@ -435,8 +435,7 @@ impl<A> Processor<A> {
 
 impl<'a, A> System<'a> for Processor<A>
 where
-    A: Asset,
-    A::Data: Into<Result<ProcessingState<A>, Error>>,
+    A: Asset + ProcessableAsset,
 {
     type SystemData = (
         Write<'a, AssetStorage<A>>,
@@ -449,7 +448,7 @@ where
         use std::ops::Deref;
 
         storage.process(
-            Into::into,
+            ProcessableAsset::process,
             time.frame_number(),
             &**pool,
             strategy.as_ref().map(Deref::deref),
