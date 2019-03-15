@@ -18,7 +18,7 @@ amethyst_core = { path = "../amethyst_core", version = "0.5" }
 amethyst_derive = { path = "../amethyst_derive", version = "0.3" }
 amethyst_error = { path = "../amethyst_error", version = "0.1" }
 failure = "0.1"
-genmesh = "*"
+genmesh = "0.6"
 glsl-layout = "0.3"
 hibitset = "0.5.4"
 lazy_static = "1.0"
@@ -30,7 +30,7 @@ rendy = { git = "https://github.com/frizi/rendy.git", branch = "palette-loading"
 ron = "0.4"
 serde = { version = "1", features = ["serde_derive"] }
 shred = { version = "0.7" }
-shred-derive = { version = "0.5" }
+shred-derive = { version = "0.5" }  
 winit = "*"
 fnv = "1"
 derivative = "1.0.2"
