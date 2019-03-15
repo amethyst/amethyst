@@ -15,13 +15,13 @@ use amethyst_core::{
     ecs::{Read, ReadExpect, ReadStorage, Resources, RunNow, SystemData, Write, WriteExpect},
     timing::Time,
 };
-use palette::Srgba;
+use palette::{Srgba, LinSrgba};
 use rendy::{
     command::{Families, QueueId},
     factory::{Factory, ImageState},
     graph::{Graph, GraphBuilder},
     hal::{queue::QueueFamilyId, Backend},
-    texture::palette::load_from_srgba,
+    texture::palette::{load_from_srgba, load_from_linear_rgba},
 };
 use std::sync::Arc;
 
@@ -190,9 +190,9 @@ fn create_default_mat<B: Backend>(res: &mut Resources) -> Material<B> {
 
     let albedo = load_from_srgba(Srgba::new(0.5, 0.5, 0.5, 1.0));
     let emission = load_from_srgba(Srgba::new(0.0, 0.0, 0.0, 0.0));
-    let normal = load_from_srgba(Srgba::new(0.5, 0.5, 1.0, 1.0));
+    let normal = load_from_linear_rgba(LinSrgba::new(0.5, 0.5, 1.0, 1.0));
     let metallic = load_from_srgba(Srgba::new(0.0, 0.0, 0.0, 0.0));
-    let roughness = load_from_srgba(Srgba::new(0.5, 0.5, 0.5, 0.5));
+    let roughness = load_from_linear_rgba(LinSrgba::new(0.5, 0.5, 0.5, 0.5));
     let ambient_occlusion = load_from_srgba(Srgba::new(1.0, 1.0, 1.0, 1.0));
     let caveat = load_from_srgba(Srgba::new(1.0, 1.0, 1.0, 1.0));
 
