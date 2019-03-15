@@ -3,17 +3,15 @@
 use amethyst::{
     assets::AssetLoaderSystemData,
     core::{
-        ecs::{Resources, RunNow, SystemData, Write},
-        shrev::EventChannel,
+        ecs::{Resources, SystemData, ReadExpect},
         Transform, TransformBundle,
     },
     prelude::*,
     utils::application_root_dir,
-    winit::{Event, EventsLoop},
+    winit::{Window, EventsLoop},
 };
 use amethyst_rendy::{
     camera::{Camera, Projection},
-    config::DisplayConfig,
     light::{Light, PointLight},
     mtl::{Material, MaterialDefaults},
     palette::{LinLuma, LinSrgb, Srgb},
@@ -26,6 +24,7 @@ use amethyst_rendy::{
     },
     shape::Shape,
     system::RendererSystem,
+    window::{WindowSystem, EventPollingSystem},
     types::{Mesh, Texture, DefaultBackend},
 };
 use std::sync::Arc;
@@ -157,18 +156,14 @@ fn main() -> amethyst::Result<()> {
 
     let path = app_root.join("examples/rendy/resources/display_config.ron");
     let resources = app_root.join("examples/assets/");
-    let config = DisplayConfig::load(&path);
 
     let event_loop = EventsLoop::new();
-    let window = config
-        .to_windowbuilder(&event_loop)
-        .build(&event_loop)
-        .unwrap();
 
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
-        .with_thread_local(RendererSystem::<DefaultBackend, _>::new(|f| build_graph(window, f)))
-        .with_thread_local(EventsLoopPoller::new(event_loop));
+        .with_thread_local(WindowSystem::from_config_path(&event_loop, path))
+        .with_thread_local(RendererSystem::<DefaultBackend, _>::new(build_graph))
+        .with_thread_local(EventPollingSystem::new(event_loop));
 
     let mut game = Application::new(&resources, Example::<DefaultBackend>::new(), game_data)?;
     game.run();
@@ -176,9 +171,10 @@ fn main() -> amethyst::Result<()> {
 }
 
 fn build_graph<B: Backend>(
-    window: winit::Window,
     factory: &mut Factory<B>,
+    res: &mut Resources,
 ) -> GraphBuilder<B, Resources> {
+    let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
     use amethyst_rendy::{
         rendy::{
             graph::{
@@ -198,7 +194,7 @@ fn build_graph<B: Backend>(
         pass::DrawPbm
     };
 
-    let surface = factory.create_surface(Arc::new(window));
+    let surface = factory.create_surface(window.clone());
     // let aspect = surface.aspect();
     
     let mut graph_builder = GraphBuilder::new();
@@ -239,26 +235,3 @@ fn build_graph<B: Backend>(
     graph_builder
 }
 
-// TODO: move out of example code
-struct EventsLoopPoller {
-    event_loop: EventsLoop,
-}
-
-impl EventsLoopPoller {
-    fn new(event_loop: EventsLoop) -> Self {
-        Self { event_loop }
-    }
-}
-
-impl<'a> RunNow<'a> for EventsLoopPoller {
-    fn run_now(&mut self, res: &'a Resources) {
-        let mut event_handler = <Write<'a, EventChannel<Event>>>::fetch(res);
-        self.event_loop.poll_events(|event| {
-            event_handler.single_write(event);
-        });
-    }
-
-    fn setup(&mut self, res: &mut Resources) {
-        <Write<'a, EventChannel<Event>> as SystemData<'_>>::setup(res)
-    }
-}

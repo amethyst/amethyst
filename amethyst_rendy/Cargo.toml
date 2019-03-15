@@ -16,6 +16,7 @@ vulkan = ["rendy/vulkan"]
 amethyst_assets = { path = "../amethyst_assets", version = "0.6" }
 amethyst_core = { path = "../amethyst_core", version = "0.5" }
 amethyst_derive = { path = "../amethyst_derive", version = "0.3" }
+amethyst_config = { path = "../amethyst_config" }
 amethyst_error = { path = "../amethyst_error", version = "0.1" }
 failure = "0.1"
 genmesh = "0.6"
