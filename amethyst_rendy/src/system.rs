@@ -28,7 +28,7 @@ use std::sync::Arc;
 pub struct RendererSystem<B, F>
 where
     B: Backend,
-    F: FnOnce(&mut Factory<B>) -> GraphBuilder<B, Resources>,
+    F: FnOnce(&mut Factory<B>, &mut Resources) -> GraphBuilder<B, Resources>,
 {
     graph: Option<Graph<B, Resources>>,
     graph_creator: Option<F>,
@@ -37,7 +37,7 @@ where
 impl<B: Backend, F> RendererSystem<B, F>
 where
     B: Backend,
-    F: FnOnce(&mut Factory<B>) -> GraphBuilder<B, Resources>,
+    F: FnOnce(&mut Factory<B>, &mut Resources) -> GraphBuilder<B, Resources>,
 {
     pub fn new(graph_creator: F) -> Self {
         Self {
@@ -69,19 +69,10 @@ type SetupData<'a, B> = (
     ReadStorage<'a, JointTransforms>,
 );
 
-// Option<Read<'_, ActiveCamera>>,
-// ReadStorage<'_, Camera>,
-// Read<'_, AssetStorage<Mesh>>,
-// Read<'_, AssetStorage<Texture>>,
-// ReadExpect<'_, MaterialDefaults>,
-// Option<Read<'_, Visibility>>,
-// ReadStorage<'_, Handle<Mesh>>,
-// ReadStorage<'_, Material>,
-
 impl<B, F> RendererSystem<B, F>
 where
     B: Backend,
-    F: FnOnce(&mut Factory<B>) -> GraphBuilder<B, Resources>,
+    F: FnOnce(&mut Factory<B>, &mut Resources) -> GraphBuilder<B, Resources>,
 {
     fn asset_loading(
         &mut self,
@@ -145,7 +136,7 @@ where
 impl<'a, B, F> RunNow<'a> for RendererSystem<B, F>
 where
     B: Backend,
-    F: FnOnce(&mut Factory<B>) -> GraphBuilder<B, Resources>,
+    F: FnOnce(&mut Factory<B>, &mut Resources) -> GraphBuilder<B, Resources>,
 {
     fn run_now(&mut self, res: &'a Resources) {
         self.asset_loading(AssetLoadingData::<B>::fetch(res));
@@ -166,7 +157,7 @@ where
         let graph_creator = self.graph_creator.take().unwrap();
 
         self.graph = Some(
-            graph_creator(&mut factory)
+            graph_creator(&mut factory, res)
                 .build(&mut factory, &mut families, res)
                 .unwrap(),
         );
@@ -191,10 +182,10 @@ fn create_default_mat<B: Backend>(res: &mut Resources) -> Material<B> {
     let albedo = load_from_srgba(Srgba::new(0.5, 0.5, 0.5, 1.0));
     let emission = load_from_srgba(Srgba::new(0.0, 0.0, 0.0, 0.0));
     let normal = load_from_linear_rgba(LinSrgba::new(0.5, 0.5, 1.0, 1.0));
-    let metallic = load_from_srgba(Srgba::new(0.0, 0.0, 0.0, 0.0));
+    let metallic = load_from_linear_rgba(LinSrgba::new(0.0, 0.0, 0.0, 0.0));
     let roughness = load_from_linear_rgba(LinSrgba::new(0.5, 0.5, 0.5, 0.5));
-    let ambient_occlusion = load_from_srgba(Srgba::new(1.0, 1.0, 1.0, 1.0));
-    let caveat = load_from_srgba(Srgba::new(1.0, 1.0, 1.0, 1.0));
+    let ambient_occlusion = load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 1.0));
+    let caveat = load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 1.0));
 
     let tex_storage = res.fetch();
 

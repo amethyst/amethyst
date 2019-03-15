@@ -25,6 +25,7 @@ pub mod skinning;
 pub mod sprite;
 pub mod sprite_visibility;
 pub mod system;
+pub mod window;
 pub mod transparent;
 pub mod types;
 pub mod visibility;
