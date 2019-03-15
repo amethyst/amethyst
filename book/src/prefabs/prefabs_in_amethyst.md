@@ -249,7 +249,7 @@ Prefab(
         // Player
         PrefabEntity(
             data: CustomPrefabData(
-                player: Player(name: "Zero"),
+                player: Named(name: "Zero"),
                 position: Position(1.0, 2.0, 3.0),
             ),
         ),
