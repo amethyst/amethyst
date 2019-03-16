@@ -2,7 +2,7 @@
 
 # Amethyst
 
-[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![docs page][docs-badge]][docs] [![MIT/Apache][s3]][li] [![Join us on Discord][s4]][di] ![Lines of Code][s6]
+[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![docs page][docs-badge]][docs] [![MIT/Apache][s3]][li] [![Join us on Discord][s4]][di] ![Lines of Code][s6] [![Community forum][s5]][ds]
 
 [s1]: https://travis-ci.org/amethyst/amethyst.svg?branch=master
 [s2]: https://img.shields.io/crates/v/amethyst.svg
@@ -10,11 +10,13 @@
 [docs]: https://www.amethyst.rs/doc/
 [s3]: https://img.shields.io/badge/license-MIT%2FApache-blue.svg
 [s4]: https://img.shields.io/discord/425678876929163284.svg?logo=discord
+[s5]: https://img.shields.io/badge/discourse-online-green.svg
 [s6]: https://tokei.rs/b1/github/amethyst/amethyst?category=code
 [tc]: https://travis-ci.org/amethyst/amethyst/
 [ci]: https://crates.io/crates/amethyst/
 [li]: COPYING
 [di]: https://discord.gg/amethyst
+[ds]: https://community.amethyst-engine.org/
 
 ## What is Amethyst?
 
