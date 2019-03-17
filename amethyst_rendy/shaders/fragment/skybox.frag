@@ -1,16 +1,16 @@
-// TODO: Needs documentation.
+#version 450
 
-#version 150 core
-
-in VertexData {
+layout(location = 0) in VertexData {
     vec3 position;
     vec2 tex_coord;
 } vertex;
 
-out vec4 out_color;
+layout(location = 0) out vec4 out_color;
 
-uniform vec3 zenith_color;
-uniform vec3 nadir_color;
+layout(std140, set = 0, binding = 0) uniform _ {
+    vec3 zenith_color;
+    vec3 nadir_color;
+};
 
 void main() {
     vec3 normalized_position = normalize(vertex.position.xyz);

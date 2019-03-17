@@ -1,12 +1,10 @@
-// TODO: Needs documentation.
+#version 450
 
-#version 150 core
+layout(set = 1, binding = 0) uniform sampler2D albedo;
 
-uniform sampler2D albedo;
+layout(location = 0) in vec2 tex_uv;
 
-in vec2 tex_uv;
-
-out vec4 color;
+layout(location = 0) out vec4 color;
 
 void main() {
     color = texture(albedo, tex_uv);

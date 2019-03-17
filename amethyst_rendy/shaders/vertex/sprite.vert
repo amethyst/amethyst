@@ -1,21 +1,21 @@
-#version 150 core
+#version 450
 
-layout (std140) uniform ViewArgs {
+layout(set = 0, binding = 0) uniform ViewArgs {
     mat4 proj;
     mat4 view;
 };
 
 // Quad transform.
-in vec2 dir_x;
-in vec2 dir_y;
-in vec2 pos;
-in float depth;
+layout(location = 0) in vec2 dir_x;
+layout(location = 1) in vec2 dir_y;
+layout(location = 2) in vec2 pos;
+layout(location = 3) in float depth;
 
 // Texture quad.
-in vec2 u_offset;
-in vec2 v_offset;
+layout(location = 4) in vec2 u_offset;
+layout(location = 5) in vec2 v_offset;
 
-out vec2 tex_uv;
+layout(location = 0) out vec2 tex_uv;
 
 const vec2 positions[6] = vec2[](
     // First triangle
@@ -35,8 +35,8 @@ vec2 texture_coords(vec2 coords, vec2 u, vec2 v) {
 }
 
 void main() {
-    float tex_u = positions[gl_VertexID][0];
-    float tex_v = positions[gl_VertexID][1];
+    float tex_u = positions[gl_VertexIndex][0];
+    float tex_v = positions[gl_VertexIndex][1];
 
     vec2 uv = pos + tex_u * dir_x + tex_v * dir_y;
     tex_uv = texture_coords(vec2(tex_u, tex_v), u_offset, v_offset);
