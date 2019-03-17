@@ -23,7 +23,7 @@ struct SpotLight {
 
 layout(set = 2, binding = 0) uniform Environment {
     vec3 ambient_color;
-    vec3 camera_position;
+    vec3 camera_position; 
     int point_light_count;
     int directional_light_count;
     int spot_light_count;

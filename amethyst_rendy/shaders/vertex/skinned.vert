@@ -1,25 +1,23 @@
-// TODO: Needs documentation.
+#version 450
 
-#version 150 core
-
-layout (std140) uniform JointTransforms {
+layout (std140, set = 3, binding = 0) uniform JointTransforms {
     mat4 joints[100];
 };
 
-layout (std140) uniform VertexArgs {
+layout (std140, set = 0, binding = 0) uniform VertexArgs {
     uniform mat4 proj;
     uniform mat4 view;
     uniform mat4 model;
 };
 
-in vec3 position;
-in vec3 normal;
-in vec3 tangent;
-in vec2 tex_coord;
-in uvec4 joint_ids;
-in vec4 joint_weights;
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec3 normal;
+layout(location = 2) in vec3 tangent;
+layout(location = 3) in vec2 tex_coord;
+layout(location = 4) in uvec4 joint_ids;
+layout(location = 5) in vec4 joint_weights;
 
-out VertexData {
+layout(location = 0) out VertexData {
     vec3 position;
     vec3 normal;
     vec3 tangent;
