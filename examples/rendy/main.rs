@@ -9,6 +9,7 @@ use amethyst::{
     prelude::*,
     utils::application_root_dir,
     winit::{Window, EventsLoop},
+    window::{WindowSystem, EventsLoopSystem},
 };
 use amethyst_rendy::{
     camera::{Camera, Projection},
@@ -24,7 +25,6 @@ use amethyst_rendy::{
     },
     shape::Shape,
     system::RendererSystem,
-    window::{WindowSystem, EventPollingSystem},
     types::{Mesh, Texture, DefaultBackend},
 };
 use std::sync::Arc;
@@ -163,7 +163,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(TransformBundle::new())?
         .with_thread_local(WindowSystem::from_config_path(&event_loop, path))
         .with_thread_local(RendererSystem::<DefaultBackend, _>::new(build_graph))
-        .with_thread_local(EventPollingSystem::new(event_loop));
+        .with_thread_local(EventsLoopSystem::new(event_loop));
 
     let mut game = Application::new(&resources, Example::<DefaultBackend>::new(), game_data)?;
     game.run();

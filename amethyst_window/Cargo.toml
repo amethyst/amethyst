@@ -1,0 +1,26 @@
+[package]
+name = "amethyst_window"
+version = "0.1.0"
+authors = ["Frizi <frizi09@gmail.com>"]
+edition = "2018"
+description = "Windowing support for Amethyst engine."
+documentation = "https://www.amethyst.rs/doc/latest/doc/amethyst_window/"
+homepage = "https://www.amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
+license = "MIT/Apache-2.0"
+
+[badges]
+appveyor = { repository = "amethyst/amethyst" }
+travis-ci = { repository = "amethyst/amethyst" }
+
+[dependencies]
+amethyst_core = { path = "../amethyst_core", version = "0.5" }
+amethyst_config = { path = "../amethyst_config" }
+
+winit = { version = "0.18", features = ["serde"] }
+thread_profiler = { version = "0.3", optional = true }
+serde = { version = "1", features = ["derive"] }
+
+[features]
+profiler = [ "thread_profiler/thread_profiler" ]
+nightly = []

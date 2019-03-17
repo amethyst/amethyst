@@ -14,7 +14,6 @@ pub use rendy;
 pub mod pass;
 
 pub mod camera;
-pub mod config;
 pub mod formats;
 pub mod hidden;
 pub mod light;
@@ -25,7 +24,6 @@ pub mod skinning;
 pub mod sprite;
 pub mod sprite_visibility;
 pub mod system;
-pub mod window;
 pub mod transparent;
 pub mod types;
 pub mod visibility;
