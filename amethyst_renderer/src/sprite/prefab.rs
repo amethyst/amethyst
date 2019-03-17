@@ -190,14 +190,23 @@ impl<'a> PrefabData<'a> for SpriteRenderPrefab {
         system_data: &mut <Self as PrefabData<'a>>::SystemData,
         _: &[Entity],
     ) -> Result<(), Error> {
-        system_data.0.insert(
-            entity,
-            SpriteRender {
-                sprite_sheet: self.handle.as_ref().unwrap().clone(),
-                sprite_number: self.sprite_number,
-            },
-        )?;
-        Ok(())
+        if let Some(handle) = self.handle.clone() {
+            system_data.0.insert(
+                entity,
+                SpriteRender {
+                    sprite_sheet: handle,
+                    sprite_number: self.sprite_number,
+                },
+            )?;
+            Ok(())
+        } else {
+            let message = format!(
+                "`SpriteSheetHandle` was not initialized before call to `add_to_entity()`. \
+                 sheet: {}, sprite_number: {}",
+                self.sheet, self.sprite_number
+            );
+            Err(Error::from_string(message))
+        }
     }
 
     fn load_sub_assets(
