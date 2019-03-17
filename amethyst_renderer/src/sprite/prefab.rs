@@ -30,12 +30,10 @@ pub struct SpritePosition {
 /// `SpriteSheetPrefab`.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct SpriteList {
-    /// Width of the sprite sheet
-    #[serde(rename = "spritesheet_width")]
-    pub width: u32,
-    /// Height of the sprite sheet
-    #[serde(rename = "spritesheet_height")]
-    pub height: u32,
+    /// Width of the texture in pixels.
+    pub texture_width: u32,
+    /// Height of the texture in pixels.
+    pub texture_height: u32,
     /// Description of the sprites
     pub sprites: Vec<SpritePosition>,
 }
@@ -57,20 +55,18 @@ pub struct SpriteList {
 /// ```
 #[derive(Clone, Debug, Deserialize, Serialize, Default)]
 pub struct SpriteGrid {
-    /// Height of the spritesheet in pixels.
-    #[serde(rename = "spritesheet_width")]
-    pub width: u32,
-    /// Width of the spritesheet in pixels.
-    #[serde(rename = "spritesheet_height")]
-    pub height: u32,
+    /// Width of the texture in pixels.
+    pub texture_width: u32,
+    /// Height of the texture in pixels.
+    pub texture_height: u32,
     /// Specifies the number of columns in the spritesheet, this value must always be given.
     pub columns: u32,
     /// Specifies the number of rows in the spritesheet. If this is not given it will be calculated
-    /// using either `count` (`count / columns`), or `cell_size` (`sheet_size / cell_size`).
+    /// using either `sprite_count` (`sprite_count / columns`), or `cell_size` (`sheet_size / cell_size`).
     pub rows: Option<u32>,
     /// Specifies the number of sprites in the spritesheet. If this is not given it will be
     /// calculated using `rows` (`columns * rows`).
-    pub count: Option<u32>,
+    pub sprite_count: Option<u32>,
     /// Specifies the size of the individual sprites in the spritesheet in pixels. If this is not
     /// given it will be calculated using the spritesheet size, `columns` and `rows`.
     /// Tuple order is `(width, height)`.
@@ -209,8 +205,13 @@ impl<'a> PrefabData<'a> for SpriteRenderPrefab {
         _: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        self.handle = Some((system_data.1).0.get(self.sheet).cloned().unwrap());
-        Ok(false)
+        if let Some(handle) = (system_data.1).0.get(self.sheet).cloned() {
+            self.handle = Some(handle);
+            Ok(false)
+        } else {
+            let message = format!("Failed to get `SpriteSheet` with index {}.", self.sheet);
+            Err(Error::from_string(message))
+        }
     }
 }
 
@@ -285,13 +286,14 @@ impl Sprites {
 }
 
 impl SpriteList {
-    pub(crate) fn build_sprites(&self) -> Vec<Sprite> {
+    /// Creates a `Vec<Sprite>` from `SpriteList`.
+    pub fn build_sprites(&self) -> Vec<Sprite> {
         self.sprites
             .iter()
             .map(|pos| {
                 Sprite::from_pixel_values(
-                    self.width,
-                    self.height,
+                    self.texture_width,
+                    self.texture_height,
                     pos.width,
                     pos.height,
                     pos.x,
@@ -304,17 +306,19 @@ impl SpriteList {
 }
 
 impl SpriteGrid {
-    fn width(&self) -> u32 {
-        self.width - self.position().0
+    /// The width of the part of the texture that the sprites reside on
+    fn sheet_width(&self) -> u32 {
+        self.texture_width - self.position().0
     }
 
-    fn height(&self) -> u32 {
-        self.height - self.position().1
+    /// The height of the part of the texture that the sprites reside on
+    fn sheet_height(&self) -> u32 {
+        self.texture_height - self.position().1
     }
 
     fn rows(&self) -> u32 {
         self.rows.unwrap_or_else(|| {
-            self.count
+            self.sprite_count
                 .map(|c| {
                     if (c % self.columns) == 0 {
                         (c / self.columns)
@@ -322,56 +326,62 @@ impl SpriteGrid {
                         (c / self.columns) + 1
                     }
                 })
-                .or_else(|| self.cell_size.map(|(_, y)| (self.height() / y)))
+                .or_else(|| self.cell_size.map(|(_, y)| (self.sheet_height() / y)))
                 .unwrap_or(1)
         })
     }
 
-    fn count(&self) -> u32 {
-        self.count.unwrap_or_else(|| self.columns * self.rows())
+    fn sprite_count(&self) -> u32 {
+        self.sprite_count
+            .unwrap_or_else(|| self.columns * self.rows())
     }
 
     fn cell_size(&self) -> (u32, u32) {
-        self.cell_size
-            .unwrap_or_else(|| ((self.width() / self.columns), (self.height() / self.rows())))
+        self.cell_size.unwrap_or_else(|| {
+            (
+                (self.sheet_width() / self.columns),
+                (self.sheet_height() / self.rows()),
+            )
+        })
     }
 
     fn position(&self) -> (u32, u32) {
         self.position.unwrap_or((0, 0))
     }
 
-    fn build_sprites(&self) -> Vec<Sprite> {
+    /// Creates a `Vec<Sprite>` from `SpriteGrid`.
+    pub fn build_sprites(&self) -> Vec<Sprite> {
         let rows = self.rows();
-        let count = self.count();
+        let sprite_count = self.sprite_count();
         let cell_size = self.cell_size();
         let position = self.position();
-        if (self.columns * cell_size.0) > self.width() {
+        if (self.columns * cell_size.0) > self.sheet_width() {
             warn!(
-                "Grid spritesheet contain more columns than can fit in the given width: {} * {} > {} - {}",
+                "Grid spritesheet contains more columns than can fit in the given width: {} * {} > {} - {}",
                 self.columns,
                 cell_size.0,
-                self.width,
+                self.texture_width,
                 position.0
             );
         }
-        if (rows * cell_size.1) > self.height() {
+        if (rows * cell_size.1) > self.sheet_height() {
             warn!(
-                "Grid spritesheet contain more rows than can fit in the given height: {} * {} > {} - {}",
+                "Grid spritesheet contains more rows than can fit in the given height: {} * {} > {} - {}",
                 rows,
                 cell_size.1,
-                self.height,
+                self.texture_height,
                 position.1
             );
         }
-        (0..count)
+        (0..sprite_count)
             .map(|cell| {
                 let row = cell / self.columns;
                 let column = cell - (row * self.columns);
                 let x = column * cell_size.0 + position.0;
                 let y = row * cell_size.1 + position.1;
                 Sprite::from_pixel_values(
-                    self.width,
-                    self.height,
+                    self.texture_width,
+                    self.texture_height,
                     cell_size.0,
                     cell_size.1,
                     x,
@@ -438,9 +448,31 @@ mod tests {
         let texture = add_texture(&mut world);
         let mut prefab = SpriteSheetPrefab::Sheet {
             sprites: vec![Sprites::List(SpriteList {
-                width: 0,
-                height: 0,
-                sprites: vec![],
+                texture_width: 3,
+                texture_height: 1,
+                sprites: vec![
+                    SpritePosition {
+                        x: 0,
+                        y: 0,
+                        width: 1,
+                        height: 1,
+                        offsets: None,
+                    },
+                    SpritePosition {
+                        x: 1,
+                        y: 0,
+                        width: 1,
+                        height: 1,
+                        offsets: None,
+                    },
+                    SpritePosition {
+                        x: 2,
+                        y: 0,
+                        width: 1,
+                        height: 1,
+                        offsets: None,
+                    },
+                ],
             })],
             texture: TexturePrefab::Handle(texture.clone()),
         };
@@ -488,8 +520,8 @@ mod tests {
     #[test]
     fn grid_col_row() {
         let sprites = SpriteGrid {
-            width: 400,
-            height: 200,
+            texture_width: 400,
+            texture_height: 200,
             columns: 4,
             rows: Some(4),
             ..Default::default()
@@ -518,8 +550,8 @@ mod tests {
         assert_eq!(0.25, sprites[9].tex_coords.bottom);
 
         let sprites = SpriteGrid {
-            width: 192,
-            height: 64,
+            texture_width: 192,
+            texture_height: 64,
             columns: 6,
             rows: Some(2),
             ..Default::default()
@@ -551,10 +583,11 @@ mod tests {
     #[test]
     fn grid_position() {
         let sprites = SpriteGrid {
-            width: 192,
-            height: 64,
+            texture_width: 192,
+            texture_height: 96,
             columns: 5,
             rows: Some(1),
+            cell_size: Some((32, 32)),
             position: Some((32, 32)),
             ..Default::default()
         }
@@ -569,13 +602,13 @@ mod tests {
 
         assert_eq!(0.16666667, sprites[0].tex_coords.left);
         assert_eq!(0.33333334, sprites[0].tex_coords.right);
-        assert_eq!(0.5, sprites[0].tex_coords.top);
-        assert_eq!(0.0, sprites[0].tex_coords.bottom);
+        assert_eq!(0.6666667, sprites[0].tex_coords.top);
+        assert_eq!(0.33333334, sprites[0].tex_coords.bottom);
 
         assert_eq!(0.8333333, sprites[4].tex_coords.left);
         assert_eq!(1.0, sprites[4].tex_coords.right);
-        assert_eq!(0.5, sprites[4].tex_coords.top);
-        assert_eq!(0.0, sprites[4].tex_coords.bottom);
+        assert_eq!(0.6666667, sprites[4].tex_coords.top);
+        assert_eq!(0.33333334, sprites[4].tex_coords.bottom);
     }
 
     #[test]
@@ -583,8 +616,8 @@ mod tests {
         assert_eq!(
             (100, 100),
             SpriteGrid {
-                width: 200,
-                height: 200,
+                texture_width: 200,
+                texture_height: 200,
                 columns: 4,
                 cell_size: Some((100, 100)),
                 ..Default::default()
@@ -598,8 +631,8 @@ mod tests {
         assert_eq!(
             (50, 100),
             SpriteGrid {
-                width: 200,
-                height: 400,
+                texture_width: 200,
+                texture_height: 400,
                 columns: 4,
                 rows: Some(4),
                 ..Default::default()
@@ -613,13 +646,13 @@ mod tests {
         assert_eq!(
             12,
             SpriteGrid {
-                width: 200,
-                height: 400,
+                texture_width: 200,
+                texture_height: 400,
                 columns: 5,
-                count: Some(12),
+                sprite_count: Some(12),
                 ..Default::default()
             }
-            .count()
+            .sprite_count()
         );
     }
 
@@ -628,13 +661,13 @@ mod tests {
         assert_eq!(
             10,
             SpriteGrid {
-                width: 200,
-                height: 400,
+                texture_width: 200,
+                texture_height: 400,
                 columns: 5,
                 rows: Some(2),
                 ..Default::default()
             }
-            .count()
+            .sprite_count()
         );
     }
 
@@ -643,8 +676,8 @@ mod tests {
         assert_eq!(
             5,
             SpriteGrid {
-                width: 200,
-                height: 400,
+                texture_width: 200,
+                texture_height: 400,
                 columns: 5,
                 rows: Some(5),
                 ..Default::default()
@@ -658,10 +691,10 @@ mod tests {
         assert_eq!(
             3,
             SpriteGrid {
-                width: 200,
-                height: 400,
+                texture_width: 200,
+                texture_height: 400,
                 columns: 5,
-                count: Some(12),
+                sprite_count: Some(12),
                 ..Default::default()
             }
             .rows()
@@ -669,10 +702,10 @@ mod tests {
         assert_eq!(
             3,
             SpriteGrid {
-                width: 200,
-                height: 400,
+                texture_width: 200,
+                texture_height: 400,
                 columns: 5,
-                count: Some(15),
+                sprite_count: Some(15),
                 ..Default::default()
             }
             .rows()
@@ -684,8 +717,8 @@ mod tests {
         assert_eq!(
             2,
             SpriteGrid {
-                width: 200,
-                height: 400,
+                texture_width: 200,
+                texture_height: 400,
                 columns: 5,
                 cell_size: Some((200, 200)),
                 ..Default::default()
@@ -695,8 +728,8 @@ mod tests {
         assert_eq!(
             2,
             SpriteGrid {
-                width: 200,
-                height: 400,
+                texture_width: 200,
+                texture_height: 400,
                 columns: 5,
                 cell_size: Some((150, 150)),
                 ..Default::default()
@@ -706,8 +739,8 @@ mod tests {
         assert_eq!(
             2,
             SpriteGrid {
-                width: 200,
-                height: 400,
+                texture_width: 200,
+                texture_height: 400,
                 columns: 5,
                 cell_size: Some((199, 199)),
                 ..Default::default()
@@ -721,8 +754,8 @@ mod tests {
         assert_eq!(
             1,
             SpriteGrid {
-                width: 200,
-                height: 400,
+                texture_width: 200,
+                texture_height: 400,
                 columns: 5,
                 ..Default::default()
             }

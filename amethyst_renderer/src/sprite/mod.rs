@@ -215,10 +215,10 @@ impl Component for SpriteRender {
 /// Example:
 /// ```text,ignore
 /// (
-///     // Width of the sprite sheet
-///     spritesheet_width: 48,
-///     // Height of the sprite sheet
-///     spritesheet_height: 16,
+///     // Width of the texture
+///     texture_width: 48,
+///     // Height of the texture
+///     texture_height: 16,
 ///     // List of sprites the sheet holds
 ///     sprites: [
 ///         (
