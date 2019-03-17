@@ -80,6 +80,7 @@ saveload = [
 members = [
   "amethyst_test",
   "amethyst_rendy",
+  "amethyst_window",
 ]
 
 [dependencies]
@@ -98,6 +99,7 @@ amethyst_renderer = { path = "amethyst_renderer", version = "0.10.0" }
 amethyst_input = { path = "amethyst_input", version = "0.6.0" }
 amethyst_ui = { path = "amethyst_ui", version = "0.5.0" }
 amethyst_utils = { path = "amethyst_utils", version = "0.5.0" }
+amethyst_window = { path = "amethyst_window", version = "0.1.0" }
 crossbeam-channel = "0.3.1"
 derivative = "1.0"
 fern = { version = "0.5", features = ["colored"] }
