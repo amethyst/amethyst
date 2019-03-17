@@ -1,17 +1,15 @@
-// TODO: Needs documentation.
+#version 450
 
-#version 150 core
-
-layout (std140) uniform VertexArgs {
+layout(std140, set = 0, binding = 0) uniform VertexArgs {
     uniform mat4 proj;
     uniform mat4 view;
     uniform mat4 model;
 };
 
-in vec3 position;
-in vec2 tex_coord;
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec2 tex_coord;
 
-out VertexData {
+layout(location = 0) out VertexData {
     vec3 position;
     vec2 tex_coord;
 } vertex;

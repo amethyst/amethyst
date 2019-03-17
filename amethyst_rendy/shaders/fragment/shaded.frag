@@ -1,21 +1,9 @@
-// TODO: Needs documentation.
-
-#version 330 core
-
-layout (std140) uniform FragmentArgs {
-    uint point_light_count;
-    uint directional_light_count;
-};
+#version 450
 
 struct PointLight {
     vec3 position;
     vec3 color;
-    float pad; // Workaround for bug in mac's implementation of opengl (loads garbage when accessing members of structures in arrays with dynamic indices).
     float intensity;
-};
-
-layout (std140) uniform PointLights {
-    PointLight plight[128];
 };
 
 struct DirectionalLight {
@@ -23,34 +11,42 @@ struct DirectionalLight {
     vec3 direction;
 };
 
-layout (std140) uniform DirectionalLights {
+layout(set = 2, binding = 0) uniform Environment {
+    vec3 ambient_color;
+    vec3 camera_position; 
+    int point_light_count;
+    int directional_light_count;
+};
+
+layout(set = 2, binding = 1) uniform PointLights {
+    PointLight plight[128];
+};
+
+layout(set = 2, binding = 2) uniform DirectionalLights {
     DirectionalLight dlight[16];
 };
 
-uniform vec3 ambient_color;
-uniform vec3 camera_position;
-
-uniform sampler2D albedo;
-uniform sampler2D emission;
-
-layout (std140) uniform AlbedoOffset {
+struct UvOffset {
     vec2 u_offset;
     vec2 v_offset;
-} albedo_offset;
+};
 
-layout (std140) uniform EmissionOffset {
-    vec2 u_offset;
-    vec2 v_offset;
-} emission_offset;
+layout(set = 1, binding = 1) uniform sampler2D albedo;
+layout(set = 1, binding = 2) uniform sampler2D emission;
 
-in VertexData {
+layout(set = 1, binding = 0) uniform Material {
+    UvOffset albedo_offset;
+    UvOffset emission_offset;
+};
+
+layout(location = 0) in VertexData {
     vec3 position;
     vec3 normal;
     vec3 tangent;
     vec2 tex_coord;
 } vertex;
 
-out vec4 out_color;
+layout(location = 0) out vec4 out_color;
 
 float tex_coord(float coord, vec2 offset) {
     return offset.x + coord * (offset.y - offset.x);

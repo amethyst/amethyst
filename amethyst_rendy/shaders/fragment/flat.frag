@@ -1,8 +1,8 @@
 #version 450
 
-layout (set = 0, binding = 1) uniform sampler2D albedo;
+layout(set = 0, binding = 1) uniform sampler2D albedo;
 
-layout (std140, set = 0, binding = 0) uniform AlbedoOffset {
+layout(std140, set = 0, binding = 0) uniform AlbedoOffset {
     vec2 u_offset;
     vec2 v_offset;
 } albedo_offset;

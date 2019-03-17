@@ -83,8 +83,9 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawPbmDesc {
     }
 
     fn layout(&self) -> Layout {
-        // Set 0
-        let vertex_args_layout = SetLayout {
+        let mut sets = Vec::with_capacity(4);
+        // Set 0 - vertex args
+        sets.push(SetLayout {
             bindings: vec![DescriptorSetLayoutBinding {
                 binding: 0,
                 ty: DescriptorType::UniformBuffer,
@@ -92,8 +93,8 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawPbmDesc {
                 stage_flags: ShaderStageFlags::GRAPHICS,
                 immutable_samplers: false,
             }],
-        };
-        // Set 1
+        });
+        // Set 1 - material
         let mut bindings = Vec::with_capacity(8);
         bindings.push(DescriptorSetLayoutBinding {
             binding: 0,
@@ -111,8 +112,8 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawPbmDesc {
                 immutable_samplers: false,
             });
         }
-        let material_layout = SetLayout { bindings };
-        // Set 2
+        sets.push(SetLayout { bindings });
+        // Set 2 - environment
         let mut bindings = Vec::with_capacity(4);
         for i in 0..4 {
             bindings.push(DescriptorSetLayoutBinding {
@@ -123,9 +124,24 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawPbmDesc {
                 immutable_samplers: false,
             })
         }
-        let environment_layout = SetLayout { bindings };
+        sets.push(SetLayout { bindings });
+
+        if self.skinning {
+            // Set 3 - skinning
+            let skinning_layout = SetLayout {
+                bindings: vec![DescriptorSetLayoutBinding {
+                    binding: 0,
+                    ty: DescriptorType::UniformBuffer,
+                    count: 1,
+                    stage_flags: ShaderStageFlags::FRAGMENT,
+                    immutable_samplers: false,
+                }],
+            };
+            sets.push(skinning_layout);
+        }
+
         Layout {
-            sets: vec![vertex_args_layout, material_layout, environment_layout],
+            sets,
             push_constants: Vec::new(),
         }
     }
