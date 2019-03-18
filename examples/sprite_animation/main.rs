@@ -4,19 +4,19 @@
 
 use amethyst::{
     animation::{
-        get_animation_set, AnimationBundle, AnimationCommand, AnimationSet, AnimationSetPrefab,
-        EndControl,
+        get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSet, AnimationSet,
+        AnimationSetPrefab, EndControl,
     },
     assets::{PrefabData, PrefabLoader, PrefabLoaderSystem, ProgressCounter, RonFormat},
     config::Config,
     core::transform::{Transform, TransformBundle},
     derive::PrefabData,
-    ecs::prelude::Entity,
+    ecs::{prelude::Entity, Entities, Join, ReadStorage, WriteStorage},
     error::Error,
     prelude::{Builder, World},
     renderer::{
         Camera, DisplayConfig, DrawFlat2D, Pipeline, Projection, RenderBundle, ScreenDimensions,
-        SpriteRender, SpriteRenderPrefab, Stage,
+        SpriteRender, SpriteScenePrefab, Stage,
     },
     utils::application_root_dir,
     Application, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData, Trans,
@@ -30,12 +30,10 @@ enum AnimationId {
 }
 
 /// Loading data for one entity
-#[derive(Debug, Clone, Serialize, Deserialize, PrefabData)]
+#[derive(Debug, Clone, Deserialize, PrefabData)]
 struct MyPrefabData {
-    /// Rendering position and orientation
-    transform: Transform,
-    /// Information for rendering a sprite
-    sprite_render: SpriteRenderPrefab,
+    /// Information for rendering a scene with sprites
+    sprite_scene: SpriteScenePrefab,
     /// Аll animations that can be run on the entity
     animation_set: AnimationSetPrefab<AnimationId, SpriteRender>,
 }
@@ -45,8 +43,6 @@ struct MyPrefabData {
 struct Example {
     /// A progress tracker to check that assets are loaded
     pub progress_counter: Option<ProgressCounter>,
-    /// Bat entity to start animation after loading
-    pub bat: Option<Entity>,
 }
 
 impl SimpleState for Example {
@@ -63,8 +59,8 @@ impl SimpleState for Example {
                 self.progress_counter.as_mut().unwrap(),
             )
         });
-        // Creates a new entity with components from MyPrefabData
-        self.bat = Some(world.create_entity().with(prefab_handle).build());
+        // Creates new entities with components from MyPrefabData
+        world.create_entity().with(prefab_handle).build();
         // Creates a new camera
         initialise_camera(world);
     }
@@ -75,24 +71,27 @@ impl SimpleState for Example {
             // Checks progress
             if progress_counter.is_complete() {
                 let StateData { world, .. } = data;
-                // Gets the Fly animation from AnimationSet
-                let animation = world
-                    .read_storage::<AnimationSet<AnimationId, SpriteRender>>()
-                    .get(self.bat.unwrap())
-                    .and_then(|s| s.get(&AnimationId::Fly).cloned())
-                    .unwrap();
-                // Creates a new AnimationControlSet for bat entity
-                let mut sets = world.write_storage();
-                let control_set =
-                    get_animation_set::<AnimationId, SpriteRender>(&mut sets, self.bat.unwrap())
-                        .unwrap();
-                // Adds the animation to AnimationControlSet and loops infinitely
-                control_set.add_animation(
-                    AnimationId::Fly,
-                    &animation,
-                    EndControl::Loop(None),
-                    1.0,
-                    AnimationCommand::Start,
+                // Execute a pass similar to a system
+                world.exec(
+                    |(entities, animation_sets, mut control_sets): (
+                        Entities,
+                        ReadStorage<AnimationSet<AnimationId, SpriteRender>>,
+                        WriteStorage<AnimationControlSet<AnimationId, SpriteRender>>,
+                    )| {
+                        // For each entity that has AnimationSet
+                        for (entity, animation_set) in (&entities, &animation_sets).join() {
+                            // Creates a new AnimationControlSet for the entity
+                            let control_set = get_animation_set(&mut control_sets, entity).unwrap();
+                            // Adds the `Fly` animation to AnimationControlSet and loops infinitely
+                            control_set.add_animation(
+                                AnimationId::Fly,
+                                &animation_set.get(&AnimationId::Fly).unwrap(),
+                                EndControl::Loop(None),
+                                1.0,
+                                AnimationCommand::Start,
+                            );
+                        }
+                    },
                 );
                 // All data loaded
                 self.progress_counter = None;
