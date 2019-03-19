@@ -53,21 +53,27 @@ impl SimpleState for ExampleState {
             (screen_dimensions.width(), screen_dimensions.height())
         };
 
-        (0..(screen_h as u32)).step_by(50).for_each(|y| {
-            debug_lines_component.add_line(
-                [0.0, y as f32, 1.0].into(),
-                [screen_w, (y + 2) as f32, 1.0].into(),
-                [0.3, 0.3, 0.3, 1.0].into(),
-            );
-        });
+        (0..(screen_h as u16))
+            .step_by(50)
+            .map(f32::from)
+            .for_each(|y| {
+                debug_lines_component.add_line(
+                    [0.0, y, 1.0].into(),
+                    [screen_w, (y + 2.0), 1.0].into(),
+                    [0.3, 0.3, 0.3, 1.0].into(),
+                );
+            });
 
-        (0..(screen_w as u32)).step_by(50).for_each(|x| {
-            debug_lines_component.add_line(
-                [x as f32, 0.0, 1.0].into(),
-                [x as f32, screen_h, 1.0].into(),
-                [0.3, 0.3, 0.3, 1.0].into(),
-            );
-        });
+        (0..(screen_w as u16))
+            .step_by(50)
+            .map(f32::from)
+            .for_each(|x| {
+                debug_lines_component.add_line(
+                    [x, 0.0, 1.0].into(),
+                    [x, screen_h, 1.0].into(),
+                    [0.3, 0.3, 0.3, 1.0].into(),
+                );
+            });
 
         debug_lines_component.add_line(
             [20.0, 20.0, 1.0].into(),
@@ -118,9 +124,6 @@ fn main() -> amethyst::Result<()> {
     let config = DisplayConfig::load(display_config_path);
 
     let game_data = GameDataBuilder::default()
-        // .with_bundle(
-        //     InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
-        // )?
         .with(ExampleLinesSystem, "example_lines_system", &[])
         .with_bundle(TransformBundle::new())?
         .with_bundle(RenderBundle::new(pipe, Some(config)))?;
