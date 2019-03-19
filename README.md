@@ -2,7 +2,7 @@
 
 # Amethyst
 
-[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![docs page][docs-badge]][docs] [![MIT/Apache][s3]][li] [![Join us on Discord][s4]][di] ![Lines of Code][s6] [![Community forum][s5]][ds]
+[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![docs page][docs-badge]][docs] [![MIT/Apache][s3]][li] [![Join us on Discord][s4]][di]  [![Community forum][s5]][ds] ![Lines of Code][s6]
 
 [s1]: https://travis-ci.org/amethyst/amethyst.svg?branch=master
 [s2]: https://img.shields.io/crates/v/amethyst.svg
