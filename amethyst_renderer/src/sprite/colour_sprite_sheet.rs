@@ -113,10 +113,7 @@ impl ColourSpriteSheetGen {
 
         let sprite_sheet_handle = {
             let column_count = sprite_count.integer_sqrt();
-            let row_count = {
-                let needs_buffer = column_count * column_count < sprite_count;
-                sprite_count / column_count + if needs_buffer { 1 } else { 0 }
-            };
+            let row_count = column_count + sprite_count / (column_count.pow(2) + 1);
             let params = ColourSpriteSheetParams {
                 sprite_w: 1,
                 sprite_h: 1,
@@ -184,15 +181,15 @@ impl ColourSpriteSheetGen {
         let channel_steps =
             Self::channel_steps(sprite_count, colour_begin, colour_end, pixel_width);
 
+        let row_capacity = sprite_w_pad as usize * column_count * pixel_width;
         (0..row_count).for_each(|sprite_row| {
             // 1. Build up a row of pixels
             // 2. Duplicate the row `sprite_h` times
             // 3. Add padding pixels if necessary
             // 4. Repeat
 
-            let capacity = sprite_w_pad as usize * column_count * pixel_width;
             let pixel_row =
-                (0..column_count).fold(vec![0f32; capacity], |mut pixel_row, sprite_col| {
+                (0..column_count).fold(vec![0f32; row_capacity], |mut pixel_row, sprite_col| {
                     // For each sprite column, generate sprite_w colour pixels, and maybe
                     // 1 padding pixel.
 
@@ -232,11 +229,7 @@ impl ColourSpriteSheetGen {
                 });
 
             // Copy pixel row `sprite_h` times.
-            let pixel_data_row_offset = sprite_row
-                * sprite_h_pad as usize
-                * sprite_w_pad as usize
-                * column_count
-                * pixel_width;
+            let pixel_data_row_offset = sprite_row * row_capacity * sprite_h_pad as usize;
             let pixel_row_len = pixel_row.len();
             (0..sprite_h).for_each(|pixel_row_n| unsafe {
                 ptr::copy_nonoverlapping(
@@ -292,7 +285,7 @@ mod tests {
     use approx::relative_eq;
 
     use super::ColourSpriteSheetGen;
-    use crate::{ColourSpriteSheetGenData, ColourSpriteSheetParams};
+    use crate::ColourSpriteSheetParams;
 
     #[test]
     fn gradient_colours_generates_pixel_data_1x1_sprite_padded() {
