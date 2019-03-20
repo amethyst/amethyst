@@ -66,9 +66,10 @@ pub use crate::{
         JointTransformsPrefab, JointWeights,
     },
     sprite::{
-        Flipped, Sprite, SpriteGrid, SpriteList, SpritePosition, SpriteRender, SpriteRenderPrefab,
-        SpriteScenePrefab, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, SpriteSheetPrefab,
-        Sprites, TextureCoordinates,
+        ColourSpriteSheetGen, ColourSpriteSheetGenData, ColourSpriteSheetParams, Flipped, Sprite,
+        SpriteGrid, SpriteList, SpritePosition, SpriteRender, SpriteRenderPrefab,
+        SpriteScenePrefab, SpriteSheet, SpriteSheetFormat, SpriteSheetGen, SpriteSheetHandle,
+        SpriteSheetPrefab, Sprites, TextureCoordinates,
     },
     sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem},
     system::RenderSystem,

@@ -1,6 +1,12 @@
-pub use self::prefab::{
-    SpriteGrid, SpriteList, SpritePosition, SpriteRenderPrefab, SpriteScenePrefab,
-    SpriteSheetPrefab, Sprites,
+pub use self::{
+    colour_sprite_sheet::{
+        ColourSpriteSheetGen, ColourSpriteSheetGenData, ColourSpriteSheetParams,
+    },
+    prefab::{
+        SpriteGrid, SpriteList, SpritePosition, SpriteRenderPrefab, SpriteScenePrefab,
+        SpriteSheetPrefab, Sprites,
+    },
+    sprite_sheet_gen::SpriteSheetGen,
 };
 
 use ron::de::from_bytes as from_ron_bytes;
@@ -12,7 +18,9 @@ use amethyst_error::Error;
 
 use crate::{error, Texture};
 
+mod colour_sprite_sheet;
 mod prefab;
+mod sprite_sheet_gen;
 
 /// An asset handle to sprite sheet metadata.
 pub type SpriteSheetHandle = Handle<SpriteSheet>;
@@ -115,41 +123,9 @@ impl Sprite {
         pixel_top: u32,
         offsets: [f32; 2],
     ) -> Sprite {
-        let image_w = image_w as f32;
-        let image_h = image_h as f32;
-        let offsets = [offsets[0] as f32, offsets[1] as f32];
-
-        let pixel_right = (pixel_left + sprite_w) as f32;
-        let pixel_bottom = (pixel_top + sprite_h) as f32;
-        let pixel_left = pixel_left as f32;
-        let pixel_top = pixel_top as f32;
-
-        // Texture coordinates are expressed as fractions of the position on the image.
-        // Y axis texture coordinates start at the bottom of the image, so we have to invert them.
-        //
-        // For pixel perfect result, the sprite border must be rendered exactly at
-        // screen pixel border or use nearest-neighbor sampling.
-        // <http://www.mindcontrol.org/~hplus/graphics/opengl-pixel-perfect.html>
-        // NOTE: Maybe we should provide an option to round coordinates from `Transform`
-        // to nearest integer in `DrawFlat2D` pass before rendering.
-        let left = (pixel_left) / image_w;
-        let right = (pixel_right) / image_w;
-        let top = (image_h - pixel_top) / image_h;
-        let bottom = (image_h - pixel_bottom) / image_h;
-
-        let tex_coords = TextureCoordinates {
-            left,
-            right,
-            top,
-            bottom,
-        };
-
-        Sprite {
-            width: sprite_w as f32,
-            height: sprite_h as f32,
-            offsets,
-            tex_coords,
-        }
+        SpriteSheetGen::from_pixel_values(
+            image_w, image_h, sprite_w, sprite_h, pixel_left, pixel_top, offsets, 0.0,
+        )
     }
 }
 

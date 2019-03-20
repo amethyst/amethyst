@@ -42,6 +42,7 @@ gfx_macros = "0.2"
 glsl-layout = { version = "0.1.1", features = ["gfx"] }
 hibitset = { version = "0.5.1", features = ["parallel"] }
 image = "0.20"
+integer-sqrt = "0.1.2"
 log = "0.4.6"
 rayon = "1.0.2"
 ron = "0.4"
@@ -75,3 +76,8 @@ version = "0.2.0"
 [dependencies.smallvec]
 version = "0.6"
 features = ["serde"]
+
+[dev-dependencies]
+amethyst_test = { path = "../amethyst_test" }
+approx = "0.3.2"
+pretty_assertions = "0.6.1"
