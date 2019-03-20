@@ -31,6 +31,7 @@ it is attached to. ([#1282])
 * Add `SpriteScenePrefab`. Allows load sprites from a grid and add them to the `SpriteRenderer`. ([#1469])
 * Add `Widgets` resource. Allows keeping track of UI entities and their components and iterating over them. ([#1390])
 * `AmethystApplication` takes in application name using `with_app_name(..)`. ([#1499])
+* `ColourSpriteSheetGen::solid` and `ColourSpriteSheetGen::gradient` can be used to generate sprite sheets at runtime. ([#1474])
 
 ### Changed
 
@@ -110,8 +111,9 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1454]: https://github.com/amethyst/amethyst/pull/1454
 [#1442]: https://github.com/amethyst/amethyst/pull/1442
 [#1469]: https://github.com/amethyst/amethyst/pull/1469
-[#1481]: https://github.com/amethyst/amethyst/pull/1481
+[#1474]: https://github.com/amethyst/amethyst/pull/1474
 [#1480]: https://github.com/amethyst/amethyst/pull/1480
+[#1481]: https://github.com/amethyst/amethyst/pull/1481
 [#1499]: https://github.com/amethyst/amethyst/pull/1499
 [#1501]: https://github.com/amethyst/amethyst/pull/1501
 
