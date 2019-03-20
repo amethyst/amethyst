@@ -121,8 +121,8 @@ impl Sprite {
         pixel_top: u32,
         offsets: [f32; 2],
     ) -> Sprite {
-        SpriteSheetGen::from_pixel_values(
-            image_w, image_h, sprite_w, sprite_h, pixel_left, pixel_top, offsets, 0.0,
+        SpriteSheetGen::Edge.from_pixel_values(
+            image_w, image_h, sprite_w, sprite_h, pixel_left, pixel_top, offsets,
         )
     }
 }

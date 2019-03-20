@@ -37,11 +37,6 @@ impl SpriteSheetGen {
         image_w: u32,
         image_h: u32,
     ) -> Vec<Sprite> {
-        let edge_shift = match self {
-            SpriteSheetGen::Edge => 0.,
-            SpriteSheetGen::HalfPixel => 0.5,
-        };
-
         let mut sprites = Vec::with_capacity(sprite_count);
         let padding_pixels = if params.padded { 1 } else { 0 };
         let offset_w = params.sprite_w + padding_pixels;
@@ -50,7 +45,7 @@ impl SpriteSheetGen {
             for col in 0..params.column_count {
                 let offset_x = offset_w * col as u32;
                 let offset_y = offset_h * row as u32;
-                let sprite = Self::from_pixel_values(
+                let sprite = self.from_pixel_values(
                     image_w as u32,
                     image_h as u32,
                     params.sprite_w,
@@ -58,7 +53,6 @@ impl SpriteSheetGen {
                     offset_x,
                     offset_y,
                     [0.; 2],
-                    edge_shift,
                 );
 
                 sprites.push(sprite);
@@ -88,9 +82,8 @@ impl SpriteSheetGen {
     /// * `pixel_top`: Pixel Y coordinate of the top of the sprite.
     /// * `offsets`: Number of pixels to shift the sprite to the left and down relative to the
     ///              entity.
-    /// * `edge_shift`: Fraction of pixels to shift inward from the edge as texture coordinate
-    ///                 adjustment. `0.` means texture coordinates lie exactly on the pixel edge.
     pub fn from_pixel_values(
+        self,
         image_w: u32,
         image_h: u32,
         sprite_w: u32,
@@ -98,8 +91,14 @@ impl SpriteSheetGen {
         pixel_left: u32,
         pixel_top: u32,
         offsets: [f32; 2],
-        edge_shift: f32,
     ) -> Sprite {
+        // Fraction of pixels to shift inward from the edge as texture coordinate adjustment.
+        // `0.` means texture coordinates lie exactly on the pixel edge.
+        let edge_shift = match self {
+            SpriteSheetGen::Edge => 0.,
+            SpriteSheetGen::HalfPixel => 0.5,
+        };
+
         let image_w = image_w as f32;
         let image_h = image_h as f32;
         let offsets = [offsets[0] as f32, offsets[1] as f32];
