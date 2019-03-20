@@ -1,4 +1,4 @@
-use crate::{ColourSpriteSheetParams, Sprite, SpriteSheet, TextureCoordinates, TextureHandle};
+use crate::{ColorSpriteSheetParams, Sprite, SpriteSheet, TextureCoordinates, TextureHandle};
 
 /// Generates `SpriteSheet`s with various methods of texture coordinate calculation.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -17,7 +17,7 @@ impl SpriteSheetGen {
     pub fn generate(
         self,
         texture_handle: TextureHandle,
-        params: ColourSpriteSheetParams,
+        params: ColorSpriteSheetParams,
         sprite_count: usize,
         image_w: u32,
         image_h: u32,
@@ -32,7 +32,7 @@ impl SpriteSheetGen {
 
     fn generate_sprites(
         self,
-        params: ColourSpriteSheetParams,
+        params: ColorSpriteSheetParams,
         sprite_count: usize,
         image_w: u32,
         image_h: u32,
@@ -141,11 +141,11 @@ impl SpriteSheetGen {
 #[cfg(test)]
 mod tests {
     use super::SpriteSheetGen;
-    use crate::{ColourSpriteSheetParams, Sprite};
+    use crate::{ColorSpriteSheetParams, Sprite};
 
     #[test]
     fn generates_edge_texture_coordinates_padded() {
-        let params = ColourSpriteSheetParams {
+        let params = ColorSpriteSheetParams {
             sprite_w: 9,
             sprite_h: 19,
             padded: true,
@@ -197,7 +197,7 @@ mod tests {
 
     #[test]
     fn generates_edge_texture_coordinates_unpadded() {
-        let params = ColourSpriteSheetParams {
+        let params = ColorSpriteSheetParams {
             sprite_w: 10,
             sprite_h: 20,
             padded: false,
@@ -249,7 +249,7 @@ mod tests {
 
     #[test]
     fn generates_half_pixel_texture_coordinates_padded() {
-        let params = ColourSpriteSheetParams {
+        let params = ColorSpriteSheetParams {
             sprite_w: 9,
             sprite_h: 19,
             padded: true,
@@ -302,7 +302,7 @@ mod tests {
 
     #[test]
     fn generates_half_pixel_texture_coordinates_unpadded() {
-        let params = ColourSpriteSheetParams {
+        let params = ColorSpriteSheetParams {
             sprite_w: 10,
             sprite_h: 20,
             padded: false,

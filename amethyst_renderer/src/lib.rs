@@ -66,7 +66,7 @@ pub use crate::{
         JointTransformsPrefab, JointWeights,
     },
     sprite::{
-        ColourSpriteSheetGen, ColourSpriteSheetGenData, ColourSpriteSheetParams, Flipped, Sprite,
+        ColorSpriteSheetGen, ColorSpriteSheetGenData, ColorSpriteSheetParams, Flipped, Sprite,
         SpriteGrid, SpriteList, SpritePosition, SpriteRender, SpriteRenderPrefab,
         SpriteScenePrefab, SpriteSheet, SpriteSheetFormat, SpriteSheetGen, SpriteSheetHandle,
         SpriteSheetPrefab, Sprites, TextureCoordinates,

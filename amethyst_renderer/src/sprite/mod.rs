@@ -1,7 +1,5 @@
 pub use self::{
-    colour_sprite_sheet::{
-        ColourSpriteSheetGen, ColourSpriteSheetGenData, ColourSpriteSheetParams,
-    },
+    color_sprite_sheet::{ColorSpriteSheetGen, ColorSpriteSheetGenData, ColorSpriteSheetParams},
     prefab::{
         SpriteGrid, SpriteList, SpritePosition, SpriteRenderPrefab, SpriteScenePrefab,
         SpriteSheetPrefab, Sprites,
@@ -18,7 +16,7 @@ use amethyst_error::Error;
 
 use crate::{error, Texture};
 
-mod colour_sprite_sheet;
+mod color_sprite_sheet;
 mod prefab;
 mod sprite_sheet_gen;
 

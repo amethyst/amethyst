@@ -1,27 +1,27 @@
 use amethyst_error::Error;
-use amethyst_renderer::{ColourSpriteSheetGen, ColourSpriteSheetGenData, SpriteRender};
+use amethyst_renderer::{ColorSpriteSheetGen, ColorSpriteSheetGenData, SpriteRender};
 use amethyst_test::AmethystApplication;
 
 #[test]
 fn solid_returns_sprite_render() -> Result<(), Error> {
     const RED: [f32; 4] = [1., 0.2, 0.1, 1.];
 
-    AmethystApplication::render_base("solid_returns_sprite_render_with_colour", false)
+    AmethystApplication::render_base("solid_returns_sprite_render_with_color", false)
         .with_setup(|world| {
             let sprite_render = {
-                let colour_sprite_gen_data = world.system_data::<ColourSpriteSheetGenData<'_>>();
-                ColourSpriteSheetGen::solid(&colour_sprite_gen_data, RED)
+                let color_sprite_gen_data = world.system_data::<ColorSpriteSheetGenData<'_>>();
+                ColorSpriteSheetGen::solid(&color_sprite_gen_data, RED)
             };
             world.add_resource(sprite_render);
         })
         .with_assertion(|world| {
             let sprite_render = &*world.read_resource::<SpriteRender>();
 
-            let ColourSpriteSheetGenData {
+            let ColorSpriteSheetGenData {
                 texture_assets,
                 sprite_sheet_assets,
                 ..
-            } = world.system_data::<ColourSpriteSheetGenData<'_>>();
+            } = world.system_data::<ColorSpriteSheetGenData<'_>>();
 
             assert_eq!(0, sprite_render.sprite_number);
 
@@ -36,25 +36,25 @@ fn solid_returns_sprite_render() -> Result<(), Error> {
 
 #[test]
 fn gradient_returns_sprite_render() -> Result<(), Error> {
-    const COLOUR_BEGIN: [f32; 4] = [1., 0., 0., 0.5];
-    const COLOUR_END: [f32; 4] = [0., 1., 0., 1.];
+    const COLOR_BEGIN: [f32; 4] = [1., 0., 0., 0.5];
+    const COLOR_END: [f32; 4] = [0., 1., 0., 1.];
 
-    AmethystApplication::render_base("solid_returns_sprite_render_with_colour", false)
+    AmethystApplication::render_base("solid_returns_sprite_render_with_color", false)
         .with_setup(|world| {
             let sprite_render = {
-                let colour_sprite_gen_data = world.system_data::<ColourSpriteSheetGenData<'_>>();
-                ColourSpriteSheetGen::gradient(&colour_sprite_gen_data, COLOUR_BEGIN, COLOUR_END, 5)
+                let color_sprite_gen_data = world.system_data::<ColorSpriteSheetGenData<'_>>();
+                ColorSpriteSheetGen::gradient(&color_sprite_gen_data, COLOR_BEGIN, COLOR_END, 5)
             };
             world.add_resource(sprite_render);
         })
         .with_assertion(|world| {
             let sprite_render = &*world.read_resource::<SpriteRender>();
 
-            let ColourSpriteSheetGenData {
+            let ColorSpriteSheetGenData {
                 texture_assets,
                 sprite_sheet_assets,
                 ..
-            } = world.system_data::<ColourSpriteSheetGenData<'_>>();
+            } = world.system_data::<ColorSpriteSheetGenData<'_>>();
 
             assert_eq!(0, sprite_render.sprite_number);
 
