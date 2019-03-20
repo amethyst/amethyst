@@ -43,6 +43,8 @@ pub struct ColourSpriteSheetGenData<'s> {
 }
 
 const COLOUR_TRANSPARENT: [f32; 4] = [0.; 4];
+/// 4 channels per pixel
+const PIXEL_WIDTH: usize = 4;
 
 /// Generates solid colour `Texture`s and `SpriteSheet`s.
 #[derive(Debug)]
@@ -170,8 +172,7 @@ impl ColourSpriteSheetGen {
         let pixel_count = image_width * image_height;
 
         // Element count.
-        let pixel_width = 4; // 4 channels per pixel
-        let capacity = pixel_count * pixel_width;
+        let capacity = pixel_count * PIXEL_WIDTH;
         let mut pixel_data = vec![0f32; capacity];
 
         // Calculate colour values.
@@ -179,9 +180,9 @@ impl ColourSpriteSheetGen {
         // Pixel coordinates are used, so Y increases downwards.
 
         let channel_steps =
-            Self::channel_steps(sprite_count, colour_begin, colour_end, pixel_width);
+            Self::channel_steps(sprite_count, colour_begin, colour_end, PIXEL_WIDTH);
 
-        let row_capacity = sprite_w_pad as usize * column_count * pixel_width;
+        let row_capacity = sprite_w_pad as usize * column_count * PIXEL_WIDTH;
         (0..row_count).for_each(|sprite_row| {
             // 1. Build up a row of pixels
             // 2. Duplicate the row `sprite_h` times
@@ -197,7 +198,7 @@ impl ColourSpriteSheetGen {
 
                     // Calculate sprite colour
                     let sprite_colour = if sprite_n < sprite_count {
-                        (0..pixel_width).fold(COLOUR_TRANSPARENT, |mut colour, channel| {
+                        (0..PIXEL_WIDTH).fold(COLOUR_TRANSPARENT, |mut colour, channel| {
                             colour[channel] =
                                 colour_begin[channel] + sprite_n as f32 * channel_steps[channel];
                             colour
@@ -211,13 +212,13 @@ impl ColourSpriteSheetGen {
                         // `pixel_n` is the pixel number, not the colour channel index in
                         // `pixel_row`.
                         let pixel_index =
-                            (sprite_col * sprite_w_pad as usize + pixel_n as usize) * pixel_width;
+                            (sprite_col * sprite_w_pad as usize + pixel_n as usize) * PIXEL_WIDTH;
 
                         unsafe {
                             ptr::copy_nonoverlapping(
                                 sprite_colour.as_ptr(),
                                 pixel_row.as_mut_ptr().offset(pixel_index as isize),
-                                pixel_width,
+                                PIXEL_WIDTH,
                             )
                         }
                     });
