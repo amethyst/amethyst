@@ -31,7 +31,7 @@ it is attached to. ([#1282])
 * Add `SpriteScenePrefab`. Allows load sprites from a grid and add them to the `SpriteRenderer`. ([#1469])
 * Add `Widgets` resource. Allows keeping track of UI entities and their components and iterating over them. ([#1390])
 * `AmethystApplication` takes in application name using `with_app_name(..)`. ([#1499])
-* `ColourSpriteSheetGen::solid` and `ColourSpriteSheetGen::gradient` can be used to generate sprite sheets at runtime. ([#1474])
+* `ColorSpriteSheetGen::solid` and `ColorSpriteSheetGen::gradient` can be used to generate sprite sheets at runtime. ([#1474])
 
 ### Changed
 
