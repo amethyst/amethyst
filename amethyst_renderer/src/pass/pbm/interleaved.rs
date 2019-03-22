@@ -4,6 +4,7 @@ use std::marker::PhantomData;
 
 use derivative::Derivative;
 use gfx::pso::buffer::ElemStride;
+use gfx::traits::Pod;
 use gfx_core::state::{Blend, ColorMask};
 
 use amethyst_assets::AssetStorage;
@@ -119,7 +120,7 @@ where
 impl<V, N> Pass for DrawPbm<V, N>
 where
     V: Query<(Position, Normal, Tangent, TexCoord)>,
-    N: Real + SubsetOf<f32>,
+    N: Real + SubsetOf<f32> + Pod,
 {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);

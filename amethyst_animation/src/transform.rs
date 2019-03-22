@@ -1,10 +1,10 @@
 use amethyst_core::{
-    nalgebra::{Quaternion, Unit, Real, zero},
+    nalgebra::{zero, Quaternion, Real, Unit},
     Transform,
 };
 
-use serde::{Deserialize, Serialize};
 use num_traits::NumCast;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     resources::{AnimationSampling, ApplyData, BlendMethod},

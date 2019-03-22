@@ -1,14 +1,14 @@
 use amethyst_core::{
+    nalgebra::Real,
     specs::prelude::{
         BitSet, ComponentEvent, Join, ReadStorage, ReaderId, Resources, System, WriteStorage,
     },
     Transform,
-    nalgebra::Real,
 };
 use amethyst_renderer::JointTransforms;
 
-use std::marker::PhantomData;
 use log::error;
+use std::marker::PhantomData;
 
 use super::resources::*;
 
@@ -40,8 +40,8 @@ impl<'a, N: Real> System<'a> for VertexSkinningSystem<N> {
     type SystemData = (
         ReadStorage<'a, Joint>,
         ReadStorage<'a, Transform<N>>,
-        WriteStorage<'a, Skin>,
-        WriteStorage<'a, JointTransforms>,
+        WriteStorage<'a, Skin<N>>,
+        WriteStorage<'a, JointTransforms<N>>,
     );
 
     fn run(&mut self, (joints, global_transforms, mut skins, mut matrices): Self::SystemData) {

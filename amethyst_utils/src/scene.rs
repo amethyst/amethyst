@@ -6,7 +6,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use amethyst_assets::{Format, PrefabData, ProgressCounter};
 use amethyst_controls::ControlTagPrefab;
-use amethyst_core::{specs::prelude::Entity, Transform, nalgebra::Real};
+use amethyst_core::{nalgebra::Real, specs::prelude::Entity, Transform};
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
 use amethyst_renderer::{
@@ -53,7 +53,7 @@ where
     M::Options: DeserializeOwned + Serialize + Clone,
     R: PartialEq + Debug + Clone + Send + Sync + 'static,
     V: From<InternalShape> + Into<MeshData>,
-    N: Real
+    N: Real,
 {
     fn default() -> Self {
         BasicScenePrefab {

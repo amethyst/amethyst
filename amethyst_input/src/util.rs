@@ -1,7 +1,7 @@
 use std::hash::Hash;
 
+use amethyst_core::nalgebra::{convert, Real};
 use winit::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
-use amethyst_core::nalgebra::{Real, convert};
 
 use crate::input_handler::InputHandler;
 
@@ -53,7 +53,9 @@ where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
-    convert(name.as_ref()
-        .and_then(|ref n| input.axis_value(n))
-        .unwrap_or(0.0))
+    convert(
+        name.as_ref()
+            .and_then(|ref n| input.axis_value(n))
+            .unwrap_or(0.0),
+    )
 }

@@ -1,5 +1,6 @@
 //! Simple flat forward drawing pass.
 
+use gfx::traits::Pod;
 use std::marker::PhantomData;
 
 use derivative::Derivative;
@@ -115,7 +116,7 @@ where
 impl<V, N> Pass for DrawFlat<V, N>
 where
     V: Query<(Position, TexCoord)>,
-    N: Real + SubsetOf<f32>,
+    N: Real + SubsetOf<f32> + Pod,
 {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         use std::mem;

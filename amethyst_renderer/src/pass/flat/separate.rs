@@ -2,6 +2,7 @@
 
 use derivative::Derivative;
 use gfx::pso::buffer::ElemStride;
+use gfx::traits::Pod;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
 use std::marker::PhantomData;
@@ -116,12 +117,12 @@ impl<'a, N: Real> PassData<'a> for DrawFlatSeparate<N> {
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, Transform<N>>,
-        ReadStorage<'a, JointTransforms>,
+        ReadStorage<'a, JointTransforms<N>>,
         ReadStorage<'a, Rgba>,
     );
 }
 
-impl<N: Real + SubsetOf<f32>> Pass for DrawFlatSeparate<N> {
+impl<N: Real + SubsetOf<f32> + Pod> Pass for DrawFlatSeparate<N> {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         use std::mem;
         let mut builder = if self.skinning {
