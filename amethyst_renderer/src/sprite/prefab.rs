@@ -225,10 +225,6 @@ impl<'a> PrefabData<'a> for SpriteRenderPrefab {
 }
 
 /// Prefab for loading a full scene with sprites.
-///
-/// When a `render` is encountered during the processing of this prefab, the sheet index
-/// in that will be loaded from the last encountered `sheets`. It is therefore recommended that
-/// all sheets used in the prefab be loaded on the first entity only.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct SpriteScenePrefab {
     /// Sprite sheets
