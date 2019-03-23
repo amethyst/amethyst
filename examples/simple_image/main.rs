@@ -44,7 +44,7 @@ fn main() -> amethyst::Result<()> {
 }
 
 fn init_camera(world: &mut World) {
-    let mut transform = Transform::default();
+    let mut transform = Transform::<f32>::default();
     transform.set_z(1.0);
     world
         .create_entity()
@@ -56,7 +56,7 @@ fn init_camera(world: &mut World) {
 }
 
 fn init_image(world: &mut World, texture: &TextureHandle) -> Entity {
-    let mut transform = Transform::default();
+    let mut transform = Transform::<f32>::default();
     transform.set_x(0.0);
     transform.set_y(0.0);
 
