@@ -11,13 +11,14 @@ use crate::{
 };
 
 /// The enum holding the different types of event that can be received in a `State` in the handle_event method.
-/// I is the generic type of virtual input events. See `InputEvent<T>` for more information.
+/// This assumes that you used `String` as the identifier for the `InputBundle`. If this is not the
+/// case, you will want to implement your own StateEvent.
 #[derive(Clone, EventReader)]
 #[reader(StateEventReader)]
-pub enum StateEvent<I> {
+pub enum StateEvent {
     /// Events sent by the winit window.
     Window(Event),
     /// Events sent by the ui system.
     Ui(UiEvent),
-    Input(InputEvent::<I>),
+    Input(InputEvent::<String>),
 }
