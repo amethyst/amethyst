@@ -20,5 +20,6 @@ pub enum StateEvent {
     Window(Event),
     /// Events sent by the ui system.
     Ui(UiEvent),
-    Input(InputEvent::<String>),
+    /// Events sent by the input system.
+    Input(InputEvent<String>),
 }
