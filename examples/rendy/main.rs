@@ -3,15 +3,11 @@
 use amethyst::{
     assets::AssetLoaderSystemData,
     core::{
-        ecs::{
-            Component, DenseVecStorage, Join, Read, ReadExpect, ReadStorage, Resources, System,
-            SystemData, WriteStorage,
-        },
-        math::{Unit, UnitQuaternion, Vector3},
-        Time, Transform, TransformBundle,
+        ecs::{ReadExpect, Resources, SystemData},
+        Transform, TransformBundle,
     },
     prelude::*,
-    utils::{application_root_dir, fps_counter::FPSCounterBundle},
+    utils::application_root_dir,
     window::{EventsLoopSystem, ScreenDimensions, WindowSystem},
     winit::{EventsLoop, Window},
 };
@@ -35,69 +31,6 @@ struct Example<B: Backend>(PhantomData<B>);
 impl<B: Backend> Example<B> {
     pub fn new() -> Self {
         Self(PhantomData)
-    }
-}
-
-struct Orbit {
-    axis: Unit<Vector3<f32>>,
-    time_scale: f32,
-    center: Vector3<f32>,
-    radius: f32,
-}
-
-impl Component for Orbit {
-    type Storage = DenseVecStorage<Self>;
-}
-
-struct OrbitSystem;
-
-impl<'a> System<'a> for OrbitSystem {
-    type SystemData = (
-        Read<'a, Time>,
-        ReadStorage<'a, Orbit>,
-        WriteStorage<'a, Transform>,
-    );
-
-    fn run(&mut self, (time, orbits, mut transforms): Self::SystemData) {
-        for (orbit, transform) in (&orbits, &mut transforms).join() {
-            let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;
-            let cross = orbit.axis.cross(&Vector3::z()).normalize() * orbit.radius;
-            let rot = UnitQuaternion::from_axis_angle(&orbit.axis, angle);
-            let final_pos = (rot * cross) + orbit.center;
-            transform.set_translation(final_pos);
-        }
-    }
-}
-
-struct CameraCorrectionSystem {
-    last_aspect: f32,
-}
-
-impl CameraCorrectionSystem {
-    pub fn new() -> Self {
-        Self { last_aspect: 0.0 }
-    }
-}
-
-impl<'a> System<'a> for CameraCorrectionSystem {
-    type SystemData = (
-        ReadExpect<'a, ScreenDimensions>,
-        ReadExpect<'a, ActiveCamera>,
-        WriteStorage<'a, Camera>,
-    );
-
-    fn run(&mut self, (dimensions, active_cam, mut cameras): Self::SystemData) {
-        let current_aspect = dimensions.aspect_ratio();
-
-        if current_aspect != self.last_aspect {
-            self.last_aspect = current_aspect;
-
-            let camera = cameras.get_mut(active_cam.entity).unwrap();
-            *camera = Camera::from(Projection::perspective(
-                current_aspect,
-                std::f32::consts::FRAC_PI_3,
-            ));
-        }
     }
 }
 
@@ -275,49 +208,30 @@ fn main() -> amethyst::Result<()> {
     let window_system = WindowSystem::from_config_path(&event_loop, path);
 
     let game_data = GameDataBuilder::default()
-        .with(OrbitSystem, "orbit", &[])
-        .with(CameraCorrectionSystem::new(), "cam", &[])
-        .with_bundle(TransformBundle::new().with_dep(&["orbit"]))?
-        .with_bundle(FPSCounterBundle::default())?
+        .with_bundle(TransformBundle::new())?
         .with_thread_local(EventsLoopSystem::new(event_loop))
         .with_thread_local(window_system)
-        .with_thread_local(RendererSystem::<DefaultBackend, _>::new(ExampleGraph::new()));
+        .with_thread_local(RendererSystem::<DefaultBackend, _>::new(ExampleGraph));
 
     let mut game = Application::new(&resources, Example::<DefaultBackend>::new(), game_data)?;
     game.run();
     Ok(())
 }
 
-struct ExampleGraph {
-    last_dimensions: Option<ScreenDimensions>,
-    dirty: bool,
-}
-
-impl ExampleGraph {
-    pub fn new() -> Self {
-        Self {
-            last_dimensions: None,
-            dirty: true,
-        }
-    }
-}
+struct ExampleGraph;
 
 impl<B: Backend> GraphCreator<B> for ExampleGraph {
-    fn rebuild(&mut self, res: &Resources) -> bool {
-        // Rebuild when dimensions change, but wait until at least two frames have the same.
-        let new_dimensions = res.try_fetch::<ScreenDimensions>();
-        use std::ops::Deref;
-        if self.last_dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
-            self.dirty = true;
-            self.last_dimensions = new_dimensions.map(|d| d.clone());
-            return false;
-        }
-        return self.dirty;
+    type GraphDeps = Option<ScreenDimensions>;
+    fn dependencies(&self, res: &Resources) -> Self::GraphDeps {
+        res.try_fetch::<ScreenDimensions>().map(|d| d.clone())
     }
 
-    fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
-        self.dirty = false;
-
+    fn builder(
+        &self,
+        factory: &mut Factory<B>,
+        res: &Resources,
+        _deps: &Self::GraphDeps,
+    ) -> GraphBuilder<B, Resources> {
         let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
         use amethyst_rendy::{
             pass::DrawPbm,
@@ -336,6 +250,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         };
 
         let surface = factory.create_surface(window.clone());
+        // let aspect = surface.aspect();
 
         let mut graph_builder = GraphBuilder::new();
 

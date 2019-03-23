@@ -13,6 +13,7 @@ use amethyst_core::{
 };
 use rendy::{
     command::{QueueId, RenderPassEncoder},
+    descriptor::DescriptorSetLayout,
     factory::Factory,
     graph::{
         render::{PrepareResult, SimpleGraphicsPipeline, SimpleGraphicsPipelineDesc},

@@ -16,6 +16,7 @@ use amethyst_core::{
     ecs::{Read, ReadExpect, ReadStorage, Resources, RunNow, SystemData, Write, WriteExpect},
     timing::Time,
 };
+
 use palette::{LinSrgba, Srgba};
 use rendy::{
     command::{Families, QueueId},
@@ -27,12 +28,20 @@ use rendy::{
 use std::{mem::ManuallyDrop, sync::Arc};
 
 pub trait GraphCreator<B: Backend> {
-    /// Check if graph needs to be rebuilt.
-    /// This function is evaluated every frame before running the graph.
-    fn rebuild(&mut self, res: &Resources) -> bool;
+    type GraphDeps: PartialEq;
+
+    /// Retreive graph's data dependencies.
+    /// When graph dependencies change, the graph will be rebuilt.
+    /// This function is evaluated every frame, make sure it's fast.
+    fn dependencies(&self, res: &Resources) -> Self::GraphDeps;
 
     /// Retreive configured complete graph builder.
-    fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources>;
+    fn builder(
+        &self,
+        factory: &mut Factory<B>,
+        res: &Resources,
+        deps: &Self::GraphDeps,
+    ) -> GraphBuilder<B, Resources>;
 }
 
 pub struct RendererSystem<B, G>
@@ -40,10 +49,9 @@ where
     B: Backend,
     G: GraphCreator<B>,
 {
-    // ManuallyDrop is used as a workaround for inability to dispose the graph properly on exit.
-    // This should be removed once we can implement disposal with access to `&Resources`.
-    graph: ManuallyDrop<Option<Graph<B, Resources>>>,
+    graph: Option<Graph<B, Resources>>,
     graph_creator: G,
+    last_deps: Option<G::GraphDeps>,
 }
 
 impl<B, G> RendererSystem<B, G>
@@ -53,8 +61,9 @@ where
 {
     pub fn new(graph_creator: G) -> Self {
         Self {
-            graph: ManuallyDrop::new(None),
+            graph: None,
             graph_creator,
+            last_deps: None,
         }
     }
 }
@@ -154,12 +163,12 @@ where
             graph.dispose(&mut *factory, res);
         }
 
-        self.graph = ManuallyDrop::new(Some(
+        self.graph = Some(
             self.graph_creator
-                .builder(&mut factory, res)
+                .builder(&mut factory, res, self.last_deps.as_ref().unwrap())
                 .build(&mut factory, &mut families, res)
                 .unwrap(),
-        ));
+        );
     }
 
     fn run_graph(&mut self, res: &Resources) {
@@ -181,10 +190,18 @@ where
     fn run_now(&mut self, res: &'a Resources) {
         self.asset_loading(SystemData::fetch(res));
 
-        let rebuild = self.graph_creator.rebuild(res);
-        if self.graph.is_none() || rebuild {
+        let new_deps = self.graph_creator.dependencies(res);
+        if self.graph.is_none()
+            || self
+                .last_deps
+                .as_ref()
+                .map(|d| d != &new_deps)
+                .unwrap_or(false)
+        {
+            self.last_deps.replace(new_deps);
             self.rebuild_graph(res);
         }
+
         self.run_graph(res);
     }
 
