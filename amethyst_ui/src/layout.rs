@@ -119,6 +119,8 @@ pub enum Stretch {
         x_margin: f32,
         /// The margin length for the height
         y_margin: f32,
+        /// Keep the aspect ratio
+        keep_aspect_ratio: bool,
     },
 }
 
@@ -246,10 +248,28 @@ impl<'a> System<'a> for UiTransformSystem {
                             transform.width,
                             parent_transform_copy.pixel_height - y_margin * 2.0,
                         ),
-                        Stretch::XY { x_margin, y_margin } => (
+                        Stretch::XY {
+                            keep_aspect_ratio: false,
+                            x_margin,
+                            y_margin,
+                        } => (
                             parent_transform_copy.pixel_width - x_margin * 2.0,
                             parent_transform_copy.pixel_height - y_margin * 2.0,
                         ),
+                        Stretch::XY {
+                            keep_aspect_ratio: true,
+                            x_margin,
+                            y_margin,
+                        } => {
+                            let scale = f32::min(
+                                (parent_transform_copy.pixel_width - x_margin * 2.0)
+                                    / transform.width,
+                                (parent_transform_copy.pixel_height - y_margin * 2.0)
+                                    / transform.height,
+                            );
+
+                            (transform.width * scale, transform.height * scale)
+                        }
                     };
                     transform.width = new_size.0;
                     transform.height = new_size.1;
@@ -319,10 +339,26 @@ where
             Stretch::NoStretch => (transform.width, transform.height),
             Stretch::X { x_margin } => (screen_dim.width() - x_margin * 2.0, transform.height),
             Stretch::Y { y_margin } => (transform.width, screen_dim.height() - y_margin * 2.0),
-            Stretch::XY { x_margin, y_margin } => (
+            Stretch::XY {
+                keep_aspect_ratio: false,
+                x_margin,
+                y_margin,
+            } => (
                 screen_dim.width() - x_margin * 2.0,
                 screen_dim.height() - y_margin * 2.0,
             ),
+            Stretch::XY {
+                keep_aspect_ratio: true,
+                x_margin,
+                y_margin,
+            } => {
+                let scale = f32::min(
+                    (screen_dim.width() - x_margin * 2.0) / transform.width,
+                    (screen_dim.height() - y_margin * 2.0) / transform.height,
+                );
+
+                (transform.width * scale, transform.height * scale)
+            }
         };
         transform.width = new_size.0;
         transform.height = new_size.1;

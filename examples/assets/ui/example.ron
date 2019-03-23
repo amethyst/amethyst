@@ -3,7 +3,7 @@ Container(
     transform: (
         id: "background",
         anchor: Middle,
-        stretch: XY( x_margin: 0., y_margin: 0.),
+        stretch: XY( x_margin: 0., y_margin: 0., keep_aspect_ratio: false),
         width: 20.,
         height: 20.,
     ),
@@ -31,7 +31,7 @@ Container(
                         width: 32.,
                         height: 32.,
                         anchor: Middle,
-                        stretch: XY( x_margin: 0., y_margin: 10.),
+                        stretch: XY( x_margin: 0., y_margin: 10., keep_aspect_ratio: false),
                     ),
                     image: (
                         image: Data(Rgba((0.18, 0.05, 0.85, 1.0), (channel: Srgb))),
@@ -78,7 +78,7 @@ Container(
                         height: 75.,
                         tab_order: 1,
                         anchor: Middle,
-                        stretch: XY(x_margin: 0., y_margin: 0.),
+                        stretch: XY(x_margin: 0., y_margin: 0., keep_aspect_ratio: false),
                         mouse_reactive: true,
                         selectable: 0,
                     ),
