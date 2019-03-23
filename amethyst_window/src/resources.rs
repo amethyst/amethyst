@@ -1,5 +1,5 @@
 /// World resource that stores screen dimensions.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct ScreenDimensions {
     /// Screen width in pixels (px).
     pub(crate) w: f64,

@@ -3,13 +3,13 @@
 use amethyst::{
     assets::AssetLoaderSystemData,
     core::{
-        ecs::{Resources, SystemData, ReadExpect},
+        ecs::{ReadExpect, Resources, SystemData},
         Transform, TransformBundle,
     },
     prelude::*,
     utils::application_root_dir,
-    winit::{Window, EventsLoop},
-    window::{WindowSystem, EventsLoopSystem},
+    window::{EventsLoopSystem, ScreenDimensions, WindowSystem},
+    winit::{EventsLoop, Window},
 };
 use amethyst_rendy::{
     camera::{Camera, Projection},
@@ -17,22 +17,20 @@ use amethyst_rendy::{
     mtl::{Material, MaterialDefaults},
     palette::{LinLuma, LinSrgb, Srgb},
     rendy::{
-        mesh::PosNormTangTex,
+        factory::Factory, graph::GraphBuilder, hal::Backend, mesh::PosNormTangTex,
         texture::palette::load_from_linear_rgba,
-        graph::{GraphBuilder},
-        hal::Backend,
-        factory::Factory,
     },
     shape::Shape,
-    system::RendererSystem,
-    types::{Mesh, Texture, DefaultBackend},
+    system::{GraphCreator, RendererSystem},
+    types::{DefaultBackend, Mesh, Texture},
 };
-use std::sync::Arc;
-use std::marker::PhantomData;
+use std::{marker::PhantomData, sync::Arc};
 
 struct Example<B: Backend>(PhantomData<B>);
 impl<B: Backend> Example<B> {
-    pub fn new() -> Self { Self(PhantomData) }
+    pub fn new() -> Self {
+        Self(PhantomData)
+    }
 }
 
 impl<B: Backend> SimpleState for Example<B> {
@@ -83,11 +81,11 @@ impl<B: Backend> SimpleState for Example<B> {
                 let mtl = world.exec(|loader: AssetLoaderSystemData<'_, Material<B>>| {
                     loader.load_from_data(
                         Material {
-                        albedo: albedo.clone(),
-                        metallic,
-                        roughness,
-                        ..mat_defaults.clone()
-                    },
+                            albedo: albedo.clone(),
+                            metallic,
+                            roughness,
+                            ..mat_defaults.clone()
+                        },
                         (),
                     )
                 });
@@ -159,79 +157,83 @@ fn main() -> amethyst::Result<()> {
 
     let event_loop = EventsLoop::new();
 
+    let window_system = WindowSystem::from_config_path(&event_loop, path);
+
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
-        .with_thread_local(WindowSystem::from_config_path(&event_loop, path))
-        .with_thread_local(RendererSystem::<DefaultBackend, _>::new(build_graph))
-        .with_thread_local(EventsLoopSystem::new(event_loop));
+        .with_thread_local(EventsLoopSystem::new(event_loop))
+        .with_thread_local(window_system)
+        .with_thread_local(RendererSystem::<DefaultBackend, _>::new(ExampleGraph));
 
     let mut game = Application::new(&resources, Example::<DefaultBackend>::new(), game_data)?;
     game.run();
     Ok(())
 }
 
-fn build_graph<B: Backend>(
-    factory: &mut Factory<B>,
-    res: &mut Resources,
-) -> GraphBuilder<B, Resources> {
-    let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
-    use amethyst_rendy::{
-        rendy::{
-            graph::{
-                present::PresentNode,
-                render::{
-                    SimpleGraphicsPipeline,
-                    RenderGroupBuilder,
+struct ExampleGraph;
+
+impl<B: Backend> GraphCreator<B> for ExampleGraph {
+    type GraphDeps = Option<ScreenDimensions>;
+    fn dependencies(&self, res: &Resources) -> Self::GraphDeps {
+        res.try_fetch::<ScreenDimensions>().map(|d| d.clone())
+    }
+
+    fn builder(
+        &self,
+        factory: &mut Factory<B>,
+        res: &Resources,
+        _deps: &Self::GraphDeps,
+    ) -> GraphBuilder<B, Resources> {
+        let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
+        use amethyst_rendy::{
+            pass::DrawPbm,
+            rendy::{
+                graph::{
+                    present::PresentNode,
+                    render::{RenderGroupBuilder, SimpleGraphicsPipeline},
+                    GraphBuilder,
                 },
-                GraphBuilder,
+                hal::{
+                    command::{ClearDepthStencil, ClearValue},
+                    format::Format,
+                },
+                memory::MemoryUsageValue,
             },
-            memory::MemoryUsageValue,
-            hal::{
-                command::{ClearValue, ClearDepthStencil},
-                format::Format,
-            }
-        },
-        pass::DrawPbm
-    };
+        };
 
-    let surface = factory.create_surface(window.clone());
-    // let aspect = surface.aspect();
-    
-    let mut graph_builder = GraphBuilder::new();
+        let surface = factory.create_surface(window.clone());
+        // let aspect = surface.aspect();
 
-    let color = graph_builder.create_image(
-        surface.kind(),
-        1,
-        factory.get_surface_format(&surface),
-        MemoryUsageValue::Data,
-        Some(ClearValue::Color(
-            [1.0, 1.0, 1.0, 1.0].into(),
-        )),
-    );
-    
-    let depth = graph_builder.create_image(
-        surface.kind(),
-        1,
-        Format::D16Unorm,
-        MemoryUsageValue::Data,
-        Some(ClearValue::DepthStencil(
-            ClearDepthStencil(1.0, 0),
-        )),
-    );
+        let mut graph_builder = GraphBuilder::new();
 
-    let pass = graph_builder.add_node(
-        DrawPbm::builder()
-            .into_subpass()
-            .with_color(color)
-            .with_depth_stencil(depth)
-            .into_pass(),
-    );
+        let color = graph_builder.create_image(
+            surface.kind(),
+            1,
+            factory.get_surface_format(&surface),
+            MemoryUsageValue::Data,
+            Some(ClearValue::Color([1.0, 1.0, 1.0, 1.0].into())),
+        );
 
-    let present_builder = PresentNode::builder(factory, surface, color)
-        .with_dependency(pass);
+        let depth = graph_builder.create_image(
+            surface.kind(),
+            1,
+            Format::D16Unorm,
+            MemoryUsageValue::Data,
+            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+        );
 
-    graph_builder.add_node(present_builder);
+        let pass = graph_builder.add_node(
+            DrawPbm::builder()
+                .into_subpass()
+                .with_color(color)
+                .with_depth_stencil(depth)
+                .into_pass(),
+        );
 
-    graph_builder
+        let present_builder = PresentNode::builder(factory, surface, color).with_dependency(pass);
+
+        graph_builder.add_node(present_builder);
+
+        graph_builder
+    }
 }
-
