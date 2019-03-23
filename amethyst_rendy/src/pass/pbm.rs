@@ -15,27 +15,26 @@ use amethyst_core::{
     },
     transform::GlobalTransform,
 };
-use core::borrow::Borrow;
 use fnv::FnvHashMap;
 use glsl_layout::AsStd140;
 use hibitset::{BitSet, BitSetLike};
 use rendy::{
     command::{QueueId, RenderPassEncoder},
+    descriptor::{DescriptorSet, DescriptorSetLayout},
     factory::Factory,
     graph::{
         render::{
             Layout, PrepareResult, SetLayout, SimpleGraphicsPipeline, SimpleGraphicsPipelineDesc,
         },
-        NodeBuffer, NodeImage,
+        GraphContext, NodeBuffer, NodeImage,
     },
     hal::{
         device::Device,
         format::Format,
         pso::{
-            BlendState, ColorBlendDesc, ColorMask, DepthStencilDesc, Descriptor, DescriptorPool,
-            DescriptorRangeDesc, DescriptorSetLayoutBinding, DescriptorSetWrite, DescriptorType,
-            ElemStride, Element, EntryPoint, GraphicsShaderSet, InstanceRate, ShaderStageFlags,
-            Specialization,
+            BlendState, ColorBlendDesc, ColorMask, DepthStencilDesc, Descriptor,
+            DescriptorSetLayoutBinding, DescriptorSetWrite, DescriptorType, ElemStride, Element,
+            EntryPoint, GraphicsShaderSet, InstanceRate, ShaderStageFlags, Specialization,
         },
         Backend,
     },
@@ -150,7 +149,7 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawPbmDesc {
         &self,
         storage: &'a mut Vec<B::ShaderModule>,
         factory: &mut Factory<B>,
-        _aux: &mut Resources,
+        _aux: &Resources,
     ) -> GraphicsShaderSet<'a, B> {
         storage.clear();
 
@@ -192,12 +191,13 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawPbmDesc {
 
     fn build<'a>(
         self,
+        _ctx: &mut GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _resources: &mut Resources,
-        _buffers: Vec<NodeBuffer<'a, B>>,
-        _images: Vec<NodeImage<'a, B>>,
-        set_layouts: &[B::DescriptorSetLayout],
+        _resources: &Resources,
+        _buffers: Vec<NodeBuffer>,
+        _images: Vec<NodeImage>,
+        set_layouts: &[DescriptorSetLayout<B>],
     ) -> Result<DrawPbm<B>, failure::Error> {
         let ubo_offset_align = {
             use rendy::hal::PhysicalDevice;
@@ -236,42 +236,29 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawPbmDesc {
             )
             .unwrap();
 
-        let max_envs = 1;
-
-        let mut env_desc_pool = unsafe {
-            factory.create_descriptor_pool(
-                max_envs,
-                vec![DescriptorRangeDesc {
-                    ty: DescriptorType::UniformBuffer,
-                    count: max_envs * 4,
-                }],
-            )
-        }
-        .unwrap();
-
         let environment_set = unsafe {
-            let set = env_desc_pool.allocate_set(&set_layouts[2]).unwrap();
+            let set = factory.create_descriptor_set(&set_layouts[2]).unwrap();
             factory.write_descriptor_sets(vec![
                 DescriptorSetWrite {
-                    set: &set,
+                    set: set.raw(),
                     binding: 0,
                     array_offset: 0,
                     descriptors: Some(Descriptor::Buffer(env_buffer.raw(), None..None)),
                 },
                 DescriptorSetWrite {
-                    set: &set,
+                    set: set.raw(),
                     binding: 1,
                     array_offset: 0,
                     descriptors: Some(Descriptor::Buffer(plight_buffer.raw(), None..None)),
                 },
                 DescriptorSetWrite {
-                    set: &set,
+                    set: set.raw(),
                     binding: 2,
                     array_offset: 0,
                     descriptors: Some(Descriptor::Buffer(dlight_buffer.raw(), None..None)),
                 },
                 DescriptorSetWrite {
-                    set: &set,
+                    set: set.raw(),
                     binding: 3,
                     array_offset: 0,
                     descriptors: Some(Descriptor::Buffer(slight_buffer.raw(), None..None)),
@@ -282,9 +269,6 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawPbmDesc {
 
         Ok(DrawPbm {
             skinning: self.skinning,
-            env_desc_pool,
-            obj_desc_pool: Vec::new(),
-            mat_desc_pool: Vec::new(),
             env_buffer,
             plight_buffer,
             dlight_buffer,
@@ -302,9 +286,6 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawPbmDesc {
 #[derive(Debug)]
 pub struct DrawPbm<B: Backend> {
     skinning: bool,
-    env_desc_pool: B::DescriptorPool,
-    obj_desc_pool: Vec<Option<(B::DescriptorPool, usize)>>,
-    mat_desc_pool: Vec<Option<(B::DescriptorPool, usize)>>,
     env_buffer: rendy::resource::Buffer<B>,
     plight_buffer: rendy::resource::Buffer<B>,
     dlight_buffer: rendy::resource::Buffer<B>,
@@ -313,20 +294,20 @@ pub struct DrawPbm<B: Backend> {
     material_buffer: Vec<Option<rendy::resource::Buffer<B>>>,
     material_data: Vec<MaterialData<B>>,
     object_data: Vec<ObjectData<B>>,
-    environment_set: B::DescriptorSet,
+    environment_set: DescriptorSet<B>,
     ubo_offset_align: u64,
 }
 
 #[derive(Debug)]
 struct MaterialData<B: Backend> {
     bit_set: BitSet,
-    desc_set: Option<B::DescriptorSet>,
+    desc_set: Option<DescriptorSet<B>>,
     handle: Handle<Material<B>>,
 }
 
 #[derive(Debug)]
 struct ObjectData<B: Backend> {
-    desc_set: B::DescriptorSet,
+    desc_set: DescriptorSet<B>,
 }
 
 impl<B: Backend> DrawPbm<B> {
@@ -345,36 +326,6 @@ impl<B: Backend> DrawPbm<B> {
                     texture.sampler.raw(),
                 )
             })
-    }
-
-    fn prepare_desc_pool<I>(
-        factory: &Factory<B>,
-        pool_tuple: &mut Option<(B::DescriptorPool, usize)>,
-        min_size: usize,
-        layout_fn: impl FnOnce(usize) -> I,
-    ) -> Result<(), failure::Error>
-    where
-        I: IntoIterator,
-        I::Item: Borrow<DescriptorRangeDesc>,
-    {
-        if let Some((mut pool, size)) = pool_tuple.take() {
-            unsafe {
-                pool.reset();
-            }
-            if size >= min_size {
-                *pool_tuple = Some((pool, size));
-                return Ok(());
-            } else {
-                unsafe {
-                    factory.destroy_descriptor_pool(pool);
-                }
-            }
-        }
-
-        let new_size = min_size.next_power_of_two();
-        let new_pool = unsafe { factory.create_descriptor_pool(new_size, layout_fn(new_size))? };
-        *pool_tuple = Some((new_pool, new_size));
-        Ok(())
     }
 }
 
@@ -404,7 +355,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
-        set_layouts: &[B::DescriptorSetLayout],
+        set_layouts: &[DescriptorSetLayout<B>],
         index: usize,
         resources: &Resources,
     ) -> PrepareResult {
@@ -525,6 +476,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
                 .unwrap();
         }
 
+        factory.destroy_descriptor_sets(self.material_data.drain(..).filter_map(|d| d.desc_set));
         self.material_data.clear();
         let mut total_objects = 0;
 
@@ -560,46 +512,6 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
                 }
             }
         }
-
-        while self.mat_desc_pool.len() <= index {
-            self.mat_desc_pool.push(None);
-        }
-
-        while self.obj_desc_pool.len() <= index {
-            self.obj_desc_pool.push(None);
-        }
-
-        Self::prepare_desc_pool(
-            factory,
-            &mut self.mat_desc_pool[index],
-            self.material_data.len(),
-            |size| {
-                vec![
-                    DescriptorRangeDesc {
-                        ty: DescriptorType::UniformBuffer,
-                        count: size,
-                    },
-                    DescriptorRangeDesc {
-                        ty: DescriptorType::CombinedImageSampler,
-                        count: size * 7,
-                    },
-                ]
-            },
-        )
-        .unwrap();
-
-        Self::prepare_desc_pool(
-            factory,
-            &mut self.obj_desc_pool[index],
-            total_objects,
-            |size| {
-                vec![DescriptorRangeDesc {
-                    ty: DescriptorType::UniformBuffer,
-                    count: size,
-                }]
-            },
-        )
-        .unwrap();
 
         let material_step = align_size::<pod::Material>(self.ubo_offset_align);
         let mut material_buffer_data: Vec<u8> =
@@ -642,15 +554,10 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
                 .unwrap();
 
             unsafe {
-                if let Ok(set) = self.mat_desc_pool[index]
-                    .as_mut()
-                    .unwrap()
-                    .0
-                    .allocate_set(&set_layouts[1])
-                {
+                if let Ok(set) = factory.create_descriptor_set(&set_layouts[1]) {
                     factory.write_descriptor_sets(vec![
                         DescriptorSetWrite {
-                            set: &set,
+                            set: set.raw(),
                             binding: 0,
                             array_offset: 0,
                             descriptors: Some(Descriptor::Buffer(
@@ -659,7 +566,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
                             )),
                         },
                         DescriptorSetWrite {
-                            set: &set,
+                            set: set.raw(),
                             binding: 1,
                             array_offset: 0,
                             descriptors: Self::texture_descriptor(
@@ -669,7 +576,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
                             ),
                         },
                         DescriptorSetWrite {
-                            set: &set,
+                            set: set.raw(),
                             binding: 2,
                             array_offset: 0,
                             descriptors: Self::texture_descriptor(
@@ -679,7 +586,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
                             ),
                         },
                         DescriptorSetWrite {
-                            set: &set,
+                            set: set.raw(),
                             binding: 3,
                             array_offset: 0,
                             descriptors: Self::texture_descriptor(
@@ -689,7 +596,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
                             ),
                         },
                         DescriptorSetWrite {
-                            set: &set,
+                            set: set.raw(),
                             binding: 4,
                             array_offset: 0,
                             descriptors: Self::texture_descriptor(
@@ -699,7 +606,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
                             ),
                         },
                         DescriptorSetWrite {
-                            set: &set,
+                            set: set.raw(),
                             binding: 5,
                             array_offset: 0,
                             descriptors: Self::texture_descriptor(
@@ -709,7 +616,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
                             ),
                         },
                         DescriptorSetWrite {
-                            set: &set,
+                            set: set.raw(),
                             binding: 6,
                             array_offset: 0,
                             descriptors: Self::texture_descriptor(
@@ -719,7 +626,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
                             ),
                         },
                         DescriptorSetWrite {
-                            set: &set,
+                            set: set.raw(),
                             binding: 7,
                             array_offset: 0,
                             descriptors: Self::texture_descriptor(
@@ -746,7 +653,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
             }
         }
 
-        self.object_data.clear();
+        factory.destroy_descriptor_sets(self.object_data.drain(..).map(|d| d.desc_set));
         self.object_data.reserve(total_objects);
 
         while self.object_buffer.len() <= index {
@@ -782,14 +689,9 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
                     .unwrap();
 
                 unsafe {
-                    let set = self.obj_desc_pool[index]
-                        .as_mut()
-                        .unwrap()
-                        .0
-                        .allocate_set(&set_layouts[0])
-                        .unwrap();
+                    let set = factory.create_descriptor_set(&set_layouts[0]).unwrap();
                     factory.write_descriptor_sets(vec![DescriptorSetWrite {
-                        set: &set,
+                        set: set.raw(),
                         binding: 0,
                         array_offset: 0,
                         descriptors: Some(Descriptor::Buffer(
@@ -836,7 +738,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
         encoder.bind_graphics_descriptor_sets(
             layout,
             2,
-            Some(&self.environment_set),
+            Some(self.environment_set.raw()),
             std::iter::empty(),
         );
 
@@ -852,7 +754,12 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
 
         for material in &self.material_data {
             if let Some(ref mat_set) = material.desc_set {
-                encoder.bind_graphics_descriptor_sets(layout, 1, Some(mat_set), std::iter::empty());
+                encoder.bind_graphics_descriptor_sets(
+                    layout,
+                    1,
+                    Some(mat_set.raw()),
+                    std::iter::empty(),
+                );
                 for entity_id in &material.bit_set {
                     let handle = unsafe { unprotected_meshes.get(entity_id) };
 
@@ -862,7 +769,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
                         encoder.bind_graphics_descriptor_sets(
                             layout,
                             0,
-                            Some(obj_set),
+                            Some(obj_set.raw()),
                             std::iter::empty(),
                         );
                         mesh.bind(&[PosNormTangTex::VERTEX], &mut encoder).unwrap();
@@ -874,23 +781,11 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
         assert!(obj_data_iter.next().is_none());
     }
 
-    fn dispose(mut self, factory: &mut Factory<B>, _aux: &mut Resources) {
-        unsafe {
-            self.env_desc_pool.reset();
-            factory.destroy_descriptor_pool(self.env_desc_pool);
-        }
-        // if let Some((mut pool, _)) = self.obj_desc_pool.take() {
-        //     unsafe {
-        //         pool.reset();
-        //         factory.destroy_descriptor_pool(pool);
-        //     }
-        // }
-        // if let Some((mut pool, _)) = self.mat_desc_pool.take() {
-        //     unsafe {
-        //         pool.reset();
-        //         factory.destroy_descriptor_pool(pool);
-        //     }
-        // }
+    fn dispose(mut self, factory: &mut Factory<B>, _aux: &Resources) {
+        let all_sets = std::iter::once(self.environment_set)
+            .chain(self.object_data.drain(..).map(|d| d.desc_set))
+            .chain(self.material_data.drain(..).filter_map(|d| d.desc_set));
+        factory.destroy_descriptor_sets(all_sets);
     }
 }
 

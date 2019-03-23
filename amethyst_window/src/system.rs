@@ -4,8 +4,7 @@ use amethyst_core::{
     ecs::{Resources, RunNow, SystemData, Write, WriteExpect},
     shrev::EventChannel,
 };
-use std::path::Path;
-use std::sync::Arc;
+use std::{path::Path, sync::Arc};
 use winit::{Event, EventsLoop, Window};
 
 /// System for opening and managing the window.

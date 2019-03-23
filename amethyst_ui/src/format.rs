@@ -1,7 +1,7 @@
 use gfx_glyph::Font;
 use serde::{Deserialize, Serialize};
 
-use amethyst_assets::{Asset, ProcessableAsset, Handle, ProcessingState, SimpleFormat};
+use amethyst_assets::{Asset, Handle, ProcessableAsset, ProcessingState, SimpleFormat};
 use amethyst_core::ecs::prelude::VecStorage;
 use amethyst_error::{format_err, Error, ResultExt};
 

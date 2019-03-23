@@ -15,34 +15,54 @@ use amethyst_core::{
     ecs::{Read, ReadExpect, ReadStorage, Resources, RunNow, SystemData, Write, WriteExpect},
     timing::Time,
 };
-use palette::{Srgba, LinSrgba};
+
+use palette::{LinSrgba, Srgba};
 use rendy::{
     command::{Families, QueueId},
     factory::{Factory, ImageState},
     graph::{Graph, GraphBuilder},
     hal::{queue::QueueFamilyId, Backend},
-    texture::palette::{load_from_srgba, load_from_linear_rgba},
+    texture::palette::{load_from_linear_rgba, load_from_srgba},
 };
 use std::sync::Arc;
 
-pub struct RendererSystem<B, F>
-where
-    B: Backend,
-    F: FnOnce(&mut Factory<B>, &mut Resources) -> GraphBuilder<B, Resources>,
-{
-    graph: Option<Graph<B, Resources>>,
-    graph_creator: Option<F>,
+pub trait GraphCreator<B: Backend> {
+    type GraphDeps: PartialEq;
+
+    /// Retreive graph's data dependencies.
+    /// When graph dependencies change, the graph will be rebuilt.
+    /// This function is evaluated every frame, make sure it's fast.
+    fn dependencies(&self, res: &Resources) -> Self::GraphDeps;
+
+    /// Retreive configured complete graph builder.
+    fn builder(
+        &self,
+        factory: &mut Factory<B>,
+        res: &Resources,
+        deps: &Self::GraphDeps,
+    ) -> GraphBuilder<B, Resources>;
 }
 
-impl<B: Backend, F> RendererSystem<B, F>
+pub struct RendererSystem<B, G>
 where
     B: Backend,
-    F: FnOnce(&mut Factory<B>, &mut Resources) -> GraphBuilder<B, Resources>,
+    G: GraphCreator<B>,
 {
-    pub fn new(graph_creator: F) -> Self {
+    graph: Option<Graph<B, Resources>>,
+    graph_creator: G,
+    last_deps: Option<G::GraphDeps>,
+}
+
+impl<B, G> RendererSystem<B, G>
+where
+    B: Backend,
+    G: GraphCreator<B>,
+{
+    pub fn new(graph_creator: G) -> Self {
         Self {
             graph: None,
-            graph_creator: Some(graph_creator),
+            graph_creator,
+            last_deps: None,
         }
     }
 }
@@ -69,10 +89,10 @@ type SetupData<'a, B> = (
     ReadStorage<'a, JointTransforms>,
 );
 
-impl<B, F> RendererSystem<B, F>
+impl<B, G> RendererSystem<B, G>
 where
     B: Backend,
-    F: FnOnce(&mut Factory<B>, &mut Resources) -> GraphBuilder<B, Resources>,
+    G: GraphCreator<B>,
 {
     fn asset_loading(
         &mut self,
@@ -131,36 +151,60 @@ where
             strategy,
         );
     }
-}
 
-impl<'a, B, F> RunNow<'a> for RendererSystem<B, F>
-where
-    B: Backend,
-    F: FnOnce(&mut Factory<B>, &mut Resources) -> GraphBuilder<B, Resources>,
-{
-    fn run_now(&mut self, res: &'a Resources) {
-        self.asset_loading(AssetLoadingData::<B>::fetch(res));
+    fn rebuild_graph(&mut self, res: &Resources) {
+        let mut factory = res.fetch_mut::<Factory<B>>();
+        let mut families = res.fetch_mut::<Families<B>>();
 
+        if let Some(graph) = self.graph.take() {
+            graph.dispose(&mut *factory, res);
+        }
+
+        self.graph = Some(
+            self.graph_creator
+                .builder(&mut factory, res, self.last_deps.as_ref().unwrap())
+                .build(&mut factory, &mut families, res)
+                .unwrap(),
+        );
+    }
+
+    fn run_graph(&mut self, res: &Resources) {
         let mut factory = res.fetch_mut::<Factory<B>>();
         let mut families = res.fetch_mut::<Families<B>>();
         factory.maintain(&mut families);
         self.graph
             .as_mut()
             .unwrap()
-            .run(&mut factory, &mut families, res);
+            .run(&mut factory, &mut families, res)
+    }
+}
+
+impl<'a, B, G> RunNow<'a> for RendererSystem<B, G>
+where
+    B: Backend,
+    G: GraphCreator<B>,
+{
+    fn run_now(&mut self, res: &'a Resources) {
+        self.asset_loading(SystemData::fetch(res));
+
+        let new_deps = self.graph_creator.dependencies(res);
+        if self.graph.is_none()
+            || self
+                .last_deps
+                .as_ref()
+                .map(|d| d != &new_deps)
+                .unwrap_or(false)
+        {
+            self.last_deps.replace(new_deps);
+            self.rebuild_graph(res);
+        }
+
+        self.run_graph(res);
     }
 
     fn setup(&mut self, res: &mut Resources) {
         let config: rendy::factory::Config = Default::default();
-        let (mut factory, mut families): (Factory<B>, _) = rendy::factory::init(config).unwrap();
-
-        let graph_creator = self.graph_creator.take().unwrap();
-
-        self.graph = Some(
-            graph_creator(&mut factory, res)
-                .build(&mut factory, &mut families, res)
-                .unwrap(),
-        );
+        let (factory, families): (Factory<B>, _) = rendy::factory::init(config).unwrap();
 
         res.insert(factory);
         res.insert(families);

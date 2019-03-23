@@ -14,10 +14,11 @@ use amethyst_core::{
 };
 use rendy::{
     command::{QueueId, RenderPassEncoder},
+    descriptor::DescriptorSetLayout,
     factory::Factory,
     graph::{
         render::{PrepareResult, SimpleGraphicsPipeline, SimpleGraphicsPipelineDesc},
-        NodeBuffer, NodeImage,
+        GraphContext, NodeBuffer, NodeImage,
     },
     hal::{
         pso::{
@@ -66,7 +67,7 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawFlatDesc {
         &self,
         storage: &'a mut Vec<B::ShaderModule>,
         factory: &mut Factory<B>,
-        _aux: &mut Resources,
+        _aux: &Resources,
     ) -> GraphicsShaderSet<'a, B> {
         storage.clear();
 
@@ -108,12 +109,13 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawFlatDesc {
 
     fn build<'a>(
         self,
+        _ctx: &mut GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _resources: &mut Resources,
-        _buffers: Vec<NodeBuffer<'a, B>>,
-        _images: Vec<NodeImage<'a, B>>,
-        _set_layouts: &[B::DescriptorSetLayout],
+        _resources: &Resources,
+        _buffers: Vec<NodeBuffer>,
+        _images: Vec<NodeImage>,
+        _set_layouts: &[DescriptorSetLayout<B>],
     ) -> Result<DrawFlat<B>, failure::Error> {
         let buffer = factory.create_buffer(1, 1024, rendy::resource::buffer::UniformBuffer)?;
 
@@ -137,7 +139,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat<B> {
         &mut self,
         _factory: &Factory<B>,
         _queue: QueueId,
-        _set_layouts: &[B::DescriptorSetLayout],
+        _set_layouts: &[DescriptorSetLayout<B>],
         _index: usize,
         resources: &Resources,
     ) -> PrepareResult {
@@ -226,7 +228,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat<B> {
         unimplemented!()
     }
 
-    fn dispose(self, _factory: &mut Factory<B>, _aux: &mut Resources) {
+    fn dispose(self, _factory: &mut Factory<B>, _aux: &Resources) {
         unimplemented!()
     }
 }
