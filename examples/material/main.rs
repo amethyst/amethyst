@@ -127,7 +127,7 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
-        .with_basic_renderer(path, DrawPbm::<PosNormTangTex>::new(), false)?;
+        .with_basic_renderer(path, DrawPbm::<PosNormTangTex, f32>::new(), false)?;
     let mut game = Application::new(&resources, Example, game_data)?;
     game.run();
     Ok(())

@@ -55,8 +55,7 @@ impl Default for DebugLinesParams {
 #[derive(Derivative, Clone, Debug, PartialEq)]
 #[derivative(Default(bound = "V: Query<(Position, Color, Normal)>"))]
 pub struct DrawDebugLines<V, N> {
-    _pd: PhantomData<V>,
-    _pd2: PhantomData<N>,
+    _marker: PhantomData<(V, N)>,
 }
 
 impl<V, N> DrawDebugLines<V, N>

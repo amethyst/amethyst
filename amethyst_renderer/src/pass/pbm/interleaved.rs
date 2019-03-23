@@ -51,8 +51,7 @@ use super::*;
 #[derive(Derivative, Clone, Debug, PartialEq)]
 #[derivative(Default(bound = "V: Query<(Position, Normal, Tangent, TexCoord)>"))]
 pub struct DrawPbm<V, N> {
-    _pd: PhantomData<V>,
-    _pd2: PhantomData<N>,
+    _marker: PhantomData<(V, N)>,
     #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
 }

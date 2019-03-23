@@ -260,7 +260,7 @@ impl Example {
         self.draw_sprites(world, &common_transform);
     }
 
-    fn draw_sprites(&mut self, world: &mut World, common_transform: &Transform) {
+    fn draw_sprites(&mut self, world: &mut World, common_transform: &Transform<f32>) {
         let LoadedSpriteSheet {
             sprite_sheet_handle,
             sprite_count,
@@ -274,7 +274,7 @@ impl Example {
 
         // Create an entity per sprite.
         for i in 0..sprite_count {
-            let mut sprite_transform = Transform::default();
+            let mut sprite_transform = Transform::<f32>::default();
 
             let z = if self.reverse {
                 (sprite_count - i - 1) as f32
@@ -356,7 +356,7 @@ fn main() -> amethyst::Result<()> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0., 0., 0., 1.], 5.)
-            .with_pass(DrawFlat2D::new()),
+            .with_pass(DrawFlat2D::<f32>::new()),
     );
 
     let assets_directory = app_root.join("examples/assets/");
@@ -364,7 +364,7 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
         .with_bundle(
-            RenderBundle::new(pipe, Some(display_config))
+            RenderBundle::<'_, _, _, f32>::new(pipe, Some(display_config))
                 .with_sprite_sheet_processor()
                 .with_sprite_visibility_sorting(&["transform_system"]),
         )?;

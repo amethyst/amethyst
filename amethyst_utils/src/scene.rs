@@ -32,8 +32,9 @@ use crate::removal::Removal;
 #[derive(Deserialize, Serialize, PrefabData)]
 #[serde(default)]
 #[serde(deny_unknown_fields)]
-pub struct BasicScenePrefab<V, N: Real, R = (), M = ObjFormat>
+pub struct BasicScenePrefab<V, N, R = (), M = ObjFormat>
 where
+    N: Real,
     M: Format<Mesh> + Clone,
     M::Options: DeserializeOwned + Serialize + Clone,
     R: PartialEq + Debug + Clone + Send + Sync + 'static,

@@ -20,7 +20,7 @@ impl<'a> System<'a> for ExampleSystem {
         WriteStorage<'a, Light>,
         Read<'a, Time>,
         ReadStorage<'a, Camera>,
-        WriteStorage<'a, Transform>,
+        WriteStorage<'a, Transform<f32>>,
         WriteExpect<'a, DemoState>,
         WriteStorage<'a, UiText>,
         Read<'a, FPSCounter>,

@@ -11,7 +11,7 @@ use amethyst::{
     Error,
 };
 
-type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
+type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>, f32>;
 
 struct ExampleState;
 
@@ -42,7 +42,7 @@ fn main() -> Result<(), Error> {
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(
-            FlyControlBundle::<String, String>::new(
+            FlyControlBundle::<String, String, f32>::new(
                 Some(String::from("move_x")),
                 Some(String::from("move_y")),
                 Some(String::from("move_z")),
@@ -53,7 +53,7 @@ fn main() -> Result<(), Error> {
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
-        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
+        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex, f32>::new(), false)?;
     let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
     game.run();
     Ok(())
