@@ -9,7 +9,7 @@ use amethyst::{
     Error,
 };
 
-type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
+type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>, f32>;
 
 struct AssetsExample;
 
@@ -36,7 +36,7 @@ fn main() -> Result<(), Error> {
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
-        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
+        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex, f32>::new(), false)?;
 
     let mut game = Application::new(resources_directory, AssetsExample, game_data)?;
     game.run();

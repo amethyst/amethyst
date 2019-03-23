@@ -47,14 +47,14 @@ fn main() -> amethyst::Result<()> {
         )?
         .with_bundle(PongBundle::default())?
         .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
-        .with_bundle(AudioBundle::default())?
+        .with_bundle(AudioBundle::<f32>::default())?
         .with(
             DjSystem::new(|music: &mut Music| music.music.next()),
             "dj_system",
             &[],
         )
         .with_bundle(UiBundle::<String, String>::new())?
-        .with_basic_renderer(display_config_path, DrawFlat::<PosTex>::new(), true)?;
+        .with_basic_renderer(display_config_path, DrawFlat::<PosTex, f32>::new(), true)?;
 
     let mut game = Application::build(assets_dir, Pong)?
         .with_frame_limit(

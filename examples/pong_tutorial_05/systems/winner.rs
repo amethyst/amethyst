@@ -11,7 +11,7 @@ pub struct WinnerSystem;
 impl<'s> System<'s> for WinnerSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
-        WriteStorage<'s, Transform>,
+        WriteStorage<'s, Transform<f32>>,
         WriteStorage<'s, UiText>,
         Write<'s, ScoreBoard>,
         ReadExpect<'s, ScoreText>,

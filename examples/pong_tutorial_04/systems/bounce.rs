@@ -11,7 +11,7 @@ impl<'s> System<'s> for BounceSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
         ReadStorage<'s, Paddle>,
-        ReadStorage<'s, Transform>,
+        ReadStorage<'s, Transform<f32>>,
     );
 
     fn run(&mut self, (mut balls, paddles, transforms): Self::SystemData) {

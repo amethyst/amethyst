@@ -5,7 +5,6 @@ use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
 use log::warn;
-use std::marker::PhantomData;
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
@@ -50,7 +49,6 @@ where
     #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
     batch: TextureBatch<N>,
-    _pd: PhantomData<N>,
 }
 
 impl<N> DrawFlat2D<N>
