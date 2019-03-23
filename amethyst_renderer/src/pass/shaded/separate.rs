@@ -1,5 +1,6 @@
 //! Simple shaded pass
 
+use gfx::traits::Pod;
 use std::marker::PhantomData;
 
 use derivative::Derivative;
@@ -122,12 +123,12 @@ where
         ReadStorage<'a, Material>,
         ReadStorage<'a, Transform<N>>,
         ReadStorage<'a, Light>,
-        ReadStorage<'a, JointTransforms>,
+        ReadStorage<'a, JointTransforms<N>>,
         ReadStorage<'a, Rgba>,
     );
 }
 
-impl<N: Real + SubsetOf<f32>> Pass for DrawShadedSeparate<N> {
+impl<N: Real + SubsetOf<f32> + Pod> Pass for DrawShadedSeparate<N> {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         debug!("Building shaded pass");
         let mut builder = if self.skinning {

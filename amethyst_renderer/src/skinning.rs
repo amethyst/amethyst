@@ -1,7 +1,10 @@
+use std::marker::PhantomData;
+
 use gfx::format::{ChannelType, Format, SurfaceType};
 use serde::{Deserialize, Serialize};
 
 use amethyst_assets::PrefabData;
+use amethyst_core::nalgebra::{zero, Real};
 use amethyst_core::specs::prelude::{
     Component, DenseVecStorage, Entity, FlaggedStorage, WriteStorage,
 };
@@ -36,14 +39,14 @@ impl Attribute for JointIds {
 
 /// Transform storage for the skin, should be attached to all mesh entities that use a skin
 #[derive(Debug, Clone)]
-pub struct JointTransforms {
+pub struct JointTransforms<N: Real> {
     /// Skin entity
     pub skin: Entity,
     /// The current joint matrices
-    pub matrices: Vec<[[f32; 4]; 4]>,
+    pub matrices: Vec<[[N; 4]; 4]>,
 }
 
-impl Component for JointTransforms {
+impl<N: Real> Component for JointTransforms<N> {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
 
@@ -111,15 +114,16 @@ impl From<AnimatedVertexBufferCombination> for AnimatedComboMeshCreator {
 
 /// Prefab for `JointTransforms`
 #[derive(Default, Clone, Debug, Deserialize, Serialize)]
-pub struct JointTransformsPrefab {
+pub struct JointTransformsPrefab<N> {
     /// Index of skin `Entity`
     pub skin: usize,
     /// Number of joints in the skin
     pub size: usize,
+    _marker: PhantomData<N>,
 }
 
-impl<'a> PrefabData<'a> for JointTransformsPrefab {
-    type SystemData = WriteStorage<'a, JointTransforms>;
+impl<'a, N: Real> PrefabData<'a> for JointTransformsPrefab<N> {
+    type SystemData = WriteStorage<'a, JointTransforms<N>>;
     type Result = ();
 
     fn add_to_entity(
@@ -133,7 +137,7 @@ impl<'a> PrefabData<'a> for JointTransformsPrefab {
                 entity,
                 JointTransforms {
                     skin: entities[self.skin],
-                    matrices: vec![[[0.; 4]; 4]; self.size],
+                    matrices: vec![[[zero(); 4]; 4]; self.size],
                 },
             )
             .map(|_| ())?;

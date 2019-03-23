@@ -478,8 +478,7 @@ impl<N: Real + Default + SubsetOf<f32>> TextureBatch<N> {
                         (tex_coords.bottom, tex_coords.top)
                     };
 
-                    let global_matrix =
-                        convert::<Matrix4<N>, Matrix4<f32>>(*transform);
+                    let global_matrix = convert::<Matrix4<N>, Matrix4<f32>>(*transform);
 
                     let dir_x = global_matrix.column(0) * sprite_data.width;
                     let dir_y = global_matrix.column(1) * sprite_data.height;
@@ -514,8 +513,7 @@ impl<N: Real + Default + SubsetOf<f32>> TextureBatch<N> {
                         (0.0, 1.0)
                     };
 
-                    let global_matrix =
-                        convert::<Matrix4<N>, Matrix4<f32>>(*transform);
+                    let global_matrix = convert::<Matrix4<N>, Matrix4<f32>>(*transform);
 
                     let dir_x = global_matrix.column(0) * (*width as f32);
                     let dir_y = global_matrix.column(1) * (*height as f32);

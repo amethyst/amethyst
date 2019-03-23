@@ -3,6 +3,7 @@
 use derivative::Derivative;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
+use glsl_layout::Pod;
 use std::marker::PhantomData;
 
 #[cfg(feature = "profiler")]
@@ -121,12 +122,12 @@ impl<'a, N: Real> PassData<'a> for DrawPbmSeparate<N> {
         ReadStorage<'a, Material>,
         ReadStorage<'a, Transform<N>>,
         ReadStorage<'a, Light>,
-        ReadStorage<'a, JointTransforms>,
+        ReadStorage<'a, JointTransforms<N>>,
         ReadStorage<'a, Rgba>,
     );
 }
 
-impl<N: Real + SubsetOf<f32>> Pass for DrawPbmSeparate<N> {
+impl<N: Real + SubsetOf<f32> + Pod> Pass for DrawPbmSeparate<N> {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("render_pass_pbm_compile");

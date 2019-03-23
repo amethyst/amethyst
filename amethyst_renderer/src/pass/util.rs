@@ -27,6 +27,8 @@ use crate::{
     Rgba,
 };
 
+use gfx::traits::Pod;
+
 pub(crate) enum TextureType {
     Albedo,
     Emission,
@@ -344,7 +346,7 @@ pub(crate) fn draw_mesh<N>(
     effect: &mut Effect,
     skinning: bool,
     mesh: Option<&Mesh>,
-    joint: Option<&JointTransforms>,
+    joint: Option<&JointTransforms<N>>,
     tex_storage: &AssetStorage<Texture>,
     material: Option<&Material>,
     material_defaults: &MaterialDefaults,
@@ -354,7 +356,7 @@ pub(crate) fn draw_mesh<N>(
     attributes: &[Attributes<'static>],
     textures: &[TextureType],
 ) where
-    N: Real + SubsetOf<f32>,
+    N: Real + SubsetOf<f32> + Pod,
 {
     #[cfg(feature = "profiler")]
     profile_scope!("render_drawmesh");
