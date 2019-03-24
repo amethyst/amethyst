@@ -22,6 +22,16 @@ of how Amethyst works, especially if you're new to ECS.
 
 Let's create a new file called `pong.rs` to hold our core game logic. We can
 move the `Pong` struct over here, and the `impl SimpleState for Pong` block as well.
+
+```rust,ignore
+extern crate amethyst;
+use amethyst::prelude::*;
+
+pub struct Pong;
+
+impl SimpleState for Pong {}
+```
+
 Then, in `main.rs` declare it as a module and import it:
 
 ```rust,ignore
