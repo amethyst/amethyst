@@ -4,23 +4,27 @@ use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
 
-use derivative::Derivative;
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::GlobalTransform,
 };
 use amethyst_error::Error;
+use derivative::Derivative;
 
 use crate::{
     cam::{ActiveCamera, Camera},
     hidden::{Hidden, HiddenPropagate},
     mesh::{Mesh, MeshHandle},
     mtl::{Material, MaterialDefaults},
-    pass::skinning::{create_skinning_effect, setup_skinning_buffers},
-    pass::util::{draw_mesh, get_camera, VertexArgs},
-    pipe::pass::{Pass, PassData},
-    pipe::{DepthMode, Effect, NewEffect},
+    pass::{
+        skinning::{create_skinning_effect, setup_skinning_buffers},
+        util::{draw_mesh, get_camera, VertexArgs},
+    },
+    pipe::{
+        pass::{Pass, PassData},
+        DepthMode, Effect, NewEffect,
+    },
     skinning::JointTransforms,
     tex::Texture,
     types::{Encoder, Factory},

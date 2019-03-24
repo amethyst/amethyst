@@ -1,5 +1,4 @@
-pub use self::interleaved::DrawFlatColor;
-pub use self::separate::DrawFlatColorSeparate;
+pub use self::{interleaved::DrawFlatColor, separate::DrawFlatColorSeparate};
 
 mod interleaved;
 mod separate;

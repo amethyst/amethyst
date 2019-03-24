@@ -3,8 +3,8 @@
 pub use self::{
     debug_lines::*,
     flat::*,
-    flat_color::*,
     flat2d::*,
+    flat_color::*,
     pbm::*,
     shaded::*,
     skinning::set_skinning_buffers,
@@ -14,8 +14,8 @@ pub use self::{
 
 mod debug_lines;
 mod flat;
-mod flat_color;
 mod flat2d;
+mod flat_color;
 mod pbm;
 mod shaded;
 mod shaded_util;

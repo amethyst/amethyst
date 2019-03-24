@@ -20,8 +20,10 @@ use crate::{
     mesh::{Mesh, MeshHandle},
     mtl::{Material, MaterialDefaults},
     pass::util::{draw_mesh, get_camera, VertexArgs},
-    pipe::pass::{Pass, PassData},
-    pipe::{DepthMode, Effect, NewEffect},
+    pipe::{
+        pass::{Pass, PassData},
+        DepthMode, Effect, NewEffect,
+    },
     tex::Texture,
     types::{Encoder, Factory},
     vertex::{Color, Position, Query},
@@ -133,8 +135,15 @@ where
 
         match visibility {
             None => {
-                for (mesh, material, global, rgba, _, _) in
-                    (&mesh, &material, &global, rgba.maybe(), !&hidden, !&hidden_prop).join()
+                for (mesh, material, global, rgba, _, _) in (
+                    &mesh,
+                    &material,
+                    &global,
+                    rgba.maybe(),
+                    !&hidden,
+                    !&hidden_prop,
+                )
+                    .join()
                 {
                     draw_mesh(
                         encoder,
@@ -154,8 +163,14 @@ where
                 }
             }
             Some(ref visibility) => {
-                for (mesh, material, global, rgba, _) in
-                    (&mesh, &material, &global, rgba.maybe(), &visibility.visible_unordered).join()
+                for (mesh, material, global, rgba, _) in (
+                    &mesh,
+                    &material,
+                    &global,
+                    rgba.maybe(),
+                    &visibility.visible_unordered,
+                )
+                    .join()
                 {
                     draw_mesh(
                         encoder,
