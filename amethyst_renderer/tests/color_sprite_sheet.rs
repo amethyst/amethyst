@@ -1,3 +1,5 @@
+#![cfg(feature = "graphics")]
+
 use amethyst_error::Error;
 use amethyst_renderer::{ColorSpriteSheetGen, ColorSpriteSheetGenData, SpriteRender};
 use amethyst_test::AmethystApplication;

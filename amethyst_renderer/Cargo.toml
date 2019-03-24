@@ -28,6 +28,9 @@ opengl = ["gfx_device_gl", "gfx_window_glutin", "glutin"]
 profiler = [ "thread_profiler/thread_profiler" ]
 nightly = [ "amethyst_core/nightly" ]
 
+# Used to tag tests that need a display (e.g. X) to run.
+graphics = []
+
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.6.0" }
 amethyst_core = { path = "../amethyst_core", version = "0.5.0" }
