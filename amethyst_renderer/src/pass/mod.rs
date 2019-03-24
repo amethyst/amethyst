@@ -3,6 +3,7 @@
 pub use self::{
     debug_lines::*,
     flat::*,
+    flat_color::*,
     flat2d::*,
     pbm::*,
     shaded::*,
@@ -13,6 +14,7 @@ pub use self::{
 
 mod debug_lines;
 mod flat;
+mod flat_color;
 mod flat2d;
 mod pbm;
 mod shaded;

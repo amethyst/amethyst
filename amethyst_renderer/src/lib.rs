@@ -49,8 +49,8 @@ pub use crate::{
     mtl::{Material, MaterialDefaults, TextureOffset},
     pass::{
         get_camera, set_vertex_args, DebugLinesParams, DrawDebugLines, DrawFlat, DrawFlat2D,
-        DrawFlatSeparate, DrawPbm, DrawPbmSeparate, DrawShaded, DrawShadedSeparate, DrawSkybox,
-        SkyboxColor,
+        DrawFlatSeparate, DrawFlatColor, DrawFlatColorSeparate, DrawPbm, DrawPbmSeparate, 
+        DrawShaded, DrawShadedSeparate, DrawSkybox, SkyboxColor,
     },
     pipe::{
         ColorBuffer, Data, DepthBuffer, DepthMode, Effect, EffectBuilder, Init, Meta, NewEffect,
