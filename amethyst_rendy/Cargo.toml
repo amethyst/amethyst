@@ -25,9 +25,9 @@ hibitset = "0.5.4"
 lazy_static = "1.0"
 log = "0.4"
 palette = { version = "0.4", features = ["serde"] }
-rendy = { git = "https://github.com/omni-viral/rendy.git", version = "0.1", features = ["full", "empty"] }
+# rendy = { git = "https://github.com/omni-viral/rendy.git", version = "0.1", features = ["full", "empty"] }
 # rendy = { git = "https://github.com/frizi/rendy.git", branch = "palette-loading", features = ["full", "empty"] }
-# rendy = { path = "../../rendy/rendy/", features = ["full", "empty"] }
+rendy = { path = "../../rendy/rendy/", features = ["full", "empty"] }
 ron = "0.4"
 serde = { version = "1", features = ["serde_derive"] }
 shred = { version = "0.7" }

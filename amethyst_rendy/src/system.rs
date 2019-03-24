@@ -27,20 +27,12 @@ use rendy::{
 use std::sync::Arc;
 
 pub trait GraphCreator<B: Backend> {
-    type GraphDeps: PartialEq;
-
-    /// Retreive graph's data dependencies.
-    /// When graph dependencies change, the graph will be rebuilt.
-    /// This function is evaluated every frame, make sure it's fast.
-    fn dependencies(&self, res: &Resources) -> Self::GraphDeps;
+    /// Check if graph needs to be rebuilt.
+    /// This function is evaluated every frame before running the graph.
+    fn rebuild(&mut self, res: &Resources) -> bool;
 
     /// Retreive configured complete graph builder.
-    fn builder(
-        &self,
-        factory: &mut Factory<B>,
-        res: &Resources,
-        deps: &Self::GraphDeps,
-    ) -> GraphBuilder<B, Resources>;
+    fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources>;
 }
 
 pub struct RendererSystem<B, G>
@@ -50,7 +42,6 @@ where
 {
     graph: Option<Graph<B, Resources>>,
     graph_creator: G,
-    last_deps: Option<G::GraphDeps>,
 }
 
 impl<B, G> RendererSystem<B, G>
@@ -62,7 +53,6 @@ where
         Self {
             graph: None,
             graph_creator,
-            last_deps: None,
         }
     }
 }
@@ -162,7 +152,7 @@ where
 
         self.graph = Some(
             self.graph_creator
-                .builder(&mut factory, res, self.last_deps.as_ref().unwrap())
+                .builder(&mut factory, res)
                 .build(&mut factory, &mut families, res)
                 .unwrap(),
         );
@@ -187,15 +177,8 @@ where
     fn run_now(&mut self, res: &'a Resources) {
         self.asset_loading(SystemData::fetch(res));
 
-        let new_deps = self.graph_creator.dependencies(res);
-        if self.graph.is_none()
-            || self
-                .last_deps
-                .as_ref()
-                .map(|d| d != &new_deps)
-                .unwrap_or(false)
-        {
-            self.last_deps.replace(new_deps);
+        let rebuild = self.graph_creator.rebuild(res);
+        if self.graph.is_none() || rebuild {
             self.rebuild_graph(res);
         }
 

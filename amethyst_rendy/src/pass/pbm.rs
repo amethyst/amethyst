@@ -20,7 +20,6 @@ use glsl_layout::AsStd140;
 use hibitset::{BitSet, BitSetLike};
 use rendy::{
     command::{QueueId, RenderPassEncoder},
-    descriptor::{DescriptorSet, DescriptorSetLayout},
     factory::Factory,
     graph::{
         render::{
@@ -39,6 +38,7 @@ use rendy::{
         Backend,
     },
     mesh::{AsVertex, PosNormTangTex},
+    resource::set::{DescriptorSet, DescriptorSetLayout},
     shader::Shader,
 };
 use shred_derive::SystemData;
@@ -476,7 +476,6 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
                 .unwrap();
         }
 
-        factory.destroy_descriptor_sets(self.material_data.drain(..).filter_map(|d| d.desc_set));
         self.material_data.clear();
         let mut total_objects = 0;
 
@@ -653,7 +652,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
             }
         }
 
-        factory.destroy_descriptor_sets(self.object_data.drain(..).map(|d| d.desc_set));
+        self.object_data.clear();
         self.object_data.reserve(total_objects);
 
         while self.object_buffer.len() <= index {
@@ -785,7 +784,6 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
         let all_sets = std::iter::once(self.environment_set)
             .chain(self.object_data.drain(..).map(|d| d.desc_set))
             .chain(self.material_data.drain(..).filter_map(|d| d.desc_set));
-        factory.destroy_descriptor_sets(all_sets);
     }
 }
 

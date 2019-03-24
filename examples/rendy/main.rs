@@ -3,8 +3,12 @@
 use amethyst::{
     assets::AssetLoaderSystemData,
     core::{
-        ecs::{ReadExpect, Resources, SystemData},
-        Transform, TransformBundle,
+        ecs::{
+            Component, DenseVecStorage, Read, ReadExpect, ReadStorage, Resources, System,
+            SystemData, WriteStorage, Join,
+        },
+        math::{Vector3, UnitQuaternion, Unit},
+        Time, Transform, TransformBundle,
     },
     prelude::*,
     utils::application_root_dir,
@@ -12,7 +16,7 @@ use amethyst::{
     winit::{EventsLoop, Window},
 };
 use amethyst_rendy::{
-    camera::{Camera, Projection},
+    camera::{Camera, Projection, ActiveCamera},
     light::{Light, PointLight},
     mtl::{Material, MaterialDefaults},
     palette::{LinLuma, LinSrgb, Srgb},
@@ -30,6 +34,72 @@ struct Example<B: Backend>(PhantomData<B>);
 impl<B: Backend> Example<B> {
     pub fn new() -> Self {
         Self(PhantomData)
+    }
+}
+
+struct Orbit {
+    axis: Unit<Vector3<f32>>,
+    time_scale: f32,
+    center: Vector3<f32>,
+    radius: f32,
+}
+
+impl Component for Orbit {
+    type Storage = DenseVecStorage<Self>;
+}
+
+struct OrbitSystem;
+
+impl<'a> System<'a> for OrbitSystem {
+    type SystemData = (
+        Read<'a, Time>,
+        ReadStorage<'a, Orbit>,
+        WriteStorage<'a, Transform>,
+    );
+
+    fn run(&mut self, (time, orbits, mut transforms): Self::SystemData) {
+        for (orbit, transform) in (&orbits, &mut transforms).join() {
+            let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;
+            let cross = orbit.axis.cross(&Vector3::z()).normalize() * orbit.radius;
+            let rot = UnitQuaternion::from_axis_angle(&orbit.axis, angle);
+            let final_pos = (rot * cross) + orbit.center;
+            transform.set_translation(final_pos);
+        }
+    }
+}
+
+
+struct CameraCorrectionSystem {
+    last_aspect: f32
+}
+
+impl CameraCorrectionSystem {
+    pub fn new() -> Self {
+        Self {
+            last_aspect: 0.0
+        }
+    }
+}
+
+impl<'a> System<'a> for CameraCorrectionSystem {
+    type SystemData = (
+        ReadExpect<'a, ScreenDimensions>,
+        ReadExpect<'a, ActiveCamera>,
+        WriteStorage<'a, Camera>,
+    );
+
+    fn run(&mut self, (dimensions, active_cam, mut cameras): Self::SystemData) {
+        let current_aspect = dimensions.aspect_ratio();
+
+        if current_aspect != self.last_aspect {
+            self.last_aspect = current_aspect;
+            
+            let camera = cameras.get_mut(active_cam.entity).unwrap();
+            *camera = Camera::from(Projection::perspective(
+                current_aspect,
+                std::f32::consts::FRAC_PI_3,
+            ));
+        }
     }
 }
 
@@ -124,6 +194,12 @@ impl<B: Backend> SimpleState for Example<B> {
             .create_entity()
             .with(light1)
             .with(light1_transform)
+            .with(Orbit {
+                axis: Unit::new_normalize(Vector3::x()),
+                time_scale: 2.0,
+                center: Vector3::new(6.0, -6.0, -6.0),
+                radius: 5.0,
+            })
             .build();
 
         world
@@ -136,7 +212,7 @@ impl<B: Backend> SimpleState for Example<B> {
         transform.set_translation_xyz(0.0, 0.0, -12.0);
         transform.prepend_rotation_y_axis(std::f32::consts::PI);
 
-        world
+        let camera = world
             .create_entity()
             .with(Camera::from(Projection::perspective(
                 1.3,
@@ -144,6 +220,10 @@ impl<B: Backend> SimpleState for Example<B> {
             )))
             .with(transform)
             .build();
+
+        world.add_resource(ActiveCamera {
+            entity: camera
+        })
     }
 }
 
@@ -160,30 +240,52 @@ fn main() -> amethyst::Result<()> {
     let window_system = WindowSystem::from_config_path(&event_loop, path);
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())?
+        .with(OrbitSystem, "orbit", &[])
+        .with(CameraCorrectionSystem::new(), "cam", &[])
+        .with_bundle(TransformBundle::new().with_dep(&["orbit"]))?
         .with_thread_local(EventsLoopSystem::new(event_loop))
         .with_thread_local(window_system)
-        .with_thread_local(RendererSystem::<DefaultBackend, _>::new(ExampleGraph));
+        .with_thread_local(RendererSystem::<DefaultBackend, _>::new(ExampleGraph::new()));
 
     let mut game = Application::new(&resources, Example::<DefaultBackend>::new(), game_data)?;
     game.run();
     Ok(())
 }
 
-struct ExampleGraph;
+struct ExampleGraph {
+    last_dimensions: Option<ScreenDimensions>,
+    dirty: bool,
+}
+
+impl ExampleGraph {
+    pub fn new() -> Self {  
+        Self {
+            last_dimensions: None,
+            dirty: true,
+        }
+    }
+}
 
 impl<B: Backend> GraphCreator<B> for ExampleGraph {
-    type GraphDeps = Option<ScreenDimensions>;
-    fn dependencies(&self, res: &Resources) -> Self::GraphDeps {
-        res.try_fetch::<ScreenDimensions>().map(|d| d.clone())
+    fn rebuild(&mut self, res: &Resources) -> bool {
+        // Rebuild when dimensions change, but wait until at least two frames have the same.
+        let new_dimensions = res.try_fetch::<ScreenDimensions>();
+        use std::ops::Deref;
+        if self.last_dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
+            self.dirty = true;
+            self.last_dimensions = new_dimensions.map(|d| d.clone());
+            return false;
+        } 
+        return self.dirty;
     }
 
     fn builder(
-        &self,
+        &mut self,
         factory: &mut Factory<B>,
         res: &Resources,
-        _deps: &Self::GraphDeps,
     ) -> GraphBuilder<B, Resources> {
+        self.dirty = false;
+
         let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
         use amethyst_rendy::{
             pass::DrawPbm,
@@ -202,7 +304,6 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         };
 
         let surface = factory.create_surface(window.clone());
-        // let aspect = surface.aspect();
 
         let mut graph_builder = GraphBuilder::new();
 
