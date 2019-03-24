@@ -461,8 +461,8 @@ are on the sheet. Let's create, right next to it, a file called
 
 ```text,ignore
 (
-    spritesheet_width: 8,
-    spritesheet_height: 16,
+    texture_width: 8,
+    texture_height: 16,
     sprites: [
         (
             x: 0,

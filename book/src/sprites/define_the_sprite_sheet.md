@@ -10,10 +10,10 @@ Here is an example of such a definition file:
 
 ```text,ignore
 (
-    // Width of the sprite sheet
-    spritesheet_width: 48,
-    // Height of the sprite sheet
-    spritesheet_height: 16,
+    // Width of the texture used by the sprite sheet
+    texture_width: 48,
+    // Height of the texture used by the sprite sheet
+    texture_height: 16,
     // List of sprites the sheet holds
     sprites: [
         (
