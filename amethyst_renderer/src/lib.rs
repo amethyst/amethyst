@@ -49,7 +49,7 @@ pub use crate::{
     mtl::{Material, MaterialDefaults, TextureOffset},
     pass::{
         get_camera, set_vertex_args, DebugLinesParams, DrawDebugLines, DrawFlat, DrawFlat2D,
-        DrawFlatColor, DrawFlatColorSeparate, DrawFlatSeparate, DrawPbm, DrawPbmSeparate,
+        DrawFlatColored, DrawFlatColoredSeparate, DrawFlatSeparate, DrawPbm, DrawPbmSeparate,
         DrawShaded, DrawShadedSeparate, DrawSkybox, SkyboxColor,
     },
     pipe::{

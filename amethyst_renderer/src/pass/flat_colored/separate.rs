@@ -1,8 +1,5 @@
 //! Simple flat forward drawing pass.
 
-use std::marker::PhantomData;
-
-use derivative::Derivative;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
@@ -13,25 +10,35 @@ use amethyst_core::{
     transform::GlobalTransform,
 };
 use amethyst_error::Error;
+use derivative::Derivative;
 
 use crate::{
     cam::{ActiveCamera, Camera},
     hidden::{Hidden, HiddenPropagate},
     mesh::{Mesh, MeshHandle},
     mtl::{Material, MaterialDefaults},
-    pass::util::{draw_mesh, get_camera, VertexArgs},
+    pass::{
+        skinning::{create_skinning_effect, setup_skinning_buffers},
+        util::{draw_mesh, get_camera, VertexArgs},
+    },
     pipe::{
         pass::{Pass, PassData},
         DepthMode, Effect, NewEffect,
     },
+    skinning::JointTransforms,
     tex::Texture,
     types::{Encoder, Factory},
-    vertex::{Color, Position, Query},
+    vertex::{Attributes, Color, Position, Separate, VertexFormat},
     visibility::Visibility,
     Rgba,
 };
 
 use super::*;
+
+static ATTRIBUTES: [Attributes<'static>; 2] = [
+    Separate::<Position>::ATTRIBUTES,
+    Separate::<Color>::ATTRIBUTES,
+];
 
 /// Draw mesh without lighting
 ///
@@ -42,20 +49,25 @@ use super::*;
 ///
 /// * `V`: `VertexFormat`
 #[derive(Derivative, Clone, Debug, PartialEq)]
-#[derivative(Default(bound = "V: Query<(Position, Color)>, Self: Pass"))]
-pub struct DrawFlatColor<V> {
-    _pd: PhantomData<V>,
+#[derivative(Default(bound = "Self: Pass"))]
+pub struct DrawFlatColoredSeparate {
+    skinning: bool,
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
 }
 
-impl<V> DrawFlatColor<V>
+impl DrawFlatColoredSeparate
 where
-    V: Query<(Position, Color)>,
     Self: Pass,
 {
-    /// Create instance of `DrawFlatColor` pass
+    /// Create instance of `DrawFlatColored` pass
     pub fn new() -> Self {
         Default::default()
+    }
+
+    /// Enable vertex skinning
+    pub fn with_vertex_skinning(mut self) -> Self {
+        self.skinning = true;
+        self
     }
 
     /// Enable transparency
@@ -70,10 +82,7 @@ where
     }
 }
 
-impl<'a, V> PassData<'a> for DrawFlatColor<V>
-where
-    V: Query<(Position, Color)>,
-{
+impl<'a> PassData<'a> for DrawFlatColoredSeparate {
     type Data = (
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
@@ -86,24 +95,38 @@ where
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, GlobalTransform>,
+        ReadStorage<'a, JointTransforms>,
         ReadStorage<'a, Rgba>,
     );
 }
 
-impl<V> Pass for DrawFlatColor<V>
-where
-    V: Query<(Position, Color)>,
-{
+impl Pass for DrawFlatColoredSeparate {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         use std::mem;
-        let mut builder = effect.simple(VERT_SRC, FRAG_SRC);
+        let mut builder = if self.skinning {
+            create_skinning_effect(effect, FRAG_SRC)
+        } else {
+            effect.simple(VERT_SRC, FRAG_SRC)
+        };
         builder
-            .with_raw_constant_buffer(
-                "VertexArgs",
-                mem::size_of::<<VertexArgs as Uniform>::Std140>(),
-                1,
+            .with_raw_vertex_buffer(
+                Separate::<Position>::ATTRIBUTES,
+                Separate::<Position>::size() as ElemStride,
+                0,
             )
-            .with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0);
+            .with_raw_vertex_buffer(
+                Separate::<Color>::ATTRIBUTES,
+                Separate::<Color>::size() as ElemStride,
+                0,
+            );
+        if self.skinning {
+            setup_skinning_buffers(&mut builder);
+        }
+        builder.with_raw_constant_buffer(
+            "VertexArgs",
+            mem::size_of::<<VertexArgs as Uniform>::Std140>(),
+            1,
+        );
         match self.transparency {
             Some((mask, blend, depth)) => builder.with_blended_output("color", mask, blend, depth),
             None => builder.with_output("color", Some(DepthMode::LessEqualWrite)),
@@ -128,6 +151,7 @@ where
             mesh,
             material,
             global,
+            joints,
             rgba,
         ): <Self as PassData<'a>>::Data,
     ) {
@@ -135,7 +159,8 @@ where
 
         match visibility {
             None => {
-                for (mesh, material, global, rgba, _, _) in (
+                for (joint, mesh, material, global, rgba, _, _) in (
+                    joints.maybe(),
                     &mesh,
                     &material,
                     &global,
@@ -148,22 +173,23 @@ where
                     draw_mesh(
                         encoder,
                         effect,
-                        false,
+                        self.skinning,
                         mesh_storage.get(mesh),
-                        None,
+                        joint,
                         &tex_storage,
                         Some(material),
                         &material_defaults,
                         rgba,
                         camera,
                         Some(global),
-                        &[V::QUERIED_ATTRIBUTES],
+                        &ATTRIBUTES,
                         &[],
                     );
                 }
             }
             Some(ref visibility) => {
-                for (mesh, material, global, rgba, _) in (
+                for (joint, mesh, material, global, rgba, _) in (
+                    joints.maybe(),
                     &mesh,
                     &material,
                     &global,
@@ -175,16 +201,16 @@ where
                     draw_mesh(
                         encoder,
                         effect,
-                        false,
+                        self.skinning,
                         mesh_storage.get(mesh),
-                        None,
+                        joint,
                         &tex_storage,
                         Some(material),
                         &material_defaults,
                         rgba,
                         camera,
                         Some(global),
-                        &[V::QUERIED_ATTRIBUTES],
+                        &ATTRIBUTES,
                         &[],
                     );
                 }
@@ -194,16 +220,16 @@ where
                         draw_mesh(
                             encoder,
                             effect,
-                            false,
+                            self.skinning,
                             mesh_storage.get(mesh),
-                            None,
+                            joints.get(*entity),
                             &tex_storage,
                             material.get(*entity),
                             &material_defaults,
                             rgba.get(*entity),
                             camera,
                             global.get(*entity),
-                            &[V::QUERIED_ATTRIBUTES],
+                            &ATTRIBUTES,
                             &[],
                         );
                     }
