@@ -119,7 +119,7 @@ pub enum Stretch {
         x_margin: f32,
         /// The margin length for the height
         y_margin: f32,
-        /// Keep the aspect ratio
+        /// Keep the aspect ratio by adding more margin to one axis when necessary
         keep_aspect_ratio: bool,
     },
 }
