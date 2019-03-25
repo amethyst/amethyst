@@ -74,6 +74,10 @@ impl DrawPbmDesc {
     }
 }
 
+const MAX_POINT_LIGHTS: usize = 100;
+const MAX_DIR_LIGHTS: usize = 100;
+const MAX_SPOT_LIGHTS: usize = 100;
+
 impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawPbmDesc {
     type Pipeline = DrawPbm<B>;
 
@@ -210,28 +214,28 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawPbmDesc {
         let env_buffer = factory
             .create_buffer(
                 16,
-                std::mem::size_of::<pod::Environment>() as _,
+                align_size::<pod::Environment>(1),
                 rendy::resource::buffer::UniformBuffer,
             )
             .unwrap();
         let plight_buffer = factory
             .create_buffer(
                 16,
-                std::mem::size_of::<pod::PointLight>() as _,
+                align_size::<pod::PointLight>(1) * MAX_POINT_LIGHTS as u64,
                 rendy::resource::buffer::UniformBuffer,
             )
             .unwrap();
         let dlight_buffer = factory
             .create_buffer(
                 16,
-                std::mem::size_of::<pod::DirectionalLight>() as _,
+                align_size::<pod::DirectionalLight>(1) * MAX_DIR_LIGHTS as u64,
                 rendy::resource::buffer::UniformBuffer,
             )
             .unwrap();
         let slight_buffer = factory
             .create_buffer(
                 16,
-                std::mem::size_of::<pod::SpotLight>() as _,
+                align_size::<pod::SpotLight>(1) * MAX_SPOT_LIGHTS as u64,
                 rendy::resource::buffer::UniformBuffer,
             )
             .unwrap();
@@ -411,6 +415,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
                     None
                 }
             })
+            .take(MAX_POINT_LIGHTS)
             .collect();
 
         let dir_lights: Vec<_> = lights
@@ -428,6 +433,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
                     None
                 }
             })
+            .take(MAX_DIR_LIGHTS)
             .collect();
 
         let spot_lights: Vec<_> = (&lights, &global_transforms)
@@ -450,6 +456,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
                     None
                 }
             })
+            .take(MAX_SPOT_LIGHTS)
             .collect();
 
         let pod = pod::Environment {
