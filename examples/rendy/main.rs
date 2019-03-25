@@ -11,7 +11,7 @@ use amethyst::{
         Time, Transform, TransformBundle,
     },
     prelude::*,
-    utils::application_root_dir,
+    utils::{application_root_dir, fps_counter::FPSCounterBundle},
     window::{EventsLoopSystem, ScreenDimensions, WindowSystem},
     winit::{EventsLoop, Window},
 };
@@ -126,13 +126,17 @@ impl<B: Backend> SimpleState for Example<B> {
         };
 
         println!("Create spheres");
-        for i in 0..5 {
-            for j in 0..5 {
-                let roughness = 1.0f32 * (i as f32 / 4.0f32);
-                let metallic = 1.0f32 * (j as f32 / 4.0f32);
+        const NUM_ROWS: usize = 6;
+        const NUM_COLS: usize = 6;
+        for i in 0..NUM_COLS {
+            for j in 0..NUM_ROWS {
+                let x = i as f32 / (NUM_COLS - 1) as f32;
+                let y = j as f32 / (NUM_ROWS - 1) as f32;
+                let roughness = x;
+                let metallic = y;
 
                 let mut pos = Transform::default();
-                pos.set_translation_xyz(2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0);
+                pos.set_translation_xyz(10.0 * (x - 0.5), 10.0 * (y - 0.5), 0.0);
 
                 let (metallic, roughness) =
                     world.exec(|loader: AssetLoaderSystemData<'_, Texture<B>>| {
@@ -228,7 +232,16 @@ impl<B: Backend> SimpleState for Example<B> {
 }
 
 fn main() -> amethyst::Result<()> {
-    amethyst::start_logger(Default::default());
+    amethyst::Logger::from_config(amethyst::LoggerConfig {
+        log_file: Some("rendy_example.log".into()),
+        level_filter: log::LevelFilter::Error,
+        ..Default::default()
+    })
+        .level_for("amethyst_utils::fps_counter", log::LevelFilter::Debug)
+        // .level_for("rendy_factory", log::LevelFilter::Trace)
+        // .level_for("rendy_resource", log::LevelFilter::Trace)
+        // .level_for("rendy_descriptor", log::LevelFilter::Trace)
+        .start();
 
     let app_root = application_root_dir()?;
 
@@ -243,6 +256,7 @@ fn main() -> amethyst::Result<()> {
         .with(OrbitSystem, "orbit", &[])
         .with(CameraCorrectionSystem::new(), "cam", &[])
         .with_bundle(TransformBundle::new().with_dep(&["orbit"]))?
+        .with_bundle(FPSCounterBundle::default())?
         .with_thread_local(EventsLoopSystem::new(event_loop))
         .with_thread_local(window_system)
         .with_thread_local(RendererSystem::<DefaultBackend, _>::new(ExampleGraph::new()));
