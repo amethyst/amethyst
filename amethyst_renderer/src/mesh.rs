@@ -6,6 +6,7 @@ use std::{
 };
 
 use gfx::Primitive;
+use log::warn;
 use serde::{Deserialize, Serialize};
 
 use amethyst_assets::Handle;
@@ -65,7 +66,10 @@ where
 
         let verts = self.0.as_ref();
         let slice = cast_slice(verts);
-        let stride = slice.len() / verts.len();
+        let stride = slice.len().checked_div(verts.len()).unwrap_or_else(|| {
+            warn!("Loading mesh with zero vertices.");
+            0
+        });
         let role = Role::Vertex;
         let bind = Bind::empty();
 
