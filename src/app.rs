@@ -350,7 +350,8 @@ where
                     .fixed_update(StateData::new(&mut self.world, &mut self.data));
                 self.world.write_resource::<Time>().finish_fixed_update();
             }
-
+        }
+        {
             #[cfg(feature = "profiler")]
             profile_scope!("update");
             self.states

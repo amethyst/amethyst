@@ -465,15 +465,21 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
             factory
                 .upload_visible_buffer(&mut self.env_buffer, 0, &[pod])
                 .unwrap();
+            if point_lights.len() > 0 {
             factory
                 .upload_visible_buffer(&mut self.plight_buffer, 0, &point_lights)
                 .unwrap();
+            }
+            if dir_lights.len() > 0 {
             factory
                 .upload_visible_buffer(&mut self.dlight_buffer, 0, &dir_lights)
                 .unwrap();
+            }
+            if spot_lights.len() > 0 {
             factory
                 .upload_visible_buffer(&mut self.slight_buffer, 0, &spot_lights)
                 .unwrap();
+        }
         }
 
         self.material_data.clear();
@@ -780,11 +786,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
         assert!(obj_data_iter.next().is_none());
     }
 
-    fn dispose(mut self, factory: &mut Factory<B>, _aux: &Resources) {
-        let all_sets = std::iter::once(self.environment_set)
-            .chain(self.object_data.drain(..).map(|d| d.desc_set))
-            .chain(self.material_data.drain(..).filter_map(|d| d.desc_set));
-    }
+    fn dispose(self, factory: &mut Factory<B>, _aux: &Resources) {}
 }
 
 fn pod_srgb(srgb: palette::Srgb) -> glsl_layout::vec3 {
@@ -810,13 +812,15 @@ fn ensure_buffer<B: Backend>(
     buffer: &mut Option<rendy::resource::Buffer<B>>,
     usage: impl rendy::resource::buffer::Usage,
     min_size: u64,
-) -> Result<(), failure::Error> {
+) -> Result<bool, failure::Error> {
     if buffer.as_ref().map(|b| b.size()).unwrap_or(0) < min_size {
         let new_size = min_size.next_power_of_two();
         let new_buffer = factory.create_buffer(512, new_size, usage)?;
         *buffer = Some(new_buffer);
+        Ok(true)
+    } else {
+        Ok(false)
     }
-    Ok(())
 }
 
 fn byte_size<T>(slice: &[T]) -> usize {
