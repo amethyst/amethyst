@@ -121,6 +121,31 @@ impl<A: Asset> AssetStorage<A> {
         }
     }
 
+    /// Get an asset by it's handle id.
+    pub fn get_by_id(&self, id: u32) -> Option<&A> {
+        if self.bitset.contains(id) {
+            Some(unsafe { self.assets.get(id) })
+        } else {
+            None
+        }
+    }
+
+    /// Check if given asset id points to a valid asset in the storage.
+    pub fn contains_id(&self, id: u32) -> bool {
+        return self.bitset.contains(id);
+    }
+
+    /// Get an asset by it's handle id without checking the internal bitset.
+    /// Use `contains_id` to manually check it's status before access.
+    ///
+    /// # Safety
+    /// You must manually verify that given asset id is valid.
+    /// Failing to do so may result in dereferencing
+    /// uninitialized memory or out of bounds access.
+    pub unsafe fn get_by_id_unchecked(&self, id: u32) -> &A {
+        self.assets.get(id)
+    }
+
     /// Get an asset mutably from a given asset handle.
     pub fn get_mut(&mut self, handle: &Handle<A>) -> Option<&mut A> {
         if self.bitset.contains(handle.id()) {

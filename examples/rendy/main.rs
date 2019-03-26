@@ -4,10 +4,10 @@ use amethyst::{
     assets::AssetLoaderSystemData,
     core::{
         ecs::{
-            Component, DenseVecStorage, Read, ReadExpect, ReadStorage, Resources, System,
-            SystemData, WriteStorage, Join,
+            Component, DenseVecStorage, Join, Read, ReadExpect, ReadStorage, Resources, System,
+            SystemData, WriteStorage,
         },
-        math::{Vector3, UnitQuaternion, Unit},
+        math::{Unit, UnitQuaternion, Vector3},
         Time, Transform, TransformBundle,
     },
     prelude::*,
@@ -16,7 +16,7 @@ use amethyst::{
     winit::{EventsLoop, Window},
 };
 use amethyst_rendy::{
-    camera::{Camera, Projection, ActiveCamera},
+    camera::{ActiveCamera, Camera, Projection},
     light::{Light, PointLight},
     mtl::{Material, MaterialDefaults},
     palette::{LinLuma, LinSrgb, Srgb},
@@ -68,16 +68,13 @@ impl<'a> System<'a> for OrbitSystem {
     }
 }
 
-
 struct CameraCorrectionSystem {
-    last_aspect: f32
+    last_aspect: f32,
 }
 
 impl CameraCorrectionSystem {
     pub fn new() -> Self {
-        Self {
-            last_aspect: 0.0
-        }
+        Self { last_aspect: 0.0 }
     }
 }
 
@@ -93,7 +90,7 @@ impl<'a> System<'a> for CameraCorrectionSystem {
 
         if current_aspect != self.last_aspect {
             self.last_aspect = current_aspect;
-            
+
             let camera = cameras.get_mut(active_cam.entity).unwrap();
             *camera = Camera::from(Projection::perspective(
                 current_aspect,
@@ -126,18 +123,15 @@ impl<B: Backend> SimpleState for Example<B> {
         };
 
         println!("Create spheres");
-        const NUM_ROWS: usize = 6;
-        const NUM_COLS: usize = 6;
-        for i in 0..NUM_COLS {
-            for j in 0..NUM_ROWS {
-                let x = i as f32 / (NUM_COLS - 1) as f32;
-                let y = j as f32 / (NUM_ROWS - 1) as f32;
-                let roughness = x;
-                let metallic = y;
+        const NUM_ROWS: usize = 100;
+        const NUM_COLS: usize = 100;
 
-                let mut pos = Transform::default();
-                pos.set_translation_xyz(10.0 * (x - 0.5), 10.0 * (y - 0.5), 0.0);
+        let mut mtls = Vec::with_capacity(100);
 
+        for i in 0..10 {
+            for j in 0..10 {
+                let roughness = i as f32 / 9.0;
+                let metallic = j as f32 / 9.0;
                 let (metallic, roughness) =
                     world.exec(|loader: AssetLoaderSystemData<'_, Texture<B>>| {
                         (
@@ -163,12 +157,34 @@ impl<B: Backend> SimpleState for Example<B> {
                         (),
                     )
                 });
+                mtls.push(mtl);
+            }
+        }
+
+        for i in 0..NUM_COLS {
+            for j in 0..NUM_ROWS {
+                let x = i as f32 / (NUM_COLS - 1) as f32;
+                let y = j as f32 / (NUM_ROWS - 1) as f32;
+
+
+                let center = Vector3::new(10.0 * (x - 0.5), 10.0 * (y - 0.5), 0.0);
+
+                let mut pos = Transform::default();
+                pos.set_translation(center);
+                pos.set_scale(0.2, 0.2, 0.2);
 
                 world
                     .create_entity()
                     .with(pos)
                     .with(mesh.clone())
-                    .with(mtl)
+                    // .with(mtls.choose(&mut rng).unwrap().clone())
+                    .with(mtls[(j + NUM_ROWS + i) % 100].clone())
+                    .with(Orbit {
+                        axis: Unit::new_normalize(Vector3::y()),
+                        time_scale: 5.0 + y,
+                        center,
+                        radius: 0.2,
+                    })
                     .build();
             }
         }
@@ -225,9 +241,7 @@ impl<B: Backend> SimpleState for Example<B> {
             .with(transform)
             .build();
 
-        world.add_resource(ActiveCamera {
-            entity: camera
-        })
+        world.add_resource(ActiveCamera { entity: camera })
     }
 }
 
@@ -237,11 +251,11 @@ fn main() -> amethyst::Result<()> {
         level_filter: log::LevelFilter::Error,
         ..Default::default()
     })
-        .level_for("amethyst_utils::fps_counter", log::LevelFilter::Debug)
-        // .level_for("rendy_factory", log::LevelFilter::Trace)
-        // .level_for("rendy_resource", log::LevelFilter::Trace)
-        // .level_for("rendy_descriptor", log::LevelFilter::Trace)
-        .start();
+    .level_for("amethyst_utils::fps_counter", log::LevelFilter::Debug)
+    // .level_for("rendy_factory", log::LevelFilter::Trace)
+    // .level_for("rendy_resource", log::LevelFilter::Trace)
+    // .level_for("rendy_descriptor", log::LevelFilter::Trace)
+    .start();
 
     let app_root = application_root_dir()?;
 
@@ -272,7 +286,7 @@ struct ExampleGraph {
 }
 
 impl ExampleGraph {
-    pub fn new() -> Self {  
+    pub fn new() -> Self {
         Self {
             last_dimensions: None,
             dirty: true,
@@ -289,15 +303,11 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
             self.dirty = true;
             self.last_dimensions = new_dimensions.map(|d| d.clone());
             return false;
-        } 
+        }
         return self.dirty;
     }
 
-    fn builder(
-        &mut self,
-        factory: &mut Factory<B>,
-        res: &Resources,
-    ) -> GraphBuilder<B, Resources> {
+    fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
         self.dirty = false;
 
         let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);

@@ -14,7 +14,6 @@ use amethyst_core::{
 };
 use rendy::{
     command::{QueueId, RenderPassEncoder},
-    resource::set::DescriptorSetLayout,
     factory::Factory,
     graph::{
         render::{PrepareResult, SimpleGraphicsPipeline, SimpleGraphicsPipelineDesc},
@@ -27,6 +26,7 @@ use rendy::{
         },
         Backend,
     },
+    resource::set::DescriptorSetLayout,
     shader::Shader,
 };
 
