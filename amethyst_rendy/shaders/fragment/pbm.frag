@@ -21,7 +21,7 @@ struct SpotLight {
     float smoothness;
 };
 
-layout(set = 2, binding = 0) uniform Environment {
+layout(std140, set = 2, binding = 0) uniform Environment {
     vec3 ambient_color;
     vec3 camera_position; 
     int point_light_count;
@@ -29,15 +29,15 @@ layout(set = 2, binding = 0) uniform Environment {
     int spot_light_count;
 };
 
-layout(set = 2, binding = 1) uniform PointLights {
+layout(std140, set = 2, binding = 1) uniform PointLights {
     PointLight plight[128];
 };
 
-layout(set = 2, binding = 2) uniform DirectionalLights {
+layout(std140, set = 2, binding = 2) uniform DirectionalLights {
     DirectionalLight dlight[16];
 };
 
-layout(set = 2, binding = 3) uniform SpotLights {
+layout(std140, set = 2, binding = 3) uniform SpotLights {
     SpotLight slight[128];
 };
 
@@ -46,7 +46,7 @@ struct UvOffset {
     vec2 v_offset;
 };
 
-layout(set = 1, binding = 0) uniform Material {
+layout(std140, set = 1, binding = 0) uniform Material {
     float alpha_cutoff;
     UvOffset albedo_offset;
     UvOffset emission_offset;

@@ -44,7 +44,13 @@ impl MonitorIdent {
         use winit::ios::windows::MonitorIdExt;
         #[cfg(target_os = "macos")]
         use winit::os::macos::MonitorIdExt;
-        #[cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "netbsd", target_os = "openbsd"))]
+        #[cfg(any(
+            target_os = "linux",
+            target_os = "dragonfly",
+            target_os = "freebsd",
+            target_os = "netbsd",
+            target_os = "openbsd"
+        ))]
         use winit::os::unix::MonitorIdExt;
         #[cfg(target_os = "windows")]
         use winit::os::windows::MonitorIdExt;

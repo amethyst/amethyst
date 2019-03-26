@@ -33,3 +33,4 @@ shred = { version = "0.7" }
 shred-derive = { version = "0.5" }  
 fnv = "1"
 derivative = "1.0.2"
+smallvec = "0.6.9"

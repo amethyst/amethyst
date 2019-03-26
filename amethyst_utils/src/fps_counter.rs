@@ -70,7 +70,11 @@ impl<'a> System<'a> for FPSCounterSystem {
     fn run(&mut self, (time, mut counter): Self::SystemData) {
         counter.push(duration_to_nanos(time.delta_real_time()));
         //Enable this to debug performance engine wide.
-        log::debug!("Cur FPS: {}, Sampled: {}",counter.frame_fps(),counter.sampled_fps());
+        log::debug!(
+            "Cur FPS: {}, Sampled: {}",
+            counter.frame_fps(),
+            counter.sampled_fps()
+        );
     }
 }
 

@@ -15,7 +15,6 @@ use amethyst_core::{
     ecs::{Read, ReadExpect, ReadStorage, Resources, RunNow, SystemData, Write, WriteExpect},
     timing::Time,
 };
-
 use palette::{LinSrgba, Srgba};
 use rendy::{
     command::{Families, QueueId},
@@ -24,7 +23,7 @@ use rendy::{
     hal::{queue::QueueFamilyId, Backend},
     texture::palette::{load_from_linear_rgba, load_from_srgba},
 };
-use std::sync::Arc;
+use std::{mem::ManuallyDrop, sync::Arc};
 
 pub trait GraphCreator<B: Backend> {
     /// Check if graph needs to be rebuilt.
@@ -40,7 +39,9 @@ where
     B: Backend,
     G: GraphCreator<B>,
 {
-    graph: Option<Graph<B, Resources>>,
+    // ManuallyDrop is used as a workaround for inability to dispose the graph properly on exit.
+    // This should be removed once we can implement disposal with access to `&Resources`.
+    graph: ManuallyDrop<Option<Graph<B, Resources>>>,
     graph_creator: G,
 }
 
@@ -51,7 +52,7 @@ where
 {
     pub fn new(graph_creator: G) -> Self {
         Self {
-            graph: None,
+            graph: ManuallyDrop::new(None),
             graph_creator,
         }
     }
@@ -150,12 +151,12 @@ where
             graph.dispose(&mut *factory, res);
         }
 
-        self.graph = Some(
+        self.graph = ManuallyDrop::new(Some(
             self.graph_creator
                 .builder(&mut factory, res)
                 .build(&mut factory, &mut families, res)
                 .unwrap(),
-        );
+        ));
     }
 
     fn run_graph(&mut self, res: &Resources) {
@@ -181,7 +182,6 @@ where
         if self.graph.is_none() || rebuild {
             self.rebuild_graph(res);
         }
-
         self.run_graph(res);
     }
 

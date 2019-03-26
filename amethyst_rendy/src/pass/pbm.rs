@@ -9,15 +9,11 @@ use crate::{
 };
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
-    ecs::{
-        storage::UnprotectedStorage, Entities, Join, Read, ReadExpect, ReadStorage, Resources,
-        SystemData,
-    },
+    ecs::{Entities, Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
     transform::GlobalTransform,
 };
 use fnv::FnvHashMap;
 use glsl_layout::AsStd140;
-use hibitset::{BitSet, BitSetLike};
 use rendy::{
     command::{QueueId, RenderPassEncoder},
     factory::Factory,
@@ -37,11 +33,12 @@ use rendy::{
         },
         Backend,
     },
-    mesh::{AsVertex, PosNormTangTex},
+    mesh::{AsVertex, PosNormTangTex, Transform},
     resource::set::{DescriptorSet, DescriptorSetLayout},
     shader::Shader,
 };
 use shred_derive::SystemData;
+use smallvec::{smallvec, SmallVec};
 use std::io::Write;
 
 /// Draw mesh without lighting
@@ -74,15 +71,18 @@ impl DrawPbmDesc {
     }
 }
 
-const MAX_POINT_LIGHTS: usize = 100;
-const MAX_DIR_LIGHTS: usize = 100;
-const MAX_SPOT_LIGHTS: usize = 100;
+const MAX_POINT_LIGHTS: usize = 128;
+const MAX_DIR_LIGHTS: usize = 16;
+const MAX_SPOT_LIGHTS: usize = 128;
 
 impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawPbmDesc {
     type Pipeline = DrawPbm<B>;
 
     fn vertices(&self) -> Vec<(Vec<Element<Format>>, ElemStride, InstanceRate)> {
-        vec![PosNormTangTex::VERTEX.gfx_vertex_input_desc(0)]
+        vec![
+            PosNormTangTex::VERTEX.gfx_vertex_input_desc(0),
+            Transform::VERTEX.gfx_vertex_input_desc(1),
+        ]
     }
 
     fn layout(&self) -> Layout {
@@ -203,86 +203,14 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawPbmDesc {
         _images: Vec<NodeImage>,
         set_layouts: &[DescriptorSetLayout<B>],
     ) -> Result<DrawPbm<B>, failure::Error> {
-        let ubo_offset_align = {
-            use rendy::hal::PhysicalDevice;
-            factory
-                .physical()
-                .limits()
-                .min_uniform_buffer_offset_alignment
-        };
-
-        let env_buffer = factory
-            .create_buffer(
-                16,
-                align_size::<pod::Environment>(1),
-                rendy::resource::buffer::UniformBuffer,
-            )
-            .unwrap();
-        let plight_buffer = factory
-            .create_buffer(
-                16,
-                align_size::<pod::PointLight>(1) * MAX_POINT_LIGHTS as u64,
-                rendy::resource::buffer::UniformBuffer,
-            )
-            .unwrap();
-        let dlight_buffer = factory
-            .create_buffer(
-                16,
-                align_size::<pod::DirectionalLight>(1) * MAX_DIR_LIGHTS as u64,
-                rendy::resource::buffer::UniformBuffer,
-            )
-            .unwrap();
-        let slight_buffer = factory
-            .create_buffer(
-                16,
-                align_size::<pod::SpotLight>(1) * MAX_SPOT_LIGHTS as u64,
-                rendy::resource::buffer::UniformBuffer,
-            )
-            .unwrap();
-
-        let environment_set = unsafe {
-            let set = factory.create_descriptor_set(&set_layouts[2]).unwrap();
-            factory.write_descriptor_sets(vec![
-                DescriptorSetWrite {
-                    set: set.raw(),
-                    binding: 0,
-                    array_offset: 0,
-                    descriptors: Some(Descriptor::Buffer(env_buffer.raw(), None..None)),
-                },
-                DescriptorSetWrite {
-                    set: set.raw(),
-                    binding: 1,
-                    array_offset: 0,
-                    descriptors: Some(Descriptor::Buffer(plight_buffer.raw(), None..None)),
-                },
-                DescriptorSetWrite {
-                    set: set.raw(),
-                    binding: 2,
-                    array_offset: 0,
-                    descriptors: Some(Descriptor::Buffer(dlight_buffer.raw(), None..None)),
-                },
-                DescriptorSetWrite {
-                    set: set.raw(),
-                    binding: 3,
-                    array_offset: 0,
-                    descriptors: Some(Descriptor::Buffer(slight_buffer.raw(), None..None)),
-                },
-            ]);
-            set
-        };
+        use rendy::hal::PhysicalDevice;
+        let limits = factory.physical().limits();
 
         Ok(DrawPbm {
             skinning: self.skinning,
-            env_buffer,
-            plight_buffer,
-            dlight_buffer,
-            slight_buffer,
-            object_buffer: Vec::new(),
-            material_buffer: Vec::new(),
-            material_data: Vec::new(),
-            object_data: Vec::new(),
-            environment_set,
-            ubo_offset_align,
+            per_image: Vec::with_capacity(4),
+            materials_data: Default::default(),
+            ubo_offset_align: limits.min_uniform_buffer_offset_alignment,
         })
     }
 }
@@ -290,23 +218,85 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawPbmDesc {
 #[derive(Debug)]
 pub struct DrawPbm<B: Backend> {
     skinning: bool,
-    env_buffer: rendy::resource::Buffer<B>,
-    plight_buffer: rendy::resource::Buffer<B>,
-    dlight_buffer: rendy::resource::Buffer<B>,
-    slight_buffer: rendy::resource::Buffer<B>,
-    object_buffer: Vec<Option<rendy::resource::Buffer<B>>>,
-    material_buffer: Vec<Option<rendy::resource::Buffer<B>>>,
-    material_data: Vec<MaterialData<B>>,
-    object_data: Vec<ObjectData<B>>,
-    environment_set: DescriptorSet<B>,
+    per_image: Vec<PerImage<B>>,
+    materials_data: FnvHashMap<u32, MaterialData<B>>,
     ubo_offset_align: u64,
+}
+
+impl<B: Backend> DrawPbm<B> {
+    #[inline(always)]
+    fn insert_batch(
+        materials_data: &mut FnvHashMap<u32, MaterialData<B>>,
+        mat_id: u32,
+        mesh_id: u32,
+        instance_data: impl IntoIterator<Item = Transform>,
+    ) {
+        use std::collections::hash_map::Entry;
+        match materials_data.entry(mat_id) {
+            Entry::Occupied(mut e) => {
+                let mat = e.get_mut();
+
+                // scan for the same mesh to try to combine batches.
+                // Scanning up to next 8 slots to limit complexity.
+                if let Some(batch) = mat
+                    .batches
+                    .iter_mut()
+                    .take(8)
+                    .find(|b| b.mesh_id == mesh_id)
+                {
+                    batch.models.extend(instance_data);
+                } else {
+                    mat.batches.push(InstancedBatchData {
+                        mesh_id,
+                        models: instance_data.into_iter().collect(),
+                    });
+                }
+            }
+            Entry::Vacant(e) => {
+                e.insert(MaterialData {
+                    batches: smallvec![InstancedBatchData {
+                        mesh_id,
+                        models: instance_data.into_iter().collect(),
+                    }],
+                    desc_set: SmallVec::new(),
+                });
+            }
+        }
+    }
+}
+
+#[derive(Debug)]
+struct PerImage<B: Backend> {
+    environment_buffer: Option<rendy::resource::Buffer<B>>,
+    models_buffer: Option<rendy::resource::Buffer<B>>,
+    material_buffer: Option<rendy::resource::Buffer<B>>,
+    environment_set: Option<DescriptorSet<B>>,
+    objects_set: Option<DescriptorSet<B>>,
+}
+
+impl<B: Backend> PerImage<B> {
+    fn new() -> Self {
+        Self {
+            environment_buffer: None,
+            models_buffer: None,
+            material_buffer: None,
+            environment_set: None,
+            objects_set: None,
+        }
+    }
 }
 
 #[derive(Debug)]
 struct MaterialData<B: Backend> {
-    bit_set: BitSet,
-    desc_set: Option<DescriptorSet<B>>,
-    handle: Handle<Material<B>>,
+    // usually given material will have just one mesh
+    batches: SmallVec<[InstancedBatchData; 1]>,
+    desc_set: SmallVec<[DescriptorSet<B>; 3]>,
+}
+
+#[derive(Debug)]
+struct InstancedBatchData {
+    mesh_id: u32,
+    models: SmallVec<[Transform; 4]>,
 }
 
 #[derive(Debug)]
@@ -367,7 +357,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
             entities,
             active_camera,
             cameras,
-            // mesh_storage,
+            mesh_storage,
             texture_storage,
             material_storage,
             material_defaults,
@@ -381,171 +371,311 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
             ..
         } = PbmPassData::<B>::fetch(resources);
 
-        let defcam = Camera::standard_2d();
-        let identity = GlobalTransform::default();
-        let camera = active_camera
-            .and_then(|ac| {
-                cameras.get(ac.entity).map(|camera| {
-                    (
-                        camera,
-                        global_transforms.get(ac.entity).unwrap_or(&identity),
-                    )
+        // ensure resources for this image are available
+        let this_image = {
+            while self.per_image.len() <= index {
+                self.per_image.push(PerImage::new());
+            }
+            &mut self.per_image[index]
+        };
+
+        // Prepare camera
+        let (camera_position, projview) = {
+            let defcam = Camera::standard_2d();
+            let identity = GlobalTransform::default();
+
+            let camera = active_camera
+                .and_then(|ac| {
+                    cameras.get(ac.entity).map(|camera| {
+                        (
+                            camera,
+                            global_transforms.get(ac.entity).unwrap_or(&identity),
+                        )
+                    })
                 })
-            })
-            .unwrap_or_else(|| {
-                (&cameras, &global_transforms)
-                    .join()
-                    .next()
-                    .unwrap_or((&defcam, &identity))
-            });
+                .unwrap_or_else(|| {
+                    (&cameras, &global_transforms)
+                        .join()
+                        .next()
+                        .unwrap_or((&defcam, &identity))
+                });
 
-        let point_lights: Vec<_> = (&lights, &global_transforms)
-            .join()
-            .filter_map(|(light, transform)| {
-                if let Light::Point(ref light) = *light {
-                    Some(
-                        pod::PointLight {
-                            position: pod_vec(transform.0.column(3).xyz()),
-                            color: pod_srgb(light.color),
-                            intensity: light.intensity,
-                        }
-                        .std140(),
-                    )
-                } else {
-                    None
-                }
-            })
-            .take(MAX_POINT_LIGHTS)
-            .collect();
+            let camera_position = pod_vec((camera.1).0.column(3).xyz());
 
-        let dir_lights: Vec<_> = lights
-            .join()
-            .filter_map(|light| {
-                if let Light::Directional(ref light) = *light {
-                    Some(
-                        pod::DirectionalLight {
-                            color: pod_srgb(light.color),
-                            direction: pod_vec(light.direction),
-                        }
-                        .std140(),
-                    )
-                } else {
-                    None
-                }
-            })
-            .take(MAX_DIR_LIGHTS)
-            .collect();
+            let proj: [[f32; 4]; 4] = camera.0.proj.into();
+            let view: [[f32; 4]; 4] = (*camera.1).0.into();
 
-        let spot_lights: Vec<_> = (&lights, &global_transforms)
-            .join()
-            .filter_map(|(light, transform)| {
-                if let Light::Spot(ref light) = *light {
-                    Some(
-                        pod::SpotLight {
-                            position: pod_vec(transform.0.column(3).xyz()),
-                            color: pod_srgb(light.color),
-                            direction: pod_vec(light.direction),
-                            angle: light.angle.cos(),
-                            intensity: light.intensity,
-                            range: light.range,
-                            smoothness: light.smoothness,
-                        }
-                        .std140(),
-                    )
-                } else {
-                    None
-                }
-            })
-            .take(MAX_SPOT_LIGHTS)
-            .collect();
-
-        let pod = pod::Environment {
-            ambient_color: [0.0, 0.0, 0.0].into(), // TODO: ambient
-            camera_position: pod_vec((camera.1).0.column(3).xyz()),
-            point_light_count: point_lights.len() as _,
-            directional_light_count: dir_lights.len() as _,
-            spot_light_count: spot_lights.len() as _,
-        }
-        .std140();
-
-        unsafe {
-            factory
-                .upload_visible_buffer(&mut self.env_buffer, 0, &[pod])
-                .unwrap();
-            if point_lights.len() > 0 {
-            factory
-                .upload_visible_buffer(&mut self.plight_buffer, 0, &point_lights)
-                .unwrap();
+            let projview = pod::Projview {
+                proj: proj.into(),
+                view: view.into(),
             }
-            if dir_lights.len() > 0 {
-            factory
-                .upload_visible_buffer(&mut self.dlight_buffer, 0, &dir_lights)
-                .unwrap();
+            .std140();
+
+            (camera_position, projview)
+        };
+
+        // Prepare lights
+        {
+            let env_buf_size = align_size::<pod::Environment>(self.ubo_offset_align, 1);
+            let plight_buf_size =
+                align_size::<pod::PointLight>(self.ubo_offset_align, MAX_POINT_LIGHTS);
+            let dlight_buf_size =
+                align_size::<pod::DirectionalLight>(self.ubo_offset_align, MAX_DIR_LIGHTS);
+            let slight_buf_size =
+                align_size::<pod::SpotLight>(self.ubo_offset_align, MAX_SPOT_LIGHTS);
+            let projview_size = align_size::<pod::Projview>(self.ubo_offset_align, 1);
+
+            let env_range = Some(0)..Some(env_buf_size);
+            let plight_range = env_range.end..env_range.end.map(|e| e + plight_buf_size);
+            let dlight_range = plight_range.end..plight_range.end.map(|e| e + dlight_buf_size);
+            let slight_range = dlight_range.end..dlight_range.end.map(|e| e + slight_buf_size);
+            let projview_range = slight_range.end..slight_range.end.map(|e| e + projview_size);
+
+            if ensure_buffer(
+                &factory,
+                &mut this_image.environment_buffer,
+                rendy::resource::buffer::UniformBuffer,
+                slight_range.end.unwrap(),
+            )
+            .unwrap()
+            {
+                let buffer = this_image.environment_buffer.as_ref().unwrap().raw();
+                let env_set = this_image
+                    .environment_set
+                    .get_or_insert_with(|| factory.create_descriptor_set(&set_layouts[2]).unwrap())
+                    .raw();
+
+                let obj_set = this_image
+                    .objects_set
+                    .get_or_insert_with(|| factory.create_descriptor_set(&set_layouts[0]).unwrap())
+                    .raw();
+
+                unsafe {
+                    factory.write_descriptor_sets(vec![
+                        DescriptorSetWrite {
+                            set: env_set,
+                            binding: 0,
+                            array_offset: 0,
+                            descriptors: Some(Descriptor::Buffer(buffer, env_range.clone())),
+                        },
+                        DescriptorSetWrite {
+                            set: env_set,
+                            binding: 1,
+                            array_offset: 0,
+                            descriptors: Some(Descriptor::Buffer(buffer, plight_range.clone())),
+                        },
+                        DescriptorSetWrite {
+                            set: env_set,
+                            binding: 2,
+                            array_offset: 0,
+                            descriptors: Some(Descriptor::Buffer(buffer, dlight_range.clone())),
+                        },
+                        DescriptorSetWrite {
+                            set: env_set,
+                            binding: 3,
+                            array_offset: 0,
+                            descriptors: Some(Descriptor::Buffer(buffer, slight_range.clone())),
+                        },
+                        DescriptorSetWrite {
+                            set: obj_set,
+                            binding: 0,
+                            array_offset: 0,
+                            descriptors: Some(Descriptor::Buffer(buffer, projview_range.clone())),
+                        },
+                    ]);
+                }
             }
-            if spot_lights.len() > 0 {
-            factory
-                .upload_visible_buffer(&mut self.slight_buffer, 0, &spot_lights)
-                .unwrap();
-        }
+
+            let point_lights: Vec<_> = (&lights, &global_transforms)
+                .join()
+                .filter_map(|(light, transform)| {
+                    if let Light::Point(ref light) = *light {
+                        Some(
+                            pod::PointLight {
+                                position: pod_vec(transform.0.column(3).xyz()),
+                                color: pod_srgb(light.color),
+                                intensity: light.intensity,
+                            }
+                            .std140(),
+                        )
+                    } else {
+                        None
+                    }
+                })
+                .take(MAX_POINT_LIGHTS)
+                .collect();
+
+            let dir_lights: Vec<_> = lights
+                .join()
+                .filter_map(|light| {
+                    if let Light::Directional(ref light) = *light {
+                        Some(
+                            pod::DirectionalLight {
+                                color: pod_srgb(light.color),
+                                direction: pod_vec(light.direction),
+                            }
+                            .std140(),
+                        )
+                    } else {
+                        None
+                    }
+                })
+                .take(MAX_DIR_LIGHTS)
+                .collect();
+
+            let spot_lights: Vec<_> = (&lights, &global_transforms)
+                .join()
+                .filter_map(|(light, transform)| {
+                    if let Light::Spot(ref light) = *light {
+                        Some(
+                            pod::SpotLight {
+                                position: pod_vec(transform.0.column(3).xyz()),
+                                color: pod_srgb(light.color),
+                                direction: pod_vec(light.direction),
+                                angle: light.angle.cos(),
+                                intensity: light.intensity,
+                                range: light.range,
+                                smoothness: light.smoothness,
+                            }
+                            .std140(),
+                        )
+                    } else {
+                        None
+                    }
+                })
+                .take(MAX_SPOT_LIGHTS)
+                .collect();
+
+            let pod = pod::Environment {
+                ambient_color: [0.0, 0.0, 0.0].into(), // TODO: ambient
+                camera_position,
+                point_light_count: point_lights.len() as _,
+                directional_light_count: dir_lights.len() as _,
+                spot_light_count: spot_lights.len() as _,
+            }
+            .std140();
+
+            unsafe {
+                let buffer = this_image.environment_buffer.as_mut().unwrap();
+                factory
+                    .upload_visible_buffer(buffer, env_range.start.unwrap(), &[pod])
+                    .unwrap();
+                if point_lights.len() > 0 {
+                    factory
+                        .upload_visible_buffer(buffer, plight_range.start.unwrap(), &point_lights)
+                        .unwrap();
+                }
+                if dir_lights.len() > 0 {
+                    factory
+                        .upload_visible_buffer(buffer, dlight_range.start.unwrap(), &dir_lights)
+                        .unwrap();
+                }
+                if spot_lights.len() > 0 {
+                    factory
+                        .upload_visible_buffer(buffer, slight_range.start.unwrap(), &spot_lights)
+                        .unwrap();
+                }
+
+                factory
+                    .upload_visible_buffer(buffer, projview_range.start.unwrap(), &[projview])
+                    .unwrap();
+            }
         }
 
-        self.material_data.clear();
+        // material setup
+        use super::util::VertexArgs;
+        let vertex_arg_step = align_size::<VertexArgs>(self.ubo_offset_align, 1) as u32;
+
+        let joinable = (
+            &entities,
+            &materials,
+            &meshes,
+            &global_transforms,
+            !&hiddens,
+        );
+
+        for (_, data) in self.materials_data.iter_mut() {
+            data.batches.clear();
+        }
+
+        // (material, mesh_id, instances)
+        let mut block: Option<(u32, u32, Vec<Transform>)> = None;
         let mut total_objects = 0;
 
-        {
-            let mut materials_hash: FnvHashMap<Handle<Material<B>>, u32> = Default::default();
-
-            let joinable = (
-                &entities,
-                &materials,
-                &meshes,
-                &global_transforms,
-                !&hiddens,
-            );
-
-            for (entity, material, _, _, _) in joinable.join() {
-                use std::collections::hash_map::Entry;
-                total_objects += 1;
-                match materials_hash.entry(material.clone()) {
-                    Entry::Occupied(e) => {
-                        let mat = &mut self.material_data[*e.get() as usize];
-                        mat.bit_set.add(entity.id());
+        for (entity, material, mesh, transform, _) in joinable.join() {
+            let next_mat_id = material.id();
+            let next_mesh_id = mesh.id();
+            match &mut block {
+                slot @ None => {
+                    let mut transforms = Vec::with_capacity(32);
+                    transforms.push((*transform).into());
+                    slot.replace((next_mat_id, next_mesh_id, transforms));
+                }
+                Some((mat_id, mesh_id, transforms))
+                    if *mat_id == next_mat_id && *mesh_id == next_mesh_id =>
+                {
+                    transforms.push((*transform).into());
+                }
+                Some((mat_id, mesh_id, transforms)) => {
+                    if mesh_storage.contains_id(*mesh_id) {
+                        Self::insert_batch(
+                            &mut self.materials_data,
+                            *mat_id,
+                            *mesh_id,
+                            transforms.drain(..),
+                        );
+                        total_objects += transforms.len();
+                    } else {
+                        transforms.clear();
                     }
-                    Entry::Vacant(e) => {
-                        e.insert(self.material_data.len() as u32);
-                        let mut bit_set = BitSet::new();
-                        bit_set.add(entity.id());
-                        self.material_data.push(MaterialData {
-                            bit_set,
-                            desc_set: None,
-                            handle: material.clone(),
-                        });
-                    }
+                    *mat_id = next_mat_id;
+                    *mesh_id = next_mesh_id;
+                    transforms.push((*transform).into());
                 }
             }
         }
-
-        let material_step = align_size::<pod::Material>(self.ubo_offset_align);
-        let mut material_buffer_data: Vec<u8> =
-            vec![0; self.material_data.len() * material_step as usize];
-
-        while self.material_buffer.len() <= index {
-            self.material_buffer.push(None);
+        if let Some((mat_id, mesh_id, transforms)) = block.take() {
+            if mesh_storage.contains_id(mesh_id) {
+                total_objects += transforms.len();
+                Self::insert_batch(&mut self.materials_data, mat_id, mesh_id, transforms);
+            }
         }
+
+        self.materials_data.retain(|_, data| data.batches.len() > 0);
+
+        let mut models: Vec<Transform> = Vec::with_capacity(total_objects);
+        models.extend(
+            self.materials_data
+                .iter()
+                .flat_map(|(_, mat)| mat.batches.iter().flat_map(|b| &b.models)),
+        );
+
+        for (_, mat) in &mut self.materials_data {
+            while mat.desc_set.len() <= index {
+                mat.desc_set
+                    .push(factory.create_descriptor_set(&set_layouts[1]).unwrap());
+            }
+        }
+
+        let num_materials = self.materials_data.len();
+        let material_step = align_size::<pod::Material>(self.ubo_offset_align, 1);
+        let mut material_buffer_data: Vec<u8> = vec![0; num_materials * material_step as usize];
 
         ensure_buffer(
             &factory,
-            &mut self.material_buffer[index],
+            &mut this_image.material_buffer,
             rendy::resource::buffer::UniformBuffer,
-            self.material_data.len() as u64 * material_step,
+            num_materials as u64 * material_step,
         )
         .unwrap();
 
-        for (i, material) in self.material_data.iter_mut().enumerate() {
+        let unprotected_transforms = global_transforms.unprotected_storage();
+
+        for (i, (mat_id, data)) in self.materials_data.iter().enumerate() {
             use super::util::TextureOffset;
 
             let def = &material_defaults.0;
-            let mat = material_storage.get(&material.handle).unwrap_or(def);
+            let mat = material_storage.get_by_id(*mat_id).unwrap_or(def);
             let storage = &texture_storage;
 
             let pod = pod::Material {
@@ -565,166 +695,101 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
                 .write(glsl_layout::as_bytes(&pod))
                 .unwrap();
 
+            let set = data.desc_set[index].raw();
+
             unsafe {
-                if let Ok(set) = factory.create_descriptor_set(&set_layouts[1]) {
-                    factory.write_descriptor_sets(vec![
-                        DescriptorSetWrite {
-                            set: set.raw(),
-                            binding: 0,
-                            array_offset: 0,
-                            descriptors: Some(Descriptor::Buffer(
-                                self.material_buffer[index].as_ref().unwrap().raw(),
-                                Some(offset)..Some(offset + material_step),
-                            )),
-                        },
-                        DescriptorSetWrite {
-                            set: set.raw(),
-                            binding: 1,
-                            array_offset: 0,
-                            descriptors: Self::texture_descriptor(
-                                &mat.albedo,
-                                &def.albedo,
-                                storage,
-                            ),
-                        },
-                        DescriptorSetWrite {
-                            set: set.raw(),
-                            binding: 2,
-                            array_offset: 0,
-                            descriptors: Self::texture_descriptor(
-                                &mat.emission,
-                                &def.emission,
-                                storage,
-                            ),
-                        },
-                        DescriptorSetWrite {
-                            set: set.raw(),
-                            binding: 3,
-                            array_offset: 0,
-                            descriptors: Self::texture_descriptor(
-                                &mat.normal,
-                                &def.normal,
-                                storage,
-                            ),
-                        },
-                        DescriptorSetWrite {
-                            set: set.raw(),
-                            binding: 4,
-                            array_offset: 0,
-                            descriptors: Self::texture_descriptor(
-                                &mat.metallic,
-                                &def.metallic,
-                                storage,
-                            ),
-                        },
-                        DescriptorSetWrite {
-                            set: set.raw(),
-                            binding: 5,
-                            array_offset: 0,
-                            descriptors: Self::texture_descriptor(
-                                &mat.roughness,
-                                &def.roughness,
-                                storage,
-                            ),
-                        },
-                        DescriptorSetWrite {
-                            set: set.raw(),
-                            binding: 6,
-                            array_offset: 0,
-                            descriptors: Self::texture_descriptor(
-                                &mat.ambient_occlusion,
-                                &def.ambient_occlusion,
-                                storage,
-                            ),
-                        },
-                        DescriptorSetWrite {
-                            set: set.raw(),
-                            binding: 7,
-                            array_offset: 0,
-                            descriptors: Self::texture_descriptor(
-                                &mat.caveat,
-                                &def.caveat,
-                                storage,
-                            ),
-                        },
-                    ]);
-                    material.desc_set = Some(set);
-                }
-            }
-        }
-
-        if material_buffer_data.len() > 0 {
-            unsafe {
-                factory
-                    .upload_visible_buffer(
-                        self.material_buffer[index].as_mut().unwrap(),
-                        0,
-                        &material_buffer_data,
-                    )
-                    .unwrap();
-            }
-        }
-
-        self.object_data.clear();
-        self.object_data.reserve(total_objects);
-
-        while self.object_buffer.len() <= index {
-            self.object_buffer.push(None);
-        }
-
-        use super::util::VertexArgs;
-        let vertex_arg_step = align_size::<VertexArgs>(self.ubo_offset_align);
-
-        let mut vertex_args: Vec<u8> = vec![0; total_objects * vertex_arg_step as usize];
-        ensure_buffer(
-            &factory,
-            &mut self.object_buffer[index],
-            rendy::resource::buffer::UniformBuffer,
-            total_objects as u64 * vertex_arg_step,
-        )
-        .unwrap();
-
-        let unprotected_transforms = global_transforms.unprotected_storage();
-        let mut obj_idx = 0;
-        for material in &self.material_data {
-            if material.desc_set.is_none() {
-                continue;
-            }
-
-            for (i, entity_id) in (&material.bit_set).iter().enumerate() {
-                let transform = unsafe { unprotected_transforms.get(entity_id) };
-                let offset = vertex_arg_step * obj_idx as u64;
-                obj_idx += 1;
-                let obj = VertexArgs::from_camera_and_object(camera, transform).std140();
-                (&mut vertex_args[offset as usize..(offset + vertex_arg_step) as usize])
-                    .write(glsl_layout::as_bytes(&obj))
-                    .unwrap();
-
-                unsafe {
-                    let set = factory.create_descriptor_set(&set_layouts[0]).unwrap();
-                    factory.write_descriptor_sets(vec![DescriptorSetWrite {
-                        set: set.raw(),
+                factory.write_descriptor_sets(vec![
+                    DescriptorSetWrite {
+                        set,
                         binding: 0,
                         array_offset: 0,
                         descriptors: Some(Descriptor::Buffer(
-                            self.object_buffer[index].as_ref().unwrap().raw(),
-                            Some(offset)..Some(offset + vertex_arg_step),
+                            this_image.material_buffer.as_mut().unwrap().raw(),
+                            Some(offset)..Some(offset + material_step),
                         )),
-                    }]);
-
-                    self.object_data.push(ObjectData { desc_set: set });
-                }
+                    },
+                    DescriptorSetWrite {
+                        set,
+                        binding: 1,
+                        array_offset: 0,
+                        descriptors: Self::texture_descriptor(&mat.albedo, &def.albedo, storage),
+                    },
+                    DescriptorSetWrite {
+                        set,
+                        binding: 2,
+                        array_offset: 0,
+                        descriptors: Self::texture_descriptor(
+                            &mat.emission,
+                            &def.emission,
+                            storage,
+                        ),
+                    },
+                    DescriptorSetWrite {
+                        set,
+                        binding: 3,
+                        array_offset: 0,
+                        descriptors: Self::texture_descriptor(&mat.normal, &def.normal, storage),
+                    },
+                    DescriptorSetWrite {
+                        set,
+                        binding: 4,
+                        array_offset: 0,
+                        descriptors: Self::texture_descriptor(
+                            &mat.metallic,
+                            &def.metallic,
+                            storage,
+                        ),
+                    },
+                    DescriptorSetWrite {
+                        set,
+                        binding: 5,
+                        array_offset: 0,
+                        descriptors: Self::texture_descriptor(
+                            &mat.roughness,
+                            &def.roughness,
+                            storage,
+                        ),
+                    },
+                    DescriptorSetWrite {
+                        set,
+                        binding: 6,
+                        array_offset: 0,
+                        descriptors: Self::texture_descriptor(
+                            &mat.ambient_occlusion,
+                            &def.ambient_occlusion,
+                            storage,
+                        ),
+                    },
+                    DescriptorSetWrite {
+                        set,
+                        binding: 7,
+                        array_offset: 0,
+                        descriptors: Self::texture_descriptor(&mat.caveat, &def.caveat, storage),
+                    },
+                ]);
             }
         }
 
-        if vertex_args.len() > 0 {
+        ensure_buffer(
+            &factory,
+            &mut this_image.models_buffer,
+            (rendy::hal::buffer::Usage::VERTEX, rendy::memory::Dynamic),
+            (models.len() * std::mem::size_of::<Transform>()) as _,
+        )
+        .unwrap();
+
+        if let Some(mut buffer) = this_image.material_buffer.as_mut() {
             unsafe {
                 factory
-                    .upload_visible_buffer(
-                        self.object_buffer[index].as_mut().unwrap(),
-                        0,
-                        &vertex_args,
-                    )
+                    .upload_visible_buffer(&mut buffer, 0, &material_buffer_data)
+                    .unwrap();
+            }
+        }
+
+        if let Some(mut buffer) = this_image.models_buffer.as_mut() {
+            unsafe {
+                factory
+                    .upload_visible_buffer(&mut buffer, 0, &models)
                     .unwrap();
             }
         }
@@ -747,50 +812,56 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawPbm<B> {
         index: usize,
         resources: &Resources,
     ) {
-        encoder.bind_graphics_descriptor_sets(
-            layout,
-            2,
-            Some(self.environment_set.raw()),
-            std::iter::empty(),
-        );
+        let this_image = &self.per_image[index];
 
-        let PbmPassData {
-            mesh_storage,
-            meshes,
-            ..
-        } = PbmPassData::<B>::fetch(resources);
+        if let Some(objects_set) = this_image.objects_set.as_ref() {
+            let PbmPassData {
+                mesh_storage,
+                meshes,
+                ..
+            } = PbmPassData::<B>::fetch(resources);
 
-        let unprotected_meshes = meshes.unprotected_storage();
+            encoder.bind_graphics_descriptor_sets(
+                layout,
+                2,
+                Some(this_image.environment_set.as_ref().unwrap().raw()),
+                std::iter::empty(),
+            );
 
-        let mut obj_data_iter = self.object_data.iter();
+            encoder.bind_graphics_descriptor_sets(
+                layout,
+                0,
+                Some(objects_set.raw()),
+                std::iter::empty(),
+            );
 
-        for material in &self.material_data {
-            if let Some(ref mat_set) = material.desc_set {
+            let mut instances_drawn = 0;
+
+            for (_, material) in &self.materials_data {
                 encoder.bind_graphics_descriptor_sets(
                     layout,
                     1,
-                    Some(mat_set.raw()),
+                    Some(material.desc_set[index].raw()),
                     std::iter::empty(),
                 );
-                for entity_id in &material.bit_set {
-                    let handle = unsafe { unprotected_meshes.get(entity_id) };
 
-                    let obj_set = &obj_data_iter.next().unwrap().desc_set;
-
-                    if let Some(Mesh(mesh)) = mesh_storage.get(handle) {
-                        encoder.bind_graphics_descriptor_sets(
-                            layout,
-                            0,
-                            Some(obj_set.raw()),
-                            std::iter::empty(),
-                        );
-                        mesh.bind(&[PosNormTangTex::VERTEX], &mut encoder).unwrap();
-                        encoder.draw(0..mesh.len(), 0..1);
-                    }
+                for batch in &material.batches {
+                    // This invariant should always be verified before inserting batches in prepare
+                    debug_assert!(mesh_storage.contains_id(batch.mesh_id));
+                    let Mesh(mesh) = unsafe { mesh_storage.get_by_id_unchecked(batch.mesh_id) };
+                    mesh.bind(&[PosNormTangTex::VERTEX], &mut encoder).unwrap();
+                    encoder.bind_vertex_buffers(
+                        1,
+                        Some((
+                            this_image.models_buffer.as_ref().unwrap().raw(),
+                            instances_drawn * std::mem::size_of::<Transform>() as u64,
+                        )),
+                    );
+                    encoder.draw(0..mesh.len(), 0..batch.models.len() as _);
+                    instances_drawn += batch.models.len() as u64;
                 }
             }
         }
-        assert!(obj_data_iter.next().is_none());
     }
 
     fn dispose(self, factory: &mut Factory<B>, _aux: &Resources) {}
@@ -806,11 +877,11 @@ fn pod_vec(vec: amethyst_core::math::Vector3<f32>) -> glsl_layout::vec3 {
     arr.into()
 }
 
-fn align_size<T: AsStd140>(align: u64) -> u64
+fn align_size<T: AsStd140>(align: u64, array_len: usize) -> u64
 where
     T::Std140: Sized,
 {
-    let size = std::mem::size_of::<T::Std140>() as u64;
+    let size = (std::mem::size_of::<T::Std140>() * array_len) as u64;
     ((size + align - 1) / align) * align
 }
 
@@ -838,11 +909,10 @@ mod pod {
     use super::super::util::TextureOffset;
     use glsl_layout::*;
 
-    pub(crate) fn array_size<T: AsStd140>(elems: usize) -> usize
-    where
-        T::Std140: Sized,
-    {
-        std::mem::size_of::<T::Std140>() * elems
+    #[derive(Clone, Copy, Debug, AsStd140)]
+    pub(crate) struct Projview {
+        pub proj: mat4,
+        pub view: mat4,
     }
 
     #[derive(Clone, Copy, Debug, AsStd140)]
