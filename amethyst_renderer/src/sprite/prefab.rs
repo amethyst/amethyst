@@ -93,13 +93,15 @@ pub enum Sprites {
 pub enum SpriteSheetPrefab {
     /// Spritesheet handle, normally not used outside the prefab system.
     #[serde(skip)]
-    Handle(SpriteSheetHandle),
+    Handle((Option<String>, SpriteSheetHandle)),
     /// Definition of a spritesheet
     Sheet {
         /// This texture contains the images for the spritesheet
         texture: TexturePrefab<TextureFormat>,
         /// The sprites in the spritesheet
         sprites: Vec<Sprites>,
+        /// The name of the spritesheet to refer to it
+        name: Option<String>,
     },
 }
 
@@ -108,7 +110,7 @@ impl<'a> PrefabData<'a> for SpriteSheetPrefab {
         <TexturePrefab<TextureFormat> as PrefabData<'a>>::SystemData,
         Read<'a, AssetStorage<SpriteSheet>>,
     );
-    type Result = SpriteSheetHandle;
+    type Result = (Option<String>, SpriteSheetHandle);
 
     fn add_to_entity(
         &self,
@@ -128,7 +130,11 @@ impl<'a> PrefabData<'a> for SpriteSheetPrefab {
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
         let handle = match self {
-            SpriteSheetPrefab::Sheet { texture, sprites } => {
+            SpriteSheetPrefab::Sheet {
+                texture,
+                sprites,
+                name,
+            } => {
                 texture.load_sub_assets(progress, &mut system_data.0)?;
                 let texture_handle = match texture {
                     TexturePrefab::Handle(handle) => handle.clone(),
@@ -139,11 +145,12 @@ impl<'a> PrefabData<'a> for SpriteSheetPrefab {
                     texture: texture_handle,
                     sprites,
                 };
-                Some(
+                Some((
+                    name.take(),
                     (system_data.0)
                         .0
                         .load_from_data(spritesheet, progress, &system_data.1),
-                )
+                ))
             }
             _ => None,
         };
@@ -157,8 +164,27 @@ impl<'a> PrefabData<'a> for SpriteSheetPrefab {
     }
 }
 
-#[derive(Default, Clone, Debug)]
-pub struct SpriteSheetLoadedSet(pub Vec<SpriteSheetHandle>);
+#[derive(Clone, Debug, Default)]
+pub struct SpriteSheetLoadedSet(pub Vec<(Option<String>, SpriteSheetHandle)>);
+
+impl SpriteSheetLoadedSet {
+    fn get(&self, reference: &SpriteSheetReference) -> Option<&SpriteSheetHandle> {
+        match reference {
+            SpriteSheetReference::Index(index) => self.0.get(*index).map(|(_, handle)| handle),
+            SpriteSheetReference::Name(name) => self
+                .0
+                .iter()
+                .find(|s| s.0.as_ref() == Some(name))
+                .map(|(_, handle)| handle),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub enum SpriteSheetReference {
+    Index(usize),
+    Name(String),
+}
 
 /// Prefab used to add a sprite to an `Entity`.
 ///
@@ -166,10 +192,10 @@ pub struct SpriteSheetLoadedSet(pub Vec<SpriteSheetHandle>);
 /// `SpriteSheetLoadedSet` by index during loading. Just like with `SpriteSheetPrefab` this means
 /// that this prefab should only be used as part of other prefabs or in specialised formats. Look at
 /// `SpriteScenePrefab` for an example.
-#[derive(Clone, Debug, Deserialize, Serialize, Default)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct SpriteRenderPrefab {
     /// Index of the sprite sheet in the prefab
-    pub sheet: usize,
+    pub sheet: SpriteSheetReference,
     /// Index of the sprite on the sprite sheet
     pub sprite_number: usize,
 
@@ -202,7 +228,7 @@ impl<'a> PrefabData<'a> for SpriteRenderPrefab {
         } else {
             let message = format!(
                 "`SpriteSheetHandle` was not initialized before call to `add_to_entity()`. \
-                 sheet: {}, sprite_number: {}",
+                 sheet: {:?}, sprite_number: {}",
                 self.sheet, self.sprite_number
             );
             Err(Error::from_string(message))
@@ -214,11 +240,11 @@ impl<'a> PrefabData<'a> for SpriteRenderPrefab {
         _: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        if let Some(handle) = (system_data.1).0.get(self.sheet).cloned() {
+        if let Some(handle) = (*system_data.1).get(&self.sheet).cloned() {
             self.handle = Some(handle);
             Ok(false)
         } else {
-            let message = format!("Failed to get `SpriteSheet` with index {}.", self.sheet);
+            let message = format!("Failed to get `SpriteSheet` with index {:?}.", self.sheet);
             Err(Error::from_string(message))
         }
     }
@@ -420,7 +446,7 @@ mod tests {
         world
     }
 
-    fn add_sheet(world: &mut World) -> (usize, Handle<SpriteSheet>) {
+    fn add_sheet(world: &mut World) -> (SpriteSheetReference, Handle<SpriteSheet>) {
         type Data<'a> = (
             ReadExpect<'a, Loader>,
             Read<'a, AssetStorage<SpriteSheet>>,
@@ -437,8 +463,8 @@ mod tests {
                 &data.1,
             );
             let index = (data.2).0.len();
-            (data.2).0.push(spritesheet.clone());
-            (index, spritesheet)
+            (data.2).0.push((None, spritesheet.clone()));
+            (SpriteSheetReference::Index(index), spritesheet)
         })
     }
 
@@ -480,6 +506,7 @@ mod tests {
                 ],
             })],
             texture: TexturePrefab::Handle(texture.clone()),
+            name: None,
         };
         prefab
             .load_sub_assets(&mut ProgressCounter::default(), &mut world.system_data())
