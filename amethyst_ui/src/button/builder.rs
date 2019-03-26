@@ -341,6 +341,7 @@ impl<G: PartialEq + Send + Sync + 'static> UiButtonBuilder<G> {
                     .with_stretch(Stretch::XY {
                         x_margin: 0.,
                         y_margin: 0.,
+                        keep_aspect_ratio: false,
                     }),
             )
             .expect("Unreachable: Inserting newly created entity");

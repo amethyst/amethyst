@@ -55,6 +55,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Changed the names of many Transform functions to better reflect their actual function and reduce potential semantic confusion ([#1451])
 * `ProgressCounter#num_loading()` no longer includes failed assets. ([#1452])
 * `SpriteSheetFormat` field renamed from `spritesheet_*` to `texture_*`. ([#1469])
+* Add new `keep_aspect_ratio` field to `Stretch::XY`. ([#1480])
 
 ### Removed
 
@@ -103,6 +104,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1442]: https://github.com/amethyst/amethyst/pull/1442
 [#1469]: https://github.com/amethyst/amethyst/pull/1469
 [#1481]: https://github.com/amethyst/amethyst/pull/1481
+[#1480]: https://github.com/amethyst/amethyst/pull/1480
 
 ## [0.10.0] - 2018-12
 
