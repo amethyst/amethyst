@@ -181,6 +181,7 @@ impl SpriteSheetLoadedSet {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(untagged)]
 pub enum SpriteSheetReference {
     Index(usize),
     Name(String),
