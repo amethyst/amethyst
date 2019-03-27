@@ -1,6 +1,7 @@
 // mod flat;
 mod pbm;
 mod util;
+mod debug_lines;
 
 pub use self::pbm::*;
 
@@ -30,6 +31,27 @@ lazy_static::lazy_static! {
 
     static ref SKINNED_VERTEX: StaticShaderInfo = StaticShaderInfo::new(
         concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/vertex/skinned.frag"),
+        ShaderKind::Fragment,
+        SourceLanguage::GLSL,
+        "main",
+    );
+
+    static ref DEBUG_LINES_VERTEX: StaticShaderInfo = StaticShaderInfo::new(
+        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/vertex/debug_lines.vert"),
+        ShaderKind::Fragment,
+        SourceLanguage::GLSL,
+        "main",
+    );
+
+    static ref DEBUG_LINES_GEOM: StaticShaderInfo = StaticShaderInfo::new(
+        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/geometry/debug_lines.geom"),
+        ShaderKind::Fragment,
+        SourceLanguage::GLSL,
+        "main",
+    );
+
+    static ref DEBUG_LINES_FRAG: StaticShaderInfo = StaticShaderInfo::new(
+        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/fragment/debug_lines.frag"),
         ShaderKind::Fragment,
         SourceLanguage::GLSL,
         "main",
