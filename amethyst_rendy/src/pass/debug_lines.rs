@@ -1,41 +1,44 @@
 //! Debug lines pass
 
-use std::marker::PhantomData;
-
-use derivative::Derivative;
-use gfx::{pso::buffer::ElemStride, Primitive};
-use log::{debug, trace};
-
+use crate::{
+    camera::{ActiveCamera, Camera},
+    hidden::Hidden,
+    mtl::{Material, MaterialDefaults},
+    skinning::JointTransforms,
+    types::{Mesh, Texture},
+    visibility::Visibility
+};
+use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
-    ecs::{Join, Read, ReadStorage, Write, WriteStorage},
-    math as na,
+    ecs::{Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
     transform::GlobalTransform,
 };
-use amethyst_error::Error;
-
-use crate::{
-    cam::{ActiveCamera, Camera},
-    debug_drawing::{DebugLine, DebugLines, DebugLinesComponent},
-    mesh::Mesh,
-    pass::util::{get_camera, set_attribute_buffers, set_vertex_args, setup_vertex_args},
-    pipe::{
-        pass::{Pass, PassData},
-        DepthMode, Effect, NewEffect,
+use rendy::{
+    command::{QueueId, RenderPassEncoder},
+    factory::Factory,
+    graph::{
+        render::{PrepareResult, SimpleGraphicsPipeline, SimpleGraphicsPipelineDesc},
+        GraphContext, NodeBuffer, NodeImage,
     },
-    types::{Encoder, Factory},
-    vertex::{Color, Normal, Position, Query},
-    Rgba,
+    hal::{
+        pso::{
+            BlendState, ColorBlendDesc, ColorMask, EntryPoint, GraphicsShaderSet,
+            Specialization,
+        },
+        Backend,
+    },
+    resource::set::DescriptorSetLayout,
+    shader::Shader,
 };
 
-use super::*;
-
+#[derive(Clone, Debug, PartialEq)]
 pub struct DrawDebugLinesDesc {
     pub line_width: f32
 }
 
 impl Default for DrawDebugLinesDesc {
     fn default() -> Self {
-        DrawDebugLines {
+        DrawDebugLinesDesc {
             line_width: 1.0 / 400.0
         }
     }
@@ -61,12 +64,6 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawDebugLinesDesc
             log::trace!("Loading shader module '{:#?}'", *super::DEBUG_LINES_VERTEX);
             storage.push(super::DEBUG_LINES_VERTEX.module(factory).unwrap());
 
-            log::trace!("Loading shader module '{:#?}'", *super::DEBUG_LINES_FLAT);
-            storage.push(super::DEBUG_LINES_FLAT.module(factory).unwrap());
-
-            log::trace!("Loading shader module '{:#?}'", *super::DEBUG_LINES_GEOM);
-            storage.push(super::DEBUG_LINES_GEOM.module(factory).unwrap());
-
             GraphicsShaderSet {
                 vertex: EntryPoint {
                     entry: "main",
@@ -78,18 +75,21 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawDebugLinesDesc
                     module: &storage[1],
                     specialization: Specialization::default(),
                 }),
-                fragment: Some(EntryPoint {
-                    entry: "main",
-                    module: &storage[2],
-                    specialization: Specialization::default(),
-                }),
+                geometry: None,
                 hull: None,
                 domain: None,
             }
     }
 
     fn colors(&self) -> Vec<ColorBlendDesc> {
-        vec![ColorMask::WHITE]
+        vec![ColorBlendDesc(ColorMask::ALL, BlendState::ALPHA)]
+    }
+
+    fn input_assembler(&self) -> gfx_hal::pso::InputAssemblerDesc {
+        gfx_hal::pso::InputAssemblerDesc {
+            primitive: gfx_hal::Primitive::LineList,
+            primitive_restart: gfx_hal::pso::PrimitiveRestart::Disabled
+        }
     }
 
     fn build<'a>(
@@ -165,6 +165,8 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawDebugLines<B> {
                 .next()
                 .unwrap_or((&defcam, &identity))
         });
+
+        unimplemented!()
     }
 
     fn draw(
@@ -174,90 +176,11 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawDebugLines<B> {
         _index: usize,
         _aux: &Resources,
     ) {
-
+        log::trace!("Drawing debug lines");
+        unimplemented!()
     }
 
     fn dispose(self, _factory: &mut Factory<B>, _aux: &Resources) {
         unimplemented!()
     }
 }
-
-// impl<V> Pass for DrawDebugLines<V>
-// where
-//     V: Query<(Position, Color, Normal)>,
-// {
-//     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
-//         debug!("Building debug lines pass");
-//         let mut builder = effect.geom(VERT_SRC, GEOM_SRC, FRAG_SRC);
-
-//         debug!("Effect compiled, adding vertex/uniform buffers");
-//         builder.with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0);
-
-//         setup_vertex_args(&mut builder);
-//         builder.with_raw_global("camera_position");
-//         builder.with_raw_global("line_width");
-//         builder.with_primitive_type(Primitive::PointList);
-//         builder.with_output("color", Some(DepthMode::LessEqualWrite));
-
-//         builder.build()
-//     }
-
-//     fn apply<'a, 'b: 'a>(
-//         &'a mut self,
-//         encoder: &mut Encoder,
-//         effect: &mut Effect,
-//         mut factory: Factory,
-//         (active, camera, global, lines_components, lines_resource, lines_params): <Self as PassData<'a>>::Data,
-//     ) {
-//         trace!("Drawing debug lines pass");
-//         let debug_lines = {
-//             let mut lines = Vec::<DebugLine>::new();
-
-//             for debug_lines_component in (&lines_components).join() {
-//                 lines.extend(&debug_lines_component.lines);
-//             }
-
-//             if let Some(mut lines_resource) = lines_resource {
-//                 lines.append(&mut lines_resource.lines);
-//             };
-
-//             lines
-//         };
-
-//         if debug_lines.len() == 0 {
-//             effect.clear();
-//             return;
-//         }
-
-//         let camera = get_camera(active, &camera, &global);
-//         effect.update_global(
-//             "camera_position",
-//             camera
-//                 .as_ref()
-//                 .map(|&(_, ref trans)| trans.0.column(3).xyz().into())
-//                 .unwrap_or([0.0; 3]),
-//         );
-
-//         effect.update_global("line_width", lines_params.line_width);
-
-//         let mesh = Mesh::build(debug_lines)
-//             .build(&mut factory)
-//             .expect("Failed to create debug lines mesh");
-
-//         if !set_attribute_buffers(effect, &mesh, &[V::QUERIED_ATTRIBUTES]) {
-//             effect.clear();
-//             return;
-//         }
-
-//         set_vertex_args(
-//             effect,
-//             encoder,
-//             camera,
-//             &GlobalTransform(na::one()),
-//             Rgba::WHITE,
-//         );
-
-//         effect.draw(mesh.slice(), encoder);
-//         effect.clear();
-//     }
-// }
