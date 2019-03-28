@@ -41,6 +41,8 @@ Prefab(
                                 ],
                             )),
                         ],
+                        // optional
+                        name: "bat",
                     ),
                     // SpriteRenderPrefab
                     render: (
@@ -87,7 +89,7 @@ Prefab(
                     render: (
                         // We have already added a SpriteSheet for the previous entity,
                         // now we can refer to it
-                        sheet: 0,
+                        sheet: "bat", // or sheet: 0,
                         sprite_number: 6,
                     ),
                     transform: (
