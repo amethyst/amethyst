@@ -75,19 +75,18 @@ where
             |mut d| {
                 d.tag = Some(self.next_tag);
                 self.next_tag += 1;
-                if !d.loading() {
-                    if !d
+                if !d.loading()
+                    && !d
                         .load_sub_assets(&mut prefab_system_data)
                         .with_context(|_| format_err!("Failed starting sub asset loading"))?
-                    {
-                        return Ok(ProcessingState::Loaded(d));
-                    }
+                {
+                    return Ok(ProcessingState::Loaded(d));
                 }
                 match d.progress().complete() {
                     Completion::Complete => Ok(ProcessingState::Loaded(d)),
                     Completion::Failed => {
                         error!("Failed loading sub asset: {:?}", d.progress().errors());
-                        return Err(Error::from_string("Failed loading sub asset"));
+                        Err(Error::from_string("Failed loading sub asset"))
                     }
                     Completion::Loading => Ok(ProcessingState::Loading(d)),
                 }

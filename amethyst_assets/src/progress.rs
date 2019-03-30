@@ -60,9 +60,7 @@ impl ProgressCounter {
     /// Removes all errors and returns them.
     pub fn errors(&self) -> Vec<AssetErrorMeta> {
         let mut lock = self.errors.lock();
-        let rv = lock.drain(..).collect();
-
-        rv
+        lock.drain(..).collect()
     }
 
     /// Returns the number of assets this struct is tracking.

@@ -255,11 +255,9 @@ impl<'a> System<'a> for CursorHideSystem {
                 release_cursor(&mut msg);
                 self.is_hidden = false;
             }
-        } else {
-            if self.is_hidden {
-                release_cursor(&mut msg);
-                self.is_hidden = false;
-            }
+        } else if self.is_hidden {
+            release_cursor(&mut msg);
+            self.is_hidden = false;
         }
     }
 

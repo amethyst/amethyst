@@ -329,7 +329,7 @@ pub fn set_view_args(
         .unwrap_or_else(|| {
             let identity: [[f32; 4]; 4] = Matrix4::identity().into();
             ViewArgs {
-                proj: identity.clone().into(),
+                proj: identity.into(),
                 view: identity.into(),
             }
         });

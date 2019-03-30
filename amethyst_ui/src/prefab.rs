@@ -440,48 +440,48 @@ where
 
         if let Some(press_image) = press_image {
             on_click_start.push(UiButtonAction {
-                target: entity.clone(),
+                target: entity,
                 event_type: UiButtonActionType::SetTexture(press_image.clone()),
             });
 
             on_click_stop.push(UiButtonAction {
-                target: entity.clone(),
+                target: entity,
                 event_type: UiButtonActionType::UnsetTexture(press_image.clone()),
             });
         }
 
         if let Some(hover_image) = hover_image {
             on_hover_start.push(UiButtonAction {
-                target: entity.clone(),
+                target: entity,
                 event_type: UiButtonActionType::SetTexture(hover_image.clone()),
             });
 
             on_hover_stop.push(UiButtonAction {
-                target: entity.clone(),
+                target: entity,
                 event_type: UiButtonActionType::UnsetTexture(hover_image.clone()),
             });
         }
 
         if let Some(press_text_color) = self.press_text_color {
             on_click_start.push(UiButtonAction {
-                target: entity.clone(),
+                target: entity,
                 event_type: UiButtonActionType::SetTextColor(press_text_color),
             });
 
             on_click_stop.push(UiButtonAction {
-                target: entity.clone(),
+                target: entity,
                 event_type: UiButtonActionType::UnsetTextColor(press_text_color),
             });
         }
 
         if let Some(hover_text_color) = self.hover_text_color {
             on_hover_start.push(UiButtonAction {
-                target: entity.clone(),
+                target: entity,
                 event_type: UiButtonActionType::SetTextColor(hover_text_color),
             });
 
             on_hover_stop.push(UiButtonAction {
-                target: entity.clone(),
+                target: entity,
                 event_type: UiButtonActionType::UnsetTextColor(hover_text_color),
             });
         }
@@ -503,9 +503,9 @@ where
 
         if hover_sound.is_some() || press_sound.is_some() || release_sound.is_some() {
             let retrigger = UiSoundRetrigger {
-                on_click_start: press_sound.map(|it| UiPlaySoundAction(it)),
-                on_click_stop: release_sound.map(|it| UiPlaySoundAction(it)),
-                on_hover_start: hover_sound.map(|it| UiPlaySoundAction(it)),
+                on_click_start: press_sound.map(UiPlaySoundAction),
+                on_click_stop: release_sound.map(UiPlaySoundAction),
+                on_hover_start: hover_sound.map(UiPlaySoundAction),
                 on_hover_stop: None,
             };
 

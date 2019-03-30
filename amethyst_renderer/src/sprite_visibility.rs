@@ -90,7 +90,7 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
             .and_then(|entity| global.get(entity))
             .or_else(|| (&camera, &global).join().map(|cg| cg.1).next());
         let camera_backward = camera
-            .map(|c| c.0.column(2).xyz().into())
+            .map(|c| c.0.column(2).xyz())
             .unwrap_or_else(Vector3::z);
         let camera_centroid = camera
             .map(|g| g.0.transform_point(&origin))

@@ -140,7 +140,7 @@ impl<'a> PrefabData<'a> for SpriteSheetPrefab {
                     TexturePrefab::Handle(handle) => handle.clone(),
                     _ => unreachable!(),
                 };
-                let sprites = sprites.iter().flat_map(|s| s.build_sprites()).collect();
+                let sprites = sprites.iter().flat_map(Sprites::build_sprites).collect();
                 let spritesheet = SpriteSheet {
                     texture: texture_handle,
                     sprites,

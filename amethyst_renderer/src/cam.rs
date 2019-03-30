@@ -295,8 +295,7 @@ mod serde_ortho {
             }
         }
 
-        const FIELDS: &'static [&'static str] =
-            &["left", "right", "bottom", "top", "znear", "zfar"];
+        const FIELDS: &[&str] = &["left", "right", "bottom", "top", "znear", "zfar"];
         deserializer.deserialize_struct("Orthographic", FIELDS, OrthographicVisitor)
     }
 
@@ -427,7 +426,7 @@ mod serde_persp {
             }
         }
 
-        const FIELDS: &'static [&'static str] = &["aspect", "fovy", "znear", "zfar"];
+        const FIELDS: &[&str] = &["aspect", "fovy", "znear", "zfar"];
         deserializer.deserialize_struct("Perspective", FIELDS, PerspectiveVisitor)
     }
 

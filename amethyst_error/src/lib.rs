@@ -12,7 +12,11 @@
 #![warn(missing_docs)]
 
 pub use backtrace::Backtrace;
-use std::{borrow::Cow, env, error, ffi, fmt, result, sync::atomic};
+use std::{
+    borrow::Cow,
+    env, error, ffi, fmt, result,
+    sync::atomic::{self, AtomicUsize},
+};
 
 const RUST_BACKTRACE: &str = "RUST_BACKTRACE";
 
@@ -310,7 +314,7 @@ fn is_backtrace_enabled<F: Fn(&str) -> Option<ffi::OsString>>(get_var: F) -> boo
 // 0: unchecked
 // 1: disabled
 // 2: enabled
-static BACKTRACE_STATUS: atomic::AtomicUsize = atomic::ATOMIC_USIZE_INIT;
+static BACKTRACE_STATUS: AtomicUsize = AtomicUsize::new(0);
 
 /// Constructs a new backtrace, if backtraces are enabled.
 fn new_backtrace() -> Option<Backtrace> {

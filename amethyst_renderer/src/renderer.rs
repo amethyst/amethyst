@@ -75,7 +75,7 @@ impl Renderer {
     }
 
     /// Draws a scene with the given pipeline.
-    #[cfg_attr(feature = "cargo-clippy", allow(float_cmp))] // cmp just used to recognize change
+    #[allow(clippy::float_cmp)] // cmp just used to recognize change
     pub fn draw<'a, P>(&mut self, pipe: &mut P, data: <P as PipelineData<'a>>::Data)
     where
         P: PolyPipeline,
