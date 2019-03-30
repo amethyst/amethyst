@@ -2,7 +2,7 @@
 //!
 
 use amethyst_assets::PrefabData;
-use amethyst_core::ecs::{Entity, Write};
+use amethyst_core::ecs::{Component, DenseVecStorage, Entity, Write};
 use amethyst_error::Error;
 
 /// The ambient color of a scene
@@ -28,4 +28,12 @@ impl<'a> PrefabData<'a> for AmbientColor {
         ambient.0 = self.0;
         Ok(())
     }
+}
+
+/// A single object tinting applied in multiplicative mode (modulation)
+#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
+pub struct Tint(pub palette::Srgba);
+
+impl Component for Tint {
+    type Storage = DenseVecStorage<Self>;
 }

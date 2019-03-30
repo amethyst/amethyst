@@ -1,8 +1,8 @@
-mod flat;
+// mod flat;
 mod pbm;
 mod util;
 
-pub use self::{flat::*, pbm::*};
+pub use self::pbm::*;
 
 use rendy::shader::{ShaderKind, SourceLanguage, StaticShaderInfo};
 
