@@ -1,6 +1,6 @@
 // this is temporary
-#![allow(dead_code)]
-#![allow(unused_variables)]
+// #![allow(dead_code)]
+// #![allow(unused_variables)]
 
 #[macro_use]
 extern crate amethyst_derive;
@@ -27,3 +27,5 @@ pub mod system;
 pub mod transparent;
 pub mod types;
 pub mod visibility;
+
+mod pod;

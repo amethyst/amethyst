@@ -24,6 +24,7 @@ use amethyst_rendy::{
         factory::Factory, graph::GraphBuilder, hal::Backend, mesh::PosNormTangTex,
         texture::palette::load_from_linear_rgba,
     },
+    resources::Tint,
     shape::Shape,
     system::{GraphCreator, RendererSystem},
     types::{DefaultBackend, Mesh, Texture},
@@ -166,26 +167,33 @@ impl<B: Backend> SimpleState for Example<B> {
                 let x = i as f32 / (NUM_COLS - 1) as f32;
                 let y = j as f32 / (NUM_ROWS - 1) as f32;
 
-
                 let center = Vector3::new(10.0 * (x - 0.5), 10.0 * (y - 0.5), 0.0);
 
                 let mut pos = Transform::default();
                 pos.set_translation(center);
                 pos.set_scale(0.2, 0.2, 0.2);
 
-                world
+                let mut builder = world
                     .create_entity()
                     .with(pos)
                     .with(mesh.clone())
-                    // .with(mtls.choose(&mut rng).unwrap().clone())
-                    .with(mtls[(j + NUM_ROWS + i) % 100].clone())
+                    .with(mtls[(j + i) % mtls.len()].clone())
                     .with(Orbit {
                         axis: Unit::new_normalize(Vector3::y()),
                         time_scale: 5.0 + y,
                         center,
                         radius: 0.2,
-                    })
-                    .build();
+                    });
+                
+                // add some visible tint pattern
+                if i > 10 && j > 10 && i < NUM_COLS - 10 && j < NUM_ROWS - 10 {
+                    let xor_x = i - 10;
+                    let xor_y = j - 10;
+                    let c = ((xor_x ^ xor_y) & 0xFF) as f32 / 255.0;
+                    builder = builder.with(Tint(Srgb::new(c, c, c).into()));
+                }
+
+                builder.build();
             }
         }
 
@@ -241,7 +249,7 @@ impl<B: Backend> SimpleState for Example<B> {
             .with(transform)
             .build();
 
-        world.add_resource(ActiveCamera { entity: camera })
+        world.add_resource(ActiveCamera { entity: camera });
     }
 }
 

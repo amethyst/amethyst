@@ -1,9 +1,10 @@
 //! Renderer system
 use crate::{
     camera::{ActiveCamera, Camera},
-    hidden::Hidden,
+    hidden::{Hidden, HiddenPropagate},
     light::Light,
     mtl::{Material, MaterialDefaults},
+    resources::Tint,
     skinning::JointTransforms,
     types::{Mesh, Texture},
     visibility::Visibility,
@@ -72,9 +73,11 @@ type SetupData<'a, B> = (
     ReadStorage<'a, Handle<Mesh<B>>>,
     ReadStorage<'a, Handle<Texture<B>>>,
     ReadStorage<'a, Handle<Material<B>>>,
+    ReadStorage<'a, Tint>,
     ReadStorage<'a, Light>,
     ReadStorage<'a, Camera>,
     ReadStorage<'a, Hidden>,
+    ReadStorage<'a, HiddenPropagate>,
     Option<Read<'a, Visibility>>,
     Option<Read<'a, ActiveCamera>>,
     ReadStorage<'a, JointTransforms>,

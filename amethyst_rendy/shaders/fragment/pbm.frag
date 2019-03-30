@@ -1,5 +1,7 @@
 #version 450
 
+layout(early_fragment_tests) in;
+
 struct PointLight {
     vec3 position;
     vec3 color;
@@ -70,6 +72,7 @@ layout(location = 0) in VertexData {
     vec3 normal;
     vec3 tangent;
     vec2 tex_coord;
+    vec4 color;
 } vertex;
 
 layout(location = 0) out vec4 out_color;
@@ -257,5 +260,5 @@ void main() {
     vec3 ambient = ambient_color * albedo * ambient_occlusion;
     vec3 color = ambient + lighted + emission;
 
-    out_color = vec4(color, alpha);
+    out_color = vec4(color, alpha) * vertex.color;
 }

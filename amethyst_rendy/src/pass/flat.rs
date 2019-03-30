@@ -1,4 +1,3 @@
-use super::util::*;
 use crate::{
     camera::{ActiveCamera, Camera},
     hidden::Hidden,
@@ -184,35 +183,35 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat<B> {
                     .unwrap_or((&defcam, &identity))
             });
 
-        let mut vertex_args = Vec::new();
+        // let mut vertex_args = Vec::new();
 
         match visibility {
             None => {
-                for (joint, mesh, material, global, _) in
-                    (joints.maybe(), &meshes, &materials, &globals, !&hiddens).join()
-                {
-                    let offset = vertex_args.len() * std::mem::size_of::<VertexArgs>();
-                    vertex_args.push(VertexArgs::from_camera_and_object(camera, global));
-                }
+                // for (joint, mesh, material, global, _) in
+                //     (joints.maybe(), &meshes, &materials, &globals, !&hiddens).join()
+                // {
+                //     let offset = vertex_args.len() * std::mem::size_of::<pod::VertexArgs>();
+                //     vertex_args.push(pod::VertexArgs::from_camera_and_object(camera, global));
+                // }
                 PrepareResult::DrawRecord
             }
             Some(ref visibility) => {
-                for (joint, mesh, material, global, _) in (
-                    joints.maybe(),
-                    &meshes,
-                    &materials,
-                    &globals,
-                    &visibility.visible_unordered,
-                )
-                    .join()
-                {}
+                // for (joint, mesh, material, global, _) in (
+                //     joints.maybe(),
+                //     &meshes,
+                //     &materials,
+                //     &globals,
+                //     &visibility.visible_unordered,
+                // )
+                //     .join()
+                // {}
 
-                for &entity in &visibility.visible_ordered {
-                    let joint = joints.get(entity).unwrap();
-                    let mesh = meshes.get(entity).unwrap();
-                    let material = materials.get(entity).unwrap();
-                    let global = globals.get(entity).unwrap();
-                }
+                // for &entity in &visibility.visible_ordered {
+                //     let joint = joints.get(entity).unwrap();
+                //     let mesh = meshes.get(entity).unwrap();
+                //     let material = materials.get(entity).unwrap();
+                //     let global = globals.get(entity).unwrap();
+                // }
                 unimplemented!()
             }
         }
