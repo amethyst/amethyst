@@ -1,12 +1,15 @@
 //! Debug lines pass
 
+use std::marker::PhantomData;
+
 use crate::{
     camera::{ActiveCamera, Camera},
     hidden::Hidden,
     mtl::{Material, MaterialDefaults},
     skinning::JointTransforms,
     types::{Mesh, Texture},
-    visibility::Visibility
+    visibility::Visibility,
+    debug_drawing::{DebugLine, DebugLinesComponent}
 };
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
@@ -30,6 +33,10 @@ use rendy::{
     resource::set::DescriptorSetLayout,
     shader::Shader,
 };
+
+use shred_derive::SystemData;
+use smallvec::{smallvec, SmallVec};
+use std::io::Write;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct DrawDebugLinesDesc {
@@ -102,16 +109,16 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawDebugLinesDesc
         _images: Vec<NodeImage>,
         _set_layouts: &[DescriptorSetLayout<B>],
     ) -> Result<DrawDebugLines<B>, failure::Error> {
-        let buffer = factory.create_buffer(1, 1024, rendy::resource::buffer::UniformBuffer)?;
+        
         Ok(DrawDebugLines {
-            buffer,
+            per_line: vec![]
         })
     }
 }
 
 #[derive(Debug)]
 pub struct DrawDebugLines<B: Backend> {
-    buffer: rendy::resource::Buffer<B>
+    per_line: Vec<PerLineSegment<B>>
 }
 
 impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawDebugLines<B> {
@@ -119,68 +126,80 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawDebugLines<B> {
 
     fn prepare(
         &mut self,
-        _factory: &Factory<B>,
+        factory: &Factory<B>,
         _queue: QueueId,
-        _set_layouts: &[DescriptorSetLayout<B>],
-        _index: usize,
+        set_layouts: &[DescriptorSetLayout<B>],
+        index: usize,
         resources: &Resources,
     ) -> PrepareResult {
- let (
-    active_camera,
-    cameras,
-    mesh_storage,
-    texture_storage,
-    material_defaults,
-    visibility,
-    hiddens,
-    meshes,
-    materials,
-    globals,
-    joints,
-    ) = <(
-    Option<Read<'_, ActiveCamera>>,
-    ReadStorage<'_, Camera>,
-    Read<'_, AssetStorage<Mesh<B>>>,
-    Read<'_, AssetStorage<Texture<B>>>,
-    ReadExpect<'_, MaterialDefaults<B>>,
-    Option<Read<'_, Visibility>>,
-    ReadStorage<'_, Hidden>,
-    ReadStorage<'_, Handle<Mesh<B>>>,
-    ReadStorage<'_, Handle<Material<B>>>,
-    ReadStorage<'_, GlobalTransform>,
-    ReadStorage<'_, JointTransforms>,
-    ) as SystemData>::fetch(resources);
+ 
+        let DebugLinePassData {
+            line_segments,
+            ..
+        } = DebugLinePassData::fetch(resources);
 
-    let defcam = Camera::standard_2d();
-    let identity = GlobalTransform::default();
-    let camera = active_camera
-        .and_then(|ac| {
-            cameras
-                .get(ac.entity)
-                .map(|camera| (camera, globals.get(ac.entity).unwrap_or(&identity)))
-        })
-        .unwrap_or_else(|| {
-            (&cameras, &globals)
-                .join()
-                .next()
-                .unwrap_or((&defcam, &identity))
-        });
 
-        unimplemented!()
+        ensure_buffer(
+            &factory,
+            &mut None,
+            //&mut self.buffer,
+            rendy::resource::buffer::UniformBuffer,
+            std::mem::size_of::<DebugLine>() as u64,
+        ).unwrap();
+
+        PrepareResult::DrawRecord
     }
 
     fn draw(
         &mut self,
-        _layout: &B::PipelineLayout,
-        _encoder: RenderPassEncoder<'_, B>,
-        _index: usize,
-        _aux: &Resources,
+        layout: &B::PipelineLayout,
+        mut encoder: RenderPassEncoder<'_, B>,
+        index: usize,
+        aux: &Resources,
     ) {
         log::trace!("Drawing debug lines");
-        unimplemented!()
+
     }
 
     fn dispose(self, _factory: &mut Factory<B>, _aux: &Resources) {
         unimplemented!()
+    }
+}
+
+#[derive(SystemData)]
+struct DebugLinePassData<'a> {
+    line_segments: ReadStorage<'a, DebugLinesComponent>
+}
+
+fn ensure_buffer<B: Backend>(
+    factory: &Factory<B>,
+    buffer: &mut Option<rendy::resource::Buffer<B>>,
+    usage: impl rendy::resource::buffer::Usage,
+    min_size: u64,
+) -> Result<bool, failure::Error> {
+    if buffer.as_ref().map(|b| b.size()).unwrap_or(0) < min_size {
+        let new_size = min_size.next_power_of_two();
+        let new_buffer = factory.create_buffer(512, new_size, usage)?;
+        *buffer = Some(new_buffer);
+        Ok(true)
+    } else {
+        Ok(false)
+    }
+}
+
+#[derive(Debug)]
+struct PerLineSegment<B: Backend> {
+    environment_buffer: Option<rendy::resource::Buffer<B>>,
+    models_buffer: Option<rendy::resource::Buffer<B>>,
+    material_buffer: Option<rendy::resource::Buffer<B>>,
+}
+
+impl<B: Backend> PerLineSegment<B> {
+    fn new() -> Self {
+        Self {
+            environment_buffer: None,
+            models_buffer: None,
+            material_buffer: None,
+        }
     }
 }

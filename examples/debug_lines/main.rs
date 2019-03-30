@@ -10,7 +10,7 @@ use amethyst::{
     ecs::{Read, System, Write},
     input::InputBundle,
     prelude::*,
-    renderer::*,
+    rendy::*,
     utils::application_root_dir,
 };
 
