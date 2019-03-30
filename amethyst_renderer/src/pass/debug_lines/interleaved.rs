@@ -123,7 +123,7 @@ where
             lines
         };
 
-        if debug_lines.len() == 0 {
+        if debug_lines.is_empty() {
             effect.clear();
             return;
         }

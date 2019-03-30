@@ -217,7 +217,7 @@ impl<'a> System<'a> for CameraOrthoSystem {
         WriteStorage<'a, CameraOrtho>,
     );
 
-    #[cfg_attr(feature = "cargo-clippy", allow(float_cmp))] // cmp just used to recognize change
+    #[allow(clippy::float_cmp)] // cmp just used to recognize change
     fn run(&mut self, (dimensions, mut cameras, mut ortho_cameras): Self::SystemData) {
         let aspect = dimensions.aspect_ratio();
 

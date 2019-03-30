@@ -134,7 +134,7 @@ where
             buffer
         };
 
-        if path.extension().and_then(|e| e.to_str()) == Some("ron") {
+        if path.extension().and_then(std::ffi::OsStr::to_str) == Some("ron") {
             Self::load_bytes(&content)
         } else {
             Err(ConfigError::Extension(path.to_path_buf()))

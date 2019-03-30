@@ -269,16 +269,14 @@ where
                         } else {
                             false
                         }
+                    } else if let Event::WindowEvent {
+                        event: WindowEvent::CloseRequested,
+                        ..
+                    } = e
+                    {
+                        true
                     } else {
-                        if let Event::WindowEvent {
-                            event: WindowEvent::CloseRequested,
-                            ..
-                        } = e
-                        {
-                            true
-                        } else {
-                            false
-                        }
+                        false
                     }
                 })
             })

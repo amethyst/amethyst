@@ -68,8 +68,7 @@ where
                 keep
             });
             rm.iter().for_each(|e| {
-                &mut cache.cached.remove(*e);
-                ()
+                cache.cached.remove(*e);
             });
         }
 

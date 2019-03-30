@@ -223,7 +223,7 @@ impl<Q> StageBuilder<Q> {
         C: Into<Option<R>>,
         D: Into<Option<f32>>,
     {
-        self.clear_color = color_val.into().map(|c| c.into());
+        self.clear_color = color_val.into().map(Into::into);
         self.clear_depth = depth_val.into();
         self
     }

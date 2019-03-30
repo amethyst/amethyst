@@ -114,17 +114,17 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             focused_edit.cursor_blink_timer = 0.0;
                         }
                         VirtualKeyCode::Back => {
-                            if !delete_highlighted(focused_edit, focused_text) {
-                                if focused_edit.cursor_position > 0 {
-                                    if let Some((byte, len)) = focused_text
-                                        .text
-                                        .grapheme_indices(true)
-                                        .nth(focused_edit.cursor_position as usize - 1)
-                                        .map(|i| (i.0, i.1.len()))
-                                    {
-                                        focused_text.text.drain(byte..(byte + len));
-                                        focused_edit.cursor_position -= 1;
-                                    }
+                            if !delete_highlighted(focused_edit, focused_text)
+                                && focused_edit.cursor_position > 0
+                            {
+                                if let Some((byte, len)) = focused_text
+                                    .text
+                                    .grapheme_indices(true)
+                                    .nth(focused_edit.cursor_position as usize - 1)
+                                    .map(|i| (i.0, i.1.len()))
+                                {
+                                    focused_text.text.drain(byte..(byte + len));
+                                    focused_edit.cursor_position -= 1;
                                 }
                             }
                         }
@@ -348,22 +348,12 @@ fn should_skip_char(input: char) -> bool {
     // Ignore obsolete control characters, and tab characters we can't render
     // properly anyways.  Also ignore newline characters since we don't
     // support multi-line text at the moment.
-    if input < '\u{20}' {
-        true
-    }
+    input < '\u{20}'
     // Ignore delete character too
-    else if input == '\u{7F}' {
-        true
-    }
+    || input == '\u{7F}'
     // Unicode reserves some characters for "private use".  Systems emit
     // these for no clear reason, so we're just going to ignore all of them.
-    else if input >= '\u{E000}' && input <= '\u{F8FF}' {
-        true
-    } else if input >= '\u{F0000}' && input <= '\u{FFFFF}' {
-        true
-    } else if input >= '\u{100000}' && input <= '\u{10FFFF}' {
-        true
-    } else {
-        false
-    }
+    || (input >= '\u{E000}' && input <= '\u{F8FF}')
+    || (input >= '\u{F0000}' && input <= '\u{FFFFF}')
+    || (input >= '\u{100000}' && input <= '\u{10FFFF}')
 }

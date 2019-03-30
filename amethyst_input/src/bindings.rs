@@ -214,7 +214,7 @@ where
         if make_new {
             let mut bindings = SmallVec::new();
             bindings.push(bind.clone());
-            self.actions.insert(id.into(), bindings);
+            self.actions.insert(id, bindings);
         }
         Ok(())
     }
@@ -265,10 +265,10 @@ where
     {
         self.actions
             .get(id)
-            .map(|a| a.as_slice())
+            .map(SmallVec::as_slice)
             .unwrap_or(&[])
             .iter()
-            .map(|a| a.as_slice())
+            .map(SmallVec::as_slice)
     }
 
     /// Gets a list of all action bindings
@@ -320,13 +320,10 @@ where
         }
         if bind.len() == 1 {
             for (k, a) in self.axes.iter() {
-                match a {
-                    Axis::Emulated { pos, neg } => {
-                        if bind[0] == *pos || bind[0] == *neg {
-                            return Err(BindingError::ButtonBoundToAxis(k.clone(), a.clone()));
-                        }
+                if let Axis::Emulated { pos, neg } = a {
+                    if bind[0] == *pos || bind[0] == *neg {
+                        return Err(BindingError::ButtonBoundToAxis(k.clone(), a.clone()));
                     }
-                    _ => {}
                 }
             }
         }
@@ -347,32 +344,24 @@ where
                 neg: ref axis_neg,
             } => {
                 for (k, a) in self.axes.iter().filter(|(k, _a)| *k != id) {
-                    match a {
-                        Axis::Emulated { pos, neg } => {
-                            if axis_pos == pos
-                                || axis_pos == neg
-                                || axis_neg == pos
-                                || axis_neg == neg
-                            {
-                                return Err(BindingError::AxisButtonAlreadyBoundToAxis(
-                                    k.clone(),
-                                    a.clone(),
-                                ));
-                            }
+                    if let Axis::Emulated { pos, neg } = a {
+                        if axis_pos == pos || axis_pos == neg || axis_neg == pos || axis_neg == neg
+                        {
+                            return Err(BindingError::AxisButtonAlreadyBoundToAxis(
+                                k.clone(),
+                                a.clone(),
+                            ));
                         }
-                        _ => {}
                     }
                 }
                 for (k, a) in self.actions.iter() {
                     for c in a {
                         // Since you can't bind combos to an axis we only need to check combos with length 1.
-                        if c.len() == 1 {
-                            if c[0] == *axis_pos || c[0] == *axis_neg {
-                                return Err(BindingError::AxisButtonAlreadyBoundToAction(
-                                    k.clone(),
-                                    c[0].clone(),
-                                ));
-                            }
+                        if c.len() == 1 && (c[0] == *axis_pos || c[0] == *axis_neg) {
+                            return Err(BindingError::AxisButtonAlreadyBoundToAction(
+                                k.clone(),
+                                c[0],
+                            ));
                         }
                     }
                 }
@@ -383,17 +372,15 @@ where
                 ..
             } => {
                 for (k, a) in self.axes.iter().filter(|(k, _a)| *k != id) {
-                    match a {
-                        Axis::Controller {
-                            controller_id,
-                            axis,
-                            ..
-                        } => {
-                            if controller_id == input_controller_id && axis == input_axis {
-                                return Err(BindingError::ControllerAxisAlreadyBound(k.clone()));
-                            }
+                    if let Axis::Controller {
+                        controller_id,
+                        axis,
+                        ..
+                    } = a
+                    {
+                        if controller_id == input_controller_id && axis == input_axis {
+                            return Err(BindingError::ControllerAxisAlreadyBound(k.clone()));
                         }
-                        _ => {}
                     }
                 }
             }

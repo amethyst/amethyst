@@ -387,7 +387,7 @@ where
 {
     actions
         .map(|action| UiButtonAction {
-            target: target.clone(),
+            target: *target,
             event_type: action,
         })
         .collect()
