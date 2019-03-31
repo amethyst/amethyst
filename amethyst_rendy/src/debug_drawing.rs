@@ -2,16 +2,16 @@ use amethyst_core::{
     ecs::{Component, DenseVecStorage}
 };
 
-use glsl_layout::*;
+use rendy::mesh::{Position, Color};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DebugLine {
     /// Starting point of the line
-    pub start: vec3,
+    pub start: Position,
     /// RGBA color value of the line.
-    pub color: vec3,
+    pub color: Color,
     /// Endpoint of the line
-    pub end: vec3,
+    pub end: Position,
 }
 
 /// Component that stores persistent debug lines to be rendered in DebugLinesPass draw pass.
@@ -41,7 +41,7 @@ impl DebugLinesComponent {
     }
 
     /// Adds a line to be rendered by giving a start and an end position.
-    pub fn add_line(&mut self, start: vec3, end: vec3, color: vec3) {
+    pub fn add_line(&mut self, start: Position, end: Position, color: Color) {
         let vertex = DebugLine {
             start,
             color,
@@ -75,7 +75,7 @@ impl DebugLines {
     }
 
     /// Submits a line to be rendered by giving a start and an end position.
-    pub fn draw_line(&mut self, start: vec3, end: vec3, color: vec3) {
+    pub fn draw_line(&mut self, start: Position, end: Position, color: Color) {
         let vertex = DebugLine {
             start,
             color,

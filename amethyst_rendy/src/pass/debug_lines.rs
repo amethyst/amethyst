@@ -23,6 +23,7 @@ use rendy::{
         render::{PrepareResult, SimpleGraphicsPipeline, SimpleGraphicsPipelineDesc},
         GraphContext, NodeBuffer, NodeImage,
     },
+    mesh::{PosColor, Position, Color},
     hal::{
         pso::{
             BlendState, ColorBlendDesc, ColorMask, EntryPoint, GraphicsShaderSet,
@@ -37,6 +38,7 @@ use rendy::{
 use shred_derive::SystemData;
 use smallvec::{smallvec, SmallVec};
 use std::io::Write;
+use super::util::ensure_buffer;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct DrawDebugLinesDesc {
@@ -104,21 +106,22 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawDebugLinesDesc
         _ctx: &mut GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _resources: &Resources,
+        resources: &Resources,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
         _set_layouts: &[DescriptorSetLayout<B>],
     ) -> Result<DrawDebugLines<B>, failure::Error> {
-        
         Ok(DrawDebugLines {
-            per_line: vec![]
+            lines_buffer: None,
+            collected_vec: vec![]
         })
     }
 }
 
 #[derive(Debug)]
 pub struct DrawDebugLines<B: Backend> {
-    per_line: Vec<PerLineSegment<B>>
+    lines_buffer: Option<rendy::resource::Buffer<B>>,
+    collected_vec: Vec<PosColor>
 }
 
 impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawDebugLines<B> {
@@ -137,16 +140,27 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawDebugLines<B> {
             line_segments,
             ..
         } = DebugLinePassData::fetch(resources);
-
-
+        self.collected_vec.clear();
+        for component in (line_segments).join() {
+            for line in &component.lines {
+                let start_vertex = PosColor{
+                    position: line.start,
+                    color: line.color
+                };
+                let end_vertex = PosColor{
+                    position: line.end,
+                    color: line.color
+                };
+                self.collected_vec.push(start_vertex);
+                self.collected_vec.push(end_vertex);
+            }
+        }
         ensure_buffer(
-            &factory,
-            &mut None,
-            //&mut self.buffer,
-            rendy::resource::buffer::UniformBuffer,
-            std::mem::size_of::<DebugLine>() as u64,
+            factory, 
+            &mut self.lines_buffer, 
+            (gfx_hal::buffer::Usage::VERTEX, rendy::memory::Dynamic), 
+            self.collected_vec.len() as u64 * std::mem::size_of::<PosColor>() as u64
         ).unwrap();
-
         PrepareResult::DrawRecord
     }
 
@@ -158,7 +172,6 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawDebugLines<B> {
         aux: &Resources,
     ) {
         log::trace!("Drawing debug lines");
-
     }
 
     fn dispose(self, _factory: &mut Factory<B>, _aux: &Resources) {
@@ -169,37 +182,4 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawDebugLines<B> {
 #[derive(SystemData)]
 struct DebugLinePassData<'a> {
     line_segments: ReadStorage<'a, DebugLinesComponent>
-}
-
-fn ensure_buffer<B: Backend>(
-    factory: &Factory<B>,
-    buffer: &mut Option<rendy::resource::Buffer<B>>,
-    usage: impl rendy::resource::buffer::Usage,
-    min_size: u64,
-) -> Result<bool, failure::Error> {
-    if buffer.as_ref().map(|b| b.size()).unwrap_or(0) < min_size {
-        let new_size = min_size.next_power_of_two();
-        let new_buffer = factory.create_buffer(512, new_size, usage)?;
-        *buffer = Some(new_buffer);
-        Ok(true)
-    } else {
-        Ok(false)
-    }
-}
-
-#[derive(Debug)]
-struct PerLineSegment<B: Backend> {
-    environment_buffer: Option<rendy::resource::Buffer<B>>,
-    models_buffer: Option<rendy::resource::Buffer<B>>,
-    material_buffer: Option<rendy::resource::Buffer<B>>,
-}
-
-impl<B: Backend> PerLineSegment<B> {
-    fn new() -> Self {
-        Self {
-            environment_buffer: None,
-            models_buffer: None,
-            material_buffer: None,
-        }
-    }
 }
