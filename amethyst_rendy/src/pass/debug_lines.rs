@@ -35,6 +35,7 @@ use rendy::{
     shader::Shader,
 };
 
+use util;
 use shred_derive::SystemData;
 use smallvec::{smallvec, SmallVec};
 use std::io::Write;
@@ -121,6 +122,7 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawDebugLinesDesc
 #[derive(Debug)]
 pub struct DrawDebugLines<B: Backend> {
     lines_buffer: Option<rendy::resource::Buffer<B>>,
+    projview_buffer: Option<rendy::resource::Buffer<B>>,
     collected_vec: Vec<PosColor>
 }
 
@@ -138,6 +140,9 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawDebugLines<B> {
  
         let DebugLinePassData {
             line_segments,
+            active_camera,
+            cameras,
+            global_transforms,
             ..
         } = DebugLinePassData::fetch(resources);
         self.collected_vec.clear();
@@ -155,12 +160,37 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawDebugLines<B> {
                 self.collected_vec.push(end_vertex);
             }
         }
+
+        let line_buf_size = util::align_size::<pod::ViewArgs>(1, collected_vec.len());
+
         ensure_buffer(
             factory, 
             &mut self.lines_buffer, 
             (gfx_hal::buffer::Usage::VERTEX, rendy::memory::Dynamic), 
-            self.collected_vec.len() as u64 * std::mem::size_of::<PosColor>() as u64
+            line_buf_size
         ).unwrap();
+
+        let view_args = util::prepare_camera(&active_camera, &cameras, &global_transforms).1;
+
+        if ensure_buffer(factory, 
+            buffer: &mut self.projview_buffer, 
+            usage: rendy::resource::buffer::UniformBuffer, 
+            min_size: util::align_size::<pod::ViewArgs>(1, 1)
+        ).unwrap() {
+            unsafe {
+                let buffer = self.lines_buffer.as_mut().unwrap();
+                factory
+                    .upload_visible_buffer(buffer, Some(0), &[view_args])
+                    .unwrap();
+            }            
+        };
+
+        unsafe {
+            let buffer = self.lines_buffer.as_mut().unwrap();
+            factory
+                .upload_visible_buffer(buffer, Some(0), &[view_args])
+                .unwrap();
+        }
         PrepareResult::DrawRecord
     }
 
@@ -181,5 +211,8 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawDebugLines<B> {
 
 #[derive(SystemData)]
 struct DebugLinePassData<'a> {
-    line_segments: ReadStorage<'a, DebugLinesComponent>
+    line_segments: ReadStorage<'a, DebugLinesComponent>,
+    active_camera: Option<Read<'a, ActiveCamera>>,
+    cameras: ReadStorage<'a, Camera>,
+    global_transforms: ReadStorage<'a, GlobalTransform>
 }
