@@ -1,7 +1,8 @@
 //! Debug lines pass
 
 use std::marker::PhantomData;
-
+use gfx_hal::device::Device;
+use gfx_hal::adapter::PhysicalDevice;
 use crate::{
     camera::{ActiveCamera, Camera},
     hidden::Hidden,
@@ -9,7 +10,8 @@ use crate::{
     skinning::JointTransforms,
     types::{Mesh, Texture},
     visibility::Visibility,
-    debug_drawing::{DebugLine, DebugLinesComponent}
+    debug_drawing::{DebugLine, DebugLinesComponent},
+    pod,
 };
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
@@ -27,19 +29,20 @@ use rendy::{
     hal::{
         pso::{
             BlendState, ColorBlendDesc, ColorMask, EntryPoint, GraphicsShaderSet,
-            Specialization,
+            Specialization, Descriptor, DescriptorSetLayoutBinding, 
+            DescriptorSetWrite, DescriptorType
         },
         Backend,
     },
-    resource::set::DescriptorSetLayout,
+    resource::set::{DescriptorSet, DescriptorSetLayout},
     shader::Shader,
 };
 
-use util;
 use shred_derive::SystemData;
 use smallvec::{smallvec, SmallVec};
 use std::io::Write;
 use super::util::ensure_buffer;
+use super::util;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct DrawDebugLinesDesc {
@@ -114,7 +117,9 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawDebugLinesDesc
     ) -> Result<DrawDebugLines<B>, failure::Error> {
         Ok(DrawDebugLines {
             lines_buffer: None,
-            collected_vec: vec![]
+            projview_buffer: None,
+            collected_vec: vec![],
+            objects_set: None,
         })
     }
 }
@@ -123,7 +128,8 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawDebugLinesDesc
 pub struct DrawDebugLines<B: Backend> {
     lines_buffer: Option<rendy::resource::Buffer<B>>,
     projview_buffer: Option<rendy::resource::Buffer<B>>,
-    collected_vec: Vec<PosColor>
+    collected_vec: Vec<PosColor>,
+    objects_set: Option<DescriptorSet<B>>,
 }
 
 impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawDebugLines<B> {
@@ -161,7 +167,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawDebugLines<B> {
             }
         }
 
-        let line_buf_size = util::align_size::<pod::ViewArgs>(1, collected_vec.len());
+        let line_buf_size = util::align_size::<pod::ViewArgs>(1, self.collected_vec.len());
 
         ensure_buffer(
             factory, 
@@ -172,25 +178,42 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawDebugLines<B> {
 
         let view_args = util::prepare_camera(&active_camera, &cameras, &global_transforms).1;
 
-        if ensure_buffer(factory, 
-            buffer: &mut self.projview_buffer, 
-            usage: rendy::resource::buffer::UniformBuffer, 
-            min_size: util::align_size::<pod::ViewArgs>(1, 1)
+        if ensure_buffer(
+            factory, 
+            &mut self.projview_buffer, 
+            rendy::resource::buffer::UniformBuffer, 
+            util::align_size::<pod::ViewArgs>(1, 1)
         ).unwrap() {
             unsafe {
                 let buffer = self.lines_buffer.as_mut().unwrap();
                 factory
-                    .upload_visible_buffer(buffer, Some(0), &[view_args])
+                    .upload_visible_buffer(buffer, 0, &[view_args])
                     .unwrap();
             }            
         };
 
+        {
+        let limits = factory.physical().limits();
+        let ubo_offset_align = limits.min_uniform_buffer_offset_alignment;
+        let align = ubo_offset_align;
+        let obj_set = self.objects_set.get_or_insert_with(|| factory.create_descriptor_set(&set_layouts[0]).unwrap()).raw();
+        let projview_size = util::align_size::<pod::ViewArgs>(align, 1);
+        let projview_range = Some(0)..Some(projview_size);
+
+
         unsafe {
-            let buffer = self.lines_buffer.as_mut().unwrap();
-            factory
-                .upload_visible_buffer(buffer, Some(0), &[view_args])
-                .unwrap();
+            let buffer = self.lines_buffer.as_mut().unwrap().raw();
+            factory.write_descriptor_sets(vec![
+                DescriptorSetWrite {
+                    set: obj_set,
+                    binding: 0,
+                    array_offset: 0,
+                    descriptors: Some(Descriptor::Buffer(buffer, projview_range.clone())),
+                },
+            ]);
         }
+        }
+
         PrepareResult::DrawRecord
     }
 
