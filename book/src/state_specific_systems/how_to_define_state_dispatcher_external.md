@@ -1,4 +1,4 @@
-# State Dispatcher: External
+# How to Define State Dispatcher: External
 
 This guide explains how to define a state-specific dispatcher whose systems are passed in externally. This is used when the list of systems is determined by user choices at runtime.
 

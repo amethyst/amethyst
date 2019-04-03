@@ -1,4 +1,4 @@
-# State Dispatcher: Internal
+# How to Define State Dispatcher: Internal
 
 This guide explains how to define a state-specific dispatcher whose systems are determined by the state and is unaffected by input from a previous state.
 
