@@ -39,6 +39,8 @@
     * [Definition](./animation/definition.md)
 * [State-Specific Systems](./state_specific_systems.md)
     * [Custom `GameData`](./state_specific_systems/custom_game_data.md)
+    * [State Dispatcher: Internal](./state_specific_systems/state_dispatcher_internal.md)
+    * [State Dispatcher: External](./state_specific_systems/state_dispatcher_external.md)
 * [Sprites](./sprites.md)
     * [Set Up The Render Pass](./sprites/set_up_the_render_pass.md)
     * [Load The `Texture`](./sprites/load_the_texture.md)
