@@ -82,6 +82,11 @@ pub struct AmethystApplication<T, E, R>
 where
     E: Send + Sync + 'static,
 {
+    /// Name of the application, if provided.
+    ///
+    /// This is used to name the thread that is used to spawn the application, so that on `panic!`s
+    /// it is easier to tell which test failed.
+    app_name: Option<String>,
     /// Functions to add bundles to the game data.
     ///
     /// This is necessary because `System`s are not `Send`, and so we cannot send `GameDataBuilder`
@@ -110,6 +115,7 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
     pub fn blank() -> AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader>
     {
         AmethystApplication {
+            app_name: None,
             bundle_add_fns: Vec::new(),
             resource_add_fns: Vec::new(),
             state_fns: Vec::new(),
@@ -267,34 +273,40 @@ where
 
         // Run in a sub thread due to mesa's threading issues with GL software rendering
         // See: <https://users.rust-lang.org/t/trouble-identifying-cause-of-segfault/18096>
-        thread::spawn(move || -> Result<(), Error> {
-            amethyst::start_logger(Default::default());
+        let app_name = self
+            .app_name
+            .unwrap_or_else(|| String::from(stringify!(AmethystApplication)));
+        thread::Builder::new()
+            .name(app_name)
+            .spawn(move || -> Result<(), Error> {
+                amethyst::start_logger(Default::default());
 
-            if render {
-                let guard = X11_GL_MUTEX.lock().unwrap();
+                if render {
+                    let guard = X11_GL_MUTEX.lock().unwrap();
 
-                // Note: if this panics, the Mutex is poisoned.
-                // Unfortunately we cannot catch panics, as the application is `!UnwindSafe`
-                //
-                // We have to build the application after acquiring the lock because the window is
-                // already instantiated during the build.
-                //
-                // The mutex greatly reduces, but does not eliminate X11 window initialization
-                // errors from happening:
-                //
-                // * <https://github.com/tomaka/glutin/issues/1034> can still happen
-                // * <https://github.com/tomaka/glutin/issues/1038> may be completely removed
-                Self::build_internal(params)?.run();
+                    // Note: if this panics, the Mutex is poisoned.
+                    // Unfortunately we cannot catch panics, as the application is `!UnwindSafe`
+                    //
+                    // We have to build the application after acquiring the lock because the window is
+                    // already instantiated during the build.
+                    //
+                    // The mutex greatly reduces, but does not eliminate X11 window initialization
+                    // errors from happening:
+                    //
+                    // * <https://github.com/tomaka/glutin/issues/1034> can still happen
+                    // * <https://github.com/tomaka/glutin/issues/1038> may be completely removed
+                    Self::build_internal(params)?.run();
 
-                drop(guard);
-            } else {
-                Self::build_internal(params)?.run();
-            }
+                    drop(guard);
+                } else {
+                    Self::build_internal(params)?.run();
+                }
 
-            Ok(())
-        })
-        .join()
-        .expect("Failed to run Amethyst application")
+                Ok(())
+            })
+            .expect("Failed to spawn `AmethystApplication` thread.")
+            .join()
+            .expect("Failed to run Amethyst application")
     }
 }
 
@@ -303,6 +315,16 @@ where
     T: GameUpdate,
     E: Send + Sync + 'static,
 {
+    /// Sets the name for this application.
+    ///
+    /// This will be used for the thread name that runs this application.
+    pub fn with_app_name<N>(mut self, app_name: N) -> Self
+    where
+        N: Into<String>,
+    {
+        self.app_name = Some(app_name.into());
+        self
+    }
     /// Use the specified custom event type instead of `()`.
     ///
     /// This **must** be invoked before any of the `.with_*()` function calls as the custom event
@@ -325,6 +347,7 @@ where
             );
         }
         AmethystApplication {
+            app_name: self.app_name,
             bundle_add_fns: self.bundle_add_fns,
             resource_add_fns: self.resource_add_fns,
             state_fns: Vec::new(),
@@ -435,12 +458,14 @@ where
         // <https://github.com/rust-lang/rfcs/pull/1719>
         let title = title.into().to_string();
 
-        let display_config = Self::display_config(title, visibility);
+        let display_config = Self::display_config(title.clone(), visibility);
         let render_bundle_fn = move || {
             RenderBundle::new(Self::pipeline(), Some(display_config)).with_sprite_sheet_processor()
         };
 
-        self.with_bundle_fn(render_bundle_fn).mark_render()
+        self.with_app_name(title)
+            .with_bundle_fn(render_bundle_fn)
+            .mark_render()
     }
 
     /// Adds a resource to the `World`.
