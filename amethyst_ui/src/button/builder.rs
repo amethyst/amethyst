@@ -5,7 +5,7 @@ use smallvec::{smallvec, SmallVec};
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_audio::SourceHandle;
 use amethyst_core::{
-    ecs::prelude::{Entities, Entity, Read, ReadExpect, World, WriteStorage},
+    ecs::prelude::{Entities, Entity, Read, ReadExpect, World, WriteExpect, WriteStorage},
     Parent,
 };
 use amethyst_renderer::{Texture, TextureHandle};
@@ -15,7 +15,7 @@ use crate::{
     Anchor, FontAsset, FontHandle, Interactable, Selectable, Stretch, UiButton, UiButtonAction,
     UiButtonActionRetrigger,
     UiButtonActionType::{self, *},
-    UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform,
+    UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform, WidgetId, Widgets,
 };
 
 use std::marker::PhantomData;
@@ -29,7 +29,7 @@ const DEFAULT_TXT_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
 /// Container for all the resources the builder needs to make a new UiButton.
 #[derive(SystemData)]
-pub struct UiButtonBuilderResources<'a, G: PartialEq + Send + Sync + 'static> {
+pub struct UiButtonBuilderResources<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId = u32> {
     font_asset: Read<'a, AssetStorage<FontAsset>>,
     texture_asset: Read<'a, AssetStorage<Texture>>,
     loader: ReadExpect<'a, Loader>,
@@ -39,7 +39,7 @@ pub struct UiButtonBuilderResources<'a, G: PartialEq + Send + Sync + 'static> {
     parent: WriteStorage<'a, Parent>,
     text: WriteStorage<'a, UiText>,
     transform: WriteStorage<'a, UiTransform>,
-    button: WriteStorage<'a, UiButton>,
+    button_widgets: WriteExpect<'a, Widgets<UiButton, I>>,
     sound_retrigger: WriteStorage<'a, UiSoundRetrigger>,
     button_action_retrigger: WriteStorage<'a, UiButtonActionRetrigger>,
     selectables: WriteStorage<'a, Selectable<G>>,
@@ -47,8 +47,8 @@ pub struct UiButtonBuilderResources<'a, G: PartialEq + Send + Sync + 'static> {
 
 /// Convenience structure for building a button
 #[derive(Debug, Clone)]
-pub struct UiButtonBuilder<G> {
-    name: String,
+pub struct UiButtonBuilder<G, I: WidgetId> {
+    id: Option<I>,
     x: f32,
     y: f32,
     z: f32,
@@ -75,10 +75,13 @@ pub struct UiButtonBuilder<G> {
     _phantom: PhantomData<G>,
 }
 
-impl<G> Default for UiButtonBuilder<G> {
+impl<G, I> Default for UiButtonBuilder<G, I>
+where
+    I: WidgetId,
+{
     fn default() -> Self {
         UiButtonBuilder {
-            name: "".to_string(),
+            id: None,
             x: 0.,
             y: 0.,
             z: DEFAULT_Z,
@@ -105,15 +108,22 @@ impl<G> Default for UiButtonBuilder<G> {
     }
 }
 
-impl<G: PartialEq + Send + Sync + 'static> UiButtonBuilder<G> {
+impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I> {
     /// Construct a new UiButtonBuilder.
     /// This allows easy use of default values for text and button appearance and allows the user
-    /// to easily set other UI-related options.
-    pub fn new<N: ToString, S: ToString>(name: N, text: S) -> UiButtonBuilder<G> {
+    /// to easily set other UI-related options. It also allows easy retrieval and updating through
+    /// the appropriate widgets resouce, see [`Widgets`](../../struct.Widgets.html).
+    pub fn new<S: ToString>(text: S) -> UiButtonBuilder<G, I> {
         let mut builder = UiButtonBuilder::default();
-        builder.name = name.to_string();
         builder.text = text.to_string();
         builder
+    }
+
+    /// Sets an ID for this widget. The type of this ID will determine which `Widgets`
+    /// resource this widget will be added to, see see [`Widgets`](../../struct.Widgets.html).
+    pub fn with_id(mut self, id: I) -> Self {
+        self.id = Some(id);
+        self
     }
 
     /// Add a parent to the button.
@@ -247,9 +257,22 @@ impl<G: PartialEq + Send + Sync + 'static> UiButtonBuilder<G> {
     }
 
     /// Build this with the `UiButtonBuilderResources`.
-    pub fn build(mut self, mut res: UiButtonBuilderResources<'_, G>) -> Entity {
-        let mut id = self.name.clone();
+    pub fn build(mut self, mut res: UiButtonBuilderResources<'a, G, I>) -> (I, UiButton) {
         let image_entity = res.entities.create();
+        let text_entity = res.entities.create();
+        let widget = UiButton::new(image_entity, text_entity);
+
+        let id = {
+            let widget = widget.clone();
+
+            if let Some(id) = self.id {
+                let added_id = id.clone();
+                res.button_widgets.add_with_id(id, widget);
+                added_id
+            } else {
+                res.button_widgets.add(widget)
+            }
+        };
 
         if !self.on_click_start.is_empty()
             || !self.on_click_stop.is_empty()
@@ -300,7 +323,7 @@ impl<G: PartialEq + Send + Sync + 'static> UiButtonBuilder<G> {
             .insert(
                 image_entity,
                 UiTransform::new(
-                    self.name,
+                    format!("{}_btn", id),
                     self.anchor,
                     self.x,
                     self.y,
@@ -331,18 +354,24 @@ impl<G: PartialEq + Send + Sync + 'static> UiButtonBuilder<G> {
                 .expect("Unreachable: Inserting newly created entity");
         }
 
-        id.push_str("_btn_txt");
-        let text_entity = res.entities.create();
         res.transform
             .insert(
                 text_entity,
-                UiTransform::new(id, Anchor::Middle, 0., 0., 0.01, 0., 0.)
-                    .as_transparent()
-                    .with_stretch(Stretch::XY {
-                        x_margin: 0.,
-                        y_margin: 0.,
-                        keep_aspect_ratio: false,
-                    }),
+                UiTransform::new(
+                    format!("{}_btn_text", id),
+                    Anchor::Middle,
+                    0.,
+                    0.,
+                    0.01,
+                    0.,
+                    0.,
+                )
+                .as_transparent()
+                .with_stretch(Stretch::XY {
+                    x_margin: 0.,
+                    y_margin: 0.,
+                    keep_aspect_ratio: false,
+                }),
             )
             .expect("Unreachable: Inserting newly created entity");
         let font_handle = self
@@ -363,21 +392,12 @@ impl<G: PartialEq + Send + Sync + 'static> UiButtonBuilder<G> {
             )
             .expect("Unreachable: Inserting newly created entity");
 
-        res.button
-            .insert(
-                image_entity,
-                UiButton {
-                    text_color: self.text_color,
-                },
-            )
-            .expect("Unreachable: Inserting newly created entity");
-
-        image_entity
+        (id, widget)
     }
 
     /// Create the UiButton based on provided configuration parameters.
-    pub fn build_from_world(self, world: &World) -> Entity {
-        self.build(UiButtonBuilderResources::<G>::fetch(&world.res))
+    pub fn build_from_world(self, world: &World) -> (I, UiButton) {
+        self.build(UiButtonBuilderResources::<G, I>::fetch(&world.res))
     }
 }
 

@@ -24,6 +24,7 @@ fn impl_prefab_data_component(ast: &DeriveInput) -> TokenStream {
             fn add_to_entity(&self,
                              entity: Entity,
                              system_data: &mut Self::SystemData,
+                             _: &[Entity],
                              _: &[Entity]) -> ::std::result::Result<(), Error> {
                 system_data.insert(entity, self.clone()).map(|_| ())?;
                 Ok(())
@@ -55,7 +56,7 @@ fn impl_prefab_data_aggregate(ast: &DeriveInput) -> TokenStream {
             }
         } else {
             quote! {
-                self.#name.add_to_entity(entity, &mut system_data.#n, entities)?;
+                self.#name.add_to_entity(entity, &mut system_data.#n, entities, children)?;
             }
         }
     });
@@ -86,7 +87,8 @@ fn impl_prefab_data_aggregate(ast: &DeriveInput) -> TokenStream {
             fn add_to_entity(&self,
                              entity: Entity,
                              system_data: &mut Self::SystemData,
-                             entities: &[Entity]) -> ::std::result::Result<(), Error> {
+                             entities: &[Entity],
+                             children: &[Entity]) -> ::std::result::Result<(), Error> {
                 #(#adds)*
                 Ok(())
             }

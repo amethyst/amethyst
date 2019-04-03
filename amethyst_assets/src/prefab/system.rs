@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, ops::Deref};
+use std::{collections::HashMap, marker::PhantomData, ops::Deref};
 
 use log::error;
 
@@ -112,6 +112,8 @@ where
                 // create entities
                 self.entities.clear();
                 self.entities.push(root_entity);
+
+                let mut children = HashMap::new();
                 for entity_data in prefab.entities.iter().skip(1) {
                     let new_entity = entities.create();
                     self.entities.push(new_entity);
@@ -124,6 +126,11 @@ where
                                 },
                             )
                             .expect("Unable to insert `Parent` for prefab");
+
+                        children
+                            .entry(parent)
+                            .or_insert(vec![])
+                            .push(new_entity.clone());
                     }
                     tags.insert(
                         new_entity,
@@ -143,6 +150,10 @@ where
                                 self.entities[index],
                                 &mut prefab_system_data,
                                 &self.entities,
+                                children
+                                    .get(&index)
+                                    .map(|children| &children[..])
+                                    .unwrap_or(&[]),
                             )
                             .expect("Unable to add prefab system data to entity");
                     }

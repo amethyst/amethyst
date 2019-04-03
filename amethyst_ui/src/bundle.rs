@@ -14,7 +14,7 @@ use crate::{
     CacheSelectionOrderSystem, FontAsset, FontFormat, NoCustomUi, ResizeSystem,
     SelectionKeyboardSystem, SelectionMouseSystem, TextEditingInputSystem, TextEditingMouseSystem,
     ToNativeWidget, UiButtonActionRetriggerSystem, UiButtonSystem, UiLoaderSystem, UiMouseSystem,
-    UiSoundRetriggerSystem, UiSoundSystem, UiTransformSystem,
+    UiSoundRetriggerSystem, UiSoundSystem, UiTransformSystem, WidgetId,
 };
 
 /// UI bundle
@@ -24,16 +24,17 @@ use crate::{
 ///
 /// Will fail with error 'No resource with the given id' if the InputBundle is not added.
 #[derive(new)]
-pub struct UiBundle<A = String, B = String, C = NoCustomUi, G = ()> {
+pub struct UiBundle<A = String, B = String, C = NoCustomUi, W = u32, G = ()> {
     #[new(default)]
-    _marker: PhantomData<(A, B, C, G)>,
+    _marker: PhantomData<(A, B, C, W, G)>,
 }
 
-impl<'a, 'b, A, B, C, G> SystemBundle<'a, 'b> for UiBundle<A, B, C, G>
+impl<'a, 'b, A, B, C, W, G> SystemBundle<'a, 'b> for UiBundle<A, B, C, W, G>
 where
     A: Send + Sync + Eq + Hash + Clone + 'static,
     B: Send + Sync + Eq + Hash + Clone + 'static,
     C: ToNativeWidget,
+    W: WidgetId,
     G: Send + Sync + PartialEq + 'static,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
@@ -43,6 +44,7 @@ where
                 TextureFormat,
                 FontFormat,
                 <C as ToNativeWidget>::PrefabData,
+                W,
             >::default(),
             "ui_loader",
             &[],

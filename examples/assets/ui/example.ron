@@ -71,7 +71,7 @@ Container(
                 image: Data(Rgba((0.09, 0.02, 0.25, 1.0), (channel: Srgb))),
             ),
             children: [
-                Text(
+                Label(
                     transform: (
                         id: "editable",
                         width: 500.,
@@ -142,7 +142,7 @@ Container(
                 normal_image: Data(Rgba((0.82, 0.83, 0.83, 1.0), (channel: Srgb))),
             )
         ),
-        Text(
+        Label(
             transform: (
                 id: "fps",
                 x: 100.,
@@ -162,7 +162,7 @@ Container(
         ),
 
         // Random text
-        Text(
+        Label(
             transform: (
                 id: "random_text",
                 x: 100.,
@@ -181,7 +181,7 @@ Container(
             )
         ),
 
-        Text(
+        Label(
             transform: (
                 id: "multiline",
                 x: -200.,
@@ -200,7 +200,7 @@ Container(
             )
         ),
 
-        Text(
+        Label(
             transform: (
                 id: "system_font",
                 x: 200.,
@@ -218,7 +218,7 @@ Container(
         ),
 
         // ------ Text Align Start ------
-        Text(
+        Label(
             transform: (
                 id: "TopLeft",
                 y: 180.0,
@@ -235,7 +235,7 @@ Container(
                 align: TopLeft, // ! relative to the transform specified, which only has a width of 800 and height of 175 !
             )
         ),
-        Text(
+        Label(
             transform: (
                 id: "Middle",
                 y: 0.0,
@@ -252,7 +252,7 @@ Container(
                 align: Middle,
             )
         ),
-        Text(
+        Label(
             transform: (
                 id: "BottomRight",
                 y: -180.0,

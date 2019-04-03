@@ -74,6 +74,7 @@ impl<'a> PrefabData<'a> for JointPrefab {
         entity: Entity,
         storage: &mut Self::SystemData,
         entities: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         storage
             .insert(
@@ -110,6 +111,7 @@ impl<'a> PrefabData<'a> for SkinPrefab {
         entity: Entity,
         storage: &mut Self::SystemData,
         entities: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         storage
             .insert(

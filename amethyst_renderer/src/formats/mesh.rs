@@ -104,6 +104,7 @@ impl<'a> PrefabData<'a> for MeshData {
         entity: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         let handle = system_data
             .0

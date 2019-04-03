@@ -15,6 +15,7 @@ pub use self::{
         systemfont::{default_system_font, get_all_font_handles, list_system_font_families},
     },
     format::{FontAsset, FontFormat, FontHandle, OtfFormat, TtfFormat},
+    label::{UiLabel, UiLabelBuilder, UiLabelBuilderResources},
     layout::{Anchor, ScaleMode, Stretch, UiTransformSystem},
     pass::DrawUi,
     prefab::{
@@ -28,7 +29,11 @@ pub use self::{
     text::{LineMode, TextEditing, TextEditingMouseSystem, UiText},
     text_editing::TextEditingInputSystem,
     transform::{UiFinder, UiTransform},
+    widgets::{Widget, WidgetId, Widgets},
 };
+
+pub(crate) use amethyst_core::ecs::prelude::Entity;
+pub(crate) use paste;
 
 mod bundle;
 mod button;
@@ -36,6 +41,7 @@ mod event;
 mod event_retrigger;
 mod font;
 mod format;
+mod label;
 mod layout;
 mod pass;
 mod prefab;
@@ -46,3 +52,4 @@ mod sound;
 mod text;
 mod text_editing;
 mod transform;
+mod widgets;

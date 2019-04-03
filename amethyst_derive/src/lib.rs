@@ -8,6 +8,7 @@ use syn::{parse_macro_input, DeriveInput};
 
 mod event_reader;
 mod prefab_data;
+mod widget_id;
 
 #[proc_macro_derive(EventReader, attributes(reader))]
 pub fn event_reader_derive(input: TokenStream) -> TokenStream {
@@ -23,5 +24,17 @@ pub fn event_reader_derive(input: TokenStream) -> TokenStream {
 pub fn prefab_data_derive(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
     let gen = prefab_data::impl_prefab_data(&ast);
+    gen.into()
+}
+
+/// This allows the use of an enum as an ID for the `Widgets` resource. One
+/// variant has to be marked as the default variant with `#[widget_id_default]
+/// and will be used when a `Widget` is added to the resource without an
+/// explicit ID. Note that when using `Widgets::add`, this will overwrite
+/// an existing widget with the same default id!
+#[proc_macro_derive(WidgetId, attributes(widget_id))]
+pub fn widget_id_derive(input: TokenStream) -> TokenStream {
+    let ast = parse_macro_input!(input as DeriveInput);
+    let gen = widget_id::impl_widget_id(&ast);
     gen.into()
 }

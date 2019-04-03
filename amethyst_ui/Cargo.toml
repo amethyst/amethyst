@@ -39,6 +39,8 @@ unicode-segmentation = "1.2"
 winit = { version = "0.18", features = ["serde"] }
 log = "0.4.6"
 font-kit = "0.1"
+paste = "0.1"
+rand = "0.6"
 
 thread_profiler = { version = "0.3", optional = true }
 

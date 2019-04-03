@@ -50,6 +50,7 @@ impl<'a> PrefabData<'a> for ControlTagPrefab {
         entity: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         system_data.0.insert(entity, FlyControlTag)?;
         if let Some((index, distance)) = self.arc_ball {
