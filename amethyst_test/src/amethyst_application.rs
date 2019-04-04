@@ -1,4 +1,4 @@
-use std::{hash::Hash, marker::PhantomData, path::PathBuf, sync::Mutex, thread};
+use std::{any::Any, hash::Hash, marker::PhantomData, panic, path::PathBuf, sync::Mutex, thread};
 
 use amethyst::{
     self,
@@ -284,29 +284,57 @@ where
                 if render {
                     let guard = X11_GL_MUTEX.lock().unwrap();
 
-                    // Note: if this panics, the Mutex is poisoned.
-                    // Unfortunately we cannot catch panics, as the application is `!UnwindSafe`
-                    //
-                    // We have to build the application after acquiring the lock because the window is
-                    // already instantiated during the build.
+                    // We have to build the application after acquiring the lock because the window
+                    // is already instantiated during the build.
                     //
                     // The mutex greatly reduces, but does not eliminate X11 window initialization
                     // errors from happening:
                     //
                     // * <https://github.com/tomaka/glutin/issues/1034> can still happen
                     // * <https://github.com/tomaka/glutin/issues/1038> may be completely removed
-                    Self::build_internal(params)?.run();
+
+                    // `CoreApplication` is `!UnwindSafe`, but wrapping it in a `Mutex` allows us to
+                    // recover from a panic.
+                    let application = Mutex::new(Self::build_internal(params)?);
+                    let run_result = panic::catch_unwind(move || {
+                        application
+                            .lock()
+                            .expect("Expected to get application lock")
+                            .run()
+                    })
+                    .map_err(Self::box_any_to_error);
 
                     drop(guard);
-                } else {
-                    Self::build_internal(params)?.run();
-                }
 
-                Ok(())
+                    run_result
+                } else {
+                    let application = Mutex::new(Self::build_internal(params)?);
+                    panic::catch_unwind(move || {
+                        application
+                            .lock()
+                            .expect("Expected to get application lock")
+                            .run()
+                    })
+                    .map_err(Self::box_any_to_error)
+                }
             })
             .expect("Failed to spawn `AmethystApplication` thread.")
             .join()
-            .expect("Failed to run Amethyst application")
+            .expect("Failed to run `AmethystApplication` closure.")
+    }
+
+    fn box_any_to_error(error: Box<dyn Any + Send>) -> Error {
+        // Caught `panic!`s are generally `&str`s.
+        //
+        // If we get something else, we just inform the user to check the test output.
+        if let Some(inner) = error.downcast_ref::<&str>() {
+            Error::from_string(inner.to_string())
+        } else {
+            Error::from_string(
+                "Unable to detect additional information from test failure.\n\
+                 Please inspect the test output for clues.",
+            )
+        }
     }
 }
 
@@ -737,18 +765,18 @@ mod test {
     }
 
     #[test]
-    #[should_panic(expected = "Failed to run Amethyst application")]
+    #[should_panic(expected = "Tried to fetch a resource, but the resource does not exist")]
     fn assertion_when_resource_is_not_added_should_panic() {
         let assertion_fn = |world: &mut World| {
             // Panics if `ApplicationResource` was not added.
             world.read_resource::<ApplicationResource>();
         };
 
-        assert!(AmethystApplication::blank()
+        AmethystApplication::blank()
             // without BundleOne
             .with_assertion(assertion_fn)
             .run()
-            .is_ok());
+            .unwrap();
     }
 
     #[test]
@@ -786,7 +814,7 @@ mod test {
     }
 
     #[test]
-    #[should_panic(expected = "Failed to run Amethyst application")]
+    #[should_panic(expected = "Tried to fetch a resource, but the resource does not exist")]
     fn assertion_switch_with_loading_state_without_add_resource_should_panic() {
         let state_fns = || {
             let assertion_fn = |world: &mut World| {
@@ -796,14 +824,14 @@ mod test {
             SwitchState::new(FunctionState::new(assertion_fn))
         };
 
-        assert!(AmethystApplication::blank()
+        AmethystApplication::blank()
             .with_state(state_fns)
             .run()
-            .is_ok());
+            .unwrap();
     }
 
     #[test]
-    #[should_panic(expected = "Failed to run Amethyst application")]
+    #[should_panic(expected = "Tried to fetch a resource, but the resource does not exist")]
     fn assertion_push_with_loading_state_without_add_resource_should_panic() {
         // Alternative to embedding the `FunctionState` is to switch to a `PopState` but still
         // provide the assertion function
@@ -812,11 +840,11 @@ mod test {
             world.read_resource::<LoadResource>();
         };
 
-        assert!(AmethystApplication::blank()
+        AmethystApplication::blank()
             .with_state(state_fns)
             .with_assertion(assertion_fn)
             .run()
-            .is_ok());
+            .unwrap();
     }
 
     #[test]
