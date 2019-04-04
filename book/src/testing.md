@@ -46,16 +46,13 @@ The following shows a simple example of testing a `State`. More examples are in 
 # }
 #
 #[test]
-fn loading_state_adds_load_resource() {
-    assert!(
-        AmethystApplication::blank()
-            .with_state(|| LoadingState::new())
-            .with_assertion(|world| {
-                world.read_resource::<LoadResource>();
-            })
-            .run()
-            .is_ok()
-    );
+fn loading_state_adds_load_resource() -> Result<(), Error> {
+    AmethystApplication::blank()
+        .with_state(|| LoadingState::new())
+        .with_assertion(|world| {
+            world.read_resource::<LoadResource>();
+        })
+        .run()
 }
 ```
 
@@ -120,22 +117,20 @@ fn test_name() {
 }
 ```
 
-Finally, call `.run()` to run the application. This returns `amethyst::Result<()>`, so you can
-wrap it in an `assert!(..);`:
+Finally, call `.run()` to run the application. This returns `amethyst::Result<()>`, so we return that as part of the function:
 
 ```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
 # extern crate amethyst_test;
 #
+# use amethyst::Error;
 # use amethyst_test::prelude::*;
 #
 #[test]
-fn test_name() {
+fn test_name() -> Result<(), Error> {
     let visibility = false; // Whether the window should be shown
-    assert!(
-        AmethystApplication::render_base("test_name", visibility)
-            // ...
-            .run()
-            .is_ok()
-    );
+    AmethystApplication::render_base("test_name", visibility)
+        // ...
+        .run()
 }
 ```

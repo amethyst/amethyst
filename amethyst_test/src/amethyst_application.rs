@@ -733,35 +733,30 @@ mod test {
     use crate::{EffectReturn, FunctionState, PopState};
 
     #[test]
-    fn bundle_build_is_ok() {
-        assert!(AmethystApplication::blank()
-            .with_bundle(BundleZero)
-            .run()
-            .is_ok());
+    fn bundle_build_is_ok() -> Result<(), Error> {
+        AmethystApplication::blank().with_bundle(BundleZero).run()
     }
 
     #[test]
-    fn load_multiple_bundles() {
-        assert!(AmethystApplication::blank()
+    fn load_multiple_bundles() -> Result<(), Error> {
+        AmethystApplication::blank()
             .with_bundle(BundleZero)
             .with_bundle(BundleOne)
             .run()
-            .is_ok());
     }
 
     #[test]
-    fn assertion_when_resource_is_added_succeeds() {
+    fn assertion_when_resource_is_added_succeeds() -> Result<(), Error> {
         let assertion_fn = |world: &mut World| {
             world.read_resource::<ApplicationResource>();
             world.read_resource::<ApplicationResourceNonDefault>();
         };
 
-        assert!(AmethystApplication::blank()
+        AmethystApplication::blank()
             .with_bundle(BundleZero)
             .with_bundle(BundleOne)
             .with_assertion(assertion_fn)
             .run()
-            .is_ok());
     }
 
     #[test]
@@ -780,7 +775,7 @@ mod test {
     }
 
     #[test]
-    fn assertion_switch_with_loading_state_with_add_resource_succeeds() {
+    fn assertion_switch_with_loading_state_with_add_resource_succeeds() -> Result<(), Error> {
         let state_fns = || {
             let assertion_fn = |world: &mut World| {
                 world.read_resource::<LoadResource>();
@@ -791,14 +786,11 @@ mod test {
             LoadingState::new(assertion_state)
         };
 
-        assert!(AmethystApplication::blank()
-            .with_state(state_fns)
-            .run()
-            .is_ok());
+        AmethystApplication::blank().with_state(state_fns).run()
     }
 
     #[test]
-    fn assertion_push_with_loading_state_with_add_resource_succeeds() {
+    fn assertion_push_with_loading_state_with_add_resource_succeeds() -> Result<(), Error> {
         // Alternative to embedding the `FunctionState` is to switch to a `PopState` but still
         // provide the assertion function
         let state_fns = || LoadingState::new(PopState);
@@ -806,11 +798,10 @@ mod test {
             world.read_resource::<LoadResource>();
         };
 
-        assert!(AmethystApplication::blank()
+        AmethystApplication::blank()
             .with_state(state_fns)
             .with_assertion(assertion_fn)
             .run()
-            .is_ok());
     }
 
     #[test]
@@ -848,7 +839,7 @@ mod test {
     }
 
     #[test]
-    fn game_data_must_update_before_assertion() {
+    fn game_data_must_update_before_assertion() -> Result<(), Error> {
         let effect_fn = |world: &mut World| {
             let handles = vec![
                 AssetZeroLoader::load(world, AssetZero(10)).unwrap(),
@@ -865,16 +856,15 @@ mod test {
             assert_eq!(Some(&AssetZero(20)), store.get(&asset_zero_handles[1]));
         };
 
-        assert!(AmethystApplication::blank()
+        AmethystApplication::blank()
             .with_bundle(BundleAsset)
             .with_effect(effect_fn)
             .with_assertion(assertion_fn)
             .run()
-            .is_ok());
     }
 
     #[test]
-    fn execution_order_is_setup_state_effect_assertion() {
+    fn execution_order_is_setup_state_effect_assertion() -> Result<(), Error> {
         struct Setup;
         let setup_fns = |world: &mut World| world.add_resource(Setup);
         let state_fns = || {
@@ -897,18 +887,17 @@ mod test {
             assert_eq!(Some(&AssetZero(10)), store.get(&asset_zero_handles[0]));
         };
 
-        assert!(AmethystApplication::blank()
+        AmethystApplication::blank()
             .with_bundle(BundleAsset)
             .with_setup(setup_fns)
             .with_state(state_fns)
             .with_effect(effect_fn)
             .with_assertion(assertion_fn)
             .run()
-            .is_ok());
     }
 
     #[test]
-    fn base_application_can_load_ui() {
+    fn base_application_can_load_ui() -> Result<(), Error> {
         let assertion_fn = |world: &mut World| {
             // Next line would panic if `UiBundle` wasn't added.
             world.read_resource::<AssetStorage<FontAsset>>();
@@ -917,25 +906,23 @@ mod test {
             world.read_resource::<ScreenDimensions>();
         };
 
-        assert!(AmethystApplication::ui_base::<String, String>()
+        AmethystApplication::ui_base::<String, String>()
             .with_assertion(assertion_fn)
             .run()
-            .is_ok());
     }
 
     #[test]
     #[cfg(feature = "graphics")]
-    fn render_base_application_can_load_material_animations() {
+    fn render_base_application_can_load_material_animations() -> Result<(), Error> {
         use crate::MaterialAnimationFixture;
 
-        assert!(AmethystApplication::render_base(
+        AmethystApplication::render_base(
             "render_base_application_can_load_material_animations",
-            false
+            false,
         )
         .with_effect(MaterialAnimationFixture::effect)
         .with_assertion(MaterialAnimationFixture::assertion)
         .run()
-        .is_ok());
     }
 
     #[test]
@@ -953,7 +940,7 @@ mod test {
     }
 
     #[test]
-    fn with_system_runs_system_every_tick() {
+    fn with_system_runs_system_every_tick() -> Result<(), Error> {
         let effect_fn = |world: &mut World| {
             let entity = world.create_entity().with(ComponentZero(0)).build();
 
@@ -971,13 +958,12 @@ mod test {
             component_zero.0
         };
 
-        assert!(AmethystApplication::blank()
+        AmethystApplication::blank()
             .with_system(SystemEffect, "system_effect", &[])
             .with_effect(effect_fn)
             .with_assertion(|world| assert_eq!(1, get_component_zero_value(world)))
             .with_assertion(|world| assert_eq!(2, get_component_zero_value(world)))
             .run()
-            .is_ok());
     }
 
     #[test]
@@ -988,7 +974,7 @@ mod test {
     }
 
     #[test]
-    fn with_system_single_runs_system_once() {
+    fn with_system_single_runs_system_once() -> Result<(), Error> {
         let assertion_fn = |world: &mut World| {
             let entity = world.read_resource::<EffectReturn<Entity>>().0.clone();
 
@@ -1001,7 +987,7 @@ mod test {
             assert_eq!(1, component_zero.0);
         };
 
-        assert!(AmethystApplication::blank()
+        AmethystApplication::blank()
             .with_setup(|world| {
                 world.register::<ComponentZero>();
 
@@ -1012,15 +998,14 @@ mod test {
             .with_assertion(assertion_fn)
             .with_assertion(assertion_fn)
             .run()
-            .is_ok());
     }
 
     // Double usage tests
     // If the second call panics, then the setup functions were not executed in the right order.
 
     #[test]
-    fn with_setup_invoked_twice_should_run_in_specified_order() {
-        assert!(AmethystApplication::blank()
+    fn with_setup_invoked_twice_should_run_in_specified_order() -> Result<(), Error> {
+        AmethystApplication::blank()
             .with_setup(|world| {
                 world.add_resource(ApplicationResource);
             })
@@ -1028,12 +1013,11 @@ mod test {
                 world.read_resource::<ApplicationResource>();
             })
             .run()
-            .is_ok());
     }
 
     #[test]
-    fn with_effect_invoked_twice_should_run_in_the_specified_order() {
-        assert!(AmethystApplication::blank()
+    fn with_effect_invoked_twice_should_run_in_the_specified_order() -> Result<(), Error> {
+        AmethystApplication::blank()
             .with_effect(|world| {
                 world.add_resource(ApplicationResource);
             })
@@ -1041,12 +1025,11 @@ mod test {
                 world.read_resource::<ApplicationResource>();
             })
             .run()
-            .is_ok());
     }
 
     #[test]
-    fn with_assertion_invoked_twice_should_run_in_the_specified_order() {
-        assert!(AmethystApplication::blank()
+    fn with_assertion_invoked_twice_should_run_in_the_specified_order() -> Result<(), Error> {
+        AmethystApplication::blank()
             .with_assertion(|world| {
                 world.add_resource(ApplicationResource);
             })
@@ -1054,44 +1037,48 @@ mod test {
                 world.read_resource::<ApplicationResource>();
             })
             .run()
-            .is_ok());
     }
 
     #[test]
-    fn with_state_invoked_twice_should_run_in_the_specified_order() {
-        assert!(AmethystApplication::blank()
-            .with_state(|| FunctionState::new(|world| {
-                world.add_resource(ApplicationResource);
-            }))
-            .with_state(|| FunctionState::new(|world| {
-                world.read_resource::<ApplicationResource>();
-            }))
+    fn with_state_invoked_twice_should_run_in_the_specified_order() -> Result<(), Error> {
+        AmethystApplication::blank()
+            .with_state(|| {
+                FunctionState::new(|world| {
+                    world.add_resource(ApplicationResource);
+                })
+            })
+            .with_state(|| {
+                FunctionState::new(|world| {
+                    world.read_resource::<ApplicationResource>();
+                })
+            })
             .run()
-            .is_ok());
     }
 
     #[test]
-    fn setup_can_be_invoked_after_with_state() {
-        assert!(AmethystApplication::blank()
-            .with_state(|| FunctionState::new(|world| {
-                world.add_resource(ApplicationResource);
-            }))
+    fn setup_can_be_invoked_after_with_state() -> Result<(), Error> {
+        AmethystApplication::blank()
+            .with_state(|| {
+                FunctionState::new(|world| {
+                    world.add_resource(ApplicationResource);
+                })
+            })
             .with_setup(|world| {
                 world.read_resource::<ApplicationResource>();
             })
             .run()
-            .is_ok());
     }
 
     #[test]
-    fn with_state_invoked_after_with_resource_should_work() {
-        assert!(AmethystApplication::blank()
+    fn with_state_invoked_after_with_resource_should_work() -> Result<(), Error> {
+        AmethystApplication::blank()
             .with_resource(ApplicationResource)
-            .with_state(|| FunctionState::new(|world| {
-                world.read_resource::<ApplicationResource>();
-            }))
+            .with_state(|| {
+                FunctionState::new(|world| {
+                    world.read_resource::<ApplicationResource>();
+                })
+            })
             .run()
-            .is_ok());
     }
 
     // === Resources === //
