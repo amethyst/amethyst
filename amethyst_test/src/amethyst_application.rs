@@ -940,17 +940,16 @@ mod test {
 
     #[test]
     #[cfg(feature = "graphics")]
-    fn render_base_application_can_load_sprite_render_animations() {
+    fn render_base_application_can_load_sprite_render_animations() -> Result<(), Error> {
         use crate::SpriteRenderAnimationFixture;
 
-        assert!(AmethystApplication::render_base(
+        AmethystApplication::render_base(
             "render_base_application_can_load_sprite_render_animations",
-            false
+            false,
         )
         .with_effect(SpriteRenderAnimationFixture::effect)
         .with_assertion(SpriteRenderAnimationFixture::assertion)
         .run()
-        .is_ok());
     }
 
     #[test]
