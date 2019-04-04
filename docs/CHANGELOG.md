@@ -67,7 +67,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Set width and height of Pong Paddles ([#1363])
 * Fix omission in `PosNormTangTex` documentation. ([#1371])
 * Fix division by zero in vertex data building ([#1481])
-* Fix tuple index generation on `PrefabData` proc macro for newer versions of Rust. ([#1501])
+* Fix tuple index generation on `PrefabData` and `EventReader` proc macros. ([#1501])
 
 [#1114]: https://github.com/amethyst/amethyst/pull/1114
 [#1213]: https://github.com/amethyst/amethyst/pull/1213
