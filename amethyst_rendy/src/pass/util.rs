@@ -12,7 +12,10 @@ use amethyst_core::{
 };
 use core::ops::{Add, Range};
 use glsl_layout::*;
-use rendy::{factory::Factory, hal::Backend};
+use rendy::{
+    factory::Factory,
+    hal::{format, pso, Backend},
+};
 
 // pub(crate) enum TextureType {
 //     Albedo,
@@ -169,4 +172,62 @@ where
 {
     let size = (std::mem::size_of::<T::Std140>() * array_len) as u64;
     ((size + align - 1) / align) * align
+}
+
+pub fn simple_shader_set<'a, B: Backend>(
+    vertex: &'a B::ShaderModule,
+    fragment: Option<&'a B::ShaderModule>,
+) -> pso::GraphicsShaderSet<'a, B> {
+    simple_shader_set_ext(vertex, fragment, None, None, None)
+}
+
+pub fn simple_shader_set_ext<'a, B: Backend>(
+    vertex: &'a B::ShaderModule,
+    fragment: Option<&'a B::ShaderModule>,
+    hull: Option<&'a B::ShaderModule>,
+    domain: Option<&'a B::ShaderModule>,
+    geometry: Option<&'a B::ShaderModule>,
+) -> pso::GraphicsShaderSet<'a, B> {
+    fn map_entry_point<'a, B: Backend>(module: &'a B::ShaderModule) -> pso::EntryPoint<'a, B> {
+        pso::EntryPoint {
+            entry: "main",
+            module,
+            specialization: pso::Specialization::default(),
+        }
+    }
+
+    pso::GraphicsShaderSet {
+        vertex: map_entry_point(vertex),
+        fragment: fragment.map(map_entry_point),
+        hull: hull.map(map_entry_point),
+        domain: domain.map(map_entry_point),
+        geometry: geometry.map(map_entry_point),
+    }
+}
+
+pub fn push_vertex_desc<'a>(
+    (elements, stride, rate): (
+        impl IntoIterator<Item = pso::Element<format::Format>>,
+        pso::ElemStride,
+        pso::InstanceRate,
+    ),
+    vertex_buffers: &mut Vec<pso::VertexBufferDesc>,
+    attributes: &mut Vec<pso::AttributeDesc>,
+) {
+    let index = vertex_buffers.len() as pso::BufferIndex;
+    vertex_buffers.push(pso::VertexBufferDesc {
+        binding: index,
+        stride,
+        rate,
+    });
+
+    let mut location = attributes.last().map_or(0, |a| a.location + 1);
+    for element in elements.into_iter() {
+        attributes.push(pso::AttributeDesc {
+            location,
+            binding: index,
+            element,
+        });
+        location += 1;
+    }
 }

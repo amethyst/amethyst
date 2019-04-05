@@ -15,9 +15,9 @@ layout(location = 2) in vec3 tangent;
 layout(location = 3) in vec2 tex_coord;
 layout(location = 4) in mat4 model; // instance rate
 layout(location = 8) in vec4 tint; // instance rate
-layout(location = 9) in uvec4 joint_ids;
-layout(location = 10) in vec4 joint_weights;
-layout(location = 11) in uint joints_offset; // instance rate
+layout(location = 9) in uint joints_offset; // instance rate
+layout(location = 10) in uvec4 joint_ids;
+layout(location = 11) in vec4 joint_weights;
 
 layout(location = 0) out VertexData {
     vec3 position;

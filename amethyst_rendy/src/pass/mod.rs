@@ -29,8 +29,8 @@ lazy_static::lazy_static! {
     );
 
     static ref SKINNED_VERTEX: StaticShaderInfo = StaticShaderInfo::new(
-        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/vertex/skinned.frag"),
-        ShaderKind::Fragment,
+        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/vertex/skinned.vert"),
+        ShaderKind::Vertex,
         SourceLanguage::GLSL,
         "main",
     );

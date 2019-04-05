@@ -4,8 +4,14 @@ use amethyst_core::{
     math::Matrix4,
 };
 use amethyst_error::Error;
-use rendy::{hal::format::Format, mesh::AsAttribute};
-use std::result::Result as StdResult;
+use rendy::{
+    hal::format::Format,
+    mesh::{
+        AsAttribute, AsVertex, Attribute, Normal, Position, Tangent, TexCoord, VertexFormat,
+        WithAttribute,
+    },
+};
+use std::{borrow::Cow, result::Result as StdResult};
 
 /// Type for joint weights attribute of vertex
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
@@ -25,6 +31,86 @@ impl AsAttribute for JointIds {
     const NAME: &'static str = "joint_ids";
     const FORMAT: Format = Format::Rgba16Uint;
     const SIZE: u32 = 8;
+}
+
+/// Vertex format with position, normal, tangent, and UV texture coordinate attributes.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct PosNormTangTexJoint {
+    /// Position of the vertex in 3D space.
+    pub position: Position,
+    /// Normal vector of the vertex.
+    pub normal: Normal,
+    /// Tangent vector of the vertex.
+    pub tangent: Tangent,
+    /// UV texture coordinates used by the vertex.
+    pub tex_coord: TexCoord,
+    /// Joint ids influencing the vertex.
+    pub joint_ids: JointIds,
+    /// Joint weights influencing the vertex.
+    pub joint_weights: JointWeights,
+}
+
+impl WithAttribute<Position> for PosNormTangTexJoint {
+    const ATTRIBUTE: Attribute = Attribute {
+        offset: 0,
+        format: Position::FORMAT,
+    };
+}
+
+impl WithAttribute<Normal> for PosNormTangTexJoint {
+    const ATTRIBUTE: Attribute = Attribute {
+        offset: Position::SIZE,
+        format: Normal::FORMAT,
+    };
+}
+
+impl WithAttribute<Tangent> for PosNormTangTexJoint {
+    const ATTRIBUTE: Attribute = Attribute {
+        offset: Position::SIZE + Normal::SIZE,
+        format: Tangent::FORMAT,
+    };
+}
+
+impl WithAttribute<TexCoord> for PosNormTangTexJoint {
+    const ATTRIBUTE: Attribute = Attribute {
+        offset: Position::SIZE + Normal::SIZE + Tangent::SIZE,
+        format: TexCoord::FORMAT,
+    };
+}
+
+impl WithAttribute<JointIds> for PosNormTangTexJoint {
+    const ATTRIBUTE: Attribute = Attribute {
+        offset: Position::SIZE + Normal::SIZE + Tangent::SIZE + TexCoord::SIZE,
+        format: JointIds::FORMAT,
+    };
+}
+
+impl WithAttribute<JointWeights> for PosNormTangTexJoint {
+    const ATTRIBUTE: Attribute = Attribute {
+        offset: Position::SIZE + Normal::SIZE + Tangent::SIZE + TexCoord::SIZE + JointIds::SIZE,
+        format: JointWeights::FORMAT,
+    };
+}
+
+impl AsVertex for PosNormTangTexJoint {
+    const VERTEX: VertexFormat<'static> = VertexFormat {
+        attributes: Cow::Borrowed(&[
+            <Self as WithAttribute<Position>>::ATTRIBUTE,
+            <Self as WithAttribute<Normal>>::ATTRIBUTE,
+            <Self as WithAttribute<Tangent>>::ATTRIBUTE,
+            <Self as WithAttribute<TexCoord>>::ATTRIBUTE,
+            <Self as WithAttribute<JointIds>>::ATTRIBUTE,
+            <Self as WithAttribute<JointWeights>>::ATTRIBUTE,
+        ]),
+        stride: Position::SIZE
+            + Normal::SIZE
+            + Tangent::SIZE
+            + TexCoord::SIZE
+            + JointIds::SIZE
+            + JointWeights::SIZE,
+    };
 }
 
 /// Transform storage for the skin, should be attached to all mesh entities that use a skin
