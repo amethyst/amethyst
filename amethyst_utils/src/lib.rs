@@ -10,7 +10,7 @@ pub mod circular_buffer;
 pub mod fps_counter;
 pub mod ortho_camera;
 pub mod removal;
-pub mod render;
+//pub mod render;
 pub mod scene;
 pub mod tag;
 pub mod time_destroy;
