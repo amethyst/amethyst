@@ -1,4 +1,4 @@
-use proc_macro2::TokenStream;
+use proc_macro2::{Literal, TokenStream};
 use quote::quote;
 use syn::{Data, DeriveInput, Ident, Meta, NestedMeta, Type};
 
@@ -52,17 +52,27 @@ pub enum SomeEvent {{
     let names = collect_variant_names(&ast.data);
     let names = &names;
 
-    let reads : Vec<_> = (0..tys.len()).map(|n| {
-        let variant = &names[n];
-        quote! {
-            events.extend(data.#n.read(self.#n.as_mut().expect("ReaderId undefined, has setup been run?")).cloned().map(#event_name::#variant));
-        }
-    }).collect();
+    let reads: Vec<_> = (0..tys.len())
+        .map(|n| {
+            let variant = &names[n];
+            let tuple_index = Literal::usize_unsuffixed(n);
+            quote! {
+                events.extend(
+                    data.#tuple_index.read(
+                        self.#tuple_index
+                            .as_mut()
+                            .expect("ReaderId undefined, has setup been run?"))
+                    .cloned()
+                    .map(#event_name::#variant));
+            }
+        })
+        .collect();
     let setups: Vec<_> = (0..tys.len())
         .map(|n| {
             let ty = &tys[n];
+            let tuple_index = Literal::usize_unsuffixed(n);
             quote! {
-                self.#n = Some(res.fetch_mut::<EventChannel<#ty>>().register_reader());
+                self.#tuple_index = Some(res.fetch_mut::<EventChannel<#ty>>().register_reader());
             }
         })
         .collect();
