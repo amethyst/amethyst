@@ -25,6 +25,7 @@ use amethyst_error::Error;
 ///
 /// ### Type parameters:
 ///
+/// `B`: `Backend` type parameter for `Mesh<B>` and `Texture<B>`
 /// `V`: Vertex format to use for generated `Mesh`es, must be one of:
 ///     * `Vec<PosTex>`
 ///     * `Vec<PosNormTex>`
