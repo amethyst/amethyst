@@ -9,8 +9,6 @@ use amethyst_error::Error;
 #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct AmbientColor(pub palette::Srgba);
 
-
-
 impl AsRef<palette::Srgba> for AmbientColor {
     fn as_ref(&self) -> &palette::Srgba {
         &self.0
