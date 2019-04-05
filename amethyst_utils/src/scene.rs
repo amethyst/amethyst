@@ -9,10 +9,22 @@ use amethyst_controls::ControlTagPrefab;
 use amethyst_core::{ecs::prelude::Entity, Transform};
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
-use amethyst_renderer::{
-    CameraPrefab, GraphicsPrefab, InternalShape, LightPrefab, Mesh, MeshData, ObjFormat,
-    TextureFormat,
+use amethyst_rendy::{
+    camera::CameraPrefab,
+    //GraphicsPrefab,
+    shape::InternalShape, light::LightPrefab,
+    types::Mesh,
+    formats::{
+        texture::ImageFormat,
+        mesh::ObjFormat,
+    },
+    rendy::{
+        hal::Backend,
+        mesh::MeshBuilder,
+    },
 };
+
+include!("placeholder.rs"); // GraphicsPrefab placeholder
 
 use crate::removal::Removal;
 
@@ -31,14 +43,16 @@ use crate::removal::Removal;
 #[derive(Deserialize, Serialize, PrefabData)]
 #[serde(default)]
 #[serde(deny_unknown_fields)]
-pub struct BasicScenePrefab<V, R = (), M = ObjFormat>
+pub struct BasicScenePrefab<B, V, R = (), M = ObjFormat>
 where
-    M: Format<Mesh> + Clone,
+    B: Backend,
+    M: Format<Mesh<B>> + Clone,
     M::Options: DeserializeOwned + Serialize + Clone,
     R: PartialEq + Debug + Clone + Send + Sync + 'static,
-    V: From<InternalShape> + Into<MeshData>,
+    V: From<InternalShape> + Into<MeshBuilder<'static>>,
 {
-    graphics: Option<GraphicsPrefab<V, M, TextureFormat>>,
+    #[serde(bound(deserialize = "GraphicsPrefab<B, V, M, ImageFormat>: Deserialize<'de>"))]
+    graphics: Option<GraphicsPrefab<B, V, M, ImageFormat>>,
     transform: Option<Transform>,
     light: Option<LightPrefab>,
     camera: Option<CameraPrefab>,
@@ -46,12 +60,13 @@ where
     removal: Option<Removal<R>>,
 }
 
-impl<V, R, M> Default for BasicScenePrefab<V, R, M>
+impl<B, V, R, M> Default for BasicScenePrefab<B, V, R, M>
 where
-    M: Format<Mesh> + Clone,
+    B: Backend,
+    M: Format<Mesh<B>> + Clone,
     M::Options: DeserializeOwned + Serialize + Clone,
     R: PartialEq + Debug + Clone + Send + Sync + 'static,
-    V: From<InternalShape> + Into<MeshData>,
+    V: From<InternalShape> + Into<MeshBuilder<'static>>,
 {
     fn default() -> Self {
         BasicScenePrefab {
