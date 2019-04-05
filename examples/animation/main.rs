@@ -21,7 +21,8 @@ use amethyst::{
 use amethyst_rendy::{
     rendy::{
         factory::Factory, graph::GraphBuilder, hal::Backend,
-        mesh::PosNormTex,
+        //mesh::PosNormTex,
+        mesh::PosNormTangTex,
     },
     system::{GraphCreator, RendererSystem},
     types::DefaultBackend,
@@ -31,7 +32,7 @@ use std::{marker::PhantomData, sync::Arc};
 use serde::{Deserialize, Serialize};
 
 type MyPrefabData<B> = (
-    Option<BasicScenePrefab<B, Vec<PosNormTex>>>,
+    Option<BasicScenePrefab<B, Vec<PosNormTangTex>>>,
     Option<AnimationSetPrefab<AnimationId, Transform>>,
 );
 
