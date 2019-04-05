@@ -8,7 +8,8 @@ use amethyst_core::{
 };
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
-use amethyst_renderer::{Camera, ScreenDimensions};
+use amethyst_rendy::camera::Camera;
+use amethyst_window::ScreenDimensions;
 
 use serde::{Deserialize, Serialize};
 
