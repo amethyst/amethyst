@@ -8,7 +8,7 @@ use amethyst_core::{
 };
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
-use amethyst_renderer::JointTransformsPrefab;
+use amethyst_rendy::skinning::JointTransformsPrefab;
 
 /// Joint, attach to an entity with a `Transform`
 #[derive(Debug, Clone)]
