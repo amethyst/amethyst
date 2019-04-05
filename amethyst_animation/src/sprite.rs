@@ -3,7 +3,10 @@ use minterpolate::InterpolationPrimitive;
 use serde::{Deserialize, Serialize};
 
 use amethyst_assets::Handle;
-use amethyst_renderer::{SpriteRender, SpriteSheet};
+use amethyst_rendy::{
+    sprite::{SpriteRender, SpriteSheet},
+    rendy::hal::Backend,
+};
 
 use crate::{AnimationSampling, ApplyData, BlendMethod};
 
@@ -11,15 +14,15 @@ use crate::{AnimationSampling, ApplyData, BlendMethod};
 /// Note that sprites can only ever be animated with `Step`, or a panic will occur.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(untagged)]
-pub enum SpriteRenderPrimitive {
+pub enum SpriteRenderPrimitive<B: Backend> {
     /// A spritesheet id
     #[serde(skip)]
-    SpriteSheet(Handle<SpriteSheet>),
+    SpriteSheet(Handle<SpriteSheet<B>>),
     /// An index into a spritesheet
     SpriteIndex(usize),
 }
 
-impl InterpolationPrimitive for SpriteRenderPrimitive {
+impl<B: Backend> InterpolationPrimitive for SpriteRenderPrimitive<B> {
     fn add(&self, _: &Self) -> Self {
         panic!("Cannot add SpriteRenderPrimitive")
     }
@@ -58,12 +61,12 @@ pub enum SpriteRenderChannel {
     SpriteIndex,
 }
 
-impl<'a> ApplyData<'a> for SpriteRender {
+impl<'a, B: Backend> ApplyData<'a> for SpriteRender<B> {
     type ApplyData = ();
 }
 
-impl AnimationSampling for SpriteRender {
-    type Primitive = SpriteRenderPrimitive;
+impl<B: Backend> AnimationSampling for SpriteRender<B> {
+    type Primitive = SpriteRenderPrimitive<B>;
     type Channel = SpriteRenderChannel;
 
     fn apply_sample(&mut self, channel: &Self::Channel, data: &Self::Primitive, _: &()) {
