@@ -19,6 +19,7 @@ use std::fmt::Debug;
 /// - `F`: `Format` to use for loading `Texture`s
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(default)]
+#[serde(bound(deserialize = "TexturePrefab<B, F>: Deserialize<'de>"))]
 pub struct MaterialPrefab<B: Backend, F>
 where
     F: Format<Texture<B>>,

@@ -18,6 +18,10 @@ use rendy::{
 };
 use std::marker::PhantomData;
 
+fn option_none<T>() -> Option<T> {
+    None
+}
+
 /// Prefab for generating `Mesh` from basic shapes
 ///
 /// ### Type parameters:
@@ -28,8 +32,9 @@ use std::marker::PhantomData;
 ///     * `Vec<PosNormTangTex>`
 ///     * `ComboMeshCreator`
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
-pub struct ShapePrefab<V, B: Backend> {
+pub struct ShapePrefab<B: Backend, V> {
     #[serde(skip)]
+    #[serde(default = "option_none")]
     handle: Option<Handle<Mesh<B>>>,
     shape: Shape,
     #[serde(default)]
@@ -38,7 +43,7 @@ pub struct ShapePrefab<V, B: Backend> {
     _m: PhantomData<V>,
 }
 
-impl<'a, V, B> PrefabData<'a> for ShapePrefab<V, B>
+impl<'a, B, V> PrefabData<'a> for ShapePrefab<B, V>
 where
     V: From<InternalShape> + Into<MeshBuilder<'static>>,
     B: Backend,

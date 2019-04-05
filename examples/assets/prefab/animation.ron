@@ -5,7 +5,8 @@ Prefab (
             data: (
                 (
                     transform: (),
-                    light: (ambient_color: ((0.05, 0.05, 0.05, 1.0))),
+//                    light: (ambient_color: ((0.05, 0.05, 0.05, 1.0))),
+//                      light: (ambient_color: AmbientColor(Alpha(color: Rgb(red: 0.05, green: 0.05, blue: 0.05), alpha: 1.0))),
                 ),
                 (
                     animations: [
@@ -64,7 +65,7 @@ Prefab (
                     graphics: (
                         mesh: Shape(( shape: Sphere(32, 32), )),
                         material: (
-                            albedo: Data(Rgba((0.0, 0.0, 1.0, 1.0,), (channel: Srgb),)),
+//                            albedo: Data(Rgba((0.0, 0.0, 1.0, 1.0,), (channel: Srgb),)),
                         ),
                     ),
                     transform: (
@@ -83,7 +84,7 @@ Prefab (
                     light: (
                         light: Point((
                             intensity: 3.0,
-                            color: (1.0, 1.0, 1.0, 1.0),
+//                            color: (1.0, 1.0, 1.0, 1.0),
                             radius: 5.0,
                         )),
                     ),
