@@ -31,9 +31,10 @@ pub(crate) struct ViewArgs {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
+#[repr(C, align(16))]
 pub(crate) struct VertexArgs {
     pub model: mat4,
-    pub rgba: vec4,
+    pub tint: vec4,
 }
 
 impl VertexArgs {
@@ -42,7 +43,7 @@ impl VertexArgs {
         let model: [[f32; 4]; 4] = (*object).into();
         VertexArgs {
             model: model.into(),
-            rgba: tint.map_or([1.0; 4].into(), |t| {
+            tint: tint.map_or([1.0; 4].into(), |t| {
                 let (r, g, b, a) = t.0.into_components();
                 [r, g, b, a].into()
             }),
@@ -75,6 +76,65 @@ impl AsVertex for VertexArgs {
             },
         ]),
         stride: 80,
+    };
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
+#[repr(C, align(4))]
+pub(crate) struct SkinnedVertexArgs {
+    pub model: mat4,
+    pub tint: vec4,
+    pub joints_offset: uint,
+}
+
+impl SkinnedVertexArgs {
+    #[inline]
+    pub fn from_object_data(
+        object: &GlobalTransform,
+        tint: Option<&Tint>,
+        joints_offset: u32,
+    ) -> Self {
+        let model: [[f32; 4]; 4] = (*object).into();
+        SkinnedVertexArgs {
+            model: model.into(),
+            tint: tint.map_or([1.0; 4].into(), |t| {
+                let (r, g, b, a) = t.0.into_components();
+                [r, g, b, a].into()
+            }),
+            joints_offset,
+        }
+    }
+}
+
+impl AsVertex for SkinnedVertexArgs {
+    const VERTEX: VertexFormat<'static> = VertexFormat {
+        attributes: Cow::Borrowed(&[
+            Attribute {
+                format: Format::Rgba32Float,
+                offset: 0,
+            },
+            Attribute {
+                format: Format::Rgba32Float,
+                offset: 16,
+            },
+            Attribute {
+                format: Format::Rgba32Float,
+                offset: 32,
+            },
+            Attribute {
+                format: Format::Rgba32Float,
+                offset: 48,
+            },
+            Attribute {
+                format: Format::Rgba32Float,
+                offset: 64,
+            },
+            Attribute {
+                format: Format::R32Uint,
+                offset: 80,
+            },
+        ]),
+        stride: 84,
     };
 }
 

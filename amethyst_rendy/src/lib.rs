@@ -13,6 +13,7 @@ pub use rendy;
 
 pub mod pass;
 
+pub mod batch;
 pub mod camera;
 pub mod formats;
 pub mod hidden;
