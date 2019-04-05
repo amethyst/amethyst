@@ -11,10 +11,10 @@ use amethyst_derive::PrefabData;
 use amethyst_error::Error;
 use amethyst_rendy::{
     camera::CameraPrefab,
-    //GraphicsPrefab,
     shape::InternalShape, light::LightPrefab,
     types::Mesh,
     formats::{
+        GraphicsPrefab,
         texture::ImageFormat,
         mesh::ObjFormat,
     },
@@ -23,8 +23,6 @@ use amethyst_rendy::{
         mesh::MeshBuilder,
     },
 };
-
-include!("placeholder.rs"); // GraphicsPrefab placeholder
 
 use crate::removal::Removal;
 

@@ -300,16 +300,17 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
 
         let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
         use amethyst_rendy::{
-            pass::DrawPbm,
+            pass::DrawPbmDesc,
             rendy::{
                 graph::{
                     present::PresentNode,
-                    render::{RenderGroupBuilder, SimpleGraphicsPipeline},
+                    render::{RenderGroupBuilder, RenderGroupDesc},
                     GraphBuilder,
                 },
                 hal::{
                     command::{ClearDepthStencil, ClearValue},
                     format::Format,
+                    pso,
                 },
                 memory::MemoryUsageValue,
             },
@@ -336,7 +337,13 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         );
 
         let pass = graph_builder.add_node(
-            DrawPbm::builder()
+            DrawPbmDesc::default()
+                .with_vertex_skinning()
+                .with_transparency(
+                    pso::ColorBlendDesc(pso::ColorMask::ALL, pso::BlendState::ALPHA),
+                    None,
+                )
+                .builder()
                 .into_subpass()
                 .with_color(color)
                 .with_depth_stencil(depth)
