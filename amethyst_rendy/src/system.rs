@@ -21,7 +21,7 @@ use rendy::{
     command::{Families, QueueId},
     factory::{Factory, ImageState},
     graph::{Graph, GraphBuilder},
-    hal::{queue::QueueFamilyId, Backend},
+    hal::Backend,
     texture::palette::{load_from_linear_rgba, load_from_srgba},
 };
 use std::{mem::ManuallyDrop, sync::Arc};
@@ -64,6 +64,7 @@ type AssetLoadingData<'a, B> = (
     ReadExpect<'a, Arc<ThreadPool>>,
     Option<Read<'a, HotReloadStrategy>>,
     WriteExpect<'a, Factory<B>>,
+    ReadExpect<'a, Families<B>>,
     Write<'a, AssetStorage<Mesh<B>>>,
     Write<'a, AssetStorage<Texture<B>>>,
     Write<'a, AssetStorage<Material<B>>>,
@@ -95,6 +96,7 @@ where
             pool,
             strategy,
             mut factory,
+            families,
             mut mesh_storage,
             mut texture_storage,
             mut material_storage,
@@ -102,7 +104,10 @@ where
     ) {
         use std::ops::Deref;
 
-        let queue_id = QueueId(QueueFamilyId(0), 0);
+        let queue_id = QueueId {
+            family: families.family_by_index(0).id(),
+            index: 0,
+        };
 
         let strategy = strategy.as_ref().map(Deref::deref);
 

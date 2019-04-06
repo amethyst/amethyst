@@ -124,8 +124,8 @@ impl<B: Backend> SimpleState for Example<B> {
         };
 
         println!("Create spheres");
-        const NUM_ROWS: usize = 100;
-        const NUM_COLS: usize = 100;
+        const NUM_ROWS: usize = 30;
+        const NUM_COLS: usize = 30;
 
         let mut mtls = Vec::with_capacity(100);
 
@@ -180,7 +180,7 @@ impl<B: Backend> SimpleState for Example<B> {
                     .with(mtls[(j + i) % mtls.len()].clone())
                     .with(Orbit {
                         axis: Unit::new_normalize(Vector3::y()),
-                        time_scale: 5.0 + y,
+                        time_scale: 5.0 + y + 0.1 * x,
                         center,
                         radius: 0.2,
                     });
