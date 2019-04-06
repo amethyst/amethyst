@@ -5,7 +5,7 @@ layout(std140, set = 0, binding = 0) uniform VertexArgs {
     uniform mat4 view;
 };
 
-layout(std430, set = 0, binding = 1) buffer JointTransforms {
+layout(std430, set = 0, binding = 1) readonly buffer JointTransforms {
     mat4 joints[];
 };
 

@@ -14,18 +14,10 @@ use core::ops::{Add, Range};
 use glsl_layout::*;
 use rendy::{
     factory::Factory,
-    hal::{format, pso, Backend},
+    hal::{buffer::Usage, format, pso, Backend},
+    memory::MemoryUsage,
+    resource::{BufferInfo, Escape},
 };
-
-// pub(crate) enum TextureType {
-//     Albedo,
-//     Emission,
-//     Normal,
-//     Metallic,
-//     Roughness,
-//     AmbientOcclusion,
-//     Caveat,
-// }
 
 pub(crate) fn prepare_camera(
     active_camera: &Option<Read<'_, ActiveCamera>>,
@@ -152,13 +144,20 @@ pub fn next_range_opt<T: Add<Output = T> + Clone>(
 
 pub fn ensure_buffer<B: Backend>(
     factory: &Factory<B>,
-    buffer: &mut Option<rendy::resource::Buffer<B>>,
-    usage: impl rendy::resource::buffer::Usage,
+    buffer: &mut Option<Escape<rendy::resource::Buffer<B>>>,
+    usage: Usage,
+    memory_usage: impl MemoryUsage,
     min_size: u64,
 ) -> Result<bool, failure::Error> {
     if buffer.as_ref().map(|b| b.size()).unwrap_or(0) < min_size {
         let new_size = min_size.next_power_of_two();
-        let new_buffer = factory.create_buffer(512, new_size, usage)?;
+        let new_buffer = factory.create_buffer(
+            BufferInfo {
+                size: new_size,
+                usage,
+            },
+            memory_usage,
+        )?;
         *buffer = Some(new_buffer);
         Ok(true)
     } else {

@@ -27,7 +27,7 @@ use rendy::{
     },
     hal::{self, adapter::PhysicalDevice, device::Device, pso, Backend},
     mesh::{AsVertex, PosNormTangTex},
-    resource::set::{DescriptorSet, DescriptorSetLayout},
+    resource::{DescriptorSet, DescriptorSetLayout, Escape, Handle as RendyHandle},
     shader::Shader,
 };
 use shred_derive::SystemData;
@@ -39,7 +39,7 @@ macro_rules! set_layout {
         $factory.create_descriptor_set_layout(set_layout(
             std::iter::empty()
                 $(.chain(std::iter::once(($times, pso::DescriptorType::$ty, pso::ShaderStageFlags::$flags))))*
-        ).bindings)
+        ).bindings)?.into()
     }
 }
 
@@ -104,13 +104,13 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbmDesc {
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, Resources>>, failure::Error> {
         log::trace!("Loading shader module '{:#?}'", *super::BASIC_VERTEX);
-        let shader_vertex_basic = super::BASIC_VERTEX.module(factory).unwrap();
+        let shader_vertex_basic = unsafe { super::BASIC_VERTEX.module(factory).unwrap() };
         log::trace!("Loading shader module '{:#?}'", *super::PBM_FRAGMENT);
-        let shader_fragment = super::PBM_FRAGMENT.module(factory).unwrap();
+        let shader_fragment = unsafe { super::PBM_FRAGMENT.module(factory).unwrap() };
 
         let shader_vertex_skinned = if self.skinning {
             log::trace!("Loading shader module '{:#?}'", *super::SKINNED_VERTEX);
-            Some(super::SKINNED_VERTEX.module(factory).unwrap())
+            Some(unsafe { super::SKINNED_VERTEX.module(factory).unwrap() })
         } else {
             None
         };
@@ -131,9 +131,9 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbmDesc {
                 set_layout! {factory, 1 UniformBuffer GRAPHICS}
             } else {
                 set_layout! {factory, 1 UniformBuffer GRAPHICS, 1 StorageBuffer VERTEX}
-            }?,
-            material: set_layout! {factory, 1 UniformBuffer FRAGMENT, 7 CombinedImageSampler FRAGMENT}?,
-            environment: set_layout! {factory, 3 UniformBuffer FRAGMENT, 1 UniformBuffer GRAPHICS}?,
+            },
+            material: set_layout! {factory, 1 UniformBuffer FRAGMENT, 7 CombinedImageSampler FRAGMENT},
+            environment: set_layout! {factory, 3 UniformBuffer FRAGMENT, 1 UniformBuffer GRAPHICS},
         };
 
         let pipeline_layout = unsafe {
@@ -306,9 +306,9 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbmDesc {
 
 #[derive(Debug)]
 struct DrawPbmLayouts<B: Backend> {
-    vertex_args: DescriptorSetLayout<B>,
-    material: DescriptorSetLayout<B>,
-    environment: DescriptorSetLayout<B>,
+    vertex_args: RendyHandle<DescriptorSetLayout<B>>,
+    material: RendyHandle<DescriptorSetLayout<B>>,
+    environment: RendyHandle<DescriptorSetLayout<B>>,
 }
 
 impl<B: Backend> DrawPbmLayouts<B> {
@@ -335,12 +335,12 @@ pub struct DrawPbm<B: Backend> {
 #[derive(Derivative, Debug)]
 #[derivative(Default(bound = ""))]
 struct PerImage<B: Backend> {
-    environment_buffer: Option<rendy::resource::Buffer<B>>,
-    models_buffer: Option<rendy::resource::Buffer<B>>,
-    joints_buffer: Option<rendy::resource::Buffer<B>>,
-    material_buffer: Option<rendy::resource::Buffer<B>>,
-    environment_set: Option<DescriptorSet<B>>,
-    objects_set: Option<DescriptorSet<B>>,
+    environment_buffer: Option<Escape<rendy::resource::Buffer<B>>>,
+    models_buffer: Option<Escape<rendy::resource::Buffer<B>>>,
+    joints_buffer: Option<Escape<rendy::resource::Buffer<B>>>,
+    material_buffer: Option<Escape<rendy::resource::Buffer<B>>>,
+    environment_set: Option<Escape<DescriptorSet<B>>>,
+    objects_set: Option<Escape<DescriptorSet<B>>>,
 }
 
 #[derive(Debug, Derivative)]
@@ -349,7 +349,7 @@ struct MaterialData<B: Backend> {
     // usually given material will have just one mesh
     static_batches: SmallVec<[StaticBatchData; 1]>,
     skinned_batches: SmallVec<[SkinnedBatchData; 1]>,
-    desc_set: SmallVec<[DescriptorSet<B>; 3]>,
+    desc_set: SmallVec<[Escape<DescriptorSet<B>>; 3]>,
 }
 
 type StaticBatchData = BatchData<u32, SmallVec<[pod::VertexArgs; 4]>>;
@@ -406,9 +406,9 @@ impl<B: Backend> DrawPbm<B> {
             .or_else(|| storage.get(fallback))
             .unwrap();
         pso::Descriptor::CombinedImageSampler(
-            texture.image_view.raw(),
-            rendy::hal::image::Layout::ShaderReadOnlyOptimal,
-            texture.sampler.raw(),
+            texture.view().raw(),
+            hal::image::Layout::ShaderReadOnlyOptimal,
+            texture.sampler().raw(),
         )
     }
 
@@ -453,7 +453,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
-        _subpass: rendy::hal::pass::Subpass<'_, B>,
+        _subpass: hal::pass::Subpass<'_, B>,
         resources: &Resources,
     ) -> PrepareResult {
         let PbmPassData {
@@ -507,7 +507,8 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
             if util::ensure_buffer(
                 &factory,
                 &mut this_image.environment_buffer,
-                rendy::resource::buffer::UniformBuffer,
+                hal::buffer::Usage::UNIFORM,
+                rendy::memory::Dynamic,
                 projview_range.end.unwrap(),
             )
             .unwrap()
@@ -517,7 +518,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
                     .environment_set
                     .get_or_insert_with(|| {
                         factory
-                            .create_descriptor_set(&set_layouts.environment)
+                            .create_descriptor_set(set_layouts.environment.clone())
                             .unwrap()
                     })
                     .raw();
@@ -526,7 +527,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
                     .objects_set
                     .get_or_insert_with(|| {
                         factory
-                            .create_descriptor_set(&set_layouts.vertex_args)
+                            .create_descriptor_set(set_layouts.vertex_args.clone())
                             .unwrap()
                     })
                     .raw();
@@ -695,7 +696,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
             while mat.desc_set.len() <= index {
                 mat.desc_set.push(
                     factory
-                        .create_descriptor_set(&set_layouts.material)
+                        .create_descriptor_set(set_layouts.material.clone())
                         .unwrap(),
                 );
             }
@@ -708,7 +709,8 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
         util::ensure_buffer(
             &factory,
             &mut this_image.material_buffer,
-            rendy::resource::buffer::UniformBuffer,
+            hal::buffer::Usage::UNIFORM,
+            rendy::memory::Dynamic,
             num_materials as u64 * material_step,
         )
         .unwrap();
@@ -757,7 +759,8 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
             if util::ensure_buffer(
                 &factory,
                 &mut this_image.joints_buffer,
-                (rendy::hal::buffer::Usage::VERTEX, rendy::memory::Dynamic),
+                hal::buffer::Usage::VERTEX,
+                rendy::memory::Dynamic,
                 (skinned_vertex_args.len() * std::mem::size_of::<pod::SkinnedVertexArgs>()) as _,
             )
             .unwrap()
@@ -774,7 +777,8 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
         util::ensure_buffer(
             &factory,
             &mut this_image.models_buffer,
-            (rendy::hal::buffer::Usage::VERTEX, rendy::memory::Dynamic),
+            hal::buffer::Usage::VERTEX,
+            rendy::memory::Dynamic,
             (vertex_args.len() * std::mem::size_of::<pod::VertexArgs>()) as _,
         )
         .unwrap();
