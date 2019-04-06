@@ -124,7 +124,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
 
 /// Initialises one ball in the middle-ish of the arena.
 fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
-    use crate::{ARENA_HEIGHT, ARENA_WIDTH, BALL_RADIUS, BALL_VELOCITY_X, BALL_VELOCITY_Y};
+    use crate::{BALL_RADIUS, BALL_VELOCITY_X, BALL_VELOCITY_Y};
 
     // Create the translation.
     let mut local_transform = Transform::default();
