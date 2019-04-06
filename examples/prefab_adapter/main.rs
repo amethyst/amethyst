@@ -52,6 +52,7 @@ impl<'a> PrefabData<'a> for PositionPrefab {
         entity: Entity,
         positions: &mut Self::SystemData,
         _entities: &[Entity],
+        _children: &[Entity],
     ) -> Result<(), Error> {
         let position = match *self {
             PositionPrefab::Pos3f { x, y, z } => (x, y, z).into(),

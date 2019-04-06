@@ -189,6 +189,7 @@ impl<'a> PrefabData<'a> for TextureData {
         _: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
+        _: &[Entity],
     ) -> Result<Handle<Texture>, Error> {
         Ok(system_data
             .0
@@ -231,6 +232,7 @@ where
         &self,
         _: Entity,
         system_data: &mut Self::SystemData,
+        _: &[Entity],
         _: &[Entity],
     ) -> Result<Handle<Texture>, Error> {
         let handle = match *self {

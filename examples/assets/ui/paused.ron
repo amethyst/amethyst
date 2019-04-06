@@ -1,5 +1,5 @@
 #![enable(implicit_some)]
-Text(
+Label(
     transform: (
         id: "paused",
         anchor: Middle,

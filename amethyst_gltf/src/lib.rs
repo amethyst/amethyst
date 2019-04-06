@@ -195,6 +195,7 @@ impl<'a> PrefabData<'a> for GltfPrefab {
         entity: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
+        children: &[Entity],
     ) -> Result<(), Error> {
         let (
             ref mut transforms,
@@ -208,7 +209,7 @@ impl<'a> PrefabData<'a> for GltfPrefab {
             _,
         ) = system_data;
         if let Some(ref transform) = self.transform {
-            transform.add_to_entity(entity, transforms, entities)?;
+            transform.add_to_entity(entity, transforms, entities, children)?;
         }
         if let Some(ref mesh) = self.mesh {
             mesh_data.insert(entity, mesh.clone())?;
@@ -217,16 +218,16 @@ impl<'a> PrefabData<'a> for GltfPrefab {
             meshes.1.insert(entity, mesh.clone())?;
         }
         if let Some(ref name) = self.name {
-            name.add_to_entity(entity, names, entities)?;
+            name.add_to_entity(entity, names, entities, children)?;
         }
         if let Some(ref material) = self.material {
-            material.add_to_entity(entity, materials, entities)?;
+            material.add_to_entity(entity, materials, entities, children)?;
         }
         if let Some(ref animatable) = self.animatable {
-            animatable.add_to_entity(entity, animatables, entities)?;
+            animatable.add_to_entity(entity, animatables, entities, children)?;
         }
         if let Some(ref skinnable) = self.skinnable {
-            skinnable.add_to_entity(entity, skinnables, entities)?;
+            skinnable.add_to_entity(entity, skinnables, entities, children)?;
         }
         if let Some(ref extent) = self.extent {
             extents.insert(entity, extent.clone())?;

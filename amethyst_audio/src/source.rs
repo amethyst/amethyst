@@ -43,6 +43,7 @@ impl<'a> PrefabData<'a> for AudioData {
         _: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
+        _: &[Entity],
     ) -> Result<Handle<Source>, Error> {
         Ok(system_data
             .0

@@ -39,6 +39,7 @@ impl<'a> PrefabData<'a> for AudioPrefab {
         entity: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         if self.emitter {
             system_data.0.insert(entity, AudioEmitter::default())?;

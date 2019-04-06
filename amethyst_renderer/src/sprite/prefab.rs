@@ -117,6 +117,7 @@ impl<'a> PrefabData<'a> for SpriteSheetPrefab {
         _entity: Entity,
         _system_data: &mut Self::SystemData,
         _entities: &[Entity],
+        _children: &[Entity],
     ) -> Result<Self::Result, Error> {
         match self {
             SpriteSheetPrefab::Handle(handle) => Ok(handle.clone()),
@@ -215,7 +216,8 @@ impl<'a> PrefabData<'a> for SpriteRenderPrefab {
         &self,
         entity: Entity,
         system_data: &mut <Self as PrefabData<'a>>::SystemData,
-        _: &[Entity],
+        _entities: &[Entity],
+        _children: &[Entity],
     ) -> Result<(), Error> {
         if let Some(handle) = self.handle.clone() {
             system_data.0.insert(
@@ -275,12 +277,13 @@ impl<'a> PrefabData<'a> for SpriteScenePrefab {
         entity: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
+        children: &[Entity],
     ) -> Result<(), Error> {
         if let Some(render) = &self.render {
-            render.add_to_entity(entity, &mut system_data.1, entities)?;
+            render.add_to_entity(entity, &mut system_data.1, entities, children)?;
         }
         if let Some(transform) = &self.transform {
-            transform.add_to_entity(entity, &mut system_data.2, entities)?;
+            transform.add_to_entity(entity, &mut system_data.2, entities, children)?;
         }
         Ok(())
     }
@@ -521,7 +524,7 @@ mod tests {
         };
         let entity = world.create_entity().build();
         let handle = prefab
-            .add_to_entity(entity, &mut world.system_data(), &[entity])
+            .add_to_entity(entity, &mut world.system_data(), &[entity], &[])
             .unwrap();
         assert_eq!(h, handle);
     }
@@ -540,7 +543,7 @@ mod tests {
             .load_sub_assets(&mut ProgressCounter::default(), &mut world.system_data())
             .unwrap();
         prefab
-            .add_to_entity(entity, &mut world.system_data(), &[entity])
+            .add_to_entity(entity, &mut world.system_data(), &[entity], &[])
             .unwrap();
         let storage = world.read_storage::<SpriteRender>();
         let render = storage.get(entity);

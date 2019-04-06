@@ -127,6 +127,7 @@ impl<'a> PrefabData<'a> for JointTransformsPrefab {
         entity: Entity,
         storage: &mut Self::SystemData,
         entities: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         storage
             .insert(

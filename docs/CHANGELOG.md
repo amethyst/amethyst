@@ -29,6 +29,7 @@ it is attached to. ([#1282])
 * Add `add_removal_to_entity` function. ([#1445])
 * Add `position_from_screen` to `Camera`. Transforms position from screen space to camera space. ([#1442])
 * Add `SpriteScenePrefab`. Allows load sprites from a grid and add them to the `SpriteRenderer`. ([#1469])
+* Add `Widgets` resource. Allows keeping track of UI entities and their components and iterating over them. ([#1390])
 
 ### Changed
 
@@ -56,6 +57,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * `ProgressCounter#num_loading()` no longer includes failed assets. ([#1452])
 * `SpriteSheetFormat` field renamed from `spritesheet_*` to `texture_*`. ([#1469])
 * Add new `keep_aspect_ratio` field to `Stretch::XY`. ([#1480])
+* Renamed `Text` UI Prefab to `Label` in preparation for full widget integration in prefabs. ([#1390])
 
 ### Removed
 
@@ -106,6 +108,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1469]: https://github.com/amethyst/amethyst/pull/1469
 [#1481]: https://github.com/amethyst/amethyst/pull/1481
 [#1480]: https://github.com/amethyst/amethyst/pull/1480
+[#1390]: https://github.com/amethyst/amethyst/pull/1390
 [#1501]: https://github.com/amethyst/amethyst/pull/1501
 
 ## [0.10.0] - 2018-12

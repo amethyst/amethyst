@@ -88,6 +88,7 @@ where
         _: Entity,
         _: &mut Self::SystemData,
         _: &[Entity],
+        _: &[Entity],
     ) -> Result<Handle<Animation<T>>, Error> {
         Ok(self
             .handle
@@ -155,6 +156,7 @@ where
         entity: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         let set = system_data
             .0
@@ -163,7 +165,7 @@ where
         for (id, animation_prefab) in &self.animations {
             set.insert(
                 id.clone(),
-                animation_prefab.add_to_entity(entity, &mut system_data.1, entities)?,
+                animation_prefab.add_to_entity(entity, &mut system_data.1, entities, &[])?,
             );
         }
         Ok(())
@@ -208,6 +210,7 @@ where
         entity: Entity,
         storage: &mut Self::SystemData,
         entities: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         storage
             .insert(

@@ -93,7 +93,7 @@ where
 {
     prefab
         .as_ref()
-        .and_then(|tp| tp.add_to_entity(entity, tp_data, &[]).ok())
+        .and_then(|tp| tp.add_to_entity(entity, tp_data, &[], &[]).ok())
         .unwrap_or_else(|| def.clone())
 }
 
@@ -113,6 +113,7 @@ where
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
+        _: &[Entity],
         _: &[Entity],
     ) -> Result<(), Error> {
         let &mut (ref mut material, ref mat_default, ref mut tp_data, ref mut transparent) =
