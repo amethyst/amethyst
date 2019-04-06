@@ -7,9 +7,9 @@ Prefab (
                     transform: (),
                     light: (
                         ambient_color: ({
-                           red: 0.5,
-                           green: 0.5,
-                           blue: 0.5,
+                           red: 0.05,
+                           green: 0.05,
+                           blue: 0.05,
                            alpha: 1.0,
                         }),
                     )
@@ -72,6 +72,21 @@ Prefab (
                         mesh: Shape(( shape: Sphere(32, 32), )),
                         material: (
 //                          albedo: Data(Rgba((0.0, 0.0, 1.0, 1.0,), (channel: Srgb),)),
+                            albedo: Data((
+                                    kind: D2(2, 2, 1, 1),
+                                    view_kind: D2,
+                                    format: Rgba8Srgb,
+                                    data: [
+                                        0, 0, 255, 255,
+                                        255, 0, 0, 255,
+                                        0, 255, 0, 255,
+                                        255, 255, 0, 255,
+                                    ],
+                                    data_width: 2,
+                                    data_height: 2,
+                                    filter: Nearest,
+                                    swizzle: (R, G, B, A),
+                                )),
                       ),
                     ),
                     transform: (
@@ -108,6 +123,7 @@ Prefab (
                     transform: Transform (
                         translation: (0.0, 0.0, -4.0),
                         rotation: (0.0, 0.0, 1.0, 0.0),
+                        scale: (1.0, -1.0, 1.0),
                     ),
                     camera: Perspective((
                         aspect: 1.3,
