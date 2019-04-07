@@ -1,4 +1,4 @@
-use std::{hash::Hash, marker::PhantomData, path::PathBuf, sync::Mutex, thread};
+use std::{any::Any, hash::Hash, marker::PhantomData, panic, path::PathBuf, sync::Mutex, thread};
 
 use amethyst::{
     self,
@@ -82,6 +82,11 @@ pub struct AmethystApplication<T, E, R>
 where
     E: Send + Sync + 'static,
 {
+    /// Name of the application, if provided.
+    ///
+    /// This is used to name the thread that is used to spawn the application, so that on `panic!`s
+    /// it is easier to tell which test failed.
+    app_name: Option<String>,
     /// Functions to add bundles to the game data.
     ///
     /// This is necessary because `System`s are not `Send`, and so we cannot send `GameDataBuilder`
@@ -110,6 +115,7 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
     pub fn blank() -> AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader>
     {
         AmethystApplication {
+            app_name: None,
             bundle_add_fns: Vec::new(),
             resource_add_fns: Vec::new(),
             state_fns: Vec::new(),
@@ -267,34 +273,68 @@ where
 
         // Run in a sub thread due to mesa's threading issues with GL software rendering
         // See: <https://users.rust-lang.org/t/trouble-identifying-cause-of-segfault/18096>
-        thread::spawn(move || -> Result<(), Error> {
-            amethyst::start_logger(Default::default());
+        let app_name = self
+            .app_name
+            .unwrap_or_else(|| String::from(stringify!(AmethystApplication)));
+        thread::Builder::new()
+            .name(app_name)
+            .spawn(move || -> Result<(), Error> {
+                amethyst::start_logger(Default::default());
 
-            if render {
-                let guard = X11_GL_MUTEX.lock().unwrap();
+                if render {
+                    let guard = X11_GL_MUTEX.lock().unwrap();
 
-                // Note: if this panics, the Mutex is poisoned.
-                // Unfortunately we cannot catch panics, as the application is `!UnwindSafe`
-                //
-                // We have to build the application after acquiring the lock because the window is
-                // already instantiated during the build.
-                //
-                // The mutex greatly reduces, but does not eliminate X11 window initialization
-                // errors from happening:
-                //
-                // * <https://github.com/tomaka/glutin/issues/1034> can still happen
-                // * <https://github.com/tomaka/glutin/issues/1038> may be completely removed
-                Self::build_internal(params)?.run();
+                    // We have to build the application after acquiring the lock because the window
+                    // is already instantiated during the build.
+                    //
+                    // The mutex greatly reduces, but does not eliminate X11 window initialization
+                    // errors from happening:
+                    //
+                    // * <https://github.com/tomaka/glutin/issues/1034> can still happen
+                    // * <https://github.com/tomaka/glutin/issues/1038> may be completely removed
 
-                drop(guard);
-            } else {
-                Self::build_internal(params)?.run();
-            }
+                    // `CoreApplication` is `!UnwindSafe`, but wrapping it in a `Mutex` allows us to
+                    // recover from a panic.
+                    let application = Mutex::new(Self::build_internal(params)?);
+                    let run_result = panic::catch_unwind(move || {
+                        application
+                            .lock()
+                            .expect("Expected to get application lock")
+                            .run()
+                    })
+                    .map_err(Self::box_any_to_error);
 
-            Ok(())
-        })
-        .join()
-        .expect("Failed to run Amethyst application")
+                    drop(guard);
+
+                    run_result
+                } else {
+                    let application = Mutex::new(Self::build_internal(params)?);
+                    panic::catch_unwind(move || {
+                        application
+                            .lock()
+                            .expect("Expected to get application lock")
+                            .run()
+                    })
+                    .map_err(Self::box_any_to_error)
+                }
+            })
+            .expect("Failed to spawn `AmethystApplication` thread.")
+            .join()
+            .expect("Failed to run `AmethystApplication` closure.")
+    }
+
+    fn box_any_to_error(error: Box<dyn Any + Send>) -> Error {
+        // Caught `panic!`s are generally `&str`s.
+        //
+        // If we get something else, we just inform the user to check the test output.
+        if let Some(inner) = error.downcast_ref::<&str>() {
+            Error::from_string(inner.to_string())
+        } else {
+            Error::from_string(
+                "Unable to detect additional information from test failure.\n\
+                 Please inspect the test output for clues.",
+            )
+        }
     }
 }
 
@@ -303,6 +343,16 @@ where
     T: GameUpdate,
     E: Send + Sync + 'static,
 {
+    /// Sets the name for this application.
+    ///
+    /// This will be used for the thread name that runs this application.
+    pub fn with_app_name<N>(mut self, app_name: N) -> Self
+    where
+        N: Into<String>,
+    {
+        self.app_name = Some(app_name.into());
+        self
+    }
     /// Use the specified custom event type instead of `()`.
     ///
     /// This **must** be invoked before any of the `.with_*()` function calls as the custom event
@@ -325,6 +375,7 @@ where
             );
         }
         AmethystApplication {
+            app_name: self.app_name,
             bundle_add_fns: self.bundle_add_fns,
             resource_add_fns: self.resource_add_fns,
             state_fns: Vec::new(),
@@ -435,12 +486,14 @@ where
         // <https://github.com/rust-lang/rfcs/pull/1719>
         let title = title.into().to_string();
 
-        let display_config = Self::display_config(title, visibility);
+        let display_config = Self::display_config(title.clone(), visibility);
         let render_bundle_fn = move || {
             RenderBundle::new(Self::pipeline(), Some(display_config)).with_sprite_sheet_processor()
         };
 
-        self.with_bundle_fn(render_bundle_fn).mark_render()
+        self.with_app_name(title)
+            .with_bundle_fn(render_bundle_fn)
+            .mark_render()
     }
 
     /// Adds a resource to the `World`.
@@ -680,54 +733,49 @@ mod test {
     use crate::{EffectReturn, FunctionState, PopState};
 
     #[test]
-    fn bundle_build_is_ok() {
-        assert!(AmethystApplication::blank()
-            .with_bundle(BundleZero)
-            .run()
-            .is_ok());
+    fn bundle_build_is_ok() -> Result<(), Error> {
+        AmethystApplication::blank().with_bundle(BundleZero).run()
     }
 
     #[test]
-    fn load_multiple_bundles() {
-        assert!(AmethystApplication::blank()
+    fn load_multiple_bundles() -> Result<(), Error> {
+        AmethystApplication::blank()
             .with_bundle(BundleZero)
             .with_bundle(BundleOne)
             .run()
-            .is_ok());
     }
 
     #[test]
-    fn assertion_when_resource_is_added_succeeds() {
+    fn assertion_when_resource_is_added_succeeds() -> Result<(), Error> {
         let assertion_fn = |world: &mut World| {
             world.read_resource::<ApplicationResource>();
             world.read_resource::<ApplicationResourceNonDefault>();
         };
 
-        assert!(AmethystApplication::blank()
+        AmethystApplication::blank()
             .with_bundle(BundleZero)
             .with_bundle(BundleOne)
             .with_assertion(assertion_fn)
             .run()
-            .is_ok());
     }
 
     #[test]
-    #[should_panic(expected = "Failed to run Amethyst application")]
+    #[should_panic(expected = "Tried to fetch a resource, but the resource does not exist")]
     fn assertion_when_resource_is_not_added_should_panic() {
         let assertion_fn = |world: &mut World| {
             // Panics if `ApplicationResource` was not added.
             world.read_resource::<ApplicationResource>();
         };
 
-        assert!(AmethystApplication::blank()
+        AmethystApplication::blank()
             // without BundleOne
             .with_assertion(assertion_fn)
             .run()
-            .is_ok());
+            .unwrap();
     }
 
     #[test]
-    fn assertion_switch_with_loading_state_with_add_resource_succeeds() {
+    fn assertion_switch_with_loading_state_with_add_resource_succeeds() -> Result<(), Error> {
         let state_fns = || {
             let assertion_fn = |world: &mut World| {
                 world.read_resource::<LoadResource>();
@@ -738,14 +786,11 @@ mod test {
             LoadingState::new(assertion_state)
         };
 
-        assert!(AmethystApplication::blank()
-            .with_state(state_fns)
-            .run()
-            .is_ok());
+        AmethystApplication::blank().with_state(state_fns).run()
     }
 
     #[test]
-    fn assertion_push_with_loading_state_with_add_resource_succeeds() {
+    fn assertion_push_with_loading_state_with_add_resource_succeeds() -> Result<(), Error> {
         // Alternative to embedding the `FunctionState` is to switch to a `PopState` but still
         // provide the assertion function
         let state_fns = || LoadingState::new(PopState);
@@ -753,15 +798,14 @@ mod test {
             world.read_resource::<LoadResource>();
         };
 
-        assert!(AmethystApplication::blank()
+        AmethystApplication::blank()
             .with_state(state_fns)
             .with_assertion(assertion_fn)
             .run()
-            .is_ok());
     }
 
     #[test]
-    #[should_panic(expected = "Failed to run Amethyst application")]
+    #[should_panic(expected = "Tried to fetch a resource, but the resource does not exist")]
     fn assertion_switch_with_loading_state_without_add_resource_should_panic() {
         let state_fns = || {
             let assertion_fn = |world: &mut World| {
@@ -771,14 +815,14 @@ mod test {
             SwitchState::new(FunctionState::new(assertion_fn))
         };
 
-        assert!(AmethystApplication::blank()
+        AmethystApplication::blank()
             .with_state(state_fns)
             .run()
-            .is_ok());
+            .unwrap();
     }
 
     #[test]
-    #[should_panic(expected = "Failed to run Amethyst application")]
+    #[should_panic(expected = "Tried to fetch a resource, but the resource does not exist")]
     fn assertion_push_with_loading_state_without_add_resource_should_panic() {
         // Alternative to embedding the `FunctionState` is to switch to a `PopState` but still
         // provide the assertion function
@@ -787,15 +831,15 @@ mod test {
             world.read_resource::<LoadResource>();
         };
 
-        assert!(AmethystApplication::blank()
+        AmethystApplication::blank()
             .with_state(state_fns)
             .with_assertion(assertion_fn)
             .run()
-            .is_ok());
+            .unwrap();
     }
 
     #[test]
-    fn game_data_must_update_before_assertion() {
+    fn game_data_must_update_before_assertion() -> Result<(), Error> {
         let effect_fn = |world: &mut World| {
             let handles = vec![
                 AssetZeroLoader::load(world, AssetZero(10)).unwrap(),
@@ -812,16 +856,15 @@ mod test {
             assert_eq!(Some(&AssetZero(20)), store.get(&asset_zero_handles[1]));
         };
 
-        assert!(AmethystApplication::blank()
+        AmethystApplication::blank()
             .with_bundle(BundleAsset)
             .with_effect(effect_fn)
             .with_assertion(assertion_fn)
             .run()
-            .is_ok());
     }
 
     #[test]
-    fn execution_order_is_setup_state_effect_assertion() {
+    fn execution_order_is_setup_state_effect_assertion() -> Result<(), Error> {
         struct Setup;
         let setup_fns = |world: &mut World| world.add_resource(Setup);
         let state_fns = || {
@@ -844,18 +887,17 @@ mod test {
             assert_eq!(Some(&AssetZero(10)), store.get(&asset_zero_handles[0]));
         };
 
-        assert!(AmethystApplication::blank()
+        AmethystApplication::blank()
             .with_bundle(BundleAsset)
             .with_setup(setup_fns)
             .with_state(state_fns)
             .with_effect(effect_fn)
             .with_assertion(assertion_fn)
             .run()
-            .is_ok());
     }
 
     #[test]
-    fn base_application_can_load_ui() {
+    fn base_application_can_load_ui() -> Result<(), Error> {
         let assertion_fn = |world: &mut World| {
             // Next line would panic if `UiBundle` wasn't added.
             world.read_resource::<AssetStorage<FontAsset>>();
@@ -864,44 +906,41 @@ mod test {
             world.read_resource::<ScreenDimensions>();
         };
 
-        assert!(AmethystApplication::ui_base::<String, String>()
+        AmethystApplication::ui_base::<String, String>()
             .with_assertion(assertion_fn)
             .run()
-            .is_ok());
     }
 
     #[test]
     #[cfg(feature = "graphics")]
-    fn render_base_application_can_load_material_animations() {
+    fn render_base_application_can_load_material_animations() -> Result<(), Error> {
         use crate::MaterialAnimationFixture;
 
-        assert!(AmethystApplication::render_base(
+        AmethystApplication::render_base(
             "render_base_application_can_load_material_animations",
-            false
+            false,
         )
         .with_effect(MaterialAnimationFixture::effect)
         .with_assertion(MaterialAnimationFixture::assertion)
         .run()
-        .is_ok());
     }
 
     #[test]
     #[cfg(feature = "graphics")]
-    fn render_base_application_can_load_sprite_render_animations() {
+    fn render_base_application_can_load_sprite_render_animations() -> Result<(), Error> {
         use crate::SpriteRenderAnimationFixture;
 
-        assert!(AmethystApplication::render_base(
+        AmethystApplication::render_base(
             "render_base_application_can_load_sprite_render_animations",
-            false
+            false,
         )
         .with_effect(SpriteRenderAnimationFixture::effect)
         .with_assertion(SpriteRenderAnimationFixture::assertion)
         .run()
-        .is_ok());
     }
 
     #[test]
-    fn with_system_runs_system_every_tick() {
+    fn with_system_runs_system_every_tick() -> Result<(), Error> {
         let effect_fn = |world: &mut World| {
             let entity = world.create_entity().with(ComponentZero(0)).build();
 
@@ -919,13 +958,12 @@ mod test {
             component_zero.0
         };
 
-        assert!(AmethystApplication::blank()
+        AmethystApplication::blank()
             .with_system(SystemEffect, "system_effect", &[])
             .with_effect(effect_fn)
             .with_assertion(|world| assert_eq!(1, get_component_zero_value(world)))
             .with_assertion(|world| assert_eq!(2, get_component_zero_value(world)))
             .run()
-            .is_ok());
     }
 
     #[test]
@@ -936,7 +974,7 @@ mod test {
     }
 
     #[test]
-    fn with_system_single_runs_system_once() {
+    fn with_system_single_runs_system_once() -> Result<(), Error> {
         let assertion_fn = |world: &mut World| {
             let entity = world.read_resource::<EffectReturn<Entity>>().0.clone();
 
@@ -949,7 +987,7 @@ mod test {
             assert_eq!(1, component_zero.0);
         };
 
-        assert!(AmethystApplication::blank()
+        AmethystApplication::blank()
             .with_setup(|world| {
                 world.register::<ComponentZero>();
 
@@ -960,15 +998,14 @@ mod test {
             .with_assertion(assertion_fn)
             .with_assertion(assertion_fn)
             .run()
-            .is_ok());
     }
 
     // Double usage tests
     // If the second call panics, then the setup functions were not executed in the right order.
 
     #[test]
-    fn with_setup_invoked_twice_should_run_in_specified_order() {
-        assert!(AmethystApplication::blank()
+    fn with_setup_invoked_twice_should_run_in_specified_order() -> Result<(), Error> {
+        AmethystApplication::blank()
             .with_setup(|world| {
                 world.add_resource(ApplicationResource);
             })
@@ -976,12 +1013,11 @@ mod test {
                 world.read_resource::<ApplicationResource>();
             })
             .run()
-            .is_ok());
     }
 
     #[test]
-    fn with_effect_invoked_twice_should_run_in_the_specified_order() {
-        assert!(AmethystApplication::blank()
+    fn with_effect_invoked_twice_should_run_in_the_specified_order() -> Result<(), Error> {
+        AmethystApplication::blank()
             .with_effect(|world| {
                 world.add_resource(ApplicationResource);
             })
@@ -989,12 +1025,11 @@ mod test {
                 world.read_resource::<ApplicationResource>();
             })
             .run()
-            .is_ok());
     }
 
     #[test]
-    fn with_assertion_invoked_twice_should_run_in_the_specified_order() {
-        assert!(AmethystApplication::blank()
+    fn with_assertion_invoked_twice_should_run_in_the_specified_order() -> Result<(), Error> {
+        AmethystApplication::blank()
             .with_assertion(|world| {
                 world.add_resource(ApplicationResource);
             })
@@ -1002,44 +1037,48 @@ mod test {
                 world.read_resource::<ApplicationResource>();
             })
             .run()
-            .is_ok());
     }
 
     #[test]
-    fn with_state_invoked_twice_should_run_in_the_specified_order() {
-        assert!(AmethystApplication::blank()
-            .with_state(|| FunctionState::new(|world| {
-                world.add_resource(ApplicationResource);
-            }))
-            .with_state(|| FunctionState::new(|world| {
-                world.read_resource::<ApplicationResource>();
-            }))
+    fn with_state_invoked_twice_should_run_in_the_specified_order() -> Result<(), Error> {
+        AmethystApplication::blank()
+            .with_state(|| {
+                FunctionState::new(|world| {
+                    world.add_resource(ApplicationResource);
+                })
+            })
+            .with_state(|| {
+                FunctionState::new(|world| {
+                    world.read_resource::<ApplicationResource>();
+                })
+            })
             .run()
-            .is_ok());
     }
 
     #[test]
-    fn setup_can_be_invoked_after_with_state() {
-        assert!(AmethystApplication::blank()
-            .with_state(|| FunctionState::new(|world| {
-                world.add_resource(ApplicationResource);
-            }))
+    fn setup_can_be_invoked_after_with_state() -> Result<(), Error> {
+        AmethystApplication::blank()
+            .with_state(|| {
+                FunctionState::new(|world| {
+                    world.add_resource(ApplicationResource);
+                })
+            })
             .with_setup(|world| {
                 world.read_resource::<ApplicationResource>();
             })
             .run()
-            .is_ok());
     }
 
     #[test]
-    fn with_state_invoked_after_with_resource_should_work() {
-        assert!(AmethystApplication::blank()
+    fn with_state_invoked_after_with_resource_should_work() -> Result<(), Error> {
+        AmethystApplication::blank()
             .with_resource(ApplicationResource)
-            .with_state(|| FunctionState::new(|world| {
-                world.read_resource::<ApplicationResource>();
-            }))
+            .with_state(|| {
+                FunctionState::new(|world| {
+                    world.read_resource::<ApplicationResource>();
+                })
+            })
             .run()
-            .is_ok());
     }
 
     // === Resources === //
