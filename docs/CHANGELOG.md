@@ -66,6 +66,12 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Updated laminar to 0.2.0. ([#1502])
 * Large binary files in examples are now tracked with `git-lfs`. ([#1509])
 
+#### Rendy support
+
+* `camera::Projection::perspective()` now returns a vulkan specific perspective matrix ([#1504])
+
+[#1504]: https://github.com/amethyst/amethyst/pull/1504
+
 ### Removed
 
 ### Fixed
