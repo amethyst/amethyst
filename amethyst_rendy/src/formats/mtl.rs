@@ -127,6 +127,7 @@ where
         entity: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         let &mut (ref mut material, ref mut transparent, _, _, _, _) = system_data;
         material.insert(entity, self.handle.as_ref().unwrap().clone())?;

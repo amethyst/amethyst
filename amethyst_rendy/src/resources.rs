@@ -24,6 +24,7 @@ impl<'a> PrefabData<'a> for AmbientColor {
         _: Entity,
         ambient: &mut Self::SystemData,
         _: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         ambient.0 = self.0;
         Ok(())

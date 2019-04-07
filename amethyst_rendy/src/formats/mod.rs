@@ -62,17 +62,18 @@ where
         entity: Entity,
         system_data: &mut <Self as PrefabData<'_>>::SystemData,
         entities: &[Entity],
+        children: &[Entity],
     ) -> Result<(), Error> {
         match self.mesh {
             MeshPrefab::Asset(ref m) => {
-                m.add_to_entity(entity, &mut system_data.0, entities)?;
+                m.add_to_entity(entity, &mut system_data.0, entities, children)?;
             }
             MeshPrefab::Shape(ref s) => {
-                s.add_to_entity(entity, &mut system_data.0, entities)?;
+                s.add_to_entity(entity, &mut system_data.0, entities, children)?;
             }
         }
         self.material
-            .add_to_entity(entity, &mut system_data.1, entities)?;
+            .add_to_entity(entity, &mut system_data.1, entities, children)?;
         Ok(())
     }
 

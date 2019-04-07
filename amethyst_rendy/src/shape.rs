@@ -60,6 +60,7 @@ where
         entity: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         let (_, ref mut meshes, _) = system_data;
         let self_handle = self.handle.as_ref().expect(

@@ -124,6 +124,7 @@ impl<'a> PrefabData<'a> for CameraPrefab {
         entity: Entity,
         storage: &mut Self::SystemData,
         _: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         let proj = match *self {
             CameraPrefab::Matrix(mat) => mat,
@@ -147,6 +148,7 @@ impl<'a> PrefabData<'a> for ActiveCameraPrefab {
         _: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         if let Some(ref mut cam) = system_data.0 {
             cam.entity = entities[self.0];

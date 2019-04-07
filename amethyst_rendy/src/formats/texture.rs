@@ -67,6 +67,7 @@ where
         _: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
+        _: &[Entity],
     ) -> Result<Handle<Texture<B>>, Error> {
         let handle = match *self {
             TexturePrefab::Data(ref data) => {
