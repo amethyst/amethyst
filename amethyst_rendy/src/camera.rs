@@ -35,11 +35,10 @@ impl Projection {
         let znear = 0.1;
         let zfar = 2000.0;
         let mut proj = Perspective3::new(aspect, fov, znear, zfar).into_inner();
-        proj[(1,1)] = -proj[(1,1)];
+        proj[(1, 1)] = -proj[(1, 1)];
 
-        proj[(2,2)] = zfar / (znear - zfar);
-        proj[(2,3)] = (znear * zfar) / (znear - zfar);
-
+        proj[(2, 2)] = zfar / (znear - zfar);
+        proj[(2, 3)] = (znear * zfar) / (znear - zfar);
 
         Projection::Perspective(Perspective3::from_matrix_unchecked(proj))
     }
