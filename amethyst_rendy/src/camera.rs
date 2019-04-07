@@ -32,7 +32,16 @@ impl Projection {
     /// Creates a perspective projection with the given aspect ratio and
     /// field-of-view. `fov` is specified in radians.
     pub fn perspective(aspect: f32, fov: f32) -> Projection {
-        Projection::Perspective(Perspective3::new(aspect, fov, 0.1, 2000.0))
+        let znear = 0.1;
+        let zfar = 2000.0;
+        let mut proj = Perspective3::new(aspect, fov, znear, zfar).into_inner();
+        proj[(1,1)] = -proj[(1,1)];
+
+        proj[(2,2)] = zfar / (znear - zfar);
+        proj[(2,3)] = (znear * zfar) / (znear - zfar);
+
+
+        Projection::Perspective(Perspective3::from_matrix_unchecked(proj))
     }
 }
 
