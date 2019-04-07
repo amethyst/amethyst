@@ -5,7 +5,7 @@ layout(std140, set = 0, binding = 0) uniform VertexArgs {
     uniform mat4 view;
 };
 
-layout(std430, set = 0, binding = 1) readonly buffer JointTransforms {
+layout(std430, set = 3, binding = 0) readonly buffer JointTransforms {
     mat4 joints[];
 };
 
@@ -13,11 +13,12 @@ layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec3 tangent;
 layout(location = 3) in vec2 tex_coord;
-layout(location = 4) in mat4 model; // instance rate
-layout(location = 8) in vec4 tint; // instance rate
-layout(location = 9) in uint joints_offset; // instance rate
-layout(location = 10) in uvec4 joint_ids;
-layout(location = 11) in vec4 joint_weights;
+layout(location = 4) in uvec4 joint_ids;
+layout(location = 5) in vec4 joint_weights;
+
+layout(location = 6) in mat4 model; // instance rate
+layout(location = 10) in vec4 tint; // instance rate
+layout(location = 11) in uint joints_offset; // instance rate
 
 layout(location = 0) out VertexData {
     vec3 position;

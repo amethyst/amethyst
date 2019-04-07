@@ -13,6 +13,7 @@ use amethyst_core::{
     transform::Transform,
 };
 use amethyst_error::{format_err, Error, ResultExt};
+use amethyst_rendy::rendy::hal::Backend;
 
 use crate::{error, GltfMaterialSet, GltfNodeExtent, GltfPrefab, GltfSceneOptions, Named};
 
@@ -40,7 +41,7 @@ mod skin;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct GltfSceneFormat;
 
-impl Format<Prefab<GltfPrefab>> for GltfSceneFormat {
+impl<B: Backend> Format<Prefab<GltfPrefab<B>>> for GltfSceneFormat {
     const NAME: &'static str = "GLTFScene";
 
     type Options = GltfSceneOptions;
@@ -51,20 +52,20 @@ impl Format<Prefab<GltfPrefab>> for GltfSceneFormat {
         source: Arc<dyn Source>,
         options: GltfSceneOptions,
         _create_reload: bool,
-    ) -> Result<FormatValue<Prefab<GltfPrefab>>, Error> {
+    ) -> Result<FormatValue<Prefab<GltfPrefab<B>>>, Error> {
         Ok(FormatValue::data(
             load_gltf(source, &name, options)
-                .with_context(|_| format_err!("Failed to import gltf scene"))?,
+                .with_context(|_| format_err!("Failed to import gltf scene '{:?}'", name))?,
         ))
     }
 }
 
-fn load_gltf(
+fn load_gltf<B: Backend>(
     source: Arc<dyn Source>,
     name: &str,
     options: GltfSceneOptions,
-) -> Result<Prefab<GltfPrefab>, Error> {
-    debug!("Loading GLTF scene {}", name);
+) -> Result<Prefab<GltfPrefab<B>>, Error> {
+    debug!("Loading GLTF scene '{:?}'", name);
     import(source.clone(), name)
         .with_context(|_| error::Error::GltfImporterError)
         .and_then(|(gltf, buffers)| {
@@ -72,15 +73,15 @@ fn load_gltf(
         })
 }
 
-fn load_data(
+fn load_data<B: Backend>(
     gltf: &Gltf,
     buffers: &Buffers,
     options: &GltfSceneOptions,
     source: Arc<dyn Source>,
     name: &str,
-) -> Result<Prefab<GltfPrefab>, Error> {
+) -> Result<Prefab<GltfPrefab<B>>, Error> {
     let scene_index = get_scene_index(gltf, options)?;
-    let mut prefab = Prefab::<GltfPrefab>::new();
+    let mut prefab = Prefab::<GltfPrefab<B>>::new();
     load_scene(
         gltf,
         scene_index,
@@ -106,14 +107,14 @@ fn get_scene_index(gltf: &Gltf, options: &GltfSceneOptions) -> Result<usize, Err
     }
 }
 
-fn load_scene(
+fn load_scene<B: Backend>(
     gltf: &Gltf,
     scene_index: usize,
     buffers: &Buffers,
     options: &GltfSceneOptions,
     source: Arc<dyn Source>,
     name: &str,
-    prefab: &mut Prefab<GltfPrefab>,
+    prefab: &mut Prefab<GltfPrefab<B>>,
 ) -> Result<(), Error> {
     let scene = gltf
         .scenes()
@@ -210,7 +211,7 @@ struct SkinInfo {
     mesh_indices: Vec<usize>,
 }
 
-fn load_node(
+fn load_node<B: Backend>(
     gltf: &Gltf,
     node: &gltf::Node<'_>,
     entity_index: usize,
@@ -218,11 +219,11 @@ fn load_node(
     options: &GltfSceneOptions,
     source: Arc<dyn Source>,
     name: &str,
-    prefab: &mut Prefab<GltfPrefab>,
+    prefab: &mut Prefab<GltfPrefab<B>>,
     node_map: &mut HashMap<usize, usize>,
     skin_map: &mut HashMap<usize, SkinInfo>,
     parent_bounding_box: &mut GltfNodeExtent,
-    material_set: &mut GltfMaterialSet,
+    material_set: &mut GltfMaterialSet<B>,
 ) -> Result<(), Error> {
     node_map.insert(node.index(), entity_index);
 

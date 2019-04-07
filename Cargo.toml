@@ -118,6 +118,7 @@ genmesh = "0.6"
 ron = "0.4.2"
 specs-derive = "0.4"
 amethyst_rendy = { path = "amethyst_rendy", features = ["vulkan"] }
+derivative = "1.0.2"
 
 [build-dependencies]
 vergen = "3.0"
@@ -296,3 +297,7 @@ path = "examples/auto_fov/main.rs"
 [[example]]
 name = "rendy"
 path = "examples/rendy/main.rs"
+required-features = ["animation", "gltf"]
+
+[profile.release]
+debug = true

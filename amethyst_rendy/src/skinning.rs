@@ -17,6 +17,12 @@ use std::{borrow::Cow, result::Result as StdResult};
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct JointWeights(pub [f32; 4]);
 
+impl From<[f32; 4]> for JointWeights {
+    fn from(from: [f32; 4]) -> Self {
+        Self(from)
+    }
+}
+
 impl AsAttribute for JointWeights {
     const NAME: &'static str = "joint_weights";
     const SIZE: u32 = 16;
@@ -26,6 +32,12 @@ impl AsAttribute for JointWeights {
 /// Type for joint ids attribute of vertex
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct JointIds(pub [u16; 4]);
+
+impl From<[u16; 4]> for JointIds {
+    fn from(from: [u16; 4]) -> Self {
+        Self(from)
+    }
+}
 
 impl AsAttribute for JointIds {
     const NAME: &'static str = "joint_ids";

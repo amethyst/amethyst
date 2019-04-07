@@ -1,25 +1,35 @@
-use std::sync::Arc;
-
-use gfx::texture::SamplerInfo;
-use gltf::{self, material::AlphaMode};
-use itertools::Itertools;
-
+use super::{get_image_data, Buffers, ImageFormat as ImportDataFormat};
 use amethyst_assets::Source;
 use amethyst_error::Error;
-use amethyst_renderer::{
-    JpgFormat, MaterialPrefab, PngFormat, TextureData, TextureFormat, TextureMetadata,
-    TexturePrefab,
+use amethyst_rendy::{
+    formats::{
+        mtl::MaterialPrefab,
+        texture::{ImageFormat, TexturePrefab},
+    },
+    palette::{LinSrgba, Srgba},
+    rendy::{
+        hal::{self, Backend},
+        texture::{
+            image::{load_from_image, ImageFormat as DataFormat, ImageTextureConfig, Repr},
+            palette::{load_from_linear_rgba, load_from_srgba},
+            TextureBuilder,
+        },
+    },
 };
 
-use super::{get_image_data, Buffers, ImageFormat};
+// use gfx::texture::SamplerInfo;
+use gltf::{self, material::AlphaMode};
+use std::sync::Arc;
 
 // Load a single material, and transform into a format usable by the engine
-pub fn load_material(
+pub fn load_material<B: Backend>(
     material: &gltf::Material<'_>,
     buffers: &Buffers,
     source: Arc<dyn Source>,
     name: &str,
-) -> Result<MaterialPrefab<TextureFormat>, Error> {
+) -> Result<MaterialPrefab<B, ImageFormat>, Error> {
+    use hal::format::{Component, Swizzle};
+
     let mut prefab = MaterialPrefab::default();
     prefab.albedo = Some(
         load_texture_with_factor(
@@ -33,33 +43,44 @@ pub fn load_material(
         .map(|(texture, _)| TexturePrefab::Data(texture))?,
     );
 
-    let (metallic, roughness) = load_texture_with_factor(
+    // metallic from B channel
+    // roughness from G channel
+    let metallic_roughness = load_texture_with_factor(
         material
             .pbr_metallic_roughness()
             .metallic_roughness_texture(),
         [
-            material.pbr_metallic_roughness().metallic_factor(),
-            material.pbr_metallic_roughness().roughness_factor(),
             1.0,
+            material.pbr_metallic_roughness().roughness_factor(),
+            material.pbr_metallic_roughness().metallic_factor(),
             1.0,
         ],
         buffers,
         source.clone(),
         name,
         false,
-    )
-    .map(|(texture, factors)| deconstruct_metallic_roughness(texture, factors[0], factors[1]))
-    .map(|(metallic, roughness)| {
-        (
-            TexturePrefab::Data(metallic.0),
-            TexturePrefab::Data(roughness.0),
-        )
-    })?;
-    prefab.metallic = Some(metallic);
-    prefab.roughness = Some(roughness);
+    )?
+    .0;
+
+    let metallic = metallic_roughness.clone().with_swizzle(Swizzle(
+        Component::B,
+        Component::B,
+        Component::B,
+        Component::One,
+    ));
+
+    let roughness = metallic_roughness.with_swizzle(Swizzle(
+        Component::G,
+        Component::G,
+        Component::G,
+        Component::One,
+    ));
+
+    prefab.metallic = Some(TexturePrefab::Data(metallic));
+    prefab.roughness = Some(TexturePrefab::Data(roughness));
 
     let em_factor = material.emissive_factor();
-    prefab.emission = Some(
+    prefab.emission = Some(TexturePrefab::Data(
         load_texture_with_factor(
             material.emissive_texture(),
             [em_factor[0], em_factor[1], em_factor[2], 1.0],
@@ -67,9 +88,9 @@ pub fn load_material(
             source.clone(),
             name,
             false,
-        )
-        .map(|(texture, _)| TexturePrefab::Data(texture))?,
-    );
+        )?
+        .0,
+    ));
 
     // Can't use map/and_then because of Result returning from the load_texture function
     prefab.normal = match material.normal_texture() {
@@ -114,49 +135,6 @@ pub fn load_material(
     Ok(prefab)
 }
 
-fn deconstruct_metallic_roughness(
-    data: TextureData,
-    metallic_factor: f32,
-    roughness_factor: f32,
-) -> ((TextureData, f32), (TextureData, f32)) {
-    (
-        (
-            deconstruct_image(&data, 2, 4), // metallic from B channel
-            metallic_factor,
-        ),
-        (
-            deconstruct_image(&data, 1, 4), // roughness from G channel
-            roughness_factor,
-        ),
-    )
-}
-
-fn deconstruct_image(data: &TextureData, offset: usize, step: usize) -> TextureData {
-    use gfx::format::SurfaceType;
-    match *data {
-        TextureData::Image(ref image_data, ref metadata) => {
-            let metadata = metadata.clone().with_format(SurfaceType::R8).with_size(
-                image_data.rgba.width() as u16,
-                image_data.rgba.height() as u16,
-            );
-            let image_data = image_data
-                .rgba
-                .clone()
-                .into_raw()
-                .iter()
-                .dropping(offset)
-                .step(step)
-                .cloned()
-                .collect();
-            TextureData::U8(image_data, metadata)
-        }
-        TextureData::Rgba(ref color, ref metadata) => {
-            TextureData::Rgba([color[offset]; 4], metadata.clone())
-        }
-        _ => unreachable!(), // We only support color and image for textures from gltf files
-    }
-}
-
 fn load_texture_with_factor(
     texture: Option<gltf::texture::Info<'_>>,
     factor: [f32; 4],
@@ -164,13 +142,20 @@ fn load_texture_with_factor(
     source: Arc<dyn Source>,
     name: &str,
     srgb: bool,
-) -> Result<(TextureData, [f32; 4]), Error> {
+) -> Result<(TextureBuilder<'static>, [f32; 4]), Error> {
     match texture {
         Some(info) => Ok((
             load_texture(&info.texture(), buffers, source, name, srgb)?,
             factor,
         )),
-        None => Ok((TextureData::color(factor), [1.0, 1.0, 1.0, 1.0])),
+        None => Ok((
+            if srgb {
+                load_from_srgba(Srgba::new(factor[0], factor[1], factor[2], factor[3]))
+            } else {
+                load_from_linear_rgba(LinSrgba::new(factor[0], factor[1], factor[2], factor[3]))
+            },
+            [1.0, 1.0, 1.0, 1.0],
+        )),
     }
 }
 
@@ -180,39 +165,59 @@ fn load_texture(
     source: Arc<dyn Source>,
     name: &str,
     srgb: bool,
-) -> Result<TextureData, Error> {
+) -> Result<TextureBuilder<'static>, Error> {
     let (data, format) = get_image_data(&texture.source(), buffers, source, name.as_ref())?;
 
-    let metadata = match srgb {
-        true => TextureMetadata::srgb(),
-        false => TextureMetadata::unorm(),
+    let metadata = ImageTextureConfig {
+        repr: match srgb {
+            true => Repr::Srgb,
+            false => Repr::Unorm,
+        },
+        format: match format {
+            ImportDataFormat::Png => Some(DataFormat::PNG),
+            ImportDataFormat::Jpeg => Some(DataFormat::JPEG),
+        },
+        sampler_info: load_sampler_info(&texture.sampler()),
+        ..Default::default()
     };
-    let metadata = metadata.with_sampler(load_sampler_info(&texture.sampler()));
-    Ok(match format {
-        ImageFormat::Png => PngFormat::from_data(&data, metadata),
-        ImageFormat::Jpeg => JpgFormat::from_data(&data, metadata),
-    }?)
+
+    load_from_image(&data, metadata).map_err(|e| e.compat().into())
 }
 
-fn load_sampler_info(sampler: &gltf::texture::Sampler<'_>) -> SamplerInfo {
-    use gfx::texture::{FilterMethod, WrapMode};
-    use gltf::texture::{MagFilter, WrappingMode};
-    // gfx only have support for a single filter, therefore we use mag filter, and ignore min filter
-    let filter = match sampler.mag_filter() {
-        None | Some(MagFilter::Nearest) => FilterMethod::Scale,
-        Some(MagFilter::Linear) => FilterMethod::Bilinear,
+fn load_sampler_info(sampler: &gltf::texture::Sampler<'_>) -> hal::image::SamplerInfo {
+    use gltf::texture::{MagFilter, MinFilter};
+    use hal::image::{Filter, SamplerInfo};
+
+    let mag_filter = match sampler.mag_filter() {
+        None | Some(MagFilter::Nearest) => Filter::Nearest,
+        Some(MagFilter::Linear) => Filter::Linear,
     };
-    let wrap_s = match sampler.wrap_s() {
-        WrappingMode::ClampToEdge => WrapMode::Clamp,
-        WrappingMode::MirroredRepeat => WrapMode::Mirror,
-        WrappingMode::Repeat => WrapMode::Tile,
+
+    let (min_filter, mip_filter) = match sampler.min_filter() {
+        None | Some(MinFilter::Nearest) | Some(MinFilter::NearestMipmapNearest) => {
+            (Filter::Nearest, Filter::Nearest)
+        }
+        Some(MinFilter::Linear) | Some(MinFilter::LinearMipmapLinear) => {
+            (Filter::Linear, Filter::Linear)
+        }
+        Some(MinFilter::NearestMipmapLinear) => (Filter::Nearest, Filter::Linear),
+        Some(MinFilter::LinearMipmapNearest) => (Filter::Linear, Filter::Nearest),
     };
-    let wrap_t = match sampler.wrap_t() {
-        WrappingMode::ClampToEdge => WrapMode::Clamp,
-        WrappingMode::MirroredRepeat => WrapMode::Mirror,
-        WrappingMode::Repeat => WrapMode::Tile,
-    };
-    let mut s = SamplerInfo::new(filter, wrap_s);
-    s.wrap_mode.1 = wrap_t;
+
+    let wrap_s = map_wrapping(sampler.wrap_s());
+    let wrap_t = map_wrapping(sampler.wrap_t());
+
+    let mut s = SamplerInfo::new(min_filter, wrap_s);
+    s.wrap_mode = (wrap_s, wrap_t, wrap_t);
+    s.mag_filter = mag_filter;
+    s.mip_filter = mip_filter;
     s
+}
+
+fn map_wrapping(gltf_wrap: gltf::texture::WrappingMode) -> hal::image::WrapMode {
+    match gltf_wrap {
+        gltf::texture::WrappingMode::ClampToEdge => hal::image::WrapMode::Clamp,
+        gltf::texture::WrappingMode::MirroredRepeat => hal::image::WrapMode::Mirror,
+        gltf::texture::WrappingMode::Repeat => hal::image::WrapMode::Tile,
+    }
 }

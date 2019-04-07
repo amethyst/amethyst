@@ -7,23 +7,16 @@ use amethyst::{
     },
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
     core::{Transform, TransformBundle},
-    ecs::prelude::{
-        Entity,
-        Resources, ReadExpect
-    },
+    ecs::prelude::{Entity, ReadExpect, Resources},
     input::{get_key, is_close_requested, is_key_down},
     prelude::*,
     utils::{application_root_dir, scene::BasicScenePrefab},
-    winit::{EventsLoop, Window, VirtualKeyCode, ElementState},
     window::{EventsLoopSystem, ScreenDimensions, WindowSystem},
+    winit::{ElementState, EventsLoop, VirtualKeyCode, Window},
 };
 
 use amethyst_rendy::{
-    rendy::{
-        factory::Factory, graph::GraphBuilder, hal::Backend,
-        //mesh::PosNormTex,
-        mesh::PosNormTangTex,
-    },
+    rendy::{factory::Factory, graph::GraphBuilder, hal::Backend, mesh::PosNormTangTex},
     system::{GraphCreator, RendererSystem},
     types::DefaultBackend,
 };
@@ -192,7 +185,8 @@ fn run<B: Backend>() -> amethyst::Result<()> {
         log_file: Some("animation_example.log".into()),
         level_filter: log::LevelFilter::Trace,
         ..Default::default()
-    }).start();
+    })
+    .start();
 
     let app_root = application_root_dir()?;
     let display_config_path = app_root.join("examples/animation/resources/display_config.ron");

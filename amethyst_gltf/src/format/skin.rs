@@ -4,18 +4,18 @@ use amethyst_animation::{JointPrefab, SkinPrefab, SkinnablePrefab};
 use amethyst_assets::Prefab;
 use amethyst_core::math::Matrix4;
 use amethyst_error::Error;
-use amethyst_renderer::JointTransformsPrefab;
+use amethyst_rendy::{rendy::hal::Backend, skinning::JointTransformsPrefab};
 
 use super::Buffers;
 use crate::GltfPrefab;
 
-pub fn load_skin(
+pub fn load_skin<B: Backend>(
     skin: &gltf::Skin<'_>,
     buffers: &Buffers,
     skin_entity: usize,
     node_map: &HashMap<usize, usize>,
     meshes: Vec<usize>,
-    prefab: &mut Prefab<GltfPrefab>,
+    prefab: &mut Prefab<GltfPrefab<B>>,
 ) -> Result<(), Error> {
     let joints = skin
         .joints()

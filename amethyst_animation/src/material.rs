@@ -4,8 +4,9 @@ use serde::{Deserialize, Serialize};
 use amethyst_assets::Handle;
 use amethyst_rendy::{
     mtl::{Material, TextureOffset},
-    sprite::Sprite, types::Texture,
     rendy::hal::Backend,
+    sprite::Sprite,
+    types::Texture,
 };
 
 use crate::{AnimationSampling, ApplyData, BlendMethod};

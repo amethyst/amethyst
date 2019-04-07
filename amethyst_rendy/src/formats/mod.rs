@@ -3,23 +3,19 @@ pub mod mtl;
 pub mod texture;
 
 use self::{
-    mesh::{ObjFormat, MeshPrefab},
+    mesh::{MeshPrefab, ObjFormat},
     mtl::MaterialPrefab,
     texture::ImageFormat,
 };
 use crate::{
-    types::{Mesh, Texture},
     shape::InternalShape,
+    types::{Mesh, Texture},
 };
-use rendy::{
-    hal::Backend,
-    texture::image::ImageTextureConfig,
-    mesh::MeshBuilder,
-};
-use serde::{Deserialize, Serialize, de::DeserializeOwned};
-use amethyst_core::ecs::prelude::Entity;
 use amethyst_assets::{AssetPrefab, Format, PrefabData, ProgressCounter};
+use amethyst_core::ecs::prelude::Entity;
 use amethyst_error::Error;
+use rendy::{hal::Backend, mesh::MeshBuilder, texture::image::ImageTextureConfig};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 /// `PrefabData` for loading graphics, ie `Mesh` + `Material`
 ///
@@ -35,11 +31,11 @@ use amethyst_error::Error;
 /// - `T`: `Format` to use for loading `Texture`s from file
 #[derive(Deserialize, Serialize)]
 pub struct GraphicsPrefab<B, V, M = ObjFormat, T = ImageFormat>
-    where
-        B: Backend,
-        M: Format<Mesh<B>>,
-        M::Options: DeserializeOwned + Serialize,
-        T: Format<Texture<B>, Options = ImageTextureConfig>,
+where
+    B: Backend,
+    M: Format<Mesh<B>>,
+    M::Options: DeserializeOwned + Serialize,
+    T: Format<Texture<B>, Options = ImageTextureConfig>,
 {
     #[serde(bound(deserialize = "MeshPrefab<B, V, M>: Deserialize<'de>"))]
     mesh: MeshPrefab<B, V, M>,
@@ -48,12 +44,12 @@ pub struct GraphicsPrefab<B, V, M = ObjFormat, T = ImageFormat>
 }
 
 impl<'a, B, V, M, T> PrefabData<'a> for GraphicsPrefab<B, V, M, T>
-    where
-        B: Backend,
-        M: Format<Mesh<B>> + Clone,
-        M::Options: Clone + DeserializeOwned + Serialize,
-        T: Format<Texture<B>, Options = ImageTextureConfig> + Sync + Clone,
-        V: From<InternalShape> + Into<MeshBuilder<'static>>,
+where
+    B: Backend,
+    M: Format<Mesh<B>> + Clone,
+    M::Options: Clone + DeserializeOwned + Serialize,
+    T: Format<Texture<B>, Options = ImageTextureConfig> + Sync + Clone,
+    V: From<InternalShape> + Into<MeshBuilder<'static>>,
 {
     type SystemData = (
         <AssetPrefab<Mesh<B>, M> as PrefabData<'a>>::SystemData,

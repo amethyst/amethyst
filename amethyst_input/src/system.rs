@@ -8,7 +8,7 @@ use amethyst_core::{
     ecs::prelude::{Read, ReadExpect, Resources, System, Write},
     shrev::{EventChannel, ReaderId},
 };
-use amethyst_renderer::ScreenDimensions;
+use amethyst_window::ScreenDimensions;
 
 use crate::{Bindings, InputEvent, InputHandler};
 

@@ -13216,7 +13216,10 @@
         }
     ], 
     "samplers" : [
-        {}
+        {
+            "minFilter": 9729,
+            "magFilter": 9729
+        }
     ], 
     "scene" : 0, 
     "scenes" : [
