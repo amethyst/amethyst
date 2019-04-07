@@ -56,6 +56,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * `ProgressCounter#num_loading()` no longer includes failed assets. ([#1452])
 * `SpriteSheetFormat` field renamed from `spritesheet_*` to `texture_*`. ([#1469])
 * Add new `keep_aspect_ratio` field to `Stretch::XY`. ([#1480])
+* `camera::Projection::perspective()` now returns a vulkan specific perspective matrix ([#1504])
 
 ### Removed
 
@@ -105,6 +106,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1469]: https://github.com/amethyst/amethyst/pull/1469
 [#1481]: https://github.com/amethyst/amethyst/pull/1481
 [#1480]: https://github.com/amethyst/amethyst/pull/1480
+[#1504]: https://github.com/amethyst/amethyst/pull/1504
 
 ## [0.10.0] - 2018-12
 
