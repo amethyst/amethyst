@@ -57,6 +57,9 @@ where
     pub transparent: bool,
     /// Alpha cutoff: the value below which we do not draw the pixel
     pub alpha_cutoff: f32,
+    /// Clone handle only
+    #[serde(skip)]
+    handle: Option<Handle<Material<B>>>,
 }
 
 impl<B: Backend, F> Default for MaterialPrefab<B, F>
@@ -82,14 +85,13 @@ where
             caveat_offset: TextureOffset::default(),
             transparent: false,
             alpha_cutoff: 0.01,
+            handle: None,
         }
     }
 }
 
 fn load_handle<B: Backend, F>(
-    entity: Entity,
     prefab: &Option<TexturePrefab<B, F>>,
-    tp_data: &mut <TexturePrefab<B, F> as PrefabData<'_>>::SystemData,
     def: &Handle<Texture<B>>,
 ) -> Handle<Texture<B>>
 where
@@ -98,7 +100,10 @@ where
 {
     prefab
         .as_ref()
-        .and_then(|tp| tp.add_to_entity(entity, tp_data, &[]).ok())
+        .and_then(|tp| match tp {
+            TexturePrefab::Handle(h) => Some(h.clone()),
+            _ => None,
+        })
         .unwrap_or_else(|| def.clone())
 }
 
@@ -109,9 +114,9 @@ where
 {
     type SystemData = (
         WriteStorage<'a, Handle<Material<B>>>,
+        WriteStorage<'a, Transparent>,
         ReadExpect<'a, MaterialDefaults<B>>,
         <TexturePrefab<B, F> as PrefabData<'a>>::SystemData,
-        WriteStorage<'a, Transparent>,
         ReadExpect<'a, Loader>,
         Read<'a, AssetStorage<Material<B>>>,
     );
@@ -123,39 +128,8 @@ where
         system_data: &mut Self::SystemData,
         _: &[Entity],
     ) -> Result<(), Error> {
-        let &mut (
-            ref mut material,
-            ref mat_default,
-            ref mut tp_data,
-            ref mut transparent,
-            ref loader,
-            ref storage,
-        ) = system_data;
-        let mtl = Material {
-            albedo: load_handle(entity, &self.albedo, tp_data, &mat_default.0.albedo),
-            albedo_offset: self.albedo_offset.clone(),
-            emission: load_handle(entity, &self.emission, tp_data, &mat_default.0.emission),
-            emission_offset: self.emission_offset.clone(),
-            normal: load_handle(entity, &self.normal, tp_data, &mat_default.0.normal),
-            normal_offset: self.normal_offset.clone(),
-            metallic: load_handle(entity, &self.metallic, tp_data, &mat_default.0.metallic),
-            metallic_offset: self.metallic_offset.clone(),
-            roughness: load_handle(entity, &self.roughness, tp_data, &mat_default.0.roughness),
-            roughness_offset: self.roughness_offset.clone(),
-            ambient_occlusion: load_handle(
-                entity,
-                &self.ambient_occlusion,
-                tp_data,
-                &mat_default.0.ambient_occlusion,
-            ),
-            ambient_occlusion_offset: self.ambient_occlusion_offset.clone(),
-            caveat: load_handle(entity, &self.caveat, tp_data, &mat_default.0.caveat),
-            caveat_offset: self.caveat_offset.clone(),
-            alpha_cutoff: self.alpha_cutoff,
-        };
-
-        let handle = loader.load_from_data(mtl, (), storage);
-        material.insert(entity, handle)?;
+        let &mut (ref mut material, ref mut transparent, _, _, _, _) = system_data;
+        material.insert(entity, self.handle.as_ref().unwrap().clone())?;
         if self.transparent {
             transparent.insert(entity, Transparent)?;
         }
@@ -167,7 +141,7 @@ where
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        let &mut (_, _, ref mut tp_data, _, _, _) = system_data;
+        let &mut (_, _, ref mat_default, ref mut tp_data, ref loader, ref storage) = system_data;
         let mut ret = false;
         if let Some(ref mut texture) = self.albedo {
             if texture.load_sub_assets(progress, tp_data)? {
@@ -204,6 +178,34 @@ where
                 ret = true;
             }
         }
+
+        if self.handle.is_none() {
+            let mtl = Material {
+                albedo: load_handle(&self.albedo, &mat_default.0.albedo),
+                albedo_offset: self.albedo_offset.clone(),
+                emission: load_handle(&self.emission, &mat_default.0.emission),
+                emission_offset: self.emission_offset.clone(),
+                normal: load_handle(&self.normal, &mat_default.0.normal),
+                normal_offset: self.normal_offset.clone(),
+                metallic: load_handle(&self.metallic, &mat_default.0.metallic),
+                metallic_offset: self.metallic_offset.clone(),
+                roughness: load_handle(&self.roughness, &mat_default.0.roughness),
+                roughness_offset: self.roughness_offset.clone(),
+                ambient_occlusion: load_handle(
+                    &self.ambient_occlusion,
+                    &mat_default.0.ambient_occlusion,
+                ),
+                ambient_occlusion_offset: self.ambient_occlusion_offset.clone(),
+                caveat: load_handle(&self.caveat, &mat_default.0.caveat),
+                caveat_offset: self.caveat_offset.clone(),
+                alpha_cutoff: self.alpha_cutoff,
+            };
+
+            self.handle
+                .replace(loader.load_from_data(mtl, progress, storage));
+            ret = true;
+        }
+
         Ok(ret)
     }
 }

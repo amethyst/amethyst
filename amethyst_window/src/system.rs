@@ -1,7 +1,7 @@
 use crate::{config::DisplayConfig, resources::ScreenDimensions};
 use amethyst_config::Config;
 use amethyst_core::{
-    ecs::{Resources, RunNow, SystemData, Write, WriteExpect},
+    ecs::{Resources, RunNow, System, SystemData, Write, WriteExpect},
     shrev::EventChannel,
 };
 use std::{path::Path, sync::Arc};
@@ -31,7 +31,7 @@ impl WindowSystem {
         }
     }
 
-    fn manage_dimensions(&mut self, mut screen_dimensions: WriteExpect<'_, ScreenDimensions>) {
+    fn manage_dimensions(&mut self, mut screen_dimensions: &mut ScreenDimensions) {
         let width = screen_dimensions.w;
         let height = screen_dimensions.h;
 
@@ -59,9 +59,11 @@ impl WindowSystem {
     }
 }
 
-impl<'a> RunNow<'a> for WindowSystem {
-    fn run_now(&mut self, res: &'a Resources) {
-        self.manage_dimensions(SystemData::fetch(res));
+impl<'a> System<'a> for WindowSystem {
+    type SystemData = WriteExpect<'a, ScreenDimensions>;
+
+    fn run(&mut self, mut screen_dimesnions: Self::SystemData) {
+        self.manage_dimensions(&mut screen_dimesnions);
     }
     fn setup(&mut self, res: &mut Resources) {
         let (width, height) = self

@@ -19,7 +19,7 @@ travis-ci = { repository = "amethyst/amethyst" }
 amethyst_core = { path = "../amethyst_core/", version = "0.5.0" }
 amethyst_error = { path = "../amethyst_error/", version = "0.1.0" }
 amethyst_config = { path = "../amethyst_config/", version = "0.9.0" }
-amethyst_renderer = { path = "../amethyst_renderer/", version = "0.10.0" }
+amethyst_window = { path = "../amethyst_window/", version = "0.1.0" }
 derivative = "1.0"
 fnv = "1"
 serde = { version = "1", features = ["derive"] }

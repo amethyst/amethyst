@@ -46,7 +46,9 @@ pub(crate) fn prepare_camera(
 
     let camera_position = (camera.1).0.column(3).xyz().into_pod();
 
-    let proj: [[f32; 4]; 4] = camera.0.proj.into();
+    let mut proj: [[f32; 4]; 4] = camera.0.proj.into();
+    proj[1][1] *= -1.0;
+
     let view: [[f32; 4]; 4] = (*camera.1)
         .0
         .try_inverse()

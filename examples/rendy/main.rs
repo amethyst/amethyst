@@ -1,27 +1,56 @@
 //! Displays spheres with physically based materials.
 //!
 use amethyst::{
-    assets::AssetLoaderSystemData,
+    animation::{
+        get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSet, AnimationSet,
+        EndControl, VertexSkinningBundle,
+    },
+    assets::{
+        AssetLoaderSystemData, AssetPrefab, Completion, Handle, Prefab, PrefabData, PrefabLoader,
+        PrefabLoaderSystem, ProgressCounter, RonFormat,
+    },
+    controls::{ControlTagPrefab, FlyControlBundle, FlyControlTag},
     core::{
         ecs::{
-            Component, DenseVecStorage, Join, Read, ReadExpect, ReadStorage, Resources, System,
-            SystemData, WriteStorage,
+            Component, DenseVecStorage, Entity, Join, Read, ReadExpect, ReadStorage, Resources,
+            System, SystemData, Write, WriteStorage,
         },
         math::{Unit, UnitQuaternion, Vector3},
         Time, Transform, TransformBundle,
     },
+    derive::PrefabData,
+    gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem},
+    input::{is_close_requested, is_key_down, Axis, Button, Bindings, InputBundle},
     prelude::*,
-    utils::{application_root_dir, fps_counter::FPSCounterBundle},
+    utils::{
+        application_root_dir,
+        fps_counter::FPSCounterBundle,
+        tag::{Tag, TagFinder},
+    },
     window::{EventsLoopSystem, ScreenDimensions, WindowSystem},
     winit::{EventsLoop, Window},
+    Error,
 };
 use amethyst_rendy::{
-    camera::{ActiveCamera, Camera, Projection},
-    light::{Light, PointLight},
+    camera::{ActiveCamera, Camera, CameraPrefab, Projection},
+    light::{Light, LightPrefab, PointLight},
     mtl::{Material, MaterialDefaults},
     palette::{LinLuma, LinSrgb, Srgb},
+    pass::DrawPbmDesc,
     rendy::{
-        factory::Factory, graph::GraphBuilder, hal::Backend, mesh::PosNormTangTex,
+        factory::Factory,
+        graph::{
+            present::PresentNode,
+            render::{RenderGroupBuilder, RenderGroupDesc},
+            GraphBuilder,
+        },
+        hal::{
+            command::{ClearDepthStencil, ClearValue},
+            format::Format,
+            pso, Backend,
+        },
+        memory::MemoryUsageValue,
+        mesh::PosNormTangTex,
         texture::palette::load_from_linear_rgba,
     },
     resources::Tint,
@@ -29,12 +58,25 @@ use amethyst_rendy::{
     system::{GraphCreator, RendererSystem},
     types::{DefaultBackend, Mesh, Texture},
 };
-use std::{marker::PhantomData, sync::Arc};
+use derivative::Derivative;
+use serde::{Deserialize, Serialize};
+use std::{marker::PhantomData, sync::Arc, path::Path};
 
-struct Example<B: Backend>(PhantomData<B>);
+struct Example<B: Backend> {
+    entity: Option<Entity>,
+    initialised: bool,
+    progress: Option<ProgressCounter>,
+    marker: PhantomData<B>,
+}
+
 impl<B: Backend> Example<B> {
     pub fn new() -> Self {
-        Self(PhantomData)
+        Self {
+            entity: None,
+            initialised: false,
+            progress: None,
+            marker: PhantomData,
+        }
     }
 }
 
@@ -101,22 +143,58 @@ impl<'a> System<'a> for CameraCorrectionSystem {
     }
 }
 
+#[derive(Clone, Serialize, Deserialize)]
+struct AnimationMarker;
+
+#[derive(Derivative)]
+#[derivative(Default(bound = ""))]
+struct Scene<B: Backend> {
+    handle: Option<Handle<Prefab<ScenePrefabData<B>>>>,
+    animation_index: usize,
+}
+
+#[derive(Derivative, Deserialize, Serialize, PrefabData)]
+#[derivative(Default(bound = ""))]
+#[serde(default, bound = "")]
+struct ScenePrefabData<B: Backend> {
+    transform: Option<Transform>,
+    gltf: Option<AssetPrefab<GltfSceneAsset<B>, GltfSceneFormat>>,
+    camera: Option<CameraPrefab>,
+    light: Option<LightPrefab>,
+    tag: Option<Tag<AnimationMarker>>,
+    fly_tag: Option<ControlTagPrefab>,
+}
+
 impl<B: Backend> SimpleState for Example<B> {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
+
         let mat_defaults = world.read_resource::<MaterialDefaults<B>>().0.clone();
+
+        self.progress = Some(ProgressCounter::default());
+
+        world.exec(
+            |(loader, mut scene): (PrefabLoader<'_, ScenePrefabData<B>>, Write<'_, Scene<B>>)| {
+                scene.handle = Some(loader.load(
+                    Path::new("prefab").join("puffy_scene_rendy.ron").to_string_lossy(),
+                    RonFormat,
+                    (),
+                    self.progress.as_mut().unwrap(),
+                ));
+            },
+        );
 
         let (mesh, albedo) = {
             let mesh = world.exec(|loader: AssetLoaderSystemData<'_, Mesh<B>>| {
                 loader.load_from_data(
                     Shape::Sphere(32, 32).generate::<Vec<PosNormTangTex>>(None),
-                    (),
+                    self.progress.as_mut().unwrap(),
                 )
             });
             let albedo = world.exec(|loader: AssetLoaderSystemData<'_, Texture<B>>| {
                 loader.load_from_data(
                     load_from_linear_rgba(LinSrgb::new(1.0, 1.0, 1.0).into()),
-                    (),
+                    self.progress.as_mut().unwrap(),
                 )
             });
 
@@ -131,6 +209,10 @@ impl<B: Backend> SimpleState for Example<B> {
 
         for i in 0..10 {
             for j in 0..10 {
+                if mtls.len() >= NUM_ROWS + NUM_COLS - 1 {
+                    break;
+                }
+                
                 let roughness = i as f32 / 9.0;
                 let metallic = j as f32 / 9.0;
                 let (metallic, roughness) =
@@ -138,11 +220,11 @@ impl<B: Backend> SimpleState for Example<B> {
                         (
                             loader.load_from_data(
                                 load_from_linear_rgba(LinLuma::new(metallic).into()),
-                                (),
+                                self.progress.as_mut().unwrap(),
                             ),
                             loader.load_from_data(
                                 load_from_linear_rgba(LinLuma::new(roughness).into()),
-                                (),
+                                self.progress.as_mut().unwrap(),
                             ),
                         )
                     });
@@ -155,7 +237,7 @@ impl<B: Backend> SimpleState for Example<B> {
                             roughness,
                             ..mat_defaults.clone()
                         },
-                        (),
+                        self.progress.as_mut().unwrap(),
                     )
                 });
                 mtls.push(mtl);
@@ -167,7 +249,7 @@ impl<B: Backend> SimpleState for Example<B> {
                 let x = i as f32 / (NUM_COLS - 1) as f32;
                 let y = j as f32 / (NUM_ROWS - 1) as f32;
 
-                let center = Vector3::new(10.0 * (x - 0.5), 10.0 * (y - 0.5), 0.0);
+                let center = Vector3::new(15.0 * (x - 0.5), 15.0 * (y - 0.5), -5.0);
 
                 let mut pos = Transform::default();
                 pos.set_translation(center);
@@ -206,7 +288,7 @@ impl<B: Backend> SimpleState for Example<B> {
         .into();
 
         let mut light1_transform = Transform::default();
-        light1_transform.set_translation_xyz(6.0, 6.0, -6.0);
+        light1_transform.set_translation_xyz(6.0, 6.0, 6.0);
 
         let light2: Light = PointLight {
             intensity: 5.0,
@@ -216,7 +298,18 @@ impl<B: Backend> SimpleState for Example<B> {
         .into();
 
         let mut light2_transform = Transform::default();
-        light2_transform.set_translation_xyz(6.0, -6.0, -6.0);
+        light2_transform.set_translation_xyz(6.0, -6.0, 6.0);
+
+
+        let light3: Light = PointLight {
+            intensity: 4.0,
+            color: Srgb::new(0.5, 0.5, 0.5),
+            ..PointLight::default()
+        }
+        .into();
+
+        let mut light3_transform = Transform::default();
+        light3_transform.set_translation_xyz(-3.0, 10.0, 2.0);
 
         world
             .create_entity()
@@ -236,9 +329,15 @@ impl<B: Backend> SimpleState for Example<B> {
             .with(light2_transform)
             .build();
 
+        world
+            .create_entity()
+            .with(light3)
+            .with(light3_transform)
+            .build();
+
         let mut transform = Transform::default();
-        transform.set_translation_xyz(0.0, 0.0, -12.0);
-        transform.prepend_rotation_y_axis(std::f32::consts::PI);
+        transform.set_translation_xyz(0.0, 4.0, 8.0);
+        transform.prepend_rotation_x_axis(std::f32::consts::PI * -0.0625);
 
         let camera = world
             .create_entity()
@@ -247,9 +346,105 @@ impl<B: Backend> SimpleState for Example<B> {
                 std::f32::consts::FRAC_PI_3,
             )))
             .with(transform)
+            .with(FlyControlTag)
             .build();
 
         world.add_resource(ActiveCamera { entity: camera });
+    }
+
+    fn handle_event(
+        &mut self,
+        data: StateData<'_, GameData<'_, '_>>,
+        event: StateEvent,
+    ) -> SimpleTrans {
+        let StateData { world, .. } = data;
+        if let StateEvent::Window(event) = &event {
+            if is_close_requested(&event) || is_key_down(&event, winit::VirtualKeyCode::Escape) {
+                Trans::Quit
+            } else if is_key_down(&event, winit::VirtualKeyCode::Space) {
+                toggle_or_cycle_animation::<B>(
+                    self.entity,
+                    &mut world.write_resource(),
+                    &world.read_storage(),
+                    &mut world.write_storage(),
+                );
+                Trans::None
+            } else {
+                Trans::None
+            }
+        } else {
+            Trans::None
+        }
+    }
+
+    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+        if !self.initialised {
+            let remove = match self.progress.as_ref().map(|p| p.complete()) {
+                None | Some(Completion::Loading) => false,
+
+                Some(Completion::Complete) => {
+                    let scene_handle = data
+                        .world
+                        .read_resource::<Scene<B>>()
+                        .handle
+                        .as_ref()
+                        .unwrap()
+                        .clone();
+
+                    data.world.create_entity().with(scene_handle).build();
+
+                    true
+                }
+
+                Some(Completion::Failed) => {
+                    println!("Error: {:?}", self.progress.as_ref().unwrap().errors());
+                    return Trans::Quit;
+                }
+            };
+            if remove {
+                self.progress = None;
+            }
+            if self.entity.is_none() {
+                if let Some(entity) = data
+                    .world
+                    .exec(|finder: TagFinder<'_, AnimationMarker>| finder.find())
+                {
+                    self.entity = Some(entity);
+                    self.initialised = true;
+                }
+            }
+        }
+        Trans::None
+    }
+}
+
+fn toggle_or_cycle_animation<B: Backend>(
+    entity: Option<Entity>,
+    scene: &mut Scene<B>,
+    sets: &ReadStorage<'_, AnimationSet<usize, Transform>>,
+    controls: &mut WriteStorage<'_, AnimationControlSet<usize, Transform>>,
+) {
+    if let Some((entity, Some(animations))) = entity.map(|entity| (entity, sets.get(entity))) {
+        if animations.animations.len() > scene.animation_index {
+            let animation = animations.animations.get(&scene.animation_index).unwrap();
+            let set = get_animation_set::<usize, Transform>(controls, entity).unwrap();
+            if set.has_animation(scene.animation_index) {
+                set.toggle(scene.animation_index);
+            } else {
+                println!("Running animation {}", scene.animation_index);
+                set.add_animation(
+                    scene.animation_index,
+                    animation,
+                    EndControl::Normal,
+                    1.0,
+                    AnimationCommand::Start,
+                );
+            }
+            scene.animation_index += 1;
+            if scene.animation_index >= animations.animations.len() {
+                scene.animation_index = 0;
+            }
+        }
     }
 }
 
@@ -267,20 +462,54 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let path = app_root.join("examples/rendy/resources/display_config.ron");
-    let resources = app_root.join("examples/assets/");
+    let path = app_root.join("examples").join("rendy").join("resources").join("display_config.ron");
+    let resources = app_root.join("examples").join("assets");
 
     let event_loop = EventsLoop::new();
 
-    let window_system = WindowSystem::from_config_path(&event_loop, path);
+
+    let mut bidnings = Bindings::new();
+    bidnings.insert_axis("vertical", Axis::Emulated { pos: Button::Key(winit::VirtualKeyCode::S), neg: Button::Key(winit::VirtualKeyCode::W)})?;
+    bidnings.insert_axis("horizontal", Axis::Emulated { pos: Button::Key(winit::VirtualKeyCode::D), neg: Button::Key(winit::VirtualKeyCode::A)})?;
 
     let game_data = GameDataBuilder::default()
+        .with(WindowSystem::from_config_path(&event_loop, path), "window", &[])
         .with(OrbitSystem, "orbit", &[])
         .with(CameraCorrectionSystem::new(), "cam", &[])
-        .with_bundle(TransformBundle::new().with_dep(&["orbit"]))?
+        // .with_bundle(TransformBundle::new().with_dep(&["orbit"]))?
         .with_bundle(FPSCounterBundle::default())?
+        .with(
+            PrefabLoaderSystem::<ScenePrefabData<DefaultBackend>>::default(),
+            "scene_loader",
+            &[],
+        )
+        .with(
+            GltfSceneLoaderSystem::<DefaultBackend>::default(),
+            "gltf_loader",
+            &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
+        )
+        .with_bundle(
+            AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
+                .with_dep(&["gltf_loader"]),
+        )?
+        .with_bundle(InputBundle::<&'static str, &'static str>::new().with_bindings(bidnings))?
+        .with_bundle(
+            FlyControlBundle::<&'static str, &'static str>::new(Some("horizontal"), None, Some("vertical"))
+                .with_sensitivity(0.1, 0.1)
+                .with_speed(5.),
+        )?
+        .with_bundle(TransformBundle::new().with_dep(&[
+            "animation_control",
+            "sampler_interpolation",
+            "fly_movement",
+            "orbit",
+        ]))?
+        .with_bundle(VertexSkinningBundle::new().with_dep(&[
+            "transform_system",
+            "animation_control",
+            "sampler_interpolation",
+        ]))?
         .with_thread_local(EventsLoopSystem::new(event_loop))
-        .with_thread_local(window_system)
         .with_thread_local(RendererSystem::<DefaultBackend, _>::new(ExampleGraph::new()));
 
     let mut game = Application::new(&resources, Example::<DefaultBackend>::new(), game_data)?;
@@ -319,22 +548,6 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         self.dirty = false;
 
         let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
-        use amethyst_rendy::{
-            pass::DrawPbmDesc,
-            rendy::{
-                graph::{
-                    present::PresentNode,
-                    render::{RenderGroupBuilder, RenderGroupDesc},
-                    GraphBuilder,
-                },
-                hal::{
-                    command::{ClearDepthStencil, ClearValue},
-                    format::Format,
-                    pso,
-                },
-                memory::MemoryUsageValue,
-            },
-        };
 
         let surface = factory.create_surface(window.clone());
 

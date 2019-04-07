@@ -7,7 +7,7 @@ use crate::{
     mtl::{Material, MaterialDefaults},
     pod,
     resources::{AmbientColor, Tint},
-    skinning::{JointIds, JointTransforms, JointWeights},
+    skinning::{JointTransforms, PosNormTangTexJoint},
     types::{Mesh, Texture},
 };
 use amethyst_assets::{AssetStorage, Handle};
@@ -127,13 +127,10 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbmDesc {
         };
 
         let set_layouts = DrawPbmLayouts {
-            vertex_args: if self.skinning {
-                set_layout! {factory, 1 UniformBuffer GRAPHICS}
-            } else {
-                set_layout! {factory, 1 UniformBuffer GRAPHICS, 1 StorageBuffer VERTEX}
-            },
+            vertex_args: set_layout! {factory, 1 UniformBuffer GRAPHICS},
             material: set_layout! {factory, 1 UniformBuffer FRAGMENT, 7 CombinedImageSampler FRAGMENT},
             environment: set_layout! {factory, 3 UniformBuffer FRAGMENT, 1 UniformBuffer GRAPHICS},
+            skinning: set_layout! {factory, 1 StorageBuffer VERTEX},
         };
 
         let pipeline_layout = unsafe {
@@ -145,9 +142,6 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbmDesc {
 
         let mut vbos = Vec::new();
         let mut attributes = Vec::new();
-        let mut vbos_skinned = Vec::new();
-        let mut attributes_skinned = Vec::new();
-
         util::push_vertex_desc(
             PosNormTangTex::VERTEX.gfx_vertex_input_desc(0),
             &mut vbos,
@@ -158,29 +152,6 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbmDesc {
             &mut vbos,
             &mut attributes,
         );
-
-        if self.skinning {
-            util::push_vertex_desc(
-                PosNormTangTex::VERTEX.gfx_vertex_input_desc(0),
-                &mut vbos_skinned,
-                &mut attributes_skinned,
-            );
-            util::push_vertex_desc(
-                pod::SkinnedVertexArgs::VERTEX.gfx_vertex_input_desc(1),
-                &mut vbos_skinned,
-                &mut attributes_skinned,
-            );
-            util::push_vertex_desc(
-                JointWeights::VERTEX.gfx_vertex_input_desc(0),
-                &mut vbos_skinned,
-                &mut attributes_skinned,
-            );
-            util::push_vertex_desc(
-                JointIds::VERTEX.gfx_vertex_input_desc(0),
-                &mut vbos_skinned,
-                &mut attributes_skinned,
-            );
-        }
 
         let rect = pso::Rect {
             x: 0,
@@ -250,6 +221,19 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbmDesc {
         });
 
         if self.skinning {
+            let mut vbos_skinned = Vec::new();
+            let mut attributes_skinned = Vec::new();
+            util::push_vertex_desc(
+                PosNormTangTexJoint::VERTEX.gfx_vertex_input_desc(0),
+                &mut vbos_skinned,
+                &mut attributes_skinned,
+            );
+            util::push_vertex_desc(
+                pod::SkinnedVertexArgs::VERTEX.gfx_vertex_input_desc(1),
+                &mut vbos_skinned,
+                &mut attributes_skinned,
+            );
+
             descs.push(pso::GraphicsPipelineDesc {
                 shaders: shader_set_skinned.unwrap(),
                 rasterizer: pso::Rasterizer::FILL,
@@ -309,6 +293,7 @@ struct DrawPbmLayouts<B: Backend> {
     vertex_args: RendyHandle<DescriptorSetLayout<B>>,
     material: RendyHandle<DescriptorSetLayout<B>>,
     environment: RendyHandle<DescriptorSetLayout<B>>,
+    skinning: RendyHandle<DescriptorSetLayout<B>>,
 }
 
 impl<B: Backend> DrawPbmLayouts<B> {
@@ -317,7 +302,7 @@ impl<B: Backend> DrawPbmLayouts<B> {
         once(self.vertex_args.raw())
             .chain(once(self.material.raw()))
             .chain(once(self.environment.raw()))
-        // .chain(once(self.skinning.raw()))
+            .chain(once(self.skinning.raw()))
     }
 }
 
@@ -337,10 +322,12 @@ pub struct DrawPbm<B: Backend> {
 struct PerImage<B: Backend> {
     environment_buffer: Option<Escape<rendy::resource::Buffer<B>>>,
     models_buffer: Option<Escape<rendy::resource::Buffer<B>>>,
+    skinned_models_buffer: Option<Escape<rendy::resource::Buffer<B>>>,
     joints_buffer: Option<Escape<rendy::resource::Buffer<B>>>,
     material_buffer: Option<Escape<rendy::resource::Buffer<B>>>,
     environment_set: Option<Escape<DescriptorSet<B>>>,
     objects_set: Option<Escape<DescriptorSet<B>>>,
+    skinning_set: Option<Escape<DescriptorSet<B>>>,
 }
 
 #[derive(Debug, Derivative)]
@@ -631,7 +618,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
                 }
             });
 
-        if self.pipeline_skinned.is_some() {
+        let joints_buffer_contents = if self.pipeline_skinned.is_some() {
             let mut joints_buffer: Vec<[[f32; 4]; 4]> = Vec::with_capacity(1024);
             let mut joints_offset_map: FnvHashMap<u32, u32> = Default::default();
             (
@@ -672,7 +659,10 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
                         );
                     }
                 });
-        }
+            Some(joints_buffer)
+        } else {
+            None
+        };
 
         self.materials_data
             .retain(|_, data| data.static_batches.len() > 0 || data.skinned_batches.len() > 0);
@@ -755,21 +745,38 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
             }
         }
 
-        if self.pipeline_skinned.is_some() {
-            if util::ensure_buffer(
+        if let Some(joints_buffer_contents) = joints_buffer_contents.as_ref() {
+            util::ensure_buffer(
                 &factory,
-                &mut this_image.joints_buffer,
+                &mut this_image.skinned_models_buffer,
                 hal::buffer::Usage::VERTEX,
                 rendy::memory::Dynamic,
                 (skinned_vertex_args.len() * std::mem::size_of::<pod::SkinnedVertexArgs>()) as _,
             )
-            .unwrap()
-            {
-                let buffer = this_image.joints_buffer.as_ref().unwrap().raw();
-                let obj_set = this_image.objects_set.as_ref().unwrap().raw();
-                let descriptor = pso::Descriptor::Buffer(buffer, None..None);
+            .unwrap();
+
+            let size = joints_buffer_contents.len() * std::mem::size_of::<[[f32; 4]; 4]>();
+            util::ensure_buffer(
+                &factory,
+                &mut this_image.joints_buffer,
+                hal::buffer::Usage::STORAGE,
+                rendy::memory::Dynamic,
+                size as _,
+            )
+            .unwrap();
+
+            let set = this_image
+                .skinning_set
+                .get_or_insert_with(|| {
+                    factory
+                        .create_descriptor_set(set_layouts.skinning.clone())
+                        .unwrap()
+                })
+                .raw();
+            if let Some(buffer) = this_image.joints_buffer.as_ref().map(|b| b.raw()) {
+                let descriptor = pso::Descriptor::Buffer(buffer, Some(0)..Some(size as _));
                 unsafe {
-                    factory.write_descriptor_sets(Some(Self::desc_write(obj_set, 1, descriptor)));
+                    factory.write_descriptor_sets(Some(Self::desc_write(set, 0, descriptor)));
                 }
             }
         }
@@ -799,11 +806,20 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
             }
         }
 
-        if let Some(mut buffer) = this_image.joints_buffer.as_mut() {
+        if let Some(mut buffer) = this_image.skinned_models_buffer.as_mut() {
             unsafe {
                 factory
                     .upload_visible_buffer(&mut buffer, 0, &skinned_vertex_args)
                     .unwrap();
+            }
+        }
+
+        if let (Some(mut buffer), Some(data)) = (
+            this_image.joints_buffer.as_mut(),
+            joints_buffer_contents.as_ref(),
+        ) {
+            unsafe {
+                factory.upload_visible_buffer(&mut buffer, 0, data).unwrap();
             }
         }
 
@@ -873,7 +889,15 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
             }
 
             if let Some(pipeline_skinned) = self.pipeline_skinned.as_ref() {
+                instances_drawn = 0;
                 encoder.bind_graphics_pipeline(pipeline_skinned);
+
+                encoder.bind_graphics_descriptor_sets(
+                    &self.pipeline_layout,
+                    3,
+                    Some(this_image.skinning_set.as_ref().unwrap().raw()),
+                    std::iter::empty(),
+                );
 
                 for (_, material) in &self.materials_data {
                     encoder.bind_graphics_descriptor_sets(
@@ -887,14 +911,21 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
                         // This invariant should always be verified before inserting batches in prepare
                         debug_assert!(mesh_storage.contains_id(batch.key));
                         let Mesh(mesh) = unsafe { mesh_storage.get_by_id_unchecked(batch.key) };
-                        mesh.bind(&[PosNormTangTex::VERTEX], &mut encoder).unwrap();
-                        encoder.bind_vertex_buffers(
-                            1,
-                            Some((
-                                this_image.models_buffer.as_ref().unwrap().raw(),
-                                instances_drawn * std::mem::size_of::<pod::VertexArgs>() as u64,
-                            )),
-                        );
+                        mesh.bind(&[PosNormTangTexJoint::VERTEX], &mut encoder)
+                            .unwrap();
+
+                        if let Some(buffer) =
+                            this_image.skinned_models_buffer.as_ref().map(|b| b.raw())
+                        {
+                            encoder.bind_vertex_buffers(
+                                1,
+                                Some((
+                                    buffer,
+                                    instances_drawn
+                                        * std::mem::size_of::<pod::SkinnedVertexArgs>() as u64,
+                                )),
+                            );
+                        }
                         encoder.draw(0..mesh.len(), 0..batch.collection.len() as _);
                         instances_drawn += batch.collection.len() as u64;
                     }

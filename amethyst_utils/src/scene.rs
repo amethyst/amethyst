@@ -11,17 +11,11 @@ use amethyst_derive::PrefabData;
 use amethyst_error::Error;
 use amethyst_rendy::{
     camera::CameraPrefab,
-    shape::InternalShape, light::LightPrefab,
+    formats::{mesh::ObjFormat, texture::ImageFormat, GraphicsPrefab},
+    light::LightPrefab,
+    rendy::{hal::Backend, mesh::MeshBuilder},
+    shape::InternalShape,
     types::Mesh,
-    formats::{
-        GraphicsPrefab,
-        texture::ImageFormat,
-        mesh::ObjFormat,
-    },
-    rendy::{
-        hal::Backend,
-        mesh::MeshBuilder,
-    },
 };
 
 use crate::removal::Removal;

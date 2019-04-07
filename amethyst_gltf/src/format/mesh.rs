@@ -1,7 +1,10 @@
 use std::ops::Range;
 
 use amethyst_error::Error;
-use amethyst_renderer::{AnimatedComboMeshCreator, Attribute, MeshData, Separate};
+use amethyst_rendy::{
+    rendy::mesh::{MeshBuilder, PosNormTangTex},
+    skinning::PosNormTangTexJoint,
+};
 use log::trace;
 
 use super::Buffers;
@@ -11,7 +14,7 @@ pub fn load_mesh(
     mesh: &gltf::Mesh<'_>,
     buffers: &Buffers,
     options: &GltfSceneOptions,
-) -> Result<Vec<(MeshData, Option<usize>, Range<[f32; 3]>)>, Error> {
+) -> Result<Vec<(MeshBuilder<'static>, Option<usize>, Range<[f32; 3]>)>, Error> {
     trace!("Loading mesh");
     let mut primitives = vec![];
 
@@ -22,17 +25,11 @@ pub fn load_mesh(
         trace!("Loading faces");
         let faces = reader
             .read_indices()
-            .map(|indices| indices.into_u32())
+            .map(|indices| indices.into_u32().collect::<Vec<_>>())
             .map(|mut indices| {
-                let mut faces = vec![];
-                while let (Some(a), Some(b), Some(c)) =
-                    (indices.next(), indices.next(), indices.next())
-                {
-                    faces.push(a as usize);
-                    faces.push(b as usize);
-                    faces.push(c as usize);
-                }
-                faces
+                // make sure that it's divisible by 3
+                indices.truncate(indices.len() / 3 * 3);
+                indices
             });
 
         trace!("Loading positions");
@@ -41,72 +38,97 @@ pub fn load_mesh(
             .map(|positions| match faces {
                 Some(ref faces) => {
                     let vertices = positions.collect::<Vec<_>>();
-                    faces.iter().map(|i| vertices[*i]).collect::<Vec<_>>()
+                    faces
+                        .iter()
+                        .map(|&i| vertices[i as usize])
+                        .collect::<Vec<_>>()
                 }
                 None => positions.collect(),
             })
             .ok_or(error::Error::MissingPositions)?;
 
         trace!("Loading normals");
-        let normals = reader
+        let normals: Vec<[f32; 3]> = reader
             .read_normals()
             .map(|normals| match faces {
                 Some(ref faces) => {
                     let normals = normals.collect::<Vec<_>>();
-                    faces.iter().map(|i| normals[*i]).collect()
+                    faces.iter().map(|&i| normals[i as usize]).collect()
                 }
                 None => normals.collect(),
             })
             .unwrap_or_else(|| {
                 use amethyst_core::math::Point3;
-                use std::iter::once;
-                let f = faces
-                    .as_ref()
-                    .map(|f| f.clone())
-                    .unwrap_or_else(|| (0..positions.len()).collect::<Vec<_>>());
-                f.chunks(3)
-                    .flat_map(|chunk| {
-                        let a = Point3::from(positions[chunk[0]]);
-                        let ab = Point3::from(positions[chunk[1]]) - a;
-                        let ac = Point3::from(positions[chunk[2]]) - a;
-                        let normal: [f32; 3] = ab.cross(&ac).into();
-                        once(normal.clone())
-                            .chain(once(normal.clone()))
-                            .chain(once(normal))
-                    })
-                    .collect::<Vec<_>>()
+                use std::iter::repeat;
+
+                #[inline(always)]
+                fn calc_normals(
+                    a: [f32; 3],
+                    b: [f32; 3],
+                    c: [f32; 3],
+                ) -> impl Iterator<Item = [f32; 3]> {
+                    let a = Point3::from(a);
+                    let ab = Point3::from(b) - a;
+                    let ac = Point3::from(c) - a;
+                    repeat(ab.cross(&ac).into()).take(3)
+                }
+
+                match faces {
+                    Some(ref faces) => faces
+                        .chunks(3)
+                        .flat_map(|f| {
+                            calc_normals(
+                                positions[f[0] as usize],
+                                positions[f[1] as usize],
+                                positions[f[2] as usize],
+                            )
+                        })
+                        .collect(),
+                    None => positions
+                        .chunks(3)
+                        .flat_map(|p| calc_normals(p[0], p[1], p[2]))
+                        .collect(),
+                }
             });
 
         trace!("Loading texture coordinates");
-        let tex_coord = reader
+        let uv: Vec<[f32; 2]> = reader
             .read_tex_coords(0)
             .map(|tex_coords| tex_coords.into_f32().collect::<Vec<[f32; 2]>>())
             .unwrap_or_else(|| {
-                vec![
-                    [options.generate_tex_coords.0, options.generate_tex_coords.1];
-                    positions.len()
-                ]
+                let u = options.generate_tex_coords.0;
+                let v = if options.flip_v_coord {
+                    1. - options.generate_tex_coords.1
+                } else {
+                    options.generate_tex_coords.1
+                };
+                vec![[u, v]; positions.len()]
             });
-        let tex_coord: Vec<[f32; 2]> = match faces {
-            Some(ref faces) => faces
+
+        let tex_coord: Vec<[f32; 2]> = match (&faces, options.flip_v_coord) {
+            (Some(faces), true) => faces
                 .iter()
-                .map(|i| flip_check(tex_coord[*i], options.flip_v_coord))
+                .map(|&i| [uv[i as usize][0], 1. - uv[i as usize][1]])
                 .collect(),
-            None => tex_coord
-                .into_iter()
-                .map(|t| flip_check(t, options.flip_v_coord))
-                .collect(),
+            (Some(faces), false) => faces.iter().map(|&i| uv[i as usize]).collect(),
+            (None, _) => uv,
         };
 
         trace!("Loading tangents");
-        let tangents = reader
+        let tangents: Vec<[f32; 3]> = reader
             .read_tangents()
-            .map(|tangents| match faces {
-                Some(ref faces) => {
+            .map(|tangents| match &faces {
+                Some(faces) => {
                     let tangents = tangents.collect::<Vec<_>>();
                     faces
                         .iter()
-                        .map(|i| [tangents[*i][0], tangents[*i][1], tangents[*i][2]])
+                        .map(|&i| {
+                            [
+                                tangents[i as usize][0],
+                                tangents[i as usize][1],
+                                tangents[i as usize][2],
+                            ]
+                        })
                         .collect()
                 }
                 None => tangents.map(|t| [t[0], t[1], t[2]]).collect(),
@@ -115,12 +137,12 @@ pub fn load_mesh(
                 let f = faces
                     .as_ref()
                     .map(|f| f.clone())
-                    .unwrap_or_else(|| (0..positions.len()).collect::<Vec<_>>());
+                    .unwrap_or_else(|| (0..positions.len() as u32).collect::<Vec<_>>());
                 let vertices_per_face = || 3;
                 let face_count = || f.len() / 3;
-                let p = |face, vert| &positions[f[face * 3 + vert]];
-                let n = |face, vert| &normals[f[face * 3 + vert]];
-                let tx = |face, vert| &tex_coord[f[face * 3 + vert]];
+                let p = |face, vert| &positions[f[face * 3 + vert] as usize];
+                let n = |face, vert| &normals[f[face * 3 + vert] as usize];
+                let tx = |face, vert| &tex_coord[f[face * 3 + vert] as usize];
                 let mut tangents: Vec<(usize, [f32; 4])> = Vec::with_capacity(f.len());
                 {
                     let mut set_tangent = |face, vert, tangent| {
@@ -146,39 +168,41 @@ pub fn load_mesh(
         let bounds = primitive.bounding_box();
         let bounds = bounds.min..bounds.max;
 
-        trace!("Loading colors");
-        let colors = reader
-            .read_colors(0)
-            .map(|colors| colors.into_rgba_f32())
-            .map(|colors| match faces {
-                Some(ref faces) => {
-                    let colors = colors.collect::<Vec<_>>();
-                    faces.iter().map(|i| colors[*i]).collect()
-                }
-                None => colors.collect(),
-            });
+        // TODO: engine doesn't support vertex colors
+        // trace!("Loading colors");
+        // let colors = reader
+        //     .read_colors(0)
+        //     .map(|colors| colors.into_rgba_f32())
+        //     .map(|colors| match &faces {
+        //         Some(faces) => {
+        //             let colors = colors.collect::<Vec<_>>();
+        //             faces.iter().map(|i| colors[*i]).collect()
+        //         }
+        //         None => colors.collect(),
+        //     });
 
         trace!("Loading joint ids");
-        let joint_ids = reader
-            .read_joints(0)
-            .map(|joints| joints.into_u16())
-            .map(|joints| match faces {
-                Some(ref faces) => {
-                    let joints = joints.collect::<Vec<_>>();
-                    faces.iter().map(|i| joints[*i]).collect()
-                }
-                None => joints.collect(),
-            });
+        let joint_ids: Option<Vec<_>> =
+            reader
+                .read_joints(0)
+                .map(|joints| joints.into_u16())
+                .map(|joints| match faces {
+                    Some(ref faces) => {
+                        let joints = joints.collect::<Vec<_>>();
+                        faces.iter().map(|&i| joints[i as usize]).collect()
+                    }
+                    None => joints.collect(),
+                });
         trace!("Joint ids: {:?}", joint_ids);
 
         trace!("Loading joint weights");
-        let joint_weights = reader
+        let joint_weights: Option<Vec<_>> = reader
             .read_weights(0)
             .map(|weights| weights.into_f32())
             .map(|weights| match faces {
                 Some(ref faces) => {
                     let weights = weights.collect::<Vec<_>>();
-                    faces.iter().map(|i| weights[*i]).collect()
+                    faces.iter().map(|&i| weights[i as usize]).collect()
                 }
                 None => weights.collect(),
             });
@@ -186,41 +210,45 @@ pub fn load_mesh(
 
         let material = primitive.material().index();
 
-        let creator = AnimatedComboMeshCreator::new((
-            cast_attribute(positions),
-            colors.map(cast_attribute),
-            Some(cast_attribute(tex_coord)),
-            Some(cast_attribute(normals)),
-            Some(cast_attribute(tangents)),
-            joint_ids.map(cast_attribute),
-            joint_weights.map(cast_attribute),
-        ));
+        let mesh_builder =
+            if let (Some(joint_ids), Some(joint_weights)) = (joint_ids, joint_weights) {
+                let vertices: Vec<_> = positions
+                    .into_iter()
+                    .zip(normals.into_iter())
+                    .zip(tangents.into_iter())
+                    .zip(tex_coord.into_iter())
+                    .zip(joint_ids.into_iter())
+                    .zip(joint_weights.into_iter())
+                    .map(|(((((pos, norm), tang), tex), joint_ids), joint_weights)| {
+                        PosNormTangTexJoint {
+                            position: pos.into(),
+                            normal: norm.into(),
+                            tangent: tang.into(),
+                            tex_coord: tex.into(),
+                            joint_ids: joint_ids.into(),
+                            joint_weights: joint_weights.into(),
+                        }
+                    })
+                    .collect();
+                MeshBuilder::new().with_vertices(vertices)
+            } else {
+                let vertices: Vec<_> = positions
+                    .into_iter()
+                    .zip(normals.into_iter())
+                    .zip(tangents.into_iter())
+                    .zip(tex_coord.into_iter())
+                    .map(|(((pos, norm), tang), tex)| PosNormTangTex {
+                        position: pos.into(),
+                        normal: norm.into(),
+                        tangent: tang.into(),
+                        tex_coord: tex.into(),
+                    })
+                    .collect();
+                MeshBuilder::new().with_vertices(vertices)
+            };
 
-        primitives.push((creator.into(), material, bounds));
+        primitives.push((mesh_builder, material, bounds));
     }
     trace!("Loaded mesh");
     Ok(primitives)
-}
-
-fn cast_attribute<T>(mut old: Vec<T::Repr>) -> Vec<Separate<T>>
-where
-    T: Attribute,
-{
-    let new = unsafe {
-        Vec::from_raw_parts(
-            old.as_mut_ptr() as *mut Separate<T>,
-            old.len(),
-            old.capacity(),
-        )
-    };
-    ::std::mem::forget(old);
-    new
-}
-
-fn flip_check(uv: [f32; 2], flip_v: bool) -> [f32; 2] {
-    if flip_v {
-        [uv[0], 1. - uv[1]]
-    } else {
-        uv
-    }
 }

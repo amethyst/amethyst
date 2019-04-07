@@ -93,11 +93,11 @@ impl<'a> System<'a> for VertexSkinningSystem {
             {
                 if let Some(global_inverse) = mesh_global.0.try_inverse() {
                     matrix.matrices.clear();
-                    matrix
-                        .matrices
-                        .extend(skin.joint_matrices.iter().map(|joint_matrix| {
-                            global_inverse * joint_matrix
-                        }));
+                    matrix.matrices.extend(
+                        skin.joint_matrices
+                            .iter()
+                            .map(|joint_matrix| global_inverse * joint_matrix),
+                    );
                 }
             }
         }
@@ -108,11 +108,11 @@ impl<'a> System<'a> for VertexSkinningSystem {
             if let Some(global_inverse) = mesh_global.0.try_inverse() {
                 if let Some(skin) = skins.get(joint_transform.skin) {
                     joint_transform.matrices.clear();
-                    joint_transform
-                        .matrices
-                        .extend(skin.joint_matrices.iter().map(|joint_matrix| {
-                            global_inverse * joint_matrix
-                        }));
+                    joint_transform.matrices.extend(
+                        skin.joint_matrices
+                            .iter()
+                            .map(|joint_matrix| global_inverse * joint_matrix),
+                    );
                 } else {
                     error!(
                         "Missing `Skin` Component for join transform entity {:?}",
