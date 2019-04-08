@@ -71,22 +71,16 @@ Prefab (
                     graphics: (
                         mesh: Shape(( shape: Sphere(32, 32), )),
                         material: (
-//                          albedo: Data(Rgba((0.0, 0.0, 1.0, 1.0,), (channel: Srgb),)),
-                            albedo: Data((
-                                    kind: D2(2, 2, 1, 1),
-                                    view_kind: D2,
-                                    format: Rgba8Srgb,
-                                    data: [
-                                        0, 0, 255, 255,
-                                        255, 0, 0, 255,
-                                        0, 255, 0, 255,
-                                        255, 255, 0, 255,
-                                    ],
-                                    data_width: 2,
-                                    data_height: 2,
-                                    filter: Nearest,
-                                    swizzle: (R, G, B, A),
-                                )),
+                            //albedo: Generate(Rgba(0.0, 0.0, 1.0, 1.0,)),
+                            albedo: Generate(RgbaCorners(
+                                (
+                                    0.0, 0.0, 1.0, 1.0,
+                                    1.0, 0.0, 0.0, 1.0,
+                                    0.0, 1.0, 0.0, 1.0,
+                                    1.0, 1.0, 0.0, 1.0,
+                                ),
+                                Nearest
+                            )),
                       ),
                     ),
                     transform: (
