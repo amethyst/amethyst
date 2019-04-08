@@ -71,13 +71,13 @@ Prefab (
                     graphics: (
                         mesh: Shape(( shape: Sphere(32, 32), )),
                         material: (
-                            //albedo: Generate(Rgba(0.0, 0.0, 1.0, 1.0,)),
-                            albedo: Generate(RgbaCorners(
+                            //albedo: Generate(Srgba(0.0, 0.0, 1.0, 1.0,)),
+                            albedo: Generate(SrgbaCorners(
                                 (
-                                    0.0, 0.0, 1.0, 1.0,
-                                    1.0, 0.0, 0.0, 1.0,
-                                    0.0, 1.0, 0.0, 1.0,
-                                    1.0, 1.0, 0.0, 1.0,
+                                    (0.0, 0.0, 1.0, 1.0),
+                                    (1.0, 0.0, 0.0, 1.0),
+                                    (0.0, 1.0, 0.0, 1.0),
+                                    (1.0, 1.0, 0.0, 1.0),
                                 ),
                                 Nearest
                             )),

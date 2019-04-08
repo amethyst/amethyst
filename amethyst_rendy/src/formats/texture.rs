@@ -7,6 +7,7 @@ use amethyst_error::Error;
 use rendy::{
     hal::{self, Backend, image::{Filter, Kind, ViewKind, Size}},
     texture::{
+        pixel::{AsPixel, Rgba8Srgb},
         image::{load_from_image, ImageTextureConfig},
         TextureBuilder,
     },
@@ -58,43 +59,49 @@ where
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum TextureGenerator {
-    Rgba(f32, f32, f32, f32),
-    RgbaCorners([f32; 16], Filter),
+    Srgba(f32, f32, f32, f32),
+    LinearRgba(f32, f32, f32, f32),
+    //LinearRgbaFloat(f32, f32, f32, f32),
+    SrgbaCorners([(f32, f32, f32, f32); 4], Filter),
+}
+
+fn simple_builder<A: AsPixel>(data: Vec<A>, size: Size, filter: Filter) -> TextureBuilder<'static> {
+    TextureBuilder::new()
+        .with_kind(Kind::D2(size,size,1,1))
+        .with_view_kind(ViewKind::D2)
+        .with_data_width(size)
+        .with_data_height(size)
+        .with_sampler_info(hal::image::SamplerInfo::new(
+            filter,
+            hal::image::WrapMode::Clamp,
+        ))
+        .with_data(data)
 }
 
 impl TextureGenerator {
-    fn generate(&self) -> (Vec<u8>, Size, Filter) {
-        fn float_to_byte(float: &f32) -> u8 {
-            (float * 255.0).max(0.0).min(255.0) as u8
-        }
-        match self {
-            TextureGenerator::Rgba(red, green, blue, alpha) =>
-            (
-                vec![
-                    float_to_byte(red),
-                    float_to_byte(green),
-                    float_to_byte(blue),
-                    float_to_byte(alpha),
-                ],
-                1,
-                Filter::Nearest,
-            ),
-            TextureGenerator::RgbaCorners(corners, filter) => (
-                corners.iter().map(float_to_byte).collect(),
-                2,
-                *filter
-            ),
-        }
-    }
     fn data(&self) -> TextureBuilder<'static> {
-        let (data, size, filter) = self.generate();
-        TextureBuilder::new()
-            .with_kind(Kind::D2(size,size,1,1))
-            .with_view_kind(ViewKind::D2)
-            .with_data_width(size)
-            .with_data_height(size)
-            .with_filter(filter)
-            .with_raw_data(data, hal::format::Format::Rgba8Srgb)
+        use rendy::texture::palette::{
+            load_from_srgba, load_from_linear_rgba
+        };
+        use palette::{Srgba, LinSrgba};
+        match *self {
+            TextureGenerator::Srgba(red, green, blue, alpha) => load_from_srgba(
+                Srgba::new(red, green, blue, alpha)
+            ),
+            TextureGenerator::LinearRgba(red, green, blue, alpha) => load_from_linear_rgba(
+                LinSrgba::new(red, green, blue, alpha)
+            ),
+            //TextureGenerator::LinearRgbaFloat(red, green, blue, alpha) => load_from_linear_rgba_f32(
+            //    LinSrgba::new(red, green, blue, alpha)
+            //),
+            TextureGenerator::SrgbaCorners(corners, filter) => simple_builder::<Rgba8Srgb> (
+                corners.iter().map(|(red, green, blue, alpha)|{
+                    palette::Srgba::new(*red, *green, *blue, *alpha).into()
+                }).collect(),
+                2,
+                filter
+            ),
+        }
     }
 }
 
