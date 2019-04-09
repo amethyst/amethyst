@@ -36,12 +36,12 @@ use amethyst_rendy::{
     light::{Light, LightPrefab, PointLight},
     mtl::{Material, MaterialDefaults},
     palette::{LinSrgba, Srgb},
-    pass::DrawPbrDesc,
+    pass::{DrawPbrDesc, DrawFlat2D},
     rendy::{
         factory::Factory,
         graph::{
             present::PresentNode,
-            render::{RenderGroupBuilder, RenderGroupDesc},
+            render::{RenderGroupBuilder, RenderGroupDesc, SimpleGraphicsPipeline},
             GraphBuilder,
         },
         hal::{
@@ -456,7 +456,8 @@ fn main() -> amethyst::Result<()> {
     // .level_for("rendy_memory", log::LevelFilter::Trace)
     // .level_for("rendy_factory", log::LevelFilter::Trace)
     // .level_for("rendy_resource", log::LevelFilter::Trace)
-    // .level_for("rendy_descriptor", log::LevelFilter::Trace)
+    .level_for("rendy_graph", log::LevelFilter::Trace)
+    .level_for("amethyst_rendy", log::LevelFilter::Trace)
     .start();
 
     let app_root = application_root_dir()?;
@@ -590,7 +591,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
             Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
         );
 
-        let pass = graph_builder.add_node(
+        let pbr_pass = graph_builder.add_node(
             DrawPbrDesc::default()
                 .with_vertex_skinning()
                 .with_transparency(
@@ -604,7 +605,18 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
                 .into_pass(),
         );
 
-        let present_builder = PresentNode::builder(factory, surface, color).with_dependency(pass);
+        let sprite_pass = graph_builder.add_node(
+            DrawFlat2D::builder()
+                .into_subpass()
+                .with_color(color)
+                .with_depth_stencil(depth)
+                .into_pass(),
+        );
+
+        let present_builder = PresentNode::builder(factory, surface, color)
+            .with_dependency(pbr_pass)
+            .with_dependency(sprite_pass)
+            ;
 
         graph_builder.add_node(present_builder);
 

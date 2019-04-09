@@ -1,8 +1,8 @@
 #version 450
 
-layout(set = 0, binding = 0) uniform ViewArgs {
-    mat4 proj;
-    mat4 view;
+layout(std140, set = 0, binding = 0) uniform ViewArgs {
+    uniform mat4 proj;
+    uniform mat4 view;
 };
 
 // Quad transform.

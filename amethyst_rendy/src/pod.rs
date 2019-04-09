@@ -192,6 +192,8 @@ pub(crate) struct SpriteArgs {
     pub dir_x: vec2,
     pub dir_y: vec2,
     pub pos: vec2,
+    pub u_offset: vec2,
+    pub v_offset: vec2,
     pub depth: float,
 }
 
