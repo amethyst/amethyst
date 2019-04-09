@@ -8,7 +8,7 @@ use crate::{
     sprite::{SpriteSheet, Sprite, SpriteRender, SpriteSheetFormat, SpriteSheetHandle },
     hidden::{Hidden, HiddenPropagate},
     pass::util,
-    pod::{self, ViewArgs, SpriteArgs},
+    pod::{self, ViewArgs, SpriteArgs, IntoPod},
     batch::{BatchData, BatchPrimitives}
 };
 use glsl_layout::AsStd140;
@@ -44,31 +44,8 @@ use rendy::{
 };
 use fnv::FnvHashMap;
 use smallvec::{SmallVec, smallvec};
+use derivative::Derivative;
 
-type SpriteBatchData = BatchData<u32, SmallVec<[pod::SpriteArgs; 1]>>;
-
-#[derive(Debug)]
-struct SpriteData {
-    sprites: Vec<SpriteBatchData>,
-}
-
-struct BatchSprite<B: Backend>(std::marker::PhantomData<B>);
-impl<B: Backend> BatchPrimitives for BatchSprite<B> {
-    type Shell = SpriteData;
-    type Batch = SpriteBatchData;
-
-    fn wrap_batch(batch: Self::Batch) -> Self::Shell {
-        SpriteData {
-            sprites: Vec::with_capacity(1024),
-        }
-    }
-    fn push(shell: &mut Self::Shell, batch: Self::Batch) {
-        shell.sprites.push(batch);
-    }
-    fn batches_mut(shell: &mut Self::Shell) -> &mut [Self::Batch] {
-        &mut shell.sprites.as_mut_slice()
-    }
-}
 
 /// Draw mesh without lighting
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -170,13 +147,13 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawFlat2DDesc {
                     bindings: vec![DescriptorSetLayoutBinding {
                         binding: 0,
                         ty: DescriptorType::SampledImage,
-                        count: 1,
+                        count: 32,
                         stage_flags: ShaderStageFlags::FRAGMENT,
                         immutable_samplers: false,
                     }],
                 }
             ],
-            push_constants: Vec::new(),
+            push_constants: vec![(ShaderStageFlags::FRAGMENT, 0..4)],
         }
     }
 
@@ -193,6 +170,7 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawFlat2DDesc {
 
         let mut projview_buffer: Option<Escape<rendy::resource::Buffer<B>>> = None;
         let mut tex_buffer: Option<Escape<rendy::resource::Buffer<B>>> = None;
+        let mut tex_id_buffer: Option<Escape<rendy::resource::Buffer<B>>> = None;
 
         let limits = factory.physical().limits();
 
@@ -207,6 +185,14 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawFlat2DDesc {
             projview_size,
         ).unwrap();
 
+        util::ensure_buffer(
+            &factory,
+            &mut tex_id_buffer,
+            BufferUsage::UNIFORM,
+            rendy::memory::Dynamic,
+            4,
+        ).unwrap();
+
         let projview_set = factory
             .create_descriptor_set(set_layouts[0].clone())
             .unwrap();
@@ -217,9 +203,11 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawFlat2DDesc {
 
         Ok(DrawFlat2D {
             projview_buffer,
+            tex_id_buffer,
             vertex_buffers: Vec::new(),
             batches: FnvHashMap::default(),
             projview_set: Some(projview_set),
+            tex_set: Some(tex_set),
             ubo_offset_align: limits.min_uniform_buffer_offset_alignment,
         })
     }
@@ -230,26 +218,12 @@ pub struct DrawFlat2D<B: Backend> {
     projview_buffer: Option<Escape<rendy::resource::Buffer<B>>>,
     projview_set:  Option<Escape<DescriptorSet<B>>>,
     vertex_buffers: Vec<Escape<rendy::resource::Buffer<B>>>,
-    batches: FnvHashMap<u32, SpriteData>,
+    tex_id_buffer: Option<Escape<rendy::resource::Buffer<B>>>,
+    tex_set:  Option<Escape<DescriptorSet<B>>>,
+    batches: FnvHashMap<u32, (Vec<pod::SpriteArgs>, u32)>,
     ubo_offset_align: u64,
 }
 impl<B: Backend> DrawFlat2D<B> {
-    #[inline]
-    fn texture_descriptor<'a>(
-        handle: &Handle<Texture<B>>,
-        fallback: &Handle<Texture<B>>,
-        storage: &'a AssetStorage<Texture<B>>,
-    ) -> Descriptor<'a, B> {
-        let Texture(texture) = storage
-            .get(handle)
-            .or_else(|| storage.get(fallback))
-            .unwrap();
-        Descriptor::CombinedImageSampler(
-            texture.view().raw(),
-            rendy::hal::image::Layout::ShaderReadOnlyOptimal,
-            texture.sampler().raw(),
-        )
-    }
 
     #[inline]
     fn desc_write<'a>(
@@ -272,7 +246,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
-        _set_layouts: &[RendyHandle<DescriptorSetLayout<B>>],
+        set_layouts: &[RendyHandle<DescriptorSetLayout<B>>],
         _index: usize,
         resources: &Resources,
     ) -> PrepareResult {
@@ -311,14 +285,26 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
                     !&hidden_props,
                 ).join()
                     {
+                        let tex_id = sprite_sheet_storage.get(&sprite_render.sprite_sheet).unwrap().texture.id();
+
                         let batch_data = SpriteArgs {
-                            dir_x: Vector2::new(1.0, 1.0).into(),
-                            dir_y: Vector2::new(1.0, 1.0).into(),
-                            pos: Vector2::new(1.0, 1.0).into(),
+                            dir_x: Vector2::new(1.0, 1.0).into_pod(),
+                            dir_y: Vector2::new(1.0, 1.0).into_pod(),
+                            pos: Vector2::new(1.0, 1.0).into_pod(),
                             depth: 1.0.into()
                         };
 
-                        BatchSprite::insert_batch(self.batches.entry(0), 0, &[batch_data]);
+                        if let Some(batch) = self.batches.get_mut(&tex_id) {
+                            batch.0.push(batch_data);
+                        } else {
+                            let mut newbatch = Vec::with_capacity(1024);
+                            newbatch.push(batch_data);
+                            self.batches.insert(tex_id, (newbatch, tex_id) );
+                        }
+
+
+                        //BatchSprite::insert_batch(self.batches.entry(tex), 0, &[batch_data]);
+
                        // self.batch.add_sprite(
                       //      &sprite_render,
                       //      Some(&global),
@@ -357,6 +343,31 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
                 }
             }
         }
+
+        let desc_writes: SmallVec<[DescriptorSetWrite<'_, B, Option<Descriptor<'_, B>>>; 32]>;
+        // build our texture descriptor once
+        // prepare each texture here, we should check if theyve changed..
+        for (n, batch) in self.batches.iter().enumerate() {
+            if let Some(texture) = tex_storage.get_by_id(*batch.0) {
+                let descriptor = Descriptor::CombinedImageSampler(
+                    texture.view().raw(),
+                    rendy::hal::image::Layout::ShaderReadOnlyOptimal,
+                    texture.sampler().raw(),
+                );
+                desc_writes.push(
+                    DescriptorSetWrite {
+                        set: self.tex_set,
+                        binding: 1,
+                        array_offset: n,
+                        descriptors: Some(descriptor),
+                    }
+                );
+            } else {
+                log::warn!("Failed to fetch texture");
+            }
+        }
+
+        factory.write_descriptor_sets(desc_writes);
 
         PrepareResult::DrawRecord
     }
@@ -398,6 +409,14 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
             std::iter::once(self.projview_set.as_ref().unwrap().raw()),
             std::iter::empty::<u32>(),
         );
+
+        encoder.push_constants(
+            layout,
+            ShaderStageFlags::FRAGMENT,
+            0,
+            &[0]
+        );
+
 
 
     }
