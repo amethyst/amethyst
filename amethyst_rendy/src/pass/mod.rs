@@ -1,8 +1,8 @@
-// mod flat;
+mod flat2d;
 mod pbr;
 mod util;
 
-pub use self::pbr::*;
+pub use self::{flat2d::*, pbr::*};
 
 use rendy::shader::{ShaderKind, SourceLanguage, StaticShaderInfo};
 
@@ -34,4 +34,19 @@ lazy_static::lazy_static! {
         SourceLanguage::GLSL,
         "main",
     );
+
+    static ref SPRITE_VERTEX: StaticShaderInfo = StaticShaderInfo::new(
+        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/vertex/sprite.vert"),
+        ShaderKind::Vertex,
+        SourceLanguage::GLSL,
+        "main",
+    );
+
+    static ref SPRITE_FRAGMENT: StaticShaderInfo = StaticShaderInfo::new(
+        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/fragment/sprite.frag"),
+        ShaderKind::Vertex,
+        SourceLanguage::GLSL,
+        "main",
+    );
+
 }

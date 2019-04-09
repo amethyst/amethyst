@@ -186,8 +186,49 @@ impl Material {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
+#[repr(C, align(16))]
+pub(crate) struct SpriteArgs {
+    pub dir_x: vec2,
+    pub dir_y: vec2,
+    pub pos: vec2,
+    pub depth: float,
+}
+
+
+impl AsVertex for SpriteArgs {
+    const VERTEX: VertexFormat<'static> = VertexFormat {
+        attributes: Cow::Borrowed(&[
+            Attribute {
+                format: Format::Rg32Float,
+                offset: 0,
+            },
+            Attribute {
+                format: Format::Rg32Float,
+                offset: 8,
+            },
+            Attribute {
+                format: Format::Rg32Float,
+                offset: 16,
+            },
+            Attribute {
+                format: Format::R32Float,
+                offset: 24,
+            },
+        ]),
+        stride: 28,
+    };
+}
+
 pub trait IntoPod<T> {
     fn into_pod(self) -> T;
+}
+
+impl IntoPod<vec2> for amethyst_core::math::Vector2<f32> {
+    fn into_pod(self) -> vec2 {
+        let arr: [f32; 2] = self.into();
+        arr.into()
+    }
 }
 
 impl IntoPod<vec3> for amethyst_core::math::Vector3<f32> {
