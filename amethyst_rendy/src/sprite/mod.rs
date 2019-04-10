@@ -2,15 +2,15 @@ use rendy::hal::Backend;
 use ron::de::from_bytes as from_ron_bytes;
 use serde::{Deserialize, Serialize};
 
+use crate::{error, types::Texture};
 use amethyst_assets::{Asset, Handle, SimpleFormat};
 use amethyst_core::ecs::prelude::{Component, DenseVecStorage, VecStorage};
 use amethyst_error::Error;
-use crate::{error, types::Texture};
 
-mod prefab;
+pub mod prefab;
 
 /// An asset handle to sprite sheet metadata.
-pub type SpriteSheetHandle<B: Backend> = Handle<SpriteSheet<B>>;
+pub type SpriteSheetHandle<B> = Handle<SpriteSheet<B>>;
 
 /// Active camera for the `DrawFlat2D` pass.
 pub type SpriteCamera = crate::camera::ActiveCamera;

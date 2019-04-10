@@ -15,6 +15,7 @@ pub mod pass;
 
 pub mod batch;
 pub mod camera;
+pub mod error;
 pub mod formats;
 pub mod hidden;
 pub mod light;
@@ -28,6 +29,5 @@ pub mod system;
 pub mod transparent;
 pub mod types;
 pub mod visibility;
-pub mod error;
 
 mod pod;

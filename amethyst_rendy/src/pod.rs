@@ -197,7 +197,6 @@ pub(crate) struct SpriteArgs {
     pub depth: float,
 }
 
-
 impl AsVertex for SpriteArgs {
     const VERTEX: VertexFormat<'static> = VertexFormat {
         attributes: Cow::Borrowed(&[

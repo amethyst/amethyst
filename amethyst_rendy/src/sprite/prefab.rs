@@ -1,39 +1,34 @@
 use serde::{Deserialize, Serialize};
 
+use crate::{
+    formats::texture::{ImageFormat, TexturePrefab},
+    sprite::{SpriteRender, SpriteSheet, SpriteSheetHandle, Sprites},
+    types::Texture,
+};
 use amethyst_assets::{AssetStorage, Format, PrefabData, ProgressCounter};
 use amethyst_core::{
     ecs::{Entity, Read, Write, WriteStorage},
     Transform,
 };
 use amethyst_error::Error;
+use derivative::Derivative;
 use rendy::hal::Backend;
 use std::fmt::Debug;
-use derivative::Derivative;
-use crate::{
-    sprite::{
-        SpriteRender, SpriteSheet, SpriteSheetHandle, Sprites,
-    },
-    types::Texture,
-    formats::texture::TexturePrefab,
-};
 
 /// Defines a spritesheet prefab. Note that this prefab will only load the spritesheet in storage,
 /// no components will be added to entities. The `add_to_entity` will return the
 /// `Handle<SpriteSheet>`. For this reason it is recommended that this prefab is only used as part
 /// of other `PrefabData` or in specialised formats. See `SpriteScenePrefab` for an example of this.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(bound(deserialize = "TexturePrefab<B, F>: Deserialize<'de>"))]
-pub enum SpriteSheetPrefab<B: Backend, F>
-    where F: Format<Texture<B>> + Clone + Send + Sync,
-          F::Options: Clone + Debug + Serialize + for<'d> Deserialize<'d>,
-{
+#[serde(bound = "")]
+pub enum SpriteSheetPrefab<B: Backend> {
     /// Spritesheet handle, normally not used outside the prefab system.
     #[serde(skip)]
     Handle((Option<String>, SpriteSheetHandle<B>)),
     /// Definition of a spritesheet
     Sheet {
         /// This texture contains the images for the spritesheet
-        texture: TexturePrefab<B, F>,
+        texture: TexturePrefab<B, ImageFormat>,
         /// The sprites in the spritesheet
         sprites: Vec<Sprites>,
         /// The name of the spritesheet to refer to it
@@ -41,12 +36,9 @@ pub enum SpriteSheetPrefab<B: Backend, F>
     },
 }
 
-impl<'a, B: Backend, F> PrefabData<'a> for SpriteSheetPrefab<B, F>
-    where F: Format<Texture<B>> + Sync + Clone,
-          F::Options: Clone + Debug + Serialize + for<'d> Deserialize<'d>,
-{
+impl<'a, B: Backend> PrefabData<'a> for SpriteSheetPrefab<B> {
     type SystemData = (
-        <TexturePrefab<B, F> as PrefabData<'a>>::SystemData,
+        <TexturePrefab<B, ImageFormat> as PrefabData<'a>>::SystemData,
         Read<'a, AssetStorage<SpriteSheet<B>>>,
     );
     type Result = (Option<String>, SpriteSheetHandle<B>);
@@ -140,6 +132,7 @@ pub enum SpriteSheetReference {
 /// `SpriteScenePrefab` for an example.
 #[derive(Derivative, Clone, Debug, Deserialize, Serialize)]
 #[derivative(Default(bound = ""))]
+#[serde(bound = "")]
 pub struct SpriteRenderPrefab<B: Backend> {
     /// Index of the sprite sheet in the prefab
     pub sheet: Option<SpriteSheetReference>,
@@ -165,6 +158,7 @@ impl<'a, B: Backend> PrefabData<'a> for SpriteRenderPrefab<B> {
         _children: &[Entity],
     ) -> Result<(), Error> {
         if let Some(handle) = self.handle.clone() {
+            log::trace!("Creating sprite: {:?}", handle);
             system_data.0.insert(
                 entity,
                 SpriteRender {
@@ -188,7 +182,7 @@ impl<'a, B: Backend> PrefabData<'a> for SpriteRenderPrefab<B> {
         _: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        if let Some(handle) = (*system_data.1).get(&self.sheet.unwrap()).cloned() {
+        if let Some(handle) = (*system_data.1).get(&self.sheet.as_ref().unwrap()).cloned() {
             self.handle = Some(handle);
             Ok(false)
         } else {
@@ -199,26 +193,21 @@ impl<'a, B: Backend> PrefabData<'a> for SpriteRenderPrefab<B> {
 }
 
 /// Prefab for loading a full scene with sprites.
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(bound(deserialize = "SpriteRenderPrefab<B>: Deserialize<'de>"))]
-pub struct SpriteScenePrefab<B: Backend, F>
-    where F: Format<Texture<B>> + Sync + Clone,
-          F::Options: Clone + Debug + Serialize + for<'d> Deserialize<'d>,
-{
+#[derive(Derivative, Clone, Debug, Deserialize, Serialize)]
+#[derivative(Default(bound = ""))]
+#[serde(bound(deserialize = "SpriteSheetPrefab<B>: Deserialize<'de>"))]
+pub struct SpriteScenePrefab<B: Backend> {
     /// Sprite sheets
-    pub sheet: Option<SpriteSheetPrefab<B, F>>,
+    pub sheet: Option<SpriteSheetPrefab<B>>,
     /// Add `SpriteRender` to the `Entity`
     pub render: Option<SpriteRenderPrefab<B>>,
     /// Add `Transform` to the `Entity`
     pub transform: Option<Transform>,
 }
 
-impl<'a, B: Backend, F> PrefabData<'a> for SpriteScenePrefab<B, F>
-    where F: Format<Texture<B>> + Sync + Clone,
-          F::Options: Clone + Debug + Serialize + for<'d> Deserialize<'d>,
-{
+impl<'a, B: Backend> PrefabData<'a> for SpriteScenePrefab<B> {
     type SystemData = (
-        <SpriteSheetPrefab<B, F> as PrefabData<'a>>::SystemData,
+        <SpriteSheetPrefab<B> as PrefabData<'a>>::SystemData,
         <SpriteRenderPrefab<B> as PrefabData<'a>>::SystemData,
         <Transform as PrefabData<'a>>::SystemData,
     );
@@ -262,7 +251,6 @@ impl<'a, B: Backend, F> PrefabData<'a> for SpriteScenePrefab<B, F>
         Ok(ret)
     }
 }
-
 
 #[cfg(test)]
 mod tests {

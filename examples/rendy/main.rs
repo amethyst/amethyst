@@ -7,7 +7,7 @@ use amethyst::{
     },
     assets::{
         AssetLoaderSystemData, AssetPrefab, Completion, Handle, Prefab, PrefabData, PrefabLoader,
-        PrefabLoaderSystem, ProgressCounter, RonFormat,
+        PrefabLoaderSystem, ProgressCounter, RonFormat, Processor,
     },
     controls::{ControlTagPrefab, FlyControlBundle, FlyControlTag},
     core::{
@@ -50,13 +50,14 @@ use amethyst_rendy::{
             pso, Backend,
         },
         mesh::PosNormTangTex,
-        texture::palette::load_from_linear_rgba,
+        texture::{palette::load_from_linear_rgba, image::ImageTextureConfig},
     },
-    sprite::{SpriteRender,  /* prefab::SpriteScenePrefab */ },
+    sprite::{SpriteCamera, SpriteSheet, SpriteRender, prefab::SpriteScenePrefab },
     resources::Tint,
     shape::Shape,
     system::{GraphCreator, RendererSystem},
     types::{DefaultBackend, Mesh, Texture},
+    formats::texture::{ImageFormat, TexturePrefab},
 };
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
@@ -165,22 +166,27 @@ struct ScenePrefabData<B: Backend> {
     fly_tag: Option<ControlTagPrefab>,
 }
 
-/*
+
 /// Animation ids used in a AnimationSet
 #[derive(Eq, PartialOrd, PartialEq, Hash, Debug, Copy, Clone, Deserialize, Serialize)]
-enum SpriteAnimationId {
+enum  SpriteAnimationId {
     Fly,
+}
+impl Default for SpriteAnimationId {
+    fn default() -> Self { SpriteAnimationId::Fly }
 }
 
 /// Loading data for one entity
-#[derive(Debug, Clone, Deserialize, PrefabData)]
-struct SpriteScenePrefabData {
+#[derive(Deserialize, Serialize, PrefabData)]
+#[serde(bound(deserialize = "SpriteScenePrefab<B>: Deserialize<'de>"))]
+struct SpriteScenePrefabData<B: Backend>
+{
     /// Information for rendering a scene with sprites
-    sprite_scene: SpriteScenePrefab,
+    sprite_scene: SpriteScenePrefab<B>,
     /// Аll animations that can be run on the entity
     animation_set: AnimationSetPrefab<SpriteAnimationId, SpriteRender<B>>,
 }
-*/
+
 
 impl<B: Backend> SimpleState for Example<B> {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
@@ -221,8 +227,6 @@ impl<B: Backend> SimpleState for Example<B> {
 
             (mesh, albedo)
         };
-
-
 
         println!("Create spheres");
         const NUM_ROWS: usize = 30;
@@ -368,6 +372,39 @@ impl<B: Backend> SimpleState for Example<B> {
             .build();
 
         world.add_resource(ActiveCamera { entity: camera });
+
+        let (width, height) = {
+            let dim = world.read_resource::<ScreenDimensions>();
+            (dim.width(), dim.height())
+        };
+
+        let mut camera_transform = Transform::default();
+        camera_transform.set_translation_z(1.0);
+
+        let sprite_camera = world
+            .create_entity()
+            .with(camera_transform)
+            .with(Camera::from(Projection::orthographic(
+                0.0, width, 0.0, height,
+            )))
+            .build();
+
+        world.add_resource(SpriteCamera { entity: sprite_camera });
+
+        println!("Create sprites");
+        // Sprites
+        let sprite_prefab_handle = world.exec(|loader: PrefabLoader<'_, SpriteScenePrefabData<B>>| {
+            loader.load(
+                "prefab/sprite_animation.ron",
+                RonFormat,
+                (),
+                self.progress.as_mut().unwrap(),
+            )
+        });
+
+        // Creates new entities with components from MyPrefabData
+        world.create_entity().with(sprite_prefab_handle).build();
+
     }
 
     fn handle_event(
@@ -476,9 +513,9 @@ fn main() -> amethyst::Result<()> {
     // .level_for("rendy_memory", log::LevelFilter::Trace)
     // .level_for("rendy_factory", log::LevelFilter::Trace)
     // .level_for("rendy_resource", log::LevelFilter::Trace)
-    .level_for("rendy_graph", log::LevelFilter::Trace)
-        .level_for("rendy_node", log::LevelFilter::Trace)
-        .level_for("amethyst_rendy", log::LevelFilter::Trace)
+    //.level_for("rendy_graph", log::LevelFilter::Trace)
+    //.level_for("rendy_node", log::LevelFilter::Trace)
+    .level_for("amethyst_rendy", log::LevelFilter::Trace)
     .start();
 
     let app_root = application_root_dir()?;
@@ -524,14 +561,28 @@ fn main() -> amethyst::Result<()> {
             &[],
         )
         .with(
+            PrefabLoaderSystem::<SpriteScenePrefabData<DefaultBackend>>::default(),
+            "sprite_loader",
+            &[],
+        )
+        .with(
             GltfSceneLoaderSystem::<DefaultBackend>::default(),
             "gltf_loader",
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
+        )
+        .with(
+            Processor::<SpriteSheet<DefaultBackend>>::new(),
+            "sprite_sheet_processor",
+            &[],
         )
         .with_bundle(
             AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
                 .with_dep(&["gltf_loader"]),
         )?
+        .with_bundle(AnimationBundle::<SpriteAnimationId, SpriteRender<DefaultBackend>>::new(
+            "sprite_animation_control",
+            "sprite_sampler_interpolation",
+        ))?
         .with_bundle(InputBundle::<&'static str, &'static str>::new().with_bindings(bidnings))?
         .with_bundle(
             FlyControlBundle::<&'static str, &'static str>::new(
@@ -545,6 +596,8 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(TransformBundle::new().with_dep(&[
             "animation_control",
             "sampler_interpolation",
+            "sprite_animation_control",
+            "sprite_sampler_interpolation",
             "fly_movement",
             "orbit",
         ]))?
