@@ -12,9 +12,7 @@ Prefab(
                         texture: File("texture/bat.32x32.png", (), (
                              format: (PNG),
                              repr: Srgb,
-                             kind: D2(
-                                 samples: 1,
-                             ),
+                             kind: D1,
                              sampler_info: (
                                  min_filter: Linear,
                                  mag_filter: Linear,

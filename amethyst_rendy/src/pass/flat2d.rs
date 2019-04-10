@@ -142,7 +142,7 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawFlat2DDesc {
                 SetLayout {
                     bindings: vec![DescriptorSetLayoutBinding {
                         binding: 0,
-                        ty: DescriptorType::SampledImage,
+                        ty: DescriptorType::CombinedImageSampler,
                         count: 32,
                         stage_flags: ShaderStageFlags::FRAGMENT,
                         immutable_samplers: false,
@@ -295,7 +295,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
                 )
                     .join()
                 {
-                    log::trace!("Rendering a sprite");
+                    log::trace!("Adding a sprite");
                     let sprite_sheet = sprite_sheet_storage
                             .get(&sprite_render.sprite_sheet)
                             .expect(
@@ -381,11 +381,11 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
 
         let mut instances_written = 0;
         for (n, (tex_id, (batch_data, texture_constant_id))) in self.batches.iter().enumerate() {
-            log::trace!("Iterating batch: {},{},{}", n, tex_id, texture_constant_id);
+            log::trace!("Iterating batch: {},{},{}, sprites={}", n, tex_id, texture_constant_id, batch_data.len());
             if let Some(texture) = tex_storage.get_by_id(*tex_id) {
                 desc_writes.push(Self::desc_write(
                     self.tex_set.as_ref().unwrap().raw(),
-                    1,
+                    0,
                     n,
                     Descriptor::CombinedImageSampler(
                         texture.0.view().raw(),
@@ -400,9 +400,9 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
                     util::ensure_buffer(
                         &factory,
                         buffer,
-                        BufferUsage::UNIFORM,
+                        BufferUsage::VERTEX,
                         rendy::memory::Dynamic,
-                        4,
+                        batch_data.len() as u64 * std::mem::size_of::<SpriteArgs>() as u64,
                     )
                     .unwrap();
                 } else {
@@ -410,9 +410,9 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
                     util::ensure_buffer(
                         &factory,
                         &mut buffer,
-                        BufferUsage::UNIFORM,
+                        BufferUsage::VERTEX,
                         rendy::memory::Dynamic,
-                        4,
+                        batch_data.len() as u64 * std::mem::size_of::<SpriteArgs>() as u64,
                     )
                     .unwrap();
                     self.vertex_buffers.push(buffer);
@@ -425,7 +425,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
                             factory
                                 .upload_visible_buffer(&mut buffer, 0, batch_data.as_slice())
                                 .unwrap();
-
+                            log::trace!("uploaded buffer");
                             instances_written += 1;
                         }
                     } else {
@@ -441,9 +441,9 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
             }
         }
 
-        if instances_written > 1 {
+        if instances_written > 0 {
             log::trace!("Rendering {} instances", instances_written);
-
+            log::trace!("Writing descriptors: {:?}", desc_writes.len());
             unsafe {
                 factory.write_descriptor_sets(desc_writes);
 
@@ -493,6 +493,12 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
             std::iter::once(self.projview_set.as_ref().unwrap().raw()),
             std::iter::empty::<u32>(),
         );
+        encoder.bind_graphics_descriptor_sets(
+            layout,
+            1, // 1 for tex
+            std::iter::once(self.tex_set.as_ref().unwrap().raw()),
+            std::iter::empty::<u32>(),
+        );
 
         for (n, (tex_id, (batch_data, batch_constant_id))) in self.batches.iter().enumerate() {
             log::trace!("drawing batch: {},{},{}", n, tex_id, batch_constant_id);
@@ -500,7 +506,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
 
             if let Some(mut buffer) = self.vertex_buffers.get(*batch_constant_id as usize) {
                 encoder.bind_vertex_buffers(
-                    1,
+                    0,
                     Some((
                         buffer.as_ref().unwrap().raw(),
                         batch_data.len() as u64 * std::mem::size_of::<SpriteArgs>() as u64,
