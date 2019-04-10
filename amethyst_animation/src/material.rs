@@ -78,32 +78,18 @@ impl<'a, B: Backend> From<&'a Sprite> for MaterialPrimitive<B> {
 pub enum MaterialChannel {
     /// Animating the texture used for the albedo
     AlbedoTexture,
-    /// Animating the "window" used to render the albedo.
-    AlbedoOffset,
     /// Animating the texture used for the emission.
     EmissionTexture,
-    /// Animating the "window" used to render the emission.
-    EmissionOffset,
     /// Animating the texture used for the normal
     NormalTexture,
-    /// Animating the "window" used to render the normal.
-    NormalOffset,
-    /// Animating the texture used for the metallic
-    MetallicTexture,
-    /// Animating the "window" used to render the metallic.
-    MetallicOffset,
-    /// Animating the texture used for the roughness
-    RoughnessTexture,
-    /// Animating the "window" used to render the roughness.
-    RoughnessOffset,
+    /// Animating the texture used for the metallic and roughness
+    MetallicRoughnessTexture,
     /// Animating the texture used for the ambient occlusion
     AmbientOcclusionTexture,
-    /// Animating the "window" used to render the ambient occlusion.
-    AmbientOcclusionOffset,
-    /// Animating the texture used for the caveat
-    CaveatTexture,
-    /// Animating the "window" used to render the caveat.
-    CaveatOffset,
+    /// Animating the texture used for the cavity
+    CavityTexture,
+    /// Animating the "window" used for all texture maps.
+    UvOffset,
 }
 
 impl<'a, B: Backend> ApplyData<'a> for Material<B> {
@@ -133,39 +119,18 @@ impl<B: Backend> AnimationSampling for Material<B> {
             (MaterialChannel::NormalTexture, MaterialPrimitive::Texture(i)) => {
                 self.normal = i.clone();
             }
-            (MaterialChannel::MetallicTexture, MaterialPrimitive::Texture(i)) => {
-                self.metallic = i.clone();
-            }
-            (MaterialChannel::RoughnessTexture, MaterialPrimitive::Texture(i)) => {
-                self.roughness = i.clone();
+            (MaterialChannel::MetallicRoughnessTexture, MaterialPrimitive::Texture(i)) => {
+                self.metallic_roughness = i.clone();
             }
             (MaterialChannel::AmbientOcclusionTexture, MaterialPrimitive::Texture(i)) => {
                 self.ambient_occlusion = i.clone();
             }
-            (MaterialChannel::CaveatTexture, MaterialPrimitive::Texture(i)) => {
-                self.caveat = i.clone();
+            (MaterialChannel::CavityTexture, MaterialPrimitive::Texture(i)) => {
+                self.cavity = i.clone();
             }
 
-            (MaterialChannel::AlbedoOffset, MaterialPrimitive::Offset(u, v)) => {
-                self.albedo_offset = texture_offset(*u, *v)
-            }
-            (MaterialChannel::EmissionOffset, MaterialPrimitive::Offset(u, v)) => {
-                self.emission_offset = texture_offset(*u, *v)
-            }
-            (MaterialChannel::NormalOffset, MaterialPrimitive::Offset(u, v)) => {
-                self.normal_offset = texture_offset(*u, *v)
-            }
-            (MaterialChannel::MetallicOffset, MaterialPrimitive::Offset(u, v)) => {
-                self.metallic_offset = texture_offset(*u, *v)
-            }
-            (MaterialChannel::RoughnessOffset, MaterialPrimitive::Offset(u, v)) => {
-                self.roughness_offset = texture_offset(*u, *v)
-            }
-            (MaterialChannel::AmbientOcclusionOffset, MaterialPrimitive::Offset(u, v)) => {
-                self.ambient_occlusion_offset = texture_offset(*u, *v)
-            }
-            (MaterialChannel::CaveatOffset, MaterialPrimitive::Offset(u, v)) => {
-                self.caveat_offset = texture_offset(*u, *v)
+            (MaterialChannel::UvOffset, MaterialPrimitive::Offset(u, v)) => {
+                self.uv_offset = texture_offset(*u, *v)
             }
 
             _ => panic!("Bad combination of data in Material animation"),
@@ -177,19 +142,14 @@ impl<B: Backend> AnimationSampling for Material<B> {
             MaterialChannel::AlbedoTexture => MaterialPrimitive::Texture(self.albedo.clone()),
             MaterialChannel::EmissionTexture => MaterialPrimitive::Texture(self.emission.clone()),
             MaterialChannel::NormalTexture => MaterialPrimitive::Texture(self.normal.clone()),
-            MaterialChannel::MetallicTexture => MaterialPrimitive::Texture(self.metallic.clone()),
-            MaterialChannel::RoughnessTexture => MaterialPrimitive::Texture(self.roughness.clone()),
+            MaterialChannel::MetallicRoughnessTexture => {
+                MaterialPrimitive::Texture(self.metallic_roughness.clone())
+            }
             MaterialChannel::AmbientOcclusionTexture => {
                 MaterialPrimitive::Texture(self.ambient_occlusion.clone())
             }
-            MaterialChannel::CaveatTexture => MaterialPrimitive::Texture(self.caveat.clone()),
-            MaterialChannel::AlbedoOffset => offset(&self.albedo_offset),
-            MaterialChannel::EmissionOffset => offset(&self.emission_offset),
-            MaterialChannel::NormalOffset => offset(&self.normal_offset),
-            MaterialChannel::MetallicOffset => offset(&self.metallic_offset),
-            MaterialChannel::RoughnessOffset => offset(&self.roughness_offset),
-            MaterialChannel::AmbientOcclusionOffset => offset(&self.ambient_occlusion_offset),
-            MaterialChannel::CaveatOffset => offset(&self.caveat_offset),
+            MaterialChannel::CavityTexture => MaterialPrimitive::Texture(self.cavity.clone()),
+            MaterialChannel::UvOffset => offset(&self.uv_offset),
         }
     }
 

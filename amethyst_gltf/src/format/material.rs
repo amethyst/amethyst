@@ -28,13 +28,14 @@ pub fn load_material<B: Backend>(
     source: Arc<dyn Source>,
     name: &str,
 ) -> Result<MaterialPrefab<B, ImageFormat>, Error> {
-    use hal::format::{Component, Swizzle};
-
     let mut prefab = MaterialPrefab::default();
+
+    let pbr = material.pbr_metallic_roughness();
+
     prefab.albedo = Some(
         load_texture_with_factor(
-            material.pbr_metallic_roughness().base_color_texture(),
-            material.pbr_metallic_roughness().base_color_factor(),
+            pbr.base_color_texture(),
+            pbr.base_color_factor(),
             buffers,
             source.clone(),
             name,
@@ -46,15 +47,8 @@ pub fn load_material<B: Backend>(
     // metallic from B channel
     // roughness from G channel
     let metallic_roughness = load_texture_with_factor(
-        material
-            .pbr_metallic_roughness()
-            .metallic_roughness_texture(),
-        [
-            1.0,
-            material.pbr_metallic_roughness().roughness_factor(),
-            material.pbr_metallic_roughness().metallic_factor(),
-            1.0,
-        ],
+        pbr.metallic_roughness_texture(),
+        [1.0, pbr.roughness_factor(), pbr.metallic_factor(), 1.0],
         buffers,
         source.clone(),
         name,
@@ -62,22 +56,7 @@ pub fn load_material<B: Backend>(
     )?
     .0;
 
-    let metallic = metallic_roughness.clone().with_swizzle(Swizzle(
-        Component::B,
-        Component::B,
-        Component::B,
-        Component::One,
-    ));
-
-    let roughness = metallic_roughness.with_swizzle(Swizzle(
-        Component::G,
-        Component::G,
-        Component::G,
-        Component::One,
-    ));
-
-    prefab.metallic = Some(TexturePrefab::Data(metallic));
-    prefab.roughness = Some(TexturePrefab::Data(roughness));
+    prefab.metallic_roughness = Some(TexturePrefab::Data(metallic_roughness));
 
     let em_factor = material.emissive_factor();
     prefab.emission = Some(TexturePrefab::Data(

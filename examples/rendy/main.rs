@@ -20,7 +20,7 @@ use amethyst::{
     },
     derive::PrefabData,
     gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem},
-    input::{is_close_requested, is_key_down, Axis, Button, Bindings, InputBundle},
+    input::{is_close_requested, is_key_down, Axis, Bindings, Button, InputBundle},
     prelude::*,
     utils::{
         application_root_dir,
@@ -35,7 +35,7 @@ use amethyst_rendy::{
     camera::{ActiveCamera, Camera, CameraPrefab, Projection},
     light::{Light, LightPrefab, PointLight},
     mtl::{Material, MaterialDefaults},
-    palette::{LinLuma, LinSrgb, Srgb},
+    palette::{LinSrgba, Srgb},
     pass::DrawPbrDesc,
     rendy::{
         factory::Factory,
@@ -60,7 +60,7 @@ use amethyst_rendy::{
 };
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
-use std::{marker::PhantomData, sync::Arc, path::Path};
+use std::{marker::PhantomData, path::Path, sync::Arc};
 
 struct Example<B: Backend> {
     entity: Option<Entity>,
@@ -175,12 +175,16 @@ impl<B: Backend> SimpleState for Example<B> {
 
         world.exec(
             |(loader, mut scene): (PrefabLoader<'_, ScenePrefabData<B>>, Write<'_, Scene<B>>)| {
-                scene.handle = Some(loader.load(
-                    Path::new("prefab").join("puffy_scene_rendy.ron").to_string_lossy(),
-                    RonFormat,
-                    (),
-                    self.progress.as_mut().unwrap(),
-                ));
+                scene.handle = Some(
+                    loader.load(
+                        Path::new("prefab")
+                            .join("puffy_scene_rendy.ron")
+                            .to_string_lossy(),
+                        RonFormat,
+                        (),
+                        self.progress.as_mut().unwrap(),
+                    ),
+                );
             },
         );
 
@@ -193,7 +197,7 @@ impl<B: Backend> SimpleState for Example<B> {
             });
             let albedo = world.exec(|loader: AssetLoaderSystemData<'_, Texture<B>>| {
                 loader.load_from_data(
-                    load_from_linear_rgba(LinSrgb::new(1.0, 1.0, 1.0).into()),
+                    load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 1.0)),
                     self.progress.as_mut().unwrap(),
                 )
             });
@@ -212,34 +216,30 @@ impl<B: Backend> SimpleState for Example<B> {
                 if mtls.len() >= NUM_ROWS + NUM_COLS - 1 {
                     break;
                 }
-                
+
                 let roughness = i as f32 / 9.0;
                 let metallic = j as f32 / 9.0;
-                let (metallic, roughness) =
-                    world.exec(|loader: AssetLoaderSystemData<'_, Texture<B>>| {
-                        (
-                            loader.load_from_data(
-                                load_from_linear_rgba(LinLuma::new(metallic).into()),
-                                self.progress.as_mut().unwrap(),
-                            ),
-                            loader.load_from_data(
-                                load_from_linear_rgba(LinLuma::new(roughness).into()),
-                                self.progress.as_mut().unwrap(),
-                            ),
-                        )
-                    });
 
-                let mtl = world.exec(|loader: AssetLoaderSystemData<'_, Material<B>>| {
-                    loader.load_from_data(
-                        Material {
-                            albedo: albedo.clone(),
-                            metallic,
-                            roughness,
-                            ..mat_defaults.clone()
-                        },
-                        self.progress.as_mut().unwrap(),
-                    )
-                });
+                let mtl = world.exec(
+                    |(mtl_loader, tex_loader): (
+                        AssetLoaderSystemData<'_, Material<B>>,
+                        AssetLoaderSystemData<'_, Texture<B>>,
+                    )| {
+                        let metallic_roughness = tex_loader.load_from_data(
+                            load_from_linear_rgba(LinSrgba::new(0.0, roughness, metallic, 0.0)),
+                            self.progress.as_mut().unwrap(),
+                        );
+
+                        mtl_loader.load_from_data(
+                            Material {
+                                albedo: albedo.clone(),
+                                metallic_roughness,
+                                ..mat_defaults.clone()
+                            },
+                            self.progress.as_mut().unwrap(),
+                        )
+                    },
+                );
                 mtls.push(mtl);
             }
         }
@@ -299,7 +299,6 @@ impl<B: Backend> SimpleState for Example<B> {
 
         let mut light2_transform = Transform::default();
         light2_transform.set_translation_xyz(6.0, -6.0, 6.0);
-
 
         let light3: Light = PointLight {
             intensity: 4.0,
@@ -462,18 +461,37 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let path = app_root.join("examples").join("rendy").join("resources").join("display_config.ron");
+    let path = app_root
+        .join("examples")
+        .join("rendy")
+        .join("resources")
+        .join("display_config.ron");
     let resources = app_root.join("examples").join("assets");
 
     let event_loop = EventsLoop::new();
 
-
     let mut bidnings = Bindings::new();
-    bidnings.insert_axis("vertical", Axis::Emulated { pos: Button::Key(winit::VirtualKeyCode::S), neg: Button::Key(winit::VirtualKeyCode::W)})?;
-    bidnings.insert_axis("horizontal", Axis::Emulated { pos: Button::Key(winit::VirtualKeyCode::D), neg: Button::Key(winit::VirtualKeyCode::A)})?;
+    bidnings.insert_axis(
+        "vertical",
+        Axis::Emulated {
+            pos: Button::Key(winit::VirtualKeyCode::S),
+            neg: Button::Key(winit::VirtualKeyCode::W),
+        },
+    )?;
+    bidnings.insert_axis(
+        "horizontal",
+        Axis::Emulated {
+            pos: Button::Key(winit::VirtualKeyCode::D),
+            neg: Button::Key(winit::VirtualKeyCode::A),
+        },
+    )?;
 
     let game_data = GameDataBuilder::default()
-        .with(WindowSystem::from_config_path(&event_loop, path), "window", &[])
+        .with(
+            WindowSystem::from_config_path(&event_loop, path),
+            "window",
+            &[],
+        )
         .with(OrbitSystem, "orbit", &[])
         .with(CameraCorrectionSystem::new(), "cam", &[])
         // .with_bundle(TransformBundle::new().with_dep(&["orbit"]))?
@@ -494,9 +512,13 @@ fn main() -> amethyst::Result<()> {
         )?
         .with_bundle(InputBundle::<&'static str, &'static str>::new().with_bindings(bidnings))?
         .with_bundle(
-            FlyControlBundle::<&'static str, &'static str>::new(Some("horizontal"), None, Some("vertical"))
-                .with_sensitivity(0.1, 0.1)
-                .with_speed(5.),
+            FlyControlBundle::<&'static str, &'static str>::new(
+                Some("horizontal"),
+                None,
+                Some("vertical"),
+            )
+            .with_sensitivity(0.1, 0.1)
+            .with_speed(5.),
         )?
         .with_bundle(TransformBundle::new().with_dep(&[
             "animation_control",

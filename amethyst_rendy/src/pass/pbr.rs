@@ -128,7 +128,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbrDesc {
 
         let set_layouts = DrawPbrLayouts {
             environment: set_layout! {factory, 1 UniformBuffer VERTEX, 4 UniformBuffer FRAGMENT},
-            material: set_layout! {factory, 1 UniformBuffer FRAGMENT, 7 CombinedImageSampler FRAGMENT},
+            material: set_layout! {factory, 1 UniformBuffer FRAGMENT, 6 CombinedImageSampler FRAGMENT},
             skinning: set_layout! {factory, 1 StorageBuffer VERTEX},
         };
 
@@ -711,11 +711,11 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbr<B> {
             let desc_albedo = Self::texture_descriptor(&mat.albedo, &def.albedo, storage);
             let desc_emission = Self::texture_descriptor(&mat.emission, &def.emission, storage);
             let desc_normal = Self::texture_descriptor(&mat.normal, &def.normal, storage);
-            let desc_metallic = Self::texture_descriptor(&mat.metallic, &def.metallic, storage);
-            let desc_roughness = Self::texture_descriptor(&mat.roughness, &def.roughness, storage);
+            let desc_metallic_roughness =
+                Self::texture_descriptor(&mat.metallic_roughness, &def.metallic_roughness, storage);
             let desc_ao =
                 Self::texture_descriptor(&mat.ambient_occlusion, &def.ambient_occlusion, storage);
-            let desc_caveat = Self::texture_descriptor(&mat.caveat, &def.caveat, storage);
+            let desc_cavity = Self::texture_descriptor(&mat.cavity, &def.cavity, storage);
 
             unsafe {
                 factory.write_descriptor_sets(vec![
@@ -723,10 +723,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbr<B> {
                     Self::desc_write(set, 1, desc_albedo),
                     Self::desc_write(set, 2, desc_emission),
                     Self::desc_write(set, 3, desc_normal),
-                    Self::desc_write(set, 4, desc_metallic),
-                    Self::desc_write(set, 5, desc_roughness),
-                    Self::desc_write(set, 6, desc_ao),
-                    Self::desc_write(set, 7, desc_caveat),
+                    Self::desc_write(set, 4, desc_metallic_roughness),
+                    Self::desc_write(set, 5, desc_ao),
+                    Self::desc_write(set, 6, desc_cavity),
                 ]);
             }
         }

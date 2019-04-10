@@ -217,36 +217,27 @@ fn create_default_mat<B: Backend>(res: &mut Resources) -> Material<B> {
     let albedo = load_from_srgba(Srgba::new(0.5, 0.5, 0.5, 1.0));
     let emission = load_from_srgba(Srgba::new(0.0, 0.0, 0.0, 0.0));
     let normal = load_from_linear_rgba(LinSrgba::new(0.5, 0.5, 1.0, 1.0));
-    let metallic = load_from_linear_rgba(LinSrgba::new(0.0, 0.0, 0.0, 0.0));
-    let roughness = load_from_linear_rgba(LinSrgba::new(0.5, 0.5, 0.5, 0.5));
+    let metallic_roughness = load_from_linear_rgba(LinSrgba::new(0.0, 0.5, 0.0, 0.0));
     let ambient_occlusion = load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 1.0));
-    let caveat = load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 1.0));
+    let cavity = load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 1.0));
 
     let tex_storage = res.fetch();
 
     let albedo = loader.load_from_data(albedo, (), &tex_storage);
     let emission = loader.load_from_data(emission, (), &tex_storage);
     let normal = loader.load_from_data(normal, (), &tex_storage);
-    let metallic = loader.load_from_data(metallic, (), &tex_storage);
-    let roughness = loader.load_from_data(roughness, (), &tex_storage);
+    let metallic_roughness = loader.load_from_data(metallic_roughness, (), &tex_storage);
     let ambient_occlusion = loader.load_from_data(ambient_occlusion, (), &tex_storage);
-    let caveat = loader.load_from_data(caveat, (), &tex_storage);
+    let cavity = loader.load_from_data(cavity, (), &tex_storage);
 
     Material {
         alpha_cutoff: 0.01,
         albedo,
-        albedo_offset: TextureOffset::default(),
         emission,
-        emission_offset: TextureOffset::default(),
         normal,
-        normal_offset: TextureOffset::default(),
-        metallic,
-        metallic_offset: TextureOffset::default(),
-        roughness,
-        roughness_offset: TextureOffset::default(),
+        metallic_roughness,
         ambient_occlusion,
-        ambient_occlusion_offset: TextureOffset::default(),
-        caveat,
-        caveat_offset: TextureOffset::default(),
+        cavity,
+        uv_offset: TextureOffset::default(),
     }
 }

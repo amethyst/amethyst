@@ -30,32 +30,18 @@ pub struct Material<B: Backend> {
     pub alpha_cutoff: f32,
     /// Diffuse map.
     pub albedo: Handle<Texture<B>>,
-    /// Diffuse texture offset
-    pub albedo_offset: TextureOffset,
     /// Emission map.
     pub emission: Handle<Texture<B>>,
-    /// Emission texture offset
-    pub emission_offset: TextureOffset,
     /// Normal map.
     pub normal: Handle<Texture<B>>,
-    /// Normal texture offset
-    pub normal_offset: TextureOffset,
-    /// Metallic map.
-    pub metallic: Handle<Texture<B>>,
-    /// Metallic texture offset
-    pub metallic_offset: TextureOffset,
-    /// Roughness map.
-    pub roughness: Handle<Texture<B>>,
-    /// Roughness texture offset
-    pub roughness_offset: TextureOffset,
+    /// Metallic-roughness map. (B channel metallic, G channel roughness)
+    pub metallic_roughness: Handle<Texture<B>>,
     /// Ambient occlusion map.
     pub ambient_occlusion: Handle<Texture<B>>,
-    /// Ambient occlusion texture offset
-    pub ambient_occlusion_offset: TextureOffset,
-    /// Caveat map.
-    pub caveat: Handle<Texture<B>>,
-    /// Caveat texture offset
-    pub caveat_offset: TextureOffset,
+    /// Cavity map.
+    pub cavity: Handle<Texture<B>>,
+    /// Texture offset
+    pub uv_offset: TextureOffset,
 }
 
 impl<B: Backend> Asset for Material<B> {

@@ -174,26 +174,14 @@ pub(crate) struct Environment {
 #[derive(Clone, Copy, Debug, AsStd140)]
 pub(crate) struct Material {
     pub alpha_cutoff: float,
-    pub(crate) albedo_offset: TextureOffset,
-    pub(crate) emission_offset: TextureOffset,
-    pub(crate) normal_offset: TextureOffset,
-    pub(crate) metallic_offset: TextureOffset,
-    pub(crate) roughness_offset: TextureOffset,
-    pub(crate) ambient_occlusion_offset: TextureOffset,
-    pub(crate) caveat_offset: TextureOffset,
+    pub(crate) uv_offset: TextureOffset,
 }
 
 impl Material {
     pub fn from_material<B: Backend>(mat: &mtl::Material<B>) -> Self {
         Material {
             alpha_cutoff: mat.alpha_cutoff,
-            albedo_offset: TextureOffset::from_offset(&mat.albedo_offset),
-            emission_offset: TextureOffset::from_offset(&mat.emission_offset),
-            normal_offset: TextureOffset::from_offset(&mat.normal_offset),
-            metallic_offset: TextureOffset::from_offset(&mat.metallic_offset),
-            roughness_offset: TextureOffset::from_offset(&mat.roughness_offset),
-            ambient_occlusion_offset: TextureOffset::from_offset(&mat.ambient_occlusion_offset),
-            caveat_offset: TextureOffset::from_offset(&mat.caveat_offset),
+            uv_offset: TextureOffset::from_offset(&mat.uv_offset),
         }
     }
 }

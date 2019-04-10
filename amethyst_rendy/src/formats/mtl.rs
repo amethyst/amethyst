@@ -27,32 +27,18 @@ where
 {
     /// Diffuse map.
     pub albedo: Option<TexturePrefab<B, F>>,
-    /// Diffuse texture offset
-    pub albedo_offset: TextureOffset,
     /// Emission map.
     pub emission: Option<TexturePrefab<B, F>>,
-    /// Emission texture offset
-    pub emission_offset: TextureOffset,
     /// Normal map.
     pub normal: Option<TexturePrefab<B, F>>,
-    /// Normal texture offset
-    pub normal_offset: TextureOffset,
-    /// Metallic map.
-    pub metallic: Option<TexturePrefab<B, F>>,
-    /// Metallic texture offset
-    pub metallic_offset: TextureOffset,
-    /// Roughness map.
-    pub roughness: Option<TexturePrefab<B, F>>,
-    /// Roughness texture offset
-    pub roughness_offset: TextureOffset,
+    /// Metallic-roughness map. (B channel metallic, G channel roughness)
+    pub metallic_roughness: Option<TexturePrefab<B, F>>,
     /// Ambient occlusion map.
     pub ambient_occlusion: Option<TexturePrefab<B, F>>,
-    /// Ambient occlusion texture offset
-    pub ambient_occlusion_offset: TextureOffset,
-    /// Caveat map.
-    pub caveat: Option<TexturePrefab<B, F>>,
-    /// Caveat texture offset
-    pub caveat_offset: TextureOffset,
+    /// Cavity map.
+    pub cavity: Option<TexturePrefab<B, F>>,
+    /// Texture offset.
+    pub uv_offset: TextureOffset,
     /// Set material as `Transparent`
     pub transparent: bool,
     /// Alpha cutoff: the value below which we do not draw the pixel
@@ -70,19 +56,12 @@ where
     fn default() -> Self {
         MaterialPrefab {
             albedo: None,
-            albedo_offset: TextureOffset::default(),
             emission: None,
-            emission_offset: TextureOffset::default(),
             normal: None,
-            normal_offset: TextureOffset::default(),
-            metallic: None,
-            metallic_offset: TextureOffset::default(),
-            roughness: None,
-            roughness_offset: TextureOffset::default(),
+            metallic_roughness: None,
             ambient_occlusion: None,
-            ambient_occlusion_offset: TextureOffset::default(),
-            caveat: None,
-            caveat_offset: TextureOffset::default(),
+            cavity: None,
+            uv_offset: TextureOffset::default(),
             transparent: false,
             alpha_cutoff: 0.01,
             handle: None,
@@ -159,12 +138,7 @@ where
                 ret = true;
             }
         }
-        if let Some(ref mut texture) = self.metallic {
-            if texture.load_sub_assets(progress, tp_data)? {
-                ret = true;
-            }
-        }
-        if let Some(ref mut texture) = self.roughness {
+        if let Some(ref mut texture) = self.metallic_roughness {
             if texture.load_sub_assets(progress, tp_data)? {
                 ret = true;
             }
@@ -174,7 +148,7 @@ where
                 ret = true;
             }
         }
-        if let Some(ref mut texture) = self.caveat {
+        if let Some(ref mut texture) = self.cavity {
             if texture.load_sub_assets(progress, tp_data)? {
                 ret = true;
             }
@@ -183,22 +157,18 @@ where
         if self.handle.is_none() {
             let mtl = Material {
                 albedo: load_handle(&self.albedo, &mat_default.0.albedo),
-                albedo_offset: self.albedo_offset.clone(),
                 emission: load_handle(&self.emission, &mat_default.0.emission),
-                emission_offset: self.emission_offset.clone(),
                 normal: load_handle(&self.normal, &mat_default.0.normal),
-                normal_offset: self.normal_offset.clone(),
-                metallic: load_handle(&self.metallic, &mat_default.0.metallic),
-                metallic_offset: self.metallic_offset.clone(),
-                roughness: load_handle(&self.roughness, &mat_default.0.roughness),
-                roughness_offset: self.roughness_offset.clone(),
+                metallic_roughness: load_handle(
+                    &self.metallic_roughness,
+                    &mat_default.0.metallic_roughness,
+                ),
                 ambient_occlusion: load_handle(
                     &self.ambient_occlusion,
                     &mat_default.0.ambient_occlusion,
                 ),
-                ambient_occlusion_offset: self.ambient_occlusion_offset.clone(),
-                caveat: load_handle(&self.caveat, &mat_default.0.caveat),
-                caveat_offset: self.caveat_offset.clone(),
+                cavity: load_handle(&self.cavity, &mat_default.0.cavity),
+                uv_offset: self.uv_offset.clone(),
                 alpha_cutoff: self.alpha_cutoff,
             };
 

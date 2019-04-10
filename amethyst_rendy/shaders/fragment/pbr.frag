@@ -50,22 +50,15 @@ struct UvOffset {
 
 layout(std140, set = 1, binding = 0) uniform Material {
     float alpha_cutoff;
-    UvOffset albedo_offset;
-    UvOffset emission_offset;
-    UvOffset normal_offset;
-    UvOffset metallic_offset;
-    UvOffset roughness_offset;
-    UvOffset ambient_occlusion_offset;
-    UvOffset caveat_offset;
+    UvOffset uv_offset;
 };
 
 layout(set = 1, binding = 1) uniform sampler2D albedo;
 layout(set = 1, binding = 2) uniform sampler2D emission;
 layout(set = 1, binding = 3) uniform sampler2D normal;
-layout(set = 1, binding = 4) uniform sampler2D metallic;
-layout(set = 1, binding = 5) uniform sampler2D roughness;
-layout(set = 1, binding = 6) uniform sampler2D ambient_occlusion;
-layout(set = 1, binding = 7) uniform sampler2D caveat;
+layout(set = 1, binding = 4) uniform sampler2D metallic_roughness;
+layout(set = 1, binding = 5) uniform sampler2D ambient_occlusion;
+layout(set = 1, binding = 6) uniform sampler2D cavity;
 
 layout(location = 0) in VertexData {
     vec3 position;
@@ -143,18 +136,21 @@ vec3 compute_light(vec3 attenuation,
 }
 
 void main() {
-    vec4 albedo_alpha       = texture(albedo, tex_coords(vertex.tex_coord, albedo_offset.u_offset, albedo_offset.v_offset)).rgba;
-
+    vec2 final_tex_coords   = tex_coords(vertex.tex_coord, uv_offset.u_offset, uv_offset.v_offset);
+    vec4 albedo_alpha       = texture(albedo, final_tex_coords).rgba;
     float alpha             = albedo_alpha.a;
+
     if(alpha < alpha_cutoff) discard;
 
     vec3 albedo             = albedo_alpha.rgb;
-    vec3 emission           = texture(emission, tex_coords(vertex.tex_coord, emission_offset.u_offset, emission_offset.v_offset)).rgb;
-    vec3 normal             = texture(normal, tex_coords(vertex.tex_coord, normal_offset.u_offset, normal_offset.v_offset)).rgb;
-    float metallic          = texture(metallic, tex_coords(vertex.tex_coord, metallic_offset.u_offset, metallic_offset.v_offset)).r;
-    float roughness         = texture(roughness, tex_coords(vertex.tex_coord, roughness_offset.u_offset, roughness_offset.v_offset)).r;
-    float ambient_occlusion = texture(ambient_occlusion, tex_coords(vertex.tex_coord, ambient_occlusion_offset.u_offset, ambient_occlusion_offset.v_offset)).r;
-    float caveat            = texture(caveat, tex_coords(vertex.tex_coord, caveat_offset.u_offset, caveat_offset.v_offset)).r; // TODO: Use caveat
+    vec3 emission           = texture(emission, final_tex_coords).rgb;
+    vec3 normal             = texture(normal, final_tex_coords).rgb;
+    vec2 metallic_roughness = texture(metallic_roughness, final_tex_coords).bg;
+    float ambient_occlusion = texture(ambient_occlusion, final_tex_coords).r;
+    // TODO: Use cavity
+    // float cavity            = texture(cavity, tex_coords(vertex.tex_coord, cavity_offset.u_offset, cavity_offset.v_offset)).r;
+    float metallic          = metallic_roughness.r;
+    float roughness         = metallic_roughness.g;
 
     // normal conversion
     normal = normal * 2 - 1;
