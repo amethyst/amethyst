@@ -127,9 +127,8 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbmDesc {
         };
 
         let set_layouts = DrawPbmLayouts {
-            vertex_args: set_layout! {factory, 1 UniformBuffer GRAPHICS},
+            environment: set_layout! {factory, 1 UniformBuffer VERTEX, 4 UniformBuffer FRAGMENT},
             material: set_layout! {factory, 1 UniformBuffer FRAGMENT, 7 CombinedImageSampler FRAGMENT},
-            environment: set_layout! {factory, 3 UniformBuffer FRAGMENT, 1 UniformBuffer GRAPHICS},
             skinning: set_layout! {factory, 1 StorageBuffer VERTEX},
         };
 
@@ -290,18 +289,16 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbmDesc {
 
 #[derive(Debug)]
 struct DrawPbmLayouts<B: Backend> {
-    vertex_args: RendyHandle<DescriptorSetLayout<B>>,
-    material: RendyHandle<DescriptorSetLayout<B>>,
     environment: RendyHandle<DescriptorSetLayout<B>>,
+    material: RendyHandle<DescriptorSetLayout<B>>,
     skinning: RendyHandle<DescriptorSetLayout<B>>,
 }
 
 impl<B: Backend> DrawPbmLayouts<B> {
     pub fn iter_raw(&self) -> impl Iterator<Item = &B::DescriptorSetLayout> {
         use std::iter::once;
-        once(self.vertex_args.raw())
+        once(self.environment.raw())
             .chain(once(self.material.raw()))
-            .chain(once(self.environment.raw()))
             .chain(once(self.skinning.raw()))
     }
 }
@@ -326,7 +323,6 @@ struct PerImage<B: Backend> {
     joints_buffer: Option<Escape<rendy::resource::Buffer<B>>>,
     material_buffer: Option<Escape<rendy::resource::Buffer<B>>>,
     environment_set: Option<Escape<DescriptorSet<B>>>,
-    objects_set: Option<Escape<DescriptorSet<B>>>,
     skinning_set: Option<Escape<DescriptorSet<B>>>,
 }
 
@@ -479,24 +475,24 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
         // Prepare environment
         {
             let align = self.ubo_offset_align;
+            let projview_size = util::align_size::<pod::ViewArgs>(align, 1);
             let env_buf_size = util::align_size::<pod::Environment>(align, 1);
             let plight_buf_size = util::align_size::<pod::PointLight>(align, MAX_POINT_LIGHTS);
             let dlight_buf_size = util::align_size::<pod::DirectionalLight>(align, MAX_DIR_LIGHTS);
             let slight_buf_size = util::align_size::<pod::SpotLight>(align, MAX_SPOT_LIGHTS);
-            let projview_size = util::align_size::<pod::ViewArgs>(align, 1);
 
-            let env_range = Some(0)..Some(env_buf_size);
+            let projview_range = Some(0)..Some(projview_size);
+            let env_range = util::next_range_opt(&projview_range, env_buf_size);
             let plight_range = util::next_range_opt(&env_range, plight_buf_size);
             let dlight_range = util::next_range_opt(&plight_range, dlight_buf_size);
             let slight_range = util::next_range_opt(&dlight_range, slight_buf_size);
-            let projview_range = util::next_range_opt(&slight_range, projview_size);
 
             if util::ensure_buffer(
                 &factory,
                 &mut this_image.environment_buffer,
                 hal::buffer::Usage::UNIFORM,
                 rendy::memory::Dynamic,
-                projview_range.end.unwrap(),
+                slight_range.end.unwrap(),
             )
             .unwrap()
             {
@@ -510,28 +506,19 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
                     })
                     .raw();
 
-                let obj_set = this_image
-                    .objects_set
-                    .get_or_insert_with(|| {
-                        factory
-                            .create_descriptor_set(set_layouts.vertex_args.clone())
-                            .unwrap()
-                    })
-                    .raw();
-
+                let desc_projview = pso::Descriptor::Buffer(buffer, projview_range.clone());
                 let desc_env = pso::Descriptor::Buffer(buffer, env_range.clone());
                 let desc_plight = pso::Descriptor::Buffer(buffer, plight_range.clone());
                 let desc_dlight = pso::Descriptor::Buffer(buffer, dlight_range.clone());
                 let desc_slight = pso::Descriptor::Buffer(buffer, slight_range.clone());
-                let desc_projview = pso::Descriptor::Buffer(buffer, projview_range.clone());
 
                 unsafe {
                     factory.write_descriptor_sets(vec![
-                        Self::desc_write(env_set, 0, desc_env),
-                        Self::desc_write(env_set, 1, desc_plight),
-                        Self::desc_write(env_set, 2, desc_dlight),
-                        Self::desc_write(env_set, 3, desc_slight),
-                        Self::desc_write(obj_set, 0, desc_projview),
+                        Self::desc_write(env_set, 0, desc_projview),
+                        Self::desc_write(env_set, 1, desc_env),
+                        Self::desc_write(env_set, 2, desc_plight),
+                        Self::desc_write(env_set, 3, desc_dlight),
+                        Self::desc_write(env_set, 4, desc_slight),
                     ]);
                 }
             }
@@ -578,7 +565,6 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
                         .upload_visible_buffer(buffer, slight_range.start.unwrap(), &spot_lights)
                         .unwrap();
                 }
-
                 factory
                     .upload_visible_buffer(buffer, projview_range.start.unwrap(), &[projview])
                     .unwrap();
@@ -844,20 +830,13 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
         let this_image = &self.per_image[index];
         encoder.bind_graphics_pipeline(&self.pipeline_basic);
 
-        if let Some(objects_set) = this_image.objects_set.as_ref() {
+        if let Some(environment_set) = this_image.environment_set.as_ref() {
             let PbmPassData { mesh_storage, .. } = PbmPassData::<B>::fetch(resources);
 
             encoder.bind_graphics_descriptor_sets(
                 &self.pipeline_layout,
-                2,
-                Some(this_image.environment_set.as_ref().unwrap().raw()),
-                std::iter::empty(),
-            );
-
-            encoder.bind_graphics_descriptor_sets(
-                &self.pipeline_layout,
                 0,
-                Some(objects_set.raw()),
+                Some(environment_set.raw()),
                 std::iter::empty(),
             );
 
@@ -894,7 +873,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
 
                 encoder.bind_graphics_descriptor_sets(
                     &self.pipeline_layout,
-                    3,
+                    2,
                     Some(this_image.skinning_set.as_ref().unwrap().raw()),
                     std::iter::empty(),
                 );
