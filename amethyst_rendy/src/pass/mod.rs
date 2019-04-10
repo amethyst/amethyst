@@ -44,7 +44,7 @@ lazy_static::lazy_static! {
 
     static ref SPRITE_FRAGMENT: StaticShaderInfo = StaticShaderInfo::new(
         concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/fragment/sprite.frag"),
-        ShaderKind::Vertex,
+        ShaderKind::Fragment,
         SourceLanguage::GLSL,
         "main",
     );

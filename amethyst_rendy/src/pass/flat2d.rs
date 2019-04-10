@@ -65,6 +65,7 @@ impl DrawFlat2DDesc {
         color: ColorBlendDesc,
         depth: Option<DepthStencilDesc>,
     ) -> Self {
+        log::trace!("Transparency set: {:?}, {:?}", color, depth);
         self.transparency = Some((color, depth));
         self
     }
@@ -82,10 +83,10 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawFlat2DDesc {
     ) -> GraphicsShaderSet<'a, B> {
         storage.clear();
 
-        log::trace!("Loading shader module '{:#?}'", *super::BASIC_VERTEX);
+        log::trace!("Loading shader module '{:#?}'", *super::SPRITE_VERTEX);
         storage.push(unsafe { super::SPRITE_VERTEX.module(factory).unwrap() });
 
-        log::trace!("Loading shader module '{:#?}'", *super::FLAT_FRAGMENT);
+        log::trace!("Loading shader module '{:#?}'", *super::SPRITE_FRAGMENT);
         storage.push(unsafe { super::SPRITE_FRAGMENT.module(factory).unwrap() });
 
         GraphicsShaderSet {
@@ -106,6 +107,7 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawFlat2DDesc {
     }
 
     fn colors(&self) -> Vec<ColorBlendDesc> {
+        log::trace!("colors()");
         if let Some((color, _)) = self.transparency {
             vec![color]
         } else {
@@ -114,6 +116,7 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawFlat2DDesc {
     }
 
     fn depth_stencil(&self) -> Option<DepthStencilDesc> {
+        log::trace!("depth_stencil()");
         if let Some((_, stencil)) = self.transparency {
             stencil
         } else {
@@ -129,11 +132,12 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawFlat2DDesc {
         ElemStride,
         InstanceRate,
     )> {
+        log::trace!("vertices()");
         vec![SpriteArgs::VERTEX.gfx_vertex_input_desc(0)]
     }
 
     fn layout(&self) -> Layout {
-
+        log::trace!("layout()");
         Layout {
             sets: vec![
                 SetLayout {
@@ -169,10 +173,7 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawFlat2DDesc {
         images: Vec<NodeImage>,
         set_layouts: &[RendyHandle<DescriptorSetLayout<B>>],
     ) -> Result<Self::Pipeline, failure::Error> {
-
-        return Ok(DrawFlat2D {
-            ..Default::default()
-        });
+        log::trace!("build()");
 
         let mut projview_buffer: Option<Escape<rendy::resource::Buffer<B>>> = None;
         let mut tex_buffer: Option<Escape<rendy::resource::Buffer<B>>> = None;
@@ -281,7 +282,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
             ReadStorage<'_, Handle<Texture<B>>>,
         ) as SystemData>::fetch(resources);
 
-        return PrepareResult::DrawRecord;
+        log::trace!("prepare");
 
         let (camera_position, projview) = util::prepare_camera(&active_camera, &cameras, &global_transforms);
         let mut texture_constant_id: u32 = 0;
@@ -456,7 +457,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
             ReadStorage<'_, Handle<Texture<B>>>,
         ) as SystemData>::fetch(resources);
 
-        return;
+        log::trace!("draws");
 
         encoder.bind_graphics_descriptor_sets(
             layout,

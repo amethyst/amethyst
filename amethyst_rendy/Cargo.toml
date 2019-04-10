@@ -29,7 +29,7 @@ palette = { version = "0.4", features = ["serde"] }
 rendy = { path = "../../rendy/rendy/", features = ["full", "empty", "serde-1"] }
 ron = "0.4"
 serde = { version = "1", features = ["serde_derive"] }
-shred = { version = "0.7" }
+shred = { version = "0.7", features = ["nightly"] }
 shred-derive = { version = "0.5" }  
 fnv = "1"
 derivative = "1.0.2"

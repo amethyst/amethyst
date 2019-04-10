@@ -214,11 +214,19 @@ impl AsVertex for SpriteArgs {
                 offset: 16,
             },
             Attribute {
-                format: Format::R32Float,
+                format: Format::Rg32Float,
                 offset: 24,
             },
+            Attribute {
+                format: Format::Rg32Float,
+                offset: 32,
+            },
+            Attribute {
+                format: Format::R32Float,
+                offset: 40,
+            },
         ]),
-        stride: 28,
+        stride: 44,
     };
 }
 

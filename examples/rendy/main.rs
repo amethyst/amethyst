@@ -457,7 +457,8 @@ fn main() -> amethyst::Result<()> {
     // .level_for("rendy_factory", log::LevelFilter::Trace)
     // .level_for("rendy_resource", log::LevelFilter::Trace)
     .level_for("rendy_graph", log::LevelFilter::Trace)
-    .level_for("amethyst_rendy", log::LevelFilter::Trace)
+        .level_for("rendy_node", log::LevelFilter::Trace)
+        .level_for("amethyst_rendy", log::LevelFilter::Trace)
     .start();
 
     let app_root = application_root_dir()?;
@@ -591,6 +592,14 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
             Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
         );
 
+        let depth_sprite = graph_builder.create_image(
+            surface.kind(),
+            1,
+            Format::D16Unorm,
+            MemoryUsageValue::Data,
+            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+        );
+
         let pbr_pass = graph_builder.add_node(
             DrawPbrDesc::default()
                 .with_vertex_skinning()
@@ -609,7 +618,6 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
             DrawFlat2D::builder()
                 .into_subpass()
                 .with_color(color)
-                .with_depth_stencil(depth)
                 .into_pass(),
         );
 
