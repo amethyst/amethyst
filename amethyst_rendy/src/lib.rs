@@ -28,5 +28,6 @@ pub mod system;
 pub mod transparent;
 pub mod types;
 pub mod visibility;
+pub mod error;
 
 mod pod;

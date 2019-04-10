@@ -3,7 +3,7 @@
 use amethyst::{
     animation::{
         get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSet, AnimationSet,
-        EndControl, VertexSkinningBundle,
+        EndControl, VertexSkinningBundle, AnimationSetPrefab,
     },
     assets::{
         AssetLoaderSystemData, AssetPrefab, Completion, Handle, Prefab, PrefabData, PrefabLoader,
@@ -52,6 +52,7 @@ use amethyst_rendy::{
         mesh::PosNormTangTex,
         texture::palette::load_from_linear_rgba,
     },
+    sprite::{SpriteRender,  /* prefab::SpriteScenePrefab */ },
     resources::Tint,
     shape::Shape,
     system::{GraphCreator, RendererSystem},
@@ -164,6 +165,23 @@ struct ScenePrefabData<B: Backend> {
     fly_tag: Option<ControlTagPrefab>,
 }
 
+/*
+/// Animation ids used in a AnimationSet
+#[derive(Eq, PartialOrd, PartialEq, Hash, Debug, Copy, Clone, Deserialize, Serialize)]
+enum SpriteAnimationId {
+    Fly,
+}
+
+/// Loading data for one entity
+#[derive(Debug, Clone, Deserialize, PrefabData)]
+struct SpriteScenePrefabData {
+    /// Information for rendering a scene with sprites
+    sprite_scene: SpriteScenePrefab,
+    /// Аll animations that can be run on the entity
+    animation_set: AnimationSetPrefab<SpriteAnimationId, SpriteRender<B>>,
+}
+*/
+
 impl<B: Backend> SimpleState for Example<B> {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
@@ -203,6 +221,8 @@ impl<B: Backend> SimpleState for Example<B> {
 
             (mesh, albedo)
         };
+
+
 
         println!("Create spheres");
         const NUM_ROWS: usize = 30;

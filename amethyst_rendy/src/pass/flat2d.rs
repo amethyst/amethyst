@@ -1,22 +1,19 @@
 use crate::{
     camera::{ActiveCamera, Camera},
-    mtl::{Material, MaterialDefaults},
-    skinning::JointTransforms,
     types::{Mesh, Texture},
     visibility::Visibility,
     sprite_visibility::SpriteVisibility,
-    sprite::{SpriteSheet, Sprite, SpriteRender, SpriteSheetFormat, SpriteSheetHandle },
+    sprite::{SpriteCamera, SpriteSheet, Sprite, SpriteRender, SpriteSheetHandle },
     hidden::{Hidden, HiddenPropagate},
     pass::util,
-    pod::{self, ViewArgs, SpriteArgs, IntoPod},
-    batch::{BatchData, BatchPrimitives}
+    pod::{self, SpriteArgs, IntoPod},
+    batch::{BatchPrimitives}
 };
-use glsl_layout::*;
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
-    math::{Vector4, Vector2},
-    ecs::{Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
+    math::{Vector4},
+    ecs::{Join, Read, ReadStorage, Resources, SystemData},
     transform::GlobalTransform,
 };
 use rendy::{
@@ -260,6 +257,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
     ) -> PrepareResult {
         let (
             active_camera,
+            sprite_camera,
             cameras,
             sprite_sheet_storage,
             tex_storage,
@@ -271,6 +269,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
             texture_handles,
         ) = <(
             Option<Read<'_, ActiveCamera>>,
+            Option<Read<'_, SpriteCamera>>,
             ReadStorage<'_, Camera>,
             Read<'_, AssetStorage<SpriteSheet<B>>>,
             Read<'_, AssetStorage<Texture<B>>>,
@@ -284,7 +283,13 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
 
         log::trace!("prepare");
 
-        let (camera_position, projview) = util::prepare_camera(&active_camera, &cameras, &global_transforms);
+        let (camera_position, projview) = if sprite_camera.is_some() {
+             util::prepare_camera(&sprite_camera, &cameras, &global_transforms)
+        } else {
+            util::prepare_camera(&active_camera, &cameras, &global_transforms)
+        };
+
+
         let mut texture_constant_id: u32 = 0;
 
         match visibilities {

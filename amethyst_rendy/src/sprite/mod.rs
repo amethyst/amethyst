@@ -1,12 +1,19 @@
-use crate::types::Texture;
+use rendy::hal::Backend;
+use ron::de::from_bytes as from_ron_bytes;
+use serde::{Deserialize, Serialize};
+
 use amethyst_assets::{Asset, Handle, SimpleFormat};
 use amethyst_core::ecs::prelude::{Component, DenseVecStorage, VecStorage};
 use amethyst_error::Error;
-use rendy::hal::Backend;
-use ron::de::from_bytes as from_ron_bytes;
+use crate::{error, types::Texture};
+
+mod prefab;
 
 /// An asset handle to sprite sheet metadata.
-pub type SpriteSheetHandle<B> = Handle<SpriteSheet<B>>;
+pub type SpriteSheetHandle<B: Backend> = Handle<SpriteSheet<B>>;
+
+/// Active camera for the `DrawFlat2D` pass.
+pub type SpriteCamera = crate::camera::ActiveCamera;
 
 /// Meta data for a sprite sheet texture.
 ///
@@ -25,9 +32,15 @@ impl<B: Backend> Asset for SpriteSheet<B> {
     type HandleStorage = VecStorage<Handle<Self>>;
 }
 
+//impl<B: Backend> From<SpriteSheet<B>> for Result<ProcessingState<SpriteSheet<B>>, Error> {
+//    fn from(sprite_sheet: SpriteSheet<B>) -> Result<ProcessingState<SpriteSheet<B>>, Error> {
+//        Ok(ProcessingState::Loaded(sprite_sheet))
+//    }
+//}
+
 /// Information about whether or not a texture should be flipped
 /// when rendering.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Flipped {
     /// Don't flip the texture
     None,
@@ -44,7 +57,7 @@ impl Component for Flipped {
 }
 
 /// Dimensions and texture coordinates of each sprite in a sprite sheet.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Sprite {
     /// Pixel width of the sprite
     pub width: f32,
@@ -62,7 +75,7 @@ pub struct Sprite {
 ///
 /// * X axis: 0.0 is the left side and 1.0 is the right side.
 /// * Y axis: 0.0 is the bottom and 1.0 is the top.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct TextureCoordinates {
     /// Normalized left x coordinate
     pub left: f32,
@@ -193,10 +206,10 @@ impl<B: Backend> Component for SpriteRender<B> {
     type Storage = VecStorage<Self>;
 }
 
-/// Structure acting as scaffolding for serde when loading a spritesheet file.
+/// Represents one sprite in `SpriteList`.
 /// Positions originate in the top-left corner (bitmap image convention).
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-struct SpritePosition {
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct SpritePosition {
     /// Horizontal position of the sprite in the sprite sheet
     pub x: u32,
     /// Vertical position of the sprite in the sprite sheet
@@ -209,15 +222,180 @@ struct SpritePosition {
     pub offsets: Option<[f32; 2]>,
 }
 
-/// Structure acting as scaffolding for serde when loading a spritesheet file.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-struct SerializedSpriteSheet {
-    /// Width of the sprite sheet
-    pub spritesheet_width: u32,
-    /// Height of the sprite sheet
-    pub spritesheet_height: u32,
+/// `SpriteList` controls how a sprite list is generated when using `Sprites::List` in a
+/// `SpriteSheetPrefab`.
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct SpriteList {
+    /// Width of the texture in pixels.
+    pub texture_width: u32,
+    /// Height of the texture in pixels.
+    pub texture_height: u32,
     /// Description of the sprites
     pub sprites: Vec<SpritePosition>,
+}
+
+/// `SpriteGrid` controls how a sprite grid is generated when using `Sprites::Grid` in a
+/// `SpriteSheetPrefab`.
+///
+/// The number of columns in the grid must always be provided, and one of the other fields must also
+/// be provided. The grid will be layout row major, starting with the sprite in the upper left corner,
+/// and ending with the sprite in the lower right corner. For example a grid with 2 rows and 4 columns
+/// will have the order below for the sprites.
+///
+/// ```text
+/// |---|---|---|---|
+/// | 0 | 1 | 2 | 3 |
+/// |---|---|---|---|
+/// | 4 | 5 | 6 | 7 |
+/// |---|---|---|---|
+/// ```
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
+pub struct SpriteGrid {
+    /// Width of the texture in pixels.
+    pub texture_width: u32,
+    /// Height of the texture in pixels.
+    pub texture_height: u32,
+    /// Specifies the number of columns in the spritesheet, this value must always be given.
+    pub columns: u32,
+    /// Specifies the number of rows in the spritesheet. If this is not given it will be calculated
+    /// using either `sprite_count` (`sprite_count / columns`), or `cell_size` (`sheet_size / cell_size`).
+    pub rows: Option<u32>,
+    /// Specifies the number of sprites in the spritesheet. If this is not given it will be
+    /// calculated using `rows` (`columns * rows`).
+    pub sprite_count: Option<u32>,
+    /// Specifies the size of the individual sprites in the spritesheet in pixels. If this is not
+    /// given it will be calculated using the spritesheet size, `columns` and `rows`.
+    /// Tuple order is `(width, height)`.
+    pub cell_size: Option<(u32, u32)>,
+    /// Specifies the position of the grid on a texture. If this is not given it will be set to (0, 0).
+    /// Positions originate in the top-left corner (bitmap image convention).
+    pub position: Option<(u32, u32)>,
+}
+
+/// Defined the sprites that are part of a `SpriteSheetPrefab`.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub enum Sprites {
+    /// A list of sprites
+    List(SpriteList),
+    /// Generate a grid sprite list, see `SpriteGrid` for more information.
+    Grid(SpriteGrid),
+}
+
+impl Sprites {
+    fn build_sprites(&self) -> Vec<Sprite> {
+        match self {
+            Sprites::List(list) => list.build_sprites(),
+            Sprites::Grid(grid) => grid.build_sprites(),
+        }
+    }
+}
+
+impl SpriteList {
+    /// Creates a `Vec<Sprite>` from `SpriteList`.
+    pub fn build_sprites(&self) -> Vec<Sprite> {
+        self.sprites
+            .iter()
+            .map(|pos| {
+                Sprite::from_pixel_values(
+                    self.texture_width,
+                    self.texture_height,
+                    pos.width,
+                    pos.height,
+                    pos.x,
+                    pos.y,
+                    pos.offsets.unwrap_or([0.0; 2]),
+                )
+            })
+            .collect()
+    }
+}
+
+impl SpriteGrid {
+    /// The width of the part of the texture that the sprites reside on
+    fn sheet_width(&self) -> u32 {
+        self.texture_width - self.position().0
+    }
+
+    /// The height of the part of the texture that the sprites reside on
+    fn sheet_height(&self) -> u32 {
+        self.texture_height - self.position().1
+    }
+
+    fn rows(&self) -> u32 {
+        self.rows.unwrap_or_else(|| {
+            self.sprite_count
+                .map(|c| {
+                    if (c % self.columns) == 0 {
+                        (c / self.columns)
+                    } else {
+                        (c / self.columns) + 1
+                    }
+                })
+                .or_else(|| self.cell_size.map(|(_, y)| (self.sheet_height() / y)))
+                .unwrap_or(1)
+        })
+    }
+
+    fn sprite_count(&self) -> u32 {
+        self.sprite_count
+            .unwrap_or_else(|| self.columns * self.rows())
+    }
+
+    fn cell_size(&self) -> (u32, u32) {
+        self.cell_size.unwrap_or_else(|| {
+            (
+                (self.sheet_width() / self.columns),
+                (self.sheet_height() / self.rows()),
+            )
+        })
+    }
+
+    fn position(&self) -> (u32, u32) {
+        self.position.unwrap_or((0, 0))
+    }
+
+    /// Creates a `Vec<Sprite>` from `SpriteGrid`.
+    pub fn build_sprites(&self) -> Vec<Sprite> {
+        let rows = self.rows();
+        let sprite_count = self.sprite_count();
+        let cell_size = self.cell_size();
+        let position = self.position();
+        if (self.columns * cell_size.0) > self.sheet_width() {
+            log::warn!(
+                "Grid spritesheet contains more columns than can fit in the given width: {} * {} > {} - {}",
+                self.columns,
+                cell_size.0,
+                self.texture_width,
+                position.0
+            );
+        }
+        if (rows * cell_size.1) > self.sheet_height() {
+            log::warn!(
+                "Grid spritesheet contains more rows than can fit in the given height: {} * {} > {} - {}",
+                rows,
+                cell_size.1,
+                self.texture_height,
+                position.1
+            );
+        }
+        (0..sprite_count)
+            .map(|cell| {
+                let row = cell / self.columns;
+                let column = cell - (row * self.columns);
+                let x = column * cell_size.0 + position.0;
+                let y = row * cell_size.1 + position.1;
+                Sprite::from_pixel_values(
+                    self.texture_width,
+                    self.texture_height,
+                    cell_size.0,
+                    cell_size.1,
+                    x,
+                    y,
+                    [0.0; 2],
+                )
+            })
+            .collect()
+    }
 }
 
 /// Allows loading of sprite sheets in RON format.
@@ -227,29 +405,29 @@ struct SerializedSpriteSheet {
 /// Example:
 /// ```text,ignore
 /// (
-///     // Width of the sprite sheet
-///     spritesheet_width: 48.0,
-///     // Height of the sprite sheet
-///     spritesheet_height: 16.0,
+///     // Width of the texture
+///     texture_width: 48,
+///     // Height of the texture
+///     texture_height: 16,
 ///     // List of sprites the sheet holds
 ///     sprites: [
 ///         (
 ///             // Horizontal position of the sprite in the sprite sheet
-///             x: 0.0,
+///             x: 0,
 ///             // Vertical position of the sprite in the sprite sheet
-///             y: 0.0,
+///             y: 0,
 ///             // Width of the sprite
-///             width: 16.0,
+///             width: 16,
 ///             // Height of the sprite
-///             height: 16.0,
+///             height: 16,
 ///             // Number of pixels to shift the sprite to the left and down relative to the entity holding it when rendering
 ///             offsets: (0.0, 0.0), // This is optional and defaults to (0.0, 0.0)
 ///         ),
 ///         (
-///             x: 16.0,
-///             y: 0.0,
-///             width: 32.0,
-///             height: 16.0,
+///             x: 16,
+///             y: 0,
+///             width: 32,
+///             height: 16,
 ///         ),
 ///     ],
 /// )
@@ -261,7 +439,7 @@ struct SerializedSpriteSheet {
 /// # use amethyst_renderer::{SpriteSheetFormat, SpriteSheet, Texture, PngFormat, TextureMetadata};
 /// #
 /// # fn load_sprite_sheet() {
-/// #   let world = amethyst_core::specs::World::new(); // Normally, you would use Amethyst's world
+/// #   let world = amethyst_core::ecs::World::new(); // Normally, you would use Amethyst's world
 /// #   let loader = world.read_resource::<Loader>();
 /// #   let spritesheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
 /// #   let texture_storage = world.read_resource::<AssetStorage<Texture>>();
@@ -281,7 +459,7 @@ struct SerializedSpriteSheet {
 /// );
 /// # }
 /// ```
-#[derive(Clone, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct SpriteSheetFormat;
 
 impl<B: Backend> SimpleFormat<SpriteSheet<B>> for SpriteSheetFormat {
@@ -290,23 +468,13 @@ impl<B: Backend> SimpleFormat<SpriteSheet<B>> for SpriteSheetFormat {
     type Options = Handle<Texture<B>>;
 
     fn import(&self, bytes: Vec<u8>, texture: Self::Options) -> Result<SpriteSheet<B>, Error> {
-        let sheet: SerializedSpriteSheet = from_ron_bytes(&bytes)
-            .map_err(|err| Error::from_string("Spritesheet loading error").with_source(err))?;
+        let sprite_list: SpriteList =
+            from_ron_bytes(&bytes).map_err(|_| error::Error::LoadSpritesheetError)?;
 
-        let mut sprites: Vec<Sprite> = Vec::with_capacity(sheet.sprites.len());
-        for sp in sheet.sprites {
-            let sprite = Sprite::from_pixel_values(
-                sheet.spritesheet_width as u32,
-                sheet.spritesheet_height as u32,
-                sp.width as u32,
-                sp.height as u32,
-                sp.x as u32,
-                sp.y as u32,
-                sp.offsets.unwrap_or([0.0; 2]),
-            );
-            sprites.push(sprite);
-        }
-        Ok(SpriteSheet { texture, sprites })
+        Ok(SpriteSheet {
+            texture,
+            sprites: sprite_list.build_sprites(),
+        })
     }
 }
 
