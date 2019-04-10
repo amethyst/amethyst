@@ -297,7 +297,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
 
         let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
         use amethyst_rendy::{
-            pass::DrawPbmDesc,
+            pass::DrawPbrDesc,
             rendy::{
                 graph::{
                     present::PresentNode,
@@ -334,7 +334,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         );
 
         let pass = graph_builder.add_node(
-            DrawPbmDesc::default()
+            DrawPbrDesc::default()
                 .with_vertex_skinning()
                 .with_transparency(
                     pso::ColorBlendDesc(pso::ColorMask::ALL, pso::BlendState::ALPHA),

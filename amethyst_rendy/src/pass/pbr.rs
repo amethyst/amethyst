@@ -45,13 +45,13 @@ macro_rules! set_layout {
 
 /// Draw mesh without lighting
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct DrawPbmDesc {
+pub struct DrawPbrDesc {
     skinning: bool,
     transparency: Option<(pso::ColorBlendDesc, Option<pso::DepthStencilDesc>)>,
 }
 
-impl DrawPbmDesc {
-    /// Create instance of `DrawPbm` pass
+impl DrawPbrDesc {
+    /// Create instance of `DrawPbr` pass
     pub fn new() -> Self {
         Default::default()
     }
@@ -77,7 +77,7 @@ const MAX_POINT_LIGHTS: usize = 128;
 const MAX_DIR_LIGHTS: usize = 16;
 const MAX_SPOT_LIGHTS: usize = 128;
 
-impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbmDesc {
+impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbrDesc {
     fn buffers(&self) -> Vec<BufferAccess> {
         vec![]
     }
@@ -105,8 +105,8 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbmDesc {
     ) -> Result<Box<dyn RenderGroup<B, Resources>>, failure::Error> {
         log::trace!("Loading shader module '{:#?}'", *super::BASIC_VERTEX);
         let shader_vertex_basic = unsafe { super::BASIC_VERTEX.module(factory).unwrap() };
-        log::trace!("Loading shader module '{:#?}'", *super::PBM_FRAGMENT);
-        let shader_fragment = unsafe { super::PBM_FRAGMENT.module(factory).unwrap() };
+        log::trace!("Loading shader module '{:#?}'", *super::PBR_FRAGMENT);
+        let shader_fragment = unsafe { super::PBR_FRAGMENT.module(factory).unwrap() };
 
         let shader_vertex_skinned = if self.skinning {
             log::trace!("Loading shader module '{:#?}'", *super::SKINNED_VERTEX);
@@ -126,7 +126,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbmDesc {
             None
         };
 
-        let set_layouts = DrawPbmLayouts {
+        let set_layouts = DrawPbrLayouts {
             environment: set_layout! {factory, 1 UniformBuffer VERTEX, 4 UniformBuffer FRAGMENT},
             material: set_layout! {factory, 1 UniformBuffer FRAGMENT, 7 CombinedImageSampler FRAGMENT},
             skinning: set_layout! {factory, 1 StorageBuffer VERTEX},
@@ -275,7 +275,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbmDesc {
             shader_vertex_skinned.map(|m| factory.destroy_shader_module(m));
         }
         let limits = factory.physical().limits();
-        Ok(Box::new(DrawPbm::<B> {
+        Ok(Box::new(DrawPbr::<B> {
             pipeline_basic,
             pipeline_skinned,
             pipeline_layout,
@@ -288,13 +288,13 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbmDesc {
 }
 
 #[derive(Debug)]
-struct DrawPbmLayouts<B: Backend> {
+struct DrawPbrLayouts<B: Backend> {
     environment: RendyHandle<DescriptorSetLayout<B>>,
     material: RendyHandle<DescriptorSetLayout<B>>,
     skinning: RendyHandle<DescriptorSetLayout<B>>,
 }
 
-impl<B: Backend> DrawPbmLayouts<B> {
+impl<B: Backend> DrawPbrLayouts<B> {
     pub fn iter_raw(&self) -> impl Iterator<Item = &B::DescriptorSetLayout> {
         use std::iter::once;
         once(self.environment.raw())
@@ -304,11 +304,11 @@ impl<B: Backend> DrawPbmLayouts<B> {
 }
 
 #[derive(Debug)]
-pub struct DrawPbm<B: Backend> {
+pub struct DrawPbr<B: Backend> {
     pipeline_basic: B::GraphicsPipeline,
     pipeline_skinned: Option<B::GraphicsPipeline>,
     pipeline_layout: B::PipelineLayout,
-    set_layouts: DrawPbmLayouts<B>,
+    set_layouts: DrawPbrLayouts<B>,
     per_image: Vec<PerImage<B>>,
     materials_data: FnvHashMap<u32, MaterialData<B>>,
     ubo_offset_align: u64,
@@ -377,7 +377,7 @@ impl<B: Backend> BatchPrimitives for BatchSkinned<B> {
     }
 }
 
-impl<B: Backend> DrawPbm<B> {
+impl<B: Backend> DrawPbr<B> {
     #[inline]
     fn texture_descriptor<'a>(
         handle: &Handle<Texture<B>>,
@@ -411,7 +411,7 @@ impl<B: Backend> DrawPbm<B> {
 }
 
 #[derive(SystemData)]
-struct PbmPassData<'a, B: Backend> {
+struct PbrPassData<'a, B: Backend> {
     ambient_color: Option<Read<'a, AmbientColor>>,
     active_camera: Option<Read<'a, ActiveCamera>>,
     cameras: ReadStorage<'a, Camera>,
@@ -430,7 +430,7 @@ struct PbmPassData<'a, B: Backend> {
     tints: ReadStorage<'a, Tint>,
 }
 
-impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
+impl<B: Backend> RenderGroup<B, Resources> for DrawPbr<B> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
@@ -439,7 +439,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         resources: &Resources,
     ) -> PrepareResult {
-        let PbmPassData {
+        let PbrPassData {
             ambient_color,
             active_camera,
             cameras,
@@ -457,7 +457,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
             lights,
             tints,
             ..
-        } = PbmPassData::<B>::fetch(resources);
+        } = PbrPassData::<B>::fetch(resources);
 
         let set_layouts = &self.set_layouts;
 
@@ -831,7 +831,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbm<B> {
         encoder.bind_graphics_pipeline(&self.pipeline_basic);
 
         if let Some(environment_set) = this_image.environment_set.as_ref() {
-            let PbmPassData { mesh_storage, .. } = PbmPassData::<B>::fetch(resources);
+            let PbrPassData { mesh_storage, .. } = PbrPassData::<B>::fetch(resources);
 
             encoder.bind_graphics_descriptor_sets(
                 &self.pipeline_layout,

@@ -2,7 +2,7 @@ use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
     core::transform::TransformBundle,
     prelude::*,
-    renderer::{DrawPbm, PosNormTangTex},
+    renderer::{DrawPbr, PosNormTangTex},
     utils::{application_root_dir, scene::BasicScenePrefab},
 };
 
@@ -31,7 +31,7 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
-        .with_basic_renderer(display_config_path, DrawPbm::<PosNormTangTex>::new(), false)?;
+        .with_basic_renderer(display_config_path, DrawPbr::<PosNormTangTex>::new(), false)?;
     let mut game = Application::new(resources, Example, game_data)?;
     game.run();
     Ok(())

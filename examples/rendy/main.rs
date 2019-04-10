@@ -36,7 +36,7 @@ use amethyst_rendy::{
     light::{Light, LightPrefab, PointLight},
     mtl::{Material, MaterialDefaults},
     palette::{LinLuma, LinSrgb, Srgb},
-    pass::DrawPbmDesc,
+    pass::DrawPbrDesc,
     rendy::{
         factory::Factory,
         graph::{
@@ -570,7 +570,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         );
 
         let pass = graph_builder.add_node(
-            DrawPbmDesc::default()
+            DrawPbrDesc::default()
                 .with_vertex_skinning()
                 .with_transparency(
                     pso::ColorBlendDesc(pso::ColorMask::ALL, pso::BlendState::ALPHA),
