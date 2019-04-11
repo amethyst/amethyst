@@ -1,5 +1,5 @@
 use amethyst_core::{
-    nalgebra::{zero, Quaternion, Real, Unit},
+    nalgebra::{zero, Quaternion, Real, Unit, Vector3},
     Transform,
 };
 
@@ -43,7 +43,7 @@ impl<N: Real + NumCast> AnimationSampling for Transform<N> {
                 *self.rotation_mut() = Unit::new_normalize(Quaternion::new(d[0], d[1], d[2], d[3]));
             }
             (&Scale, Vec3(ref d)) => {
-                self.set_scale(d[0], d[1], d[2]);
+                self.set_scale(Vector3::new(d[0], d[1], d[2]));
             }
             _ => panic!("Attempt to apply invalid sample to Transform"),
         }

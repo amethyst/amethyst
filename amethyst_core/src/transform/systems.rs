@@ -263,7 +263,7 @@ mod tests {
         let global_matrix2 = {
             let global_matrix2 = local2.global_matrix();
             let a1: [[f32; 4]; 4] = global_matrix2.into();
-            let a2: [[f32; 4]; 4] = together(global_matrix1, local2.matrix());
+            let a2: [[f32; 4]; 4] = together(*global_matrix1, local2.matrix());
             assert_eq!(a1, a2);
             global_matrix2
         };
@@ -271,7 +271,7 @@ mod tests {
         {
             let global_matrix3 = local3.global_matrix();
             let a1: [[f32; 4]; 4] = global_matrix3.into();
-            let a2: [[f32; 4]; 4] = together(global_matrix2, local3.matrix());
+            let a2: [[f32; 4]; 4] = together(*global_matrix2, local3.matrix());
             assert_eq!(a1, a2);
         };
     }
@@ -321,7 +321,7 @@ mod tests {
         let global_matrix2 = {
             let global_matrix2 = local2.global_matrix();
             let a1: [[f32; 4]; 4] = global_matrix2.into();
-            let a2: [[f32; 4]; 4] = together(global_matrix1, local2.matrix());
+            let a2: [[f32; 4]; 4] = together(*global_matrix1, local2.matrix());
             assert_eq!(a1, a2);
             global_matrix2
         };
@@ -329,7 +329,7 @@ mod tests {
         {
             let global_matrix3 = local3.global_matrix();
             let a1: [[f32; 4]; 4] = transform3.into();
-            let a2: [[f32; 4]; 4] = together(global_matrix3, local3.matrix());
+            let a2: [[f32; 4]; 4] = together(*global_matrix3, local3.matrix());
             assert_eq!(a1, a2);
         };
     }

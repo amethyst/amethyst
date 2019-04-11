@@ -75,7 +75,7 @@ impl<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + Real 
             let scale = max_distance / max;
             self.transform
                 .get_or_insert_with(Transform::default)
-                .set_scale(scale.into(), scale.into(), scale.into());
+                .set_scale(Vector3::new(scale.into(), scale.into(), scale.into()));
         }
     }
 }

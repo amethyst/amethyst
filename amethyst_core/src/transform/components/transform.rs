@@ -20,14 +20,14 @@ use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 #[derive(Getters, Setters, MutGetters, Clone, Debug, PartialEq)]
 pub struct Transform<N: Real> {
     /// Translation + rotation value
-    #[get]
-    #[set]
-    #[get_mut]
+    #[get = "pub"]
+    #[set = "pub"]
+    #[get_mut = "pub"]
     iso: Isometry3<N>,
     /// Scale vector
-    #[get]
-    #[set]
-    #[get_mut]
+    #[get = "pub"]
+    #[set = "pub"]
+    #[get_mut = "pub"]
     scale: Vector3<N>,
     #[get = "pub"]
     pub(crate) global_matrix: Matrix4<N>,
@@ -136,18 +136,6 @@ impl<N: Real> Transform<N> {
     #[inline]
     pub fn rotation_mut(&mut self) -> &mut UnitQuaternion<N> {
         &mut self.iso.rotation
-    }
-
-    /// Returns a reference to the scale vector.
-    #[inline]
-    pub fn scale(&self) -> &Vector3<N> {
-        &self.scale
-    }
-
-    /// Returns a mutable reference to the scale vector.
-    #[inline]
-    pub fn scale_mut(&mut self) -> &mut Vector3<N> {
-        &mut self.scale
     }
 
     /// Returns a reference to the isometry of the transform (translation and rotation combined).
@@ -355,14 +343,6 @@ impl<N: Real> Transform<N> {
     /// Sets the rotation of the transform.
     pub fn set_rotation(&mut self, rotation: UnitQuaternion<N>) -> &mut Self {
         self.iso.rotation = rotation;
-        self
-    }
-
-    /// Sets the scale of the transform.
-    pub fn set_scale(&mut self, x: N, y: N, z: N) -> &mut Self {
-        self.scale.x = x;
-        self.scale.y = y;
-        self.scale.z = z;
         self
     }
 
@@ -620,7 +600,7 @@ mod tests {
         // For the condition to hold both scales must be uniform
         let mut first = Transform::default();
         first.set_xyz(20., 10., -3.);
-        first.set_scale(2., 2., 2.);
+        first.set_scale(Vector3::new(2., 2., 2.));
         first.set_rotation(
             UnitQuaternion::rotation_between(&Vector3::new(-1., 1., 2.), &Vector3::new(1., 0., 0.))
                 .unwrap(),
@@ -628,7 +608,7 @@ mod tests {
 
         let mut second = Transform::default();
         second.set_xyz(2., 1., -3.);
-        second.set_scale(1., 1., 1.);
+        second.set_scale(Vector3::new(1., 1., 1.));
         second.set_rotation(
             UnitQuaternion::rotation_between(&Vector3::new(7., -1., 3.), &Vector3::new(2., 1., 1.))
                 .unwrap(),
@@ -649,7 +629,7 @@ mod tests {
     fn test_view_matrix() {
         let mut transform = Transform::default();
         transform.set_xyz(5.0, 70.1, 43.7);
-        transform.set_scale(N::one(), 5.0, 8.9);
+        transform.set_scale(Vector3::new(N::one(), 5.0, 8.9));
         transform.set_rotation(
             UnitQuaternion::rotation_between(&Vector3::new(-1., 1., 2.), &Vector3::new(1., 0., 0.))
                 .unwrap(),
