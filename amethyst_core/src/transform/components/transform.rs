@@ -593,6 +593,7 @@ mod tests {
         nalgebra::{UnitQuaternion, Vector3},
         Transform,
     };
+    
 
     /// Sanity test for concat operation
     #[test]
@@ -629,7 +630,7 @@ mod tests {
     fn test_view_matrix() {
         let mut transform = Transform::default();
         transform.set_xyz(5.0, 70.1, 43.7);
-        transform.set_scale(Vector3::new(N::one(), 5.0, 8.9));
+        transform.set_scale(Vector3::new(1.0, 5.0, 8.9));
         transform.set_rotation(
             UnitQuaternion::rotation_between(&Vector3::new(-1., 1., 2.), &Vector3::new(1., 0., 0.))
                 .unwrap(),
