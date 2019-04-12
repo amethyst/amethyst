@@ -112,7 +112,7 @@ thread_profiler = { version = "0.3", optional = true }
 derive-new = "0.5"
 env_logger = "0.6.1"
 genmesh = "0.6"
-ron = "0.4.2"
+ron = "0.5"
 specs-derive = "0.4"
 
 [build-dependencies]
