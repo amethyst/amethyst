@@ -39,17 +39,21 @@ pub enum NetEvent<T> {
         /// The message.
         msg: String,
     },
-    /// A user-defined type containing more network event types.
-    Custom(T),
+    /// There are two user-defined types containing more network event types:
+    /// Reliable events will keep sending until the target confirms receipt
+    Reliable(T),
+    /// Unreliable events will send a bare packet, whether lost or not
+    Unreliable(T),
 }
 
 impl<T> NetEvent<T> {
     /// Tries to convert a NetEvent to a custom event type.
     pub fn custom(&self) -> Option<&T> {
-        if let NetEvent::Custom(ref t) = self {
-            Some(&t)
-        } else {
-            None
-        }
+	    match self {
+		    | NetEvent::Reliable(ref t)
+		    | NetEvent::Unreliable(ref t)
+		    => Some(&t),
+		    _ => None,
+	    }
     }
 }

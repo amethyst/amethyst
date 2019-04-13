@@ -28,6 +28,30 @@ mod network_socket;
 mod server;
 mod test;
 
+/// Each event type is either reliable or unreliable:
+/// Reliable events always reach their destination,
+/// Unreliable events may be lost
+/// For Amethyst-defined events, whether it's reliable is specified in this function,
+/// Otherwise, it's specified by the use of NetEvent::Reliable vs NetEvent::Unreliable
+fn is_reliable<T>(event: NetEvent<T>) -> bool {
+	use NetEvent as NE;
+	match event {
+		// I specify them all explicitly so the typechecker can save
+		// us from the mistake of specifying a builtin that SHOULD be
+		// unreliable, but is assumed to be unreliable like all the rest
+		| NE::Connect {..}
+		| NE::Connected {..}
+		| NE::ConnectionRefused {..}
+		| NE::Disconnect {..}
+		| NE::Disconnected {..}
+		| NE::TextMessage {..}
+		| NE::Reliable(_)
+		=> true,
+		| NE::Unreliable(_)
+		=> false,
+	}
+}
+
 /// Sends an event to the target NetConnection using the provided network Socket.
 /// The socket has to be bound.
 pub fn send_event<T>(event: NetEvent<T>, addr: SocketAddr, sender: &SyncSender<ServerSocketEvent>)
@@ -37,12 +61,12 @@ where
     let ser = serialize(&event);
     match ser {
         Ok(s) => {
-            let slice = s.as_slice();
-            // send an unreliable `Packet` from laminar which is basically just a bare UDP packet.
-            match sender.send(ServerSocketEvent::Packet(Packet::unreliable(
-                addr,
-                slice.to_owned(),
-            ))) {
+            let p = if is_reliable(event) {
+	            Packet::unreliable(addr, s)
+            } else {
+	            Packet::reliable_unordered(addr, s)
+            };
+            match sender.send(ServerSocketEvent::Packet(p)) {
                 Ok(_qty) => {}
                 Err(e) => error!("Failed to send data to network socket: {}", e),
             }
