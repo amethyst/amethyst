@@ -1,6 +1,5 @@
 # Set the default behavior, in case people don't have core.autocrlf set.
 * text=auto
-
 # Explicitly declare text files you want to always be normalized and converted
 # to native line endings on checkout.
 *.md text
@@ -9,7 +8,11 @@
 *.yml text
 COPYING text
 LICENSE-* text
-
-# Denote all files that are truly binary and should not be modified.
-*.obj binary
-*.custom binary
+# LFS
+examples/assets/large/*.obj filter=lfs diff=lfs merge=lfs -text
+examples/assets/large/*.png filter=lfs diff=lfs merge=lfs -text
+examples/assets/large/*.ogg filter=lfs diff=lfs merge=lfs -text
+examples/assets/large/*.dds filter=lfs diff=lfs merge=lfs -text
+examples/assets/large/*.glb filter=lfs diff=lfs merge=lfs -text
+examples/assets/large/*.bin filter=lfs diff=lfs merge=lfs -text
+examples/assets/large/*.jpg filter=lfs diff=lfs merge=lfs -text
