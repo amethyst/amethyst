@@ -66,7 +66,7 @@ pub fn load_material<B: Backend>(
             buffers,
             source.clone(),
             name,
-            false,
+            true,
         )?
         .0,
     ));

@@ -49,7 +49,6 @@ use amethyst_rendy::{
             format::Format,
             pso, Backend,
         },
-        memory::MemoryUsageValue,
         mesh::PosNormTangTex,
         texture::palette::load_from_linear_rgba,
     },
@@ -178,7 +177,7 @@ impl<B: Backend> SimpleState for Example<B> {
                 scene.handle = Some(
                     loader.load(
                         Path::new("prefab")
-                            .join("puffy_scene_rendy.ron")
+                            .join("rendy_example_scene.ron")
                             .to_string_lossy(),
                         RonFormat,
                         (),
@@ -453,7 +452,8 @@ fn main() -> amethyst::Result<()> {
         level_filter: log::LevelFilter::Error,
         ..Default::default()
     })
-    .level_for("amethyst_utils::fps_counter", log::LevelFilter::Debug)
+    // .level_for("amethyst_utils::fps_counter", log::LevelFilter::Debug)
+    // .level_for("rendy_memory", log::LevelFilter::Trace)
     // .level_for("rendy_factory", log::LevelFilter::Trace)
     // .level_for("rendy_resource", log::LevelFilter::Trace)
     // .level_for("rendy_descriptor", log::LevelFilter::Trace)
@@ -575,19 +575,18 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
 
         let mut graph_builder = GraphBuilder::new();
 
+
         let color = graph_builder.create_image(
             surface.kind(),
             1,
             factory.get_surface_format(&surface),
-            MemoryUsageValue::Data,
-            Some(ClearValue::Color([1.0, 1.0, 1.0, 1.0].into())),
+            Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
         );
 
         let depth = graph_builder.create_image(
             surface.kind(),
             1,
             Format::D16Unorm,
-            MemoryUsageValue::Data,
             Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
         );
 

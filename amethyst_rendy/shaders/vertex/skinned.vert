@@ -11,7 +11,7 @@ layout(std430, set = 2, binding = 0) readonly buffer JointTransforms {
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
-layout(location = 2) in vec3 tangent;
+layout(location = 2) in vec4 tangent;
 layout(location = 3) in vec2 tex_coord;
 layout(location = 4) in uvec4 joint_ids;
 layout(location = 5) in vec4 joint_weights;
@@ -24,6 +24,7 @@ layout(location = 0) out VertexData {
     vec3 position;
     vec3 normal;
     vec3 tangent;
+    float tang_handedness;
     vec2 tex_coord;
     vec4 color;
 } vertex;
@@ -38,7 +39,8 @@ void main() {
     mat3 mat3_transform = mat3(model) * mat3(joint_transform);
     vertex.position = vertex_position.xyz;
     vertex.normal = mat3_transform * normal;
-    vertex.tangent = mat3_transform * tangent;
+    vertex.tangent = mat3_transform * tangent.xyz;
+    vertex.tang_handedness = tangent.w;
     vertex.tex_coord = tex_coord;
     vertex.color = tint;
     gl_Position = proj * view * vertex_position;

@@ -1,0 +1,36 @@
+#![enable(implicit_some)]
+Prefab (
+    entities: [
+        (
+            data: (
+                transform: (
+                    scale: (1.0, 1.0, 1.0),
+                    translation: (10.0, 0.0, 0.0),
+                ),
+                gltf: File("large/AlphaBlendModeTest.glb", GltfSceneFormat, (
+                    load_animations: true,
+                    flip_v_coord: false,
+                )),
+            ),
+        ),
+        (
+            data: (
+                transform: (
+                    scale: (10.0, 10.0, 10.0),
+                ),
+                gltf: File("large/SciFiHelmet/SciFiHelmet.gltf", GltfSceneFormat, (
+                    load_animations: true,
+                    flip_v_coord: false,
+                )),
+            ),
+        ),
+        (
+            data: (
+                gltf: File("large/NormalTangentMirrorTest.glb", GltfSceneFormat, (
+                    load_animations: true,
+                    flip_v_coord: false,
+                )),
+            ),
+        ),
+    ],
+)

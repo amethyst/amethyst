@@ -297,7 +297,7 @@ impl From<InternalShape> for Vec<PosNormTangTex> {
                 position: Position([v.0[0], v.0[1], v.0[2]]),
                 tex_coord: TexCoord([v.2[0], v.2[1]]),
                 normal: Normal([v.1[0], v.1[1], v.1[2]]),
-                tangent: Tangent([v.3[0], v.3[1], v.3[2]]),
+                tangent: Tangent([v.3[0], v.3[1], v.3[2], 1.0]),
             })
             .collect()
     }

@@ -93,7 +93,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbrDesc {
 
     fn build<'a>(
         self,
-        _ctx: &mut GraphContext<B>,
+        _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
         _aux: &Resources,
@@ -167,6 +167,14 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbrDesc {
                 pso::BlendState::ALPHA,
             )]
         };
+
+        // let multisampling = Some(pso::Multisampling {
+        //     rasterization_samples: 8,
+        //     sample_shading: None,
+        //     sample_mask: std::u64::MAX,
+        //     alpha_coverage: true,
+        //     alpha_to_one: false,
+        // });
 
         let multisampling = None;
 

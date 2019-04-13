@@ -115,25 +115,17 @@ pub fn load_mesh(
         };
 
         trace!("Loading tangents");
-        let tangents: Vec<[f32; 3]> = reader
+        let tangents: Vec<[f32; 4]> = reader
             .read_tangents()
-            .map(|tangents| match &faces {
-                Some(faces) => {
-                    let tangents = tangents.collect::<Vec<_>>();
-                    faces
-                        .iter()
-                        .map(|&i| {
-                            [
-                                tangents[i as usize][0],
-                                tangents[i as usize][1],
-                                tangents[i as usize][2],
-                            ]
-                        })
-                        .collect()
+            .map(|tangents| {
+                let tangents = tangents.collect::<Vec<_>>();
+                match &faces {
+                    Some(faces) => faces.iter().map(|&i| tangents[i as usize]).collect(),
+                    None => tangents,
                 }
-                None => tangents.map(|t| [t[0], t[1], t[2]]).collect(),
             })
             .unwrap_or_else(|| {
+                trace!("Calculating tangents");
                 let f = faces
                     .as_ref()
                     .map(|f| f.clone())
@@ -161,7 +153,7 @@ pub fn load_mesh(
                     );
                 }
 
-                tangents.iter().map(|(_, t)| [t[0], t[1], t[2]]).collect()
+                tangents.into_iter().map(|(_, t)| t).collect()
             });
 
         trace!("Loading bounding box");

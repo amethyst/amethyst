@@ -23,7 +23,7 @@ impl Default for TextureOffset {
     }
 }
 
-/// Material struct.
+/// A physically based Material with metallic workflow, fully utilized in PBR render pass.
 #[derive(Clone, PartialEq)]
 pub struct Material<B: Backend> {
     /// Alpha cutoff: the value at which we do not draw the pixel

@@ -64,6 +64,7 @@ layout(location = 0) in VertexData {
     vec3 position;
     vec3 normal;
     vec3 tangent;
+    float tang_handedness;
     vec2 tex_coord;
     vec4 color;
 } vertex;
@@ -151,7 +152,7 @@ void main() {
     // float cavity            = texture(cavity, tex_coords(vertex.tex_coord, cavity_offset.u_offset, cavity_offset.v_offset)).r;
     float metallic          = metallic_roughness.r;
     float roughness         = metallic_roughness.g;
-
+    
     // normal conversion
     normal = normal * 2 - 1;
 
@@ -160,10 +161,9 @@ void main() {
 
     vec3 vertex_normal = normalize(vertex.normal);
     vec3 vertex_tangent = normalize(vertex.tangent - vertex_normal * dot(vertex_normal, vertex.tangent));
-    vec3 vertex_bitangent = normalize(cross(vertex_normal, vertex_tangent));
+    vec3 vertex_bitangent = normalize(cross(vertex_normal, vertex_tangent) * vertex.tang_handedness);
     mat3 vertex_basis = mat3(vertex_tangent, vertex_bitangent, vertex_normal);
     normal = normalize(vertex_basis * normal);
-
 
     vec3 view_direction = normalize(camera_position - vertex.position);
     vec3 lighted = vec3(0.0);

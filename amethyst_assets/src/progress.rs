@@ -197,13 +197,12 @@ impl Tracker for () {
 
 fn show_error(handle_id: u32, asset_type_name: &'static str, asset_name: &String, error: &Error) {
     let mut err_out = format!(
-        "Error loading handle {}, {}, with name {}, caused by: {:?}",
-        handle_id, asset_type_name, asset_name, error
+        "Error loading handle {}, {}, with name {}: {}",
+        handle_id, asset_type_name, asset_name, error,
     );
     error
         .causes()
-        .skip(1)
-        .for_each(|e| err_out.push_str(&format!("\r\ncaused by: {:?}", e)));
+        .for_each(|e| err_out.push_str(&format!("\ncaused by: {}\n{:?}", e, e)));
     error!("{}", err_out);
 }
 

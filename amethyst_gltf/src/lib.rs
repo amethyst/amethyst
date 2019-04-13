@@ -168,12 +168,14 @@ pub struct GltfMaterialSet<B: Backend> {
 }
 
 /// Options used when loading a GLTF file
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Derivative, Serialize, Deserialize)]
+#[derivative(Default)]
 #[serde(default)]
 pub struct GltfSceneOptions {
     /// Generate texture coordinates if none exist in the Gltf file
     pub generate_tex_coords: (f32, f32),
     /// Load animation data from the Gltf file
+    #[derivative(Default(value = "true"))]
     pub load_animations: bool,
     /// Flip the v coordinate for all texture coordinates
     pub flip_v_coord: bool,
