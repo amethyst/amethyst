@@ -76,9 +76,10 @@ pub enum SomeEvent {{
                     data.#tuple_index.read(
                         self.#tuple_index
                             .as_mut()
-                            .expect("ReaderId undefined, has setup been run?"))
-                        .cloned()
-                        .map(#event_name::#variant)
+                            .expect("ReaderId undefined, has setup been run?")
+                        )
+                    .cloned()
+                    .map(#event_name::#variant)
                 );
             }
         })
