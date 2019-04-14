@@ -15,11 +15,14 @@ use crate::{
 /// case, you will want to implement your own StateEvent.
 #[derive(Clone, EventReader)]
 #[reader(StateEventReader)]
-pub enum StateEvent {
+pub enum StateEvent<T = String>
+where
+    T: Clone + Send + Sync + 'static,
+{
     /// Events sent by the winit window.
     Window(Event),
     /// Events sent by the ui system.
     Ui(UiEvent),
     /// Events sent by the input system.
-    Input(InputEvent<String>),
+    Input(InputEvent<T>),
 }
