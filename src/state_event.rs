@@ -11,8 +11,6 @@ use crate::{
 };
 
 /// The enum holding the different types of event that can be received in a `State` in the handle_event method.
-/// This assumes that you used `String` as the identifier for the `InputBundle`. If this is not the
-/// case, you will want to implement your own StateEvent.
 #[derive(Clone, EventReader)]
 #[reader(StateEventReader)]
 pub enum StateEvent<T = String>
