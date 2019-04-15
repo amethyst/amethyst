@@ -39,17 +39,40 @@ pub enum NetEvent<T> {
         /// The message.
         msg: String,
     },
-    /// A user-defined type containing more network event types.
-    Custom(T),
+    /// There are two user-defined types containing more network event types:
+    /// Reliable events will keep sending until the target confirms receipt
+    Reliable(T),
+    /// Unreliable events will send a bare packet, whether lost or not
+    Unreliable(T),
 }
 
 impl<T> NetEvent<T> {
     /// Tries to convert a NetEvent to a custom event type.
     pub fn custom(&self) -> Option<&T> {
-        if let NetEvent::Custom(ref t) = self {
-            Some(&t)
-        } else {
-            None
+        match self {
+            NetEvent::Reliable(ref t) | NetEvent::Unreliable(ref t) => Some(&t),
+            _ => None,
+        }
+    }
+    /// Each event type is either reliable or unreliable:
+    /// Reliable events always reach their destination,
+    /// Unreliable events may be lost
+    /// For Amethyst-defined events, whether it's reliable is specified in this function,
+    /// Otherwise, it's specified by the use of NetEvent::Reliable vs NetEvent::Unreliable
+    pub fn is_reliable(&self) -> bool {
+        use NetEvent as NE;
+        match self {
+            // I specify them all explicitly so the typechecker can save
+            // us from the mistake of specifying a builtin that SHOULD be
+            // unreliable, but is assumed to be unreliable like all the rest
+            NE::Connect { .. }
+            | NE::Connected { .. }
+            | NE::ConnectionRefused { .. }
+            | NE::Disconnect { .. }
+            | NE::Disconnected { .. }
+            | NE::TextMessage { .. }
+            | NE::Reliable(_) => true,
+            NE::Unreliable(_) => false,
         }
     }
 }

@@ -37,12 +37,12 @@ where
     let ser = serialize(&event);
     match ser {
         Ok(s) => {
-            let slice = s.as_slice();
-            // send an unreliable `Packet` from laminar which is basically just a bare UDP packet.
-            match sender.send(ServerSocketEvent::Packet(Packet::unreliable(
-                addr,
-                slice.to_owned(),
-            ))) {
+            let p = if event.is_reliable() {
+                Packet::unreliable(addr, s)
+            } else {
+                Packet::reliable_unordered(addr, s)
+            };
+            match sender.send(ServerSocketEvent::Packet(p)) {
                 Ok(_qty) => {}
                 Err(e) => error!("Failed to send data to network socket: {}", e),
             }

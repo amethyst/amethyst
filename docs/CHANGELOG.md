@@ -31,6 +31,7 @@ it is attached to. ([#1282])
 * Add `SpriteScenePrefab`. Allows load sprites from a grid and add them to the `SpriteRenderer`. ([#1469])
 * Add `Widgets` resource. Allows keeping track of UI entities and their components and iterating over them. ([#1390])
 * `AmethystApplication` takes in application name using `with_app_name(..)`. ([#1499])
+* Add `NetEvent::Reliable` variant. When added to NetConnection, these events will eventually reach the target. ([#???])
 
 ### Changed
 
@@ -61,6 +62,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Renamed `Text` UI Prefab to `Label` in preparation for full widget integration in prefabs. ([#1390])
 * `amethyst_test` includes the application name of a failing test. ([#1499])
 * `amethyst_test` returns the panic message of a failed execution. ([#1499])
+* Rename `NetEvent::Custom` variant to `NetEvent::Unreliable`. ([#???])
 
 ### Removed
 
