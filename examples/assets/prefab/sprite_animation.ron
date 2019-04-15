@@ -10,13 +10,10 @@ Prefab(
                     sheet: Sheet(
                         // TexturePrefab
                         texture: File("texture/bat.32x32.png", (), (
-                             format: (PNG),
-                             repr: Srgb,
-                             kind: D1,
-                             sampler_info: (
-                                 min_filter: Linear,
-                                 mag_filter: Linear,
-                                 mip_filter: Linear,
+                            sampler_info: (
+                                min_filter: Nearest,
+                                mag_filter: Nearest,
+                                mip_filter: Nearest,
                                  wrap_mode: (Clamp, Clamp, Clamp),
                                  lod_bias: (0),
                                  lod_range: (
@@ -26,8 +23,8 @@ Prefab(
                                  comparison: None,
                                  border: (0),
                                  anisotropic: Off,
-                             ),
-                         )),
+                            ),
+                        )),
                         sprites: [
                             // Grey bat sprites
                             // Sprites with indexes from 0 to 5

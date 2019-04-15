@@ -1,19 +1,17 @@
-use serde::{Deserialize, Serialize};
-
 use crate::{
     formats::texture::{ImageFormat, TexturePrefab},
     sprite::{SpriteRender, SpriteSheet, SpriteSheetHandle, Sprites},
-    types::Texture,
 };
-use amethyst_assets::{AssetStorage, Format, PrefabData, ProgressCounter};
+use amethyst_assets::{AssetStorage, Loader, PrefabData, ProgressCounter};
 use amethyst_core::{
-    ecs::{Entity, Read, Write, WriteStorage},
+    ecs::{Entity, Read, ReadExpect, WriteStorage},
     Transform,
 };
 use amethyst_error::Error;
 use derivative::Derivative;
 use rendy::hal::Backend;
-use std::fmt::Debug;
+use serde::{Deserialize, Serialize};
+use std::sync::Mutex;
 
 /// Defines a spritesheet prefab. Note that this prefab will only load the spritesheet in storage,
 /// no components will be added to entities. The `add_to_entity` will return the
@@ -39,7 +37,9 @@ pub enum SpriteSheetPrefab<B: Backend> {
 impl<'a, B: Backend> PrefabData<'a> for SpriteSheetPrefab<B> {
     type SystemData = (
         <TexturePrefab<B, ImageFormat> as PrefabData<'a>>::SystemData,
+        Read<'a, SpriteSheetLoadedSet<B>>,
         Read<'a, AssetStorage<SpriteSheet<B>>>,
+        ReadExpect<'a, Loader>,
     );
     type Result = (Option<String>, SpriteSheetHandle<B>);
 
@@ -61,59 +61,58 @@ impl<'a, B: Backend> PrefabData<'a> for SpriteSheetPrefab<B> {
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        let handle = match self {
-            SpriteSheetPrefab::Sheet {
-                texture,
+        let (ref mut tex_data, ref mut loaded_set, storage, loader) = system_data;
+
+        if let SpriteSheetPrefab::Sheet {
+            texture,
+            sprites,
+            name,
+        } = self
+        {
+            texture.load_sub_assets(progress, tex_data)?;
+            let texture_handle = match texture {
+                TexturePrefab::Handle(handle) => handle.clone(),
+                _ => unreachable!(),
+            };
+            let sprites = sprites.iter().flat_map(Sprites::build_sprites).collect();
+            let spritesheet = SpriteSheet {
+                texture: texture_handle,
                 sprites,
-                name,
-            } => {
-                texture.load_sub_assets(progress, &mut system_data.0)?;
-                let texture_handle = match texture {
-                    TexturePrefab::Handle(handle) => handle.clone(),
-                    _ => unreachable!(),
-                };
-                let sprites = sprites.iter().flat_map(Sprites::build_sprites).collect();
-                let spritesheet = SpriteSheet {
-                    texture: texture_handle,
-                    sprites,
-                };
-                Some((
-                    name.take(),
-                    (system_data.0)
-                        .0
-                        .load_from_data(spritesheet, progress, &system_data.1),
-                ))
-            }
-            _ => None,
-        };
-        match handle {
-            Some(handle) => {
-                *self = SpriteSheetPrefab::Handle(handle);
-                Ok(true)
-            }
-            _ => Ok(false),
+            };
+
+            let handle = loader.load_from_data(spritesheet, progress, &storage);
+            loaded_set.push((name.clone(), handle.clone()));
+            *self = SpriteSheetPrefab::Handle((name.take(), handle));
+            Ok(true)
+        } else {
+            Ok(false)
         }
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct SpriteSheetLoadedSet<B: Backend>(pub Vec<(Option<String>, SpriteSheetHandle<B>)>);
+#[derive(Debug)]
+pub struct SpriteSheetLoadedSet<B: Backend>(Mutex<Vec<(Option<String>, SpriteSheetHandle<B>)>>);
 
 impl<B: Backend> SpriteSheetLoadedSet<B> {
-    fn get(&self, reference: &SpriteSheetReference) -> Option<&SpriteSheetHandle<B>> {
+    fn push(&self, data: (Option<String>, SpriteSheetHandle<B>)) {
+        self.0.lock().unwrap().push(data);
+    }
+    fn get(&self, reference: &SpriteSheetReference) -> Option<SpriteSheetHandle<B>> {
+        let inner = self.0.lock().unwrap();
         match reference {
-            SpriteSheetReference::Index(index) => self.0.get(*index).map(|(_, handle)| handle),
-            SpriteSheetReference::Name(name) => self
-                .0
+            SpriteSheetReference::Index(index) => {
+                inner.get(*index).map(|(_, handle)| handle.clone())
+            }
+            SpriteSheetReference::Name(name) => inner
                 .iter()
                 .find(|s| s.0.as_ref() == Some(name))
-                .map(|(_, handle)| handle),
+                .map(|(_, handle)| handle.clone()),
         }
     }
 }
 impl<B: Backend> Default for SpriteSheetLoadedSet<B> {
     fn default() -> Self {
-        Self(vec![])
+        Self(Mutex::new(vec![]))
     }
 }
 
@@ -146,7 +145,7 @@ pub struct SpriteRenderPrefab<B: Backend> {
 impl<'a, B: Backend> PrefabData<'a> for SpriteRenderPrefab<B> {
     type SystemData = (
         WriteStorage<'a, SpriteRender<B>>,
-        Write<'a, SpriteSheetLoadedSet<B>>,
+        Read<'a, SpriteSheetLoadedSet<B>>,
     );
     type Result = ();
 
@@ -182,7 +181,7 @@ impl<'a, B: Backend> PrefabData<'a> for SpriteRenderPrefab<B> {
         _: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        if let Some(handle) = (*system_data.1).get(&self.sheet.as_ref().unwrap()).cloned() {
+        if let Some(handle) = (*system_data.1).get(&self.sheet.as_ref().unwrap()) {
             self.handle = Some(handle);
             Ok(false)
         } else {
@@ -239,11 +238,6 @@ impl<'a, B: Backend> PrefabData<'a> for SpriteScenePrefab<B> {
             if sheet.load_sub_assets(progress, &mut system_data.0)? {
                 ret = true;
             }
-            let sheet = match sheet {
-                SpriteSheetPrefab::Handle(handle) => handle.clone(),
-                _ => unreachable!(),
-            };
-            ((system_data.1).1).0.push(sheet);
         }
         if let Some(ref mut render) = &mut self.render {
             render.load_sub_assets(progress, &mut system_data.1)?;
@@ -278,7 +272,7 @@ mod tests {
         type Data<'a> = (
             ReadExpect<'a, Loader>,
             Read<'a, AssetStorage<SpriteSheet<B>>>,
-            Write<'a, SpriteSheetLoadedSet>,
+            Read<'a, SpriteSheetLoadedSet>,
         );
         let texture = add_texture(world);
         world.exec(|mut data: Data<'_>| {

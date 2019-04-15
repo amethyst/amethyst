@@ -3,17 +3,17 @@
 use amethyst::{
     animation::{
         get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSet, AnimationSet,
-        EndControl, VertexSkinningBundle, AnimationSetPrefab,
+        AnimationSetPrefab, EndControl, VertexSkinningBundle,
     },
     assets::{
         AssetLoaderSystemData, AssetPrefab, Completion, Handle, Prefab, PrefabData, PrefabLoader,
-        PrefabLoaderSystem, ProgressCounter, RonFormat, Processor,
+        PrefabLoaderSystem, Processor, ProgressCounter, RonFormat,
     },
     controls::{ControlTagPrefab, FlyControlBundle, FlyControlTag},
     core::{
         ecs::{
-            Component, DenseVecStorage, Entity, Join, Read, ReadExpect, ReadStorage, Resources,
-            System, SystemData, Write, WriteStorage,
+            Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
+            Resources, System, SystemData, Write, WriteStorage,
         },
         math::{Unit, UnitQuaternion, Vector3},
         Time, Transform, TransformBundle,
@@ -36,12 +36,12 @@ use amethyst_rendy::{
     light::{Light, LightPrefab, PointLight},
     mtl::{Material, MaterialDefaults},
     palette::{LinSrgba, Srgb},
-    pass::{DrawPbrDesc, DrawFlat2D},
+    pass::{DrawFlat2DDesc, DrawPbrDesc},
     rendy::{
         factory::Factory,
         graph::{
             present::PresentNode,
-            render::{RenderGroupBuilder, RenderGroupDesc, SimpleGraphicsPipeline},
+            render::{RenderGroupBuilder, RenderGroupDesc, SimpleGraphicsPipelineDesc},
             GraphBuilder,
         },
         hal::{
@@ -50,14 +50,16 @@ use amethyst_rendy::{
             pso, Backend,
         },
         mesh::PosNormTangTex,
-        texture::{palette::load_from_linear_rgba, image::ImageTextureConfig},
+        texture::palette::load_from_linear_rgba,
     },
-    sprite::{SpriteCamera, SpriteSheet, SpriteRender, prefab::SpriteScenePrefab },
     resources::Tint,
     shape::Shape,
+    sprite::{
+        prefab::{SpriteRenderPrefab, SpriteSheetPrefab},
+        SpriteRender, SpriteSheet,
+    },
     system::{GraphCreator, RendererSystem},
     types::{DefaultBackend, Mesh, Texture},
-    formats::texture::{ImageFormat, TexturePrefab},
 };
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
@@ -139,6 +141,8 @@ impl<'a> System<'a> for CameraCorrectionSystem {
             *camera = Camera::from(Projection::perspective(
                 current_aspect,
                 std::f32::consts::FRAC_PI_3,
+                0.1,
+                100.0,
             ));
         }
     }
@@ -164,29 +168,21 @@ struct ScenePrefabData<B: Backend> {
     light: Option<LightPrefab>,
     tag: Option<Tag<AnimationMarker>>,
     fly_tag: Option<ControlTagPrefab>,
+    sprite_sheet: Option<SpriteSheetPrefab<B>>,
+    sprite: Option<SpriteRenderPrefab<B>>,
+    animation_set: Option<AnimationSetPrefab<SpriteAnimationId, SpriteRender<B>>>,
 }
-
 
 /// Animation ids used in a AnimationSet
 #[derive(Eq, PartialOrd, PartialEq, Hash, Debug, Copy, Clone, Deserialize, Serialize)]
-enum  SpriteAnimationId {
+enum SpriteAnimationId {
     Fly,
 }
 impl Default for SpriteAnimationId {
-    fn default() -> Self { SpriteAnimationId::Fly }
+    fn default() -> Self {
+        SpriteAnimationId::Fly
+    }
 }
-
-/// Loading data for one entity
-#[derive(Deserialize, Serialize, PrefabData)]
-#[serde(bound(deserialize = "SpriteScenePrefab<B>: Deserialize<'de>"))]
-struct SpriteScenePrefabData<B: Backend>
-{
-    /// Information for rendering a scene with sprites
-    sprite_scene: SpriteScenePrefab<B>,
-    /// Аll animations that can be run on the entity
-    animation_set: AnimationSetPrefab<SpriteAnimationId, SpriteRender<B>>,
-}
-
 
 impl<B: Backend> SimpleState for Example<B> {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
@@ -366,6 +362,8 @@ impl<B: Backend> SimpleState for Example<B> {
             .with(Camera::from(Projection::perspective(
                 1.3,
                 std::f32::consts::FRAC_PI_3,
+                0.1,
+                100.0,
             )))
             .with(transform)
             .with(FlyControlTag)
@@ -373,38 +371,40 @@ impl<B: Backend> SimpleState for Example<B> {
 
         world.add_resource(ActiveCamera { entity: camera });
 
-        let (width, height) = {
-            let dim = world.read_resource::<ScreenDimensions>();
-            (dim.width(), dim.height())
-        };
+        // let (width, height) = {
+        //     let dim = world.read_resource::<ScreenDimensions>();
+        //     (dim.width(), dim.height())
+        // };
 
-        let mut camera_transform = Transform::default();
-        camera_transform.set_translation_z(1.0);
+        // let mut camera_transform = Transform::default();
+        // camera_transform.set_translation_z(1.0);
 
-        let sprite_camera = world
-            .create_entity()
-            .with(camera_transform)
-            .with(Camera::from(Projection::orthographic(
-                0.0, width, 0.0, height,
-            )))
-            .build();
+        // let sprite_camera = world
+        //     .create_entity()
+        //     .with(camera_transform)
+        //     .with(Camera::from(Projection::orthographic(
+        //         0.0, width, 0.0, height,
+        //     )))
+        //     .build();
 
-        world.add_resource(SpriteCamera { entity: sprite_camera });
+        // world.add_resource(SpriteCamera {
+        //     entity: sprite_camera,
+        // });
 
-        println!("Create sprites");
-        // Sprites
-        let sprite_prefab_handle = world.exec(|loader: PrefabLoader<'_, SpriteScenePrefabData<B>>| {
-            loader.load(
-                "prefab/sprite_animation.ron",
-                RonFormat,
-                (),
-                self.progress.as_mut().unwrap(),
-            )
-        });
+        // println!("Create sprites");
+        // // Sprites
+        // let sprite_prefab_handle =
+        //     world.exec(|loader: PrefabLoader<'_, SpriteScenePrefabData<B>>| {
+        //         loader.load(
+        //             "prefab/sprite_animation.ron",
+        //             RonFormat,
+        //             (),
+        //             self.progress.as_mut().unwrap(),
+        //         )
+        //     });
 
-        // Creates new entities with components from MyPrefabData
-        world.create_entity().with(sprite_prefab_handle).build();
-
+        // // Creates new entities with components from MyPrefabData
+        // world.create_entity().with(sprite_prefab_handle).build();
     }
 
     fn handle_event(
@@ -447,7 +447,6 @@ impl<B: Backend> SimpleState for Example<B> {
                         .clone();
 
                     data.world.create_entity().with(scene_handle).build();
-
                     true
                 }
 
@@ -468,6 +467,30 @@ impl<B: Backend> SimpleState for Example<B> {
                     self.initialised = true;
                 }
             }
+
+            data.world.exec(
+                |(entities, animation_sets, mut control_sets): (
+                    Entities,
+                    ReadStorage<AnimationSet<SpriteAnimationId, SpriteRender<B>>>,
+                    WriteStorage<AnimationControlSet<SpriteAnimationId, SpriteRender<B>>>,
+                )| {
+                    // For each entity that has AnimationSet
+                    for (entity, animation_set, _) in (&entities, &animation_sets, !&control_sets).join().collect::<Vec<_>>() {
+                        dbg!(&entity);
+                        // Creates a new AnimationControlSet for the entity
+                        let control_set =
+                            get_animation_set(&mut control_sets, entity).unwrap();
+                        // Adds the `Fly` animation to AnimationControlSet and loops infinitely
+                        control_set.add_animation(
+                            SpriteAnimationId::Fly,
+                            &animation_set.get(&SpriteAnimationId::Fly).unwrap(),
+                            EndControl::Loop(None),
+                            1.0,
+                            AnimationCommand::Start,
+                        );
+                    }
+                },
+            );
         }
         Trans::None
     }
@@ -561,11 +584,6 @@ fn main() -> amethyst::Result<()> {
             &[],
         )
         .with(
-            PrefabLoaderSystem::<SpriteScenePrefabData<DefaultBackend>>::default(),
-            "sprite_loader",
-            &[],
-        )
-        .with(
             GltfSceneLoaderSystem::<DefaultBackend>::default(),
             "gltf_loader",
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
@@ -579,10 +597,13 @@ fn main() -> amethyst::Result<()> {
             AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
                 .with_dep(&["gltf_loader"]),
         )?
-        .with_bundle(AnimationBundle::<SpriteAnimationId, SpriteRender<DefaultBackend>>::new(
-            "sprite_animation_control",
-            "sprite_sampler_interpolation",
-        ))?
+        .with_bundle(
+            AnimationBundle::<SpriteAnimationId, SpriteRender<DefaultBackend>>::new(
+                "sprite_animation_control",
+                "sprite_sampler_interpolation",
+            )
+            .with_dep(&["gltf_loader"]),
+        )?
         .with_bundle(InputBundle::<&'static str, &'static str>::new().with_bindings(bidnings))?
         .with_bundle(
             FlyControlBundle::<&'static str, &'static str>::new(
@@ -650,7 +671,6 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
 
         let mut graph_builder = GraphBuilder::new();
 
-
         let color = graph_builder.create_image(
             surface.kind(),
             1,
@@ -665,20 +685,19 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
             Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
         );
 
-        let depth_sprite = graph_builder.create_image(
-            surface.kind(),
-            1,
-            Format::D16Unorm,
-            MemoryUsageValue::Data,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
-        );
-
         let pbr_pass = graph_builder.add_node(
             DrawPbrDesc::default()
                 .with_vertex_skinning()
                 .with_transparency(
                     pso::ColorBlendDesc(pso::ColorMask::ALL, pso::BlendState::ALPHA),
-                    None,
+                    Some(pso::DepthStencilDesc {
+                        depth: pso::DepthTest::On {
+                            fun: pso::Comparison::Less,
+                            write: true,
+                        },
+                        depth_bounds: false,
+                        stencil: pso::StencilTest::Off,
+                    }),
                 )
                 .builder()
                 .into_subpass()
@@ -688,16 +707,28 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         );
 
         let sprite_pass = graph_builder.add_node(
-            DrawFlat2D::builder()
+            DrawFlat2DDesc::default()
+                .with_transparency(
+                    pso::ColorBlendDesc(pso::ColorMask::ALL, pso::BlendState::ALPHA),
+                    Some(pso::DepthStencilDesc {
+                        depth: pso::DepthTest::On {
+                            fun: pso::Comparison::Less,
+                            write: true,
+                        },
+                        depth_bounds: false,
+                        stencil: pso::StencilTest::Off,
+                    }),
+                )
+                .builder()
                 .into_subpass()
                 .with_color(color)
+                .with_depth_stencil(depth)
                 .into_pass(),
         );
 
         let present_builder = PresentNode::builder(factory, surface, color)
             .with_dependency(pbr_pass)
-            .with_dependency(sprite_pass)
-            ;
+            .with_dependency(sprite_pass);
 
         graph_builder.add_node(present_builder);
 

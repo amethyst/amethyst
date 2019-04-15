@@ -3,6 +3,52 @@ Prefab (
     entities: [
         (
             data: (
+                sprite_sheet: Sheet(
+                    texture: File("texture/bat.32x32.png", (), (
+                        sampler_info: (
+                            min_filter: Nearest,
+                            mag_filter: Nearest,
+                            mip_filter: Nearest,
+                            wrap_mode: (Clamp, Clamp, Clamp),
+                            lod_bias: (0),
+                            lod_range: (
+                                start: (-8000),
+                                end: (8000),
+                            ),
+                            comparison: None,
+                            border: (0),
+                            anisotropic: Off,
+                        ),
+                    )),
+                    sprites: [
+                        Grid((
+                            texture_width: 192,
+                            texture_height: 64,
+                            columns: 6,
+                            rows: 1,
+                            cell_size: (32, 32),
+                            // position: (0, 32),
+                        )),
+                        List((
+                            texture_width: 192,
+                            texture_height: 64,
+                            sprites: [
+                                (x: 0,   y: 32, width: 32, height: 32),
+                                (x: 32,  y: 32, width: 32, height: 32, offsets: (0.0, -4.0)),
+                                (x: 64,  y: 32, width: 32, height: 32, offsets: (0.0, 7.0)),
+                                (x: 64,  y: 32, width: 32, height: 32, offsets: (0.0, 6.0)),
+                                (x: 96,  y: 32, width: 32, height: 32, offsets: (0.0, -4.0)),
+                                (x: 128, y: 32, width: 32, height: 32, offsets: (0.0, -2.0)),
+                            ],
+                        )),
+                    ],
+                    // optional
+                    name: "bat",
+                ),
+            ),
+        ),
+        (
+            data: (
                 transform: (
                     scale: (1.0, 1.0, 1.0),
                     translation: (10.0, 0.0, 0.0),
@@ -30,6 +76,43 @@ Prefab (
                     load_animations: true,
                     flip_v_coord: false,
                 )),
+            ),
+        ),
+        (
+            data: (
+                // SpriteRenderPrefab
+                sprite: (
+                    sheet: "bat",
+                    sprite_number: 0,
+                ),
+                transform: (
+                    translation: (2.5, 0.0, 0.5),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                animation_set: (
+                    animations: [
+                        (
+                            // AnimationId
+                            Fly,
+                            (
+                                samplers: [
+                                    (
+                                        0,
+                                        SpriteIndex,
+                                        (
+                                            // Time of key frames
+                                            input: [0.0, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4],
+                                            // Sprite indexes from SpriteSheet for key frames
+                                            output: [5, 4, 3, 2, 1, 0, 1, 2, 3, 4, 4],
+                                            // Sprites can only ever be animated with Step
+                                            function: Step,
+                                        ),
+                                    ),
+                                ],
+                            ),
+                        ),
+                    ],
+                )
             ),
         ),
     ],

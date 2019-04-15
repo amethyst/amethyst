@@ -10,7 +10,10 @@ use amethyst_core::{
     ecs::{Join, Read, ReadStorage},
     GlobalTransform,
 };
-use core::ops::{Add, Range};
+use core::{
+    hash::Hash,
+    ops::{Add, Range},
+};
 use glsl_layout::*;
 use rendy::{
     factory::Factory,
@@ -169,7 +172,7 @@ pub fn align_size<T: AsStd140>(align: u64, array_len: usize) -> u64
 where
     T::Std140: Sized,
 {
-    let size = (std::mem::size_of::<T::Std140>() * array_len) as u64;
+    let size = (core::mem::size_of::<T::Std140>() * array_len) as u64;
     ((size + align - 1) / align) * align
 }
 
@@ -228,5 +231,45 @@ pub fn push_vertex_desc<'a>(
             element,
         });
         location += 1;
+    }
+}
+
+pub struct LookupBuilder<I: Hash + Eq + Copy> {
+    forward: fnv::FnvHashMap<I, usize>,
+    backward: Vec<I>,
+}
+
+impl<I: Hash + Eq + Copy> LookupBuilder<I> {
+    pub fn new() -> LookupBuilder<I> {
+        LookupBuilder {
+            forward: fnv::FnvHashMap::default(),
+            backward: Vec::new(),
+        }
+    }
+
+    pub fn forward(&mut self, id: I) -> usize {
+        if let Some(&id_num) = self.forward.get(&id) {
+            id_num
+        } else {
+            let id_num = self.backward.len();
+            self.backward.push(id);
+            self.forward.insert(id, id_num);
+            id_num
+        }
+    }
+
+    pub fn backward(&self) -> &Vec<I> {
+        &self.backward
+    }
+}
+
+/// Convert any type slice to bytes slice.
+pub fn slice_as_bytes<T>(slice: &[T]) -> &[u8] {
+    unsafe {
+        // Inspecting any value as bytes should be safe.
+        core::slice::from_raw_parts(
+            slice.as_ptr() as *const u8,
+            core::mem::size_of::<T>() * slice.len(),
+        )
     }
 }

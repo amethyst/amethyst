@@ -12,4 +12,7 @@ layout(location = 0) out vec4 color;
 
 void main() {
     color = texture(albedo[u_pushConstants.tex_id], tex_uv);
+    if (color.a == 0.0) {
+        discard;
+    }
 }

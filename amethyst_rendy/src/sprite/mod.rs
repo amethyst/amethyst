@@ -12,9 +12,6 @@ pub mod prefab;
 /// An asset handle to sprite sheet metadata.
 pub type SpriteSheetHandle<B> = Handle<SpriteSheet<B>>;
 
-/// Active camera for the `DrawFlat2D` pass.
-pub type SpriteCamera = crate::camera::ActiveCamera;
-
 /// Meta data for a sprite sheet texture.
 ///
 /// Contains a handle to the texture and the sprite coordinates on the texture.

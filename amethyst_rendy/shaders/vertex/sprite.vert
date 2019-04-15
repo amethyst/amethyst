@@ -9,11 +9,9 @@ layout(std140, set = 0, binding = 0) uniform ViewArgs {
 layout(location = 0) in vec2 dir_x;
 layout(location = 1) in vec2 dir_y;
 layout(location = 2) in vec2 pos;
-layout(location = 3) in float depth;
-
-// Texture quad.
-layout(location = 4) in vec2 u_offset;
-layout(location = 5) in vec2 v_offset;
+layout(location = 3) in vec2 u_offset;
+layout(location = 4) in vec2 v_offset;
+layout(location = 5) in float depth;
 
 layout(location = 0) out vec2 tex_uv;
 
