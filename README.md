@@ -1,6 +1,6 @@
 <img align="left" width="64px" src="book/src/images/amethyst_emblem.png" />
 
-# Amethyst
+# Amethyst testasasdfasdfasdf
 
 [![Build Status][s1]][jc] [![Crates.io][s2]][ci] [![docs page][docs-badge]][docs] [![MIT/Apache][s3]][li] [![Join us on Discord][s4]][di]  [![Community forum][s5]][ds] [![Reddit][s7]][rd] ![Lines of Code][s6]
 
