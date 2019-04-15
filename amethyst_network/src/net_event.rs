@@ -49,11 +49,11 @@ pub enum NetEvent<T> {
 impl<T> NetEvent<T> {
     /// Tries to convert a NetEvent to a custom event type.
     pub fn custom(&self) -> Option<&T> {
-	    match self {
-		    | NetEvent::Reliable(ref t)
-		    | NetEvent::Unreliable(ref t)
-		    => Some(&t),
-		    _ => None,
-	    }
+        match self {
+            | NetEvent::Reliable(ref t)
+            | NetEvent::Unreliable(ref t)
+            => Some(&t),
+            _ => None,
+        }
     }
 }
