@@ -129,3 +129,90 @@ pub fn init_output(res: &mut Resources) {
         error!("Failed finding a default audio output to hook AudioSink to, audio will not work!")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{fs::File, io::Read, vec::Vec};
+
+    use amethyst_utils::app_root_dir::application_root_dir;
+
+    use crate::{output::Output, source::Source, DecoderError};
+
+    #[test]
+    #[cfg(target_os = "linux")]
+    fn test_play_wav() {
+        test_play("tests/sound_test.wav", true)
+    }
+
+    #[test]
+    #[cfg(target_os = "linux")]
+    fn test_play_mp3() {
+        test_play("tests/sound_test.mp3", true);
+    }
+
+    #[test]
+    #[cfg(target_os = "linux")]
+    fn test_play_flac() {
+        test_play("tests/sound_test.flac", true);
+    }
+
+    #[test]
+    #[cfg(target_os = "linux")]
+    fn test_play_ogg() {
+        test_play("tests/sound_test.ogg", true);
+    }
+
+    #[test]
+    #[cfg(target_os = "linux")]
+    fn test_play_fake() {
+        test_play("tests/sound_test.fake", false);
+    }
+
+    // test_play tests the play APIs for Output
+    #[cfg(target_os = "linux")]
+    fn test_play(file_name: &str, should_pass: bool) {
+        // Get the full file path
+        let app_root = application_root_dir().unwrap();
+        let audio_path = app_root.join(file_name);
+
+        // Convert the file contents into a byte vec
+        let mut f = File::open(audio_path).unwrap();
+        let mut buffer = Vec::new();
+        f.read_to_end(&mut buffer).unwrap();
+
+        // Create a Source from those bytes
+        let src = Source { bytes: buffer };
+
+        // Set volume and number of times to play
+        let vol: f32 = 4.0;
+        let n: u16 = 5;
+
+        // Test each of the play APIs
+        let output = Output::default();
+
+        output.play_once(&src, vol);
+
+        output.play_n_times(&src, vol, n);
+
+        let result_try_play_once = output.try_play_once(&src, vol);
+        check_result(result_try_play_once, should_pass);
+
+        let result_try_play_n_times = output.try_play_n_times(&src, vol, n);
+        check_result(result_try_play_n_times, should_pass);
+    }
+
+    #[cfg(target_os = "linux")]
+    fn check_result(result: Result<(), DecoderError>, should_pass: bool) {
+        match result {
+            Ok(_pass) => assert!(
+                should_pass,
+                "Expected `play` result to be Err(..), but was Ok(..)"
+            ),
+            Err(fail) => assert!(
+                !should_pass,
+                "Expected `play` result to be `Ok(..)`, but was {:?}",
+                fail
+            ),
+        };
+    }
+}
