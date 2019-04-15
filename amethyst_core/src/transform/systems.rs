@@ -146,8 +146,10 @@ impl<'a> System<'a> for TransformSystem {
 
 #[cfg(test)]
 mod tests {
-    use crate::ecs::prelude::{Builder, World};
-    use crate::math::{Matrix4, Quaternion, Unit};
+    use crate::{
+        ecs::prelude::{Builder, World},
+        math::{Matrix4, Quaternion, Unit},
+    };
     use shred::RunNow;
     use specs_hierarchy::{Hierarchy, HierarchySystem};
 

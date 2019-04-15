@@ -1,18 +1,11 @@
 //! The network send and receive System
 
-use std::{
-    clone::Clone,
-    net::SocketAddr,
-    sync::{
-        mpsc::{self, Receiver, Sender},
-        Arc, Mutex,
-    },
-    thread,
-};
+use std::{clone::Clone, net::SocketAddr, thread};
 
 use amethyst_core::ecs::{Join, Resources, System, SystemData, WriteStorage};
 
-use laminar::Packet;
+use crossbeam_channel::{Receiver, Sender};
+use laminar::{Packet, SocketEvent};
 use log::{error, warn};
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -20,7 +13,7 @@ use super::{
     deserialize_event,
     error::Result,
     send_event,
-    server::{Host, ReceiveHandler, SendHandler, ServerConfig, ServerSocketEvent},
+    server::{Host, ServerConfig},
     ConnectionState, NetConnection, NetEvent, NetFilter,
 };
 
@@ -63,7 +56,7 @@ where
 {
     /// Creates a `NetSocketSystem` and binds the Socket on the ip and port added in parameters.
     pub fn new(config: ServerConfig, filters: Vec<Box<dyn NetFilter<E>>>) -> Result<Self> {
-        if config.udp_recv_addr.port() < 1024 {
+        if config.udp_socket_addr.port() < 1024 {
             // Just warning the user here, just in case they want to use the root port.
             warn!("Using a port below 1024, this will require root permission and should not be done.");
         }
@@ -85,15 +78,15 @@ where
     }
 
     /// Start a thread to send all queued packets.
-    fn start_sending(sender: Arc<SendHandler>) -> Sender<InternalSocketEvent<E>> {
-        let (tx, send_queue) = mpsc::channel();
+    fn start_sending(sender: Sender<Packet>) -> Sender<InternalSocketEvent<E>> {
+        let (tx, send_queue) = crossbeam_channel::unbounded();
 
         thread::spawn(move || loop {
             for control_event in send_queue.try_iter() {
                 match control_event {
                     InternalSocketEvent::SendEvents { target, events } => {
                         for ev in events {
-                            send_event(ev, target, &sender.get_sender());
+                            send_event(ev, target, &sender);
                         }
                     }
                     InternalSocketEvent::Stop => {
@@ -107,33 +100,19 @@ where
     }
 
     /// Starts a thread which receives incoming packets and sends them onto the 'Receiver' channel.
-    fn start_receiving(receiver: Arc<Mutex<ReceiveHandler>>) -> Receiver<Packet> {
-        let (receive_queue, rx) = mpsc::channel();
+    fn start_receiving(receiver: Receiver<SocketEvent>) -> Receiver<Packet> {
+        let (receive_queue, rx) = crossbeam_channel::unbounded();
 
-        thread::spawn(move || {
-            // take note that this lock will be there as long this thread lives.
-            // We only have one receiver, if one tries to have two receivers the program should panic.
-            // Why is there one receiver? This is because how a channel works. Once we read the messages it will be removed from the channel.
-            match receiver.try_lock() {
-                Ok(receiver) => loop {
-                    for event in receiver.iter() {
-                        match event {
-                            ServerSocketEvent::Packet(packet) => {
-                                if let Err(error) = receive_queue.send(packet.clone()) {
-                                    error!(
-                                        "`NetworkSocketSystem` was dropped. Reason: {:?}",
-                                        error
-                                    );
-                                    break;
-                                }
-                            }
-                            ServerSocketEvent::Error(error) => error!("{:?}", error),
-                            _ => error!("Event not supported"),
+        thread::spawn(move || loop {
+            for event in receiver.iter() {
+                match event {
+                    SocketEvent::Packet(packet) => {
+                        if let Err(error) = receive_queue.send(packet.clone()) {
+                            error!("`NetworkSocketSystem` was dropped. Reason: {:?}", error);
+                            break;
                         }
                     }
-                },
-                Err(_) => {
-                    panic!("Two packet receivers can't run at the same time");
+                    _ => error!("Event not supported"),
                 }
             }
         });
@@ -150,7 +129,7 @@ where
 
     fn run(&mut self, mut net_connections: Self::SystemData) {
         for net_connection in (&mut net_connections).join() {
-            let target = net_connection.target_receiver;
+            let target = net_connection.target_addr;
 
             if net_connection.state == ConnectionState::Connected
                 || net_connection.state == ConnectionState::Connecting
@@ -171,7 +150,7 @@ where
         for (counter, raw_event) in self.transport_receiver.try_iter().enumerate() {
             // Get the NetConnection from the source
             for net_connection in (&mut net_connections).join() {
-                if net_connection.target_sender == raw_event.addr() {
+                if net_connection.target_addr == raw_event.addr() {
                     // Get the event
                     match deserialize_event::<E>(raw_event.payload()) {
                         Ok(ev) => {

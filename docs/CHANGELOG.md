@@ -62,7 +62,8 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Renamed `Text` UI Prefab to `Label` in preparation for full widget integration in prefabs. ([#1390])
 * `amethyst_test` includes the application name of a failing test. ([#1499])
 * `amethyst_test` returns the panic message of a failed execution. ([#1499])
-* Rename `NetEvent::Custom` variant to `NetEvent::Unreliable`. ([#???])
+* Rename `NetEvent::Custom` variant to `NetEvent::Unreliable`. ([#1513])
+* Updated laminar to 0.2.0. ([#1502])
 
 ### Removed
 
@@ -116,6 +117,8 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1480]: https://github.com/amethyst/amethyst/pull/1480
 [#1499]: https://github.com/amethyst/amethyst/pull/1499
 [#1501]: https://github.com/amethyst/amethyst/pull/1501
+[#1502]: https://github.com/amethyst/amethyst/pull/1515
+[#1513]: https://github.com/amethyst/amethyst/pull/1513
 
 ## [0.10.0] - 2018-12
 

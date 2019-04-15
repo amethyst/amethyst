@@ -16,9 +16,7 @@ use crate::NetEvent;
 #[serde(bound = "")]
 pub struct NetConnection<E: 'static> {
     /// The target remote socket address who is listening for incoming packets.
-    pub target_receiver: SocketAddr,
-    /// The target remote socket address who is sending packets to us.
-    pub target_sender: SocketAddr,
+    pub target_addr: SocketAddr,
     /// The state of the connection.
     pub state: ConnectionState,
     /// The buffer of events to be sent.
@@ -34,13 +32,12 @@ pub struct NetConnection<E: 'static> {
 
 impl<E: Send + Sync + 'static> NetConnection<E> {
     /// Construct a new NetConnection. `SocketAddr` is the address that will be connected to.
-    pub fn new(target_receiver: SocketAddr, target_sender: SocketAddr) -> Self {
+    pub fn new(target_addr: SocketAddr) -> Self {
         let mut send_buffer = EventChannel::new();
         let send_reader = send_buffer.register_reader();
 
         NetConnection {
-            target_receiver,
-            target_sender,
+            target_addr,
             state: ConnectionState::Connecting,
             send_buffer,
             receive_buffer: EventChannel::<NetEvent<E>>::new(),
@@ -62,10 +59,7 @@ impl<E: Send + Sync + 'static> NetConnection<E> {
 
 impl<E> PartialEq for NetConnection<E> {
     fn eq(&self, other: &Self) -> bool {
-        self.target_receiver == other.target_receiver
-            && self.state == other.state
-            && self.target_sender == other.target_sender
-            && self.state == other.state
+        self.target_addr == other.target_addr
     }
 }
 
