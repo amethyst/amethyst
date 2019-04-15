@@ -54,25 +54,25 @@ impl<T> NetEvent<T> {
             _ => None,
         }
     }
-	/// Each event type is either reliable or unreliable:
-	/// Reliable events always reach their destination,
-	/// Unreliable events may be lost
-	/// For Amethyst-defined events, whether it's reliable is specified in this function,
-	/// Otherwise, it's specified by the use of NetEvent::Reliable vs NetEvent::Unreliable
-	pub fn is_reliable(&self) -> bool {
-	    use NetEvent as NE;
-	    match self {
-	        // I specify them all explicitly so the typechecker can save
-	        // us from the mistake of specifying a builtin that SHOULD be
-	        // unreliable, but is assumed to be unreliable like all the rest
-	        NE::Connect { .. }
-	        | NE::Connected { .. }
-	        | NE::ConnectionRefused { .. }
-	        | NE::Disconnect { .. }
-	        | NE::Disconnected { .. }
-	        | NE::TextMessage { .. }
-	        | NE::Reliable(_) => true,
-	        NE::Unreliable(_) => false,
-	    }
-	}
+    /// Each event type is either reliable or unreliable:
+    /// Reliable events always reach their destination,
+    /// Unreliable events may be lost
+    /// For Amethyst-defined events, whether it's reliable is specified in this function,
+    /// Otherwise, it's specified by the use of NetEvent::Reliable vs NetEvent::Unreliable
+    pub fn is_reliable(&self) -> bool {
+        use NetEvent as NE;
+        match self {
+            // I specify them all explicitly so the typechecker can save
+            // us from the mistake of specifying a builtin that SHOULD be
+            // unreliable, but is assumed to be unreliable like all the rest
+            NE::Connect { .. }
+            | NE::Connected { .. }
+            | NE::ConnectionRefused { .. }
+            | NE::Disconnect { .. }
+            | NE::Disconnected { .. }
+            | NE::TextMessage { .. }
+            | NE::Reliable(_) => true,
+            NE::Unreliable(_) => false,
+        }
+    }
 }
