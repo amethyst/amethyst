@@ -34,22 +34,20 @@ mod test;
 /// For Amethyst-defined events, whether it's reliable is specified in this function,
 /// Otherwise, it's specified by the use of NetEvent::Reliable vs NetEvent::Unreliable
 fn is_reliable<T>(event: NetEvent<T>) -> bool {
-	use NetEvent as NE;
-	match event {
-		// I specify them all explicitly so the typechecker can save
-		// us from the mistake of specifying a builtin that SHOULD be
-		// unreliable, but is assumed to be unreliable like all the rest
-		| NE::Connect {..}
-		| NE::Connected {..}
-		| NE::ConnectionRefused {..}
-		| NE::Disconnect {..}
-		| NE::Disconnected {..}
-		| NE::TextMessage {..}
-		| NE::Reliable(_)
-		=> true,
-		| NE::Unreliable(_)
-		=> false,
-	}
+    use NetEvent as NE;
+    match event {
+        // I specify them all explicitly so the typechecker can save
+        // us from the mistake of specifying a builtin that SHOULD be
+        // unreliable, but is assumed to be unreliable like all the rest
+        NE::Connect { .. }
+        | NE::Connected { .. }
+        | NE::ConnectionRefused { .. }
+        | NE::Disconnect { .. }
+        | NE::Disconnected { .. }
+        | NE::TextMessage { .. }
+        | NE::Reliable(_) => true,
+        NE::Unreliable(_) => false,
+    }
 }
 
 /// Sends an event to the target NetConnection using the provided network Socket.
@@ -62,9 +60,9 @@ where
     match ser {
         Ok(s) => {
             let p = if is_reliable(event) {
-	            Packet::unreliable(addr, s)
+                Packet::unreliable(addr, s)
             } else {
-	            Packet::reliable_unordered(addr, s)
+                Packet::reliable_unordered(addr, s)
             };
             match sender.send(ServerSocketEvent::Packet(p)) {
                 Ok(_qty) => {}
