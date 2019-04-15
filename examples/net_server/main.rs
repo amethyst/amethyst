@@ -17,7 +17,6 @@ fn main() -> Result<()> {
     let game_data = GameDataBuilder::default()
         .with_bundle(NetworkBundle::<()>::new(
             "127.0.0.1:3455".parse().unwrap(),
-            "127.0.0.1:3454".parse().unwrap(),
             vec![Box::new(FilterConnected::<()>::new())],
         ))?
         .with(SpamReceiveSystem::new(), "rcv", &[]);
@@ -37,10 +36,7 @@ impl SimpleState for State1 {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         data.world
             .create_entity()
-            .with(NetConnection::<()>::new(
-                "127.0.0.1:3457".parse().unwrap(),
-                "127.0.0.1:3456".parse().unwrap(),
-            ))
+            .with(NetConnection::<()>::new("127.0.0.1:3457".parse().unwrap()))
             .build();
     }
 }

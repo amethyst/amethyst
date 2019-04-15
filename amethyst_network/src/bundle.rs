@@ -21,14 +21,9 @@ impl<T> NetworkBundle<T> {
     ///
     /// `receive_addr`: this is the address on which we will receive incoming packets.
     /// `send_addr`: this is the address from which we will send outgoing packets.
-    pub fn new(
-        receive_addr: SocketAddr,
-        send_addr: SocketAddr,
-        filters: Vec<Box<dyn NetFilter<T>>>,
-    ) -> Self {
+    pub fn new(udp_socket_addr: SocketAddr, filters: Vec<Box<dyn NetFilter<T>>>) -> Self {
         let config = ServerConfig {
-            udp_recv_addr: receive_addr,
-            udp_send_addr: send_addr,
+            udp_socket_addr,
             max_throughput: 5000,
         };
 

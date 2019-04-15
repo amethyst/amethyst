@@ -11,23 +11,14 @@ mod test {
 
     #[test]
     fn single_packet_early() {
-        // server got one socket receiving and one sending
-        let server_send: SocketAddr = "127.0.0.1:21200".parse().unwrap();
-        let server_receive: SocketAddr = "127.0.0.1:21201".parse().unwrap();
+        let server_addr: SocketAddr = "127.0.0.1:21200".parse().unwrap();
+        let client_addr: SocketAddr = "127.0.0.1:21202".parse().unwrap();
 
-        // client got one socket receiving and one sending
-        let client_send: SocketAddr = "127.0.0.1:21202".parse().unwrap();
-        let client_receive: SocketAddr = "127.0.0.1:21203".parse().unwrap();
+        let (mut world_cl, mut cl_dispatch, mut world_sv, mut sv_dispatch) =
+            build(client_addr, server_addr);
 
-        let (mut world_cl, mut cl_dispatch, mut world_sv, mut sv_dispatch) = build(
-            server_send.clone(),
-            server_receive.clone(),
-            client_send.clone(),
-            client_receive.clone(),
-        );
-
-        let mut conn_to_server = NetConnection::<()>::new(server_receive, server_send);
-        let mut conn_to_client = NetConnection::<()>::new(client_receive, client_send);
+        let mut conn_to_server = NetConnection::<()>::new(server_addr);
+        let mut conn_to_client = NetConnection::<()>::new(client_addr);
 
         let test_event = NetEvent::TextMessage {
             msg: "1".to_string(),
@@ -54,25 +45,16 @@ mod test {
     #[test]
     #[ignore]
     fn send_receive_100_packets() {
-        // server got one socket receiving and one sending
-        let server_send: SocketAddr = "127.0.0.1:21204".parse().unwrap();
-        let server_receive: SocketAddr = "127.0.0.1:21205".parse().unwrap();
-
-        // client got one socket receiving and one sending
-        let client_send: SocketAddr = "127.0.0.1:21206".parse().unwrap();
-        let client_receive: SocketAddr = "127.0.0.1:21207".parse().unwrap();
+        let server_addr: SocketAddr = "127.0.0.1:21204".parse().unwrap();
+        let client_addr: SocketAddr = "127.0.0.1:21206".parse().unwrap();
 
         // setup world for client and server
-        let (mut world_cl, mut cl_dispatch, mut world_sv, mut sv_dispatch) = build(
-            server_send.clone(),
-            server_receive.clone(),
-            client_send.clone(),
-            client_receive.clone(),
-        );
+        let (mut world_cl, mut cl_dispatch, mut world_sv, mut sv_dispatch) =
+            build(client_addr, server_addr);
 
         // setup connections from client -> server and server -> client
-        let conn_to_server = NetConnection::<()>::new(server_receive, server_send);
-        let mut conn_to_client = NetConnection::<()>::new(client_receive, client_send);
+        let conn_to_server = NetConnection::<()>::new(server_addr);
+        let mut conn_to_client = NetConnection::<()>::new(client_addr);
 
         let test_event = NetEvent::TextMessage {
             msg: "Test Message From Client1".to_string(),
@@ -103,25 +85,21 @@ mod test {
     }
 
     fn build<'a, 'b>(
-        server_send: SocketAddr,
-        server_receive: SocketAddr,
-        client_send: SocketAddr,
-        client_receive: SocketAddr,
+        client_addr: SocketAddr,
+        server_addr: SocketAddr,
     ) -> (World, Dispatcher<'a, 'b>, World, Dispatcher<'a, 'b>) {
         let mut world_cl = World::new();
         let mut world_sv = World::new();
 
         // client config
         let client_config = ServerConfig {
-            udp_send_addr: client_send,
-            udp_recv_addr: client_receive,
+            udp_socket_addr: client_addr,
             max_throughput: 10000,
         };
 
         // server config
         let server_config = ServerConfig {
-            udp_send_addr: server_send,
-            udp_recv_addr: server_receive,
+            udp_socket_addr: server_addr,
             max_throughput: 10000,
         };
 

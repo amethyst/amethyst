@@ -9,12 +9,13 @@ pub use crate::{
     filter::{FilterConnected, NetFilter},
     net_event::NetEvent,
     network_socket::NetSocketSystem,
-    server::{Host, ServerConfig, ServerSocketEvent},
+    server::{Host, ServerConfig},
 };
 
-use std::{net::SocketAddr, sync::mpsc::SyncSender};
+use std::net::SocketAddr;
 
 use bincode::{deserialize, serialize};
+use crossbeam_channel::Sender;
 use laminar::Packet;
 use log::error;
 use serde::{de::DeserializeOwned, Serialize};
@@ -30,7 +31,7 @@ mod test;
 
 /// Sends an event to the target NetConnection using the provided network Socket.
 /// The socket has to be bound.
-pub fn send_event<T>(event: NetEvent<T>, addr: SocketAddr, sender: &SyncSender<ServerSocketEvent>)
+pub fn send_event<T>(event: NetEvent<T>, addr: SocketAddr, sender: &Sender<Packet>)
 where
     T: Serialize,
 {
@@ -42,7 +43,8 @@ where
             } else {
                 Packet::reliable_unordered(addr, s)
             };
-            match sender.send(ServerSocketEvent::Packet(p)) {
+
+            match sender.send(p) {
                 Ok(_qty) => {}
                 Err(e) => error!("Failed to send data to network socket: {}", e),
             }
