@@ -39,9 +39,9 @@ where
     match ser {
         Ok(s) => {
             let p = if event.is_reliable() {
-                Packet::unreliable(addr, s)
-            } else {
                 Packet::reliable_unordered(addr, s)
+            } else {
+                Packet::unreliable(addr, s)
             };
 
             match sender.send(p) {
