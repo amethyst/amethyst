@@ -339,15 +339,17 @@ where
             }
         }
         {
-            let do_fixed = {
-                let time = self.world.write_resource::<Time>();
-                time.last_fixed_update().elapsed() >= time.fixed_time()
-            };
             #[cfg(feature = "profiler")]
             profile_scope!("fixed_update");
-            if do_fixed {
+
+            {
+                self.world.write_resource::<Time>().start_fixed_update();
+            }
+            while { self.world.write_resource::<Time>().step_fixed_update() } {
                 self.states
                     .fixed_update(StateData::new(&mut self.world, &mut self.data));
+            }
+            {
                 self.world.write_resource::<Time>().finish_fixed_update();
             }
 
