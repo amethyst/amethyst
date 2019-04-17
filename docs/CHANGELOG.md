@@ -64,6 +64,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * `amethyst_test` returns the panic message of a failed execution. ([#1499])
 * Rename `NetEvent::Custom` variant to `NetEvent::Unreliable`. ([#1513])
 * Updated laminar to 0.2.0. ([#1502])
+* Updated nalgebra to 0.18.0. ([#1519])
 
 ### Removed
 
