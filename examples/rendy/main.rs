@@ -228,8 +228,8 @@ impl<B: Backend> SimpleState for Example<B> {
         };
 
         println!("Create spheres");
-        const NUM_ROWS: usize = 30;
-        const NUM_COLS: usize = 30;
+        const NUM_ROWS: usize = 15;
+        const NUM_COLS: usize = 15;
 
         let mut mtls = Vec::with_capacity(100);
 

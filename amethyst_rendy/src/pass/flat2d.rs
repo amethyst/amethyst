@@ -33,7 +33,7 @@ use rendy::{
         pso::{
             BlendState, ColorBlendDesc, ColorMask, DepthStencilDesc, Descriptor,
             DescriptorSetLayoutBinding, DescriptorSetWrite, DescriptorType, ElemStride, Element,
-            EntryPoint, GraphicsShaderSet, InstanceRate, ShaderStageFlags, Specialization,
+            EntryPoint, GraphicsShaderSet, InstanceRate, ShaderStageFlags, Specialization, SpecializationConstant
         },
         Backend,
     },
@@ -44,7 +44,7 @@ use rendy::{
 };
 use smallvec::SmallVec;
 
-const TEXTURE_ARRAY_SIZE: usize = 32;
+const TEXTURE_ARRAY_SIZE: usize = 16;
 
 /// Draw sprites without lighting
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -97,6 +97,17 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawFlat2DDesc {
                 entry: "main",
                 module: &storage[1],
                 specialization: Specialization::default(),
+                // TODO: Use that spec constants.
+                // Doesn't work on metal due to potential spirv-cross bug?
+                // specialization: Specialization {
+                //     constants: &[SpecializationConstant {
+                //         id: 0,
+                //         range: 0..4,
+                //     }],
+                //     data: util::slice_as_bytes(&[
+                //         TEXTURE_ARRAY_SIZE as i32
+                //     ]),
+                // },
             }),
             hull: None,
             domain: None,

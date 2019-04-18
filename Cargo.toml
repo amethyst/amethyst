@@ -25,6 +25,10 @@ debug = true
 [features]
 default = ["animation", "audio", "locale", "network"]
 
+vulkan = ["amethyst_rendy/vulkan"]
+metal = ["amethyst_rendy/metal"]
+dx12 = ["amethyst_rendy/dx12"]
+
 animation = [
     "amethyst_animation"
 ]
@@ -54,6 +58,7 @@ profiler = [
     "amethyst_input/profiler",
     "amethyst_locale/profiler",
     "amethyst_renderer/profiler",
+    "amethyst_rendy/profiler",
     "amethyst_ui/profiler",
     "amethyst_utils/profiler",
 ]
@@ -66,6 +71,7 @@ nightly = [
     "amethyst_controls/nightly",
     "amethyst_network/nightly",
     "amethyst_renderer/nightly",
+    "amethyst_rendy/nightly",
     "amethyst_input/nightly",
     "amethyst_ui/nightly",
     "amethyst_utils/nightly",
@@ -121,7 +127,7 @@ env_logger = "0.6.1"
 genmesh = "0.6"
 ron = "0.4.2"
 specs-derive = "0.4"
-amethyst_rendy = { path = "amethyst_rendy", features = ["vulkan"] }
+amethyst_rendy = { path = "amethyst_rendy", features = ["metal"] }
 derivative = "1.0.2"
 
 [build-dependencies]

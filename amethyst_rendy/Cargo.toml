@@ -11,6 +11,8 @@ categories = ["rendering", "rendering::engine"]
 dx12 = ["rendy/dx12"]
 metal = ["rendy/metal"]
 vulkan = ["rendy/vulkan"]
+nightly = ["shred/nightly"]
+profiler = []
 
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.6" }
@@ -29,7 +31,7 @@ palette = { version = "0.4", features = ["serde"] }
 rendy = { path = "../../rendy/rendy/", features = ["full", "empty", "serde-1"] }
 ron = "0.4"
 serde = { version = "1", features = ["serde_derive"] }
-shred = { version = "0.7", features = ["nightly"] }
+shred = { version = "0.7"  }
 shred-derive = { version = "0.5" }  
 fnv = "1"
 derivative = "1.0.2"

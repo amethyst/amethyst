@@ -1,10 +1,11 @@
 #version 450
 
+
 layout(push_constant) uniform pushConstants {
     uint tex_id;
 } u_pushConstants;
 
-layout(set = 1, binding = 0) uniform sampler2D albedo[32];
+layout(set = 1, binding = 0) uniform sampler2D albedo[16];
 
 layout(location = 0) in vec2 tex_uv;
 
