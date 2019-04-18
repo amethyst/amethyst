@@ -6,9 +6,9 @@ use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 use unicode_segmentation::UnicodeSegmentation;
 use winit::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, WindowEvent};
 
-use crate::{Selected, TextEditing, UiText, UiEvent, UiEventType, LineMode};
+use crate::{LineMode, Selected, TextEditing, UiEvent, UiEventType, UiText};
 use amethyst_core::{
-    ecs::prelude::{Join, Read, Write, ReadStorage, Resources, System, WriteStorage, Entities},
+    ecs::prelude::{Entities, Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
     shrev::{EventChannel, ReaderId},
 };
 
@@ -40,7 +40,10 @@ impl<'a> System<'a> for TextEditingInputSystem {
         Write<'a, EventChannel<UiEvent>>,
     );
 
-    fn run(&mut self, (entities, mut texts, mut editables, selecteds, events, mut edit_events): Self::SystemData) {
+    fn run(
+        &mut self,
+        (entities, mut texts, mut editables, selecteds, events, mut edit_events): Self::SystemData,
+    ) {
         for text in (&mut texts).join() {
             if (*text.text).chars().any(is_combining_mark) {
                 let normalized = text.text.nfd().collect::<String>();
@@ -55,7 +58,9 @@ impl<'a> System<'a> for TextEditingInputSystem {
         ) {
             // Process events for the focused text element
             if let Some((entity, ref mut focused_text, ref mut focused_edit, _)) =
-                (&*entities, &mut texts, &mut editables, &selecteds).join().next()
+                (&*entities, &mut texts, &mut editables, &selecteds)
+                    .join()
+                    .next()
             {
                 match *event {
                     Event::WindowEvent {
@@ -222,8 +227,14 @@ impl<'a> System<'a> for TextEditingInputSystem {
                                     match ClipboardProvider::new().and_then(
                                         |mut ctx: ClipboardContext| ctx.set_contents(new_clip),
                                     ) {
-                                        Ok(_) => edit_events.single_write(UiEvent::new(UiEventType::Change, entity)),
-                                        Err(e) => error!("Error occured when cutting to clipboard: {:?}", e)
+                                        Ok(_) => edit_events.single_write(UiEvent::new(
+                                            UiEventType::Change,
+                                            entity,
+                                        )),
+                                        Err(e) => error!(
+                                            "Error occured when cutting to clipboard: {:?}",
+                                            e
+                                        ),
                                     }
                                 }
                             }
@@ -264,8 +275,10 @@ impl<'a> System<'a> for TextEditingInputSystem {
                                         focused_edit.cursor_position +=
                                             contents.graphemes(true).count() as isize;
 
-
-                                        edit_events.single_write(UiEvent::new(UiEventType::Change, entity));
+                                        edit_events.single_write(UiEvent::new(
+                                            UiEventType::Change,
+                                            entity,
+                                        ));
                                     }
                                     Err(e) => error!(
                                         "Error occured when pasting contents of clipboard: {:?}",
@@ -275,28 +288,35 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             }
                         }
                         VirtualKeyCode::Return | VirtualKeyCode::NumpadEnter => {
-                            info!("{:?}", focused_text);
                             match focused_text.line_mode {
                                 LineMode::Single => {
-                                    edit_events.single_write(UiEvent::new(UiEventType::Commit, entity));
+                                    edit_events
+                                        .single_write(UiEvent::new(UiEventType::Commit, entity));
                                 }
                                 LineMode::Wrap => {
-                                    if modifiers.shift && focused_text.text.graphemes(true).count() < focused_edit.max_length {
+                                    if modifiers.shift
+                                        && focused_text.text.graphemes(true).count()
+                                            < focused_edit.max_length
+                                    {
                                         let start_byte = focused_text
                                             .text
                                             .grapheme_indices(true)
                                             .nth(focused_edit.cursor_position as usize)
                                             .map(|i| i.0)
-                                            .unwrap_or_else(|| {
-                                                focused_text.text.len()
-                                            });
+                                            .unwrap_or_else(|| focused_text.text.len());
 
                                         focused_text.text.insert(start_byte, '\n');
                                         focused_edit.cursor_position += 1;
 
-                                        edit_events.single_write(UiEvent::new(UiEventType::Change, entity));
+                                        edit_events.single_write(UiEvent::new(
+                                            UiEventType::Change,
+                                            entity,
+                                        ));
                                     } else {
-                                        edit_events.single_write(UiEvent::new(UiEventType::Commit, entity));
+                                        edit_events.single_write(UiEvent::new(
+                                            UiEventType::Commit,
+                                            entity,
+                                        ));
                                     }
                                 }
                             }
