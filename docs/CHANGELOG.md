@@ -93,6 +93,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1365]: https://github.com/amethyst/amethyst/pull/1365
 [#1371]: https://github.com/amethyst/amethyst/pull/1371
 [#1373]: https://github.com/amethyst/amethyst/pull/1373
+[#1375]: https://github.com/amethyst/amethyst/pull/1375
 [#1388]: https://github.com/amethyst/amethyst/pull/1388
 [#1390]: https://github.com/amethyst/amethyst/pull/1390
 [#1397]: https://github.com/amethyst/amethyst/pull/1397
@@ -104,6 +105,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1419]: https://github.com/amethyst/amethyst/pull/1419
 [#1424]: https://github.com/amethyst/amethyst/pull/1424
 [#1435]: https://github.com/amethyst/amethyst/pull/1435
+[#1436]: https://github.com/amethyst/amethyst/pull/1436
 [#1410]: https://github.com/amethyst/amethyst/pull/1410
 [#1439]: https://github.com/amethyst/amethyst/pull/1439
 [#1445]: https://github.com/amethyst/amethyst/pull/1445
@@ -248,7 +250,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 
 * Sprites contain their dimensions and offsets to render them with the right size and desired position. ([#829], [#830])
 * Texture coordinates for sprites are 1.0 at the top of the texture and 0.0 at the bottom. ([#829], [#830])
-* Made get_camera public. ([#878)]
+* Made get_camera public. ([#878])
 * Simplified creating states with SimpleState and EmptyState. ([#887])
 * Updated ProgressCounter to show loading errors. ([#892])
 * Replaced the `imagefmt` crate with `image`. ([#877])
