@@ -43,7 +43,8 @@ impl<B: Backend> SimpleFormat<Texture<B>> for ImageFormat {
 /// - `B`: `Backend` parameter to use for `Texture<B>` type
 /// - `F`: `Format` to use for loading the `Texture`s from file
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub enum TexturePrefab<B: Backend, F>
+#[serde(bound = "")]
+pub enum TexturePrefab<B: Backend, F = ImageFormat>
 where
     F: Format<Texture<B>>,
 {
@@ -52,13 +53,19 @@ where
 
     // Generate texture
     Generate(TextureGenerator),
-
+    #[serde(bound(
+        serialize = "F: Serialize, F::Options: Serialize",
+        deserialize = "F: Deserialize<'de>, F::Options: Deserialize<'de>",
+    ))]
     /// Load file with format
     File(String, F, F::Options),
 
     /// Clone handle only
     #[serde(skip)]
     Handle(Handle<Texture<B>>),
+    /// Placeholder during loading
+    #[serde(skip)]
+    Placeholder,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -70,6 +77,7 @@ pub enum TextureGenerator {
 }
 
 fn simple_builder<A: AsPixel>(data: Vec<A>, size: Size, filter: Filter) -> TextureBuilder<'static> {
+    println!("Generate");
     TextureBuilder::new()
         .with_kind(Kind::D2(size, size, 1, 1))
         .with_view_kind(ViewKind::D2)
@@ -112,8 +120,7 @@ impl TextureGenerator {
 
 impl<'a, B: Backend, F> PrefabData<'a> for TexturePrefab<B, F>
 where
-    F: Format<Texture<B>> + Clone + Sync,
-    F::Options: Clone,
+    F: Format<Texture<B>> + Sync,
 {
     type SystemData = (ReadExpect<'a, Loader>, Read<'a, AssetStorage<Texture<B>>>);
 
@@ -122,25 +129,13 @@ where
     fn add_to_entity(
         &self,
         _: Entity,
-        system_data: &mut Self::SystemData,
+        _: &mut Self::SystemData,
         _: &[Entity],
         _: &[Entity],
     ) -> Result<Handle<Texture<B>>, Error> {
         let handle = match *self {
-            TexturePrefab::Data(ref data) => {
-                system_data
-                    .0
-                    .load_from_data(data.clone(), (), &system_data.1)
-            }
-
-            TexturePrefab::Generate(ref generator) => {
-                let data = generator.data();
-                system_data.0.load_from_data(data, (), &system_data.1)
-            }
-
-            TexturePrefab::File(..) => unreachable!(),
-
             TexturePrefab::Handle(ref handle) => handle.clone(),
+            _ => unreachable!(),
         };
         Ok(handle)
     }
@@ -148,35 +143,24 @@ where
     fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
-        system_data: &mut Self::SystemData,
+        (loader, storage): &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        let handle = match *self {
-            TexturePrefab::Data(ref data) => Some(system_data.0.load_from_data(
-                data.clone(),
-                progress,
-                &system_data.1,
-            )),
-
-            TexturePrefab::Generate(ref generator) => {
-                let data = generator.data();
-                Some(system_data.0.load_from_data(data, progress, &system_data.1))
+        let (ret, next) = match std::mem::replace(self, TexturePrefab::Placeholder) {
+            TexturePrefab::Data(data) => {
+                let handle = loader.load_from_data(data, progress, storage);
+                (true, TexturePrefab::Handle(handle))
             }
-
-            TexturePrefab::File(ref name, ref format, ref options) => Some(system_data.0.load(
-                name.as_ref(),
-                format.clone(),
-                options.clone(),
-                progress,
-                &system_data.1,
-            )),
-
-            TexturePrefab::Handle(_) => None,
+            TexturePrefab::Generate(generator) => {
+                let handle = loader.load_from_data(generator.data(), progress, storage);
+                (true, TexturePrefab::Handle(handle))
+            }
+            TexturePrefab::File(name, format, options) => {
+                let handle = loader.load(name.as_ref(), format, options, progress, storage);
+                (true, TexturePrefab::Handle(handle))
+            }
+            slot => (false, slot),
         };
-        if let Some(handle) = handle {
-            *self = TexturePrefab::Handle(handle);
-            Ok(true)
-        } else {
-            Ok(false)
-        }
+        *self = next;
+        Ok(ret)
     }
 }

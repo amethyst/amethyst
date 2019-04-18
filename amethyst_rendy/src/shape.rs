@@ -32,6 +32,7 @@ fn option_none<T>() -> Option<T> {
 ///     * `Vec<PosNormTangTex>`
 ///     * `ComboMeshCreator`
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[serde(bound = "")]
 pub struct ShapePrefab<B: Backend, V> {
     #[serde(skip)]
     #[serde(default = "option_none")]

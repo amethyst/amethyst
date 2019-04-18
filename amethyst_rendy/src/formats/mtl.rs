@@ -1,5 +1,5 @@
 use crate::{
-    formats::texture::TexturePrefab,
+    formats::texture::{ImageFormat, TexturePrefab},
     mtl::{Material, MaterialDefaults, TextureOffset},
     rendy::hal::Backend,
     transparent::Transparent,
@@ -17,13 +17,18 @@ use std::fmt::Debug;
 ///
 /// - `B`: `Backend` type parameter for `Material<B>` and `Texture<B>`
 /// - `F`: `Format` to use for loading `Texture`s
-#[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(default)]
-#[serde(bound(deserialize = "TexturePrefab<B, F>: Deserialize<'de>"))]
-pub struct MaterialPrefab<B: Backend, F>
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(
+    default,
+    bound(
+        serialize = "F: Serialize, F::Options: Serialize",
+        deserialize = "F: Deserialize<'de>, F::Options: Deserialize<'de>"
+    )
+)]
+pub struct MaterialPrefab<B: Backend, F = ImageFormat>
 where
     F: Format<Texture<B>>,
-    F::Options: Clone + Debug + Serialize + for<'d> Deserialize<'d>,
+    F::Options: Debug,
 {
     /// Diffuse map.
     pub albedo: Option<TexturePrefab<B, F>>,
@@ -48,10 +53,20 @@ where
     handle: Option<Handle<Material<B>>>,
 }
 
+impl<B: Backend, F> MaterialPrefab<B, F>
+where
+    F: Format<Texture<B>>,
+    F::Options: Debug,
+{
+    pub fn handle(&self) -> Option<Handle<Material<B>>> {
+        self.handle.clone()
+    }
+}
+
 impl<B: Backend, F> Default for MaterialPrefab<B, F>
 where
     F: Format<Texture<B>>,
-    F::Options: Clone + Debug + Serialize + for<'d> Deserialize<'d>,
+    F::Options: Debug,
 {
     fn default() -> Self {
         MaterialPrefab {
@@ -74,8 +89,7 @@ fn load_handle<B: Backend, F>(
     def: &Handle<Texture<B>>,
 ) -> Handle<Texture<B>>
 where
-    F: Format<Texture<B>> + Sync + Clone,
-    F::Options: Clone,
+    F: Format<Texture<B>>,
 {
     prefab
         .as_ref()
@@ -88,8 +102,8 @@ where
 
 impl<'a, B: Backend, F> PrefabData<'a> for MaterialPrefab<B, F>
 where
-    F: Format<Texture<B>> + Sync + Clone,
-    F::Options: Clone + Debug + Serialize + for<'d> Deserialize<'d>,
+    F: Format<Texture<B>> + Sync,
+    F::Options: Debug,
 {
     type SystemData = (
         WriteStorage<'a, Handle<Material<B>>>,

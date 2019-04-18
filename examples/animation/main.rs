@@ -14,15 +14,27 @@ use amethyst::{
     window::{EventsLoopSystem, ScreenDimensions, WindowSystem},
     winit::{ElementState, EventsLoop, VirtualKeyCode, Window},
 };
-
 use amethyst_rendy::{
-    rendy::{factory::Factory, graph::GraphBuilder, hal::Backend, mesh::PosNormTangTex},
+    pass::DrawPbrDesc,
+    rendy::{
+        factory::Factory,
+        graph::{
+            present::PresentNode,
+            render::{RenderGroupBuilder, RenderGroupDesc},
+            GraphBuilder,
+        },
+        hal::{
+            command::{ClearDepthStencil, ClearValue},
+            format::Format,
+            pso, Backend,
+        },
+        mesh::PosNormTangTex,
+    },
     system::{GraphCreator, RendererSystem},
     types::DefaultBackend,
 };
-use std::{marker::PhantomData, sync::Arc};
-
 use serde::{Deserialize, Serialize};
+use std::{marker::PhantomData, sync::Arc};
 
 type MyPrefabData<B> = (
     Option<BasicScenePrefab<B, Vec<PosNormTangTex>>>,
@@ -296,22 +308,6 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         use amethyst::shred::SystemData;
 
         let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
-        use amethyst_rendy::{
-            pass::DrawPbrDesc,
-            rendy::{
-                graph::{
-                    present::PresentNode,
-                    render::{RenderGroupBuilder, RenderGroupDesc},
-                    GraphBuilder,
-                },
-                hal::{
-                    command::{ClearDepthStencil, ClearValue},
-                    format::Format,
-                    pso,
-                },
-                memory::MemoryUsageValue,
-            },
-        };
 
         let surface = factory.create_surface(window.clone());
 
@@ -321,7 +317,6 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
             surface.kind(),
             1,
             factory.get_surface_format(&surface),
-            MemoryUsageValue::Data,
             Some(ClearValue::Color(CLEAR_COLOR.into())),
         );
 
@@ -329,7 +324,6 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
             surface.kind(),
             1,
             Format::D16Unorm,
-            MemoryUsageValue::Data,
             Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
         );
 

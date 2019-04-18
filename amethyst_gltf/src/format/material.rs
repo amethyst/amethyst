@@ -168,15 +168,15 @@ fn load_sampler_info(sampler: &gltf::texture::Sampler<'_>) -> hal::image::Sample
     use hal::image::{Filter, SamplerInfo};
 
     let mag_filter = match sampler.mag_filter() {
-        None | Some(MagFilter::Nearest) => Filter::Nearest,
-        Some(MagFilter::Linear) => Filter::Linear,
+        Some(MagFilter::Nearest) => Filter::Nearest,
+        None | Some(MagFilter::Linear) => Filter::Linear,
     };
 
     let (min_filter, mip_filter) = match sampler.min_filter() {
-        None | Some(MinFilter::Nearest) | Some(MinFilter::NearestMipmapNearest) => {
+        Some(MinFilter::Nearest) | Some(MinFilter::NearestMipmapNearest) => {
             (Filter::Nearest, Filter::Nearest)
         }
-        Some(MinFilter::Linear) | Some(MinFilter::LinearMipmapLinear) => {
+        None | Some(MinFilter::Linear) | Some(MinFilter::LinearMipmapLinear) => {
             (Filter::Linear, Filter::Linear)
         }
         Some(MinFilter::NearestMipmapLinear) => (Filter::Nearest, Filter::Linear),

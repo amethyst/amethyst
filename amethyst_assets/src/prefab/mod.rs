@@ -339,16 +339,21 @@ where
     /// From existing handle
     #[serde(skip)]
     Handle(Handle<A>),
-
+    #[serde(bound(
+        serialize = "F: Serialize, F::Options: Serialize",
+        deserialize = "F: Deserialize<'de>, F::Options: Deserialize<'de>",
+    ))]
     /// From file, (name, format, format options)
     File(String, F, F::Options),
+    /// Placeholder during loading
+    #[serde(skip)]
+    Placeholder,
 }
 
 impl<'a, A, F> PrefabData<'a> for AssetPrefab<A, F>
 where
     A: Asset,
-    F: Format<A> + Clone,
-    F::Options: Clone,
+    F: Format<A>,
 {
     type SystemData = (
         ReadExpect<'a, Loader>,
@@ -367,7 +372,7 @@ where
     ) -> Result<Handle<A>, Error> {
         let handle = match *self {
             AssetPrefab::Handle(ref handle) => handle.clone(),
-            AssetPrefab::File(..) => unreachable!(),
+            _ => unreachable!(),
         };
         Ok(system_data
             .1
@@ -378,25 +383,17 @@ where
     fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
-        system_data: &mut Self::SystemData,
+        (loader, _, storage): &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        let handle = if let AssetPrefab::File(ref name, ref format, ref options) = *self {
-            Some(system_data.0.load(
-                name.as_ref(),
-                format.clone(),
-                options.clone(),
-                progress,
-                &system_data.2,
-            ))
-        } else {
-            None
+        let (ret, next) = match std::mem::replace(self, AssetPrefab::Placeholder) {
+            AssetPrefab::File(name, format, options) => {
+                let handle = loader.load(name, format, options, progress, storage);
+                (true, AssetPrefab::Handle(handle))
+            }
+            slot => (false, slot),
         };
-        if let Some(handle) = handle {
-            *self = AssetPrefab::Handle(handle);
-            Ok(true)
-        } else {
-            Ok(false)
-        }
+        *self = next;
+        Ok(ret)
     }
 }
 

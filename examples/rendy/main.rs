@@ -33,6 +33,7 @@ use amethyst::{
 };
 use amethyst_rendy::{
     camera::{ActiveCamera, Camera, CameraPrefab, Projection},
+    formats::{mesh::MeshPrefab, mtl::MaterialPrefab},
     light::{Light, LightPrefab, PointLight},
     mtl::{Material, MaterialDefaults},
     palette::{LinSrgba, Srgb},
@@ -164,13 +165,15 @@ struct Scene<B: Backend> {
 struct ScenePrefabData<B: Backend> {
     transform: Option<Transform>,
     gltf: Option<AssetPrefab<GltfSceneAsset<B>, GltfSceneFormat>>,
+    sprite_sheet: Option<SpriteSheetPrefab<B>>,
+    animation_set: Option<AnimationSetPrefab<SpriteAnimationId, SpriteRender<B>>>,
     camera: Option<CameraPrefab>,
     light: Option<LightPrefab>,
     tag: Option<Tag<AnimationMarker>>,
     fly_tag: Option<ControlTagPrefab>,
-    sprite_sheet: Option<SpriteSheetPrefab<B>>,
     sprite: Option<SpriteRenderPrefab<B>>,
-    animation_set: Option<AnimationSetPrefab<SpriteAnimationId, SpriteRender<B>>>,
+    mesh: Option<MeshPrefab<B, Vec<PosNormTangTex>>>,
+    material: Option<MaterialPrefab<B>>,
 }
 
 /// Animation ids used in a AnimationSet
@@ -475,11 +478,12 @@ impl<B: Backend> SimpleState for Example<B> {
                     WriteStorage<AnimationControlSet<SpriteAnimationId, SpriteRender<B>>>,
                 )| {
                     // For each entity that has AnimationSet
-                    for (entity, animation_set, _) in (&entities, &animation_sets, !&control_sets).join().collect::<Vec<_>>() {
-                        dbg!(&entity);
+                    for (entity, animation_set, _) in (&entities, &animation_sets, !&control_sets)
+                        .join()
+                        .collect::<Vec<_>>()
+                    {
                         // Creates a new AnimationControlSet for the entity
-                        let control_set =
-                            get_animation_set(&mut control_sets, entity).unwrap();
+                        let control_set = get_animation_set(&mut control_sets, entity).unwrap();
                         // Adds the `Fly` animation to AnimationControlSet and loops infinitely
                         control_set.add_animation(
                             SpriteAnimationId::Fly,

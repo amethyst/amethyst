@@ -573,7 +573,7 @@ impl<'de> Deserialize<'de> for Transform {
             Translation,
             Rotation,
             Scale,
-        };
+        }
 
         struct TransformVisitor;
 

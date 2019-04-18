@@ -15,6 +15,7 @@ use amethyst_core::{
 use amethyst_error::Error;
 use amethyst_rendy::{
     formats::{mtl::MaterialPrefab, texture::ImageFormat},
+    mtl::Material,
     rendy::{hal::Backend, mesh::MeshBuilder},
     types::Mesh,
 };
@@ -34,7 +35,7 @@ pub type GltfSceneLoaderSystem<B> = PrefabLoaderSystem<GltfPrefab<B>>;
 pub type GltfSceneAsset<B> = Prefab<GltfPrefab<B>>;
 
 /// `PrefabData` for loading Gltf files.
-#[derive(Debug, Clone, Derivative)]
+#[derive(Debug, Derivative)]
 #[derivative(Default(bound = ""))]
 pub struct GltfPrefab<B: Backend> {
     /// `Transform` will almost always be placed, the only exception is for the main `Entity` for
@@ -45,7 +46,7 @@ pub struct GltfPrefab<B: Backend> {
     /// Mesh handle after sub asset loading is done
     pub mesh_handle: Option<Handle<Mesh<B>>>,
     /// `Material` is placed on all `Entity`s with graphics primitives with material
-    pub material: Option<MaterialPrefab<B, ImageFormat>>,
+    pub material: Option<Handle<Material<B>>>,
     /// Loaded animations, if applicable, will always only be placed on the main `Entity`
     pub animatable: Option<AnimatablePrefab<usize, Transform>>,
     /// Skin data is placed on `Entity`s involved in the skin, skeleton or graphical primitives
@@ -161,7 +162,7 @@ impl Component for GltfNodeExtent {
 }
 
 /// Used during gltf loading to contain the materials used from scenes in the file
-#[derive(Debug, Clone, Derivative)]
+#[derive(Debug, Derivative)]
 #[derivative(Default(bound = ""))]
 pub struct GltfMaterialSet<B: Backend> {
     pub(crate) materials: HashMap<usize, MaterialPrefab<B, ImageFormat>>,
@@ -206,37 +207,27 @@ impl<'a, B: Backend> PrefabData<'a> for GltfPrefab<B> {
         entities: &[Entity],
         children: &[Entity],
     ) -> Result<(), Error> {
-        let (
-            ref mut transforms,
-            ref mut names,
-            ref mut materials,
-            ref mut animatables,
-            ref mut skinnables,
-            ref mut extents,
-            ref mut meshes,
-            _,
-            _,
-            _,
-        ) = system_data;
-        if let Some(ref transform) = self.transform {
+        let (transforms, names, materials, animatables, skinnables, extents, meshes, _, _, _) =
+            system_data;
+        if let Some(transform) = &self.transform {
             transform.add_to_entity(entity, transforms, entities, children)?;
         }
-        if let Some(ref mesh) = self.mesh_handle {
+        if let Some(mesh) = &self.mesh_handle {
             meshes.insert(entity, mesh.clone())?;
         }
-        if let Some(ref name) = self.name {
+        if let Some(name) = &self.name {
             name.add_to_entity(entity, names, entities, children)?;
         }
-        if let Some(ref material) = self.material {
-            material.add_to_entity(entity, materials, entities, children)?;
+        if let Some(material) = &self.material {
+            materials.0.insert(entity, material.clone())?;
         }
-        if let Some(ref animatable) = self.animatable {
+        if let Some(animatable) = &self.animatable {
             animatable.add_to_entity(entity, animatables, entities, children)?;
         }
-        if let Some(ref skinnable) = self.skinnable {
+        if let Some(skinnable) = &self.skinnable {
             skinnable.add_to_entity(entity, skinnables, entities, children)?;
         }
-        if let Some(ref extent) = self.extent {
+        if let Some(extent) = &self.extent {
             extents.insert(entity, extent.clone())?;
         }
         Ok(())
@@ -247,51 +238,28 @@ impl<'a, B: Backend> PrefabData<'a> for GltfPrefab<B> {
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        let (
-            _,
-            _,
-            ref mut materials,
-            ref mut animatables,
-            _,
-            _,
-            _,
-            ref meshes_storage,
-            ref loader,
-            ref mut mat_set,
-        ) = system_data;
+        let (_, _, materials, animatables, _, _, _, meshes_storage, loader, mat_set) = system_data;
+
         let mut ret = false;
-        if let Some(ref mut mats) = self.materials {
+        if let Some(mut mats) = self.materials.take() {
             mat_set.materials.clear();
-            for (id, material) in mats.materials.iter_mut() {
-                if material.load_sub_assets(progress, materials)? {
-                    ret = true;
-                }
-                mat_set.materials.insert(*id, material.clone());
+            for (id, mut material) in mats.materials.drain() {
+                ret |= material.load_sub_assets(progress, materials)?;
+                mat_set.materials.insert(id, material);
             }
         }
-        if let Some(ref mesh) = self.mesh {
+        if let Some(material_id) = self.material_id {
+            if let Some(mat) = mat_set.materials.get(&material_id) {
+                self.material = mat.handle();
+            }
+        }
+        if let Some(mesh) = self.mesh.take() {
             self.mesh_handle =
                 Some(loader.load_from_data(mesh.clone(), &mut *progress, meshes_storage));
             ret = true;
         }
-        match self.material_id {
-            Some(material_id) => {
-                if let Some(mat) = mat_set.materials.get(&material_id) {
-                    self.material = Some(mat.clone());
-                }
-            }
-            None => {
-                if let Some(ref mut material) = self.material {
-                    if material.load_sub_assets(progress, materials)? {
-                        ret = true;
-                    }
-                }
-            }
-        }
-        if let Some(ref mut animatable) = self.animatable {
-            if animatable.load_sub_assets(progress, animatables)? {
-                ret = true;
-            }
+        if let Some(animatable) = &mut self.animatable {
+            ret |= animatable.load_sub_assets(progress, animatables)?;
         }
         Ok(ret)
     }

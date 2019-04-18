@@ -5,7 +5,7 @@
 use std::sync::Arc;
 
 use rayon::{ThreadPool, ThreadPoolBuilder};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use amethyst_assets::*;
 use amethyst_core::{
@@ -82,7 +82,7 @@ impl Asset for MeshAsset {
 }
 
 /// A format the mesh data could be stored with.
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 struct Ron;
 
 impl SimpleFormat<MeshAsset> for Ron {

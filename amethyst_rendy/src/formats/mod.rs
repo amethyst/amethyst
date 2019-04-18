@@ -11,7 +11,7 @@ use crate::{
     shape::InternalShape,
     types::{Mesh, Texture},
 };
-use amethyst_assets::{AssetPrefab, Format, PrefabData, ProgressCounter};
+use amethyst_assets::{Format, PrefabData, ProgressCounter};
 use amethyst_core::ecs::prelude::Entity;
 use amethyst_error::Error;
 use rendy::{hal::Backend, mesh::MeshBuilder, texture::image::ImageTextureConfig};
@@ -37,9 +37,9 @@ where
     M::Options: DeserializeOwned + Serialize,
     T: Format<Texture<B>, Options = ImageTextureConfig>,
 {
-    #[serde(bound(deserialize = "MeshPrefab<B, V, M>: Deserialize<'de>"))]
+    #[serde(bound(deserialize = "MeshPrefab<B, V, M>: for<'d> Deserialize<'d>"))]
     mesh: MeshPrefab<B, V, M>,
-    #[serde(bound(deserialize = "MaterialPrefab<B, T>: Deserialize<'de>"))]
+    #[serde(bound(deserialize = "MaterialPrefab<B, T>: for<'d> Deserialize<'d>"))]
     material: MaterialPrefab<B, T>,
 }
 
@@ -52,7 +52,7 @@ where
     V: From<InternalShape> + Into<MeshBuilder<'static>>,
 {
     type SystemData = (
-        <AssetPrefab<Mesh<B>, M> as PrefabData<'a>>::SystemData,
+        <MeshPrefab<B, V, M> as PrefabData<'a>>::SystemData,
         <MaterialPrefab<B, T> as PrefabData<'a>>::SystemData,
     );
     type Result = ();
@@ -60,37 +60,22 @@ where
     fn add_to_entity(
         &self,
         entity: Entity,
-        system_data: &mut <Self as PrefabData<'_>>::SystemData,
-        entities: &[Entity],
-        children: &[Entity],
+        (ref mut mesh_data, ref mut mat_data): &mut Self::SystemData,
+        ent: &[Entity],
+        ch: &[Entity],
     ) -> Result<(), Error> {
-        match self.mesh {
-            MeshPrefab::Asset(ref m) => {
-                m.add_to_entity(entity, &mut system_data.0, entities, children)?;
-            }
-            MeshPrefab::Shape(ref s) => {
-                s.add_to_entity(entity, &mut system_data.0, entities, children)?;
-            }
-        }
-        self.material
-            .add_to_entity(entity, &mut system_data.1, entities, children)?;
+        self.mesh.add_to_entity(entity, mesh_data, ent, ch)?;
+        self.material.add_to_entity(entity, mat_data, ent, ch)?;
         Ok(())
     }
 
     fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
-        system_data: &mut Self::SystemData,
+        (ref mut mesh_data, ref mut mat_data): &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        let load_mesh = match self.mesh {
-            MeshPrefab::Asset(ref mut m) => m.load_sub_assets(progress, &mut system_data.0)?,
-            MeshPrefab::Shape(ref mut s) => s.load_sub_assets(progress, &mut system_data.0)?,
-        };
-
-        let load_material = self
-            .material
-            .load_sub_assets(progress, &mut system_data.1)?;
-
+        let load_mesh = self.mesh.load_sub_assets(progress, mesh_data)?;
+        let load_material = self.material.load_sub_assets(progress, mat_data)?;
         Ok(load_mesh || load_material)
     }
 }

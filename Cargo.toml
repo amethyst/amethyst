@@ -18,6 +18,10 @@ license = "MIT/Apache-2.0"
 [badges]
 travis-ci = { repository = "amethyst/amethyst", branch = "master" }
 
+[profile.release]
+incremental = true
+debug = true
+
 [features]
 default = ["animation", "audio", "locale", "network"]
 
@@ -298,6 +302,3 @@ path = "examples/auto_fov/main.rs"
 name = "rendy"
 path = "examples/rendy/main.rs"
 required-features = ["animation", "gltf"]
-
-[profile.release]
-debug = true
