@@ -31,7 +31,7 @@ it is attached to. ([#1282])
 * Add `SpriteScenePrefab`. Allows load sprites from a grid and add them to the `SpriteRenderer`. ([#1469])
 * Add `Widgets` resource. Allows keeping track of UI entities and their components and iterating over them. ([#1390])
 * `AmethystApplication` takes in application name using `with_app_name(..)`. ([#1499])
-* Add `NetEvent::Reliable` variant. When added to NetConnection, these events will eventually reach the target. ([#???])
+* Add `NetEvent::Reliable` variant. When added to NetConnection, these events will eventually reach the target. ([#1513])
 
 ### Changed
 
