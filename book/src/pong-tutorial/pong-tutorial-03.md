@@ -70,12 +70,12 @@ let input_bundle = InputBundle::<String, String>::new()
 # let config = DisplayConfig::load(&path);
 # let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
 #       .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-#       .with_pass(DrawFlat::<PosTex>::new()),
+#       .with_pass(DrawFlat::<PosTex, f32>::new()),
 # );
 # struct Pong;
 # impl SimpleState for Pong { }
 let game_data = GameDataBuilder::default()
-    .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
+    .with_bundle(RenderBundle::<'_, _, _, f32>::new(pipe, Some(config)).with_sprite_sheet_processor())?
     .with_bundle(TransformBundle::new())?
     .with_bundle(input_bundle)?;
 let mut game = Application::new("./", Pong, game_data)?;
@@ -134,7 +134,7 @@ pub struct PaddleSystem;
 
 impl<'s> System<'s> for PaddleSystem {
   type SystemData = (
-    WriteStorage<'s, Transform>,
+    WriteStorage<'s, Transform<f32>>,
     ReadStorage<'s, Paddle>,
     Read<'s, InputHandler<String, String>>,
   );
@@ -210,7 +210,7 @@ fn main() -> amethyst::Result<()> {
 # let config = DisplayConfig::load(&path);
 # let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
 #       .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-#       .with_pass(DrawFlat::<PosTex>::new()),
+#       .with_pass(DrawFlat::<PosTex, f32>::new()),
 # );
 # mod systems {
 # use amethyst;
@@ -222,10 +222,14 @@ fn main() -> amethyst::Result<()> {
 # }
 # let input_bundle = amethyst::input::InputBundle::<String, String>::new();
   let game_data = GameDataBuilder::default()
-      .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
+      .with_bundle(RenderBundle::<'_, _, _, f32>::new(pipe, Some(config)).with_sprite_sheet_processor())?
       .with_bundle(TransformBundle::new())?
       .with_bundle(input_bundle)?
       .with(systems::PaddleSystem, "paddle_system", &["input_system"]); // Add this line
+# let assets_dir = "/";
+# struct Pong;
+# impl SimpleState for Pong { }
+# let mut game = Application::new(assets_dir, Pong, game_data)?;
 # Ok(())
 }
 ```
@@ -261,7 +265,7 @@ component of the transform's translation.
 # pub struct PaddleSystem;
 # impl<'s> System<'s> for PaddleSystem {
 #  type SystemData = (
-#    WriteStorage<'s, Transform>,
+#    WriteStorage<'s, Transform<f32>>,
 #    ReadStorage<'s, Paddle>,
 #    Read<'s, InputHandler<String, String>>,
 #  );
@@ -321,7 +325,7 @@ Our run function should now look something like this:
 # pub struct PaddleSystem;
 # impl<'s> System<'s> for PaddleSystem {
 #  type SystemData = (
-#    WriteStorage<'s, Transform>,
+#    WriteStorage<'s, Transform<f32>>,
 #    ReadStorage<'s, Paddle>,
 #    Read<'s, InputHandler<String, String>>,
 #  );

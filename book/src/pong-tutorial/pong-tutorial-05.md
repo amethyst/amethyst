@@ -53,7 +53,7 @@ pub struct WinnerSystem;
 impl<'s> System<'s> for WinnerSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
-        WriteStorage<'s, Transform>,
+        WriteStorage<'s, Transform<f32>>,
     );
 
     fn run(&mut self, (mut balls, mut locals): Self::SystemData) {
@@ -136,12 +136,12 @@ keep playing after someone scores and log who got the point.
 # let config = DisplayConfig::load(&path);
 # let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
 #       .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-#       .with_pass(DrawFlat2D::new()),
+#       .with_pass(DrawFlat2D::<f32>::new()),
 # );
 # let input_bundle = amethyst::input::InputBundle::<String, String>::new();
 #
 let game_data = GameDataBuilder::default()
-#    .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
+#    .with_bundle(RenderBundle::<'_, _, _, f32>::new(pipe, Some(config)).with_sprite_sheet_processor())?
 #    .with_bundle(TransformBundle::new())?
 #    .with_bundle(input_bundle)?
 #    .with(systems::PaddleSystem, "paddle_system", &["input_system"])
@@ -154,6 +154,10 @@ let game_data = GameDataBuilder::default()
     // --snip--
     .with(systems::WinnerSystem, "winner_system", &["ball_system"]);
 #
+# let assets_dir = "/";
+# struct Pong;
+# impl SimpleState for Pong { }
+# let mut game = Application::new(assets_dir, Pong, game_data)?;
 # Ok(())
 # }
 ```
@@ -218,13 +222,13 @@ fn main() -> amethyst::Result<()> {
 #     let config = DisplayConfig::load(&path);
     let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
           .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-          .with_pass(DrawFlat2D::new())
+          .with_pass(DrawFlat2D::<f32>::new())
           .with_pass(DrawUi::new()), // <-- Add me
     );
 #     let input_bundle = amethyst::input::InputBundle::<String, String>::new();
 #
     let game_data = GameDataBuilder::default()
-        .with_bundle(RenderBundle::new(pipe, Some(config))
+        .with_bundle(RenderBundle::<'_, _, _, f32>::new(pipe, Some(config))
         .with_sprite_sheet_processor())?
         .with_bundle(TransformBundle::new())?
         .with_bundle(input_bundle)?
@@ -239,8 +243,12 @@ fn main() -> amethyst::Result<()> {
 #             &["paddle_system", "ball_system"],
 #         )
 #         .with(systems::WinnerSystem, "winner_system", &["ball_system"]);
-# 
-#     Ok(())
+#
+# let assets_dir = "/";
+# struct Pong;
+# impl SimpleState for Pong { }
+# let mut game = Application::new(assets_dir, Pong, game_data)?;
+# Ok(())
 }
 ```
 
@@ -777,7 +785,7 @@ pub struct WinnerSystem;
 impl<'s> System<'s> for WinnerSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
-        WriteStorage<'s, Transform>,
+        WriteStorage<'s, Transform<f32>>,
         WriteStorage<'s, UiText>,
         Write<'s, ScoreBoard>,
         ReadExpect<'s, ScoreText>,

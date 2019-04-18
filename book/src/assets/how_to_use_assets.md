@@ -75,7 +75,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
         let game_data = GameDataBuilder::default()
             .with_bundle(UiBundle::<String, String>::new())?
             .with_bundle(
-                RenderBundle::new(pipeline, Some(display_config))
+                RenderBundle::<'_, _, _, f32>::new(pipeline, Some(display_config))
                     .with_sprite_sheet_processor()
             )?;
 
