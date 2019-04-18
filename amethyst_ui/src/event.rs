@@ -48,6 +48,10 @@ pub enum UiEventType {
         /// The entity on which the dragged object was dropped.
         dropped_on: Entity,
     },
+    /// When the value of an `Editable` Ui element has changed.
+    Change,
+    /// When an `Editable` Ui element has been committed.
+    Commit,
 }
 
 /// A ui event instance.
