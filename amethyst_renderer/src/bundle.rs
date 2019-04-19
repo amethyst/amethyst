@@ -1,7 +1,7 @@
 //! ECS rendering bundle
 
 use amethyst_assets::Processor;
-use amethyst_core::{bundle::SystemBundle, nalgebra::Real, specs::prelude::DispatcherBuilder};
+use amethyst_core::{bundle::SystemBundle, nalgebra::RealField, specs::prelude::DispatcherBuilder};
 use amethyst_error::{format_err, Error, ResultExt};
 use std::marker::PhantomData;
 
@@ -31,7 +31,7 @@ pub struct RenderBundle<'a, B, P, N>
 where
     B: PipelineBuild<Pipeline = P>,
     P: PolyPipeline,
-    N: Real,
+    N: RealField,
 {
     pipe: B,
     config: Option<DisplayConfig>,
@@ -46,7 +46,7 @@ impl<'a, B, P, N> RenderBundle<'a, B, P, N>
 where
     B: PipelineBuild<Pipeline = P>,
     P: PolyPipeline,
-    N: Real,
+    N: RealField,
 {
     /// Create a new render bundle
     pub fn new(pipe: B, config: Option<DisplayConfig>) -> Self {
@@ -94,7 +94,7 @@ impl<'a, 'b, 'c, B, P, N> SystemBundle<'a, 'b> for RenderBundle<'c, B, P, N>
 where
     B: PipelineBuild<Pipeline = P>,
     P: 'b + PolyPipeline,
-    N: Real + Default,
+    N: RealField + Default,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         if let Some(dep) = self.visibility_sorting {

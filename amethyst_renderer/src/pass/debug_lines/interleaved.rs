@@ -7,7 +7,8 @@ use gfx::{pso::buffer::ElemStride, Primitive};
 use log::{debug, trace};
 
 use amethyst_core::{
-    nalgebra::{self as na, alga::general::SubsetOf},
+    alga::general::SubsetOf,
+    nalgebra::{self as na, Matrix4, RealField},
     specs::{Join, Read, ReadStorage, Write, WriteStorage},
     transform::Transform,
 };
@@ -61,7 +62,7 @@ pub struct DrawDebugLines<V, N> {
 impl<V, N> DrawDebugLines<V, N>
 where
     V: Query<(Position, Color, Normal)>,
-    N: na::Real,
+    N: RealField,
 {
     /// Create instance of `DrawDebugLines` pass
     pub fn new() -> Self {
@@ -72,7 +73,7 @@ where
 impl<'a, V, N> PassData<'a> for DrawDebugLines<V, N>
 where
     V: Query<(Position, Color, Normal)>,
-    N: na::Real,
+    N: RealField,
 {
     type Data = (
         Read<'a, ActiveCamera>,
@@ -87,7 +88,7 @@ where
 impl<V, N> Pass for DrawDebugLines<V, N>
 where
     V: Query<(Position, Color, Normal)>,
-    N: na::Real + SubsetOf<f32>,
+    N: RealField + SubsetOf<f32>,
 {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         debug!("Building debug lines pass");
@@ -138,7 +139,7 @@ where
             camera
                 .as_ref()
                 .map(|&(_, ref trans)| {
-                    na::convert::<na::Matrix4<N>, na::Matrix4<f32>>(*trans.global_matrix())
+                    na::convert::<Matrix4<N>, Matrix4<f32>>(*trans.global_matrix())
                         .column(3)
                         .xyz()
                         .into()

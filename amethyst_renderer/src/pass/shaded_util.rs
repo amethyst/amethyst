@@ -3,7 +3,8 @@ use std::mem;
 use glsl_layout::*;
 
 use amethyst_core::{
-    nalgebra::{alga::general::SubsetOf, convert, Matrix4, Real},
+    alga::general::SubsetOf,
+    nalgebra::{convert, Matrix4, RealField},
     specs::prelude::{Join, ReadStorage},
     Transform,
 };
@@ -48,7 +49,7 @@ pub(crate) struct SpotLightPod {
     smoothness: float,
 }
 
-pub(crate) fn set_light_args<N: Real + SubsetOf<f32>>(
+pub(crate) fn set_light_args<N: RealField + SubsetOf<f32>>(
     effect: &mut Effect,
     encoder: &mut Encoder,
     light: &ReadStorage<'_, Light>,

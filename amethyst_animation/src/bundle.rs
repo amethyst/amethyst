@@ -10,7 +10,7 @@ use crate::{
 use amethyst_error::Error;
 
 use amethyst_core::{
-    nalgebra::Real,
+    nalgebra::RealField,
     specs::prelude::{Component, DispatcherBuilder},
     SystemBundle,
 };
@@ -38,7 +38,7 @@ impl<'a, N: Default> VertexSkinningBundle<'a, N> {
     }
 }
 
-impl<'a, 'b, 'c, N: Real> SystemBundle<'a, 'b> for VertexSkinningBundle<'c, N> {
+impl<'a, 'b, 'c, N: RealField> SystemBundle<'a, 'b> for VertexSkinningBundle<'c, N> {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
             VertexSkinningSystem::<N>::new(),

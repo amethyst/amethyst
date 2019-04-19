@@ -10,7 +10,8 @@ use glsl_layout::Uniform;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    nalgebra::{alga::general::SubsetOf, Real},
+    alga::general::SubsetOf,
+    nalgebra::RealField,
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::Transform,
 };
@@ -55,7 +56,7 @@ pub struct DrawFlat<V, N> {
 impl<V, N> DrawFlat<V, N>
 where
     V: Query<(Position, TexCoord)>,
-    N: Real,
+    N: RealField,
     Self: Pass,
 {
     /// Create instance of `DrawFlat` pass
@@ -94,7 +95,7 @@ where
 impl<'a, V, N> PassData<'a> for DrawFlat<V, N>
 where
     V: Query<(Position, TexCoord)>,
-    N: Real,
+    N: RealField,
 {
     type Data = (
         Read<'a, ActiveCamera>,
@@ -115,7 +116,7 @@ where
 impl<V, N> Pass for DrawFlat<V, N>
 where
     V: Query<(Position, TexCoord)>,
-    N: Real + SubsetOf<f32> + Pod,
+    N: RealField + SubsetOf<f32> + Pod,
 {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         use std::mem;

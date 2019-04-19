@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 use hibitset::BitSet;
 
 use amethyst_core::{
-    nalgebra::{self as na, zero, Point3, Real, Vector3},
+    nalgebra::{self as na, zero, Point3, RealField, Vector3},
     specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
     Transform,
 };
@@ -29,13 +29,13 @@ pub struct Visibility {
 ///
 /// Note that this should run after `GlobalTransform` has been updated for the current frame, and
 /// before rendering occurs.
-pub struct VisibilitySortingSystem<N: Real> {
+pub struct VisibilitySortingSystem<N: RealField> {
     centroids: Vec<Internals<N>>,
     transparent: Vec<Internals<N>>,
 }
 
 #[derive(Clone)]
-struct Internals<N: Real> {
+struct Internals<N: RealField> {
     entity: Entity,
     transparent: bool,
     centroid: Point3<N>,
@@ -43,7 +43,7 @@ struct Internals<N: Real> {
     from_camera: Vector3<N>,
 }
 
-impl<N: Real> VisibilitySortingSystem<N> {
+impl<N: RealField> VisibilitySortingSystem<N> {
     /// Create new sorting system
     pub fn new() -> Self {
         VisibilitySortingSystem {
@@ -53,7 +53,7 @@ impl<N: Real> VisibilitySortingSystem<N> {
     }
 }
 
-impl<'a, N: Real> System<'a> for VisibilitySortingSystem<N> {
+impl<'a, N: RealField> System<'a> for VisibilitySortingSystem<N> {
     type SystemData = (
         Entities<'a>,
         Write<'a, Visibility>,

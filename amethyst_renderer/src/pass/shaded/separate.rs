@@ -10,7 +10,8 @@ use log::{debug, trace};
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    nalgebra::{alga::general::SubsetOf, Real},
+    alga::general::SubsetOf,
+    nalgebra::RealField,
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::Transform,
 };
@@ -107,7 +108,7 @@ impl<N> DrawShadedSeparate<N> {
 
 impl<'a, N> PassData<'a> for DrawShadedSeparate<N>
 where
-    N: Real,
+    N: RealField,
 {
     type Data = (
         Read<'a, ActiveCamera>,
@@ -128,7 +129,7 @@ where
     );
 }
 
-impl<N: Real + SubsetOf<f32> + Pod> Pass for DrawShadedSeparate<N> {
+impl<N: RealField + SubsetOf<f32> + Pod> Pass for DrawShadedSeparate<N> {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         debug!("Building shaded pass");
         let mut builder = if self.skinning {

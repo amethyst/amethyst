@@ -8,7 +8,8 @@ use log::warn;
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
-    nalgebra::{alga::general::SubsetOf, convert, one, zero, Matrix4, Real, Vector4},
+    alga::general::SubsetOf,
+    nalgebra::{convert, one, zero, Matrix4, RealField, Vector4},
     specs::prelude::{Join, Read, ReadStorage},
     transform::Transform,
 };
@@ -44,7 +45,7 @@ use super::*;
 #[derivative(Default(bound = "Self: Pass"))]
 pub struct DrawFlat2D<N>
 where
-    N: Real + Default,
+    N: RealField + Default,
 {
     #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
@@ -54,7 +55,7 @@ where
 impl<N> DrawFlat2D<N>
 where
     Self: Pass,
-    N: Real + Default,
+    N: RealField + Default,
 {
     /// Create instance of `DrawFlat2D` pass
     pub fn new() -> Self {
@@ -93,7 +94,7 @@ where
     }
 }
 
-impl<'a, N: Real + Default> PassData<'a> for DrawFlat2D<N> {
+impl<'a, N: RealField + Default> PassData<'a> for DrawFlat2D<N> {
     type Data = (
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
@@ -111,7 +112,7 @@ impl<'a, N: Real + Default> PassData<'a> for DrawFlat2D<N> {
     );
 }
 
-impl<N: Real + Default + SubsetOf<f32>> Pass for DrawFlat2D<N> {
+impl<N: RealField + Default + SubsetOf<f32>> Pass for DrawFlat2D<N> {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         use std::mem;
 
@@ -276,7 +277,7 @@ impl<N: Real + Default + SubsetOf<f32>> Pass for DrawFlat2D<N> {
 }
 
 #[derive(Clone, Debug)]
-enum TextureDrawData<N: Real> {
+enum TextureDrawData<N: RealField> {
     Sprite {
         texture_handle: Handle<Texture>,
         render: SpriteRender,
@@ -294,7 +295,7 @@ enum TextureDrawData<N: Real> {
     },
 }
 
-impl<N: Real> TextureDrawData<N> {
+impl<N: RealField> TextureDrawData<N> {
     pub fn texture_handle(&self) -> &Handle<Texture> {
         match self {
             TextureDrawData::Sprite { texture_handle, .. } => texture_handle,
@@ -318,11 +319,11 @@ impl<N: Real> TextureDrawData<N> {
 }
 
 #[derive(Clone, Default, Debug)]
-struct TextureBatch<N: Real> {
+struct TextureBatch<N: RealField> {
     textures: Vec<TextureDrawData<N>>,
 }
 
-impl<N: Real + Default + SubsetOf<f32>> TextureBatch<N> {
+impl<N: RealField + Default + SubsetOf<f32>> TextureBatch<N> {
     pub fn add_image(
         &mut self,
         texture_handle: &TextureHandle,

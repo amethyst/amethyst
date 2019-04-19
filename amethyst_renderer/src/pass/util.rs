@@ -9,7 +9,8 @@ use thread_profiler::profile_scope;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    nalgebra::{alga::general::SubsetOf, convert, Matrix4, Real},
+    alga::general::SubsetOf, 
+    nalgebra::{convert, Matrix4, RealField},
     specs::prelude::{Join, Read, ReadStorage},
     Transform,
 };
@@ -265,7 +266,7 @@ pub(crate) fn setup_vertex_args(builder: &mut EffectBuilder<'_>) {
 }
 
 /// Sets the vertex argument in the constant buffer.
-pub fn set_vertex_args<N: Real + SubsetOf<f32>>(
+pub fn set_vertex_args<N: RealField + SubsetOf<f32>>(
     effect: &mut Effect,
     encoder: &mut Encoder,
     camera: Option<(&Camera, &Transform<N>)>,
@@ -310,7 +311,7 @@ pub fn set_view_args<N>(
     encoder: &mut Encoder,
     camera: Option<(&Camera, &Transform<N>)>,
 ) where
-    N: Real + SubsetOf<f32>,
+    N: RealField + SubsetOf<f32>,
 {
     #[cfg(feature = "profiler")]
     profile_scope!("render_setviewargs");
@@ -356,7 +357,7 @@ pub(crate) fn draw_mesh<N>(
     attributes: &[Attributes<'static>],
     textures: &[TextureType],
 ) where
-    N: Real + SubsetOf<f32> + Pod,
+    N: RealField + SubsetOf<f32> + Pod,
 {
     #[cfg(feature = "profiler")]
     profile_scope!("render_drawmesh");
@@ -409,7 +410,7 @@ pub fn get_camera<'a, N>(
     transform: &'a ReadStorage<'a, Transform<N>>,
 ) -> Option<(&'a Camera, &'a Transform<N>)>
 where
-    N: Real,
+    N: RealField,
 {
     #[cfg(feature = "profiler")]
     profile_scope!("render_getcamera");
