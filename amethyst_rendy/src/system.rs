@@ -24,7 +24,7 @@ use rendy::{
     hal::Backend,
     texture::palette::{load_from_linear_rgba, load_from_srgba},
 };
-use std::{mem::ManuallyDrop, sync::Arc};
+use std::sync::Arc;
 
 pub trait GraphCreator<B: Backend> {
     /// Check if graph needs to be rebuilt.
@@ -40,9 +40,8 @@ where
     B: Backend,
     G: GraphCreator<B>,
 {
-    // ManuallyDrop is used as a workaround for inability to dispose the graph properly on exit.
-    // This should be removed once we can implement disposal with access to `&Resources`.
-    graph: ManuallyDrop<Option<Graph<B, Resources>>>,
+    graph: Option<Graph<B, Resources>>,
+    families: Option<Families<B>>,
     graph_creator: G,
 }
 
@@ -53,7 +52,8 @@ where
 {
     pub fn new(graph_creator: G) -> Self {
         Self {
-            graph: ManuallyDrop::new(None),
+            graph: None,
+            families: None,
             graph_creator,
         }
     }
@@ -64,7 +64,6 @@ type AssetLoadingData<'a, B> = (
     ReadExpect<'a, Arc<ThreadPool>>,
     Option<Read<'a, HotReloadStrategy>>,
     WriteExpect<'a, Factory<B>>,
-    ReadExpect<'a, Families<B>>,
     Write<'a, AssetStorage<Mesh<B>>>,
     Write<'a, AssetStorage<Texture<B>>>,
     Write<'a, AssetStorage<Material<B>>>,
@@ -96,7 +95,6 @@ where
             pool,
             strategy,
             mut factory,
-            families,
             mut mesh_storage,
             mut texture_storage,
             mut material_storage,
@@ -105,7 +103,7 @@ where
         use std::ops::Deref;
 
         let queue_id = QueueId {
-            family: families.family_by_index(0).id(),
+            family: self.families.as_mut().unwrap().family_by_index(0).id(),
             index: 0,
         };
 
@@ -153,28 +151,26 @@ where
 
     fn rebuild_graph(&mut self, res: &Resources) {
         let mut factory = res.fetch_mut::<Factory<B>>();
-        let mut families = res.fetch_mut::<Families<B>>();
 
         if let Some(graph) = self.graph.take() {
             graph.dispose(&mut *factory, res);
         }
 
-        self.graph = ManuallyDrop::new(Some(
+        self.graph = Some(
             self.graph_creator
                 .builder(&mut factory, res)
-                .build(&mut factory, &mut families, res)
+                .build(&mut factory, self.families.as_mut().unwrap(), res)
                 .unwrap(),
-        ));
+        );
     }
 
     fn run_graph(&mut self, res: &Resources) {
         let mut factory = res.fetch_mut::<Factory<B>>();
-        let mut families = res.fetch_mut::<Families<B>>();
-        factory.maintain(&mut families);
+        factory.maintain(self.families.as_mut().unwrap());
         self.graph
             .as_mut()
             .unwrap()
-            .run(&mut factory, &mut families, res)
+            .run(&mut factory, self.families.as_mut().unwrap(), res)
     }
 }
 
@@ -197,13 +193,33 @@ where
         let config: rendy::factory::Config = Default::default();
         let (factory, families): (Factory<B>, _) = rendy::factory::init(config).unwrap();
 
+        // res.insert(families);
+        self.families = Some(families);
         res.insert(factory);
-        res.insert(families);
         AssetLoadingData::<B>::setup(res);
         SetupData::<B>::setup(res);
 
         let mat = create_default_mat::<B>(res);
         res.insert(MaterialDefaults(mat));
+    }
+
+    fn dispose(mut self: Box<Self>, res: &mut Resources) {
+        if let Some(graph) = self.graph.take() {
+            let mut factory = res.fetch_mut::<Factory<B>>();
+            log::debug!("Dispose graph");
+            graph.dispose(&mut *factory, res);
+        }
+
+        log::debug!("Unload resources");
+        if let Some(mut storage) = res.try_fetch_mut::<AssetStorage<Mesh<B>>>() {
+            storage.unload_all();
+        }
+        if let Some(mut storage) = res.try_fetch_mut::<AssetStorage<Texture<B>>>() {
+            storage.unload_all();
+        }
+
+        log::debug!("Drop families");
+        drop(self.families);
     }
 }
 

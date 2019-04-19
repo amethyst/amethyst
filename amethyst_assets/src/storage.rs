@@ -86,6 +86,13 @@ impl<A: Asset> AssetStorage<A> {
         }
     }
 
+    /// Remove all data from asset storages, invalidating all associated handles.
+    /// Trying to retreive any data using old handle will return `None`.
+    pub fn unload_all(&mut self) {
+        unsafe { self.assets.clean(&self.bitset) }
+        self.bitset.clear();
+    }
+
     /// When cloning an asset handle, you'll get another handle,
     /// but pointing to the same asset. If you instead want to
     /// indeed create a new asset, you can use this method.

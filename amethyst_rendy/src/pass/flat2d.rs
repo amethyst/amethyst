@@ -3,7 +3,7 @@ use crate::{
     camera::{ActiveCamera, Camera},
     hidden::{Hidden, HiddenPropagate},
     pass::util,
-    pod::{IntoPod, SpriteArgs, ViewArgs},
+    pod::{SpriteArgs, ViewArgs},
     sprite::{SpriteRender, SpriteSheet},
     sprite_visibility::SpriteVisibility,
     types::Texture,
@@ -11,7 +11,6 @@ use crate::{
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     ecs::{Join, Read, ReadStorage, Resources, SystemData},
-    math::Vector4,
     transform::GlobalTransform,
 };
 use derivative::Derivative;
@@ -33,7 +32,7 @@ use rendy::{
         pso::{
             BlendState, ColorBlendDesc, ColorMask, DepthStencilDesc, Descriptor,
             DescriptorSetLayoutBinding, DescriptorSetWrite, DescriptorType, ElemStride, Element,
-            EntryPoint, GraphicsShaderSet, InstanceRate, ShaderStageFlags, Specialization, SpecializationConstant
+            EntryPoint, GraphicsShaderSet, InstanceRate, ShaderStageFlags, Specialization,
         },
         Backend,
     },
@@ -351,42 +350,25 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
                     !&hidden_props,
                 )
                     .join()
-                    .map(|(sprite_render, global, _, _)| {
-                        log::trace!("Add sprite");
-                        let sprite_sheet = sprite_sheet_storage
-                                .get(&sprite_render.sprite_sheet)
-                                .expect(
-                                    "Unreachable: Existence of sprite sheet checked when collecting the sprites",
-                                );
-
-                        let tex_id = tex_lookup.forward(sprite_sheet.texture.id()) as u32;
-                        let sprite = &sprite_sheet.sprites[sprite_render.sprite_number];
-
-                        let transform = &global.0;
-                        let dir_x = transform.column(0) * sprite.width;
-                        let dir_y = transform.column(1) * sprite.height;
-                        let pos = transform
-                            * Vector4::new(-sprite.offsets[0], -sprite.offsets[1], 0.0, 1.0);
-
-                        let batch_data = SpriteArgs {
-                            dir_x: dir_x.xy().into_pod(),
-                            dir_y: dir_y.xy().into_pod(),
-                            pos: pos.xy().into_pod(),
-                            u_offset: [sprite.tex_coords.left, sprite.tex_coords.right]
-                                .into(),
-                            v_offset: [sprite.tex_coords.bottom, sprite.tex_coords.top]
-                                .into(),
-                            depth: pos.z,
-                        };
-
-                        (tex_id, batch_data)
+                    .filter_map(|(sprite_render, global, _, _)| {
+                        let (batch_data, tex_id) = SpriteArgs::from_data(
+                            &tex_storage,
+                            &sprite_sheet_storage,
+                            &sprite_render,
+                            &global,
+                        )?;
+                        let tex_id = tex_lookup.forward(tex_id) as u32;
+                        Some((tex_id, batch_data))
                     })
-                    .filter(|(tex_id, _)| tex_storage.contains_id(*tex_id))
                     .for_each_group(|tex_id, batch_data| {
                         let tex_pk = tex_id / TEXTURE_ARRAY_SIZE as u32;
                         let tex_sk = tex_id % TEXTURE_ARRAY_SIZE as u32;
                         total_instances += batch_data.len() as u64;
-                        BatchSprite::insert_batch(sprite_data_ref.entry(tex_pk), tex_sk, batch_data);
+                        BatchSprite::insert_batch(
+                            sprite_data_ref.entry(tex_pk),
+                            tex_sk,
+                            batch_data,
+                        );
                     });
             }
             Some(ref visibility) => {

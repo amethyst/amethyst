@@ -25,7 +25,7 @@ use crate::{
         prelude::{Component, Read, World, Write},
     },
     error::Error,
-    game_data::DataInit,
+    game_data::{DataDispose, DataInit},
     state::{State, StateData, StateMachine, TransEvent},
     state_event::{StateEvent, StateEventReader},
     ui::UiEvent,
@@ -46,7 +46,7 @@ use crate::{
 #[derivative(Debug)]
 pub struct CoreApplication<'a, T, E = StateEvent, R = StateEventReader>
 where
-    T: 'static,
+    T: DataDispose + 'static,
     E: 'static,
 {
     /// The world
@@ -132,7 +132,7 @@ pub type Application<'a, T> = CoreApplication<'a, T, StateEvent, StateEventReade
 
 impl<'a, T, E, R> CoreApplication<'a, T, E, R>
 where
-    T: 'static,
+    T: DataDispose + 'static,
     E: Clone + Send + Sync + 'static,
 {
     /// Creates a new Application with the given initial game state.
@@ -371,8 +371,7 @@ where
     /// Cleans up after the quit signal is received.
     fn shutdown(&mut self) {
         info!("Engine is shutting down");
-
-        // Placeholder.
+        self.data.dispose(&mut self.world);
     }
 }
 
@@ -403,7 +402,7 @@ pub struct ApplicationBuilder<S, T, E, R> {
 
 impl<S, T, E, X> ApplicationBuilder<S, T, E, X>
 where
-    T: 'static,
+    T: DataDispose + 'static,
 {
     /// Creates a new [ApplicationBuilder](struct.ApplicationBuilder.html) instance
     /// that wraps the initial_state. This is the more verbose way of initializing

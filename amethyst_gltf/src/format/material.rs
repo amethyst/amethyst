@@ -12,7 +12,7 @@ use amethyst_rendy::{
         texture::{
             image::{load_from_image, ImageFormat as DataFormat, ImageTextureConfig, Repr},
             palette::{load_from_linear_rgba, load_from_srgba},
-            TextureBuilder,
+            MipLevel, TextureBuilder,
         },
     },
 };
@@ -124,7 +124,8 @@ fn load_texture_with_factor(
 ) -> Result<(TextureBuilder<'static>, [f32; 4]), Error> {
     match texture {
         Some(info) => Ok((
-            load_texture(&info.texture(), buffers, source, name, srgb)?,
+            load_texture(&info.texture(), buffers, source, name, srgb)?
+                .with_mip_levels(MipLevel::Auto),
             factor,
         )),
         None => Ok((

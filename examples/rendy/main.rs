@@ -213,7 +213,7 @@ impl<B: Backend> SimpleState for Example<B> {
         let (mesh, albedo) = {
             let mesh = world.exec(|loader: AssetLoaderSystemData<'_, Mesh<B>>| {
                 loader.load_from_data(
-                    Shape::Sphere(32, 32).generate::<Vec<PosNormTangTex>>(None),
+                    Shape::Sphere(16, 16).generate::<Vec<PosNormTangTex>>(None),
                     self.progress.as_mut().unwrap(),
                 )
             });
@@ -540,9 +540,10 @@ fn main() -> amethyst::Result<()> {
     // .level_for("rendy_memory", log::LevelFilter::Trace)
     // .level_for("rendy_factory", log::LevelFilter::Trace)
     // .level_for("rendy_resource", log::LevelFilter::Trace)
-    //.level_for("rendy_graph", log::LevelFilter::Trace)
-    //.level_for("rendy_node", log::LevelFilter::Trace)
-    .level_for("amethyst_rendy", log::LevelFilter::Trace)
+    // .level_for("rendy_graph", log::LevelFilter::Trace)
+    // .level_for("rendy_node", log::LevelFilter::Trace)
+    // .level_for("amethyst_rendy", log::LevelFilter::Trace)
+    // .level_for("gfx_backend_metal", log::LevelFilter::Trace)
     .start();
 
     let app_root = application_root_dir()?;

@@ -50,6 +50,9 @@ struct UvOffset {
 
 layout(std140, set = 1, binding = 0) uniform Material {
     float alpha_cutoff;
+    float _pad0; // metal doesn't respect std140
+    float _pad1;
+    float _pad2;
     UvOffset uv_offset;
 };
 
@@ -124,6 +127,7 @@ vec3 compute_light(vec3 attenuation,
     float HdotV = max(dot(halfway, view_direction), 0.0);
     float geometry = geometry(NdotV, NdotL, roughness2);
 
+
     vec3 fresnel = fresnel(HdotV, fresnel_base);
     vec3 diffuse = vec3(1.0) - fresnel;
     diffuse *= 1.0 - metallic;
@@ -153,6 +157,9 @@ void main() {
     float metallic          = metallic_roughness.r;
     float roughness         = metallic_roughness.g;
     
+    // out_color = vec4(mod(final_tex_coords, vec2(1.0)), 0.0, 1.0);
+    // return;
+
     // normal conversion
     normal = normal * 2 - 1;
 

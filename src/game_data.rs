@@ -15,23 +15,45 @@ pub trait DataInit<T> {
     fn build(self, world: &mut World) -> T;
 }
 
+/// Allow disposing game data with access to world.
+pub trait DataDispose {
+    fn dispose(&mut self, world: &mut World);
+}
+
 /// Default game data.
 ///
 /// The lifetimes are for the systems inside and can be `'static` unless a system has a borrowed
 /// field.
 pub struct GameData<'a, 'b> {
-    dispatcher: Dispatcher<'a, 'b>,
+    dispatcher: Option<Dispatcher<'a, 'b>>,
 }
 
 impl<'a, 'b> GameData<'a, 'b> {
     /// Create new game data
     pub fn new(dispatcher: Dispatcher<'a, 'b>) -> Self {
-        GameData { dispatcher }
+        GameData {
+            dispatcher: Some(dispatcher),
+        }
     }
 
     /// Update game data
     pub fn update(&mut self, world: &World) {
-        self.dispatcher.dispatch(&world.res);
+        if let Some(dispatcher) = &mut self.dispatcher {
+            dispatcher.dispatch(&world.res);
+        }
+    }
+
+    /// Dispose game data, dropping the dispatcher
+    pub fn dispose(&mut self, world: &mut World) {
+        if let Some(dispatcher) = self.dispatcher.take() {
+            dispatcher.dispose(&mut world.res);
+        }
+    }
+}
+
+impl DataDispose for GameData<'_, '_> {
+    fn dispose(&mut self, world: &mut World) {
+        self.dispose(world);
     }
 }
 

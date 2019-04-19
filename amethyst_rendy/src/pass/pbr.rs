@@ -270,18 +270,25 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbrDesc {
         }
 
         let mut pipelines = unsafe { factory.device().create_graphics_pipelines(descs, None) };
-        let pipeline_basic = pipelines.remove(0)?;
-        let pipeline_skinned = if self.skinning {
-            Some(pipelines.remove(0)?)
-        } else {
-            None
-        };
 
         unsafe {
             factory.destroy_shader_module(shader_vertex_basic);
             factory.destroy_shader_module(shader_fragment);
             shader_vertex_skinned.map(|m| factory.destroy_shader_module(m));
         }
+
+        if let Some(err) = pipelines.iter().find_map(|p| p.as_ref().err().cloned()) {
+            for p in pipelines.drain(..).filter_map(Result::ok) {
+                unsafe {
+                    factory.destroy_graphics_pipeline(p);
+                }
+            }
+            failure::bail!(err);
+        }
+
+        let pipeline_basic = pipelines.remove(0).unwrap();
+        let pipeline_skinned = pipelines.pop().map(|p| p.unwrap());
+
         let limits = factory.physical().limits();
         Ok(Box::new(DrawPbr::<B> {
             pipeline_basic,
@@ -705,7 +712,6 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbr<B> {
             let storage = &texture_storage;
 
             let pod = pod::Material::from_material(&mat).std140();
-
             let offset = material_step * i as u64;
             (&mut material_buffer_data[offset as usize..(offset + material_step) as usize])
                 .write(as_bytes(&pod))

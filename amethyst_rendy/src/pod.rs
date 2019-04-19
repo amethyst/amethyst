@@ -1,5 +1,11 @@
-use crate::{mtl, resources::Tint};
-use amethyst_core::GlobalTransform;
+use crate::{
+    mtl,
+    resources::Tint,
+    sprite::{SpriteRender, SpriteSheet},
+    types::Texture,
+};
+use amethyst_assets::AssetStorage;
+use amethyst_core::{math::Vector4, GlobalTransform};
 use glsl_layout::*;
 use rendy::{
     hal::{format::Format, Backend},
@@ -7,8 +13,8 @@ use rendy::{
 };
 use std::borrow::Cow;
 
-#[repr(C, align(16))]
 #[derive(Clone, Copy, Debug, AsStd140)]
+#[repr(C, align(16))]
 pub(crate) struct TextureOffset {
     pub u_offset: vec2,
     pub v_offset: vec2,
@@ -172,6 +178,7 @@ pub(crate) struct Environment {
 }
 
 #[derive(Clone, Copy, Debug, AsStd140)]
+#[repr(C, align(16))]
 pub(crate) struct Material {
     pub alpha_cutoff: float,
     pub(crate) uv_offset: TextureOffset,
@@ -195,6 +202,39 @@ pub(crate) struct SpriteArgs {
     pub u_offset: vec2,
     pub v_offset: vec2,
     pub depth: float,
+}
+
+impl SpriteArgs {
+    pub fn from_data<B: Backend>(
+        tex_storage: &AssetStorage<Texture<B>>,
+        sprite_storage: &AssetStorage<SpriteSheet<B>>,
+        sprite_render: &SpriteRender<B>,
+        global_transform: &GlobalTransform,
+    ) -> Option<(Self, u32)> {
+        let sprite_sheet = sprite_storage.get(&sprite_render.sprite_sheet)?;
+        if !tex_storage.contains_id(sprite_sheet.texture.id()) {
+            return None;
+        }
+
+        let sprite = &sprite_sheet.sprites[sprite_render.sprite_number];
+
+        let transform = &global_transform.0;
+        let dir_x = transform.column(0) * sprite.width;
+        let dir_y = transform.column(1) * sprite.height;
+        let pos = transform * Vector4::new(-sprite.offsets[0], -sprite.offsets[1], 0.0, 1.0);
+
+        Some((
+            SpriteArgs {
+                dir_x: dir_x.xy().into_pod(),
+                dir_y: dir_y.xy().into_pod(),
+                pos: pos.xy().into_pod(),
+                u_offset: [sprite.tex_coords.left, sprite.tex_coords.right].into(),
+                v_offset: [sprite.tex_coords.bottom, sprite.tex_coords.top].into(),
+                depth: pos.z,
+            },
+            sprite_sheet.texture.id(),
+        ))
+    }
 }
 
 impl AsVertex for SpriteArgs {
