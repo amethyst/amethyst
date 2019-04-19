@@ -14,6 +14,7 @@ extern crate derive_new;
 
 pub use approx;
 pub use nalgebra;
+pub use alga;
 pub use shred;
 pub use shrev;
 pub use specs;

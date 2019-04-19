@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_core::{
-    nalgebra::{Matrix4, Real},
+    nalgebra::{Matrix4, RealField},
     specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage},
 };
 use amethyst_derive::PrefabData;
@@ -23,7 +23,7 @@ impl Component for Joint {
 
 /// Skin, attach to the root entity in the mesh hierarchy
 #[derive(Debug)]
-pub struct Skin<N: Real> {
+pub struct Skin<N: RealField> {
     /// Joint entities for the skin
     pub joints: Vec<Entity>,
     /// Mesh entities that use the skin
@@ -36,7 +36,7 @@ pub struct Skin<N: Real> {
     pub joint_matrices: Vec<Matrix4<N>>,
 }
 
-impl<N: Real> Skin<N> {
+impl<N: RealField> Skin<N> {
     /// Creates a new `Skin`
     pub fn new(
         joints: Vec<Entity>,
@@ -54,7 +54,7 @@ impl<N: Real> Skin<N> {
     }
 }
 
-impl<N: Real> Component for Skin<N> {
+impl<N: RealField> Component for Skin<N> {
     type Storage = DenseVecStorage<Self>;
 }
 
@@ -90,7 +90,7 @@ impl<'a> PrefabData<'a> for JointPrefab {
 
 /// `PrefabData` for loading `Skin`s
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SkinPrefab<N: Real> {
+pub struct SkinPrefab<N: RealField> {
     /// Indices of `Entity`s in the `Prefab` which have `Joint`s belonging to this `Skin`
     pub joints: Vec<usize>,
     /// The bind shape matrix of the `Skin`
@@ -101,7 +101,7 @@ pub struct SkinPrefab<N: Real> {
     pub inverse_bind_matrices: Vec<Matrix4<N>>,
 }
 
-impl<'a, N: Real> PrefabData<'a> for SkinPrefab<N> {
+impl<'a, N: RealField> PrefabData<'a> for SkinPrefab<N> {
     type SystemData = WriteStorage<'a, Skin<N>>;
     type Result = ();
 
@@ -135,7 +135,7 @@ impl<'a, N: Real> PrefabData<'a> for SkinPrefab<N> {
 /// `PrefabData` for full skinning support
 #[derive(Clone, Default, Debug, Serialize, Deserialize, PrefabData)]
 #[serde(default)]
-pub struct SkinnablePrefab<N: Real> {
+pub struct SkinnablePrefab<N: RealField> {
     /// Place `Skin` on the `Entity`
     pub skin: Option<SkinPrefab<N>>,
     /// Place `Joint` on the `Entity`

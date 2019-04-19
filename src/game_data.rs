@@ -5,7 +5,7 @@ use crate::{
     core::{
         specs::prelude::{Dispatcher, DispatcherBuilder, System, World},
         ArcThreadPool, SystemBundle,
-        nalgebra::Real,
+        nalgebra::RealField,
     },
     error::Error,
     renderer::pipe::pass::Pass,
@@ -38,18 +38,18 @@ impl<'a, 'b> GameData<'a, 'b> {
 }
 
 /// Builder for default game data
-pub struct GameDataBuilder<'a, 'b, N: Real = f32> {
+pub struct GameDataBuilder<'a, 'b, N: RealField = f32> {
     disp_builder: DispatcherBuilder<'a, 'b>,
     _marker: PhantomData<N>,
 }
 
-impl<'a, 'b, N: Real + Default> Default for GameDataBuilder<'a, 'b, N> {
+impl<'a, 'b, N: RealField + Default> Default for GameDataBuilder<'a, 'b, N> {
     fn default() -> Self {
         GameDataBuilder::new()
     }
 }
 
-impl<'a, 'b, N: Real + Default> GameDataBuilder<'a, 'b, N> {
+impl<'a, 'b, N: RealField + Default> GameDataBuilder<'a, 'b, N> {
     /// Create new builder
     pub fn new() -> Self {
         GameDataBuilder {

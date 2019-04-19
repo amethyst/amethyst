@@ -1,5 +1,5 @@
 use amethyst_core::{
-    nalgebra::Real,
+    nalgebra::RealField,
     specs::prelude::{
         BitSet, ComponentEvent, Join, ReadStorage, ReaderId, Resources, System, WriteStorage,
     },
@@ -15,7 +15,7 @@ use super::resources::*;
 /// System for performing vertex skinning.
 ///
 /// Needs to run after global transforms have been updated for the current frame.
-pub struct VertexSkinningSystem<N: Real> {
+pub struct VertexSkinningSystem<N: RealField> {
     /// Also scratch space, used while determining which skins need to be updated.
     updated: BitSet,
     updated_skins: BitSet,
@@ -24,7 +24,7 @@ pub struct VertexSkinningSystem<N: Real> {
     _phantom: PhantomData<N>,
 }
 
-impl<N: Real> VertexSkinningSystem<N> {
+impl<N: RealField> VertexSkinningSystem<N> {
     /// Creates a new `VertexSkinningSystem`
     pub fn new() -> Self {
         Self {
@@ -36,7 +36,7 @@ impl<N: Real> VertexSkinningSystem<N> {
     }
 }
 
-impl<'a, N: Real> System<'a> for VertexSkinningSystem<N> {
+impl<'a, N: RealField> System<'a> for VertexSkinningSystem<N> {
     type SystemData = (
         ReadStorage<'a, Joint>,
         ReadStorage<'a, Transform<N>>,

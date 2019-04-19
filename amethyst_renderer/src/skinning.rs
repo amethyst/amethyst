@@ -4,7 +4,7 @@ use gfx::format::{ChannelType, Format, SurfaceType};
 use serde::{Deserialize, Serialize};
 
 use amethyst_assets::PrefabData;
-use amethyst_core::nalgebra::{zero, Real};
+use amethyst_core::nalgebra::{zero, RealField};
 use amethyst_core::specs::prelude::{
     Component, DenseVecStorage, Entity, FlaggedStorage, WriteStorage,
 };
@@ -39,14 +39,14 @@ impl Attribute for JointIds {
 
 /// Transform storage for the skin, should be attached to all mesh entities that use a skin
 #[derive(Debug, Clone)]
-pub struct JointTransforms<N: Real> {
+pub struct JointTransforms<N: RealField> {
     /// Skin entity
     pub skin: Entity,
     /// The current joint matrices
     pub matrices: Vec<[[N; 4]; 4]>,
 }
 
-impl<N: Real> Component for JointTransforms<N> {
+impl<N: RealField> Component for JointTransforms<N> {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
 
@@ -122,7 +122,7 @@ pub struct JointTransformsPrefab<N> {
     _marker: PhantomData<N>,
 }
 
-impl<N: Real> JointTransformsPrefab<N> {
+impl<N: RealField> JointTransformsPrefab<N> {
     /// Creates a new `JointTransformsPrefab`.
     pub fn new(skin: usize, size: usize) -> Self {
         JointTransformsPrefab {
@@ -133,7 +133,7 @@ impl<N: Real> JointTransformsPrefab<N> {
     }
 }
 
-impl<'a, N: Real> PrefabData<'a> for JointTransformsPrefab<N> {
+impl<'a, N: RealField> PrefabData<'a> for JointTransformsPrefab<N> {
     type SystemData = WriteStorage<'a, JointTransforms<N>>;
     type Result = ();
 

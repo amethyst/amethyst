@@ -3,7 +3,8 @@
 use amethyst_assets::Processor;
 use amethyst_core::{
     bundle::SystemBundle,
-    nalgebra::{alga::general::SubsetOf, Real},
+    alga::general::SubsetOf,
+    nalgebra::RealField,
     specs::prelude::DispatcherBuilder,
 };
 use amethyst_error::Error;
@@ -21,9 +22,9 @@ use crate::{output::Output, source::*, systems::AudioSystem};
 #[derive(Default)]
 pub struct AudioBundle<N>(Output, PhantomData<N>);
 
-impl<'a, 'b, N: Real> SystemBundle<'a, 'b> for AudioBundle<N>
+impl<'a, 'b, N: RealField> SystemBundle<'a, 'b> for AudioBundle<N>
 where
-    N: Real + SubsetOf<f32>,
+    N: RealField + SubsetOf<f32>,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(AudioSystem::<N>::new(self.0), "audio_system", &[]);

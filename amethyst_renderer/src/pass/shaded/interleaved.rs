@@ -9,7 +9,8 @@ use glsl_layout::Pod;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    nalgebra::{alga::general::SubsetOf, Real},
+    alga::general::SubsetOf,
+    nalgebra::RealField,
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::Transform,
 };
@@ -96,7 +97,7 @@ where
 impl<'a, V, N> PassData<'a> for DrawShaded<V, N>
 where
     V: Query<(Position, Normal, TexCoord)>,
-    N: Real,
+    N: RealField,
 {
     type Data = (
         Read<'a, ActiveCamera>,
@@ -119,7 +120,7 @@ where
 impl<V, N> Pass for DrawShaded<V, N>
 where
     V: Query<(Position, Normal, TexCoord)>,
-    N: Real + SubsetOf<f32> + Pod,
+    N: RealField + SubsetOf<f32> + Pod,
 {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);

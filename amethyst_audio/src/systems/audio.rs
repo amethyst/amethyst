@@ -14,7 +14,8 @@ use rodio::SpatialSink;
 use thread_profiler::profile_scope;
 
 use amethyst_core::{
-    nalgebra::{alga::general::SubsetOf, convert, Real},
+    alga::general::SubsetOf,
+    nalgebra::{convert, RealField},
     specs::prelude::{
         Entities, Entity, Join, Read, ReadStorage, Resources, System, SystemData, WriteStorage,
     },
@@ -32,7 +33,7 @@ use crate::{
 #[derive(Default)]
 pub struct AudioSystem<N>(Output, PhantomData<N>);
 
-impl<N: Real> AudioSystem<N> {
+impl<N: RealField> AudioSystem<N> {
     /// Produces a new AudioSystem that uses the given output.
     pub fn new(output: Output) -> Self {
         AudioSystem(output, PhantomData)
@@ -46,7 +47,7 @@ pub struct SelectedListener(pub Entity);
 
 impl<'a, N> System<'a> for AudioSystem<N>
 where
-    N: Real + SubsetOf<f32>,
+    N: RealField + SubsetOf<f32>,
 {
     type SystemData = (
         Option<Read<'a, Output>>,

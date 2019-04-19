@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 use hibitset::BitSet;
 
 use amethyst_core::{
-    nalgebra::{zero, Point3, Real, Vector3},
+    nalgebra::{zero, Point3, RealField, Vector3},
     specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
     Transform,
 };
@@ -37,27 +37,27 @@ pub struct SpriteVisibility {
 ///
 /// * `N`: `RealBound` (f32, f64)
 #[derive(Default)]
-pub struct SpriteVisibilitySortingSystem<N: Real> {
+pub struct SpriteVisibilitySortingSystem<N: RealField> {
     centroids: Vec<Internals<N>>,
     transparent: Vec<Internals<N>>,
 }
 
 #[derive(Clone)]
-struct Internals<N: Real> {
+struct Internals<N: RealField> {
     entity: Entity,
     transparent: bool,
     centroid: Point3<N>,
     from_camera: Vector3<N>,
 }
 
-impl<N: Real + Default> SpriteVisibilitySortingSystem<N> {
+impl<N: RealField + Default> SpriteVisibilitySortingSystem<N> {
     /// Returns a new sprite visibility sorting system
     pub fn new() -> Self {
         Default::default()
     }
 }
 
-impl<'a, N: Real> System<'a> for SpriteVisibilitySortingSystem<N> {
+impl<'a, N: RealField> System<'a> for SpriteVisibilitySortingSystem<N> {
     type SystemData = (
         Entities<'a>,
         Write<'a, SpriteVisibility>,

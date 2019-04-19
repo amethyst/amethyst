@@ -3,7 +3,8 @@
 use std::marker::PhantomData;
 
 use amethyst_core::{
-    nalgebra::{self as na, alga::general::SubsetOf},
+    alga::general::SubsetOf,
+    nalgebra::{self as na, RealField},
     specs::{Read, ReadStorage},
     transform::Transform,
 };
@@ -56,7 +57,7 @@ impl<N> DrawSkybox<N> {
 
 impl<'a, N> PassData<'a> for DrawSkybox<N>
 where
-    N: na::Real,
+    N: RealField,
 {
     type Data = (
         Read<'a, ActiveCamera>,
@@ -68,7 +69,7 @@ where
 
 impl<N> Pass for DrawSkybox<N>
 where
-    N: na::Real + SubsetOf<f32>,
+    N: RealField + SubsetOf<f32>,
 {
     fn compile(&mut self, mut effect: NewEffect<'_>) -> Result<Effect, Error> {
         let verts = Shape::Cube.generate_vertices::<Vec<PosTex>>(None);

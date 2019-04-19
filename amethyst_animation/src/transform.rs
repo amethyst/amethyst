@@ -1,5 +1,5 @@
 use amethyst_core::{
-    nalgebra::{zero, Quaternion, Real, Unit, Vector3},
+    nalgebra::{zero, Quaternion, RealField, Unit, Vector3},
     Transform,
 };
 
@@ -22,11 +22,11 @@ pub enum TransformChannel {
     Scale,
 }
 
-impl<'a, N: Real> ApplyData<'a> for Transform<N> {
+impl<'a, N: RealField> ApplyData<'a> for Transform<N> {
     type ApplyData = ();
 }
 
-impl<N: Real + NumCast> AnimationSampling for Transform<N> {
+impl<N: RealField + NumCast> AnimationSampling for Transform<N> {
     type Primitive = SamplerPrimitive<N>;
     type Channel = TransformChannel;
 

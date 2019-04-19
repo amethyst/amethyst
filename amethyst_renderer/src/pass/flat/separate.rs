@@ -9,7 +9,8 @@ use std::marker::PhantomData;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    nalgebra::{alga::general::SubsetOf, Real},
+    alga::general::SubsetOf,
+    nalgebra::RealField,
     specs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::Transform,
 };
@@ -63,7 +64,7 @@ pub struct DrawFlatSeparate<N> {
 impl<N> DrawFlatSeparate<N>
 where
     Self: Pass,
-    N: Real,
+    N: RealField,
 {
     /// Create instance of `DrawFlat` pass
     pub fn new() -> Self {
@@ -104,7 +105,7 @@ where
     }
 }
 
-impl<'a, N: Real> PassData<'a> for DrawFlatSeparate<N> {
+impl<'a, N: RealField> PassData<'a> for DrawFlatSeparate<N> {
     type Data = (
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
@@ -122,7 +123,7 @@ impl<'a, N: Real> PassData<'a> for DrawFlatSeparate<N> {
     );
 }
 
-impl<N: Real + SubsetOf<f32> + Pod> Pass for DrawFlatSeparate<N> {
+impl<N: RealField + SubsetOf<f32> + Pod> Pass for DrawFlatSeparate<N> {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         use std::mem;
         let mut builder = if self.skinning {
