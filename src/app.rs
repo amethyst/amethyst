@@ -489,9 +489,9 @@ where
 
         let thread_count :usize = env::var("AMETHYST_NUM_THREADS")
             .as_ref()
-            .map(String::as_str)
-            .unwrap_or("0")
-            .parse().expect("AMETHYST_NUM_THREADS was provided but is not a valid number!");
+            .map(|s| s.as_str().parse()
+                    .expect("AMETHYST_NUM_THREADS was provided but is not a valid number!"))
+            .unwrap_or(0);
 
         let mut world = World::new();
 
