@@ -351,13 +351,13 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
                 )
                     .join()
                     .filter_map(|(sprite_render, global, _, _)| {
-                        let (batch_data, tex_id) = SpriteArgs::from_data(
+                        let (batch_data, texture) = SpriteArgs::from_data(
                             &tex_storage,
                             &sprite_sheet_storage,
                             &sprite_render,
                             &global,
                         )?;
-                        let tex_id = tex_lookup.forward(tex_id) as u32;
+                        let tex_id = tex_lookup.forward(texture.id()) as u32;
                         Some((tex_id, batch_data))
                     })
                     .for_each_group(|tex_id, batch_data| {

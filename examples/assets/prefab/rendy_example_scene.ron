@@ -9,7 +9,7 @@ Prefab (
                             min_filter: Nearest,
                             mag_filter: Nearest,
                             mip_filter: Nearest,
-                            wrap_mode: (Clamp, Clamp, Clamp),
+                            wrap_mode: (Tile, Tile, Tile),
                             lod_bias: (0),
                             lod_range: (
                                 start: (-8000),
@@ -77,6 +77,18 @@ Prefab (
         ),
         (
             data: (
+                sprite: (
+                    sheet: "bat",
+                    sprite_number: 0,
+                ),
+                transform: (
+                    translation: (2.55, 0.05, 0.55),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+            ),
+        ),
+        (
+            data: (
                 // SpriteRenderPrefab
                 sprite: (
                     sheet: "bat",
@@ -131,6 +143,307 @@ Prefab (
                     )),
                 ),
             ),
-        )
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 0),
+                transform: (translation: (0.0, -1.5, 2.0), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.4], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 2.1), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.41], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 2.2), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.42], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 2.3), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.43], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 2.4), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.44], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 2.5), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.45], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 2.6), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.46], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 2.7), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.47], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 2.8), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.48], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 2.9), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.49], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 3.0), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.5], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 3.1), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.51], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 3.2), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.52], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 3.3), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.53], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 3.4), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.54], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 3.5), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.55], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 3.6), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.56], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 3.7), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.57], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 3.8), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.58], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 3.9), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.59], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 4.0), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.6], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 4.1), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.61], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 4.2), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.62], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 4.3), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.63], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 4.4), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.64], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 4.5), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.65], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 4.6), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.66], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 4.7), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.67], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 4.8), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.68], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 4.9), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.69], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 5.0), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.7], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 5.1), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.71], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 5.2), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.72], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 5.3), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.73], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 5.4), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.74], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 5.5), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.75], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 5.6), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.76], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 5.7), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.77], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 5.8), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.78], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 5.9), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.79], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 6.0), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.8], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 6.1), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.81], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 6.2), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.82], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
     ],
 )

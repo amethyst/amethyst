@@ -1,6 +1,5 @@
 #version 450
 
-
 layout(push_constant) uniform pushConstants {
     uint tex_id;
 } u_pushConstants;
@@ -9,11 +8,12 @@ layout(set = 1, binding = 0) uniform sampler2D albedo[16];
 
 layout(location = 0) in vec2 tex_uv;
 
-layout(location = 0) out vec4 color;
+layout(location = 0) out vec4 out_color;
 
 void main() {
-    color = texture(albedo[u_pushConstants.tex_id], tex_uv);
+    vec4 color = texture(albedo[u_pushConstants.tex_id], tex_uv);
     if (color.a == 0.0) {
         discard;
     }
+    out_color = color;
 }

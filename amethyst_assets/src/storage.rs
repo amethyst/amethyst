@@ -137,6 +137,11 @@ impl<A: Asset> AssetStorage<A> {
         }
     }
 
+    /// Check if given handle points to a valid asset in the storage.
+    pub fn contains(&self, handle: &Handle<A>) -> bool {
+        return self.bitset.contains(handle.id());
+    }
+
     /// Check if given asset id points to a valid asset in the storage.
     pub fn contains_id(&self, id: u32) -> bool {
         return self.bitset.contains(id);

@@ -4,7 +4,7 @@ use crate::{
     sprite::{SpriteRender, SpriteSheet},
     types::Texture,
 };
-use amethyst_assets::AssetStorage;
+use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{math::Vector4, GlobalTransform};
 use glsl_layout::*;
 use rendy::{
@@ -194,7 +194,7 @@ impl Material {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
-#[repr(C, align(16))]
+#[repr(C, align(4))]
 pub(crate) struct SpriteArgs {
     pub dir_x: vec2,
     pub dir_y: vec2,
@@ -205,14 +205,14 @@ pub(crate) struct SpriteArgs {
 }
 
 impl SpriteArgs {
-    pub fn from_data<B: Backend>(
+    pub fn from_data<'a, B: Backend>(
         tex_storage: &AssetStorage<Texture<B>>,
-        sprite_storage: &AssetStorage<SpriteSheet<B>>,
+        sprite_storage: &'a AssetStorage<SpriteSheet<B>>,
         sprite_render: &SpriteRender<B>,
         global_transform: &GlobalTransform,
-    ) -> Option<(Self, u32)> {
+    ) -> Option<(Self, &'a Handle<Texture<B>>)> {
         let sprite_sheet = sprite_storage.get(&sprite_render.sprite_sheet)?;
-        if !tex_storage.contains_id(sprite_sheet.texture.id()) {
+        if !tex_storage.contains(&sprite_sheet.texture) {
             return None;
         }
 
@@ -232,7 +232,7 @@ impl SpriteArgs {
                 v_offset: [sprite.tex_coords.bottom, sprite.tex_coords.top].into(),
                 depth: pos.z,
             },
-            sprite_sheet.texture.id(),
+            &sprite_sheet.texture,
         ))
     }
 }
