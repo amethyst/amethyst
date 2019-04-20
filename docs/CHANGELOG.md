@@ -33,6 +33,7 @@ it is attached to. ([#1282])
 * `AmethystApplication` takes in application name using `with_app_name(..)`. ([#1499])
 * Add `NetEvent::Reliable` variant. When added to NetConnection, these events will eventually reach the target. ([#1513])
 * "How To" guides for defining state-specific dispatchers. ([#1498])
+* Adding support for AMETHYST_NUM_THREADS environment variable to control size of the threads pool used by thread_pool_builder.
 * Add `Input` variant to `StateEvent`. ([#1478])
 * Support type parameters in `EventReader` derive. ([#1478])
 
