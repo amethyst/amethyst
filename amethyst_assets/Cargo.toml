@@ -34,7 +34,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", optional = true }
 shred = { version = "0.7" }
 shred-derive = { version = "0.5" }
-ron = "0.4.2"
+ron = "0.5"
 thread_profiler = { version = "0.3", optional = true }
 err-derive = "0.1"
 

@@ -7,7 +7,7 @@ pub use crate::{
     connection::{ConnectionState, NetConnection, NetIdentity},
     error::Result,
     filter::{FilterConnected, NetFilter},
-    net_event::NetEvent,
+    net_event::{NetEvent, NetPacket},
     network_socket::NetSocketSystem,
     server::{Host, ServerConfig},
 };
@@ -31,7 +31,7 @@ mod test;
 
 /// Sends an event to the target NetConnection using the provided network Socket.
 /// The socket has to be bound.
-pub fn send_event<T>(event: NetEvent<T>, addr: SocketAddr, sender: &Sender<Packet>)
+pub fn send_event<T>(event: NetPacket<T>, addr: SocketAddr, sender: &Sender<Packet>)
 where
     T: Serialize,
 {
@@ -39,9 +39,9 @@ where
     match ser {
         Ok(s) => {
             let p = if event.is_reliable() {
-                Packet::unreliable(addr, s)
-            } else {
                 Packet::reliable_unordered(addr, s)
+            } else {
+                Packet::unreliable(addr, s)
             };
 
             match sender.send(p) {
@@ -54,9 +54,9 @@ where
 }
 
 // Attempts to deserialize an event from the raw byte data.
-fn deserialize_event<T>(data: &[u8]) -> Result<NetEvent<T>>
+fn deserialize_event<T>(data: &[u8]) -> Result<NetPacket<T>>
 where
     T: DeserializeOwned,
 {
-    Ok(deserialize::<NetEvent<T>>(data)?)
+    Ok(deserialize::<NetPacket<T>>(data)?)
 }

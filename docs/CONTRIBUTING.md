@@ -42,7 +42,8 @@ and try our best to resolve it.
 
 So, you want to write some code? Great!
 
-To begin hacking, fork the repository to your account and `git clone` the forked
+To begin hacking, make sure you have [git lfs](https://git-lfs.github.com/)
+installed, fork the repository to your account and `git clone` the forked
 copy to your local machine. On clone you will be on the *master* branch. This
 is the branch that contains all new work that has not been released yet. If you
 are adding a new feature to amethyst then you want to base your work off of this
