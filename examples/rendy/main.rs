@@ -136,7 +136,7 @@ impl<'a> System<'a> for CameraCorrectionSystem {
                 current_aspect,
                 std::f32::consts::FRAC_PI_3,
                 0.1,
-                100.0,
+                1000.0,
             ));
         }
     }
@@ -321,7 +321,7 @@ impl<B: Backend> SimpleState for Example<B> {
                 1.3,
                 std::f32::consts::FRAC_PI_3,
                 0.1,
-                100.0,
+                1000.0,
             )))
             .with(transform)
             .with(FlyControlTag)
@@ -646,7 +646,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         let depth = graph_builder.create_image(
             surface.kind(),
             1,
-            Format::D16Unorm,
+            Format::D32Float,
             Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
         );
 
