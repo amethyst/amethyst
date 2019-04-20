@@ -1,6 +1,6 @@
 //! The core engine framework.
 
-use std::{marker::PhantomData, path::Path, sync::Arc, time::Duration};
+use std::{marker::PhantomData, path::Path, sync::Arc, time::Duration, env};
 
 use crate::shred::Resource;
 use derivative::Derivative;
@@ -30,6 +30,7 @@ use crate::{
     state_event::{StateEvent, StateEventReader},
     ui::UiEvent,
 };
+use amethyst_core::ArcThreadPool;
 
 /// `CoreApplication` is the application implementation for the game engine. This is fully generic
 /// over the state type and event type.
@@ -486,6 +487,12 @@ where
             info!("Rustc git commit: {}", hash);
         }
 
+        let _thread_count :usize = env::var("AMETHYST_NUM_THREADS")
+            .as_ref()
+            .map(String::as_str)
+            .unwrap_or(&String::from("0"))
+            .parse().expect("AMETHYST_NUM_THREADS was provided but is not a valid number!");
+
         let mut world = World::new();
 
         let thread_pool_builder = ThreadPoolBuilder::new();
@@ -493,7 +500,13 @@ where
         let thread_pool_builder = thread_pool_builder.start_handler(|_index| {
             register_thread_with_profiler();
         });
-        let pool = thread_pool_builder.build().map(Arc::new)?;
+        let pool :ArcThreadPool;
+        if _thread_count == 0 {
+            pool = thread_pool_builder.build().map(Arc::new)?;
+        } else {
+            info!("Running Amethyst with fixed thread pool: {}", _thread_count);
+            pool = thread_pool_builder.num_threads(_thread_count).build().map(Arc::new)?;
+        }
         world.add_resource(Loader::new(path.as_ref().to_owned(), pool.clone()));
         world.add_resource(pool);
         world.add_resource(EventChannel::<Event>::with_capacity(2000));
