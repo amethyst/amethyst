@@ -1,5 +1,5 @@
 use crate::{
-    batch::{BatchData, BatchPrimitives, GroupIterator},
+    batch::GroupIterator,
     camera::{ActiveCamera, Camera},
     hidden::{Hidden, HiddenPropagate},
     pass::util,
@@ -42,8 +42,7 @@ use rendy::{
     shader::Shader,
 };
 use smallvec::SmallVec;
-
-const TEXTURE_ARRAY_SIZE: usize = 16;
+use std::collections::hash_map::Entry;
 
 /// Draw sprites without lighting
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -96,17 +95,6 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawFlat2DDesc {
                 entry: "main",
                 module: &storage[1],
                 specialization: Specialization::default(),
-                // TODO: Use that spec constants.
-                // Doesn't work on metal due to potential spirv-cross bug?
-                // specialization: Specialization {
-                //     constants: &[SpecializationConstant {
-                //         id: 0,
-                //         range: 0..4,
-                //     }],
-                //     data: util::slice_as_bytes(&[
-                //         TEXTURE_ARRAY_SIZE as i32
-                //     ]),
-                // },
             }),
             hull: None,
             domain: None,
@@ -150,7 +138,7 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawFlat2DDesc {
                     bindings: vec![DescriptorSetLayoutBinding {
                         binding: 0,
                         ty: DescriptorType::CombinedImageSampler,
-                        count: TEXTURE_ARRAY_SIZE,
+                        count: 1,
                         stage_flags: ShaderStageFlags::FRAGMENT,
                         immutable_samplers: false,
                     }],
@@ -179,7 +167,6 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawFlat2DDesc {
             per_image: Vec::with_capacity(4),
             sprite_data: Default::default(),
             ubo_offset_align,
-            total_instances: 0,
             ..Default::default()
         })
     }
@@ -189,9 +176,9 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawFlat2DDesc {
 #[derivative(Default(bound = ""))]
 pub struct DrawFlat2D<B: Backend> {
     per_image: Vec<PerImage<B>>,
-    sprite_data: FnvHashMap<u32, SpriteData>,
+    sprite_data: FnvHashMap<u32, Vec<SpriteArgs>>,
+    ordered_sprite_data: Vec<(u32, SmallVec<[SpriteArgs; 1]>)>,
     ubo_offset_align: u64,
-    total_instances: u64,
 }
 
 impl<B: Backend> DrawFlat2D<B> {
@@ -219,35 +206,6 @@ struct PerImage<B: Backend> {
     sprites_buf: Option<Escape<Buffer<B>>>,
     projview_set: Option<Escape<DescriptorSet<B>>>,
     textures_set: Vec<Escape<DescriptorSet<B>>>,
-}
-
-// Outer layer - texture_num / TEXTURE_ARRAY_SIZE (batch id)
-// Inner layer - texture_num % TEXTURE_ARRAY_SIZE (texture id in batch)
-// data        - SpriteArgs sequence
-type SpriteBatchData = BatchData<u32, SmallVec<[SpriteArgs; 1]>>;
-
-#[derive(Debug)]
-struct SpriteData {
-    sprites: Vec<SpriteBatchData>,
-}
-
-struct BatchSprite;
-
-impl BatchPrimitives for BatchSprite {
-    type Shell = SpriteData;
-    type Batch = SpriteBatchData;
-
-    fn wrap_batch(batch: Self::Batch) -> Self::Shell {
-        let mut sprites = Vec::with_capacity(1024);
-        sprites.push(batch);
-        SpriteData { sprites }
-    }
-    fn push(shell: &mut Self::Shell, batch: Self::Batch) {
-        shell.sprites.push(batch);
-    }
-    fn batches_mut(shell: &mut Self::Shell) -> &mut [Self::Batch] {
-        &mut shell.sprites
-    }
 }
 
 impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
@@ -335,11 +293,13 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
 
         let mut tex_lookup = util::LookupBuilder::new();
         let sprite_data_ref = &mut self.sprite_data;
+        let ordered_sprite_data_ref = &mut self.ordered_sprite_data;
         let mut total_instances = 0;
 
         for (_, data) in sprite_data_ref.iter_mut() {
-            data.sprites.clear();
+            data.clear();
         }
+        ordered_sprite_data_ref.clear();
 
         match visibilities {
             None => {
@@ -361,46 +321,79 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
                         Some((tex_id, batch_data))
                     })
                     .for_each_group(|tex_id, batch_data| {
-                        let tex_pk = tex_id / TEXTURE_ARRAY_SIZE as u32;
-                        let tex_sk = tex_id % TEXTURE_ARRAY_SIZE as u32;
                         total_instances += batch_data.len() as u64;
-                        BatchSprite::insert_batch(
-                            sprite_data_ref.entry(tex_pk),
-                            tex_sk,
-                            batch_data,
-                        );
+                        match sprite_data_ref.entry(tex_id) {
+                            Entry::Vacant(e) => {
+                                e.insert(batch_data.collect());
+                            }
+                            Entry::Occupied(mut e) => {
+                                e.get_mut().extend(batch_data);
+                            }
+                        }
                     });
             }
             Some(ref visibility) => {
-                for (_sprite_render, _global, _) in (
+                (
                     &sprite_renders,
                     &global_transforms,
                     &visibility.visible_unordered,
                 )
                     .join()
-                {
-                    unimplemented!();
-                }
+                    .filter_map(|(sprite_render, global, _)| {
+                        let (batch_data, texture) = SpriteArgs::from_data(
+                            &tex_storage,
+                            &sprite_sheet_storage,
+                            &sprite_render,
+                            &global,
+                        )?;
+                        let tex_id = tex_lookup.forward(texture.id()) as u32;
+                        Some((tex_id, batch_data))
+                    })
+                    .for_each_group(|tex_id, batch_data| {
+                        total_instances += batch_data.len() as u64;
+                        match sprite_data_ref.entry(tex_id) {
+                            Entry::Vacant(e) => {
+                                e.insert(batch_data.collect());
+                            }
+                            Entry::Occupied(mut e) => {
+                                e.get_mut().extend(batch_data);
+                            }
+                        }
+                    });
 
-                for entity in &visibility.visible_ordered {
-                    //let screen = screens.contains(*entity);
-                    if let Some(_sprite_render) = sprite_renders.get(*entity) {
-                        unimplemented!();
-                    }
-                }
+                visibility
+                    .visible_ordered
+                    .iter()
+                    .filter_map(|&entity| {
+                        let sprite_render = sprite_renders.get(entity)?;
+                        let global = global_transforms.get(entity)?;
+
+                        let (batch_data, texture) = SpriteArgs::from_data(
+                            &tex_storage,
+                            &sprite_sheet_storage,
+                            &sprite_render,
+                            &global,
+                        )?;
+                        let tex_id = tex_lookup.forward(texture.id()) as u32;
+                        Some((tex_id, batch_data))
+                    })
+                    .for_each_group(|tex_id, batch_data| {
+                        total_instances += batch_data.len() as u64;
+                        ordered_sprite_data_ref.push((tex_id, batch_data.collect()));
+                    });
             }
         }
 
-        sprite_data_ref.retain(|_, data| data.sprites.len() > 0);
+        sprite_data_ref.retain(|_, data| data.len() > 0);
 
-        let num_chunks =
-            (tex_lookup.backward().len() + TEXTURE_ARRAY_SIZE - 1) / TEXTURE_ARRAY_SIZE;
-        if this_image.textures_set.len() < num_chunks {
-            this_image.textures_set.resize_with(num_chunks, || {
-                factory
-                    .create_descriptor_set(set_layouts[1].clone())
-                    .unwrap()
-            });
+        if this_image.textures_set.len() < tex_lookup.backward().len() {
+            this_image
+                .textures_set
+                .resize_with(tex_lookup.backward().len(), || {
+                    factory
+                        .create_descriptor_set(set_layouts[1].clone())
+                        .unwrap()
+                });
         }
 
         {
@@ -408,29 +401,22 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
 
             let writes_iter = tex_lookup
                 .backward()
-                .chunks(TEXTURE_ARRAY_SIZE)
+                .iter()
                 .zip(this_image.textures_set.iter())
-                .map(|(tex_ids, set)| {
-                    let expand = TEXTURE_ARRAY_SIZE - tex_ids.len();
-                    let ids_iter = tex_ids
-                        .iter()
-                        .chain(std::iter::repeat(&tex_ids[0]).take(expand));
-
-                    let descriptors = ids_iter.map(move |tex_id| {
-                        // Validated by `filter` in batch collection
-                        debug_assert!(tex_storage.contains_id(*tex_id));
-                        let Texture(tex) = unsafe { tex_storage.get_by_id_unchecked(*tex_id) };
-                        Descriptor::CombinedImageSampler(
-                            tex.view().raw(),
-                            rendy::hal::image::Layout::ShaderReadOnlyOptimal,
-                            tex.sampler().raw(),
-                        )
-                    });
+                .map(|(tex_id, set)| {
+                    // Validated by `filter` in batch collection
+                    debug_assert!(tex_storage.contains_id(*tex_id));
+                    let Texture(tex) = unsafe { tex_storage.get_by_id_unchecked(*tex_id) };
+                    let descriptor = Descriptor::CombinedImageSampler(
+                        tex.view().raw(),
+                        rendy::hal::image::Layout::ShaderReadOnlyOptimal,
+                        tex.sampler().raw(),
+                    );
                     DescriptorSetWrite {
                         set: set.raw(),
                         binding: 0,
                         array_offset: 0,
-                        descriptors,
+                        descriptors: Some(descriptor),
                     }
                 });
 
@@ -439,27 +425,32 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
             }
         }
 
-        let sprite_args_size = total_instances * std::mem::size_of::<SpriteArgs>() as u64;
-        util::ensure_buffer(
-            factory,
-            &mut this_image.sprites_buf,
-            BufferUsage::VERTEX,
-            rendy::memory::Dynamic,
-            sprite_args_size,
-        )
-        .unwrap();
+        if total_instances > 0 {
+            let sprite_args_size = total_instances * std::mem::size_of::<SpriteArgs>() as u64;
+            util::ensure_buffer(
+                factory,
+                &mut this_image.sprites_buf,
+                BufferUsage::VERTEX,
+                rendy::memory::Dynamic,
+                sprite_args_size,
+            )
+            .unwrap();
 
-        if let Some(buffer) = this_image.sprites_buf.as_mut() {
-            unsafe {
-                let mut mapped = buffer.map(factory, 0..sprite_args_size).unwrap();
-                let mut writer = mapped.write(factory, 0..sprite_args_size).unwrap();
-                let dst_slice = writer.slice();
+            if let Some(buffer) = this_image.sprites_buf.as_mut() {
+                unsafe {
+                    let mut mapped = buffer.map(factory, 0..sprite_args_size).unwrap();
+                    let mut writer = mapped.write(factory, 0..sprite_args_size).unwrap();
+                    let dst_slice = writer.slice();
 
-                let mut offset = 0;
-                for (_, sprite_data) in sprite_data_ref {
-                    for batch in &sprite_data.sprites {
-                        let bytes = util::slice_as_bytes(&batch.collection);
-                        dst_slice[offset..].copy_from_slice(bytes);
+                    let mut offset = 0;
+                    for (_, sprite_data) in sprite_data_ref {
+                        let bytes = util::slice_as_bytes(&sprite_data);
+                        dst_slice[offset..offset + bytes.len()].copy_from_slice(bytes);
+                        offset += bytes.len();
+                    }
+                    for (_, sprite_data) in ordered_sprite_data_ref {
+                        let bytes = util::slice_as_bytes(&sprite_data);
+                        dst_slice[offset..offset + bytes.len()].copy_from_slice(bytes);
                         offset += bytes.len();
                     }
                 }
@@ -489,16 +480,21 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
         encoder.bind_vertex_buffers(0, Some((sprites_buf, 0)));
 
         let mut offset = 0;
-        for (tex_pk, data) in self.sprite_data.iter() {
-            let tex_set = this_image.textures_set[*tex_pk as usize].raw();
+        for (tex_id, data) in self.sprite_data.iter() {
+            let tex_set = this_image.textures_set[*tex_id as usize].raw();
             encoder.bind_graphics_descriptor_sets(layout, 1, Some(tex_set), None);
 
-            for BatchData { key, collection } in &data.sprites {
-                let num_instances = collection.len() as u32;
-                encoder.push_constants(layout, ShaderStageFlags::FRAGMENT, 0, &[*key]);
-                encoder.draw(0..6, offset..offset + num_instances);
-                offset += num_instances;
-            }
+            let num_instances = data.len() as u32;
+            encoder.draw(0..6, offset..offset + num_instances);
+            offset += num_instances;
+        }
+        for (tex_id, data) in self.ordered_sprite_data.iter() {
+            let tex_set = this_image.textures_set[*tex_id as usize].raw();
+            encoder.bind_graphics_descriptor_sets(layout, 1, Some(tex_set), None);
+
+            let num_instances = data.len() as u32;
+            encoder.draw(0..6, offset..offset + num_instances);
+            offset += num_instances;
         }
     }
 

@@ -4,6 +4,52 @@ Prefab (
         (
             data: (
                 sprite_sheet: Sheet(
+                    texture: File("texture/bat_semi_transparent.png", (), (
+                        sampler_info: (
+                            min_filter: Nearest,
+                            mag_filter: Nearest,
+                            mip_filter: Nearest,
+                            wrap_mode: (Tile, Tile, Tile),
+                            lod_bias: (0),
+                            lod_range: (
+                                start: (-8000),
+                                end: (8000),
+                            ),
+                            comparison: None,
+                            border: (0),
+                            anisotropic: Off,
+                        ),
+                    )),
+                    sprites: [
+                        Grid((
+                            texture_width: 192,
+                            texture_height: 64,
+                            columns: 6,
+                            rows: 1,
+                            cell_size: (32, 32),
+                            position: (0, 32),
+                        )),
+                        List((
+                            texture_width: 192,
+                            texture_height: 64,
+                            sprites: [
+                                (x: 0,   y: 32, width: 32, height: 32),
+                                (x: 32,  y: 32, width: 32, height: 32, offsets: (0.0, -4.0)),
+                                (x: 64,  y: 32, width: 32, height: 32, offsets: (0.0, 7.0)),
+                                (x: 64,  y: 32, width: 32, height: 32, offsets: (0.0, 6.0)),
+                                (x: 96,  y: 32, width: 32, height: 32, offsets: (0.0, -4.0)),
+                                (x: 128, y: 32, width: 32, height: 32, offsets: (0.0, -2.0)),
+                            ],
+                        )),
+                    ],
+                    // optional
+                    name: "bat_color",
+                ),
+            ),
+        ),
+        (
+            data: (
+                sprite_sheet: Sheet(
                     texture: File("texture/bat.32x32.png", (), (
                         sampler_info: (
                             min_filter: Nearest,
@@ -27,7 +73,7 @@ Prefab (
                             columns: 6,
                             rows: 1,
                             cell_size: (32, 32),
-                            // position: (0, 32),
+                            position: (0, 32),
                         )),
                         List((
                             texture_width: 192,
@@ -49,14 +95,43 @@ Prefab (
         ),
         (
             data: (
+                sprite_sheet: Sheet(
+                    texture: File("texture/logo_transparent.png", (), ()),
+                    sprites: [
+                        List((
+                            texture_width: 256,
+                            texture_height: 256,
+                            sprites: [(x: 0,   y: 0, width: 256, height: 256)],
+                        )),
+                    ],
+                    // optional
+                    name: "logo",
+                ),
+            ),
+        ),
+        (
+            data: (
+                sprite_sheet: Sheet(
+                    texture: File("texture/crate.png", (), ()),
+                    sprites: [
+                        List((
+                            texture_width: 32,
+                            texture_height: 32,
+                            sprites: [(x: 0,   y: 0, width: 32, height: 32)],
+                        )),
+                    ],
+                    // optional
+                    name: "crate",
+                ),
+            ),
+        ),
+        (
+            data: (
                 transform: (
                     scale: (1.0, 1.0, 1.0),
                     translation: (10.0, 0.0, 0.0),
                 ),
-                gltf: File("large/AlphaBlendModeTest.glb", GltfSceneFormat, (
-                    load_animations: true,
-                    flip_v_coord: false,
-                )),
+                gltf: File("large/AlphaBlendModeTest.glb", GltfSceneFormat, ()),
             ),
         ),
         (
@@ -69,29 +144,14 @@ Prefab (
         ),
         (
             data: (
-                gltf: File("large/NormalTangentMirrorTest.glb", GltfSceneFormat, (
-                    load_animations: true,
-                    flip_v_coord: false,
-                )),
-            ),
-        ),
-        (
-            data: (
-                sprite: (
-                    sheet: "bat",
-                    sprite_number: 0,
-                ),
-                transform: (
-                    translation: (2.55, 0.05, 0.55),
-                    scale: (0.02, 0.02, 1.0),
-                ),
+                gltf: File("large/NormalTangentMirrorTest.glb", GltfSceneFormat, ()),
             ),
         ),
         (
             data: (
                 // SpriteRenderPrefab
                 sprite: (
-                    sheet: "bat",
+                    sheet: "bat_color",
                     sprite_number: 0,
                 ),
                 transform: (
@@ -121,7 +181,46 @@ Prefab (
                             ),
                         ),
                     ],
-                )
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "bat_color",
+                    sprite_number: 0,
+                ),
+                transform: (
+                    translation: (2.55, 0.05, 0.45),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "logo",
+                    sprite_number: 0,
+                ),
+                transform: (
+                    translation: (2.5, 0.00, 0.4),
+                    scale: (0.005, 0.005, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "crate",
+                    sprite_number: 0,
+                ),
+                transform: (
+                    translation: (3.8, 0.00, 0.5),
+                    scale: (0.03, 0.03, 1.0),
+                ),
             ),
         ),
         (
@@ -146,91 +245,104 @@ Prefab (
         ),
         (
             data: (
-                sprite: (sheet: "bat", sprite_number: 0),
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 0),
                 transform: (translation: (0.0, -1.5, 2.0), scale: (0.02, 0.02, 1.0)),
                 animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.4], output: [0, 1, 0], function: Step))]))])
             ),
         ),
         (
             data: (
-                sprite: (sheet: "bat", sprite_number: 1),
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
                 transform: (translation: (0.0, -1.5, 2.1), scale: (0.02, 0.02, 1.0)),
                 animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.41], output: [0, 1, 0], function: Step))]))])
             ),
         ),
         (
             data: (
-                sprite: (sheet: "bat", sprite_number: 1),
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
                 transform: (translation: (0.0, -1.5, 2.2), scale: (0.02, 0.02, 1.0)),
                 animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.42], output: [0, 1, 0], function: Step))]))])
             ),
         ),
         (
             data: (
-                sprite: (sheet: "bat", sprite_number: 1),
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
                 transform: (translation: (0.0, -1.5, 2.3), scale: (0.02, 0.02, 1.0)),
                 animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.43], output: [0, 1, 0], function: Step))]))])
             ),
         ),
         (
             data: (
-                sprite: (sheet: "bat", sprite_number: 1),
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
                 transform: (translation: (0.0, -1.5, 2.4), scale: (0.02, 0.02, 1.0)),
                 animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.44], output: [0, 1, 0], function: Step))]))])
             ),
         ),
         (
             data: (
-                sprite: (sheet: "bat", sprite_number: 1),
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
                 transform: (translation: (0.0, -1.5, 2.5), scale: (0.02, 0.02, 1.0)),
                 animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.45], output: [0, 1, 0], function: Step))]))])
             ),
         ),
         (
             data: (
-                sprite: (sheet: "bat", sprite_number: 1),
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
                 transform: (translation: (0.0, -1.5, 2.6), scale: (0.02, 0.02, 1.0)),
                 animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.46], output: [0, 1, 0], function: Step))]))])
             ),
         ),
         (
             data: (
-                sprite: (sheet: "bat", sprite_number: 1),
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
                 transform: (translation: (0.0, -1.5, 2.7), scale: (0.02, 0.02, 1.0)),
                 animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.47], output: [0, 1, 0], function: Step))]))])
             ),
         ),
         (
             data: (
-                sprite: (sheet: "bat", sprite_number: 1),
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
                 transform: (translation: (0.0, -1.5, 2.8), scale: (0.02, 0.02, 1.0)),
                 animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.48], output: [0, 1, 0], function: Step))]))])
             ),
         ),
         (
             data: (
-                sprite: (sheet: "bat", sprite_number: 1),
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
                 transform: (translation: (0.0, -1.5, 2.9), scale: (0.02, 0.02, 1.0)),
                 animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.49], output: [0, 1, 0], function: Step))]))])
             ),
         ),
         (
             data: (
-                sprite: (sheet: "bat", sprite_number: 1),
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
                 transform: (translation: (0.0, -1.5, 3.0), scale: (0.02, 0.02, 1.0)),
                 animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.5], output: [0, 1, 0], function: Step))]))])
             ),
         ),
         (
             data: (
-                sprite: (sheet: "bat", sprite_number: 1),
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
                 transform: (translation: (0.0, -1.5, 3.1), scale: (0.02, 0.02, 1.0)),
                 animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.51], output: [0, 1, 0], function: Step))]))])
             ),
         ),
         (
             data: (
-                sprite: (sheet: "bat", sprite_number: 1),
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
                 transform: (translation: (0.0, -1.5, 3.2), scale: (0.02, 0.02, 1.0)),
                 animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.52], output: [0, 1, 0], function: Step))]))])
             ),
@@ -272,7 +384,8 @@ Prefab (
         ),
         (
             data: (
-                sprite: (sheet: "bat", sprite_number: 1),
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
                 transform: (translation: (0.0, -1.5, 3.8), scale: (0.02, 0.02, 1.0)),
                 animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.58], output: [0, 1, 0], function: Step))]))])
             ),
@@ -300,7 +413,8 @@ Prefab (
         ),
         (
             data: (
-                sprite: (sheet: "bat", sprite_number: 1),
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
                 transform: (translation: (0.0, -1.5, 4.2), scale: (0.02, 0.02, 1.0)),
                 animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.62], output: [0, 1, 0], function: Step))]))])
             ),
@@ -328,7 +442,8 @@ Prefab (
         ),
         (
             data: (
-                sprite: (sheet: "bat", sprite_number: 1),
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
                 transform: (translation: (0.0, -1.5, 4.6), scale: (0.02, 0.02, 1.0)),
                 animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.66], output: [0, 1, 0], function: Step))]))])
             ),
@@ -356,7 +471,8 @@ Prefab (
         ),
         (
             data: (
-                sprite: (sheet: "bat", sprite_number: 1),
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
                 transform: (translation: (0.0, -1.5, 5.0), scale: (0.02, 0.02, 1.0)),
                 animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.7], output: [0, 1, 0], function: Step))]))])
             ),
@@ -384,7 +500,8 @@ Prefab (
         ),
         (
             data: (
-                sprite: (sheet: "bat", sprite_number: 1),
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
                 transform: (translation: (0.0, -1.5, 5.4), scale: (0.02, 0.02, 1.0)),
                 animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.74], output: [0, 1, 0], function: Step))]))])
             ),
@@ -426,7 +543,8 @@ Prefab (
         ),
         (
             data: (
-                sprite: (sheet: "bat", sprite_number: 1),
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
                 transform: (translation: (0.0, -1.5, 6.0), scale: (0.02, 0.02, 1.0)),
                 animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.8], output: [0, 1, 0], function: Step))]))])
             ),

@@ -40,6 +40,7 @@ struct Internals {
     entity: Entity,
     transparent: bool,
     centroid: Point3<f32>,
+    camera_distance: f32,
     from_camera: Vector3<f32>,
 }
 
@@ -85,33 +86,36 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
             (&*entities, &global, !&hidden, !&hidden_prop)
                 .join()
                 .map(|(entity, global, _, _)| (entity, global.0.transform_point(&origin)))
+                // filter entities behind the camera
+                .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.)
                 .map(|(entity, centroid)| Internals {
                     entity,
                     transparent: transparent.contains(entity),
                     centroid,
+                    camera_distance: (centroid.z - camera_centroid.z).abs(),
                     from_camera: centroid - camera_centroid,
-                })
-                // filter entities behind the camera
-                .filter(|c| c.from_camera.dot(&camera_backward) < 0.),
+                }),
         );
+
+        visibility.visible_unordered.clear();
+        visibility.visible_unordered.extend(
+            self.centroids
+                .iter()
+                .filter(|c| !c.transparent)
+                .map(|c| c.entity.id()),
+        );
+
         self.transparent.clear();
         self.transparent
-            .extend(self.centroids.iter().filter(|c| c.transparent).cloned());
+            .extend(self.centroids.drain(..).filter(|c| c.transparent));
 
         // Note: Smaller Z values are placed first, so that semi-transparent sprite colors blend
-        // correctly. This is opposite to the mesh visibility sorting system.
+        // correctly.
         self.transparent.sort_by(|a, b| {
-            a.centroid
-                .z
-                .partial_cmp(&b.centroid.z)
+            b.camera_distance
+                .partial_cmp(&a.camera_distance)
                 .unwrap_or(Ordering::Equal)
         });
-        visibility.visible_unordered.clear();
-        for c in &self.centroids {
-            if !c.transparent {
-                visibility.visible_unordered.add(c.entity.id());
-            }
-        }
 
         visibility.visible_ordered.clear();
         visibility

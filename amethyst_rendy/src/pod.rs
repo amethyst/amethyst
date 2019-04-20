@@ -220,7 +220,7 @@ impl SpriteArgs {
 
         let transform = &global_transform.0;
         let dir_x = transform.column(0) * sprite.width;
-        let dir_y = transform.column(1) * sprite.height;
+        let dir_y = transform.column(1) * -sprite.height;
         let pos = transform * Vector4::new(-sprite.offsets[0], -sprite.offsets[1], 0.0, 1.0);
 
         Some((

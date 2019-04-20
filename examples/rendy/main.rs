@@ -3,13 +3,13 @@
 use amethyst::{
     animation::{
         get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSet, AnimationSet,
-        AnimationSetPrefab, EndControl, VertexSkinningBundle,
+        EndControl, VertexSkinningBundle,
     },
     assets::{
-        AssetLoaderSystemData, AssetPrefab, Completion, Handle, Prefab, PrefabData, PrefabLoader,
-        PrefabLoaderSystem, Processor, ProgressCounter, RonFormat,
+        AssetLoaderSystemData, Completion, PrefabLoader, PrefabLoaderSystem, Processor,
+        ProgressCounter, RonFormat,
     },
-    controls::{ControlTagPrefab, FlyControlBundle, FlyControlTag},
+    controls::{FlyControlBundle, FlyControlTag},
     core::{
         ecs::{
             Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
@@ -18,23 +18,16 @@ use amethyst::{
         math::{Unit, UnitQuaternion, Vector3},
         Time, Transform, TransformBundle,
     },
-    derive::PrefabData,
-    gltf::{GltfSceneAsset, GltfSceneFormat, GltfSceneLoaderSystem},
+    gltf::GltfSceneLoaderSystem,
     input::{is_close_requested, is_key_down, Axis, Bindings, Button, InputBundle},
     prelude::*,
-    utils::{
-        application_root_dir,
-        fps_counter::FPSCounterBundle,
-        tag::{Tag, TagFinder},
-    },
+    utils::{application_root_dir, fps_counter::FPSCounterBundle, tag::TagFinder},
     window::{EventsLoopSystem, ScreenDimensions, WindowSystem},
     winit::{EventsLoop, Window},
-    Error,
 };
 use amethyst_rendy::{
-    camera::{ActiveCamera, Camera, CameraPrefab, Projection},
-    formats::{mesh::MeshPrefab, mtl::MaterialPrefab},
-    light::{Light, LightPrefab, PointLight},
+    camera::{ActiveCamera, Camera, Projection},
+    light::{Light, PointLight},
     mtl::{Material, MaterialDefaults},
     palette::{LinSrgba, Srgb},
     pass::{DrawFlat2DDesc, DrawPbrDesc},
@@ -42,7 +35,7 @@ use amethyst_rendy::{
         factory::Factory,
         graph::{
             present::PresentNode,
-            render::{RenderGroupBuilder, RenderGroupDesc, SimpleGraphicsPipelineDesc},
+            render::{RenderGroupDesc, SimpleGraphicsPipelineDesc, SubpassBuilder},
             GraphBuilder,
         },
         hal::{
@@ -55,16 +48,16 @@ use amethyst_rendy::{
     },
     resources::Tint,
     shape::Shape,
-    sprite::{
-        prefab::{SpriteRenderPrefab, SpriteSheetPrefab},
-        SpriteRender, SpriteSheet,
-    },
+    sprite::{SpriteRender, SpriteSheet},
+    sprite_visibility::SpriteVisibilitySortingSystem,
     system::{GraphCreator, RendererSystem},
     types::{DefaultBackend, Mesh, Texture},
 };
-use derivative::Derivative;
-use serde::{Deserialize, Serialize};
 use std::{marker::PhantomData, path::Path, sync::Arc};
+
+use prefab_data::{AnimationMarker, Scene, ScenePrefabData, SpriteAnimationId};
+
+mod prefab_data;
 
 struct Example<B: Backend> {
     entity: Option<Entity>,
@@ -146,44 +139,6 @@ impl<'a> System<'a> for CameraCorrectionSystem {
                 100.0,
             ));
         }
-    }
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-struct AnimationMarker;
-
-#[derive(Derivative)]
-#[derivative(Default(bound = ""))]
-struct Scene<B: Backend> {
-    handle: Option<Handle<Prefab<ScenePrefabData<B>>>>,
-    animation_index: usize,
-}
-
-#[derive(Derivative, Deserialize, Serialize, PrefabData)]
-#[derivative(Default(bound = ""))]
-#[serde(default, bound = "")]
-struct ScenePrefabData<B: Backend> {
-    transform: Option<Transform>,
-    gltf: Option<AssetPrefab<GltfSceneAsset<B>, GltfSceneFormat>>,
-    sprite_sheet: Option<SpriteSheetPrefab<B>>,
-    animation_set: Option<AnimationSetPrefab<SpriteAnimationId, SpriteRender<B>>>,
-    camera: Option<CameraPrefab>,
-    light: Option<LightPrefab>,
-    tag: Option<Tag<AnimationMarker>>,
-    fly_tag: Option<ControlTagPrefab>,
-    sprite: Option<SpriteRenderPrefab<B>>,
-    mesh: Option<MeshPrefab<B, Vec<PosNormTangTex>>>,
-    material: Option<MaterialPrefab<B>>,
-}
-
-/// Animation ids used in a AnimationSet
-#[derive(Eq, PartialOrd, PartialEq, Hash, Debug, Copy, Clone, Deserialize, Serialize)]
-enum SpriteAnimationId {
-    Fly,
-}
-impl Default for SpriteAnimationId {
-    fn default() -> Self {
-        SpriteAnimationId::Fly
     }
 }
 
@@ -632,6 +587,11 @@ fn main() -> amethyst::Result<()> {
             "animation_control",
             "sampler_interpolation",
         ]))?
+        .with(
+            SpriteVisibilitySortingSystem::new(),
+            "sprite_visibility_system",
+            &["fly_movement", "cam", "transform_system"],
+        )
         .with_thread_local(EventsLoopSystem::new(event_loop))
         .with_thread_local(RendererSystem::<DefaultBackend, _>::new(ExampleGraph::new()));
 
@@ -690,50 +650,43 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
             Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
         );
 
-        let pbr_pass = graph_builder.add_node(
-            DrawPbrDesc::default()
-                .with_vertex_skinning()
-                .with_transparency(
-                    pso::ColorBlendDesc(pso::ColorMask::ALL, pso::BlendState::ALPHA),
-                    Some(pso::DepthStencilDesc {
-                        depth: pso::DepthTest::On {
-                            fun: pso::Comparison::Less,
-                            write: true,
-                        },
-                        depth_bounds: false,
-                        stencil: pso::StencilTest::Off,
-                    }),
-                )
-                .builder()
-                .into_subpass()
-                .with_color(color)
-                .with_depth_stencil(depth)
-                .into_pass(),
-        );
+        let subpass = SubpassBuilder::new()
+            .with_group(
+                DrawPbrDesc::default()
+                    .with_vertex_skinning()
+                    .with_transparency(
+                        pso::ColorBlendDesc(pso::ColorMask::ALL, pso::BlendState::ALPHA),
+                        Some(pso::DepthStencilDesc {
+                            depth: pso::DepthTest::On {
+                                fun: pso::Comparison::Less,
+                                write: true,
+                            },
+                            depth_bounds: false,
+                            stencil: pso::StencilTest::Off,
+                        }),
+                    )
+                    .builder(),
+            )
+            .with_group(
+                DrawFlat2DDesc::default()
+                    .with_transparency(
+                        pso::ColorBlendDesc(pso::ColorMask::ALL, pso::BlendState::ALPHA),
+                        Some(pso::DepthStencilDesc {
+                            depth: pso::DepthTest::On {
+                                fun: pso::Comparison::Less,
+                                write: true,
+                            },
+                            depth_bounds: false,
+                            stencil: pso::StencilTest::Off,
+                        }),
+                    )
+                    .builder(),
+            )
+            .with_color(color)
+            .with_depth_stencil(depth);
 
-        let sprite_pass = graph_builder.add_node(
-            DrawFlat2DDesc::default()
-                .with_transparency(
-                    pso::ColorBlendDesc(pso::ColorMask::ALL, pso::BlendState::ALPHA),
-                    Some(pso::DepthStencilDesc {
-                        depth: pso::DepthTest::On {
-                            fun: pso::Comparison::Less,
-                            write: true,
-                        },
-                        depth_bounds: false,
-                        stencil: pso::StencilTest::Off,
-                    }),
-                )
-                .builder()
-                .into_subpass()
-                .with_color(color)
-                .with_depth_stencil(depth)
-                .into_pass(),
-        );
-
-        let present_builder = PresentNode::builder(factory, surface, color)
-            .with_dependency(pbr_pass)
-            .with_dependency(sprite_pass);
+        let pass = graph_builder.add_node(subpass.into_pass());
+        let present_builder = PresentNode::builder(factory, surface, color).with_dependency(pass);
 
         graph_builder.add_node(present_builder);
 
