@@ -3,7 +3,6 @@ use amethyst::{
     ecs::{Join, Read, System, WriteStorage},
     network::*,
     prelude::*,
-    shrev::ReaderId,
     Result,
 };
 use log::info;
@@ -13,7 +12,7 @@ fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(NetworkBundle::<()>::new(
+        .with_bundle(NetworkBundle::<String>::new(
             "127.0.0.1:3457".parse().unwrap(),
             vec![],
         ))?
@@ -33,14 +32,16 @@ impl SimpleState for State1 {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         data.world
             .create_entity()
-            .with(NetConnection::<()>::new("127.0.0.1:3455".parse().unwrap()))
+            .with(NetConnection::<String>::new(
+                "127.0.0.1:3455".parse().unwrap(),
+            ))
             .build();
     }
 }
 
 /// A simple system that sends a ton of messages to all connections.
 /// In this case, only the server is connected.
-struct SpamSystem {}
+struct SpamSystem;
 
 impl SpamSystem {
     pub fn new() -> Self {
@@ -49,52 +50,19 @@ impl SpamSystem {
 }
 
 impl<'a> System<'a> for SpamSystem {
-    type SystemData = (WriteStorage<'a, NetConnection<()>>, Read<'a, Time>);
+    type SystemData = (WriteStorage<'a, NetConnection<String>>, Read<'a, Time>);
     fn run(&mut self, (mut connections, time): Self::SystemData) {
         for conn in (&mut connections).join() {
             info!("Sending 10k messages.");
             for i in 0..10000 {
-                let ev = NetEvent::TextMessage {
-                    msg: format!(
-                        "CL: frame:{},abs_time:{},c:{}",
-                        time.frame_number(),
-                        time.absolute_time_seconds(),
-                        i
-                    ),
-                };
+                let packet = NetEvent::Packet(NetPacket::unreliable(format!(
+                    "CL: frame:{},abs_time:{},c:{}",
+                    time.frame_number(),
+                    time.absolute_time_seconds(),
+                    i
+                )));
 
-                conn.send_buffer.single_write(ev);
-            }
-        }
-    }
-}
-
-/// A simple system reading received events.
-/// Used to see events sent by the net_echo_server example.
-#[allow(unused)]
-struct ReaderSystem {
-    pub reader: Option<ReaderId<NetEvent<()>>>,
-}
-
-impl ReaderSystem {
-    #[allow(unused)]
-    pub fn new() -> Self {
-        ReaderSystem { reader: None }
-    }
-}
-
-impl<'a> System<'a> for ReaderSystem {
-    type SystemData = (WriteStorage<'a, NetConnection<()>>,);
-    fn run(&mut self, (mut connections,): Self::SystemData) {
-        if let Some((conn,)) = (&mut connections,).join().next() {
-            if self.reader.is_none() {
-                self.reader = Some(conn.receive_buffer.register_reader());
-            }
-            for ev in conn.receive_buffer.read(self.reader.as_mut().unwrap()) {
-                match ev {
-                    NetEvent::TextMessage { ref msg } => info!("Received: {}", msg),
-                    _ => {}
-                }
+                conn.send_buffer.single_write(packet);
             }
         }
     }
