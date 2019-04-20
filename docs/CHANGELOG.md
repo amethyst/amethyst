@@ -134,6 +134,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1513]: https://github.com/amethyst/amethyst/pull/1513
 [#1509]: https://github.com/amethyst/amethyst/pull/1509
 [#1510]: https:://github.com/amethyst/amethyst/pull/1523/
+[#1524]: https://github.com/amethyst/amethyst/pull/1524
 
 ## [0.10.0] - 2018-12
 

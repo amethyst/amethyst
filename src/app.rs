@@ -487,7 +487,7 @@ where
             info!("Rustc git commit: {}", hash);
         }
 
-        let _thread_count :usize = env::var("AMETHYST_NUM_THREADS")
+        let thread_count :usize = env::var("AMETHYST_NUM_THREADS")
             .as_ref()
             .map(String::as_str)
             .unwrap_or(&String::from("0"))
@@ -501,11 +501,11 @@ where
             register_thread_with_profiler();
         });
         let pool :ArcThreadPool;
-        if _thread_count == 0 {
+        if thread_count == 0 {
             pool = thread_pool_builder.build().map(Arc::new)?;
         } else {
-            info!("Running Amethyst with fixed thread pool: {}", _thread_count);
-            pool = thread_pool_builder.num_threads(_thread_count).build().map(Arc::new)?;
+            info!("Running Amethyst with fixed thread pool: {}", thread_count);
+            pool = thread_pool_builder.num_threads(thread_count).build().map(Arc::new)?;
         }
         world.add_resource(Loader::new(path.as_ref().to_owned(), pool.clone()));
         world.add_resource(pool);
