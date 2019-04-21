@@ -269,6 +269,62 @@ impl AsVertex for SpriteArgs {
     };
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
+#[repr(C, align(4))]
+pub(crate) struct UiArgs {
+    pub inverse_window_size: vec2,
+    pub coords: vec2,
+    pub dimensions: vec2,
+    pub color: vec4,
+}
+
+impl AsVertex for UiArgs {
+    const VERTEX: VertexFormat<'static> = VertexFormat {
+        attributes: Cow::Borrowed(&[
+            Attribute {
+                format: Format::Rg32Float,
+                offset: 0,
+            },
+            Attribute {
+                format: Format::Rg32Float,
+                offset: 8,
+            },
+            Attribute {
+                format: Format::Rg32Float,
+                offset: 16,
+            },
+            Attribute {
+                format: Format::Rg32Float,
+                offset: 24,
+            },
+        ]),
+        stride: 40,
+    };
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
+#[repr(C, align(4))]
+pub(crate) struct UiVertexArgs {
+    pub pos: vec4,
+    pub tex_uv: vec2,
+}
+
+impl AsVertex for UiVertexArgs {
+    const VERTEX: VertexFormat<'static> = VertexFormat {
+        attributes: Cow::Borrowed(&[
+            Attribute {
+                format: Format::Rg32Float,
+                offset: 0,
+            },
+            Attribute {
+                format: Format::Rg32Float,
+                offset: 16,
+            },
+        ]),
+        stride: 24,
+    };
+}
+
 pub trait IntoPod<T> {
     fn into_pod(self) -> T;
 }

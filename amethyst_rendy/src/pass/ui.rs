@@ -3,10 +3,7 @@ use crate::{
     camera::{ActiveCamera, Camera},
     hidden::{Hidden, HiddenPropagate},
     pass::util,
-    pod::{SpriteArgs, ViewArgs},
-    sprite::{SpriteRender, SpriteSheet},
-    sprite_visibility::SpriteVisibility,
-    types::Texture,
+    pod::{SpriteArgs, ViewArgs, UiVertexArgs, UiArgs},
 };
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
@@ -98,8 +95,7 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawUiDesc {
     }
 
     fn vertices(&self) -> Vec<(Vec<Element<Format>>, ElemStride, InstanceRate)> {
-        // TODO(happens): Correct vertex format
-        vec![SpriteArgs::VERTEX.gfx_vertex_input_desc(1)]
+        vec![UiArgs::VERTEX.gfx_vertex_input_desc(1)]
     }
 
     fn layout(&self) -> Layout {
