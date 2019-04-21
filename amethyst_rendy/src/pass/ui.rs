@@ -3,7 +3,7 @@ use crate::{
     camera::{ActiveCamera, Camera},
     hidden::{Hidden, HiddenPropagate},
     pass::util,
-    pod::{SpriteArgs, ViewArgs, UiVertexArgs, UiArgs},
+    pod::{SpriteArgs, ViewArgs, UiViewArgs, UiArgs},
 };
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
@@ -95,7 +95,7 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawUiDesc {
     }
 
     fn vertices(&self) -> Vec<(Vec<Element<Format>>, ElemStride, InstanceRate)> {
-        vec![UiArgs::VERTEX.gfx_vertex_input_desc(1)]
+        vec![UiArgs::VERTEX.gfx_vertex_input_desc(0)]
     }
 
     fn layout(&self) -> Layout {
@@ -119,8 +119,17 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawUiDesc {
                         immutable_samplers: false,
                     }],
                 },
+                SetLayout {
+                    bindings: vec![DescriptorSetLayoutBinding {
+                        binding: 0,
+                        ty: DescriptorType::UniformBuffer,
+                        count: 1,
+                        stage_flags: ShaderStageFlags::FRAGMENT,
+                        immutable_samplers: false,
+                    }],
+                },
             ],
-            push_constants: vec![(ShaderStageFlags::FRAGMENT, 0..1)],
+            push_constants: vec![(ShaderStageFlags::FRAGMENT, 0..2)],
         }
     }
 
@@ -139,13 +148,14 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawUiDesc {
             .limits()
             .min_uniform_buffer_offset_alignment;
 
-        Ok(DrawUi { ..Default::default() })
+        Ok(DrawUi { ubo_offset_align, ..Default::default() })
     }
 }
 
 #[derive(Debug, Derivative)]
 #[derivative(Default(bound = ""))]
 pub struct DrawUi<B: Backend> {
+    ubo_offset_align: u64,
     _phantom: std::marker::PhantomData<B>,
 }
 
