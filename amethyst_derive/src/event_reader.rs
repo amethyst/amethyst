@@ -1,6 +1,6 @@
-use proc_macro2::{Literal, TokenStream};
+use proc_macro2::{Literal, Span, TokenStream};
 use quote::quote;
-use syn::{Data, DeriveInput, Ident, Meta, NestedMeta, Type};
+use syn::{Data, DeriveInput, GenericParam, Ident, Lifetime, LifetimeDef, Meta, NestedMeta, Type};
 
 pub fn impl_event_reader(ast: &DeriveInput) -> TokenStream {
     let event_name = &ast.ident;
@@ -51,6 +51,21 @@ pub enum SomeEvent {{
     let tys = &tys;
     let names = collect_variant_names(&ast.data);
     let names = &names;
+    let type_params_with_defaults = ast.generics.type_params();
+    let (_, type_generics, where_clause) = ast.generics.split_for_impl();
+    let mut generics = ast.generics.clone();
+
+    let reader_lifetime = Lifetime::new("'r", Span::call_site());
+    // Need to wrap the lifetime in an iterator because the event channel resources are tokenized in
+    // a cycle.
+    let reader_lifetime_iter = std::iter::repeat(reader_lifetime.clone()).take(tys.len());
+    generics
+        .params
+        .push(GenericParam::Lifetime(LifetimeDef::new(
+            reader_lifetime.clone(),
+        )));
+
+    let (impl_generics, _, _) = generics.split_for_impl();
 
     let reads: Vec<_> = (0..tys.len())
         .map(|n| {
@@ -61,9 +76,11 @@ pub enum SomeEvent {{
                     data.#tuple_index.read(
                         self.#tuple_index
                             .as_mut()
-                            .expect("ReaderId undefined, has setup been run?"))
+                            .expect("ReaderId undefined, has setup been run?")
+                        )
                     .cloned()
-                    .map(#event_name::#variant));
+                    .map(#event_name::#variant)
+                );
             }
         })
         .collect();
@@ -79,22 +96,24 @@ pub enum SomeEvent {{
     quote! {
         #[allow(missing_docs)]
         #[derive(Default)]
-        pub struct #reader_name(
+        pub struct #reader_name <#(#type_params_with_defaults),*> (
             #(Option<ReaderId<#tys>>, )*
-        );
+        ) #where_clause;
 
-        impl<'a> EventReader<'a> for #reader_name {
+        impl #impl_generics EventReader<#reader_lifetime> for #reader_name #type_generics
+        #where_clause
+        {
             type SystemData = (
-                #(Read<'a, EventChannel<#tys>>),*
+                #(Read<#reader_lifetime_iter, EventChannel<#tys>>),*
             );
-            type Event = #event_name;
+            type Event = #event_name #type_generics;
 
-            fn read(&mut self, data: Self::SystemData, events: &mut Vec<#event_name>) {
+            fn read(&mut self, data: Self::SystemData, events: &mut Vec<#event_name #type_generics>) {
                 #(#reads)*
             }
 
             fn setup(&mut self, res: &mut Resources) {
-                <Self::SystemData as SystemData<'a>>::setup(res);
+                <Self::SystemData as SystemData<#reader_lifetime>>::setup(res);
                 #(#setups)*
             }
         }

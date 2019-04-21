@@ -33,6 +33,8 @@ it is attached to. ([#1282])
 * `AmethystApplication` takes in application name using `with_app_name(..)`. ([#1499])
 * Add `NetEvent::Reliable` variant. When added to NetConnection, these events will eventually reach the target. ([#1513])
 * "How To" guides for defining state-specific dispatchers. ([#1498])
+* Add `Input` variant to `StateEvent`. ([#1478])
+* Support type parameters in `EventReader` derive. ([#1478])
 
 ### Changed
 
@@ -121,6 +123,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1454]: https://github.com/amethyst/amethyst/pull/1454
 [#1442]: https://github.com/amethyst/amethyst/pull/1442
 [#1469]: https://github.com/amethyst/amethyst/pull/1469
+[#1478]: https://github.com/amethyst/amethyst/pull/1478
 [#1481]: https://github.com/amethyst/amethyst/pull/1481
 [#1480]: https://github.com/amethyst/amethyst/pull/1480
 [#1498]: https://github.com/amethyst/amethyst/pull/1498
