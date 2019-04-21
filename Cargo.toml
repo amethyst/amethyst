@@ -127,7 +127,7 @@ env_logger = "0.6.1"
 genmesh = "0.6"
 ron = "0.4.2"
 specs-derive = "0.4"
-amethyst_rendy = { path = "amethyst_rendy", features = ["metal"] }
+amethyst_rendy = { path = "amethyst_rendy" }
 derivative = "1.0.2"
 
 [build-dependencies]
