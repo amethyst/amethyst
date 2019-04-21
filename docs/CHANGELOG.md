@@ -68,6 +68,8 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Large binary files in examples are now tracked with `git-lfs`. ([#1509])
 * Allowed the user to arrange with laminar. ([#1510])
 * Removed `NetEvent::Custom` and added `NetEvent::Packet(NetPacket)` ([#1510])
+* Fixed update is no longer frame rate dependent ([#1516])
+
 
 ### Removed
 
