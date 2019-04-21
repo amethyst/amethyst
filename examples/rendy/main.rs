@@ -30,7 +30,7 @@ use amethyst_rendy::{
     light::{Light, PointLight},
     mtl::{Material, MaterialDefaults},
     palette::{LinSrgba, Srgb},
-    pass::{DrawFlat2DDesc, DrawPbrDesc},
+    pass::{DrawFlat2DDesc, DrawPbrDesc, DrawUiDesc},
     rendy::{
         factory::Factory,
         graph::{
@@ -183,8 +183,8 @@ impl<B: Backend> SimpleState for Example<B> {
         };
 
         println!("Create spheres");
-        const NUM_ROWS: usize = 15;
-        const NUM_COLS: usize = 15;
+        const NUM_ROWS: usize = 40;
+        const NUM_COLS: usize = 40;
 
         let mut mtls = Vec::with_capacity(100);
 
@@ -682,6 +682,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
                     )
                     .builder(),
             )
+            .with_group(DrawUiDesc::default().builder())
             .with_color(color)
             .with_depth_stencil(depth);
 

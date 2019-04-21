@@ -1,8 +1,9 @@
 mod flat2d;
 mod pbr;
+mod ui;
 mod util;
 
-pub use self::{flat2d::*, pbr::*};
+pub use self::{flat2d::*, pbr::*, ui::*};
 
 use rendy::shader::{ShaderKind, SourceLanguage, StaticShaderInfo};
 
@@ -49,4 +50,17 @@ lazy_static::lazy_static! {
         "main",
     );
 
+    static ref UI_VERTEX: StaticShaderInfo = StaticShaderInfo::new(
+        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/vertex/ui.vert"),
+        ShaderKind::Vertex,
+        SourceLanguage::GLSL,
+        "main",
+    );
+
+    static ref UI_FRAGMENT: StaticShaderInfo = StaticShaderInfo::new(
+        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/fragment/ui.frag"),
+        ShaderKind::Fragment,
+        SourceLanguage::GLSL,
+        "main",
+    );
 }
