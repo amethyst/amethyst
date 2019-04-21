@@ -14,7 +14,7 @@ pub(crate) enum Error {
     /// The window handle associated with the renderer has been destroyed.
     WindowDestroyed,
     /// Failed to parse a Spritesheet from RON.
-    LoadSpritesheetError,
+    LoadSpritesheetError(ron::de::Error),
     /// Failed to build texture.
     BuildTextureError,
     /// Unsupported texture size.
@@ -36,7 +36,7 @@ impl fmt::Display for Error {
             ProgramCreation => write!(fmt, "Program compilation failed"),
             PixelDataMismatch(ref e) => write!(fmt, "Pixel data and metadata do not match: {}", e),
             WindowDestroyed => write!(fmt, "Window has been destroyed"),
-            LoadSpritesheetError => write!(fmt, "Failed to parse SpriteSheet"),
+            LoadSpritesheetError(ref e) => write!(fmt, "Failed to parse SpriteSheet: {}", e),
             BuildTextureError => write!(fmt, "Failed to build texture"),
             UnsupportedTextureSize(w, h) => write!(
                 fmt,
