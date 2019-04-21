@@ -14,7 +14,7 @@ use amethyst_core::{
     shrev::{EventChannel, ReaderId},
     timing::Time,
 };
-use amethyst_renderer::ScreenDimensions;
+use amethyst_window::ScreenDimensions;
 
 use super::*;
 

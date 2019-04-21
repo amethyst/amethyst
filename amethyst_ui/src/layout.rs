@@ -11,7 +11,7 @@ use amethyst_core::{
     },
     HierarchyEvent, Parent, ParentHierarchy,
 };
-use amethyst_renderer::ScreenDimensions;
+use amethyst_window::ScreenDimensions;
 
 use super::UiTransform;
 

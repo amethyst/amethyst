@@ -3,7 +3,10 @@
 // TODO(happens): should these be in the same set?
 // decide after implementing drawing
 layout(set = 1, binding = 0) uniform sampler2D tex;
-layout(set = 2, binding = 0) uniform vec4 color;
+
+layout(set = 2, binding = 0) uniform ColorArgs{
+    uniform vec4 color;
+};
 
 layout(location = 0) in vec2 tex_uv;
 layout(location = 0) out vec4 out_color;

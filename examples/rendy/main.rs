@@ -24,6 +24,7 @@ use amethyst::{
     utils::{application_root_dir, fps_counter::FPSCounterBundle, tag::TagFinder},
     window::{EventsLoopSystem, ScreenDimensions, WindowSystem},
     winit::{EventsLoop, Window},
+    ui::{UiBundle, UiButtonBuilder},
 };
 use amethyst_rendy::{
     camera::{ActiveCamera, Camera, Projection},
@@ -183,8 +184,8 @@ impl<B: Backend> SimpleState for Example<B> {
         };
 
         println!("Create spheres");
-        const NUM_ROWS: usize = 40;
-        const NUM_COLS: usize = 40;
+        const NUM_ROWS: usize = 25;
+        const NUM_COLS: usize = 25;
 
         let mut mtls = Vec::with_capacity(100);
 
@@ -328,6 +329,11 @@ impl<B: Backend> SimpleState for Example<B> {
             .build();
 
         world.add_resource(ActiveCamera { entity: camera });
+
+        let _ = UiButtonBuilder::<(), u32>::new("hello rendy")
+            .with_size(200., 30.)
+            .with_position(100., 15.)
+            .build_from_world(&world);
 
         // let (width, height) = {
         //     let dim = world.read_resource::<ScreenDimensions>();
@@ -587,6 +593,7 @@ fn main() -> amethyst::Result<()> {
             "animation_control",
             "sampler_interpolation",
         ]))?
+        .with_bundle(UiBundle::<String, String>::new())?
         .with(
             SpriteVisibilitySortingSystem::new(),
             "sprite_visibility_system",

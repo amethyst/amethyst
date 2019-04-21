@@ -27,6 +27,7 @@ use rendy::{
         device::Device,
         format::Format,
         pso::{
+            self,
             BlendState, ColorBlendDesc, ColorMask, DepthStencilDesc, Descriptor,
             DescriptorSetLayoutBinding, DescriptorSetWrite, DescriptorType, ElemStride, Element,
             EntryPoint, GraphicsShaderSet, InstanceRate, ShaderStageFlags, Specialization,
@@ -91,7 +92,14 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawUiDesc {
 
     fn depth_stencil(&self) -> Option<DepthStencilDesc> {
         // TODO(happens): transparency stencil
-        None
+        Some(DepthStencilDesc {
+            depth: pso::DepthTest::On {
+                fun: pso::Comparison::Less,
+                write: true,
+            },
+            depth_bounds: false,
+            stencil: pso::StencilTest::Off,
+        })
     }
 
     fn vertices(&self) -> Vec<(Vec<Element<Format>>, ElemStride, InstanceRate)> {
@@ -129,7 +137,7 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawUiDesc {
                     }],
                 },
             ],
-            push_constants: vec![(ShaderStageFlags::FRAGMENT, 0..2)],
+            push_constants: vec![],
         }
     }
 
@@ -143,20 +151,26 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawUiDesc {
         _images: Vec<NodeImage>,
         _set_layouts: &[RendyHandle<DescriptorSetLayout<B>>],
     ) -> Result<Self::Pipeline, failure::Error> {
-        let ubo_offset_align = factory
-            .physical()
-            .limits()
-            .min_uniform_buffer_offset_alignment;
-
-        Ok(DrawUi { ubo_offset_align, ..Default::default() })
+        Ok(DrawUi {
+            per_image: Vec::with_capacity(4),
+        })
     }
 }
 
 #[derive(Debug, Derivative)]
 #[derivative(Default(bound = ""))]
 pub struct DrawUi<B: Backend> {
-    ubo_offset_align: u64,
-    _phantom: std::marker::PhantomData<B>,
+    per_image: Vec<PerImage<B>>,
+}
+
+#[derive(Debug, Derivative)]
+#[derivative(Default(bound = ""))]
+struct PerImage<B: Backend> {
+    projview_buffer: Option<Escape<rendy::resource::Buffer<B>>>,
+    projview_set: Option<Escape<DescriptorSet<B>>>,
+
+    tex_set: Vec<Escape<DescriptorSet<B>>>,
+    tex_id_buffer: Option<Escape<rendy::resource::Buffer<B>>>,
 }
 
 impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawUi<B> {
@@ -170,6 +184,35 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawUi<B> {
         index: usize,
         resources: &Resources,
     ) -> PrepareResult {
+        let (
+            entities,
+            loader,
+            screen_dimensions,
+            texture_storage,
+            font_assets_storage,
+            textures,
+            transforms,
+            mut texts,
+            text_editings,
+            hidden,
+            hidden_propagate,
+            selected,
+            rgba,
+        ) = <(
+            Entities<'_>,
+            ReadExpect<'_, Loader>,
+            ReadExpect<'_, ScreenDimensions>,
+            Read<'_, AssetStorage<Texture>>,
+            Read<'_, AssetStorage<FontAsset>>,
+            ReadStorage<'_, Handle<Texture>>,
+            ReadStorage<'_, UiTransform>,
+            WriteStorage<'_, UiText>,
+            ReadStorage<'_, TextEditing>,
+            ReadStorage<'_, Hidden>,
+            ReadStorage<'_, HiddenPropagate>,
+            ReadStorage<'_, Selected>,
+            ReadStorage<'_, Rgba>,
+        ) as SystemData>::fetch(resources);
         PrepareResult::DrawReuse
     }
 

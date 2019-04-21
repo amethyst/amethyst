@@ -30,9 +30,10 @@ use amethyst_renderer::{
         pass::{Pass, PassData},
         Effect, NewEffect,
     },
-    Encoder, Factory, Hidden, HiddenPropagate, Mesh, PosTex, Resources, Rgba, ScreenDimensions,
+    Encoder, Factory, Hidden, HiddenPropagate, Mesh, PosTex, Resources, Rgba,
     Shape, Texture, TextureData, TextureHandle, TextureMetadata, VertexFormat,
 };
+use amethyst_window::ScreenDimensions;
 
 use super::*;
 

@@ -11,7 +11,8 @@ use amethyst_core::{
     shrev::EventChannel,
 };
 use amethyst_input::InputHandler;
-use amethyst_renderer::{MouseButton, ScreenDimensions};
+use amethyst_renderer::MouseButton;
+use amethyst_window::ScreenDimensions;
 
 use serde::{Deserialize, Serialize};
 
