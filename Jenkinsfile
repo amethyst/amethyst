@@ -116,6 +116,8 @@ pipeline {
             }
             steps {
                 withCredentials([string(credentialsId: 'codecov_token', variable: 'CODECOV_TOKEN')]) {
+                    echo 'Building to calculate coverage...'
+                    sh 'cargo build --all'
                     echo 'Calculating code coverage...'
                     sh 'for file in target/debug/amethyst_*[^\\.d]; do mkdir -p \"target/cov/$(basename $file)\"; kcov --exclude-pattern=/.cargo,/usr/lib --verify \"target/cov/$(basename $file)\" \"$file\" || true; done'
                     echo "Uploading coverage..."
