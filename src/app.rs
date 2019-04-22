@@ -512,9 +512,6 @@ where
                 .map(Arc::new)?;
         } else {
             pool = thread_pool_builder.build().map(Arc::new)?;
-        } else {
-            info!("Running Amethyst with fixed thread pool: {}", thread_count);
-            pool = thread_pool_builder.num_threads(thread_count).build().map(Arc::new)?;
         }
         world.add_resource(Loader::new(path.as_ref().to_owned(), pool.clone()));
         world.add_resource(pool);
