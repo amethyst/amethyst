@@ -8,7 +8,7 @@ use winit::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, 
 
 use crate::{LineMode, Selected, TextEditing, UiEvent, UiEventType, UiText};
 use amethyst_core::{
-    ecs::prelude::{Entities, Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
+    ecs::prelude::{Entity, Entities, Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
     shrev::{EventChannel, ReaderId},
 };
 
@@ -21,12 +21,13 @@ use amethyst_core::{
 pub struct TextEditingInputSystem {
     /// A reader for winit events.
     reader: Option<ReaderId<Event>>,
+    last_selected: Option<Entity>,
 }
 
 impl TextEditingInputSystem {
     /// Creates a new instance of this system
     pub fn new() -> Self {
-        Self { reader: None }
+        Self { reader: None, last_selected: None }
     }
 }
 
@@ -62,6 +63,19 @@ impl<'a> System<'a> for TextEditingInputSystem {
                     .join()
                     .next()
             {
+                match self.last_selected {
+                    Some(last) => {
+                        if last != entity {
+                            edit_events.single_write(UiEvent::new(UiEventType::Blur, last));
+                            edit_events.single_write(UiEvent::new(UiEventType::Focus, entity));
+                        }
+                    }
+                    None => {
+                        edit_events.single_write(UiEvent::new(UiEventType::Focus, entity));
+                    }
+                }
+                self.last_selected = Some(entity);
+
                 match *event {
                     Event::WindowEvent {
                         event: WindowEvent::ReceivedCharacter(input),
@@ -86,7 +100,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             focused_text.text.insert(start_byte, input);
                             focused_edit.cursor_position += 1;
 
-                            edit_events.single_write(UiEvent::new(UiEventType::Change, entity));
+                            edit_events.single_write(UiEvent::new(UiEventType::ValueChange, entity));
                         }
                     }
                     Event::WindowEvent {
@@ -228,7 +242,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                                         |mut ctx: ClipboardContext| ctx.set_contents(new_clip),
                                     ) {
                                         Ok(_) => edit_events.single_write(UiEvent::new(
-                                            UiEventType::Change,
+                                            UiEventType::ValueChange,
                                             entity,
                                         )),
                                         Err(e) => error!(
@@ -276,7 +290,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                                             contents.graphemes(true).count() as isize;
 
                                         edit_events.single_write(UiEvent::new(
-                                            UiEventType::Change,
+                                            UiEventType::ValueChange,
                                             entity,
                                         ));
                                     }
@@ -291,30 +305,29 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             match focused_text.line_mode {
                                 LineMode::Single => {
                                     edit_events
-                                        .single_write(UiEvent::new(UiEventType::Commit, entity));
+                                        .single_write(UiEvent::new(UiEventType::ValueCommit, entity));
                                 }
                                 LineMode::Wrap => {
-                                    if modifiers.shift
-                                        && focused_text.text.graphemes(true).count()
-                                            < focused_edit.max_length
-                                    {
-                                        let start_byte = focused_text
-                                            .text
-                                            .grapheme_indices(true)
-                                            .nth(focused_edit.cursor_position as usize)
-                                            .map(|i| i.0)
-                                            .unwrap_or_else(|| focused_text.text.len());
+                                    if modifiers.shift {
+                                        if focused_text.text.graphemes(true).count() < focused_edit.max_length {
+                                            let start_byte = focused_text
+                                                .text
+                                                .grapheme_indices(true)
+                                                .nth(focused_edit.cursor_position as usize)
+                                                .map(|i| i.0)
+                                                .unwrap_or_else(|| focused_text.text.len());
 
-                                        focused_text.text.insert(start_byte, '\n');
-                                        focused_edit.cursor_position += 1;
+                                            focused_text.text.insert(start_byte, '\n');
+                                            focused_edit.cursor_position += 1;
 
-                                        edit_events.single_write(UiEvent::new(
-                                            UiEventType::Change,
-                                            entity,
-                                        ));
+                                            edit_events.single_write(UiEvent::new(
+                                                UiEventType::ValueChange,
+                                                entity,
+                                            ));
+                                        }
                                     } else {
                                         edit_events.single_write(UiEvent::new(
-                                            UiEventType::Commit,
+                                            UiEventType::ValueCommit,
                                             entity,
                                         ));
                                     }
@@ -325,6 +338,8 @@ impl<'a> System<'a> for TextEditingInputSystem {
                     },
                     _ => {}
                 }
+            } else {
+                self.last_selected = None
             }
         }
     }
