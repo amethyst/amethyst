@@ -1,10 +1,10 @@
 //! The core engine framework.
 
-use std::{marker::PhantomData, path::Path, sync::Arc, time::Duration, env};
+use std::{env, marker::PhantomData, path::Path, sync::Arc, time::Duration};
 
 use crate::shred::Resource;
 use derivative::Derivative;
-use log::{info, log_enabled, trace, Level};
+use log::{debug, info, log_enabled, trace, Level};
 use rayon::ThreadPoolBuilder;
 use winit::Event;
 
@@ -487,11 +487,14 @@ where
             info!("Rustc git commit: {}", hash);
         }
 
-        let thread_count :usize = env::var("AMETHYST_NUM_THREADS")
+        let thread_count: Option<usize> = env::var("AMETHYST_NUM_THREADS")
             .as_ref()
-            .map(|s| s.as_str().parse()
-                    .expect("AMETHYST_NUM_THREADS was provided but is not a valid number!"))
-            .unwrap_or(0);
+            .map(|s| {
+                s.as_str()
+                    .parse()
+                    .expect("AMETHYST_NUM_THREADS was provided but is not a valid number!")
+            })
+            .ok();
 
         let mut world = World::new();
 
@@ -500,8 +503,14 @@ where
         let thread_pool_builder = thread_pool_builder.start_handler(|_index| {
             register_thread_with_profiler();
         });
-        let pool :ArcThreadPool;
-        if thread_count == 0 {
+        let pool: ArcThreadPool;
+        if let Some(thread_count) = thread_count {
+            debug!("Running Amethyst with fixed thread pool: {}", thread_count);
+            pool = thread_pool_builder
+                .num_threads(thread_count)
+                .build()
+                .map(Arc::new)?;
+        } else {
             pool = thread_pool_builder.build().map(Arc::new)?;
         } else {
             info!("Running Amethyst with fixed thread pool: {}", thread_count);
