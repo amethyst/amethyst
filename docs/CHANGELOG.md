@@ -33,6 +33,7 @@ it is attached to. ([#1282])
 * `AmethystApplication` takes in application name using `with_app_name(..)`. ([#1499])
 * Add `NetEvent::Reliable` variant. When added to NetConnection, these events will eventually reach the target. ([#1513])
 * "How To" guides for defining state-specific dispatchers. ([#1498])
+* Adding support for AMETHYST_NUM_THREADS environment variable to control size of the threads pool used by thread_pool_builder.
 * Add `Input` variant to `StateEvent`. ([#1478])
 * Support type parameters in `EventReader` derive. ([#1478])
 
@@ -133,6 +134,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1513]: https://github.com/amethyst/amethyst/pull/1513
 [#1509]: https://github.com/amethyst/amethyst/pull/1509
 [#1510]: https:://github.com/amethyst/amethyst/pull/1523/
+[#1524]: https://github.com/amethyst/amethyst/pull/1524
 
 ## [0.10.0] - 2018-12
 
