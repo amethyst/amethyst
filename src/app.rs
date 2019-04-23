@@ -15,6 +15,7 @@ use crate::{
     assets::{Loader, Source},
     callback_queue::CallbackQueue,
     core::{
+        ArcThreadPool,
         frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy},
         shrev::{EventChannel, ReaderId},
         timing::{Stopwatch, Time},
@@ -30,7 +31,6 @@ use crate::{
     state_event::{StateEvent, StateEventReader},
     ui::UiEvent,
 };
-use amethyst_core::ArcThreadPool;
 
 /// `CoreApplication` is the application implementation for the game engine. This is fully generic
 /// over the state type and event type.
