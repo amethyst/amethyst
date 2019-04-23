@@ -15,11 +15,10 @@ use crate::{
     assets::{Loader, Source},
     callback_queue::CallbackQueue,
     core::{
-        ArcThreadPool,
         frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy},
         shrev::{EventChannel, ReaderId},
         timing::{Stopwatch, Time},
-        EventReader, Named,
+        ArcThreadPool, EventReader, Named,
     },
     ecs::{
         common::Errors,
