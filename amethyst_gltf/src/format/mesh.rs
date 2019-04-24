@@ -111,14 +111,7 @@ pub fn load_mesh(
                 }
                 None => tangents.map(|t| [t[0], t[1], t[2]]).collect(),
             })
-            .unwrap_or_else(|| {
-                let faces = faces
-                    .as_ref()
-                    .map(|f| f.clone())
-                    .unwrap_or_else(|| (0..positions.len()).collect::<Vec<_>>());
-
-                calculate_tangents(&faces, &positions, &normals, &tex_coord)
-            });
+            .unwrap_or_else(|| calculate_tangents(&positions, &normals, &tex_coord));
 
         trace!("Loading bounding box");
         let bounds = primitive.bounding_box();
@@ -181,29 +174,27 @@ pub fn load_mesh(
 }
 
 fn calculate_tangents(
-    faces: &[usize],
     positions: &[[f32; 3]],
     normals: &[[f32; 3]],
     tex_coords: &[[f32; 2]],
 ) -> Vec<[f32; 3]> {
-    calculate_tangents_with_faces(faces, positions, normals, tex_coords)
+    generate_tangents(positions, normals, tex_coords)
         .iter()
         .map(|(_, t)| [t[0], t[1], t[2]])
         .collect()
 }
 
-fn calculate_tangents_with_faces(
-    faces: &[usize],
+fn generate_tangents(
     positions: &[[f32; 3]],
     normals: &[[f32; 3]],
     tex_coords: &[[f32; 2]],
 ) -> Vec<(usize, [f32; 4])> {
     let vertices_per_face = || 3;
-    let face_count = || faces.len() / 3;
-    let position = |face, vert| &positions[faces[face * 3 + vert]];
-    let normal = |face, vert| &normals[faces[face * 3 + vert]];
-    let tx = |face, vert| &tex_coords[faces[face * 3 + vert]];
-    let mut tangents: Vec<(usize, [f32; 4])> = Vec::with_capacity(faces.len());
+    let face_count = || positions.len() / 3;
+    let position = |face, vert| &positions[face * 3 + vert];
+    let normal = |face, vert| &normals[face * 3 + vert];
+    let tx = |face, vert| &tex_coords[face * 3 + vert];
+    let mut tangents: Vec<(usize, [f32; 4])> = Vec::with_capacity(positions.len());
 
     {
         let mut set_tangent = |face, vert, tangent| {
@@ -254,9 +245,10 @@ mod tests {
 
     #[test]
     fn test_tangent_calc() {
-        let faces = &[0, 1, 2, 1, 2, 3];
         let positions = &[
             [0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [1.0, 1.0, 0.0],
             [0.0, 1.0, 0.0],
             [1.0, 1.0, 0.0],
             [0.0, 1.0, 0.0],
@@ -266,10 +258,19 @@ mod tests {
             [0.0, 0.0, 1.0],
             [0.0, 0.0, 1.0],
             [0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0],
         ];
-        let tex_coords = &[[0.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.0, 1.0]];
+        let tex_coords = &[
+            [0.0, 0.0],
+            [0.0, 1.0],
+            [1.0, 1.0],
+            [0.0, 1.0],
+            [1.0, 1.0],
+            [0.0, 1.0],
+        ];
 
-        let tangents = calculate_tangents(faces, positions, normals, tex_coords);
+        let tangents = calculate_tangents(positions, normals, tex_coords);
 
         assert_eq!(
             tangents,
