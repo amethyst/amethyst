@@ -1,7 +1,7 @@
 use amethyst_core::{
     ecs::{
-        Component, DenseVecStorage, FlaggedStorage, Read, ReadStorage, ReaderId, Resources, System,
-        SystemData, WriteStorage,
+        Component, DenseVecStorage, Entities, FlaggedStorage, Join, Read, ReadStorage, ReaderId,
+        Resources, System, SystemData, Write, WriteStorage,
     },
     shrev::EventChannel,
 };
@@ -71,8 +71,13 @@ where
         Read<'a, EventChannel<Event>>,
         Read<'a, CachedSelectionOrder>,
         WriteStorage<'a, Selected>,
+        Write<'a, EventChannel<UiEvent>>,
+        Entities<'a>,
     );
-    fn run(&mut self, (window_events, cached, mut selecteds): Self::SystemData) {
+    fn run(
+        &mut self,
+        (window_events, cached, mut selecteds, mut ui_events, entities): Self::SystemData,
+    ) {
         /*
         Add clicked elements + shift + ctrl status.
         If tab or shift-tab
@@ -115,6 +120,9 @@ where
                 if let Some(highest) = highest {
                     // If Some, an element was currently selected. We move the cursor to the next or previous element depending if Shift was pressed.
                     // Select Replace
+                    for (entity, _) in (&*entities, &selecteds).join() {
+                        ui_events.single_write(UiEvent::new(UiEventType::Blur, entity));
+                    }
                     selecteds.clear();
 
                     let target = if !modifiers.shift {
@@ -131,14 +139,19 @@ where
                         cached.cache.get(highest + 1).unwrap_or_else(|| cached.cache.first()
                         .expect("unreachable: A highest ui element was selected, but none exist in the cache."))
                     };
+
                     selecteds
                         .insert(target.1, Selected)
                         .expect("unreachable: We are inserting");
+
+                    ui_events.single_write(UiEvent::new(UiEventType::Focus, target.1));
                 } else if let Some(lowest) = cached.cache.first() {
                     // If None, nothing was selected. Try to take lowest if it exists.
                     selecteds
                         .insert(lowest.1, Selected)
                         .expect("unreachable: We are inserting");
+
+                    ui_events.single_write(UiEvent::new(UiEventType::Focus, lowest.1));
                 }
             }
         }
@@ -166,20 +179,23 @@ where
     AC: Hash + Eq + Clone + Send + Sync + 'static,
 {
     type SystemData = (
-        Read<'a, EventChannel<UiEvent>>,
+        Write<'a, EventChannel<UiEvent>>,
         Read<'a, CachedSelectionOrder>,
         WriteStorage<'a, Selected>,
         ReadStorage<'a, Selectable<G>>,
         Read<'a, InputHandler<AX, AC>>,
+        Entities<'a>,
     );
     fn run(
         &mut self,
-        (ui_events, cached, mut selecteds, selectables, input_handler): Self::SystemData,
+        (mut ui_events, cached, mut selecteds, selectables, input_handler, entities): Self::SystemData,
     ) {
         let shift = input_handler.key_is_down(VirtualKeyCode::LShift)
             || input_handler.key_is_down(VirtualKeyCode::RShift);
         let ctrl = input_handler.key_is_down(VirtualKeyCode::LControl)
             || input_handler.key_is_down(VirtualKeyCode::RControl);
+
+        let mut emitted: Vec<UiEvent> = Vec::new();
 
         // Add clicked elements to clicked buffer
         for ev in ui_events.read(self.ui_reader_id.as_mut().unwrap()) {
@@ -225,6 +241,9 @@ where
                                     .expect("unreachable: Entity has to be in the cache, otherwise it wouldn't have been added.");
 
                                 // When multi-selecting, you remove everything that was previously selected, and then add everything in the range.
+                                for (entity, _) in (&*entities, &selecteds).join() {
+                                    emitted.push(UiEvent::new(UiEventType::Blur, entity));
+                                }
                                 selecteds.clear();
 
                                 let min = cached_index_clicked.min(highest);
@@ -237,35 +256,51 @@ where
                                     selecteds
                                         .insert(target_entity.1, Selected)
                                         .expect("unreachable: We are inserting");
+
+                                    emitted.push(UiEvent::new(UiEventType::Focus, target_entity.1));
                                 }
                             } else if ctrl || auto_multi_select {
                                 // Select adding single element
                                 selecteds
                                     .insert(clicked, Selected)
                                     .expect("unreachable: We are inserting");
+
+                                emitted.push(UiEvent::new(UiEventType::Focus, clicked));
                             } else {
                                 // Select replace, because we don't want to be adding elements.
                                 selecteds.clear();
                                 selecteds
                                     .insert(clicked, Selected)
                                     .expect("unreachable: We are inserting");
+
+                                emitted.push(UiEvent::new(UiEventType::Focus, clicked));
                             }
                         } else {
+                            for (entity, _) in (&*entities, &selecteds).join() {
+                                emitted.push(UiEvent::new(UiEventType::Blur, entity));
+                            }
                             // Different multi select group than the latest one selected. Execute Select replace
                             selecteds.clear();
+
                             selecteds
                                 .insert(clicked, Selected)
                                 .expect("unreachable: We are inserting");
+
+                            emitted.push(UiEvent::new(UiEventType::Focus, clicked));
                         }
                     } else {
                         // Nothing was previously selected, let's just select single.
                         selecteds
                             .insert(clicked, Selected)
                             .expect("unreachable: We are inserting");
+
+                        emitted.push(UiEvent::new(UiEventType::Focus, clicked));
                     }
                 }
             }
         }
+
+        ui_events.iter_write(emitted.into_iter());
     }
     fn setup(&mut self, res: &mut Resources) {
         Self::SystemData::setup(res);

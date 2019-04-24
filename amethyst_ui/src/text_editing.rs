@@ -8,7 +8,9 @@ use winit::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, 
 
 use crate::{LineMode, Selected, TextEditing, UiEvent, UiEventType, UiText};
 use amethyst_core::{
-    ecs::prelude::{Entity, Entities, Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
+    ecs::prelude::{
+        Entities, Entity, Join, Read, ReadStorage, Resources, System, Write, WriteStorage,
+    },
     shrev::{EventChannel, ReaderId},
 };
 
@@ -27,7 +29,10 @@ pub struct TextEditingInputSystem {
 impl TextEditingInputSystem {
     /// Creates a new instance of this system
     pub fn new() -> Self {
-        Self { reader: None, last_selected: None }
+        Self {
+            reader: None,
+            last_selected: None,
+        }
     }
 }
 
@@ -63,19 +68,6 @@ impl<'a> System<'a> for TextEditingInputSystem {
                     .join()
                     .next()
             {
-                match self.last_selected {
-                    Some(last) => {
-                        if last != entity {
-                            edit_events.single_write(UiEvent::new(UiEventType::Blur, last));
-                            edit_events.single_write(UiEvent::new(UiEventType::Focus, entity));
-                        }
-                    }
-                    None => {
-                        edit_events.single_write(UiEvent::new(UiEventType::Focus, entity));
-                    }
-                }
-                self.last_selected = Some(entity);
-
                 match *event {
                     Event::WindowEvent {
                         event: WindowEvent::ReceivedCharacter(input),
@@ -100,7 +92,8 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             focused_text.text.insert(start_byte, input);
                             focused_edit.cursor_position += 1;
 
-                            edit_events.single_write(UiEvent::new(UiEventType::ValueChange, entity));
+                            edit_events
+                                .single_write(UiEvent::new(UiEventType::ValueChange, entity));
                         }
                     }
                     Event::WindowEvent {
@@ -304,12 +297,16 @@ impl<'a> System<'a> for TextEditingInputSystem {
                         VirtualKeyCode::Return | VirtualKeyCode::NumpadEnter => {
                             match focused_text.line_mode {
                                 LineMode::Single => {
-                                    edit_events
-                                        .single_write(UiEvent::new(UiEventType::ValueCommit, entity));
+                                    edit_events.single_write(UiEvent::new(
+                                        UiEventType::ValueCommit,
+                                        entity,
+                                    ));
                                 }
                                 LineMode::Wrap => {
                                     if modifiers.shift {
-                                        if focused_text.text.graphemes(true).count() < focused_edit.max_length {
+                                        if focused_text.text.graphemes(true).count()
+                                            < focused_edit.max_length
+                                        {
                                             let start_byte = focused_text
                                                 .text
                                                 .grapheme_indices(true)

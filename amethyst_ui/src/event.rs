@@ -50,8 +50,7 @@ pub enum UiEventType {
     },
     /// When the value of a UiText element has been changed by user input.
     ValueChange,
-    /// When the value of a UiText element has been committed either by 
-    /// losing focus on mobile or by pressing "Enter".
+    /// When the value of a UiText element has been committed by user action.
     ValueCommit,
     /// When an editable UiText element has gained focus.
     Focus,
