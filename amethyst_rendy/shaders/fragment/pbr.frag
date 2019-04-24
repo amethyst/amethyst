@@ -49,11 +49,8 @@ struct UvOffset {
 };
 
 layout(std140, set = 1, binding = 0) uniform Material {
-    float alpha_cutoff;
-    float _pad0; // metal doesn't respect std140
-    float _pad1;
-    float _pad2;
     UvOffset uv_offset;
+    float alpha_cutoff;
 };
 
 layout(set = 1, binding = 1) uniform sampler2D albedo;

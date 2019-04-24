@@ -52,6 +52,7 @@ use amethyst_rendy::{
     sprite_visibility::SpriteVisibilitySortingSystem,
     system::{GraphCreator, RendererSystem},
     types::{DefaultBackend, Mesh, Texture},
+    visibility::VisibilitySortingSystem,
 };
 use std::{marker::PhantomData, path::Path, sync::Arc};
 
@@ -174,7 +175,7 @@ impl<B: Backend> SimpleState for Example<B> {
             });
             let albedo = world.exec(|loader: AssetLoaderSystemData<'_, Texture<B>>| {
                 loader.load_from_data(
-                    load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 1.0)),
+                    load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 0.5)),
                     self.progress.as_mut().unwrap(),
                 )
             });
@@ -590,6 +591,11 @@ fn main() -> amethyst::Result<()> {
         .with(
             SpriteVisibilitySortingSystem::new(),
             "sprite_visibility_system",
+            &["fly_movement", "cam", "transform_system"],
+        )
+        .with(
+            VisibilitySortingSystem::new(),
+            "visibility_system",
             &["fly_movement", "cam", "transform_system"],
         )
         .with_thread_local(EventsLoopSystem::new(event_loop))

@@ -1,12 +1,12 @@
 use crate::{
     batch::GroupIterator,
-    camera::{ActiveCamera, Camera},
     hidden::{Hidden, HiddenPropagate},
-    pass::util,
     pod::{SpriteArgs, ViewArgs},
     sprite::{SpriteRender, SpriteSheet},
     sprite_visibility::SpriteVisibility,
+    submodules::gather::CameraGatherer,
     types::Texture,
+    util,
 };
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
@@ -144,7 +144,7 @@ impl<B: Backend> SimpleGraphicsPipelineDesc<B, Resources> for DrawFlat2DDesc {
                     }],
                 },
             ],
-            push_constants: vec![(ShaderStageFlags::FRAGMENT, 0..1)],
+            push_constants: vec![],
         }
     }
 
@@ -220,8 +220,6 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
         resources: &Resources,
     ) -> PrepareResult {
         let (
-            active_camera,
-            cameras,
             sprite_sheet_storage,
             tex_storage,
             visibilities,
@@ -230,8 +228,6 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
             sprite_renders,
             global_transforms,
         ) = <(
-            Option<Read<'_, ActiveCamera>>,
-            ReadStorage<'_, Camera>,
             Read<'_, AssetStorage<SpriteSheet<B>>>,
             Read<'_, AssetStorage<Texture<B>>>,
             Option<Read<'_, SpriteVisibility>>,
@@ -249,7 +245,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
             &mut self.per_image[index]
         };
 
-        let (_, projview) = util::prepare_camera(&active_camera, &cameras, &global_transforms);
+        let projview = CameraGatherer::gather(resources).projview;
 
         // Write the projview buffer and set.
         let projview_size = util::align_size::<ViewArgs>(self.ubo_offset_align, 1);
@@ -324,10 +320,10 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
                         total_instances += batch_data.len() as u64;
                         match sprite_data_ref.entry(tex_id) {
                             Entry::Vacant(e) => {
-                                e.insert(batch_data.collect());
+                                e.insert(batch_data.clone());
                             }
                             Entry::Occupied(mut e) => {
-                                e.get_mut().extend(batch_data);
+                                e.get_mut().extend(batch_data.drain(..));
                             }
                         }
                     });
@@ -353,10 +349,10 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
                         total_instances += batch_data.len() as u64;
                         match sprite_data_ref.entry(tex_id) {
                             Entry::Vacant(e) => {
-                                e.insert(batch_data.collect());
+                                e.insert(batch_data.clone());
                             }
                             Entry::Occupied(mut e) => {
-                                e.get_mut().extend(batch_data);
+                                e.get_mut().extend(batch_data.drain(..));
                             }
                         }
                     });
@@ -379,7 +375,7 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
                     })
                     .for_each_group(|tex_id, batch_data| {
                         total_instances += batch_data.len() as u64;
-                        ordered_sprite_data_ref.push((tex_id, batch_data.collect()));
+                        ordered_sprite_data_ref.push((tex_id, batch_data.drain(..).collect()));
                     });
             }
         }
@@ -406,20 +402,9 @@ impl<B: Backend> SimpleGraphicsPipeline<B, Resources> for DrawFlat2D<B> {
                 .map(|(tex_id, set)| {
                     // Validated by `filter` in batch collection
                     debug_assert!(tex_storage.contains_id(*tex_id));
-                    let Texture(tex) = unsafe { tex_storage.get_by_id_unchecked(*tex_id) };
-                    let descriptor = Descriptor::CombinedImageSampler(
-                        tex.view().raw(),
-                        rendy::hal::image::Layout::ShaderReadOnlyOptimal,
-                        tex.sampler().raw(),
-                    );
-                    DescriptorSetWrite {
-                        set: set.raw(),
-                        binding: 0,
-                        array_offset: 0,
-                        descriptors: Some(descriptor),
-                    }
+                    let tex = unsafe { tex_storage.get_by_id_unchecked(*tex_id) };
+                    util::desc_write(set.raw(), 0, util::texture_desc(tex))
                 });
-
             unsafe {
                 factory.write_descriptor_sets(writes_iter);
             }
