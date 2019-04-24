@@ -36,7 +36,7 @@ it is attached to. ([#1282])
 * Adding support for AMETHYST_NUM_THREADS environment variable to control size of the threads pool used by thread_pool_builder.
 * Add `Input` variant to `StateEvent`. ([#1478])
 * Support type parameters in `EventReader` derive. ([#1478])
-* Added `events` example which demonstrates working even reader and writer in action. ([#])
+* Added `events` example which demonstrates working even reader and writer in action. ([#1538])
 
 ### Changed
 
@@ -138,6 +138,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1523]: https://github.com/amethyst/amethyst/pull/1523
 [#1524]: https://github.com/amethyst/amethyst/pull/1524
 [#1526]: https://github.com/amethyst/amethyst/pull/1526
+[#1538]: https://github.com/amethyst/amethyst/pull/1538
 
 ## [0.10.0] - 2018-12
 
