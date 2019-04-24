@@ -131,7 +131,7 @@ where
             .get_dimensions();
 
         screen_dimensions.monitor_w = monitor_size.width;
-        screen_dimensions.monitor_w = monitor_size.height;
+        screen_dimensions.monitor_h = monitor_size.height;
 
         // Send resource size changes to the window
         if screen_dimensions.dirty {
