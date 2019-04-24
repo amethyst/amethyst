@@ -36,6 +36,7 @@ it is attached to. ([#1282])
 * Adding support for AMETHYST_NUM_THREADS environment variable to control size of the threads pool used by thread_pool_builder.
 * Add `Input` variant to `StateEvent`. ([#1478])
 * Support type parameters in `EventReader` derive. ([#1478])
+* Added `events` example which demonstrates working even reader and writer in action. ([#])
 
 ### Changed
 
