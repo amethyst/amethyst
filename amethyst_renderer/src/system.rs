@@ -124,6 +124,15 @@ where
         let width = screen_dimensions.w;
         let height = screen_dimensions.h;
 
+        let monitor_size = self
+            .renderer
+            .window()
+            .get_primary_monitor()
+            .get_dimensions();
+
+        screen_dimensions.monitor_w = monitor_size.width;
+        screen_dimensions.monitor_w = monitor_size.height;
+
         // Send resource size changes to the window
         if screen_dimensions.dirty {
             self.renderer
@@ -211,8 +220,18 @@ where
             .get_inner_size()
             .expect("Window closed during initialization!")
             .into();
+
+        let (monitor_w, monitor_h) = self
+            .renderer
+            .window()
+            .get_current_monitor()
+            .get_dimensions()
+            .into();
+
         let hidpi = self.renderer.window().get_hidpi_factor();
-        res.insert(ScreenDimensions::new(width, height, hidpi));
+        res.insert(ScreenDimensions::new(
+            width, height, hidpi, monitor_w, monitor_h,
+        ));
     }
 }
 

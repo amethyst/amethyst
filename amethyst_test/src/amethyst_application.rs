@@ -137,7 +137,13 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
         AmethystApplication::blank()
             .with_bundle(TransformBundle::new())
             .with_ui_bundles::<AX, AC>()
-            .with_resource(ScreenDimensions::new(SCREEN_WIDTH, SCREEN_HEIGHT, HIDPI))
+            .with_resource(ScreenDimensions::new(
+                SCREEN_WIDTH,
+                SCREEN_HEIGHT,
+                HIDPI,
+                1280,
+                800,
+            ))
     }
 
     /// Returns an application with the Animation, Transform, and Render bundles.
@@ -682,6 +688,7 @@ where
             dimensions: Some((SCREEN_WIDTH, SCREEN_HEIGHT)),
             min_dimensions: Some((SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)),
             max_dimensions: None,
+            centered_window: true,
             loaded_icon: None,
             icon: None,
             vsync: true,

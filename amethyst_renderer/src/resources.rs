@@ -68,10 +68,14 @@ impl WindowMessages {
 /// World resource that stores screen dimensions.
 #[derive(Debug)]
 pub struct ScreenDimensions {
-    /// Screen width in pixels (px).
+    /// Window width in pixels (px).
     pub(crate) w: f64,
-    /// Screen height in pixels (px).
+    /// Window height in pixels (px).
     pub(crate) h: f64,
+    /// Monitor width in pixels (px).
+    pub(crate) monitor_w: f64,
+    /// Monitor height in pixels (px).
+    pub(crate) monitor_h: f64,
     /// Width divided by height.
     aspect_ratio: f32,
     /// The ratio between the backing framebuffer resolution and the window size in screen pixels.
@@ -81,13 +85,15 @@ pub struct ScreenDimensions {
 }
 
 impl ScreenDimensions {
-    /// Creates a new screen dimensions object with the given width and height.
-    pub fn new(w: u32, h: u32, hidpi: f64) -> Self {
+    /// Creates a new screen dimensions object with the given width and height for the window and the monitor.
+    pub fn new(w: u32, h: u32, hidpi: f64, mw: u32, mh: u32) -> Self {
         ScreenDimensions {
             w: f64::from(w),
             h: f64::from(h),
             aspect_ratio: w as f32 / h as f32,
             hidpi,
+            monitor_w: f64::from(mw),
+            monitor_h: f64::from(mh),
             dirty: false,
         }
     }
@@ -100,6 +106,16 @@ impl ScreenDimensions {
     /// Returns the current height of the window.
     pub fn height(&self) -> f32 {
         self.h as f32
+    }
+
+    /// Returns the current width of the monitor that the window lives in.
+    pub fn monitor_width(&self) -> f32 {
+        self.monitor_w as f32
+    }
+
+    /// Returns the current height of the monitor that the window lives in.
+    pub fn monitor_height(&self) -> f32 {
+        self.monitor_h as f32
     }
 
     /// Returns the current aspect ratio of the window.

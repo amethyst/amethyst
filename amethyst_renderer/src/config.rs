@@ -15,6 +15,7 @@ use winit::{self, Icon, MonitorId, WindowAttributes, WindowBuilder};
 ///     max_dimensions: None,
 ///     min_dimensions: None,
 ///     fullscreen: false,
+///     centered_window: true,
 ///     multisampling: 0,
 ///     visibility: true,
 ///     vsync: true,
@@ -43,6 +44,9 @@ pub struct DisplayConfig {
 
     /// Maximum window dimensions, measured in pixels (px).
     pub max_dimensions: Option<(u32, u32)>,
+
+    /// Whether the window will be centered on the monitor by deafult.
+    pub centered_window: bool,
 
     /// Path to window icon.
     pub icon: Option<String>,
@@ -88,6 +92,7 @@ impl Default for DisplayConfig {
             decorations: true,
             dimensions: Some((640, 480)),
             fullscreen: false,
+            centered_window: true,
             icon: None,
             loaded_icon: None,
             max_dimensions: None,

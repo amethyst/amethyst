@@ -212,6 +212,20 @@ impl RendererBuilder {
             .get_inner_size()
             .ok_or_else(|| format_err!("Unable to fetch window size, as the window went away."))?;
 
+        if self.config.centered_window && !self.config.fullscreen {
+            let windowsize = window.get_outer_size().ok_or_else(|| {
+                format_err!("Unable to fetch window outer size, as the window went away.")
+            })?;
+            let screen_size = window.get_current_monitor().get_dimensions();
+            window.set_position(
+                (
+                    ((screen_size.width * 0.5) - windowsize.width * 0.5) as f64,
+                    ((screen_size.height * 0.5) - windowsize.height * 0.5) as f64,
+                )
+                    .into(),
+            );
+        }
+
         let cached_hidpi_factor = window.get_hidpi_factor();
 
         let encoder = factory.create_command_buffer().into();
