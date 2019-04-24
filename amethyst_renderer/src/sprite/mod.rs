@@ -279,7 +279,7 @@ impl SimpleFormat<SpriteSheet> for SpriteSheetFormat {
 
     fn import(&self, bytes: Vec<u8>, texture: Self::Options) -> Result<SpriteSheet, Error> {
         let sprite_list: SpriteList =
-            from_ron_bytes(&bytes).map_err(|_| error::Error::LoadSpritesheetError)?;
+            from_ron_bytes(&bytes).map_err(|err| error::Error::LoadSpritesheetError(err))?;
 
         Ok(SpriteSheet {
             texture,

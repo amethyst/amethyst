@@ -69,9 +69,10 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Rename `NetEvent::Custom` variant to `NetEvent::Unreliable`. ([#1513])
 * Updated laminar to 0.2.0. ([#1502])
 * Large binary files in examples are now tracked with `git-lfs`. ([#1509])
-* Allowed the user to arrange with laminar. ([#1510])
-* Removed `NetEvent::Custom` and added `NetEvent::Packet(NetPacket)` ([#1510])
+* Allowed the user to arrange with laminar. ([#1523])
+* Removed `NetEvent::Custom` and added `NetEvent::Packet(NetPacket)` ([#1523])
 * Fixed update is no longer frame rate dependent ([#1516])
+* Display the syntax error when failing to parse sprite sheets  ([#1526])
 
 
 ### Removed
@@ -133,8 +134,9 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1502]: https://github.com/amethyst/amethyst/pull/1515
 [#1513]: https://github.com/amethyst/amethyst/pull/1513
 [#1509]: https://github.com/amethyst/amethyst/pull/1509
-[#1510]: https:://github.com/amethyst/amethyst/pull/1523/
+[#1523]: https://github.com/amethyst/amethyst/pull/1523
 [#1524]: https://github.com/amethyst/amethyst/pull/1524
+[#1526]: https://github.com/amethyst/amethyst/pull/1526
 
 ## [0.10.0] - 2018-12
 
