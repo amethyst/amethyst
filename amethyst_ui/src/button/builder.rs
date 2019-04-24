@@ -260,7 +260,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
     pub fn build(mut self, mut res: UiButtonBuilderResources<'a, G, I>) -> (I, UiButton) {
         let image_entity = res.entities.create();
         let text_entity = res.entities.create();
-        let widget = UiButton::new(image_entity, text_entity);
+        let widget = UiButton::new(text_entity, image_entity);
 
         let id = {
             let widget = widget.clone();

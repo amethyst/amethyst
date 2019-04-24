@@ -5,6 +5,7 @@ use crate::{
         EventReader,
     },
     derive::EventReader,
+    input::InputEvent,
     renderer::Event,
     ui::UiEvent,
 };
@@ -12,9 +13,14 @@ use crate::{
 /// The enum holding the different types of event that can be received in a `State` in the handle_event method.
 #[derive(Clone, EventReader)]
 #[reader(StateEventReader)]
-pub enum StateEvent {
+pub enum StateEvent<T = String>
+where
+    T: Clone + Send + Sync + 'static,
+{
     /// Events sent by the winit window.
     Window(Event),
     /// Events sent by the ui system.
     Ui(UiEvent),
+    /// Events sent by the input system.
+    Input(InputEvent<T>),
 }

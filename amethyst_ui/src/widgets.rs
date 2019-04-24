@@ -187,7 +187,10 @@ macro_rules! define_widget {
         /// A $t widget, containing references to its associated entities.
         #[derive(Debug, Clone)]
         pub struct $t {
-            $($field: $crate::Entity),*
+            $(
+                /// `$field` Entity
+                pub $field: $crate::Entity
+            ),*
         }
 
         impl $crate::Widget for $t {}

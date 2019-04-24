@@ -17,14 +17,14 @@ mod test {
         let (mut world_cl, mut cl_dispatch, mut world_sv, mut sv_dispatch) =
             build(client_addr, server_addr);
 
-        let mut conn_to_server = NetConnection::<()>::new(server_addr);
-        let mut conn_to_client = NetConnection::<()>::new(client_addr);
+        let mut conn_to_server = NetConnection::<String>::new(server_addr);
+        let mut conn_to_client = NetConnection::<String>::new(client_addr);
 
-        let test_event = NetEvent::TextMessage {
-            msg: "1".to_string(),
-        };
+        let packet = NetEvent::from(NetPacket::reliable_unordered(
+            "Test Message From Client1".to_string(),
+        ));
 
-        conn_to_server.send_buffer.single_write(test_event.clone());
+        conn_to_server.send_buffer.single_write(packet.clone());
         world_cl.create_entity().with(conn_to_server).build();
 
         let mut rcv = conn_to_client.receive_buffer.register_reader();
@@ -34,10 +34,10 @@ mod test {
         sleep(Duration::from_millis(500));
         sv_dispatch.dispatch(&mut world_sv.res);
 
-        let storage = world_sv.read_storage::<NetConnection<()>>();
+        let storage = world_sv.read_storage::<NetConnection<String>>();
         let comp = storage.get(conn_to_client_entity).unwrap();
 
-        assert_eq!(comp.receive_buffer.read(&mut rcv).next(), Some(&test_event));
+        assert_eq!(comp.receive_buffer.read(&mut rcv).next(), Some(&packet));
         // We should have consumed the only event in the iterator by calling next().
         assert!(comp.receive_buffer.read(&mut rcv).count() == 0);
     }
@@ -53,12 +53,14 @@ mod test {
             build(client_addr, server_addr);
 
         // setup connections from client -> server and server -> client
-        let conn_to_server = NetConnection::<()>::new(server_addr);
-        let mut conn_to_client = NetConnection::<()>::new(client_addr);
+        let conn_to_server = NetConnection::<String>::new(server_addr);
+        let mut conn_to_client = NetConnection::<String>::new(client_addr);
 
-        let test_event = NetEvent::TextMessage {
-            msg: "Test Message From Client1".to_string(),
-        };
+        use net_event::NetPacket;
+
+        let packet = NetEvent::from(NetPacket::reliable_unordered(
+            "Test Message From Client1".to_string(),
+        ));
 
         world_cl.create_entity().with(conn_to_server).build();
 
@@ -67,11 +69,11 @@ mod test {
 
         sleep(Duration::from_millis(50));
         {
-            let mut sto = WriteStorage::<NetConnection<()>>::fetch(&world_cl.res);
+            let mut sto = WriteStorage::<NetConnection<String>>::fetch(&world_cl.res);
 
             for cmp in (&mut sto).join() {
                 for _i in 0..100 {
-                    cmp.send_buffer.single_write(test_event.clone());
+                    cmp.send_buffer.single_write(packet.clone());
                 }
             }
         }
@@ -79,7 +81,7 @@ mod test {
         sleep(Duration::from_millis(100));
         sv_dispatch.dispatch(&mut world_sv.res);
 
-        let storage = world_sv.read_storage::<NetConnection<()>>();
+        let storage = world_sv.read_storage::<NetConnection<String>>();
         let comp = storage.get(conn_to_client_entity).unwrap();
         assert_eq!(comp.receive_buffer.read(&mut rcv).count(), 100);
     }
@@ -105,7 +107,7 @@ mod test {
 
         let mut cl_dispatch = DispatcherBuilder::new()
             .with(
-                NetSocketSystem::<()>::new(client_config, Vec::new()).unwrap(),
+                NetSocketSystem::<String>::new(client_config, Vec::new()).unwrap(),
                 "s",
                 &[],
             )
@@ -113,7 +115,7 @@ mod test {
         cl_dispatch.setup(&mut world_cl.res);
         let mut sv_dispatch = DispatcherBuilder::new()
             .with(
-                NetSocketSystem::<()>::new(server_config, Vec::new()).unwrap(),
+                NetSocketSystem::<String>::new(server_config, Vec::new()).unwrap(),
                 "s",
                 &[],
             )

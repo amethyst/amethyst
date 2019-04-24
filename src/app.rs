@@ -1,10 +1,10 @@
 //! The core engine framework.
 
-use std::{marker::PhantomData, path::Path, sync::Arc, time::Duration};
+use std::{env, marker::PhantomData, path::Path, sync::Arc, time::Duration};
 
 use crate::shred::Resource;
 use derivative::Derivative;
-use log::{info, log_enabled, trace, Level};
+use log::{debug, info, log_enabled, trace, Level};
 use rayon::ThreadPoolBuilder;
 use winit::Event;
 
@@ -18,7 +18,7 @@ use crate::{
         frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy},
         shrev::{EventChannel, ReaderId},
         timing::{Stopwatch, Time},
-        EventReader, Named,
+        ArcThreadPool, EventReader, Named,
     },
     ecs::{
         common::Errors,
@@ -339,15 +339,17 @@ where
             }
         }
         {
-            let do_fixed = {
-                let time = self.world.write_resource::<Time>();
-                time.last_fixed_update().elapsed() >= time.fixed_time()
-            };
             #[cfg(feature = "profiler")]
             profile_scope!("fixed_update");
-            if do_fixed {
+
+            {
+                self.world.write_resource::<Time>().start_fixed_update();
+            }
+            while { self.world.write_resource::<Time>().step_fixed_update() } {
                 self.states
                     .fixed_update(StateData::new(&mut self.world, &mut self.data));
+            }
+            {
                 self.world.write_resource::<Time>().finish_fixed_update();
             }
 
@@ -484,6 +486,15 @@ where
             info!("Rustc git commit: {}", hash);
         }
 
+        let thread_count: Option<usize> = env::var("AMETHYST_NUM_THREADS")
+            .as_ref()
+            .map(|s| {
+                s.as_str()
+                    .parse()
+                    .expect("AMETHYST_NUM_THREADS was provided but is not a valid number!")
+            })
+            .ok();
+
         let mut world = World::new();
 
         let thread_pool_builder = ThreadPoolBuilder::new();
@@ -491,7 +502,16 @@ where
         let thread_pool_builder = thread_pool_builder.start_handler(|_index| {
             register_thread_with_profiler();
         });
-        let pool = thread_pool_builder.build().map(Arc::new)?;
+        let pool: ArcThreadPool;
+        if let Some(thread_count) = thread_count {
+            debug!("Running Amethyst with fixed thread pool: {}", thread_count);
+            pool = thread_pool_builder
+                .num_threads(thread_count)
+                .build()
+                .map(Arc::new)?;
+        } else {
+            pool = thread_pool_builder.build().map(Arc::new)?;
+        }
         world.add_resource(Loader::new(path.as_ref().to_owned(), pool.clone()));
         world.add_resource(pool);
         world.add_resource(EventChannel::<Event>::with_capacity(2000));
