@@ -63,7 +63,6 @@ impl<'a> System<'a> for SpamReceiveSystem {
             for ev in conn.receive_buffer.read(self.reader.as_mut().unwrap()) {
                 count += 1;
                 match ev {
-                    &NetEvent::TextMessage { ref msg } => info!("{}", msg),
                     _ => {}
                 }
             }
