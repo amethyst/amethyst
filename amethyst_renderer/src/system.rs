@@ -127,7 +127,7 @@ where
         let monitor_size = self
             .renderer
             .window()
-            .get_primary_monitor()
+            .get_current_monitor()
             .get_dimensions();
 
         screen_dimensions.monitor_w = monitor_size.width;
