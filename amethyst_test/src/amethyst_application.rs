@@ -57,6 +57,12 @@ type DefaultPipeline = PipelineBuilder<
 pub const SCREEN_WIDTH: u32 = 800;
 /// Screen height used in predefined display configuration.
 pub const SCREEN_HEIGHT: u32 = 600;
+
+/// Monitor width used in predefined display configuration.
+pub const MONITOR_WIDTH: u32 = 1280;
+/// Monitor height used in predefined display configuration.
+pub const MONITOR_HEIGHT: u32 = 800;
+
 /// The ratio between the backing framebuffer resolution and the window size in screen pixels.
 /// This is typically one for a normal display and two for a retina display.
 pub const HIDPI: f64 = 1.;
@@ -141,8 +147,8 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
                 SCREEN_WIDTH,
                 SCREEN_HEIGHT,
                 HIDPI,
-                1280,
-                800,
+                MONITOR_WIDTH,
+                MONITOR_HEIGHT,
             ))
     }
 
