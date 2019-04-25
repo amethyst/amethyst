@@ -102,14 +102,19 @@ pub fn load_material<B: Backend>(
 
         None => None,
     };
-    prefab.transparent = if let AlphaMode::Blend = material.alpha_mode() {
-        true
-    } else {
-        false
-    };
-    if let AlphaMode::Mask = material.alpha_mode() {
-        prefab.alpha_cutoff = material.alpha_cutoff();
+
+    match material.alpha_mode() {
+        AlphaMode::Blend => {
+            prefab.transparent = true;
+        }
+        AlphaMode::Mask => {
+            prefab.alpha_cutoff = material.alpha_cutoff();
+        }
+        AlphaMode::Opaque => {
+            prefab.alpha_cutoff = 0.0;
+        }
     }
+    dbg!(prefab.transparent);
 
     Ok(prefab)
 }

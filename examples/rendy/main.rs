@@ -30,7 +30,7 @@ use amethyst_rendy::{
     light::{Light, PointLight},
     mtl::{Material, MaterialDefaults},
     palette::{LinSrgba, Srgb},
-    pass::{DrawFlat2DDesc, DrawPbrDesc},
+    pass::{DrawFlat2DDesc, DrawPbrDesc, DrawPbrTransparentDesc},
     rendy::{
         factory::Factory,
         graph::{
@@ -51,6 +51,7 @@ use amethyst_rendy::{
     sprite::{SpriteRender, SpriteSheet},
     sprite_visibility::SpriteVisibilitySortingSystem,
     system::{GraphCreator, RendererSystem},
+    transparent::Transparent,
     types::{DefaultBackend, Mesh, Texture},
     visibility::VisibilitySortingSystem,
 };
@@ -238,6 +239,7 @@ impl<B: Backend> SimpleState for Example<B> {
                     .with(pos)
                     .with(mesh.clone())
                     .with(mtls[(j + i) % mtls.len()].clone())
+                    .with(Transparent)
                     .with(Orbit {
                         axis: Unit::new_normalize(Vector3::y()),
                         time_scale: 5.0 + y + 0.1 * x,
@@ -329,41 +331,6 @@ impl<B: Backend> SimpleState for Example<B> {
             .build();
 
         world.add_resource(ActiveCamera { entity: camera });
-
-        // let (width, height) = {
-        //     let dim = world.read_resource::<ScreenDimensions>();
-        //     (dim.width(), dim.height())
-        // };
-
-        // let mut camera_transform = Transform::default();
-        // camera_transform.set_translation_z(1.0);
-
-        // let sprite_camera = world
-        //     .create_entity()
-        //     .with(camera_transform)
-        //     .with(Camera::from(Projection::orthographic(
-        //         0.0, width, 0.0, height,
-        //     )))
-        //     .build();
-
-        // world.add_resource(SpriteCamera {
-        //     entity: sprite_camera,
-        // });
-
-        // println!("Create sprites");
-        // // Sprites
-        // let sprite_prefab_handle =
-        //     world.exec(|loader: PrefabLoader<'_, SpriteScenePrefabData<B>>| {
-        //         loader.load(
-        //             "prefab/sprite_animation.ron",
-        //             RonFormat,
-        //             (),
-        //             self.progress.as_mut().unwrap(),
-        //         )
-        //     });
-
-        // // Creates new entities with components from MyPrefabData
-        // world.create_entity().with(sprite_prefab_handle).build();
     }
 
     fn handle_event(
@@ -656,45 +623,47 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
             Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
         );
 
-        let subpass = SubpassBuilder::new()
-            .with_group(
-                DrawPbrDesc::default()
-                    .with_vertex_skinning()
-                    .with_transparency(
-                        pso::ColorBlendDesc(pso::ColorMask::ALL, pso::BlendState::ALPHA),
-                        Some(pso::DepthStencilDesc {
-                            depth: pso::DepthTest::On {
-                                fun: pso::Comparison::Less,
-                                write: true,
-                            },
-                            depth_bounds: false,
-                            stencil: pso::StencilTest::Off,
-                        }),
-                    )
-                    .builder(),
-            )
-            .with_group(
-                DrawFlat2DDesc::default()
-                    .with_transparency(
-                        pso::ColorBlendDesc(pso::ColorMask::ALL, pso::BlendState::ALPHA),
-                        Some(pso::DepthStencilDesc {
-                            depth: pso::DepthTest::On {
-                                fun: pso::Comparison::Less,
-                                write: true,
-                            },
-                            depth_bounds: false,
-                            stencil: pso::StencilTest::Off,
-                        }),
-                    )
-                    .builder(),
-            )
-            .with_color(color)
-            .with_depth_stencil(depth);
+        let opaque = graph_builder.add_node(
+            SubpassBuilder::new()
+                .with_group(DrawPbrDesc::default().with_vertex_skinning().builder())
+                .with_group(
+                    DrawFlat2DDesc::default()
+                        .with_transparency(
+                            pso::ColorBlendDesc(pso::ColorMask::ALL, pso::BlendState::ALPHA),
+                            Some(pso::DepthStencilDesc {
+                                depth: pso::DepthTest::On {
+                                    fun: pso::Comparison::Less,
+                                    write: true,
+                                },
+                                depth_bounds: false,
+                                stencil: pso::StencilTest::Off,
+                            }),
+                        )
+                        .builder(),
+                )
+                .with_color(color)
+                .with_depth_stencil(depth)
+                .into_pass(),
+        );
 
-        let pass = graph_builder.add_node(subpass.into_pass());
-        let present_builder = PresentNode::builder(factory, surface, color).with_dependency(pass);
+        let transparent = graph_builder.add_node(
+            SubpassBuilder::new()
+                .with_group(
+                    DrawPbrTransparentDesc::default()
+                        .with_vertex_skinning()
+                        .builder()
+                        .with_dependency(opaque),
+                )
+                .with_color(color)
+                .with_depth_stencil(depth)
+                .into_pass()
+        );
 
-        graph_builder.add_node(present_builder);
+        let _present = graph_builder.add_node(
+            PresentNode::builder(factory, surface, color)
+                .with_dependency(opaque)
+                .with_dependency(transparent),
+        );
 
         graph_builder
     }
