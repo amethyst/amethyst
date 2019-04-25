@@ -52,6 +52,8 @@ will have to base your work off of a released tag. This can be done after a clon
 by running `git checkout TAG` where `TAG` is a released tag eg `v0.8.0`. Now that
 you have the latest code you can start contributing.
 
+Contributors should be familiar with the [Git Syle Guide](https://github.com/agis/git-style-guide) and [Commit Message Guidelines](https://gist.github.com/robertpainsi/b632364184e70900af4ab688decf6f53).
+
 ### Submission Checklist
 
 Before submitting your pull request to the repository, please make sure you have
@@ -275,6 +277,8 @@ Then you can hit load button and choose `thread_profile.json` file.
   * [Rust By Example][re] - Get acquainted with Rust through a series of small
     code samples.
   * [The Rust Programming Language][rl] - The canonical online book about Rust.
+* Git
+  * [How to write a Git commit message](https://chris.beams.io/posts/git-commit/)
 
 [di]: https://discord.gg/amethyst
 [bs]: https://www.kth.se/social/upload/5289cb3ff276542440dd668c/bitsquid-behind-the-scenes.pdf
