@@ -45,7 +45,7 @@ pub struct DisplayConfig {
     /// Maximum window dimensions, measured in pixels (px).
     pub max_dimensions: Option<(u32, u32)>,
 
-    /// Whether the window will be centered on the monitor by deafult.
+    /// Whether the window will be centered on the monitor by default.
     pub centered_window: bool,
 
     /// Path to window icon.
