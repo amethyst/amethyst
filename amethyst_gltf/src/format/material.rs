@@ -114,8 +114,6 @@ pub fn load_material<B: Backend>(
             prefab.alpha_cutoff = 0.0;
         }
     }
-    dbg!(prefab.transparent);
-
     Ok(prefab)
 }
 

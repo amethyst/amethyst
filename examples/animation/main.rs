@@ -330,10 +330,6 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         let pass = graph_builder.add_node(
             DrawPbrDesc::default()
                 .with_vertex_skinning()
-                .with_transparency(
-                    pso::ColorBlendDesc(pso::ColorMask::ALL, pso::BlendState::ALPHA),
-                    None,
-                )
                 .builder()
                 .into_subpass()
                 .with_color(color)

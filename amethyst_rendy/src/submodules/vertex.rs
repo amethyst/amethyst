@@ -37,7 +37,7 @@ impl<B: Backend, T: 'static> DynamicVertex<B, T> {
         iter: I,
     ) -> bool
     where
-        I: Iterator,
+        I: IntoIterator,
         I::Item: AsRef<[T]>,
     {
         if max_num_items == 0 {
@@ -56,7 +56,7 @@ impl<B: Backend, T: 'static> DynamicVertex<B, T> {
             let mut writer = unsafe { mapped.write::<u8>(factory.device(), 0..buf_size).unwrap() };
             let mut slice = unsafe { writer.slice() };
 
-            iter.for_each(|data| {
+            iter.into_iter().for_each(|data| {
                 let data_slice = util::slice_as_bytes(data.as_ref());
                 let tmp = std::mem::replace(&mut slice, &mut []);
                 let (dst_slice, rest) = tmp.split_at_mut(data_slice.len());

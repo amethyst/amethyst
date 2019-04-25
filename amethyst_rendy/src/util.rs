@@ -7,10 +7,12 @@ use core::{
     iter::{DoubleEndedIterator, ExactSizeIterator, FusedIterator},
     ops::{Add, Range},
 };
+use derivative::Derivative;
 use glsl_layout::*;
 use num_traits::PrimInt;
 use rendy::{
     factory::Factory,
+    graph::render::PrepareResult,
     hal::{self, buffer::Usage, format, pso, Backend},
     memory::MemoryUsage,
     mesh::VertexFormat,
@@ -181,16 +183,16 @@ pub fn set_layout_bindings(
 }
 
 #[derive(Debug)]
-pub struct LookupBuilder<I: Hash + Eq + Copy> {
+pub struct LookupBuilder<I: Hash + Eq> {
     forward: fnv::FnvHashMap<I, usize>,
-    backward: Vec<I>,
+    len: usize,
 }
 
-impl<I: Hash + Eq + Copy> LookupBuilder<I> {
+impl<I: Hash + Eq> LookupBuilder<I> {
     pub fn new() -> LookupBuilder<I> {
         LookupBuilder {
             forward: fnv::FnvHashMap::default(),
-            backward: Vec::new(),
+            len: 0,
         }
     }
 
@@ -198,15 +200,11 @@ impl<I: Hash + Eq + Copy> LookupBuilder<I> {
         if let Some(&id_num) = self.forward.get(&id) {
             id_num
         } else {
-            let id_num = self.backward.len();
-            self.backward.push(id);
+            let id_num = self.len;
             self.forward.insert(id, id_num);
+            self.len += 1;
             id_num
         }
-    }
-
-    pub fn backward(&self) -> &Vec<I> {
-        &self.backward
     }
 }
 
@@ -280,3 +278,37 @@ impl<'a, T: PrimInt, I: ExactSizeIterator> ExactSizeIterator for TapCountIterato
 }
 
 impl<'a, T: PrimInt, I: FusedIterator> FusedIterator for TapCountIterator<'a, T, I> {}
+
+#[derive(Debug, Clone, Copy, Derivative)]
+#[derivative(Default)]
+pub enum ChangeDetection {
+    #[derivative(Default)]
+    Stable,
+    Changed(usize),
+}
+
+impl ChangeDetection {
+    pub fn can_reuse(&mut self, index: usize, changed: bool) -> bool {
+        use ChangeDetection::*;
+        match (*self, changed) {
+            (_, true) => {
+                *self = Changed(index);
+                false
+            }
+            (Changed(idx), false) if idx == index => {
+                *self = Stable;
+                true
+            }
+            (Stable, false) => true,
+            (Changed(_), false) => false,
+        }
+    }
+
+    pub fn prepare_result(&mut self, index: usize, changed: bool) -> PrepareResult {
+        if self.can_reuse(index, changed) {
+            PrepareResult::DrawReuse
+        } else {
+            PrepareResult::DrawRecord
+        }
+    }
+}

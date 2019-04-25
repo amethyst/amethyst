@@ -4,6 +4,7 @@ use smallvec::{smallvec, SmallVec};
 use std::{
     collections::hash_map::Entry,
     iter::{Extend, FromIterator},
+    ops::Range,
 };
 
 pub trait GroupIterator<K, V>
@@ -171,5 +172,111 @@ where
 
     pub fn count(&self) -> usize {
         self.data_count
+    }
+}
+
+#[derive(Derivative, Debug)]
+#[derivative(Default(bound = ""))]
+pub struct OneLevelBatch<PK, D>
+where
+    PK: Eq + std::hash::Hash,
+{
+    map: fnv::FnvHashMap<PK, Vec<D>>,
+    data_count: usize,
+}
+
+impl<PK, D> OneLevelBatch<PK, D>
+where
+    PK: Eq + std::hash::Hash,
+{
+    pub fn clear_inner(&mut self) {
+        self.data_count = 0;
+        for (_, data) in self.map.iter_mut() {
+            data.clear();
+        }
+    }
+
+    pub fn prune(&mut self) {
+        self.map.retain(|_, b| b.len() > 0);
+    }
+
+    pub fn insert(&mut self, pk: PK, data: impl IntoIterator<Item = D>) {
+        let instance_data = data.into_iter().tap_count(&mut self.data_count);
+
+        match self.map.entry(pk) {
+            Entry::Occupied(mut e) => {
+                e.get_mut().extend(instance_data);
+            }
+            Entry::Vacant(e) => {
+                e.insert(instance_data.collect());
+            }
+        }
+    }
+
+    pub fn data<'a>(&'a self) -> impl Iterator<Item = &'a Vec<D>> {
+        self.map.values()
+    }
+
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a PK, &'a Vec<D>)> {
+        self.map.iter()
+    }
+
+    pub fn count(&self) -> usize {
+        self.data_count
+    }
+}
+
+#[derive(Derivative, Debug)]
+#[derivative(Default(bound = ""))]
+pub struct OrderedOneLevelBatch<PK, D>
+where
+    PK: Eq + std::hash::Hash,
+{
+    old_keys: Vec<(PK, Range<usize>)>,
+    keys_list: Vec<(PK, Range<usize>)>,
+    data_list: Vec<D>,
+}
+
+impl<PK, D> OrderedOneLevelBatch<PK, D>
+where
+    PK: Eq + std::hash::Hash,
+{
+    pub fn swap_clear(&mut self) {
+        std::mem::swap(&mut self.old_keys, &mut self.keys_list);
+        self.keys_list.clear();
+        self.data_list.clear();
+    }
+
+    pub fn insert(&mut self, pk: PK, data: impl IntoIterator<Item = D>) {
+        let start = self.data_list.len();
+        self.data_list.extend(data);
+
+        match self.keys_list.last_mut() {
+            Some((last_pk, last_range)) if last_pk == &pk => {
+                last_range.end = self.data_list.len();
+            }
+            _ => {
+                self.keys_list.push((pk, start..self.data_list.len()));
+            }
+        }
+    }
+
+    pub fn data(&self) -> &Vec<D> {
+        &self.data_list
+    }
+
+    /// Iterator that returns primary keys and lengths of submitted batch
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a PK, usize)> {
+        self.keys_list
+            .iter()
+            .map(move |(k, range)| (k, range.end - range.start))
+    }
+
+    pub fn changed(&self) -> bool {
+        self.keys_list != self.old_keys
+    }
+
+    pub fn count(&self) -> usize {
+        self.data_list.len()
     }
 }

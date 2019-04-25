@@ -13,8 +13,7 @@ use crate::{
     types::Texture,
     util,
 };
-use amethyst_assets::AssetStorage;
-use amethyst_assets::Handle;
+use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::ecs::{Read, Resources, SystemData};
 use glsl_layout::*;
 

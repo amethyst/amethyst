@@ -1,5 +1,5 @@
 use crate::{
-    batch::{GroupIterator, OrderedTwoLevelBatch, TwoLevelBatch},
+    batch::{GroupIterator, OrderedOneLevelBatch, TwoLevelBatch},
     hidden::{Hidden, HiddenPropagate},
     mtl::Material,
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
@@ -14,7 +14,7 @@ use crate::{
 };
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
-    ecs::{Join, Read, ReadStorage, Resources, SystemData},
+    ecs::{Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
     transform::GlobalTransform,
 };
 use core::borrow::Borrow;
@@ -442,6 +442,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbrTransparentDesc {
             skinning,
             models: DynamicVertex::new(),
             skinned_models: DynamicVertex::new(),
+            change: Default::default(),
         }))
     }
 }
@@ -451,13 +452,14 @@ pub struct DrawPbrTransparent<B: Backend> {
     pipeline_basic: B::GraphicsPipeline,
     pipeline_skinned: Option<B::GraphicsPipeline>,
     pipeline_layout: B::PipelineLayout,
-    static_batches: OrderedTwoLevelBatch<MaterialId, u32, SmallVec<[VertexArgs; 4]>>,
-    skinned_batches: OrderedTwoLevelBatch<MaterialId, u32, SmallVec<[SkinnedVertexArgs; 4]>>,
+    static_batches: OrderedOneLevelBatch<(MaterialId, u32), VertexArgs>,
+    skinned_batches: OrderedOneLevelBatch<(MaterialId, u32), SkinnedVertexArgs>,
     env: EnvironmentSub<B>,
     materials: MaterialSub<B>,
     skinning: SkinningSub<B>,
     models: DynamicVertex<B, VertexArgs>,
     skinned_models: DynamicVertex<B, SkinnedVertexArgs>,
+    change: util::ChangeDetection,
 }
 
 impl<B: Backend> RenderGroup<B, Resources> for DrawPbrTransparent<B> {
@@ -472,7 +474,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbrTransparent<B> {
         let (mesh_storage, visibility, meshes, materials, global_transforms, joints, tints) =
             <(
                 Read<AssetStorage<Mesh<B>>>,
-                Read<Visibility>,
+                ReadExpect<Visibility>,
                 ReadStorage<Handle<Mesh<B>>>,
                 ReadStorage<Handle<Material<B>>>,
                 ReadStorage<GlobalTransform>,
@@ -484,13 +486,14 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbrTransparent<B> {
         self.env.process(factory, index, resources);
         self.materials.maintain();
 
-        self.static_batches.clear();
-        self.skinned_batches.clear();
+        self.static_batches.swap_clear();
+        self.skinned_batches.swap_clear();
 
         let materials_ref = &mut self.materials;
         let skinning_ref = &mut self.skinning;
         let statics_ref = &mut self.static_batches;
         let skinned_ref = &mut self.skinned_batches;
+        let mut changed = false;
 
         let mut joined = (
             (&materials, &meshes, &global_transforms, tints.maybe()),
@@ -506,8 +509,10 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbrTransparent<B> {
             })
             .for_each_group(|(mat, mesh_id), data| {
                 if mesh_storage.contains_id(mesh_id) {
-                    if let Some((mat, _)) = materials_ref.insert(factory, resources, mat) {
-                        statics_ref.insert(mat, mesh_id, data.drain(..));
+                    if let Some((mat, this_changed)) = materials_ref.insert(factory, resources, mat)
+                    {
+                        changed = changed || this_changed;
+                        statics_ref.insert((mat, mesh_id), data.drain(..));
                     }
                 }
             });
@@ -538,8 +543,11 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbrTransparent<B> {
                 })
                 .for_each_group(|(mat, mesh_id), data| {
                     if mesh_storage.contains_id(mesh_id) {
-                        if let Some((mat, _)) = materials_ref.insert(factory, resources, mat) {
-                            skinned_ref.insert(mat, mesh_id, data.drain(..));
+                        if let Some((mat, this_changed)) =
+                            materials_ref.insert(factory, resources, mat)
+                        {
+                            changed = changed || this_changed;
+                            skinned_ref.insert((mat, mesh_id), data.drain(..));
                         }
                     }
                 });
@@ -549,18 +557,22 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbrTransparent<B> {
             factory,
             index,
             self.static_batches.count() as u64,
-            self.static_batches.data(),
+            Some(self.static_batches.data()),
         );
 
         self.skinned_models.write(
             factory,
             index,
             self.skinned_batches.count() as u64,
-            self.skinned_batches.data(),
+            Some(self.skinned_batches.data()),
         );
+
         self.skinning.commit(factory, index);
 
-        PrepareResult::DrawRecord
+        changed = changed || self.static_batches.changed();
+        changed = changed || self.skinned_batches.changed();
+
+        self.change.prepare_result(index, changed)
     }
 
     fn draw_inline(
@@ -577,23 +589,23 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbrTransparent<B> {
 
         if self.models.bind(index, 1, &mut encoder) {
             let mut instances_drawn = 0;
-            for (mat_id, batch_iter) in self.static_batches.iter() {
-                if self
-                    .materials
-                    .bind(&self.pipeline_layout, 1, mat_id, &mut encoder)
+            let mut last_mat_id = None;
+            for (&(mat_id, mesh_id), num_instances) in self.static_batches.iter() {
+                if last_mat_id == Some(mat_id)
+                    || self
+                        .materials
+                        .bind(&self.pipeline_layout, 1, mat_id, &mut encoder)
                 {
-                    for (mesh_id, batch_data) in batch_iter {
-                        // This invariant should always be verified before inserting batches in prepare
-                        debug_assert!(mesh_storage.contains_id(*mesh_id));
-                        let Mesh(mesh) = unsafe { mesh_storage.get_by_id_unchecked(*mesh_id) };
-                        mesh.bind(&[PosNormTangTex::VERTEX], &mut encoder).unwrap();
+                    last_mat_id.replace(mat_id);
+                    debug_assert!(mesh_storage.contains_id(mesh_id));
+                    let Mesh(mesh) = unsafe { mesh_storage.get_by_id_unchecked(mesh_id) };
+                    mesh.bind(&[PosNormTangTex::VERTEX], &mut encoder).unwrap();
 
-                        encoder.draw(
-                            0..mesh.len(),
-                            instances_drawn..instances_drawn + batch_data.len() as u32,
-                        );
-                        instances_drawn += batch_data.len() as u32;
-                    }
+                    encoder.draw(
+                        0..mesh.len(),
+                        instances_drawn..instances_drawn + num_instances as u32,
+                    );
+                    instances_drawn += num_instances as u32;
                 }
             }
         }
@@ -606,23 +618,24 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbrTransparent<B> {
                     .bind(index, &self.pipeline_layout, 2, &mut encoder);
 
                 let mut instances_drawn = 0;
-                for (mat_id, batch_iter) in self.skinned_batches.iter() {
-                    if self
-                        .materials
-                        .bind(&self.pipeline_layout, 1, mat_id, &mut encoder)
+                let mut last_mat_id = None;
+                for (&(mat_id, mesh_id), num_instances) in self.skinned_batches.iter() {
+                    if last_mat_id == Some(mat_id)
+                        || self
+                            .materials
+                            .bind(&self.pipeline_layout, 1, mat_id, &mut encoder)
                     {
-                        for (mesh_id, batch_data) in batch_iter {
-                            // This invariant should always be verified before inserting batches in prepare
-                            debug_assert!(mesh_storage.contains_id(*mesh_id));
-                            let Mesh(mesh) = unsafe { mesh_storage.get_by_id_unchecked(*mesh_id) };
-                            mesh.bind(&[PosNormTangTexJoint::VERTEX], &mut encoder)
-                                .unwrap();
-                            encoder.draw(
-                                0..mesh.len(),
-                                instances_drawn..instances_drawn + batch_data.len() as u32,
-                            );
-                            instances_drawn += batch_data.len() as u32;
-                        }
+                        last_mat_id.replace(mat_id);
+                        debug_assert!(mesh_storage.contains_id(mesh_id));
+                        let Mesh(mesh) = unsafe { mesh_storage.get_by_id_unchecked(mesh_id) };
+                        mesh.bind(&[PosNormTangTexJoint::VERTEX], &mut encoder)
+                            .unwrap();
+
+                        encoder.draw(
+                            0..mesh.len(),
+                            instances_drawn..instances_drawn + num_instances as u32,
+                        );
+                        instances_drawn += num_instances as u32;
                     }
                 }
             }

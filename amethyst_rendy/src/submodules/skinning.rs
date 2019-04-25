@@ -89,7 +89,7 @@ impl<B: Backend> PerImageSkinningSub<B> {
         }
     }
 
-    fn commit(&mut self, factory: &Factory<B>, data: &[u8]) -> bool {
+    fn commit(&mut self, factory: &Factory<B>, data: &[u8]) {
         let allocated = util::ensure_buffer(
             &factory,
             &mut self.buffer,
@@ -119,8 +119,6 @@ impl<B: Backend> PerImageSkinningSub<B> {
             let dst_slice = unsafe { writer.slice() };
             dst_slice.copy_from_slice(data);
         }
-
-        allocated
     }
 
     #[inline]

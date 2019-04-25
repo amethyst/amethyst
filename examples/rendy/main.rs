@@ -30,18 +30,18 @@ use amethyst_rendy::{
     light::{Light, PointLight},
     mtl::{Material, MaterialDefaults},
     palette::{LinSrgba, Srgb},
-    pass::{DrawFlat2DDesc, DrawPbrDesc, DrawPbrTransparentDesc},
+    pass::{DrawFlat2DDesc, DrawPbrDesc, DrawPbrTransparentDesc, DrawFlat2DTransparentDesc},
     rendy::{
         factory::Factory,
         graph::{
             present::PresentNode,
-            render::{RenderGroupDesc, SimpleGraphicsPipelineDesc, SubpassBuilder},
+            render::{RenderGroupDesc, SubpassBuilder},
             GraphBuilder,
         },
         hal::{
             command::{ClearDepthStencil, ClearValue},
             format::Format,
-            pso, Backend,
+            Backend,
         },
         mesh::PosNormTangTex,
         texture::palette::load_from_linear_rgba,
@@ -626,21 +626,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         let opaque = graph_builder.add_node(
             SubpassBuilder::new()
                 .with_group(DrawPbrDesc::default().with_vertex_skinning().builder())
-                .with_group(
-                    DrawFlat2DDesc::default()
-                        .with_transparency(
-                            pso::ColorBlendDesc(pso::ColorMask::ALL, pso::BlendState::ALPHA),
-                            Some(pso::DepthStencilDesc {
-                                depth: pso::DepthTest::On {
-                                    fun: pso::Comparison::Less,
-                                    write: true,
-                                },
-                                depth_bounds: false,
-                                stencil: pso::StencilTest::Off,
-                            }),
-                        )
-                        .builder(),
-                )
+                .with_group(DrawFlat2DDesc::default().builder())
                 .with_color(color)
                 .with_depth_stencil(depth)
                 .into_pass(),
@@ -654,9 +640,14 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
                         .builder()
                         .with_dependency(opaque),
                 )
+                .with_group(
+                    DrawFlat2DTransparentDesc::default()
+                        .builder()
+                        .with_dependency(opaque),
+                )
                 .with_color(color)
                 .with_depth_stencil(depth)
-                .into_pass()
+                .into_pass(),
         );
 
         let _present = graph_builder.add_node(
