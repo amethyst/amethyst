@@ -23,16 +23,12 @@ use amethyst_core::{
 pub struct TextEditingInputSystem {
     /// A reader for winit events.
     reader: Option<ReaderId<Event>>,
-    last_selected: Option<Entity>,
 }
 
 impl TextEditingInputSystem {
     /// Creates a new instance of this system
     pub fn new() -> Self {
-        Self {
-            reader: None,
-            last_selected: None,
-        }
+        Self { reader: None }
     }
 }
 
@@ -335,8 +331,6 @@ impl<'a> System<'a> for TextEditingInputSystem {
                     },
                     _ => {}
                 }
-            } else {
-                self.last_selected = None
             }
         }
     }
