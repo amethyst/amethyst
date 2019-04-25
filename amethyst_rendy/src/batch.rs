@@ -137,6 +137,7 @@ where
 {
     pub fn clear(&mut self) {
         self.list.clear();
+        self.data_count = 0;
     }
 
     pub fn insert(&mut self, pk: PK, sk: SK, data: impl IntoIterator<Item = C::Item>) {

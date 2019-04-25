@@ -254,8 +254,10 @@ impl<I: Iterator> TapCountIter for I {
 impl<'a, T: PrimInt, I: Iterator> Iterator for TapCountIterator<'a, T, I> {
     type Item = I::Item;
     fn next(&mut self) -> Option<Self::Item> {
-        *self.counter = *self.counter + T::one();
-        self.inner.next()
+        self.inner.next().map(|d| {
+            *self.counter = *self.counter + T::one();
+            d
+        })
     }
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.inner.size_hint()
@@ -264,8 +266,10 @@ impl<'a, T: PrimInt, I: Iterator> Iterator for TapCountIterator<'a, T, I> {
 
 impl<'a, T: PrimInt, I: DoubleEndedIterator> DoubleEndedIterator for TapCountIterator<'a, T, I> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        *self.counter = *self.counter + T::one();
-        self.inner.next_back()
+        self.inner.next_back().map(|d| {
+            *self.counter = *self.counter + T::one();
+            d
+        })
     }
 }
 
