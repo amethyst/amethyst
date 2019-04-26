@@ -124,7 +124,7 @@ This guide explains how to define a state-specific dispatcher whose systems are 
 
     `System` resources are setup when the dispatcher is built. The `System#setup(..)` method needs access to the world's resources, which is made available to `State#on_start(..)`. Therefore, we need to defer building the actual `Dispatcher` until this method is called.
 
-4. Run both the application and state-specific dispatchers during `update(..)`.
+4. Run the state-specific dispatchers during `update(..)`.
 
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
@@ -145,10 +145,9 @@ This guide explains how to define a state-specific dispatcher whose systems are 
         //..
 
         fn update(&mut self, data: StateData<'_, GameData<'a, 'b>>) -> Trans<GameData<'a, 'b>, E> {
-            data.data.update(&data.world);
             self.dispatcher.as_mut().unwrap().dispatch(&data.world.res);
-
-            Trans::Pop
+            
+            Trans::None
         }
     }
     ```

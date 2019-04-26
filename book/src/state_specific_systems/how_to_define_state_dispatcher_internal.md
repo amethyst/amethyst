@@ -64,7 +64,7 @@ This guide explains how to define a state-specific dispatcher whose systems are 
     }
     ```
 
-3. Run both the application and state-specific dispatchers during `update(..)`.
+3. Run the state-specific dispatchers during `update(..)`.
 
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
@@ -85,10 +85,9 @@ This guide explains how to define a state-specific dispatcher whose systems are 
         //..
 
         fn update(&mut self, data: StateData<'_, GameData<'a, 'b>>) -> Trans<GameData<'a, 'b>, E> {
-            data.data.update(&data.world);
             self.dispatcher.as_mut().unwrap().dispatch(&data.world.res);
 
-            Trans::Pop
+            Trans::None
         }
     }
     ```
