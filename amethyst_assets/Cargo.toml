@@ -44,4 +44,3 @@ err-derive = "0.1"
 profiler = [ "thread_profiler/thread_profiler" ]
 nightly = [ "amethyst_core/nightly" ]
 json = [ "serde_json" ]
-headless = []

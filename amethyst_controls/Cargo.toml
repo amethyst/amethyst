@@ -29,4 +29,3 @@ thread_profiler = { version = "0.3", optional = true }
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
 nightly = [ "amethyst_core/nightly" ]
-headless = []

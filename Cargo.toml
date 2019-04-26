@@ -76,14 +76,8 @@ saveload = [
     "amethyst_core/saveload"
 ]
 headless = [
-    "amethyst_assets/headless",
-    "amethyst_config/headless",
-    "amethyst_core/headless",
-    "amethyst_controls/headless",
-    "amethyst_network/headless",
-    "amethyst_renderer/headless",
-    "amethyst_input/headless",
-    "amethyst_utils/headless",
+    "locale", 
+    "network"
 ]
 
 [workspace]
