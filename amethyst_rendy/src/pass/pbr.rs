@@ -30,6 +30,9 @@ use rendy::{
 };
 use smallvec::SmallVec;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 /// Draw opaque mesh with physically based lighting
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct DrawPbrDesc {
@@ -57,6 +60,9 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbrDesc {
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, Resources>>, failure::Error> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("build");
+
         let env = EnvironmentSub::new(factory)?;
         let materials = MaterialSub::new(factory)?;
         let skinning = SkinningSub::new(factory)?;
@@ -113,6 +119,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbr<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         resources: &Resources,
     ) -> PrepareResult {
+        #[cfg(feature = "profiler")]
+        profile_scope!("prepare");
+
         let (
             mesh_storage,
             visibility,
@@ -168,6 +177,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbr<B> {
 
         match &visibility {
             None => {
+                #[cfg(feature = "profiler")]
+                profile_scope!("gather_novisibility");
+
                 (static_input(), (!&hiddens, !&hiddens_prop, !&transparent))
                     .join()
                     .map(|(((mat, mesh, tform, tint), _), _)| {
@@ -182,6 +194,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbr<B> {
                     });
 
                 if self.pipeline_skinned.is_some() {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("gather_novisibility_skinning");
+
                     (skinned_input(), (!&hiddens, !&hiddens_prop))
                         .join()
                         .map(|((mat, mesh, tform, tint, joints), _)| {
@@ -206,6 +221,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbr<B> {
                 }
             }
             Some(visibility) => {
+                #[cfg(feature = "profiler")]
+                profile_scope!("prepare_visibility");
+
                 (static_input(), &visibility.visible_unordered)
                     .join()
                     .map(|(((mat, mesh, tform, tint), _), _)| {
@@ -220,6 +238,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbr<B> {
                     });
 
                 if self.pipeline_skinned.is_some() {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("prepare_visibility_skinning");
+
                     (skinned_input(), &visibility.visible_unordered)
                         .join()
                         .map(|((mat, mesh, tform, tint, joints), _)| {
@@ -245,24 +266,28 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbr<B> {
             }
         };
 
-        self.static_batches.prune();
-        self.skinned_batches.prune();
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("write");
 
-        self.models.write(
-            factory,
-            index,
-            self.static_batches.count() as u64,
-            self.static_batches.data(),
-        );
+            self.static_batches.prune();
+            self.skinned_batches.prune();
 
-        self.skinned_models.write(
-            factory,
-            index,
-            self.skinned_batches.count() as u64,
-            self.skinned_batches.data(),
-        );
-        self.skinning.commit(factory, index);
+            self.models.write(
+                factory,
+                index,
+                self.static_batches.count() as u64,
+                self.static_batches.data(),
+            );
 
+            self.skinned_models.write(
+                factory,
+                index,
+                self.skinned_batches.count() as u64,
+                self.skinned_batches.data(),
+            );
+            self.skinning.commit(factory, index);
+        }
         PrepareResult::DrawRecord
     }
 
@@ -273,6 +298,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbr<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         resources: &Resources,
     ) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("draw");
+
         let mesh_storage = <Read<'_, AssetStorage<Mesh<B>>>>::fetch(resources);
 
         encoder.bind_graphics_pipeline(&self.pipeline_basic);

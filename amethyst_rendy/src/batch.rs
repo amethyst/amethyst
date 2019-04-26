@@ -7,6 +7,9 @@ use std::{
     ops::Range,
 };
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 pub trait GroupIterator<K, V>
 where
     Self: Iterator<Item = (K, V)> + Sized,
@@ -30,6 +33,9 @@ where
     where
         F: FnMut(K, &mut Vec<V>),
     {
+        #[cfg(feature = "profiler")]
+        profile_scope!("for_each_group");
+
         let mut block: Option<(K, Vec<V>)> = None;
 
         for (next_group_id, value) in self {
@@ -87,6 +93,9 @@ where
     }
 
     pub fn insert(&mut self, pk: PK, sk: SK, data: impl IntoIterator<Item = C::Item>) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("twolevel_insert");
+
         let instance_data = data.into_iter().tap_count(&mut self.data_count);
 
         match self.map.entry(pk) {
@@ -149,6 +158,9 @@ where
     }
 
     pub fn insert(&mut self, pk: PK, sk: SK, data: impl IntoIterator<Item = D>) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("ordered_twolevel_insert");
+
         let start = self.data_list.len() as u32;
         self.data_list.extend(data);
         let end = self.data_list.len() as u32;
@@ -219,6 +231,9 @@ where
     }
 
     pub fn insert(&mut self, pk: PK, data: impl IntoIterator<Item = D>) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("onelevel_insert");
+
         let instance_data = data.into_iter();
 
         match self.map.entry(pk) {
@@ -276,6 +291,9 @@ where
     }
 
     pub fn insert(&mut self, pk: PK, data: impl IntoIterator<Item = D>) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("ordered_onelevel_insert");
+
         let start = self.data_list.len() as u32;
         self.data_list.extend(data);
         let added_len = self.data_list.len() as u32 - start;

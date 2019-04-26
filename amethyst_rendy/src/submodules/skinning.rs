@@ -11,6 +11,9 @@ use crate::{
 };
 use fnv::FnvHashMap;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 #[derive(Debug)]
 pub struct SkinningSub<B: Backend> {
     layout: RendyHandle<DescriptorSetLayout<B>>,
@@ -53,6 +56,9 @@ impl<B: Backend> SkinningSub<B> {
     }
 
     pub fn insert(&mut self, joints: &JointTransforms) -> u32 {
+        #[cfg(feature = "profiler")]
+        profile_scope!("insert");
+
         let staging = &mut self.staging;
         *self
             .skin_offset_map

@@ -9,6 +9,9 @@ use amethyst_core::{
 };
 use glsl_layout::*;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 type Std140<T> = <T as AsStd140>::Std140;
 
 pub struct CameraGatherer {
@@ -18,6 +21,9 @@ pub struct CameraGatherer {
 
 impl CameraGatherer {
     pub fn gather(res: &Resources) -> Self {
+        #[cfg(feature = "profiler")]
+        profile_scope!("gather_cameras");
+
         let (active_camera, cameras, global_transforms) = <(
             Option<Read<'_, ActiveCamera>>,
             ReadStorage<'_, Camera>,
