@@ -1,6 +1,6 @@
 #version 450
 
-layout(early_fragment_tests) in;
+// layout(early_fragment_tests) in;
 
 struct PointLight {
     vec3 position;
@@ -49,11 +49,8 @@ struct UvOffset {
 };
 
 layout(std140, set = 1, binding = 0) uniform Material {
-    float alpha_cutoff;
-    float _pad0; // metal doesn't respect std140
-    float _pad1;
-    float _pad2;
     UvOffset uv_offset;
+    float alpha_cutoff;
 };
 
 layout(set = 1, binding = 1) uniform sampler2D albedo;
@@ -145,6 +142,7 @@ void main() {
     vec4 albedo_alpha       = texture(albedo, final_tex_coords).rgba;
     float alpha             = albedo_alpha.a;
 
+    // TODO: what if alpha_cutoff is zero?
     if(alpha < alpha_cutoff) discard;
 
     vec3 albedo             = albedo_alpha.rgb;

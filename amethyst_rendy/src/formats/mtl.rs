@@ -58,8 +58,14 @@ where
     F: Format<Texture<B>>,
     F::Options: Debug,
 {
-    pub fn handle(&self) -> Option<Handle<Material<B>>> {
-        self.handle.clone()
+    pub fn clone_loaded(&self) -> Self {
+        assert!(self.handle.is_some());
+
+        Self {
+            handle: self.handle.clone(),
+            transparent: self.transparent,
+            ..Self::default()
+        }
     }
 }
 
@@ -78,7 +84,7 @@ where
             cavity: None,
             uv_offset: TextureOffset::default(),
             transparent: false,
-            alpha_cutoff: 0.01,
+            alpha_cutoff: std::f32::MIN_POSITIVE,
             handle: None,
         }
     }

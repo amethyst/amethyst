@@ -15,7 +15,6 @@ use amethyst_core::{
 use amethyst_error::Error;
 use amethyst_rendy::{
     formats::{mtl::MaterialPrefab, texture::ImageFormat},
-    mtl::Material,
     rendy::{hal::Backend, mesh::MeshBuilder},
     types::Mesh,
 };
@@ -46,7 +45,7 @@ pub struct GltfPrefab<B: Backend> {
     /// Mesh handle after sub asset loading is done
     pub mesh_handle: Option<Handle<Mesh<B>>>,
     /// `Material` is placed on all `Entity`s with graphics primitives with material
-    pub material: Option<Handle<Material<B>>>,
+    pub material: Option<MaterialPrefab<B, ImageFormat>>,
     /// Loaded animations, if applicable, will always only be placed on the main `Entity`
     pub animatable: Option<AnimatablePrefab<usize, Transform>>,
     /// Skin data is placed on `Entity`s involved in the skin, skeleton or graphical primitives
@@ -219,7 +218,7 @@ impl<'a, B: Backend> PrefabData<'a> for GltfPrefab<B> {
             name.add_to_entity(entity, names, entities, children)?;
         }
         if let Some(material) = &self.material {
-            materials.0.insert(entity, material.clone())?;
+            material.add_to_entity(entity, materials, entities, children)?;
         }
         if let Some(animatable) = &self.animatable {
             animatable.add_to_entity(entity, animatables, entities, children)?;
@@ -250,7 +249,7 @@ impl<'a, B: Backend> PrefabData<'a> for GltfPrefab<B> {
         }
         if let Some(material_id) = self.material_id {
             if let Some(mat) = mat_set.materials.get(&material_id) {
-                self.material = mat.handle();
+                self.material.replace(mat.clone_loaded());
             }
         }
         if let Some(mesh) = self.mesh.take() {

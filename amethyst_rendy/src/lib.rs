@@ -8,6 +8,9 @@ extern crate amethyst_derive;
 #[macro_use]
 extern crate shred_derive;
 
+#[macro_use]
+mod macros;
+
 pub use palette;
 pub use rendy;
 
@@ -20,6 +23,7 @@ pub mod formats;
 pub mod hidden;
 pub mod light;
 pub mod mtl;
+pub mod pipeline;
 pub mod resources;
 pub mod shape;
 pub mod skinning;
@@ -31,3 +35,5 @@ pub mod types;
 pub mod visibility;
 
 mod pod;
+mod submodules;
+mod util;

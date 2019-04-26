@@ -15,13 +15,13 @@ use std::borrow::Cow;
 
 #[derive(Clone, Copy, Debug, AsStd140)]
 #[repr(C, align(16))]
-pub(crate) struct TextureOffset {
+pub struct TextureOffset {
     pub u_offset: vec2,
     pub v_offset: vec2,
 }
 
 impl TextureOffset {
-    pub(crate) fn from_offset(offset: &crate::mtl::TextureOffset) -> Self {
+    pub fn from_offset(offset: &crate::mtl::TextureOffset) -> Self {
         TextureOffset {
             u_offset: [offset.u.0, offset.u.1].into(),
             v_offset: [offset.v.0, offset.v.1].into(),
@@ -31,14 +31,14 @@ impl TextureOffset {
 
 #[derive(Clone, Copy, Debug, AsStd140)]
 #[repr(C, align(16))]
-pub(crate) struct ViewArgs {
+pub struct ViewArgs {
     pub proj: mat4,
     pub view: mat4,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
 #[repr(C, align(16))]
-pub(crate) struct VertexArgs {
+pub struct VertexArgs {
     pub model: mat4,
     pub tint: vec4,
 }
@@ -87,7 +87,7 @@ impl AsVertex for VertexArgs {
 
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
 #[repr(C, align(4))]
-pub(crate) struct SkinnedVertexArgs {
+pub struct SkinnedVertexArgs {
     pub model: mat4,
     pub tint: vec4,
     pub joints_offset: uint,
@@ -145,20 +145,20 @@ impl AsVertex for SkinnedVertexArgs {
 }
 
 #[derive(Clone, Copy, Debug, AsStd140)]
-pub(crate) struct PointLight {
+pub struct PointLight {
     pub position: vec3,
     pub color: vec3,
     pub intensity: float,
 }
 
 #[derive(Clone, Copy, Debug, AsStd140)]
-pub(crate) struct DirectionalLight {
+pub struct DirectionalLight {
     pub color: vec3,
     pub direction: vec3,
 }
 
 #[derive(Clone, Copy, Debug, AsStd140)]
-pub(crate) struct SpotLight {
+pub struct SpotLight {
     pub position: vec3,
     pub color: vec3,
     pub direction: vec3,
@@ -169,7 +169,7 @@ pub(crate) struct SpotLight {
 }
 
 #[derive(Clone, Copy, Debug, AsStd140)]
-pub(crate) struct Environment {
+pub struct Environment {
     pub ambient_color: vec3,
     pub camera_position: vec3,
     pub point_light_count: int,
@@ -179,23 +179,23 @@ pub(crate) struct Environment {
 
 #[derive(Clone, Copy, Debug, AsStd140)]
 #[repr(C, align(16))]
-pub(crate) struct Material {
+pub struct Material {
+    pub uv_offset: TextureOffset,
     pub alpha_cutoff: float,
-    pub(crate) uv_offset: TextureOffset,
 }
 
 impl Material {
     pub fn from_material<B: Backend>(mat: &mtl::Material<B>) -> Self {
         Material {
-            alpha_cutoff: mat.alpha_cutoff,
             uv_offset: TextureOffset::from_offset(&mat.uv_offset),
+            alpha_cutoff: mat.alpha_cutoff,
         }
     }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
 #[repr(C, align(4))]
-pub(crate) struct SpriteArgs {
+pub struct SpriteArgs {
     pub dir_x: vec2,
     pub dir_y: vec2,
     pub pos: vec2,

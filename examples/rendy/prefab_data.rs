@@ -1,20 +1,17 @@
-use amethyst::core::Transform;
 use amethyst::{
     animation::AnimationSetPrefab,
     assets::{AssetPrefab, Handle, Prefab, PrefabData, ProgressCounter},
     controls::ControlTagPrefab,
-    core::ecs::Entity,
+    core::{ecs::Entity, Transform},
     gltf::{GltfSceneAsset, GltfSceneFormat},
     utils::tag::Tag,
     Error,
 };
 use amethyst_rendy::{
     camera::CameraPrefab,
-    formats::mesh::MeshPrefab,
-    formats::mtl::MaterialPrefab,
+    formats::{mesh::MeshPrefab, mtl::MaterialPrefab},
     light::LightPrefab,
-    rendy::hal::Backend,
-    rendy::mesh::PosNormTangTex,
+    rendy::{hal::Backend, mesh::PosNormTangTex},
     sprite::{
         prefab::{SpriteRenderPrefab, SpriteSheetPrefab},
         SpriteRender,

@@ -31,18 +31,22 @@ use amethyst_rendy::{
     light::{Light, PointLight},
     mtl::{Material, MaterialDefaults},
     palette::{LinSrgba, Srgb},
+<<<<<<< HEAD
     pass::{DrawFlat2DDesc, DrawPbrDesc, DrawUiDesc},
+=======
+    pass::{DrawFlat2DDesc, DrawPbrDesc, DrawPbrTransparentDesc, DrawFlat2DTransparentDesc},
+>>>>>>> rendy
     rendy::{
         factory::Factory,
         graph::{
             present::PresentNode,
-            render::{RenderGroupDesc, SimpleGraphicsPipelineDesc, SubpassBuilder},
+            render::{RenderGroupDesc, SubpassBuilder},
             GraphBuilder,
         },
         hal::{
             command::{ClearDepthStencil, ClearValue},
             format::Format,
-            pso, Backend,
+            Backend,
         },
         mesh::PosNormTangTex,
         texture::palette::load_from_linear_rgba,
@@ -52,7 +56,9 @@ use amethyst_rendy::{
     sprite::{SpriteRender, SpriteSheet},
     sprite_visibility::SpriteVisibilitySortingSystem,
     system::{GraphCreator, RendererSystem},
+    transparent::Transparent,
     types::{DefaultBackend, Mesh, Texture},
+    visibility::VisibilitySortingSystem,
 };
 use std::{marker::PhantomData, path::Path, sync::Arc};
 
@@ -137,7 +143,7 @@ impl<'a> System<'a> for CameraCorrectionSystem {
                 current_aspect,
                 std::f32::consts::FRAC_PI_3,
                 0.1,
-                100.0,
+                1000.0,
             ));
         }
     }
@@ -175,7 +181,7 @@ impl<B: Backend> SimpleState for Example<B> {
             });
             let albedo = world.exec(|loader: AssetLoaderSystemData<'_, Texture<B>>| {
                 loader.load_from_data(
-                    load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 1.0)),
+                    load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 0.5)),
                     self.progress.as_mut().unwrap(),
                 )
             });
@@ -238,6 +244,7 @@ impl<B: Backend> SimpleState for Example<B> {
                     .with(pos)
                     .with(mesh.clone())
                     .with(mtls[(j + i) % mtls.len()].clone())
+                    .with(Transparent)
                     .with(Orbit {
                         axis: Unit::new_normalize(Vector3::y()),
                         time_scale: 5.0 + y + 0.1 * x,
@@ -322,13 +329,14 @@ impl<B: Backend> SimpleState for Example<B> {
                 1.3,
                 std::f32::consts::FRAC_PI_3,
                 0.1,
-                100.0,
+                1000.0,
             )))
             .with(transform)
             .with(FlyControlTag)
             .build();
 
         world.add_resource(ActiveCamera { entity: camera });
+<<<<<<< HEAD
 
         let _ = UiButtonBuilder::<(), u32>::new("hello rendy")
             .with_size(200., 30.)
@@ -369,6 +377,8 @@ impl<B: Backend> SimpleState for Example<B> {
 
         // // Creates new entities with components from MyPrefabData
         // world.create_entity().with(sprite_prefab_handle).build();
+=======
+>>>>>>> rendy
     }
 
     fn handle_event(
@@ -599,6 +609,11 @@ fn main() -> amethyst::Result<()> {
             "sprite_visibility_system",
             &["fly_movement", "cam", "transform_system"],
         )
+        .with(
+            VisibilitySortingSystem::new(),
+            "visibility_system",
+            &["fly_movement", "cam", "transform_system"],
+        )
         .with_thread_local(EventsLoopSystem::new(event_loop))
         .with_thread_local(RendererSystem::<DefaultBackend, _>::new(ExampleGraph::new()));
 
@@ -653,50 +668,43 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         let depth = graph_builder.create_image(
             surface.kind(),
             1,
-            Format::D16Unorm,
+            Format::D32Float,
             Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
         );
 
-        let subpass = SubpassBuilder::new()
-            .with_group(
-                DrawPbrDesc::default()
-                    .with_vertex_skinning()
-                    .with_transparency(
-                        pso::ColorBlendDesc(pso::ColorMask::ALL, pso::BlendState::ALPHA),
-                        Some(pso::DepthStencilDesc {
-                            depth: pso::DepthTest::On {
-                                fun: pso::Comparison::Less,
-                                write: true,
-                            },
-                            depth_bounds: false,
-                            stencil: pso::StencilTest::Off,
-                        }),
-                    )
-                    .builder(),
-            )
-            .with_group(
-                DrawFlat2DDesc::default()
-                    .with_transparency(
-                        pso::ColorBlendDesc(pso::ColorMask::ALL, pso::BlendState::ALPHA),
-                        Some(pso::DepthStencilDesc {
-                            depth: pso::DepthTest::On {
-                                fun: pso::Comparison::Less,
-                                write: true,
-                            },
-                            depth_bounds: false,
-                            stencil: pso::StencilTest::Off,
-                        }),
-                    )
-                    .builder(),
-            )
-            .with_group(DrawUiDesc::default().builder())
-            .with_color(color)
-            .with_depth_stencil(depth);
+        let opaque = graph_builder.add_node(
+            SubpassBuilder::new()
+                .with_group(DrawPbrDesc::default().with_vertex_skinning().builder())
+                .with_group(DrawFlat2DDesc::default().builder())
+                .with_group(DrawUiDesc::default().builder())
+                .with_color(color)
+                .with_depth_stencil(depth)
+                .into_pass(),
+        );
 
-        let pass = graph_builder.add_node(subpass.into_pass());
-        let present_builder = PresentNode::builder(factory, surface, color).with_dependency(pass);
+        let transparent = graph_builder.add_node(
+            SubpassBuilder::new()
+                .with_group(
+                    DrawPbrTransparentDesc::default()
+                        .with_vertex_skinning()
+                        .builder()
+                        .with_dependency(opaque),
+                )
+                .with_group(
+                    DrawFlat2DTransparentDesc::default()
+                        .builder()
+                        .with_dependency(opaque),
+                )
+                .with_color(color)
+                .with_depth_stencil(depth)
+                .into_pass(),
+        );
 
-        graph_builder.add_node(present_builder);
+        let _present = graph_builder.add_node(
+            PresentNode::builder(factory, surface, color)
+                .with_dependency(opaque)
+                .with_dependency(transparent),
+        );
 
         graph_builder
     }

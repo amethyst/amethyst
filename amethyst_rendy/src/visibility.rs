@@ -100,12 +100,15 @@ impl<'a> System<'a> for VisibilitySortingSystem {
                 .partial_cmp(&a.camera_distance)
                 .unwrap_or(Ordering::Equal)
         });
+
         visibility.visible_unordered.clear();
-        for c in &self.centroids {
-            if !c.transparent {
-                visibility.visible_unordered.add(c.entity.id());
-            }
-        }
+        visibility.visible_unordered.extend(
+            self.centroids
+                .iter()
+                .filter(|c| !c.transparent)
+                .map(|c| c.entity.id()),
+        );
+
         visibility.visible_ordered.clear();
         visibility
             .visible_ordered

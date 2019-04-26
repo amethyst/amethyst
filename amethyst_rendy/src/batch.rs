@@ -1,6 +1,10 @@
+use crate::util::TapCountIter;
+use derivative::Derivative;
+use smallvec::{smallvec, SmallVec};
 use std::{
     collections::hash_map::Entry,
     iter::{Extend, FromIterator},
+    ops::Range,
 };
 
 pub trait GroupIterator<K, V>
@@ -12,7 +16,7 @@ where
     /// countiguous list of data with same group identifier.
     fn for_each_group<F>(self, on_group: F)
     where
-        F: FnMut(K, std::vec::Drain<'_, V>);
+        F: FnMut(K, &mut Vec<V>);
 }
 
 // This would be an iterator adaptor if `Item` type would allow a borrow on iterator itself.
@@ -24,7 +28,7 @@ where
 {
     fn for_each_group<F>(self, mut on_group: F)
     where
-        F: FnMut(K, std::vec::Drain<'_, V>),
+        F: FnMut(K, &mut Vec<V>),
     {
         let mut block: Option<(K, Vec<V>)> = None;
 
@@ -40,7 +44,7 @@ where
                 }
                 Some((group_id, ref mut group_buffer)) => {
                     let submitted_group_id = std::mem::replace(group_id, next_group_id);
-                    on_group(submitted_group_id, group_buffer.drain(..));
+                    on_group(submitted_group_id, group_buffer);
                     group_buffer.clear();
                     group_buffer.push(value);
                 }
@@ -48,83 +52,231 @@ where
         }
 
         if let Some((group_id, mut group_buffer)) = block.take() {
-            on_group(group_id, group_buffer.drain(..));
+            on_group(group_id, &mut group_buffer);
         }
     }
 }
 
-#[derive(Debug)]
-pub struct BatchData<K, C> {
-    pub key: K,
-    pub collection: C,
-}
-
-pub trait BatchType {
-    type Key: PartialEq;
-    type Data;
-    fn key(&self) -> &Self::Key;
-    fn extend(&mut self, vals: impl IntoIterator<Item = Self::Data>);
-    fn new(key: Self::Key, vals: impl IntoIterator<Item = Self::Data>) -> Self;
-}
-
-impl<K, C> BatchType for BatchData<K, C>
+#[derive(Derivative, Debug)]
+#[derivative(Default(bound = ""))]
+pub struct TwoLevelBatch<PK, SK, C>
 where
-    K: PartialEq,
+    PK: Eq + std::hash::Hash,
+{
+    map: fnv::FnvHashMap<PK, SmallVec<[(SK, C); 1]>>,
+    data_count: usize,
+}
+
+impl<PK, SK, C> TwoLevelBatch<PK, SK, C>
+where
+    PK: Eq + std::hash::Hash,
+    SK: PartialEq,
     C: IntoIterator,
     C: FromIterator<<C as IntoIterator>::Item>,
     C: Extend<<C as IntoIterator>::Item>,
 {
-    type Key = K;
-    type Data = C::Item;
-    fn key(&self) -> &Self::Key {
-        &self.key
-    }
-    fn extend(&mut self, vals: impl IntoIterator<Item = Self::Data>) {
-        &self.collection.extend(vals);
-    }
-    fn new(key: Self::Key, vals: impl IntoIterator<Item = Self::Data>) -> Self {
-        BatchData {
-            key,
-            collection: vals.into_iter().collect(),
+    pub fn clear_inner(&mut self) {
+        self.data_count = 0;
+        for (_, data) in self.map.iter_mut() {
+            data.clear();
         }
+    }
+
+    pub fn prune(&mut self) {
+        self.map.retain(|_, b| b.len() > 0);
+    }
+
+    pub fn insert(&mut self, pk: PK, sk: SK, data: impl IntoIterator<Item = C::Item>) {
+        let instance_data = data.into_iter().tap_count(&mut self.data_count);
+
+        match self.map.entry(pk) {
+            Entry::Occupied(mut e) => {
+                let e = e.get_mut();
+                // scan for the same key to try to combine batches.
+                // Scanning limited slots to limit complexity.
+                if let Some(batch) = e.iter_mut().take(8).find(|(k, _)| k == &sk) {
+                    batch.1.extend(instance_data);
+                } else {
+                    e.push((sk, instance_data.collect()));
+                }
+            }
+            Entry::Vacant(e) => {
+                e.insert(smallvec![(sk, instance_data.collect())]);
+            }
+        }
+    }
+
+    pub fn data<'a>(&'a self) -> impl Iterator<Item = &'a C> {
+        self.map
+            .iter()
+            .flat_map(|(_, batch)| batch.iter().map(|data| &data.1))
+    }
+
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a PK, impl Iterator<Item = &'a (SK, C)>)> {
+        self.map.iter().map(|(pk, batch)| (pk, batch.iter()))
+    }
+
+    pub fn count(&self) -> usize {
+        self.data_count
     }
 }
 
-pub trait BatchPrimitives {
-    type Shell;
-    type Batch: BatchType;
+#[derive(Derivative, Debug)]
+#[derivative(Default(bound = ""))]
+pub struct OrderedTwoLevelBatch<PK, SK, C> {
+    list: Vec<(PK, SK, C)>,
+    data_count: usize,
+}
 
-    fn wrap_batch(batch: Self::Batch) -> Self::Shell;
-    fn push(shell: &mut Self::Shell, batch: Self::Batch);
-    fn batches_mut(shell: &mut Self::Shell) -> &mut [Self::Batch];
+impl<PK, SK, C> OrderedTwoLevelBatch<PK, SK, C>
+where
+    PK: Eq + Copy,
+    SK: PartialEq,
+    C: IntoIterator,
+    C: FromIterator<<C as IntoIterator>::Item>,
+    C: Extend<<C as IntoIterator>::Item>,
+{
+    pub fn clear(&mut self) {
+        self.list.clear();
+        self.data_count = 0;
+    }
 
-    fn insert_batch<
-        K: std::hash::Hash + PartialEq,
-        I: IntoIterator<Item = <Self::Batch as BatchType>::Data>,
-    >(
-        entry: Entry<'_, K, Self::Shell>,
-        batch_key: <Self::Batch as BatchType>::Key,
-        instance_data: I,
-    ) {
-        match entry {
+    pub fn insert(&mut self, pk: PK, sk: SK, data: impl IntoIterator<Item = C::Item>) {
+        let instance_data = data.into_iter().tap_count(&mut self.data_count);
+
+        match self.list.last_mut() {
+            Some((last_pk, last_sk, c)) if last_pk == &pk && last_sk == &sk => {
+                c.extend(instance_data);
+            }
+            _ => self.list.push((pk, sk, instance_data.collect())),
+        }
+    }
+
+    pub fn data<'a>(&'a self) -> impl Iterator<Item = &'a C> {
+        self.list.iter().map(|(_, _, data)| data)
+    }
+
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (PK, impl Iterator<Item = (&'a SK, &'a C)>)> {
+        (0..).scan(0, move |start_idx, _| {
+            self.list.get(*start_idx).map(|(pk, _, _)| {
+                let size = self.list[*start_idx..]
+                    .iter()
+                    .take_while(|e| &e.0 == pk)
+                    .count();
+                let range = *start_idx..*start_idx + size;
+                *start_idx += size;
+                (*pk, self.list[range].iter().map(|(_, sk, c)| (sk, c)))
+            })
+        })
+    }
+
+    pub fn count(&self) -> usize {
+        self.data_count
+    }
+}
+
+#[derive(Derivative, Debug)]
+#[derivative(Default(bound = ""))]
+pub struct OneLevelBatch<PK, D>
+where
+    PK: Eq + std::hash::Hash,
+{
+    map: fnv::FnvHashMap<PK, Vec<D>>,
+    data_count: usize,
+}
+
+impl<PK, D> OneLevelBatch<PK, D>
+where
+    PK: Eq + std::hash::Hash,
+{
+    pub fn clear_inner(&mut self) {
+        self.data_count = 0;
+        for (_, data) in self.map.iter_mut() {
+            data.clear();
+        }
+    }
+
+    pub fn prune(&mut self) {
+        self.map.retain(|_, b| b.len() > 0);
+    }
+
+    pub fn insert(&mut self, pk: PK, data: impl IntoIterator<Item = D>) {
+        let instance_data = data.into_iter().tap_count(&mut self.data_count);
+
+        match self.map.entry(pk) {
             Entry::Occupied(mut e) => {
-                let shell = e.get_mut();
-
-                // scan for the same key to try to combine batches.
-                // Scanning up to next 8 slots to limit complexity.
-                if let Some(batch) = Self::batches_mut(shell)
-                    .iter_mut()
-                    .take(8)
-                    .find(|b| b.key() == &batch_key)
-                {
-                    batch.extend(instance_data);
-                    return;
-                }
-                Self::push(shell, Self::Batch::new(batch_key, instance_data));
+                e.get_mut().extend(instance_data);
             }
             Entry::Vacant(e) => {
-                e.insert(Self::wrap_batch(Self::Batch::new(batch_key, instance_data)));
+                e.insert(instance_data.collect());
             }
         }
+    }
+
+    pub fn data<'a>(&'a self) -> impl Iterator<Item = &'a Vec<D>> {
+        self.map.values()
+    }
+
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a PK, &'a Vec<D>)> {
+        self.map.iter()
+    }
+
+    pub fn count(&self) -> usize {
+        self.data_count
+    }
+}
+
+#[derive(Derivative, Debug)]
+#[derivative(Default(bound = ""))]
+pub struct OrderedOneLevelBatch<PK, D>
+where
+    PK: Eq + std::hash::Hash,
+{
+    old_keys: Vec<(PK, Range<usize>)>,
+    keys_list: Vec<(PK, Range<usize>)>,
+    data_list: Vec<D>,
+}
+
+impl<PK, D> OrderedOneLevelBatch<PK, D>
+where
+    PK: Eq + std::hash::Hash,
+{
+    pub fn swap_clear(&mut self) {
+        std::mem::swap(&mut self.old_keys, &mut self.keys_list);
+        self.keys_list.clear();
+        self.data_list.clear();
+    }
+
+    pub fn insert(&mut self, pk: PK, data: impl IntoIterator<Item = D>) {
+        let start = self.data_list.len();
+        self.data_list.extend(data);
+
+        match self.keys_list.last_mut() {
+            Some((last_pk, last_range)) if last_pk == &pk => {
+                last_range.end = self.data_list.len();
+            }
+            _ => {
+                self.keys_list.push((pk, start..self.data_list.len()));
+            }
+        }
+    }
+
+    pub fn data(&self) -> &Vec<D> {
+        &self.data_list
+    }
+
+    /// Iterator that returns primary keys and lengths of submitted batch
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a PK, usize)> {
+        self.keys_list
+            .iter()
+            .map(move |(k, range)| (k, range.end - range.start))
+    }
+
+    pub fn changed(&self) -> bool {
+        self.keys_list != self.old_keys
+    }
+
+    pub fn count(&self) -> usize {
+        self.data_list.len()
     }
 }
