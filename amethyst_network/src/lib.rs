@@ -6,7 +6,6 @@ pub use crate::{
     bundle::NetworkBundle,
     connection::{ConnectionState, NetConnection, NetIdentity},
     error::Result,
-    filter::{FilterConnected, NetFilter},
     net_event::{NetEvent, NetPacket},
     network_socket::NetSocketSystem,
     server::{Host, ServerConfig},
@@ -23,7 +22,6 @@ use serde::{de::DeserializeOwned, Serialize};
 mod bundle;
 mod connection;
 mod error;
-mod filter;
 mod net_event;
 mod network_socket;
 mod server;

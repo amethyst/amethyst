@@ -4,37 +4,18 @@
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use std::net::SocketAddr;
 
 /// Network events which you can send or and receive from an endpoint.
+// TODO, Connect, connection refused, disconnect, disconnected
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum NetEvent<T> {
-    /// Ask to connect to the server.
-    Connect {
-        /// The client uuid.
-        client_uuid: Uuid,
-    },
-    /// Reply to the client that the connection has been accepted.
-    Connected {
-        /// The server uuid.
-        server_uuid: Uuid,
-    },
-    /// Reply to the client that the connection has been refused.
-    ConnectionRefused {
-        /// The reason of the refusal.
-        reason: String,
-    },
-    /// Tell the server that the client is disconnecting.
-    Disconnect {
-        /// The reason of the disconnection.
-        reason: String,
-    },
-    /// Notify the clients(including the one being disconnected) that a client has been disconnected from the server.
-    Disconnected {
-        /// The reason of the disconnection.
-        reason: String,
-    },
+    Connected(SocketAddr),
+    Disconnected(SocketAddr),
     /// Send a packet to all connected clients
     Packet(NetPacket<T>),
+    #[doc(hidden)]
+    __Nonexhaustive,
 }
 
 /// Enum to specify how a packet should be arranged.
@@ -251,5 +232,74 @@ impl<T> NetPacket<T> {
 impl<T> From<NetPacket<T>> for NetEvent<T> {
     fn from(packet: NetPacket<T>) -> Self {
         NetEvent::Packet(packet)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::net_event::{DeliveryGuarantee, NetPacket, OrderingGuarantee};
+    use std::net::SocketAddr;
+
+    #[test]
+    fn assure_creation_unreliable_packet() {
+        let packet = NetPacket::unreliable(test_payload());
+
+        assert_eq!(packet.content(), &test_payload());
+        assert_eq!(packet.is_ordered(), false);
+        assert_eq!(packet.is_sequenced(), false);
+        assert_eq!(packet.is_reliable(), false);
+        assert_eq!(packet.is_unreliable(), true);
+    }
+
+    #[test]
+    fn assure_creation_unreliable_sequenced() {
+        let packet = NetPacket::unreliable_sequenced(test_payload(), Some(1));
+
+        assert_eq!(packet.content(), &test_payload());
+        assert_eq!(packet.is_ordered(), false);
+        assert_eq!(packet.is_sequenced(), true);
+        assert_eq!(packet.is_reliable(), false);
+        assert_eq!(packet.is_unreliable(), true);
+    }
+
+    #[test]
+    fn assure_creation_reliable() {
+        let packet = NetPacket::reliable_unordered(test_payload());
+
+        assert_eq!(packet.content(), &test_payload());
+        assert_eq!(packet.is_ordered(), false);
+        assert_eq!(packet.is_sequenced(), false);
+        assert_eq!(packet.is_reliable(), true);
+        assert_eq!(packet.is_unreliable(), false);
+    }
+
+    #[test]
+    fn assure_creation_reliable_ordered() {
+        let packet = NetPacket::reliable_ordered(test_payload(), Some(1));
+
+        assert_eq!(packet.content(), &test_payload());
+        assert_eq!(packet.is_ordered(), true);
+        assert_eq!(packet.is_sequenced(), false);
+        assert_eq!(packet.is_reliable(), true);
+        assert_eq!(packet.is_unreliable(), false);
+    }
+
+    #[test]
+    fn assure_creation_reliable_sequence() {
+        let packet = NetPacket::reliable_sequenced(test_payload(), Some(1));
+
+        assert_eq!(packet.content(), &test_payload());
+        assert_eq!(packet.is_ordered(), false);
+        assert_eq!(packet.is_sequenced(), true);
+        assert_eq!(packet.is_reliable(), true);
+        assert_eq!(packet.is_unreliable(), false);
+    }
+
+    fn test_payload() -> Vec<u8> {
+        return "test".as_bytes().to_vec();
+    }
+
+    fn test_addr() -> SocketAddr {
+        "127.0.0.1:12345".parse().unwrap()
     }
 }

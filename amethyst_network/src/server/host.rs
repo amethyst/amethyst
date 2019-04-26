@@ -8,6 +8,8 @@ use crate::{error::Result, server::ServerConfig};
 use crossbeam_channel::{Receiver, Sender};
 use laminar::{Packet, Socket, SocketEvent};
 use std::thread;
+use laminar::Config;
+use std::time::Duration;
 
 /// 'Host' abstracts Laminar udp sockets away.
 pub struct Host {

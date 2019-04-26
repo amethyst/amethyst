@@ -17,8 +17,8 @@ mod test {
         let (mut world_cl, mut cl_dispatch, mut world_sv, mut sv_dispatch) =
             build(client_addr, server_addr);
 
-        let mut conn_to_server = NetConnection::<String>::new(server_addr);
-        let mut conn_to_client = NetConnection::<String>::new(client_addr);
+//        let mut conn_to_server = NetConnection::<String>::new(server_addr);
+//        let mut conn_to_client = NetConnection::<String>::new(client_addr);
 
         let packet = NetEvent::from(NetPacket::reliable_unordered(
             "Test Message From Client1".to_string(),
@@ -107,7 +107,7 @@ mod test {
 
         let mut cl_dispatch = DispatcherBuilder::new()
             .with(
-                NetSocketSystem::<String>::new(client_config, Vec::new()).unwrap(),
+                NetSocketSystem::<String>::new(client_config).unwrap(),
                 "s",
                 &[],
             )
@@ -115,7 +115,7 @@ mod test {
         cl_dispatch.setup(&mut world_cl.res);
         let mut sv_dispatch = DispatcherBuilder::new()
             .with(
-                NetSocketSystem::<String>::new(server_config, Vec::new()).unwrap(),
+                NetSocketSystem::<String>::new(server_config).unwrap(),
                 "s",
                 &[],
             )

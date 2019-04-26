@@ -2,7 +2,7 @@
 
 use std::{clone::Clone, net::SocketAddr, thread};
 
-use amethyst_core::ecs::{Join, Resources, System, SystemData, WriteStorage};
+use amethyst_core::ecs::{Entities, Join, Resources, System, SystemData, WriteStorage};
 
 use crossbeam_channel::{Receiver, Sender};
 use laminar::{Packet, SocketEvent};
@@ -14,7 +14,7 @@ use super::{
     error::Result,
     send_event,
     server::{Host, ServerConfig},
-    ConnectionState, NetConnection, NetEvent, NetFilter,
+    ConnectionState, NetConnection, NetEvent,
 };
 
 enum InternalSocketEvent<E> {
@@ -41,8 +41,6 @@ pub struct NetSocketSystem<E: 'static>
 where
     E: PartialEq,
 {
-    /// The list of filters applied on the events received.
-    pub filters: Vec<Box<dyn NetFilter<E>>>,
     // sender on which you can queue packets to send to some endpoint.
     event_sender: Sender<InternalSocketEvent<E>>,
     // receiver from which you can read received packets.
@@ -55,7 +53,7 @@ where
     E: Serialize + PartialEq + Send + 'static,
 {
     /// Creates a `NetSocketSystem` and binds the Socket on the ip and port added in parameters.
-    pub fn new(config: ServerConfig, filters: Vec<Box<dyn NetFilter<E>>>) -> Result<Self> {
+    pub fn new(config: ServerConfig) -> Result<Self> {
         if config.udp_socket_addr.port() < 1024 {
             // Just warning the user here, just in case they want to use the root port.
             warn!("Using a port below 1024, this will require root permission and should not be done.");
@@ -69,7 +67,6 @@ where
         let event_sender = NetSocketSystem::<E>::start_sending(udp_send_handle);
 
         Ok(NetSocketSystem {
-            filters,
             event_sender,
             event_receiver: udp_receive_handle,
             config,
@@ -108,9 +105,9 @@ impl<'a, E> System<'a> for NetSocketSystem<E>
 where
     E: Send + Sync + Serialize + Clone + DeserializeOwned + PartialEq + 'static,
 {
-    type SystemData = (WriteStorage<'a, NetConnection<E>>);
+    type SystemData = (WriteStorage<'a, NetConnection<E>>, Entities<'a>);
 
-    fn run(&mut self, mut net_connections: Self::SystemData) {
+    fn run(&mut self, (mut net_connections, mut entities): Self::SystemData) {
         for connection in (&mut net_connections).join() {
             match connection.state {
                 ConnectionState::Connected | ConnectionState::Connecting => {
@@ -135,13 +132,21 @@ where
                     // Get the event
                     match deserialize_event::<E>(packet.payload()) {
                         Ok(event) => {
+
+                            let mut connection_exists = false;
+
                             // Get the NetConnection from the source
                             for connection in (&mut net_connections).join() {
                                 if connection.target_addr == packet.addr() {
+                                    connection_exists = true;
                                     connection
                                         .receive_buffer
                                         .single_write(NetEvent::Packet(event.clone()));
                                 };
+                            }
+
+                            if !connection_exists {
+                                panic!("No connection exitsts");
                             }
                         }
                         Err(e) => error!(
@@ -151,8 +156,28 @@ where
                         ),
                     };
                 }
-                SocketEvent::Connect(_) => { /* TODO: Update connection status */ }
-                SocketEvent::Timeout(_) => { /* TODO: Update connection status */ }
+                SocketEvent::Connect(addr) => {
+                    let mut connection: NetConnection<E> = NetConnection::new(addr);
+
+                    connection
+                        .receive_buffer
+                        .single_write(NetEvent::Connected(addr));
+
+                    entities
+                        .build_entity()
+                        .with(connection, &mut net_connections)
+                        .build();
+                }
+                SocketEvent::Timeout(timeout_addr) => {
+                    for (e, connection) in (&entities, &mut net_connections).join() {
+                        if connection.target_addr == timeout_addr {
+                            // we can't remove the entity from the world here because it could still have events in it's buffer.
+                            connection
+                                .receive_buffer
+                                .single_write(NetEvent::Disconnected(timeout_addr));
+                        }
+                    }
+                }
             };
 
             // this will prevent our system to be stuck in the iterator.
