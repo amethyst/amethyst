@@ -392,70 +392,38 @@ where
     I::Item: Borrow<B::DescriptorSetLayout>,
 {
     let pipeline_layout = unsafe {
-        factory.device().create_pipeline_layout(
-            layouts,
-            None as Option<(pso::ShaderStageFlags, std::ops::Range<u32>)>,
-        )
+        factory
+            .device()
+            .create_pipeline_layout(layouts, None as Option<(_, _)>)
     }?;
-
-    let rect = pso::Rect {
-        x: 0,
-        y: 0,
-        w: framebuffer_width as i16,
-        h: framebuffer_height as i16,
-    };
 
     let shader_vertex = unsafe { super::SPRITE_VERTEX.module(factory).unwrap() };
     let shader_fragment = unsafe { super::SPRITE_FRAGMENT.module(factory).unwrap() };
-    let (vbos, attrs) = util::vertex_desc(&[(SpriteArgs::VERTEX, 1)]);
-
-    let pipe_desc = PipelineDescBuilder::new()
-        .with_shaders(util::simple_shader_set(
-            &shader_vertex,
-            Some(&shader_fragment),
-        ))
-        .with_vertex_buffers(vbos)
-        .with_attributes(attrs)
-        .with_layout(&pipeline_layout)
-        .with_subpass(subpass)
-        .with_baked_states(pso::BakedStates {
-            viewport: Some(pso::Viewport {
-                rect,
-                depth: 0.0..1.0,
-            }),
-            scissor: Some(rect),
-            blend_color: if transparent {
-                None
-            } else {
-                Some([0.0, 0.0, 0.0, 0.0])
-            },
-            depth_bounds: None,
-        })
-        .with_blender(pso::BlendDesc {
-            logic_op: None,
-            targets: vec![pso::ColorBlendDesc(
-                pso::ColorMask::ALL,
-                if transparent {
-                    pso::BlendState::ALPHA
-                } else {
-                    pso::BlendState::On {
-                        color: pso::BlendOp::REPLACE,
-                        alpha: pso::BlendOp::REPLACE,
-                    }
-                },
-            )],
-        })
-        .with_depth_stencil(pso::DepthStencilDesc {
-            depth: pso::DepthTest::On {
-                fun: pso::Comparison::Less,
-                write: !transparent,
-            },
-            depth_bounds: false,
-            stencil: pso::StencilTest::Off,
-        });
 
     let pipes = PipelinesBuilder::new()
-        .with_pipeline(pipe_desc)
+        .with_pipeline(
+            PipelineDescBuilder::new()
+                .with_vertex_desc(&[(SpriteArgs::VERTEX, 1)])
+                .with_shaders(util::simple_shader_set(
+                    &shader_vertex,
+                    Some(&shader_fragment),
+                ))
+                .with_layout(&pipeline_layout)
+                .with_subpass(subpass)
+                .with_framebuffer_size(framebuffer_width, framebuffer_height)
+                .with_blend_targets(vec![pso::ColorBlendDesc(
+                    pso::ColorMask::ALL,
+                    if transparent {
+                        pso::BlendState::ALPHA
+                    } else {
+                        pso::BlendState::Off
+                    },
+                )])
+                .with_depth_test(pso::DepthTest::On {
+                    fun: pso::Comparison::Less,
+                    write: !transparent,
+                }),
+        )
         .build(factory, None);
 
     unsafe {

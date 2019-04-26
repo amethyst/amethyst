@@ -673,94 +673,52 @@ where
     I::Item: Borrow<B::DescriptorSetLayout>,
 {
     let pipeline_layout = unsafe {
-        factory.device().create_pipeline_layout(
-            layouts,
-            None as Option<(pso::ShaderStageFlags, std::ops::Range<u32>)>,
-        )
+        factory
+            .device()
+            .create_pipeline_layout(layouts, None as Option<(_, _)>)
     }?;
-
-    let rect = pso::Rect {
-        x: 0,
-        y: 0,
-        w: framebuffer_width as i16,
-        h: framebuffer_height as i16,
-    };
 
     let shader_vertex_basic = unsafe { super::BASIC_VERTEX.module(factory).unwrap() };
     let shader_fragment = unsafe { super::PBR_FRAGMENT.module(factory).unwrap() };
-    let (vbos, attrs) = util::vertex_desc(&[(PosNormTangTex::VERTEX, 0), (VertexArgs::VERTEX, 1)]);
 
     let pipe_desc = PipelineDescBuilder::new()
+        .with_vertex_desc(&[(PosNormTangTex::VERTEX, 0), (VertexArgs::VERTEX, 1)])
         .with_shaders(util::simple_shader_set(
             &shader_vertex_basic,
             Some(&shader_fragment),
         ))
-        .with_vertex_buffers(vbos)
-        .with_attributes(attrs)
         .with_layout(&pipeline_layout)
         .with_subpass(subpass)
-        .with_baked_states(pso::BakedStates {
-            viewport: Some(pso::Viewport {
-                rect,
-                depth: 0.0..1.0,
-            }),
-            scissor: Some(rect),
-            blend_color: if transparent {
-                None
+        .with_framebuffer_size(framebuffer_width, framebuffer_height)
+        .with_face_culling(pso::Face::BACK)
+        .with_depth_test(pso::DepthTest::On {
+            fun: pso::Comparison::Less,
+            write: !transparent,
+        })
+        .with_blend_targets(vec![pso::ColorBlendDesc(
+            pso::ColorMask::ALL,
+            if transparent {
+                pso::BlendState::ALPHA
             } else {
-                Some([0.0, 0.0, 0.0, 0.0])
+                pso::BlendState::Off
             },
-            depth_bounds: None,
-        })
-        .with_blender(pso::BlendDesc {
-            logic_op: None,
-            targets: vec![pso::ColorBlendDesc(
-                pso::ColorMask::ALL,
-                if transparent {
-                    pso::BlendState::ALPHA
-                } else {
-                    pso::BlendState::On {
-                        color: pso::BlendOp::REPLACE,
-                        alpha: pso::BlendOp::REPLACE,
-                    }
-                },
-            )],
-        })
-        .with_depth_stencil(pso::DepthStencilDesc {
-            depth: pso::DepthTest::On {
-                fun: pso::Comparison::Less,
-                write: !transparent,
-            },
-            depth_bounds: false,
-            stencil: pso::StencilTest::Off,
-        })
-        .with_rasterizer(pso::Rasterizer {
-            polygon_mode: pso::PolygonMode::Fill,
-            cull_face: pso::Face::BACK,
-            front_face: pso::FrontFace::CounterClockwise,
-            depth_clamping: false,
-            depth_bias: None,
-            conservative: false,
-        });
+        )]);
 
     let pipelines = if skinning {
         let shader_vertex_skinned = unsafe { super::SKINNED_VERTEX.module(factory).unwrap() };
-        let (vbos, attrs) = util::vertex_desc(&[
-            (PosNormTangTexJoint::VERTEX, 0),
-            (SkinnedVertexArgs::VERTEX, 1),
-        ]);
-
         let pipe = PipelinesBuilder::new()
             .with_pipeline(pipe_desc.clone())
             .with_child_pipeline(
                 0,
                 pipe_desc
+                    .with_vertex_desc(&[
+                        (PosNormTangTexJoint::VERTEX, 0),
+                        (SkinnedVertexArgs::VERTEX, 1),
+                    ])
                     .with_shaders(util::simple_shader_set(
                         &shader_vertex_skinned,
                         Some(&shader_fragment),
-                    ))
-                    .with_vertex_buffers(vbos)
-                    .with_attributes(attrs),
+                    )),
             )
             .build(factory, None);
 

@@ -1,3 +1,4 @@
+use crate::util;
 use derivative::Derivative;
 use rendy::{
     factory::Factory,
@@ -5,12 +6,14 @@ use rendy::{
         device::Device,
         pass::Subpass,
         pso::{
-            AttributeDesc, BakedStates, BasePipeline, BlendDesc, DepthStencilDesc,
-            GraphicsPipelineDesc, GraphicsShaderSet, InputAssemblerDesc, Multisampling,
-            PipelineCreationFlags, Rasterizer, VertexBufferDesc,
+            AttributeDesc, BakedStates, BasePipeline, BlendDesc, ColorBlendDesc, DepthStencilDesc,
+            DepthTest, Face, GraphicsPipelineDesc, GraphicsShaderSet, InputAssemblerDesc,
+            InstanceRate, Multisampling, PipelineCreationFlags, Rasterizer, Rect, VertexBufferDesc,
+            Viewport,
         },
         Backend, Primitive,
     },
+    mesh::VertexFormat,
 };
 
 // TODO: make gfx type cloneable
@@ -153,6 +156,58 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
             BasePipeline::None => LocalBasePipeline::None,
         };
     }
+    pub fn with_framebuffer_size(mut self, fb_w: u32, fb_h: u32) -> Self {
+        self.set_framebuffer_size(fb_w, fb_h);
+        self
+    }
+    pub fn set_framebuffer_size(&mut self, fb_w: u32, fb_h: u32) {
+        let rect = Rect {
+            x: 0,
+            y: 0,
+            w: fb_w as i16,
+            h: fb_h as i16,
+        };
+        let old_baked_states = self.baked_states.clone();
+        self.set_baked_states(BakedStates {
+            viewport: Some(Viewport {
+                rect,
+                depth: old_baked_states.viewport.map_or(0.0..1.0, |v| v.depth),
+            }),
+            scissor: Some(rect),
+            ..old_baked_states
+        })
+    }
+    pub fn with_depth_test(mut self, depth_test: DepthTest) -> Self {
+        self.set_depth_test(depth_test);
+        self
+    }
+    pub fn set_depth_test(&mut self, depth_test: DepthTest) {
+        self.depth_stencil.depth = depth_test;
+    }
+    pub fn with_face_culling(mut self, cull_face: Face) -> Self {
+        self.set_face_culling(cull_face);
+        self
+    }
+    pub fn set_face_culling(&mut self, cull_face: Face) {
+        self.rasterizer.cull_face = cull_face;
+    }
+    pub fn with_vertex_desc(mut self, desc: &[(VertexFormat<'static>, InstanceRate)]) -> Self {
+        self.set_vertex_desc(desc);
+        self
+    }
+    pub fn set_vertex_desc(&mut self, desc: &[(VertexFormat<'static>, InstanceRate)]) {
+        let (vbos, attrs) = util::vertex_desc(desc);
+        self.set_vertex_buffers(vbos);
+        self.set_attributes(attrs);
+    }
+    pub fn with_blend_targets(mut self, targets: Vec<ColorBlendDesc>) -> Self {
+        self.set_blend_targets(targets);
+        self
+    }
+    pub fn set_blend_targets(&mut self, targets: Vec<ColorBlendDesc>) {
+        self.blender.targets = targets;
+    }
+    // pub fn set_blend_targets(&mut self, blend_targets: )
     pub fn build(self) -> GraphicsPipelineDesc<'a, B> {
         GraphicsPipelineDesc {
             shaders: self.shaders.expect("Pipeline is missing shaders"),
