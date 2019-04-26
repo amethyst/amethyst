@@ -1,4 +1,5 @@
 mod environment;
+mod ui_environment;
 mod flat_environment;
 mod material;
 mod skinning;
@@ -8,6 +9,7 @@ mod vertex;
 pub mod gather;
 
 pub use environment::*;
+pub use ui_environment::*;
 pub use flat_environment::*;
 pub use material::*;
 pub use skinning::*;

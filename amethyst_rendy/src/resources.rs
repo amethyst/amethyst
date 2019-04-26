@@ -38,3 +38,10 @@ pub struct Tint(pub palette::Srgba);
 impl Component for Tint {
     type Storage = DenseVecStorage<Self>;
 }
+
+impl Into<[f32; 4]> for Tint {
+    fn into(self) -> [f32; 4] {
+        let (r, g, b, a) = self.0.into_components();
+        [r, g, b, a]
+    }
+}

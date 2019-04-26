@@ -31,11 +31,7 @@ use amethyst_rendy::{
     light::{Light, PointLight},
     mtl::{Material, MaterialDefaults},
     palette::{LinSrgba, Srgb},
-<<<<<<< HEAD
-    pass::{DrawFlat2DDesc, DrawPbrDesc, DrawUiDesc},
-=======
-    pass::{DrawFlat2DDesc, DrawPbrDesc, DrawPbrTransparentDesc, DrawFlat2DTransparentDesc},
->>>>>>> rendy
+    pass::{DrawFlat2DDesc, DrawPbrDesc, DrawPbrTransparentDesc, DrawFlat2DTransparentDesc, DrawUiDesc},
     rendy::{
         factory::Factory,
         graph::{
@@ -336,49 +332,11 @@ impl<B: Backend> SimpleState for Example<B> {
             .build();
 
         world.add_resource(ActiveCamera { entity: camera });
-<<<<<<< HEAD
 
         let _ = UiButtonBuilder::<(), u32>::new("hello rendy")
             .with_size(200., 30.)
             .with_position(100., 15.)
             .build_from_world(&world);
-
-        // let (width, height) = {
-        //     let dim = world.read_resource::<ScreenDimensions>();
-        //     (dim.width(), dim.height())
-        // };
-
-        // let mut camera_transform = Transform::default();
-        // camera_transform.set_translation_z(1.0);
-
-        // let sprite_camera = world
-        //     .create_entity()
-        //     .with(camera_transform)
-        //     .with(Camera::from(Projection::orthographic(
-        //         0.0, width, 0.0, height,
-        //     )))
-        //     .build();
-
-        // world.add_resource(SpriteCamera {
-        //     entity: sprite_camera,
-        // });
-
-        // println!("Create sprites");
-        // // Sprites
-        // let sprite_prefab_handle =
-        //     world.exec(|loader: PrefabLoader<'_, SpriteScenePrefabData<B>>| {
-        //         loader.load(
-        //             "prefab/sprite_animation.ron",
-        //             RonFormat,
-        //             (),
-        //             self.progress.as_mut().unwrap(),
-        //         )
-        //     });
-
-        // // Creates new entities with components from MyPrefabData
-        // world.create_entity().with(sprite_prefab_handle).build();
-=======
->>>>>>> rendy
     }
 
     fn handle_event(

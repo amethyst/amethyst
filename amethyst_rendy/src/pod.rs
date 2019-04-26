@@ -273,15 +273,16 @@ impl AsVertex for SpriteArgs {
 #[repr(C, align(4))]
 pub(crate) struct UiViewArgs {
     pub inverse_window_size: vec2,
-    pub coords: vec2,
-    pub dimensions: vec2,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
 #[repr(C, align(4))]
 pub(crate) struct UiArgs {
-    pub pos: vec4,
-    pub tex_uv: vec2,
+    pub pos: vec3,
+    pub tex_coords: vec2,
+    pub coords: vec2,
+    pub dimensions: vec2,
+    pub color: vec4,
 }
 
 impl AsVertex for UiArgs {
@@ -293,10 +294,22 @@ impl AsVertex for UiArgs {
             },
             Attribute {
                 format: Format::Rg32Float,
-                offset: 16,
+                offset: 12,
+            },
+            Attribute {
+                format: Format::Rg32Float,
+                offset: 20,
+            },
+            Attribute {
+                format: Format::Rg32Float,
+                offset: 28,
+            },
+            Attribute {
+                format: Format::Rg32Float,
+                offset: 36,
             },
         ]),
-        stride: 24,
+        stride: 52,
     };
 }
 

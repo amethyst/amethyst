@@ -1,21 +1,17 @@
 #version 450
 
-// TODO(happens): should these be in the same set?
-// decide after implementing drawing
 layout(set = 1, binding = 0) uniform sampler2D tex;
 
-layout(set = 2, binding = 0) uniform ColorArgs{
-    uniform vec4 color;
-};
+layout(location = 0) in vec2 in_tex_coords;
+layout(location = 1) in vec4 in_color;
 
-layout(location = 0) in vec2 tex_uv;
 layout(location = 0) out vec4 out_color;
 
 void main() {
-    vec4 color_result = texture(tex, tex_uv) * color;
-    if (color_result.a == 0.0) {
+    vec4 color = texture(tex, in_tex_coords) * in_color;
+    if (color.a == 0.0) {
         discard;
     }
 
-    out_color = color_result;
+    out_color = color;
 }
