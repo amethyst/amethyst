@@ -288,3 +288,7 @@ path = "examples/simple_image/main.rs"
 [[example]]
 name = "auto_fov"
 path = "examples/auto_fov/main.rs"
+
+[[example]]
+name = "events"
+path = "examples/events/main.rs"
