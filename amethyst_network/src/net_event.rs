@@ -4,13 +4,16 @@
 
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
-use uuid::Uuid;
 
 /// Network events which you can send or and receive from an endpoint.
 // TODO, Connect, connection refused, disconnect, disconnected
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum NetEvent<T> {
+    /// Will be fired when a client connected.
+    /// When this event occurs the `NetConnection` with this address was already automatically added to the world.
     Connected(SocketAddr),
+    /// Will be fired when a client was disconnected.
+    /// If this happens consider removing the `NetConnection` with this address from the world.
     Disconnected(SocketAddr),
     /// Send a packet to all connected clients
     Packet(NetPacket<T>),

@@ -32,14 +32,7 @@ fn main() -> Result<()> {
 /// Default empty state
 pub struct State1;
 impl SimpleState for State1 {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        //        data.world
-        //            .create_entity()
-        //            .with(NetConnection::<String>::new(
-        //                "127.0.0.1:3457".parse().unwrap(),
-        //            ))
-        //            .build();
-    }
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {}
 }
 
 /// A simple system that receives a ton of network events.

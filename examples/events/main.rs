@@ -1,11 +1,11 @@
 extern crate amethyst;
 
-use amethyst::core::{
-    bundle::SystemBundle,
-    frame_limiter::FrameRateLimitStrategy,
-    shrev::{EventChannel, ReaderId},
-};
 use amethyst::{
+    core::{
+        bundle::SystemBundle,
+        frame_limiter::FrameRateLimitStrategy,
+        shrev::{EventChannel, ReaderId},
+    },
     ecs::{DispatcherBuilder, Read, Resources, System, SystemData, World, Write},
     prelude::*,
 };

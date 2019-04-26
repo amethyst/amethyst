@@ -107,7 +107,7 @@ where
 {
     type SystemData = (WriteStorage<'a, NetConnection<E>>, Entities<'a>);
 
-    fn run(&mut self, (mut net_connections, mut entities): Self::SystemData) {
+    fn run(&mut self, (mut net_connections, entities): Self::SystemData) {
         for connection in (&mut net_connections).join() {
             match connection.state {
                 ConnectionState::Connected | ConnectionState::Connecting => {
@@ -132,20 +132,13 @@ where
                     // Get the event
                     match deserialize_event::<E>(packet.payload()) {
                         Ok(event) => {
-                            let mut connection_exists = false;
-
                             // Get the NetConnection from the source
                             for connection in (&mut net_connections).join() {
                                 if connection.target_addr == packet.addr() {
-                                    connection_exists = true;
                                     connection
                                         .receive_buffer
                                         .single_write(NetEvent::Packet(event.clone()));
                                 };
-                            }
-
-                            if !connection_exists {
-                                panic!("No connection exitsts");
                             }
                         }
                         Err(e) => error!(
@@ -168,7 +161,7 @@ where
                         .build();
                 }
                 SocketEvent::Timeout(timeout_addr) => {
-                    for (e, connection) in (&entities, &mut net_connections).join() {
+                    for connection in (&mut net_connections).join() {
                         if connection.target_addr == timeout_addr {
                             // we can't remove the entity from the world here because it could still have events in it's buffer.
                             connection
