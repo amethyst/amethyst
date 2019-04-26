@@ -197,17 +197,13 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         _resources: &Resources,
     ) {
+        let layout = &self.pipeline_layout;
         encoder.bind_graphics_pipeline(&self.pipeline);
-        self.env.bind(index, &self.pipeline_layout, 0, &mut encoder);
+        self.env.bind(index, layout, 0, &mut encoder);
         self.vertex.bind(index, 0, &mut encoder);
-        let mut offset = 0;
-        for (tex_id, data) in self.sprites.iter() {
-            self.textures
-                .bind(&self.pipeline_layout, 1, *tex_id, &mut encoder);
-
-            let num_instances = data.len() as u32;
-            encoder.draw(0..6, offset..offset + num_instances);
-            offset += num_instances;
+        for (&tex, range) in self.sprites.iter() {
+            self.textures.bind(layout, 1, tex, &mut encoder);
+            encoder.draw(0..6, range);
         }
     }
 
@@ -357,15 +353,13 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         _resources: &Resources,
     ) {
+        let layout = &self.pipeline_layout;
         encoder.bind_graphics_pipeline(&self.pipeline);
-        self.env.bind(index, &self.pipeline_layout, 0, &mut encoder);
+        self.env.bind(index, layout, 0, &mut encoder);
         self.vertex.bind(index, 0, &mut encoder);
-        let mut offset = 0;
-        for (tex_id, num_instances) in self.sprites.iter() {
-            self.textures
-                .bind(&self.pipeline_layout, 1, *tex_id, &mut encoder);
-            encoder.draw(0..6, offset..offset + num_instances as u32);
-            offset += num_instances as u32;
+        for (&tex, range) in self.sprites.iter() {
+            self.textures.bind(layout, 1, tex, &mut encoder);
+            encoder.draw(0..6, range);
         }
     }
 

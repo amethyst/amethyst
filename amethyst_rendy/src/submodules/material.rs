@@ -285,13 +285,21 @@ impl<B: Backend> MaterialSub<B> {
     }
 
     #[inline]
+    pub fn loaded(&self, material_id: MaterialId) -> bool {
+        match &self.materials[material_id.0 as usize] {
+            MaterialState::Loaded { .. } => true,
+            _ => false,
+        }
+    }
+
+    #[inline]
     pub fn bind(
         &self,
         pipeline_layout: &B::PipelineLayout,
         set_id: u32,
         material_id: MaterialId,
         encoder: &mut RenderPassEncoder<'_, B>,
-    ) -> bool {
+    ) {
         match &self.materials[material_id.0 as usize] {
             MaterialState::Loaded { set, .. } => {
                 encoder.bind_graphics_descriptor_sets(
@@ -300,9 +308,8 @@ impl<B: Backend> MaterialSub<B> {
                     Some(set.raw()),
                     std::iter::empty(),
                 );
-                true
             }
-            _ => false,
-        }
+            _ => panic!("Trying to bind unloaded material"),
+        };
     }
 }
