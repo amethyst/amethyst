@@ -19,13 +19,15 @@ use rendy::{
     factory::Factory,
     graph::{
         render::{PrepareResult, RenderGroup, RenderGroupDesc},
-        BufferAccess, GraphContext, ImageAccess, NodeBuffer, NodeImage,
+        GraphContext, NodeBuffer, NodeImage,
     },
     hal::{self, device::Device, pso, Backend},
     mesh::AsVertex,
     shader::Shader,
 };
-use std::borrow::Borrow;
+
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
 
 /// Draw opaque sprites without lighting.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -39,19 +41,6 @@ impl DrawFlat2DDesc {
 }
 
 impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DDesc {
-    fn buffers(&self) -> Vec<BufferAccess> {
-        vec![]
-    }
-    fn images(&self) -> Vec<ImageAccess> {
-        vec![]
-    }
-    fn depth(&self) -> bool {
-        true
-    }
-    fn colors(&self) -> usize {
-        1
-    }
-
     fn build(
         self,
         _ctx: &GraphContext<B>,
@@ -64,6 +53,9 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DDesc {
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, Resources>>, failure::Error> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("build");
+
         let env = FlatEnvironmentSub::new(factory)?;
         let textures = TextureSub::new(factory)?;
         let vertex = DynamicVertex::new();
@@ -107,6 +99,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         resources: &Resources,
     ) -> PrepareResult {
+        #[cfg(feature = "profiler")]
+        profile_scope!("prepare");
+
         let (
             sprite_sheet_storage,
             tex_storage,
@@ -135,6 +130,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
 
         match visibilities {
             None => {
+                #[cfg(feature = "profiler")]
+                profile_scope!("gather_novisibility");
+
                 (
                     &sprite_renders,
                     &global_transforms,
@@ -157,6 +155,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
                     });
             }
             Some(ref visibility) => {
+                #[cfg(feature = "profiler")]
+                profile_scope!("gather_visibility");
+
                 (
                     &sprite_renders,
                     &global_transforms,
@@ -179,13 +180,18 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
             }
         }
 
-        sprites_ref.prune();
-        self.vertex.write(
-            factory,
-            index,
-            self.sprites.count() as u64,
-            self.sprites.data(),
-        );
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("write");
+
+            sprites_ref.prune();
+            self.vertex.write(
+                factory,
+                index,
+                self.sprites.count() as u64,
+                self.sprites.data(),
+            );
+        }
 
         PrepareResult::DrawRecord
     }
@@ -197,17 +203,16 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         _resources: &Resources,
     ) {
-        encoder.bind_graphics_pipeline(&self.pipeline);
-        self.env.bind(index, &self.pipeline_layout, 0, &mut encoder);
-        self.vertex.bind(index, 0, &mut encoder);
-        let mut offset = 0;
-        for (tex_id, data) in self.sprites.iter() {
-            self.textures
-                .bind(&self.pipeline_layout, 1, *tex_id, &mut encoder);
+        #[cfg(feature = "profiler")]
+        profile_scope!("draw");
 
-            let num_instances = data.len() as u32;
-            encoder.draw(0..6, offset..offset + num_instances);
-            offset += num_instances;
+        let layout = &self.pipeline_layout;
+        encoder.bind_graphics_pipeline(&self.pipeline);
+        self.env.bind(index, layout, 0, &mut encoder);
+        self.vertex.bind(index, 0, &mut encoder);
+        for (&tex, range) in self.sprites.iter() {
+            self.textures.bind(layout, 1, tex, &mut encoder);
+            encoder.draw(0..6, range);
         }
     }
 
@@ -232,19 +237,6 @@ impl DrawFlat2DTransparentDesc {
 }
 
 impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DTransparentDesc {
-    fn buffers(&self) -> Vec<BufferAccess> {
-        vec![]
-    }
-    fn images(&self) -> Vec<ImageAccess> {
-        vec![]
-    }
-    fn depth(&self) -> bool {
-        true
-    }
-    fn colors(&self) -> usize {
-        1
-    }
-
     fn build(
         self,
         _ctx: &GraphContext<B>,
@@ -257,6 +249,9 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DTransparentDesc {
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, Resources>>, failure::Error> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("build_trans");
+
         let env = FlatEnvironmentSub::new(factory)?;
         let textures = TextureSub::new(factory)?;
         let vertex = DynamicVertex::new();
@@ -302,6 +297,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         resources: &Resources,
     ) -> PrepareResult {
+        #[cfg(feature = "profiler")]
+        profile_scope!("prepare_trans");
+
         let (sprite_sheet_storage, tex_storage, visibility, sprite_renders, global_transforms) =
             <(
                 Read<'_, AssetStorage<SpriteSheet<B>>>,
@@ -319,33 +317,44 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
         let sprites_ref = &mut self.sprites;
         let textures_ref = &mut self.textures;
 
-        let mut joined = (&sprite_renders, &global_transforms).join();
-        visibility
-            .visible_ordered
-            .iter()
-            .filter_map(|e| joined.get_unchecked(e.id()))
-            .filter_map(|(sprite_render, global)| {
-                let (batch_data, texture) = SpriteArgs::from_data(
-                    &tex_storage,
-                    &sprite_sheet_storage,
-                    &sprite_render,
-                    &global,
-                )?;
-                let (tex_id, this_changed) = textures_ref.insert(factory, resources, texture)?;
-                changed = changed || this_changed;
-                Some((tex_id, batch_data))
-            })
-            .for_each_group(|tex_id, batch_data| {
-                sprites_ref.insert(tex_id, batch_data.drain(..));
-            });
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("gather_sprites_trans");
 
+            let mut joined = (&sprite_renders, &global_transforms).join();
+            visibility
+                .visible_ordered
+                .iter()
+                .filter_map(|e| joined.get_unchecked(e.id()))
+                .filter_map(|(sprite_render, global)| {
+                    let (batch_data, texture) = SpriteArgs::from_data(
+                        &tex_storage,
+                        &sprite_sheet_storage,
+                        &sprite_render,
+                        &global,
+                    )?;
+                    let (tex_id, this_changed) =
+                        textures_ref.insert(factory, resources, texture)?;
+                    changed = changed || this_changed;
+                    Some((tex_id, batch_data))
+                })
+                .for_each_group(|tex_id, batch_data| {
+                    sprites_ref.insert(tex_id, batch_data.drain(..));
+                });
+        }
         changed = changed || self.sprites.changed();
-        self.vertex.write(
-            factory,
-            index,
-            self.sprites.count() as u64,
-            Some(self.sprites.data()),
-        );
+
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("write");
+
+            self.vertex.write(
+                factory,
+                index,
+                self.sprites.count() as u64,
+                Some(self.sprites.data()),
+            );
+        }
 
         self.change.prepare_result(index, changed)
     }
@@ -357,15 +366,16 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         _resources: &Resources,
     ) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("draw_trans");
+
+        let layout = &self.pipeline_layout;
         encoder.bind_graphics_pipeline(&self.pipeline);
-        self.env.bind(index, &self.pipeline_layout, 0, &mut encoder);
+        self.env.bind(index, layout, 0, &mut encoder);
         self.vertex.bind(index, 0, &mut encoder);
-        let mut offset = 0;
-        for (tex_id, num_instances) in self.sprites.iter() {
-            self.textures
-                .bind(&self.pipeline_layout, 1, *tex_id, &mut encoder);
-            encoder.draw(0..6, offset..offset + num_instances as u32);
-            offset += num_instances as u32;
+        for (&tex, range) in self.sprites.iter() {
+            self.textures.bind(layout, 1, tex, &mut encoder);
+            encoder.draw(0..6, range);
         }
     }
 
@@ -379,18 +389,14 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
     }
 }
 
-fn build_sprite_pipeline<B: Backend, I>(
+fn build_sprite_pipeline<B: Backend>(
     factory: &Factory<B>,
     subpass: hal::pass::Subpass<'_, B>,
     framebuffer_width: u32,
     framebuffer_height: u32,
     transparent: bool,
-    layouts: I,
-) -> Result<(B::GraphicsPipeline, B::PipelineLayout), failure::Error>
-where
-    I: IntoIterator,
-    I::Item: Borrow<B::DescriptorSetLayout>,
-{
+    layouts: Vec<&B::DescriptorSetLayout>,
+) -> Result<(B::GraphicsPipeline, B::PipelineLayout), failure::Error> {
     let pipeline_layout = unsafe {
         factory
             .device()

@@ -17,6 +17,9 @@ use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::ecs::{Read, Resources, SystemData};
 use glsl_layout::*;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 #[derive(Debug)]
 struct SlotAllocator {
     vaccants: Vec<u64>,
@@ -192,6 +195,9 @@ impl<B: Backend> MaterialSub<B> {
         res: &Resources,
         handle: &Handle<Material<B>>,
     ) -> Option<MaterialState<B>> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("try_insert");
+
         use util::{desc_write, slice_as_bytes, texture_desc};
         let (mat_storage, tex_storage) = <(
             Read<'_, AssetStorage<Material<B>>>,
@@ -246,6 +252,9 @@ impl<B: Backend> MaterialSub<B> {
         res: &Resources,
         handle: &Handle<Material<B>>,
     ) -> Option<(MaterialId, bool)> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("insert");
+
         let id = self.lookup.forward(handle.id());
         match self.materials.get_mut(id) {
             Some(MaterialState::Loaded { generation, .. }) => {
@@ -285,13 +294,21 @@ impl<B: Backend> MaterialSub<B> {
     }
 
     #[inline]
+    pub fn loaded(&self, material_id: MaterialId) -> bool {
+        match &self.materials[material_id.0 as usize] {
+            MaterialState::Loaded { .. } => true,
+            _ => false,
+        }
+    }
+
+    #[inline]
     pub fn bind(
         &self,
         pipeline_layout: &B::PipelineLayout,
         set_id: u32,
         material_id: MaterialId,
         encoder: &mut RenderPassEncoder<'_, B>,
-    ) -> bool {
+    ) {
         match &self.materials[material_id.0 as usize] {
             MaterialState::Loaded { set, .. } => {
                 encoder.bind_graphics_descriptor_sets(
@@ -300,9 +317,8 @@ impl<B: Backend> MaterialSub<B> {
                     Some(set.raw()),
                     std::iter::empty(),
                 );
-                true
             }
-            _ => false,
-        }
+            _ => panic!("Trying to bind unloaded material"),
+        };
     }
 }

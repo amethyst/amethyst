@@ -7,6 +7,9 @@ use std::{
     ops::Range,
 };
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 pub trait GroupIterator<K, V>
 where
     Self: Iterator<Item = (K, V)> + Sized,
@@ -30,6 +33,9 @@ where
     where
         F: FnMut(K, &mut Vec<V>),
     {
+        #[cfg(feature = "profiler")]
+        profile_scope!("for_each_group");
+
         let mut block: Option<(K, Vec<V>)> = None;
 
         for (next_group_id, value) in self {
@@ -87,6 +93,9 @@ where
     }
 
     pub fn insert(&mut self, pk: PK, sk: SK, data: impl IntoIterator<Item = C::Item>) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("twolevel_insert");
+
         let instance_data = data.into_iter().tap_count(&mut self.data_count);
 
         match self.map.entry(pk) {
@@ -123,55 +132,76 @@ where
 
 #[derive(Derivative, Debug)]
 #[derivative(Default(bound = ""))]
-pub struct OrderedTwoLevelBatch<PK, SK, C> {
-    list: Vec<(PK, SK, C)>,
-    data_count: usize,
+pub struct OrderedTwoLevelBatch<PK, SK, D>
+where
+    PK: PartialEq,
+    SK: PartialEq,
+{
+    old_pk_list: Vec<(PK, u32)>,
+    old_sk_list: Vec<(SK, Range<u32>)>,
+    pk_list: Vec<(PK, u32)>,
+    sk_list: Vec<(SK, Range<u32>)>,
+    data_list: Vec<D>,
 }
 
-impl<PK, SK, C> OrderedTwoLevelBatch<PK, SK, C>
+impl<PK, SK, D> OrderedTwoLevelBatch<PK, SK, D>
 where
-    PK: Eq + Copy,
+    PK: PartialEq,
     SK: PartialEq,
-    C: IntoIterator,
-    C: FromIterator<<C as IntoIterator>::Item>,
-    C: Extend<<C as IntoIterator>::Item>,
 {
-    pub fn clear(&mut self) {
-        self.list.clear();
-        self.data_count = 0;
+    pub fn swap_clear(&mut self) {
+        std::mem::swap(&mut self.old_pk_list, &mut self.pk_list);
+        std::mem::swap(&mut self.old_sk_list, &mut self.sk_list);
+        self.pk_list.clear();
+        self.sk_list.clear();
+        self.data_list.clear();
     }
 
-    pub fn insert(&mut self, pk: PK, sk: SK, data: impl IntoIterator<Item = C::Item>) {
-        let instance_data = data.into_iter().tap_count(&mut self.data_count);
+    pub fn insert(&mut self, pk: PK, sk: SK, data: impl IntoIterator<Item = D>) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("ordered_twolevel_insert");
 
-        match self.list.last_mut() {
-            Some((last_pk, last_sk, c)) if last_pk == &pk && last_sk == &sk => {
-                c.extend(instance_data);
+        let start = self.data_list.len() as u32;
+        self.data_list.extend(data);
+        let end = self.data_list.len() as u32;
+
+        match (self.pk_list.last_mut(), self.sk_list.last_mut()) {
+            (Some((last_pk, _)), Some((last_sk, last_sk_range)))
+                if last_pk == &pk && last_sk == &sk =>
+            {
+                last_sk_range.end = end;
             }
-            _ => self.list.push((pk, sk, instance_data.collect())),
+            (Some((last_pk, last_pk_len)), _) if last_pk == &pk => {
+                *last_pk_len += 1;
+                self.sk_list.push((sk, start..end));
+            }
+            _ => {
+                self.pk_list.push((pk, 1));
+                self.sk_list.push((sk, start..end));
+            }
         }
     }
 
-    pub fn data<'a>(&'a self) -> impl Iterator<Item = &'a C> {
-        self.list.iter().map(|(_, _, data)| data)
+    pub fn data(&self) -> &Vec<D> {
+        &self.data_list
     }
 
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (PK, impl Iterator<Item = (&'a SK, &'a C)>)> {
-        (0..).scan(0, move |start_idx, _| {
-            self.list.get(*start_idx).map(|(pk, _, _)| {
-                let size = self.list[*start_idx..]
-                    .iter()
-                    .take_while(|e| &e.0 == pk)
-                    .count();
-                let range = *start_idx..*start_idx + size;
-                *start_idx += size;
-                (*pk, self.list[range].iter().map(|(_, sk, c)| (sk, c)))
-            })
+    /// Iterator that returns primary keys and all inner submitted batches
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a PK, &[(SK, Range<u32>)])> {
+        let mut pk_offset = 0;
+        self.pk_list.iter().map(move |(pk, pk_len)| {
+            let range = pk_offset..pk_offset + *pk_len as usize;
+            pk_offset += *pk_len as usize;
+            (pk, &self.sk_list[range])
         })
     }
 
+    pub fn changed(&self) -> bool {
+        self.pk_list != self.old_pk_list || self.sk_list != self.old_sk_list
+    }
+
     pub fn count(&self) -> usize {
-        self.data_count
+        self.data_list.len()
     }
 }
 
@@ -201,14 +231,22 @@ where
     }
 
     pub fn insert(&mut self, pk: PK, data: impl IntoIterator<Item = D>) {
-        let instance_data = data.into_iter().tap_count(&mut self.data_count);
+        #[cfg(feature = "profiler")]
+        profile_scope!("onelevel_insert");
+
+        let instance_data = data.into_iter();
 
         match self.map.entry(pk) {
             Entry::Occupied(mut e) => {
-                e.get_mut().extend(instance_data);
+                let vec = e.get_mut();
+                let old_len = vec.len();
+                vec.extend(instance_data);
+                self.data_count += vec.len() - old_len;
             }
             Entry::Vacant(e) => {
-                e.insert(instance_data.collect());
+                let collected = instance_data.collect::<Vec<_>>();
+                self.data_count += collected.len();
+                e.insert(collected);
             }
         }
     }
@@ -217,8 +255,13 @@ where
         self.map.values()
     }
 
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a PK, &'a Vec<D>)> {
-        self.map.iter()
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a PK, Range<u32>)> {
+        let mut offset = 0;
+        self.map.iter().map(move |(pk, data)| {
+            let range = offset..offset + data.len() as u32;
+            offset = range.end;
+            (pk, range)
+        })
     }
 
     pub fn count(&self) -> usize {
@@ -230,16 +273,16 @@ where
 #[derivative(Default(bound = ""))]
 pub struct OrderedOneLevelBatch<PK, D>
 where
-    PK: Eq + std::hash::Hash,
+    PK: PartialEq,
 {
-    old_keys: Vec<(PK, Range<usize>)>,
-    keys_list: Vec<(PK, Range<usize>)>,
+    old_keys: Vec<(PK, u32)>,
+    keys_list: Vec<(PK, u32)>,
     data_list: Vec<D>,
 }
 
 impl<PK, D> OrderedOneLevelBatch<PK, D>
 where
-    PK: Eq + std::hash::Hash,
+    PK: PartialEq,
 {
     pub fn swap_clear(&mut self) {
         std::mem::swap(&mut self.old_keys, &mut self.keys_list);
@@ -248,15 +291,19 @@ where
     }
 
     pub fn insert(&mut self, pk: PK, data: impl IntoIterator<Item = D>) {
-        let start = self.data_list.len();
+        #[cfg(feature = "profiler")]
+        profile_scope!("ordered_onelevel_insert");
+
+        let start = self.data_list.len() as u32;
         self.data_list.extend(data);
+        let added_len = self.data_list.len() as u32 - start;
 
         match self.keys_list.last_mut() {
-            Some((last_pk, last_range)) if last_pk == &pk => {
-                last_range.end = self.data_list.len();
+            Some((last_pk, last_len)) if last_pk == &pk => {
+                *last_len += added_len;
             }
             _ => {
-                self.keys_list.push((pk, start..self.data_list.len()));
+                self.keys_list.push((pk, added_len));
             }
         }
     }
@@ -266,10 +313,13 @@ where
     }
 
     /// Iterator that returns primary keys and lengths of submitted batch
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a PK, usize)> {
-        self.keys_list
-            .iter()
-            .map(move |(k, range)| (k, range.end - range.start))
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a PK, Range<u32>)> {
+        let mut offset = 0;
+        self.keys_list.iter().map(move |(pk, size)| {
+            let range = offset..offset + *size;
+            offset = range.end;
+            (pk, range)
+        })
     }
 
     pub fn changed(&self) -> bool {

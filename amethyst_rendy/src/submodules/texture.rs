@@ -11,6 +11,9 @@ use crate::{
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::ecs::{Read, Resources, SystemData};
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 #[derive(Debug)]
 enum TextureState<B: Backend> {
     Unloaded {
@@ -57,6 +60,9 @@ impl<B: Backend> TextureSub<B> {
         res: &Resources,
         handle: &Handle<Texture<B>>,
     ) -> Option<TextureState<B>> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("try_insert");
+
         use util::{desc_write, texture_desc};
         let tex_storage = <(Read<'_, AssetStorage<Texture<B>>>)>::fetch(res);
 
@@ -78,6 +84,9 @@ impl<B: Backend> TextureSub<B> {
         res: &Resources,
         handle: &Handle<Texture<B>>,
     ) -> Option<(TextureId, bool)> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("insert");
+
         let id = self.lookup.forward(handle.id());
         match self.textures.get_mut(id) {
             Some(TextureState::Loaded { .. }) => {

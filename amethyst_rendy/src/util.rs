@@ -1,6 +1,3 @@
-#[cfg(feature = "profiler")]
-use thread_profiler::profile_scope;
-
 use crate::types::Texture;
 use core::{
     hash::Hash,
@@ -18,6 +15,9 @@ use rendy::{
     mesh::VertexFormat,
     resource::{BufferInfo, Escape},
 };
+
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
 
 #[inline]
 pub fn next_range<T: Add<Output = T> + Clone>(prev: &Range<T>, length: T) -> Range<T> {
@@ -41,6 +41,9 @@ pub fn ensure_buffer<B: Backend>(
     memory_usage: impl MemoryUsage,
     min_size: u64,
 ) -> Result<bool, failure::Error> {
+    #[cfg(feature = "profiler")]
+    profile_scope!("ensure_buffer");
+
     if buffer.as_ref().map(|b| b.size()).unwrap_or(0) < min_size {
         let new_size = min_size.next_power_of_two();
         let new_buffer = factory.create_buffer(
