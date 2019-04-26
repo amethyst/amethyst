@@ -75,12 +75,14 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Fixed update is no longer frame rate dependent ([#1516])
 * Display the syntax error when failing to parse sprite sheets  ([#1526])
 * Added generic parameter type to `Transform` to configure floating point precision. ([#1334])
-
+* `NetConnection` is automatically created when client starts sends data to server. ([#1539])
+* User will receive `NetEvent::Connected` on new connection and `NetEvent::Dissconnected` on disconnect. ([#1539])
 
 ### Removed
+- Removed all `NetEvent's` because they were not used. ([#1539])
+- Removed filter logic, because it didn't do anything, will be added back in a later version (NetFilter, FilterConnected). ([#1539])
 
 ### Fixed
-
 * Optimize loading of wavefront obj mesh assets by getting rid of unnecessary allocations. ([#1454])
 * Fixed the "json" feature for amethyst_assets. ([#1302])
 * Fixed default system font loading to accept uppercase extension ("TTF"). ([#1328])
@@ -141,7 +143,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1524]: https://github.com/amethyst/amethyst/pull/1524
 [#1526]: https://github.com/amethyst/amethyst/pull/1526
 [#1538]: https://github.com/amethyst/amethyst/pull/1538
-
+[#1539]: https://github.com/amethyst/amethyst/pull/1543
 ## [0.10.0] - 2018-12
 
 ### Added
