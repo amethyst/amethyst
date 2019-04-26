@@ -21,7 +21,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for MyBundle {
         builder.add(SpammingSystem, "spamming_system", &[]);
         builder.add(
             ReceivingSystem {
-                reader: std::prelude::v1::Option::None,
+                reader: Option::None,
             },
             "receiving_system",
             &[],
