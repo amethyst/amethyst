@@ -3,8 +3,8 @@
 //! NetOwnedEvent are passed through the ECS, and contains the event's source (remote connection, usually).
 
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 use std::net::SocketAddr;
+use uuid::Uuid;
 
 /// Network events which you can send or and receive from an endpoint.
 // TODO, Connect, connection refused, disconnect, disconnected

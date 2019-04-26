@@ -132,7 +132,6 @@ where
                     // Get the event
                     match deserialize_event::<E>(packet.payload()) {
                         Ok(event) => {
-
                             let mut connection_exists = false;
 
                             // Get the NetConnection from the source

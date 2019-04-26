@@ -1,6 +1,6 @@
 use amethyst::{
     core::frame_limiter::FrameRateLimitStrategy,
-    ecs::{Join, System, WriteStorage, Entities},
+    ecs::{Entities, Join, System, WriteStorage},
     network::*,
     prelude::*,
     shrev::ReaderId,
@@ -33,12 +33,12 @@ fn main() -> Result<()> {
 pub struct State1;
 impl SimpleState for State1 {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-//        data.world
-//            .create_entity()
-//            .with(NetConnection::<String>::new(
-//                "127.0.0.1:3457".parse().unwrap(),
-//            ))
-//            .build();
+        //        data.world
+        //            .create_entity()
+        //            .with(NetConnection::<String>::new(
+        //                "127.0.0.1:3457".parse().unwrap(),
+        //            ))
+        //            .build();
     }
 }
 
@@ -66,10 +66,13 @@ impl<'a> System<'a> for SpamReceiveSystem {
 
             let mut client_disconnected = false;
 
-            for ev in connection.receive_buffer.read(self.reader.as_mut().unwrap()) {
+            for ev in connection
+                .receive_buffer
+                .read(self.reader.as_mut().unwrap())
+            {
                 count += 1;
                 match ev {
-                    NetEvent::Packet(packet) => { /* info!("{}", packet.content()) */ },
+                    NetEvent::Packet(packet) => { /* info!("{}", packet.content()) */ }
                     NetEvent::Connected(addr) => println!("New Client Connection: {}", addr),
                     NetEvent::Disconnected(addr) => {
                         client_disconnected = true;
@@ -85,6 +88,9 @@ impl<'a> System<'a> for SpamReceiveSystem {
 
             connection_count += 1;
         }
-        println!("Received {} messages this frame connections: {}", count, connection_count);
+        println!(
+            "Received {} messages this frame connections: {}",
+            count, connection_count
+        );
     }
 }
