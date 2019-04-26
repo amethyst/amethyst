@@ -25,7 +25,6 @@ use rendy::{
     mesh::AsVertex,
     shader::Shader,
 };
-use std::borrow::Borrow;
 
 /// Draw opaque sprites without lighting.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -39,19 +38,6 @@ impl DrawFlat2DDesc {
 }
 
 impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DDesc {
-    fn buffers(&self) -> Vec<BufferAccess> {
-        vec![]
-    }
-    fn images(&self) -> Vec<ImageAccess> {
-        vec![]
-    }
-    fn depth(&self) -> bool {
-        true
-    }
-    fn colors(&self) -> usize {
-        1
-    }
-
     fn build(
         self,
         _ctx: &GraphContext<B>,
@@ -228,19 +214,6 @@ impl DrawFlat2DTransparentDesc {
 }
 
 impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DTransparentDesc {
-    fn buffers(&self) -> Vec<BufferAccess> {
-        vec![]
-    }
-    fn images(&self) -> Vec<ImageAccess> {
-        vec![]
-    }
-    fn depth(&self) -> bool {
-        true
-    }
-    fn colors(&self) -> usize {
-        1
-    }
-
     fn build(
         self,
         _ctx: &GraphContext<B>,
@@ -373,18 +346,14 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
     }
 }
 
-fn build_sprite_pipeline<B: Backend, I>(
+fn build_sprite_pipeline<B: Backend>(
     factory: &Factory<B>,
     subpass: hal::pass::Subpass<'_, B>,
     framebuffer_width: u32,
     framebuffer_height: u32,
     transparent: bool,
-    layouts: I,
-) -> Result<(B::GraphicsPipeline, B::PipelineLayout), failure::Error>
-where
-    I: IntoIterator,
-    I::Item: Borrow<B::DescriptorSetLayout>,
-{
+    layouts: Vec<&B::DescriptorSetLayout>,
+) -> Result<(B::GraphicsPipeline, B::PipelineLayout), failure::Error> {
     let pipeline_layout = unsafe {
         factory
             .device()

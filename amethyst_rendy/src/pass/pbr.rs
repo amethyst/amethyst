@@ -17,13 +17,12 @@ use amethyst_core::{
     ecs::{Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
     transform::GlobalTransform,
 };
-use core::borrow::Borrow;
 use rendy::{
     command::{QueueId, RenderPassEncoder},
     factory::Factory,
     graph::{
         render::{PrepareResult, RenderGroup, RenderGroupDesc},
-        BufferAccess, GraphContext, ImageAccess, NodeBuffer, NodeImage,
+        GraphContext, NodeBuffer, NodeImage,
     },
     hal::{self, device::Device, pso, Backend},
     mesh::{AsVertex, PosNormTangTex},
@@ -38,11 +37,6 @@ pub struct DrawPbrDesc {
 }
 
 impl DrawPbrDesc {
-    /// Create instance of `DrawPbr` pass
-    pub fn new() -> Self {
-        Default::default()
-    }
-
     /// Enable vertex skinning
     pub fn with_vertex_skinning(mut self) -> Self {
         self.skinning = true;
@@ -51,19 +45,6 @@ impl DrawPbrDesc {
 }
 
 impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbrDesc {
-    fn buffers(&self) -> Vec<BufferAccess> {
-        vec![]
-    }
-    fn images(&self) -> Vec<ImageAccess> {
-        vec![]
-    }
-    fn depth(&self) -> bool {
-        true
-    }
-    fn colors(&self) -> usize {
-        1
-    }
-
     fn build(
         self,
         _ctx: &GraphContext<B>,
@@ -371,11 +352,6 @@ pub struct DrawPbrTransparentDesc {
 }
 
 impl DrawPbrTransparentDesc {
-    /// Create instance of `DrawPbr` pass
-    pub fn new() -> Self {
-        Default::default()
-    }
-
     /// Enable vertex skinning
     pub fn with_vertex_skinning(mut self) -> Self {
         self.skinning = true;
@@ -384,19 +360,6 @@ impl DrawPbrTransparentDesc {
 }
 
 impl<B: Backend> RenderGroupDesc<B, Resources> for DrawPbrTransparentDesc {
-    fn buffers(&self) -> Vec<BufferAccess> {
-        vec![]
-    }
-    fn images(&self) -> Vec<ImageAccess> {
-        vec![]
-    }
-    fn depth(&self) -> bool {
-        true
-    }
-    fn colors(&self) -> usize {
-        1
-    }
-
     fn build(
         self,
         _ctx: &GraphContext<B>,
@@ -634,19 +597,15 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawPbrTransparent<B> {
     }
 }
 
-fn build_pbr_pipelines<B: Backend, I>(
+fn build_pbr_pipelines<B: Backend>(
     factory: &Factory<B>,
     subpass: hal::pass::Subpass<'_, B>,
     framebuffer_width: u32,
     framebuffer_height: u32,
     skinning: bool,
     transparent: bool,
-    layouts: I,
-) -> Result<(Vec<B::GraphicsPipeline>, B::PipelineLayout), failure::Error>
-where
-    I: IntoIterator,
-    I::Item: Borrow<B::DescriptorSetLayout>,
-{
+    layouts: Vec<&B::DescriptorSetLayout>,
+) -> Result<(Vec<B::GraphicsPipeline>, B::PipelineLayout), failure::Error> {
     let pipeline_layout = unsafe {
         factory
             .device()

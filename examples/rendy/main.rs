@@ -30,7 +30,7 @@ use amethyst_rendy::{
     light::{Light, PointLight},
     mtl::{Material, MaterialDefaults},
     palette::{LinSrgba, Srgb},
-    pass::{DrawFlat2DDesc, DrawPbrDesc, DrawPbrTransparentDesc, DrawFlat2DTransparentDesc},
+    pass::{DrawFlat2DDesc, DrawFlat2DTransparentDesc, DrawPbrDesc, DrawPbrTransparentDesc},
     rendy::{
         factory::Factory,
         graph::{
@@ -53,7 +53,7 @@ use amethyst_rendy::{
     system::{GraphCreator, RendererSystem},
     transparent::Transparent,
     types::{DefaultBackend, Mesh, Texture},
-    visibility::VisibilitySortingSystem,
+    visibility::{BoundingSphere, VisibilitySortingSystem},
 };
 use std::{marker::PhantomData, path::Path, sync::Arc};
 
@@ -187,6 +187,7 @@ impl<B: Backend> SimpleState for Example<B> {
         println!("Create spheres");
         const NUM_ROWS: usize = 15;
         const NUM_COLS: usize = 15;
+        const NUM_PLANES: usize = 2;
 
         let mut mtls = Vec::with_capacity(100);
 
@@ -223,39 +224,44 @@ impl<B: Backend> SimpleState for Example<B> {
             }
         }
 
-        for i in 0..NUM_COLS {
-            for j in 0..NUM_ROWS {
-                let x = i as f32 / (NUM_COLS - 1) as f32;
-                let y = j as f32 / (NUM_ROWS - 1) as f32;
+        for k in 0..NUM_PLANES {
+            for i in 0..NUM_COLS {
+                for j in 0..NUM_ROWS {
+                    let x = i as f32 / (NUM_COLS - 1) as f32;
+                    let y = j as f32 / (NUM_ROWS - 1) as f32;
+                    let z = k as f32 / (NUM_PLANES - 1) as f32;
 
-                let center = Vector3::new(15.0 * (x - 0.5), 15.0 * (y - 0.5), -5.0);
+                    let center =
+                        Vector3::new(15.0 * (x - 0.5), 15.0 * (y - 0.5), 2.0 * (z - 0.5) - 5.0);
 
-                let mut pos = Transform::default();
-                pos.set_translation(center);
-                pos.set_scale(0.2, 0.2, 0.2);
+                    let mut pos = Transform::default();
+                    pos.set_translation(center);
+                    pos.set_scale(0.2, 0.2, 0.2);
 
-                let mut builder = world
-                    .create_entity()
-                    .with(pos)
-                    .with(mesh.clone())
-                    .with(mtls[(j + i) % mtls.len()].clone())
-                    .with(Transparent)
-                    .with(Orbit {
-                        axis: Unit::new_normalize(Vector3::y()),
-                        time_scale: 5.0 + y + 0.1 * x,
-                        center,
-                        radius: 0.2,
-                    });
+                    let mut builder = world
+                        .create_entity()
+                        .with(pos)
+                        .with(mesh.clone())
+                        .with(mtls[(j + i) % mtls.len()].clone())
+                        .with(Transparent)
+                        .with(BoundingSphere::origin(1.0))
+                        .with(Orbit {
+                            axis: Unit::new_normalize(Vector3::y()),
+                            time_scale: 5.0 + y + 0.1 * x + 0.07 * z,
+                            center,
+                            radius: 0.2,
+                        });
 
-                // add some visible tint pattern
-                if i > 10 && j > 10 && i < NUM_COLS - 10 && j < NUM_ROWS - 10 {
-                    let xor_x = i - 10;
-                    let xor_y = j - 10;
-                    let c = ((xor_x ^ xor_y) & 0xFF) as f32 / 255.0;
-                    builder = builder.with(Tint(Srgb::new(c, c, c).into()));
+                    // add some visible tint pattern
+                    if i > 10 && j > 10 && i < NUM_COLS - 10 && j < NUM_ROWS - 10 {
+                        let xor_x = i - 10;
+                        let xor_y = j - 10;
+                        let c = ((xor_x ^ xor_y) & 0xFF) as f32 / 255.0;
+                        builder = builder.with(Tint(Srgb::new(c, c, c).into()));
+                    }
+
+                    builder.build();
                 }
-
-                builder.build();
             }
         }
 

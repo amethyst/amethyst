@@ -7,7 +7,7 @@ use amethyst_assets::{
     AssetStorage, Handle, Loader, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter,
 };
 use amethyst_core::{
-    ecs::prelude::{Component, DenseVecStorage, Entity, Read, ReadExpect, Write, WriteStorage},
+    ecs::prelude::{Entity, Read, ReadExpect, Write, WriteStorage},
     math::{Point3, Vector3},
     transform::Transform,
     Named,
@@ -17,6 +17,7 @@ use amethyst_rendy::{
     formats::{mtl::MaterialPrefab, texture::ImageFormat},
     rendy::{hal::Backend, mesh::MeshBuilder},
     types::Mesh,
+    visibility::BoundingSphere,
 };
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
@@ -147,6 +148,15 @@ impl GltfNodeExtent {
     }
 }
 
+impl From<GltfNodeExtent> for BoundingSphere {
+    fn from(extent: GltfNodeExtent) -> Self {
+        BoundingSphere {
+            center: extent.centroid(),
+            radius: extent.distance().magnitude() * 0.5,
+        }
+    }
+}
+
 impl From<Range<[f32; 3]>> for GltfNodeExtent {
     fn from(range: Range<[f32; 3]>) -> Self {
         GltfNodeExtent {
@@ -154,10 +164,6 @@ impl From<Range<[f32; 3]>> for GltfNodeExtent {
             end: Point3::from(range.end),
         }
     }
-}
-
-impl Component for GltfNodeExtent {
-    type Storage = DenseVecStorage<Self>;
 }
 
 /// Used during gltf loading to contain the materials used from scenes in the file
@@ -191,7 +197,7 @@ impl<'a, B: Backend> PrefabData<'a> for GltfPrefab<B> {
         <MaterialPrefab<B, ImageFormat> as PrefabData<'a>>::SystemData,
         <AnimatablePrefab<usize, Transform> as PrefabData<'a>>::SystemData,
         <SkinnablePrefab as PrefabData<'a>>::SystemData,
-        WriteStorage<'a, GltfNodeExtent>,
+        WriteStorage<'a, BoundingSphere>,
         WriteStorage<'a, Handle<Mesh<B>>>,
         Read<'a, AssetStorage<Mesh<B>>>,
         ReadExpect<'a, Loader>,
@@ -206,7 +212,7 @@ impl<'a, B: Backend> PrefabData<'a> for GltfPrefab<B> {
         entities: &[Entity],
         children: &[Entity],
     ) -> Result<(), Error> {
-        let (transforms, names, materials, animatables, skinnables, extents, meshes, _, _, _) =
+        let (transforms, names, materials, animatables, skinnables, bound, meshes, _, _, _) =
             system_data;
         if let Some(transform) = &self.transform {
             transform.add_to_entity(entity, transforms, entities, children)?;
@@ -227,7 +233,7 @@ impl<'a, B: Backend> PrefabData<'a> for GltfPrefab<B> {
             skinnable.add_to_entity(entity, skinnables, entities, children)?;
         }
         if let Some(extent) = &self.extent {
-            extents.insert(entity, extent.clone())?;
+            bound.insert(entity, extent.clone().into())?;
         }
         Ok(())
     }
