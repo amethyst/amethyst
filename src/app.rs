@@ -376,7 +376,10 @@ where
 }
 
 #[cfg(feature = "profiler")]
-impl<'a, T, E, R> Drop for CoreApplication<'a, T, E, R> {
+impl<'a, T, E, R> Drop for CoreApplication<'a, T, E, R>
+where
+    T: DataDispose,
+{
     fn drop(&mut self) {
         // TODO: Specify filename in config.
         use crate::utils::application_root_dir;

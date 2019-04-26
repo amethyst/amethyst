@@ -26,6 +26,9 @@ use rendy::{
 };
 use std::sync::Arc;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 pub trait GraphCreator<B: Backend> {
     /// Check if graph needs to be rebuilt.
     /// This function is evaluated every frame before running the graph.
@@ -150,6 +153,9 @@ where
     }
 
     fn rebuild_graph(&mut self, res: &Resources) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("rebuild_graph");
+
         let mut factory = res.fetch_mut::<Factory<B>>();
 
         if let Some(graph) = self.graph.take() {

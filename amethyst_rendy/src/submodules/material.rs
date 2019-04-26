@@ -17,6 +17,9 @@ use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::ecs::{Read, Resources, SystemData};
 use glsl_layout::*;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 #[derive(Debug)]
 struct SlotAllocator {
     vaccants: Vec<u64>,
@@ -192,6 +195,9 @@ impl<B: Backend> MaterialSub<B> {
         res: &Resources,
         handle: &Handle<Material<B>>,
     ) -> Option<MaterialState<B>> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("try_insert");
+
         use util::{desc_write, slice_as_bytes, texture_desc};
         let (mat_storage, tex_storage) = <(
             Read<'_, AssetStorage<Material<B>>>,
@@ -246,6 +252,9 @@ impl<B: Backend> MaterialSub<B> {
         res: &Resources,
         handle: &Handle<Material<B>>,
     ) -> Option<(MaterialId, bool)> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("insert");
+
         let id = self.lookup.forward(handle.id());
         match self.materials.get_mut(id) {
             Some(MaterialState::Loaded { generation, .. }) => {

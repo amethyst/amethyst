@@ -7,13 +7,6 @@ description = "High-level rendering engine with multiple backends"
 keywords = ["game", "engine", "renderer", "3d", "amethyst"]
 categories = ["rendering", "rendering::engine"]
 
-[features]
-dx12 = ["rendy/dx12"]
-metal = ["rendy/metal"]
-vulkan = ["rendy/vulkan"]
-nightly = ["shred/nightly"]
-profiler = []
-
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.6" }
 amethyst_core = { path = "../amethyst_core", version = "0.5" }
@@ -32,8 +25,17 @@ rendy = { path = "../../rendy/rendy/", features = ["full", "empty", "serde-1"] }
 ron = "0.4"
 serde = { version = "1", features = ["serde_derive"] }
 shred = { version = "0.7"  }
-shred-derive = { version = "0.5" }  
+shred-derive = { version = "0.5" }
 fnv = "1"
 derivative = "1.0.2"
 smallvec = "0.6.9"
 num-traits = "0.2.6"
+
+thread_profiler = { version = "0.3", optional = true }
+
+[features]
+dx12 = ["rendy/dx12"]
+metal = ["rendy/metal"]
+vulkan = ["rendy/vulkan"]
+profiler = [ "thread_profiler/thread_profiler" ]
+nightly = [ "amethyst_core/nightly", "shred/nightly" ]

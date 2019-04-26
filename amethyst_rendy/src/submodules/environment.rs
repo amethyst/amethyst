@@ -17,6 +17,9 @@ use amethyst_core::{
 };
 use glsl_layout::*;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 const MAX_POINT_LIGHTS: usize = 128;
 const MAX_DIR_LIGHTS: usize = 16;
 const MAX_SPOT_LIGHTS: usize = 128;
@@ -46,6 +49,9 @@ impl<B: Backend> EnvironmentSub<B> {
     }
 
     pub fn process(&mut self, factory: &Factory<B>, index: usize, res: &Resources) -> bool {
+        #[cfg(feature = "profiler")]
+        profile_scope!("process");
+
         let this_image = {
             while self.per_image.len() <= index {
                 self.per_image

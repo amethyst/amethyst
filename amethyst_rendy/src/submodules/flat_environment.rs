@@ -14,6 +14,9 @@ use crate::{
 };
 use amethyst_core::ecs::Resources;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 #[derive(Debug)]
 pub struct FlatEnvironmentSub<B: Backend> {
     layout: RendyHandle<DescriptorSetLayout<B>>,
@@ -39,6 +42,9 @@ impl<B: Backend> FlatEnvironmentSub<B> {
     }
 
     pub fn process(&mut self, factory: &Factory<B>, index: usize, res: &Resources) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("process");
+
         let this_image = {
             while self.per_image.len() <= index {
                 self.per_image

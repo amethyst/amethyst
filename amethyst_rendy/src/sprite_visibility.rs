@@ -11,6 +11,9 @@ use amethyst_core::{
 use hibitset::BitSet;
 use std::cmp::Ordering;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 /// Resource for controlling what entities should be rendered, and whether to draw them ordered or
 /// not, which is useful for transparent surfaces.
 #[derive(Default)]
@@ -67,6 +70,9 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
         &mut self,
         (entities, mut visibility, hidden, hidden_prop, active, camera, transparent, global): Self::SystemData,
     ) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("run");
+
         let origin = Point3::origin();
 
         // The camera position is used to determine culling, but the sprites are ordered based on
