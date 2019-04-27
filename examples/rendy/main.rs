@@ -30,7 +30,7 @@ use amethyst_rendy::{
     light::{Light, PointLight},
     mtl::{Material, MaterialDefaults},
     palette::{LinSrgba, Srgb},
-    pass::{DrawFlat2DDesc, DrawFlat2DTransparentDesc, DrawPbrDesc, DrawPbrTransparentDesc},
+    pass::{DrawFlat2DDesc, DrawFlat2DTransparentDesc, DrawSkyboxDesc, DrawPbrDesc, DrawPbrTransparentDesc},
     rendy::{
         factory::Factory,
         graph::{
@@ -633,6 +633,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
             SubpassBuilder::new()
                 .with_group(DrawPbrDesc::default().with_vertex_skinning().builder())
                 .with_group(DrawFlat2DDesc::default().builder())
+                .with_group(DrawSkyboxDesc::with_colors(Srgb::new(0.82, 0.51, 0.50), Srgb::new(0.18, 0.11, 0.85)).builder())
                 .with_color(color)
                 .with_depth_stencil(depth)
                 .into_pass(),

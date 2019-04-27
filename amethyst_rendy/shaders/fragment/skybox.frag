@@ -1,5 +1,7 @@
 #version 450
 
+layout(early_fragment_tests) in;
+
 layout(location = 0) in VertexData {
     vec3 position;
     vec2 tex_coord;
@@ -7,7 +9,7 @@ layout(location = 0) in VertexData {
 
 layout(location = 0) out vec4 out_color;
 
-layout(std140, set = 0, binding = 0) uniform _ {
+layout(std140, set = 1, binding = 0) uniform _ {
     vec3 zenith_color;
     vec3 nadir_color;
 };

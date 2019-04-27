@@ -3,6 +3,7 @@ mod flat_environment;
 mod material;
 mod skinning;
 mod texture;
+mod uniform;
 mod vertex;
 
 pub mod gather;
@@ -12,4 +13,5 @@ pub use flat_environment::*;
 pub use material::*;
 pub use skinning::*;
 pub use texture::*;
+pub use uniform::*;
 pub use vertex::*;
