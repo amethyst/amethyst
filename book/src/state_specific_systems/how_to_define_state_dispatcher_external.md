@@ -170,7 +170,7 @@ impl<'a, 'b> SimpleState for CustomDispatcherState<'a, 'b> {
             let mut dispatcher = self.dispatcher_builder
                 .take()
                 .expect("Expected `dispatcher_builder` to exist when `dispatcher` is not yet built.")
-                .build();
+                .build(); // We build the dispatcher itself
             dispatcher.setup(&mut data.world.res);
             self.dispatcher = Some(dispatcher);
         }
