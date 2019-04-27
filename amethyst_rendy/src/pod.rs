@@ -278,8 +278,6 @@ pub(crate) struct UiViewArgs {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
 #[repr(C, align(4))]
 pub(crate) struct UiArgs {
-    pub pos: vec3,
-    pub tex_coords: vec2,
     pub coords: vec2,
     pub dimensions: vec2,
     pub color: vec4,
@@ -294,22 +292,14 @@ impl AsVertex for UiArgs {
             },
             Attribute {
                 format: Format::Rg32Float,
-                offset: 12,
+                offset: 8,
             },
             Attribute {
                 format: Format::Rg32Float,
-                offset: 20,
-            },
-            Attribute {
-                format: Format::Rg32Float,
-                offset: 28,
-            },
-            Attribute {
-                format: Format::Rg32Float,
-                offset: 36,
+                offset: 16,
             },
         ]),
-        stride: 52,
+        stride: 32,
     };
 }
 

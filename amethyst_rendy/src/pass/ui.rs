@@ -1,21 +1,20 @@
-use std::{collections::HashMap, cmp::Ordering};
+use std::cmp::Ordering;
 use derivative::Derivative;
 use crate::{
-    batch::{GroupIterator, OneLevelBatch, OrderedOneLevelBatch},
+    batch::OrderedOneLevelBatch,
     hidden::{Hidden, HiddenPropagate},
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
-    pod::{UiArgs, UiViewArgs},
+    pod::{UiArgs},
     submodules::{DynamicVertex, UiEnvironmentSub, TextureId, TextureSub},
     types::Texture, resources::Tint,
     util,
 };
-use amethyst_assets::{AssetStorage, Handle, Loader};
+use amethyst_assets::Handle;
 use amethyst_core::ecs::prelude::{
-    Join, Read, ReadExpect, ReadStorage, Resources, SystemData,
+    Join, ReadStorage, Resources, SystemData,
     WriteStorage, Entities, Entity,
 };
 use hibitset::BitSet;
-use amethyst_window::ScreenDimensions;
 use rendy::{
     command::{QueueId, RenderPassEncoder},
     factory::Factory,
@@ -43,22 +42,6 @@ impl DrawUiDesc {
 }
 
 impl<B: Backend> RenderGroupDesc<B, Resources> for DrawUiDesc {
-    fn buffers(&self) -> Vec<BufferAccess> {
-        vec![]
-    }
-
-    fn images(&self) -> Vec<ImageAccess> {
-        vec![]
-    }
-
-    fn depth(&self) -> bool {
-        true
-    }
-
-    fn colors(&self) -> usize {
-        1
-    }
-
     fn build<'a>(
         self,
         _ctx: &GraphContext<B>,
@@ -71,7 +54,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawUiDesc {
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, Resources>>, failure::Error> {
-        let env = UiEnvironmentSub::new(factory)?;
+        let mut env = UiEnvironmentSub::new(factory)?;
         let textures = TextureSub::new(factory)?;
         let vertex = DynamicVertex::new();
 
@@ -84,11 +67,10 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawUiDesc {
             vec![env.raw_layout(), textures.raw_layout()],
         )?;
 
-        // TODO(happens): Set uniform
-        let invert_window_size = [
-            1. / framebuffer_width as f32,
-            1. / framebuffer_height as f32,
-        ];
+        // NOTE(happens): The only thing the uniform depends on is the
+        // framebuffer size. Build is called whenever this changes, so
+        // we only need to call this once at this point.
+        env.setup(factory, (framebuffer_width, framebuffer_height));
 
         Ok(Box::new(DrawUi::<B> {
             pipeline,
@@ -140,9 +122,6 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
     ) -> PrepareResult {
         let (
             entities,
-            loader,
-            screen_dimensions,
-            // font_assets_storage,
             textures,
             transforms,
             mut texts,
@@ -153,9 +132,6 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             tints,
         ) = <(
             Entities<'_>,
-            ReadExpect<'_, Loader>,
-            ReadExpect<'_, ScreenDimensions>,
-            // Read<'_, AssetStorage<FontAsset>>,
             ReadStorage<'_, Handle<Texture<B>>>,
             ReadStorage<'_, UiTransform>,
             WriteStorage<'_, UiText>,
@@ -166,8 +142,8 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             ReadStorage<'_, Tint>,
         ) as SystemData>::fetch(resources);
 
-        self.env.process(factory, index, resources);
         self.textures.maintain();
+        self.images.swap_clear();
         let mut changed = false;
 
         let images_ref = &mut self.images;
@@ -249,10 +225,6 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
 
             if let Some(texture) = textures.get(entity) {
                 let args = UiArgs {
-                    // TODO(happens): Remove these 2 since they always stay
-                    // the same
-                    pos: [0., 0., 0.].into(),
-                    tex_coords: [0., 1.].into(),
                     coords: [transform.pixel_x(), transform.pixel_y()].into(),
                     dimensions: [transform.pixel_width(), transform.pixel_height()].into(),
                     color: tint.into(),
@@ -266,10 +238,12 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             }
 
             // TODO(happens): Text drawing
-            if let Some(text) = texts.get_mut(entity) {}
+            // if let Some(text) = texts.get_mut(entity) {}
         }
 
-        PrepareResult::DrawRecord
+        changed = changed || self.images.changed();
+        self.vertex.write(factory, index, self.images.count() as u64, Some(self.images.data()));
+        self.change.prepare_result(index, changed)
     }
 
     fn draw_inline(
@@ -279,11 +253,14 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         _resources: &Resources,
     ) {
+        let layout = &self.pipeline_layout;
         encoder.bind_graphics_pipeline(&self.pipeline);
         self.env.bind(index, &self.pipeline_layout, 0, &mut encoder);
         self.vertex.bind(index, 0, &mut encoder);
-
-        // TODO(happens): Draw instances
+        for (&tex, range) in self.images.iter() {
+            self.textures.bind(layout, 1, tex, &mut encoder);
+            encoder.draw(0..6, range);
+        }
     }
 
     fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &Resources) {
@@ -330,11 +307,7 @@ where
                 .with_framebuffer_size(framebuffer_width, framebuffer_height)
                 .with_blend_targets(vec![pso::ColorBlendDesc(
                     pso::ColorMask::ALL,
-                    if transparent {
-                        pso::BlendState::ALPHA
-                    } else {
-                        pso::BlendState::Off
-                    },
+                    pso::BlendState::ALPHA,
                 )]),
         )
         .build(factory, None);

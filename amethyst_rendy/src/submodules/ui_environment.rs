@@ -11,57 +11,20 @@ use crate::{
     },
     util,
 };
-use amethyst_core::ecs::Resources;
+use glsl_layout::AsStd140;
 
 #[derive(Debug)]
 pub struct UiEnvironmentSub<B: Backend> {
     layout: RendyHandle<DescriptorSetLayout<B>>,
-    per_image: Vec<PerImageUiEnvironmentSub<B>>,
-}
-
-#[derive(Debug)]
-struct PerImageUiEnvironmentSub<B: Backend> {
     buffer: Escape<Buffer<B>>,
     set: Escape<DescriptorSet<B>>,
 }
 
 impl<B: Backend> UiEnvironmentSub<B> {
     pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
-        Ok(Self {
-            layout: set_layout! {factory, 1 UniformBuffer VERTEX},
-            per_image: Vec::new(),
-        })
-    }
+        let layout: RendyHandle<DescriptorSetLayout<B>> =
+            set_layout! {factory, 1 UniformBuffer VERTEX};
 
-    pub fn raw_layout(&self) -> &B::DescriptorSetLayout {
-        self.layout.raw()
-    }
-
-    pub fn process(&mut self, factory: &Factory<B>, index: usize, res: &Resources) {
-        let this_image = {
-            while self.per_image.len() <= index {
-                self.per_image
-                    .push(PerImageUiEnvironmentSub::new(factory, &self.layout));
-            }
-            &mut self.per_image[index]
-        };
-        this_image.process(factory, res)
-    }
-
-    #[inline]
-    pub fn bind(
-        &self,
-        index: usize,
-        pipeline_layout: &B::PipelineLayout,
-        set_id: u32,
-        encoder: &mut RenderPassEncoder<'_, B>,
-    ) {
-        self.per_image[index].bind(pipeline_layout, set_id, encoder);
-    }
-}
-
-impl<B: Backend> PerImageUiEnvironmentSub<B> {
-    fn new(factory: &Factory<B>, layout: &RendyHandle<DescriptorSetLayout<B>>) -> Self {
         let buffer = factory
             .create_buffer(
                 BufferInfo {
@@ -77,12 +40,33 @@ impl<B: Backend> PerImageUiEnvironmentSub<B> {
         unsafe {
             factory.write_descriptor_sets(Some(util::desc_write(set.raw(), 0, descriptor)));
         }
-        Self { buffer, set }
+
+        Ok(Self { layout, buffer, set })
+    }
+
+    pub fn raw_layout(&self) -> &B::DescriptorSetLayout {
+        self.layout.raw()
+    }
+
+    pub fn setup(&mut self, factory: &Factory<B>, framebuffer_size: (u32, u32)) {
+        let args_size = util::align_size::<UiViewArgs>(1, 1);
+        let (width, height) = framebuffer_size;
+        let inverse_window_size = [
+            1. / width as f32,
+            1. / height as f32,
+        ].into();
+
+        let args = UiViewArgs { inverse_window_size }.std140();
+        let mut mapped = self.buffer.map(factory, 0..args_size).unwrap();
+        let mut writer = unsafe { mapped.write::<u8>(factory, 0..args_size).unwrap() };
+        let dst_slice = unsafe { writer.slice() };
+        dst_slice.copy_from_slice(util::slice_as_bytes(&[args]));
     }
 
     #[inline]
-    fn bind(
+    pub fn bind(
         &self,
+        index: usize,
         pipeline_layout: &B::PipelineLayout,
         set_id: u32,
         encoder: &mut RenderPassEncoder<'_, B>,
@@ -93,17 +77,5 @@ impl<B: Backend> PerImageUiEnvironmentSub<B> {
             Some(self.set.raw()),
             std::iter::empty(),
         );
-    }
-
-    fn process(&mut self, factory: &Factory<B>, res: &Resources) {
-        // TODO(happens): This should happen in build
-        // let args_size = util::align_size::<UiViewArgs>(1, 1);
-        // let inverted_screen_size = <(ScreenDimensions)>::fetch()
-
-        // let mut mapped = self.buffer.map(factory, 0..args_size).unwrap();
-        // let mut writer = unsafe { mapped.write::<u8>(factory, 0..args_size).unwrap() };
-        // let dst_slice = unsafe { writer.slice() };
-
-        // dst_slice.copy_from_slice(util::slice_as_bytes(&[projview]));
     }
 }
