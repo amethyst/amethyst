@@ -1,13 +1,12 @@
+use std::collections::HashMap;
+
 use amethyst_core::{
     ecs::{Entity, ReadExpect, Resources, System, SystemData, Write, WriteStorage},
     shrev::{EventChannel, ReaderId},
     ParentHierarchy,
 };
-use amethyst_renderer::TextureHandle;
-
-use std::collections::HashMap;
-
-use crate::{UiButtonAction, UiButtonActionType::*, UiText};
+use amethyst_assets::Handle;
+use crate::{UiButtonAction, UiButtonActionType::*, UiText, render::UiRenderer};
 
 struct ActionChangeStack<T: Clone + PartialEq> {
     initial_value: T,
@@ -59,31 +58,31 @@ where
 ///
 /// It's automatically registered with the `UiBundle`.
 #[derive(Default)]
-pub struct UiButtonSystem {
-    event_reader: Option<ReaderId<UiButtonAction>>,
-    set_textures: HashMap<Entity, ActionChangeStack<TextureHandle>>,
+pub struct UiButtonSystem<R: UiRenderer> {
+    event_reader: Option<ReaderId<UiButtonAction<R>>>,
+    set_textures: HashMap<Entity, ActionChangeStack<Handle<R::Texture>>>,
     set_text_colors: HashMap<Entity, ActionChangeStack<[f32; 4]>>,
 }
 
-impl UiButtonSystem {
+impl<R> UiButtonSystem<R> where R: UiRenderer {
     /// Creates a new instance of this structure
     pub fn new() -> Self {
         Self::default()
     }
 }
 
-impl<'s> System<'s> for UiButtonSystem {
+impl<'s, R> System<'s> for UiButtonSystem<R> where R: UiRenderer {
     type SystemData = (
-        WriteStorage<'s, TextureHandle>,
+        WriteStorage<'s, Handle<R::Texture>>,
         WriteStorage<'s, UiText>,
         ReadExpect<'s, ParentHierarchy>,
-        Write<'s, EventChannel<UiButtonAction>>,
+        Write<'s, EventChannel<UiButtonAction<R>>>,
     );
 
     fn setup(&mut self, res: &mut Resources) {
         Self::SystemData::setup(res);
         self.event_reader = Some(
-            res.fetch_mut::<EventChannel<UiButtonAction>>()
+            res.fetch_mut::<EventChannel<UiButtonAction<R>>>()
                 .register_reader(),
         );
     }

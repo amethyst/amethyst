@@ -17,7 +17,6 @@ pub use self::{
     format::{FontAsset, FontFormat, FontHandle, OtfFormat, TtfFormat},
     label::{UiLabel, UiLabelBuilder, UiLabelBuilderResources},
     layout::{Anchor, ScaleMode, Stretch, UiTransformSystem},
-    pass::DrawUi,
     prefab::{
         NoCustomUi, ToNativeWidget, UiCreator, UiFormat, UiImagePrefab, UiLoader, UiLoaderSystem,
         UiPrefab, UiTextBuilder, UiTransformBuilder, UiWidget,
@@ -43,8 +42,8 @@ mod font;
 mod format;
 mod label;
 mod layout;
-mod pass;
 mod prefab;
+mod render;
 mod resize;
 mod selection;
 mod selection_order_cache;

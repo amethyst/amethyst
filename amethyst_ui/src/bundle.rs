@@ -8,13 +8,13 @@ use amethyst_assets::Processor;
 use amethyst_audio::AudioFormat;
 use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder};
 use amethyst_error::Error;
-use amethyst_renderer::{BlinkSystem, TextureFormat};
 
 use crate::{
     CacheSelectionOrderSystem, FontAsset, FontFormat, NoCustomUi, ResizeSystem,
     SelectionKeyboardSystem, SelectionMouseSystem, TextEditingInputSystem, TextEditingMouseSystem,
     ToNativeWidget, UiButtonActionRetriggerSystem, UiButtonSystem, UiLoaderSystem, UiMouseSystem,
     UiSoundRetriggerSystem, UiSoundSystem, UiTransformSystem, WidgetId,
+    render::UiRenderer,
 };
 
 /// UI bundle
@@ -24,24 +24,25 @@ use crate::{
 ///
 /// Will fail with error 'No resource with the given id' if the InputBundle is not added.
 #[derive(new)]
-pub struct UiBundle<A = String, B = String, C = NoCustomUi, W = u32, G = ()> {
+pub struct UiBundle<R, A = String, B = String, C = NoCustomUi, W = u32, G = ()> {
     #[new(default)]
-    _marker: PhantomData<(A, B, C, W, G)>,
+    _marker: PhantomData<(A, B, C, W, G, R)>,
 }
 
-impl<'a, 'b, A, B, C, W, G> SystemBundle<'a, 'b> for UiBundle<A, B, C, W, G>
+impl<'a, 'b, A, B, C, W, G, R> SystemBundle<'a, 'b> for UiBundle<A, B, C, W, G, R>
 where
     A: Send + Sync + Eq + Hash + Clone + 'static,
     B: Send + Sync + Eq + Hash + Clone + 'static,
     C: ToNativeWidget,
     W: WidgetId,
     G: Send + Sync + PartialEq + 'static,
+    R: UiRenderer,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
             UiLoaderSystem::<
                 AudioFormat,
-                TextureFormat,
+                R::TextureFormat,
                 FontFormat,
                 <C as ToNativeWidget>::PrefabData,
                 W,
@@ -110,8 +111,9 @@ where
             &["ui_sound_system"],
         );
 
+        // TODO(happens): Move this into ui. Why is this even here?
         // Required for text editing. You want the cursor image to blink.
-        builder.add(BlinkSystem, "blink_system", &[]);
+        // builder.add(BlinkSystem, "blink_system", &[]);
 
         Ok(())
     }

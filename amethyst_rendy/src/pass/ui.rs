@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 use derivative::Derivative;
-use crate::{
+use amethyst_rendy::{
     batch::OrderedOneLevelBatch,
     hidden::{Hidden, HiddenPropagate},
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
@@ -15,7 +15,7 @@ use amethyst_core::ecs::prelude::{
     WriteStorage, Entities, Entity,
 };
 use hibitset::BitSet;
-use rendy::{
+use amethyst_rendy::rendy::{
     command::{QueueId, RenderPassEncoder},
     factory::Factory,
     graph::{

@@ -10,8 +10,7 @@ use amethyst_core::{
     math::Vector2,
     shrev::EventChannel,
 };
-use amethyst_input::InputHandler;
-use amethyst_renderer::MouseButton;
+use amethyst_input::{InputHandler, MouseButton};
 use amethyst_window::ScreenDimensions;
 
 use serde::{Deserialize, Serialize};

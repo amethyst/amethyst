@@ -186,13 +186,13 @@ macro_rules! define_widget {
     ) => {
         /// A $t widget, containing references to its associated entities.
         #[derive(Debug, Clone)]
-        pub struct $t {
+        pub struct $t<R: $crate::render::UiRenderer> {
             $($field: $crate::Entity),*
         }
 
-        impl $crate::Widget for $t {}
+        impl<R> $crate::Widget for $t<R> where R: $crate::render::UiRenderer {}
 
-        impl $t {
+        impl<R> $t<R> where R: $crate::render::UiRenderer {
             /// Create a new $t widget from its associated entities.
             pub fn new(
                 $($field: $crate::Entity),*

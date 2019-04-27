@@ -5,8 +5,9 @@ use amethyst_core::{
     },
     shrev::EventChannel,
 };
-use amethyst_input::InputHandler;
-use amethyst_renderer::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+use amethyst_input::{
+    InputHandler, ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent
+};
 use std::{hash::Hash, marker::PhantomData};
 
 use derive_new::new;

@@ -8,19 +8,28 @@ use amethyst_assets::{
     Progress, ProgressCounter, SimpleFormat,
 };
 use amethyst_audio::{AudioFormat, Source as Audio};
-use amethyst_core::ecs::prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage};
-use amethyst_error::{format_err, Error, ResultExt};
-use amethyst_renderer::{
-    HiddenPropagate, Texture, TextureFormat, TextureHandle, TextureMetadata, TexturePrefab,
+use amethyst_core::ecs::prelude::{
+    Component, Entities, Entity, Read, ReadExpect, Write, WriteStorage,
+    FlaggedStorage, NullStorage,
 };
+use amethyst_error::{format_err, Error, ResultExt};
 
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    render::{UiRenderer, TextureFormat, TextureMetadata, TexturePrefab},
     get_default_font, Anchor, FontAsset, FontFormat, Interactable, LineMode, Selectable, Stretch,
     TextEditing, UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionType,
     UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform, WidgetId, Widgets,
 };
+
+// TODO(happens): Put this someplace more appropriate (and rename it?)
+#[derive(Clone, Debug, Default)]
+pub struct HiddenPropagate;
+
+impl Component for HiddenPropagate {
+    type Storage = FlaggedStorage<Self, NullStorage<Self>>;
+}
 
 /// Loadable `UiTransform` data.
 /// By default z is equal to one.
@@ -56,7 +65,7 @@ pub struct UiTransformBuilder<G> {
     pub anchor: Anchor,
     /// Allow mouse events on this UI element.
     pub mouse_reactive: bool,
-    /// Hides an entity by adding a [`HiddenPropagate`](../amethyst_renderer/struct.HiddenPropagate.html) component
+    /// Hides an entity and its children
     pub hidden: bool,
     /// Makes the UiTransform selectable through keyboard inputs, mouse inputs and other means.
     /// # Ordering
@@ -101,7 +110,7 @@ impl<G> UiTransformBuilder<G> {
         self
     }
 
-    /// Hides an entity by adding a [`HiddenPropagate`](../amethyst_renderer/struct.HiddenPropagate.html) component
+    /// Hides an entity and its children
     pub fn hide(mut self) -> Self {
         self.hidden = true;
         self
@@ -308,21 +317,25 @@ where
 ///
 /// - `F`: `Format` used for loading `Texture`s
 #[derive(Clone, Deserialize, Serialize)]
-pub struct UiImagePrefab<F = TextureFormat>
+pub struct UiImagePrefab<'a, R, F, T>
 where
-    F: Format<Texture, Options = TextureMetadata>,
+    R: UiRenderer,
+    F: Format<R::Texture, Options = ()>,
+    T: TexturePrefab<'a, R, F>,
 {
     /// Image
-    pub image: TexturePrefab<F>,
+    pub image: T,
 }
 
-impl<'a, F> PrefabData<'a> for UiImagePrefab<F>
+impl<'a, R, F, T> PrefabData<'a> for UiImagePrefab<'a, R, F, T>
 where
-    F: Format<Texture, Options = TextureMetadata> + Clone + Sync,
+    R: UiRenderer,
+    F: Format<R::Texture, Options = ()> + Clone + Sync,
+    T: TexturePrefab<'a, R, F>,
 {
     type SystemData = (
-        WriteStorage<'a, TextureHandle>,
-        <TexturePrefab<F> as PrefabData<'a>>::SystemData,
+        WriteStorage<'a, Handle<R::Texture>>,
+        <T as PrefabData<'a>>::SystemData,
     );
     type Result = ();
 
@@ -360,12 +373,13 @@ where
 /// - `F`: `Format` used for loading fonts
 /// - `W`: Type used for Widget IDs
 #[derive(Deserialize, Serialize, Clone)]
-pub struct UiButtonBuilder<A = AudioFormat, I = TextureFormat, F = FontFormat, W = u32>
+pub struct UiButtonBuilder<R, A = AudioFormat, I = TextureFormat, F = FontFormat, W = u32>
 where
-    I: Format<Texture, Options = TextureMetadata>,
+    I: Format<R::Texture, Options = ()>,
     F: Format<FontAsset, Options = ()>,
     A: Format<Audio, Options = ()>,
     W: WidgetId,
+    R: UiRenderer,
 {
     /// Id for the widget
     pub id: Option<W>,
@@ -378,13 +392,13 @@ where
     /// Default text color
     pub normal_text_color: [f32; 4],
     /// Default image
-    pub normal_image: Option<TexturePrefab<I>>,
+    pub normal_image: Option<TexturePrefab<'_, R, I>>,
     /// Image used when the mouse hovers over this element
-    pub hover_image: Option<TexturePrefab<I>>,
+    pub hover_image: Option<TexturePrefab<'_, R, I>>,
     /// Text color used when this button is hovered over
     pub hover_text_color: Option<[f32; 4]>,
     /// Image used when button is pressed
-    pub press_image: Option<TexturePrefab<I>>,
+    pub press_image: Option<TexturePrefab<'_, R, I>>,
     /// Text color used when this button is pressed
     pub press_text_color: Option<[f32; 4]>,
     /// Sound made when this button is hovered over
@@ -395,18 +409,20 @@ where
     pub release_sound: Option<AssetPrefab<Audio, A>>,
 }
 
-impl<'a, A, I, F, W> PrefabData<'a> for UiButtonBuilder<A, I, F, W>
+impl<'a, R, A, I, F, W, T> PrefabData<'a> for UiButtonBuilder<R, A, I, F, W, T>
 where
-    I: Format<Texture, Options = TextureMetadata> + Clone + Sync,
+    I: Format<R::Texture, Options = ()> + Clone + Sync,
     F: Format<FontAsset, Options = ()> + Clone,
     A: Format<Audio, Options = ()> + Clone,
     W: WidgetId,
+    R: UiRenderer,
+    T: TexturePrefab<'a, R, I>,
 {
     type SystemData = (
         WriteStorage<'a, UiSoundRetrigger>,
-        WriteStorage<'a, UiButtonActionRetrigger>,
-        Write<'a, Widgets<UiButton, W>>,
-        <TexturePrefab<I> as PrefabData<'a>>::SystemData,
+        WriteStorage<'a, UiButtonActionRetrigger<R>>,
+        Write<'a, Widgets<UiButton<R>, W>>,
+        <T as PrefabData<'a>>::SystemData,
         <AssetPrefab<Audio, A> as PrefabData<'a>>::SystemData,
     );
     type Result = ();
@@ -569,7 +585,7 @@ pub enum UiWidget<
     G = (),
 > where
     A: Format<Audio, Options = ()>,
-    I: Format<Texture, Options = TextureMetadata>,
+    I: Format<Texture, Options = ()>,
     F: Format<FontAsset, Options = ()>,
     C: ToNativeWidget<A, I, F, W>,
     W: WidgetId,
@@ -612,7 +628,7 @@ pub enum UiWidget<
 impl<A, I, F, C, W, G> UiWidget<A, I, F, C, W, G>
 where
     A: Format<Audio, Options = ()>,
-    I: Format<Texture, Options = TextureMetadata>,
+    I: Format<Texture, Options = ()>,
     F: Format<FontAsset, Options = ()>,
     C: ToNativeWidget<A, I, F, W>,
     W: WidgetId,
@@ -672,7 +688,7 @@ where
 pub trait ToNativeWidget<A = AudioFormat, I = TextureFormat, F = FontFormat, W = u32>
 where
     A: Format<Audio, Options = ()>,
-    I: Format<Texture, Options = TextureMetadata>,
+    I: Format<Texture, Options = ()>,
     F: Format<FontAsset, Options = ()>,
     W: WidgetId,
     Self: Sized,
@@ -696,7 +712,7 @@ pub enum NoCustomUi {}
 impl<A, I, F, W> ToNativeWidget<A, I, F, W> for NoCustomUi
 where
     A: Format<Audio, Options = ()>,
-    I: Format<Texture, Options = TextureMetadata>,
+    I: Format<Texture, Options = ()>,
     F: Format<FontAsset, Options = ()>,
     W: WidgetId,
 {
@@ -712,21 +728,21 @@ where
 
 fn default_container_image<I>() -> Option<UiImagePrefab<I>>
 where
-    I: Format<Texture, Options = TextureMetadata>,
+    I: Format<Texture, Options = ()>,
 {
     None
 }
 
 type UiPrefabData<
+    I,
     A = AudioFormat,
-    I = TextureFormat,
     F = FontFormat,
     D = <NoCustomUi as ToNativeWidget>::PrefabData,
     W = u32,
     G = (),
 > = (
     Option<UiTransformBuilder<G>>,
-    Option<UiImagePrefab<I>>,
+    Option<UiImagePrefab<'_, I>>,
     Option<UiTextBuilder<F>>,
     Option<UiButtonBuilder<A, I, F, W>>,
     D,
@@ -742,8 +758,8 @@ type UiPrefabData<
 /// - `D`: `ToNativeWidget::PrefabData` data used by custom UI
 /// - `W`: Type used for Widget IDs
 pub type UiPrefab<
+    I,
     A = AudioFormat,
-    I = TextureFormat,
     F = FontFormat,
     D = <NoCustomUi as ToNativeWidget>::PrefabData,
     W = u32,
@@ -754,12 +770,12 @@ pub type UiPrefab<
 /// Load `UiPrefab` from `ron` file.
 #[derive(Serialize, Deserialize, Derivative)]
 #[derivative(Clone(bound = ""), Debug(bound = ""), Default(bound = ""))]
-pub struct UiFormat<C>(PhantomData<C>);
+pub struct UiFormat<C, R>(PhantomData<C, R>) where R: UiRenderer;
 
-impl<A, I, F, C, W> SimpleFormat<UiPrefab<A, I, F, C::PrefabData, W>> for UiFormat<C>
+impl<A, I, F, C, W, R> SimpleFormat<UiPrefab<I, A, F, C::PrefabData, W>> for UiFormat<C, R>
 where
+    I: Format<R::Texture, Options = ()> + Sync + DeserializeOwned + Clone,
     A: Format<Audio, Options = ()> + Sync + DeserializeOwned,
-    I: Format<Texture, Options = TextureMetadata> + Sync + DeserializeOwned + Clone,
     F: Format<FontAsset, Options = ()> + Sync + DeserializeOwned + Clone,
     C: ToNativeWidget<A, I, F, W> + for<'de> serde::Deserialize<'de>,
     W: WidgetId + DeserializeOwned,
@@ -767,7 +783,7 @@ where
     const NAME: &'static str = "Ui";
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<UiPrefab<A, I, F, C::PrefabData, W>, Error> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<UiPrefab<I, A, F, C::PrefabData, W>, Error> {
         use ron::de::Deserializer;
         let mut d = Deserializer::from_bytes(&bytes)
             .with_context(|_| format_err!("Failed deserializing Ron file"))?;
@@ -783,14 +799,14 @@ where
     }
 }
 
-fn walk_ui_tree<A, I, F, C, W>(
+fn walk_ui_tree<A, I, F, C, W, R: UiRenderer>(
     widget: UiWidget<A, I, F, C, W>,
     current_index: usize,
     prefab: &mut Prefab<UiPrefabData<A, I, F, C::PrefabData, W>>,
     custom_data: C::PrefabData,
 ) where
     A: Format<Audio, Options = ()>,
-    I: Format<Texture, Options = TextureMetadata> + Clone,
+    I: Format<R::Texture, Options = ()> + Clone,
     F: Format<FontAsset, Options = ()> + Clone,
     C: ToNativeWidget<A, I, F, W>,
     W: WidgetId,
@@ -892,7 +908,7 @@ fn walk_ui_tree<A, I, F, C, W>(
 pub struct UiLoader<'a, A = AudioFormat, I = TextureFormat, F = FontFormat, C = NoCustomUi, W = u32>
 where
     A: Format<Audio, Options = ()> + Sync,
-    I: Format<Texture, Options = TextureMetadata> + Sync,
+    I: Format<Texture, Options = ()> + Sync,
     F: Format<FontAsset, Options = ()> + Sync,
     C: ToNativeWidget<A, I, F, W>,
     W: WidgetId,
@@ -904,7 +920,7 @@ where
 impl<'a, A, I, F, C, W> UiLoader<'a, A, I, F, C, W>
 where
     A: Format<Audio, Options = ()> + Sync + DeserializeOwned,
-    I: Format<Texture, Options = TextureMetadata> + Sync + DeserializeOwned + Clone,
+    I: Format<Texture, Options = ()> + Sync + DeserializeOwned + Clone,
     F: Format<FontAsset, Options = ()> + Sync + DeserializeOwned + Clone,
     C: ToNativeWidget<A, I, F, W> + for<'de> serde::Deserialize<'de> + Send + Sync + 'static,
     W: WidgetId + DeserializeOwned,
@@ -942,27 +958,29 @@ where
 #[derive(SystemData)]
 pub struct UiCreator<
     'a,
+    R,
+    I,
     A = AudioFormat,
-    I = TextureFormat,
     F = FontFormat,
     C = NoCustomUi,
     W = u32,
 > where
+    R: UiRenderer,
     A: Format<Audio, Options = ()> + Sync,
-    I: Format<Texture, Options = TextureMetadata> + Sync,
+    I: Format<R::Texture, Options = ()> + Sync,
     F: Format<FontAsset, Options = ()> + Sync,
     C: ToNativeWidget<A, I, F, W>,
     W: WidgetId,
 {
-    loader: UiLoader<'a, A, I, F, C, W>,
+    loader: UiLoader<'a, R, I, A, F, C, W>,
     entities: Entities<'a>,
-    handles: WriteStorage<'a, Handle<UiPrefab<A, I, F, C::PrefabData, W>>>,
+    handles: WriteStorage<'a, Handle<UiPrefab<R, I, A, F, C::PrefabData, W>>>,
 }
 
 impl<'a, A, I, F, C, W> UiCreator<'a, A, I, F, C, W>
 where
     A: Format<Audio, Options = ()> + Sync + DeserializeOwned + Clone,
-    I: Format<Texture, Options = TextureMetadata> + Sync + DeserializeOwned + Clone,
+    I: Format<Texture, Options = ()> + Sync + DeserializeOwned + Clone,
     F: Format<FontAsset, Options = ()> + Sync + DeserializeOwned + Clone,
     C: ToNativeWidget<A, I, F, W> + for<'de> serde::Deserialize<'de> + Send + Sync + 'static,
     W: WidgetId + DeserializeOwned,

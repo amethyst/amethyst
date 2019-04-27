@@ -16,7 +16,10 @@ pub use self::{
     system::InputSystem,
     util::{get_input_axis_simple, get_key, is_close_requested, is_key_down},
 };
-pub use winit::{ElementState, VirtualKeyCode};
+pub use winit::{
+    MouseButton, ElementState, VirtualKeyCode, Event, KeyboardInput,
+    WindowEvent,
+};
 
 use std::iter::Iterator;
 

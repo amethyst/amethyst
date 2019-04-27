@@ -8,12 +8,9 @@ use amethyst_core::{
     ecs::prelude::{Entities, Entity, Read, ReadExpect, World, WriteExpect, WriteStorage},
     Parent,
 };
-use amethyst_rendy::{
-    types::Texture,
-    rendy::hal::Backend,
-};
 
 use crate::{
+    render::UiRenderer,
     font::default::get_default_font,
     Anchor, FontAsset, FontHandle, Interactable, Selectable, Stretch, UiButton, UiButtonAction,
     UiButtonActionRetrigger,
@@ -32,17 +29,17 @@ const DEFAULT_TXT_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
 /// Container for all the resources the builder needs to make a new UiButton.
 #[derive(SystemData)]
-pub struct UiButtonBuilderResources<'a, G, I, B>
+pub struct UiButtonBuilderResources<'a, G, R, I = u32>
 where
     G: PartialEq + Send + Sync + 'static,
-    I: WidgetId = u32,
-    B: Backend,
+    I: WidgetId,
+    R: UiRenderer,
 {
     font_asset: Read<'a, AssetStorage<FontAsset>>,
-    texture_asset: Read<'a, AssetStorage<Texture<B>>>,
+    texture_asset: Read<'a, AssetStorage<R::Texture>>,
     loader: ReadExpect<'a, Loader>,
     entities: Entities<'a>,
-    image: WriteStorage<'a, Handle<Texture<B>>>,
+    image: WriteStorage<'a, Handle<R::Texture>>,
     mouse_reactive: WriteStorage<'a, Interactable>,
     parent: WriteStorage<'a, Parent>,
     text: WriteStorage<'a, UiText>,
@@ -55,7 +52,7 @@ where
 
 /// Convenience structure for building a button
 #[derive(Debug, Clone)]
-pub struct UiButtonBuilder<G, I: WidgetId, B: Backend> {
+pub struct UiButtonBuilder<G, I: WidgetId, R: UiRenderer> {
     id: Option<I>,
     x: f32,
     y: f32,
@@ -69,7 +66,7 @@ pub struct UiButtonBuilder<G, I: WidgetId, B: Backend> {
     text_color: [f32; 4],
     font: Option<FontHandle>,
     font_size: f32,
-    image: Option<Handle<Texture<B>>>,
+    image: Option<Handle<R::Texture>>,
     parent: Option<Entity>,
     on_click_start_sound: Option<UiPlaySoundAction>,
     on_click_stop_sound: Option<UiPlaySoundAction>,
@@ -83,10 +80,10 @@ pub struct UiButtonBuilder<G, I: WidgetId, B: Backend> {
     _phantom: PhantomData<G>,
 }
 
-impl<G, I, B> Default for UiButtonBuilder<G, I, B>
+impl<G, I, R> Default for UiButtonBuilder<G, I, R>
 where
     I: WidgetId,
-    B: Backend
+    R: UiRenderer,
 {
     fn default() -> Self {
         UiButtonBuilder {
@@ -117,11 +114,11 @@ where
     }
 }
 
-impl<'a, G, I, B> UiButtonBuilder<G, I, B>
+impl<'a, G, I, R> UiButtonBuilder<G, I, R>
 where
     G: PartialEq + Send + Sync + 'static,
     I: WidgetId,
-    B: Backend,
+    R: UiRenderer,
 {
     /// Construct a new UiButtonBuilder.
     /// This allows easy use of default values for text and button appearance and allows the user
@@ -171,7 +168,7 @@ where
     }
 
     /// Replace the default texture handle with `image`.
-    pub fn with_image(mut self, image: Option<Texture>) -> Self {
+    pub fn with_image(mut self, image: Option<R::Texture>) -> Self {
         self.image = Some(image);
         self
     }
@@ -239,14 +236,14 @@ where
     }
 
     /// Button image to use when the mouse is hovering over this button
-    pub fn with_hover_image(mut self, image: Handle<Texture<B>>) -> Self {
+    pub fn with_hover_image(mut self, image: Handle<R::Texture>) -> Self {
         self.on_hover_start.push(SetTexture(image.clone()));
         self.on_hover_stop.push(UnsetTexture(image));
         self
     }
 
     /// Button image to use when this button is pressed
-    pub fn with_press_image(mut self, image: Handle<Texture<B>>) -> Self {
+    pub fn with_press_image(mut self, image: Handle<R::Texture>) -> Self {
         self.on_click_start.push(SetTexture(image.clone()));
         self.on_click_stop.push(UnsetTexture(image));
         self
@@ -271,7 +268,7 @@ where
     }
 
     /// Build this with the `UiButtonBuilderResources`.
-    pub fn build(mut self, mut res: UiButtonBuilderResources<'a, G, I, B>) -> (I, UiButton) {
+    pub fn build(mut self, mut res: UiButtonBuilderResources<'a, G, I, R>) -> (I, UiButton) {
         let image_entity = res.entities.create();
         let text_entity = res.entities.create();
         let widget = UiButton::new(image_entity, text_entity);
@@ -411,13 +408,13 @@ where
 
     /// Create the UiButton based on provided configuration parameters.
     pub fn build_from_world(self, world: &World) -> (I, UiButton) {
-        self.build(UiButtonBuilderResources::<G, I, B>::fetch(&world.res))
+        self.build(UiButtonBuilderResources::<G, I, R>::fetch(&world.res))
     }
 }
 
-fn actions_with_target<I, B: Backend>(actions: I, target: &Entity) -> Vec<UiButtonAction<B>>
+fn actions_with_target<I, R: UiRenderer>(actions: I, target: &Entity) -> Vec<UiButtonAction<R>>
 where
-    I: Iterator<Item = UiButtonActionType<B>>,
+    I: Iterator<Item = UiButtonActionType<R>>,
 {
     actions
         .map(|action| UiButtonAction {
