@@ -49,17 +49,17 @@ lazy_static::lazy_static! {
         "main",
     ).precompile().unwrap();
 
-    static ref UI_VERTEX: StaticShaderInfo = StaticShaderInfo::new(
+    static ref UI_VERTEX: SpirvShader = StaticShaderInfo::new(
         concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/vertex/ui.vert"),
         ShaderKind::Vertex,
         SourceLanguage::GLSL,
         "main",
-    );
+    ).precompile().unwrap();
 
-    static ref UI_FRAGMENT: StaticShaderInfo = StaticShaderInfo::new(
+    static ref UI_FRAGMENT: SpirvShader = StaticShaderInfo::new(
         concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/fragment/ui.frag"),
         ShaderKind::Fragment,
         SourceLanguage::GLSL,
         "main",
-    );
+    ).precompile().unwrap();
 }

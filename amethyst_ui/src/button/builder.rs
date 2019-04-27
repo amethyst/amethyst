@@ -2,13 +2,16 @@ use shred::SystemData;
 use shred_derive::SystemData;
 use smallvec::{smallvec, SmallVec};
 
-use amethyst_assets::{AssetStorage, Loader};
+use amethyst_assets::{AssetStorage, Loader, Handle};
 use amethyst_audio::SourceHandle;
 use amethyst_core::{
     ecs::prelude::{Entities, Entity, Read, ReadExpect, World, WriteExpect, WriteStorage},
     Parent,
 };
-use amethyst_renderer::{Texture, TextureHandle};
+use amethyst_rendy::{
+    types::Texture,
+    rendy::hal::Backend,
+};
 
 use crate::{
     font::default::get_default_font,
@@ -29,12 +32,17 @@ const DEFAULT_TXT_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
 /// Container for all the resources the builder needs to make a new UiButton.
 #[derive(SystemData)]
-pub struct UiButtonBuilderResources<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId = u32> {
+pub struct UiButtonBuilderResources<'a, G, I, B>
+where
+    G: PartialEq + Send + Sync + 'static,
+    I: WidgetId = u32,
+    B: Backend,
+{
     font_asset: Read<'a, AssetStorage<FontAsset>>,
-    texture_asset: Read<'a, AssetStorage<Texture>>,
+    texture_asset: Read<'a, AssetStorage<Texture<B>>>,
     loader: ReadExpect<'a, Loader>,
     entities: Entities<'a>,
-    image: WriteStorage<'a, TextureHandle>,
+    image: WriteStorage<'a, Handle<Texture<B>>>,
     mouse_reactive: WriteStorage<'a, Interactable>,
     parent: WriteStorage<'a, Parent>,
     text: WriteStorage<'a, UiText>,
@@ -47,7 +55,7 @@ pub struct UiButtonBuilderResources<'a, G: PartialEq + Send + Sync + 'static, I:
 
 /// Convenience structure for building a button
 #[derive(Debug, Clone)]
-pub struct UiButtonBuilder<G, I: WidgetId> {
+pub struct UiButtonBuilder<G, I: WidgetId, B: Backend> {
     id: Option<I>,
     x: f32,
     y: f32,
@@ -61,7 +69,7 @@ pub struct UiButtonBuilder<G, I: WidgetId> {
     text_color: [f32; 4],
     font: Option<FontHandle>,
     font_size: f32,
-    image: Option<TextureHandle>,
+    image: Option<Handle<Texture<B>>>,
     parent: Option<Entity>,
     on_click_start_sound: Option<UiPlaySoundAction>,
     on_click_stop_sound: Option<UiPlaySoundAction>,
@@ -75,9 +83,10 @@ pub struct UiButtonBuilder<G, I: WidgetId> {
     _phantom: PhantomData<G>,
 }
 
-impl<G, I> Default for UiButtonBuilder<G, I>
+impl<G, I, B> Default for UiButtonBuilder<G, I, B>
 where
     I: WidgetId,
+    B: Backend
 {
     fn default() -> Self {
         UiButtonBuilder {
@@ -108,7 +117,12 @@ where
     }
 }
 
-impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I> {
+impl<'a, G, I, B> UiButtonBuilder<G, I, B>
+where
+    G: PartialEq + Send + Sync + 'static,
+    I: WidgetId,
+    B: Backend,
+{
     /// Construct a new UiButtonBuilder.
     /// This allows easy use of default values for text and button appearance and allows the user
     /// to easily set other UI-related options. It also allows easy retrieval and updating through
@@ -156,8 +170,8 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
         self
     }
 
-    /// Replace the default TextureHandle with `image`.
-    pub fn with_image(mut self, image: TextureHandle) -> Self {
+    /// Replace the default texture handle with `image`.
+    pub fn with_image(mut self, image: Option<Texture>) -> Self {
         self.image = Some(image);
         self
     }
@@ -225,14 +239,14 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
     }
 
     /// Button image to use when the mouse is hovering over this button
-    pub fn with_hover_image(mut self, image: TextureHandle) -> Self {
+    pub fn with_hover_image(mut self, image: Handle<Texture<B>>) -> Self {
         self.on_hover_start.push(SetTexture(image.clone()));
         self.on_hover_stop.push(UnsetTexture(image));
         self
     }
 
     /// Button image to use when this button is pressed
-    pub fn with_press_image(mut self, image: TextureHandle) -> Self {
+    pub fn with_press_image(mut self, image: Handle<Texture<B>>) -> Self {
         self.on_click_start.push(SetTexture(image.clone()));
         self.on_click_stop.push(UnsetTexture(image));
         self
@@ -257,7 +271,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
     }
 
     /// Build this with the `UiButtonBuilderResources`.
-    pub fn build(mut self, mut res: UiButtonBuilderResources<'a, G, I>) -> (I, UiButton) {
+    pub fn build(mut self, mut res: UiButtonBuilderResources<'a, G, I, B>) -> (I, UiButton) {
         let image_entity = res.entities.create();
         let text_entity = res.entities.create();
         let widget = UiButton::new(image_entity, text_entity);
@@ -397,13 +411,13 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
 
     /// Create the UiButton based on provided configuration parameters.
     pub fn build_from_world(self, world: &World) -> (I, UiButton) {
-        self.build(UiButtonBuilderResources::<G, I>::fetch(&world.res))
+        self.build(UiButtonBuilderResources::<G, I, B>::fetch(&world.res))
     }
 }
 
-fn actions_with_target<I>(actions: I, target: &Entity) -> Vec<UiButtonAction>
+fn actions_with_target<I, B: Backend>(actions: I, target: &Entity) -> Vec<UiButtonAction<B>>
 where
-    I: Iterator<Item = UiButtonActionType>,
+    I: Iterator<Item = UiButtonActionType<B>>,
 {
     actions
         .map(|action| UiButtonAction {
