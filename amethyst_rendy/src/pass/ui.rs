@@ -98,6 +98,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawUiDesc {
             vertex,
             change: Default::default(),
             cached_draw_order: Default::default(),
+            images: Default::default(),
 
             // cached_color_textures: HashMap::new(),
         }))
@@ -111,7 +112,7 @@ pub struct DrawUi<B: Backend> {
     env: UiEnvironmentSub<B>,
     textures: TextureSub<B>,
     vertex: DynamicVertex<B, UiArgs>,
-    // sprites: OrderedOneLevelBatch<TextureId, SpriteArgs>,
+    images: OrderedOneLevelBatch<TextureId, UiArgs>,
     change: util::ChangeDetection,
 
     cached_draw_order: CachedDrawOrder,
@@ -141,7 +142,6 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             entities,
             loader,
             screen_dimensions,
-            texture_storage,
             // font_assets_storage,
             textures,
             transforms,
@@ -155,7 +155,6 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             Entities<'_>,
             ReadExpect<'_, Loader>,
             ReadExpect<'_, ScreenDimensions>,
-            Read<'_, AssetStorage<Texture<B>>>,
             // Read<'_, AssetStorage<FontAsset>>,
             ReadStorage<'_, Handle<Texture<B>>>,
             ReadStorage<'_, UiTransform>,
@@ -170,6 +169,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
         self.env.process(factory, index, resources);
         self.textures.maintain();
         let mut changed = false;
+
+        let images_ref = &mut self.images;
+        let textures_ref = &mut self.textures;
 
         // Populate and update the draw order cache.
         let bitset = &mut self.cached_draw_order.cached;
@@ -224,18 +226,6 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
                 z1.partial_cmp(&z2).unwrap_or(Ordering::Equal)
             });
 
-        // TODO(happens): Do we keep drawing this using an instanced mesh?
-        // let mesh = self
-        //     .mesh
-        //     .as_ref()
-        //     .expect("`DrawUi::compile` was not called before `DrawUi::apply`");
-
-        // let vbuf = match mesh.buffer(PosTex::ATTRIBUTES) {
-        //     Some(vbuf) => vbuf.clone(),
-        //     None => return,
-        // };
-        // effect.data.vertex_bufs.push(vbuf);
-
         let highest_abs_z = (&transforms,).join()
             .map(|t| t.0.global_z())
             // TODO(happens): Use max_by here?
@@ -247,7 +237,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
                 continue;
             }
 
-            let ui_transform = transforms
+            let transform = transforms
                 .get(entity)
                 .expect("Unreachable: Entity is guaranteed to be present based on earlier actions");
 
@@ -257,21 +247,22 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
                 .unwrap_or(Tint(palette::Srgba::new(1., 1., 1., 1.)))
                 .into();
 
-            if let Some(tex) = textures
-                .get(entity)
-                .and_then(|tex| texture_storage.get(&tex))
-            {
-                // TODO(happens): Draw texture with params:
-                // [ui_transform.pixel_x, ui_transform.pixel_y] -> coords
-                // [ui_transform.pixel_width, ui_transform.pixel_height] -> dimensions
-                // tint -> color
+            if let Some(texture) = textures.get(entity) {
+                let args = UiArgs {
+                    // TODO(happens): Remove these 2 since they always stay
+                    // the same
+                    pos: [0., 0., 0.].into(),
+                    tex_coords: [0., 1.].into(),
+                    coords: [transform.pixel_x(), transform.pixel_y()].into(),
+                    dimensions: [transform.pixel_width(), transform.pixel_height()].into(),
+                    color: tint.into(),
+                };
 
-                // Why were these uniforms before?!
-
-                // TODO(happens): We were binding the texture anew every time here
-                // before, which is pretty inefficient. Can we batch these and
-                // draw them similarly to before, so at least the color textures
-                // are not rebound all the time?
+                if let Some((tex_id, this_changed)) =
+                    textures_ref.insert(factory, resources, texture) {
+                    changed = changed || this_changed;
+                    images_ref.insert(tex_id, Some(args));
+                }
             }
 
             // TODO(happens): Text drawing

@@ -151,6 +151,16 @@ impl UiTransform {
         self.pixel_y
     }
 
+    /// Returns the width of this UiTransform as computed by the `UiTransformSystem`.
+    pub fn pixel_width(&self) -> f32 {
+        self.pixel_width
+    }
+
+    /// Returns the height of this UiTransform as computed by the `UiTransformSystem`.
+    pub fn pixel_height(&self) -> f32 {
+        self.pixel_height
+    }
+
     /// Returns the global z order of this UiTransform as computed by the `UiTransformSystem`.
     pub fn global_z(&self) -> f32 {
         self.global_z

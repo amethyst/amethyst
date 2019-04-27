@@ -9,7 +9,6 @@ use crate::{
             Buffer, BufferInfo, DescriptorSet, DescriptorSetLayout, Escape, Handle as RendyHandle,
         },
     },
-    submodules::gather::CameraGatherer,
     util,
 };
 use amethyst_core::ecs::Resources;
