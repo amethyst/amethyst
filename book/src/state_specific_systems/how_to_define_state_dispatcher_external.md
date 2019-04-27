@@ -41,6 +41,8 @@ impl<'a, 'b> CustomDispatcherState<'a, 'b> {
 }
 ```
 
+The `CustomDispatcherState` requires two lifetime annotations (`'a` and `'b`) for use in the `DispatcherBuilder` and `Dispatcher`.
+
 Then we'll create the builder for `CustomDispatcherState` that initialises the `DispatcherBuilder`, populates it with the desired `System`s and builds the state.
 
 ```rust,edition2018,no_run,noplaypen
@@ -166,14 +168,12 @@ Now we have to actually build the `Dispatcher` within the `State`.  In order to 
 # 
 impl<'a, 'b> SimpleState for CustomDispatcherState<'a, 'b> {
     fn on_start(&mut self, data: StateData<GameData>) {
-        if self.dispatcher.is_none() {
-            let mut dispatcher = self.dispatcher_builder
-                .take()
-                .expect("Expected `dispatcher_builder` to exist when `dispatcher` is not yet built.")
-                .build(); // We build the dispatcher itself
-            dispatcher.setup(&mut data.world.res); // We register the resources it uses into the world
-            self.dispatcher = Some(dispatcher);
-        }
+        let mut dispatcher = self.dispatcher_builder
+            .take()
+            .expect("Expected `dispatcher_builder` to exist when `dispatcher` is not yet built.")
+            .build(); // We build the dispatcher itself
+        dispatcher.setup(&mut data.world.res); // We register the resources it uses into the world
+        self.dispatcher = Some(dispatcher);
     }
 }
 # 
@@ -242,18 +242,18 @@ To finish it off we have to execute the `Dispatcher` during the `State`s `update
 # 
 impl<'a, 'b> SimpleState for CustomDispatcherState<'a, 'b> {
     fn on_start(&mut self, data: StateData<GameData>) {
-        if self.dispatcher.is_none() {
-            let mut dispatcher = self.dispatcher_builder
-                .take()
-                .expect("Expected `dispatcher_builder` to exist when `dispatcher` is not yet built.")
-                .build();
-            dispatcher.setup(&mut data.world.res);
-            self.dispatcher = Some(dispatcher);
-        }
+        let mut dispatcher = self.dispatcher_builder
+            .take()
+            .expect("Expected `dispatcher_builder` to exist when `dispatcher` is not yet built.")
+            .build();
+        dispatcher.setup(&mut data.world.res);
+        self.dispatcher = Some(dispatcher);
     }
 
     fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans {
-        self.dispatcher.as_mut().unwrap().dispatch(&data.world.res);
+        if let Some(dispatcher) = self.dispatcher.as_mut() {
+            dispatcher.dispatch(&data.world.res);
+        }
 
         Trans::None
     }
