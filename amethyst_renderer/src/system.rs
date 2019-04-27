@@ -21,7 +21,7 @@ use amethyst_error::Error;
 
 use crate::{
     config::DisplayConfig,
-    formats::{create_mesh_asset, create_texture_asset},
+    formats::{create_mesh_asset, create_texture_asset, TextureData, TextureMetadata},
     mesh::Mesh,
     mtl::{Material, MaterialDefaults},
     pipe::{PipelineBuild, PipelineData, PolyPipeline},
@@ -223,13 +223,13 @@ fn create_default_mat(res: &mut Resources) -> Material {
 
     let loader = res.fetch::<Loader>();
 
-    let albedo = [0.5, 0.5, 0.5, 1.0].into();
-    let emission = [0.0; 4].into();
-    let normal = [0.5, 0.5, 1.0, 1.0].into();
-    let metallic = [0.0; 4].into();
-    let roughness = [0.5; 4].into();
-    let ambient_occlusion = [1.0; 4].into();
-    let caveat = [1.0; 4].into();
+    let albedo = TextureData::Rgba([0.5, 0.5, 0.5, 1.0], TextureMetadata::unorm());
+    let emission = TextureData::Rgba([0.0; 4], TextureMetadata::unorm());
+    let normal = TextureData::Rgba([0.5, 0.5, 1.0, 1.0], TextureMetadata::unorm());
+    let metallic = TextureData::Rgba([0.0; 4], TextureMetadata::unorm());
+    let roughness = TextureData::Rgba([0.5; 4], TextureMetadata::unorm());
+    let ambient_occlusion = TextureData::Rgba([1.0; 4], TextureMetadata::unorm());
+    let caveat = TextureData::Rgba([1.0; 4], TextureMetadata::unorm());
 
     let tex_storage = res.fetch();
 
