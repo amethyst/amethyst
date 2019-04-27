@@ -1,164 +1,277 @@
 # How to Define State Dispatcher: External
 
-This guide explains how to define a state-specific dispatcher whose systems are passed in externally. This is used when the list of systems is determined by user choices at runtime.
+This guide explains how to define a state-specific dispatcher whose `System`s are passed in externally. This is used when the list of `System`s is determined by user choices at runtime. For simplicity sake we'll be using the `SimpleState` trait for our our custom state. 
 
-## Steps
+For convenience we'll create a builder for our `State`. This way we'll be able to create our `State` and register `System`s as follows:
 
-1. Create a builder type for the state.
+```rust,edition2018,no_run,noplaypen
+CustomDispatcherBuilder::new()
+    .with(MovementSystem, "movement_systen", &["input_system"])
+    .with(CollisionSystem, "collision_system", &[])
+    .build(); 
+```
 
-    This will be used to register the `System`s for the state-specific dispatcher.
+We'll start off by creating our `State`. 
 
-    ```rust,edition2018,no_run,noplaypen
-    # extern crate amethyst;
-    #
-    use amethyst::{ecs::prelude::*, prelude::*};
+```rust,edition2018,no_run,noplaypen
+extern crate amethyst;
 
-    /// Builder for the `CustomDispatcherState`.
+use amethyst::{
+    ecs::prelude::*,
+    prelude::*,
+};
+
+pub struct CustomDispatcherState<'a, 'b> {
+    /// The `State` specific `DispatcherBuilder`. This will be used build the actual `Dispatcher`.
+    dispatcher_builder: Option<DispatcherBuilder<'a, 'b>>,
+
+    /// The `State` specific `Dispatcher`, containing `System`s only relevant for this `State`.
+    dispatcher: Option<Dispatcher<'a, 'b>>,
+}
+
+impl<'a, 'b> SimpleState for CustomDispatcherState<'a, 'b> {}
+
+impl<'a, 'b> CustomDispatcherState<'a, 'b> {
+    fn new(dispatcher_builder: DispatcherBuilder<'a, 'b>) -> Self {
+        Self {
+            dispatcher_builder: Some(dispatcher_builder),
+            dispatcher: None,
+        }
+    }
+}
+```
+
+Then we'll create the builder for `CustomDispatcherState` that initialises the `DispatcherBuilder`, populates it with the desired `System`s and builds the state.
+
+```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+#
+# use amethyst::{
+#     ecs::prelude::*,
+#     prelude::*,
+# };
+# 
+/// Builder for the `CustomDispatcherState`.
+///
+/// This allows you to specify which `System`s you want to run within the state.
+pub struct CustomDispatcherStateBuilder<'a, 'b> {
+    /// The `State` specific `DispatcherBuilder`.
+    dispatcher_builder: DispatcherBuilder<'a, 'b>,
+}
+
+impl<'a, 'b> CustomDispatcherStateBuilder<'a, 'b> {
+
+    /// Returns a new `CustomDispatcherStateBuilder`.
+    pub fn new() -> Self {
+        CustomDispatcherStateBuilder {
+            dispatcher_builder: DispatcherBuilder::new(),
+        }
+    }
+
+    /// Registers a `System` with the dispatcher builder.
     ///
-    /// This allows you to specify which systems you want to run within the state.
-    pub struct CustomDispatcherStateBuilder<'a, 'b> {
-        /// State specific dispatcher.
-        dispatcher_builder: DispatcherBuilder<'a, 'b>,
-    }
-
-    impl<'a, 'b> CustomDispatcherStateBuilder<'a, 'b> {
-        /// Returns a new `CustomDispatcherStateBuilder`.
-        pub fn new() -> Self {
-            CustomDispatcherStateBuilder {
-                dispatcher_builder: DispatcherBuilder::new(),
-            }
-        }
-
-        /// Registers a `System` with the dispatcher builder.
-        ///
-        /// # Parameters
-        ///
-        /// * `system`: `System` to register.
-        /// * `name`: Name to register the system with, used for dependency ordering.
-        /// * `deps`: Names of systems that must run before this system.
-        pub fn with<Sys>(mut self, system: Sys, name: &str, deps: &[&str]) -> Self
-        where
-            Sys: for<'c> System<'c> + Send + 'a,
-        {
-            self.dispatcher_builder.add(system, name, deps);
-            self
-        }
-
-        /// Builds and returns the `CustomDispatcherState`.
-        pub fn build(self) -> CustomDispatcherState<'a, 'b> {
-            CustomDispatcherState::new(self.dispatcher_builder)
-        }
-    }
-    #
-    # pub struct CustomDispatcherState<'a, 'b> {
-    #     /// State specific dispatcher builder.
-    #     dispatcher_builder: Option<DispatcherBuilder<'a, 'b>>,
-    # }
-    #
-    # impl<'a, 'b> CustomDispatcherState<'a, 'b> {
-    #     fn new(dispatcher_builder: DispatcherBuilder<'a, 'b>) -> Self {
-    #         unimplemented!()
-    #     }
-    # }
-    ```
-
-2. Add the `dispatcher_builder` and `dispatcher` fields to your state:
-
-    ```rust,edition2018,no_run,noplaypen
-    # extern crate amethyst;
-    #
-    # use amethyst::{ecs::prelude::*, prelude::*};
-    #
-    pub struct CustomDispatcherState<'a, 'b> {
-        /// State specific dispatcher builder.
-        dispatcher_builder: Option<DispatcherBuilder<'a, 'b>>,
-        /// State specific dispatcher.
-        dispatcher: Option<Dispatcher<'a, 'b>>,
-    }
-
-    impl<'a, 'b> CustomDispatcherState<'a, 'b> {
-        fn new(dispatcher_builder: DispatcherBuilder<'a, 'b>) -> Self {
-            CustomDispatcherState {
-                dispatcher_builder: Some(dispatcher_builder),
-                dispatcher: None,
-            }
-        }
-    }
-    ```
-
-3. Initialize the dispatcher `on_start(..)`.
-
-    ```rust,edition2018,no_run,noplaypen
-    # extern crate amethyst;
-    #
-    # use amethyst::{ecs::prelude::*, prelude::*};
-    #
-    # pub struct CustomDispatcherState<'a, 'b> {
-    #     /// State specific dispatcher builder.
-    #     dispatcher_builder: Option<DispatcherBuilder<'a, 'b>>,
-    #     /// State specific dispatcher.
-    #     dispatcher: Option<Dispatcher<'a, 'b>>,
-    # }
-    #
-    impl<'a, 'b, E> State<GameData<'a, 'b>, E> for CustomDispatcherState<'a, 'b>
-    where
-        E: Send + Sync + 'static,
+    /// # Parameters
+    ///
+    /// * `system`: `System` to register.
+    /// * `name`: Name to register the system with, used for dependency ordering.
+    /// * `deps`: Names of systems that must run before this system.
+    pub fn with<Sys>(mut self, system: Sys, name: &str, deps: &[&str]) -> Self
+        where Sys: for<'c> System<'c> + Send + 'a,
     {
-        fn on_start(&mut self, data: StateData<'_, GameData<'a, 'b>>) {
-            if self.dispatcher.is_none() {
-                let mut dispatcher = self
-                    .dispatcher_builder
-                    .take()
-                    .expect(
-                        "Expected `dispatcher_builder` to exist when `dispatcher` is not yet built.",
-                    )
-                    .build();
-                dispatcher.setup(&mut data.world.res);
-                self.dispatcher = Some(dispatcher);
-            }
-        }
-
-        // ..
+        self.dispatcher_builder.add(system, name, deps);
+        self
     }
-    ```
 
-    `System` resources are setup when the dispatcher is built. The `System#setup(..)` method needs access to the world's resources, which is made available to `State#on_start(..)`. Therefore, we need to defer building the actual `Dispatcher` until this method is called.
+    /// Builds and returns the `CustomDispatcherState`.
+    pub fn build(self) -> CustomDispatcherState<'a, 'b> {
+        CustomDispatcherState::new(self.dispatcher_builder)
+    }
+}
+# 
+# pub struct CustomDispatcherState<'a, 'b> {
+#     /// The `State` specific `DispatcherBuilder`. This will be used build the actual `Dispatcher`.
+#     dispatcher_builder: Option<DispatcherBuilder<'a, 'b>>,
+# 
+#     /// The `State` specific `Dispatcher`, containing `System`s only relevant for this `State`.
+#     dispatcher: Option<Dispatcher<'a, 'b>>,
+# }
+# 
+# impl<'a, 'b> SimpleState for CustomDispatcherState<'a, 'b> {}
+# 
+# impl<'a, 'b> CustomDispatcherState<'a, 'b> {
+#     fn new(dispatcher_builder: DispatcherBuilder<'a, 'b>) -> Self {
+#         Self {
+#             dispatcher_builder: Some(dispatcher_builder),
+#             dispatcher: None,
+#         }
+#     }
+# }
+```
 
-4. Run both the application and state-specific dispatchers during `update(..)`.
+This enables us to create the `State` and register `System`s as mentioned above. Now we have to actually build the `Dispatcher` within the `State`. `System` resources are setup when the `Dispatcher` is built. The `System#setup(..)` method needs access to the `World`'s resources, which is made available to `State#on_start(..)`. Therefore, we need to defer building the actual `Dispatcher` until this method is called.
 
-    ```rust,edition2018,no_run,noplaypen
-    # extern crate amethyst;
-    #
-    # use amethyst::{ecs::prelude::*, prelude::*};
-    #
-    # pub struct CustomDispatcherState<'a, 'b> {
-    #     /// State specific dispatcher builder.
-    #     dispatcher_builder: Option<DispatcherBuilder<'a, 'b>>,
-    #     /// State specific dispatcher.
-    #     dispatcher: Option<Dispatcher<'a, 'b>>,
-    # }
-    #
-    impl<'a, 'b, E> State<GameData<'a, 'b>, E> for CustomDispatcherState<'a, 'b>
-    where
-        E: Send + Sync + 'static,
-    {
-        //..
-
-        fn update(&mut self, data: StateData<'_, GameData<'a, 'b>>) -> Trans<GameData<'a, 'b>, E> {
-            data.data.update(&data.world);
-            self.dispatcher.as_mut().unwrap().dispatch(&data.world.res);
-            
-            Trans::None
+```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+# 
+# use amethyst::{
+#     ecs::prelude::*,
+#     prelude::*,
+# };
+# 
+# /// Builder for the `CustomDispatcherState`.
+# ///
+# /// This allows you to specify which `System`s you want to run within the state.
+# pub struct CustomDispatcherStateBuilder<'a, 'b> {
+#     /// The `State` specific `DispatcherBuilder`.
+#     dispatcher_builder: DispatcherBuilder<'a, 'b>,
+# }
+# 
+# impl<'a, 'b> CustomDispatcherStateBuilder<'a, 'b> {
+#     /// Returns a new `CustomDispatcherStateBuilder`.
+#     pub fn new() -> Self {
+#         CustomDispatcherStateBuilder {
+#             dispatcher_builder: DispatcherBuilder::new(),
+#         }
+#     }
+# 
+#     /// Registers a `System` with the dispatcher builder.
+#     ///
+#     /// # Parameters
+#     ///
+#     /// * `system`: `System` to register.
+#     /// * `name`: Name to register the system with, used for dependency ordering.
+#     /// * `deps`: Names of systems that must run before this system.
+#     pub fn with<Sys>(mut self, system: Sys, name: &str, deps: &[&str]) -> Self
+#         where Sys: for<'c> System<'c> + Send + 'a,
+#     {
+#         self.dispatcher_builder.add(system, name, deps);
+#         self
+#     }
+# 
+#     /// Builds and returns the `CustomDispatcherState`.
+#     pub fn build(self) -> CustomDispatcherState<'a, 'b> {
+#         CustomDispatcherState::new(self.dispatcher_builder)
+#     }
+# }
+# 
+# pub struct CustomDispatcherState<'a, 'b> {
+#     /// The `State` specific `DispatcherBuilder`. This will be used to build the actual dispatcher.
+#     dispatcher_builder: Option<DispatcherBuilder<'a, 'b>>,
+# 
+#     /// The `State` specific `Dispatcher`, containing `System`s only relevant for this `State`.
+#     dispatcher: Option<Dispatcher<'a, 'b>>,
+# }
+# 
+impl<'a, 'b> SimpleState for CustomDispatcherState<'a, 'b> {
+    fn on_start(&mut self, data: StateData<GameData>) {
+        if self.dispatcher.is_none() {
+            let mut dispatcher = self.dispatcher_builder
+                .take()
+                .expect("Expected `dispatcher_builder` to exist when `dispatcher` is not yet built.")
+                .build();
+            dispatcher.setup(&mut data.world.res);
+            self.dispatcher = Some(dispatcher);
         }
     }
-    ```
+}
+# 
+# impl<'a, 'b> CustomDispatcherState<'a, 'b> {
+#     fn new(dispatcher_builder: DispatcherBuilder<'a, 'b>) -> Self {
+#         Self {
+#             dispatcher_builder: Some(dispatcher_builder),
+#             dispatcher: None,
+#         }
+#     }
+# }
+```
 
-    Now, any systems in the state-specific dispatcher will only run in this state.
-    
-    Depending on the trait implemented by `CustomDispatcherState` it is recommended to omit the execution of the application dispatcher during `update(..)`:
-    ```rust,edition2018,no_run,noplaypen
-    data.data.update(&data.world);
-    ```
-    **For example:** The application dispatcher is automatically executed for states that implement `SimpleState`, another trait commonly used in other chapters of this book. Explicitly executing the application dispatcher during `update(..)` of a `SimpleState` can be the cause for an increase in time between frames. 
-    
-    
+To finish it off we have to execute the `Dispatcher` during the `State`s `update(..)` method. This ensures that the `System`s are actually executed.
+```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+# 
+# use amethyst::{
+#     ecs::prelude::*,
+#     prelude::*,
+# };
+# 
+# /// Builder for the `CustomDispatcherState`.
+# ///
+# /// This allows you to specify which `System`s you want to run within the state.
+# pub struct CustomDispatcherStateBuilder<'a, 'b> {
+#     /// The `State` specific `DispatcherBuilder`.
+#     dispatcher_builder: DispatcherBuilder<'a, 'b>,
+# }
+# 
+# impl<'a, 'b> CustomDispatcherStateBuilder<'a, 'b> {
+#     /// Returns a new `CustomDispatcherStateBuilder`.
+#     pub fn new() -> Self {
+#         CustomDispatcherStateBuilder {
+#             dispatcher_builder: DispatcherBuilder::new(),
+#         }
+#     }
+# 
+#     /// Registers a `System` with the dispatcher builder.
+#     ///
+#     /// # Parameters
+#     ///
+#     /// * `system`: `System` to register.
+#     /// * `name`: Name to register the system with, used for dependency ordering.
+#     /// * `deps`: Names of systems that must run before this system.
+#     pub fn with<Sys>(mut self, system: Sys, name: &str, deps: &[&str]) -> Self
+#         where Sys: for<'c> System<'c> + Send + 'a,
+#     {
+#         self.dispatcher_builder.add(system, name, deps);
+#         self
+#     }
+# 
+#     /// Builds and returns the `CustomDispatcherState`.
+#     pub fn build(self) -> CustomDispatcherState<'a, 'b> {
+#         CustomDispatcherState::new(self.dispatcher_builder)
+#     }
+# }
+# 
+# pub struct CustomDispatcherState<'a, 'b> {
+#     /// The `State` specific `DispatcherBuilder`. This will be used to build the actual dispatcher.
+#     dispatcher_builder: Option<DispatcherBuilder<'a, 'b>>,
+# 
+#     /// The `State` specific `Dispatcher`, containing `System`s only relevant for this `State`.
+#     dispatcher: Option<Dispatcher<'a, 'b>>,
+# }
+# 
+impl<'a, 'b> SimpleState for CustomDispatcherState<'a, 'b> {
+    fn on_start(&mut self, data: StateData<GameData>) {
+        if self.dispatcher.is_none() {
+            let mut dispatcher = self.dispatcher_builder
+                .take()
+                .expect("Expected `dispatcher_builder` to exist when `dispatcher` is not yet built.")
+                .build();
+            dispatcher.setup(&mut data.world.res);
+            self.dispatcher = Some(dispatcher);
+        }
+    }
+
+    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans {
+        self.dispatcher.as_mut().unwrap().dispatch(&data.world.res);
+
+        Trans::None
+    }
+}
+# 
+# impl<'a, 'b> CustomDispatcherState<'a, 'b> {
+#     fn new(dispatcher_builder: DispatcherBuilder<'a, 'b>) -> Self {
+#         Self {
+#             dispatcher_builder: Some(dispatcher_builder),
+#             dispatcher: None,
+#         }
+#     }
+# }
+```
+
+Now, any systems in the state-specific `Dispatcher` will only run in this `State`. The *application* `Dispatcher` is automatically executed for `SimpleState` implementations. For more complex states that implement other `State` specific traits, the *application* `Dispatcher` has to be explicitly executed on top of the `State` specific `Dispatcher`. This is done by slightly modifying your `State`s `update(..)` method:
+
+```rust,edition2018,no_run,noplaypen
+data.data.update(&data.world);
+self.dispatcher.as_mut().unwrap().dispatch(&data.world.res);
+        
+Trans::None
+```
