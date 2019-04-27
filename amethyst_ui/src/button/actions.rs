@@ -1,6 +1,6 @@
 use amethyst_core::ecs::prelude::Entity;
 use amethyst_assets::Handle;
-use amethyst_rendy::rendy::hal::Texture;
+use amethyst_rendy::types::Texture;
 
 /// Describes an action targeted at a `UiButton`.
 #[derive(Debug, Clone)]
