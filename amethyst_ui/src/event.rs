@@ -48,6 +48,14 @@ pub enum UiEventType {
         /// The entity on which the dragged object was dropped.
         dropped_on: Entity,
     },
+    /// When the value of a UiText element has been changed by user input.
+    ValueChange,
+    /// When the value of a UiText element has been committed by user action.
+    ValueCommit,
+    /// When an editable UiText element has gained focus.
+    Focus,
+    /// When an editable UiText element has lost focus.
+    Blur,
 }
 
 /// A ui event instance.
