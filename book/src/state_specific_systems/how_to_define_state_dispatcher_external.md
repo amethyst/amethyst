@@ -1,6 +1,6 @@
 # How to Define State Dispatcher: External
 
-This guide explains how to define a state-specific dispatcher whose `System`s are passed in externally. This is used when the list of `System`s is determined by user choices at runtime. For simplicity sake we'll be using the `SimpleState` trait for our our custom state. 
+This guide explains how to define a state-specific dispatcher whose `System`s are passed in externally, which means at the moment of state struct creation. This is used when the list of `System`s is determined by user choices at runtime. For simplicity sake we'll be using the `SimpleState` trait for our custom state. 
 
 For convenience we'll create a builder for our `State`. This way we'll be able to create our `State` and register `System`s as follows:
 
