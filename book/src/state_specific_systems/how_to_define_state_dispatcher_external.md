@@ -108,7 +108,9 @@ impl<'a, 'b> CustomDispatcherStateBuilder<'a, 'b> {
 # }
 ```
 
-This enables us to create the `State` and register `System`s as mentioned above. Now we have to actually build the `Dispatcher` within the `State`. `System` resources are setup when the `Dispatcher` is built. The `System#setup(..)` method needs access to the `World`'s resources, which is made available to `State#on_start(..)`. Therefore, we need to defer building the actual `Dispatcher` until this method is called.
+This enables us to create the `State` and register `System`s as mentioned above.
+
+Now we have to actually build the `Dispatcher` within the `State`.  In order to initialize the resources used by `System`s, building the `Dispatcher` needs to modify the `World`'s resources. Therefore, we need to defer building the actual `Dispatcher` until we can access them. Let's update our `on_start` method:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
