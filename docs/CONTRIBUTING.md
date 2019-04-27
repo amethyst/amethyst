@@ -52,7 +52,7 @@ will have to base your work off of a released tag. This can be done after a clon
 by running `git checkout TAG` where `TAG` is a released tag eg `v0.8.0`. Now that
 you have the latest code you can start contributing.
 
-Contributors should be familiar with the [Git Syle Guide](https://github.com/agis/git-style-guide) and [Commit Message Guidelines](https://gist.github.com/robertpainsi/b632364184e70900af4ab688decf6f53).
+Contributors should be familiar with the [Git Style Guide](https://github.com/agis/git-style-guide) and [Commit Message Guidelines](https://gist.github.com/robertpainsi/b632364184e70900af4ab688decf6f53).
 
 ### Submission Checklist
 
