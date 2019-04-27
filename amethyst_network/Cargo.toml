@@ -29,7 +29,7 @@ shred = "0.7"
 bincode = "1.0"
 log = "0.4.6"
 uuid = { version = "0.7.1", features = ["v4","serde"] }
-thread_profiler = { version = "0.3" , optional = true }
-laminar = "0.2"
+thread_profiler = { version = "0.3", optional = true }
+laminar = "0.2.0"
 err-derive = "0.1"
 crossbeam-channel = "0.3.8"
