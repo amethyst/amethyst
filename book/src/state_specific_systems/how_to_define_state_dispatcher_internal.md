@@ -64,7 +64,7 @@ This guide explains how to define a state-specific dispatcher whose systems are 
     }
     ```
 
-3. Run the state-specific dispatchers during `update(..)`.
+3. Run both the application and state-specific dispatchers during `update(..)`.
 
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
@@ -85,6 +85,7 @@ This guide explains how to define a state-specific dispatcher whose systems are 
         //..
 
         fn update(&mut self, data: StateData<'_, GameData<'a, 'b>>) -> Trans<GameData<'a, 'b>, E> {
+            data.data.update(&data.world);
             self.dispatcher.as_mut().unwrap().dispatch(&data.world.res);
 
             Trans::None
@@ -93,3 +94,9 @@ This guide explains how to define a state-specific dispatcher whose systems are 
     ```
 
     Now, any systems in the state-specific dispatcher will only run in this state.
+
+    Depending on the trait implemented by `CustomDispatcherState` it is recommended to omit the execution of the application dispatcher during `update(..)`:
+    ```rust,edition2018,no_run,noplaypen
+    data.data.update(&data.world);
+    ```
+    **For example:** The application dispatcher is automatically executed for states that implement `SimpleState`, another trait commonly used in other chapters of this book. Explicitly executing the application dispatcher during `update(..)` of a `SimpleState` can be the cause for an increase in time between frames. 
