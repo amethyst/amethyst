@@ -9,8 +9,8 @@ in VertexData {
     vec4 color;
 } vertex;
 
-out vec4 color;
+out vec4 out_color;
 
 void main() {
-    color = texture(albedo, vertex.tex_uv) * vertex.color;
+    out_color = texture(albedo, vertex.tex_uv) * vertex.color;
 }

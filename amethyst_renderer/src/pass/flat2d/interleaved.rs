@@ -124,8 +124,10 @@ impl Pass for DrawFlat2D {
             .with_raw_vertex_buffer(Self::attributes(), SpriteInstance::size() as ElemStride, 1);
         setup_textures(&mut builder, &TEXTURES);
         match self.transparency {
-            Some((mask, blend, depth)) => builder.with_blended_output("color", mask, blend, depth),
-            None => builder.with_output("color", Some(DepthMode::LessEqualWrite)),
+            Some((mask, blend, depth)) => {
+                builder.with_blended_output("out_color", mask, blend, depth)
+            }
+            None => builder.with_output("out_color", Some(DepthMode::LessEqualWrite)),
         };
         builder.build()
     }

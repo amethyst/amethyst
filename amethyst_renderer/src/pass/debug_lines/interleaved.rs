@@ -96,7 +96,7 @@ where
         builder.with_raw_global("camera_position");
         builder.with_raw_global("line_width");
         builder.with_primitive_type(Primitive::PointList);
-        builder.with_output("color", Some(DepthMode::LessEqualWrite));
+        builder.with_output("out_color", Some(DepthMode::LessEqualWrite));
 
         builder.build()
     }

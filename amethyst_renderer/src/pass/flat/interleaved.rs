@@ -123,8 +123,10 @@ where
             .with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0);
         setup_textures(&mut builder, &TEXTURES);
         match self.transparency {
-            Some((mask, blend, depth)) => builder.with_blended_output("color", mask, blend, depth),
-            None => builder.with_output("color", Some(DepthMode::LessEqualWrite)),
+            Some((mask, blend, depth)) => {
+                builder.with_blended_output("out_color", mask, blend, depth)
+            }
+            None => builder.with_output("out_color", Some(DepthMode::LessEqualWrite)),
         };
         builder.build()
     }

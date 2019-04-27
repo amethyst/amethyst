@@ -70,7 +70,7 @@ impl Pass for DrawSkybox {
             .with_raw_global("camera_position")
             .with_raw_global("zenith_color")
             .with_raw_global("nadir_color")
-            .with_output("color", Some(DepthMode::LessEqualWrite))
+            .with_output("out_color", Some(DepthMode::LessEqualWrite))
             .build()
     }
 
