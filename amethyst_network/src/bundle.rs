@@ -23,8 +23,17 @@ impl<T> NetworkBundle<T> {
         let config = ServerConfig {
             udp_socket_addr,
             max_throughput: 5000,
+            create_net_connection_on_connect: true,
         };
 
+        NetworkBundle {
+            config,
+            _data: PhantomData,
+        }
+    }
+
+    /// Construct a new `NetworkBundle` with the specified configuration.
+    pub fn from_config(config: ServerConfig) -> NetworkBundle<T> {
         NetworkBundle {
             config,
             _data: PhantomData,

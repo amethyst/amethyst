@@ -149,16 +149,18 @@ where
                     };
                 }
                 SocketEvent::Connect(addr) => {
-                    let mut connection: NetConnection<E> = NetConnection::new(addr);
+                    if self.config.create_net_connection_on_connect {
+                        let mut connection: NetConnection<E> = NetConnection::new(addr);
 
-                    connection
-                        .receive_buffer
-                        .single_write(NetEvent::Connected(addr));
+                        connection
+                            .receive_buffer
+                            .single_write(NetEvent::Connected(addr));
 
-                    entities
-                        .build_entity()
-                        .with(connection, &mut net_connections)
-                        .build();
+                        entities
+                            .build_entity()
+                            .with(connection, &mut net_connections)
+                            .build();
+                    }
                 }
                 SocketEvent::Timeout(timeout_addr) => {
                     for connection in (&mut net_connections).join() {
