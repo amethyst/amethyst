@@ -1,6 +1,6 @@
 # How to Define State Dispatcher: External
 
-This guide explains how to define a state-specific dispatcher whose `System`s are passed in externally, which means at the moment of state struct creation. This is used when the list of `System`s is determined by user choices at runtime. For simplicity sake we'll be using the `SimpleState` trait for our custom state. 
+This guide explains how to define a state-specific `Dispatcher` whose `System`s are passed in externally, which means at the moment of state struct creation. This is used when the list of `System`s is determined by user choices at runtime. For simplicity sake we'll be using the `SimpleState` trait for our custom state. 
 
 For convenience we'll create a builder for our `State`. This way we'll be able to create our `State` and register `System`s as follows:
 
@@ -11,7 +11,7 @@ CustomDispatcherBuilder::new()
     .build(); 
 ```
 
-We'll start off by creating our `State`. 
+We'll start off by creating our `State` with `dispatcher_builder` and `dispatcher` fields. 
 
 ```rust,edition2018,no_run,noplaypen
 extern crate amethyst;
@@ -41,7 +41,7 @@ impl<'a, 'b> CustomDispatcherState<'a, 'b> {
 }
 ```
 
-The `CustomDispatcherState` requires two lifetime annotations (`'a` and `'b`) for use in the `DispatcherBuilder` and `Dispatcher`.
+The `CustomDispatcherState` requires two annotations (`'a` and `'b`) to satisfy the lifetimes of `DispatcherBuilder` and `Dispatcher`.
 
 Then we'll create the builder for `CustomDispatcherState` that initialises the `DispatcherBuilder`, populates it with the desired `System`s and builds the state.
 
