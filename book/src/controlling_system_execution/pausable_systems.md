@@ -38,4 +38,4 @@ To register the `Resource` or change its value, we can use the following line:
 *data.world.write_resource::<CurrentState>() = CurrentState::Paused;
 ```
 
-Alternatively we can access the `Resource` in `System`s utilising `amethyst::ecs::prelude::Read` and `amethyst::ecs::prelude::Write` as seen before. 
+However, this cannot be done inside the pausable `System` itself. A pausable `System` can only access its pause `Resource` with immutable `Read` and cannot modify the value, thus the `System` cannot decide on its own if it should run on not. This has to be done from a different location. 
