@@ -42,7 +42,7 @@ where
                     net_event::OrderingGuarantee::Sequenced(s) => {
                         Packet::unreliable_sequenced(addr, payload, s)
                     }
-                    _ => panic!("This is in no way possible"),
+                    _ => unreachable!("Can not apply the guarantees: {:?}, {:?} to the packet", event.ordering_guarantee(), event.delivery_guarantee()),
                 },
                 net_event::DeliveryGuarantee::Reliable => match event.ordering_guarantee() {
                     net_event::OrderingGuarantee::None => Packet::reliable_unordered(addr, payload),
