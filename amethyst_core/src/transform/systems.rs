@@ -1,5 +1,7 @@
 //! Scene graph system and types
 
+use std::marker::PhantomData;
+
 use hibitset::BitSet;
 use specs::prelude::{
     ComponentEvent, Entities, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
@@ -7,36 +9,37 @@ use specs::prelude::{
 };
 
 use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform};
+use crate::nalgebra::RealField;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
 /// Handles updating `global_matrix` field from `Transform` components.
 /// component and parents.
-pub struct TransformSystem {
+pub struct TransformSystem<N> {
     local_modified: BitSet,
-
     locals_events_id: Option<ReaderId<ComponentEvent>>,
-
     parent_events_id: Option<ReaderId<HierarchyEvent>>,
+    _phantom: PhantomData<N>,
 }
 
-impl TransformSystem {
+impl<N> TransformSystem<N> {
     /// Creates a new transform processor.
-    pub fn new() -> TransformSystem {
+    pub fn new() -> TransformSystem<N> {
         TransformSystem {
             locals_events_id: None,
             parent_events_id: None,
             local_modified: BitSet::default(),
+            _phantom: PhantomData,
         }
     }
 }
 
-impl<'a> System<'a> for TransformSystem {
+impl<'a, N: RealField> System<'a> for TransformSystem<N> {
     type SystemData = (
         Entities<'a>,
         ReadExpect<'a, ParentHierarchy>,
-        WriteStorage<'a, Transform<f32>>,
+        WriteStorage<'a, Transform<N>>,
         ReadStorage<'a, Parent>,
     );
     fn run(&mut self, (entities, hierarchy, mut locals, parents): Self::SystemData) {
@@ -86,39 +89,32 @@ impl<'a> System<'a> for TransformSystem {
             local.global_matrix = local.matrix();
             debug_assert!(
                 local.is_finite(),
-                format!("Entity {:?} had a non-finite `Transform`", entity)
+                format!("Entity {:?} had a non-finite `Transform` {:?}", entity, local)
             );
         }
         modified.into_iter().for_each(|id| {
             self.local_modified.add(id);
         });
 
-        let mut matrix_changes = vec![];
         // Compute transforms with parents.
         for entity in hierarchy.all() {
             let self_dirty = self.local_modified.contains(entity.id());
-            if let (Some(parent), Some(local)) = (parents.get(*entity), locals.get(*entity)) {
+            if let Some(parent) = parents.get(*entity) {
                 let parent_dirty = self.local_modified.contains(parent.entity.id());
                 if parent_dirty || self_dirty {
-                    let combined_transform = if let Some(parent_global) = locals.get(parent.entity)
-                    {
-                        (parent_global.global_matrix * local.matrix())
-                    } else {
-                        local.matrix()
+                    let combined_transform = {
+                        let local = locals.get(*entity).expect("unreachable: We know this entity has a local because is was just modified.");
+                        if let Some(parent_global) = locals.get(parent.entity) {
+                            (parent_global.global_matrix * local.matrix())
+                        } else {
+                            local.matrix()
+                        }
                     };
                     self.local_modified.add(entity.id());
-                    matrix_changes.push((entity.clone(), combined_transform));
+                    locals.get_mut(*entity).expect("unreachable: We know this entity has a local because is was just modified.").global_matrix = combined_transform;
                 }
             }
         }
-        matrix_changes.into_iter().for_each(|(e, m)| {
-            locals
-                .get_mut(e)
-                .expect(
-                    "unreachable: We know this entity has a local because is was just modified.",
-                )
-                .global_matrix = m
-        });
     }
 
     fn setup(&mut self, res: &mut Resources) {
@@ -155,10 +151,10 @@ mod tests {
         assert_eq!(transform.matrix(), combined);
     }
 
-    fn transform_world<'a, 'b>() -> (World, HierarchySystem<Parent>, TransformSystem) {
+    fn transform_world<'a, 'b>() -> (World, HierarchySystem<Parent>, TransformSystem<f32>) {
         let mut world = World::new();
         let mut hs = HierarchySystem::<Parent>::new();
-        let mut ts = TransformSystem::new();
+        let mut ts = TransformSystem::<f32>::new();
         hs.setup(&mut world.res);
         ts.setup(&mut world.res);
 
@@ -276,7 +272,7 @@ mod tests {
             .unwrap()
             .clone();
         let a3 = e3_transform.global_matrix();
-        let a4 = together(*a3, local3.matrix());
+        let _a4 = together(*a3, local3.matrix());
         // assert_eq!(*a3, a4);
         // let global_matrix1 = {
         //     // First entity (top level parent)
@@ -327,6 +323,7 @@ mod tests {
 
         let e1 = world.create_entity().with(local1.clone()).build();
 
+        // e1 > e2 > e3
         {
             let mut parents = world.write_storage::<Parent>();
             parents.insert(e2, Parent { entity: e1 }).unwrap();
@@ -337,26 +334,41 @@ mod tests {
         system.run_now(&mut world.res);
 
         let global_matrix1 = {
+            let e1_transform = world
+                .read_storage::<Transform<f32>>()
+                .get(e1)
+                .unwrap()
+                .clone();
+
             // First entity (top level parent)
-            let global_matrix1 = local1.global_matrix();
-            let a1 = global_matrix1;
+            let a1 = e1_transform.global_matrix().clone();
             let a2 = local1.matrix();
-            assert_eq!(*a1, a2);
-            global_matrix1
+            assert_eq!(a1, a2);
+            a1
         };
 
         let global_matrix2 = {
-            let global_matrix2 = local2.global_matrix();
-            let a1 = global_matrix2;
-            let a2 = together(*global_matrix1, local2.matrix());
-            assert_eq!(*a1, a2);
-            global_matrix2
+            let e2_transform = world
+                .read_storage::<Transform<f32>>()
+                .get(e2)
+                .unwrap()
+                .clone();
+
+            let a1 = e2_transform.global_matrix().clone();
+            let a2 = together(global_matrix1, local2.matrix());
+            assert_eq!(a1, a2);
+            a1
         };
 
         {
-            let global_matrix3 = local3.global_matrix();
-            let a1 = global_matrix3;
-            let a2 = together(*global_matrix3, local3.matrix());
+            let e3_transform = world
+                .read_storage::<Transform<f32>>()
+                .get(e3)
+                .unwrap()
+                .clone();
+
+            let a1 = e3_transform.global_matrix();
+            let a2 = together(global_matrix2, local3.matrix());
             assert_eq!(*a1, a2);
         };
     }

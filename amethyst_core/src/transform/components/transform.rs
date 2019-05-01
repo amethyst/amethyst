@@ -41,11 +41,11 @@ impl<N: Real> Transform<N> {
     /// ```rust
     /// # use amethyst_core::transform::components::Transform;
     /// # use amethyst_core::nalgebra::{Isometry3, Translation3, UnitQuaternion, Vector3};
-    /// let position = Translation3::new(N::zero(), 2.0, 4.0);
-    /// let rotation = UnitQuaternion::from_euler_angles(0.4, 0.2, N::zero());
-    /// let scale = Vector3::new(N::one(), N::one(), N::one());
+    /// let position = Translation3::new(0.0, 2.0, 4.0);
+    /// let rotation = UnitQuaternion::from_euler_angles(0.4, 0.2, 0.0);
+    /// let scale = Vector3::new(1.0, 1.0, 1.0);
     ///
-    /// let t = Transform::new(position, rotation, scale);
+    /// let t = Transform::<f32>::new(position, rotation, scale);
     ///
     /// assert_eq!(t.translation().y, 2.0);
     /// ```
@@ -80,21 +80,21 @@ impl<N: Real> Transform<N> {
     /// ```rust
     /// # use amethyst_core::transform::components::Transform;
     /// # use amethyst_core::nalgebra::{UnitQuaternion, Quaternion, Vector3};
-    /// let mut t = Transform::default();
+    /// let mut t = Transform::<f32>::default();
     /// // No rotation by default
     /// assert_eq!(*t.rotation().quaternion(), Quaternion::identity());
     /// // look up with up pointing backwards
-    /// t.face_towards(Vector3::new(N::zero(), N::one(), N::zero()), Vector3::new(N::zero(), N::zero(), N::one()));
+    /// t.face_towards(Vector3::new(0.0, 1.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
     /// // our rotation should match the angle from straight ahead to straight up
     /// let rotation = UnitQuaternion::rotation_between(
-    ///     &Vector3::new(N::zero(), N::one(), N::zero()),
-    ///     &Vector3::new(N::zero(), N::zero(), N::one()),
+    ///     &Vector3::new(0.0, 1.0, 0.0),
+    ///     &Vector3::new(0.0, 0.0, 1.0),
     /// ).unwrap();
     /// assert_eq!(*t.rotation(), rotation);
     /// // now if we move forwards by N::one(), we'll end up at the point we are facing
     /// // (modulo some floating point error)
-    /// t.move_forward(N::one());
-    /// assert!((*t.translation() - Vector3::new(N::zero(), N::one(), N::zero())).magnitude() <= N::zero()001);
+    /// t.move_forward(1.0);
+    /// assert!((*t.translation() - Vector3::new(0.0, 1.0, 0.0)).magnitude() <= 0.0001);
     /// ```
     #[inline]
     pub fn face_towards(&mut self, target: Vector3<N>, up: Vector3<N>) -> &mut Self {
@@ -359,9 +359,9 @@ impl<N: Real> Transform<N> {
     /// # use amethyst_core::transform::components::Transform;
     /// let mut transform = Transform::default();
     ///
-    /// transform.set_rotation_euler(N::one(), N::zero(), N::zero());
+    /// transform.set_rotation_euler(1.0, 0.0, 0.0);
     ///
-    /// assert_eq!(transform.rotation().euler_angles().0, N::one());
+    /// assert_eq!(transform.rotation().euler_angles().0, 1.0);
     /// ```
     pub fn set_rotation_euler(&mut self, x: N, y: N, z: N) -> &mut Self {
         self.iso.rotation = UnitQuaternion::from_euler_angles(x, y, z);
@@ -427,9 +427,9 @@ impl<N: Real> Component for Transform<N> {
 /// ```
 /// # use amethyst_core::transform::components::Transform;
 /// # use amethyst_core::nalgebra::Vector3;
-/// let transform = Transform::from(Vector3::new(10N::zero(), 20N::zero(), 30N::zero()));
+/// let transform = Transform::from(Vector3::new(100.0, 200.0, 300.0));
 ///
-/// assert_eq!(transform.translation().x, 10N::zero());
+/// assert_eq!(transform.translation().x, 100.0);
 /// ```
 impl<N: Real> From<Vector3<N>> for Transform<N> {
     fn from(translation: Vector3<N>) -> Self {
@@ -616,13 +616,15 @@ mod tests {
         );
 
         // check Mat(first * second) == Mat(first) * Mat(second)
-        assert_ulps_eq!(
+        assert_relative_eq!(
             first.matrix() * second.matrix(),
             first.concat(&second).matrix(),
+            max_relative = 0.0000000000001,
         );
-        assert_ulps_eq!(
+        assert_relative_eq!(
             first.matrix() * second.matrix(),
             first.concat(&second).matrix(),
+            max_relative = 0.0000000000001,
         );
     }
 
