@@ -129,24 +129,21 @@ where
         for (counter, socket_event) in self.event_receiver.try_iter().enumerate() {
             match socket_event {
                 SocketEvent::Packet(packet) => {
-                    // Get the event
-                    match deserialize_event::<E>(packet.payload()) {
+                    let from_addr = packet.addr();
+
+                    match NetEvent::<E>::from_packet(packet) {
                         Ok(event) => {
-                            // Get the NetConnection from the source
                             for connection in (&mut net_connections).join() {
-                                if connection.target_addr == packet.addr() {
-                                    connection
-                                        .receive_buffer
-                                        .single_write(NetEvent::Packet(event.clone()));
-                                };
+                                if &connection.target_addr == &from_addr {
+                                    connection.receive_buffer.single_write(event.clone());
+                                }
                             }
                         }
                         Err(e) => error!(
                             "Failed to deserialize an incoming network event: {} From source: {:?}",
-                            e,
-                            packet.addr()
+                            e, from_addr
                         ),
-                    };
+                    }
                 }
                 SocketEvent::Connect(addr) => {
                     if self.config.create_net_connection_on_connect {

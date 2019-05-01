@@ -65,7 +65,7 @@ impl<'a> System<'a> for SpamReceiveSystem {
             {
                 count += 1;
                 match ev {
-                    NetEvent::Packet(packet) => { /* info!("{}", packet.content()) */ }
+                    NetEvent::Packet(packet) => info!("{}", packet.content()),
                     NetEvent::Connected(addr) => println!("New Client Connection: {}", addr),
                     NetEvent::Disconnected(addr) => {
                         client_disconnected = true;

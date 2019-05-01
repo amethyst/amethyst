@@ -2,8 +2,10 @@
 //! NetEvent are passed through the network
 //! NetOwnedEvent are passed through the ECS, and contains the event's source (remote connection, usually).
 
-use serde::{Deserialize, Serialize};
-use std::net::SocketAddr;
+use crate::Result;
+use laminar::Packet;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use std::{fmt::Debug, net::SocketAddr};
 
 /// Network events which you can send or and receive from an endpoint.
 // TODO, Connect, connection refused, disconnect, disconnected
@@ -21,9 +23,42 @@ pub enum NetEvent<T> {
     __Nonexhaustive,
 }
 
+impl<T> NetEvent<T>
+where
+    T: Serialize + DeserializeOwned,
+{
+    pub(crate) fn from_packet(packet: laminar::Packet) -> Result<Self> {
+        match crate::deserialize_event::<T>(packet.payload()) {
+            Ok(event) => {
+                let net_event: NetEvent<T> = NetEvent::Packet(match packet.delivery_guarantee() {
+                    laminar::DeliveryGuarantee::Unreliable => match packet.order_guarantee() {
+                        laminar::OrderingGuarantee::None => NetPacket::<T>::unreliable(event),
+                        laminar::OrderingGuarantee::Sequenced(s) => {
+                            NetPacket::unreliable_sequenced(event, s)
+                        }
+                        _ => panic!("This is in no way possible"),
+                    },
+                    laminar::DeliveryGuarantee::Reliable => match packet.order_guarantee() {
+                        laminar::OrderingGuarantee::None => NetPacket::reliable_unordered(event),
+                        laminar::OrderingGuarantee::Sequenced(s) => {
+                            NetPacket::reliable_sequenced(event, s)
+                        }
+                        laminar::OrderingGuarantee::Ordered(o) => {
+                            NetPacket::reliable_ordered(event, o)
+                        }
+                    },
+                });
+
+                Ok(net_event)
+            }
+            Err(e) => Err(e),
+        }
+    }
+}
+
 /// Enum to specify how a packet should be arranged.
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialOrd, PartialEq, Eq)]
-enum OrderingGuarantee {
+pub(crate) enum OrderingGuarantee {
     /// No arranging will be done.
     None,
     /// Packets will be arranged in sequence.
@@ -34,7 +69,7 @@ enum OrderingGuarantee {
 
 /// Enum to specify how a packet should be delivered.
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialOrd, PartialEq, Eq)]
-enum DeliveryGuarantee {
+pub(crate) enum DeliveryGuarantee {
     /// Packet may or may not be delivered
     Unreliable,
     /// Packet will be delivered
@@ -51,12 +86,34 @@ impl From<laminar::OrderingGuarantee> for OrderingGuarantee {
     }
 }
 
-impl From<laminar::DeliveryGuarantee> for DeliveryGuarantee {
-    fn from(delivery: laminar::DeliveryGuarantee) -> Self {
-        match delivery {
-            laminar::DeliveryGuarantee::Unreliable => DeliveryGuarantee::Unreliable,
-            laminar::DeliveryGuarantee::Reliable => DeliveryGuarantee::Reliable,
+impl From<OrderingGuarantee> for laminar::OrderingGuarantee {
+    fn from(ordering: OrderingGuarantee) -> Self {
+        match ordering {
+            OrderingGuarantee::None => laminar::OrderingGuarantee::None,
+            OrderingGuarantee::Sequenced(s) => laminar::OrderingGuarantee::Sequenced(s),
+            OrderingGuarantee::Ordered(o) => laminar::OrderingGuarantee::Ordered(o),
         }
+    }
+}
+
+impl From<DeliveryGuarantee> for laminar::DeliveryGuarantee {
+    fn from(delivery: DeliveryGuarantee) -> Self {
+        match delivery {
+            DeliveryGuarantee::Unreliable => laminar::DeliveryGuarantee::Unreliable,
+            DeliveryGuarantee::Reliable => laminar::DeliveryGuarantee::Reliable,
+        }
+    }
+}
+
+impl Default for OrderingGuarantee {
+    fn default() -> Self {
+        OrderingGuarantee::None
+    }
+}
+
+impl Default for DeliveryGuarantee {
+    fn default() -> Self {
+        DeliveryGuarantee::Unreliable
     }
 }
 
@@ -77,9 +134,11 @@ impl From<laminar::DeliveryGuarantee> for DeliveryGuarantee {
 /// For more information please have a look at: https://amethyst.github.io/laminar/docs/reliability/reliability.html
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct NetPacket<T> {
-    ordering_guarantee: OrderingGuarantee,
-    delivery_guarantee: DeliveryGuarantee,
     content: T,
+    #[serde(skip)]
+    ordering_guarantee: OrderingGuarantee,
+    #[serde(skip)]
+    delivery_guarantee: DeliveryGuarantee,
 }
 
 impl<T> NetPacket<T> {
@@ -230,11 +289,15 @@ impl<T> NetPacket<T> {
     pub fn content_mut(&mut self) -> &mut T {
         &mut self.content
     }
-}
 
-impl<T> From<NetPacket<T>> for NetEvent<T> {
-    fn from(packet: NetPacket<T>) -> Self {
-        NetEvent::Packet(packet)
+    /// Returns the ordering guarantee
+    pub(crate) fn ordering_guarantee(&self) -> OrderingGuarantee {
+        self.ordering_guarantee
+    }
+
+    /// Returns the delivery guarantee
+    pub(crate) fn delivery_guarantee(&self) -> DeliveryGuarantee {
+        self.delivery_guarantee
     }
 }
 
