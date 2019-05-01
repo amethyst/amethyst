@@ -149,7 +149,7 @@ fn main() -> amethyst::Result<()> {
     );
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(TransformBundle::<f32>::new())?
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(root.join("input.ron"))?,
         )?

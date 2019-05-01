@@ -204,7 +204,7 @@ fn main() -> Result<(), Error> {
     let game_data = CustomGameDataBuilder::default()
         .with_base(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_running::<ExampleSystem>(ExampleSystem::default(), "example_system", &[])
-        .with_base_bundle(TransformBundle::new())?
+        .with_base_bundle(TransformBundle::<f32>::new())?
         .with_base_bundle(UiBundle::<String, String>::new())?
         .with_base_bundle(FPSCounterBundle::default())?
         .with_base_bundle(RenderBundle::<_, _, f32>::new(pipeline_builder, Some(display_config)))?

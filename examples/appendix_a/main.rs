@@ -46,7 +46,7 @@ fn main() -> amethyst::Result<()> {
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
         .with_bundle(PongBundle::default())?
-        .with_bundle(TransformBundle::new().with_dep(&["ball_system", "paddle_system"]))?
+        .with_bundle(TransformBundle::<f32>::new().with_dep(&["ball_system", "paddle_system"]))?
         .with_bundle(AudioBundle::<f32>::default())?
         .with(
             DjSystem::new(|music: &mut Music| music.music.next()),

@@ -362,7 +362,7 @@ fn main() -> amethyst::Result<()> {
     let assets_directory = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(TransformBundle::<f32>::new())?
         .with_bundle(
             RenderBundle::<'_, _, _, f32>::new(pipe, Some(display_config))
                 .with_sprite_sheet_processor()

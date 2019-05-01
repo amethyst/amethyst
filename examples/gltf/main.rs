@@ -196,7 +196,7 @@ fn main() -> Result<(), amethyst::Error> {
                 .with_sensitivity(0.1, 0.1)
                 .with_speed(5.),
         )?
-        .with_bundle(TransformBundle::new().with_dep(&[
+        .with_bundle(TransformBundle::<f32>::new().with_dep(&[
             "animation_control",
             "sampler_interpolation",
             "fly_movement",

@@ -126,7 +126,7 @@ fn main() -> amethyst::Result<()> {
     let resources = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(TransformBundle::<f32>::new())?
         .with_basic_renderer(path, DrawPbm::<PosNormTangTex, f32>::new(), false)?;
     let mut game = Application::new(&resources, Example, game_data)?;
     game.run();

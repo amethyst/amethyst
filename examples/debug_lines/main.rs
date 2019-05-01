@@ -168,7 +168,7 @@ fn main() -> amethyst::Result<()> {
         )?
         .with(ExampleLinesSystem, "example_lines_system", &[])
         .with_bundle(fly_control_bundle)?
-        .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
+        .with_bundle(TransformBundle::<f32>::new().with_dep(&["fly_movement"]))?
         .with_bundle(RenderBundle::<'_, _, _, f32>::new(pipe, Some(config)))?;
 
     let mut game = Application::new(resources, ExampleState, game_data)?;

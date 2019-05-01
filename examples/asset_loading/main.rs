@@ -111,7 +111,7 @@ fn main() -> Result<(), Error> {
 
     let game_data = GameDataBuilder::default()
         .with_bundle(InputBundle::<String, String>::new())?
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(TransformBundle::<f32>::new())?
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex, f32>::new(), false)?;
 
     let mut game = Application::new(resources_directory, AssetsExample, game_data)?;

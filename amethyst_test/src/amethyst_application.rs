@@ -129,7 +129,7 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
         AC: Hash + Eq + Clone + Send + Sync + 'static,
     {
         AmethystApplication::blank()
-            .with_bundle(TransformBundle::new())
+            .with_bundle(TransformBundle::<f32>::new())
             .with_ui_bundles::<AX, AC>()
             .with_resource(ScreenDimensions::new(SCREEN_WIDTH, SCREEN_HEIGHT, HIDPI))
     }
@@ -161,7 +161,7 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
                 "sprite_render_animation_control_system",
                 "sprite_render_sampler_interpolation_system",
             ))
-            .with_bundle(TransformBundle::new().with_dep(&[
+            .with_bundle(TransformBundle::<f32>::new().with_dep(&[
                 "material_animation_control_system",
                 "material_sampler_interpolation_system",
                 "sprite_render_animation_control_system",

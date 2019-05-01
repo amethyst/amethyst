@@ -111,7 +111,7 @@ fn main() -> Result<(), Error> {
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
-        .with_bundle(TransformBundle::new().with_dep(&[]))?
+        .with_bundle(TransformBundle::<f32>::new().with_dep(&[]))?
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
