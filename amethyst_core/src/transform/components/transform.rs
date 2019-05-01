@@ -3,7 +3,7 @@ use std::fmt;
 use std::marker::PhantomData;
 
 use nalgebra::{
-    self as na, Isometry3, Matrix4, Quaternion, Real, Translation3, Unit, UnitQuaternion, Vector3,
+    self as na, Isometry3, Matrix4, Quaternion, RealField, Translation3, Unit, UnitQuaternion, Vector3,
 };
 use serde::{
     de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor},
@@ -18,7 +18,7 @@ use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 ///
 /// The transforms are preformed in this order: scale, then rotation, then translation.
 #[derive(Getters, Setters, MutGetters, Clone, Debug, PartialEq)]
-pub struct Transform<N: Real> {
+pub struct Transform<N: RealField> {
     /// Translation + rotation value
     #[get = "pub"]
     #[set = "pub"]
@@ -33,7 +33,7 @@ pub struct Transform<N: Real> {
     pub(crate) global_matrix: Matrix4<N>,
 }
 
-impl<N: Real> Transform<N> {
+impl<N: RealField> Transform<N> {
     /// Create a new Transform.
     ///
     /// # Examples
@@ -407,7 +407,7 @@ impl<N: Real> Transform<N> {
     }
 }
 
-impl<N: Real> Default for Transform<N> {
+impl<N: RealField> Default for Transform<N> {
     /// The default transform does nothing when used to transform an entity.
     fn default() -> Self {
         Transform {
@@ -418,7 +418,7 @@ impl<N: Real> Default for Transform<N> {
     }
 }
 
-impl<N: Real> Component for Transform<N> {
+impl<N: RealField> Component for Transform<N> {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
 
@@ -431,7 +431,7 @@ impl<N: Real> Component for Transform<N> {
 ///
 /// assert_eq!(transform.translation().x, 100.0);
 /// ```
-impl<N: Real> From<Vector3<N>> for Transform<N> {
+impl<N: RealField> From<Vector3<N>> for Transform<N> {
     fn from(translation: Vector3<N>) -> Self {
         Transform {
             iso: Isometry3::new(translation, na::zero()),
@@ -440,7 +440,7 @@ impl<N: Real> From<Vector3<N>> for Transform<N> {
     }
 }
 
-impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform<N> {
+impl<'de, N: RealField + Deserialize<'de>> Deserialize<'de> for Transform<N> {
     fn deserialize<D>(deserializer: D) -> Result<Transform<N>, D::Error>
     where
         D: Deserializer<'de>,
@@ -453,11 +453,11 @@ impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform<N> {
             Scale,
         };
 
-        struct TransformVisitor<N: Real> {
+        struct TransformVisitor<N: RealField> {
             _phantom: PhantomData<N>,
         }
 
-        impl<N: Real> Default for TransformVisitor<N> {
+        impl<N: RealField> Default for TransformVisitor<N> {
             fn default() -> Self {
                 TransformVisitor {
                     _phantom: PhantomData,
@@ -465,7 +465,7 @@ impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform<N> {
             }
         }
 
-        impl<'de, N: Real + Deserialize<'de>> Visitor<'de> for TransformVisitor<N> {
+        impl<'de, N: RealField + Deserialize<'de>> Visitor<'de> for TransformVisitor<N> {
             type Value = Transform<N>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -563,13 +563,13 @@ impl<'de, N: Real + Deserialize<'de>> Deserialize<'de> for Transform<N> {
     }
 }
 
-impl<N: Real + Serialize> Serialize for Transform<N> {
+impl<N: RealField + Serialize> Serialize for Transform<N> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
         #[derive(Serialize)]
-        struct TransformValues<N: Real> {
+        struct TransformValues<N: RealField> {
             translation: [N; 3],
             rotation: [N; 4],
             scale: [N; 3],

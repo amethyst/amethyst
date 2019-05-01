@@ -1,6 +1,6 @@
 use amethyst_assets::PrefabData;
 use amethyst_core::{
-    nalgebra::Real,
+    nalgebra::RealField,
     specs::prelude::{Component, Entity, HashMapStorage, NullStorage, WriteStorage},
 };
 use amethyst_error::Error;
@@ -18,14 +18,14 @@ impl Component for FlyControlTag {
 
 /// To add an arc ball behaviour, add this to a camera which already has the FlyControlTag added.
 #[derive(Debug, Clone)]
-pub struct ArcBallControlTag<N: Real> {
+pub struct ArcBallControlTag<N: RealField> {
     /// The target entity which the camera will orbit
     pub target: Entity,
     /// The distance from the target entity that the camera should orbit at.
     pub distance: N,
 }
 
-impl<N: Real> Component for ArcBallControlTag<N> {
+impl<N: RealField> Component for ArcBallControlTag<N> {
     // we can use HashMapStorage here because, according to the specs doc, this storage should be
     // use when the component is used with few entity, I think there will rarely more than one
     // camera
@@ -36,12 +36,12 @@ impl<N: Real> Component for ArcBallControlTag<N> {
 ///
 /// Will always load a `FlyControlTag`
 #[derive(Default, Clone, Deserialize, Serialize)]
-pub struct ControlTagPrefab<N: Real> {
+pub struct ControlTagPrefab<N: RealField> {
     /// Place `ArcBallControlTag` on the `Entity`
     pub arc_ball: Option<(usize, N)>,
 }
 
-impl<'a, N: Real> PrefabData<'a> for ControlTagPrefab<N> {
+impl<'a, N: RealField> PrefabData<'a> for ControlTagPrefab<N> {
     type SystemData = (
         WriteStorage<'a, FlyControlTag>,
         WriteStorage<'a, ArcBallControlTag<N>>,

@@ -12,7 +12,7 @@ use std::{collections::HashMap, ops::Range, fmt::Debug};
 use amethyst_animation::{AnimatablePrefab, SkinnablePrefab};
 use amethyst_assets::{Handle, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter};
 use amethyst_core::{
-    nalgebra::{Point3, Vector3, Real},
+    nalgebra::{Point3, Vector3, RealField},
     specs::prelude::{Component, DenseVecStorage, Entity, Write, WriteStorage},
     transform::Transform,
     Named,
@@ -31,7 +31,7 @@ pub type GltfSceneAsset<N> = Prefab<GltfPrefab<N>>;
 
 /// `PrefabData` for loading Gltf files.
 #[derive(Debug, Clone, Default)]
-pub struct GltfPrefab<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + Real> {
+pub struct GltfPrefab<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField> {
     /// `Transform` will almost always be placed, the only exception is for the main `Entity` for
     /// certain scenarios (based on the data in the Gltf file)
     pub transform: Option<Transform<N>>,
@@ -54,7 +54,7 @@ pub struct GltfPrefab<N: Clone + Debug + Default + DeserializeOwned + Serialize 
     pub(crate) material_id: Option<usize>,
 }
 
-impl<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + Real + From<f32>> GltfPrefab<N> {
+impl<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>> GltfPrefab<N> {
     /// Move the scene so the center of the bounding box is at the given `target` location.
     pub fn move_to(&mut self, target: Point3<f32>) {
         if let Some(ref extent) = self.extent {
@@ -179,7 +179,7 @@ pub struct GltfSceneOptions {
 }
 
 impl<'a, N> PrefabData<'a> for GltfPrefab<N> 
-    where N: Real + Serialize + DeserializeOwned + NumCast + Clone + Debug + Default
+    where N: RealField + Serialize + DeserializeOwned + NumCast + Clone + Debug + Default
     {
     type SystemData = (
         <Transform<N> as PrefabData<'a>>::SystemData,

@@ -7,7 +7,7 @@ use crate::{
     resources::{HideCursor, WindowFocus},
 };
 use amethyst_core::{
-    nalgebra::{convert, Real, Unit, Vector3},
+    nalgebra::{convert, RealField, Unit, Vector3},
     shrev::{EventChannel, ReaderId},
     specs::prelude::{Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
     timing::Time,
@@ -22,7 +22,7 @@ use amethyst_renderer::WindowMessages;
 ///
 /// * `A`: This is the key the `InputHandler` is using for axes. Often, this is a `String`.
 /// * `B`: This is the key the `InputHandler` is using for actions. Often, this is a `String`.
-/// * `N`: Real bound (f32 or f64).
+/// * `N`: RealField bound (f32 or f64).
 pub struct FlyMovementSystem<A, B, N> {
     /// The movement speed of the movement in units per second.
     speed: N,
@@ -61,7 +61,7 @@ impl<'a, A, B, N> System<'a> for FlyMovementSystem<A, B, N>
 where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
-    N: Real,
+    N: RealField,
 {
     type SystemData = (
         Read<'a, Time>,
@@ -93,7 +93,7 @@ where
 ///
 /// # Type parameters
 ///
-/// * `N`: Real bound (f32 or f64).
+/// * `N`: RealField bound (f32 or f64).
 pub struct ArcBallRotationSystem<N>(PhantomData<N>);
 
 impl<N> Default for ArcBallRotationSystem<N> {
@@ -102,7 +102,7 @@ impl<N> Default for ArcBallRotationSystem<N> {
     }
 }
 
-impl<'a, N: Real> System<'a> for ArcBallRotationSystem<N> {
+impl<'a, N: RealField> System<'a> for ArcBallRotationSystem<N> {
     type SystemData = (
         WriteStorage<'a, Transform<N>>,
         ReadStorage<'a, ArcBallControlTag<N>>,
@@ -135,8 +135,8 @@ impl<'a, N: Real> System<'a> for ArcBallRotationSystem<N> {
 ///
 /// * `A`: This is the key the `InputHandler` is using for axes. Often, this is a `String`.
 /// * `B`: This is the key the `InputHandler` is using for actions. Often, this is a `String`.
-/// * `N`: Real bound (f32 or f64).
-pub struct FreeRotationSystem<A, B, N: Real> {
+/// * `N`: RealField bound (f32 or f64).
+pub struct FreeRotationSystem<A, B, N: RealField> {
     sensitivity_x: f32,
     sensitivity_y: f32,
     _marker1: PhantomData<A>,
@@ -145,7 +145,7 @@ pub struct FreeRotationSystem<A, B, N: Real> {
     event_reader: Option<ReaderId<Event>>,
 }
 
-impl<A, B, N: Real> FreeRotationSystem<A, B, N> {
+impl<A, B, N: RealField> FreeRotationSystem<A, B, N> {
     /// Builds a new `FreeRotationSystem` with the specified mouse sensitivity values.
     pub fn new(sensitivity_x: f32, sensitivity_y: f32) -> Self {
         FreeRotationSystem {
@@ -163,7 +163,7 @@ impl<'a, A, B, N> System<'a> for FreeRotationSystem<A, B, N>
 where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
-    N: Real,
+    N: RealField,
 {
     type SystemData = (
         Read<'a, EventChannel<Event>>,

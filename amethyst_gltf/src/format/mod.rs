@@ -10,7 +10,7 @@ use num_traits::NumCast;
 use amethyst_animation::AnimationHierarchyPrefab;
 use amethyst_assets::{Format, FormatValue, Prefab, Source};
 use amethyst_core::{
-    nalgebra::{Quaternion, Vector3, Unit, Real},
+    nalgebra::{Quaternion, Vector3, Unit, RealField},
     transform::Transform,
 };
 use amethyst_error::{format_err, Error, ResultExt};
@@ -41,7 +41,7 @@ mod skin;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct GltfSceneFormat;
 
-impl<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + Real + From<f32>> Format<Prefab<GltfPrefab<N>>> for GltfSceneFormat {
+impl<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>> Format<Prefab<GltfPrefab<N>>> for GltfSceneFormat {
     const NAME: &'static str = "GLTFScene";
 
     type Options = GltfSceneOptions;
@@ -60,7 +60,7 @@ impl<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + Real 
     }
 }
 
-fn load_gltf<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + Real + From<f32>>(
+fn load_gltf<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>>(
     source: Arc<dyn Source>,
     name: &str,
     options: GltfSceneOptions,
@@ -73,7 +73,7 @@ fn load_gltf<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast
         })
 }
 
-fn load_data<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + Real + From<f32>>(
+fn load_data<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>>(
     gltf: &Gltf,
     buffers: &Buffers,
     options: &GltfSceneOptions,
@@ -107,7 +107,7 @@ fn get_scene_index(gltf: &Gltf, options: &GltfSceneOptions) -> Result<usize, Err
     }
 }
 
-fn load_scene<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + Real + From<f32>>(
+fn load_scene<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>>(
     gltf: &Gltf,
     scene_index: usize,
     buffers: &Buffers,
@@ -211,7 +211,7 @@ struct SkinInfo {
     mesh_indices: Vec<usize>,
 }
 
-fn load_node<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + Real + From<f32>>(
+fn load_node<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>>(
     gltf: &Gltf,
     node: &gltf::Node<'_>,
     entity_index: usize,

@@ -1,6 +1,6 @@
 use std::hash::Hash;
 
-use amethyst_core::nalgebra::{convert, Real};
+use amethyst_core::nalgebra::{convert, RealField};
 use winit::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 
 use crate::input_handler::InputHandler;
@@ -48,7 +48,7 @@ pub fn is_close_requested(event: &Event) -> bool {
 
 /// Gets the input axis value from the `InputHandler`.
 /// If the name is None, it will return the default value of the axis (0.0).
-pub fn get_input_axis_simple<A, B, N: Real>(name: &Option<A>, input: &InputHandler<A, B>) -> N
+pub fn get_input_axis_simple<A, B, N: RealField>(name: &Option<A>, input: &InputHandler<A, B>) -> N
 where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,

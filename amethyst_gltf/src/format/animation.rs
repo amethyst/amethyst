@@ -8,12 +8,12 @@ use amethyst_animation::{
     AnimationPrefab, AnimationSetPrefab, InterpolationFunction, InterpolationPrimitive, Sampler,
     SamplerPrimitive, TransformChannel,
 };
-use amethyst_core::{Transform, nalgebra::Real};
+use amethyst_core::{Transform, nalgebra::RealField};
 
 use super::Buffers;
 use crate::error;
 
-pub fn load_animations<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + Real + From<f32>>(
+pub fn load_animations<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>>(
     gltf: &gltf::Gltf,
     buffers: &Buffers,
     node_map: &HashMap<usize, usize>,
@@ -32,7 +32,7 @@ pub fn load_animations<N: Clone + Debug + Default + DeserializeOwned + Serialize
     Ok(prefab)
 }
 
-fn load_animation<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + Real + From<f32>>(
+fn load_animation<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>>(
     animation: &gltf::Animation<'_>,
     buffers: &Buffers,
 ) -> Result<AnimationPrefab<Transform<N>>, Error> {
@@ -44,7 +44,7 @@ fn load_animation<N: Clone + Debug + Default + DeserializeOwned + Serialize + Nu
     Ok(a)
 }
 
-fn load_channel<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + Real + From<f32>>(
+fn load_channel<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>>(
     channel: &gltf::animation::Channel<'_>,
     buffers: &Buffers,
 ) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<N>>), Error> {

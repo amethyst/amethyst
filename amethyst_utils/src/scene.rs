@@ -6,7 +6,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use amethyst_assets::{Format, PrefabData, ProgressCounter};
 use amethyst_controls::ControlTagPrefab;
-use amethyst_core::{nalgebra::Real, specs::prelude::Entity, Transform};
+use amethyst_core::{nalgebra::RealField, specs::prelude::Entity, Transform};
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
 use amethyst_renderer::{
@@ -26,7 +26,7 @@ use crate::removal::Removal;
 ///     * `Vec<PosNormTex>`
 ///     * `Vec<PosNormTangTex>`
 ///     * `ComboMeshCreator`
-/// - `N`: Real bound (f32 or f64).
+/// - `N`: RealField bound (f32 or f64).
 /// - `R`: The type of id used by the Removal component.
 /// - `M`: `Format` to use for loading `Mesh`es from file
 #[derive(Deserialize, Serialize, PrefabData)]
@@ -34,7 +34,7 @@ use crate::removal::Removal;
 #[serde(deny_unknown_fields)]
 pub struct BasicScenePrefab<V, N, R = (), M = ObjFormat>
 where
-    N: Real,
+    N: RealField,
     M: Format<Mesh> + Clone,
     M::Options: DeserializeOwned + Serialize + Clone,
     R: PartialEq + Debug + Clone + Send + Sync + 'static,
@@ -54,7 +54,7 @@ where
     M::Options: DeserializeOwned + Serialize + Clone,
     R: PartialEq + Debug + Clone + Send + Sync + 'static,
     V: From<InternalShape> + Into<MeshData>,
-    N: Real,
+    N: RealField,
 {
     fn default() -> Self {
         BasicScenePrefab {

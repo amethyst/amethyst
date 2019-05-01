@@ -1,5 +1,5 @@
 use amethyst_core::{
-    nalgebra::Real,
+    nalgebra::RealField,
     specs::{Entity, WriteStorage},
     Named, Transform,
 };
@@ -40,7 +40,7 @@ where
     }
 }
 
-impl<'a, N: Real> PrefabData<'a> for Transform<N> {
+impl<'a, N: RealField> PrefabData<'a> for Transform<N> {
     type SystemData = WriteStorage<'a, Transform<N>>;
     type Result = ();
 

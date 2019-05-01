@@ -129,7 +129,7 @@ impl<'a, N: RealField> System<'a> for TransformSystem<N> {
 
 #[cfg(test)]
 mod tests {
-    use nalgebra::{Matrix4, Quaternion, Real, Unit, Vector3};
+    use nalgebra::{Matrix4, Quaternion, RealField, Unit, Vector3};
     use shred::RunNow;
     use specs::prelude::{Builder, World};
     use specs_hierarchy::{Hierarchy, HierarchySystem};
@@ -161,7 +161,7 @@ mod tests {
         (world, hs, ts)
     }
 
-    fn together<N: Real>(global_matrix: Matrix4<N>, local_matrix: Matrix4<N>) -> Matrix4<N> {
+    fn together<N: RealField>(global_matrix: Matrix4<N>, local_matrix: Matrix4<N>) -> Matrix4<N> {
         global_matrix * local_matrix
     }
 

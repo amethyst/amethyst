@@ -2,7 +2,7 @@ use std::{hash::Hash, marker::PhantomData};
 
 use amethyst_core::{
     bundle::SystemBundle,
-    nalgebra::{one, Real},
+    nalgebra::{one, RealField},
     specs::prelude::DispatcherBuilder,
 };
 use amethyst_error::Error;
@@ -22,7 +22,7 @@ use super::*;
 ///
 /// * `A`: This is the key the `InputHandler` is using for axes. Often, this is a `String`.
 /// * `B`: This is the key the `InputHandler` is using for actions. Often, this is a `String`.
-/// * `N`: Real bound (f32 or f64).
+/// * `N`: RealField bound (f32 or f64).
 ///
 /// # Systems
 ///
@@ -32,7 +32,7 @@ use super::*;
 /// * `FreeRotationSystem`
 /// * `MouseFocusUpdateSystem`
 /// * `CursorHideSystem`
-pub struct FlyControlBundle<A, B, N: Real> {
+pub struct FlyControlBundle<A, B, N: RealField> {
     sensitivity_x: f32,
     sensitivity_y: f32,
     speed: N,
@@ -42,7 +42,7 @@ pub struct FlyControlBundle<A, B, N: Real> {
     _marker: PhantomData<(B, N)>,
 }
 
-impl<A, B, N: Real> FlyControlBundle<A, B, N> {
+impl<A, B, N: RealField> FlyControlBundle<A, B, N> {
     /// Builds a new fly control bundle using the provided axes as controls.
     pub fn new(
         right_input_axis: Option<A>,
@@ -78,7 +78,7 @@ impl<'a, 'b, A, B, N> SystemBundle<'a, 'b> for FlyControlBundle<A, B, N>
 where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
-    N: Real,
+    N: RealField,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
@@ -141,7 +141,7 @@ impl<'a, 'b, A, B, N> SystemBundle<'a, 'b> for ArcBallControlBundle<A, B, N>
 where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
-    N: Real,
+    N: RealField,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(

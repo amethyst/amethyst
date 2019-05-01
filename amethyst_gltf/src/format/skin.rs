@@ -4,14 +4,14 @@ use serde::{Serialize, de::DeserializeOwned};
 
 use amethyst_animation::{JointPrefab, SkinPrefab, SkinnablePrefab};
 use amethyst_assets::Prefab;
-use amethyst_core::nalgebra::{Matrix4, Real};
+use amethyst_core::nalgebra::{Matrix4, RealField};
 use amethyst_error::Error;
 use amethyst_renderer::JointTransformsPrefab;
 
 use super::Buffers;
 use crate::GltfPrefab;
 
-pub fn load_skin<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + Real + From<f32>>(
+pub fn load_skin<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>>(
     skin: &gltf::Skin<'_>,
     buffers: &Buffers,
     skin_entity: usize,
