@@ -5,7 +5,7 @@ use smallvec::SmallVec;
 use winit::Window;
 
 use amethyst_assets::PrefabData;
-use amethyst_core::specs::{Entity, Write};
+use amethyst_core::ecs::{Entity, Write};
 use amethyst_error::Error;
 
 use crate::color::Rgba;
@@ -28,6 +28,7 @@ impl<'a> PrefabData<'a> for AmbientColor {
         &self,
         _: Entity,
         ambient: &mut Self::SystemData,
+        _: &[Entity],
         _: &[Entity],
     ) -> Result<(), Error> {
         ambient.0 = self.0;
@@ -83,8 +84,8 @@ impl ScreenDimensions {
     /// Creates a new screen dimensions object with the given width and height.
     pub fn new(w: u32, h: u32, hidpi: f64) -> Self {
         ScreenDimensions {
-            w: w as f64,
-            h: h as f64,
+            w: f64::from(w),
+            h: f64::from(h),
             aspect_ratio: w as f32 / h as f32,
             hidpi,
             dirty: false,

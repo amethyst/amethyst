@@ -6,10 +6,10 @@ use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 use unicode_segmentation::UnicodeSegmentation;
 use winit::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, WindowEvent};
 
-use crate::{Selected, TextEditing, UiText};
+use crate::{LineMode, Selected, TextEditing, UiEvent, UiEventType, UiText};
 use amethyst_core::{
+    ecs::prelude::{Entities, Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
     shrev::{EventChannel, ReaderId},
-    specs::prelude::{Join, Read, ReadStorage, Resources, System, WriteStorage},
 };
 
 /// System managing the keyboard inputs for the editable text fields.
@@ -32,13 +32,18 @@ impl TextEditingInputSystem {
 
 impl<'a> System<'a> for TextEditingInputSystem {
     type SystemData = (
+        Entities<'a>,
         WriteStorage<'a, UiText>,
         WriteStorage<'a, TextEditing>,
         ReadStorage<'a, Selected>,
         Read<'a, EventChannel<Event>>,
+        Write<'a, EventChannel<UiEvent>>,
     );
 
-    fn run(&mut self, (mut texts, mut editables, selecteds, events): Self::SystemData) {
+    fn run(
+        &mut self,
+        (entities, mut texts, mut editables, selecteds, events, mut edit_events): Self::SystemData,
+    ) {
         for text in (&mut texts).join() {
             if (*text.text).chars().any(is_combining_mark) {
                 let normalized = text.text.nfd().collect::<String>();
@@ -52,8 +57,10 @@ impl<'a> System<'a> for TextEditingInputSystem {
                 .expect("`UiKeyboardSystem::setup` was not called before `UiKeyboardSystem::run`"),
         ) {
             // Process events for the focused text element
-            if let Some((ref mut focused_text, ref mut focused_edit, _)) =
-                (&mut texts, &mut editables, &selecteds).join().next()
+            if let Some((entity, ref mut focused_text, ref mut focused_edit, _)) =
+                (&*entities, &mut texts, &mut editables, &selecteds)
+                    .join()
+                    .next()
             {
                 match *event {
                     Event::WindowEvent {
@@ -78,6 +85,9 @@ impl<'a> System<'a> for TextEditingInputSystem {
                         if focused_text.text.graphemes(true).count() < focused_edit.max_length {
                             focused_text.text.insert(start_byte, input);
                             focused_edit.cursor_position += 1;
+
+                            edit_events
+                                .single_write(UiEvent::new(UiEventType::ValueChange, entity));
                         }
                     }
                     Event::WindowEvent {
@@ -114,17 +124,17 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             focused_edit.cursor_blink_timer = 0.0;
                         }
                         VirtualKeyCode::Back => {
-                            if !delete_highlighted(focused_edit, focused_text) {
-                                if focused_edit.cursor_position > 0 {
-                                    if let Some((byte, len)) = focused_text
-                                        .text
-                                        .grapheme_indices(true)
-                                        .nth(focused_edit.cursor_position as usize - 1)
-                                        .map(|i| (i.0, i.1.len()))
-                                    {
-                                        focused_text.text.drain(byte..(byte + len));
-                                        focused_edit.cursor_position -= 1;
-                                    }
+                            if !delete_highlighted(focused_edit, focused_text)
+                                && focused_edit.cursor_position > 0
+                            {
+                                if let Some((byte, len)) = focused_text
+                                    .text
+                                    .grapheme_indices(true)
+                                    .nth(focused_edit.cursor_position as usize - 1)
+                                    .map(|i| (i.0, i.1.len()))
+                                {
+                                    focused_text.text.drain(byte..(byte + len));
+                                    focused_edit.cursor_position -= 1;
                                 }
                             }
                         }
@@ -215,10 +225,17 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             if ctrl_or_cmd(&modifiers) {
                                 let new_clip = extract_highlighted(focused_edit, focused_text);
                                 if !new_clip.is_empty() {
-                                    if let Err(e) = ClipboardProvider::new().and_then(
+                                    match ClipboardProvider::new().and_then(
                                         |mut ctx: ClipboardContext| ctx.set_contents(new_clip),
                                     ) {
-                                        error!("Error occured when cutting to clipboard: {:?}", e);
+                                        Ok(_) => edit_events.single_write(UiEvent::new(
+                                            UiEventType::ValueChange,
+                                            entity,
+                                        )),
+                                        Err(e) => error!(
+                                            "Error occured when cutting to clipboard: {:?}",
+                                            e
+                                        ),
                                     }
                                 }
                             }
@@ -258,11 +275,53 @@ impl<'a> System<'a> for TextEditingInputSystem {
                                         focused_text.text.insert_str(index, &contents);
                                         focused_edit.cursor_position +=
                                             contents.graphemes(true).count() as isize;
+
+                                        edit_events.single_write(UiEvent::new(
+                                            UiEventType::ValueChange,
+                                            entity,
+                                        ));
                                     }
                                     Err(e) => error!(
                                         "Error occured when pasting contents of clipboard: {:?}",
                                         e
                                     ),
+                                }
+                            }
+                        }
+                        VirtualKeyCode::Return | VirtualKeyCode::NumpadEnter => {
+                            match focused_text.line_mode {
+                                LineMode::Single => {
+                                    edit_events.single_write(UiEvent::new(
+                                        UiEventType::ValueCommit,
+                                        entity,
+                                    ));
+                                }
+                                LineMode::Wrap => {
+                                    if modifiers.shift {
+                                        if focused_text.text.graphemes(true).count()
+                                            < focused_edit.max_length
+                                        {
+                                            let start_byte = focused_text
+                                                .text
+                                                .grapheme_indices(true)
+                                                .nth(focused_edit.cursor_position as usize)
+                                                .map(|i| i.0)
+                                                .unwrap_or_else(|| focused_text.text.len());
+
+                                            focused_text.text.insert(start_byte, '\n');
+                                            focused_edit.cursor_position += 1;
+
+                                            edit_events.single_write(UiEvent::new(
+                                                UiEventType::ValueChange,
+                                                entity,
+                                            ));
+                                        }
+                                    } else {
+                                        edit_events.single_write(UiEvent::new(
+                                            UiEventType::ValueCommit,
+                                            entity,
+                                        ));
+                                    }
                                 }
                             }
                         }
@@ -275,7 +334,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         self.reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
     }
@@ -348,22 +407,12 @@ fn should_skip_char(input: char) -> bool {
     // Ignore obsolete control characters, and tab characters we can't render
     // properly anyways.  Also ignore newline characters since we don't
     // support multi-line text at the moment.
-    if input < '\u{20}' {
-        true
-    }
+    input < '\u{20}'
     // Ignore delete character too
-    else if input == '\u{7F}' {
-        true
-    }
+    || input == '\u{7F}'
     // Unicode reserves some characters for "private use".  Systems emit
     // these for no clear reason, so we're just going to ignore all of them.
-    else if input >= '\u{E000}' && input <= '\u{F8FF}' {
-        true
-    } else if input >= '\u{F0000}' && input <= '\u{FFFFF}' {
-        true
-    } else if input >= '\u{100000}' && input <= '\u{10FFFF}' {
-        true
-    } else {
-        false
-    }
+    || (input >= '\u{E000}' && input <= '\u{F8FF}')
+    || (input >= '\u{F0000}' && input <= '\u{FFFFF}')
+    || (input >= '\u{100000}' && input <= '\u{10FFFF}')
 }

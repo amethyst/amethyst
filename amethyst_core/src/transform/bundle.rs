@@ -3,10 +3,9 @@
 use std::marker::PhantomData;
 
 use amethyst_error::Error;
-use specs::prelude::DispatcherBuilder;
 use specs_hierarchy::HierarchySystem;
 
-use crate::{bundle::SystemBundle, transform::*, nalgebra::RealField};
+use crate::{bundle::SystemBundle, transform::*, nalgebra::RealField, ecs::prelude::DispatcherBuilder};
 
 /// Transform bundle
 ///

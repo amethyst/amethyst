@@ -10,8 +10,8 @@ use std::marker::PhantomData;
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     alga::general::SubsetOf,
-    nalgebra::RealField,
-    specs::prelude::{Join, Read, ReadExpect, ReadStorage},
+    math::RealField,
+    ecs::prelude::{Join, Read, ReadExpect, ReadStorage},
     transform::Transform,
 };
 use amethyst_error::Error;

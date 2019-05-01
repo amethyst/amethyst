@@ -60,9 +60,7 @@ impl ProgressCounter {
     /// Removes all errors and returns them.
     pub fn errors(&self) -> Vec<AssetErrorMeta> {
         let mut lock = self.errors.lock();
-        let rv = lock.drain(..).collect();
-
-        rv
+        lock.drain(..).collect()
     }
 
     /// Returns the number of assets this struct is tracking.
@@ -80,9 +78,9 @@ impl ProgressCounter {
         self.num_loading.load(Ordering::Relaxed)
     }
 
-    /// Returns the number of assets this struct is tracking.
+    /// Returns the number of assets that have successfully loaded.
     pub fn num_finished(&self) -> usize {
-        self.num_assets - self.num_loading()
+        self.num_assets - self.num_loading() - self.num_failed()
     }
 
     /// Returns `Completion::Complete` if all tracked assets are finished.
@@ -152,6 +150,10 @@ impl Tracker for ProgressCounterTracker {
             asset_name,
         });
         self.num_failed.fetch_add(1, Ordering::Relaxed);
+
+        // Failed assets are not requeued for loading, so we subtract it from the number that tracks
+        // the assets that are still loading.
+        self.num_loading.fetch_sub(1, Ordering::Relaxed);
     }
 }
 
@@ -203,4 +205,88 @@ fn show_error(handle_id: u32, asset_type_name: &'static str, asset_name: &String
         .skip(1)
         .for_each(|e| err_out.push_str(&format!("\r\ncaused by: {:?}", e)));
     error!("{}", err_out);
+}
+
+#[cfg(test)]
+mod tests {
+    use amethyst_error::Error;
+
+    use super::{Completion, Progress, ProgressCounter, Tracker};
+
+    #[test]
+    fn progress_counter_complete_returns_correct_completion_status_when_loading_or_complete() {
+        let mut progress_counter = ProgressCounter::new();
+        let mut progress = &mut progress_counter;
+        progress.add_assets(2);
+        let tracker_0 = Box::new(progress.create_tracker());
+        let tracker_1 = Box::new(progress.create_tracker());
+
+        // 2 loading, 0 success
+        assert_eq!(Completion::Loading, progress.complete());
+        assert!(!progress.is_complete());
+
+        // 1 loading, 1 success
+        tracker_0.success();
+        assert_eq!(Completion::Loading, progress.complete());
+        assert!(!progress.is_complete());
+
+        // 0 loading, 2 success
+        tracker_1.success();
+        assert_eq!(Completion::Complete, progress.complete());
+        assert!(progress.is_complete());
+    }
+
+    #[test]
+    fn progress_counter_complete_returns_failed_when_any_assets_failed() {
+        let mut progress_counter = ProgressCounter::new();
+        let mut progress = &mut progress_counter;
+        progress.add_assets(2);
+        let tracker_0 = Box::new(progress.create_tracker());
+        let tracker_1 = Box::new(progress.create_tracker());
+
+        // 1 failed, 1 loading
+        tracker_0.fail(
+            1,
+            "AssetType",
+            String::from("test.asset"),
+            Error::from_string(""),
+        );
+        assert_eq!(Completion::Failed, progress.complete());
+        assert!(!progress.is_complete());
+
+        // 1 failed, 1 success
+        tracker_1.success();
+        assert_eq!(Completion::Failed, progress.complete());
+        assert!(!progress.is_complete());
+    }
+
+    #[test]
+    fn progress_counter_num_finished_excludes_loading_and_failed_assets() {
+        let mut progress_counter = ProgressCounter::new();
+        let mut progress = &mut progress_counter;
+        progress.add_assets(3);
+        let tracker_0 = Box::new(progress.create_tracker());
+        let tracker_1 = Box::new(progress.create_tracker());
+        let tracker_2 = Box::new(progress.create_tracker());
+
+        // 0 failed, 3 loading, 0 success
+        assert_eq!(0, progress.num_finished());
+
+        // 1 failed, 1 loading, 0 success
+        tracker_0.fail(
+            1,
+            "AssetType",
+            String::from("test.asset"),
+            Error::from_string(""),
+        );
+        assert_eq!(0, progress.num_finished());
+
+        // 1 failed, 1 loading, 1 success
+        tracker_1.success();
+        assert_eq!(1, progress.num_finished());
+
+        // 1 failed, 0 loading, 2 success
+        tracker_2.success();
+        assert_eq!(2, progress.num_finished());
+    }
 }

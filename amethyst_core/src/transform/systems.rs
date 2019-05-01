@@ -3,10 +3,11 @@
 use std::marker::PhantomData;
 
 use hibitset::BitSet;
-use specs::prelude::{
+use ecs::prelude::{
     ComponentEvent, Entities, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
     WriteStorage,
 };
+use hibitset::BitSet;
 
 use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform};
 use crate::nalgebra::RealField;
@@ -15,7 +16,6 @@ use crate::nalgebra::RealField;
 use thread_profiler::profile_scope;
 
 /// Handles updating `global_matrix` field from `Transform` components.
-/// component and parents.
 pub struct TransformSystem<N> {
     local_modified: BitSet,
     locals_events_id: Option<ReaderId<ComponentEvent>>,
@@ -118,7 +118,7 @@ impl<'a, N: RealField> System<'a> for TransformSystem<N> {
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use specs::prelude::SystemData;
+        use crate::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         let mut hierarchy = res.fetch_mut::<ParentHierarchy>();
         let mut locals = WriteStorage::<Transform<f32>>::fetch(res);
@@ -129,9 +129,11 @@ impl<'a, N: RealField> System<'a> for TransformSystem<N> {
 
 #[cfg(test)]
 mod tests {
-    use nalgebra::{Matrix4, Quaternion, RealField, Unit, Vector3};
+    use crate::{
+        ecs::prelude::{Builder, World},
+        math::{Matrix4, Quaternion, RealField, Unit, Vector3},
+    };
     use shred::RunNow;
-    use specs::prelude::{Builder, World};
     use specs_hierarchy::{Hierarchy, HierarchySystem};
 
     use crate::transform::{Parent, Transform, TransformSystem};
@@ -140,7 +142,7 @@ mod tests {
     #[test]
     fn transform_matrix() {
         let mut transform = Transform::default();
-        transform.set_xyz(5.0, 2.0, -0.5);
+        transform.set_translation_xyz(5.0, 2.0, -0.5);
         transform.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.0, 0.0, 0.0)));
         transform.set_scale(Vector3::new(2.0, 2.0, 2.0));
 
@@ -381,7 +383,7 @@ mod tests {
 
         let mut local = Transform::<f32>::default();
         // Release the indeterminate forms!
-        local.set_xyz(0.0 / 0.0, 0.0 / 0.0, 0.0 / 0.0);
+        local.set_translation_xyz(0.0 / 0.0, 0.0 / 0.0, 0.0 / 0.0);
 
         world.create_entity().with(local.clone()).build();
 

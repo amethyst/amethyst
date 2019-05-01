@@ -2,7 +2,7 @@
 
 use amethyst::{
     assets::AssetLoaderSystemData,
-    core::{nalgebra::Vector3, Transform, TransformBundle},
+    core::{Transform, TransformBundle},
     prelude::*,
     renderer::*,
     utils::application_root_dir,
@@ -37,7 +37,7 @@ impl SimpleState for Example {
                 let metallic = 1.0f32 * (j as f32 / 4.0f32);
 
                 let mut pos = Transform::default();
-                pos.set_xyz(2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0);
+                pos.set_translation_xyz(2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0);
 
                 let metallic = [metallic, metallic, metallic, 1.0].into();
                 let roughness = [roughness, roughness, roughness, 1.0].into();
@@ -75,7 +75,7 @@ impl SimpleState for Example {
         .into();
 
         let mut light1_transform = Transform::default();
-        light1_transform.set_xyz(6.0, 6.0, -6.0);
+        light1_transform.set_translation_xyz(6.0, 6.0, -6.0);
 
         let light2: Light = PointLight {
             intensity: 5.0,
@@ -85,7 +85,7 @@ impl SimpleState for Example {
         .into();
 
         let mut light2_transform = Transform::default();
-        light2_transform.set_xyz(6.0, -6.0, -6.0);
+        light2_transform.set_translation_xyz(6.0, -6.0, -6.0);
 
         world
             .create_entity()
@@ -102,8 +102,8 @@ impl SimpleState for Example {
         println!("Put camera");
 
         let mut transform = Transform::default();
-        transform.set_xyz(0.0, 0.0, -12.0);
-        transform.rotate_local(Vector3::y_axis(), std::f32::consts::PI);
+        transform.set_translation_xyz(0.0, 0.0, -12.0);
+        transform.prepend_rotation_y_axis(std::f32::consts::PI);
 
         world
             .create_entity()

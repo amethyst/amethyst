@@ -29,7 +29,7 @@ gfx_glyph = "0.13.3"
 
 glsl-layout = { version = "0.1.1", features = ["gfx"] }
 hibitset = { version = "0.5.1", features = ["parallel"] }
-ron = "0.4"
+ron = "0.5"
 serde = { version = "1.0", features = ["derive"] }
 shred-derive = "0.5"
 shred = "0.7"
@@ -39,6 +39,8 @@ unicode-segmentation = "1.2"
 winit = { version = "0.18", features = ["serde"] }
 log = "0.4.6"
 font-kit = "0.1"
+paste = "0.1"
+rand = "0.6"
 
 thread_profiler = { version = "0.3", optional = true }
 

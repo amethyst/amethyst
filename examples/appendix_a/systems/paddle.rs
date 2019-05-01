@@ -29,11 +29,14 @@ impl<'s> System<'s> for PaddleSystem {
             };
 
             if let Some(movement) = opt_movement {
-                transform.translate_y(paddle.velocity * time.delta_seconds() * movement as f32);
+                transform.prepend_translation_y(
+                    paddle.velocity * time.delta_seconds() * movement as f32,
+                );
 
                 // We make sure the paddle remains in the arena.
                 let paddle_y = transform.translation().y;
-                transform.set_y(paddle_y.max(0.0).min(arena_config.height - paddle.height));
+                transform
+                    .set_translation_y(paddle_y.max(0.0).min(arena_config.height - paddle.height));
             }
         }
     }

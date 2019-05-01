@@ -2,8 +2,8 @@ use amethyst_derive::{EventReader, PrefabData};
 
 use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_core::{
+    ecs::{Component, DenseVecStorage, Entity, Read, Resources, SystemData, WriteStorage},
     shrev::{EventChannel, ReaderId},
-    specs::{Component, DenseVecStorage, Entity, Read, Resources, SystemData, WriteStorage},
     EventReader,
 };
 use amethyst_error::Error;
@@ -14,11 +14,27 @@ pub struct TestEvent1;
 #[derive(Clone)]
 pub struct TestEvent2;
 
+#[derive(Clone)]
+pub struct TestEvent3<T>(T);
+
 #[derive(Clone, EventReader)]
 #[reader(TestEventReader)]
 pub enum TestEvent {
     One(TestEvent1),
     Two(TestEvent2),
+}
+
+#[derive(Clone, EventReader)]
+#[reader(TestEventWithTypeParameterReader)]
+pub enum TestEventWithTypeParameter<T1, T2>
+where
+    T1: Clone + Send + Sync + 'static,
+    T2: Clone + Send + Sync + 'static,
+{
+    One(TestEvent1),
+    Two(TestEvent2),
+    Three(TestEvent3<T1>),
+    Four(TestEvent3<T2>),
 }
 
 #[derive(Clone, PrefabData, Default)]

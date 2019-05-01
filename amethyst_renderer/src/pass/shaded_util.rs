@@ -4,8 +4,8 @@ use glsl_layout::*;
 
 use amethyst_core::{
     alga::general::SubsetOf,
-    nalgebra::{convert, Matrix4, RealField},
-    specs::prelude::{Join, ReadStorage},
+    math::{convert, Matrix4, RealField},
+    ecs::prelude::{Join, ReadStorage},
     Transform,
 };
 

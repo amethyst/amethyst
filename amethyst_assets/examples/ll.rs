@@ -5,7 +5,7 @@ use std::{str::from_utf8, sync::Arc, thread::sleep, time::Duration};
 use rayon::ThreadPoolBuilder;
 
 use amethyst_assets::*;
-use amethyst_core::specs::prelude::VecStorage;
+use amethyst_core::ecs::prelude::VecStorage;
 use amethyst_error::Error;
 
 #[derive(Clone, Debug)]

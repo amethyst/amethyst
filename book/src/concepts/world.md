@@ -74,6 +74,7 @@ Please note that **in order to use this syntax, you need to import the ``amethys
 # }
 # fn main() {
 #   let mut world = amethyst::ecs::World::new();
+    world.register::<MyComponent>();
     use amethyst::prelude::Builder;
 
     let mut entity_builder = world.create_entity();

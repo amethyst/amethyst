@@ -5,12 +5,12 @@ use std::marker::PhantomData;
 use nalgebra::{
     self as na, Isometry3, Matrix4, Quaternion, RealField, Translation3, Unit, UnitQuaternion, Vector3,
 };
+use math::prelude::{Component, DenseVecStorage, FlaggedStorage};
 use serde::{
     de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor},
     ser::{Serialize, Serializer},
 };
 
-use specs::prelude::{Component, DenseVecStorage, FlaggedStorage};
 
 /// Local position, rotation, and scale (from parent if it exists).
 ///

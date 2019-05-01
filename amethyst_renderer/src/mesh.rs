@@ -6,10 +6,11 @@ use std::{
 };
 
 use gfx::Primitive;
+use log::warn;
 use serde::{Deserialize, Serialize};
 
 use amethyst_assets::Handle;
-use amethyst_core::nalgebra::{Matrix4, Point3, Rotation3, Translation3, Unit, Vector3};
+use amethyst_core::math::{Matrix4, Point3, Rotation3, Translation3, Unit, Vector3};
 use amethyst_error::Error;
 
 use crate::{
@@ -65,7 +66,10 @@ where
 
         let verts = self.0.as_ref();
         let slice = cast_slice(verts);
-        let stride = slice.len() / verts.len();
+        let stride = slice.len().checked_div(verts.len()).unwrap_or_else(|| {
+            warn!("Loading mesh with zero vertices.");
+            0
+        });
         let role = Role::Vertex;
         let bind = Bind::empty();
 

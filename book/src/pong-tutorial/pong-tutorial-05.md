@@ -74,7 +74,7 @@ impl<'s> System<'s> for WinnerSystem {
 
             if did_hit {
                 ball.velocity[0] = -ball.velocity[0]; // Reverse Direction
-                transform.set_x(ARENA_WIDTH / 2.0); // Reset Position
+                transform.set_translation_x(ARENA_WIDTH / 2.0); // Reset Position
             }
         }
     }
@@ -325,8 +325,8 @@ use amethyst::{
 #     fn new(side: Side) -> Paddle {
 #         Paddle {
 #             side: side,
-#             width: 1.0,
-#             height: 1.0,
+#             width: PADDLE_WIDTH,
+#             height: PADDLE_HEIGHT,
 #         }
 #     }
 # }
@@ -390,7 +390,7 @@ pub struct ScoreText {
 # /// Initialise the camera.
 # fn initialise_camera(world: &mut World) {
 #     let mut transform = Transform::default();
-#     transform.set_z(1.0);
+#     transform.set_translation_z(1.0);
 #     world
 #         .create_entity()
 #         .with(Camera::from(Projection::orthographic(
@@ -409,8 +409,8 @@ pub struct ScoreText {
 # 
 #     // Correctly position the paddles.
 #     let y = ARENA_HEIGHT / 2.0;
-#     left_transform.set_xyz(PADDLE_WIDTH * 0.5, y, 0.0);
-#     right_transform.set_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
+#     left_transform.set_translation_xyz(PADDLE_WIDTH * 0.5, y, 0.0);
+#     right_transform.set_translation_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 # 
 #     // Assign the sprites for the paddles
 #     let sprite_render = SpriteRender {
@@ -440,7 +440,7 @@ pub struct ScoreText {
 # fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
 #     // Create the translation.
 #     let mut local_transform = Transform::default();
-#     local_transform.set_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
+#     local_transform.set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 # 
 #     // Assign the sprite for the ball
 #     let sprite_render = SpriteRender {
@@ -592,7 +592,7 @@ impl SimpleState for Pong {
 # /// Initialise the camera.
 # fn initialise_camera(world: &mut World) {
 #     let mut transform = Transform::default();
-#     transform.set_z(1.0);
+#     transform.set_translation_z(1.0);
 #     world
 #         .create_entity()
 #         .with(Camera::from(Projection::orthographic(
@@ -611,8 +611,8 @@ impl SimpleState for Pong {
 # 
 #     // Correctly position the paddles.
 #     let y = ARENA_HEIGHT / 2.0;
-#     left_transform.set_xyz(PADDLE_WIDTH * 0.5, y, 0.0);
-#     right_transform.set_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
+#     left_transform.set_translation_xyz(PADDLE_WIDTH * 0.5, y, 0.0);
+#     right_transform.set_translation_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 # 
 #     // Assign the sprites for the paddles
 #     let sprite_render = SpriteRender {
@@ -642,7 +642,7 @@ impl SimpleState for Pong {
 # fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
 #     // Create the translation.
 #     let mut local_transform = Transform::default();
-#     local_transform.set_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
+#     local_transform.set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 # 
 #     // Assign the sprite for the ball
 #     let sprite_render = SpriteRender {
@@ -827,7 +827,7 @@ impl<'s> System<'s> for WinnerSystem {
 
             if did_hit {
 #                 ball.velocity[0] = -ball.velocity[0]; // Reverse Direction
-#                 transform.set_x(ARENA_WIDTH / 2.0); // Reset Position
+#                 transform.set_translation_x(ARENA_WIDTH / 2.0); // Reset Position
                 // --snip--
 
                 // Print the score board.

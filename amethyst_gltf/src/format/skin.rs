@@ -4,7 +4,7 @@ use serde::{Serialize, de::DeserializeOwned};
 
 use amethyst_animation::{JointPrefab, SkinPrefab, SkinnablePrefab};
 use amethyst_assets::Prefab;
-use amethyst_core::nalgebra::{Matrix4, RealField};
+use amethyst_core::math::{Matrix4, RealField};
 use amethyst_error::Error;
 use amethyst_renderer::JointTransformsPrefab;
 

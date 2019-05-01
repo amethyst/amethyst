@@ -6,7 +6,7 @@ use minterpolate::InterpolationPrimitive;
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
-    specs::prelude::{
+    ecs::prelude::{
         Component, Entities, Entity, Join, Read, ReadStorage, Resources, System, SystemData,
         WriteStorage,
     },
@@ -473,7 +473,7 @@ where
         );
         let component = rest_states
             .get(*node_entity)
-            .map(|r| r.state())
+            .map(RestState::state)
             .or_else(|| targets.get(*node_entity))
             .expect(
                 "Unreachable: Existence of all nodes are checked in validation of hierarchy above",

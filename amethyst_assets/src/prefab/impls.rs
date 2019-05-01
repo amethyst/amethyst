@@ -1,6 +1,6 @@
 use amethyst_core::{
-    nalgebra::RealField,
-    specs::{Entity, WriteStorage},
+    math::RealField,
+    ecs::{Entity, WriteStorage},
     Named, Transform,
 };
 use amethyst_error::Error;
@@ -19,9 +19,15 @@ where
         entity: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
+        children: &[Entity],
     ) -> Result<Self::Result, Error> {
         if let Some(ref prefab) = self {
-            Ok(Some(prefab.add_to_entity(entity, system_data, entities)?))
+            Ok(Some(prefab.add_to_entity(
+                entity,
+                system_data,
+                entities,
+                children,
+            )?))
         } else {
             Ok(None)
         }
@@ -49,6 +55,7 @@ impl<'a, N: RealField> PrefabData<'a> for Transform<N> {
         entity: Entity,
         storages: &mut Self::SystemData,
         _: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         storages.insert(entity, self.clone()).map(|_| ())?;
         Ok(())
@@ -63,6 +70,7 @@ impl<'a> PrefabData<'a> for Named {
         &self,
         entity: Entity,
         storages: &mut Self::SystemData,
+        _: &[Entity],
         _: &[Entity],
     ) -> Result<(), Error> {
         storages.0.insert(entity, self.clone()).map(|_| ())?;
@@ -88,10 +96,11 @@ macro_rules! impl_data {
                 entity: Entity,
                 system_data: &mut Self::SystemData,
                 entities: &[Entity],
+                children: &[Entity],
             ) -> Result<(), Error> {
                 #![allow(unused_variables)]
                 $(
-                    self.$i.add_to_entity(entity, &mut system_data.$i, entities)?;
+                    self.$i.add_to_entity(entity, &mut system_data.$i, entities, children)?;
                 )*
                 Ok(())
             }

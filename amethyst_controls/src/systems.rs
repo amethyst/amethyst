@@ -7,9 +7,9 @@ use crate::{
     resources::{HideCursor, WindowFocus},
 };
 use amethyst_core::{
-    nalgebra::{convert, RealField, Unit, Vector3},
+    math::{convert, RealField, Unit, Vector3},
+    ecs::prelude::{Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
     shrev::{EventChannel, ReaderId},
-    specs::prelude::{Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
     timing::Time,
     transform::Transform,
 };
@@ -77,8 +77,12 @@ where
 
         if let Some(dir) = Unit::try_new(Vector3::new(x, y, z), convert(1.0e-6)) {
             for (transform, _) in (&mut transform, &tag).join() {
+<<<<<<< HEAD
                 let delta_sec: N = convert(time.delta_seconds() as f64);
                 transform.move_along_local(dir, delta_sec * self.speed);
+=======
+                transform.append_translation_along(dir, time.delta_seconds() * self.speed);
+>>>>>>> eac09b6c781b0c523a138eb324dfe02bc59a3af1
             }
         }
     }
@@ -184,11 +188,20 @@ where
                 if let Event::DeviceEvent { ref event, .. } = *event {
                     if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
                         for (transform, _) in (&mut transform, &tag).join() {
+<<<<<<< HEAD
                             transform.pitch_local(convert(
                                 (-y * self.sensitivity_y as f64).to_radians(),
                             ));
                             transform
                                 .yaw_global(convert((-x * self.sensitivity_x as f64).to_radians()));
+=======
+                            transform.append_rotation_x_axis(
+                                (-y as f32 * self.sensitivity_y).to_radians(),
+                            );
+                            transform.prepend_rotation_y_axis(
+                                (-x as f32 * self.sensitivity_x).to_radians(),
+                            );
+>>>>>>> eac09b6c781b0c523a138eb324dfe02bc59a3af1
                         }
                     }
                 }
@@ -197,7 +210,7 @@ where
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_core::ecs::prelude::SystemData;
 
         Self::SystemData::setup(res);
         self.event_reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
@@ -232,7 +245,7 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         self.event_reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
     }
@@ -269,16 +282,14 @@ impl<'a> System<'a> for CursorHideSystem {
                 release_cursor(&mut msg);
                 self.is_hidden = false;
             }
-        } else {
-            if self.is_hidden {
-                release_cursor(&mut msg);
-                self.is_hidden = false;
-            }
+        } else if self.is_hidden {
+            release_cursor(&mut msg);
+            self.is_hidden = false;
         }
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_core::ecs::prelude::SystemData;
         use amethyst_renderer::mouse::*;
 
         Self::SystemData::setup(res);

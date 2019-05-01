@@ -4,7 +4,7 @@ Custom(
         count: 11,
         x_move: 75.,
         y_move: -50.,
-        item: Text(
+        item: Label(
             transform: (
                 id: "paused",
                 anchor: TopLeft,

@@ -68,7 +68,7 @@ Then let's add a `initialise_ball` function the same way we wrote the
 fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
     // Create the translation.
     let mut local_transform = Transform::default();
-    local_transform.set_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
+    local_transform.set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 
     // Assign the sprite for the ball
     let sprite_render = SpriteRender {
@@ -175,8 +175,8 @@ impl<'s> System<'s> for MoveBallsSystem {
     fn run(&mut self, (balls, mut locals, time): Self::SystemData) {
         // Move every ball according to its speed, and the time passed.
         for (ball, local) in (&balls, &mut locals).join() {
-            local.translate_x(ball.velocity[0] * time.delta_seconds());
-            local.translate_y(ball.velocity[1] * time.delta_seconds());
+            local.prepend_translation_x(ball.velocity[0] * time.delta_seconds());
+            local.prepend_translation_y(ball.velocity[1] * time.delta_seconds());
         }
     }
 }
@@ -262,9 +262,9 @@ impl<'s> System<'s> for BounceSystem {
             let ball_y = transform.translation().y;
 
             // Bounce at the top or the bottom of the arena.
-            if ball_y >= ARENA_HEIGHT - ball.radius && ball.velocity[1] > 0.0 {
-                ball.velocity[1] = -ball.velocity[1];
-            } else if ball_y <= ball.radius && ball.velocity[1] < 0.0 {
+            if (ball_y <= ball.radius && ball.velocity[1] < 0.0)
+                || (ball_y >= ARENA_HEIGHT - ball.radius && ball.velocity[1] > 0.0)
+            {
                 ball.velocity[1] = -ball.velocity[1];
             }
 
@@ -286,9 +286,9 @@ impl<'s> System<'s> for BounceSystem {
                     paddle_x + paddle.width + ball.radius,
                     paddle_y + paddle.height + ball.radius,
                 ) {
-                    if paddle.side == Side::Left && ball.velocity[0] < 0.0 {
-                        ball.velocity[0] = -ball.velocity[0];
-                    } else if paddle.side == Side::Right && ball.velocity[0] > 0.0 {
+                    if (paddle.side == Side::Left && ball.velocity[0] < 0.0)
+                        || (paddle.side == Side::Right && ball.velocity[0] > 0.0)
+                    {
                         ball.velocity[0] = -ball.velocity[0];
                     }
                 }

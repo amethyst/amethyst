@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 
 use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_core::{
-    nalgebra::{Matrix4, RealField},
-    specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage},
+    math::{Matrix4, RealField},
+    ecs::prelude::{Component, DenseVecStorage, Entity, WriteStorage},
 };
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
@@ -74,6 +74,7 @@ impl<'a> PrefabData<'a> for JointPrefab {
         entity: Entity,
         storage: &mut Self::SystemData,
         entities: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         storage
             .insert(
@@ -110,6 +111,7 @@ impl<'a, N: RealField> PrefabData<'a> for SkinPrefab<N> {
         entity: Entity,
         storage: &mut Self::SystemData,
         entities: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         storage
             .insert(

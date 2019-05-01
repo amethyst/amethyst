@@ -3,7 +3,7 @@ use std::path::Path;
 
 use crate::{
     core::{
-        specs::prelude::{Dispatcher, DispatcherBuilder, System, World},
+        ecs::prelude::{Dispatcher, DispatcherBuilder, System, World},
         ArcThreadPool, SystemBundle,
         nalgebra::RealField,
     },

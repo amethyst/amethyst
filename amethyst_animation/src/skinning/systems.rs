@@ -1,6 +1,6 @@
 use amethyst_core::{
-    nalgebra::RealField,
-    specs::prelude::{
+    math::RealField,
+    ecs::prelude::{
         BitSet, ComponentEvent, Join, ReadStorage, ReaderId, Resources, System, WriteStorage,
     },
     Transform,
@@ -128,7 +128,7 @@ impl<'a, N: RealField> System<'a> for VertexSkinningSystem<N> {
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         let mut transform = WriteStorage::<Transform<N>>::fetch(res);
         self.updated_id = Some(transform.register_reader());

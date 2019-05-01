@@ -83,9 +83,9 @@ impl<'a> PrefabData<'a> for Transform {
         entity: Entity,
         storage: &mut Self::SystemData,
         _: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
-        storage.insert(entity, self.clone())?;
-        Ok(())
+        storage.insert(entity, self.clone()).map(|_| ())
     }
 }
 ```
@@ -149,6 +149,7 @@ where
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
+        _: &[Entity],
         _: &[Entity],
     ) -> Result<Handle<A>, Error> {
         let handle = match *self {

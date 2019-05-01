@@ -1,6 +1,6 @@
 use amethyst_core::{
+    ecs::{Entity, ReadExpect, Resources, System, SystemData, Write, WriteStorage},
     shrev::{EventChannel, ReaderId},
-    specs::{Entity, ReadExpect, Resources, System, SystemData, Write, WriteStorage},
     ParentHierarchy,
 };
 use amethyst_renderer::TextureHandle;
@@ -106,7 +106,7 @@ impl<'s> System<'s> for UiButtonSystem {
                             // it's not there yet
                             self.set_text_colors
                                 .entry(event.target)
-                                .or_insert(ActionChangeStack::new(text.color))
+                                .or_insert_with(|| ActionChangeStack::new(text.color))
                                 .add(*color);
 
                             text.color = *color;
@@ -138,7 +138,7 @@ impl<'s> System<'s> for UiButtonSystem {
                     if let Some(image) = image_storage.get_mut(event.target) {
                         self.set_textures
                             .entry(event.target)
-                            .or_insert(ActionChangeStack::new(image.clone()))
+                            .or_insert_with(|| ActionChangeStack::new(image.clone()))
                             .add(texture_handle.clone());
 
                         *image = texture_handle.clone();

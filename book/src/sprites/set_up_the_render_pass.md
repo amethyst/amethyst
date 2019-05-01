@@ -2,7 +2,7 @@
 
 Amethyst supports drawing sprites using the `DrawFlat2D` render pass. To enable this you have to do the following:
 
-1. Build a `Pipeline` with the `DrawFlat2D` pass. If your sprites have transparent pixels use the `.with_transparency(..)` method.
+1. Build a `Pipeline` with the `DrawFlat2D` pass.
 2. Use the `.with_sprite_sheet_processor()` method on the `RenderBundle`.
 
 ```rust,edition2018,no_run,noplaypen
@@ -12,7 +12,7 @@ Amethyst supports drawing sprites using the `DrawFlat2D` render pass. To enable 
 # use amethyst::input::InputBundle;
 # use amethyst::prelude::*;
 use amethyst::renderer::{
-    ColorMask, DisplayConfig, DrawFlat2D, Pipeline, RenderBundle, Stage, ALPHA,
+    DisplayConfig, DrawFlat2D, Pipeline, RenderBundle, Stage,
 };
 # use amethyst::ui::UiBundle;
 # use amethyst::utils::application_root_dir;

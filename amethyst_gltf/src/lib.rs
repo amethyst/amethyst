@@ -12,8 +12,8 @@ use std::{collections::HashMap, ops::Range, fmt::Debug};
 use amethyst_animation::{AnimatablePrefab, SkinnablePrefab};
 use amethyst_assets::{Handle, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter};
 use amethyst_core::{
-    nalgebra::{Point3, Vector3, RealField},
-    specs::prelude::{Component, DenseVecStorage, Entity, Write, WriteStorage},
+    math::{Point3, Vector3, RealField},
+    ecs::prelude::{Component, DenseVecStorage, Entity, Write, WriteStorage},
     transform::Transform,
     Named,
 };
@@ -200,6 +200,7 @@ impl<'a, N> PrefabData<'a> for GltfPrefab<N>
         entity: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
+        children: &[Entity],
     ) -> Result<(), Error> {
         let (
             ref mut transforms,
@@ -213,7 +214,7 @@ impl<'a, N> PrefabData<'a> for GltfPrefab<N>
             _,
         ) = system_data;
         if let Some(ref transform) = self.transform {
-            transform.add_to_entity(entity, transforms, entities)?;
+            transform.add_to_entity(entity, transforms, entities, children)?;
         }
         if let Some(ref mesh) = self.mesh {
             mesh_data.insert(entity, mesh.clone())?;
@@ -222,16 +223,16 @@ impl<'a, N> PrefabData<'a> for GltfPrefab<N>
             meshes.1.insert(entity, mesh.clone())?;
         }
         if let Some(ref name) = self.name {
-            name.add_to_entity(entity, names, entities)?;
+            name.add_to_entity(entity, names, entities, children)?;
         }
         if let Some(ref material) = self.material {
-            material.add_to_entity(entity, materials, entities)?;
+            material.add_to_entity(entity, materials, entities, children)?;
         }
         if let Some(ref animatable) = self.animatable {
-            animatable.add_to_entity(entity, animatables, entities)?;
+            animatable.add_to_entity(entity, animatables, entities, children)?;
         }
         if let Some(ref skinnable) = self.skinnable {
-            skinnable.add_to_entity(entity, skinnables, entities)?;
+            skinnable.add_to_entity(entity, skinnables, entities, children)?;
         }
         if let Some(ref extent) = self.extent {
             extents.insert(entity, extent.clone())?;

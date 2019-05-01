@@ -4,8 +4,8 @@ pub use self::{audio_emitter::AudioEmitter, audio_listener::AudioListener};
 
 use amethyst_assets::PrefabData;
 use amethyst_core::{
-    nalgebra::{Point3, RealField},
-    specs::prelude::{Entity, Read, WriteStorage},
+    math::{Point3, RealField},
+    ecs::prelude::{Entity, Read, WriteStorage},
 };
 use amethyst_error::Error;
 
@@ -38,6 +38,7 @@ impl<'a, N: RealField> PrefabData<'a> for AudioPrefab<N> {
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
+        _: &[Entity],
         _: &[Entity],
     ) -> Result<(), Error> {
         if self.emitter {

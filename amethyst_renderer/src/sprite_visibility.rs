@@ -3,14 +3,14 @@ use std::cmp::Ordering;
 use hibitset::BitSet;
 
 use amethyst_core::{
-    nalgebra::{zero, Point3, RealField, Vector3},
-    specs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
-    Transform,
+    math::{zero, Point3, RealField, Vector3},
+    ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
 };
 
 use crate::{
     cam::{ActiveCamera, Camera},
     hidden::{Hidden, HiddenPropagate},
+    screen_space::ScreenSpace,
     transparent::Transparent,
 };
 
@@ -67,11 +67,22 @@ impl<'a, N: RealField> System<'a> for SpriteVisibilitySortingSystem<N> {
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Transparent>,
         ReadStorage<'a, Transform<N>>,
+        ReadStorage<'a, ScreenSpace>,
     );
 
     fn run(
         &mut self,
-        (entities, mut visibility, hidden, hidden_prop, active, camera, transparent, transform): Self::SystemData,
+        (
+            entities,
+            mut visibility,
+            hidden,
+            hidden_prop,
+            active,
+            camera,
+            transparent,
+            transform,
+            screen_spaces,
+        ): Self::SystemData,
     ) {
         let origin = Point3::origin();
 
@@ -90,19 +101,33 @@ impl<'a, N: RealField> System<'a> for SpriteVisibilitySortingSystem<N> {
 
         self.centroids.clear();
         self.centroids.extend(
-            (&*entities, &transform, !&hidden, !&hidden_prop)
+            (
+                &*entities,
+                &transform,
+                !&hidden,
+                !&hidden_prop,
+                screen_spaces.maybe(),
+            )
                 .join()
-                .map(|(entity, transform, _, _)| {
-                    (entity, transform.global_matrix().transform_point(&origin))
+                .map(|(entity, global, _, _, screen_space)| {
+                    (entity, transform.global_matrix().transform_point(&origin), screen_space)
                 })
-                .map(|(entity, centroid)| Internals {
-                    entity,
-                    transparent: transparent.contains(entity),
-                    centroid,
-                    from_camera: centroid - camera_centroid,
+                .map(|(entity, centroid, screen_space)| {
+                    (
+                        Internals {
+                            entity,
+                            transparent: transparent.contains(entity),
+                            centroid,
+                            from_camera: centroid - camera_centroid,
+                        },
+                        screen_space,
+                    )
                 })
                 // filter entities behind the camera
-                .filter(|c| c.from_camera.dot(&camera_backward) < zero()),
+                .filter(|(c, screen_space)| {
+                    c.from_camera.dot(&camera_backward) < zero() || screen_space.is_some()
+                })
+                .map(|(c, _)| c),
         );
         self.transparent.clear();
         self.transparent

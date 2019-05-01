@@ -3,7 +3,7 @@
 //! TODO: Remove redundant padding once `#[repr(align(...))]` stabilizes.
 
 use amethyst_assets::{PrefabData, ProgressCounter};
-use amethyst_core::specs::prelude::{Component, DenseVecStorage, Entity, WriteStorage};
+use amethyst_core::ecs::prelude::{Component, DenseVecStorage, Entity, WriteStorage};
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
 

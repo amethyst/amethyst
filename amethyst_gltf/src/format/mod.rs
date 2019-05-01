@@ -10,7 +10,7 @@ use num_traits::NumCast;
 use amethyst_animation::AnimationHierarchyPrefab;
 use amethyst_assets::{Format, FormatValue, Prefab, Source};
 use amethyst_core::{
-    nalgebra::{Quaternion, Vector3, Unit, RealField},
+    math::{Quaternion, Vector3, Unit, RealField},
     transform::Transform,
 };
 use amethyst_error::{format_err, Error, ResultExt};

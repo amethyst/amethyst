@@ -62,6 +62,10 @@ impl SimpleState for Example {
                 );
                 Trans::None
             }
+            StateEvent::Input(input) => {
+                info!("Input Event detected: {:?}.", input);
+                Trans::None
+            }
         }
     }
 

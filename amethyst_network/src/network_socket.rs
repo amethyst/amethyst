@@ -1,18 +1,11 @@
 //! The network send and receive System
 
-use std::{
-    clone::Clone,
-    net::SocketAddr,
-    sync::{
-        mpsc::{self, Receiver, Sender},
-        Arc, Mutex,
-    },
-    thread,
-};
+use std::{clone::Clone, net::SocketAddr, thread};
 
-use amethyst_core::specs::{Join, Resources, System, SystemData, WriteStorage};
+use amethyst_core::ecs::{Join, Resources, System, SystemData, WriteStorage};
 
-use laminar::Packet;
+use crossbeam_channel::{Receiver, Sender};
+use laminar::{Packet, SocketEvent};
 use log::{error, warn};
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -20,7 +13,7 @@ use super::{
     deserialize_event,
     error::Result,
     send_event,
-    server::{Host, ReceiveHandler, SendHandler, ServerConfig, ServerSocketEvent},
+    server::{Host, ServerConfig},
     ConnectionState, NetConnection, NetEvent, NetFilter,
 };
 
@@ -51,9 +44,9 @@ where
     /// The list of filters applied on the events received.
     pub filters: Vec<Box<dyn NetFilter<E>>>,
     // sender on which you can queue packets to send to some endpoint.
-    transport_sender: Sender<InternalSocketEvent<E>>,
+    event_sender: Sender<InternalSocketEvent<E>>,
     // receiver from which you can read received packets.
-    transport_receiver: Receiver<Packet>,
+    event_receiver: Receiver<laminar::SocketEvent>,
     config: ServerConfig,
 }
 
@@ -63,7 +56,7 @@ where
 {
     /// Creates a `NetSocketSystem` and binds the Socket on the ip and port added in parameters.
     pub fn new(config: ServerConfig, filters: Vec<Box<dyn NetFilter<E>>>) -> Result<Self> {
-        if config.udp_recv_addr.port() < 1024 {
+        if config.udp_socket_addr.port() < 1024 {
             // Just warning the user here, just in case they want to use the root port.
             warn!("Using a port below 1024, this will require root permission and should not be done.");
         }
@@ -73,27 +66,31 @@ where
         let udp_send_handle = server.udp_send_handle();
         let udp_receive_handle = server.udp_receive_handle();
 
-        let server_sender = NetSocketSystem::<E>::start_sending(udp_send_handle);
-        let server_receiver = NetSocketSystem::<E>::start_receiving(udp_receive_handle);
+        let event_sender = NetSocketSystem::<E>::start_sending(udp_send_handle);
 
         Ok(NetSocketSystem {
             filters,
-            transport_sender: server_sender,
-            transport_receiver: server_receiver,
+            event_sender,
+            event_receiver: udp_receive_handle,
             config,
         })
     }
 
     /// Start a thread to send all queued packets.
-    fn start_sending(sender: Arc<SendHandler>) -> Sender<InternalSocketEvent<E>> {
-        let (tx, send_queue) = mpsc::channel();
+    fn start_sending(sender: Sender<Packet>) -> Sender<InternalSocketEvent<E>> {
+        let (event_sender, event_receiver) = crossbeam_channel::unbounded();
 
         thread::spawn(move || loop {
-            for control_event in send_queue.try_iter() {
+            for control_event in event_receiver.try_iter() {
                 match control_event {
                     InternalSocketEvent::SendEvents { target, events } => {
                         for ev in events {
-                            send_event(ev, target, &sender.get_sender());
+                            match ev {
+                                NetEvent::Packet(packet) => {
+                                    send_event(packet, target, &sender);
+                                }
+                                _ => { /* TODO, handle connect, disconnect etc. */ }
+                            }
                         }
                     }
                     InternalSocketEvent::Stop => {
@@ -103,42 +100,7 @@ where
             }
         });
 
-        tx
-    }
-
-    /// Starts a thread which receives incoming packets and sends them onto the 'Receiver' channel.
-    fn start_receiving(receiver: Arc<Mutex<ReceiveHandler>>) -> Receiver<Packet> {
-        let (receive_queue, rx) = mpsc::channel();
-
-        thread::spawn(move || {
-            // take note that this lock will be there as long this thread lives.
-            // We only have one receiver, if one tries to have two receivers the program should panic.
-            // Why is there one receiver? This is because how a channel works. Once we read the messages it will be removed from the channel.
-            match receiver.try_lock() {
-                Ok(receiver) => loop {
-                    for event in receiver.iter() {
-                        match event {
-                            ServerSocketEvent::Packet(packet) => {
-                                if let Err(error) = receive_queue.send(packet.clone()) {
-                                    error!(
-                                        "`NetworkSocketSystem` was dropped. Reason: {:?}",
-                                        error
-                                    );
-                                    break;
-                                }
-                            }
-                            ServerSocketEvent::Error(error) => error!("{:?}", error),
-                            _ => error!("Event not supported"),
-                        }
-                    }
-                },
-                Err(_) => {
-                    panic!("Two packet receivers can't run at the same time");
-                }
-            }
-        });
-
-        rx
+        event_sender
     }
 }
 
@@ -149,44 +111,49 @@ where
     type SystemData = (WriteStorage<'a, NetConnection<E>>);
 
     fn run(&mut self, mut net_connections: Self::SystemData) {
-        for net_connection in (&mut net_connections).join() {
-            let target = net_connection.target_receiver;
-
-            if net_connection.state == ConnectionState::Connected
-                || net_connection.state == ConnectionState::Connecting
-            {
-                self.transport_sender
-                    .send(InternalSocketEvent::SendEvents {
-                        target,
-                        events: net_connection.send_buffer_early_read().cloned().collect(),
-                    })
-                    .expect("Unreachable: Channel will be alive until a stop event is sent");
-            } else if net_connection.state == ConnectionState::Disconnected {
-                self.transport_sender
-                    .send(InternalSocketEvent::Stop)
-                    .expect("Already sent a stop event to the channel");
+        for connection in (&mut net_connections).join() {
+            match connection.state {
+                ConnectionState::Connected | ConnectionState::Connecting => {
+                    self.event_sender
+                        .send(InternalSocketEvent::SendEvents {
+                            target: connection.target_addr,
+                            events: connection.send_buffer_early_read().cloned().collect(),
+                        })
+                        .expect("Unreachable: Channel will be alive until a stop event is sent");
+                }
+                ConnectionState::Disconnected => {
+                    self.event_sender
+                        .send(InternalSocketEvent::Stop)
+                        .expect("Already sent a stop event to the channel");
+                }
             }
         }
 
-        for (counter, raw_event) in self.transport_receiver.try_iter().enumerate() {
-            // Get the NetConnection from the source
-            for net_connection in (&mut net_connections).join() {
-                if net_connection.target_sender == raw_event.addr() {
+        for (counter, socket_event) in self.event_receiver.try_iter().enumerate() {
+            match socket_event {
+                SocketEvent::Packet(packet) => {
                     // Get the event
-                    match deserialize_event::<E>(raw_event.payload()) {
-                        Ok(ev) => {
-                            net_connection.receive_buffer.single_write(ev);
+                    match deserialize_event::<E>(packet.payload()) {
+                        Ok(event) => {
+                            // Get the NetConnection from the source
+                            for connection in (&mut net_connections).join() {
+                                if connection.target_addr == packet.addr() {
+                                    connection
+                                        .receive_buffer
+                                        .single_write(NetEvent::Packet(event.clone()));
+                                };
+                            }
                         }
                         Err(e) => error!(
                             "Failed to deserialize an incoming network event: {} From source: {:?}",
                             e,
-                            raw_event.addr()
+                            packet.addr()
                         ),
-                    }
-                } else {
-                    warn!("Received packet from unknown source");
+                    };
                 }
-            }
+                SocketEvent::Connect(_) => { /* TODO: Update connection status */ }
+                SocketEvent::Timeout(_) => { /* TODO: Update connection status */ }
+            };
 
             // this will prevent our system to be stuck in the iterator.
             // After 10000 packets we will continue and leave the other packets for the next run.

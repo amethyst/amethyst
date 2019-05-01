@@ -3,7 +3,7 @@
 use std::{fmt::Debug, ops::Deref};
 
 use amethyst_assets::PrefabData;
-use amethyst_core::specs::{
+use amethyst_core::ecs::{
     storage::MaskedStorage, world::EntitiesRes, Component, DenseVecStorage, Entity, Join, Storage,
     WriteStorage,
 };
@@ -59,4 +59,21 @@ pub fn exec_removal<I, D>(
             error!("Failed to delete entity during exec_removal: {:?}", err);
         }
     }
+}
+
+/// Adds a `Removal` component with the specified id to the specified entity.
+/// Usually used with prefabs, when you want to add a `Removal` component at the root of the loaded prefab.
+pub fn add_removal_to_entity<T: PartialEq + Clone + Debug + Send + Sync + 'static>(
+    entity: Entity,
+    id: T,
+    storage: &mut WriteStorage<'_, Removal<T>>,
+) {
+    storage
+        .insert(entity, Removal::new(id))
+        .unwrap_or_else(|_| {
+            panic!(
+                "Failed to insert `Removal` component id to entity {:?}.",
+                entity,
+            )
+        });
 }

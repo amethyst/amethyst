@@ -1,6 +1,6 @@
 //! Types for constructing render passes.
 
-use amethyst_core::specs::prelude::SystemData;
+use amethyst_core::ecs::prelude::SystemData;
 use amethyst_error::Error;
 
 use crate::{

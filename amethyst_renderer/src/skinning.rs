@@ -4,9 +4,11 @@ use gfx::format::{ChannelType, Format, SurfaceType};
 use serde::{Deserialize, Serialize};
 
 use amethyst_assets::PrefabData;
-use amethyst_core::nalgebra::{zero, RealField};
-use amethyst_core::specs::prelude::{
-    Component, DenseVecStorage, Entity, FlaggedStorage, WriteStorage,
+use amethyst_core::{
+    math::{zero, RealField},
+    ecs::prelude::{
+        Component, DenseVecStorage, Entity, FlaggedStorage, WriteStorage,
+    },
 };
 use amethyst_error::Error;
 
@@ -142,6 +144,7 @@ impl<'a, N: RealField> PrefabData<'a> for JointTransformsPrefab<N> {
         entity: Entity,
         storage: &mut Self::SystemData,
         entities: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         storage
             .insert(

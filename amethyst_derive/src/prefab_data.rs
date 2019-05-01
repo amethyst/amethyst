@@ -1,4 +1,4 @@
-use proc_macro2::TokenStream;
+use proc_macro2::{Literal, TokenStream};
 use quote::quote;
 use syn::{Attribute, Data, DeriveInput, Generics, Ident, Meta, NestedMeta, Type};
 
@@ -24,6 +24,7 @@ fn impl_prefab_data_component(ast: &DeriveInput) -> TokenStream {
             fn add_to_entity(&self,
                              entity: Entity,
                              system_data: &mut Self::SystemData,
+                             _: &[Entity],
                              _: &[Entity]) -> ::std::result::Result<(), Error> {
                 system_data.insert(entity, self.clone()).map(|_| ())?;
                 Ok(())
@@ -48,14 +49,15 @@ fn impl_prefab_data_aggregate(ast: &DeriveInput) -> TokenStream {
         }
     });
     let adds = (0..data.len()).map(|n| {
+        let tuple_index = Literal::usize_unsuffixed(n);
         let (_, name, is_component) = &data[n];
         if *is_component {
             quote! {
-                system_data.#n.insert(entity, self.#name.clone())?;
+                system_data.#tuple_index.insert(entity, self.#name.clone())?;
             }
         } else {
             quote! {
-                self.#name.add_to_entity(entity, &mut system_data.#n, entities)?;
+                self.#name.add_to_entity(entity, &mut system_data.#tuple_index, entities, children)?;
             }
         }
     });
@@ -64,8 +66,9 @@ fn impl_prefab_data_aggregate(ast: &DeriveInput) -> TokenStream {
         if *is_component {
             None
         } else {
+            let tuple_index = Literal::usize_unsuffixed(n);
             Some(quote! {
-                if self.#name.load_sub_assets(progress, &mut system_data.#n)? {
+                if self.#name.load_sub_assets(progress, &mut system_data.#tuple_index)? {
                     ret = true;
                 }
             })
@@ -86,7 +89,8 @@ fn impl_prefab_data_aggregate(ast: &DeriveInput) -> TokenStream {
             fn add_to_entity(&self,
                              entity: Entity,
                              system_data: &mut Self::SystemData,
-                             entities: &[Entity]) -> ::std::result::Result<(), Error> {
+                             entities: &[Entity],
+                             children: &[Entity]) -> ::std::result::Result<(), Error> {
                 #(#adds)*
                 Ok(())
             }

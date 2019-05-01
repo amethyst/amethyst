@@ -1,7 +1,7 @@
 use amethyst_assets::PrefabData;
 use amethyst_core::{
-    nalgebra::RealField,
-    specs::prelude::{Component, Entity, HashMapStorage, NullStorage, WriteStorage},
+    math::RealField,
+    ecs::prelude::{Component, Entity, HashMapStorage, NullStorage, WriteStorage},
 };
 use amethyst_error::Error;
 
@@ -53,6 +53,7 @@ impl<'a, N: RealField> PrefabData<'a> for ControlTagPrefab<N> {
         entity: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         system_data.0.insert(entity, FlyControlTag)?;
         if let Some((index, distance)) = self.arc_ball {

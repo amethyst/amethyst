@@ -9,8 +9,8 @@ use log::warn;
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     alga::general::SubsetOf,
-    nalgebra::{convert, one, zero, Matrix4, RealField, Vector4},
-    specs::prelude::{Join, Read, ReadStorage},
+    math::{convert, one, zero, Matrix4, RealField, Vector4},
+    ecs::prelude::{Join, Read, ReadStorage},
     transform::Transform,
 };
 use amethyst_error::Error;
@@ -20,12 +20,15 @@ use crate::{
     hidden::{Hidden, HiddenPropagate},
     mesh::MeshHandle,
     pass::util::{
-        add_texture, default_transparency, get_camera, set_view_args, setup_textures, ViewArgs,
+        add_texture, default_transparency, get_camera, set_view_args, set_view_args_screen,
+        setup_textures, ViewArgs,
     },
     pipe::{
         pass::{Pass, PassData},
         DepthMode, Effect, NewEffect,
     },
+    resources::ScreenDimensions,
+    screen_space::{ScreenSpace, ScreenSpaceSettings},
     sprite::{Flipped, SpriteRender, SpriteSheet},
     sprite_visibility::SpriteVisibility,
     tex::{Texture, TextureHandle},
@@ -109,6 +112,9 @@ impl<'a, N: RealField + Default> PassData<'a> for DrawFlat2D<N> {
         ReadStorage<'a, Flipped>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Rgba>,
+        ReadStorage<'a, ScreenSpace>,
+        ReadExpect<'a, ScreenDimensions>,
+        Read<'a, ScreenSpaceSettings>,
     );
 }
 
@@ -152,19 +158,23 @@ impl<N: RealField + Default + SubsetOf<f32>> Pass for DrawFlat2D<N> {
             flipped,
             mesh,
             rgba,
+            screens,
+            screen_dimensions,
+            screen_space_settings,
         ): <Self as PassData<'a>>::Data,
     ) {
         let camera = get_camera(active, &camera, &transform);
 
         match visibility {
             None => {
-                for (sprite_render, transform, flipped, rgba, _, _) in (
+                for (sprite_render, transform, flipped, rgba, _, _, screen_maybe) in (
                     &sprite_render,
                     &transform,
                     flipped.maybe(),
                     rgba.maybe(),
                     !&hidden,
                     !&hidden_prop,
+                    screens.maybe(),
                 )
                     .join()
                 {
@@ -175,10 +185,11 @@ impl<N: RealField + Default + SubsetOf<f32>> Pass for DrawFlat2D<N> {
                         rgba,
                         &sprite_sheet_storage,
                         &tex_storage,
+                        screen_maybe.is_some(),
                     );
                 }
 
-                for (image_render, transform, flipped, rgba, _, _, _) in (
+                for (image_render, transform, flipped, rgba, _, _, _, screen_maybe) in (
                     &texture_handle,
                     &transform,
                     flipped.maybe(),
@@ -186,6 +197,7 @@ impl<N: RealField + Default + SubsetOf<f32>> Pass for DrawFlat2D<N> {
                     !&hidden,
                     !&hidden_prop,
                     !&mesh,
+                    screens.maybe(),
                 )
                     .join()
                 {
@@ -195,18 +207,20 @@ impl<N: RealField + Default + SubsetOf<f32>> Pass for DrawFlat2D<N> {
                         flipped,
                         rgba,
                         &tex_storage,
+                        screen_maybe.is_some(),
                     );
                 }
 
                 self.batch.sort();
             }
             Some(ref visibility) => {
-                for (sprite_render, transform, flipped, rgba, _) in (
+                for (sprite_render, transform, flipped, rgba, _, screen_maybe) in (
                     &sprite_render,
                     &transform,
                     flipped.maybe(),
                     rgba.maybe(),
                     &visibility.visible_unordered,
+                    screens.maybe(),
                 )
                     .join()
                 {
@@ -217,16 +231,18 @@ impl<N: RealField + Default + SubsetOf<f32>> Pass for DrawFlat2D<N> {
                         rgba,
                         &sprite_sheet_storage,
                         &tex_storage,
+                        screen_maybe.is_some(),
                     );
                 }
 
-                for (image_render, transform, flipped, rgba, _, _) in (
+                for (image_render, transform, flipped, rgba, _, _, screen_maybe) in (
                     &texture_handle,
                     &transform,
                     flipped.maybe(),
                     rgba.maybe(),
                     &visibility.visible_unordered,
                     !&mesh,
+                    screens.maybe(),
                 )
                     .join()
                 {
@@ -236,6 +252,7 @@ impl<N: RealField + Default + SubsetOf<f32>> Pass for DrawFlat2D<N> {
                         flipped,
                         rgba,
                         &tex_storage,
+                        screen_maybe.is_some(),
                     );
                 }
 
@@ -243,6 +260,7 @@ impl<N: RealField + Default + SubsetOf<f32>> Pass for DrawFlat2D<N> {
                 self.batch.sort();
 
                 for entity in &visibility.visible_ordered {
+                    let screen = screens.contains(*entity);
                     if let Some(sprite_render) = sprite_render.get(*entity) {
                         self.batch.add_sprite(
                             sprite_render,
@@ -251,6 +269,7 @@ impl<N: RealField + Default + SubsetOf<f32>> Pass for DrawFlat2D<N> {
                             rgba.get(*entity),
                             &sprite_sheet_storage,
                             &tex_storage,
+                            screen,
                         );
                     } else if let Some(texture_handle) = texture_handle.get(*entity) {
                         self.batch.add_image(
@@ -259,6 +278,7 @@ impl<N: RealField + Default + SubsetOf<f32>> Pass for DrawFlat2D<N> {
                             flipped.get(*entity),
                             rgba.get(*entity),
                             &tex_storage,
+                            screen,
                         )
                     }
                 }
@@ -271,6 +291,8 @@ impl<N: RealField + Default + SubsetOf<f32>> Pass for DrawFlat2D<N> {
             camera,
             &sprite_sheet_storage,
             &tex_storage,
+            &screen_dimensions,
+            &screen_space_settings,
         );
         self.batch.reset();
     }
@@ -284,6 +306,7 @@ enum TextureDrawData<N: RealField> {
         flipped: Option<Flipped>,
         rgba: Option<Rgba>,
         transform: Matrix4<N>,
+        screen: bool,
     },
     Image {
         texture_handle: Handle<Texture>,
@@ -292,6 +315,7 @@ enum TextureDrawData<N: RealField> {
         rgba: Option<Rgba>,
         width: usize,
         height: usize,
+        screen: bool,
     },
 }
 
@@ -320,7 +344,9 @@ impl<N: RealField> TextureDrawData<N> {
 
 #[derive(Clone, Default, Debug)]
 struct TextureBatch<N: RealField> {
+struct TextureBatch {
     textures: Vec<TextureDrawData<N>>,
+    textures_screen: Vec<TextureDrawData<N>>,
 }
 
 impl<N: RealField + Default + SubsetOf<f32>> TextureBatch<N> {
@@ -331,6 +357,7 @@ impl<N: RealField + Default + SubsetOf<f32>> TextureBatch<N> {
         flipped: Option<&Flipped>,
         rgba: Option<&Rgba>,
         tex_storage: &AssetStorage<Texture>,
+        screen: bool,
     ) {
         let transform = match transform {
             Some(v) => v,
@@ -345,14 +372,20 @@ impl<N: RealField + Default + SubsetOf<f32>> TextureBatch<N> {
             }
         };
 
-        self.textures.push(TextureDrawData::Image {
+        let data = TextureDrawData::Image {
             texture_handle: texture_handle.clone(),
             transform: *transform.global_matrix(),
             flipped: flipped.cloned(),
             rgba: rgba.cloned(),
             width: texture_dims.0,
             height: texture_dims.1,
-        });
+            screen,
+        };
+        if screen {
+            self.textures_screen.push(data);
+        } else {
+            self.textures.push(data);
+        }
     }
 
     pub fn add_sprite(
@@ -363,6 +396,7 @@ impl<N: RealField + Default + SubsetOf<f32>> TextureBatch<N> {
         rgba: Option<&Rgba>,
         sprite_sheet_storage: &AssetStorage<SpriteSheet>,
         tex_storage: &AssetStorage<Texture>,
+        screen: bool,
     ) {
         let transform = match transform {
             Some(v) => v,
@@ -383,26 +417,38 @@ impl<N: RealField + Default + SubsetOf<f32>> TextureBatch<N> {
             }
             None => {
                 warn!(
-                    "Sprite sheet not loaded for sprite_render: `{:?}`.",
+                    "Sprite sheet not loaded for sprite_render: `{:?}`. \
+                     Ensure that `RenderBundle::new(..).with_sprite_sheet_processor()` has been \
+                     called and that the corresponding `SpriteSheet` asset has loaded \
+                     successfully.",
                     sprite_render
                 );
                 return;
             }
         };
 
-        self.textures.push(TextureDrawData::Sprite {
+        let data = TextureDrawData::Sprite {
             texture_handle,
             render: sprite_render.clone(),
             flipped: flipped.cloned(),
             rgba: rgba.cloned(),
             transform: *transform.global_matrix(),
-        });
+            screen,
+        };
+
+        if screen {
+            self.textures_screen.push(data);
+        } else {
+            self.textures.push(data);
+        }
     }
 
     /// Optimize the sprite order to generating more coherent batches.
     pub fn sort(&mut self) {
         // Only takes the texture into account for now.
         self.textures.sort_by(|a, b| a.tex_id().cmp(&b.tex_id()));
+        self.textures_screen
+            .sort_by(|a, b| a.tex_id().cmp(&b.tex_id()));
     }
 
     pub fn encode(
@@ -413,19 +459,52 @@ impl<N: RealField + Default + SubsetOf<f32>> TextureBatch<N> {
         camera: Option<(&Camera, &Transform<N>)>,
         sprite_sheet_storage: &AssetStorage<SpriteSheet>,
         tex_storage: &AssetStorage<Texture>,
+        screen_dimensions: &ScreenDimensions,
+        screen_space_settings: &ScreenSpaceSettings,
+    ) {
+        if !self.textures.is_empty() {
+            // Draw to world
+            set_view_args(effect, encoder, camera);
+            TextureBatch::encode_vec(
+                &self.textures,
+                encoder,
+                factory,
+                effect,
+                sprite_sheet_storage,
+                tex_storage,
+            );
+        }
+
+        if !self.textures_screen.is_empty() {
+            if let Some(depth_data) = &effect.data.out_depth {
+                encoder.clear_depth(&depth_data.0, 1.0);
+            }
+            // Draw to screen
+            set_view_args_screen(effect, encoder, screen_dimensions, screen_space_settings);
+            TextureBatch::encode_vec(
+                &self.textures_screen,
+                encoder,
+                factory,
+                effect,
+                sprite_sheet_storage,
+                tex_storage,
+            );
+        }
+    }
+
+    fn encode_vec(
+        textures: &Vec<TextureDrawData>,
+        encoder: &mut Encoder,
+        factory: &mut Factory,
+        effect: &mut Effect,
+        sprite_sheet_storage: &AssetStorage<SpriteSheet>,
+        tex_storage: &AssetStorage<Texture>,
     ) {
         use gfx::{
             buffer,
             memory::{Bind, Typed},
             Factory,
         };
-
-        if self.textures.is_empty() {
-            return;
-        }
-
-        // Sprite vertex shader
-        set_view_args(effect, encoder, camera);
 
         // We might be able to improve performance here if we
         // preallocate the maximum needed capacity. We need to
@@ -435,9 +514,9 @@ impl<N: RealField + Default + SubsetOf<f32>> TextureBatch<N> {
         // doing the allocations.
         let mut instance_data = Vec::<f32>::new();
         let mut num_instances = 0;
-        let num_quads = self.textures.len();
+        let num_quads = textures.len();
 
-        for (i, quad) in self.textures.iter().enumerate() {
+        for (i, quad) in textures.iter().enumerate() {
             let texture = tex_storage
                 .get(&quad.texture_handle())
                 .expect("Unable to get texture of sprite");
@@ -536,7 +615,7 @@ impl<N: RealField + Default + SubsetOf<f32>> TextureBatch<N> {
             // 1. We are at the last sprite and want to submit all pending work.
             // 2. The next sprite will use a different texture triggering a flush.
             let need_flush = i >= num_quads - 1
-                || self.textures[i + 1].texture_handle().id() != quad.texture_handle().id();
+                || textures[i + 1].texture_handle().id() != quad.texture_handle().id();
 
             if need_flush {
                 add_texture(effect, texture);
@@ -570,5 +649,6 @@ impl<N: RealField + Default + SubsetOf<f32>> TextureBatch<N> {
 
     pub fn reset(&mut self) {
         self.textures.clear();
+        self.textures_screen.clear();
     }
 }

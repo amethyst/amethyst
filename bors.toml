@@ -1,6 +1,6 @@
 # Test suite must pass on both Travis and GitLab before merging into `master`.
 status = [
-    "continuous-integration/travis-ci/push",
+    "continuous-integration/jenkins/%",
 ]
 
 # Do not allow pull requests with these labels to be merged.

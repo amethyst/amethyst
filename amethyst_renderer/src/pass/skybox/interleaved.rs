@@ -4,8 +4,8 @@ use std::marker::PhantomData;
 
 use amethyst_core::{
     alga::general::SubsetOf,
-    nalgebra::{self as na, RealField},
-    specs::{Read, ReadStorage},
+    math::{self as na, RealField},
+    ecs::{Read, ReadStorage},
     transform::Transform,
 };
 use amethyst_error::Error;

@@ -6,7 +6,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use amethyst_assets::{Format, PrefabData, ProgressCounter};
 use amethyst_controls::ControlTagPrefab;
-use amethyst_core::{nalgebra::RealField, specs::prelude::Entity, Transform};
+use amethyst_core::{math::RealField, ecs::prelude::Entity, Transform};
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
 use amethyst_renderer::{

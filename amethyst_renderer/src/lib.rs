@@ -59,14 +59,16 @@ pub use crate::{
     },
     renderer::Renderer,
     resources::{AmbientColor, ScreenDimensions, WindowMessages},
+    screen_space::{ScreenSpace, ScreenSpaceSettings},
     shape::{InternalShape, Shape, ShapePrefab, ShapeUpload},
     skinning::{
         AnimatedComboMeshCreator, AnimatedVertexBufferCombination, JointIds, JointTransforms,
         JointTransformsPrefab, JointWeights,
     },
     sprite::{
-        Flipped, Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle,
-        TextureCoordinates,
+        Flipped, Sprite, SpriteGrid, SpriteList, SpritePosition, SpriteRender, SpriteRenderPrefab,
+        SpriteScenePrefab, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, SpriteSheetPrefab,
+        Sprites, TextureCoordinates,
     },
     sprite_visibility::{SpriteVisibility, SpriteVisibilitySortingSystem},
     system::RenderSystem,
@@ -108,6 +110,7 @@ mod mtl;
 mod pass;
 mod renderer;
 mod resources;
+mod screen_space;
 mod shape;
 mod skinning;
 mod sprite;

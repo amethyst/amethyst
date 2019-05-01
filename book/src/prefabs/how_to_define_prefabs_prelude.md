@@ -49,7 +49,11 @@ Component     | Serialized representation             | Example(s)            | 
     # use specs_derive::Component;
     #
     # #[derive(Component, Debug, Deserialize, Serialize /* .. */)]
-    # pub struct Position{pub x: f32, pub y: f32, pub z:f32};
+    # pub struct Position {
+    #     pub x: f32,
+    #     pub y: f32,
+    #     pub z: f32,
+    # };
     #
     impl From<(i32, i32, i32)> for Position {
         fn from((x, y, z): (i32, i32, i32)) -> Position {
@@ -81,8 +85,8 @@ Component     | Serialized representation             | Example(s)            | 
     #
     # use amethyst_audio::output::Output;
     # use amethyst_core::{
-    #     nalgebra::Point3,
-    #     specs::{prelude::Component, storage::HashMapStorage},
+    #     math::Point3,
+    #     ecs::{prelude::Component, storage::HashMapStorage},
     # };
     # use specs_derive::Component;
     #

@@ -1,9 +1,9 @@
-use std::{marker::PhantomData, ops::Deref};
+use std::{collections::HashMap, marker::PhantomData, ops::Deref};
 
 use log::error;
 
 use amethyst_core::{
-    specs::{
+    ecs::{
         storage::ComponentEvent, BitSet, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
         ReaderId, Resources, System, Write, WriteStorage,
     },
@@ -75,19 +75,18 @@ where
             |mut d| {
                 d.tag = Some(self.next_tag);
                 self.next_tag += 1;
-                if !d.loading() {
-                    if !d
+                if !d.loading()
+                    && !d
                         .load_sub_assets(&mut prefab_system_data)
                         .with_context(|_| format_err!("Failed starting sub asset loading"))?
-                    {
-                        return Ok(ProcessingState::Loaded(d));
-                    }
+                {
+                    return Ok(ProcessingState::Loaded(d));
                 }
                 match d.progress().complete() {
                     Completion::Complete => Ok(ProcessingState::Loaded(d)),
                     Completion::Failed => {
                         error!("Failed loading sub asset: {:?}", d.progress().errors());
-                        return Err(Error::from_string("Failed loading sub asset"));
+                        Err(Error::from_string("Failed loading sub asset"))
                     }
                     Completion::Loading => Ok(ProcessingState::Loading(d)),
                 }
@@ -113,6 +112,8 @@ where
                 // create entities
                 self.entities.clear();
                 self.entities.push(root_entity);
+
+                let mut children = HashMap::new();
                 for entity_data in prefab.entities.iter().skip(1) {
                     let new_entity = entities.create();
                     self.entities.push(new_entity);
@@ -125,6 +126,11 @@ where
                                 },
                             )
                             .expect("Unable to insert `Parent` for prefab");
+
+                        children
+                            .entry(parent)
+                            .or_insert(vec![])
+                            .push(new_entity.clone());
                     }
                     tags.insert(
                         new_entity,
@@ -144,6 +150,10 @@ where
                                 self.entities[index],
                                 &mut prefab_system_data,
                                 &self.entities,
+                                children
+                                    .get(&index)
+                                    .map(|children| &children[..])
+                                    .unwrap_or(&[]),
                             )
                             .expect("Unable to add prefab system data to entity");
                     }
@@ -157,7 +167,7 @@ where
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         self.insert_reader = Some(WriteStorage::<Handle<Prefab<T>>>::fetch(&res).register_reader());
     }

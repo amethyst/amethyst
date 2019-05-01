@@ -8,7 +8,7 @@ use std::{
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, ProgressCounter};
-use amethyst_core::specs::prelude::{Entity, Read, ReadExpect, WriteStorage};
+use amethyst_core::ecs::prelude::{Entity, Read, ReadExpect, WriteStorage};
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
 
@@ -88,6 +88,7 @@ where
         _: Entity,
         _: &mut Self::SystemData,
         _: &[Entity],
+        _: &[Entity],
     ) -> Result<Handle<Animation<T>>, Error> {
         Ok(self
             .handle
@@ -126,6 +127,7 @@ where
 /// - `I`: Id type
 /// - `T`: The animatable `Component`
 #[derive(Clone, Debug, Deserialize, Serialize, Default)]
+#[serde(bound = "I: for<'a> Deserialize<'a> + Serialize")]
 pub struct AnimationSetPrefab<I, T>
 where
     T: AnimationSampling,
@@ -154,6 +156,7 @@ where
         entity: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         let set = system_data
             .0
@@ -162,7 +165,7 @@ where
         for (id, animation_prefab) in &self.animations {
             set.insert(
                 id.clone(),
-                animation_prefab.add_to_entity(entity, &mut system_data.1, entities)?,
+                animation_prefab.add_to_entity(entity, &mut system_data.1, entities, &[])?,
             );
         }
         Ok(())
@@ -207,6 +210,7 @@ where
         entity: Entity,
         storage: &mut Self::SystemData,
         entities: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         storage
             .insert(
@@ -240,6 +244,7 @@ where
     I: Clone + Hash + Eq + Send + Sync + 'static,
 {
     /// Place an `AnimationSet` on the `Entity`
+    #[serde(bound = "I: for<'a> Deserialize<'a> + Serialize")]
     pub animation_set: Option<AnimationSetPrefab<I, T>>,
     /// Place an `AnimationHierarchy` on the `Entity`
     pub hierarchy: Option<AnimationHierarchyPrefab<T>>,

@@ -1,7 +1,7 @@
 //! Utility to adjust the aspect ratio of cameras automatically
 
 use amethyst_assets::PrefabData;
-use amethyst_core::specs::{
+use amethyst_core::ecs::{
     Component, Entity, HashMapStorage, Join, ReadExpect, ReadStorage, System, WriteStorage,
 };
 use amethyst_derive::PrefabData;
@@ -206,7 +206,7 @@ impl Component for AutoFov {
 impl Default for AutoFov {
     fn default() -> Self {
         AutoFov {
-            base_fovx: 1.861684535,
+            base_fovx: 1.861_684_535,
             fovx_growth_rate: 1.0,
             fixed_growth_rate: false,
             base_aspect_ratio: (16, 9),

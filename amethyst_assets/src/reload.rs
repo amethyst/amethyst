@@ -3,7 +3,7 @@
 use std::{sync::Arc, time::Instant};
 
 use amethyst_core::{
-    specs::prelude::{DispatcherBuilder, Read, Resources, System, Write},
+    ecs::prelude::{DispatcherBuilder, Read, Resources, System, Write},
     SystemBundle, Time,
 };
 use amethyst_error::Error;
@@ -40,7 +40,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for HotReloadBundle {
 ///
 /// ```
 /// # use amethyst_assets::HotReloadStrategy;
-/// # use amethyst_core::specs::prelude::World;
+/// # use amethyst_core::ecs::prelude::World;
 /// #
 /// # fn main() {
 /// let mut world = World::new();
@@ -172,7 +172,7 @@ impl<'a> System<'a> for HotReloadSystem {
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::specs::prelude::SystemData;
+        use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         res.insert(self.initial_strategy.clone());
         res.fetch_mut::<Loader>().set_hot_reload(true);

@@ -1,4 +1,4 @@
-use amethyst_core::specs::{
+use amethyst_core::ecs::{
     storage::GenericReadStorage, Entities, Entity, Join, ReadStorage, System, Write,
 };
 use derive_new::new;
@@ -68,8 +68,7 @@ where
                 keep
             });
             rm.iter().for_each(|e| {
-                &mut cache.cached.remove(*e);
-                ()
+                cache.cached.remove(*e);
             });
         }
 

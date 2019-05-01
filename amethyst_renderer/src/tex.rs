@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 
 use amethyst_assets::{Asset, Handle};
-use amethyst_core::specs::prelude::DenseVecStorage;
+use amethyst_core::ecs::prelude::DenseVecStorage;
 use amethyst_error::Error;
 
 use crate::{

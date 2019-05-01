@@ -44,11 +44,11 @@ hibitset = { version = "0.5.1", features = ["parallel"] }
 image = "0.20"
 log = "0.4.6"
 rayon = "1.0.2"
-ron = "0.4"
+ron = "0.5"
 serde = { version = "1", features = ["derive"] }
 shred-derive = "0.5"
 shred = "0.7"
-wavefront_obj = "5.1"
+wavefront_obj = "6.0"
 winit = { version = "0.18", features = ["serde", "icon_loading"] }
 
 thread_profiler = { version = "0.3", optional = true }

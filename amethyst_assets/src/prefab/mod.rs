@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use serde::{Deserialize, Serialize};
 use shred_derive::SystemData;
 
-use amethyst_core::specs::prelude::{
+use amethyst_core::ecs::prelude::{
     Component, DenseVecStorage, Entity, FlaggedStorage, Read, ReadExpect, SystemData, WriteStorage,
 };
 use amethyst_error::Error;
@@ -34,11 +34,15 @@ pub trait PrefabData<'a> {
     /// - `system_data`: `SystemData` needed to do the loading
     /// - `entities`: Some components need access to the entities that was created as part of the
     ///               full prefab, for linking purposes, so this contains all those `Entity`s.
+    /// - `children`: Entities that need access to the `Hierarchy`  in this function won't be able
+    ///               to access it yet, since it is only updated after this function runs. As a work-
+    ///               around, this slice includes all hierarchical children of the entity being passed.
     fn add_to_entity(
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
         entities: &[Entity],
+        children: &[Entity],
     ) -> Result<Self::Result, Error>;
 
     /// Trigger asset loading for any sub assets.
@@ -359,6 +363,7 @@ where
         entity: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
+        _: &[Entity],
     ) -> Result<Handle<A>, Error> {
         let handle = match *self {
             AssetPrefab::Handle(ref handle) => handle.clone(),
@@ -452,7 +457,7 @@ mod tests {
     use rayon::ThreadPoolBuilder;
 
     use amethyst_core::{
-        specs::{Builder, RunNow, World},
+        math::{Builder, RunNow, World},
         Time, Transform,
     };
 

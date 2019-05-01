@@ -2,8 +2,8 @@ use std::fmt::Debug;
 
 use amethyst_assets::{Asset, AssetStorage, Loader, PrefabData, ProcessingState, SimpleFormat};
 use amethyst_core::{
-    nalgebra::{Vector2, Vector3},
-    specs::prelude::{Component, Entity, Read, ReadExpect, VecStorage, WriteStorage},
+    ecs::prelude::{Component, Entity, Read, ReadExpect, VecStorage, WriteStorage},
+    math::{Vector2, Vector3},
 };
 use amethyst_error::{format_err, Error, ResultExt};
 
@@ -104,6 +104,7 @@ impl<'a> PrefabData<'a> for MeshData {
         entity: Entity,
         system_data: &mut Self::SystemData,
         _: &[Entity],
+        _: &[Entity],
     ) -> Result<(), Error> {
         let handle = system_data
             .0
@@ -151,13 +152,13 @@ fn convert(
                 let normal: Normal = object.normals[i];
                 Vector3::from([normal.x as f32, normal.y as f32, normal.z as f32]).normalize()
             })
-            .unwrap_or(Vector3::new(0.0, 0.0, 0.0)),
+            .unwrap_or_else(|| Vector3::new(0.0, 0.0, 0.0)),
         tex_coord: ti
             .map(|i| {
                 let tvertex: TVertex = object.tex_vertices[i];
                 Vector2::new(tvertex.u as f32, tvertex.v as f32)
             })
-            .unwrap_or(Vector2::new(0.0, 0.0)),
+            .unwrap_or_else(|| Vector2::new(0.0, 0.0)),
     }
 }
 

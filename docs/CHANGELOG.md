@@ -24,9 +24,23 @@ it is attached to. ([#1282])
 * Add `loaded_icon` to `DisplayConfig` to set a window icon programatically ([#1405])
 * Added optional feature gates which will reduce compilation times when used. ([#1412])
 * Several passes got `with_transparency_settings` which changes the transparency settings for the pass. ([#1419])
+* Add `SpriteRenderPrefab`. ([#1435])
+* Add `ScreenSpace` component. Draws entities using the screen coordinates. ([#1424])
+* Add `add_removal_to_entity` function. ([#1445])
+* Add `position_from_screen` to `Camera`. Transforms position from screen space to camera space. ([#1442])
+* Add `SpriteScenePrefab`. Allows load sprites from a grid and add them to the `SpriteRenderer`. ([#1469])
+* Add `Widgets` resource. Allows keeping track of UI entities and their components and iterating over them. ([#1390])
+* `AmethystApplication` takes in application name using `with_app_name(..)`. ([#1499])
+* Add `NetEvent::Reliable` variant. When added to NetConnection, these events will eventually reach the target. ([#1513])
+* "How To" guides for defining state-specific dispatchers. ([#1498])
+* Adding support for AMETHYST_NUM_THREADS environment variable to control size of the threads pool used by thread_pool_builder.
+* Add `Input` variant to `StateEvent`. ([#1478])
+* Support type parameters in `EventReader` derive. ([#1478])
+* Added `events` example which demonstrates working even reader and writer in action. ([#1538])
 
 ### Changed
 
+* Make `frame_limiter::do_sleep` calculate the amount of time to sleep instead of calling `sleep(0)` ([#1446])
 * Make `application_root_dir` return a `Result<Path>` instead of a `String` ([#1213])
 * Remove unnecessary texture coordinates offset in `Sprite::from_pixel_values` ([#1267])
 * Changed `ActiveCamera` to have the `Option` inside. ([#1280])
@@ -41,15 +55,38 @@ it is attached to. ([#1282])
 * Re-exported amethyst_gltf by amethyst as amethyst::gltf. ([#1411])
 * `Default::default` now returns a pass with transparency enabled for all applicable passes. ([#1419])
 * Several passes had a function named `with_transparency` changed to accept a boolean. ([#1419])
+* `FrameRateLimitConfig` has a `new` constructor, and its fields are made public. ([#1436])
+* Derive `Deserialize, Serialize` for `MaterialPrimitive` and `SpriteRenderPrimitive`, remove
+extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
+* Renamed `amethyst_core::specs` to `amethyst_core::ecs` and `amethyst_core::nalgebra` to `amethyst_core::math`. ([#1410])
+* Simplified some of the conditionals in the Pong tutorial. ([#1439])
+* Changed the names of many Transform functions to better reflect their actual function and reduce potential semantic confusion ([#1451])
+* `ProgressCounter#num_loading()` no longer includes failed assets. ([#1452])
+* `SpriteSheetFormat` field renamed from `spritesheet_*` to `texture_*`. ([#1469])
+* Add new `keep_aspect_ratio` field to `Stretch::XY`. ([#1480])
+* Renamed `Text` UI Prefab to `Label` in preparation for full widget integration in prefabs. ([#1390])
+* `amethyst_test` includes the application name of a failing test. ([#1499])
+* `amethyst_test` returns the panic message of a failed execution. ([#1499])
+* Rename `NetEvent::Custom` variant to `NetEvent::Unreliable`. ([#1513])
+* Updated laminar to 0.2.0. ([#1502])
+* Large binary files in examples are now tracked with `git-lfs`. ([#1509])
+* Allowed the user to arrange with laminar. ([#1523])
+* Removed `NetEvent::Custom` and added `NetEvent::Packet(NetPacket)` ([#1523])
+* Fixed update is no longer frame rate dependent ([#1516])
+* Display the syntax error when failing to parse sprite sheets  ([#1526])
+
 
 ### Removed
 
 ### Fixed
 
+* Optimize loading of wavefront obj mesh assets by getting rid of unnecessary allocations. ([#1454])
 * Fixed the "json" feature for amethyst_assets. ([#1302])
 * Fixed default system font loading to accept uppercase extension ("TTF"). ([#1328])
 * Set width and height of Pong Paddles ([#1363])
 * Fix omission in `PosNormTangTex` documentation. ([#1371])
+* Fix division by zero in vertex data building ([#1481])
+* Fix tuple index generation on `PrefabData` and `EventReader` proc macros. ([#1501])
 
 [#1114]: https://github.com/amethyst/amethyst/pull/1114
 [#1213]: https://github.com/amethyst/amethyst/pull/1213
@@ -67,7 +104,9 @@ it is attached to. ([#1282])
 [#1365]: https://github.com/amethyst/amethyst/pull/1365
 [#1371]: https://github.com/amethyst/amethyst/pull/1371
 [#1373]: https://github.com/amethyst/amethyst/pull/1373
+[#1375]: https://github.com/amethyst/amethyst/pull/1375
 [#1388]: https://github.com/amethyst/amethyst/pull/1388
+[#1390]: https://github.com/amethyst/amethyst/pull/1390
 [#1397]: https://github.com/amethyst/amethyst/pull/1397
 [#1404]: https://github.com/amethyst/amethyst/pull/1404
 [#1408]: https://github.com/amethyst/amethyst/pull/1408
@@ -75,6 +114,31 @@ it is attached to. ([#1282])
 [#1411]: https://github.com/amethyst/amethyst/pull/1411
 [#1412]: https://github.com/amethyst/amethyst/pull/1412
 [#1419]: https://github.com/amethyst/amethyst/pull/1419
+[#1424]: https://github.com/amethyst/amethyst/pull/1424
+[#1435]: https://github.com/amethyst/amethyst/pull/1435
+[#1436]: https://github.com/amethyst/amethyst/pull/1436
+[#1410]: https://github.com/amethyst/amethyst/pull/1410
+[#1439]: https://github.com/amethyst/amethyst/pull/1439
+[#1445]: https://github.com/amethyst/amethyst/pull/1445
+[#1446]: https://github.com/amethyst/amethyst/pull/1446
+[#1451]: https://github.com/amethyst/amethyst/pull/1451
+[#1452]: https://github.com/amethyst/amethyst/pull/1452
+[#1454]: https://github.com/amethyst/amethyst/pull/1454
+[#1442]: https://github.com/amethyst/amethyst/pull/1442
+[#1469]: https://github.com/amethyst/amethyst/pull/1469
+[#1478]: https://github.com/amethyst/amethyst/pull/1478
+[#1481]: https://github.com/amethyst/amethyst/pull/1481
+[#1480]: https://github.com/amethyst/amethyst/pull/1480
+[#1498]: https://github.com/amethyst/amethyst/pull/1498
+[#1499]: https://github.com/amethyst/amethyst/pull/1499
+[#1501]: https://github.com/amethyst/amethyst/pull/1501
+[#1502]: https://github.com/amethyst/amethyst/pull/1515
+[#1513]: https://github.com/amethyst/amethyst/pull/1513
+[#1509]: https://github.com/amethyst/amethyst/pull/1509
+[#1523]: https://github.com/amethyst/amethyst/pull/1523
+[#1524]: https://github.com/amethyst/amethyst/pull/1524
+[#1526]: https://github.com/amethyst/amethyst/pull/1526
+[#1538]: https://github.com/amethyst/amethyst/pull/1538
 
 ## [0.10.0] - 2018-12
 
@@ -204,7 +268,7 @@ it is attached to. ([#1282])
 
 * Sprites contain their dimensions and offsets to render them with the right size and desired position. ([#829], [#830])
 * Texture coordinates for sprites are 1.0 at the top of the texture and 0.0 at the bottom. ([#829], [#830])
-* Made get_camera public. ([#878)]
+* Made get_camera public. ([#878])
 * Simplified creating states with SimpleState and EmptyState. ([#887])
 * Updated ProgressCounter to show loading errors. ([#892])
 * Replaced the `imagefmt` crate with `image`. ([#877])

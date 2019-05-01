@@ -1,6 +1,6 @@
 use amethyst_core::{
-    nalgebra::{one, zero, Point3, RealField},
-    specs::{prelude::Component, storage::HashMapStorage},
+    math::{one, zero, Point3, RealField},
+    ecs::{prelude::Component, storage::HashMapStorage},
 };
 
 /// An audio listener, add this component to the local player character.

@@ -2,8 +2,8 @@ use std::{hash::Hash, marker::PhantomData};
 
 use amethyst_core::{
     bundle::SystemBundle,
-    nalgebra::{one, RealField},
-    specs::prelude::DispatcherBuilder,
+    math::{one, RealField},
+    ecs::prelude::DispatcherBuilder,
 };
 use amethyst_error::Error;
 

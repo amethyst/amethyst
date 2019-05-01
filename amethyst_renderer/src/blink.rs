@@ -1,7 +1,7 @@
 //! Module for the Blink component and BlinkSystem.
 
 use amethyst_core::{
-    specs::{Component, DenseVecStorage, Entities, Join, Read, System, WriteStorage},
+    ecs::{Component, DenseVecStorage, Entities, Join, Read, System, WriteStorage},
     Time,
 };
 

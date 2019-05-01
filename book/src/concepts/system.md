@@ -78,7 +78,7 @@ impl<'a> System<'a> for WalkPlayerUp {
     type SystemData = WriteStorage<'a, Transform<f32>>;
 
     fn run(&mut self, mut transforms: Self::SystemData) {
-        transforms.get_mut(self.player).unwrap().translate_y(0.1);
+        transforms.get_mut(self.player).unwrap().prepend_translation_y(0.1);
     }
 }
 ```
@@ -123,7 +123,7 @@ impl<'a> System<'a> for MakeObjectsFall {
     fn run(&mut self, (mut transforms, falling): Self::SystemData) {
         for (mut transform, _) in (&mut transforms, &falling).join() {
             if transform.translation().y > 0.0 {
-                transform.translate_y(-0.1);
+                transform.prepend_translation_y(-0.1);
             }
         }
     }
@@ -161,7 +161,7 @@ impl<'a> System<'a> for NotFallingObjects {
     fn run(&mut self, (mut transforms, falling): Self::SystemData) {
         for (mut transform, _) in (&mut transforms, !&falling).join() {
             // If they don't fall, why not make them go up!
-            transform.translate_y(0.1);
+            transform.prepend_translation_y(0.1);
         }
     }
 }
@@ -251,7 +251,7 @@ impl<'a> System<'a> for MakeObjectsFall {
     fn run(&mut self, (entities, mut transforms, falling): Self::SystemData) {
         for (e, mut transform, _) in (&*entities, &mut transforms, &falling).join() {
             if transform.translation().y > 0.0 {
-                transform.translate_y(-0.1);
+                transform.prepend_translation_y(-0.1);
             } else {
                 entities.delete(e);
             }

@@ -58,7 +58,7 @@ pub fn load_mesh(
                 None => normals.collect(),
             })
             .unwrap_or_else(|| {
-                use amethyst_core::nalgebra::Point3;
+                use amethyst_core::math::Point3;
                 use std::iter::once;
                 let f = faces
                     .as_ref()
@@ -111,36 +111,7 @@ pub fn load_mesh(
                 }
                 None => tangents.map(|t| [t[0], t[1], t[2]]).collect(),
             })
-            .unwrap_or_else(|| {
-                let f = faces
-                    .as_ref()
-                    .map(|f| f.clone())
-                    .unwrap_or_else(|| (0..positions.len()).collect::<Vec<_>>());
-                let vertices_per_face = || 3;
-                let face_count = || f.len() / 3;
-                let p = |face, vert| &positions[f[face * 3 + vert]];
-                let n = |face, vert| &normals[f[face * 3 + vert]];
-                let tx = |face, vert| &tex_coord[f[face * 3 + vert]];
-                let mut tangents: Vec<(usize, [f32; 4])> = Vec::with_capacity(f.len());
-                {
-                    let mut set_tangent = |face, vert, tangent| {
-                        let index = face * 3 + vert;
-                        if let Err(pos) = tangents.binary_search_by(|probe| probe.0.cmp(&index)) {
-                            tangents.insert(pos, (index, tangent));
-                        }
-                    };
-                    mikktspace::generate_tangents(
-                        &vertices_per_face,
-                        &face_count,
-                        &p,
-                        &n,
-                        &tx,
-                        &mut set_tangent,
-                    );
-                }
-
-                tangents.iter().map(|(_, t)| [t[0], t[1], t[2]]).collect()
-            });
+            .unwrap_or_else(|| calculate_tangents(&positions, &normals, &tex_coord));
 
         trace!("Loading bounding box");
         let bounds = primitive.bounding_box();
@@ -202,6 +173,49 @@ pub fn load_mesh(
     Ok(primitives)
 }
 
+fn calculate_tangents(
+    positions: &[[f32; 3]],
+    normals: &[[f32; 3]],
+    tex_coords: &[[f32; 2]],
+) -> Vec<[f32; 3]> {
+    generate_tangents(positions, normals, tex_coords)
+        .iter()
+        .map(|(_, t)| [t[0], t[1], t[2]])
+        .collect()
+}
+
+fn generate_tangents(
+    positions: &[[f32; 3]],
+    normals: &[[f32; 3]],
+    tex_coords: &[[f32; 2]],
+) -> Vec<(usize, [f32; 4])> {
+    let vertices_per_face = || 3;
+    let face_count = || positions.len() / 3;
+    let position = |face, vert| &positions[face * 3 + vert];
+    let normal = |face, vert| &normals[face * 3 + vert];
+    let tx = |face, vert| &tex_coords[face * 3 + vert];
+    let mut tangents: Vec<(usize, [f32; 4])> = Vec::with_capacity(positions.len());
+
+    {
+        let mut set_tangent = |face, vert, tangent| {
+            let index = face * 3 + vert;
+            if let Err(pos) = tangents.binary_search_by(|probe| probe.0.cmp(&index)) {
+                tangents.insert(pos, (index, tangent));
+            }
+        };
+        mikktspace::generate_tangents(
+            &vertices_per_face,
+            &face_count,
+            &position,
+            &normal,
+            &tx,
+            &mut set_tangent,
+        );
+    }
+
+    tangents
+}
+
 fn cast_attribute<T>(mut old: Vec<T::Repr>) -> Vec<Separate<T>>
 where
     T: Attribute,
@@ -222,5 +236,52 @@ fn flip_check(uv: [f32; 2], flip_v: bool) -> [f32; 2] {
         [uv[0], 1. - uv[1]]
     } else {
         uv
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::format::mesh::calculate_tangents;
+
+    #[test]
+    fn test_tangent_calc() {
+        let positions = &[
+            [0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [1.0, 1.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [1.0, 1.0, 0.0],
+            [0.0, 1.0, 0.0],
+        ];
+        let normals = &[
+            [0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0],
+        ];
+        let tex_coords = &[
+            [0.0, 0.0],
+            [0.0, 1.0],
+            [1.0, 1.0],
+            [0.0, 1.0],
+            [1.0, 1.0],
+            [0.0, 1.0],
+        ];
+
+        let tangents = calculate_tangents(positions, normals, tex_coords);
+
+        assert_eq!(
+            tangents,
+            vec![
+                [1.0, 0.0, 0.0],
+                [1.0, 0.0, 0.0],
+                [1.0, 0.0, 0.0],
+                [1.0, 0.0, 0.0],
+                [1.0, 0.0, 0.0],
+                [1.0, 0.0, 0.0]
+            ]
+        );
     }
 }

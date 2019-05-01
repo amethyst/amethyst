@@ -4,8 +4,8 @@ use amethyst_assets::Processor;
 use amethyst_core::{
     bundle::SystemBundle,
     alga::general::SubsetOf,
-    nalgebra::RealField,
-    specs::prelude::DispatcherBuilder,
+    math::RealField,
+    ecs::prelude::DispatcherBuilder,
 };
 use amethyst_error::Error;
 use std::marker::PhantomData;

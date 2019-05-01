@@ -2,19 +2,23 @@
 
 # Amethyst
 
-[![Build Status][s1]][tc] [![Crates.io][s2]][ci] [![docs page][docs-badge]][docs] [![MIT/Apache][s3]][li] [![Join us on Discord][s4]][di] ![Lines of Code][s6]
+[![Build Status][s1]][jc] [![Crates.io][s2]][ci] [![docs page][docs-badge]][docs] [![MIT/Apache][s3]][li] [![Join us on Discord][s4]][di]  [![Community forum][s5]][ds] [![Reddit][s7]][rd] ![Lines of Code][s6]
 
-[s1]: https://travis-ci.org/amethyst/amethyst.svg?branch=master
+[s1]: https://jenkins.amethyst-engine.org/job/amethyst/job/master/badge/icon
 [s2]: https://img.shields.io/crates/v/amethyst.svg
 [docs-badge]: https://img.shields.io/badge/docs-website-blue.svg
 [docs]: https://www.amethyst.rs/doc/
 [s3]: https://img.shields.io/badge/license-MIT%2FApache-blue.svg
 [s4]: https://img.shields.io/discord/425678876929163284.svg?logo=discord
+[s5]: https://img.shields.io/badge/discourse-online-green.svg
 [s6]: https://tokei.rs/b1/github/amethyst/amethyst?category=code
-[tc]: https://travis-ci.org/amethyst/amethyst/
+[s7]: https://img.shields.io/badge/dynamic/json.svg?label=r/Amethyst&query=$.data.subscribers&url=https://www.reddit.com/r/Amethyst/about.json
+[jc]: https://jenkins.amethyst-engine.org/blue/organizations/jenkins/amethyst/activity/
 [ci]: https://crates.io/crates/amethyst/
 [li]: COPYING
 [di]: https://discord.gg/amethyst
+[ds]: https://community.amethyst-engine.org/
+[rd]: https://www.reddit.com/r/Amethyst/
 
 ## What is Amethyst?
 
@@ -73,6 +77,14 @@ If you don't understand a part of the documentation, please let us know. Join us
 [exm]: https://github.com/amethyst/amethyst/tree/master/examples
 
 ## Getting started
+
+### Before you begin
+
+This repository uses Git LFS for some files used in examples.
+If you intend to run the examples, make sure you have LFS installed in your system before you clone.
+You can download it and read the installation instructions at [Git LFS home page](https://git-lfs.github.com/).
+
+### Examples
 
 To compile any of the examples run:
 

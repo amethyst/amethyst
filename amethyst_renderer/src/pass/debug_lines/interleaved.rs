@@ -8,8 +8,8 @@ use log::{debug, trace};
 
 use amethyst_core::{
     alga::general::SubsetOf,
-    nalgebra::{self as na, Matrix4, RealField},
-    specs::{Join, Read, ReadStorage, Write, WriteStorage},
+    math::{self as na, Matrix4, RealField},
+    ecs::{Join, Read, ReadStorage, Write, WriteStorage},
     transform::Transform,
 };
 use amethyst_error::Error;
@@ -128,7 +128,7 @@ where
             lines
         };
 
-        if debug_lines.len() == 0 {
+        if debug_lines.is_empty() {
             effect.clear();
             return;
         }

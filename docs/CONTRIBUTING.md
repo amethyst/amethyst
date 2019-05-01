@@ -42,7 +42,8 @@ and try our best to resolve it.
 
 So, you want to write some code? Great!
 
-To begin hacking, fork the repository to your account and `git clone` the forked
+To begin hacking, make sure you have [git lfs](https://git-lfs.github.com/)
+installed, fork the repository to your account and `git clone` the forked
 copy to your local machine. On clone you will be on the *master* branch. This
 is the branch that contains all new work that has not been released yet. If you
 are adding a new feature to amethyst then you want to base your work off of this
@@ -50,6 +51,8 @@ branch. Otherwise, if you are attemping to fix something in an older release you
 will have to base your work off of a released tag. This can be done after a clone
 by running `git checkout TAG` where `TAG` is a released tag eg `v0.8.0`. Now that
 you have the latest code you can start contributing.
+
+Contributors should be familiar with the [Git Style Guide](https://github.com/agis/git-style-guide) and [Commit Message Guidelines](https://gist.github.com/robertpainsi/b632364184e70900af4ab688decf6f53).
 
 ### Submission Checklist
 
@@ -274,6 +277,8 @@ Then you can hit load button and choose `thread_profile.json` file.
   * [Rust By Example][re] - Get acquainted with Rust through a series of small
     code samples.
   * [The Rust Programming Language][rl] - The canonical online book about Rust.
+* Git
+  * [How to write a Git commit message](https://chris.beams.io/posts/git-commit/)
 
 [di]: https://discord.gg/amethyst
 [bs]: https://www.kth.se/social/upload/5289cb3ff276542440dd668c/bitsquid-behind-the-scenes.pdf

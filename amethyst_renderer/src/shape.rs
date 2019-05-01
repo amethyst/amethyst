@@ -12,8 +12,8 @@ use shred_derive::SystemData;
 
 use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, Progress, ProgressCounter};
 use amethyst_core::{
-    nalgebra::{Vector2, Vector3},
-    specs::prelude::{Entity, Read, ReadExpect, WriteStorage},
+    ecs::prelude::{Entity, Read, ReadExpect, WriteStorage},
+    math::{Vector2, Vector3},
 };
 use amethyst_error::Error;
 
@@ -57,6 +57,7 @@ where
         &self,
         entity: Entity,
         system_data: &mut Self::SystemData,
+        _: &[Entity],
         _: &[Entity],
     ) -> Result<(), Error> {
         let (_, ref mut meshes, _) = system_data;

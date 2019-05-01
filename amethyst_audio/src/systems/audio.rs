@@ -15,8 +15,8 @@ use thread_profiler::profile_scope;
 
 use amethyst_core::{
     alga::general::SubsetOf,
-    nalgebra::{convert, RealField},
-    specs::prelude::{
+    math::{convert, RealField},
+    ecs::prelude::{
         Entities, Entity, Join, Read, ReadStorage, Resources, System, SystemData, WriteStorage,
     },
     transform::Transform,

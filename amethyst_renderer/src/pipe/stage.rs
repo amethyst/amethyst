@@ -5,7 +5,7 @@ use fnv::FnvHashMap as HashMap;
 use hetseq::*;
 use log::error;
 
-use amethyst_core::specs::prelude::SystemData;
+use amethyst_core::ecs::prelude::SystemData;
 use amethyst_error::Error;
 
 use crate::{
@@ -131,7 +131,7 @@ where
     }
 }
 
-/// Data requested by the pass from the specs::World.
+/// Data requested by the pass from the ecs::World.
 pub trait StageData<'a> {
     type Data: SystemData<'a> + Send;
 }
@@ -223,7 +223,7 @@ impl<Q> StageBuilder<Q> {
         C: Into<Option<R>>,
         D: Into<Option<f32>>,
     {
-        self.clear_color = color_val.into().map(|c| c.into());
+        self.clear_color = color_val.into().map(Into::into);
         self.clear_depth = depth_val.into();
         self
     }

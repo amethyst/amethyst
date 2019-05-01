@@ -1,8 +1,8 @@
 use std::default::Default;
 
 use amethyst_core::{
+    ecs::prelude::{Component, Read, ReadStorage, Resources, System, SystemData, Write},
     shrev::{Event, EventChannel, ReaderId},
-    specs::prelude::{Component, Read, ReadStorage, Resources, System, SystemData, Write},
 };
 
 use derivative::Derivative;
