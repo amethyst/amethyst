@@ -457,7 +457,7 @@ mod tests {
     use rayon::ThreadPoolBuilder;
 
     use amethyst_core::{
-        math::{Builder, RunNow, World},
+        ecs::{Builder, RunNow, World},
         Time, Transform,
     };
 

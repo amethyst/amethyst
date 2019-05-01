@@ -10,7 +10,7 @@ use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     alga::general::SubsetOf,
     math::{convert, one, zero, Matrix4, RealField, Vector4},
-    ecs::prelude::{Join, Read, ReadStorage},
+    ecs::prelude::{Join, Read, ReadStorage, ReadExpect},
     transform::Transform,
 };
 use amethyst_error::Error;
@@ -344,7 +344,6 @@ impl<N: RealField> TextureDrawData<N> {
 
 #[derive(Clone, Default, Debug)]
 struct TextureBatch<N: RealField> {
-struct TextureBatch {
     textures: Vec<TextureDrawData<N>>,
     textures_screen: Vec<TextureDrawData<N>>,
 }
@@ -493,7 +492,7 @@ impl<N: RealField + Default + SubsetOf<f32>> TextureBatch<N> {
     }
 
     fn encode_vec(
-        textures: &Vec<TextureDrawData>,
+        textures: &Vec<TextureDrawData<N>>,
         encoder: &mut Encoder,
         factory: &mut Factory,
         effect: &mut Effect,

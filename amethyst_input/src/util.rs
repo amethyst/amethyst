@@ -1,6 +1,6 @@
 use std::hash::Hash;
 
-use amethyst_core::nalgebra::{convert, RealField};
+use amethyst_core::math::{convert, RealField};
 use winit::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 
 use crate::input_handler::InputHandler;

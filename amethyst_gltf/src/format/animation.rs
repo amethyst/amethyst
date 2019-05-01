@@ -8,7 +8,7 @@ use amethyst_animation::{
     AnimationPrefab, AnimationSetPrefab, InterpolationFunction, InterpolationPrimitive, Sampler,
     SamplerPrimitive, TransformChannel,
 };
-use amethyst_core::{Transform, nalgebra::RealField};
+use amethyst_core::{Transform, math::RealField};
 
 use super::Buffers;
 use crate::error;

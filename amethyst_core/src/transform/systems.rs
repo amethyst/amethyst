@@ -3,14 +3,13 @@
 use std::marker::PhantomData;
 
 use hibitset::BitSet;
-use ecs::prelude::{
+use crate::ecs::prelude::{
     ComponentEvent, Entities, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
     WriteStorage,
 };
-use hibitset::BitSet;
 
 use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform};
-use crate::nalgebra::RealField;
+use crate::math::RealField;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -197,7 +196,7 @@ mod tests {
         let (mut world, mut hs, mut system) = transform_world();
 
         let mut local = Transform::<f32>::default();
-        local.set_xyz(5.0, 5.0, 5.0);
+        local.set_translation_xyz(5.0, 5.0, 5.0);
         local.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e1 = world.create_entity().with(local.clone()).build();
@@ -221,13 +220,13 @@ mod tests {
         let (mut world, mut hs, mut system) = transform_world();
 
         let mut local1 = Transform::<f32>::default();
-        local1.set_xyz(5.0, 5.0, 5.0);
+        local1.set_translation_xyz(5.0, 5.0, 5.0);
         local1.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e1 = world.create_entity().with(local1.clone()).build();
 
         let mut local2 = Transform::<f32>::default();
-        local2.set_xyz(5.0, 5.0, 5.0);
+        local2.set_translation_xyz(5.0, 5.0, 5.0);
         local2.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e2 = world
@@ -237,7 +236,7 @@ mod tests {
             .build();
 
         let mut local3 = Transform::<f32>::default();
-        local3.set_xyz(5.0, 5.0, 5.0);
+        local3.set_translation_xyz(5.0, 5.0, 5.0);
         local3.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e3 = world
@@ -308,19 +307,19 @@ mod tests {
         let (mut world, mut hs, mut system) = transform_world();
 
         let mut local3 = Transform::<f32>::default();
-        local3.set_xyz(5.0, 5.0, 5.0);
+        local3.set_translation_xyz(5.0, 5.0, 5.0);
         local3.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e3 = world.create_entity().with(local3.clone()).build();
 
         let mut local2 = Transform::<f32>::default();
-        local2.set_xyz(5.0, 5.0, 5.0);
+        local2.set_translation_xyz(5.0, 5.0, 5.0);
         local2.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e2 = world.create_entity().with(local2.clone()).build();
 
         let mut local1 = Transform::<f32>::default();
-        local1.set_xyz(5.0, 5.0, 5.0);
+        local1.set_translation_xyz(5.0, 5.0, 5.0);
         local1.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e1 = world.create_entity().with(local1.clone()).build();
@@ -399,7 +398,7 @@ mod tests {
 
         let mut local = Transform::<f32>::default();
         // Release the indeterminate forms!
-        local.set_xyz(1.0 / 0.0, 1.0 / 0.0, 1.0 / 0.0);
+        local.set_translation_xyz(1.0 / 0.0, 1.0 / 0.0, 1.0 / 0.0);
         world.create_entity().with(local.clone()).build();
 
         hs.run_now(&mut world.res);

@@ -10,7 +10,7 @@ use crate::{
 use amethyst_error::Error;
 
 use amethyst_core::{
-    nalgebra::RealField,
+    math::RealField,
     ecs::prelude::{Component, DispatcherBuilder},
     SystemBundle,
 };

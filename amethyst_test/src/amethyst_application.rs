@@ -849,11 +849,11 @@ mod test {
             world.add_resource::<Vec<AssetZeroHandle>>(handles);
         };
         let assertion_fn = |world: &mut World| {
-            let asset_zero_handles = world.read_resource::<Vec<AssetZeroHandle>>();
+            let asset_translation_zero_handles = world.read_resource::<Vec<AssetZeroHandle>>();
 
             let store = world.read_resource::<AssetStorage<AssetZero>>();
-            assert_eq!(Some(&AssetZero(10)), store.get(&asset_zero_handles[0]));
-            assert_eq!(Some(&AssetZero(20)), store.get(&asset_zero_handles[1]));
+            assert_eq!(Some(&AssetZero(10)), store.get(&asset_translation_zero_handles[0]));
+            assert_eq!(Some(&AssetZero(20)), store.get(&asset_translation_zero_handles[1]));
         };
 
         AmethystApplication::blank()
@@ -881,10 +881,10 @@ mod test {
             world.add_resource(handles);
         };
         let assertion_fn = |world: &mut World| {
-            let asset_zero_handles = world.read_resource::<Vec<AssetZeroHandle>>();
+            let asset_translation_zero_handles = world.read_resource::<Vec<AssetZeroHandle>>();
 
             let store = world.read_resource::<AssetStorage<AssetZero>>();
-            assert_eq!(Some(&AssetZero(10)), store.get(&asset_zero_handles[0]));
+            assert_eq!(Some(&AssetZero(10)), store.get(&asset_translation_zero_handles[0]));
         };
 
         AmethystApplication::blank()
@@ -1220,7 +1220,7 @@ mod test {
     struct BundleAsset;
     impl<'a, 'b> SystemBundle<'a, 'b> for BundleAsset {
         fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
-            builder.add(Processor::<AssetZero>::new(), "asset_zero_processor", &[]);
+            builder.add(Processor::<AssetZero>::new(), "asset_translation_zero_processor", &[]);
             Ok(())
         }
     }
@@ -1237,8 +1237,8 @@ mod test {
         type Storage = DenseVecStorage<Self>;
     }
     impl From<AssetZero> for Result<ProcessingState<AssetZero>, Error> {
-        fn from(asset_zero: AssetZero) -> Result<ProcessingState<AssetZero>, Error> {
-            Ok(ProcessingState::Loaded(asset_zero))
+        fn from(asset_translation_zero: AssetZero) -> Result<ProcessingState<AssetZero>, Error> {
+            Ok(ProcessingState::Loaded(asset_translation_zero))
         }
     }
     type AssetZeroHandle = Handle<AssetZero>;
@@ -1246,10 +1246,10 @@ mod test {
     // === System delegates === //
     struct AssetZeroLoader;
     impl AssetZeroLoader {
-        fn load(world: &World, asset_zero: AssetZero) -> Result<AssetZeroHandle, Error> {
+        fn load(world: &World, asset_translation_zero: AssetZero) -> Result<AssetZeroHandle, Error> {
             let loader = world.read_resource::<Loader>();
             Ok(loader.load_from_data(
-                asset_zero,
+                asset_translation_zero,
                 (),
                 &world.read_resource::<AssetStorage<AssetZero>>(),
             ))

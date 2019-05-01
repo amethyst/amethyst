@@ -5,6 +5,7 @@ use hibitset::BitSet;
 use amethyst_core::{
     math::{zero, Point3, RealField, Vector3},
     ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
+    Transform,
 };
 
 use crate::{
@@ -109,7 +110,7 @@ impl<'a, N: RealField> System<'a> for SpriteVisibilitySortingSystem<N> {
                 screen_spaces.maybe(),
             )
                 .join()
-                .map(|(entity, global, _, _, screen_space)| {
+                .map(|(entity, transform, _, _, screen_space)| {
                     (entity, transform.global_matrix().transform_point(&origin), screen_space)
                 })
                 .map(|(entity, centroid, screen_space)| {

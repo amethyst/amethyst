@@ -77,12 +77,8 @@ where
 
         if let Some(dir) = Unit::try_new(Vector3::new(x, y, z), convert(1.0e-6)) {
             for (transform, _) in (&mut transform, &tag).join() {
-<<<<<<< HEAD
                 let delta_sec: N = convert(time.delta_seconds() as f64);
-                transform.move_along_local(dir, delta_sec * self.speed);
-=======
-                transform.append_translation_along(dir, time.delta_seconds() * self.speed);
->>>>>>> eac09b6c781b0c523a138eb324dfe02bc59a3af1
+                transform.append_translation_along(dir, delta_sec * self.speed);
             }
         }
     }
@@ -188,20 +184,11 @@ where
                 if let Event::DeviceEvent { ref event, .. } = *event {
                     if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
                         for (transform, _) in (&mut transform, &tag).join() {
-<<<<<<< HEAD
-                            transform.pitch_local(convert(
+                            transform.append_rotation_x_axis(convert(
                                 (-y * self.sensitivity_y as f64).to_radians(),
                             ));
                             transform
-                                .yaw_global(convert((-x * self.sensitivity_x as f64).to_radians()));
-=======
-                            transform.append_rotation_x_axis(
-                                (-y as f32 * self.sensitivity_y).to_radians(),
-                            );
-                            transform.prepend_rotation_y_axis(
-                                (-x as f32 * self.sensitivity_x).to_radians(),
-                            );
->>>>>>> eac09b6c781b0c523a138eb324dfe02bc59a3af1
+                                .prepend_rotation_y_axis(convert((-x * self.sensitivity_x as f64).to_radians()));
                         }
                     }
                 }
