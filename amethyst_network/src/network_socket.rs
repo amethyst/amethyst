@@ -10,7 +10,6 @@ use log::{error, warn};
 use serde::{de::DeserializeOwned, Serialize};
 
 use super::{
-    deserialize_event,
     error::Result,
     send_event,
     server::{Host, ServerConfig},

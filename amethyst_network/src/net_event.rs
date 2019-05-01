@@ -3,9 +3,8 @@
 //! NetOwnedEvent are passed through the ECS, and contains the event's source (remote connection, usually).
 
 use crate::Result;
-use laminar::Packet;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::{fmt::Debug, net::SocketAddr};
+use std::net::SocketAddr;
 
 /// Network events which you can send or and receive from an endpoint.
 // TODO, Connect, connection refused, disconnect, disconnected
