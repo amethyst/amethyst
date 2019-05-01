@@ -1,6 +1,8 @@
+use std::marker::PhantomData;
 use crate::{
     define_widget, font::default::get_default_font, Anchor, FontAsset, FontHandle, Stretch, UiText,
     UiTransform, WidgetId, Widgets,
+    render::UiRenderer,
 };
 use shred::SystemData;
 use shred_derive::SystemData;
@@ -25,8 +27,9 @@ define_widget!(UiLabel =>
 
 /// Container for all the resources the builder needs to make a new UiLabel.
 #[derive(SystemData)]
-pub struct UiLabelBuilderResources<'a, I: WidgetId = u32>
+pub struct UiLabelBuilderResources<'a, R, I = u32>
 where
+    R: UiRenderer,
     I: WidgetId,
 {
     font_asset: Read<'a, AssetStorage<FontAsset>>,
@@ -34,12 +37,13 @@ where
     entities: Entities<'a>,
     text: WriteStorage<'a, UiText>,
     transform: WriteStorage<'a, UiTransform>,
-    label_widgets: WriteExpect<'a, Widgets<UiLabel, I>>,
+    label_widgets: WriteExpect<'a, Widgets<UiLabel<R>, I>>,
 }
 
 /// Convenience structure for building a label
-pub struct UiLabelBuilder<I = u32>
+pub struct UiLabelBuilder<R, I = u32>
 where
+    R: UiRenderer,
     I: WidgetId,
 {
     id: Option<I>,
@@ -55,10 +59,12 @@ where
     font: Option<FontHandle>,
     font_size: f32,
     parent: Option<Entity>,
+    _phantom: PhantomData<R>,
 }
 
-impl<'a, I> Default for UiLabelBuilder<I>
+impl<'a, R, I> Default for UiLabelBuilder<R, I>
 where
+    R: UiRenderer,
     I: WidgetId + 'static,
 {
     fn default() -> Self {
@@ -76,12 +82,14 @@ where
             font: None,
             font_size: 32.,
             parent: None,
+            _phantom: Default::default(),
         }
     }
 }
 
-impl<'a, I> UiLabelBuilder<I>
+impl<'a, R, I> UiLabelBuilder<R, I>
 where
+    R: UiRenderer,
     I: WidgetId + 'static,
 {
     /// Construct a new UiLabelBuilder.
@@ -166,7 +174,7 @@ where
     }
 
     /// Build this with the `UiLabelBuilderResources`.
-    pub fn build(self, mut res: UiLabelBuilderResources<'a, I>) -> (I, UiLabel) {
+    pub fn build(self, mut res: UiLabelBuilderResources<'a, I>) -> (I, UiLabel<R>) {
         let text_entity = res.entities.create();
         let widget = UiLabel::new(text_entity);
 
@@ -213,7 +221,7 @@ where
     }
 
     /// Create the UiLabel based on provided configuration parameters.
-    pub fn build_from_world(self, world: &World) -> (I, UiLabel) {
+    pub fn build_from_world(self, world: &World) -> (I, UiLabel<R>) {
         self.build(UiLabelBuilderResources::<I>::fetch(&world.res))
     }
 }

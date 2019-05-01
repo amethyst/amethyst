@@ -44,9 +44,9 @@ where
     parent: WriteStorage<'a, Parent>,
     text: WriteStorage<'a, UiText>,
     transform: WriteStorage<'a, UiTransform>,
-    button_widgets: WriteExpect<'a, Widgets<UiButton, I>>,
+    button_widgets: WriteExpect<'a, Widgets<UiButton<R>, I>>,
     sound_retrigger: WriteStorage<'a, UiSoundRetrigger>,
-    button_action_retrigger: WriteStorage<'a, UiButtonActionRetrigger>,
+    button_action_retrigger: WriteStorage<'a, UiButtonActionRetrigger<R>>,
     selectables: WriteStorage<'a, Selectable<G>>,
 }
 
@@ -73,10 +73,10 @@ pub struct UiButtonBuilder<G, I: WidgetId, R: UiRenderer> {
     on_hover_sound: Option<UiPlaySoundAction>,
     // SetTextColor and SetTexture can occur on click/hover start,
     // Unset for both on click/hover stop, so we only need 2 max.
-    on_click_start: SmallVec<[UiButtonActionType; 2]>,
-    on_click_stop: SmallVec<[UiButtonActionType; 2]>,
-    on_hover_start: SmallVec<[UiButtonActionType; 2]>,
-    on_hover_stop: SmallVec<[UiButtonActionType; 2]>,
+    on_click_start: SmallVec<[UiButtonActionType<R>; 2]>,
+    on_click_stop: SmallVec<[UiButtonActionType<R>; 2]>,
+    on_hover_start: SmallVec<[UiButtonActionType<R>; 2]>,
+    on_hover_stop: SmallVec<[UiButtonActionType<R>; 2]>,
     _phantom: PhantomData<G>,
 }
 
@@ -124,7 +124,7 @@ where
     /// This allows easy use of default values for text and button appearance and allows the user
     /// to easily set other UI-related options. It also allows easy retrieval and updating through
     /// the appropriate widgets resouce, see [`Widgets`](../../struct.Widgets.html).
-    pub fn new<S: ToString>(text: S) -> UiButtonBuilder<G, I> {
+    pub fn new<S: ToString>(text: S) -> UiButtonBuilder<G, I, R> {
         let mut builder = UiButtonBuilder::default();
         builder.text = text.to_string();
         builder
@@ -268,7 +268,7 @@ where
     }
 
     /// Build this with the `UiButtonBuilderResources`.
-    pub fn build(mut self, mut res: UiButtonBuilderResources<'a, G, I, R>) -> (I, UiButton) {
+    pub fn build(mut self, mut res: UiButtonBuilderResources<'a, G, I, R>) -> (I, UiButton<R>) {
         let image_entity = res.entities.create();
         let text_entity = res.entities.create();
         let widget = UiButton::new(image_entity, text_entity);
@@ -407,7 +407,7 @@ where
     }
 
     /// Create the UiButton based on provided configuration parameters.
-    pub fn build_from_world(self, world: &World) -> (I, UiButton) {
+    pub fn build_from_world(self, world: &World) -> (I, UiButton<R>) {
         self.build(UiButtonBuilderResources::<G, I, R>::fetch(&world.res))
     }
 }

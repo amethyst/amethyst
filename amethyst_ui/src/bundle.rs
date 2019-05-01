@@ -4,7 +4,7 @@ use std::{hash::Hash, marker::PhantomData};
 
 use derive_new::new;
 
-use amethyst_assets::Processor;
+use amethyst_assets::{Processor, Format};
 use amethyst_audio::AudioFormat;
 use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder};
 use amethyst_error::Error;
@@ -24,19 +24,20 @@ use crate::{
 ///
 /// Will fail with error 'No resource with the given id' if the InputBundle is not added.
 #[derive(new)]
-pub struct UiBundle<R, A = String, B = String, C = NoCustomUi, W = u32, G = ()> {
+pub struct UiBundle<R, I, A = String, B = String, C = NoCustomUi, W = u32, G = ()> {
     #[new(default)]
-    _marker: PhantomData<(A, B, C, W, G, R)>,
+    _marker: PhantomData<(R, I, A, B, C, W, G, R)>,
 }
 
-impl<'a, 'b, A, B, C, W, G, R> SystemBundle<'a, 'b> for UiBundle<A, B, C, W, G, R>
+impl<'a, 'b, R, I, A, B, C, W, G> SystemBundle<'a, 'b> for UiBundle<R, I, A, B, C, W, G>
 where
     A: Send + Sync + Eq + Hash + Clone + 'static,
     B: Send + Sync + Eq + Hash + Clone + 'static,
-    C: ToNativeWidget,
+    C: ToNativeWidget<R, I>,
     W: WidgetId,
     G: Send + Sync + PartialEq + 'static,
     R: UiRenderer,
+    I: Format<R::Texture, Options = ()>,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
