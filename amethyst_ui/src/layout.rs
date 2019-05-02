@@ -214,12 +214,10 @@ impl<'a> System<'a> for UiTransformSystem {
         for entity in hierarchy.all() {
             {
                 let self_dirty = self_transform_modified.contains(entity.id());
-                let parent_entity = parents
-                    .get(*entity)
-                    .expect(
-                        "Unreachable: All entities in `ParentHierarchy` should also be in `Parent`",
-                    )
-                    .entity;
+                let parent_entity = match parents.get(*entity) {
+                    Some(p) => p.entity,
+                    None => continue, // Skip this entity iteration, as its dirty
+                };
                 let parent_dirty = self_transform_modified.contains(parent_entity.id());
                 if parent_dirty || self_dirty || screen_resized {
                     let parent_transform_copy = transforms.get(parent_entity).cloned();
