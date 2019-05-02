@@ -74,6 +74,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Removed `NetEvent::Custom` and added `NetEvent::Packet(NetPacket)` ([#1523])
 * Fixed update is no longer frame rate dependent ([#1516])
 * Display the syntax error when failing to parse sprite sheets  ([#1526])
+* Added generic parameter type to `Transform` to configure floating point precision. ([#1334])
 
 
 ### Removed
@@ -99,6 +100,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1281]: https://github.com/amethyst/amethyst/pull/1281
 [#1302]: https://github.com/amethyst/amethyst/pull/1302
 [#1328]: https://github.com/amethyst/amethyst/pull/1328
+[#1334]: https://github.com/amethyst/amethyst/pull/1334
 [#1356]: https://github.com/amethyst/amethyst/pull/1356
 [#1363]: https://github.com/amethyst/amethyst/pull/1363
 [#1365]: https://github.com/amethyst/amethyst/pull/1365
