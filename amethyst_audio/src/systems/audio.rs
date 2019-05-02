@@ -15,10 +15,10 @@ use thread_profiler::profile_scope;
 
 use amethyst_core::{
     alga::general::SubsetOf,
-    math::{convert, RealField},
     ecs::prelude::{
         Entities, Entity, Join, Read, ReadStorage, Resources, System, SystemData, WriteStorage,
     },
+    math::{convert, RealField},
     transform::Transform,
 };
 

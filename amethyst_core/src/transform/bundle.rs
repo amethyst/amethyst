@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 use amethyst_error::Error;
 use specs_hierarchy::HierarchySystem;
 
-use crate::{bundle::SystemBundle, transform::*, math::RealField, ecs::prelude::DispatcherBuilder};
+use crate::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder, math::RealField, transform::*};
 
 /// Transform bundle
 ///

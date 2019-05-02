@@ -10,8 +10,8 @@ use glsl_layout::Pod;
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     alga::general::SubsetOf,
-    math::RealField,
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage},
+    math::RealField,
     transform::Transform,
 };
 use amethyst_error::Error;

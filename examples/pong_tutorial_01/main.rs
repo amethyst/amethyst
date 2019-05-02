@@ -21,8 +21,9 @@ fn main() -> amethyst::Result<()> {
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
             .with_pass(DrawFlat2D::<f32>::new()),
     );
-    let game_data = GameDataBuilder::default()
-        .with_bundle(RenderBundle::<'_, _, _, f32>::new(pipe, Some(config)).with_sprite_sheet_processor())?;
+    let game_data = GameDataBuilder::default().with_bundle(
+        RenderBundle::<'_, _, _, f32>::new(pipe, Some(config)).with_sprite_sheet_processor(),
+    )?;
 
     // This line is not mentioned in the pong tutorial as it is specific to the context
     // of the git repository. It only is a different location to load the assets from.

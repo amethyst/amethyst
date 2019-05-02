@@ -8,8 +8,8 @@ use log::{debug, trace};
 
 use amethyst_core::{
     alga::general::SubsetOf,
-    math::{self as na, Matrix4, RealField},
     ecs::{Join, Read, ReadStorage, Write, WriteStorage},
+    math::{self as na, Matrix4, RealField},
     transform::Transform,
 };
 use amethyst_error::Error;

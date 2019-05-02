@@ -1,6 +1,6 @@
-use std::{collections::HashMap, fmt::Debug};
 use num_traits::NumCast;
-use serde::{Serialize, de::DeserializeOwned};
+use serde::{de::DeserializeOwned, Serialize};
+use std::{collections::HashMap, fmt::Debug};
 
 use amethyst_error::Error;
 
@@ -8,12 +8,14 @@ use amethyst_animation::{
     AnimationPrefab, AnimationSetPrefab, InterpolationFunction, InterpolationPrimitive, Sampler,
     SamplerPrimitive, TransformChannel,
 };
-use amethyst_core::{Transform, math::RealField};
+use amethyst_core::{math::RealField, Transform};
 
 use super::Buffers;
 use crate::error;
 
-pub fn load_animations<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>>(
+pub fn load_animations<
+    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
+>(
     gltf: &gltf::Gltf,
     buffers: &Buffers,
     node_map: &HashMap<usize, usize>,
@@ -32,7 +34,9 @@ pub fn load_animations<N: Clone + Debug + Default + DeserializeOwned + Serialize
     Ok(prefab)
 }
 
-fn load_animation<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>>(
+fn load_animation<
+    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
+>(
     animation: &gltf::Animation<'_>,
     buffers: &Buffers,
 ) -> Result<AnimationPrefab<Transform<N>>, Error> {
@@ -44,7 +48,9 @@ fn load_animation<N: Clone + Debug + Default + DeserializeOwned + Serialize + Nu
     Ok(a)
 }
 
-fn load_channel<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>>(
+fn load_channel<
+    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
+>(
     channel: &gltf::animation::Channel<'_>,
     buffers: &Buffers,
 ) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<N>>), Error> {
@@ -66,7 +72,9 @@ fn load_channel<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumC
             Sampler {
                 input,
                 function: map_interpolation_type(&sampler.interpolation()),
-                output: translations.map(|t| [t[0].into(), t[1].into(), t[2].into()].into()).collect(),
+                output: translations
+                    .map(|t| [t[0].into(), t[1].into(), t[2].into()].into())
+                    .collect(),
             },
         )),
         Rotations(rotations) => {
@@ -96,7 +104,9 @@ fn load_channel<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumC
             Sampler {
                 input,
                 function: map_interpolation_type(&sampler.interpolation()),
-                output: scales.map(|s| [s[0].into(), s[1].into(), s[2].into()].into()).collect(),
+                output: scales
+                    .map(|s| [s[0].into(), s[1].into(), s[2].into()].into())
+                    .collect(),
             },
         )),
         MorphTargetWeights(_) => Err(error::Error::NotImplemented.into()),

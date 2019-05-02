@@ -184,7 +184,11 @@ fn main() -> amethyst::Result<()> {
             "sampler_interpolation_system",
         ))?
         .with_bundle(TransformBundle::<f32>::new().with_dep(&["sampler_interpolation_system"]))?
-        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex, f32>::new(), false)?;
+        .with_basic_renderer(
+            display_config_path,
+            DrawShaded::<PosNormTex, f32>::new(),
+            false,
+        )?;
     let mut game = Application::new(resources, Example::default(), game_data)?;
     game.run();
 

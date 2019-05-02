@@ -207,7 +207,10 @@ fn main() -> Result<(), Error> {
         .with_base_bundle(TransformBundle::<f32>::new())?
         .with_base_bundle(UiBundle::<String, String>::new())?
         .with_base_bundle(FPSCounterBundle::default())?
-        .with_base_bundle(RenderBundle::<_, _, f32>::new(pipeline_builder, Some(display_config)))?
+        .with_base_bundle(RenderBundle::<_, _, f32>::new(
+            pipeline_builder,
+            Some(display_config),
+        ))?
         .with_base_bundle(InputBundle::<String, String>::new())?;
 
     let mut game = Application::build(resources_directory, Loading::default())?.build(game_data)?;

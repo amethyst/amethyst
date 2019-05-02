@@ -2,15 +2,15 @@
 use std::fmt;
 use std::marker::PhantomData;
 
-use crate::math::{
-    self as na, Isometry3, Matrix4, Quaternion, RealField, Translation3, Unit, UnitQuaternion, Vector3,
-};
 use crate::ecs::prelude::{Component, DenseVecStorage, FlaggedStorage};
+use crate::math::{
+    self as na, Isometry3, Matrix4, Quaternion, RealField, Translation3, Unit, UnitQuaternion,
+    Vector3,
+};
 use serde::{
     de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor},
     ser::{Serialize, Serializer},
 };
-
 
 /// Local position, rotation, and scale (from parent if it exists).
 ///
@@ -104,7 +104,7 @@ impl<N: RealField> Transform<N> {
             .to_homogeneous()
             .prepend_nonuniform_scaling(&self.scale)
     }
-    
+
     /// Returns a reference to the translation vector.
     #[inline]
     pub fn translation(&self) -> &Vector3<N> {
@@ -165,14 +165,22 @@ impl<N: RealField> Transform<N> {
     /// move along the parent's Z axis rather than its local Z axis (which
     /// is rotated 45 degrees).
     #[inline]
-    pub fn prepend_translation_along(&mut self, direction: Unit<Vector3<N>>, distance: N) -> &mut Self {
+    pub fn prepend_translation_along(
+        &mut self,
+        direction: Unit<Vector3<N>>,
+        distance: N,
+    ) -> &mut Self {
         self.isometry.translation.vector += direction.as_ref() * distance;
         self
     }
 
     /// Move a distance along an axis relative to the local orientation.
     #[inline]
-    pub fn append_translation_along(&mut self, direction: Unit<Vector3<N>>, distance: N) -> &mut Self {
+    pub fn append_translation_along(
+        &mut self,
+        direction: Unit<Vector3<N>>,
+        distance: N,
+    ) -> &mut Self {
         self.isometry.translation.vector += self.isometry.rotation * direction.as_ref() * distance;
         self
     }
@@ -691,7 +699,6 @@ mod tests {
         math::{UnitQuaternion, Vector3},
         Transform,
     };
-    
 
     /// Sanity test for concat operation
     #[test]

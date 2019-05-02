@@ -23,7 +23,9 @@ fn main() -> amethyst::Result<()> {
             .with_pass(DrawFlat2D::<f32>::new()),
     );
     let game_data = GameDataBuilder::default()
-        .with_bundle(RenderBundle::<'_, _, _, f32>::new(pipe, Some(config)).with_sprite_sheet_processor())?
+        .with_bundle(
+            RenderBundle::<'_, _, _, f32>::new(pipe, Some(config)).with_sprite_sheet_processor(),
+        )?
         .with_bundle(TransformBundle::<f32>::new())?;
 
     // This line is not mentioned in the pong tutorial as it is specific to the context

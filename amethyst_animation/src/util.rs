@@ -3,8 +3,8 @@ use num_traits::cast::{NumCast, ToPrimitive};
 use serde::{Deserialize, Serialize};
 
 use amethyst_core::{
-    math::RealField,
     ecs::prelude::{Entity, WriteStorage},
+    math::RealField,
 };
 
 use crate::resources::{AnimationControlSet, AnimationSampling};

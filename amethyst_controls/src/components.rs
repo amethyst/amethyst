@@ -1,7 +1,7 @@
 use amethyst_assets::PrefabData;
 use amethyst_core::{
-    math::RealField,
     ecs::prelude::{Component, Entity, HashMapStorage, NullStorage, WriteStorage},
+    math::RealField,
 };
 use amethyst_error::Error;
 

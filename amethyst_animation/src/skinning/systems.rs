@@ -1,8 +1,8 @@
 use amethyst_core::{
-    math::RealField,
     ecs::prelude::{
         BitSet, ComponentEvent, Join, ReadStorage, ReaderId, Resources, System, WriteStorage,
     },
+    math::RealField,
     Transform,
 };
 use amethyst_renderer::JointTransforms;

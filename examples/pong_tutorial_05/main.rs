@@ -37,7 +37,9 @@ fn main() -> amethyst::Result<()> {
         InputBundle::<String, String>::new().with_bindings_from_file(binding_path)?;
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(RenderBundle::<'_, _, _, f32>::new(pipe, Some(config)).with_sprite_sheet_processor())?
+        .with_bundle(
+            RenderBundle::<'_, _, _, f32>::new(pipe, Some(config)).with_sprite_sheet_processor(),
+        )?
         .with_bundle(TransformBundle::<f32>::new())?
         .with_bundle(UiBundle::<String, String>::new())?
         .with_bundle(input_bundle)?

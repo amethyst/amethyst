@@ -4,8 +4,8 @@ pub use self::{audio_emitter::AudioEmitter, audio_listener::AudioListener};
 
 use amethyst_assets::PrefabData;
 use amethyst_core::{
-    math::{Point3, RealField},
     ecs::prelude::{Entity, Read, WriteStorage},
+    math::{Point3, RealField},
 };
 use amethyst_error::Error;
 

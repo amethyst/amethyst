@@ -9,8 +9,8 @@ use log::warn;
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     alga::general::SubsetOf,
+    ecs::prelude::{Join, Read, ReadExpect, ReadStorage},
     math::{convert, one, zero, Matrix4, RealField, Vector4},
-    ecs::prelude::{Join, Read, ReadStorage, ReadExpect},
     transform::Transform,
 };
 use amethyst_error::Error;

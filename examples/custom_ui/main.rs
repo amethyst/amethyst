@@ -102,7 +102,11 @@ fn main() -> amethyst::Result<()> {
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::<f32>::new())?
         .with_bundle(UiBundle::<String, String, CustomUi>::new())?
-        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex, f32>::new(), true)?;
+        .with_basic_renderer(
+            display_config_path,
+            DrawShaded::<PosNormTex, f32>::new(),
+            true,
+        )?;
     let mut game = Application::new(resources, Example, game_data)?;
     game.run();
     Ok(())

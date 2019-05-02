@@ -7,8 +7,8 @@ use crate::{
     resources::{HideCursor, WindowFocus},
 };
 use amethyst_core::{
-    math::{convert, RealField, Unit, Vector3},
     ecs::prelude::{Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
+    math::{convert, RealField, Unit, Vector3},
     shrev::{EventChannel, ReaderId},
     timing::Time,
     transform::Transform,
@@ -187,8 +187,9 @@ where
                             transform.append_rotation_x_axis(convert(
                                 (-y * self.sensitivity_y as f64).to_radians(),
                             ));
-                            transform
-                                .prepend_rotation_y_axis(convert((-x * self.sensitivity_x as f64).to_radians()));
+                            transform.prepend_rotation_y_axis(convert(
+                                (-x * self.sensitivity_x as f64).to_radians(),
+                            ));
                         }
                     }
                 }

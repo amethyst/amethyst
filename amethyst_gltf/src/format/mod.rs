@@ -1,16 +1,16 @@
 //! GLTF format
 
-use std::{collections::HashMap, sync::Arc, fmt::Debug};
+use std::{collections::HashMap, fmt::Debug, sync::Arc};
 
 use gltf::{self, Gltf};
 use log::debug;
-use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use num_traits::NumCast;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use amethyst_animation::AnimationHierarchyPrefab;
 use amethyst_assets::{Format, FormatValue, Prefab, Source};
 use amethyst_core::{
-    math::{Quaternion, Vector3, Unit, RealField},
+    math::{Quaternion, RealField, Unit, Vector3},
     transform::Transform,
 };
 use amethyst_error::{format_err, Error, ResultExt};
@@ -41,7 +41,10 @@ mod skin;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct GltfSceneFormat;
 
-impl<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>> Format<Prefab<GltfPrefab<N>>> for GltfSceneFormat {
+impl<
+        N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
+    > Format<Prefab<GltfPrefab<N>>> for GltfSceneFormat
+{
     const NAME: &'static str = "GLTFScene";
 
     type Options = GltfSceneOptions;
@@ -60,7 +63,9 @@ impl<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealF
     }
 }
 
-fn load_gltf<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>>(
+fn load_gltf<
+    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
+>(
     source: Arc<dyn Source>,
     name: &str,
     options: GltfSceneOptions,
@@ -73,7 +78,9 @@ fn load_gltf<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast
         })
 }
 
-fn load_data<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>>(
+fn load_data<
+    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
+>(
     gltf: &Gltf,
     buffers: &Buffers,
     options: &GltfSceneOptions,
@@ -107,7 +114,9 @@ fn get_scene_index(gltf: &Gltf, options: &GltfSceneOptions) -> Result<usize, Err
     }
 }
 
-fn load_scene<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>>(
+fn load_scene<
+    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
+>(
     gltf: &Gltf,
     scene_index: usize,
     buffers: &Buffers,
@@ -211,7 +220,9 @@ struct SkinInfo {
     mesh_indices: Vec<usize>,
 }
 
-fn load_node<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>>(
+fn load_node<
+    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
+>(
     gltf: &Gltf,
     node: &gltf::Node<'_>,
     entity_index: usize,
@@ -235,7 +246,11 @@ fn load_node<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast
     // Load transformation data, default will be identity
     let (translation, rotation, scale) = node.transform().decomposed();
     let mut local_transform = Transform::<N>::default();
-    *local_transform.translation_mut() = Vector3::new(translation[0].into(), translation[1].into(), translation[2].into());
+    *local_transform.translation_mut() = Vector3::new(
+        translation[0].into(),
+        translation[1].into(),
+        translation[2].into(),
+    );
     // gltf quat format: [x, y, z, w], argument order expected by our quaternion: (w, x, y, z)
     *local_transform.rotation_mut() = Unit::new_normalize(Quaternion::new(
         rotation[3].into(),

@@ -12,8 +12,8 @@ extern crate getset;
 #[macro_use]
 extern crate derive_new;
 
-pub use approx;
 pub use alga;
+pub use approx;
 pub use nalgebra as math;
 pub use shred;
 pub use shrev;

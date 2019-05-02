@@ -488,7 +488,8 @@ where
 
         let display_config = Self::display_config(title.clone(), visibility);
         let render_bundle_fn = move || {
-            RenderBundle::<'_, _, _, f32>::new(Self::pipeline(), Some(display_config)).with_sprite_sheet_processor()
+            RenderBundle::<'_, _, _, f32>::new(Self::pipeline(), Some(display_config))
+                .with_sprite_sheet_processor()
         };
 
         self.with_app_name(title)
@@ -852,8 +853,14 @@ mod test {
             let asset_translation_zero_handles = world.read_resource::<Vec<AssetZeroHandle>>();
 
             let store = world.read_resource::<AssetStorage<AssetZero>>();
-            assert_eq!(Some(&AssetZero(10)), store.get(&asset_translation_zero_handles[0]));
-            assert_eq!(Some(&AssetZero(20)), store.get(&asset_translation_zero_handles[1]));
+            assert_eq!(
+                Some(&AssetZero(10)),
+                store.get(&asset_translation_zero_handles[0])
+            );
+            assert_eq!(
+                Some(&AssetZero(20)),
+                store.get(&asset_translation_zero_handles[1])
+            );
         };
 
         AmethystApplication::blank()
@@ -884,7 +891,10 @@ mod test {
             let asset_translation_zero_handles = world.read_resource::<Vec<AssetZeroHandle>>();
 
             let store = world.read_resource::<AssetStorage<AssetZero>>();
-            assert_eq!(Some(&AssetZero(10)), store.get(&asset_translation_zero_handles[0]));
+            assert_eq!(
+                Some(&AssetZero(10)),
+                store.get(&asset_translation_zero_handles[0])
+            );
         };
 
         AmethystApplication::blank()
@@ -1220,7 +1230,11 @@ mod test {
     struct BundleAsset;
     impl<'a, 'b> SystemBundle<'a, 'b> for BundleAsset {
         fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
-            builder.add(Processor::<AssetZero>::new(), "asset_translation_zero_processor", &[]);
+            builder.add(
+                Processor::<AssetZero>::new(),
+                "asset_translation_zero_processor",
+                &[],
+            );
             Ok(())
         }
     }
@@ -1246,7 +1260,10 @@ mod test {
     // === System delegates === //
     struct AssetZeroLoader;
     impl AssetZeroLoader {
-        fn load(world: &World, asset_translation_zero: AssetZero) -> Result<AssetZeroHandle, Error> {
+        fn load(
+            world: &World,
+            asset_translation_zero: AssetZero,
+        ) -> Result<AssetZeroHandle, Error> {
             let loader = world.read_resource::<Loader>();
             Ok(loader.load_from_data(
                 asset_translation_zero,

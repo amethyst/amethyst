@@ -1,6 +1,6 @@
 use amethyst_core::{
-    math::RealField,
     ecs::{Entity, WriteStorage},
+    math::RealField,
     Named, Transform,
 };
 use amethyst_error::Error;

@@ -140,7 +140,10 @@ fn main() -> amethyst::Result<()> {
             "animation_control_system",
             "sampler_interpolation_system",
         ))?
-        .with_bundle(RenderBundle::<_, _, f32>::new(pipe, Some(display_config)).with_sprite_sheet_processor())?;
+        .with_bundle(
+            RenderBundle::<_, _, f32>::new(pipe, Some(display_config))
+                .with_sprite_sheet_processor(),
+        )?;
 
     let mut game = Application::new(assets_directory, Example::default(), game_data)?;
     game.run();

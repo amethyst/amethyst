@@ -5,10 +5,8 @@ use serde::{Deserialize, Serialize};
 
 use amethyst_assets::PrefabData;
 use amethyst_core::{
+    ecs::prelude::{Component, DenseVecStorage, Entity, FlaggedStorage, WriteStorage},
     math::{zero, RealField},
-    ecs::prelude::{
-        Component, DenseVecStorage, Entity, FlaggedStorage, WriteStorage,
-    },
 };
 use amethyst_error::Error;
 

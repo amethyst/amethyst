@@ -2,14 +2,14 @@
 
 use std::marker::PhantomData;
 
-use hibitset::BitSet;
 use crate::ecs::prelude::{
     ComponentEvent, Entities, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
     WriteStorage,
 };
+use hibitset::BitSet;
 
-use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform};
 use crate::math::RealField;
+use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -88,7 +88,10 @@ impl<'a, N: RealField> System<'a> for TransformSystem<N> {
             local.global_matrix = local.matrix();
             debug_assert!(
                 local.is_finite(),
-                format!("Entity {:?} had a non-finite `Transform` {:?}", entity, local)
+                format!(
+                    "Entity {:?} had a non-finite `Transform` {:?}",
+                    entity, local
+                )
             );
         }
         modified.into_iter().for_each(|id| {
@@ -189,7 +192,10 @@ mod tests {
             .clone();
         // let a1: [[f32; 4]; 4] = transform.global_matrix().into();
         // let a2: [[f32; 4]; 4] = Transform::default().global_matrix().into();
-        assert_eq!(transform.global_matrix(), Transform::default().global_matrix());
+        assert_eq!(
+            transform.global_matrix(),
+            Transform::default().global_matrix()
+        );
     }
 
     // Basic sanity check for Transform's local matrix -> global matrix, no parent relationships
@@ -269,7 +275,6 @@ mod tests {
         let a3 = e2_transform.global_matrix();
         let a4 = together(*a1, local2.matrix());
         assert_eq!(*a3, a4);
-
 
         let e3_transform = world
             .read_storage::<Transform<f32>>()
@@ -413,7 +418,10 @@ mod tests {
     fn parent_removed() {
         let (mut world, mut hs, mut system) = transform_world();
 
-        let e1 = world.create_entity().with(Transform::<f32>::default()).build();
+        let e1 = world
+            .create_entity()
+            .with(Transform::<f32>::default())
+            .build();
 
         let e2 = world
             .create_entity()
@@ -421,7 +429,10 @@ mod tests {
             .with(Parent { entity: e1 })
             .build();
 
-        let e3 = world.create_entity().with(Transform::<f32>::default()).build();
+        let e3 = world
+            .create_entity()
+            .with(Transform::<f32>::default())
+            .build();
 
         let e4 = world
             .create_entity()

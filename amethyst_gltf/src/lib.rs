@@ -2,18 +2,18 @@
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use num_traits::cast::NumCast;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 pub use crate::format::GltfSceneFormat;
 
-use std::{collections::HashMap, ops::Range, fmt::Debug};
+use std::{collections::HashMap, fmt::Debug, ops::Range};
 
 use amethyst_animation::{AnimatablePrefab, SkinnablePrefab};
 use amethyst_assets::{Handle, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter};
 use amethyst_core::{
-    math::{Point3, Vector3, RealField},
     ecs::prelude::{Component, DenseVecStorage, Entity, Write, WriteStorage},
+    math::{Point3, RealField, Vector3},
     transform::Transform,
     Named,
 };
@@ -31,7 +31,9 @@ pub type GltfSceneAsset<N> = Prefab<GltfPrefab<N>>;
 
 /// `PrefabData` for loading Gltf files.
 #[derive(Debug, Clone, Default)]
-pub struct GltfPrefab<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField> {
+pub struct GltfPrefab<
+    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField,
+> {
     /// `Transform` will almost always be placed, the only exception is for the main `Entity` for
     /// certain scenarios (based on the data in the Gltf file)
     pub transform: Option<Transform<N>>,
@@ -54,7 +56,10 @@ pub struct GltfPrefab<N: Clone + Debug + Default + DeserializeOwned + Serialize 
     pub(crate) material_id: Option<usize>,
 }
 
-impl<N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>> GltfPrefab<N> {
+impl<
+        N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
+    > GltfPrefab<N>
+{
     /// Move the scene so the center of the bounding box is at the given `target` location.
     pub fn move_to(&mut self, target: Point3<f32>) {
         if let Some(ref extent) = self.extent {
@@ -178,9 +183,10 @@ pub struct GltfSceneOptions {
     pub scene_index: Option<usize>,
 }
 
-impl<'a, N> PrefabData<'a> for GltfPrefab<N> 
-    where N: RealField + Serialize + DeserializeOwned + NumCast + Clone + Debug + Default
-    {
+impl<'a, N> PrefabData<'a> for GltfPrefab<N>
+where
+    N: RealField + Serialize + DeserializeOwned + NumCast + Clone + Debug + Default,
+{
     type SystemData = (
         <Transform<N> as PrefabData<'a>>::SystemData,
         <MeshData as PrefabData<'a>>::SystemData,

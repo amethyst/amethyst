@@ -9,9 +9,9 @@ use thread_profiler::profile_scope;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    alga::general::SubsetOf, 
-    math::{convert, Matrix4, RealField, Orthographic3},
+    alga::general::SubsetOf,
     ecs::prelude::{Join, Read, ReadStorage},
+    math::{convert, Matrix4, Orthographic3, RealField},
     Transform,
 };
 

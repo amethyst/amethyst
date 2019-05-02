@@ -247,7 +247,8 @@ impl Example {
         //
         // The X offset needs to be multiplied because we are drawing the sprites across the window;
         // we don't need to multiply the Y offset because we are only drawing the sprites in 1 row.
-        let sprite_offset_translation_x = (sprite_count * sprite_w) as f32 * SPRITE_SPACING_RATIO / 2.;
+        let sprite_offset_translation_x =
+            (sprite_count * sprite_w) as f32 * SPRITE_SPACING_RATIO / 2.;
 
         let (width, height) = {
             let dim = world.read_resource::<ScreenDimensions>();
@@ -255,7 +256,11 @@ impl Example {
         };
         // This `Transform` moves the sprites to the middle of the window
         let mut common_transform = Transform::default();
-        common_transform.set_translation_xyz(width / 2.0 - sprite_offset_translation_x, height / 2.0, 0.0);
+        common_transform.set_translation_xyz(
+            width / 2.0 - sprite_offset_translation_x,
+            height / 2.0,
+            0.0,
+        );
 
         self.draw_sprites(world, &common_transform);
     }

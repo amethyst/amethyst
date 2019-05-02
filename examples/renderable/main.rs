@@ -187,7 +187,11 @@ fn main() -> Result<(), Error> {
         .with_bundle(UiBundle::<String, String>::new())?
         .with_bundle(HotReloadBundle::default())?
         .with_bundle(FPSCounterBundle::default())?
-        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex, f32>::new(), true)?
+        .with_basic_renderer(
+            display_config_path,
+            DrawShaded::<PosNormTex, f32>::new(),
+            true,
+        )?
         .with_bundle(InputBundle::<String, String>::new())?;
     let mut game = Application::build(resources_directory, Loading::default())?.build(game_data)?;
     game.run();

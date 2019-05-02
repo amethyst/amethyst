@@ -2,10 +2,7 @@
 
 use amethyst_assets::Processor;
 use amethyst_core::{
-    bundle::SystemBundle,
-    alga::general::SubsetOf,
-    math::RealField,
-    ecs::prelude::DispatcherBuilder,
+    alga::general::SubsetOf, bundle::SystemBundle, ecs::prelude::DispatcherBuilder, math::RealField,
 };
 use amethyst_error::Error;
 use std::marker::PhantomData;
