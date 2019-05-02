@@ -102,7 +102,11 @@ impl<'a, N: RealField> System<'a> for TransformSystem<N> {
                 let parent_dirty = self.local_modified.contains(parent.entity.id());
                 if parent_dirty || self_dirty {
                     let combined_transform = {
-                        let local = locals.get(*entity).expect("unreachable: We know this entity has a local because is was just modified.");
+                        let local = locals.get(*entity);
+                        if local.is_none() {
+                            continue;
+                        }
+                        let local = local.unwrap();
                         if let Some(parent_global) = locals.get(parent.entity) {
                             (parent_global.global_matrix * local.matrix())
                         } else {

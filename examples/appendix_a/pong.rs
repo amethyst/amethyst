@@ -41,7 +41,7 @@ fn initialise_camera(world: &mut World) {
         (config.height, config.width)
     };
 
-    let mut transform = Transform::default();
+    let mut transform = Transform::<f32>::default();
     transform.set_translation_z(1.0);
     world
         .create_entity()
@@ -64,8 +64,8 @@ fn hide_cursor(world: &mut World) {
 
 /// Initialises one paddle on the left, and one paddle on the right.
 fn initialise_paddles(world: &mut World) {
-    let mut left_transform = Transform::default();
-    let mut right_transform = Transform::default();
+    let mut left_transform = Transform::<f32>::default();
+    let mut right_transform = Transform::<f32>::default();
 
     let (arena_height, arena_width) = {
         let config = &world.read_resource::<ArenaConfig>();
@@ -169,7 +169,7 @@ fn initialise_balls(world: &mut World) {
     // Create the mesh, material and translation.
     let mesh = create_mesh(world, generate_circle_vertices(radius, 16));
     let material = create_colour_material(world, colour);
-    let mut local_transform = Transform::default();
+    let mut local_transform = Transform::<f32>::default();
     local_transform.set_translation_xyz(arena_width / 2.0, arena_height / 2.0, 0.0);
 
     world

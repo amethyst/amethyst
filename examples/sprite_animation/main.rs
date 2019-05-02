@@ -107,7 +107,7 @@ fn initialise_camera(world: &mut World) {
         (dim.width(), dim.height())
     };
 
-    let mut camera_transform = Transform::default();
+    let mut camera_transform = Transform::<f32>::default();
     camera_transform.set_translation_z(1.0);
 
     world

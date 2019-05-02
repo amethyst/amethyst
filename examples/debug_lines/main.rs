@@ -124,7 +124,7 @@ impl SimpleState for ExampleState {
             .build();
 
         // Setup camera
-        let mut local_transform = Transform::default();
+        let mut local_transform = Transform::<f32>::default();
         local_transform.set_translation_xyz(0.0, 0.5, 2.0);
         data.world
             .create_entity()
