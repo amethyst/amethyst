@@ -1,4 +1,6 @@
-use std::collections::HashMap;
+use num_traits::NumCast;
+use serde::{de::DeserializeOwned, Serialize};
+use std::{collections::HashMap, fmt::Debug};
 
 use amethyst_error::Error;
 
@@ -6,16 +8,18 @@ use amethyst_animation::{
     AnimationPrefab, AnimationSetPrefab, InterpolationFunction, InterpolationPrimitive, Sampler,
     SamplerPrimitive, TransformChannel,
 };
-use amethyst_core::Transform;
+use amethyst_core::{math::RealField, Transform};
 
 use super::Buffers;
 use crate::error;
 
-pub fn load_animations(
+pub fn load_animations<
+    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
+>(
     gltf: &gltf::Gltf,
     buffers: &Buffers,
     node_map: &HashMap<usize, usize>,
-) -> Result<AnimationSetPrefab<usize, Transform>, Error> {
+) -> Result<AnimationSetPrefab<usize, Transform<N>>, Error> {
     let mut prefab = AnimationSetPrefab::default();
     for animation in gltf.animations() {
         let anim = load_animation(&animation, buffers)?;
@@ -30,10 +34,12 @@ pub fn load_animations(
     Ok(prefab)
 }
 
-fn load_animation(
+fn load_animation<
+    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
+>(
     animation: &gltf::Animation<'_>,
     buffers: &Buffers,
-) -> Result<AnimationPrefab<Transform>, Error> {
+) -> Result<AnimationPrefab<Transform<N>>, Error> {
     let mut a = AnimationPrefab::default();
     a.samplers = animation
         .channels()
@@ -42,10 +48,12 @@ fn load_animation(
     Ok(a)
 }
 
-fn load_channel(
+fn load_channel<
+    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
+>(
     channel: &gltf::animation::Channel<'_>,
     buffers: &Buffers,
-) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<f32>>), Error> {
+) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<N>>), Error> {
     use gltf::animation::util::ReadOutputs::*;
     let sampler = channel.sampler();
     let target = channel.target();
@@ -64,7 +72,9 @@ fn load_channel(
             Sampler {
                 input,
                 function: map_interpolation_type(&sampler.interpolation()),
-                output: translations.map(|t| t.into()).collect(),
+                output: translations
+                    .map(|t| [t[0].into(), t[1].into(), t[2].into()].into())
+                    .collect(),
             },
         )),
         Rotations(rotations) => {
@@ -83,7 +93,7 @@ fn load_channel(
                     function: ty,
                     output: rotations
                         .into_f32()
-                        .map(|q| [q[3], q[0], q[1], q[2]].into())
+                        .map(|q| [q[3].into(), q[0].into(), q[1].into(), q[2].into()].into())
                         .collect(),
                 },
             ))
@@ -94,7 +104,9 @@ fn load_channel(
             Sampler {
                 input,
                 function: map_interpolation_type(&sampler.interpolation()),
-                output: scales.map(|s| s.into()).collect(),
+                output: scales
+                    .map(|s| [s[0].into(), s[1].into(), s[2].into()].into())
+                    .collect(),
             },
         )),
         MorphTargetWeights(_) => Err(error::Error::NotImplemented.into()),

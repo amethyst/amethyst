@@ -23,7 +23,7 @@ fn main() -> amethyst::Result<()> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawFlat2D::new())
+            .with_pass(DrawFlat2D::<f32>::new())
             .with_pass(DrawUi::new()),
     );
 
@@ -37,8 +37,10 @@ fn main() -> amethyst::Result<()> {
         InputBundle::<String, String>::new().with_bindings_from_file(binding_path)?;
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(
+            RenderBundle::<'_, _, _, f32>::new(pipe, Some(config)).with_sprite_sheet_processor(),
+        )?
+        .with_bundle(TransformBundle::<f32>::new())?
         .with_bundle(UiBundle::<String, String>::new())?
         .with_bundle(input_bundle)?
         .with(systems::PaddleSystem, "paddle_system", &["input_system"])

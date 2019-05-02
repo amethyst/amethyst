@@ -6,7 +6,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use amethyst_assets::{Format, PrefabData, ProgressCounter};
 use amethyst_controls::ControlTagPrefab;
-use amethyst_core::{ecs::prelude::Entity, Transform};
+use amethyst_core::{ecs::prelude::Entity, math::RealField, Transform};
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
 use amethyst_renderer::{
@@ -26,32 +26,35 @@ use crate::removal::Removal;
 ///     * `Vec<PosNormTex>`
 ///     * `Vec<PosNormTangTex>`
 ///     * `ComboMeshCreator`
+/// - `N`: RealField bound (f32 or f64).
 /// - `R`: The type of id used by the Removal component.
 /// - `M`: `Format` to use for loading `Mesh`es from file
 #[derive(Deserialize, Serialize, PrefabData)]
 #[serde(default)]
 #[serde(deny_unknown_fields)]
-pub struct BasicScenePrefab<V, R = (), M = ObjFormat>
+pub struct BasicScenePrefab<V, N, R = (), M = ObjFormat>
 where
+    N: RealField,
     M: Format<Mesh> + Clone,
     M::Options: DeserializeOwned + Serialize + Clone,
     R: PartialEq + Debug + Clone + Send + Sync + 'static,
     V: From<InternalShape> + Into<MeshData>,
 {
     graphics: Option<GraphicsPrefab<V, M, TextureFormat>>,
-    transform: Option<Transform>,
+    transform: Option<Transform<N>>,
     light: Option<LightPrefab>,
     camera: Option<CameraPrefab>,
-    control_tag: Option<ControlTagPrefab>,
+    control_tag: Option<ControlTagPrefab<N>>,
     removal: Option<Removal<R>>,
 }
 
-impl<V, R, M> Default for BasicScenePrefab<V, R, M>
+impl<V, N, R, M> Default for BasicScenePrefab<V, N, R, M>
 where
     M: Format<Mesh> + Clone,
     M::Options: DeserializeOwned + Serialize + Clone,
     R: PartialEq + Debug + Clone + Send + Sync + 'static,
     V: From<InternalShape> + Into<MeshData>,
+    N: RealField,
 {
     fn default() -> Self {
         BasicScenePrefab {

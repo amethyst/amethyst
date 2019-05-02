@@ -16,10 +16,10 @@ appveyor = { repository = "amethyst/amethyst" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-nalgebra = { version = "0.17", features = ["serde-serialize", "mint"] }
+nalgebra = { version = "0.18", features = ["serde-serialize", "mint"] }
+alga = { version = "0.9", default-features = false }
 approx = "0.3"
 amethyst_error = { path = "../amethyst_error", version = "0.1.0" }
-derive-new = "0.5"
 fnv = "1"
 hibitset = { version = "0.5.2", features = ["parallel"] }
 log = "0.4.6"
@@ -29,6 +29,8 @@ shred = { version = "0.7" }
 specs = { version = "0.14", features = ["common"] }
 specs-hierarchy = { version = "0.3" }
 shrev = "1.0"
+getset = "0.0.7"
+derive-new = "0.5.6"
 
 thread_profiler = { version = "0.3" , optional = true }
 

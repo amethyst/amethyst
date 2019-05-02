@@ -9,9 +9,10 @@ use thread_profiler::profile_scope;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
+    alga::general::SubsetOf,
     ecs::prelude::{Join, Read, ReadStorage},
-    math::{Matrix4, Orthographic3},
-    GlobalTransform,
+    math::{convert, Matrix4, Orthographic3, RealField},
+    Transform,
 };
 
 use crate::{
@@ -28,6 +29,8 @@ use crate::{
     vertex::Attributes,
     Rgba,
 };
+
+use gfx::traits::Pod;
 
 pub(crate) enum TextureType {
     Albedo,
@@ -265,23 +268,26 @@ pub(crate) fn setup_vertex_args(builder: &mut EffectBuilder<'_>) {
 }
 
 /// Sets the vertex argument in the constant buffer.
-pub fn set_vertex_args(
+pub fn set_vertex_args<N: RealField + SubsetOf<f32>>(
     effect: &mut Effect,
     encoder: &mut Encoder,
-    camera: Option<(&Camera, &GlobalTransform)>,
-    global: &GlobalTransform,
+    camera: Option<(&Camera, &Transform<N>)>,
+    global_matrix: &Matrix4<N>,
     rgba: Rgba,
 ) {
+    let model: [[f32; 4]; 4] = convert::<Matrix4<N>, Matrix4<f32>>(*global_matrix).into();
+
     let vertex_args = camera
         .as_ref()
-        .map(|&(ref cam, ref transform)| {
+        .map(|&(ref cam, ref cam_transform)| {
             let proj: [[f32; 4]; 4] = cam.proj.into();
-            let view: [[f32; 4]; 4] = transform
-                .0
-                .try_inverse()
-                .expect("Unable to get inverse of camera transform")
-                .into();
-            let model: [[f32; 4]; 4] = global.0.into();
+            let view: [[f32; 4]; 4] = convert::<_, Matrix4<f32>>(
+                cam_transform
+                    .global_matrix()
+                    .try_inverse()
+                    .expect("Unable to get inverse of camera transform"),
+            )
+            .into();
             VertexArgs {
                 proj: proj.into(),
                 view: view.into(),
@@ -292,7 +298,6 @@ pub fn set_vertex_args(
         .unwrap_or_else(|| {
             let proj: [[f32; 4]; 4] = Matrix4::identity().into();
             let view: [[f32; 4]; 4] = Matrix4::identity().into();
-            let model: [[f32; 4]; 4] = global.0.into();
             VertexArgs {
                 proj: proj.into(),
                 view: view.into(),
@@ -304,11 +309,13 @@ pub fn set_vertex_args(
 }
 
 /// Sets the view arguments in the contant buffer.
-pub fn set_view_args(
+pub fn set_view_args<N>(
     effect: &mut Effect,
     encoder: &mut Encoder,
-    camera: Option<(&Camera, &GlobalTransform)>,
-) {
+    camera: Option<(&Camera, &Transform<N>)>,
+) where
+    N: RealField + SubsetOf<f32>,
+{
     #[cfg(feature = "profiler")]
     profile_scope!("render_setviewargs");
 
@@ -316,11 +323,13 @@ pub fn set_view_args(
         .as_ref()
         .map(|&(ref cam, ref transform)| {
             let proj: [[f32; 4]; 4] = cam.proj.into();
-            let view: [[f32; 4]; 4] = transform
-                .0
-                .try_inverse()
-                .expect("Unable to get inverse of camera transform")
-                .into();
+            let view: [[f32; 4]; 4] = convert::<_, Matrix4<f32>>(
+                transform
+                    .global_matrix()
+                    .try_inverse()
+                    .expect("Unable to get inverse of camera transform"),
+            )
+            .into();
             ViewArgs {
                 proj: proj.into(),
                 view: view.into(),
@@ -363,27 +372,29 @@ pub fn set_view_args_screen(
     effect.update_constant_buffer("ViewArgs", &view_args.std140(), encoder);
 }
 
-pub(crate) fn draw_mesh(
+pub(crate) fn draw_mesh<N>(
     encoder: &mut Encoder,
     effect: &mut Effect,
     skinning: bool,
     mesh: Option<&Mesh>,
-    joint: Option<&JointTransforms>,
+    joint: Option<&JointTransforms<N>>,
     tex_storage: &AssetStorage<Texture>,
     material: Option<&Material>,
     material_defaults: &MaterialDefaults,
     rgba: Option<&Rgba>,
-    camera: Option<(&Camera, &GlobalTransform)>,
-    global: Option<&GlobalTransform>,
+    camera: Option<(&Camera, &Transform<N>)>,
+    transform: Option<&Transform<N>>,
     attributes: &[Attributes<'static>],
     textures: &[TextureType],
-) {
+) where
+    N: RealField + SubsetOf<f32> + Pod,
+{
     #[cfg(feature = "profiler")]
     profile_scope!("render_drawmesh");
 
     // Return straight away if some parameters are none
     // Consider changing function signature?
-    let (mesh, material, global) = match (mesh, material, global) {
+    let (mesh, material, transform) = match (mesh, material, transform) {
         (Some(v1), Some(v2), Some(v3)) => (v1, v2, v3),
         _ => return,
     };
@@ -399,7 +410,7 @@ pub(crate) fn draw_mesh(
         effect,
         encoder,
         camera,
-        global,
+        transform.global_matrix(),
         rgba.cloned().unwrap_or(Rgba::WHITE),
     );
 
@@ -422,12 +433,15 @@ pub(crate) fn draw_mesh(
     effect.clear();
 }
 
-/// Returns the main camera and its `GlobalTransform`
-pub fn get_camera<'a>(
+/// Returns the main camera and its `Transform<N>`
+pub fn get_camera<'a, N>(
     active: Read<'a, ActiveCamera>,
     camera: &'a ReadStorage<'a, Camera>,
-    global: &'a ReadStorage<'a, GlobalTransform>,
-) -> Option<(&'a Camera, &'a GlobalTransform)> {
+    transform: &'a ReadStorage<'a, Transform<N>>,
+) -> Option<(&'a Camera, &'a Transform<N>)>
+where
+    N: RealField,
+{
     #[cfg(feature = "profiler")]
     profile_scope!("render_getcamera");
 
@@ -435,10 +449,10 @@ pub fn get_camera<'a>(
         .entity
         .and_then(|entity| {
             let cam = camera.get(entity);
-            let transform = global.get(entity);
+            let transform = transform.get(entity);
             cam.into_iter().zip(transform.into_iter()).next()
         })
-        .or_else(|| (camera, global).join().next())
+        .or_else(|| (camera, transform).join().next())
 }
 
 pub fn default_transparency() -> Option<(ColorMask, Blend, Option<DepthMode>)> {

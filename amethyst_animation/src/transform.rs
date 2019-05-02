@@ -1,8 +1,9 @@
 use amethyst_core::{
-    math::{Quaternion, Unit},
+    math::{zero, Quaternion, RealField, Unit, Vector3},
     Transform,
 };
 
+use num_traits::NumCast;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -21,15 +22,15 @@ pub enum TransformChannel {
     Scale,
 }
 
-impl<'a> ApplyData<'a> for Transform {
+impl<'a, N: RealField> ApplyData<'a> for Transform<N> {
     type ApplyData = ();
 }
 
-impl AnimationSampling for Transform {
-    type Primitive = SamplerPrimitive<f32>;
+impl<N: RealField + NumCast> AnimationSampling for Transform<N> {
+    type Primitive = SamplerPrimitive<N>;
     type Channel = TransformChannel;
 
-    fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<f32>, _: &()) {
+    fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<N>, _: &()) {
         use crate::util::SamplerPrimitive::*;
 
         use self::TransformChannel::*;
@@ -42,13 +43,13 @@ impl AnimationSampling for Transform {
                 *self.rotation_mut() = Unit::new_normalize(Quaternion::new(d[0], d[1], d[2], d[3]));
             }
             (&Scale, Vec3(ref d)) => {
-                self.set_scale(d[0], d[1], d[2]);
+                self.set_scale(Vector3::new(d[0], d[1], d[2]));
             }
             _ => panic!("Attempt to apply invalid sample to Transform"),
         }
     }
 
-    fn current_sample(&self, channel: &Self::Channel, _: &()) -> SamplerPrimitive<f32> {
+    fn current_sample(&self, channel: &Self::Channel, _: &()) -> SamplerPrimitive<N> {
         use self::TransformChannel::*;
         match channel {
             Translation => SamplerPrimitive::Vec3((*self.translation()).into()),
@@ -62,9 +63,9 @@ impl AnimationSampling for Transform {
     fn default_primitive(channel: &Self::Channel) -> Self::Primitive {
         use self::TransformChannel::*;
         match channel {
-            Translation => SamplerPrimitive::Vec3([0.; 3]),
-            Rotation => SamplerPrimitive::Vec4([0.; 4]),
-            Scale => SamplerPrimitive::Vec3([0.; 3]),
+            Translation => SamplerPrimitive::Vec3([zero(); 3]),
+            Rotation => SamplerPrimitive::Vec4([zero(); 4]),
+            Scale => SamplerPrimitive::Vec3([zero(); 3]),
         }
     }
 

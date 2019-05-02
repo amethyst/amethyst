@@ -2,9 +2,13 @@ use std::{hash::Hash, marker::PhantomData};
 
 use winit::{DeviceEvent, Event, WindowEvent};
 
+use crate::{
+    components::{ArcBallControlTag, FlyControlTag},
+    resources::{HideCursor, WindowFocus},
+};
 use amethyst_core::{
     ecs::prelude::{Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
-    math::{Unit, Vector3},
+    math::{convert, RealField, Unit, Vector3},
     shrev::{EventChannel, ReaderId},
     timing::Time,
     transform::Transform,
@@ -12,37 +16,33 @@ use amethyst_core::{
 use amethyst_input::{get_input_axis_simple, InputHandler};
 use amethyst_renderer::WindowMessages;
 
-use crate::{
-    components::{ArcBallControlTag, FlyControlTag},
-    resources::{HideCursor, WindowFocus},
-};
-
 /// The system that manages the fly movement.
 ///
 /// # Type parameters
 ///
 /// * `A`: This is the key the `InputHandler` is using for axes. Often, this is a `String`.
 /// * `B`: This is the key the `InputHandler` is using for actions. Often, this is a `String`.
-pub struct FlyMovementSystem<A, B> {
+/// * `N`: RealField bound (f32 or f64).
+pub struct FlyMovementSystem<A, B, N> {
     /// The movement speed of the movement in units per second.
-    speed: f32,
+    speed: N,
     /// The name of the input axis to locally move in the x coordinates.
     right_input_axis: Option<A>,
     /// The name of the input axis to locally move in the y coordinates.
     up_input_axis: Option<A>,
     /// The name of the input axis to locally move in the z coordinates.
     forward_input_axis: Option<A>,
-    _marker: PhantomData<B>,
+    _marker: PhantomData<(B, N)>,
 }
 
-impl<A, B> FlyMovementSystem<A, B>
+impl<A, B, N> FlyMovementSystem<A, B, N>
 where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
     /// Builds a new `FlyMovementSystem` using the provided speeds and axis controls.
     pub fn new(
-        speed: f32,
+        speed: N,
         right_input_axis: Option<A>,
         up_input_axis: Option<A>,
         forward_input_axis: Option<A>,
@@ -57,14 +57,15 @@ where
     }
 }
 
-impl<'a, A, B> System<'a> for FlyMovementSystem<A, B>
+impl<'a, A, B, N> System<'a> for FlyMovementSystem<A, B, N>
 where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
+    N: RealField,
 {
     type SystemData = (
         Read<'a, Time>,
-        WriteStorage<'a, Transform>,
+        WriteStorage<'a, Transform<N>>,
         Read<'a, InputHandler<A, B>>,
         ReadStorage<'a, FlyControlTag>,
     );
@@ -74,9 +75,10 @@ where
         let y = get_input_axis_simple(&self.up_input_axis, &input);
         let z = get_input_axis_simple(&self.forward_input_axis, &input);
 
-        if let Some(dir) = Unit::try_new(Vector3::new(x, y, z), 1.0e-6) {
+        if let Some(dir) = Unit::try_new(Vector3::new(x, y, z), convert(1.0e-6)) {
             for (transform, _) in (&mut transform, &tag).join() {
-                transform.append_translation_along(dir, time.delta_seconds() * self.speed);
+                let delta_sec: N = convert(time.delta_seconds() as f64);
+                transform.append_translation_along(dir, delta_sec * self.speed);
             }
         }
     }
@@ -88,13 +90,22 @@ where
 ///
 /// To modify the orientation of the camera in accordance with the mouse input, please use the
 /// `FreeRotationSystem`.
-#[derive(Default)]
-pub struct ArcBallRotationSystem;
+///
+/// # Type parameters
+///
+/// * `N`: RealField bound (f32 or f64).
+pub struct ArcBallRotationSystem<N>(PhantomData<N>);
 
-impl<'a> System<'a> for ArcBallRotationSystem {
+impl<N> Default for ArcBallRotationSystem<N> {
+    fn default() -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl<'a, N: RealField> System<'a> for ArcBallRotationSystem<N> {
     type SystemData = (
-        WriteStorage<'a, Transform>,
-        ReadStorage<'a, ArcBallControlTag>,
+        WriteStorage<'a, Transform<N>>,
+        ReadStorage<'a, ArcBallControlTag<N>>,
     );
 
     fn run(&mut self, (mut transforms, tags): Self::SystemData) {
@@ -124,15 +135,17 @@ impl<'a> System<'a> for ArcBallRotationSystem {
 ///
 /// * `A`: This is the key the `InputHandler` is using for axes. Often, this is a `String`.
 /// * `B`: This is the key the `InputHandler` is using for actions. Often, this is a `String`.
-pub struct FreeRotationSystem<A, B> {
+/// * `N`: RealField bound (f32 or f64).
+pub struct FreeRotationSystem<A, B, N: RealField> {
     sensitivity_x: f32,
     sensitivity_y: f32,
     _marker1: PhantomData<A>,
     _marker2: PhantomData<B>,
+    _marker3: PhantomData<N>,
     event_reader: Option<ReaderId<Event>>,
 }
 
-impl<A, B> FreeRotationSystem<A, B> {
+impl<A, B, N: RealField> FreeRotationSystem<A, B, N> {
     /// Builds a new `FreeRotationSystem` with the specified mouse sensitivity values.
     pub fn new(sensitivity_x: f32, sensitivity_y: f32) -> Self {
         FreeRotationSystem {
@@ -140,19 +153,21 @@ impl<A, B> FreeRotationSystem<A, B> {
             sensitivity_y,
             _marker1: PhantomData,
             _marker2: PhantomData,
+            _marker3: PhantomData,
             event_reader: None,
         }
     }
 }
 
-impl<'a, A, B> System<'a> for FreeRotationSystem<A, B>
+impl<'a, A, B, N> System<'a> for FreeRotationSystem<A, B, N>
 where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
+    N: RealField,
 {
     type SystemData = (
         Read<'a, EventChannel<Event>>,
-        WriteStorage<'a, Transform>,
+        WriteStorage<'a, Transform<N>>,
         ReadStorage<'a, FlyControlTag>,
         Read<'a, WindowFocus>,
         Read<'a, HideCursor>,
@@ -169,12 +184,12 @@ where
                 if let Event::DeviceEvent { ref event, .. } = *event {
                     if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
                         for (transform, _) in (&mut transform, &tag).join() {
-                            transform.append_rotation_x_axis(
-                                (-y as f32 * self.sensitivity_y).to_radians(),
-                            );
-                            transform.prepend_rotation_y_axis(
-                                (-x as f32 * self.sensitivity_x).to_radians(),
-                            );
+                            transform.append_rotation_x_axis(convert(
+                                (-y * self.sensitivity_y as f64).to_radians(),
+                            ));
+                            transform.prepend_rotation_y_axis(convert(
+                                (-x * self.sensitivity_x as f64).to_radians(),
+                            ));
                         }
                     }
                 }

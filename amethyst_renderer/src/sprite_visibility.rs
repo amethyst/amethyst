@@ -4,8 +4,8 @@ use hibitset::BitSet;
 
 use amethyst_core::{
     ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
-    math::{Point3, Vector3},
-    GlobalTransform,
+    math::{zero, Point3, RealField, Vector3},
+    Transform,
 };
 
 use crate::{
@@ -33,28 +33,32 @@ pub struct SpriteVisibility {
 ///
 /// Note that this should run after `GlobalTransform` has been updated for the current frame, and
 /// before rendering occurs.
+///
+/// # Type Parameters:
+///
+/// * `N`: `RealBound` (f32, f64)
 #[derive(Default)]
-pub struct SpriteVisibilitySortingSystem {
-    centroids: Vec<Internals>,
-    transparent: Vec<Internals>,
+pub struct SpriteVisibilitySortingSystem<N: RealField> {
+    centroids: Vec<Internals<N>>,
+    transparent: Vec<Internals<N>>,
 }
 
 #[derive(Clone)]
-struct Internals {
+struct Internals<N: RealField> {
     entity: Entity,
     transparent: bool,
-    centroid: Point3<f32>,
-    from_camera: Vector3<f32>,
+    centroid: Point3<N>,
+    from_camera: Vector3<N>,
 }
 
-impl SpriteVisibilitySortingSystem {
+impl<N: RealField + Default> SpriteVisibilitySortingSystem<N> {
     /// Returns a new sprite visibility sorting system
     pub fn new() -> Self {
         Default::default()
     }
 }
 
-impl<'a> System<'a> for SpriteVisibilitySortingSystem {
+impl<'a, N: RealField> System<'a> for SpriteVisibilitySortingSystem<N> {
     type SystemData = (
         Entities<'a>,
         Write<'a, SpriteVisibility>,
@@ -63,7 +67,7 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Transparent>,
-        ReadStorage<'a, GlobalTransform>,
+        ReadStorage<'a, Transform<N>>,
         ReadStorage<'a, ScreenSpace>,
     );
 
@@ -77,7 +81,7 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
             active,
             camera,
             transparent,
-            global,
+            transform,
             screen_spaces,
         ): Self::SystemData,
     ) {
@@ -85,29 +89,33 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
 
         // The camera position is used to determine culling, but the sprites are ordered based on
         // the Z coordinate
-        let camera: Option<&GlobalTransform> = active
+        let camera: Option<&Transform<N>> = active
             .entity
-            .and_then(|entity| global.get(entity))
-            .or_else(|| (&camera, &global).join().map(|cg| cg.1).next());
+            .and_then(|entity| transform.get(entity))
+            .or_else(|| (&camera, &transform).join().map(|cg| cg.1).next());
         let camera_backward = camera
-            .map(|c| c.0.column(2).xyz())
+            .map(|c| c.global_matrix().column(2).xyz().into())
             .unwrap_or_else(Vector3::z);
         let camera_centroid = camera
-            .map(|g| g.0.transform_point(&origin))
+            .map(|g| g.global_matrix().transform_point(&origin))
             .unwrap_or_else(|| origin);
 
         self.centroids.clear();
         self.centroids.extend(
             (
                 &*entities,
-                &global,
+                &transform,
                 !&hidden,
                 !&hidden_prop,
                 screen_spaces.maybe(),
             )
                 .join()
-                .map(|(entity, global, _, _, screen_space)| {
-                    (entity, global.0.transform_point(&origin), screen_space)
+                .map(|(entity, transform, _, _, screen_space)| {
+                    (
+                        entity,
+                        transform.global_matrix().transform_point(&origin),
+                        screen_space,
+                    )
                 })
                 .map(|(entity, centroid, screen_space)| {
                     (
@@ -122,7 +130,7 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
                 })
                 // filter entities behind the camera
                 .filter(|(c, screen_space)| {
-                    c.from_camera.dot(&camera_backward) < 0. || screen_space.is_some()
+                    c.from_camera.dot(&camera_backward) < zero() || screen_space.is_some()
                 })
                 .map(|(c, _)| c),
         );

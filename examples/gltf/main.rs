@@ -45,12 +45,12 @@ struct Scene {
 #[derive(Default, Deserialize, Serialize, PrefabData)]
 #[serde(default)]
 struct ScenePrefabData {
-    transform: Option<Transform>,
-    gltf: Option<AssetPrefab<GltfSceneAsset, GltfSceneFormat>>,
+    transform: Option<Transform<f32>>,
+    gltf: Option<AssetPrefab<GltfSceneAsset<f32>, GltfSceneFormat>>,
     camera: Option<CameraPrefab>,
     light: Option<LightPrefab>,
     tag: Option<Tag<AnimationMarker>>,
-    fly_tag: Option<ControlTagPrefab>,
+    fly_tag: Option<ControlTagPrefab<f32>>,
 }
 
 impl SimpleState for Example {
@@ -140,13 +140,13 @@ impl SimpleState for Example {
 fn toggle_or_cycle_animation(
     entity: Option<Entity>,
     scene: &mut Scene,
-    sets: &ReadStorage<'_, AnimationSet<usize, Transform>>,
-    controls: &mut WriteStorage<'_, AnimationControlSet<usize, Transform>>,
+    sets: &ReadStorage<'_, AnimationSet<usize, Transform<f32>>>,
+    controls: &mut WriteStorage<'_, AnimationControlSet<usize, Transform<f32>>>,
 ) {
     if let Some((entity, Some(animations))) = entity.map(|entity| (entity, sets.get(entity))) {
         if animations.animations.len() > scene.animation_index {
             let animation = animations.animations.get(&scene.animation_index).unwrap();
-            let set = get_animation_set::<usize, Transform>(controls, entity).unwrap();
+            let set = get_animation_set::<usize, Transform<f32>>(controls, entity).unwrap();
             if set.has_animation(scene.animation_index) {
                 set.toggle(scene.animation_index);
             } else {
@@ -182,26 +182,33 @@ fn main() -> Result<(), amethyst::Error> {
             &[],
         )
         .with(
-            GltfSceneLoaderSystem::default(),
+            GltfSceneLoaderSystem::<f32>::default(),
             "gltf_loader",
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
         )
-        .with_basic_renderer(path, DrawPbmSeparate::new().with_vertex_skinning(), false)?
-        .with_bundle(
-            AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
-                .with_dep(&["gltf_loader"]),
+        .with_basic_renderer(
+            path,
+            DrawPbmSeparate::<f32>::new().with_vertex_skinning(),
+            false,
         )?
         .with_bundle(
-            FlyControlBundle::<String, String>::new(None, None, None)
+            AnimationBundle::<usize, Transform<f32>>::new(
+                "animation_control",
+                "sampler_interpolation",
+            )
+            .with_dep(&["gltf_loader"]),
+        )?
+        .with_bundle(
+            FlyControlBundle::<String, String, f32>::new(None, None, None)
                 .with_sensitivity(0.1, 0.1)
                 .with_speed(5.),
         )?
-        .with_bundle(TransformBundle::new().with_dep(&[
+        .with_bundle(TransformBundle::<f32>::new().with_dep(&[
             "animation_control",
             "sampler_interpolation",
             "fly_movement",
         ]))?
-        .with_bundle(VertexSkinningBundle::new().with_dep(&[
+        .with_bundle(VertexSkinningBundle::<f32>::new().with_dep(&[
             "transform_system",
             "animation_control",
             "sampler_interpolation",

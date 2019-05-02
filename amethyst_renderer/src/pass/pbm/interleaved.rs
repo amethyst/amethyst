@@ -4,12 +4,15 @@ use std::marker::PhantomData;
 
 use derivative::Derivative;
 use gfx::pso::buffer::ElemStride;
+use gfx::traits::Pod;
 use gfx_core::state::{Blend, ColorMask};
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
+    alga::general::SubsetOf,
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage},
-    transform::GlobalTransform,
+    math::RealField,
+    transform::Transform,
 };
 use amethyst_error::Error;
 
@@ -45,15 +48,16 @@ use super::*;
 /// # Type Parameters
 ///
 /// * `V`: `VertexFormat`
+/// * `N`: `RealBound` (f32, f64)
 #[derive(Derivative, Clone, Debug, PartialEq)]
 #[derivative(Default(bound = "V: Query<(Position, Normal, Tangent, TexCoord)>"))]
-pub struct DrawPbm<V> {
-    _pd: PhantomData<V>,
+pub struct DrawPbm<V, N> {
+    _marker: PhantomData<(V, N)>,
     #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
 }
 
-impl<V> DrawPbm<V>
+impl<V, N> DrawPbm<V, N>
 where
     V: Query<(Position, Normal, Tangent, TexCoord)>,
 {
@@ -90,9 +94,10 @@ where
     }
 }
 
-impl<'a, V> PassData<'a> for DrawPbm<V>
+impl<'a, V, N> PassData<'a> for DrawPbm<V, N>
 where
     V: Query<(Position, Normal, Tangent, TexCoord)>,
+    N: RealField,
 {
     type Data = (
         Read<'a, ActiveCamera>,
@@ -106,15 +111,16 @@ where
         ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
-        ReadStorage<'a, GlobalTransform>,
+        ReadStorage<'a, Transform<N>>,
         ReadStorage<'a, Light>,
         ReadStorage<'a, Rgba>,
     );
 }
 
-impl<V> Pass for DrawPbm<V>
+impl<V, N> Pass for DrawPbm<V, N>
 where
     V: Query<(Position, Normal, Tangent, TexCoord)>,
+    N: RealField + SubsetOf<f32> + Pod,
 {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);
@@ -146,21 +152,21 @@ where
             hidden_prop,
             mesh,
             material,
-            global,
+            transform,
             light,
             rgba,
         ): <Self as PassData<'a>>::Data,
     ) {
-        let camera = get_camera(active, &camera, &global);
+        let camera = get_camera(active, &camera, &transform);
 
-        set_light_args(effect, encoder, &light, &global, &ambient, camera);
+        set_light_args(effect, encoder, &light, &transform, &ambient, camera);
 
         match visibility {
             None => {
-                for (mesh, material, global, rgba, _, _) in (
+                for (mesh, material, transform, rgba, _, _) in (
                     &mesh,
                     &material,
-                    &global,
+                    &transform,
                     rgba.maybe(),
                     !&hidden,
                     !&hidden_prop,
@@ -178,17 +184,17 @@ where
                         &material_defaults,
                         rgba,
                         camera,
-                        Some(global),
+                        Some(transform),
                         &[V::QUERIED_ATTRIBUTES],
                         &TEXTURES,
                     );
                 }
             }
             Some(ref visibility) => {
-                for (mesh, material, global, rgba, _) in (
+                for (mesh, material, transform, rgba, _) in (
                     &mesh,
                     &material,
-                    &global,
+                    &transform,
                     rgba.maybe(),
                     &visibility.visible_unordered,
                 )
@@ -205,7 +211,7 @@ where
                         &material_defaults,
                         rgba,
                         camera,
-                        Some(global),
+                        Some(transform),
                         &[V::QUERIED_ATTRIBUTES],
                         &TEXTURES,
                     );
@@ -224,7 +230,7 @@ where
                             &material_defaults,
                             rgba.get(*entity),
                             camera,
-                            global.get(*entity),
+                            transform.get(*entity),
                             &[V::QUERIED_ATTRIBUTES],
                             &TEXTURES,
                         );

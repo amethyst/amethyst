@@ -12,7 +12,7 @@ use amethyst::{
 
 use serde::Deserialize;
 
-type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
+type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>, f32>;
 
 #[derive(Clone, Deserialize)]
 enum CustomUi {
@@ -100,9 +100,13 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(TransformBundle::<f32>::new())?
         .with_bundle(UiBundle::<String, String, CustomUi>::new())?
-        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), true)?;
+        .with_basic_renderer(
+            display_config_path,
+            DrawShaded::<PosNormTex, f32>::new(),
+            true,
+        )?;
     let mut game = Application::new(resources, Example, game_data)?;
     game.run();
     Ok(())

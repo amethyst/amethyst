@@ -1,8 +1,10 @@
+use std::marker::PhantomData;
 use std::path::Path;
 
 use crate::{
     core::{
         ecs::prelude::{Dispatcher, DispatcherBuilder, System, World},
+        math::RealField,
         ArcThreadPool, SystemBundle,
     },
     error::Error,
@@ -36,21 +38,23 @@ impl<'a, 'b> GameData<'a, 'b> {
 }
 
 /// Builder for default game data
-pub struct GameDataBuilder<'a, 'b> {
+pub struct GameDataBuilder<'a, 'b, N: RealField = f32> {
     disp_builder: DispatcherBuilder<'a, 'b>,
+    _marker: PhantomData<N>,
 }
 
-impl<'a, 'b> Default for GameDataBuilder<'a, 'b> {
+impl<'a, 'b, N: RealField + Default> Default for GameDataBuilder<'a, 'b, N> {
     fn default() -> Self {
         GameDataBuilder::new()
     }
 }
 
-impl<'a, 'b> GameDataBuilder<'a, 'b> {
+impl<'a, 'b, N: RealField + Default> GameDataBuilder<'a, 'b, N> {
     /// Create new builder
     pub fn new() -> Self {
         GameDataBuilder {
             disp_builder: DispatcherBuilder::new(),
+            _marker: PhantomData,
         }
     }
 
@@ -80,7 +84,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// // Three systems are added in this example. The "tabby cat" & "tom cat"
     /// // systems will both run in parallel. Only after both cat systems have
     /// // run is the "doggo" system permitted to run them.
-    /// GameDataBuilder::default()
+    /// GameDataBuilder::<f32>::default()
     ///     .with(NopSystem, "tabby cat", &[])
     ///     .with(NopSystem, "tom cat", &[])
     ///     .with_barrier()
@@ -133,7 +137,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     ///     fn run(&mut self, _: Self::SystemData) {}
     /// }
     ///
-    /// GameDataBuilder::default()
+    /// GameDataBuilder::<f32>::default()
     ///     // This will add the "foo" system to the game loop, in this case
     ///     // the "foo" system will not depend on any systems.
     ///     .with(NopSystem, "foo", &[])
@@ -184,7 +188,7 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     ///     fn run(&mut self, _: Self::SystemData) {}
     /// }
     ///
-    /// GameDataBuilder::default()
+    /// GameDataBuilder::<f32>::default()
     ///     // the Nop system is registered here
     ///     .with_thread_local(NopSystem);
     /// ~~~
@@ -250,14 +254,14 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
                     .with_pass(pass)
                     .with_pass(DrawUi::new()),
             );
-            self.with_bundle(RenderBundle::new(pipe, Some(config)))
+            self.with_bundle(RenderBundle::<'_, _, _, N>::new(pipe, Some(config)))
         } else {
             let pipe = Pipeline::build().with_stage(
                 Stage::with_backbuffer()
                     .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
                     .with_pass(pass),
             );
-            self.with_bundle(RenderBundle::new(pipe, Some(config)))
+            self.with_bundle(RenderBundle::<'_, _, _, N>::new(pipe, Some(config)))
         }
     }
 }

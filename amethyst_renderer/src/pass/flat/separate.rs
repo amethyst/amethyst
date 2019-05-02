@@ -2,13 +2,17 @@
 
 use derivative::Derivative;
 use gfx::pso::buffer::ElemStride;
+use gfx::traits::Pod;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
+use std::marker::PhantomData;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
+    alga::general::SubsetOf,
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage},
-    transform::GlobalTransform,
+    math::RealField,
+    transform::Transform,
 };
 use amethyst_error::Error;
 
@@ -47,18 +51,20 @@ static ATTRIBUTES: [Attributes<'static>; 2] = [
 ///
 /// # Type Parameters
 ///
-/// * `V`: `VertexFormat`
+/// * `N`: `RealBound` (f32, f64)
 #[derive(Derivative, Clone, Debug, PartialEq)]
 #[derivative(Default(bound = "Self: Pass"))]
-pub struct DrawFlatSeparate {
+pub struct DrawFlatSeparate<N> {
     skinning: bool,
     #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
+    _pd: PhantomData<N>,
 }
 
-impl DrawFlatSeparate
+impl<N> DrawFlatSeparate<N>
 where
     Self: Pass,
+    N: RealField,
 {
     /// Create instance of `DrawFlat` pass
     pub fn new() -> Self {
@@ -99,7 +105,7 @@ where
     }
 }
 
-impl<'a> PassData<'a> for DrawFlatSeparate {
+impl<'a, N: RealField> PassData<'a> for DrawFlatSeparate<N> {
     type Data = (
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
@@ -111,13 +117,13 @@ impl<'a> PassData<'a> for DrawFlatSeparate {
         ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
-        ReadStorage<'a, GlobalTransform>,
-        ReadStorage<'a, JointTransforms>,
+        ReadStorage<'a, Transform<N>>,
+        ReadStorage<'a, JointTransforms<N>>,
         ReadStorage<'a, Rgba>,
     );
 }
 
-impl Pass for DrawFlatSeparate {
+impl<N: RealField + SubsetOf<f32> + Pod> Pass for DrawFlatSeparate<N> {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         use std::mem;
         let mut builder = if self.skinning {
@@ -168,20 +174,20 @@ impl Pass for DrawFlatSeparate {
             hidden_prop,
             mesh,
             material,
-            global,
+            transform,
             joints,
             rgba,
         ): <Self as PassData<'a>>::Data,
     ) {
-        let camera = get_camera(active, &camera, &global);
+        let camera = get_camera(active, &camera, &transform);
 
         match visibility {
             None => {
-                for (joint, mesh, material, global, rgba, _, _) in (
+                for (joint, mesh, material, transform, rgba, _, _) in (
                     joints.maybe(),
                     &mesh,
                     &material,
-                    &global,
+                    &transform,
                     rgba.maybe(),
                     !&hidden,
                     !&hidden_prop,
@@ -199,18 +205,18 @@ impl Pass for DrawFlatSeparate {
                         &material_defaults,
                         rgba,
                         camera,
-                        Some(global),
+                        Some(transform),
                         &ATTRIBUTES,
                         &TEXTURES,
                     );
                 }
             }
             Some(ref visibility) => {
-                for (joint, mesh, material, global, rgba, _) in (
+                for (joint, mesh, material, transform, rgba, _) in (
                     joints.maybe(),
                     &mesh,
                     &material,
-                    &global,
+                    &transform,
                     rgba.maybe(),
                     &visibility.visible_unordered,
                 )
@@ -227,7 +233,7 @@ impl Pass for DrawFlatSeparate {
                         &material_defaults,
                         rgba,
                         camera,
-                        Some(global),
+                        Some(transform),
                         &ATTRIBUTES,
                         &TEXTURES,
                     );
@@ -246,7 +252,7 @@ impl Pass for DrawFlatSeparate {
                             &material_defaults,
                             rgba.get(*entity),
                             camera,
-                            global.get(*entity),
+                            transform.get(*entity),
                             &ATTRIBUTES,
                             &TEXTURES,
                         );

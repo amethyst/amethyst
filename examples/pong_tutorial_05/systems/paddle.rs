@@ -9,7 +9,7 @@ pub struct PaddleSystem;
 
 impl<'s> System<'s> for PaddleSystem {
     type SystemData = (
-        WriteStorage<'s, Transform>,
+        WriteStorage<'s, Transform<f32>>,
         ReadStorage<'s, Paddle>,
         Read<'s, InputHandler<String, String>>,
     );

@@ -4,7 +4,6 @@ use amethyst_assets::PrefabData;
 use amethyst_core::{
     ecs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
     math::{Matrix4, Orthographic3, Perspective3, Point2, Point3},
-    GlobalTransform,
 };
 use amethyst_error::Error;
 
@@ -84,14 +83,14 @@ impl Camera {
     pub fn position_from_screen(
         &self,
         screen_position: Point2<f32>,
-        camera_transform: &GlobalTransform,
+        camera_transform: &Matrix4<f32>,
         screen_dimensions: &ScreenDimensions,
     ) -> Point3<f32> {
         let screen_x = 2.0 * screen_position.x / screen_dimensions.width() - 1.0;
         let screen_y = 1.0 - 2.0 * screen_position.y / screen_dimensions.height();
         let screen_point = Point3::new(screen_x, screen_y, 0.0).to_homogeneous();
 
-        let vector = camera_transform.0
+        let vector = camera_transform
             * self
                 .proj
                 .try_inverse()

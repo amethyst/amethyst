@@ -7,9 +7,10 @@ use gfx::{pso::buffer::ElemStride, Primitive};
 use log::{debug, trace};
 
 use amethyst_core::{
+    alga::general::SubsetOf,
     ecs::{Join, Read, ReadStorage, Write, WriteStorage},
-    math as na,
-    transform::GlobalTransform,
+    math::{self as na, Matrix4, RealField},
+    transform::Transform,
 };
 use amethyst_error::Error;
 
@@ -51,15 +52,17 @@ impl Default for DebugLinesParams {
 /// # Type Parameters:
 ///
 /// * `V`: `VertexFormat`
+/// * `N`: `RealBound` (f32, f64)
 #[derive(Derivative, Clone, Debug, PartialEq)]
 #[derivative(Default(bound = "V: Query<(Position, Color, Normal)>"))]
-pub struct DrawDebugLines<V> {
-    _pd: PhantomData<V>,
+pub struct DrawDebugLines<V, N> {
+    _marker: PhantomData<(V, N)>,
 }
 
-impl<V> DrawDebugLines<V>
+impl<V, N> DrawDebugLines<V, N>
 where
     V: Query<(Position, Color, Normal)>,
+    N: RealField,
 {
     /// Create instance of `DrawDebugLines` pass
     pub fn new() -> Self {
@@ -67,23 +70,25 @@ where
     }
 }
 
-impl<'a, V> PassData<'a> for DrawDebugLines<V>
+impl<'a, V, N> PassData<'a> for DrawDebugLines<V, N>
 where
     V: Query<(Position, Color, Normal)>,
+    N: RealField,
 {
     type Data = (
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
-        ReadStorage<'a, GlobalTransform>,
+        ReadStorage<'a, Transform<N>>,
         WriteStorage<'a, DebugLinesComponent>, // DebugLines components
         Option<Write<'a, DebugLines>>,         // DebugLines resource
         Read<'a, DebugLinesParams>,
     );
 }
 
-impl<V> Pass for DrawDebugLines<V>
+impl<V, N> Pass for DrawDebugLines<V, N>
 where
     V: Query<(Position, Color, Normal)>,
+    N: RealField + SubsetOf<f32>,
 {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         debug!("Building debug lines pass");
@@ -106,7 +111,7 @@ where
         encoder: &mut Encoder,
         effect: &mut Effect,
         mut factory: Factory,
-        (active, camera, global, lines_components, lines_resource, lines_params): <Self as PassData<'a>>::Data,
+        (active, camera, transform, lines_components, lines_resource, lines_params): <Self as PassData<'a>>::Data,
     ) {
         trace!("Drawing debug lines pass");
         let debug_lines = {
@@ -128,12 +133,17 @@ where
             return;
         }
 
-        let camera = get_camera(active, &camera, &global);
+        let camera = get_camera(active, &camera, &transform);
         effect.update_global(
             "camera_position",
             camera
                 .as_ref()
-                .map(|&(_, ref trans)| trans.0.column(3).xyz().into())
+                .map(|&(_, ref trans)| {
+                    na::convert::<Matrix4<N>, Matrix4<f32>>(*trans.global_matrix())
+                        .column(3)
+                        .xyz()
+                        .into()
+                })
                 .unwrap_or([0.0; 3]),
         );
 
@@ -148,13 +158,7 @@ where
             return;
         }
 
-        set_vertex_args(
-            effect,
-            encoder,
-            camera,
-            &GlobalTransform(na::one()),
-            Rgba::WHITE,
-        );
+        set_vertex_args(effect, encoder, camera, &na::one(), Rgba::WHITE);
 
         effect.draw(mesh.slice(), encoder);
         effect.clear();

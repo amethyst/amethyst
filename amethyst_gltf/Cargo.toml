@@ -30,6 +30,7 @@ hibitset = { version = "0.5.1", features = ["parallel"] }
 itertools = "0.7"
 log = "0.4.6"
 mikktspace = { version = "0.1" }
+num-traits = "0.2.6"
 serde = { version = "1.0", features = ["derive"] }
 
 thread_profiler = { version = "0.3", optional = true }

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use amethyst_core::{
     ecs::prelude::{Entity, WriteStorage},
-    math::Real,
+    math::RealField,
 };
 
 use crate::resources::{AnimationControlSet, AnimationSampling};
@@ -37,7 +37,7 @@ where
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum SamplerPrimitive<S>
 where
-    S: Real,
+    S: RealField,
 {
     /// A single value
     Scalar(S),
@@ -51,7 +51,7 @@ where
 
 impl<S> From<[S; 2]> for SamplerPrimitive<S>
 where
-    S: Real,
+    S: RealField,
 {
     fn from(arr: [S; 2]) -> Self {
         SamplerPrimitive::Vec2(arr)
@@ -60,7 +60,7 @@ where
 
 impl<S> From<[S; 3]> for SamplerPrimitive<S>
 where
-    S: Real,
+    S: RealField,
 {
     fn from(arr: [S; 3]) -> Self {
         SamplerPrimitive::Vec3(arr)
@@ -69,7 +69,7 @@ where
 
 impl<S> From<[S; 4]> for SamplerPrimitive<S>
 where
-    S: Real,
+    S: RealField,
 {
     fn from(arr: [S; 4]) -> Self {
         SamplerPrimitive::Vec4(arr)
@@ -78,7 +78,7 @@ where
 
 impl<S> InterpolationPrimitive for SamplerPrimitive<S>
 where
-    S: Real + ToPrimitive + NumCast,
+    S: RealField + ToPrimitive + NumCast,
 {
     fn add(&self, other: &Self) -> Self {
         match (*self, *other) {
@@ -157,7 +157,7 @@ where
 
 fn mul_f32<T>(s: T, scalar: f32) -> T
 where
-    T: Real + ToPrimitive + NumCast,
+    T: RealField + ToPrimitive + NumCast,
 {
     NumCast::from(
         s.to_f32()

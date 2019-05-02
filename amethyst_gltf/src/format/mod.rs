@@ -1,15 +1,16 @@
 //! GLTF format
 
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, fmt::Debug, sync::Arc};
 
 use gltf::{self, Gltf};
 use log::debug;
-use serde::{Deserialize, Serialize};
+use num_traits::NumCast;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use amethyst_animation::AnimationHierarchyPrefab;
 use amethyst_assets::{Format, FormatValue, Prefab, Source};
 use amethyst_core::{
-    math::{Quaternion, Unit},
+    math::{Quaternion, RealField, Unit, Vector3},
     transform::Transform,
 };
 use amethyst_error::{format_err, Error, ResultExt};
@@ -40,7 +41,10 @@ mod skin;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct GltfSceneFormat;
 
-impl Format<Prefab<GltfPrefab>> for GltfSceneFormat {
+impl<
+        N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
+    > Format<Prefab<GltfPrefab<N>>> for GltfSceneFormat
+{
     const NAME: &'static str = "GLTFScene";
 
     type Options = GltfSceneOptions;
@@ -51,7 +55,7 @@ impl Format<Prefab<GltfPrefab>> for GltfSceneFormat {
         source: Arc<dyn Source>,
         options: GltfSceneOptions,
         _create_reload: bool,
-    ) -> Result<FormatValue<Prefab<GltfPrefab>>, Error> {
+    ) -> Result<FormatValue<Prefab<GltfPrefab<N>>>, Error> {
         Ok(FormatValue::data(
             load_gltf(source, &name, options)
                 .with_context(|_| format_err!("Failed to import gltf scene"))?,
@@ -59,11 +63,13 @@ impl Format<Prefab<GltfPrefab>> for GltfSceneFormat {
     }
 }
 
-fn load_gltf(
+fn load_gltf<
+    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
+>(
     source: Arc<dyn Source>,
     name: &str,
     options: GltfSceneOptions,
-) -> Result<Prefab<GltfPrefab>, Error> {
+) -> Result<Prefab<GltfPrefab<N>>, Error> {
     debug!("Loading GLTF scene {}", name);
     import(source.clone(), name)
         .with_context(|_| error::Error::GltfImporterError)
@@ -72,15 +78,17 @@ fn load_gltf(
         })
 }
 
-fn load_data(
+fn load_data<
+    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
+>(
     gltf: &Gltf,
     buffers: &Buffers,
     options: &GltfSceneOptions,
     source: Arc<dyn Source>,
     name: &str,
-) -> Result<Prefab<GltfPrefab>, Error> {
+) -> Result<Prefab<GltfPrefab<N>>, Error> {
     let scene_index = get_scene_index(gltf, options)?;
-    let mut prefab = Prefab::<GltfPrefab>::new();
+    let mut prefab = Prefab::<GltfPrefab<N>>::new();
     load_scene(
         gltf,
         scene_index,
@@ -106,14 +114,16 @@ fn get_scene_index(gltf: &Gltf, options: &GltfSceneOptions) -> Result<usize, Err
     }
 }
 
-fn load_scene(
+fn load_scene<
+    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
+>(
     gltf: &Gltf,
     scene_index: usize,
     buffers: &Buffers,
     options: &GltfSceneOptions,
     source: Arc<dyn Source>,
     name: &str,
-    prefab: &mut Prefab<GltfPrefab>,
+    prefab: &mut Prefab<GltfPrefab<N>>,
 ) -> Result<(), Error> {
     let scene = gltf
         .scenes()
@@ -210,7 +220,9 @@ struct SkinInfo {
     mesh_indices: Vec<usize>,
 }
 
-fn load_node(
+fn load_node<
+    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
+>(
     gltf: &Gltf,
     node: &gltf::Node<'_>,
     entity_index: usize,
@@ -218,7 +230,7 @@ fn load_node(
     options: &GltfSceneOptions,
     source: Arc<dyn Source>,
     name: &str,
-    prefab: &mut Prefab<GltfPrefab>,
+    prefab: &mut Prefab<GltfPrefab<N>>,
     node_map: &mut HashMap<usize, usize>,
     skin_map: &mut HashMap<usize, SkinInfo>,
     parent_bounding_box: &mut GltfNodeExtent,
@@ -233,16 +245,20 @@ fn load_node(
 
     // Load transformation data, default will be identity
     let (translation, rotation, scale) = node.transform().decomposed();
-    let mut local_transform = Transform::default();
-    *local_transform.translation_mut() = translation.into();
+    let mut local_transform = Transform::<N>::default();
+    *local_transform.translation_mut() = Vector3::new(
+        translation[0].into(),
+        translation[1].into(),
+        translation[2].into(),
+    );
     // gltf quat format: [x, y, z, w], argument order expected by our quaternion: (w, x, y, z)
     *local_transform.rotation_mut() = Unit::new_normalize(Quaternion::new(
-        rotation[3],
-        rotation[0],
-        rotation[1],
-        rotation[2],
+        rotation[3].into(),
+        rotation[0].into(),
+        rotation[1].into(),
+        rotation[2].into(),
     ));
-    *local_transform.scale_mut() = scale.into();
+    *local_transform.scale_mut() = Vector3::new(scale[0].into(), scale[1].into(), scale[2].into());
     prefab.data_or_default(entity_index).transform = Some(local_transform);
 
     // check for skinning

@@ -37,11 +37,11 @@ fn main() -> amethyst::Result<()> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.00196, 0.23726, 0.21765, 1.0], 1.0)
-            .with_pass(DrawFlat::<PosNormTex>::new()),
+            .with_pass(DrawFlat::<PosNormTex, f32>::new()),
     );
 
-    let game_data =
-        GameDataBuilder::default().with_bundle(RenderBundle::new(pipe, Some(config)))?;
+    let game_data = GameDataBuilder::default()
+        .with_bundle(RenderBundle::<'_, _, _, f32>::new(pipe, Some(config)))?;
     let mut game = Application::new("./", Example, game_data)?;
 
     game.run();

@@ -1,6 +1,10 @@
 use std::{hash::Hash, marker::PhantomData};
 
-use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder};
+use amethyst_core::{
+    bundle::SystemBundle,
+    ecs::prelude::DispatcherBuilder,
+    math::{one, RealField},
+};
 use amethyst_error::Error;
 
 use super::*;
@@ -18,6 +22,7 @@ use super::*;
 ///
 /// * `A`: This is the key the `InputHandler` is using for axes. Often, this is a `String`.
 /// * `B`: This is the key the `InputHandler` is using for actions. Often, this is a `String`.
+/// * `N`: RealField bound (f32 or f64).
 ///
 /// # Systems
 ///
@@ -27,17 +32,17 @@ use super::*;
 /// * `FreeRotationSystem`
 /// * `MouseFocusUpdateSystem`
 /// * `CursorHideSystem`
-pub struct FlyControlBundle<A, B> {
+pub struct FlyControlBundle<A, B, N: RealField> {
     sensitivity_x: f32,
     sensitivity_y: f32,
-    speed: f32,
+    speed: N,
     right_input_axis: Option<A>,
     up_input_axis: Option<A>,
     forward_input_axis: Option<A>,
-    _marker: PhantomData<B>,
+    _marker: PhantomData<(B, N)>,
 }
 
-impl<A, B> FlyControlBundle<A, B> {
+impl<A, B, N: RealField> FlyControlBundle<A, B, N> {
     /// Builds a new fly control bundle using the provided axes as controls.
     pub fn new(
         right_input_axis: Option<A>,
@@ -47,7 +52,7 @@ impl<A, B> FlyControlBundle<A, B> {
         FlyControlBundle {
             sensitivity_x: 1.0,
             sensitivity_y: 1.0,
-            speed: 1.0,
+            speed: one(),
             right_input_axis,
             up_input_axis,
             forward_input_axis,
@@ -63,20 +68,21 @@ impl<A, B> FlyControlBundle<A, B> {
     }
 
     /// Alters the speed on this `FlyControlBundle`.
-    pub fn with_speed(mut self, speed: f32) -> Self {
+    pub fn with_speed(mut self, speed: N) -> Self {
         self.speed = speed;
         self
     }
 }
 
-impl<'a, 'b, A, B> SystemBundle<'a, 'b> for FlyControlBundle<A, B>
+impl<'a, 'b, A, B, N> SystemBundle<'a, 'b> for FlyControlBundle<A, B, N>
 where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
+    N: RealField,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
-            FlyMovementSystem::<A, B>::new(
+            FlyMovementSystem::<A, B, N>::new(
                 self.speed,
                 self.right_input_axis,
                 self.up_input_axis,
@@ -86,7 +92,7 @@ where
             &[],
         );
         builder.add(
-            FreeRotationSystem::<A, B>::new(self.sensitivity_x, self.sensitivity_y),
+            FreeRotationSystem::<A, B, N>::new(self.sensitivity_x, self.sensitivity_y),
             "free_rotation",
             &[],
         );
@@ -107,13 +113,13 @@ where
 /// Adding this bundle will grab the mouse, hide it and keep it centered.
 ///
 /// See the `arc_ball_camera` example to see how to use the arc ball camera.
-pub struct ArcBallControlBundle<A, B> {
+pub struct ArcBallControlBundle<A, B, N> {
     sensitivity_x: f32,
     sensitivity_y: f32,
-    _marker: PhantomData<(A, B)>,
+    _marker: PhantomData<(A, B, N)>,
 }
 
-impl<A, B> ArcBallControlBundle<A, B> {
+impl<A, B, N> ArcBallControlBundle<A, B, N> {
     /// Builds a new `ArcBallControlBundle` with a default sensitivity of 1.0
     pub fn new() -> Self {
         ArcBallControlBundle {
@@ -131,15 +137,20 @@ impl<A, B> ArcBallControlBundle<A, B> {
     }
 }
 
-impl<'a, 'b, A, B> SystemBundle<'a, 'b> for ArcBallControlBundle<A, B>
+impl<'a, 'b, A, B, N> SystemBundle<'a, 'b> for ArcBallControlBundle<A, B, N>
 where
     A: Send + Sync + Hash + Eq + Clone + 'static,
     B: Send + Sync + Hash + Eq + Clone + 'static,
+    N: RealField,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
-        builder.add(ArcBallRotationSystem::default(), "arc_ball_rotation", &[]);
         builder.add(
-            FreeRotationSystem::<A, B>::new(self.sensitivity_x, self.sensitivity_y),
+            ArcBallRotationSystem::<N>::default(),
+            "arc_ball_rotation",
+            &[],
+        );
+        builder.add(
+            FreeRotationSystem::<A, B, N>::new(self.sensitivity_x, self.sensitivity_y),
             "free_rotation",
             &[],
         );

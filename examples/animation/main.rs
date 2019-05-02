@@ -17,8 +17,8 @@ use amethyst::{
 use serde::{Deserialize, Serialize};
 
 type MyPrefabData = (
-    Option<BasicScenePrefab<Vec<PosNormTex>>>,
-    Option<AnimationSetPrefab<AnimationId, Transform>>,
+    Option<BasicScenePrefab<Vec<PosNormTex>, f32>>,
+    Option<AnimationSetPrefab<AnimationId, Transform<f32>>>,
 );
 
 #[derive(Eq, PartialOrd, PartialEq, Hash, Debug, Copy, Clone, Deserialize, Serialize)]
@@ -104,7 +104,7 @@ impl SimpleState for Example {
                 }
 
                 Some((VirtualKeyCode::Left, ElementState::Pressed)) => {
-                    get_animation_set::<AnimationId, Transform>(
+                    get_animation_set::<AnimationId, Transform<f32>>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     )
@@ -113,7 +113,7 @@ impl SimpleState for Example {
                 }
 
                 Some((VirtualKeyCode::Right, ElementState::Pressed)) => {
-                    get_animation_set::<AnimationId, Transform>(
+                    get_animation_set::<AnimationId, Transform<f32>>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     )
@@ -123,7 +123,7 @@ impl SimpleState for Example {
 
                 Some((VirtualKeyCode::F, ElementState::Pressed)) => {
                     self.rate = 1.0;
-                    get_animation_set::<AnimationId, Transform>(
+                    get_animation_set::<AnimationId, Transform<f32>>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     )
@@ -133,7 +133,7 @@ impl SimpleState for Example {
 
                 Some((VirtualKeyCode::V, ElementState::Pressed)) => {
                     self.rate = 0.0;
-                    get_animation_set::<AnimationId, Transform>(
+                    get_animation_set::<AnimationId, Transform<f32>>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     )
@@ -143,7 +143,7 @@ impl SimpleState for Example {
 
                 Some((VirtualKeyCode::H, ElementState::Pressed)) => {
                     self.rate = 0.5;
-                    get_animation_set::<AnimationId, Transform>(
+                    get_animation_set::<AnimationId, Transform<f32>>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     )
@@ -179,12 +179,16 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
-        .with_bundle(AnimationBundle::<AnimationId, Transform>::new(
+        .with_bundle(AnimationBundle::<AnimationId, Transform<f32>>::new(
             "animation_control_system",
             "sampler_interpolation_system",
         ))?
-        .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
-        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
+        .with_bundle(TransformBundle::<f32>::new().with_dep(&["sampler_interpolation_system"]))?
+        .with_basic_renderer(
+            display_config_path,
+            DrawShaded::<PosNormTex, f32>::new(),
+            false,
+        )?;
     let mut game = Application::new(resources, Example::default(), game_data)?;
     game.run();
 
@@ -200,13 +204,13 @@ fn add_animation(
     toggle_if_exists: bool,
 ) {
     let animation = world
-        .read_storage::<AnimationSet<AnimationId, Transform>>()
+        .read_storage::<AnimationSet<AnimationId, Transform<f32>>>()
         .get(entity)
         .and_then(|s| s.get(&id))
         .cloned()
         .unwrap();
     let mut sets = world.write_storage();
-    let control_set = get_animation_set::<AnimationId, Transform>(&mut sets, entity).unwrap();
+    let control_set = get_animation_set::<AnimationId, Transform<f32>>(&mut sets, entity).unwrap();
     match defer {
         None => {
             if toggle_if_exists && control_set.has_animation(id) {

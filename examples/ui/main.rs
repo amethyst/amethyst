@@ -20,7 +20,7 @@ use amethyst::{
 
 use log::info;
 
-type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
+type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>, f32>;
 
 #[derive(Default)]
 struct Example {
@@ -125,13 +125,17 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(TransformBundle::<f32>::new())?
         .with_bundle(UiBundle::<String, String>::new())?
         .with(Processor::<Source>::new(), "source_processor", &[])
         .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
         .with_bundle(FPSCounterBundle::default())?
         .with_bundle(InputBundle::<String, String>::new())?
-        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), true)?;
+        .with_basic_renderer(
+            display_config_path,
+            DrawShaded::<PosNormTex, f32>::new(),
+            true,
+        )?;
     let mut game = Application::build(resources, Example::default())?
         // Unlimited FPS
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 9999)

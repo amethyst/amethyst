@@ -4,8 +4,8 @@ use hibitset::BitSet;
 
 use amethyst_core::{
     ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
-    math::{self as na, Point3, Vector3},
-    GlobalTransform,
+    math::{self as na, zero, Point3, RealField, Vector3},
+    Transform,
 };
 
 use crate::{
@@ -29,21 +29,21 @@ pub struct Visibility {
 ///
 /// Note that this should run after `GlobalTransform` has been updated for the current frame, and
 /// before rendering occurs.
-pub struct VisibilitySortingSystem {
-    centroids: Vec<Internals>,
-    transparent: Vec<Internals>,
+pub struct VisibilitySortingSystem<N: RealField> {
+    centroids: Vec<Internals<N>>,
+    transparent: Vec<Internals<N>>,
 }
 
 #[derive(Clone)]
-struct Internals {
+struct Internals<N: RealField> {
     entity: Entity,
     transparent: bool,
-    centroid: Point3<f32>,
-    camera_distance: f32,
-    from_camera: Vector3<f32>,
+    centroid: Point3<N>,
+    camera_distance: N,
+    from_camera: Vector3<N>,
 }
 
-impl VisibilitySortingSystem {
+impl<N: RealField> VisibilitySortingSystem<N> {
     /// Create new sorting system
     pub fn new() -> Self {
         VisibilitySortingSystem {
@@ -53,7 +53,7 @@ impl VisibilitySortingSystem {
     }
 }
 
-impl<'a> System<'a> for VisibilitySortingSystem {
+impl<'a, N: RealField> System<'a> for VisibilitySortingSystem<N> {
     type SystemData = (
         Entities<'a>,
         Write<'a, Visibility>,
@@ -62,31 +62,33 @@ impl<'a> System<'a> for VisibilitySortingSystem {
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Transparent>,
-        ReadStorage<'a, GlobalTransform>,
+        ReadStorage<'a, Transform<N>>,
     );
 
     fn run(
         &mut self,
-        (entities, mut visibility, hidden, hidden_prop, active, camera, transparent, global): Self::SystemData,
+        (entities, mut visibility, hidden, hidden_prop, active, camera, transparent, transform): Self::SystemData,
     ) {
         let origin = Point3::origin();
 
-        let camera: Option<&GlobalTransform> = active
+        let camera: Option<&Transform<N>> = active
             .entity
-            .and_then(|entity| global.get(entity))
-            .or_else(|| (&camera, &global).join().map(|cg| cg.1).next());
+            .and_then(|entity| transform.get(entity))
+            .or_else(|| (&camera, &transform).join().map(|cg| cg.1).next());
         let camera_backward = camera
-            .map(|c| c.0.column(2).xyz())
+            .map(|c| c.global_matrix().column(2).xyz())
             .unwrap_or_else(Vector3::z);
         let camera_centroid = camera
-            .map(|g| g.0.transform_point(&origin))
+            .map(|g| g.global_matrix().transform_point(&origin))
             .unwrap_or(origin);
 
         self.centroids.clear();
         self.centroids.extend(
-            (&*entities, &global, !&hidden, !&hidden_prop)
+            (&*entities, &transform, !&hidden, !&hidden_prop)
                 .join()
-                .map(|(entity, global, _, _)| (entity, global.0.transform_point(&origin)))
+                .map(|(entity, transform, _, _)| {
+                    (entity, transform.global_matrix().transform_point(&origin))
+                })
                 .map(|(entity, centroid)| Internals {
                     entity,
                     transparent: transparent.contains(entity),
@@ -94,7 +96,7 @@ impl<'a> System<'a> for VisibilitySortingSystem {
                     camera_distance: na::distance_squared(&centroid, &camera_centroid),
                     from_camera: centroid - camera_centroid,
                 })
-                .filter(|c| c.from_camera.dot(&camera_backward) < 0.), // filter entities behind the camera
+                .filter(|c| c.from_camera.dot(&camera_backward) < zero()), // filter entities behind the camera
         );
         self.transparent.clear();
         self.transparent

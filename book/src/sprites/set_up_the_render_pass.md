@@ -32,13 +32,15 @@ fn main() -> amethyst::Result<()> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0., 0., 0., 1.], 1.)
-            .with_pass(DrawFlat2D::new()),
+            .with_pass(
+                DrawFlat2D::<f32>::new()
+                    .with_transparency_settings(ColorMask::all(), ALPHA, None)),
     );
 
     let game_data = GameDataBuilder::default()
 #         .with_bundle(TransformBundle::new())?
         .with_bundle(
-            RenderBundle::new(pipe, Some(display_config))
+            RenderBundle::<'_, _, _, f32>::new(pipe, Some(display_config))
                 .with_sprite_sheet_processor())?
 
 #         .with_bundle(InputBundle::<String, String>::new())?

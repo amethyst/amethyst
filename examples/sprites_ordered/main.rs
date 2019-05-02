@@ -247,7 +247,8 @@ impl Example {
         //
         // The X offset needs to be multiplied because we are drawing the sprites across the window;
         // we don't need to multiply the Y offset because we are only drawing the sprites in 1 row.
-        let sprite_offset_x = (sprite_count * sprite_w) as f32 * SPRITE_SPACING_RATIO / 2.;
+        let sprite_offset_translation_x =
+            (sprite_count * sprite_w) as f32 * SPRITE_SPACING_RATIO / 2.;
 
         let (width, height) = {
             let dim = world.read_resource::<ScreenDimensions>();
@@ -255,12 +256,16 @@ impl Example {
         };
         // This `Transform` moves the sprites to the middle of the window
         let mut common_transform = Transform::default();
-        common_transform.set_translation_xyz(width / 2.0 - sprite_offset_x, height / 2.0, 0.0);
+        common_transform.set_translation_xyz(
+            width / 2.0 - sprite_offset_translation_x,
+            height / 2.0,
+            0.0,
+        );
 
         self.draw_sprites(world, &common_transform);
     }
 
-    fn draw_sprites(&mut self, world: &mut World, common_transform: &Transform) {
+    fn draw_sprites(&mut self, world: &mut World, common_transform: &Transform<f32>) {
         let LoadedSpriteSheet {
             sprite_sheet_handle,
             sprite_count,
@@ -274,7 +279,7 @@ impl Example {
 
         // Create an entity per sprite.
         for i in 0..sprite_count {
-            let mut sprite_transform = Transform::default();
+            let mut sprite_transform = Transform::<f32>::default();
 
             let z = if self.reverse {
                 (sprite_count - i - 1) as f32
@@ -360,15 +365,15 @@ fn main() -> amethyst::Result<()> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0., 0., 0., 1.], 5.)
-            .with_pass(DrawFlat2D::new()),
+            .with_pass(DrawFlat2D::<f32>::new()),
     );
 
     let assets_directory = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(TransformBundle::<f32>::new())?
         .with_bundle(
-            RenderBundle::new(pipe, Some(display_config))
+            RenderBundle::<'_, _, _, f32>::new(pipe, Some(display_config))
                 .with_sprite_sheet_processor()
                 .with_sprite_visibility_sorting(&["transform_system"]),
         )?;

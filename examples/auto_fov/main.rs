@@ -37,10 +37,10 @@ fn main() -> Result<(), Error> {
         .with(PrefabLoaderSystem::<ScenePrefab>::default(), "prefab", &[])
         .with(AutoFovSystem, "auto_fov", &["prefab"]) // This makes the system adjust the camera right after it has been loaded (in the same frame), preventing any flickering
         .with(ShowFovSystem, "show_fov", &["auto_fov"])
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(TransformBundle::<f32>::new())?
         .with_bundle(InputBundle::<String, String>::new())?
         .with_bundle(UiBundle::<String, String>::new())?
-        .with_basic_renderer(display_config, DrawShaded::<PosNormTex>::new(), true)?;
+        .with_basic_renderer(display_config, DrawShaded::<PosNormTex, f32>::new(), true)?;
 
     let mut game = Application::build(assets, Loading::new())?.build(game_data)?;
     game.run();
@@ -52,7 +52,7 @@ fn main() -> Result<(), Error> {
 #[serde(default)]
 struct ScenePrefab {
     graphics: Option<GraphicsPrefab<Vec<PosNormTex>>>,
-    transform: Option<Transform>,
+    transform: Option<Transform<f32>>,
     light: Option<LightPrefab>,
     camera: Option<CameraPrefab>,
     auto_fov: Option<AutoFov>, // `AutoFov` implements `PrefabData` trait
