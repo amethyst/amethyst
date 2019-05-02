@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use amethyst_assets::{PrefabData, Format, Asset};
 
 pub trait UiRenderer: Send + Sync + 'static + Clone {
@@ -6,7 +6,7 @@ pub trait UiRenderer: Send + Sync + 'static + Clone {
 }
 
 pub trait TexturePrefab<R, F>: Send + Sync + 'static +
-    Clone + for<'de> Deserialize<'de> + for<'a> PrefabData<'a>
+    Clone + Serialize + for<'de> Deserialize<'de> + for<'a> PrefabData<'a>
 where
     R: UiRenderer,
     F: Format<R::Texture, Options = ()>,

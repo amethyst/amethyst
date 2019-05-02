@@ -317,6 +317,7 @@ where
 ///
 /// - `F`: `Format` used for loading `Texture`s
 #[derive(Clone, Deserialize, Serialize)]
+#[serde(bound(deserialize = "T: Deserialize<'de>"))]
 pub struct UiImagePrefab<R, I, T>
 where
     R: UiRenderer,
@@ -594,7 +595,7 @@ pub enum UiWidget<
     T: TexturePrefab<R, I>,
     A: Format<Audio, Options = ()>,
     F: Format<FontAsset, Options = ()>,
-    C: ToNativeWidget<R, I, T>,
+    C: ToNativeWidget<R, I, T, A, F, W>,
     W: WidgetId,
 {
     /// Container widget
@@ -639,7 +640,7 @@ where
     T: TexturePrefab<R, I>,
     A: Format<Audio, Options = ()>,
     F: Format<FontAsset, Options = ()>,
-    C: ToNativeWidget<R, I, T>,
+    C: ToNativeWidget<R, I, T, A, F, W>,
     W: WidgetId,
 {
     /// Convenience function to access widgets `UiTransformBuilder`
@@ -831,7 +832,7 @@ fn walk_ui_tree<R, I, T, A, F, C, W>(
     T: TexturePrefab<R, I>,
     A: Format<Audio, Options = ()>,
     F: Format<FontAsset, Options = ()> + Clone,
-    C: ToNativeWidget<R, I, T>,
+    C: ToNativeWidget<R, I, T, A, F, W>,
     W: WidgetId,
 {
     match widget {
