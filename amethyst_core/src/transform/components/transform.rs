@@ -29,6 +29,7 @@ pub struct Transform<N: RealField> {
     #[set = "pub"]
     #[get_mut = "pub"]
     scale: Vector3<N>,
+    /// The global transformation matrix.
     #[get = "pub"]
     pub(crate) global_matrix: Matrix4<N>,
 }
