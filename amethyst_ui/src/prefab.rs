@@ -317,21 +317,22 @@ where
 ///
 /// - `F`: `Format` used for loading `Texture`s
 #[derive(Clone, Deserialize, Serialize)]
-pub struct UiImagePrefab<R, F, T>
+pub struct UiImagePrefab<R, I, T>
 where
     R: UiRenderer,
-    F: Format<R::Texture, Options = ()>,
-    T: TexturePrefab<R, F>,
+    I: Format<R::Texture, Options = ()>,
+    T: TexturePrefab<R, I>,
 {
     /// Image
     pub image: T,
+    _phantom: PhantomData<(R, I)>,
 }
 
-impl<'a, R, F, T> PrefabData<'a> for UiImagePrefab<R, F, T>
+impl<'a, R, I, T> PrefabData<'a> for UiImagePrefab<R, I, T>
 where
     R: UiRenderer,
-    F: Format<R::Texture, Options = ()> + Clone + Sync,
-    T: TexturePrefab<R, F>,
+    I: Format<R::Texture, Options = ()> + Clone + Sync,
+    T: TexturePrefab<R, I>,
 {
     type SystemData = (
         WriteStorage<'a, Handle<R::Texture>>,
@@ -377,6 +378,7 @@ pub struct UiButtonBuilder<R, I, T, A = AudioFormat, F = FontFormat, W = u32>
 where
     R: UiRenderer,
     I: Format<R::Texture, Options = ()>,
+    T: TexturePrefab<R, I>,
     A: Format<Audio, Options = ()>,
     F: Format<FontAsset, Options = ()>,
     W: WidgetId,
@@ -407,6 +409,7 @@ where
     pub press_sound: Option<AssetPrefab<Audio, A>>,
     /// Sound made when this button is released.
     pub release_sound: Option<AssetPrefab<Audio, A>>,
+    _phantom: PhantomData<(R, I)>,
 }
 
 impl<'a, R, I, T, A, F, W> PrefabData<'a> for UiButtonBuilder<R, I, T, A, F, W>
@@ -591,7 +594,7 @@ pub enum UiWidget<
     T: TexturePrefab<R, I>,
     A: Format<Audio, Options = ()>,
     F: Format<FontAsset, Options = ()>,
-    C: ToNativeWidget<A, I, F, W>,
+    C: ToNativeWidget<R, I, T>,
     W: WidgetId,
 {
     /// Container widget
@@ -602,7 +605,7 @@ pub enum UiWidget<
         #[serde(default = "default_container_image")]
         background: Option<UiImagePrefab<R, I, T>>,
         /// Child widgets
-        children: Vec<UiWidget<R, I, A, F, C, W>>,
+        children: Vec<UiWidget<R, I, T, A, F, C, W, G>>,
     },
     /// Image widget
     Image {
@@ -623,7 +626,7 @@ pub enum UiWidget<
         /// Spatial information
         transform: UiTransformBuilder<G>,
         /// Button
-        button: UiButtonBuilder<R, I, A, F, W>,
+        button: UiButtonBuilder<R, I, T, A, F, W>,
     },
     /// Custom UI widget
     Custom(Box<C>),
@@ -636,7 +639,7 @@ where
     T: TexturePrefab<R, I>,
     A: Format<Audio, Options = ()>,
     F: Format<FontAsset, Options = ()>,
-    C: ToNativeWidget<A, I, F, W>,
+    C: ToNativeWidget<R, I, T>,
     W: WidgetId,
 {
     /// Convenience function to access widgets `UiTransformBuilder`
@@ -691,10 +694,11 @@ where
 }
 
 /// Create native `UiWidget` from custom UI
-pub trait ToNativeWidget<R, I, A = AudioFormat, F = FontFormat, W = u32>
+pub trait ToNativeWidget<R, I, T, A = AudioFormat, F = FontFormat, W = u32>
 where
     R: UiRenderer,
     I: Format<R::Texture, Options = ()>,
+    T: TexturePrefab<R, I>,
     A: Format<Audio, Options = ()>,
     F: Format<FontAsset, Options = ()>,
     W: WidgetId,
@@ -709,17 +713,18 @@ where
     fn to_native_widget(
         self,
         parent_data: Self::PrefabData,
-    ) -> (UiWidget<A, I, F, Self, W>, Self::PrefabData);
+    ) -> (UiWidget<R, I, T, A, F, Self, W>, Self::PrefabData);
 }
 
 /// Type used when no custom ui is desired
 #[derive(Serialize, Deserialize)]
 pub enum NoCustomUi {}
 
-impl<R, I, A, F, W> ToNativeWidget<R, I, A, F, W> for NoCustomUi
+impl<R, I, T, A, F, W> ToNativeWidget<R, I, T, A, F, W> for NoCustomUi
 where
     R: UiRenderer,
     I: Format<R::Texture, Options = ()>,
+    T: TexturePrefab<R, I>,
     A: Format<Audio, Options = ()>,
     F: Format<FontAsset, Options = ()>,
     W: WidgetId,
@@ -728,7 +733,7 @@ where
     fn to_native_widget(
         self,
         _: Self::PrefabData,
-    ) -> (UiWidget<R, I, A, F, NoCustomUi, W>, Self::PrefabData) {
+    ) -> (UiWidget<R, I, T, A, F, NoCustomUi, W>, Self::PrefabData) {
         // self can not exist
         unreachable!()
     }
@@ -749,14 +754,14 @@ type UiPrefabData<
     T,
     A = AudioFormat,
     F = FontFormat,
-    D = <NoCustomUi as ToNativeWidget<R, I>>::PrefabData,
+    D = <NoCustomUi as ToNativeWidget<R, I, T>>::PrefabData,
     W = u32,
     G = (),
 > = (
     Option<UiTransformBuilder<G>>,
     Option<UiImagePrefab<R, I, T>>,
     Option<UiTextBuilder<F>>,
-    Option<UiButtonBuilder<A, I, F, W>>,
+    Option<UiButtonBuilder<R, I, T, A, F, W>>,
     D,
 );
 
@@ -775,7 +780,7 @@ pub type UiPrefab<
     T,
     A = AudioFormat,
     F = FontFormat,
-    D = <NoCustomUi as ToNativeWidget<R, I>>::PrefabData,
+    D = <NoCustomUi as ToNativeWidget<R, I, T>>::PrefabData,
     W = u32,
 > = Prefab<UiPrefabData<R, I, T, A, F, D, W>>;
 
@@ -786,19 +791,20 @@ pub type UiPrefab<
 #[derivative(Clone(bound = ""), Debug(bound = ""), Default(bound = ""))]
 pub struct UiFormat<C, R>(PhantomData<(C, R)>) where R: UiRenderer;
 
-impl<'a, R, I, A, F, C, W> SimpleFormat<UiPrefab<R, I, A, F, C::PrefabData, W>> for UiFormat<C, R>
+impl<R, I, T, A, F, C, W> SimpleFormat<UiPrefab<R, I, T, A, F, C::PrefabData, W>> for UiFormat<C, R>
 where
     R: UiRenderer,
     I: Format<R::Texture, Options = ()> + Sync + DeserializeOwned + Clone,
+    T: TexturePrefab<R, I>,
     A: Format<Audio, Options = ()> + Sync + DeserializeOwned,
     F: Format<FontAsset, Options = ()> + Sync + DeserializeOwned + Clone,
-    C: ToNativeWidget<A, I, F, W> + for<'de> serde::Deserialize<'de>,
+    C: ToNativeWidget<R, I, T> + for<'de> serde::Deserialize<'de>,
     W: WidgetId + DeserializeOwned,
 {
     const NAME: &'static str = "Ui";
     type Options = ();
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<UiPrefab<R, I, A, F, C::PrefabData, W>, Error> {
+    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<UiPrefab<R, I, T, A, F, C::PrefabData, W>, Error> {
         use ron::de::Deserializer;
         let mut d = Deserializer::from_bytes(&bytes)
             .with_context(|_| format_err!("Failed deserializing Ron file"))?;
@@ -814,17 +820,18 @@ where
     }
 }
 
-fn walk_ui_tree<R, I, A, F, C, W>(
-    widget: UiWidget<R, I, A, F, C, W>,
+fn walk_ui_tree<R, I, T, A, F, C, W>(
+    widget: UiWidget<R, I, T, A, F, C, W>,
     current_index: usize,
-    prefab: &mut Prefab<UiPrefabData<A, I, F, C::PrefabData, W>>,
+    prefab: &mut Prefab<UiPrefabData<R, I, T, A, F, C::PrefabData, W>>,
     custom_data: C::PrefabData,
 ) where
     R: UiRenderer,
     I: Format<R::Texture, Options = ()> + Clone,
+    T: TexturePrefab<R, I>,
     A: Format<Audio, Options = ()>,
     F: Format<FontAsset, Options = ()> + Clone,
-    C: ToNativeWidget<A, I, F, W>,
+    C: ToNativeWidget<R, I, T>,
     W: WidgetId,
 {
     match widget {
@@ -883,6 +890,7 @@ fn walk_ui_tree<R, I, A, F, C, W>(
                     Some(transform),
                     button.normal_image.as_ref().map(|image| UiImagePrefab {
                         image: image.clone(),
+                        _phantom: Default::default(),
                     }),
                     None,
                     Some(button),
@@ -921,30 +929,32 @@ fn walk_ui_tree<R, I, A, F, C, W>(
 /// });
 /// ```
 #[derive(SystemData)]
-pub struct UiLoader<'a, R, I, A = AudioFormat, F = FontFormat, C = NoCustomUi, W = u32>
+pub struct UiLoader<'a, R, I, T, A = AudioFormat, F = FontFormat, C = NoCustomUi, W = u32>
 where
     R: UiRenderer,
     I: Format<R::Texture, Options = ()> + Sync,
+    T: TexturePrefab<R, I>,
     A: Format<Audio, Options = ()> + Sync,
     F: Format<FontAsset, Options = ()> + Sync,
-    C: ToNativeWidget<R, I, A, F, W>,
+    C: ToNativeWidget<R, I, T>,
     W: WidgetId,
 {
     loader: ReadExpect<'a, Loader>,
-    storage: Read<'a, AssetStorage<UiPrefab<R, I, A, F, C::PrefabData, W>>>,
+    storage: Read<'a, AssetStorage<UiPrefab<R, I, T, A, F, C::PrefabData, W>>>,
 }
 
-impl<'a, R, I, A, F, C, W> UiLoader<'a, R, I, A, F, C, W>
+impl<'a, R, I, T, A, F, C, W> UiLoader<'a, R, I, T, A, F, C, W>
 where
     R: UiRenderer,
     I: Format<R::Texture, Options = ()> + Sync + DeserializeOwned + Clone,
+    T: TexturePrefab<R, I>,
     A: Format<Audio, Options = ()> + Sync + DeserializeOwned,
     F: Format<FontAsset, Options = ()> + Sync + DeserializeOwned + Clone,
-    C: ToNativeWidget<A, I, F, W> + for<'de> serde::Deserialize<'de> + Send + Sync + 'static,
+    C: ToNativeWidget<R, I, T> + for<'de> serde::Deserialize<'de> + Send + Sync + 'static,
     W: WidgetId + DeserializeOwned,
 {
     /// Load ui from disc
-    pub fn load<N, P>(&self, name: N, progress: P) -> Handle<UiPrefab<R, I, A, F, C::PrefabData, W>>
+    pub fn load<N, P>(&self, name: N, progress: P) -> Handle<UiPrefab<R, I, T, A, F, C::PrefabData, W>>
     where
         N: Into<String>,
         P: Progress,
@@ -978,6 +988,7 @@ pub struct UiCreator<
     'a,
     R,
     I,
+    T,
     A = AudioFormat,
     F = FontFormat,
     C = NoCustomUi,
@@ -985,23 +996,25 @@ pub struct UiCreator<
 > where
     R: UiRenderer,
     I: Format<R::Texture, Options = ()> + Sync,
+    T: TexturePrefab<R, I>,
     A: Format<Audio, Options = ()> + Sync,
     F: Format<FontAsset, Options = ()> + Sync,
-    C: ToNativeWidget<A, I, F, W>,
+    C: ToNativeWidget<R, I, T>,
     W: WidgetId,
 {
-    loader: UiLoader<'a, R, I, A, F, C, W>,
+    loader: UiLoader<'a, R, I, T, A, F, C, W>,
     entities: Entities<'a>,
-    handles: WriteStorage<'a, Handle<UiPrefab<R, I, A, F, C::PrefabData, W>>>,
+    handles: WriteStorage<'a, Handle<UiPrefab<R, I, T, A, F, C::PrefabData, W>>>,
 }
 
-impl<'a, R, I, A, F, C, W> UiCreator<'a, R, I, A, F, C, W>
+impl<'a, R, I, T, A, F, C, W> UiCreator<'a, R, I, T, A, F, C, W>
 where
     R: UiRenderer,
     I: Format<R::Texture, Options = ()> + Sync + DeserializeOwned + Clone,
+    T: TexturePrefab<R, I>,
     A: Format<Audio, Options = ()> + Sync + DeserializeOwned + Clone,
     F: Format<FontAsset, Options = ()> + Sync + DeserializeOwned + Clone,
-    C: ToNativeWidget<A, I, F, W> + for<'de> serde::Deserialize<'de> + Send + Sync + 'static,
+    C: ToNativeWidget<R, I, T> + for<'de> serde::Deserialize<'de> + Send + Sync + 'static,
     W: WidgetId + DeserializeOwned,
 {
     /// Create a UI.
@@ -1040,7 +1053,7 @@ where
 /// - `F`: `Format` used for loading `FontAsset`
 /// - `CD`: prefab data from custom UI, see `ToNativeWidget::PrefabData`
 /// - `W`: Type used for Widget IDs
-pub type UiLoaderSystem<R, I, A, F, CD, W> = PrefabLoaderSystem<UiPrefabData<R, I, A, F, CD, W>>;
+pub type UiLoaderSystem<R, I, T, A, F, CD, W> = PrefabLoaderSystem<UiPrefabData<R, I, T, A, F, CD, W>>;
 
 fn button_text_transform<G>(mut id: String) -> UiTransformBuilder<G> {
     id.push_str("_btn_txt");

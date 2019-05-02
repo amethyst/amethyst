@@ -14,7 +14,7 @@ use crate::{
     SelectionKeyboardSystem, SelectionMouseSystem, TextEditingInputSystem, TextEditingMouseSystem,
     ToNativeWidget, UiButtonActionRetriggerSystem, UiButtonSystem, UiLoaderSystem, UiMouseSystem,
     UiSoundRetriggerSystem, UiSoundSystem, UiTransformSystem, WidgetId,
-    render::UiRenderer,
+    render::{UiRenderer, TexturePrefab},
 };
 
 /// UI bundle
@@ -24,26 +24,29 @@ use crate::{
 ///
 /// Will fail with error 'No resource with the given id' if the InputBundle is not added.
 #[derive(new)]
-pub struct UiBundle<R, I, A = String, B = String, C = NoCustomUi, W = u32, G = ()> {
+pub struct UiBundle<R, I, T, A = String, B = String, C = NoCustomUi, W = u32, G = ()> {
     #[new(default)]
-    _marker: PhantomData<(R, I, A, B, C, W, G, R)>,
+    _marker: PhantomData<(R, I, T, A, B, C, W, G)>,
 }
 
-impl<'a, 'b, R, I, A, B, C, W, G> SystemBundle<'a, 'b> for UiBundle<R, I, A, B, C, W, G>
+impl<'a, 'b, R, I, T, A, B, C, W, G> SystemBundle<'a, 'b> for UiBundle<R, I, T, A, B, C, W, G>
 where
     A: Send + Sync + Eq + Hash + Clone + 'static,
     B: Send + Sync + Eq + Hash + Clone + 'static,
-    C: ToNativeWidget<R, I>,
+    C: ToNativeWidget<R, I, T>,
     W: WidgetId,
     G: Send + Sync + PartialEq + 'static,
     R: UiRenderer,
     I: Format<R::Texture, Options = ()>,
+    T: TexturePrefab<R, I>,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
             UiLoaderSystem::<
+                R,
+                I,
+                T,
                 AudioFormat,
-                R::TextureFormat,
                 FontFormat,
                 <C as ToNativeWidget>::PrefabData,
                 W,
@@ -95,13 +98,13 @@ where
             &["ui_transform"],
         );
         builder.add(
-            UiButtonSystem::new(),
+            UiButtonSystem::<R>::new(),
             "ui_button_system",
             &["ui_mouse_system"],
         );
 
         builder.add(
-            UiButtonActionRetriggerSystem::new(),
+            UiButtonActionRetriggerSystem::<R>::new(),
             "ui_button_action_retrigger_system",
             &["ui_button_system"],
         );

@@ -96,7 +96,7 @@ where
     /// This allows the user to easily build a UI element with a text that can
     /// easily be retrieved and updated through the appropriate resource,
     /// see [`Widgets`](../struct.Widgets.html).
-    pub fn new<S: ToString>(text: S) -> UiLabelBuilder<I> {
+    pub fn new<S: ToString>(text: S) -> UiLabelBuilder<R, I> {
         let mut builder = UiLabelBuilder::default();
         builder.text = text.to_string();
         builder
@@ -174,7 +174,7 @@ where
     }
 
     /// Build this with the `UiLabelBuilderResources`.
-    pub fn build(self, mut res: UiLabelBuilderResources<'a, I>) -> (I, UiLabel<R>) {
+    pub fn build(self, mut res: UiLabelBuilderResources<'a, R, I>) -> (I, UiLabel<R>) {
         let text_entity = res.entities.create();
         let widget = UiLabel::new(text_entity);
 
@@ -222,6 +222,6 @@ where
 
     /// Create the UiLabel based on provided configuration parameters.
     pub fn build_from_world(self, world: &World) -> (I, UiLabel<R>) {
-        self.build(UiLabelBuilderResources::<I>::fetch(&world.res))
+        self.build(UiLabelBuilderResources::<R, I>::fetch(&world.res))
     }
 }

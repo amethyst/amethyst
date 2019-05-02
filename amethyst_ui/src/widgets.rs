@@ -188,6 +188,7 @@ macro_rules! define_widget {
         #[derive(Debug, Clone)]
         pub struct $t<R: $crate::render::UiRenderer> {
             $($field: $crate::Entity),*
+            ,_phantom: std::marker::PhantomData<R>,
         }
 
         impl<R> $crate::Widget for $t<R> where R: $crate::render::UiRenderer {}
@@ -199,6 +200,7 @@ macro_rules! define_widget {
             ) -> Self {
                 Self {
                     $($field),*
+                    ,_phantom: Default::default(),
                 }
             }
 

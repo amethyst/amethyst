@@ -39,9 +39,9 @@ impl<R> EventRetrigger for UiButtonActionRetrigger<R> where R: UiRenderer {
     type In = UiEvent;
     type Out = UiButtonAction<R>;
 
-    fn apply<R>(&self, event: &Self::In, out: &mut R)
+    fn apply<T>(&self, event: &Self::In, out: &mut T)
     where
-        R: EventReceiver<Self::Out>,
+        T: EventReceiver<Self::Out>,
     {
         match event.event_type {
             UiEventType::ClickStart => out.receive(&self.on_click_start),

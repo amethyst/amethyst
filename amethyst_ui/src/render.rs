@@ -1,13 +1,12 @@
-use std::any::Any;
-use serde::de::DeserializeOwned;
-use amethyst_assets::{PrefabData, Format};
+use serde::Deserialize;
+use amethyst_assets::{PrefabData, Format, Asset};
 
-pub trait UiRenderer: Any + Send + Sync {
-    type Texture: Any + Send + Sync;
+pub trait UiRenderer: Send + Sync + 'static + Clone {
+    type Texture: Send + Sync + Asset;
 }
 
-pub trait TexturePrefab<R, F>: Any + Send + Sync + 'static +
-    Clone + DeserializeOwned + PrefabData<'_>
+pub trait TexturePrefab<R, F>: Send + Sync + 'static +
+    Clone + for<'de> Deserialize<'de> + for<'a> PrefabData<'a>
 where
     R: UiRenderer,
     F: Format<R::Texture, Options = ()>,

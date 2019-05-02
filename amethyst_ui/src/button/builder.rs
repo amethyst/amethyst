@@ -32,8 +32,8 @@ const DEFAULT_TXT_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 pub struct UiButtonBuilderResources<'a, G, R, I = u32>
 where
     G: PartialEq + Send + Sync + 'static,
-    I: WidgetId,
     R: UiRenderer,
+    I: WidgetId,
 {
     font_asset: Read<'a, AssetStorage<FontAsset>>,
     texture_asset: Read<'a, AssetStorage<R::Texture>>,
@@ -52,7 +52,7 @@ where
 
 /// Convenience structure for building a button
 #[derive(Debug, Clone)]
-pub struct UiButtonBuilder<G, I: WidgetId, R: UiRenderer> {
+pub struct UiButtonBuilder<G, R: UiRenderer, I: WidgetId> {
     id: Option<I>,
     x: f32,
     y: f32,
@@ -80,10 +80,10 @@ pub struct UiButtonBuilder<G, I: WidgetId, R: UiRenderer> {
     _phantom: PhantomData<G>,
 }
 
-impl<G, I, R> Default for UiButtonBuilder<G, I, R>
+impl<G, R, I> Default for UiButtonBuilder<G, R, I>
 where
-    I: WidgetId,
     R: UiRenderer,
+    I: WidgetId,
 {
     fn default() -> Self {
         UiButtonBuilder {
@@ -114,17 +114,17 @@ where
     }
 }
 
-impl<'a, G, I, R> UiButtonBuilder<G, I, R>
+impl<'a, G, R, I> UiButtonBuilder<G, R, I>
 where
     G: PartialEq + Send + Sync + 'static,
-    I: WidgetId,
     R: UiRenderer,
+    I: WidgetId,
 {
     /// Construct a new UiButtonBuilder.
     /// This allows easy use of default values for text and button appearance and allows the user
     /// to easily set other UI-related options. It also allows easy retrieval and updating through
     /// the appropriate widgets resouce, see [`Widgets`](../../struct.Widgets.html).
-    pub fn new<S: ToString>(text: S) -> UiButtonBuilder<G, I, R> {
+    pub fn new<S: ToString>(text: S) -> UiButtonBuilder<G, R, I> {
         let mut builder = UiButtonBuilder::default();
         builder.text = text.to_string();
         builder
@@ -268,7 +268,7 @@ where
     }
 
     /// Build this with the `UiButtonBuilderResources`.
-    pub fn build(mut self, mut res: UiButtonBuilderResources<'a, G, I, R>) -> (I, UiButton<R>) {
+    pub fn build(mut self, mut res: UiButtonBuilderResources<'a, G, R, I>) -> (I, UiButton<R>) {
         let image_entity = res.entities.create();
         let text_entity = res.entities.create();
         let widget = UiButton::new(image_entity, text_entity);
@@ -408,7 +408,7 @@ where
 
     /// Create the UiButton based on provided configuration parameters.
     pub fn build_from_world(self, world: &World) -> (I, UiButton<R>) {
-        self.build(UiButtonBuilderResources::<G, I, R>::fetch(&world.res))
+        self.build(UiButtonBuilderResources::<G, R, I>::fetch(&world.res))
     }
 }
 
