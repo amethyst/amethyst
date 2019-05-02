@@ -808,7 +808,7 @@ where
         use ron::de::Deserializer;
         let mut d = Deserializer::from_bytes(&bytes)
             .with_context(|_| format_err!("Failed deserializing Ron file"))?;
-        let root: UiWidget<A, I, F, C, W> = UiWidget::deserialize(&mut d)
+        let root: UiWidget<R, I, T, A, F, C, W> = UiWidget::deserialize(&mut d)
             .with_context(|_| format_err!("Failed parsing Ron file"))?;
         d.end()
             .with_context(|_| format_err!("Failed parsing Ron file"))?;
@@ -960,7 +960,7 @@ where
         P: Progress,
     {
         self.loader
-            .load(name, UiFormat::<C>::default(), (), progress, &self.storage)
+            .load(name, UiFormat::<C, R>::default(), (), progress, &self.storage)
     }
 }
 
