@@ -303,7 +303,6 @@ impl<T> NetPacket<T> {
 #[cfg(test)]
 mod tests {
     use crate::net_event::NetPacket;
-    use std::net::SocketAddr;
 
     #[test]
     fn assure_creation_unreliable_packet() {
@@ -362,9 +361,5 @@ mod tests {
 
     fn test_payload() -> Vec<u8> {
         return "test".as_bytes().to_vec();
-    }
-
-    fn test_addr() -> SocketAddr {
-        "127.0.0.1:12345".parse().unwrap()
     }
 }
