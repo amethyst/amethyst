@@ -302,7 +302,7 @@ impl<T> NetPacket<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::net_event::{DeliveryGuarantee, NetPacket, OrderingGuarantee};
+    use crate::net_event::NetPacket;
     use std::net::SocketAddr;
 
     #[test]

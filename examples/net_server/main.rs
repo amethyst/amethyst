@@ -32,7 +32,7 @@ fn main() -> Result<()> {
 /// Default empty state
 pub struct State1;
 impl SimpleState for State1 {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {}
+    fn on_start(&mut self, _data: StateData<'_, GameData<'_, '_>>) {}
 }
 
 /// A simple system that receives a ton of network events.
@@ -67,7 +67,7 @@ impl<'a> System<'a> for SpamReceiveSystem {
                 match ev {
                     NetEvent::Packet(packet) => info!("{}", packet.content()),
                     NetEvent::Connected(addr) => println!("New Client Connection: {}", addr),
-                    NetEvent::Disconnected(addr) => {
+                    NetEvent::Disconnected(_addr) => {
                         client_disconnected = true;
                     }
                     _ => {}
@@ -76,7 +76,9 @@ impl<'a> System<'a> for SpamReceiveSystem {
 
             if client_disconnected {
                 println!("Client Disconnects");
-                entities.delete(e);
+                entities
+                    .delete(e)
+                    .expect("Cannot delete connection from world!");
             }
 
             connection_count += 1;
