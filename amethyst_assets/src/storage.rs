@@ -2,7 +2,7 @@ use std::{
     marker::PhantomData,
     sync::{
         atomic::{AtomicUsize, Ordering},
-        Arc, Mutex, Weak,
+        Arc, Weak,
     },
 };
 
@@ -51,7 +51,6 @@ pub struct AssetStorage<A: Asset> {
     pub(crate) processed: Arc<MsQueue<Processed<A>>>,
     reloads: Vec<(WeakHandle<A>, Box<dyn Reload<A>>)>,
     unused_handles: MsQueue<Handle<A>>,
-    requeue: Mutex<Vec<Processed<A>>>,
 }
 
 /// Returned by processor systems, describes the loading state of the asset.
@@ -194,10 +193,7 @@ impl<A: Asset> AssetStorage<A> {
         F: FnMut(A::Data) -> Result<ProcessingState<A>, Error>,
     {
         {
-            let requeue = self
-                .requeue
-                .get_mut()
-                .expect("The mutex of `requeue` in `AssetStorage` was poisoned");
+            let mut requeue = Vec::new();
             while let Some(processed) = self.processed.try_pop() {
                 let assets = &mut self.assets;
                 let bitset = &mut self.bitset;
@@ -438,7 +434,6 @@ impl<A: Asset> Default for AssetStorage<A> {
             processed: Arc::new(MsQueue::new()),
             reloads: Default::default(),
             unused_handles: MsQueue::new(),
-            requeue: Mutex::new(Vec::default()),
         }
     }
 }

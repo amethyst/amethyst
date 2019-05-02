@@ -6,14 +6,12 @@ use amethyst_core::{
 use amethyst_error::Error;
 use rendy::{
     hal::format::Format,
-    mesh::{
-        AsAttribute, AsVertex, Attribute, Normal, Position, Tangent, TexCoord, VertexFormat,
-        WithAttribute,
-    },
+    mesh::{AsAttribute, AsVertex, VertexFormat},
 };
-use std::{borrow::Cow, result::Result as StdResult};
+use std::result::Result as StdResult;
 
 /// Type for joint weights attribute of vertex
+#[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct JointWeights(pub [f32; 4]);
 
@@ -25,11 +23,11 @@ impl From<[f32; 4]> for JointWeights {
 
 impl AsAttribute for JointWeights {
     const NAME: &'static str = "joint_weights";
-    const SIZE: u32 = 16;
     const FORMAT: Format = Format::Rgba32Float;
 }
 
 /// Type for joint ids attribute of vertex
+#[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct JointIds(pub [u16; 4]);
 
@@ -42,87 +40,31 @@ impl From<[u16; 4]> for JointIds {
 impl AsAttribute for JointIds {
     const NAME: &'static str = "joint_ids";
     const FORMAT: Format = Format::Rgba16Uint;
-    const SIZE: u32 = 8;
 }
 
-/// Vertex format with position, normal, tangent, and UV texture coordinate attributes.
-#[repr(C)]
+/// A type for vertex buffer value with interleaved joint data
+#[repr(C, align(8))]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct PosNormTangTexJoint {
-    /// Position of the vertex in 3D space.
-    pub position: Position,
-    /// Normal vector of the vertex.
-    pub normal: Normal,
-    /// Tangent vector of the vertex.
-    pub tangent: Tangent,
-    /// UV texture coordinates used by the vertex.
-    pub tex_coord: TexCoord,
+pub struct JointCombined {
     /// Joint ids influencing the vertex.
     pub joint_ids: JointIds,
     /// Joint weights influencing the vertex.
     pub joint_weights: JointWeights,
 }
 
-impl WithAttribute<Position> for PosNormTangTexJoint {
-    const ATTRIBUTE: Attribute = Attribute {
-        offset: 0,
-        format: Position::FORMAT,
-    };
+impl JointCombined {
+    pub fn new<I: Into<JointIds>, W: Into<JointWeights>>(ids: I, weights: W) -> Self {
+        Self {
+            joint_ids: ids.into(),
+            joint_weights: weights.into(),
+        }
+    }
 }
 
-impl WithAttribute<Normal> for PosNormTangTexJoint {
-    const ATTRIBUTE: Attribute = Attribute {
-        offset: Position::SIZE,
-        format: Normal::FORMAT,
-    };
-}
-
-impl WithAttribute<Tangent> for PosNormTangTexJoint {
-    const ATTRIBUTE: Attribute = Attribute {
-        offset: Position::SIZE + Normal::SIZE,
-        format: Tangent::FORMAT,
-    };
-}
-
-impl WithAttribute<TexCoord> for PosNormTangTexJoint {
-    const ATTRIBUTE: Attribute = Attribute {
-        offset: Position::SIZE + Normal::SIZE + Tangent::SIZE,
-        format: TexCoord::FORMAT,
-    };
-}
-
-impl WithAttribute<JointIds> for PosNormTangTexJoint {
-    const ATTRIBUTE: Attribute = Attribute {
-        offset: Position::SIZE + Normal::SIZE + Tangent::SIZE + TexCoord::SIZE,
-        format: JointIds::FORMAT,
-    };
-}
-
-impl WithAttribute<JointWeights> for PosNormTangTexJoint {
-    const ATTRIBUTE: Attribute = Attribute {
-        offset: Position::SIZE + Normal::SIZE + Tangent::SIZE + TexCoord::SIZE + JointIds::SIZE,
-        format: JointWeights::FORMAT,
-    };
-}
-
-impl AsVertex for PosNormTangTexJoint {
-    const VERTEX: VertexFormat<'static> = VertexFormat {
-        attributes: Cow::Borrowed(&[
-            <Self as WithAttribute<Position>>::ATTRIBUTE,
-            <Self as WithAttribute<Normal>>::ATTRIBUTE,
-            <Self as WithAttribute<Tangent>>::ATTRIBUTE,
-            <Self as WithAttribute<TexCoord>>::ATTRIBUTE,
-            <Self as WithAttribute<JointIds>>::ATTRIBUTE,
-            <Self as WithAttribute<JointWeights>>::ATTRIBUTE,
-        ]),
-        stride: Position::SIZE
-            + Normal::SIZE
-            + Tangent::SIZE
-            + TexCoord::SIZE
-            + JointIds::SIZE
-            + JointWeights::SIZE,
-    };
+impl AsVertex for JointCombined {
+    fn vertex() -> VertexFormat {
+        VertexFormat::new((JointIds::vertex(), JointWeights::vertex()))
+    }
 }
 
 /// Transform storage for the skin, should be attached to all mesh entities that use a skin

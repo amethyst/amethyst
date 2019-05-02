@@ -95,87 +95,6 @@
         0
       ],
       "type": "SCALAR"
-    },
-    {
-      "bufferView": 2,
-      "byteOffset": 6384,
-      "componentType": 5126,
-      "count": 4,
-      "max": [
-        5.7333498001098633,
-        -0.97133994102478027,
-        5.7333498001098633
-      ],
-      "min": [
-        -5.7333498001098633,
-        -0.97133994102478027,
-        -5.7333498001098633
-      ],
-      "type": "VEC3"
-    },
-    {
-      "bufferView": 2,
-      "byteOffset": 6432,
-      "componentType": 5126,
-      "count": 4,
-      "max": [
-        0,
-        1,
-        0
-      ],
-      "min": [
-        0,
-        1,
-        0
-      ],
-      "type": "VEC3"
-    },
-    {
-      "bufferView": 3,
-      "byteOffset": 8512,
-      "componentType": 5126,
-      "count": 4,
-      "max": [
-        1,
-        0,
-        0,
-        1
-      ],
-      "min": [
-        1,
-        0,
-        0,
-        1
-      ],
-      "type": "VEC4"
-    },
-    {
-      "bufferView": 1,
-      "byteOffset": 2128,
-      "componentType": 5126,
-      "count": 4,
-      "max": [
-        0.99592840671539307,
-        0.32024818658828735
-      ],
-      "min": [
-        0.6793595552444458,
-        0.0036793332546949387
-      ],
-      "type": "VEC2"
-    },
-    {
-      "bufferView": 0,
-      "byteOffset": 3132,
-      "componentType": 5125,
-      "count": 6,
-      "max": [
-        3
-      ],
-      "min": [
-        0
-      ],
-      "type": "SCALAR"
     }
   ],
   "asset": {
@@ -229,9 +148,6 @@
   ],
   "images": [
     {
-      "uri": "textures/lambert1_baseColor.png"
-    },
-    {
       "uri": "textures/Stone_low_1_metallicRoughness.png"
     },
     {
@@ -253,17 +169,17 @@
         1
       ],
       "emissiveTexture": {
-        "index": 4,
+        "index": 3,
         "texCoord": 0
       },
       "name": "Stone_low_1",
       "normalTexture": {
-        "index": 3,
+        "index": 2,
         "scale": 1,
         "texCoord": 0
       },
       "occlusionTexture": {
-        "index": 1,
+        "index": 0,
         "strength": 1,
         "texCoord": 0
       },
@@ -275,34 +191,15 @@
           1
         ],
         "baseColorTexture": {
-          "index": 2,
+          "index": 1,
           "texCoord": 0
         },
         "metallicFactor": 1,
         "metallicRoughnessTexture": {
-          "index": 1,
-          "texCoord": 0
-        },
-        "roughnessFactor": 1
-      }
-    },
-    {
-      "alphaMode": "BLEND",
-      "doubleSided": true,
-      "name": "lambert1",
-      "pbrMetallicRoughness": {
-        "baseColorFactor": [
-          1,
-          1,
-          1,
-          0
-        ],
-        "baseColorTexture": {
           "index": 0,
           "texCoord": 0
         },
-        "metallicFactor": 0,
-        "roughnessFactor": 0.66634908540000004
+        "roughnessFactor": 1
       }
     }
   ],
@@ -320,22 +217,6 @@
           },
           "indices": 5,
           "material": 0,
-          "mode": 4
-        }
-      ]
-    },
-    {
-      "name": "pPlane1_lambert1_0",
-      "primitives": [
-        {
-          "attributes": {
-            "NORMAL": 7,
-            "POSITION": 6,
-            "TANGENT": 8,
-            "TEXCOORD_0": 9
-          },
-          "indices": 10,
-          "material": 1,
           "mode": 4
         }
       ]
@@ -386,8 +267,7 @@
     },
     {
       "children": [
-        4,
-        6
+        4
       ],
       "name": "RootNode"
     },
@@ -400,16 +280,6 @@
     {
       "mesh": 0,
       "name": "Stone_low_1_Stone_low_1_0"
-    },
-    {
-      "children": [
-        7
-      ],
-      "name": "pPlane1"
-    },
-    {
-      "mesh": 1,
-      "name": "pPlane1_lambert1_0"
     }
   ],
   "samplers": [
@@ -445,10 +315,6 @@
     {
       "sampler": 0,
       "source": 3
-    },
-    {
-      "sampler": 0,
-      "source": 4
     }
   ]
 }

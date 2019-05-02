@@ -30,7 +30,11 @@ use amethyst_rendy::{
     light::{Light, PointLight},
     mtl::{Material, MaterialDefaults},
     palette::{LinSrgba, Srgb},
-    pass::{DrawFlat2DDesc, DrawFlat2DTransparentDesc, DrawSkyboxDesc, DrawPbrDesc, DrawPbrTransparentDesc},
+    pass::{
+        DrawFlat2DDesc, DrawFlat2DTransparentDesc, DrawFlatDesc, DrawFlatTransparentDesc,
+        DrawPbrDesc, DrawPbrTransparentDesc, DrawShadedDesc, DrawShadedTransparentDesc,
+        DrawSkyboxDesc,
+    },
     rendy::{
         factory::Factory,
         graph::{
@@ -43,7 +47,7 @@ use amethyst_rendy::{
             format::Format,
             Backend,
         },
-        mesh::PosNormTangTex,
+        mesh::{Normal, Position, Tangent, TexCoord},
         texture::palette::load_from_linear_rgba,
     },
     resources::Tint,
@@ -110,6 +114,13 @@ impl<'a> System<'a> for OrbitSystem {
     }
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum RenderMode {
+    Flat,
+    Shaded,
+    Pbr,
+}
+
 struct CameraCorrectionSystem {
     last_aspect: f32,
 }
@@ -170,7 +181,10 @@ impl<B: Backend> SimpleState for Example<B> {
         let (mesh, albedo) = {
             let mesh = world.exec(|loader: AssetLoaderSystemData<'_, Mesh<B>>| {
                 loader.load_from_data(
-                    Shape::Sphere(16, 16).generate::<Vec<PosNormTangTex>>(None),
+                    Shape::Sphere(16, 16)
+                        .generate::<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>)>(
+                            None,
+                        ),
                     self.progress.as_mut().unwrap(),
                 )
             });
@@ -337,6 +351,7 @@ impl<B: Backend> SimpleState for Example<B> {
             .build();
 
         world.add_resource(ActiveCamera { entity: camera });
+        world.add_resource(RenderMode::Pbr);
     }
 
     fn handle_event(
@@ -355,6 +370,14 @@ impl<B: Backend> SimpleState for Example<B> {
                     &world.read_storage(),
                     &mut world.write_storage(),
                 );
+                Trans::None
+            } else if is_key_down(&event, winit::VirtualKeyCode::E) {
+                let mut mode = world.write_resource::<RenderMode>();
+                *mode = match *mode {
+                    RenderMode::Flat => RenderMode::Shaded,
+                    RenderMode::Shaded => RenderMode::Pbr,
+                    RenderMode::Pbr => RenderMode::Flat,
+                };
                 Trans::None
             } else {
                 Trans::None
@@ -581,6 +604,8 @@ fn main() -> amethyst::Result<()> {
 
 struct ExampleGraph {
     last_dimensions: Option<ScreenDimensions>,
+    last_mode: RenderMode,
+    surface_format: Option<Format>,
     dirty: bool,
 }
 
@@ -588,6 +613,8 @@ impl ExampleGraph {
     pub fn new() -> Self {
         Self {
             last_dimensions: None,
+            last_mode: RenderMode::Pbr,
+            surface_format: None,
             dirty: true,
         }
     }
@@ -595,6 +622,13 @@ impl ExampleGraph {
 
 impl<B: Backend> GraphCreator<B> for ExampleGraph {
     fn rebuild(&mut self, res: &Resources) -> bool {
+        let new_mode = res.fetch::<RenderMode>();
+
+        if *new_mode != self.last_mode {
+            self.last_mode = *new_mode;
+            return true;
+        }
+
         // Rebuild when dimensions change, but wait until at least two frames have the same.
         let new_dimensions = res.try_fetch::<ScreenDimensions>();
         use std::ops::Deref;
@@ -609,16 +643,20 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
     fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
         self.dirty = false;
 
-        let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
+        let (window, render_mode) =
+            <(ReadExpect<'_, Arc<Window>>, ReadExpect<'_, RenderMode>)>::fetch(res);
 
         let surface = factory.create_surface(window.clone());
+
+        // cache surface format to speed things up
+        let surface_format = *self.surface_format.get_or_insert_with(|| factory.get_surface_format(&surface));
 
         let mut graph_builder = GraphBuilder::new();
 
         let color = graph_builder.create_image(
             surface.kind(),
             1,
-            factory.get_surface_format(&surface),
+            surface_format,
             Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
         );
 
@@ -629,24 +667,52 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
             Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
         );
 
+        let mut opaque_subpass = SubpassBuilder::new();
+        let mut transparent_subpass = SubpassBuilder::new();
+        match *render_mode {
+            RenderMode::Flat => {
+                opaque_subpass.add_group(DrawFlatDesc::default().with_vertex_skinning().builder());
+                transparent_subpass.add_group(
+                    DrawFlatTransparentDesc::default()
+                        .with_vertex_skinning()
+                        .builder(),
+                );
+            }
+            RenderMode::Shaded => {
+                opaque_subpass.add_group(DrawShadedDesc::default().with_vertex_skinning().builder());
+                transparent_subpass.add_group(
+                    DrawShadedTransparentDesc::default()
+                        .with_vertex_skinning()
+                        .builder(),
+                );
+            }
+            RenderMode::Pbr => {
+                opaque_subpass.add_group(DrawPbrDesc::default().with_vertex_skinning().builder());
+                transparent_subpass.add_group(
+                    DrawPbrTransparentDesc::default()
+                        .with_vertex_skinning()
+                        .builder(),
+                );
+            }
+        };
+
         let opaque = graph_builder.add_node(
-            SubpassBuilder::new()
-                .with_group(DrawPbrDesc::default().with_vertex_skinning().builder())
+            opaque_subpass
                 .with_group(DrawFlat2DDesc::default().builder())
-                .with_group(DrawSkyboxDesc::with_colors(Srgb::new(0.82, 0.51, 0.50), Srgb::new(0.18, 0.11, 0.85)).builder())
+                .with_group(
+                    DrawSkyboxDesc::with_colors(
+                        Srgb::new(0.82, 0.51, 0.50),
+                        Srgb::new(0.18, 0.11, 0.85),
+                    )
+                    .builder(),
+                )
                 .with_color(color)
                 .with_depth_stencil(depth)
                 .into_pass(),
         );
 
         let transparent = graph_builder.add_node(
-            SubpassBuilder::new()
-                .with_group(
-                    DrawPbrTransparentDesc::default()
-                        .with_vertex_skinning()
-                        .builder()
-                        .with_dependency(opaque),
-                )
+            transparent_subpass
                 .with_group(
                     DrawFlat2DTransparentDesc::default()
                         .builder()

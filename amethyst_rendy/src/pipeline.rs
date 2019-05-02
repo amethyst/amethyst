@@ -16,6 +16,9 @@ use rendy::{
     mesh::VertexFormat,
 };
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 // TODO: make gfx type cloneable
 #[derive(Derivative, Debug)]
 #[derivative(Clone(bound = ""))]
@@ -191,11 +194,11 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     pub fn set_face_culling(&mut self, cull_face: Face) {
         self.rasterizer.cull_face = cull_face;
     }
-    pub fn with_vertex_desc(mut self, desc: &[(VertexFormat<'static>, InstanceRate)]) -> Self {
+    pub fn with_vertex_desc(mut self, desc: &[(VertexFormat, InstanceRate)]) -> Self {
         self.set_vertex_desc(desc);
         self
     }
-    pub fn set_vertex_desc(&mut self, desc: &[(VertexFormat<'static>, InstanceRate)]) {
+    pub fn set_vertex_desc(&mut self, desc: &[(VertexFormat, InstanceRate)]) {
         let (vbos, attrs) = util::vertex_desc(desc);
         self.set_vertex_buffers(vbos);
         self.set_attributes(attrs);
@@ -267,6 +270,9 @@ impl<'a, B: Backend> PipelinesBuilder<'a, B> {
         factory: &Factory<B>,
         cache: Option<&B::PipelineCache>,
     ) -> Result<Vec<B::GraphicsPipeline>, failure::Error> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("create_pipelines");
+
         let mut pipelines = unsafe {
             factory
                 .device()

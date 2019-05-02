@@ -15,7 +15,6 @@ layout(location = 2) in vec4 tangent;
 layout(location = 3) in vec2 tex_coord;
 layout(location = 4) in uvec4 joint_ids;
 layout(location = 5) in vec4 joint_weights;
-
 layout(location = 6) in mat4 model; // instance rate
 layout(location = 10) in vec4 tint; // instance rate
 layout(location = 11) in uint joints_offset; // instance rate
@@ -30,7 +29,8 @@ layout(location = 0) out VertexData {
 } vertex;
 
 void main() {
-    mat4 joint_transform = joint_weights.x * joints[int(joints_offset + joint_ids.x)] +
+    mat4 joint_transform =
+        joint_weights.x * joints[int(joints_offset + joint_ids.x)] +
         joint_weights.y * joints[int(joints_offset + joint_ids.y)] +
         joint_weights.z * joints[int(joints_offset + joint_ids.z)] +
         joint_weights.w * joints[int(joints_offset + joint_ids.w)];

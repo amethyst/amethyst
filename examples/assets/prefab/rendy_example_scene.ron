@@ -137,6 +137,28 @@ Prefab (
         (
             data: (
                 transform: (
+                    translation: (10.0, 3.3, 8),
+                ),
+                light: (
+                    light: Spot((
+                        intensity: 5.0,
+                        color: (
+                            red: 1.0,
+                            green: 1.0,
+                            blue: 1.0,
+                        ),
+                        angle: 90.0,
+                        range: 32.0,
+                        smoothness: 0.1,
+                        direction: [0.0, -0.3, -1.0],
+                    )),
+                ),
+            ),
+        ),
+        (
+            data: (
+                transform: (
+                    translation: (-5.0, 0.0, 0.0),
                     scale: (10.0, 10.0, 10.0),
                 ),
                 gltf: File("large/SciFiHelmet/SciFiHelmet.gltf", GltfSceneFormat, ()),
@@ -144,9 +166,39 @@ Prefab (
         ),
         (
             data: (
+                transform: (
+                    scale: (2.0, 2.0, 2.0),
+                    translation: (-10.0, 0.0, 0.0),
+                ),
+                gltf: File("large/crystal_stone/scene.gltf", GltfSceneFormat, ()),
+            ),
+        ),
+        (
+            data: (
+                transform: (
+                    translation: (0.0, 1.5, 0.0),
+                ),
                 gltf: File("large/NormalTangentMirrorTest.glb", GltfSceneFormat, ()),
             ),
         ),
+        (
+            data: (
+                transform: (
+                    translation: (0.0, -1.5, 0.0),
+                ),
+                gltf: File("large/NormalTangentTest.glb", GltfSceneFormat, ()),
+            ),
+        ),
+        (
+            data: (
+                transform: (
+                    scale: (0.3, 0.3, 0.3),
+                    translation: (5.0, -3.5, 0.0),
+                ),
+                tag: (),
+                gltf: File("large/InterpolationTest.glb", GltfSceneFormat, ()),
+            ),
+        ),        
         (
             data: (
                 // SpriteRenderPrefab

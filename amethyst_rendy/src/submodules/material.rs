@@ -1,5 +1,5 @@
 use crate::{
-    mtl::Material,
+    mtl::{Material, StaticTextureSet},
     pod,
     rendy::{
         command::RenderPassEncoder,
@@ -135,24 +135,26 @@ enum MaterialState<B: Backend> {
 pub struct MaterialId(u32);
 
 #[derive(Debug)]
-pub struct MaterialSub<B: Backend> {
+pub struct MaterialSub<B: Backend, T: for<'a> StaticTextureSet<'a, B>> {
     generation: u32,
     layout: RendyHandle<DescriptorSetLayout<B>>,
     lookup: util::LookupBuilder<u32>,
     allocator: SlotAllocator,
     buffers: Vec<SlottedBuffer<B>>,
     materials: Vec<MaterialState<B>>,
+    marker: std::marker::PhantomData<T>,
 }
 
-impl<B: Backend> MaterialSub<B> {
+impl<B: Backend, T: for<'a> StaticTextureSet<'a, B>> MaterialSub<B, T> {
     pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
         Ok(Self {
-            layout: set_layout! {factory, 1 UniformBuffer FRAGMENT, 6 CombinedImageSampler FRAGMENT},
+            layout: set_layout! {factory, [1] UniformBuffer FRAGMENT, [T::len()] CombinedImageSampler FRAGMENT},
             lookup: util::LookupBuilder::new(),
             allocator: SlotAllocator::new(1024),
             buffers: vec![Self::create_buffer(factory)?],
             materials: Vec::with_capacity(1024),
             generation: 0,
+            marker: std::marker::PhantomData,
         })
     }
 
@@ -205,12 +207,10 @@ impl<B: Backend> MaterialSub<B> {
         )>::fetch(res);
 
         let mat = mat_storage.get(handle)?;
-        let t_albedo = tex_storage.get(&mat.albedo)?;
-        let t_emission = tex_storage.get(&mat.emission)?;
-        let t_normal = tex_storage.get(&mat.normal)?;
-        let t_met_rough = tex_storage.get(&mat.metallic_roughness)?;
-        let t_ao = tex_storage.get(&mat.ambient_occlusion)?;
-        let t_cavity = tex_storage.get(&mat.cavity)?;
+
+        if T::textures(mat).any(|t| !tex_storage.contains(t)) {
+            return None;
+        }
 
         let pod = pod::Material::from_material(&mat).std140();
 
@@ -227,17 +227,21 @@ impl<B: Backend> MaterialSub<B> {
         }
         self.buffers[buf_num].write(factory, buf_slot, slice_as_bytes(&[pod]));
         let set = factory.create_descriptor_set(self.layout.clone()).unwrap();
+        let buf_desc = self.buffers[buf_num].descriptor(buf_slot);
+
         unsafe {
             let set = set.raw();
-            factory.write_descriptor_sets(vec![
-                desc_write(set, 0, self.buffers[buf_num].descriptor(buf_slot)),
-                desc_write(set, 1, texture_desc(t_albedo)),
-                desc_write(set, 2, texture_desc(t_emission)),
-                desc_write(set, 3, texture_desc(t_normal)),
-                desc_write(set, 4, texture_desc(t_met_rough)),
-                desc_write(set, 5, texture_desc(t_ao)),
-                desc_write(set, 6, texture_desc(t_cavity)),
-            ]);
+
+            let tex_descs = T::textures(mat).enumerate().map(|(i, t)| {
+                desc_write(
+                    set,
+                    (i + 1) as u32,
+                    texture_desc(tex_storage.get(t).unwrap()),
+                )
+            });
+
+            let desc_iter = std::iter::once(desc_write(set, 0, buf_desc)).chain(tex_descs);
+            factory.write_descriptor_sets(desc_iter);
         }
         Some(MaterialState::Loaded {
             set,

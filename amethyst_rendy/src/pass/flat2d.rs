@@ -211,8 +211,10 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
         self.env.bind(index, layout, 0, &mut encoder);
         self.vertex.bind(index, 0, &mut encoder);
         for (&tex, range) in self.sprites.iter() {
-            self.textures.bind(layout, 1, tex, &mut encoder);
-            encoder.draw(0..6, range);
+            if self.textures.loaded(tex) {
+                self.textures.bind(layout, 1, tex, &mut encoder);
+                encoder.draw(0..6, range);
+            }
         }
     }
 
@@ -374,8 +376,10 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
         self.env.bind(index, layout, 0, &mut encoder);
         self.vertex.bind(index, 0, &mut encoder);
         for (&tex, range) in self.sprites.iter() {
-            self.textures.bind(layout, 1, tex, &mut encoder);
-            encoder.draw(0..6, range);
+            if self.textures.loaded(tex) {
+                self.textures.bind(layout, 1, tex, &mut encoder);
+                encoder.draw(0..6, range);
+            }
         }
     }
 
@@ -409,7 +413,7 @@ fn build_sprite_pipeline<B: Backend>(
     let pipes = PipelinesBuilder::new()
         .with_pipeline(
             PipelineDescBuilder::new()
-                .with_vertex_desc(&[(SpriteArgs::VERTEX, 1)])
+                .with_vertex_desc(&[(SpriteArgs::vertex(), 1)])
                 .with_shaders(util::simple_shader_set(
                     &shader_vertex,
                     Some(&shader_fragment),

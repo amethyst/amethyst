@@ -1,5 +1,5 @@
 use crate::{
-    shape::{InternalShape, ShapePrefab},
+    shape::{FromShape, ShapePrefab},
     types::Mesh,
 };
 use amethyst_assets::{
@@ -54,7 +54,7 @@ impl<'a, B, V, F> PrefabData<'a> for MeshPrefab<B, V, F>
 where
     B: Backend,
     F: Format<Mesh<B>>,
-    V: From<InternalShape> + Into<MeshBuilder<'static>>,
+    V: FromShape + Into<MeshBuilder<'static>>,
 {
     type SystemData = (
         ReadExpect<'a, Loader>,

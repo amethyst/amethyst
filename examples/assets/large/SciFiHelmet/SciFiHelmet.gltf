@@ -164,25 +164,12 @@
          "mode": 4
       }]
    }],
-   "nodes": [{
-         "name": "Camera",
-         "rotation": [
-            0.483536,
-            0.336872,
-            -0.208704,
-            0.780483
-         ],
-         "translation": [
-            7.481132,
-            5.343665,
-            6.507640
-         ]
-      },
+   "nodes": [
       {
          "mesh": 0,
          "name": "SciFiHelmet",
          "translation": [
-            -0.5,
+            0.0,
             0.0,
             0.0
          ],
@@ -197,8 +184,7 @@
    "scene": 0,
    "scenes": [{
       "nodes": [
-         0,
-         1
+         0
       ]
    }],
    "textures": [{

@@ -1,5 +1,8 @@
 use super::base_3d::*;
-use crate::{mtl::FullTextureSet, skinning::JointCombined};
+use crate::{
+    mtl::{TexAlbedo, TexEmission},
+    skinning::JointCombined,
+};
 use rendy::{
     hal::Backend,
     mesh::{AsVertex, Normal, Position, Tangent, TexCoord, VertexFormat},
@@ -7,10 +10,10 @@ use rendy::{
 };
 
 #[derive(Debug)]
-pub struct PbrPassDef;
-impl<B: Backend> Base3DPassDef<B> for PbrPassDef {
-    const NAME: &'static str = "Pbr";
-    type TextureSet = FullTextureSet;
+pub struct ShadedPassDef;
+impl<B: Backend> Base3DPassDef<B> for ShadedPassDef {
+    const NAME: &'static str = "Shaded";
+    type TextureSet = (TexAlbedo, TexEmission);
     fn vertex_shader() -> &'static SpirvShader {
         &super::POS_NORM_TANG_TEX_VERTEX
     }
@@ -18,7 +21,7 @@ impl<B: Backend> Base3DPassDef<B> for PbrPassDef {
         &super::POS_NORM_TANG_TEX_SKIN_VERTEX
     }
     fn fragment_shader() -> &'static SpirvShader {
-        &super::PBR_FRAGMENT
+        &super::SHADED_FRAGMENT
     }
     fn base_format() -> Vec<VertexFormat> {
         vec![
@@ -39,7 +42,7 @@ impl<B: Backend> Base3DPassDef<B> for PbrPassDef {
     }
 }
 
-pub type DrawPbrDesc<B> = DrawBase3DDesc<B, PbrPassDef>;
-pub type DrawPbr<B> = DrawBase3D<B, PbrPassDef>;
-pub type DrawPbrTransparentDesc<B> = DrawBase3DTransparentDesc<B, PbrPassDef>;
-pub type DrawPbrTransparent<B> = DrawBase3DTransparent<B, PbrPassDef>;
+pub type DrawShadedDesc<B> = DrawBase3DDesc<B, ShadedPassDef>;
+pub type DrawShaded<B> = DrawBase3D<B, ShadedPassDef>;
+pub type DrawShadedTransparentDesc<B> = DrawBase3DTransparentDesc<B, ShadedPassDef>;
+pub type DrawShadedTransparent<B> = DrawBase3DTransparent<B, ShadedPassDef>;

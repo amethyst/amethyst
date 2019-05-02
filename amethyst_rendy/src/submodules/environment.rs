@@ -39,7 +39,7 @@ struct PerImageEnvironmentSub<B: Backend> {
 impl<B: Backend> EnvironmentSub<B> {
     pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
         Ok(Self {
-            layout: set_layout! {factory, 1 UniformBuffer VERTEX, 4 UniformBuffer FRAGMENT},
+            layout: set_layout! {factory, [1] UniformBuffer VERTEX, [4] UniformBuffer FRAGMENT},
             per_image: Vec::new(),
         })
     }

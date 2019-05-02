@@ -8,7 +8,7 @@ use self::{
     texture::ImageFormat,
 };
 use crate::{
-    shape::InternalShape,
+    shape::FromShape,
     types::{Mesh, Texture},
 };
 use amethyst_assets::{Format, PrefabData, ProgressCounter};
@@ -49,7 +49,7 @@ where
     M: Format<Mesh<B>> + Clone,
     M::Options: Clone + DeserializeOwned + Serialize,
     T: Format<Texture<B>, Options = ImageTextureConfig> + Sync + Clone,
-    V: From<InternalShape> + Into<MeshBuilder<'static>>,
+    V: FromShape + Into<MeshBuilder<'static>>,
 {
     type SystemData = (
         <MeshPrefab<B, V, M> as PrefabData<'a>>::SystemData,

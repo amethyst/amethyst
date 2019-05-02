@@ -1,14 +1,37 @@
+mod base_3d;
+mod flat;
 mod flat2d;
 mod pbr;
+mod shaded;
 mod skybox;
 
-pub use self::{flat2d::*, pbr::*, skybox::*};
+pub use self::{base_3d::*, flat::*, flat2d::*, pbr::*, shaded::*, skybox::*};
 
 use rendy::shader::{ShaderKind, SourceLanguage, SpirvShader, StaticShaderInfo};
 
 lazy_static::lazy_static! {
-    static ref BASIC_VERTEX: SpirvShader = StaticShaderInfo::new(
-        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/vertex/basic.vert"),
+    static ref POS_TEX_VERTEX: SpirvShader = StaticShaderInfo::new(
+        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/vertex/pos_tex.vert"),
+        ShaderKind::Vertex,
+        SourceLanguage::GLSL,
+        "main",
+    ).precompile().unwrap();
+
+    static ref POS_TEX_SKIN_VERTEX: SpirvShader = StaticShaderInfo::new(
+        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/vertex/pos_tex_skin.vert"),
+        ShaderKind::Vertex,
+        SourceLanguage::GLSL,
+        "main",
+    ).precompile().unwrap();
+    static ref POS_NORM_TANG_TEX_VERTEX: SpirvShader = StaticShaderInfo::new(
+        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/vertex/pos_norm_tang_tex.vert"),
+        ShaderKind::Vertex,
+        SourceLanguage::GLSL,
+        "main",
+    ).precompile().unwrap();
+
+    static ref POS_NORM_TANG_TEX_SKIN_VERTEX: SpirvShader = StaticShaderInfo::new(
+        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/vertex/pos_norm_tang_tex_skin.vert"),
         ShaderKind::Vertex,
         SourceLanguage::GLSL,
         "main",
@@ -21,16 +44,23 @@ lazy_static::lazy_static! {
         "main",
     ).precompile().unwrap();
 
-    static ref PBR_FRAGMENT: SpirvShader = StaticShaderInfo::new(
-        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/fragment/pbr.frag"),
+    static ref SHADED_FRAGMENT: SpirvShader = StaticShaderInfo::new(
+        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/fragment/shaded.frag"),
         ShaderKind::Fragment,
         SourceLanguage::GLSL,
         "main",
     ).precompile().unwrap();
 
-    static ref SKINNED_VERTEX: SpirvShader = StaticShaderInfo::new(
-        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/vertex/skinned.vert"),
+    static ref PBR_SKINNED_VERTEX: SpirvShader = StaticShaderInfo::new(
+        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/vertex/pbr_skinned.vert"),
         ShaderKind::Vertex,
+        SourceLanguage::GLSL,
+        "main",
+    ).precompile().unwrap();
+
+    static ref PBR_FRAGMENT: SpirvShader = StaticShaderInfo::new(
+        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/fragment/pbr.frag"),
+        ShaderKind::Fragment,
         SourceLanguage::GLSL,
         "main",
     ).precompile().unwrap();

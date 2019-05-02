@@ -11,7 +11,10 @@ use amethyst_rendy::{
     camera::CameraPrefab,
     formats::{mesh::MeshPrefab, mtl::MaterialPrefab},
     light::LightPrefab,
-    rendy::{hal::Backend, mesh::PosNormTangTex},
+    rendy::{
+        hal::Backend,
+        mesh::{Normal, Position, Tangent, TexCoord},
+    },
     sprite::{
         prefab::{SpriteRenderPrefab, SpriteSheetPrefab},
         SpriteRender,
@@ -41,6 +44,8 @@ pub struct Scene<B: Backend> {
     pub animation_index: usize,
 }
 
+type GenMeshVertex = (Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>);
+
 #[derive(Derivative, Deserialize, Serialize)]
 #[derivative(Default(bound = ""))]
 #[serde(default, bound = "")]
@@ -54,7 +59,7 @@ pub struct ScenePrefabData<B: Backend> {
     tag: Option<Tag<AnimationMarker>>,
     fly_tag: Option<ControlTagPrefab>,
     sprite: Option<SpriteRenderPrefab<B>>,
-    mesh: Option<MeshPrefab<B, Vec<PosNormTangTex>>>,
+    mesh: Option<MeshPrefab<B, GenMeshVertex>>,
     material: Option<MaterialPrefab<B>>,
     transparent: Option<Transparent>,
 }
@@ -71,7 +76,7 @@ impl<'a, B: Backend> PrefabData<'a> for ScenePrefabData<B> {
         PData<'a, Tag<AnimationMarker>>,
         PData<'a, ControlTagPrefab>,
         PData<'a, SpriteRenderPrefab<B>>,
-        PData<'a, MeshPrefab<B, Vec<PosNormTangTex>>>,
+        PData<'a, MeshPrefab<B, GenMeshVertex>>,
         PData<'a, MaterialPrefab<B>>,
     );
     type Result = ();
@@ -82,10 +87,6 @@ impl<'a, B: Backend> PrefabData<'a> for ScenePrefabData<B> {
         e: &[Entity],
         c: &[Entity],
     ) -> Result<(), Error> {
-        self.transform
-            .as_ref()
-            .map(|p| p.add_to_entity(entity, &mut d.0, e, c))
-            .transpose()?;
         self.gltf
             .as_ref()
             .map(|p| p.add_to_entity(entity, &mut d.1, e, c))
@@ -129,6 +130,10 @@ impl<'a, B: Backend> PrefabData<'a> for ScenePrefabData<B> {
         self.transparent
             .as_ref()
             .map(|p| p.add_to_entity(entity, &mut (d.10).1, e, c))
+            .transpose()?;
+        self.transform
+            .as_ref()
+            .map(|p| p.add_to_entity(entity, &mut d.0, e, c))
             .transpose()?;
         Ok(())
     }

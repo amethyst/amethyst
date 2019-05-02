@@ -1,6 +1,6 @@
 use crate::{
     mtl,
-    resources::Tint,
+    resources::Tint as TintComponent,
     sprite::{SpriteRender, SpriteSheet},
     types::Texture,
 };
@@ -9,9 +9,8 @@ use amethyst_core::{math::Vector4, GlobalTransform};
 use glsl_layout::*;
 use rendy::{
     hal::{format::Format, Backend},
-    mesh::{AsVertex, Attribute, VertexFormat},
+    mesh::{AsAttribute, AsVertex, Model, VertexFormat},
 };
-use std::borrow::Cow;
 
 #[derive(Clone, Copy, Debug, AsStd140)]
 #[repr(C, align(16))]
@@ -38,6 +37,17 @@ pub struct ViewArgs {
 
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
 #[repr(C, align(16))]
+pub struct Tint {
+    pub tint: vec4,
+}
+
+impl AsAttribute for Tint {
+    const NAME: &'static str = "tint";
+    const FORMAT: Format = Format::Rgba32Float;
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
+#[repr(C, align(16))]
 pub struct VertexArgs {
     pub model: mat4,
     pub tint: vec4,
@@ -45,7 +55,7 @@ pub struct VertexArgs {
 
 impl VertexArgs {
     #[inline]
-    pub fn from_object_data(object: &GlobalTransform, tint: Option<&Tint>) -> Self {
+    pub fn from_object_data(object: &GlobalTransform, tint: Option<&TintComponent>) -> Self {
         let model: [[f32; 4]; 4] = (*object).into();
         VertexArgs {
             model: model.into(),
@@ -58,31 +68,20 @@ impl VertexArgs {
 }
 
 impl AsVertex for VertexArgs {
-    const VERTEX: VertexFormat<'static> = VertexFormat {
-        attributes: Cow::Borrowed(&[
-            Attribute {
-                format: Format::Rgba32Float,
-                offset: 0,
-            },
-            Attribute {
-                format: Format::Rgba32Float,
-                offset: 16,
-            },
-            Attribute {
-                format: Format::Rgba32Float,
-                offset: 32,
-            },
-            Attribute {
-                format: Format::Rgba32Float,
-                offset: 48,
-            },
-            Attribute {
-                format: Format::Rgba32Float,
-                offset: 64,
-            },
-        ]),
-        stride: 80,
-    };
+    fn vertex() -> VertexFormat {
+        VertexFormat::new((Model::vertex(), Tint::vertex()))
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
+#[repr(C, align(4))]
+pub struct JointsOffset {
+    pub tint: uint,
+}
+
+impl AsAttribute for JointsOffset {
+    const NAME: &'static str = "joints_offset";
+    const FORMAT: Format = Format::R32Uint;
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
@@ -93,11 +92,17 @@ pub struct SkinnedVertexArgs {
     pub joints_offset: uint,
 }
 
+impl AsVertex for SkinnedVertexArgs {
+    fn vertex() -> VertexFormat {
+        VertexFormat::new((Model::vertex(), Tint::vertex(), JointsOffset::vertex()))
+    }
+}
+
 impl SkinnedVertexArgs {
     #[inline]
     pub fn from_object_data(
         object: &GlobalTransform,
-        tint: Option<&Tint>,
+        tint: Option<&TintComponent>,
         joints_offset: u32,
     ) -> Self {
         let model: [[f32; 4]; 4] = (*object).into();
@@ -110,38 +115,6 @@ impl SkinnedVertexArgs {
             joints_offset,
         }
     }
-}
-
-impl AsVertex for SkinnedVertexArgs {
-    const VERTEX: VertexFormat<'static> = VertexFormat {
-        attributes: Cow::Borrowed(&[
-            Attribute {
-                format: Format::Rgba32Float,
-                offset: 0,
-            },
-            Attribute {
-                format: Format::Rgba32Float,
-                offset: 16,
-            },
-            Attribute {
-                format: Format::Rgba32Float,
-                offset: 32,
-            },
-            Attribute {
-                format: Format::Rgba32Float,
-                offset: 48,
-            },
-            Attribute {
-                format: Format::Rgba32Float,
-                offset: 64,
-            },
-            Attribute {
-                format: Format::R32Uint,
-                offset: 80,
-            },
-        ]),
-        stride: 84,
-    };
 }
 
 #[derive(Clone, Copy, Debug, AsStd140)]
@@ -204,6 +177,19 @@ pub struct SpriteArgs {
     pub depth: float,
 }
 
+impl AsVertex for SpriteArgs {
+    fn vertex() -> VertexFormat {
+        VertexFormat::new((
+            (Format::Rg32Float, "dir_x"),
+            (Format::Rg32Float, "dir_y"),
+            (Format::Rg32Float, "pos"),
+            (Format::Rg32Float, "u_offset"),
+            (Format::Rg32Float, "v_offset"),
+            (Format::R32Float, "depth"),
+        ))
+    }
+}
+
 impl SpriteArgs {
     pub fn from_data<'a, B: Backend>(
         tex_storage: &AssetStorage<Texture<B>>,
@@ -235,38 +221,6 @@ impl SpriteArgs {
             &sprite_sheet.texture,
         ))
     }
-}
-
-impl AsVertex for SpriteArgs {
-    const VERTEX: VertexFormat<'static> = VertexFormat {
-        attributes: Cow::Borrowed(&[
-            Attribute {
-                format: Format::Rg32Float,
-                offset: 0,
-            },
-            Attribute {
-                format: Format::Rg32Float,
-                offset: 8,
-            },
-            Attribute {
-                format: Format::Rg32Float,
-                offset: 16,
-            },
-            Attribute {
-                format: Format::Rg32Float,
-                offset: 24,
-            },
-            Attribute {
-                format: Format::Rg32Float,
-                offset: 32,
-            },
-            Attribute {
-                format: Format::R32Float,
-                offset: 40,
-            },
-        ]),
-        stride: 44,
-    };
 }
 
 pub trait IntoPod<T> {

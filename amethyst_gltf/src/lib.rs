@@ -180,8 +180,20 @@ pub struct GltfMaterialSet<B: Backend> {
 pub struct GltfSceneOptions {
     /// Generate texture coordinates if none exist in the Gltf file
     pub generate_tex_coords: (f32, f32),
-    /// Load animation data from the Gltf file
     #[derivative(Default(value = "true"))]
+    /// Load vertex normal data from the Gltf file
+    pub load_normals: bool,
+    #[derivative(Default(value = "true"))]
+    /// Load vertex color data from the Gltf file
+    pub load_colors: bool,
+    #[derivative(Default(value = "true"))]
+    /// Load texture coordinates data from the Gltf file
+    pub load_texcoords: bool,
+    #[derivative(Default(value = "true"))]
+    /// Load vertex tangent data from the Gltf file
+    pub load_tangents: bool,
+    #[derivative(Default(value = "true"))]
+    /// Load animation data from the Gltf file
     pub load_animations: bool,
     /// Flip the v coordinate for all texture coordinates
     pub flip_v_coord: bool,

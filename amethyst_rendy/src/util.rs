@@ -15,6 +15,7 @@ use rendy::{
     mesh::VertexFormat,
     resource::{BufferInfo, Escape},
 };
+use smallvec::SmallVec;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -100,16 +101,23 @@ pub fn simple_shader_set_ext<'a, B: Backend>(
 }
 
 pub fn vertex_desc(
-    formats: &[(VertexFormat<'static>, pso::InstanceRate)],
+    formats: &[(VertexFormat, pso::InstanceRate)],
 ) -> (Vec<pso::VertexBufferDesc>, Vec<pso::AttributeDesc>) {
     let mut vertex_buffers = Vec::with_capacity(formats.len());
     let mut attributes = Vec::with_capacity(formats.len());
-    for (format, rate) in formats {
+
+    let mut sorted: SmallVec<[_; 16]> = formats.iter().enumerate().collect();
+    sorted.sort_unstable_by(|a, b| a.1.cmp(&b.1));
+
+    let mut loc_offset = 0;
+    for (loc_base, (format, rate)) in sorted {
         push_vertex_desc(
             format.gfx_vertex_input_desc(*rate),
+            loc_base as pso::Location + loc_offset,
             &mut vertex_buffers,
             &mut attributes,
-        )
+        );
+        loc_offset += format.attributes.len() as pso::Location - 1;
     }
     (vertex_buffers, attributes)
 }
@@ -120,6 +128,7 @@ pub fn push_vertex_desc(
         pso::ElemStride,
         pso::InstanceRate,
     ),
+    mut location: pso::Location,
     vertex_buffers: &mut Vec<pso::VertexBufferDesc>,
     attributes: &mut Vec<pso::AttributeDesc>,
 ) {
@@ -130,7 +139,6 @@ pub fn push_vertex_desc(
         rate,
     });
 
-    let mut location = attributes.last().map_or(0, |a| a.location + 1);
     for element in elements.into_iter() {
         attributes.push(pso::AttributeDesc {
             location,

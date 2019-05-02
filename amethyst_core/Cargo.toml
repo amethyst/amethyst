@@ -30,7 +30,7 @@ specs = { version = "0.14", features = ["common"] }
 specs-hierarchy = { version = "0.3" }
 shrev = "1.0"
 
-thread_profiler = { version = "0.3" , optional = true }
+thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
 amethyst = { path = "..", version = "0.10.0" }

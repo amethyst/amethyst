@@ -86,6 +86,8 @@ type SetupData<'a, B> = (
     ReadStorage<'a, JointTransforms>,
 );
 
+// struct MeshProcessor<B: Backend>(PhantomData<B>);
+
 impl<B, G> RendererSystem<B, G>
 where
     B: Backend,
@@ -114,6 +116,9 @@ where
 
         mesh_storage.process(
             |b| {
+                #[cfg(feature = "profiler")]
+                profile_scope!("process_mesh");
+
                 b.build(queue_id, &mut factory)
                     .map(Mesh)
                     .map(ProcessingState::Loaded)
@@ -126,6 +131,9 @@ where
 
         texture_storage.process(
             |b| {
+                #[cfg(feature = "profiler")]
+                profile_scope!("process_texture");
+
                 b.build(
                     ImageState {
                         queue: queue_id,
@@ -145,7 +153,12 @@ where
         );
 
         material_storage.process(
-            ProcessableAsset::process,
+            |b| {
+                #[cfg(feature = "profiler")]
+                profile_scope!("process_material");
+
+                ProcessableAsset::process(b)
+            },
             time.frame_number(),
             &**pool,
             strategy,
@@ -159,15 +172,26 @@ where
         let mut factory = res.fetch_mut::<Factory<B>>();
 
         if let Some(graph) = self.graph.take() {
+            #[cfg(feature = "profiler")]
+            profile_scope!("dispose_graph");
             graph.dispose(&mut *factory, res);
         }
 
-        self.graph = Some(
-            self.graph_creator
-                .builder(&mut factory, res)
+        let builder = {
+            #[cfg(feature = "profiler")]
+            profile_scope!("run_graph_creator");
+            self.graph_creator.builder(&mut factory, res)
+        };
+
+        let graph = {
+            #[cfg(feature = "profiler")]
+            profile_scope!("build_graph");
+            builder
                 .build(&mut factory, self.families.as_mut().unwrap(), res)
-                .unwrap(),
-        );
+                .unwrap()
+        };
+
+        self.graph = Some(graph);
     }
 
     fn run_graph(&mut self, res: &Resources) {

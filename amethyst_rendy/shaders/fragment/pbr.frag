@@ -139,10 +139,8 @@ vec3 compute_light(vec3 attenuation,
 
 void main() {
     vec2 final_tex_coords   = tex_coords(vertex.tex_coord, uv_offset.u_offset, uv_offset.v_offset);
-    vec4 albedo_alpha       = texture(albedo, final_tex_coords).rgba;
+    vec4 albedo_alpha       = texture(albedo, final_tex_coords);
     float alpha             = albedo_alpha.a;
-
-    // TODO: what if alpha_cutoff is zero?
     if(alpha < alpha_cutoff) discard;
 
     vec3 albedo             = albedo_alpha.rgb;
@@ -151,12 +149,9 @@ void main() {
     vec2 metallic_roughness = texture(metallic_roughness, final_tex_coords).bg;
     float ambient_occlusion = texture(ambient_occlusion, final_tex_coords).r;
     // TODO: Use cavity
-    // float cavity            = texture(cavity, tex_coords(vertex.tex_coord, cavity_offset.u_offset, cavity_offset.v_offset)).r;
+    // float cavity            = texture(cavity, tex_coords(vertex.tex_coord, final_tex_coords).r;
     float metallic          = metallic_roughness.r;
     float roughness         = metallic_roughness.g;
-    
-    // out_color = vec4(mod(final_tex_coords, vec2(1.0)), 0.0, 1.0);
-    // return;
 
     // normal conversion
     normal = normal * 2 - 1;

@@ -46,7 +46,7 @@ pub struct ShapePrefab<B: Backend, V> {
 
 impl<'a, B, V> PrefabData<'a> for ShapePrefab<B, V>
 where
-    V: From<InternalShape> + Into<MeshBuilder<'static>>,
+    V: FromShape + Into<MeshBuilder<'static>>,
     B: Backend,
 {
     type SystemData = (
@@ -115,11 +115,31 @@ pub struct ShapeUpload<'a, B: Backend> {
     storage: Read<'a, AssetStorage<Mesh<B>>>,
 }
 
-pub type VertexFormat = ([f32; 3], [f32; 3], [f32; 2], [f32; 3]);
+pub type InternalVertexData = ([f32; 3], [f32; 3], [f32; 2], [f32; 3]);
 
 /// Internal Shape, used for transformation from `genmesh` to `MeshBuilder`
 #[derive(Debug)]
-pub struct InternalShape(Vec<VertexFormat>);
+pub struct InternalShape(Vec<InternalVertexData>);
+
+impl InternalShape {
+    fn map_into<T, F: FnMut(&InternalVertexData) -> T>(&self, f: F) -> Vec<T> {
+        self.0.iter().map(f).collect()
+    }
+}
+
+pub trait FromShape {
+    fn from(shape: &InternalShape) -> Self;
+}
+
+pub trait FromInternalVertex {
+    fn from_internal(v: &InternalVertexData) -> Self;
+}
+
+impl<T: FromInternalVertex> FromShape for Vec<T> {
+    fn from(shape: &InternalShape) -> Self {
+        shape.map_into(T::from_internal)
+    }
+}
 
 impl Shape {
     /// Generate `Mesh` for the `Shape`, and convert it into a `Handle<Mesh>`.
@@ -144,7 +164,7 @@ impl Shape {
         progress: P,
     ) -> Handle<Mesh<B>>
     where
-        V: From<InternalShape> + Into<MeshBuilder<'static>>,
+        V: FromShape + Into<MeshBuilder<'static>>,
         P: Progress,
     {
         upload
@@ -167,9 +187,9 @@ impl Shape {
     ///     * `ComboMeshCreator`
     pub fn generate<V>(&self, scale: Option<(f32, f32, f32)>) -> MeshBuilder<'static>
     where
-        V: From<InternalShape> + Into<MeshBuilder<'static>>,
+        V: FromShape + Into<MeshBuilder<'static>>,
     {
-        V::from(self.generate_internal(scale)).into()
+        V::from(&self.generate_internal(scale)).into()
     }
 
     /// Generate vertices for the `Shape`, in format `V`
@@ -187,9 +207,9 @@ impl Shape {
     ///     * `ComboMeshCreator`
     pub fn generate_vertices<V>(&self, scale: Option<(f32, f32, f32)>) -> V
     where
-        V: From<InternalShape>,
+        V: FromShape,
     {
-        V::from(self.generate_internal(scale))
+        V::from(&self.generate_internal(scale))
     }
 
     fn generate_internal(&self, scale: Option<(f32, f32, f32)>) -> InternalShape {
@@ -226,7 +246,10 @@ impl Shape {
     }
 }
 
-fn generate_vertices<F, P, G>(generator: G, scale: Option<(f32, f32, f32)>) -> Vec<VertexFormat>
+fn generate_vertices<F, P, G>(
+    generator: G,
+    scale: Option<(f32, f32, f32)>,
+) -> Vec<InternalVertexData>
 where
     F: EmitTriangles<Vertex = Vertex>,
     F::Vertex: Clone + Copy + PartialEq,
@@ -262,47 +285,77 @@ where
         .collect::<Vec<_>>()
 }
 
-impl From<InternalShape> for Vec<PosTex> {
-    fn from(shape: InternalShape) -> Self {
-        shape
-            .0
-            .iter()
-            .map(|v| PosTex {
-                position: Position([v.0[0], v.0[1], v.0[2]]),
-                tex_coord: TexCoord([v.2[0], v.2[1]]),
-            })
-            .collect()
+impl FromInternalVertex for Position {
+    fn from_internal(v: &InternalVertexData) -> Self {
+        Position([v.0[0], v.0[1], v.0[2]])
     }
 }
 
-impl From<InternalShape> for Vec<PosNormTex> {
-    fn from(shape: InternalShape) -> Self {
-        shape
-            .0
-            .iter()
-            .map(|v| PosNormTex {
-                position: Position([v.0[0], v.0[1], v.0[2]]),
-                tex_coord: TexCoord([v.2[0], v.2[1]]),
-                normal: Normal([v.1[0], v.1[1], v.1[2]]),
-            })
-            .collect()
+impl FromInternalVertex for TexCoord {
+    fn from_internal(v: &InternalVertexData) -> Self {
+        TexCoord([v.2[0], v.2[1]])
     }
 }
 
-impl From<InternalShape> for Vec<PosNormTangTex> {
-    fn from(shape: InternalShape) -> Self {
-        shape
-            .0
-            .iter()
-            .map(|v| PosNormTangTex {
-                position: Position([v.0[0], v.0[1], v.0[2]]),
-                tex_coord: TexCoord([v.2[0], v.2[1]]),
-                normal: Normal([v.1[0], v.1[1], v.1[2]]),
-                tangent: Tangent([v.3[0], v.3[1], v.3[2], 1.0]),
-            })
-            .collect()
+impl FromInternalVertex for Normal {
+    fn from_internal(v: &InternalVertexData) -> Self {
+        Normal([v.1[0], v.1[1], v.1[2]])
     }
 }
+
+impl FromInternalVertex for Tangent {
+    fn from_internal(v: &InternalVertexData) -> Self {
+        Tangent([v.3[0], v.3[1], v.3[2], 1.0])
+    }
+}
+
+macro_rules! impl_interleaved {
+    ($($type:ident { $($member:ident),*}),*,) => {
+        $(impl FromInternalVertex for $type {
+            fn from_internal(v: &InternalVertexData) -> Self {
+                Self {
+                    $($member: FromInternalVertex::from_internal(v),)*
+                }
+            }
+        })*
+    }
+}
+
+impl_interleaved! {
+    PosTex { position, tex_coord },
+    PosNormTex { position, normal, tex_coord },
+    PosNormTangTex { position, normal, tangent, tex_coord },
+}
+
+macro_rules! impl_nested_from {
+    ($($from:ident),*) => {
+        impl<$($from,)*> FromShape for ($($from,)*)
+        where
+            $($from: FromShape,)*
+        {
+            fn from(shape: &InternalShape) -> Self {
+                ($($from::from(shape),)*)
+            }
+        }
+    }
+}
+
+impl_nested_from!(A);
+impl_nested_from!(A, B);
+impl_nested_from!(A, B, C);
+impl_nested_from!(A, B, C, D);
+impl_nested_from!(A, B, C, D, E);
+impl_nested_from!(A, B, C, D, E, F);
+impl_nested_from!(A, B, C, D, E, F, G);
+impl_nested_from!(A, B, C, D, E, F, G, H);
+impl_nested_from!(A, B, C, D, E, F, G, H, I);
+impl_nested_from!(A, B, C, D, E, F, G, H, I, J);
+impl_nested_from!(A, B, C, D, E, F, G, H, I, J, K);
+impl_nested_from!(A, B, C, D, E, F, G, H, I, J, K, L);
+impl_nested_from!(A, B, C, D, E, F, G, H, I, J, K, L, M);
+impl_nested_from!(A, B, C, D, E, F, G, H, I, J, K, L, M, N);
+impl_nested_from!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O);
+impl_nested_from!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P);
 
 #[cfg(test)]
 mod tests {

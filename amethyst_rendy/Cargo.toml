@@ -37,5 +37,5 @@ thread_profiler = { version = "0.3", optional = true }
 dx12 = ["rendy/dx12"]
 metal = ["rendy/metal"]
 vulkan = ["rendy/vulkan"]
-profiler = [ "thread_profiler/thread_profiler" ]
+profiler = [ "thread_profiler/thread_profiler", "rendy/profiler" ]
 nightly = [ "amethyst_core/nightly", "shred/nightly" ]

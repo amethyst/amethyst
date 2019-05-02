@@ -39,7 +39,7 @@ pub struct TextureSub<B: Backend> {
 impl<B: Backend> TextureSub<B> {
     pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
         Ok(Self {
-            layout: set_layout! {factory, 1 CombinedImageSampler FRAGMENT},
+            layout: set_layout! {factory, [1] CombinedImageSampler FRAGMENT},
             lookup: util::LookupBuilder::new(),
             textures: Vec::with_capacity(1024),
             generation: 0,
@@ -124,13 +124,21 @@ impl<B: Backend> TextureSub<B> {
     }
 
     #[inline]
+    pub fn loaded(&self, texture_id: TextureId) -> bool {
+        match &self.textures[texture_id.0 as usize] {
+            TextureState::Loaded { .. } => true,
+            _ => false,
+        }
+    }
+
+    #[inline]
     pub fn bind(
         &self,
         pipeline_layout: &B::PipelineLayout,
         set_id: u32,
         texture_id: TextureId,
         encoder: &mut RenderPassEncoder<'_, B>,
-    ) -> bool {
+    ) {
         match &self.textures[texture_id.0 as usize] {
             TextureState::Loaded { set, .. } => {
                 encoder.bind_graphics_descriptor_sets(
@@ -139,9 +147,8 @@ impl<B: Backend> TextureSub<B> {
                     Some(set.raw()),
                     std::iter::empty(),
                 );
-                true
             }
-            _ => false,
+            _ => panic!("Trying to bind unloaded texture"),
         }
     }
 }

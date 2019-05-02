@@ -24,7 +24,7 @@ impl Default for TextureOffset {
 }
 
 /// A physically based Material with metallic workflow, fully utilized in PBR render pass.
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Material<B: Backend> {
     /// Alpha cutoff: the value at which we do not draw the pixel
     pub alpha_cutoff: f32,
@@ -57,3 +57,75 @@ impl<B: Backend> Asset for Material<B> {
 /// `Material` you don't want to specify.
 #[derive(Clone)]
 pub struct MaterialDefaults<B: Backend>(pub Material<B>);
+
+pub trait StaticTextureSet<'a, B: Backend>:
+    Clone + Copy + std::fmt::Debug + PartialEq + Eq + std::hash::Hash + Send + Sync + 'static
+{
+    type Iter: Iterator<Item = &'a Handle<Texture<B>>>;
+    fn textures(mat: &'a Material<B>) -> Self::Iter;
+    fn len() -> usize {
+        1
+    }
+}
+
+pub type FullTextureSet = (
+    TexAlbedo,
+    TexEmission,
+    TexNormal,
+    TexMetallicRoughness,
+    TexAmbientOcclusion,
+    TexCavity,
+);
+
+macro_rules! impl_texture {
+    ($name:ident, $prop:ident) => {
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+        pub struct $name;
+        impl<'a, B: Backend> StaticTextureSet<'a, B> for $name {
+            type Iter = std::iter::Once<&'a Handle<Texture<B>>>;
+            #[inline(always)]
+            fn textures(mat: &'a Material<B>) -> Self::Iter {
+                std::iter::once(&mat.$prop)
+            }
+        }
+    };
+}
+
+impl_texture!(TexAlbedo, albedo);
+impl_texture!(TexEmission, emission);
+impl_texture!(TexNormal, normal);
+impl_texture!(TexMetallicRoughness, metallic_roughness);
+impl_texture!(TexAmbientOcclusion, ambient_occlusion);
+impl_texture!(TexCavity, cavity);
+
+macro_rules! recursive_iter {
+    (@value $first:expr, $($rest:expr),*) => { $first.chain(recursive_iter!(@value $($rest),*)) };
+    (@value $last:expr) => { $last };
+    (@type $first:ty, $($rest:ty),*) => { std::iter::Chain<$first, recursive_iter!(@type $($rest),*)> };
+    (@type $last:ty) => { $last };
+}
+
+macro_rules! impl_texture_set_tuple {
+    ($($from:ident),*) => {
+        impl<'a, BE: Backend, $($from,)*> StaticTextureSet<'a, BE> for ($($from),*,)
+        where
+            $($from: StaticTextureSet<'a, BE>),*,
+        {
+            type Iter = recursive_iter!(@type $($from::Iter),*);
+            #[inline(always)]
+            fn textures(mat: &'a Material<BE>) -> Self::Iter {
+                recursive_iter!(@value $($from::textures(mat)),*)
+            }
+            fn len() -> usize {
+                $($from::len() + )* 0
+            }
+        }
+    }
+}
+
+impl_texture_set_tuple!(A);
+impl_texture_set_tuple!(A, B);
+impl_texture_set_tuple!(A, B, C);
+impl_texture_set_tuple!(A, B, C, D);
+impl_texture_set_tuple!(A, B, C, D, E);
+impl_texture_set_tuple!(A, B, C, D, E, F);

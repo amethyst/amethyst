@@ -124,17 +124,15 @@ fn load_scene<B: Backend>(
     let mut skin_map = HashMap::new();
     let mut bounding_box = GltfNodeExtent::default();
     let mut material_set = GltfMaterialSet::default();
-    if scene.nodes().len() == 1 {
+    for node in scene.nodes() {
+        let index = prefab.add(Some(0), None);
         load_node(
             gltf,
-            &scene
-                .nodes()
-                .next()
-                .expect("Unreachable: Length of nodes in scene is checked to be equal to one"),
-            0,
+            &node,
+            index,
             buffers,
             options,
-            source,
+            source.clone(),
             name,
             prefab,
             &mut node_map,
@@ -142,27 +140,9 @@ fn load_scene<B: Backend>(
             &mut bounding_box,
             &mut material_set,
         )?;
-    } else {
-        for node in scene.nodes() {
-            let index = prefab.add(Some(0), None);
-            load_node(
-                gltf,
-                &node,
-                index,
-                buffers,
-                options,
-                source.clone(),
-                name,
-                prefab,
-                &mut node_map,
-                &mut skin_map,
-                &mut bounding_box,
-                &mut material_set,
-            )?;
-        }
-        if bounding_box.valid() {
-            prefab.data_or_default(0).extent = Some(bounding_box.clone());
-        }
+    }
+    if bounding_box.valid() {
+        prefab.data_or_default(0).extent = Some(bounding_box.clone());
     }
     prefab.data_or_default(0).materials = Some(material_set);
 

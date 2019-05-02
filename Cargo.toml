@@ -106,6 +106,7 @@ amethyst_gltf = { path = "amethyst_gltf", version = "0.5.0", optional = true }
 amethyst_network = { path = "amethyst_network", version = "0.3.0", optional = true }
 amethyst_locale = { path = "amethyst_locale", version = "0.4.0", optional = true }
 amethyst_renderer = { path = "amethyst_renderer", version = "0.10.0" }
+amethyst_rendy = { path = "amethyst_rendy" }
 amethyst_input = { path = "amethyst_input", version = "0.6.0" }
 amethyst_ui = { path = "amethyst_ui", version = "0.5.0" }
 amethyst_utils = { path = "amethyst_utils", version = "0.5.0" }
@@ -127,7 +128,6 @@ env_logger = "0.6.1"
 genmesh = "0.6"
 ron = "0.4.2"
 specs-derive = "0.4"
-amethyst_rendy = { path = "amethyst_rendy" }
 derivative = "1.0.2"
 
 [build-dependencies]

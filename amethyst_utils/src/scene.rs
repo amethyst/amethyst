@@ -14,7 +14,7 @@ use amethyst_rendy::{
     formats::{mesh::ObjFormat, texture::ImageFormat, GraphicsPrefab},
     light::LightPrefab,
     rendy::{hal::Backend, mesh::MeshBuilder},
-    shape::InternalShape,
+    shape::FromShape,
     types::Mesh,
 };
 
@@ -41,7 +41,7 @@ where
     M: Format<Mesh<B>> + Clone,
     M::Options: DeserializeOwned + Serialize + Clone,
     R: PartialEq + Debug + Clone + Send + Sync + 'static,
-    V: From<InternalShape> + Into<MeshBuilder<'static>>,
+    V: FromShape + Into<MeshBuilder<'static>>,
 {
     #[serde(bound(deserialize = "GraphicsPrefab<B, V, M, ImageFormat>: Deserialize<'de>"))]
     graphics: Option<GraphicsPrefab<B, V, M, ImageFormat>>,
@@ -58,7 +58,7 @@ where
     M: Format<Mesh<B>> + Clone,
     M::Options: DeserializeOwned + Serialize + Clone,
     R: PartialEq + Debug + Clone + Send + Sync + 'static,
-    V: From<InternalShape> + Into<MeshBuilder<'static>>,
+    V: FromShape + Into<MeshBuilder<'static>>,
 {
     fn default() -> Self {
         BasicScenePrefab {

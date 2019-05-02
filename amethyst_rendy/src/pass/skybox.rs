@@ -166,7 +166,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawSkybox<B> {
         self.env.bind(index, &self.pipeline_layout, 0, &mut encoder);
         self.colors
             .bind(index, &self.pipeline_layout, 1, &mut encoder);
-        self.mesh.bind(&[PosTex::VERTEX], &mut encoder).unwrap();
+        self.mesh
+            .bind(0, &[PosTex::vertex()], &mut encoder)
+            .unwrap();
         encoder.draw(0..self.mesh.len(), 0..1);
     }
 
@@ -199,7 +201,7 @@ fn build_skybox_pipeline<B: Backend>(
     let pipes = PipelinesBuilder::new()
         .with_pipeline(
             PipelineDescBuilder::new()
-                .with_vertex_desc(&[(PosTex::VERTEX, 0)])
+                .with_vertex_desc(&[(PosTex::vertex(), 0)])
                 .with_shaders(util::simple_shader_set(
                     &shader_vertex,
                     Some(&shader_fragment),
