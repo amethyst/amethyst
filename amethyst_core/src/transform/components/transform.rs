@@ -1,11 +1,12 @@
 //! Local transform component.
-use std::fmt;
-use std::marker::PhantomData;
+use std::{fmt, marker::PhantomData};
 
-use crate::ecs::prelude::{Component, DenseVecStorage, FlaggedStorage};
-use crate::math::{
-    self as na, Isometry3, Matrix4, Quaternion, RealField, Translation3, Unit, UnitQuaternion,
-    Vector3,
+use crate::{
+    ecs::prelude::{Component, DenseVecStorage, FlaggedStorage},
+    math::{
+        self as na, Isometry3, Matrix4, Quaternion, RealField, Translation3, Unit, UnitQuaternion,
+        Vector3,
+    },
 };
 use serde::{
     de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor},

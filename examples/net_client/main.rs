@@ -14,7 +14,6 @@ fn main() -> Result<()> {
     let game_data = GameDataBuilder::default()
         .with_bundle(NetworkBundle::<String>::new(
             "127.0.0.1:3457".parse().unwrap(),
-            vec![],
         ))?
         .with(SpamSystem::new(), "spam", &[]);
     let mut game = Application::build("./", State1)?
@@ -54,7 +53,7 @@ impl<'a> System<'a> for SpamSystem {
     fn run(&mut self, (mut connections, time): Self::SystemData) {
         for conn in (&mut connections).join() {
             info!("Sending 10k messages.");
-            for i in 0..10000 {
+            for i in 0..500 {
                 let packet = NetEvent::Packet(NetPacket::unreliable(format!(
                     "CL: frame:{},abs_time:{},c:{}",
                     time.frame_number(),

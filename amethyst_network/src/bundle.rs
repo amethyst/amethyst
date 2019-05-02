@@ -1,19 +1,17 @@
-use std::net::SocketAddr;
+use std::{marker::PhantomData, net::SocketAddr};
 
 use serde::{de::DeserializeOwned, Serialize};
 
 use amethyst_core::{bundle::SystemBundle, shred::DispatcherBuilder};
 use amethyst_error::{Error, ResultExt};
 
-use crate::{filter::NetFilter, server::ServerConfig, NetSocketSystem};
+use crate::{server::ServerConfig, NetSocketSystem};
 
 /// A convenience bundle to create the infrastructure needed to send and receive network messages.
 pub struct NetworkBundle<T> {
     /// the configuration used for the networking crate.
     config: ServerConfig,
-
-    /// The filters applied on received network events.
-    filters: Vec<Box<dyn NetFilter<T>>>,
+    _data: PhantomData<T>,
 }
 
 impl<T> NetworkBundle<T> {
@@ -21,13 +19,25 @@ impl<T> NetworkBundle<T> {
     ///
     /// `receive_addr`: this is the address on which we will receive incoming packets.
     /// `send_addr`: this is the address from which we will send outgoing packets.
-    pub fn new(udp_socket_addr: SocketAddr, filters: Vec<Box<dyn NetFilter<T>>>) -> Self {
+    pub fn new(udp_socket_addr: SocketAddr) -> Self {
         let config = ServerConfig {
             udp_socket_addr,
             max_throughput: 5000,
+            create_net_connection_on_connect: true,
         };
 
-        NetworkBundle { config, filters }
+        NetworkBundle {
+            config,
+            _data: PhantomData,
+        }
+    }
+
+    /// Construct a new `NetworkBundle` with the specified configuration.
+    pub fn from_config(config: ServerConfig) -> NetworkBundle<T> {
+        NetworkBundle {
+            config,
+            _data: PhantomData,
+        }
     }
 }
 
@@ -37,7 +47,7 @@ where
 {
     /// Build the networking bundle by adding the networking system to the application.
     fn build(self, builder: &mut DispatcherBuilder<'_, '_>) -> Result<(), Error> {
-        let socket_system = NetSocketSystem::<T>::new(self.config, self.filters)
+        let socket_system = NetSocketSystem::<T>::new(self.config)
             .with_context(|_| Error::from_string("Failed to open network system."))?;
 
         builder.add(socket_system, "net_socket", &[]);

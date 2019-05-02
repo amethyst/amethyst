@@ -1,6 +1,6 @@
 use amethyst::{
     core::frame_limiter::FrameRateLimitStrategy,
-    ecs::{Join, System, WriteStorage},
+    ecs::{Entities, Join, System, WriteStorage},
     network::*,
     prelude::*,
     shrev::ReaderId,
@@ -17,7 +17,6 @@ fn main() -> Result<()> {
     let game_data = GameDataBuilder::default()
         .with_bundle(NetworkBundle::<String>::new(
             "127.0.0.1:3455".parse().unwrap(),
-            vec![Box::new(FilterConnected::<String>::new())],
         ))?
         .with(SpamReceiveSystem::new(), "rcv", &[]);
     let mut game = Application::build("./", State1)?
@@ -33,14 +32,7 @@ fn main() -> Result<()> {
 /// Default empty state
 pub struct State1;
 impl SimpleState for State1 {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        data.world
-            .create_entity()
-            .with(NetConnection::<String>::new(
-                "127.0.0.1:3457".parse().unwrap(),
-            ))
-            .build();
-    }
+    fn on_start(&mut self, _data: StateData<'_, GameData<'_, '_>>) {}
 }
 
 /// A simple system that receives a ton of network events.
@@ -55,21 +47,45 @@ impl SpamReceiveSystem {
 }
 
 impl<'a> System<'a> for SpamReceiveSystem {
-    type SystemData = (WriteStorage<'a, NetConnection<String>>,);
-    fn run(&mut self, (mut connections,): Self::SystemData) {
+    type SystemData = (WriteStorage<'a, NetConnection<String>>, Entities<'a>);
+    fn run(&mut self, (mut connections, entities): Self::SystemData) {
         let mut count = 0;
-        for (conn,) in (&mut connections,).join() {
+        let mut connection_count = 0;
+
+        for (e, connection) in (&entities, &mut connections).join() {
             if self.reader.is_none() {
-                self.reader = Some(conn.receive_buffer.register_reader());
+                self.reader = Some(connection.receive_buffer.register_reader());
             }
-            for ev in conn.receive_buffer.read(self.reader.as_mut().unwrap()) {
+
+            let mut client_disconnected = false;
+
+            for ev in connection
+                .receive_buffer
+                .read(self.reader.as_mut().unwrap())
+            {
                 count += 1;
                 match ev {
                     NetEvent::Packet(packet) => info!("{}", packet.content()),
+                    NetEvent::Connected(addr) => println!("New Client Connection: {}", addr),
+                    NetEvent::Disconnected(_addr) => {
+                        client_disconnected = true;
+                    }
                     _ => {}
                 }
             }
+
+            if client_disconnected {
+                println!("Client Disconnects");
+                entities
+                    .delete(e)
+                    .expect("Cannot delete connection from world!");
+            }
+
+            connection_count += 1;
         }
-        info!("Received {} messages this frame", count);
+        println!(
+            "Received {} messages this frame connections: {}",
+            count, connection_count
+        );
     }
 }

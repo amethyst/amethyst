@@ -2,44 +2,62 @@
 //! NetEvent are passed through the network
 //! NetOwnedEvent are passed through the ECS, and contains the event's source (remote connection, usually).
 
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use crate::Result;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use std::net::SocketAddr;
 
 /// Network events which you can send or and receive from an endpoint.
+// TODO, Connect, connection refused, disconnect, disconnected
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum NetEvent<T> {
-    /// Ask to connect to the server.
-    Connect {
-        /// The client uuid.
-        client_uuid: Uuid,
-    },
-    /// Reply to the client that the connection has been accepted.
-    Connected {
-        /// The server uuid.
-        server_uuid: Uuid,
-    },
-    /// Reply to the client that the connection has been refused.
-    ConnectionRefused {
-        /// The reason of the refusal.
-        reason: String,
-    },
-    /// Tell the server that the client is disconnecting.
-    Disconnect {
-        /// The reason of the disconnection.
-        reason: String,
-    },
-    /// Notify the clients(including the one being disconnected) that a client has been disconnected from the server.
-    Disconnected {
-        /// The reason of the disconnection.
-        reason: String,
-    },
+    /// Will be fired when a client connected.
+    /// When this event occurs the `NetConnection` with this address was already automatically added to the world.
+    Connected(SocketAddr),
+    /// Will be fired when a client was disconnected.
+    /// If this happens consider removing the `NetConnection` with this address from the world.
+    Disconnected(SocketAddr),
     /// Send a packet to all connected clients
     Packet(NetPacket<T>),
+    #[doc(hidden)]
+    __Nonexhaustive,
+}
+
+impl<T> NetEvent<T>
+where
+    T: Serialize + DeserializeOwned,
+{
+    pub(crate) fn from_packet(packet: laminar::Packet) -> Result<Self> {
+        match crate::deserialize_event::<T>(packet.payload()) {
+            Ok(event) => {
+                let net_event: NetEvent<T> = NetEvent::Packet(match packet.delivery_guarantee() {
+                    laminar::DeliveryGuarantee::Unreliable => match packet.order_guarantee() {
+                        laminar::OrderingGuarantee::None => NetPacket::<T>::unreliable(event),
+                        laminar::OrderingGuarantee::Sequenced(s) => {
+                            NetPacket::unreliable_sequenced(event, s)
+                        }
+                        _ => panic!("This is in no way possible"),
+                    },
+                    laminar::DeliveryGuarantee::Reliable => match packet.order_guarantee() {
+                        laminar::OrderingGuarantee::None => NetPacket::reliable_unordered(event),
+                        laminar::OrderingGuarantee::Sequenced(s) => {
+                            NetPacket::reliable_sequenced(event, s)
+                        }
+                        laminar::OrderingGuarantee::Ordered(o) => {
+                            NetPacket::reliable_ordered(event, o)
+                        }
+                    },
+                });
+
+                Ok(net_event)
+            }
+            Err(e) => Err(e),
+        }
+    }
 }
 
 /// Enum to specify how a packet should be arranged.
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialOrd, PartialEq, Eq)]
-enum OrderingGuarantee {
+pub(crate) enum OrderingGuarantee {
     /// No arranging will be done.
     None,
     /// Packets will be arranged in sequence.
@@ -50,7 +68,7 @@ enum OrderingGuarantee {
 
 /// Enum to specify how a packet should be delivered.
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialOrd, PartialEq, Eq)]
-enum DeliveryGuarantee {
+pub(crate) enum DeliveryGuarantee {
     /// Packet may or may not be delivered
     Unreliable,
     /// Packet will be delivered
@@ -67,12 +85,34 @@ impl From<laminar::OrderingGuarantee> for OrderingGuarantee {
     }
 }
 
-impl From<laminar::DeliveryGuarantee> for DeliveryGuarantee {
-    fn from(delivery: laminar::DeliveryGuarantee) -> Self {
-        match delivery {
-            laminar::DeliveryGuarantee::Unreliable => DeliveryGuarantee::Unreliable,
-            laminar::DeliveryGuarantee::Reliable => DeliveryGuarantee::Reliable,
+impl From<OrderingGuarantee> for laminar::OrderingGuarantee {
+    fn from(ordering: OrderingGuarantee) -> Self {
+        match ordering {
+            OrderingGuarantee::None => laminar::OrderingGuarantee::None,
+            OrderingGuarantee::Sequenced(s) => laminar::OrderingGuarantee::Sequenced(s),
+            OrderingGuarantee::Ordered(o) => laminar::OrderingGuarantee::Ordered(o),
         }
+    }
+}
+
+impl From<DeliveryGuarantee> for laminar::DeliveryGuarantee {
+    fn from(delivery: DeliveryGuarantee) -> Self {
+        match delivery {
+            DeliveryGuarantee::Unreliable => laminar::DeliveryGuarantee::Unreliable,
+            DeliveryGuarantee::Reliable => laminar::DeliveryGuarantee::Reliable,
+        }
+    }
+}
+
+impl Default for OrderingGuarantee {
+    fn default() -> Self {
+        OrderingGuarantee::None
+    }
+}
+
+impl Default for DeliveryGuarantee {
+    fn default() -> Self {
+        DeliveryGuarantee::Unreliable
     }
 }
 
@@ -93,9 +133,11 @@ impl From<laminar::DeliveryGuarantee> for DeliveryGuarantee {
 /// For more information please have a look at: https://amethyst.github.io/laminar/docs/reliability/reliability.html
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct NetPacket<T> {
-    ordering_guarantee: OrderingGuarantee,
-    delivery_guarantee: DeliveryGuarantee,
     content: T,
+    #[serde(skip)]
+    ordering_guarantee: OrderingGuarantee,
+    #[serde(skip)]
+    delivery_guarantee: DeliveryGuarantee,
 }
 
 impl<T> NetPacket<T> {
@@ -246,10 +288,78 @@ impl<T> NetPacket<T> {
     pub fn content_mut(&mut self) -> &mut T {
         &mut self.content
     }
+
+    /// Returns the ordering guarantee
+    pub(crate) fn ordering_guarantee(&self) -> OrderingGuarantee {
+        self.ordering_guarantee
+    }
+
+    /// Returns the delivery guarantee
+    pub(crate) fn delivery_guarantee(&self) -> DeliveryGuarantee {
+        self.delivery_guarantee
+    }
 }
 
-impl<T> From<NetPacket<T>> for NetEvent<T> {
-    fn from(packet: NetPacket<T>) -> Self {
-        NetEvent::Packet(packet)
+#[cfg(test)]
+mod tests {
+    use crate::net_event::NetPacket;
+
+    #[test]
+    fn assure_creation_unreliable_packet() {
+        let packet = NetPacket::unreliable(test_payload());
+
+        assert_eq!(packet.content(), &test_payload());
+        assert_eq!(packet.is_ordered(), false);
+        assert_eq!(packet.is_sequenced(), false);
+        assert_eq!(packet.is_reliable(), false);
+        assert_eq!(packet.is_unreliable(), true);
+    }
+
+    #[test]
+    fn assure_creation_unreliable_sequenced() {
+        let packet = NetPacket::unreliable_sequenced(test_payload(), Some(1));
+
+        assert_eq!(packet.content(), &test_payload());
+        assert_eq!(packet.is_ordered(), false);
+        assert_eq!(packet.is_sequenced(), true);
+        assert_eq!(packet.is_reliable(), false);
+        assert_eq!(packet.is_unreliable(), true);
+    }
+
+    #[test]
+    fn assure_creation_reliable() {
+        let packet = NetPacket::reliable_unordered(test_payload());
+
+        assert_eq!(packet.content(), &test_payload());
+        assert_eq!(packet.is_ordered(), false);
+        assert_eq!(packet.is_sequenced(), false);
+        assert_eq!(packet.is_reliable(), true);
+        assert_eq!(packet.is_unreliable(), false);
+    }
+
+    #[test]
+    fn assure_creation_reliable_ordered() {
+        let packet = NetPacket::reliable_ordered(test_payload(), Some(1));
+
+        assert_eq!(packet.content(), &test_payload());
+        assert_eq!(packet.is_ordered(), true);
+        assert_eq!(packet.is_sequenced(), false);
+        assert_eq!(packet.is_reliable(), true);
+        assert_eq!(packet.is_unreliable(), false);
+    }
+
+    #[test]
+    fn assure_creation_reliable_sequence() {
+        let packet = NetPacket::reliable_sequenced(test_payload(), Some(1));
+
+        assert_eq!(packet.content(), &test_payload());
+        assert_eq!(packet.is_ordered(), false);
+        assert_eq!(packet.is_sequenced(), true);
+        assert_eq!(packet.is_reliable(), true);
+        assert_eq!(packet.is_unreliable(), false);
+    }
+
+    fn test_payload() -> Vec<u8> {
+        return "test".as_bytes().to_vec();
     }
 }

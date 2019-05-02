@@ -8,8 +8,10 @@ use crate::ecs::prelude::{
 };
 use hibitset::BitSet;
 
-use crate::math::RealField;
-use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform};
+use crate::{
+    math::RealField,
+    transform::{HierarchyEvent, Parent, ParentHierarchy, Transform},
+};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;

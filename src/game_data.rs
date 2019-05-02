@@ -1,5 +1,4 @@
-use std::marker::PhantomData;
-use std::path::Path;
+use std::{marker::PhantomData, path::Path};
 
 use crate::{
     core::{

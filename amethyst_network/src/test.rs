@@ -20,7 +20,7 @@ mod test {
         let mut conn_to_server = NetConnection::<String>::new(server_addr);
         let mut conn_to_client = NetConnection::<String>::new(client_addr);
 
-        let packet = NetEvent::from(NetPacket::reliable_unordered(
+        let packet = NetEvent::Packet(NetPacket::reliable_unordered(
             "Test Message From Client1".to_string(),
         ));
 
@@ -58,7 +58,7 @@ mod test {
 
         use net_event::NetPacket;
 
-        let packet = NetEvent::from(NetPacket::reliable_unordered(
+        let packet = NetEvent::Packet(NetPacket::reliable_unordered(
             "Test Message From Client1".to_string(),
         ));
 
@@ -97,17 +97,19 @@ mod test {
         let client_config = ServerConfig {
             udp_socket_addr: client_addr,
             max_throughput: 10000,
+            create_net_connection_on_connect: false,
         };
 
         // server config
         let server_config = ServerConfig {
             udp_socket_addr: server_addr,
             max_throughput: 10000,
+            create_net_connection_on_connect: false,
         };
 
         let mut cl_dispatch = DispatcherBuilder::new()
             .with(
-                NetSocketSystem::<String>::new(client_config, Vec::new()).unwrap(),
+                NetSocketSystem::<String>::new(client_config).unwrap(),
                 "s",
                 &[],
             )
@@ -115,7 +117,7 @@ mod test {
         cl_dispatch.setup(&mut world_cl.res);
         let mut sv_dispatch = DispatcherBuilder::new()
             .with(
-                NetSocketSystem::<String>::new(server_config, Vec::new()).unwrap(),
+                NetSocketSystem::<String>::new(server_config).unwrap(),
                 "s",
                 &[],
             )

@@ -6,7 +6,6 @@ pub use crate::{
     bundle::NetworkBundle,
     connection::{ConnectionState, NetConnection, NetIdentity},
     error::Result,
-    filter::{FilterConnected, NetFilter},
     net_event::{NetEvent, NetPacket},
     network_socket::NetSocketSystem,
     server::{Host, ServerConfig},
@@ -23,7 +22,6 @@ use serde::{de::DeserializeOwned, Serialize};
 mod bundle;
 mod connection;
 mod error;
-mod filter;
 mod net_event;
 mod network_socket;
 mod server;
@@ -35,16 +33,33 @@ pub fn send_event<T>(event: NetPacket<T>, addr: SocketAddr, sender: &Sender<Pack
 where
     T: Serialize,
 {
-    let ser = serialize(&event);
+    let ser = serialize(&event.content());
     match ser {
-        Ok(s) => {
-            let p = if event.is_reliable() {
-                Packet::reliable_unordered(addr, s)
-            } else {
-                Packet::unreliable(addr, s)
+        Ok(payload) => {
+            let packet = match event.delivery_guarantee() {
+                net_event::DeliveryGuarantee::Unreliable => match event.ordering_guarantee() {
+                    net_event::OrderingGuarantee::None => Packet::unreliable(addr, payload),
+                    net_event::OrderingGuarantee::Sequenced(s) => {
+                        Packet::unreliable_sequenced(addr, payload, s)
+                    }
+                    _ => unreachable!(
+                        "Can not apply the guarantees: {:?}, {:?} to the packet",
+                        event.ordering_guarantee(),
+                        event.delivery_guarantee()
+                    ),
+                },
+                net_event::DeliveryGuarantee::Reliable => match event.ordering_guarantee() {
+                    net_event::OrderingGuarantee::None => Packet::reliable_unordered(addr, payload),
+                    net_event::OrderingGuarantee::Sequenced(s) => {
+                        Packet::reliable_sequenced(addr, payload, s)
+                    }
+                    net_event::OrderingGuarantee::Ordered(o) => {
+                        Packet::reliable_ordered(addr, payload, o)
+                    }
+                },
             };
 
-            match sender.send(p) {
+            match sender.send(packet) {
                 Ok(_qty) => {}
                 Err(e) => error!("Failed to send data to network socket: {}", e),
             }
@@ -54,9 +69,9 @@ where
 }
 
 // Attempts to deserialize an event from the raw byte data.
-fn deserialize_event<T>(data: &[u8]) -> Result<NetPacket<T>>
+fn deserialize_event<T>(data: &[u8]) -> Result<T>
 where
     T: DeserializeOwned,
 {
-    Ok(deserialize::<NetPacket<T>>(data)?)
+    Ok(deserialize::<T>(data)?)
 }
