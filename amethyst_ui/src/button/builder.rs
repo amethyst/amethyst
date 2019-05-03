@@ -168,7 +168,7 @@ where
     }
 
     /// Replace the default texture handle with `image`.
-    pub fn with_image(mut self, image: Option<R::Texture>) -> Self {
+    pub fn with_image(mut self, image: Handle<R::Texture>) -> Self {
         self.image = Some(image);
         self
     }
@@ -350,7 +350,7 @@ where
             .expect("Unreachable: Inserting newly created entity");
         let image_handle = self.image.unwrap_or_else(|| {
             res.loader
-                .load_from_data(DEFAULT_BKGD_COLOR.into(), (), &res.texture_asset)
+                .load_from_data(R::color_texture(DEFAULT_BKGD_COLOR), (), &res.texture_asset)
         });
 
         res.image

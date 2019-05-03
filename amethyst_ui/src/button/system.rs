@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use derivative::Derivative;
 
 use amethyst_core::{
     ecs::{Entity, ReadExpect, Resources, System, SystemData, Write, WriteStorage},
@@ -57,7 +58,8 @@ where
 /// when necessary.
 ///
 /// It's automatically registered with the `UiBundle`.
-#[derive(Default)]
+#[derive(Derivative)]
+#[derivative(Default(bound = ""))]
 pub struct UiButtonSystem<R: UiRenderer> {
     event_reader: Option<ReaderId<UiButtonAction<R>>>,
     set_textures: HashMap<Entity, ActionChangeStack<Handle<R::Texture>>>,
@@ -67,7 +69,7 @@ pub struct UiButtonSystem<R: UiRenderer> {
 impl<R> UiButtonSystem<R> where R: UiRenderer {
     /// Creates a new instance of this structure
     pub fn new() -> Self {
-        Self::default()
+        Default::default()
     }
 }
 
