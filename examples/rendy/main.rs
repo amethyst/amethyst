@@ -29,11 +29,12 @@ use amethyst_rendy::{
     camera::{ActiveCamera, Camera, Projection},
     light::{Light, PointLight},
     mtl::{Material, MaterialDefaults},
-    palette::{LinSrgba, Srgb},
+    palette::{LinSrgba, Srgba, Srgb},
+    debug_drawing::DebugLines,
     pass::{
         DrawFlat2DDesc, DrawFlat2DTransparentDesc, DrawFlatDesc, DrawFlatTransparentDesc,
         DrawPbrDesc, DrawPbrTransparentDesc, DrawShadedDesc, DrawShadedTransparentDesc,
-        DrawSkyboxDesc,
+        DrawSkyboxDesc, DrawDebugLinesDesc,
     },
     rendy::{
         factory::Factory,
@@ -101,14 +102,16 @@ impl<'a> System<'a> for OrbitSystem {
         Read<'a, Time>,
         ReadStorage<'a, Orbit>,
         WriteStorage<'a, Transform>,
+        Write<'a, DebugLines>,
     );
 
-    fn run(&mut self, (time, orbits, mut transforms): Self::SystemData) {
+    fn run(&mut self, (time, orbits, mut transforms, mut debug): Self::SystemData) {
         for (orbit, transform) in (&orbits, &mut transforms).join() {
             let angle = time.absolute_time_seconds() as f32 * orbit.time_scale;
             let cross = orbit.axis.cross(&Vector3::z()).normalize() * orbit.radius;
             let rot = UnitQuaternion::from_axis_angle(&orbit.axis, angle);
             let final_pos = (rot * cross) + orbit.center;
+            debug.draw_line(orbit.center.into(), final_pos.into(), Srgba::new(0.0, 0.5, 1.0, 1.0));
             transform.set_translation(final_pos);
         }
     }
@@ -352,6 +355,7 @@ impl<B: Backend> SimpleState for Example<B> {
 
         world.add_resource(ActiveCamera { entity: camera });
         world.add_resource(RenderMode::Pbr);
+        world.add_resource(DebugLines::new());
     }
 
     fn handle_event(
@@ -699,6 +703,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         let opaque = graph_builder.add_node(
             opaque_subpass
                 .with_group(DrawFlat2DDesc::default().builder())
+                .with_group(DrawDebugLinesDesc::default().builder())
                 .with_group(
                     DrawSkyboxDesc::with_colors(
                         Srgb::new(0.82, 0.51, 0.50),

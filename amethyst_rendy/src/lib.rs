@@ -18,6 +18,7 @@ pub mod pass;
 
 pub mod batch;
 pub mod camera;
+pub mod debug_drawing;
 pub mod error;
 pub mod formats;
 pub mod hidden;

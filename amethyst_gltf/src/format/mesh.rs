@@ -87,7 +87,7 @@ pub fn load_mesh(
                 normals.map(Normal).collect::<Vec<_>>()
             } else {
                 trace!("Calculating normals");
-                let mut normals = vec!(zero::<Vector3<f32>>(); num_unique_vertices];
+                let mut normals = vec![zero::<Vector3<f32>>(); num_unique_vertices];
                 for face in 0..num_faces {
                     let i0 = indices.map(face, 0);
                     let i1 = indices.map(face, 1);

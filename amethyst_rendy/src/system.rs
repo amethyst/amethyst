@@ -1,6 +1,7 @@
 //! Renderer system
 use crate::{
     camera::{ActiveCamera, Camera},
+    debug_drawing::DebugLinesComponent,
     hidden::{Hidden, HiddenPropagate},
     light::Light,
     mtl::{Material, MaterialDefaults},
@@ -81,6 +82,7 @@ type SetupData<'a, B> = (
     ReadStorage<'a, Camera>,
     ReadStorage<'a, Hidden>,
     ReadStorage<'a, HiddenPropagate>,
+    ReadStorage<'a, DebugLinesComponent>,
     Option<Read<'a, Visibility>>,
     Option<Read<'a, ActiveCamera>>,
     ReadStorage<'a, JointTransforms>,
@@ -223,7 +225,6 @@ where
         let config: rendy::factory::Config = Default::default();
         let (factory, families): (Factory<B>, _) = rendy::factory::init(config).unwrap();
 
-        // res.insert(families);
         self.families = Some(families);
         res.insert(factory);
         AssetLoadingData::<B>::setup(res);
