@@ -32,7 +32,7 @@ This book is split into several sections, with this introduction being the first
 * [Pong Tutorial][pt] – Build a basic pong game in Rust.
 * [Math][math] – A quick introduction to doing math with Amethyst.
 * [Animation][anim] – Explains the architecture of the `amethyst_animation` crate.
-* [Custom `GameData`][gad] – Shows you how to structure more complex games that need to change the system graph.
+* [Controlling `System` Execution][cse] – Shows you how to structure more complex games that need to change the `System` graph.
 * [Glossary][gl] – Defines special terms used throughout the book.
 * [Appendix A: Config Files][ax_a] – Shows you how to define your data in RON files.
 
@@ -41,7 +41,7 @@ This book is split into several sections, with this introduction being the first
 [pt]: ./pong-tutorial.html
 [math]: ./math.html
 [anim]: ./animation.html
-[gad]: ./game-data.html
+[cse]: ./controlling_system_execution.html
 [gl]: ./glossary.html
 [ax_a]: ./appendices/a_config_files.html
 
