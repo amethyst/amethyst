@@ -1,11 +1,12 @@
 //! Local transform component.
-use std::fmt;
-use std::marker::PhantomData;
+use std::{fmt, marker::PhantomData};
 
-use crate::ecs::prelude::{Component, DenseVecStorage, FlaggedStorage};
-use crate::math::{
-    self as na, Isometry3, Matrix4, Quaternion, RealField, Translation3, Unit, UnitQuaternion,
-    Vector3,
+use crate::{
+    ecs::prelude::{Component, DenseVecStorage, FlaggedStorage},
+    math::{
+        self as na, Isometry3, Matrix4, Quaternion, RealField, Translation3, Unit, UnitQuaternion,
+        Vector3,
+    },
 };
 use serde::{
     de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor},
@@ -759,11 +760,11 @@ mod tests {
             UnitQuaternion::rotation_between(&Vector3::new(-1., 1., 2.), &Vector3::new(1., 0., 0.))
                 .unwrap(),
         );
-        let s: String = ron::ser::to_string_pretty(&transform, ron::ser::PrettyConfig::default()).unwrap();
+        let s: String =
+            ron::ser::to_string_pretty(&transform, ron::ser::PrettyConfig::default()).unwrap();
         let transform2: Transform<f32> = ron::de::from_str(&s).unwrap();
 
         assert_eq!(transform, transform2);
-
     }
 
     #[test]

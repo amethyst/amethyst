@@ -8,8 +8,10 @@ use crate::ecs::prelude::{
 };
 use hibitset::BitSet;
 
-use crate::math::RealField;
-use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform};
+use crate::{
+    math::RealField,
+    transform::{HierarchyEvent, Parent, ParentHierarchy, Transform},
+};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -123,8 +125,9 @@ impl<'a, N: RealField> System<'a> for TransformSystem<N> {
         }
 
         // Clear the local event reader.
-        locals.channel().read(self.locals_events_id.as_mut().expect("unreachable"));
-
+        locals
+            .channel()
+            .read(self.locals_events_id.as_mut().expect("unreachable"));
     }
 
     fn setup(&mut self, res: &mut Resources) {
@@ -501,7 +504,7 @@ mod tests {
             let mut transforms = world.write_storage::<Transform<f32>>();
             transforms.register_reader()
         };
-        
+
         hs.run_now(&mut world.res);
         system.run_now(&mut world.res);
         world.maintain();
@@ -510,7 +513,7 @@ mod tests {
             let transforms = world.write_storage::<Transform<f32>>();
             for _component_event in transforms.channel().read(&mut transform_reader) {}
         }
-        
+
         hs.run_now(&mut world.res);
         system.run_now(&mut world.res);
         world.maintain();
@@ -520,6 +523,5 @@ mod tests {
                 panic!("Found transform event when there should not be.")
             }
         }
-
     }
 }
