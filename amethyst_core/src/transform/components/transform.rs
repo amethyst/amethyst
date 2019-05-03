@@ -596,10 +596,10 @@ impl<'de, N: RealField + Deserialize<'de>> Deserialize<'de> for Transform<N> {
                 let isometry = Isometry3::from_parts(
                     Translation3::new(translation[0], translation[1], translation[2]),
                     Unit::new_normalize(Quaternion::new(
+                        rotation[3],
                         rotation[0],
                         rotation[1],
                         rotation[2],
-                        rotation[3],
                     )),
                 );
                 let scale = scale.into();
@@ -649,10 +649,10 @@ impl<'de, N: RealField + Deserialize<'de>> Deserialize<'de> for Transform<N> {
                 let isometry = Isometry3::from_parts(
                     Translation3::new(translation[0], translation[1], translation[2]),
                     Unit::new_normalize(Quaternion::new(
+                        rotation[3],
                         rotation[0],
                         rotation[1],
                         rotation[2],
-                        rotation[3],
                     )),
                 );
                 let scale = scale.into();
@@ -748,6 +748,22 @@ mod tests {
             transform.matrix().try_inverse().unwrap(),
             transform.view_matrix(),
         );
+    }
+
+    #[test]
+    fn ser_deser() {
+        let mut transform = Transform::<f32>::default();
+        transform.set_translation_xyz(1.0, 2.0, 3.0);
+        transform.set_scale(Vector3::new(4.0, 5.0, 6.0));
+        transform.set_rotation(
+            UnitQuaternion::rotation_between(&Vector3::new(-1., 1., 2.), &Vector3::new(1., 0., 0.))
+                .unwrap(),
+        );
+        let s: String = ron::ser::to_string_pretty(&transform, ron::ser::PrettyConfig::default()).unwrap();
+        let transform2: Transform<f32> = ron::de::from_str(&s).unwrap();
+
+        assert_eq!(transform, transform2);
+
     }
 
     #[test]
