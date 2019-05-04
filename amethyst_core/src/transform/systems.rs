@@ -123,6 +123,11 @@ impl<'a, N: RealField> System<'a> for TransformSystem<N> {
                 }
             }
         }
+
+        // Clear the local event reader.
+        locals
+            .channel()
+            .read(self.locals_events_id.as_mut().expect("unreachable"));
     }
 
     fn setup(&mut self, res: &mut Resources) {
@@ -472,5 +477,51 @@ mod tests {
         assert_eq!(world.is_alive(e3), false);
         assert_eq!(world.is_alive(e4), false);
         assert_eq!(world.is_alive(e5), false);
+    }
+
+    #[test]
+    fn events() {
+        let (mut world, mut hs, mut system) = transform_world();
+
+        let e1 = world
+            .create_entity()
+            .with(Transform::<f32>::default())
+            .build();
+
+        let e2 = world
+            .create_entity()
+            .with(Transform::<f32>::default())
+            .with(Parent { entity: e1 })
+            .build();
+
+        world
+            .create_entity()
+            .with(Transform::<f32>::default())
+            .with(Parent { entity: e2 })
+            .build();
+
+        let mut transform_reader = {
+            let mut transforms = world.write_storage::<Transform<f32>>();
+            transforms.register_reader()
+        };
+
+        hs.run_now(&mut world.res);
+        system.run_now(&mut world.res);
+        world.maintain();
+
+        {
+            let transforms = world.write_storage::<Transform<f32>>();
+            for _component_event in transforms.channel().read(&mut transform_reader) {}
+        }
+
+        hs.run_now(&mut world.res);
+        system.run_now(&mut world.res);
+        world.maintain();
+        {
+            let transforms = world.write_storage::<Transform<f32>>();
+            for _component_event in transforms.channel().read(&mut transform_reader) {
+                panic!("Found transform event when there should not be.")
+            }
+        }
     }
 }
