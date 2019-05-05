@@ -54,6 +54,9 @@ pub struct UiTransformBuilder<G> {
     /// Indicates where the element sits, relative to the parent (or to the screen, if there is no parent)
     #[derivative(Default(value = "Anchor::Middle"))]
     pub anchor: Anchor,
+    /// Indicates where the element sits, relative to itself
+    #[derivative(Default(value = "Anchor::Middle"))]
+    pub pivot: Anchor,
     /// Allow mouse events on this UI element.
     pub mouse_reactive: bool,
     /// Hides an entity by adding a [`HiddenPropagate`](../amethyst_renderer/struct.HiddenPropagate.html) component
@@ -148,6 +151,7 @@ where
         let mut transform = UiTransform::new(
             self.id.clone(),
             self.anchor.clone(),
+            self.pivot.clone(),
             self.x,
             self.y,
             self.z,

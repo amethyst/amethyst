@@ -77,6 +77,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Added generic parameter type to `Transform` to configure floating point precision. ([#1334])
 * `NetConnection` is automatically created when client starts sends data to server. ([#1539])
 * User will receive `NetEvent::Connected` on new connection and `NetEvent::Dissconnected` on disconnect. ([#1539])
+* Added a `pivot` field to `UiTransform`.
 
 ### Removed
 - Removed all `NetEvent's` because they were not used. ([#1539])
