@@ -33,7 +33,7 @@ Prefab (
             data: (
                 transform: Transform (
                     translation: (0.0, -20.0, 10.0),
-                    rotation: (0.7882256, 0.6153864, 0.0, 0.0),
+                    rotation: (0.6153864, 0.0, 0.0, 0.7882256),
                 ),
                 camera: Perspective((
                     aspect: 1.0,
