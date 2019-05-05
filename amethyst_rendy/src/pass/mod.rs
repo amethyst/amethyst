@@ -1,12 +1,12 @@
 mod base_3d;
+mod debug_lines;
 mod flat;
 mod flat2d;
 mod pbr;
 mod shaded;
 mod skybox;
-mod debug_lines;
 
-pub use self::{base_3d::*, flat::*, flat2d::*, pbr::*, shaded::*, skybox::*, debug_lines::*};
+pub use self::{base_3d::*, debug_lines::*, flat::*, flat2d::*, pbr::*, shaded::*, skybox::*};
 
 use rendy::shader::{ShaderKind, SourceLanguage, SpirvShader, StaticShaderInfo};
 
@@ -101,14 +101,7 @@ lazy_static::lazy_static! {
         "main",
     ).precompile().unwrap();
 
-    static ref DEBUG_LINES_GEOMETRY: SpirvShader = StaticShaderInfo::new(
-        concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/geometry/debug_lines.geom"),
-        ShaderKind::Geometry,
-        SourceLanguage::GLSL,
-        "main",
-    ).precompile().unwrap();
-
-        static ref DEBUG_LINES_FRAGMENT: SpirvShader = StaticShaderInfo::new(
+    static ref DEBUG_LINES_FRAGMENT: SpirvShader = StaticShaderInfo::new(
         concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/fragment/debug_lines.frag"),
         ShaderKind::Fragment,
         SourceLanguage::GLSL,

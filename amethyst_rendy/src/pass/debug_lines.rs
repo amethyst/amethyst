@@ -24,16 +24,19 @@ use thread_profiler::profile_scope;
 
 /// Parameters for renderer of debug lines. The params affect all lines.
 pub struct DebugLinesParams {
-    /// Width of lines in units, default is 1.0 / 400.0 units
+    /// Width of lines in screen space pixels, default is 1.0 pixel
     pub line_width: f32,
 }
 
 impl Default for DebugLinesParams {
     fn default() -> Self {
-        DebugLinesParams {
-            line_width: 1.0 / 400.0,
-        }
+        DebugLinesParams { line_width: 1.0 }
     }
+}
+
+#[derive(Debug, Clone, AsStd140)]
+struct DebugLinesArgs {
+    screen_space_thickness: vec2,
 }
 
 /// Draw opaque sprites without lighting.
@@ -45,12 +48,6 @@ impl DrawDebugLinesDesc {
     pub fn new() -> Self {
         Default::default()
     }
-}
-
-#[derive(Debug, Clone, AsStd140)]
-struct DebugLinesPod {
-    camera_position: vec3,
-    line_width: float,
 }
 
 impl<B: Backend> RenderGroupDesc<B, Resources> for DrawDebugLinesDesc {
@@ -69,8 +66,8 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawDebugLinesDesc {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
-        let env = DynamicUniform::new(factory, pso::ShaderStageFlags::GEOMETRY)?;
-        let lines_uniform = DynamicUniform::new(factory, pso::ShaderStageFlags::GEOMETRY)?;
+        let env = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)?;
+        let args = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)?;
         let vertex = DynamicVertex::new();
 
         let (pipeline, pipeline_layout) = build_lines_pipeline(
@@ -78,16 +75,19 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawDebugLinesDesc {
             subpass,
             framebuffer_width,
             framebuffer_height,
-            vec![env.raw_layout(), lines_uniform.raw_layout()],
+            vec![env.raw_layout(), args.raw_layout()],
         )?;
 
         Ok(Box::new(DrawDebugLines::<B> {
             pipeline: pipeline,
             pipeline_layout,
             env,
-            lines_uniform,
+            args,
             vertex,
+            framebuffer_width: framebuffer_width as f32,
+            framebuffer_height: framebuffer_height as f32,
             lines: Vec::new(),
+            change: Default::default(),
         }))
     }
 }
@@ -97,9 +97,12 @@ pub struct DrawDebugLines<B: Backend> {
     pipeline: B::GraphicsPipeline,
     pipeline_layout: B::PipelineLayout,
     env: DynamicUniform<B, ViewArgs>,
-    lines_uniform: DynamicUniform<B, DebugLinesPod>,
+    args: DynamicUniform<B, DebugLinesArgs>,
     vertex: DynamicVertex<B, DebugLine>,
+    framebuffer_width: f32,
+    framebuffer_height: f32,
     lines: Vec<DebugLine>,
+    change: util::ChangeDetection,
 }
 
 impl<B: Backend> RenderGroup<B, Resources> for DrawDebugLines<B> {
@@ -120,13 +123,14 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawDebugLines<B> {
             Option<Read<DebugLinesParams>>,
         )>::fetch(resources);
 
+        let old_len = self.lines.len();
         self.lines.clear();
         for lines_component in (&lines_comps).join() {
-            self.lines.extend(&lines_component.lines);
+            self.lines.extend_from_slice(lines_component.lines());
         }
 
         if let Some(mut lines_res) = lines_res {
-            self.lines.extend(lines_res.lines.drain(..));
+            self.lines.extend(lines_res.drain());
         };
 
         let cam = CameraGatherer::gather(resources);
@@ -134,14 +138,19 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawDebugLines<B> {
             .map(|p| p.line_width)
             .unwrap_or(DebugLinesParams::default().line_width);
 
-        let config_pod = DebugLinesPod {
-            line_width,
-            camera_position: cam.camera_position,
-        };
-
         self.env.write(factory, index, cam.projview);
-        self.lines_uniform
-            .write(factory, index, config_pod.std140());
+        self.args.write(
+            factory,
+            index,
+            DebugLinesArgs {
+                screen_space_thickness: [
+                    self.framebuffer_width / (line_width * 2.0),
+                    self.framebuffer_height / (line_width * 2.0),
+                ]
+                .into(),
+            }
+            .std140(),
+        );
 
         {
             #[cfg(feature = "profiler")]
@@ -150,7 +159,8 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawDebugLines<B> {
                 .write(factory, index, self.lines.len() as u64, Some(&self.lines));
         }
 
-        PrepareResult::DrawRecord
+        let changed = old_len != self.lines.len();
+        self.change.prepare_result(index, changed)
     }
 
     fn draw_inline(
@@ -166,9 +176,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawDebugLines<B> {
         let layout = &self.pipeline_layout;
         encoder.bind_graphics_pipeline(&self.pipeline);
         self.env.bind(index, layout, 0, &mut encoder);
-        self.lines_uniform.bind(index, layout, 1, &mut encoder);
+        self.args.bind(index, layout, 1, &mut encoder);
         self.vertex.bind(index, 0, &mut encoder);
-        encoder.draw(0..self.lines.len() as u32, 0..1);
+        encoder.draw(0..4, 0..self.lines.len() as u32);
     }
 
     fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &Resources) {
@@ -195,19 +205,16 @@ fn build_lines_pipeline<B: Backend>(
     }?;
 
     let shader_vertex = unsafe { super::DEBUG_LINES_VERTEX.module(factory).unwrap() };
-    let shader_geom = unsafe { super::DEBUG_LINES_GEOMETRY.module(factory).unwrap() };
     let shader_fragment = unsafe { super::DEBUG_LINES_FRAGMENT.module(factory).unwrap() };
 
     let pipes = PipelinesBuilder::new()
         .with_pipeline(
             PipelineDescBuilder::new()
-                .with_vertex_desc(&[(DebugLine::vertex(), 0)])
-                .with_shaders(util::simple_shader_set_ext(
+                .with_vertex_desc(&[(DebugLine::vertex(), 1)])
+                .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleStrip))
+                .with_shaders(util::simple_shader_set(
                     &shader_vertex,
                     Some(&shader_fragment),
-                    None,
-                    None,
-                    Some(&shader_geom),
                 ))
                 .with_layout(&pipeline_layout)
                 .with_subpass(subpass)
@@ -225,7 +232,6 @@ fn build_lines_pipeline<B: Backend>(
 
     unsafe {
         factory.destroy_shader_module(shader_vertex);
-        factory.destroy_shader_module(shader_geom);
         factory.destroy_shader_module(shader_fragment);
     }
 

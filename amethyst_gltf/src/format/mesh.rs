@@ -1,6 +1,6 @@
 use super::Buffers;
 use crate::{error, GltfSceneOptions};
-use amethyst_core::math::{Vector3, zero};
+use amethyst_core::math::{zero, Vector3};
 use amethyst_error::Error;
 use amethyst_rendy::{
     rendy::mesh::{Color, MeshBuilder, Normal, Position, Tangent, TexCoord},
@@ -100,7 +100,10 @@ pub fn load_mesh(
                     normals[i1] += n;
                     normals[i2] += n;
                 }
-                normals.into_iter().map(|n| Normal(n.normalize().into())).collect::<Vec<_>>()
+                normals
+                    .into_iter()
+                    .map(|n| Normal(n.normalize().into()))
+                    .collect::<Vec<_>>()
             }
         });
 

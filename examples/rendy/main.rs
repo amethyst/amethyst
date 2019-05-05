@@ -27,14 +27,14 @@ use amethyst::{
 };
 use amethyst_rendy::{
     camera::{ActiveCamera, Camera, Projection},
+    debug_drawing::DebugLines,
     light::{Light, PointLight},
     mtl::{Material, MaterialDefaults},
-    palette::{LinSrgba, Srgba, Srgb},
-    debug_drawing::DebugLines,
+    palette::{LinSrgba, Srgb, Srgba},
     pass::{
-        DrawFlat2DDesc, DrawFlat2DTransparentDesc, DrawFlatDesc, DrawFlatTransparentDesc,
-        DrawPbrDesc, DrawPbrTransparentDesc, DrawShadedDesc, DrawShadedTransparentDesc,
-        DrawSkyboxDesc, DrawDebugLinesDesc,
+        DrawDebugLinesDesc, DrawFlat2DDesc, DrawFlat2DTransparentDesc, DrawFlatDesc,
+        DrawFlatTransparentDesc, DrawPbrDesc, DrawPbrTransparentDesc, DrawShadedDesc,
+        DrawShadedTransparentDesc, DrawSkyboxDesc,
     },
     rendy::{
         factory::Factory,
@@ -111,7 +111,11 @@ impl<'a> System<'a> for OrbitSystem {
             let cross = orbit.axis.cross(&Vector3::z()).normalize() * orbit.radius;
             let rot = UnitQuaternion::from_axis_angle(&orbit.axis, angle);
             let final_pos = (rot * cross) + orbit.center;
-            debug.draw_line(orbit.center.into(), final_pos.into(), Srgba::new(0.0, 0.5, 1.0, 1.0));
+            debug.draw_line(
+                orbit.center.into(),
+                final_pos.into(),
+                Srgba::new(0.0, 0.5, 1.0, 1.0),
+            );
             transform.set_translation(final_pos);
         }
     }
@@ -653,7 +657,9 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         let surface = factory.create_surface(window.clone());
 
         // cache surface format to speed things up
-        let surface_format = *self.surface_format.get_or_insert_with(|| factory.get_surface_format(&surface));
+        let surface_format = *self
+            .surface_format
+            .get_or_insert_with(|| factory.get_surface_format(&surface));
 
         let mut graph_builder = GraphBuilder::new();
 
@@ -683,7 +689,8 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
                 );
             }
             RenderMode::Shaded => {
-                opaque_subpass.add_group(DrawShadedDesc::default().with_vertex_skinning().builder());
+                opaque_subpass
+                    .add_group(DrawShadedDesc::default().with_vertex_skinning().builder());
                 transparent_subpass.add_group(
                     DrawShadedTransparentDesc::default()
                         .with_vertex_skinning()
