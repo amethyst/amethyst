@@ -289,6 +289,9 @@ impl<'a> System<'a> for UiTransformSystem {
                                 transform.height * parent_transform_copy.pixel_height;
                         }
                     }
+                    let pivot_norm = transform.pivot.norm_offset();
+                    transform.pixel_x += transform.pixel_width * -pivot_norm.0;
+                    transform.pixel_y += transform.pixel_height * -pivot_norm.1;
                 }
             }
             // Populate the modifications we just did.
@@ -374,5 +377,8 @@ where
                 transform.pixel_height = transform.height * screen_dim.height();
             }
         }
+        let pivot_norm = transform.pivot.norm_offset();
+        transform.pixel_x += transform.pixel_width * -pivot_norm.0;
+        transform.pixel_y += transform.pixel_height * -pivot_norm.1;
     }
 }

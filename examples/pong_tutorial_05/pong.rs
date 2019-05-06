@@ -200,6 +200,7 @@ fn initialise_scoreboard(world: &mut World) {
     let p1_transform = UiTransform::new(
         "P1".to_string(),
         Anchor::TopMiddle,
+        Anchor::Middle,
         -50.,
         -50.,
         1.,
@@ -209,6 +210,7 @@ fn initialise_scoreboard(world: &mut World) {
     let p2_transform = UiTransform::new(
         "P2".to_string(),
         Anchor::TopMiddle,
+        Anchor::Middle,
         50.,
         -50.,
         1.,

@@ -325,6 +325,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
                 UiTransform::new(
                     format!("{}_btn", id),
                     self.anchor,
+                    Anchor::Middle,
                     self.x,
                     self.y,
                     self.z,
@@ -359,6 +360,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
                 text_entity,
                 UiTransform::new(
                     format!("{}_btn_text", id),
+                    Anchor::Middle,
                     Anchor::Middle,
                     0.,
                     0.,
