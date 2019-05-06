@@ -89,7 +89,7 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
 
 /// Initialise the camera.
 fn initialise_camera(world: &mut World) {
-    let mut transform = Transform::default();
+    let mut transform = Transform::<f32>::default();
     transform.set_translation_xyz(0.0, 0.0, 1.0);
 
     world
@@ -106,8 +106,8 @@ fn initialise_camera(world: &mut World) {
 
 /// Initialises one paddle on the left, and one paddle on the right.
 fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
-    let mut left_transform = Transform::default();
-    let mut right_transform = Transform::default();
+    let mut left_transform = Transform::<f32>::default();
+    let mut right_transform = Transform::<f32>::default();
 
     // Correctly position the paddles.
     let y = ARENA_HEIGHT / 2.0;

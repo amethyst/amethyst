@@ -4,11 +4,12 @@ use crate::{
     transparent::Transparent,
 };
 use amethyst_core::{
+    alga::general::SubsetOf,
     ecs::prelude::{
         Component, DenseVecStorage, Entities, Entity, Join, Read, ReadStorage, System, Write,
     },
-    math::{distance_squared, Matrix4, Point3, Vector4},
-    GlobalTransform,
+    math::{distance_squared, try_convert, Matrix4, Point3, RealField, Vector4},
+    Transform,
 };
 use hibitset::BitSet;
 use serde::{Deserialize, Serialize};
@@ -30,35 +31,35 @@ pub struct Visibility {
 /// Determine what entities are visible to the camera, and which are not. Will also sort transparent
 /// entities back to front based on distance from camera.
 ///
-/// Note that this should run after `GlobalTransform` has been updated for the current frame, and
+/// Note that this should run after `Transform` has been updated for the current frame, and
 /// before rendering occurs.
-pub struct VisibilitySortingSystem {
-    centroids: Vec<Internals>,
-    transparent: Vec<Internals>,
+pub struct VisibilitySortingSystem<N: RealField> {
+    centroids: Vec<Internals<N>>,
+    transparent: Vec<Internals<N>>,
 }
 
 /// Defines a object's bounding sphere used by frustum culling.
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
-pub struct BoundingSphere {
-    pub center: Point3<f32>,
-    pub radius: f32,
+pub struct BoundingSphere<N: RealField> {
+    pub center: Point3<N>,
+    pub radius: N,
 }
 
-impl Default for BoundingSphere {
+impl<N: RealField> Default for BoundingSphere<N> {
     fn default() -> Self {
         Self {
             center: Point3::origin(),
-            radius: 1.0,
+            radius: N::one(),
         }
     }
 }
 
-impl BoundingSphere {
-    pub fn new(center: Point3<f32>, radius: f32) -> Self {
+impl<N: RealField> BoundingSphere<N> {
+    pub fn new(center: Point3<N>, radius: N) -> Self {
         Self { center, radius }
     }
 
-    pub fn origin(radius: f32) -> Self {
+    pub fn origin(radius: N) -> Self {
         Self {
             center: Point3::origin(),
             radius,
@@ -66,19 +67,19 @@ impl BoundingSphere {
     }
 }
 
-impl Component for BoundingSphere {
+impl<N: RealField> Component for BoundingSphere<N> {
     type Storage = DenseVecStorage<Self>;
 }
 
 #[derive(Clone)]
-struct Internals {
+struct Internals<N: RealField> {
     entity: Entity,
     transparent: bool,
-    centroid: Point3<f32>,
-    camera_distance: f32,
+    centroid: Point3<N>,
+    camera_distance: N,
 }
 
-impl VisibilitySortingSystem {
+impl<N: RealField> VisibilitySortingSystem<N> {
     /// Create new sorting system
     pub fn new() -> Self {
         VisibilitySortingSystem {
@@ -88,7 +89,7 @@ impl VisibilitySortingSystem {
     }
 }
 
-impl<'a> System<'a> for VisibilitySortingSystem {
+impl<'a, N: RealField + SubsetOf<f32>> System<'a> for VisibilitySortingSystem<N> {
     type SystemData = (
         Entities<'a>,
         Write<'a, Visibility>,
@@ -97,41 +98,61 @@ impl<'a> System<'a> for VisibilitySortingSystem {
         Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Transparent>,
-        ReadStorage<'a, GlobalTransform>,
-        ReadStorage<'a, BoundingSphere>,
+        ReadStorage<'a, Transform<N>>,
+        ReadStorage<'a, BoundingSphere<N>>,
     );
 
     fn run(
         &mut self,
-        (entities, mut visibility, hidden, hidden_prop, active, camera, transparent, global, bound): Self::SystemData,
+        (
+            entities,
+            mut visibility,
+            hidden,
+            hidden_prop,
+            active,
+            camera,
+            transparent,
+            transform,
+            bound,
+        ): Self::SystemData,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("run");
 
         let origin = Point3::origin();
         let defcam = Camera::standard_2d();
-        let identity = GlobalTransform::default();
+        let identity = Transform::default();
 
-        let mut camera_join = (&camera, &global).join();
+        let mut camera_join = (&camera, &transform).join();
         let (camera, camera_transform) = active
             .and_then(|a| camera_join.get(a.entity, &entities))
             .or_else(|| camera_join.next())
             .unwrap_or((&defcam, &identity));
 
-        let camera_centroid = camera_transform.0.transform_point(&origin);
-        let frustum = Frustum::new(camera.proj * camera_transform.0.try_inverse().unwrap());
+        let camera_centroid = camera_transform.global_matrix().transform_point(&origin);
+        let frustum = Frustum::<N>::new(
+            try_convert::<Matrix4<f32>, Matrix4<N>>(camera.proj).unwrap()
+                * camera_transform.global_matrix().try_inverse().unwrap(),
+        );
 
         self.centroids.clear();
         self.centroids.extend(
-            (&*entities, &global, bound.maybe(), !&hidden, !&hidden_prop)
+            (
+                &*entities,
+                &transform,
+                bound.maybe(),
+                !&hidden,
+                !&hidden_prop,
+            )
                 .join()
-                .map(|(entity, global, sphere, _, _)| {
+                .map(|(entity, transform, sphere, _, _)| {
                     let pos = sphere.map_or(&origin, |s| &s.center);
+                    let matrix = transform.global_matrix();
                     (
                         entity,
-                        global.0.transform_point(&pos),
-                        sphere.map_or(1.0, |s| s.radius)
-                            * global.0[(0, 0)].max(global.0[(1, 1)]).max(global.0[(2, 2)]),
+                        matrix.transform_point(&pos),
+                        sphere.map_or(N::one(), |s| s.radius)
+                            * matrix[(0, 0)].max(matrix[(1, 1)]).max(matrix[(2, 2)]),
                     )
                 })
                 .filter(|(_, centroid, radius)| frustum.check_sphere(centroid, *radius))
@@ -168,12 +189,12 @@ impl<'a> System<'a> for VisibilitySortingSystem {
 }
 
 #[derive(Debug)]
-struct Frustum {
-    planes: [Vector4<f32>; 6],
+struct Frustum<N: RealField> {
+    planes: [Vector4<N>; 6],
 }
 
-impl Frustum {
-    fn new(matrix: Matrix4<f32>) -> Self {
+impl<N: RealField> Frustum<N> {
+    fn new(matrix: Matrix4<N>) -> Self {
         let planes = [
             (matrix.row(3) + matrix.row(0)).transpose(),
             (matrix.row(3) - matrix.row(0)).transpose(),
@@ -184,17 +205,17 @@ impl Frustum {
         ];
         Self {
             planes: [
-                planes[0] * (1.0 / planes[0].xyz().magnitude()),
-                planes[1] * (1.0 / planes[1].xyz().magnitude()),
-                planes[2] * (1.0 / planes[2].xyz().magnitude()),
-                planes[3] * (1.0 / planes[3].xyz().magnitude()),
-                planes[4] * (1.0 / planes[4].xyz().magnitude()),
-                planes[5] * (1.0 / planes[5].xyz().magnitude()),
+                planes[0] * (N::one() / planes[0].xyz().magnitude()),
+                planes[1] * (N::one() / planes[1].xyz().magnitude()),
+                planes[2] * (N::one() / planes[2].xyz().magnitude()),
+                planes[3] * (N::one() / planes[3].xyz().magnitude()),
+                planes[4] * (N::one() / planes[4].xyz().magnitude()),
+                planes[5] * (N::one() / planes[5].xyz().magnitude()),
             ],
         }
     }
 
-    fn check_sphere(&self, center: &Point3<f32>, radius: f32) -> bool {
+    fn check_sphere(&self, center: &Point3<N>, radius: N) -> bool {
         for plane in &self.planes {
             if plane.xyz().dot(&center.coords) + plane.w <= -radius {
                 return false;

@@ -89,6 +89,13 @@ pub struct JointTransformsPrefab {
     pub size: usize,
 }
 
+impl JointTransformsPrefab {
+    /// Creates a new `JointTransformsPrefab`.
+    pub fn new(skin: usize, size: usize) -> Self {
+        JointTransformsPrefab { skin, size }
+    }
+}
+
 impl<'a> PrefabData<'a> for JointTransformsPrefab {
     type SystemData = WriteStorage<'a, JointTransforms>;
     type Result = ();

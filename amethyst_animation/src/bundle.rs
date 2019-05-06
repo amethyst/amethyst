@@ -10,7 +10,9 @@ use crate::{
 use amethyst_error::Error;
 
 use amethyst_core::{
+    alga::general::SubsetOf,
     ecs::prelude::{Component, DispatcherBuilder},
+    math::RealField,
     SystemBundle,
 };
 
@@ -19,11 +21,12 @@ use amethyst_core::{
 /// This registers `VertexSkinningSystem`.
 /// Note that the user must make sure this system runs after `TransformSystem`
 #[derive(Default)]
-pub struct VertexSkinningBundle<'a> {
+pub struct VertexSkinningBundle<'a, N> {
     dep: &'a [&'a str],
+    _marker: marker::PhantomData<N>,
 }
 
-impl<'a> VertexSkinningBundle<'a> {
+impl<'a, N: Default> VertexSkinningBundle<'a, N> {
     /// Create a new sampling bundle
     pub fn new() -> Self {
         Default::default()
@@ -36,10 +39,12 @@ impl<'a> VertexSkinningBundle<'a> {
     }
 }
 
-impl<'a, 'b, 'c> SystemBundle<'a, 'b> for VertexSkinningBundle<'c> {
+impl<'a, 'b, 'c, N: RealField + SubsetOf<f32>> SystemBundle<'a, 'b>
+    for VertexSkinningBundle<'c, N>
+{
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
-            VertexSkinningSystem::new(),
+            VertexSkinningSystem::<N>::new(),
             "vertex_skinning_system",
             self.dep,
         );

@@ -14,8 +14,10 @@ use crate::{
 };
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
+    alga::general::SubsetOf,
     ecs::{Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
-    transform::GlobalTransform,
+    math::RealField,
+    transform::Transform,
 };
 use derivative::Derivative;
 use rendy::{
@@ -57,12 +59,12 @@ pub trait Base3DPassDef<B: Backend>: 'static + std::fmt::Debug + Send + Sync {
 /// Draw opaque 3d mesh with specified shaders and texture set
 #[derive(Clone, Derivative)]
 #[derivative(Debug(bound = ""), Default(bound = ""))]
-pub struct DrawBase3DDesc<B: Backend, T: Base3DPassDef<B>> {
+pub struct DrawBase3DDesc<B: Backend, N: RealField + SubsetOf<f32>, T: Base3DPassDef<B>> {
     skinning: bool,
-    marker: PhantomData<(B, T)>,
+    marker: PhantomData<(B, N, T)>,
 }
 
-impl<B: Backend, T: Base3DPassDef<B>> DrawBase3DDesc<B, T> {
+impl<B: Backend, N: RealField + SubsetOf<f32>, T: Base3DPassDef<B>> DrawBase3DDesc<B, N, T> {
     /// Enable vertex skinning
     pub fn with_vertex_skinning(mut self) -> Self {
         self.skinning = true;
@@ -70,7 +72,9 @@ impl<B: Backend, T: Base3DPassDef<B>> DrawBase3DDesc<B, T> {
     }
 }
 
-impl<B: Backend, T: Base3DPassDef<B>> RenderGroupDesc<B, Resources> for DrawBase3DDesc<B, T> {
+impl<B: Backend, N: RealField + SubsetOf<f32>, T: Base3DPassDef<B>> RenderGroupDesc<B, Resources>
+    for DrawBase3DDesc<B, N, T>
+{
     fn build(
         self,
         _ctx: &GraphContext<B>,
@@ -111,7 +115,7 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroupDesc<B, Resources> for DrawBase
         vertex_format_base.sort();
         vertex_format_skinned.sort();
 
-        Ok(Box::new(DrawBase3D::<B, T> {
+        Ok(Box::new(DrawBase3D::<B, N, T> {
             pipeline_basic: pipelines.remove(0),
             pipeline_skinned: pipelines.pop(),
             pipeline_layout,
@@ -131,7 +135,7 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroupDesc<B, Resources> for DrawBase
 
 #[derive(Derivative)]
 #[derivative(Debug(bound = ""))]
-pub struct DrawBase3D<B: Backend, T: Base3DPassDef<B>> {
+pub struct DrawBase3D<B: Backend, N: RealField + SubsetOf<f32>, T: Base3DPassDef<B>> {
     pipeline_basic: B::GraphicsPipeline,
     pipeline_skinned: Option<B::GraphicsPipeline>,
     pipeline_layout: B::PipelineLayout,
@@ -144,10 +148,12 @@ pub struct DrawBase3D<B: Backend, T: Base3DPassDef<B>> {
     skinning: SkinningSub<B>,
     models: DynamicVertex<B, VertexArgs>,
     skinned_models: DynamicVertex<B, SkinnedVertexArgs>,
-    marker: PhantomData<T>,
+    marker: PhantomData<(N, T)>,
 }
 
-impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3D<B, T> {
+impl<B: Backend, N: RealField + SubsetOf<f32>, T: Base3DPassDef<B>> RenderGroup<B, Resources>
+    for DrawBase3D<B, N, T>
+{
     fn prepare(
         &mut self,
         factory: &Factory<B>,
@@ -166,7 +172,7 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3D<B
             hiddens_prop,
             meshes,
             materials,
-            global_transforms,
+            transforms,
             joints,
             tints,
         ) = <(
@@ -177,13 +183,13 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3D<B
             ReadStorage<HiddenPropagate>,
             ReadStorage<Handle<Mesh<B>>>,
             ReadStorage<Handle<Material<B>>>,
-            ReadStorage<GlobalTransform>,
+            ReadStorage<Transform<N>>,
             ReadStorage<JointTransforms>,
             ReadStorage<Tint>,
         )>::fetch(resources);
 
         // Prepare environment
-        self.env.process(factory, index, resources);
+        self.env.process::<N>(factory, index, resources);
         self.materials.maintain();
 
         self.static_batches.clear_inner();
@@ -194,22 +200,9 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3D<B
         let statics_ref = &mut self.static_batches;
         let skinned_ref = &mut self.skinned_batches;
 
-        let static_input = || {
-            (
-                (&materials, &meshes, &global_transforms, tints.maybe()),
-                !&joints,
-            )
-        };
+        let static_input = || ((&materials, &meshes, &transforms, tints.maybe()), !&joints);
 
-        let skinned_input = || {
-            (
-                &materials,
-                &meshes,
-                &global_transforms,
-                tints.maybe(),
-                &joints,
-            )
-        };
+        let skinned_input = || (&materials, &meshes, &transforms, tints.maybe(), &joints);
 
         match &visibility {
             None => {
@@ -412,12 +405,15 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3D<B
 /// Draw transparent mesh with physically based lighting
 #[derive(Clone, Derivative)]
 #[derivative(Debug(bound = ""), Default(bound = ""))]
-pub struct DrawBase3DTransparentDesc<B: Backend, T: Base3DPassDef<B>> {
+pub struct DrawBase3DTransparentDesc<B: Backend, N: RealField + SubsetOf<f32>, T: Base3DPassDef<B>>
+{
     skinning: bool,
-    marker: PhantomData<(B, T)>,
+    marker: PhantomData<(B, N, T)>,
 }
 
-impl<B: Backend, T: Base3DPassDef<B>> DrawBase3DTransparentDesc<B, T> {
+impl<B: Backend, N: RealField + SubsetOf<f32>, T: Base3DPassDef<B>>
+    DrawBase3DTransparentDesc<B, N, T>
+{
     /// Enable vertex skinning
     pub fn with_vertex_skinning(mut self) -> Self {
         self.skinning = true;
@@ -425,8 +421,8 @@ impl<B: Backend, T: Base3DPassDef<B>> DrawBase3DTransparentDesc<B, T> {
     }
 }
 
-impl<B: Backend, T: Base3DPassDef<B>> RenderGroupDesc<B, Resources>
-    for DrawBase3DTransparentDesc<B, T>
+impl<B: Backend, N: RealField + SubsetOf<f32>, T: Base3DPassDef<B>> RenderGroupDesc<B, Resources>
+    for DrawBase3DTransparentDesc<B, N, T>
 {
     fn build(
         self,
@@ -466,7 +462,7 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroupDesc<B, Resources>
         vertex_format_base.sort();
         vertex_format_skinned.sort();
 
-        Ok(Box::new(DrawBase3DTransparent::<B, T> {
+        Ok(Box::new(DrawBase3DTransparent::<B, N, T> {
             pipeline_basic: pipelines.remove(0),
             pipeline_skinned: pipelines.pop(),
             pipeline_layout,
@@ -487,7 +483,7 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroupDesc<B, Resources>
 
 #[derive(Derivative)]
 #[derivative(Debug(bound = ""))]
-pub struct DrawBase3DTransparent<B: Backend, T: Base3DPassDef<B>> {
+pub struct DrawBase3DTransparent<B: Backend, N: RealField + SubsetOf<f32>, T: Base3DPassDef<B>> {
     pipeline_basic: B::GraphicsPipeline,
     pipeline_skinned: Option<B::GraphicsPipeline>,
     pipeline_layout: B::PipelineLayout,
@@ -501,10 +497,12 @@ pub struct DrawBase3DTransparent<B: Backend, T: Base3DPassDef<B>> {
     models: DynamicVertex<B, VertexArgs>,
     skinned_models: DynamicVertex<B, SkinnedVertexArgs>,
     change: util::ChangeDetection,
-    marker: PhantomData<T>,
+    marker: PhantomData<(N, T)>,
 }
 
-impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3DTransparent<B, T> {
+impl<B: Backend, N: RealField + SubsetOf<f32>, T: Base3DPassDef<B>> RenderGroup<B, Resources>
+    for DrawBase3DTransparent<B, N, T>
+{
     fn prepare(
         &mut self,
         factory: &Factory<B>,
@@ -513,19 +511,19 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3DTr
         _subpass: hal::pass::Subpass<'_, B>,
         resources: &Resources,
     ) -> PrepareResult {
-        let (mesh_storage, visibility, meshes, materials, global_transforms, joints, tints) =
+        let (mesh_storage, visibility, meshes, materials, transforms, joints, tints) =
             <(
                 Read<AssetStorage<Mesh<B>>>,
                 ReadExpect<Visibility>,
                 ReadStorage<Handle<Mesh<B>>>,
                 ReadStorage<Handle<Material<B>>>,
-                ReadStorage<GlobalTransform>,
+                ReadStorage<Transform<N>>,
                 ReadStorage<JointTransforms>,
                 ReadStorage<Tint>,
             )>::fetch(resources);
 
         // Prepare environment
-        self.env.process(factory, index, resources);
+        self.env.process::<N>(factory, index, resources);
         self.materials.maintain();
 
         self.static_batches.swap_clear();
@@ -537,11 +535,7 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3DTr
         let skinned_ref = &mut self.skinned_batches;
         let mut changed = false;
 
-        let mut joined = (
-            (&materials, &meshes, &global_transforms, tints.maybe()),
-            !&joints,
-        )
-            .join();
+        let mut joined = ((&materials, &meshes, &transforms, tints.maybe()), !&joints).join();
         visibility
             .visible_ordered
             .iter()
@@ -560,14 +554,7 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3DTr
             });
 
         if self.pipeline_skinned.is_some() {
-            let mut joined = (
-                &materials,
-                &meshes,
-                &global_transforms,
-                tints.maybe(),
-                &joints,
-            )
-                .join();
+            let mut joined = (&materials, &meshes, &transforms, tints.maybe(), &joints).join();
 
             visibility
                 .visible_ordered

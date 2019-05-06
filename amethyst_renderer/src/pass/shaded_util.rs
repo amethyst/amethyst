@@ -3,8 +3,10 @@ use std::mem;
 use glsl_layout::*;
 
 use amethyst_core::{
+    alga::general::SubsetOf,
     ecs::prelude::{Join, ReadStorage},
-    GlobalTransform,
+    math::{convert, Matrix4, RealField},
+    Transform,
 };
 
 use crate::{
@@ -47,19 +49,23 @@ pub(crate) struct SpotLightPod {
     smoothness: float,
 }
 
-pub(crate) fn set_light_args(
+pub(crate) fn set_light_args<N: RealField + SubsetOf<f32>>(
     effect: &mut Effect,
     encoder: &mut Encoder,
     light: &ReadStorage<'_, Light>,
-    global: &ReadStorage<'_, GlobalTransform>,
+    transform: &ReadStorage<'_, Transform<N>>,
     ambient: &AmbientColor,
-    camera: Option<(&Camera, &GlobalTransform)>,
+    camera: Option<(&Camera, &Transform<N>)>,
 ) {
-    let point_lights: Vec<_> = (light, global)
+    let point_lights: Vec<_> = (light, transform)
         .join()
         .filter_map(|(light, transform)| {
             if let Light::Point(ref light) = *light {
-                let position: [f32; 3] = transform.0.column(3).xyz().into();
+                let position: [f32; 3] =
+                    convert::<Matrix4<N>, Matrix4<f32>>(*transform.global_matrix())
+                        .column(3)
+                        .xyz()
+                        .into();
                 Some(
                     PointLightPod {
                         position: position.into(),
@@ -92,11 +98,15 @@ pub(crate) fn set_light_args(
         })
         .collect();
 
-    let spot_lights: Vec<_> = (light, global)
+    let spot_lights: Vec<_> = (light, transform)
         .join()
         .filter_map(|(light, transform)| {
             if let Light::Spot(ref light) = *light {
-                let position: [f32; 3] = transform.0.column(3).xyz().into();
+                let position: [f32; 3] =
+                    convert::<Matrix4<N>, Matrix4<f32>>(*transform.global_matrix())
+                        .column(3)
+                        .xyz()
+                        .into();
                 Some(
                     SpotLightPod {
                         position: position.into(),
@@ -132,7 +142,12 @@ pub(crate) fn set_light_args(
         "camera_position",
         camera
             .as_ref()
-            .map(|&(_, ref trans)| trans.0.column(3).xyz().into())
+            .map(|&(_, ref trans)| {
+                convert::<Matrix4<N>, Matrix4<f32>>(*trans.global_matrix())
+                    .column(3)
+                    .xyz()
+                    .into()
+            })
             .unwrap_or([0.0; 3]),
     );
 }

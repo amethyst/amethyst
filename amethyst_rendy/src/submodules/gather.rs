@@ -4,8 +4,10 @@ use crate::{
     resources::AmbientColor,
 };
 use amethyst_core::{
+    alga::general::SubsetOf,
     ecs::{Join, Read, ReadStorage, Resources, SystemData},
-    transform::GlobalTransform,
+    math::{convert, Matrix4, RealField, Vector3},
+    transform::Transform,
 };
 use glsl_layout::*;
 
@@ -20,44 +22,45 @@ pub struct CameraGatherer {
 }
 
 impl CameraGatherer {
-    pub fn gather(res: &Resources) -> Self {
+    pub fn gather<N: RealField + SubsetOf<f32>>(res: &Resources) -> Self {
         #[cfg(feature = "profiler")]
         profile_scope!("gather_cameras");
 
-        let (active_camera, cameras, global_transforms) = <(
+        let (active_camera, cameras, transforms) = <(
             Option<Read<'_, ActiveCamera>>,
             ReadStorage<'_, Camera>,
-            ReadStorage<'_, GlobalTransform>,
+            ReadStorage<'_, Transform<N>>,
         )>::fetch(res);
 
         let defcam = Camera::standard_2d();
-        let identity = GlobalTransform::default();
+        let identity = Transform::default();
 
-        let camera = active_camera
+        let (camera, transform) = active_camera
             .as_ref()
             .and_then(|ac| {
-                cameras.get(ac.entity).map(|camera| {
-                    (
-                        camera,
-                        global_transforms.get(ac.entity).unwrap_or(&identity),
-                    )
-                })
+                cameras
+                    .get(ac.entity)
+                    .map(|camera| (camera, transforms.get(ac.entity).unwrap_or(&identity)))
             })
             .unwrap_or_else(|| {
-                (&cameras, &global_transforms)
+                (&cameras, &transforms)
                     .join()
                     .next()
                     .unwrap_or((&defcam, &identity))
             });
 
-        let camera_position = (camera.1).0.column(3).xyz().into_pod();
+        let camera_position =
+            convert::<Vector3<N>, Vector3<f32>>(transform.global_matrix().column(3).xyz())
+                .into_pod();
 
-        let proj: [[f32; 4]; 4] = camera.0.proj.into();
-        let view: [[f32; 4]; 4] = (*camera.1)
-            .0
-            .try_inverse()
-            .expect("Unable to get inverse of camera transform")
-            .into();
+        let proj: [[f32; 4]; 4] = camera.proj.into();
+        let view: [[f32; 4]; 4] = convert::<Matrix4<N>, Matrix4<f32>>(
+            transform
+                .global_matrix()
+                .try_inverse()
+                .expect("Unable to get inverse of camera transform"),
+        )
+        .into();
 
         let projview = pod::ViewArgs {
             proj: proj.into(),

@@ -5,6 +5,14 @@
 #[cfg(all(target_os = "emscripten", not(no_threading)))]
 compile_error!("the cfg flag \"no_threading\" is required when building for emscripten");
 
+#[macro_use]
+extern crate serde;
+#[macro_use]
+extern crate getset;
+#[macro_use]
+extern crate derive_new;
+
+pub use alga;
 pub use approx;
 pub use nalgebra as math;
 pub use shred;
@@ -12,6 +20,10 @@ pub use shrev;
 pub use specs as ecs;
 
 use rayon;
+
+#[macro_use]
+#[cfg(feature = "profiler")]
+extern crate thread_profiler;
 
 use std::sync::Arc;
 

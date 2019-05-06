@@ -5,9 +5,10 @@ use crate::{
 };
 use amethyst_core::{
     ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
-    math::{Point3, Vector3},
-    GlobalTransform,
+    math::{Point3, RealField, Vector3},
+    Transform,
 };
+use derivative::Derivative;
 use hibitset::BitSet;
 use std::cmp::Ordering;
 
@@ -30,31 +31,32 @@ pub struct SpriteVisibility {
 /// The sprite render pass should draw all sprites without semi-transparent pixels, then draw the
 /// sprites with semi-transparent pixels from far to near.
 ///
-/// Note that this should run after `GlobalTransform` has been updated for the current frame, and
+/// Note that this should run after `Transform` has been updated for the current frame, and
 /// before rendering occurs.
-#[derive(Default)]
-pub struct SpriteVisibilitySortingSystem {
-    centroids: Vec<Internals>,
-    transparent: Vec<Internals>,
+#[derive(Derivative)]
+#[derivative(Default(bound = ""))]
+pub struct SpriteVisibilitySortingSystem<N: RealField> {
+    centroids: Vec<Internals<N>>,
+    transparent: Vec<Internals<N>>,
 }
 
 #[derive(Clone)]
-struct Internals {
+struct Internals<N: RealField> {
     entity: Entity,
     transparent: bool,
-    centroid: Point3<f32>,
-    camera_distance: f32,
-    from_camera: Vector3<f32>,
+    centroid: Point3<N>,
+    camera_distance: N,
+    from_camera: Vector3<N>,
 }
 
-impl SpriteVisibilitySortingSystem {
+impl<N: RealField> SpriteVisibilitySortingSystem<N> {
     /// Returns a new sprite visibility sorting system
     pub fn new() -> Self {
         Default::default()
     }
 }
 
-impl<'a> System<'a> for SpriteVisibilitySortingSystem {
+impl<'a, N: RealField> System<'a> for SpriteVisibilitySortingSystem<N> {
     type SystemData = (
         Entities<'a>,
         Write<'a, SpriteVisibility>,
@@ -63,12 +65,12 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
         Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Transparent>,
-        ReadStorage<'a, GlobalTransform>,
+        ReadStorage<'a, Transform<N>>,
     );
 
     fn run(
         &mut self,
-        (entities, mut visibility, hidden, hidden_prop, active, camera, transparent, global): Self::SystemData,
+        (entities, mut visibility, hidden, hidden_prop, active, camera, transparent, transform): Self::SystemData,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("run");
@@ -77,23 +79,23 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
 
         // The camera position is used to determine culling, but the sprites are ordered based on
         // the Z coordinate
-        let camera: Option<&GlobalTransform> = active
-            .and_then(|a| global.get(a.entity))
-            .or_else(|| (&camera, &global).join().map(|cg| cg.1).next());
+        let camera: Option<&Transform<N>> = active
+            .and_then(|a| transform.get(a.entity))
+            .or_else(|| (&camera, &transform).join().map(|ct| ct.1).next());
         let camera_backward = camera
-            .map(|c| c.0.column(2).xyz().into())
+            .map(|c| c.global_matrix().column(2).xyz().into())
             .unwrap_or_else(Vector3::z);
         let camera_centroid = camera
-            .map(|g| g.0.transform_point(&origin))
+            .map(|t| t.global_matrix().transform_point(&origin))
             .unwrap_or_else(|| origin);
 
         self.centroids.clear();
         self.centroids.extend(
-            (&*entities, &global, !&hidden, !&hidden_prop)
+            (&*entities, &transform, !&hidden, !&hidden_prop)
                 .join()
-                .map(|(entity, global, _, _)| (entity, global.0.transform_point(&origin)))
+                .map(|(e, t, _, _)| (e, t.global_matrix().transform_point(&origin)))
                 // filter entities behind the camera
-                .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.)
+                .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < N::zero())
                 .map(|(entity, centroid)| Internals {
                     entity,
                     transparent: transparent.contains(entity),

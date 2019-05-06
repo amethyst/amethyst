@@ -12,8 +12,10 @@ use crate::{
     util::{self, TapCountIter},
 };
 use amethyst_core::{
+    alga::general::SubsetOf,
     ecs::{Join, ReadStorage, Resources, SystemData},
-    transform::GlobalTransform,
+    math::{convert, RealField, Vector3},
+    transform::Transform,
 };
 use glsl_layout::*;
 
@@ -48,7 +50,12 @@ impl<B: Backend> EnvironmentSub<B> {
         self.layout.raw()
     }
 
-    pub fn process(&mut self, factory: &Factory<B>, index: usize, res: &Resources) -> bool {
+    pub fn process<N: RealField + SubsetOf<f32>>(
+        &mut self,
+        factory: &Factory<B>,
+        index: usize,
+        res: &Resources,
+    ) -> bool {
         #[cfg(feature = "profiler")]
         profile_scope!("process");
 
@@ -59,7 +66,7 @@ impl<B: Backend> EnvironmentSub<B> {
             }
             &mut self.per_image[index]
         };
-        this_image.process(factory, res)
+        this_image.process::<N>(factory, res)
     }
 
     #[inline]
@@ -97,7 +104,11 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
         );
     }
 
-    fn process(&mut self, factory: &Factory<B>, res: &Resources) -> bool {
+    fn process<N: RealField + SubsetOf<f32>>(
+        &mut self,
+        factory: &Factory<B>,
+        res: &Resources,
+    ) -> bool {
         let align = factory
             .physical()
             .limits()
@@ -151,7 +162,7 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
             let CameraGatherer {
                 camera_position,
                 projview,
-            } = CameraGatherer::gather(res);
+            } = CameraGatherer::gather::<N>(res);
 
             let mut mapped = buffer.map(factory, whole_range.clone()).unwrap();
             let mut writer = unsafe { mapped.write::<u8>(factory, whole_range.clone()).unwrap() };
@@ -166,15 +177,18 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
             }
             .std140();
 
-            let (lights, global_transforms) =
-                <(ReadStorage<'_, Light>, ReadStorage<'_, GlobalTransform>)>::fetch(res);
+            let (lights, transforms) =
+                <(ReadStorage<'_, Light>, ReadStorage<'_, Transform<N>>)>::fetch(res);
 
-            let point_lights = (&lights, &global_transforms)
+            let point_lights = (&lights, &transforms)
                 .join()
                 .filter_map(|(light, transform)| match light {
                     Light::Point(light) => Some(
                         pod::PointLight {
-                            position: transform.0.column(3).xyz().into_pod(),
+                            position: convert::<Vector3<N>, Vector3<f32>>(
+                                transform.global_matrix().column(3).xyz(),
+                            )
+                            .into_pod(),
                             color: light.color.into_pod(),
                             intensity: light.intensity,
                         }
@@ -198,13 +212,16 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
                 })
                 .take(MAX_DIR_LIGHTS);
 
-            let spot_lights = (&lights, &global_transforms)
+            let spot_lights = (&lights, &transforms)
                 .join()
                 .filter_map(|(light, transform)| {
                     if let Light::Spot(ref light) = *light {
                         Some(
                             pod::SpotLight {
-                                position: transform.0.column(3).xyz().into_pod(),
+                                position: convert::<Vector3<N>, Vector3<f32>>(
+                                    transform.global_matrix().column(3).xyz(),
+                                )
+                                .into_pod(),
                                 color: light.color.into_pod(),
                                 direction: light.direction.into_pod(),
                                 angle: light.angle.cos(),

@@ -24,7 +24,7 @@ struct MovementSystem;
 impl<'s> System<'s> for MovementSystem {
     type SystemData = (
         ReadStorage<'s, Player>,
-        WriteStorage<'s, Transform>,
+        WriteStorage<'s, Transform<f32>>,
         Read<'s, InputHandler<String, String>>,
     );
 
@@ -64,7 +64,7 @@ fn load_sprite_sheet(world: &mut World, png_path: &str, ron_path: &str) -> Sprit
 
 // Initialize a background
 fn init_background_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
-    let mut transform = Transform::default();
+    let mut transform = Transform::<f32>::default();
     transform.set_translation_z(-10.0);
     let sprite = SpriteRender {
         sprite_sheet: sprite_sheet.clone(),
@@ -75,7 +75,7 @@ fn init_background_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -
 
 // Initialize a sprite as a reference point at a fixed location
 fn init_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
-    let mut transform = Transform::default();
+    let mut transform = Transform::<f32>::default();
     transform.set_translation_xyz(100.0, 0.0, 0.0);
     let sprite = SpriteRender {
         sprite_sheet: sprite_sheet.clone(),
@@ -91,7 +91,7 @@ fn init_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) ->
 
 // Initialize a sprite as a reference point using a screen position
 fn init_screen_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
-    let mut transform = Transform::default();
+    let mut transform = Transform::<f32>::default();
     transform.set_translation_xyz(60.0, 10.0, -20.0);
     let sprite = SpriteRender {
         sprite_sheet: sprite_sheet.clone(),
@@ -107,7 +107,7 @@ fn init_screen_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHan
 }
 
 fn init_player(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
-    let mut transform = Transform::default();
+    let mut transform = Transform::<f32>::default();
     transform.set_translation_xyz(0.0, 0.0, 0.0);
     let sprite = SpriteRender {
         sprite_sheet: sprite_sheet.clone(),
@@ -123,7 +123,7 @@ fn init_player(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
 }
 
 fn init_camera(world: &mut World, parent: Entity) -> Entity {
-    let mut transform = Transform::default();
+    let mut transform = Transform::<f32>::default();
     transform.set_translation_z(1.0);
     world
         .create_entity()
@@ -161,17 +161,17 @@ fn main() -> amethyst::Result<()> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.1, 0.1, 0.1, 1.0], 1.0)
-            .with_pass(DrawFlat2D::new()),
+            .with_pass(DrawFlat2D::<f32>::new()),
     );
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(TransformBundle::<f32>::new())?
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(root.join("input.ron"))?,
         )?
         .with(MovementSystem, "movement", &[])
         .with_bundle(
-            RenderBundle::new(pipe, Some(config))
+            RenderBundle::<'_, _, _, f32>::new(pipe, Some(config))
                 .with_sprite_sheet_processor()
                 .with_sprite_visibility_sorting(&[]), // Let's us use the `Transparent` component
         )?;

@@ -78,32 +78,13 @@ pub fn load_mesh(
             .map(Position)
             .collect::<Vec<_>>();
 
-        let num_unique_vertices = positions.len();
-        let num_faces = indices.len().unwrap_or(num_unique_vertices) / 3;
-
         let normals = compute_if(options.load_normals || options.load_tangents, || {
             trace!("Loading normals");
             if let Some(normals) = reader.read_normals() {
                 normals.map(Normal).collect::<Vec<_>>()
             } else {
                 trace!("Calculating normals");
-                let mut normals = vec![zero::<Vector3<f32>>(); num_unique_vertices];
-                for face in 0..num_faces {
-                    let i0 = indices.map(face, 0);
-                    let i1 = indices.map(face, 1);
-                    let i2 = indices.map(face, 2);
-                    let a = Vector3::from(positions[i0].0);
-                    let b = Vector3::from(positions[i1].0);
-                    let c = Vector3::from(positions[i2].0);
-                    let n = (b - a).cross(&(c - a));
-                    normals[i0] += n;
-                    normals[i1] += n;
-                    normals[i2] += n;
-                }
-                normals
-                    .into_iter()
-                    .map(|n| Normal(n.normalize().into()))
-                    .collect::<Vec<_>>()
+                calculate_normals(&positions, &indices)
             }
         });
 
@@ -132,22 +113,13 @@ pub fn load_mesh(
             match tangents {
                 Some(tangents) => tangents.map(Tangent).collect::<Vec<_>>(),
                 None => {
-                    let normals = normals.as_ref().unwrap();
-                    let tex_coords = tex_coords.as_ref().unwrap();
-                    let mut tangents = vec![Tangent([0.0, 0.0, 0.0, 0.0]); num_unique_vertices];
-
-                    mikktspace::generate_tangents(
-                        &|| 3,
-                        &|| num_faces,
-                        &|face, vert| &positions[indices.map(face, vert)].0,
-                        &|face, vert| &normals[indices.map(face, vert)].0,
-                        &|face, vert| &tex_coords[indices.map(face, vert)].0,
-                        &mut |face, vert, tangent| {
-                            let [x, y, z, w] = tangent;
-                            tangents[indices.map(face, vert)] = Tangent([x, y, z, 1.0 - w]);
-                        },
-                    );
-                    tangents
+                    trace!("Calculating tangents");
+                    calculate_tangents(
+                        &positions,
+                        normals.as_ref().unwrap(),
+                        tex_coords.as_ref().unwrap(),
+                        &indices,
+                    )
                 }
             }
         });
@@ -201,4 +173,94 @@ pub fn load_mesh(
     }
     trace!("Loaded mesh");
     Ok(primitives)
+}
+
+fn calculate_normals(positions: &[Position], indices: &Indices) -> Vec<Normal> {
+    let mut normals = vec![zero::<Vector3<f32>>(); positions.len()];
+    let num_faces = indices.len().unwrap_or(positions.len()) / 3;
+    for face in 0..num_faces {
+        let i0 = indices.map(face, 0);
+        let i1 = indices.map(face, 1);
+        let i2 = indices.map(face, 2);
+        let a = Vector3::from(positions[i0].0);
+        let b = Vector3::from(positions[i1].0);
+        let c = Vector3::from(positions[i2].0);
+        let n = (b - a).cross(&(c - a));
+        normals[i0] += n;
+        normals[i1] += n;
+        normals[i2] += n;
+    }
+    normals
+        .into_iter()
+        .map(|n| Normal(n.normalize().into()))
+        .collect::<Vec<_>>()
+}
+
+fn calculate_tangents(
+    positions: &[Position],
+    normals: &[Normal],
+    tex_coords: &[TexCoord],
+    indices: &Indices,
+) -> Vec<Tangent> {
+    let mut tangents = vec![Tangent([0.0, 0.0, 0.0, 0.0]); positions.len()];
+    let num_faces = indices.len().unwrap_or(positions.len()) / 3;
+    mikktspace::generate_tangents(
+        &|| 3,
+        &|| num_faces,
+        &|face, vert| &positions[indices.map(face, vert)].0,
+        &|face, vert| &normals[indices.map(face, vert)].0,
+        &|face, vert| &tex_coords[indices.map(face, vert)].0,
+        &mut |face, vert, tangent| {
+            let [x, y, z, w] = tangent;
+            tangents[indices.map(face, vert)] = Tangent([x, y, z, 1.0 - w]);
+        },
+    );
+    tangents
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::format::mesh::calculate_tangents;
+
+    #[test]
+    fn test_tangent_calc() {
+        let positions = &[
+            Position([0.0, 0.0, 0.0]),
+            Position([0.0, 1.0, 0.0]),
+            Position([1.0, 1.0, 0.0]),
+            Position([0.0, 1.0, 0.0]),
+            Position([1.0, 1.0, 0.0]),
+            Position([0.0, 1.0, 0.0]),
+        ];
+        let normals = &[
+            Normal([0.0, 0.0, 1.0]),
+            Normal([0.0, 0.0, 1.0]),
+            Normal([0.0, 0.0, 1.0]),
+            Normal([0.0, 0.0, 1.0]),
+            Normal([0.0, 0.0, 1.0]),
+            Normal([0.0, 0.0, 1.0]),
+        ];
+        let tex_coords = &[
+            TexCoord([0.0, 0.0]),
+            TexCoord([0.0, 1.0]),
+            TexCoord([1.0, 1.0]),
+            TexCoord([0.0, 1.0]),
+            TexCoord([1.0, 1.0]),
+            TexCoord([0.0, 1.0]),
+        ];
+
+        let tangents = calculate_tangents(positions, normals, tex_coords);
+
+        assert_eq!(
+            tangents,
+            vec![
+                Tangent([1.0, 0.0, 0.0, 1.0]),
+                Tangent([1.0, 0.0, 0.0, 1.0]),
+                Tangent([1.0, 0.0, 0.0, 1.0]),
+                Tangent([1.0, 0.0, 0.0, 1.0]),
+                Tangent([1.0, 0.0, 0.0, 1.0]),
+                Tangent([1.0, 0.0, 0.0, 1.0])
+            ]
+        );
+    }
 }

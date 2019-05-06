@@ -18,7 +18,7 @@ pipeline {
 		docker {
 		    image 'amethystrs/builder-linux:stable'
 		    label 'docker'
-		} 
+		}
             }
             steps {
                 echo 'Checking formatting...'
@@ -35,7 +35,7 @@ pipeline {
 			docker {
 			    image 'amethystrs/builder-linux:stable'
 			    label 'docker'
-			} 
+			}
 		    }
 		    steps {
 			echo 'Running Cargo check...'
@@ -50,7 +50,7 @@ pipeline {
 			docker {
 			    image 'amethystrs/builder-linux:nightly'
 			    label 'docker'
-			} 
+			}
 		    }
 		    steps {
 			echo 'Running Cargo check...'
@@ -61,13 +61,13 @@ pipeline {
         }
         stage('Run Tests') {
             parallel {
-                stage("Test on Windows") {                    
+                stage("Test on Windows") {
                     environment {
                         CARGO_HOME = 'C:\\Users\\root\\.cargo'
                         RUSTUP_HOME = 'C:\\Users\\root\\.rustup'
                     }
-                    agent { 
-                        label 'windows' 
+                    agent {
+                        label 'windows'
                     }
                     steps {
                         echo 'Beginning tests...'
@@ -80,7 +80,7 @@ pipeline {
 			docker {
 			    image 'amethystrs/builder-linux:stable'
 			    label 'docker'
-			} 
+			}
                     }
                     steps {
                         echo 'Beginning tests...'

@@ -8,7 +8,7 @@ use amethyst::{
     utils::{application_root_dir, scene::BasicScenePrefab},
 };
 
-type MyPrefabData = BasicScenePrefab<ComboMeshCreator>;
+type MyPrefabData = BasicScenePrefab<ComboMeshCreator, f32>;
 
 struct Example;
 
@@ -32,8 +32,8 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
-        .with_bundle(TransformBundle::new())?
-        .with_basic_renderer(display_config_path, DrawShadedSeparate::new(), false)?;
+        .with_bundle(TransformBundle::<f32>::new())?
+        .with_basic_renderer(display_config_path, DrawShadedSeparate::<f32>::new(), false)?;
     let mut game = Application::new(resources, Example, game_data)?;
     game.run();
     Ok(())

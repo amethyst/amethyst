@@ -168,7 +168,7 @@ pub struct MoveBallsSystem;
 impl<'s> System<'s> for MoveBallsSystem {
     type SystemData = (
         ReadStorage<'s, Ball>,
-        WriteStorage<'s, Transform>,
+        WriteStorage<'s, Transform<f32>>,
         Read<'s, Time>,
     );
 
@@ -249,7 +249,7 @@ impl<'s> System<'s> for BounceSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
         ReadStorage<'s, Paddle>,
-        ReadStorage<'s, Transform>,
+        ReadStorage<'s, Transform<f32>>,
     );
 
     fn run(&mut self, (mut balls, paddles, transforms): Self::SystemData) {
@@ -324,7 +324,7 @@ as well as adding our new systems to the game data:
 # let config = DisplayConfig::load(&path);
 # let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
 #       .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-#       .with_pass(DrawFlat::<PosTex>::new()),
+#       .with_pass(DrawFlat::<PosTex, f32>::new()),
 # );
 # mod systems {
 # use amethyst;
@@ -346,7 +346,7 @@ as well as adding our new systems to the game data:
 # }
 # let input_bundle = amethyst::input::InputBundle::<String, String>::new();
 let game_data = GameDataBuilder::default()
-#    .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
+#    .with_bundle(RenderBundle::<'_, _, _, f32>::new(pipe, Some(config)).with_sprite_sheet_processor())?
 #    .with_bundle(TransformBundle::new())?
 #    .with_bundle(input_bundle)?
 #    .with(systems::PaddleSystem, "paddle_system", &["input_system"])
@@ -357,6 +357,10 @@ let game_data = GameDataBuilder::default()
         "collision_system",
         &["paddle_system", "ball_system"],
     );
+# let assets_dir = "/";
+# struct Pong;
+# impl SimpleState for Pong { }
+# let mut game = Application::new(assets_dir, Pong, game_data)?;
 # Ok(())
 # }
 ```

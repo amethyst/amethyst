@@ -16,7 +16,7 @@ use amethyst::{
 };
 use std::hash::Hash;
 
-type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
+type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>, f32>;
 
 struct ExampleState;
 
@@ -51,8 +51,8 @@ where
 {
     type SystemData = (
         Read<'a, EventChannel<InputEvent<AC>>>,
-        ReadStorage<'a, Transform>,
-        WriteStorage<'a, ArcBallControlTag>,
+        ReadStorage<'a, Transform<f32>>,
+        WriteStorage<'a, ArcBallControlTag<f32>>,
     );
 
     fn run(&mut self, (events, transforms, mut tags): Self::SystemData) {
@@ -103,19 +103,19 @@ fn main() -> Result<(), Error> {
         let pipe = Pipeline::build().with_stage(
             Stage::with_backbuffer()
                 .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-                .with_pass(DrawShaded::<PosNormTex>::new())
-                .with_pass(DrawSkybox::new()),
+                .with_pass(DrawShaded::<PosNormTex, f32>::new())
+                .with_pass(DrawSkybox::<f32>::new()),
         );
-        RenderBundle::new(pipe, Some(display_config))
+        RenderBundle::<'_, _, _, f32>::new(pipe, Some(display_config))
     };
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
-        .with_bundle(TransformBundle::new().with_dep(&[]))?
+        .with_bundle(TransformBundle::<f32>::new().with_dep(&[]))?
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
-        .with_bundle(ArcBallControlBundle::<String, String>::new())?
+        .with_bundle(ArcBallControlBundle::<String, String, f32>::new())?
         .with_bundle(render_bundle)?
         .with(
             CameraDistanceSystem::<String>::new(),

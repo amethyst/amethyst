@@ -11,9 +11,12 @@ use crate::{
 };
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
+    alga::general::SubsetOf,
     ecs::{Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
-    transform::GlobalTransform,
+    math::RealField,
+    transform::Transform,
 };
+use derivative::Derivative;
 use rendy::{
     command::{QueueId, RenderPassEncoder},
     factory::Factory,
@@ -25,22 +28,24 @@ use rendy::{
     mesh::AsVertex,
     shader::Shader,
 };
+use std::marker::PhantomData;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
 /// Draw opaque sprites without lighting.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct DrawFlat2DDesc;
+#[derive(Clone, Debug, PartialEq, Derivative)]
+#[derivative(Default(bound = ""))]
+pub struct DrawFlat2DDesc<N: RealField + SubsetOf<f32>>(PhantomData<N>);
 
-impl DrawFlat2DDesc {
+impl<N: RealField + SubsetOf<f32>> DrawFlat2DDesc<N> {
     /// Create instance of `DrawFlat2D` render group
     pub fn new() -> Self {
         Default::default()
     }
 }
 
-impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DDesc {
+impl<B: Backend, N: RealField + SubsetOf<f32>> RenderGroupDesc<B, Resources> for DrawFlat2DDesc<N> {
     fn build(
         self,
         _ctx: &GraphContext<B>,
@@ -69,28 +74,30 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DDesc {
             vec![env.raw_layout(), textures.raw_layout()],
         )?;
 
-        Ok(Box::new(DrawFlat2D::<B> {
+        Ok(Box::new(DrawFlat2D::<B, N> {
             pipeline: pipeline,
             pipeline_layout,
             env,
             textures,
             vertex,
             sprites: Default::default(),
+            marker: PhantomData,
         }))
     }
 }
 
 #[derive(Debug)]
-pub struct DrawFlat2D<B: Backend> {
+pub struct DrawFlat2D<B: Backend, N: RealField + SubsetOf<f32>> {
     pipeline: B::GraphicsPipeline,
     pipeline_layout: B::PipelineLayout,
     env: FlatEnvironmentSub<B>,
     textures: TextureSub<B>,
     vertex: DynamicVertex<B, SpriteArgs>,
     sprites: OneLevelBatch<TextureId, SpriteArgs>,
+    marker: PhantomData<N>,
 }
 
-impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
+impl<B: Backend, N: RealField + SubsetOf<f32>> RenderGroup<B, Resources> for DrawFlat2D<B, N> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
@@ -109,7 +116,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
             hiddens,
             hidden_props,
             sprite_renders,
-            global_transforms,
+            transforms,
         ) = <(
             Read<'_, AssetStorage<SpriteSheet<B>>>,
             Read<'_, AssetStorage<Texture<B>>>,
@@ -117,10 +124,10 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
             ReadStorage<'_, Hidden>,
             ReadStorage<'_, HiddenPropagate>,
             ReadStorage<'_, SpriteRender<B>>,
-            ReadStorage<'_, GlobalTransform>,
+            ReadStorage<'_, Transform<N>>,
         )>::fetch(resources);
 
-        self.env.process(factory, index, resources);
+        self.env.process::<N>(factory, index, resources);
         self.textures.maintain();
 
         let sprites_ref = &mut self.sprites;
@@ -133,12 +140,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
                 #[cfg(feature = "profiler")]
                 profile_scope!("gather_novisibility");
 
-                (
-                    &sprite_renders,
-                    &global_transforms,
-                    !&hiddens,
-                    !&hidden_props,
-                )
+                (&sprite_renders, &transforms, !&hiddens, !&hidden_props)
                     .join()
                     .filter_map(|(sprite_render, global, _, _)| {
                         let (batch_data, texture) = SpriteArgs::from_data(
@@ -158,11 +160,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
                 #[cfg(feature = "profiler")]
                 profile_scope!("gather_visibility");
 
-                (
-                    &sprite_renders,
-                    &global_transforms,
-                    &visibility.visible_unordered,
-                )
+                (&sprite_renders, &transforms, &visibility.visible_unordered)
                     .join()
                     .filter_map(|(sprite_render, global, _)| {
                         let (batch_data, texture) = SpriteArgs::from_data(
@@ -228,17 +226,20 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
     }
 }
 /// Draw transparent sprites without lighting.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct DrawFlat2DTransparentDesc;
+#[derive(Clone, Debug, PartialEq, Derivative)]
+#[derivative(Default(bound = ""))]
+pub struct DrawFlat2DTransparentDesc<N: RealField + SubsetOf<f32>>(PhantomData<N>);
 
-impl DrawFlat2DTransparentDesc {
+impl<N: RealField + SubsetOf<f32>> DrawFlat2DTransparentDesc<N> {
     /// Create instance of `DrawFlat2D` render group
     pub fn new() -> Self {
         Default::default()
     }
 }
 
-impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DTransparentDesc {
+impl<B: Backend, N: RealField + SubsetOf<f32>> RenderGroupDesc<B, Resources>
+    for DrawFlat2DTransparentDesc<N>
+{
     fn build(
         self,
         _ctx: &GraphContext<B>,
@@ -267,7 +268,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DTransparentDesc {
             vec![env.raw_layout(), textures.raw_layout()],
         )?;
 
-        Ok(Box::new(DrawFlat2DTransparent::<B> {
+        Ok(Box::new(DrawFlat2DTransparent::<B, N> {
             pipeline: pipeline,
             pipeline_layout,
             env,
@@ -275,12 +276,13 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DTransparentDesc {
             vertex,
             sprites: Default::default(),
             change: Default::default(),
+            marker: PhantomData,
         }))
     }
 }
 
 #[derive(Debug)]
-pub struct DrawFlat2DTransparent<B: Backend> {
+pub struct DrawFlat2DTransparent<B: Backend, N: RealField + SubsetOf<f32>> {
     pipeline: B::GraphicsPipeline,
     pipeline_layout: B::PipelineLayout,
     env: FlatEnvironmentSub<B>,
@@ -288,9 +290,12 @@ pub struct DrawFlat2DTransparent<B: Backend> {
     vertex: DynamicVertex<B, SpriteArgs>,
     sprites: OrderedOneLevelBatch<TextureId, SpriteArgs>,
     change: util::ChangeDetection,
+    marker: PhantomData<N>,
 }
 
-impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
+impl<B: Backend, N: RealField + SubsetOf<f32>> RenderGroup<B, Resources>
+    for DrawFlat2DTransparent<B, N>
+{
     fn prepare(
         &mut self,
         factory: &Factory<B>,
@@ -302,16 +307,16 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare_trans");
 
-        let (sprite_sheet_storage, tex_storage, visibility, sprite_renders, global_transforms) =
+        let (sprite_sheet_storage, tex_storage, visibility, sprite_renders, transforms) =
             <(
                 Read<'_, AssetStorage<SpriteSheet<B>>>,
                 Read<'_, AssetStorage<Texture<B>>>,
                 ReadExpect<'_, SpriteVisibility>,
                 ReadStorage<'_, SpriteRender<B>>,
-                ReadStorage<'_, GlobalTransform>,
+                ReadStorage<'_, Transform<N>>,
             )>::fetch(resources);
 
-        self.env.process(factory, index, resources);
+        self.env.process::<N>(factory, index, resources);
         self.textures.maintain();
         self.sprites.swap_clear();
         let mut changed = false;
@@ -323,7 +328,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
             #[cfg(feature = "profiler")]
             profile_scope!("gather_sprites_trans");
 
-            let mut joined = (&sprite_renders, &global_transforms).join();
+            let mut joined = (&sprite_renders, &transforms).join();
             visibility
                 .visible_ordered
                 .iter()

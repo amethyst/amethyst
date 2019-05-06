@@ -2,7 +2,7 @@ use amethyst::{
     animation::AnimationSetPrefab,
     assets::{AssetPrefab, Handle, Prefab, PrefabData, ProgressCounter},
     controls::ControlTagPrefab,
-    core::{ecs::Entity, Transform},
+    core::{ecs::Entity, Transform, math::RealField, alga::general::SubsetOf},
     gltf::{GltfSceneAsset, GltfSceneFormat},
     utils::tag::Tag,
     Error,
@@ -39,8 +39,8 @@ pub enum SpriteAnimationId {
 
 #[derive(Derivative)]
 #[derivative(Default(bound = ""))]
-pub struct Scene<B: Backend> {
-    pub handle: Option<Handle<Prefab<ScenePrefabData<B>>>>,
+pub struct Scene<B: Backend, N: RealField + SubsetOf<f32>> {
+    pub handle: Option<Handle<Prefab<ScenePrefabData<B, N>>>>,
     pub animation_index: usize,
 }
 
@@ -48,16 +48,19 @@ type GenMeshVertex = (Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>);
 
 #[derive(Derivative, Deserialize, Serialize)]
 #[derivative(Default(bound = ""))]
-#[serde(default, bound = "")]
-pub struct ScenePrefabData<B: Backend> {
-    transform: Option<Transform>,
-    gltf: Option<AssetPrefab<GltfSceneAsset<B>, GltfSceneFormat>>,
+#[serde(default, bound(
+    serialize = "N: Serialize",
+    deserialize = "N: Deserialize<'de>",
+))]
+pub struct ScenePrefabData<B: Backend, N: RealField + SubsetOf<f32>> {
+    transform: Option<Transform<N>>,
+    gltf: Option<AssetPrefab<GltfSceneAsset<B, N>, GltfSceneFormat>>,
     sprite_sheet: Option<SpriteSheetPrefab<B>>,
     animation_set: Option<AnimationSetPrefab<SpriteAnimationId, SpriteRender<B>>>,
     camera: Option<CameraPrefab>,
     light: Option<LightPrefab>,
     tag: Option<Tag<AnimationMarker>>,
-    fly_tag: Option<ControlTagPrefab>,
+    fly_tag: Option<ControlTagPrefab<N>>,
     sprite: Option<SpriteRenderPrefab<B>>,
     mesh: Option<MeshPrefab<B, GenMeshVertex>>,
     material: Option<MaterialPrefab<B>>,
@@ -65,16 +68,16 @@ pub struct ScenePrefabData<B: Backend> {
 }
 
 type PData<'a, T> = <T as PrefabData<'a>>::SystemData;
-impl<'a, B: Backend> PrefabData<'a> for ScenePrefabData<B> {
+impl<'a, B: Backend, N: RealField + SubsetOf<f32>> PrefabData<'a> for ScenePrefabData<B, N> {
     type SystemData = (
-        PData<'a, Transform>,
-        PData<'a, AssetPrefab<GltfSceneAsset<B>, GltfSceneFormat>>,
+        PData<'a, Transform<N>>,
+        PData<'a, AssetPrefab<GltfSceneAsset<B, N>, GltfSceneFormat>>,
         PData<'a, SpriteSheetPrefab<B>>,
         PData<'a, AnimationSetPrefab<SpriteAnimationId, SpriteRender<B>>>,
         PData<'a, CameraPrefab>,
         PData<'a, LightPrefab>,
         PData<'a, Tag<AnimationMarker>>,
-        PData<'a, ControlTagPrefab>,
+        PData<'a, ControlTagPrefab<N>>,
         PData<'a, SpriteRenderPrefab<B>>,
         PData<'a, MeshPrefab<B, GenMeshVertex>>,
         PData<'a, MaterialPrefab<B>>,

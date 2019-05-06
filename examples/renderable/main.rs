@@ -26,7 +26,7 @@ use amethyst::{
     Error,
 };
 
-type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
+type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>, f32>;
 
 #[derive(Default)]
 struct Loading {
@@ -183,11 +183,15 @@ fn main() -> Result<(), Error> {
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with::<ExampleSystem>(ExampleSystem::default(), "example_system", &[])
-        .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
+        .with_bundle(TransformBundle::<f32>::new().with_dep(&["example_system"]))?
         .with_bundle(UiBundle::<String, String>::new())?
         .with_bundle(HotReloadBundle::default())?
         .with_bundle(FPSCounterBundle::default())?
-        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), true)?
+        .with_basic_renderer(
+            display_config_path,
+            DrawShaded::<PosNormTex, f32>::new(),
+            true,
+        )?
         .with_bundle(InputBundle::<String, String>::new())?;
     let mut game = Application::build(resources_directory, Loading::default())?.build(game_data)?;
     game.run();
@@ -226,7 +230,7 @@ impl<'a> System<'a> for ExampleSystem {
         WriteStorage<'a, Light>,
         Read<'a, Time>,
         ReadStorage<'a, Camera>,
-        WriteStorage<'a, Transform>,
+        WriteStorage<'a, Transform<f32>>,
         Write<'a, DemoState>,
         WriteStorage<'a, UiText>,
         Read<'a, FPSCounter>,

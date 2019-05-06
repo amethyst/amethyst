@@ -77,7 +77,6 @@ pub enum TextureGenerator {
 }
 
 fn simple_builder<A: AsPixel>(data: Vec<A>, size: Size, filter: Filter) -> TextureBuilder<'static> {
-    println!("Generate");
     TextureBuilder::new()
         .with_kind(Kind::D2(size, size, 1, 1))
         .with_view_kind(ViewKind::D2)

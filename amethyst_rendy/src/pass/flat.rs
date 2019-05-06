@@ -32,7 +32,7 @@ impl<B: Backend> Base3DPassDef<B> for FlatPassDef {
     }
 }
 
-pub type DrawFlatDesc<B> = DrawBase3DDesc<B, FlatPassDef>;
-pub type DrawFlat<B> = DrawBase3D<B, FlatPassDef>;
-pub type DrawFlatTransparentDesc<B> = DrawBase3DTransparentDesc<B, FlatPassDef>;
-pub type DrawFlatTransparent<B> = DrawBase3DTransparent<B, FlatPassDef>;
+pub type DrawFlatDesc<B, N> = DrawBase3DDesc<B, N, FlatPassDef>;
+pub type DrawFlat<B, N> = DrawBase3D<B, N, FlatPassDef>;
+pub type DrawFlatTransparentDesc<B, N> = DrawBase3DTransparentDesc<B, N, FlatPassDef>;
+pub type DrawFlatTransparent<B, N> = DrawBase3DTransparent<B, N, FlatPassDef>;

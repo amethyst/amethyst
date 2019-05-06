@@ -9,6 +9,25 @@ pub struct ServerConfig {
     /// This value is meant for preventing some loops to read infinitely long when many packets are send and received.
     /// This value is by default 5000.
     pub max_throughput: u16,
+    // If enabled a `NetConnection` will be automatically added to the world when a client connects.
+    /// Make this property 'false' you prevent this behaviour.
+    /// This property is enabled by default.
+    pub create_net_connection_on_connect: bool,
+}
+
+impl ServerConfig {
+    /// Construct the config with the specified configuration options.
+    pub fn new(
+        ip: SocketAddr,
+        max_throughput: u16,
+        create_net_connection_on_connect: bool,
+    ) -> ServerConfig {
+        ServerConfig {
+            udp_socket_addr: ip,
+            max_throughput,
+            create_net_connection_on_connect,
+        }
+    }
 }
 
 impl Default for ServerConfig {
@@ -17,6 +36,7 @@ impl Default for ServerConfig {
             // by passing in :0 port the OS will give an available port.
             udp_socket_addr: "0.0.0.0:0".parse().unwrap(),
             max_throughput: 5000,
+            create_net_connection_on_connect: true,
         }
     }
 }

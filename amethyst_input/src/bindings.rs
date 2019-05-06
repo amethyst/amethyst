@@ -180,7 +180,7 @@ where
     }
 
     /// Returns a reference to an axis.
-    pub fn axis<A: Hash + Eq + ?Sized>(&mut self, id: &A) -> Option<&Axis>
+    pub fn axis<A: Hash + Eq + ?Sized>(&self, id: &A) -> Option<&Axis>
     where
         AX: Borrow<A>,
     {

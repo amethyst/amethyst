@@ -11,7 +11,7 @@ pub struct PaddleSystem;
 impl<'s> System<'s> for PaddleSystem {
     type SystemData = (
         ReadStorage<'s, Paddle>,
-        WriteStorage<'s, Transform>,
+        WriteStorage<'s, Transform<f32>>,
         Read<'s, Time>,
         Read<'s, InputHandler<String, String>>,
         Read<'s, ArenaConfig>,

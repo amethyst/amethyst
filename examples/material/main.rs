@@ -36,7 +36,7 @@ impl SimpleState for Example {
                 let roughness = 1.0f32 * (i as f32 / 4.0f32);
                 let metallic = 1.0f32 * (j as f32 / 4.0f32);
 
-                let mut pos = Transform::default();
+                let mut pos = Transform::<f32>::default();
                 pos.set_translation_xyz(2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0);
 
                 let metallic = [metallic, metallic, metallic, 1.0].into();
@@ -74,7 +74,7 @@ impl SimpleState for Example {
         }
         .into();
 
-        let mut light1_transform = Transform::default();
+        let mut light1_transform = Transform::<f32>::default();
         light1_transform.set_translation_xyz(6.0, 6.0, -6.0);
 
         let light2: Light = PointLight {
@@ -84,7 +84,7 @@ impl SimpleState for Example {
         }
         .into();
 
-        let mut light2_transform = Transform::default();
+        let mut light2_transform = Transform::<f32>::default();
         light2_transform.set_translation_xyz(6.0, -6.0, -6.0);
 
         world
@@ -101,7 +101,7 @@ impl SimpleState for Example {
 
         println!("Put camera");
 
-        let mut transform = Transform::default();
+        let mut transform = Transform::<f32>::default();
         transform.set_translation_xyz(0.0, 0.0, -12.0);
         transform.prepend_rotation_y_axis(std::f32::consts::PI);
 
@@ -126,8 +126,8 @@ fn main() -> amethyst::Result<()> {
     let resources = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())?
-        .with_basic_renderer(path, DrawPbm::<PosNormTangTex>::new(), false)?;
+        .with_bundle(TransformBundle::<f32>::new())?
+        .with_basic_renderer(path, DrawPbm::<PosNormTangTex, f32>::new(), false)?;
     let mut game = Application::new(&resources, Example, game_data)?;
     game.run();
     Ok(())

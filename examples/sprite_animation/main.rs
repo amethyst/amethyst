@@ -33,7 +33,7 @@ enum AnimationId {
 #[derive(Debug, Clone, Deserialize, PrefabData)]
 struct MyPrefabData {
     /// Information for rendering a scene with sprites
-    sprite_scene: SpriteScenePrefab,
+    sprite_scene: SpriteScenePrefab<f32>,
     /// Аll animations that can be run on the entity
     animation_set: AnimationSetPrefab<AnimationId, SpriteRender>,
 }
@@ -107,7 +107,7 @@ fn initialise_camera(world: &mut World) {
         (dim.width(), dim.height())
     };
 
-    let mut camera_transform = Transform::default();
+    let mut camera_transform = Transform::<f32>::default();
     camera_transform.set_translation_z(1.0);
 
     world
@@ -130,17 +130,20 @@ fn main() -> amethyst::Result<()> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawFlat2D::new()),
+            .with_pass(DrawFlat2D::<f32>::new()),
     );
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(TransformBundle::<f32>::new())?
         .with_bundle(AnimationBundle::<AnimationId, SpriteRender>::new(
             "animation_control_system",
             "sampler_interpolation_system",
         ))?
-        .with_bundle(RenderBundle::new(pipe, Some(display_config)).with_sprite_sheet_processor())?;
+        .with_bundle(
+            RenderBundle::<_, _, f32>::new(pipe, Some(display_config))
+                .with_sprite_sheet_processor(),
+        )?;
 
     let mut game = Application::new(assets_directory, Example::default(), game_data)?;
     game.run();

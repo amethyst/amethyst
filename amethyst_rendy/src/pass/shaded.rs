@@ -42,7 +42,7 @@ impl<B: Backend> Base3DPassDef<B> for ShadedPassDef {
     }
 }
 
-pub type DrawShadedDesc<B> = DrawBase3DDesc<B, ShadedPassDef>;
-pub type DrawShaded<B> = DrawBase3D<B, ShadedPassDef>;
-pub type DrawShadedTransparentDesc<B> = DrawBase3DTransparentDesc<B, ShadedPassDef>;
-pub type DrawShadedTransparent<B> = DrawBase3DTransparent<B, ShadedPassDef>;
+pub type DrawShadedDesc<B, N> = DrawBase3DDesc<B, N, ShadedPassDef>;
+pub type DrawShaded<B, N> = DrawBase3D<B, N, ShadedPassDef>;
+pub type DrawShadedTransparentDesc<B, N> = DrawBase3DTransparentDesc<B, N, ShadedPassDef>;
+pub type DrawShadedTransparent<B, N> = DrawBase3DTransparent<B, N, ShadedPassDef>;

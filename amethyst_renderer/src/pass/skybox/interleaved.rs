@@ -1,9 +1,12 @@
 //! Skybox pass
 
+use std::marker::PhantomData;
+
 use amethyst_core::{
+    alga::general::SubsetOf,
     ecs::{Read, ReadStorage},
-    math as na,
-    transform::GlobalTransform,
+    math::{self as na, RealField},
+    transform::Transform,
 };
 use amethyst_error::Error;
 
@@ -32,28 +35,42 @@ pub(crate) struct VertexArgs {
 }
 
 /// Draw a simple gradient skybox
+///
+/// # Type Parameters:
+///
+/// * `N`: `RealBound` (f32, f64)
 #[derive(Clone, Debug)]
-pub struct DrawSkybox {
+pub struct DrawSkybox<N> {
     mesh: Option<Mesh>,
+    _pd: PhantomData<N>,
 }
 
-impl DrawSkybox {
+impl<N> DrawSkybox<N> {
     /// Create instance of `DrawSkybox` pass
     pub fn new() -> Self {
-        DrawSkybox { mesh: None }
+        DrawSkybox {
+            mesh: None,
+            _pd: PhantomData,
+        }
     }
 }
 
-impl<'a> PassData<'a> for DrawSkybox {
+impl<'a, N> PassData<'a> for DrawSkybox<N>
+where
+    N: RealField,
+{
     type Data = (
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
-        ReadStorage<'a, GlobalTransform>,
+        ReadStorage<'a, Transform<N>>,
         Read<'a, SkyboxColor>,
     );
 }
 
-impl Pass for DrawSkybox {
+impl<N> Pass for DrawSkybox<N>
+where
+    N: RealField + SubsetOf<f32>,
+{
     fn compile(&mut self, mut effect: NewEffect<'_>) -> Result<Effect, Error> {
         let verts = Shape::Cube.generate_vertices::<Vec<PosTex>>(None);
         self.mesh = Some(Mesh::build(verts).build(&mut effect.factory)?);
@@ -79,22 +96,16 @@ impl Pass for DrawSkybox {
         encoder: &mut Encoder,
         effect: &mut Effect,
         mut _factory: Factory,
-        (active, camera, global, skybox_color): <Self as PassData<'a>>::Data,
+        (active, camera, transform, skybox_color): <Self as PassData<'a>>::Data,
     ) {
-        let camera = get_camera(active, &camera, &global);
+        let camera = get_camera(active, &camera, &transform);
 
         let mesh = self
             .mesh
             .as_ref()
             .expect("Pass doesn't seem to be compiled.");
 
-        set_vertex_args(
-            effect,
-            encoder,
-            camera,
-            &GlobalTransform(na::one()),
-            Rgba::WHITE,
-        );
+        set_vertex_args(effect, encoder, camera, &na::one(), Rgba::WHITE);
 
         if let Some(vbuf) = mesh.buffer(PosTex::ATTRIBUTES) {
             effect.data.vertex_bufs.push(vbuf.clone());

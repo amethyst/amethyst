@@ -1,5 +1,8 @@
 use amethyst_assets::PrefabData;
-use amethyst_core::ecs::prelude::{Component, Entity, HashMapStorage, NullStorage, WriteStorage};
+use amethyst_core::{
+    ecs::prelude::{Component, Entity, HashMapStorage, NullStorage, WriteStorage},
+    math::RealField,
+};
 use amethyst_error::Error;
 
 use serde::{Deserialize, Serialize};
@@ -15,33 +18,33 @@ impl Component for FlyControlTag {
 
 /// To add an arc ball behaviour, add this to a camera which already has the FlyControlTag added.
 #[derive(Debug, Clone)]
-pub struct ArcBallControlTag {
+pub struct ArcBallControlTag<N: RealField> {
     /// The target entity which the camera will orbit
     pub target: Entity,
     /// The distance from the target entity that the camera should orbit at.
-    pub distance: f32,
+    pub distance: N,
 }
 
-impl Component for ArcBallControlTag {
+impl<N: RealField> Component for ArcBallControlTag<N> {
     // we can use HashMapStorage here because, according to the specs doc, this storage should be
     // use when the component is used with few entity, I think there will rarely more than one
     // camera
-    type Storage = HashMapStorage<ArcBallControlTag>;
+    type Storage = HashMapStorage<ArcBallControlTag<N>>;
 }
 
 /// `PrefabData` for loading control tags on an `Entity`
 ///
 /// Will always load a `FlyControlTag`
 #[derive(Default, Clone, Deserialize, Serialize)]
-pub struct ControlTagPrefab {
+pub struct ControlTagPrefab<N: RealField> {
     /// Place `ArcBallControlTag` on the `Entity`
-    pub arc_ball: Option<(usize, f32)>,
+    pub arc_ball: Option<(usize, N)>,
 }
 
-impl<'a> PrefabData<'a> for ControlTagPrefab {
+impl<'a, N: RealField> PrefabData<'a> for ControlTagPrefab<N> {
     type SystemData = (
         WriteStorage<'a, FlyControlTag>,
-        WriteStorage<'a, ArcBallControlTag>,
+        WriteStorage<'a, ArcBallControlTag<N>>,
     );
     type Result = ();
 

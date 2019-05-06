@@ -24,7 +24,7 @@ debug = true
 debug-assertions = true
 
 [features]
-default = ["animation", "audio", "locale", "network"]
+default = ["animation", "audio", "locale", "network", "renderer"]
 
 vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
@@ -45,6 +45,11 @@ locale = [
 ]
 network = [
     "amethyst_network"
+]
+
+renderer = [
+    "amethyst_renderer",
+    "amethyst_rendy",
 ]
 
 profiler = [
@@ -86,6 +91,10 @@ json = [
 saveload = [
     "amethyst_core/saveload"
 ]
+server = [
+    "locale", 
+    "network"
+]
 
 [workspace]
 members = [
@@ -106,8 +115,8 @@ amethyst_derive = { path = "amethyst_derive", version = "0.3.0" }
 amethyst_gltf = { path = "amethyst_gltf", version = "0.5.0", optional = true }
 amethyst_network = { path = "amethyst_network", version = "0.3.0", optional = true }
 amethyst_locale = { path = "amethyst_locale", version = "0.4.0", optional = true }
-amethyst_renderer = { path = "amethyst_renderer", version = "0.10.0" }
-amethyst_rendy = { path = "amethyst_rendy" }
+amethyst_renderer = { path = "amethyst_renderer", version = "0.10.0", optional = true }
+amethyst_rendy = { path = "amethyst_rendy", optional = true }
 amethyst_input = { path = "amethyst_input", version = "0.6.0" }
 amethyst_ui = { path = "amethyst_ui", version = "0.5.0" }
 amethyst_utils = { path = "amethyst_utils", version = "0.5.0" }
@@ -127,7 +136,7 @@ thread_profiler = { version = "0.3", optional = true }
 derive-new = "0.5"
 env_logger = "0.6.1"
 genmesh = "0.6"
-ron = "0.4.2"
+ron = "0.5"
 specs-derive = "0.4"
 derivative = "1.0.2"
 
@@ -304,6 +313,10 @@ path = "examples/simple_image/main.rs"
 [[example]]
 name = "auto_fov"
 path = "examples/auto_fov/main.rs"
+
+[[example]]
+name = "events"
+path = "examples/events/main.rs"
 
 [[example]]
 name = "rendy"

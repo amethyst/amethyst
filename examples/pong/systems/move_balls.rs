@@ -11,7 +11,7 @@ pub struct MoveBallsSystem;
 impl<'s> System<'s> for MoveBallsSystem {
     type SystemData = (
         ReadStorage<'s, Ball>,
-        WriteStorage<'s, Transform>,
+        WriteStorage<'s, Transform<f32>>,
         Read<'s, Time>,
     );
 

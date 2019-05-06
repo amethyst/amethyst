@@ -32,6 +32,11 @@ it is attached to. ([#1282])
 * Add `Widgets` resource. Allows keeping track of UI entities and their components and iterating over them. ([#1390])
 * `AmethystApplication` takes in application name using `with_app_name(..)`. ([#1499])
 * Add `NetEvent::Reliable` variant. When added to NetConnection, these events will eventually reach the target. ([#1513])
+* "How To" guides for defining state-specific dispatchers. ([#1498])
+* Adding support for AMETHYST_NUM_THREADS environment variable to control size of the threads pool used by thread_pool_builder.
+* Add `Input` variant to `StateEvent`. ([#1478])
+* Support type parameters in `EventReader` derive. ([#1478])
+* Added `events` example which demonstrates working even reader and writer in action. ([#1538])
 
 ### Changed
 
@@ -65,6 +70,13 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Rename `NetEvent::Custom` variant to `NetEvent::Unreliable`. ([#1513])
 * Updated laminar to 0.2.0. ([#1502])
 * Large binary files in examples are now tracked with `git-lfs`. ([#1509])
+* Allowed the user to arrange with laminar. ([#1523])
+* Removed `NetEvent::Custom` and added `NetEvent::Packet(NetPacket)` ([#1523])
+* Fixed update is no longer frame rate dependent ([#1516])
+* Display the syntax error when failing to parse sprite sheets  ([#1526])
+* Added generic parameter type to `Transform` to configure floating point precision. ([#1334])
+* `NetConnection` is automatically created when client starts sends data to server. ([#1539])
+* User will receive `NetEvent::Connected` on new connection and `NetEvent::Dissconnected` on disconnect. ([#1539])
 
 #### Rendy support
 
@@ -73,9 +85,10 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1504]: https://github.com/amethyst/amethyst/pull/1504
 
 ### Removed
+- Removed all `NetEvent's` because they were not used. ([#1539])
+- Removed filter logic, because it didn't do anything, will be added back in a later version (NetFilter, FilterConnected). ([#1539])
 
 ### Fixed
-
 * Optimize loading of wavefront obj mesh assets by getting rid of unnecessary allocations. ([#1454])
 * Fixed the "json" feature for amethyst_assets. ([#1302])
 * Fixed default system font loading to accept uppercase extension ("TTF"). ([#1328])
@@ -95,11 +108,13 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1281]: https://github.com/amethyst/amethyst/pull/1281
 [#1302]: https://github.com/amethyst/amethyst/pull/1302
 [#1328]: https://github.com/amethyst/amethyst/pull/1328
+[#1334]: https://github.com/amethyst/amethyst/pull/1334
 [#1356]: https://github.com/amethyst/amethyst/pull/1356
 [#1363]: https://github.com/amethyst/amethyst/pull/1363
 [#1365]: https://github.com/amethyst/amethyst/pull/1365
 [#1371]: https://github.com/amethyst/amethyst/pull/1371
 [#1373]: https://github.com/amethyst/amethyst/pull/1373
+[#1375]: https://github.com/amethyst/amethyst/pull/1375
 [#1388]: https://github.com/amethyst/amethyst/pull/1388
 [#1390]: https://github.com/amethyst/amethyst/pull/1390
 [#1397]: https://github.com/amethyst/amethyst/pull/1397
@@ -111,6 +126,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1419]: https://github.com/amethyst/amethyst/pull/1419
 [#1424]: https://github.com/amethyst/amethyst/pull/1424
 [#1435]: https://github.com/amethyst/amethyst/pull/1435
+[#1436]: https://github.com/amethyst/amethyst/pull/1436
 [#1410]: https://github.com/amethyst/amethyst/pull/1410
 [#1439]: https://github.com/amethyst/amethyst/pull/1439
 [#1445]: https://github.com/amethyst/amethyst/pull/1445
@@ -120,14 +136,20 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1454]: https://github.com/amethyst/amethyst/pull/1454
 [#1442]: https://github.com/amethyst/amethyst/pull/1442
 [#1469]: https://github.com/amethyst/amethyst/pull/1469
+[#1478]: https://github.com/amethyst/amethyst/pull/1478
 [#1481]: https://github.com/amethyst/amethyst/pull/1481
 [#1480]: https://github.com/amethyst/amethyst/pull/1480
+[#1498]: https://github.com/amethyst/amethyst/pull/1498
 [#1499]: https://github.com/amethyst/amethyst/pull/1499
 [#1501]: https://github.com/amethyst/amethyst/pull/1501
 [#1502]: https://github.com/amethyst/amethyst/pull/1515
 [#1513]: https://github.com/amethyst/amethyst/pull/1513
 [#1509]: https://github.com/amethyst/amethyst/pull/1509
-
+[#1523]: https://github.com/amethyst/amethyst/pull/1523
+[#1524]: https://github.com/amethyst/amethyst/pull/1524
+[#1526]: https://github.com/amethyst/amethyst/pull/1526
+[#1538]: https://github.com/amethyst/amethyst/pull/1538
+[#1539]: https://github.com/amethyst/amethyst/pull/1543
 ## [0.10.0] - 2018-12
 
 ### Added
@@ -256,7 +278,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 
 * Sprites contain their dimensions and offsets to render them with the right size and desired position. ([#829], [#830])
 * Texture coordinates for sprites are 1.0 at the top of the texture and 0.0 at the bottom. ([#829], [#830])
-* Made get_camera public. ([#878)]
+* Made get_camera public. ([#878])
 * Simplified creating states with SimpleState and EmptyState. ([#887])
 * Updated ProgressCounter to show loading errors. ([#892])
 * Replaced the `imagefmt` crate with `image`. ([#877])

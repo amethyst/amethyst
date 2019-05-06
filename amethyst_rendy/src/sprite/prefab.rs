@@ -5,6 +5,7 @@ use crate::{
 use amethyst_assets::{AssetStorage, Loader, PrefabData, ProgressCounter};
 use amethyst_core::{
     ecs::{Entity, Read, ReadExpect, WriteStorage},
+    math::RealField,
     Transform,
 };
 use amethyst_error::Error;
@@ -194,21 +195,21 @@ impl<'a, B: Backend> PrefabData<'a> for SpriteRenderPrefab<B> {
 /// Prefab for loading a full scene with sprites.
 #[derive(Derivative, Clone, Debug, Deserialize, Serialize)]
 #[derivative(Default(bound = ""))]
-#[serde(bound(deserialize = "SpriteSheetPrefab<B>: Deserialize<'de>"))]
-pub struct SpriteScenePrefab<B: Backend> {
+#[serde(bound(deserialize = "SpriteSheetPrefab<B>: Deserialize<'de>, N: Deserialize<'de>"))]
+pub struct SpriteScenePrefab<B: Backend, N: RealField> {
     /// Sprite sheets
     pub sheet: Option<SpriteSheetPrefab<B>>,
     /// Add `SpriteRender` to the `Entity`
     pub render: Option<SpriteRenderPrefab<B>>,
     /// Add `Transform` to the `Entity`
-    pub transform: Option<Transform>,
+    pub transform: Option<Transform<N>>,
 }
 
-impl<'a, B: Backend> PrefabData<'a> for SpriteScenePrefab<B> {
+impl<'a, B: Backend, N: RealField> PrefabData<'a> for SpriteScenePrefab<B, N> {
     type SystemData = (
         <SpriteSheetPrefab<B> as PrefabData<'a>>::SystemData,
         <SpriteRenderPrefab<B> as PrefabData<'a>>::SystemData,
-        <Transform as PrefabData<'a>>::SystemData,
+        <Transform<N> as PrefabData<'a>>::SystemData,
     );
     type Result = ();
 

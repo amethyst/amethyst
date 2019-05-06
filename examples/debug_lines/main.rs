@@ -8,7 +8,7 @@ use amethyst::{
         Time,
     },
     ecs::{Read, System, Write},
-    input::InputBundle,
+    input::{is_close_requested, is_key_down, InputBundle},
     prelude::*,
     renderer::*,
     utils::application_root_dir,
@@ -124,7 +124,7 @@ impl SimpleState for ExampleState {
             .build();
 
         // Setup camera
-        let mut local_transform = Transform::default();
+        let mut local_transform = Transform::<f32>::default();
         local_transform.set_translation_xyz(0.0, 0.5, 2.0);
         data.world
             .create_entity()
@@ -135,6 +135,22 @@ impl SimpleState for ExampleState {
             )))
             .with(local_transform)
             .build();
+    }
+
+    fn handle_event(
+        &mut self,
+        _: StateData<'_, GameData<'_, '_>>,
+        event: StateEvent,
+    ) -> SimpleTrans {
+        if let StateEvent::Window(event) = event {
+            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                Trans::Quit
+            } else {
+                Trans::None
+            }
+        } else {
+            Trans::None
+        }
     }
 }
 
@@ -150,12 +166,12 @@ fn main() -> amethyst::Result<()> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.001, 0.005, 0.005, 1.0], 1.0)
-            .with_pass(DrawDebugLines::<PosColorNorm>::new()),
+            .with_pass(DrawDebugLines::<PosColorNorm, f32>::new()),
     );
 
     let config = DisplayConfig::load(display_config_path);
 
-    let fly_control_bundle = FlyControlBundle::<String, String>::new(
+    let fly_control_bundle = FlyControlBundle::<String, String, f32>::new(
         Some(String::from("move_x")),
         Some(String::from("move_y")),
         Some(String::from("move_z")),
@@ -168,8 +184,8 @@ fn main() -> amethyst::Result<()> {
         )?
         .with(ExampleLinesSystem, "example_lines_system", &[])
         .with_bundle(fly_control_bundle)?
-        .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?;
+        .with_bundle(TransformBundle::<f32>::new().with_dep(&["fly_movement"]))?
+        .with_bundle(RenderBundle::<'_, _, _, f32>::new(pipe, Some(config)))?;
 
     let mut game = Application::new(resources, ExampleState, game_data)?;
     game.run();

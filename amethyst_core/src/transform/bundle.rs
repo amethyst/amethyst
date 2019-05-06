@@ -1,10 +1,11 @@
 //! ECS transform bundle
 
-use crate::ecs::prelude::DispatcherBuilder;
+use std::marker::PhantomData;
+
 use amethyst_error::Error;
 use specs_hierarchy::HierarchySystem;
 
-use crate::{bundle::SystemBundle, transform::*};
+use crate::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder, math::RealField, transform::*};
 
 /// Transform bundle
 ///
@@ -20,14 +21,18 @@ use crate::{bundle::SystemBundle, transform::*};
 /// Panics in `TransformSystem` registration if the bundle is applied twice in the same dispatcher.
 ///
 #[derive(Default)]
-pub struct TransformBundle<'a> {
+pub struct TransformBundle<'a, N> {
     dep: &'a [&'a str],
+    _phantom: PhantomData<N>,
 }
 
-impl<'a> TransformBundle<'a> {
+impl<'a, N> TransformBundle<'a, N> {
     /// Create a new transform bundle
     pub fn new() -> Self {
-        Default::default()
+        TransformBundle {
+            dep: Default::default(),
+            _phantom: PhantomData,
+        }
     }
 
     /// Set dependencies for the `TransformSystem`
@@ -37,7 +42,7 @@ impl<'a> TransformBundle<'a> {
     }
 }
 
-impl<'a, 'b, 'c> SystemBundle<'a, 'b> for TransformBundle<'c> {
+impl<'a, 'b, 'c, N: RealField> SystemBundle<'a, 'b> for TransformBundle<'c, N> {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
             HierarchySystem::<Parent>::new(),
@@ -45,7 +50,7 @@ impl<'a, 'b, 'c> SystemBundle<'a, 'b> for TransformBundle<'c> {
             self.dep,
         );
         builder.add(
-            TransformSystem::new(),
+            TransformSystem::<N>::new(),
             "transform_system",
             &["parent_hierarchy_system"],
         );

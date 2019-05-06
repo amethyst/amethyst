@@ -18,7 +18,7 @@ impl<'s> System<'s> for BounceSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
         ReadStorage<'s, Paddle>,
-        ReadStorage<'s, Transform>,
+        ReadStorage<'s, Transform<f32>>,
         Read<'s, AssetStorage<Source>>,
         ReadExpect<'s, Sounds>,
         Read<'s, Option<Output>>,

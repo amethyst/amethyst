@@ -116,7 +116,7 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
 
 /// Initialise the camera.
 fn initialise_camera(world: &mut World) {
-    let mut transform = Transform::default();
+    let mut transform = Transform::<f32>::default();
     transform.set_translation_z(1.0);
     world
         .create_entity()
@@ -132,8 +132,8 @@ fn initialise_camera(world: &mut World) {
 
 /// Initialises one paddle on the left, and one paddle on the right.
 fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
-    let mut left_transform = Transform::default();
-    let mut right_transform = Transform::default();
+    let mut left_transform = Transform::<f32>::default();
+    let mut right_transform = Transform::<f32>::default();
 
     // Correctly position the paddles.
     let y = ARENA_HEIGHT / 2.0;
@@ -167,7 +167,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
 /// Initialises one ball in the middle-ish of the arena.
 fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
     // Create the translation.
-    let mut local_transform = Transform::default();
+    let mut local_transform = Transform::<f32>::default();
     local_transform.set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 
     // Assign the sprite for the ball

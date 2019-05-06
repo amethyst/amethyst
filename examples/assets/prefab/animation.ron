@@ -116,7 +116,7 @@ Prefab (
                 (
                     transform: Transform (
                         translation: (0.0, 0.0, -4.0),
-                        rotation: (0.0, 0.0, 1.0, 0.0),
+                        rotation: (0.0, 1.0, 0.0, 0.0),
                         scale: (1.0, -1.0, 1.0),
                     ),
                     camera: Perspective((

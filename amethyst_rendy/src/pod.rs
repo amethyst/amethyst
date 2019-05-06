@@ -5,7 +5,11 @@ use crate::{
     types::Texture,
 };
 use amethyst_assets::{AssetStorage, Handle};
-use amethyst_core::{math::Vector4, GlobalTransform};
+use amethyst_core::{
+    alga::general::SubsetOf,
+    math::{convert, Matrix4, RealField, Vector4},
+    Transform,
+};
 use glsl_layout::*;
 use rendy::{
     hal::{format::Format, Backend},
@@ -55,8 +59,12 @@ pub struct VertexArgs {
 
 impl VertexArgs {
     #[inline]
-    pub fn from_object_data(object: &GlobalTransform, tint: Option<&TintComponent>) -> Self {
-        let model: [[f32; 4]; 4] = (*object).into();
+    pub fn from_object_data<N: RealField + SubsetOf<f32>>(
+        transform: &Transform<N>,
+        tint: Option<&TintComponent>,
+    ) -> Self {
+        let model: [[f32; 4]; 4] =
+            convert::<Matrix4<N>, Matrix4<f32>>(*transform.global_matrix()).into();
         VertexArgs {
             model: model.into(),
             tint: tint.map_or([1.0; 4].into(), |t| {
@@ -100,12 +108,13 @@ impl AsVertex for SkinnedVertexArgs {
 
 impl SkinnedVertexArgs {
     #[inline]
-    pub fn from_object_data(
-        object: &GlobalTransform,
+    pub fn from_object_data<N: RealField + SubsetOf<f32>>(
+        transform: &Transform<N>,
         tint: Option<&TintComponent>,
         joints_offset: u32,
     ) -> Self {
-        let model: [[f32; 4]; 4] = (*object).into();
+        let model: [[f32; 4]; 4] =
+            convert::<Matrix4<N>, Matrix4<f32>>(*transform.global_matrix()).into();
         SkinnedVertexArgs {
             model: model.into(),
             tint: tint.map_or([1.0; 4].into(), |t| {
@@ -191,11 +200,11 @@ impl AsVertex for SpriteArgs {
 }
 
 impl SpriteArgs {
-    pub fn from_data<'a, B: Backend>(
+    pub fn from_data<'a, B: Backend, N: RealField + SubsetOf<f32>>(
         tex_storage: &AssetStorage<Texture<B>>,
         sprite_storage: &'a AssetStorage<SpriteSheet<B>>,
         sprite_render: &SpriteRender<B>,
-        global_transform: &GlobalTransform,
+        transform: &Transform<N>,
     ) -> Option<(Self, &'a Handle<Texture<B>>)> {
         let sprite_sheet = sprite_storage.get(&sprite_render.sprite_sheet)?;
         if !tex_storage.contains(&sprite_sheet.texture) {
@@ -204,7 +213,7 @@ impl SpriteArgs {
 
         let sprite = &sprite_sheet.sprites[sprite_render.sprite_number];
 
-        let transform = &global_transform.0;
+        let transform = convert::<Matrix4<N>, Matrix4<f32>>(*transform.global_matrix());
         let dir_x = transform.column(0) * sprite.width;
         let dir_y = transform.column(1) * -sprite.height;
         let pos = transform * Vector4::new(-sprite.offsets[0], -sprite.offsets[1], 0.0, 1.0);

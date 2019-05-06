@@ -49,7 +49,11 @@ Component     | Serialized representation             | Example(s)            | 
     # use specs_derive::Component;
     #
     # #[derive(Component, Debug, Deserialize, Serialize /* .. */)]
-    # pub struct Position(pub f32, pub f32, pub f32);
+    # pub struct Position {
+    #     pub x: f32,
+    #     pub y: f32,
+    #     pub z: f32,
+    # };
     #
     impl From<(i32, i32, i32)> for Position {
         fn from((x, y, z): (i32, i32, i32)) -> Position {

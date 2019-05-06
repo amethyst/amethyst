@@ -165,6 +165,13 @@ impl<T> PrefabEntity<T> {
         self.data.get_or_insert_with(T::default)
     }
 
+    /// Get mutable access to the data
+    ///
+    /// If Option is `None`, insert an entry computed from a closure
+    pub fn data_or_insert_with(&mut self, func: impl FnOnce() -> T) -> &mut T {
+        self.data.get_or_insert_with(func)
+    }
+
     /// Trigger sub asset loading for the prefab entity
     pub fn load_sub_assets<'a>(
         &mut self,
@@ -245,6 +252,17 @@ impl<T> Prefab<T> {
         T: Default,
     {
         self.entities[index].data_or_default()
+    }
+
+    /// Get mutable access to the data in the `PrefabEntity` with the given index
+    ///
+    /// If data is None, this will insert a value for `T` computed with a closure
+    ///
+    /// ### Panics
+    ///
+    /// If the given index do not have a `PrefabEntity`
+    pub fn data_or_insert_with(&mut self, index: usize, func: impl FnOnce() -> T) -> &mut T {
+        self.entities[index].data_or_insert_with(func)
     }
 
     /// Check if sub asset loading have been triggered
@@ -455,14 +473,14 @@ mod tests {
 
     use amethyst_core::{
         ecs::{Builder, RunNow, World},
-        GlobalTransform, Time, Transform,
+        Time, Transform,
     };
 
     use crate::Loader;
 
     use super::*;
 
-    type MyPrefab = Transform;
+    type MyPrefab = Transform<f32>;
 
     #[test]
     fn test_prefab_load() {
@@ -484,11 +502,11 @@ mod tests {
         let root_entity = world.create_entity().with(handle).build();
         system.run_now(&world.res);
         assert_eq!(
-            Some(&Transform::default()),
+            Some(&Transform::<f32>::default()),
             world.read_storage().get(root_entity)
         );
         assert!(world
-            .read_storage::<GlobalTransform>()
+            .read_storage::<Transform<f32>>()
             .get(root_entity)
             .is_some());
     }

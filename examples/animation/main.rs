@@ -26,9 +26,9 @@ use amethyst_rendy::{
         hal::{
             command::{ClearDepthStencil, ClearValue},
             format::Format,
-            pso, Backend,
+            Backend,
         },
-        mesh::PosNormTangTex,
+        mesh::{Position, Normal, Tangent, TexCoord},
     },
     system::{GraphCreator, RendererSystem},
     types::DefaultBackend,
@@ -37,8 +37,8 @@ use serde::{Deserialize, Serialize};
 use std::{marker::PhantomData, sync::Arc};
 
 type MyPrefabData<B> = (
-    Option<BasicScenePrefab<B, Vec<PosNormTangTex>>>,
-    Option<AnimationSetPrefab<AnimationId, Transform>>,
+    Option<BasicScenePrefab<B, (Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>), f32>>,
+    Option<AnimationSetPrefab<AnimationId, Transform<f32>>>,
 );
 
 const CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
@@ -128,7 +128,7 @@ impl<B: Backend> SimpleState for Example<B> {
                 }
 
                 Some((VirtualKeyCode::Left, ElementState::Pressed)) => {
-                    get_animation_set::<AnimationId, Transform>(
+                    get_animation_set::<AnimationId, Transform<f32>>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     )
@@ -137,7 +137,7 @@ impl<B: Backend> SimpleState for Example<B> {
                 }
 
                 Some((VirtualKeyCode::Right, ElementState::Pressed)) => {
-                    get_animation_set::<AnimationId, Transform>(
+                    get_animation_set::<AnimationId, Transform<f32>>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     )
@@ -147,7 +147,7 @@ impl<B: Backend> SimpleState for Example<B> {
 
                 Some((VirtualKeyCode::F, ElementState::Pressed)) => {
                     self.rate = 1.0;
-                    get_animation_set::<AnimationId, Transform>(
+                    get_animation_set::<AnimationId, Transform<f32>>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     )
@@ -157,7 +157,7 @@ impl<B: Backend> SimpleState for Example<B> {
 
                 Some((VirtualKeyCode::V, ElementState::Pressed)) => {
                     self.rate = 0.0;
-                    get_animation_set::<AnimationId, Transform>(
+                    get_animation_set::<AnimationId, Transform<f32>>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     )
@@ -167,7 +167,7 @@ impl<B: Backend> SimpleState for Example<B> {
 
                 Some((VirtualKeyCode::H, ElementState::Pressed)) => {
                     self.rate = 0.5;
-                    get_animation_set::<AnimationId, Transform>(
+                    get_animation_set::<AnimationId, Transform<f32>>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     )
@@ -197,7 +197,7 @@ impl<B: Backend> SimpleState for Example<B> {
 fn run<B: Backend>() -> amethyst::Result<()> {
     amethyst::Logger::from_config(amethyst::LoggerConfig {
         log_file: Some("animation_example.log".into()),
-        level_filter: log::LevelFilter::Debug,
+        level_filter: log::LevelFilter::Error,
         ..Default::default()
     })
     .start();
@@ -211,11 +211,11 @@ fn run<B: Backend>() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData<B>>::default(), "", &[])
-        .with_bundle(AnimationBundle::<AnimationId, Transform>::new(
+        .with_bundle(AnimationBundle::<AnimationId, Transform<f32>>::new(
             "animation_control_system",
             "sampler_interpolation_system",
         ))?
-        .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
+        .with_bundle(TransformBundle::<f32>::new().with_dep(&["sampler_interpolation_system"]))?
         .with_thread_local(EventsLoopSystem::new(event_loop))
         .with_thread_local(window_system)
         .with_thread_local(RendererSystem::<B, _>::new(ExampleGraph::new()));
@@ -239,13 +239,13 @@ fn add_animation(
     toggle_if_exists: bool,
 ) {
     let animation = world
-        .read_storage::<AnimationSet<AnimationId, Transform>>()
+        .read_storage::<AnimationSet<AnimationId, Transform<f32>>>()
         .get(entity)
         .and_then(|s| s.get(&id))
         .cloned()
         .unwrap();
     let mut sets = world.write_storage();
-    let control_set = get_animation_set::<AnimationId, Transform>(&mut sets, entity).unwrap();
+    let control_set = get_animation_set::<AnimationId, Transform<f32>>(&mut sets, entity).unwrap();
     match defer {
         None => {
             if toggle_if_exists && control_set.has_animation(id) {
@@ -328,7 +328,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         );
 
         let pass = graph_builder.add_node(
-            DrawPbrDesc::default()
+            DrawPbrDesc::<B, f32>::default()
                 .with_vertex_skinning()
                 .builder()
                 .into_subpass()
