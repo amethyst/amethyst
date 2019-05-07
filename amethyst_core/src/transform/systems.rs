@@ -40,7 +40,7 @@ impl<'a, N: RealField> System<'a> for TransformSystem<N> {
     type SystemData = (
         Entities<'a>,
         ReadExpect<'a, ParentHierarchy>,
-        WriteStorage<'a, Transform<N>>,
+        WriteStorage<'a, Transform>,
         ReadStorage<'a, Parent>,
     );
     fn run(&mut self, (entities, hierarchy, mut locals, parents): Self::SystemData) {

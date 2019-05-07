@@ -16,8 +16,9 @@ appveyor = { repository = "amethyst/amethyst" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-nalgebra = { version = "0.18", features = ["serde-serialize", "mint"] }
-alga = { version = "0.9", default-features = false }
+nalgebra = { git = "https://github.com/jojolepro/nalgebra", branch = "pub", features = ["serde-serialize", "mint"] }
+alga = { git = "https://github.com/jojolepro/alga", branch = "pub",default-features = false }
+alga_derive = "0.9.0"
 approx = "0.3"
 amethyst_error = { path = "../amethyst_error", version = "0.1.0" }
 fnv = "1"
@@ -42,3 +43,4 @@ ron = "0.5.1"
 profiler = [ "thread_profiler/thread_profiler" ]
 nightly = [ "shred/nightly" ]
 saveload = ["specs/serde"]
+float64 = []
