@@ -89,7 +89,7 @@ pub fn load_skin(
     let skin_prefab = SkinPrefab {
         joints,
         meshes,
-        bind_shape_matrix: Matrix4::<N>::identity(),
+        bind_shape_matrix: Matrix4::identity(),
         inverse_bind_matrices,
     };
     prefab

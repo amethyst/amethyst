@@ -234,7 +234,7 @@ fn load_node(
 
     // Load transformation data, default will be identity
     let (translation, rotation, scale) = node.transform().decomposed();
-    let mut local_transform = Transform::<N>::default();
+    let mut local_transform = Transform::default();
     *local_transform.translation_mut() = Vector3::new(
         translation[0].into(),
         translation[1].into(),

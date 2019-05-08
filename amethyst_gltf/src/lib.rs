@@ -45,7 +45,7 @@ pub struct GltfPrefab {
     pub animatable: Option<AnimatablePrefab<usize, Transform>>,
     /// Skin data is placed on `Entity`s involved in the skin, skeleton or graphical primitives
     /// using the skin
-    pub skinnable: Option<SkinnablePrefab<N>>,
+    pub skinnable: Option<SkinnablePrefab>,
     /// Node extent
     pub extent: Option<GltfNodeExtent>,
     /// Node name
@@ -185,7 +185,7 @@ impl<'a> PrefabData<'a> for GltfPrefab {
         <Named as PrefabData<'a>>::SystemData,
         <MaterialPrefab<TextureFormat> as PrefabData<'a>>::SystemData,
         <AnimatablePrefab<usize, Transform> as PrefabData<'a>>::SystemData,
-        <SkinnablePrefab<N> as PrefabData<'a>>::SystemData,
+        <SkinnablePrefab as PrefabData<'a>>::SystemData,
         WriteStorage<'a, GltfNodeExtent>,
         // TODO make optional after prefab refactor. We need a way to pass options to decide to enable this or not, but without touching the prefab.
         WriteStorage<'a, MeshData>,
