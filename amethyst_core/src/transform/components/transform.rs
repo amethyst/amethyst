@@ -6,8 +6,8 @@ use crate::{
     ecs::prelude::{Component, DenseVecStorage, FlaggedStorage},
     float::{Float, FloatBase},
     math::{
-        self as na, ComplexField, Isometry3, Matrix4, Quaternion, Translation3, Unit, UnitQuaternion,
-        Vector3,
+        self as na, ComplexField, Isometry3, Matrix4, Quaternion, Translation3, Unit,
+        UnitQuaternion, Vector3,
     },
 };
 use serde::{
@@ -53,7 +53,11 @@ impl Transform {
     ///
     /// assert_eq!(t.translation().y, 2.0);
     /// ```
-    pub fn new(position: Translation3<Float>, rotation: UnitQuaternion<Float>, scale: Vector3<Float>) -> Self {
+    pub fn new(
+        position: Translation3<Float>,
+        rotation: UnitQuaternion<Float>,
+        scale: Vector3<Float>,
+    ) -> Self {
         Transform {
             isometry: Isometry3::from_parts(position, rotation),
             scale,
@@ -185,7 +189,8 @@ impl Transform {
         direction: Unit<Vector3<Float>>,
         distance: N,
     ) -> &mut Self {
-        self.isometry.translation.vector += self.isometry.rotation * direction.as_ref() * distance.into();
+        self.isometry.translation.vector +=
+            self.isometry.rotation * direction.as_ref() * distance.into();
         self
     }
 
@@ -381,7 +386,11 @@ impl Transform {
     ///
     /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn prepend_rotation<N: Into<Float>>(&mut self, axis: Unit<Vector3<Float>>, angle: N) -> &mut Self {
+    pub fn prepend_rotation<N: Into<Float>>(
+        &mut self,
+        axis: Unit<Vector3<Float>>,
+        angle: N,
+    ) -> &mut Self {
         let q = UnitQuaternion::from_axis_angle(&axis, angle.into());
         self.isometry.rotation = q * self.isometry.rotation;
         self
@@ -392,7 +401,11 @@ impl Transform {
     ///
     /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn append_rotation<N: Into<Float>>(&mut self, axis: Unit<Vector3<Float>>, angle: N) -> &mut Self {
+    pub fn append_rotation<N: Into<Float>>(
+        &mut self,
+        axis: Unit<Vector3<Float>>,
+        angle: N,
+    ) -> &mut Self {
         self.isometry.rotation *= UnitQuaternion::from_axis_angle(&axis, angle.into());
         self
     }
@@ -588,7 +601,11 @@ impl<'de> Deserialize<'de> for Transform {
                     .ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
                 let isometry = Isometry3::from_parts(
-                    Translation3::new(Float(translation[0]), Float(translation[1]), Float(translation[2])),
+                    Translation3::new(
+                        Float(translation[0]),
+                        Float(translation[1]),
+                        Float(translation[2]),
+                    ),
                     Unit::new_normalize(Quaternion::new(
                         Float(rotation[3]),
                         Float(rotation[0]),
@@ -636,12 +653,20 @@ impl<'de> Deserialize<'de> for Transform {
                     }
                 }
                 let translation: [FloatBase; 3] = translation.unwrap_or([FloatBase::zero(); 3]);
-                let rotation: [FloatBase; 4] =
-                    rotation.unwrap_or([FloatBase::one(), FloatBase::zero(), FloatBase::zero(), FloatBase::zero()]);
+                let rotation: [FloatBase; 4] = rotation.unwrap_or([
+                    FloatBase::one(),
+                    FloatBase::zero(),
+                    FloatBase::zero(),
+                    FloatBase::zero(),
+                ]);
                 let scale: [FloatBase; 3] = scale.unwrap_or([FloatBase::one(); 3]);
 
                 let isometry = Isometry3::from_parts(
-                    Translation3::new(Float(translation[0]), Float(translation[1]), Float(translation[2])),
+                    Translation3::new(
+                        Float(translation[0]),
+                        Float(translation[1]),
+                        Float(translation[2]),
+                    ),
                     Unit::new_normalize(Quaternion::new(
                         Float(rotation[3]),
                         Float(rotation[0]),

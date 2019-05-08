@@ -1,27 +1,26 @@
+use std::{
+    fmt::{Display, Formatter},
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign},
+};
 
-use std::ops::{Add, AddAssign, Neg, Div, DivAssign, Mul, MulAssign, Sub, SubAssign, Rem, RemAssign};
-use std::fmt::{Display, Formatter};
-
-use alga::general::*;
-use alga::num::*;
-use approx::{RelativeEq, UlpsEq, AbsDiffEq};
+use alga::{general::*, num::*};
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use nalgebra::Complex;
 
-#[cfg(feature = "float64")]
-use std::f64::consts as consts;
 #[cfg(not(feature = "float64"))]
-use std::f32::consts as consts;
-
+use std::f32::consts;
 #[cfg(feature = "float64")]
-use std::f64 as minmax;
+use std::f64::consts;
+
 #[cfg(not(feature = "float64"))]
 use std::f32 as minmax;
+#[cfg(feature = "float64")]
+use std::f64 as minmax;
 
 #[cfg(feature = "float64")]
 pub(crate) type FloatBase = f64;
 #[cfg(not(feature = "float64"))]
 pub(crate) type FloatBase = f32;
-
 
 /// A wrapper type around f32 and f64. It is used to hide the actual type being used internally.
 /// Mostly used with the `Transform` type.
@@ -33,9 +32,13 @@ pub struct Float(pub(crate) FloatBase);
 impl Float {
     /// Get the internal value as a f32. Can cause a loss of precision or a loss of data if using
     /// the "float64" feature.
-    pub fn as_f32(self) -> f32 { self.0 as f32 }
+    pub fn as_f32(self) -> f32 {
+        self.0 as f32
+    }
     /// Get the internal value as a f64.
-    pub fn as_f64(self) -> f64 { self.0 as f64 }
+    pub fn as_f64(self) -> f64 {
+        self.0 as f64
+    }
 }
 
 impl From<f32> for Float {
@@ -43,7 +46,6 @@ impl From<f32> for Float {
         Float(val as FloatBase)
     }
 }
-
 
 impl From<f64> for Float {
     fn from(val: f64) -> Self {
@@ -92,7 +94,7 @@ impl RelativeEq for Float {
         &self,
         other: &Self,
         epsilon: Self::Epsilon,
-        max_relative: Self::Epsilon
+        max_relative: Self::Epsilon,
     ) -> bool {
         FloatBase::relative_eq(&self.0, &other.0, epsilon.0, max_relative.0)
     }
@@ -143,7 +145,7 @@ impl Signed for Float {
         }
     }
 
-    fn signum(&self) -> Self{
+    fn signum(&self) -> Self {
         if self.0 > 0.0 {
             Float(1.0)
         } else if self.0 == 0.0 {
@@ -282,7 +284,6 @@ impl Identity<Multiplicative> for Float {
     }
 }
 
-
 impl RealField for Float {
     #[inline]
     fn is_sign_positive(self) -> bool {
@@ -400,361 +401,360 @@ impl RealField for Float {
     }
 }
 
-        impl ComplexField for Float {
-            type RealField = Float;
+impl ComplexField for Float {
+    type RealField = Float;
 
-            #[inline]
-            fn from_real(re: Self::RealField) -> Self {
-                re
-            }
+    #[inline]
+    fn from_real(re: Self::RealField) -> Self {
+        re
+    }
 
-            #[inline]
-            fn real(self) -> Self::RealField {
-                self
-            }
+    #[inline]
+    fn real(self) -> Self::RealField {
+        self
+    }
 
-            #[inline]
-            fn imaginary(self) -> Self::RealField {
-                Self::zero()
-            }
+    #[inline]
+    fn imaginary(self) -> Self::RealField {
+        Self::zero()
+    }
 
-            #[inline]
-            fn norm1(self) -> Self::RealField {
-                Float(FloatBase::abs(self.0))
-            }
+    #[inline]
+    fn norm1(self) -> Self::RealField {
+        Float(FloatBase::abs(self.0))
+    }
 
-            #[inline]
-            fn modulus(self) -> Self::RealField {
-                Float(FloatBase::abs(self.0))
-            }
+    #[inline]
+    fn modulus(self) -> Self::RealField {
+        Float(FloatBase::abs(self.0))
+    }
 
-            #[inline]
-            fn modulus_squared(self) -> Self::RealField {
-                Float(self.0 * self.0)
-            }
+    #[inline]
+    fn modulus_squared(self) -> Self::RealField {
+        Float(self.0 * self.0)
+    }
 
-            #[inline]
-            fn argument(self) -> Self::RealField {
-                if self >= Self::zero() {
-                    Self::zero()
-                } else {
-                    Self::pi()
-                }
-            }
-
-            #[inline]
-            fn to_exp(self) -> (Self, Self) {
-                if self >= Self::zero() {
-                    (self, Self::one())
-                } else {
-                    (-self, -Self::one())
-                }
-            }
-
-            #[inline]
-            fn recip(self) -> Self {
-                Float(FloatBase::recip(self.0))
-            }
-
-            #[inline]
-            fn conjugate(self) -> Self {
-                Float(self.0)
-            }
-
-            #[inline]
-            fn scale(self, factor: Self::RealField) -> Self {
-                Float(self.0 * factor.0)
-            }
-
-            #[inline]
-            fn unscale(self, factor: Self::RealField) -> Self {
-                Float(self.0 / factor.0)
-            }
-
-            #[inline]
-            fn floor(self) -> Self {
-                Float(FloatBase::floor(self.0))
-            }
-
-            #[inline]
-            fn ceil(self) -> Self {
-                Float(FloatBase::ceil(self.0))
-            }
-
-            #[inline]
-            fn round(self) -> Self {
-                Float(FloatBase::round(self.0))
-            }
-
-            #[inline]
-            fn trunc(self) -> Self {
-                Float(FloatBase::trunc(self.0))
-            }
-
-            #[inline]
-            fn fract(self) -> Self {
-                Float(FloatBase::fract(self.0))
-            }
-
-            #[inline]
-            fn abs(self) -> Self {
-                Float(FloatBase::abs(self.0))
-            }
-
-            #[inline]
-            fn signum(self) -> Self {
-                Float(Signed::signum(&self.0))
-            }
-
-            #[inline]
-            fn mul_add(self, a: Self, b: Self) -> Self {
-                Float(FloatBase::mul_add(self.0, a.0, b.0))
-            }
-
-            #[cfg(feature = "std")]
-            #[inline]
-            fn powi(self, n: i32) -> Self {
-                Float(self.0.powi(n))
-            }
-
-            #[cfg(not(feature = "std"))]
-            #[inline]
-            fn powi(self, n: i32) -> Self {
-                Float(FloatBase::powf(self.0, n as FloatBase))
-            }
-
-            #[inline]
-            fn powf(self, n: Self) -> Self {
-                Float(FloatBase::powf(self.0, n.0))
-            }
-
-            #[inline]
-            fn powc(self, n: Self) -> Self {
-                // Same as powf.
-                Float(FloatBase::powf(self.0, n.0))
-            }
-
-            #[inline]
-            fn sqrt(self) -> Self {
-                Float(FloatBase::sqrt(self.0))
-            }
-
-            #[inline]
-            fn try_sqrt(self) -> Option<Self> {
-                if self >= Self::zero() {
-                    Some(Float(FloatBase::sqrt(self.0)))
-                } else {
-                    None
-                }
-            }
-
-            #[inline]
-            fn exp(self) -> Self {
-                Float(FloatBase::exp(self.0))
-            }
-
-            #[inline]
-            fn exp2(self) -> Self {
-                Float(FloatBase::exp2(self.0))
-            }
-
-            #[inline]
-            fn exp_m1(self) -> Self {
-                Float(FloatBase::exp_m1(self.0))
-            }
-
-            #[inline]
-            fn ln_1p(self) -> Self {
-                Float(FloatBase::ln_1p(self.0))
-            }
-
-            #[inline]
-            fn ln(self) -> Self {
-                Float(FloatBase::ln(self.0))
-            }
-
-            #[inline]
-            fn log(self, base: Self) -> Self {
-                Float(FloatBase::log(self.0, base.0))
-            }
-
-            #[inline]
-            fn log2(self) -> Self {
-                Float(FloatBase::log2(self.0))
-            }
-
-            #[inline]
-            fn log10(self) -> Self {
-                Float(FloatBase::log10(self.0))
-            }
-
-            #[inline]
-            fn cbrt(self) -> Self {
-                Float(FloatBase::cbrt(self.0))
-            }
-
-            #[inline]
-            fn hypot(self, other: Self) -> Self::RealField {
-                Float(FloatBase::hypot(self.0, other.0))
-            }
-
-            #[inline]
-            fn sin(self) -> Self {
-                Float(FloatBase::sin(self.0))
-            }
-
-            #[inline]
-            fn cos(self) -> Self {
-                Float(FloatBase::cos(self.0))
-            }
-
-            #[inline]
-            fn tan(self) -> Self {
-                Float(FloatBase::tan(self.0))
-            }
-
-            #[inline]
-            fn asin(self) -> Self {
-                Float(FloatBase::asin(self.0))
-            }
-
-            #[inline]
-            fn acos(self) -> Self {
-                Float(FloatBase::acos(self.0))
-            }
-
-            #[inline]
-            fn atan(self) -> Self {
-                Float(FloatBase::atan(self.0))
-            }
-
-            #[inline]
-            fn sin_cos(self) -> (Self, Self) {
-                let vals = FloatBase::sin_cos(self.0);
-                (Float(vals.0), Float(vals.1))
-            }
-
-            #[inline]
-            fn sinh(self) -> Self {
-                Float(FloatBase::sinh(self.0))
-            }
-
-            #[inline]
-            fn cosh(self) -> Self {
-                Float(FloatBase::cosh(self.0))
-            }
-
-            #[inline]
-            fn tanh(self) -> Self {
-                Float(FloatBase::tanh(self.0))
-            }
-
-            #[inline]
-            fn asinh(self) -> Self {
-                Float(FloatBase::asinh(self.0))
-            }
-
-            #[inline]
-            fn acosh(self) -> Self {
-                Float(FloatBase::acosh(self.0))
-            }
-
-            #[inline]
-            fn atanh(self) -> Self {
-                Float(FloatBase::atanh(self.0))
-            }
-
-            #[inline]
-            fn is_finite(&self) -> bool {
-                self.0.is_finite()
-            }
+    #[inline]
+    fn argument(self) -> Self::RealField {
+        if self >= Self::zero() {
+            Self::zero()
+        } else {
+            Self::pi()
         }
+    }
 
+    #[inline]
+    fn to_exp(self) -> (Self, Self) {
+        if self >= Self::zero() {
+            (self, Self::one())
+        } else {
+            (-self, -Self::one())
+        }
+    }
+
+    #[inline]
+    fn recip(self) -> Self {
+        Float(FloatBase::recip(self.0))
+    }
+
+    #[inline]
+    fn conjugate(self) -> Self {
+        Float(self.0)
+    }
+
+    #[inline]
+    fn scale(self, factor: Self::RealField) -> Self {
+        Float(self.0 * factor.0)
+    }
+
+    #[inline]
+    fn unscale(self, factor: Self::RealField) -> Self {
+        Float(self.0 / factor.0)
+    }
+
+    #[inline]
+    fn floor(self) -> Self {
+        Float(FloatBase::floor(self.0))
+    }
+
+    #[inline]
+    fn ceil(self) -> Self {
+        Float(FloatBase::ceil(self.0))
+    }
+
+    #[inline]
+    fn round(self) -> Self {
+        Float(FloatBase::round(self.0))
+    }
+
+    #[inline]
+    fn trunc(self) -> Self {
+        Float(FloatBase::trunc(self.0))
+    }
+
+    #[inline]
+    fn fract(self) -> Self {
+        Float(FloatBase::fract(self.0))
+    }
+
+    #[inline]
+    fn abs(self) -> Self {
+        Float(FloatBase::abs(self.0))
+    }
+
+    #[inline]
+    fn signum(self) -> Self {
+        Float(Signed::signum(&self.0))
+    }
+
+    #[inline]
+    fn mul_add(self, a: Self, b: Self) -> Self {
+        Float(FloatBase::mul_add(self.0, a.0, b.0))
+    }
+
+    #[cfg(feature = "std")]
+    #[inline]
+    fn powi(self, n: i32) -> Self {
+        Float(self.0.powi(n))
+    }
+
+    #[cfg(not(feature = "std"))]
+    #[inline]
+    fn powi(self, n: i32) -> Self {
+        Float(FloatBase::powf(self.0, n as FloatBase))
+    }
+
+    #[inline]
+    fn powf(self, n: Self) -> Self {
+        Float(FloatBase::powf(self.0, n.0))
+    }
+
+    #[inline]
+    fn powc(self, n: Self) -> Self {
+        // Same as powf.
+        Float(FloatBase::powf(self.0, n.0))
+    }
+
+    #[inline]
+    fn sqrt(self) -> Self {
+        Float(FloatBase::sqrt(self.0))
+    }
+
+    #[inline]
+    fn try_sqrt(self) -> Option<Self> {
+        if self >= Self::zero() {
+            Some(Float(FloatBase::sqrt(self.0)))
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    fn exp(self) -> Self {
+        Float(FloatBase::exp(self.0))
+    }
+
+    #[inline]
+    fn exp2(self) -> Self {
+        Float(FloatBase::exp2(self.0))
+    }
+
+    #[inline]
+    fn exp_m1(self) -> Self {
+        Float(FloatBase::exp_m1(self.0))
+    }
+
+    #[inline]
+    fn ln_1p(self) -> Self {
+        Float(FloatBase::ln_1p(self.0))
+    }
+
+    #[inline]
+    fn ln(self) -> Self {
+        Float(FloatBase::ln(self.0))
+    }
+
+    #[inline]
+    fn log(self, base: Self) -> Self {
+        Float(FloatBase::log(self.0, base.0))
+    }
+
+    #[inline]
+    fn log2(self) -> Self {
+        Float(FloatBase::log2(self.0))
+    }
+
+    #[inline]
+    fn log10(self) -> Self {
+        Float(FloatBase::log10(self.0))
+    }
+
+    #[inline]
+    fn cbrt(self) -> Self {
+        Float(FloatBase::cbrt(self.0))
+    }
+
+    #[inline]
+    fn hypot(self, other: Self) -> Self::RealField {
+        Float(FloatBase::hypot(self.0, other.0))
+    }
+
+    #[inline]
+    fn sin(self) -> Self {
+        Float(FloatBase::sin(self.0))
+    }
+
+    #[inline]
+    fn cos(self) -> Self {
+        Float(FloatBase::cos(self.0))
+    }
+
+    #[inline]
+    fn tan(self) -> Self {
+        Float(FloatBase::tan(self.0))
+    }
+
+    #[inline]
+    fn asin(self) -> Self {
+        Float(FloatBase::asin(self.0))
+    }
+
+    #[inline]
+    fn acos(self) -> Self {
+        Float(FloatBase::acos(self.0))
+    }
+
+    #[inline]
+    fn atan(self) -> Self {
+        Float(FloatBase::atan(self.0))
+    }
+
+    #[inline]
+    fn sin_cos(self) -> (Self, Self) {
+        let vals = FloatBase::sin_cos(self.0);
+        (Float(vals.0), Float(vals.1))
+    }
+
+    #[inline]
+    fn sinh(self) -> Self {
+        Float(FloatBase::sinh(self.0))
+    }
+
+    #[inline]
+    fn cosh(self) -> Self {
+        Float(FloatBase::cosh(self.0))
+    }
+
+    #[inline]
+    fn tanh(self) -> Self {
+        Float(FloatBase::tanh(self.0))
+    }
+
+    #[inline]
+    fn asinh(self) -> Self {
+        Float(FloatBase::asinh(self.0))
+    }
+
+    #[inline]
+    fn acosh(self) -> Self {
+        Float(FloatBase::acosh(self.0))
+    }
+
+    #[inline]
+    fn atanh(self) -> Self {
+        Float(FloatBase::atanh(self.0))
+    }
+
+    #[inline]
+    fn is_finite(&self) -> bool {
+        self.0.is_finite()
+    }
+}
 
 impl SubsetOf<f32> for Float {
-            #[inline]
-            fn to_superset(&self) -> f32 {
-                self.0 as f32
-            }
+    #[inline]
+    fn to_superset(&self) -> f32 {
+        self.0 as f32
+    }
 
-            #[inline]
-            unsafe fn from_superset_unchecked(element: &f32) -> Self {
-                Float(*element as FloatBase)
-            }
+    #[inline]
+    unsafe fn from_superset_unchecked(element: &f32) -> Self {
+        Float(*element as FloatBase)
+    }
 
-            #[inline]
-            fn is_in_subset(_: &f32) -> bool {
-                true
-            }
-        }
+    #[inline]
+    fn is_in_subset(_: &f32) -> bool {
+        true
+    }
+}
 
 impl SubsetOf<f64> for Float {
-            #[inline]
-            fn to_superset(&self) -> f64 {
-                self.0 as f64
-            }
+    #[inline]
+    fn to_superset(&self) -> f64 {
+        self.0 as f64
+    }
 
-            #[inline]
-            unsafe fn from_superset_unchecked(element: &f64) -> Self {
-                Float(*element as FloatBase)
-            }
+    #[inline]
+    unsafe fn from_superset_unchecked(element: &f64) -> Self {
+        Float(*element as FloatBase)
+    }
 
-            #[inline]
-            fn is_in_subset(_: &f64) -> bool {
-                true
-            }
-        }
+    #[inline]
+    fn is_in_subset(_: &f64) -> bool {
+        true
+    }
+}
 
 impl SubsetOf<Float> for f32 {
-            #[inline]
-            fn to_superset(&self) -> Float {
-                Float(*self as FloatBase)
-            }
+    #[inline]
+    fn to_superset(&self) -> Float {
+        Float(*self as FloatBase)
+    }
 
-            #[inline]
-            unsafe fn from_superset_unchecked(element: &Float) -> Self {
-                element.0 as Self
-            }
+    #[inline]
+    unsafe fn from_superset_unchecked(element: &Float) -> Self {
+        element.0 as Self
+    }
 
-            #[inline]
-            fn is_in_subset(_: &Float) -> bool {
-                true
-            }
-        }
+    #[inline]
+    fn is_in_subset(_: &Float) -> bool {
+        true
+    }
+}
 
 impl SubsetOf<Float> for f64 {
-            #[inline]
-            fn to_superset(&self) -> Float {
-                Float(*self as FloatBase)
-            }
+    #[inline]
+    fn to_superset(&self) -> Float {
+        Float(*self as FloatBase)
+    }
 
-            #[inline]
-            unsafe fn from_superset_unchecked(element: &Float) -> Self {
-                element.0 as Self
-            }
+    #[inline]
+    unsafe fn from_superset_unchecked(element: &Float) -> Self {
+        element.0 as Self
+    }
 
-            #[inline]
-            fn is_in_subset(_: &Float) -> bool {
-                true
-            }
-        }
+    #[inline]
+    fn is_in_subset(_: &Float) -> bool {
+        true
+    }
+}
 
 impl SubsetOf<Float> for Float {
-            #[inline]
-            fn to_superset(&self) -> Float {
-                Float(self.0 as FloatBase)
-            }
+    #[inline]
+    fn to_superset(&self) -> Float {
+        Float(self.0 as FloatBase)
+    }
 
-            #[inline]
-            unsafe fn from_superset_unchecked(element: &Float) -> Self {
-                Float(element.0)
-            }
+    #[inline]
+    unsafe fn from_superset_unchecked(element: &Float) -> Self {
+        Float(element.0)
+    }
 
-            #[inline]
-            fn is_in_subset(_: &Float) -> bool {
-                true
-            }
-        }
+    #[inline]
+    fn is_in_subset(_: &Float) -> bool {
+        true
+    }
+}
 
 impl_lattice!(Float);
 impl_scalar_subset_of_complex!(Float);
