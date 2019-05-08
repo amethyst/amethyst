@@ -2,11 +2,11 @@
 
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
-    controls::FlyControlBundle,
+    controls::{FlyControlBundle, HideCursor},
     core::transform::TransformBundle,
-    input::InputBundle,
+    input::{is_key_down, is_mouse_button_down, InputBundle},
     prelude::*,
-    renderer::{DrawShaded, PosNormTex},
+    renderer::{DrawShaded, MouseButton, PosNormTex, VirtualKeyCode},
     utils::{application_root_dir, scene::BasicScenePrefab},
     Error,
 };
@@ -25,6 +25,24 @@ impl SimpleState for ExampleState {
             .named("Fly Camera Scene")
             .with(prefab_handle)
             .build();
+    }
+
+    fn handle_event(
+        &mut self,
+        data: StateData<'_, GameData<'_, '_>>,
+        event: StateEvent,
+    ) -> SimpleTrans {
+        let StateData { world, .. } = data;
+        if let StateEvent::Window(event) = &event {
+            if is_key_down(&event, VirtualKeyCode::Escape) {
+                let mut hide_cursor = world.write_resource::<HideCursor>();
+                hide_cursor.hide = false;
+            } else if is_mouse_button_down(&event, MouseButton::Left) {
+                let mut hide_cursor = world.write_resource::<HideCursor>();
+                hide_cursor.hide = true;
+            }
+        }
+        Trans::None
     }
 }
 
