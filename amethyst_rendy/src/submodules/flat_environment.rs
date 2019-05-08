@@ -1,7 +1,8 @@
 use crate::{
     pod::ViewArgs,
-    rendy::{command::RenderPassEncoder, factory::Factory, hal::Backend},
+    rendy::{command::RenderPassEncoder, factory::Factory},
     submodules::{gather::CameraGatherer, uniform::DynamicUniform},
+    types::Backend,
 };
 use amethyst_core::{alga::general::SubsetOf, ecs::Resources, math::RealField};
 

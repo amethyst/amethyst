@@ -6,7 +6,6 @@ use rendy::{
     hal::{
         self,
         image::{Filter, Kind, Size, ViewKind},
-        Backend,
     },
     texture::{
         image::{load_from_image, ImageTextureConfig},
@@ -38,14 +37,9 @@ impl Format<TextureData> for ImageFormat {
 /// `PrefabData` for loading `Texture`s.
 ///
 /// Will not add any `Component`s to the `Entity`, will only return a `Handle`
-///
-/// ### Type parameters:
-///
-/// - `B`: `Backend` parameter to use for `Texture<B>` type
-/// - `F`: `Format` to use for loading the `Texture`s from file
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(bound = "")]
-pub enum TexturePrefab<B: Backend> {
+pub enum TexturePrefab {
     /// Texture data
     Data(TextureData),
 
@@ -56,7 +50,7 @@ pub enum TexturePrefab<B: Backend> {
 
     /// Clone handle only
     #[serde(skip)]
-    Handle(Handle<Texture<B>>),
+    Handle(Handle<Texture>),
     /// Placeholder during loading
     #[serde(skip)]
     Placeholder,
@@ -112,10 +106,10 @@ impl TextureGenerator {
     }
 }
 
-impl<'a, B: Backend> PrefabData<'a> for TexturePrefab<B> {
-    type SystemData = (ReadExpect<'a, Loader>, Read<'a, AssetStorage<Texture<B>>>);
+impl<'a> PrefabData<'a> for TexturePrefab {
+    type SystemData = (ReadExpect<'a, Loader>, Read<'a, AssetStorage<Texture>>);
 
-    type Result = Handle<Texture<B>>;
+    type Result = Handle<Texture>;
 
     fn add_to_entity(
         &self,
@@ -123,7 +117,7 @@ impl<'a, B: Backend> PrefabData<'a> for TexturePrefab<B> {
         _: &mut Self::SystemData,
         _: &[Entity],
         _: &[Entity],
-    ) -> Result<Handle<Texture<B>>, Error> {
+    ) -> Result<Handle<Texture>, Error> {
         let handle = match *self {
             TexturePrefab::Handle(ref handle) => handle.clone(),
             _ => unreachable!(),

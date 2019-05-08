@@ -1,4 +1,4 @@
-use crate::util;
+use crate::{types::Backend, util};
 use derivative::Derivative;
 use rendy::{
     factory::Factory,
@@ -11,7 +11,7 @@ use rendy::{
             InstanceRate, Multisampling, PipelineCreationFlags, Rasterizer, Rect, VertexBufferDesc,
             Viewport,
         },
-        Backend, Primitive,
+        Primitive,
     },
     mesh::VertexFormat,
 };

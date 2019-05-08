@@ -7,7 +7,7 @@ use amethyst_assets::{
 };
 use amethyst_core::ecs::{Entity, Read, ReadExpect, WriteStorage};
 use amethyst_error::Error;
-use rendy::{hal::Backend, mesh::MeshBuilder};
+use rendy::mesh::MeshBuilder;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -32,34 +32,27 @@ impl Format<MeshData> for ObjFormat {
 ///
 /// ### Type parameters:
 ///
-/// `B`: `Backend` type parameter for `Mesh<B>`
-/// `V`: Vertex format to use for generated `Mesh`es, must be one of:
+/// `V`: Vertex format to use for generated `Mesh`es, for example:
 ///     * `Vec<PosTex>`
 ///     * `Vec<PosNormTex>`
-///     * `Vec<PosNormTangTex>`
-///     * `ComboMeshCreator`
-/// `M`: `Format` to use for loading `Mesh`es from file
+///     * `(Vec<Position>, Vec<Normal>)`
 #[derive(Deserialize, Serialize)]
 #[serde(bound = "")]
-pub enum MeshPrefab<B, V>
-where
-    B: Backend,
-{
+pub enum MeshPrefab<V> {
     /// Load an asset Mesh from file
-    Asset(AssetPrefab<Mesh<B>>),
+    Asset(AssetPrefab<Mesh>),
     /// Generate a Mesh from basic type
-    Shape(ShapePrefab<B, V>),
+    Shape(ShapePrefab<V>),
 }
 
-impl<'a, B, V> PrefabData<'a> for MeshPrefab<B, V>
+impl<'a, V> PrefabData<'a> for MeshPrefab<V>
 where
-    B: Backend,
     V: FromShape + Into<MeshBuilder<'static>>,
 {
     type SystemData = (
         ReadExpect<'a, Loader>,
-        WriteStorage<'a, Handle<Mesh<B>>>,
-        Read<'a, AssetStorage<Mesh<B>>>,
+        WriteStorage<'a, Handle<Mesh>>,
+        Read<'a, AssetStorage<Mesh>>,
     );
     type Result = ();
 

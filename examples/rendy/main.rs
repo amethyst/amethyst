@@ -46,7 +46,6 @@ use amethyst_rendy::{
         hal::{
             command::{ClearDepthStencil, ClearValue},
             format::Format,
-            Backend,
         },
         mesh::{Normal, Position, Tangent, TexCoord},
         texture::palette::load_from_linear_rgba,
@@ -57,10 +56,10 @@ use amethyst_rendy::{
     sprite_visibility::SpriteVisibilitySortingSystem,
     system::{GraphCreator, RendererSystem},
     transparent::Transparent,
-    types::{DefaultBackend, Mesh, Texture},
+    types::{Backend, DefaultBackend, Mesh, Texture},
     visibility::{BoundingSphere, VisibilitySortingSystem},
 };
-use std::{marker::PhantomData, path::Path, sync::Arc};
+use std::{path::Path, sync::Arc};
 
 use prefab_data::{AnimationMarker, Scene, ScenePrefabData, SpriteAnimationId};
 
@@ -68,20 +67,18 @@ mod prefab_data;
 
 type Real = f32;
 
-struct Example<B: Backend> {
+struct Example {
     entity: Option<Entity>,
     initialised: bool,
     progress: Option<ProgressCounter>,
-    marker: PhantomData<B>,
 }
 
-impl<B: Backend> Example<B> {
+impl Example {
     pub fn new() -> Self {
         Self {
             entity: None,
             initialised: false,
             progress: None,
-            marker: PhantomData,
         }
     }
 }
@@ -164,18 +161,18 @@ impl<'a> System<'a> for CameraCorrectionSystem {
     }
 }
 
-impl<B: Backend> SimpleState for Example<B> {
+impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
 
-        let mat_defaults = world.read_resource::<MaterialDefaults<B>>().0.clone();
+        let mat_defaults = world.read_resource::<MaterialDefaults>().0.clone();
 
         self.progress = Some(ProgressCounter::default());
 
         world.exec(
             |(loader, mut scene): (
-                PrefabLoader<'_, ScenePrefabData<B, Real>>,
-                Write<'_, Scene<B, Real>>,
+                PrefabLoader<'_, ScenePrefabData<Real>>,
+                Write<'_, Scene<Real>>,
             )| {
                 scene.handle = Some(
                     loader.load(
@@ -190,7 +187,7 @@ impl<B: Backend> SimpleState for Example<B> {
         );
 
         let (mesh, albedo) = {
-            let mesh = world.exec(|loader: AssetLoaderSystemData<'_, Mesh<B>>| {
+            let mesh = world.exec(|loader: AssetLoaderSystemData<'_, Mesh>| {
                 loader.load_from_data(
                     Shape::Sphere(16, 16)
                         .generate::<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>)>(None)
@@ -198,7 +195,7 @@ impl<B: Backend> SimpleState for Example<B> {
                     self.progress.as_mut().unwrap(),
                 )
             });
-            let albedo = world.exec(|loader: AssetLoaderSystemData<'_, Texture<B>>| {
+            let albedo = world.exec(|loader: AssetLoaderSystemData<'_, Texture>| {
                 loader.load_from_data(
                     load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 0.5)).into(),
                     self.progress.as_mut().unwrap(),
@@ -226,8 +223,8 @@ impl<B: Backend> SimpleState for Example<B> {
 
                 let mtl = world.exec(
                     |(mtl_loader, tex_loader): (
-                        AssetLoaderSystemData<'_, Material<B>>,
-                        AssetLoaderSystemData<'_, Texture<B>>,
+                        AssetLoaderSystemData<'_, Material>,
+                        AssetLoaderSystemData<'_, Texture>,
                     )| {
                         let metallic_roughness = tex_loader.load_from_data(
                             load_from_linear_rgba(LinSrgba::new(0.0, roughness, metallic, 0.0))
@@ -376,7 +373,7 @@ impl<B: Backend> SimpleState for Example<B> {
             if is_close_requested(&event) || is_key_down(&event, winit::VirtualKeyCode::Escape) {
                 Trans::Quit
             } else if is_key_down(&event, winit::VirtualKeyCode::Space) {
-                toggle_or_cycle_animation::<B>(
+                toggle_or_cycle_animation(
                     self.entity,
                     &mut world.write_resource(),
                     &world.read_storage(),
@@ -407,7 +404,7 @@ impl<B: Backend> SimpleState for Example<B> {
                 Some(Completion::Complete) => {
                     let scene_handle = data
                         .world
-                        .read_resource::<Scene<B, Real>>()
+                        .read_resource::<Scene<Real>>()
                         .handle
                         .as_ref()
                         .unwrap()
@@ -438,8 +435,8 @@ impl<B: Backend> SimpleState for Example<B> {
             data.world.exec(
                 |(entities, animation_sets, mut control_sets): (
                     Entities,
-                    ReadStorage<AnimationSet<SpriteAnimationId, SpriteRender<B>>>,
-                    WriteStorage<AnimationControlSet<SpriteAnimationId, SpriteRender<B>>>,
+                    ReadStorage<AnimationSet<SpriteAnimationId, SpriteRender>>,
+                    WriteStorage<AnimationControlSet<SpriteAnimationId, SpriteRender>>,
                 )| {
                     // For each entity that has AnimationSet
                     for (entity, animation_set, _) in (&entities, &animation_sets, !&control_sets)
@@ -464,9 +461,9 @@ impl<B: Backend> SimpleState for Example<B> {
     }
 }
 
-fn toggle_or_cycle_animation<B: Backend>(
+fn toggle_or_cycle_animation(
     entity: Option<Entity>,
-    scene: &mut Scene<B, Real>,
+    scene: &mut Scene<Real>,
     sets: &ReadStorage<'_, AnimationSet<usize, Transform<Real>>>,
     controls: &mut WriteStorage<'_, AnimationControlSet<usize, Transform<Real>>>,
 ) {
@@ -548,17 +545,17 @@ fn main() -> amethyst::Result<()> {
         // .with_bundle(TransformBundle::new().with_dep(&["orbit"]))?
         .with_bundle(FPSCounterBundle::default())?
         .with(
-            PrefabLoaderSystem::<ScenePrefabData<DefaultBackend, Real>>::default(),
+            PrefabLoaderSystem::<ScenePrefabData<Real>>::default(),
             "scene_loader",
             &[],
         )
         .with(
-            GltfSceneLoaderSystem::<DefaultBackend, Real>::default(),
+            GltfSceneLoaderSystem::<Real>::default(),
             "gltf_loader",
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
         )
         .with(
-            Processor::<SpriteSheet<DefaultBackend>>::new(),
+            Processor::<SpriteSheet>::new(),
             "sprite_sheet_processor",
             &[],
         )
@@ -570,7 +567,7 @@ fn main() -> amethyst::Result<()> {
             .with_dep(&["gltf_loader"]),
         )?
         .with_bundle(
-            AnimationBundle::<SpriteAnimationId, SpriteRender<DefaultBackend>>::new(
+            AnimationBundle::<SpriteAnimationId, SpriteRender>::new(
                 "sprite_animation_control",
                 "sprite_sampler_interpolation",
             )
@@ -612,7 +609,7 @@ fn main() -> amethyst::Result<()> {
         .with_thread_local(EventsLoopSystem::new(event_loop))
         .with_thread_local(RendererSystem::<DefaultBackend, _>::new(ExampleGraph::new()));
 
-    let mut game = Application::new(&resources, Example::<DefaultBackend>::new(), game_data)?;
+    let mut game = Application::new(&resources, Example::new(), game_data)?;
     game.run();
     Ok(())
 }

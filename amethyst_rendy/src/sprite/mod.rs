@@ -1,4 +1,3 @@
-use rendy::hal::Backend;
 use ron::de::from_bytes as from_ron_bytes;
 use serde::{Deserialize, Serialize};
 
@@ -10,30 +9,24 @@ use amethyst_error::Error;
 pub mod prefab;
 
 /// An asset handle to sprite sheet metadata.
-pub type SpriteSheetHandle<B> = Handle<SpriteSheet<B>>;
+pub type SpriteSheetHandle = Handle<SpriteSheet>;
 
 /// Meta data for a sprite sheet texture.
 ///
 /// Contains a handle to the texture and the sprite coordinates on the texture.
 #[derive(Clone, Debug, PartialEq)]
-pub struct SpriteSheet<B: Backend> {
+pub struct SpriteSheet {
     /// `Texture` handle of the spritesheet texture
-    pub texture: Handle<Texture<B>>,
+    pub texture: Handle<Texture>,
     /// A list of sprites in this sprite sheet.
     pub sprites: Vec<Sprite>,
 }
 
-impl<B: Backend> Asset for SpriteSheet<B> {
+impl Asset for SpriteSheet {
     const NAME: &'static str = "renderer::SpriteSheet";
     type Data = Self;
     type HandleStorage = VecStorage<Handle<Self>>;
 }
-
-//impl<B: Backend> From<SpriteSheet<B>> for Result<ProcessingState<SpriteSheet<B>>, Error> {
-//    fn from(sprite_sheet: SpriteSheet<B>) -> Result<ProcessingState<SpriteSheet<B>>, Error> {
-//        Ok(ProcessingState::Loaded(sprite_sheet))
-//    }
-//}
 
 /// Information about whether or not a texture should be flipped
 /// when rendering.
@@ -192,14 +185,14 @@ impl From<[f32; 4]> for TextureCoordinates {
 /// Instead of using a `Mesh` on a `DrawFlat` render pass, we can use a simpler set of shaders to
 /// render textures to quads. This struct carries the information necessary for the draw2dflat pass.
 #[derive(Clone, Debug, PartialEq)]
-pub struct SpriteRender<B: Backend> {
+pub struct SpriteRender {
     /// Handle to the sprite sheet of the sprite
-    pub sprite_sheet: SpriteSheetHandle<B>,
+    pub sprite_sheet: SpriteSheetHandle,
     /// Index of the sprite on the sprite sheet
     pub sprite_number: usize,
 }
 
-impl<B: Backend> Component for SpriteRender<B> {
+impl Component for SpriteRender {
     type Storage = VecStorage<Self>;
 }
 
@@ -457,14 +450,14 @@ impl SpriteGrid {
 /// # }
 /// ```
 #[derive(Clone, Debug)]
-pub struct SpriteSheetFormat<B: Backend>(Handle<Texture<B>>);
+pub struct SpriteSheetFormat(Handle<Texture>);
 
-impl<B: Backend> Format<SpriteSheet<B>> for SpriteSheetFormat<B> {
+impl Format<SpriteSheet> for SpriteSheetFormat {
     fn name(&self) -> &'static str {
         "SPRITE_SHEET"
     }
 
-    fn import_simple(&self, bytes: Vec<u8>) -> Result<SpriteSheet<B>, Error> {
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<SpriteSheet, Error> {
         let sprite_list: SpriteList =
             from_ron_bytes(&bytes).map_err(|_| error::Error::LoadSpritesheetError)?;
 

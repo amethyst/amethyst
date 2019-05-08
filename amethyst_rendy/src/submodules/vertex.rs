@@ -2,10 +2,11 @@ use crate::{
     rendy::{
         command::RenderPassEncoder,
         factory::Factory,
-        hal::{self, Backend},
+        hal,
         memory::{MappedRange, Write},
         resource::{Buffer, Escape},
     },
+    types::Backend,
     util,
 };
 use core::{marker::PhantomData, ops::Range};

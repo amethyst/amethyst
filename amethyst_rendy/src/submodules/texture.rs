@@ -2,10 +2,10 @@ use crate::{
     rendy::{
         command::RenderPassEncoder,
         factory::Factory,
-        hal::{device::Device, Backend},
+        hal::device::Device,
         resource::{DescriptorSet, DescriptorSetLayout, Escape, Handle as RendyHandle},
     },
-    types::Texture,
+    types::{Backend, Texture},
     util,
 };
 use amethyst_assets::{AssetStorage, Handle};
@@ -58,19 +58,20 @@ impl<B: Backend> TextureSub<B> {
         &mut self,
         factory: &Factory<B>,
         res: &Resources,
-        handle: &Handle<Texture<B>>,
+        handle: &Handle<Texture>,
     ) -> Option<TextureState<B>> {
         #[cfg(feature = "profiler")]
         profile_scope!("try_insert");
 
         use util::{desc_write, texture_desc};
-        let tex_storage = <(Read<'_, AssetStorage<Texture<B>>>)>::fetch(res);
+        let tex_storage = <(Read<'_, AssetStorage<Texture>>)>::fetch(res);
 
         let tex = tex_storage.get(handle)?;
+        let desc = texture_desc(tex)?;
         let set = factory.create_descriptor_set(self.layout.clone()).unwrap();
         unsafe {
             let set = set.raw();
-            factory.write_descriptor_sets(vec![desc_write(set, 0, texture_desc(tex))]);
+            factory.write_descriptor_sets(vec![desc_write(set, 0, desc)]);
         }
         Some(TextureState::Loaded {
             set,
@@ -82,7 +83,7 @@ impl<B: Backend> TextureSub<B> {
         &mut self,
         factory: &Factory<B>,
         res: &Resources,
-        handle: &Handle<Texture<B>>,
+        handle: &Handle<Texture>,
     ) -> Option<(TextureId, bool)> {
         #[cfg(feature = "profiler")]
         profile_scope!("insert");

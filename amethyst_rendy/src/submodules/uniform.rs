@@ -2,12 +2,13 @@ use crate::{
     rendy::{
         command::RenderPassEncoder,
         factory::Factory,
-        hal::{self, device::Device, Backend},
+        hal::{self, device::Device},
         memory::{MappedRange, Write},
         resource::{
             Buffer, BufferInfo, DescriptorSet, DescriptorSetLayout, Escape, Handle as RendyHandle,
         },
     },
+    types::Backend,
     util,
 };
 use core::marker::PhantomData;

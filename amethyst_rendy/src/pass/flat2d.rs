@@ -6,7 +6,7 @@ use crate::{
     sprite::{SpriteRender, SpriteSheet},
     sprite_visibility::SpriteVisibility,
     submodules::{DynamicVertex, FlatEnvironmentSub, TextureId, TextureSub},
-    types::Texture,
+    types::{Backend, Texture},
     util,
 };
 use amethyst_assets::AssetStorage;
@@ -24,7 +24,7 @@ use rendy::{
         render::{PrepareResult, RenderGroup, RenderGroupDesc},
         GraphContext, NodeBuffer, NodeImage,
     },
-    hal::{self, device::Device, pso, Backend},
+    hal::{self, device::Device, pso},
     mesh::AsVertex,
     shader::Shader,
 };
@@ -118,12 +118,12 @@ impl<B: Backend, N: RealField + SubsetOf<f32>> RenderGroup<B, Resources> for Dra
             sprite_renders,
             transforms,
         ) = <(
-            Read<'_, AssetStorage<SpriteSheet<B>>>,
-            Read<'_, AssetStorage<Texture<B>>>,
+            Read<'_, AssetStorage<SpriteSheet>>,
+            Read<'_, AssetStorage<Texture>>,
             Option<Read<'_, SpriteVisibility>>,
             ReadStorage<'_, Hidden>,
             ReadStorage<'_, HiddenPropagate>,
-            ReadStorage<'_, SpriteRender<B>>,
+            ReadStorage<'_, SpriteRender>,
             ReadStorage<'_, Transform<N>>,
         )>::fetch(resources);
 
@@ -309,10 +309,10 @@ impl<B: Backend, N: RealField + SubsetOf<f32>> RenderGroup<B, Resources>
 
         let (sprite_sheet_storage, tex_storage, visibility, sprite_renders, transforms) =
             <(
-                Read<'_, AssetStorage<SpriteSheet<B>>>,
-                Read<'_, AssetStorage<Texture<B>>>,
+                Read<'_, AssetStorage<SpriteSheet>>,
+                Read<'_, AssetStorage<Texture>>,
                 ReadExpect<'_, SpriteVisibility>,
-                ReadStorage<'_, SpriteRender<B>>,
+                ReadStorage<'_, SpriteRender>,
                 ReadStorage<'_, Transform<N>>,
             )>::fetch(resources);
 

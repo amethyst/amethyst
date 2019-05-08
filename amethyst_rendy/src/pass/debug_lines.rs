@@ -3,6 +3,7 @@ use crate::{
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
     pod::ViewArgs,
     submodules::{gather::CameraGatherer, DynamicUniform, DynamicVertex},
+    types::Backend,
     util,
 };
 use amethyst_core::{
@@ -19,7 +20,7 @@ use rendy::{
         render::{PrepareResult, RenderGroup, RenderGroupDesc},
         GraphContext, NodeBuffer, NodeImage,
     },
-    hal::{self, device::Device, pso, Backend},
+    hal::{self, device::Device, pso},
     mesh::AsVertex,
     shader::Shader,
 };

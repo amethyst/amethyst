@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use amethyst_assets::Handle;
 use amethyst_rendy::{
     mtl::{Material, TextureOffset},
-    rendy::hal::Backend,
     sprite::Sprite,
     types::Texture,
 };
@@ -15,15 +14,15 @@ use crate::{AnimationSampling, ApplyData, BlendMethod};
 /// Note that material can only ever be animated with `Step`, or a panic will occur.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(untagged)]
-pub enum MaterialPrimitive<B: Backend> {
+pub enum MaterialPrimitive {
     /// Dynamically altering the texture rendered
     #[serde(skip)]
-    Texture(Handle<Texture<B>>),
+    Texture(Handle<Texture>),
     /// Dynamically altering the section of the texture rendered.
     Offset((f32, f32), (f32, f32)),
 }
 
-impl<B: Backend> InterpolationPrimitive for MaterialPrimitive<B> {
+impl InterpolationPrimitive for MaterialPrimitive {
     fn add(&self, _: &Self) -> Self {
         panic!("Cannot add MaterialPrimitive")
     }
@@ -53,7 +52,7 @@ impl<B: Backend> InterpolationPrimitive for MaterialPrimitive<B> {
     }
 }
 
-impl<B: Backend> From<Sprite> for MaterialPrimitive<B> {
+impl From<Sprite> for MaterialPrimitive {
     fn from(sprite: Sprite) -> Self {
         let tex_coords = &sprite.tex_coords;
         MaterialPrimitive::Offset(
@@ -63,7 +62,7 @@ impl<B: Backend> From<Sprite> for MaterialPrimitive<B> {
     }
 }
 
-impl<'a, B: Backend> From<&'a Sprite> for MaterialPrimitive<B> {
+impl<'a> From<&'a Sprite> for MaterialPrimitive {
     fn from(sprite: &'a Sprite) -> Self {
         let tex_coords = &sprite.tex_coords;
         MaterialPrimitive::Offset(
@@ -92,11 +91,11 @@ pub enum MaterialChannel {
     UvOffset,
 }
 
-impl<'a, B: Backend> ApplyData<'a> for Material<B> {
+impl<'a> ApplyData<'a> for Material {
     type ApplyData = ();
 }
 
-fn offset<B: Backend>(offset: &TextureOffset) -> MaterialPrimitive<B> {
+fn offset(offset: &TextureOffset) -> MaterialPrimitive {
     MaterialPrimitive::Offset(offset.u, offset.v)
 }
 
@@ -104,8 +103,8 @@ fn texture_offset(u: (f32, f32), v: (f32, f32)) -> TextureOffset {
     TextureOffset { u, v }
 }
 
-impl<B: Backend> AnimationSampling for Material<B> {
-    type Primitive = MaterialPrimitive<B>;
+impl AnimationSampling for Material {
+    type Primitive = MaterialPrimitive;
     type Channel = MaterialChannel;
 
     fn apply_sample(&mut self, channel: &Self::Channel, data: &Self::Primitive, _: &()) {

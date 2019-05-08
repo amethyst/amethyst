@@ -5,7 +5,7 @@ use amethyst_rendy::{
     formats::{mtl::MaterialPrefab, texture::TexturePrefab},
     palette::{LinSrgba, Srgba},
     rendy::{
-        hal::{self, Backend},
+        hal,
         texture::{
             image::{load_from_image, ImageFormat as DataFormat, ImageTextureConfig, Repr},
             palette::{load_from_linear_rgba, load_from_srgba},
@@ -19,12 +19,12 @@ use gltf::{self, material::AlphaMode};
 use std::sync::Arc;
 
 // Load a single material, and transform into a format usable by the engine
-pub fn load_material<B: Backend>(
+pub fn load_material(
     material: &gltf::Material<'_>,
     buffers: &Buffers,
     source: Arc<dyn Source>,
     name: &str,
-) -> Result<MaterialPrefab<B>, Error> {
+) -> Result<MaterialPrefab, Error> {
     let mut prefab = MaterialPrefab::default();
 
     let pbr = material.pbr_metallic_roughness();

@@ -11,10 +11,7 @@ use amethyst_rendy::{
     camera::CameraPrefab,
     formats::{mesh::MeshPrefab, mtl::MaterialPrefab},
     light::LightPrefab,
-    rendy::{
-        hal::Backend,
-        mesh::{Normal, Position, Tangent, TexCoord},
-    },
+    rendy::mesh::{Normal, Position, Tangent, TexCoord},
     sprite::{
         prefab::{SpriteRenderPrefab, SpriteSheetPrefab},
         SpriteRender,
@@ -39,8 +36,8 @@ pub enum SpriteAnimationId {
 
 #[derive(Derivative)]
 #[derivative(Default(bound = ""))]
-pub struct Scene<B: Backend, N: RealField + SubsetOf<f32>> {
-    pub handle: Option<Handle<Prefab<ScenePrefabData<B, N>>>>,
+pub struct Scene<N: RealField + SubsetOf<f32>> {
+    pub handle: Option<Handle<Prefab<ScenePrefabData<N>>>>,
     pub animation_index: usize,
 }
 
@@ -52,35 +49,35 @@ type GenMeshVertex = (Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>);
     default,
     bound(serialize = "N: Serialize", deserialize = "N: Deserialize<'de>",)
 )]
-pub struct ScenePrefabData<B: Backend, N: RealField + SubsetOf<f32>> {
+pub struct ScenePrefabData<N: RealField + SubsetOf<f32>> {
     transform: Option<Transform<N>>,
-    gltf: Option<AssetPrefab<GltfSceneAsset<B, N>, GltfSceneFormat>>,
-    sprite_sheet: Option<SpriteSheetPrefab<B>>,
-    animation_set: Option<AnimationSetPrefab<SpriteAnimationId, SpriteRender<B>>>,
+    gltf: Option<AssetPrefab<GltfSceneAsset<N>, GltfSceneFormat>>,
+    sprite_sheet: Option<SpriteSheetPrefab>,
+    animation_set: Option<AnimationSetPrefab<SpriteAnimationId, SpriteRender>>,
     camera: Option<CameraPrefab>,
     light: Option<LightPrefab>,
     tag: Option<Tag<AnimationMarker>>,
     fly_tag: Option<ControlTagPrefab<N>>,
-    sprite: Option<SpriteRenderPrefab<B>>,
-    mesh: Option<MeshPrefab<B, GenMeshVertex>>,
-    material: Option<MaterialPrefab<B>>,
+    sprite: Option<SpriteRenderPrefab>,
+    mesh: Option<MeshPrefab<GenMeshVertex>>,
+    material: Option<MaterialPrefab>,
     transparent: Option<Transparent>,
 }
 
 type PData<'a, T> = <T as PrefabData<'a>>::SystemData;
-impl<'a, B: Backend, N: RealField + SubsetOf<f32>> PrefabData<'a> for ScenePrefabData<B, N> {
+impl<'a, N: RealField + SubsetOf<f32>> PrefabData<'a> for ScenePrefabData<N> {
     type SystemData = (
         PData<'a, Transform<N>>,
-        PData<'a, AssetPrefab<GltfSceneAsset<B, N>, GltfSceneFormat>>,
-        PData<'a, SpriteSheetPrefab<B>>,
-        PData<'a, AnimationSetPrefab<SpriteAnimationId, SpriteRender<B>>>,
+        PData<'a, AssetPrefab<GltfSceneAsset<N>, GltfSceneFormat>>,
+        PData<'a, SpriteSheetPrefab>,
+        PData<'a, AnimationSetPrefab<SpriteAnimationId, SpriteRender>>,
         PData<'a, CameraPrefab>,
         PData<'a, LightPrefab>,
         PData<'a, Tag<AnimationMarker>>,
         PData<'a, ControlTagPrefab<N>>,
-        PData<'a, SpriteRenderPrefab<B>>,
-        PData<'a, MeshPrefab<B, GenMeshVertex>>,
-        PData<'a, MaterialPrefab<B>>,
+        PData<'a, SpriteRenderPrefab>,
+        PData<'a, MeshPrefab<GenMeshVertex>>,
+        PData<'a, MaterialPrefab>,
     );
     type Result = ();
     fn add_to_entity(

@@ -7,21 +7,20 @@ use amethyst_core::{
     math::{try_convert, Matrix4, RealField},
 };
 use amethyst_error::Error;
-use amethyst_rendy::{rendy::hal::Backend, skinning::JointTransformsPrefab};
+use amethyst_rendy::skinning::JointTransformsPrefab;
 
 use super::Buffers;
 use crate::GltfPrefab;
 
-pub fn load_skin<B, N>(
+pub fn load_skin<N>(
     skin: &gltf::Skin<'_>,
     buffers: &Buffers,
     skin_entity: usize,
     node_map: &HashMap<usize, usize>,
     meshes: Vec<usize>,
-    prefab: &mut Prefab<GltfPrefab<B, N>>,
+    prefab: &mut Prefab<GltfPrefab<N>>,
 ) -> Result<(), Error>
 where
-    B: Backend,
     N: RealField + SubsetOf<f32>,
 {
     let joints = skin

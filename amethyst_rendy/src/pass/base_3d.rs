@@ -8,7 +8,7 @@ use crate::{
     skinning::JointTransforms,
     submodules::{DynamicVertex, EnvironmentSub, MaterialId, MaterialSub, SkinningSub},
     transparent::Transparent,
-    types::Mesh,
+    types::{Backend, Mesh},
     util,
     visibility::Visibility,
 };
@@ -27,7 +27,7 @@ use rendy::{
         render::{PrepareResult, RenderGroup, RenderGroupDesc},
         GraphContext, NodeBuffer, NodeImage,
     },
-    hal::{self, device::Device, pso, Backend},
+    hal::{self, device::Device, pso},
     mesh::{AsVertex, VertexFormat},
     shader::{Shader, SpirvShader},
 };
@@ -48,7 +48,7 @@ macro_rules! profile_scope_impl {
 
 pub trait Base3DPassDef<B: Backend>: 'static + std::fmt::Debug + Send + Sync {
     const NAME: &'static str;
-    type TextureSet: for<'a> StaticTextureSet<'a, B>;
+    type TextureSet: for<'a> StaticTextureSet<'a>;
     fn vertex_shader() -> &'static SpirvShader;
     fn vertex_skinned_shader() -> &'static SpirvShader;
     fn fragment_shader() -> &'static SpirvShader;
@@ -176,13 +176,13 @@ impl<B: Backend, N: RealField + SubsetOf<f32>, T: Base3DPassDef<B>> RenderGroup<
             joints,
             tints,
         ) = <(
-            Read<AssetStorage<Mesh<B>>>,
+            Read<AssetStorage<Mesh>>,
             Option<Read<Visibility>>,
             ReadStorage<Transparent>,
             ReadStorage<Hidden>,
             ReadStorage<HiddenPropagate>,
-            ReadStorage<Handle<Mesh<B>>>,
-            ReadStorage<Handle<Material<B>>>,
+            ReadStorage<Handle<Mesh>>,
+            ReadStorage<Handle<Material>>,
             ReadStorage<Transform<N>>,
             ReadStorage<JointTransforms>,
             ReadStorage<Tint>,
@@ -324,7 +324,7 @@ impl<B: Backend, N: RealField + SubsetOf<f32>, T: Base3DPassDef<B>> RenderGroup<
     ) {
         profile_scope_impl!("draw");
 
-        let mesh_storage = <Read<'_, AssetStorage<Mesh<B>>>>::fetch(resources);
+        let mesh_storage = <Read<'_, AssetStorage<Mesh>>>::fetch(resources);
         let models_loc = self.vertex_format_base.len() as u32;
         let skin_models_loc = self.vertex_format_skinned.len() as u32;
 
@@ -339,14 +339,17 @@ impl<B: Backend, N: RealField + SubsetOf<f32>, T: Base3DPassDef<B>> RenderGroup<
                         .bind(&self.pipeline_layout, 1, mat_id, &mut encoder);
                     for (mesh_id, batch_data) in batches {
                         debug_assert!(mesh_storage.contains_id(*mesh_id));
-                        let Mesh(mesh) = unsafe { mesh_storage.get_by_id_unchecked(*mesh_id) };
-                        mesh.bind_and_draw(
-                            0,
-                            &self.vertex_format_base,
-                            instances_drawn..instances_drawn + batch_data.len() as u32,
-                            &mut encoder,
-                        )
-                        .unwrap();
+                        if let Some(mesh) =
+                            B::unwrap_mesh(unsafe { mesh_storage.get_by_id_unchecked(*mesh_id) })
+                        {
+                            mesh.bind_and_draw(
+                                0,
+                                &self.vertex_format_base,
+                                instances_drawn..instances_drawn + batch_data.len() as u32,
+                                &mut encoder,
+                            )
+                            .unwrap();
+                        }
                         instances_drawn += batch_data.len() as u32;
                     }
                 }
@@ -370,14 +373,17 @@ impl<B: Backend, N: RealField + SubsetOf<f32>, T: Base3DPassDef<B>> RenderGroup<
                             .bind(&self.pipeline_layout, 1, mat_id, &mut encoder);
                         for (mesh_id, batch_data) in batches {
                             debug_assert!(mesh_storage.contains_id(*mesh_id));
-                            let Mesh(mesh) = unsafe { mesh_storage.get_by_id_unchecked(*mesh_id) };
-                            mesh.bind_and_draw(
-                                0,
-                                &self.vertex_format_skinned,
-                                instances_drawn..instances_drawn + batch_data.len() as u32,
-                                &mut encoder,
-                            )
-                            .unwrap();
+                            if let Some(mesh) = B::unwrap_mesh(unsafe {
+                                mesh_storage.get_by_id_unchecked(*mesh_id)
+                            }) {
+                                mesh.bind_and_draw(
+                                    0,
+                                    &self.vertex_format_skinned,
+                                    instances_drawn..instances_drawn + batch_data.len() as u32,
+                                    &mut encoder,
+                                )
+                                .unwrap();
+                            }
                             instances_drawn += batch_data.len() as u32;
                         }
                     }
@@ -513,10 +519,10 @@ impl<B: Backend, N: RealField + SubsetOf<f32>, T: Base3DPassDef<B>> RenderGroup<
     ) -> PrepareResult {
         let (mesh_storage, visibility, meshes, materials, transforms, joints, tints) =
             <(
-                Read<AssetStorage<Mesh<B>>>,
+                Read<AssetStorage<Mesh>>,
                 ReadExpect<Visibility>,
-                ReadStorage<Handle<Mesh<B>>>,
-                ReadStorage<Handle<Material<B>>>,
+                ReadStorage<Handle<Mesh>>,
+                ReadStorage<Handle<Material>>,
                 ReadStorage<Transform<N>>,
                 ReadStorage<JointTransforms>,
                 ReadStorage<Tint>,
@@ -611,7 +617,7 @@ impl<B: Backend, N: RealField + SubsetOf<f32>, T: Base3DPassDef<B>> RenderGroup<
         _subpass: hal::pass::Subpass<'_, B>,
         resources: &Resources,
     ) {
-        let mesh_storage = <Read<'_, AssetStorage<Mesh<B>>>>::fetch(resources);
+        let mesh_storage = <Read<'_, AssetStorage<Mesh>>>::fetch(resources);
         let layout = &self.pipeline_layout;
         let encoder = &mut encoder;
 
@@ -627,9 +633,12 @@ impl<B: Backend, N: RealField + SubsetOf<f32>, T: Base3DPassDef<B>> RenderGroup<
                     self.materials.bind(layout, 1, mat, encoder);
                     for (mesh, range) in batches {
                         debug_assert!(mesh_storage.contains_id(*mesh));
-                        let Mesh(mesh) = unsafe { mesh_storage.get_by_id_unchecked(*mesh) };
-                        mesh.bind_and_draw(0, &self.vertex_format_base, range.clone(), encoder)
-                            .unwrap();
+                        if let Some(mesh) =
+                            B::unwrap_mesh(unsafe { mesh_storage.get_by_id_unchecked(*mesh) })
+                        {
+                            mesh.bind_and_draw(0, &self.vertex_format_base, range.clone(), encoder)
+                                .unwrap();
+                        }
                     }
                 }
             }
@@ -645,14 +654,17 @@ impl<B: Backend, N: RealField + SubsetOf<f32>, T: Base3DPassDef<B>> RenderGroup<
                         self.materials.bind(layout, 1, mat, encoder);
                         for (mesh, range) in batches {
                             debug_assert!(mesh_storage.contains_id(*mesh));
-                            let Mesh(mesh) = unsafe { mesh_storage.get_by_id_unchecked(*mesh) };
-                            mesh.bind_and_draw(
-                                0,
-                                &self.vertex_format_skinned,
-                                range.clone(),
-                                encoder,
-                            )
-                            .unwrap();
+                            if let Some(mesh) =
+                                B::unwrap_mesh(unsafe { mesh_storage.get_by_id_unchecked(*mesh) })
+                            {
+                                mesh.bind_and_draw(
+                                    0,
+                                    &self.vertex_format_skinned,
+                                    range.clone(),
+                                    encoder,
+                                )
+                                .unwrap();
+                            }
                         }
                     }
                 }

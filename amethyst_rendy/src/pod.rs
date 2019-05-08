@@ -12,7 +12,7 @@ use amethyst_core::{
 };
 use glsl_layout::*;
 use rendy::{
-    hal::{format::Format, Backend},
+    hal::format::Format,
     mesh::{AsAttribute, AsVertex, Model, VertexFormat},
 };
 
@@ -167,7 +167,7 @@ pub struct Material {
 }
 
 impl Material {
-    pub fn from_material<B: Backend>(mat: &mtl::Material<B>) -> Self {
+    pub fn from_material(mat: &mtl::Material) -> Self {
         Material {
             uv_offset: TextureOffset::from_offset(&mat.uv_offset),
             alpha_cutoff: mat.alpha_cutoff,
@@ -200,12 +200,12 @@ impl AsVertex for SpriteArgs {
 }
 
 impl SpriteArgs {
-    pub fn from_data<'a, B: Backend, N: RealField + SubsetOf<f32>>(
-        tex_storage: &AssetStorage<Texture<B>>,
-        sprite_storage: &'a AssetStorage<SpriteSheet<B>>,
-        sprite_render: &SpriteRender<B>,
+    pub fn from_data<'a, N: RealField + SubsetOf<f32>>(
+        tex_storage: &AssetStorage<Texture>,
+        sprite_storage: &'a AssetStorage<SpriteSheet>,
+        sprite_render: &SpriteRender,
         transform: &Transform<N>,
-    ) -> Option<(Self, &'a Handle<Texture<B>>)> {
+    ) -> Option<(Self, &'a Handle<Texture>)> {
         let sprite_sheet = sprite_storage.get(&sprite_render.sprite_sheet)?;
         if !tex_storage.contains(&sprite_sheet.texture) {
             return None;

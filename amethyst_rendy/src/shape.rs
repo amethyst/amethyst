@@ -12,9 +12,8 @@ use genmesh::{
     },
     EmitTriangles, MapVertex, Triangulate, Vertex, Vertices,
 };
-use rendy::{
-    hal::Backend,
-    mesh::{MeshBuilder, Normal, PosNormTangTex, PosNormTex, PosTex, Position, Tangent, TexCoord},
+use rendy::mesh::{
+    MeshBuilder, Normal, PosNormTangTex, PosNormTex, PosTex, Position, Tangent, TexCoord,
 };
 use std::marker::PhantomData;
 
@@ -33,10 +32,10 @@ fn option_none<T>() -> Option<T> {
 ///     * `ComboMeshCreator`
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 #[serde(bound = "")]
-pub struct ShapePrefab<B: Backend, V> {
+pub struct ShapePrefab<V> {
     #[serde(skip)]
     #[serde(default = "option_none")]
-    handle: Option<Handle<Mesh<B>>>,
+    handle: Option<Handle<Mesh>>,
     shape: Shape,
     #[serde(default)]
     shape_scale: Option<(f32, f32, f32)>,
@@ -44,15 +43,14 @@ pub struct ShapePrefab<B: Backend, V> {
     _m: PhantomData<V>,
 }
 
-impl<'a, B, V> PrefabData<'a> for ShapePrefab<B, V>
+impl<'a, V> PrefabData<'a> for ShapePrefab<V>
 where
     V: FromShape + Into<MeshBuilder<'static>>,
-    B: Backend,
 {
     type SystemData = (
         ReadExpect<'a, Loader>,
-        WriteStorage<'a, Handle<Mesh<B>>>,
-        Read<'a, AssetStorage<Mesh<B>>>,
+        WriteStorage<'a, Handle<Mesh>>,
+        Read<'a, AssetStorage<Mesh>>,
     );
     type Result = ();
 
@@ -110,9 +108,9 @@ pub enum Shape {
 
 /// `SystemData` needed to upload a `Shape` directly to create a `Handle<Mesh>`
 #[derive(SystemData)]
-pub struct ShapeUpload<'a, B: Backend> {
+pub struct ShapeUpload<'a> {
     loader: ReadExpect<'a, Loader>,
-    storage: Read<'a, AssetStorage<Mesh<B>>>,
+    storage: Read<'a, AssetStorage<Mesh>>,
 }
 
 pub type InternalVertexData = ([f32; 3], [f32; 3], [f32; 2], [f32; 3]);
@@ -157,12 +155,13 @@ impl Shape {
     ///     * `Vec<PosNormTex>`
     ///     * `Vec<PosNormTangTex>`
     ///     * `ComboMeshCreator`
-    pub fn upload<V, P, B: Backend>(
+    /// `P`: Progress tracker type
+    pub fn upload<V, P>(
         &self,
         scale: Option<(f32, f32, f32)>,
-        upload: ShapeUpload<'_, B>,
+        upload: ShapeUpload<'_>,
         progress: P,
-    ) -> Handle<Mesh<B>>
+    ) -> Handle<Mesh>
     where
         V: FromShape + Into<MeshBuilder<'static>>,
         P: Progress,

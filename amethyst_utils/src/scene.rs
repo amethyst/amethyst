@@ -6,10 +6,7 @@ use amethyst_core::{ecs::prelude::Entity, math::RealField, Transform};
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
 use amethyst_rendy::{
-    camera::CameraPrefab,
-    formats::GraphicsPrefab,
-    light::LightPrefab,
-    rendy::{hal::Backend, mesh::MeshBuilder},
+    camera::CameraPrefab, formats::GraphicsPrefab, light::LightPrefab, rendy::mesh::MeshBuilder,
     shape::FromShape,
 };
 use serde::{Deserialize, Serialize};
@@ -29,18 +26,16 @@ use crate::removal::Removal;
 ///     * `ComboMeshCreator`
 /// - `N`: RealField bound (f32 or f64).
 /// - `R`: The type of id used by the Removal component.
-/// - `M`: `Format` to use for loading `Mesh`es from file
 #[derive(Deserialize, Serialize, PrefabData)]
 #[serde(default)]
 #[serde(deny_unknown_fields)]
-pub struct BasicScenePrefab<B, V, N, R = ()>
+pub struct BasicScenePrefab<V, N, R = ()>
 where
-    B: Backend,
     R: PartialEq + Debug + Clone + Send + Sync + 'static,
     V: FromShape + Into<MeshBuilder<'static>>,
     N: RealField,
 {
-    graphics: Option<GraphicsPrefab<B, V>>,
+    graphics: Option<GraphicsPrefab<V>>,
     transform: Option<Transform<N>>,
     light: Option<LightPrefab>,
     camera: Option<CameraPrefab>,
@@ -48,9 +43,8 @@ where
     removal: Option<Removal<R>>,
 }
 
-impl<B, V, N, R> Default for BasicScenePrefab<B, V, N, R>
+impl<V, N, R> Default for BasicScenePrefab<V, N, R>
 where
-    B: Backend,
     R: PartialEq + Debug + Clone + Send + Sync + 'static,
     V: FromShape + Into<MeshBuilder<'static>>,
     N: RealField,

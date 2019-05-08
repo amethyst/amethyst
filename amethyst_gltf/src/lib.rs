@@ -15,10 +15,7 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 use amethyst_rendy::{
-    formats::mtl::MaterialPrefab,
-    rendy::{hal::Backend, mesh::MeshBuilder},
-    types::Mesh,
-    visibility::BoundingSphere,
+    formats::mtl::MaterialPrefab, rendy::mesh::MeshBuilder, types::Mesh, visibility::BoundingSphere,
 };
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
@@ -30,17 +27,16 @@ mod error;
 mod format;
 
 /// Load `GltfSceneAsset`s
-pub type GltfSceneLoaderSystem<B, N> = PrefabLoaderSystem<GltfPrefab<B, N>>;
+pub type GltfSceneLoaderSystem<N> = PrefabLoaderSystem<GltfPrefab<N>>;
 
 /// Gltf scene asset as returned by the `GltfSceneFormat`
-pub type GltfSceneAsset<B, N> = Prefab<GltfPrefab<B, N>>;
+pub type GltfSceneAsset<N> = Prefab<GltfPrefab<N>>;
 
 /// `PrefabData` for loading Gltf files.
 #[derive(Debug, Derivative)]
 #[derivative(Default(bound = ""))]
-pub struct GltfPrefab<B, N>
+pub struct GltfPrefab<N>
 where
-    B: Backend,
     N: RealField + SubsetOf<f32>,
 {
     /// `Transform` will almost always be placed, the only exception is for the main `Entity` for
@@ -49,9 +45,9 @@ where
     /// `MeshData` is placed on all `Entity`s with graphics primitives
     pub mesh: Option<MeshBuilder<'static>>,
     /// Mesh handle after sub asset loading is done
-    pub mesh_handle: Option<Handle<Mesh<B>>>,
+    pub mesh_handle: Option<Handle<Mesh>>,
     /// `Material` is placed on all `Entity`s with graphics primitives with material
-    pub material: Option<MaterialPrefab<B>>,
+    pub material: Option<MaterialPrefab>,
     /// Loaded animations, if applicable, will always only be placed on the main `Entity`
     pub animatable: Option<AnimatablePrefab<usize, Transform<N>>>,
     /// Skin data is placed on `Entity`s involved in the skin, skeleton or graphical primitives
@@ -61,13 +57,12 @@ where
     pub extent: Option<GltfNodeExtent>,
     /// Node name
     pub name: Option<Named>,
-    pub(crate) materials: Option<GltfMaterialSet<B>>,
+    pub(crate) materials: Option<GltfMaterialSet>,
     pub(crate) material_id: Option<usize>,
 }
 
-impl<B, N> GltfPrefab<B, N>
+impl<N> GltfPrefab<N>
 where
-    B: Backend,
     N: RealField + SubsetOf<f32>,
 {
     /// Move the scene so the center of the bounding box is at the given `target` location.
@@ -179,8 +174,8 @@ impl From<Range<[f32; 3]>> for GltfNodeExtent {
 /// Used during gltf loading to contain the materials used from scenes in the file
 #[derive(Debug, Derivative)]
 #[derivative(Default(bound = ""))]
-pub struct GltfMaterialSet<B: Backend> {
-    pub(crate) materials: HashMap<usize, MaterialPrefab<B>>,
+pub struct GltfMaterialSet {
+    pub(crate) materials: HashMap<usize, MaterialPrefab>,
 }
 
 /// Options used when loading a GLTF file
@@ -212,22 +207,21 @@ pub struct GltfSceneOptions {
     pub scene_index: Option<usize>,
 }
 
-impl<'a, B, N> PrefabData<'a> for GltfPrefab<B, N>
+impl<'a, N> PrefabData<'a> for GltfPrefab<N>
 where
-    B: Backend,
     N: RealField + SubsetOf<f32>,
 {
     type SystemData = (
         <Transform<N> as PrefabData<'a>>::SystemData,
         <Named as PrefabData<'a>>::SystemData,
-        <MaterialPrefab<B> as PrefabData<'a>>::SystemData,
+        <MaterialPrefab as PrefabData<'a>>::SystemData,
         <AnimatablePrefab<usize, Transform<N>> as PrefabData<'a>>::SystemData,
         <SkinnablePrefab<N> as PrefabData<'a>>::SystemData,
         WriteStorage<'a, BoundingSphere<N>>,
-        WriteStorage<'a, Handle<Mesh<B>>>,
-        Read<'a, AssetStorage<Mesh<B>>>,
+        WriteStorage<'a, Handle<Mesh>>,
+        Read<'a, AssetStorage<Mesh>>,
         ReadExpect<'a, Loader>,
-        Write<'a, GltfMaterialSet<B>>,
+        Write<'a, GltfMaterialSet>,
     );
     type Result = ();
 

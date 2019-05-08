@@ -1,7 +1,6 @@
 use super::base_3d::*;
-use crate::{mtl::FullTextureSet, skinning::JointCombined};
+use crate::{mtl::FullTextureSet, skinning::JointCombined, types::Backend};
 use rendy::{
-    hal::Backend,
     mesh::{AsVertex, Normal, Position, Tangent, TexCoord, VertexFormat},
     shader::SpirvShader,
 };

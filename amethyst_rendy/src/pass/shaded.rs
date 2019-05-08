@@ -2,9 +2,9 @@ use super::base_3d::*;
 use crate::{
     mtl::{TexAlbedo, TexEmission},
     skinning::JointCombined,
+    types::Backend,
 };
 use rendy::{
-    hal::Backend,
     mesh::{AsVertex, Normal, Position, Tangent, TexCoord, VertexFormat},
     shader::SpirvShader,
 };

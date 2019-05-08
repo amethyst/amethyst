@@ -1,7 +1,6 @@
 use super::base_3d::*;
-use crate::{mtl::TexAlbedo, skinning::JointCombined};
+use crate::{mtl::TexAlbedo, skinning::JointCombined, types::Backend};
 use rendy::{
-    hal::Backend,
     mesh::{AsVertex, Position, TexCoord, VertexFormat},
     shader::SpirvShader,
 };

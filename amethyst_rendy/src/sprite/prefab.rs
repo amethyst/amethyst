@@ -10,7 +10,6 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 use derivative::Derivative;
-use rendy::hal::Backend;
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 
@@ -20,14 +19,14 @@ use std::sync::Mutex;
 /// of other `PrefabData` or in specialised formats. See `SpriteScenePrefab` for an example of this.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(bound = "")]
-pub enum SpriteSheetPrefab<B: Backend> {
+pub enum SpriteSheetPrefab {
     /// Spritesheet handle, normally not used outside the prefab system.
     #[serde(skip)]
-    Handle((Option<String>, SpriteSheetHandle<B>)),
+    Handle((Option<String>, SpriteSheetHandle)),
     /// Definition of a spritesheet
     Sheet {
         /// This texture contains the images for the spritesheet
-        texture: TexturePrefab<B>,
+        texture: TexturePrefab,
         /// The sprites in the spritesheet
         sprites: Vec<Sprites>,
         /// The name of the spritesheet to refer to it
@@ -35,14 +34,14 @@ pub enum SpriteSheetPrefab<B: Backend> {
     },
 }
 
-impl<'a, B: Backend> PrefabData<'a> for SpriteSheetPrefab<B> {
+impl<'a> PrefabData<'a> for SpriteSheetPrefab {
     type SystemData = (
-        <TexturePrefab<B> as PrefabData<'a>>::SystemData,
-        Read<'a, SpriteSheetLoadedSet<B>>,
-        Read<'a, AssetStorage<SpriteSheet<B>>>,
+        <TexturePrefab as PrefabData<'a>>::SystemData,
+        Read<'a, SpriteSheetLoadedSet>,
+        Read<'a, AssetStorage<SpriteSheet>>,
         ReadExpect<'a, Loader>,
     );
-    type Result = (Option<String>, SpriteSheetHandle<B>);
+    type Result = (Option<String>, SpriteSheetHandle);
 
     fn add_to_entity(
         &self,
@@ -92,13 +91,13 @@ impl<'a, B: Backend> PrefabData<'a> for SpriteSheetPrefab<B> {
 }
 
 #[derive(Debug)]
-pub struct SpriteSheetLoadedSet<B: Backend>(Mutex<Vec<(Option<String>, SpriteSheetHandle<B>)>>);
+pub struct SpriteSheetLoadedSet(Mutex<Vec<(Option<String>, SpriteSheetHandle)>>);
 
-impl<B: Backend> SpriteSheetLoadedSet<B> {
-    fn push(&self, data: (Option<String>, SpriteSheetHandle<B>)) {
+impl SpriteSheetLoadedSet {
+    fn push(&self, data: (Option<String>, SpriteSheetHandle)) {
         self.0.lock().unwrap().push(data);
     }
-    fn get(&self, reference: &SpriteSheetReference) -> Option<SpriteSheetHandle<B>> {
+    fn get(&self, reference: &SpriteSheetReference) -> Option<SpriteSheetHandle> {
         let inner = self.0.lock().unwrap();
         match reference {
             SpriteSheetReference::Index(index) => {
@@ -111,7 +110,7 @@ impl<B: Backend> SpriteSheetLoadedSet<B> {
         }
     }
 }
-impl<B: Backend> Default for SpriteSheetLoadedSet<B> {
+impl Default for SpriteSheetLoadedSet {
     fn default() -> Self {
         Self(Mutex::new(vec![]))
     }
@@ -133,20 +132,20 @@ pub enum SpriteSheetReference {
 #[derive(Derivative, Clone, Debug, Deserialize, Serialize)]
 #[derivative(Default(bound = ""))]
 #[serde(bound = "")]
-pub struct SpriteRenderPrefab<B: Backend> {
+pub struct SpriteRenderPrefab {
     /// Index of the sprite sheet in the prefab
     pub sheet: Option<SpriteSheetReference>,
     /// Index of the sprite on the sprite sheet
     pub sprite_number: usize,
 
     #[serde(skip_deserializing, skip_serializing)]
-    handle: Option<SpriteSheetHandle<B>>,
+    handle: Option<SpriteSheetHandle>,
 }
 
-impl<'a, B: Backend> PrefabData<'a> for SpriteRenderPrefab<B> {
+impl<'a> PrefabData<'a> for SpriteRenderPrefab {
     type SystemData = (
-        WriteStorage<'a, SpriteRender<B>>,
-        Read<'a, SpriteSheetLoadedSet<B>>,
+        WriteStorage<'a, SpriteRender>,
+        Read<'a, SpriteSheetLoadedSet>,
     );
     type Result = ();
 
@@ -195,20 +194,20 @@ impl<'a, B: Backend> PrefabData<'a> for SpriteRenderPrefab<B> {
 /// Prefab for loading a full scene with sprites.
 #[derive(Derivative, Clone, Debug, Deserialize, Serialize)]
 #[derivative(Default(bound = ""))]
-#[serde(bound(deserialize = "SpriteSheetPrefab<B>: Deserialize<'de>, N: Deserialize<'de>"))]
-pub struct SpriteScenePrefab<B: Backend, N: RealField> {
+#[serde(bound(deserialize = "SpriteSheetPrefab: Deserialize<'de>, N: Deserialize<'de>"))]
+pub struct SpriteScenePrefab<N: RealField> {
     /// Sprite sheets
-    pub sheet: Option<SpriteSheetPrefab<B>>,
+    pub sheet: Option<SpriteSheetPrefab>,
     /// Add `SpriteRender` to the `Entity`
-    pub render: Option<SpriteRenderPrefab<B>>,
+    pub render: Option<SpriteRenderPrefab>,
     /// Add `Transform` to the `Entity`
     pub transform: Option<Transform<N>>,
 }
 
-impl<'a, B: Backend, N: RealField> PrefabData<'a> for SpriteScenePrefab<B, N> {
+impl<'a, N: RealField> PrefabData<'a> for SpriteScenePrefab<N> {
     type SystemData = (
-        <SpriteSheetPrefab<B> as PrefabData<'a>>::SystemData,
-        <SpriteRenderPrefab<B> as PrefabData<'a>>::SystemData,
+        <SpriteSheetPrefab as PrefabData<'a>>::SystemData,
+        <SpriteRenderPrefab as PrefabData<'a>>::SystemData,
         <Transform<N> as PrefabData<'a>>::SystemData,
     );
     type Result = ();
@@ -260,8 +259,8 @@ mod tests {
         let mut world = World::new();
         world.register::<SpriteRender>();
         let loader = Loader::new(".", Arc::new(ThreadPoolBuilder::new().build().unwrap()));
-        let tex_storage = AssetStorage::<Texture<B>>::default();
-        let ss_storage = AssetStorage::<SpriteSheet<B>>::default();
+        let tex_storage = AssetStorage::<Texture>::default();
+        let ss_storage = AssetStorage::<SpriteSheet>::default();
         world.add_resource(tex_storage);
         world.add_resource(ss_storage);
         world.add_resource(SpriteSheetLoadedSet::default());
@@ -269,10 +268,10 @@ mod tests {
         world
     }
 
-    fn add_sheet(world: &mut World) -> (SpriteSheetReference, Handle<SpriteSheet<B>>) {
+    fn add_sheet(world: &mut World) -> (SpriteSheetReference, Handle<SpriteSheet>) {
         type Data<'a> = (
             ReadExpect<'a, Loader>,
-            Read<'a, AssetStorage<SpriteSheet<B>>>,
+            Read<'a, AssetStorage<SpriteSheet>>,
             Read<'a, SpriteSheetLoadedSet>,
         );
         let texture = add_texture(world);

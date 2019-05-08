@@ -4,6 +4,7 @@ use crate::{
     pod::IntoPod,
     shape::Shape,
     submodules::{DynamicUniform, FlatEnvironmentSub},
+    types::Backend,
     util,
 };
 use amethyst_core::{
@@ -20,7 +21,7 @@ use rendy::{
         render::{PrepareResult, RenderGroup, RenderGroupDesc},
         GraphContext, NodeBuffer, NodeImage,
     },
-    hal::{self, device::Device, pso, Backend},
+    hal::{self, device::Device, pso},
     mesh::{AsVertex, Mesh, PosTex},
     shader::Shader,
 };

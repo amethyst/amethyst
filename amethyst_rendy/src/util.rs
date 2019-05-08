@@ -1,4 +1,4 @@
-use crate::types::Texture;
+use crate::types::{Backend, Texture};
 use core::{
     hash::Hash,
     iter::{DoubleEndedIterator, ExactSizeIterator, FusedIterator},
@@ -10,7 +10,7 @@ use num_traits::PrimInt;
 use rendy::{
     factory::Factory,
     graph::render::PrepareResult,
-    hal::{self, buffer::Usage, format, pso, Backend},
+    hal::{self, buffer::Usage, format, pso},
     memory::MemoryUsage,
     mesh::VertexFormat,
     resource::{BufferInfo, Escape},
@@ -164,14 +164,14 @@ pub fn desc_write<'a, B: Backend>(
 }
 
 #[inline]
-pub fn texture_desc<'a, B: Backend>(texture: &'a Texture<B>) -> pso::Descriptor<'a, B> {
-    let Texture(inner) = texture;
-
-    pso::Descriptor::CombinedImageSampler(
-        inner.view().raw(),
-        hal::image::Layout::ShaderReadOnlyOptimal,
-        inner.sampler().raw(),
-    )
+pub fn texture_desc<'a, B: Backend>(texture: &'a Texture) -> Option<pso::Descriptor<'a, B>> {
+    B::unwrap_texture(texture).map(|inner| {
+        pso::Descriptor::CombinedImageSampler(
+            inner.view().raw(),
+            hal::image::Layout::ShaderReadOnlyOptimal,
+            inner.sampler().raw(),
+        )
+    })
 }
 
 pub fn set_layout_bindings(

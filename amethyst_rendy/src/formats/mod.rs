@@ -7,35 +7,30 @@ use crate::shape::FromShape;
 use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_core::ecs::prelude::Entity;
 use amethyst_error::Error;
-use rendy::{hal::Backend, mesh::MeshBuilder};
+use rendy::mesh::MeshBuilder;
 use serde::{Deserialize, Serialize};
 
 /// `PrefabData` for loading graphics, ie `Mesh` + `Material`
 ///
 /// ### Type parameters:
 ///
-/// `B`: `Backend` type parameter for `Mesh<B>` and `Texture<B>`
-/// `V`: Vertex format to use for generated `Mesh`es, must be one of:
+/// `V`: Vertex format to use for generated `Mesh`es, for example:
 ///     * `Vec<PosTex>`
 ///     * `Vec<PosNormTex>`
-///     * `Vec<PosNormTangTex>`
-///     * `ComboMeshCreator`
-/// - `M`: `Format` to use for loading `Mesh`es from file
-/// - `T`: `Format` to use for loading `Texture`s from file
+///     * `(Vec<Position>, Vec<Normal>)`
 #[derive(Deserialize, Serialize)]
-pub struct GraphicsPrefab<B: Backend, V> {
-    mesh: MeshPrefab<B, V>,
-    material: MaterialPrefab<B>,
+pub struct GraphicsPrefab<V> {
+    mesh: MeshPrefab<V>,
+    material: MaterialPrefab,
 }
 
-impl<'a, B, V> PrefabData<'a> for GraphicsPrefab<B, V>
+impl<'a, V> PrefabData<'a> for GraphicsPrefab<V>
 where
-    B: Backend,
     V: FromShape + Into<MeshBuilder<'static>>,
 {
     type SystemData = (
-        <MeshPrefab<B, V> as PrefabData<'a>>::SystemData,
-        <MaterialPrefab<B> as PrefabData<'a>>::SystemData,
+        <MeshPrefab<V> as PrefabData<'a>>::SystemData,
+        <MaterialPrefab as PrefabData<'a>>::SystemData,
     );
     type Result = ();
 

@@ -3,7 +3,6 @@
 use crate::types::Texture;
 use amethyst_assets::{Asset, Handle};
 use amethyst_core::ecs::prelude::DenseVecStorage;
-use rendy::hal::Backend;
 
 /// Material reference this part of the texture
 #[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
@@ -25,26 +24,26 @@ impl Default for TextureOffset {
 
 /// A physically based Material with metallic workflow, fully utilized in PBR render pass.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Material<B: Backend> {
+pub struct Material {
     /// Alpha cutoff: the value at which we do not draw the pixel
     pub alpha_cutoff: f32,
     /// Diffuse map.
-    pub albedo: Handle<Texture<B>>,
+    pub albedo: Handle<Texture>,
     /// Emission map.
-    pub emission: Handle<Texture<B>>,
+    pub emission: Handle<Texture>,
     /// Normal map.
-    pub normal: Handle<Texture<B>>,
+    pub normal: Handle<Texture>,
     /// Metallic-roughness map. (B channel metallic, G channel roughness)
-    pub metallic_roughness: Handle<Texture<B>>,
+    pub metallic_roughness: Handle<Texture>,
     /// Ambient occlusion map.
-    pub ambient_occlusion: Handle<Texture<B>>,
+    pub ambient_occlusion: Handle<Texture>,
     /// Cavity map.
-    pub cavity: Handle<Texture<B>>,
+    pub cavity: Handle<Texture>,
     /// Texture offset
     pub uv_offset: TextureOffset,
 }
 
-impl<B: Backend> Asset for Material<B> {
+impl Asset for Material {
     const NAME: &'static str = "renderer::Material";
     type Data = Self;
     type HandleStorage = DenseVecStorage<Handle<Self>>;
@@ -56,13 +55,13 @@ impl<B: Backend> Asset for Material<B> {
 /// Additionally, you can use it to fill up the fields of
 /// `Material` you don't want to specify.
 #[derive(Clone)]
-pub struct MaterialDefaults<B: Backend>(pub Material<B>);
+pub struct MaterialDefaults(pub Material);
 
-pub trait StaticTextureSet<'a, B: Backend>:
+pub trait StaticTextureSet<'a>:
     Clone + Copy + std::fmt::Debug + PartialEq + Eq + std::hash::Hash + Send + Sync + 'static
 {
-    type Iter: Iterator<Item = &'a Handle<Texture<B>>>;
-    fn textures(mat: &'a Material<B>) -> Self::Iter;
+    type Iter: Iterator<Item = &'a Handle<Texture>>;
+    fn textures(mat: &'a Material) -> Self::Iter;
     fn len() -> usize {
         1
     }
@@ -81,10 +80,10 @@ macro_rules! impl_texture {
     ($name:ident, $prop:ident) => {
         #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
         pub struct $name;
-        impl<'a, B: Backend> StaticTextureSet<'a, B> for $name {
-            type Iter = std::iter::Once<&'a Handle<Texture<B>>>;
+        impl<'a> StaticTextureSet<'a> for $name {
+            type Iter = std::iter::Once<&'a Handle<Texture>>;
             #[inline(always)]
-            fn textures(mat: &'a Material<B>) -> Self::Iter {
+            fn textures(mat: &'a Material) -> Self::Iter {
                 std::iter::once(&mat.$prop)
             }
         }
@@ -107,13 +106,13 @@ macro_rules! recursive_iter {
 
 macro_rules! impl_texture_set_tuple {
     ($($from:ident),*) => {
-        impl<'a, BE: Backend, $($from,)*> StaticTextureSet<'a, BE> for ($($from),*,)
+        impl<'a, $($from,)*> StaticTextureSet<'a> for ($($from),*,)
         where
-            $($from: StaticTextureSet<'a, BE>),*,
+            $($from: StaticTextureSet<'a>),*,
         {
             type Iter = recursive_iter!(@type $($from::Iter),*);
             #[inline(always)]
-            fn textures(mat: &'a Material<BE>) -> Self::Iter {
+            fn textures(mat: &'a Material) -> Self::Iter {
                 recursive_iter!(@value $($from::textures(mat)),*)
             }
             fn len() -> usize {

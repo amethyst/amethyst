@@ -4,11 +4,12 @@ use crate::{
     rendy::{
         command::RenderPassEncoder,
         factory::Factory,
-        hal::{self, adapter::PhysicalDevice, device::Device, pso::Descriptor, Backend},
+        hal::{self, adapter::PhysicalDevice, device::Device, pso::Descriptor},
         memory::Write as _,
         resource::{Buffer, DescriptorSet, DescriptorSetLayout, Escape, Handle as RendyHandle},
     },
     submodules::gather::{AmbientGatherer, CameraGatherer},
+    types::Backend,
     util::{self, TapCountIter},
 };
 use amethyst_core::{

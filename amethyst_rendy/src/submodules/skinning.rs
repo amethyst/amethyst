@@ -2,11 +2,12 @@ use crate::{
     rendy::{
         command::RenderPassEncoder,
         factory::Factory,
-        hal::{self, device::Device, pso::Descriptor, Backend},
+        hal::{self, device::Device, pso::Descriptor},
         memory::Write as _,
         resource::{Buffer, DescriptorSet, DescriptorSetLayout, Escape, Handle as RendyHandle},
     },
     skinning::JointTransforms,
+    types::Backend,
     util,
 };
 use fnv::FnvHashMap;

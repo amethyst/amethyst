@@ -4,13 +4,13 @@ use crate::{
     rendy::{
         command::RenderPassEncoder,
         factory::Factory,
-        hal::{self, adapter::PhysicalDevice, device::Device, pso::Descriptor, Backend},
+        hal::{self, adapter::PhysicalDevice, device::Device, pso::Descriptor},
         memory::Write as _,
         resource::{
             Buffer, BufferInfo, DescriptorSet, DescriptorSetLayout, Escape, Handle as RendyHandle,
         },
     },
-    types::Texture,
+    types::{Backend, Texture},
     util,
 };
 use amethyst_assets::{AssetStorage, Handle};
@@ -135,7 +135,7 @@ enum MaterialState<B: Backend> {
 pub struct MaterialId(u32);
 
 #[derive(Debug)]
-pub struct MaterialSub<B: Backend, T: for<'a> StaticTextureSet<'a, B>> {
+pub struct MaterialSub<B: Backend, T: for<'a> StaticTextureSet<'a>> {
     generation: u32,
     layout: RendyHandle<DescriptorSetLayout<B>>,
     lookup: util::LookupBuilder<u32>,
@@ -145,7 +145,7 @@ pub struct MaterialSub<B: Backend, T: for<'a> StaticTextureSet<'a, B>> {
     marker: std::marker::PhantomData<T>,
 }
 
-impl<B: Backend, T: for<'a> StaticTextureSet<'a, B>> MaterialSub<B, T> {
+impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
         Ok(Self {
             layout: set_layout! {factory, [1] UniformBuffer FRAGMENT, [T::len()] CombinedImageSampler FRAGMENT},
@@ -195,20 +195,24 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a, B>> MaterialSub<B, T> {
         &mut self,
         factory: &Factory<B>,
         res: &Resources,
-        handle: &Handle<Material<B>>,
+        handle: &Handle<Material>,
     ) -> Option<MaterialState<B>> {
         #[cfg(feature = "profiler")]
         profile_scope!("try_insert");
 
         use util::{desc_write, slice_as_bytes, texture_desc};
         let (mat_storage, tex_storage) = <(
-            Read<'_, AssetStorage<Material<B>>>,
-            Read<'_, AssetStorage<Texture<B>>>,
+            Read<'_, AssetStorage<Material>>,
+            Read<'_, AssetStorage<Texture>>,
         )>::fetch(res);
 
         let mat = mat_storage.get(handle)?;
 
-        if T::textures(mat).any(|t| !tex_storage.contains(t)) {
+        if T::textures(mat).any(|t| {
+            !tex_storage
+                .get(t)
+                .map_or(false, |tex| B::unwrap_texture(tex).is_some())
+        }) {
             return None;
         }
 
@@ -236,7 +240,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a, B>> MaterialSub<B, T> {
                 desc_write(
                     set,
                     (i + 1) as u32,
-                    texture_desc(tex_storage.get(t).unwrap()),
+                    texture_desc(tex_storage.get(t).unwrap()).unwrap(),
                 )
             });
 
@@ -254,7 +258,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a, B>> MaterialSub<B, T> {
         &mut self,
         factory: &Factory<B>,
         res: &Resources,
-        handle: &Handle<Material<B>>,
+        handle: &Handle<Material>,
     ) -> Option<(MaterialId, bool)> {
         #[cfg(feature = "profiler")]
         profile_scope!("insert");

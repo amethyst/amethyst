@@ -7,7 +7,7 @@ use crate::{
     mtl::{Material, MaterialDefaults},
     resources::Tint,
     skinning::JointTransforms,
-    types::{Mesh, Texture},
+    types::{Backend, Mesh, Texture},
     visibility::Visibility,
 };
 use amethyst_assets::{
@@ -22,7 +22,6 @@ use rendy::{
     command::{Families, QueueId},
     factory::{Factory, ImageState},
     graph::{Graph, GraphBuilder},
-    hal::Backend,
     texture::palette::{load_from_linear_rgba, load_from_srgba},
 };
 use std::sync::Arc;
@@ -68,15 +67,15 @@ type AssetLoadingData<'a, B> = (
     ReadExpect<'a, Arc<ThreadPool>>,
     Option<Read<'a, HotReloadStrategy>>,
     WriteExpect<'a, Factory<B>>,
-    Write<'a, AssetStorage<Mesh<B>>>,
-    Write<'a, AssetStorage<Texture<B>>>,
-    Write<'a, AssetStorage<Material<B>>>,
+    Write<'a, AssetStorage<Mesh>>,
+    Write<'a, AssetStorage<Texture>>,
+    Write<'a, AssetStorage<Material>>,
 );
 
-type SetupData<'a, B> = (
-    ReadStorage<'a, Handle<Mesh<B>>>,
-    ReadStorage<'a, Handle<Texture<B>>>,
-    ReadStorage<'a, Handle<Material<B>>>,
+type SetupData<'a> = (
+    ReadStorage<'a, Handle<Mesh>>,
+    ReadStorage<'a, Handle<Texture>>,
+    ReadStorage<'a, Handle<Material>>,
     ReadStorage<'a, Tint>,
     ReadStorage<'a, Light>,
     ReadStorage<'a, Camera>,
@@ -122,7 +121,7 @@ where
                 profile_scope!("process_mesh");
 
                 b.0.build(queue_id, &mut factory)
-                    .map(Mesh)
+                    .map(B::wrap_mesh)
                     .map(ProcessingState::Loaded)
                     .map_err(|e| e.compat().into())
             },
@@ -145,7 +144,7 @@ where
                     },
                     &mut factory,
                 )
-                .map(Texture)
+                .map(B::wrap_texture)
                 .map(ProcessingState::Loaded)
                 .map_err(|e| e.compat().into())
             },
@@ -228,7 +227,7 @@ where
         self.families = Some(families);
         res.insert(factory);
         AssetLoadingData::<B>::setup(res);
-        SetupData::<B>::setup(res);
+        SetupData::setup(res);
 
         let mat = create_default_mat::<B>(res);
         res.insert(MaterialDefaults(mat));
@@ -242,10 +241,10 @@ where
         }
 
         log::debug!("Unload resources");
-        if let Some(mut storage) = res.try_fetch_mut::<AssetStorage<Mesh<B>>>() {
+        if let Some(mut storage) = res.try_fetch_mut::<AssetStorage<Mesh>>() {
             storage.unload_all();
         }
-        if let Some(mut storage) = res.try_fetch_mut::<AssetStorage<Texture<B>>>() {
+        if let Some(mut storage) = res.try_fetch_mut::<AssetStorage<Texture>>() {
             storage.unload_all();
         }
 
@@ -254,7 +253,7 @@ where
     }
 }
 
-fn create_default_mat<B: Backend>(res: &mut Resources) -> Material<B> {
+fn create_default_mat<B: Backend>(res: &mut Resources) -> Material {
     use crate::mtl::TextureOffset;
 
     use amethyst_assets::Loader;
