@@ -40,7 +40,7 @@ impl<'a, N: RealField> System<'a> for TransformSystem<N> {
     type SystemData = (
         Entities<'a>,
         ReadExpect<'a, ParentHierarchy>,
-        WriteStorage<'a, Transform<N>>,
+        WriteStorage<'a, Transform>,
         ReadStorage<'a, Parent>,
     );
     fn run(&mut self, (entities, hierarchy, mut locals, parents): Self::SystemData) {
@@ -134,7 +134,7 @@ impl<'a, N: RealField> System<'a> for TransformSystem<N> {
         use crate::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         let mut hierarchy = res.fetch_mut::<ParentHierarchy>();
-        let mut locals = WriteStorage::<Transform<N>>::fetch(res);
+        let mut locals = WriteStorage::<Transform>::fetch(res);
         self.parent_events_id = Some(hierarchy.track());
         self.locals_events_id = Some(locals.register_reader());
     }
