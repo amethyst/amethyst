@@ -11,7 +11,7 @@ use amethyst_assets::AssetStorage;
 use amethyst_core::{
     ecs::prelude::{Join, Read, ReadStorage},
     math::{convert, Matrix4, Orthographic3},
-    Transform, Float,
+    Float, Transform,
 };
 
 use crate::{
@@ -431,8 +431,7 @@ pub fn get_camera<'a>(
     active: Read<'a, ActiveCamera>,
     camera: &'a ReadStorage<'a, Camera>,
     transform: &'a ReadStorage<'a, Transform>,
-) -> Option<(&'a Camera, &'a Transform)>
-{
+) -> Option<(&'a Camera, &'a Transform)> {
     #[cfg(feature = "profiler")]
     profile_scope!("render_getcamera");
 

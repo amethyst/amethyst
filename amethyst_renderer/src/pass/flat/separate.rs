@@ -1,7 +1,7 @@
 //! Simple flat forward drawing pass.
 
 use derivative::Derivative;
-use gfx::{pso::buffer::ElemStride};
+use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
 

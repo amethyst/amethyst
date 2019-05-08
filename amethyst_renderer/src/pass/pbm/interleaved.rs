@@ -3,7 +3,7 @@
 use std::marker::PhantomData;
 
 use derivative::Derivative;
-use gfx::{pso::buffer::ElemStride};
+use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 
 use amethyst_assets::AssetStorage;

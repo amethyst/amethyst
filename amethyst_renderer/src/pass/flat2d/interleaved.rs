@@ -8,10 +8,10 @@ use log::warn;
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
-    Float,
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage},
     math::{convert, one, zero, Matrix4, Vector4},
     transform::Transform,
+    Float,
 };
 use amethyst_error::Error;
 
@@ -42,8 +42,7 @@ use super::*;
 /// Draws sprites on a 2D quad.
 #[derive(Derivative, Clone, Debug)]
 #[derivative(Default(bound = "Self: Pass"))]
-pub struct DrawFlat2D
-{
+pub struct DrawFlat2D {
     #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
     batch: TextureBatch,

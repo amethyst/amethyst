@@ -5,7 +5,7 @@ use hibitset::BitSet;
 use amethyst_core::{
     ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
     math::{zero, Point3, Vector3},
-    Transform, Float,
+    Float, Transform,
 };
 
 use crate::{
