@@ -3,10 +3,9 @@ use std::cmp::Ordering;
 use hibitset::BitSet;
 
 use amethyst_core::{
-    Float,
     ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
     math::{self as na, zero, Point3, Vector3},
-    Transform,
+    Float, Transform,
 };
 
 use crate::{

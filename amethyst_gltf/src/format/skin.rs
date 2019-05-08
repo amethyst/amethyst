@@ -11,15 +11,13 @@ use amethyst_renderer::JointTransformsPrefab;
 use super::Buffers;
 use crate::GltfPrefab;
 
-pub fn load_skin<
-    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
->(
+pub fn load_skin(
     skin: &gltf::Skin<'_>,
     buffers: &Buffers,
     skin_entity: usize,
     node_map: &HashMap<usize, usize>,
     meshes: Vec<usize>,
-    prefab: &mut Prefab<GltfPrefab<N>>,
+    prefab: &mut Prefab<GltfPrefab>,
 ) -> Result<(), Error> {
     let joints = skin
         .joints()

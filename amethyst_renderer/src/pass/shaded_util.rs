@@ -60,11 +60,10 @@ pub(crate) fn set_light_args(
         .join()
         .filter_map(|(light, transform)| {
             if let Light::Point(ref light) = *light {
-                let position: [f32; 3] =
-                    convert::<_, Matrix4<f32>>(*transform.global_matrix())
-                        .column(3)
-                        .xyz()
-                        .into();
+                let position: [f32; 3] = convert::<_, Matrix4<f32>>(*transform.global_matrix())
+                    .column(3)
+                    .xyz()
+                    .into();
                 Some(
                     PointLightPod {
                         position: position.into(),
@@ -101,11 +100,10 @@ pub(crate) fn set_light_args(
         .join()
         .filter_map(|(light, transform)| {
             if let Light::Spot(ref light) = *light {
-                let position: [f32; 3] =
-                    convert::<_, Matrix4<f32>>(*transform.global_matrix())
-                        .column(3)
-                        .xyz()
-                        .into();
+                let position: [f32; 3] = convert::<_, Matrix4<f32>>(*transform.global_matrix())
+                    .column(3)
+                    .xyz()
+                    .into();
                 Some(
                     SpotLightPod {
                         position: position.into(),

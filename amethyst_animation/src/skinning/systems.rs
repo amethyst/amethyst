@@ -2,46 +2,43 @@ use amethyst_core::{
     ecs::prelude::{
         BitSet, ComponentEvent, Join, ReadStorage, ReaderId, Resources, System, WriteStorage,
     },
-    math::RealField,
     Transform,
+    math::{Matrix4, convert},
 };
 use amethyst_renderer::JointTransforms;
 
 use log::error;
-use std::marker::PhantomData;
 
 use super::resources::*;
 
 /// System for performing vertex skinning.
 ///
 /// Needs to run after global transforms have been updated for the current frame.
-pub struct VertexSkinningSystem<N: RealField> {
+pub struct VertexSkinningSystem {
     /// Also scratch space, used while determining which skins need to be updated.
     updated: BitSet,
     updated_skins: BitSet,
     /// Used for tracking modifications to global transforms
     updated_id: Option<ReaderId<ComponentEvent>>,
-    _phantom: PhantomData<N>,
 }
 
-impl<N: RealField> VertexSkinningSystem<N> {
+impl VertexSkinningSystem {
     /// Creates a new `VertexSkinningSystem`
     pub fn new() -> Self {
         Self {
             updated: BitSet::new(),
             updated_skins: BitSet::new(),
             updated_id: None,
-            _phantom: PhantomData,
         }
     }
 }
 
-impl<'a, N: RealField> System<'a> for VertexSkinningSystem<N> {
+impl<'a> System<'a> for VertexSkinningSystem {
     type SystemData = (
         ReadStorage<'a, Joint>,
-        ReadStorage<'a, Transform<N>>,
-        WriteStorage<'a, Skin<N>>,
-        WriteStorage<'a, JointTransforms<N>>,
+        ReadStorage<'a, Transform>,
+        WriteStorage<'a, Skin>,
+        WriteStorage<'a, JointTransforms>,
     );
 
     fn run(&mut self, (joints, global_transforms, mut skins, mut matrices): Self::SystemData) {
@@ -100,7 +97,7 @@ impl<'a, N: RealField> System<'a> for VertexSkinningSystem<N> {
                     matrix
                         .matrices
                         .extend(skin.joint_matrices.iter().map(|joint_matrix| {
-                            Into::<[[N; 4]; 4]>::into(global_inverse * joint_matrix)
+                            Into::<[[f32; 4]; 4]>::into(convert::<_, Matrix4<f32>>(global_inverse * joint_matrix))
                         }));
                 }
             }
@@ -115,7 +112,7 @@ impl<'a, N: RealField> System<'a> for VertexSkinningSystem<N> {
                     joint_transform
                         .matrices
                         .extend(skin.joint_matrices.iter().map(|joint_matrix| {
-                            Into::<[[N; 4]; 4]>::into(global_inverse * joint_matrix)
+                            Into::<[[f32; 4]; 4]>::into(convert::<_, Matrix4<f32>>(global_inverse * joint_matrix))
                         }));
                 } else {
                     error!(
@@ -130,7 +127,7 @@ impl<'a, N: RealField> System<'a> for VertexSkinningSystem<N> {
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
-        let mut transform = WriteStorage::<Transform<N>>::fetch(res);
+        let mut transform = WriteStorage::<Transform>::fetch(res);
         self.updated_id = Some(transform.register_reader());
     }
 }

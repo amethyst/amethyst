@@ -13,13 +13,11 @@ use amethyst_core::{math::RealField, Transform};
 use super::Buffers;
 use crate::error;
 
-pub fn load_animations<
-    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
->(
+pub fn load_animations(
     gltf: &gltf::Gltf,
     buffers: &Buffers,
     node_map: &HashMap<usize, usize>,
-) -> Result<AnimationSetPrefab<usize, Transform<N>>, Error> {
+) -> Result<AnimationSetPrefab<usize, Transform>, Error> {
     let mut prefab = AnimationSetPrefab::default();
     for animation in gltf.animations() {
         let anim = load_animation(&animation, buffers)?;
@@ -34,12 +32,10 @@ pub fn load_animations<
     Ok(prefab)
 }
 
-fn load_animation<
-    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
->(
+fn load_animation(
     animation: &gltf::Animation<'_>,
     buffers: &Buffers,
-) -> Result<AnimationPrefab<Transform<N>>, Error> {
+) -> Result<AnimationPrefab<Transform>, Error> {
     let mut a = AnimationPrefab::default();
     a.samplers = animation
         .channels()
@@ -48,12 +44,10 @@ fn load_animation<
     Ok(a)
 }
 
-fn load_channel<
-    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
->(
+fn load_channel(
     channel: &gltf::animation::Channel<'_>,
     buffers: &Buffers,
-) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<N>>), Error> {
+) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive>), Error> {
     use gltf::animation::util::ReadOutputs::*;
     let sampler = channel.sampler();
     let target = channel.target();

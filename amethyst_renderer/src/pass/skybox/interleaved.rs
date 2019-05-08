@@ -2,7 +2,7 @@
 
 use amethyst_core::{
     ecs::{Read, ReadStorage},
-    math::{self as na},
+    math as na,
     transform::Transform,
 };
 use amethyst_error::Error;
@@ -40,14 +40,11 @@ pub struct DrawSkybox {
 impl DrawSkybox {
     /// Create instance of `DrawSkybox` pass
     pub fn new() -> Self {
-        DrawSkybox {
-            mesh: None,
-        }
+        DrawSkybox { mesh: None }
     }
 }
 
-impl<'a> PassData<'a> for DrawSkybox
-{
+impl<'a> PassData<'a> for DrawSkybox {
     type Data = (
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
@@ -56,8 +53,7 @@ impl<'a> PassData<'a> for DrawSkybox
     );
 }
 
-impl Pass for DrawSkybox
-{
+impl Pass for DrawSkybox {
     fn compile(&mut self, mut effect: NewEffect<'_>) -> Result<Effect, Error> {
         let verts = Shape::Cube.generate_vertices::<Vec<PosTex>>(None);
         self.mesh = Some(Mesh::build(verts).build(&mut effect.factory)?);

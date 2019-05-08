@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_core::{
     ecs::prelude::{Component, DenseVecStorage, Entity, WriteStorage},
-    math::{Matrix4, RealField},
+    math::{Matrix4}, Float,
 };
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
@@ -23,25 +23,25 @@ impl Component for Joint {
 
 /// Skin, attach to the root entity in the mesh hierarchy
 #[derive(Debug)]
-pub struct Skin<N: RealField> {
+pub struct Skin {
     /// Joint entities for the skin
     pub joints: Vec<Entity>,
     /// Mesh entities that use the skin
     pub meshes: BitSet,
     /// Bind shape matrix
-    pub bind_shape_matrix: Matrix4<N>,
+    pub bind_shape_matrix: Matrix4<Float>,
     /// Bring the mesh into the joints local coordinate system
-    pub inverse_bind_matrices: Vec<Matrix4<N>>,
+    pub inverse_bind_matrices: Vec<Matrix4<Float>>,
     /// Scratch area holding the current joint matrices
-    pub joint_matrices: Vec<Matrix4<N>>,
+    pub joint_matrices: Vec<Matrix4<Float>>,
 }
 
-impl<N: RealField> Skin<N> {
+impl Skin {
     /// Creates a new `Skin`
     pub fn new(
         joints: Vec<Entity>,
         meshes: BitSet,
-        inverse_bind_matrices: Vec<Matrix4<N>>,
+        inverse_bind_matrices: Vec<Matrix4<Float>>,
     ) -> Self {
         let len = joints.len();
         Skin {
@@ -54,7 +54,7 @@ impl<N: RealField> Skin<N> {
     }
 }
 
-impl<N: RealField> Component for Skin<N> {
+impl Component for Skin {
     type Storage = DenseVecStorage<Self>;
 }
 
@@ -91,19 +91,19 @@ impl<'a> PrefabData<'a> for JointPrefab {
 
 /// `PrefabData` for loading `Skin`s
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SkinPrefab<N: RealField> {
+pub struct SkinPrefab {
     /// Indices of `Entity`s in the `Prefab` which have `Joint`s belonging to this `Skin`
     pub joints: Vec<usize>,
     /// The bind shape matrix of the `Skin`
-    pub bind_shape_matrix: Matrix4<N>,
+    pub bind_shape_matrix: Matrix4<Float>,
     /// Indices of the `Entity`s in the `Prefab` which have `Mesh`s using this `Skin`
     pub meshes: Vec<usize>,
     /// Inverse bind matrices of the `Joint`s
-    pub inverse_bind_matrices: Vec<Matrix4<N>>,
+    pub inverse_bind_matrices: Vec<Matrix4<Float>>,
 }
 
-impl<'a, N: RealField> PrefabData<'a> for SkinPrefab<N> {
-    type SystemData = WriteStorage<'a, Skin<N>>;
+impl<'a> PrefabData<'a> for SkinPrefab {
+    type SystemData = WriteStorage<'a, Skin>;
     type Result = ();
 
     fn add_to_entity(
@@ -137,11 +137,11 @@ impl<'a, N: RealField> PrefabData<'a> for SkinPrefab<N> {
 /// `PrefabData` for full skinning support
 #[derive(Clone, Default, Debug, Serialize, Deserialize, PrefabData)]
 #[serde(default)]
-pub struct SkinnablePrefab<N: RealField> {
+pub struct SkinnablePrefab {
     /// Place `Skin` on the `Entity`
-    pub skin: Option<SkinPrefab<N>>,
+    pub skin: Option<SkinPrefab>,
     /// Place `Joint` on the `Entity`
     pub joint: Option<JointPrefab>,
     /// Place `JointTransforms` on the `Entity`
-    pub joint_transforms: Option<JointTransformsPrefab<N>>,
+    pub joint_transforms: Option<JointTransformsPrefab>,
 }

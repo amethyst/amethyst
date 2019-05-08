@@ -41,10 +41,7 @@ mod skin;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct GltfSceneFormat;
 
-impl<
-        N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
-    > Format<Prefab<GltfPrefab<N>>> for GltfSceneFormat
-{
+impl Format<Prefab<GltfPrefab>> for GltfSceneFormat {
     const NAME: &'static str = "GLTFScene";
 
     type Options = GltfSceneOptions;
@@ -55,7 +52,7 @@ impl<
         source: Arc<dyn Source>,
         options: GltfSceneOptions,
         _create_reload: bool,
-    ) -> Result<FormatValue<Prefab<GltfPrefab<N>>>, Error> {
+    ) -> Result<FormatValue<Prefab<GltfPrefab>>, Error> {
         Ok(FormatValue::data(
             load_gltf(source, &name, options)
                 .with_context(|_| format_err!("Failed to import gltf scene"))?,
@@ -63,13 +60,11 @@ impl<
     }
 }
 
-fn load_gltf<
-    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
->(
+fn load_gltf(
     source: Arc<dyn Source>,
     name: &str,
     options: GltfSceneOptions,
-) -> Result<Prefab<GltfPrefab<N>>, Error> {
+) -> Result<Prefab<GltfPrefab>, Error> {
     debug!("Loading GLTF scene {}", name);
     import(source.clone(), name)
         .with_context(|_| error::Error::GltfImporterError)
@@ -78,17 +73,15 @@ fn load_gltf<
         })
 }
 
-fn load_data<
-    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
->(
+fn load_data(
     gltf: &Gltf,
     buffers: &Buffers,
     options: &GltfSceneOptions,
     source: Arc<dyn Source>,
     name: &str,
-) -> Result<Prefab<GltfPrefab<N>>, Error> {
+) -> Result<Prefab<GltfPrefab>, Error> {
     let scene_index = get_scene_index(gltf, options)?;
-    let mut prefab = Prefab::<GltfPrefab<N>>::new();
+    let mut prefab = Prefab::<GltfPrefab>::new();
     load_scene(
         gltf,
         scene_index,
@@ -114,16 +107,14 @@ fn get_scene_index(gltf: &Gltf, options: &GltfSceneOptions) -> Result<usize, Err
     }
 }
 
-fn load_scene<
-    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
->(
+fn load_scene(
     gltf: &Gltf,
     scene_index: usize,
     buffers: &Buffers,
     options: &GltfSceneOptions,
     source: Arc<dyn Source>,
     name: &str,
-    prefab: &mut Prefab<GltfPrefab<N>>,
+    prefab: &mut Prefab<GltfPrefab>,
 ) -> Result<(), Error> {
     let scene = gltf
         .scenes()
@@ -220,9 +211,7 @@ struct SkinInfo {
     mesh_indices: Vec<usize>,
 }
 
-fn load_node<
-    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
->(
+fn load_node(
     gltf: &Gltf,
     node: &gltf::Node<'_>,
     entity_index: usize,
@@ -230,7 +219,7 @@ fn load_node<
     options: &GltfSceneOptions,
     source: Arc<dyn Source>,
     name: &str,
-    prefab: &mut Prefab<GltfPrefab<N>>,
+    prefab: &mut Prefab<GltfPrefab>,
     node_map: &mut HashMap<usize, usize>,
     skin_map: &mut HashMap<usize, SkinInfo>,
     parent_bounding_box: &mut GltfNodeExtent,

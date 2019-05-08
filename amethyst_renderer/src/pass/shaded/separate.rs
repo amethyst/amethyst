@@ -96,8 +96,7 @@ impl DrawShadedSeparate {
     }
 }
 
-impl<'a> PassData<'a> for DrawShadedSeparate
-{
+impl<'a> PassData<'a> for DrawShadedSeparate {
     type Data = (
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
