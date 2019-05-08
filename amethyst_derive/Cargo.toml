@@ -28,4 +28,3 @@ amethyst_error = { path = "../amethyst_error", version = "0.1.0" }
 [lib]
 name = "amethyst_derive"
 proc-macro = true
-float64 = ["amethyst_core/float64"]
