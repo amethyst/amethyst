@@ -1,7 +1,7 @@
 use amethyst_assets::PrefabData;
 use amethyst_core::{
     ecs::prelude::{Component, Entity, HashMapStorage, NullStorage, WriteStorage},
-    math::RealField,
+    float::Float,
 };
 use amethyst_error::Error;
 
@@ -18,33 +18,33 @@ impl Component for FlyControlTag {
 
 /// To add an arc ball behaviour, add this to a camera which already has the FlyControlTag added.
 #[derive(Debug, Clone)]
-pub struct ArcBallControlTag<N: RealField> {
+pub struct ArcBallControlTag {
     /// The target entity which the camera will orbit
     pub target: Entity,
     /// The distance from the target entity that the camera should orbit at.
-    pub distance: N,
+    pub distance: Float,
 }
 
-impl<N: RealField> Component for ArcBallControlTag<N> {
+impl Component for ArcBallControlTag {
     // we can use HashMapStorage here because, according to the specs doc, this storage should be
     // use when the component is used with few entity, I think there will rarely more than one
     // camera
-    type Storage = HashMapStorage<ArcBallControlTag<N>>;
+    type Storage = HashMapStorage<ArcBallControlTag>;
 }
 
 /// `PrefabData` for loading control tags on an `Entity`
 ///
 /// Will always load a `FlyControlTag`
 #[derive(Default, Clone, Deserialize, Serialize)]
-pub struct ControlTagPrefab<N: RealField> {
+pub struct ControlTagPrefab {
     /// Place `ArcBallControlTag` on the `Entity`
-    pub arc_ball: Option<(usize, N)>,
+    pub arc_ball: Option<(usize, f32)>,
 }
 
-impl<'a, N: RealField> PrefabData<'a> for ControlTagPrefab<N> {
+impl<'a> PrefabData<'a> for ControlTagPrefab {
     type SystemData = (
         WriteStorage<'a, FlyControlTag>,
-        WriteStorage<'a, ArcBallControlTag<N>>,
+        WriteStorage<'a, ArcBallControlTag>,
     );
     type Result = ();
 
@@ -61,7 +61,7 @@ impl<'a, N: RealField> PrefabData<'a> for ControlTagPrefab<N> {
                 entity,
                 ArcBallControlTag {
                     target: entities[index],
-                    distance,
+                    distance: Float::from(distance),
                 },
             )?;
         }
