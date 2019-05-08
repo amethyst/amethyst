@@ -1,5 +1,5 @@
 
-use std::ops::{Add, AddAssign, Neg, Div, DivAssign, Mul, MulAssign, Sub, SubAssign, Rem, RemAssign, Deref, DerefMut};
+use std::ops::{Add, AddAssign, Neg, Div, DivAssign, Mul, MulAssign, Sub, SubAssign, Rem, RemAssign};
 use std::fmt::{Display, Formatter};
 
 use alga::general::*;
@@ -13,18 +13,28 @@ use std::f64::consts as consts;
 use std::f32::consts as consts;
 
 #[cfg(feature = "float64")]
-type FloatBase = f64;
+use std::f64 as minmax;
 #[cfg(not(feature = "float64"))]
-type FloatBase = f32;
+use std::f32 as minmax;
 
-//type Float = alga::Wrapper<FloatBase, 
+#[cfg(feature = "float64")]
+pub(crate) type FloatBase = f64;
+#[cfg(not(feature = "float64"))]
+pub(crate) type FloatBase = f32;
 
-#[derive(Alga, Clone, Copy, Hash, PartialOrd, PartialEq, Eq, Serialize, Deserialize, Debug)]
+
+/// A wrapper type around f32 and f64. It is used to hide the actual type being used internally.
+/// Mostly used with the `Transform` type.
+/// The default type is f32 and you can switch to the f64 type by enabling the "float64" feature gate.
+#[derive(Alga, Clone, Copy, PartialOrd, PartialEq, Serialize, Deserialize, Debug)]
 #[alga_traits(Field(Additive, Multiplicative))]
-pub struct Float(pub FloatBase);
+pub struct Float(pub(crate) FloatBase);
 
 impl Float {
+    /// Get the internal value as a f32. Can cause a loss of precision or a loss of data if using
+    /// the "float64" feature.
     pub fn as_f32(self) -> f32 { self.0 as f32 }
+    /// Get the internal value as a f64.
     pub fn as_f64(self) -> f64 { self.0 as f64 }
 }
 
@@ -52,12 +62,14 @@ impl FromPrimitive for Float {
 }
 
 impl AbsDiffEq for Float {
+    type Epsilon = Float;
+
     fn default_epsilon() -> Self::Epsilon {
-        FloatBase::default_epsilon()
+        Float(FloatBase::default_epsilon())
     }
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        FloatBase::abs_diff_eq(&self, other, epsilon)
+        FloatBase::abs_diff_eq(&self.0, &other.0, epsilon.0)
     }
 }
 
@@ -67,13 +79,13 @@ impl UlpsEq for Float {
     }
 
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
-        FloatBase::ulps_eq(&self, other, epsilon, max_ulps)
+        FloatBase::ulps_eq(&self.0, &other.0, epsilon.0, max_ulps)
     }
 }
 
 impl RelativeEq for Float {
     fn default_max_relative() -> Self::Epsilon {
-        FloatBase::default_max_relative()
+        Float(FloatBase::default_max_relative())
     }
 
     fn relative_eq(
@@ -82,23 +94,23 @@ impl RelativeEq for Float {
         epsilon: Self::Epsilon,
         max_relative: Self::Epsilon
     ) -> bool {
-        FloatBase::relative_eq(other, epsilon, max_relative)
+        FloatBase::relative_eq(&self.0, &other.0, epsilon.0, max_relative.0)
     }
 }
 
 impl Num for Float {
     type FromStrRadixErr = ParseFloatError;
     fn from_str_radix(src: &str, radix: u32) -> Result<Self, Self::FromStrRadixErr> {
-        Float(FloatBase::from_str_radix(src, radix)?)
+        Ok(Float(FloatBase::from_str_radix(src, radix)?))
     }
 }
 
 impl Bounded for Float {
     fn min_value() -> Self {
-        FloatBase::MIN_VALUE
+        Float(minmax::MIN)
     }
     fn max_value() -> Self {
-        FloatBase::MAX_VALUE
+        Float(minmax::MAX)
     }
 }
 
@@ -112,6 +124,10 @@ impl Zero for Float {
     fn zero() -> Self {
         Float(0.0)
     }
+
+    fn is_zero(&self) -> bool {
+        self.0 == 0.0
+    }
 }
 
 impl Signed for Float {
@@ -121,26 +137,28 @@ impl Signed for Float {
 
     fn abs_sub(&self, other: &Self) -> Self {
         if *self <= *other {
-            0.
+            Float(0.0)
         } else {
             *self - *other
         }
     }
 
     fn signum(&self) -> Self{
-        match **self {
-            n if n > 0.0 => 1.0,
-            0.0 => 0.0,
-            _ => -1.0,
+        if self.0 > 0.0 {
+            Float(1.0)
+        } else if self.0 == 0.0 {
+            Float(0.0)
+        } else {
+            Float(-1.0)
         }
     }
 
     fn is_positive(&self) -> bool {
-        **self >= 0.0;
+        self.0 >= 0.0
     }
 
     fn is_negative(&self) -> bool {
-        **self <= 0.0
+        self.0 <= 0.0
     }
 }
 
@@ -278,12 +296,12 @@ impl RealField for Float {
 
     #[inline]
     fn max(self, other: Self) -> Self {
-        Float(self.0.max(self, other))
+        Float(self.0.max(other.0))
     }
 
     #[inline]
     fn min(self, other: Self) -> Self {
-        Float(self.0.min(self, other))
+        Float(self.0.min(other.0))
     }
 
     #[inline]
@@ -490,7 +508,7 @@ impl RealField for Float {
 
             #[inline]
             fn mul_add(self, a: Self, b: Self) -> Self {
-                Float(FloatBase::mul_add(self, a.0, b.0))
+                Float(FloatBase::mul_add(self.0, a.0, b.0))
             }
 
             #[cfg(feature = "std")]
@@ -612,7 +630,8 @@ impl RealField for Float {
 
             #[inline]
             fn sin_cos(self) -> (Self, Self) {
-                Float(FloatBase::sin_cos(self.0))
+                let vals = FloatBase::sin_cos(self.0);
+                (Float(vals.0), Float(vals.1))
             }
 
             #[inline]
@@ -652,10 +671,90 @@ impl RealField for Float {
         }
 
 
-impl_subset!(
-    Float as f32, f64, Float;
-    f64 as Float;
-    f32 as Float;
-);
+impl SubsetOf<f32> for Float {
+            #[inline]
+            fn to_superset(&self) -> f32 {
+                self.0 as f32
+            }
+
+            #[inline]
+            unsafe fn from_superset_unchecked(element: &f32) -> Self {
+                Float(*element as FloatBase)
+            }
+
+            #[inline]
+            fn is_in_subset(_: &f32) -> bool {
+                true
+            }
+        }
+
+impl SubsetOf<f64> for Float {
+            #[inline]
+            fn to_superset(&self) -> f64 {
+                self.0 as f64
+            }
+
+            #[inline]
+            unsafe fn from_superset_unchecked(element: &f64) -> Self {
+                Float(*element as FloatBase)
+            }
+
+            #[inline]
+            fn is_in_subset(_: &f64) -> bool {
+                true
+            }
+        }
+
+impl SubsetOf<Float> for f32 {
+            #[inline]
+            fn to_superset(&self) -> Float {
+                Float(*self as FloatBase)
+            }
+
+            #[inline]
+            unsafe fn from_superset_unchecked(element: &Float) -> Self {
+                element.0 as Self
+            }
+
+            #[inline]
+            fn is_in_subset(_: &Float) -> bool {
+                true
+            }
+        }
+
+impl SubsetOf<Float> for f64 {
+            #[inline]
+            fn to_superset(&self) -> Float {
+                Float(*self as FloatBase)
+            }
+
+            #[inline]
+            unsafe fn from_superset_unchecked(element: &Float) -> Self {
+                element.0 as Self
+            }
+
+            #[inline]
+            fn is_in_subset(_: &Float) -> bool {
+                true
+            }
+        }
+
+impl SubsetOf<Float> for Float {
+            #[inline]
+            fn to_superset(&self) -> Float {
+                Float(self.0 as FloatBase)
+            }
+
+            #[inline]
+            unsafe fn from_superset_unchecked(element: &Float) -> Self {
+                Float(element.0)
+            }
+
+            #[inline]
+            fn is_in_subset(_: &Float) -> bool {
+                true
+            }
+        }
+
 impl_lattice!(Float);
 impl_scalar_subset_of_complex!(Float);
