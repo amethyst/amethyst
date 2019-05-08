@@ -1,6 +1,5 @@
 use std::{
     iter::Iterator,
-    marker::PhantomData,
     mem::replace,
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -14,11 +13,10 @@ use rodio::SpatialSink;
 use thread_profiler::profile_scope;
 
 use amethyst_core::{
-    alga::general::SubsetOf,
     ecs::prelude::{
         Entities, Entity, Join, Read, ReadStorage, Resources, System, SystemData, WriteStorage,
     },
-    math::{convert, RealField},
+    math::{convert},
     transform::Transform,
 };
 
@@ -29,14 +27,13 @@ use crate::{
 };
 
 /// Syncs 3D transform data with the audio engine to provide 3D audio.
-/// The generic N type should be the same as the one in `Transform<N>`.
 #[derive(Default)]
-pub struct AudioSystem<N>(Output, PhantomData<N>);
+pub struct AudioSystem(Output);
 
-impl<N: RealField> AudioSystem<N> {
+impl AudioSystem {
     /// Produces a new AudioSystem that uses the given output.
     pub fn new(output: Output) -> Self {
-        AudioSystem(output, PhantomData)
+        AudioSystem(output)
     }
 }
 
@@ -45,16 +42,14 @@ impl<N: RealField> AudioSystem<N> {
 /// the first AudioListener it finds.
 pub struct SelectedListener(pub Entity);
 
-impl<'a, N> System<'a> for AudioSystem<N>
-where
-    N: RealField + SubsetOf<f32>,
+impl<'a> System<'a> for AudioSystem
 {
     type SystemData = (
         Option<Read<'a, Output>>,
         Option<Read<'a, SelectedListener>>,
         Entities<'a>,
-        ReadStorage<'a, Transform<N>>,
-        ReadStorage<'a, AudioListener<N>>,
+        ReadStorage<'a, Transform>,
+        ReadStorage<'a, AudioListener>,
         WriteStorage<'a, AudioEmitter>,
     );
 
