@@ -1,16 +1,15 @@
 //! GLTF format
 
-use std::{collections::HashMap, fmt::Debug, sync::Arc};
+use std::{collections::HashMap, sync::Arc};
 
 use gltf::{self, Gltf};
 use log::debug;
-use num_traits::NumCast;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 use amethyst_animation::AnimationHierarchyPrefab;
 use amethyst_assets::{Format, FormatValue, Prefab, Source};
 use amethyst_core::{
-    math::{Quaternion, RealField, Unit, Vector3},
+    math::{Quaternion, Unit, Vector3},
     transform::Transform,
 };
 use amethyst_error::{format_err, Error, ResultExt};

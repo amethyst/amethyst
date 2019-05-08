@@ -16,7 +16,7 @@ use amethyst_core::{
     ecs::prelude::{
         Entities, Entity, Join, Read, ReadStorage, Resources, System, SystemData, WriteStorage,
     },
-    math::{convert},
+    math::convert,
     transform::Transform,
 };
 
@@ -42,8 +42,7 @@ impl AudioSystem {
 /// the first AudioListener it finds.
 pub struct SelectedListener(pub Entity);
 
-impl<'a> System<'a> for AudioSystem
-{
+impl<'a> System<'a> for AudioSystem {
     type SystemData = (
         Option<Read<'a, Output>>,
         Option<Read<'a, SelectedListener>>,

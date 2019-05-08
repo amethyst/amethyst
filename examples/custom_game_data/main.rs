@@ -198,19 +198,16 @@ fn main() -> Result<(), Error> {
     let pipeline_builder = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawShaded::<PosNormTex, f32>::new())
+            .with_pass(DrawShaded::<PosNormTex>::new())
             .with_pass(DrawUi::new()),
     );
     let game_data = CustomGameDataBuilder::default()
         .with_base(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_running::<ExampleSystem>(ExampleSystem::default(), "example_system", &[])
-        .with_base_bundle(TransformBundle::<f32>::new())?
+        .with_base_bundle(TransformBundle::new())?
         .with_base_bundle(UiBundle::<String, String>::new())?
         .with_base_bundle(FPSCounterBundle::default())?
-        .with_base_bundle(RenderBundle::<_, _, f32>::new(
-            pipeline_builder,
-            Some(display_config),
-        ))?
+        .with_base_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
         .with_base_bundle(InputBundle::<String, String>::new())?;
 
     let mut game = Application::build(resources_directory, Loading::default())?.build(game_data)?;

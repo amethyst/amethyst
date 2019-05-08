@@ -2,7 +2,7 @@ use super::DemoState;
 use amethyst::{
     core::{
         math::{UnitQuaternion, Vector3},
-        Time, Transform,
+        Float, Time, Transform,
     },
     ecs::prelude::{Entity, Join, Read, ReadStorage, System, WriteExpect, WriteStorage},
     renderer::{Camera, Light},
@@ -20,7 +20,7 @@ impl<'a> System<'a> for ExampleSystem {
         WriteStorage<'a, Light>,
         Read<'a, Time>,
         ReadStorage<'a, Camera>,
-        WriteStorage<'a, Transform<f32>>,
+        WriteStorage<'a, Transform>,
         WriteExpect<'a, DemoState>,
         WriteStorage<'a, UiText>,
         Read<'a, FPSCounter>,
@@ -39,9 +39,9 @@ impl<'a> System<'a> for ExampleSystem {
         state.light_angle += light_angular_velocity * time.delta_seconds();
         state.camera_angle += camera_angular_velocity * time.delta_seconds();
 
-        let delta_rot = UnitQuaternion::from_axis_angle(
+        let delta_rot: UnitQuaternion<Float> = UnitQuaternion::from_axis_angle(
             &Vector3::z_axis(),
-            camera_angular_velocity * time.delta_seconds(),
+            (camera_angular_velocity * time.delta_seconds()).into(),
         );
         for (_, transform) in (&camera, &mut transforms).join() {
             // Append the delta rotation to the current transform.

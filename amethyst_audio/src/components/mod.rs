@@ -5,7 +5,8 @@ pub use self::{audio_emitter::AudioEmitter, audio_listener::AudioListener};
 use amethyst_assets::PrefabData;
 use amethyst_core::{
     ecs::prelude::{Entity, Read, WriteStorage},
-    math::{Point3}, Float
+    math::Point3,
+    Float,
 };
 use amethyst_error::Error;
 

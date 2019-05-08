@@ -456,7 +456,7 @@ where
     ///
     /// // components can be registered at this stage
     ///     .register::<Parent>()
-    ///     .register::<Transform<f32>>()
+    ///     .register::<Transform>()
     ///
     /// // lastly we can build the Application object
     /// // the `build` function takes the user defined game data initializer as input

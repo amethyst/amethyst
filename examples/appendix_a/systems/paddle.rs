@@ -1,6 +1,6 @@
 use crate::{config::ArenaConfig, Paddle};
 use amethyst::{
-    core::{timing::Time, transform::Transform},
+    core::{timing::Time, transform::Transform, math::RealField},
     ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
     input::InputHandler,
 };
@@ -11,7 +11,7 @@ pub struct PaddleSystem;
 impl<'s> System<'s> for PaddleSystem {
     type SystemData = (
         ReadStorage<'s, Paddle>,
-        WriteStorage<'s, Transform<f32>>,
+        WriteStorage<'s, Transform>,
         Read<'s, Time>,
         Read<'s, InputHandler<String, String>>,
         Read<'s, ArenaConfig>,
@@ -36,7 +36,7 @@ impl<'s> System<'s> for PaddleSystem {
                 // We make sure the paddle remains in the arena.
                 let paddle_y = transform.translation().y;
                 transform
-                    .set_translation_y(paddle_y.max(0.0).min(arena_config.height - paddle.height));
+                    .set_translation_y(paddle_y.max((0.0).into()).min((arena_config.height - paddle.height).into()));
             }
         }
     }

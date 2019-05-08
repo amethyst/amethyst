@@ -2,18 +2,17 @@
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-use num_traits::cast::NumCast;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 pub use crate::format::GltfSceneFormat;
 
-use std::{collections::HashMap, fmt::Debug, ops::Range};
+use std::{collections::HashMap, ops::Range};
 
 use amethyst_animation::{AnimatablePrefab, SkinnablePrefab};
 use amethyst_assets::{Handle, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter};
 use amethyst_core::{
     ecs::prelude::{Component, DenseVecStorage, Entity, Write, WriteStorage},
-    math::{Point3, RealField, Vector3},
+    math::{Point3, Vector3},
     transform::Transform,
     Named,
 };

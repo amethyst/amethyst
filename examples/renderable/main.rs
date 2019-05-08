@@ -12,6 +12,7 @@ use amethyst::{
         math::{UnitQuaternion, Vector3},
         timing::Time,
         transform::{Transform, TransformBundle},
+        Float,
     },
     ecs::prelude::{Entity, Join, Read, ReadStorage, System, Write, WriteStorage},
     input::{get_key, is_close_requested, is_key_down, InputBundle},
@@ -183,15 +184,11 @@ fn main() -> Result<(), Error> {
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with::<ExampleSystem>(ExampleSystem::default(), "example_system", &[])
-        .with_bundle(TransformBundle::<f32>::new().with_dep(&["example_system"]))?
+        .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
         .with_bundle(UiBundle::<String, String>::new())?
         .with_bundle(HotReloadBundle::default())?
         .with_bundle(FPSCounterBundle::default())?
-        .with_basic_renderer(
-            display_config_path,
-            DrawShaded::<PosNormTex, f32>::new(),
-            true,
-        )?
+        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), true)?
         .with_bundle(InputBundle::<String, String>::new())?;
     let mut game = Application::build(resources_directory, Loading::default())?.build(game_data)?;
     game.run();
@@ -230,7 +227,7 @@ impl<'a> System<'a> for ExampleSystem {
         WriteStorage<'a, Light>,
         Read<'a, Time>,
         ReadStorage<'a, Camera>,
-        WriteStorage<'a, Transform<f32>>,
+        WriteStorage<'a, Transform>,
         Write<'a, DemoState>,
         WriteStorage<'a, UiText>,
         Read<'a, FPSCounter>,
@@ -249,9 +246,9 @@ impl<'a> System<'a> for ExampleSystem {
         state.light_angle += light_angular_velocity * time.delta_seconds();
         state.camera_angle += camera_angular_velocity * time.delta_seconds();
 
-        let delta_rot = UnitQuaternion::from_axis_angle(
+        let delta_rot: UnitQuaternion<Float> = UnitQuaternion::from_axis_angle(
             &Vector3::z_axis(),
-            camera_angular_velocity * time.delta_seconds(),
+            (camera_angular_velocity * time.delta_seconds()).into(),
         );
         for (_, transform) in (&camera, &mut transforms).join() {
             // Append the delta rotation to the current transform.

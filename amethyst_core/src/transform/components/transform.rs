@@ -43,13 +43,13 @@ impl Transform {
     /// # Examples
     ///
     /// ```rust
-    /// # use amethyst_core::transform::components::Transform;
+    /// # use amethyst_core::transform::Transform;
     /// # use amethyst_core::math::{Isometry3, Translation3, UnitQuaternion, Vector3};
     /// let position = Translation3::new(0.0, 2.0, 4.0);
     /// let rotation = UnitQuaternion::from_euler_angles(0.4, 0.2, 0.0);
     /// let scale = Vector3::new(1.0, 1.0, 1.0);
     ///
-    /// let t = Transform::<f32>::new(position, rotation, scale);
+    /// let t = Transform::new(position, rotation, scale);
     ///
     /// assert_eq!(t.translation().y, 2.0);
     /// ```
@@ -77,9 +77,9 @@ impl Transform {
     /// # Examples
     ///
     /// ```rust
-    /// # use amethyst_core::transform::components::Transform;
+    /// # use amethyst_core::transform::Transform;
     /// # use amethyst_core::math::{UnitQuaternion, Quaternion, Vector3};
-    /// let mut t = Transform::<f32>::default();
+    /// let mut t = Transform::default();
     /// // No rotation by default
     /// assert_eq!(*t.rotation().quaternion(), Quaternion::identity());
     /// // look up with up pointing backwards
@@ -458,7 +458,7 @@ impl Transform {
     /// rotation about the y axis, and 'yaw' will mean rotation about the z axis.
     ///
     /// ```
-    /// # use amethyst_core::transform::components::Transform;
+    /// # use amethyst_core::transform::Transform;
     /// let mut transform = Transform::default();
     ///
     /// transform.set_rotation_euler(1.0, 0.0, 0.0);
@@ -548,7 +548,7 @@ impl Component for Transform {
 /// Creates a Transform using the `Vector3` as the translation vector.
 ///
 /// ```
-/// # use amethyst_core::transform::components::Transform;
+/// # use amethyst_core::transform::Transform;
 /// # use amethyst_core::math::Vector3;
 /// let transform = Transform::from(Vector3::new(100.0, 200.0, 300.0));
 ///
@@ -775,7 +775,7 @@ mod tests {
 
     #[test]
     fn ser_deser() {
-        let mut transform = Transform::<f32>::default();
+        let mut transform = Transform::default();
         transform.set_translation_xyz(1.0, 2.0, 3.0);
         transform.set_scale(Vector3::new(4.0, 5.0, 6.0));
         transform.set_rotation(
@@ -784,7 +784,7 @@ mod tests {
         );
         let s: String =
             ron::ser::to_string_pretty(&transform, ron::ser::PrettyConfig::default()).unwrap();
-        let transform2: Transform<f32> = ron::de::from_str(&s).unwrap();
+        let transform2: Transform = ron::de::from_str(&s).unwrap();
 
         assert_eq!(transform, transform2);
     }

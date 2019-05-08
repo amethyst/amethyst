@@ -1,6 +1,4 @@
-use num_traits::NumCast;
-use serde::{de::DeserializeOwned, Serialize};
-use std::{collections::HashMap, fmt::Debug};
+use std::collections::HashMap;
 
 use amethyst_error::Error;
 
@@ -8,7 +6,7 @@ use amethyst_animation::{
     AnimationPrefab, AnimationSetPrefab, InterpolationFunction, InterpolationPrimitive, Sampler,
     SamplerPrimitive, TransformChannel,
 };
-use amethyst_core::{math::RealField, Transform};
+use amethyst_core::{Float, Transform};
 
 use super::Buffers;
 use crate::error;
@@ -47,7 +45,7 @@ fn load_animation(
 fn load_channel(
     channel: &gltf::animation::Channel<'_>,
     buffers: &Buffers,
-) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive>), Error> {
+) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<Float>>), Error> {
     use gltf::animation::util::ReadOutputs::*;
     let sampler = channel.sampler();
     let target = channel.target();
