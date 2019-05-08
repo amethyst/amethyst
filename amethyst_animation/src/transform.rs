@@ -1,6 +1,6 @@
 use amethyst_core::{
     math::{zero, Quaternion, Unit, Vector3},
-    Transform, Float,
+    Float, Transform,
 };
 
 use serde::{Deserialize, Serialize};

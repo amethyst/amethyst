@@ -4,7 +4,8 @@ use serde::{Deserialize, Serialize};
 use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_core::{
     ecs::prelude::{Component, DenseVecStorage, Entity, WriteStorage},
-    math::{Matrix4}, Float,
+    math::Matrix4,
+    Float,
 };
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;

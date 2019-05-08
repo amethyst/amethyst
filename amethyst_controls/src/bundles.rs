@@ -1,11 +1,6 @@
 use std::{hash::Hash, marker::PhantomData};
 
-use amethyst_core::{
-    bundle::SystemBundle,
-    ecs::prelude::DispatcherBuilder,
-    float::Float,
-    math::one,
-};
+use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder, math::one, Float};
 use amethyst_error::Error;
 
 use super::*;
@@ -142,11 +137,7 @@ where
     B: Send + Sync + Hash + Eq + Clone + 'static,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
-        builder.add(
-            ArcBallRotationSystem::default(),
-            "arc_ball_rotation",
-            &[],
-        );
+        builder.add(ArcBallRotationSystem::default(), "arc_ball_rotation", &[]);
         builder.add(
             FreeRotationSystem::<A, B>::new(self.sensitivity_x, self.sensitivity_y),
             "free_rotation",

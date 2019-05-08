@@ -8,11 +8,11 @@ use crate::{
 };
 use amethyst_core::{
     ecs::prelude::{Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
-    float::Float,
     math::{convert, Unit, Vector3},
     shrev::{EventChannel, ReaderId},
     timing::Time,
     transform::Transform,
+    Float,
 };
 use amethyst_input::{get_input_axis_simple, InputHandler};
 use amethyst_renderer::WindowMessages;
@@ -176,8 +176,12 @@ where
                 if let Event::DeviceEvent { ref event, .. } = *event {
                     if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
                         for (transform, _) in (&mut transform, &tag).join() {
-                            transform.append_rotation_x_axis((-y * self.sensitivity_y as f64).to_radians());
-                            transform.prepend_rotation_y_axis((-x * self.sensitivity_x as f64).to_radians());
+                            transform.append_rotation_x_axis(
+                                (-y * self.sensitivity_y as f64).to_radians(),
+                            );
+                            transform.prepend_rotation_y_axis(
+                                (-x * self.sensitivity_x as f64).to_radians(),
+                            );
                         }
                     }
                 }

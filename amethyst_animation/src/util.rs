@@ -2,9 +2,9 @@ use minterpolate::InterpolationPrimitive;
 use serde::{Deserialize, Serialize};
 
 use amethyst_core::{
+    alga::general::{SubsetOf, SupersetOf},
     ecs::prelude::{Entity, WriteStorage},
-    math::{RealField, convert},
-    alga::general::{SubsetOf, SupersetOf}
+    math::{convert, RealField},
 };
 
 use crate::resources::{AnimationControlSet, AnimationSampling};
@@ -151,7 +151,6 @@ where
     }
 }
 
-fn mul_f32<T: RealField + SubsetOf<f32> + SupersetOf<f32>>(s: T, scalar: f32) -> T
-{
+fn mul_f32<T: RealField + SubsetOf<f32> + SupersetOf<f32>>(s: T, scalar: f32) -> T {
     convert::<f32, T>(scalar) * s
 }
