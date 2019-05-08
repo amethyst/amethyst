@@ -9,10 +9,9 @@ use thread_profiler::profile_scope;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    alga::general::SubsetOf,
     ecs::prelude::{Join, Read, ReadStorage},
-    math::{convert, Matrix4, Orthographic3, RealField},
-    Transform,
+    math::{convert, Matrix4, Orthographic3},
+    Transform, Float,
 };
 
 use crate::{
@@ -29,8 +28,6 @@ use crate::{
     vertex::Attributes,
     Rgba,
 };
-
-use gfx::traits::Pod;
 
 pub(crate) enum TextureType {
     Albedo,
@@ -268,14 +265,14 @@ pub(crate) fn setup_vertex_args(builder: &mut EffectBuilder<'_>) {
 }
 
 /// Sets the vertex argument in the constant buffer.
-pub fn set_vertex_args<N: RealField + SubsetOf<f32>>(
+pub fn set_vertex_args(
     effect: &mut Effect,
     encoder: &mut Encoder,
-    camera: Option<(&Camera, &Transform<N>)>,
-    global_matrix: &Matrix4<N>,
+    camera: Option<(&Camera, &Transform)>,
+    global_matrix: &Matrix4<Float>,
     rgba: Rgba,
 ) {
-    let model: [[f32; 4]; 4] = convert::<Matrix4<N>, Matrix4<f32>>(*global_matrix).into();
+    let model: [[f32; 4]; 4] = convert::<_, Matrix4<f32>>(*global_matrix).into();
 
     let vertex_args = camera
         .as_ref()
@@ -309,13 +306,11 @@ pub fn set_vertex_args<N: RealField + SubsetOf<f32>>(
 }
 
 /// Sets the view arguments in the contant buffer.
-pub fn set_view_args<N>(
+pub fn set_view_args(
     effect: &mut Effect,
     encoder: &mut Encoder,
-    camera: Option<(&Camera, &Transform<N>)>,
-) where
-    N: RealField + SubsetOf<f32>,
-{
+    camera: Option<(&Camera, &Transform)>,
+) {
     #[cfg(feature = "profiler")]
     profile_scope!("render_setviewargs");
 
@@ -372,23 +367,21 @@ pub fn set_view_args_screen(
     effect.update_constant_buffer("ViewArgs", &view_args.std140(), encoder);
 }
 
-pub(crate) fn draw_mesh<N>(
+pub(crate) fn draw_mesh(
     encoder: &mut Encoder,
     effect: &mut Effect,
     skinning: bool,
     mesh: Option<&Mesh>,
-    joint: Option<&JointTransforms<N>>,
+    joint: Option<&JointTransforms>,
     tex_storage: &AssetStorage<Texture>,
     material: Option<&Material>,
     material_defaults: &MaterialDefaults,
     rgba: Option<&Rgba>,
-    camera: Option<(&Camera, &Transform<N>)>,
-    transform: Option<&Transform<N>>,
+    camera: Option<(&Camera, &Transform)>,
+    transform: Option<&Transform>,
     attributes: &[Attributes<'static>],
     textures: &[TextureType],
-) where
-    N: RealField + SubsetOf<f32> + Pod,
-{
+) {
     #[cfg(feature = "profiler")]
     profile_scope!("render_drawmesh");
 
@@ -433,14 +426,12 @@ pub(crate) fn draw_mesh<N>(
     effect.clear();
 }
 
-/// Returns the main camera and its `Transform<N>`
-pub fn get_camera<'a, N>(
+/// Returns the main camera and its `Transform`
+pub fn get_camera<'a>(
     active: Read<'a, ActiveCamera>,
     camera: &'a ReadStorage<'a, Camera>,
-    transform: &'a ReadStorage<'a, Transform<N>>,
-) -> Option<(&'a Camera, &'a Transform<N>)>
-where
-    N: RealField,
+    transform: &'a ReadStorage<'a, Transform>,
+) -> Option<(&'a Camera, &'a Transform)>
 {
     #[cfg(feature = "profiler")]
     profile_scope!("render_getcamera");

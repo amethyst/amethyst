@@ -3,9 +3,8 @@ use std::mem;
 use glsl_layout::*;
 
 use amethyst_core::{
-    alga::general::SubsetOf,
     ecs::prelude::{Join, ReadStorage},
-    math::{convert, Matrix4, RealField},
+    math::{convert, Matrix4},
     Transform,
 };
 
@@ -49,20 +48,20 @@ pub(crate) struct SpotLightPod {
     smoothness: float,
 }
 
-pub(crate) fn set_light_args<N: RealField + SubsetOf<f32>>(
+pub(crate) fn set_light_args(
     effect: &mut Effect,
     encoder: &mut Encoder,
     light: &ReadStorage<'_, Light>,
-    transform: &ReadStorage<'_, Transform<N>>,
+    transform: &ReadStorage<'_, Transform>,
     ambient: &AmbientColor,
-    camera: Option<(&Camera, &Transform<N>)>,
+    camera: Option<(&Camera, &Transform)>,
 ) {
     let point_lights: Vec<_> = (light, transform)
         .join()
         .filter_map(|(light, transform)| {
             if let Light::Point(ref light) = *light {
                 let position: [f32; 3] =
-                    convert::<Matrix4<N>, Matrix4<f32>>(*transform.global_matrix())
+                    convert::<_, Matrix4<f32>>(*transform.global_matrix())
                         .column(3)
                         .xyz()
                         .into();
@@ -103,7 +102,7 @@ pub(crate) fn set_light_args<N: RealField + SubsetOf<f32>>(
         .filter_map(|(light, transform)| {
             if let Light::Spot(ref light) = *light {
                 let position: [f32; 3] =
-                    convert::<Matrix4<N>, Matrix4<f32>>(*transform.global_matrix())
+                    convert::<_, Matrix4<f32>>(*transform.global_matrix())
                         .column(3)
                         .xyz()
                         .into();
@@ -143,7 +142,7 @@ pub(crate) fn set_light_args<N: RealField + SubsetOf<f32>>(
         camera
             .as_ref()
             .map(|&(_, ref trans)| {
-                convert::<Matrix4<N>, Matrix4<f32>>(*trans.global_matrix())
+                convert::<_, Matrix4<f32>>(*trans.global_matrix())
                     .column(3)
                     .xyz()
                     .into()

@@ -7,9 +7,8 @@ use gfx::{pso::buffer::ElemStride, Primitive};
 use log::{debug, trace};
 
 use amethyst_core::{
-    alga::general::SubsetOf,
     ecs::{Join, Read, ReadStorage, Write, WriteStorage},
-    math::{self as na, Matrix4, RealField},
+    math::{self as na, Matrix4},
     transform::Transform,
 };
 use amethyst_error::Error;
@@ -52,17 +51,15 @@ impl Default for DebugLinesParams {
 /// # Type Parameters:
 ///
 /// * `V`: `VertexFormat`
-/// * `N`: `RealBound` (f32, f64)
 #[derive(Derivative, Clone, Debug, PartialEq)]
 #[derivative(Default(bound = "V: Query<(Position, Color, Normal)>"))]
-pub struct DrawDebugLines<V, N> {
-    _marker: PhantomData<(V, N)>,
+pub struct DrawDebugLines<V> {
+    _marker: PhantomData<(V)>,
 }
 
-impl<V, N> DrawDebugLines<V, N>
+impl<V> DrawDebugLines<V>
 where
     V: Query<(Position, Color, Normal)>,
-    N: RealField,
 {
     /// Create instance of `DrawDebugLines` pass
     pub fn new() -> Self {
@@ -70,25 +67,23 @@ where
     }
 }
 
-impl<'a, V, N> PassData<'a> for DrawDebugLines<V, N>
+impl<'a, V> PassData<'a> for DrawDebugLines<V>
 where
     V: Query<(Position, Color, Normal)>,
-    N: RealField,
 {
     type Data = (
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
-        ReadStorage<'a, Transform<N>>,
+        ReadStorage<'a, Transform>,
         WriteStorage<'a, DebugLinesComponent>, // DebugLines components
         Option<Write<'a, DebugLines>>,         // DebugLines resource
         Read<'a, DebugLinesParams>,
     );
 }
 
-impl<V, N> Pass for DrawDebugLines<V, N>
+impl<V> Pass for DrawDebugLines<V>
 where
     V: Query<(Position, Color, Normal)>,
-    N: RealField + SubsetOf<f32>,
 {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         debug!("Building debug lines pass");
@@ -139,7 +134,7 @@ where
             camera
                 .as_ref()
                 .map(|&(_, ref trans)| {
-                    na::convert::<Matrix4<N>, Matrix4<f32>>(*trans.global_matrix())
+                    na::convert::<_, Matrix4<f32>>(*trans.global_matrix())
                         .column(3)
                         .xyz()
                         .into()

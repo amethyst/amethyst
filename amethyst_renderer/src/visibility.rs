@@ -3,8 +3,9 @@ use std::cmp::Ordering;
 use hibitset::BitSet;
 
 use amethyst_core::{
+    Float,
     ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
-    math::{self as na, zero, Point3, RealField, Vector3},
+    math::{self as na, zero, Point3, Vector3},
     Transform,
 };
 
@@ -29,21 +30,21 @@ pub struct Visibility {
 ///
 /// Note that this should run after `GlobalTransform` has been updated for the current frame, and
 /// before rendering occurs.
-pub struct VisibilitySortingSystem<N: RealField> {
-    centroids: Vec<Internals<N>>,
-    transparent: Vec<Internals<N>>,
+pub struct VisibilitySortingSystem {
+    centroids: Vec<Internals>,
+    transparent: Vec<Internals>,
 }
 
 #[derive(Clone)]
-struct Internals<N: RealField> {
+struct Internals {
     entity: Entity,
     transparent: bool,
-    centroid: Point3<N>,
-    camera_distance: N,
-    from_camera: Vector3<N>,
+    centroid: Point3<Float>,
+    camera_distance: Float,
+    from_camera: Vector3<Float>,
 }
 
-impl<N: RealField> VisibilitySortingSystem<N> {
+impl VisibilitySortingSystem {
     /// Create new sorting system
     pub fn new() -> Self {
         VisibilitySortingSystem {
@@ -53,7 +54,7 @@ impl<N: RealField> VisibilitySortingSystem<N> {
     }
 }
 
-impl<'a, N: RealField> System<'a> for VisibilitySortingSystem<N> {
+impl<'a> System<'a> for VisibilitySortingSystem {
     type SystemData = (
         Entities<'a>,
         Write<'a, Visibility>,
@@ -62,7 +63,7 @@ impl<'a, N: RealField> System<'a> for VisibilitySortingSystem<N> {
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Transparent>,
-        ReadStorage<'a, Transform<N>>,
+        ReadStorage<'a, Transform>,
     );
 
     fn run(
@@ -71,7 +72,7 @@ impl<'a, N: RealField> System<'a> for VisibilitySortingSystem<N> {
     ) {
         let origin = Point3::origin();
 
-        let camera: Option<&Transform<N>> = active
+        let camera: Option<&Transform> = active
             .entity
             .and_then(|entity| transform.get(entity))
             .or_else(|| (&camera, &transform).join().map(|cg| cg.1).next());

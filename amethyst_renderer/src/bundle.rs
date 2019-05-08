@@ -1,9 +1,8 @@
 //! ECS rendering bundle
 
 use amethyst_assets::Processor;
-use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder, math::RealField};
+use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder};
 use amethyst_error::{format_err, Error, ResultExt};
-use std::marker::PhantomData;
 
 use crate::{
     config::DisplayConfig,
@@ -23,15 +22,10 @@ use crate::{
 ///
 /// Will register `TransparentSortingSystem`, with name `transparent_sorting_system` if sorting is
 /// requested.
-///
-/// # Type Parameters:
-///
-/// * `N`: `RealBound` (f32, f64)
-pub struct RenderBundle<'a, B, P, N>
+pub struct RenderBundle<'a, B, P>
 where
     B: PipelineBuild<Pipeline = P>,
     P: PolyPipeline,
-    N: RealField,
 {
     pipe: B,
     config: Option<DisplayConfig>,
@@ -39,14 +33,12 @@ where
     sprite_visibility_sorting: Option<&'a [&'a str]>,
     sprite_sheet_processor_enabled: bool,
     hide_hierarchy_system_enabled: bool,
-    _pd: PhantomData<N>,
 }
 
-impl<'a, B, P, N> RenderBundle<'a, B, P, N>
+impl<'a, B, P> RenderBundle<'a, B, P>
 where
     B: PipelineBuild<Pipeline = P>,
     P: PolyPipeline,
-    N: RealField,
 {
     /// Create a new render bundle
     pub fn new(pipe: B, config: Option<DisplayConfig>) -> Self {
@@ -57,7 +49,6 @@ where
             sprite_visibility_sorting: None,
             sprite_sheet_processor_enabled: false,
             hide_hierarchy_system_enabled: false,
-            _pd: PhantomData,
         }
     }
 
@@ -90,23 +81,22 @@ where
     }
 }
 
-impl<'a, 'b, 'c, B, P, N> SystemBundle<'a, 'b> for RenderBundle<'c, B, P, N>
+impl<'a, 'b, 'c, B, P> SystemBundle<'a, 'b> for RenderBundle<'c, B, P>
 where
     B: PipelineBuild<Pipeline = P>,
     P: 'b + PolyPipeline,
-    N: RealField + Default,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         if let Some(dep) = self.visibility_sorting {
             builder.add(
-                VisibilitySortingSystem::<N>::new(),
+                VisibilitySortingSystem::new(),
                 "visibility_sorting_system",
                 dep,
             );
         };
         if let Some(dep) = self.sprite_visibility_sorting {
             builder.add(
-                SpriteVisibilitySortingSystem::<N>::new(),
+                SpriteVisibilitySortingSystem::new(),
                 "sprite_visibility_sorting_system",
                 dep,
             );

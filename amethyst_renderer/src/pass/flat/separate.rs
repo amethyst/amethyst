@@ -1,16 +1,13 @@
 //! Simple flat forward drawing pass.
 
 use derivative::Derivative;
-use gfx::{pso::buffer::ElemStride, traits::Pod};
+use gfx::{pso::buffer::ElemStride};
 use gfx_core::state::{Blend, ColorMask};
 use glsl_layout::Uniform;
-use std::marker::PhantomData;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    alga::general::SubsetOf,
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage},
-    math::RealField,
     transform::Transform,
 };
 use amethyst_error::Error;
@@ -47,23 +44,17 @@ static ATTRIBUTES: [Attributes<'static>; 2] = [
 ///
 /// See the [crate level documentation](index.html) for information about interleaved and separate
 /// passes.
-///
-/// # Type Parameters
-///
-/// * `N`: `RealBound` (f32, f64)
 #[derive(Derivative, Clone, Debug, PartialEq)]
 #[derivative(Default(bound = "Self: Pass"))]
-pub struct DrawFlatSeparate<N> {
+pub struct DrawFlatSeparate {
     skinning: bool,
     #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
-    _pd: PhantomData<N>,
 }
 
-impl<N> DrawFlatSeparate<N>
+impl DrawFlatSeparate
 where
     Self: Pass,
-    N: RealField,
 {
     /// Create instance of `DrawFlat` pass
     pub fn new() -> Self {
@@ -104,7 +95,7 @@ where
     }
 }
 
-impl<'a, N: RealField> PassData<'a> for DrawFlatSeparate<N> {
+impl<'a> PassData<'a> for DrawFlatSeparate {
     type Data = (
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
@@ -116,13 +107,13 @@ impl<'a, N: RealField> PassData<'a> for DrawFlatSeparate<N> {
         ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
-        ReadStorage<'a, Transform<N>>,
-        ReadStorage<'a, JointTransforms<N>>,
+        ReadStorage<'a, Transform>,
+        ReadStorage<'a, JointTransforms>,
         ReadStorage<'a, Rgba>,
     );
 }
 
-impl<N: RealField + SubsetOf<f32> + Pod> Pass for DrawFlatSeparate<N> {
+impl Pass for DrawFlatSeparate {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         use std::mem;
         let mut builder = if self.skinning {

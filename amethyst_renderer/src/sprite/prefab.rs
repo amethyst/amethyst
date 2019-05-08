@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use amethyst_assets::{AssetStorage, PrefabData, ProgressCounter};
 use amethyst_core::{
     ecs::{Entity, Read, Write, WriteStorage},
-    math::RealField,
     Transform,
 };
 use amethyst_error::Error;
@@ -256,20 +255,20 @@ impl<'a> PrefabData<'a> for SpriteRenderPrefab {
 
 /// Prefab for loading a full scene with sprites.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct SpriteScenePrefab<N: RealField> {
+pub struct SpriteScenePrefab {
     /// Sprite sheets
     pub sheet: Option<SpriteSheetPrefab>,
     /// Add `SpriteRender` to the `Entity`
     pub render: Option<SpriteRenderPrefab>,
     /// Add `Transform` to the `Entity`
-    pub transform: Option<Transform<N>>,
+    pub transform: Option<Transform>,
 }
 
-impl<'a, N: RealField> PrefabData<'a> for SpriteScenePrefab<N> {
+impl<'a> PrefabData<'a> for SpriteScenePrefab {
     type SystemData = (
         <SpriteSheetPrefab as PrefabData<'a>>::SystemData,
         <SpriteRenderPrefab as PrefabData<'a>>::SystemData,
-        <Transform<N> as PrefabData<'a>>::SystemData,
+        <Transform as PrefabData<'a>>::SystemData,
     );
     type Result = ();
 

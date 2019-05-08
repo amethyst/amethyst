@@ -8,9 +8,9 @@ use log::warn;
 
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
-    alga::general::SubsetOf,
+    Float,
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage},
-    math::{convert, one, zero, Matrix4, RealField, Vector4},
+    math::{convert, one, zero, Matrix4, Vector4},
     transform::Transform,
 };
 use amethyst_error::Error;
@@ -40,25 +40,18 @@ use crate::{
 use super::*;
 
 /// Draws sprites on a 2D quad.
-///
-/// # Type Parameters:
-///
-/// * `N`: `RealBound` (f32, f64)
 #[derive(Derivative, Clone, Debug)]
 #[derivative(Default(bound = "Self: Pass"))]
-pub struct DrawFlat2D<N>
-where
-    N: RealField + Default,
+pub struct DrawFlat2D
 {
     #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
-    batch: TextureBatch<N>,
+    batch: TextureBatch,
 }
 
-impl<N> DrawFlat2D<N>
+impl DrawFlat2D
 where
     Self: Pass,
-    N: RealField + Default,
 {
     /// Create instance of `DrawFlat2D` pass
     pub fn new() -> Self {
@@ -97,7 +90,7 @@ where
     }
 }
 
-impl<'a, N: RealField + Default> PassData<'a> for DrawFlat2D<N> {
+impl<'a> PassData<'a> for DrawFlat2D {
     type Data = (
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
@@ -107,7 +100,7 @@ impl<'a, N: RealField + Default> PassData<'a> for DrawFlat2D<N> {
         ReadStorage<'a, Hidden>,
         ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, SpriteRender>,
-        ReadStorage<'a, Transform<N>>,
+        ReadStorage<'a, Transform>,
         ReadStorage<'a, TextureHandle>,
         ReadStorage<'a, Flipped>,
         ReadStorage<'a, MeshHandle>,
@@ -118,7 +111,7 @@ impl<'a, N: RealField + Default> PassData<'a> for DrawFlat2D<N> {
     );
 }
 
-impl<N: RealField + Default + SubsetOf<f32>> Pass for DrawFlat2D<N> {
+impl Pass for DrawFlat2D {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         use std::mem;
 
@@ -299,18 +292,18 @@ impl<N: RealField + Default + SubsetOf<f32>> Pass for DrawFlat2D<N> {
 }
 
 #[derive(Clone, Debug)]
-enum TextureDrawData<N: RealField> {
+enum TextureDrawData {
     Sprite {
         texture_handle: Handle<Texture>,
         render: SpriteRender,
         flipped: Option<Flipped>,
         rgba: Option<Rgba>,
-        transform: Matrix4<N>,
+        transform: Matrix4<Float>,
         screen: bool,
     },
     Image {
         texture_handle: Handle<Texture>,
-        transform: Matrix4<N>,
+        transform: Matrix4<Float>,
         flipped: Option<Flipped>,
         rgba: Option<Rgba>,
         width: usize,
@@ -319,7 +312,7 @@ enum TextureDrawData<N: RealField> {
     },
 }
 
-impl<N: RealField> TextureDrawData<N> {
+impl TextureDrawData {
     pub fn texture_handle(&self) -> &Handle<Texture> {
         match self {
             TextureDrawData::Sprite { texture_handle, .. } => texture_handle,
@@ -343,16 +336,16 @@ impl<N: RealField> TextureDrawData<N> {
 }
 
 #[derive(Clone, Default, Debug)]
-struct TextureBatch<N: RealField> {
-    textures: Vec<TextureDrawData<N>>,
-    textures_screen: Vec<TextureDrawData<N>>,
+struct TextureBatch {
+    textures: Vec<TextureDrawData>,
+    textures_screen: Vec<TextureDrawData>,
 }
 
-impl<N: RealField + Default + SubsetOf<f32>> TextureBatch<N> {
+impl TextureBatch {
     pub fn add_image(
         &mut self,
         texture_handle: &TextureHandle,
-        transform: Option<&Transform<N>>,
+        transform: Option<&Transform>,
         flipped: Option<&Flipped>,
         rgba: Option<&Rgba>,
         tex_storage: &AssetStorage<Texture>,
@@ -390,7 +383,7 @@ impl<N: RealField + Default + SubsetOf<f32>> TextureBatch<N> {
     pub fn add_sprite(
         &mut self,
         sprite_render: &SpriteRender,
-        transform: Option<&Transform<N>>,
+        transform: Option<&Transform>,
         flipped: Option<&Flipped>,
         rgba: Option<&Rgba>,
         sprite_sheet_storage: &AssetStorage<SpriteSheet>,
@@ -455,7 +448,7 @@ impl<N: RealField + Default + SubsetOf<f32>> TextureBatch<N> {
         encoder: &mut Encoder,
         factory: &mut Factory,
         effect: &mut Effect,
-        camera: Option<(&Camera, &Transform<N>)>,
+        camera: Option<(&Camera, &Transform)>,
         sprite_sheet_storage: &AssetStorage<SpriteSheet>,
         tex_storage: &AssetStorage<Texture>,
         screen_dimensions: &ScreenDimensions,
@@ -492,7 +485,7 @@ impl<N: RealField + Default + SubsetOf<f32>> TextureBatch<N> {
     }
 
     fn encode_vec(
-        textures: &Vec<TextureDrawData<N>>,
+        textures: &Vec<TextureDrawData>,
         encoder: &mut Encoder,
         factory: &mut Factory,
         effect: &mut Effect,
@@ -555,7 +548,7 @@ impl<N: RealField + Default + SubsetOf<f32>> TextureBatch<N> {
                         (tex_coords.bottom, tex_coords.top)
                     };
 
-                    let global_matrix = convert::<Matrix4<N>, Matrix4<f32>>(*transform);
+                    let global_matrix = convert::<Matrix4<Float>, Matrix4<f32>>(*transform);
 
                     let dir_x = global_matrix.column(0) * sprite_data.width;
                     let dir_y = global_matrix.column(1) * sprite_data.height;
@@ -590,7 +583,7 @@ impl<N: RealField + Default + SubsetOf<f32>> TextureBatch<N> {
                         (0.0, 1.0)
                     };
 
-                    let global_matrix = convert::<Matrix4<N>, Matrix4<f32>>(*transform);
+                    let global_matrix = convert::<Matrix4<Float>, Matrix4<f32>>(*transform);
 
                     let dir_x = global_matrix.column(0) * (*width as f32);
                     let dir_y = global_matrix.column(1) * (*height as f32);
@@ -623,7 +616,7 @@ impl<N: RealField + Default + SubsetOf<f32>> TextureBatch<N> {
                     .create_buffer_immutable(&instance_data, buffer::Role::Vertex, Bind::empty())
                     .expect("Unable to create immutable buffer for `TextureBatch`");
 
-                for _ in DrawFlat2D::<N>::attributes() {
+                for _ in DrawFlat2D::attributes() {
                     effect.data.vertex_bufs.push(vbuf.raw().clone());
                 }
 
