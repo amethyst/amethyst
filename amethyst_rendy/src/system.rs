@@ -121,7 +121,7 @@ where
                 #[cfg(feature = "profiler")]
                 profile_scope!("process_mesh");
 
-                b.build(queue_id, &mut factory)
+                b.0.build(queue_id, &mut factory)
                     .map(Mesh)
                     .map(ProcessingState::Loaded)
                     .map_err(|e| e.compat().into())
@@ -136,7 +136,7 @@ where
                 #[cfg(feature = "profiler")]
                 profile_scope!("process_texture");
 
-                b.build(
+                b.0.build(
                     ImageState {
                         queue: queue_id,
                         stage: rendy::hal::pso::PipelineStage::FRAGMENT_SHADER,
@@ -270,12 +270,12 @@ fn create_default_mat<B: Backend>(res: &mut Resources) -> Material<B> {
 
     let tex_storage = res.fetch();
 
-    let albedo = loader.load_from_data(albedo, (), &tex_storage);
-    let emission = loader.load_from_data(emission, (), &tex_storage);
-    let normal = loader.load_from_data(normal, (), &tex_storage);
-    let metallic_roughness = loader.load_from_data(metallic_roughness, (), &tex_storage);
-    let ambient_occlusion = loader.load_from_data(ambient_occlusion, (), &tex_storage);
-    let cavity = loader.load_from_data(cavity, (), &tex_storage);
+    let albedo = loader.load_from_data(albedo.into(), (), &tex_storage);
+    let emission = loader.load_from_data(emission.into(), (), &tex_storage);
+    let normal = loader.load_from_data(normal.into(), (), &tex_storage);
+    let metallic_roughness = loader.load_from_data(metallic_roughness.into(), (), &tex_storage);
+    let ambient_occlusion = loader.load_from_data(ambient_occlusion.into(), (), &tex_storage);
+    let cavity = loader.load_from_data(cavity.into(), (), &tex_storage);
 
     Material {
         alpha_cutoff: 0.01,

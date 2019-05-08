@@ -2,10 +2,7 @@ use super::{get_image_data, Buffers, ImageFormat as ImportDataFormat};
 use amethyst_assets::Source;
 use amethyst_error::Error;
 use amethyst_rendy::{
-    formats::{
-        mtl::MaterialPrefab,
-        texture::{ImageFormat, TexturePrefab},
-    },
+    formats::{mtl::MaterialPrefab, texture::TexturePrefab},
     palette::{LinSrgba, Srgba},
     rendy::{
         hal::{self, Backend},
@@ -27,7 +24,7 @@ pub fn load_material<B: Backend>(
     buffers: &Buffers,
     source: Arc<dyn Source>,
     name: &str,
-) -> Result<MaterialPrefab<B, ImageFormat>, Error> {
+) -> Result<MaterialPrefab<B>, Error> {
     let mut prefab = MaterialPrefab::default();
 
     let pbr = material.pbr_metallic_roughness();
@@ -41,7 +38,7 @@ pub fn load_material<B: Backend>(
             name,
             true,
         )
-        .map(|(texture, _)| TexturePrefab::Data(texture))?,
+        .map(|(texture, _)| TexturePrefab::Data(texture.into()))?,
     );
 
     // metallic from B channel
@@ -56,7 +53,7 @@ pub fn load_material<B: Backend>(
     )?
     .0;
 
-    prefab.metallic_roughness = Some(TexturePrefab::Data(metallic_roughness));
+    prefab.metallic_roughness = Some(TexturePrefab::Data(metallic_roughness.into()));
 
     let em_factor = material.emissive_factor();
     prefab.emission = Some(TexturePrefab::Data(
@@ -68,7 +65,8 @@ pub fn load_material<B: Backend>(
             name,
             true,
         )?
-        .0,
+        .0
+        .into(),
     ));
 
     // Can't use map/and_then because of Result returning from the load_texture function
@@ -81,7 +79,7 @@ pub fn load_material<B: Backend>(
                 name,
                 false,
             )
-            .map(|data| TexturePrefab::Data(data))?,
+            .map(|data| TexturePrefab::Data(data.into()))?,
         ),
 
         None => None,
@@ -97,7 +95,7 @@ pub fn load_material<B: Backend>(
                 name,
                 false,
             )
-            .map(|data| TexturePrefab::Data(data))?,
+            .map(|data| TexturePrefab::Data(data.into()))?,
         ),
 
         None => None,

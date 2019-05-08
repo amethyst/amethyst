@@ -4,21 +4,23 @@ Prefab (
         (
             data: (
                 sprite_sheet: Sheet(
-                    texture: File("texture/bat_semi_transparent.png", (), (
-                        sampler_info: (
-                            min_filter: Nearest,
-                            mag_filter: Nearest,
-                            mip_filter: Nearest,
-                            wrap_mode: (Tile, Tile, Tile),
-                            lod_bias: (0),
-                            lod_range: (
-                                start: (-8000),
-                                end: (8000),
+                    texture: File("texture/bat_semi_transparent.png", (
+                        "IMAGE", (
+                            sampler_info: (
+                                min_filter: Nearest,
+                                mag_filter: Nearest,
+                                mip_filter: Nearest,
+                                wrap_mode: (Tile, Tile, Tile),
+                                lod_bias: (0),
+                                lod_range: (
+                                    start: ( 0 ),
+                                    end: ( 8000 ),
+                                ),
+                                comparison: None,
+                                border: (0),
+                                anisotropic: Off,
                             ),
-                            comparison: None,
-                            border: (0),
-                            anisotropic: Off,
-                        ),
+                        )
                     )),
                     sprites: [
                         Grid((
@@ -50,20 +52,22 @@ Prefab (
         (
             data: (
                 sprite_sheet: Sheet(
-                    texture: File("texture/bat.32x32.png", (), (
-                        sampler_info: (
-                            min_filter: Nearest,
-                            mag_filter: Nearest,
-                            mip_filter: Nearest,
-                            wrap_mode: (Tile, Tile, Tile),
-                            lod_bias: (0),
-                            lod_range: (
-                                start: (-8000),
-                                end: (8000),
+                    texture: File("texture/bat.32x32.png", (
+                        "IMAGE", (
+                            sampler_info: (
+                                min_filter: Nearest,
+                                mag_filter: Nearest,
+                                mip_filter: Nearest,
+                                wrap_mode: (Tile, Tile, Tile),
+                                lod_bias: (0),
+                                lod_range: (
+                                    start: ( 0 ),
+                                    end: ( 8000 ),
+                                ),
+                                comparison: None,
+                                border: (0),
+                                anisotropic: Off,
                             ),
-                            comparison: None,
-                            border: (0),
-                            anisotropic: Off,
                         ),
                     )),
                     sprites: [
@@ -96,7 +100,7 @@ Prefab (
         (
             data: (
                 sprite_sheet: Sheet(
-                    texture: File("texture/logo_transparent.png", (), ()),
+                    texture: File("texture/logo_transparent.png", ("IMAGE", ())),
                     sprites: [
                         List((
                             texture_width: 256,
@@ -112,7 +116,7 @@ Prefab (
         (
             data: (
                 sprite_sheet: Sheet(
-                    texture: File("texture/crate.png", (), ()),
+                    texture: File("texture/crate.png", ("IMAGE", ())),
                     sprites: [
                         List((
                             texture_width: 32,
@@ -131,7 +135,7 @@ Prefab (
                     scale: (1.0, 1.0, 1.0),
                     translation: (10.0, 0.0, 0.0),
                 ),
-                gltf: File("large/AlphaBlendModeTest.glb", GltfSceneFormat, ()),
+                gltf: File("large/AlphaBlendModeTest.glb", ()),
             ),
         ),
         (
@@ -161,7 +165,7 @@ Prefab (
                     translation: (-5.0, 0.0, 0.0),
                     scale: (10.0, 10.0, 10.0),
                 ),
-                gltf: File("large/SciFiHelmet/SciFiHelmet.gltf", GltfSceneFormat, ()),
+                gltf: File("large/SciFiHelmet/SciFiHelmet.gltf", ()),
             ),
         ),
         (
@@ -170,7 +174,7 @@ Prefab (
                     scale: (2.0, 2.0, 2.0),
                     translation: (-10.0, 0.0, 0.0),
                 ),
-                gltf: File("large/crystal_stone/scene.gltf", GltfSceneFormat, ()),
+                gltf: File("large/crystal_stone/scene.gltf", ()),
             ),
         ),
         (
@@ -178,7 +182,7 @@ Prefab (
                 transform: (
                     translation: (0.0, 1.5, 0.0),
                 ),
-                gltf: File("large/NormalTangentMirrorTest.glb", GltfSceneFormat, ()),
+                gltf: File("large/NormalTangentMirrorTest.glb", ()),
             ),
         ),
         (
@@ -186,7 +190,7 @@ Prefab (
                 transform: (
                     translation: (0.0, -1.5, 0.0),
                 ),
-                gltf: File("large/NormalTangentTest.glb", GltfSceneFormat, ()),
+                gltf: File("large/NormalTangentTest.glb", ()),
             ),
         ),
         (
@@ -196,7 +200,7 @@ Prefab (
                     translation: (5.0, -3.5, 0.0),
                 ),
                 tag: (),
-                gltf: File("large/InterpolationTest.glb", GltfSceneFormat, ()),
+                gltf: File("large/InterpolationTest.glb", ()),
             ),
         ),        
         (

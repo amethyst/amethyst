@@ -5,15 +5,14 @@ use std::{hash::Hash, marker::PhantomData};
 use derive_new::new;
 
 use amethyst_assets::Processor;
-use amethyst_audio::AudioFormat;
 use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder};
 use amethyst_error::Error;
-use amethyst_renderer::{BlinkSystem, TextureFormat};
+use amethyst_renderer::BlinkSystem;
 
 use crate::{
-    CacheSelectionOrderSystem, FontAsset, FontFormat, NoCustomUi, ResizeSystem,
-    SelectionKeyboardSystem, SelectionMouseSystem, TextEditingInputSystem, TextEditingMouseSystem,
-    ToNativeWidget, UiButtonActionRetriggerSystem, UiButtonSystem, UiLoaderSystem, UiMouseSystem,
+    CacheSelectionOrderSystem, FontAsset, NoCustomUi, ResizeSystem, SelectionKeyboardSystem,
+    SelectionMouseSystem, TextEditingInputSystem, TextEditingMouseSystem, ToNativeWidget,
+    UiButtonActionRetriggerSystem, UiButtonSystem, UiLoaderSystem, UiMouseSystem,
     UiSoundRetriggerSystem, UiSoundSystem, UiTransformSystem, WidgetId,
 };
 
@@ -39,13 +38,7 @@ where
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
-            UiLoaderSystem::<
-                AudioFormat,
-                TextureFormat,
-                FontFormat,
-                <C as ToNativeWidget>::PrefabData,
-                W,
-            >::default(),
+            UiLoaderSystem::<<C as ToNativeWidget>::PrefabData, W>::default(),
             "ui_loader",
             &[],
         );

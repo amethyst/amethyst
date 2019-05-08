@@ -1,7 +1,5 @@
-use crate::types::Texture;
-use amethyst_assets::{
-    AssetStorage, Format, Handle, Loader, PrefabData, ProgressCounter, SimpleFormat,
-};
+use crate::types::{Texture, TextureData};
+use amethyst_assets::{AssetStorage, Format, Handle, Loader, PrefabData, ProgressCounter};
 use amethyst_core::ecs::{Entity, Read, ReadExpect};
 use amethyst_error::Error;
 use rendy::{
@@ -18,19 +16,22 @@ use rendy::{
 };
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-pub struct ImageFormat;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct ImageFormat(ImageTextureConfig);
 
-impl<B: Backend> SimpleFormat<Texture<B>> for ImageFormat {
-    const NAME: &'static str = "IMAGE";
-    type Options = ImageTextureConfig;
+amethyst_assets::register_format_type!(TextureData);
 
-    fn import(
-        &self,
-        bytes: Vec<u8>,
-        options: ImageTextureConfig,
-    ) -> Result<TextureBuilder<'static>, Error> {
-        load_from_image(&bytes, options).map_err(|e| e.compat().into())
+amethyst_assets::register_format!("IMAGE", ImageFormat as TextureData);
+impl Format<TextureData> for ImageFormat {
+    fn name(&self) -> &'static str {
+        "IMAGE"
+    }
+
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<TextureData, Error> {
+        load_from_image(&bytes, self.0.clone())
+            .map(|builder| builder.into())
+            .map_err(|e| e.compat().into())
     }
 }
 
@@ -44,21 +45,14 @@ impl<B: Backend> SimpleFormat<Texture<B>> for ImageFormat {
 /// - `F`: `Format` to use for loading the `Texture`s from file
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(bound = "")]
-pub enum TexturePrefab<B: Backend, F = ImageFormat>
-where
-    F: Format<Texture<B>>,
-{
+pub enum TexturePrefab<B: Backend> {
     /// Texture data
-    Data(TextureBuilder<'static>),
+    Data(TextureData),
 
     // Generate texture
     Generate(TextureGenerator),
-    #[serde(bound(
-        serialize = "F: Serialize, F::Options: Serialize",
-        deserialize = "F: Deserialize<'de>, F::Options: Deserialize<'de>",
-    ))]
     /// Load file with format
-    File(String, F, F::Options),
+    File(String, Box<dyn Format<TextureData>>),
 
     /// Clone handle only
     #[serde(skip)]
@@ -76,7 +70,7 @@ pub enum TextureGenerator {
     SrgbaCorners([(f32, f32, f32, f32); 4], Filter),
 }
 
-fn simple_builder<A: AsPixel>(data: Vec<A>, size: Size, filter: Filter) -> TextureBuilder<'static> {
+fn simple_builder<A: AsPixel>(data: Vec<A>, size: Size, filter: Filter) -> TextureData {
     TextureBuilder::new()
         .with_kind(Kind::D2(size, size, 1, 1))
         .with_view_kind(ViewKind::D2)
@@ -87,18 +81,19 @@ fn simple_builder<A: AsPixel>(data: Vec<A>, size: Size, filter: Filter) -> Textu
             hal::image::WrapMode::Clamp,
         ))
         .with_data(data)
+        .into()
 }
 
 impl TextureGenerator {
-    fn data(&self) -> TextureBuilder<'static> {
+    fn data(&self) -> TextureData {
         use palette::{LinSrgba, Srgba};
         use rendy::texture::palette::{load_from_linear_rgba, load_from_srgba};
         match *self {
             TextureGenerator::Srgba(red, green, blue, alpha) => {
-                load_from_srgba(Srgba::new(red, green, blue, alpha))
+                load_from_srgba(Srgba::new(red, green, blue, alpha)).into()
             }
             TextureGenerator::LinearRgba(red, green, blue, alpha) => {
-                load_from_linear_rgba(LinSrgba::new(red, green, blue, alpha))
+                load_from_linear_rgba(LinSrgba::new(red, green, blue, alpha)).into()
             }
             //TextureGenerator::LinearRgbaFloat(red, green, blue, alpha) => load_from_linear_rgba_f32(
             //    LinSrgba::new(red, green, blue, alpha)
@@ -117,10 +112,7 @@ impl TextureGenerator {
     }
 }
 
-impl<'a, B: Backend, F> PrefabData<'a> for TexturePrefab<B, F>
-where
-    F: Format<Texture<B>> + Sync,
-{
+impl<'a, B: Backend> PrefabData<'a> for TexturePrefab<B> {
     type SystemData = (ReadExpect<'a, Loader>, Read<'a, AssetStorage<Texture<B>>>);
 
     type Result = Handle<Texture<B>>;
@@ -153,8 +145,8 @@ where
                 let handle = loader.load_from_data(generator.data(), progress, storage);
                 (true, TexturePrefab::Handle(handle))
             }
-            TexturePrefab::File(name, format, options) => {
-                let handle = loader.load(name.as_ref(), format, options, progress, storage);
+            TexturePrefab::File(name, format) => {
+                let handle = loader.load(name.as_ref(), format, progress, storage);
                 (true, TexturePrefab::Handle(handle))
             }
             slot => (false, slot),

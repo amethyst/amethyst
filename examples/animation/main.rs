@@ -28,7 +28,7 @@ use amethyst_rendy::{
             format::Format,
             Backend,
         },
-        mesh::{Position, Normal, Tangent, TexCoord},
+        mesh::{Normal, Position, Tangent, TexCoord},
     },
     system::{GraphCreator, RendererSystem},
     types::DefaultBackend,

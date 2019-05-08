@@ -21,10 +21,6 @@ pub use specs as ecs;
 
 use rayon;
 
-#[macro_use]
-#[cfg(feature = "profiler")]
-extern crate thread_profiler;
-
 use std::sync::Arc;
 
 pub use crate::{

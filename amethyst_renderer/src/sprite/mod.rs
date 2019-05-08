@@ -6,7 +6,7 @@ pub use self::prefab::{
 use ron::de::from_bytes as from_ron_bytes;
 use serde::{Deserialize, Serialize};
 
-use amethyst_assets::{Asset, Handle, ProcessingState, SimpleFormat};
+use amethyst_assets::{Asset, Format, Handle, ProcessingState};
 use amethyst_core::ecs::prelude::{Component, DenseVecStorage, VecStorage};
 use amethyst_error::Error;
 
@@ -269,20 +269,20 @@ impl Component for SpriteRender {
 /// );
 /// # }
 /// ```
-#[derive(Clone, Deserialize, Serialize)]
-pub struct SpriteSheetFormat;
+#[derive(Clone, Debug)]
+pub struct SpriteSheetFormat(pub Handle<Texture>);
 
-impl SimpleFormat<SpriteSheet> for SpriteSheetFormat {
-    const NAME: &'static str = "SPRITE_SHEET";
+impl Format<SpriteSheet> for SpriteSheetFormat {
+    fn name(&self) -> &'static str {
+        "SPRITE_SHEET"
+    }
 
-    type Options = Handle<Texture>;
-
-    fn import(&self, bytes: Vec<u8>, texture: Self::Options) -> Result<SpriteSheet, Error> {
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<SpriteSheet, Error> {
         let sprite_list: SpriteList =
             from_ron_bytes(&bytes).map_err(|err| error::Error::LoadSpritesheetError(err))?;
 
         Ok(SpriteSheet {
-            texture,
+            texture: self.0.clone(),
             sprites: sprite_list.build_sprites(),
         })
     }

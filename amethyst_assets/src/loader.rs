@@ -81,19 +81,18 @@ impl Loader {
         &self,
         name: N,
         format: F,
-        options: F::Options,
         progress: P,
         storage: &AssetStorage<A>,
     ) -> Handle<A>
     where
         A: Asset,
-        F: Format<A>,
+        F: Format<A::Data>,
         N: Into<String>,
         P: Progress,
     {
         #[cfg(feature = "profiler")]
         profile_scope!("initialise_loading_assets");
-        self.load_from::<A, F, _, _, _>(name, format, options, "", progress, storage)
+        self.load_from::<A, F, _, _, _>(name, format, "", progress, storage)
     }
 
     /// Loads an asset with a given id and format from a custom source.
@@ -105,8 +104,6 @@ impl Loader {
     ///   `"meshes/a.obj"`
     /// * `format`: A format struct which loads bytes from a `source` and produces `Asset::Data`
     ///   with them
-    /// * `options`: Additional parameter to `format` to configure how exactly the data will
-    ///   be created. This could e.g. be mipmap levels for textures.
     /// * `source`: An identifier for a source which has previously been added using `with_source`
     /// * `progress`: A tracker which will be notified of assets which have been imported
     /// * `storage`: The asset storage which can be fetched from the ECS `World` using
@@ -115,14 +112,13 @@ impl Loader {
         &self,
         name: N,
         format: F,
-        options: F::Options,
         source: &S,
         mut progress: P,
         storage: &AssetStorage<A>,
     ) -> Handle<A>
     where
         A: Asset,
-        F: Format<A> + 'static,
+        F: Format<A::Data>,
         N: Into<String>,
         P: Progress,
         S: AsRef<str> + Eq + Hash + ?Sized,
@@ -135,7 +131,7 @@ impl Loader {
         let name = name.into();
         let source = source.as_ref();
 
-        let format_name = F::NAME;
+        let format_name = format.name();
         let source_name = match source {
             "" => "[default source]",
             other => other,
@@ -159,14 +155,18 @@ impl Loader {
         let handle_clone = handle.clone();
         let processed = storage.processed.clone();
 
-        let hot_reload = self.hot_reload;
+        let hot_reload = if self.hot_reload {
+            Some(objekt::clone_box(&format) as Box<dyn Format<A::Data>>)
+        } else {
+            None
+        };
 
         let cl = move || {
             #[cfg(feature = "profiler")]
             profile_scope!("load_asset_from_worker");
             let data = format
-                .import(name.clone(), source, options, hot_reload)
-                .with_context(|_| Error::Format(F::NAME));
+                .import(name.clone(), source, hot_reload)
+                .with_context(|_| Error::Format(format_name));
             let tracker = Box::new(tracker) as Box<dyn Tracker>;
 
             processed.push(Processed::NewAsset {

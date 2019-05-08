@@ -14,7 +14,7 @@ pub use self::{
         default::get_default_font,
         systemfont::{default_system_font, get_all_font_handles, list_system_font_families},
     },
-    format::{FontAsset, FontFormat, FontHandle, OtfFormat, TtfFormat},
+    format::{FontAsset, FontHandle, OtfFormat, TtfFormat},
     label::{UiLabel, UiLabelBuilder, UiLabelBuilderResources},
     layout::{Anchor, ScaleMode, Stretch, UiTransformSystem},
     pass::DrawUi,

@@ -78,7 +78,7 @@ where
     ) -> Result<bool, Error> {
         let (loader, _, mesh_storage) = system_data;
         self.handle = Some(loader.load_from_data(
-            self.shape.generate::<V>(self.shape_scale),
+            self.shape.generate::<V>(self.shape_scale).into(),
             progress,
             &mesh_storage,
         ));
@@ -169,7 +169,7 @@ impl Shape {
     {
         upload
             .loader
-            .load_from_data(self.generate::<V>(scale), progress, &upload.storage)
+            .load_from_data(self.generate::<V>(scale).into(), progress, &upload.storage)
     }
 
     /// Generate `MeshBuilder` for the `Shape`

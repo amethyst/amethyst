@@ -1,4 +1,4 @@
-use amethyst_assets::{Format, Handle, PrefabData, ProgressCounter};
+use amethyst_assets::{Handle, PrefabData, ProgressCounter};
 use amethyst_core::ecs::prelude::{Entity, ReadExpect, WriteStorage};
 use amethyst_error::Error;
 
@@ -9,7 +9,7 @@ use crate::{
     transparent::Transparent,
 };
 
-use super::{Texture, TextureMetadata, TexturePrefab};
+use super::{Texture, TexturePrefab};
 
 /// `PrefabData` for loading `Material`s
 ///
@@ -18,36 +18,33 @@ use super::{Texture, TextureMetadata, TexturePrefab};
 /// - `F`: `Format` to use for loading `Texture`s
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(default)]
-pub struct MaterialPrefab<F>
-where
-    F: Format<Texture, Options = TextureMetadata>,
-{
+pub struct MaterialPrefab {
     /// Diffuse map.
-    pub albedo: Option<TexturePrefab<F>>,
+    pub albedo: Option<TexturePrefab>,
     /// Diffuse texture offset
     pub albedo_offset: TextureOffset,
     /// Emission map.
-    pub emission: Option<TexturePrefab<F>>,
+    pub emission: Option<TexturePrefab>,
     /// Emission texture offset
     pub emission_offset: TextureOffset,
     /// Normal map.
-    pub normal: Option<TexturePrefab<F>>,
+    pub normal: Option<TexturePrefab>,
     /// Normal texture offset
     pub normal_offset: TextureOffset,
     /// Metallic map.
-    pub metallic: Option<TexturePrefab<F>>,
+    pub metallic: Option<TexturePrefab>,
     /// Metallic texture offset
     pub metallic_offset: TextureOffset,
     /// Roughness map.
-    pub roughness: Option<TexturePrefab<F>>,
+    pub roughness: Option<TexturePrefab>,
     /// Roughness texture offset
     pub roughness_offset: TextureOffset,
     /// Ambient occlusion map.
-    pub ambient_occlusion: Option<TexturePrefab<F>>,
+    pub ambient_occlusion: Option<TexturePrefab>,
     /// Ambient occlusion texture offset
     pub ambient_occlusion_offset: TextureOffset,
     /// Caveat map.
-    pub caveat: Option<TexturePrefab<F>>,
+    pub caveat: Option<TexturePrefab>,
     /// Caveat texture offset
     pub caveat_offset: TextureOffset,
     /// Set material as `Transparent`
@@ -56,10 +53,7 @@ where
     pub alpha_cutoff: f32,
 }
 
-impl<F> Default for MaterialPrefab<F>
-where
-    F: Format<Texture, Options = TextureMetadata>,
-{
+impl Default for MaterialPrefab {
     fn default() -> Self {
         MaterialPrefab {
             albedo: None,
@@ -82,29 +76,23 @@ where
     }
 }
 
-fn load_handle<F>(
+fn load_handle(
     entity: Entity,
-    prefab: &Option<TexturePrefab<F>>,
-    tp_data: &mut <TexturePrefab<F> as PrefabData<'_>>::SystemData,
+    prefab: &Option<TexturePrefab>,
+    tp_data: &mut <TexturePrefab as PrefabData<'_>>::SystemData,
     def: &Handle<Texture>,
-) -> Handle<Texture>
-where
-    F: Format<Texture, Options = TextureMetadata> + Sync + Clone,
-{
+) -> Handle<Texture> {
     prefab
         .as_ref()
         .and_then(|tp| tp.add_to_entity(entity, tp_data, &[], &[]).ok())
         .unwrap_or_else(|| def.clone())
 }
 
-impl<'a, F> PrefabData<'a> for MaterialPrefab<F>
-where
-    F: Format<Texture, Options = TextureMetadata> + Sync + Clone,
-{
+impl<'a> PrefabData<'a> for MaterialPrefab {
     type SystemData = (
         WriteStorage<'a, Material>,
         ReadExpect<'a, MaterialDefaults>,
-        <TexturePrefab<F> as PrefabData<'a>>::SystemData,
+        <TexturePrefab as PrefabData<'a>>::SystemData,
         WriteStorage<'a, Transparent>,
     );
     type Result = ();

@@ -1,5 +1,5 @@
 use crate::{
-    formats::texture::{ImageFormat, TexturePrefab},
+    formats::texture::TexturePrefab,
     sprite::{SpriteRender, SpriteSheet, SpriteSheetHandle, Sprites},
 };
 use amethyst_assets::{AssetStorage, Loader, PrefabData, ProgressCounter};
@@ -27,7 +27,7 @@ pub enum SpriteSheetPrefab<B: Backend> {
     /// Definition of a spritesheet
     Sheet {
         /// This texture contains the images for the spritesheet
-        texture: TexturePrefab<B, ImageFormat>,
+        texture: TexturePrefab<B>,
         /// The sprites in the spritesheet
         sprites: Vec<Sprites>,
         /// The name of the spritesheet to refer to it
@@ -37,7 +37,7 @@ pub enum SpriteSheetPrefab<B: Backend> {
 
 impl<'a, B: Backend> PrefabData<'a> for SpriteSheetPrefab<B> {
     type SystemData = (
-        <TexturePrefab<B, ImageFormat> as PrefabData<'a>>::SystemData,
+        <TexturePrefab<B> as PrefabData<'a>>::SystemData,
         Read<'a, SpriteSheetLoadedSet<B>>,
         Read<'a, AssetStorage<SpriteSheet<B>>>,
         ReadExpect<'a, Loader>,

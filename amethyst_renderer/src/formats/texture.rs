@@ -8,7 +8,6 @@ use serde::{Deserialize, Serialize};
 
 use amethyst_assets::{
     AssetStorage, Format, Handle, Loader, PrefabData, ProcessingState, ProgressCounter,
-    SimpleFormat,
 };
 use amethyst_core::ecs::prelude::{Entity, Read, ReadExpect};
 use amethyst_error::{Error, ResultExt};
@@ -132,7 +131,9 @@ impl TextureMetadata {
     }
 }
 
-/// Texture data for loading
+amethyst_assets::register_format_type!(TextureData);
+
+/// Texture data for loading texture assets
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum TextureData {
     /// Image data
@@ -205,25 +206,19 @@ impl<'a> PrefabData<'a> for TextureData {
 ///
 /// - `F`: `Format` to use for loading the `Texture`s from file
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub enum TexturePrefab<F>
-where
-    F: Format<Texture, Options = TextureMetadata>,
-{
+pub enum TexturePrefab {
     /// Texture data
     Data(TextureData),
 
     /// Load file with format
-    File(String, F, TextureMetadata),
+    File(String, Box<dyn Format<TextureData>>),
 
     /// Clone handle only
     #[serde(skip)]
     Handle(Handle<Texture>),
 }
 
-impl<'a, F> PrefabData<'a> for TexturePrefab<F>
-where
-    F: Format<Texture, Options = TextureMetadata> + Clone + Sync,
-{
+impl<'a> PrefabData<'a> for TexturePrefab {
     type SystemData = (ReadExpect<'a, Loader>, Read<'a, AssetStorage<Texture>>);
 
     type Result = Handle<Texture>;
@@ -261,10 +256,9 @@ where
                 &system_data.1,
             )),
 
-            TexturePrefab::File(ref name, ref format, ref options) => Some(system_data.0.load(
+            TexturePrefab::File(ref name, ref format) => Some(system_data.0.load(
                 name.as_ref(),
                 format.clone(),
-                options.clone(),
                 progress,
                 &system_data.1,
             )),
@@ -309,8 +303,9 @@ fn load_into_rgba8_from_memory(
 }
 
 /// Allows loading of jpg or jpeg files.
-#[derive(Clone, Deserialize, Serialize)]
-pub struct JpgFormat;
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct JpgFormat(pub TextureMetadata);
 
 impl JpgFormat {
     /// Load Jpg from memory buffer
@@ -319,19 +314,21 @@ impl JpgFormat {
     }
 }
 
-impl SimpleFormat<Texture> for JpgFormat {
-    const NAME: &'static str = "JPEG";
+amethyst_assets::register_format!("JPEG", JpgFormat as TextureData);
+impl Format<TextureData> for JpgFormat {
+    fn name(&self) -> &'static str {
+        "JPEG"
+    }
 
-    type Options = TextureMetadata;
-
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData, Error> {
-        JpgFormat::from_data(&bytes, options)
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<TextureData, Error> {
+        JpgFormat::from_data(&bytes, self.0.clone())
     }
 }
 
 /// Allows loading of PNG files.
-#[derive(Clone, Deserialize, Serialize)]
-pub struct PngFormat;
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct PngFormat(pub TextureMetadata);
 
 impl PngFormat {
     /// Load Png from memory buffer
@@ -340,35 +337,39 @@ impl PngFormat {
     }
 }
 
-impl SimpleFormat<Texture> for PngFormat {
-    const NAME: &'static str = "PNG";
+amethyst_assets::register_format!("PNG", PngFormat as TextureData);
+impl Format<TextureData> for PngFormat {
+    fn name(&self) -> &'static str {
+        "PNG"
+    }
 
-    type Options = TextureMetadata;
-
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData, Error> {
-        PngFormat::from_data(&bytes, options)
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<TextureData, Error> {
+        PngFormat::from_data(&bytes, self.0.clone())
     }
 }
 
 /// Allows loading of BMP files.
-#[derive(Clone, Deserialize, Serialize)]
-pub struct BmpFormat;
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct BmpFormat(pub TextureMetadata);
 
-impl SimpleFormat<Texture> for BmpFormat {
-    const NAME: &'static str = "BMP";
+amethyst_assets::register_format!("BMP", BmpFormat as TextureData);
+impl Format<TextureData> for BmpFormat {
+    fn name(&self) -> &'static str {
+        "BMP"
+    }
 
-    type Options = TextureMetadata;
-
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData, Error> {
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<TextureData, Error> {
         // TODO: consider reading directly into GPU-visible memory
         // TODO: as noted by @omni-viral.
-        load_into_rgba8_from_memory(&bytes, options, ImageFormat::BMP)
+        load_into_rgba8_from_memory(&bytes, self.0.clone(), ImageFormat::BMP)
     }
 }
 
 /// Allows loading of TGA files.
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct TgaFormat;
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct TgaFormat(pub TextureMetadata);
 
 impl TgaFormat {
     /// Loads a TGA image from a byte slice.
@@ -377,13 +378,13 @@ impl TgaFormat {
     }
 }
 
-impl SimpleFormat<Texture> for TgaFormat {
-    const NAME: &'static str = "TGA";
+impl Format<TextureData> for TgaFormat {
+    fn name(&self) -> &'static str {
+        "TGA"
+    }
 
-    type Options = TextureMetadata;
-
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData, Error> {
-        TgaFormat::from_data(&bytes, options)
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<TextureData, Error> {
+        TgaFormat::from_data(&bytes, self.0.clone())
     }
 }
 
@@ -491,34 +492,6 @@ fn create_texture_asset_from_image(
     renderer
         .create_texture(tb)
         .with_context(|_| error::Error::CreateTextureError)
-}
-
-/// Aggregate texture format
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub enum TextureFormat {
-    /// Jpeg
-    Jpg,
-    /// Png
-    Png,
-    /// Bmp
-    Bmp,
-    /// Tga
-    Tga,
-}
-
-impl SimpleFormat<Texture> for TextureFormat {
-    const NAME: &'static str = "TextureFormat";
-
-    type Options = TextureMetadata;
-
-    fn import(&self, bytes: Vec<u8>, options: TextureMetadata) -> Result<TextureData, Error> {
-        match *self {
-            TextureFormat::Jpg => SimpleFormat::import(&JpgFormat, bytes, options),
-            TextureFormat::Png => SimpleFormat::import(&PngFormat, bytes, options),
-            TextureFormat::Bmp => SimpleFormat::import(&BmpFormat, bytes, options),
-            TextureFormat::Tga => SimpleFormat::import(&TgaFormat, bytes, options),
-        }
-    }
 }
 
 mod serde_helper {

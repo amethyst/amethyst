@@ -4,7 +4,7 @@
 pub use self::{
     bundle::AudioBundle,
     components::*,
-    formats::{AudioFormat, FlacFormat, Mp3Format, OggFormat, WavFormat},
+    formats::{FlacFormat, Mp3Format, OggFormat, WavFormat},
     sink::AudioSink,
     source::{Source, SourceHandle},
     systems::*,

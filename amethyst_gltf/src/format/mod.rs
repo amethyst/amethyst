@@ -39,27 +39,27 @@ mod skin;
 /// as the root node of the scene hierarchy.
 ///
 /// See `GltfSceneOptions` for more information about the load options.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct GltfSceneFormat;
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct GltfSceneFormat(GltfSceneOptions);
 
 impl<B, N> Format<Prefab<GltfPrefab<B, N>>> for GltfSceneFormat
 where
     B: Backend,
     N: RealField + SubsetOf<f32>,
 {
-    const NAME: &'static str = "GLTFScene";
-
-    type Options = GltfSceneOptions;
+    fn name(&self) -> &'static str {
+        "GLTFScene"
+    }
 
     fn import(
         &self,
         name: String,
         source: Arc<dyn Source>,
-        options: GltfSceneOptions,
-        _create_reload: bool,
+        _create_reload: Option<Box<dyn Format<Prefab<GltfPrefab<B, N>>>>>,
     ) -> Result<FormatValue<Prefab<GltfPrefab<B, N>>>, Error> {
         Ok(FormatValue::data(
-            load_gltf(source, &name, options)
+            load_gltf(source, &name, &self.0)
                 .with_context(|_| format_err!("Failed to import gltf scene '{:?}'", name))?,
         ))
     }
@@ -68,7 +68,7 @@ where
 fn load_gltf<B, N>(
     source: Arc<dyn Source>,
     name: &str,
-    options: GltfSceneOptions,
+    options: &GltfSceneOptions,
 ) -> Result<Prefab<GltfPrefab<B, N>>, Error>
 where
     B: Backend,
@@ -78,7 +78,7 @@ where
     import(source.clone(), name)
         .with_context(|_| error::Error::GltfImporterError)
         .and_then(|(gltf, buffers)| {
-            load_data(&gltf, &buffers, &options, source, name).map_err(Into::into)
+            load_data(&gltf, &buffers, options, source, name).map_err(Into::into)
         })
 }
 

@@ -1,9 +1,9 @@
 use crate::{
     shape::{FromShape, ShapePrefab},
-    types::Mesh,
+    types::{Mesh, MeshData},
 };
 use amethyst_assets::{
-    AssetPrefab, AssetStorage, Format, Handle, Loader, PrefabData, ProgressCounter, SimpleFormat,
+    AssetPrefab, AssetStorage, Format, Handle, Loader, PrefabData, ProgressCounter,
 };
 use amethyst_core::ecs::{Entity, Read, ReadExpect, WriteStorage};
 use amethyst_error::Error;
@@ -13,12 +13,18 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct ObjFormat;
 
-impl<B: Backend> SimpleFormat<Mesh<B>> for ObjFormat {
-    const NAME: &'static str = "WAVEFRONT_OBJ";
-    type Options = ();
+amethyst_assets::register_format_type!(MeshData);
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<MeshBuilder<'static>, Error> {
-        rendy::mesh::obj::load_from_obj(&bytes).map_err(|e| e.compat().into())
+amethyst_assets::register_format!("OBJ", ObjFormat as MeshData);
+impl Format<MeshData> for ObjFormat {
+    fn name(&self) -> &'static str {
+        "WAVEFRONT_OBJ"
+    }
+
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<MeshData, Error> {
+        rendy::mesh::obj::load_from_obj(&bytes)
+            .map(|builder| builder.into())
+            .map_err(|e| e.compat().into())
     }
 }
 
@@ -35,25 +41,19 @@ impl<B: Backend> SimpleFormat<Mesh<B>> for ObjFormat {
 /// `M`: `Format` to use for loading `Mesh`es from file
 #[derive(Deserialize, Serialize)]
 #[serde(bound = "")]
-pub enum MeshPrefab<B, V, F = ObjFormat>
+pub enum MeshPrefab<B, V>
 where
     B: Backend,
-    F: Format<Mesh<B>>,
 {
     /// Load an asset Mesh from file
-    #[serde(bound(
-        serialize = "AssetPrefab<Mesh<B>, F>: Serialize",
-        deserialize = "AssetPrefab<Mesh<B>, F>: Deserialize<'de>",
-    ))]
-    Asset(AssetPrefab<Mesh<B>, F>),
+    Asset(AssetPrefab<Mesh<B>>),
     /// Generate a Mesh from basic type
     Shape(ShapePrefab<B, V>),
 }
 
-impl<'a, B, V, F> PrefabData<'a> for MeshPrefab<B, V, F>
+impl<'a, B, V> PrefabData<'a> for MeshPrefab<B, V>
 where
     B: Backend,
-    F: Format<Mesh<B>>,
     V: FromShape + Into<MeshBuilder<'static>>,
 {
     type SystemData = (

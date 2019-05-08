@@ -173,14 +173,16 @@ impl<B: Backend> SimpleState for Example<B> {
         self.progress = Some(ProgressCounter::default());
 
         world.exec(
-            |(loader, mut scene): (PrefabLoader<'_, ScenePrefabData<B, Real>>, Write<'_, Scene<B, Real>>)| {
+            |(loader, mut scene): (
+                PrefabLoader<'_, ScenePrefabData<B, Real>>,
+                Write<'_, Scene<B, Real>>,
+            )| {
                 scene.handle = Some(
                     loader.load(
                         Path::new("prefab")
                             .join("rendy_example_scene.ron")
                             .to_string_lossy(),
                         RonFormat,
-                        (),
                         self.progress.as_mut().unwrap(),
                     ),
                 );
@@ -191,15 +193,14 @@ impl<B: Backend> SimpleState for Example<B> {
             let mesh = world.exec(|loader: AssetLoaderSystemData<'_, Mesh<B>>| {
                 loader.load_from_data(
                     Shape::Sphere(16, 16)
-                        .generate::<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>)>(
-                            None,
-                        ),
+                        .generate::<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>)>(None)
+                        .into(),
                     self.progress.as_mut().unwrap(),
                 )
             });
             let albedo = world.exec(|loader: AssetLoaderSystemData<'_, Texture<B>>| {
                 loader.load_from_data(
-                    load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 0.5)),
+                    load_from_linear_rgba(LinSrgba::new(1.0, 1.0, 1.0, 0.5)).into(),
                     self.progress.as_mut().unwrap(),
                 )
             });
@@ -229,7 +230,8 @@ impl<B: Backend> SimpleState for Example<B> {
                         AssetLoaderSystemData<'_, Texture<B>>,
                     )| {
                         let metallic_roughness = tex_loader.load_from_data(
-                            load_from_linear_rgba(LinSrgba::new(0.0, roughness, metallic, 0.0)),
+                            load_from_linear_rgba(LinSrgba::new(0.0, roughness, metallic, 0.0))
+                                .into(),
                             self.progress.as_mut().unwrap(),
                         );
 
@@ -561,8 +563,11 @@ fn main() -> amethyst::Result<()> {
             &[],
         )
         .with_bundle(
-            AnimationBundle::<usize, Transform<Real>>::new("animation_control", "sampler_interpolation")
-                .with_dep(&["gltf_loader"]),
+            AnimationBundle::<usize, Transform<Real>>::new(
+                "animation_control",
+                "sampler_interpolation",
+            )
+            .with_dep(&["gltf_loader"]),
         )?
         .with_bundle(
             AnimationBundle::<SpriteAnimationId, SpriteRender<DefaultBackend>>::new(
@@ -683,7 +688,11 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         let mut transparent_subpass = SubpassBuilder::new();
         match *render_mode {
             RenderMode::Flat => {
-                opaque_subpass.add_group(DrawFlatDesc::<_, Real>::default().with_vertex_skinning().builder());
+                opaque_subpass.add_group(
+                    DrawFlatDesc::<_, Real>::default()
+                        .with_vertex_skinning()
+                        .builder(),
+                );
                 transparent_subpass.add_group(
                     DrawFlatTransparentDesc::<_, Real>::default()
                         .with_vertex_skinning()
@@ -691,8 +700,11 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
                 );
             }
             RenderMode::Shaded => {
-                opaque_subpass
-                    .add_group(DrawShadedDesc::<_, Real>::default().with_vertex_skinning().builder());
+                opaque_subpass.add_group(
+                    DrawShadedDesc::<_, Real>::default()
+                        .with_vertex_skinning()
+                        .builder(),
+                );
                 transparent_subpass.add_group(
                     DrawShadedTransparentDesc::<_, Real>::default()
                         .with_vertex_skinning()
@@ -700,7 +712,11 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
                 );
             }
             RenderMode::Pbr => {
-                opaque_subpass.add_group(DrawPbrDesc::<_, Real>::default().with_vertex_skinning().builder());
+                opaque_subpass.add_group(
+                    DrawPbrDesc::<_, Real>::default()
+                        .with_vertex_skinning()
+                        .builder(),
+                );
                 transparent_subpass.add_group(
                     DrawPbrTransparentDesc::<_, Real>::default()
                         .with_vertex_skinning()

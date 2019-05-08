@@ -2,7 +2,7 @@ use amethyst::{
     animation::AnimationSetPrefab,
     assets::{AssetPrefab, Handle, Prefab, PrefabData, ProgressCounter},
     controls::ControlTagPrefab,
-    core::{ecs::Entity, Transform, math::RealField, alga::general::SubsetOf},
+    core::{alga::general::SubsetOf, ecs::Entity, math::RealField, Transform},
     gltf::{GltfSceneAsset, GltfSceneFormat},
     utils::tag::Tag,
     Error,
@@ -48,10 +48,10 @@ type GenMeshVertex = (Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>);
 
 #[derive(Derivative, Deserialize, Serialize)]
 #[derivative(Default(bound = ""))]
-#[serde(default, bound(
-    serialize = "N: Serialize",
-    deserialize = "N: Deserialize<'de>",
-))]
+#[serde(
+    default,
+    bound(serialize = "N: Serialize", deserialize = "N: Deserialize<'de>",)
+)]
 pub struct ScenePrefabData<B: Backend, N: RealField + SubsetOf<f32>> {
     transform: Option<Transform<N>>,
     gltf: Option<AssetPrefab<GltfSceneAsset<B, N>, GltfSceneFormat>>,

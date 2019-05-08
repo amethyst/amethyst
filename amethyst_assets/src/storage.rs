@@ -49,7 +49,7 @@ pub struct AssetStorage<A: Asset> {
     handles: Vec<Handle<A>>,
     handle_alloc: Allocator,
     pub(crate) processed: Arc<MsQueue<Processed<A>>>,
-    reloads: Vec<(WeakHandle<A>, Box<dyn Reload<A>>)>,
+    reloads: Vec<(WeakHandle<A>, Box<dyn Reload<A::Data>>)>,
     unused_handles: MsQueue<Handle<A>>,
 }
 
@@ -536,16 +536,16 @@ where
 
 pub(crate) enum Processed<A: Asset> {
     NewAsset {
-        data: Result<FormatValue<A>, Error>,
+        data: Result<FormatValue<A::Data>, Error>,
         handle: Handle<A>,
         name: String,
         tracker: Box<dyn Tracker>,
     },
     HotReload {
-        data: Result<FormatValue<A>, Error>,
+        data: Result<FormatValue<A::Data>, Error>,
         handle: Handle<A>,
         name: String,
-        old_reload: Box<dyn Reload<A>>,
+        old_reload: Box<dyn Reload<A::Data>>,
     },
 }
 

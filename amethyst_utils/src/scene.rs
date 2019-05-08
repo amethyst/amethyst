@@ -1,22 +1,19 @@
 //! Provides utilities for building and describing scenes in your game.
 
-use std::fmt::Debug;
-
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
-
-use amethyst_assets::{Format, PrefabData, ProgressCounter};
+use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_controls::ControlTagPrefab;
 use amethyst_core::{ecs::prelude::Entity, math::RealField, Transform};
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
 use amethyst_rendy::{
     camera::CameraPrefab,
-    formats::{mesh::ObjFormat, texture::ImageFormat, GraphicsPrefab},
+    formats::GraphicsPrefab,
     light::LightPrefab,
     rendy::{hal::Backend, mesh::MeshBuilder},
     shape::FromShape,
-    types::Mesh,
 };
+use serde::{Deserialize, Serialize};
+use std::fmt::Debug;
 
 use crate::removal::Removal;
 
@@ -36,17 +33,14 @@ use crate::removal::Removal;
 #[derive(Deserialize, Serialize, PrefabData)]
 #[serde(default)]
 #[serde(deny_unknown_fields)]
-pub struct BasicScenePrefab<B, V, N, R = (), M = ObjFormat>
+pub struct BasicScenePrefab<B, V, N, R = ()>
 where
     B: Backend,
-    N: RealField,
-    M: Format<Mesh<B>> + Clone,
-    M::Options: DeserializeOwned + Serialize + Clone,
     R: PartialEq + Debug + Clone + Send + Sync + 'static,
     V: FromShape + Into<MeshBuilder<'static>>,
+    N: RealField,
 {
-    #[serde(bound(deserialize = "GraphicsPrefab<B, V, M, ImageFormat>: Deserialize<'de>"))]
-    graphics: Option<GraphicsPrefab<B, V, M, ImageFormat>>,
+    graphics: Option<GraphicsPrefab<B, V>>,
     transform: Option<Transform<N>>,
     light: Option<LightPrefab>,
     camera: Option<CameraPrefab>,
@@ -54,11 +48,9 @@ where
     removal: Option<Removal<R>>,
 }
 
-impl<B, V, N, R, M> Default for BasicScenePrefab<B, V, N, R, M>
+impl<B, V, N, R> Default for BasicScenePrefab<B, V, N, R>
 where
     B: Backend,
-    M: Format<Mesh<B>> + Clone,
-    M::Options: DeserializeOwned + Serialize + Clone,
     R: PartialEq + Debug + Clone + Send + Sync + 'static,
     V: FromShape + Into<MeshBuilder<'static>>,
     N: RealField,

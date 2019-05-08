@@ -254,7 +254,7 @@ where
         if self.ignore_window_close {
             false
         } else {
-            use crate::renderer::WindowEvent;
+            use crate::winit::WindowEvent;
             let world = &mut self.world;
             let reader_id = &mut self.event_reader_id;
             world.exec(|ev: Read<'_, EventChannel<Event>>| {

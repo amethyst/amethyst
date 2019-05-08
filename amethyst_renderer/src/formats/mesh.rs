@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use amethyst_assets::{Asset, AssetStorage, Loader, PrefabData, ProcessingState, SimpleFormat};
+use amethyst_assets::{Asset, AssetStorage, Format, Loader, PrefabData, ProcessingState};
 use amethyst_core::{
     ecs::prelude::{Component, Entity, Read, ReadExpect, VecStorage, WriteStorage},
     math::{Vector2, Vector3},
@@ -18,6 +18,8 @@ use crate::{
     vertex::*,
     Renderer,
 };
+
+amethyst_assets::register_format_type!(MeshData);
 
 /// Mesh data for loading
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -116,15 +118,15 @@ impl<'a> PrefabData<'a> for MeshData {
 
 /// Allows loading from Wavefront files
 /// see: https://en.wikipedia.org/wiki/Wavefront_.obj_file
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct ObjFormat;
 
-impl SimpleFormat<Mesh> for ObjFormat {
-    const NAME: &'static str = "WAVEFRONT_OBJ";
+impl Format<MeshData> for ObjFormat {
+    fn name(&self) -> &'static str {
+        "WAVEFRONT_OBJ"
+    }
 
-    type Options = ();
-
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<MeshData, Error> {
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<MeshData, Error> {
         String::from_utf8(bytes)
             .map_err(Into::into)
             .and_then(|string| {

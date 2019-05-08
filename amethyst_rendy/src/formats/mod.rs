@@ -2,20 +2,13 @@ pub mod mesh;
 pub mod mtl;
 pub mod texture;
 
-use self::{
-    mesh::{MeshPrefab, ObjFormat},
-    mtl::MaterialPrefab,
-    texture::ImageFormat,
-};
-use crate::{
-    shape::FromShape,
-    types::{Mesh, Texture},
-};
-use amethyst_assets::{Format, PrefabData, ProgressCounter};
+use self::{mesh::MeshPrefab, mtl::MaterialPrefab};
+use crate::shape::FromShape;
+use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_core::ecs::prelude::Entity;
 use amethyst_error::Error;
-use rendy::{hal::Backend, mesh::MeshBuilder, texture::image::ImageTextureConfig};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use rendy::{hal::Backend, mesh::MeshBuilder};
+use serde::{Deserialize, Serialize};
 
 /// `PrefabData` for loading graphics, ie `Mesh` + `Material`
 ///
@@ -30,30 +23,19 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 /// - `M`: `Format` to use for loading `Mesh`es from file
 /// - `T`: `Format` to use for loading `Texture`s from file
 #[derive(Deserialize, Serialize)]
-pub struct GraphicsPrefab<B, V, M = ObjFormat, T = ImageFormat>
-where
-    B: Backend,
-    M: Format<Mesh<B>>,
-    M::Options: DeserializeOwned + Serialize,
-    T: Format<Texture<B>, Options = ImageTextureConfig>,
-{
-    #[serde(bound(deserialize = "MeshPrefab<B, V, M>: for<'d> Deserialize<'d>"))]
-    mesh: MeshPrefab<B, V, M>,
-    #[serde(bound(deserialize = "MaterialPrefab<B, T>: for<'d> Deserialize<'d>"))]
-    material: MaterialPrefab<B, T>,
+pub struct GraphicsPrefab<B: Backend, V> {
+    mesh: MeshPrefab<B, V>,
+    material: MaterialPrefab<B>,
 }
 
-impl<'a, B, V, M, T> PrefabData<'a> for GraphicsPrefab<B, V, M, T>
+impl<'a, B, V> PrefabData<'a> for GraphicsPrefab<B, V>
 where
     B: Backend,
-    M: Format<Mesh<B>> + Clone,
-    M::Options: Clone + DeserializeOwned + Serialize,
-    T: Format<Texture<B>, Options = ImageTextureConfig> + Sync + Clone,
     V: FromShape + Into<MeshBuilder<'static>>,
 {
     type SystemData = (
-        <MeshPrefab<B, V, M> as PrefabData<'a>>::SystemData,
-        <MaterialPrefab<B, T> as PrefabData<'a>>::SystemData,
+        <MeshPrefab<B, V> as PrefabData<'a>>::SystemData,
+        <MaterialPrefab<B> as PrefabData<'a>>::SystemData,
     );
     type Result = ();
 

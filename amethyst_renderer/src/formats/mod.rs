@@ -3,13 +3,11 @@
 
 pub use self::{mesh::*, mtl::*, texture::*};
 
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
-
-use amethyst_assets::{AssetPrefab, Format, PrefabData, ProgressCounter};
+use crate::{shape::InternalShape, Mesh, ShapePrefab, Texture};
+use amethyst_assets::{AssetPrefab, PrefabData, ProgressCounter};
 use amethyst_core::ecs::prelude::Entity;
 use amethyst_error::Error;
-
-use crate::{shape::InternalShape, Mesh, ShapePrefab, Texture};
+use serde::{Deserialize, Serialize};
 
 mod mesh;
 mod mtl;
@@ -26,13 +24,9 @@ mod texture;
 ///     * `ComboMeshCreator`
 /// `M`: `Format` to use for loading `Mesh`es from file
 #[derive(Deserialize, Serialize)]
-pub enum MeshPrefab<V, M>
-where
-    M: Format<Mesh>,
-    M::Options: DeserializeOwned + Serialize,
-{
+pub enum MeshPrefab<V> {
     /// Load an asset Mesh from file
-    Asset(AssetPrefab<Mesh, M>),
+    Asset(AssetPrefab<Mesh>),
     /// Generate a Mesh from basic type
     Shape(ShapePrefab<V>),
 }
@@ -49,26 +43,18 @@ where
 /// - `M`: `Format` to use for loading `Mesh`es from file
 /// - `T`: `Format` to use for loading `Texture`s from file
 #[derive(Deserialize, Serialize)]
-pub struct GraphicsPrefab<V, M = ObjFormat, T = TextureFormat>
-where
-    M: Format<Mesh>,
-    M::Options: DeserializeOwned + Serialize,
-    T: Format<Texture, Options = TextureMetadata>,
-{
-    mesh: MeshPrefab<V, M>,
-    material: MaterialPrefab<T>,
+pub struct GraphicsPrefab<V> {
+    mesh: MeshPrefab<V>,
+    material: MaterialPrefab,
 }
 
-impl<'a, V, M, T> PrefabData<'a> for GraphicsPrefab<V, M, T>
+impl<'a, V> PrefabData<'a> for GraphicsPrefab<V>
 where
-    M: Format<Mesh> + Clone,
-    M::Options: Clone + DeserializeOwned + Serialize,
-    T: Format<Texture, Options = TextureMetadata> + Sync + Clone,
     V: From<InternalShape> + Into<MeshData>,
 {
     type SystemData = (
-        <AssetPrefab<Mesh, M> as PrefabData<'a>>::SystemData,
-        <MaterialPrefab<T> as PrefabData<'a>>::SystemData,
+        <AssetPrefab<Mesh> as PrefabData<'a>>::SystemData,
+        <MaterialPrefab as PrefabData<'a>>::SystemData,
     );
     type Result = ();
 

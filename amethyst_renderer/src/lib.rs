@@ -36,8 +36,7 @@ pub use crate::{
     formats::{
         build_mesh_with_combo, create_mesh_asset, create_texture_asset, BmpFormat,
         ComboMeshCreator, GraphicsPrefab, ImageData, JpgFormat, MaterialPrefab, MeshCreator,
-        MeshData, ObjFormat, PngFormat, TextureData, TextureFormat, TextureMetadata, TexturePrefab,
-        TgaFormat,
+        MeshData, ObjFormat, PngFormat, TextureData, TextureMetadata, TexturePrefab, TgaFormat,
     },
     hidden::{Hidden, HiddenPropagate},
     hide_system::HideHierarchySystem,

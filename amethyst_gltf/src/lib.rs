@@ -15,7 +15,7 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 use amethyst_rendy::{
-    formats::{mtl::MaterialPrefab, texture::ImageFormat},
+    formats::mtl::MaterialPrefab,
     rendy::{hal::Backend, mesh::MeshBuilder},
     types::Mesh,
     visibility::BoundingSphere,
@@ -51,7 +51,7 @@ where
     /// Mesh handle after sub asset loading is done
     pub mesh_handle: Option<Handle<Mesh<B>>>,
     /// `Material` is placed on all `Entity`s with graphics primitives with material
-    pub material: Option<MaterialPrefab<B, ImageFormat>>,
+    pub material: Option<MaterialPrefab<B>>,
     /// Loaded animations, if applicable, will always only be placed on the main `Entity`
     pub animatable: Option<AnimatablePrefab<usize, Transform<N>>>,
     /// Skin data is placed on `Entity`s involved in the skin, skeleton or graphical primitives
@@ -180,7 +180,7 @@ impl From<Range<[f32; 3]>> for GltfNodeExtent {
 #[derive(Debug, Derivative)]
 #[derivative(Default(bound = ""))]
 pub struct GltfMaterialSet<B: Backend> {
-    pub(crate) materials: HashMap<usize, MaterialPrefab<B, ImageFormat>>,
+    pub(crate) materials: HashMap<usize, MaterialPrefab<B>>,
 }
 
 /// Options used when loading a GLTF file
@@ -220,7 +220,7 @@ where
     type SystemData = (
         <Transform<N> as PrefabData<'a>>::SystemData,
         <Named as PrefabData<'a>>::SystemData,
-        <MaterialPrefab<B, ImageFormat> as PrefabData<'a>>::SystemData,
+        <MaterialPrefab<B> as PrefabData<'a>>::SystemData,
         <AnimatablePrefab<usize, Transform<N>> as PrefabData<'a>>::SystemData,
         <SkinnablePrefab<N> as PrefabData<'a>>::SystemData,
         WriteStorage<'a, BoundingSphere<N>>,
@@ -286,7 +286,7 @@ where
         }
         if let Some(mesh) = self.mesh.take() {
             self.mesh_handle =
-                Some(loader.load_from_data(mesh.clone(), &mut *progress, meshes_storage));
+                Some(loader.load_from_data(mesh.clone().into(), &mut *progress, meshes_storage));
             ret = true;
         }
         if let Some(animatable) = &mut self.animatable {

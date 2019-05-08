@@ -9,7 +9,7 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 
-use crate::{Sprite, SpriteRender, SpriteSheet, SpriteSheetHandle, TextureFormat, TexturePrefab};
+use crate::{Sprite, SpriteRender, SpriteSheet, SpriteSheetHandle, TexturePrefab};
 
 /// Represents one sprite in `SpriteList`.
 /// Positions originate in the top-left corner (bitmap image convention).
@@ -98,7 +98,7 @@ pub enum SpriteSheetPrefab {
     /// Definition of a spritesheet
     Sheet {
         /// This texture contains the images for the spritesheet
-        texture: TexturePrefab<TextureFormat>,
+        texture: TexturePrefab,
         /// The sprites in the spritesheet
         sprites: Vec<Sprites>,
         /// The name of the spritesheet to refer to it
@@ -108,7 +108,7 @@ pub enum SpriteSheetPrefab {
 
 impl<'a> PrefabData<'a> for SpriteSheetPrefab {
     type SystemData = (
-        <TexturePrefab<TextureFormat> as PrefabData<'a>>::SystemData,
+        <TexturePrefab as PrefabData<'a>>::SystemData,
         Read<'a, AssetStorage<SpriteSheet>>,
     );
     type Result = (Option<String>, SpriteSheetHandle);

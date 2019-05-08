@@ -349,20 +349,17 @@ where
 /// - `A`: `Asset`,
 /// - `F`: `Format` for loading `A`
 #[derive(Clone, Deserialize, Serialize)]
-pub enum AssetPrefab<A, F>
+pub enum AssetPrefab<A, F = Box<dyn Format<<A as Asset>::Data>>>
 where
     A: Asset,
-    F: Format<A>,
+    // A::Data: FormatRegisteredData,
+    F: Format<A::Data>,
 {
     /// From existing handle
     #[serde(skip)]
     Handle(Handle<A>),
-    #[serde(bound(
-        serialize = "F: Serialize, F::Options: Serialize",
-        deserialize = "F: Deserialize<'de>, F::Options: Deserialize<'de>",
-    ))]
-    /// From file, (name, format, format options)
-    File(String, F, F::Options),
+    /// From file, (name, format)
+    File(String, F),
     /// Placeholder during loading
     #[serde(skip)]
     Placeholder,
@@ -371,7 +368,7 @@ where
 impl<'a, A, F> PrefabData<'a> for AssetPrefab<A, F>
 where
     A: Asset,
-    F: Format<A>,
+    F: Format<A::Data>,
 {
     type SystemData = (
         ReadExpect<'a, Loader>,
@@ -404,8 +401,8 @@ where
         (loader, _, storage): &mut Self::SystemData,
     ) -> Result<bool, Error> {
         let (ret, next) = match std::mem::replace(self, AssetPrefab::Placeholder) {
-            AssetPrefab::File(name, format, options) => {
-                let handle = loader.load(name, format, options, progress, storage);
+            AssetPrefab::File(name, format) => {
+                let handle = loader.load(name, format, progress, storage);
                 (true, AssetPrefab::Handle(handle))
             }
             slot => (false, slot),
@@ -440,20 +437,13 @@ where
     T: Send + Sync + 'static,
 {
     /// Load prefab from source
-    pub fn load<F, N, P>(
-        &self,
-        name: N,
-        format: F,
-        options: F::Options,
-        progress: P,
-    ) -> Handle<Prefab<T>>
+    pub fn load<F, N, P>(&self, name: N, format: F, progress: P) -> Handle<Prefab<T>>
     where
-        F: Format<Prefab<T>>,
+        F: Format<<Prefab<T> as Asset>::Data>,
         N: Into<String>,
         P: Progress,
     {
-        self.loader
-            .load(name, format, options, progress, &self.storage)
+        self.loader.load(name, format, progress, &self.storage)
     }
 
     /// Load prefab from explicit data

@@ -1,15 +1,14 @@
 use crate::{
-    formats::texture::{ImageFormat, TexturePrefab},
+    formats::texture::TexturePrefab,
     mtl::{Material, MaterialDefaults, TextureOffset},
     rendy::hal::Backend,
     transparent::Transparent,
     types::Texture,
 };
-use amethyst_assets::{AssetStorage, Format, Handle, Loader, PrefabData, ProgressCounter};
+use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, ProgressCounter};
 use amethyst_core::ecs::prelude::{Entity, Read, ReadExpect, WriteStorage};
 use amethyst_error::Error;
 use serde::{Deserialize, Serialize};
-use std::fmt::Debug;
 
 /// `PrefabData` for loading `Material`s
 ///
@@ -18,30 +17,20 @@ use std::fmt::Debug;
 /// - `B`: `Backend` type parameter for `Material<B>` and `Texture<B>`
 /// - `F`: `Format` to use for loading `Texture`s
 #[derive(Debug, Deserialize, Serialize)]
-#[serde(
-    default,
-    bound(
-        serialize = "F: Serialize, F::Options: Serialize",
-        deserialize = "F: Deserialize<'de>, F::Options: Deserialize<'de>"
-    )
-)]
-pub struct MaterialPrefab<B: Backend, F = ImageFormat>
-where
-    F: Format<Texture<B>>,
-    F::Options: Debug,
-{
+#[serde(default, bound = "")]
+pub struct MaterialPrefab<B: Backend> {
     /// Diffuse map.
-    pub albedo: Option<TexturePrefab<B, F>>,
+    pub albedo: Option<TexturePrefab<B>>,
     /// Emission map.
-    pub emission: Option<TexturePrefab<B, F>>,
+    pub emission: Option<TexturePrefab<B>>,
     /// Normal map.
-    pub normal: Option<TexturePrefab<B, F>>,
+    pub normal: Option<TexturePrefab<B>>,
     /// Metallic-roughness map. (B channel metallic, G channel roughness)
-    pub metallic_roughness: Option<TexturePrefab<B, F>>,
+    pub metallic_roughness: Option<TexturePrefab<B>>,
     /// Ambient occlusion map.
-    pub ambient_occlusion: Option<TexturePrefab<B, F>>,
+    pub ambient_occlusion: Option<TexturePrefab<B>>,
     /// Cavity map.
-    pub cavity: Option<TexturePrefab<B, F>>,
+    pub cavity: Option<TexturePrefab<B>>,
     /// Texture offset.
     pub uv_offset: TextureOffset,
     /// Set material as `Transparent`
@@ -53,11 +42,7 @@ where
     handle: Option<Handle<Material<B>>>,
 }
 
-impl<B: Backend, F> MaterialPrefab<B, F>
-where
-    F: Format<Texture<B>>,
-    F::Options: Debug,
-{
+impl<B: Backend> MaterialPrefab<B> {
     pub fn clone_loaded(&self) -> Self {
         assert!(self.handle.is_some());
 
@@ -69,11 +54,7 @@ where
     }
 }
 
-impl<B: Backend, F> Default for MaterialPrefab<B, F>
-where
-    F: Format<Texture<B>>,
-    F::Options: Debug,
-{
+impl<B: Backend> Default for MaterialPrefab<B> {
     fn default() -> Self {
         MaterialPrefab {
             albedo: None,
@@ -90,13 +71,10 @@ where
     }
 }
 
-fn load_handle<B: Backend, F>(
-    prefab: &Option<TexturePrefab<B, F>>,
+fn load_handle<B: Backend>(
+    prefab: &Option<TexturePrefab<B>>,
     def: &Handle<Texture<B>>,
-) -> Handle<Texture<B>>
-where
-    F: Format<Texture<B>>,
-{
+) -> Handle<Texture<B>> {
     prefab
         .as_ref()
         .and_then(|tp| match tp {
@@ -106,16 +84,12 @@ where
         .unwrap_or_else(|| def.clone())
 }
 
-impl<'a, B: Backend, F> PrefabData<'a> for MaterialPrefab<B, F>
-where
-    F: Format<Texture<B>> + Sync,
-    F::Options: Debug,
-{
+impl<'a, B: Backend> PrefabData<'a> for MaterialPrefab<B> {
     type SystemData = (
         WriteStorage<'a, Handle<Material<B>>>,
         WriteStorage<'a, Transparent>,
         ReadExpect<'a, MaterialDefaults<B>>,
-        <TexturePrefab<B, F> as PrefabData<'a>>::SystemData,
+        <TexturePrefab<B> as PrefabData<'a>>::SystemData,
         ReadExpect<'a, Loader>,
         Read<'a, AssetStorage<Material<B>>>,
     );

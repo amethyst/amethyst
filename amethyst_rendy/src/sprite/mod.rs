@@ -3,7 +3,7 @@ use ron::de::from_bytes as from_ron_bytes;
 use serde::{Deserialize, Serialize};
 
 use crate::{error, types::Texture};
-use amethyst_assets::{Asset, Handle, SimpleFormat};
+use amethyst_assets::{Asset, Format, Handle};
 use amethyst_core::ecs::prelude::{Component, DenseVecStorage, VecStorage};
 use amethyst_error::Error;
 
@@ -456,20 +456,20 @@ impl SpriteGrid {
 /// );
 /// # }
 /// ```
-#[derive(Clone, Deserialize, Serialize)]
-pub struct SpriteSheetFormat;
+#[derive(Clone, Debug)]
+pub struct SpriteSheetFormat<B: Backend>(Handle<Texture<B>>);
 
-impl<B: Backend> SimpleFormat<SpriteSheet<B>> for SpriteSheetFormat {
-    const NAME: &'static str = "SPRITE_SHEET";
+impl<B: Backend> Format<SpriteSheet<B>> for SpriteSheetFormat<B> {
+    fn name(&self) -> &'static str {
+        "SPRITE_SHEET"
+    }
 
-    type Options = Handle<Texture<B>>;
-
-    fn import(&self, bytes: Vec<u8>, texture: Self::Options) -> Result<SpriteSheet<B>, Error> {
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<SpriteSheet<B>, Error> {
         let sprite_list: SpriteList =
             from_ron_bytes(&bytes).map_err(|_| error::Error::LoadSpritesheetError)?;
 
         Ok(SpriteSheet {
-            texture,
+            texture: self.0.clone(),
             sprites: sprite_list.build_sprites(),
         })
     }
