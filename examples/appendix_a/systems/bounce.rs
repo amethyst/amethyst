@@ -39,7 +39,8 @@ impl<'s> System<'s> for BounceSystem {
             if ball_y <= ball.radius.into() && ball.velocity[1] < 0.0 {
                 ball.velocity[1] = -ball.velocity[1];
                 play_bounce(&*sounds, &storage, &*audio_output);
-            } else if ball_y >= (arena_config.height - ball.radius).into() && ball.velocity[1] > 0.0 {
+            } else if ball_y >= (arena_config.height - ball.radius).into() && ball.velocity[1] > 0.0
+            {
                 ball.velocity[1] = -ball.velocity[1];
                 play_bounce(&*sounds, &storage, &*audio_output);
             }

@@ -1,6 +1,6 @@
 use crate::{config::ArenaConfig, Paddle};
 use amethyst::{
-    core::{timing::Time, transform::Transform, math::RealField},
+    core::{math::RealField, timing::Time, transform::Transform},
     ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
     input::InputHandler,
 };
@@ -35,8 +35,11 @@ impl<'s> System<'s> for PaddleSystem {
 
                 // We make sure the paddle remains in the arena.
                 let paddle_y = transform.translation().y;
-                transform
-                    .set_translation_y(paddle_y.max((0.0).into()).min((arena_config.height - paddle.height).into()));
+                transform.set_translation_y(
+                    paddle_y
+                        .max((0.0).into())
+                        .min((arena_config.height - paddle.height).into()),
+                );
             }
         }
     }

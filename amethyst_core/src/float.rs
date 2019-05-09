@@ -18,16 +18,17 @@ use std::f32 as minmax;
 use std::f64 as minmax;
 
 #[cfg(feature = "float64")]
-pub(crate) type FloatBase = f64;
+type FloatBase = f64;
 #[cfg(not(feature = "float64"))]
-pub(crate) type FloatBase = f32;
+type FloatBase = f32;
 
 /// A wrapper type around f32 and f64. It is used to hide the actual type being used internally.
 /// Mostly used with the `Transform` type.
 /// The default type is f32 and you can switch to the f64 type by enabling the "float64" feature gate.
 #[derive(Alga, Clone, Copy, PartialOrd, PartialEq, Serialize, Deserialize, Debug)]
 #[alga_traits(Field(Additive, Multiplicative))]
-pub struct Float(pub(crate) FloatBase);
+#[serde(transparent)]
+pub struct Float(FloatBase);
 
 impl Float {
     /// Get the internal value as a f32. Can cause a loss of precision or a loss of data if using

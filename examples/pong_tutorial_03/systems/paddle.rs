@@ -1,6 +1,6 @@
 use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 use amethyst::{
-    core::{transform::Transform, Float, math::RealField},
+    core::{math::RealField, transform::Transform, Float},
     ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
     input::InputHandler,
 };

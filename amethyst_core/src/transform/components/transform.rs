@@ -4,7 +4,7 @@ use std::fmt;
 use crate::{
     alga::num::{One, Zero},
     ecs::prelude::{Component, DenseVecStorage, FlaggedStorage},
-    float::{Float, FloatBase},
+    float::Float,
     math::{
         self as na, ComplexField, Isometry3, Matrix4, Quaternion, Translation3, Unit,
         UnitQuaternion, Vector3,
@@ -45,13 +45,13 @@ impl Transform {
     /// ```rust
     /// # use amethyst_core::transform::Transform;
     /// # use amethyst_core::math::{Isometry3, Translation3, UnitQuaternion, Vector3};
-    /// let position = Translation3::new(0.0, 2.0, 4.0);
-    /// let rotation = UnitQuaternion::from_euler_angles(0.4, 0.2, 0.0);
-    /// let scale = Vector3::new(1.0, 1.0, 1.0);
+    /// let position = Translation3::new(0.0.into(), 2.0.into(), 4.0.into());
+    /// let rotation = UnitQuaternion::from_euler_angles(0.4.into(), 0.2.into(), 0.0.into());
+    /// let scale = Vector3::new(1.0.into(), 1.0.into(), 1.0.into());
     ///
     /// let t = Transform::new(position, rotation, scale);
     ///
-    /// assert_eq!(t.translation().y, 2.0);
+    /// assert_eq!(t.translation().y, 2.0.into());
     /// ```
     pub fn new(
         position: Translation3<Float>,
@@ -83,17 +83,20 @@ impl Transform {
     /// // No rotation by default
     /// assert_eq!(*t.rotation().quaternion(), Quaternion::identity());
     /// // look up with up pointing backwards
-    /// t.face_towards(Vector3::new(0.0, 1.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
+    /// t.face_towards(
+    ///     Vector3::new(0.0.into(), 1.0.into(), 0.0.into()),
+    ///     Vector3::new(0.0.into(), 0.0.into(), 1.0.into()),
+    /// );
     /// // our rotation should match the angle from straight ahead to straight up
     /// let rotation = UnitQuaternion::rotation_between(
-    ///     &Vector3::new(0.0, 1.0, 0.0),
-    ///     &Vector3::new(0.0, 0.0, 1.0),
+    ///     &Vector3::new(0.0.into(), 1.0.into(), 0.0.into()),
+    ///     &Vector3::new(0.0.into(), 0.0.into(), 1.0.into()),
     /// ).unwrap();
     /// assert_eq!(*t.rotation(), rotation);
     /// // now if we move forwards by 1.0, we'll end up at the point we are facing
     /// // (modulo some floating point error)
     /// t.move_forward(1.0);
-    /// assert!((*t.translation() - Vector3::new(0.0, 1.0, 0.0)).magnitude() <= 0.0001);
+    /// assert!((*t.translation() - Vector3::new(0.0.into(), 1.0.into(), 0.0.into())).magnitude() <= 0.0001.into());
     /// ```
     #[inline]
     pub fn face_towards(&mut self, target: Vector3<Float>, up: Vector3<Float>) -> &mut Self {
@@ -173,10 +176,10 @@ impl Transform {
     /// move along the parent's Z axis rather than its local Z axis (which
     /// is rotated 45 degrees).
     #[inline]
-    pub fn prepend_translation_along<N: Into<Float>>(
+    pub fn prepend_translation_along(
         &mut self,
         direction: Unit<Vector3<Float>>,
-        distance: N,
+        distance: impl Into<Float>,
     ) -> &mut Self {
         self.isometry.translation.vector += direction.as_ref() * distance.into();
         self
@@ -184,10 +187,10 @@ impl Transform {
 
     /// Move a distance along an axis relative to the local orientation.
     #[inline]
-    pub fn append_translation_along<N: Into<Float>>(
+    pub fn append_translation_along(
         &mut self,
         direction: Unit<Vector3<Float>>,
-        distance: N,
+        distance: impl Into<Float>,
     ) -> &mut Self {
         self.isometry.translation.vector +=
             self.isometry.rotation * direction.as_ref() * distance.into();
@@ -196,38 +199,38 @@ impl Transform {
 
     /// Move forward relative to current position and orientation.
     #[inline]
-    pub fn move_forward<N: Into<Float>>(&mut self, amount: N) -> &mut Self {
+    pub fn move_forward(&mut self, amount: impl Into<Float>) -> &mut Self {
         // sign is reversed because z comes towards us
         self.append_translation(Vector3::new(0.0.into(), 0.0.into(), -amount.into()))
     }
 
     /// Move backward relative to current position and orientation.
     #[inline]
-    pub fn move_backward<N: Into<Float>>(&mut self, amount: N) -> &mut Self {
+    pub fn move_backward(&mut self, amount: impl Into<Float>) -> &mut Self {
         self.append_translation(Vector3::new(0.0.into(), 0.0.into(), amount.into()))
     }
 
     /// Move right relative to current position and orientation.
     #[inline]
-    pub fn move_right<N: Into<Float>>(&mut self, amount: N) -> &mut Self {
+    pub fn move_right(&mut self, amount: impl Into<Float>) -> &mut Self {
         self.append_translation(Vector3::new(amount.into(), 0.0.into(), 0.0.into()))
     }
 
     /// Move left relative to current position and orientation.
     #[inline]
-    pub fn move_left<N: Into<Float>>(&mut self, amount: N) -> &mut Self {
+    pub fn move_left(&mut self, amount: impl Into<Float>) -> &mut Self {
         self.append_translation(Vector3::new(-amount.into(), 0.0.into(), 0.0.into()))
     }
 
     /// Move up relative to current position and orientation.
     #[inline]
-    pub fn move_up<N: Into<Float>>(&mut self, amount: N) -> &mut Self {
+    pub fn move_up(&mut self, amount: impl Into<Float>) -> &mut Self {
         self.append_translation(Vector3::new(0.0.into(), amount.into(), 0.0.into()))
     }
 
     /// Move down relative to current position and orientation.
     #[inline]
-    pub fn move_down<N: Into<Float>>(&mut self, amount: N) -> &mut Self {
+    pub fn move_down(&mut self, amount: impl Into<Float>) -> &mut Self {
         self.append_translation(Vector3::new(0.0.into(), -amount.into(), 0.0.into()))
     }
 
@@ -235,7 +238,7 @@ impl Transform {
     /// i.e. move relative to the parent's (or global, if no parent exists)
     /// x axis.
     #[inline]
-    pub fn prepend_translation_x<N: Into<Float>>(&mut self, amount: N) -> &mut Self {
+    pub fn prepend_translation_x(&mut self, amount: impl Into<Float>) -> &mut Self {
         self.isometry.translation.vector.x += amount.into();
         self
     }
@@ -244,7 +247,7 @@ impl Transform {
     /// i.e. move relative to the parent's (or global, if no parent exists)
     /// y axis.
     #[inline]
-    pub fn prepend_translation_y<N: Into<Float>>(&mut self, amount: N) -> &mut Self {
+    pub fn prepend_translation_y(&mut self, amount: impl Into<Float>) -> &mut Self {
         self.isometry.translation.vector.y += amount.into();
         self
     }
@@ -253,28 +256,28 @@ impl Transform {
     /// i.e. move relative to the parent's (or global, if no parent exists)
     /// z axis.
     #[inline]
-    pub fn prepend_translation_z<N: Into<Float>>(&mut self, amount: N) -> &mut Self {
+    pub fn prepend_translation_z(&mut self, amount: impl Into<Float>) -> &mut Self {
         self.isometry.translation.vector.z += amount.into();
         self
     }
 
     /// Sets the translation vector's x component to the specified value.
     #[inline]
-    pub fn set_translation_x<N: Into<Float>>(&mut self, value: N) -> &mut Self {
+    pub fn set_translation_x(&mut self, value: impl Into<Float>) -> &mut Self {
         self.isometry.translation.vector.x = value.into();
         self
     }
 
     /// Sets the translation vector's y component to the specified value.
     #[inline]
-    pub fn set_translation_y<N: Into<Float>>(&mut self, value: N) -> &mut Self {
+    pub fn set_translation_y(&mut self, value: impl Into<Float>) -> &mut Self {
         self.isometry.translation.vector.y = value.into();
         self
     }
 
     /// Sets the translation vector's z component to the specified value.
     #[inline]
-    pub fn set_translation_z<N: Into<Float>>(&mut self, value: N) -> &mut Self {
+    pub fn set_translation_z(&mut self, value: impl Into<Float>) -> &mut Self {
         self.isometry.translation.vector.z = value.into();
         self
     }
@@ -284,7 +287,7 @@ impl Transform {
     ///
     /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn prepend_rotation_x_axis<N: Into<Float>>(&mut self, delta_angle: N) -> &mut Self {
+    pub fn prepend_rotation_x_axis(&mut self, delta_angle: impl Into<Float>) -> &mut Self {
         self.prepend_rotation(Vector3::x_axis(), delta_angle.into())
     }
 
@@ -293,7 +296,7 @@ impl Transform {
     ///
     /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn append_rotation_x_axis<N: Into<Float>>(&mut self, delta_angle: N) -> &mut Self {
+    pub fn append_rotation_x_axis(&mut self, delta_angle: impl Into<Float>) -> &mut Self {
         self.append_rotation(Vector3::x_axis(), delta_angle.into())
     }
 
@@ -303,7 +306,7 @@ impl Transform {
     ///
     /// `angle` is specified in radians.
     #[inline]
-    pub fn set_rotation_x_axis<N: Into<Float>>(&mut self, angle: N) -> &mut Self {
+    pub fn set_rotation_x_axis(&mut self, angle: impl Into<Float>) -> &mut Self {
         self.set_rotation_euler(angle.into(), Float::zero(), Float::zero())
     }
 
@@ -312,7 +315,7 @@ impl Transform {
     ///
     /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn prepend_rotation_y_axis<N: Into<Float>>(&mut self, delta_angle: N) -> &mut Self {
+    pub fn prepend_rotation_y_axis(&mut self, delta_angle: impl Into<Float>) -> &mut Self {
         self.prepend_rotation(Vector3::y_axis(), delta_angle.into())
     }
 
@@ -321,7 +324,7 @@ impl Transform {
     ///
     /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn append_rotation_y_axis<N: Into<Float>>(&mut self, delta_angle: N) -> &mut Self {
+    pub fn append_rotation_y_axis(&mut self, delta_angle: impl Into<Float>) -> &mut Self {
         self.append_rotation(Vector3::y_axis(), delta_angle.into())
     }
 
@@ -331,8 +334,8 @@ impl Transform {
     ///
     /// `angle` is specified in radians.
     #[inline]
-    pub fn set_rotation_y_axis<N: Into<Float>>(&mut self, angle: N) -> &mut Self {
-        self.set_rotation_euler(0.0.into(), angle.into(), 0.0.into())
+    pub fn set_rotation_y_axis(&mut self, angle: impl Into<Float>) -> &mut Self {
+        self.set_rotation_euler(0.0, angle, 0.0)
     }
 
     /// Premultiply a rotation about the z axis, i.e. perform a rotation about
@@ -340,7 +343,7 @@ impl Transform {
     ///
     /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn prepend_rotation_z_axis<N: Into<Float>>(&mut self, delta_angle: N) -> &mut Self {
+    pub fn prepend_rotation_z_axis(&mut self, delta_angle: impl Into<Float>) -> &mut Self {
         self.prepend_rotation(-Vector3::z_axis(), delta_angle.into())
     }
 
@@ -349,7 +352,7 @@ impl Transform {
     ///
     /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn append_rotation_z_axis<N: Into<Float>>(&mut self, delta_angle: N) -> &mut Self {
+    pub fn append_rotation_z_axis(&mut self, delta_angle: impl Into<Float>) -> &mut Self {
         self.append_rotation(-Vector3::z_axis(), delta_angle.into())
     }
 
@@ -359,8 +362,8 @@ impl Transform {
     ///
     /// `angle` is specified in radians.
     #[inline]
-    pub fn set_rotation_z_axis<N: Into<Float>>(&mut self, angle: N) -> &mut Self {
-        self.set_rotation_euler(0.0.into(), 0.0.into(), angle.into())
+    pub fn set_rotation_z_axis(&mut self, angle: impl Into<Float>) -> &mut Self {
+        self.set_rotation_euler(0.0, 0.0, angle)
     }
 
     /// Perform a rotation about the axis perpendicular to X and Y,
@@ -368,7 +371,7 @@ impl Transform {
     ///
     /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn rotate_2d<N: Into<Float>>(&mut self, delta_angle: N) -> &mut Self {
+    pub fn rotate_2d(&mut self, delta_angle: impl Into<Float>) -> &mut Self {
         self.prepend_rotation_z_axis(delta_angle.into())
     }
 
@@ -377,8 +380,8 @@ impl Transform {
     ///
     /// `angle` is specified in radians.
     #[inline]
-    pub fn set_rotation_2d<N: Into<Float>>(&mut self, angle: N) -> &mut Self {
-        self.set_rotation_euler(0.0.into(), 0.0.into(), angle.into())
+    pub fn set_rotation_2d(&mut self, angle: impl Into<Float>) -> &mut Self {
+        self.set_rotation_euler(0.0, 0.0, angle)
     }
 
     /// Premultiply a rotation, i.e. rotate relatively to the parent's orientation
@@ -386,10 +389,10 @@ impl Transform {
     ///
     /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn prepend_rotation<N: Into<Float>>(
+    pub fn prepend_rotation(
         &mut self,
         axis: Unit<Vector3<Float>>,
-        angle: N,
+        angle: impl Into<Float>,
     ) -> &mut Self {
         let q = UnitQuaternion::from_axis_angle(&axis, angle.into());
         self.isometry.rotation = q * self.isometry.rotation;
@@ -401,10 +404,10 @@ impl Transform {
     ///
     /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn append_rotation<N: Into<Float>>(
+    pub fn append_rotation(
         &mut self,
         axis: Unit<Vector3<Float>>,
-        angle: N,
+        angle: impl Into<Float>,
     ) -> &mut Self {
         self.isometry.rotation *= UnitQuaternion::from_axis_angle(&axis, angle.into());
         self
@@ -417,13 +420,23 @@ impl Transform {
     }
 
     /// Adds the specified amounts to the translation vector.
-    pub fn append_translation_xyz<N: Into<Float>>(&mut self, x: N, y: N, z: N) -> &mut Self {
+    pub fn append_translation_xyz(
+        &mut self,
+        x: impl Into<Float>,
+        y: impl Into<Float>,
+        z: impl Into<Float>,
+    ) -> &mut Self {
         self.append_translation(Vector3::new(x.into(), y.into(), z.into()));
         self
     }
 
     /// Sets the specified values of the translation vector.
-    pub fn set_translation_xyz<N: Into<Float>>(&mut self, x: N, y: N, z: N) -> &mut Self {
+    pub fn set_translation_xyz(
+        &mut self,
+        x: impl Into<Float>,
+        y: impl Into<Float>,
+        z: impl Into<Float>,
+    ) -> &mut Self {
         self.set_translation(Vector3::new(x.into(), y.into(), z.into()))
     }
 
@@ -463,9 +476,14 @@ impl Transform {
     ///
     /// transform.set_rotation_euler(1.0, 0.0, 0.0);
     ///
-    /// assert_eq!(transform.rotation().euler_angles().0, 1.0);
+    /// assert_eq!(transform.rotation().euler_angles().0, 1.0.into());
     /// ```
-    pub fn set_rotation_euler<N: Into<Float>>(&mut self, x: N, y: N, z: N) -> &mut Self {
+    pub fn set_rotation_euler(
+        &mut self,
+        x: impl Into<Float>,
+        y: impl Into<Float>,
+        z: impl Into<Float>,
+    ) -> &mut Self {
         self.isometry.rotation = UnitQuaternion::from_euler_angles(x.into(), y.into(), z.into());
         self
     }
@@ -519,9 +537,9 @@ impl Transform {
     pub fn view_matrix(&self) -> Matrix4<Float> {
         // TODO: check if this actually is faster
         let inv_scale = Vector3::new(
-            Float(1.0) / self.scale.x,
-            Float(1.0) / self.scale.y,
-            Float(1.0) / self.scale.z,
+            Float::from(1.0) / self.scale.x,
+            Float::from(1.0) / self.scale.y,
+            Float::from(1.0) / self.scale.z,
         );
         self.isometry
             .inverse()
@@ -548,16 +566,38 @@ impl Component for Transform {
 /// Creates a Transform using the `Vector3` as the translation vector.
 ///
 /// ```
-/// # use amethyst_core::transform::Transform;
+/// # use amethyst_core::{transform::Transform, Float};
 /// # use amethyst_core::math::Vector3;
-/// let transform = Transform::from(Vector3::new(100.0, 200.0, 300.0));
-///
-/// assert_eq!(transform.translation().x, 100.0);
+/// let transform = Transform::from(Vector3::new(Float::from(100.0), Float::from(200.0), Float::from(300.0)));
+/// assert_eq!(transform.translation().x, 100.0.into());
 /// ```
 impl From<Vector3<Float>> for Transform {
     fn from(translation: Vector3<Float>) -> Self {
         Transform {
-            isometry: Isometry3::new(translation, na::zero()),
+            isometry: Isometry3::new(
+                translation,
+                na::zero(),
+            ),
+            ..Default::default()
+        }
+    }
+}
+/// Creates a Transform using the `Vector3<f64>` as the translation vector.
+/// Provided for convinience when providing constants.
+/// ```
+/// # use amethyst_core::transform::Transform;
+/// # use amethyst_core::math::Vector3;
+/// let transform = Transform::from(Vector3::new(100.0, 200.0, 300.0));
+/// assert_eq!(transform.translation().x, 100.0.into());
+///
+impl From<Vector3<f64>> for Transform {
+    #[inline]
+    fn from(translation: Vector3<f64>) -> Self {
+        Transform {
+            isometry: Isometry3::new(
+                na::convert(translation),
+                na::zero(),
+            ),
             ..Default::default()
         }
     }
@@ -590,27 +630,27 @@ impl<'de> Deserialize<'de> for Transform {
             where
                 V: SeqAccess<'de>,
             {
-                let translation: [FloatBase; 3] = seq
+                let translation: [Float; 3] = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(0, &self))?;
-                let rotation: [FloatBase; 4] = seq
+                let rotation: [Float; 4] = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(1, &self))?;
-                let scale: [FloatBase; 3] = seq
+                let scale: [Float; 3] = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
                 let isometry = Isometry3::from_parts(
                     Translation3::new(
-                        Float(translation[0]),
-                        Float(translation[1]),
-                        Float(translation[2]),
+                        translation[0],
+                        translation[1],
+                        translation[2],
                     ),
                     Unit::new_normalize(Quaternion::new(
-                        Float(rotation[3]),
-                        Float(rotation[0]),
-                        Float(rotation[1]),
-                        Float(rotation[2]),
+                        rotation[3],
+                        rotation[0],
+                        rotation[1],
+                        rotation[2],
                     )),
                 );
                 let scale = Vector3::new(scale[0].into(), scale[1].into(), scale[2].into());
@@ -652,29 +692,25 @@ impl<'de> Deserialize<'de> for Transform {
                         }
                     }
                 }
-                let translation: [FloatBase; 3] = translation.unwrap_or([FloatBase::zero(); 3]);
-                let rotation: [FloatBase; 4] = rotation.unwrap_or([
-                    FloatBase::one(),
-                    FloatBase::zero(),
-                    FloatBase::zero(),
-                    FloatBase::zero(),
-                ]);
-                let scale: [FloatBase; 3] = scale.unwrap_or([FloatBase::one(); 3]);
+                let translation: [Float; 3] = translation.unwrap_or([Float::zero(); 3]);
+                let rotation: [Float; 4] =
+                    rotation.unwrap_or([Float::one(), Float::zero(), Float::zero(), Float::zero()]);
+                let scale: [Float; 3] = scale.unwrap_or([Float::one(); 3]);
 
                 let isometry = Isometry3::from_parts(
                     Translation3::new(
-                        Float(translation[0]),
-                        Float(translation[1]),
-                        Float(translation[2]),
+                        translation[0],
+                        translation[1],
+                        translation[2],
                     ),
                     Unit::new_normalize(Quaternion::new(
-                        Float(rotation[3]),
-                        Float(rotation[0]),
-                        Float(rotation[1]),
-                        Float(rotation[2]),
+                        rotation[3],
+                        rotation[0],
+                        rotation[1],
+                        rotation[2],
                     )),
                 );
-                let scale = Vector3::new(scale[0].into(), scale[1].into(), scale[2].into());
+                let scale = Vector3::new(scale[0], scale[1], scale[2]);
 
                 Ok(Transform {
                     isometry,
@@ -696,9 +732,9 @@ impl Serialize for Transform {
     {
         #[derive(Serialize)]
         struct TransformValues {
-            translation: [FloatBase; 3],
-            rotation: [FloatBase; 4],
-            scale: [FloatBase; 3],
+            translation: [Float; 3],
+            rotation: [Float; 4],
+            scale: [Float; 3],
         }
 
         let pos: [Float; 3] = self.isometry.translation.vector.into();
@@ -707,9 +743,9 @@ impl Serialize for Transform {
 
         Serialize::serialize(
             &TransformValues {
-                translation: [pos[0].0, pos[1].0, pos[2].0],
-                rotation: [rot[0].0, rot[1].0, rot[2].0, rot[3].0],
-                scale: [scale[0].0, scale[1].0, scale[2].0],
+                translation: [pos[0], pos[1], pos[2]],
+                rotation: [rot[0], rot[1], rot[2], rot[3]],
+                scale: [scale[0], scale[1], scale[2]],
             },
             serializer,
         )
@@ -720,7 +756,6 @@ impl Serialize for Transform {
 mod tests {
     use crate::{
         approx::*,
-        Float,
         math::{UnitQuaternion, Vector3},
         Transform,
     };
@@ -733,28 +768,34 @@ mod tests {
         first.set_translation_xyz(20., 10., -3.);
         first.set_scale(Vector3::new(2.0.into(), 2.0.into(), 2.0.into()));
         first.set_rotation(
-            UnitQuaternion::rotation_between(&Vector3::new(Float(-1.0), Float(1.0), Float(2.0)), &Vector3::new(Float(1.0), Float(0.0), Float(0.0)))
-                .unwrap(),
+            UnitQuaternion::rotation_between(
+                &Vector3::new((-1.0).into(), 1.0.into(), 2.0.into()),
+                &Vector3::new(1.0.into(), 0.0.into(), 0.0.into()),
+            )
+            .unwrap(),
         );
 
         let mut second = Transform::default();
         second.set_translation_xyz(2., 1., -3.);
         second.set_scale(Vector3::new(1.0.into(), 1.0.into(), 1.0.into()));
         second.set_rotation(
-            UnitQuaternion::rotation_between(&Vector3::new(Float(7.0), Float(-1.0), Float(3.0)), &Vector3::new(Float(2.0), Float(1.0), Float(1.0)))
-                .unwrap(),
+            UnitQuaternion::rotation_between(
+                &Vector3::new(7.0.into(), (-1.0).into(), 3.0.into()),
+                &Vector3::new(2.0.into(), 1.0.into(), 1.0.into()),
+            )
+            .unwrap(),
         );
 
         // check Mat(first * second) == Mat(first) * Mat(second)
         assert_relative_eq!(
             first.matrix() * second.matrix(),
             first.concat(&second).matrix(),
-            max_relative = Float(0.000001),
+            max_relative = 0.000001.into(),
         );
         assert_relative_eq!(
             first.matrix() * second.matrix(),
             first.concat(&second).matrix(),
-            max_relative = Float(0.000001),
+            max_relative = 0.000001.into(),
         );
     }
 
@@ -764,8 +805,11 @@ mod tests {
         transform.set_translation_xyz(5.0, 70.1, 43.7);
         transform.set_scale(Vector3::new(1.0.into(), 5.0.into(), 8.9.into()));
         transform.set_rotation(
-            UnitQuaternion::rotation_between(&Vector3::new(Float(-1.0), Float(1.0), Float(2.0)), &Vector3::new(Float(1.0), Float(0.0), Float(0.0)))
-                .unwrap(),
+            UnitQuaternion::rotation_between(
+                &Vector3::new((-1.0).into(), 1.0.into(), 2.0.into()),
+                &Vector3::new(1.0.into(), 0.0.into(), 0.0.into()),
+            )
+            .unwrap(),
         );
 
         assert_ulps_eq!(
@@ -780,8 +824,11 @@ mod tests {
         transform.set_translation_xyz(1.0, 2.0, 3.0);
         transform.set_scale(Vector3::new(4.0.into(), 5.0.into(), 6.0.into()));
         transform.set_rotation(
-            UnitQuaternion::rotation_between(&Vector3::new(Float(-1.0), Float(1.0), Float(2.0)), &Vector3::new(Float(1.0), Float(0.0), Float(0.0)))
-                .unwrap(),
+            UnitQuaternion::rotation_between(
+                &Vector3::new((-1.0).into(), 1.0.into(), 2.0.into()),
+                &Vector3::new(1.0.into(), 0.0.into(), 0.0.into()),
+            )
+            .unwrap(),
         );
         let s: String =
             ron::ser::to_string_pretty(&transform, ron::ser::PrettyConfig::default()).unwrap();
