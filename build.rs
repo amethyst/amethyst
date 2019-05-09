@@ -64,7 +64,7 @@ fn ask_user_data_collection() -> bool {
     s = s.trim().to_lowercase();
     match s.chars().next() {
         Some('n') => false,
-        _ => true,
+        _ => false, // Can't read stdin from the build.rs file. Let's default to false. Set this line to true when a solution is found.
     }
 }
 
