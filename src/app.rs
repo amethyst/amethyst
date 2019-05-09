@@ -221,10 +221,13 @@ where
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
-        if let Some(dsn) = option_env!("SENTRY_DSN") {
-            let _guard = sentry::init(dsn);
+        let _sentry_guard = if let Some(dsn) = option_env!("SENTRY_DSN") {
+            let guard = sentry::init(dsn);
             register_panic_handler();
-        }
+            Some(guard)
+        } else {
+            None
+        };
 
         self.initialize();
         self.world.write_resource::<Stopwatch>().start();
