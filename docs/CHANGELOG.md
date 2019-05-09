@@ -74,9 +74,9 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Removed `NetEvent::Custom` and added `NetEvent::Packet(NetPacket)` ([#1523])
 * Fixed update is no longer frame rate dependent ([#1516])
 * Display the syntax error when failing to parse sprite sheets  ([#1526])
-* Added generic parameter type to `Transform` to configure floating point precision. ([#1334])
+* Added generic parameter type to `Transform` to configure floating point precision (then removed). ([#1334]) ([#1584])
 * `NetConnection` is automatically created when client starts sends data to server. ([#1539])
-* User will receive `NetEvent::Connected` on new connection and `NetEvent::Dissconnected` on disconnect. ([#1539])
+* User will receive `NetEvent::Connected` on new connection and `NetEvent::Disconnected` on disconnect. ([#1539])
 * Added a `pivot` field to `UiTransform`. ([#1571])
 
 ### Removed
@@ -146,6 +146,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1538]: https://github.com/amethyst/amethyst/pull/1538
 [#1539]: https://github.com/amethyst/amethyst/pull/1543
 [#1571]: https://github.com/amethyst/amethyst/pull/1571
+[#1584]: https://github.com/amethyst/amethyst/pull/1584
 ## [0.10.0] - 2018-12
 
 ### Added
