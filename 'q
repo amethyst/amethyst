@@ -41,7 +41,9 @@ fn check_sentry_allowed(amethyst_home: &Path) -> Option<bool> {
                 match result.as_str().trim() {
                     "true" => Some(true),
                     "false" => Some(false),
-                    _ => {
+                    b => {
+                        println!("{}", b);
+                        panic!("uwu");
                         remove_file(sentry_status_file).expect("Failed to remove invalid sentry file.");
                         None
                     },
