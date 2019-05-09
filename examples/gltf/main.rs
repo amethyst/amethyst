@@ -46,11 +46,11 @@ struct Scene {
 #[serde(default)]
 struct ScenePrefabData {
     transform: Option<Transform>,
-    gltf: Option<AssetPrefab<GltfSceneAsset<f32>, GltfSceneFormat>>,
+    gltf: Option<AssetPrefab<GltfSceneAsset, GltfSceneFormat>>,
     camera: Option<CameraPrefab>,
     light: Option<LightPrefab>,
     tag: Option<Tag<AnimationMarker>>,
-    fly_tag: Option<ControlTagPrefab<f32>>,
+    fly_tag: Option<ControlTagPrefab>,
 }
 
 impl SimpleState for Example {
