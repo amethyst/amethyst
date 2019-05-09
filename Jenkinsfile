@@ -83,6 +83,8 @@ pipeline {
 			}
                     }
                     steps {
+			echo 'Build all the examples in the book'
+			sh 'mdbook test book -L target/debug/deps'
                         echo 'Beginning tests...'
                         sh 'cargo test --all'
                         echo 'Tests done!'
