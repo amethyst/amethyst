@@ -134,7 +134,7 @@ impl<'a, N: RealField> System<'a> for TransformSystem<N> {
         use crate::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         let mut hierarchy = res.fetch_mut::<ParentHierarchy>();
-        let mut locals = WriteStorage::<Transform<f32>>::fetch(res);
+        let mut locals = WriteStorage::<Transform<N>>::fetch(res);
         self.parent_events_id = Some(hierarchy.track());
         self.locals_events_id = Some(locals.register_reader());
     }
