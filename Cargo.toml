@@ -112,6 +112,7 @@ fern = { version = "0.5", features = ["colored"] }
 log = { version = "0.4.6", features = ["serde"] }
 rayon = "1.0.2"
 rustc_version_runtime = "0.1"
+sentry = "0.15.4"
 winit = { version = "0.18", features = ["serde", "icon_loading"] }
 serde = { version = "1.0", features = ["derive"] }
 
@@ -125,6 +126,7 @@ ron = "0.5"
 specs-derive = "0.4"
 
 [build-dependencies]
+dirs = "1.0.5"
 vergen = "3.0"
 
 [[example]]
