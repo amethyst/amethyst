@@ -4,7 +4,7 @@ use crate::{
     submodules::{gather::CameraGatherer, uniform::DynamicUniform},
     types::Backend,
 };
-use amethyst_core::{alga::general::SubsetOf, ecs::Resources, math::RealField};
+use amethyst_core::ecs::Resources;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -25,15 +25,10 @@ impl<B: Backend> FlatEnvironmentSub<B> {
         self.uniform.raw_layout()
     }
 
-    pub fn process<N: RealField + SubsetOf<f32>>(
-        &mut self,
-        factory: &Factory<B>,
-        index: usize,
-        res: &Resources,
-    ) {
+    pub fn process(&mut self, factory: &Factory<B>, index: usize, res: &Resources) {
         #[cfg(feature = "profiler")]
         profile_scope!("process");
-        let projview = CameraGatherer::gather::<N>(res).projview;
+        let projview = CameraGatherer::gather(res).projview;
         self.uniform.write(factory, index, projview);
     }
 

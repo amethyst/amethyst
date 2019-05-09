@@ -36,8 +36,8 @@ use amethyst_rendy::{
 use serde::{Deserialize, Serialize};
 use std::{marker::PhantomData, sync::Arc};
 
-type MyPrefabData<B> = (
-    Option<BasicScenePrefab<B, (Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>), f32>>,
+type MyPrefabData = (
+    Option<BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>), f32>>,
     Option<AnimationSetPrefab<AnimationId, Transform<f32>>>,
 );
 
@@ -128,7 +128,7 @@ impl<B: Backend> SimpleState for Example<B> {
                 }
 
                 Some((VirtualKeyCode::Left, ElementState::Pressed)) => {
-                    get_animation_set::<AnimationId, Transform<f32>>(
+                    get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     )
@@ -137,7 +137,7 @@ impl<B: Backend> SimpleState for Example<B> {
                 }
 
                 Some((VirtualKeyCode::Right, ElementState::Pressed)) => {
-                    get_animation_set::<AnimationId, Transform<f32>>(
+                    get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     )
@@ -147,7 +147,7 @@ impl<B: Backend> SimpleState for Example<B> {
 
                 Some((VirtualKeyCode::F, ElementState::Pressed)) => {
                     self.rate = 1.0;
-                    get_animation_set::<AnimationId, Transform<f32>>(
+                    get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     )
@@ -157,7 +157,7 @@ impl<B: Backend> SimpleState for Example<B> {
 
                 Some((VirtualKeyCode::V, ElementState::Pressed)) => {
                     self.rate = 0.0;
-                    get_animation_set::<AnimationId, Transform<f32>>(
+                    get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     )
@@ -167,7 +167,7 @@ impl<B: Backend> SimpleState for Example<B> {
 
                 Some((VirtualKeyCode::H, ElementState::Pressed)) => {
                     self.rate = 0.5;
-                    get_animation_set::<AnimationId, Transform<f32>>(
+                    get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     )
@@ -210,7 +210,7 @@ fn run<B: Backend>() -> amethyst::Result<()> {
     let window_system = WindowSystem::from_config_path(&event_loop, display_config_path);
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystem::<MyPrefabData<B>>::default(), "", &[])
+        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(AnimationBundle::<AnimationId, Transform<f32>>::new(
             "animation_control_system",
             "sampler_interpolation_system",
@@ -239,13 +239,13 @@ fn add_animation(
     toggle_if_exists: bool,
 ) {
     let animation = world
-        .read_storage::<AnimationSet<AnimationId, Transform<f32>>>()
+        .read_storage::<AnimationSet<AnimationId, Transform>>()
         .get(entity)
         .and_then(|s| s.get(&id))
         .cloned()
         .unwrap();
     let mut sets = world.write_storage();
-    let control_set = get_animation_set::<AnimationId, Transform<f32>>(&mut sets, entity).unwrap();
+    let control_set = get_animation_set::<AnimationId, Transform>(&mut sets, entity).unwrap();
     match defer {
         None => {
             if toggle_if_exists && control_set.has_animation(id) {

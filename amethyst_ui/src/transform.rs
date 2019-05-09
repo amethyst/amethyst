@@ -35,6 +35,8 @@ pub struct UiTransform {
     pub id: String,
     /// Indicates where the element sits, relative to the parent (or to the screen, if there is no parent)
     pub anchor: Anchor,
+    /// Indicates where the element sits, relative to itself
+    pub pivot: Anchor,
     /// If a child ui element needs to fill its parent this can be used to stretch it to the appropriate size.
     pub stretch: Stretch,
     /// X coordinate, 0 is the left edge of the screen. If scale_mode is set to pixel then the width of the
@@ -80,6 +82,7 @@ impl UiTransform {
     pub fn new(
         id: String,
         anchor: Anchor,
+        pivot: Anchor,
         x: f32,
         y: f32,
         z: f32,
@@ -89,6 +92,7 @@ impl UiTransform {
         UiTransform {
             id,
             anchor,
+            pivot,
             stretch: Stretch::NoStretch,
             local_x: x,
             local_y: y,
@@ -166,7 +170,16 @@ mod tests {
     use super::*;
     #[test]
     fn inside_local() {
-        let tr = UiTransform::new("".to_string(), Anchor::TopLeft, 0.0, 0.0, 0.0, 1.0, 1.0);
+        let tr = UiTransform::new(
+            "".to_string(),
+            Anchor::TopLeft,
+            Anchor::Middle,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            1.0,
+        );
         let pos = (-0.49, 0.20);
         assert!(tr.position_inside_local(pos.0, pos.1));
         let pos = (-1.49, 1.20);
@@ -175,7 +188,16 @@ mod tests {
 
     #[test]
     fn inside_global() {
-        let tr = UiTransform::new("".to_string(), Anchor::TopLeft, 0.0, 0.0, 0.0, 1.0, 1.0);
+        let tr = UiTransform::new(
+            "".to_string(),
+            Anchor::TopLeft,
+            Anchor::Middle,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            1.0,
+        );
         let pos = (-0.49, 0.20);
         assert!(tr.position_inside(pos.0, pos.1));
         let pos = (-1.49, 1.20);

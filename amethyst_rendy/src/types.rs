@@ -9,7 +9,6 @@ pub trait Backend: rendy::hal::Backend {
     fn wrap_texture(texture: rendy::texture::Texture<Self>) -> Texture;
 }
 
-
 macro_rules! impl_backends {
     ($($variant:ident, $feature:literal, $backend:ty;)*) => {
 

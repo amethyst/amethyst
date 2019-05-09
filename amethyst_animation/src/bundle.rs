@@ -1,5 +1,3 @@
-use std::{hash::Hash, marker};
-
 use crate::{
     resources::AnimationSampling,
     skinning::VertexSkinningSystem,
@@ -7,26 +5,23 @@ use crate::{
         AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem, SamplerProcessor,
     },
 };
-use amethyst_error::Error;
-
 use amethyst_core::{
-    alga::general::SubsetOf,
     ecs::prelude::{Component, DispatcherBuilder},
-    math::RealField,
     SystemBundle,
 };
+use amethyst_error::Error;
+use std::{hash::Hash, marker};
 
 /// Bundle for vertex skinning
 ///
 /// This registers `VertexSkinningSystem`.
 /// Note that the user must make sure this system runs after `TransformSystem`
 #[derive(Default)]
-pub struct VertexSkinningBundle<'a, N> {
+pub struct VertexSkinningBundle<'a> {
     dep: &'a [&'a str],
-    _marker: marker::PhantomData<N>,
 }
 
-impl<'a, N: Default> VertexSkinningBundle<'a, N> {
+impl<'a> VertexSkinningBundle<'a> {
     /// Create a new sampling bundle
     pub fn new() -> Self {
         Default::default()
@@ -39,12 +34,10 @@ impl<'a, N: Default> VertexSkinningBundle<'a, N> {
     }
 }
 
-impl<'a, 'b, 'c, N: RealField + SubsetOf<f32>> SystemBundle<'a, 'b>
-    for VertexSkinningBundle<'c, N>
-{
+impl<'a, 'b, 'c> SystemBundle<'a, 'b> for VertexSkinningBundle<'c> {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
-            VertexSkinningSystem::<N>::new(),
+            VertexSkinningSystem::new(),
             "vertex_skinning_system",
             self.dep,
         );

@@ -1,7 +1,6 @@
 use amethyst_core::{
-    alga::general::SubsetOf,
-    math::{zero, Quaternion, RealField, Unit, Vector3, Vector4},
-    Transform,
+    math::{zero, Quaternion, Unit, Vector3, Vector4},
+    Float, Transform,
 };
 
 use serde::{Deserialize, Serialize};
@@ -22,15 +21,15 @@ pub enum TransformChannel {
     Scale,
 }
 
-impl<'a, N: RealField> ApplyData<'a> for Transform<N> {
+impl<'a> ApplyData<'a> for Transform {
     type ApplyData = ();
 }
 
-impl<N: RealField + SubsetOf<f32>> AnimationSampling for Transform<N> {
-    type Primitive = SamplerPrimitive<N>;
+impl AnimationSampling for Transform {
+    type Primitive = SamplerPrimitive<Float>;
     type Channel = TransformChannel;
 
-    fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<N>, _: &()) {
+    fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<Float>, _: &()) {
         use crate::util::SamplerPrimitive::*;
 
         use self::TransformChannel::*;
@@ -49,7 +48,7 @@ impl<N: RealField + SubsetOf<f32>> AnimationSampling for Transform<N> {
         }
     }
 
-    fn current_sample(&self, channel: &Self::Channel, _: &()) -> SamplerPrimitive<N> {
+    fn current_sample(&self, channel: &Self::Channel, _: &()) -> SamplerPrimitive<Float> {
         use self::TransformChannel::*;
         match channel {
             Translation => SamplerPrimitive::Vec3((*self.translation()).into()),

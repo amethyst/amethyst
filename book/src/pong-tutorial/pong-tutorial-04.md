@@ -168,7 +168,7 @@ pub struct MoveBallsSystem;
 impl<'s> System<'s> for MoveBallsSystem {
     type SystemData = (
         ReadStorage<'s, Ball>,
-        WriteStorage<'s, Transform<f32>>,
+        WriteStorage<'s, Transform>,
         Read<'s, Time>,
     );
 
@@ -249,7 +249,7 @@ impl<'s> System<'s> for BounceSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
         ReadStorage<'s, Paddle>,
-        ReadStorage<'s, Transform<f32>>,
+        ReadStorage<'s, Transform>,
     );
 
     fn run(&mut self, (mut balls, paddles, transforms): Self::SystemData) {
@@ -281,10 +281,10 @@ impl<'s> System<'s> for BounceSystem {
                 if point_in_rect(
                     ball_x,
                     ball_y,
-                    paddle_x - ball.radius,
-                    paddle_y - ball.radius,
-                    paddle_x + paddle.width + ball.radius,
-                    paddle_y + paddle.height + ball.radius,
+                    paddle_x - ball.radius.into(),
+                    paddle_y - ball.radius.into(),
+                    paddle_x + (paddle.width + ball.radius).into(),
+                    paddle_y + (paddle.height + ball.radius).into(),
                 ) {
                     if (paddle.side == Side::Left && ball.velocity[0] < 0.0)
                         || (paddle.side == Side::Right && ball.velocity[0] > 0.0)
@@ -299,7 +299,7 @@ impl<'s> System<'s> for BounceSystem {
 
 // A point is in a box when its coordinates are smaller or equal than the top
 // right and larger or equal than the bottom left.
-fn point_in_rect(x: f32, y: f32, left: f32, bottom: f32, right: f32, top: f32) -> bool {
+fn point_in_rect(x: Float, y: Float, left: Float, bottom: Float, right: Float, top: Float) -> bool {
     x >= left && x <= right && y >= bottom && y <= top
 }
 #
@@ -324,7 +324,7 @@ as well as adding our new systems to the game data:
 # let config = DisplayConfig::load(&path);
 # let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
 #       .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-#       .with_pass(DrawFlat::<PosTex, f32>::new()),
+#       .with_pass(DrawFlat::<PosTex>::new()),
 # );
 # mod systems {
 # use amethyst;
@@ -346,7 +346,7 @@ as well as adding our new systems to the game data:
 # }
 # let input_bundle = amethyst::input::InputBundle::<String, String>::new();
 let game_data = GameDataBuilder::default()
-#    .with_bundle(RenderBundle::<'_, _, _, f32>::new(pipe, Some(config)).with_sprite_sheet_processor())?
+#    .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
 #    .with_bundle(TransformBundle::new())?
 #    .with_bundle(input_bundle)?
 #    .with(systems::PaddleSystem, "paddle_system", &["input_system"])

@@ -3,17 +3,13 @@
 use derivative::Derivative;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
-use glsl_layout::Pod;
-use std::marker::PhantomData;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    alga::general::SubsetOf,
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage},
-    math::RealField,
     transform::Transform,
 };
 use amethyst_error::Error;
@@ -55,20 +51,15 @@ static ATTRIBUTES: [Attributes<'static>; 4] = [
 ///
 /// See the [crate level documentation](index.html) for information about interleaved and separate
 /// passes.
-///
-/// # Type Parameters:
-///
-/// * `N`: `RealBound` (f32, f64)
 #[derive(Derivative, Clone, Debug, PartialEq)]
 #[derivative(Default)]
-pub struct DrawPbmSeparate<N> {
-    _ph: PhantomData<N>,
+pub struct DrawPbmSeparate {
     skinning: bool,
     #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
 }
 
-impl<N> DrawPbmSeparate<N> {
+impl DrawPbmSeparate {
     /// Create instance of `DrawPbm` pass
     pub fn new() -> Self {
         Default::default()
@@ -108,7 +99,7 @@ impl<N> DrawPbmSeparate<N> {
     }
 }
 
-impl<'a, N: RealField> PassData<'a> for DrawPbmSeparate<N> {
+impl<'a> PassData<'a> for DrawPbmSeparate {
     type Data = (
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
@@ -121,14 +112,14 @@ impl<'a, N: RealField> PassData<'a> for DrawPbmSeparate<N> {
         ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
-        ReadStorage<'a, Transform<N>>,
+        ReadStorage<'a, Transform>,
         ReadStorage<'a, Light>,
-        ReadStorage<'a, JointTransforms<N>>,
+        ReadStorage<'a, JointTransforms>,
         ReadStorage<'a, Rgba>,
     );
 }
 
-impl<N: RealField + SubsetOf<f32> + Pod> Pass for DrawPbmSeparate<N> {
+impl Pass for DrawPbmSeparate {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("render_pass_pbm_compile");

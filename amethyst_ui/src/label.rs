@@ -188,6 +188,7 @@ where
                 UiTransform::new(
                     format!("{}_label", id),
                     self.anchor,
+                    Anchor::Middle,
                     self.x,
                     self.y,
                     self.z,

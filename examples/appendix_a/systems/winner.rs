@@ -15,7 +15,7 @@ pub struct WinnerSystem;
 impl<'s> System<'s> for WinnerSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
-        WriteStorage<'s, Transform<f32>>,
+        WriteStorage<'s, Transform>,
         WriteStorage<'s, UiText>,
         Write<'s, ScoreBoard>,
         Read<'s, AssetStorage<Source>>,
@@ -42,14 +42,14 @@ impl<'s> System<'s> for WinnerSystem {
         for (ball, transform) in (&mut balls, &mut transforms).join() {
             let ball_x = transform.translation().x;
 
-            let did_hit = if ball_x <= ball.radius {
+            let did_hit = if ball_x <= ball.radius.into() {
                 // Right player scored on the left side.
                 score_board.score_right += 1;
                 if let Some(text) = text.get_mut(score_text.p2_score) {
                     text.text = score_board.score_right.to_string();
                 }
                 true
-            } else if ball_x >= arena_config.width - ball.radius {
+            } else if ball_x >= (arena_config.width - ball.radius).into() {
                 // Left player scored on the right side.
                 score_board.score_left += 1;
                 if let Some(text) = text.get_mut(score_text.p1_score) {

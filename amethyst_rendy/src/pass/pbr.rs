@@ -38,7 +38,7 @@ impl<B: Backend> Base3DPassDef<B> for PbrPassDef {
     }
 }
 
-pub type DrawPbrDesc<B, N> = DrawBase3DDesc<B, N, PbrPassDef>;
-pub type DrawPbr<B, N> = DrawBase3D<B, N, PbrPassDef>;
-pub type DrawPbrTransparentDesc<B, N> = DrawBase3DTransparentDesc<B, N, PbrPassDef>;
-pub type DrawPbrTransparent<B, N> = DrawBase3DTransparent<B, N, PbrPassDef>;
+pub type DrawPbrDesc<B> = DrawBase3DDesc<B, PbrPassDef>;
+pub type DrawPbr<B> = DrawBase3D<B, PbrPassDef>;
+pub type DrawPbrTransparentDesc<B> = DrawBase3DTransparentDesc<B, PbrPassDef>;
+pub type DrawPbrTransparent<B> = DrawBase3DTransparent<B, PbrPassDef>;

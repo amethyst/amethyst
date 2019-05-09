@@ -5,8 +5,8 @@ use crate::{
 };
 use amethyst_core::{
     ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
-    math::{Point3, RealField, Vector3},
-    Transform,
+    math::{self as na, ComplexField, Point3, Vector3},
+    Float, Transform,
 };
 use derivative::Derivative;
 use hibitset::BitSet;
@@ -35,28 +35,28 @@ pub struct SpriteVisibility {
 /// before rendering occurs.
 #[derive(Derivative)]
 #[derivative(Default(bound = ""))]
-pub struct SpriteVisibilitySortingSystem<N: RealField> {
-    centroids: Vec<Internals<N>>,
-    transparent: Vec<Internals<N>>,
+pub struct SpriteVisibilitySortingSystem {
+    centroids: Vec<Internals>,
+    transparent: Vec<Internals>,
 }
 
 #[derive(Clone)]
-struct Internals<N: RealField> {
+struct Internals {
     entity: Entity,
     transparent: bool,
-    centroid: Point3<N>,
-    camera_distance: N,
-    from_camera: Vector3<N>,
+    centroid: Point3<Float>,
+    camera_distance: Float,
+    from_camera: Vector3<Float>,
 }
 
-impl<N: RealField> SpriteVisibilitySortingSystem<N> {
+impl SpriteVisibilitySortingSystem {
     /// Returns a new sprite visibility sorting system
     pub fn new() -> Self {
         Default::default()
     }
 }
 
-impl<'a, N: RealField> System<'a> for SpriteVisibilitySortingSystem<N> {
+impl<'a> System<'a> for SpriteVisibilitySortingSystem {
     type SystemData = (
         Entities<'a>,
         Write<'a, SpriteVisibility>,
@@ -65,7 +65,7 @@ impl<'a, N: RealField> System<'a> for SpriteVisibilitySortingSystem<N> {
         Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Transparent>,
-        ReadStorage<'a, Transform<N>>,
+        ReadStorage<'a, Transform>,
     );
 
     fn run(
@@ -79,7 +79,7 @@ impl<'a, N: RealField> System<'a> for SpriteVisibilitySortingSystem<N> {
 
         // The camera position is used to determine culling, but the sprites are ordered based on
         // the Z coordinate
-        let camera: Option<&Transform<N>> = active
+        let camera: Option<&Transform> = active
             .and_then(|a| transform.get(a.entity))
             .or_else(|| (&camera, &transform).join().map(|ct| ct.1).next());
         let camera_backward = camera
@@ -95,7 +95,7 @@ impl<'a, N: RealField> System<'a> for SpriteVisibilitySortingSystem<N> {
                 .join()
                 .map(|(e, t, _, _)| (e, t.global_matrix().transform_point(&origin)))
                 // filter entities behind the camera
-                .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < N::zero())
+                .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < na::zero())
                 .map(|(entity, centroid)| Internals {
                     entity,
                     transparent: transparent.contains(entity),

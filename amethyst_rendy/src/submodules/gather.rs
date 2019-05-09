@@ -4,9 +4,8 @@ use crate::{
     resources::AmbientColor,
 };
 use amethyst_core::{
-    alga::general::SubsetOf,
     ecs::{Join, Read, ReadStorage, Resources, SystemData},
-    math::{convert, Matrix4, RealField, Vector3},
+    math::{convert, Matrix4, Vector3},
     transform::Transform,
 };
 use glsl_layout::*;
@@ -22,14 +21,14 @@ pub struct CameraGatherer {
 }
 
 impl CameraGatherer {
-    pub fn gather<N: RealField + SubsetOf<f32>>(res: &Resources) -> Self {
+    pub fn gather(res: &Resources) -> Self {
         #[cfg(feature = "profiler")]
         profile_scope!("gather_cameras");
 
         let (active_camera, cameras, transforms) = <(
             Option<Read<'_, ActiveCamera>>,
             ReadStorage<'_, Camera>,
-            ReadStorage<'_, Transform<N>>,
+            ReadStorage<'_, Transform>,
         )>::fetch(res);
 
         let defcam = Camera::standard_2d();
@@ -50,11 +49,10 @@ impl CameraGatherer {
             });
 
         let camera_position =
-            convert::<Vector3<N>, Vector3<f32>>(transform.global_matrix().column(3).xyz())
-                .into_pod();
+            convert::<_, Vector3<f32>>(transform.global_matrix().column(3).xyz()).into_pod();
 
         let proj: [[f32; 4]; 4] = camera.proj.into();
-        let view: [[f32; 4]; 4] = convert::<Matrix4<N>, Matrix4<f32>>(
+        let view: [[f32; 4]; 4] = convert::<_, Matrix4<f32>>(
             transform
                 .global_matrix()
                 .try_inverse()

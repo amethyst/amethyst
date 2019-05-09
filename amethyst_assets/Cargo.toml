@@ -48,3 +48,4 @@ lazy_static = "1.3.0"
 profiler = [ "thread_profiler/thread_profiler" ]
 nightly = [ "amethyst_core/nightly" ]
 json = [ "serde_json" ]
+float64 = ["amethyst_core/float64"]

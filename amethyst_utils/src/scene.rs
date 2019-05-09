@@ -2,7 +2,7 @@
 
 use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_controls::ControlTagPrefab;
-use amethyst_core::{ecs::prelude::Entity, math::RealField, Transform};
+use amethyst_core::{ecs::prelude::Entity, Transform};
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
 use amethyst_rendy::{
@@ -24,30 +24,27 @@ use crate::removal::Removal;
 ///     * `Vec<PosNormTex>`
 ///     * `Vec<PosNormTangTex>`
 ///     * `ComboMeshCreator`
-/// - `N`: RealField bound (f32 or f64).
 /// - `R`: The type of id used by the Removal component.
 #[derive(Deserialize, Serialize, PrefabData)]
 #[serde(default)]
 #[serde(deny_unknown_fields)]
-pub struct BasicScenePrefab<V, N, R = ()>
+pub struct BasicScenePrefab<V, R = ()>
 where
     R: PartialEq + Debug + Clone + Send + Sync + 'static,
     V: FromShape + Into<MeshBuilder<'static>>,
-    N: RealField,
 {
     graphics: Option<GraphicsPrefab<V>>,
-    transform: Option<Transform<N>>,
+    transform: Option<Transform>,
     light: Option<LightPrefab>,
     camera: Option<CameraPrefab>,
-    control_tag: Option<ControlTagPrefab<N>>,
+    control_tag: Option<ControlTagPrefab>,
     removal: Option<Removal<R>>,
 }
 
-impl<V, N, R> Default for BasicScenePrefab<V, N, R>
+impl<V, R> Default for BasicScenePrefab<V, R>
 where
     R: PartialEq + Debug + Clone + Send + Sync + 'static,
     V: FromShape + Into<MeshBuilder<'static>>,
-    N: RealField,
 {
     fn default() -> Self {
         BasicScenePrefab {

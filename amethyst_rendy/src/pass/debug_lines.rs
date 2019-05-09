@@ -6,11 +6,7 @@ use crate::{
     types::Backend,
     util,
 };
-use amethyst_core::{
-    alga::general::SubsetOf,
-    ecs::{Join, Read, Resources, SystemData, Write, WriteStorage},
-    math::RealField,
-};
+use amethyst_core::ecs::{Join, Read, Resources, SystemData, Write, WriteStorage};
 use derivative::Derivative;
 use glsl_layout::*;
 use rendy::{
@@ -24,7 +20,6 @@ use rendy::{
     mesh::AsVertex,
     shader::Shader,
 };
-use std::marker::PhantomData;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -49,18 +44,16 @@ struct DebugLinesArgs {
 /// Draw opaque sprites without lighting.
 #[derive(Clone, Debug, PartialEq, Derivative)]
 #[derivative(Default(bound = ""))]
-pub struct DrawDebugLinesDesc<N: RealField + SubsetOf<f32>>(PhantomData<N>);
+pub struct DrawDebugLinesDesc;
 
-impl<N: RealField + SubsetOf<f32>> DrawDebugLinesDesc<N> {
+impl DrawDebugLinesDesc {
     /// Create instance of `DrawDebugLines` render group
     pub fn new() -> Self {
         Default::default()
     }
 }
 
-impl<B: Backend, N: RealField + SubsetOf<f32>> RenderGroupDesc<B, Resources>
-    for DrawDebugLinesDesc<N>
-{
+impl<B: Backend> RenderGroupDesc<B, Resources> for DrawDebugLinesDesc {
     fn build(
         self,
         _ctx: &GraphContext<B>,
@@ -88,7 +81,7 @@ impl<B: Backend, N: RealField + SubsetOf<f32>> RenderGroupDesc<B, Resources>
             vec![env.raw_layout(), args.raw_layout()],
         )?;
 
-        Ok(Box::new(DrawDebugLines::<B, N> {
+        Ok(Box::new(DrawDebugLines::<B> {
             pipeline: pipeline,
             pipeline_layout,
             env,
@@ -98,13 +91,12 @@ impl<B: Backend, N: RealField + SubsetOf<f32>> RenderGroupDesc<B, Resources>
             framebuffer_height: framebuffer_height as f32,
             lines: Vec::new(),
             change: Default::default(),
-            marker: PhantomData,
         }))
     }
 }
 
 #[derive(Debug)]
-pub struct DrawDebugLines<B: Backend, N: RealField + SubsetOf<f32>> {
+pub struct DrawDebugLines<B: Backend> {
     pipeline: B::GraphicsPipeline,
     pipeline_layout: B::PipelineLayout,
     env: DynamicUniform<B, ViewArgs>,
@@ -114,10 +106,9 @@ pub struct DrawDebugLines<B: Backend, N: RealField + SubsetOf<f32>> {
     framebuffer_height: f32,
     lines: Vec<DebugLine>,
     change: util::ChangeDetection,
-    marker: PhantomData<N>,
 }
 
-impl<B: Backend, N: RealField + SubsetOf<f32>> RenderGroup<B, Resources> for DrawDebugLines<B, N> {
+impl<B: Backend> RenderGroup<B, Resources> for DrawDebugLines<B> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
@@ -145,7 +136,7 @@ impl<B: Backend, N: RealField + SubsetOf<f32>> RenderGroup<B, Resources> for Dra
             self.lines.extend(lines_res.drain());
         };
 
-        let cam = CameraGatherer::gather::<N>(resources);
+        let cam = CameraGatherer::gather(resources);
         let line_width = line_params
             .map(|p| p.line_width)
             .unwrap_or(DebugLinesParams::default().line_width);

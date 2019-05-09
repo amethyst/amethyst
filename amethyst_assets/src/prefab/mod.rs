@@ -470,7 +470,7 @@ mod tests {
 
     use super::*;
 
-    type MyPrefab = Transform<f32>;
+    type MyPrefab = Transform;
 
     #[test]
     fn test_prefab_load() {
@@ -492,12 +492,9 @@ mod tests {
         let root_entity = world.create_entity().with(handle).build();
         system.run_now(&world.res);
         assert_eq!(
-            Some(&Transform::<f32>::default()),
+            Some(&Transform::default()),
             world.read_storage().get(root_entity)
         );
-        assert!(world
-            .read_storage::<Transform<f32>>()
-            .get(root_entity)
-            .is_some());
+        assert!(world.read_storage::<Transform>().get(root_entity).is_some());
     }
 }

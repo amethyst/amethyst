@@ -65,8 +65,6 @@ use prefab_data::{AnimationMarker, Scene, ScenePrefabData, SpriteAnimationId};
 
 mod prefab_data;
 
-type Real = f32;
-
 struct Example {
     entity: Option<Entity>,
     initialised: bool,
@@ -84,10 +82,10 @@ impl Example {
 }
 
 struct Orbit {
-    axis: Unit<Vector3<Real>>,
+    axis: Unit<Vector3<f32>>,
     time_scale: f32,
-    center: Vector3<Real>,
-    radius: Real,
+    center: Vector3<f32>,
+    radius: f32,
 }
 
 impl Component for Orbit {
@@ -100,7 +98,7 @@ impl<'a> System<'a> for OrbitSystem {
     type SystemData = (
         Read<'a, Time>,
         ReadStorage<'a, Orbit>,
-        WriteStorage<'a, Transform<Real>>,
+        WriteStorage<'a, Transform>,
         Write<'a, DebugLines>,
     );
 
@@ -171,8 +169,8 @@ impl SimpleState for Example {
 
         world.exec(
             |(loader, mut scene): (
-                PrefabLoader<'_, ScenePrefabData<Real>>,
-                Write<'_, Scene<Real>>,
+                PrefabLoader<'_, ScenePrefabData>,
+                Write<'_, Scene>,
             )| {
                 scene.handle = Some(
                     loader.load(
@@ -256,7 +254,7 @@ impl SimpleState for Example {
                     let center =
                         Vector3::new(15.0 * (x - 0.5), 15.0 * (y - 0.5), 2.0 * (z - 0.5) - 5.0);
 
-                    let mut pos = Transform::<Real>::default();
+                    let mut pos = Transform::default();
                     pos.set_translation(center);
                     pos.set_scale(Vector3::new(0.2, 0.2, 0.2));
 
@@ -266,7 +264,7 @@ impl SimpleState for Example {
                         .with(mesh.clone())
                         .with(mtls[(j + i) % mtls.len()].clone())
                         .with(Transparent)
-                        .with(BoundingSphere::<Real>::origin(1.0))
+                        .with(BoundingSphere::origin(1.0))
                         .with(Orbit {
                             axis: Unit::new_normalize(Vector3::y()),
                             time_scale: 5.0 + y + 0.1 * x + 0.07 * z,
@@ -295,7 +293,7 @@ impl SimpleState for Example {
         }
         .into();
 
-        let mut light1_transform = Transform::<Real>::default();
+        let mut light1_transform = Transform::default();
         light1_transform.set_translation_xyz(6.0, 6.0, 6.0);
 
         let light2: Light = PointLight {
@@ -305,7 +303,7 @@ impl SimpleState for Example {
         }
         .into();
 
-        let mut light2_transform = Transform::<Real>::default();
+        let mut light2_transform = Transform::default();
         light2_transform.set_translation_xyz(6.0, -6.0, 6.0);
 
         let light3: Light = PointLight {
@@ -315,7 +313,7 @@ impl SimpleState for Example {
         }
         .into();
 
-        let mut light3_transform = Transform::<Real>::default();
+        let mut light3_transform = Transform::default();
         light3_transform.set_translation_xyz(-3.0, 10.0, 2.0);
 
         world
@@ -342,7 +340,7 @@ impl SimpleState for Example {
             .with(light3_transform)
             .build();
 
-        let mut transform = Transform::<Real>::default();
+        let mut transform = Transform::default();
         transform.set_translation_xyz(0.0, 4.0, 8.0);
         transform.prepend_rotation_x_axis(std::f32::consts::PI * -0.0625);
 
@@ -404,7 +402,7 @@ impl SimpleState for Example {
                 Some(Completion::Complete) => {
                     let scene_handle = data
                         .world
-                        .read_resource::<Scene<Real>>()
+                        .read_resource::<Scene>()
                         .handle
                         .as_ref()
                         .unwrap()
@@ -463,14 +461,14 @@ impl SimpleState for Example {
 
 fn toggle_or_cycle_animation(
     entity: Option<Entity>,
-    scene: &mut Scene<Real>,
-    sets: &ReadStorage<'_, AnimationSet<usize, Transform<Real>>>,
-    controls: &mut WriteStorage<'_, AnimationControlSet<usize, Transform<Real>>>,
+    scene: &mut Scene,
+    sets: &ReadStorage<'_, AnimationSet<usize, Transform>>,
+    controls: &mut WriteStorage<'_, AnimationControlSet<usize, Transform>>,
 ) {
     if let Some((entity, Some(animations))) = entity.map(|entity| (entity, sets.get(entity))) {
         if animations.animations.len() > scene.animation_index {
             let animation = animations.animations.get(&scene.animation_index).unwrap();
-            let set = get_animation_set::<usize, Transform<Real>>(controls, entity).unwrap();
+            let set = get_animation_set::<usize, Transform>(controls, entity).unwrap();
             if set.has_animation(scene.animation_index) {
                 set.toggle(scene.animation_index);
             } else {
@@ -545,12 +543,12 @@ fn main() -> amethyst::Result<()> {
         // .with_bundle(TransformBundle::new().with_dep(&["orbit"]))?
         .with_bundle(FPSCounterBundle::default())?
         .with(
-            PrefabLoaderSystem::<ScenePrefabData<Real>>::default(),
+            PrefabLoaderSystem::<ScenePrefabData>::default(),
             "scene_loader",
             &[],
         )
         .with(
-            GltfSceneLoaderSystem::<Real>::default(),
+            GltfSceneLoaderSystem::default(),
             "gltf_loader",
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
         )
@@ -560,7 +558,7 @@ fn main() -> amethyst::Result<()> {
             &[],
         )
         .with_bundle(
-            AnimationBundle::<usize, Transform<Real>>::new(
+            AnimationBundle::<usize, Transform>::new(
                 "animation_control",
                 "sampler_interpolation",
             )
@@ -575,7 +573,7 @@ fn main() -> amethyst::Result<()> {
         )?
         .with_bundle(InputBundle::<&'static str, &'static str>::new().with_bindings(bidnings))?
         .with_bundle(
-            FlyControlBundle::<&'static str, &'static str, Real>::new(
+            FlyControlBundle::<&'static str, &'static str>::new(
                 Some("horizontal"),
                 None,
                 Some("vertical"),
@@ -583,7 +581,7 @@ fn main() -> amethyst::Result<()> {
             .with_sensitivity(0.1, 0.1)
             .with_speed(5.),
         )?
-        .with_bundle(TransformBundle::<Real>::new().with_dep(&[
+        .with_bundle(TransformBundle::new().with_dep(&[
             "animation_control",
             "sampler_interpolation",
             "sprite_animation_control",
@@ -591,18 +589,18 @@ fn main() -> amethyst::Result<()> {
             "fly_movement",
             "orbit",
         ]))?
-        .with_bundle(VertexSkinningBundle::<Real>::new().with_dep(&[
+        .with_bundle(VertexSkinningBundle::new().with_dep(&[
             "transform_system",
             "animation_control",
             "sampler_interpolation",
         ]))?
         .with(
-            SpriteVisibilitySortingSystem::<Real>::new(),
+            SpriteVisibilitySortingSystem::new(),
             "sprite_visibility_system",
             &["fly_movement", "cam", "transform_system"],
         )
         .with(
-            VisibilitySortingSystem::<Real>::new(),
+            VisibilitySortingSystem::new(),
             "visibility_system",
             &["fly_movement", "cam", "transform_system"],
         )
@@ -686,36 +684,36 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         match *render_mode {
             RenderMode::Flat => {
                 opaque_subpass.add_group(
-                    DrawFlatDesc::<_, Real>::default()
+                    DrawFlatDesc::default()
                         .with_vertex_skinning()
                         .builder(),
                 );
                 transparent_subpass.add_group(
-                    DrawFlatTransparentDesc::<_, Real>::default()
+                    DrawFlatTransparentDesc::default()
                         .with_vertex_skinning()
                         .builder(),
                 );
             }
             RenderMode::Shaded => {
                 opaque_subpass.add_group(
-                    DrawShadedDesc::<_, Real>::default()
+                    DrawShadedDesc::default()
                         .with_vertex_skinning()
                         .builder(),
                 );
                 transparent_subpass.add_group(
-                    DrawShadedTransparentDesc::<_, Real>::default()
+                    DrawShadedTransparentDesc::default()
                         .with_vertex_skinning()
                         .builder(),
                 );
             }
             RenderMode::Pbr => {
                 opaque_subpass.add_group(
-                    DrawPbrDesc::<_, Real>::default()
+                    DrawPbrDesc::default()
                         .with_vertex_skinning()
                         .builder(),
                 );
                 transparent_subpass.add_group(
-                    DrawPbrTransparentDesc::<_, Real>::default()
+                    DrawPbrTransparentDesc::default()
                         .with_vertex_skinning()
                         .builder(),
                 );
@@ -724,10 +722,10 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
 
         let opaque = graph_builder.add_node(
             opaque_subpass
-                .with_group(DrawFlat2DDesc::<Real>::default().builder())
-                .with_group(DrawDebugLinesDesc::<Real>::default().builder())
+                .with_group(DrawFlat2DDesc::default().builder())
+                .with_group(DrawDebugLinesDesc::default().builder())
                 .with_group(
-                    DrawSkyboxDesc::<Real>::with_colors(
+                    DrawSkyboxDesc::with_colors(
                         Srgb::new(0.82, 0.51, 0.50),
                         Srgb::new(0.18, 0.11, 0.85),
                     )
@@ -741,7 +739,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         let transparent = graph_builder.add_node(
             transparent_subpass
                 .with_group(
-                    DrawFlat2DTransparentDesc::<Real>::default()
+                    DrawFlat2DTransparentDesc::default()
                         .builder()
                         .with_dependency(opaque),
                 )

@@ -6,20 +6,16 @@ use amethyst_animation::{
     AnimationPrefab, AnimationSetPrefab, InterpolationFunction, InterpolationPrimitive, Sampler,
     SamplerPrimitive, TransformChannel,
 };
-use amethyst_core::{
-    alga::general::SubsetOf,
-    math::{try_convert, RealField, Vector3, Vector4},
-    Transform,
-};
+use amethyst_core::{Float, Transform, math::{convert, Vector3, Vector4}};
 
 use super::Buffers;
 use crate::error;
 
-pub fn load_animations<N: RealField + SubsetOf<f32>>(
+pub fn load_animations(
     gltf: &gltf::Gltf,
     buffers: &Buffers,
     node_map: &HashMap<usize, usize>,
-) -> Result<AnimationSetPrefab<usize, Transform<N>>, Error> {
+) -> Result<AnimationSetPrefab<usize, Transform>, Error> {
     let mut prefab = AnimationSetPrefab::default();
     for animation in gltf.animations() {
         let anim = load_animation(&animation, buffers)?;
@@ -34,10 +30,10 @@ pub fn load_animations<N: RealField + SubsetOf<f32>>(
     Ok(prefab)
 }
 
-fn load_animation<N: RealField + SubsetOf<f32>>(
+fn load_animation(
     animation: &gltf::Animation<'_>,
     buffers: &Buffers,
-) -> Result<AnimationPrefab<Transform<N>>, Error> {
+) -> Result<AnimationPrefab<Transform>, Error> {
     let mut a = AnimationPrefab::default();
     a.samplers = animation
         .channels()
@@ -46,10 +42,10 @@ fn load_animation<N: RealField + SubsetOf<f32>>(
     Ok(a)
 }
 
-fn load_channel<N: RealField + SubsetOf<f32>>(
+fn load_channel(
     channel: &gltf::animation::Channel<'_>,
     buffers: &Buffers,
-) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<N>>), Error> {
+) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<Float>>), Error> {
     use gltf::animation::util::ReadOutputs::*;
     let sampler = channel.sampler();
     let target = channel.target();
@@ -70,7 +66,7 @@ fn load_channel<N: RealField + SubsetOf<f32>>(
                 function: map_interpolation_type(&sampler.interpolation()),
                 output: translations
                     .map(Vector3::from)
-                    .map(|t| try_convert::<_, Vector3<N>>(t).unwrap().into())
+                    .map(|t| convert::<_, Vector3<Float>>(t).into())
                     .collect(),
             },
         )),
@@ -90,7 +86,7 @@ fn load_channel<N: RealField + SubsetOf<f32>>(
                     output: rotations
                         .into_f32()
                         .map(Vector4::from)
-                        .map(|q| try_convert::<_, Vector4<N>>(q).unwrap().into())
+                        .map(|q| convert::<_, Vector4<Float>>(q).into())
                         .collect(),
                 },
             ))
@@ -103,7 +99,7 @@ fn load_channel<N: RealField + SubsetOf<f32>>(
                 function: map_interpolation_type(&sampler.interpolation()),
                 output: scales
                     .map(Vector3::from)
-                    .map(|s| try_convert::<_, Vector3<N>>(s).unwrap().into())
+                    .map(|s| convert::<_, Vector3<Float>>(s).into())
                     .collect(),
             },
         )),

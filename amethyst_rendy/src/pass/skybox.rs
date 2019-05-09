@@ -7,11 +7,7 @@ use crate::{
     types::Backend,
     util,
 };
-use amethyst_core::{
-    alga::general::SubsetOf,
-    ecs::{Read, Resources, SystemData},
-    math::RealField,
-};
+use amethyst_core::ecs::{Read, Resources, SystemData};
 use derivative::Derivative;
 use glsl_layout::{vec3, AsStd140};
 use rendy::{
@@ -25,7 +21,6 @@ use rendy::{
     mesh::{AsVertex, Mesh, PosTex},
     shader::Shader,
 };
-use std::marker::PhantomData;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -64,12 +59,11 @@ impl SkyboxSettings {
 /// Draw opaque sprites without lighting.
 #[derive(Clone, Debug, PartialEq, Derivative)]
 #[derivative(Default(bound = ""))]
-pub struct DrawSkyboxDesc<N: RealField + SubsetOf<f32>> {
+pub struct DrawSkyboxDesc {
     default_settings: SkyboxSettings,
-    marker: PhantomData<N>,
 }
 
-impl<N: RealField + SubsetOf<f32>> DrawSkyboxDesc<N> {
+impl DrawSkyboxDesc {
     /// Create instance of `DrawSkybox` render group
     pub fn new() -> Self {
         Default::default()
@@ -81,12 +75,11 @@ impl<N: RealField + SubsetOf<f32>> DrawSkyboxDesc<N> {
                 nadir_color,
                 zenith_color,
             },
-            marker: PhantomData,
         }
     }
 }
 
-impl<B: Backend, N: RealField + SubsetOf<f32>> RenderGroupDesc<B, Resources> for DrawSkyboxDesc<N> {
+impl<B: Backend> RenderGroupDesc<B, Resources> for DrawSkyboxDesc {
     fn build(
         self,
         _ctx: &GraphContext<B>,
@@ -116,30 +109,28 @@ impl<B: Backend, N: RealField + SubsetOf<f32>> RenderGroupDesc<B, Resources> for
             vec![env.raw_layout(), colors.raw_layout()],
         )?;
 
-        Ok(Box::new(DrawSkybox::<B, N> {
+        Ok(Box::new(DrawSkybox::<B> {
             pipeline: pipeline,
             pipeline_layout,
             env,
             colors,
             mesh,
             default_settings: self.default_settings,
-            marker: PhantomData,
         }))
     }
 }
 
 #[derive(Debug)]
-pub struct DrawSkybox<B: Backend, N: RealField + SubsetOf<f32>> {
+pub struct DrawSkybox<B: Backend> {
     pipeline: B::GraphicsPipeline,
     pipeline_layout: B::PipelineLayout,
     env: FlatEnvironmentSub<B>,
     colors: DynamicUniform<B, SkyboxUniform>,
     mesh: Mesh<B>,
     default_settings: SkyboxSettings,
-    marker: PhantomData<N>,
 }
 
-impl<B: Backend, N: RealField + SubsetOf<f32>> RenderGroup<B, Resources> for DrawSkybox<B, N> {
+impl<B: Backend> RenderGroup<B, Resources> for DrawSkybox<B> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
@@ -155,7 +146,7 @@ impl<B: Backend, N: RealField + SubsetOf<f32>> RenderGroup<B, Resources> for Dra
             .map(|s| s.uniform())
             .unwrap_or_else(|| self.default_settings.uniform());
 
-        self.env.process::<N>(factory, index, resources);
+        self.env.process(factory, index, resources);
         let changed = self.colors.write(factory, index, settings);
 
         if changed {

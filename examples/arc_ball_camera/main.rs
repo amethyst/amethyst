@@ -6,6 +6,7 @@ use amethyst::{
     core::{
         shrev::{EventChannel, ReaderId},
         transform::{Transform, TransformBundle},
+        Float,
     },
     ecs::prelude::{Join, Read, ReadStorage, Resources, System, SystemData, WriteStorage},
     input::{InputBundle, InputEvent, ScrollDirection},
@@ -51,8 +52,8 @@ where
 {
     type SystemData = (
         Read<'a, EventChannel<InputEvent<AC>>>,
-        ReadStorage<'a, Transform<f32>>,
-        WriteStorage<'a, ArcBallControlTag<f32>>,
+        ReadStorage<'a, Transform>,
+        WriteStorage<'a, ArcBallControlTag>,
     );
 
     fn run(&mut self, (events, transforms, mut tags): Self::SystemData) {
@@ -61,12 +62,12 @@ where
                 InputEvent::MouseWheelMoved(direction) => match direction {
                     ScrollDirection::ScrollUp => {
                         for (_, tag) in (&transforms, &mut tags).join() {
-                            tag.distance *= 0.9;
+                            tag.distance *= Float::from(0.9);
                         }
                     }
                     ScrollDirection::ScrollDown => {
                         for (_, tag) in (&transforms, &mut tags).join() {
-                            tag.distance *= 1.1;
+                            tag.distance *= Float::from(1.1);
                         }
                     }
                     _ => (),
@@ -103,19 +104,19 @@ fn main() -> Result<(), Error> {
         let pipe = Pipeline::build().with_stage(
             Stage::with_backbuffer()
                 .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-                .with_pass(DrawShaded::<PosNormTex, f32>::new())
-                .with_pass(DrawSkybox::<f32>::new()),
+                .with_pass(DrawShaded::<PosNormTex>::new())
+                .with_pass(DrawSkybox::new()),
         );
-        RenderBundle::<'_, _, _, f32>::new(pipe, Some(display_config))
+        RenderBundle::new(pipe, Some(display_config))
     };
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
-        .with_bundle(TransformBundle::<f32>::new().with_dep(&[]))?
+        .with_bundle(TransformBundle::new().with_dep(&[]))?
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
-        .with_bundle(ArcBallControlBundle::<String, String, f32>::new())?
+        .with_bundle(ArcBallControlBundle::<String, String>::new())?
         .with_bundle(render_bundle)?
         .with(
             CameraDistanceSystem::<String>::new(),

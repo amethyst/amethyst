@@ -2,7 +2,7 @@ use amethyst::{
     animation::AnimationSetPrefab,
     assets::{AssetPrefab, Handle, Prefab, PrefabData, ProgressCounter},
     controls::ControlTagPrefab,
-    core::{alga::general::SubsetOf, ecs::Entity, math::RealField, Transform},
+    core::{ecs::Entity, Transform},
     gltf::{GltfSceneAsset, GltfSceneFormat},
     utils::tag::Tag,
     Error,
@@ -36,8 +36,8 @@ pub enum SpriteAnimationId {
 
 #[derive(Derivative)]
 #[derivative(Default(bound = ""))]
-pub struct Scene<N: RealField + SubsetOf<f32>> {
-    pub handle: Option<Handle<Prefab<ScenePrefabData<N>>>>,
+pub struct Scene {
+    pub handle: Option<Handle<Prefab<ScenePrefabData>>>,
     pub animation_index: usize,
 }
 
@@ -45,19 +45,16 @@ type GenMeshVertex = (Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>);
 
 #[derive(Derivative, Deserialize, Serialize)]
 #[derivative(Default(bound = ""))]
-#[serde(
-    default,
-    bound(serialize = "N: Serialize", deserialize = "N: Deserialize<'de>",)
-)]
-pub struct ScenePrefabData<N: RealField + SubsetOf<f32>> {
-    transform: Option<Transform<N>>,
-    gltf: Option<AssetPrefab<GltfSceneAsset<N>, GltfSceneFormat>>,
+#[serde(default)]
+pub struct ScenePrefabData {
+    transform: Option<Transform>,
+    gltf: Option<AssetPrefab<GltfSceneAsset, GltfSceneFormat>>,
     sprite_sheet: Option<SpriteSheetPrefab>,
     animation_set: Option<AnimationSetPrefab<SpriteAnimationId, SpriteRender>>,
     camera: Option<CameraPrefab>,
     light: Option<LightPrefab>,
     tag: Option<Tag<AnimationMarker>>,
-    fly_tag: Option<ControlTagPrefab<N>>,
+    fly_tag: Option<ControlTagPrefab>,
     sprite: Option<SpriteRenderPrefab>,
     mesh: Option<MeshPrefab<GenMeshVertex>>,
     material: Option<MaterialPrefab>,
@@ -65,16 +62,16 @@ pub struct ScenePrefabData<N: RealField + SubsetOf<f32>> {
 }
 
 type PData<'a, T> = <T as PrefabData<'a>>::SystemData;
-impl<'a, N: RealField + SubsetOf<f32>> PrefabData<'a> for ScenePrefabData<N> {
+impl<'a> PrefabData<'a> for ScenePrefabData {
     type SystemData = (
-        PData<'a, Transform<N>>,
-        PData<'a, AssetPrefab<GltfSceneAsset<N>, GltfSceneFormat>>,
+        PData<'a, Transform>,
+        PData<'a, AssetPrefab<GltfSceneAsset, GltfSceneFormat>>,
         PData<'a, SpriteSheetPrefab>,
         PData<'a, AnimationSetPrefab<SpriteAnimationId, SpriteRender>>,
         PData<'a, CameraPrefab>,
         PData<'a, LightPrefab>,
         PData<'a, Tag<AnimationMarker>>,
-        PData<'a, ControlTagPrefab<N>>,
+        PData<'a, ControlTagPrefab>,
         PData<'a, SpriteRenderPrefab>,
         PData<'a, MeshPrefab<GenMeshVertex>>,
         PData<'a, MaterialPrefab>,

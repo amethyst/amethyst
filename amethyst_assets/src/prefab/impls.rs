@@ -1,6 +1,5 @@
 use amethyst_core::{
     ecs::{Entity, WriteStorage},
-    math::RealField,
     Named, Transform,
 };
 use amethyst_error::Error;
@@ -46,8 +45,8 @@ where
     }
 }
 
-impl<'a, N: RealField> PrefabData<'a> for Transform<N> {
-    type SystemData = WriteStorage<'a, Transform<N>>;
+impl<'a> PrefabData<'a> for Transform {
+    type SystemData = WriteStorage<'a, Transform>;
     type Result = ();
 
     fn add_to_entity(

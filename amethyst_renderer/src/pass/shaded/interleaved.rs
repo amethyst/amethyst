@@ -5,13 +5,10 @@ use std::marker::PhantomData;
 use derivative::Derivative;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
-use glsl_layout::Pod;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    alga::general::SubsetOf,
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage},
-    math::RealField,
     transform::Transform,
 };
 use amethyst_error::Error;
@@ -48,16 +45,15 @@ use super::*;
 /// # Type Parameters:
 ///
 /// * `V`: `VertexFormat`
-/// * `N`: `RealBound` (f32, f64)
 #[derive(Derivative, Clone, Debug, PartialEq)]
 #[derivative(Default(bound = "V: Query<(Position, Normal, TexCoord)>"))]
-pub struct DrawShaded<V, N> {
-    _marker: PhantomData<(V, N)>,
+pub struct DrawShaded<V> {
+    _marker: PhantomData<(V)>,
     #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
 }
 
-impl<V, N> DrawShaded<V, N>
+impl<V> DrawShaded<V>
 where
     V: Query<(Position, Normal, TexCoord)>,
 {
@@ -94,10 +90,9 @@ where
     }
 }
 
-impl<'a, V, N> PassData<'a> for DrawShaded<V, N>
+impl<'a, V> PassData<'a> for DrawShaded<V>
 where
     V: Query<(Position, Normal, TexCoord)>,
-    N: RealField,
 {
     type Data = (
         Read<'a, ActiveCamera>,
@@ -111,16 +106,15 @@ where
         ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
-        ReadStorage<'a, Transform<N>>,
+        ReadStorage<'a, Transform>,
         ReadStorage<'a, Light>,
         ReadStorage<'a, Rgba>,
     );
 }
 
-impl<V, N> Pass for DrawShaded<V, N>
+impl<V> Pass for DrawShaded<V>
 where
     V: Query<(Position, Normal, TexCoord)>,
-    N: RealField + SubsetOf<f32> + Pod,
 {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);

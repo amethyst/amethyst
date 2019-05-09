@@ -1,4 +1,5 @@
 use crate::types::{Backend, Texture};
+use amethyst_core::alga::num::PrimInt;
 use core::{
     hash::Hash,
     iter::{DoubleEndedIterator, ExactSizeIterator, FusedIterator},
@@ -6,7 +7,6 @@ use core::{
 };
 use derivative::Derivative;
 use glsl_layout::*;
-use num_traits::PrimInt;
 use rendy::{
     factory::Factory,
     graph::render::PrepareResult,

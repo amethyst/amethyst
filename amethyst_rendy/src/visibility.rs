@@ -4,12 +4,12 @@ use crate::{
     transparent::Transparent,
 };
 use amethyst_core::{
-    alga::general::SubsetOf,
+    alga::num::One,
     ecs::prelude::{
         Component, DenseVecStorage, Entities, Entity, Join, Read, ReadStorage, System, Write,
     },
-    math::{distance_squared, try_convert, Matrix4, Point3, RealField, Vector4},
-    Transform,
+    math::{self as na, convert, distance_squared, Matrix4, Point3, RealField, Vector4},
+    Float, Transform,
 };
 use hibitset::BitSet;
 use serde::{Deserialize, Serialize};
@@ -33,53 +33,56 @@ pub struct Visibility {
 ///
 /// Note that this should run after `Transform` has been updated for the current frame, and
 /// before rendering occurs.
-pub struct VisibilitySortingSystem<N: RealField> {
-    centroids: Vec<Internals<N>>,
-    transparent: Vec<Internals<N>>,
+pub struct VisibilitySortingSystem {
+    centroids: Vec<Internals>,
+    transparent: Vec<Internals>,
 }
 
 /// Defines a object's bounding sphere used by frustum culling.
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
-pub struct BoundingSphere<N: RealField> {
-    pub center: Point3<N>,
-    pub radius: N,
+pub struct BoundingSphere {
+    pub center: Point3<Float>,
+    pub radius: Float,
 }
 
-impl<N: RealField> Default for BoundingSphere<N> {
+impl Default for BoundingSphere {
     fn default() -> Self {
         Self {
             center: Point3::origin(),
-            radius: N::one(),
+            radius: na::one(),
         }
     }
 }
 
-impl<N: RealField> BoundingSphere<N> {
-    pub fn new(center: Point3<N>, radius: N) -> Self {
-        Self { center, radius }
+impl BoundingSphere {
+    pub fn new(center: Point3<Float>, radius: impl Into<Float>) -> Self {
+        Self {
+            center,
+            radius: radius.into(),
+        }
     }
 
-    pub fn origin(radius: N) -> Self {
+    pub fn origin(radius: impl Into<Float>) -> Self {
         Self {
             center: Point3::origin(),
-            radius,
+            radius: radius.into(),
         }
     }
 }
 
-impl<N: RealField> Component for BoundingSphere<N> {
+impl Component for BoundingSphere {
     type Storage = DenseVecStorage<Self>;
 }
 
 #[derive(Clone)]
-struct Internals<N: RealField> {
+struct Internals {
     entity: Entity,
     transparent: bool,
-    centroid: Point3<N>,
-    camera_distance: N,
+    centroid: Point3<Float>,
+    camera_distance: Float,
 }
 
-impl<N: RealField> VisibilitySortingSystem<N> {
+impl VisibilitySortingSystem {
     /// Create new sorting system
     pub fn new() -> Self {
         VisibilitySortingSystem {
@@ -89,7 +92,7 @@ impl<N: RealField> VisibilitySortingSystem<N> {
     }
 }
 
-impl<'a, N: RealField + SubsetOf<f32>> System<'a> for VisibilitySortingSystem<N> {
+impl<'a> System<'a> for VisibilitySortingSystem {
     type SystemData = (
         Entities<'a>,
         Write<'a, Visibility>,
@@ -98,8 +101,8 @@ impl<'a, N: RealField + SubsetOf<f32>> System<'a> for VisibilitySortingSystem<N>
         Option<Read<'a, ActiveCamera>>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Transparent>,
-        ReadStorage<'a, Transform<N>>,
-        ReadStorage<'a, BoundingSphere<N>>,
+        ReadStorage<'a, Transform>,
+        ReadStorage<'a, BoundingSphere>,
     );
 
     fn run(
@@ -130,8 +133,8 @@ impl<'a, N: RealField + SubsetOf<f32>> System<'a> for VisibilitySortingSystem<N>
             .unwrap_or((&defcam, &identity));
 
         let camera_centroid = camera_transform.global_matrix().transform_point(&origin);
-        let frustum = Frustum::<N>::new(
-            try_convert::<Matrix4<f32>, Matrix4<N>>(camera.proj).unwrap()
+        let frustum = Frustum::new(
+            convert::<_, Matrix4<Float>>(camera.proj)
                 * camera_transform.global_matrix().try_inverse().unwrap(),
         );
 
@@ -151,7 +154,7 @@ impl<'a, N: RealField + SubsetOf<f32>> System<'a> for VisibilitySortingSystem<N>
                     (
                         entity,
                         matrix.transform_point(&pos),
-                        sphere.map_or(N::one(), |s| s.radius)
+                        sphere.map_or(na::one(), |s| s.radius)
                             * matrix[(0, 0)].max(matrix[(1, 1)]).max(matrix[(2, 2)]),
                     )
                 })
@@ -189,12 +192,12 @@ impl<'a, N: RealField + SubsetOf<f32>> System<'a> for VisibilitySortingSystem<N>
 }
 
 #[derive(Debug)]
-struct Frustum<N: RealField> {
-    planes: [Vector4<N>; 6],
+struct Frustum {
+    planes: [Vector4<Float>; 6],
 }
 
-impl<N: RealField> Frustum<N> {
-    fn new(matrix: Matrix4<N>) -> Self {
+impl Frustum {
+    fn new(matrix: Matrix4<Float>) -> Self {
         let planes = [
             (matrix.row(3) + matrix.row(0)).transpose(),
             (matrix.row(3) - matrix.row(0)).transpose(),
@@ -205,17 +208,18 @@ impl<N: RealField> Frustum<N> {
         ];
         Self {
             planes: [
-                planes[0] * (N::one() / planes[0].xyz().magnitude()),
-                planes[1] * (N::one() / planes[1].xyz().magnitude()),
-                planes[2] * (N::one() / planes[2].xyz().magnitude()),
-                planes[3] * (N::one() / planes[3].xyz().magnitude()),
-                planes[4] * (N::one() / planes[4].xyz().magnitude()),
-                planes[5] * (N::one() / planes[5].xyz().magnitude()),
+                planes[0] * (Float::one() / planes[0].xyz().magnitude()),
+                planes[1] * (Float::one() / planes[1].xyz().magnitude()),
+                planes[2] * (Float::one() / planes[2].xyz().magnitude()),
+                planes[3] * (Float::one() / planes[3].xyz().magnitude()),
+                planes[4] * (Float::one() / planes[4].xyz().magnitude()),
+                planes[5] * (Float::one() / planes[5].xyz().magnitude()),
             ],
         }
     }
 
-    fn check_sphere(&self, center: &Point3<N>, radius: N) -> bool {
+    fn check_sphere(&self, center: &Point3<Float>, radius: impl Into<Float>) -> bool {
+        let radius = radius.into();
         for plane in &self.planes {
             if plane.xyz().dot(&center.coords) + plane.w <= -radius {
                 return false;

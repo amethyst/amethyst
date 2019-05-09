@@ -7,11 +7,10 @@ use amethyst_assets::{
     AssetStorage, Handle, Loader, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter,
 };
 use amethyst_core::{
-    alga::general::SubsetOf,
-    ecs::prelude::{Entity, Read, ReadExpect, Write, WriteStorage},
-    math::{try_convert, Point3, RealField, Vector3},
+    ecs::prelude::{Entity, Write, WriteStorage, Read, ReadExpect},
+    math::{convert, Point3, Vector3},
     transform::Transform,
-    Named,
+    Named, Float,
 };
 use amethyst_error::Error;
 use amethyst_rendy::{
@@ -27,21 +26,17 @@ mod error;
 mod format;
 
 /// Load `GltfSceneAsset`s
-pub type GltfSceneLoaderSystem<N> = PrefabLoaderSystem<GltfPrefab<N>>;
+pub type GltfSceneLoaderSystem = PrefabLoaderSystem<GltfPrefab>;
 
 /// Gltf scene asset as returned by the `GltfSceneFormat`
-pub type GltfSceneAsset<N> = Prefab<GltfPrefab<N>>;
+pub type GltfSceneAsset = Prefab<GltfPrefab>;
 
 /// `PrefabData` for loading Gltf files.
-#[derive(Debug, Derivative)]
-#[derivative(Default(bound = ""))]
-pub struct GltfPrefab<N>
-where
-    N: RealField + SubsetOf<f32>,
-{
+#[derive(Debug, Default)]
+pub struct GltfPrefab {
     /// `Transform` will almost always be placed, the only exception is for the main `Entity` for
     /// certain scenarios (based on the data in the Gltf file)
-    pub transform: Option<Transform<N>>,
+    pub transform: Option<Transform>,
     /// `MeshData` is placed on all `Entity`s with graphics primitives
     pub mesh: Option<MeshBuilder<'static>>,
     /// Mesh handle after sub asset loading is done
@@ -49,10 +44,10 @@ where
     /// `Material` is placed on all `Entity`s with graphics primitives with material
     pub material: Option<MaterialPrefab>,
     /// Loaded animations, if applicable, will always only be placed on the main `Entity`
-    pub animatable: Option<AnimatablePrefab<usize, Transform<N>>>,
+    pub animatable: Option<AnimatablePrefab<usize, Transform>>,
     /// Skin data is placed on `Entity`s involved in the skin, skeleton or graphical primitives
     /// using the skin
-    pub skinnable: Option<SkinnablePrefab<N>>,
+    pub skinnable: Option<SkinnablePrefab>,
     /// Node extent
     pub extent: Option<GltfNodeExtent>,
     /// Node name
@@ -61,14 +56,11 @@ where
     pub(crate) material_id: Option<usize>,
 }
 
-impl<N> GltfPrefab<N>
-where
-    N: RealField + SubsetOf<f32>,
-{
+impl GltfPrefab {
     /// Move the scene so the center of the bounding box is at the given `target` location.
     pub fn move_to(&mut self, target: Point3<f32>) {
         if let Some(ref extent) = self.extent {
-            let diff = try_convert::<_, Vector3<N>>(target - extent.centroid()).unwrap();
+            let diff = convert::<_, Vector3<Float>>(target - extent.centroid());
             *self
                 .transform
                 .get_or_insert_with(Transform::default)
@@ -81,7 +73,7 @@ where
         if let Some(ref extent) = self.extent {
             let distance = extent.distance();
             let max = distance.x.max(distance.y).max(distance.z);
-            let scale = try_convert::<_, N>(max_distance / max).unwrap();
+            let scale: Float = (max_distance / max).into();
             self.transform
                 .get_or_insert_with(Transform::default)
                 .set_scale(Vector3::new(scale, scale, scale));
@@ -153,11 +145,11 @@ impl GltfNodeExtent {
     }
 }
 
-impl<N: RealField + SubsetOf<f32>> Into<BoundingSphere<N>> for GltfNodeExtent {
-    fn into(self) -> BoundingSphere<N> {
+impl Into<BoundingSphere> for GltfNodeExtent {
+    fn into(self) -> BoundingSphere {
         BoundingSphere {
-            center: try_convert(self.centroid()).unwrap(),
-            radius: try_convert(self.distance().magnitude() * 0.5).unwrap(),
+            center: convert(self.centroid()),
+            radius: convert(self.distance().magnitude() * 0.5),
         }
     }
 }
@@ -207,17 +199,14 @@ pub struct GltfSceneOptions {
     pub scene_index: Option<usize>,
 }
 
-impl<'a, N> PrefabData<'a> for GltfPrefab<N>
-where
-    N: RealField + SubsetOf<f32>,
-{
+impl<'a> PrefabData<'a> for GltfPrefab {
     type SystemData = (
-        <Transform<N> as PrefabData<'a>>::SystemData,
+        <Transform as PrefabData<'a>>::SystemData,
         <Named as PrefabData<'a>>::SystemData,
         <MaterialPrefab as PrefabData<'a>>::SystemData,
-        <AnimatablePrefab<usize, Transform<N>> as PrefabData<'a>>::SystemData,
-        <SkinnablePrefab<N> as PrefabData<'a>>::SystemData,
-        WriteStorage<'a, BoundingSphere<N>>,
+        <AnimatablePrefab<usize, Transform> as PrefabData<'a>>::SystemData,
+        <SkinnablePrefab as PrefabData<'a>>::SystemData,
+        WriteStorage<'a, BoundingSphere>,
         WriteStorage<'a, Handle<Mesh>>,
         Read<'a, AssetStorage<Mesh>>,
         ReadExpect<'a, Loader>,

@@ -2,27 +2,21 @@ use std::collections::HashMap;
 
 use amethyst_animation::{JointPrefab, SkinPrefab, SkinnablePrefab};
 use amethyst_assets::Prefab;
-use amethyst_core::{
-    alga::general::SubsetOf,
-    math::{try_convert, Matrix4, RealField},
-};
+use amethyst_core::{math::{Matrix4, convert}, Float};
 use amethyst_error::Error;
 use amethyst_rendy::skinning::JointTransformsPrefab;
 
 use super::Buffers;
 use crate::GltfPrefab;
 
-pub fn load_skin<N>(
+pub fn load_skin(
     skin: &gltf::Skin<'_>,
     buffers: &Buffers,
     skin_entity: usize,
     node_map: &HashMap<usize, usize>,
     meshes: Vec<usize>,
-    prefab: &mut Prefab<GltfPrefab<N>>,
-) -> Result<(), Error>
-where
-    N: RealField + SubsetOf<f32>,
-{
+    prefab: &mut Prefab<GltfPrefab>,
+) -> Result<(), Error> {
     let joints = skin
         .joints()
         .map(|j| {
@@ -39,7 +33,7 @@ where
         .map(|matrices| {
             matrices
                 .map(Matrix4::from)
-                .map(|m| try_convert::<_, Matrix4<N>>(m).unwrap())
+                .map(|m| convert::<_, Matrix4<Float>>(m))
                 .collect()
         })
         .unwrap_or(vec![Matrix4::identity().into(); joints.len()]);
@@ -66,7 +60,7 @@ where
     let skin_prefab = SkinPrefab {
         joints,
         meshes,
-        bind_shape_matrix: Matrix4::<N>::identity(),
+        bind_shape_matrix: Matrix4::identity(),
         inverse_bind_matrices,
     };
     prefab
