@@ -137,7 +137,8 @@ impl<'a> System<'a> for TransformSystem {
 mod tests {
     use crate::{
         ecs::prelude::{Builder, World},
-        math::{Matrix4, Quaternion, RealField, Unit, Vector3},
+        math::{Matrix4, Quaternion, Unit, Vector3},
+        Float,
     };
     use shred::RunNow;
     use specs_hierarchy::{Hierarchy, HierarchySystem};
@@ -149,27 +150,27 @@ mod tests {
     fn transform_matrix() {
         let mut transform = Transform::default();
         transform.set_translation_xyz(5.0, 2.0, -0.5);
-        transform.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.0, 0.0, 0.0)));
-        transform.set_scale(Vector3::new(2.0, 2.0, 2.0));
+        transform.set_rotation(Unit::new_normalize(Quaternion::new(1.0.into(), 0.0.into(), 0.0.into(), 0.0.into())));
+        transform.set_scale(Vector3::new(2.0.into(), 2.0.into(), 2.0.into()));
 
         let combined = Matrix4::new_translation(transform.translation())
             * transform.rotation().to_rotation_matrix().to_homogeneous()
-            * Matrix4::new_scaling(2.0);
+            * Matrix4::new_scaling(2.0.into());
 
         assert_eq!(transform.matrix(), combined);
     }
 
-    fn transform_world<'a, 'b>() -> (World, HierarchySystem<Parent>, TransformSystem<f32>) {
+    fn transform_world<'a, 'b>() -> (World, HierarchySystem<Parent>, TransformSystem) {
         let mut world = World::new();
         let mut hs = HierarchySystem::<Parent>::new();
-        let mut ts = TransformSystem::<f32>::new();
+        let mut ts = TransformSystem::new();
         hs.setup(&mut world.res);
         ts.setup(&mut world.res);
 
         (world, hs, ts)
     }
 
-    fn together<N: RealField>(
+    fn together(
         global_matrix: Matrix4<Float>,
         local_matrix: Matrix4<Float>,
     ) -> Matrix4<Float> {
@@ -206,7 +207,7 @@ mod tests {
 
         let mut local = Transform::default();
         local.set_translation_xyz(5.0, 5.0, 5.0);
-        local.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
+        local.set_rotation(Unit::new_normalize(Quaternion::new(1.0.into(), 0.5.into(), 0.5.into(), 0.0.into())));
 
         let e1 = world.create_entity().with(local.clone()).build();
 
@@ -226,13 +227,13 @@ mod tests {
 
         let mut local1 = Transform::default();
         local1.set_translation_xyz(5.0, 5.0, 5.0);
-        local1.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
+        local1.set_rotation(Unit::new_normalize(Quaternion::new(1.0.into(), 0.5.into(), 0.5.into(), 0.0.into())));
 
         let e1 = world.create_entity().with(local1.clone()).build();
 
         let mut local2 = Transform::default();
         local2.set_translation_xyz(5.0, 5.0, 5.0);
-        local2.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
+        local2.set_rotation(Unit::new_normalize(Quaternion::new(1.0.into(), 0.5.into(), 0.5.into(), 0.0.into())));
 
         let e2 = world
             .create_entity()
@@ -242,7 +243,7 @@ mod tests {
 
         let mut local3 = Transform::default();
         local3.set_translation_xyz(5.0, 5.0, 5.0);
-        local3.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
+        local3.set_rotation(Unit::new_normalize(Quaternion::new(1.0.into(), 0.5.into(), 0.5.into(), 0.0.into())));
 
         let e3 = world
             .create_entity()
@@ -300,19 +301,19 @@ mod tests {
 
         let mut local3 = Transform::default();
         local3.set_translation_xyz(5.0, 5.0, 5.0);
-        local3.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
+        local3.set_rotation(Unit::new_normalize(Quaternion::new(1.0.into(), 0.5.into(), 0.5.into(), 0.0.into())));
 
         let e3 = world.create_entity().with(local3.clone()).build();
 
         let mut local2 = Transform::default();
         local2.set_translation_xyz(5.0, 5.0, 5.0);
-        local2.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
+        local2.set_rotation(Unit::new_normalize(Quaternion::new(1.0.into(), 0.5.into(), 0.5.into(), 0.0.into())));
 
         let e2 = world.create_entity().with(local2.clone()).build();
 
         let mut local1 = Transform::default();
         local1.set_translation_xyz(5.0, 5.0, 5.0);
-        local1.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
+        local1.set_rotation(Unit::new_normalize(Quaternion::new(1.0.into(), 0.5.into(), 0.5.into(), 0.0.into())));
 
         let e1 = world.create_entity().with(local1.clone()).build();
 

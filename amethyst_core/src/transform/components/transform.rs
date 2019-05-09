@@ -720,6 +720,7 @@ impl Serialize for Transform {
 mod tests {
     use crate::{
         approx::*,
+        Float,
         math::{UnitQuaternion, Vector3},
         Transform,
     };
@@ -730,17 +731,17 @@ mod tests {
         // For the condition to hold both scales must be uniform
         let mut first = Transform::default();
         first.set_translation_xyz(20., 10., -3.);
-        first.set_scale(Vector3::new(2., 2., 2.));
+        first.set_scale(Vector3::new(2.0.into(), 2.0.into(), 2.0.into()));
         first.set_rotation(
-            UnitQuaternion::rotation_between(&Vector3::new(-1., 1., 2.), &Vector3::new(1., 0., 0.))
+            UnitQuaternion::rotation_between(&Vector3::new(Float(-1.0), Float(1.0), Float(2.0)), &Vector3::new(Float(1.0), Float(0.0), Float(0.0)))
                 .unwrap(),
         );
 
         let mut second = Transform::default();
         second.set_translation_xyz(2., 1., -3.);
-        second.set_scale(Vector3::new(1., 1., 1.));
+        second.set_scale(Vector3::new(1.0.into(), 1.0.into(), 1.0.into()));
         second.set_rotation(
-            UnitQuaternion::rotation_between(&Vector3::new(7., -1., 3.), &Vector3::new(2., 1., 1.))
+            UnitQuaternion::rotation_between(&Vector3::new(Float(7.0), Float(-1.0), Float(3.0)), &Vector3::new(Float(2.0), Float(1.0), Float(1.0)))
                 .unwrap(),
         );
 
@@ -748,12 +749,12 @@ mod tests {
         assert_relative_eq!(
             first.matrix() * second.matrix(),
             first.concat(&second).matrix(),
-            max_relative = 0.0000000000001,
+            max_relative = Float(0.000001),
         );
         assert_relative_eq!(
             first.matrix() * second.matrix(),
             first.concat(&second).matrix(),
-            max_relative = 0.0000000000001,
+            max_relative = Float(0.000001),
         );
     }
 
@@ -761,9 +762,9 @@ mod tests {
     fn test_view_matrix() {
         let mut transform = Transform::default();
         transform.set_translation_xyz(5.0, 70.1, 43.7);
-        transform.set_scale(Vector3::new(1.0, 5.0, 8.9));
+        transform.set_scale(Vector3::new(1.0.into(), 5.0.into(), 8.9.into()));
         transform.set_rotation(
-            UnitQuaternion::rotation_between(&Vector3::new(-1., 1., 2.), &Vector3::new(1., 0., 0.))
+            UnitQuaternion::rotation_between(&Vector3::new(Float(-1.0), Float(1.0), Float(2.0)), &Vector3::new(Float(1.0), Float(0.0), Float(0.0)))
                 .unwrap(),
         );
 
@@ -777,9 +778,9 @@ mod tests {
     fn ser_deser() {
         let mut transform = Transform::default();
         transform.set_translation_xyz(1.0, 2.0, 3.0);
-        transform.set_scale(Vector3::new(4.0, 5.0, 6.0));
+        transform.set_scale(Vector3::new(4.0.into(), 5.0.into(), 6.0.into()));
         transform.set_rotation(
-            UnitQuaternion::rotation_between(&Vector3::new(-1., 1., 2.), &Vector3::new(1., 0., 0.))
+            UnitQuaternion::rotation_between(&Vector3::new(Float(-1.0), Float(1.0), Float(2.0)), &Vector3::new(Float(1.0), Float(0.0), Float(0.0)))
                 .unwrap(),
         );
         let s: String =
@@ -794,7 +795,7 @@ mod tests {
         let mut transform = Transform::default();
         assert!(transform.is_finite());
 
-        transform.global_matrix.fill_row(2, std::f32::NAN);
+        transform.global_matrix.fill_row(2, std::f32::NAN.into());
         assert!(!transform.is_finite());
     }
 }

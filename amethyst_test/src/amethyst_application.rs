@@ -49,7 +49,7 @@ type FnState<T, E> = SendBoxFnOnce<'static, (), Box<dyn State<T, E>>>;
 type DefaultPipeline = PipelineBuilder<
     Queue<(
         Queue<()>,
-        StageBuilder<Queue<(Queue<(Queue<()>, DrawFlat2D<f32>)>, DrawUi)>>,
+        StageBuilder<Queue<(Queue<(Queue<()>, DrawFlat2D)>, DrawUi)>>,
     )>,
 >;
 
