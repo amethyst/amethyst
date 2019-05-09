@@ -37,6 +37,7 @@ it is attached to. ([#1282])
 * Add `Input` variant to `StateEvent`. ([#1478])
 * Support type parameters in `EventReader` derive. ([#1478])
 * Added `events` example which demonstrates working even reader and writer in action. ([#1538])
+*  Implement builder like functionality for `AnimationSet` and `AnimationControlSet` ([#1568])
 
 ### Changed
 
@@ -144,6 +145,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1526]: https://github.com/amethyst/amethyst/pull/1526
 [#1538]: https://github.com/amethyst/amethyst/pull/1538
 [#1539]: https://github.com/amethyst/amethyst/pull/1543
+[#1568]: https://github.com/amethyst/amethyst/pull/1568
 ## [0.10.0] - 2018-12
 
 ### Added
