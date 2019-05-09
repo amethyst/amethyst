@@ -1,11 +1,8 @@
 //! Skybox pass
 
-use std::marker::PhantomData;
-
 use amethyst_core::{
-    alga::general::SubsetOf,
     ecs::{Read, ReadStorage},
-    math::{self as na, RealField},
+    math as na,
     transform::Transform,
 };
 use amethyst_error::Error;
@@ -35,42 +32,28 @@ pub(crate) struct VertexArgs {
 }
 
 /// Draw a simple gradient skybox
-///
-/// # Type Parameters:
-///
-/// * `N`: `RealBound` (f32, f64)
 #[derive(Clone, Debug)]
-pub struct DrawSkybox<N> {
+pub struct DrawSkybox {
     mesh: Option<Mesh>,
-    _pd: PhantomData<N>,
 }
 
-impl<N> DrawSkybox<N> {
+impl DrawSkybox {
     /// Create instance of `DrawSkybox` pass
     pub fn new() -> Self {
-        DrawSkybox {
-            mesh: None,
-            _pd: PhantomData,
-        }
+        DrawSkybox { mesh: None }
     }
 }
 
-impl<'a, N> PassData<'a> for DrawSkybox<N>
-where
-    N: RealField,
-{
+impl<'a> PassData<'a> for DrawSkybox {
     type Data = (
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
-        ReadStorage<'a, Transform<N>>,
+        ReadStorage<'a, Transform>,
         Read<'a, SkyboxColor>,
     );
 }
 
-impl<N> Pass for DrawSkybox<N>
-where
-    N: RealField + SubsetOf<f32>,
-{
+impl Pass for DrawSkybox {
     fn compile(&mut self, mut effect: NewEffect<'_>) -> Result<Effect, Error> {
         let verts = Shape::Cube.generate_vertices::<Vec<PosTex>>(None);
         self.mesh = Some(Mesh::build(verts).build(&mut effect.factory)?);

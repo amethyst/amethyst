@@ -5,7 +5,7 @@ use amethyst::{
     assets::{Loader, SimpleFormat},
     core::{
         math::{Vector2, Vector3},
-        Transform, TransformBundle,
+        Float, Transform, TransformBundle,
     },
     error::Error,
     input::InputBundle,
@@ -86,9 +86,13 @@ impl SimpleState for AssetsExample {
             (mesh, mat)
         };
 
-        let mut trans = Transform::<f32>::default();
+        let mut trans = Transform::default();
         trans.set_translation_xyz(-5.0, 0.0, 0.0);
-        trans.set_scale(Vector3::new(2.0, 2.0, 2.0));
+        trans.set_scale(Vector3::new(
+            Float::from(2.0),
+            Float::from(2.0),
+            Float::from(2.0),
+        ));
         world
             .create_entity()
             .with(mesh)
@@ -111,12 +115,8 @@ fn main() -> Result<(), Error> {
 
     let game_data = GameDataBuilder::default()
         .with_bundle(InputBundle::<String, String>::new())?
-        .with_bundle(TransformBundle::<f32>::new())?
-        .with_basic_renderer(
-            display_config_path,
-            DrawShaded::<PosNormTex, f32>::new(),
-            false,
-        )?;
+        .with_bundle(TransformBundle::new())?
+        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
 
     let mut game = Application::new(resources_directory, AssetsExample, game_data)?;
     game.run();
@@ -124,7 +124,7 @@ fn main() -> Result<(), Error> {
 }
 
 fn initialise_camera(world: &mut World) {
-    let mut transform = Transform::<f32>::default();
+    let mut transform = Transform::default();
     transform.set_translation_xyz(0.0, -20.0, 10.0);
     transform.prepend_rotation_x_axis(1.3257521);
 
@@ -148,7 +148,7 @@ fn initialise_lights(world: &mut World) {
     }
     .into();
 
-    let mut transform = Transform::<f32>::default();
+    let mut transform = Transform::default();
     transform.set_translation_xyz(5.0, -20.0, 15.0);
 
     // Add point light.

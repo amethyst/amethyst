@@ -42,22 +42,18 @@ fn main() -> Result<(), Error> {
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(
-            FlyControlBundle::<String, String, f32>::new(
+            FlyControlBundle::<String, String>::new(
                 Some(String::from("move_x")),
                 Some(String::from("move_y")),
                 Some(String::from("move_z")),
             )
             .with_sensitivity(0.1, 0.1),
         )?
-        .with_bundle(TransformBundle::<f32>::new().with_dep(&["fly_movement"]))?
+        .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_bundle(
             InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
-        .with_basic_renderer(
-            display_config_path,
-            DrawShaded::<PosNormTex, f32>::new(),
-            false,
-        )?;
+        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
     let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
     game.run();
     Ok(())

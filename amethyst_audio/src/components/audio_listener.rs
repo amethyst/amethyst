@@ -1,26 +1,27 @@
 use amethyst_core::{
     ecs::{prelude::Component, storage::HashMapStorage},
-    math::{one, zero, Point3, RealField},
+    math::{one, zero, Point3},
+    Float,
 };
 
 /// An audio listener, add this component to the local player character.
 #[derive(Debug)]
-pub struct AudioListener<N: RealField> {
+pub struct AudioListener {
     /// Position of the left ear relative to the global transform on this entity.
-    pub left_ear: Point3<N>,
+    pub left_ear: Point3<Float>,
     /// Position of the right ear relative to the global transform on this entity.
-    pub right_ear: Point3<N>,
+    pub right_ear: Point3<Float>,
 }
 
-impl<N: RealField> Default for AudioListener<N> {
+impl Default for AudioListener {
     fn default() -> Self {
         AudioListener {
-            left_ear: Point3::new(-one::<N>(), zero::<N>(), zero::<N>()),
-            right_ear: Point3::new(one::<N>(), zero::<N>(), zero::<N>()),
+            left_ear: Point3::new(-one::<Float>(), zero::<Float>(), zero::<Float>()),
+            right_ear: Point3::new(one::<Float>(), zero::<Float>(), zero::<Float>()),
         }
     }
 }
 
-impl<N: RealField> Component for AudioListener<N> {
+impl Component for AudioListener {
     type Storage = HashMapStorage<Self>;
 }

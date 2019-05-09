@@ -256,7 +256,7 @@ Lets look at an example of an aggregate struct:
 #[derive(PrefabData)]
 pub struct MyScenePrefab {
     mesh: AssetPrefab<Mesh, ObjFormat>,
-    transform: Transform<f32>,
+    transform: Transform,
 }
 ```
 
@@ -276,7 +276,7 @@ One last example that also adds a custom pure data `Component` into the aggregat
 #[derive(PrefabData)]
 pub struct MyScenePrefab {
     mesh: AssetPrefab<Mesh, ObjFormat>,
-    transform: Transform<f32>,
+    transform: Transform,
 
     #[prefab(Component)]
     some: SomeComponent,

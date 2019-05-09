@@ -1,25 +1,21 @@
-use num_traits::NumCast;
-use serde::{de::DeserializeOwned, Serialize};
-use std::{collections::HashMap, fmt::Debug};
+use std::collections::HashMap;
 
 use amethyst_animation::{JointPrefab, SkinPrefab, SkinnablePrefab};
 use amethyst_assets::Prefab;
-use amethyst_core::math::{Matrix4, RealField};
+use amethyst_core::math::Matrix4;
 use amethyst_error::Error;
 use amethyst_renderer::JointTransformsPrefab;
 
 use super::Buffers;
 use crate::GltfPrefab;
 
-pub fn load_skin<
-    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
->(
+pub fn load_skin(
     skin: &gltf::Skin<'_>,
     buffers: &Buffers,
     skin_entity: usize,
     node_map: &HashMap<usize, usize>,
     meshes: Vec<usize>,
-    prefab: &mut Prefab<GltfPrefab<N>>,
+    prefab: &mut Prefab<GltfPrefab>,
 ) -> Result<(), Error> {
     let joints = skin
         .joints()
@@ -91,7 +87,7 @@ pub fn load_skin<
     let skin_prefab = SkinPrefab {
         joints,
         meshes,
-        bind_shape_matrix: Matrix4::<N>::identity(),
+        bind_shape_matrix: Matrix4::identity(),
         inverse_bind_matrices,
     };
     prefab

@@ -2,18 +2,17 @@
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-use num_traits::cast::NumCast;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 pub use crate::format::GltfSceneFormat;
 
-use std::{collections::HashMap, fmt::Debug, ops::Range};
+use std::{collections::HashMap, ops::Range};
 
 use amethyst_animation::{AnimatablePrefab, SkinnablePrefab};
 use amethyst_assets::{Handle, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter};
 use amethyst_core::{
     ecs::prelude::{Component, DenseVecStorage, Entity, Write, WriteStorage},
-    math::{Point3, RealField, Vector3},
+    math::{Point3, Vector3},
     transform::Transform,
     Named,
 };
@@ -24,19 +23,17 @@ mod error;
 mod format;
 
 /// Load `GltfSceneAsset`s
-pub type GltfSceneLoaderSystem<N> = PrefabLoaderSystem<GltfPrefab<N>>;
+pub type GltfSceneLoaderSystem = PrefabLoaderSystem<GltfPrefab>;
 
 /// Gltf scene asset as returned by the `GltfSceneFormat`
-pub type GltfSceneAsset<N> = Prefab<GltfPrefab<N>>;
+pub type GltfSceneAsset = Prefab<GltfPrefab>;
 
 /// `PrefabData` for loading Gltf files.
 #[derive(Debug, Clone, Default)]
-pub struct GltfPrefab<
-    N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField,
-> {
+pub struct GltfPrefab {
     /// `Transform` will almost always be placed, the only exception is for the main `Entity` for
     /// certain scenarios (based on the data in the Gltf file)
-    pub transform: Option<Transform<N>>,
+    pub transform: Option<Transform>,
     /// `MeshData` is placed on all `Entity`s with graphics primitives
     pub mesh: Option<MeshData>,
     /// Mesh handle after sub asset loading is done
@@ -44,10 +41,10 @@ pub struct GltfPrefab<
     /// `Material` is placed on all `Entity`s with graphics primitives with material
     pub material: Option<MaterialPrefab<TextureFormat>>,
     /// Loaded animations, if applicable, will always only be placed on the main `Entity`
-    pub animatable: Option<AnimatablePrefab<usize, Transform<N>>>,
+    pub animatable: Option<AnimatablePrefab<usize, Transform>>,
     /// Skin data is placed on `Entity`s involved in the skin, skeleton or graphical primitives
     /// using the skin
-    pub skinnable: Option<SkinnablePrefab<N>>,
+    pub skinnable: Option<SkinnablePrefab>,
     /// Node extent
     pub extent: Option<GltfNodeExtent>,
     /// Node name
@@ -56,10 +53,7 @@ pub struct GltfPrefab<
     pub(crate) material_id: Option<usize>,
 }
 
-impl<
-        N: Clone + Debug + Default + DeserializeOwned + Serialize + NumCast + RealField + From<f32>,
-    > GltfPrefab<N>
-{
+impl GltfPrefab {
     /// Move the scene so the center of the bounding box is at the given `target` location.
     pub fn move_to(&mut self, target: Point3<f32>) {
         if let Some(ref extent) = self.extent {
@@ -183,17 +177,14 @@ pub struct GltfSceneOptions {
     pub scene_index: Option<usize>,
 }
 
-impl<'a, N> PrefabData<'a> for GltfPrefab<N>
-where
-    N: RealField + Serialize + DeserializeOwned + NumCast + Clone + Debug + Default,
-{
+impl<'a> PrefabData<'a> for GltfPrefab {
     type SystemData = (
-        <Transform<N> as PrefabData<'a>>::SystemData,
+        <Transform as PrefabData<'a>>::SystemData,
         <MeshData as PrefabData<'a>>::SystemData,
         <Named as PrefabData<'a>>::SystemData,
         <MaterialPrefab<TextureFormat> as PrefabData<'a>>::SystemData,
-        <AnimatablePrefab<usize, Transform<N>> as PrefabData<'a>>::SystemData,
-        <SkinnablePrefab<N> as PrefabData<'a>>::SystemData,
+        <AnimatablePrefab<usize, Transform> as PrefabData<'a>>::SystemData,
+        <SkinnablePrefab as PrefabData<'a>>::SystemData,
         WriteStorage<'a, GltfNodeExtent>,
         // TODO make optional after prefab refactor. We need a way to pass options to decide to enable this or not, but without touching the prefab.
         WriteStorage<'a, MeshData>,

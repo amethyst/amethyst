@@ -132,11 +132,12 @@ pub fn init_output(res: &mut Resources) {
 
 #[cfg(test)]
 mod tests {
-    use std::{fs::File, io::Read, vec::Vec};
-
-    use amethyst_utils::app_root_dir::application_root_dir;
-
-    use crate::{output::Output, source::Source, DecoderError};
+    #[cfg(target_os = "linux")]
+    use {
+        crate::{output::Output, source::Source, DecoderError},
+        amethyst_utils::app_root_dir::application_root_dir,
+        std::{fs::File, io::Read, vec::Vec},
+    };
 
     #[test]
     #[cfg(target_os = "linux")]

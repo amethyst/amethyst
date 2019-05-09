@@ -33,14 +33,14 @@ fn main() -> amethyst::Result<()> {
         Stage::with_backbuffer()
             .clear_target([0., 0., 0., 1.], 1.)
             .with_pass(
-                DrawFlat2D::<f32>::new()
+                DrawFlat2D::new()
                     .with_transparency_settings(ColorMask::all(), ALPHA, None)),
     );
 
     let game_data = GameDataBuilder::default()
 #         .with_bundle(TransformBundle::new())?
         .with_bundle(
-            RenderBundle::<'_, _, _, f32>::new(pipe, Some(display_config))
+            RenderBundle::new(pipe, Some(display_config))
                 .with_sprite_sheet_processor())?
 
 #         .with_bundle(InputBundle::<String, String>::new())?

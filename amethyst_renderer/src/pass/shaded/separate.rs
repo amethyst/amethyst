@@ -1,8 +1,5 @@
 //! Simple shaded pass
 
-use gfx::traits::Pod;
-use std::marker::PhantomData;
-
 use derivative::Derivative;
 use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
@@ -10,9 +7,7 @@ use log::{debug, trace};
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    alga::general::SubsetOf,
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage},
-    math::RealField,
     transform::Transform,
 };
 use amethyst_error::Error;
@@ -53,20 +48,15 @@ static ATTRIBUTES: [Attributes<'static>; 3] = [
 ///
 /// See the [crate level documentation](index.html) for information about interleaved and separate
 /// passes.
-///
-/// # Type Parameters:
-///
-/// * `N`: `RealBound` (f32, f64)
 #[derive(Derivative, Clone, Debug, PartialEq)]
 #[derivative(Default)]
-pub struct DrawShadedSeparate<N> {
+pub struct DrawShadedSeparate {
     skinning: bool,
     #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
-    _pd: PhantomData<N>,
 }
 
-impl<N> DrawShadedSeparate<N> {
+impl DrawShadedSeparate {
     /// Create instance of `DrawShaded` pass
     pub fn new() -> Self {
         Default::default()
@@ -106,10 +96,7 @@ impl<N> DrawShadedSeparate<N> {
     }
 }
 
-impl<'a, N> PassData<'a> for DrawShadedSeparate<N>
-where
-    N: RealField,
-{
+impl<'a> PassData<'a> for DrawShadedSeparate {
     type Data = (
         Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
@@ -122,14 +109,14 @@ where
         ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
-        ReadStorage<'a, Transform<N>>,
+        ReadStorage<'a, Transform>,
         ReadStorage<'a, Light>,
-        ReadStorage<'a, JointTransforms<N>>,
+        ReadStorage<'a, JointTransforms>,
         ReadStorage<'a, Rgba>,
     );
 }
 
-impl<N: RealField + SubsetOf<f32> + Pod> Pass for DrawShadedSeparate<N> {
+impl Pass for DrawShadedSeparate {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         debug!("Building shaded pass");
         let mut builder = if self.skinning {

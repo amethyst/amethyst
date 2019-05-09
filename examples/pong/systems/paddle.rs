@@ -1,6 +1,6 @@
 use crate::Paddle;
 use amethyst::{
-    core::{timing::Time, transform::Transform},
+    core::{math::RealField, timing::Time, transform::Transform},
     ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
     input::InputHandler,
 };
@@ -12,7 +12,7 @@ pub struct PaddleSystem;
 impl<'s> System<'s> for PaddleSystem {
     type SystemData = (
         ReadStorage<'s, Paddle>,
-        WriteStorage<'s, Transform<f32>>,
+        WriteStorage<'s, Transform>,
         Read<'s, Time>,
         Read<'s, InputHandler<String, String>>,
     );
@@ -38,8 +38,8 @@ impl<'s> System<'s> for PaddleSystem {
                 let paddle_y = transform.translation().y;
                 transform.set_translation_y(
                     paddle_y
-                        .max(paddle.height * 0.5)
-                        .min(ARENA_HEIGHT - paddle.height * 0.5),
+                        .max((paddle.height * 0.5).into())
+                        .min((ARENA_HEIGHT - paddle.height * 0.5).into()),
                 );
             }
         }

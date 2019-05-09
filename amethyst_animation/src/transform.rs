@@ -1,9 +1,8 @@
 use amethyst_core::{
-    math::{zero, Quaternion, RealField, Unit, Vector3},
-    Transform,
+    math::{zero, Quaternion, Unit, Vector3},
+    Float, Transform,
 };
 
-use num_traits::NumCast;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -22,15 +21,15 @@ pub enum TransformChannel {
     Scale,
 }
 
-impl<'a, N: RealField> ApplyData<'a> for Transform<N> {
+impl<'a> ApplyData<'a> for Transform {
     type ApplyData = ();
 }
 
-impl<N: RealField + NumCast> AnimationSampling for Transform<N> {
-    type Primitive = SamplerPrimitive<N>;
+impl AnimationSampling for Transform {
+    type Primitive = SamplerPrimitive<Float>;
     type Channel = TransformChannel;
 
-    fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<N>, _: &()) {
+    fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<Float>, _: &()) {
         use crate::util::SamplerPrimitive::*;
 
         use self::TransformChannel::*;
@@ -49,7 +48,7 @@ impl<N: RealField + NumCast> AnimationSampling for Transform<N> {
         }
     }
 
-    fn current_sample(&self, channel: &Self::Channel, _: &()) -> SamplerPrimitive<N> {
+    fn current_sample(&self, channel: &Self::Channel, _: &()) -> SamplerPrimitive<Float> {
         use self::TransformChannel::*;
         match channel {
             Translation => SamplerPrimitive::Vec3((*self.translation()).into()),

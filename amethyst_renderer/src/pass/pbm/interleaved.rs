@@ -3,14 +3,12 @@
 use std::marker::PhantomData;
 
 use derivative::Derivative;
-use gfx::{pso::buffer::ElemStride, traits::Pod};
+use gfx::pso::buffer::ElemStride;
 use gfx_core::state::{Blend, ColorMask};
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    alga::general::SubsetOf,
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage},
-    math::RealField,
     transform::Transform,
 };
 use amethyst_error::Error;
@@ -47,16 +45,15 @@ use super::*;
 /// # Type Parameters
 ///
 /// * `V`: `VertexFormat`
-/// * `N`: `RealBound` (f32, f64)
 #[derive(Derivative, Clone, Debug, PartialEq)]
 #[derivative(Default(bound = "V: Query<(Position, Normal, Tangent, TexCoord)>"))]
-pub struct DrawPbm<V, N> {
-    _marker: PhantomData<(V, N)>,
+pub struct DrawPbm<V> {
+    _marker: PhantomData<(V)>,
     #[derivative(Default(value = "default_transparency()"))]
     transparency: Option<(ColorMask, Blend, Option<DepthMode>)>,
 }
 
-impl<V, N> DrawPbm<V, N>
+impl<V> DrawPbm<V>
 where
     V: Query<(Position, Normal, Tangent, TexCoord)>,
 {
@@ -93,10 +90,9 @@ where
     }
 }
 
-impl<'a, V, N> PassData<'a> for DrawPbm<V, N>
+impl<'a, V> PassData<'a> for DrawPbm<V>
 where
     V: Query<(Position, Normal, Tangent, TexCoord)>,
-    N: RealField,
 {
     type Data = (
         Read<'a, ActiveCamera>,
@@ -110,16 +106,15 @@ where
         ReadStorage<'a, HiddenPropagate>,
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
-        ReadStorage<'a, Transform<N>>,
+        ReadStorage<'a, Transform>,
         ReadStorage<'a, Light>,
         ReadStorage<'a, Rgba>,
     );
 }
 
-impl<V, N> Pass for DrawPbm<V, N>
+impl<V> Pass for DrawPbm<V>
 where
     V: Query<(Position, Normal, Tangent, TexCoord)>,
-    N: RealField + SubsetOf<f32> + Pod,
 {
     fn compile(&mut self, effect: NewEffect<'_>) -> Result<Effect, Error> {
         let mut builder = effect.simple(VERT_SRC, FRAG_SRC);

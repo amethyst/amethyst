@@ -33,12 +33,8 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
-        .with_bundle(TransformBundle::<f32>::new())?
-        .with_basic_renderer(
-            display_config_path,
-            DrawShaded::<PosNormTex, f32>::new(),
-            false,
-        )?;
+        .with_bundle(TransformBundle::new())?
+        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
     let mut game = Application::new(resources, Example, game_data)?;
     game.run();
     Ok(())

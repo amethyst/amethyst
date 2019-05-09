@@ -75,7 +75,7 @@ struct WalkPlayerUp {
 }
 
 impl<'a> System<'a> for WalkPlayerUp {
-    type SystemData = WriteStorage<'a, Transform<f32>>;
+    type SystemData = WriteStorage<'a, Transform>;
 
     fn run(&mut self, mut transforms: Self::SystemData) {
         transforms.get_mut(self.player).unwrap().prepend_translation_y(0.1);
@@ -116,7 +116,7 @@ struct MakeObjectsFall;
 
 impl<'a> System<'a> for MakeObjectsFall {
     type SystemData = (
-        WriteStorage<'a, Transform<f32>>,
+        WriteStorage<'a, Transform>,
         ReadStorage<'a, FallingObject>,
     );
 
@@ -154,7 +154,7 @@ struct NotFallingObjects;
 
 impl<'a> System<'a> for NotFallingObjects {
     type SystemData = (
-        WriteStorage<'a, Transform<f32>>,
+        WriteStorage<'a, Transform>,
         ReadStorage<'a, FallingObject>,
     );
 
@@ -191,7 +191,7 @@ struct SpawnEnemies {
 
 impl<'a> System<'a> for SpawnEnemies {
     type SystemData = (
-        WriteStorage<'a, Transform<f32>>,
+        WriteStorage<'a, Transform>,
         WriteStorage<'a, Enemy>,
         Entities<'a>,
     );
@@ -244,7 +244,7 @@ struct MakeObjectsFall;
 impl<'a> System<'a> for MakeObjectsFall {
     type SystemData = (
         Entities<'a>,
-        WriteStorage<'a, Transform<f32>>,
+        WriteStorage<'a, Transform>,
         ReadStorage<'a, FallingObject>,
     );
 
