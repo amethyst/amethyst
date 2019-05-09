@@ -574,10 +574,7 @@ impl Component for Transform {
 impl From<Vector3<Float>> for Transform {
     fn from(translation: Vector3<Float>) -> Self {
         Transform {
-            isometry: Isometry3::new(
-                translation,
-                na::zero(),
-            ),
+            isometry: Isometry3::new(translation, na::zero()),
             ..Default::default()
         }
     }
@@ -594,10 +591,7 @@ impl From<Vector3<f64>> for Transform {
     #[inline]
     fn from(translation: Vector3<f64>) -> Self {
         Transform {
-            isometry: Isometry3::new(
-                na::convert(translation),
-                na::zero(),
-            ),
+            isometry: Isometry3::new(na::convert(translation), na::zero()),
             ..Default::default()
         }
     }
@@ -641,11 +635,7 @@ impl<'de> Deserialize<'de> for Transform {
                     .ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
                 let isometry = Isometry3::from_parts(
-                    Translation3::new(
-                        translation[0],
-                        translation[1],
-                        translation[2],
-                    ),
+                    Translation3::new(translation[0], translation[1], translation[2]),
                     Unit::new_normalize(Quaternion::new(
                         rotation[3],
                         rotation[0],
@@ -698,11 +688,7 @@ impl<'de> Deserialize<'de> for Transform {
                 let scale: [Float; 3] = scale.unwrap_or([Float::one(); 3]);
 
                 let isometry = Isometry3::from_parts(
-                    Translation3::new(
-                        translation[0],
-                        translation[1],
-                        translation[2],
-                    ),
+                    Translation3::new(translation[0], translation[1], translation[2]),
                     Unit::new_normalize(Quaternion::new(
                         rotation[3],
                         rotation[0],
