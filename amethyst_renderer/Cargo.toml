@@ -27,6 +27,7 @@ opengl = ["gfx_device_gl", "gfx_window_glutin", "glutin"]
 #vulkan = ["gfx_device_vulkan", "gfx_window_vulkan"]
 profiler = [ "thread_profiler/thread_profiler" ]
 nightly = [ "amethyst_core/nightly" ]
+float64 = ["amethyst_core/float64"]
 
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.6.0" }
