@@ -2,13 +2,13 @@
 use std::fmt;
 
 use crate::{
-    alga::num::{One, Zero},
     ecs::prelude::{Component, DenseVecStorage, FlaggedStorage},
     float::Float,
     math::{
         self as na, ComplexField, Isometry3, Matrix4, Quaternion, Translation3, Unit,
         UnitQuaternion, Vector3,
     },
+    num::{One, Zero},
 };
 use serde::{
     de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor},
