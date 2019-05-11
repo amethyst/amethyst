@@ -1,7 +1,7 @@
 use dirs::home_dir;
 use std::{
     fs::{create_dir_all, read_to_string, remove_file, File},
-    io::{stdin, stdout, Write},
+    io::{stderr, stdin, Write},
     path::Path,
 };
 use vergen::{self, ConstantsFlags};
@@ -53,8 +53,8 @@ fn check_sentry_allowed(amethyst_home: &Path) -> Option<bool> {
 }
 
 fn ask_user_data_collection() -> bool {
-    print!("May we collect anonymous panic data and usage statistics to help improve Amethyst? No personal information is collected or stored. [Y/n]: ");
-    stdout().flush().expect("Failed to flush stdout");
+    eprint!("May we collect anonymous panic data and usage statistics to help improve Amethyst? No personal information is collected or stored. [Y/n]: ");
+    stderr().flush().expect("Failed to flush stdout");
 
     let mut s = String::new();
     stdin()
