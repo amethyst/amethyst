@@ -66,6 +66,7 @@ done the following things first:
    * `cargo build`
    * `cargo test --all`
    * `cargo run --example {example-name}`
+   * `mdbook test book -L target/debug/deps`
 4. You have granted non-exclusive right to your source code under both the
    [MIT License][lm] and the [Apache License 2.0][la]. Unless you explicitly
    state otherwise, any contribution intentionally submitted for inclusion in
@@ -81,6 +82,10 @@ done the following things first:
 [lm]: LICENSE-MIT
 [la]: LICENSE-APACHE
 [rustfmt]: https://github.com/rust-lang-nursery/rustfmt
+
+Note that if you do not have mdbook already installed you may do so with `cargo install mdbook`. 
+If you find dependency resolution problems when testing mdbook, 
+you may have to run `cargo clean` and `cargo build` again before retrying the `mdbook test` command.
 
 > If you want to be publicly known as an author, feel free to add your name
 > and/or GitHub username to the AUTHORS.md file in your pull request.
