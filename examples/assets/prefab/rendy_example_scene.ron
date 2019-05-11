@@ -146,11 +146,7 @@ Prefab (
                 light: (
                     light: Spot((
                         intensity: 5.0,
-                        color: (
-                            red: 1.0,
-                            green: 1.0,
-                            blue: 1.0,
-                        ),
+                        color: (1.0, 1.0, 1.0),
                         angle: 90.0,
                         range: 32.0,
                         smoothness: 0.1,

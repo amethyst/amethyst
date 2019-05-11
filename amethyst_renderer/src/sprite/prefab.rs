@@ -23,11 +23,22 @@ pub struct SpritePosition {
     /// Height of the sprite
     pub height: u32,
     /// Number of pixels to shift the sprite to the left and down relative to the entity holding it
+    #[serde(default="default_offsets")]
     pub offsets: Option<[f32; 2]>,
     /// Flip the sprite horizontally during rendering
+    #[serde(default="default_flip")]
     pub flip_horizontal: bool,
     /// Flip the sprite vertically during rendering
+    #[serde(default="default_flip")]
     pub flip_vertical: bool,
+}
+
+fn default_offsets() -> Option<[f32; 2]> {
+    None
+}
+
+fn default_flip() -> bool {
+    false
 }
 
 /// `SpriteList` controls how a sprite list is generated when using `Sprites::List` in a

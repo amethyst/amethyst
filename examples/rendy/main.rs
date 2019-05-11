@@ -19,7 +19,7 @@ use amethyst::{
         Time, Transform, TransformBundle,
     },
     gltf::GltfSceneLoaderSystem,
-    input::{is_close_requested, is_key_down, Axis, Bindings, Button, InputBundle},
+    input::{is_close_requested, is_key_down, Axis, Bindings, Button, InputBundle, StringBindings},
     prelude::*,
     utils::{application_root_dir, fps_counter::FPSCounterBundle, tag::TagFinder},
     window::{EventsLoopSystem, ScreenDimensions, WindowSystem},
@@ -565,15 +565,11 @@ fn main() -> amethyst::Result<()> {
             )
             .with_dep(&["gltf_loader"]),
         )?
-        .with_bundle(InputBundle::<&'static str, &'static str>::new().with_bindings(bidnings))?
+        .with_bundle(InputBundle::<StringBindings>::new().with_bindings(bidnings))?
         .with_bundle(
-            FlyControlBundle::<&'static str, &'static str>::new(
-                Some("horizontal"),
-                None,
-                Some("vertical"),
-            )
-            .with_sensitivity(0.1, 0.1)
-            .with_speed(5.),
+            FlyControlBundle::<StringBindings>::new(Some("horizontal".into()), None, Some("vertical".into()))
+                .with_sensitivity(0.1, 0.1)
+                .with_speed(5.),
         )?
         .with_bundle(TransformBundle::new().with_dep(&[
             "animation_control",
