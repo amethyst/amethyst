@@ -8,9 +8,12 @@ use amethyst_assets::{
     Progress, ProgressCounter,
 };
 use amethyst_audio::Source as Audio;
-use amethyst_core::ecs::prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage};
+use amethyst_core::{
+    ecs::prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage},
+    HiddenPropagate,
+};
 use amethyst_error::{format_err, Error, ResultExt};
-use amethyst_renderer::{HiddenPropagate, TextureHandle, TexturePrefab};
+use amethyst_rendy::{Texture, TexturePrefab};
 
 use serde::{Deserialize, Serialize};
 
@@ -311,7 +314,7 @@ pub struct UiImagePrefab {
 
 impl<'a> PrefabData<'a> for UiImagePrefab {
     type SystemData = (
-        WriteStorage<'a, TextureHandle>,
+        WriteStorage<'a, Handle<Texture>>,
         <TexturePrefab as PrefabData<'a>>::SystemData,
     );
     type Result = ();

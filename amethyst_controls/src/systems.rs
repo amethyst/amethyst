@@ -1,78 +1,64 @@
-use std::{hash::Hash, marker::PhantomData};
-
-use winit::{DeviceEvent, Event, WindowEvent};
-
 use crate::{
     components::{ArcBallControlTag, FlyControlTag},
     resources::{HideCursor, WindowFocus},
 };
 use amethyst_core::{
-    ecs::prelude::{Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
+    ecs::prelude::{Join, Read, ReadExpect, ReadStorage, Resources, System, Write, WriteStorage},
     math::{convert, Unit, Vector3},
     shrev::{EventChannel, ReaderId},
     timing::Time,
     transform::Transform,
     Float,
 };
-use amethyst_input::{get_input_axis_simple, InputHandler};
-use amethyst_renderer::WindowMessages;
+use amethyst_input::{get_input_axis_simple, BindingTypes, InputHandler};
+use std::sync::Arc;
+use winit::{DeviceEvent, Event, Window, WindowEvent};
 
 /// The system that manages the fly movement.
 ///
 /// # Type parameters
 ///
-/// * `A`: This is the key the `InputHandler` is using for axes. Often, this is a `String`.
-/// * `B`: This is the key the `InputHandler` is using for actions. Often, this is a `String`.
-pub struct FlyMovementSystem<A, B> {
+/// * `T`: This are the keys the `InputHandler` is using for axes and actions. Often, this is a `StringBindings`.
+pub struct FlyMovementSystem<T: BindingTypes> {
     /// The movement speed of the movement in units per second.
     speed: Float,
     /// The name of the input axis to locally move in the x coordinates.
-    right_input_axis: Option<A>,
+    right_input_axis: Option<T::Axis>,
     /// The name of the input axis to locally move in the y coordinates.
-    up_input_axis: Option<A>,
+    up_input_axis: Option<T::Axis>,
     /// The name of the input axis to locally move in the z coordinates.
-    forward_input_axis: Option<A>,
-    _marker: PhantomData<B>,
+    forward_input_axis: Option<T::Axis>,
 }
 
-impl<A, B> FlyMovementSystem<A, B>
-where
-    A: Send + Sync + Hash + Eq + Clone + 'static,
-    B: Send + Sync + Hash + Eq + Clone + 'static,
-{
+impl<T: BindingTypes> FlyMovementSystem<T> {
     /// Builds a new `FlyMovementSystem` using the provided speeds and axis controls.
     pub fn new<N: Into<Float>>(
         speed: N,
-        right_input_axis: Option<A>,
-        up_input_axis: Option<A>,
-        forward_input_axis: Option<A>,
+        right_input_axis: Option<T::Axis>,
+        up_input_axis: Option<T::Axis>,
+        forward_input_axis: Option<T::Axis>,
     ) -> Self {
         FlyMovementSystem {
             speed: speed.into(),
             right_input_axis,
             up_input_axis,
             forward_input_axis,
-            _marker: PhantomData,
         }
     }
 }
 
-impl<'a, A, B> System<'a> for FlyMovementSystem<A, B>
-where
-    A: Send + Sync + Hash + Eq + Clone + 'static,
-    B: Send + Sync + Hash + Eq + Clone + 'static,
-{
+impl<'a, T: BindingTypes> System<'a> for FlyMovementSystem<T> {
     type SystemData = (
         Read<'a, Time>,
         WriteStorage<'a, Transform>,
-        Read<'a, InputHandler<A, B>>,
+        Read<'a, InputHandler<T>>,
         ReadStorage<'a, FlyControlTag>,
     );
 
     fn run(&mut self, (time, mut transform, input, tag): Self::SystemData) {
-        let x = get_input_axis_simple(&self.right_input_axis, &input);
-        let y = get_input_axis_simple(&self.up_input_axis, &input);
-        let z = get_input_axis_simple(&self.forward_input_axis, &input);
+        let x: Float = get_input_axis_simple(&self.right_input_axis, &input).into();
+        let y: Float = get_input_axis_simple(&self.up_input_axis, &input).into();
+        let z: Float = get_input_axis_simple(&self.forward_input_axis, &input).into();
 
         if let Some(dir) = Unit::try_new(Vector3::new(x, y, z), convert(1.0e-6)) {
             for (transform, _) in (&mut transform, &tag).join() {
@@ -129,34 +115,25 @@ impl<'a> System<'a> for ArcBallRotationSystem {
 ///
 /// # Type parameters
 ///
-/// * `A`: This is the key the `InputHandler` is using for axes. Often, this is a `String`.
-/// * `B`: This is the key the `InputHandler` is using for actions. Often, this is a `String`.
-pub struct FreeRotationSystem<A, B> {
+/// * `T`: This are the keys the `InputHandler` is using for axes and actions. Often, this is a `StringBindings`.
+pub struct FreeRotationSystem {
     sensitivity_x: f32,
     sensitivity_y: f32,
-    _marker1: PhantomData<A>,
-    _marker2: PhantomData<B>,
     event_reader: Option<ReaderId<Event>>,
 }
 
-impl<A, B> FreeRotationSystem<A, B> {
+impl FreeRotationSystem {
     /// Builds a new `FreeRotationSystem` with the specified mouse sensitivity values.
     pub fn new(sensitivity_x: f32, sensitivity_y: f32) -> Self {
         FreeRotationSystem {
             sensitivity_x,
             sensitivity_y,
-            _marker1: PhantomData,
-            _marker2: PhantomData,
             event_reader: None,
         }
     }
 }
 
-impl<'a, A, B> System<'a> for FreeRotationSystem<A, B>
-where
-    A: Send + Sync + Hash + Eq + Clone + 'static,
-    B: Send + Sync + Hash + Eq + Clone + 'static,
-{
+impl<'a> System<'a> for FreeRotationSystem {
     type SystemData = (
         Read<'a, EventChannel<Event>>,
         WriteStorage<'a, Transform>,
@@ -246,37 +223,40 @@ impl CursorHideSystem {
 
 impl<'a> System<'a> for CursorHideSystem {
     type SystemData = (
-        Write<'a, WindowMessages>,
+        ReadExpect<'a, Arc<Window>>,
         Read<'a, HideCursor>,
         Read<'a, WindowFocus>,
     );
 
-    fn run(&mut self, (mut msg, hide, focus): Self::SystemData) {
-        use amethyst_renderer::mouse::*;
-        if focus.is_focused {
-            if !self.is_hidden && hide.hide {
-                grab_cursor(&mut msg);
-                hide_cursor(&mut msg);
-                self.is_hidden = true;
-            } else if self.is_hidden && !hide.hide {
-                release_cursor(&mut msg);
-                self.is_hidden = false;
+    fn run(&mut self, (win, hide, focus): Self::SystemData) {
+        let should_be_hidden = focus.is_focused && hide.hide;
+        if !self.is_hidden && should_be_hidden {
+            if let Err(err) = win.grab_cursor(true) {
+                log::error!("Unable to grab the cursor. Error: {:?}", err);
             }
-        } else if self.is_hidden {
-            release_cursor(&mut msg);
+            win.hide_cursor(true);
+            self.is_hidden = true;
+        } else if self.is_hidden && !should_be_hidden {
+            if let Err(err) = win.grab_cursor(false) {
+                log::error!("Unable to release the cursor. Error: {:?}", err);
+            }
+            win.hide_cursor(false);
             self.is_hidden = false;
         }
     }
 
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::ecs::prelude::SystemData;
-        use amethyst_renderer::mouse::*;
 
         Self::SystemData::setup(res);
 
-        let mut msg = res.fetch_mut::<WindowMessages>();
-        grab_cursor(&mut msg);
-        hide_cursor(&mut msg);
+        let win = res.fetch::<Arc<Window>>();
+
+        if let Err(err) = win.grab_cursor(true) {
+            log::error!("Unable to grab the cursor. Error: {:?}", err);
+        }
+        win.hide_cursor(true);
+
         self.is_hidden = true;
     }
 }

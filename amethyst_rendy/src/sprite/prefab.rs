@@ -246,7 +246,11 @@ impl<'a> PrefabData<'a> for SpriteScenePrefab {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Texture;
+    use crate::{
+        rendy::texture::palette::load_from_srgb,
+        sprite::{SpriteGrid, SpriteList, SpritePosition, SpriteSheet},
+        Texture,
+    };
     use amethyst_assets::{Handle, Loader};
     use amethyst_core::ecs::{Builder, Read, ReadExpect, World};
     use rayon::ThreadPoolBuilder;
@@ -272,7 +276,7 @@ mod tests {
             Read<'a, SpriteSheetLoadedSet>,
         );
         let texture = add_texture(world);
-        world.exec(|mut data: Data<'_>| {
+        world.exec(|data: Data<'_>| {
             let spritesheet = data.0.load_from_data(
                 SpriteSheet {
                     texture,
@@ -281,15 +285,22 @@ mod tests {
                 (),
                 &data.1,
             );
-            let index = (data.2).0.len();
-            (data.2).0.push((None, spritesheet.clone()));
+            let mut storage = (data.2).0.lock().unwrap();
+            let index = storage.len();
+            storage.push((None, spritesheet.clone()));
             (SpriteSheetReference::Index(index), spritesheet)
         })
     }
 
     fn add_texture(world: &mut World) -> Handle<Texture> {
         type Data<'a> = (ReadExpect<'a, Loader>, Read<'a, AssetStorage<Texture>>);
-        world.exec(|data: Data<'_>| data.0.load_from_data([1., 1., 1., 1.].into(), (), &data.1))
+        world.exec(|data: Data<'_>| {
+            data.0.load_from_data(
+                load_from_srgb(palette::Srgb::new(1., 1., 1.)).into(),
+                (),
+                &data.1,
+            )
+        })
     }
 
     #[test]
@@ -307,6 +318,8 @@ mod tests {
                         width: 1,
                         height: 1,
                         offsets: None,
+                        flip_horizontal: false,
+                        flip_vertical: false,
                     },
                     SpritePosition {
                         x: 1,
@@ -314,6 +327,8 @@ mod tests {
                         width: 1,
                         height: 1,
                         offsets: None,
+                        flip_horizontal: false,
+                        flip_vertical: false,
                     },
                     SpritePosition {
                         x: 2,
@@ -321,6 +336,8 @@ mod tests {
                         width: 1,
                         height: 1,
                         offsets: None,
+                        flip_horizontal: false,
+                        flip_vertical: false,
                     },
                 ],
             })],
@@ -350,7 +367,7 @@ mod tests {
         let (sheet, handle) = add_sheet(&mut world);
         let entity = world.create_entity().build();
         let mut prefab = SpriteRenderPrefab {
-            sheet,
+            sheet: Some(sheet),
             sprite_number: 0,
             handle: None,
         };

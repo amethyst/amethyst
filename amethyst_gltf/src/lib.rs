@@ -7,10 +7,10 @@ use amethyst_assets::{
     AssetStorage, Handle, Loader, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter,
 };
 use amethyst_core::{
-    ecs::prelude::{Entity, Write, WriteStorage, Read, ReadExpect},
+    ecs::prelude::{Entity, Read, ReadExpect, Write, WriteStorage},
     math::{convert, Point3, Vector3},
     transform::Transform,
-    Named, Float,
+    Float, Named,
 };
 use amethyst_error::Error;
 use amethyst_rendy::{

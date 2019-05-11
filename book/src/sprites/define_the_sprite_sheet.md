@@ -110,7 +110,7 @@ pub fn load_sprite_sheet(texture: TextureHandle) -> SpriteSheet {
     let offsets = [5.0; 2]; // Align the sprite with the middle of the entity.
 
     let sprite = Sprite::from_pixel_values(
-        image_w, image_h, sprite_w, sprite_h, offset_x, offset_y, offsets,
+        image_w, image_h, sprite_w, sprite_h, offset_x, offset_y, offsets, false, false,
     );
     sprites.push(sprite);
 

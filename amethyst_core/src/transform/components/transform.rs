@@ -2,12 +2,15 @@
 use std::fmt;
 
 use crate::{
-    alga::{num::{One, Zero}, general::SubsetOf},
+    alga::{
+        general::SubsetOf,
+        num::{One, Zero},
+    },
     ecs::prelude::{Component, DenseVecStorage, FlaggedStorage},
     float::Float,
     math::{
-        self as na, ComplexField, Isometry3, Matrix4, Quaternion, Translation3, Unit,
-        UnitQuaternion, Vector3, RealField,
+        self as na, ComplexField, Isometry3, Matrix4, Quaternion, RealField, Translation3, Unit,
+        UnitQuaternion, Vector3,
     },
 };
 use serde::{
@@ -103,12 +106,15 @@ impl Transform {
     /// assert!((*t.translation() - Vector3::new(0.0.into(), 1.0.into(), 0.0.into())).magnitude() <= 0.0001.into());
     /// ```
     #[inline]
-    pub fn face_towards<N: RealField + SubsetOf<Float>>(&mut self, target: Vector3<N>, up: Vector3<N>) -> &mut Self {
-        self.isometry.rotation =
-            UnitQuaternion::face_towards(
-                &(self.isometry.translation.vector - na::convert::<_, Vector3<Float>>(target)),
-                &na::convert::<_, Vector3<Float>>(up)
-            );
+    pub fn face_towards<N: RealField + SubsetOf<Float>>(
+        &mut self,
+        target: Vector3<N>,
+        up: Vector3<N>,
+    ) -> &mut Self {
+        self.isometry.rotation = UnitQuaternion::face_towards(
+            &(self.isometry.translation.vector - na::convert::<_, Vector3<Float>>(target)),
+            &na::convert::<_, Vector3<Float>>(up),
+        );
         self
     }
 
@@ -418,7 +424,10 @@ impl Transform {
     }
 
     /// Set the position.
-    pub fn set_translation<N: RealField + SubsetOf<Float>>(&mut self, position: Vector3<N>) -> &mut Self {
+    pub fn set_translation<N: RealField + SubsetOf<Float>>(
+        &mut self,
+        position: Vector3<N>,
+    ) -> &mut Self {
         self.isometry.translation.vector = na::convert(position);
         self
     }
@@ -445,7 +454,10 @@ impl Transform {
     }
 
     /// Sets the rotation of the transform.
-    pub fn set_rotation<N: RealField + SubsetOf<Float>>(&mut self, rotation: UnitQuaternion<N>) -> &mut Self {
+    pub fn set_rotation<N: RealField + SubsetOf<Float>>(
+        &mut self,
+        rotation: UnitQuaternion<N>,
+    ) -> &mut Self {
         self.isometry.rotation = na::convert(rotation);
         self
     }

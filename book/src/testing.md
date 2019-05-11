@@ -88,7 +88,7 @@ fn test_name() {
     // * `RenderBundle`
     //
     // If you want the Input and UI bundles, you can use the
-    // `.with_ui_bundles::<AX, AC>()` method.
+    // `.with_ui_bundles::<T>()` method.
     let visibility = false; // Whether the window should be shown
     AmethystApplication::render_base("test_name", visibility);
 }

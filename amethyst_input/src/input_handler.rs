@@ -1,21 +1,18 @@
 //! World resource that handles all user input.
 
-use std::{borrow::Borrow, hash::Hash};
-
-use derivative::Derivative;
-use smallvec::SmallVec;
-use winit::{
-    dpi::LogicalPosition, DeviceEvent, ElementState, Event, KeyboardInput, MouseButton,
-    MouseScrollDelta, VirtualKeyCode, WindowEvent,
-};
-
-use amethyst_core::shrev::EventChannel;
-
 use super::{
     controller::{ControllerButton, ControllerEvent},
     event::InputEvent::{self, *},
     scroll_direction::ScrollDirection,
     *,
+};
+use amethyst_core::shrev::EventChannel;
+use derivative::Derivative;
+use smallvec::SmallVec;
+use std::{borrow::Borrow, hash::Hash};
+use winit::{
+    dpi::LogicalPosition, DeviceEvent, ElementState, Event, KeyboardInput, MouseButton,
+    MouseScrollDelta, VirtualKeyCode, WindowEvent,
 };
 
 /// This struct holds state information about input devices.
@@ -24,13 +21,9 @@ use super::{
 /// that the key is pressed until it is released again.
 #[derive(Derivative)]
 #[derivative(Default(bound = ""))]
-pub struct InputHandler<AX = String, AC = String>
-where
-    AX: Hash + Eq + Clone,
-    AC: Hash + Eq + Clone,
-{
+pub struct InputHandler<T: BindingTypes> {
     /// Maps inputs to actions and axes.
-    pub bindings: Bindings<AX, AC>,
+    pub bindings: Bindings<T>,
     /// Encodes the VirtualKeyCode and corresponding scancode.
     pressed_keys: SmallVec<[(VirtualKeyCode, u32); 12]>,
     pressed_mouse_buttons: SmallVec<[MouseButton; 12]>,
@@ -44,22 +37,12 @@ where
     mouse_position: Option<(f64, f64)>,
 }
 
-impl<AX, AC> InputHandler<AX, AC>
-where
-    AX: Hash + Eq + Clone,
-    AC: Hash + Eq + Clone,
-{
+impl<T: BindingTypes> InputHandler<T> {
     /// Creates a new input handler.
     pub fn new() -> Self {
         Default::default()
     }
-}
 
-impl<AX, AC> InputHandler<AX, AC>
-where
-    AX: Hash + Eq + Clone + Send + Sync + 'static,
-    AC: Hash + Eq + Clone + Send + Sync + 'static,
-{
     /// Updates the input handler with a new engine event.
     ///
     /// The Amethyst game engine will automatically call this if the InputHandler is attached to
@@ -67,7 +50,7 @@ where
     pub fn send_event(
         &mut self,
         event: &Event,
-        event_handler: &mut EventChannel<InputEvent<AC>>,
+        event_handler: &mut EventChannel<InputEvent<T::Action>>,
         hidpi: f64,
     ) {
         match *event {
@@ -273,7 +256,7 @@ where
     pub fn send_controller_event(
         &mut self,
         event: &ControllerEvent,
-        event_handler: &mut EventChannel<InputEvent<AC>>,
+        event_handler: &mut EventChannel<InputEvent<T::Action>>,
     ) {
         use self::ControllerEvent::*;
 
@@ -484,9 +467,10 @@ where
     }
 
     /// Returns the value of an axis by the string id, if the id doesn't exist this returns None.
-    pub fn axis_value<T: Hash + Eq + ?Sized>(&self, id: &T) -> Option<f64>
+    pub fn axis_value<A>(&self, id: &A) -> Option<f64>
     where
-        AX: Borrow<T>,
+        T::Axis: Borrow<A>,
+        A: Hash + Eq + ?Sized,
     {
         self.bindings.axes.get(id).map(|a| match *a {
             Axis::Emulated { pos, neg, .. } => {
@@ -527,9 +511,10 @@ where
     /// Returns true if any of the actions bindings is down.
     ///
     /// If a binding represents a combination of buttons, all of them need to be down.
-    pub fn action_is_down<T: Hash + Eq + ?Sized>(&self, action: &T) -> Option<bool>
+    pub fn action_is_down<A>(&self, action: &A) -> Option<bool>
     where
-        AC: Borrow<T>,
+        T::Action: Borrow<A>,
+        A: Hash + Eq + ?Sized,
     {
         self.bindings.actions.get(action).map(|combinations| {
             combinations.iter().any(|combination| {
@@ -569,9 +554,9 @@ where
         &self,
         delta_x: f64,
         delta_y: f64,
-        event_handler: &mut EventChannel<InputEvent<AC>>,
+        event_handler: &mut EventChannel<InputEvent<T::Action>>,
     ) {
-        let mut events = Vec::<InputEvent<AC>>::new();
+        let mut events = Vec::<InputEvent<T::Action>>::new();
 
         // determine if a horizontal scroll happend
         let dir_x = match delta_x {
@@ -648,7 +633,7 @@ mod tests {
         // Press the key and check for a press event of both the key and the action.
         // Release the key and check for a release event of both the key and the action.
 
-        let mut handler = InputHandler::<String, String>::new();
+        let mut handler = InputHandler::<StringBindings>::new();
         let mut events = EventChannel::<InputEvent<String>>::new();
         let mut reader = events.register_reader();
         handler
@@ -697,7 +682,7 @@ mod tests {
         // Press the button and check for a press event of both the button and the action.
         // Release the button and check for a release event of both the button and the action.
 
-        let mut handler = InputHandler::<String, String>::new();
+        let mut handler = InputHandler::<StringBindings>::new();
         let mut events = EventChannel::<InputEvent<String>>::new();
         let mut reader = events.register_reader();
         handler
@@ -740,7 +725,7 @@ mod tests {
         // Release first key, we should get key release and action release
         // Release second key, we should key release and no action release
 
-        let mut handler = InputHandler::<String, String>::new();
+        let mut handler = InputHandler::<StringBindings>::new();
         let mut events = EventChannel::<InputEvent<String>>::new();
         let mut reader = events.register_reader();
         handler
@@ -826,7 +811,7 @@ mod tests {
         // Press both and check for 0.
         // Release both and check for 0.
 
-        let mut handler = InputHandler::<String, String>::new();
+        let mut handler = InputHandler::<StringBindings>::new();
         let mut events = EventChannel::<InputEvent<String>>::new();
         handler
             .bindings
@@ -857,7 +842,7 @@ mod tests {
         // Press some buttons and make sure the input handler returns them
         // in iterators
 
-        let mut handler = InputHandler::<String, String>::new();
+        let mut handler = InputHandler::<StringBindings>::new();
         let mut events = EventChannel::<InputEvent<String>>::new();
         assert_eq!(handler.keys_that_are_down().next(), None);
         assert_eq!(handler.scan_codes_that_are_down().next(), None);
@@ -953,7 +938,7 @@ mod tests {
 
     #[test]
     fn basic_key_check() {
-        let mut handler = InputHandler::<String, String>::new();
+        let mut handler = InputHandler::<StringBindings>::new();
         let mut events = EventChannel::<InputEvent<String>>::new();
         assert!(!handler.key_is_down(VirtualKeyCode::Up));
         assert!(!handler.scan_code_is_down(104));
@@ -973,7 +958,7 @@ mod tests {
 
     #[test]
     fn basic_mouse_check() {
-        let mut handler = InputHandler::<String, String>::new();
+        let mut handler = InputHandler::<StringBindings>::new();
         let mut events = EventChannel::<InputEvent<String>>::new();
         assert!(!handler.mouse_button_is_down(MouseButton::Left));
         assert!(!handler.button_is_down(Button::Mouse(MouseButton::Left)));

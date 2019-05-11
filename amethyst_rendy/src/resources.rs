@@ -7,7 +7,7 @@ use amethyst_error::Error;
 
 /// The ambient color of a scene
 #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
-pub struct AmbientColor(pub palette::Srgba);
+pub struct AmbientColor(#[serde(with = "crate::serde_shim::srgba")] pub palette::Srgba);
 
 impl AsRef<palette::Srgba> for AmbientColor {
     fn as_ref(&self) -> &palette::Srgba {
@@ -33,8 +33,15 @@ impl<'a> PrefabData<'a> for AmbientColor {
 
 /// A single object tinting applied in multiplicative mode (modulation)
 #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
-pub struct Tint(pub palette::Srgba);
+pub struct Tint(#[serde(with = "crate::serde_shim::srgba")] pub palette::Srgba);
 
 impl Component for Tint {
     type Storage = DenseVecStorage<Self>;
+}
+
+impl Into<[f32; 4]> for Tint {
+    fn into(self) -> [f32; 4] {
+        let (r, g, b, a) = self.0.into_components();
+        [r, g, b, a]
+    }
 }

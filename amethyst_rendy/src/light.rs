@@ -11,7 +11,7 @@ use amethyst_core::{
 use amethyst_error::Error;
 
 /// A light source.
-#[derive(Clone, Debug, serde::Deserialize, PartialEq, serde::Serialize, PrefabData)]
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize, PrefabData)]
 #[prefab(Component)]
 pub enum Light {
     /// An area light.
@@ -29,10 +29,11 @@ pub enum Light {
 
 /// A directional light source.
 #[repr(C)]
-#[derive(Clone, Debug, serde::Deserialize, PartialEq, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct DirectionalLight {
     /// Color of the light in SRGB format.
+    #[serde(with = "crate::serde_shim::srgb")]
     pub color: palette::Srgb,
     /// Direction that the light is pointing.
     pub direction: Vector3<f32>,
@@ -74,10 +75,11 @@ impl From<DirectionalLight> for Light {
 ///
 /// [fb]: http://www.frostbite.com/wp-content/uploads/2014/11/course_notes_moving_frostbite_to_pbr.pdf
 #[repr(C)]
-#[derive(Clone, Debug, serde::Deserialize, PartialEq, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct PointLight {
     /// Color of the light in SRGB format.
+    #[serde(with = "crate::serde_shim::srgb")]
     pub color: palette::Srgb,
     /// Brightness of the light source, in lumens.
     pub intensity: f32,
@@ -107,12 +109,13 @@ impl From<PointLight> for Light {
 
 /// A spot light source.
 #[repr(C)]
-#[derive(Clone, Debug, serde::Deserialize, PartialEq, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct SpotLight {
     /// Opening angle of the light cone in radians.
     pub angle: f32,
     /// Color of the light in SRGB format.
+    #[serde(with = "crate::serde_shim::srgb")]
     pub color: palette::Srgb,
     /// Direction that the light is pointing.
     pub direction: Vector3<f32>,
@@ -146,12 +149,13 @@ impl From<SpotLight> for Light {
 
 /// A realistic disk-shaped sun light source.
 #[repr(C)]
-#[derive(Clone, Debug, serde::Deserialize, PartialEq, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct SunLight {
     /// The sun's angular radius in radians.
     pub angle: f32,
     /// Color of the light in SRGB format.
+    #[serde(with = "crate::serde_shim::srgb")]
     pub color: palette::Srgb,
     /// Direction that the light is pointing.
     pub direction: Vector3<f32>,

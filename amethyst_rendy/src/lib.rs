@@ -21,20 +21,25 @@ pub mod camera;
 pub mod debug_drawing;
 pub mod error;
 pub mod formats;
-pub mod hidden;
 pub mod light;
 pub mod mtl;
 pub mod pipeline;
 pub mod resources;
+pub mod serde_shim;
 pub mod shape;
 pub mod skinning;
 pub mod sprite;
 pub mod sprite_visibility;
+pub mod submodules;
 pub mod system;
 pub mod transparent;
 pub mod types;
 pub mod visibility;
 
 mod pod;
-mod submodules;
 mod util;
+
+pub use formats::{mesh::MeshPrefab, texture::TexturePrefab};
+pub use system::{GraphCreator, RenderingSystem};
+pub use types::{Backend, Mesh, Texture};
+pub use util::{simple_shader_set, ChangeDetection};

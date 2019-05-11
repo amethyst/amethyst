@@ -114,6 +114,8 @@ impl Sprite {
         pixel_left: u32,
         pixel_top: u32,
         offsets: [f32; 2],
+        flip_horizontal: bool,
+        flip_vertical: bool,
     ) -> Sprite {
         let image_w = image_w as f32;
         let image_h = image_h as f32;
@@ -136,6 +138,15 @@ impl Sprite {
         let right = (pixel_right) / image_w;
         let top = (image_h - pixel_top) / image_h;
         let bottom = (image_h - pixel_bottom) / image_h;
+
+        let (left, right) = match flip_horizontal {
+            false => (left, right),
+            true => (right, left),
+        };
+        let (top, bottom) = match flip_vertical {
+            false => (top, bottom),
+            true => (bottom, top),
+        };
 
         let tex_coords = TextureCoordinates {
             left,
@@ -371,7 +382,7 @@ mod test {
                 [0., 10. / 30., 0., 20. / 40.], // Texture coordinates
             )),
             Sprite::from_pixel_values(
-                image_w, image_h, sprite_w, sprite_h, pixel_left, pixel_top, offsets
+                image_w, image_h, sprite_w, sprite_h, pixel_left, pixel_top, offsets, false, false,
             )
         );
     }

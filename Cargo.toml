@@ -62,7 +62,6 @@ profiler = [
     "amethyst_controls/profiler",
     "amethyst_input/profiler",
     "amethyst_locale/profiler",
-    "amethyst_renderer/profiler",
     "amethyst_rendy/profiler",
     "amethyst_ui/profiler",
     "amethyst_utils/profiler",
@@ -75,7 +74,6 @@ nightly = [
     "amethyst_core/nightly",
     "amethyst_controls/nightly",
     "amethyst_network/nightly",
-    "amethyst_renderer/nightly",
     "amethyst_rendy/nightly",
     "amethyst_input/nightly",
     "amethyst_ui/nightly",
@@ -116,7 +114,6 @@ amethyst_gltf = { path = "amethyst_gltf", version = "0.5.0", optional = true }
 amethyst_network = { path = "amethyst_network", version = "0.3.0", optional = true }
 amethyst_locale = { path = "amethyst_locale", version = "0.4.0", optional = true }
 amethyst_rendy = { path = "amethyst_rendy", optional = true }
-amethyst_renderer = { path = "amethyst_renderer" }
 amethyst_input = { path = "amethyst_input", version = "0.6.0" }
 amethyst_ui = { path = "amethyst_ui", version = "0.5.0" }
 amethyst_utils = { path = "amethyst_utils", version = "0.5.0" }

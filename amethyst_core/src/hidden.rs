@@ -1,4 +1,4 @@
-use amethyst_core::ecs::{
+use crate::ecs::{
     prelude::Component,
     storage::{FlaggedStorage, NullStorage},
 };

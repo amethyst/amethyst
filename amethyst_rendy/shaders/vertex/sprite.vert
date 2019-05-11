@@ -15,16 +15,11 @@ layout(location = 5) in float depth;
 
 layout(location = 0) out vec2 tex_uv;
 
-const vec2 positions[6] = vec2[](
-    // First triangle
-    vec2(-0.5, -0.5), // Left bottom
+const vec2 positions[4] = vec2[](
     vec2(0.5, -0.5), // Right bottom
+    vec2(-0.5, -0.5), // Left bottom
     vec2(0.5, 0.5), // Right top
-
-    // Second triangle
-    vec2(0.5, 0.5), // Right top
-    vec2(-0.5, 0.5), // Left top
-    vec2(-0.5, -0.5)  // Left bottom
+    vec2(-0.5, 0.5) // Left top
 );
 
 // coords = 0.0 to 1.0 texture coordinates
@@ -36,9 +31,8 @@ void main() {
     float tex_u = positions[gl_VertexIndex][0];
     float tex_v = positions[gl_VertexIndex][1];
 
-    vec2 uv = pos + tex_u * dir_x + tex_v * dir_y;
     tex_uv = texture_coords(vec2(tex_u, tex_v), u_offset, v_offset);
-
-    vec4 vertex = vec4(uv, depth, 1.0);
+    vec2 final_pos = pos + tex_u * dir_x + tex_v * dir_y;
+    vec4 vertex = vec4(final_pos, depth, 1.0);
     gl_Position = proj * view * vertex;
 }

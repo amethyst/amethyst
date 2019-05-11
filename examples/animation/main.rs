@@ -30,7 +30,7 @@ use amethyst_rendy::{
         },
         mesh::{Normal, Position, Tangent, TexCoord},
     },
-    system::{GraphCreator, RendererSystem},
+    system::{GraphCreator, RenderingSystem},
     types::DefaultBackend,
 };
 use serde::{Deserialize, Serialize};
@@ -218,7 +218,7 @@ fn run<B: Backend>() -> amethyst::Result<()> {
         .with_bundle(TransformBundle::<f32>::new().with_dep(&["sampler_interpolation_system"]))?
         .with_thread_local(EventsLoopSystem::new(event_loop))
         .with_thread_local(window_system)
-        .with_thread_local(RendererSystem::<B, _>::new(ExampleGraph::new()));
+        .with_thread_local(RenderingSystem::<B, _>::new(ExampleGraph::new()));
     let state: Example<B> = Default::default();
     let mut game = Application::new(resources, state, game_data)?;
     game.run();

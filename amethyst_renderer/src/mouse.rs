@@ -12,12 +12,10 @@ pub fn hide_cursor(msg: &mut WindowMessages) {
 
 /// Set the cursor back to normal/visible.
 pub fn release_cursor(msg: &mut WindowMessages) {
-    msg.send_command(move |win| {
-        if let Err(err) = win.grab_cursor(false) {
-            error!("Unable to release the cursor. Error: {:?}", err);
-        }
-        win.hide_cursor(false);
-    });
+    if let Err(err) = win.grab_cursor(false) {
+        error!("Unable to release the cursor. Error: {:?}", err);
+    }
+    win.hide_cursor(false);
 }
 
 /// Grab the cursor to prevent it from going outside the screen.
@@ -26,12 +24,5 @@ pub fn grab_cursor(msg: &mut WindowMessages) {
         if let Err(err) = win.grab_cursor(true) {
             error!("Unable to grab the cursor. Error: {:?}", err);
         }
-    });
-}
-
-/// Sets the mouse cursor icon.
-pub fn set_mouse_cursor(msg: &mut WindowMessages, cursor: MouseCursor) {
-    msg.send_command(move |win| {
-        win.set_cursor(cursor);
     });
 }

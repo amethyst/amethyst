@@ -44,6 +44,8 @@ pub fn load(texture: Handle<Texture>, definition: &sprite::SpriteSheetDefinition
                 pixel_left,
                 pixel_top,
                 [0.0; 2],
+                false,
+                false,
             );
 
             let sprite_number = row * definition.column_count + col;

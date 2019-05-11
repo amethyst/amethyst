@@ -27,7 +27,6 @@
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 pub use crate::{
-    blink::{Blink, BlinkSystem},
     bundle::RenderBundle,
     cam::{ActiveCamera, ActiveCameraPrefab, Camera, CameraPrefab, Projection},
     color::Rgba,
@@ -93,7 +92,6 @@ pub mod pipe;
 #[macro_use]
 mod macros;
 
-mod blink;
 mod bundle;
 mod cam;
 mod color;
@@ -101,7 +99,6 @@ mod config;
 mod debug_drawing;
 mod formats;
 mod hidden;
-mod hide_system;
 mod input;
 mod light;
 mod mesh;

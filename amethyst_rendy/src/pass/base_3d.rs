@@ -1,6 +1,5 @@
 use crate::{
     batch::{GroupIterator, OrderedTwoLevelBatch, TwoLevelBatch},
-    hidden::{Hidden, HiddenPropagate},
     mtl::{FullTextureSet, Material, StaticTextureSet},
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
     pod::{SkinnedVertexArgs, VertexArgs},
@@ -16,6 +15,7 @@ use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     ecs::{Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
     transform::Transform,
+    Hidden, HiddenPropagate,
 };
 use derivative::Derivative;
 use rendy::{

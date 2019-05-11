@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct ImageFormat(ImageTextureConfig);
+pub struct ImageFormat(pub ImageTextureConfig);
 
 amethyst_assets::register_format_type!(TextureData);
 

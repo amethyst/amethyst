@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{error, types::Texture};
 use amethyst_assets::{Asset, Format, Handle};
-use amethyst_core::ecs::prelude::{Component, DenseVecStorage, VecStorage};
+use amethyst_core::ecs::prelude::{Component, DenseVecStorage};
 use amethyst_error::Error;
 
 pub mod prefab;
@@ -25,25 +25,7 @@ pub struct SpriteSheet {
 impl Asset for SpriteSheet {
     const NAME: &'static str = "renderer::SpriteSheet";
     type Data = Self;
-    type HandleStorage = VecStorage<Handle<Self>>;
-}
-
-/// Information about whether or not a texture should be flipped
-/// when rendering.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub enum Flipped {
-    /// Don't flip the texture
-    None,
-    /// Flip the texture horizontally
-    Horizontal,
-    /// Flip the texture vertically
-    Vertical,
-    /// Flip the texture in both orientations
-    Both,
-}
-
-impl Component for Flipped {
-    type Storage = DenseVecStorage<Self>;
+    type HandleStorage = DenseVecStorage<Handle<Self>>;
 }
 
 /// Dimensions and texture coordinates of each sprite in a sprite sheet.
@@ -102,6 +84,8 @@ impl Sprite {
         pixel_left: u32,
         pixel_top: u32,
         offsets: [f32; 2],
+        flip_horizontal: bool,
+        flip_vertical: bool,
     ) -> Sprite {
         let image_w = image_w as f32;
         let image_h = image_h as f32;
@@ -124,6 +108,15 @@ impl Sprite {
         let right = (pixel_right) / image_w;
         let top = (image_h - pixel_top) / image_h;
         let bottom = (image_h - pixel_bottom) / image_h;
+
+        let (left, right) = match flip_horizontal {
+            false => (left, right),
+            true => (right, left),
+        };
+        let (top, bottom) = match flip_vertical {
+            false => (top, bottom),
+            true => (bottom, top),
+        };
 
         let tex_coords = TextureCoordinates {
             left,
@@ -193,7 +186,7 @@ pub struct SpriteRender {
 }
 
 impl Component for SpriteRender {
-    type Storage = VecStorage<Self>;
+    type Storage = DenseVecStorage<Self>;
 }
 
 /// Represents one sprite in `SpriteList`.
@@ -210,6 +203,10 @@ pub struct SpritePosition {
     pub height: u32,
     /// Number of pixels to shift the sprite to the left and down relative to the entity holding it
     pub offsets: Option<[f32; 2]>,
+    /// Flip the sprite horizontally during rendering
+    pub flip_horizontal: bool,
+    /// Flip the sprite vertically during rendering
+    pub flip_vertical: bool,
 }
 
 /// `SpriteList` controls how a sprite list is generated when using `Sprites::List` in a
@@ -294,6 +291,8 @@ impl SpriteList {
                     pos.x,
                     pos.y,
                     pos.offsets.unwrap_or([0.0; 2]),
+                    pos.flip_horizontal,
+                    pos.flip_vertical,
                 )
             })
             .collect()
@@ -382,6 +381,8 @@ impl SpriteGrid {
                     x,
                     y,
                     [0.0; 2],
+                    false,
+                    false,
                 )
             })
             .collect()
@@ -426,7 +427,7 @@ impl SpriteGrid {
 /// Such a spritesheet description can be loaded using a `Loader` by passing it the handle of the corresponding loaded texture.
 /// ```rust,no_run
 /// # use amethyst_assets::{Loader, AssetStorage};
-/// # use amethyst_renderer::{SpriteSheetFormat, SpriteSheet, Texture, PngFormat, TextureMetadata};
+/// # use amethyst_rendy::{sprite::{SpriteSheetFormat, SpriteSheet}, Texture, formats::texture::ImageFormat};
 /// #
 /// # fn load_sprite_sheet() {
 /// #   let world = amethyst_core::ecs::World::new(); // Normally, you would use Amethyst's world
@@ -435,22 +436,20 @@ impl SpriteGrid {
 /// #   let texture_storage = world.read_resource::<AssetStorage<Texture>>();
 /// let texture_handle = loader.load(
 ///     "my_texture.png",
-///     PngFormat,
-///     TextureMetadata::srgb(),
+///     ImageFormat(Default::default()),
 ///     (),
 ///     &texture_storage,
 /// );
 /// let spritesheet_handle = loader.load(
 ///     "my_spritesheet.ron",
-///     SpriteSheetFormat,
-///     texture_handle,
+///     SpriteSheetFormat(texture_handle),
 ///     (),
 ///     &spritesheet_storage,
 /// );
 /// # }
 /// ```
 #[derive(Clone, Debug)]
-pub struct SpriteSheetFormat(Handle<Texture>);
+pub struct SpriteSheetFormat(pub Handle<Texture>);
 
 impl Format<SpriteSheet> for SpriteSheetFormat {
     fn name(&self) -> &'static str {
@@ -551,7 +550,7 @@ mod test {
                 [0., 10. / 30., 0., 20. / 40.], // Texture coordinates
             )),
             Sprite::from_pixel_values(
-                image_w, image_h, sprite_w, sprite_h, pixel_left, pixel_top, offsets
+                image_w, image_h, sprite_w, sprite_h, pixel_left, pixel_top, offsets, false, false
             )
         );
     }

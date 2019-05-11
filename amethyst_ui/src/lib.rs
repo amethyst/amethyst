@@ -3,6 +3,7 @@
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 pub use self::{
+    blink::BlinkSystem,
     bundle::UiBundle,
     button::{
         UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionRetriggerSystem,
@@ -17,7 +18,7 @@ pub use self::{
     format::{FontAsset, FontHandle, OtfFormat, TtfFormat},
     label::{UiLabel, UiLabelBuilder, UiLabelBuilderResources},
     layout::{Anchor, ScaleMode, Stretch, UiTransformSystem},
-    pass::DrawUi,
+    pass::{DrawUi, DrawUiDesc},
     prefab::{
         NoCustomUi, ToNativeWidget, UiCreator, UiFormat, UiImagePrefab, UiLoader, UiLoaderSystem,
         UiPrefab, UiTextBuilder, UiTransformBuilder, UiWidget,
@@ -35,6 +36,7 @@ pub use self::{
 pub(crate) use amethyst_core::ecs::prelude::Entity;
 pub(crate) use paste;
 
+mod blink;
 mod bundle;
 mod button;
 mod event;

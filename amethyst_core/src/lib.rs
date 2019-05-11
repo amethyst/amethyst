@@ -37,6 +37,8 @@ pub use crate::{
 
 pub use self::{
     axis::{Axis2, Axis3},
+    hidden::{Hidden, HiddenPropagate},
+    hide_system::HideHierarchySystem,
     named::{Named, WithNamed},
 };
 
@@ -48,6 +50,8 @@ pub mod transform;
 mod axis;
 mod event;
 mod float;
+mod hidden;
+mod hide_system;
 mod named;
 mod system_ext;
 

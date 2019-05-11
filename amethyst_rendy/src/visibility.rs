@@ -1,6 +1,5 @@
 use crate::{
     camera::{ActiveCamera, Camera},
-    hidden::{Hidden, HiddenPropagate},
     transparent::Transparent,
 };
 use amethyst_core::{
@@ -9,7 +8,7 @@ use amethyst_core::{
         Component, DenseVecStorage, Entities, Entity, Join, Read, ReadStorage, System, Write,
     },
     math::{self as na, convert, distance_squared, Matrix4, Point3, RealField, Vector4},
-    Float, Transform,
+    Float, Hidden, HiddenPropagate, Transform,
 };
 use hibitset::BitSet;
 use serde::{Deserialize, Serialize};

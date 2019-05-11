@@ -4,9 +4,9 @@ Prefab (
         (
             data: (
                 graphics: (
-                    mesh: Shape((shape: Sphere(32, 32),)),
+                    mesh: Shape((shape: Sphere(32, 32))),
                     material: (
-                        albedo: Data(Rgba((0.0, 0.0, 1.0, 1.0,), (channel: Srgb),)),
+                        albedo: Generate(Srgba(0.0, 0.0, 1.0, 1.0)),
                     ),
                 ),
                 transform: (),
@@ -19,10 +19,10 @@ Prefab (
                     rotation: (0.0, 0.0, 1.0, 0.0),
                 ),
                 light: (
-                    ambient_color: (Rgba(0.01, 0.01, 0.01, 1.0)),
+                    ambient_color: (Srgba(0.01, 0.01, 0.01, 1.0)),
                     light: Point((
                         intensity: 3.0,
-                        color: (1.0, 1.0, 1.0, 1.0),
+                        color: (1.0, 1.0, 1.0),
                         radius: 5.0,
                     )),
                 ),

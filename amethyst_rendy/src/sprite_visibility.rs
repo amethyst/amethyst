@@ -1,12 +1,11 @@
 use crate::{
     camera::{ActiveCamera, Camera},
-    hidden::{Hidden, HiddenPropagate},
     transparent::Transparent,
 };
 use amethyst_core::{
     ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
     math::{self as na, ComplexField, Point3, Vector3},
-    Float, Transform,
+    Float, Hidden, HiddenPropagate, Transform,
 };
 use derivative::Derivative;
 use hibitset::BitSet;

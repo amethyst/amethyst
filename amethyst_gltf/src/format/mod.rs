@@ -9,8 +9,9 @@ use serde::{Deserialize, Serialize};
 use amethyst_animation::AnimationHierarchyPrefab;
 use amethyst_assets::{Format, FormatValue, Prefab, Source};
 use amethyst_core::{
-    math::{Quaternion, Unit, Vector3, Vector4, convert},
-    transform::Transform, Float,
+    math::{convert, Quaternion, Unit, Vector3, Vector4},
+    transform::Transform,
+    Float,
 };
 use amethyst_error::{format_err, Error, ResultExt};
 
@@ -215,8 +216,9 @@ fn load_node(
     let (translation, rotation, scale) = node.transform().decomposed();
     let mut local_transform = Transform::default();
     *local_transform.translation_mut() = convert::<_, Vector3<Float>>(Vector3::from(translation));
-    *local_transform.rotation_mut() =
-        Unit::new_normalize(convert::<_, Quaternion<Float>>(Quaternion::from(Vector4::from(rotation))));
+    *local_transform.rotation_mut() = Unit::new_normalize(convert::<_, Quaternion<Float>>(
+        Quaternion::from(Vector4::from(rotation)),
+    ));
     *local_transform.scale_mut() = convert::<_, Vector3<Float>>(Vector3::from(scale));
     prefab.data_or_default(entity_index).transform = Some(local_transform);
 

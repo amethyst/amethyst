@@ -128,21 +128,17 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
     ///
     /// This also adds a `ScreenDimensions` resource to the `World` so that UI calculations can be
     /// done.
-    pub fn ui_base<AX, AC>(
-    ) -> AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader>
-    where
-        AX: Hash + Eq + Clone + Send + Sync + 'static,
-        AC: Hash + Eq + Clone + Send + Sync + 'static,
-    {
+    pub fn ui_base<T: BindingTypes>(
+    ) -> AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader> {
         AmethystApplication::blank()
             .with_bundle(TransformBundle::new())
-            .with_ui_bundles::<AX, AC>()
+            .with_ui_bundles::<T>()
             .with_resource(ScreenDimensions::new(SCREEN_WIDTH, SCREEN_HEIGHT, HIDPI))
     }
 
     /// Returns an application with the Animation, Transform, and Render bundles.
     ///
-    /// If you requite `InputBundle` and `UiBundle`, you can call the `with_ui_bundles::<AX, AC>()`
+    /// If you requite `InputBundle` and `UiBundle`, you can call the `with_ui_bundles::<T>()`
     /// method.
     ///
     /// # Parameters
@@ -450,19 +446,15 @@ where
     /// Registers `InputBundle` and `UiBundle` with this application.
     ///
     /// This method is provided to avoid [stringly-typed][stringly] parameters for the Input and UI
-    /// bundles. We recommended that you use strong types instead of `<String, String>`.
+    /// bundles. We recommended that you use strong types instead of `<StringBindings>`.
     ///
     /// # Type Parameters
     ///
     /// * `AX`: Type representing the movement axis.
     /// * `AC`: Type representing actions.
-    pub fn with_ui_bundles<AX, AC>(self) -> Self
-    where
-        AX: Hash + Eq + Clone + Send + Sync + 'static,
-        AC: Hash + Eq + Clone + Send + Sync + 'static,
-    {
-        self.with_bundle(InputBundle::<AX, AC>::new())
-            .with_bundle(UiBundle::<AX, AC>::new())
+    pub fn with_ui_bundles<T: BindingTypes>(self) -> Self {
+        self.with_bundle(InputBundle::<T>::new())
+            .with_bundle(UiBundle::<T>::new())
     }
 
     /// Registers the `RenderBundle` with this application.
@@ -915,7 +907,7 @@ mod test {
             world.read_resource::<ScreenDimensions>();
         };
 
-        AmethystApplication::ui_base::<String, String>()
+        AmethystApplication::ui_base::<amethyst_ui::StringBindings>()
             .with_assertion(assertion_fn)
             .run()
     }

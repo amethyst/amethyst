@@ -6,7 +6,7 @@
 pub use self::sdl_events_system::SdlEventsSystem;
 pub use self::{
     axis::Axis,
-    bindings::{BindingError, Bindings},
+    bindings::{BindingError, BindingTypes, Bindings, StringBindings},
     bundle::{BindingsFileError, InputBundle},
     button::Button,
     controller::{ControllerAxis, ControllerButton, ControllerEvent},

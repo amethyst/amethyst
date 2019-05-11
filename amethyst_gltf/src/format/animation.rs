@@ -6,7 +6,10 @@ use amethyst_animation::{
     AnimationPrefab, AnimationSetPrefab, InterpolationFunction, InterpolationPrimitive, Sampler,
     SamplerPrimitive, TransformChannel,
 };
-use amethyst_core::{Float, Transform, math::{convert, Vector3, Vector4}};
+use amethyst_core::{
+    math::{convert, Vector3, Vector4},
+    Float, Transform,
+};
 
 use super::Buffers;
 use crate::error;

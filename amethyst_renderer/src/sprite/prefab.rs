@@ -24,6 +24,10 @@ pub struct SpritePosition {
     pub height: u32,
     /// Number of pixels to shift the sprite to the left and down relative to the entity holding it
     pub offsets: Option<[f32; 2]>,
+    /// Flip the sprite horizontally during rendering
+    pub flip_horizontal: bool,
+    /// Flip the sprite vertically during rendering
+    pub flip_vertical: bool,
 }
 
 /// `SpriteList` controls how a sprite list is generated when using `Sprites::List` in a
@@ -334,6 +338,8 @@ impl SpriteList {
                     pos.x,
                     pos.y,
                     pos.offsets.unwrap_or([0.0; 2]),
+                    pos.flip_horizontal,
+                    pos.flip_vertical,
                 )
             })
             .collect()
@@ -422,6 +428,8 @@ impl SpriteGrid {
                     x,
                     y,
                     [0.0; 2],
+                    false,
+                    false,
                 )
             })
             .collect()

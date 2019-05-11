@@ -1,4 +1,4 @@
-use amethyst_core::{
+use crate::{
     ecs::prelude::{
         BitSet, ComponentEvent, ReadExpect, ReadStorage, ReaderId, Resources, System, WriteStorage,
     },
@@ -121,7 +121,7 @@ impl<'a> System<'a> for HideHierarchySystem {
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::ecs::prelude::SystemData;
+        use crate::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         // This fetch_mut panics if `ParentHierarchy` is not set up yet, hence the dependency on "parent_hierarchy_system"
         self.parent_events_id = Some(res.fetch_mut::<ParentHierarchy>().track());

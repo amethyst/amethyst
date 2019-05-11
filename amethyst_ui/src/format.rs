@@ -46,9 +46,10 @@ pub type OtfFormat = TtfFormat;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TtfFormat;
 
+amethyst_assets::register_format!("TTF", TtfFormat as FontData);
 impl Format<FontData> for TtfFormat {
     fn name(&self) -> &'static str {
-        "TTF/OTF"
+        "TTF"
     }
 
     fn import_simple(&self, bytes: Vec<u8>) -> Result<FontData, Error> {

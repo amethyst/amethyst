@@ -1,9 +1,10 @@
+use amethyst_assets::Handle;
 use amethyst_core::{
     ecs::{Entity, ReadExpect, Resources, System, SystemData, Write, WriteStorage},
     shrev::{EventChannel, ReaderId},
     ParentHierarchy,
 };
-use amethyst_renderer::TextureHandle;
+use amethyst_rendy::Texture;
 
 use std::collections::HashMap;
 
@@ -61,7 +62,7 @@ where
 #[derive(Default)]
 pub struct UiButtonSystem {
     event_reader: Option<ReaderId<UiButtonAction>>,
-    set_textures: HashMap<Entity, ActionChangeStack<TextureHandle>>,
+    set_textures: HashMap<Entity, ActionChangeStack<Handle<Texture>>>,
     set_text_colors: HashMap<Entity, ActionChangeStack<[f32; 4]>>,
 }
 
@@ -74,7 +75,7 @@ impl UiButtonSystem {
 
 impl<'s> System<'s> for UiButtonSystem {
     type SystemData = (
-        WriteStorage<'s, TextureHandle>,
+        WriteStorage<'s, Handle<Texture>>,
         WriteStorage<'s, UiText>,
         ReadExpect<'s, ParentHierarchy>,
         Write<'s, EventChannel<UiButtonAction>>,

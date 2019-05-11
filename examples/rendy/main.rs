@@ -54,7 +54,7 @@ use amethyst_rendy::{
     shape::Shape,
     sprite::{SpriteRender, SpriteSheet},
     sprite_visibility::SpriteVisibilitySortingSystem,
-    system::{GraphCreator, RendererSystem},
+    system::{GraphCreator, RenderingSystem},
     transparent::Transparent,
     types::{Backend, DefaultBackend, Mesh, Texture},
     visibility::{BoundingSphere, VisibilitySortingSystem},
@@ -168,10 +168,7 @@ impl SimpleState for Example {
         self.progress = Some(ProgressCounter::default());
 
         world.exec(
-            |(loader, mut scene): (
-                PrefabLoader<'_, ScenePrefabData>,
-                Write<'_, Scene>,
-            )| {
+            |(loader, mut scene): (PrefabLoader<'_, ScenePrefabData>, Write<'_, Scene>)| {
                 scene.handle = Some(
                     loader.load(
                         Path::new("prefab")
@@ -558,11 +555,8 @@ fn main() -> amethyst::Result<()> {
             &[],
         )
         .with_bundle(
-            AnimationBundle::<usize, Transform>::new(
-                "animation_control",
-                "sampler_interpolation",
-            )
-            .with_dep(&["gltf_loader"]),
+            AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
+                .with_dep(&["gltf_loader"]),
         )?
         .with_bundle(
             AnimationBundle::<SpriteAnimationId, SpriteRender>::new(
@@ -605,7 +599,9 @@ fn main() -> amethyst::Result<()> {
             &["fly_movement", "cam", "transform_system"],
         )
         .with_thread_local(EventsLoopSystem::new(event_loop))
-        .with_thread_local(RendererSystem::<DefaultBackend, _>::new(ExampleGraph::new()));
+        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
+            ExampleGraph::new(),
+        ));
 
     let mut game = Application::new(&resources, Example::new(), game_data)?;
     game.run();
@@ -683,11 +679,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         let mut transparent_subpass = SubpassBuilder::new();
         match *render_mode {
             RenderMode::Flat => {
-                opaque_subpass.add_group(
-                    DrawFlatDesc::default()
-                        .with_vertex_skinning()
-                        .builder(),
-                );
+                opaque_subpass.add_group(DrawFlatDesc::default().with_vertex_skinning().builder());
                 transparent_subpass.add_group(
                     DrawFlatTransparentDesc::default()
                         .with_vertex_skinning()
@@ -695,11 +687,8 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
                 );
             }
             RenderMode::Shaded => {
-                opaque_subpass.add_group(
-                    DrawShadedDesc::default()
-                        .with_vertex_skinning()
-                        .builder(),
-                );
+                opaque_subpass
+                    .add_group(DrawShadedDesc::default().with_vertex_skinning().builder());
                 transparent_subpass.add_group(
                     DrawShadedTransparentDesc::default()
                         .with_vertex_skinning()
@@ -707,11 +696,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
                 );
             }
             RenderMode::Pbr => {
-                opaque_subpass.add_group(
-                    DrawPbrDesc::default()
-                        .with_vertex_skinning()
-                        .builder(),
-                );
+                opaque_subpass.add_group(DrawPbrDesc::default().with_vertex_skinning().builder());
                 transparent_subpass.add_group(
                     DrawPbrTransparentDesc::default()
                         .with_vertex_skinning()

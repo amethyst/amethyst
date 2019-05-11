@@ -1,6 +1,5 @@
 use crate::{
     batch::{GroupIterator, OneLevelBatch, OrderedOneLevelBatch},
-    hidden::{Hidden, HiddenPropagate},
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
     pod::SpriteArgs,
     sprite::{SpriteRender, SpriteSheet},
@@ -13,6 +12,7 @@ use amethyst_assets::AssetStorage;
 use amethyst_core::{
     ecs::{Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
     transform::Transform,
+    Hidden, HiddenPropagate,
 };
 use derivative::Derivative;
 use rendy::{
@@ -206,7 +206,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
         for (&tex, range) in self.sprites.iter() {
             if self.textures.loaded(tex) {
                 self.textures.bind(layout, 1, tex, &mut encoder);
-                encoder.draw(0..6, range);
+                encoder.draw(0..4, range);
             }
         }
     }
@@ -408,6 +408,7 @@ fn build_sprite_pipeline<B: Backend>(
         .with_pipeline(
             PipelineDescBuilder::new()
                 .with_vertex_desc(&[(SpriteArgs::vertex(), 1)])
+                .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleStrip))
                 .with_shaders(util::simple_shader_set(
                     &shader_vertex,
                     Some(&shader_fragment),

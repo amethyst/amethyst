@@ -2,7 +2,6 @@
 use crate::{
     camera::{ActiveCamera, Camera},
     debug_drawing::DebugLinesComponent,
-    hidden::{Hidden, HiddenPropagate},
     light::Light,
     mtl::{Material, MaterialDefaults},
     resources::Tint,
@@ -16,6 +15,7 @@ use amethyst_assets::{
 use amethyst_core::{
     ecs::{Read, ReadExpect, ReadStorage, Resources, RunNow, SystemData, Write, WriteExpect},
     timing::Time,
+    Hidden, HiddenPropagate,
 };
 use palette::{LinSrgba, Srgba};
 use rendy::{
@@ -38,7 +38,7 @@ pub trait GraphCreator<B: Backend> {
     fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources>;
 }
 
-pub struct RendererSystem<B, G>
+pub struct RenderingSystem<B, G>
 where
     B: Backend,
     G: GraphCreator<B>,
@@ -48,7 +48,7 @@ where
     graph_creator: G,
 }
 
-impl<B, G> RendererSystem<B, G>
+impl<B, G> RenderingSystem<B, G>
 where
     B: Backend,
     G: GraphCreator<B>,
@@ -89,7 +89,7 @@ type SetupData<'a> = (
 
 // struct MeshProcessor<B: Backend>(PhantomData<B>);
 
-impl<B, G> RendererSystem<B, G>
+impl<B, G> RenderingSystem<B, G>
 where
     B: Backend,
     G: GraphCreator<B>,
@@ -205,7 +205,7 @@ where
     }
 }
 
-impl<'a, B, G> RunNow<'a> for RendererSystem<B, G>
+impl<'a, B, G> RunNow<'a> for RenderingSystem<B, G>
 where
     B: Backend,
     G: GraphCreator<B>,

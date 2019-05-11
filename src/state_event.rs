@@ -6,9 +6,9 @@ use crate::{
     },
     derive::EventReader,
     input::InputEvent,
-    renderer::Event,
     ui::UiEvent,
 };
+use winit::Event;
 
 /// The enum holding the different types of event that can be received in a `State` in the handle_event method.
 #[derive(Clone, EventReader)]

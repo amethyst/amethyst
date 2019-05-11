@@ -2,10 +2,8 @@
 
 use amethyst_core::{
     ecs::{Component, DenseVecStorage, Entities, Join, Read, System, WriteStorage},
-    Time,
+    Hidden, Time,
 };
-
-use crate::Hidden;
 
 /// # Blink Component
 /// Periodically adds and removes a `Hidden` Component on the entity this is attached to.

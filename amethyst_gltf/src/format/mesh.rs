@@ -212,7 +212,7 @@ fn calculate_tangents(
         &|face, vert| &tex_coords[indices.map(face, vert)].0,
         &mut |face, vert, tangent| {
             let [x, y, z, w] = tangent;
-            tangents[indices.map(face, vert)] = Tangent([x, y, z, 1.0 - w]);
+            tangents[indices.map(face, vert)] = Tangent([x, y, z, -w]);
         },
     );
     tangents
@@ -220,37 +220,37 @@ fn calculate_tangents(
 
 #[cfg(test)]
 mod tests {
-    use crate::format::mesh::calculate_tangents;
+    use super::{calculate_tangents, Indices};
+    use amethyst_rendy::rendy::mesh::{Normal, Position, Tangent, TexCoord};
+
+    const POSITIONS: &[Position] = &[
+        Position([0.0, 0.0, 0.0]),
+        Position([0.0, 1.0, 0.0]),
+        Position([1.0, 1.0, 0.0]),
+        Position([0.0, 1.0, 0.0]),
+        Position([1.0, 1.0, 0.0]),
+        Position([1.0, 0.0, 0.0]),
+    ];
+    const NORMALS: &[Normal] = &[
+        Normal([0.0, 0.0, 1.0]),
+        Normal([0.0, 0.0, 1.0]),
+        Normal([0.0, 0.0, 1.0]),
+        Normal([0.0, 0.0, 1.0]),
+        Normal([0.0, 0.0, 1.0]),
+        Normal([1.0, 0.0, 0.0]),
+    ];
+    const TEX_COORDS: &[TexCoord] = &[
+        TexCoord([0.0, 0.0]),
+        TexCoord([0.0, 1.0]),
+        TexCoord([1.0, 1.0]),
+        TexCoord([0.0, 1.0]),
+        TexCoord([1.0, 1.0]),
+        TexCoord([1.0, 0.0]),
+    ];
 
     #[test]
     fn test_tangent_calc() {
-        let positions = &[
-            Position([0.0, 0.0, 0.0]),
-            Position([0.0, 1.0, 0.0]),
-            Position([1.0, 1.0, 0.0]),
-            Position([0.0, 1.0, 0.0]),
-            Position([1.0, 1.0, 0.0]),
-            Position([0.0, 1.0, 0.0]),
-        ];
-        let normals = &[
-            Normal([0.0, 0.0, 1.0]),
-            Normal([0.0, 0.0, 1.0]),
-            Normal([0.0, 0.0, 1.0]),
-            Normal([0.0, 0.0, 1.0]),
-            Normal([0.0, 0.0, 1.0]),
-            Normal([0.0, 0.0, 1.0]),
-        ];
-        let tex_coords = &[
-            TexCoord([0.0, 0.0]),
-            TexCoord([0.0, 1.0]),
-            TexCoord([1.0, 1.0]),
-            TexCoord([0.0, 1.0]),
-            TexCoord([1.0, 1.0]),
-            TexCoord([0.0, 1.0]),
-        ];
-
-        let tangents = calculate_tangents(positions, normals, tex_coords);
-
+        let tangents = calculate_tangents(POSITIONS, NORMALS, TEX_COORDS, &Indices::None);
         assert_eq!(
             tangents,
             vec![
@@ -259,7 +259,23 @@ mod tests {
                 Tangent([1.0, 0.0, 0.0, 1.0]),
                 Tangent([1.0, 0.0, 0.0, 1.0]),
                 Tangent([1.0, 0.0, 0.0, 1.0]),
-                Tangent([1.0, 0.0, 0.0, 1.0])
+                Tangent([0.0, 0.0, 0.0, 1.0]),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_indexed_tangent_calc() {
+        let tangents = calculate_tangents(POSITIONS, NORMALS, TEX_COORDS, &Indices::U32(vec![3, 4, 5, 0, 1, 2]));
+        assert_eq!(
+            tangents,
+            vec![
+                Tangent([1.0, 0.0, 0.0, 1.0]),
+                Tangent([1.0, 0.0, 0.0, 1.0]),
+                Tangent([1.0, 0.0, 0.0, 1.0]),
+                Tangent([1.0, 0.0, 0.0, 1.0]),
+                Tangent([1.0, 0.0, 0.0, 1.0]),
+                Tangent([0.0, 0.0, 0.0, 1.0]),
             ]
         );
     }

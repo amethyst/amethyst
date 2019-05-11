@@ -1,20 +1,17 @@
 //! ECS rendering bundle
 
-use std::{hash::Hash, marker::PhantomData};
-
-use derive_new::new;
-
+use crate::{
+    BlinkSystem, CacheSelectionOrderSystem, FontAsset, NoCustomUi, ResizeSystem,
+    SelectionKeyboardSystem, SelectionMouseSystem, TextEditingInputSystem, TextEditingMouseSystem,
+    ToNativeWidget, UiButtonActionRetriggerSystem, UiButtonSystem, UiLoaderSystem, UiMouseSystem,
+    UiSoundRetriggerSystem, UiSoundSystem, UiTransformSystem, WidgetId,
+};
 use amethyst_assets::Processor;
 use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder};
 use amethyst_error::Error;
-use amethyst_renderer::BlinkSystem;
-
-use crate::{
-    CacheSelectionOrderSystem, FontAsset, NoCustomUi, ResizeSystem, SelectionKeyboardSystem,
-    SelectionMouseSystem, TextEditingInputSystem, TextEditingMouseSystem, ToNativeWidget,
-    UiButtonActionRetriggerSystem, UiButtonSystem, UiLoaderSystem, UiMouseSystem,
-    UiSoundRetriggerSystem, UiSoundSystem, UiTransformSystem, WidgetId,
-};
+use amethyst_input::BindingTypes;
+use derive_new::new;
+use std::marker::PhantomData;
 
 /// UI bundle
 ///
@@ -23,15 +20,14 @@ use crate::{
 ///
 /// Will fail with error 'No resource with the given id' if the InputBundle is not added.
 #[derive(new)]
-pub struct UiBundle<A = String, B = String, C = NoCustomUi, W = u32, G = ()> {
+pub struct UiBundle<T: BindingTypes, C = NoCustomUi, W = u32, G = ()> {
     #[new(default)]
-    _marker: PhantomData<(A, B, C, W, G)>,
+    _marker: PhantomData<(T, C, W, G)>,
 }
 
-impl<'a, 'b, A, B, C, W, G> SystemBundle<'a, 'b> for UiBundle<A, B, C, W, G>
+impl<'a, 'b, T, C, W, G> SystemBundle<'a, 'b> for UiBundle<T, C, W, G>
 where
-    A: Send + Sync + Eq + Hash + Clone + 'static,
-    B: Send + Sync + Eq + Hash + Clone + 'static,
+    T: BindingTypes,
     C: ToNativeWidget,
     W: WidgetId,
     G: Send + Sync + PartialEq + 'static,
@@ -58,7 +54,7 @@ where
             &[],
         );
         builder.add(
-            SelectionMouseSystem::<G, A, B>::new(),
+            SelectionMouseSystem::<G, T>::new(),
             "ui_mouse_selection",
             &[],
         );
@@ -81,7 +77,7 @@ where
         );
         builder.add(ResizeSystem::new(), "ui_resize_system", &[]);
         builder.add(
-            UiMouseSystem::<A, B>::new(),
+            UiMouseSystem::<T>::new(),
             "ui_mouse_system",
             &["ui_transform"],
         );
