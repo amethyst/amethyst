@@ -41,7 +41,7 @@ A wrapper type around f32 and f64. It is used to hide the actual type being used
 
 ```patch
 -transform.set_xyz(0.2, 1.0, 0.8);
-+transform.set_translation_xyz(0.2);
++transform.set_translation_xyz(0.2, 1.0, 0.8);
 ```
 
 ### `_local` to `append_`
@@ -151,6 +151,7 @@ transform.set_rotation(UnitQuaternion::identity());
 transform.set_rotation_x_axis(0.4);
 transform.set_rotation_y_axis(2.3);
 transform.set_rotation_z_axis(1.0);
+transform.set_rotation_euler(2.1, 3.4, 8.7);
 ```
 
 ### 2D helper functions
