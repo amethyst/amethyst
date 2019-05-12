@@ -1,4 +1,4 @@
-use crate::{Selected, TextEditing, UiText, UiTransform};
+use crate::{Selected, TextEditing, UiImage, UiText, UiTransform};
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::{
     ecs::{
@@ -20,7 +20,7 @@ use amethyst_rendy::{
         hal::{self, device::Device, format::Format, pso},
         mesh::{AsVertex, VertexFormat},
         shader::{Shader, ShaderKind, SourceLanguage, SpirvShader, StaticShaderInfo},
-        texture::palette::load_from_srgb,
+        texture::palette::load_from_srgba,
     },
     resources::Tint,
     simple_shader_set,
@@ -125,7 +125,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawUiDesc {
         let (loader, tex_storage) =
             <(ReadExpect<'_, Loader>, Read<'_, AssetStorage<Texture>>)>::fetch(resources);
         let white_tex = loader.load_from_data(
-            load_from_srgb(palette::named::WHITE).into(),
+            load_from_srgba(palette::Srgba::new(1., 1., 1., 1.)).into(),
             (),
             &tex_storage,
         );
@@ -138,7 +138,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawUiDesc {
             vertex,
             change: Default::default(),
             cached_draw_order: Default::default(),
-            images: Default::default(),
+            batches: Default::default(),
             white_tex,
         }))
     }
@@ -151,7 +151,7 @@ pub struct DrawUi<B: Backend> {
     env: DynamicUniform<B, UiViewArgs>,
     textures: TextureSub<B>,
     vertex: DynamicVertex<B, UiArgs>,
-    images: OrderedOneLevelBatch<TextureId, UiArgs>,
+    batches: OrderedOneLevelBatch<TextureId, UiArgs>,
     change: ChangeDetection,
     cached_draw_order: CachedDrawOrder,
     white_tex: Handle<Texture>,
@@ -175,7 +175,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
     ) -> PrepareResult {
         let (
             entities,
-            textures,
+            images,
             transforms,
             mut texts,
             text_editings,
@@ -185,7 +185,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             tints,
         ) = <(
             Entities<'_>,
-            ReadStorage<'_, Handle<Texture>>,
+            ReadStorage<'_, UiImage>,
             ReadStorage<'_, UiTransform>,
             WriteStorage<'_, UiText>,
             ReadStorage<'_, TextEditing>,
@@ -196,10 +196,10 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
         ) as SystemData>::fetch(resources);
 
         self.textures.maintain();
-        self.images.swap_clear();
+        self.batches.swap_clear();
         let mut changed = false;
 
-        let images_ref = &mut self.images;
+        let batches_ref = &mut self.batches;
         let textures_ref = &mut self.textures;
 
         // Populate and update the draw order cache.
@@ -253,11 +253,11 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             .cache
             .sort_unstable_by(|&(z1, _), &(z2, _)| z1.partial_cmp(&z2).unwrap_or(Ordering::Equal));
 
-        let highest_abs_z = (&transforms,)
-            .join()
-            .map(|t| t.0.global_z())
-            // TODO(happens): Use max_by here?
-            .fold(1.0, |highest, current| current.abs().max(highest));
+        // let highest_abs_z = (&transforms,)
+        //     .join()
+        //     .map(|t| t.0.global_z())
+        //     // TODO(happens): Use max_by here?
+        //     .fold(1.0, |highest, current| current.abs().max(highest));
 
         for &(_z, entity) in &self.cached_draw_order.cache {
             // Skip hidden entities
@@ -269,39 +269,27 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
                 .get(entity)
                 .expect("Unreachable: Entity is guaranteed to be present based on earlier actions");
 
-            // let (texture, tint) = match (textures.get(entity), tints.get(entity)) {
-            //     (Some(tex), tint) => {
-
-            //     }
-            //     (None, tint) => {
-
-            //     }
-            //     (None, None) => {
-            //         (
-            //             self.white_tex,
-            //             Tint(palette::Srgba::new(1., 1., 1., 1.))
-            //         )
-            //     }
-            // }
-
-            let tint: [f32; 4] = tints
-                .get(entity)
-                .cloned()
-                .unwrap_or(Tint(palette::Srgba::new(1., 1., 1., 1.)))
-                .into();
-
-            if let Some(texture) = textures.get(entity) {
-                let args = UiArgs {
-                    coords: [transform.pixel_x(), transform.pixel_y()].into(),
-                    dimensions: [transform.pixel_width, transform.pixel_height].into(),
-                    color: tint.into(),
-                };
-
-                if let Some((tex_id, this_changed)) =
-                    textures_ref.insert(factory, resources, texture)
-                {
+            if let Some((texture, color)) = match (
+                images.get(entity),
+                tints.get(entity).map(|t| t.0.into_components()),
+            ) {
+                (Some(UiImage::Texture(tex)), Some((r, g, b, a))) => Some((tex, [r, g, b, a])),
+                (Some(UiImage::Texture(tex)), None) => Some((tex, [1., 1., 1., 1.])),
+                (Some(UiImage::SolidColor(color)), Some((r, g, b, a))) => {
+                    Some((&self.white_tex, mul_blend(color, &[r, g, b, a])))
+                }
+                (Some(UiImage::SolidColor(color)), None) => Some((&self.white_tex, color.clone())),
+                (None, _) => None,
+            } {
+                if let Some((tex_id, this_changed)) = textures_ref.insert(factory, resources, texture) {
                     changed = changed || this_changed;
-                    images_ref.insert(tex_id, Some(args));
+
+                    let args = UiArgs {
+                        coords: [transform.pixel_x(), transform.pixel_y()].into(),
+                        dimensions: [transform.pixel_width, transform.pixel_height].into(),
+                        color: color.into(),
+                    };
+                    batches_ref.insert(tex_id, Some(args));
                 }
             }
 
@@ -309,12 +297,12 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             // if let Some(text) = texts.get_mut(entity) {}
         }
 
-        changed = changed || self.images.changed();
+        changed = changed || self.batches.changed();
         self.vertex.write(
             factory,
             index,
-            self.images.count() as u64,
-            Some(self.images.data()),
+            self.batches.count() as u64,
+            Some(self.batches.data()),
         );
         self.change.prepare_result(index, changed)
     }
@@ -331,7 +319,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
         // use index 0 unconditionally. This is written only once.
         self.env.bind(0, &self.pipeline_layout, 0, &mut encoder);
         self.vertex.bind(index, 0, &mut encoder);
-        for (&tex, range) in self.images.iter() {
+        for (&tex, range) in self.batches.iter() {
             dbg!(&range);
             self.textures.bind(layout, 1, tex, &mut encoder);
             encoder.draw(0..4, range);
@@ -394,4 +382,8 @@ fn build_ui_pipeline<B: Backend>(
         }
         Ok(mut pipes) => Ok((pipes.remove(0), pipeline_layout)),
     }
+}
+
+fn mul_blend(a: &[f32; 4], b: &[f32; 4]) -> [f32; 4] {
+    [a[0] * b[0], a[1] * b[1], a[2] * b[2], a[3] * b[3]]
 }

@@ -7,19 +7,19 @@ use amethyst_rendy::TextureHandle;
 /// Requires `MouseReactive`.
 pub struct OnUiActionImage {
     /// Default image
-    pub(crate) normal_image: Option<TextureHandle>,
+    pub(crate) normal_image: Option<UiImage>,
     /// Image used when the mouse hovers over this element
-    pub(crate) hover_image: Option<TextureHandle>,
+    pub(crate) hover_image: Option<UiImage>,
     /// Image used when element is pressed
-    pub(crate) press_image: Option<TextureHandle>,
+    pub(crate) press_image: Option<UiImage>,
 }
 
 impl OnUiActionImage {
     /// A constructor for this component
     pub fn new(
-        normal_image: Option<TextureHandle>,
-        hover_image: Option<TextureHandle>,
-        press_image: Option<TextureHandle>,
+        normal_image: Option<UiImage>,
+        hover_image: Option<UiImage>,
+        press_image: Option<UiImage>,
     ) -> Self {
         Self {
             normal_image,

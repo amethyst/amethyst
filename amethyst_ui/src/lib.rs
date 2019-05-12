@@ -16,6 +16,7 @@ pub use self::{
         systemfont::{default_system_font, get_all_font_handles, list_system_font_families},
     },
     format::{FontAsset, FontHandle, OtfFormat, TtfFormat},
+    image::UiImage,
     label::{UiLabel, UiLabelBuilder, UiLabelBuilderResources},
     layout::{Anchor, ScaleMode, Stretch, UiTransformSystem},
     pass::{DrawUi, DrawUiDesc},
@@ -43,6 +44,7 @@ mod event;
 mod event_retrigger;
 mod font;
 mod format;
+mod image;
 mod label;
 mod layout;
 mod pass;

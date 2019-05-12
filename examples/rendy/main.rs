@@ -567,9 +567,13 @@ fn main() -> amethyst::Result<()> {
         )?
         .with_bundle(InputBundle::<StringBindings>::new().with_bindings(bidnings))?
         .with_bundle(
-            FlyControlBundle::<StringBindings>::new(Some("horizontal".into()), None, Some("vertical".into()))
-                .with_sensitivity(0.1, 0.1)
-                .with_speed(5.),
+            FlyControlBundle::<StringBindings>::new(
+                Some("horizontal".into()),
+                None,
+                Some("vertical".into()),
+            )
+            .with_sensitivity(0.1, 0.1)
+            .with_speed(5.),
         )?
         .with_bundle(TransformBundle::new().with_dep(&[
             "animation_control",

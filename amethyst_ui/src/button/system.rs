@@ -1,14 +1,11 @@
-use amethyst_assets::Handle;
 use amethyst_core::{
     ecs::{Entity, ReadExpect, Resources, System, SystemData, Write, WriteStorage},
     shrev::{EventChannel, ReaderId},
     ParentHierarchy,
 };
-use amethyst_rendy::Texture;
-
 use std::collections::HashMap;
 
-use crate::{UiButtonAction, UiButtonActionType::*, UiText};
+use crate::{UiButtonAction, UiButtonActionType::*, UiImage, UiText};
 
 struct ActionChangeStack<T: Clone + PartialEq> {
     initial_value: T,
@@ -62,7 +59,7 @@ where
 #[derive(Default)]
 pub struct UiButtonSystem {
     event_reader: Option<ReaderId<UiButtonAction>>,
-    set_textures: HashMap<Entity, ActionChangeStack<Handle<Texture>>>,
+    set_images: HashMap<Entity, ActionChangeStack<UiImage>>,
     set_text_colors: HashMap<Entity, ActionChangeStack<[f32; 4]>>,
 }
 
@@ -75,7 +72,7 @@ impl UiButtonSystem {
 
 impl<'s> System<'s> for UiButtonSystem {
     type SystemData = (
-        WriteStorage<'s, Handle<Texture>>,
+        WriteStorage<'s, UiImage>,
         WriteStorage<'s, UiText>,
         ReadExpect<'s, ParentHierarchy>,
         Write<'s, EventChannel<UiButtonAction>>,
@@ -135,30 +132,30 @@ impl<'s> System<'s> for UiButtonSystem {
                         }
                     }
                 }
-                SetTexture(ref texture_handle) => {
+                SetImage(ref set_image) => {
                     if let Some(image) = image_storage.get_mut(event.target) {
-                        self.set_textures
+                        self.set_images
                             .entry(event.target)
                             .or_insert_with(|| ActionChangeStack::new(image.clone()))
-                            .add(texture_handle.clone());
+                            .add(set_image.clone());
 
-                        *image = texture_handle.clone();
+                        *image = set_image.clone();
                     }
                 }
-                UnsetTexture(ref texture_handle) => {
+                UnsetTexture(ref unset_image) => {
                     if let Some(image) = image_storage.get_mut(event.target) {
-                        if !self.set_textures.contains_key(&event.target) {
+                        if !self.set_images.contains_key(&event.target) {
                             continue;
                         }
 
-                        self.set_textures
+                        self.set_images
                             .get_mut(&event.target)
-                            .and_then(|it| it.remove(texture_handle));
+                            .and_then(|it| it.remove(unset_image));
 
-                        *image = self.set_textures[&event.target].current();
+                        *image = self.set_images[&event.target].current();
 
-                        if self.set_textures[&event.target].is_empty() {
-                            self.set_textures.remove(&event.target);
+                        if self.set_images[&event.target].is_empty() {
+                            self.set_images.remove(&event.target);
                         }
                     }
                 }

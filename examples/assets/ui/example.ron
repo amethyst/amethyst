@@ -7,9 +7,7 @@ Container(
         width: 20.,
         height: 20.,
     ),
-    background: (
-        image: Generate(Srgba(1.0, 1.0, 1.0, 1.0))
-    ),
+    // background: SolidColor(1.0, 1.0, 1.0, 1.0),
     children: [
         // Parenting test
         Container(
@@ -21,9 +19,7 @@ Container(
                 height: 64.,
                 anchor: TopRight,
             ),
-            background: (
-                image: Generate(Srgba(0.09, 0.02, 0.25, 1.0)),
-            ),
+            background: SolidColor(0.09, 0.02, 0.25, 1.0),
             children: [
                 Image(
                     transform: (
@@ -33,9 +29,7 @@ Container(
                         anchor: Middle,
                         stretch: XY( x_margin: 0., y_margin: 10., keep_aspect_ratio: false),
                     ),
-                    image: (
-                        image: Generate(Srgba(0.18, 0.05, 0.85, 1.0)),
-                    )
+                    image: SolidColor(0.18, 0.05, 0.85, 1.0),
                 ),
             ]
         ),
@@ -51,9 +45,7 @@ Container(
                 anchor: BottomMiddle,
                 mouse_reactive: true,
             ),
-            image: (
-                image: File("texture/logo_transparent.png", ("IMAGE", ())),
-            )
+            image: Texture(File("texture/logo_transparent.png", ("IMAGE", ()))),
         ),
 
         // Editable text single line.
@@ -67,9 +59,7 @@ Container(
                 tab_order: 1,
                 anchor: BottomLeft,
             ),
-            background: (
-                image: Generate(Srgba(0.09, 0.02, 0.25, 1.0)),
-            ),
+            background: SolidColor(0.09, 0.02, 0.25, 1.0),
             children: [
                 Label(
                     transform: (
@@ -114,9 +104,9 @@ Container(
                 normal_text_color: (0.2, 0.2, 1.0, 1.0),
                 hover_text_color: (0.4, 0.4, 1.0, 1.0),
                 press_text_color: (0.6, 0.6, 1.0, 1.0),
-                normal_image: Generate(Srgba(0., 1., 0., 1.)),
-                hover_image: Generate(Srgba(0.3, 1., 0.3, 1.)),
-                press_image: Generate(Srgba(0.15, 1., 0.15, 1.)),
+                normal_image: SolidColor(0., 1., 0., 1.),
+                hover_image: SolidColor(0.3, 1., 0.3, 1.),
+                press_image: SolidColor(0.15, 1., 0.15, 1.),
                 hover_sound: File("audio/boop.ogg", ("OGG", ())),
                 press_sound: File("audio/confirm.ogg", ("OGG", ())),
             )
@@ -139,7 +129,7 @@ Container(
                 font: File("font/square.ttf", ("TTF", ())),
                 font_size: 20.,
                 normal_text_color: (0.0, 0.0, 0.0, 1.0),
-                normal_image: Generate(Srgba(0.82, 0.83, 0.83, 1.0)),
+                normal_image: SolidColor(0.82, 0.83, 0.83, 1.0),
             )
         ),
         Label(

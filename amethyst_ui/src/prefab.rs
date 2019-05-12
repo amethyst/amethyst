@@ -13,14 +13,14 @@ use amethyst_core::{
     HiddenPropagate,
 };
 use amethyst_error::{format_err, Error, ResultExt};
-use amethyst_rendy::{Texture, TexturePrefab};
+use amethyst_rendy::TexturePrefab;
 
 use serde::{Deserialize, Serialize};
 
 use crate::{
     get_default_font, Anchor, FontAsset, Interactable, LineMode, Selectable, Stretch, TextEditing,
-    UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionType, UiPlaySoundAction,
-    UiSoundRetrigger, UiText, UiTransform, WidgetId, Widgets,
+    UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionType, UiImage,
+    UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform, WidgetId, Widgets,
 };
 
 /// Loadable `UiTransform` data.
@@ -301,46 +301,78 @@ impl<'a> PrefabData<'a> for UiTextBuilder {
     }
 }
 
-/// Loadable `UiImage` data
-///
-/// ### Type parameters:
-///
-/// - `F`: `Format` used for loading `Texture`s
+/// Loadable `UiImage` data. Adds UiImage component to the entity.
 #[derive(Clone, Deserialize, Serialize)]
-pub struct UiImagePrefab {
-    /// Image
-    pub image: TexturePrefab,
+#[serde(transparent)]
+pub struct UiImagePrefab(UiImageLoadPrefab);
+
+/// Loadable `UiImage` data. Returns image component from `add_to_entity` instead of adding it.
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(rename = "UiImagePrefab")]
+pub enum UiImageLoadPrefab {
+    /// A textured image
+    Texture(TexturePrefab),
+    /// Solid color image
+    SolidColor(f32, f32, f32, f32),
 }
 
 impl<'a> PrefabData<'a> for UiImagePrefab {
     type SystemData = (
-        WriteStorage<'a, Handle<Texture>>,
-        <TexturePrefab as PrefabData<'a>>::SystemData,
+        <UiImageLoadPrefab as PrefabData<'a>>::SystemData,
+        WriteStorage<'a, UiImage>,
     );
+
     type Result = ();
 
     fn add_to_entity(
         &self,
         entity: Entity,
-        system_data: &mut Self::SystemData,
+        (ref mut inner, ref mut images): &mut Self::SystemData,
         entities: &[Entity],
         children: &[Entity],
     ) -> Result<(), Error> {
-        let (ref mut images, ref mut textures) = system_data;
-        let texture_handle = self
-            .image
-            .add_to_entity(entity, textures, entities, children)?;
-        images.insert(entity, texture_handle)?;
+        let image = self.0.add_to_entity(entity, inner, entities, children)?;
+        images.insert(entity, image)?;
         Ok(())
+    }
+    fn load_sub_assets(
+        &mut self,
+        progress: &mut ProgressCounter,
+        (ref mut inner, _): &mut Self::SystemData,
+    ) -> Result<bool, Error> {
+        self.0.load_sub_assets(progress, inner)
+    }
+}
+
+impl<'a> PrefabData<'a> for UiImageLoadPrefab {
+    type SystemData = (<TexturePrefab as PrefabData<'a>>::SystemData);
+    type Result = UiImage;
+
+    fn add_to_entity(
+        &self,
+        entity: Entity,
+        textures: &mut Self::SystemData,
+        entities: &[Entity],
+        children: &[Entity],
+    ) -> Result<UiImage, Error> {
+        let image = match self {
+            UiImageLoadPrefab::Texture(tex) => {
+                UiImage::Texture(tex.add_to_entity(entity, textures, entities, children)?)
+            }
+            UiImageLoadPrefab::SolidColor(r, g, b, a) => UiImage::SolidColor([*r, *g, *b, *a]),
+        };
+        Ok(image)
     }
 
     fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
-        system_data: &mut Self::SystemData,
+        textures: &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        let (_, ref mut textures) = system_data;
-        self.image.load_sub_assets(progress, textures)
+        match self {
+            UiImageLoadPrefab::Texture(tex) => tex.load_sub_assets(progress, textures),
+            UiImageLoadPrefab::SolidColor(..) => Ok(false),
+        }
     }
 }
 
@@ -361,14 +393,17 @@ pub struct UiButtonBuilder<W: WidgetId = u32> {
     pub font: Option<AssetPrefab<FontAsset>>,
     /// Default text color
     pub normal_text_color: [f32; 4],
+    // this `normal_image` is "transplanted" into UiImagePrefab at the top level
+    // of ui widegt. This happens inside `walk_ui_tree` function. It means that
+    // it will always be `None` during `add_to_entity`.
     /// Default image
-    pub normal_image: Option<TexturePrefab>,
+    pub normal_image: Option<UiImageLoadPrefab>,
     /// Image used when the mouse hovers over this element
-    pub hover_image: Option<TexturePrefab>,
+    pub hover_image: Option<UiImageLoadPrefab>,
     /// Text color used when this button is hovered over
     pub hover_text_color: Option<[f32; 4]>,
     /// Image used when button is pressed
-    pub press_image: Option<TexturePrefab>,
+    pub press_image: Option<UiImageLoadPrefab>,
     /// Text color used when this button is pressed
     pub press_text_color: Option<[f32; 4]>,
     /// Sound made when this button is hovered over
@@ -387,7 +422,7 @@ where
         WriteStorage<'a, UiSoundRetrigger>,
         WriteStorage<'a, UiButtonActionRetrigger>,
         Write<'a, Widgets<UiButton, W>>,
-        <TexturePrefab as PrefabData<'a>>::SystemData,
+        <UiImageLoadPrefab as PrefabData<'a>>::SystemData,
         <AssetPrefab<Audio> as PrefabData<'a>>::SystemData,
     );
     type Result = ();
@@ -403,7 +438,7 @@ where
             ref mut sound_retrigger,
             ref mut button_action_retrigger,
             ref mut widgets,
-            ref mut textures,
+            ref mut images,
             ref mut sounds,
         ) = system_data;
 
@@ -417,13 +452,13 @@ where
 
         let _normal_image = self
             .normal_image
-            .add_to_entity(entity, textures, entity_set, children)?;
+            .add_to_entity(entity, images, entity_set, children)?;
         let hover_image = self
             .hover_image
-            .add_to_entity(entity, textures, entity_set, children)?;
+            .add_to_entity(entity, images, entity_set, children)?;
         let press_image = self
             .press_image
-            .add_to_entity(entity, textures, entity_set, children)?;
+            .add_to_entity(entity, images, entity_set, children)?;
 
         let hover_sound = self
             .hover_sound
@@ -443,7 +478,7 @@ where
         if let Some(press_image) = press_image {
             on_click_start.push(UiButtonAction {
                 target: entity,
-                event_type: UiButtonActionType::SetTexture(press_image.clone()),
+                event_type: UiButtonActionType::SetImage(press_image.clone()),
             });
 
             on_click_stop.push(UiButtonAction {
@@ -455,7 +490,7 @@ where
         if let Some(hover_image) = hover_image {
             on_hover_start.push(UiButtonAction {
                 target: entity,
-                event_type: UiButtonActionType::SetTexture(hover_image.clone()),
+                event_type: UiButtonActionType::SetImage(hover_image.clone()),
             });
 
             on_hover_stop.push(UiButtonAction {
@@ -522,10 +557,10 @@ where
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        let (_, _, _, ref mut textures, ref mut sounds) = system_data;
-        self.normal_image.load_sub_assets(progress, textures)?;
-        self.hover_image.load_sub_assets(progress, textures)?;
-        self.press_image.load_sub_assets(progress, textures)?;
+        let (_, _, _, ref mut images, ref mut sounds) = system_data;
+        self.normal_image.load_sub_assets(progress, images)?;
+        self.hover_image.load_sub_assets(progress, images)?;
+        self.press_image.load_sub_assets(progress, images)?;
         self.press_sound.load_sub_assets(progress, sounds)?;
         self.hover_sound.load_sub_assets(progress, sounds)?;
         self.release_sound.load_sub_assets(progress, sounds)
@@ -768,7 +803,10 @@ fn walk_ui_tree<C, W>(
             }
         }
 
-        UiWidget::Button { transform, button } => {
+        UiWidget::Button {
+            transform,
+            mut button,
+        } => {
             let id = transform.id.clone();
             let text = UiTextBuilder {
                 color: button.normal_text_color,
@@ -786,9 +824,7 @@ fn walk_ui_tree<C, W>(
                 .expect("Unreachable: `Prefab` entity should always be set when walking ui tree")
                 .set_data((
                     Some(transform),
-                    button.normal_image.as_ref().map(|image| UiImagePrefab {
-                        image: image.clone(),
-                    }),
+                    button.normal_image.clone().map(UiImagePrefab),
                     None,
                     Some(button),
                     custom_data,

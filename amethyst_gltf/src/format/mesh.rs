@@ -266,7 +266,12 @@ mod tests {
 
     #[test]
     fn test_indexed_tangent_calc() {
-        let tangents = calculate_tangents(POSITIONS, NORMALS, TEX_COORDS, &Indices::U32(vec![3, 4, 5, 0, 1, 2]));
+        let tangents = calculate_tangents(
+            POSITIONS,
+            NORMALS,
+            TEX_COORDS,
+            &Indices::U32(vec![3, 4, 5, 0, 1, 2]),
+        );
         assert_eq!(
             tangents,
             vec![

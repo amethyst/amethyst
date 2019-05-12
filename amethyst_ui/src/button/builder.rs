@@ -15,7 +15,7 @@ use crate::{
     Anchor, FontAsset, FontHandle, Interactable, Selectable, Stretch, UiButton, UiButtonAction,
     UiButtonActionRetrigger,
     UiButtonActionType::{self, *},
-    UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform, WidgetId, Widgets,
+    UiImage, UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform, WidgetId, Widgets,
 };
 
 use std::marker::PhantomData;
@@ -66,7 +66,7 @@ pub struct UiButtonBuilder<G, I: WidgetId> {
     on_click_start_sound: Option<UiPlaySoundAction>,
     on_click_stop_sound: Option<UiPlaySoundAction>,
     on_hover_sound: Option<UiPlaySoundAction>,
-    // SetTextColor and SetTexture can occur on click/hover start,
+    // SetTextColor and SetImage can occur on click/hover start,
     // Unset for both on click/hover stop, so we only need 2 max.
     on_click_start: SmallVec<[UiButtonActionType; 2]>,
     on_click_stop: SmallVec<[UiButtonActionType; 2]>,
@@ -225,15 +225,15 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
     }
 
     /// Button image to use when the mouse is hovering over this button
-    pub fn with_hover_image(mut self, image: Handle<Texture>) -> Self {
-        self.on_hover_start.push(SetTexture(image.clone()));
+    pub fn with_hover_image(mut self, image: UiImage) -> Self {
+        self.on_hover_start.push(SetImage(image.clone()));
         self.on_hover_stop.push(UnsetTexture(image));
         self
     }
 
     /// Button image to use when this button is pressed
-    pub fn with_press_image(mut self, image: Handle<Texture>) -> Self {
-        self.on_click_start.push(SetTexture(image.clone()));
+    pub fn with_press_image(mut self, image: UiImage) -> Self {
+        self.on_click_start.push(SetImage(image.clone()));
         self.on_click_stop.push(UnsetTexture(image));
         self
     }

@@ -28,5 +28,5 @@ void main() {
     center.y = 1.0 - center.y; 
     vec2 final_pos = (center + in_dimensions * inverse_window_size * pos) * 2.0 - vec2(1.0);
 
-    gl_Position = vec4(final_pos, 1.0, 1.0);
+    gl_Position = vec4(final_pos, 0.0, 1.0);
 }

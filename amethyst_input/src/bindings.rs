@@ -38,7 +38,7 @@ use super::{Axis, Button};
 /// enum ActionBinding {
 ///     UsePowerup(PlayerId),
 /// }
-/// 
+///
 /// struct DriverBindingTypes;
 /// impl BindingTypes for DriverBindingTypes {
 ///     type Axis = AxisBinding;
