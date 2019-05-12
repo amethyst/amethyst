@@ -1,6 +1,6 @@
 # `Transform` API Changes
 
-The `Transform` API has been changed in order to better reflect their actual function and reduce potential semantic confusion. Many of these changes are breaking and old projects will have to be updated.
+The names of several `Transform` methods have been changed in order to better reflect their actual function and reduce potential semantic confusion. Many of these changes are breaking and old projects will have to be updated.
 
 ## Summary
 
@@ -16,11 +16,11 @@ The `Transform` API has been changed in order to better reflect their actual fun
 * `set_rotation` methods have been added
 * `euler_angles` has been added
 
-## Breaking Changes
+## `Float` Type
 
-### `Float` Type
+A wrapper type around `f32` and `f64`. It is used to hide the actual type being used internally. Mostly used with the Transform type. The default type is `f32` and you can switch to the `f64` type by enabling the "float64" feature gate.
 
-A wrapper type around f32 and f64. It is used to hide the actual type being used internally. Mostly used with the Transform type. The default type is f32 and you can switch to the f64 type by enabling the "float64" feature gate.
+## Renamed Transform Methods (Breaking Changes)
 
 ### `set(x|y|z)` to `set_translation(x|y|z)`
 
@@ -141,10 +141,12 @@ A wrapper type around f32 and f64. It is used to hide the actual type being used
 -transform.set_position(Vector3::new(0.3, 0.2, 4.1));
 +transform.set_translation(Vector3::new(0.3, 0.2, 4.1));
 ```
-## New Additions
+## New Transform Methods
 
 
 ### Set Rotation
+
+Several new methods to set rotation have been added.
 
 ```
 transform.set_rotation(UnitQuaternion::identity());
