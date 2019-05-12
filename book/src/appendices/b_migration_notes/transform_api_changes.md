@@ -95,7 +95,7 @@ A wrapper type around `f32` and `f64`. It is used to hide the actual type being 
 +transform.prepend_rotation(Vector3::new(0.2, 0.4, 0.6), 0.4);
 ```
 
-### `(pitch|yaw|roll)_global` have changed to `append_rotation_(x|y|z)_axis`
+### `(pitch|yaw|roll)_global` to `append_rotation_(x|y|z)_axis`
 
 ```patch
 -pitch_global(0.4);
@@ -142,7 +142,6 @@ A wrapper type around `f32` and `f64`. It is used to hide the actual type being 
 +transform.set_translation(Vector3::new(0.3, 0.2, 4.1));
 ```
 ## New Transform Methods
-
 
 ### Set Rotation
 
