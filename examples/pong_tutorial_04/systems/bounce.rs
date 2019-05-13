@@ -24,8 +24,8 @@ impl<'s> System<'s> for BounceSystem {
             let ball_y = transform.translation().y;
 
             // Bounce at the top or the bottom of the arena.
-            if (ball_y <= ball.radius.into() && ball.velocity[1] < 0.0)
-                || (ball_y >= (ARENA_HEIGHT - ball.radius).into() && ball.velocity[1] > 0.0)
+            if (ball_y <= Float::from(ball.radius) && ball.velocity[1] < 0.0)
+                || (ball_y >= Float::from(ARENA_HEIGHT - ball.radius) && ball.velocity[1] > 0.0)
             {
                 ball.velocity[1] = -ball.velocity[1];
             }
