@@ -126,7 +126,7 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
                 })
                 // filter entities behind the camera
                 .filter(|(c, screen_space)| {
-                    c.from_camera.dot(&camera_backward) < 0.0 || screen_space.is_some()
+                    c.from_camera.dot(&camera_backward) < Float::from(0.0) || screen_space.is_some()
                 })
                 .map(|(c, _)| c),
         );

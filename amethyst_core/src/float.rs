@@ -44,30 +44,6 @@ impl Float {
     }
 }
 
-impl PartialEq<f32> for Float {
-    fn eq(&self, other: &f32) -> bool {
-        (self.0 as f32).eq(other)
-    }
-}
-
-impl PartialEq<f64> for Float {
-    fn eq(&self, other: &f64) -> bool {
-        (self.0 as f64).eq(other)
-    }
-}
-
-impl PartialOrd<f32> for Float {
-    fn partial_cmp(&self, other: &f32) -> Option<Ordering> {
-        (self.0 as f32).partial_cmp(other)
-    }
-}
-
-impl PartialOrd<f64> for Float {
-    fn partial_cmp(&self, other: &f64) -> Option<Ordering> {
-        (self.0 as f64).partial_cmp(other)
-    }
-}
-
 impl From<f32> for Float {
     fn from(val: f32) -> Self {
         Float(val as FloatBase)
