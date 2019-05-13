@@ -1,5 +1,4 @@
 use std::{
-    cmp::Ordering,
     fmt::{Display, Formatter},
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign},
 };
