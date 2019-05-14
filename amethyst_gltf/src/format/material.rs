@@ -9,7 +9,7 @@ use amethyst_rendy::{
         texture::{
             image::{load_from_image, ImageFormat as DataFormat, ImageTextureConfig, Repr},
             palette::{load_from_linear_rgba, load_from_srgba},
-            MipLevel, TextureBuilder,
+            MipLevels, TextureBuilder,
         },
     },
 };
@@ -126,7 +126,7 @@ fn load_texture_with_factor(
     match texture {
         Some(info) => Ok((
             load_texture(&info.texture(), buffers, source, name, srgb)?
-                .with_mip_levels(MipLevel::Auto),
+                .with_mip_levels(MipLevels::GenerateAuto),
             factor,
         )),
         None => Ok((
@@ -162,7 +162,7 @@ fn load_texture(
         ..Default::default()
     };
 
-    load_from_image(&data, metadata).map_err(|e| e.compat().into())
+    load_from_image(std::io::Cursor::new(&data), metadata).map_err(|e| e.compat().into())
 }
 
 fn load_sampler_info(sampler: &gltf::texture::Sampler<'_>) -> hal::image::SamplerInfo {
