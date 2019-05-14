@@ -98,41 +98,41 @@ A wrapper type around `f32` and `f64`. It is used to hide the actual type being 
 ### `(pitch|yaw|roll)_global` to `append_rotation_(x|y|z)_axis`
 
 ```patch
--pitch_global(0.4);
-+prepend_rotation_x_axis(0.4);
+-transform.pitch_global(0.4);
++transform.prepend_rotation_x_axis(0.4);
 ```
 
 ```patch
--yaw_global(0.4);
-+prepend_rotation_y_axis(0.4);
+-transform.yaw_global(0.4);
++transform.prepend_rotation_y_axis(0.4);
 ```
 
 ```patch
--roll_global(0.4);
-+prepend_rotation_z_axis(0.4);
+-transform.roll_global(0.4);
++transform.prepend_rotation_z_axis(0.4);
 ```
 
 ### `translate_[xyz]` to `prepend_translation_[xyz]`
 
 ```patch
--translate_x(3.0);
-+prepend_translation_x(3.0);
+-transform.translate_x(3.0);
++transform.prepend_translation_x(3.0);
 ```
 
 ```patch
--translate_y(2.4);
-+prepend_translation_y(2.4);
+-transform.translate_y(2.4);
++transform.prepend_translation_y(2.4);
 ```
 
 
 ```patch
--translate_z(0.4);
-+prepend_translation_z(0.4);
+-transform.translate_z(0.4);
++transform.prepend_translation_z(0.4);
 ```
 
 ```patch
--translate_xyz(0.4, 2.4, 3.2);
-+prepend_translation_xyz(0.4, 2.4, 3.2);
+-transform.translate_xyz(0.4, 2.4, 3.2);
++transform.prepend_translation_xyz(0.4, 2.4, 3.2);
 ```
 
 ### `set_position` to `set_translation`
