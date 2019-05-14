@@ -1,8 +1,8 @@
 (
     axes: {
         "entity_x": Emulated(
-            pos: Key(D),
-            neg: Key(A),
+            pos: Key(A),
+            neg: Key(D),
         ),
         "entity_y": Emulated(
             pos: Key(W),

@@ -9,6 +9,7 @@ use crate::{
     types::{Backend, Mesh, Texture},
     visibility::Visibility,
     transparent::Transparent,
+    sprite::SpriteRender,
 };
 use amethyst_assets::{
     AssetStorage, Handle, HotReloadStrategy, ProcessableAsset, ProcessingState, ThreadPool,
@@ -86,6 +87,7 @@ type SetupData<'a> = (
     ReadStorage<'a, DebugLinesComponent>,
     ReadStorage<'a, Transparent>,
     ReadStorage<'a, Transform>,
+    ReadStorage<'a, SpriteRender>,
     Option<Read<'a, Visibility>>,
     Option<Read<'a, ActiveCamera>>,
     ReadStorage<'a, JointTransforms>,

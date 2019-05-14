@@ -19,6 +19,38 @@ use serde::{Deserialize, Serialize};
 #[serde(transparent)]
 pub struct ImageFormat(pub ImageTextureConfig);
 
+impl Default for ImageFormat {
+    fn default() -> Self {
+        use rendy::{
+            texture::image::{Repr, TextureKind},
+            hal::image::{
+                WrapMode,
+                PackedColor,
+                Anisotropic,
+                SamplerInfo,
+            },
+        };
+
+        ImageFormat(ImageTextureConfig {
+            format: None,
+            repr: Repr::Srgb,
+            kind: TextureKind::D2,
+            sampler_info: SamplerInfo {
+                min_filter: Filter::Nearest,
+                mag_filter: Filter::Nearest,
+                mip_filter: Filter::Nearest,
+                wrap_mode: (WrapMode::Tile, WrapMode::Tile, WrapMode::Tile),
+                lod_bias: 0.0.into(),
+                lod_range: std::ops::Range{ start: 0.0.into(), end: 8000.0.into()},
+                comparison: None,
+                border: PackedColor(0),
+                anisotropic: Anisotropic::Off,
+            },
+            generate_mips: false,
+        })
+    }
+}
+
 amethyst_assets::register_format_type!(TextureData);
 
 amethyst_assets::register_format!("IMAGE", ImageFormat as TextureData);

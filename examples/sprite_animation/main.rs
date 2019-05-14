@@ -16,7 +16,7 @@ use amethyst::{
     prelude::{Builder, World},
     renderer::{
         pass::DrawFlat2DDesc,
-        camera::{Camera, Projection},
+        camera::Camera,
         rendy::{
             factory::Factory,
             graph::{
@@ -126,9 +126,7 @@ fn initialise_camera(world: &mut World) {
     world
         .create_entity()
         .with(camera_transform)
-        .with(Camera::from(Projection::orthographic(
-            0.0, width, 0.0, height,
-        )))
+        .with(Camera::standard_2d(width, height))
         .build();
 }
 
