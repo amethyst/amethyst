@@ -48,7 +48,7 @@ PongSystemsBundle::default()
     .expect("Failed to register PongSystemsBundle");
 ```
 
-The `DispatcherBuilder` can be initialized and populated wherever desired, be it inside the `State` or in an external location. However, the `Dispatcher` needs to modify the `World`s resources in order to initialize the resources used by its `System`s. Therefore, we need to defer building the `Dispatcher` until we can access the `World`. This is commonly done in the `State`s `on_start` method. To showcase how this is done, we'll create a `SimpleState` with a `dispatcher` field and a `on_start` method that builds the `Dispatcher`.
+The `DispatcherBuilder` can be initialized and populated wherever desired, be it inside the `State` or in an external location. However, the `Dispatcher` needs to modify the `World`s resources in order to initialize the resources used by its `System`s. Normally you will also want the `Dispatcher` to share the global thread pool which much be retrieved from the `World`. Therefore, we need to defer building the `Dispatcher` until we can access the `World`. This is commonly done in the `State`s `on_start` method. To showcase how this is done, we'll create a `SimpleState` with a `dispatcher` field and a `on_start` method that builds the `Dispatcher`.
 
 ```rust,edition2018,no_run,noplaypen
 # external crate amethyst;
@@ -56,6 +56,7 @@ The `DispatcherBuilder` can be initialized and populated wherever desired, be it
 # use amethyst::{
 #     ecs::prelude::*,
 #     prelude::*,
+#     core::ArcThreadPool,
 # };
 # 
 #[derive(Default)]
@@ -74,7 +75,9 @@ impl<'a, 'b> SimpleState for CustomState<'a, 'b> {
         dispatcher_builder.add(MovePaddlesSystem, "move_paddles_system", &[]);
 
         // Build and setup the `Dispatcher`.
-        let mut dispatcher = dispatcher_builder.build();
+        let mut dispatcher = dispatcher_builder
+            .with_pool(world.read_resource::<ArcThreadPool>().clone())
+            .build();
         dispatcher.setup(&mut world.res);
 
         self.dispatcher = Some(dispatcher);
