@@ -2,23 +2,36 @@
 //!
 //! Sprites are from <https://opengameart.org/content/bat-32x32>.
 
+use std::sync::Arc;
 use amethyst::{
     animation::{
         get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSet, AnimationSet,
         AnimationSetPrefab, EndControl,
     },
-    assets::{PrefabData, PrefabLoader, PrefabLoaderSystem, ProgressCounter, RonFormat},
-    config::Config,
+    assets::{PrefabData, PrefabLoader, PrefabLoaderSystem, ProgressCounter, RonFormat, Processor},
     core::transform::{Transform, TransformBundle},
     derive::PrefabData,
-    ecs::{prelude::Entity, Entities, Join, ReadStorage, WriteStorage},
+    ecs::{prelude::Entity, Entities, Join, ReadStorage, WriteStorage, Resources, ReadExpect, SystemData},
     error::Error,
     prelude::{Builder, World},
     renderer::{
-        Camera, DisplayConfig, DrawFlat2D, Pipeline, Projection, RenderBundle, ScreenDimensions,
-        SpriteRender, SpriteScenePrefab, Stage,
+        pass::DrawFlat2DDesc,
+        camera::{Camera, Projection},
+        rendy::{
+            factory::Factory,
+            graph::{
+                render::{RenderGroupDesc, SubpassBuilder},
+                GraphBuilder,
+            },
+            hal::format::Format,
+        },
+        types::DefaultBackend,
+        GraphCreator, RenderingSystem,
+        sprite::{SpriteRender, prefab::SpriteScenePrefab, SpriteSheet},
+        sprite_visibility::SpriteVisibilitySortingSystem,
     },
-    utils::application_root_dir,
+    window::{WindowBundle, Window, ScreenDimensions},
+    utils::{application_root_dir},
     Application, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData, Trans,
 };
 use serde::{Deserialize, Serialize};
@@ -55,7 +68,6 @@ impl SimpleState for Example {
             loader.load(
                 "prefab/sprite_animation.ron",
                 RonFormat,
-                (),
                 self.progress_counter.as_mut().unwrap(),
             )
         });
@@ -67,6 +79,7 @@ impl SimpleState for Example {
 
     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         // Checks if we are still loading data
+
         if let Some(ref progress_counter) = self.progress_counter {
             // Checks progress
             if progress_counter.is_complete() {
@@ -106,6 +119,7 @@ fn initialise_camera(world: &mut World) {
         let dim = world.read_resource::<ScreenDimensions>();
         (dim.width(), dim.height())
     };
+    //println!("Init camera with dimensions: {}x{}", width, height);
 
     let mut camera_transform = Transform::default();
     camera_transform.set_translation_z(1.0);
@@ -124,26 +138,108 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
     let assets_directory = app_root.join("examples/assets/");
-    let display_conf_path = app_root.join("examples/sprite_animation/resources/display_config.ron");
-    let display_config = DisplayConfig::load(display_conf_path);
-
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawFlat2D::new()),
-    );
+    let display_config_path = app_root.join("examples/sprite_animation/resources/display_config.ron");
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(WindowBundle::from_config_path(display_config_path))?
+        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "scene_loader", &[])
         .with_bundle(AnimationBundle::<AnimationId, SpriteRender>::new(
-            "animation_control_system",
-            "sampler_interpolation_system",
+            "sprite_animation_control",
+            "sprite_sampler_interpolation",
         ))?
-        .with_bundle(RenderBundle::new(pipe, Some(display_config)).with_sprite_sheet_processor())?;
+        .with_bundle(TransformBundle::new().with_dep(&[
+            "sprite_animation_control",
+            "sprite_sampler_interpolation",
+        ]))?
+        .with(
+            Processor::<SpriteSheet>::new(),
+            "sprite_sheet_processor",
+            &[],
+        )
+        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(ExampleGraph::new()));
 
     let mut game = Application::new(assets_directory, Example::default(), game_data)?;
     game.run();
 
     Ok(())
+}
+
+
+
+struct ExampleGraph {
+    last_dimensions: Option<ScreenDimensions>,
+    surface_format: Option<Format>,
+    dirty: bool,
+}
+
+impl ExampleGraph {
+    pub fn new() -> Self {
+        Self {
+            last_dimensions: None,
+            surface_format: None,
+            dirty: true,
+        }
+    }
+}
+
+impl GraphCreator<DefaultBackend> for ExampleGraph {
+    fn rebuild(&mut self, res: &Resources) -> bool {
+        // Rebuild when dimensions change, but wait until at least two frames have the same.
+        let new_dimensions = res.try_fetch::<ScreenDimensions>();
+        use std::ops::Deref;
+        if self.last_dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
+            self.dirty = true;
+            self.last_dimensions = new_dimensions.map(|d| d.clone());
+            return false;
+        }
+        return self.dirty;
+    }
+
+    fn builder(
+        &mut self,
+        factory: &mut Factory<DefaultBackend>,
+        res: &Resources,
+    ) -> GraphBuilder<DefaultBackend, Resources> {
+        use amethyst::renderer::rendy::{
+            graph::present::PresentNode,
+            hal::command::{ClearDepthStencil, ClearValue},
+        };
+
+        self.dirty = false;
+
+        let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
+        let surface = factory.create_surface(window.clone());
+        // cache surface format to speed things up
+        let surface_format = *self
+            .surface_format
+            .get_or_insert_with(|| factory.get_surface_format(&surface));
+
+        let mut graph_builder = GraphBuilder::new();
+        let color = graph_builder.create_image(
+            surface.kind(),
+            1,
+            surface_format,
+            Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
+        );
+
+        let depth = graph_builder.create_image(
+            surface.kind(),
+            1,
+            Format::D32Float,
+            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+        );
+
+        let sprite = graph_builder.add_node(
+            SubpassBuilder::new()
+                .with_group(DrawFlat2DDesc::default().builder())
+                .with_color(color)
+                .with_depth_stencil(depth)
+                .into_pass(),
+        );
+
+        let _present = graph_builder
+            .add_node(PresentNode::builder(factory, surface, color).with_dependency(sprite));
+
+        graph_builder
+    }
 }

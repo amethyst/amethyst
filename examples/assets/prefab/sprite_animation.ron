@@ -3,26 +3,28 @@ Prefab(
     entities: [
         // Grey bat
         PrefabEntity(
-            data: SpriteScenePrefabData(
+            data: MyPrefabData(
                 // SpriteScenePrefab
                 sprite_scene: (
                     // SpriteSheetPrefab with index 0
                     sheet: Sheet(
                         // TexturePrefab
-                        texture: File("texture/bat.32x32.png", (), (
-                            sampler_info: (
-                                min_filter: Nearest,
-                                mag_filter: Nearest,
-                                mip_filter: Nearest,
-                                 wrap_mode: (Clamp, Clamp, Clamp),
-                                 lod_bias: (0),
-                                 lod_range: (
-                                     start: (-8000),
-                                     end: (8000),
-                                 ),
-                                 comparison: None,
-                                 border: (0),
-                                 anisotropic: Off,
+                        texture: File("texture/bat.32x32.png", (
+                            "IMAGE", (
+                                sampler_info: (
+                                    min_filter: Nearest,
+                                    mag_filter: Nearest,
+                                    mip_filter: Nearest,
+                                    wrap_mode: (Tile, Tile, Tile),
+                                    lod_bias: (0),
+                                    lod_range: (
+                                        start: ( 0 ),
+                                        end: ( 8000 ),
+                                    ),
+                                    comparison: None,
+                                    border: (0),
+                                    anisotropic: Off,
+                                ),
                             ),
                         )),
                         sprites: [

@@ -60,7 +60,6 @@ fn main() -> amethyst::Result<()> {
     Ok(())
 }
 
-
 struct ExampleGraph {
     last_dimensions: Option<ScreenDimensions>,
     surface_format: Option<Format>,
