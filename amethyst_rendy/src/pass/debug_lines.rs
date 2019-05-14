@@ -176,6 +176,10 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawDebugLines<B> {
         #[cfg(feature = "profiler")]
         profile_scope!("draw");
 
+        if self.lines.len() == 0 {
+            return
+        }
+
         let layout = &self.pipeline_layout;
         encoder.bind_graphics_pipeline(&self.pipeline);
         self.env.bind(index, layout, 0, &mut encoder);
