@@ -8,6 +8,7 @@ use crate::{
     skinning::JointTransforms,
     types::{Backend, Mesh, Texture},
     visibility::Visibility,
+    transparent::Transparent,
 };
 use amethyst_assets::{
     AssetStorage, Handle, HotReloadStrategy, ProcessableAsset, ProcessingState, ThreadPool,
@@ -16,6 +17,7 @@ use amethyst_core::{
     ecs::{Read, ReadExpect, ReadStorage, Resources, RunNow, SystemData, Write, WriteExpect},
     timing::Time,
     Hidden, HiddenPropagate,
+    components::Transform,
 };
 use palette::{LinSrgba, Srgba};
 use rendy::{
@@ -82,6 +84,8 @@ type SetupData<'a> = (
     ReadStorage<'a, Hidden>,
     ReadStorage<'a, HiddenPropagate>,
     ReadStorage<'a, DebugLinesComponent>,
+    ReadStorage<'a, Transparent>,
+    ReadStorage<'a, Transform>,
     Option<Read<'a, Visibility>>,
     Option<Read<'a, ActiveCamera>>,
     ReadStorage<'a, JointTransforms>,
