@@ -26,7 +26,14 @@ impl Projection {
     /// Creates an orthographic projection with the given left, right, bottom, and
     /// top plane distances.
     pub fn orthographic(l: f32, r: f32, b: f32, t: f32) -> Projection {
-        Projection::Orthographic(Orthographic3::new(l, r, b, t, 0.1, 2000.0))
+        let z_near = 0.1;
+        let z_far = 2000.0;
+
+        let mut proj = Orthographic3::new(l, r, b, t, 0.1, 2000.0).into_inner();
+        proj[(2, 2)] = 2.0 / (z_far - z_near);
+        proj[(2, 3)] = (z_far + z_near) / (z_far - z_near);
+
+        Projection::Orthographic(Orthographic3::from_matrix_unchecked(proj))
     }
 
     /// Creates a perspective projection with the given aspect ratio and

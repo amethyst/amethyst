@@ -28,7 +28,6 @@ use amethyst::{
         types::DefaultBackend,
         GraphCreator, RenderingSystem,
         sprite::{SpriteRender, prefab::SpriteScenePrefab, SpriteSheet},
-        sprite_visibility::SpriteVisibilitySortingSystem,
     },
     window::{WindowBundle, Window, ScreenDimensions},
     utils::{application_root_dir},
