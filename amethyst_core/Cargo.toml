@@ -16,14 +16,15 @@ appveyor = { repository = "amethyst/amethyst" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-nalgebra = { git = "https://github.com/jojolepro/nalgebra", branch = "pub", features = ["serde-serialize", "mint"] }
-alga = { git = "https://github.com/jojolepro/alga", branch = "pub",default-features = false }
+nalgebra = { version = "0.18.0", features = ["serde-serialize", "mint"] }
+alga = { version = "0.9.0", default-features = false }
 alga_derive = "0.9.0"
 approx = "0.3"
 amethyst_error = { path = "../amethyst_error", version = "0.1.0" }
 fnv = "1"
 hibitset = { version = "0.5.2", features = ["parallel"] }
 log = "0.4.6"
+num-traits = "0.2.0"
 rayon = "1.0.2"
 serde = { version = "1", features = ["derive"] }
 shred = { version = "0.7" }

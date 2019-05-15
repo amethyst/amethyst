@@ -6,8 +6,6 @@
 compile_error!("the cfg flag \"no_threading\" is required when building for emscripten");
 
 #[macro_use]
-pub extern crate alga;
-#[macro_use]
 extern crate alga_derive;
 #[macro_use]
 extern crate serde;
@@ -16,8 +14,10 @@ extern crate getset;
 #[macro_use]
 extern crate derive_new;
 
+pub use alga;
 pub use approx;
 pub use nalgebra as math;
+pub use num_traits as num;
 pub use shred;
 pub use shrev;
 pub use specs as ecs;

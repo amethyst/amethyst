@@ -4,7 +4,7 @@ use hibitset::BitSet;
 
 use amethyst_core::{
     ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
-    math::{zero, Point3, Vector3},
+    math::{Point3, Vector3},
     Float, Transform,
 };
 
@@ -126,7 +126,7 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
                 })
                 // filter entities behind the camera
                 .filter(|(c, screen_space)| {
-                    c.from_camera.dot(&camera_backward) < zero() || screen_space.is_some()
+                    c.from_camera.dot(&camera_backward) < Float::from(0.0) || screen_space.is_some()
                 })
                 .map(|(c, _)| c),
         );
