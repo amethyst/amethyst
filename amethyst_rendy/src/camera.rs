@@ -81,11 +81,11 @@ pub struct Camera {
 impl Camera {
     /// Create a normalized camera for 2D.
     ///
-    /// Will use an orthographic projection with top left corner being (-1., -1.) and
-    /// lower right (1., 1.).
+    /// Will use an orthographic projection centered around (0, 0) of size (width, height)
+    /// Bottom left corner is (-width/2.0, -height/2.0)
     /// View transformation will be multiplicative identity.
-    pub fn standard_2d() -> Self {
-        Self::from(Projection::orthographic(-1., 1., -1., 1., 0.1, 2000.0))
+    pub fn standard_2d(width: f32, height: f32) -> Self {
+        Self::from(Projection::orthographic(-width/2.0, width/2.0, - height/2.0, height/2.0, 0.1, 2000.0))
     }
 
     /// Create a standard camera for 3D.
