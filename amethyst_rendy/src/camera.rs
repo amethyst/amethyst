@@ -25,24 +25,38 @@ pub enum Projection {
 impl Projection {
     /// Creates an orthographic projection with the given left, right, bottom, and
     /// top plane distances.
-    pub fn orthographic(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32,) -> Projection {
+    /// Projection matrix is right-handed and has a depth range of 0 to 1
+    pub fn orthographic(left: f32, right: f32, bottom: f32, top: f32, z_near: f32, z_far: f32,) -> Projection {
+        let mut proj = Matrix4::<f32>::identity();
 
-        let mut proj = Orthographic3::new(left, right, bottom, top, 0.1, 2000.0).into_inner();
-        proj[(2, 2)] = 2.0 / (far - near);
-        proj[(2, 3)] = (far + near) / (far - near);
+        proj[(0, 0)] = 2.0 / (right - left);
+        proj[(0, 3)] = - (right + left) / (right - left);
+        proj[(1, 1)] = 2.0 / (top - bottom);
+        proj[(1, 3)] = - (top + bottom) / (top - bottom);
+        proj[(2, 2)] = - 1.0 / (z_far - z_near);
+        proj[(2, 3)] = - z_near / (z_far  - z_near);
 
+        // Important: nalgebra's methods on Orthographic3 are not safe for use with RH matrices
         Projection::Orthographic(Orthographic3::from_matrix_unchecked(proj))
     }
 
     /// Creates a perspective projection with the given aspect ratio and
     /// field-of-view. `fov` is specified in radians.
+    /// Projection matrix is right-handed and has a depth range of 0 to 1
     pub fn perspective(aspect: f32, fov: f32, z_near: f32, z_far: f32) -> Projection {
-        let mut proj = Perspective3::new(aspect, fov, z_near, z_far).into_inner();
-        proj[(1, 1)] = -proj[(1, 1)];
+        let mut proj = Matrix4::<f32>::identity();
+        
+        let tan_half_fovy = (fov / 2.0).tan();
+
+        proj[(0, 0)] = 1.0 / (aspect * tan_half_fovy);
+        proj[(1, 1)] = - 1.0 / tan_half_fovy;
 
         proj[(2, 2)] = z_far / (z_near - z_far);
-        proj[(2, 3)] = (z_near * z_far) / (z_near - z_far);
+        proj[(2, 3)] = - (z_near * z_far) / (z_far - z_near);
+        proj[(3, 2)] = - 1.0;
+        proj[(3, 3)] = 0.0;
 
+        // Important: nalgebra's methods on Perspective3 are not safe for use with RH matrices
         Projection::Perspective(Perspective3::from_matrix_unchecked(proj))
     }
 }
@@ -67,8 +81,8 @@ pub struct Camera {
 impl Camera {
     /// Create a normalized camera for 2D.
     ///
-    /// Will use an orthographic projection with lower left corner being (-1., -1.) and
-    /// upper right (1., 1.).
+    /// Will use an orthographic projection with top left corner being (-1., -1.) and
+    /// lower right (1., 1.).
     /// View transformation will be multiplicative identity.
     pub fn standard_2d(width: f32, height: f32) -> Self {
         Self::from(Projection::orthographic(-1., width, -1., height, 0.1, 2000.0))
@@ -256,5 +270,39 @@ mod serde_persp {
             },
             serializer,
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn standard_2d() {
+        let cam = Camera::standard_2d(1280.0, 720.0);
+
+    }
+
+    #[test]
+    fn standard_3d() {
+        let cam = Camera::standard_3d(1280.0, 720.0)
+    }
+
+    #[test]
+    fn orthographic_orientation() {
+        let cam : Camera = Projection::orthographic(-1.0, 1.0, 1.0, -1.0, 0.1, 2000.0).into()
+    }
+
+    #[test]
+    fn orthographic_depth() {
+        let cam : Camera = Projection::orthographic(-1.0, 1.0, 1.0, -1.0, 0.1, 2000.0).into()
+    }
+
+    #[test]
+    fn perspective_orientation() {
+        let cam : Camera = Projection:perspective(16.0/9.0, std::f32::consts::FRAC_PI_3, 0.1, 2000.0).into();
+    }
+
+    #[test]
+    fn perspective_depth() {
+        let cam : Camera = Projection:perspective(16.0/9.0, std::f32::consts::FRAC_PI_3, 0.1, 2000.0).into();
     }
 }
