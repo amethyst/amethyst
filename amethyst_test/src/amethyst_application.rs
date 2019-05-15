@@ -1,6 +1,6 @@
 #[cfg(not(windows))]
-use std::{any::Any, thread};
-use std::{hash::Hash, marker::PhantomData, panic, path::PathBuf, sync::Mutex};
+use std::thread;
+use std::{any::Any, hash::Hash, marker::PhantomData, panic, path::PathBuf, sync::Mutex};
 
 use amethyst::{
     self,
@@ -272,8 +272,14 @@ where
     {
         let params = (self.bundle_add_fns, self.resource_add_fns, self.state_fns);
 
-        Self::build_internal(params)?.run();
-        Ok(())
+        let application = Mutex::new(Self::build_internal(params)?);
+        panic::catch_unwind(move || {
+            application
+                .lock()
+                .expect("Expected to get application lock")
+                .run()
+        })
+        .map_err(Self::box_any_to_error)
     }
 
     /// Runs the application and returns `Ok(())` if nothing went wrong.
@@ -341,7 +347,6 @@ where
             .expect("Failed to run `AmethystApplication` closure.")
     }
 
-    #[cfg(not(windows))]
     fn box_any_to_error(error: Box<dyn Any + Send>) -> Error {
         // Caught `panic!`s are generally `&str`s.
         //
