@@ -84,8 +84,8 @@ impl Camera {
     /// Will use an orthographic projection with top left corner being (-1., -1.) and
     /// lower right (1., 1.).
     /// View transformation will be multiplicative identity.
-    pub fn standard_2d(width: f32, height: f32) -> Self {
-        Self::from(Projection::orthographic(-1., width, -1., height, 0.1, 2000.0))
+    pub fn standard_2d() -> Self {
+        Self::from(Projection::orthographic(-1., 1., -1., 1., 0.1, 2000.0))
     }
 
     /// Create a standard camera for 3D.
@@ -283,7 +283,7 @@ mod tests {
 
     #[test]
     fn standard_2d() {
-        let cam = Camera::standard_2d(1280.0, 720.0);
+        let cam = Camera::standard_2d();
         
     }
 
