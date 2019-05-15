@@ -1122,6 +1122,7 @@ mod test {
     /// * Another sub-thread accesses the COM object through the same `lazy_static` variable.
     ///
     /// For more details, see <https://github.com/amethyst/amethyst/issues/1595>.
+    #[cfg(feature = "graphics")]
     mod audio_test {
         use amethyst::{
             assets::AssetStorage,
