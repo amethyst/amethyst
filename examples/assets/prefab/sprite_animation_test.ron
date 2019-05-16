@@ -1,7 +1,7 @@
 #![enable(implicit_some)]
 Prefab(
     entities: [
-        // Grey bat
+        // Grey arrow
         PrefabEntity(
             data: MyPrefabData(
                 // SpriteScenePrefab
@@ -9,7 +9,7 @@ Prefab(
                     // SpriteSheetPrefab with index 0
                     sheet: Sheet(
                         // TexturePrefab
-                        texture: File("texture/bat.32x32.png", (
+                        texture: File("texture/arrow_semi_transparent.png", (
                             "IMAGE", (
                                 sampler_info: (
                                     min_filter: Nearest,
@@ -28,7 +28,7 @@ Prefab(
                             ),
                         )),
                         sprites: [
-                            // Grey bat sprites
+                            // Grey arrow sprites
                             // Sprites with indexes from 0 to 5
                             Grid((
                                 texture_width: 192,
@@ -36,35 +36,41 @@ Prefab(
                                 columns: 6,
                                 rows: 1,
                                 cell_size: (32, 32),
-                                // Shifts the grid by 32 pixels down and the bat changes to brown
+                                // Shifts the grid by 32 pixels down and the arrow changes to brown
                                 // position: (0, 32),
                             )),
-                            // Brown bat sprites
+                            // Brown arrow sprites
                             // Sprites with indexes from 6 to 11
                             List((
                                 texture_width: 192,
                                 texture_height: 64,
                                 sprites: [
-                                    (x: 0,   y: 32, width: 32, height: 32),
-                                    (x: 32,  y: 32, width: 32, height: 32, offsets: (0.0, -4.0)),
-                                    (x: 64,  y: 32, width: 32, height: 32, offsets: (0.0, 7.0)),
-                                    (x: 64,  y: 32, width: 32, height: 32, offsets: (0.0, 6.0)),
-                                    (x: 96,  y: 32, width: 32, height: 32, offsets: (0.0, -4.0)),
-                                    (x: 128, y: 32, width: 32, height: 32, offsets: (0.0, -2.0)),
+                                    (x: 0,   y: 0, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                    (x: 32,  y: 0, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                    (x: 64,  y: 0, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                    (x: 64,  y: 0, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                    (x: 96,  y: 0, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                    (x: 128, y: 0, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                    (x: 0,   y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                    (x: 32,  y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                    (x: 64,  y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                    (x: 64,  y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                    (x: 96,  y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                    (x: 128, y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
                                 ],
                             )),
                         ],
                         // optional
-                        name: "bat",
+                        name: "arrow",
                     ),
                     // SpriteRenderPrefab
                     render: (
-                        sheet: "bat",
+                        sheet: "arrow",
                         sprite_number: 0,
                     ),
                     // Transform
                     transform: (
-                        translation: (150.0, 37.5, 0.0),
+                        translation: (50.0, 37.5, 0.0),
                     ),
                 ),
                 // AnimationSetPrefab
@@ -95,18 +101,18 @@ Prefab(
                 ),
             ),
         ),
-        // Brown bat
+        // Brown arrow
         (
             data: (
                 sprite_scene: (
                     render: (
                         // We have already added a SpriteSheet for the previous entity,
                         // now we can refer to it
-                        sheet: "bat", // or sheet: 0,
+                        sheet: "arrow", // or sheet: 0,
                         sprite_number: 6,
                     ),
                     transform: (
-                        translation: (250.0, 37.5, 0.0),
+                        translation: (0.0, 37.5, 0.0),
                     ),
                 ),
                 animation_set: (

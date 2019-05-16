@@ -66,15 +66,23 @@ impl SimpleState for Example {
         // Crates new progress counter
         self.progress_counter = Some(Default::default());
         // Starts asset loading
-        let prefab_handle = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
+        let bat_prefab = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load(
                 "prefab/sprite_animation.ron",
                 RonFormat,
                 self.progress_counter.as_mut().unwrap(),
             )
         });
+        let arrow_test_prefab = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
+            loader.load(
+                "prefab/sprite_animation_test.ron",
+                RonFormat,
+                self.progress_counter.as_mut().unwrap(),
+            )
+        });
         // Creates new entities with components from MyPrefabData
-        world.create_entity().with(prefab_handle).build();
+        world.create_entity().with(bat_prefab).build();
+        world.create_entity().with(arrow_test_prefab).build();
         // Creates a new camera
         initialise_camera(world);
     }
