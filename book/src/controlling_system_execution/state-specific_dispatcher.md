@@ -85,7 +85,7 @@ impl<'a, 'b> SimpleState for CustomState<'a, 'b> {
 }
 ```
 
-By default the dispatcher will create it's own pool of worker threads to execute states in but Amethyst's main dispatcher already has a thread pool setup and configured. Normally you'll want to reuse that. The global pool is available as a resource so we pull it from the world and attach the dispatcher to it with `.with_pool()`.
+By default the dispatcher will create its own pool of worker threads to execute systems in but Amethyst's main dispatcher already has a thread pool setup and configured. As reusing it is more efficient, we pull the global pool from the world and attach the dispatcher to it with `.with_pool()`.
 
 The `CustomState` requires two annotations (`'a` and `'b`) to satisfy the lifetimes of the `Dispatcher`. Now that we have our `Dispatcher` we need to ensure that it is executed. We do this in the `State`s `update` method.
 
