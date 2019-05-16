@@ -14,7 +14,7 @@ use amethyst::{
     input::{InputBundle, InputHandler, StringBindings, is_key_down, is_close_requested, get_key, ElementState},
     prelude::*,
     renderer::{
-        pass::DrawFlat2DTransparentDesc,
+        pass::{DrawFlat2DDesc, DrawFlat2DTransparentDesc},
         camera::{Camera, Projection},
         rendy::{
             factory::Factory,
@@ -461,6 +461,13 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         let sprite = graph_builder.add_node(
             SubpassBuilder::new()
+                .with_group(DrawFlat2DDesc::default().builder())
+                .with_color(color)
+                .with_depth_stencil(depth)
+                .into_pass(),
+        );
+        let sprite_trans = graph_builder.add_node(
+            SubpassBuilder::new()
                 .with_group(DrawFlat2DTransparentDesc::default().builder())
                 .with_color(color)
                 .with_depth_stencil(depth)
@@ -468,7 +475,9 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         );
 
         let _present = graph_builder
-            .add_node(PresentNode::builder(factory, surface, color).with_dependency(sprite));
+            .add_node(PresentNode::builder(factory, surface, color)
+                .with_dependency(sprite_trans)
+                .with_dependency(sprite));
 
         graph_builder
     }

@@ -55,7 +55,7 @@ pub fn load(texture: Handle<Texture>, definition: &sprite::SpriteSheetDefinition
             sprites.push(sprite);
         }
     }
-
+    println!("Sheet: {:?}", sprites);
     SpriteSheet { texture, sprites }
 }
 
