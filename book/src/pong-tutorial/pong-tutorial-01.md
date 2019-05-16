@@ -113,7 +113,7 @@ In either case, open `display_config.ron` and change its contents to the followi
 > If you have never run into Rusty Object Notation before (or RON for short), 
 > it is a data storage format that mirrors Rust's syntax. Here, the
 > data represents the [`DisplayConfig`][displayconf] struct. If you want to
-> learn more abour the RON syntax, you can visit the [official repository][ron].
+> learn more about the RON syntax, you can visit the [official repository][ron].
 
 This will set the default window dimensions to 500 x 500, and make the title bar
 say "Pong!" instead of the sad, lowercase default of "pong".
