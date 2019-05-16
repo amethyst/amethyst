@@ -372,7 +372,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
         for (&tex, range) in self.sprites.iter() {
             if self.textures.loaded(tex) {
                 self.textures.bind(layout, 1, tex, &mut encoder);
-                encoder.draw(0..6, range);
+                encoder.draw(0..4, range);
             }
         }
     }
