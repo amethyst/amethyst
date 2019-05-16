@@ -53,7 +53,7 @@ pub fn load(texture: Handle<Texture>, definition: &sprite::SpriteSheetDefinition
 
             let sprite_number = row * definition.column_count + col;
             debug!("{}: Sprite: {:?}", sprite_number, &sprite);
-
+            println!("{} = {},{}", sprite_number, pixel_left, pixel_top);
             sprites.push(sprite);
         }
     }

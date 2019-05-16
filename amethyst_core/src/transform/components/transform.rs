@@ -2,9 +2,7 @@
 use std::fmt;
 
 use crate::{
-    alga::{
-        general::SubsetOf,
-    },
+    alga::general::SubsetOf,
     ecs::prelude::{Component, DenseVecStorage, FlaggedStorage},
     float::Float,
     math::{

@@ -81,10 +81,38 @@ Prefab (
                             texture_width: 192,
                             texture_height: 64,
                             columns: 6,
-                            rows: 1,
+                            rows: 2,
                             cell_size: (32, 32),
-                            position: (0, 32),
+                            position: (0, 0),
                         )),
+                    ],
+                    // optional
+                    name: "arrow_color",
+                ),
+            ),
+        ),
+        (
+        data: (
+                sprite_sheet: Sheet(
+                    texture: File("texture/arrow_semi_transparent.png", (
+                        "IMAGE", (
+                            sampler_info: (
+                                min_filter: Nearest,
+                                mag_filter: Nearest,
+                                mip_filter: Nearest,
+                                wrap_mode: (Tile, Tile, Tile),
+                                lod_bias: (0),
+                                lod_range: (
+                                    start: ( 0 ),
+                                    end: ( 8000 ),
+                                ),
+                                comparison: None,
+                                border: (0),
+                                anisotropic: Off,
+                            ),
+                        )
+                    )),
+                    sprites: [
                         List((
                             texture_width: 192,
                             texture_height: 64,
@@ -106,7 +134,7 @@ Prefab (
                         )),
                     ],
                     // optional
-                    name: "arrow_color",
+                    name: "arrow_color_list",
                 ),
             ),
         ),
@@ -487,6 +515,162 @@ Prefab (
                 ),
                 transform: (
                     translation: (1.5, 1.5, 3.75),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 0,
+                ),
+                transform: (
+                    translation: (2.0, 1.5, 1.0),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 1,
+                ),
+                transform: (
+                    translation: (2.0, 1.5, 1.25),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 2,
+                ),
+                transform: (
+                    translation: (2.0, 1.5, 1.5),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 3,
+                ),
+                transform: (
+                    translation: (2.0, 1.5, 1.75),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 4,
+                ),
+                transform: (
+                    translation: (2.0, 1.5, 2.0),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 5,
+                ),
+                transform: (
+                    translation: (2.0, 1.5, 2.25),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 6,
+                ),
+                transform: (
+                    translation: (2.0, 1.5, 2.5),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 7,
+                ),
+                transform: (
+                    translation: (2.0, 1.5, 2.75),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 8,
+                ),
+                transform: (
+                    translation: (2.0, 1.5, 3.0),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 9,
+                ),
+                transform: (
+                    translation: (2.0, 1.5, 3.25),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 10,
+                ),
+                transform: (
+                    translation: (2.0, 1.5, 3.5),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 11,
+                ),
+                transform: (
+                    translation: (2.0, 1.5, 3.75),
                     scale: (0.02, 0.02, 1.0),
                 ),
                 transparent: (),

@@ -8,8 +8,8 @@ use amethyst_core::{
         Write,
     },
     math::{self as na, convert, distance_squared, Matrix4, Point3, RealField, Vector4},
-    Float, Hidden, HiddenPropagate, Transform,
     num::One,
+    Float, Hidden, HiddenPropagate, Transform,
 };
 use amethyst_window::ScreenDimensions;
 

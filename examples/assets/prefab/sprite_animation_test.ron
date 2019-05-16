@@ -28,19 +28,7 @@ Prefab(
                             ),
                         )),
                         sprites: [
-                            // Grey arrow sprites
-                            // Sprites with indexes from 0 to 5
-                            Grid((
-                                texture_width: 192,
-                                texture_height: 64,
-                                columns: 6,
-                                rows: 1,
-                                cell_size: (32, 32),
-                                // Shifts the grid by 32 pixels down and the arrow changes to brown
-                                // position: (0, 32),
-                            )),
-                            // Brown arrow sprites
-                            // Sprites with indexes from 6 to 11
+                            // arrow sprites
                             List((
                                 texture_width: 192,
                                 texture_height: 64,

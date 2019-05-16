@@ -337,7 +337,7 @@ fn load_sprite_sheet(world: &mut World) -> LoadedSpriteSheet {
     let texture_handle = {
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
         loader.load(
-            "texture/bat_semi_transparent.png",
+            "texture/arrow_semi_transparent.png",
             ImageFormat::default(),
             (),
             &texture_storage,
