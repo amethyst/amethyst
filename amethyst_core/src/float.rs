@@ -3,7 +3,8 @@ use std::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign},
 };
 
-use alga::{general::*, num::*};
+use crate::num::*;
+use alga::general::*;
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use nalgebra::Complex;
 
@@ -757,5 +758,55 @@ impl SubsetOf<Float> for Float {
     }
 }
 
-impl_lattice!(Float);
-impl_scalar_subset_of_complex!(Float);
+impl MeetSemilattice for Float {
+    #[inline]
+    fn meet(&self, other: &Self) -> Self {
+        if *self <= *other {
+            *self
+        } else {
+            *other
+        }
+    }
+}
+
+impl JoinSemilattice for Float {
+    #[inline]
+    fn join(&self, other: &Self) -> Self {
+        if *self >= *other {
+            *self
+        } else {
+            *other
+        }
+    }
+}
+
+impl Lattice for Float {
+    #[inline]
+    fn meet_join(&self, other: &Self) -> (Self, Self) {
+        if *self >= *other {
+            (*other, *self)
+        } else {
+            (*self, *other)
+        }
+    }
+}
+
+impl<N2: Zero + SupersetOf<Float>> SubsetOf<Complex<N2>> for Float {
+    #[inline]
+    fn to_superset(&self) -> Complex<N2> {
+        Complex {
+            re: N2::from_subset(self),
+            im: N2::zero(),
+        }
+    }
+
+    #[inline]
+    unsafe fn from_superset_unchecked(element: &Complex<N2>) -> Float {
+        element.re.to_subset_unchecked()
+    }
+
+    #[inline]
+    fn is_in_subset(c: &Complex<N2>) -> bool {
+        c.re.is_in_subset() && c.im.is_zero()
+    }
+}

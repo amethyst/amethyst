@@ -36,7 +36,10 @@ it is attached to. ([#1282])
 * Adding support for AMETHYST_NUM_THREADS environment variable to control size of the threads pool used by thread_pool_builder.
 * Add `Input` variant to `StateEvent`. ([#1478])
 * Support type parameters in `EventReader` derive. ([#1478])
+* Derive `Debug`, `PartialEq`, `Eq` for `Source`. ([#1591])
 * Added `events` example which demonstrates working even reader and writer in action. ([#1538])
+*  Implement builder like functionality for `AnimationSet` and `AnimationControlSet` ([#1568])
+* Add `get_mouse_button` and `is_mouse_button_down` utility functions to amethyst_input. ([#1582])
 
 ### Changed
 
@@ -78,6 +81,8 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * `NetConnection` is automatically created when client starts sends data to server. ([#1539])
 * User will receive `NetEvent::Connected` on new connection and `NetEvent::Disconnected` on disconnect. ([#1539])
 * Added a `pivot` field to `UiTransform`. ([#1571])
+* Fix fly_camera example initial camera and cube position. ([#1582])
+* Add to fly_camera example code to release and capture back mouse input, and to show and hide cursor. ([#1582])
 
 #### Rendy support
 
@@ -151,8 +156,12 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1526]: https://github.com/amethyst/amethyst/pull/1526
 [#1538]: https://github.com/amethyst/amethyst/pull/1538
 [#1539]: https://github.com/amethyst/amethyst/pull/1543
+[#1568]: https://github.com/amethyst/amethyst/pull/1568
 [#1571]: https://github.com/amethyst/amethyst/pull/1571
 [#1584]: https://github.com/amethyst/amethyst/pull/1584
+[#1591]: https://github.com/amethyst/amethyst/pull/1591
+[#1582]: https://github.com/amethyst/amethyst/pull/1582
+
 ## [0.10.0] - 2018-12
 
 ### Added

@@ -12,7 +12,7 @@ use crate::formats::AudioData;
 pub type SourceHandle = Handle<Source>;
 
 /// A loaded audio file
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Source {
     /// The bytes of this audio source.
     pub bytes: Vec<u8>,

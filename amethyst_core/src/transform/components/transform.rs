@@ -12,6 +12,7 @@ use crate::{
         self as na, ComplexField, Isometry3, Matrix4, Quaternion, RealField, Translation3, Unit,
         UnitQuaternion, Vector3,
     },
+    num::{One, Zero},
 };
 use serde::{
     de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor},

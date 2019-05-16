@@ -6,6 +6,7 @@ use crate::shred::Resource;
 use derivative::Derivative;
 use log::{debug, info, log_enabled, trace, Level};
 use rayon::ThreadPoolBuilder;
+use sentry::integrations::panic::register_panic_handler;
 use winit::Event;
 
 #[cfg(feature = "profiler")]
@@ -220,6 +221,14 @@ where
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
+        let _sentry_guard = if let Some(dsn) = option_env!("SENTRY_DSN") {
+            let guard = sentry::init(dsn);
+            register_panic_handler();
+            Some(guard)
+        } else {
+            None
+        };
+
         self.initialize();
         self.world.write_resource::<Stopwatch>().start();
         while self.states.is_running() {
@@ -480,6 +489,10 @@ where
         info!("Version: {}", env!("CARGO_PKG_VERSION"));
         info!("Platform: {}", env!("VERGEN_TARGET_TRIPLE"));
         info!("Amethyst git commit: {}", env!("VERGEN_SHA"));
+        if let Some(sentry) = option_env!("SENTRY_DSN") {
+            info!("Sentry DSN: {}", sentry);
+        }
+
         let rustc_meta = rustc_version_runtime::version_meta();
         info!(
             "Rustc version: {} {:?}",

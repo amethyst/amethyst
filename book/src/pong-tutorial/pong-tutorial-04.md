@@ -237,7 +237,7 @@ by negating the velocity of the `Ball` component on the `x` or `y` axis.
 # }
 #
 use amethyst::{
-    core::transform::Transform,
+    core::{Float, Transform},
     ecs::prelude::{Join, ReadStorage, System, WriteStorage},
 };
 
@@ -270,8 +270,8 @@ impl<'s> System<'s> for BounceSystem {
 
             // Bounce at the paddles.
             for (paddle, paddle_transform) in (&paddles, &transforms).join() {
-                let paddle_x = paddle_transform.translation().x - paddle.width * 0.5;
-                let paddle_y = paddle_transform.translation().y - paddle.height * 0.5;
+                let paddle_x = paddle_transform.translation().x - Float::from(paddle.width * 0.5);
+                let paddle_y = paddle_transform.translation().y - Float::from(paddle.height * 0.5);
 
                 // To determine whether the ball has collided with a paddle, we create a larger
                 // rectangle around the current one, by subtracting the ball radius from the

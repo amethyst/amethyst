@@ -124,6 +124,7 @@ fern = { version = "0.5", features = ["colored"] }
 log = { version = "0.4.6", features = ["serde"] }
 rayon = "1.0.2"
 rustc_version_runtime = "0.1"
+sentry = "0.15.4"
 winit = { version = "0.18", features = ["serde", "icon_loading"] }
 serde = { version = "1.0", features = ["derive"] }
 palette = { version = "0.4", features = ["serde"] }
@@ -139,6 +140,7 @@ specs-derive = "0.4"
 derivative = "1.0.2"
 
 [build-dependencies]
+dirs = "1.0.5"
 vergen = "3.0"
 
 [[example]]
@@ -320,3 +322,4 @@ path = "examples/events/main.rs"
 name = "rendy"
 path = "examples/rendy/main.rs"
 required-features = ["animation", "gltf"]
+

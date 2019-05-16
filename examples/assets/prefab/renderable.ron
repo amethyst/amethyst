@@ -17,7 +17,7 @@ Prefab (
                 ),
                 transform: (
                     translation: (5.0, 5.0, 0.0),
-                    rotation: (0.5, 0.5, -0.5, -0.5),
+                    rotation: (0.5, -0.5, -0.5, 0.5),
                 ),
             ),
         ),
@@ -32,7 +32,7 @@ Prefab (
                 ),
                 transform: (
                     translation: (5.0, 5.0, 0.0),
-                    rotation: (0.5, 0.5, -0.5, -0.5),
+                    rotation: (0.5, -0.5, -0.5, 0.5),
                 ),
             ),
         ),
@@ -61,6 +61,7 @@ Prefab (
                 transform: (
                     translation: (-5.0, 5.0, 0.0),
                     scale: (2.0, 2.0, 2.0),
+                    rotation: (0, 0, 1, 0),
                 ),
             ),
         ),
@@ -88,6 +89,7 @@ Prefab (
                 ),
                 transform: (
                     scale: (10.0, 10.0, 10.0),
+                    rotation: (0, 0, 1, 0),
                 ),
             ),
         ),
@@ -117,7 +119,7 @@ Prefab (
             data: (
                 transform: Transform (
                     translation: (0.0, -20.0, 10.0),
-                    rotation: (0.7933533, 0.6087614, 0.0, 0.0),
+                    rotation: (0.6087614, 0.0, 0.0, 0.7933533),
                 ),
                 camera: Perspective((
                     aspect: 1.3,

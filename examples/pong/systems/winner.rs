@@ -2,7 +2,7 @@ use crate::{audio::Sounds, Ball, ScoreBoard};
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
-    core::transform::Transform,
+    core::{Float, Transform},
     ecs::prelude::{Entity, Join, Read, ReadExpect, System, Write, WriteStorage},
     ui::UiText,
 };
@@ -42,7 +42,7 @@ impl<'s> System<'s> for WinnerSystem {
 
             let ball_x = transform.translation().x;
 
-            let did_hit = if ball_x <= ball.radius.into() {
+            let did_hit = if ball_x <= Float::from(ball.radius) {
                 // Right player scored on the left side.
                 // We top the score at 999 to avoid text overlap.
                 score_board.score_right = (score_board.score_right + 1).min(999);
@@ -50,7 +50,7 @@ impl<'s> System<'s> for WinnerSystem {
                     text.text = score_board.score_right.to_string();
                 }
                 true
-            } else if ball_x >= (ARENA_WIDTH - ball.radius).into() {
+            } else if ball_x >= Float::from(ARENA_WIDTH - ball.radius) {
                 // Left player scored on the right side.
                 // We top the score at 999 to avoid text overlap.
                 score_board.score_left = (score_board.score_left + 1).min(999);

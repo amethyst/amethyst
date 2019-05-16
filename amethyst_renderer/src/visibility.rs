@@ -4,7 +4,7 @@ use hibitset::BitSet;
 
 use amethyst_core::{
     ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
-    math::{self as na, zero, Point3, Vector3},
+    math::{self as na, Point3, Vector3},
     Float, Transform,
 };
 
@@ -96,7 +96,7 @@ impl<'a> System<'a> for VisibilitySortingSystem {
                     camera_distance: na::distance_squared(&centroid, &camera_centroid),
                     from_camera: centroid - camera_centroid,
                 })
-                .filter(|c| c.from_camera.dot(&camera_backward) < zero()), // filter entities behind the camera
+                .filter(|c| c.from_camera.dot(&camera_backward) < Float::from(0.0)), // filter entities behind the camera
         );
         self.transparent.clear();
         self.transparent

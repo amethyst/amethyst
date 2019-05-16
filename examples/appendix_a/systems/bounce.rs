@@ -36,10 +36,11 @@ impl<'s> System<'s> for BounceSystem {
             let ball_y = transform.translation().y;
 
             // Bounce at the top or the bottom of the arena.
-            if ball_y <= ball.radius.into() && ball.velocity[1] < 0.0 {
+            if ball_y <= Float::from(ball.radius) && ball.velocity[1] < 0.0 {
                 ball.velocity[1] = -ball.velocity[1];
                 play_bounce(&*sounds, &storage, &*audio_output);
-            } else if ball_y >= (arena_config.height - ball.radius).into() && ball.velocity[1] > 0.0
+            } else if ball_y >= Float::from(arena_config.height - ball.radius)
+                && ball.velocity[1] > 0.0
             {
                 ball.velocity[1] = -ball.velocity[1];
                 play_bounce(&*sounds, &storage, &*audio_output);

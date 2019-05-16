@@ -19,7 +19,10 @@ Prefab (
         (
             parent: 1,
             data: (
-                transform: (),
+                transform: (
+                    translation: (0.0, 0.0, 0.0),
+                    rotation: (0.0, 0.0, 1.0, 0.0),
+                ),
                 fly_tag: (),
             ),
         ),
@@ -27,7 +30,8 @@ Prefab (
             parent: 2,
             data: (
                 transform: (
-                    translation: (0., 0., 10.0),
+                    translation: (0.0, 0.0, 10.0),
+                    rotation: (0.0, 0.0, 1.0, 0.0),
                 ),
                 // camera: Perspective((
                 //     aspect: 1.33333333333333333333,
@@ -41,7 +45,7 @@ Prefab (
             data: (
                 transform: (
                     translation: (6.0, 6.0, -6.0),
-                    rotation: (0.0, 0.0, 1.0, 0.0),
+                    rotation: (0.0, 1.0, 0.0, 0.0),
                 ),
                 light: (
                     // light: Point((
@@ -55,7 +59,7 @@ Prefab (
             data: (
                 transform: (
                     translation: (0.0, 4.0, 4.0),
-                    rotation: (0.0, 0.0, 1.0, 0.0),
+                    rotation: (0.0, 1.0, 0.0, 0.0),
                 ),
                 light: (
                     // light: Point((

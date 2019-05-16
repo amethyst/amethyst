@@ -2,7 +2,7 @@ use crate::{audio::Sounds, config::ArenaConfig, Ball, ScoreBoard};
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
-    core::transform::Transform,
+    core::{Float, Transform},
     ecs::prelude::{Entity, Join, Read, ReadExpect, System, Write, WriteStorage},
     ui::UiText,
 };
@@ -42,14 +42,14 @@ impl<'s> System<'s> for WinnerSystem {
         for (ball, transform) in (&mut balls, &mut transforms).join() {
             let ball_x = transform.translation().x;
 
-            let did_hit = if ball_x <= ball.radius.into() {
+            let did_hit = if ball_x <= Float::from(ball.radius) {
                 // Right player scored on the left side.
                 score_board.score_right += 1;
                 if let Some(text) = text.get_mut(score_text.p2_score) {
                     text.text = score_board.score_right.to_string();
                 }
                 true
-            } else if ball_x >= (arena_config.width - ball.radius).into() {
+            } else if ball_x >= Float::from(arena_config.width - ball.radius) {
                 // Left player scored on the right side.
                 score_board.score_left += 1;
                 if let Some(text) = text.get_mut(score_text.p1_score) {
