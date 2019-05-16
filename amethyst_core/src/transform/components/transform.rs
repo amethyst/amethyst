@@ -4,7 +4,6 @@ use std::fmt;
 use crate::{
     alga::{
         general::SubsetOf,
-        num::{One, Zero},
     },
     ecs::prelude::{Component, DenseVecStorage, FlaggedStorage},
     float::Float,
