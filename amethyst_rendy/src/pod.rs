@@ -218,7 +218,7 @@ impl SpriteArgs {
                 dir_y: dir_y.xy().into_pod(),
                 pos: pos.xy().into_pod(),
                 u_offset: [sprite.tex_coords.left, sprite.tex_coords.right].into(),
-                v_offset: [sprite.tex_coords.bottom, sprite.tex_coords.top].into(),
+                v_offset: [sprite.tex_coords.top, sprite.tex_coords.bottom].into(),
                 depth: pos.z,
             },
             &sprite_sheet.texture,
