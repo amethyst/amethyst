@@ -36,8 +36,8 @@ pub mod transparent;
 pub mod types;
 pub mod visibility;
 
-mod pod;
-mod util;
+pub mod pod;
+pub mod util;
 
 pub use formats::{mesh::MeshPrefab, texture::TexturePrefab};
 pub use system::{GraphCreator, RenderingSystem};

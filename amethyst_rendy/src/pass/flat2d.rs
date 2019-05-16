@@ -5,7 +5,6 @@ use crate::{
     sprite::{SpriteRender, SpriteSheet},
     sprite_visibility::SpriteVisibility,
     submodules::{DynamicVertex, FlatEnvironmentSub, TextureId, TextureSub},
-    transparent::Transparent,
     types::{Backend, Texture},
     util,
 };
@@ -113,7 +112,6 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
             hidden_props,
             sprite_renders,
             transforms,
-            transparents,
         ) = <(
             Read<'_, AssetStorage<SpriteSheet>>,
             Read<'_, AssetStorage<Texture>>,
@@ -122,7 +120,6 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
             ReadStorage<'_, HiddenPropagate>,
             ReadStorage<'_, SpriteRender>,
             ReadStorage<'_, Transform>,
-            ReadStorage<'_, Transparent>,
         )>::fetch(resources);
 
         self.env.process(factory, index, resources);
@@ -138,15 +135,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
                 #[cfg(feature = "profiler")]
                 profile_scope!("gather_novisibility");
 
-                (
-                    &sprite_renders,
-                    &transforms,
-                    !&hiddens,
-                    !&hidden_props,
-                    !&transparents,
-                )
+                (&sprite_renders, &transforms, !&hiddens, !&hidden_props)
                     .join()
-                    .filter_map(|(sprite_render, global, _, _, _)| {
+                    .filter_map(|(sprite_render, global, _, _)| {
                         let (batch_data, texture) = SpriteArgs::from_data(
                             &tex_storage,
                             &sprite_sheet_storage,
@@ -164,14 +155,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
                 #[cfg(feature = "profiler")]
                 profile_scope!("gather_visibility");
 
-                (
-                    &sprite_renders,
-                    &transforms,
-                    &visibility.visible_unordered,
-                    !&transparents,
-                )
+                (&sprite_renders, &transforms, &visibility.visible_unordered)
                     .join()
-                    .filter_map(|(sprite_render, global, _, _)| {
+                    .filter_map(|(sprite_render, global, _)| {
                         let (batch_data, texture) = SpriteArgs::from_data(
                             &tex_storage,
                             &sprite_sheet_storage,
@@ -310,21 +296,14 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare_trans");
 
-        let (
-            sprite_sheet_storage,
-            tex_storage,
-            visibility,
-            sprite_renders,
-            transforms,
-            transparents,
-        ) = <(
-            Read<'_, AssetStorage<SpriteSheet>>,
-            Read<'_, AssetStorage<Texture>>,
-            ReadExpect<'_, SpriteVisibility>,
-            ReadStorage<'_, SpriteRender>,
-            ReadStorage<'_, Transform>,
-            ReadStorage<'_, Transparent>,
-        )>::fetch(resources);
+        let (sprite_sheet_storage, tex_storage, visibility, sprite_renders, transforms) =
+            <(
+                Read<'_, AssetStorage<SpriteSheet>>,
+                Read<'_, AssetStorage<Texture>>,
+                ReadExpect<'_, SpriteVisibility>,
+                ReadStorage<'_, SpriteRender>,
+                ReadStorage<'_, Transform>,
+            )>::fetch(resources);
 
         self.env.process(factory, index, resources);
         self.textures.maintain();
@@ -338,12 +317,12 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
             #[cfg(feature = "profiler")]
             profile_scope!("gather_sprites_trans");
 
-            let mut joined = (&sprite_renders, &transforms, &transparents).join();
+            let mut joined = (&sprite_renders, &transforms).join();
             visibility
                 .visible_ordered
                 .iter()
                 .filter_map(|e| joined.get_unchecked(e.id()))
-                .filter_map(|(sprite_render, global, _)| {
+                .filter_map(|(sprite_render, global)| {
                     let (batch_data, texture) = SpriteArgs::from_data(
                         &tex_storage,
                         &sprite_sheet_storage,
