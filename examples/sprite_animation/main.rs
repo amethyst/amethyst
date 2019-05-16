@@ -2,21 +2,23 @@
 //!
 //! Sprites are from <https://opengameart.org/content/bat-32x32>.
 
-use std::sync::Arc;
 use amethyst::{
     animation::{
         get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSet, AnimationSet,
         AnimationSetPrefab, EndControl,
     },
-    assets::{PrefabData, PrefabLoader, PrefabLoaderSystem, ProgressCounter, RonFormat, Processor},
+    assets::{PrefabData, PrefabLoader, PrefabLoaderSystem, Processor, ProgressCounter, RonFormat},
     core::transform::{Transform, TransformBundle},
     derive::PrefabData,
-    ecs::{prelude::Entity, Entities, Join, ReadStorage, WriteStorage, Resources, ReadExpect, SystemData},
+    ecs::{
+        prelude::Entity, Entities, Join, ReadExpect, ReadStorage, Resources, SystemData,
+        WriteStorage,
+    },
     error::Error,
     prelude::{Builder, World},
     renderer::{
-        pass::DrawFlat2DDesc,
         camera::Camera,
+        pass::DrawFlat2DDesc,
         rendy::{
             factory::Factory,
             graph::{
@@ -25,15 +27,16 @@ use amethyst::{
             },
             hal::format::Format,
         },
+        sprite::{prefab::SpriteScenePrefab, SpriteRender, SpriteSheet},
         types::DefaultBackend,
         GraphCreator, RenderingSystem,
-        sprite::{SpriteRender, prefab::SpriteScenePrefab, SpriteSheet},
     },
-    window::{WindowBundle, Window, ScreenDimensions},
-    utils::{application_root_dir},
+    utils::application_root_dir,
+    window::{ScreenDimensions, Window, WindowBundle},
     Application, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData, Trans,
 };
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 
 /// Animation ids used in a AnimationSet
 #[derive(Eq, PartialOrd, PartialEq, Hash, Debug, Copy, Clone, Deserialize, Serialize)]
@@ -135,33 +138,38 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
     let assets_directory = app_root.join("examples/assets/");
-    let display_config_path = app_root.join("examples/sprite_animation/resources/display_config.ron");
+    let display_config_path =
+        app_root.join("examples/sprite_animation/resources/display_config.ron");
 
     let game_data = GameDataBuilder::default()
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "scene_loader", &[])
+        .with(
+            PrefabLoaderSystem::<MyPrefabData>::default(),
+            "scene_loader",
+            &[],
+        )
         .with_bundle(AnimationBundle::<AnimationId, SpriteRender>::new(
             "sprite_animation_control",
             "sprite_sampler_interpolation",
         ))?
-        .with_bundle(TransformBundle::new().with_dep(&[
-            "sprite_animation_control",
-            "sprite_sampler_interpolation",
-        ]))?
+        .with_bundle(
+            TransformBundle::new()
+                .with_dep(&["sprite_animation_control", "sprite_sampler_interpolation"]),
+        )?
         .with(
             Processor::<SpriteSheet>::new(),
             "sprite_sheet_processor",
             &[],
         )
-        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(ExampleGraph::new()));
+        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
+            ExampleGraph::new(),
+        ));
 
     let mut game = Application::new(assets_directory, Example::default(), game_data)?;
     game.run();
 
     Ok(())
 }
-
-
 
 struct ExampleGraph {
     last_dimensions: Option<ScreenDimensions>,

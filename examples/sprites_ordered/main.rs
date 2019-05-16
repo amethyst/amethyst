@@ -6,16 +6,16 @@
 mod sprite;
 mod sprite_sheet_loader;
 
-use std::sync::Arc;
 use amethyst::{
     assets::{AssetStorage, Loader, Processor},
-    core::{Parent, Transform, TransformBundle, Hidden},
-    ecs::{Component, Entity, Join, NullStorage, Read, ReadStorage, System, WriteStorage, ReadExpect, SystemData, Resources},
-    input::{InputBundle, InputHandler, StringBindings, is_key_down, is_close_requested, get_key, ElementState},
+    core::{Hidden, Transform, TransformBundle},
+    ecs::{Entity, Join, ReadExpect, Resources, System, SystemData},
+    input::{get_key, is_close_requested, is_key_down, ElementState},
     prelude::*,
     renderer::{
-        pass::{DrawFlat2DDesc, DrawFlat2DTransparentDesc},
         camera::{Camera, Projection},
+        formats::texture::ImageFormat,
+        pass::{DrawFlat2DDesc, DrawFlat2DTransparentDesc},
         rendy::{
             factory::Factory,
             graph::{
@@ -24,18 +24,17 @@ use amethyst::{
             },
             hal::format::Format,
         },
-        formats::texture::ImageFormat,
-        Texture,
-        types::DefaultBackend,
-        GraphCreator, RenderingSystem,
         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
-        sprite_visibility::{SpriteVisibilitySortingSystem},
+        sprite_visibility::SpriteVisibilitySortingSystem,
         transparent::Transparent,
+        types::DefaultBackend,
+        GraphCreator, RenderingSystem, Texture,
     },
-    window::{WindowBundle, Window, ScreenDimensions},
     utils::application_root_dir,
-    winit::{self, VirtualKeyCode},
+    window::{ScreenDimensions, Window, WindowBundle},
+    winit::VirtualKeyCode,
 };
+use std::sync::Arc;
 
 use log::info;
 
@@ -226,7 +225,14 @@ impl Example {
             // Define the view that the camera can see. It makes sense to keep the `near` value as
             // 0.0, as this means it starts seeing anything that is 0 units in front of it. The
             // `far` value is the distance the camera can see facing the origin.
-            .with(Camera::from(Projection::orthographic(-width/2.0, width/2.0, height/2., -height/2.0, 0.0, self.camera_depth_vision)))
+            .with(Camera::from(Projection::orthographic(
+                -width / 2.0,
+                width / 2.0,
+                height / 2.,
+                -height / 2.0,
+                0.0,
+                self.camera_depth_vision,
+            )))
             .build();
 
         self.camera = Some(camera);
@@ -256,17 +262,9 @@ impl Example {
         let sprite_offset_translation_x =
             (sprite_count * sprite_w) as f32 * SPRITE_SPACING_RATIO / 2.;
 
-        let (width, height) = {
-            let dim = world.read_resource::<ScreenDimensions>();
-            (dim.width(), dim.height())
-        };
         // This `Transform` moves the sprites to the middle of the window
         let mut common_transform = Transform::default();
-        common_transform.set_translation_xyz(
-            -sprite_offset_translation_x,
-            0.0,
-            0.0,
-        );
+        common_transform.set_translation_xyz(-sprite_offset_translation_x, 0.0, 0.0);
 
         self.draw_sprites(world, &common_transform);
     }
@@ -348,7 +346,7 @@ fn load_sprite_sheet(world: &mut World) -> LoadedSpriteSheet {
     let sprite_w = 32;
     let sprite_h = 32;
     let sprite_sheet_definition = SpriteSheetDefinition::new(sprite_w, sprite_h, 2, 6, false);
-    
+
     let sprite_sheet = sprite_sheet_loader::load(texture_handle, &sprite_sheet_definition);
     let sprite_count = sprite_sheet.sprites.len() as u32;
 
@@ -374,27 +372,33 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples/sprites_ordered/resources/display_config.ron");
+    let display_config_path =
+        app_root.join("examples/sprites_ordered/resources/display_config.ron");
 
     let assets_directory = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
-        .with(Processor::<SpriteSheet>::new(), "sprite_sheet_processor", &[], )
+        .with(
+            Processor::<SpriteSheet>::new(),
+            "sprite_sheet_processor",
+            &[],
+        )
         .with(
             SpriteVisibilitySortingSystem::new(),
             "sprite_visibility_system",
             &["transform_system"],
         )
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
-        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(ExampleGraph::new()));
+        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
+            ExampleGraph::new(),
+        ));
 
     let mut game = Application::new(assets_directory, Example::new(), game_data)?;
     game.run();
 
     Ok(())
 }
-
 
 struct ExampleGraph {
     last_dimensions: Option<ScreenDimensions>,
@@ -474,10 +478,11 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
                 .into_pass(),
         );
 
-        let _present = graph_builder
-            .add_node(PresentNode::builder(factory, surface, color)
+        let _present = graph_builder.add_node(
+            PresentNode::builder(factory, surface, color)
                 .with_dependency(sprite_trans)
-                .with_dependency(sprite));
+                .with_dependency(sprite),
+        );
 
         graph_builder
     }

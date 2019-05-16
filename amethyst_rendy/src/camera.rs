@@ -26,15 +26,22 @@ impl Projection {
     /// Creates an orthographic projection with the given left, right, bottom, and
     /// top plane distances.
     /// The projection matrix is right-handed and has a depth range of 0 to 1
-    pub fn orthographic(left: f32, right: f32, bottom: f32, top: f32, z_near: f32, z_far: f32,) -> Projection {
+    pub fn orthographic(
+        left: f32,
+        right: f32,
+        bottom: f32,
+        top: f32,
+        z_near: f32,
+        z_far: f32,
+    ) -> Projection {
         let mut proj = Matrix4::<f32>::identity();
 
         proj[(0, 0)] = 2.0 / (right - left);
         proj[(1, 1)] = 2.0 / (top - bottom);
-        proj[(2, 2)] = - 1.0 / (z_far - z_near);
-        proj[(0, 3)] = - (right + left) / (right - left);
-        proj[(1, 3)] = - (top + bottom) / (top - bottom);
-        proj[(2, 3)] = - z_near / (z_far  - z_near);
+        proj[(2, 2)] = -1.0 / (z_far - z_near);
+        proj[(0, 3)] = -(right + left) / (right - left);
+        proj[(1, 3)] = -(top + bottom) / (top - bottom);
+        proj[(2, 3)] = -z_near / (z_far - z_near);
 
         // Important: nalgebra's methods on Orthographic3 are not safe for use with RH matrices
         Projection::Orthographic(Orthographic3::from_matrix_unchecked(proj))
@@ -45,15 +52,15 @@ impl Projection {
     /// The projection matrix is right-handed and has a depth range of 0 to 1
     pub fn perspective(aspect: f32, fov: f32, z_near: f32, z_far: f32) -> Projection {
         let mut proj = Matrix4::<f32>::identity();
-        
+
         let tan_half_fovy = (fov / 2.0).tan();
 
         proj[(0, 0)] = 1.0 / (aspect * tan_half_fovy);
-        proj[(1, 1)] = - 1.0 / tan_half_fovy;
+        proj[(1, 1)] = -1.0 / tan_half_fovy;
         proj[(2, 2)] = z_far / (z_near - z_far);
 
-        proj[(2, 3)] = - (z_near * z_far) / (z_far - z_near);
-        proj[(3, 2)] = - 1.0;
+        proj[(2, 3)] = -(z_near * z_far) / (z_far - z_near);
+        proj[(3, 2)] = -1.0;
         proj[(3, 3)] = 0.0;
 
         // Important: nalgebra's methods on Perspective3 are not safe for use with RH matrices
@@ -85,7 +92,14 @@ impl Camera {
     /// Bottom left corner is (-width/2.0, -height/2.0)
     /// View transformation will be multiplicative identity.
     pub fn standard_2d(width: f32, height: f32) -> Self {
-        Self::from(Projection::orthographic(-width/2.0, width/2.0, height/2.0, - height/2.0, 0.1, 2000.0))
+        Self::from(Projection::orthographic(
+            -width / 2.0,
+            width / 2.0,
+            height / 2.0,
+            -height / 2.0,
+            0.1,
+            2000.0,
+        ))
     }
 
     /// Create a standard camera for 3D.

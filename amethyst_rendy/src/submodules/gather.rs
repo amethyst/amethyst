@@ -4,7 +4,7 @@ use crate::{
     resources::AmbientColor,
 };
 use amethyst_core::{
-    ecs::{Join, Read, ReadStorage, ReadExpect, Resources, SystemData},
+    ecs::{Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
     math::{convert, Matrix4, Vector3},
     transform::Transform,
 };
@@ -30,7 +30,7 @@ impl CameraGatherer {
             Option<Read<'_, ActiveCamera>>,
             ReadStorage<'_, Camera>,
             ReadStorage<'_, Transform>,
-            ReadExpect<'_, ScreenDimensions>
+            ReadExpect<'_, ScreenDimensions>,
         )>::fetch(res);
 
         let defcam = Camera::standard_2d(dimensions.width(), dimensions.height());

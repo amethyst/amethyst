@@ -177,7 +177,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawDebugLines<B> {
         profile_scope!("draw");
 
         if self.lines.len() == 0 {
-            return
+            return;
         }
 
         let layout = &self.pipeline_layout;

@@ -281,7 +281,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
                 (Some(UiImage::SolidColor(color)), None) => Some((&self.white_tex, color.clone())),
                 (None, _) => None,
             } {
-                if let Some((tex_id, this_changed)) = textures_ref.insert(factory, resources, texture) {
+                if let Some((tex_id, this_changed)) =
+                    textures_ref.insert(factory, resources, texture)
+                {
                     changed = changed || this_changed;
 
                     let args = UiArgs {

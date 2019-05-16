@@ -6,19 +6,19 @@ use crate::{
     mtl::{Material, MaterialDefaults},
     resources::Tint,
     skinning::JointTransforms,
+    sprite::SpriteRender,
+    transparent::Transparent,
     types::{Backend, Mesh, Texture},
     visibility::Visibility,
-    transparent::Transparent,
-    sprite::SpriteRender,
 };
 use amethyst_assets::{
     AssetStorage, Handle, HotReloadStrategy, ProcessableAsset, ProcessingState, ThreadPool,
 };
 use amethyst_core::{
+    components::Transform,
     ecs::{Read, ReadExpect, ReadStorage, Resources, RunNow, SystemData, Write, WriteExpect},
     timing::Time,
     Hidden, HiddenPropagate,
-    components::Transform,
 };
 use palette::{LinSrgba, Srgba};
 use rendy::{

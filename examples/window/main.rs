@@ -1,13 +1,9 @@
 //! Opens an empty window.
 
-use std::sync::Arc;
 use amethyst::{
+    ecs::{ReadExpect, Resources, SystemData},
     input::is_key_down,
     prelude::*,
-    window::{WindowBundle, Window, ScreenDimensions},
-    utils::application_root_dir,
-    winit::VirtualKeyCode,
-    ecs::{Resources, ReadExpect, SystemData},
     renderer::{
         pass::DrawFlatDesc,
         rendy::{
@@ -21,7 +17,11 @@ use amethyst::{
         types::DefaultBackend,
         GraphCreator, RenderingSystem,
     },
+    utils::application_root_dir,
+    window::{ScreenDimensions, Window, WindowBundle},
+    winit::VirtualKeyCode,
 };
+use std::sync::Arc;
 
 struct ExampleState;
 
@@ -49,10 +49,11 @@ fn main() -> amethyst::Result<()> {
     let app_root = application_root_dir()?;
     let display_config_path = app_root.join("examples/ui/resources/display.ron");
 
-    let game_data =
-        GameDataBuilder::default()
-            .with_bundle(WindowBundle::from_config_path(display_config_path))?
-            .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(ExampleGraph::new()));
+    let game_data = GameDataBuilder::default()
+        .with_bundle(WindowBundle::from_config_path(display_config_path))?
+        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
+            ExampleGraph::new(),
+        ));
 
     let mut game = Application::new("./", ExampleState, game_data)?;
     game.run();

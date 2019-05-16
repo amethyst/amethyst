@@ -1,13 +1,16 @@
-use std::sync::Arc;
 use amethyst::{
     assets::{AssetStorage, Loader, Processor},
-    core::{Parent, Transform, TransformBundle, Named},
-    ecs::{Component, Entity, Join, NullStorage, Read, ReadStorage, System, WriteStorage, ReadExpect, SystemData, Resources},
-    input::{InputBundle, InputHandler, StringBindings, is_key_down, is_close_requested},
+    core::{Named, Parent, Transform, TransformBundle},
+    ecs::{
+        Component, Entity, Join, NullStorage, Read, ReadExpect, ReadStorage, Resources, System,
+        SystemData, WriteStorage,
+    },
+    input::{is_close_requested, is_key_down, InputBundle, InputHandler, StringBindings},
     prelude::*,
     renderer::{
-        pass::DrawFlat2DTransparentDesc,
         camera::Camera,
+        formats::texture::ImageFormat,
+        pass::DrawFlat2DTransparentDesc,
         rendy::{
             factory::Factory,
             graph::{
@@ -16,18 +19,17 @@ use amethyst::{
             },
             hal::format::Format,
         },
-        formats::texture::ImageFormat,
-        Texture,
-        types::DefaultBackend,
-        GraphCreator, RenderingSystem,
         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
-        sprite_visibility::{SpriteVisibilitySortingSystem},
+        sprite_visibility::SpriteVisibilitySortingSystem,
         transparent::Transparent,
+        types::DefaultBackend,
+        GraphCreator, RenderingSystem, Texture,
     },
-    window::{WindowBundle, Window, ScreenDimensions},
     utils::application_root_dir,
+    window::{ScreenDimensions, Window, WindowBundle},
     winit,
 };
+use std::sync::Arc;
 
 #[derive(Default)]
 struct Player;
@@ -46,7 +48,7 @@ impl<'s> System<'s> for MovementSystem {
         Read<'s, InputHandler<StringBindings>>,
     );
 
-    fn run(&mut self, (players, mut transforms, cameras, input,): Self::SystemData) {
+    fn run(&mut self, (players, mut transforms, cameras, input): Self::SystemData) {
         let x_move = input.axis_value("entity_x").unwrap();
         let y_move = input.axis_value("entity_y").unwrap();
 
@@ -62,12 +64,7 @@ fn load_sprite_sheet(world: &mut World, png_path: &str, ron_path: &str) -> Sprit
     let texture_handle = {
         let loader = world.read_resource::<Loader>();
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
-        loader.load(
-            png_path,
-            ImageFormat::default(),
-            (),
-            &texture_storage,
-        )
+        loader.load(png_path, ImageFormat::default(), (), &texture_storage)
     };
     let loader = world.read_resource::<Loader>();
     let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
@@ -87,7 +84,13 @@ fn init_background_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -
         sprite_sheet: sprite_sheet.clone(),
         sprite_number: 0,
     };
-    world.create_entity().with(transform).with(sprite).named("background").with(Transparent).build()
+    world
+        .create_entity()
+        .with(transform)
+        .with(sprite)
+        .named("background")
+        .with(Transparent)
+        .build()
 }
 
 // Initialize a sprite as a reference point at a fixed location
@@ -154,7 +157,7 @@ fn initialise_camera(world: &mut World, parent: Entity) -> Entity {
     world
         .create_entity()
         .with(camera_transform)
-        .with(Parent{entity: parent})
+        .with(Parent { entity: parent })
         .with(Camera::standard_2d(width, height))
         .named("camera")
         .build()
@@ -208,34 +211,40 @@ impl SimpleState for Example {
 
 fn main() -> amethyst::Result<()> {
     amethyst::Logger::from_config(Default::default())
-    .level_for("amethyst_assets", log::LevelFilter::Debug)
-    .start();
+        .level_for("amethyst_assets", log::LevelFilter::Debug)
+        .start();
 
     let app_root = application_root_dir()?;
     let assets_directory = app_root.join("examples/sprite_camera_follow/resources");
-    let display_config_path = app_root.join("examples/sprite_camera_follow/resources/display_config.ron");
+    let display_config_path =
+        app_root.join("examples/sprite_camera_follow/resources/display_config.ron");
 
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
         .with_bundle(
-            InputBundle::<StringBindings>::new().with_bindings_from_file(assets_directory.join("input.ron"))?,
+            InputBundle::<StringBindings>::new()
+                .with_bindings_from_file(assets_directory.join("input.ron"))?,
         )?
         .with(MovementSystem, "movement", &[])
-        .with(Processor::<SpriteSheet>::new(), "sprite_sheet_processor", &[], )
+        .with(
+            Processor::<SpriteSheet>::new(),
+            "sprite_sheet_processor",
+            &[],
+        )
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with(
             SpriteVisibilitySortingSystem::new(),
             "sprite_visibility_system",
             &["transform_system"],
         )
-        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(ExampleGraph::new()));
+        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
+            ExampleGraph::new(),
+        ));
 
     let mut game = Application::build(assets_directory, Example)?.build(game_data)?;
     game.run();
     Ok(())
 }
-
-
 
 struct ExampleGraph {
     last_dimensions: Option<ScreenDimensions>,
