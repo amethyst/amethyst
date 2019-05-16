@@ -105,8 +105,8 @@ impl Sprite {
         // to nearest integer in `DrawFlat2D` pass before rendering.
         let left = (pixel_left) / image_w;
         let right = (pixel_right) / image_w;
-        let top = pixel_bottom / image_h;
-        let bottom = pixel_top / image_h;
+        let top = (pixel_top) / image_h;
+        let bottom = (pixel_bottom) / image_h;
 
         let (left, right) = match flip_horizontal {
             false => (left, right),
