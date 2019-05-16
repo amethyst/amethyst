@@ -1,6 +1,7 @@
 use amethyst::{
     assets::Handle,
-    renderer::{Sprite, SpriteSheet, Texture},
+    renderer::sprite::{Sprite, SpriteSheet, SpriteSheetHandle},
+    renderer::Texture,
 };
 
 use log::debug;

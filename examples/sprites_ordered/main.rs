@@ -3,25 +3,38 @@
 //! Sprites are originally from <https://opengameart.org/content/bat-32x32>, edited to show
 //! layering and blending.
 
-mod png_loader;
 mod sprite;
 mod sprite_sheet_loader;
 
+use std::sync::Arc;
 use amethyst::{
-    assets::{AssetStorage, Loader},
-    core::{
-        math::Orthographic3,
-        transform::{Transform, TransformBundle},
-    },
-    ecs::prelude::Entity,
-    input::{get_key, is_close_requested, is_key_down},
+    assets::{AssetStorage, Loader, Processor},
+    core::{Parent, Transform, TransformBundle, Hidden},
+    ecs::{Component, Entity, Join, NullStorage, Read, ReadStorage, System, WriteStorage, ReadExpect, SystemData, Resources},
+    input::{InputBundle, InputHandler, StringBindings, is_key_down, is_close_requested, get_key, ElementState},
     prelude::*,
     renderer::{
-        Camera, DisplayConfig, DrawFlat2D, ElementState, Hidden, Pipeline, Projection,
-        RenderBundle, ScreenDimensions, SpriteRender, SpriteSheet, SpriteSheetHandle, Stage,
-        Transparent, VirtualKeyCode,
+        pass::DrawFlat2DTransparentDesc,
+        camera::{Camera, Projection},
+        rendy::{
+            factory::Factory,
+            graph::{
+                render::{RenderGroupDesc, SubpassBuilder},
+                GraphBuilder,
+            },
+            hal::format::Format,
+        },
+        formats::texture::ImageFormat,
+        Texture,
+        types::DefaultBackend,
+        GraphCreator, RenderingSystem,
+        sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
+        sprite_visibility::{SpriteVisibilitySortingSystem},
+        transparent::Transparent,
     },
+    window::{WindowBundle, Window, ScreenDimensions},
     utils::application_root_dir,
+    winit::{self, VirtualKeyCode},
 };
 
 use log::info;
@@ -213,14 +226,7 @@ impl Example {
             // Define the view that the camera can see. It makes sense to keep the `near` value as
             // 0.0, as this means it starts seeing anything that is 0 units in front of it. The
             // `far` value is the distance the camera can see facing the origin.
-            .with(Camera::from(Projection::Orthographic(Orthographic3::new(
-                0.0,
-                width,
-                0.0,
-                height,
-                0.0,
-                self.camera_depth_vision,
-            ))))
+            .with(Camera::from(Projection::orthographic(-width/2.0, width/2.0, height/2., -height/2.0, 0.0, self.camera_depth_vision)))
             .build();
 
         self.camera = Some(camera);
@@ -257,8 +263,8 @@ impl Example {
         // This `Transform` moves the sprites to the middle of the window
         let mut common_transform = Transform::default();
         common_transform.set_translation_xyz(
-            width / 2.0 - sprite_offset_translation_x,
-            height / 2.0,
+            -sprite_offset_translation_x,
+            0.0,
             0.0,
         );
 
@@ -329,12 +335,21 @@ impl Example {
 /// * texture: the pixel data
 /// * `SpriteSheet`: the layout information of the sprites on the image
 fn load_sprite_sheet(world: &mut World) -> LoadedSpriteSheet {
-    let texture = png_loader::load("texture/bat_semi_transparent.png", world);
+    let loader = world.read_resource::<Loader>();
+    let texture_handle = {
+        let texture_storage = world.read_resource::<AssetStorage<Texture>>();
+        loader.load(
+            "texture/bat_semi_transparent.png",
+            ImageFormat::default(),
+            (),
+            &texture_storage,
+        )
+    };
     let sprite_w = 32;
     let sprite_h = 32;
     let sprite_sheet_definition = SpriteSheetDefinition::new(sprite_w, sprite_h, 2, 6, false);
-
-    let sprite_sheet = sprite_sheet_loader::load(texture, &sprite_sheet_definition);
+    
+    let sprite_sheet = sprite_sheet_loader::load(texture_handle, &sprite_sheet_definition);
     let sprite_count = sprite_sheet.sprites.len() as u32;
 
     let sprite_sheet_handle = {
@@ -359,27 +374,102 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let display_config =
-        DisplayConfig::load(app_root.join("examples/sprites_ordered/resources/display_config.ron"));
-
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0., 0., 0., 1.], 5.)
-            .with_pass(DrawFlat2D::new()),
-    );
+    let display_config_path = app_root.join("examples/sprites_ordered/resources/display_config.ron");
 
     let assets_directory = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
-        .with_bundle(
-            RenderBundle::new(pipe, Some(display_config))
-                .with_sprite_sheet_processor()
-                .with_sprite_visibility_sorting(&["transform_system"]),
-        )?;
+        .with(Processor::<SpriteSheet>::new(), "sprite_sheet_processor", &[], )
+        .with(
+            SpriteVisibilitySortingSystem::new(),
+            "sprite_visibility_system",
+            &["transform_system"],
+        )
+        .with_bundle(WindowBundle::from_config_path(display_config_path))?
+        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(ExampleGraph::new()));
 
     let mut game = Application::new(assets_directory, Example::new(), game_data)?;
     game.run();
 
     Ok(())
+}
+
+
+struct ExampleGraph {
+    last_dimensions: Option<ScreenDimensions>,
+    surface_format: Option<Format>,
+    dirty: bool,
+}
+
+impl ExampleGraph {
+    pub fn new() -> Self {
+        Self {
+            last_dimensions: None,
+            surface_format: None,
+            dirty: true,
+        }
+    }
+}
+
+impl GraphCreator<DefaultBackend> for ExampleGraph {
+    fn rebuild(&mut self, res: &Resources) -> bool {
+        // Rebuild when dimensions change, but wait until at least two frames have the same.
+        let new_dimensions = res.try_fetch::<ScreenDimensions>();
+        use std::ops::Deref;
+        if self.last_dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
+            self.dirty = true;
+            self.last_dimensions = new_dimensions.map(|d| d.clone());
+            return false;
+        }
+        return self.dirty;
+    }
+
+    fn builder(
+        &mut self,
+        factory: &mut Factory<DefaultBackend>,
+        res: &Resources,
+    ) -> GraphBuilder<DefaultBackend, Resources> {
+        use amethyst::renderer::rendy::{
+            graph::present::PresentNode,
+            hal::command::{ClearDepthStencil, ClearValue},
+        };
+
+        self.dirty = false;
+
+        let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
+        let surface = factory.create_surface(window.clone());
+        // cache surface format to speed things up
+        let surface_format = *self
+            .surface_format
+            .get_or_insert_with(|| factory.get_surface_format(&surface));
+
+        let mut graph_builder = GraphBuilder::new();
+        let color = graph_builder.create_image(
+            surface.kind(),
+            1,
+            surface_format,
+            Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
+        );
+
+        let depth = graph_builder.create_image(
+            surface.kind(),
+            1,
+            Format::D32Float,
+            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+        );
+
+        let sprite = graph_builder.add_node(
+            SubpassBuilder::new()
+                .with_group(DrawFlat2DTransparentDesc::default().builder())
+                .with_color(color)
+                .with_depth_stencil(depth)
+                .into_pass(),
+        );
+
+        let _present = graph_builder
+            .add_node(PresentNode::builder(factory, surface, color).with_dependency(sprite));
+
+        graph_builder
+    }
 }
