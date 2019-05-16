@@ -1,5 +1,5 @@
 use crate::types::{Backend, Texture};
-use amethyst_core::alga::num::PrimInt;
+use amethyst_core::num::PrimInt;
 use core::{
     hash::Hash,
     iter::{DoubleEndedIterator, ExactSizeIterator, FusedIterator},

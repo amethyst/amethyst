@@ -3,13 +3,13 @@ use crate::{
     transparent::Transparent,
 };
 use amethyst_core::{
-    alga::num::One,
     ecs::prelude::{
         Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage, System,
         Write,
     },
     math::{self as na, convert, distance_squared, Matrix4, Point3, RealField, Vector4},
     Float, Hidden, HiddenPropagate, Transform,
+    num::One,
 };
 use amethyst_window::ScreenDimensions;
 

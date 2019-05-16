@@ -38,7 +38,7 @@ use std::{marker::PhantomData, sync::Arc};
 
 type MyPrefabData = (
     Option<BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>), f32>>,
-    Option<AnimationSetPrefab<AnimationId, Transform<f32>>>,
+    Option<AnimationSetPrefab<AnimationId, Transform>>,
 );
 
 const CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
