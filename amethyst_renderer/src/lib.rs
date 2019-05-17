@@ -22,7 +22,7 @@
 //!
 //! [am]: https://amethyst.rs/
 //! [gh]: https://github.com/amethyst/amethyst/tree/master/src/renderer
-//! [bk]: https://book.amethyst.rs/master/
+//! [bk]: https://book.amethyst.rs/stable/
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
