@@ -11,7 +11,7 @@ use amethyst::{
     Error,
 };
 
-type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>, f32>;
+type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 struct ExampleState;
 

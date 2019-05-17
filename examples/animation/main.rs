@@ -35,7 +35,7 @@ use amethyst_rendy::{
 use serde::{Deserialize, Serialize};
 
 type MyPrefabData = (
-    Option<BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>), f32>>,
+    Option<BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>)>>,
     Option<AnimationSetPrefab<AnimationId, Transform>>,
 );
 

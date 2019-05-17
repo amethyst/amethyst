@@ -17,7 +17,7 @@ use amethyst::{
 };
 use std::hash::Hash;
 
-type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>, f32>;
+type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 struct ExampleState;
 
