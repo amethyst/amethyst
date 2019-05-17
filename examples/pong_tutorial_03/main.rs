@@ -1,4 +1,4 @@
-//! Pong Tutorial 2
+//! Pong Tutorial 3
 
 mod pong;
 mod systems;
