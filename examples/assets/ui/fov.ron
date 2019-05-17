@@ -26,7 +26,7 @@ Container(
                 align: MiddleLeft,
                 font_size: 25.0,
                 color: (1.0, 1.0, 1.0, 1.0),
-                font: File("font/square.ttf", Ttf, ()),
+                font: File("font/square.ttf", ("TTF", ())),
             ),
         ),
         Label(
@@ -44,7 +44,7 @@ Container(
                 align: MiddleLeft,
                 font_size: 25.0,
                 color: (1.0, 1.0, 1.0, 1.0),
-                font: File("font/square.ttf", Ttf, ()),
+                font: File("font/square.ttf", ("TTF", ())),
             ),
         ),
         Label(
@@ -62,7 +62,7 @@ Container(
                 align: MiddleLeft,
                 font_size: 25.0,
                 color: (1.0, 1.0, 1.0, 1.0),
-                font: File("font/square.ttf", Ttf, ()),
+                font: File("font/square.ttf", ("TTF", ())),
             ),
         ),
     ],

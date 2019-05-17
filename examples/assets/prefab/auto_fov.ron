@@ -9,10 +9,11 @@ Prefab (
         (
             data: (
                 graphics: (
-                    mesh: Asset(File("mesh/lid.obj", ObjFormat, ())),
+                    mesh: Asset(File("mesh/lid.obj", ("OBJ", ()))),
                     material: (
-                        albedo: Data(Rgba((1.0, 0.0, 0.0, 1.0,), (channel: Srgb,
-                            sampler: (filter: Anisotropic(8), wrap_mode: (Clamp, Clamp, Clamp)),))),
+                        albedo: Generate(Srgba(1.0, 0.0, 0.0, 1.0,)),
+//                        albedo: Data(Rgba((1.0, 0.0, 0.0, 1.0,), (channel: Srgb,
+//                            sampler: (filter: Anisotropic(8), wrap_mode: (Clamp, Clamp, Clamp)),))),
                     ),
                 ),
                 transform: (
@@ -24,10 +25,11 @@ Prefab (
         (
             data: (
                 graphics: (
-                    mesh: Asset(File("mesh/teapot.obj", ObjFormat, ())),
+                    mesh: Asset(File("mesh/teapot.obj", ("OBJ", ()))),
                     material: (
-                        albedo: Data(Rgba((1.0, 0.0, 0.0, 1.0,), (channel: Srgb,
-                            sampler: (filter: Anisotropic(8), wrap_mode: (Clamp, Clamp, Clamp)),))),
+                        albedo: Generate(Srgba(1.0, 0.0, 0.0, 1.0,)),
+//                        albedo: Data(Rgba((1.0, 0.0, 0.0, 1.0,), (channel: Srgb,
+//                            sampler: (filter: Anisotropic(8), wrap_mode: (Clamp, Clamp, Clamp)),))),
                     ),
                 ),
                 transform: (
@@ -39,9 +41,9 @@ Prefab (
         (
             data: (
                 graphics: (
-                    mesh: Asset(File("mesh/cube.obj", ObjFormat, ())),
+                    mesh: Asset(File("mesh/cube.obj", ("OBJ", ()))),
                     material: (
-                        albedo: File("texture/logo.png", Png, (channel: Srgb),),
+                        albedo: File("texture/logo.png", ("IMAGE", (channel: Srgb))),
                     ),
                 ),
                 transform: (
@@ -53,9 +55,10 @@ Prefab (
         (
             data: (
                 graphics: (
-                    mesh: Asset(File("mesh/cone.obj", ObjFormat, ())),
+                    mesh: Asset(File("mesh/cone.obj", ("OBJ", ()))),
                     material: (
-                        albedo: Data(Rgba((1.0, 1.0, 1.0, 1.0,), (channel: Srgb),)),
+                        albedo: Generate(Srgba(1.0, 0.0, 0.0, 1.0,)),
+                        //albedo: Data(Rgba((1.0, 1.0, 1.0, 1.0,), (channel: Srgb),)),
                     ),
                 ),
                 transform: (
@@ -68,9 +71,10 @@ Prefab (
         (
             data: (
                 graphics: (
-                    mesh: Asset(File("mesh/cube.obj", ObjFormat, ())),
+                    mesh: Asset(File("mesh/cube.obj", ("OBJ", ()))),
                     material: (
-                        albedo: Data(Rgba((1.0, 0.0, 0.0, 1.0,), (channel: Srgb),)),
+                        albedo: Generate(Srgba(1.0, 0.0, 0.0, 1.0,)),
+                        //albedo: Data(Rgba((1.0, 0.0, 0.0, 1.0,), (channel: Srgb),)),
                     ),
                 ),
                 transform: (
@@ -82,9 +86,10 @@ Prefab (
         (
             data: (
                 graphics: (
-                    mesh: Asset(File("mesh/rectangle.obj", ObjFormat, ())),
+                    mesh: Asset(File("mesh/rectangle.obj", ("OBJ", ()))),
                     material: (
-                        albedo: Data(Rgba((1.0, 1.0, 1.0, 1.0,), (channel: Srgb),)),
+                        albedo: Generate(Srgba(1.0, 0.0, 0.0, 1.0,)),
+                        //albedo: Data(Rgba((1.0, 1.0, 1.0, 1.0,), (channel: Srgb),)),
                     ),
                 ),
                 transform: (
@@ -101,7 +106,7 @@ Prefab (
                 light: (
                     light: Point((
                         intensity: 50.0,
-                        color: (1.0, 1.0, 1.0, 1.0),
+                        color: (1.0, 1.0, 1.0),
                     )),
                 ),
             ),
@@ -110,8 +115,8 @@ Prefab (
             data: (
                 light: (
                     light: Directional((
-                        direction: (-1.0, -1.0, -1.0),
-                        color: (0.2, 0.2, 0.2, 0.2,),
+                        color: (0.2, 0.2, 0.2),
+                        //direction: (-1.0, -1.0, -1.0),
                     )),
                 ),
             ),
