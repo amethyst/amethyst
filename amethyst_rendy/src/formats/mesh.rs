@@ -18,12 +18,19 @@ amethyst_assets::register_format_type!(MeshData);
 amethyst_assets::register_format!("OBJ", ObjFormat as MeshData);
 impl Format<MeshData> for ObjFormat {
     fn name(&self) -> &'static str {
-        "WAVEFRONT_OBJ"
+        "OBJ"
     }
 
     fn import_simple(&self, bytes: Vec<u8>) -> Result<MeshData, Error> {
         rendy::mesh::obj::load_from_obj(&bytes)
-            .map(|builder| builder.into())
+            .map(|objects| {
+                if objects.len() == 1 {
+                    let builder = objects[0].0.clone();
+                    builder.into()
+                } else {
+                    unimplemented!();
+                }
+            })
             .map_err(|e| e.compat().into())
     }
 }
