@@ -103,9 +103,9 @@ cargo run --example prefab_basic
 
 [`#[serde(default)]`]: https://serde.rs/container-attrs.html#default
 [`#[serde(deny_unknown_fields)]`]: https://serde.rs/container-attrs.html#deny_unknown_fields
-[`Component`]: https://www.amethyst.rs/doc/latest/doc/specs/trait.Component.html
-[`Prefab`]: https://www.amethyst.rs/doc/latest/doc/amethyst_assets/struct.Prefab.html
-[`PrefabData`]: https://www.amethyst.rs/doc/latest/doc/amethyst_assets/trait.PrefabData.html#impl-PrefabData%3C%27a%3E
-[api_pf_derive]: https://www.amethyst.rs/doc/latest/doc/amethyst_derive/derive.PrefabData.html
+[`Component`]: https://docs-src.amethyst.rs/stable/specs/trait.Component.html
+[`Prefab`]: https://docs-src.amethyst.rs/stable/amethyst_assets/struct.Prefab.html
+[`PrefabData`]: https://docs-src.amethyst.rs/stable/amethyst_assets/trait.PrefabData.html#impl-PrefabData%3C%27a%3E
+[api_pf_derive]: https://docs-src.amethyst.rs/stable/amethyst_derive/derive.PrefabData.html
 [bk_prefab_prelude]: how_to_define_prefabs_prelude.html
 [repo_prefab_basic]: https://github.com/amethyst/amethyst/tree/master/examples/prefab_basic

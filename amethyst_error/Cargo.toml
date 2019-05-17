@@ -10,7 +10,7 @@ Internal error handling for Amethyst.
 keywords = ["game", "error", "amethyst"]
 categories = ["error"]
 
-documentation = "https://www.amethyst.rs/doc/master/doc/amethyst/"
+documentation = "https://docs-src.amethyst.rs/stable/amethyst_error/"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 

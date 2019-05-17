@@ -146,16 +146,16 @@ Component     | Serialized representation             | Example(s)            | 
 
     Applicable guide: [How to Define Prefabs: Multi-Handle][Multi-Handle].
 
-[`AudioListener`]: https://www.amethyst.rs/doc/latest/doc/amethyst_audio/struct.AudioListener.html
-[`AudioPrefab`]: https://www.amethyst.rs/doc/latest/doc/amethyst_audio/struct.AudioPrefab.html
-[`Camera`]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.Camera.html
-[`CameraPrefab`]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/enum.CameraPrefab.html
-[`Material`]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.Material.html
-[`MaterialPrefab`]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.MaterialPrefab.html
-[`Mesh`]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.Mesh.html
-[`MeshData`]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/enum.MeshData.html
-[`Texture`]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.Texture.html
-[`TexturePrefab`]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/enum.TexturePrefab.html
+[`AudioListener`]: https://docs-src.amethyst.rs/stable/amethyst_audio/struct.AudioListener.html
+[`AudioPrefab`]: https://docs-src.amethyst.rs/stable/amethyst_audio/struct.AudioPrefab.html
+[`Camera`]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.Camera.html
+[`CameraPrefab`]: https://docs-src.amethyst.rs/stable/amethyst_renderer/enum.CameraPrefab.html
+[`Material`]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.Material.html
+[`MaterialPrefab`]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.MaterialPrefab.html
+[`Mesh`]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.Mesh.html
+[`MeshData`]: https://docs-src.amethyst.rs/stable/amethyst_renderer/enum.MeshData.html
+[`Texture`]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.Texture.html
+[`TexturePrefab`]: https://docs-src.amethyst.rs/stable/amethyst_renderer/enum.TexturePrefab.html
 [Adapter]: how_to_define_prefabs_adapter.html
 [Asset]: how_to_define_prefabs_asset.html
 [Aggregate]: how_to_define_prefabs_aggregate.html

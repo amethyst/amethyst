@@ -277,6 +277,6 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     If the asset data is stored in a format that is not supported by Amethyst, a [custom format][bk_custom_formats] can be implemented and provided to the `Loader` to load the asset data.
 
 [bk_custom_formats]: how_to_define_custom_formats.html
-[doc_asset]: https://www.amethyst.rs/doc/latest/doc/amethyst_assets/trait.Asset.html
-[doc_processor_system]: https://www.amethyst.rs/doc/latest/doc/amethyst_assets/struct.Processor.html
+[doc_asset]: https://docs-src.amethyst.rs/stable/amethyst_assets/trait.Asset.html
+[doc_processor_system]: https://docs-src.amethyst.rs/stable/amethyst_assets/struct.Processor.html
 [gh_contributing]: https://github.com/amethyst/amethyst/blob/master/docs/CONTRIBUTING.md

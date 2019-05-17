@@ -8,7 +8,7 @@ exclude = ["examples/*"]
 keywords = ["game", "engine", "renderer", "3d", "amethyst"]
 categories = ["rendering", "rendering::engine"]
 
-documentation = "https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/"
+documentation = "https://docs-src.amethyst.rs/stable/amethyst_renderer/"
 homepage = "https://www.amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
