@@ -26,7 +26,7 @@ use amethyst::{
 
 use serde::Deserialize;
 
-type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>), f32>;
+type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
 
 #[derive(Clone, Deserialize)]
 enum CustomUi {

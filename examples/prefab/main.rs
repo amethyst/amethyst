@@ -24,7 +24,7 @@ use amethyst::{
     Error,
 };
 
-type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>), f32>;
+type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
 
 struct AssetsExample;
 

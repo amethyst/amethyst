@@ -27,7 +27,7 @@ use amethyst::{
     Error,
 };
 
-type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>, f32>;
+type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 #[derive(Default)]
 struct Loading {

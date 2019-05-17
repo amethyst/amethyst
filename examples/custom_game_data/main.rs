@@ -27,7 +27,7 @@ use amethyst::{
 mod example_system;
 mod game_data;
 
-type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>, f32>;
+type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
 
 pub struct DemoState {
     light_angle: f32,

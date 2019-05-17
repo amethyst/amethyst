@@ -6,7 +6,7 @@ use amethyst::{
     utils::{application_root_dir, scene::BasicScenePrefab},
 };
 
-type MyPrefabData = BasicScenePrefab<Vec<PosNormTangTex>, f32>;
+type MyPrefabData = BasicScenePrefab<Vec<PosNormTangTex>>;
 
 struct Example;
 
