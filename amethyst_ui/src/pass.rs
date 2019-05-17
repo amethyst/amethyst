@@ -1,11 +1,11 @@
 use crate::{
     glyphs::{UiGlyphs, UiGlyphsResource},
-    FontAsset, Selected, TextEditing, UiImage, UiText, UiTransform,
+    Selected, TextEditing, UiImage, UiTransform,
 };
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::{
     ecs::{
-        Entities, Entity, Join, Read, ReadExpect, ReadStorage, Resources, SystemData, WriteStorage,
+        Entities, Entity, Join, Read, ReadExpect, ReadStorage, Resources, SystemData,
     },
     Hidden, HiddenPropagate,
 };
@@ -81,6 +81,7 @@ lazy_static::lazy_static! {
     ).precompile().unwrap();
 }
 
+/// A UI drawing pass that draws UI elements and text in screen-space
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct DrawUiDesc;
 
@@ -104,7 +105,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawUiDesc {
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, Resources>>, failure::Error> {
-        let mut env = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)?;
+        let env = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)?;
         let textures = TextureSub::new(factory)?;
         let vertex = DynamicVertex::new();
 
@@ -138,6 +139,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawUiDesc {
     }
 }
 
+/// A UI drawing pass that draws UI elements and text in screen-space
 #[derive(Debug)]
 pub struct DrawUi<B: Backend> {
     pipeline: B::GraphicsPipeline,
@@ -171,7 +173,6 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             entities,
             images,
             transforms,
-            texts,
             text_editings,
             hiddens,
             hidden_propagates,
@@ -179,14 +180,11 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             tints,
             glyphs,
             glyphs_res,
-            tex_storage,
-            font_storage,
             screen_dimesnions,
         ) = <(
             Entities<'_>,
             ReadStorage<'_, UiImage>,
             ReadStorage<'_, UiTransform>,
-            WriteStorage<'_, UiText>,
             ReadStorage<'_, TextEditing>,
             ReadStorage<'_, Hidden>,
             ReadStorage<'_, HiddenPropagate>,
@@ -194,8 +192,6 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             ReadStorage<'_, Tint>,
             ReadStorage<'_, UiGlyphs>,
             ReadExpect<'_, UiGlyphsResource>,
-            Read<'_, AssetStorage<Texture>>,
-            Read<'_, AssetStorage<FontAsset>>,
             ReadExpect<'_, ScreenDimensions>,
         ) as SystemData>::fetch(resources);
 

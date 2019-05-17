@@ -98,6 +98,7 @@ pub struct UiGlyphsSystem<B: Backend> {
 }
 
 impl<B: Backend> UiGlyphsSystem<B> {
+    /// Create new UI glyphs system
     pub fn new() -> Self {
         Self {
             glyph_brush: GlyphBrushBuilder::using_fonts(vec![])
@@ -112,7 +113,6 @@ impl<B: Backend> UiGlyphsSystem<B> {
 
 impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
     type SystemData = (
-        ReadExpect<'a, Loader>,
         WriteExpect<'a, Factory<B>>,
         Entities<'a>,
         ReadStorage<'a, UiTransform>,
@@ -132,7 +132,6 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
     fn run(
         &mut self,
         (
-            loader,
             mut factory,
             entities,
             transforms,
@@ -466,7 +465,6 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                     )
                         .join()
                     {
-                        let start = glyph_ctr;
                         let e_id = entity.id();
                         let len = vertices[glyph_ctr..]
                             .iter()
