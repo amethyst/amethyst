@@ -10,6 +10,7 @@ struct PointLight {
 
 struct DirectionalLight {
     vec3 color;
+    float intensity;
     vec3 direction;
 };
 
@@ -186,7 +187,7 @@ void main() {
 
     for (int i = 0; i < directional_light_count; i++) {
         vec3 light_direction = -normalize(dlight[i].direction);
-        float attenuation = 1.0;
+        float attenuation = dlight[i].intensity;
 
         vec3 light = compute_light(vec3(attenuation),
                                    dlight[i].color,

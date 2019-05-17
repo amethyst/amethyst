@@ -35,6 +35,8 @@ pub struct DirectionalLight {
     /// Color of the light in SRGB format.
     #[serde(with = "crate::serde_shim::srgb")]
     pub color: palette::Srgb,
+    /// Brightness of the light source, different unit from Spot and PointLight.
+    pub intensity: f32,
     /// Direction that the light is pointing.
     pub direction: Vector3<f32>,
 }
@@ -43,6 +45,7 @@ impl Default for DirectionalLight {
     fn default() -> Self {
         DirectionalLight {
             color: Default::default(),
+            intensity: 1.0,
             direction: [-1.0, -1.0, -1.0].into(),
         }
     }

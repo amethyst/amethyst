@@ -8,6 +8,7 @@ struct PointLight {
 
 struct DirectionalLight {
     vec3 color;
+    float intensity;
     vec3 direction;
 };
 
@@ -82,7 +83,7 @@ void main() {
         vec3 dir = dlight[i].direction;
         float diff = max(dot(-dir, normal), 0.0);
         vec3 diffuse = diff * dlight[i].color;
-        lighting += diffuse;
+        lighting += diffuse * dlight[i].intensity;
     }
     lighting += ambient_color;
     out_color = vec4(lighting * albedo + emission, alpha) * vertex.color;

@@ -3,7 +3,14 @@ Prefab (
     entities: [
         (
             data: (
-                light: (ambient_color: ((0.1, 0.1, 0.1, 1.0))),
+                light: (
+                    ambient_color: ((0.2, 0.2, 0.2, 1.0)),
+                    light: Directional((
+                        color: Srgb(0.9, 0.8, 0.3),
+                        intensity: 0.1,
+                        direction: [-1.0, -1.0, -1.0],
+                    )),
+                ),
             ),
         ),
         (
@@ -11,11 +18,19 @@ Prefab (
                 graphics: (
                     mesh: Asset(File ("mesh/cube.obj", ("OBJ", ()) )),
                     material: (
-                        albedo: Generate(Srgba(1.0, 0.0, 0.0, 1.0)),
+                        albedo: Generate(Srgba(1.0, 0.3, 0.3, 1.0)),
                     ),
                 ),
                 transform: (
-                    translation: (-5.0, 0.0, -10.0),
+                    translation: (-5.0, 1.0, -5.0),
+                ),
+                light: (
+                    light: Point((
+                        color: Srgb(0.5, 0.5, 0.5),
+                        intensity: 10.0,
+                        radius: 100.0,
+                        smoothness: 4.0,
+                    )),
                 ),
             ),
         ),
@@ -24,11 +39,11 @@ Prefab (
                 graphics: (
                     mesh: Asset(File ("mesh/teapot.obj", ("OBJ", ()))),
                     material: (
-                        albedo: Generate(Srgba(1.0, 0.3, 0.0, 1.0)),
+                        albedo: Generate(Srgba(1.0, 0.3, 0.3, 1.0)),
                     ),
                 ),
                 transform: (
-                    translation: (0.0, 0.0, -5.0),
+                    translation: (0.0, 0.0, 0.0),
                 ),
             ),
         ),
@@ -41,7 +56,7 @@ Prefab (
                     znear: 0.1,
                     zfar: 2000.0,
                 )),
-                control_tag: (arc_ball: (1, 10.),),
+                control_tag: (arc_ball: (2, 10.),),
             ),
         ),
     ],
