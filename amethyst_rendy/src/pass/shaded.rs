@@ -5,7 +5,7 @@ use crate::{
     types::Backend,
 };
 use rendy::{
-    mesh::{AsVertex, Normal, Position, Tangent, TexCoord, VertexFormat},
+    mesh::{AsVertex, Normal, Position, TexCoord, VertexFormat},
     shader::SpirvShader,
 };
 
@@ -15,10 +15,10 @@ impl<B: Backend> Base3DPassDef<B> for ShadedPassDef {
     const NAME: &'static str = "Shaded";
     type TextureSet = (TexAlbedo, TexEmission);
     fn vertex_shader() -> &'static SpirvShader {
-        &super::POS_NORM_TANG_TEX_VERTEX
+        &super::POS_NORM_TEX_VERTEX
     }
     fn vertex_skinned_shader() -> &'static SpirvShader {
-        &super::POS_NORM_TANG_TEX_SKIN_VERTEX
+        &super::POS_NORM_TEX_SKIN_VERTEX
     }
     fn fragment_shader() -> &'static SpirvShader {
         &super::SHADED_FRAGMENT
@@ -27,7 +27,6 @@ impl<B: Backend> Base3DPassDef<B> for ShadedPassDef {
         vec![
             Position::vertex(),
             Normal::vertex(),
-            Tangent::vertex(),
             TexCoord::vertex(),
         ]
     }
@@ -35,7 +34,6 @@ impl<B: Backend> Base3DPassDef<B> for ShadedPassDef {
         vec![
             Position::vertex(),
             Normal::vertex(),
-            Tangent::vertex(),
             TexCoord::vertex(),
             JointCombined::vertex(),
         ]

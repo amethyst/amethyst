@@ -33,7 +33,6 @@ use amethyst_rendy::{
     types::{Backend, DefaultBackend},
 };
 use serde::{Deserialize, Serialize};
-use std::{marker::PhantomData, sync::Arc};
 
 type MyPrefabData = (
     Option<BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>), f32>>,
@@ -49,25 +48,23 @@ enum AnimationId {
     Translate,
 }
 
-struct Example<B> {
+struct Example {
     pub sphere: Option<Entity>,
     rate: f32,
     current_animation: AnimationId,
-    _phantom: PhantomData<B>,
 }
 
-impl<B: Backend> Default for Example<B> {
+impl Default for Example {
     fn default() -> Self {
         Example {
             sphere: None,
             rate: 1.0,
             current_animation: AnimationId::Translate,
-            _phantom: PhantomData,
         }
     }
 }
 
-impl<B: Backend> SimpleState for Example<B> {
+impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
         // Initialise the scene with an object, a light and a camera.
@@ -193,6 +190,10 @@ impl<B: Backend> SimpleState for Example<B> {
     }
 }
 
+fn main() -> amethyst::Result<()> {
+    run::<DefaultBackend>()
+}
+
 fn run<B: Backend>() -> amethyst::Result<()> {
     amethyst::Logger::from_config(amethyst::LoggerConfig {
         log_file: Some("animation_example.log".into()),
@@ -218,15 +219,11 @@ fn run<B: Backend>() -> amethyst::Result<()> {
         .with_thread_local(EventsLoopSystem::new(event_loop))
         .with_thread_local(window_system)
         .with_thread_local(RenderingSystem::<B, _>::new(ExampleGraph::new()));
-    let state: Example<B> = Default::default();
+    let state: Example = Default::default();
     let mut game = Application::new(resources, state, game_data)?;
     game.run();
 
     Ok(())
-}
-
-fn main() -> amethyst::Result<()> {
-    run::<DefaultBackend>()
 }
 
 fn add_animation(
@@ -306,7 +303,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
 
         use amethyst::shred::SystemData;
 
-        let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
+        let window = <ReadExpect<'_, std::sync::Arc<Window>>>::fetch(res);
 
         let surface = factory.create_surface(window.clone());
 
