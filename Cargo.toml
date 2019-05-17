@@ -93,6 +93,7 @@ server = [
     "locale", 
     "network"
 ]
+no-slow-safety-checks = ["amethyst_rendy/no-slow-safety-checks"]
 
 [workspace]
 members = [
