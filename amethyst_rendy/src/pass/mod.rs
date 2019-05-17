@@ -24,7 +24,7 @@ lazy_static::lazy_static! {
         SourceLanguage::GLSL,
         "main",
     ).precompile().unwrap();
-    
+
     static ref POS_NORM_TEX_VERTEX: SpirvShader = StaticShaderInfo::new(
         concat!(env!("CARGO_MANIFEST_DIR"), "/shaders/vertex/pos_norm_tex.vert"),
         ShaderKind::Vertex,

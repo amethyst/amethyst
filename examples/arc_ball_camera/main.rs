@@ -8,7 +8,9 @@ use amethyst::{
         transform::{Transform, TransformBundle},
         Float,
     },
-    ecs::prelude::{Join, Read, ReadStorage, ReadExpect, Resources, System, SystemData, WriteStorage},
+    ecs::prelude::{
+        Join, Read, ReadExpect, ReadStorage, Resources, System, SystemData, WriteStorage,
+    },
     input::{InputBundle, InputEvent, ScrollDirection, StringBindings},
     prelude::*,
     renderer::{
@@ -22,8 +24,8 @@ use amethyst::{
                 render::{RenderGroupDesc, SubpassBuilder},
                 GraphBuilder,
             },
-            mesh::{Normal, Position, Tangent, TexCoord},
             hal::format::Format,
+            mesh::{Normal, Position, Tangent, TexCoord},
         },
         transparent::Transparent,
         types::DefaultBackend,
@@ -138,7 +140,6 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-
 struct ExampleGraph {
     last_dimensions: Option<ScreenDimensions>,
     surface_format: Option<Format>,
@@ -217,10 +218,8 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
                 .into_pass(),
         );
 
-        let _present = graph_builder.add_node(
-            PresentNode::builder(factory, surface, color)
-                .with_dependency(opaque),
-        );
+        let _present = graph_builder
+            .add_node(PresentNode::builder(factory, surface, color).with_dependency(opaque));
 
         graph_builder
     }
