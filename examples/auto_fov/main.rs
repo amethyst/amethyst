@@ -5,26 +5,48 @@ use amethyst::{
     },
     core::{Transform, TransformBundle},
     derive::PrefabData,
-    ecs::{Entity, ReadExpect, ReadStorage, System, WriteStorage},
-    input::{is_close_requested, is_key_down, InputBundle},
+    ecs::{Entity, ReadExpect, ReadStorage, System, WriteStorage, Resources},
+    input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::{
         Application, Builder, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData,
         StateEvent, Trans,
     },
-    renderer::{
-        Camera, CameraPrefab, DrawShaded, GraphicsPrefab, LightPrefab, PosNormTex,
-        ScreenDimensions, VirtualKeyCode,
-    },
+    window::{EventsLoopSystem, ScreenDimensions, WindowSystem},
     ui::{UiBundle, UiCreator, UiFinder, UiText},
     utils::{
         auto_fov::{AutoFov, AutoFovSystem},
         tag::{Tag, TagFinder},
     },
+    winit::{EventsLoop, VirtualKeyCode, Window},
     Error,
+};
+use amethyst_rendy::{
+    camera::{Camera, CameraPrefab},
+    light::LightPrefab,
+    pass::DrawShadedDesc,
+    formats::GraphicsPrefab,
+    rendy::{
+        factory::Factory,
+        graph::{
+            present::PresentNode,
+            render::{RenderGroupBuilder, RenderGroupDesc},
+            GraphBuilder,
+        },
+        hal::{
+            command::{ClearDepthStencil, ClearValue},
+            format::Format,
+        },
+        mesh::{Normal, Position, Tangent, TexCoord},
+    },
+    system::{GraphCreator, RenderingSystem},
+    types::{Backend, DefaultBackend},
 };
 
 use log::{error, info};
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+
+const CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
@@ -33,14 +55,19 @@ fn main() -> Result<(), Error> {
     let display_config = app_dir.join("auto_fov/resources/display.ron");
     let assets = app_dir.join("assets");
 
+    let event_loop = EventsLoop::new();
+    let window_system = WindowSystem::from_config_path(&event_loop, display_config);
+
     let game_data = GameDataBuilder::new()
         .with(PrefabLoaderSystem::<ScenePrefab>::default(), "prefab", &[])
         .with(AutoFovSystem, "auto_fov", &["prefab"]) // This makes the system adjust the camera right after it has been loaded (in the same frame), preventing any flickering
         .with(ShowFovSystem, "show_fov", &["auto_fov"])
         .with_bundle(TransformBundle::new())?
-        .with_bundle(InputBundle::<String, String>::new())?
-        .with_bundle(UiBundle::<String, String>::new())?
-        .with_basic_renderer(display_config, DrawShaded::<PosNormTex>::new(), true)?;
+        .with_bundle(InputBundle::<StringBindings>::new())?
+        .with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
+        .with_thread_local(EventsLoopSystem::new(event_loop))
+        .with_thread_local(window_system)
+        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(ExampleGraph::new()));
 
     let mut game = Application::build(assets, Loading::new())?.build(game_data)?;
     game.run();
@@ -51,7 +78,7 @@ fn main() -> Result<(), Error> {
 #[derive(Default, Deserialize, PrefabData, Serialize)]
 #[serde(default)]
 struct ScenePrefab {
-    graphics: Option<GraphicsPrefab<Vec<PosNormTex>>>,
+    graphics: Option<GraphicsPrefab<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>)>>,
     transform: Option<Transform>,
     light: Option<LightPrefab>,
     camera: Option<CameraPrefab>,
@@ -84,7 +111,7 @@ impl SimpleState for Loading {
         });
 
         let handle = data.world.exec(|loader: PrefabLoader<'_, ScenePrefab>| {
-            loader.load("prefab/auto_fov.ron", RonFormat, (), &mut self.progress)
+            loader.load("prefab/auto_fov.ron", RonFormat, &mut self.progress)
         });
         self.scene = Some(handle);
     }
@@ -189,4 +216,73 @@ fn get_fovy(camera: &Camera) -> f32 {
 
 fn get_aspect(camera: &Camera) -> f32 {
     camera.proj[(1, 1)] / camera.proj[(0, 0)]
+}
+
+struct ExampleGraph {
+    last_dimensions: Option<ScreenDimensions>,
+    dirty: bool,
+}
+
+impl ExampleGraph {
+    pub fn new() -> Self {
+        Self {
+            last_dimensions: None,
+            dirty: true,
+        }
+    }
+}
+
+impl<B: Backend> GraphCreator<B> for ExampleGraph {
+    fn rebuild(&mut self, res: &Resources) -> bool {
+        // Rebuild when dimensions change, but wait until at least two frames have the same.
+        let new_dimensions = res.try_fetch::<ScreenDimensions>();
+        use std::ops::Deref;
+        if self.last_dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
+            self.dirty = true;
+            self.last_dimensions = new_dimensions.map(|d| d.clone());
+            return false;
+        }
+        return self.dirty;
+    }
+
+    fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
+        self.dirty = false;
+
+        use amethyst::shred::SystemData;
+
+        let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
+
+        let surface = factory.create_surface(window.clone());
+
+        let mut graph_builder = GraphBuilder::new();
+
+        let color = graph_builder.create_image(
+            surface.kind(),
+            1,
+            factory.get_surface_format(&surface),
+            Some(ClearValue::Color(CLEAR_COLOR.into())),
+        );
+
+        let depth = graph_builder.create_image(
+            surface.kind(),
+            1,
+            Format::D16Unorm,
+            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+        );
+
+        let pass = graph_builder.add_node(
+            DrawShadedDesc::default()
+                .builder()
+                .into_subpass()
+                .with_color(color)
+                .with_depth_stencil(depth)
+                .into_pass(),
+        );
+
+        let present_builder = PresentNode::builder(factory, surface, color).with_dependency(pass);
+
+        graph_builder.add_node(present_builder);
+
+        graph_builder
+    }
 }
