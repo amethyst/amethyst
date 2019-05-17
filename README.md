@@ -17,7 +17,7 @@
 [ci]: https://crates.io/crates/amethyst/
 [li]: COPYING
 [di]: https://discord.gg/amethyst
-[ds]: https://community.amethyst-engine.org/
+[ds]: https://community.amethyst.rs/
 [rd]: https://www.reddit.com/r/Amethyst/
 
 ## What is Amethyst?
@@ -100,7 +100,7 @@ For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chap
 
 There are also many open source games and prototypes being made with Amethyst. See our showcase in the regularly updated [Games Made With Amethyst][gmwa] thread on the community forum for some good sources of inspiration.
 
-[gmwa]: https://community.amethyst-engine.org/t/games-made-with-amethyst/134
+[gmwa]: https://community.amethyst.rs/t/games-made-with-amethyst/134
 
 ## Dependencies
 

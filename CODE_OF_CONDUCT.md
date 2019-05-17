@@ -31,8 +31,8 @@ In the Amethyst community we strive to go the extra step to look out for each ot
 
 And if someone takes issue with something you said or did, resist the urge to be defensive. Just stop doing what it was they complained about and apologize. Even if you feel you were misinterpreted or unfairly accused, chances are good there was something you could've communicated better — remember that it's your responsibility to make your fellow Amethyst community members comfortable. Everyone wants to get along and we are all here first and foremost because we want to talk about making games. You will find that people will be eager to assume good intent and forgive as long as you earn their trust.
 
-The enforcement policies listed above apply to all official Amethyst venues; including all Amethyst Discord channels; GitHub repositories under amethyst; and the community forums at https://community.amethyst-engine.org
+The enforcement policies listed above apply to all official Amethyst venues; including all Amethyst Discord channels; GitHub repositories under amethyst; and the community forums at https://community.amethyst.rs
 
 _This Code of Conduct is based on the Rust Code of Conduct, available here: https://www.rust-lang.org/conduct.html_
 
-[mod_team]: https://community.amethyst-engine.org/t/moderation-team/102
+[mod_team]: https://community.amethyst.rs/t/moderation-team/102
