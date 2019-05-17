@@ -2,7 +2,7 @@ use crate::{
     rendy::{
         command::RenderPassEncoder,
         factory::Factory,
-        hal::device::Device,
+        hal::{self, device::Device},
         resource::{DescriptorSet, DescriptorSetLayout, Escape, Handle as RendyHandle},
     },
     types::{Backend, Texture},
@@ -22,6 +22,9 @@ enum TextureState<B: Backend> {
     Loaded {
         set: Escape<DescriptorSet<B>>,
         generation: u32,
+        version: u32,
+        handle: Handle<Texture>,
+        layout: hal::image::Layout,
     },
 }
 
@@ -50,7 +53,45 @@ impl<B: Backend> TextureSub<B> {
         self.layout.raw()
     }
 
-    pub fn maintain(&mut self) {
+    pub fn maintain(&mut self, factory: &Factory<B>, res: &Resources) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("maintain");
+
+        use util::{desc_write, texture_desc};
+        let tex_storage = <(Read<'_, AssetStorage<Texture>>)>::fetch(res);
+        for state in self.textures.iter_mut() {
+            match state {
+                TextureState::Loaded {
+                    generation,
+                    set,
+                    version,
+                    handle,
+                    layout,
+                } if *generation == self.generation => {
+                    if let Some((new_tex, new_version)) = tex_storage.get_with_version(handle) {
+                        if version != new_version {
+                            if let Some(desc) = texture_desc(new_tex, *layout) {
+                                unsafe {
+                                    let set = set.raw();
+                                    factory.write_descriptor_sets(vec![desc_write(set, 0, desc)]);
+                                }
+                                *version = *new_version;
+                            } else {
+                                *state = TextureState::Unloaded {
+                                    generation: self.generation,
+                                };
+                            }
+                        }
+                    } else {
+                        *state = TextureState::Unloaded {
+                            generation: self.generation,
+                        };
+                    }
+                }
+                // Todo: cleanup long unused textures
+                _ => {}
+            }
+        }
         self.generation += self.generation.wrapping_add(1);
     }
 
@@ -59,6 +100,7 @@ impl<B: Backend> TextureSub<B> {
         factory: &Factory<B>,
         res: &Resources,
         handle: &Handle<Texture>,
+        layout: hal::image::Layout,
     ) -> Option<TextureState<B>> {
         #[cfg(feature = "profiler")]
         profile_scope!("try_insert");
@@ -66,8 +108,8 @@ impl<B: Backend> TextureSub<B> {
         use util::{desc_write, texture_desc};
         let tex_storage = <(Read<'_, AssetStorage<Texture>>)>::fetch(res);
 
-        let tex = tex_storage.get(handle)?;
-        let desc = texture_desc(tex)?;
+        let (tex, version) = tex_storage.get_with_version(handle)?;
+        let desc = texture_desc(tex, layout)?;
         let set = factory.create_descriptor_set(self.layout.clone()).unwrap();
         unsafe {
             let set = set.raw();
@@ -76,6 +118,9 @@ impl<B: Backend> TextureSub<B> {
         Some(TextureState::Loaded {
             set,
             generation: self.generation,
+            version: *version,
+            handle: handle.clone(),
+            layout,
         })
     }
 
@@ -84,12 +129,13 @@ impl<B: Backend> TextureSub<B> {
         factory: &Factory<B>,
         res: &Resources,
         handle: &Handle<Texture>,
+        layout: hal::image::Layout,
     ) -> Option<(TextureId, bool)> {
         #[cfg(feature = "profiler")]
         profile_scope!("insert");
 
         let id = self.lookup.forward(handle.id());
-        match self.textures.get_mut(id) {
+        match self.textures.get(id) {
             Some(TextureState::Loaded { .. }) => {
                 return Some((TextureId(id as u32), false));
             }
@@ -100,7 +146,7 @@ impl<B: Backend> TextureSub<B> {
         };
 
         let (new_state, loaded) = self
-            .try_insert(factory, res, handle)
+            .try_insert(factory, res, handle, layout)
             .map(|s| (s, true))
             .unwrap_or_else(|| {
                 (

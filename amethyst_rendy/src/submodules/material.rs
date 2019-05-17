@@ -240,7 +240,11 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
                 desc_write(
                     set,
                     (i + 1) as u32,
-                    texture_desc(tex_storage.get(t).unwrap()).unwrap(),
+                    texture_desc(
+                        tex_storage.get(t).unwrap(),
+                        hal::image::Layout::ShaderReadOnlyOptimal,
+                    )
+                    .unwrap(),
                 )
             });
 

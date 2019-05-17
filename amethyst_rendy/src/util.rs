@@ -164,13 +164,12 @@ pub fn desc_write<'a, B: Backend>(
 }
 
 #[inline]
-pub fn texture_desc<'a, B: Backend>(texture: &'a Texture) -> Option<pso::Descriptor<'a, B>> {
+pub fn texture_desc<'a, B: Backend>(
+    texture: &'a Texture,
+    layout: hal::image::Layout,
+) -> Option<pso::Descriptor<'a, B>> {
     B::unwrap_texture(texture).map(|inner| {
-        pso::Descriptor::CombinedImageSampler(
-            inner.view().raw(),
-            hal::image::Layout::ShaderReadOnlyOptimal,
-            inner.sampler().raw(),
-        )
+        pso::Descriptor::CombinedImageSampler(inner.view().raw(), layout, inner.sampler().raw())
     })
 }
 

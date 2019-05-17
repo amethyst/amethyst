@@ -25,6 +25,7 @@ macro_rules! impl_backends {
         }
 
         /// Mesh wrapper.
+        #[derive(Debug)]
         pub enum Mesh {
             $(
                 #[cfg(feature = $feature)]
@@ -33,6 +34,7 @@ macro_rules! impl_backends {
         }
 
         /// Texture wrapper.
+        #[derive(Debug)]
         pub enum Texture {
             $(
                 #[cfg(feature = $feature)]

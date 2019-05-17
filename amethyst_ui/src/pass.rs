@@ -1,4 +1,7 @@
-use crate::{Selected, TextEditing, UiImage, UiText, UiTransform};
+use crate::{
+    glyphs::{UiGlyphs, UiGlyphsResource},
+    FontAsset, Selected, TextEditing, UiImage, UiText, UiTransform,
+};
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::{
     ecs::{
@@ -28,6 +31,7 @@ use amethyst_rendy::{
     types::{Backend, Texture},
     ChangeDetection,
 };
+use amethyst_window::ScreenDimensions;
 use derivative::Derivative;
 use glsl_layout::{vec2, vec4, AsStd140};
 use hibitset::BitSet;
@@ -38,10 +42,11 @@ use thread_profiler::profile_scope;
 
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
 #[repr(C, align(4))]
-struct UiArgs {
-    coords: vec2,
-    dimensions: vec2,
-    color: vec4,
+pub(crate) struct UiArgs {
+    pub(crate) coords: vec2,
+    pub(crate) dimensions: vec2,
+    pub(crate) tex_coord_bounds: vec4,
+    pub(crate) color: vec4,
 }
 
 impl AsVertex for UiArgs {
@@ -49,6 +54,7 @@ impl AsVertex for UiArgs {
         VertexFormat::new((
             (Format::Rg32Float, "coords"),
             (Format::Rg32Float, "dimensions"),
+            (Format::Rgba32Float, "tex_coord_bounds"),
             (Format::Rgba32Float, "color"),
         ))
     }
@@ -79,6 +85,7 @@ lazy_static::lazy_static! {
 pub struct DrawUiDesc;
 
 impl DrawUiDesc {
+    /// Create new DrawUI pass description
     pub fn new() -> Self {
         Default::default()
     }
@@ -108,19 +115,6 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawUiDesc {
             framebuffer_height,
             vec![env.raw_layout(), textures.raw_layout()],
         )?;
-
-        // NOTE(happens): The only thing the uniform depends on is the
-        // framebuffer size. Build is called whenever this changes, so
-        // we only need to call this once at this point.
-        // This also means that all frames are using index 0 during drawing.
-        let view_args = UiViewArgs {
-            inverse_window_size: [
-                1.0 / framebuffer_width as f32,
-                1.0 / framebuffer_height as f32,
-            ]
-            .into(),
-        };
-        env.write(factory, 0, view_args.std140());
 
         let (loader, tex_storage) =
             <(ReadExpect<'_, Loader>, Read<'_, AssetStorage<Texture>>)>::fetch(resources);
@@ -177,12 +171,17 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             entities,
             images,
             transforms,
-            mut texts,
+            texts,
             text_editings,
             hiddens,
             hidden_propagates,
             selected,
             tints,
+            glyphs,
+            glyphs_res,
+            tex_storage,
+            font_storage,
+            screen_dimesnions,
         ) = <(
             Entities<'_>,
             ReadStorage<'_, UiImage>,
@@ -193,17 +192,47 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             ReadStorage<'_, HiddenPropagate>,
             ReadStorage<'_, Selected>,
             ReadStorage<'_, Tint>,
+            ReadStorage<'_, UiGlyphs>,
+            ReadExpect<'_, UiGlyphsResource>,
+            Read<'_, AssetStorage<Texture>>,
+            Read<'_, AssetStorage<FontAsset>>,
+            ReadExpect<'_, ScreenDimensions>,
         ) as SystemData>::fetch(resources);
 
-        self.textures.maintain();
         self.batches.swap_clear();
         let mut changed = false;
 
-        let batches_ref = &mut self.batches;
-        let textures_ref = &mut self.textures;
+        let (white_tex_id, glyph_tex_id) = {
+            if let (Some((white_tex_id, white_changed)), Some((glyph_tex_id, glyph_changed))) = (
+                self.textures.insert(
+                    factory,
+                    resources,
+                    &self.white_tex,
+                    hal::image::Layout::ShaderReadOnlyOptimal,
+                ),
+                self.textures.insert(
+                    factory,
+                    resources,
+                    glyphs_res.glyph_tex(),
+                    hal::image::Layout::General,
+                ),
+            ) {
+                changed = changed || white_changed || glyph_changed;
+                (white_tex_id, glyph_tex_id)
+            } else {
+                // Internal texture was not loaded. This can happen only during the
+                // first frame ever, as the texture ref never changes and is loaded by
+                // assets processor immediately. Having this check here allows to skip
+                // many branches in actual drawing code below.
+                // `DrawReuse` is OK here because we are sure that nothing gets drawn anyway.
+                self.textures.maintain(factory, resources);
+                return PrepareResult::DrawReuse;
+            }
+        };
 
         // Populate and update the draw order cache.
         let bitset = &mut self.cached_draw_order.cached;
+
         self.cached_draw_order.cache.retain(|&(_z, entity)| {
             let keep = transforms.contains(entity);
             if !keep {
@@ -253,12 +282,6 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             .cache
             .sort_unstable_by(|&(z1, _), &(z2, _)| z1.partial_cmp(&z2).unwrap_or(Ordering::Equal));
 
-        // let highest_abs_z = (&transforms,)
-        //     .join()
-        //     .map(|t| t.0.global_z())
-        //     // TODO(happens): Use max_by here?
-        //     .fold(1.0, |highest, current| current.abs().max(highest));
-
         for &(_z, entity) in &self.cached_draw_order.cache {
             // Skip hidden entities
             if hiddens.contains(entity) || hidden_propagates.contains(entity) {
@@ -269,36 +292,84 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
                 .get(entity)
                 .expect("Unreachable: Entity is guaranteed to be present based on earlier actions");
 
-            if let Some((texture, color)) = match (
-                images.get(entity),
-                tints.get(entity).map(|t| t.0.into_components()),
-            ) {
-                (Some(UiImage::Texture(tex)), Some((r, g, b, a))) => Some((tex, [r, g, b, a])),
-                (Some(UiImage::Texture(tex)), None) => Some((tex, [1., 1., 1., 1.])),
-                (Some(UiImage::SolidColor(color)), Some((r, g, b, a))) => {
-                    Some((&self.white_tex, mul_blend(color, &[r, g, b, a])))
-                }
-                (Some(UiImage::SolidColor(color)), None) => Some((&self.white_tex, color.clone())),
-                (None, _) => None,
-            } {
-                if let Some((tex_id, this_changed)) =
-                    textures_ref.insert(factory, resources, texture)
-                {
-                    changed = changed || this_changed;
+            let tint = tints.get(entity).map(|t| {
+                let (r, g, b, a) = t.0.into_components();
+                [r, g, b, a]
+            });
 
-                    let args = UiArgs {
-                        coords: [transform.pixel_x(), transform.pixel_y()].into(),
-                        dimensions: [transform.pixel_width, transform.pixel_height].into(),
-                        color: color.into(),
-                    };
-                    batches_ref.insert(tex_id, Some(args));
+            let image = images.get(entity);
+            if let Some(image) = image {
+                let this_changed = render_image(
+                    factory,
+                    resources,
+                    transform,
+                    image,
+                    &tint,
+                    white_tex_id,
+                    &mut self.textures,
+                    &mut self.batches,
+                );
+                changed = changed || this_changed;
+            };
+
+            if let Some(glyph_data) = glyphs.get(entity) {
+                if glyph_data.sel_vertices.len() > 0 {
+                    self.batches
+                        .insert(white_tex_id, glyph_data.sel_vertices.iter().cloned());
+                }
+
+                // blinking cursor
+                if selected.contains(entity) {
+                    if let Some(editing) = text_editings.get(entity) {
+                        let blink_on = editing.cursor_blink_timer < 0.25;
+                        let (w, h) = match (blink_on, editing.use_block_cursor) {
+                            // use degenerate quad, but still insert so batches will not change
+                            (false, false) => (0., 0.),
+                            (true, false) => (2., glyph_data.height),
+                            (false, true) => {
+                                (glyph_data.space_width, 1.0f32.max(glyph_data.height * 0.1))
+                            }
+                            (true, true) => (glyph_data.space_width, glyph_data.height),
+                        };
+                        // align to baseline
+                        let base_x = glyph_data.cursor_pos.0 + w * 0.5;
+                        let base_y = glyph_data.cursor_pos.1 - (glyph_data.height - h) * 0.5;
+
+                        let min_x = transform.pixel_x + transform.pixel_width * -0.5;
+                        let max_x = transform.pixel_x + transform.pixel_width * 0.5;
+                        let min_y = transform.pixel_y + transform.pixel_height * -0.5;
+                        let max_y = transform.pixel_y + transform.pixel_height * 0.5;
+
+                        let left = (base_x - w * 0.5).max(min_x).min(max_x);
+                        let right = (base_x + w * 0.5).max(min_x).min(max_x);
+                        let top = (base_y - h * 0.5).max(min_y).min(max_y);
+                        let bottom = (base_y + h * 0.5).max(min_y).min(max_y);
+
+                        let x = (left + right) * 0.5;
+                        let y = (top + bottom) * 0.5;
+                        let w = right - left;
+                        let h = bottom - top;
+
+                        self.batches.insert(
+                            white_tex_id,
+                            Some(UiArgs {
+                                coords: [x, y].into(),
+                                dimensions: [w, h].into(),
+                                tex_coord_bounds: [0., 0., 1., 1.].into(),
+                                color: tint.unwrap_or([1., 1., 1., 1.]).into(),
+                            }),
+                        )
+                    }
+                }
+
+                if glyph_data.vertices.len() > 0 {
+                    self.batches
+                        .insert(glyph_tex_id, glyph_data.vertices.iter().cloned());
                 }
             }
-
-            // TODO(happens): Text drawing
-            // if let Some(text) = texts.get_mut(entity) {}
         }
 
+        self.textures.maintain(factory, resources);
         changed = changed || self.batches.changed();
         self.vertex.write(
             factory,
@@ -306,6 +377,16 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             self.batches.count() as u64,
             Some(self.batches.data()),
         );
+
+        let view_args = UiViewArgs {
+            inverse_window_size: [
+                1.0 / screen_dimesnions.width() as f32,
+                1.0 / screen_dimesnions.height() as f32,
+            ]
+            .into(),
+        };
+        changed = self.env.write(factory, index, view_args.std140()) || changed;
+
         self.change.prepare_result(index, changed)
     }
 
@@ -316,15 +397,15 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         _resources: &Resources,
     ) {
-        let layout = &self.pipeline_layout;
-        encoder.bind_graphics_pipeline(&self.pipeline);
-        // use index 0 unconditionally. This is written only once.
-        self.env.bind(0, &self.pipeline_layout, 0, &mut encoder);
-        self.vertex.bind(index, 0, &mut encoder);
-        for (&tex, range) in self.batches.iter() {
-            dbg!(&range);
-            self.textures.bind(layout, 1, tex, &mut encoder);
-            encoder.draw(0..4, range);
+        if self.batches.count() > 0 {
+            let layout = &self.pipeline_layout;
+            encoder.bind_graphics_pipeline(&self.pipeline);
+            self.env.bind(index, &self.pipeline_layout, 0, &mut encoder);
+            self.vertex.bind(index, 0, &mut encoder);
+            for (&tex, range) in self.batches.iter() {
+                self.textures.bind(layout, 1, tex, &mut encoder);
+                encoder.draw(0..4, range);
+            }
         }
     }
 
@@ -388,4 +469,49 @@ fn build_ui_pipeline<B: Backend>(
 
 fn mul_blend(a: &[f32; 4], b: &[f32; 4]) -> [f32; 4] {
     [a[0] * b[0], a[1] * b[1], a[2] * b[2], a[3] * b[3]]
+}
+
+fn render_image<B: Backend>(
+    factory: &Factory<B>,
+    resources: &Resources,
+    transform: &UiTransform,
+    raw_image: &UiImage,
+    tint: &Option<[f32; 4]>,
+    white_tex_id: TextureId,
+    textures: &mut TextureSub<B>,
+    batches: &mut OrderedOneLevelBatch<TextureId, UiArgs>,
+) -> bool {
+    let color = match (raw_image, tint.as_ref()) {
+        (UiImage::SolidColor(color), Some(t)) => mul_blend(color, t),
+        (UiImage::SolidColor(color), None) => color.clone(),
+        (_, Some(t)) => t.clone(),
+        (_, None) => [1., 1., 1., 1.],
+    };
+
+    let args = UiArgs {
+        coords: [transform.pixel_x(), transform.pixel_y()].into(),
+        dimensions: [transform.pixel_width, transform.pixel_height].into(),
+        tex_coord_bounds: [0., 0., 1., 1.].into(),
+        color: color.into(),
+    };
+
+    match raw_image {
+        UiImage::Texture(tex) => {
+            if let Some((tex_id, this_changed)) = textures.insert(
+                factory,
+                resources,
+                tex,
+                hal::image::Layout::ShaderReadOnlyOptimal,
+            ) {
+                batches.insert(tex_id, Some(args));
+                this_changed
+            } else {
+                false
+            }
+        }
+        _ => {
+            batches.insert(white_tex_id, Some(args));
+            false
+        }
+    }
 }

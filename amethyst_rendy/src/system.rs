@@ -73,6 +73,7 @@ type AssetLoadingData<'a, B> = (
     Write<'a, AssetStorage<Mesh>>,
     Write<'a, AssetStorage<Texture>>,
     Write<'a, AssetStorage<Material>>,
+    ReadExpect<'a, QueueId>,
 );
 
 type SetupData<'a> = (
@@ -110,15 +111,10 @@ where
             mut mesh_storage,
             mut texture_storage,
             mut material_storage,
+            queue_id,
         ): AssetLoadingData<'_, B>,
     ) {
         use std::ops::Deref;
-
-        let queue_id = QueueId {
-            family: self.families.as_mut().unwrap().family_by_index(0).id(),
-            index: 0,
-        };
-
         let strategy = strategy.as_ref().map(Deref::deref);
 
         mesh_storage.process(
@@ -126,7 +122,7 @@ where
                 #[cfg(feature = "profiler")]
                 profile_scope!("process_mesh");
 
-                b.0.build(queue_id, &mut factory)
+                b.0.build(*queue_id, &mut factory)
                     .map(B::wrap_mesh)
                     .map(ProcessingState::Loaded)
                     .map_err(|e| e.compat().into())
@@ -143,8 +139,9 @@ where
 
                 b.0.build(
                     ImageState {
-                        queue: queue_id,
-                        stage: rendy::hal::pso::PipelineStage::FRAGMENT_SHADER,
+                        queue: *queue_id,
+                        stage: rendy::hal::pso::PipelineStage::VERTEX_SHADER
+                            | rendy::hal::pso::PipelineStage::FRAGMENT_SHADER,
                         access: rendy::hal::image::Access::SHADER_READ,
                         layout: rendy::hal::image::Layout::ShaderReadOnlyOptimal,
                     },
@@ -230,8 +227,14 @@ where
         let config: rendy::factory::Config = Default::default();
         let (factory, families): (Factory<B>, _) = rendy::factory::init(config).unwrap();
 
+        let queue_id = QueueId {
+            family: families.family_by_index(0).id(),
+            index: 0,
+        };
+
         self.families = Some(families);
         res.insert(factory);
+        res.insert(queue_id);
         AssetLoadingData::<B>::setup(res);
         SetupData::setup(res);
 

@@ -824,7 +824,7 @@ fn walk_ui_tree<C, W>(
                 .expect("Unreachable: `Prefab` entity should always be set when walking ui tree")
                 .set_data((
                     Some(transform),
-                    button.normal_image.clone().map(UiImagePrefab),
+                    button.normal_image.take().map(UiImagePrefab),
                     None,
                     Some(button),
                     custom_data,

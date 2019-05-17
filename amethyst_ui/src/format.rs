@@ -1,4 +1,4 @@
-use gfx_glyph::Font;
+use glyph_brush::rusttype::Font;
 use serde::{Deserialize, Serialize};
 
 use amethyst_assets::{Asset, Format, Handle, ProcessableAsset, ProcessingState};
@@ -28,15 +28,6 @@ impl ProcessableAsset for FontAsset {
         Ok(ProcessingState::Loaded(FontAsset(data.0)))
     }
 }
-
-/// Identical to TtfFormat.
-///
-/// Loads font files, supports TrueType and **some** OpenType files.
-///
-/// OpenType is a superset of TrueType, so if your OpenType file uses any features that don't
-/// exist in TrueType this will fail.  This will only load the first font contained in a file.
-/// If this is a problem for you please file an issue with Amethyst on GitHub.
-pub type OtfFormat = TtfFormat;
 
 /// Loads font files, supports TrueType and **some** OpenType files.
 ///

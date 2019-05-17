@@ -123,7 +123,6 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
         )>::fetch(resources);
 
         self.env.process(factory, index, resources);
-        self.textures.maintain();
 
         let sprites_ref = &mut self.sprites;
         let textures_ref = &mut self.textures;
@@ -144,7 +143,12 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
                             &sprite_render,
                             &global,
                         )?;
-                        let (tex_id, _) = textures_ref.insert(factory, resources, texture)?;
+                        let (tex_id, _) = textures_ref.insert(
+                            factory,
+                            resources,
+                            texture,
+                            hal::image::Layout::ShaderReadOnlyOptimal,
+                        )?;
                         Some((tex_id, batch_data))
                     })
                     .for_each_group(|tex_id, batch_data| {
@@ -164,7 +168,12 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
                             &sprite_render,
                             &global,
                         )?;
-                        let (tex_id, _) = textures_ref.insert(factory, resources, texture)?;
+                        let (tex_id, _) = textures_ref.insert(
+                            factory,
+                            resources,
+                            texture,
+                            hal::image::Layout::ShaderReadOnlyOptimal,
+                        )?;
                         Some((tex_id, batch_data))
                     })
                     .for_each_group(|tex_id, batch_data| {
@@ -172,6 +181,8 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
                     });
             }
         }
+
+        self.textures.maintain(factory, resources);
 
         {
             #[cfg(feature = "profiler")]
@@ -306,7 +317,6 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
             )>::fetch(resources);
 
         self.env.process(factory, index, resources);
-        self.textures.maintain();
         self.sprites.swap_clear();
         let mut changed = false;
 
@@ -329,8 +339,12 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
                         &sprite_render,
                         &global,
                     )?;
-                    let (tex_id, this_changed) =
-                        textures_ref.insert(factory, resources, texture)?;
+                    let (tex_id, this_changed) = textures_ref.insert(
+                        factory,
+                        resources,
+                        texture,
+                        hal::image::Layout::ShaderReadOnlyOptimal,
+                    )?;
                     changed = changed || this_changed;
                     Some((tex_id, batch_data))
                 })
@@ -338,6 +352,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
                     sprites_ref.insert(tex_id, batch_data.drain(..));
                 });
         }
+        self.textures.maintain(factory, resources);
         changed = changed || self.sprites.changed();
 
         {

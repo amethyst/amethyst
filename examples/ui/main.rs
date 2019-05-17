@@ -139,7 +139,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
-        .with_bundle(UiBundle::<StringBindings>::new())?
+        .with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
         .with(Processor::<Source>::new(), "source_processor", &[])
         .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
         .with_bundle(FPSCounterBundle::default())?

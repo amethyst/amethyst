@@ -77,9 +77,11 @@ Container(
                         font: File("font/square.ttf", ("TTF", ())),
                         font_size: 75.,
                         color: (0.2, 0.2, 1.0, 1.0),
-                        align: MiddleRight,
+                        align: MiddleLeft,
                         editable: (
-                            max_length: 12,
+                            max_length: 2000,
+                            selected_text_color: (0.09, 0.02, 0.25, 1.0),
+                            selected_background_color: (1.0, 0.5, 0.8, 1.0),
                         ),
                     )
                 ),
@@ -207,11 +209,42 @@ Container(
             )
         ),
 
+        Image(
+            transform: (
+                id: "TopLeft_bg",
+                y: 180.0,
+                width: 800.,
+                height: 175.,
+                anchor: Middle,
+            ),
+            image: SolidColor(1.0, 1.0, 1.0, 0.2),
+        ),
+        Image(
+            transform: (
+                id: "Middle_bg",
+                y: 0.0,
+                width: 800.,
+                height: 175.,
+                anchor: Middle,
+            ),
+            image: SolidColor(1.0, 1.0, 1.0, 0.2),
+        ),
+        Image(
+            transform: (
+                id: "BottomRight_bg",
+                y: -180.0,
+                width: 800.,
+                height: 175.,
+                anchor: Middle,
+            ),
+            image: SolidColor(1.0, 1.0, 1.0, 0.2),
+        ),
         // ------ Text Align Start ------
         Label(
             transform: (
                 id: "TopLeft",
                 y: 180.0,
+                z: 2.0,
                 width: 800.,
                 height: 175.,
                 tab_order: 1,
@@ -229,6 +262,7 @@ Container(
             transform: (
                 id: "Middle",
                 y: 0.0,
+                z: 2.0,
                 width: 800.,
                 height: 175.,
                 tab_order: 1,
@@ -246,6 +280,7 @@ Container(
             transform: (
                 id: "BottomRight",
                 y: -180.0,
+                z: 2.0,
                 width: 800.,
                 height: 175.,
                 tab_order: 1,
@@ -260,5 +295,35 @@ Container(
             )
         ),
         // ------ Text Align Stop -------
+
+        Container(
+            transform: (
+                id: "right_bar",
+                width: 500.,
+                height: 1024.,
+                anchor: BottomRight,
+            ),
+            background: SolidColor(0., 0., 0., 1.0),
+            children: [
+                Label(
+                    transform: (
+                        id: "multiline",
+                        x: 0.,
+                        y: 0.,
+                        z: 2.,
+                        width: 500.,
+                        height: 1024.,
+                        anchor: Middle,
+                    ),
+                    text: (
+                        text: "Multiline\nNested in container\nTEST!\nlorem\nipsum\ndolor\nlines\n123\nlines\nlines\nlines\nlines\nlines\nlines\nlines\nlines\nlines\nlines\nlast line",
+                        font_size: 20.,
+                        color: (0.2, 0.2, 1.0, 1.0),
+                        line_mode: Wrap,
+                        align: TopLeft,
+                    )
+                ),
+            ]
+        ),
     ],
 )

@@ -1,4 +1,4 @@
-use gfx_glyph::{HorizontalAlign, VerticalAlign};
+use glyph_brush::{HorizontalAlign, VerticalAlign};
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "profiler")]
@@ -67,9 +67,11 @@ impl Anchor {
         }
     }
 
-    /// Vertical align. Used by the ui `Pass`.
+    /// Vertical align. Used by the `UiGlyphsSystem`.
     pub(crate) fn vertical_align(&self) -> VerticalAlign {
         match self {
+            // Vertical align is reversed, because engine top is
+            // opposite to what glyph-brush considers top.
             Anchor::TopLeft => VerticalAlign::Top,
             Anchor::TopMiddle => VerticalAlign::Top,
             Anchor::TopRight => VerticalAlign::Top,
@@ -82,7 +84,7 @@ impl Anchor {
         }
     }
 
-    /// Horizontal align. Used by the ui `Pass`.
+    /// Horizontal align. Used by the `UiGlyphsSystem`.
     pub(crate) fn horizontal_align(&self) -> HorizontalAlign {
         match self {
             Anchor::TopLeft => HorizontalAlign::Left,

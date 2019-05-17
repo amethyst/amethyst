@@ -44,7 +44,7 @@ impl Allocator {
 /// An asset storage, storing the actual assets and allocating
 /// handles to them.
 pub struct AssetStorage<A: Asset> {
-    assets: VecStorage<A>,
+    assets: VecStorage<(A, u32)>,
     bitset: BitSet,
     handles: Vec<Handle<A>>,
     handle_alloc: Allocator,
@@ -109,7 +109,7 @@ impl<A: Asset> AssetStorage<A> {
             self.handles.push(h.clone());
 
             unsafe {
-                self.assets.insert(id, asset);
+                self.assets.insert(id, (asset, 0));
             }
 
             Some(h)
@@ -121,6 +121,24 @@ impl<A: Asset> AssetStorage<A> {
     /// Get an asset from a given asset handle.
     pub fn get(&self, handle: &Handle<A>) -> Option<&A> {
         if self.bitset.contains(handle.id()) {
+            Some(unsafe { &self.assets.get(handle.id()).0 })
+        } else {
+            None
+        }
+    }
+
+    /// Get an asset version from a given asset handle.
+    pub fn get_version(&self, handle: &Handle<A>) -> Option<u32> {
+        if self.bitset.contains(handle.id()) {
+            Some(unsafe { self.assets.get(handle.id()).1 })
+        } else {
+            None
+        }
+    }
+
+    /// Get an asset and it's version from a given asset handle.
+    pub fn get_with_version(&self, handle: &Handle<A>) -> Option<&(A, u32)> {
+        if self.bitset.contains(handle.id()) {
             Some(unsafe { self.assets.get(handle.id()) })
         } else {
             None
@@ -130,10 +148,39 @@ impl<A: Asset> AssetStorage<A> {
     /// Get an asset by it's handle id.
     pub fn get_by_id(&self, id: u32) -> Option<&A> {
         if self.bitset.contains(id) {
-            Some(unsafe { self.assets.get(id) })
+            Some(unsafe { &self.assets.get(id).0 })
         } else {
             None
         }
+    }
+
+    /// Replace asset under given handle, incrementing the version id.
+    /// Returns old asset. Panics if asset handle is empty.
+    pub fn replace(&mut self, handle: &Handle<A>, asset: A) -> A {
+        if self.bitset.contains(handle.id()) {
+            let data = unsafe { self.assets.get_mut(handle.id()) };
+            data.1 += 1;
+            std::mem::replace(&mut data.0, asset)
+        } else {
+            panic!("Trying to replace not loaded asset");
+        }
+    }
+
+    /// Insert preloaded asset into storage synchronously
+    /// without going through usual loading step.
+    /// You probably want to use `Loader::load` instead.
+    ///
+    /// Use this method only when you need to insert procedurally generated
+    /// asset directly into storage, skipping intermediate Asset::Data form.
+    pub fn insert(&mut self, asset: A) -> Handle<A> {
+        let handle = self.allocate();
+        let id = handle.id();
+        self.bitset.add(id);
+        self.handles.push(handle.clone());
+        unsafe {
+            self.assets.insert(id, (asset, 0));
+        }
+        handle
     }
 
     /// Check if given handle points to a valid asset in the storage.
@@ -154,13 +201,13 @@ impl<A: Asset> AssetStorage<A> {
     /// Failing to do so may result in dereferencing
     /// uninitialized memory or out of bounds access.
     pub unsafe fn get_by_id_unchecked(&self, id: u32) -> &A {
-        self.assets.get(id)
+        &self.assets.get(id).0
     }
 
     /// Get an asset mutably from a given asset handle.
     pub fn get_mut(&mut self, handle: &Handle<A>) -> Option<&mut A> {
         if self.bitset.contains(handle.id()) {
-            Some(unsafe { self.assets.get_mut(handle.id()) })
+            Some(unsafe { &mut self.assets.get_mut(handle.id()).0 })
         } else {
             None
         }
@@ -276,7 +323,7 @@ impl<A: Asset> AssetStorage<A> {
                         // NOTE: the loader has to ensure that a handle will be used
                         // together with a `Data` only once.
                         unsafe {
-                            assets.insert(id, asset);
+                            assets.insert(id, (asset, 0));
                         }
 
                         (reload_obj, handle)
@@ -330,10 +377,9 @@ impl<A: Asset> AssetStorage<A> {
                             "Expected handle {:?} to be valid, but the asset storage says otherwise",
                             handle,
                         );
-                        unsafe {
-                            let old = assets.get_mut(id);
-                            *old = asset;
-                        }
+                        let data = unsafe { self.assets.get_mut(id) };
+                        data.1 += 1;
+                        drop_fn(std::mem::replace(&mut data.0, asset));
 
                         (reload_obj, handle)
                     }
@@ -360,7 +406,8 @@ impl<A: Asset> AssetStorage<A> {
             let handle = self.handles.swap_remove(i);
             let id = handle.id();
             unsafe {
-                drop_fn(self.assets.remove(id));
+                let (asset, _) = self.assets.remove(id);
+                drop_fn(asset);
             }
             self.bitset.remove(id);
 
