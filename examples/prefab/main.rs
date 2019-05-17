@@ -3,6 +3,7 @@
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
     core::TransformBundle,
+    ecs::{Resources, ReadExpect, SystemData},
     prelude::*,
     renderer::{
         rendy::{
@@ -16,20 +17,21 @@ use amethyst::{
         },
         types::DefaultBackend,
         GraphCreator, RenderingSystem,
+        pass::DrawShadedDesc,
     },
     utils::{application_root_dir, scene::BasicScenePrefab},
     window::{ScreenDimensions, Window, WindowBundle},
     Error,
 };
 
-type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>, f32>;
+type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>), f32>;
 
 struct AssetsExample;
 
 impl SimpleState for AssetsExample {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let prefab_handle = data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
-            loader.load("prefab/example.ron", RonFormat, (), ())
+            loader.load("prefab/example.ron", RonFormat, ())
         });
         data.world.create_entity().with(prefab_handle).build();
     }
@@ -89,7 +91,6 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         };
 
         self.dirty = false;
-
         let window = <ReadExpect<'_, std::sync::Arc<Window>>>::fetch(res);
         let surface = factory.create_surface(window.clone());
         // cache surface format to speed things up
@@ -114,7 +115,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         let ui = graph_builder.add_node(
             SubpassBuilder::new()
-                .with_group(DrawUiDesc::default().builder())
+                .with_group(DrawShadedDesc::default().builder())
                 .with_color(color)
                 .with_depth_stencil(depth)
                 .into_pass(),

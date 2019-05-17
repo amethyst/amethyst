@@ -42,8 +42,6 @@ layout(set = 1, binding = 2) uniform sampler2D emission;
 layout(location = 0) in VertexData {
     vec3 position;
     vec3 normal;
-    vec3 tangent;
-    float tang_handedness;
     vec2 tex_coord;
     vec4 color;
 } vertex;
