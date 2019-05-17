@@ -1,5 +1,5 @@
 use crate::{
-    debug_drawing::{DebugLine, DebugLines, DebugLinesComponent},
+    debug_drawing::{DebugLine, DebugLines, DebugLinesComponent, DebugLinesParams},
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
     pod::ViewArgs,
     submodules::{gather::CameraGatherer, DynamicUniform, DynamicVertex},
@@ -23,18 +23,6 @@ use rendy::{
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
-
-/// Parameters for renderer of debug lines. The params affect all lines.
-pub struct DebugLinesParams {
-    /// Width of lines in screen space pixels, default is 1.0 pixel
-    pub line_width: f32,
-}
-
-impl Default for DebugLinesParams {
-    fn default() -> Self {
-        DebugLinesParams { line_width: 1.0 }
-    }
-}
 
 #[derive(Debug, Clone, AsStd140)]
 struct DebugLinesArgs {

@@ -26,12 +26,11 @@ use amethyst_rendy::{
         hal::{
             command::{ClearDepthStencil, ClearValue},
             format::Format,
-            Backend,
         },
         mesh::{Normal, Position, Tangent, TexCoord},
     },
     system::{GraphCreator, RenderingSystem},
-    types::DefaultBackend,
+    types::{Backend, DefaultBackend},
 };
 use serde::{Deserialize, Serialize};
 use std::{marker::PhantomData, sync::Arc};
@@ -72,8 +71,8 @@ impl<B: Backend> SimpleState for Example<B> {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
         // Initialise the scene with an object, a light and a camera.
-        let prefab_handle = world.exec(|loader: PrefabLoader<'_, MyPrefabData<B>>| {
-            loader.load("prefab/animation.ron", RonFormat, (), ())
+        let prefab_handle = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
+            loader.load("prefab/animation.ron", RonFormat, ())
         });
         self.sphere = Some(world.create_entity().with(prefab_handle).build());
     }
@@ -211,11 +210,11 @@ fn run<B: Backend>() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
-        .with_bundle(AnimationBundle::<AnimationId, Transform<f32>>::new(
+        .with_bundle(AnimationBundle::<AnimationId, Transform>::new(
             "animation_control_system",
             "sampler_interpolation_system",
         ))?
-        .with_bundle(TransformBundle::<f32>::new().with_dep(&["sampler_interpolation_system"]))?
+        .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
         .with_thread_local(EventsLoopSystem::new(event_loop))
         .with_thread_local(window_system)
         .with_thread_local(RenderingSystem::<B, _>::new(ExampleGraph::new()));
@@ -328,7 +327,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         );
 
         let pass = graph_builder.add_node(
-            DrawPbrDesc::<B, f32>::default()
+            DrawPbrDesc::default()
                 .with_vertex_skinning()
                 .builder()
                 .into_subpass()

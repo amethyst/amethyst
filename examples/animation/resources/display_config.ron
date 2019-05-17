@@ -4,7 +4,7 @@
   min_dimensions: None,
   fullscreen: None,
   multisampling: 0,
-  title: "GLTF example",
+  title: "Animation example",
   visibility: true,
   vsync: true,
 )

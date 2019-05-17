@@ -86,9 +86,9 @@ impl Asset for MeshAsset {
 struct Ron;
 
 impl SimpleFormat<MeshAsset> for Ron {
-    const NAME: &'static str = "RON";
-
-    type Options = ();
+    fn name(&self) -> &'static str {
+        "RON"
+    }
 
     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<VertexData, Error> {
         use ron::de::from_str;

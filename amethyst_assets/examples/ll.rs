@@ -17,12 +17,13 @@ impl Asset for DummyAsset {
     type HandleStorage = VecStorage<Handle<DummyAsset>>;
 }
 
+#[derive(Clone, Debug)]
 struct DummyFormat;
 
-impl Format<DummyAsset> for DummyFormat {
-    const NAME: &'static str = "DUMMY";
-
-    type Options = ();
+impl Format<String> for DummyFormat {
+    fn name(&self) -> &'static str {
+        "DUMMY"
+    }
 
     fn import(
         &self,
@@ -30,7 +31,7 @@ impl Format<DummyAsset> for DummyFormat {
         source: Arc<dyn Source>,
         _: (),
         _create_reload: bool,
-    ) -> Result<FormatValue<DummyAsset>, Error> {
+    ) -> Result<FormatValue<String>, Error> {
         let dummy = from_utf8(source.load(&name)?.as_slice()).map(|s| s.to_owned())?;
 
         Ok(FormatValue::data(dummy))

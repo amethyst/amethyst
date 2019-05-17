@@ -6,12 +6,7 @@ Prefab (
                 (
                     transform: (),
                     light: (
-                        ambient_color: ({
-                           red: 0.05,
-                           green: 0.05,
-                           blue: 0.05,
-                           alpha: 1.0,
-                        }),
+                        ambient_color: ((0.05, 0.05, 0.05, 1.0)),
                     )
                 ),
                 (
@@ -99,11 +94,7 @@ Prefab (
                     light: (
                         light: Point((
                             intensity: 3.0,
-                            color: (
-                                red: 1.0,
-                                green: 1.0,
-                                blue: 1.0,
-                            ),
+                            color: (1.0, 1.0, 1.0),
                             radius: 5.0,
                         )),
                     ),

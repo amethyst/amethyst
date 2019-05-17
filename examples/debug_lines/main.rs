@@ -7,11 +7,32 @@ use amethyst::{
         transform::{Transform, TransformBundle},
         Time,
     },
-    ecs::{Read, System, Write},
-    input::{is_close_requested, is_key_down, InputBundle},
+    ecs::{Read, ReadExpect, Resources, System, SystemData, Write},
+    input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
-    renderer::*,
+    renderer::{
+        camera::{Camera, Projection},
+        debug_drawing::{DebugLines, DebugLinesComponent, DebugLinesParams},
+        palette::{Srgb, Srgba},
+        pass::{DrawDebugLinesDesc, DrawSkyboxDesc},
+        rendy::{
+            factory::Factory,
+            graph::{
+                present::PresentNode,
+                render::{RenderGroupDesc, SubpassBuilder},
+                GraphBuilder,
+            },
+            hal::{
+                command::{ClearDepthStencil, ClearValue},
+                format::Format,
+            },
+        },
+        types::DefaultBackend,
+        Backend, GraphCreator, RenderingSystem,
+    },
     utils::application_root_dir,
+    window::{ScreenDimensions, Window, WindowBundle},
+    winit::VirtualKeyCode,
 };
 
 struct ExampleLinesSystem;
@@ -28,13 +49,13 @@ impl<'s> System<'s> for ExampleLinesSystem {
         debug_lines_resource.draw_direction(
             [t, 0.0, 0.5].into(),
             [0.0, 0.3, 0.0].into(),
-            [0.5, 0.05, 0.65, 1.0].into(),
+            Srgba::new(0.5, 0.05, 0.65, 1.0),
         );
 
         debug_lines_resource.draw_line(
             [t, 0.0, 0.5].into(),
             [0.0, 0.0, 0.2].into(),
-            [0.5, 0.05, 0.65, 1.0].into(),
+            Srgba::new(0.5, 0.05, 0.65, 1.0),
         );
     }
 }
@@ -43,34 +64,32 @@ struct ExampleState;
 impl SimpleState for ExampleState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         // Setup debug lines as a resource
-        data.world
-            .add_resource(DebugLines::new().with_capacity(100));
+        data.world.add_resource(DebugLines::new());
         // Configure width of lines. Optional step
-        data.world.add_resource(DebugLinesParams {
-            line_width: 1.0 / 400.0,
-        });
+        data.world
+            .add_resource(DebugLinesParams { line_width: 2.0 });
 
         // Setup debug lines as a component and add lines to render axis&grid
-        let mut debug_lines_component = DebugLinesComponent::new().with_capacity(100);
+        let mut debug_lines_component = DebugLinesComponent::with_capacity(100);
         debug_lines_component.add_direction(
             [0.0, 0.0001, 0.0].into(),
             [0.2, 0.0, 0.0].into(),
-            [1.0, 0.0, 0.23, 1.0].into(),
+            Srgba::new(1.0, 0.0, 0.23, 1.0),
         );
         debug_lines_component.add_direction(
             [0.0, 0.0, 0.0].into(),
             [0.0, 0.2, 0.0].into(),
-            [0.5, 0.85, 0.1, 1.0].into(),
+            Srgba::new(0.5, 0.85, 0.1, 1.0),
         );
         debug_lines_component.add_direction(
             [0.0, 0.0001, 0.0].into(),
             [0.0, 0.0, 0.2].into(),
-            [0.2, 0.75, 0.93, 1.0].into(),
+            Srgba::new(0.2, 0.75, 0.93, 1.0),
         );
 
         let width: u32 = 10;
         let depth: u32 = 10;
-        let main_color = [0.4, 0.4, 0.4, 1.0].into();
+        let main_color = Srgba::new(0.4, 0.4, 0.4, 1.0);
 
         // Grid lines in X-axis
         for x in 0..=width {
@@ -89,7 +108,7 @@ impl SimpleState for ExampleState {
                     debug_lines_component.add_direction(
                         position + sub_offset,
                         direction,
-                        [0.1, 0.1, 0.1, 0.1].into(),
+                        Srgba::new(0.1, 0.1, 0.1, 0.1),
                     );
                 }
             }
@@ -112,7 +131,7 @@ impl SimpleState for ExampleState {
                     debug_lines_component.add_direction(
                         position + sub_offset,
                         direction,
-                        [0.1, 0.1, 0.1, 0.0].into(),
+                        Srgba::new(0.1, 0.1, 0.1, 0.0),
                     );
                 }
             }
@@ -132,6 +151,8 @@ impl SimpleState for ExampleState {
             .with(Camera::from(Projection::perspective(
                 1.33333,
                 std::f32::consts::FRAC_PI_2,
+                0.1,
+                1000.0,
             )))
             .with(local_transform)
             .build();
@@ -163,15 +184,7 @@ fn main() -> amethyst::Result<()> {
     let key_bindings_path = app_root.join("examples/debug_lines/resources/input.ron");
     let resources = app_root.join("examples/assets/");
 
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0.001, 0.005, 0.005, 1.0], 1.0)
-            .with_pass(DrawDebugLines::<PosColorNorm>::new()),
-    );
-
-    let config = DisplayConfig::load(display_config_path);
-
-    let fly_control_bundle = FlyControlBundle::<String, String>::new(
+    let fly_control_bundle = FlyControlBundle::<StringBindings>::new(
         Some(String::from("move_x")),
         Some(String::from("move_y")),
         Some(String::from("move_z")),
@@ -179,15 +192,86 @@ fn main() -> amethyst::Result<()> {
     .with_sensitivity(0.1, 0.1);
 
     let game_data = GameDataBuilder::default()
+        .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with_bundle(
-            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
+            InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
         .with(ExampleLinesSystem, "example_lines_system", &[])
         .with_bundle(fly_control_bundle)?
         .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
-        .with_bundle(RenderBundle::new(pipe, Some(config)))?;
+        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
+            ExampleGraph::default(),
+        ));
 
     let mut game = Application::new(resources, ExampleState, game_data)?;
     game.run();
     Ok(())
+}
+
+#[derive(Default)]
+struct ExampleGraph {
+    last_dimensions: Option<ScreenDimensions>,
+    surface_format: Option<Format>,
+    dirty: bool,
+}
+
+impl<B: Backend> GraphCreator<B> for ExampleGraph {
+    fn rebuild(&mut self, res: &Resources) -> bool {
+        // Rebuild when dimensions change, but wait until at least two frames have the same.
+        let new_dimensions = res.try_fetch::<ScreenDimensions>();
+        use std::ops::Deref;
+        if self.last_dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
+            self.dirty = true;
+            self.last_dimensions = new_dimensions.map(|d| d.clone());
+            return false;
+        }
+        return self.dirty;
+    }
+
+    fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
+        self.dirty = false;
+
+        let window = <ReadExpect<'_, std::sync::Arc<Window>>>::fetch(res);
+
+        let surface = factory.create_surface(window.clone());
+        // cache surface format to speed things up
+        let surface_format = *self
+            .surface_format
+            .get_or_insert_with(|| factory.get_surface_format(&surface));
+
+        let mut graph_builder = GraphBuilder::new();
+        let color = graph_builder.create_image(
+            surface.kind(),
+            1,
+            surface_format,
+            Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
+        );
+
+        let depth = graph_builder.create_image(
+            surface.kind(),
+            1,
+            Format::D32Float,
+            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+        );
+
+        let opaque = graph_builder.add_node(
+            SubpassBuilder::new()
+                .with_group(DrawDebugLinesDesc::default().builder())
+                .with_group(
+                    DrawSkyboxDesc::with_colors(
+                        Srgb::new(0.82, 0.51, 0.50),
+                        Srgb::new(0.18, 0.11, 0.85),
+                    )
+                    .builder(),
+                )
+                .with_color(color)
+                .with_depth_stencil(depth)
+                .into_pass(),
+        );
+
+        let _present = graph_builder
+            .add_node(PresentNode::builder(factory, surface, color).with_dependency(opaque));
+
+        graph_builder
+    }
 }

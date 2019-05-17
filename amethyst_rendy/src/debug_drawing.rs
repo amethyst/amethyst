@@ -26,6 +26,18 @@ impl DebugLine {
     }
 }
 
+/// Parameters for renderer of debug lines. The params affect all lines.
+pub struct DebugLinesParams {
+    /// Width of lines in screen space pixels, default is 1.0 pixel
+    pub line_width: f32,
+}
+
+impl Default for DebugLinesParams {
+    fn default() -> Self {
+        DebugLinesParams { line_width: 1.0 }
+    }
+}
+
 /// Component that stores persistent debug lines to be rendered in DebugLinesPass draw pass.
 /// The vector can only be cleared manually.
 #[derive(Debug, Default)]
