@@ -6,6 +6,7 @@ use amethyst::{
     ecs::prelude::{ReadExpect, Resources, SystemData},
     prelude::*,
     renderer::{
+        pass::DrawShadedDesc,
         rendy::{
             factory::Factory,
             graph::{
@@ -17,7 +18,6 @@ use amethyst::{
         },
         types::DefaultBackend,
         GraphCreator, RenderingSystem,
-        pass::DrawShadedDesc,
     },
     utils::{application_root_dir, scene::BasicScenePrefab},
     window::{ScreenDimensions, Window, WindowBundle},

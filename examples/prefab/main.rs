@@ -3,9 +3,10 @@
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
     core::TransformBundle,
-    ecs::{Resources, ReadExpect, SystemData},
+    ecs::{ReadExpect, Resources, SystemData},
     prelude::*,
     renderer::{
+        pass::DrawShadedDesc,
         rendy::{
             factory::Factory,
             graph::{
@@ -17,7 +18,6 @@ use amethyst::{
         },
         types::DefaultBackend,
         GraphCreator, RenderingSystem,
-        pass::DrawShadedDesc,
     },
     utils::{application_root_dir, scene::BasicScenePrefab},
     window::{ScreenDimensions, Window, WindowBundle},

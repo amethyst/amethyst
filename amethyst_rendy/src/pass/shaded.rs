@@ -24,11 +24,7 @@ impl<B: Backend> Base3DPassDef<B> for ShadedPassDef {
         &super::SHADED_FRAGMENT
     }
     fn base_format() -> Vec<VertexFormat> {
-        vec![
-            Position::vertex(),
-            Normal::vertex(),
-            TexCoord::vertex(),
-        ]
+        vec![Position::vertex(), Normal::vertex(), TexCoord::vertex()]
     }
     fn skinned_format() -> Vec<VertexFormat> {
         vec![

@@ -5,26 +5,26 @@ use amethyst::{
     },
     core::{Transform, TransformBundle},
     derive::PrefabData,
-    ecs::{Entity, ReadExpect, ReadStorage, System, WriteStorage, Resources},
+    ecs::{Entity, ReadExpect, ReadStorage, Resources, System, WriteStorage},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::{
         Application, Builder, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData,
         StateEvent, Trans,
     },
-    window::{EventsLoopSystem, ScreenDimensions, WindowSystem},
     ui::{UiBundle, UiCreator, UiFinder, UiText},
     utils::{
         auto_fov::{AutoFov, AutoFovSystem},
         tag::{Tag, TagFinder},
     },
+    window::{EventsLoopSystem, ScreenDimensions, WindowSystem},
     winit::{EventsLoop, VirtualKeyCode, Window},
     Error,
 };
 use amethyst_rendy::{
     camera::{Camera, CameraPrefab},
+    formats::GraphicsPrefab,
     light::LightPrefab,
     pass::DrawShadedDesc,
-    formats::GraphicsPrefab,
     rendy::{
         factory::Factory,
         graph::{
@@ -67,7 +67,9 @@ fn main() -> Result<(), Error> {
         .with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
         .with_thread_local(EventsLoopSystem::new(event_loop))
         .with_thread_local(window_system)
-        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(ExampleGraph::new()));
+        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
+            ExampleGraph::new(),
+        ));
 
     let mut game = Application::build(assets, Loading::new())?.build(game_data)?;
     game.run();
