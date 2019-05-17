@@ -18,7 +18,7 @@ Custom(
                 text: "Repeated Text",
                 font_size: 25.,
                 color: (1., 1., 1., 1.),
-                font: File("font/square.ttf", Ttf, ()),
+                font: File("font/square.ttf", ("TTF", ())),
             ),
         )
     )

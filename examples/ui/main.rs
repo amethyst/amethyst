@@ -14,6 +14,7 @@ use amethyst::{
                 render::{RenderGroupDesc, SubpassBuilder},
                 GraphBuilder,
             },
+            hal::format::Format,
             mesh::{Normal, Position, TexCoord},
         },
         types::DefaultBackend,
@@ -30,7 +31,6 @@ use amethyst::{
     winit::VirtualKeyCode,
 };
 use log::info;
-use std::sync::Arc;
 
 type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>), f32>;
 
@@ -145,7 +145,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(FPSCounterBundle::default())?
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::new(),
+            ExampleGraph::default(),
         ));
 
     let mut game = Application::build(resources, Example::default())?
@@ -182,22 +182,11 @@ impl<'a> System<'a> for UiEventHandlerSystem {
     }
 }
 
-use amethyst::renderer::rendy::hal::format::Format;
-
+#[derive(Default)]
 struct ExampleGraph {
     last_dimensions: Option<ScreenDimensions>,
     surface_format: Option<Format>,
     dirty: bool,
-}
-
-impl ExampleGraph {
-    pub fn new() -> Self {
-        Self {
-            last_dimensions: None,
-            surface_format: None,
-            dirty: true,
-        }
-    }
 }
 
 impl GraphCreator<DefaultBackend> for ExampleGraph {
@@ -225,7 +214,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         self.dirty = false;
 
-        let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
+        let window = <ReadExpect<'_, std::sync::Arc<Window>>>::fetch(res);
         let surface = factory.create_surface(window.clone());
         // cache surface format to speed things up
         let surface_format = *self
