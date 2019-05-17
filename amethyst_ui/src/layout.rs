@@ -70,8 +70,6 @@ impl Anchor {
     /// Vertical align. Used by the `UiGlyphsSystem`.
     pub(crate) fn vertical_align(&self) -> VerticalAlign {
         match self {
-            // Vertical align is reversed, because engine top is
-            // opposite to what glyph-brush considers top.
             Anchor::TopLeft => VerticalAlign::Top,
             Anchor::TopMiddle => VerticalAlign::Top,
             Anchor::TopRight => VerticalAlign::Top,
