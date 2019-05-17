@@ -7,7 +7,7 @@ description = "Loading from .ron files into Rust structures with defaults to pre
 exclude = ["examples/*"]
 
 documentation = "https://docs-src.amethyst.rs/stable/amethyst_config/"
-homepage = "https://www.amethyst.rs/"
+homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
 license = "MIT/Apache-2.0"

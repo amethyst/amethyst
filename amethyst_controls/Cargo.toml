@@ -6,7 +6,7 @@ edition = "2018"
 description = "Amethyst controls"
 
 documentation = "https://docs-src.amethyst.rs/stable/amethyst_controls/"
-homepage = "https://www.amethyst.rs/"
+homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
 license = "MIT/Apache-2.0"

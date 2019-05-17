@@ -11,7 +11,7 @@ keywords = ["game", "error", "amethyst"]
 categories = ["error"]
 
 documentation = "https://docs-src.amethyst.rs/stable/amethyst_error/"
-homepage = "https://www.amethyst.rs/"
+homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
 [badges]

@@ -7,7 +7,7 @@
 [s1]: https://jenkins.amethyst-engine.org/job/amethyst/job/master/badge/icon
 [s2]: https://img.shields.io/crates/v/amethyst.svg
 [docs-badge]: https://img.shields.io/badge/docs-website-blue.svg
-[docs]: https://www.amethyst.rs/doc/
+[docs]: https://amethyst.rs/doc/
 [s3]: https://img.shields.io/badge/license-MIT%2FApache-blue.svg
 [s4]: https://img.shields.io/discord/425678876929163284.svg?logo=discord
 [s5]: https://img.shields.io/badge/discourse-online-green.svg
@@ -183,7 +183,7 @@ If for some reason we don't have any open PRs in need of a review nor any good f
 
 ## Backers
 
-Thank you to all our backers! 🙏 [Become a backer](https://www.amethyst.rs/donate)
+Thank you to all our backers! 🙏 [Become a backer](https://amethyst.rs/donate)
 
 ## Sponsors
 
