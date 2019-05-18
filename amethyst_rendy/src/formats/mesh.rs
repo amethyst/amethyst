@@ -23,13 +23,13 @@ impl Format<MeshData> for ObjFormat {
 
     fn import_simple(&self, bytes: Vec<u8>) -> Result<MeshData, Error> {
         rendy::mesh::obj::load_from_obj(&bytes)
-            .map(|objects| {
-                if objects.len() == 1 {
-                    let builder = objects[0].0.clone();
-                    builder.into()
-                } else {
-                    unimplemented!();
+            .map(|mut builders| {
+                let mut iter = builders.drain(..);
+                let builder = iter.next().unwrap();
+                if iter.next().is_some() {
+                    log::warn!("OBJ file contains more than one object, only loading the first");
                 }
+                builder.0.into()
             })
             .map_err(|e| e.compat().into())
     }
