@@ -204,7 +204,7 @@ fn build_skybox_pipeline<B: Backend>(
     let pipes = PipelinesBuilder::new()
         .with_pipeline(
             PipelineDescBuilder::new()
-                .with_vertex_desc(&[(PosTex::vertex(), 0)])
+                .with_vertex_desc(&[(PosTex::vertex(), pso::VertexInputRate::Vertex)])
                 .with_shaders(util::simple_shader_set(
                     &shader_vertex,
                     Some(&shader_fragment),

@@ -695,8 +695,8 @@ fn build_pipelines<B: Backend, T: Base3DPassDef<B>>(
 
     let vertex_desc = vertex_format_base
         .iter()
-        .map(|f| (f.clone(), 0))
-        .chain(Some((VertexArgs::vertex(), 1)))
+        .map(|f| (f.clone(), pso::VertexInputRate::Vertex))
+        .chain(Some((VertexArgs::vertex(), pso::VertexInputRate::Instance(1))))
         .collect::<Vec<_>>();
 
     let shader_vertex_basic = unsafe { T::vertex_shader().module(factory).unwrap() };
@@ -729,8 +729,8 @@ fn build_pipelines<B: Backend, T: Base3DPassDef<B>>(
 
         let vertex_desc = vertex_format_skinned
             .iter()
-            .map(|f| (f.clone(), 0))
-            .chain(Some((SkinnedVertexArgs::vertex(), 1)))
+            .map(|f| (f.clone(), pso::VertexInputRate::Vertex))
+            .chain(Some((SkinnedVertexArgs::vertex(), pso::VertexInputRate::Instance(1))))
             .collect::<Vec<_>>();
 
         let pipe = PipelinesBuilder::new()

@@ -50,10 +50,10 @@ pub(crate) struct UiArgs {
 impl AsVertex for UiArgs {
     fn vertex() -> VertexFormat {
         VertexFormat::new((
-            (Format::Rg32Float, "coords"),
-            (Format::Rg32Float, "dimensions"),
-            (Format::Rgba32Float, "tex_coord_bounds"),
-            (Format::Rgba32Float, "color"),
+            (Format::Rg32Sfloat, "coords"),
+            (Format::Rg32Sfloat, "dimensions"),
+            (Format::Rgba32Sfloat, "tex_coord_bounds"),
+            (Format::Rgba32Sfloat, "color"),
         ))
     }
 }
@@ -432,7 +432,7 @@ fn build_ui_pipeline<B: Backend>(
     let pipes = PipelinesBuilder::new()
         .with_pipeline(
             PipelineDescBuilder::new()
-                .with_vertex_desc(&[(UiArgs::vertex(), 1)])
+                .with_vertex_desc(&[(UiArgs::vertex(), pso::VertexInputRate::Instance(1))])
                 .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleStrip))
                 .with_shaders(simple_shader_set(&shader_vertex, Some(&shader_fragment)))
                 .with_layout(&pipeline_layout)

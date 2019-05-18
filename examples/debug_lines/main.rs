@@ -250,7 +250,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         let depth = graph_builder.create_image(
             surface.kind(),
             1,
-            Format::D32Float,
+            Format::D32Sfloat,
             Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
         );
 

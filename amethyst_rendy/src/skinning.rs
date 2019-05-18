@@ -23,7 +23,7 @@ impl From<[f32; 4]> for JointWeights {
 
 impl AsAttribute for JointWeights {
     const NAME: &'static str = "joint_weights";
-    const FORMAT: Format = Format::Rgba32Float;
+    const FORMAT: Format = Format::Rgba32Sfloat;
 }
 
 /// Type for joint ids attribute of vertex

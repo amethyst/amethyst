@@ -8,7 +8,7 @@ use rendy::{
         pso::{
             AttributeDesc, BakedStates, BasePipeline, BlendDesc, ColorBlendDesc, DepthStencilDesc,
             DepthTest, Face, GraphicsPipelineDesc, GraphicsShaderSet, InputAssemblerDesc,
-            InstanceRate, Multisampling, PipelineCreationFlags, Rasterizer, Rect, VertexBufferDesc,
+            VertexInputRate, Multisampling, PipelineCreationFlags, Rasterizer, Rect, VertexBufferDesc,
             Viewport,
         },
         Primitive,
@@ -194,11 +194,11 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     pub fn set_face_culling(&mut self, cull_face: Face) {
         self.rasterizer.cull_face = cull_face;
     }
-    pub fn with_vertex_desc(mut self, desc: &[(VertexFormat, InstanceRate)]) -> Self {
+    pub fn with_vertex_desc(mut self, desc: &[(VertexFormat, VertexInputRate)]) -> Self {
         self.set_vertex_desc(desc);
         self
     }
-    pub fn set_vertex_desc(&mut self, desc: &[(VertexFormat, InstanceRate)]) {
+    pub fn set_vertex_desc(&mut self, desc: &[(VertexFormat, VertexInputRate)]) {
         let (vbos, attrs) = util::vertex_desc(desc);
         self.set_vertex_buffers(vbos);
         self.set_attributes(attrs);

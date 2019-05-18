@@ -46,7 +46,7 @@ pub struct Tint {
 
 impl AsAttribute for Tint {
     const NAME: &'static str = "tint";
-    const FORMAT: Format = Format::Rgba32Float;
+    const FORMAT: Format = Format::Rgba32Sfloat;
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
@@ -184,12 +184,12 @@ pub struct SpriteArgs {
 impl AsVertex for SpriteArgs {
     fn vertex() -> VertexFormat {
         VertexFormat::new((
-            (Format::Rg32Float, "dir_x"),
-            (Format::Rg32Float, "dir_y"),
-            (Format::Rg32Float, "pos"),
-            (Format::Rg32Float, "u_offset"),
-            (Format::Rg32Float, "v_offset"),
-            (Format::R32Float, "depth"),
+            (Format::Rg32Sfloat, "dir_x"),
+            (Format::Rg32Sfloat, "dir_y"),
+            (Format::Rg32Sfloat, "pos"),
+            (Format::Rg32Sfloat, "u_offset"),
+            (Format::Rg32Sfloat, "v_offset"),
+            (Format::R32Sfloat, "depth"),
         ))
     }
 }

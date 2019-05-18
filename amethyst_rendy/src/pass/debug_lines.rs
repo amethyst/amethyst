@@ -205,7 +205,7 @@ fn build_lines_pipeline<B: Backend>(
     let pipes = PipelinesBuilder::new()
         .with_pipeline(
             PipelineDescBuilder::new()
-                .with_vertex_desc(&[(DebugLine::vertex(), 1)])
+                .with_vertex_desc(&[(DebugLine::vertex(), pso::VertexInputRate::Instance(1))])
                 .with_input_assembler(pso::InputAssemblerDesc::new(hal::Primitive::TriangleStrip))
                 .with_shaders(util::simple_shader_set(
                     &shader_vertex,

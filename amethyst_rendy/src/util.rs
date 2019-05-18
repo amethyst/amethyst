@@ -101,7 +101,7 @@ pub fn simple_shader_set_ext<'a, B: Backend>(
 }
 
 pub fn vertex_desc(
-    formats: &[(VertexFormat, pso::InstanceRate)],
+    formats: &[(VertexFormat, pso::VertexInputRate)],
 ) -> (Vec<pso::VertexBufferDesc>, Vec<pso::AttributeDesc>) {
     let mut vertex_buffers = Vec::with_capacity(formats.len());
     let mut attributes = Vec::with_capacity(formats.len());
@@ -126,7 +126,7 @@ pub fn push_vertex_desc(
     (elements, stride, rate): (
         impl IntoIterator<Item = pso::Element<format::Format>>,
         pso::ElemStride,
-        pso::InstanceRate,
+        pso::VertexInputRate,
     ),
     mut location: pso::Location,
     vertex_buffers: &mut Vec<pso::VertexBufferDesc>,
