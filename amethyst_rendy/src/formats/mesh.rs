@@ -18,12 +18,19 @@ amethyst_assets::register_format_type!(MeshData);
 amethyst_assets::register_format!("OBJ", ObjFormat as MeshData);
 impl Format<MeshData> for ObjFormat {
     fn name(&self) -> &'static str {
-        "WAVEFRONT_OBJ"
+        "OBJ"
     }
 
     fn import_simple(&self, bytes: Vec<u8>) -> Result<MeshData, Error> {
         rendy::mesh::obj::load_from_obj(&bytes)
-            .map(|builder| builder.into())
+            .map(|mut builders| {
+                let mut iter = builders.drain(..);
+                let builder = iter.next().unwrap();
+                if iter.next().is_some() {
+                    log::warn!("OBJ file contains more than one object, only loading the first");
+                }
+                builder.0.into()
+            })
             .map_err(|e| e.compat().into())
     }
 }

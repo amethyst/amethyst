@@ -6,6 +6,7 @@ use amethyst::{
     ecs::prelude::{ReadExpect, Resources, SystemData},
     prelude::*,
     renderer::{
+        pass::DrawShadedDesc,
         rendy::{
             factory::Factory,
             graph::{
@@ -17,7 +18,6 @@ use amethyst::{
         },
         types::DefaultBackend,
         GraphCreator, RenderingSystem,
-        pass::DrawShadedDesc,
     },
     utils::{application_root_dir, scene::BasicScenePrefab},
     window::{ScreenDimensions, Window, WindowBundle},
@@ -41,25 +41,34 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples/separate_sphere/resources/display.ron");
+    let display_config_path = app_root.join("examples/sphere/resources/display_config.ron");
     let resources = app_root.join("examples/assets/");
     let game_data = GameDataBuilder::default()
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::default(),
+            ExampleGraph::new(),
         ));
     let mut game = Application::new(resources, Example, game_data)?;
     game.run();
     Ok(())
 }
 
-#[derive(Default)]
 struct ExampleGraph {
     last_dimensions: Option<ScreenDimensions>,
     surface_format: Option<Format>,
     dirty: bool,
+}
+
+impl ExampleGraph {
+    pub fn new() -> Self {
+        ExampleGraph {
+            last_dimensions: None,
+            surface_format: None,
+            dirty: true,
+        }
+    }
 }
 
 impl GraphCreator<DefaultBackend> for ExampleGraph {

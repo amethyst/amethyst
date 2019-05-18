@@ -14,20 +14,38 @@ use amethyst::{
         transform::{Transform, TransformBundle},
         Float,
     },
-    ecs::prelude::{Entity, Join, Read, ReadStorage, System, Write, WriteStorage},
-    input::{get_key, is_close_requested, is_key_down, InputBundle},
+    ecs::prelude::{Entity, Resources, Join, Read, ReadStorage, ReadExpect, SystemData, System, Write, WriteStorage},
+    input::{get_key, is_close_requested, is_key_down, InputBundle, VirtualKeyCode, ElementState, StringBindings},
     prelude::*,
-    renderer::{AmbientColor, Camera, DrawShaded, ElementState, Light, PosNormTex, VirtualKeyCode},
-    ui::{UiBundle, UiCreator, UiFinder, UiText},
+    renderer::{
+        rendy::{
+            factory::Factory,
+            graph::{
+                render::{RenderGroupDesc, SubpassBuilder},
+                GraphBuilder,
+            },
+            hal::format::Format,
+            mesh::{Normal, Position, TexCoord},
+        },
+        types::DefaultBackend,
+        GraphCreator, RenderingSystem,
+        pass::DrawShadedDesc,
+        light::Light,
+        camera::Camera,
+        resources::AmbientColor,
+        palette::{Srgb, Srgba},
+    },
+    ui::{DrawUiDesc, UiBundle, UiCreator, UiFinder, UiText},
     utils::{
         application_root_dir,
         fps_counter::{FPSCounter, FPSCounterBundle},
         scene::BasicScenePrefab,
     },
+    window::{ScreenDimensions, Window, WindowBundle},
     Error,
 };
 
-type MyPrefabData = BasicScenePrefab<Vec<PosNormTex>>;
+type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>)>;
 
 #[derive(Default)]
 struct Loading {
@@ -42,7 +60,7 @@ struct Example {
 impl SimpleState for Loading {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         self.prefab = Some(data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
-            loader.load("prefab/renderable.ron", RonFormat, (), &mut self.progress)
+            loader.load("prefab/renderable.ron", RonFormat, &mut self.progress)
         }));
 
         data.world.exec(|mut creator: UiCreator<'_>| {
@@ -95,22 +113,22 @@ impl SimpleState for Example {
             match get_key(&event) {
                 Some((VirtualKeyCode::R, ElementState::Pressed)) => {
                     w.exec(|mut state: Write<'_, DemoState>| {
-                        state.light_color = [0.8, 0.2, 0.2, 1.0];
+                        state.light_color = Srgb::new(0.8, 0.2, 0.2);
                     });
                 }
                 Some((VirtualKeyCode::G, ElementState::Pressed)) => {
                     w.exec(|mut state: Write<'_, DemoState>| {
-                        state.light_color = [0.2, 0.8, 0.2, 1.0];
+                        state.light_color = Srgb::new(0.2, 0.8, 0.2);
                     });
                 }
                 Some((VirtualKeyCode::B, ElementState::Pressed)) => {
                     w.exec(|mut state: Write<'_, DemoState>| {
-                        state.light_color = [0.2, 0.2, 0.8, 1.0];
+                        state.light_color = Srgb::new(0.2, 0.2, 0.8);
                     });
                 }
                 Some((VirtualKeyCode::W, ElementState::Pressed)) => {
                     w.exec(|mut state: Write<'_, DemoState>| {
-                        state.light_color = [1.0, 1.0, 1.0, 1.0];
+                        state.light_color = Srgb::new(1.0, 1.0, 1.0);
                     });
                 }
                 Some((VirtualKeyCode::A, ElementState::Pressed)) => {
@@ -121,10 +139,10 @@ impl SimpleState for Example {
                         )| {
                             if state.ambient_light {
                                 state.ambient_light = false;
-                                color.0 = [0.0; 3].into();
+                                color.0 = Srgba::new(0.0, 0.0, 0.0, 0.0);
                             } else {
                                 state.ambient_light = true;
-                                color.0 = [0.01; 3].into();
+                                color.0 = Srgba::new(0.01, 0.01, 0.01, 1.0);
                             }
                         },
                     );
@@ -139,14 +157,14 @@ impl SimpleState for Example {
                                 state.directional_light = false;
                                 for light in (&mut lights).join() {
                                     if let Light::Directional(ref mut d) = *light {
-                                        d.color = [0.0; 4].into();
+                                        d.color = Srgb::new(0.0, 0.0, 0.0);
                                     }
                                 }
                             } else {
                                 state.directional_light = true;
                                 for light in (&mut lights).join() {
                                     if let Light::Directional(ref mut d) = *light {
-                                        d.color = [0.2; 4].into();
+                                        d.color = Srgb::new(0.2, 0.2, 0.2);
                                     }
                                 }
                             }
@@ -157,10 +175,10 @@ impl SimpleState for Example {
                     w.exec(|mut state: Write<'_, DemoState>| {
                         if state.point_light {
                             state.point_light = false;
-                            state.light_color = [0.0; 4].into();
+                            state.light_color = Srgb::new(0.0, 0.0, 0.0);
                         } else {
                             state.point_light = true;
-                            state.light_color = [1.0; 4].into();
+                            state.light_color = Srgb::new(1.0, 1.0, 1.0);
                         }
                     });
                 }
@@ -177,19 +195,25 @@ fn main() -> Result<(), Error> {
     let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let resources_directory = app_root.join("examples/assets/");
+    let resources_directory = app_root.join("examples").join("assets");
 
-    let display_config_path = app_root.join("examples/renderable/resources/display_config.ron");
+    let display_config_path = app_root.join("examples")
+        .join("renderable")
+        .join("resources")
+        .join("display_config.ron");
 
     let game_data = GameDataBuilder::default()
+        .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with::<ExampleSystem>(ExampleSystem::default(), "example_system", &[])
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
-        .with_bundle(UiBundle::<String, String>::new())?
+        .with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
         .with_bundle(HotReloadBundle::default())?
         .with_bundle(FPSCounterBundle::default())?
-        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), true)?
-        .with_bundle(InputBundle::<String, String>::new())?;
+        .with_bundle(InputBundle::<StringBindings>::new())?
+        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
+            ExampleGraph::new(),
+        ));
     let mut game = Application::build(resources_directory, Loading::default())?.build(game_data)?;
     game.run();
     Ok(())
@@ -197,7 +221,7 @@ fn main() -> Result<(), Error> {
 
 struct DemoState {
     light_angle: f32,
-    light_color: [f32; 4],
+    light_color: Srgb,
     ambient_light: bool,
     point_light: bool,
     directional_light: bool,
@@ -208,7 +232,7 @@ impl Default for DemoState {
     fn default() -> Self {
         DemoState {
             light_angle: 0.0,
-            light_color: [1.0; 4],
+            light_color: Srgb::new(1.0, 1.0, 1.0),
             ambient_light: true,
             point_light: true,
             directional_light: true,
@@ -288,5 +312,83 @@ impl<'a> System<'a> for ExampleSystem {
                 }
             }
         }
+    }
+}
+
+struct ExampleGraph {
+    last_dimensions: Option<ScreenDimensions>,
+    surface_format: Option<Format>,
+    dirty: bool,
+}
+
+impl ExampleGraph {
+    pub fn new() -> Self {
+        ExampleGraph {
+            last_dimensions: None,
+            surface_format: None,
+            dirty: true,
+        }
+    }
+}
+
+impl GraphCreator<DefaultBackend> for ExampleGraph {
+    fn rebuild(&mut self, res: &Resources) -> bool {
+        // Rebuild when dimensions change, but wait until at least two frames have the same.
+        let new_dimensions = res.try_fetch::<ScreenDimensions>();
+        use std::ops::Deref;
+        if self.last_dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
+            self.dirty = true;
+            self.last_dimensions = new_dimensions.map(|d| d.clone());
+            return false;
+        }
+        return self.dirty;
+    }
+
+    fn builder(
+        &mut self,
+        factory: &mut Factory<DefaultBackend>,
+        res: &Resources,
+    ) -> GraphBuilder<DefaultBackend, Resources> {
+        use amethyst::renderer::rendy::{
+            graph::present::PresentNode,
+            hal::command::{ClearDepthStencil, ClearValue},
+        };
+
+        self.dirty = false;
+        let window = <ReadExpect<'_, std::sync::Arc<Window>>>::fetch(res);
+        let surface = factory.create_surface(window.clone());
+        // cache surface format to speed things up
+        let surface_format = *self
+            .surface_format
+            .get_or_insert_with(|| factory.get_surface_format(&surface));
+
+        let mut graph_builder = GraphBuilder::new();
+        let color = graph_builder.create_image(
+            surface.kind(),
+            1,
+            surface_format,
+            Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
+        );
+
+        let depth = graph_builder.create_image(
+            surface.kind(),
+            1,
+            Format::D32Float,
+            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+        );
+
+        let ui = graph_builder.add_node(
+            SubpassBuilder::new()
+                .with_group(DrawShadedDesc::default().builder())
+                .with_group(DrawUiDesc::default().builder())
+                .with_color(color)
+                .with_depth_stencil(depth)
+                .into_pass(),
+        );
+
+        let _present = graph_builder
+            .add_node(PresentNode::builder(factory, surface, color).with_dependency(ui));
+
+        graph_builder
     }
 }

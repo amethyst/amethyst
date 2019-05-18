@@ -34,7 +34,6 @@ impl SimpleState for Example {
                 loader.load(
                     "locale/locale_en.ftl",
                     LocaleFormat,
-                    (),
                     &mut progress_counter,
                     &storage,
                 )
@@ -45,7 +44,6 @@ impl SimpleState for Example {
                 loader.load(
                     "locale/locale_fr.ftl",
                     LocaleFormat,
-                    (),
                     &mut progress_counter,
                     &storage,
                 )

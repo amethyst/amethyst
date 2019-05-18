@@ -9,15 +9,15 @@ pub struct WindowBundle {
 }
 
 impl WindowBundle {
-    /// Builds a new window bundle.
-    pub fn with_config(config: DisplayConfig) -> Self {
-        Self { config }
+    /// Builds a new window bundle from a loaded `DisplayConfig`.
+    pub fn from_config(config: DisplayConfig) -> Self {
+        WindowBundle { config }
     }
 
+    /// Builds a new window bundle by loading the `DisplayConfig` from `path`.
+    /// Will fall back to `DisplayConfig::default()` in case of an error.
     pub fn from_config_path(path: impl AsRef<std::path::Path>) -> Self {
-        Self {
-            config: DisplayConfig::load(path.as_ref()),
-        }
+        WindowBundle::from_config(DisplayConfig::load(path.as_ref()))
     }
 }
 
