@@ -5,8 +5,10 @@ use amethyst::{
     ecs::prelude::World,
     prelude::*,
     renderer::{
-        Camera, Flipped, PngFormat, Projection, SpriteRender, SpriteSheet, SpriteSheetFormat,
-        SpriteSheetHandle, Texture, TextureMetadata,
+        camera::{Camera, Projection},
+        formats::texture::ImageFormat,
+        sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
+        Texture,
     },
     ui::{Anchor, TtfFormat, UiText, UiTransform},
 };
@@ -37,13 +39,13 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
     // The texture is the pixel data
     // `sprite_sheet` is the layout of the sprites on the image
     // `texture_handle` is a cloneable reference to the texture
+
     let texture_handle = {
         let loader = world.read_resource::<Loader>();
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
         loader.load(
             "texture/pong_spritesheet.png",
-            PngFormat,
-            TextureMetadata::srgb_scale(),
+            ImageFormat::default(),
             (),
             &texture_storage,
         )
@@ -53,8 +55,7 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
     let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
     loader.load(
         "texture/pong_spritesheet.ron", // Here we load the associated ron file
-        SpriteSheetFormat,
-        texture_handle, // We pass it the texture we want it to use
+        SpriteSheetFormat(texture_handle), // We pass it the texture we want it to use
         (),
         &sprite_sheet_store,
     )
@@ -63,14 +64,19 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
 /// Initialise the camera.
 fn initialise_camera(world: &mut World) {
     let mut transform = Transform::default();
-    transform.set_translation_z(1.0);
+    transform.set_translation_xyz(0.0, 0.0, 1.0);
+
     world
         .create_entity()
+        // A default camera can be created with standard_2d, but we instead create a camera
+        // which is centered on our gameplay area (ARENA)
         .with(Camera::from(Projection::orthographic(
             0.0,
             ARENA_WIDTH,
             0.0,
             ARENA_HEIGHT,
+            0.1,
+            2000.0,
         )))
         .with(transform)
         .build();
@@ -84,7 +90,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
     let mut right_transform = Transform::default();
 
     // Correctly position the paddles.
-    let y = (ARENA_HEIGHT - PADDLE_HEIGHT) / 2.0;
+    let y = ARENA_HEIGHT / 2.0;
     left_transform.set_translation_xyz(PADDLE_WIDTH * 0.5, y, 0.0);
     right_transform.set_translation_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 
@@ -99,10 +105,10 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
         .create_entity()
         .with(sprite_render.clone())
         .with(Paddle {
+            velocity: PADDLE_VELOCITY,
             side: Side::Left,
             width: PADDLE_WIDTH,
             height: PADDLE_HEIGHT,
-            velocity: PADDLE_VELOCITY,
         })
         .with(left_transform)
         .build();
@@ -111,12 +117,11 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
     world
         .create_entity()
         .with(sprite_render.clone())
-        .with(Flipped::Horizontal)
         .with(Paddle {
+            velocity: PADDLE_VELOCITY,
             side: Side::Right,
             width: PADDLE_WIDTH,
             height: PADDLE_HEIGHT,
-            velocity: PADDLE_VELOCITY,
         })
         .with(right_transform)
         .build();
@@ -151,7 +156,6 @@ fn initialise_score(world: &mut World) {
     let font = world.read_resource::<Loader>().load(
         "font/square.ttf",
         TtfFormat,
-        Default::default(),
         (),
         &world.read_resource(),
     );
