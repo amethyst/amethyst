@@ -130,6 +130,7 @@ pub struct PointLight {
 #[derive(Clone, Copy, Debug, AsStd140)]
 pub struct DirectionalLight {
     pub color: vec3,
+    pub intensity: float,
     pub direction: vec3,
 }
 

@@ -195,6 +195,7 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
                     Light::Directional(ref light) => Some(
                         pod::DirectionalLight {
                             color: light.color.into_pod(),
+                            intensity: light.intensity,
                             direction: light.direction.into_pod(),
                         }
                         .std140(),
