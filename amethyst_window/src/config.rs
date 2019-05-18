@@ -1,8 +1,10 @@
+use std::path::PathBuf;
+
+use log::error;
 use serde::{Deserialize, Serialize};
 use winit::{Icon, WindowAttributes, WindowBuilder};
 
 use crate::monitor::{MonitorIdent, MonitorsAccess};
-use std::path::PathBuf;
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct DisplayConfig {
@@ -119,7 +121,16 @@ impl DisplayConfig {
         if self.loaded_icon.is_some() {
             builder = builder.with_window_icon(self.loaded_icon);
         } else if let Some(icon) = self.icon {
-            builder = builder.with_window_icon(Icon::from_path(icon).ok());
+            let icon = match Icon::from_path(&icon) {
+                Ok(x) => Some(x),
+                Err(e) => {
+                    error!("Failed to load window icon from `{}`: {}", icon.display(), e);
+
+                    None
+                }
+            };
+
+            builder = builder.with_window_icon(icon);
         }
 
         builder
