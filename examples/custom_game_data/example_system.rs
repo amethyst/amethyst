@@ -1,13 +1,17 @@
 use super::DemoState;
 use amethyst::{
+    assets::{Completion},
     core::{
         math::{UnitQuaternion, Vector3},
         Float, Time, Transform,
+        Named,
     },
     ecs::prelude::{Entity, Join, Read, ReadStorage, System, WriteExpect, WriteStorage},
-    renderer::{Camera, Light},
+    renderer::{camera::Camera, light::Light},
     ui::{UiFinder, UiText},
     utils::fps_counter::FPSCounter,
+    controls::FlyControlTag,
+    input::{Button, VirtualKeyCode, InputHandler, StringBindings},
 };
 
 #[derive(Default)]
@@ -24,15 +28,17 @@ impl<'a> System<'a> for ExampleSystem {
         WriteExpect<'a, DemoState>,
         WriteStorage<'a, UiText>,
         Read<'a, FPSCounter>,
+        Read<'a, InputHandler<StringBindings>>,
+        ReadStorage<'a, FlyControlTag>,
         UiFinder<'a>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (mut lights, time, camera, mut transforms, mut state, mut ui_text, fps_counter, finder) =
+        let (mut lights, time, camera, mut transforms, mut state, mut ui_text, fps_counter, input, tags, finder) =
             data;
         let light_angular_velocity = -1.0;
         let light_orbit_radius = 15.0;
-        let light_z = 6.0;
+        let light_y = 6.0;
 
         let camera_angular_velocity = 0.1;
 
@@ -40,12 +46,21 @@ impl<'a> System<'a> for ExampleSystem {
         state.camera_angle += camera_angular_velocity * time.delta_seconds();
 
         let delta_rot: UnitQuaternion<Float> = UnitQuaternion::from_axis_angle(
-            &Vector3::z_axis(),
+            &Vector3::y_axis(),
             (camera_angular_velocity * time.delta_seconds()).into(),
         );
         for (_, transform) in (&camera, &mut transforms).join() {
             // Append the delta rotation to the current transform.
             *transform.isometry_mut() = delta_rot * transform.isometry();
+        }
+        for (tag, transform) in (&tags, &mut transforms).join() {
+            if input.button_is_down(Button::Key(VirtualKeyCode::Up)) {
+                transform.prepend_translation_y(0.5);
+                println!("test");
+            }
+            if input.button_is_down(Button::Key(VirtualKeyCode::Down)) {
+                transform.prepend_translation_y(-0.5);
+            }
         }
 
         for (point_light, transform) in
@@ -61,11 +76,11 @@ impl<'a> System<'a> for ExampleSystem {
         {
             transform.set_translation_xyz(
                 light_orbit_radius * state.light_angle.cos(),
+                light_y,
                 light_orbit_radius * state.light_angle.sin(),
-                light_z,
             );
 
-            point_light.color = state.light_color.into();
+            point_light.color = state.light_color;
         }
 
         if let None = self.fps_display {

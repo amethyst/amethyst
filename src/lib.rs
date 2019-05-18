@@ -86,7 +86,7 @@ pub use self::{
     app::{Application, ApplicationBuilder, CoreApplication},
     callback_queue::{Callback, CallbackQueue},
     error::Error,
-    game_data::{DataInit, GameData, GameDataBuilder},
+    game_data::{DataInit, GameData, GameDataBuilder, DataDispose},
     logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
     state::{
         EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, StateMachine, Trans,
