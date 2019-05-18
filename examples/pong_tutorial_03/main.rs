@@ -33,7 +33,7 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
     let display_config_path =
-        app_root.join("examples/pong_tutorial_01/resources/display_config.ron");
+        app_root.join("examples/pong_tutorial_03/resources/display_config.ron");
 
     let game_data = GameDataBuilder::default()
         // Add the transform bundle which handles tracking entity positions
