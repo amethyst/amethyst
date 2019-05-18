@@ -135,8 +135,8 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawDebugLines<B> {
             index,
             DebugLinesArgs {
                 screen_space_thickness: [
-                    self.framebuffer_width / (line_width * 2.0),
-                    self.framebuffer_height / (line_width * 2.0),
+                    (line_width * 2.0) / self.framebuffer_width,
+                    (line_width * 2.0) / self.framebuffer_height,
                 ]
                 .into(),
             }

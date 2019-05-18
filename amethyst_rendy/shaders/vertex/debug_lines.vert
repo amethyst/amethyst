@@ -24,20 +24,27 @@ layout(location = 0) out VertexData {
 } vertex;
 
 void main() {
+    float factor = float((gl_VertexIndex & 2) >> 1);
+    vertex.color = mix(color_a, color_b, factor);
 
     mat4 proj_view = proj * view;
     vec4 projected_a = proj_view * vec4(position_a, 1.0);
     vec4 projected_b = proj_view * vec4(position_b, 1.0);
-    vec2 screen_a = projected_a.xy / projected_a.w;
-    vec2 screen_b = projected_b.xy / projected_b.w;
+    vec4 proj_current = mix(projected_a, projected_b, factor);
 
-    vec2 normal = normalize((screen_b - screen_a)) * dir_mats[gl_VertexIndex & 1];
-    float factor = float((gl_VertexIndex & 2) >> 1);
-
-    normal *= mix(projected_a.w, projected_b.w, factor) * 1.0;
-    normal.x /= screen_space_thickness.x;
-    normal.y /= screen_space_thickness.y;
-
-    vertex.color = mix(color_a, color_b, factor);
-    gl_Position = mix(projected_a, projected_b, factor) + vec4(normal, 0.0, 0.0);
+    if (proj_current.w < 0) {
+        // vertex behind camera clip plane
+        vec4 proj_next = mix(projected_b, projected_a, factor);
+        vec3 clip_space_dir =  normalize(proj_current.xyw - proj_next.xyw);
+        float coef = -proj_current.w / clip_space_dir.z;
+        vec3 intersect_pos = proj_current.xyw + (clip_space_dir * coef);
+        gl_Position = vec4(intersect_pos.x, intersect_pos.y, 0, intersect_pos.z);
+    } else {
+        vec2 screen_a = projected_a.xy / projected_a.w;
+        vec2 screen_b = projected_b.xy / projected_b.w;
+        vec2 dir = normalize(screen_b - screen_a);
+        vec2 normal = dir * dir_mats[gl_VertexIndex & 1];
+        normal *= proj_current.w * screen_space_thickness;
+        gl_Position = proj_current + vec4(normal, 0.0, 0.0);
+    }
 }

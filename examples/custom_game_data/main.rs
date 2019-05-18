@@ -10,7 +10,7 @@ use amethyst::{
     },
     core::transform::TransformBundle,
     ecs::{
-        prelude::{Component, Entity, ReadExpect, Resources, System, SystemData},
+        prelude::{Component, Entity, ReadExpect, Resources, SystemData},
         NullStorage,
     },
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
