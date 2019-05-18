@@ -1,5 +1,5 @@
 (
-  fullscreen: false,
+  fullscreen: None,
   multisampling: 0,
   title: "AutoFov Example",
   visibility: true,

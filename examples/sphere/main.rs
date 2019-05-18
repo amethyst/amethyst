@@ -6,6 +6,7 @@ use amethyst::{
     ecs::prelude::{ReadExpect, Resources, SystemData},
     prelude::*,
     renderer::{
+        pass::DrawShadedDesc,
         rendy::{
             factory::Factory,
             graph::{
@@ -17,7 +18,6 @@ use amethyst::{
         },
         types::DefaultBackend,
         GraphCreator, RenderingSystem,
-        pass::DrawShadedDesc,
     },
     utils::{application_root_dir, scene::BasicScenePrefab},
     window::{ScreenDimensions, Window, WindowBundle},
@@ -41,7 +41,7 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples/separate_sphere/resources/display.ron");
+    let display_config_path = app_root.join("examples/sphere/resources/display_config.ron");
     let resources = app_root.join("examples/assets/");
     let game_data = GameDataBuilder::default()
         .with_bundle(WindowBundle::from_config_path(display_config_path))?

@@ -47,7 +47,7 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let display_config_path = app_root.join("examples/ui/resources/display.ron");
+    let display_config_path = app_root.join("examples/window/resources/display_config.ron");
 
     let game_data = GameDataBuilder::default()
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
@@ -87,7 +87,8 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             self.last_dimensions = new_dimensions.map(|d| d.clone());
             return false;
         }
-        return self.dirty;
+
+        self.dirty
     }
 
     fn builder(

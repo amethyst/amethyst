@@ -18,7 +18,7 @@ amethyst_assets::register_format_type!(MeshData);
 amethyst_assets::register_format!("OBJ", ObjFormat as MeshData);
 impl Format<MeshData> for ObjFormat {
     fn name(&self) -> &'static str {
-        "WAVEFRONT_OBJ"
+        "OBJ"
     }
 
     fn import_simple(&self, bytes: Vec<u8>) -> Result<MeshData, Error> {
