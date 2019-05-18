@@ -254,28 +254,29 @@ where
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        let handle = match *self {
-            TexturePrefab::Data(ref data) => Some(system_data.0.load_from_data(
-                data.clone(),
-                progress,
-                &system_data.1,
-            )),
+        match *self {
+            TexturePrefab::Data(ref data) => {
+                *self = TexturePrefab::Handle(system_data.0.load_from_data(
+                    data.clone(),
+                    progress,
+                    &system_data.1,
+                ));
+                return Ok(true);
+            }
 
-            TexturePrefab::File(ref name, ref format, ref options) => Some(system_data.0.load(
-                name.as_ref(),
-                format.clone(),
-                options.clone(),
-                progress,
-                &system_data.1,
-            )),
+            TexturePrefab::File(ref name, ref format, ref options) => {
+                *self = TexturePrefab::Handle(system_data.0.load(
+                    name.clone(),
+                    format.clone(),
+                    options.clone(),
+                    progress,
+                    &system_data.1,
+                ));
+                return Ok(true);
+            }
 
-            TexturePrefab::Handle(_) => None,
-        };
-        if let Some(handle) = handle {
-            *self = TexturePrefab::Handle(handle);
-            Ok(true)
-        } else {
-            Ok(false)
+            // Already loaded
+            TexturePrefab::Handle(_) => return Ok(false),
         }
     }
 }

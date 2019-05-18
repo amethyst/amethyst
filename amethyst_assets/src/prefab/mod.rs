@@ -380,22 +380,20 @@ where
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        let handle = if let AssetPrefab::File(ref name, ref format, ref options) = *self {
-            Some(system_data.0.load(
-                name.as_ref(),
-                format.clone(),
-                options.clone(),
-                progress,
-                &system_data.2,
-            ))
-        } else {
-            None
-        };
-        if let Some(handle) = handle {
-            *self = AssetPrefab::Handle(handle);
-            Ok(true)
-        } else {
-            Ok(false)
+        match *self {
+            AssetPrefab::File(ref name, ref format, ref options) => {
+                *self = AssetPrefab::Handle(system_data.0.load(
+                    name.clone(),
+                    format.clone(),
+                    options.clone(),
+                    progress,
+                    &system_data.2,
+                ));
+                return Ok(true);
+            }
+
+            // Already loaded
+            _ => return Ok(false),
         }
     }
 }
