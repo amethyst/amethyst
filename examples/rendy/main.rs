@@ -513,15 +513,15 @@ fn main() -> amethyst::Result<()> {
 
     let event_loop = EventsLoop::new();
 
-    let mut bidnings = Bindings::new();
-    bidnings.insert_axis(
+    let mut bindings = Bindings::new();
+    bindings.insert_axis(
         "vertical",
         Axis::Emulated {
             pos: Button::Key(winit::VirtualKeyCode::S),
             neg: Button::Key(winit::VirtualKeyCode::W),
         },
     )?;
-    bidnings.insert_axis(
+    bindings.insert_axis(
         "horizontal",
         Axis::Emulated {
             pos: Button::Key(winit::VirtualKeyCode::D),
@@ -565,7 +565,7 @@ fn main() -> amethyst::Result<()> {
             )
             .with_dep(&["gltf_loader"]),
         )?
-        .with_bundle(InputBundle::<StringBindings>::new().with_bindings(bidnings))?
+        .with_bundle(InputBundle::<StringBindings>::new().with_bindings(bindings))?
         .with_bundle(
             FlyControlBundle::<StringBindings>::new(
                 Some("horizontal".into()),

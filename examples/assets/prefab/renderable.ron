@@ -9,10 +9,9 @@ Prefab (
         (
             data: (
                 graphics: (
-                    mesh: Asset(File("mesh/lid.obj", ObjFormat, ())),
+                    mesh: Asset(File("mesh/lid.obj", ("OBJ", ObjFormat))),
                     material: (
-                        albedo: Data(Rgba((1.0, 0.0, 0.0, 1.0,), (channel: Srgb,
-                            sampler: (filter: Anisotropic(8), wrap_mode: (Clamp, Clamp, Clamp)),))),
+                        albedo: Generate(Srgba(1.0, 0.0, 0.0, 1.0)),
                     ),
                 ),
                 transform: (
@@ -24,10 +23,9 @@ Prefab (
         (
             data: (
                 graphics: (
-                    mesh: Asset(File("mesh/teapot.obj", ObjFormat, ())),
+                    mesh: Asset(File("mesh/teapot.obj", ("OBJ", ObjFormat))),
                     material: (
-                        albedo: Data(Rgba((1.0, 0.0, 0.0, 1.0,), (channel: Srgb,
-                            sampler: (filter: Anisotropic(8), wrap_mode: (Clamp, Clamp, Clamp)),))),
+                        albedo: Generate(Srgba(1.0, 0.0, 0.0, 1.0)),
                     ),
                 ),
                 transform: (
@@ -39,9 +37,26 @@ Prefab (
         (
             data: (
                 graphics: (
-                    mesh: Asset(File("mesh/cube.obj", ObjFormat, ())),
+                    mesh: Asset(File("mesh/cube.obj", ("OBJ", ObjFormat))),
                     material: (
-                        albedo: File("texture/logo.png", Png, (channel: Srgb),),
+                        albedo: File("texture/logo.png", (
+                            "IMAGE", (
+                                sampler_info: (
+                                    min_filter: Linear,
+                                    mag_filter: Linear,
+                                    mip_filter: Linear,
+                                    wrap_mode: (Tile, Tile, Tile),
+                                    lod_bias: (0),
+                                    lod_range: (
+                                        start: ( 0 ),
+                                        end: ( 8000 ),
+                                    ),
+                                    comparison: None,
+                                    border: (0),
+                                    anisotropic: On(8),
+                                ),
+                            )
+                        )),
                     ),
                 ),
                 transform: (
@@ -53,9 +68,9 @@ Prefab (
         (
             data: (
                 graphics: (
-                    mesh: Asset(File("mesh/cone.obj", ObjFormat, ())),
+                    mesh: Asset(File("mesh/cone.obj", ("OBJ", ObjFormat))),
                     material: (
-                        albedo: Data(Rgba((1.0, 1.0, 1.0, 1.0,), (channel: Srgb),)),
+                        albedo: Generate(Srgba(1.0, 1.0, 1.0, 1.0)),
                     ),
                 ),
                 transform: (
@@ -68,9 +83,9 @@ Prefab (
         (
             data: (
                 graphics: (
-                    mesh: Asset(File("mesh/cube.obj", ObjFormat, ())),
+                    mesh: Asset(File("mesh/cube.obj", ("OBJ", ObjFormat))),
                     material: (
-                        albedo: Data(Rgba((1.0, 0.0, 0.0, 1.0,), (channel: Srgb),)),
+                        albedo: Generate(Srgba(1.0, 0.0, 0.0, 1.0)),
                     ),
                 ),
                 transform: (
@@ -82,9 +97,9 @@ Prefab (
         (
             data: (
                 graphics: (
-                    mesh: Asset(File("mesh/rectangle.obj", ObjFormat, ())),
+                    mesh: Asset(File("mesh/rectangle.obj", ("OBJ", ObjFormat))),
                     material: (
-                        albedo: Data(Rgba((1.0, 1.0, 1.0, 1.0,), (channel: Srgb),)),
+                        albedo: Generate(Srgba(1.0, 1.0, 1.0, 1.0)),
                     ),
                 ),
                 transform: (
@@ -109,8 +124,8 @@ Prefab (
             data: (
                 light: (
                     light: Directional((
-                        direction: (-1.0, -1.0, -1.0),
-                        color: (0.2, 0.2, 0.2, 0.2,),
+                        direction: [-1.0, -1.0, -1.0],
+                        color: Srgb(0.2, 0.2, 0.2),
                     )),
                 ),
             ),

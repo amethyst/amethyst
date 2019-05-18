@@ -48,18 +48,27 @@ fn main() -> amethyst::Result<()> {
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::default(),
+            ExampleGraph::new(),
         ));
     let mut game = Application::new(resources, Example, game_data)?;
     game.run();
     Ok(())
 }
 
-#[derive(Default)]
 struct ExampleGraph {
     last_dimensions: Option<ScreenDimensions>,
     surface_format: Option<Format>,
     dirty: bool,
+}
+
+impl ExampleGraph {
+    pub fn new() -> Self {
+        ExampleGraph {
+            last_dimensions: None,
+            surface_format: None,
+            dirty: true,
+        }
+    }
 }
 
 impl GraphCreator<DefaultBackend> for ExampleGraph {
