@@ -158,8 +158,8 @@ fn main() -> amethyst::Result<()> {
     let resources = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())?
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(TransformBundle::new())?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::new(),
         ));
