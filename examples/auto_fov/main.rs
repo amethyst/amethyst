@@ -11,37 +11,36 @@ use amethyst::{
         Application, Builder, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData,
         StateEvent, Trans,
     },
-    ui::{UiBundle, UiCreator, UiFinder, UiText},
+    ui::{UiBundle, UiCreator, UiFinder, UiText, DrawUiDesc},
     utils::{
         auto_fov::{AutoFov, AutoFovSystem},
         tag::{Tag, TagFinder},
+    },
+    renderer::{
+        camera::{Camera, CameraPrefab},
+        formats::GraphicsPrefab,
+        light::LightPrefab,
+        pass::DrawShadedDesc,
+        rendy::{
+            factory::Factory,
+            graph::{
+                present::PresentNode,
+                render::{RenderGroupDesc, SubpassBuilder},
+                GraphBuilder,
+            },
+            hal::{
+                command::{ClearDepthStencil, ClearValue},
+                format::Format,
+            },
+            mesh::{Normal, Position, Tangent, TexCoord},
+        },
+        system::{GraphCreator, RenderingSystem},
+        types::{Backend, DefaultBackend},
     },
     window::{ScreenDimensions, WindowBundle},
     winit::{VirtualKeyCode, Window},
     Error,
 };
-use amethyst_rendy::{
-    camera::{Camera, CameraPrefab},
-    formats::GraphicsPrefab,
-    light::LightPrefab,
-    pass::DrawShadedDesc,
-    rendy::{
-        factory::Factory,
-        graph::{
-            present::PresentNode,
-            render::{RenderGroupBuilder, RenderGroupDesc},
-            GraphBuilder,
-        },
-        hal::{
-            command::{ClearDepthStencil, ClearValue},
-            format::Format,
-        },
-        mesh::{Normal, Position, Tangent, TexCoord},
-    },
-    system::{GraphCreator, RenderingSystem},
-    types::{Backend, DefaultBackend},
-};
-
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -58,7 +57,7 @@ fn main() -> Result<(), Error> {
     let game_data = GameDataBuilder::new()
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with(PrefabLoaderSystem::<ScenePrefab>::default(), "prefab", &[])
-        .with(AutoFovSystem, "auto_fov", &["prefab"]) // This makes the system adjust the camera right after it has been loaded (in the same frame), preventing any flickering
+        .with(AutoFovSystem::default(), "auto_fov", &["prefab"]) // This makes the system adjust the camera right after it has been loaded (in the same frame), preventing any flickering
         .with(ShowFovSystem, "show_fov", &["auto_fov"])
         .with_bundle(TransformBundle::new())?
         .with_bundle(InputBundle::<StringBindings>::new())?
@@ -208,12 +207,20 @@ impl<'a> System<'a> for ShowFovSystem {
     }
 }
 
+/*    let tan_half_fovy = (fov / 2.0).tan();
+proj[(0, 0)] = 1.0 / (aspect * tan_half_fovy);
+proj[(1, 1)] = -1.0 / tan_half_fovy;
+proj[(2, 2)] = z_far / (z_near - z_far);
+proj[(2, 3)] = -(z_near * z_far) / (z_far - z_near);
+proj[(3, 2)] = -1.0;
+proj[(3, 3)] = 0.0;*/
+
 fn get_fovy(camera: &Camera) -> f32 {
-    (1.0 / camera.proj[(1, 1)]).atan() * 2.0
+    (-1.0 / camera.proj[(1, 1)]).atan() * 2.0
 }
 
 fn get_aspect(camera: &Camera) -> f32 {
-    camera.proj[(1, 1)] / camera.proj[(0, 0)]
+    (camera.proj[(1, 1)] / camera.proj[(0, 0)]).abs()
 }
 
 #[derive(Default)]
@@ -261,9 +268,9 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         );
 
         let pass = graph_builder.add_node(
-            DrawShadedDesc::default()
-                .builder()
-                .into_subpass()
+            SubpassBuilder::new()
+                .with_group(DrawUiDesc::new().builder())
+                .with_group(DrawShadedDesc::new().builder())
                 .with_color(color)
                 .with_depth_stencil(depth)
                 .into_pass(),
