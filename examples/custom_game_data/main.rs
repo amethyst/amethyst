@@ -8,20 +8,15 @@ use amethyst::{
     assets::{
         Completion, Handle, Prefab, PrefabLoader, PrefabLoaderSystem, ProgressCounter, RonFormat,
     },
-    core::{
-        frame_limiter::FrameRateLimitStrategy,
-        math::{Point3, Vector3},
-        transform::TransformBundle,
-        Time, Transform,
-    },
+    core::transform::TransformBundle,
     ecs::{
-        prelude::{Component, Entity, ReadExpect, Resources, System, SystemData, Write},
+        prelude::{Component, Entity, ReadExpect, Resources, System, SystemData},
         NullStorage,
     },
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
-        palette::{Srgb, Srgba},
+        palette::Srgb,
         pass::DrawShadedDesc,
         rendy::{
             factory::Factory,
@@ -33,15 +28,10 @@ use amethyst::{
             mesh::{Normal, Position, TexCoord},
         },
         types::DefaultBackend,
-        GraphCreator, Mesh, RenderingSystem,
+        GraphCreator, RenderingSystem,
     },
-    shrev::{EventChannel, ReaderId},
-    ui::{DrawUiDesc, UiBundle, UiCreator, UiEvent, UiFinder, UiLoader, UiPrefab, UiText},
-    utils::{
-        application_root_dir,
-        fps_counter::{FPSCounter, FPSCounterBundle},
-        scene::BasicScenePrefab,
-    },
+    ui::{DrawUiDesc, UiBundle, UiCreator, UiLoader, UiPrefab},
+    utils::{application_root_dir, fps_counter::FPSCounterBundle, scene::BasicScenePrefab},
     window::{ScreenDimensions, Window, WindowBundle},
     winit::VirtualKeyCode,
     Error,

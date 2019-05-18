@@ -15,11 +15,45 @@ pub enum Projection {
     /// An [orthographic projection][op].
     ///
     /// [op]: https://en.wikipedia.org/wiki/Orthographic_projection
+    #[serde(with = "serde_ortho")]
     Orthographic(Orthographic3<f32>),
     /// A realistic [perspective projection][pp].
     ///
     /// [pp]: https://en.wikipedia.org/wiki/Perspective_(graphical)
+    #[serde(with = "serde_persp")]
     Perspective(Perspective3<f32>),
+}
+
+fn perspective_matrix(aspect: f32, fov: f32, z_near: f32, z_far: f32) -> Perspective3<f32> {
+    // Important: nalgebra's methods on Perspective3 are not safe for use with RH matrices
+    let mut proj = Matrix4::<f32>::identity();
+    let tan_half_fovy = (fov / 2.0).tan();
+    proj[(0, 0)] = 1.0 / (aspect * tan_half_fovy);
+    proj[(1, 1)] = -1.0 / tan_half_fovy;
+    proj[(2, 2)] = z_far / (z_near - z_far);
+    proj[(2, 3)] = -(z_near * z_far) / (z_far - z_near);
+    proj[(3, 2)] = -1.0;
+    proj[(3, 3)] = 0.0;
+    Perspective3::from_matrix_unchecked(proj)
+}
+
+fn orthographic_matrix(
+    left: f32,
+    right: f32,
+    bottom: f32,
+    top: f32,
+    z_near: f32,
+    z_far: f32,
+) -> Orthographic3<f32> {
+    // Important: nalgebra's methods on Orthographic3 are not safe for use with RH matrices
+    let mut proj = Matrix4::<f32>::identity();
+    proj[(0, 0)] = 2.0 / (right - left);
+    proj[(1, 1)] = 2.0 / (top - bottom);
+    proj[(2, 2)] = -1.0 / (z_far - z_near);
+    proj[(0, 3)] = -(right + left) / (right - left);
+    proj[(1, 3)] = -(top + bottom) / (top - bottom);
+    proj[(2, 3)] = -z_near / (z_far - z_near);
+    Orthographic3::from_matrix_unchecked(proj)
 }
 
 impl Projection {
@@ -34,40 +68,14 @@ impl Projection {
         z_near: f32,
         z_far: f32,
     ) -> Projection {
-        let mut proj = Matrix4::<f32>::identity();
-
-        proj[(0, 0)] = 2.0 / (right - left);
-        proj[(1, 1)] = 2.0 / (top - bottom);
-        proj[(2, 2)] = -1.0 / (z_far - z_near);
-        proj[(0, 3)] = -(right + left) / (right - left);
-        proj[(1, 3)] = -(top + bottom) / (top - bottom);
-        proj[(2, 3)] = -z_near / (z_far - z_near);
-
-        // Important: nalgebra's methods on Orthographic3 are not safe for use with RH matrices
-        Projection::Orthographic(Orthographic3::from_matrix_unchecked(proj))
+        Projection::Orthographic(orthographic_matrix(left, right, bottom, top, z_near, z_far))
     }
 
     /// Creates a perspective projection with the given aspect ratio and
     /// field-of-view. `fov` is specified in radians.
     /// The projection matrix is right-handed and has a depth range of 0 to 1
     pub fn perspective(aspect: f32, fov: f32, z_near: f32, z_far: f32) -> Projection {
-        let mut proj = Matrix4::<f32>::identity();
-
-        let tan_half_fovy = (fov / 2.0).tan();
-
-        proj[(0, 0)] = 1.0 / (aspect * tan_half_fovy);
-
-        // TODO: Check if we can change this to 1.0 / tan_half_fovy
-        // as other vulkan render examples use this form of a matrix
-        proj[(1, 1)] = -1.0 / tan_half_fovy;
-        proj[(2, 2)] = z_far / (z_near - z_far);
-
-        proj[(2, 3)] = -(z_near * z_far) / (z_far - z_near);
-        proj[(3, 2)] = -1.0;
-        proj[(3, 3)] = 0.0;
-
-        // Important: nalgebra's methods on Perspective3 are not safe for use with RH matrices
-        Projection::Perspective(Perspective3::from_matrix_unchecked(proj))
+        Projection::Perspective(perspective_matrix(aspect, fov, z_near, z_far))
     }
 }
 
@@ -218,17 +226,10 @@ mod serde_ortho {
     where
         D: Deserializer<'de>,
     {
-        let values = Orthographic::deserialize(deserializer)?;
-        let mut proj = Matrix4::<f32>::identity();
-
-        proj[(0, 0)] = 2.0 / (values.right - values.left);
-        proj[(1, 1)] = 2.0 / (values.bottom - values.top);
-        proj[(2, 2)] = -1.0 / (values.zfar - values.znear);
-        proj[(0, 3)] = -(values.right + values.left) / (values.right - values.left);
-        proj[(1, 3)] = -(values.bottom + values.top) / (values.bottom - values.top);
-        proj[(2, 3)] = -values.znear / (values.zfar - values.znear);
-
-        Ok(Orthographic3::from_matrix_unchecked(proj))
+        let v = Orthographic::deserialize(deserializer)?;
+        Ok(orthographic_matrix(
+            v.left, v.right, v.bottom, v.top, v.znear, v.zfar,
+        ))
     }
 
     pub fn serialize<S>(proj: &Orthographic3<f32>, serializer: S) -> Result<S::Ok, S::Error>
@@ -250,14 +251,12 @@ mod serde_ortho {
 }
 
 mod serde_persp {
+    use super::*;
+    use amethyst_core::math::Perspective3;
     use serde::{
         de::{Deserialize, Deserializer},
         ser::{Serialize, Serializer},
     };
-
-    use super::*;
-
-    use amethyst_core::math::Perspective3;
 
     #[derive(serde::Deserialize, serde::Serialize)]
     struct Perspective {
@@ -271,21 +270,8 @@ mod serde_persp {
     where
         D: Deserializer<'de>,
     {
-        let values = Perspective::deserialize(deserializer)?;
-
-        let mut proj = Matrix4::<f32>::identity();
-
-        let tan_half_fovy = (values.fovy / 2.0).tan();
-
-        proj[(0, 0)] = 1.0 / (values.aspect * tan_half_fovy);
-        proj[(1, 1)] = -1.0 / tan_half_fovy;
-        proj[(2, 2)] = values.zfar / (values.znear - values.zfar);
-
-        proj[(2, 3)] = -(values.znear * values.zfar) / (values.zfar - values.znear);
-        proj[(3, 2)] = -1.0;
-        proj[(3, 3)] = 0.0;
-
-        Ok(Perspective3::from_matrix_unchecked(proj))
+        let v = Perspective::deserialize(deserializer)?;
+        Ok(perspective_matrix(v.aspect, v.fovy, v.znear, v.zfar))
     }
 
     pub fn serialize<S>(proj: &Perspective3<f32>, serializer: S) -> Result<S::Ok, S::Error>
@@ -301,5 +287,25 @@ mod serde_persp {
             },
             serializer,
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ron::{de::from_str, ser::to_string_pretty};
+
+    #[test]
+    fn test_orthographic_serde() {
+        let test_ortho = Projection::orthographic(0.0, 100.0, 10.0, 150.0, -5.0, 100.0);
+        let de = from_str(&to_string_pretty(&test_ortho, Default::default()).unwrap()).unwrap();
+        assert_eq!(test_ortho, de);
+    }
+
+    #[test]
+    fn test_perspective_serde() {
+        let test_persp = Projection::perspective(1.7, std::f32::consts::FRAC_PI_3, 0.1, 1000.0);
+        let de = from_str(&to_string_pretty(&test_persp, Default::default()).unwrap()).unwrap();
+        assert_eq!(test_persp, de);
     }
 }

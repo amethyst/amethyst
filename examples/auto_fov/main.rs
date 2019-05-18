@@ -16,8 +16,8 @@ use amethyst::{
         auto_fov::{AutoFov, AutoFovSystem},
         tag::{Tag, TagFinder},
     },
-    window::{EventsLoopSystem, ScreenDimensions, WindowBundle},
-    winit::{EventsLoop, VirtualKeyCode, Window},
+    window::{ScreenDimensions, WindowBundle},
+    winit::{VirtualKeyCode, Window},
     Error,
 };
 use amethyst_rendy::{
@@ -52,7 +52,7 @@ fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
     let app_dir = amethyst::utils::application_dir("examples")?;
-    let display_config = app_dir.join("auto_fov/resources/display.ron");
+    let display_config_path = app_dir.join("auto_fov/resources/display.ron");
     let assets = app_dir.join("assets");
 
     let game_data = GameDataBuilder::new()
@@ -63,7 +63,6 @@ fn main() -> Result<(), Error> {
         .with_bundle(TransformBundle::new())?
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
-        .with_thread_local(window_system)
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
@@ -217,18 +216,10 @@ fn get_aspect(camera: &Camera) -> f32 {
     camera.proj[(1, 1)] / camera.proj[(0, 0)]
 }
 
+#[derive(Default)]
 struct ExampleGraph {
     last_dimensions: Option<ScreenDimensions>,
     dirty: bool,
-}
-
-impl ExampleGraph {
-    pub fn new() -> Self {
-        Self {
-            last_dimensions: None,
-            dirty: true,
-        }
-    }
 }
 
 impl<B: Backend> GraphCreator<B> for ExampleGraph {
