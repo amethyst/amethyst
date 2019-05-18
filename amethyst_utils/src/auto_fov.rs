@@ -1,10 +1,9 @@
 //! Utility to adjust the aspect ratio of cameras automatically
 
 use amethyst_assets::PrefabData;
-use amethyst_core::{
-    ecs::{
-        Component, Entity, HashMapStorage, Join, ReadExpect, ReadStorage, System, WriteStorage, Resources, SystemData,
-    },
+use amethyst_core::ecs::{
+    Component, Entity, HashMapStorage, Join, ReadExpect, ReadStorage, Resources, System,
+    SystemData, WriteStorage,
 };
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
@@ -257,7 +256,7 @@ impl<'a> System<'a> for AutoFovSystem {
 impl Default for AutoFovSystem {
     fn default() -> Self {
         Self {
-            last_dimensions: ScreenDimensions::new(0, 0, 0.0)
+            last_dimensions: ScreenDimensions::new(0, 0, 0.0),
         }
     }
 }
@@ -266,7 +265,6 @@ impl Default for AutoFovSystem {
 fn get_fovy(camera: &Camera) -> f32 {
     (-1.0 / camera.proj[(1, 1)]).atan() * 2.0
 }
-
 
 #[inline]
 fn set_aspect(camera: &mut Camera, new_aspect: f32) {

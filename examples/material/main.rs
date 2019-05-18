@@ -1,13 +1,15 @@
 //! Displays spheres with physically based materials.
-use std::sync::Arc;
 use amethyst::{
     assets::AssetLoaderSystemData,
     core::{
-        ecs::{ReadExpect, SystemData, Resources, Builder, },
-        Transform, TransformBundle
+        ecs::{Builder, ReadExpect, Resources, SystemData},
+        Transform, TransformBundle,
     },
     renderer::{
         camera::Camera,
+        light::{Light, PointLight},
+        mtl::{Material, MaterialDefaults},
+        palette::{LinSrgba, Srgb},
         pass::DrawPbrDesc,
         rendy::{
             factory::Factory,
@@ -19,18 +21,15 @@ use amethyst::{
             mesh::{Normal, Position, Tangent, TexCoord},
             texture::palette::load_from_linear_rgba,
         },
-        Mesh,
-        mtl::{Material, MaterialDefaults},
         shape::Shape,
-        light::{Light, PointLight},
         types::{DefaultBackend, Texture},
-        GraphCreator, RenderingSystem,
-        palette::{LinSrgba, Srgb},
+        GraphCreator, Mesh, RenderingSystem,
     },
     utils::application_root_dir,
     window::{ScreenDimensions, Window, WindowBundle},
-    StateData, GameData, GameDataBuilder, Application, SimpleState,
+    Application, GameData, GameDataBuilder, SimpleState, StateData,
 };
+use std::sync::Arc;
 
 struct Example;
 
@@ -161,13 +160,14 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
-        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(ExampleGraph::new()));
+        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
+            ExampleGraph::new(),
+        ));
 
     let mut game = Application::new(&resources, Example, game_data)?;
     game.run();
     Ok(())
 }
-
 
 struct ExampleGraph {
     last_dimensions: Option<ScreenDimensions>,

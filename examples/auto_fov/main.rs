@@ -11,11 +11,6 @@ use amethyst::{
         Application, Builder, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData,
         StateEvent, Trans,
     },
-    ui::{UiBundle, UiCreator, UiFinder, UiText, DrawUiDesc},
-    utils::{
-        auto_fov::{AutoFov, AutoFovSystem},
-        tag::{Tag, TagFinder},
-    },
     renderer::{
         camera::{Camera, CameraPrefab},
         formats::GraphicsPrefab,
@@ -36,6 +31,11 @@ use amethyst::{
         },
         system::{GraphCreator, RenderingSystem},
         types::{Backend, DefaultBackend},
+    },
+    ui::{DrawUiDesc, UiBundle, UiCreator, UiFinder, UiText},
+    utils::{
+        auto_fov::{AutoFov, AutoFovSystem},
+        tag::{Tag, TagFinder},
     },
     window::{ScreenDimensions, WindowBundle},
     winit::{VirtualKeyCode, Window},
