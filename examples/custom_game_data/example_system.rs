@@ -10,8 +10,6 @@ use amethyst::{
     renderer::{camera::Camera, light::Light},
     ui::{UiFinder, UiText},
     utils::fps_counter::FPSCounter,
-    controls::FlyControlTag,
-    input::{Button, VirtualKeyCode, InputHandler, StringBindings},
 };
 
 #[derive(Default)]
@@ -28,13 +26,11 @@ impl<'a> System<'a> for ExampleSystem {
         WriteExpect<'a, DemoState>,
         WriteStorage<'a, UiText>,
         Read<'a, FPSCounter>,
-        Read<'a, InputHandler<StringBindings>>,
-        ReadStorage<'a, FlyControlTag>,
         UiFinder<'a>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (mut lights, time, camera, mut transforms, mut state, mut ui_text, fps_counter, input, tags, finder) =
+        let (mut lights, time, camera, mut transforms, mut state, mut ui_text, fps_counter, finder) =
             data;
         let light_angular_velocity = -1.0;
         let light_orbit_radius = 15.0;
@@ -52,15 +48,6 @@ impl<'a> System<'a> for ExampleSystem {
         for (_, transform) in (&camera, &mut transforms).join() {
             // Append the delta rotation to the current transform.
             *transform.isometry_mut() = delta_rot * transform.isometry();
-        }
-        for (tag, transform) in (&tags, &mut transforms).join() {
-            if input.button_is_down(Button::Key(VirtualKeyCode::Up)) {
-                transform.prepend_translation_y(0.5);
-                println!("test");
-            }
-            if input.button_is_down(Button::Key(VirtualKeyCode::Down)) {
-                transform.prepend_translation_y(-0.5);
-            }
         }
 
         for (point_light, transform) in
