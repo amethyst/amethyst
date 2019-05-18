@@ -71,8 +71,8 @@ While the engine can be hard to use at times, we made a lot of [documentation][b
 
 If you don't understand a part of the documentation, please let us know. Join us on Discord or open an issue; we are always happy to help!
 
-[bkr]: https://www.amethyst.rs/book/latest/
-[bkm]: https://www.amethyst.rs/book/master/
+[bkr]: https://book.amethyst.rs/stable/
+[bkm]: https://book.amethyst.rs/master/
 [exr]: https://github.com/amethyst/amethyst/tree/v0.10.0/examples
 [exm]: https://github.com/amethyst/amethyst/tree/master/examples
 
