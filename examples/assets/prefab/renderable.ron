@@ -9,35 +9,35 @@ Prefab (
         (
             data: (
                 graphics: (
-                    mesh: Asset(File("mesh/lid.obj", ("OBJ", ObjFormat))),
+                    mesh: Asset(File("mesh/lid.obj", ("OBJ", ()))),
                     material: (
                         albedo: Generate(Srgba(1.0, 0.0, 0.0, 1.0)),
                     ),
                 ),
                 transform: (
-                    translation: (5.0, 5.0, 0.0),
-                    rotation: (0.5, -0.5, -0.5, 0.5),
+                    translation: (5.0, 1.0, 5.0),
+                    // rotation: (0.5, -0.5, -0.5, 0.5),
                 ),
             ),
         ),
         (
             data: (
                 graphics: (
-                    mesh: Asset(File("mesh/teapot.obj", ("OBJ", ObjFormat))),
+                    mesh: Asset(File("mesh/teapot.obj", ("OBJ", ()))),
                     material: (
                         albedo: Generate(Srgba(1.0, 0.0, 0.0, 1.0)),
                     ),
                 ),
                 transform: (
-                    translation: (5.0, 5.0, 0.0),
-                    rotation: (0.5, -0.5, -0.5, 0.5),
+                    translation: (5.0, 1.0, 5.0),
+                    // rotation: (0.5, -0.5, -0.5, 0.5),
                 ),
             ),
         ),
         (
             data: (
                 graphics: (
-                    mesh: Asset(File("mesh/cube.obj", ("OBJ", ObjFormat))),
+                    mesh: Asset(File("mesh/cube.obj", ("OBJ", ()))),
                     material: (
                         albedo: File("texture/logo.png", (
                             "IMAGE", (
@@ -60,7 +60,7 @@ Prefab (
                     ),
                 ),
                 transform: (
-                    translation: (5.0, -5.0, 2.0),
+                    translation: (5.0, 3.0, -5.0),
                     scale: (2.0, 2.0, 2.0),
                 ),
             ),
@@ -68,28 +68,29 @@ Prefab (
         (
             data: (
                 graphics: (
-                    mesh: Asset(File("mesh/cone.obj", ("OBJ", ObjFormat))),
+                    mesh: Asset(File("mesh/cone.obj", ("OBJ", ()))),
                     material: (
                         albedo: Generate(Srgba(1.0, 1.0, 1.0, 1.0)),
                     ),
                 ),
                 transform: (
-                    translation: (-5.0, 5.0, 0.0),
+                    translation: (-5.0, 0.0, -5.0),
                     scale: (2.0, 2.0, 2.0),
-                    rotation: (0, 0, 1, 0),
+                    rotation: (-0.707, 0, 0, 0.707),
                 ),
+                control_tag: ()
             ),
         ),
         (
             data: (
                 graphics: (
-                    mesh: Asset(File("mesh/cube.obj", ("OBJ", ObjFormat))),
+                    mesh: Asset(File("mesh/cube.obj", ("OBJ", ()))),
                     material: (
                         albedo: Generate(Srgba(1.0, 0.0, 0.0, 1.0)),
                     ),
                 ),
                 transform: (
-                    translation: (-5.0, -5.0, 1.0),
+                    translation: (-5.0, 3.0, 5.0),
                     scale: (2.0, 2.0, 2.0),
                 ),
             ),
@@ -97,21 +98,22 @@ Prefab (
         (
             data: (
                 graphics: (
-                    mesh: Asset(File("mesh/rectangle.obj", ("OBJ", ObjFormat))),
+                    mesh: Asset(File("mesh/rectangle.obj", ("OBJ", ()))),
                     material: (
                         albedo: Generate(Srgba(1.0, 1.0, 1.0, 1.0)),
                     ),
                 ),
                 transform: (
                     scale: (10.0, 10.0, 10.0),
-                    rotation: (0, 0, 1, 0),
+                    rotation: (0, 0.5, 0.5, 0),
+                    translation: (0.0, 1.0, 0.0),
                 ),
             ),
         ),
         (
             data: (
                 transform: (
-                    translation: (1.0, 1.0, 0.0),
+                    translation: (1.0, 2.0, 0.0),
                 ),
                 light: (
                     light: Point((
@@ -125,6 +127,7 @@ Prefab (
                 light: (
                     light: Directional((
                         direction: [-1.0, -1.0, -1.0],
+                        intensity: 0.2,
                         color: Srgb(0.2, 0.2, 0.2),
                     )),
                 ),
@@ -133,8 +136,11 @@ Prefab (
         (
             data: (
                 transform: Transform (
-                    translation: (0.0, -20.0, 10.0),
-                    rotation: (0.6087614, 0.0, 0.0, 0.7933533),
+                    translation: (0.0, 10.0, 20.0),
+                    // translation: (0.0, 0.0, 20.0),
+                    // rotation: (0.6087614, 0.0, 0.0, 0.7933533),
+                    rotation: (-0.4, 0.0, 0.0, 0.862),
+                    
                 ),
                 camera: Perspective((
                     aspect: 1.3,
