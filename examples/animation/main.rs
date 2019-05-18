@@ -11,8 +11,8 @@ use amethyst::{
     input::{get_key, is_close_requested, is_key_down},
     prelude::*,
     utils::{application_root_dir, scene::BasicScenePrefab},
-    window::{EventsLoopSystem, ScreenDimensions, WindowSystem},
-    winit::{ElementState, EventsLoop, VirtualKeyCode, Window},
+    window::{ScreenDimensions, WindowBundle},
+    winit::{ElementState, VirtualKeyCode, Window},
 };
 use amethyst_rendy::{
     pass::DrawPbrDesc,

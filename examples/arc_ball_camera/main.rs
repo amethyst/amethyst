@@ -14,9 +14,7 @@ use amethyst::{
     input::{InputBundle, InputEvent, ScrollDirection, StringBindings},
     prelude::*,
     renderer::{
-        camera::{Camera, Projection},
-        formats::texture::ImageFormat,
-        palette::{LinSrgba, Srgb, Srgba},
+        palette::Srgb,
         pass::{DrawShadedDesc, DrawSkyboxDesc},
         rendy::{
             factory::Factory,
@@ -25,17 +23,15 @@ use amethyst::{
                 GraphBuilder,
             },
             hal::format::Format,
-            mesh::{Normal, Position, Tangent, TexCoord},
+            mesh::{Normal, Position, TexCoord},
         },
-        transparent::Transparent,
         types::DefaultBackend,
-        GraphCreator, RenderingSystem, Texture,
+        GraphCreator, RenderingSystem,
     },
     utils::{application_root_dir, scene::BasicScenePrefab},
     window::{ScreenDimensions, Window, WindowBundle},
     Error,
 };
-use std::{hash::Hash, sync::Arc};
 
 type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>), f32>;
 
@@ -50,28 +46,19 @@ impl SimpleState for ExampleState {
     }
 }
 
-struct CameraDistanceSystem<AC>
-where
-    AC: Hash + Eq + 'static,
-{
-    event_reader: Option<ReaderId<InputEvent<AC>>>,
+struct CameraDistanceSystem {
+    event_reader: Option<ReaderId<InputEvent<String>>>,
 }
 
-impl<AC> CameraDistanceSystem<AC>
-where
-    AC: Hash + Eq + 'static,
-{
+impl CameraDistanceSystem {
     pub fn new() -> Self {
         CameraDistanceSystem { event_reader: None }
     }
 }
 
-impl<'a, AC> System<'a> for CameraDistanceSystem<AC>
-where
-    AC: Hash + Eq + Clone + Send + Sync + 'static,
-{
+impl<'a> System<'a> for CameraDistanceSystem {
     type SystemData = (
-        Read<'a, EventChannel<InputEvent<AC>>>,
+        Read<'a, EventChannel<InputEvent<String>>>,
         ReadStorage<'a, Transform>,
         WriteStorage<'a, ArcBallControlTag>,
     );
@@ -101,7 +88,7 @@ where
         Self::SystemData::setup(res);
 
         self.event_reader = Some(
-            res.fetch_mut::<EventChannel<InputEvent<AC>>>()
+            res.fetch_mut::<EventChannel<InputEvent<String>>>()
                 .register_reader(),
         );
     }
@@ -127,7 +114,7 @@ fn main() -> Result<(), Error> {
         )?
         .with_bundle(ArcBallControlBundle::<StringBindings>::new())?
         .with(
-            CameraDistanceSystem::<String>::new(),
+            CameraDistanceSystem::new(),
             "camera_distance_system",
             &["input_system"],
         )
@@ -171,7 +158,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         self.dirty = false;
 
-        let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
+        let window = <ReadExpect<'_, std::sync::Arc<Window>>>::fetch(res);
         let surface = factory.create_surface(window.clone());
         // cache surface format to speed things up
         let surface_format = *self
