@@ -8,8 +8,8 @@ use rendy::{
         pso::{
             AttributeDesc, BakedStates, BasePipeline, BlendDesc, ColorBlendDesc, DepthStencilDesc,
             DepthTest, Face, GraphicsPipelineDesc, GraphicsShaderSet, InputAssemblerDesc,
-            VertexInputRate, Multisampling, PipelineCreationFlags, Rasterizer, Rect, VertexBufferDesc,
-            Viewport,
+            Multisampling, PipelineCreationFlags, Rasterizer, Rect, VertexBufferDesc,
+            VertexInputRate, Viewport,
         },
         Primitive,
     },

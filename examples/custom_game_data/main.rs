@@ -5,15 +5,24 @@ use crate::{
     game_data::{CustomGameData, CustomGameDataBuilder},
 };
 use amethyst::{
-    assets::{Completion, ProgressCounter, Prefab, PrefabLoader, PrefabLoaderSystem, Handle, RonFormat},
-    core::{frame_limiter::FrameRateLimitStrategy, Transform, transform::TransformBundle, Time, math::Vector3, math::Point3,},
-    ecs::prelude::{Component, Entity, ReadExpect, Resources, System, SystemData, Write},
-    ecs::NullStorage,
+    assets::{
+        Completion, Handle, Prefab, PrefabLoader, PrefabLoaderSystem, ProgressCounter, RonFormat,
+    },
+    core::{
+        frame_limiter::FrameRateLimitStrategy,
+        math::{Point3, Vector3},
+        transform::TransformBundle,
+        Time, Transform,
+    },
+    ecs::{
+        prelude::{Component, Entity, ReadExpect, Resources, System, SystemData, Write},
+        NullStorage,
+    },
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
-        Mesh,
         palette::{Srgb, Srgba},
+        pass::DrawShadedDesc,
         rendy::{
             factory::Factory,
             graph::{
@@ -23,12 +32,11 @@ use amethyst::{
             hal::format::Format,
             mesh::{Normal, Position, TexCoord},
         },
-        pass::DrawShadedDesc,
         types::DefaultBackend,
-        GraphCreator, RenderingSystem,
+        GraphCreator, Mesh, RenderingSystem,
     },
     shrev::{EventChannel, ReaderId},
-    ui::{DrawUiDesc, UiBundle, UiCreator, UiEvent, UiFinder, UiText, UiLoader, UiPrefab},
+    ui::{DrawUiDesc, UiBundle, UiCreator, UiEvent, UiFinder, UiLoader, UiPrefab, UiText},
     utils::{
         application_root_dir,
         fps_counter::{FPSCounter, FPSCounterBundle},
@@ -77,7 +85,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Loading {
         self.scene = Some(data.world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/renderable.ron", RonFormat, &mut self.progress)
         }));
-       
+
         self.load_ui = Some(data.world.exec(|mut creator: UiCreator<'_>| {
             creator.create("ui/fps.ron", &mut self.progress);
             creator.create("ui/loading.ron", &mut self.progress)
@@ -238,8 +246,6 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-
-
 #[derive(Default)]
 struct ExampleGraph {
     last_dimensions: Option<ScreenDimensions>,
@@ -294,7 +300,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         );
         let opaque = graph_builder.add_node(
             SubpassBuilder::new()
-                .with_group(DrawShadedDesc::default().builder())
+                .with_group(DrawShadedDesc::new().builder())
                 .with_color(color)
                 .with_depth_stencil(depth)
                 .into_pass(),
@@ -302,7 +308,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         let ui = graph_builder.add_node(
             SubpassBuilder::new()
-                .with_group(DrawUiDesc::default().builder().with_dependency(opaque))
+                .with_group(DrawUiDesc::new().builder().with_dependency(opaque))
                 .with_color(color)
                 .with_depth_stencil(depth)
                 .into_pass(),

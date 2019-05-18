@@ -9,7 +9,7 @@ mod sprite_sheet_loader;
 use amethyst::{
     assets::{AssetStorage, Loader, Processor},
     core::{Hidden, Transform, TransformBundle},
-    ecs::{Entity, Join, ReadExpect, Resources, System, SystemData},
+    ecs::{Entity, ReadExpect, Resources, SystemData},
     input::{get_key, is_close_requested, is_key_down, ElementState},
     prelude::*,
     renderer::{
@@ -378,6 +378,7 @@ fn main() -> amethyst::Result<()> {
     let assets_directory = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
+        .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with_bundle(TransformBundle::new())?
         .with(
             Processor::<SpriteSheet>::new(),
@@ -389,7 +390,6 @@ fn main() -> amethyst::Result<()> {
             "sprite_visibility_system",
             &["transform_system"],
         )
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::new(),
         ));
@@ -465,14 +465,14 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         let sprite = graph_builder.add_node(
             SubpassBuilder::new()
-                .with_group(DrawFlat2DDesc::default().builder())
+                .with_group(DrawFlat2DDesc::new().builder())
                 .with_color(color)
                 .with_depth_stencil(depth)
                 .into_pass(),
         );
         let sprite_trans = graph_builder.add_node(
             SubpassBuilder::new()
-                .with_group(DrawFlat2DTransparentDesc::default().builder())
+                .with_group(DrawFlat2DTransparentDesc::new().builder())
                 .with_color(color)
                 .with_depth_stencil(depth)
                 .into_pass(),

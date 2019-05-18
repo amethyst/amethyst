@@ -16,7 +16,7 @@ use amethyst::{
         auto_fov::{AutoFov, AutoFovSystem},
         tag::{Tag, TagFinder},
     },
-    window::{EventsLoopSystem, ScreenDimensions, WindowSystem},
+    window::{EventsLoopSystem, ScreenDimensions, WindowBundle},
     winit::{EventsLoop, VirtualKeyCode, Window},
     Error,
 };
@@ -55,20 +55,17 @@ fn main() -> Result<(), Error> {
     let display_config = app_dir.join("auto_fov/resources/display.ron");
     let assets = app_dir.join("assets");
 
-    let event_loop = EventsLoop::new();
-    let window_system = WindowSystem::from_config_path(&event_loop, display_config);
-
     let game_data = GameDataBuilder::new()
+        .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with(PrefabLoaderSystem::<ScenePrefab>::default(), "prefab", &[])
         .with(AutoFovSystem, "auto_fov", &["prefab"]) // This makes the system adjust the camera right after it has been loaded (in the same frame), preventing any flickering
         .with(ShowFovSystem, "show_fov", &["auto_fov"])
         .with_bundle(TransformBundle::new())?
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
-        .with_thread_local(EventsLoopSystem::new(event_loop))
         .with_thread_local(window_system)
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::new(),
+            ExampleGraph::default(),
         ));
 
     let mut game = Application::build(assets, Loading::new())?.build(game_data)?;

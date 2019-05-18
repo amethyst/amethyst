@@ -35,8 +35,7 @@ use amethyst::{
     window::{ScreenDimensions, Window, WindowBundle},
     Error,
 };
-use std::hash::Hash;
-use std::sync::Arc;
+use std::{hash::Hash, sync::Arc};
 
 type MyPrefabData = BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<TexCoord>), f32>;
 
@@ -120,6 +119,7 @@ fn main() -> Result<(), Error> {
     let key_bindings_path = app_root.join("examples/arc_ball_camera/resources/input.ron");
 
     let game_data = GameDataBuilder::default()
+        .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new().with_dep(&[]))?
         .with_bundle(
@@ -131,29 +131,19 @@ fn main() -> Result<(), Error> {
             "camera_distance_system",
             &["input_system"],
         )
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::new(),
+            ExampleGraph::default(),
         ));
     let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
     game.run();
     Ok(())
 }
 
+#[derive(Default)]
 struct ExampleGraph {
     last_dimensions: Option<ScreenDimensions>,
     surface_format: Option<Format>,
     dirty: bool,
-}
-
-impl ExampleGraph {
-    pub fn new() -> Self {
-        Self {
-            last_dimensions: None,
-            surface_format: None,
-            dirty: true,
-        }
-    }
 }
 
 impl GraphCreator<DefaultBackend> for ExampleGraph {
@@ -205,7 +195,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         let opaque = graph_builder.add_node(
             SubpassBuilder::new()
-                .with_group(DrawShadedDesc::default().builder())
+                .with_group(DrawShadedDesc::new().builder())
                 .with_group(
                     DrawSkyboxDesc::with_colors(
                         Srgb::new(0.82, 0.51, 0.50),

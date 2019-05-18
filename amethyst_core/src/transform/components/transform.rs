@@ -766,22 +766,22 @@ mod tests {
         // For the condition to hold both scales must be uniform
         let mut first = Transform::default();
         first.set_translation_xyz(20., 10., -3.);
-        first.set_scale(Vector3::new(2.0.into(), 2.0.into(), 2.0.into()));
+        first.set_scale(Vector3::new(2.0, 2.0, 2.0));
         first.set_rotation(
             UnitQuaternion::rotation_between(
-                &Vector3::new((-1.0).into(), 1.0.into(), 2.0.into()),
-                &Vector3::new(1.0.into(), 0.0.into(), 0.0.into()),
+                &Vector3::new(-1.0, 1.0, 2.0),
+                &Vector3::new(1.0, 0.0, 0.0),
             )
             .unwrap(),
         );
 
         let mut second = Transform::default();
         second.set_translation_xyz(2., 1., -3.);
-        second.set_scale(Vector3::new(1.0.into(), 1.0.into(), 1.0.into()));
+        second.set_scale(Vector3::new(1.0, 1.0, 1.0));
         second.set_rotation(
             UnitQuaternion::rotation_between(
-                &Vector3::new(7.0.into(), (-1.0).into(), 3.0.into()),
-                &Vector3::new(2.0.into(), 1.0.into(), 1.0.into()),
+                &Vector3::new(7.0, -1.0, 3.0),
+                &Vector3::new(2.0, 1.0, 1.0),
             )
             .unwrap(),
         );
@@ -803,11 +803,11 @@ mod tests {
     fn test_view_matrix() {
         let mut transform = Transform::default();
         transform.set_translation_xyz(5.0, 70.1, 43.7);
-        transform.set_scale(Vector3::new(1.0.into(), 5.0.into(), 8.9.into()));
+        transform.set_scale(Vector3::new(1.0, 5.0, 8.9));
         transform.set_rotation(
             UnitQuaternion::rotation_between(
-                &Vector3::new((-1.0).into(), 1.0.into(), 2.0.into()),
-                &Vector3::new(1.0.into(), 0.0.into(), 0.0.into()),
+                &Vector3::new(-1.0, 1.0, 2.0),
+                &Vector3::new(1.0, 0.0, 0.0),
             )
             .unwrap(),
         );
@@ -822,11 +822,11 @@ mod tests {
     fn ser_deser() {
         let mut transform = Transform::default();
         transform.set_translation_xyz(1.0, 2.0, 3.0);
-        transform.set_scale(Vector3::new(4.0.into(), 5.0.into(), 6.0.into()));
+        transform.set_scale(Vector3::new(4.0, 5.0, 6.0));
         transform.set_rotation(
             UnitQuaternion::rotation_between(
-                &Vector3::new((-1.0).into(), 1.0.into(), 2.0.into()),
-                &Vector3::new(1.0.into(), 0.0.into(), 0.0.into()),
+                &Vector3::new(-1.0, 1.0, 2.0),
+                &Vector3::new(1.0, 0.0, 0.0),
             )
             .unwrap(),
         );
@@ -839,7 +839,7 @@ mod tests {
 
     #[test]
     fn deser_seq_default_identity() {
-        let transform: Transform<f32> = ron::de::from_str("()").unwrap();
+        let transform: Transform = ron::de::from_str("()").unwrap();
         assert_eq!(transform, Transform::default());
     }
 

@@ -34,10 +34,10 @@ fn main() -> amethyst::Result<()> {
         app_root.join("examples/pong_tutorial_01/resources/display_config.ron");
 
     let game_data = GameDataBuilder::default()
-        // Add the transform bundle which handles tracking entity positions
-        .with_bundle(TransformBundle::new())?
         // The WindowBundle provides all the scaffolding for opening a window and drawing to it
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
+        // Add the transform bundle which handles tracking entity positions
+        .with_bundle(TransformBundle::new())?
         // A Processor system is added to handle loading spritesheets.
         .with(
             Processor::<SpriteSheet>::new(),
@@ -140,7 +140,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         // We pass the subpass builder a description of our pass for construction
         let sprite = graph_builder.add_node(
             SubpassBuilder::new()
-                .with_group(DrawFlat2DDesc::default().builder())
+                .with_group(DrawFlat2DDesc::new().builder())
                 .with_color(color)
                 .with_depth_stencil(depth)
                 .into_pass(),

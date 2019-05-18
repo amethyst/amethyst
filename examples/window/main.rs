@@ -127,7 +127,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         let flat = graph_builder.add_node(
             SubpassBuilder::new()
-                .with_group(DrawFlatDesc::default().builder())
+                .with_group(DrawFlatDesc::new().builder())
                 .with_color(color)
                 .with_depth_stencil(depth)
                 .into_pass(),

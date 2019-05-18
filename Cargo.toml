@@ -182,10 +182,6 @@ name = "material"
 path = "examples/material/main.rs"
 
 [[example]]
-name = "separate_sphere"
-path = "examples/separate_sphere/main.rs"
-
-[[example]]
 name = "gltf"
 path = "examples/gltf/main.rs"
 required-features = ["animation", "gltf"]
@@ -306,10 +302,6 @@ path = "examples/spotlights/main.rs"
 [[example]]
 name = "sprite_camera_follow"
 path = "examples/sprite_camera_follow/main.rs"
-
-[[example]]
-name = "simple_image"
-path = "examples/simple_image/main.rs"
 
 [[example]]
 name = "auto_fov"

@@ -14,10 +14,20 @@ use amethyst::{
         transform::{Transform, TransformBundle},
         Float,
     },
-    ecs::prelude::{Entity, Resources, Join, Read, ReadStorage, ReadExpect, SystemData, System, Write, WriteStorage},
-    input::{get_key, is_close_requested, is_key_down, InputBundle, VirtualKeyCode, ElementState, StringBindings},
+    ecs::prelude::{
+        Entity, Join, Read, ReadExpect, ReadStorage, Resources, System, SystemData, Write,
+        WriteStorage,
+    },
+    input::{
+        get_key, is_close_requested, is_key_down, ElementState, InputBundle, StringBindings,
+        VirtualKeyCode,
+    },
     prelude::*,
     renderer::{
+        camera::Camera,
+        light::Light,
+        palette::{Srgb, Srgba},
+        pass::DrawShadedDesc,
         rendy::{
             factory::Factory,
             graph::{
@@ -27,13 +37,9 @@ use amethyst::{
             hal::format::Format,
             mesh::{Normal, Position, TexCoord},
         },
+        resources::AmbientColor,
         types::DefaultBackend,
         GraphCreator, RenderingSystem,
-        pass::DrawShadedDesc,
-        light::Light,
-        camera::Camera,
-        resources::AmbientColor,
-        palette::{Srgb, Srgba},
     },
     ui::{DrawUiDesc, UiBundle, UiCreator, UiFinder, UiText},
     utils::{
@@ -197,7 +203,8 @@ fn main() -> Result<(), Error> {
     // Add our meshes directory to the asset loader.
     let resources_directory = app_root.join("examples").join("assets");
 
-    let display_config_path = app_root.join("examples")
+    let display_config_path = app_root
+        .join("examples")
         .join("renderable")
         .join("resources")
         .join("display_config.ron");
@@ -379,8 +386,8 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         let ui = graph_builder.add_node(
             SubpassBuilder::new()
-                .with_group(DrawShadedDesc::default().builder())
-                .with_group(DrawUiDesc::default().builder())
+                .with_group(DrawShadedDesc::new().builder())
+                .with_group(DrawUiDesc::new().builder())
                 .with_color(color)
                 .with_depth_stencil(depth)
                 .into_pass(),

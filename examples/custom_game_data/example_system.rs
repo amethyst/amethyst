@@ -1,10 +1,9 @@
 use super::DemoState;
 use amethyst::{
-    assets::{Completion},
+    assets::Completion,
     core::{
         math::{UnitQuaternion, Vector3},
-        Float, Time, Transform,
-        Named,
+        Float, Named, Time, Transform,
     },
     ecs::prelude::{Entity, Join, Read, ReadStorage, System, WriteExpect, WriteStorage},
     renderer::{camera::Camera, light::Light},

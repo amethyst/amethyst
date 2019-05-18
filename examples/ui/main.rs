@@ -238,7 +238,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         let ui = graph_builder.add_node(
             SubpassBuilder::new()
-                .with_group(DrawUiDesc::default().builder())
+                .with_group(DrawUiDesc::new().builder())
                 .with_color(color)
                 .with_depth_stencil(depth)
                 .into_pass(),

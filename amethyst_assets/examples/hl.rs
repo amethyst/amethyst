@@ -82,15 +82,15 @@ impl Asset for MeshAsset {
 }
 
 /// A format the mesh data could be stored with.
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct Ron;
 
-impl SimpleFormat<MeshAsset> for Ron {
+impl Format<VertexData> for Ron {
     fn name(&self) -> &'static str {
         "RON"
     }
 
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<VertexData, Error> {
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<VertexData, Error> {
         use ron::de::from_str;
         use std::str::from_utf8;
 
@@ -143,7 +143,8 @@ impl State {
                 let (mesh, progress) = {
                     let mut progress = ProgressCounter::new();
                     let loader = world.read_resource::<Loader>();
-                    let a = loader.load("mesh.ron", Ron, (), &mut progress, &world.read_resource());
+                    let a: MeshHandle =
+                        loader.load("mesh.ron", Ron, &mut progress, &world.read_resource());
 
                     (a, progress)
                 };

@@ -256,7 +256,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
 
         let opaque = graph_builder.add_node(
             SubpassBuilder::new()
-                .with_group(DrawDebugLinesDesc::default().builder())
+                .with_group(DrawDebugLinesDesc::new().builder())
                 .with_group(
                     DrawSkyboxDesc::with_colors(
                         Srgb::new(0.82, 0.51, 0.50),

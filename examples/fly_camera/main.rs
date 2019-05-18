@@ -4,7 +4,7 @@ use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
     controls::{FlyControlBundle, HideCursor},
     core::transform::TransformBundle,
-    input::{is_key_down, is_mouse_button_down, InputBundle},
+    input::{is_key_down, is_mouse_button_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{DrawShaded, MouseButton, PosNormTex, VirtualKeyCode},
     utils::{application_root_dir, scene::BasicScenePrefab},
@@ -60,7 +60,7 @@ fn main() -> Result<(), Error> {
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(
-            FlyControlBundle::<String, String>::new(
+            FlyControlBundle::<StringBindings>::new(
                 Some(String::from("move_x")),
                 Some(String::from("move_y")),
                 Some(String::from("move_z")),
@@ -69,7 +69,7 @@ fn main() -> Result<(), Error> {
         )?
         .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_bundle(
-            InputBundle::<String, String>::new().with_bindings_from_file(&key_bindings_path)?,
+            InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
         .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
     let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;

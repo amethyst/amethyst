@@ -63,10 +63,20 @@ pub struct DrawBase3DDesc<B: Backend, T: Base3DPassDef<B>> {
 }
 
 impl<B: Backend, T: Base3DPassDef<B>> DrawBase3DDesc<B, T> {
-    /// Enable vertex skinning
-    pub fn with_vertex_skinning(mut self) -> Self {
-        self.skinning = true;
-        self
+    /// Create pass in default configuration
+    pub fn new() -> Self {
+        Self {
+            skinning: false,
+            marker: PhantomData,
+        }
+    }
+
+    /// Create pass in with vertex skinning enabled
+    pub fn skinned() -> Self {
+        Self {
+            skinning: true,
+            marker: PhantomData,
+        }
     }
 }
 
@@ -411,10 +421,20 @@ pub struct DrawBase3DTransparentDesc<B: Backend, T: Base3DPassDef<B>> {
 }
 
 impl<B: Backend, T: Base3DPassDef<B>> DrawBase3DTransparentDesc<B, T> {
-    /// Enable vertex skinning
-    pub fn with_vertex_skinning(mut self) -> Self {
-        self.skinning = true;
-        self
+    /// Create pass in default configuration
+    pub fn new() -> Self {
+        Self {
+            skinning: false,
+            marker: PhantomData,
+        }
+    }
+
+    /// Create pass in with vertex skinning enabled
+    pub fn skinned() -> Self {
+        Self {
+            skinning: true,
+            marker: PhantomData,
+        }
     }
 }
 
@@ -696,7 +716,10 @@ fn build_pipelines<B: Backend, T: Base3DPassDef<B>>(
     let vertex_desc = vertex_format_base
         .iter()
         .map(|f| (f.clone(), pso::VertexInputRate::Vertex))
-        .chain(Some((VertexArgs::vertex(), pso::VertexInputRate::Instance(1))))
+        .chain(Some((
+            VertexArgs::vertex(),
+            pso::VertexInputRate::Instance(1),
+        )))
         .collect::<Vec<_>>();
 
     let shader_vertex_basic = unsafe { T::vertex_shader().module(factory).unwrap() };
@@ -730,7 +753,10 @@ fn build_pipelines<B: Backend, T: Base3DPassDef<B>>(
         let vertex_desc = vertex_format_skinned
             .iter()
             .map(|f| (f.clone(), pso::VertexInputRate::Vertex))
-            .chain(Some((SkinnedVertexArgs::vertex(), pso::VertexInputRate::Instance(1))))
+            .chain(Some((
+                SkinnedVertexArgs::vertex(),
+                pso::VertexInputRate::Instance(1),
+            )))
             .collect::<Vec<_>>();
 
         let pipe = PipelinesBuilder::new()

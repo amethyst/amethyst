@@ -72,10 +72,10 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
-        // Add the transform bundle which handles tracking entity positions
-        .with_bundle(TransformBundle::new())?
         // The WindowBundle provides all the scaffolding for opening a window and drawing to it
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
+        // Add the transform bundle which handles tracking entity positions
+        .with_bundle(TransformBundle::new())?
         // A Processor system is added to handle loading spritesheets.
         .with(
             Processor::<SpriteSheet>::new(),
@@ -234,8 +234,8 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         // We pass the subpass builder a description of our groups for construction
         let pass = graph_builder.add_node(
             SubpassBuilder::new()
-                .with_group(DrawFlat2DDesc::default().builder()) // Draws sprites
-                .with_group(DrawUiDesc::default().builder()) // Draws UI components
+                .with_group(DrawFlat2DDesc::new().builder()) // Draws sprites
+                .with_group(DrawUiDesc::new().builder()) // Draws UI components
                 .with_color(color)
                 .with_depth_stencil(depth)
                 .into_pass(),

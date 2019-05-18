@@ -29,8 +29,7 @@ impl Format<String> for DummyFormat {
         &self,
         name: String,
         source: Arc<dyn Source>,
-        _: (),
-        _create_reload: bool,
+        _create_reload: Option<Box<dyn Format<String>>>,
     ) -> Result<FormatValue<String>, Error> {
         let dummy = from_utf8(source.load(&name)?.as_slice()).map(|s| s.to_owned())?;
 
@@ -45,17 +44,11 @@ fn main() {
     let pool = Arc::new(builder.build().expect("Invalid config"));
 
     let loader = Loader::new(&path, pool.clone());
-    let mut storage = AssetStorage::new();
+    let mut storage: AssetStorage<DummyAsset> = AssetStorage::new();
 
     let mut progress = ProgressCounter::new();
 
-    let dummy = loader.load(
-        "dummy/whatever.dum",
-        DummyFormat,
-        (),
-        &mut progress,
-        &storage,
-    );
+    let dummy = loader.load("dummy/whatever.dum", DummyFormat, &mut progress, &storage);
 
     // Hot-reload every three seconds.
     let strategy = HotReloadStrategy::every(3);

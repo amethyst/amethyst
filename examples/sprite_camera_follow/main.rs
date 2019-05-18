@@ -220,6 +220,7 @@ fn main() -> amethyst::Result<()> {
         app_root.join("examples/sprite_camera_follow/resources/display_config.ron");
 
     let game_data = GameDataBuilder::default()
+        .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with_bundle(TransformBundle::new())?
         .with_bundle(
             InputBundle::<StringBindings>::new()
@@ -231,7 +232,6 @@ fn main() -> amethyst::Result<()> {
             "sprite_sheet_processor",
             &[],
         )
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with(
             SpriteVisibilitySortingSystem::new(),
             "sprite_visibility_system",
@@ -311,7 +311,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         let sprite = graph_builder.add_node(
             SubpassBuilder::new()
-                .with_group(DrawFlat2DTransparentDesc::default().builder())
+                .with_group(DrawFlat2DTransparentDesc::new().builder())
                 .with_color(color)
                 .with_depth_stencil(depth)
                 .into_pass(),

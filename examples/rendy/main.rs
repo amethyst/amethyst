@@ -22,8 +22,7 @@ use amethyst::{
     input::{is_close_requested, is_key_down, Axis, Bindings, Button, InputBundle, StringBindings},
     prelude::*,
     utils::{application_root_dir, fps_counter::FPSCounterBundle, tag::TagFinder},
-    window::{EventsLoopSystem, ScreenDimensions, WindowSystem},
-    winit::{EventsLoop, Window},
+    window::{ScreenDimensions, Window, WindowBundle},
 };
 use amethyst_rendy::{
     camera::{ActiveCamera, Camera, Projection},
@@ -504,14 +503,12 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let path = app_root
+    let display_config_path = app_root
         .join("examples")
         .join("rendy")
         .join("resources")
         .join("display_config.ron");
     let resources = app_root.join("examples").join("assets");
-
-    let event_loop = EventsLoop::new();
 
     let mut bindings = Bindings::new();
     bindings.insert_axis(
@@ -530,11 +527,7 @@ fn main() -> amethyst::Result<()> {
     )?;
 
     let game_data = GameDataBuilder::default()
-        .with(
-            WindowSystem::from_config_path(&event_loop, path),
-            "window",
-            &[],
-        )
+        .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with(OrbitSystem, "orbit", &[])
         .with(CameraCorrectionSystem::new(), "cam", &[])
         // .with_bundle(TransformBundle::new().with_dep(&["orbit"]))?
@@ -598,7 +591,6 @@ fn main() -> amethyst::Result<()> {
             "visibility_system",
             &["fly_movement", "cam", "transform_system"],
         )
-        .with_thread_local(EventsLoopSystem::new(event_loop))
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::new(),
         ));
@@ -679,36 +671,23 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         let mut transparent_subpass = SubpassBuilder::new();
         match *render_mode {
             RenderMode::Flat => {
-                opaque_subpass.add_group(DrawFlatDesc::default().with_vertex_skinning().builder());
-                transparent_subpass.add_group(
-                    DrawFlatTransparentDesc::default()
-                        .with_vertex_skinning()
-                        .builder(),
-                );
+                opaque_subpass.add_group(DrawFlatDesc::skinned().builder());
+                transparent_subpass.add_group(DrawFlatTransparentDesc::skinned().builder());
             }
             RenderMode::Shaded => {
-                opaque_subpass
-                    .add_group(DrawShadedDesc::default().with_vertex_skinning().builder());
-                transparent_subpass.add_group(
-                    DrawShadedTransparentDesc::default()
-                        .with_vertex_skinning()
-                        .builder(),
-                );
+                opaque_subpass.add_group(DrawShadedDesc::skinned().builder());
+                transparent_subpass.add_group(DrawShadedTransparentDesc::skinned().builder());
             }
             RenderMode::Pbr => {
-                opaque_subpass.add_group(DrawPbrDesc::default().with_vertex_skinning().builder());
-                transparent_subpass.add_group(
-                    DrawPbrTransparentDesc::default()
-                        .with_vertex_skinning()
-                        .builder(),
-                );
+                opaque_subpass.add_group(DrawPbrDesc::skinned().builder());
+                transparent_subpass.add_group(DrawPbrTransparentDesc::skinned().builder());
             }
         };
 
         let opaque = graph_builder.add_node(
             opaque_subpass
-                .with_group(DrawFlat2DDesc::default().builder())
-                .with_group(DrawDebugLinesDesc::default().builder())
+                .with_group(DrawFlat2DDesc::new().builder())
+                .with_group(DrawDebugLinesDesc::new().builder())
                 .with_group(
                     DrawSkyboxDesc::with_colors(
                         Srgb::new(0.82, 0.51, 0.50),

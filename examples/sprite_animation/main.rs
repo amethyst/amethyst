@@ -244,7 +244,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         let sprite = graph_builder.add_node(
             SubpassBuilder::new()
-                .with_group(DrawFlat2DDesc::default().builder())
+                .with_group(DrawFlat2DDesc::new().builder())
                 .with_color(color)
                 .with_depth_stencil(depth)
                 .into_pass(),

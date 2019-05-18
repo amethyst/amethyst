@@ -57,13 +57,13 @@ impl Projection {
 
         proj[(0, 0)] = 1.0 / (aspect * tan_half_fovy);
 
-        // TODO: Check if we can change this to 1.0 / tan_half_fovy 
+        // TODO: Check if we can change this to 1.0 / tan_half_fovy
         // as other vulkan render examples use this form of a matrix
         proj[(1, 1)] = -1.0 / tan_half_fovy;
         proj[(2, 2)] = z_far / (z_near - z_far);
 
         proj[(2, 3)] = -(z_near * z_far) / (z_far - z_near);
-        proj[(3, 2)] = - 1.0;
+        proj[(3, 2)] = -1.0;
         proj[(3, 3)] = 0.0;
 
         // Important: nalgebra's methods on Perspective3 are not safe for use with RH matrices
@@ -95,7 +95,6 @@ impl Camera {
     /// Bottom left corner is (-width/2.0, -height/2.0)
     /// View transformation will be multiplicative identity.
     pub fn standard_2d(width: f32, height: f32) -> Self {
-
         // TODO: Check if bottom = height/2.0 is really the solution we want here.
         // Maybe the same problem as with the perspective matrix.
         Self::from(Projection::orthographic(
@@ -198,12 +197,12 @@ impl<'a> PrefabData<'a> for ActiveCameraPrefab {
 }
 
 mod serde_ortho {
+    use super::*;
+    use amethyst_core::math::Orthographic3;
     use serde::{
         de::{Deserialize, Deserializer},
         ser::{Serialize, Serializer},
     };
-    use super::*;
-    use amethyst_core::math::Orthographic3;
 
     #[derive(serde::Deserialize, serde::Serialize)]
     struct Orthographic {
@@ -274,7 +273,6 @@ mod serde_persp {
     {
         let values = Perspective::deserialize(deserializer)?;
 
-
         let mut proj = Matrix4::<f32>::identity();
 
         let tan_half_fovy = (values.fovy / 2.0).tan();
@@ -284,9 +282,9 @@ mod serde_persp {
         proj[(2, 2)] = values.zfar / (values.znear - values.zfar);
 
         proj[(2, 3)] = -(values.znear * values.zfar) / (values.zfar - values.znear);
-        proj[(3, 2)] = - 1.0;
+        proj[(3, 2)] = -1.0;
         proj[(3, 3)] = 0.0;
-        
+
         Ok(Perspective3::from_matrix_unchecked(proj))
     }
 

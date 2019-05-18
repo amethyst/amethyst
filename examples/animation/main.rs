@@ -206,19 +206,15 @@ fn run<B: Backend>() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/animation/resources/display_config.ron");
     let resources = app_root.join("examples/assets/");
 
-    let event_loop = EventsLoop::new();
-    let window_system = WindowSystem::from_config_path(&event_loop, display_config_path);
-
     let game_data = GameDataBuilder::default()
+        .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(AnimationBundle::<AnimationId, Transform>::new(
             "animation_control_system",
             "sampler_interpolation_system",
         ))?
         .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
-        .with_thread_local(EventsLoopSystem::new(event_loop))
-        .with_thread_local(window_system)
-        .with_thread_local(RenderingSystem::<B, _>::new(ExampleGraph::new()));
+        .with_thread_local(RenderingSystem::<B, _>::new(ExampleGraph::default()));
     let state: Example = Default::default();
     let mut game = Application::new(resources, state, game_data)?;
     game.run();
@@ -271,18 +267,10 @@ fn add_animation(
     }
 }
 
+#[derive(Default)]
 struct ExampleGraph {
     last_dimensions: Option<ScreenDimensions>,
     dirty: bool,
-}
-
-impl ExampleGraph {
-    pub fn new() -> Self {
-        Self {
-            last_dimensions: None,
-            dirty: true,
-        }
-    }
 }
 
 impl<B: Backend> GraphCreator<B> for ExampleGraph {
@@ -324,8 +312,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         );
 
         let pass = graph_builder.add_node(
-            DrawPbrDesc::default()
-                .with_vertex_skinning()
+            DrawPbrDesc::skinned()
                 .builder()
                 .into_subpass()
                 .with_color(color)

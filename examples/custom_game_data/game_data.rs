@@ -1,9 +1,8 @@
 use amethyst::{
     core::{ArcThreadPool, SystemBundle},
-    ecs::prelude::{Dispatcher, DispatcherBuilder, System, World, RunNow},
+    ecs::prelude::{Dispatcher, DispatcherBuilder, RunNow, System, World},
     error::Error,
-    DataInit,
-    DataDispose,
+    DataDispose, DataInit,
 };
 
 pub struct CustomGameData<'a, 'b> {
@@ -15,9 +14,9 @@ impl<'a, 'b> CustomGameData<'a, 'b> {
     /// Update game data
     pub fn update(&mut self, world: &World, running: bool) {
         if running {
-             if let Some(running) = &mut self.running {
-            running.dispatch(&world.res);
-        }
+            if let Some(running) = &mut self.running {
+                running.dispatch(&world.res);
+            }
         }
         if let Some(base) = &mut self.base {
             base.dispatch(&world.res);
@@ -44,7 +43,6 @@ impl DataDispose for CustomGameData<'_, '_> {
 pub struct CustomGameDataBuilder<'a, 'b> {
     pub base: DispatcherBuilder<'a, 'b>,
     pub running: DispatcherBuilder<'a, 'b>,
-
 }
 
 impl<'a, 'b> Default for CustomGameDataBuilder<'a, 'b> {
@@ -110,6 +108,9 @@ impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> 
         let mut running = self.running.build();
         running.setup(&mut world.res);
 
-        CustomGameData { base: Some(base), running: Some(running) }
+        CustomGameData {
+            base: Some(base),
+            running: Some(running),
+        }
     }
 }
