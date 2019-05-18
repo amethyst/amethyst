@@ -51,8 +51,30 @@ pub struct DisplayConfig {
     #[serde(default)]
     pub transparent: bool,
 
-    /// A programmatically loaded icon; not present in serialization.
+    /// A programmatically loaded window icon; not present in serialization.
     /// Takes precedence over `icon`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use amethyst_window::{DisplayConfig, Icon};
+    ///
+    /// // First, create your `DisplayConfig` as usual
+    /// let mut config = DisplayConfig::default(); // or load from file
+    ///
+    /// // Create the icon data
+    /// let mut icon = Vec::new();
+    /// for _ in 0..(128 * 128) {
+    ///     icon.extend(vec![255, 0, 0, 255]);
+    /// }
+    ///
+    /// // Set the `loaded_icon` field of the config
+    /// // It will now be used as the window icon
+    /// config.loaded_icon = Some(Icon::from_rgba(icon, 128, 128).unwrap());
+    ///
+    /// // Now, feed this into the `GameDataBuilder` using
+    /// // `.with_bundle(WindowBundle::from_config(config))`
+    /// ```
     #[serde(skip)]
     pub loaded_icon: Option<Icon>,
 }
@@ -124,7 +146,11 @@ impl DisplayConfig {
             let icon = match Icon::from_path(&icon) {
                 Ok(x) => Some(x),
                 Err(e) => {
-                    error!("Failed to load window icon from `{}`: {}", icon.display(), e);
+                    error!(
+                        "Failed to load window icon from `{}`: {}",
+                        icon.display(),
+                        e
+                    );
 
                     None
                 }

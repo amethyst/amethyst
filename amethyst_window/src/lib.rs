@@ -11,4 +11,4 @@ pub use crate::{
     resources::ScreenDimensions,
     system::{EventsLoopSystem, WindowSystem},
 };
-pub use winit::Window;
+pub use winit::{Icon, Window};
