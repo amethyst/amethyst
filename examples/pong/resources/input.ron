@@ -1,8 +1,8 @@
 (
     axes: {
         "left_paddle": Emulated(
-            pos: Key(W),
-            neg: Key(S),
+            pos: Key(S),
+            neg: Key(W),
         ),
         "right_paddle": Emulated(
             pos: Key(Down),

@@ -17,6 +17,7 @@ pub trait DataInit<T> {
 
 /// Allow disposing game data with access to world.
 pub trait DataDispose {
+    /// Perform disposal
     fn dispose(&mut self, world: &mut World);
 }
 
