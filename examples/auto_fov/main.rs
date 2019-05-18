@@ -207,14 +207,6 @@ impl<'a> System<'a> for ShowFovSystem {
     }
 }
 
-/*    let tan_half_fovy = (fov / 2.0).tan();
-proj[(0, 0)] = 1.0 / (aspect * tan_half_fovy);
-proj[(1, 1)] = -1.0 / tan_half_fovy;
-proj[(2, 2)] = z_far / (z_near - z_far);
-proj[(2, 3)] = -(z_near * z_far) / (z_far - z_near);
-proj[(3, 2)] = -1.0;
-proj[(3, 3)] = 0.0;*/
-
 fn get_fovy(camera: &Camera) -> f32 {
     (-1.0 / camera.proj[(1, 1)]).atan() * 2.0
 }
