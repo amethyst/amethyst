@@ -20,9 +20,9 @@
 //! supports vertex skinning and joint transformations to improve the render. An exception to this
 //! is the `DrawFlat2D` pass, which does not support joint transformations.
 //!
-//! [am]: https://www.amethyst.rs/
+//! [am]: https://amethyst.rs/
 //! [gh]: https://github.com/amethyst/amethyst/tree/master/src/renderer
-//! [bk]: https://www.amethyst.rs/book/master/
+//! [bk]: https://book.amethyst.rs/stable/
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 

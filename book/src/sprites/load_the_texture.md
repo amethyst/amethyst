@@ -44,14 +44,14 @@ There is one thing that may surprise you.
 
 The loaded texture will use linear filter, e.g. screen pixels will be linearly interpolated between the closest image pixels. In layman's terms, if your images have small resolution, sprites will look blury. Use `TextureMetadata::srgb_scale()` instead to avoid such effect. Screen pixel will be taken from nearest pixel of texture in that case.
 
-[doc_asset]: https://www.amethyst.rs/doc/latest/doc/amethyst_assets/trait.Asset.html
-[doc_asset_get]: https://www.amethyst.rs/doc/latest/doc/amethyst_assets/struct.AssetStorage.html#method.get
-[doc_fmt_bmp]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.BmpFormat.html
-[doc_fmt_jpg]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.JpgFormat.html
-[doc_fmt_png]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.PngFormat.html
-[doc_fmt_tga]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.TgaFormat.html
-[doc_load]: https://www.amethyst.rs/doc/latest/doc/amethyst_assets/struct.Loader.html#method.load
-[doc_read_resource]: https://www.amethyst.rs/doc/latest/doc/specs/world/struct.World.html#method.read_resource
-[doc_ss]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.SpriteSheet.html
-[doc_tex]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.Texture.html
-[doc_tex_hd]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/type.TextureHandle.html
+[doc_asset]: https://docs-src.amethyst.rs/stable/amethyst_assets/trait.Asset.html
+[doc_asset_get]: https://docs-src.amethyst.rs/stable/amethyst_assets/struct.AssetStorage.html#method.get
+[doc_fmt_bmp]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.BmpFormat.html
+[doc_fmt_jpg]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.JpgFormat.html
+[doc_fmt_png]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.PngFormat.html
+[doc_fmt_tga]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.TgaFormat.html
+[doc_load]: https://docs-src.amethyst.rs/stable/amethyst_assets/struct.Loader.html#method.load
+[doc_read_resource]: https://docs-src.amethyst.rs/stable/specs/world/struct.World.html#method.read_resource
+[doc_ss]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.SpriteSheet.html
+[doc_tex]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.Texture.html
+[doc_tex_hd]: https://docs-src.amethyst.rs/stable/amethyst_renderer/type.TextureHandle.html

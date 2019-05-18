@@ -7,7 +7,7 @@
 [s1]: https://jenkins.amethyst-engine.org/job/amethyst/job/master/badge/icon
 [s2]: https://img.shields.io/crates/v/amethyst.svg
 [docs-badge]: https://img.shields.io/badge/docs-website-blue.svg
-[docs]: https://www.amethyst.rs/doc/
+[docs]: https://amethyst.rs/doc/
 [s3]: https://img.shields.io/badge/license-MIT%2FApache-blue.svg
 [s4]: https://img.shields.io/discord/425678876929163284.svg?logo=discord
 [s5]: https://img.shields.io/badge/discourse-online-green.svg
@@ -17,7 +17,7 @@
 [ci]: https://crates.io/crates/amethyst/
 [li]: COPYING
 [di]: https://discord.gg/amethyst
-[ds]: https://community.amethyst-engine.org/
+[ds]: https://community.amethyst.rs/
 [rd]: https://www.reddit.com/r/Amethyst/
 
 ## What is Amethyst?
@@ -60,19 +60,19 @@ Please visit the [features page][feat] for a list of features Amethyst provides.
 
 ## Navigation
 
-* [**Link to the book (latest release)**][bkr]
+* [**Link to the book (latest release)**][bks]
 * [**Link to the book (master)**][bkm]
 * [**Link to the examples (latest release)**][exr]
 * [**Link to the examples (master)**][exm]
 
 ## Usage
 
-While the engine can be hard to use at times, we made a lot of [documentation][bkr] that will teach you everything you need to use Amethyst comfortably.
+While the engine can be hard to use at times, we made a lot of [documentation][bks] that will teach you everything you need to use Amethyst comfortably.
 
 If you don't understand a part of the documentation, please let us know. Join us on Discord or open an issue; we are always happy to help!
 
-[bkr]: https://www.amethyst.rs/book/latest/
-[bkm]: https://www.amethyst.rs/book/master/
+[bks]: https://book.amethyst.rs/stable/
+[bkm]: https://book.amethyst.rs/master/
 [exr]: https://github.com/amethyst/amethyst/tree/v0.10.0/examples
 [exm]: https://github.com/amethyst/amethyst/tree/master/examples
 
@@ -96,11 +96,11 @@ All available examples are listed under the [examples][exr] directory.
 
 For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chapter in the book.
 
-[gs]: https://www.amethyst.rs/book/latest/getting-started.html
+[gs]: https://book.amethyst.rs/stable/getting-started.html
 
 There are also many open source games and prototypes being made with Amethyst. See our showcase in the regularly updated [Games Made With Amethyst][gmwa] thread on the community forum for some good sources of inspiration.
 
-[gmwa]: https://community.amethyst-engine.org/t/games-made-with-amethyst/134
+[gmwa]: https://community.amethyst.rs/t/games-made-with-amethyst/134
 
 ## Dependencies
 
@@ -183,7 +183,7 @@ If for some reason we don't have any open PRs in need of a review nor any good f
 
 ## Backers
 
-Thank you to all our backers! 🙏 [Become a backer](https://www.amethyst.rs/donate)
+Thank you to all our backers! 🙏 [Become a backer](https://amethyst.rs/donate)
 
 ## Sponsors
 

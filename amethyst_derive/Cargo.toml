@@ -5,8 +5,8 @@ authors = ["Simon Rönnberg <seamonr@gmail.com>"]
 edition = "2018"
 description = "Amethyst derive"
 
-documentation = "https://www.amethyst.rs/doc/latest/doc/amethyst_derive/"
-homepage = "https://www.amethyst.rs/"
+documentation = "https://docs-src.amethyst.rs/stable/amethyst_derive/"
+homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
 license = "MIT/Apache-2.0"

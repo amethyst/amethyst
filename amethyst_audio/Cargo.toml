@@ -8,8 +8,8 @@ exclude = ["examples/*"]
 keywords = ["game", "engine", "audio","amethyst"]
 categories = ["audio"]
 
-documentation = "https://www.amethyst.rs/doc/latest/doc/amethyst_audio/"
-homepage = "https://www.amethyst.rs/"
+documentation = "https://docs-src.amethyst.rs/stable/amethyst_audio/"
+homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
 readme = "README.md"
