@@ -18,7 +18,7 @@ amethyst_core = { path = "../amethyst_core", version = "0.5" }
 amethyst_config = { path = "../amethyst_config" }
 amethyst_error = { path = "../amethyst_error/", version = "0.1.0" }
 
-winit = { version = "0.18", features = ["serde"] }
+winit = { version = "0.18", features = ["serde", "icon_loading"] }
 thread_profiler = { version = "0.3", optional = true }
 serde = { version = "1", features = ["derive"] }
 

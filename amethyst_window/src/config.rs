@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
-use winit::{WindowAttributes, WindowBuilder};
+use winit::{Icon, WindowAttributes, WindowBuilder};
 
 use crate::monitor::{MonitorIdent, MonitorsAccess};
+use std::path::PathBuf;
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct DisplayConfig {
@@ -23,6 +24,10 @@ pub struct DisplayConfig {
     pub max_dimensions: Option<(u32, u32)>,
     #[serde(default = "default_visibility")]
     pub visibility: bool,
+    /// A path to the icon used for the window.
+    /// If `loaded_icon` is present, this will be ignored.
+    #[serde(default)]
+    pub icon: Option<PathBuf>,
     /// Whether the window should always be on top of other windows.
     #[serde(default)]
     pub always_on_top: bool,
@@ -43,6 +48,11 @@ pub struct DisplayConfig {
     /// window.
     #[serde(default)]
     pub transparent: bool,
+
+    /// A programmatically loaded icon; not present in serialization.
+    /// Takes precedence over `icon`.
+    #[serde(skip)]
+    pub loaded_icon: Option<Icon>,
 }
 
 impl Default for DisplayConfig {
@@ -54,12 +64,14 @@ impl Default for DisplayConfig {
             min_dimensions: None,
             max_dimensions: None,
             visibility: default_visibility(),
+            icon: None,
             always_on_top: false,
             decorations: default_decorations(),
             maximized: false,
             multitouch: false,
             resizable: default_resizable(),
-            transparent: false
+            transparent: false,
+            loaded_icon: None,
         }
     }
 }
@@ -81,10 +93,10 @@ fn default_resizable() -> bool {
 }
 
 impl DisplayConfig {
-    /// Creates a `winit::WindowBuilder` using the values set in the DisplayConfig
+    /// Creates a `winit::WindowBuilder` using the values set in the `DisplayConfig`.
     ///
     /// The `MonitorsAccess` is needed to configure a fullscreen window.
-    pub fn to_windowbuilder(self, monitors: &impl MonitorsAccess) -> WindowBuilder {
+    pub fn to_window_builder(self, monitors: &impl MonitorsAccess) -> WindowBuilder {
         let attrs = WindowAttributes {
             dimensions: self.dimensions.map(Into::into),
             max_dimensions: self.max_dimensions.map(Into::into),
@@ -98,11 +110,18 @@ impl DisplayConfig {
             window_icon: None,
             fullscreen: self.fullscreen.map(|ident| ident.monitor_id(monitors)),
             resizable: self.resizable,
-            multitouch: self.multitouch
+            multitouch: self.multitouch,
         };
 
         let mut builder = WindowBuilder::new();
         builder.window = attrs;
+
+        if self.loaded_icon.is_some() {
+            builder = builder.with_window_icon(self.loaded_icon);
+        } else if let Some(icon) = self.icon {
+            builder = builder.with_window_icon(Icon::from_path(icon).ok());
+        }
+
         builder
     }
 }
