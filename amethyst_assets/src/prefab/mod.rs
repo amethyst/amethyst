@@ -389,11 +389,11 @@ where
                     progress,
                     &system_data.2,
                 ));
-                return Ok(true);
+                Ok(true)
             }
 
             // Already loaded
-            _ => return Ok(false),
+            _ => Ok(false),
         }
     }
 }

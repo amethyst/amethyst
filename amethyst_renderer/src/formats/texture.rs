@@ -261,7 +261,7 @@ where
                     progress,
                     &system_data.1,
                 ));
-                return Ok(true);
+                Ok(true)
             }
 
             TexturePrefab::File(ref name, ref format, ref options) => {
@@ -272,11 +272,11 @@ where
                     progress,
                     &system_data.1,
                 ));
-                return Ok(true);
+                Ok(true)
             }
 
             // Already loaded
-            TexturePrefab::Handle(_) => return Ok(false),
+            TexturePrefab::Handle(_) => Ok(false),
         }
     }
 }
