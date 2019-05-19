@@ -219,7 +219,7 @@ fn main() -> Result<(), Error> {
         .with_bundle(FPSCounterBundle::default())?
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::new(),
+            ExampleGraph::default(),
         ));
     let mut game = Application::build(resources_directory, Loading::default())?.build(game_data)?;
     game.run();
@@ -322,20 +322,11 @@ impl<'a> System<'a> for ExampleSystem {
     }
 }
 
+#[derive(Default)]
 struct ExampleGraph {
     last_dimensions: Option<ScreenDimensions>,
     surface_format: Option<Format>,
     dirty: bool,
-}
-
-impl ExampleGraph {
-    pub fn new() -> Self {
-        ExampleGraph {
-            last_dimensions: None,
-            surface_format: None,
-            dirty: true,
-        }
-    }
 }
 
 impl GraphCreator<DefaultBackend> for ExampleGraph {
@@ -384,7 +375,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
         );
 
-        let ui = graph_builder.add_node(
+        let pass = graph_builder.add_node(
             SubpassBuilder::new()
                 .with_group(DrawShadedDesc::new().builder())
                 .with_group(DrawUiDesc::new().builder())
@@ -394,7 +385,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         );
 
         let _present = graph_builder
-            .add_node(PresentNode::builder(factory, surface, color).with_dependency(ui));
+            .add_node(PresentNode::builder(factory, surface, color).with_dependency(pass));
 
         graph_builder
     }

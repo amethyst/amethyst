@@ -74,7 +74,6 @@ fn main() -> amethyst::Result<()> {
     Ok(())
 }
 
-
 // This graph structure is used for creating a proper `RenderGraph` for rendering.
 // A renderGraph can be thought of as the stages during a render pass. In our case,
 // we are only executing one subpass (DrawFlat2D, or the sprite pass). This graph

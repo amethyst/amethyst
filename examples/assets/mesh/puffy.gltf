@@ -12410,7 +12410,6 @@
     ], 
     "materials" : [
         {
-            "alphaMode" : "BLEND", 
             "name" : "BaseMaterial", 
             "pbrMetallicRoughness" : {
                 "baseColorTexture" : {

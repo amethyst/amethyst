@@ -23,9 +23,9 @@ use amethyst::{
         types::DefaultBackend,
         GraphCreator, RenderingSystem,
     },
+    ui::{DrawUiDesc, UiBundle},
     utils::application_root_dir,
     window::{ScreenDimensions, Window, WindowBundle},
-    ui::{DrawUiDesc, UiBundle},
 };
 use std::sync::Arc;
 
@@ -76,7 +76,6 @@ fn main() -> amethyst::Result<()> {
     game.run();
     Ok(())
 }
-
 
 // This graph structure is used for creating a proper `RenderGraph` for rendering.
 // A renderGraph can be thought of as the stages during a render pass. In our case,

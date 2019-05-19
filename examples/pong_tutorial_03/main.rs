@@ -56,7 +56,7 @@ fn main() -> amethyst::Result<()> {
         // The renderer must be executed on the same thread consecutively, so we initialize it as thread_local
         // which will always execute on the main thread.
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::new(),
+            ExampleGraph::default(),
         ));
 
     // This line is not mentioned in the pong tutorial as it is specific to the context
@@ -73,6 +73,7 @@ fn main() -> amethyst::Result<()> {
 // we are only executing one subpass (DrawFlat2D, or the sprite pass). This graph
 // also needs to be rebuilt whenever the window is resized, so the boilerplate code
 // for that operation is also here.
+#[derive(Default)]
 struct ExampleGraph {
     last_dimensions: Option<ScreenDimensions>,
     surface_format: Option<Format>,

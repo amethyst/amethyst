@@ -233,7 +233,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
         );
 
-        let ui = graph_builder.add_node(
+        let opaque = graph_builder.add_node(
             SubpassBuilder::new()
                 .with_group(DrawShadedDesc::new().builder())
                 .with_group(
@@ -249,7 +249,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         );
 
         let _present = graph_builder
-            .add_node(PresentNode::builder(factory, surface, color).with_dependency(ui));
+            .add_node(PresentNode::builder(factory, surface, color).with_dependency(opaque));
 
         graph_builder
     }

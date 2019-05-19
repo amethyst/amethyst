@@ -97,6 +97,10 @@ impl<B: Backend> PerImageSkinningSub<B> {
     }
 
     fn commit(&mut self, factory: &Factory<B>, data: &[u8]) {
+        if data.len() == 0 {
+            return;
+        }
+
         let allocated = util::ensure_buffer(
             &factory,
             &mut self.buffer,

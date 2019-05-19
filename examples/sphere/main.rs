@@ -48,27 +48,18 @@ fn main() -> amethyst::Result<()> {
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::new(),
+            ExampleGraph::default(),
         ));
     let mut game = Application::new(resources, Example, game_data)?;
     game.run();
     Ok(())
 }
 
+#[derive(Default)]
 struct ExampleGraph {
     last_dimensions: Option<ScreenDimensions>,
     surface_format: Option<Format>,
     dirty: bool,
-}
-
-impl ExampleGraph {
-    pub fn new() -> Self {
-        ExampleGraph {
-            last_dimensions: None,
-            surface_format: None,
-            dirty: true,
-        }
-    }
 }
 
 impl GraphCreator<DefaultBackend> for ExampleGraph {
@@ -117,7 +108,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
         );
 
-        let ui = graph_builder.add_node(
+        let opaque = graph_builder.add_node(
             SubpassBuilder::new()
                 .with_group(DrawShadedDesc::new().builder())
                 .with_color(color)
@@ -126,7 +117,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         );
 
         let _present = graph_builder
-            .add_node(PresentNode::builder(factory, surface, color).with_dependency(ui));
+            .add_node(PresentNode::builder(factory, surface, color).with_dependency(opaque));
 
         graph_builder
     }

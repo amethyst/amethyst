@@ -124,6 +124,12 @@ enum RenderMode {
     Pbr,
 }
 
+impl Default for RenderMode {
+    fn default() -> Self {
+        RenderMode::Pbr
+    }
+}
+
 struct CameraCorrectionSystem {
     last_aspect: f32,
 }
@@ -353,7 +359,7 @@ impl SimpleState for Example {
             .build();
 
         world.add_resource(ActiveCamera { entity: camera });
-        world.add_resource(RenderMode::Pbr);
+        world.add_resource(RenderMode::default());
         world.add_resource(DebugLines::new());
     }
 
@@ -592,7 +598,7 @@ fn main() -> amethyst::Result<()> {
             &["fly_movement", "cam", "transform_system"],
         )
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::new(),
+            ExampleGraph::default(),
         ));
 
     let mut game = Application::new(&resources, Example::new(), game_data)?;
@@ -600,22 +606,12 @@ fn main() -> amethyst::Result<()> {
     Ok(())
 }
 
+#[derive(Default)]
 struct ExampleGraph {
     last_dimensions: Option<ScreenDimensions>,
     last_mode: RenderMode,
     surface_format: Option<Format>,
     dirty: bool,
-}
-
-impl ExampleGraph {
-    pub fn new() -> Self {
-        Self {
-            last_dimensions: None,
-            last_mode: RenderMode::Pbr,
-            surface_format: None,
-            dirty: true,
-        }
-    }
 }
 
 impl<B: Backend> GraphCreator<B> for ExampleGraph {

@@ -49,7 +49,7 @@ impl AsAttribute for Tint {
     const FORMAT: Format = Format::Rgba32Sfloat;
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 #[repr(C, align(16))]
 pub struct VertexArgs {
     pub model: mat4,
@@ -79,7 +79,7 @@ impl AsVertex for VertexArgs {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
 #[repr(C, align(4))]
 pub struct JointsOffset {
-    pub tint: uint,
+    pub joints_offset: u32,
 }
 
 impl AsAttribute for JointsOffset {
@@ -87,12 +87,12 @@ impl AsAttribute for JointsOffset {
     const FORMAT: Format = Format::R32Uint;
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
-#[repr(C, align(4))]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+#[repr(C, packed)]
 pub struct SkinnedVertexArgs {
     pub model: mat4,
     pub tint: vec4,
-    pub joints_offset: uint,
+    pub joints_offset: u32,
 }
 
 impl AsVertex for SkinnedVertexArgs {

@@ -72,7 +72,7 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
             &texture_storage,
         )
     };
-    
+
     let loader = world.read_resource::<Loader>();
     let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
     loader.load(
