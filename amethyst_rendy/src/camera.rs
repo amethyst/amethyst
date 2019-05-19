@@ -32,7 +32,7 @@ impl Orthographic {
 
     #[inline]
     pub fn top(&self) -> f32 {
-        unimplemented!()
+        2.0 * matrix[]
     }
 
     #[inline]
@@ -198,8 +198,6 @@ pub enum Projection {
     ///
     /// [pp]: https://en.wikipedia.org/wiki/Perspective_(graphical)
     Perspective(Perspective),
-
-    Matrix(Matrix4<f32>),
 }
 
 impl Projection {
@@ -224,17 +222,17 @@ impl Projection {
         Projection::Perspective(Perspective::new(aspect, fov, z_near, z_far))
     }
 
-    pub fn as_orthographic(&self) -> &Orthographic {
+    pub fn as_orthographic(&self) -> Result<failure::Error, &Orthographic> {
         match self {
-            Projection::Orthographic(ref s) => s,
-            _ => panic!("Failed to retrieve perspective"),
+            Projection::Orthographic(ref s) => Ok(s),
+            _ => Err(failure::format_err!("Attempting to retrieve perspective from invalid projection"))
         }
     }
 
-    pub fn as_perspective(&self) -> &Perspective {
+    pub fn as_perspective(&self) -> Result<failure::Error, &Perspective> {
         match self {
-            Projection::Perspective(ref s) => s,
-            _ => panic!("Failed to retrieve perspective"),
+            Projection::Perspective(ref s) => Ok(s),
+            _ => Err(failure::format_err!("Attempting to retrieve perspective from invalid projection")),
         }
     }
 
@@ -242,7 +240,6 @@ impl Projection {
         match self {
             Projection::Orthographic(ref s) => s.as_matrix(),
             Projection::Perspective(ref s) => s.as_matrix(),
-            Projection::Matrix(ref s) => s,
 
         }
     }
@@ -251,7 +248,6 @@ impl Projection {
         match self {
             Projection::Orthographic(ref mut s) => s.as_matrix_mut(),
             Projection::Perspective(ref mut s) => s.as_matrix_mut(),
-            Projection::Matrix(ref mut s) => s,
 
         }
     }

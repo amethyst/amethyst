@@ -227,15 +227,16 @@ impl<'a> System<'a> for CameraOrthoSystem {
                 ortho_camera.aspect_ratio_cache = aspect;
                 let offsets = ortho_camera.camera_offsets(aspect);
 
-                let prev = camera.projection().as_orthographic();
-                camera.set_projection(Orthographic::new(
-                    offsets.0,
-                    offsets.1,
-                    offsets.2,
-                    offsets.3,
-                    prev.near(),
-                    prev.far(),
-                ).into());
+                if let Some(prev) = camera.projection().as_orthographic() {
+                    camera.set_projection(Orthographic::new(
+                        offsets.0,
+                        offsets.1,
+                        offsets.2,
+                        offsets.3,
+                        prev.near(),
+                        prev.far(),
+                    ).into());
+                }
             }
         }
     }
