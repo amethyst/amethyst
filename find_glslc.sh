@@ -14,9 +14,3 @@ else
 fi
 
 echo "$BIN"
-
-# for SHADER in $(find shaders -type f -name "*.vert" -o -name "*.frag"); do
-#     echo $SHADER
-#     "$BIN" -MD -c -g -O "$SHADER" -o "$SHADER.spv"
-#     "$BIN" -S -g -O "$SHADER" -o "$SHADER.spvasm"
-# done
