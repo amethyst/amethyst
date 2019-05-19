@@ -164,9 +164,9 @@ impl ScoreBoard {
 
 // This graph structure is used for creating a proper `RenderGraph` for rendering.
 // A renderGraph can be thought of as the stages during a render pass. In our case,
-// we are only executing one subpass (DrawFlat2D, or the sprite pass). This graph
-// also needs to be rebuilt whenever the window is resized, so the boilerplate code
-// for that operation is also here.
+// we are only executing one subpass, with two render groups (DrawFlat2D and DrawUi).
+// This graph also needs to be rebuilt whenever the window is resized, so the
+// boilerplate code for that operation is also here.
 #[derive(Default)]
 struct ExampleGraph {
     last_dimensions: Option<ScreenDimensions>,
