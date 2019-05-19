@@ -20,7 +20,7 @@ hibitset = "0.5.4"
 lazy_static = "1.3"
 log = "0.4"
 palette = { version = "0.4", features = ["serde"] }
-rendy = { git = "https://github.com/amethyst/rendy.git", features = ["full", "empty", "serde-1"] }
+rendy = { git = "https://github.com/amethyst/rendy.git", features = ["command", "descriptor", "factory", "frame", "graph", "memory", "mesh", "shader", "resource", "texture", "util", "wsi", "empty", "mesh-obj", "texture-image", "texture-palette", "serde-1"] }
 # rendy = { git = "https://github.com/frizi/rendy.git", branch = "fence-reset", features = ["full", "empty", "serde-1"] }
 # rendy = { path = "../../rendy/rendy/", features = ["full", "empty", "serde-1"] }
 ron = "0.4"
@@ -43,3 +43,4 @@ vulkan = ["rendy/vulkan"]
 profiler = [ "thread_profiler/thread_profiler", "rendy/profiler" ]
 nightly = [ "amethyst_core/nightly", "shred/nightly" ]
 no-slow-safety-checks = ["rendy/no-slow-safety-checks"]
+shader-compiler =  ["rendy/shader-compiler"]
