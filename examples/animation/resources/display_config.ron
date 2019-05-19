@@ -1,10 +1,4 @@
 (
   dimensions: Some((1024, 768)),
-  max_dimensions: None,
-  min_dimensions: None,
-  fullscreen: None,
-  multisampling: 0,
   title: "Animation example",
-  visibility: true,
-  vsync: true,
 )

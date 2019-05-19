@@ -5,9 +5,9 @@ Prefab (
         (
             data: (
                 graphics: (
-                    mesh: Shape((shape: Plane(None),)),
+                    mesh: Shape((shape: Plane(None))),
                     material: (
-                        albedo: Data(Rgba((1.0, 1.0, 1.0, 1.0,), (channel: Srgb),)),
+                        albedo: Generate(Srgba(1.0, 1.0, 1.0, 1.0)),
                     ),
                 ),
                 transform: (
@@ -19,7 +19,7 @@ Prefab (
         (
             data: (
                 light: (
-                    ambient_color: (Rgba(0.01, 0.01, 0.01, 1.0)),
+                    ambient_color: ((0.01, 0.01, 0.01, 1.0)),
                 ),
             ),
         ),
@@ -28,11 +28,11 @@ Prefab (
                 light: (
                     light: Spot((
                         intensity: 3.0,
-                        color: (1.5, 0.0, 0.0, 1.0),
+                        color: (1.5, 0.0, 0.0),
                         angle: 50.0,
                         range: 4.0,
                         smoothness: 0.0,
-                        direction: (0.0, 0.0, 1.0),
+                        direction: [0.0, 0.0, 1.0],
                     )),
                 ),
                 transform: (
@@ -45,11 +45,11 @@ Prefab (
                 light: (
                     light: Spot((
                         intensity: 3.0,
-                        color: (0.0, 1.0, 0.0, 1.0),
+                        color: (0.0, 1.0, 0.0),
                         angle: 30.0,
                         range: 4.0,
                         smoothness: 0.0,
-                        direction: (0.0, 0.0, 1.0),
+                        direction: [0.0, 0.0, 1.0],
                     )),
                 ),
                 transform: (
@@ -62,11 +62,11 @@ Prefab (
                 light: (
                     light: Spot((
                         intensity: 3.0,
-                        color: (0.0, 0.0, 1.0, 1.0),
+                        color: (0.0, 0.0, 1.0),
                         angle: 30.0,
                         range: 4.0,
                         smoothness: 0.0,
-                        direction: (0.0, 0.0, 1.0),
+                        direction: [0.0, 0.0, 1.0],
                     )),
                 ),
                 transform: (
@@ -79,11 +79,11 @@ Prefab (
                 light: (
                     light: Spot((
                         intensity: 2.0,
-                        color: (1.0, 1.0, 0.0, 1.0),
+                        color: (1.0, 1.0, 0.0),
                         angle: 15.0,
                         range: 10.0,
                         smoothness: 0.8,
-                        direction: (1.0, -0.4, 0.4),
+                        direction: [1.0, -0.4, 0.4],
                     )),
                 ),
                 transform: (

@@ -251,11 +251,6 @@ path = "examples/net_server/main.rs"
 required-features = ["network"]
 
 [[example]]
-name = "appendix_a"
-path = "examples/appendix_a/main.rs"
-required-features = ["audio"]
-
-[[example]]
 name = "locale"
 path = "examples/locale/main.rs"
 required-features = ["locale"]

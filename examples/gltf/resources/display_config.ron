@@ -1,10 +1,4 @@
 (
   dimensions: Some((1024, 768)),
-  max_dimensions: None,
-  min_dimensions: None,
-  fullscreen: false,
-  multisampling: 0,
   title: "GLTF example",
-  visibility: true,
-  vsync: true,
 )
