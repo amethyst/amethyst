@@ -86,13 +86,14 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 
 #### Rendy support
 
-* `camera::Projection::perspective()` now returns a vulkan specific perspective matrix ([#1504])
 * Brand new way to define rendering pipelines.
 * OpenGL support temporarily dropped, Vulkan and Metal support added.
 * Normalized texel coordinates are now in Vulkan convention (top-left 0.0, bottom-right 1.0), mirrored vertically compared to old one.
-* World space is now Y-up consistently in all projections.
-
-[#1504]: https://github.com/amethyst/amethyst/pull/1504
+* World space is now Y-up consistently for all projections (2D and 3D).
+* `Format` type no longer has associated `Options` and is now object-safe. It is expected to carry required options itself.
+* `Format` now supports tag-based deserialization, it is no longer required to provide specific format to prefab type.
+* Combined input axis/action generics into single type.
+* `Material` is now an asset. Must be turned into handle before putting on an entity.
 
 ### Removed
 
