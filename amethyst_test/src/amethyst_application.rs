@@ -1,4 +1,4 @@
-use std::{any::Any, hash::Hash, marker::PhantomData, panic, path::PathBuf, sync::Mutex, thread};
+use std::{any::Any, marker::PhantomData, panic, path::PathBuf, sync::Mutex, thread};
 
 use amethyst::{
     self,

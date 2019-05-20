@@ -71,16 +71,6 @@ struct ExampleGraph {
     dirty: bool,
 }
 
-impl ExampleGraph {
-    pub fn new() -> Self {
-        Self {
-            last_dimensions: None,
-            surface_format: None,
-            dirty: true,
-        }
-    }
-}
-
 impl GraphCreator<DefaultBackend> for ExampleGraph {
     // This trait method reports to the renderer if the graph must be rebuilt, usually because
     // the window has been resized. This implementation checks the screen size and returns true
