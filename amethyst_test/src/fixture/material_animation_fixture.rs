@@ -2,7 +2,7 @@ use amethyst::{
     animation::{Animation, InterpolationFunction, MaterialChannel, MaterialPrimitive, Sampler},
     assets::{AssetStorage, Handle, Loader},
     ecs::prelude::*,
-    renderer::Material,
+    renderer::{loaders::load_from_srgba, palette::Srgba, Material},
 };
 
 use crate::EffectReturn;
@@ -21,7 +21,11 @@ impl MaterialAnimationFixture {
         // Load the animation.
         let animation_handle = {
             let loader = world.read_resource::<Loader>();
-            let tex_handle = loader.load_from_data([0.5; 4].into(), (), &world.read_resource());
+            let tex_handle = loader.load_from_data(
+                load_from_srgba(Srgba::new(0.5, 0.5, 0.5, 0.5)).into(),
+                (),
+                &world.read_resource(),
+            );
 
             let texture_sampler = Sampler {
                 input: vec![0.0],
@@ -42,7 +46,7 @@ impl MaterialAnimationFixture {
             let animation = Animation::<Material> {
                 nodes: vec![
                     (0, MaterialChannel::AlbedoTexture, texture_animation_handle),
-                    (0, MaterialChannel::AlbedoOffset, sampler_animation_handle),
+                    (0, MaterialChannel::UvOffset, sampler_animation_handle),
                 ],
             };
 

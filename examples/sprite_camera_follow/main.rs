@@ -44,11 +44,10 @@ impl<'s> System<'s> for MovementSystem {
     type SystemData = (
         ReadStorage<'s, Player>,
         WriteStorage<'s, Transform>,
-        ReadStorage<'s, Camera>,
         Read<'s, InputHandler<StringBindings>>,
     );
 
-    fn run(&mut self, (players, mut transforms, cameras, input): Self::SystemData) {
+    fn run(&mut self, (players, mut transforms, input): Self::SystemData) {
         let x_move = input.axis_value("entity_x").unwrap();
         let y_move = input.axis_value("entity_y").unwrap();
 

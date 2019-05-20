@@ -87,6 +87,10 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 #### Rendy support
 
 * `camera::Projection::perspective()` now returns a vulkan specific perspective matrix ([#1504])
+* Brand new way to define rendering pipelines.
+* OpenGL support temporarily dropped, Vulkan and Metal support added.
+* Normalized texel coordinates are now in Vulkan convention (top-left 0.0, bottom-right 1.0), mirrored vertically compared to old one.
+* World space is now Y-up consistently in all projections.
 
 [#1504]: https://github.com/amethyst/amethyst/pull/1504
 

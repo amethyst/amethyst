@@ -24,7 +24,7 @@ use amethyst::{
             },
             hal::format::Format,
         },
-        sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
+        sprite::{SpriteRender, SpriteSheet, SpriteSheetHandle},
         sprite_visibility::SpriteVisibilitySortingSystem,
         transparent::Transparent,
         types::DefaultBackend,

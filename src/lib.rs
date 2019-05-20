@@ -13,7 +13,7 @@
 //!
 //! ```rust,no_run
 //! use amethyst::prelude::*;
-//! use amethyst::renderer::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+//! use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 //!
 //! struct GameState;
 //!

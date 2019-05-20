@@ -150,12 +150,7 @@ mod tests {
     fn transform_matrix() {
         let mut transform = Transform::default();
         transform.set_translation_xyz(5.0, 2.0, -0.5);
-        transform.set_rotation(Unit::new_normalize(Quaternion::new(
-            1.0.into(),
-            0.0.into(),
-            0.0.into(),
-            0.0.into(),
-        )));
+        transform.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.0, 0.0, 0.0)));
         transform.set_scale(Vector3::new(2.0, 2.0, 2.0));
 
         let combined = Matrix4::new_translation(transform.translation())

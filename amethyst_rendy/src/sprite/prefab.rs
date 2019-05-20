@@ -404,18 +404,18 @@ mod tests {
         }
         assert_eq!(0., sprites[0].tex_coords.left);
         assert_eq!(0.25, sprites[0].tex_coords.right);
-        assert_eq!(1.0, sprites[0].tex_coords.top);
-        assert_eq!(0.75, sprites[0].tex_coords.bottom);
+        assert_eq!(0.0, sprites[0].tex_coords.top);
+        assert_eq!(0.25, sprites[0].tex_coords.bottom);
 
         assert_eq!(0.75, sprites[7].tex_coords.left);
         assert_eq!(1.0, sprites[7].tex_coords.right);
-        assert_eq!(0.75, sprites[7].tex_coords.top);
+        assert_eq!(0.25, sprites[7].tex_coords.top);
         assert_eq!(0.5, sprites[7].tex_coords.bottom);
 
         assert_eq!(0.25, sprites[9].tex_coords.left);
         assert_eq!(0.5, sprites[9].tex_coords.right);
         assert_eq!(0.5, sprites[9].tex_coords.top);
-        assert_eq!(0.25, sprites[9].tex_coords.bottom);
+        assert_eq!(0.75, sprites[9].tex_coords.bottom);
 
         let sprites = SpriteGrid {
             texture_width: 192,
@@ -434,18 +434,18 @@ mod tests {
         }
         assert_eq!(0.0, sprites[0].tex_coords.left);
         assert_eq!(0.16666667, sprites[0].tex_coords.right);
-        assert_eq!(1.0, sprites[0].tex_coords.top);
+        assert_eq!(0.0, sprites[0].tex_coords.top);
         assert_eq!(0.5, sprites[0].tex_coords.bottom);
 
         assert_eq!(0.16666667, sprites[7].tex_coords.left);
         assert_eq!(0.33333334, sprites[7].tex_coords.right);
         assert_eq!(0.5, sprites[7].tex_coords.top);
-        assert_eq!(0.0, sprites[7].tex_coords.bottom);
+        assert_eq!(1.0, sprites[7].tex_coords.bottom);
 
         assert_eq!(0.5, sprites[9].tex_coords.left);
         assert_eq!(0.6666667, sprites[9].tex_coords.right);
         assert_eq!(0.5, sprites[9].tex_coords.top);
-        assert_eq!(0.0, sprites[9].tex_coords.bottom);
+        assert_eq!(1.0, sprites[9].tex_coords.bottom);
     }
 
     #[test]
@@ -470,13 +470,13 @@ mod tests {
 
         assert_eq!(0.16666667, sprites[0].tex_coords.left);
         assert_eq!(0.33333334, sprites[0].tex_coords.right);
-        assert_eq!(0.6666667, sprites[0].tex_coords.top);
-        assert_eq!(0.33333334, sprites[0].tex_coords.bottom);
+        assert_eq!(0.33333334, sprites[0].tex_coords.top);
+        assert_eq!(0.6666667, sprites[0].tex_coords.bottom);
 
         assert_eq!(0.8333333, sprites[4].tex_coords.left);
         assert_eq!(1.0, sprites[4].tex_coords.right);
-        assert_eq!(0.6666667, sprites[4].tex_coords.top);
-        assert_eq!(0.33333334, sprites[4].tex_coords.bottom);
+        assert_eq!(0.33333334, sprites[4].tex_coords.top);
+        assert_eq!(0.6666667, sprites[4].tex_coords.bottom);
     }
 
     #[test]

@@ -158,10 +158,6 @@ name = "sphere"
 path = "examples/sphere/main.rs"
 
 [[example]]
-name = "sphere_multisample"
-path = "examples/sphere_multisample/main.rs"
-
-[[example]]
 name = "renderable"
 path = "examples/renderable/main.rs"
 
