@@ -1,6 +1,8 @@
 use proc_macro2::{Literal, TokenStream};
 use quote::quote;
-use syn::{Attribute, Data, DeriveInput, Generics, Ident, Meta, NestedMeta, Type};
+use syn::{
+    Attribute, Data, DataEnum, DataStruct, DeriveInput, Fields, Generics, Meta, NestedMeta, Type,
+};
 
 pub fn impl_prefab_data(ast: &DeriveInput) -> TokenStream {
     if have_component_attribute(&ast.attrs[..]) {
@@ -33,45 +35,121 @@ fn impl_prefab_data_component(ast: &DeriveInput) -> TokenStream {
     }
 }
 
-fn impl_prefab_data_aggregate(ast: &DeriveInput) -> TokenStream {
-    let base = &ast.ident;
-    let data = collect_field_data(&ast.data);
-
-    let system_datas = data.iter().map(|(ty, _, is_component)| {
-        if *is_component {
-            quote! {
-                WriteStorage<'pfd, #ty>
+fn prepare_prefab_aggregate_fields(
+    data_types: &mut Vec<Type>,
+    fields: &Fields,
+) -> (Vec<TokenStream>, Vec<Option<TokenStream>>) {
+    let mut subs = Vec::new();
+    let mut add_to_entity = Vec::new();
+    for field in fields.iter() {
+        let i = match data_types.iter().position(|t| *t == field.ty) {
+            Some(i) => i,
+            None => {
+                data_types.push(field.ty.clone());
+                data_types.len() - 1
             }
-        } else {
-            quote! {
-                <#ty as PrefabData<'pfd>>::SystemData
-            }
-        }
-    });
-    let adds = (0..data.len()).map(|n| {
-        let tuple_index = Literal::usize_unsuffixed(n);
-        let (_, name, is_component) = &data[n];
-        if *is_component {
-            quote! {
+        };
+        let tuple_index = Literal::usize_unsuffixed(i);
+        let name = field
+            .ident
+            .as_ref()
+            .expect("PrefabData derive only support named fields")
+            .clone();
+        if have_component_attribute(&field.attrs[..]) {
+            subs.push(None);
+            add_to_entity.push(quote! {
                 system_data.#tuple_index.insert(entity, self.#name.clone())?;
-            }
+            });
         } else {
-            quote! {
-                self.#name.add_to_entity(entity, &mut system_data.#tuple_index, entities, children)?;
-            }
-        }
-    });
-    let subs = (0..data.len()).filter_map(|n| {
-        let (_, name, is_component) = &data[n];
-        if *is_component {
-            None
-        } else {
-            let tuple_index = Literal::usize_unsuffixed(n);
-            Some(quote! {
-                if self.#name.load_sub_assets(progress, &mut system_data.#tuple_index)? {
+            subs.push(Some(quote! {
+                if #name.load_sub_assets(progress, &mut system_data.#tuple_index)? {
                     ret = true;
                 }
-            })
+            }));
+            add_to_entity.push(quote! {
+                #name.add_to_entity(entity, &mut system_data.#tuple_index, entities, children)?;
+            });
+        }
+    }
+    (add_to_entity, subs)
+}
+
+fn prepare_prefab_aggregate_struct(data: &DataStruct) -> (Vec<Type>, TokenStream, TokenStream) {
+    let mut data_types = Vec::new();
+    let (add_to_entity, subs) = prepare_prefab_aggregate_fields(&mut data_types, &data.fields);
+    let extract_fields_add = data.fields.iter().map(|f| {
+        let name = &f.ident;
+        quote! {
+            let #name = &self.#name;
+        }
+    });
+    let extract_fields_sub = data.fields.iter().map(|f| {
+        let name = &f.ident;
+        quote! {
+            let #name = &mut self.#name;
+        }
+    });
+    (
+        data_types,
+        quote! {
+            #(#extract_fields_add)*
+            #(#add_to_entity)*
+        },
+        quote! {
+            #(#extract_fields_sub)*
+            #(#subs)*
+        },
+    )
+}
+
+fn prepare_prefab_aggregate_enum(data: &DataEnum) -> (Vec<Type>, TokenStream, TokenStream) {
+    let mut data_types = Vec::new();
+    let mut subs = Vec::new();
+    let mut add_to_entity = Vec::new();
+
+    for variant in &data.variants {
+        let (variant_add_to_entity, variant_subs) =
+            prepare_prefab_aggregate_fields(&mut data_types, &variant.fields);
+        let field_names_add: Vec<_> = variant.fields.iter().map(|f| &f.ident).collect();
+        let field_names_sub = field_names_add.clone();
+        let ident = &variant.ident;
+        add_to_entity.push(quote! {
+            CustomPrefabData::#ident {#(#field_names_add,)*} => {
+                #(#variant_add_to_entity)*
+            }
+        });
+        subs.push(quote! {
+            CustomPrefabData::#ident {#(#field_names_sub,)*} => {
+                #(#variant_subs)*
+            }
+        });
+    }
+
+    (
+        data_types,
+        quote! {
+            match self {
+                #(#add_to_entity,)*
+            }
+        },
+        quote! {
+            match self {
+                #(#subs,)*
+            }
+        },
+    )
+}
+
+fn impl_prefab_data_aggregate(ast: &DeriveInput) -> TokenStream {
+    let base = &ast.ident;
+    let (data_types, add_to_entity, subs) = match &ast.data {
+        Data::Struct(ref s) => prepare_prefab_aggregate_struct(s),
+        Data::Enum(ref e) => prepare_prefab_aggregate_enum(e),
+        _ => panic!("PrefabData aggregate derive only support structs and enums"),
+    };
+    let system_data = data_types.iter().map(|t| {
+        quote! {
+            <#t as PrefabData<'pfd>>::SystemData
         }
     });
 
@@ -82,7 +160,7 @@ fn impl_prefab_data_aggregate(ast: &DeriveInput) -> TokenStream {
     quote! {
         impl<'pfd, #lf_tokens #ty_tokens> PrefabData<'pfd> for #base #ty_generics #where_clause {
             type SystemData = (
-                #(#system_datas,)*
+                #(#system_data,)*
             );
             type Result = ();
 
@@ -91,7 +169,7 @@ fn impl_prefab_data_aggregate(ast: &DeriveInput) -> TokenStream {
                              system_data: &mut Self::SystemData,
                              entities: &[Entity],
                              children: &[Entity]) -> ::std::result::Result<(), Error> {
-                #(#adds)*
+                #add_to_entity
                 Ok(())
             }
 
@@ -99,30 +177,10 @@ fn impl_prefab_data_aggregate(ast: &DeriveInput) -> TokenStream {
                                progress: &mut ProgressCounter,
                                system_data: &mut Self::SystemData) -> ::std::result::Result<bool, Error> {
                 let mut ret = false;
-                #(#subs)*
+                #subs
                 Ok(ret)
             }
         }
-    }
-}
-
-fn collect_field_data(ast: &Data) -> Vec<(Type, Ident, bool)> {
-    match *ast {
-        Data::Struct(ref s) => s
-            .fields
-            .iter()
-            .map(|f| {
-                (
-                    f.ty.clone(),
-                    f.ident
-                        .as_ref()
-                        .expect("PrefabData derive only support named fields")
-                        .clone(),
-                    have_component_attribute(&f.attrs[..]),
-                )
-            })
-            .collect(),
-        _ => panic!("PrefabData aggregate derive only support structs"),
     }
 }
 
