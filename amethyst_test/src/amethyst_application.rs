@@ -573,7 +573,6 @@ where
     {
         self.with_fn(assertion_fn)
     }
-
 }
 
 #[cfg(test)]

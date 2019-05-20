@@ -7,8 +7,8 @@ use crate::{
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     ecs::{
-        Component, DenseVecStorage, Entities, Join, Read, ReadStorage, Resources,
-        System, SystemData, Write, WriteExpect, WriteStorage,
+        Component, DenseVecStorage, Entities, Join, Read, ReadStorage, Resources, System,
+        SystemData, Write, WriteExpect, WriteStorage,
     },
     Hidden, HiddenPropagate,
 };
@@ -146,13 +146,14 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
             mut glyphs_res,
         ): Self::SystemData,
     ) {
-        let (factory, queue) = if let (Some(factory), Some(queue)) = (maybe_factory.as_mut(), maybe_queue) {
-            (factory, queue)
-        } else {
-            // Rendering system not present which might be the case during testing.
-            // Just do nothing.
-            return;
-        };
+        let (factory, queue) =
+            if let (Some(factory), Some(queue)) = (maybe_factory.as_mut(), maybe_queue) {
+                (factory, queue)
+            } else {
+                // Rendering system not present which might be the case during testing.
+                // Just do nothing.
+                return;
+            };
 
         let glyph_tex = glyphs_res.glyph_tex.get_or_insert_with(|| {
             let (w, h) = self.glyph_brush.texture_dimensions();
