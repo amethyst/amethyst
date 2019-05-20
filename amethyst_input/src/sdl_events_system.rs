@@ -125,7 +125,7 @@ impl<T: BindingTypes> SdlEventsSystem<T> {
         &mut self,
         event: &Event,
         handler: &mut InputHandler<T>,
-        output: &mut EventChannel<InputEvent<AC>>,
+        output: &mut EventChannel<InputEvent<T::Action>>,
     ) {
         use self::ControllerEvent::*;
 
@@ -207,7 +207,7 @@ impl<T: BindingTypes> SdlEventsSystem<T> {
     fn initialize_controllers(
         &mut self,
         handler: &mut InputHandler<T>,
-        output: &mut EventChannel<InputEvent<AC>>,
+        output: &mut EventChannel<InputEvent<T::Action>>,
     ) {
         use crate::controller::ControllerEvent::ControllerConnected;
 
