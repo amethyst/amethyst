@@ -1,4 +1,6 @@
-use std::{any::Any, marker::PhantomData, panic, path::PathBuf, sync::Mutex, thread};
+#[cfg(not(windows))]
+use std::thread;
+use std::{any::Any, marker::PhantomData, panic, path::PathBuf, sync::Mutex};
 
 use amethyst::{
     self,
@@ -212,6 +214,28 @@ where
     ///
     /// This method should be called instead of the `.build()` method if the application is to be
     /// run, as this avoids a segfault on Linux when using the GL software renderer.
+    #[cfg(windows)]
+    pub fn run(self) -> Result<(), Error>
+    where
+        for<'b> R: EventReader<'b, Event = E>,
+    {
+        let params = (self.bundle_add_fns, self.resource_add_fns, self.state_fns);
+
+        let application = Mutex::new(Self::build_internal(params)?);
+        panic::catch_unwind(move || {
+            application
+                .lock()
+                .expect("Expected to get application lock")
+                .run()
+        })
+        .map_err(Self::box_any_to_error)
+    }
+
+    /// Runs the application and returns `Ok(())` if nothing went wrong.
+    ///
+    /// This method should be called instead of the `.build()` method if the application is to be
+    /// run, as this avoids a segfault on Linux when using the GL software renderer.
+    #[cfg(not(windows))]
     pub fn run(self) -> Result<(), Error>
     where
         for<'b> R: EventReader<'b, Event = E>,
@@ -897,6 +921,65 @@ mod test {
                 })
             })
             .run()
+    }
+
+    /// This is here because on Windows, a segmentation fault happens when:
+    ///
+    /// * There are multiple threads, each with its own sub-thread in the same application.
+    /// * One of the sub-threads initializes a COM object in a `lazy_static` variable.
+    /// * That sub-thread is joined.
+    /// * Another sub-thread accesses the COM object through the same `lazy_static` variable.
+    ///
+    /// For more details, see <https://github.com/amethyst/amethyst/issues/1595>.
+    #[cfg(feature = "graphics")]
+    mod audio_test {
+        use amethyst::{
+            assets::AssetStorage,
+            audio::{AudioBundle, Source},
+            error::Error,
+        };
+
+        use super::AmethystApplication;
+
+        #[test]
+        fn audio_zero() -> Result<(), Error> {
+            AmethystApplication::render_base("audio_zero", false)
+                .with_bundle(AudioBundle::default())
+                .with_assertion(|world| {
+                    world.read_resource::<AssetStorage<Source>>();
+                })
+                .run()
+        }
+
+        #[test]
+        fn audio_one() -> Result<(), Error> {
+            AmethystApplication::render_base("audio_one", false)
+                .with_bundle(AudioBundle::default())
+                .with_assertion(|world| {
+                    world.read_resource::<AssetStorage<Source>>();
+                })
+                .run()
+        }
+
+        #[test]
+        fn audio_two() -> Result<(), Error> {
+            AmethystApplication::render_base("audio_two", false)
+                .with_bundle_fn(|| AudioBundle::default())
+                .with_assertion(|world| {
+                    world.read_resource::<AssetStorage<Source>>();
+                })
+                .run()
+        }
+
+        #[test]
+        fn audio_three() -> Result<(), Error> {
+            AmethystApplication::render_base("audio_three", false)
+                .with_bundle_fn(|| AudioBundle::default())
+                .with_assertion(|world| {
+                    world.read_resource::<AssetStorage<Source>>();
+                })
+                .run()
+        }
     }
 
     // === Resources === //

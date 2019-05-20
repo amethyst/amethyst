@@ -113,7 +113,7 @@ In either case, open `display_config.ron` and change its contents to the followi
 > If you have never run into Rusty Object Notation before (or RON for short), 
 > it is a data storage format that mirrors Rust's syntax. Here, the
 > data represents the [`DisplayConfig`][displayconf] struct. If you want to
-> learn more abour the RON syntax, you can visit the [official repository][ron].
+> learn more about the RON syntax, you can visit the [official repository][ron].
 
 This will set the default window dimensions to 500 x 500, and make the title bar
 say "Pong!" instead of the sad, lowercase default of "pong".
@@ -208,8 +208,8 @@ It should look something like this:
 
 
 [ron]: https://github.com/ron-rs/ron
-[st]: https://www.amethyst.rs/doc/latest/doc/amethyst/prelude/trait.SimpleState.html
-[ap]: https://www.amethyst.rs/doc/latest/doc/amethyst/struct.Application.html
+[st]: https://docs-src.amethyst.rs/stable/amethyst/prelude/trait.SimpleState.html
+[ap]: https://docs-src.amethyst.rs/stable/amethyst/struct.Application.html
 [gs]: ../getting-started.html
-[displayconf]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.DisplayConfig.html
+[displayconf]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.DisplayConfig.html
 

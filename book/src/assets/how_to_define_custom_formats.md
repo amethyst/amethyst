@@ -182,6 +182,6 @@ If you are defining a new format that may be useful to others, [please send us a
     ```
 
 [bk_custom_assets]: how_to_define_custom_assets.html
-[doc_hrs]: https://www.amethyst.rs/doc/latest/doc/amethyst_assets/struct.HotReloadStrategy.html
-[doc_ron_format]: https://www.amethyst.rs/doc/latest/doc/amethyst_assets/struct.RonFormat.html
+[doc_hrs]: https://docs-src.amethyst.rs/stable/amethyst_assets/struct.HotReloadStrategy.html
+[doc_ron_format]: https://docs-src.amethyst.rs/stable/amethyst_assets/struct.RonFormat.html
 [gh_contributing]: https://github.com/amethyst/amethyst/blob/master/docs/CONTRIBUTING.md
