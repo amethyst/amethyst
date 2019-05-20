@@ -42,8 +42,9 @@ impl<D> Format<D> for JsonFormat
 where
     D: for<'a> Deserialize<'a> + Send + Sync + 'static,
 {
-    const NAME: &'static str = "Json";
-    type Options = ();
+    fn name(&self) -> &'static str {
+        "Json"
+    }
 
     fn import_simple(&self, bytes: Vec<u8>) -> Result<D, Error> {
         use serde_json::de::Deserializer;

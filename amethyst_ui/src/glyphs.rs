@@ -66,12 +66,6 @@ impl FontState {
             FontState::Ready(id) => Some(*id),
         }
     }
-    fn ready(&self) -> bool {
-        match self {
-            FontState::NotFound => false,
-            FontState::Ready(_) => true,
-        }
-    }
 }
 
 #[derive(Debug, Hash, Clone, Copy)]
@@ -157,8 +151,7 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
 
         let glyph_tex = glyphs_res.glyph_tex.get_or_insert_with(|| {
             let (w, h) = self.glyph_brush.texture_dimensions();
-            let built_texture = create_glyph_texture(factory, *queue, w, h);
-            tex_storage.insert(built_texture)
+            tex_storage.insert(create_glyph_texture(factory, *queue, w, h))
         });
 
         let mut tex = tex_storage
@@ -324,8 +317,6 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                 glyph_brush_ref.queue_custom_layout(section, &layout);
             }
         }
-
-        self.fonts_map.retain(|_, f| f.ready());
 
         loop {
             let action = glyph_brush_ref.process_queued(
@@ -530,8 +521,7 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                 }
                 Err(BrushError::TextureTooSmall { suggested: (w, h) }) => {
                     // Replace texture in asset storage. No handles have to be updated.
-                    let built_texture = create_glyph_texture(factory, *queue, w, h);
-                    tex_storage.replace(glyph_tex, built_texture);
+                    tex_storage.replace(glyph_tex, create_glyph_texture(factory, *queue, w, h));
                     tex = tex_storage
                         .get(glyph_tex)
                         .and_then(B::unwrap_texture)
