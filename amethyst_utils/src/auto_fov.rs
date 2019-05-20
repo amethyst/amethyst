@@ -263,10 +263,10 @@ impl Default for AutoFovSystem {
 
 #[inline]
 fn get_fovy(camera: &Camera) -> f32 {
-    (-1.0 / camera.proj[(1, 1)]).atan() * 2.0
+    (-1.0 / camera.as_matrix()[(1, 1)]).atan() * 2.0
 }
 
 #[inline]
 fn set_aspect(camera: &mut Camera, new_aspect: f32) {
-    camera.proj[(0, 0)] = (camera.proj[(1, 1)] / new_aspect) * -1.0;
+    camera.as_matrix_mut()[(0, 0)] = (camera.as_matrix()[(1, 1)] / new_aspect) * -1.0;
 }

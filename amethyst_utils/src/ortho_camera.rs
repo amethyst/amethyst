@@ -3,9 +3,9 @@
 use amethyst_assets::PrefabData;
 use amethyst_core::{
     ecs::{Component, DenseVecStorage, Entity, Join, ReadExpect, System, WriteStorage},
-    math::Orthographic3,
     Axis2,
 };
+use amethyst_rendy::camera::Orthographic;
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
 use amethyst_rendy::camera::Camera;
@@ -227,16 +227,16 @@ impl<'a> System<'a> for CameraOrthoSystem {
                 ortho_camera.aspect_ratio_cache = aspect;
                 let offsets = ortho_camera.camera_offsets(aspect);
 
-                let prev = Orthographic3::from_matrix_unchecked(camera.proj);
-                camera.proj = Orthographic3::new(
-                    offsets.0,
-                    offsets.1,
-                    offsets.2,
-                    offsets.3,
-                    prev.znear(),
-                    prev.zfar(),
-                )
-                .to_homogeneous();
+                if let Some(prev) = camera.projection().as_orthographic() {
+                    camera.set_projection(Orthographic::new(
+                        offsets.0,
+                        offsets.1,
+                        offsets.2,
+                        offsets.3,
+                        prev.near(),
+                        prev.far(),
+                    ).into());
+                }
             }
         }
     }

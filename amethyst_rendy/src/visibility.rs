@@ -138,7 +138,7 @@ impl<'a> System<'a> for VisibilitySortingSystem {
 
         let camera_centroid = camera_transform.global_matrix().transform_point(&origin);
         let frustum = Frustum::new(
-            convert::<_, Matrix4<Float>>(camera.proj)
+            convert::<_, Matrix4<Float>>(*camera.as_matrix())
                 * camera_transform.global_matrix().try_inverse().unwrap(),
         );
 
