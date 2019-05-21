@@ -1,25 +1,23 @@
-use std::{any::Any, marker::PhantomData, panic, path::PathBuf, sync::Mutex, thread};
+#[cfg(not(windows))]
+use std::thread;
+use std::{any::Any, marker::PhantomData, panic, path::PathBuf, sync::Mutex};
 
 use amethyst::{
     self,
-    animation::AnimationBundle,
     core::{transform::TransformBundle, EventReader, SystemBundle},
     ecs::prelude::*,
     error::Error,
-    input::InputBundle,
+    input::{BindingTypes, InputBundle},
     prelude::*,
-    renderer::{
-        DisplayConfig, DrawFlat2D, Material, Pipeline, PipelineBuilder, RenderBundle,
-        ScreenDimensions, SpriteRender, Stage, StageBuilder,
-    },
+    renderer::types::DefaultBackend,
     shred::Resource,
-    ui::{DrawUi, UiBundle},
+    ui::UiBundle,
     utils::application_root_dir,
+    window::ScreenDimensions,
     StateEventReader,
 };
 use boxfnonce::SendBoxFnOnce;
 use derivative::Derivative;
-use hetseq::Queue;
 use lazy_static::lazy_static;
 
 use crate::{
@@ -45,13 +43,6 @@ type BundleAddFn = SendBoxFnOnce<
 //   ergonomics of this test harness.
 type FnResourceAdd = Box<dyn FnMut(&mut World) + Send>;
 type FnState<T, E> = SendBoxFnOnce<'static, (), Box<dyn State<T, E>>>;
-
-type DefaultPipeline = PipelineBuilder<
-    Queue<(
-        Queue<()>,
-        StageBuilder<Queue<(Queue<(Queue<()>, DrawFlat2D)>, DrawUi)>>,
-    )>,
->;
 
 /// Screen width used in predefined display configuration.
 pub const SCREEN_WIDTH: u32 = 800;
@@ -128,51 +119,15 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
     ///
     /// This also adds a `ScreenDimensions` resource to the `World` so that UI calculations can be
     /// done.
-    pub fn ui_base<T: BindingTypes>(
+    pub fn ui_base<B: BindingTypes>(
     ) -> AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader> {
         AmethystApplication::blank()
             .with_bundle(TransformBundle::new())
-            .with_ui_bundles::<T>()
+            .with_ui_bundles::<B>()
             .with_resource(ScreenDimensions::new(SCREEN_WIDTH, SCREEN_HEIGHT, HIDPI))
     }
 
-    /// Returns an application with the Animation, Transform, and Render bundles.
-    ///
-    /// If you requite `InputBundle` and `UiBundle`, you can call the `with_ui_bundles::<T>()`
-    /// method.
-    ///
-    /// # Parameters
-    ///
-    /// * `test_name`: Name of the test, used to populate the window title.
-    /// * `visibility`: Whether the window should be visible.
-    ///
-    /// [stringly]: http://wiki.c2.com/?StringlyTyped
-    pub fn render_base<'name, N>(
-        test_name: N,
-        visibility: bool,
-    ) -> AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader>
-    where
-        N: Into<&'name str>,
-    {
-        AmethystApplication::blank()
-            .with_bundle(AnimationBundle::<u32, Material>::new(
-                "material_animation_control_system",
-                "material_sampler_interpolation_system",
-            ))
-            .with_bundle(AnimationBundle::<u32, SpriteRender>::new(
-                "sprite_render_animation_control_system",
-                "sprite_render_sampler_interpolation_system",
-            ))
-            .with_bundle(TransformBundle::new().with_dep(&[
-                "material_animation_control_system",
-                "material_sampler_interpolation_system",
-                "sprite_render_animation_control_system",
-                "sprite_render_sampler_interpolation_system",
-            ]))
-            .with_render_bundle(test_name, visibility)
-    }
-
-    /// Returns a `String` to `<crate_dir>/assets`.
+    /// Returns a `PathBuf` to `<crate_dir>/assets`.
     pub fn assets_dir() -> Result<PathBuf, Error> {
         Ok(application_root_dir()?.join("assets"))
     }
@@ -259,6 +214,28 @@ where
     ///
     /// This method should be called instead of the `.build()` method if the application is to be
     /// run, as this avoids a segfault on Linux when using the GL software renderer.
+    #[cfg(windows)]
+    pub fn run(self) -> Result<(), Error>
+    where
+        for<'b> R: EventReader<'b, Event = E>,
+    {
+        let params = (self.bundle_add_fns, self.resource_add_fns, self.state_fns);
+
+        let application = Mutex::new(Self::build_internal(params)?);
+        panic::catch_unwind(move || {
+            application
+                .lock()
+                .expect("Expected to get application lock")
+                .run()
+        })
+        .map_err(Self::box_any_to_error)
+    }
+
+    /// Runs the application and returns `Ok(())` if nothing went wrong.
+    ///
+    /// This method should be called instead of the `.build()` method if the application is to be
+    /// run, as this avoids a segfault on Linux when using the GL software renderer.
+    #[cfg(not(windows))]
     pub fn run(self) -> Result<(), Error>
     where
         for<'b> R: EventReader<'b, Event = E>,
@@ -450,42 +427,10 @@ where
     ///
     /// # Type Parameters
     ///
-    /// * `AX`: Type representing the movement axis.
-    /// * `AC`: Type representing actions.
-    pub fn with_ui_bundles<T: BindingTypes>(self) -> Self {
-        self.with_bundle(InputBundle::<T>::new())
-            .with_bundle(UiBundle::<T>::new())
-    }
-
-    /// Registers the `RenderBundle` with this application.
-    ///
-    /// This is a convenience function that registers the `RenderBundle` using the predefined
-    /// [`display_config`][disp] and [`pipeline`][pipe].
-    ///
-    /// # Parameters
-    ///
-    /// * `title`: Window title.
-    /// * `visibility`: Whether the window should be visible.
-    ///
-    /// [disp]: #method.display_config
-    /// [pipe]: #method.pipeline
-    pub fn with_render_bundle<'name, N>(self, title: N, visibility: bool) -> Self
-    where
-        N: Into<&'name str>,
-    {
-        // TODO: We can default to the function name once this RFC is implemented:
-        // <https://github.com/rust-lang/rfcs/issues/1743>
-        // <https://github.com/rust-lang/rfcs/pull/1719>
-        let title = title.into().to_string();
-
-        let display_config = Self::display_config(title.clone(), visibility);
-        let render_bundle_fn = move || {
-            RenderBundle::new(Self::pipeline(), Some(display_config)).with_sprite_sheet_processor()
-        };
-
-        self.with_app_name(title)
-            .with_bundle_fn(render_bundle_fn)
-            .mark_render()
+    /// * `B`: Type representing the input binding types.
+    pub fn with_ui_bundles<B: BindingTypes>(self) -> Self {
+        self.with_bundle(InputBundle::<B>::new())
+            .with_bundle(UiBundle::<DefaultBackend, B>::new())
     }
 
     /// Adds a resource to the `World`.
@@ -628,83 +573,6 @@ where
     {
         self.with_fn(assertion_fn)
     }
-
-    /// Marks that this application uses the `RenderBundle`.
-    ///
-    /// **Note:** There is a `.with_render_bundle()` convenience function if you just need the
-    /// `RenderBundle` with predefined parameters.
-    ///
-    /// This is used to avoid a window initialization race condition that causes tests to fail.
-    /// See <https://github.com/tomaka/glutin/issues/1038>.
-    pub fn mark_render(mut self) -> Self {
-        self.render = true;
-        self
-    }
-
-    /// Convenience function that returns a `DisplayConfig`.
-    ///
-    /// The configuration uses the following parameters:
-    ///
-    /// * `title`: As provided.
-    /// * `fullscreen`: `false`
-    /// * `dimensions`: `Some((800, 600))`
-    /// * `min_dimensions`: `Some((400, 300))`
-    /// * `max_dimensions`: `None`
-    /// * `vsync`: `true`
-    /// * `multisampling`: `0` (disabled)
-    /// * `visibility`: As provided.
-    /// * always_on_top: false
-    /// * decorations: true
-    /// * maximized: false
-    /// * multitouch: true
-    /// * resizable: true
-    /// * transparent: true
-    ///
-    /// This is exposed to allow external crates a convenient way of obtaining display
-    /// configuration.
-    ///
-    /// # Parameters
-    ///
-    /// * `title`: Window title.
-    /// * `visibility`: Whether the window should be visible.
-    pub fn display_config(title: String, visibility: bool) -> DisplayConfig {
-        DisplayConfig {
-            title,
-            fullscreen: false,
-            dimensions: Some((SCREEN_WIDTH, SCREEN_HEIGHT)),
-            min_dimensions: Some((SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)),
-            max_dimensions: None,
-            loaded_icon: None,
-            icon: None,
-            vsync: true,
-            multisampling: 0, // Must be multiple of 2, use 0 to disable
-            visibility,
-            always_on_top: false,
-            decorations: true,
-            maximized: false,
-            multitouch: true,
-            resizable: true,
-            transparent: true,
-        }
-    }
-
-    /// Convenience function that returns a `PipelineBuilder`.
-    ///
-    /// The pipeline is built from the following:
-    ///
-    /// * Black clear target.
-    /// * `DrawFlat2D` pass with transparency.
-    /// * `DrawUi` pass.
-    ///
-    /// This is exposed to allow external crates a convenient way of obtaining a render pipeline.
-    pub fn pipeline() -> DefaultPipeline {
-        Pipeline::build().with_stage(
-            Stage::with_backbuffer()
-                .clear_target([0., 0., 0., 0.], 0.)
-                .with_pass(DrawFlat2D::new())
-                .with_pass(DrawUi::new()),
-        )
-    }
 }
 
 #[cfg(test)]
@@ -717,8 +585,8 @@ mod test {
         ecs::prelude::*,
         error::Error,
         prelude::*,
-        renderer::ScreenDimensions,
         ui::FontAsset,
+        window::ScreenDimensions,
     };
 
     use super::AmethystApplication;
@@ -907,37 +775,9 @@ mod test {
             world.read_resource::<ScreenDimensions>();
         };
 
-        AmethystApplication::ui_base::<amethyst_ui::StringBindings>()
+        AmethystApplication::ui_base::<amethyst::input::StringBindings>()
             .with_assertion(assertion_fn)
             .run()
-    }
-
-    #[test]
-    #[cfg(feature = "graphics")]
-    fn render_base_application_can_load_material_animations() -> Result<(), Error> {
-        use crate::MaterialAnimationFixture;
-
-        AmethystApplication::render_base(
-            "render_base_application_can_load_material_animations",
-            false,
-        )
-        .with_effect(MaterialAnimationFixture::effect)
-        .with_assertion(MaterialAnimationFixture::assertion)
-        .run()
-    }
-
-    #[test]
-    #[cfg(feature = "graphics")]
-    fn render_base_application_can_load_sprite_render_animations() -> Result<(), Error> {
-        use crate::SpriteRenderAnimationFixture;
-
-        AmethystApplication::render_base(
-            "render_base_application_can_load_sprite_render_animations",
-            false,
-        )
-        .with_effect(SpriteRenderAnimationFixture::effect)
-        .with_assertion(SpriteRenderAnimationFixture::assertion)
-        .run()
     }
 
     #[test]
@@ -1080,6 +920,65 @@ mod test {
                 })
             })
             .run()
+    }
+
+    /// This is here because on Windows, a segmentation fault happens when:
+    ///
+    /// * There are multiple threads, each with its own sub-thread in the same application.
+    /// * One of the sub-threads initializes a COM object in a `lazy_static` variable.
+    /// * That sub-thread is joined.
+    /// * Another sub-thread accesses the COM object through the same `lazy_static` variable.
+    ///
+    /// For more details, see <https://github.com/amethyst/amethyst/issues/1595>.
+    #[cfg(feature = "graphics")]
+    mod audio_test {
+        use amethyst::{
+            assets::AssetStorage,
+            audio::{AudioBundle, Source},
+            error::Error,
+        };
+
+        use super::AmethystApplication;
+
+        #[test]
+        fn audio_zero() -> Result<(), Error> {
+            AmethystApplication::render_base("audio_zero", false)
+                .with_bundle(AudioBundle::default())
+                .with_assertion(|world| {
+                    world.read_resource::<AssetStorage<Source>>();
+                })
+                .run()
+        }
+
+        #[test]
+        fn audio_one() -> Result<(), Error> {
+            AmethystApplication::render_base("audio_one", false)
+                .with_bundle(AudioBundle::default())
+                .with_assertion(|world| {
+                    world.read_resource::<AssetStorage<Source>>();
+                })
+                .run()
+        }
+
+        #[test]
+        fn audio_two() -> Result<(), Error> {
+            AmethystApplication::render_base("audio_two", false)
+                .with_bundle_fn(|| AudioBundle::default())
+                .with_assertion(|world| {
+                    world.read_resource::<AssetStorage<Source>>();
+                })
+                .run()
+        }
+
+        #[test]
+        fn audio_three() -> Result<(), Error> {
+            AmethystApplication::render_base("audio_three", false)
+                .with_bundle_fn(|| AudioBundle::default())
+                .with_assertion(|world| {
+                    world.read_resource::<AssetStorage<Source>>();
+                })
+                .run()
+        }
     }
 
     // === Resources === //

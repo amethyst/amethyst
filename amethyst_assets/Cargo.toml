@@ -12,8 +12,8 @@ license = "MIT/Apache-2.0"
 keywords = ["game", "asset", "resource", "management", "amethyst"]
 categories = ["filesystem"]
 
-documentation = "https://www.amethyst.rs/doc/latest/doc/amethyst/"
-homepage = "https://www.amethyst.rs/"
+documentation = "https://docs-src.amethyst.rs/stable/amethyst_assets/"
+homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
 [badges]

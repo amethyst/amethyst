@@ -5,7 +5,7 @@
 //!
 //! [rs]: https://www.rust-lang.org/
 //! [gh]: https://github.com/amethyst/amethyst
-//! [bk]: https://www.amethyst.rs/book/master/
+//! [bk]: https://book.amethyst.rs/master/
 //!
 //! This project is a work in progress and is very incomplete. Pardon the dust!
 //!
@@ -13,7 +13,7 @@
 //!
 //! ```rust,no_run
 //! use amethyst::prelude::*;
-//! use amethyst::renderer::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+//! use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 //!
 //! struct GameState;
 //!
@@ -52,7 +52,7 @@
 //! }
 //! ```
 
-#![doc(html_logo_url = "https://www.amethyst.rs/brand/logo-standard.svg")]
+#![doc(html_logo_url = "https://amethyst.rs/brand/logo-standard.svg")]
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 #[cfg(feature = "animation")]

@@ -4,11 +4,11 @@ use crate::{
     pass::UiArgs, text::CachedGlyph, FontAsset, LineMode, Selected, TextEditing, UiText,
     UiTransform,
 };
-use amethyst_assets::{AssetStorage, Handle, Loader};
+use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     ecs::{
-        Component, DenseVecStorage, Entities, Join, Read, ReadExpect, ReadStorage, Resources,
-        System, SystemData, Write, WriteExpect, WriteStorage,
+        Component, DenseVecStorage, Entities, Join, Read, ReadStorage, Resources, System,
+        SystemData, Write, WriteExpect, WriteStorage,
     },
     Hidden, HiddenPropagate,
 };
@@ -31,12 +31,12 @@ use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Debug)]
 pub struct UiGlyphsResource {
-    glyph_tex: Handle<Texture>,
+    glyph_tex: Option<Handle<Texture>>,
 }
 
 impl UiGlyphsResource {
-    pub fn glyph_tex(&self) -> &Handle<Texture> {
-        &self.glyph_tex
+    pub fn glyph_tex(&self) -> Option<&Handle<Texture>> {
+        self.glyph_tex.as_ref()
     }
 }
 
@@ -66,12 +66,6 @@ impl FontState {
             FontState::Ready(id) => Some(*id),
         }
     }
-    fn ready(&self) -> bool {
-        match self {
-            FontState::NotFound => false,
-            FontState::Ready(_) => true,
-        }
-    }
 }
 
 #[derive(Debug, Hash, Clone, Copy)]
@@ -93,7 +87,6 @@ impl LineBreaker for CustomLineBreaker {
 pub struct UiGlyphsSystem<B: Backend> {
     glyph_brush: GlyphBrush<'static, (u32, UiArgs)>,
     fonts_map: HashMap<u32, FontState>,
-    transitioned: bool,
     marker: PhantomData<B>,
 }
 
@@ -105,7 +98,6 @@ impl<B: Backend> UiGlyphsSystem<B> {
                 .initial_cache_size((512, 512))
                 .build(),
             fonts_map: Default::default(),
-            transitioned: false,
             marker: PhantomData,
         }
     }
@@ -113,7 +105,8 @@ impl<B: Backend> UiGlyphsSystem<B> {
 
 impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
     type SystemData = (
-        WriteExpect<'a, Factory<B>>,
+        Option<Write<'a, Factory<B>>>,
+        Option<Read<'a, QueueId>>,
         Entities<'a>,
         ReadStorage<'a, UiTransform>,
         WriteStorage<'a, UiText>,
@@ -125,14 +118,14 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
         ReadStorage<'a, Tint>,
         Write<'a, AssetStorage<Texture>>,
         Read<'a, AssetStorage<FontAsset>>,
-        ReadExpect<'a, QueueId>,
-        ReadExpect<'a, UiGlyphsResource>,
+        WriteExpect<'a, UiGlyphsResource>,
     );
 
     fn run(
         &mut self,
         (
-            mut factory,
+            mut maybe_factory,
+            maybe_queue,
             entities,
             transforms,
             mut texts,
@@ -144,45 +137,27 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
             tints,
             mut tex_storage,
             font_storage,
-            queue,
-            glyphs_res,
+            mut glyphs_res,
         ): Self::SystemData,
     ) {
-        let mut tex = if let Some(tex) = tex_storage
-            .get(&glyphs_res.glyph_tex)
-            .and_then(B::unwrap_texture)
-        {
-            tex
-        } else {
-            return;
-        };
+        let (factory, queue) =
+            if let (Some(factory), Some(queue)) = (maybe_factory.as_mut(), maybe_queue) {
+                (factory, queue)
+            } else {
+                // Rendering system not present which might be the case during testing.
+                // Just do nothing.
+                return;
+            };
 
-        if !self.transitioned {
-            unsafe {
-                factory.transition_image(
-                    tex.image().clone(),
-                    hal::image::SubresourceRange {
-                        aspects: hal::format::Aspects::COLOR,
-                        levels: 0..1,
-                        layers: 0..1,
-                    },
-                    ImageState {
-                        queue: *queue,
-                        stage: hal::pso::PipelineStage::TOP_OF_PIPE,
-                        access: hal::image::Access::empty(),
-                        layout: hal::image::Layout::Undefined,
-                    },
-                    ImageState {
-                        queue: *queue,
-                        stage: hal::pso::PipelineStage::FRAGMENT_SHADER
-                            | hal::pso::PipelineStage::TRANSFER,
-                        access: hal::image::Access::SHADER_READ,
-                        layout: hal::image::Layout::General,
-                    },
-                )
-            }
-            self.transitioned = true;
-        }
+        let glyph_tex = glyphs_res.glyph_tex.get_or_insert_with(|| {
+            let (w, h) = self.glyph_brush.texture_dimensions();
+            tex_storage.insert(create_glyph_texture(factory, *queue, w, h))
+        });
+
+        let mut tex = tex_storage
+            .get(glyph_tex)
+            .and_then(B::unwrap_texture)
+            .expect("Glyph texture is created synchronously");
 
         let fonts_map_ref = &mut self.fonts_map;
         let glyph_brush_ref = &mut self.glyph_brush;
@@ -342,8 +317,6 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                 glyph_brush_ref.queue_custom_layout(section, &layout);
             }
         }
-
-        self.fonts_map.retain(|_, f| f.ready());
 
         loop {
             let action = glyph_brush_ref.process_queued(
@@ -548,22 +521,9 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                 }
                 Err(BrushError::TextureTooSmall { suggested: (w, h) }) => {
                     // Replace texture in asset storage. No handles have to be updated.
-                    let built_texture = create_glyph_texture(w, h)
-                        .build(
-                            ImageState {
-                                queue: *queue,
-                                stage: hal::pso::PipelineStage::FRAGMENT_SHADER,
-                                access: hal::image::Access::SHADER_READ,
-                                layout: hal::image::Layout::General,
-                            },
-                            &mut factory,
-                        )
-                        .map(B::wrap_texture)
-                        .expect("Failed to create glyph texture");
-
-                    tex_storage.replace(&glyphs_res.glyph_tex, built_texture);
+                    tex_storage.replace(glyph_tex, create_glyph_texture(factory, *queue, w, h));
                     tex = tex_storage
-                        .get(&glyphs_res.glyph_tex)
+                        .get(glyph_tex)
                         .and_then(B::unwrap_texture)
                         .unwrap();
                     glyph_brush_ref.resize_texture(w, h);
@@ -574,17 +534,16 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
 
     fn setup(&mut self, res: &mut Resources) {
         Self::SystemData::setup(res);
-        let glyph_tex = {
-            let (loader, tex_storage) =
-                <(ReadExpect<'_, Loader>, Read<'_, AssetStorage<Texture>>)>::fetch(res);
-            let (w, h) = self.glyph_brush.texture_dimensions();
-            loader.load_from_data(create_glyph_texture(w, h).into(), (), &tex_storage)
-        };
-        res.insert(UiGlyphsResource { glyph_tex });
+        res.insert(UiGlyphsResource { glyph_tex: None });
     }
 }
 
-fn create_glyph_texture(w: u32, h: u32) -> TextureBuilder<'static> {
+fn create_glyph_texture<B: Backend>(
+    factory: &mut Factory<B>,
+    queue: QueueId,
+    w: u32,
+    h: u32,
+) -> Texture {
     use hal::format::{Component as C, Swizzle};
     TextureBuilder::new()
         .with_kind(hal::image::Kind::D2(w, h, 1, 1))
@@ -595,6 +554,17 @@ fn create_glyph_texture(w: u32, h: u32) -> TextureBuilder<'static> {
         // TODO: This will not work properly on metal :(
         // need to add extra uniform and mask in shader for metal
         .with_swizzle(Swizzle(C::One, C::One, C::One, C::R))
+        .build(
+            ImageState {
+                queue,
+                stage: hal::pso::PipelineStage::FRAGMENT_SHADER,
+                access: hal::image::Access::SHADER_READ,
+                layout: hal::image::Layout::General,
+            },
+            factory,
+        )
+        .map(B::wrap_texture)
+        .expect("Failed to create glyph texture")
 }
 
 fn selection_span(editing: &TextEditing, string: &str) -> Option<(usize, usize)> {

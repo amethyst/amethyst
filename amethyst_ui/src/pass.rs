@@ -207,12 +207,10 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
                     &self.white_tex,
                     hal::image::Layout::ShaderReadOnlyOptimal,
                 ),
-                self.textures.insert(
-                    factory,
-                    resources,
-                    glyphs_res.glyph_tex(),
-                    hal::image::Layout::General,
-                ),
+                glyphs_res.glyph_tex().and_then(|tex| {
+                    self.textures
+                        .insert(factory, resources, tex, hal::image::Layout::General)
+                }),
             ) {
                 changed = changed || white_changed || glyph_changed;
                 (white_tex_id, glyph_tex_id)

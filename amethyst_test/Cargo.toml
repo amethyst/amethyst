@@ -7,8 +7,8 @@ description = "Amethyst test utilities crate"
 keywords = ["test", "amethyst"]
 categories = ["game-engines"]
 
-documentation = "https://www.amethyst.rs/doc/latest/doc/amethyst_test/"
-homepage = "https://www.amethyst.rs/"
+documentation = "https://docs-src.amethyst.rs/stable/amethyst_test/"
+homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 license = "MIT/Apache-2.0"
 
@@ -17,7 +17,6 @@ amethyst = { path = "..", version = "0.10.0" }
 boxfnonce = "0.1"
 derivative = "1.0"
 derive-new = "0.5"
-hetseq = "0.2"
 lazy_static = "1.3"
 
 [features]

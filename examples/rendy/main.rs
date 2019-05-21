@@ -45,6 +45,7 @@ use amethyst_rendy::{
         hal::{
             command::{ClearDepthStencil, ClearValue},
             format::Format,
+            image,
         },
         mesh::{Normal, Position, Tangent, TexCoord},
         texture::palette::load_from_linear_rgba,
@@ -608,7 +609,7 @@ fn main() -> amethyst::Result<()> {
 
 #[derive(Default)]
 struct ExampleGraph {
-    last_dimensions: Option<ScreenDimensions>,
+    dimensions: Option<ScreenDimensions>,
     last_mode: RenderMode,
     surface_format: Option<Format>,
     dirty: bool,
@@ -626,9 +627,9 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
         let new_dimensions = res.try_fetch::<ScreenDimensions>();
         use std::ops::Deref;
-        if self.last_dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
+        if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
             self.dirty = true;
-            self.last_dimensions = new_dimensions.map(|d| d.clone());
+            self.dimensions = new_dimensions.map(|d| d.clone());
             return false;
         }
         return self.dirty;
@@ -640,24 +641,31 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         let (window, render_mode) =
             <(ReadExpect<'_, Arc<Window>>, ReadExpect<'_, RenderMode>)>::fetch(res);
 
-        let surface = factory.create_surface(window.clone());
+        let surface = factory.create_surface(&window);
 
         // cache surface format to speed things up
         let surface_format = *self
             .surface_format
             .get_or_insert_with(|| factory.get_surface_format(&surface));
 
-        let mut graph_builder = GraphBuilder::new();
+        let dimensions = self.dimensions.as_ref().unwrap();
+        let window_kind = image::Kind::D2(
+            dbg!(dimensions.width()) as u32,
+            dimensions.height() as u32,
+            1,
+            1,
+        );
 
+        let mut graph_builder = GraphBuilder::new();
         let color = graph_builder.create_image(
-            surface.kind(),
+            window_kind,
             1,
             surface_format,
             Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
         );
 
         let depth = graph_builder.create_image(
-            surface.kind(),
+            window_kind,
             1,
             Format::D32Sfloat,
             Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),

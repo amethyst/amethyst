@@ -685,8 +685,8 @@ where
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::assets::{Directory, Loader};
-    /// use amethyst::renderer::ObjFormat;
+    /// use amethyst::assets::{Directory, Loader, Handle};
+    /// use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
     /// use amethyst::ecs::prelude::World;
     ///
     /// let mut game = Application::build("assets/", LoadingState)
@@ -704,8 +704,8 @@ where
     ///
     ///         let loader = data.world.read_resource::<Loader>();
     ///         // Load a teapot mesh from the directory that registered above.
-    ///         let mesh = loader.load_from("teapot", ObjFormat, (), "custom_directory",
-    ///                                     (), &storage);
+    ///         let mesh: Handle<Mesh> =
+    ///             loader.load_from("teapot", ObjFormat, "custom_directory", (), &storage);
     ///     }
     /// }
     /// ~~~
@@ -739,8 +739,8 @@ where
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::assets::{Directory, Loader};
-    /// use amethyst::renderer::ObjFormat;
+    /// use amethyst::assets::{Directory, Loader, Handle};
+    /// use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
     /// use amethyst::ecs::prelude::World;
     ///
     /// let mut game = Application::build("assets/", LoadingState)
@@ -758,7 +758,7 @@ where
     ///
     ///         let loader = data.world.read_resource::<Loader>();
     ///         // Load a teapot mesh from the directory that registered above.
-    ///         let mesh = loader.load("teapot", ObjFormat, (), (), &storage);
+    ///         let mesh: Handle<Mesh> = loader.load("teapot", ObjFormat, (), &storage);
     ///     }
     /// }
     /// ~~~

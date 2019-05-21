@@ -45,9 +45,9 @@ impl Transform {
     /// ```rust
     /// # use amethyst_core::transform::Transform;
     /// # use amethyst_core::math::{Isometry3, Translation3, UnitQuaternion, Vector3};
-    /// let position = Translation3::new(0.0.into(), 2.0.into(), 4.0.into());
-    /// let rotation = UnitQuaternion::from_euler_angles(0.4.into(), 0.2.into(), 0.0.into());
-    /// let scale = Vector3::new(1.0.into(), 1.0.into(), 1.0.into());
+    /// let position = Translation3::new(0.0, 2.0, 4.0);
+    /// let rotation = UnitQuaternion::from_euler_angles(0.4, 0.2, 0.0);
+    /// let scale = Vector3::new(1.0, 1.0, 1.0);
     ///
     /// let t = Transform::new(position, rotation, scale);
     ///
@@ -89,8 +89,8 @@ impl Transform {
     /// assert_eq!(*t.rotation().quaternion(), Quaternion::identity());
     /// // look up with up pointing backwards
     /// t.face_towards(
-    ///     Vector3::new(0.0.into(), 1.0.into(), 0.0.into()),
-    ///     Vector3::new(0.0.into(), 0.0.into(), 1.0.into()),
+    ///     Vector3::new(0.0, 1.0, 0.0),
+    ///     Vector3::new(0.0, 0.0, 1.0),
     /// );
     /// // our rotation should match the angle from straight ahead to straight up
     /// let rotation = UnitQuaternion::rotation_between(

@@ -75,8 +75,8 @@ pub trait Format<D: 'static>: objekt::Clone + Debug + Send + Sync + 'static {
     ///
     /// The reload structure has metadata which allows the asset management
     /// to reload assets if necessary (for hot reloading).
-    /// You should only create this if `create_reload` contains a boxed format.
-    /// Also, the parameter is just a request, which means you can also return `None`.
+    /// You should only create `Reload` when `create_reload` is `Some`.
+    /// Also, the parameter is just a request, which means it's optional either way.
     fn import(
         &self,
         name: String,

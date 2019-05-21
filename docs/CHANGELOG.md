@@ -86,15 +86,22 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 
 #### Rendy support
 
-* `camera::Projection::perspective()` now returns a vulkan specific perspective matrix ([#1504])
-
-[#1504]: https://github.com/amethyst/amethyst/pull/1504
+* Brand new way to define rendering pipelines.
+* OpenGL support temporarily dropped, Vulkan and Metal support added.
+* Normalized texel coordinates are now in Vulkan convention (top-left 0.0, bottom-right 1.0), mirrored vertically compared to old one.
+* World space is now Y-up consistently for all projections (2D and 3D).
+* `Format` type no longer has associated `Options` and is now object-safe. It is expected to carry required options itself.
+* `Format` now supports tag-based deserialization, it is no longer required to provide specific format to prefab type.
+* Combined input axis/action generics into single type.
+* `Material` is now an asset. Must be turned into handle before putting on an entity.
 
 ### Removed
+
 - Removed all `NetEvent's` because they were not used. ([#1539])
 - Removed filter logic, because it didn't do anything, will be added back in a later version (NetFilter, FilterConnected). ([#1539])
 
 ### Fixed
+
 * Optimize loading of wavefront obj mesh assets by getting rid of unnecessary allocations. ([#1454])
 * Fixed the "json" feature for amethyst_assets. ([#1302])
 * Fixed default system font loading to accept uppercase extension ("TTF"). ([#1328])
@@ -102,6 +109,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Fix omission in `PosNormTangTex` documentation. ([#1371])
 * Fix division by zero in vertex data building ([#1481])
 * Fix tuple index generation on `PrefabData` and `EventReader` proc macros. ([#1501])
+* Avoid segmentation fault on Windows when using `AudioBundle` in `amethyst_test`. ([#1595], [#1599])
 
 [#1114]: https://github.com/amethyst/amethyst/pull/1114
 [#1213]: https://github.com/amethyst/amethyst/pull/1213
@@ -161,6 +169,8 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1584]: https://github.com/amethyst/amethyst/pull/1584
 [#1591]: https://github.com/amethyst/amethyst/pull/1591
 [#1582]: https://github.com/amethyst/amethyst/pull/1582
+[#1595]: https://github.com/amethyst/amethyst/issues/1595
+[#1599]: https://github.com/amethyst/amethyst/pull/1599
 
 ## [0.10.0] - 2018-12
 

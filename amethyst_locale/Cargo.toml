@@ -12,8 +12,8 @@ license = "MIT/Apache-2.0"
 keywords = ["game", "localisation", "resource", "management", "amethyst"]
 categories = ["filesystem,localisation"]
 
-documentation = "https://www.amethyst.rs/doc/latest/doc/amethyst_locale/"
-homepage = "https://www.amethyst.rs/"
+documentation = "https://docs-src.amethyst.rs/stable/amethyst_locale/"
+homepage = "https://amethyst.rs/"
 repository = "https://github.com/amethyst/amethyst"
 
 [badges]

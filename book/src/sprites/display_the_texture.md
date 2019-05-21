@@ -55,8 +55,8 @@ impl SimpleState for ExampleState {
 }
 ```
 
-[doc_drawflat2d]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.DrawFlat2D.html
-[doc_tex_handle]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/type.TextureHandle.html
-[doc_component]: https://www.amethyst.rs/doc/latest/doc/specs/trait.Component.html
-[doc_handle]: https://www.amethyst.rs/doc/latest/doc/amethyst_assets/struct.Handle.html
-[doc_flipped]: https://www.amethyst.rs/doc/latest/doc/amethyst_renderer/struct.Flipped.html
+[doc_drawflat2d]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.DrawFlat2D.html
+[doc_tex_handle]: https://docs-src.amethyst.rs/stable/amethyst_renderer/type.TextureHandle.html
+[doc_component]: https://docs-src.amethyst.rs/stable/specs/trait.Component.html
+[doc_handle]: https://docs-src.amethyst.rs/stable/amethyst_assets/struct.Handle.html
+[doc_flipped]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.Flipped.html

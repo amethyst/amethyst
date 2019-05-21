@@ -19,7 +19,7 @@ use std::{collections::BTreeMap, marker::PhantomData};
 /// registered with `register_format_type` macro.
 ///
 ///  This trait should never be implemented manually. Use the `register_format_type` macro to register it correctly.
-/// ```
+/// ```ignore
 /// // this must be used exactly once per data type
 /// amethyst_assets::register_format_type!(AudioData);
 ///
@@ -218,7 +218,7 @@ macro_rules! register_format_type {
 /// Register a dynamically deserializable format for given asset data type.
 /// Note that provided asset data type must also be registered using `register_format_type` macro.
 ///
-/// ```
+/// ```ignore
 /// amethyst_assets::register_format!("WAV", WavFormat as AudioData);
 /// ```
 ///
@@ -229,7 +229,7 @@ macro_rules! register_format_type {
 /// The `amethyst_assets` crate must be in scope in order to use that macro.
 /// You can also specify name for the crate as additional first parameter.
 ///
-/// ```
+/// ```ignore
 /// amethyst_assets::register_format!(renamed_assets_crate; "WAV", WavFormat as AudioData);
 /// ```
 #[macro_export]

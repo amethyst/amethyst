@@ -25,12 +25,12 @@ impl ScreenDimensions {
         }
     }
 
-    /// Returns the current width of the window.
+    /// Returns the current logical width of the window.
     pub fn width(&self) -> f32 {
         self.w as f32
     }
 
-    /// Returns the current height of the window.
+    /// Returns the current logical height of the window.
     pub fn height(&self) -> f32 {
         self.h as f32
     }

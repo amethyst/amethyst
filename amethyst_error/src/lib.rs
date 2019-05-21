@@ -417,6 +417,7 @@ mod tests {
 
         BACKTRACE_STATUS.store(2, atomic::Ordering::Relaxed);
 
+        #[allow(warnings)]
         #[inline(never)]
         #[no_mangle]
         fn a_really_unique_name_42() -> Error {

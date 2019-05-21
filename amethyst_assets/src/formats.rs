@@ -3,7 +3,11 @@ use amethyst_error::{format_err, Error, ResultExt};
 use serde::{Deserialize, Serialize};
 
 /// Format for loading from Ron files. Mostly useful for prefabs.
-/// This type can only be used as manually specified to the loader.
+/// This type cannot be used for tagged deserialization.
+/// It is meant to be used at top-level loading, manually specified to the loader.
+/// ```rust,ignore
+/// loader.load("prefab.ron", RonFormat, ());
+/// ```
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct RonFormat;
 
@@ -38,8 +42,9 @@ impl<D> Format<D> for JsonFormat
 where
     D: for<'a> Deserialize<'a> + Send + Sync + 'static,
 {
-    const NAME: &'static str = "Json";
-    type Options = ();
+    fn name(&self) -> &'static str {
+        "Json"
+    }
 
     fn import_simple(&self, bytes: Vec<u8>) -> Result<D, Error> {
         use serde_json::de::Deserializer;

@@ -557,7 +557,7 @@ mod test {
             Sprite::from((
                 (10., 20.),                     // Sprite w and h
                 [-5., -10.],                    // Offsets
-                [0., 10. / 30., 0., 20. / 40.], // Texture coordinates
+                [0., 10. / 30., 1., 20. / 40.], // Texture coordinates
             )),
             Sprite::from_pixel_values(
                 image_w, image_h, sprite_w, sprite_h, pixel_left, pixel_top, offsets, false, false

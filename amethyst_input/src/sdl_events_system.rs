@@ -1,4 +1,4 @@
-use std::{fmt, hash::Hash, marker::PhantomData, path::PathBuf};
+use std::{fmt, marker::PhantomData, path::PathBuf};
 
 use sdl2::{
     self,
@@ -14,7 +14,7 @@ use amethyst_core::{
 
 use super::{
     controller::{ControllerAxis, ControllerButton, ControllerEvent},
-    InputEvent, InputHandler,
+    BindingTypes, InputEvent, InputHandler,
 };
 
 /// A collection of errors that can occur in the SDL system.
@@ -61,9 +61,9 @@ pub struct SdlEventsSystem<T: BindingTypes> {
     marker: PhantomData<T>,
 }
 
-type SdlEventsData<'a, T: BindingTypes> = (
+type SdlEventsData<'a, T> = (
     Write<'a, InputHandler<T>>,
-    Write<'a, EventChannel<InputEvent<T::Action>>>,
+    Write<'a, EventChannel<InputEvent<<T as BindingTypes>::Action>>>,
 );
 
 impl<'a, T: BindingTypes> RunNow<'a> for SdlEventsSystem<T> {
@@ -125,7 +125,7 @@ impl<T: BindingTypes> SdlEventsSystem<T> {
         &mut self,
         event: &Event,
         handler: &mut InputHandler<T>,
-        output: &mut EventChannel<InputEvent<AC>>,
+        output: &mut EventChannel<InputEvent<T::Action>>,
     ) {
         use self::ControllerEvent::*;
 
@@ -207,7 +207,7 @@ impl<T: BindingTypes> SdlEventsSystem<T> {
     fn initialize_controllers(
         &mut self,
         handler: &mut InputHandler<T>,
-        output: &mut EventChannel<InputEvent<AC>>,
+        output: &mut EventChannel<InputEvent<T::Action>>,
     ) {
         use crate::controller::ControllerEvent::ControllerConnected;
 
