@@ -1,13 +1,40 @@
 use amethyst::{
+    assets::Processor,
+    core::TransformBundle,
     ecs::Resources,
     renderer::{
         rendy::{factory::Factory, graph::GraphBuilder},
+        sprite::SpriteSheet,
         types::DefaultBackend,
         GraphCreator, RenderingSystem,
     },
+    window::ScreenDimensions,
+    GameData, StateEvent, StateEventReader,
 };
 
-use crate::{AmethystApplication, GameUpdate};
+use crate::{AmethystApplication, GameUpdate, HIDPI, SCREEN_HEIGHT, SCREEN_WIDTH};
+
+/// Extension to include render specific functions.
+pub trait RenderBaseAppExt {
+    /// Provides base bundles and systems for an application with render functionality.
+    fn render_base() -> Self;
+}
+
+impl RenderBaseAppExt
+    for AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader>
+{
+    fn render_base() -> Self {
+        AmethystApplication::blank()
+            .with_rendering_system()
+            .with_bundle(TransformBundle::new())
+            .with_system(
+                Processor::<SpriteSheet>::new(),
+                "sprite_sheet_processor",
+                &[],
+            )
+            .with_resource(ScreenDimensions::new(SCREEN_WIDTH, SCREEN_HEIGHT, HIDPI))
+    }
+}
 
 /// Extension to include render specific functions.
 pub trait RenderAppExt {

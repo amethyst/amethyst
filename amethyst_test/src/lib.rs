@@ -298,7 +298,7 @@ pub use crate::{
     effect_return::EffectReturn,
     fixture::{MaterialAnimationFixture, SpriteRenderAnimationFixture},
     game_update::GameUpdate,
-    render_app_ext::RenderAppExt,
+    render_app_ext::{RenderAppExt, RenderBaseAppExt},
     state::{
         CustomDispatcherState, CustomDispatcherStateBuilder, FunctionState, PopState,
         SequencerState,
