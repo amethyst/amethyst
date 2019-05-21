@@ -22,6 +22,7 @@ use lazy_static::lazy_static;
 
 use crate::{
     CustomDispatcherStateBuilder, FunctionState, GameUpdate, SequencerState, SystemInjectionBundle,
+    ThreadLocalInjectionBundle,
 };
 
 type BundleAddFn = SendBoxFnOnce<
@@ -487,6 +488,33 @@ where
             .map(|dep| dep.clone().into())
             .collect::<Vec<String>>();
         self.with_bundle_fn(move || SystemInjectionBundle::new(system, name, deps))
+    }
+
+    /// Registers a thread local `System` into this application's `GameData`.
+    ///
+    /// # Parameters
+    ///
+    /// * `system`: The thread local system.
+    pub fn with_thread_local<Sys>(self, system: Sys) -> Self
+    where
+        Sys: for<'sys_local> RunNow<'sys_local> + Send + 'static,
+    {
+        self.with_bundle_fn(move || ThreadLocalInjectionBundle::new(system))
+    }
+
+    /// Registers a thread local `System` into this application's `GameData`.
+    ///
+    /// This is a separate function in case the thread local system is `!Send`.
+    ///
+    /// # Parameters
+    ///
+    /// * `system_fn`: Function to instantiate the thread local system.
+    pub fn with_thread_local_fn<FnSysLocal, Sys>(self, system_fn: FnSysLocal) -> Self
+    where
+        FnSysLocal: FnOnce() -> Sys + Send + 'static,
+        Sys: for<'sys_local> RunNow<'sys_local> + 'static,
+    {
+        self.with_bundle_fn(move || ThreadLocalInjectionBundle::new(system_fn()))
     }
 
     /// Registers a `System` to run in a `CustomDispatcherState`.

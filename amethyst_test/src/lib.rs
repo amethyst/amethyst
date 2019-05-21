@@ -293,7 +293,6 @@
 //! # }
 //! ```
 
-pub(crate) use crate::system_injection_bundle::SystemInjectionBundle;
 pub use crate::{
     amethyst_application::{AmethystApplication, HIDPI, SCREEN_HEIGHT, SCREEN_WIDTH},
     effect_return::EffectReturn,
@@ -304,6 +303,10 @@ pub use crate::{
         SequencerState,
     },
 };
+pub(crate) use crate::{
+    system_injection_bundle::SystemInjectionBundle,
+    thread_local_injection_bundle::ThreadLocalInjectionBundle,
+};
 
 mod amethyst_application;
 mod effect_return;
@@ -312,3 +315,4 @@ mod game_update;
 pub mod prelude;
 mod state;
 mod system_injection_bundle;
+mod thread_local_injection_bundle;
