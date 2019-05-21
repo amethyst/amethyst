@@ -1,7 +1,8 @@
 use proc_macro2::{Literal, TokenStream};
 use quote::quote;
 use syn::{
-    Attribute, Data, DataEnum, DataStruct, DeriveInput, Fields, Generics, Meta, NestedMeta, Type, Ident
+    Attribute, Data, DataEnum, DataStruct, DeriveInput, Fields, Generics, Ident, Meta, NestedMeta,
+    Type,
 };
 
 pub fn impl_prefab_data(ast: &DeriveInput) -> TokenStream {
@@ -43,7 +44,10 @@ fn prepare_prefab_aggregate_fields(
     let mut add_to_entity = Vec::new();
     for field in fields.iter() {
         let is_component = have_component_attribute(&field.attrs[..]);
-        let i = match data_types.iter().position(|t| t.0 == field.ty && t.1 == is_component) {
+        let i = match data_types
+            .iter()
+            .position(|t| t.0 == field.ty && t.1 == is_component)
+        {
             Some(i) => i,
             None => {
                 data_types.push((field.ty.clone(), is_component));
@@ -75,7 +79,9 @@ fn prepare_prefab_aggregate_fields(
     (add_to_entity, subs)
 }
 
-fn prepare_prefab_aggregate_struct(data: &DataStruct) -> (Vec<(Type, bool)>, TokenStream, TokenStream) {
+fn prepare_prefab_aggregate_struct(
+    data: &DataStruct,
+) -> (Vec<(Type, bool)>, TokenStream, TokenStream) {
     let mut data_types = Vec::new();
     let (add_to_entity, subs) = prepare_prefab_aggregate_fields(&mut data_types, &data.fields);
     let extract_fields_add = data.fields.iter().map(|f| {
@@ -103,7 +109,10 @@ fn prepare_prefab_aggregate_struct(data: &DataStruct) -> (Vec<(Type, bool)>, Tok
     )
 }
 
-fn prepare_prefab_aggregate_enum(base: &Ident, data: &DataEnum) -> (Vec<(Type, bool)>, TokenStream, TokenStream) {
+fn prepare_prefab_aggregate_enum(
+    base: &Ident,
+    data: &DataEnum,
+) -> (Vec<(Type, bool)>, TokenStream, TokenStream) {
     let mut data_types = Vec::new();
     let mut subs = Vec::new();
     let mut add_to_entity = Vec::new();
