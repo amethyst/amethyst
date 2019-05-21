@@ -3,7 +3,7 @@
 use amethyst_assets::PrefabData;
 use amethyst_core::{
     ecs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
-    math::{Matrix4, },
+    math::{Matrix4, Perspective3, Orthographic3},
 };
 use amethyst_error::Error;
 
@@ -258,6 +258,13 @@ impl From<Orthographic> for Projection {
 impl From<Perspective> for Projection {
     fn from(proj: Perspective) -> Self {
         Projection::Perspective(proj)
+    }
+}
+
+impl From<Orthographic3<f32>> for Projection {
+    fn from(proj: Orthographic3<f32>) -> Self {
+        // Get fovy, aspect and planes from nalgebra and constrcut new.
+        Projection::Orthographic(Orthographic::new(proj.left(), proj.right(), proj.bottom(), proj.top(), proj.znear(), proj.zfar()))
     }
 }
 
