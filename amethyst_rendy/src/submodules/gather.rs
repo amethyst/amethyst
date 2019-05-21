@@ -55,10 +55,7 @@ impl CameraGatherer {
 
         let proj: [[f32; 4]; 4] = (*camera.as_matrix()).into();
         let view: [[f32; 4]; 4] = convert::<_, Matrix4<f32>>(
-            transform
-                .global_matrix()
-                .try_inverse()
-                .expect("Unable to get inverse of camera transform"),
+            transform.view_matrix()
         )
         .into();
 

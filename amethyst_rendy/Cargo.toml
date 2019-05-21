@@ -35,6 +35,7 @@ thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
 rayon = "1.0.2"
+approx = "0.3.2"
 
 [features]
 dx12 = ["rendy/dx12"]

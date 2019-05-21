@@ -222,21 +222,25 @@ impl<'a> System<'a> for CameraOrthoSystem {
     fn run(&mut self, (dimensions, mut cameras, mut ortho_cameras): Self::SystemData) {
         let aspect = dimensions.aspect_ratio();
 
-        for (mut camera, mut ortho_camera) in (&mut cameras, &mut ortho_cameras).join() {
+        for (camera, mut ortho_camera) in (&mut cameras, &mut ortho_cameras).join() {
             if aspect != ortho_camera.aspect_ratio_cache {
                 ortho_camera.aspect_ratio_cache = aspect;
                 let offsets = ortho_camera.camera_offsets(aspect);
 
-                if let Some(prev) = camera.projection().as_orthographic() {
-                    camera.set_projection(Orthographic::new(
-                        offsets.0,
-                        offsets.1,
-                        offsets.2,
-                        offsets.3,
-                        prev.near(),
-                        prev.far(),
-                    ).into());
-                }
+                let (near, far) = if let Ok(prev) = camera.projection().as_orthographic() {
+                    (prev.near(), prev.far())
+                } else {
+                    continue;
+                };
+
+                camera.set_projection(Orthographic::new(
+                    offsets.0,
+                    offsets.1,
+                    offsets.2,
+                    offsets.3,
+                    near,
+                    far,
+                ).into());
             }
         }
     }

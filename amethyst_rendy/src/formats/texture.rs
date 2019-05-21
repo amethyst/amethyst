@@ -170,7 +170,7 @@ impl<'a> PrefabData<'a> for TexturePrefab {
                 (true, TexturePrefab::Handle(handle))
             }
             TexturePrefab::File(name, format) => {
-                let handle = loader.load(name.as_ref(), format, progress, storage);
+                let handle = loader.load(name, format, progress, storage);
                 (true, TexturePrefab::Handle(handle))
             }
             slot => (false, slot),
