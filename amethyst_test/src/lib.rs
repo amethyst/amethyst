@@ -298,6 +298,7 @@ pub use crate::{
     effect_return::EffectReturn,
     fixture::{MaterialAnimationFixture, SpriteRenderAnimationFixture},
     game_update::GameUpdate,
+    render_app_ext::RenderAppExt,
     state::{
         CustomDispatcherState, CustomDispatcherStateBuilder, FunctionState, PopState,
         SequencerState,
@@ -313,6 +314,7 @@ mod effect_return;
 mod fixture;
 mod game_update;
 pub mod prelude;
+mod render_app_ext;
 mod state;
 mod system_injection_bundle;
 mod thread_local_injection_bundle;

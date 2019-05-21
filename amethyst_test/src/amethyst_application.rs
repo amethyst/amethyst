@@ -98,8 +98,8 @@ where
     state_fns: Vec<FnState<T, E>>,
     /// Game data and event type.
     state_data: PhantomData<(T, E, R)>,
-    /// Whether or not this application uses the `RenderBundle`.
-    render: bool,
+    /// Whether the application should be run in a sub thread.
+    run_in_thread: bool,
 }
 
 impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader> {
@@ -112,7 +112,7 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
             resource_add_fns: Vec::new(),
             state_fns: Vec::new(),
             state_data: PhantomData,
-            render: false,
+            run_in_thread: false,
         }
     }
 
@@ -243,7 +243,7 @@ where
     {
         let params = (self.bundle_add_fns, self.resource_add_fns, self.state_fns);
 
-        let render = self.render;
+        let run_in_thread = self.run_in_thread;
 
         // Run in a sub thread due to mesa's threading issues with GL software rendering
         // See: <https://users.rust-lang.org/t/trouble-identifying-cause-of-segfault/18096>
@@ -255,7 +255,7 @@ where
             .spawn(move || -> Result<(), Error> {
                 amethyst::start_logger(Default::default());
 
-                if render {
+                if run_in_thread {
                     let guard = X11_GL_MUTEX.lock().unwrap();
 
                     // We have to build the application after acquiring the lock because the window
@@ -354,15 +354,11 @@ where
             resource_add_fns: self.resource_add_fns,
             state_fns: Vec::new(),
             state_data: PhantomData,
-            render: self.render,
+            run_in_thread: self.run_in_thread,
         }
     }
 
     /// Adds a bundle to the list of bundles.
-    ///
-    /// **Note:** If you are adding the `RenderBundle`, you need to use `.with_bundle_fn(F)` as the
-    /// `Pipeline` type used by the bundle is `!Send`. Furthermore, you must also invoke
-    /// `.mark_render()` to avoid a race condition that causes render tests to fail.
     ///
     /// # Parameters
     ///
@@ -398,12 +394,6 @@ where
     ///
     /// This provides an alternative to `.with_bundle(B)` where `B` is `!Send`. The function that
     /// instantiates the bundle must be `Send`.
-    ///
-    /// **Note:** If you are adding the `RenderBundle`, you must also invoke `.mark_render()` to
-    /// avoid a race condition that causes render tests to fail.
-    ///
-    /// **Note:** There is a `.with_render_bundle()` convenience function if you just need the
-    /// `RenderBundle` with predefined parameters.
     ///
     /// # Parameters
     ///
@@ -600,6 +590,15 @@ where
         F: Fn(&mut World) + Send + Sync + 'static,
     {
         self.with_fn(assertion_fn)
+    }
+
+    /// Indicates that this should be run in a thread.
+    ///
+    /// This is used to avoid a window initialization race condition that causes tests to fail.
+    /// See <https://github.com/tomaka/glutin/issues/1038>.
+    pub fn run_in_thread(mut self) -> Self {
+        self.run_in_thread = true;
+        self
     }
 }
 
