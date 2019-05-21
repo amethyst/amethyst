@@ -90,10 +90,14 @@ fn prepare_prefab_aggregate_struct(
             let #name = &self.#name;
         }
     });
-    let extract_fields_sub = data.fields.iter().map(|f| {
-        let name = &f.ident;
-        quote! {
-            let #name = &mut self.#name;
+    let extract_fields_sub = data.fields.iter().map(|field| {
+        let name = &field.ident;
+        if !have_component_attribute(&field.attrs[..]) {
+            Some(quote! {
+                let #name = &mut self.#name;
+            })
+        } else {
+            None
         }
     });
     (
@@ -120,8 +124,24 @@ fn prepare_prefab_aggregate_enum(
     for variant in &data.variants {
         let (variant_add_to_entity, variant_subs) =
             prepare_prefab_aggregate_fields(&mut data_types, &variant.fields);
-        let field_names_add: Vec<_> = variant.fields.iter().map(|f| &f.ident).collect();
-        let field_names_sub = field_names_add.clone();
+        let field_names_add: Vec<_> = variant.fields.iter().map(|field| &field.ident).collect();
+        let field_names_sub: Vec<_> = variant
+            .fields
+            .iter()
+            .map(|field| {
+                // This unwrap is safe because we have already paniced on unnamed fields
+                let ident = field.ident.clone().unwrap();
+                if !have_component_attribute(&field.attrs[..]) {
+                    quote! {
+                        #ident
+                    }
+                } else {
+                    quote! {
+                        #ident: _
+                    }
+                }
+            })
+            .collect();
         let ident = &variant.ident;
         add_to_entity.push(quote! {
             #base::#ident {#(#field_names_add,)*} => {
