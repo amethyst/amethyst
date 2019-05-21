@@ -75,3 +75,16 @@ pub struct Outer {
     #[prefab(Component)]
     external: External,
 }
+
+#[derive(PrefabData, Clone)]
+pub enum EnumPrefab {
+    One {
+        number: Stuff<usize>,
+    },
+    Two {
+        #[prefab(Component)]
+        component: External,
+    },
+    Three {
+    },
+}

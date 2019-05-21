@@ -1,7 +1,7 @@
 use proc_macro2::{Literal, TokenStream};
 use quote::quote;
 use syn::{
-    Attribute, Data, DataEnum, DataStruct, DeriveInput, Fields, Generics, Meta, NestedMeta, Type,
+    Attribute, Data, DataEnum, DataStruct, DeriveInput, Fields, Generics, Meta, NestedMeta, Type, Ident
 };
 
 pub fn impl_prefab_data(ast: &DeriveInput) -> TokenStream {
@@ -36,16 +36,17 @@ fn impl_prefab_data_component(ast: &DeriveInput) -> TokenStream {
 }
 
 fn prepare_prefab_aggregate_fields(
-    data_types: &mut Vec<Type>,
+    data_types: &mut Vec<(Type, bool)>,
     fields: &Fields,
 ) -> (Vec<TokenStream>, Vec<Option<TokenStream>>) {
     let mut subs = Vec::new();
     let mut add_to_entity = Vec::new();
     for field in fields.iter() {
-        let i = match data_types.iter().position(|t| *t == field.ty) {
+        let is_component = have_component_attribute(&field.attrs[..]);
+        let i = match data_types.iter().position(|t| t.0 == field.ty && t.1 == is_component) {
             Some(i) => i,
             None => {
-                data_types.push(field.ty.clone());
+                data_types.push((field.ty.clone(), is_component));
                 data_types.len() - 1
             }
         };
@@ -55,10 +56,10 @@ fn prepare_prefab_aggregate_fields(
             .as_ref()
             .expect("PrefabData derive only support named fields")
             .clone();
-        if have_component_attribute(&field.attrs[..]) {
+        if is_component {
             subs.push(None);
             add_to_entity.push(quote! {
-                system_data.#tuple_index.insert(entity, self.#name.clone())?;
+                system_data.#tuple_index.insert(entity, #name.clone())?;
             });
         } else {
             subs.push(Some(quote! {
@@ -74,7 +75,7 @@ fn prepare_prefab_aggregate_fields(
     (add_to_entity, subs)
 }
 
-fn prepare_prefab_aggregate_struct(data: &DataStruct) -> (Vec<Type>, TokenStream, TokenStream) {
+fn prepare_prefab_aggregate_struct(data: &DataStruct) -> (Vec<(Type, bool)>, TokenStream, TokenStream) {
     let mut data_types = Vec::new();
     let (add_to_entity, subs) = prepare_prefab_aggregate_fields(&mut data_types, &data.fields);
     let extract_fields_add = data.fields.iter().map(|f| {
@@ -102,7 +103,7 @@ fn prepare_prefab_aggregate_struct(data: &DataStruct) -> (Vec<Type>, TokenStream
     )
 }
 
-fn prepare_prefab_aggregate_enum(data: &DataEnum) -> (Vec<Type>, TokenStream, TokenStream) {
+fn prepare_prefab_aggregate_enum(base: &Ident, data: &DataEnum) -> (Vec<(Type, bool)>, TokenStream, TokenStream) {
     let mut data_types = Vec::new();
     let mut subs = Vec::new();
     let mut add_to_entity = Vec::new();
@@ -114,12 +115,12 @@ fn prepare_prefab_aggregate_enum(data: &DataEnum) -> (Vec<Type>, TokenStream, To
         let field_names_sub = field_names_add.clone();
         let ident = &variant.ident;
         add_to_entity.push(quote! {
-            CustomPrefabData::#ident {#(#field_names_add,)*} => {
+            #base::#ident {#(#field_names_add,)*} => {
                 #(#variant_add_to_entity)*
             }
         });
         subs.push(quote! {
-            CustomPrefabData::#ident {#(#field_names_sub,)*} => {
+            #base::#ident {#(#field_names_sub,)*} => {
                 #(#variant_subs)*
             }
         });
@@ -144,12 +145,18 @@ fn impl_prefab_data_aggregate(ast: &DeriveInput) -> TokenStream {
     let base = &ast.ident;
     let (data_types, add_to_entity, subs) = match &ast.data {
         Data::Struct(ref s) => prepare_prefab_aggregate_struct(s),
-        Data::Enum(ref e) => prepare_prefab_aggregate_enum(e),
+        Data::Enum(ref e) => prepare_prefab_aggregate_enum(base, e),
         _ => panic!("PrefabData aggregate derive only support structs and enums"),
     };
-    let system_data = data_types.iter().map(|t| {
-        quote! {
-            <#t as PrefabData<'pfd>>::SystemData
+    let system_data = data_types.iter().map(|(ty, is_component)| {
+        if *is_component {
+            quote! {
+                 WriteStorage<'pfd, #ty>
+            }
+        } else {
+            quote! {
+                <#ty as PrefabData<'pfd>>::SystemData
+            }
         }
     });
 
