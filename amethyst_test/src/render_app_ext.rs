@@ -47,6 +47,13 @@ where
     T: GameUpdate,
     E: Send + Sync + 'static,
 {
+    #[cfg(windows)]
+    fn with_rendering_system(self) -> Self {
+        self.with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
+            RenderGraphEmpty::default(),
+        ))
+    }
+    #[cfg(not(windows))]
     fn with_rendering_system(self) -> Self {
         self.with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             RenderGraphEmpty::default(),
