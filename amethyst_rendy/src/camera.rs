@@ -190,7 +190,7 @@ pub enum Projection {
     /// [pp]: https://en.wikipedia.org/wiki/Perspective_(graphical)
     #[serde(with = "serde_persp")]
     Perspective(Perspective),
-
+  
     /// A raw matrix projection
     Matrix(Matrix4<f32>),
 }
@@ -261,6 +261,13 @@ impl From<Perspective> for Projection {
     }
 }
 
+impl From<Perspective3<f32>> for Projection {
+    fn from(proj: Perspective3<f32>) -> Self {
+        // Get fovy, aspect and planes from nalgebra and constrcut new.
+        Projection::Perspective(Perspective::new(proj.aspect(), proj.fovy(), proj.znear(), proj.zfar()))
+    }
+}
+
 impl From<Matrix4<f32>> for Projection {
     fn from(proj: Matrix4<f32>) -> Self {
         Projection::Matrix(proj)
@@ -274,6 +281,23 @@ impl From<Projection> for Camera {
 }
 
 /// Camera struct.
+/// 
+/// Contains a projection matrix to convert from world/eye-space
+/// into normalized device coordinates.
+/// For rendy/gfx-hal these are y-down, x-right and y-away in range [0; 1]
+/// 
+/// World Coordinate system
+/// +y
+/// |  +z
+/// | /
+/// |/___+x
+/// 
+/// NDC system
+///  +z
+/// /
+/// |¯¯¯+x
+/// |
+/// +y
 #[derive(Clone, Debug, serde::Deserialize, PartialEq, serde::Serialize)]
 pub struct Camera {
     /// Graphical projection of the camera.
@@ -292,8 +316,8 @@ impl Camera {
         Self::from(Projection::orthographic(
             -width / 2.0,
             width / 2.0,
-            height / 2.0,
             -height / 2.0,
+            height / 2.0,
             0.1,
             2000.0,
         ))
@@ -482,6 +506,7 @@ mod tests {
     use amethyst_core::Transform;
 
     use approx::assert_ulps_eq;
+    use more_asserts::{assert_gt, assert_ge, assert_lt, assert_le};
 
     // TODO: this will be fixed after camera projection refactor
     #[test]
@@ -507,14 +532,12 @@ mod tests {
     // Our world-space is Y-up, X-right, z-away
     // Thus eye-space is y-up, x-right, z-behind
     // Current render target is y-down, x-right, z-away
-
     fn setup() -> (Transform, [Point3<f32>; 3], [Point3<f32>; 3]) {
         // Test camera is positioned at (0,0,-3) in world space
         // A camera without rotation points (0,0,-1)
         let camera_transform : Transform = Transform::new(
-            Translation3::new(0.0, 0.0, -3.0),
+            Translation3::new(0.0, 0.0, -3.0), 
             UnitQuaternion::from_axis_angle(&Vector3::y_axis(), 0.0),
-            // UnitQuaternion::from_axis_angle(&Vector3::y_axis(), std::f32::consts::PI),
             [1.0, 1.0, 1.0].into());
 
         let simple_points : [Point3<f32>; 3] = [
@@ -532,8 +555,6 @@ mod tests {
     }
 
     fn gatherer_calc_view_matrix(transform: Transform) -> Matrix4<f32> {
-        // let mat : Matrix4<f32> = convert(*transform.global_matrix());
-        // mat.try_inverse().expect("Unable to get inverse of camera transform")
         convert(transform.view_matrix())
     }
 
@@ -541,8 +562,8 @@ mod tests {
     fn camera_matrix() {
         let (camera_transform, _, _) = setup();
         let iso = Isometry3::face_towards(
-            &Point3::new(0.0, 0.0, -3.0),
-            &Point3::new(0.0, 0.0, 0.0),
+            &Point3::new(0.0, 0.0, -3.0), 
+            &Point3::new(0.0, 0.0, 0.0), 
             &Vector3::y_axis()
         );
         let our_iso : Matrix4<f32> = convert(camera_transform.isometry().to_homogeneous());
@@ -568,12 +589,30 @@ mod tests {
 
     #[test]
     fn standard_2d() {
-        unimplemented!();
+        let width = 1280.0;
+        let height = 720.0;
+        let top = height/2.0;
+        let bottom = -height/2.0;
+        let left = -width/2.0;
+        let right = width/2.0;
+
+        // Our standrd projection has a far clipping plane of 2000.0
+        let proj = Projection::orthographic(left, right, bottom, top, 0.1, 2000.0);
+        let our_proj = Camera::standard_2d(width, height).inner;
+
+        assert_ulps_eq!(our_proj.as_matrix(), proj.as_matrix());
     }
 
     #[test]
     fn standard_3d() {
-        unimplemented!();
+        let width = 1280.0;
+        let height = 720.0;
+
+        // Our standrd projection has a far clipping plane of 2000.0
+        let proj = Projection::perspective(width/height, std::f32::consts::FRAC_PI_3, 0.1, 2000.0);
+        let our_proj = Camera::standard_3d(width, height).inner;
+
+        assert_ulps_eq!(our_proj.as_matrix(), proj.as_matrix());
     }
 
 
@@ -589,42 +628,33 @@ mod tests {
         let x_axis = mvp * simple_points[0].to_homogeneous();
         let y_axis = mvp * simple_points[1].to_homogeneous();
         let z_axis = mvp * simple_points[2].to_homogeneous();
-
-        dbg!(x_axis);
-        assert!(x_axis[0] > 0.0);
+      
+        assert_gt!(x_axis[0], 0.0);
 
         // Y should be negative
-        dbg!(y_axis);
-        assert!(y_axis[1] < 0.0);
+        assert_lt!(y_axis[1], 0.0);
 
         // Z should be in [0; 1]
-        dbg!(z_axis);
-        assert!(z_axis[2] >= 0.0);
-        assert!(z_axis[2] <= 1.0);
+        assert_ge!(z_axis[2], 0.0);
+        assert_le!(z_axis[2], 1.0);
         // Should be near the near plane at 0.0
-        assert!(z_axis[2] <= 0.5);
+        assert_le!(z_axis[2], 0.5);
 
         let x_axis_clipped = mvp * simple_points_clipped[0].to_homogeneous();
         let y_axis_clipped = mvp * simple_points_clipped[1].to_homogeneous();
         let z_axis_clipped = mvp * simple_points_clipped[2].to_homogeneous();
 
         // Outside of frustum should be clipped
-        dbg!(x_axis_clipped);
-        assert!(x_axis_clipped[0] <= -1.0);
-        dbg!(y_axis_clipped);
-        assert!(y_axis_clipped[1] >= 1.0);
+        assert_le!(x_axis_clipped[0], -1.0);
+        assert_ge!(y_axis_clipped[1], 1.0);
 
         // Behind Camera should be clipped.
-        dbg!(z_axis_clipped);
-        assert!(z_axis_clipped[2] < 0.0);
+        assert_lt!(z_axis_clipped[2], 0.0);
     }
 
-    // Todo: Add when we support reversed z
-    // #[test]
-    // fn perspective_orientation_reversed_z() {
-    //     unimplemented!()
-    // }
-
+    // Todo: Add perspective_orientation_reversed_z when we support reversed z depth buffer.
+  
+  
     #[test]
     fn orthographic_orientation() {
         let (camera_transform, simple_points, _) = setup();
@@ -638,22 +668,19 @@ mod tests {
         let y_axis = mvp * simple_points[1].to_homogeneous();
         let z_axis = mvp * simple_points[2].to_homogeneous();
 
-        dbg!(x_axis);
-        assert!(x_axis[0] > 0.0);
+        assert_gt!(x_axis[0], 0.0);
 
         // Y should be negative
-        dbg!(y_axis);
-        assert!(y_axis[1] < 0.0);
+        assert_lt!(y_axis[1], 0.0);
 
         // Z should be in [0; 1]
-        dbg!(z_axis);
-        assert!(z_axis[2] >= 0.0);
-        assert!(z_axis[2] <= 1.0);
+        assert_ge!(z_axis[2], 0.0);
+        assert_le!(z_axis[2], 1.0);
     }
 
     #[test]
     fn perspective_depth_usage() {
-        let (camera_transform, simple_points, _) = setup();
+        let (camera_transform, _, _) = setup();
 
         let proj = Projection::perspective(1280.0/720.0, std::f32::consts::FRAC_PI_3, 0.1, 100.0);
         let view = gatherer_calc_view_matrix(camera_transform);
@@ -661,18 +688,17 @@ mod tests {
         let mvp = proj.as_matrix() * view;
         // Nearest point = -distance to (0,0) + zNear
         let near = Point3::new(0.0, 0.0, -2.9);
-        dbg!(view * near.to_homogeneous());
+      
         assert_ulps_eq!((mvp * near.to_homogeneous())[2], 0.0);
 
         // Furthest point = -distance to (0,0) + zFar
         let far = Point3::new(0.0, 0.0, 97.0);
-        dbg!(view * far.to_homogeneous());
         assert_ulps_eq!((mvp * far.to_homogeneous())[2], 1.0);
     }
 
     #[test]
     fn orthographic_depth_usage() {
-        let (camera_transform, simple_points, _) = setup();
+        let (camera_transform, _, _) = setup();
 
         let proj = Projection::orthographic(-1280.0/2.0, 1280.0/2.0, -720.0/2.0, 720.0/2.0, 0.1, 100.0);
         let view = gatherer_calc_view_matrix(camera_transform);
@@ -680,12 +706,10 @@ mod tests {
         let mvp = proj.as_matrix() * view;
         // Nearest point = -distance to (0,0) + zNear
         let near = Point3::new(0.0, 0.0, -2.9);
-        dbg!(view * near.to_homogeneous());
         assert_ulps_eq!((mvp * near.to_homogeneous())[2], 0.0);
 
         // Furthest point = -distance to (0,0) + zFar
         let far = Point3::new(0.0, 0.0, 97.0);
-        dbg!(view * far.to_homogeneous());
         assert_ulps_eq!((mvp * far.to_homogeneous())[2], 1.0);
     }
 
@@ -695,10 +719,10 @@ mod tests {
 
         // Cube in worldspace
         let cube = [
-            Point3::new(1.0, 1.0, 1.0), Point3::new(-1.0, 1.0, 1.0),
+            Point3::new(1.0, 1.0, 1.0), Point3::new(-1.0, 1.0, 1.0), 
             Point3::new(-1.0, -1.0, 1.0), Point3::new(1.0, -1.0, 1.0),
 
-            Point3::new(1.0, 1.0, -1.0), Point3::new(-1.0, 1.0, -1.0),
+            Point3::new(1.0, 1.0, -1.0), Point3::new(-1.0, 1.0, -1.0), 
             Point3::new(-1.0, -1.0, -1.0), Point3::new(1.0, -1.0, -1.0),
         ];
 
@@ -718,10 +742,10 @@ mod tests {
         let (camera_transform, _, _) = setup();
         // Cube in worldspace
         let cube = [
-            Point3::new(1.0, 1.0, 1.0), Point3::new(-1.0, 1.0, 1.0),
+            Point3::new(1.0, 1.0, 1.0), Point3::new(-1.0, 1.0, 1.0), 
             Point3::new(-1.0, -1.0, 1.0), Point3::new(1.0, -1.0, 1.0),
 
-            Point3::new(1.0, 1.0, -1.0), Point3::new(-1.0, 1.0, -1.0),
+            Point3::new(1.0, 1.0, -1.0), Point3::new(-1.0, 1.0, -1.0), 
             Point3::new(-1.0, -1.0, -1.0), Point3::new(1.0, -1.0, -1.0),
         ];
         let proj = Projection::perspective(1280.0/720.0, std::f32::consts::FRAC_PI_3, 0.1, 100.0);
@@ -743,7 +767,7 @@ mod tests {
         // assert_ulps_eq!(result, Point());
         unimplemented!()
     }
-
+  
     #[test]
     fn orthographic_project_cube_off_centered_rotated() {
         unimplemented!()
