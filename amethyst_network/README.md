@@ -15,11 +15,11 @@
 
 The networking crate for the `amethyst` game engine. This crate provides the API and functionality which application developers will normally use to develop multiplayer games. The main engine can be found at https://amethyst.rs.
 
-This project is at an early stage. We are currently designing and working on some robust, fast, distributed, networking system on top of specs. To make this work we are creating a small test game so that we can experiment with different solutions. Once in a while, we will move some stable functionality over from that game to amethyst network.
+This project is still at an early stage. We are currently designing and implementing a fast/robust networking system on top of specs. To exercise our implementation, we are creating a small test game which we will make public when we feel it's in a good place. Eventually, as we gain more confidence in our solution, we will move stable functionality over from that game to amethyst network.
 
 Currently, amethyst network supports:
-- Reliable (ordered, sequenced) UPD
-- Unreliable (sequenced) UDP
+- Reliable (ordered, sequenced) UDP.
+- Unreliable (sequenced) UDP.
 - Connect/Disconnect events from clients.
 - Automatic creation of `NetConnection` on client connect.
 - Automatic Fragmentation of big packets
@@ -36,6 +36,6 @@ For more information or help, please come find us on the amethyst discord server
 ## License
 
 Licensed under either of
- * Apache License, Version 2.0 ([LICENSE-APACHE](docs/LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
- * MIT license ([LICENSE-MIT](docs/LICENSE-MIT) or http://opensource.org/licenses/MIT)
+ * Apache License, Version 2.0 ([LICENSE-APACHE](docs/LICENSE-APACHE) or https://www.apache.org/licenses/LICENSE-2.0)
+ * MIT license ([LICENSE-MIT](docs/LICENSE-MIT) or https://opensource.org/licenses/MIT)
 at your option.
