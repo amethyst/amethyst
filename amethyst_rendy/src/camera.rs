@@ -21,73 +21,94 @@ impl Orthographic {
         z_far: f32,
     ) -> Self {
         let mut matrix = Matrix4::<f32>::identity();
+
         matrix[(0, 0)] = 2.0 / (right - left);
         matrix[(1, 1)] = -2.0 / (top - bottom);
         matrix[(2, 2)] = 1.0 / (z_far - z_near);
         matrix[(0, 3)] = -(right + left) / (right - left);
         matrix[(1, 3)] = -(top + bottom) / (top - bottom);
         matrix[(2, 3)] = -z_near / (z_far - z_near);
+
         Self { matrix }
     }
 
     #[inline]
     pub fn top(&self) -> f32 {
-        unimplemented!()
+        ((1.0 - self.matrix[(1, 3)]) / self.matrix[(1, 1)]) * -1.0
     }
 
     #[inline]
     pub fn bottom(&self) -> f32 {
-        unimplemented!()
+        // TODO: we need to solve these precision errors
+        ((-1.0 - self.matrix[(1, 3)]) / self.matrix[(1, 1)]) * -1.0
     }
 
     #[inline]
     pub fn left(&self) -> f32 {
-        unimplemented!()
+        (-1.0 - self.matrix[(0, 3)]) / self.matrix[(0, 0)]
     }
 
     #[inline]
     pub fn right(&self) -> f32 {
-        unimplemented!()
+        (1.0 - self.matrix[(0, 3)]) / self.matrix[(0, 0)]
     }
 
     #[inline]
     pub fn near(&self) -> f32 {
-        unimplemented!()
+        -(self.matrix[(2,3)] / self.matrix[(2,2)])
     }
 
     #[inline]
     pub fn far(&self) -> f32 {
-        unimplemented!()
+        ((-1.0 + self.matrix[(2, 3)]) / self.matrix[(2, 2)]) * -1.0
     }
 
     #[inline]
-    pub fn set_top(&mut self, near: f32) {
-        unimplemented!()
+    pub fn set_top(&mut self, top: f32) {
+        self.set_bottom_and_top(self.bottom(), top)
     }
 
     #[inline]
-    pub fn set_bottom(&mut self, far: f32) {
-        unimplemented!()
+    pub fn set_bottom(&mut self, bottom: f32) {
+        self.set_bottom_and_top(bottom, self.top())
     }
 
     #[inline]
-    pub fn set_left(&mut self, near: f32) {
-        unimplemented!()
+    pub fn set_bottom_and_top(&mut self, bottom: f32, top: f32) {
+        self.matrix[(1, 1)] = -2.0 / (top - bottom);
+        self.matrix[(1, 3)] = -(top + bottom) / (top - bottom);
     }
 
     #[inline]
-    pub fn set_right(&mut self, far: f32) {
-        unimplemented!()
+    pub fn set_left(&mut self, left: f32) {
+        self.set_left_and_right(left, self.right())
+    }
+
+    #[inline]
+    pub fn set_right(&mut self, right: f32) {
+        self.set_left_and_right(self.left(), right)
+    }
+
+    #[inline]
+    pub fn set_left_and_right(&mut self, left: f32, right: f32) {
+        self.matrix[(0, 0)] = 2.0 / (right - left);
+        self.matrix[(0, 3)] = -(right + left) / (right - left);
     }
 
     #[inline]
     pub fn set_near(&mut self, near: f32) {
-        unimplemented!()
+        self.set_near_and_far(near, self.far())
     }
 
     #[inline]
     pub fn set_far(&mut self, far: f32) {
-        unimplemented!()
+        self.set_near_and_far(self.near(), far)
+    }
+
+    #[inline]
+    pub fn set_near_and_far(&mut self, z_near: f32, z_far: f32) {
+        self.matrix[(2, 2)] = 1.0 / (z_far - z_near);
+        self.matrix[(2, 3)] = -z_near / (z_far - z_near);
     }
 
     #[inline]
@@ -135,32 +156,51 @@ impl Perspective {
 
     #[inline]
     pub fn near(&self) -> f32 {
-        1.0 + self.matrix[(2,3)] / self.matrix[(2,2)]
+        -(self.matrix[(2,3)] / self.matrix[(2,2)])
     }
 
     #[inline]
     pub fn far(&self) -> f32 {
-        unimplemented!()
+        // TODO: we need to solve these precision errors
+        let ratio = (self.matrix[(2, 2)] + 1.0) / (self.matrix[(2, 2)] - 1.0);
+
+        (self.matrix[(2, 3)] - ratio * self.matrix[(2, 3)]) / 2.0
     }
 
     #[inline]
     pub fn set_aspect(&mut self, aspect: f32) {
-        self.matrix[(0, 0)] = (self.matrix[(1, 1)] / aspect) * -1.0;
+        let tan_half_fovy = (self.fovy() / 2.0).tan();
+        self.matrix[(0, 0)] = 1.0 / (aspect * tan_half_fovy);
     }
 
     #[inline]
     pub fn set_fov(&mut self, fov: f32) {
-        unimplemented!()
+        let tan_half_fovy = (fov / 2.0).tan();
+        self.matrix[(0, 0)] = 1.0 / (self.aspect() * tan_half_fovy);
+        self.matrix[(1, 1)] = -1.0 / tan_half_fovy;
+    }
+
+    #[inline]
+    pub fn set_fov_and_aspect(&mut self, fov: f32, aspect: f32) {
+        let tan_half_fovy = (fov / 2.0).tan();
+        self.matrix[(0, 0)] = 1.0 / (aspect * tan_half_fovy);
+        self.matrix[(1, 1)] = -1.0 / tan_half_fovy;
     }
 
     #[inline]
     pub fn set_near(&mut self, near: f32) {
-        unimplemented!()
+        self.set_near_and_far(near, self.far())
     }
 
     #[inline]
     pub fn set_far(&mut self, far: f32) {
-        unimplemented!()
+        self.set_near_and_far(self.near(), far)
+    }
+
+    #[inline]
+    pub fn set_near_and_far(&mut self, z_near: f32, z_far: f32) {
+        self.matrix[(2, 2)] = z_far / (z_far - z_near);
+        self.matrix[(2, 3)] = -(z_near * z_far) / (z_far - z_near);
     }
 
     #[inline]
@@ -263,7 +303,6 @@ impl From<Perspective> for Projection {
 
 impl From<Orthographic3<f32>> for Projection {
     fn from(proj: Orthographic3<f32>) -> Self {
-        // Get fovy, aspect and planes from nalgebra and constrcut new.
         Projection::Orthographic(Orthographic::new(proj.left(), proj.right(), proj.bottom(), proj.top(), proj.znear(), proj.zfar()))
     }
 }
@@ -512,7 +551,7 @@ mod tests {
     use amethyst_core::math::{Point3, Matrix4, Isometry3, Translation3, UnitQuaternion, Vector3, Vector4, convert};
     use amethyst_core::Transform;
 
-    use approx::assert_ulps_eq;
+    use approx::{assert_ulps_eq};
     use more_asserts::{assert_gt, assert_ge, assert_lt, assert_le};
 
     // TODO: this will be fixed after camera projection refactor
@@ -534,6 +573,48 @@ mod tests {
         let de = from_str(&to_string_pretty(&test_persp, Default::default()).unwrap()).unwrap();
 
         assert_eq!(test_persp, de);
+    }
+
+    #[test]
+    fn extract_perspective_values() {
+        let proj = Perspective::new(1280.0/720.0, std::f32::consts::FRAC_PI_3, 0.1, 100.0);
+
+        assert_eq!(1280.0/720.0, proj.aspect());
+        assert_eq!(std::f32::consts::FRAC_PI_3, proj.fovy());
+        assert_eq!(0.1, proj.near());
+        // TODO: we need to solve these precision errors
+        //assert_ulps_eq!(100.0, proj.far());
+
+        //let proj = Projection::perspective(width/height, std::f32::consts::FRAC_PI_3, 0.1, 2000.0);
+        let proj_standard = Camera::standard_3d(1920.0, 1280.0);
+        assert_ulps_eq!(1.5, proj_standard.projection().as_perspective().unwrap().fovy());
+        assert_ulps_eq!(std::f32::consts::FRAC_PI_3, proj_standard.projection().as_perspective().unwrap().aspect());
+        assert_ulps_eq!(0.1, proj_standard.projection().as_perspective().unwrap().near());
+        assert_ulps_eq!(2000.0, proj_standard.projection().as_perspective().unwrap().far());
+    }
+
+    #[test]
+    fn extract_orthographic_values() {
+        let proj = Orthographic::new(0.0, 100.0, 10.0, 150.0, -5.0, 100.0);
+
+        // TODO: we need to solve these precision errors
+        assert_ulps_eq!(10.0, proj.bottom());
+        assert_eq!(150.0, proj.top());
+        assert_eq!(0.0, proj.left());
+        assert_eq!(100.0, proj.right());
+        assert_eq!(-5.0, proj.near());
+        assert_eq!(100.0, proj.far());
+
+        let camera_standard = Camera::standard_2d(1920.0, 1280.0);
+
+        // TODO: we need to solve these precision errors
+        assert_ulps_eq!(-640.0, camera_standard.projection().as_orthographic().unwrap().bottom());
+        assert_ulps_eq!(640.0, camera_standard.projection().as_orthographic().unwrap().top());
+        assert_ulps_eq!(-960.0, camera_standard.projection().as_orthographic().unwrap().left());
+        assert_ulps_eq!(960.0, camera_standard.projection().as_orthographic().unwrap().right());
+        assert_ulps_eq!(0.1, camera_standard.projection().as_orthographic().unwrap().near());
+        assert_ulps_eq!(2000.0, camera_standard.projection().as_orthographic().unwrap().far());
+
     }
 
     // Our world-space is Y-up, X-right, z-away
@@ -768,7 +849,7 @@ mod tests {
         assert_ulps_eq!(model.column(0)[0], 0.70710678118);
         assert_ulps_eq!(model.column(3)[0], -1.0);
 
-        let result : Vec<Vector4<f32>> = cube.iter().map(|vertex| mvp * vertex.to_homogeneous()).collect();
+        let _result : Vec<Vector4<f32>> = cube.iter().map(|vertex| mvp * vertex.to_homogeneous()).collect();
 
         // TODO: Calc correct result
         // assert_ulps_eq!(result, Point());
