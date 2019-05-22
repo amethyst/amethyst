@@ -86,4 +86,5 @@ pub enum EnumPrefab {
         component: External,
     },
     Three {},
+    Four,
 }
