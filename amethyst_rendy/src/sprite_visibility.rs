@@ -75,7 +75,6 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
         profile_scope!("run");
 
         let origin = Point3::origin();
-        let camera_default_backwards = Vector3::z().scale((-1.0).into());
 
         // The camera position is used to determine culling, but the sprites are ordered based on
         // the Z coordinate
@@ -84,7 +83,7 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
             .or_else(|| (&camera, &transform).join().map(|ct| ct.1).next());
         let camera_backward = camera
             .map(|c| c.global_matrix().column(2).xyz().into())
-            .unwrap_or_else(|| camera_default_backwards);
+            .unwrap_or_else(Vector3::z);
         let camera_centroid = camera
             .map(|t| t.global_matrix().transform_point(&origin))
             .unwrap_or_else(|| origin);
@@ -95,7 +94,7 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
                 .join()
                 .map(|(e, t, _, _)| (e, t.global_matrix().transform_point(&origin)))
                 // filter entities behind the camera
-                .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) > na::zero())
+                .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < na::zero())
                 .map(|(entity, centroid)| Internals {
                     entity,
                     transparent: transparent.contains(entity),
