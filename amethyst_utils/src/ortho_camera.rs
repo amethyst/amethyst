@@ -5,7 +5,6 @@ use amethyst_core::{
     ecs::{Component, DenseVecStorage, Entity, Join, ReadExpect, System, WriteStorage},
     Axis2,
 };
-use amethyst_rendy::camera::Orthographic;
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
 use amethyst_rendy::camera::{Camera, Orthographic};
