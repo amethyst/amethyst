@@ -1,5 +1,3 @@
-#[cfg(not(windows))]
-use std::thread;
 use std::{any::Any, marker::PhantomData, panic, path::PathBuf, sync::Mutex};
 
 use amethyst::{
@@ -18,7 +16,6 @@ use amethyst::{
 };
 use boxfnonce::SendBoxFnOnce;
 use derivative::Derivative;
-use lazy_static::lazy_static;
 
 use crate::{
     CustomDispatcherStateBuilder, FunctionState, GameUpdate, SequencerState, SystemInjectionBundle,
@@ -53,13 +50,6 @@ pub const SCREEN_HEIGHT: u32 = 600;
 /// This is typically one for a normal display and two for a retina display.
 pub const HIDPI: f64 = 1.;
 
-// Use a mutex to prevent multiple tests that open GL windows from running simultaneously, due to
-// race conditions causing failures in X.
-// <https://github.com/tomaka/glutin/issues/1038>
-lazy_static! {
-    static ref X11_GL_MUTEX: Mutex<()> = Mutex::new(());
-}
-
 /// Builder for an Amethyst application.
 ///
 /// This provides varying levels of setup so that users do not have to register common bundles.
@@ -74,11 +64,6 @@ pub struct AmethystApplication<T, E, R>
 where
     E: Send + Sync + 'static,
 {
-    /// Name of the application, if provided.
-    ///
-    /// This is used to name the thread that is used to spawn the application, so that on `panic!`s
-    /// it is easier to tell which test failed.
-    app_name: Option<String>,
     /// Functions to add bundles to the game data.
     ///
     /// This is necessary because `System`s are not `Send`, and so we cannot send `GameDataBuilder`
@@ -98,8 +83,6 @@ where
     state_fns: Vec<FnState<T, E>>,
     /// Game data and event type.
     state_data: PhantomData<(T, E, R)>,
-    /// Whether the application should be run in a sub thread.
-    run_in_thread: bool,
 }
 
 impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader> {
@@ -107,12 +90,10 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
     pub fn blank() -> AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader>
     {
         AmethystApplication {
-            app_name: None,
             bundle_add_fns: Vec::new(),
             resource_add_fns: Vec::new(),
             state_fns: Vec::new(),
             state_data: PhantomData,
-            run_in_thread: false,
         }
     }
 
@@ -215,7 +196,6 @@ where
     ///
     /// This method should be called instead of the `.build()` method if the application is to be
     /// run, as this avoids a segfault on Linux when using the GL software renderer.
-    #[cfg(windows)]
     pub fn run(self) -> Result<(), Error>
     where
         for<'b> R: EventReader<'b, Event = E>,
@@ -230,71 +210,6 @@ where
                 .run()
         })
         .map_err(Self::box_any_to_error)
-    }
-
-    /// Runs the application and returns `Ok(())` if nothing went wrong.
-    ///
-    /// This method should be called instead of the `.build()` method if the application is to be
-    /// run, as this avoids a segfault on Linux when using the GL software renderer.
-    #[cfg(not(windows))]
-    pub fn run(self) -> Result<(), Error>
-    where
-        for<'b> R: EventReader<'b, Event = E>,
-    {
-        let params = (self.bundle_add_fns, self.resource_add_fns, self.state_fns);
-
-        let run_in_thread = self.run_in_thread;
-
-        // Run in a sub thread due to mesa's threading issues with GL software rendering
-        // See: <https://users.rust-lang.org/t/trouble-identifying-cause-of-segfault/18096>
-        let app_name = self
-            .app_name
-            .unwrap_or_else(|| String::from(stringify!(AmethystApplication)));
-        thread::Builder::new()
-            .name(app_name)
-            .spawn(move || -> Result<(), Error> {
-                amethyst::start_logger(Default::default());
-
-                if run_in_thread {
-                    let guard = X11_GL_MUTEX.lock().unwrap();
-
-                    // We have to build the application after acquiring the lock because the window
-                    // is already instantiated during the build.
-                    //
-                    // The mutex greatly reduces, but does not eliminate X11 window initialization
-                    // errors from happening:
-                    //
-                    // * <https://github.com/tomaka/glutin/issues/1034> can still happen
-                    // * <https://github.com/tomaka/glutin/issues/1038> may be completely removed
-
-                    // `CoreApplication` is `!UnwindSafe`, but wrapping it in a `Mutex` allows us to
-                    // recover from a panic.
-                    let application = Mutex::new(Self::build_internal(params)?);
-                    let run_result = panic::catch_unwind(move || {
-                        application
-                            .lock()
-                            .expect("Expected to get application lock")
-                            .run()
-                    })
-                    .map_err(Self::box_any_to_error);
-
-                    drop(guard);
-
-                    run_result
-                } else {
-                    let application = Mutex::new(Self::build_internal(params)?);
-                    panic::catch_unwind(move || {
-                        application
-                            .lock()
-                            .expect("Expected to get application lock")
-                            .run()
-                    })
-                    .map_err(Self::box_any_to_error)
-                }
-            })
-            .expect("Failed to spawn `AmethystApplication` thread.")
-            .join()
-            .expect("Failed to run `AmethystApplication` closure.")
     }
 
     fn box_any_to_error(error: Box<dyn Any + Send>) -> Error {
@@ -317,16 +232,6 @@ where
     T: GameUpdate,
     E: Send + Sync + 'static,
 {
-    /// Sets the name for this application.
-    ///
-    /// This will be used for the thread name that runs this application.
-    pub fn with_app_name<N>(mut self, app_name: N) -> Self
-    where
-        N: Into<String>,
-    {
-        self.app_name = Some(app_name.into());
-        self
-    }
     /// Use the specified custom event type instead of `()`.
     ///
     /// This **must** be invoked before any of the `.with_*()` function calls as the custom event
@@ -349,12 +254,10 @@ where
             );
         }
         AmethystApplication {
-            app_name: self.app_name,
             bundle_add_fns: self.bundle_add_fns,
             resource_add_fns: self.resource_add_fns,
             state_fns: Vec::new(),
             state_data: PhantomData,
-            run_in_thread: self.run_in_thread,
         }
     }
 
@@ -590,15 +493,6 @@ where
         F: Fn(&mut World) + Send + Sync + 'static,
     {
         self.with_fn(assertion_fn)
-    }
-
-    /// Indicates that this should be run in a thread.
-    ///
-    /// This is used to avoid a window initialization race condition that causes tests to fail.
-    /// See <https://github.com/tomaka/glutin/issues/1038>.
-    pub fn run_in_thread(mut self) -> Self {
-        self.run_in_thread = true;
-        self
     }
 }
 
@@ -966,10 +860,11 @@ mod test {
         };
 
         use super::AmethystApplication;
+        use crate::RenderBaseAppExt;
 
         #[test]
         fn audio_zero() -> Result<(), Error> {
-            AmethystApplication::render_base("audio_zero", false)
+            AmethystApplication::render_base()
                 .with_bundle(AudioBundle::default())
                 .with_assertion(|world| {
                     world.read_resource::<AssetStorage<Source>>();
@@ -979,7 +874,7 @@ mod test {
 
         #[test]
         fn audio_one() -> Result<(), Error> {
-            AmethystApplication::render_base("audio_one", false)
+            AmethystApplication::render_base()
                 .with_bundle(AudioBundle::default())
                 .with_assertion(|world| {
                     world.read_resource::<AssetStorage<Source>>();
@@ -989,7 +884,7 @@ mod test {
 
         #[test]
         fn audio_two() -> Result<(), Error> {
-            AmethystApplication::render_base("audio_two", false)
+            AmethystApplication::render_base()
                 .with_bundle_fn(|| AudioBundle::default())
                 .with_assertion(|world| {
                     world.read_resource::<AssetStorage<Source>>();
@@ -999,7 +894,7 @@ mod test {
 
         #[test]
         fn audio_three() -> Result<(), Error> {
-            AmethystApplication::render_base("audio_three", false)
+            AmethystApplication::render_base()
                 .with_bundle_fn(|| AudioBundle::default())
                 .with_assertion(|world| {
                     world.read_resource::<AssetStorage<Source>>();
