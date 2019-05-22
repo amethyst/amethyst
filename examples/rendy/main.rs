@@ -379,7 +379,6 @@ impl SimpleState for Example {
                     &world.read_storage(),
                     &mut world.write_storage(),
                 );
-                print_camera_pos(&world.res);
                 Trans::None
             } else if is_key_down(&event, winit::VirtualKeyCode::E) {
                 let mut mode = world.write_resource::<RenderMode>();

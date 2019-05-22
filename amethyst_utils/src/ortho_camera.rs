@@ -8,7 +8,7 @@ use amethyst_core::{
 use amethyst_rendy::camera::Orthographic;
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
-use amethyst_rendy::camera::Camera;
+use amethyst_rendy::camera::{Camera, Orthographic};
 use amethyst_window::ScreenDimensions;
 
 use serde::{Deserialize, Serialize};
@@ -233,14 +233,9 @@ impl<'a> System<'a> for CameraOrthoSystem {
                     continue;
                 };
 
-                camera.set_projection(Orthographic::new(
-                    offsets.0,
-                    offsets.1,
-                    offsets.2,
-                    offsets.3,
-                    near,
-                    far,
-                ).into());
+                camera.set_projection(
+                    Orthographic::new(offsets.0, offsets.1, offsets.2, offsets.3, near, far).into(),
+                );
             }
         }
     }
