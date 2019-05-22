@@ -95,7 +95,7 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
                 .join()
                 .map(|(e, t, _, _)| (e, t.global_matrix().transform_point(&origin)))
                 // filter entities behind the camera
-                .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < na::zero())
+                .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) > na::zero())
                 .map(|(entity, centroid)| Internals {
                     entity,
                     transparent: transparent.contains(entity),

@@ -153,14 +153,14 @@ impl SimpleState for Example {
                 }
 
                 Some((VirtualKeyCode::Up, ElementState::Pressed)) => {
-                    self.camera_z -= 1.0;
+                    self.camera_z += 1.0;
                     info!("Camera Z position is: {}", self.camera_z);
                     self.adjust_camera(&mut data.world);
                     self.redraw_sprites(&mut data.world);
                 }
 
                 Some((VirtualKeyCode::Down, ElementState::Pressed)) => {
-                    self.camera_z += 1.0;
+                    self.camera_z -= 1.0;
                     info!("Camera Z position is: {}", self.camera_z);
                     self.adjust_camera(&mut data.world);
                     self.redraw_sprites(&mut data.world);
