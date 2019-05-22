@@ -42,12 +42,12 @@ impl Orthographic {
 
     #[inline]
     pub fn top(&self) -> f32 {
-        (1.0 - self.matrix[(1, 3)]) / self.matrix[(1, 1)]
+        -((1.0 - self.matrix[(1, 3)]) / self.matrix[(1, 1)])
     }
 
     #[inline]
     pub fn bottom(&self) -> f32 {
-        (-1.0 - self.matrix[(1, 3)]) / self.matrix[(1, 1)]
+        -((-1.0 - self.matrix[(1, 3)]) / self.matrix[(1, 1)])
     }
 
     #[inline]
@@ -578,7 +578,6 @@ mod tests {
 
     // TODO: this will be fixed after camera projection refactor
     #[test]
-    #[ignore]
     fn test_orthographic_serde() {
         let test_ortho = Projection::orthographic(0.0, 100.0, 10.0, 150.0, -5.0, 100.0);
         println!("{}", to_string_pretty(&test_ortho, Default::default()).unwrap());
@@ -589,7 +588,6 @@ mod tests {
 
     // TODO: this will be fixed after camera projection refactor
     #[test]
-    #[ignore]
     fn test_perspective_serde() {
         let test_persp = Projection::perspective(1.7, std::f32::consts::FRAC_PI_3, 0.1, 1000.0);
         println!("{}", to_string_pretty(&test_persp, Default::default()).unwrap());
@@ -600,7 +598,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn extract_perspective_values() {
         let proj = Perspective::new(1280.0/720.0, std::f32::consts::FRAC_PI_3, 0.1, 100.0);
 
