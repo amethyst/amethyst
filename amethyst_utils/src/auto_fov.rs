@@ -244,9 +244,11 @@ impl<'a> System<'a> for AutoFovSystem {
     fn run(&mut self, (screen, auto_fovs, mut cameras): Self::SystemData) {
         if self.last_dimensions != *screen {
             for (camera, auto_fov) in (&mut cameras, &auto_fovs).join() {
-                let fovy = get_fovy(camera);
-                let fovx = auto_fov.new_fovx(screen.aspect_ratio(), fovy);
-                set_aspect(camera, fovx / fovy);
+                if let Ok(perspective) = camera.projection_mut().as_perspective_mut() {
+                    let fovy = perspective.fovy();
+                    let fovx = auto_fov.new_fovx(screen.aspect_ratio(), fovy);
+                    perspective.set_aspect(fovx / fovy);
+                }
             }
             self.last_dimensions = screen.clone();
         }
@@ -259,14 +261,4 @@ impl Default for AutoFovSystem {
             last_dimensions: ScreenDimensions::new(0, 0, 0.0),
         }
     }
-}
-
-#[inline]
-fn get_fovy(camera: &Camera) -> f32 {
-    (-1.0 / camera.as_matrix()[(1, 1)]).atan() * 2.0
-}
-
-#[inline]
-fn set_aspect(camera: &mut Camera, new_aspect: f32) {
-    camera.as_matrix_mut()[(0, 0)] = (camera.as_matrix()[(1, 1)] / new_aspect) * -1.0;
 }

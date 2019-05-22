@@ -379,7 +379,6 @@ impl SimpleState for Example {
                     &world.read_storage(),
                     &mut world.write_storage(),
                 );
-                print_camera_pos(&world.res);
                 Trans::None
             } else if is_key_down(&event, winit::VirtualKeyCode::E) {
                 let mut mode = world.write_resource::<RenderMode>();
@@ -490,35 +489,6 @@ fn toggle_or_cycle_animation(
             }
         }
     }
-}
-#[inline]
-fn print_camera_pos(mut res: &Resources) {
-    use amethyst_core::math::{Point3};
-    let (active_camera, cameras, transforms) = <(
-            Option<Read<'_, ActiveCamera>>,
-            ReadStorage<'_, Camera>,
-            ReadStorage<'_, Transform>,
-        )>::fetch(res);
-    let (camera, transform) = active_camera
-        .as_ref()
-        .and_then(|ac| {
-            cameras
-                .get(ac.entity)
-                .map(|camera| (camera, transforms.get(ac.entity).unwrap()))
-        })
-        .unwrap_or_else(|| {
-            (&cameras, &transforms)
-                .join()
-                .next()
-                .unwrap()
-        });
-    dbg!(transform.isometry());
-    let eye = &(Point3::from(transform.isometry().translation.vector));
-        let target = &(transform.isometry().translation * transform.isometry().rotation * Point3::from(Vector3::z()));
-        let up = &(transform.isometry().rotation * Vector3::y());
-        dbg!(eye);
-        dbg!(target);
-        dbg!(up); 
 }
 
 fn main() -> amethyst::Result<()> {

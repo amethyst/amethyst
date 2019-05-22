@@ -110,12 +110,12 @@ Prefab (
                         rotation: (0.0, 1.0, 0.0, 0.0),
                         scale: (1.0, -1.0, 1.0),
                     ),
-                    camera: Perspective((
+                    camera: Perspective(
                         aspect: 1.3,
                         fovy: 1.0471975512,
                         znear: 0.1,
                         zfar: 2000.0,
-                    )),
+                    ),
                 ),
                 None
             ),

@@ -167,7 +167,7 @@ impl SimpleState for Example {
                 }
 
                 Some((VirtualKeyCode::Left, ElementState::Pressed)) => {
-                    if (self.camera_depth_vision >= 2.0) {
+                    if self.camera_depth_vision >= 2.0 {
                         self.camera_depth_vision -= 1.0;
                         info!("Camera depth vision: {}", self.camera_depth_vision);
                     }
@@ -201,7 +201,8 @@ impl Example {
         // additional distance means the camera can see up to just before -1.0 on the Z axis, so
         // we can view the sprite at 0.0.
         self.camera_z = 1.0;
-        self.camera_depth_vision = self.loaded_sprite_sheet.as_ref().unwrap().sprite_count as f32 + 1.0;
+        self.camera_depth_vision =
+            self.loaded_sprite_sheet.as_ref().unwrap().sprite_count as f32 + 1.0;
 
         self.adjust_camera(world);
     }

@@ -35,12 +35,12 @@ Prefab (
                     translation: (0.0, -20.0, 10.0),
                     rotation: (0.6153864, 0.0, 0.0, 0.7882256),
                 ),
-                camera: Perspective((
+                camera: Perspective(
                     aspect: 1.0,
                     fovy: 1.0471975512,
                     znear: 0.1,
                     zfar: 2000.0,
-                )),
+                ),
             ),
         ),
     ],
