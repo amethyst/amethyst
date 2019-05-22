@@ -90,7 +90,6 @@ pub enum TexturePrefab {
 pub enum TextureGenerator {
     Srgba(f32, f32, f32, f32),
     LinearRgba(f32, f32, f32, f32),
-    //LinearRgbaFloat(f32, f32, f32, f32),
     SrgbaCorners([(f32, f32, f32, f32); 4], Filter),
 }
 
@@ -109,7 +108,7 @@ fn simple_builder<A: AsPixel>(data: Vec<A>, size: Size, filter: Filter) -> Textu
 }
 
 impl TextureGenerator {
-    fn data(&self) -> TextureData {
+    pub fn data(&self) -> TextureData {
         use palette::{LinSrgba, Srgba};
         use rendy::texture::palette::{load_from_linear_rgba, load_from_srgba};
         match *self {
