@@ -244,7 +244,7 @@ impl<'a> System<'a> for AutoFovSystem {
     fn run(&mut self, (screen, auto_fovs, mut cameras): Self::SystemData) {
         if self.last_dimensions != *screen {
             for (camera, auto_fov) in (&mut cameras, &auto_fovs).join() {
-                if let Ok(perspective) = camera.projection_mut().as_perspective_mut() {
+                if let Some(perspective) = camera.projection_mut().as_perspective_mut() {
                     let fovy = perspective.fovy();
                     let fovx = auto_fov.new_fovx(screen.aspect_ratio(), fovy);
                     perspective.set_aspect(fovx / fovy);

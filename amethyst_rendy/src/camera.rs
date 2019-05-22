@@ -255,39 +255,31 @@ impl Projection {
         Projection::Perspective(Perspective::new(aspect, fov, z_near, z_far))
     }
 
-    pub fn as_orthographic(&self) -> Result<&Orthographic, failure::Error> {
+    pub fn as_orthographic(&self) -> Option<&Orthographic> {
         match *self {
-            Projection::Orthographic(ref s) => Ok(s),
-            _ => Err(failure::format_err!(
-                "Attempting to retrieve orthographic from invalid projection"
-            )),
+            Projection::Orthographic(ref s) => Some(s),
+            _ => None,
         }
     }
 
-    pub fn as_orthographic_mut(&mut self) -> Result<&mut Orthographic, failure::Error> {
+    pub fn as_orthographic_mut(&mut self) -> Option<&mut Orthographic> {
         match *self {
-            Projection::Orthographic(ref mut s) => Ok(s),
-            _ => Err(failure::format_err!(
-                "Attempting to retrieve orthographic from invalid projection"
-            )),
+            Projection::Orthographic(ref mut s) => Some(s),
+            _ => None,
         }
     }
 
-    pub fn as_perspective(&self) -> Result<&Perspective, failure::Error> {
+    pub fn as_perspective(&self) -> Option<&Perspective> {
         match *self {
-            Projection::Perspective(ref s) => Ok(s),
-            _ => Err(failure::format_err!(
-                "Attempting to retrieve perspective from invalid projection"
-            )),
+            Projection::Perspective(ref s) => Some(s),
+            _ => None,
         }
     }
 
-    pub fn as_perspective_mut(&mut self) -> Result<&mut Perspective, failure::Error> {
+    pub fn as_perspective_mut(&mut self) -> Option<&mut Perspective> {
         match *self {
-            Projection::Perspective(ref mut s) => Ok(s),
-            _ => Err(failure::format_err!(
-                "Attempting to retrieve perspective from invalid projection"
-            )),
+            Projection::Perspective(ref mut s) => Some(s),
+            _ => None,
         }
     }
 

@@ -226,7 +226,7 @@ impl<'a> System<'a> for CameraOrthoSystem {
                 ortho_camera.aspect_ratio_cache = aspect;
                 let offsets = ortho_camera.camera_offsets(aspect);
 
-                let (near, far) = if let Ok(prev) = camera.projection().as_orthographic() {
+                let (near, far) = if let Some(prev) = camera.projection().as_orthographic() {
                     (prev.near(), prev.far())
                 } else {
                     continue;
