@@ -96,7 +96,7 @@ impl SpriteSheetLoadedSet {
     fn push(&self, data: (Option<String>, SpriteSheetHandle)) {
         self.0.lock().unwrap().push(data);
     }
-    fn get(&self, reference: &SpriteSheetReference) -> Option<SpriteSheetHandle> {
+    pub fn get(&self, reference: &SpriteSheetReference) -> Option<SpriteSheetHandle> {
         let inner = self.0.lock().unwrap();
         match reference {
             SpriteSheetReference::Index(index) => {
