@@ -6,7 +6,10 @@ use amethyst_animation::{
     AnimationPrefab, AnimationSetPrefab, InterpolationFunction, InterpolationPrimitive, Sampler,
     SamplerPrimitive, TransformChannel,
 };
-use amethyst_core::{Float, Transform};
+use amethyst_core::{
+    math::{convert, Vector3, Vector4},
+    Float, Transform,
+};
 
 use super::Buffers;
 use crate::error;
@@ -65,7 +68,8 @@ fn load_channel(
                 input,
                 function: map_interpolation_type(&sampler.interpolation()),
                 output: translations
-                    .map(|t| [t[0].into(), t[1].into(), t[2].into()].into())
+                    .map(Vector3::from)
+                    .map(|t| convert::<_, Vector3<Float>>(t).into())
                     .collect(),
             },
         )),
@@ -76,7 +80,6 @@ fn load_channel(
             } else {
                 ty
             };
-            // gltf quat format: [x, y, z, w], our quat format: [w, x, y, z]
             Ok((
                 node_index,
                 TransformChannel::Rotation,
@@ -85,7 +88,8 @@ fn load_channel(
                     function: ty,
                     output: rotations
                         .into_f32()
-                        .map(|q| [q[3].into(), q[0].into(), q[1].into(), q[2].into()].into())
+                        .map(Vector4::from)
+                        .map(|q| convert::<_, Vector4<Float>>(q).into())
                         .collect(),
                 },
             ))
@@ -97,7 +101,8 @@ fn load_channel(
                 input,
                 function: map_interpolation_type(&sampler.interpolation()),
                 output: scales
-                    .map(|s| [s[0].into(), s[1].into(), s[2].into()].into())
+                    .map(Vector3::from)
+                    .map(|s| convert::<_, Vector3<Float>>(s).into())
                     .collect(),
             },
         )),

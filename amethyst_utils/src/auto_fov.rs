@@ -2,11 +2,13 @@
 
 use amethyst_assets::PrefabData;
 use amethyst_core::ecs::{
-    Component, Entity, HashMapStorage, Join, ReadExpect, ReadStorage, System, WriteStorage,
+    Component, Entity, HashMapStorage, Join, ReadExpect, ReadStorage, Resources, System,
+    SystemData, WriteStorage,
 };
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
-use amethyst_renderer::{Camera, ScreenDimensions};
+use amethyst_rendy::camera::Camera;
+use amethyst_window::ScreenDimensions;
 
 use serde::{Deserialize, Serialize};
 
@@ -224,7 +226,9 @@ impl Default for AutoFov {
 /// If the camera is being loaded by a prefab, it is best to have the `PrefabLoaderSystem` loading
 /// the camera as a dependency of this system. It enables the system to adjust the camera right
 /// after it is created -- simply put, in the same frame.
-pub struct AutoFovSystem;
+pub struct AutoFovSystem {
+    last_dimensions: ScreenDimensions,
+}
 
 impl<'a> System<'a> for AutoFovSystem {
     type SystemData = (
@@ -233,23 +237,28 @@ impl<'a> System<'a> for AutoFovSystem {
         WriteStorage<'a, Camera>,
     );
 
-    fn run(&mut self, (screen, auto_fovs, mut cameras): Self::SystemData) {
-        let current_aspect = screen.aspect_ratio();
+    fn setup(&mut self, res: &mut Resources) {
+        Self::SystemData::setup(res);
+    }
 
-        for (camera, auto_fov) in (&mut cameras, &auto_fovs).join() {
-            let fovy = get_fovy(camera);
-            let fovx = auto_fov.new_fovx(current_aspect, fovy);
-            set_aspect(camera, fovx / fovy);
+    fn run(&mut self, (screen, auto_fovs, mut cameras): Self::SystemData) {
+        if self.last_dimensions != *screen {
+            for (camera, auto_fov) in (&mut cameras, &auto_fovs).join() {
+                if let Some(perspective) = camera.projection_mut().as_perspective_mut() {
+                    let fovy = perspective.fovy();
+                    let fovx = auto_fov.new_fovx(screen.aspect_ratio(), fovy);
+                    perspective.set_aspect(fovx / fovy);
+                }
+            }
+            self.last_dimensions = screen.clone();
         }
     }
 }
 
-#[inline]
-fn get_fovy(camera: &Camera) -> f32 {
-    (1.0 / camera.proj[(1, 1)]).atan() * 2.0
-}
-
-#[inline]
-fn set_aspect(camera: &mut Camera, new_aspect: f32) {
-    camera.proj[(0, 0)] = camera.proj[(1, 1)] / new_aspect;
+impl Default for AutoFovSystem {
+    fn default() -> Self {
+        Self {
+            last_dimensions: ScreenDimensions::new(0, 0, 0.0),
+        }
+    }
 }

@@ -1,13 +1,12 @@
-use std::{marker::PhantomData, path::Path};
+use std::marker::PhantomData;
 
 use crate::{
     core::{
-        ecs::prelude::{Dispatcher, DispatcherBuilder, System, World},
+        ecs::prelude::{Dispatcher, DispatcherBuilder, RunNow, System, World},
         math::RealField,
         ArcThreadPool, SystemBundle,
     },
     error::Error,
-    renderer::pipe::pass::Pass,
 };
 
 /// Initialise trait for game data
@@ -16,23 +15,50 @@ pub trait DataInit<T> {
     fn build(self, world: &mut World) -> T;
 }
 
+/// Allow disposing game data with access to world.
+pub trait DataDispose {
+    /// Perform disposal
+    fn dispose(&mut self, world: &mut World);
+}
+
 /// Default game data.
 ///
 /// The lifetimes are for the systems inside and can be `'static` unless a system has a borrowed
 /// field.
 pub struct GameData<'a, 'b> {
-    dispatcher: Dispatcher<'a, 'b>,
+    dispatcher: Option<Dispatcher<'a, 'b>>,
 }
 
 impl<'a, 'b> GameData<'a, 'b> {
     /// Create new game data
     pub fn new(dispatcher: Dispatcher<'a, 'b>) -> Self {
-        GameData { dispatcher }
+        GameData {
+            dispatcher: Some(dispatcher),
+        }
     }
 
     /// Update game data
     pub fn update(&mut self, world: &World) {
-        self.dispatcher.dispatch(&world.res);
+        if let Some(dispatcher) = &mut self.dispatcher {
+            dispatcher.dispatch(&world.res);
+        }
+    }
+
+    /// Dispose game data, dropping the dispatcher
+    pub fn dispose(&mut self, world: &mut World) {
+        if let Some(dispatcher) = self.dispatcher.take() {
+            dispatcher.dispose(&mut world.res);
+        }
+    }
+}
+
+impl DataDispose for () {
+    fn dispose(&mut self, _world: &mut World) {}
+}
+
+impl DataDispose for GameData<'_, '_> {
+    fn dispose(&mut self, world: &mut World) {
+        self.dispose(world);
     }
 }
 
@@ -193,7 +219,7 @@ impl<'a, 'b, N: RealField + Default> GameDataBuilder<'a, 'b, N> {
     /// ~~~
     pub fn with_thread_local<S>(mut self, system: S) -> Self
     where
-        for<'c> S: System<'c> + 'b,
+        for<'c> S: RunNow<'c> + 'b,
     {
         self.disp_builder.add_thread_local(system);
         self
@@ -226,43 +252,43 @@ impl<'a, 'b, N: RealField + Default> GameDataBuilder<'a, 'b, N> {
         Ok(self)
     }
 
-    /// Create a basic renderer with a single given `Pass`, and optional support for the `DrawUi` pass.
-    ///
-    /// Will set the clear color to black.
-    ///
-    /// ### Parameters:
-    ///
-    /// - `path`: Path to the `DisplayConfig` configuration file
-    /// - `pass`: The single pass in the render graph
-    /// - `with_ui`: If set to true, will add the UI render pass
-    pub fn with_basic_renderer<A, P>(self, path: A, pass: P, with_ui: bool) -> Result<Self, Error>
-    where
-        A: AsRef<Path>,
-        P: Pass + 'b,
-    {
-        use crate::{
-            config::Config,
-            renderer::{DisplayConfig, Pipeline, RenderBundle, Stage},
-            ui::DrawUi,
-        };
-        let config = DisplayConfig::load(path);
-        if with_ui {
-            let pipe = Pipeline::build().with_stage(
-                Stage::with_backbuffer()
-                    .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-                    .with_pass(pass)
-                    .with_pass(DrawUi::new()),
-            );
-            self.with_bundle(RenderBundle::new(pipe, Some(config)))
-        } else {
-            let pipe = Pipeline::build().with_stage(
-                Stage::with_backbuffer()
-                    .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-                    .with_pass(pass),
-            );
-            self.with_bundle(RenderBundle::new(pipe, Some(config)))
-        }
-    }
+    // /// Create a basic renderer with a single given `Pass`, and optional support for the `DrawUi` pass.
+    // ///
+    // /// Will set the clear color to black.
+    // ///
+    // /// ### Parameters:
+    // ///
+    // /// - `path`: Path to the `DisplayConfig` configuration file
+    // /// - `pass`: The single pass in the render graph
+    // /// - `with_ui`: If set to true, will add the UI render pass
+    // pub fn with_basic_renderer<A, P>(self, path: A, pass: P, with_ui: bool) -> Result<Self, Error>
+    // where
+    //     A: AsRef<Path>,
+    //     P: Pass + 'b,
+    // {
+    //     use crate::{
+    //         config::Config,
+    //         renderer::{DisplayConfig, Pipeline, RenderBundle, Stage},
+    //         ui::DrawUi,
+    //     };
+    //     let config = DisplayConfig::load(path);
+    //     if with_ui {
+    //         let pipe = Pipeline::build().with_stage(
+    //             Stage::with_backbuffer()
+    //                 .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+    //                 .with_pass(pass)
+    //                 .with_pass(DrawUi::new()),
+    //         );
+    //         self.with_bundle(RenderBundle::new(pipe, Some(config)))
+    //     } else {
+    //         let pipe = Pipeline::build().with_stage(
+    //             Stage::with_backbuffer()
+    //                 .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
+    //                 .with_pass(pass),
+    //         );
+    //         self.with_bundle(RenderBundle::new(pipe, Some(config)))
+    //     }
+    // }
 }
 
 impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {

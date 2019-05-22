@@ -2,22 +2,25 @@
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-use serde::{Deserialize, Serialize};
-
-pub use crate::format::GltfSceneFormat;
-
-use std::{collections::HashMap, ops::Range};
-
 use amethyst_animation::{AnimatablePrefab, SkinnablePrefab};
-use amethyst_assets::{Handle, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter};
+use amethyst_assets::{
+    AssetStorage, Handle, Loader, Prefab, PrefabData, PrefabLoaderSystem, ProgressCounter,
+};
 use amethyst_core::{
-    ecs::prelude::{Component, DenseVecStorage, Entity, Write, WriteStorage},
-    math::{Point3, Vector3},
+    ecs::prelude::{Entity, Read, ReadExpect, Write, WriteStorage},
+    math::{convert, Point3, Vector3},
     transform::Transform,
-    Named,
+    Float, Named,
 };
 use amethyst_error::Error;
-use amethyst_renderer::{MaterialPrefab, Mesh, MeshData, TextureFormat};
+use amethyst_rendy::{
+    formats::mtl::MaterialPrefab, rendy::mesh::MeshBuilder, types::Mesh, visibility::BoundingSphere,
+};
+use derivative::Derivative;
+use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, ops::Range};
+
+pub use crate::format::GltfSceneFormat;
 
 mod error;
 mod format;
@@ -29,17 +32,17 @@ pub type GltfSceneLoaderSystem = PrefabLoaderSystem<GltfPrefab>;
 pub type GltfSceneAsset = Prefab<GltfPrefab>;
 
 /// `PrefabData` for loading Gltf files.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Default)]
 pub struct GltfPrefab {
     /// `Transform` will almost always be placed, the only exception is for the main `Entity` for
     /// certain scenarios (based on the data in the Gltf file)
     pub transform: Option<Transform>,
     /// `MeshData` is placed on all `Entity`s with graphics primitives
-    pub mesh: Option<MeshData>,
+    pub mesh: Option<MeshBuilder<'static>>,
     /// Mesh handle after sub asset loading is done
     pub mesh_handle: Option<Handle<Mesh>>,
     /// `Material` is placed on all `Entity`s with graphics primitives with material
-    pub material: Option<MaterialPrefab<TextureFormat>>,
+    pub material: Option<MaterialPrefab>,
     /// Loaded animations, if applicable, will always only be placed on the main `Entity`
     pub animatable: Option<AnimatablePrefab<usize, Transform>>,
     /// Skin data is placed on `Entity`s involved in the skin, skeleton or graphical primitives
@@ -57,8 +60,7 @@ impl GltfPrefab {
     /// Move the scene so the center of the bounding box is at the given `target` location.
     pub fn move_to(&mut self, target: Point3<f32>) {
         if let Some(ref extent) = self.extent {
-            let diff = target - extent.centroid();
-            let diff = Vector3::new(diff.x.into(), diff.y.into(), diff.z.into());
+            let diff = convert::<_, Vector3<Float>>(target - extent.centroid());
             *self
                 .transform
                 .get_or_insert_with(Transform::default)
@@ -71,10 +73,10 @@ impl GltfPrefab {
         if let Some(ref extent) = self.extent {
             let distance = extent.distance();
             let max = distance.x.max(distance.y).max(distance.z);
-            let scale = max_distance / max;
+            let scale: Float = (max_distance / max).into();
             self.transform
                 .get_or_insert_with(Transform::default)
-                .set_scale(Vector3::new(scale.into(), scale.into(), scale.into()));
+                .set_scale(Vector3::new(scale, scale, scale));
         }
     }
 }
@@ -143,6 +145,15 @@ impl GltfNodeExtent {
     }
 }
 
+impl Into<BoundingSphere> for GltfNodeExtent {
+    fn into(self) -> BoundingSphere {
+        BoundingSphere {
+            center: convert(self.centroid()),
+            radius: convert(self.distance().magnitude() * 0.5),
+        }
+    }
+}
+
 impl From<Range<[f32; 3]>> for GltfNodeExtent {
     fn from(range: Range<[f32; 3]>) -> Self {
         GltfNodeExtent {
@@ -152,22 +163,33 @@ impl From<Range<[f32; 3]>> for GltfNodeExtent {
     }
 }
 
-impl Component for GltfNodeExtent {
-    type Storage = DenseVecStorage<Self>;
-}
-
 /// Used during gltf loading to contain the materials used from scenes in the file
-#[derive(Default, Clone, Debug)]
+#[derive(Debug, Derivative)]
+#[derivative(Default(bound = ""))]
 pub struct GltfMaterialSet {
-    pub(crate) materials: HashMap<usize, MaterialPrefab<TextureFormat>>,
+    pub(crate) materials: HashMap<usize, MaterialPrefab>,
 }
 
 /// Options used when loading a GLTF file
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Derivative, Serialize, Deserialize)]
+#[derivative(Default)]
 #[serde(default)]
 pub struct GltfSceneOptions {
     /// Generate texture coordinates if none exist in the Gltf file
     pub generate_tex_coords: (f32, f32),
+    #[derivative(Default(value = "true"))]
+    /// Load vertex normal data from the Gltf file
+    pub load_normals: bool,
+    #[derivative(Default(value = "true"))]
+    /// Load vertex color data from the Gltf file
+    pub load_colors: bool,
+    #[derivative(Default(value = "true"))]
+    /// Load texture coordinates data from the Gltf file
+    pub load_texcoords: bool,
+    #[derivative(Default(value = "true"))]
+    /// Load vertex tangent data from the Gltf file
+    pub load_tangents: bool,
+    #[derivative(Default(value = "true"))]
     /// Load animation data from the Gltf file
     pub load_animations: bool,
     /// Flip the v coordinate for all texture coordinates
@@ -180,14 +202,14 @@ pub struct GltfSceneOptions {
 impl<'a> PrefabData<'a> for GltfPrefab {
     type SystemData = (
         <Transform as PrefabData<'a>>::SystemData,
-        <MeshData as PrefabData<'a>>::SystemData,
         <Named as PrefabData<'a>>::SystemData,
-        <MaterialPrefab<TextureFormat> as PrefabData<'a>>::SystemData,
+        <MaterialPrefab as PrefabData<'a>>::SystemData,
         <AnimatablePrefab<usize, Transform> as PrefabData<'a>>::SystemData,
         <SkinnablePrefab as PrefabData<'a>>::SystemData,
-        WriteStorage<'a, GltfNodeExtent>,
-        // TODO make optional after prefab refactor. We need a way to pass options to decide to enable this or not, but without touching the prefab.
-        WriteStorage<'a, MeshData>,
+        WriteStorage<'a, BoundingSphere>,
+        WriteStorage<'a, Handle<Mesh>>,
+        Read<'a, AssetStorage<Mesh>>,
+        ReadExpect<'a, Loader>,
         Write<'a, GltfMaterialSet>,
     );
     type Result = ();
@@ -199,40 +221,28 @@ impl<'a> PrefabData<'a> for GltfPrefab {
         entities: &[Entity],
         children: &[Entity],
     ) -> Result<(), Error> {
-        let (
-            ref mut transforms,
-            ref mut meshes,
-            ref mut names,
-            ref mut materials,
-            ref mut animatables,
-            ref mut skinnables,
-            ref mut extents,
-            ref mut mesh_data,
-            _,
-        ) = system_data;
-        if let Some(ref transform) = self.transform {
+        let (transforms, names, materials, animatables, skinnables, bound, meshes, _, _, _) =
+            system_data;
+        if let Some(transform) = &self.transform {
             transform.add_to_entity(entity, transforms, entities, children)?;
         }
-        if let Some(ref mesh) = self.mesh {
-            mesh_data.insert(entity, mesh.clone())?;
+        if let Some(mesh) = &self.mesh_handle {
+            meshes.insert(entity, mesh.clone())?;
         }
-        if let Some(ref mesh) = self.mesh_handle {
-            meshes.1.insert(entity, mesh.clone())?;
-        }
-        if let Some(ref name) = self.name {
+        if let Some(name) = &self.name {
             name.add_to_entity(entity, names, entities, children)?;
         }
-        if let Some(ref material) = self.material {
+        if let Some(material) = &self.material {
             material.add_to_entity(entity, materials, entities, children)?;
         }
-        if let Some(ref animatable) = self.animatable {
+        if let Some(animatable) = &self.animatable {
             animatable.add_to_entity(entity, animatables, entities, children)?;
         }
-        if let Some(ref skinnable) = self.skinnable {
+        if let Some(skinnable) = &self.skinnable {
             skinnable.add_to_entity(entity, skinnables, entities, children)?;
         }
-        if let Some(ref extent) = self.extent {
-            extents.insert(entity, extent.clone())?;
+        if let Some(extent) = &self.extent {
+            bound.insert(entity, extent.clone().into())?;
         }
         Ok(())
     }
@@ -242,53 +252,28 @@ impl<'a> PrefabData<'a> for GltfPrefab {
         progress: &mut ProgressCounter,
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        let (
-            _,
-            ref mut meshes,
-            _,
-            ref mut materials,
-            ref mut animatables,
-            _,
-            _,
-            _,
-            ref mut mat_set,
-        ) = system_data;
+        let (_, _, materials, animatables, _, _, _, meshes_storage, loader, mat_set) = system_data;
+
         let mut ret = false;
-        if let Some(ref mut mats) = self.materials {
+        if let Some(mut mats) = self.materials.take() {
             mat_set.materials.clear();
-            for (id, material) in mats.materials.iter_mut() {
-                if material.load_sub_assets(progress, materials)? {
-                    ret = true;
-                }
-                mat_set.materials.insert(*id, material.clone());
+            for (id, mut material) in mats.materials.drain() {
+                ret |= material.load_sub_assets(progress, materials)?;
+                mat_set.materials.insert(id, material);
             }
         }
-        if let Some(ref mesh) = self.mesh {
-            self.mesh_handle = Some(meshes.0.load_from_data(
-                mesh.clone(),
-                &mut *progress,
-                &meshes.2,
-            ));
+        if let Some(material_id) = self.material_id {
+            if let Some(mat) = mat_set.materials.get(&material_id) {
+                self.material.replace(mat.clone_loaded());
+            }
+        }
+        if let Some(mesh) = self.mesh.take() {
+            self.mesh_handle =
+                Some(loader.load_from_data(mesh.clone().into(), &mut *progress, meshes_storage));
             ret = true;
         }
-        match self.material_id {
-            Some(material_id) => {
-                if let Some(mat) = mat_set.materials.get(&material_id) {
-                    self.material = Some(mat.clone());
-                }
-            }
-            None => {
-                if let Some(ref mut material) = self.material {
-                    if material.load_sub_assets(progress, materials)? {
-                        ret = true;
-                    }
-                }
-            }
-        }
-        if let Some(ref mut animatable) = self.animatable {
-            if animatable.load_sub_assets(progress, animatables)? {
-                ret = true;
-            }
+        if let Some(animatable) = &mut self.animatable {
+            ret |= animatable.load_sub_assets(progress, animatables)?;
         }
         Ok(ret)
     }

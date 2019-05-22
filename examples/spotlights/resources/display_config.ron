@@ -1,10 +1,3 @@
 (
-  dimensions: None,
-  max_dimensions: None,
-  min_dimensions: None,
-  fullscreen: false,
-  multisampling: 0,
   title: "Spotlights example",
-  visibility: true,
-  vsync: true,
 )

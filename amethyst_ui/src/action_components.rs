@@ -1,25 +1,25 @@
 use amethyst_audio::SourceHandle;
 use amethyst_core::ecs::prelude::{Component, DenseVecStorage};
-use amethyst_renderer::TextureHandle;
+use amethyst_rendy::TextureHandle;
 
 /// When this component is added to a UI element with a `TextureHandle`
 /// it will change that image based on mouse interaction.
 /// Requires `MouseReactive`.
 pub struct OnUiActionImage {
     /// Default image
-    pub(crate) normal_image: Option<TextureHandle>,
+    pub(crate) normal_image: Option<UiImage>,
     /// Image used when the mouse hovers over this element
-    pub(crate) hover_image: Option<TextureHandle>,
+    pub(crate) hover_image: Option<UiImage>,
     /// Image used when element is pressed
-    pub(crate) press_image: Option<TextureHandle>,
+    pub(crate) press_image: Option<UiImage>,
 }
 
 impl OnUiActionImage {
     /// A constructor for this component
     pub fn new(
-        normal_image: Option<TextureHandle>,
-        hover_image: Option<TextureHandle>,
-        press_image: Option<TextureHandle>,
+        normal_image: Option<UiImage>,
+        hover_image: Option<UiImage>,
+        press_image: Option<UiImage>,
     ) -> Self {
         Self {
             normal_image,

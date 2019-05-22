@@ -1,3 +1,4 @@
+use derivative::Derivative;
 use hibitset::BitSet;
 use serde::{Deserialize, Serialize};
 
@@ -9,7 +10,7 @@ use amethyst_core::{
 };
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
-use amethyst_renderer::JointTransformsPrefab;
+use amethyst_rendy::skinning::JointTransformsPrefab;
 
 /// Joint, attach to an entity with a `Transform`
 #[derive(Debug, Clone)]
@@ -136,7 +137,7 @@ impl<'a> PrefabData<'a> for SkinPrefab {
 }
 
 /// `PrefabData` for full skinning support
-#[derive(Clone, Default, Debug, Serialize, Deserialize, PrefabData)]
+#[derive(Clone, Debug, Default, Derivative, Serialize, Deserialize, PrefabData)]
 #[serde(default)]
 pub struct SkinnablePrefab {
     /// Place `Skin` on the `Entity`

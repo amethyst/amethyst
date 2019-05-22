@@ -4,7 +4,9 @@ use amethyst::{
     },
     assets::{AssetStorage, Handle, Loader},
     ecs::prelude::*,
-    renderer::{Sprite, SpriteRender, SpriteSheet, Texture},
+    renderer::{
+        loaders::load_from_srgba, palette::Srgba, Sprite, SpriteRender, SpriteSheet, Texture,
+    },
 };
 
 use crate::EffectReturn;
@@ -25,7 +27,7 @@ impl SpriteRenderAnimationFixture {
             // This invocation sequence of read_resource / write_resource is to satisfy the borrow
             // checker, since we don't have NLL yet.
             let tex_handle = world.read_resource::<Loader>().load_from_data(
-                [0.5; 4].into(),
+                load_from_srgba(Srgba::new(0.5, 0.5, 0.5, 0.5)).into(),
                 (),
                 &world.read_resource::<AssetStorage<Texture>>(),
             );

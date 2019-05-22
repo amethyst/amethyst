@@ -85,6 +85,18 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Fix fly_camera example initial camera and cube position. ([#1582])
 * Add to fly_camera example code to release and capture back mouse input, and to show and hide cursor. ([#1582])
 
+#### Rendy support
+
+* Brand new way to define rendering pipelines.
+* OpenGL support temporarily dropped, Vulkan and Metal support added.
+* Normalized texel coordinates are now in Vulkan convention (top-left 0.0, bottom-right 1.0), mirrored vertically compared to old one.
+* World space is now Y-up consistently for all projections (2D and 3D).
+* `Format` type no longer has associated `Options` and is now object-safe. It is expected to carry required options itself.
+* `Format` now supports tag-based deserialization, it is no longer required to provide specific format to prefab type.
+* Combined input axis/action generics into single type.
+* `Material` is now an asset. Must be turned into handle before putting on an entity.
+* Removed `Flipped` component. Use `flip_horizontal` and `flip_vertical` sprite property instead.
+
 ### Removed
 
 - Removed all `NetEvent's` because they were not used. ([#1539])

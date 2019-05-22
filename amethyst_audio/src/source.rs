@@ -1,6 +1,8 @@
 //! Provides structures used to load audio files.
 //!
-use amethyst_assets::{Asset, AssetStorage, Handle, Loader, PrefabData, ProcessingState};
+use amethyst_assets::{
+    Asset, AssetStorage, Handle, Loader, PrefabData, ProcessableAsset, ProcessingState,
+};
 use amethyst_core::ecs::prelude::{Entity, Read, ReadExpect, VecStorage};
 use amethyst_error::Error;
 
@@ -28,9 +30,9 @@ impl Asset for Source {
     type HandleStorage = VecStorage<SourceHandle>;
 }
 
-impl Into<Result<ProcessingState<Source>, Error>> for AudioData {
-    fn into(self) -> Result<ProcessingState<Source>, Error> {
-        Ok(ProcessingState::Loaded(Source { bytes: self.0 }))
+impl ProcessableAsset for Source {
+    fn process(data: AudioData) -> Result<ProcessingState<Source>, Error> {
+        Ok(ProcessingState::Loaded(Source { bytes: data.0 }))
     }
 }
 

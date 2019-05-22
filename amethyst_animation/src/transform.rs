@@ -1,5 +1,5 @@
 use amethyst_core::{
-    math::{zero, Quaternion, Unit, Vector3},
+    math::{zero, Quaternion, Unit, Vector3, Vector4},
     Float, Transform,
 };
 
@@ -39,7 +39,7 @@ impl AnimationSampling for Transform {
                 self.set_translation_xyz(d[0], d[1], d[2]);
             }
             (&Rotation, Vec4(ref d)) => {
-                *self.rotation_mut() = Unit::new_normalize(Quaternion::new(d[0], d[1], d[2], d[3]));
+                *self.rotation_mut() = Unit::new_normalize(Quaternion::from(Vector4::from(*d)));
             }
             (&Scale, Vec3(ref d)) => {
                 self.set_scale(Vector3::new(d[0], d[1], d[2]));
@@ -52,10 +52,7 @@ impl AnimationSampling for Transform {
         use self::TransformChannel::*;
         match channel {
             Translation => SamplerPrimitive::Vec3((*self.translation()).into()),
-            Rotation => SamplerPrimitive::Vec4({
-                let c = self.rotation().as_ref().coords;
-                [c.w, c.x, c.y, c.z]
-            }),
+            Rotation => SamplerPrimitive::Vec4((*self.rotation().as_vector()).into()),
             Scale => SamplerPrimitive::Vec3((*self.scale()).into()),
         }
     }

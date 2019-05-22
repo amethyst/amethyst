@@ -1,5 +1,4 @@
-use std::{hash::Hash, marker::PhantomData};
-
+use crate::transform::UiTransform;
 use amethyst_core::{
     ecs::{
         prelude::{
@@ -10,12 +9,11 @@ use amethyst_core::{
     math::Vector2,
     shrev::EventChannel,
 };
-use amethyst_input::InputHandler;
-use amethyst_renderer::{MouseButton, ScreenDimensions};
-
+use amethyst_input::{BindingTypes, InputHandler};
+use amethyst_window::ScreenDimensions;
 use serde::{Deserialize, Serialize};
-
-use crate::transform::UiTransform;
+use std::marker::PhantomData;
+use winit::MouseButton;
 
 pub trait TargetedEvent {
     fn get_target(&self) -> Entity;
@@ -92,14 +90,14 @@ impl Component for Interactable {
 
 /// The system that generates events for `Interactable` enabled entities.
 /// The generic types A and B represent the A and B generic parameter of the InputHandler<A,B>.
-pub struct UiMouseSystem<A, B> {
+pub struct UiMouseSystem<T: BindingTypes> {
     was_down: bool,
     click_started_on: Option<Entity>,
     last_target: Option<Entity>,
-    _marker: PhantomData<(A, B)>,
+    _marker: PhantomData<T>,
 }
 
-impl<A, B> UiMouseSystem<A, B> {
+impl<T: BindingTypes> UiMouseSystem<T> {
     /// Creates a new UiMouseSystem.
     pub fn new() -> Self {
         UiMouseSystem {
@@ -111,16 +109,12 @@ impl<A, B> UiMouseSystem<A, B> {
     }
 }
 
-impl<'a, A, B> System<'a> for UiMouseSystem<A, B>
-where
-    A: Send + Sync + Eq + Hash + Clone + 'static,
-    B: Send + Sync + Eq + Hash + Clone + 'static,
-{
+impl<'a, T: BindingTypes> System<'a> for UiMouseSystem<T> {
     type SystemData = (
         Entities<'a>,
         ReadStorage<'a, UiTransform>,
         ReadStorage<'a, Interactable>,
-        Read<'a, InputHandler<A, B>>,
+        Read<'a, InputHandler<T>>,
         ReadExpect<'a, ScreenDimensions>,
         Write<'a, EventChannel<UiEvent>>,
     );

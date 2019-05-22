@@ -165,6 +165,13 @@ impl<T> PrefabEntity<T> {
         self.data.get_or_insert_with(T::default)
     }
 
+    /// Get mutable access to the data
+    ///
+    /// If Option is `None`, insert an entry computed from a closure
+    pub fn data_or_insert_with(&mut self, func: impl FnOnce() -> T) -> &mut T {
+        self.data.get_or_insert_with(func)
+    }
+
     /// Trigger sub asset loading for the prefab entity
     pub fn load_sub_assets<'a>(
         &mut self,
@@ -245,6 +252,17 @@ impl<T> Prefab<T> {
         T: Default,
     {
         self.entities[index].data_or_default()
+    }
+
+    /// Get mutable access to the data in the `PrefabEntity` with the given index
+    ///
+    /// If data is None, this will insert a value for `T` computed with a closure
+    ///
+    /// ### Panics
+    ///
+    /// If the given index do not have a `PrefabEntity`
+    pub fn data_or_insert_with(&mut self, index: usize, func: impl FnOnce() -> T) -> &mut T {
+        self.entities[index].data_or_insert_with(func)
     }
 
     /// Check if sub asset loading have been triggered
@@ -331,24 +349,26 @@ where
 /// - `A`: `Asset`,
 /// - `F`: `Format` for loading `A`
 #[derive(Clone, Deserialize, Serialize)]
-pub enum AssetPrefab<A, F>
+pub enum AssetPrefab<A, F = Box<dyn Format<<A as Asset>::Data>>>
 where
     A: Asset,
-    F: Format<A>,
+    // A::Data: FormatRegisteredData,
+    F: Format<A::Data>,
 {
     /// From existing handle
     #[serde(skip)]
     Handle(Handle<A>),
-
-    /// From file, (name, format, format options)
-    File(String, F, F::Options),
+    /// From file, (name, format)
+    File(String, F),
+    /// Placeholder during loading
+    #[serde(skip)]
+    Placeholder,
 }
 
 impl<'a, A, F> PrefabData<'a> for AssetPrefab<A, F>
 where
     A: Asset,
-    F: Format<A> + Clone,
-    F::Options: Clone,
+    F: Format<A::Data>,
 {
     type SystemData = (
         ReadExpect<'a, Loader>,
@@ -367,7 +387,7 @@ where
     ) -> Result<Handle<A>, Error> {
         let handle = match *self {
             AssetPrefab::Handle(ref handle) => handle.clone(),
-            AssetPrefab::File(..) => unreachable!(),
+            _ => unreachable!(),
         };
         Ok(system_data
             .1
@@ -378,23 +398,17 @@ where
     fn load_sub_assets(
         &mut self,
         progress: &mut ProgressCounter,
-        system_data: &mut Self::SystemData,
+        (loader, _, storage): &mut Self::SystemData,
     ) -> Result<bool, Error> {
-        match *self {
-            AssetPrefab::File(ref name, ref format, ref options) => {
-                *self = AssetPrefab::Handle(system_data.0.load(
-                    name.clone(),
-                    format.clone(),
-                    options.clone(),
-                    progress,
-                    &system_data.2,
-                ));
-                Ok(true)
+        let (ret, next) = match std::mem::replace(self, AssetPrefab::Placeholder) {
+            AssetPrefab::File(name, format) => {
+                let handle = loader.load(name, format, progress, storage);
+                (true, AssetPrefab::Handle(handle))
             }
-
-            // Already loaded
-            _ => Ok(false),
-        }
+            slot => (false, slot),
+        };
+        *self = next;
+        Ok(ret)
     }
 }
 
@@ -406,7 +420,7 @@ where
 ///
 /// ```rust,ignore
 /// let prefab_handle = world.exec(|loader: PrefabLoader<SomePrefab>| {
-///     loader.load("prefab.ron", RonFormat, (), ());
+///     loader.load("prefab.ron", RonFormat, ());
 /// });
 /// ```
 #[derive(SystemData)]
@@ -423,20 +437,13 @@ where
     T: Send + Sync + 'static,
 {
     /// Load prefab from source
-    pub fn load<F, N, P>(
-        &self,
-        name: N,
-        format: F,
-        options: F::Options,
-        progress: P,
-    ) -> Handle<Prefab<T>>
+    pub fn load<F, N, P>(&self, name: N, format: F, progress: P) -> Handle<Prefab<T>>
     where
-        F: Format<Prefab<T>>,
+        F: Format<<Prefab<T> as Asset>::Data>,
         N: Into<String>,
         P: Progress,
     {
-        self.loader
-            .load(name, format, options, progress, &self.storage)
+        self.loader.load(name, format, progress, &self.storage)
     }
 
     /// Load prefab from explicit data

@@ -9,11 +9,24 @@ Prefab(
                     // SpriteSheetPrefab with index 0
                     sheet: Sheet(
                         // TexturePrefab
-                        texture: File(
-                            "texture/bat.32x32.png",
-                            Png,
-                            TextureMetadata(channel: Srgb),
-                        ),
+                        texture: File("texture/bat.32x32.png", (
+                            "IMAGE", (
+                                sampler_info: (
+                                    min_filter: Nearest,
+                                    mag_filter: Nearest,
+                                    mip_filter: Nearest,
+                                    wrap_mode: (Tile, Tile, Tile),
+                                    lod_bias: (0),
+                                    lod_range: (
+                                        start: ( 0 ),
+                                        end: ( 8000 ),
+                                    ),
+                                    comparison: None,
+                                    border: (0),
+                                    anisotropic: Off,
+                                ),
+                            ),
+                        )),
                         sprites: [
                             // Grey bat sprites
                             // Sprites with indexes from 0 to 5
@@ -46,7 +59,7 @@ Prefab(
                     ),
                     // SpriteRenderPrefab
                     render: (
-                        sheet: 0,
+                        sheet: "bat",
                         sprite_number: 0,
                     ),
                     // Transform

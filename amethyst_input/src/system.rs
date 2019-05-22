@@ -1,37 +1,25 @@
 //! Input system
 
-use std::hash::Hash;
-
-use winit::Event;
-
+use crate::{BindingTypes, Bindings, InputEvent, InputHandler};
 use amethyst_core::{
     ecs::prelude::{Read, ReadExpect, Resources, System, Write},
     shrev::{EventChannel, ReaderId},
 };
-use amethyst_renderer::ScreenDimensions;
-
-use crate::{Bindings, InputEvent, InputHandler};
+use amethyst_window::ScreenDimensions;
+use winit::Event;
 
 /// Input system
 ///
 /// Will read `winit::Event` from `EventHandler<winit::Event>`, process them with `InputHandler`,
 /// and push the results in `EventHandler<InputEvent>`.
-pub struct InputSystem<AX, AC>
-where
-    AX: Hash + Eq + Clone,
-    AC: Hash + Eq + Clone,
-{
+pub struct InputSystem<T: BindingTypes> {
     reader: Option<ReaderId<Event>>,
-    bindings: Option<Bindings<AX, AC>>,
+    bindings: Option<Bindings<T>>,
 }
 
-impl<AX, AC> InputSystem<AX, AC>
-where
-    AX: Hash + Eq + Clone,
-    AC: Hash + Eq + Clone,
-{
+impl<T: BindingTypes> InputSystem<T> {
     /// Create a new input system. Needs a reader id for `EventHandler<winit::Event>`.
-    pub fn new(bindings: Option<Bindings<AX, AC>>) -> Self {
+    pub fn new(bindings: Option<Bindings<T>>) -> Self {
         InputSystem {
             reader: None,
             bindings,
@@ -40,26 +28,19 @@ where
 
     fn process_event(
         event: &Event,
-        handler: &mut InputHandler<AX, AC>,
-        output: &mut EventChannel<InputEvent<AC>>,
+        handler: &mut InputHandler<T>,
+        output: &mut EventChannel<InputEvent<T::Action>>,
         hidpi: f64,
-    ) where
-        AX: Hash + Eq + Clone + Send + Sync + 'static,
-        AC: Hash + Eq + Clone + Send + Sync + 'static,
-    {
+    ) {
         handler.send_event(event, output, hidpi);
     }
 }
 
-impl<'a, AX, AC> System<'a> for InputSystem<AX, AC>
-where
-    AX: Hash + Eq + Clone + Send + Sync + 'static,
-    AC: Hash + Eq + Clone + Send + Sync + 'static,
-{
+impl<'a, T: BindingTypes> System<'a> for InputSystem<T> {
     type SystemData = (
         Read<'a, EventChannel<Event>>,
-        Write<'a, InputHandler<AX, AC>>,
-        Write<'a, EventChannel<InputEvent<AC>>>,
+        Write<'a, InputHandler<T>>,
+        Write<'a, EventChannel<InputEvent<T::Action>>>,
         ReadExpect<'a, ScreenDimensions>,
     );
 
@@ -84,7 +65,7 @@ where
         Self::SystemData::setup(res);
         self.reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
         if let Some(ref bindings) = self.bindings {
-            res.fetch_mut::<InputHandler<AX, AC>>().bindings = bindings.clone();
+            res.fetch_mut::<InputHandler<T>>().bindings = bindings.clone();
         }
     }
 }

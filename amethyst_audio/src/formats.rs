@@ -3,90 +3,66 @@ use amethyst_error::Error;
 
 use serde::{Deserialize, Serialize};
 
-use super::Source as Audio;
-
 #[derive(Clone)]
 pub struct AudioData(pub Vec<u8>);
+amethyst_assets::register_format_type!(AudioData);
 
 /// Loads audio from wav files.
-#[derive(Clone)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct WavFormat;
 
-impl SimpleFormat<Audio> for WavFormat {
-    const NAME: &'static str = "WAV";
+amethyst_assets::register_format!("WAV", WavFormat as AudioData);
+impl Format<AudioData> for WavFormat {
+    fn name(&self) -> &'static str {
+        "WAV"
+    }
 
-    type Options = ();
-
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData, Error> {
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<AudioData, Error> {
         Ok(AudioData(bytes))
     }
 }
 
 /// Loads audio from Ogg Vorbis files
-#[derive(Clone)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct OggFormat;
 
-impl SimpleFormat<Audio> for OggFormat {
-    const NAME: &'static str = "OGG";
+amethyst_assets::register_format!("OGG", OggFormat as AudioData);
+impl Format<AudioData> for OggFormat {
+    fn name(&self) -> &'static str {
+        "OGG"
+    }
 
-    type Options = ();
-
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData, Error> {
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<AudioData, Error> {
         Ok(AudioData(bytes))
     }
 }
 
 /// Loads audio from Flac files.
-#[derive(Clone)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct FlacFormat;
 
-impl SimpleFormat<Audio> for FlacFormat {
-    const NAME: &'static str = "FLAC";
+amethyst_assets::register_format!("FLAC", FlacFormat as AudioData);
+impl Format<AudioData> for FlacFormat {
+    fn name(&self) -> &'static str {
+        "FLAC"
+    }
 
-    type Options = ();
-
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData, Error> {
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<AudioData, Error> {
         Ok(AudioData(bytes))
     }
 }
 
 /// Loads audio from MP3 files.
-#[derive(Clone)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Mp3Format;
 
-impl SimpleFormat<Audio> for Mp3Format {
-    const NAME: &'static str = "MP3";
-
-    type Options = ();
-
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<AudioData, Error> {
-        Ok(AudioData(bytes))
+amethyst_assets::register_format!("MP3", Mp3Format as AudioData);
+impl Format<AudioData> for Mp3Format {
+    fn name(&self) -> &'static str {
+        "MP3"
     }
-}
-/// Aggregate sound format
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub enum AudioFormat {
-    /// Ogg
-    Ogg,
-    /// Wav
-    Wav,
-    /// Flac
-    Flac,
-    /// Mp3
-    Mp3,
-}
 
-impl SimpleFormat<Audio> for AudioFormat {
-    const NAME: &'static str = "AudioFormat";
-
-    type Options = ();
-
-    fn import(&self, bytes: Vec<u8>, options: ()) -> Result<AudioData, Error> {
-        match *self {
-            AudioFormat::Ogg => SimpleFormat::import(&OggFormat, bytes, options),
-            AudioFormat::Wav => SimpleFormat::import(&WavFormat, bytes, options),
-            AudioFormat::Flac => SimpleFormat::import(&FlacFormat, bytes, options),
-            AudioFormat::Mp3 => SimpleFormat::import(&Mp3Format, bytes, options),
-        }
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<AudioData, Error> {
+        Ok(AudioData(bytes))
     }
 }

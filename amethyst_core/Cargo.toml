@@ -34,7 +34,7 @@ shrev = "1.0"
 getset = "0.0.7"
 derive-new = "0.5.6"
 
-thread_profiler = { version = "0.3" , optional = true }
+thread_profiler = { version = "0.3", optional = true }
 
 [dev-dependencies]
 amethyst = { path = "..", version = "0.10.0" }

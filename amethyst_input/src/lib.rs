@@ -6,7 +6,7 @@
 pub use self::sdl_events_system::SdlEventsSystem;
 pub use self::{
     axis::Axis,
-    bindings::{BindingError, Bindings},
+    bindings::{BindingError, BindingTypes, Bindings, StringBindings},
     bundle::{BindingsFileError, InputBundle},
     button::Button,
     controller::{ControllerAxis, ControllerButton, ControllerEvent},
@@ -19,10 +19,11 @@ pub use self::{
         is_mouse_button_down,
     },
 };
+pub use winit::{ElementState, VirtualKeyCode};
 
 use std::iter::Iterator;
 
-use winit::{self, VirtualKeyCode};
+use winit;
 
 mod axis;
 mod bindings;

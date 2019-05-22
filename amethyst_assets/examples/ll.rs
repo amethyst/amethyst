@@ -17,20 +17,20 @@ impl Asset for DummyAsset {
     type HandleStorage = VecStorage<Handle<DummyAsset>>;
 }
 
+#[derive(Clone, Debug)]
 struct DummyFormat;
 
-impl Format<DummyAsset> for DummyFormat {
-    const NAME: &'static str = "DUMMY";
-
-    type Options = ();
+impl Format<String> for DummyFormat {
+    fn name(&self) -> &'static str {
+        "DUMMY"
+    }
 
     fn import(
         &self,
         name: String,
         source: Arc<dyn Source>,
-        _: (),
-        _create_reload: bool,
-    ) -> Result<FormatValue<DummyAsset>, Error> {
+        _create_reload: Option<Box<dyn Format<String>>>,
+    ) -> Result<FormatValue<String>, Error> {
         let dummy = from_utf8(source.load(&name)?.as_slice()).map(|s| s.to_owned())?;
 
         Ok(FormatValue::data(dummy))
@@ -44,17 +44,11 @@ fn main() {
     let pool = Arc::new(builder.build().expect("Invalid config"));
 
     let loader = Loader::new(&path, pool.clone());
-    let mut storage = AssetStorage::new();
+    let mut storage: AssetStorage<DummyAsset> = AssetStorage::new();
 
     let mut progress = ProgressCounter::new();
 
-    let dummy = loader.load(
-        "dummy/whatever.dum",
-        DummyFormat,
-        (),
-        &mut progress,
-        &storage,
-    );
+    let dummy = loader.load("dummy/whatever.dum", DummyFormat, &mut progress, &storage);
 
     // Hot-reload every three seconds.
     let strategy = HotReloadStrategy::every(3);

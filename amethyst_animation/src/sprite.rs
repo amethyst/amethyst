@@ -3,7 +3,7 @@ use minterpolate::InterpolationPrimitive;
 use serde::{Deserialize, Serialize};
 
 use amethyst_assets::Handle;
-use amethyst_renderer::{SpriteRender, SpriteSheet};
+use amethyst_rendy::sprite::{SpriteRender, SpriteSheet};
 
 use crate::{AnimationSampling, ApplyData, BlendMethod};
 

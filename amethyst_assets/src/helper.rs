@@ -23,15 +23,13 @@ where
     /// If you want to load from a custom source instead, use `load_from`.
     ///
     /// See `load_from` for more information.
-    pub fn load<F, N, P>(&self, name: N, format: F, options: F::Options, progress: P) -> Handle<A>
+    pub fn load<F, N, P>(&self, name: N, format: F, progress: P) -> Handle<A>
     where
-        A: Asset,
-        F: Format<A>,
+        F: Format<A::Data>,
         N: Into<String>,
         P: Progress,
     {
-        self.loader
-            .load(name, format, options, progress, &*self.storage)
+        self.loader.load(name, format, progress, &*self.storage)
     }
 
     /// Loads an asset with a given id and format from a custom source.
@@ -43,28 +41,18 @@ where
     ///   `"meshes/a.obj"`
     /// * `format`: A format struct which loads bytes from a `source` and produces `Asset::Data`
     ///   with them
-    /// * `options`: Additional parameter to `format` to configure how exactly the data will
-    ///   be created. This could e.g. be mipmap levels for textures.
     /// * `source`: An identifier for a source which has previously been added using `with_source`
     /// * `progress`: A tracker which will be notified of assets which have been imported
-    pub fn load_from<F, N, P, S>(
-        &self,
-        name: N,
-        format: F,
-        options: F::Options,
-        source: &S,
-        progress: P,
-    ) -> Handle<A>
+    pub fn load_from<F, N, P, S>(&self, name: N, format: F, source: &S, progress: P) -> Handle<A>
     where
-        A: Asset,
-        F: Format<A> + 'static,
+        F: Format<A::Data>,
         N: Into<String>,
         P: Progress,
         S: AsRef<str> + Eq + Hash + ?Sized,
         String: Borrow<S>,
     {
         self.loader
-            .load_from(name, format, options, source, progress, &*self.storage)
+            .load_from(name, format, source, progress, &*self.storage)
     }
 
     /// Load an asset from data and return a handle.

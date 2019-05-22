@@ -1,7 +1,3 @@
 (
-  fullscreen: false,
-  multisampling: 0,
   title: "Fly Camera Example",
-  visibility: true,
-  vsync: true,
 )

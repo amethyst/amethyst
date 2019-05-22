@@ -7,9 +7,7 @@ Container(
         width: 20.,
         height: 20.,
     ),
-    background: (
-        image: Data(Rgba((1.0, 1.0, 1.0, 1.0), (channel: Srgb))),
-    ),
+    // background: SolidColor(1.0, 1.0, 1.0, 1.0),
     children: [
         // Parenting test
         Container(
@@ -21,9 +19,7 @@ Container(
                 height: 64.,
                 anchor: TopRight,
             ),
-            background: (
-                image: Data(Rgba((0.09, 0.02, 0.25, 1.0), (channel: Srgb))),
-            ),
+            background: SolidColor(0.09, 0.02, 0.25, 1.0),
             children: [
                 Image(
                     transform: (
@@ -33,9 +29,7 @@ Container(
                         anchor: Middle,
                         stretch: XY( x_margin: 0., y_margin: 10., keep_aspect_ratio: false),
                     ),
-                    image: (
-                        image: Data(Rgba((0.18, 0.05, 0.85, 1.0), (channel: Srgb))),
-                    )
+                    image: SolidColor(0.18, 0.05, 0.85, 1.0),
                 ),
             ]
         ),
@@ -51,9 +45,7 @@ Container(
                 anchor: BottomMiddle,
                 mouse_reactive: true,
             ),
-            image: (
-                image: File("texture/logo_transparent.png", Png, (channel: Srgb)),
-            )
+            image: Texture(File("texture/logo_transparent.png", ("IMAGE", ()))),
         ),
 
         // Editable text single line.
@@ -67,9 +59,7 @@ Container(
                 tab_order: 1,
                 anchor: BottomLeft,
             ),
-            background: (
-                image: Data(Rgba((0.09, 0.02, 0.25, 1.0), (channel: Srgb))),
-            ),
+            background: SolidColor(0.09, 0.02, 0.25, 1.0),
             children: [
                 Label(
                     transform: (
@@ -84,12 +74,14 @@ Container(
                     ),
                     text: (
                         text: "Editable",
-                        font: File("font/square.ttf", Ttf, ()),
+                        font: File("font/square.ttf", ("TTF", ())),
                         font_size: 75.,
                         color: (0.2, 0.2, 1.0, 1.0),
-                        align: MiddleRight,
+                        align: MiddleLeft,
                         editable: (
-                            max_length: 12,
+                            max_length: 2000,
+                            selected_text_color: (0.09, 0.02, 0.25, 1.0),
+                            selected_background_color: (1.0, 0.5, 0.8, 1.0),
                         ),
                     )
                 ),
@@ -109,16 +101,16 @@ Container(
             ),
             button: (
                 text: "ComplexBtn",
-                font: File("font/square.ttf", Ttf, ()),
+                font: File("font/square.ttf", ("TTF", ())),
                 font_size: 20.,
                 normal_text_color: (0.2, 0.2, 1.0, 1.0),
                 hover_text_color: (0.4, 0.4, 1.0, 1.0),
                 press_text_color: (0.6, 0.6, 1.0, 1.0),
-                normal_image: Data(Rgba((0., 1., 0., 1.), (channel: Srgb))),
-                hover_image: Data(Rgba((0.3, 1., 0.3, 1.), (channel: Srgb))),
-                press_image: Data(Rgba((0.15, 1., 0.15, 1.), (channel: Srgb))),
-                hover_sound: File("audio/boop.ogg", Ogg, ()),
-                press_sound: File("audio/confirm.ogg", Ogg, ()),
+                normal_image: SolidColor(0., 1., 0., 1.),
+                hover_image: SolidColor(0.3, 1., 0.3, 1.),
+                press_image: SolidColor(0.15, 1., 0.15, 1.),
+                hover_sound: File("audio/boop.ogg", ("OGG", ())),
+                press_sound: File("audio/confirm.ogg", ("OGG", ())),
             )
         ),
 
@@ -136,10 +128,10 @@ Container(
             ),
             button: (
                 text: "SimpleBtn",
-                font: File("font/square.ttf", Ttf, ()),
+                font: File("font/square.ttf", ("TTF", ())),
                 font_size: 20.,
                 normal_text_color: (0.0, 0.0, 0.0, 1.0),
-                normal_image: Data(Rgba((0.82, 0.83, 0.83, 1.0), (channel: Srgb))),
+                normal_image: SolidColor(0.82, 0.83, 0.83, 1.0),
             )
         ),
         Label(
@@ -155,7 +147,7 @@ Container(
             ),
             text: (
                 text: "N/A",
-                font: File("font/square.ttf", Ttf, ()),
+                font: File("font/square.ttf", ("TTF", ())),
                 font_size: 25.,
                 color: (0.498, 0.254, 0.937, 1.0),
             )
@@ -175,7 +167,7 @@ Container(
             ),
             text: (
                 text: "N/A",
-                font: File("font/square.ttf", Ttf, ()),
+                font: File("font/square.ttf", ("TTF", ())),
                 font_size: 25.,
                 color: (1.0, 1.0, 1.0, 1.0),
             )
@@ -192,7 +184,7 @@ Container(
             ),
             text: (
                 text: "Multiline\nText!",
-                font: File("font/square.ttf", Ttf, ()),
+                font: File("font/square.ttf", ("TTF", ())),
                 font_size: 30.,
                 color: (0.2, 0.2, 1.0, 1.0),
                 line_mode: Wrap,
@@ -217,11 +209,42 @@ Container(
             )
         ),
 
+        Image(
+            transform: (
+                id: "TopLeft_bg",
+                y: 180.0,
+                width: 800.,
+                height: 175.,
+                anchor: Middle,
+            ),
+            image: SolidColor(1.0, 1.0, 1.0, 0.2),
+        ),
+        Image(
+            transform: (
+                id: "Middle_bg",
+                y: 0.0,
+                width: 800.,
+                height: 175.,
+                anchor: Middle,
+            ),
+            image: SolidColor(1.0, 1.0, 1.0, 0.2),
+        ),
+        Image(
+            transform: (
+                id: "BottomRight_bg",
+                y: -180.0,
+                width: 800.,
+                height: 175.,
+                anchor: Middle,
+            ),
+            image: SolidColor(1.0, 1.0, 1.0, 0.2),
+        ),
         // ------ Text Align Start ------
         Label(
             transform: (
                 id: "TopLeft",
                 y: 180.0,
+                z: 2.0,
                 width: 800.,
                 height: 175.,
                 tab_order: 1,
@@ -229,7 +252,7 @@ Container(
             ),
             text: (
                 text: "TopLeft",
-                font: File("font/square.ttf", Ttf, ()),
+                font: File("font/square.ttf", ("TTF", ())),
                 font_size: 75.,
                 color: (0.2, 0.2, 1.0, 1.0),
                 align: TopLeft, // ! relative to the transform specified, which only has a width of 800 and height of 175 !
@@ -239,6 +262,7 @@ Container(
             transform: (
                 id: "Middle",
                 y: 0.0,
+                z: 2.0,
                 width: 800.,
                 height: 175.,
                 tab_order: 1,
@@ -246,7 +270,7 @@ Container(
             ),
             text: (
                 text: "Middle",
-                font: File("font/square.ttf", Ttf, ()),
+                font: File("font/square.ttf", ("TTF", ())),
                 font_size: 75.,
                 color: (0.2, 0.2, 1.0, 1.0),
                 align: Middle,
@@ -256,6 +280,7 @@ Container(
             transform: (
                 id: "BottomRight",
                 y: -180.0,
+                z: 2.0,
                 width: 800.,
                 height: 175.,
                 tab_order: 1,
@@ -263,12 +288,42 @@ Container(
             ),
             text: (
                 text: "BottomRight",
-                font: File("font/square.ttf", Ttf, ()),
+                font: File("font/square.ttf", ("TTF", ())),
                 font_size: 75.,
                 color: (0.2, 0.2, 1.0, 1.0),
                 align: BottomRight,
             )
         ),
         // ------ Text Align Stop -------
+
+        Container(
+            transform: (
+                id: "right_bar",
+                width: 500.,
+                height: 1024.,
+                anchor: BottomRight,
+            ),
+            background: SolidColor(0., 0., 0., 1.0),
+            children: [
+                Label(
+                    transform: (
+                        id: "multiline",
+                        x: 0.,
+                        y: 0.,
+                        z: 2.,
+                        width: 500.,
+                        height: 1024.,
+                        anchor: Middle,
+                    ),
+                    text: (
+                        text: "Multiline\nNested in container\nTEST!\nlorem\nipsum\ndolor\nlines\n123\nlines\nlines\nlines\nlines\nlines\nlines\nlines\nlines\nlines\nlines\nlast line",
+                        font_size: 20.,
+                        color: (0.2, 0.2, 1.0, 1.0),
+                        line_mode: Wrap,
+                        align: TopLeft,
+                    )
+                ),
+            ]
+        ),
     ],
 )

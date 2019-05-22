@@ -5,7 +5,7 @@ use amethyst_core::{
     },
     shrev::ReaderId,
 };
-use amethyst_renderer::ScreenDimensions;
+use amethyst_window::ScreenDimensions;
 
 use super::*;
 

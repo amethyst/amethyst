@@ -4,9 +4,9 @@ Prefab (
         (
             data: (
                 graphics: (
-                    mesh: Asset(File ("mesh/cube.obj", ObjFormat, ())),
+                    mesh: Asset(File("mesh/cube.obj", ("OBJ", ()))),
                     material: (
-                        albedo: Data(Rgba((0.0, 0.0, 1.0, 1.0,), (channel: Srgb))),
+                        albedo: Generate(Srgba(0.0, 0.0, 1.0, 1.0)),
                     ),
                 ),
                 transform: (
@@ -23,7 +23,7 @@ Prefab (
                 light: (
                     light: Point((
                         intensity: 100.0,
-                        color: (1.0, 1.0, 1.0, 1.0),
+                        color: (1.0, 1.0, 1.0),
                         radius: 1.0,
                     )),
                 ),
@@ -35,12 +35,12 @@ Prefab (
                     translation: (0.0, -20.0, 10.0),
                     rotation: (0.6153864, 0.0, 0.0, 0.7882256),
                 ),
-                camera: Perspective((
+                camera: Perspective(
                     aspect: 1.0,
                     fovy: 1.0471975512,
                     znear: 0.1,
                     zfar: 2000.0,
-                )),
+                ),
             ),
         ),
     ],

@@ -12410,7 +12410,6 @@
     ], 
     "materials" : [
         {
-            "alphaMode" : "BLEND", 
             "name" : "BaseMaterial", 
             "pbrMetallicRoughness" : {
                 "baseColorTexture" : {
@@ -13216,7 +13215,10 @@
         }
     ], 
     "samplers" : [
-        {}
+        {
+            "minFilter": 9729,
+            "magFilter": 9729
+        }
     ], 
     "scene" : 0, 
     "scenes" : [

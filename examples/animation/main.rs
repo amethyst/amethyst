@@ -7,19 +7,40 @@ use amethyst::{
     },
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
     core::{Transform, TransformBundle},
-    ecs::prelude::Entity,
+    ecs::prelude::{Entity, ReadExpect, Resources},
     input::{get_key, is_close_requested, is_key_down},
     prelude::*,
-    renderer::{DrawShaded, ElementState, PosNormTex, VirtualKeyCode},
     utils::{application_root_dir, scene::BasicScenePrefab},
+    window::{ScreenDimensions, WindowBundle},
+    winit::{ElementState, VirtualKeyCode, Window},
 };
-
+use amethyst_rendy::{
+    pass::DrawPbrDesc,
+    rendy::{
+        factory::Factory,
+        graph::{
+            present::PresentNode,
+            render::{RenderGroupBuilder, RenderGroupDesc},
+            GraphBuilder,
+        },
+        hal::{
+            command::{ClearDepthStencil, ClearValue},
+            format::Format,
+            image,
+        },
+        mesh::{Normal, Position, Tangent, TexCoord},
+    },
+    system::{GraphCreator, RenderingSystem},
+    types::{Backend, DefaultBackend},
+};
 use serde::{Deserialize, Serialize};
 
 type MyPrefabData = (
-    Option<BasicScenePrefab<Vec<PosNormTex>, f32>>,
+    Option<BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>)>>,
     Option<AnimationSetPrefab<AnimationId, Transform>>,
 );
+
+const CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
 #[derive(Eq, PartialOrd, PartialEq, Hash, Debug, Copy, Clone, Deserialize, Serialize)]
 enum AnimationId {
@@ -49,7 +70,7 @@ impl SimpleState for Example {
         let StateData { world, .. } = data;
         // Initialise the scene with an object, a light and a camera.
         let prefab_handle = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
-            loader.load("prefab/animation.ron", RonFormat, (), ())
+            loader.load("prefab/animation.ron", RonFormat, ())
         });
         self.sphere = Some(world.create_entity().with(prefab_handle).build());
     }
@@ -171,21 +192,32 @@ impl SimpleState for Example {
 }
 
 fn main() -> amethyst::Result<()> {
-    amethyst::start_logger(Default::default());
+    run::<DefaultBackend>()
+}
+
+fn run<B: Backend>() -> amethyst::Result<()> {
+    amethyst::Logger::from_config(amethyst::LoggerConfig {
+        log_file: Some("animation_example.log".into()),
+        level_filter: log::LevelFilter::Error,
+        ..Default::default()
+    })
+    .start();
 
     let app_root = application_root_dir()?;
     let display_config_path = app_root.join("examples/animation/resources/display_config.ron");
     let resources = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
+        .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(AnimationBundle::<AnimationId, Transform>::new(
             "animation_control_system",
             "sampler_interpolation_system",
         ))?
         .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
-        .with_basic_renderer(display_config_path, DrawShaded::<PosNormTex>::new(), false)?;
-    let mut game = Application::new(resources, Example::default(), game_data)?;
+        .with_thread_local(RenderingSystem::<B, _>::new(ExampleGraph::default()));
+    let state: Example = Default::default();
+    let mut game = Application::new(resources, state, game_data)?;
     game.run();
 
     Ok(())
@@ -233,5 +265,68 @@ fn add_animation(
                 defer_relation,
             );
         }
+    }
+}
+
+#[derive(Default)]
+struct ExampleGraph {
+    dimensions: Option<ScreenDimensions>,
+    dirty: bool,
+}
+
+impl<B: Backend> GraphCreator<B> for ExampleGraph {
+    fn rebuild(&mut self, res: &Resources) -> bool {
+        // Rebuild when dimensions change, but wait until at least two frames have the same.
+        let new_dimensions = res.try_fetch::<ScreenDimensions>();
+        use std::ops::Deref;
+        if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
+            self.dirty = true;
+            self.dimensions = new_dimensions.map(|d| d.clone());
+            return false;
+        }
+        return self.dirty;
+    }
+
+    fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
+        self.dirty = false;
+
+        use amethyst::shred::SystemData;
+
+        let window = <ReadExpect<'_, std::sync::Arc<Window>>>::fetch(res);
+
+        let surface = factory.create_surface(&window);
+        let dimensions = self.dimensions.as_ref().unwrap();
+        let window_kind =
+            image::Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
+
+        let mut graph_builder = GraphBuilder::new();
+        let color = graph_builder.create_image(
+            window_kind,
+            1,
+            factory.get_surface_format(&surface),
+            Some(ClearValue::Color(CLEAR_COLOR.into())),
+        );
+
+        let depth = graph_builder.create_image(
+            window_kind,
+            1,
+            Format::D16Unorm,
+            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+        );
+
+        let pass = graph_builder.add_node(
+            DrawPbrDesc::skinned()
+                .builder()
+                .into_subpass()
+                .with_color(color)
+                .with_depth_stencil(depth)
+                .into_pass(),
+        );
+
+        let present_builder = PresentNode::builder(factory, surface, color).with_dependency(pass);
+
+        graph_builder.add_node(present_builder);
+
+        graph_builder
     }
 }

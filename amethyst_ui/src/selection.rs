@@ -5,9 +5,9 @@ use amethyst_core::{
     },
     shrev::EventChannel,
 };
-use amethyst_input::InputHandler;
-use amethyst_renderer::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
-use std::{hash::Hash, marker::PhantomData};
+use amethyst_input::{BindingTypes, InputHandler};
+use std::marker::PhantomData;
+use winit::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 
 use derive_new::new;
 use serde::{Deserialize, Serialize};
@@ -165,25 +165,23 @@ where
 
 /// System handling the clicks on ui entities and selecting them, if applicable.
 #[derive(Debug, Default, new)]
-pub struct SelectionMouseSystem<G, AX, AC> {
+pub struct SelectionMouseSystem<G, T: BindingTypes> {
     #[new(default)]
     ui_reader_id: Option<ReaderId<UiEvent>>,
     #[new(default)]
-    phantom: PhantomData<(G, AX, AC)>,
+    phantom: PhantomData<(G, T)>,
 }
 
-impl<'a, G, AX, AC> System<'a> for SelectionMouseSystem<G, AX, AC>
+impl<'a, G, T: BindingTypes> System<'a> for SelectionMouseSystem<G, T>
 where
     G: Send + Sync + 'static + PartialEq,
-    AX: Hash + Eq + Clone + Send + Sync + 'static,
-    AC: Hash + Eq + Clone + Send + Sync + 'static,
 {
     type SystemData = (
         Write<'a, EventChannel<UiEvent>>,
         Read<'a, CachedSelectionOrder>,
         WriteStorage<'a, Selected>,
         ReadStorage<'a, Selectable<G>>,
-        Read<'a, InputHandler<AX, AC>>,
+        Read<'a, InputHandler<T>>,
         Entities<'a>,
     );
     fn run(

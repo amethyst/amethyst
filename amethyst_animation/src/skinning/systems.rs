@@ -5,7 +5,7 @@ use amethyst_core::{
     math::{convert, Matrix4},
     Transform,
 };
-use amethyst_renderer::JointTransforms;
+use amethyst_rendy::skinning::JointTransforms;
 
 use log::error;
 
@@ -97,9 +97,7 @@ impl<'a> System<'a> for VertexSkinningSystem {
                     matrix
                         .matrices
                         .extend(skin.joint_matrices.iter().map(|joint_matrix| {
-                            Into::<[[f32; 4]; 4]>::into(convert::<_, Matrix4<f32>>(
-                                global_inverse * joint_matrix,
-                            ))
+                            convert::<_, Matrix4<f32>>(global_inverse * joint_matrix)
                         }));
                 }
             }
@@ -114,9 +112,7 @@ impl<'a> System<'a> for VertexSkinningSystem {
                     joint_transform
                         .matrices
                         .extend(skin.joint_matrices.iter().map(|joint_matrix| {
-                            Into::<[[f32; 4]; 4]>::into(convert::<_, Matrix4<f32>>(
-                                global_inverse * joint_matrix,
-                            ))
+                            convert::<_, Matrix4<f32>>(global_inverse * joint_matrix)
                         }));
                 } else {
                     error!(

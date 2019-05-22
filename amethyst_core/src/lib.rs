@@ -24,10 +24,6 @@ pub use specs as ecs;
 
 use rayon;
 
-#[macro_use]
-#[cfg(feature = "profiler")]
-extern crate thread_profiler;
-
 use std::sync::Arc;
 
 pub use crate::{
@@ -41,6 +37,8 @@ pub use crate::{
 
 pub use self::{
     axis::{Axis2, Axis3},
+    hidden::{Hidden, HiddenPropagate},
+    hide_system::HideHierarchySystem,
     named::{Named, WithNamed},
 };
 
@@ -52,6 +50,8 @@ pub mod transform;
 mod axis;
 mod event;
 mod float;
+mod hidden;
+mod hide_system;
 mod named;
 mod system_ext;
 

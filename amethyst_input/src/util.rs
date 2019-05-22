@@ -1,9 +1,5 @@
-use std::hash::Hash;
-
-use amethyst_core::math::{convert, RealField};
+use crate::{input_handler::InputHandler, BindingTypes};
 use winit::{ElementState, Event, KeyboardInput, MouseButton, VirtualKeyCode, WindowEvent};
-
-use crate::input_handler::InputHandler;
 
 /// If this event was for manipulating a keyboard key then this will return the `VirtualKeyCode`
 /// and the new state.
@@ -48,16 +44,13 @@ pub fn is_close_requested(event: &Event) -> bool {
 
 /// Gets the input axis value from the `InputHandler`.
 /// If the name is None, it will return the default value of the axis (0.0).
-pub fn get_input_axis_simple<A, B, N: RealField>(name: &Option<A>, input: &InputHandler<A, B>) -> N
-where
-    A: Send + Sync + Hash + Eq + Clone + 'static,
-    B: Send + Sync + Hash + Eq + Clone + 'static,
-{
-    convert(
-        name.as_ref()
-            .and_then(|ref n| input.axis_value(n))
-            .unwrap_or(0.0),
-    )
+pub fn get_input_axis_simple<T: BindingTypes>(
+    name: &Option<T::Axis>,
+    input: &InputHandler<T>,
+) -> f64 {
+    name.as_ref()
+        .and_then(|ref n| input.axis_value(n))
+        .unwrap_or(0.0)
 }
 
 /// If this event was for manipulating a mouse button, this will return the `MouseButton`
