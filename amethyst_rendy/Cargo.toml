@@ -30,9 +30,11 @@ derivative = "1.0.2"
 smallvec = "0.6.9"
 
 thread_profiler = { version = "0.3", optional = true }
+approx = "0.3.2"
 
 [dev-dependencies]
 rayon = "1.0.2"
+more-asserts = "0.2.1"
 
 [features]
 dx12 = ["rendy/dx12"]

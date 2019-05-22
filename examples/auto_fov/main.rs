@@ -209,11 +209,11 @@ impl<'a> System<'a> for ShowFovSystem {
 }
 
 fn get_fovy(camera: &Camera) -> f32 {
-    (-1.0 / camera.proj[(1, 1)]).atan() * 2.0
+    (-1.0 / camera.as_matrix()[(1, 1)]).atan() * 2.0
 }
 
 fn get_aspect(camera: &Camera) -> f32 {
-    (camera.proj[(1, 1)] / camera.proj[(0, 0)]).abs()
+    (camera.as_matrix()[(1, 1)] / camera.as_matrix()[(0, 0)]).abs()
 }
 
 #[derive(Default)]
