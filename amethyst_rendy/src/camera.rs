@@ -42,12 +42,12 @@ impl Orthographic {
 
     #[inline]
     pub fn top(&self) -> f32 {
-        -((1.0 - self.matrix[(1, 3)]) / self.matrix[(1, 1)])
+        (1.0 - self.matrix[(1, 3)]) / self.matrix[(1, 1)]
     }
 
     #[inline]
     pub fn bottom(&self) -> f32 {
-        (1.0 + self.matrix[(1, 3)]) / self.matrix[(1, 1)]
+        (-1.0 - self.matrix[(1, 3)]) / self.matrix[(1, 1)]
     }
 
     #[inline]
@@ -600,6 +600,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn extract_perspective_values() {
         let proj = Perspective::new(1280.0/720.0, std::f32::consts::FRAC_PI_3, 0.1, 100.0);
 
@@ -618,28 +619,27 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn extract_orthographic_values() {
         let proj = Orthographic::new(0.0, 100.0, 10.0, 150.0, -5.0, 100.0);
 
         // TODO: we need to solve these precision errors
-        assert_ulps_eq!(150.0, proj.top());
-        assert_ulps_eq!(10.0, proj.bottom());
+        assert_eq!(150.0, proj.top());
+        assert_eq!(10.0, proj.bottom());
 
-        assert_ulps_eq!(0.0, proj.left());
-        assert_ulps_eq!(100.0, proj.right());
-        assert_ulps_eq!(-5.0, proj.near());
-        assert_ulps_eq!(100.0, proj.far());
+        assert_eq!(0.0, proj.left());
+        assert_eq!(100.0, proj.right());
+        assert_eq!(-5.0, proj.near());
+        assert_eq!(100.0, proj.far());
 
         let camera_standard = Camera::standard_2d(1920.0, 1280.0);
 
         // TODO: we need to solve these precision errors
-        assert_ulps_eq!(-640.0, camera_standard.projection().as_orthographic().unwrap().bottom());
-        assert_ulps_eq!(640.0, camera_standard.projection().as_orthographic().unwrap().top());
-        assert_ulps_eq!(-960.0, camera_standard.projection().as_orthographic().unwrap().left());
-        assert_ulps_eq!(960.0, camera_standard.projection().as_orthographic().unwrap().right());
-        assert_ulps_eq!(0.1, camera_standard.projection().as_orthographic().unwrap().near());
-        assert_ulps_eq!(2000.0, camera_standard.projection().as_orthographic().unwrap().far());
+        assert_eq!(-640.0, camera_standard.projection().as_orthographic().unwrap().bottom());
+        assert_eq!(640.0, camera_standard.projection().as_orthographic().unwrap().top());
+        assert_eq!(-960.0, camera_standard.projection().as_orthographic().unwrap().left());
+        assert_eq!(960.0, camera_standard.projection().as_orthographic().unwrap().right());
+        assert_eq!(0.1, camera_standard.projection().as_orthographic().unwrap().near());
+        assert_eq!(2000.0, camera_standard.projection().as_orthographic().unwrap().far());
 
     }
 
@@ -818,8 +818,8 @@ mod tests {
 
 
         // Furthest point = distance to (0,0) - zFar
-        let _far = Point3::new(0.0, 0.0, -97.0);
-        let projected_point = mvp * near.to_homogeneous();
+        let far = Point3::new(0.0, 0.0, -97.0);
+        let projected_point = mvp * far.to_homogeneous();
         assert_abs_diff_eq!(projected_point[2]/projected_point[3], 1.0);
     }
 
@@ -837,8 +837,8 @@ mod tests {
         assert_abs_diff_eq!(projected_point[2]/projected_point[3], 0.0);
 
         // Furthest point = distance to (0,0) - zFar
-        let _far = Point3::new(0.0, 0.0, -97.0);
-        let projected_point = mvp * near.to_homogeneous();
+        let far = Point3::new(0.0, 0.0, -97.0);
+        let projected_point = mvp * far.to_homogeneous();
         assert_abs_diff_eq!(projected_point[2]/projected_point[3], 1.0);
     }
 
