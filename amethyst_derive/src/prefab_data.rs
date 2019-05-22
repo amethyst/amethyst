@@ -1,8 +1,8 @@
 use proc_macro2::{Literal, Span, TokenStream};
 use quote::quote;
 use syn::{
-    Attribute, Data, DataEnum, DataStruct, DeriveInput, Fields, Generics, Ident,
-    Meta, NestedMeta, Type,
+    Attribute, Data, DataEnum, DataStruct, DeriveInput, Fields, Generics, Ident, Meta, NestedMeta,
+    Type,
 };
 
 pub fn impl_prefab_data(ast: &DeriveInput) -> TokenStream {
