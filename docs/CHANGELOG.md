@@ -94,6 +94,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * `Format` now supports tag-based deserialization, it is no longer required to provide specific format to prefab type.
 * Combined input axis/action generics into single type.
 * `Material` is now an asset. Must be turned into handle before putting on an entity.
+* Removed `Flipped` component. Use `flip_horizontal` and `flip_vertical` sprite property instead.
 
 ### Removed
 
