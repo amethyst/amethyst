@@ -528,12 +528,12 @@ mod tests {
     //! 
     //! Assertions are in NDC
     //! Our world-space is Y-up, X-right, Z-away
-    //! Our is Y-up, X-right, Z-away
+    //! Our view space is Y-up, X-right, Z-away
     //! Current render target is Y-down, X-right, Z-away
 
     use super::*;
     use ron::{de::from_str, ser::to_string_pretty};
-    use amethyst_core::math::{Point3, Matrix4, Isometry3, Translation3, UnitQuaternion, Vector3, Vector4, convert};
+    use amethyst_core::math::{Point3, Matrix4, Isometry3, Translation3, Quaternion, UnitQuaternion, Vector3, Vector4, convert};
     use amethyst_core::Transform;
 
     use approx::{assert_ulps_eq, assert_abs_diff_eq};
@@ -572,11 +572,14 @@ mod tests {
         let camera_transform : Transform = Transform::new(
             Translation3::new(0.0, 0.0, -3.0),
             // Apply _no_ rotation
-            UnitQuaternion::from_axis_angle(&Vector3::y_axis(), 0.0),
+            UnitQuaternion::from_quaternion(Quaternion::new(0.0, 0.0, 1.0, 0.0)),
+            // UnitQuaternion::from_axis_angle(&Vector3::y_axis(), std::f32::consts::PI),
+            // UnitQuaternion::look_at_rh(&Vector3::z_axis(), &Vector3::y_axis()),
             [1.0, 1.0, 1.0].into());
+            // dbg!(camera_transform.rotation());
 
         let simple_points : [Point3<f32>; 3] = [
-            Point3::new(2.0, 0.0, 0.0),
+            Point3::new(1.0, 0.0, 0.0),
             Point3::new(0.0, 1.0, 0.0),
             Point3::new(0.0, 0.0, 1.0)
         ];
@@ -595,21 +598,17 @@ mod tests {
 
     #[test]
     fn camera_matrix() {
-        let (camera_transform, _, _) = setup();
-        let iso = Isometry3::face_towards(
+        let (camera_transform, simple_points, _) = setup();
+        let view_matrix = Isometry3::look_at_rh(
             &Point3::new(0.0, 0.0, -3.0), 
             &Point3::new(0.0, 0.0, 0.0), 
             &Vector3::y_axis()
         );
-        let our_iso : Matrix4<f32> = convert(camera_transform.isometry().to_homogeneous());
+        // let our_iso : Matrix4<f32> = convert(camera_transform.isometry().to_homogeneous());
         // Check camera isometry
-        assert_ulps_eq!(our_iso, iso.to_homogeneous());
+        // assert_ulps_eq!(our_iso, view_matrix.to_homogeneous());
 
-        let view_matrix = Isometry3::look_at_lh(
-            &Point3::new(0.0, 0.0, -3.0),
-            &Point3::new(0.0, 0.0, 0.0),
-            &Vector3::y_axis()
-        );
+        
         // Check view matrix.
         // The view matrix is used to transfrom a point from world space to eye space.
         // Changes the base of a vector from world origin to your eye.
@@ -620,6 +619,13 @@ mod tests {
         assert_ulps_eq!(our_inverse, view_matrix.to_homogeneous());
 
         assert_ulps_eq!(our_inverse, our_view);
+
+        let x_axis = our_view * simple_points[0].to_homogeneous();
+        let y_axis = our_view * simple_points[1].to_homogeneous();
+        let z_axis = our_view * simple_points[2].to_homogeneous();
+        assert_gt!(x_axis[0], 0.0);
+        assert_gt!(z_axis[1], 0.0);
+        assert_lt!(y_axis[2], 0.0);
     }
 
     #[test]
@@ -653,6 +659,11 @@ mod tests {
 
     #[test]
     fn perspective_orientation() {
+        /// -w_c <= x_c <= w_c
+        /// -w_c <= y_c <= w_c
+        /// 0 <= z_c <= w_c
+        /// 
+        /// https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#vertexpostproc-clipping-shader-outputs
         let (camera_transform, simple_points, simple_points_clipped) = setup();
 
         let proj = Projection::perspective(1280.0/720.0, std::f32::consts::FRAC_PI_3, 0.1, 100.0);
@@ -664,13 +675,17 @@ mod tests {
         let y_axis = mvp * simple_points[1].to_homogeneous();
         let z_axis = mvp * simple_points[2].to_homogeneous();
       
+        assert_gt!(x_axis[0], 0.0);
         assert_gt!(x_axis[0]/x_axis[3], 0.0);
 
-        // Y should be negative (Test in NDC)
+        // Y should be negative
+        assert_lt!(y_axis[1], 0.0);
         assert_lt!(y_axis[1]/y_axis[3], 0.0);
 
-        // Z should be in [0; 1] (Test in NDC)
+        // Z should be in [0; w] resp. [0; 1]
+        assert_ge!(z_axis[2], 0.0);
         assert_ge!(z_axis[2]/z_axis[3], 0.0);
+        assert_le!(z_axis[2], z_axis[3]);
         assert_le!(z_axis[2]/z_axis[3], 1.0);
 
         let x_axis_clipped = mvp * simple_points_clipped[0].to_homogeneous();
@@ -701,13 +716,17 @@ mod tests {
         let y_axis = mvp * simple_points[1].to_homogeneous();
         let z_axis = mvp * simple_points[2].to_homogeneous();
 
+        assert_gt!(x_axis[0], 0.0);
         assert_gt!(x_axis[0]/x_axis[3], 0.0);
 
-        // Y should be negative (Test in NDC)
+        // Y should be negative
+        assert_lt!(y_axis[1], 0.0);
         assert_lt!(y_axis[1]/y_axis[3], 0.0);
 
-        // Z should be in [0; 1] (Test in NDC)
+        // Z should be in [0; w] resp. [0; 1]
+        assert_ge!(z_axis[2], 0.0);
         assert_ge!(z_axis[2]/z_axis[3], 0.0);
+        assert_le!(z_axis[2], z_axis[3]);
         assert_le!(z_axis[2]/z_axis[3], 1.0);
     }
 
