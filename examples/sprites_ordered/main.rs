@@ -135,9 +135,9 @@ impl SimpleState for Example {
                     info!(
                         "Sprite Z order is {}",
                         if self.reverse {
-                            "reversed. Right most sprite has Z: 0, increasing to the left."
+                            "reversed. Right most sprite has Z: 0, decreasing to the left."
                         } else {
-                            "normal. Left most sprite has Z: 0, increasing to the right."
+                            "normal. Left most sprite has Z: 0, decreasing to the right."
                         }
                     );
                     self.redraw_sprites(&mut data.world);
@@ -153,22 +153,24 @@ impl SimpleState for Example {
                 }
 
                 Some((VirtualKeyCode::Up, ElementState::Pressed)) => {
-                    self.camera_z += 1.0;
-                    info!("Camera Z position is: {}", self.camera_z);
-                    self.adjust_camera(&mut data.world);
-                    self.redraw_sprites(&mut data.world);
-                }
-
-                Some((VirtualKeyCode::Down, ElementState::Pressed)) => {
                     self.camera_z -= 1.0;
                     info!("Camera Z position is: {}", self.camera_z);
                     self.adjust_camera(&mut data.world);
                     self.redraw_sprites(&mut data.world);
                 }
 
+                Some((VirtualKeyCode::Down, ElementState::Pressed)) => {
+                    self.camera_z += 1.0;
+                    info!("Camera Z position is: {}", self.camera_z);
+                    self.adjust_camera(&mut data.world);
+                    self.redraw_sprites(&mut data.world);
+                }
+
                 Some((VirtualKeyCode::Left, ElementState::Pressed)) => {
-                    self.camera_depth_vision -= 1.0;
-                    info!("Camera depth vision: {}", self.camera_depth_vision);
+                    if (self.camera_depth_vision >= 2.0) {
+                        self.camera_depth_vision -= 1.0;
+                        info!("Camera depth vision: {}", self.camera_depth_vision);
+                    }
                     self.adjust_camera(&mut data.world);
                     self.redraw_sprites(&mut data.world);
                 }
@@ -198,7 +200,7 @@ impl Example {
         // excluding, entities with a Z coordinate that is `camera_z - camera_depth_vision`. The
         // additional distance means the camera can see up to just before -1.0 on the Z axis, so
         // we can view the sprite at 0.0.
-        self.camera_z = -1.0;
+        self.camera_z = 1.0;
         self.camera_depth_vision = self.loaded_sprite_sheet.as_ref().unwrap().sprite_count as f32 + 1.0;
 
         self.adjust_camera(world);
@@ -293,7 +295,7 @@ impl Example {
             sprite_transform.set_translation_xyz(
                 (i * sprite_w) as f32 * SPRITE_SPACING_RATIO,
                 z,
-                z,
+                -z,
             );
 
             // This combines multiple `Transform`ations.
