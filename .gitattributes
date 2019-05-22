@@ -8,6 +8,7 @@
 *.yml text
 COPYING text
 LICENSE-* text
+*.spv binary
 # LFS
 examples/assets/large/**/*.obj filter=lfs diff=lfs merge=lfs -text
 examples/assets/large/**/*.png filter=lfs diff=lfs merge=lfs -text
@@ -16,5 +17,3 @@ examples/assets/large/**/*.dds filter=lfs diff=lfs merge=lfs -text
 examples/assets/large/**/*.glb filter=lfs diff=lfs merge=lfs -text
 examples/assets/large/**/*.bin filter=lfs diff=lfs merge=lfs -text
 examples/assets/large/**/*.jpg filter=lfs diff=lfs merge=lfs -text
-amethyst_rendy/compiled/**/*.spv filter=lfs diff=lfs merge=lfs -text
-amethyst_ui/compiled/**/*.spv filter=lfs diff=lfs merge=lfs -text

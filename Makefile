@@ -19,7 +19,7 @@ all: $(COMP_SHADERS) $(COMP_DISASMS) $(COMP_SHADERS_UI) $(COMP_DISASMS_UI)
 
 amethyst_rendy/compiled/%.spv: amethyst_rendy/shaders/%
 	mkdir -p $(dir $@)
-	$(GLSLC) -MD -c -g -O -o $@ $<
+	$(GLSLC) -MD -c -O -o $@ $<
 
 amethyst_rendy/compiled/%.spvasm: amethyst_rendy/shaders/%
 	mkdir -p $(dir $@)
@@ -27,7 +27,7 @@ amethyst_rendy/compiled/%.spvasm: amethyst_rendy/shaders/%
 
 amethyst_ui/compiled/%.spv: amethyst_ui/shaders/%
 	mkdir -p $(dir $@)
-	$(GLSLC) -MD -c -g -O -o $@ $<
+	$(GLSLC) -MD -c -O -o $@ $<
 
 amethyst_ui/compiled/%.spvasm: amethyst_ui/shaders/%
 	mkdir -p $(dir $@)
@@ -35,6 +35,6 @@ amethyst_ui/compiled/%.spvasm: amethyst_ui/shaders/%
 
 clean:
 	rm amethyst_rendy/compiled/**/*.spv amethyst_rendy/compiled/**/*.spvasm amethyst_rendy/compiled/**/*.d
-	rm amethyst_ui/compiled/**/*.spv amethyst_ui/compiled/**/*.spvasm amethyst_ui/compiled/**/*.d
+	rm amethyst_ui/compiled/*.spv amethyst_ui/compiled/*.spvasm amethyst_ui/compiled/*.d
 
 .PHONY: all clean
