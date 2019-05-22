@@ -507,10 +507,9 @@ mod tests {
     };
     use ron::{de::from_str, ser::to_string_pretty};
 
-    use approx::{assert_abs_diff_eq, assert_ulps_eq};
+    use approx::{assert_abs_diff_eq, assert_relative_eq, assert_ulps_eq};
     use more_asserts::{assert_ge, assert_gt, assert_le, assert_lt};
 
-    // TODO: this will be fixed after camera projection refactor
     #[test]
     #[ignore]
     fn test_orthographic_serde() {
@@ -524,7 +523,6 @@ mod tests {
         assert_eq!(test_ortho, de);
     }
 
-    // TODO: this will be fixed after camera projection refactor
     #[test]
     #[ignore]
     fn test_perspective_serde() {
@@ -547,7 +545,7 @@ mod tests {
         assert_ulps_eq!(std::f32::consts::FRAC_PI_3, proj.fovy());
         assert_ulps_eq!(0.1, proj.near());
         // TODO: we need to solve these precision errors
-        //assert_ulps_eq!(100.0, proj.far());
+        assert_relative_eq!(100.0, proj.far(), max_relative = 1.0);
 
         //let proj = Projection::perspective(width/height, std::f32::consts::FRAC_PI_3, 0.1, 2000.0);
         let proj_standard = Camera::standard_3d(1920.0, 1280.0);
@@ -567,9 +565,10 @@ mod tests {
             0.1,
             proj_standard.projection().as_perspective().unwrap().near()
         );
-        assert_ulps_eq!(
+        assert_relative_eq!(
             2000.0,
-            proj_standard.projection().as_perspective().unwrap().far()
+            proj_standard.projection().as_perspective().unwrap().far(),
+            max_relative = 3.0
         );
     }
 
@@ -584,50 +583,55 @@ mod tests {
         assert_ulps_eq!(0.0, proj.left());
         assert_ulps_eq!(100.0, proj.right());
         assert_ulps_eq!(-5.0, proj.near());
-        //assert_relative_eq!(100.0, proj.far());
+        assert_relative_eq!(100.0, proj.far(), max_relative = 0.1);
 
         let camera_standard = Camera::standard_2d(1920.0, 1280.0);
 
         // TODO: we need to solve these precision errors
-        assert_ulps_eq!(
+        assert_relative_eq!(
             -640.0,
             camera_standard
                 .projection()
                 .as_orthographic()
                 .unwrap()
-                .bottom()
+                .bottom(),
+            max_relative = 1.0
         );
-        assert_ulps_eq!(
+        assert_relative_eq!(
             640.0,
             camera_standard
                 .projection()
                 .as_orthographic()
                 .unwrap()
-                .top()
+                .top(),
+            max_relative = 1.0
         );
-        assert_ulps_eq!(
+        assert_relative_eq!(
             -960.0,
             camera_standard
                 .projection()
                 .as_orthographic()
                 .unwrap()
-                .left()
+                .left(),
+            max_relative = 1.0
         );
-        assert_ulps_eq!(
+        assert_relative_eq!(
             960.0,
             camera_standard
                 .projection()
                 .as_orthographic()
                 .unwrap()
-                .right()
+                .right(),
+            max_relative = 1.0
         );
-        assert_ulps_eq!(
+        assert_relative_eq!(
             0.1,
             camera_standard
                 .projection()
                 .as_orthographic()
                 .unwrap()
-                .near()
+                .near(),
+            max_relative = 1.0
         );
         //assert_ulps_eq!(2000.0, camera_standard.projection().as_orthographic().unwrap().far());
     }
