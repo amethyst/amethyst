@@ -1,8 +1,8 @@
-use proc_macro2::{Literal, TokenStream};
+use proc_macro2::{Literal, Span, TokenStream};
 use quote::quote;
 use syn::{
-    Attribute, Data, DataEnum, DataStruct, DeriveInput, Fields, Generics, Ident, Meta, NestedMeta,
-    Type,
+    spanned::Spanned, Attribute, Data, DataEnum, DataStruct, DeriveInput, Fields, Generics, Ident,
+    Meta, NestedMeta, Type,
 };
 
 pub fn impl_prefab_data(ast: &DeriveInput) -> TokenStream {
@@ -42,7 +42,7 @@ fn prepare_prefab_aggregate_fields(
 ) -> (Vec<TokenStream>, Vec<Option<TokenStream>>) {
     let mut subs = Vec::new();
     let mut add_to_entity = Vec::new();
-    for field in fields.iter() {
+    for (field_number, field) in fields.iter().enumerate() {
         let is_component = have_component_attribute(&field.attrs[..]);
         let i = match data_types
             .iter()
@@ -55,11 +55,10 @@ fn prepare_prefab_aggregate_fields(
             }
         };
         let tuple_index = Literal::usize_unsuffixed(i);
-        let name = field
-            .ident
-            .as_ref()
-            .expect("PrefabData derive only support named fields")
-            .clone();
+        let name = field.ident.clone().unwrap_or(Ident::new(
+            &format!("field_{}", field_number),
+            Span::call_site(),
+        ));
         if is_component {
             subs.push(None);
             add_to_entity.push(quote! {
@@ -84,18 +83,38 @@ fn prepare_prefab_aggregate_struct(
 ) -> (Vec<(Type, bool)>, TokenStream, TokenStream) {
     let mut data_types = Vec::new();
     let (add_to_entity, subs) = prepare_prefab_aggregate_fields(&mut data_types, &data.fields);
-    let extract_fields_add = data.fields.iter().map(|f| {
-        let name = &f.ident;
-        quote! {
-            let #name = &self.#name;
-        }
-    });
-    let extract_fields_sub = data.fields.iter().map(|field| {
-        let name = &field.ident;
+    let extract_fields_add =
+        data.fields
+            .iter()
+            .enumerate()
+            .map(|(field_number, field)| match &field.ident {
+                Some(name) => quote! {
+                    let #name = &self.#name;
+                },
+                None => {
+                    let var_name =
+                        Ident::new(&format!("field_{}", field_number), Span::call_site());
+                    let number = Literal::usize_unsuffixed(field_number);
+                    quote! {
+                        let #var_name = &self.#number;
+                    }
+                }
+            });
+    let extract_fields_sub = data.fields.iter().enumerate().map(|(field_number, field)| {
         if !have_component_attribute(&field.attrs[..]) {
-            Some(quote! {
-                let #name = &mut self.#name;
-            })
+            match &field.ident {
+                Some(name) => Some(quote! {
+                    let #name = &mut self.#name;
+                }),
+                None => {
+                    let var_name =
+                        Ident::new(&format!("field_{}", field_number), Span::call_site());
+                    let number = Literal::usize_unsuffixed(field_number);
+                    Some(quote! {
+                        let #var_name = &mut self.#number;
+                    })
+                }
+            }
         } else {
             None
         }
@@ -124,34 +143,73 @@ fn prepare_prefab_aggregate_enum(
     for variant in &data.variants {
         let (variant_add_to_entity, variant_subs) =
             prepare_prefab_aggregate_fields(&mut data_types, &variant.fields);
-        let field_names_add: Vec<_> = variant.fields.iter().map(|field| &field.ident).collect();
+        let field_names_add: Vec<_> = variant
+            .fields
+            .iter()
+            .enumerate()
+            .map(|(field_number, field)| match &field.ident {
+                Some(name) => name.clone(),
+                None => Ident::new(&format!("field_{}", field_number), Span::call_site()),
+            })
+            .collect();
         let field_names_sub: Vec<_> = variant
             .fields
             .iter()
-            .map(|field| {
-                // This unwrap is safe because we have already paniced on unnamed fields
-                let ident = field.ident.clone().unwrap();
-                if !have_component_attribute(&field.attrs[..]) {
-                    quote! {
-                        #ident
+            .enumerate()
+            .map(|(field_number, field)| match &field.ident {
+                Some(name) => {
+                    if !have_component_attribute(&field.attrs[..]) {
+                        quote! {
+                            #name
+                        }
+                    } else {
+                        quote! {
+                            #name: _
+                        }
                     }
-                } else {
+                }
+                None => {
+                    let var_name = if !have_component_attribute(&field.attrs[..]) {
+                        Ident::new(&format!("field_{}", field_number), Span::call_site())
+                    } else {
+                        Ident::new(&format!("_field_{}", field_number), Span::call_site())
+                    };
                     quote! {
-                        #ident: _
+                        #var_name
                     }
                 }
             })
             .collect();
         let ident = &variant.ident;
-        add_to_entity.push(quote! {
-            #base::#ident {#(#field_names_add,)*} => {
-                #(#variant_add_to_entity)*
-            }
+        add_to_entity.push(match variant.fields {
+            Fields::Named(_) => quote! {
+                #base::#ident {#(#field_names_add,)*} => {
+                    #(#variant_add_to_entity)*
+                }
+            },
+            Fields::Unnamed(_) => quote! {
+                #base::#ident (#(#field_names_add,)*) => {
+                    #(#variant_add_to_entity)*
+                }
+            },
+            Fields::Unit => quote! {
+                #base::#ident => ()
+            },
         });
-        subs.push(quote! {
-            #base::#ident {#(#field_names_sub,)*} => {
-                #(#variant_subs)*
-            }
+        subs.push(match variant.fields {
+            Fields::Named(_) => quote! {
+                #base::#ident {#(#field_names_sub,)*} => {
+                    #(#variant_subs)*
+                }
+            },
+            Fields::Unnamed(_) => quote! {
+                #base::#ident (#(#field_names_sub,)*) => {
+                    #(#variant_subs)*
+                }
+            },
+            Fields::Unit => quote! {
+                #base::#ident => ()
+            },
         });
     }
 

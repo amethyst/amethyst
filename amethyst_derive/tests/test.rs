@@ -77,6 +77,9 @@ pub struct Outer {
 }
 
 #[derive(PrefabData, Clone)]
+pub struct OuterTuple(#[prefab(Component)] External);
+
+#[derive(PrefabData, Clone)]
 pub enum EnumPrefab {
     One {
         number: Stuff<usize>,
@@ -87,4 +90,5 @@ pub enum EnumPrefab {
     },
     Three {},
     Four,
+    Five(Stuff<usize>, #[prefab(Component)] External),
 }
