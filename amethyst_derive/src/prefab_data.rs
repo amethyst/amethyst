@@ -1,7 +1,7 @@
 use proc_macro2::{Literal, Span, TokenStream};
 use quote::quote;
 use syn::{
-    spanned::Spanned, Attribute, Data, DataEnum, DataStruct, DeriveInput, Fields, Generics, Ident,
+    Attribute, Data, DataEnum, DataStruct, DeriveInput, Fields, Generics, Ident,
     Meta, NestedMeta, Type,
 };
 
