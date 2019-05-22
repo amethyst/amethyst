@@ -31,7 +31,7 @@ impl Orthographic {
         let mut matrix = Matrix4::<f32>::identity();
         matrix[(0, 0)] = 2.0 / (right - left);
         matrix[(1, 1)] = -2.0 / (top - bottom);
-        matrix[(2, 2)] = 1.0 / (z_far - z_near);
+        matrix[(2, 2)] = -1.0 / (z_far - z_near);
         matrix[(0, 3)] = -(right + left) / (right - left);
         matrix[(1, 3)] = -(top + bottom) / (top - bottom);
         matrix[(2, 3)] = -z_near / (z_far - z_near);
@@ -131,9 +131,9 @@ impl Perspective {
 
         matrix[(0, 0)] = 1.0 / (aspect * tan_half_fovy);
         matrix[(1, 1)] = -1.0 / tan_half_fovy;
-        matrix[(2, 2)] = (z_far) / (z_far - z_near);
+        matrix[(2, 2)] = z_far / (z_near - z_far);
         matrix[(2, 3)] = -(z_far * z_near) / (z_far - z_near);
-        matrix[(3, 2)] = 1.0;
+        matrix[(3, 2)] = -1.0;
 
         Self {
             matrix,
@@ -527,9 +527,9 @@ mod tests {
     //! Tests for amethysts camera implementation.
     //! 
     //! Assertions are in NDC
-    //! Our world-space is Y-up, X-right, Z-away
-    //! Our view space is Y-up, X-right, Z-away
-    //! Current render target is Y-down, X-right, Z-away
+    //! Our world-space is +Y Up, +X Right and -Z Away
+    //! Our view space is +Y Down, +X Right, +Z Away
+    //! Current render target is +Y Down, +X Right, +Z Away
 
     use super::*;
     use ron::{de::from_str, ser::to_string_pretty};
@@ -565,29 +565,29 @@ mod tests {
     fn setup() -> (Transform, [Point3<f32>; 3], [Point3<f32>; 3]) {
         /// Setup common inputs for most of the tests.
         /// 
-        /// Sets up a test camera is positioned at (0,0,-3) in world space.
-        /// A camera without rotation is pointing in the (0,0,-1) direction.
+        /// Sets up a test camera is positioned at (0,0,3) in world space.
+        /// A camera without rotation is pointing in the (0,0,1) direction.
         /// 
         /// Sets up basic points.
         let camera_transform : Transform = Transform::new(
-            Translation3::new(0.0, 0.0, -3.0),
-            // Apply _no_ rotation
-            UnitQuaternion::from_quaternion(Quaternion::new(0.0, 0.0, 1.0, 0.0)),
+            Translation3::new(0.0, 0.0, 3.0),
+            // Apply _no_ rotation            
             // UnitQuaternion::from_axis_angle(&Vector3::y_axis(), std::f32::consts::PI),
             // UnitQuaternion::look_at_rh(&Vector3::z_axis(), &Vector3::y_axis()),
+            UnitQuaternion::identity(),
             [1.0, 1.0, 1.0].into());
             // dbg!(camera_transform.rotation());
 
         let simple_points : [Point3<f32>; 3] = [
             Point3::new(1.0, 0.0, 0.0),
             Point3::new(0.0, 1.0, 0.0),
-            Point3::new(0.0, 0.0, 1.0)
+            Point3::new(0.0, 0.0, -1.0)
         ];
 
         let simple_points_clipped : [Point3<f32>; 3] = [
             Point3::new(-20.0, 0.0, 0.0),
             Point3::new(0.0, -20.0, 0.0),
-            Point3::new(0.0, 0.0, -3.0)
+            Point3::new(0.0, 0.0, 4.0)
         ];
         (camera_transform, simple_points, simple_points_clipped)
     }
@@ -600,8 +600,8 @@ mod tests {
     fn camera_matrix() {
         let (camera_transform, simple_points, _) = setup();
         let view_matrix = Isometry3::look_at_rh(
-            &Point3::new(0.0, 0.0, -3.0), 
-            &Point3::new(0.0, 0.0, 0.0), 
+            &Point3::new(0.0, 0.0, 3.0),
+            &Point3::new(0.0, 0.0, 0.0),
             &Vector3::y_axis()
         );
         // let our_iso : Matrix4<f32> = convert(camera_transform.isometry().to_homogeneous());
@@ -624,8 +624,8 @@ mod tests {
         let y_axis = our_view * simple_points[1].to_homogeneous();
         let z_axis = our_view * simple_points[2].to_homogeneous();
         assert_gt!(x_axis[0], 0.0);
-        assert_gt!(z_axis[1], 0.0);
-        assert_lt!(y_axis[2], 0.0);
+        assert_gt!(y_axis[1], 0.0);
+        assert_le!(z_axis[2], 0.0);
     }
 
     #[test]
@@ -674,7 +674,7 @@ mod tests {
         let x_axis = mvp * simple_points[0].to_homogeneous();
         let y_axis = mvp * simple_points[1].to_homogeneous();
         let z_axis = mvp * simple_points[2].to_homogeneous();
-      
+
         assert_gt!(x_axis[0], 0.0);
         assert_gt!(x_axis[0]/x_axis[3], 0.0);
 
@@ -738,14 +738,14 @@ mod tests {
         let view = gatherer_calc_view_matrix(camera_transform);
 
         let mvp = proj.as_matrix() * view;
-        // Nearest point = -distance to (0,0) + zNear
-        let near = Point3::new(0.0, 0.0, -2.9);
+        // Nearest point = distance to (0,0) - zNear
+        let near = Point3::new(0.0, 0.0, 2.9);
         let projected_point = (mvp * near.to_homogeneous());
         assert_abs_diff_eq!(projected_point[2]/projected_point[3], 0.0);
 
 
-        // Furthest point = -distance to (0,0) + zFar
-        let far = Point3::new(0.0, 0.0, 97.0);
+        // Furthest point = distance to (0,0) - zFar
+        let far = Point3::new(0.0, 0.0, -97.0);
         let projected_point = (mvp * far.to_homogeneous());
         assert_abs_diff_eq!(projected_point[2]/projected_point[3], 1.0);
     }
@@ -758,13 +758,13 @@ mod tests {
         let view = gatherer_calc_view_matrix(camera_transform);
 
         let mvp = proj.as_matrix() * view;
-        // Nearest point = -distance to (0,0) + zNear
-        let near = Point3::new(0.0, 0.0, -2.9);
+        // Nearest point = distance to (0,0) - zNear
+        let near = Point3::new(0.0, 0.0, 2.9);
         let projected_point = (mvp * near.to_homogeneous());
         assert_abs_diff_eq!(projected_point[2]/projected_point[3], 0.0);
 
-        // Furthest point = -distance to (0,0) + zFar
-        let far = Point3::new(0.0, 0.0, 97.0);
+        // Furthest point = distance to (0,0) - zFar
+        let far = Point3::new(0.0, 0.0, -97.0);
         let projected_point = (mvp * far.to_homogeneous());
         assert_abs_diff_eq!(projected_point[2]/projected_point[3], 1.0);
     }
