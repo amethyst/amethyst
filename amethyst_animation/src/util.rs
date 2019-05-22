@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use amethyst_core::{
     alga::general::{SubsetOf, SupersetOf},
     ecs::prelude::{Entity, WriteStorage},
-    math::{convert, RealField},
+    math::{convert, RealField, Vector2, Vector3, Vector4},
 };
 
 use crate::resources::{AnimationControlSet, AnimationSampling};
@@ -73,6 +73,33 @@ where
 {
     fn from(arr: [S; 4]) -> Self {
         SamplerPrimitive::Vec4(arr)
+    }
+}
+
+impl<S> From<Vector2<S>> for SamplerPrimitive<S>
+where
+    S: RealField + SubsetOf<f32> + SupersetOf<f32>,
+{
+    fn from(arr: Vector2<S>) -> Self {
+        SamplerPrimitive::Vec2(arr.into())
+    }
+}
+
+impl<S> From<Vector3<S>> for SamplerPrimitive<S>
+where
+    S: RealField + SubsetOf<f32> + SupersetOf<f32>,
+{
+    fn from(arr: Vector3<S>) -> Self {
+        SamplerPrimitive::Vec3(arr.into())
+    }
+}
+
+impl<S> From<Vector4<S>> for SamplerPrimitive<S>
+where
+    S: RealField + SubsetOf<f32> + SupersetOf<f32>,
+{
+    fn from(arr: Vector4<S>) -> Self {
+        SamplerPrimitive::Vec4(arr.into())
     }
 }
 

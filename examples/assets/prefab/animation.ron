@@ -5,7 +5,9 @@ Prefab (
             data: (
                 (
                     transform: (),
-                    light: (ambient_color: ((0.05, 0.05, 0.05, 1.0))),
+                    light: (
+                        ambient_color: ((0.05, 0.05, 0.05, 1.0)),
+                    )
                 ),
                 (
                     animations: [
@@ -64,8 +66,17 @@ Prefab (
                     graphics: (
                         mesh: Shape(( shape: Sphere(32, 32), )),
                         material: (
-                            albedo: Data(Rgba((0.0, 0.0, 1.0, 1.0,), (channel: Srgb),)),
-                        ),
+                            //albedo: Generate(Srgba(0.0, 0.0, 1.0, 1.0,)),
+                            albedo: Generate(SrgbaCorners(
+                                (
+                                    (0.0, 0.0, 1.0, 1.0),
+                                    (1.0, 0.0, 0.0, 1.0),
+                                    (0.0, 1.0, 0.0, 1.0),
+                                    (1.0, 1.0, 0.0, 1.0),
+                                ),
+                                Nearest
+                            )),
+                      ),
                     ),
                     transform: (
                         translation: (0.0, 1.0, 0.0),
@@ -83,7 +94,7 @@ Prefab (
                     light: (
                         light: Point((
                             intensity: 3.0,
-                            color: (1.0, 1.0, 1.0, 1.0),
+                            color: (1.0, 1.0, 1.0),
                             radius: 5.0,
                         )),
                     ),
@@ -96,14 +107,15 @@ Prefab (
                 (
                     transform: Transform (
                         translation: (0.0, 0.0, -4.0),
-                        rotation: (0.0, 0.0, 1.0, 0.0),
+                        rotation: (0.0, 1.0, 0.0, 0.0),
+                        scale: (1.0, -1.0, 1.0),
                     ),
-                    camera: Perspective((
+                    camera: Perspective(
                         aspect: 1.3,
                         fovy: 1.0471975512,
                         znear: 0.1,
                         zfar: 2000.0,
-                    )),
+                    ),
                 ),
                 None
             ),

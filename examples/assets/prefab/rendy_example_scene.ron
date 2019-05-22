@@ -1,0 +1,1109 @@
+#![enable(implicit_some)]
+Prefab (
+    entities: [
+        (
+            data: (
+                sprite_sheet: Sheet(
+                    texture: File("texture/bat_semi_transparent.png", (
+                        "IMAGE", (
+                            sampler_info: (
+                                min_filter: Nearest,
+                                mag_filter: Nearest,
+                                mip_filter: Nearest,
+                                wrap_mode: (Tile, Tile, Tile),
+                                lod_bias: (0),
+                                lod_range: (
+                                    start: ( 0 ),
+                                    end: ( 8000 ),
+                                ),
+                                comparison: None,
+                                border: (0),
+                                anisotropic: Off,
+                            ),
+                        )
+                    )),
+                    sprites: [
+                        Grid((
+                            texture_width: 192,
+                            texture_height: 64,
+                            columns: 6,
+                            rows: 1,
+                            cell_size: (32, 32),
+                            position: (0, 32),
+                        )),
+                        List((
+                            texture_width: 192,
+                            texture_height: 64,
+                            sprites: [
+                                (x: 0,   y: 0, width: 32, height: 32),
+                                (x: 32,  y: 0, width: 32, height: 32, offsets: (0.0, -4.0)),
+                                (x: 64,  y: 0, width: 32, height: 32, offsets: (0.0, 7.0)),
+                                (x: 64,  y: 0, width: 32, height: 32, offsets: (0.0, 6.0)),
+                                (x: 96,  y: 0, width: 32, height: 32, offsets: (0.0, -4.0)),
+                                (x: 128, y: 0, width: 32, height: 32, offsets: (0.0, -2.0)),
+                                (x: 0,   y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                (x: 32,  y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                (x: 64,  y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                (x: 64,  y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                (x: 96,  y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                (x: 128, y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
+                            ],
+                        )),
+                    ],
+                    // optional
+                    name: "bat_color",
+                ),
+            ),
+        ),
+        (
+        data: (
+                sprite_sheet: Sheet(
+                    texture: File("texture/arrow_semi_transparent.png", (
+                        "IMAGE", (
+                            sampler_info: (
+                                min_filter: Nearest,
+                                mag_filter: Nearest,
+                                mip_filter: Nearest,
+                                wrap_mode: (Tile, Tile, Tile),
+                                lod_bias: (0),
+                                lod_range: (
+                                    start: ( 0 ),
+                                    end: ( 8000 ),
+                                ),
+                                comparison: None,
+                                border: (0),
+                                anisotropic: Off,
+                            ),
+                        )
+                    )),
+                    sprites: [
+                        Grid((
+                            texture_width: 192,
+                            texture_height: 64,
+                            columns: 6,
+                            rows: 2,
+                            cell_size: (32, 32),
+                            position: (0, 0),
+                        )),
+                    ],
+                    // optional
+                    name: "arrow_color",
+                ),
+            ),
+        ),
+        (
+        data: (
+                sprite_sheet: Sheet(
+                    texture: File("texture/arrow_semi_transparent.png", (
+                        "IMAGE", (
+                            sampler_info: (
+                                min_filter: Nearest,
+                                mag_filter: Nearest,
+                                mip_filter: Nearest,
+                                wrap_mode: (Tile, Tile, Tile),
+                                lod_bias: (0),
+                                lod_range: (
+                                    start: ( 0 ),
+                                    end: ( 8000 ),
+                                ),
+                                comparison: None,
+                                border: (0),
+                                anisotropic: Off,
+                            ),
+                        )
+                    )),
+                    sprites: [
+                        List((
+                            texture_width: 192,
+                            texture_height: 64,
+                            sprites: [
+                                (x: 0,   y: 0, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                (x: 32,  y: 0, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                (x: 64,  y: 0, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                (x: 96,  y: 0, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                (x: 128,  y: 0, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                (x: 160, y: 0, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                (x: 0,   y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                (x: 32,  y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                (x: 64,  y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                (x: 92,  y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                (x: 128,  y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                (x: 160, y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
+
+                            ],
+                        )),
+                    ],
+                    // optional
+                    name: "arrow_color_list",
+                ),
+            ),
+        ),
+        (
+            data: (
+                sprite_sheet: Sheet(
+                    texture: File("texture/bat.32x32.png", (
+                        "IMAGE", (
+                            sampler_info: (
+                                min_filter: Nearest,
+                                mag_filter: Nearest,
+                                mip_filter: Nearest,
+                                wrap_mode: (Tile, Tile, Tile),
+                                lod_bias: (0),
+                                lod_range: (
+                                    start: ( 0 ),
+                                    end: ( 8000 ),
+                                ),
+                                comparison: None,
+                                border: (0),
+                                anisotropic: Off,
+                            ),
+                        ),
+                    )),
+                    sprites: [
+                        Grid((
+                            texture_width: 192,
+                            texture_height: 64,
+                            columns: 6,
+                            rows: 1,
+                            cell_size: (32, 32),
+                            position: (0, 32),
+                        )),
+                        List((
+                            texture_width: 192,
+                            texture_height: 64,
+                            sprites: [
+                                (x: 0,   y: 32, width: 32, height: 32),
+                                (x: 32,  y: 32, width: 32, height: 32, offsets: (0.0, -4.0)),
+                                (x: 64,  y: 32, width: 32, height: 32, offsets: (0.0, 7.0)),
+                                (x: 64,  y: 32, width: 32, height: 32, offsets: (0.0, 6.0)),
+                                (x: 96,  y: 32, width: 32, height: 32, offsets: (0.0, -4.0)),
+                                (x: 128, y: 32, width: 32, height: 32, offsets: (0.0, -2.0)),
+                            ],
+                        )),
+                    ],
+                    // optional
+                    name: "bat",
+                ),
+            ),
+        ),
+        (
+            data: (
+                sprite_sheet: Sheet(
+                    texture: File("texture/logo_transparent.png", ("IMAGE", ())),
+                    sprites: [
+                        List((
+                            texture_width: 256,
+                            texture_height: 256,
+                            sprites: [(x: 0,   y: 0, width: 256, height: 256)],
+                        )),
+                    ],
+                    // optional
+                    name: "logo",
+                ),
+            ),
+        ),
+        (
+            data: (
+                sprite_sheet: Sheet(
+                    texture: File("texture/crate.png", ("IMAGE", ())),
+                    sprites: [
+                        List((
+                            texture_width: 32,
+                            texture_height: 32,
+                            sprites: [(x: 0,   y: 0, width: 32, height: 32)],
+                        )),
+                    ],
+                    // optional
+                    name: "crate",
+                ),
+            ),
+        ),
+        (
+            data: (
+                transform: (
+                    scale: (1.0, 1.0, 1.0),
+                    translation: (10.0, 0.0, 0.0),
+                ),
+                gltf: File("large/AlphaBlendModeTest.glb", ()),
+            ),
+        ),
+        (
+            data: (
+                transform: (
+                    translation: (10.0, 3.3, 8),
+                ),
+                light: (
+                    light: Spot((
+                        intensity: 5.0,
+                        color: (1.0, 1.0, 1.0),
+                        angle: 90.0,
+                        range: 32.0,
+                        smoothness: 0.1,
+                        direction: [0.0, -0.3, -1.0],
+                    )),
+                ),
+            ),
+        ),
+        (
+            data: (
+                transform: (
+                    translation: (-5.0, 0.0, 0.0),
+                    scale: (10.0, 10.0, 10.0),
+                ),
+                gltf: File("large/SciFiHelmet/SciFiHelmet.gltf", ()),
+            ),
+        ),
+        (
+            data: (
+                transform: (
+                    scale: (2.0, 2.0, 2.0),
+                    translation: (-10.0, 0.0, 0.0),
+                ),
+                gltf: File("large/crystal_stone/scene.gltf", ()),
+            ),
+        ),
+        (
+            data: (
+                transform: (
+                    translation: (0.0, 1.5, 0.0),
+                ),
+                gltf: File("large/NormalTangentMirrorTest.glb", ()),
+            ),
+        ),
+        (
+            data: (
+                transform: (
+                    translation: (0.0, -1.5, 0.0),
+                ),
+                gltf: File("large/NormalTangentTest.glb", ()),
+            ),
+        ),
+        (
+            data: (
+                transform: (
+                    scale: (0.3, 0.3, 0.3),
+                    translation: (5.0, -3.5, 0.0),
+                ),
+                tag: (),
+                gltf: File("large/InterpolationTest.glb", ()),
+            ),
+        ),        
+        (
+            data: (
+                // SpriteRenderPrefab
+                sprite: (
+                    sheet: "bat_color",
+                    sprite_number: 0,
+                ),
+                transform: (
+                    translation: (2.0, 2.0, 0.5),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                animation_set: (
+                    animations: [
+                        (
+                            // AnimationId
+                            Fly,
+                            (
+                                samplers: [
+                                    (
+                                        0,
+                                        SpriteIndex,
+                                        (
+                                            // Time of key frames
+                                            input: [0.0, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5],
+                                            // Sprite indexes from SpriteSheet for key frames
+                                            output: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+                                            // Sprites can only ever be animated with Step
+                                            function: Step,
+                                        ),
+                                    ),
+                                ],
+                            ),
+                        ),
+                    ],
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                // SpriteRenderPrefab
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 0,
+                ),
+                transform: (
+                    translation: (2.5, 2.5, 0.5),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                animation_set: (
+                    animations: [
+                        (
+                            // AnimationId
+                            Fly,
+                            (
+                                samplers: [
+                                    (
+                                        0,
+                                        SpriteIndex,
+                                        (
+                                            // Time of key frames
+                                            input: [0.0, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5],
+                                            // Sprite indexes from SpriteSheet for key frames
+                                            output: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+                                            // Sprites can only ever be animated with Step
+                                            function: Step,
+                                        ),
+                                    ),
+                                ],
+                            ),
+                        ),
+                    ],
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite_sheet: Sheet(
+                    texture: File("texture/grid.png", ("IMAGE", ())),
+                    sprites: [
+                        List((
+                            texture_width: 64,
+                            texture_height: 32,
+                            sprites: [(x: 0,   y: 0, width: 64, height: 32)],
+                        )),
+                    ],
+                    // optional
+                    name: "grid_title",
+                ),
+                sprite: (
+                    sheet: "grid_title",
+                    sprite_number: 0,
+                ),
+                transform: (
+                    translation: (1.0, 6.0, 0.9),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 0,
+                ),
+                transform: (
+                    translation: (1.5, 5.5, 1.0),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 1,
+                ),
+                transform: (
+                    translation: (1.5, 5.5, 1.25),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 2,
+                ),
+                transform: (
+                    translation: (1.5, 5.5, 1.5),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 3,
+                ),
+                transform: (
+                    translation: (1.5, 5.5, 1.75),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 4,
+                ),
+                transform: (
+                    translation: (1.5, 5.5, 2.0),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 5,
+                ),
+                transform: (
+                    translation: (1.5, 5.5, 2.25),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 6,
+                ),
+                transform: (
+                    translation: (1.5, 5.5, 2.5),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 7,
+                ),
+                transform: (
+                    translation: (1.5, 5.5, 2.75),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 8,
+                ),
+                transform: (
+                    translation: (1.5, 5.5, 3.0),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 9,
+                ),
+                transform: (
+                    translation: (1.5, 5.5, 3.25),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 10,
+                ),
+                transform: (
+                    translation: (1.5, 5.5, 3.5),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color",
+                    sprite_number: 11,
+                ),
+                transform: (
+                    translation: (1.5, 5.5, 3.75),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+
+        (
+            data: (
+                sprite_sheet: Sheet(
+                    texture: File("texture/list.png", ("IMAGE", ())),
+                    sprites: [
+                        List((
+                            texture_width: 64,
+                            texture_height: 32,
+                            sprites: [(x: 0,   y: 0, width: 64, height: 32)],
+                        )),
+                    ],
+                    // optional
+                    name: "list_title",
+                ),
+                sprite: (
+                    sheet: "list_title",
+                    sprite_number: 0,
+                ),
+                transform: (
+                    translation: (2.5, 6.0, 0.9),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+            ),
+        ),
+
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color_list",
+                    sprite_number: 0,
+                ),
+                transform: (
+                    translation: (2.5, 5.5, 1.0),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color_list",
+                    sprite_number: 1,
+                ),
+                transform: (
+                    translation: (2.5, 5.5, 1.25),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color_list",
+                    sprite_number: 2,
+                ),
+                transform: (
+                    translation: (2.5, 5.5, 1.5),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color_list",
+                    sprite_number: 3,
+                ),
+                transform: (
+                    translation: (2.5, 5.5, 1.75),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color_list",
+                    sprite_number: 4,
+                ),
+                transform: (
+                    translation: (2.5, 5.5, 2.0),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color_list",
+                    sprite_number: 5,
+                ),
+                transform: (
+                    translation: (2.5, 5.5, 2.25),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color_list",
+                    sprite_number: 6,
+                ),
+                transform: (
+                    translation: (2.5, 5.5, 2.5),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color_list",
+                    sprite_number: 7,
+                ),
+                transform: (
+                    translation: (2.5, 5.5, 2.75),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color_list",
+                    sprite_number: 8,
+                ),
+                transform: (
+                    translation: (2.5, 5.5, 3.0),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color_list",
+                    sprite_number: 9,
+                ),
+                transform: (
+                    translation: (2.5, 5.5, 3.25),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color_list",
+                    sprite_number: 10,
+                ),
+                transform: (
+                    translation: (2.5, 5.5, 3.5),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "arrow_color_list",
+                    sprite_number: 11,
+                ),
+                transform: (
+                    translation: (2.5, 5.5, 3.75),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "bat_color",
+                    sprite_number: 0,
+                ),
+                transform: (
+                    translation: (2.55, 0.05, 0.45),
+                    scale: (0.02, 0.02, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "logo",
+                    sprite_number: 0,
+                ),
+                transform: (
+                    translation: (2.5, 0.00, 0.4),
+                    scale: (0.005, 0.005, 1.0),
+                ),
+                transparent: (),
+            ),
+        ),
+        (
+            data: (
+                sprite: (
+                    sheet: "crate",
+                    sprite_number: 0,
+                ),
+                transform: (
+                    translation: (3.8, 0.00, 0.5),
+                    scale: (0.03, 0.03, 1.0),
+                ),
+            ),
+        ),
+        
+        (
+            data: (
+                transform: (
+                    translation: (3.0, 1.0, 0.0),
+                    scale: (0.5, 0.5, 0.5),
+                ),
+                mesh: Shape(( shape: Sphere(32, 32), )),
+                material: (
+                    albedo: Generate(SrgbaCorners(
+                        (
+                            (0.0, 0.0, 1.0, 0.5),
+                            (1.0, 0.0, 0.0, 1.0),
+                            (0.0, 1.0, 0.0, 0.5),
+                            (1.0, 1.0, 0.0, 1.0),
+                        ),
+                        Linear
+                    )),
+                ),
+            ),
+        ),
+        (
+            data: (
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 0),
+                transform: (translation: (0.0, -1.5, 2.0), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.4], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 2.1), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.41], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 2.2), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.42], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 2.3), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.43], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 2.4), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.44], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 2.5), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.45], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 2.6), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.46], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 2.7), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.47], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 2.8), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.48], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 2.9), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.49], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 3.0), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.5], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 3.1), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.51], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 3.2), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.52], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 3.3), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.53], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 3.4), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.54], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 3.5), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.55], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 3.6), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.56], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 3.7), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.57], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 3.8), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.58], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 3.9), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.59], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 4.0), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.6], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 4.1), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.61], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 4.2), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.62], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 4.3), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.63], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 4.4), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.64], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 4.5), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.65], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 4.6), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.66], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 4.7), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.67], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 4.8), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.68], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 4.9), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.69], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 5.0), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.7], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 5.1), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.71], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 5.2), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.72], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 5.3), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.73], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 5.4), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.74], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 5.5), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.75], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 5.6), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.76], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 5.7), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.77], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 5.8), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.78], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 5.9), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.79], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                transparent: (),
+                sprite: (sheet: "bat_color", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 6.0), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.8], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 6.1), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.81], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+        (
+            data: (
+                sprite: (sheet: "bat", sprite_number: 1),
+                transform: (translation: (0.0, -1.5, 6.2), scale: (0.02, 0.02, 1.0)),
+                animation_set: (animations: [(Fly, (samplers: [(0,SpriteIndex,(input: [0.0, 0.2, 0.82], output: [0, 1, 0], function: Step))]))])
+            ),
+        ),
+    ],
+)

@@ -1,0 +1,207 @@
+{
+   "accessors": [{
+         "bufferView": 0,
+         "byteOffset": 0,
+         "componentType": 5125,
+         "count": 70074,
+         "max": [
+            70073
+         ],
+         "min": [
+            0
+         ],
+         "type": "SCALAR"
+      },
+      {
+         "bufferView": 1,
+         "byteOffset": 0,
+         "componentType": 5126,
+         "count": 70074,
+         "max": [
+            1.1511525,
+            1.4587184,
+            1.2511277
+         ],
+         "min": [
+            -1.1511525,
+            -1.4587183,
+            -1.2511287
+         ],
+         "type": "VEC3"
+      },
+      {
+         "bufferView": 2,
+         "byteOffset": 0,
+         "componentType": 5126,
+         "count": 70074,
+         "max": [
+            0.99993396,
+            0.9998779,
+            0.9999757
+         ],
+         "min": [
+            -0.99993396,
+            -0.9999633,
+            -0.9999864
+         ],
+         "type": "VEC3"
+      },
+      {
+         "bufferView": 3,
+         "byteOffset": 0,
+         "componentType": 5126,
+         "count": 70074,
+         "max": [
+            0.9999959,
+            1.000000,
+            0.9999942,
+            1.000000
+         ],
+         "min": [
+            -0.99999845,
+            -0.99996936,
+            -0.9999994,
+            1.000000
+         ],
+         "type": "VEC4"
+      },
+      {
+         "bufferView": 4,
+         "byteOffset": 0,
+         "componentType": 5126,
+         "count": 70074,
+         "max": [
+            0.995369,
+            0.990894
+         ],
+         "min": [
+            0.003625,
+            0.0064439773
+         ],
+         "type": "VEC2"
+      }
+   ],
+   "asset": {
+      "generator": "VKTS glTF 2.0 exporter",
+      "version": "2.0"
+   },
+   "bufferViews": [{
+         "buffer": 0,
+         "byteLength": 280296,
+         "byteOffset": 0,
+         "target": 34963
+      },
+      {
+         "buffer": 0,
+         "byteLength": 840888,
+         "byteOffset": 280296,
+         "target": 34962
+      },
+      {
+         "buffer": 0,
+         "byteLength": 840888,
+         "byteOffset": 1121184,
+         "target": 34962
+      },
+      {
+         "buffer": 0,
+         "byteLength": 1121184,
+         "byteOffset": 1962072,
+         "target": 34962
+      },
+      {
+         "buffer": 0,
+         "byteLength": 560592,
+         "byteOffset": 3083256,
+         "target": 34962
+      }
+   ],
+   "buffers": [{
+      "byteLength": 3643848,
+      "uri": "SciFiHelmet.bin"
+   }],
+   "images": [{
+         "uri": "SciFiHelmet_BaseColor.png"
+      },
+      {
+         "uri": "SciFiHelmet_MetallicRoughness.png"
+      },
+      {
+         "uri": "SciFiHelmet_Normal.png"
+      },
+      {
+         "uri": "SciFiHelmet_AmbientOcclusion.png"
+      }
+   ],
+   "materials": [{
+      "name": "SciFiHelmet",
+      "normalTexture": {
+         "index": 2
+      },
+      "occlusionTexture": {
+         "index": 3
+      },
+      "pbrMetallicRoughness": {
+         "baseColorTexture": {
+            "index": 0
+         },
+         "metallicRoughnessTexture": {
+            "index": 1
+         }
+      }
+   }],
+   "meshes": [{
+      "name": "SciFiHelmet",
+      "primitives": [{
+         "attributes": {
+            "NORMAL": 2,
+            "POSITION": 1,
+            "TANGENT": 3,
+            "TEXCOORD_0": 4
+         },
+         "indices": 0,
+         "material": 0,
+         "mode": 4
+      }]
+   }],
+   "nodes": [
+      {
+         "mesh": 0,
+         "name": "SciFiHelmet",
+         "translation": [
+            0.0,
+            0.0,
+            0.0
+         ],
+         "scale": [
+            0.15,
+            0.15,
+            0.15
+         ]
+      }
+   ],
+   "samplers": [{}],
+   "scene": 0,
+   "scenes": [{
+      "nodes": [
+         0
+      ]
+   }],
+   "textures": [{
+         "sampler": 0,
+         "source": 0
+      },
+      {
+         "sampler": 0,
+         "source": 1
+      },
+      {
+         "sampler": 0,
+         "source": 2
+      },
+      {
+         "sampler": 0,
+         "source": 3
+      }
+   ]
+}

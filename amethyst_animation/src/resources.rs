@@ -6,7 +6,7 @@ use log::error;
 use minterpolate::{get_input_index, InterpolationFunction, InterpolationPrimitive};
 use serde::{Deserialize, Serialize};
 
-use amethyst_assets::{Asset, AssetStorage, Handle, PrefabData, ProcessingState};
+use amethyst_assets::{Asset, AssetStorage, Handle, PrefabData};
 use amethyst_core::{
     ecs::prelude::{Component, DenseVecStorage, Entity, VecStorage, WriteStorage},
     shred::SystemData,
@@ -100,15 +100,6 @@ where
     const NAME: &'static str = "animation::Sampler";
     type Data = Self;
     type HandleStorage = VecStorage<Handle<Self>>;
-}
-
-impl<T> Into<Result<ProcessingState<Sampler<T>>, Error>> for Sampler<T>
-where
-    T: InterpolationPrimitive + Send + Sync + 'static,
-{
-    fn into(self) -> Result<ProcessingState<Sampler<T>>, Error> {
-        Ok(ProcessingState::Loaded(self))
-    }
 }
 
 /// Define the rest state for a component on an entity
@@ -286,15 +277,6 @@ where
     const NAME: &'static str = "animation::Animation";
     type Data = Self;
     type HandleStorage = VecStorage<Handle<Self>>;
-}
-
-impl<T> Into<Result<ProcessingState<Animation<T>>, Error>> for Animation<T>
-where
-    T: AnimationSampling,
-{
-    fn into(self) -> Result<ProcessingState<Animation<T>>, Error> {
-        Ok(ProcessingState::Loaded(self))
-    }
 }
 
 /// State of animation

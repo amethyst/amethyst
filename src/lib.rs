@@ -13,7 +13,7 @@
 //!
 //! ```rust,no_run
 //! use amethyst::prelude::*;
-//! use amethyst::renderer::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
+//! use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 //!
 //! struct GameState;
 //!
@@ -72,9 +72,10 @@ pub use amethyst_input as input;
 pub use amethyst_locale as locale;
 #[cfg(feature = "network")]
 pub use amethyst_network as network;
-pub use amethyst_renderer as renderer;
+pub use amethyst_rendy as renderer;
 pub use amethyst_ui as ui;
 pub use amethyst_utils as utils;
+pub use amethyst_window as window;
 pub use winit;
 
 pub use crate::core::{ecs, shred, shrev};
@@ -85,7 +86,7 @@ pub use self::{
     app::{Application, ApplicationBuilder, CoreApplication},
     callback_queue::{Callback, CallbackQueue},
     error::Error,
-    game_data::{DataInit, GameData, GameDataBuilder},
+    game_data::{DataDispose, DataInit, GameData, GameDataBuilder},
     logger::{start_logger, LevelFilter as LogLevelFilter, Logger, LoggerConfig, StdoutLog},
     state::{
         EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, StateMachine, Trans,

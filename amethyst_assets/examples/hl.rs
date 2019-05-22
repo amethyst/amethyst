@@ -5,7 +5,7 @@
 use std::sync::Arc;
 
 use rayon::{ThreadPool, ThreadPoolBuilder};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use amethyst_assets::*;
 use amethyst_core::{
@@ -82,15 +82,15 @@ impl Asset for MeshAsset {
 }
 
 /// A format the mesh data could be stored with.
-#[derive(Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct Ron;
 
-impl SimpleFormat<MeshAsset> for Ron {
-    const NAME: &'static str = "RON";
+impl Format<VertexData> for Ron {
+    fn name(&self) -> &'static str {
+        "RON"
+    }
 
-    type Options = ();
-
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<VertexData, Error> {
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<VertexData, Error> {
         use ron::de::from_str;
         use std::str::from_utf8;
 
@@ -143,7 +143,8 @@ impl State {
                 let (mesh, progress) = {
                     let mut progress = ProgressCounter::new();
                     let loader = world.read_resource::<Loader>();
-                    let a = loader.load("mesh.ron", Ron, (), &mut progress, &world.read_resource());
+                    let a: MeshHandle =
+                        loader.load("mesh.ron", Ron, &mut progress, &world.read_resource());
 
                     (a, progress)
                 };

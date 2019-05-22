@@ -1,14 +1,15 @@
-use std::{hash::Hash, marker::PhantomData};
+use std::marker::PhantomData;
 
 use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder, math::one, Float};
 use amethyst_error::Error;
+use amethyst_input::BindingTypes;
 
 use super::*;
 
 /// The bundle that creates a flying movement system.
 ///
 /// Note: Will not actually create a moving entity. It will only register the needed resources and
-/// systems. The generic parameters `A` and `B` are the ones used in `InputHandler<A,B>`.
+/// systems.
 ///
 /// You might want to add `"fly_movement"` and `"free_rotation"` as dependencies of the
 /// `TransformSystem` in order to apply changes made by these systems in the same frame.
@@ -16,8 +17,7 @@ use super::*;
 ///
 /// # Type parameters
 ///
-/// * `A`: This is the key the `InputHandler` is using for axes. Often, this is a `String`.
-/// * `B`: This is the key the `InputHandler` is using for actions. Often, this is a `String`.
+/// * `T`: This are the keys the `InputHandler` is using for axes and actions. Often, this is a `StringBindings`.
 ///
 /// # Systems
 ///
@@ -27,22 +27,21 @@ use super::*;
 /// * `FreeRotationSystem`
 /// * `MouseFocusUpdateSystem`
 /// * `CursorHideSystem`
-pub struct FlyControlBundle<A, B> {
+pub struct FlyControlBundle<T: BindingTypes> {
     sensitivity_x: f32,
     sensitivity_y: f32,
     speed: Float,
-    right_input_axis: Option<A>,
-    up_input_axis: Option<A>,
-    forward_input_axis: Option<A>,
-    _marker: PhantomData<B>,
+    right_input_axis: Option<T::Axis>,
+    up_input_axis: Option<T::Axis>,
+    forward_input_axis: Option<T::Axis>,
 }
 
-impl<A, B> FlyControlBundle<A, B> {
+impl<T: BindingTypes> FlyControlBundle<T> {
     /// Builds a new fly control bundle using the provided axes as controls.
     pub fn new(
-        right_input_axis: Option<A>,
-        up_input_axis: Option<A>,
-        forward_input_axis: Option<A>,
+        right_input_axis: Option<T::Axis>,
+        up_input_axis: Option<T::Axis>,
+        forward_input_axis: Option<T::Axis>,
     ) -> Self {
         FlyControlBundle {
             sensitivity_x: 1.0,
@@ -51,7 +50,6 @@ impl<A, B> FlyControlBundle<A, B> {
             right_input_axis,
             up_input_axis,
             forward_input_axis,
-            _marker: PhantomData,
         }
     }
 
@@ -69,14 +67,10 @@ impl<A, B> FlyControlBundle<A, B> {
     }
 }
 
-impl<'a, 'b, A, B> SystemBundle<'a, 'b> for FlyControlBundle<A, B>
-where
-    A: Send + Sync + Hash + Eq + Clone + 'static,
-    B: Send + Sync + Hash + Eq + Clone + 'static,
-{
+impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for FlyControlBundle<T> {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
-            FlyMovementSystem::<A, B>::new(
+            FlyMovementSystem::<T>::new(
                 self.speed,
                 self.right_input_axis,
                 self.up_input_axis,
@@ -86,7 +80,7 @@ where
             &[],
         );
         builder.add(
-            FreeRotationSystem::<A, B>::new(self.sensitivity_x, self.sensitivity_y),
+            FreeRotationSystem::new(self.sensitivity_x, self.sensitivity_y),
             "free_rotation",
             &[],
         );
@@ -107,13 +101,13 @@ where
 /// Adding this bundle will grab the mouse, hide it and keep it centered.
 ///
 /// See the `arc_ball_camera` example to see how to use the arc ball camera.
-pub struct ArcBallControlBundle<A, B> {
+pub struct ArcBallControlBundle<T: BindingTypes> {
     sensitivity_x: f32,
     sensitivity_y: f32,
-    _marker: PhantomData<(A, B)>,
+    _marker: PhantomData<T>,
 }
 
-impl<A, B> ArcBallControlBundle<A, B> {
+impl<T: BindingTypes> ArcBallControlBundle<T> {
     /// Builds a new `ArcBallControlBundle` with a default sensitivity of 1.0
     pub fn new() -> Self {
         ArcBallControlBundle {
@@ -131,15 +125,11 @@ impl<A, B> ArcBallControlBundle<A, B> {
     }
 }
 
-impl<'a, 'b, A, B> SystemBundle<'a, 'b> for ArcBallControlBundle<A, B>
-where
-    A: Send + Sync + Hash + Eq + Clone + 'static,
-    B: Send + Sync + Hash + Eq + Clone + 'static,
-{
+impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for ArcBallControlBundle<T> {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(ArcBallRotationSystem::default(), "arc_ball_rotation", &[]);
         builder.add(
-            FreeRotationSystem::<A, B>::new(self.sensitivity_x, self.sensitivity_y),
+            FreeRotationSystem::new(self.sensitivity_x, self.sensitivity_y),
             "free_rotation",
             &[],
         );

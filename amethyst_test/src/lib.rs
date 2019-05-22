@@ -87,7 +87,7 @@
 //!     AmethystApplication::ui_base::<String, String>();
 //!
 //!     // Start with the Animation, Transform, and Render bundles.
-//!     // If you want the Input and UI bundles, you can use the `.with_ui_bundles::<AX, AC>()`
+//!     // If you want the Input and UI bundles, you can use the `.with_ui_bundles::<T>()`
 //!     // method.
 //!     let visibility = false; // Whether the window should be shown
 //!     AmethystApplication::render_base("test_name", visibility);

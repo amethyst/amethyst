@@ -1,22 +1,42 @@
 use amethyst::{
     core::{ArcThreadPool, SystemBundle},
-    ecs::prelude::{Dispatcher, DispatcherBuilder, System, World},
+    ecs::prelude::{Dispatcher, DispatcherBuilder, RunNow, System, World},
     error::Error,
-    DataInit,
+    DataDispose, DataInit,
 };
 
 pub struct CustomGameData<'a, 'b> {
-    pub base: Dispatcher<'a, 'b>,
-    pub running: Dispatcher<'a, 'b>,
+    pub base: Option<Dispatcher<'a, 'b>>,
+    pub running: Option<Dispatcher<'a, 'b>>,
 }
 
 impl<'a, 'b> CustomGameData<'a, 'b> {
     /// Update game data
     pub fn update(&mut self, world: &World, running: bool) {
         if running {
-            self.running.dispatch(&world.res);
+            if let Some(running) = &mut self.running {
+                running.dispatch(&world.res);
+            }
         }
-        self.base.dispatch(&world.res);
+        if let Some(base) = &mut self.base {
+            base.dispatch(&world.res);
+        }
+    }
+
+    /// Dispose game data, dropping the dispatcher
+    pub fn dispose(&mut self, world: &mut World) {
+        if let Some(base) = self.base.take() {
+            base.dispose(&mut world.res);
+        }
+        if let Some(running) = self.running.take() {
+            running.dispose(&mut world.res);
+        }
+    }
+}
+
+impl DataDispose for CustomGameData<'_, '_> {
+    fn dispose(&mut self, world: &mut World) {
+        self.dispose(world);
     }
 }
 
@@ -54,6 +74,13 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
         bundle.build(&mut self.base)?;
         Ok(self)
     }
+    pub fn with_thread_local<S>(mut self, system: S) -> Self
+    where
+        for<'c> S: RunNow<'c> + 'b,
+    {
+        self.base.add_thread_local(system);
+        self
+    }
 
     pub fn with_running<S>(mut self, system: S, name: &str, dependencies: &[&str]) -> Self
     where
@@ -81,6 +108,9 @@ impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> 
         let mut running = self.running.build();
         running.setup(&mut world.res);
 
-        CustomGameData { base, running }
+        CustomGameData {
+            base: Some(base),
+            running: Some(running),
+        }
     }
 }

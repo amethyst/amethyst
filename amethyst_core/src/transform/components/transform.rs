@@ -2,10 +2,11 @@
 use std::fmt;
 
 use crate::{
+    alga::general::SubsetOf,
     ecs::prelude::{Component, DenseVecStorage, FlaggedStorage},
     float::Float,
     math::{
-        self as na, ComplexField, Isometry3, Matrix4, Quaternion, Translation3, Unit,
+        self as na, ComplexField, Isometry3, Matrix4, Quaternion, RealField, Translation3, Unit,
         UnitQuaternion, Vector3,
     },
     num::{One, Zero},
@@ -29,7 +30,6 @@ pub struct Transform {
     isometry: Isometry3<Float>,
     /// Scale vector
     #[get = "pub"]
-    #[set = "pub"]
     #[get_mut = "pub"]
     scale: Vector3<Float>,
     /// The global transformation matrix.
@@ -45,24 +45,29 @@ impl Transform {
     /// ```rust
     /// # use amethyst_core::transform::Transform;
     /// # use amethyst_core::math::{Isometry3, Translation3, UnitQuaternion, Vector3};
-    /// let position = Translation3::new(0.0.into(), 2.0.into(), 4.0.into());
-    /// let rotation = UnitQuaternion::from_euler_angles(0.4.into(), 0.2.into(), 0.0.into());
-    /// let scale = Vector3::new(1.0.into(), 1.0.into(), 1.0.into());
+    /// let position = Translation3::new(0.0, 2.0, 4.0);
+    /// let rotation = UnitQuaternion::from_euler_angles(0.4, 0.2, 0.0);
+    /// let scale = Vector3::new(1.0, 1.0, 1.0);
     ///
     /// let t = Transform::new(position, rotation, scale);
     ///
     /// assert_eq!(t.translation().y, 2.0.into());
     /// ```
-    pub fn new(
-        position: Translation3<Float>,
-        rotation: UnitQuaternion<Float>,
-        scale: Vector3<Float>,
+    pub fn new<N: RealField + SubsetOf<Float>>(
+        position: Translation3<N>,
+        rotation: UnitQuaternion<N>,
+        scale: Vector3<N>,
     ) -> Self {
         Transform {
-            isometry: Isometry3::from_parts(position, rotation),
-            scale,
+            isometry: Isometry3::from_parts(na::convert(position), na::convert(rotation)),
+            scale: na::convert(scale),
             global_matrix: na::one(),
         }
+    }
+
+    /// Set the scaling factor of this transform.
+    pub fn set_scale<N: RealField + SubsetOf<Float>>(&mut self, scale: Vector3<N>) {
+        self.scale = na::convert(scale);
     }
 
     /// Makes the entity point towards `target`.
@@ -84,8 +89,8 @@ impl Transform {
     /// assert_eq!(*t.rotation().quaternion(), Quaternion::identity());
     /// // look up with up pointing backwards
     /// t.face_towards(
-    ///     Vector3::new(0.0.into(), 1.0.into(), 0.0.into()),
-    ///     Vector3::new(0.0.into(), 0.0.into(), 1.0.into()),
+    ///     Vector3::new(0.0, 1.0, 0.0),
+    ///     Vector3::new(0.0, 0.0, 1.0),
     /// );
     /// // our rotation should match the angle from straight ahead to straight up
     /// let rotation = UnitQuaternion::rotation_between(
@@ -99,16 +104,19 @@ impl Transform {
     /// assert!((*t.translation() - Vector3::new(0.0.into(), 1.0.into(), 0.0.into())).magnitude() <= 0.0001.into());
     /// ```
     #[inline]
-    pub fn face_towards(&mut self, target: Vector3<Float>, up: Vector3<Float>) -> &mut Self {
-        self.isometry.rotation =
-            UnitQuaternion::face_towards(&(self.isometry.translation.vector - target), &up);
+    pub fn face_towards<N: RealField + SubsetOf<Float>>(
+        &mut self,
+        target: Vector3<N>,
+        up: Vector3<N>,
+    ) -> &mut Self {
+        self.isometry.rotation = UnitQuaternion::face_towards(
+            &(self.isometry.translation.vector - na::convert::<_, Vector3<Float>>(target)),
+            &na::convert::<_, Vector3<Float>>(up),
+        );
         self
     }
 
     /// Returns the local object matrix for the transform.
-    ///
-    /// Combined with the parent's `GlobalTransform` component it gives
-    /// the global (or world) matrix for the current entity.
     #[inline]
     pub fn matrix(&self) -> Matrix4<Float> {
         self.isometry
@@ -414,8 +422,11 @@ impl Transform {
     }
 
     /// Set the position.
-    pub fn set_translation(&mut self, position: Vector3<Float>) -> &mut Self {
-        self.isometry.translation.vector = position;
+    pub fn set_translation<N: RealField + SubsetOf<Float>>(
+        &mut self,
+        position: Vector3<N>,
+    ) -> &mut Self {
+        self.isometry.translation.vector = na::convert(position);
         self
     }
 
@@ -441,8 +452,11 @@ impl Transform {
     }
 
     /// Sets the rotation of the transform.
-    pub fn set_rotation(&mut self, rotation: UnitQuaternion<Float>) -> &mut Self {
-        self.isometry.rotation = rotation;
+    pub fn set_rotation<N: RealField + SubsetOf<Float>>(
+        &mut self,
+        rotation: UnitQuaternion<N>,
+    ) -> &mut Self {
+        self.isometry.rotation = na::convert(rotation);
         self
     }
 
@@ -574,7 +588,7 @@ impl Component for Transform {
 impl From<Vector3<Float>> for Transform {
     fn from(translation: Vector3<Float>) -> Self {
         Transform {
-            isometry: Isometry3::new(translation, na::zero()),
+            isometry: Isometry3::new(translation.into(), na::zero()),
             ..Default::default()
         }
     }
@@ -684,7 +698,7 @@ impl<'de> Deserialize<'de> for Transform {
                 }
                 let translation: [Float; 3] = translation.unwrap_or([Float::zero(); 3]);
                 let rotation: [Float; 4] =
-                    rotation.unwrap_or([Float::one(), Float::zero(), Float::zero(), Float::zero()]);
+                    rotation.unwrap_or([Float::zero(), Float::zero(), Float::zero(), Float::one()]);
                 let scale: [Float; 3] = scale.unwrap_or([Float::one(); 3]);
 
                 let isometry = Isometry3::from_parts(
@@ -752,22 +766,22 @@ mod tests {
         // For the condition to hold both scales must be uniform
         let mut first = Transform::default();
         first.set_translation_xyz(20., 10., -3.);
-        first.set_scale(Vector3::new(2.0.into(), 2.0.into(), 2.0.into()));
+        first.set_scale(Vector3::new(2.0, 2.0, 2.0));
         first.set_rotation(
             UnitQuaternion::rotation_between(
-                &Vector3::new((-1.0).into(), 1.0.into(), 2.0.into()),
-                &Vector3::new(1.0.into(), 0.0.into(), 0.0.into()),
+                &Vector3::new(-1.0, 1.0, 2.0),
+                &Vector3::new(1.0, 0.0, 0.0),
             )
             .unwrap(),
         );
 
         let mut second = Transform::default();
         second.set_translation_xyz(2., 1., -3.);
-        second.set_scale(Vector3::new(1.0.into(), 1.0.into(), 1.0.into()));
+        second.set_scale(Vector3::new(1.0, 1.0, 1.0));
         second.set_rotation(
             UnitQuaternion::rotation_between(
-                &Vector3::new(7.0.into(), (-1.0).into(), 3.0.into()),
-                &Vector3::new(2.0.into(), 1.0.into(), 1.0.into()),
+                &Vector3::new(7.0, -1.0, 3.0),
+                &Vector3::new(2.0, 1.0, 1.0),
             )
             .unwrap(),
         );
@@ -789,11 +803,11 @@ mod tests {
     fn test_view_matrix() {
         let mut transform = Transform::default();
         transform.set_translation_xyz(5.0, 70.1, 43.7);
-        transform.set_scale(Vector3::new(1.0.into(), 5.0.into(), 8.9.into()));
+        transform.set_scale(Vector3::new(1.0, 5.0, 8.9));
         transform.set_rotation(
             UnitQuaternion::rotation_between(
-                &Vector3::new((-1.0).into(), 1.0.into(), 2.0.into()),
-                &Vector3::new(1.0.into(), 0.0.into(), 0.0.into()),
+                &Vector3::new(-1.0, 1.0, 2.0),
+                &Vector3::new(1.0, 0.0, 0.0),
             )
             .unwrap(),
         );
@@ -808,11 +822,11 @@ mod tests {
     fn ser_deser() {
         let mut transform = Transform::default();
         transform.set_translation_xyz(1.0, 2.0, 3.0);
-        transform.set_scale(Vector3::new(4.0.into(), 5.0.into(), 6.0.into()));
+        transform.set_scale(Vector3::new(4.0, 5.0, 6.0));
         transform.set_rotation(
             UnitQuaternion::rotation_between(
-                &Vector3::new((-1.0).into(), 1.0.into(), 2.0.into()),
-                &Vector3::new(1.0.into(), 0.0.into(), 0.0.into()),
+                &Vector3::new(-1.0, 1.0, 2.0),
+                &Vector3::new(1.0, 0.0, 0.0),
             )
             .unwrap(),
         );
@@ -821,6 +835,12 @@ mod tests {
         let transform2: Transform = ron::de::from_str(&s).unwrap();
 
         assert_eq!(transform, transform2);
+    }
+
+    #[test]
+    fn deser_seq_default_identity() {
+        let transform: Transform = ron::de::from_str("()").unwrap();
+        assert_eq!(transform, Transform::default());
     }
 
     #[test]

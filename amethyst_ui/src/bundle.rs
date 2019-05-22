@@ -1,51 +1,42 @@
 //! ECS rendering bundle
 
-use std::{hash::Hash, marker::PhantomData};
-
-use derive_new::new;
-
+use crate::{
+    BlinkSystem, CacheSelectionOrderSystem, FontAsset, NoCustomUi, ResizeSystem,
+    SelectionKeyboardSystem, SelectionMouseSystem, TextEditingInputSystem, TextEditingMouseSystem,
+    ToNativeWidget, UiButtonActionRetriggerSystem, UiButtonSystem, UiGlyphsSystem, UiLoaderSystem,
+    UiMouseSystem, UiSoundRetriggerSystem, UiSoundSystem, UiTransformSystem, WidgetId,
+};
 use amethyst_assets::Processor;
-use amethyst_audio::AudioFormat;
 use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder};
 use amethyst_error::Error;
-use amethyst_renderer::{BlinkSystem, TextureFormat};
-
-use crate::{
-    CacheSelectionOrderSystem, FontAsset, FontFormat, NoCustomUi, ResizeSystem,
-    SelectionKeyboardSystem, SelectionMouseSystem, TextEditingInputSystem, TextEditingMouseSystem,
-    ToNativeWidget, UiButtonActionRetriggerSystem, UiButtonSystem, UiLoaderSystem, UiMouseSystem,
-    UiSoundRetriggerSystem, UiSoundSystem, UiTransformSystem, WidgetId,
-};
+use amethyst_input::BindingTypes;
+use amethyst_rendy::Backend;
+use derive_new::new;
+use std::marker::PhantomData;
 
 /// UI bundle
 ///
 /// Will register all necessary components and systems needed for UI, along with any resources.
-/// The generic types A and B represent the A and B generic parameter of the InputHandler<A,B>.
+/// The generic type T represent the T generic parameter of the InputHandler<T>.
 ///
 /// Will fail with error 'No resource with the given id' if the InputBundle is not added.
 #[derive(new)]
-pub struct UiBundle<A = String, B = String, C = NoCustomUi, W = u32, G = ()> {
+pub struct UiBundle<B: Backend, T: BindingTypes, C = NoCustomUi, W = u32, G = ()> {
     #[new(default)]
-    _marker: PhantomData<(A, B, C, W, G)>,
+    _marker: PhantomData<(B, T, C, W, G)>,
 }
 
-impl<'a, 'b, A, B, C, W, G> SystemBundle<'a, 'b> for UiBundle<A, B, C, W, G>
+impl<'a, 'b, B, T, C, W, G> SystemBundle<'a, 'b> for UiBundle<B, T, C, W, G>
 where
-    A: Send + Sync + Eq + Hash + Clone + 'static,
-    B: Send + Sync + Eq + Hash + Clone + 'static,
+    B: Backend,
+    T: BindingTypes,
     C: ToNativeWidget,
     W: WidgetId,
     G: Send + Sync + PartialEq + 'static,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
-            UiLoaderSystem::<
-                AudioFormat,
-                TextureFormat,
-                FontFormat,
-                <C as ToNativeWidget>::PrefabData,
-                W,
-            >::default(),
+            UiLoaderSystem::<<C as ToNativeWidget>::PrefabData, W>::default(),
             "ui_loader",
             &[],
         );
@@ -65,7 +56,7 @@ where
             &[],
         );
         builder.add(
-            SelectionMouseSystem::<G, A, B>::new(),
+            SelectionMouseSystem::<G, T>::new(),
             "ui_mouse_selection",
             &[],
         );
@@ -88,7 +79,7 @@ where
         );
         builder.add(ResizeSystem::new(), "ui_resize_system", &[]);
         builder.add(
-            UiMouseSystem::<A, B>::new(),
+            UiMouseSystem::<T>::new(),
             "ui_mouse_system",
             &["ui_transform"],
         );
@@ -112,6 +103,17 @@ where
 
         // Required for text editing. You want the cursor image to blink.
         builder.add(BlinkSystem, "blink_system", &[]);
+        builder.add(
+            UiGlyphsSystem::<B>::new(),
+            "ui_glyphs_system",
+            &[
+                "ui_loader",
+                "ui_transform",
+                "font_processor",
+                "ui_text_editing_mouse_system",
+                "ui_text_editing_input_system",
+            ],
+        );
 
         Ok(())
     }

@@ -1,4 +1,4 @@
-use std::{fmt, hash::Hash, marker::PhantomData, path::PathBuf};
+use std::{fmt, marker::PhantomData, path::PathBuf};
 
 use sdl2::{
     self,
@@ -14,7 +14,7 @@ use amethyst_core::{
 
 use super::{
     controller::{ControllerAxis, ControllerButton, ControllerEvent},
-    InputEvent, InputHandler,
+    BindingTypes, InputEvent, InputHandler,
 };
 
 /// A collection of errors that can occur in the SDL system.
@@ -51,30 +51,22 @@ pub enum ControllerMappings {
 }
 
 /// A system that pumps SDL events into the `amethyst_input` APIs.
-pub struct SdlEventsSystem<AX, AC>
-where
-    AX: Hash + Eq,
-    AC: Hash + Eq,
-{
+pub struct SdlEventsSystem<T: BindingTypes> {
     #[allow(dead_code)]
     sdl_context: Sdl,
     event_pump: Option<EventPump>,
     controller_subsystem: GameControllerSubsystem,
     /// Vector of opened controllers and their corresponding joystick indices
     opened_controllers: Vec<(u32, GameController)>,
-    marker: PhantomData<(AX, AC)>,
+    marker: PhantomData<T>,
 }
 
-type SdlEventsData<'a, AX, AC> = (
-    Write<'a, InputHandler<AX, AC>>,
-    Write<'a, EventChannel<InputEvent<AC>>>,
+type SdlEventsData<'a, T> = (
+    Write<'a, InputHandler<T>>,
+    Write<'a, EventChannel<InputEvent<<T as BindingTypes>::Action>>>,
 );
 
-impl<'a, AX, AC> RunNow<'a> for SdlEventsSystem<AX, AC>
-where
-    AX: Hash + Eq + Clone + Send + Sync + 'static,
-    AC: Hash + Eq + Clone + Send + Sync + 'static,
-{
+impl<'a, T: BindingTypes> RunNow<'a> for SdlEventsSystem<T> {
     fn run_now(&mut self, res: &'a Resources) {
         let (mut handler, mut output) = SdlEventsData::fetch(res);
 
@@ -95,11 +87,7 @@ where
     }
 }
 
-impl<AX, AC> SdlEventsSystem<AX, AC>
-where
-    AX: Hash + Eq + Clone + Send + Sync + 'static,
-    AC: Hash + Eq + Clone + Send + Sync + 'static,
-{
+impl<T: BindingTypes> SdlEventsSystem<T> {
     /// Creates a new instance of this system with the provided controller mappings.
     pub fn new(mappings: Option<ControllerMappings>) -> Result<Self, SdlSystemError> {
         let sdl_context = sdl2::init().map_err(|e| SdlSystemError::ContextInit(e))?;
@@ -136,8 +124,8 @@ where
     fn handle_sdl_event(
         &mut self,
         event: &Event,
-        handler: &mut InputHandler<AX, AC>,
-        output: &mut EventChannel<InputEvent<AC>>,
+        handler: &mut InputHandler<T>,
+        output: &mut EventChannel<InputEvent<T::Action>>,
     ) {
         use self::ControllerEvent::*;
 
@@ -218,8 +206,8 @@ where
 
     fn initialize_controllers(
         &mut self,
-        handler: &mut InputHandler<AX, AC>,
-        output: &mut EventChannel<InputEvent<AC>>,
+        handler: &mut InputHandler<T>,
+        output: &mut EventChannel<InputEvent<T::Action>>,
     ) {
         use crate::controller::ControllerEvent::ControllerConnected;
 

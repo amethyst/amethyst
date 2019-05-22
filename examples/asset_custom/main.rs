@@ -1,7 +1,7 @@
 use amethyst::{
     assets::{
-        Asset, AssetStorage, Handle, Loader, ProcessingState, Processor, ProgressCounter,
-        SimpleFormat, Source,
+        Asset, AssetStorage, Format, Handle, Loader, ProcessingState, Processor, ProgressCounter,
+        Source,
     },
     ecs::VecStorage,
     error::{format_err, Error, ResultExt},
@@ -47,21 +47,18 @@ pub struct LoadingState {
 #[derive(Clone, Copy, Debug, Default)]
 pub struct MyLangFormat;
 
-impl<A> SimpleFormat<A> for MyLangFormat
+impl<D> Format<D> for MyLangFormat
 where
-    A: Asset,
-    A::Data: for<'a> Deserialize<'a> + Send + Sync + 'static,
+    D: for<'a> Deserialize<'a> + Send + Sync + 'static,
 {
-    const NAME: &'static str = "MyLang";
+    fn name(&self) -> &'static str {
+        "MyLang"
+    }
 
-    // If the deserializer implementation takes parameters,
-    // the parameter type may be specified here.
-    type Options = ();
-
-    fn import(&self, bytes: Vec<u8>, _: ()) -> Result<A::Data, Error> {
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<D, Error> {
         let mut deserializer = Deserializer::from_bytes(&bytes)
             .with_context(|_| format_err!("Failed deserializing MyLang file"))?;
-        let val = A::Data::deserialize(&mut deserializer)
+        let val = D::deserialize(&mut deserializer)
             .with_context(|_| format_err!("Failed parsing MyLang file"))?;
         deserializer
             .end()
@@ -98,7 +95,6 @@ impl SimpleState for LoadingState {
         let energy_blast_handle = loader.load_from(
             "energy_blast.mylang",
             self::MyLangFormat,
-            (),
             "code_source",
             &mut self.progress_counter,
             &data.world.read_resource::<AssetStorage<EnergyBlast>>(),

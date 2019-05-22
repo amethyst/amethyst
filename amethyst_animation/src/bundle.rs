@@ -1,5 +1,3 @@
-use std::{hash::Hash, marker};
-
 use crate::{
     resources::AnimationSampling,
     skinning::VertexSkinningSystem,
@@ -7,12 +5,12 @@ use crate::{
         AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem, SamplerProcessor,
     },
 };
-use amethyst_error::Error;
-
 use amethyst_core::{
     ecs::prelude::{Component, DispatcherBuilder},
     SystemBundle,
 };
+use amethyst_error::Error;
+use std::{hash::Hash, marker};
 
 /// Bundle for vertex skinning
 ///

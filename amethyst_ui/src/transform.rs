@@ -73,7 +73,7 @@ pub struct UiTransform {
     /// the next element (for example, the text on a button).
     pub opaque: bool,
     /// A private field to keep this from being initialized without new.
-    pd: PhantomData<u8>,
+    pd: PhantomData<()>,
 }
 
 impl UiTransform {

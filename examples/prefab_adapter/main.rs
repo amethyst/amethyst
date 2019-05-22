@@ -79,7 +79,6 @@ impl SimpleState for CustomPrefabState {
             loader.load(
                 "prefab/prefab_adapter.ron",
                 RonFormat,
-                (),
                 &mut self.progress_counter,
             )
         });
