@@ -207,7 +207,7 @@ There are a few special blanket implementations provided by the asset system:
 Amethyst supplies a derive macro for creating the `PrefabData` implementation for the following scenarios:
 
 * Single `Component`
-* Aggregate `PrefabData` structs which contain other `PrefabData` constructs, and optionally simple data `Component`s
+* Aggregate `PrefabData` structs or enums which contain other `PrefabData` constructs, and optionally simple data `Component`s
 
 In addition, deriving a `Prefab` requires that `amethyst::Error`, `amethyst::ecs::Entity` and
  `amethyst:assets::{PrefabData, ProgressCounter}` are imported
