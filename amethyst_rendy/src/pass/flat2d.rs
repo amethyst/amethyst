@@ -434,7 +434,7 @@ fn build_sprite_pipeline<B: Backend>(
                 .with_blend_targets(vec![pso::ColorBlendDesc(
                     pso::ColorMask::ALL,
                     if transparent {
-                        pso::BlendState::ALPHA
+                        pso::BlendState::PREMULTIPLIED_ALPHA
                     } else {
                         pso::BlendState::Off
                     },

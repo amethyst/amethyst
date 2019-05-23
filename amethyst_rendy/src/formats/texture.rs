@@ -45,6 +45,7 @@ impl Default for ImageFormat {
                 anisotropic: Anisotropic::Off,
             },
             generate_mips: false,
+            premultiply_alpha: true,
         })
     }
 }
