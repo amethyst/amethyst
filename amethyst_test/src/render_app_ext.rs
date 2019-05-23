@@ -9,7 +9,6 @@ use amethyst::{
         rendy::{
             factory::Factory,
             graph::{
-                present::PresentNode,
                 render::{RenderGroupDesc, SubpassBuilder},
                 GraphBuilder,
             },
@@ -132,24 +131,19 @@ impl GraphCreator<DefaultBackend> for RenderGraph {
             Some(ClearValue::DepthStencil(ClearDepthStencil(1., 0))),
         );
 
-        let sprite = graph_builder.add_node(
+        let _sprite = graph_builder.add_node(
             SubpassBuilder::new()
                 .with_group(DrawFlat2DDesc::new().builder())
                 .with_color(colour)
                 .with_depth_stencil(depth)
                 .into_pass(),
         );
-        let sprite_trans = graph_builder.add_node(
+        let _sprite_trans = graph_builder.add_node(
             SubpassBuilder::new()
                 .with_group(DrawFlat2DTransparentDesc::new().builder())
                 .with_color(colour)
                 .with_depth_stencil(depth)
                 .into_pass(),
-        );
-        let _present = graph_builder.add_node(
-            PresentNode::builder(factory, surface, colour)
-                .with_dependency(sprite_trans)
-                .with_dependency(sprite),
         );
 
         graph_builder
