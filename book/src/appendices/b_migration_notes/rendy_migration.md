@@ -52,13 +52,13 @@
 
 ## Window
 
-* `DisplayConfig`'s `fullscreen` field is now an `Option<MonitorIdent>`. `MonitorIdent` is `MonitorIdent(u16, String)`. What's that? Good question.
+* `DisplayConfig`'s `fullscreen` field is now an `Option<MonitorIdent>`. `MonitorIdent` is `MonitorIdent(u16, String)`, indicating the native monitor display ID, and its [name](https://docs.rs/winit/0.19.1/winit/struct.MonitorId.html#method.get_name).
 * `WindowBundle` is now separate from `amethyst_renderer`.
 
     ```rust
     use amethyst::window::WindowBundle;
 
-    game_data.with_bundle(WindowBundle::from_config_file(display_config_path))?
+    game_data.with_bundle(WindowBundle::from_config_file(display_config_path))?;
     ```
 
 ## Renderer
@@ -66,8 +66,9 @@
 * `amethyst::renderer::VirtualKeyCode` is now `amethyst::input::VirtualKeyCode`
 * `amethyst::renderer::DisplayConfig` is now `amethyst::window::DisplayConfig`
 * `amethyst::renderer::WindowEvent` is now `amethyst::window::WindowEvent`
-* `amethyst::renderer::Event` is no longer re-exported. Use `winit::Event`
+* `amethyst::renderer::Event` is no longer re-exported. Use `amethyst::winit::Event`
 * `amethyst::renderer::Transparent` is now under `amethyst::renderer::transparent::Transparent`.
+* `amethyst::renderer::Visibility` is now under `amethyst::renderer::visibility::Visibility`.
 * `TextureHandle` type alias no longer exists, use `Handle<Texture>`.
 * `Flipped` component is removed. You can specify `flipped` during sprite loading, or mutating `Transform` at run time.
 * To load a texture in memory, you can't use `[0.; 4].into()` as the `TextureData` anymore. Use:
@@ -91,7 +92,7 @@
         loader.load_from_data(TextureData::from(texture_builder), (), &texture_assets);
     ```
 
-* `RenderBundle` and `Pipeline` are gone, now you need to do something like this:
+* `RenderBundle` and `Pipeline` are gone, now you need to create a `RenderGraph`, for example:
 
     In `main.rs`:
 
@@ -106,7 +107,7 @@
         .with_bundle(WindowBundle::from_config(display_config))?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             RenderGraph::default(),
-        ))
+        ));
     ```
 
     In `render_graph.rs`:
@@ -222,6 +223,53 @@
     }
 
     ```
+
+* `RenderBundle#with_sprite_sheet_processor()` is replaced by:
+
+    ```rust
+    game_data.with(
+        Processor::<SpriteSheet>::new(),
+        "sprite_sheet_processor",
+        &[],
+    );
+    ```
+
+* `RenderBundle#with_sprite_visibility_sorting()` is replaced by:
+
+    ```rust
+    use amethyst::rendy::sprite_visibility::SpriteVisibilitySortingSystem;
+
+    game_data.with(
+        SpriteVisibilitySortingSystem::new(),
+        "sprite_visibility_system",
+        &["transform_system"],
+    );
+    ```
+
+* Sprite transparency is no longer a separate flag. Instead of `with_transparency`, you add a second render pass using `DrawFlat2DTransparent`. See the [`sprites_ordered` example](https://github.com/amethyst/amethyst/blob/7ed8432d8eef2b2727d0c4188b91e5823ae03548/examples/sprites_ordered/main.rs#L463-L482).
+
+Camera changes:
+
+* `CameraPrefab` is no longer nested:
+
+    ```patch
+    -camera: Perspective((aspect: 1.3, fovy: 1.0471975512, znear: 0.1, zfar: 2000.0))
+    +camera: Perspective(aspect: 1.3, fovy: 1.0471975512, znear: 0.1, zfar: 2000.0)
+    ```
+
+* `nalgebra`'s `Perspective3`/`Orthographic3` are _no longer compatible_, as they use OpenGL coordinates instead of Vulkan.
+
+    Amethyst now has amethyst::rendy::camera::Orthographic and Perspective, respectively. These types are mostly feature-parity with nalgebra, but correct for vulkan. You can use as_matrix to get the inner Matrix4 value.
+
+* Camera now stores `Projection`, which means it is type-safe.
+* You can no longer serialize raw camera matrices, only camera parameter types.
+
+Z-axis direction clarifications:
+
+* In Vulkan, `Z+` is away.
+* in OpenGL, `Z-` is away.
+* In amethyst_renderer, `Z-` is away (world coordinates).
+* In amethyst_rendy, `Z-` is away (world coordinates).
 
 ## Amethyst Test
 
