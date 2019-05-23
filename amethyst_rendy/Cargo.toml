@@ -35,6 +35,7 @@ approx = "0.3.2"
 [dev-dependencies]
 rayon = "1.0.2"
 more-asserts = "0.2.1"
+bencher = "0.1.5"
 
 [features]
 dx12 = ["rendy/dx12"]

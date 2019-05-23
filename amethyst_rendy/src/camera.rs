@@ -925,4 +925,55 @@ mod tests {
     fn orthographic_project_cube_off_centered_rotated() {
         unimplemented!()
     }
+
+    #[cfg(not(feature = "nightly"))]
+    #[bench]
+    pub fn transform_global_view_matrix_1000(b: &mut bencher::Bencher) {
+        do_transform_global_view_matrix_1000(b)
+    }
+
+    #[cfg(feature = "nightly")]
+    #[bench]
+    pub fn transform_global_view_matrix_1000(b: &mut test::Bencher) {
+        do_transform_global_view_matrix_1000(b)
+    }
+
+    pub fn do_transform_global_view_matrix_1000<T>(b: T) {
+        let (transform, _, _) = setup();
+
+        b.iter(|| {
+            for _ in 0..1000 {
+                let _: [[f32; 4]; 4] =
+                    convert::<_, Matrix4<f32>>(transform.global_view_matrix()).into();
+            }
+        });
+    }
+
+    #[cfg(not(feature = "nightly"))]
+    #[bench]
+    pub fn manual_inverse_global_matrix_1000(b: &mut bencher::Bencher) {
+        do_manual_inverse_global_matrix_1000(b)
+    }
+
+    #[cfg(feature = "nightly")]
+    #[bench]
+    pub fn manual_inverse_global_matrix_1000(b: &mut test::Bencher) {
+        do_manual_inverse_global_matrix_1000(b)
+    }
+
+    pub fn do_manual_inverse_global_matrix_1000<T>(b: T) {
+        let (transform, _, _) = setup();
+
+        b.iter(|| {
+            for _ in 0..1000 {
+                let _: [[f32; 4]; 4] = convert::<_, Matrix4<f32>>(
+                    transform
+                        .global_matrix()
+                        .try_inverse()
+                        .expect("Unable to get inverse of camera transform"),
+                )
+                .into();
+            }
+        });
+    }
 }

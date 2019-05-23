@@ -544,8 +544,9 @@ impl Transform {
             .iter()
             .all(|f| Float::is_finite(f))
     }
-
-    /// Calculates the inverse of this transform, which we need to render.
+    /// Calculates the inverse of this transform, which is in effect the 'view matrix' as
+    /// commonly seen in computer graphics. This function computes the view matrix for ONLY
+    /// the local transformation, and ignores any Parents of this entity.
     ///
     /// We can exploit the extra information we have to perform this inverse faster than `O(n^3)`.
     pub fn view_matrix(&self) -> Matrix4<Float> {
@@ -559,6 +560,31 @@ impl Transform {
             .inverse()
             .to_homogeneous()
             .append_nonuniform_scaling(&inv_scale)
+    }
+
+    /// Calculates the inverse of this transform, which is in effect the 'view matrix' as
+    /// commonly seen in computer graphics. This function computes the view matrix for the
+    /// global transformation of the entity, and so takes into account Parents.
+    ///
+    /// We can exploit the extra information we have to perform this inverse faster than `O(n^3)`.
+    pub fn global_view_matrix(&self) -> Matrix4<Float> {
+        // TODO: check if this actually is faster
+        let mut res = self.global_matrix.clone();
+
+        {
+            let mut slice3x3 = res.fixed_slice_mut::<na::U3, na::U3>(0, 0);
+            assert!(slice3x3.try_inverse_mut());
+        }
+
+        let mut translation = -res.column(3).xyz();
+        translation = res.clone().fixed_slice::<na::U3, na::U3>(0, 0) * translation;
+
+        let mut res_trans = res.column_mut(3);
+        res_trans.x = translation.x;
+        res_trans.y = translation.y;
+        res_trans.z = translation.z;
+
+        res
     }
 }
 
