@@ -31,7 +31,7 @@ We use [laminar](https://github.com/amethyst/laminar) as the application layer c
 Unless you explicitly state otherwise, any Contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any
 additional terms or conditions.
 
-For more information or help, please come find us on the amethyst discord server's `#net` channel. We are working on architecture, design, and roadmaps and can definitely use some helping hands, don't hessitate :). 
+For more information or help, please come find us on the amethyst discord server's `#net` channel. We are working on architecture, design, and roadmaps and can definitely use some helping hands, don't hesitate :). 
 
 ## License
 
