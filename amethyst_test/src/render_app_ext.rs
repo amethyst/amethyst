@@ -3,11 +3,24 @@ use amethyst::{
     core::TransformBundle,
     ecs::Resources,
     renderer::{
-        rendy::{factory::Factory, graph::GraphBuilder},
+        pass::{DrawFlat2DDesc, DrawFlat2DTransparentDesc},
+        rendy::{
+            factory::Factory,
+            graph::{
+                render::{RenderGroupDesc, SubpassBuilder},
+                GraphBuilder,
+            },
+            hal::{
+                command::{ClearDepthStencil, ClearValue},
+                format::Format,
+                image::Kind,
+            },
+        },
         sprite::SpriteSheet,
         types::DefaultBackend,
         GraphCreator, RenderingSystem,
     },
+    ui::DrawUiDesc,
     window::ScreenDimensions,
     GameData, StateEvent, StateEventReader,
 };
@@ -68,6 +81,47 @@ impl GraphCreator<DefaultBackend> for RenderGraphEmpty {
         _factory: &mut Factory<DefaultBackend>,
         _res: &Resources,
     ) -> GraphBuilder<DefaultBackend, Resources> {
-        GraphBuilder::new()
+        let window_kind = Kind::D2(SCREEN_WIDTH, SCREEN_HEIGHT, 1, 1);
+        let surface_format = Format::Rgba32Sfloat; // Normally extracted from the `Window`.
+
+        let mut graph_builder = GraphBuilder::new();
+        let colour = graph_builder.create_image(
+            window_kind,
+            1,
+            surface_format,
+            Some(ClearValue::Color([0., 0., 0., 1.].into())),
+        );
+
+        // Depth stencil must be 1. for the background to be drawn.
+        let depth = graph_builder.create_image(
+            window_kind,
+            1,
+            Format::D32Sfloat,
+            Some(ClearValue::DepthStencil(ClearDepthStencil(1., 0))),
+        );
+
+        let _sprite = graph_builder.add_node(
+            SubpassBuilder::new()
+                .with_group(DrawFlat2DDesc::new().builder())
+                .with_color(colour)
+                .with_depth_stencil(depth)
+                .into_pass(),
+        );
+        let _sprite_trans = graph_builder.add_node(
+            SubpassBuilder::new()
+                .with_group(DrawFlat2DTransparentDesc::new().builder())
+                .with_color(colour)
+                .with_depth_stencil(depth)
+                .into_pass(),
+        );
+        let _ui = graph_builder.add_node(
+            SubpassBuilder::new()
+                .with_group(DrawUiDesc::new().builder())
+                .with_color(colour)
+                .with_depth_stencil(depth)
+                .into_pass(),
+        );
+
+        graph_builder
     }
 }
