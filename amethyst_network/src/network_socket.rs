@@ -24,18 +24,19 @@ enum InternalSocketEvent<E> {
     Stop,
 }
 
-// If a client sends both a connect event and other events,
-// only the connect event will be considered valid and all others will be lost.
-/// The System managing the network state and connections.
-/// The T generic parameter corresponds to the network event type.
-/// Receives events and filters them.
-/// Received events will be inserted into the NetReceiveBuffer resource.
-/// To send an event, add it to the NetSendBuffer resource.
+/// The System managing the network state from `NetConnections`.
 ///
-/// If both a connection (Connect or Connected) event is received at the same time as another event from the same connection,
-/// only the connection event will be considered and rest will be filtered out.
-// TODO: add Unchecked Event type list. Those events will be let pass the client connected filter (Example: NetEvent::Connect).
-// Current behaviour: hardcoded passthrough of Connect and Connected events.
+/// This system has a few responsibilities.
+///
+/// - Reading all send packets from `NetConnection` and send those over to some remote endpoint.
+/// - Listen for incoming packets and queue the received packets (`NetEvent::Packet(...)`) on the accompanying `NetConnection`.
+///
+/// This system is able to create a `NetConnection` and add those to the world when a new client connects.
+/// (This behavior might not be desired and can therefore be deactivated in the configuration).
+///
+/// In both cases when a client connects and disconnects a `NetEvent::Connected` or `NetEvent::Disconnected` will be queued on accompanying `NetConnection`
+///
+/// - `T` corresponds to the network event type.
 pub struct NetSocketSystem<E: 'static>
 where
     E: PartialEq,
@@ -44,6 +45,7 @@ where
     event_sender: Sender<InternalSocketEvent<E>>,
     // receiver from which you can read received packets.
     event_receiver: Receiver<laminar::SocketEvent>,
+    // the configuration with which you can configure the network behaviour.
     config: ServerConfig,
 }
 
@@ -147,7 +149,7 @@ where
                 SocketEvent::Connect(addr) => {
                     if self.config.create_net_connection_on_connect {
                         let mut connection: NetConnection<E> = NetConnection::new(addr);
-
+                        panic!("Connected");
                         connection
                             .receive_buffer
                             .single_write(NetEvent::Connected(addr));
@@ -161,6 +163,7 @@ where
                 SocketEvent::Timeout(timeout_addr) => {
                     for connection in (&mut net_connections).join() {
                         if connection.target_addr == timeout_addr {
+                            error!("Disconnected");
                             // we can't remove the entity from the world here because it could still have events in it's buffer.
                             connection
                                 .receive_buffer

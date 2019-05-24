@@ -24,7 +24,7 @@ mod test {
             "Test Message From Client1".to_string(),
         ));
 
-        conn_to_server.send_buffer.single_write(packet.clone());
+        conn_to_server.queue(packet.clone());
         world_cl.create_entity().with(conn_to_server).build();
 
         let mut rcv = conn_to_client.receive_buffer.register_reader();
@@ -73,7 +73,7 @@ mod test {
 
             for cmp in (&mut sto).join() {
                 for _i in 0..100 {
-                    cmp.send_buffer.single_write(packet.clone());
+                    cmp.queue(packet.clone());
                 }
             }
         }

@@ -6,8 +6,10 @@
 
 use crate::{error::Result, server::ServerConfig};
 use crossbeam_channel::{Receiver, Sender};
+use laminar::Config;
 use laminar::{Packet, Socket, SocketEvent};
 use std::thread;
+use std::time::Duration;
 
 /// 'Host' abstracts Laminar udp sockets away.
 pub struct Host {
@@ -19,8 +21,12 @@ impl Host {
     /// This will start and return an instance of the host.
     ///
     /// The method uses the config provided when creating a `host` instance.
-    pub fn run(config: &ServerConfig) -> Result<Host> {
-        let (mut socket, packet_sender, packet_receiver) = Socket::bind(config.udp_socket_addr)?;
+    pub fn run(server_config: &ServerConfig) -> Result<Host> {
+        let mut config = Config::default();
+        config.idle_connection_timeout = Duration::from_millis(20000);
+
+        let (mut socket, packet_sender, packet_receiver) =
+            Socket::bind_with_config(server_config.udp_socket_addr, config)?;
 
         thread::spawn(move || {
             socket.start_polling().unwrap();

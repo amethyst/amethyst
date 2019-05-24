@@ -52,7 +52,7 @@ impl<'a> System<'a> for SpamSystem {
     type SystemData = (WriteStorage<'a, NetConnection<String>>, Read<'a, Time>);
     fn run(&mut self, (mut connections, time): Self::SystemData) {
         for conn in (&mut connections).join() {
-            info!("Sending 10k messages.");
+            //            info!("Sending 10k messages.");
             for i in 0..500 {
                 let packet = NetEvent::Packet(NetPacket::unreliable(format!(
                     "CL: frame:{},abs_time:{},c:{}",
@@ -61,7 +61,7 @@ impl<'a> System<'a> for SpamSystem {
                     i
                 )));
 
-                conn.send_buffer.single_write(packet);
+                conn.queue(packet);
             }
         }
     }

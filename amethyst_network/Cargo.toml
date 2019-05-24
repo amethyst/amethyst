@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_network"
-version = "0.3.0"
+version = "0.3.1"
 authors = [
 	"Joël Lupien (Jojolepro) <jojolepromain@gmail.com>",
 	"Lucio Franco (LucioFranco) <luciofranco14@gmail.com>"
@@ -31,6 +31,6 @@ bincode = "1.0"
 log = "0.4.6"
 uuid = { version = "0.7.1", features = ["v4","serde"] }
 thread_profiler = { version = "0.3" , optional = true }
-laminar = "0.2.1"
+laminar = "0.2.2"
 err-derive = "0.1"
 crossbeam-channel = "0.3.8"

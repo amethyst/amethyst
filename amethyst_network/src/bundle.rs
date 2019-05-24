@@ -49,7 +49,6 @@ where
     fn build(self, builder: &mut DispatcherBuilder<'_, '_>) -> Result<(), Error> {
         let socket_system = NetSocketSystem::<T>::new(self.config)
             .with_context(|_| Error::from_string("Failed to open network system."))?;
-
         builder.add(socket_system, "net_socket", &[]);
 
         Ok(())
