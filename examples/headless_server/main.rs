@@ -55,9 +55,10 @@ impl<'a> System<'a> for SpamReceiveSystem {
         let mut count = 0;
         for (conn,) in (&mut connections,).join() {
             if self.reader.is_none() {
-                self.reader = Some(conn.receive_buffer.register_reader());
+                self.reader = Some(conn.register_reader());
             }
-            for ev in conn.receive_buffer.read(self.reader.as_mut().unwrap()) {
+
+            for ev in conn.received_events(self.reader.as_mut().unwrap()) {
                 count += 1;
                 match ev {
                     _ => {}

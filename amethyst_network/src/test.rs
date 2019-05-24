@@ -98,6 +98,7 @@ mod test {
             udp_socket_addr: client_addr,
             max_throughput: 10000,
             create_net_connection_on_connect: false,
+            laminar_config: None,
         };
 
         // server config
@@ -105,6 +106,7 @@ mod test {
             udp_socket_addr: server_addr,
             max_throughput: 10000,
             create_net_connection_on_connect: false,
+            laminar_config: None,
         };
 
         let mut cl_dispatch = DispatcherBuilder::new()
