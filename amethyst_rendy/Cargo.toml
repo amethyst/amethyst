@@ -35,7 +35,7 @@ approx = "0.3.2"
 [dev-dependencies]
 rayon = "1.0.2"
 more-asserts = "0.2.1"
-bencher = "0.1.5"
+criterion = "0.2.11"
 
 [features]
 dx12 = ["rendy/dx12"]
@@ -45,3 +45,7 @@ profiler = [ "thread_profiler/thread_profiler", "rendy/profiler" ]
 nightly = [ "amethyst_core/nightly", "shred/nightly" ]
 no-slow-safety-checks = ["rendy/no-slow-safety-checks"]
 shader-compiler =  ["rendy/shader-compiler"]
+
+[[bench]]
+name = "camera"
+harness = false
