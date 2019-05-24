@@ -103,7 +103,7 @@ impl<E: Send + Sync + 'static> NetConnection<E> {
     pub fn received_events(
         &self,
         reader_id: &mut ReaderId<NetEvent<E>>,
-    ) -> EventIterator<NetEvent<E>> {
+    ) -> EventIterator<'_, NetEvent<E>> {
         self.receive_buffer.read(reader_id)
     }
 
