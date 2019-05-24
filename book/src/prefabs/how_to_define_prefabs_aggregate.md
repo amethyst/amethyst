@@ -24,6 +24,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
         Error,
     };
     use serde::{Deserialize, Serialize};
+    use specs_derive::Component;
     ```
 
 3. Define the aggregate prefab data type.
@@ -31,11 +32,6 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     In these examples, `Named`, `Position`, and `Weapon` all derive [`PrefabData`].
 
     ```rust,edition2018,no_run,noplaypen
-    # extern crate amethyst;
-    # extern crate derivative;
-    # extern crate serde;
-    # extern crate specs_derive;
-    #
     # use amethyst::{
     #     assets::{PrefabData, ProgressCounter},
     #     core::Named,
@@ -47,15 +43,14 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     #     prelude::*,
     #     Error,
     # };
-    # use derivative::Derivative;
     # use serde::{Deserialize, Serialize};
     # use specs_derive::Component;
     #
-    # #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
-    # #[prefab(Component)]
-    # #[serde(deny_unknown_fields)]
-    # pub struct Position(pub f32, pub f32, pub f32);
-    #
+    #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
+    #[prefab(Component)]
+    #[serde(deny_unknown_fields)]
+    pub struct Position(pub f32, pub f32, pub f32);
+    
     /// **Note:** All fields must be specified in the prefab. If a field is
     /// not specified, then the prefab will fail to load.
     #[derive(Deserialize, Serialize, PrefabData)]
@@ -69,11 +64,6 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     If you want to mix different types of entities within a single prefab then you must define an enum that implemenets `PrefabData`. Each variant is treated in the same way as `PrefabData` structs.
 
     ```rust,edition2018,no_run,noplaypen
-    # extern crate amethyst;
-    # extern crate derivative;
-    # extern crate serde;
-    # extern crate specs_derive;
-    #
     # use amethyst::{
     #     assets::{PrefabData, ProgressCounter},
     #     core::Named,
@@ -85,25 +75,22 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     #     prelude::*,
     #     Error,
     # };
-    # use derivative::Derivative;
     # use serde::{Deserialize, Serialize};
     # use specs_derive::Component;
     #
-    # #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
-    # #[prefab(Component)]
-    # #[serde(deny_unknown_fields)]
-    # pub struct Position(pub f32, pub f32, pub f32);
-    #
-    # #[derive(Clone, Copy, Component, Debug, Derivative, Deserialize, Serialize, PrefabData)]
-    # #[derivative(Default)]
-    # #[prefab(Component)]
-    # #[storage(VecStorage)]
-    # pub enum Weapon {
-    #     #[derivative(Default)]
-    #     Axe,
-    #     Sword,
-    # }
-    #
+    #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
+    #[prefab(Component)]
+    #[serde(deny_unknown_fields)]
+    pub struct Position(pub f32, pub f32, pub f32);
+    
+    #[derive(Clone, Copy, Component, Debug, Derivative, Deserialize, Serialize, PrefabData)]
+    #[prefab(Component)]
+    #[storage(VecStorage)]
+    pub enum Weapon {
+        Axe,
+        Sword,
+    }
+    
     /// All fields implement `PrefabData`, and are wrapped in `Option<_>`.
     ///
     /// **Note:** If a field is not specified in the prefab, it will default
