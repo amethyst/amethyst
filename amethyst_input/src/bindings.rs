@@ -123,6 +123,8 @@ pub struct Bindings<T: BindingTypes> {
 #[derive(Clone, Derivative)]
 #[derivative(Debug(bound = ""))]
 pub enum BindingError<T: BindingTypes> {
+    /// You attempted to bind a mousewheel axis twice.
+    MouseWheelAxisAlreadyBound(T::Axis),
     /// Combo provided for action binding has two (or more) of the same button.
     ComboContainsDuplicates(T::Action),
     /// Combo provided was already bound to contained action.
@@ -161,6 +163,10 @@ impl<T: BindingTypes> PartialEq for BindingError<T> {
                 BindingError::ControllerAxisAlreadyBound(a),
                 BindingError::ControllerAxisAlreadyBound(x),
             ) => a == x,
+            (
+                BindingError::MouseWheelAxisAlreadyBound(a),
+                BindingError::MouseWheelAxisAlreadyBound(x),
+            ) => a == x,
             (_, _) => false,
         }
     }
@@ -196,6 +202,9 @@ where
             ),
             BindingError::ControllerAxisAlreadyBound(ref id) => {
                 write!(f, "Controller axis provided is already in use by {}", id)
+            }
+            BindingError::MouseWheelAxisAlreadyBound(ref id) => {
+                write!(f, "Mouse wheel axis provided is already in use by {}", id)
             }
         }
     }
@@ -470,6 +479,17 @@ impl<T: BindingTypes> Bindings<T> {
                     {
                         if controller_id == input_controller_id && axis == input_axis {
                             return Err(BindingError::ControllerAxisAlreadyBound(k.clone()));
+                        }
+                    }
+                }
+            }
+            Axis::MouseWheel {
+                horizontal: ref input_horizontal,
+            } => {
+                for (k, a) in self.axes.iter().filter(|(k, _a)| *k != id) {
+                    if let Axis::MouseWheel { horizontal } = a {
+                        if input_horizontal == horizontal {
+                            return Err(BindingError::MouseWheelAxisAlreadyBound(k.clone()));
                         }
                     }
                 }
@@ -765,6 +785,33 @@ mod tests {
                 .unwrap_err(),
             BindingError::ControllerAxisAlreadyBound(String::from("test_controller_axis"))
         );
+        assert_eq!(
+            bindings
+                .insert_axis(
+                    String::from("test_mouse_wheel_axis"),
+                    Axis::MouseWheel { horizontal: true },
+                )
+                .unwrap(),
+            None
+        );
+        assert_eq!(
+            bindings
+                .insert_axis(
+                    String::from("test_mouse_wheel_axis"),
+                    Axis::MouseWheel { horizontal: false },
+                )
+                .unwrap(),
+            Some(Axis::MouseWheel { horizontal: true })
+        );
+        assert_eq!(
+            bindings
+                .insert_axis(
+                    String::from("test_mouse_wheel_axis_2"),
+                    Axis::MouseWheel { horizontal: false },
+                )
+                .unwrap_err(),
+            BindingError::MouseWheelAxisAlreadyBound(String::from("test_mouse_wheel_axis"))
+        );
     }
 
     #[test]
@@ -811,6 +858,19 @@ mod tests {
                 invert: false,
                 dead_zone: 0.25,
             })
+        );
+        assert_eq!(
+            bindings
+                .insert_axis(
+                    String::from("test_mouse_wheel_axis"),
+                    Axis::MouseWheel { horizontal: false },
+                )
+                .unwrap(),
+            None
+        );
+        assert_eq!(
+            bindings.remove_axis("test_mouse_wheel_axis"),
+            Some(Axis::MouseWheel { horizontal: false })
         );
     }
 }

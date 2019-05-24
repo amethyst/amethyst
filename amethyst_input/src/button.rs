@@ -17,7 +17,7 @@ pub enum Button {
     /// Mouse buttons
     Mouse(MouseButton),
 
-    /// Mouse wheel
+    /// Mouse wheel (Do not use these with an emulated axis, instead use the MouseWheel axis.)
     MouseWheel(ScrollDirection),
 
     /// Controller buttons matching SDL controller model.
