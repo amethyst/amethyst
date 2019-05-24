@@ -22,8 +22,7 @@ impl<T> NetworkBundle<T> {
     pub fn new(udp_socket_addr: SocketAddr) -> Self {
         let config = ServerConfig {
             udp_socket_addr,
-            max_throughput: 5000,
-            create_net_connection_on_connect: true,
+            ..Default::default()
         };
 
         NetworkBundle {

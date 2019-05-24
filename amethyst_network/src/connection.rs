@@ -11,11 +11,11 @@ use crate::NetEvent;
 
 // TODO: Think about relationship between NetConnection and NetIdentity.
 
-/// A remote connection connection to some endpoint.
+/// A remote connection to some endpoint.
 ///
 /// This type is a `Component`, and it is used by systems too:
 /// - Queue received data into this type
-/// - Read the queued data for transmission and send it.
+/// - Read the queued data from the user for transmission.
 ///
 /// # Remark
 /// Note that this type does not perform any reading or writing, this is done only withing systems.
@@ -68,6 +68,8 @@ impl<E: Send + Sync + 'static> NetConnection<E> {
     }
 
     /// Queues the given event iterator of events for transmission.
+    /// This function writes the passed event iterator to a buffer which can be read by a `System`.
+    /// It is the job of the `System` to send those events to the remote client.
     pub fn queue_iter<I>(&mut self, iter: I)
     where
         I: IntoIterator<Item = NetEvent<E>>,
@@ -77,11 +79,15 @@ impl<E: Send + Sync + 'static> NetConnection<E> {
     }
 
     /// Queues the given vector of events for transmission.
+    /// This function writes the passed event vector to a buffer which can be read by a `System`.
+    /// It is the job of the `System` to send those events to the remote client.
     pub fn queue_vec(&mut self, events: &mut Vec<NetEvent<E>>) {
         self.send_buffer.drain_vec_write(events);
     }
 
     /// Queues a single event for transmission.
+    /// This function writes the passed event to a buffer which can be read by a `System`.
+    /// It is the job of the `System` to send this event to the remote client.
     pub fn queue(&mut self, event: NetEvent<E>) {
         self.send_buffer.single_write(event);
     }

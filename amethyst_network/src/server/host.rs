@@ -22,11 +22,12 @@ impl Host {
     ///
     /// The method uses the config provided when creating a `host` instance.
     pub fn run(server_config: &ServerConfig) -> Result<Host> {
-        let mut config = Config::default();
-        config.idle_connection_timeout = Duration::from_millis(20000);
-
         let (mut socket, packet_sender, packet_receiver) =
-            Socket::bind_with_config(server_config.udp_socket_addr, config)?;
+            if let Some(config) = &server_config.laminar_config {
+                Socket::bind_with_config(server_config.udp_socket_addr, config.clone())?
+            } else {
+                Socket::bind(server_config.udp_socket_addr)?
+            };
 
         thread::spawn(move || {
             socket.start_polling().unwrap();

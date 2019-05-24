@@ -149,7 +149,6 @@ where
                 SocketEvent::Connect(addr) => {
                     if self.config.create_net_connection_on_connect {
                         let mut connection: NetConnection<E> = NetConnection::new(addr);
-                        panic!("Connected");
                         connection
                             .receive_buffer
                             .single_write(NetEvent::Connected(addr));
@@ -163,7 +162,6 @@ where
                 SocketEvent::Timeout(timeout_addr) => {
                     for connection in (&mut net_connections).join() {
                         if connection.target_addr == timeout_addr {
-                            error!("Disconnected");
                             // we can't remove the entity from the world here because it could still have events in it's buffer.
                             connection
                                 .receive_buffer

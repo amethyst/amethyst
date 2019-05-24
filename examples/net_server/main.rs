@@ -65,7 +65,6 @@ impl<'a> System<'a> for SpamReceiveSystem {
                     NetEvent::Packet(packet) => info!("{}", packet.content()),
                     NetEvent::Connected(addr) => panic!("New Client Connection: {}", addr),
                     NetEvent::Disconnected(_addr) => {
-                        panic!("Client disconnected");
                         client_disconnected = true;
                     }
                     _ => {}
@@ -81,9 +80,9 @@ impl<'a> System<'a> for SpamReceiveSystem {
 
             connection_count += 1;
         }
-        //        println!(
-        //            "Received {} messages this frame connections: {}",
-        //            count, connection_count
-        //        );
+        println!(
+            "Received {} messages this frame connections: {}",
+            count, connection_count
+        );
     }
 }
