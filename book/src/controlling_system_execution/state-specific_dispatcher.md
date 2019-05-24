@@ -56,6 +56,7 @@ The `DispatcherBuilder` can be initialized and populated wherever desired, be it
 # use amethyst::{
 #     ecs::prelude::*,
 #     prelude::*,
+#     core::ArcThreadPool,
 # };
 # 
 #[derive(Default)]
@@ -74,13 +75,17 @@ impl<'a, 'b> SimpleState for CustomState<'a, 'b> {
         dispatcher_builder.add(MovePaddlesSystem, "move_paddles_system", &[]);
 
         // Build and setup the `Dispatcher`.
-        let mut dispatcher = dispatcher_builder.build();
+        let mut dispatcher = dispatcher_builder
+            .with_pool(world.read_resource::<ArcThreadPool>().clone())
+            .build();
         dispatcher.setup(&mut world.res);
 
         self.dispatcher = Some(dispatcher);
     }
 }
 ```
+
+By default, the dispatcher will create its own pool of worker threads to execute systems in, but Amethyst's main dispatcher already has a thread pool setup and configured. As reusing it is more efficient, we pull the global pool from the world and attach the dispatcher to it with `.with_pool()`.
 
 The `CustomState` requires two annotations (`'a` and `'b`) to satisfy the lifetimes of the `Dispatcher`. Now that we have our `Dispatcher` we need to ensure that it is executed. We do this in the `State`s `update` method.
 
