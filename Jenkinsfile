@@ -38,8 +38,12 @@ pipeline {
                         }
                     }
                     steps {
-                        echo 'Running Cargo check...'
-                        sh 'cargo check --all --all-targets --features vulkan,sdl_controller,json,saveload'
+                        // Make sure static_assertion fails
+                        echo 'Confirming static assertion...'
+                        sh 'cargo check --all --all-targets || exit 0'
+
+                        // Perform actual check
+                        sh 'cargo check --all --all-targets --features "vulkan sdl_controller json saveload"'
                     }
                 }
                 stage("nightly") {
@@ -53,8 +57,13 @@ pipeline {
                         }
                     }
                     steps {
+                        // Make sure static_assertion fails
+                        echo 'Confirming static assertion...'
+                        sh 'cargo check --all --all-targets || exit 0'
+
+                        // Perform actual check
                         echo 'Running Cargo check...'
-                        sh 'cargo check --all --all-targets --features vulkan,nightly'
+                        sh 'cargo check --all --all-targets --features "nightly vulkan sdl_controller json saveload"'
                     }
                 }
             }
@@ -71,7 +80,7 @@ pipeline {
                     }
                     steps {
                         echo 'Beginning tests...'
-                        bat 'C:\\Users\\root\\.cargo\\bin\\cargo test --all'
+                        bat 'C:\\Users\\root\\.cargo\\bin\\cargo test --all --features "vulkan sdl_controller json saveload shader-compiler"'
                         echo 'Tests done!'
                     }
                 }
@@ -84,7 +93,7 @@ pipeline {
                     }
                     steps {
                         echo 'Beginning tests...'
-                        sh 'cargo test --all'
+                        sh 'cargo test --all --features "vulkan sdl_controller json saveload shader-compiler"'
                         echo 'Tests done!'
                     }
                 }
