@@ -88,7 +88,7 @@ pipeline {
                         echo 'Tests done!'
                     }
                 }
-                stage('Calculate Coverage') {
+                stage('Coverage') {
                     agent {
 			            docker {
 			                image 'amethystrs/builder-linux:stable'
