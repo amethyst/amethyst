@@ -39,7 +39,7 @@ pipeline {
                     }
                     steps {
                         echo 'Running Cargo check...'
-                        sh 'cargo check --all --all-targets --features sdl_controller,json,saveload'
+                        sh 'cargo check --all --all-targets --features vulkan,sdl_controller,json,saveload'
                     }
                 }
                 stage("nightly") {
@@ -54,7 +54,7 @@ pipeline {
                     }
                     steps {
                         echo 'Running Cargo check...'
-                        sh 'cargo check --all --all-targets --features nightly'
+                        sh 'cargo check --all --all-targets --features vulkan,nightly'
                     }
                 }
             }
