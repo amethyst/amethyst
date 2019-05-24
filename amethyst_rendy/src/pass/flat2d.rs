@@ -82,6 +82,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DDesc {
     }
 }
 
+/// Draws opaque 2D sprites to the screen without lighting.
 #[derive(Debug)]
 pub struct DrawFlat2D<B: Backend> {
     pipeline: B::GraphicsPipeline,
@@ -231,7 +232,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
         }
     }
 }
-/// Draw transparent sprites without lighting.
+/// Describes drawing transparent sprites without lighting.
 #[derive(Clone, Debug, PartialEq, Derivative)]
 #[derivative(Default(bound = ""))]
 pub struct DrawFlat2DTransparentDesc;
@@ -284,6 +285,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DTransparentDesc {
     }
 }
 
+/// Draws transparent sprites without lighting.
 #[derive(Debug)]
 pub struct DrawFlat2DTransparent<B: Backend> {
     pipeline: B::GraphicsPipeline,

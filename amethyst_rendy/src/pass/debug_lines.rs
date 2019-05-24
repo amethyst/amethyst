@@ -83,6 +83,8 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawDebugLinesDesc {
     }
 }
 
+
+/// Draws debug lines
 #[derive(Debug)]
 pub struct DrawDebugLines<B: Backend> {
     pipeline: B::GraphicsPipeline,

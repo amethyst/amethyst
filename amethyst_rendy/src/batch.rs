@@ -1,3 +1,7 @@
+//!  FriziBatch 9000
+//!
+//! 
+
 use crate::util::TapCountIter;
 use derivative::Derivative;
 use smallvec::{smallvec, SmallVec};
