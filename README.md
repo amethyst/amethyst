@@ -108,23 +108,35 @@ If you are compiling on Linux, make sure to install the dependencies below.
 
 Additionally, make sure you have EGL installed. Since the package depends on your drivers, we cannot list it here.
 
+### Arch Linux
+
+```
+$ pacman -Sy grep gcc pkgconfig openssl alsa-lib cmake make python3 freetype2 awk libxcb
+```
+
 ### Debian/Ubuntu
 
 ```
-$ sudo apt install pkg-config libasound2-dev libssl-dev cmake libfreetype6-dev libexpat1-dev libxcb-composite0-dev
+$ apt-get install gcc pkg-config openssl libasound2-dev cmake build-essential python3 libfreetype6-dev libexpat1-dev libxcb-composite0-dev
 ```
 
 ### Fedora
 
 ```
-$ sudo dnf install alsa-lib-devel openssl-devel cmake freetype-devel expat-devel libxcb-devel
+$ yum install gcc openssl-devel alsa-lib-devel cmake make gcc-c++ freetype-devel expat-devel libxcb-devel
+```
+
+### openSUSE
+
+```
+$ zypper install gcc pkg-config libopenssl-devel alsa-devel cmake gcc-c++ python3 freetype2-devel libexpat-devel libxcb-devel
 ```
 
 ### Other
 
 See your distribution-specific installation process for the equivalent dependencies.
 
-Please note that you need to have a functional graphics driver installed. If you get a panic about the renderer unable to create the context when trying to run an example, a faulty driver installation could be the issue.
+**Please note that you need to have a functional graphics driver installed. If you get a panic about the renderer unable to create the context when trying to run an example, a faulty driver installation could be the issue.**
 
 ## Building Documentation
 
