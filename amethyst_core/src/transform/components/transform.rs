@@ -546,11 +546,10 @@ impl Transform {
     }
     /// Calculates the inverse of this transform, which is in effect the 'view matrix' as
     /// commonly seen in computer graphics. This function computes the view matrix for ONLY
-    /// the local transformation, and ignores any Parents of this entity.
+    /// the local transformation, and ignores any `Parent`s of this entity.
     ///
     /// We can exploit the extra information we have to perform this inverse faster than `O(n^3)`.
     pub fn view_matrix(&self) -> Matrix4<Float> {
-        // TODO: check if this actually is faster
         let inv_scale = Vector3::new(
             Float::from(1.0) / self.scale.x,
             Float::from(1.0) / self.scale.y,
@@ -564,13 +563,13 @@ impl Transform {
 
     /// Calculates the inverse of this transform, which is in effect the 'view matrix' as
     /// commonly seen in computer graphics. This function computes the view matrix for the
-    /// global transformation of the entity, and so takes into account Parents.
+    /// global transformation of the entity, and so takes into account `Parent`s.
     ///
     /// We can exploit the extra information we have to perform this inverse faster than `O(n^3)`.
     pub fn global_view_matrix(&self) -> Matrix4<Float> {
-        // TODO: check if this actually is faster
         let mut res = self.global_matrix.clone();
 
+        // Perform an in-place inversion of the 3x3 matrix
         {
             let mut slice3x3 = res.fixed_slice_mut::<na::U3, na::U3>(0, 0);
             assert!(slice3x3.try_inverse_mut());
@@ -825,6 +824,7 @@ mod tests {
         );
     }
 
+    /// Test correctness of the view matrix locally
     #[test]
     fn test_view_matrix() {
         let mut transform = Transform::default();
@@ -841,6 +841,26 @@ mod tests {
         assert_ulps_eq!(
             transform.matrix().try_inverse().unwrap(),
             transform.view_matrix(),
+        );
+    }
+
+    /// Test correctness of global view matrix vs. inverse matrix globally
+    #[test]
+    fn test_global_view_matrix() {
+        let mut transform = Transform::default();
+        transform.set_translation_xyz(5.0, 70.1, 43.7);
+        transform.set_scale(Vector3::new(1.0, 5.0, 8.9));
+        transform.set_rotation(
+            UnitQuaternion::rotation_between(
+                &Vector3::new(-1.0, 1.0, 2.0),
+                &Vector3::new(1.0, 0.0, 0.0),
+            )
+                .unwrap(),
+        );
+
+        assert_ulps_eq!(
+            transform.global_matrix().try_inverse().unwrap(),
+            transform.global_view_matrix(),
         );
     }
 
