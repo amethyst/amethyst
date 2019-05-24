@@ -89,11 +89,6 @@ pipeline {
                     }
                 }
                 stage('Calculate Coverage') {
-                    environment {
-                        CARGO_HOME = '/home/jenkins/.cargo'
-                        RUSTUP_HOME = '/home/jenkins/.rustup'
-                        RUSTFLAGS = "-D warnings"
-                    }
                     agent {
 			            docker {
 			                image 'amethystrs/builder-linux:stable'
