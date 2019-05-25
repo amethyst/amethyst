@@ -167,16 +167,6 @@ mod tests {
     use crate::connection::NetConnection;
     use crate::net_event::NetEvent;
 
-    #[test]
-    fn can_register_reader() {
-        let mut connection = test_connection();
-        connection
-            .receive_buffer
-            .single_write(NetEvent::Connected("127.0.0.1:0".parse().unwrap()));
-
-        let reader_id = connection.register_reader();
-    }
-
     fn can_read_received_events() {
         let mut connection = test_connection();
         connection

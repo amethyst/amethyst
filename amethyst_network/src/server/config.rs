@@ -15,7 +15,7 @@ pub struct ServerConfig {
     /// This property is enabled by default.
     pub create_net_connection_on_connect: bool,
     /// Allows you to configure laminar its behaviour.
-    pub laminar_config: Option<Config>,
+    pub laminar_config: Config,
 }
 
 impl ServerConfig {
@@ -24,7 +24,7 @@ impl ServerConfig {
         ip: SocketAddr,
         max_throughput: u16,
         create_net_connection_on_connect: bool,
-        laminar_config: Option<Config>,
+        laminar_config: Config,
     ) -> ServerConfig {
         ServerConfig {
             udp_socket_addr: ip,
@@ -42,7 +42,7 @@ impl Default for ServerConfig {
             udp_socket_addr: "0.0.0.0:0".parse().unwrap(),
             max_throughput: 5000,
             create_net_connection_on_connect: true,
-            laminar_config: None,
+            laminar_config: Config::default(),
         }
     }
 }

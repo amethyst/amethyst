@@ -20,12 +20,10 @@ impl Host {
     ///
     /// The method uses the config provided when creating a `host` instance.
     pub fn run(server_config: &ServerConfig) -> Result<Host> {
-        let (mut socket, packet_sender, packet_receiver) =
-            if let Some(config) = &server_config.laminar_config {
-                Socket::bind_with_config(server_config.udp_socket_addr, config.clone())?
-            } else {
-                Socket::bind(server_config.udp_socket_addr)?
-            };
+        let (mut socket, packet_sender, packet_receiver) = Socket::bind_with_config(
+            server_config.udp_socket_addr,
+            server_config.laminar_config.clone(),
+        )?;
 
         thread::spawn(move || {
             socket.start_polling().unwrap();

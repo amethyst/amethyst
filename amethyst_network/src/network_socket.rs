@@ -28,8 +28,8 @@ enum InternalSocketEvent<E> {
 ///
 /// This system has a few responsibilities.
 ///
-/// - Reading all send packets from `NetConnection` and send those over to some remote endpoint.
-/// - Listen for incoming packets and queue the received packets (`NetEvent::Packet(...)`) on the accompanying `NetConnection`.
+/// - Reading to send packets from `NetConnection` and sending those over to some remote endpoint.
+/// - Listening for incoming packets and queue the received packets (`NetEvent::Packet(...)`) on the accompanying `NetConnection`.
 ///
 /// This system is able to create a `NetConnection` and add those to the world when a new client connects.
 /// (This behavior might not be desired and can therefore be deactivated in the configuration).
