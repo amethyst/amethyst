@@ -62,16 +62,17 @@ struct Example {
     hidden: bool,
     /// Whether or not to reverse the Z coordinates of the entities
     ///
-    /// Non-reversed means left most entity has Z: 0, and Z increases by 1.0 for each entity to the
-    /// right. Reversed means the right most entity has Z: 0, and Z increases by 1.0 for each entity
+    /// Non-reversed means left most entity has Z: 0, and Z decreases by 1.0 for each entity to the
+    /// right. Reversed means the right most entity has Z: 0, and Z decreases by 1.0 for each entity
     /// to the left.
     reverse: bool,
     /// Information about the loaded sprite sheet.
     loaded_sprite_sheet: Option<LoadedSpriteSheet>,
     /// Z-axis position of the camera.
     ///
-    /// The Z axis increases "out of the screen". The camera faces the XY plane (i.e. towards the
-    /// origin).
+    /// The Z axis increases "out of the screen" if the camera faces the XY plane (i.e. towards the
+    /// origin from (0.0, 0.0, 1.0)). This is the default orientation, when no rotation is applied to the
+    /// camera's transform.
     camera_z: f32,
     /// Depth (Z-axis distance) that the camera can see.
     ///
@@ -194,12 +195,12 @@ impl Example {
     /// This method initialises a camera which will view our sprite.
     fn initialise_camera(&mut self, world: &mut World) {
         // Position the camera. Here we translate it forward (out of the screen) far enough to view
-        // all of the sprites. Note that camera_z is 12.0, whereas the furthest sprite is 11.0.
+        // all of the sprites. Note that camera_z is 1.0, whereas the furthest sprite is -11.0.
         //
         // For the depth, the additional + 1.0 is needed because the camera can see up to, but
         // excluding, entities with a Z coordinate that is `camera_z - camera_depth_vision`. The
-        // additional distance means the camera can see up to just before -1.0 on the Z axis, so
-        // we can view the sprite at 0.0.
+        // additional distance means the camera can see up to just before -12.0 on the Z axis, so
+        // we can view the sprite at -11.0.
         self.camera_z = 1.0;
         self.camera_depth_vision =
             self.loaded_sprite_sheet.as_ref().unwrap().sprite_count as f32 + 1.0;
