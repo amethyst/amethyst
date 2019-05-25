@@ -9,9 +9,9 @@ Instructions should be on screen once rustup is downloaded.
 
 ## Required dependencies
 
-If you are on Linux, you'll need to install `libasound2-dev`, `libx11-xcb-dev` and `libssl-dev`.
+If you are on Linux, please check the dependencies section of the [README.md](https://github.com/amethyst/amethyst/blob/master/README.md#dependencies) for details on what distribution specific dependencies are required.
 
-See the readme on github for distribution specific details.
+Please note that you need to have a functional graphics driver installed. If you get a panic about the renderer unable to create the context when trying to run an example, a faulty driver installation could be the issue.
 
 ## Setting up Amethyst
 
