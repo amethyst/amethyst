@@ -117,7 +117,7 @@ $ pacman -Sy grep gcc pkgconfig openssl alsa-lib cmake make python3 freetype2 aw
 ### Debian/Ubuntu
 
 ```
-$ apt-get install gcc pkg-config openssl libasound2-dev cmake build-essential python3 libfreetype6-dev libexpat1-dev libxcb-composite0-dev
+# apt install gcc pkg-config openssl libasound2-dev cmake build-essential python3 libfreetype6-dev libexpat1-dev libxcb-composite0-dev
 ```
 
 ### Fedora
