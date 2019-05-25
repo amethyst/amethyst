@@ -134,8 +134,7 @@ Let's use handle_event to go to the `PausedState` and come back by pressing the 
 ```rust,edition2018,no_run,noplaypen
 extern crate amethyst;
 use amethyst::prelude::*;
-use amethyst::renderer::VirtualKeyCode;
-use amethyst::input::is_key_down;
+use amethyst::input::{VirtualKeyCode, is_key_down};
 
 struct GameplayState;
 struct PausedState;
@@ -183,9 +182,9 @@ To change the set of events that the state receives, you create a new event enum
 ```rust,edition2018,no_run,noplaypen
 # #[macro_use] extern crate amethyst;
 # use amethyst::prelude::*;
-# use amethyst::renderer::{VirtualKeyCode, Event};
 # use amethyst::ui::UiEvent;
-# use amethyst::input::is_key_down;
+# use amethyst::input::{VirtualKeyCode, is_key_down};
+# use amethyst::winit::Event;
 
 // These imports are required for the #[derive(EventReader)] code to build
 use amethyst::core::{
