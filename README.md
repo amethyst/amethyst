@@ -123,7 +123,7 @@ $ apt-get install gcc pkg-config openssl libasound2-dev cmake build-essential py
 ### Fedora
 
 ```
-$ yum install gcc openssl-devel alsa-lib-devel cmake make gcc-c++ freetype-devel expat-devel libxcb-devel
+# dnf install pkgconfig gcc openssl-devel alsa-lib-devel cmake make gcc-c++ freetype-devel expat-devel libxcb-devel
 ```
 
 ### openSUSE
