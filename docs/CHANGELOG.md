@@ -40,6 +40,10 @@ it is attached to. ([#1282])
 * Added `events` example which demonstrates working even reader and writer in action. ([#1538])
 *  Implement builder like functionality for `AnimationSet` and `AnimationControlSet` ([#1568])
 * Add `get_mouse_button` and `is_mouse_button_down` utility functions to amethyst_input. ([#1582])
+- Add amethyst_input::Axis::MouseWheel ([#1642])
+- Add amethyst_input::BindingError::MouseWheelAlreadyBound ([#1642])
+- Add amethyst_input::InputHandler::send_frame_begin ([#1642])
+- Add amethyst_input::InputHandler::mouse_wheel_value ([#1642])
 
 ### Changed
 
@@ -172,6 +176,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1582]: https://github.com/amethyst/amethyst/pull/1582
 [#1595]: https://github.com/amethyst/amethyst/issues/1595
 [#1599]: https://github.com/amethyst/amethyst/pull/1599
+[#1642]: https://github.com/amethyst/amethyst/pull/1642
 
 ## [0.10.0] - 2018-12
 

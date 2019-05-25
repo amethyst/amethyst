@@ -35,6 +35,8 @@ pub struct InputHandler<T: BindingTypes> {
     /// while second is the ID used by incoming events.
     connected_controllers: SmallVec<[(u32, u32); 8]>,
     mouse_position: Option<(f64, f64)>,
+    mouse_wheel_vertical: f64,
+    mouse_wheel_horizontal: f64,
 }
 
 impl<T: BindingTypes> InputHandler<T> {
@@ -235,11 +237,23 @@ impl<T: BindingTypes> InputHandler<T> {
                 DeviceEvent::MouseWheel {
                     delta: MouseScrollDelta::LineDelta(delta_x, delta_y),
                 } => {
+                    if delta_x != 0.0 {
+                        self.mouse_wheel_horizontal = delta_x.signum().into();
+                    }
+                    if delta_y != 0.0 {
+                        self.mouse_wheel_vertical = delta_y.signum().into();
+                    }
                     self.invoke_wheel_moved(delta_x.into(), delta_y.into(), event_handler);
                 }
                 DeviceEvent::MouseWheel {
                     delta: MouseScrollDelta::PixelDelta(LogicalPosition { x, y }),
                 } => {
+                    if x != 0.0 {
+                        self.mouse_wheel_horizontal = x.signum();
+                    }
+                    if y != 0.0 {
+                        self.mouse_wheel_vertical = y.signum();
+                    }
                     self.invoke_wheel_moved(x, y, event_handler);
                 }
                 _ => {}
@@ -368,6 +382,15 @@ impl<T: BindingTypes> InputHandler<T> {
         }
     }
 
+    /// This function is to be called whenever a frame begins. It resets some input values.
+    ///
+    /// The `InputSystem` will call this automatically. If you're using that system, you
+    /// don't need to call this function.
+    pub fn send_frame_begin(&mut self) {
+        self.mouse_wheel_vertical = 0.0;
+        self.mouse_wheel_horizontal = 0.0;
+    }
+
     /// Returns an iterator over all keys that are down.
     pub fn keys_that_are_down(&self) -> impl Iterator<Item = VirtualKeyCode> + '_ {
         self.pressed_keys.iter().map(|k| k.0)
@@ -388,6 +411,18 @@ impl<T: BindingTypes> InputHandler<T> {
         self.pressed_mouse_buttons
             .iter()
             .any(|&mb| mb == mouse_button)
+    }
+
+    /// If the mouse wheel was scrolled this frame this function will return the direction it was scrolled.
+    ///
+    /// If "horizontal" is true this will return the horizontal mouse value. You almost always want the
+    /// vertical mouse value.
+    pub fn mouse_wheel_value(&self, horizontal: bool) -> f64 {
+        if horizontal {
+            self.mouse_wheel_horizontal
+        } else {
+            self.mouse_wheel_vertical
+        }
     }
 
     /// Returns an iterator over all pressed scan codes
@@ -505,6 +540,7 @@ impl<T: BindingTypes> InputHandler<T> {
                     }
                 })
                 .unwrap_or(0.0),
+            Axis::MouseWheel { horizontal } => self.mouse_wheel_value(horizontal),
         })
     }
 
@@ -970,6 +1006,35 @@ mod tests {
         assert!(!handler.button_is_down(Button::Mouse(MouseButton::Left)));
     }
 
+    #[test]
+    fn basic_mouse_wheel_check() {
+        let mut handler = InputHandler::<StringBindings>::new();
+        let mut events = EventChannel::<InputEvent<String>>::new();
+        assert_eq!(handler.mouse_wheel_value(false), 0.0);
+        assert_eq!(handler.mouse_wheel_value(true), 0.0);
+        handler.send_event(&mouse_wheel(0.0, 5.0), &mut events, HIDPI);
+        assert_eq!(handler.mouse_wheel_value(false), 1.0);
+        assert_eq!(handler.mouse_wheel_value(true), 0.0);
+        handler.send_frame_begin();
+        assert_eq!(handler.mouse_wheel_value(false), 0.0);
+        assert_eq!(handler.mouse_wheel_value(true), 0.0);
+        handler.send_event(&mouse_wheel(5.0, 0.0), &mut events, HIDPI);
+        assert_eq!(handler.mouse_wheel_value(false), 0.0);
+        assert_eq!(handler.mouse_wheel_value(true), 1.0);
+        handler.send_frame_begin();
+        assert_eq!(handler.mouse_wheel_value(false), 0.0);
+        assert_eq!(handler.mouse_wheel_value(true), 0.0);
+        handler.send_event(&mouse_wheel(0.0, -5.0), &mut events, HIDPI);
+        assert_eq!(handler.mouse_wheel_value(false), -1.0);
+        assert_eq!(handler.mouse_wheel_value(true), 0.0);
+        handler.send_frame_begin();
+        assert_eq!(handler.mouse_wheel_value(false), 0.0);
+        assert_eq!(handler.mouse_wheel_value(true), 0.0);
+        handler.send_event(&mouse_wheel(-5.0, 0.0), &mut events, HIDPI);
+        assert_eq!(handler.mouse_wheel_value(false), 0.0);
+        assert_eq!(handler.mouse_wheel_value(true), -1.0);
+    }
+
     /// Compares two sets for equality, but not the order
     fn sets_are_equal<T>(a: &[T], b: &[T])
     where
@@ -1051,6 +1116,15 @@ right: `{:?}`",
                     alt: false,
                     logo: false,
                 },
+            },
+        }
+    }
+
+    fn mouse_wheel(x: f32, y: f32) -> Event {
+        Event::DeviceEvent {
+            device_id: unsafe { DeviceId::dummy() },
+            event: DeviceEvent::MouseWheel {
+                delta: MouseScrollDelta::LineDelta(x, y),
             },
         }
     }

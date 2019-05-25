@@ -26,4 +26,11 @@ pub enum Axis {
         /// linearly interpolate remaining ranges.
         dead_zone: f64,
     },
+    /// Represents the wheel on a PC mouse.
+    MouseWheel {
+        /// If this value is true then this axis is for the horizontal mouse wheel rather than the vertical mouse wheel.
+        ///
+        /// You almost always want this false.
+        horizontal: bool,
+    },
 }
