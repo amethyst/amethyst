@@ -129,7 +129,7 @@ $ pacman -Sy grep gcc pkgconfig openssl alsa-lib cmake make python3 freetype2 aw
 ### openSUSE
 
 ```
-$ zypper install gcc pkg-config libopenssl-devel alsa-devel cmake gcc-c++ python3 freetype2-devel libexpat-devel libxcb-devel
+# zypper install gcc pkg-config libopenssl-devel alsa-devel cmake gcc-c++ python3 freetype2-devel libexpat-devel libxcb-devel
 ```
 
 ### Other
