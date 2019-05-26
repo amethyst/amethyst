@@ -13,6 +13,7 @@ amethyst_core = { path = "../amethyst_core", version = "0.5" }
 amethyst_derive = { path = "../amethyst_derive", version = "0.3" }
 amethyst_error = { path = "../amethyst_error", version = "0.1" }
 amethyst_window = { path = "../amethyst_window", version = "0.1" }
+derive-new = "0.5.6"
 failure = "0.1"
 genmesh = "0.6"
 glsl-layout = "0.3"
@@ -45,6 +46,7 @@ profiler = [ "thread_profiler/thread_profiler", "rendy/profiler" ]
 nightly = [ "amethyst_core/nightly", "shred/nightly" ]
 no-slow-safety-checks = ["rendy/no-slow-safety-checks"]
 shader-compiler =  ["rendy/shader-compiler"]
+test-support =  []
 
 [[bench]]
 name = "camera"

@@ -39,12 +39,18 @@ pub mod visibility;
 pub mod pod;
 pub mod util;
 
+#[cfg(feature = "test-support")]
+mod render_test_bundle;
+
 pub use formats::{mesh::MeshPrefab, texture::TexturePrefab};
 pub use mtl::{Material, MaterialDefaults};
 pub use sprite::{Sprite, SpriteRender, SpriteSheet};
 pub use system::{GraphCreator, RenderingSystem};
 pub use types::{Backend, Mesh, Texture};
 pub use util::{simple_shader_set, ChangeDetection};
+
+#[cfg(feature = "test-support")]
+pub use render_test_bundle::RenderTestBundle;
 
 pub mod loaders {
     pub use rendy::texture::palette::{load_from_linear_rgba, load_from_srgb, load_from_srgba};

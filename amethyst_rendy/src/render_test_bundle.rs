@@ -1,81 +1,59 @@
 use std::{ops::Deref, sync::Arc};
 
-use amethyst::{
-    assets::Processor,
-    core::TransformBundle,
-    ecs::{ReadExpect, Resources, SystemData},
-    renderer::{
-        pass::{DrawFlat2DDesc, DrawFlat2DTransparentDesc},
-        rendy::{
-            factory::Factory,
-            graph::{
-                render::{RenderGroupDesc, SubpassBuilder},
-                GraphBuilder,
-            },
-            hal::{
-                command::{ClearDepthStencil, ClearValue},
-                format::Format,
-                image::Kind,
-            },
+use amethyst_assets::Processor;
+use amethyst_core::{
+    bundle::SystemBundle,
+    ecs::{DispatcherBuilder, ReadExpect, Resources, SystemData},
+};
+use amethyst_error::Error;
+use amethyst_window::{ScreenDimensions, Window};
+use derive_new::new;
+
+use crate::{
+    pass::{DrawFlat2DDesc, DrawFlat2DTransparentDesc},
+    rendy::{
+        factory::Factory,
+        graph::{
+            render::{RenderGroupDesc, SubpassBuilder},
+            GraphBuilder,
         },
-        sprite::SpriteSheet,
-        sprite_visibility::SpriteVisibilitySortingSystem,
-        types::DefaultBackend,
-        GraphCreator, RenderingSystem,
+        hal::{
+            command::{ClearDepthStencil, ClearValue},
+            format::Format,
+            image::Kind,
+        },
     },
-    window::{DisplayConfig, ScreenDimensions, Window, WindowBundle},
-    GameData, StateEvent, StateEventReader,
+    sprite::SpriteSheet,
+    sprite_visibility::SpriteVisibilitySortingSystem,
+    types::DefaultBackend,
+    GraphCreator, RenderingSystem,
 };
 
-use crate::{AmethystApplication, GameUpdate, HIDPI, SCREEN_HEIGHT, SCREEN_WIDTH};
+/// Adds sprite systems and a basic rendering system to the dispatcher.
+///
+/// This test bundle requires the user to also add the `TransformBundle` and `WindowBundle` to the
+/// dispatcher.
+#[derive(Debug, new)]
+pub struct RenderTestBundle;
 
-/// Extension to include render specific functions.
-pub trait RenderBaseAppExt {
-    /// Provides base bundles and systems for an application with render functionality.
-    fn render_base() -> Self;
-}
+impl<'a, 'b> SystemBundle<'a, 'b> for RenderTestBundle {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        builder.add(
+            Processor::<SpriteSheet>::new(),
+            "sprite_sheet_processor",
+            &[],
+        );
+        builder.add(
+            SpriteVisibilitySortingSystem::new(),
+            "sprite_visibility_system",
+            &["transform_system"],
+        );
 
-impl RenderBaseAppExt
-    for AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader>
-{
-    fn render_base() -> Self {
-        let mut display_config = DisplayConfig::default();
-        display_config.dimensions = Some((SCREEN_WIDTH, SCREEN_HEIGHT));
-        display_config.visibility = false;
-
-        AmethystApplication::blank()
-            .with_bundle(TransformBundle::new())
-            .with_bundle(WindowBundle::from_config(display_config))
-            .with_rendering_system()
-            .with_system(
-                Processor::<SpriteSheet>::new(),
-                "sprite_sheet_processor",
-                &[],
-            )
-            .with_system(
-                SpriteVisibilitySortingSystem::new(),
-                "sprite_visibility_system",
-                &["transform_system"],
-            )
-            .with_resource(ScreenDimensions::new(SCREEN_WIDTH, SCREEN_HEIGHT, HIDPI))
-    }
-}
-
-/// Extension to include render specific functions.
-pub trait RenderAppExt {
-    /// Adds a `RenderingSystem` with an empty graph.
-    fn with_rendering_system(self) -> Self;
-}
-
-impl<T, E, R> RenderAppExt for AmethystApplication<T, E, R>
-where
-    T: GameUpdate,
-    E: Send + Sync + 'static,
-{
-    fn with_rendering_system(self) -> Self {
-        self.with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
+        builder.add_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             RenderGraph::default(),
-        ))
+        ));
+
+        Ok(())
     }
 }
 
