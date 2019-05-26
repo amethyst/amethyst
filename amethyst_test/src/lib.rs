@@ -84,7 +84,7 @@
 //!     // Start with the Transform, Input, and UI bundles
 //!     // The type parameters here are the Axis and Action types for the `InputBundle` and
 //!     // `UiBundle`.
-//!     AmethystApplication::ui_base::<String, String>();
+//!     AmethystApplication::ui_base::<amethyst::input::StringBindings>();
 //!
 //!     // Start with the Animation, Transform, and Render bundles.
 //!     // If you want the Input and UI bundles, you can use the `.with_ui_bundles::<T>()`
