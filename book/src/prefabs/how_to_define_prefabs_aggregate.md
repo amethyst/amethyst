@@ -91,9 +91,9 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
         Sword,
     }
     
-    /// All fields implement `PrefabData`, and are wrapped in `Option<_>`.
+    /// All fields implement `PrefabData`.
     ///
-    /// **Note:** If a field is not specified in the prefab, it will default
+    /// **Note:** If a field is of type `Option<_>` and not specified in the prefab, it will default
     /// to `None`.
     #[derive(Debug, Deserialize, Serialize, PrefabData)]
     #[serde(deny_unknown_fields)]
@@ -109,6 +109,83 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     }
 
     ```
+    **Note:** There is an important limitation when building `PrefabData`s, particularly enum `PrefabData`s. No two fields in the `PrefabData` or in any nested `PrefabData`s under it can access the same `Component` unless all accesses are reads. This is still true even if the fields appear in different variants of an enum. This means that the following `PrefabData` will fail at runtime when loaded:
+
+    ```rust,edition2018,no_run,noplaypen
+    # use amethyst::{
+    #     assets::{PrefabData, ProgressCounter},
+    #     core::Named,
+    #     derive::PrefabData,
+    #     ecs::{
+    #         storage::{DenseVecStorage, VecStorage},
+    #         Component, Entity, WriteStorage,
+    #         renderer::sprite::prefab::SpriteScenePrefab,
+    #     },
+    #     prelude::*,
+    #     Error,
+    # };
+    # use serde::{Deserialize, Serialize};
+    # use specs_derive::Component;
+
+    #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
+    #[prefab(Component)]
+    #[serde(deny_unknown_fields)]
+    pub struct SpecialPower;
+
+    #[derive(Debug, Deserialize, Serialize, PrefabData)]
+    #[serde(deny_unknown_fields)]
+    pub enum CustomPrefabData {
+        MundaneCreature {
+            sprite: SpriteScenePrefab,
+        },
+        MagicalCreature {
+            special_power: SpecialPower,
+            sprite: SpriteScenePrefab,
+        },
+    }
+
+    ```
+
+    The problem is that both the `SpriteScenePrefab`s need to write to `Trasform` and several other common `Components`. Because Amythest's underlyng ECS system determins what resources are accessed based on static types it can't determine that only one of the `SpriteScenePrefab`s will be accessed at a time and it attempts a double mutable borrow which fails. The solution is to define the `PrefabData` hierarchically so each component only appears once:
+
+    ```rust,edition2018,no_run,noplaypen
+    # use amethyst::{
+    #     assets::{PrefabData, ProgressCounter},
+    #     core::Named,
+    #     derive::PrefabData,
+    #     ecs::{
+    #         storage::{DenseVecStorage, VecStorage},
+    #         Component, Entity, WriteStorage,
+    #         renderer::sprite::prefab::SpriteScenePrefab,
+    #     },
+    #     prelude::*,
+    #     Error,
+    # };
+    # use serde::{Deserialize, Serialize};
+    # use specs_derive::Component;
+
+    #[derive(Clone, Copy, Component, Debug, Default, Deserialize, Serialize, PrefabData)]
+    #[prefab(Component)]
+    #[serde(deny_unknown_fields)]
+    pub struct SpecialPower;
+
+    #[derive(Debug, Deserialize, Serialize, PrefabData)]
+    #[serde(deny_unknown_fields)]
+    pub enum CreatureDetailsPrefab {
+        MundaneCreature {
+        },
+        MagicalCreature {
+            special_power: SpecialPower,
+        },
+    }
+    #[derive(Debug, Deserialize, Serialize, PrefabData)]
+    #[serde(deny_unknown_fields)]
+    pub enum CustomPrefabData {
+        sprite: SpriteScenePrefab,
+        creature_details: CreatureDetailsPrefab,
+    }
+
+    ```
 
     The [`PrefabData`][api_pf_derive] derive implements the [`PrefabData`] trait for the type. The generated code will handle invoking the appropriate [`PrefabData`] methods when loading and attaching components to an entity. **Note:** This differs from the simple component [`PrefabData`] derive implementation &ndash; there is no `#[prefab(Component)]` attribute.
 
@@ -116,8 +193,9 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
 
     Finally, the [`#[serde(deny_unknown_fields)]`] ensures that deserialization produces an error if it encounters an unknown field. This will help expose mistakes in the prefab file, such as when there is a typo.
 
+
 4. Now the type can be used in a prefab.
-    * *struct* prefab data:
+    * `struct` prefab data:
 
         ```rust,ignore
         #![enable(implicit_some)]
@@ -133,7 +211,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
         )
         ```
 
-    * *enum* prefab data:
+    * `enum` prefab data:
 
         ```rust,ignore
         #![enable(implicit_some)]

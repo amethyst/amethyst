@@ -168,7 +168,6 @@ cargo run --example prefab_multi
 The next level is to instantiate multiple entities, each with their own set of [`Component`]s. The current implementation of [`Prefab`] requires the `data` field to be the same type for *every* [`PrefabEntity`] in the list. This means that to have different types of entity in the same prefab they must be variants of an enum. For instance, a prefab like this:
 
 ```rust,ignore
-// Note: Invalid / erroneous example
 #![enable(implicit_some)]
 Prefab(
     entities: [
