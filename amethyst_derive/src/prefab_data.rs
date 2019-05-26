@@ -6,7 +6,7 @@ use syn::{
 };
 
 pub fn impl_prefab_data(ast: &DeriveInput) -> TokenStream {
-    if have_component_attribute(&ast.attrs[..]) {
+    if is_component_prefab(&ast.attrs[..]) {
         impl_prefab_data_component(ast)
     } else {
         impl_prefab_data_aggregate(ast)
@@ -36,6 +36,11 @@ fn impl_prefab_data_component(ast: &DeriveInput) -> TokenStream {
     }
 }
 
+#[inline]
+fn is_aggregate_prefab(attrs: &[Attribute]) -> bool {
+    !is_component_prefab(attrs)
+}
+
 fn prepare_prefab_aggregate_fields(
     data_types: &mut Vec<(Type, bool)>,
     fields: &Fields,
@@ -43,7 +48,9 @@ fn prepare_prefab_aggregate_fields(
     let mut subs = Vec::new();
     let mut add_to_entity = Vec::new();
     for (field_number, field) in fields.iter().enumerate() {
-        let is_component = have_component_attribute(&field.attrs[..]);
+        let is_component = is_component_prefab(&field.attrs[..]);
+        // Since there may be multiple fields that use the same prefab data type, we keep track of whether
+        // that type has been seen. If it has, then we use the item that we tracked earlier.
         let i = match data_types
             .iter()
             .position(|t| t.0 == field.ty && t.1 == is_component)
@@ -101,12 +108,13 @@ fn prepare_prefab_aggregate_struct(
                 }
             });
     let extract_fields_sub = data.fields.iter().enumerate().map(|(field_number, field)| {
-        if !have_component_attribute(&field.attrs[..]) {
+        if is_aggregate_prefab(&field.attrs[..]) {
             match &field.ident {
                 Some(name) => Some(quote! {
                     let #name = &mut self.#name;
                 }),
                 None => {
+                    // Unnamed fields (tuple structs) do not have an ident, so we name based on their position instead.
                     let var_name =
                         Ident::new(&format!("field_{}", field_number), Span::call_site());
                     let number = Literal::usize_unsuffixed(field_number);
@@ -158,7 +166,7 @@ fn prepare_prefab_aggregate_enum(
             .enumerate()
             .map(|(field_number, field)| match &field.ident {
                 Some(name) => {
-                    if !have_component_attribute(&field.attrs[..]) {
+                    if is_aggregate_prefab(&field.attrs[..]) {
                         quote! {
                             #name
                         }
@@ -169,7 +177,7 @@ fn prepare_prefab_aggregate_enum(
                     }
                 }
                 None => {
-                    let var_name = if !have_component_attribute(&field.attrs[..]) {
+                    let var_name = if is_aggregate_prefab(&field.attrs[..]) {
                         Ident::new(&format!("field_{}", field_number), Span::call_site())
                     } else {
                         Ident::new(&format!("_field_{}", field_number), Span::call_site())
@@ -310,7 +318,7 @@ fn gen_def_ty_params(generics: &Generics) -> TokenStream {
     quote! { #( #ty_params ),* }
 }
 
-fn have_component_attribute(attrs: &[Attribute]) -> bool {
+fn is_component_prefab(attrs: &[Attribute]) -> bool {
     for meta in attrs
         .iter()
         .filter(|attr| attr.path.segments[0].ident == "prefab")
