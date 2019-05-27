@@ -85,7 +85,7 @@ mod tests {
     use crate::{
         deserialize_event,
         net_event::{NetEvent, NetPacket},
-        send_packet, serialize_packet,
+        serialize_packet,
     };
     use crossbeam_channel::unbounded;
     use laminar::{DeliveryGuarantee, OrderingGuarantee};
@@ -137,14 +137,5 @@ mod tests {
             deserialize_event::<NetPacket<String>>(&[3, 0, 0, 0, 0, 0, 0, 0, 97, 98, 99]).unwrap();
 
         assert_eq!(result.content(), &"abc".to_string());
-    }
-
-    #[test]
-    fn packet_is_queued_for_send() {
-        let packet = NetPacket::reliable_unordered("a".to_string());
-        let (tx, rx) = unbounded();
-        send_packet(packet, "127.0.0.1:0".parse().unwrap(), &tx);
-
-        assert_eq!(rx.len(), 1);
     }
 }

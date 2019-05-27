@@ -163,18 +163,14 @@ where
                 SocketEvent::Connect(addr) => {
                     if self.config.create_net_connection_on_connect {
                         let mut connection: NetConnection<E> = NetConnection::new(addr);
+                        connection
+                            .receive_buffer
+                            .single_write(NetEvent::Connected(addr));
+
                         entities
                             .build_entity()
                             .with(connection, &mut net_connections)
                             .build();
-
-                        for connection in (&mut net_connections).join() {
-                            if connection.target_addr == addr {
-                                connection
-                                    .receive_buffer
-                                    .single_write(NetEvent::Connected(addr));
-                            }
-                        }
                     }
                 }
                 SocketEvent::Timeout(timeout_addr) => {
