@@ -91,8 +91,6 @@ where
     state_fns: Vec<FnState<T, E>>,
     /// Game data and event type.
     state_data: PhantomData<(T, E, R)>,
-    /// Whether or not this application should block on holding a lock around rendy.
-    block_on_rendy: bool,
 }
 
 impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader> {
@@ -104,7 +102,6 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
             resource_add_fns: Vec::new(),
             state_fns: Vec::new(),
             state_data: PhantomData,
-            block_on_rendy: false,
         }
     }
 
@@ -204,50 +201,51 @@ where
     }
 
     /// Runs the application and returns `Ok(())` if nothing went wrong.
-    ///
-    /// This method should be called instead of the `.build()` method if the application is to be
-    /// run, as this avoids a segfault on Linux when using the GL software renderer.
     pub fn run(self) -> Result<(), Error>
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
         let params = (self.bundle_add_fns, self.resource_add_fns, self.state_fns);
 
-        let block_on_rendy = self.block_on_rendy;
+        // `CoreApplication` is `!UnwindSafe`, but wrapping it in a `Mutex` allows us to
+        // recover from a panic.
+        let application = Mutex::new(Self::build_internal(params)?);
+        panic::catch_unwind(move || {
+            application
+                .lock()
+                .expect("Expected to get application lock")
+                .run()
+        })
+        .map_err(Self::box_any_to_error)
+    }
 
-        // Acquire a lock due to memory access issues when using Rendy:
-        //
-        // See: <https://github.com/amethyst/rendy/issues/151>
-        if block_on_rendy {
-            let guard = RENDY_MEMORY_MUTEX.lock().unwrap();
+    /// Run the application in a sub thread.
+    ///
+    /// Historically this has been used for the following reasons:
+    ///
+    /// * To avoid segmentation faults using [X and mesa][mesa].
+    /// * To avoid multiple threads sharing the same memory in [Vulkan][vulkan].
+    ///
+    /// This must **NOT** be used when including the `AudioBundle` on Windows, as it causes a
+    /// [segfault][audio].
+    ///
+    /// [mesa]: <https://github.com/rust-windowing/glutin/issues/1038>
+    /// [vulkan]: <https://github.com/amethyst/rendy/issues/151>
+    /// [audio]: <https://github.com/amethyst/amethyst/issues/1595>
+    pub fn run_isolated(self) -> Result<(), Error>
+    where
+        for<'b> R: EventReader<'b, Event = E>,
+    {
+        let run_result = {
+            // Acquire a lock due to memory access issues when using Rendy:
+            //
+            // See: <https://github.com/amethyst/rendy/issues/151>
+            let _guard = RENDY_MEMORY_MUTEX.lock().unwrap();
 
-            // We have to build the application after acquiring the lock because the window
-            // is already instantiated during the build.
+            self.run()
+        };
 
-            // `CoreApplication` is `!UnwindSafe`, but wrapping it in a `Mutex` allows us to
-            // recover from a panic.
-            let application = Mutex::new(Self::build_internal(params)?);
-            let run_result = panic::catch_unwind(move || {
-                application
-                    .lock()
-                    .expect("Expected to get application lock")
-                    .run()
-            })
-            .map_err(Self::box_any_to_error);
-
-            drop(guard);
-
-            run_result
-        } else {
-            let application = Mutex::new(Self::build_internal(params)?);
-            panic::catch_unwind(move || {
-                application
-                    .lock()
-                    .expect("Expected to get application lock")
-                    .run()
-            })
-            .map_err(Self::box_any_to_error)
-        }
+        run_result
     }
 
     fn box_any_to_error(error: Box<dyn Any + Send>) -> Error {
@@ -296,7 +294,6 @@ where
             resource_add_fns: self.resource_add_fns,
             state_fns: Vec::new(),
             state_data: PhantomData,
-            block_on_rendy: self.block_on_rendy,
         }
     }
 
@@ -532,24 +529,6 @@ where
         F: Fn(&mut World) + Send + Sync + 'static,
     {
         self.with_fn(assertion_fn)
-    }
-
-    /// Mark that the application should run in a sub thread.
-    ///
-    /// Historically this has been used for the following reasons:
-    ///
-    /// * To avoid segmentation faults using [X and mesa][mesa].
-    /// * To avoid multiple threads sharing the same memory in [Vulkan][vulkan].
-    ///
-    /// This must **NOT** be used when including the `AudioBundle` on Windows, as it causes a
-    /// [segfault][audio].
-    ///
-    /// [mesa]: <https://github.com/rust-windowing/glutin/issues/1038>
-    /// [vulkan]: <https://github.com/amethyst/rendy/issues/151>
-    /// [audio]: <https://github.com/amethyst/amethyst/issues/1595>
-    pub fn block_on_rendy(mut self) -> Self {
-        self.block_on_rendy = true;
-        self
     }
 }
 
