@@ -87,12 +87,14 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::net_event::{NetEvent, NetPacket};
-    use crate::{deserialize_event, send_event, serialize_event};
+    use crate::{
+        deserialize_event,
+        net_event::{NetEvent, NetPacket},
+        send_event, serialize_event,
+    };
     use crossbeam_channel::unbounded;
     use laminar::{DeliveryGuarantee, OrderingGuarantee};
     use std::net::SocketAddr;
-    use std::sync::mpsc::Sender;
 
     #[test]
     fn can_serialize_packets() {

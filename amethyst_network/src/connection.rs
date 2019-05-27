@@ -164,8 +164,7 @@ impl Component for NetIdentity {
 
 #[cfg(test)]
 mod tests {
-    use crate::connection::NetConnection;
-    use crate::net_event::NetEvent;
+    use crate::{connection::NetConnection, net_event::NetEvent};
 
     fn can_read_received_events() {
         let mut connection = test_connection();
