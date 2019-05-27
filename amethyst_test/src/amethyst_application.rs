@@ -1,4 +1,4 @@
-use std::{any::Any, marker::PhantomData, panic, path::PathBuf, sync::Mutex, thread};
+use std::{any::Any, marker::PhantomData, panic, path::PathBuf, sync::Mutex};
 
 use amethyst::{
     self,
@@ -72,11 +72,6 @@ pub struct AmethystApplication<T, E, R>
 where
     E: Send + Sync + 'static,
 {
-    /// Name of the application, if provided.
-    ///
-    /// This is used to name the thread that is used to spawn the application, so that on `panic!`s
-    /// it is easier to tell which test failed.
-    app_name: Option<String>,
     /// Functions to add bundles to the game data.
     ///
     /// This is necessary because `System`s are not `Send`, and so we cannot send `GameDataBuilder`
@@ -96,8 +91,8 @@ where
     state_fns: Vec<FnState<T, E>>,
     /// Game data and event type.
     state_data: PhantomData<(T, E, R)>,
-    /// Whether or not this application should run in a sub thread.
-    run_in_thread: bool,
+    /// Whether or not this application should block on holding a lock around rendy.
+    block_on_rendy: bool,
 }
 
 impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader> {
@@ -105,12 +100,11 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
     pub fn blank() -> AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader>
     {
         AmethystApplication {
-            app_name: None,
             bundle_add_fns: Vec::new(),
             resource_add_fns: Vec::new(),
             state_fns: Vec::new(),
             state_data: PhantomData,
-            run_in_thread: false,
+            block_on_rendy: false,
         }
     }
 
@@ -219,43 +213,31 @@ where
     {
         let params = (self.bundle_add_fns, self.resource_add_fns, self.state_fns);
 
-        let run_in_thread = self.run_in_thread;
+        let block_on_rendy = self.block_on_rendy;
 
-        // Run in a sub thread due to memory access issues when using Rendy:
+        // Acquire a lock due to memory access issues when using Rendy:
         //
         // See: <https://github.com/amethyst/rendy/issues/151>
-        if run_in_thread {
-            let app_name = self
-                .app_name
-                .unwrap_or_else(|| String::from(stringify!(AmethystApplication)));
-            thread::Builder::new()
-                .name(app_name)
-                .spawn(move || -> Result<(), Error> {
-                    amethyst::start_logger(Default::default());
+        if block_on_rendy {
+            let guard = RENDY_MEMORY_MUTEX.lock().unwrap();
 
-                    let guard = RENDY_MEMORY_MUTEX.lock().unwrap();
+            // We have to build the application after acquiring the lock because the window
+            // is already instantiated during the build.
 
-                    // We have to build the application after acquiring the lock because the window
-                    // is already instantiated during the build.
+            // `CoreApplication` is `!UnwindSafe`, but wrapping it in a `Mutex` allows us to
+            // recover from a panic.
+            let application = Mutex::new(Self::build_internal(params)?);
+            let run_result = panic::catch_unwind(move || {
+                application
+                    .lock()
+                    .expect("Expected to get application lock")
+                    .run()
+            })
+            .map_err(Self::box_any_to_error);
 
-                    // `CoreApplication` is `!UnwindSafe`, but wrapping it in a `Mutex` allows us to
-                    // recover from a panic.
-                    let application = Mutex::new(Self::build_internal(params)?);
-                    let run_result = panic::catch_unwind(move || {
-                        application
-                            .lock()
-                            .expect("Expected to get application lock")
-                            .run()
-                    })
-                    .map_err(Self::box_any_to_error);
+            drop(guard);
 
-                    drop(guard);
-
-                    run_result
-                })
-                .expect("Failed to spawn `AmethystApplication` thread.")
-                .join()
-                .expect("Failed to run `AmethystApplication` closure.")
+            run_result
         } else {
             let application = Mutex::new(Self::build_internal(params)?);
             panic::catch_unwind(move || {
@@ -288,17 +270,6 @@ where
     T: GameUpdate,
     E: Send + Sync + 'static,
 {
-    /// Sets the name for this application.
-    ///
-    /// This will be used for the thread name that runs this application.
-    pub fn with_app_name<N>(mut self, app_name: N) -> Self
-    where
-        N: Into<String>,
-    {
-        self.app_name = Some(app_name.into());
-        self
-    }
-
     /// Use the specified custom event type instead of `()`.
     ///
     /// This **must** be invoked before any of the `.with_*()` function calls as the custom event
@@ -321,12 +292,11 @@ where
             );
         }
         AmethystApplication {
-            app_name: self.app_name,
             bundle_add_fns: self.bundle_add_fns,
             resource_add_fns: self.resource_add_fns,
             state_fns: Vec::new(),
             state_data: PhantomData,
-            run_in_thread: self.run_in_thread,
+            block_on_rendy: self.block_on_rendy,
         }
     }
 
@@ -577,8 +547,8 @@ where
     /// [mesa]: <https://github.com/rust-windowing/glutin/issues/1038>
     /// [vulkan]: <https://github.com/amethyst/rendy/issues/151>
     /// [audio]: <https://github.com/amethyst/amethyst/issues/1595>
-    pub fn run_in_thread(mut self) -> Self {
-        self.run_in_thread = true;
+    pub fn block_on_rendy(mut self) -> Self {
+        self.block_on_rendy = true;
         self
     }
 }
