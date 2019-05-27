@@ -14,6 +14,7 @@ use crate::{
     rendy::{
         factory::Factory,
         graph::{
+            present::PresentNode,
             render::{RenderGroupDesc, SubpassBuilder},
             GraphBuilder,
         },
@@ -57,7 +58,34 @@ impl<'a, 'b> SystemBundle<'a, 'b> for RenderTestBundle {
     }
 }
 
-/// Default render graph in case the `RenderingSystem` is only needed to load textures and meshes.
+/// Adds sprite systems and a basic rendering system to the dispatcher.
+///
+/// This test bundle requires the user to also add the `TransformBundle` to the dispatcher.
+#[derive(Debug, new)]
+pub struct RenderEmptyBundle;
+
+impl<'a, 'b> SystemBundle<'a, 'b> for RenderEmptyBundle {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        builder.add(
+            Processor::<SpriteSheet>::new(),
+            "sprite_sheet_processor",
+            &[],
+        );
+        builder.add(
+            SpriteVisibilitySortingSystem::new(),
+            "sprite_visibility_system",
+            &["transform_system"],
+        );
+
+        builder.add_thread_local(RenderingSystem::<DefaultBackend, _>::new(
+            EmptyGraph::default(),
+        ));
+
+        Ok(())
+    }
+}
+
+/// Render graph that renders sprites to a Window.
 #[derive(Default)]
 pub struct RenderGraph {
     dimensions: Option<ScreenDimensions>,
@@ -109,14 +137,14 @@ impl GraphCreator<DefaultBackend> for RenderGraph {
             Some(ClearValue::DepthStencil(ClearDepthStencil(1., 0))),
         );
 
-        let _sprite = graph_builder.add_node(
+        let sprite = graph_builder.add_node(
             SubpassBuilder::new()
                 .with_group(DrawFlat2DDesc::new().builder())
                 .with_color(colour)
                 .with_depth_stencil(depth)
                 .into_pass(),
         );
-        let _sprite_trans = graph_builder.add_node(
+        let sprite_trans = graph_builder.add_node(
             SubpassBuilder::new()
                 .with_group(DrawFlat2DTransparentDesc::new().builder())
                 .with_color(colour)
@@ -124,6 +152,30 @@ impl GraphCreator<DefaultBackend> for RenderGraph {
                 .into_pass(),
         );
 
+        let _present = graph_builder.add_node(
+            PresentNode::builder(factory, surface, colour)
+                .with_dependency(sprite_trans)
+                .with_dependency(sprite),
+        );
+
         graph_builder
+    }
+}
+
+/// Default render graph in case the `RenderingSystem` is only needed to load textures and meshes.
+#[derive(Default)]
+pub struct EmptyGraph;
+
+impl GraphCreator<DefaultBackend> for EmptyGraph {
+    fn rebuild(&mut self, _res: &Resources) -> bool {
+        false
+    }
+
+    fn builder(
+        &mut self,
+        _factory: &mut Factory<DefaultBackend>,
+        _res: &Resources,
+    ) -> GraphBuilder<DefaultBackend, Resources> {
+        GraphBuilder::new()
     }
 }

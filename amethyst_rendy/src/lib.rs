@@ -50,7 +50,7 @@ pub use types::{Backend, Mesh, Texture};
 pub use util::{simple_shader_set, ChangeDetection};
 
 #[cfg(feature = "test-support")]
-pub use render_test_bundle::RenderTestBundle;
+pub use render_test_bundle::{RenderEmptyBundle, RenderTestBundle};
 
 pub mod loaders {
     pub use rendy::texture::palette::{load_from_linear_rgba, load_from_srgb, load_from_srgba};
