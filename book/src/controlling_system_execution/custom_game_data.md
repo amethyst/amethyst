@@ -124,8 +124,7 @@ our `Application`, but first we should create some `State`s.
 #
 # use amethyst::ecs::prelude::{Dispatcher, World};
 # use amethyst::prelude::{State, StateData, StateEvent, Trans};
-# use amethyst::input::{is_close_requested, is_key_down};
-# use amethyst::renderer::VirtualKeyCode;
+# use amethyst::input::{is_close_requested, is_key_down, VirtualKeyCode};
 #
 # pub struct CustomGameData<'a, 'b> {
 #     core_dispatcher: Dispatcher<'a, 'b>,
