@@ -11,10 +11,11 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use super::{
     error::Result,
-    send_event,
+    serialize_event, serialize_packet,
     server::{Host, ServerConfig},
     ConnectionState, NetConnection, NetEvent,
 };
+use std::io::{Error, ErrorKind};
 
 enum InternalSocketEvent<E> {
     SendEvents {
@@ -83,11 +84,24 @@ where
                 match control_event {
                     InternalSocketEvent::SendEvents { target, events } => {
                         for ev in events {
-                            match ev {
-                                NetEvent::Packet(packet) => {
-                                    send_event(packet, target, &sender);
+                            let serialize_result = match ev {
+                                NetEvent::Packet(packet) => serialize_packet(packet, target),
+                                NetEvent::Connected(addr) => serialize_event(ev, addr),
+                                NetEvent::Disconnected(addr) => serialize_event(ev, addr),
+                                NetEvent::__Nonexhaustive => {
+                                    Err(Error::new(ErrorKind::Other, "Net event does not exist.")
+                                        .into())
                                 }
-                                _ => { /* TODO, handle connect, disconnect etc. */ }
+                            };
+
+                            match serialize_result {
+                                Ok(packet) => match sender.send(packet) {
+                                    Ok(_qty) => {}
+                                    Err(e) => {
+                                        error!("Failed to send data to network socket: {}", e)
+                                    }
+                                },
+                                Err(e) => error!("Cannot serialize packet. Reason: {}", e),
                             }
                         }
                     }
@@ -149,14 +163,18 @@ where
                 SocketEvent::Connect(addr) => {
                     if self.config.create_net_connection_on_connect {
                         let mut connection: NetConnection<E> = NetConnection::new(addr);
-                        connection
-                            .receive_buffer
-                            .single_write(NetEvent::Connected(addr));
-
                         entities
                             .build_entity()
                             .with(connection, &mut net_connections)
                             .build();
+
+                        for connection in (&mut net_connections).join() {
+                            if connection.target_addr == addr {
+                                connection
+                                    .receive_buffer
+                                    .single_write(NetEvent::Connected(addr));
+                            }
+                        }
                     }
                 }
                 SocketEvent::Timeout(timeout_addr) => {

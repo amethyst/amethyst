@@ -27,25 +27,20 @@ mod network_socket;
 mod server;
 mod test;
 
-/// Send the given packet onto the given sender.
-///
-/// This function serializes the data of the given packet and converts it to a laminar packet.
-/// After this, it will be queued on the given `Sender`.
-pub fn send_event<T>(packet: NetPacket<T>, addr: SocketAddr, sender: &Sender<Packet>)
+/// Attempts to serialize the given `NetEvent` and returns a laminar packet.
+/// Reliable ordered will be used by default.
+fn serialize_event<E>(event: NetEvent<E>, addr: SocketAddr) -> Result<Packet>
 where
-    T: Serialize,
+    E: Serialize,
 {
-    match serialize_event(packet, addr) {
-        Ok(packet) => match sender.send(packet) {
-            Ok(_qty) => {}
-            Err(e) => error!("Failed to send data to network socket: {}", e),
-        },
-        Err(e) => error!("Cannot serialize packet. Reason: {}", e),
-    };
+    match serialize(&event) {
+        Ok(packet) => Ok(Packet::reliable_ordered(addr, packet, None)),
+        Err(e) => Err(e.into()),
+    }
 }
 
 /// Attempts to serialize the given packet and returns a laminar packet.
-fn serialize_event<T>(packet: NetPacket<T>, addr: SocketAddr) -> Result<Packet>
+fn serialize_packet<T>(packet: NetPacket<T>, addr: SocketAddr) -> Result<Packet>
 where
     T: Serialize,
 {
@@ -90,7 +85,7 @@ mod tests {
     use crate::{
         deserialize_event,
         net_event::{NetEvent, NetPacket},
-        send_event, serialize_event,
+        send_packet, serialize_packet,
     };
     use crossbeam_channel::unbounded;
     use laminar::{DeliveryGuarantee, OrderingGuarantee};
@@ -107,11 +102,11 @@ mod tests {
 
         let addr: SocketAddr = "127.0.0.1:1234".parse().unwrap();
 
-        let serialized_packet1 = serialize_event(packet1, addr).unwrap();
-        let serialized_packet2 = serialize_event(packet2, addr).unwrap();
-        let serialized_packet3 = serialize_event(packet3, addr).unwrap();
-        let serialized_packet4 = serialize_event(packet4, addr).unwrap();
-        let serialized_packet5 = serialize_event(packet5, addr).unwrap();
+        let serialized_packet1 = serialize_packet(packet1, addr).unwrap();
+        let serialized_packet2 = serialize_packet(packet2, addr).unwrap();
+        let serialized_packet3 = serialize_packet(packet3, addr).unwrap();
+        let serialized_packet4 = serialize_packet(packet4, addr).unwrap();
+        let serialized_packet5 = serialize_packet(packet5, addr).unwrap();
 
         // assure correct guarantees
         assert!(
@@ -148,7 +143,7 @@ mod tests {
     fn packet_is_queued_for_send() {
         let packet = NetPacket::reliable_unordered("a".to_string());
         let (tx, rx) = unbounded();
-        send_event(packet, "127.0.0.1:0".parse().unwrap(), &tx);
+        send_packet(packet, "127.0.0.1:0".parse().unwrap(), &tx);
 
         assert_eq!(rx.len(), 1);
     }
