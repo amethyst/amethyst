@@ -41,7 +41,7 @@ pub struct NetConnection<E: 'static> {
 impl<E: Send + Sync + 'static> NetConnection<E> {
     /// Construct a new `NetConnection`.
     ///
-    /// - `SocketAddr`: the remote enpoint, from here the data will be send to and received from.
+    /// - `SocketAddr`: the remote endpoint, from here the data will be send to and received from.
     pub fn new(target_addr: SocketAddr) -> Self {
         let mut send_buffer = EventChannel::new();
         let send_reader = send_buffer.register_reader();
@@ -166,16 +166,18 @@ impl Component for NetIdentity {
 mod tests {
     use crate::{connection::NetConnection, net_event::NetEvent};
 
+    #[test]
     fn can_read_received_events() {
         let mut connection = test_connection();
+        let mut reader_id = connection.register_reader();
         connection
             .receive_buffer
             .single_write(NetEvent::Connected("127.0.0.1:0".parse().unwrap()));
 
-        let mut reader_id = connection.register_reader();
         assert_eq!(connection.received_events(&mut reader_id).len(), 1);
     }
 
+    #[test]
     fn can_queue_packet_for_send() {
         let mut connection = test_connection();
         connection.queue(NetEvent::Connected("127.0.0.1:0".parse().unwrap()));
@@ -183,6 +185,7 @@ mod tests {
         assert_eq!(connection.send_buffer_early_read().len(), 1);
     }
 
+    #[test]
     fn can_queue_vec_for_send() {
         let mut connection = test_connection();
 

@@ -14,9 +14,7 @@ pub use crate::{
 use std::net::SocketAddr;
 
 use bincode::{deserialize, serialize};
-use crossbeam_channel::Sender;
 use laminar::Packet;
-use log::error;
 use serde::{de::DeserializeOwned, Serialize};
 
 mod bundle;
@@ -87,7 +85,6 @@ mod tests {
         net_event::{NetEvent, NetPacket},
         serialize_packet,
     };
-    use crossbeam_channel::unbounded;
     use laminar::{DeliveryGuarantee, OrderingGuarantee};
     use std::net::SocketAddr;
 
