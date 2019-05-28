@@ -22,7 +22,22 @@ impl Default for CurrentState {
 
 We'll use this `enum` `Resource` to control whether or not our `System` is running. Next we'll register our `System` and set it as pausable.
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
+# external crate amethyst;
+#
+# use amethyst::{
+#     ecs::prelude::*,
+#     prelude::*,
+# };
+# 
+# struct MovementSystem;
+# 
+# impl<'a> System<'a> for MovementSystem {
+#   type SystemData = ();
+#
+#   fn run(&mut self, data: Self::SystemData) {}
+# }
+# let mut dispatcher = DispatcherBuilder::new();
 dispatcher.add(
     MovementSystem::default().pausable(CurrentState::Running),
     "movement_system",
@@ -34,8 +49,28 @@ dispatcher.add(
 
 To register the `Resource` or change its value, we can use the following line:
 
-```rust,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::prelude::*;
+# #[derive(PartialEq)]
+# pub enum CurrentState {
+#    Running,
+#    Paused,
+# }
+# 
+# impl Default for CurrentState {
+#     fn default() -> Self {
+#         CurrentState::Paused
+#     }
+# }
+# 
+# struct GameplayState;
+# 
+# impl SimpleState for GameplayState {
+#     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
 *data.world.write_resource::<CurrentState>() = CurrentState::Paused;
+#     }
+# }
 ```
 
 However, this cannot be done inside the pausable `System` itself. A pausable `System` can only access its pause `Resource` with immutable `Read` and cannot modify the value, thus the `System` cannot decide on its own if it should run on not. This has to be done from a different location. 
