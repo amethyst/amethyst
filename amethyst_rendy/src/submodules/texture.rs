@@ -29,7 +29,7 @@ enum TextureState<B: Backend> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TextureId(pub u32);
+pub struct TextureId(u32);
 
 #[derive(Debug)]
 pub struct TextureSub<B: Backend> {
