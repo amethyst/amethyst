@@ -66,7 +66,7 @@ impl<B: Backend, T: 'static> VertexDataBufferType<B> for VertexData<T> {
     }
 }
 
-impl<B: Backend, T: 'static> VertexDataBufferType<B> for IndexData<T> {
+impl<B: Backend> VertexDataBufferType<B> for IndexData<u16> {
     #[inline]
     fn usage() -> hal::buffer::Usage {
         hal::buffer::Usage::INDEX
@@ -81,6 +81,28 @@ impl<B: Backend, T: 'static> VertexDataBufferType<B> for IndexData<T> {
     ) -> bool {
         if let Some(buffer) = buffer.as_ref() {
             encoder.bind_index_buffer(buffer.raw(), offset, hal::IndexType::U16);
+            return true;
+        }
+
+        false
+    }
+}
+
+impl<B: Backend> VertexDataBufferType<B> for IndexData<u32> {
+    #[inline]
+    fn usage() -> hal::buffer::Usage {
+        hal::buffer::Usage::INDEX
+    }
+
+    #[inline]
+    fn bind(
+        _: u32,
+        encoder: &mut RenderPassEncoder<'_, B>,
+        buffer: &Option<Escape<Buffer<B>>>,
+        offset: u64,
+    ) -> bool {
+        if let Some(buffer) = buffer.as_ref() {
+            encoder.bind_index_buffer(buffer.raw(), offset, hal::IndexType::U32);
             return true;
         }
 
