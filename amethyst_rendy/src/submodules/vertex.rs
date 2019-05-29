@@ -45,9 +45,12 @@ pub trait VertexDataBufferType<B: Backend> {
 }
 
 impl<B: Backend, T: 'static> VertexDataBufferType<B> for VertexData<T> {
+    #[inline]
     fn usage() -> hal::buffer::Usage {
         hal::buffer::Usage::VERTEX
     }
+
+    #[inline]
     fn bind(
         binding_id: u32,
         encoder: &mut RenderPassEncoder<'_, B>,
@@ -64,10 +67,12 @@ impl<B: Backend, T: 'static> VertexDataBufferType<B> for VertexData<T> {
 }
 
 impl<B: Backend, T: 'static> VertexDataBufferType<B> for IndexData<T> {
+    #[inline]
     fn usage() -> hal::buffer::Usage {
         hal::buffer::Usage::INDEX
     }
 
+    #[inline]
     fn bind(
         _: u32,
         encoder: &mut RenderPassEncoder<'_, B>,
