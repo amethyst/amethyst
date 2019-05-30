@@ -246,7 +246,6 @@ This guide explains how to define a new asset type to be used in an Amethyst app
             let energy_blast_handle = loader.load(
                 "energy_blast.ron",
                 RonFormat,
-                (),
                 &mut self.progress_counter,
                 &data.world.read_resource::<AssetStorage<EnergyBlast>>(),
             );
