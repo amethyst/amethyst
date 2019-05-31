@@ -1,3 +1,6 @@
+//! Wrapper and management data structures for providing automatic buffering, resizing and management
+//! of rendy vertex buffer types.
+
 use crate::{
     rendy::{
         command::RenderPassEncoder,
@@ -11,18 +14,102 @@ use crate::{
 };
 use core::{marker::PhantomData, ops::Range};
 
+/// Type alias for a set of dynamic vertex buffer data to be managed. See the documentation
+/// for [DynamicVertexData] for implementation details.
+pub type DynamicVertexBuffer<B, T> = DynamicVertexData<B, VertexData<B, T>, T>;
+/// Type alias for a set of dynamic index buffer data to be managed. See the documentation
+/// for [DynamicVertexData] for implementation details.
+pub type DynamicIndexBuffer<B, T> = DynamicVertexData<B, IndexData<B, T>, T>;
+
+/// Type used to compile-time specify the type of vertex buffer data managed by a  `DynamicVertexData`
 #[derive(Debug)]
-pub struct DynamicVertex<B: Backend, T: 'static> {
-    per_image: Vec<PerImageDynamicVertex<B>>,
+pub struct IndexData<B, T>(PhantomData<(B, T)>);
+
+/// Type used to compile-time specify the type of vertex buffer data managed by a  `DynamicVertexData`
+#[derive(Debug)]
+pub struct VertexData<B, T>(PhantomData<(B, T)>);
+
+/// Type trait for allowing type-based implementation details for binding the different buffer types
+/// of index and vertex `DynamicVertexData`
+pub trait VertexDataBufferType {
+    /// Returns this type implementations `gfx_hal::buffer::Usage`
+    fn usage() -> hal::buffer::Usage;
+}
+
+impl<B: Backend, T: 'static> VertexDataBufferType for VertexData<B, T> {
+    #[inline]
+    fn usage() -> hal::buffer::Usage {
+        hal::buffer::Usage::VERTEX
+    }
+}
+impl<B: Backend, T: 'static> VertexData<B, T> {
+    #[inline]
+    fn bind(
+        binding_id: u32,
+        encoder: &mut RenderPassEncoder<'_, B>,
+        buffer: &Option<Escape<Buffer<B>>>,
+        offset: u64,
+    ) -> bool {
+        if let Some(buffer) = buffer.as_ref() {
+            encoder.bind_vertex_buffers(binding_id, Some((buffer.raw(), offset)));
+            return true;
+        }
+
+        false
+    }
+}
+
+impl<B: Backend, T: 'static> VertexDataBufferType for IndexData<B, T> {
+    #[inline]
+    fn usage() -> hal::buffer::Usage {
+        hal::buffer::Usage::INDEX
+    }
+}
+
+impl<B: Backend> IndexData<B, u16> {
+    #[inline]
+    pub fn bind(
+        encoder: &mut RenderPassEncoder<'_, B>,
+        buffer: &Option<Escape<Buffer<B>>>,
+        offset: u64,
+    ) -> bool {
+        if let Some(buffer) = buffer.as_ref() {
+            encoder.bind_index_buffer(buffer.raw(), offset, hal::IndexType::U16);
+            return true;
+        }
+
+        false
+    }
+}
+
+impl<B: Backend> IndexData<B, u32> {
+    #[inline]
+    pub fn bind(
+        _: u32,
+        encoder: &mut RenderPassEncoder<'_, B>,
+        buffer: &Option<Escape<Buffer<B>>>,
+        offset: u64,
+    ) -> bool {
+        if let Some(buffer) = buffer.as_ref() {
+            encoder.bind_index_buffer(buffer.raw(), offset, hal::IndexType::U32);
+            return true;
+        }
+
+        false
+    }
+}
+
+/// This structure wraps [PerImageDynamicVertexData], managing multiple instances and providing
+/// an easy-to-use interface for having per-image buffers. This is needed because multiple images
+/// (frames) can be in flight at any given time, so multiple buffers are needed for the same data.
+#[derive(Debug)]
+pub struct DynamicVertexData<B: Backend, V: VertexDataBufferType, T: 'static> {
+    per_image: Vec<PerImageDynamicVertexData<B, V>>,
     marker: PhantomData<T>,
 }
 
-#[derive(Debug)]
-struct PerImageDynamicVertex<B: Backend> {
-    buffer: Option<Escape<Buffer<B>>>,
-}
-
-impl<B: Backend, T: 'static> DynamicVertex<B, T> {
+impl<B: Backend, V: VertexDataBufferType, T: 'static> DynamicVertexData<B, V, T> {
+    /// Creates a new `DynamicVertexData`
     pub fn new() -> Self {
         Self {
             per_image: Vec::new(),
@@ -30,6 +117,7 @@ impl<B: Backend, T: 'static> DynamicVertex<B, T> {
         }
     }
 
+    /// Write to the allocated rendy buffer for the specified frame index.
     pub fn write<I>(
         &mut self,
         factory: &Factory<B>,
@@ -47,7 +135,7 @@ impl<B: Backend, T: 'static> DynamicVertex<B, T> {
 
         let this_image = {
             while self.per_image.len() <= index {
-                self.per_image.push(PerImageDynamicVertex::new());
+                self.per_image.push(PerImageDynamicVertexData::new());
             }
             &mut self.per_image[index]
         };
@@ -69,36 +157,76 @@ impl<B: Backend, T: 'static> DynamicVertex<B, T> {
             false
         }
     }
+}
 
+impl<B: Backend, T: 'static> DynamicVertexData<B, VertexData<B, T>, T> {
+    /// Bind the allocated rendy buffer for this frame index.
     #[inline]
     pub fn bind(
         &self,
         index: usize,
         binding_id: u32,
+        offset: u64,
         encoder: &mut RenderPassEncoder<'_, B>,
     ) -> bool {
-        self.per_image
-            .get(index)
-            .map_or(false, |i| i.bind(binding_id, encoder))
+        self.per_image.get(index).map_or(false, |i| {
+            VertexData::<B, T>::bind(binding_id, encoder, &i.buffer, offset)
+        })
     }
 }
 
-impl<B: Backend> PerImageDynamicVertex<B> {
+impl<B: Backend> DynamicVertexData<B, IndexData<B, u16>, u16> {
+    /// Bind the allocated rendy buffer for this frame index.
+    #[inline]
+    pub fn bind(&self, index: usize, offset: u64, encoder: &mut RenderPassEncoder<'_, B>) -> bool {
+        self.per_image.get(index).map_or(false, |i| {
+            IndexData::<B, u16>::bind(encoder, &i.buffer, offset)
+        })
+    }
+}
+
+impl<B: Backend> DynamicVertexData<B, IndexData<B, u32>, u32> {
+    /// Bind the allocated rendy buffer for this frame index.
+    #[inline]
+    pub fn bind(&self, index: usize, offset: u64, encoder: &mut RenderPassEncoder<'_, B>) -> bool {
+        self.per_image.get(index).map_or(false, |i| {
+            IndexData::<B, u16>::bind(encoder, &i.buffer, offset)
+        })
+    }
+}
+
+/// an easy-to-use interface for managing, growing and binding a given vertex buffer type. This
+/// implementation also leverages the [VertexDataBufferType] trait type for statically dispatching
+/// the appropriate binding and allocation functions, preventing hot-path branching.
+#[derive(Debug)]
+struct PerImageDynamicVertexData<B: Backend, V: VertexDataBufferType> {
+    buffer: Option<Escape<Buffer<B>>>,
+    marker: PhantomData<V>,
+}
+
+impl<B: Backend, V: VertexDataBufferType> PerImageDynamicVertexData<B, V> {
+    /// Creates a new 'PerImageDynamicVertexData'
     fn new() -> Self {
-        Self { buffer: None }
+        Self {
+            buffer: None,
+            marker: PhantomData,
+        }
     }
 
+    /// Garuntees that at least max_size bytes of memory is allocated for this buffer
+    /// Calls the utility function, [util::ensure_buffer] to dynamically grow the buffer if needed.
     fn ensure(&mut self, factory: &Factory<B>, max_size: u64) -> bool {
         util::ensure_buffer(
             &factory,
             &mut self.buffer,
-            hal::buffer::Usage::VERTEX,
+            V::usage(),
             rendy::memory::Dynamic,
             max_size,
         )
         .unwrap()
     }
 
+    /// Maps the allocated buffer for writing.
     fn map<'a>(
         &'a mut self,
         factory: &Factory<B>,
@@ -109,16 +237,6 @@ impl<B: Backend> PerImageDynamicVertex<B> {
             Some((alloc, buffer.map(factory.device(), range).unwrap()))
         } else {
             None
-        }
-    }
-
-    #[inline]
-    fn bind(&self, binding_id: u32, encoder: &mut RenderPassEncoder<'_, B>) -> bool {
-        if let Some(buffer) = self.buffer.as_ref() {
-            encoder.bind_vertex_buffers(binding_id, Some((buffer.raw(), 0)));
-            true
-        } else {
-            false
         }
     }
 }
