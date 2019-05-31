@@ -109,7 +109,7 @@ pub struct DynamicVertexData<B: Backend, V: VertexDataBufferType, T: 'static> {
 }
 
 impl<B: Backend, V: VertexDataBufferType, T: 'static> DynamicVertexData<B, V, T> {
-    /// Creates an empty, 0-frame `DynamicVertexData`
+    /// Creates a new `DynamicVertexData`
     pub fn new() -> Self {
         Self {
             per_image: Vec::new(),
@@ -199,13 +199,13 @@ impl<B: Backend> DynamicVertexData<B, IndexData<B, u32>, u32> {
 /// implementation also leverages the [VertexDataBufferType] trait type for statically dispatching
 /// the appropriate binding and allocation functions, preventing hot-path branching.
 #[derive(Debug)]
-pub struct PerImageDynamicVertexData<B: Backend, V: VertexDataBufferType> {
+struct PerImageDynamicVertexData<B: Backend, V: VertexDataBufferType> {
     buffer: Option<Escape<Buffer<B>>>,
     marker: PhantomData<V>,
 }
 
 impl<B: Backend, V: VertexDataBufferType> PerImageDynamicVertexData<B, V> {
-    /// Creates an empty, 0-frame `DynamicVertexData`
+    /// Creates a new 'PerImageDynamicVertexData'
     fn new() -> Self {
         Self {
             buffer: None,
