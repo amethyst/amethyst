@@ -23,14 +23,26 @@ impl Default for CurrentState {
 We'll use this `enum` `Resource` to control whether or not our `System` is running. Next we'll register our `System` and set it as pausable.
 
 ```rust,edition2018,no_run,noplaypen
-# external crate amethyst;
+# extern crate amethyst;
 #
 # use amethyst::{
 #     ecs::prelude::*,
 #     prelude::*,
 # };
 # 
-# struct MovementSystem;
+# #[derive(PartialEq)]
+# pub enum CurrentState {
+#     Running,
+#     Paused,
+# }
+# 
+# impl Default for CurrentState {
+#     fn default() -> Self {
+#         CurrentState::Paused
+#     }
+# }
+#
+# #[derive(Default)] struct MovementSystem;
 # 
 # impl<'a> System<'a> for MovementSystem {
 #   type SystemData = ();
@@ -47,7 +59,7 @@ dispatcher.add(
 
 `pausable(CurrentState::Running)` creates a wrapper around our `System` that controls its execution depending on the `CurrentState` `Resource` registered with the `World`. As long as the value of the `Resource` is set to `CurrentState::Running`, the `System` is executed.
 
-To register the `Resource` or change its value, we can use the following line:
+To register the `Resource` or change its value, we can use the following code:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
@@ -64,13 +76,19 @@ To register the `Resource` or change its value, we can use the following line:
 #     }
 # }
 # 
-# struct GameplayState;
-# 
-# impl SimpleState for GameplayState {
-#     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
-*data.world.write_resource::<CurrentState>() = CurrentState::Paused;
-#     }
-# }
+struct GameplayState;
+
+impl SimpleState for GameplayState {
+    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+#       let my_condition = true;
+        if (my_condition) {
+            *data.world.write_resource::<CurrentState>() = CurrentState::Paused;
+        }
+        
+        Trans::None
+    }
+}
 ```
 
-However, this cannot be done inside the pausable `System` itself. A pausable `System` can only access its pause `Resource` with immutable `Read` and cannot modify the value, thus the `System` cannot decide on its own if it should run on not. This has to be done from a different location. 
+However, this cannot be done inside the pausable `System` itself. A pausable `System` can only access its pause `Resource` with immutable `Read` and cannot modify the value, thus the `System` cannot decide on its own if it should run on not. This has to be done from a different location.
+ 
