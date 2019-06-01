@@ -1,4 +1,4 @@
-use std::{ops::Deref, sync::Arc};
+use std::{marker::PhantomData, ops::Deref, sync::Arc};
 
 use amethyst_assets::Processor;
 use amethyst_core::{
@@ -26,7 +26,7 @@ use crate::{
     },
     sprite::SpriteSheet,
     sprite_visibility::SpriteVisibilitySortingSystem,
-    types::DefaultBackend,
+    types::Backend,
     GraphCreator, RenderingSystem,
 };
 
@@ -35,9 +35,12 @@ use crate::{
 /// This test bundle requires the user to also add the `TransformBundle` and `WindowBundle` to the
 /// dispatcher.
 #[derive(Debug, new)]
-pub struct RenderTestBundle;
+pub struct RenderTestBundle<B>(PhantomData<B>);
 
-impl<'a, 'b> SystemBundle<'a, 'b> for RenderTestBundle {
+impl<'a, 'b, B> SystemBundle<'a, 'b> for RenderTestBundle<B>
+where
+    B: Backend,
+{
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
             Processor::<SpriteSheet>::new(),
@@ -50,9 +53,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for RenderTestBundle {
             &["transform_system"],
         );
 
-        builder.add_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            RenderGraph::default(),
-        ));
+        builder.add_thread_local(RenderingSystem::<B, _>::new(RenderGraph::<B>::new()));
 
         Ok(())
     }
@@ -62,9 +63,12 @@ impl<'a, 'b> SystemBundle<'a, 'b> for RenderTestBundle {
 ///
 /// This test bundle requires the user to also add the `TransformBundle` to the dispatcher.
 #[derive(Debug, new)]
-pub struct RenderEmptyBundle;
+pub struct RenderEmptyBundle<B>(PhantomData<B>);
 
-impl<'a, 'b> SystemBundle<'a, 'b> for RenderEmptyBundle {
+impl<'a, 'b, B> SystemBundle<'a, 'b> for RenderEmptyBundle<B>
+where
+    B: Backend,
+{
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
             Processor::<SpriteSheet>::new(),
@@ -77,23 +81,28 @@ impl<'a, 'b> SystemBundle<'a, 'b> for RenderEmptyBundle {
             &["transform_system"],
         );
 
-        builder.add_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            EmptyGraph::default(),
-        ));
+        builder.add_thread_local(RenderingSystem::<B, _>::new(EmptyGraph::<B>::new()));
 
         Ok(())
     }
 }
 
 /// Render graph that renders sprites to a Window.
-#[derive(Default)]
-pub struct RenderGraph {
+#[derive(Default, new)]
+pub struct RenderGraph<B> {
+    #[new(default)]
     dimensions: Option<ScreenDimensions>,
+    #[new(default)]
     surface_format: Option<Format>,
+    #[new(default)]
     dirty: bool,
+    backend: PhantomData<B>,
 }
 
-impl GraphCreator<DefaultBackend> for RenderGraph {
+impl<B> GraphCreator<B> for RenderGraph<B>
+where
+    B: Backend,
+{
     fn rebuild(&mut self, res: &Resources) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
         let new_dimensions = res.try_fetch::<ScreenDimensions>();
@@ -105,11 +114,7 @@ impl GraphCreator<DefaultBackend> for RenderGraph {
         return self.dirty;
     }
 
-    fn builder(
-        &mut self,
-        factory: &mut Factory<DefaultBackend>,
-        res: &Resources,
-    ) -> GraphBuilder<DefaultBackend, Resources> {
+    fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
         self.dirty = false;
 
         let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
@@ -163,19 +168,22 @@ impl GraphCreator<DefaultBackend> for RenderGraph {
 }
 
 /// Default render graph in case the `RenderingSystem` is only needed to load textures and meshes.
-#[derive(Default)]
-pub struct EmptyGraph;
+#[derive(Default, new)]
+pub struct EmptyGraph<B>(PhantomData<B>);
 
-impl GraphCreator<DefaultBackend> for EmptyGraph {
+impl<B> GraphCreator<B> for EmptyGraph<B>
+where
+    B: Backend,
+{
     fn rebuild(&mut self, _res: &Resources) -> bool {
         false
     }
 
     fn builder(
         &mut self,
-        _factory: &mut Factory<DefaultBackend>,
+        _factory: &mut Factory<B>,
         _res: &Resources,
-    ) -> GraphBuilder<DefaultBackend, Resources> {
+    ) -> GraphBuilder<B, Resources> {
         GraphBuilder::new()
     }
 }
