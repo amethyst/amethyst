@@ -1,8 +1,8 @@
 //! Components for the transform processor.
 
 pub use self::{
-    parent::{HierarchyEvent, Parent, ParentHierarchy},
-    transform::Transform,
+    parent::{HierarchyEvent, ParentComponent, ParentHierarchy},
+    transform::TransformComponent,
 };
 
 mod parent;

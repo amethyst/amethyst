@@ -41,7 +41,7 @@ impl<'a> TransformBundle<'a> {
 impl<'a, 'b, 'c> SystemBundle<'a, 'b> for TransformBundle<'c> {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
-            HierarchySystem::<Parent>::new(),
+            HierarchySystem::<ParentComponent>::new(),
             "parent_hierarchy_system",
             self.dep,
         );

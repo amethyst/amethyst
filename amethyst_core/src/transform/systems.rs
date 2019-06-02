@@ -6,12 +6,12 @@ use crate::ecs::prelude::{
 };
 use hibitset::BitSet;
 
-use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform};
+use crate::transform::{HierarchyEvent, ParentComponent, ParentHierarchy, TransformComponent};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-/// Handles updating `global_matrix` field from `Transform` components.
+/// Handles updating `global_matrix` field from `TransformComponent` components.
 pub struct TransformSystem {
     local_modified: BitSet,
     locals_events_id: Option<ReaderId<ComponentEvent>>,
@@ -33,8 +33,8 @@ impl<'a> System<'a> for TransformSystem {
     type SystemData = (
         Entities<'a>,
         ReadExpect<'a, ParentHierarchy>,
-        WriteStorage<'a, Transform>,
-        ReadStorage<'a, Parent>,
+        WriteStorage<'a, TransformComponent>,
+        ReadStorage<'a, ParentComponent>,
     );
     fn run(&mut self, (entities, hierarchy, mut locals, parents): Self::SystemData) {
         #[cfg(feature = "profiler")]
@@ -84,7 +84,7 @@ impl<'a> System<'a> for TransformSystem {
             debug_assert!(
                 local.is_finite(),
                 format!(
-                    "Entity {:?} had a non-finite `Transform` {:?}",
+                    "Entity {:?} had a non-finite `TransformComponent` {:?}",
                     entity, local
                 )
             );
@@ -127,7 +127,7 @@ impl<'a> System<'a> for TransformSystem {
         use crate::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         let mut hierarchy = res.fetch_mut::<ParentHierarchy>();
-        let mut locals = WriteStorage::<Transform>::fetch(res);
+        let mut locals = WriteStorage::<TransformComponent>::fetch(res);
         self.parent_events_id = Some(hierarchy.track());
         self.locals_events_id = Some(locals.register_reader());
     }
@@ -143,12 +143,12 @@ mod tests {
     use shred::RunNow;
     use specs_hierarchy::{Hierarchy, HierarchySystem};
 
-    use crate::transform::{Parent, Transform, TransformSystem};
+    use crate::transform::{ParentComponent, TransformComponent, TransformSystem};
 
     // If this works, then all other tests should work.
     #[test]
     fn transform_matrix() {
-        let mut transform = Transform::default();
+        let mut transform = TransformComponent::default();
         transform.set_translation_xyz(5.0, 2.0, -0.5);
         transform.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.0, 0.0, 0.0)));
         transform.set_scale(Vector3::new(2.0, 2.0, 2.0));
@@ -160,9 +160,9 @@ mod tests {
         assert_eq!(transform.matrix(), combined);
     }
 
-    fn transform_world<'a, 'b>() -> (World, HierarchySystem<Parent>, TransformSystem) {
+    fn transform_world<'a, 'b>() -> (World, HierarchySystem<ParentComponent>, TransformSystem) {
         let mut world = World::new();
-        let mut hs = HierarchySystem::<Parent>::new();
+        let mut hs = HierarchySystem::<ParentComponent>::new();
         let mut ts = TransformSystem::new();
         hs.setup(&mut world.res);
         ts.setup(&mut world.res);
@@ -179,30 +179,34 @@ mod tests {
     fn zeroed() {
         let (mut world, mut hs, mut system) = transform_world();
 
-        let transform = Transform::default();
+        let transform = TransformComponent::default();
 
         let e1 = world.create_entity().with(transform).build();
 
         hs.run_now(&mut world.res);
         system.run_now(&mut world.res);
 
-        let transform = world.read_storage::<Transform>().get(e1).unwrap().clone();
+        let transform = world
+            .read_storage::<TransformComponent>()
+            .get(e1)
+            .unwrap()
+            .clone();
         // let a1: [[f32; 4]; 4] = transform.global_matrix().into();
-        // let a2: [[f32; 4]; 4] = Transform::default().global_matrix().into();
+        // let a2: [[f32; 4]; 4] = TransformComponent::default().global_matrix().into();
         assert_eq!(
             transform.global_matrix(),
-            Transform::default().global_matrix()
+            TransformComponent::default().global_matrix()
         );
     }
 
-    // Basic sanity check for Transform's local matrix -> global matrix, no parent relationships
+    // Basic sanity check for TransformComponent's local matrix -> global matrix, no parent relationships
     //
     // Should just put the value of the Transform's local matrix into the global matrix field.
     #[test]
     fn basic() {
         let (mut world, mut hs, mut system) = transform_world();
 
-        let mut local = Transform::default();
+        let mut local = TransformComponent::default();
         local.set_translation_xyz(5.0, 5.0, 5.0);
         local.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
@@ -211,57 +215,73 @@ mod tests {
         hs.run_now(&mut world.res);
         system.run_now(&mut world.res);
 
-        let transform = world.read_storage::<Transform>().get(e1).unwrap().clone();
+        let transform = world
+            .read_storage::<TransformComponent>()
+            .get(e1)
+            .unwrap()
+            .clone();
         let a1 = transform.global_matrix();
         let a2 = local.matrix();
         assert_eq!(*a1, a2);
     }
 
-    // Test Parent's global matrix * Child's local matrix -> Child's global matrix (Parent is before child)
+    // Test ParentComponent's global matrix * Child's local matrix -> Child's global matrix (ParentComponent is before child)
     #[test]
     fn parent_before() {
         let (mut world, mut hs, mut system) = transform_world();
 
-        let mut local1 = Transform::default();
+        let mut local1 = TransformComponent::default();
         local1.set_translation_xyz(5.0, 5.0, 5.0);
         local1.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e1 = world.create_entity().with(local1.clone()).build();
 
-        let mut local2 = Transform::default();
+        let mut local2 = TransformComponent::default();
         local2.set_translation_xyz(5.0, 5.0, 5.0);
         local2.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e2 = world
             .create_entity()
             .with(local2.clone())
-            .with(Parent { entity: e1 })
+            .with(ParentComponent { entity: e1 })
             .build();
 
-        let mut local3 = Transform::default();
+        let mut local3 = TransformComponent::default();
         local3.set_translation_xyz(5.0, 5.0, 5.0);
         local3.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e3 = world
             .create_entity()
             .with(local3.clone())
-            .with(Parent { entity: e2 })
+            .with(ParentComponent { entity: e2 })
             .build();
 
         hs.run_now(&mut world.res);
         system.run_now(&mut world.res);
 
-        let e1_transform = world.read_storage::<Transform>().get(e1).unwrap().clone();
+        let e1_transform = world
+            .read_storage::<TransformComponent>()
+            .get(e1)
+            .unwrap()
+            .clone();
         let a1 = e1_transform.global_matrix();
         let a2 = local1.matrix();
         assert_eq!(*a1, a2);
 
-        let e2_transform = world.read_storage::<Transform>().get(e2).unwrap().clone();
+        let e2_transform = world
+            .read_storage::<TransformComponent>()
+            .get(e2)
+            .unwrap()
+            .clone();
         let a3 = e2_transform.global_matrix();
         let a4 = together(*a1, local2.matrix());
         assert_eq!(*a3, a4);
 
-        let e3_transform = world.read_storage::<Transform>().get(e3).unwrap().clone();
+        let e3_transform = world
+            .read_storage::<TransformComponent>()
+            .get(e3)
+            .unwrap()
+            .clone();
         let a3 = e3_transform.global_matrix();
         let _a4 = together(*a3, local3.matrix());
         // assert_eq!(*a3, a4);
@@ -290,25 +310,25 @@ mod tests {
         // };
     }
 
-    // Test Parent's global matrix * Child's local matrix -> Child's global matrix
-    // (Parent is after child, therefore must be special cased in list)
+    // Test ParentComponent's global matrix * Child's local matrix -> Child's global matrix
+    // (ParentComponent is after child, therefore must be special cased in list)
     #[test]
     fn parent_after() {
         let (mut world, mut hs, mut system) = transform_world();
 
-        let mut local3 = Transform::default();
+        let mut local3 = TransformComponent::default();
         local3.set_translation_xyz(5.0, 5.0, 5.0);
         local3.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e3 = world.create_entity().with(local3.clone()).build();
 
-        let mut local2 = Transform::default();
+        let mut local2 = TransformComponent::default();
         local2.set_translation_xyz(5.0, 5.0, 5.0);
         local2.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
         let e2 = world.create_entity().with(local2.clone()).build();
 
-        let mut local1 = Transform::default();
+        let mut local1 = TransformComponent::default();
         local1.set_translation_xyz(5.0, 5.0, 5.0);
         local1.set_rotation(Unit::new_normalize(Quaternion::new(1.0, 0.5, 0.5, 0.0)));
 
@@ -316,16 +336,20 @@ mod tests {
 
         // e1 > e2 > e3
         {
-            let mut parents = world.write_storage::<Parent>();
-            parents.insert(e2, Parent { entity: e1 }).unwrap();
-            parents.insert(e3, Parent { entity: e2 }).unwrap();
+            let mut parents = world.write_storage::<ParentComponent>();
+            parents.insert(e2, ParentComponent { entity: e1 }).unwrap();
+            parents.insert(e3, ParentComponent { entity: e2 }).unwrap();
         }
 
         hs.run_now(&mut world.res);
         system.run_now(&mut world.res);
 
         let global_matrix1 = {
-            let e1_transform = world.read_storage::<Transform>().get(e1).unwrap().clone();
+            let e1_transform = world
+                .read_storage::<TransformComponent>()
+                .get(e1)
+                .unwrap()
+                .clone();
 
             // First entity (top level parent)
             let a1 = e1_transform.global_matrix().clone();
@@ -335,7 +359,11 @@ mod tests {
         };
 
         let global_matrix2 = {
-            let e2_transform = world.read_storage::<Transform>().get(e2).unwrap().clone();
+            let e2_transform = world
+                .read_storage::<TransformComponent>()
+                .get(e2)
+                .unwrap()
+                .clone();
 
             let a1 = e2_transform.global_matrix().clone();
             let a2 = together(global_matrix1, local2.matrix());
@@ -344,7 +372,11 @@ mod tests {
         };
 
         {
-            let e3_transform = world.read_storage::<Transform>().get(e3).unwrap().clone();
+            let e3_transform = world
+                .read_storage::<TransformComponent>()
+                .get(e3)
+                .unwrap()
+                .clone();
 
             let a1 = e3_transform.global_matrix();
             let a2 = together(global_matrix2, local3.matrix());
@@ -358,7 +390,7 @@ mod tests {
     fn nan_transform() {
         let (mut world, mut hs, mut system) = transform_world();
 
-        let mut local = Transform::default();
+        let mut local = TransformComponent::default();
         // Release the indeterminate forms!
         local.set_translation_xyz(0.0 / 0.0, 0.0 / 0.0, 0.0 / 0.0);
 
@@ -374,7 +406,7 @@ mod tests {
     fn is_finite_transform() {
         let (mut world, mut hs, mut system) = transform_world();
 
-        let mut local = Transform::default();
+        let mut local = TransformComponent::default();
         // Release the indeterminate forms!
         local.set_translation_xyz(1.0 / 0.0, 1.0 / 0.0, 1.0 / 0.0);
         world.create_entity().with(local.clone()).build();
@@ -387,37 +419,49 @@ mod tests {
     fn parent_removed() {
         let (mut world, mut hs, mut system) = transform_world();
 
-        let e1 = world.create_entity().with(Transform::default()).build();
+        let e1 = world
+            .create_entity()
+            .with(TransformComponent::default())
+            .build();
 
         let e2 = world
             .create_entity()
-            .with(Transform::default())
-            .with(Parent { entity: e1 })
+            .with(TransformComponent::default())
+            .with(ParentComponent { entity: e1 })
             .build();
 
-        let e3 = world.create_entity().with(Transform::default()).build();
+        let e3 = world
+            .create_entity()
+            .with(TransformComponent::default())
+            .build();
 
         let e4 = world
             .create_entity()
-            .with(Transform::default())
-            .with(Parent { entity: e3 })
+            .with(TransformComponent::default())
+            .with(ParentComponent { entity: e3 })
             .build();
 
         let e5 = world
             .create_entity()
-            .with(Transform::default())
-            .with(Parent { entity: e4 })
+            .with(TransformComponent::default())
+            .with(ParentComponent { entity: e4 })
             .build();
         hs.run_now(&mut world.res);
         system.run_now(&mut world.res);
         world.maintain();
-        println!("{:?}", world.read_resource::<Hierarchy<Parent>>().all());
+        println!(
+            "{:?}",
+            world.read_resource::<Hierarchy<ParentComponent>>().all()
+        );
 
         let _ = world.delete_entity(e1);
         hs.run_now(&mut world.res);
         system.run_now(&mut world.res);
         world.maintain();
-        println!("{:?}", world.read_resource::<Hierarchy<Parent>>().all());
+        println!(
+            "{:?}",
+            world.read_resource::<Hierarchy<ParentComponent>>().all()
+        );
 
         assert_eq!(world.is_alive(e1), false);
         assert_eq!(world.is_alive(e2), false);
@@ -439,22 +483,25 @@ mod tests {
     fn events() {
         let (mut world, mut hs, mut system) = transform_world();
 
-        let e1 = world.create_entity().with(Transform::default()).build();
+        let e1 = world
+            .create_entity()
+            .with(TransformComponent::default())
+            .build();
 
         let e2 = world
             .create_entity()
-            .with(Transform::default())
-            .with(Parent { entity: e1 })
+            .with(TransformComponent::default())
+            .with(ParentComponent { entity: e1 })
             .build();
 
         world
             .create_entity()
-            .with(Transform::default())
-            .with(Parent { entity: e2 })
+            .with(TransformComponent::default())
+            .with(ParentComponent { entity: e2 })
             .build();
 
         let mut transform_reader = {
-            let mut transforms = world.write_storage::<Transform>();
+            let mut transforms = world.write_storage::<TransformComponent>();
             transforms.register_reader()
         };
 
@@ -463,7 +510,7 @@ mod tests {
         world.maintain();
 
         {
-            let transforms = world.write_storage::<Transform>();
+            let transforms = world.write_storage::<TransformComponent>();
             for _component_event in transforms.channel().read(&mut transform_reader) {}
         }
 
@@ -471,7 +518,7 @@ mod tests {
         system.run_now(&mut world.res);
         world.maintain();
         {
-            let transforms = world.write_storage::<Transform>();
+            let transforms = world.write_storage::<TransformComponent>();
             for _component_event in transforms.channel().read(&mut transform_reader) {
                 panic!("Found transform event when there should not be.")
             }

@@ -10,28 +10,28 @@ use amethyst_window::ScreenDimensions;
 use super::*;
 
 /// Whenever the window is resized the function in this component will be called on this
-/// entity's UiTransform, along with the new width and height of the window.
+/// entity's UiTransformComponent, along with the new width and height of the window.
 ///
 /// The function in this component is also guaranteed to be called at least once by the
 /// `ResizeSystem` when either the component is attached, or the function is changed.
-pub struct UiResize {
+pub struct UiResizeComponent {
     /// The core function of this component
-    pub function: Box<dyn FnMut(&mut UiTransform, (f32, f32)) + Send + Sync>,
+    pub function: Box<dyn FnMut(&mut UiTransformComponent, (f32, f32)) + Send + Sync>,
 }
 
-impl UiResize {
+impl UiResizeComponent {
     /// Creates a new component with the given function.
     pub fn new<F>(function: F) -> Self
     where
-        F: FnMut(&mut UiTransform, (f32, f32)) + Send + Sync + 'static,
+        F: FnMut(&mut UiTransformComponent, (f32, f32)) + Send + Sync + 'static,
     {
-        UiResize {
+        UiResizeComponent {
             function: Box::new(function),
         }
     }
 }
 
-impl Component for UiResize {
+impl Component for UiResizeComponent {
     type Storage = FlaggedStorage<Self>;
 }
 
@@ -53,8 +53,8 @@ impl ResizeSystem {
 
 impl<'a> System<'a> for ResizeSystem {
     type SystemData = (
-        WriteStorage<'a, UiTransform>,
-        WriteStorage<'a, UiResize>,
+        WriteStorage<'a, UiTransformComponent>,
+        WriteStorage<'a, UiResizeComponent>,
         ReadExpect<'a, ScreenDimensions>,
     );
 
@@ -109,7 +109,7 @@ impl<'a> System<'a> for ResizeSystem {
         use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         self.screen_size = (0.0, 0.0);
-        let mut resize = WriteStorage::<UiResize>::fetch(res);
+        let mut resize = WriteStorage::<UiResizeComponent>::fetch(res);
         self.resize_events_id = Some(resize.register_reader());
     }
 }

@@ -67,7 +67,7 @@ The top level type is a [`Prefab`], and holds a list of `entities`. These are no
 
     This must be a type that implements [`PrefabData`]. When this prefab is instantiated, it will attach a `Position` component to the entity.
 
-* `parent`: (Optional) index of this entity's [`Parent`] entity. The value is the index of the parent entity which resides within this prefab file.
+* `parent`: (Optional) index of this entity's [`ParentComponent`] entity. The value is the index of the parent entity which resides within this prefab file.
 
 When we load this prefab, the prefab entity is read as:
 
@@ -105,7 +105,7 @@ If there are multiple components to be attached to the entity, then we need a ty
 #
 # use amethyst::{
 #     assets::{Prefab, PrefabData, ProgressCounter},
-#     core::Named,
+#     core::NamedComponent,
 #     derive::PrefabData,
 #     ecs::{
 #         storage::{DenseVecStorage, VecStorage},
@@ -126,7 +126,7 @@ If there are multiple components to be attached to the entity, then we need a ty
 #[derive(Debug, Deserialize, Serialize, PrefabData)]
 # #[serde(deny_unknown_fields)]
 pub struct Player {
-    player: Named,
+    player: NamedComponent,
     position: Position,
 }
 ```
@@ -141,7 +141,7 @@ Prefab(
     entities: [
         PrefabEntity(
             data: Player(
-                player: Named(name: "Zero"),
+                player: NamedComponent(name: "Zero"),
                 position: Position(1.0, 2.0, 3.0),
             ),
         ),
@@ -149,13 +149,13 @@ Prefab(
 )
 ```
 
-When an entity is created with this prefab, Amethyst will recurse into each of the prefab data fields &ndash; [`Named`] and `Position` &ndash; to attach their respective components to the entity.
+When an entity is created with this prefab, Amethyst will recurse into each of the prefab data fields &ndash; [`NamedComponent`] and `Position` &ndash; to attach their respective components to the entity.
 
 Now, when we create an entity with the prefab handle, both components will be attached:
 
 | Handle<Prefab&lt;Player>> | Position                | Player                 |
 | ---------------------- | ----------------------- | ---------------------- |
-| Handle { id: 0 }       | Position(1.0, 2.0, 3.0) | Named { name: "Zero" } |
+| Handle { id: 0 }       | Position(1.0, 2.0, 3.0) | NamedComponent { name: "Zero" } |
 
 This can be seen by running the `prefab_multi` example from the Amethyst repository:
 
@@ -174,7 +174,7 @@ Prefab(
         // Player
         PrefabEntity(
             data: Player(
-                player: Named(name: "Zero"),
+                player: NamedComponent(name: "Zero"),
                 position: Position(1.0, 2.0, 3.0),
             ),
         ),
@@ -200,7 +200,7 @@ Could be implemented using an enum like this:
 #
 # use amethyst::{
 #     assets::{Prefab, PrefabData, ProgressCounter},
-#     core::Named,
+#     core::NamedComponent,
 #     derive::PrefabData,
 #     ecs::{
 #         storage::{DenseVecStorage, VecStorage},
@@ -233,7 +233,7 @@ pub enum Weapon {
 #[serde(deny_unknown_fields)]
 pub enum CustomPrefabData {
     Player {
-        name: Named,
+        name: NamedComponent,
         position: Option<Position>,
     },
     Weapon {
@@ -252,7 +252,7 @@ When we run this, we start off by creating one entity:
 
 When the [`PrefabLoaderSystem`] runs, this becomes the following:
 
-| Entity                   | Handle<Prefab&lt;CustomPrefabData>>> | Parent                   | Position                | Player                 | Weapon |
+| Entity                   | Handle<Prefab&lt;CustomPrefabData>>> | ParentComponent                   | Position                | Player                 | Weapon |
 | ------------------------ | --------------------------------- | ------------------------ | ----------------------- | ---------------------- | ------ |
 | Entity(0, Generation(1)) | Handle { id: 0 }                  | None                     | Position(1.0, 2.0, 3.0) | Named { name: "Zero" } | None   |
 | Entity(1, Generation(1)) | None                              | Entity(0, Generation(1)) | Position(4.0, 5.0, 6.0) | None                   | Sword  |
@@ -269,7 +269,7 @@ Note that the `Weapon` has a parent with index `0`. Let's see what happens when 
 
 Next, the [`PrefabLoaderSystem`] runs and creates and augments the entities:
 
-| Entity                   | Handle<Prefab&lt;CustomPrefabData>>> | Parent                   | Position                | Player                 | Weapon |
+| Entity                   | Handle<Prefab&lt;CustomPrefabData>>> | ParentComponent                   | Position                | Player                 | Weapon |
 | ------------------------ | --------------------------------- | ------------------------ | ----------------------- | ---------------------- | ------ |
 | Entity(0, Generation(1)) | Handle { id: 0 }                  | None                     | Position(1.0, 2.0, 3.0) | Named { name: "Zero" } | None   |
 | Entity(1, Generation(1)) | Handle { id: 0 }                  | None                     | Position(1.0, 2.0, 3.0) | Named { name: "Zero" } | None   |
@@ -293,7 +293,7 @@ Phew, that was long! Now that you have an understanding of how prefabs work in A
 [`Entity`]: https://docs-src.amethyst.rs/stable/specs/struct.Entity.html
 [`Named`]: https://docs-src.amethyst.rs/stable/amethyst_core/struct.Named.html
 [`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html
-[`Parent`]: https://docs-src.amethyst.rs/stable/amethyst_core/transform/components/struct.Parent.html
+[`ParentComponent`]: https://docs-src.amethyst.rs/stable/amethyst_core/transform/components/struct.ParentComponent.html
 [`Prefab`]: https://docs-src.amethyst.rs/stable/amethyst_assets/struct.Prefab.html
 [`PrefabData`]: https://docs-src.amethyst.rs/stable/amethyst_assets/trait.PrefabData.html#impl-PrefabData%3C%27a%3E
 [`PrefabEntity`]: https://github.com/amethyst/amethyst/blob/v0.10.0/amethyst_assets/src/prefab/mod.rs#L110-L115

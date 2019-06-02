@@ -9,11 +9,11 @@ use amethyst_core::{
         BitSet, ComponentEvent, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
         WriteStorage,
     },
-    HierarchyEvent, Parent, ParentHierarchy,
+    HierarchyEvent, ParentComponent, ParentHierarchy,
 };
 use amethyst_window::ScreenDimensions;
 
-use super::UiTransform;
+use super::UiTransformComponent;
 
 /// Indicates if the position and margins should be calculated in pixel or
 /// relative to their parent size.
@@ -124,9 +124,9 @@ pub enum Stretch {
     },
 }
 
-/// Manages the `Parent` component on entities having `UiTransform`
+/// Manages the `ParentComponent` component on entities having `UiTransformComponent`
 /// It does almost the same as the `TransformSystem`, but with some differences,
-/// like `UiTransform` alignment and stretching.
+/// like `UiTransformComponent` alignment and stretching.
 #[derive(Default)]
 pub struct UiTransformSystem {
     transform_modified: BitSet,
@@ -140,8 +140,8 @@ pub struct UiTransformSystem {
 
 impl<'a> System<'a> for UiTransformSystem {
     type SystemData = (
-        WriteStorage<'a, UiTransform>,
-        ReadStorage<'a, Parent>,
+        WriteStorage<'a, UiTransformComponent>,
+        ReadStorage<'a, ParentComponent>,
         ReadExpect<'a, ScreenDimensions>,
         ReadExpect<'a, ParentHierarchy>,
     );
@@ -321,14 +321,14 @@ impl<'a> System<'a> for UiTransformSystem {
         use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
         self.parent_events_id = Some(res.fetch_mut::<ParentHierarchy>().track());
-        let mut transforms = WriteStorage::<UiTransform>::fetch(res);
+        let mut transforms = WriteStorage::<UiTransformComponent>::fetch(res);
         self.transform_events_id = Some(transforms.register_reader());
     }
 }
 
 fn process_root_iter<'a, I>(iter: I, screen_dim: &ScreenDimensions)
 where
-    I: Iterator<Item = &'a mut UiTransform>,
+    I: Iterator<Item = &'a mut UiTransformComponent>,
 {
     for transform in iter {
         let norm = transform.anchor.norm_offset();

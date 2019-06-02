@@ -2,7 +2,7 @@ use crate::{
     ecs::prelude::{
         BitSet, ComponentEvent, ReadExpect, ReadStorage, ReaderId, Resources, System, WriteStorage,
     },
-    transform::components::{HierarchyEvent, Parent, ParentHierarchy},
+    transform::components::{HierarchyEvent, ParentComponent, ParentHierarchy},
 };
 
 #[cfg(feature = "profiler")]
@@ -10,10 +10,10 @@ use thread_profiler::profile_scope;
 
 use log::error;
 
-use crate::HiddenPropagate;
+use crate::HiddenPropagateComponent;
 
 // Based on the [UiTransformSystem](struct.UiTransformSystem.html).
-/// This system adds a [HiddenPropagate](struct.HiddenPropagate.html)-component to all children.
+/// This system adds a [HiddenPropagateComponent](struct.HiddenPropagate.html)-component to all children.
 /// Using this system will result in every child being hidden.
 /// Depends on the resource "ParentHierarchy", which is set up by the [TransformBundle](struct.TransformBundle.html)
 #[derive(Default)]
@@ -27,8 +27,8 @@ pub struct HideHierarchySystem {
 
 impl<'a> System<'a> for HideHierarchySystem {
     type SystemData = (
-        WriteStorage<'a, HiddenPropagate>,
-        ReadStorage<'a, Parent>,
+        WriteStorage<'a, HiddenPropagateComponent>,
+        ReadStorage<'a, ParentComponent>,
         ReadExpect<'a, ParentHierarchy>,
     );
     fn run(&mut self, (mut hidden, parents, hierarchy): Self::SystemData) {
@@ -80,8 +80,13 @@ impl<'a> System<'a> for HideHierarchySystem {
                 if parent_dirty {
                     if hidden.contains(parent_entity) {
                         for child in hierarchy.all_children_iter(parent_entity) {
-                            if let Err(e) = hidden.insert(child, HiddenPropagate::default()) {
-                                error!("Failed to automatically add `HiddenPropagate`: {:?}", e);
+                            if let Err(e) =
+                                hidden.insert(child, HiddenPropagateComponent::default())
+                            {
+                                error!(
+                                    "Failed to automatically add `HiddenPropagateComponent`: {:?}",
+                                    e
+                                );
                             };
                         }
                     } else {
@@ -94,8 +99,13 @@ impl<'a> System<'a> for HideHierarchySystem {
                     // therefore it only needs to be an else-if, instead of a stand-alone if.
                     if hidden.contains(*entity) {
                         for child in hierarchy.all_children_iter(*entity) {
-                            if let Err(e) = hidden.insert(child, HiddenPropagate::default()) {
-                                error!("Failed to automatically add `HiddenPropagate`: {:?}", e);
+                            if let Err(e) =
+                                hidden.insert(child, HiddenPropagateComponent::default())
+                            {
+                                error!(
+                                    "Failed to automatically add `HiddenPropagateComponent`: {:?}",
+                                    e
+                                );
                             };
                         }
                     } else {
@@ -125,7 +135,7 @@ impl<'a> System<'a> for HideHierarchySystem {
         Self::SystemData::setup(res);
         // This fetch_mut panics if `ParentHierarchy` is not set up yet, hence the dependency on "parent_hierarchy_system"
         self.parent_events_id = Some(res.fetch_mut::<ParentHierarchy>().track());
-        let mut hidden = WriteStorage::<HiddenPropagate>::fetch(res);
+        let mut hidden = WriteStorage::<HiddenPropagateComponent>::fetch(res);
         self.hidden_events_id = Some(hidden.register_reader());
     }
 }

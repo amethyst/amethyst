@@ -1,17 +1,17 @@
 use amethyst::{
-    core::{transform::Transform, Float},
+    core::{transform::TransformComponent, Float},
     ecs::prelude::{Join, ReadStorage, System, WriteStorage},
 };
 
-use crate::pong::{Ball, Paddle, Side, ARENA_HEIGHT};
+use crate::pong::{BallComponent, PaddleComponent, Side, ARENA_HEIGHT};
 
 pub struct BounceSystem;
 
 impl<'s> System<'s> for BounceSystem {
     type SystemData = (
-        WriteStorage<'s, Ball>,
-        ReadStorage<'s, Paddle>,
-        ReadStorage<'s, Transform>,
+        WriteStorage<'s, BallComponent>,
+        ReadStorage<'s, PaddleComponent>,
+        ReadStorage<'s, TransformComponent>,
     );
 
     fn run(&mut self, (mut balls, paddles, transforms): Self::SystemData) {

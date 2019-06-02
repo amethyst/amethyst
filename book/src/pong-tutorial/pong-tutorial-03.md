@@ -123,7 +123,7 @@ We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 #     pub const PADDLE_HEIGHT: f32 = 16.0;
 # }
 #
-use amethyst::core::Transform;
+use amethyst::core::TransformComponent;
 use amethyst::ecs::{Join, Read, ReadStorage, System, WriteStorage};
 use amethyst::input::InputHandler;
 
@@ -134,7 +134,7 @@ pub struct PaddleSystem;
 
 impl<'s> System<'s> for PaddleSystem {
   type SystemData = (
-    WriteStorage<'s, Transform>,
+    WriteStorage<'s, TransformComponent>,
     ReadStorage<'s, Paddle>,
     Read<'s, InputHandler<String, String>>,
   );
@@ -168,7 +168,7 @@ with the lifetime of the components on which it operates.
 Inside the implementation, we define the data the system operates on in the
 `SystemData` tuple: `WriteStorage`, `ReadStorage`, and `Read`. More
 specifically, the generic types we've used here tell us that the `PaddleSystem`
-mutates `Transform` components, `WriteStorage<'s, Transform>`, it
+mutates `TransformComponent` components, `WriteStorage<'s, TransformComponent>`, it
 reads `Paddle` components, `ReadStorage<'s, Paddle>`, and also accesses the
 `InputHandler<String, String>` resource we created earlier, using the `Read`
 structure.
@@ -177,10 +177,10 @@ structure.
 > as those used to create the `InputBundle` earlier.
 
 Now that we have access to the storages of the components we want, we can iterate
-over them. We perform a join operation between the `Transform` and `Paddle`
+over them. We perform a join operation between the `TransformComponent` and `Paddle`
 storages. This will iterate over all entities that have both a `Paddle`
-and `Transform` attached to them, and give us access to the actual components,
-immutably for the `Paddle` and mutably for the `Transform`.
+and `TransformComponent` attached to them, and give us access to the actual components,
+immutably for the `Paddle` and mutably for the `TransformComponent`.
 
 > There are many other ways to use storages. For example, you can use them to get
 > a reference to the component of a specific type held by an entity, or simply
@@ -249,7 +249,7 @@ component of the transform's translation.
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::core::Transform;
+# use amethyst::core::TransformComponent;
 # use amethyst::ecs::{Join, Read, ReadStorage, System, WriteStorage};
 # use amethyst::input::InputHandler;
 # enum Side {
@@ -265,7 +265,7 @@ component of the transform's translation.
 # pub struct PaddleSystem;
 # impl<'s> System<'s> for PaddleSystem {
 #  type SystemData = (
-#    WriteStorage<'s, Transform>,
+#    WriteStorage<'s, TransformComponent>,
 #    ReadStorage<'s, Paddle>,
 #    Read<'s, InputHandler<String, String>>,
 #  );
@@ -305,7 +305,7 @@ Our run function should now look something like this:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::core::{math::RealField, Float, Transform};
+# use amethyst::core::{math::RealField, Float, TransformComponent};
 # use amethyst::ecs::{Join, Read, ReadStorage, System, WriteStorage};
 # use amethyst::input::InputHandler;
 # const PADDLE_HEIGHT: f32 = 16.0;
@@ -325,7 +325,7 @@ Our run function should now look something like this:
 # pub struct PaddleSystem;
 # impl<'s> System<'s> for PaddleSystem {
 #  type SystemData = (
-#    WriteStorage<'s, Transform>,
+#    WriteStorage<'s, TransformComponent>,
 #    ReadStorage<'s, Paddle>,
 #    Read<'s, InputHandler<String, String>>,
 #  );

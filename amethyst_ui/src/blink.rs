@@ -2,11 +2,11 @@
 
 use amethyst_core::{
     ecs::{Component, DenseVecStorage, Entities, Join, Read, System, WriteStorage},
-    Hidden, Time,
+    HiddenComponent, Time,
 };
 
 /// # Blink Component
-/// Periodically adds and removes a `Hidden` Component on the entity this is attached to.
+/// Periodically adds and removes a `HiddenComponent` Component on the entity this is attached to.
 ///
 /// ## Visibility Period
 /// During the first half period, the entity is visible.
@@ -14,7 +14,7 @@ use amethyst_core::{
 ///
 /// During the second half period, the entity is invisible.
 /// [delay/2, delay]
-pub struct Blink {
+pub struct BlinkComponent {
     /// Period of a full blink cycle.
     pub delay: f32,
     /// Timer value keeping track of the time during the blink cycle.
@@ -23,7 +23,7 @@ pub struct Blink {
     pub absolute_time: bool,
 }
 
-impl Component for Blink {
+impl Component for BlinkComponent {
     type Storage = DenseVecStorage<Self>;
 }
 
@@ -33,8 +33,8 @@ pub struct BlinkSystem;
 impl<'a> System<'a> for BlinkSystem {
     type SystemData = (
         Entities<'a>,
-        WriteStorage<'a, Hidden>,
-        WriteStorage<'a, Blink>,
+        WriteStorage<'a, HiddenComponent>,
+        WriteStorage<'a, BlinkComponent>,
         Read<'a, Time>,
     );
 
@@ -59,8 +59,11 @@ impl<'a> System<'a> for BlinkSystem {
             let on = blink.timer < blink.delay / 2.0;
 
             match (on, hiddens.contains(entity)) {
-                (true, false) => hiddens.insert(entity, Hidden).unwrap_or_else(|_| {
-                    panic!("Failed to insert Hidden component for {:?}", entity)
+                (true, false) => hiddens.insert(entity, HiddenComponent).unwrap_or_else(|_| {
+                    panic!(
+                        "Failed to insert HiddenComponent component for {:?}",
+                        entity
+                    )
                 }),
                 (false, true) => hiddens.remove(entity),
                 _ => None,

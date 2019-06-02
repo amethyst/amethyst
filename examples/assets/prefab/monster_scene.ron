@@ -9,7 +9,7 @@ Prefab (
         ),
         (
             data: (
-                transform: Transform(
+                transform: TransformComponent(
                     scale: (0.2, 0.2, 0.2),
                 ),
             ),
@@ -27,7 +27,7 @@ Prefab (
         ),
         (
             data: (
-                transform: Transform (
+                transform: TransformComponent (
                      translation: (5.0, 2.0, 5.0),
                 ),
                 camera: Perspective(
@@ -40,7 +40,7 @@ Prefab (
         ),
         (
             data: (
-                transform: Transform (
+                transform: TransformComponent (
                      translation: (6.0, 6.0, -6.0),
                 ),
                 light: (
@@ -53,7 +53,7 @@ Prefab (
         ),
         (
             data: (
-                transform: Transform (
+                transform: TransformComponent (
                      translation: (0.0, 4.0, 4.0),
                 ),
                 light: (

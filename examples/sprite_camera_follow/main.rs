@@ -1,6 +1,6 @@
 use amethyst::{
     assets::{AssetStorage, Loader, Processor},
-    core::{Named, Parent, Transform, TransformBundle},
+    core::{NamedComponent, ParentComponent, TransformBundle, TransformComponent},
     ecs::{
         Component, Entity, Join, NullStorage, Read, ReadExpect, ReadStorage, Resources, System,
         SystemData, WriteStorage,
@@ -8,7 +8,7 @@ use amethyst::{
     input::{is_close_requested, is_key_down, InputBundle, InputHandler, StringBindings},
     prelude::*,
     renderer::{
-        camera::Camera,
+        camera::CameraComponent,
         formats::texture::ImageFormat,
         pass::DrawFlat2DTransparentDesc,
         rendy::{
@@ -19,9 +19,9 @@ use amethyst::{
             },
             hal::{format::Format, image},
         },
-        sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
+        sprite::{SpriteRenderComponent, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
         sprite_visibility::SpriteVisibilitySortingSystem,
-        transparent::Transparent,
+        transparent::TransparentComponent,
         types::DefaultBackend,
         GraphCreator, RenderingSystem, Texture,
     },
@@ -32,9 +32,9 @@ use amethyst::{
 use std::sync::Arc;
 
 #[derive(Default)]
-struct Player;
+struct PlayerComponent;
 
-impl Component for Player {
+impl Component for PlayerComponent {
     type Storage = NullStorage<Self>;
 }
 
@@ -42,8 +42,8 @@ struct MovementSystem;
 
 impl<'s> System<'s> for MovementSystem {
     type SystemData = (
-        ReadStorage<'s, Player>,
-        WriteStorage<'s, Transform>,
+        ReadStorage<'s, PlayerComponent>,
+        WriteStorage<'s, TransformComponent>,
         Read<'s, InputHandler<StringBindings>>,
     );
 
@@ -77,9 +77,9 @@ fn load_sprite_sheet(world: &mut World, png_path: &str, ron_path: &str) -> Sprit
 
 // Initialize a background
 fn init_background_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
-    let mut transform = Transform::default();
+    let mut transform = TransformComponent::default();
     transform.set_translation_z(-10.0);
-    let sprite = SpriteRender {
+    let sprite = SpriteRenderComponent {
         sprite_sheet: sprite_sheet.clone(),
         sprite_number: 0,
     };
@@ -88,15 +88,15 @@ fn init_background_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -
         .with(transform)
         .with(sprite)
         .named("background")
-        .with(Transparent)
+        .with(TransparentComponent)
         .build()
 }
 
 // Initialize a sprite as a reference point at a fixed location
 fn init_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
-    let mut transform = Transform::default();
+    let mut transform = TransformComponent::default();
     transform.set_translation_xyz(0.0, 0.0, 0.0);
-    let sprite = SpriteRender {
+    let sprite = SpriteRenderComponent {
         sprite_sheet: sprite_sheet.clone(),
         sprite_number: 0,
     };
@@ -104,16 +104,16 @@ fn init_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) ->
         .create_entity()
         .with(transform)
         .with(sprite)
-        .with(Transparent)
+        .with(TransparentComponent)
         .named("reference")
         .build()
 }
 
 // Initialize a sprite as a reference point
 fn init_screen_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
-    let mut transform = Transform::default();
+    let mut transform = TransformComponent::default();
     transform.set_translation_xyz(-250.0, -245.0, -11.0);
-    let sprite = SpriteRender {
+    let sprite = SpriteRenderComponent {
         sprite_sheet: sprite_sheet.clone(),
         sprite_number: 0,
     };
@@ -121,24 +121,24 @@ fn init_screen_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHan
         .create_entity()
         .with(transform)
         .with(sprite)
-        .with(Transparent)
+        .with(TransparentComponent)
         .named("screen_reference")
         .build()
 }
 
 fn init_player(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
-    let mut transform = Transform::default();
+    let mut transform = TransformComponent::default();
     transform.set_translation_xyz(0.0, 0.0, -3.0);
-    let sprite = SpriteRender {
+    let sprite = SpriteRenderComponent {
         sprite_sheet: sprite_sheet.clone(),
         sprite_number: 1,
     };
     world
         .create_entity()
         .with(transform)
-        .with(Player)
+        .with(PlayerComponent)
         .with(sprite)
-        .with(Transparent)
+        .with(TransparentComponent)
         .named("player")
         .build()
 }
@@ -150,14 +150,14 @@ fn initialise_camera(world: &mut World, parent: Entity) -> Entity {
     };
     //println!("Init camera with dimensions: {}x{}", width, height);
 
-    let mut camera_transform = Transform::default();
+    let mut camera_transform = TransformComponent::default();
     camera_transform.set_translation_z(5.0);
 
     world
         .create_entity()
         .with(camera_transform)
-        .with(Parent { entity: parent })
-        .with(Camera::standard_2d(width, height))
+        .with(ParentComponent { entity: parent })
+        .with(CameraComponent::standard_2d(width, height))
         .named("camera")
         .build()
 }
@@ -167,7 +167,7 @@ struct Example;
 impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
-        world.register::<Named>();
+        world.register::<NamedComponent>();
 
         let circle_sprite_sheet_handle =
             load_sprite_sheet(world, "Circle_Spritesheet.png", "Circle_Spritesheet.ron");
@@ -192,7 +192,10 @@ impl SimpleState for Example {
                 Trans::Quit
             } else if is_key_down(&event, winit::VirtualKeyCode::Space) {
                 world.exec(
-                    |(named, transforms): (ReadStorage<Named>, ReadStorage<Transform>)| {
+                    |(named, transforms): (
+                        ReadStorage<NamedComponent>,
+                        ReadStorage<TransformComponent>,
+                    )| {
                         for (name, transform) in (&named, &transforms).join() {
                             println!("{} => {:?}", name.name, transform.translation());
                         }

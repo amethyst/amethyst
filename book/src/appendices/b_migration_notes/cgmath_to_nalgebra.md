@@ -47,7 +47,7 @@ We will not list the names of every type with the same simple name, but will try
     +matrix4.transform_point(&origin)
     ```
 
-* `amethyst::core::transform::Transform`
+* `amethyst::core::transform::TransformComponent`
 
     - Transformation values are accessed / mutated through accessor methods.
 
@@ -108,7 +108,7 @@ We will not list the names of every type with the same simple name, but will try
         +*transform.scale_mut() = Vector3::new(1.0, 1.0, 1.0);
         ```
 
-    - `amethyst::core::transform::Transform` prefabs no longer use labels
+    - `amethyst::core::transform::TransformComponent` prefabs no longer use labels
 
         ```patch
          // scene.ron

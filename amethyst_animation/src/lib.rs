@@ -58,7 +58,10 @@ pub use self::{
         AnimationSampling, AnimationSet, ApplyData, BlendMethod, ControlState, DeferStartRelation,
         EndControl, RestState, Sampler, SamplerControl, SamplerControlSet, StepDirection,
     },
-    skinning::{Joint, JointPrefab, Skin, SkinPrefab, SkinnablePrefab, VertexSkinningSystem},
+    skinning::{
+        JointComponent, JointPrefab, SkinComponent, SkinPrefab, SkinnablePrefab,
+        VertexSkinningSystem,
+    },
     sprite::{SpriteRenderChannel, SpriteRenderPrimitive},
     systems::{
         AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem, SamplerProcessor,

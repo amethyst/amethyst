@@ -41,7 +41,7 @@ pub mod util;
 
 pub use formats::{mesh::MeshPrefab, texture::TexturePrefab};
 pub use mtl::{Material, MaterialDefaults};
-pub use sprite::{Sprite, SpriteRender, SpriteSheet};
+pub use sprite::{Sprite, SpriteRenderComponent, SpriteSheet};
 pub use system::{GraphCreator, RenderingSystem};
 pub use types::{Backend, Mesh, Texture};
 pub use util::{simple_shader_set, ChangeDetection};

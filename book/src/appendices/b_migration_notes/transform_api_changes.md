@@ -1,11 +1,11 @@
-# `Transform` API Changes
+# `TransformComponent` API Changes
 
-The names of several `Transform` methods have been changed in order to better reflect their actual function and reduce potential semantic confusion. Many of these changes are breaking and old projects will have to be updated.
+The names of several `TransformComponent` methods have been changed in order to better reflect their actual function and reduce potential semantic confusion. Many of these changes are breaking and old projects will have to be updated.
 
 ## Summary
 
-* `Float` type has been added to wrap `f32` or `f64` for `Transform` coordinates.
-* `GlobalTransform` has been removed, and merged into `Transform`.
+* `Float` type has been added to wrap `f32` or `f64` for `TransformComponent` coordinates.
+* `GlobalTransform` has been removed, and merged into `TransformComponent`.
 * `set_*` translation methods have been renamed to `set_translation_*`
 * `*_local` transforms have been renamed to `append_*`.
 * `*_global` transforms have been renamed to `prepend_*`.
@@ -17,9 +17,9 @@ The names of several `Transform` methods have been changed in order to better re
 
 ## `Float` Type
 
-A wrapper type around `f32` and `f64`. It is used to hide the actual type being used internally. Mostly used with the Transform type. The default type is `f32` and you can switch to the `f64` type by enabling the "float64" feature gate.
+A wrapper type around `f32` and `f64`. It is used to hide the actual type being used internally. Mostly used with the TransformComponent type. The default type is `f32` and you can switch to the `f64` type by enabling the "float64" feature gate.
 
-## Renamed Transform Methods (Breaking Changes)
+## Renamed TransformComponent Methods (Breaking Changes)
 
 * `set(x|y|z)` to `set_translation(x|y|z)`
 
@@ -112,7 +112,7 @@ A wrapper type around `f32` and `f64`. It is used to hide the actual type being 
     +transform.set_translation(Vector3::new(0.3, 0.2, 4.1));
     ```
 
-## New Transform Methods
+## New TransformComponent Methods
 
 * Set Rotation
 

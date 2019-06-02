@@ -9,14 +9,14 @@ use amethyst::{
         AssetLoaderSystemData, Completion, PrefabLoader, PrefabLoaderSystem, Processor,
         ProgressCounter, RonFormat,
     },
-    controls::{FlyControlBundle, FlyControlTag},
+    controls::{FlyControlBundle, FlyControlTagComponent},
     core::{
         ecs::{
             Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
             Resources, System, SystemData, Write, WriteStorage,
         },
         math::{Unit, UnitQuaternion, Vector3},
-        Time, Transform, TransformBundle,
+        Time, TransformBundle, TransformComponent,
     },
     gltf::GltfSceneLoaderSystem,
     input::{is_close_requested, is_key_down, Axis, Bindings, Button, InputBundle, StringBindings},
@@ -25,9 +25,9 @@ use amethyst::{
     window::{ScreenDimensions, Window, WindowBundle},
 };
 use amethyst_rendy::{
-    camera::{ActiveCamera, Camera, Projection},
+    camera::{ActiveCamera, CameraComponent, Projection},
     debug_drawing::DebugLines,
-    light::{Light, PointLight},
+    light::{LightComponent, PointLight},
     mtl::{Material, MaterialDefaults},
     palette::{LinSrgba, Srgb, Srgba},
     pass::{
@@ -50,14 +50,14 @@ use amethyst_rendy::{
         mesh::{Normal, Position, Tangent, TexCoord},
         texture::palette::load_from_linear_rgba,
     },
-    resources::Tint,
+    resources::TintComponent,
     shape::Shape,
-    sprite::{SpriteRender, SpriteSheet},
+    sprite::{SpriteRenderComponent, SpriteSheet},
     sprite_visibility::SpriteVisibilitySortingSystem,
     system::{GraphCreator, RenderingSystem},
-    transparent::Transparent,
+    transparent::TransparentComponent,
     types::{Backend, DefaultBackend, Mesh, Texture},
-    visibility::{BoundingSphere, VisibilitySortingSystem},
+    visibility::{BoundingSphereComponent, VisibilitySortingSystem},
 };
 use std::{path::Path, sync::Arc};
 
@@ -81,14 +81,14 @@ impl Example {
     }
 }
 
-struct Orbit {
+struct OrbitComponent {
     axis: Unit<Vector3<f32>>,
     time_scale: f32,
     center: Vector3<f32>,
     radius: f32,
 }
 
-impl Component for Orbit {
+impl Component for OrbitComponent {
     type Storage = DenseVecStorage<Self>;
 }
 
@@ -97,8 +97,8 @@ struct OrbitSystem;
 impl<'a> System<'a> for OrbitSystem {
     type SystemData = (
         Read<'a, Time>,
-        ReadStorage<'a, Orbit>,
-        WriteStorage<'a, Transform>,
+        ReadStorage<'a, OrbitComponent>,
+        WriteStorage<'a, TransformComponent>,
         Write<'a, DebugLines>,
     );
 
@@ -145,7 +145,7 @@ impl<'a> System<'a> for CameraCorrectionSystem {
     type SystemData = (
         ReadExpect<'a, ScreenDimensions>,
         ReadExpect<'a, ActiveCamera>,
-        WriteStorage<'a, Camera>,
+        WriteStorage<'a, CameraComponent>,
     );
 
     fn run(&mut self, (dimensions, active_cam, mut cameras): Self::SystemData) {
@@ -155,7 +155,7 @@ impl<'a> System<'a> for CameraCorrectionSystem {
             self.last_aspect = current_aspect;
 
             let camera = cameras.get_mut(active_cam.entity).unwrap();
-            *camera = Camera::from(Projection::perspective(
+            *camera = CameraComponent::from(Projection::perspective(
                 current_aspect,
                 std::f32::consts::FRAC_PI_3,
                 0.1,
@@ -257,7 +257,7 @@ impl SimpleState for Example {
                     let center =
                         Vector3::new(15.0 * (x - 0.5), 15.0 * (y - 0.5), 2.0 * (z - 0.5) - 5.0);
 
-                    let mut pos = Transform::default();
+                    let mut pos = TransformComponent::default();
                     pos.set_translation(center);
                     pos.set_scale(Vector3::new(0.2, 0.2, 0.2));
 
@@ -266,9 +266,9 @@ impl SimpleState for Example {
                         .with(pos)
                         .with(mesh.clone())
                         .with(mtls[(j + i) % mtls.len()].clone())
-                        .with(Transparent)
-                        .with(BoundingSphere::origin(1.0))
-                        .with(Orbit {
+                        .with(TransparentComponent)
+                        .with(BoundingSphereComponent::origin(1.0))
+                        .with(OrbitComponent {
                             axis: Unit::new_normalize(Vector3::y()),
                             time_scale: 5.0 + y + 0.1 * x + 0.07 * z,
                             center,
@@ -280,7 +280,7 @@ impl SimpleState for Example {
                         let xor_x = i - 10;
                         let xor_y = j - 10;
                         let c = ((xor_x ^ xor_y) & 0xFF) as f32 / 255.0;
-                        builder = builder.with(Tint(Srgb::new(c, c, c).into()));
+                        builder = builder.with(TintComponent(Srgb::new(c, c, c).into()));
                     }
 
                     builder.build();
@@ -289,41 +289,41 @@ impl SimpleState for Example {
         }
 
         println!("Create lights");
-        let light1: Light = PointLight {
+        let light1: LightComponent = PointLight {
             intensity: 6.0,
             color: Srgb::new(0.8, 0.0, 0.0),
             ..PointLight::default()
         }
         .into();
 
-        let mut light1_transform = Transform::default();
+        let mut light1_transform = TransformComponent::default();
         light1_transform.set_translation_xyz(6.0, 6.0, 6.0);
 
-        let light2: Light = PointLight {
+        let light2: LightComponent = PointLight {
             intensity: 5.0,
             color: Srgb::new(0.0, 0.3, 0.7),
             ..PointLight::default()
         }
         .into();
 
-        let mut light2_transform = Transform::default();
+        let mut light2_transform = TransformComponent::default();
         light2_transform.set_translation_xyz(6.0, -6.0, 6.0);
 
-        let light3: Light = PointLight {
+        let light3: LightComponent = PointLight {
             intensity: 4.0,
             color: Srgb::new(0.5, 0.5, 0.5),
             ..PointLight::default()
         }
         .into();
 
-        let mut light3_transform = Transform::default();
+        let mut light3_transform = TransformComponent::default();
         light3_transform.set_translation_xyz(-3.0, 10.0, 2.0);
 
         world
             .create_entity()
             .with(light1)
             .with(light1_transform)
-            .with(Orbit {
+            .with(OrbitComponent {
                 axis: Unit::new_normalize(Vector3::x()),
                 time_scale: 2.0,
                 center: Vector3::new(6.0, -6.0, -6.0),
@@ -343,19 +343,19 @@ impl SimpleState for Example {
             .with(light3_transform)
             .build();
 
-        let mut transform = Transform::default();
+        let mut transform = TransformComponent::default();
         transform.set_translation_xyz(0.0, 4.0, 8.0);
 
         let camera = world
             .create_entity()
-            .with(Camera::from(Projection::perspective(
+            .with(CameraComponent::from(Projection::perspective(
                 1.3,
                 std::f32::consts::FRAC_PI_3,
                 0.1,
                 1000.0,
             )))
             .with(transform)
-            .with(FlyControlTag)
+            .with(FlyControlTagComponent)
             .build();
 
         world.add_resource(ActiveCamera { entity: camera });
@@ -435,8 +435,8 @@ impl SimpleState for Example {
             data.world.exec(
                 |(entities, animation_sets, mut control_sets): (
                     Entities,
-                    ReadStorage<AnimationSet<SpriteAnimationId, SpriteRender>>,
-                    WriteStorage<AnimationControlSet<SpriteAnimationId, SpriteRender>>,
+                    ReadStorage<AnimationSet<SpriteAnimationId, SpriteRenderComponent>>,
+                    WriteStorage<AnimationControlSet<SpriteAnimationId, SpriteRenderComponent>>,
                 )| {
                     // For each entity that has AnimationSet
                     for (entity, animation_set, _) in (&entities, &animation_sets, !&control_sets)
@@ -464,13 +464,13 @@ impl SimpleState for Example {
 fn toggle_or_cycle_animation(
     entity: Option<Entity>,
     scene: &mut Scene,
-    sets: &ReadStorage<'_, AnimationSet<usize, Transform>>,
-    controls: &mut WriteStorage<'_, AnimationControlSet<usize, Transform>>,
+    sets: &ReadStorage<'_, AnimationSet<usize, TransformComponent>>,
+    controls: &mut WriteStorage<'_, AnimationControlSet<usize, TransformComponent>>,
 ) {
     if let Some((entity, Some(animations))) = entity.map(|entity| (entity, sets.get(entity))) {
         if animations.animations.len() > scene.animation_index {
             let animation = animations.animations.get(&scene.animation_index).unwrap();
-            let set = get_animation_set::<usize, Transform>(controls, entity).unwrap();
+            let set = get_animation_set::<usize, TransformComponent>(controls, entity).unwrap();
             if set.has_animation(scene.animation_index) {
                 set.toggle(scene.animation_index);
             } else {
@@ -554,11 +554,14 @@ fn main() -> amethyst::Result<()> {
             &[],
         )
         .with_bundle(
-            AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
-                .with_dep(&["gltf_loader"]),
+            AnimationBundle::<usize, TransformComponent>::new(
+                "animation_control",
+                "sampler_interpolation",
+            )
+            .with_dep(&["gltf_loader"]),
         )?
         .with_bundle(
-            AnimationBundle::<SpriteAnimationId, SpriteRender>::new(
+            AnimationBundle::<SpriteAnimationId, SpriteRenderComponent>::new(
                 "sprite_animation_control",
                 "sprite_sampler_interpolation",
             )

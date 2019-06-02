@@ -4,9 +4,9 @@
 // File currently ignored because it is not added to lib.rs
 
 /// Tag component placed on the cursor of a text field being edited.
-pub struct TextEditingCursor;
+pub struct TextEditingCursorComponent;
 
-impl Component for TextEditingCursor {
+impl Component for TextEditingCursorComponent {
     type Storage = NullStorage<Self>;
 }
 
@@ -16,9 +16,9 @@ pub struct TextEditingCursorSystem;
 impl<'a> System<'a> for TextEditingCursorSystem {
     type SystemData = (
         Entities<'a>,
-        WriteStorage<'a, UiTransform>,
+        WriteStorage<'a, UiTransformComponent>,
         ReadStorage<'a, TextEditing>,
-        ReadStorage<'a, Parent>,
+        ReadStorage<'a, ParentComponent>,
         ReadStorage<'a, Selected>,
         WriteStorage<'a, Cursor>,
         WriteStorage<'a, Blink>,
@@ -44,8 +44,8 @@ impl<'a> System<'a> for TextEditingCursorSystem {
                 // TODO: Should have a cursor.
                 let cursor_entity = entities.create_entity();
                 cursors.insert(cursor_entity, Cursor).expect("Unreachable: Entity just created.");
-                parents.insert(cursor_entity, Parent{parent: entity.clone()}).expect("Unreachable: Entity just created.");
-                transforms.insert(cursor_entity, UiTransform::new()).expect("Unreachable: Entity just created.");
+                parents.insert(cursor_entity, ParentComponent{parent: entity.clone()}).expect("Unreachable: Entity just created.");
+                transforms.insert(cursor_entity, UiTransformComponent::new()).expect("Unreachable: Entity just created.");
                 blinks.insert(cursor_entity, Blink::new(config.blink_delay)).expect("Unreachable: Entity just created.");
                 textures.insert(cursor_entity, config.cursor).expect("Unreachable: Entity just created.");
             }

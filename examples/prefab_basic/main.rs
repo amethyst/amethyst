@@ -7,7 +7,7 @@ use amethyst::{
         AssetStorage, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem,
         ProgressCounter, RonFormat,
     },
-    core::Parent,
+    core::ParentComponent,
     derive::PrefabData,
     ecs::{storage::DenseVecStorage, Component, Entities, Entity, Join, ReadStorage, WriteStorage},
     prelude::*,
@@ -92,7 +92,7 @@ impl CustomPrefabState {
             "| {e:24} | {prefab_handle:24} | {parent:6} | {pos:23} |",
             e = "Entity",
             prefab_handle = "Handle<Prefab<Position>>",
-            parent = "Parent",
+            parent = "ParentComponent",
             pos = "Position",
         );
         println!("| {c:-^24} | {c:-^24} | {c:-^6} | {c:-^23} |", c = "",);
@@ -100,7 +100,7 @@ impl CustomPrefabState {
             |(entities, prefab_handles, parents, positions): (
                 Entities,
                 ReadStorage<Handle<Prefab<Position>>>,
-                ReadStorage<Parent>,
+                ReadStorage<ParentComponent>,
                 ReadStorage<Position>,
             )| {
                 (

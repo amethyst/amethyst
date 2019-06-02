@@ -101,7 +101,7 @@ impl Sprite {
         // For pixel perfect result, the sprite border must be rendered exactly at
         // screen pixel border or use nearest-neighbor sampling.
         // <http://www.mindcontrol.org/~hplus/graphics/opengl-pixel-perfect.html>
-        // NOTE: Maybe we should provide an option to round coordinates from `Transform`
+        // NOTE: Maybe we should provide an option to round coordinates from `TransformComponent`
         // to nearest integer in `DrawFlat2D` pass before rendering.
         let left = (pixel_left) / image_w;
         let right = (pixel_right) / image_w;
@@ -177,14 +177,14 @@ impl From<[f32; 4]> for TextureCoordinates {
 /// Instead of using a `Mesh` on a `DrawFlat` render pass, we can use a simpler set of shaders to
 /// render textures to quads. This struct carries the information necessary for the draw2dflat pass.
 #[derive(Clone, Debug, PartialEq)]
-pub struct SpriteRender {
+pub struct SpriteRenderComponent {
     /// Handle to the sprite sheet of the sprite
     pub sprite_sheet: SpriteSheetHandle,
     /// Index of the sprite on the sprite sheet
     pub sprite_number: usize,
 }
 
-impl Component for SpriteRender {
+impl Component for SpriteRenderComponent {
     type Storage = DenseVecStorage<Self>;
 }
 

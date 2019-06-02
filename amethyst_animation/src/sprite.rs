@@ -3,11 +3,11 @@ use minterpolate::InterpolationPrimitive;
 use serde::{Deserialize, Serialize};
 
 use amethyst_assets::Handle;
-use amethyst_rendy::sprite::{SpriteRender, SpriteSheet};
+use amethyst_rendy::sprite::{SpriteRenderComponent, SpriteSheet};
 
 use crate::{AnimationSampling, ApplyData, BlendMethod};
 
-/// Sampler primitive for SpriteRender animations
+/// Sampler primitive for SpriteRenderComponent animations
 /// Note that sprites can only ever be animated with `Step`, or a panic will occur.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(untagged)]
@@ -49,7 +49,7 @@ impl InterpolationPrimitive for SpriteRenderPrimitive {
     }
 }
 
-/// Channels that are animatable on `SpriteRender`
+/// Channels that are animatable on `SpriteRenderComponent`
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum SpriteRenderChannel {
     /// Selecting a spritesheet dynamically
@@ -58,11 +58,11 @@ pub enum SpriteRenderChannel {
     SpriteIndex,
 }
 
-impl<'a> ApplyData<'a> for SpriteRender {
+impl<'a> ApplyData<'a> for SpriteRenderComponent {
     type ApplyData = ();
 }
 
-impl AnimationSampling for SpriteRender {
+impl AnimationSampling for SpriteRenderComponent {
     type Primitive = SpriteRenderPrimitive;
     type Channel = SpriteRenderChannel;
 
@@ -104,7 +104,7 @@ impl AnimationSampling for SpriteRender {
     }
 
     fn default_primitive(_: &Self::Channel) -> Self::Primitive {
-        panic!("Blending is not applicable to SpriteRender animation")
+        panic!("Blending is not applicable to SpriteRenderComponent animation")
     }
 
     fn blend_method(&self, _: &Self::Channel) -> Option<BlendMethod> {

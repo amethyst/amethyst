@@ -8,13 +8,13 @@ use crate::{
 
 /// Provides an `EventRetriggerSystem` that will handle incoming `UiEvents`
 /// and trigger `UiButtonAction`s for `UiButton`s with an attached
-/// `UiButtonActionRetrigger` component.
-pub type UiButtonActionRetriggerSystem = EventRetriggerSystem<UiButtonActionRetrigger>;
+/// `UiButtonActionRetriggerComponent` component.
+pub type UiButtonActionRetriggerSystem = EventRetriggerSystem<UiButtonActionRetriggerComponent>;
 
 /// Attach this to an entity with a `UiButton` attached to it to
 /// trigger specific events when a user interaction happens.
 #[derive(Debug)]
-pub struct UiButtonActionRetrigger {
+pub struct UiButtonActionRetriggerComponent {
     /// The `UiButtonAction`s that should happen when the user begins a click
     /// on the `UiButton`
     pub on_click_start: Vec<UiButtonAction>,
@@ -29,11 +29,11 @@ pub struct UiButtonActionRetrigger {
     pub on_hover_stop: Vec<UiButtonAction>,
 }
 
-impl Component for UiButtonActionRetrigger {
+impl Component for UiButtonActionRetriggerComponent {
     type Storage = DenseVecStorage<Self>;
 }
 
-impl EventRetrigger for UiButtonActionRetrigger {
+impl EventRetrigger for UiButtonActionRetriggerComponent {
     type In = UiEvent;
     type Out = UiButtonAction;
 

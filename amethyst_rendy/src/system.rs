@@ -1,13 +1,13 @@
 //! Renderer system
 use crate::{
-    camera::{ActiveCamera, Camera},
+    camera::{ActiveCamera, CameraComponent},
     debug_drawing::DebugLinesComponent,
-    light::Light,
+    light::LightComponent,
     mtl::{Material, MaterialDefaults},
-    resources::Tint,
-    skinning::JointTransforms,
-    sprite::SpriteRender,
-    transparent::Transparent,
+    resources::TintComponent,
+    skinning::JointTransformsComponent,
+    sprite::SpriteRenderComponent,
+    transparent::TransparentComponent,
     types::{Backend, Mesh, Texture},
     visibility::Visibility,
 };
@@ -15,10 +15,10 @@ use amethyst_assets::{
     AssetStorage, Handle, HotReloadStrategy, ProcessableAsset, ProcessingState, ThreadPool,
 };
 use amethyst_core::{
-    components::Transform,
+    components::TransformComponent,
     ecs::{Read, ReadExpect, ReadStorage, Resources, RunNow, SystemData, Write, WriteExpect},
     timing::Time,
-    Hidden, HiddenPropagate,
+    HiddenComponent, HiddenPropagateComponent,
 };
 use palette::{LinSrgba, Srgba};
 use rendy::{
@@ -80,18 +80,18 @@ type SetupData<'a> = (
     ReadStorage<'a, Handle<Mesh>>,
     ReadStorage<'a, Handle<Texture>>,
     ReadStorage<'a, Handle<Material>>,
-    ReadStorage<'a, Tint>,
-    ReadStorage<'a, Light>,
-    ReadStorage<'a, Camera>,
-    ReadStorage<'a, Hidden>,
-    ReadStorage<'a, HiddenPropagate>,
+    ReadStorage<'a, TintComponent>,
+    ReadStorage<'a, LightComponent>,
+    ReadStorage<'a, CameraComponent>,
+    ReadStorage<'a, HiddenComponent>,
+    ReadStorage<'a, HiddenPropagateComponent>,
     ReadStorage<'a, DebugLinesComponent>,
-    ReadStorage<'a, Transparent>,
-    ReadStorage<'a, Transform>,
-    ReadStorage<'a, SpriteRender>,
+    ReadStorage<'a, TransparentComponent>,
+    ReadStorage<'a, TransformComponent>,
+    ReadStorage<'a, SpriteRenderComponent>,
     Option<Read<'a, Visibility>>,
     Option<Read<'a, ActiveCamera>>,
-    ReadStorage<'a, JointTransforms>,
+    ReadStorage<'a, JointTransformsComponent>,
 );
 
 // struct MeshProcessor<B: Backend>(PhantomData<B>);

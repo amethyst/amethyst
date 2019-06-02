@@ -84,19 +84,19 @@ pub enum ConnectionState {
 /// It represents anything that can own an entity or a component.
 /// Think of it as an identity card.
 /// When used as a resource, it designates the local network uuid.
-pub struct NetIdentity {
+pub struct NetIdentityComponent {
     /// The uuid identifying this NetIdentity.
     pub uuid: Uuid,
 }
 
-impl Default for NetIdentity {
+impl Default for NetIdentityComponent {
     fn default() -> Self {
-        NetIdentity {
+        NetIdentityComponent {
             uuid: Uuid::new_v4(),
         }
     }
 }
 
-impl Component for NetIdentity {
-    type Storage = VecStorage<NetIdentity>;
+impl Component for NetIdentityComponent {
+    type Storage = VecStorage<NetIdentityComponent>;
 }

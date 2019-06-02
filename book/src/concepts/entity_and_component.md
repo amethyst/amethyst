@@ -56,7 +56,7 @@ enum Shape {
 }
 
 /// This `Component` describes the transform of an `Entity`
-pub struct Transform {
+pub struct TransformComponent {
     /// Translation + rotation value
     iso: Isometry3<f32>,
     /// Scale vector
@@ -69,14 +69,14 @@ and then you implement the `Component` trait for them:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # struct Shape;
-# struct Transform;
+# struct TransformComponent;
 use amethyst::ecs::{Component, DenseVecStorage, FlaggedStorage};
 
 impl Component for Shape {
     type Storage = DenseVecStorage<Self>;
 }
 
-impl Component for Transform {
+impl Component for TransformComponent {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
 ```

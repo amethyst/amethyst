@@ -1,6 +1,6 @@
 use amethyst_core::{
     ecs::{Entity, WriteStorage},
-    Named, Transform,
+    NamedComponent, TransformComponent,
 };
 use amethyst_error::Error;
 
@@ -45,8 +45,8 @@ where
     }
 }
 
-impl<'a> PrefabData<'a> for Transform {
-    type SystemData = WriteStorage<'a, Transform>;
+impl<'a> PrefabData<'a> for TransformComponent {
+    type SystemData = WriteStorage<'a, TransformComponent>;
     type Result = ();
 
     fn add_to_entity(
@@ -61,8 +61,8 @@ impl<'a> PrefabData<'a> for Transform {
     }
 }
 
-impl<'a> PrefabData<'a> for Named {
-    type SystemData = (WriteStorage<'a, Named>,);
+impl<'a> PrefabData<'a> for NamedComponent {
+    type SystemData = (WriteStorage<'a, NamedComponent>,);
     type Result = ();
 
     fn add_to_entity(

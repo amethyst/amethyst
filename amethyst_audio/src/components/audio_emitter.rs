@@ -12,17 +12,17 @@ use crate::{source::Source, DecoderError};
 
 /// An audio source, add this component to anything that emits sound.
 #[derive(Default)]
-pub struct AudioEmitter {
+pub struct AudioEmitterComponent {
     pub(crate) sinks: SmallVec<[(SpatialSink, Arc<AtomicBool>); 4]>,
     pub(crate) sound_queue: SmallVec<[Decoder<Cursor<Source>>; 4]>,
-    pub(crate) picker: Option<Box<dyn FnMut(&mut AudioEmitter) -> bool + Send + Sync>>,
+    pub(crate) picker: Option<Box<dyn FnMut(&mut AudioEmitterComponent) -> bool + Send + Sync>>,
 }
 
-impl AudioEmitter {
-    /// Creates a new AudioEmitter component initialized to the given positions.
-    /// These positions will stay synced with Transform if the Transform component is available
+impl AudioEmitterComponent {
+    /// Creates a new AudioEmitterComponent component initialized to the given positions.
+    /// These positions will stay synced with TransformComponent if the TransformComponent component is available
     /// on this entity.
-    pub fn new() -> AudioEmitter {
+    pub fn new() -> AudioEmitterComponent {
         Default::default()
     }
 
@@ -40,7 +40,10 @@ impl AudioEmitter {
     /// aliasing.
     /// After the callback is complete, if the picker returned true then the
     /// picker that just finished will be reattached.
-    pub fn set_picker(&mut self, picker: Box<dyn FnMut(&mut AudioEmitter) -> bool + Send + Sync>) {
+    pub fn set_picker(
+        &mut self,
+        picker: Box<dyn FnMut(&mut AudioEmitterComponent) -> bool + Send + Sync>,
+    ) {
         self.picker = Some(picker);
     }
 
@@ -50,7 +53,7 @@ impl AudioEmitter {
     }
 }
 
-impl Component for AudioEmitter {
+impl Component for AudioEmitterComponent {
     type Storage = BTreeStorage<Self>;
 }
 
@@ -60,9 +63,9 @@ mod tests {
 
     use amethyst_utils::app_root_dir::application_root_dir;
 
-    use crate::{AudioEmitter, Source};
+    use crate::{AudioEmitterComponent, Source};
 
-    // test_play tests the AudioEmitter's play function
+    // test_play tests the AudioEmitterComponent's play function
     fn test_play(file_name: &str, should_pass: bool) {
         // Get the full file path
         let app_root = application_root_dir().unwrap();
@@ -73,9 +76,9 @@ mod tests {
         let mut buffer = Vec::new();
         f.read_to_end(&mut buffer).unwrap();
 
-        // Create a Source and AudioEmitter from those bytes
+        // Create a Source and AudioEmitterComponent from those bytes
         let src = Source { bytes: buffer };
-        let mut emitter = AudioEmitter::default();
+        let mut emitter = AudioEmitterComponent::default();
 
         // Call play
         match emitter.play(&src) {
@@ -120,8 +123,8 @@ mod tests {
     #[test]
     fn test_picker() {
         // Create the input variables
-        let mut emitter_main = AudioEmitter::default();
-        let box_picker: Box<dyn FnMut(&mut AudioEmitter) -> bool + Send + Sync> =
+        let mut emitter_main = AudioEmitterComponent::default();
+        let box_picker: Box<dyn FnMut(&mut AudioEmitterComponent) -> bool + Send + Sync> =
             Box::new(use_audio_emitter);
 
         // Test set_picker and assert that it is not empty
@@ -133,8 +136,8 @@ mod tests {
         assert!(emitter_main.picker.is_none());
     }
 
-    // use_audio_emitter is a fake test function to play an AudioEmitter
-    fn use_audio_emitter(_emitter: &mut AudioEmitter) -> bool {
+    // use_audio_emitter is a fake test function to play an AudioEmitterComponent
+    fn use_audio_emitter(_emitter: &mut AudioEmitterComponent) -> bool {
         true
     }
 }

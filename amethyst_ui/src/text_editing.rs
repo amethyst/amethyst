@@ -6,7 +6,9 @@ use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
 use unicode_segmentation::UnicodeSegmentation;
 use winit::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, WindowEvent};
 
-use crate::{LineMode, Selected, TextEditing, UiEvent, UiEventType, UiText};
+use crate::{
+    LineMode, SelectedComponent, TextEditingComponent, UiEvent, UiEventType, UiTextComponent,
+};
 use amethyst_core::{
     ecs::prelude::{Entities, Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
     shrev::{EventChannel, ReaderId},
@@ -33,9 +35,9 @@ impl TextEditingInputSystem {
 impl<'a> System<'a> for TextEditingInputSystem {
     type SystemData = (
         Entities<'a>,
-        WriteStorage<'a, UiText>,
-        WriteStorage<'a, TextEditing>,
-        ReadStorage<'a, Selected>,
+        WriteStorage<'a, UiTextComponent>,
+        WriteStorage<'a, TextEditingComponent>,
+        ReadStorage<'a, SelectedComponent>,
         Read<'a, EventChannel<Event>>,
         Write<'a, EventChannel<UiEvent>>,
     );
@@ -346,13 +348,13 @@ fn ctrl_or_cmd(modifiers: &ModifiersState) -> bool {
         || (cfg!(not(target_os = "macos")) && modifiers.ctrl)
 }
 
-fn read_highlighted<'a>(edit: &TextEditing, text: &'a UiText) -> &'a str {
+fn read_highlighted<'a>(edit: &TextEditingComponent, text: &'a UiTextComponent) -> &'a str {
     let range = highlighted_bytes(edit, text);
     &text.text[range]
 }
 
 /// Removes the highlighted text and returns it in a String.
-fn extract_highlighted(edit: &mut TextEditing, text: &mut UiText) -> String {
+fn extract_highlighted(edit: &mut TextEditingComponent, text: &mut UiTextComponent) -> String {
     let range = highlighted_bytes(edit, text);
     edit.cursor_position = range.start as isize;
     edit.highlight_vector = 0;
@@ -360,7 +362,7 @@ fn extract_highlighted(edit: &mut TextEditing, text: &mut UiText) -> String {
 }
 
 /// Removes the highlighted text and returns true if anything was deleted..
-fn delete_highlighted(edit: &mut TextEditing, text: &mut UiText) -> bool {
+fn delete_highlighted(edit: &mut TextEditingComponent, text: &mut UiTextComponent) -> bool {
     if edit.highlight_vector != 0 {
         let range = highlighted_bytes(edit, text);
         edit.cursor_position = range.start as isize;
@@ -372,7 +374,7 @@ fn delete_highlighted(edit: &mut TextEditing, text: &mut UiText) -> bool {
 }
 
 // Gets the byte index of the cursor.
-fn cursor_byte_index(edit: &TextEditing, text: &UiText) -> usize {
+fn cursor_byte_index(edit: &TextEditingComponent, text: &UiTextComponent) -> usize {
     text.text
         .grapheme_indices(true)
         .nth(edit.cursor_position as usize)
@@ -381,7 +383,7 @@ fn cursor_byte_index(edit: &TextEditing, text: &UiText) -> usize {
 }
 
 /// Returns the byte indices that are highlighted in the string.
-fn highlighted_bytes(edit: &TextEditing, text: &UiText) -> Range<usize> {
+fn highlighted_bytes(edit: &TextEditingComponent, text: &UiTextComponent) -> Range<usize> {
     let start = edit
         .cursor_position
         .min(edit.cursor_position + edit.highlight_vector) as usize;

@@ -1,5 +1,5 @@
 use crate::{
-    light::Light,
+    light::LightComponent,
     pod::{self, IntoPod},
     rendy::{
         command::RenderPassEncoder,
@@ -15,7 +15,7 @@ use crate::{
 use amethyst_core::{
     ecs::{Join, ReadStorage, Resources, SystemData},
     math::{convert, Vector3},
-    transform::Transform,
+    transform::TransformComponent,
 };
 use glsl_layout::*;
 
@@ -168,13 +168,15 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
             }
             .std140();
 
-            let (lights, transforms) =
-                <(ReadStorage<'_, Light>, ReadStorage<'_, Transform>)>::fetch(res);
+            let (lights, transforms) = <(
+                ReadStorage<'_, LightComponent>,
+                ReadStorage<'_, TransformComponent>,
+            )>::fetch(res);
 
             let point_lights = (&lights, &transforms)
                 .join()
                 .filter_map(|(light, transform)| match light {
-                    Light::Point(light) => Some(
+                    LightComponent::Point(light) => Some(
                         pod::PointLight {
                             position: convert::<_, Vector3<f32>>(
                                 transform.global_matrix().column(3).xyz(),
@@ -192,7 +194,7 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
             let dir_lights = lights
                 .join()
                 .filter_map(|light| match light {
-                    Light::Directional(ref light) => Some(
+                    LightComponent::Directional(ref light) => Some(
                         pod::DirectionalLight {
                             color: light.color.into_pod(),
                             intensity: light.intensity,
@@ -207,7 +209,7 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
             let spot_lights = (&lights, &transforms)
                 .join()
                 .filter_map(|(light, transform)| {
-                    if let Light::Spot(ref light) = *light {
+                    if let LightComponent::Spot(ref light) = *light {
                         Some(
                             pod::SpotLight {
                                 position: convert::<_, Vector3<f32>>(

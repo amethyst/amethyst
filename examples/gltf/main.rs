@@ -10,7 +10,7 @@ use amethyst::{
         ProgressCounter, RonFormat,
     },
     controls::{ControlTagPrefab, FlyControlBundle},
-    core::transform::{Transform, TransformBundle},
+    core::transform::{TransformBundle, TransformComponent},
     derive::PrefabData,
     ecs::{Entity, ReadExpect, ReadStorage, Resources, SystemData, Write, WriteStorage},
     input::{is_close_requested, is_key_down, StringBindings, VirtualKeyCode},
@@ -33,7 +33,7 @@ use amethyst::{
     },
     utils::{
         application_root_dir,
-        auto_fov::{AutoFov, AutoFovSystem},
+        auto_fov::{AutoFovComponent, AutoFovSystem},
         tag::{Tag, TagFinder},
     },
     window::{ScreenDimensions, Window, WindowBundle},
@@ -62,10 +62,10 @@ struct Scene {
 #[derive(Default, Deserialize, Serialize, PrefabData)]
 #[serde(default)]
 struct ScenePrefabData {
-    transform: Option<Transform>,
+    transform: Option<TransformComponent>,
     gltf: Option<AssetPrefab<GltfSceneAsset, GltfSceneFormat>>,
     camera: Option<CameraPrefab>,
-    auto_fov: Option<AutoFov>,
+    auto_fov: Option<AutoFovComponent>,
     light: Option<LightPrefab>,
     tag: Option<Tag<AnimationMarker>>,
     fly_tag: Option<ControlTagPrefab>,
@@ -157,13 +157,13 @@ impl SimpleState for Example {
 fn toggle_or_cycle_animation(
     entity: Option<Entity>,
     scene: &mut Scene,
-    sets: &ReadStorage<'_, AnimationSet<usize, Transform>>,
-    controls: &mut WriteStorage<'_, AnimationControlSet<usize, Transform>>,
+    sets: &ReadStorage<'_, AnimationSet<usize, TransformComponent>>,
+    controls: &mut WriteStorage<'_, AnimationControlSet<usize, TransformComponent>>,
 ) {
     if let Some((entity, Some(animations))) = entity.map(|entity| (entity, sets.get(entity))) {
         if animations.animations.len() > scene.animation_index {
             let animation = animations.animations.get(&scene.animation_index).unwrap();
-            let set = get_animation_set::<usize, Transform>(controls, entity).unwrap();
+            let set = get_animation_set::<usize, TransformComponent>(controls, entity).unwrap();
             if set.has_animation(scene.animation_index) {
                 set.toggle(scene.animation_index);
             } else {
@@ -206,8 +206,11 @@ fn main() -> Result<(), amethyst::Error> {
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
         )
         .with_bundle(
-            AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
-                .with_dep(&["gltf_loader"]),
+            AnimationBundle::<usize, TransformComponent>::new(
+                "animation_control",
+                "sampler_interpolation",
+            )
+            .with_dep(&["gltf_loader"]),
         )?
         .with_bundle(
             FlyControlBundle::<StringBindings>::new(None, None, None)

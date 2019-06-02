@@ -24,7 +24,7 @@ type FloatBase = f64;
 type FloatBase = f32;
 
 /// A wrapper type around f32 and f64. It is used to hide the actual type being used internally.
-/// Mostly used with the `Transform` type.
+/// Mostly used with the `TransformComponent` type.
 /// The default type is f32 and you can switch to the f64 type by enabling the "float64" feature gate.
 #[derive(Alga, Clone, Copy, PartialOrd, PartialEq, Serialize, Deserialize, Debug)]
 #[alga_traits(Field(Additive, Multiplicative))]

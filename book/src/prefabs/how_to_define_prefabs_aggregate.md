@@ -29,12 +29,12 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
 
 3. Define the aggregate prefab data type.
 
-    In these examples, `Named`, `Position`, and `Weapon` all derive [`PrefabData`].
+    In these examples, `NamedComponent`, `Position`, and `Weapon` all derive [`PrefabData`].
 
     ```rust,edition2018,no_run,noplaypen
     # use amethyst::{
     #     assets::{PrefabData, ProgressCounter},
-    #     core::Named,
+    #     core::NamedComponent,
     #     derive::PrefabData,
     #     ecs::{
     #         storage::DenseVecStorage,
@@ -56,7 +56,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     #[derive(Deserialize, Serialize, PrefabData)]
     #[serde(deny_unknown_fields)]
     pub struct Player {
-        name: Named,
+        name: NamedComponent,
         position: Position,
     }
     ```
@@ -66,7 +66,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     ```rust,edition2018,no_run,noplaypen
     # use amethyst::{
     #     assets::{PrefabData, ProgressCounter},
-    #     core::Named,
+    #     core::NamedComponent,
     #     derive::PrefabData,
     #     ecs::{
     #         storage::{DenseVecStorage, VecStorage},
@@ -99,7 +99,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     #[serde(deny_unknown_fields)]
     pub enum CustomPrefabData {
         Player {
-            name: Named,
+            name: NamedComponent,
             position: Option<Position>,
         },
         Weapon {
@@ -114,7 +114,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     ```rust,edition2018,no_run,noplaypen
     # use amethyst::{
     #     assets::{PrefabData, ProgressCounter},
-    #     core::Named,
+    #     core::NamedComponent,
     #     derive::PrefabData,
     #     ecs::{
     #         storage::{DenseVecStorage, VecStorage},
@@ -151,7 +151,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     ```rust,edition2018,no_run,noplaypen
     # use amethyst::{
     #     assets::{PrefabData, ProgressCounter},
-    #     core::Named,
+    #     core::NamedComponent,
     #     derive::PrefabData,
     #     ecs::{
     #         storage::{DenseVecStorage, VecStorage},
@@ -203,7 +203,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
             entities: [
                 PrefabEntity(
                     data: Player(
-                        name: Named(name: "Zero"),
+                        name: NamedComponent(name: "Zero"),
                         position: Position(1.0, 2.0, 3.0),
                     ),
                 ),
@@ -220,7 +220,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
                 // Player
                 PrefabEntity(
                     data: Player(
-                        name: Named(name: "Zero"),
+                        name: NamedComponent(name: "Zero"),
                         position: Position(1.0, 2.0, 3.0),
                     ),
                 ),

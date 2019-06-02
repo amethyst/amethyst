@@ -7,7 +7,7 @@ use amethyst::{
         AssetStorage, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem,
         ProgressCounter, RonFormat,
     },
-    core::{Named, Parent},
+    core::{NamedComponent, ParentComponent},
     derive::PrefabData,
     ecs::{storage::DenseVecStorage, Component, Entities, Entity, Join, ReadStorage, WriteStorage},
     prelude::*,
@@ -26,7 +26,7 @@ pub struct Position(pub f32, pub f32, pub f32);
 #[derive(Debug, Deserialize, Serialize, PrefabData)]
 #[serde(deny_unknown_fields)]
 pub struct Player {
-    player: Named,
+    player: NamedComponent,
     position: Position,
 }
 
@@ -99,7 +99,7 @@ impl CustomPrefabState {
             "| {e:24} | {prefab_handle:22} | {parent:6} | {pos:23} | {named:22} |",
             e = "Entity",
             prefab_handle = "Handle<Prefab<Player>>",
-            parent = "Parent",
+            parent = "ParentComponent",
             pos = "Position",
             named = "Player",
         );
@@ -111,9 +111,9 @@ impl CustomPrefabState {
             |(entities, prefab_handles, parents, positions, nameds): (
                 Entities,
                 ReadStorage<Handle<Prefab<Player>>>,
-                ReadStorage<Parent>,
+                ReadStorage<ParentComponent>,
                 ReadStorage<Position>,
-                ReadStorage<Named>,
+                ReadStorage<NamedComponent>,
             )| {
                 (
                     &entities,

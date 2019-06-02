@@ -26,10 +26,10 @@ pub enum LineMode {
     Wrap,
 }
 
-/// A component used to display text in this entity's UiTransform
+/// A component used to display text in this entity's UiTransformComponent
 #[derive(Clone, Derivative, Serialize)]
 #[derivative(Debug)]
-pub struct UiText {
+pub struct UiTextComponent {
     /// The string rendered by this.
     pub text: String,
     /// The height of a line of text in pixels.
@@ -43,7 +43,7 @@ pub struct UiText {
     pub password: bool,
     /// How the text should handle new lines.
     pub line_mode: LineMode,
-    /// How to align the text within its `UiTransform`.
+    /// How to align the text within its `UiTransformComponent`.
     pub align: Anchor,
     /// Cached glyph positions, used to process mouse highlighting
     #[serde(skip)]
@@ -57,8 +57,8 @@ pub(crate) struct CachedGlyph {
     pub(crate) advance_width: f32,
 }
 
-impl UiText {
-    /// Initializes a new UiText
+impl UiTextComponent {
+    /// Initializes a new UiTextComponent
     ///
     /// # Parameters
     ///
@@ -66,8 +66,8 @@ impl UiText {
     /// * `text`: the glyphs to render
     /// * `color`: RGBA color with a maximum of 1.0 and a minimum of 0.0 for each channel
     /// * `font_size`: a uniform scale applied to the glyphs
-    pub fn new(font: FontHandle, text: String, color: [f32; 4], font_size: f32) -> UiText {
-        UiText {
+    pub fn new(font: FontHandle, text: String, color: [f32; 4], font_size: f32) -> UiTextComponent {
+        UiTextComponent {
             text,
             color,
             font_size,
@@ -80,13 +80,13 @@ impl UiText {
     }
 }
 
-impl Component for UiText {
+impl Component for UiTextComponent {
     type Storage = DenseVecStorage<Self>;
 }
 
-/// If this component is attached to an entity with a UiText then that UiText is editable.
+/// If this component is attached to an entity with a UiTextComponent then that UiTextComponent is editable.
 /// This component also controls how that editing works.
-pub struct TextEditing {
+pub struct TextEditingComponent {
     /// The current editing cursor position, specified in terms of glyphs, not characters.
     pub cursor_position: isize,
     /// The maximum graphemes permitted in this string.
@@ -109,15 +109,15 @@ pub struct TextEditing {
     pub(crate) cursor_blink_timer: f32,
 }
 
-impl TextEditing {
+impl TextEditingComponent {
     /// Create a new TextEditing Component
     pub fn new(
         max_length: usize,
         selected_text_color: [f32; 4],
         selected_background_color: [f32; 4],
         use_block_cursor: bool,
-    ) -> TextEditing {
-        TextEditing {
+    ) -> TextEditingComponent {
+        TextEditingComponent {
             cursor_position: 0,
             max_length,
             highlight_vector: 0,
@@ -129,7 +129,7 @@ impl TextEditing {
     }
 }
 
-impl Component for TextEditing {
+impl Component for TextEditingComponent {
     type Storage = DenseVecStorage<Self>;
 }
 
@@ -156,9 +156,9 @@ impl TextEditingMouseSystem {
 
 impl<'a> System<'a> for TextEditingMouseSystem {
     type SystemData = (
-        WriteStorage<'a, UiText>,
-        WriteStorage<'a, TextEditing>,
-        ReadStorage<'a, Selected>,
+        WriteStorage<'a, UiTextComponent>,
+        WriteStorage<'a, TextEditingComponent>,
+        ReadStorage<'a, SelectedComponent>,
         Read<'a, EventChannel<Event>>,
         ReadExpect<'a, ScreenDimensions>,
         Read<'a, Time>,
@@ -270,7 +270,11 @@ impl<'a> System<'a> for TextEditingMouseSystem {
     }
 }
 
-fn should_advance_to_end(mouse_x: f32, text_editing: &mut TextEditing, text: &mut UiText) -> bool {
+fn should_advance_to_end(
+    mouse_x: f32,
+    text_editing: &mut TextEditingComponent,
+    text: &mut UiTextComponent,
+) -> bool {
     let cursor_pos = text_editing.cursor_position + text_editing.highlight_vector;
     let len = text.cached_glyphs.len() as isize;
     if cursor_pos + 1 == len {

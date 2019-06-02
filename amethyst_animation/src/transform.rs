@@ -1,6 +1,6 @@
 use amethyst_core::{
     math::{zero, Quaternion, Unit, Vector3, Vector4},
-    Float, Transform,
+    Float, TransformComponent,
 };
 
 use serde::{Deserialize, Serialize};
@@ -10,7 +10,7 @@ use crate::{
     util::SamplerPrimitive,
 };
 
-/// Channels that can be animated on `Transform`
+/// Channels that can be animated on `TransformComponent`
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum TransformChannel {
     /// The 3 dimensional cartesian coordinates of an entity
@@ -21,11 +21,11 @@ pub enum TransformChannel {
     Scale,
 }
 
-impl<'a> ApplyData<'a> for Transform {
+impl<'a> ApplyData<'a> for TransformComponent {
     type ApplyData = ();
 }
 
-impl AnimationSampling for Transform {
+impl AnimationSampling for TransformComponent {
     type Primitive = SamplerPrimitive<Float>;
     type Channel = TransformChannel;
 
@@ -44,7 +44,7 @@ impl AnimationSampling for Transform {
             (&Scale, Vec3(ref d)) => {
                 self.set_scale(Vector3::new(d[0], d[1], d[2]));
             }
-            _ => panic!("Attempt to apply invalid sample to Transform"),
+            _ => panic!("Attempt to apply invalid sample to TransformComponent"),
         }
     }
 

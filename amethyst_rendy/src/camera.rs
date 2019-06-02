@@ -310,9 +310,9 @@ impl From<Perspective> for Projection {
     }
 }
 
-impl From<Projection> for Camera {
+impl From<Projection> for CameraComponent {
     fn from(proj: Projection) -> Self {
-        Camera { inner: proj }
+        CameraComponent { inner: proj }
     }
 }
 
@@ -335,12 +335,12 @@ impl From<Projection> for Camera {
 /// |
 /// +y
 #[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
-pub struct Camera {
+pub struct CameraComponent {
     /// Graphical projection of the camera.
     inner: Projection,
 }
 
-impl Camera {
+impl CameraComponent {
     /// Create a normalized camera for 2D.
     ///
     /// Will use an orthographic projection centered around (0, 0) of size (width, height)
@@ -400,7 +400,7 @@ impl Camera {
     }
 }
 
-impl Component for Camera {
+impl Component for CameraComponent {
     type Storage = HashMapStorage<Self>;
 }
 
@@ -432,7 +432,7 @@ pub enum CameraPrefab {
 }
 
 impl<'a> PrefabData<'a> for CameraPrefab {
-    type SystemData = WriteStorage<'a, Camera>;
+    type SystemData = WriteStorage<'a, CameraComponent>;
     type Result = ();
 
     fn add_to_entity(
@@ -444,7 +444,7 @@ impl<'a> PrefabData<'a> for CameraPrefab {
     ) -> Result<(), Error> {
         storage.insert(
             entity,
-            Camera {
+            CameraComponent {
                 inner: match *self {
                     CameraPrefab::Orthographic {
                         left,
@@ -503,7 +503,7 @@ mod tests {
         math::{
             convert, Isometry3, Matrix4, Point3, Translation3, UnitQuaternion, Vector3, Vector4,
         },
-        Transform,
+        TransformComponent,
     };
     use ron::{de::from_str, ser::to_string_pretty};
 
@@ -548,7 +548,7 @@ mod tests {
         assert_relative_eq!(100.0, proj.far(), max_relative = 1.0);
 
         //let proj = Projection::perspective(width/height, std::f32::consts::FRAC_PI_3, 0.1, 2000.0);
-        let proj_standard = Camera::standard_3d(1920.0, 1280.0);
+        let proj_standard = CameraComponent::standard_3d(1920.0, 1280.0);
         assert_ulps_eq!(
             std::f32::consts::FRAC_PI_3,
             proj_standard.projection().as_perspective().unwrap().fovy()
@@ -585,7 +585,7 @@ mod tests {
         assert_ulps_eq!(-5.0, proj.near());
         assert_relative_eq!(100.0, proj.far(), max_relative = 0.1);
 
-        let camera_standard = Camera::standard_2d(1920.0, 1280.0);
+        let camera_standard = CameraComponent::standard_2d(1920.0, 1280.0);
 
         // TODO: we need to solve these precision errors
         assert_relative_eq!(
@@ -638,14 +638,14 @@ mod tests {
 
     // Our world-space is +Y Up, +X Right and -Z Away
     // Current render target is +Y Down, +X Right and +Z Away
-    fn setup() -> (Transform, [Point3<f32>; 3], [Point3<f32>; 3]) {
+    fn setup() -> (TransformComponent, [Point3<f32>; 3], [Point3<f32>; 3]) {
         // Setup common inputs for most of the tests.
         //
         // Sets up a test camera is positioned at (0,0,3) in world space.
         // A camera without rotation is pointing in the (0,0,-1) direction.
         //
         // Sets up basic points.
-        let camera_transform: Transform = Transform::new(
+        let camera_transform: TransformComponent = TransformComponent::new(
             Translation3::new(0.0, 0.0, 3.0),
             // Apply _no_ rotation
             UnitQuaternion::identity(),
@@ -666,7 +666,7 @@ mod tests {
         (camera_transform, simple_points, simple_points_clipped)
     }
 
-    fn gatherer_calc_view_matrix(transform: Transform) -> Matrix4<f32> {
+    fn gatherer_calc_view_matrix(transform: TransformComponent) -> Matrix4<f32> {
         convert(transform.view_matrix())
     }
 
@@ -704,7 +704,7 @@ mod tests {
 
         // Our standrd projection has a far clipping plane of 2000.0
         let proj = Projection::orthographic(left, right, bottom, top, 0.1, 2000.0);
-        let our_proj = Camera::standard_2d(width, height).inner;
+        let our_proj = CameraComponent::standard_2d(width, height).inner;
 
         assert_ulps_eq!(our_proj.as_matrix(), proj.as_matrix());
     }
@@ -717,7 +717,7 @@ mod tests {
         // Our standrd projection has a far clipping plane of 2000.0
         let proj =
             Projection::perspective(width / height, std::f32::consts::FRAC_PI_3, 0.1, 2000.0);
-        let our_proj = Camera::standard_3d(width, height).inner;
+        let our_proj = CameraComponent::standard_3d(width, height).inner;
 
         assert_ulps_eq!(our_proj.as_matrix(), proj.as_matrix());
     }

@@ -1,6 +1,6 @@
-use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
+use crate::pong::{PaddleComponent, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 use amethyst::{
-    core::{math::RealField, transform::Transform, Float},
+    core::{math::RealField, transform::TransformComponent, Float},
     ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
     input::{InputHandler, StringBindings},
 };
@@ -9,8 +9,8 @@ pub struct PaddleSystem;
 
 impl<'s> System<'s> for PaddleSystem {
     type SystemData = (
-        WriteStorage<'s, Transform>,
-        ReadStorage<'s, Paddle>,
+        WriteStorage<'s, TransformComponent>,
+        ReadStorage<'s, PaddleComponent>,
         Read<'s, InputHandler<StringBindings>>,
     );
 

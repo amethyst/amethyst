@@ -1,8 +1,8 @@
 //! Module containing the system managing glyphbrush state for visible UI Text components.
 
 use crate::{
-    pass::UiArgs, text::CachedGlyph, FontAsset, LineMode, Selected, TextEditing, UiText,
-    UiTransform,
+    pass::UiArgs, text::CachedGlyph, FontAsset, LineMode, SelectedComponent, TextEditingComponent,
+    UiTextComponent, UiTransformComponent,
 };
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
@@ -10,7 +10,7 @@ use amethyst_core::{
         Component, DenseVecStorage, Entities, Join, Read, ReadStorage, Resources, System,
         SystemData, Write, WriteExpect, WriteStorage,
     },
-    Hidden, HiddenPropagate,
+    HiddenComponent, HiddenPropagateComponent,
 };
 use amethyst_rendy::{
     rendy::{
@@ -19,7 +19,7 @@ use amethyst_rendy::{
         hal,
         texture::{pixel::R8Srgb, TextureBuilder},
     },
-    resources::Tint,
+    resources::TintComponent,
     Backend, Texture,
 };
 use glyph_brush::{
@@ -40,7 +40,7 @@ impl UiGlyphsResource {
     }
 }
 
-pub struct UiGlyphs {
+pub struct UiGlyphsComponent {
     pub(crate) sel_vertices: Vec<UiArgs>,
     pub(crate) vertices: Vec<UiArgs>,
     // props below are only filled for selected fields
@@ -49,7 +49,7 @@ pub struct UiGlyphs {
     pub(crate) space_width: f32,
 }
 
-impl Component for UiGlyphs {
+impl Component for UiGlyphsComponent {
     type Storage = DenseVecStorage<Self>;
 }
 
@@ -108,14 +108,14 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
         Option<Write<'a, Factory<B>>>,
         Option<Read<'a, QueueId>>,
         Entities<'a>,
-        ReadStorage<'a, UiTransform>,
-        WriteStorage<'a, UiText>,
-        WriteStorage<'a, UiGlyphs>,
-        ReadStorage<'a, TextEditing>,
-        ReadStorage<'a, Hidden>,
-        ReadStorage<'a, HiddenPropagate>,
-        ReadStorage<'a, Selected>,
-        ReadStorage<'a, Tint>,
+        ReadStorage<'a, UiTransformComponent>,
+        WriteStorage<'a, UiTextComponent>,
+        WriteStorage<'a, UiGlyphsComponent>,
+        ReadStorage<'a, TextEditingComponent>,
+        ReadStorage<'a, HiddenComponent>,
+        ReadStorage<'a, HiddenPropagateComponent>,
+        ReadStorage<'a, SelectedComponent>,
+        ReadStorage<'a, TintComponent>,
         Write<'a, AssetStorage<Texture>>,
         Read<'a, AssetStorage<FontAsset>>,
         WriteExpect<'a, UiGlyphsResource>,
@@ -452,7 +452,7 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                             glyphs
                                 .insert(
                                     entity,
-                                    UiGlyphs {
+                                    UiGlyphsComponent {
                                         vertices: entity_verts.collect(),
                                         sel_vertices: vec![],
                                         cursor_pos: (0., 0.),
@@ -567,7 +567,7 @@ fn create_glyph_texture<B: Backend>(
         .expect("Failed to create glyph texture")
 }
 
-fn selection_span(editing: &TextEditing, string: &str) -> Option<(usize, usize)> {
+fn selection_span(editing: &TextEditingComponent, string: &str) -> Option<(usize, usize)> {
     if editing.highlight_vector == 0 {
         return None;
     }

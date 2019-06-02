@@ -463,14 +463,14 @@ mod tests {
 
     use amethyst_core::{
         ecs::{Builder, RunNow, World},
-        Time, Transform,
+        Time, TransformComponent,
     };
 
     use crate::Loader;
 
     use super::*;
 
-    type MyPrefab = Transform;
+    type MyPrefab = TransformComponent;
 
     #[test]
     fn test_prefab_load() {
@@ -482,7 +482,7 @@ mod tests {
         let mut system = PrefabLoaderSystem::<MyPrefab>::default();
         RunNow::setup(&mut system, &mut world.res);
 
-        let prefab = Prefab::new_main(Transform::default());
+        let prefab = Prefab::new_main(TransformComponent::default());
 
         let handle = world.read_resource::<Loader>().load_from_data(
             prefab,
@@ -492,9 +492,12 @@ mod tests {
         let root_entity = world.create_entity().with(handle).build();
         system.run_now(&world.res);
         assert_eq!(
-            Some(&Transform::default()),
+            Some(&TransformComponent::default()),
             world.read_storage().get(root_entity)
         );
-        assert!(world.read_storage::<Transform>().get(root_entity).is_some());
+        assert!(world
+            .read_storage::<TransformComponent>()
+            .get(root_entity)
+            .is_some());
     }
 }

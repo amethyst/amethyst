@@ -3,7 +3,7 @@ use amethyst::{
         Completion, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem, ProgressCounter,
         RonFormat,
     },
-    core::{Transform, TransformBundle},
+    core::{TransformBundle, TransformComponent},
     derive::PrefabData,
     ecs::{Entity, ReadExpect, ReadStorage, Resources, System, WriteStorage},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
@@ -12,7 +12,7 @@ use amethyst::{
         StateEvent, Trans,
     },
     renderer::{
-        camera::{Camera, CameraPrefab},
+        camera::{CameraComponent, CameraPrefab},
         formats::GraphicsPrefab,
         light::LightPrefab,
         pass::DrawShadedDesc,
@@ -33,9 +33,9 @@ use amethyst::{
         system::{GraphCreator, RenderingSystem},
         types::{Backend, DefaultBackend},
     },
-    ui::{DrawUiDesc, UiBundle, UiCreator, UiFinder, UiText},
+    ui::{DrawUiDesc, UiBundle, UiCreator, UiFinder, UiTextComponent},
     utils::{
-        auto_fov::{AutoFov, AutoFovSystem},
+        auto_fov::{AutoFovComponent, AutoFovSystem},
         tag::{Tag, TagFinder},
     },
     window::{ScreenDimensions, WindowBundle},
@@ -77,10 +77,10 @@ fn main() -> Result<(), Error> {
 #[serde(default)]
 struct ScenePrefab {
     graphics: Option<GraphicsPrefab<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>)>>,
-    transform: Option<Transform>,
+    transform: Option<TransformComponent>,
     light: Option<LightPrefab>,
     camera: Option<CameraPrefab>,
-    auto_fov: Option<AutoFov>, // `AutoFov` implements `PrefabData` trait
+    auto_fov: Option<AutoFovComponent>, // `AutoFov` implements `PrefabData` trait
     show_fov_tag: Option<Tag<ShowFov>>,
 }
 
@@ -173,8 +173,8 @@ impl<'a> System<'a> for ShowFovSystem {
     type SystemData = (
         TagFinder<'a, ShowFov>,
         UiFinder<'a>,
-        WriteStorage<'a, UiText>,
-        ReadStorage<'a, Camera>,
+        WriteStorage<'a, UiTextComponent>,
+        ReadStorage<'a, CameraComponent>,
         ReadExpect<'a, ScreenDimensions>,
     );
 
@@ -208,11 +208,11 @@ impl<'a> System<'a> for ShowFovSystem {
     }
 }
 
-fn get_fovy(camera: &Camera) -> f32 {
+fn get_fovy(camera: &CameraComponent) -> f32 {
     (-1.0 / camera.as_matrix()[(1, 1)]).atan() * 2.0
 }
 
-fn get_aspect(camera: &Camera) -> f32 {
+fn get_aspect(camera: &CameraComponent) -> f32 {
     (camera.as_matrix()[(1, 1)] / camera.as_matrix()[(0, 0)]).abs()
 }
 

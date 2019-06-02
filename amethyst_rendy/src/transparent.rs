@@ -4,14 +4,14 @@ use amethyst_error::Error;
 
 /// Transparent mesh component
 #[derive(Clone, Copy, Debug, Default, serde::Serialize, serde::Deserialize)]
-pub struct Transparent;
+pub struct TransparentComponent;
 
-impl Component for Transparent {
+impl Component for TransparentComponent {
     type Storage = NullStorage<Self>;
 }
 
-impl<'a> PrefabData<'a> for Transparent {
-    type SystemData = WriteStorage<'a, Transparent>;
+impl<'a> PrefabData<'a> for TransparentComponent {
+    type SystemData = WriteStorage<'a, TransparentComponent>;
     type Result = ();
 
     fn add_to_entity(
@@ -21,7 +21,7 @@ impl<'a> PrefabData<'a> for Transparent {
         _: &[Entity],
         _: &[Entity],
     ) -> Result<(), Error> {
-        storage.insert(entity, Transparent)?;
+        storage.insert(entity, TransparentComponent)?;
         Ok(())
     }
 }

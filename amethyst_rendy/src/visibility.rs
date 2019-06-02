@@ -1,6 +1,6 @@
 use crate::{
-    camera::{ActiveCamera, Camera},
-    transparent::Transparent,
+    camera::{ActiveCamera, CameraComponent},
+    transparent::TransparentComponent,
 };
 use amethyst_core::{
     ecs::prelude::{
@@ -9,7 +9,7 @@ use amethyst_core::{
     },
     math::{self as na, convert, distance_squared, Matrix4, Point3, RealField, Vector4},
     num::One,
-    Float, Hidden, HiddenPropagate, Transform,
+    Float, HiddenComponent, HiddenPropagateComponent, TransformComponent,
 };
 use amethyst_window::ScreenDimensions;
 
@@ -33,7 +33,7 @@ pub struct Visibility {
 /// Determine what entities are visible to the camera, and which are not. Will also sort transparent
 /// entities back to front based on distance from camera.
 ///
-/// Note that this should run after `Transform` has been updated for the current frame, and
+/// Note that this should run after `TransformComponent` has been updated for the current frame, and
 /// before rendering occurs.
 pub struct VisibilitySortingSystem {
     centroids: Vec<Internals>,
@@ -42,12 +42,12 @@ pub struct VisibilitySortingSystem {
 
 /// Defines a object's bounding sphere used by frustum culling.
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
-pub struct BoundingSphere {
+pub struct BoundingSphereComponent {
     pub center: Point3<Float>,
     pub radius: Float,
 }
 
-impl Default for BoundingSphere {
+impl Default for BoundingSphereComponent {
     fn default() -> Self {
         Self {
             center: Point3::origin(),
@@ -56,7 +56,7 @@ impl Default for BoundingSphere {
     }
 }
 
-impl BoundingSphere {
+impl BoundingSphereComponent {
     pub fn new(center: Point3<Float>, radius: impl Into<Float>) -> Self {
         Self {
             center,
@@ -72,7 +72,7 @@ impl BoundingSphere {
     }
 }
 
-impl Component for BoundingSphere {
+impl Component for BoundingSphereComponent {
     type Storage = DenseVecStorage<Self>;
 }
 
@@ -98,13 +98,13 @@ impl<'a> System<'a> for VisibilitySortingSystem {
     type SystemData = (
         Entities<'a>,
         Write<'a, Visibility>,
-        ReadStorage<'a, Hidden>,
-        ReadStorage<'a, HiddenPropagate>,
+        ReadStorage<'a, HiddenComponent>,
+        ReadStorage<'a, HiddenPropagateComponent>,
         Option<Read<'a, ActiveCamera>>,
-        ReadStorage<'a, Camera>,
-        ReadStorage<'a, Transparent>,
-        ReadStorage<'a, Transform>,
-        ReadStorage<'a, BoundingSphere>,
+        ReadStorage<'a, CameraComponent>,
+        ReadStorage<'a, TransparentComponent>,
+        ReadStorage<'a, TransformComponent>,
+        ReadStorage<'a, BoundingSphereComponent>,
         ReadExpect<'a, ScreenDimensions>,
     );
 
@@ -127,8 +127,8 @@ impl<'a> System<'a> for VisibilitySortingSystem {
         profile_scope!("run");
 
         let origin = Point3::origin();
-        let defcam = Camera::standard_2d(dimensions.width(), dimensions.height());
-        let identity = Transform::default();
+        let defcam = CameraComponent::standard_2d(dimensions.width(), dimensions.height());
+        let identity = TransformComponent::default();
 
         let mut camera_join = (&camera, &transform).join();
         let (camera, camera_transform) = active

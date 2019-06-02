@@ -1,16 +1,16 @@
-use crate::{systems::ScoreText, Ball, Paddle, Side, ARENA_HEIGHT, ARENA_WIDTH};
+use crate::{systems::ScoreText, BallComponent, PaddleComponent, Side, ARENA_HEIGHT, ARENA_WIDTH};
 use amethyst::{
     assets::{AssetStorage, Loader},
-    core::transform::Transform,
+    core::transform::TransformComponent,
     ecs::prelude::World,
     prelude::*,
     renderer::{
-        camera::{Camera, Projection},
+        camera::{CameraComponent, Projection},
         formats::texture::ImageFormat,
-        sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
+        sprite::{SpriteRenderComponent, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
         Texture,
     },
-    ui::{Anchor, TtfFormat, UiText, UiTransform},
+    ui::{Anchor, TtfFormat, UiTextComponent, UiTransformComponent},
 };
 
 pub struct Pong;
@@ -63,14 +63,14 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
 
 /// Initialise the camera.
 fn initialise_camera(world: &mut World) {
-    let mut transform = Transform::default();
+    let mut transform = TransformComponent::default();
     transform.set_translation_xyz(0.0, 0.0, 1.0);
 
     world
         .create_entity()
         // A default camera can be created with standard_2d, but we instead create a camera
         // which is centered on our gameplay area (ARENA)
-        .with(Camera::from(Projection::orthographic(
+        .with(CameraComponent::from(Projection::orthographic(
             0.0,
             ARENA_WIDTH,
             0.0,
@@ -86,8 +86,8 @@ fn initialise_camera(world: &mut World) {
 fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
     use crate::{PADDLE_HEIGHT, PADDLE_VELOCITY, PADDLE_WIDTH};
 
-    let mut left_transform = Transform::default();
-    let mut right_transform = Transform::default();
+    let mut left_transform = TransformComponent::default();
+    let mut right_transform = TransformComponent::default();
 
     // Correctly position the paddles.
     let y = ARENA_HEIGHT / 2.0;
@@ -95,7 +95,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
     right_transform.set_translation_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 
     // Assign the sprites for the paddles
-    let sprite_render = SpriteRender {
+    let sprite_render = SpriteRenderComponent {
         sprite_sheet: sprite_sheet_handle.clone(),
         sprite_number: 0, // paddle is the first sprite in the sprite_sheet
     };
@@ -104,7 +104,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
     world
         .create_entity()
         .with(sprite_render.clone())
-        .with(Paddle {
+        .with(PaddleComponent {
             velocity: PADDLE_VELOCITY,
             side: Side::Left,
             width: PADDLE_WIDTH,
@@ -117,7 +117,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
     world
         .create_entity()
         .with(sprite_render.clone())
-        .with(Paddle {
+        .with(PaddleComponent {
             velocity: PADDLE_VELOCITY,
             side: Side::Right,
             width: PADDLE_WIDTH,
@@ -132,11 +132,11 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
     use crate::{BALL_RADIUS, BALL_VELOCITY_X, BALL_VELOCITY_Y};
 
     // Create the translation.
-    let mut local_transform = Transform::default();
+    let mut local_transform = TransformComponent::default();
     local_transform.set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 
     // Assign the sprite for the ball
-    let sprite_render = SpriteRender {
+    let sprite_render = SpriteRenderComponent {
         sprite_sheet: sprite_sheet_handle,
         sprite_number: 1, // ball is the second sprite on the sprite_sheet
     };
@@ -144,7 +144,7 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
     world
         .create_entity()
         .with(sprite_render)
-        .with(Ball {
+        .with(BallComponent {
             radius: BALL_RADIUS,
             velocity: [BALL_VELOCITY_X, BALL_VELOCITY_Y],
         })
@@ -159,7 +159,7 @@ fn initialise_score(world: &mut World) {
         (),
         &world.read_resource(),
     );
-    let p1_transform = UiTransform::new(
+    let p1_transform = UiTransformComponent::new(
         "P1".to_string(),
         Anchor::TopMiddle,
         Anchor::Middle,
@@ -170,7 +170,7 @@ fn initialise_score(world: &mut World) {
         50.,
     );
 
-    let p2_transform = UiTransform::new(
+    let p2_transform = UiTransformComponent::new(
         "P2".to_string(),
         Anchor::TopMiddle,
         Anchor::Middle,
@@ -184,7 +184,7 @@ fn initialise_score(world: &mut World) {
     let p1_score = world
         .create_entity()
         .with(p1_transform)
-        .with(UiText::new(
+        .with(UiTextComponent::new(
             font.clone(),
             "0".to_string(),
             [1.0, 1.0, 1.0, 1.0],
@@ -194,7 +194,7 @@ fn initialise_score(world: &mut World) {
     let p2_score = world
         .create_entity()
         .with(p2_transform)
-        .with(UiText::new(
+        .with(UiTextComponent::new(
             font,
             "0".to_string(),
             [1.0, 1.0, 1.0, 1.0],

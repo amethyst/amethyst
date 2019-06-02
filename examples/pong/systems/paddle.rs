@@ -1,6 +1,6 @@
-use crate::Paddle;
+use crate::PaddleComponent;
 use amethyst::{
-    core::{math::RealField, timing::Time, transform::Transform},
+    core::{math::RealField, timing::Time, transform::TransformComponent},
     ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
     input::{InputHandler, StringBindings},
 };
@@ -11,8 +11,8 @@ pub struct PaddleSystem;
 
 impl<'s> System<'s> for PaddleSystem {
     type SystemData = (
-        ReadStorage<'s, Paddle>,
-        WriteStorage<'s, Transform>,
+        ReadStorage<'s, PaddleComponent>,
+        WriteStorage<'s, TransformComponent>,
         Read<'s, Time>,
         Read<'s, InputHandler<StringBindings>>,
     );

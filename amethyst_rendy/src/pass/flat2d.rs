@@ -2,7 +2,7 @@ use crate::{
     batch::{GroupIterator, OneLevelBatch, OrderedOneLevelBatch},
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
     pod::SpriteArgs,
-    sprite::{SpriteRender, SpriteSheet},
+    sprite::{SpriteRenderComponent, SpriteSheet},
     sprite_visibility::SpriteVisibility,
     submodules::{DynamicVertexBuffer, FlatEnvironmentSub, TextureId, TextureSub},
     types::{Backend, Texture},
@@ -11,8 +11,8 @@ use crate::{
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
     ecs::{Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
-    transform::Transform,
-    Hidden, HiddenPropagate,
+    transform::TransformComponent,
+    HiddenComponent, HiddenPropagateComponent,
 };
 use derivative::Derivative;
 use rendy::{
@@ -116,10 +116,10 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
             Read<'_, AssetStorage<SpriteSheet>>,
             Read<'_, AssetStorage<Texture>>,
             Option<Read<'_, SpriteVisibility>>,
-            ReadStorage<'_, Hidden>,
-            ReadStorage<'_, HiddenPropagate>,
-            ReadStorage<'_, SpriteRender>,
-            ReadStorage<'_, Transform>,
+            ReadStorage<'_, HiddenComponent>,
+            ReadStorage<'_, HiddenPropagateComponent>,
+            ReadStorage<'_, SpriteRenderComponent>,
+            ReadStorage<'_, TransformComponent>,
         )>::fetch(resources);
 
         self.env.process(factory, index, resources);
@@ -312,8 +312,8 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
                 Read<'_, AssetStorage<SpriteSheet>>,
                 Read<'_, AssetStorage<Texture>>,
                 ReadExpect<'_, SpriteVisibility>,
-                ReadStorage<'_, SpriteRender>,
-                ReadStorage<'_, Transform>,
+                ReadStorage<'_, SpriteRenderComponent>,
+                ReadStorage<'_, TransformComponent>,
             )>::fetch(resources);
 
         self.env.process(factory, index, resources);

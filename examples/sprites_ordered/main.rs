@@ -8,12 +8,12 @@ mod sprite_sheet_loader;
 
 use amethyst::{
     assets::{AssetStorage, Loader, Processor},
-    core::{Hidden, Transform, TransformBundle},
+    core::{HiddenComponent, TransformBundle, TransformComponent},
     ecs::{Entity, ReadExpect, Resources, SystemData},
     input::{get_key, is_close_requested, is_key_down, ElementState},
     prelude::*,
     renderer::{
-        camera::{Camera, Projection},
+        camera::{CameraComponent, Projection},
         formats::texture::ImageFormat,
         pass::{DrawFlat2DDesc, DrawFlat2DTransparentDesc},
         rendy::{
@@ -24,9 +24,9 @@ use amethyst::{
             },
             hal::{format::Format, image},
         },
-        sprite::{SpriteRender, SpriteSheet, SpriteSheetHandle},
+        sprite::{SpriteRenderComponent, SpriteSheet, SpriteSheetHandle},
         sprite_visibility::SpriteVisibilitySortingSystem,
-        transparent::Transparent,
+        transparent::TransparentComponent,
         types::DefaultBackend,
         GraphCreator, RenderingSystem, Texture,
     },
@@ -220,7 +220,7 @@ impl Example {
             (dim.width(), dim.height())
         };
 
-        let mut camera_transform = Transform::default();
+        let mut camera_transform = TransformComponent::default();
         camera_transform.set_translation_xyz(0.0, 0.0, self.camera_z);
 
         let camera = world
@@ -229,7 +229,7 @@ impl Example {
             // Define the view that the camera can see. It makes sense to keep the `near` value as
             // 0.0, as this means it starts seeing anything that is 0 units in front of it. The
             // `far` value is the distance the camera can see facing the origin.
-            .with(Camera::from(Projection::orthographic(
+            .with(CameraComponent::from(Projection::orthographic(
                 -width / 2.0,
                 width / 2.0,
                 -height / 2.0,
@@ -266,14 +266,14 @@ impl Example {
         let sprite_offset_translation_x =
             (sprite_count * sprite_w) as f32 * SPRITE_SPACING_RATIO / 2.;
 
-        // This `Transform` moves the sprites to the middle of the window
-        let mut common_transform = Transform::default();
+        // This `TransformComponent` moves the sprites to the middle of the window
+        let mut common_transform = TransformComponent::default();
         common_transform.set_translation_xyz(-sprite_offset_translation_x, 0.0, 0.0);
 
         self.draw_sprites(world, &common_transform);
     }
 
-    fn draw_sprites(&mut self, world: &mut World, common_transform: &Transform) {
+    fn draw_sprites(&mut self, world: &mut World, common_transform: &TransformComponent) {
         let LoadedSpriteSheet {
             sprite_sheet_handle,
             sprite_count,
@@ -287,7 +287,7 @@ impl Example {
 
         // Create an entity per sprite.
         for i in 0..sprite_count {
-            let mut sprite_transform = Transform::default();
+            let mut sprite_transform = TransformComponent::default();
 
             let z = if self.reverse {
                 (sprite_count - i - 1) as f32
@@ -300,10 +300,10 @@ impl Example {
                 -z,
             );
 
-            // This combines multiple `Transform`ations.
+            // This combines multiple `TransformComponent`ations.
             sprite_transform.concat(&common_transform);
 
-            let sprite_render = SpriteRender {
+            let sprite_render = SpriteRenderComponent {
                 sprite_sheet: sprite_sheet_handle.clone(),
                 sprite_number: i as usize,
             };
@@ -318,10 +318,10 @@ impl Example {
             // The `Transparent` component indicates that the pixel color should blend instead of
             // replacing the existing drawn pixel.
             if self.transparent {
-                entity_builder = entity_builder.with(Transparent);
+                entity_builder = entity_builder.with(TransparentComponent);
             }
             if self.hidden {
-                entity_builder = entity_builder.with(Hidden);
+                entity_builder = entity_builder.with(HiddenComponent);
             }
 
             // Store the entity

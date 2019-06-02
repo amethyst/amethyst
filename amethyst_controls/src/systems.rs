@@ -1,5 +1,5 @@
 use crate::{
-    components::{ArcBallControlTag, FlyControlTag},
+    components::{ArcBallControlTagComponent, FlyControlTagComponent},
     resources::{HideCursor, WindowFocus},
 };
 use amethyst_core::{
@@ -7,7 +7,7 @@ use amethyst_core::{
     math::{convert, Unit, Vector3},
     shrev::{EventChannel, ReaderId},
     timing::Time,
-    transform::Transform,
+    transform::TransformComponent,
     Float,
 };
 use amethyst_input::{get_input_axis_simple, BindingTypes, InputHandler};
@@ -50,9 +50,9 @@ impl<T: BindingTypes> FlyMovementSystem<T> {
 impl<'a, T: BindingTypes> System<'a> for FlyMovementSystem<T> {
     type SystemData = (
         Read<'a, Time>,
-        WriteStorage<'a, Transform>,
+        WriteStorage<'a, TransformComponent>,
         Read<'a, InputHandler<T>>,
-        ReadStorage<'a, FlyControlTag>,
+        ReadStorage<'a, FlyControlTagComponent>,
     );
 
     fn run(&mut self, (time, mut transform, input, tag): Self::SystemData) {
@@ -86,8 +86,8 @@ impl Default for ArcBallRotationSystem {
 
 impl<'a> System<'a> for ArcBallRotationSystem {
     type SystemData = (
-        WriteStorage<'a, Transform>,
-        ReadStorage<'a, ArcBallControlTag>,
+        WriteStorage<'a, TransformComponent>,
+        ReadStorage<'a, ArcBallControlTagComponent>,
     );
 
     fn run(&mut self, (mut transforms, tags): Self::SystemData) {
@@ -136,8 +136,8 @@ impl FreeRotationSystem {
 impl<'a> System<'a> for FreeRotationSystem {
     type SystemData = (
         Read<'a, EventChannel<Event>>,
-        WriteStorage<'a, Transform>,
-        ReadStorage<'a, FlyControlTag>,
+        WriteStorage<'a, TransformComponent>,
+        ReadStorage<'a, FlyControlTagComponent>,
         Read<'a, WindowFocus>,
         Read<'a, HideCursor>,
     );

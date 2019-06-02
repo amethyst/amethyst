@@ -6,16 +6,17 @@ use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_audio::SourceHandle;
 use amethyst_core::{
     ecs::prelude::{Entities, Entity, Read, ReadExpect, World, WriteExpect, WriteStorage},
-    Parent,
+    ParentComponent,
 };
 use amethyst_rendy::{palette::Srgba, rendy::texture::palette::load_from_srgba, Texture};
 
 use crate::{
     font::default::get_default_font,
-    Anchor, FontAsset, FontHandle, Interactable, Selectable, Stretch, UiButton, UiButtonAction,
-    UiButtonActionRetrigger,
+    Anchor, FontAsset, FontHandle, InteractableComponent, Selectable, Stretch, UiButton,
+    UiButtonAction, UiButtonActionRetriggerComponent,
     UiButtonActionType::{self, *},
-    UiImage, UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform, WidgetId, Widgets,
+    UiImageComponent, UiPlaySoundAction, UiSoundRetriggerComponent, UiTextComponent,
+    UiTransformComponent, WidgetId, Widgets,
 };
 
 use std::marker::PhantomData;
@@ -35,13 +36,13 @@ pub struct UiButtonBuilderResources<'a, G: PartialEq + Send + Sync + 'static, I:
     loader: ReadExpect<'a, Loader>,
     entities: Entities<'a>,
     image: WriteStorage<'a, Handle<Texture>>,
-    mouse_reactive: WriteStorage<'a, Interactable>,
-    parent: WriteStorage<'a, Parent>,
-    text: WriteStorage<'a, UiText>,
-    transform: WriteStorage<'a, UiTransform>,
+    mouse_reactive: WriteStorage<'a, InteractableComponent>,
+    parent: WriteStorage<'a, ParentComponent>,
+    text: WriteStorage<'a, UiTextComponent>,
+    transform: WriteStorage<'a, UiTransformComponent>,
     button_widgets: WriteExpect<'a, Widgets<UiButton, I>>,
-    sound_retrigger: WriteStorage<'a, UiSoundRetrigger>,
-    button_action_retrigger: WriteStorage<'a, UiButtonActionRetrigger>,
+    sound_retrigger: WriteStorage<'a, UiSoundRetriggerComponent>,
+    button_action_retrigger: WriteStorage<'a, UiButtonActionRetriggerComponent>,
     selectables: WriteStorage<'a, Selectable<G>>,
 }
 
@@ -147,7 +148,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
     /// This will set the rendered characters within the button. Use this to just change what
     /// characters will appear. If you need to change the font size, color, etc., then you should
     /// use
-    /// [`with_uitext`](#with_uitext) and provide a new `UiText` object.
+    /// [`with_uitext`](#with_uitext) and provide a new `UiTextComponent` object.
     pub fn with_text<S>(mut self, text: S) -> Self
     where
         S: ToString,
@@ -170,9 +171,9 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
 
     /// Provide an X and Y position for the button.
     ///
-    /// This will create a default UiTransform if one is not already attached.
+    /// This will create a default UiTransformComponent if one is not already attached.
     /// See `DEFAULT_Z`, `DEFAULT_WIDTH`, `DEFAULT_HEIGHT`, and `DEFAULT_TAB_ORDER` for
-    /// the values that will be provided to the default UiTransform.
+    /// the values that will be provided to the default UiTransformComponent.
     pub fn with_position(mut self, x: f32, y: f32) -> Self {
         self.x = x;
         self.y = y;
@@ -225,14 +226,14 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
     }
 
     /// Button image to use when the mouse is hovering over this button
-    pub fn with_hover_image(mut self, image: UiImage) -> Self {
+    pub fn with_hover_image(mut self, image: UiImageComponent) -> Self {
         self.on_hover_start.push(SetImage(image.clone()));
         self.on_hover_stop.push(UnsetTexture(image));
         self
     }
 
     /// Button image to use when this button is pressed
-    pub fn with_press_image(mut self, image: UiImage) -> Self {
+    pub fn with_press_image(mut self, image: UiImageComponent) -> Self {
         self.on_click_start.push(SetImage(image.clone()));
         self.on_click_stop.push(UnsetTexture(image));
         self
@@ -279,7 +280,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
             || !self.on_hover_start.is_empty()
             || !self.on_hover_stop.is_empty()
         {
-            let retrigger = UiButtonActionRetrigger {
+            let retrigger = UiButtonActionRetriggerComponent {
                 on_click_start: actions_with_target(
                     &mut self.on_click_start.into_iter(),
                     &image_entity,
@@ -307,7 +308,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
             || self.on_click_stop_sound.is_some()
             || self.on_hover_sound.is_some()
         {
-            let retrigger = UiSoundRetrigger {
+            let retrigger = UiSoundRetriggerComponent {
                 on_click_start: self.on_click_start_sound,
                 on_click_stop: self.on_click_stop_sound,
                 on_hover_start: self.on_hover_sound,
@@ -322,7 +323,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
         res.transform
             .insert(
                 image_entity,
-                UiTransform::new(
+                UiTransformComponent::new(
                     format!("{}_btn", id),
                     self.anchor,
                     Anchor::Middle,
@@ -356,18 +357,18 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
             .insert(image_entity, image_handle.clone())
             .expect("Unreachable: Inserting newly created entity");
         res.mouse_reactive
-            .insert(image_entity, Interactable)
+            .insert(image_entity, InteractableComponent)
             .expect("Unreachable: Inserting newly created entity");
         if let Some(parent) = self.parent.take() {
             res.parent
-                .insert(image_entity, Parent { entity: parent })
+                .insert(image_entity, ParentComponent { entity: parent })
                 .expect("Unreachable: Inserting newly created entity");
         }
 
         res.transform
             .insert(
                 text_entity,
-                UiTransform::new(
+                UiTransformComponent::new(
                     format!("{}_btn_text", id),
                     Anchor::Middle,
                     Anchor::Middle,
@@ -391,13 +392,13 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
         res.text
             .insert(
                 text_entity,
-                UiText::new(font_handle, self.text, self.text_color, self.font_size),
+                UiTextComponent::new(font_handle, self.text, self.text_color, self.font_size),
             )
             .expect("Unreachable: Inserting newly created entity");
         res.parent
             .insert(
                 text_entity,
-                Parent {
+                ParentComponent {
                     entity: image_entity,
                 },
             )

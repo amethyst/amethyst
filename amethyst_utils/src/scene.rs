@@ -2,7 +2,7 @@
 
 use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_controls::ControlTagPrefab;
-use amethyst_core::{ecs::prelude::Entity, Transform};
+use amethyst_core::{ecs::prelude::Entity, TransformComponent};
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
 use amethyst_rendy::{
@@ -34,7 +34,7 @@ where
     V: FromShape + Into<MeshBuilder<'static>>,
 {
     graphics: Option<GraphicsPrefab<V>>,
-    transform: Option<Transform>,
+    transform: Option<TransformComponent>,
     light: Option<LightPrefab>,
     camera: Option<CameraPrefab>,
     control_tag: Option<ControlTagPrefab>,

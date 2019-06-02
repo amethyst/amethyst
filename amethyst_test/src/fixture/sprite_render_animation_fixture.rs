@@ -5,7 +5,8 @@ use amethyst::{
     assets::{AssetStorage, Handle, Loader},
     ecs::prelude::*,
     renderer::{
-        loaders::load_from_srgba, palette::Srgba, Sprite, SpriteRender, SpriteSheet, Texture,
+        loaders::load_from_srgba, palette::Srgba, Sprite, SpriteRenderComponent, SpriteSheet,
+        Texture,
     },
 };
 
@@ -51,7 +52,7 @@ impl SpriteRenderAnimationFixture {
             let sprite_index_animation_handle =
                 loader.load_from_data(sprite_index_sampler, (), &world.read_resource());
 
-            let animation = Animation::<SpriteRender> {
+            let animation = Animation::<SpriteRenderComponent> {
                 nodes: vec![
                     (
                         0,
@@ -66,7 +67,7 @@ impl SpriteRenderAnimationFixture {
                 ],
             };
 
-            loader.load_from_data::<Animation<SpriteRender>, ()>(
+            loader.load_from_data::<Animation<SpriteRenderComponent>, ()>(
                 animation,
                 (),
                 &world.read_resource(),
@@ -83,10 +84,10 @@ impl SpriteRenderAnimationFixture {
     pub fn assertion(world: &mut World) {
         // Read the animation.
         let animation_handle = &world
-            .read_resource::<EffectReturn<Handle<Animation<SpriteRender>>>>()
+            .read_resource::<EffectReturn<Handle<Animation<SpriteRenderComponent>>>>()
             .0;
 
-        let store = world.read_resource::<AssetStorage<Animation<SpriteRender>>>();
+        let store = world.read_resource::<AssetStorage<Animation<SpriteRenderComponent>>>();
         assert!(store.get(animation_handle).is_some());
     }
 

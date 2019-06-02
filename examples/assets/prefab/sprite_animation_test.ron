@@ -56,7 +56,7 @@ Prefab(
                         sheet: "arrow",
                         sprite_number: 0,
                     ),
-                    // Transform
+                    // TransformComponent
                     transform: (
                         translation: (50.0, 37.5, 0.0),
                     ),
@@ -71,7 +71,7 @@ Prefab(
                                 samplers: [
                                     (
                                         0,
-                                        // Only SpriteIndex channel allowed for SpriteRender in AnimationSetPrefab
+                                        // Only SpriteIndex channel allowed for SpriteRenderComponent in AnimationSetPrefab
                                         SpriteIndex,
                                         (
                                             // Time of key frames

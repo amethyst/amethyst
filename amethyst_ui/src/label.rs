@@ -1,6 +1,6 @@
 use crate::{
-    define_widget, font::default::get_default_font, Anchor, FontAsset, FontHandle, Stretch, UiText,
-    UiTransform, WidgetId, Widgets,
+    define_widget, font::default::get_default_font, Anchor, FontAsset, FontHandle, Stretch,
+    UiTextComponent, UiTransformComponent, WidgetId, Widgets,
 };
 use shred::SystemData;
 use shred_derive::SystemData;
@@ -18,8 +18,8 @@ const DEFAULT_TXT_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 define_widget!(UiLabel =>
     entities: [text_entity]
     components: [
-        (has UiTransform as position on text_entity),
-        (has UiText as text on text_entity)
+        (has UiTransformComponent as position on text_entity),
+        (has UiTextComponent as text on text_entity)
     ]
 );
 
@@ -32,8 +32,8 @@ where
     font_asset: Read<'a, AssetStorage<FontAsset>>,
     loader: ReadExpect<'a, Loader>,
     entities: Entities<'a>,
-    text: WriteStorage<'a, UiText>,
-    transform: WriteStorage<'a, UiTransform>,
+    text: WriteStorage<'a, UiTextComponent>,
+    transform: WriteStorage<'a, UiTransformComponent>,
     label_widgets: WriteExpect<'a, Widgets<UiLabel, I>>,
 }
 
@@ -108,9 +108,9 @@ where
         self
     }
 
-    /// This will create a default UiTransform if one is not already attached.
+    /// This will create a default UiTransformComponent if one is not already attached.
     /// See `DEFAULT_Z`, `DEFAULT_WIDTH`, `DEFAULT_HEIGHT`, and `DEFAULT_TAB_ORDER` for
-    /// the values that will be provided to the default UiTransform.
+    /// the values that will be provided to the default UiTransformComponent.
     pub fn with_position(mut self, x: f32, y: f32) -> Self {
         self.x = x;
         self.y = y;
@@ -132,7 +132,7 @@ where
     /// This will set the rendered characters within the button. Use this to just change what
     /// characters will appear. If you need to change the font size, color, etc., then you should
     /// use
-    /// [`with_uitext`](#with_uitext) and provide a new `UiText` object.
+    /// [`with_uitext`](#with_uitext) and provide a new `UiTextComponent` object.
     pub fn with_text<S>(mut self, text: S) -> Self
     where
         S: ToString,
@@ -185,7 +185,7 @@ where
         res.transform
             .insert(
                 text_entity,
-                UiTransform::new(
+                UiTransformComponent::new(
                     format!("{}_label", id),
                     self.anchor,
                     Anchor::Middle,
@@ -206,7 +206,7 @@ where
         res.text
             .insert(
                 text_entity,
-                UiText::new(font_handle, self.text, self.text_color, self.font_size),
+                UiTextComponent::new(font_handle, self.text, self.text_color, self.font_size),
             )
             .expect("Unreachable: Inserting newly created entity");
 

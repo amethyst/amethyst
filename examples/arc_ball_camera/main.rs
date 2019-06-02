@@ -2,10 +2,10 @@
 
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
-    controls::{ArcBallControlBundle, ArcBallControlTag},
+    controls::{ArcBallControlBundle, ArcBallControlTagComponent},
     core::{
         shrev::{EventChannel, ReaderId},
-        transform::{Transform, TransformBundle},
+        transform::{TransformBundle, TransformComponent},
         Float,
     },
     ecs::prelude::{
@@ -59,8 +59,8 @@ impl CameraDistanceSystem {
 impl<'a> System<'a> for CameraDistanceSystem {
     type SystemData = (
         Read<'a, EventChannel<InputEvent<String>>>,
-        ReadStorage<'a, Transform>,
-        WriteStorage<'a, ArcBallControlTag>,
+        ReadStorage<'a, TransformComponent>,
+        WriteStorage<'a, ArcBallControlTagComponent>,
     );
 
     fn run(&mut self, (events, transforms, mut tags): Self::SystemData) {

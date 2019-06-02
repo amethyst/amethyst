@@ -1,7 +1,7 @@
 use crate::{
     formats::texture::TexturePrefab,
     mtl::{Material, MaterialDefaults, TextureOffset},
-    transparent::Transparent,
+    transparent::TransparentComponent,
     types::Texture,
 };
 use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, ProgressCounter};
@@ -78,7 +78,7 @@ fn load_handle(prefab: &Option<TexturePrefab>, def: &Handle<Texture>) -> Handle<
 impl<'a> PrefabData<'a> for MaterialPrefab {
     type SystemData = (
         WriteStorage<'a, Handle<Material>>,
-        WriteStorage<'a, Transparent>,
+        WriteStorage<'a, TransparentComponent>,
         ReadExpect<'a, MaterialDefaults>,
         <TexturePrefab as PrefabData<'a>>::SystemData,
         ReadExpect<'a, Loader>,
@@ -96,7 +96,7 @@ impl<'a> PrefabData<'a> for MaterialPrefab {
         let &mut (ref mut material, ref mut transparent, _, _, _, _) = system_data;
         material.insert(entity, self.handle.as_ref().unwrap().clone())?;
         if self.transparent {
-            transparent.insert(entity, Transparent)?;
+            transparent.insert(entity, TransparentComponent)?;
         }
         Ok(())
     }

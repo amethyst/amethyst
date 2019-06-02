@@ -10,12 +10,12 @@ use amethyst_animation::AnimationHierarchyPrefab;
 use amethyst_assets::{Format, FormatValue, Prefab, Source};
 use amethyst_core::{
     math::{convert, Quaternion, Unit, Vector3, Vector4},
-    transform::Transform,
+    transform::TransformComponent,
     Float,
 };
 use amethyst_error::{format_err, Error, ResultExt};
 
-use crate::{error, GltfMaterialSet, GltfNodeExtent, GltfPrefab, GltfSceneOptions, Named};
+use crate::{error, GltfMaterialSet, GltfNodeExtent, GltfPrefab, GltfSceneOptions, NamedComponent};
 
 use self::{
     animation::load_animations,
@@ -209,12 +209,12 @@ fn load_node(
 
     // Load node name.
     if let Some(name) = node.name() {
-        prefab.data_or_default(entity_index).name = Some(Named::new(name.to_string()));
+        prefab.data_or_default(entity_index).name = Some(NamedComponent::new(name.to_string()));
     }
 
     // Load transformation data, default will be identity
     let (translation, rotation, scale) = node.transform().decomposed();
-    let mut local_transform = Transform::default();
+    let mut local_transform = TransformComponent::default();
     *local_transform.translation_mut() = convert::<_, Vector3<Float>>(Vector3::from(translation));
     *local_transform.rotation_mut() = Unit::new_normalize(convert::<_, Quaternion<Float>>(
         Quaternion::from(Vector4::from(rotation)),
@@ -260,7 +260,7 @@ fn load_node(
             for (mesh, material_index, bounds) in graphics {
                 let mesh_entity = prefab.add(Some(entity_index), None);
                 let prefab_data = prefab.data_or_default(mesh_entity);
-                prefab_data.transform = Some(Transform::default());
+                prefab_data.transform = Some(TransformComponent::default());
                 prefab_data.mesh = Some(mesh);
                 if let Some((material_id, material)) =
                     material_index.and_then(|index| gltf.materials().nth(index).map(|m| (index, m)))

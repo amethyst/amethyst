@@ -37,9 +37,9 @@ pub use crate::{
 
 pub use self::{
     axis::{Axis2, Axis3},
-    hidden::{Hidden, HiddenPropagate},
+    hidden::{HiddenComponent, HiddenPropagateComponent},
     hide_system::HideHierarchySystem,
-    named::{Named, WithNamed},
+    named::{NamedComponent, WithNamed},
 };
 
 pub mod bundle;

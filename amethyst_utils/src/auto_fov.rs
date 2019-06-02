@@ -7,7 +7,7 @@ use amethyst_core::ecs::{
 };
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
-use amethyst_rendy::camera::Camera;
+use amethyst_rendy::camera::CameraComponent;
 use amethyst_window::ScreenDimensions;
 
 use serde::{Deserialize, Serialize};
@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Deserialize, PrefabData, Serialize)]
 #[prefab(Component)]
 #[serde(default)]
-pub struct AutoFov {
+pub struct AutoFovComponent {
     /// The horizontal FOV value at the aspect ratio in the field `base_aspect_ratio`
     base_fovx: f32,
 
@@ -36,7 +36,7 @@ pub struct AutoFov {
     max_fovx: f32,
 }
 
-impl AutoFov {
+impl AutoFovComponent {
     /// Creates a new instance with the default values for all fields
     pub fn new() -> Self {
         Default::default()
@@ -201,13 +201,13 @@ impl AutoFov {
     }
 }
 
-impl Component for AutoFov {
+impl Component for AutoFovComponent {
     type Storage = HashMapStorage<Self>;
 }
 
-impl Default for AutoFov {
+impl Default for AutoFovComponent {
     fn default() -> Self {
-        AutoFov {
+        AutoFovComponent {
             base_fovx: 1.861_684_535,
             fovx_growth_rate: 1.0,
             fixed_growth_rate: false,
@@ -233,8 +233,8 @@ pub struct AutoFovSystem {
 impl<'a> System<'a> for AutoFovSystem {
     type SystemData = (
         ReadExpect<'a, ScreenDimensions>,
-        ReadStorage<'a, AutoFov>,
-        WriteStorage<'a, Camera>,
+        ReadStorage<'a, AutoFovComponent>,
+        WriteStorage<'a, CameraComponent>,
     );
 
     fn setup(&mut self, res: &mut Resources) {

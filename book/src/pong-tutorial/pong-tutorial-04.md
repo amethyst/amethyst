@@ -44,10 +44,10 @@ Then let's add a `initialise_ball` function the same way we wrote the
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::assets::{Loader, AssetStorage};
-# use amethyst::renderer::{Texture, PngFormat, TextureHandle, SpriteRender,
+# use amethyst::renderer::{Texture, PngFormat, TextureHandle, SpriteRenderComponent,
 #                          TextureCoordinates, Sprite, SpriteSheet, SpriteSheetHandle, TextureMetadata};
 # use amethyst::ecs::World;
-# use amethyst::core::transform::Transform;
+# use amethyst::core::transform::TransformComponent;
 # use amethyst::ecs::prelude::{Component, DenseVecStorage};
 # pub struct Ball {
 #    pub velocity: [f32; 2],
@@ -67,11 +67,11 @@ Then let's add a `initialise_ball` function the same way we wrote the
 /// Initialises one ball in the middle-ish of the arena.
 fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
     // Create the translation.
-    let mut local_transform = Transform::default();
+    let mut local_transform = TransformComponent::default();
     local_transform.set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 
     // Assign the sprite for the ball
-    let sprite_render = SpriteRender {
+    let sprite_render = SpriteRenderComponent {
         sprite_sheet: sprite_sheet_handle,
         sprite_number: 1, // ball is the second sprite on the sprite sheet
     };
@@ -157,7 +157,7 @@ We're now ready to implement the `MoveBallsSystem` in `systems/move_balls.rs`:
 #
 use amethyst::{
     core::timing::Time,
-    core::transform::Transform,
+    core::transform::TransformComponent,
     ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
 };
 
@@ -168,7 +168,7 @@ pub struct MoveBallsSystem;
 impl<'s> System<'s> for MoveBallsSystem {
     type SystemData = (
         ReadStorage<'s, Ball>,
-        WriteStorage<'s, Transform>,
+        WriteStorage<'s, TransformComponent>,
         Read<'s, Time>,
     );
 
@@ -237,7 +237,7 @@ by negating the velocity of the `Ball` component on the `x` or `y` axis.
 # }
 #
 use amethyst::{
-    core::{Float, Transform},
+    core::{Float, TransformComponent},
     ecs::prelude::{Join, ReadStorage, System, WriteStorage},
 };
 
@@ -249,7 +249,7 @@ impl<'s> System<'s> for BounceSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
         ReadStorage<'s, Paddle>,
-        ReadStorage<'s, Transform>,
+        ReadStorage<'s, TransformComponent>,
     );
 
     fn run(&mut self, (mut balls, paddles, transforms): Self::SystemData) {

@@ -64,9 +64,9 @@ struct Paused {
 }
 
 #[derive(Default)]
-struct Tag;
+struct TagComponent;
 
-impl Component for Tag {
+impl Component for TagComponent {
     type Storage = NullStorage<Self>;
 }
 

@@ -16,8 +16,8 @@ use crate::{
 
 /// Provides an `EventRetriggerSystem` that will handle incoming `UiEvent`s
 /// and trigger `UiPlaySoundAction`s for entities with attached
-/// `UiSoundRetrigger` components.
-pub type UiSoundRetriggerSystem = EventRetriggerSystem<UiSoundRetrigger>;
+/// `UiSoundRetriggerComponent` components.
+pub type UiSoundRetriggerSystem = EventRetriggerSystem<UiSoundRetriggerComponent>;
 
 /// Action that will trigger a sound to play in `UiSoundSystem`.
 #[derive(Debug, Clone)]
@@ -26,7 +26,7 @@ pub struct UiPlaySoundAction(pub SourceHandle);
 /// Attach this to an entity to play the respective sound when a `UiEvent`
 /// targets the entity.
 #[derive(Debug, Clone)]
-pub struct UiSoundRetrigger {
+pub struct UiSoundRetriggerComponent {
     /// The sound that is played when the user begins a click on the entity
     pub on_click_start: Option<UiPlaySoundAction>,
     /// The sound that is played when the user ends a click on the entity
@@ -37,11 +37,11 @@ pub struct UiSoundRetrigger {
     pub on_hover_stop: Option<UiPlaySoundAction>,
 }
 
-impl Component for UiSoundRetrigger {
+impl Component for UiSoundRetriggerComponent {
     type Storage = DenseVecStorage<Self>;
 }
 
-impl EventRetrigger for UiSoundRetrigger {
+impl EventRetrigger for UiSoundRetriggerComponent {
     type In = UiEvent;
     type Out = UiPlaySoundAction;
 

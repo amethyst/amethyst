@@ -19,7 +19,7 @@ use crate::{
         frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy},
         shrev::{EventChannel, ReaderId},
         timing::{Stopwatch, Time},
-        ArcThreadPool, EventReader, Named,
+        ArcThreadPool, EventReader, NamedComponent,
     },
     ecs::{
         common::Errors,
@@ -80,7 +80,7 @@ where
 ///
 /// ```
 /// use amethyst::prelude::*;
-/// use amethyst::core::transform::{Parent, Transform};
+/// use amethyst::core::transform::{ParentComponent, TransformComponent};
 /// use amethyst::ecs::prelude::System;
 ///
 /// use log::{info, warn};
@@ -108,7 +108,7 @@ where
 ///
 /// ```
 /// use amethyst::prelude::*;
-/// use amethyst::core::transform::{Parent, Transform};
+/// use amethyst::core::transform::{ParentComponent, TransformComponent};
 /// use amethyst::ecs::prelude::System;
 ///
 /// struct NullState;
@@ -453,7 +453,7 @@ where
     ///
     /// ~~~no_run
     /// use amethyst::prelude::*;
-    /// use amethyst::core::transform::{Parent, Transform};
+    /// use amethyst::core::transform::{ParentComponent, TransformComponent};
     /// use amethyst::ecs::prelude::System;
     ///
     /// struct NullState;
@@ -467,8 +467,8 @@ where
     ///     .expect("Failed to initialize")
     ///
     /// // components can be registered at this stage
-    ///     .register::<Parent>()
-    ///     .register::<Transform>()
+    ///     .register::<ParentComponent>()
+    ///     .register::<TransformComponent>()
     ///
     /// // lastly we can build the Application object
     /// // the `build` function takes the user defined game data initializer as input
@@ -539,7 +539,7 @@ where
         world.add_resource(Time::default());
         world.add_resource(CallbackQueue::default());
 
-        world.register::<Named>();
+        world.register::<NamedComponent>();
 
         Ok(ApplicationBuilder {
             initial_state,

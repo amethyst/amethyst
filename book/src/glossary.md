@@ -48,7 +48,7 @@ ECS approach is broken into three key pieces:
    ease of use.
 2. *Component*: A plain-old-data structure that describes a certain trait an
    entity can have. Can be "attached" to entities to grant them certain
-   abilities, e.g. a `Light` component contains parameters to make an entity
+   abilities, e.g. a `LightComponent` component contains parameters to make an entity
    glow, or a `Collidable` component can grant an entity collision detection
    properties. These components *do not* have any logic. They contain only data.
 3. *System*: This is where the magic happens! Systems are centralized game engine
@@ -56,7 +56,7 @@ ECS approach is broken into three key pieces:
    etc. Every frame, they process each entity in the game world looking for
    components that are relevant to them, reading their contents, and performing
    actions. For example, a `Rendering` system could search for all entities that have
-   `Light`, `Mesh`, or `Emitter` components and draw them to the screen.
+   `LightComponent`, `Mesh`, or `Emitter` components and draw them to the screen.
 
 This approach could potentially be stretched to fit the model-view-controller
 (MVC) paradigm popular in GUI and Web development circles: entities and

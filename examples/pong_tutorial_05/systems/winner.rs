@@ -1,18 +1,18 @@
 use amethyst::{
-    core::{Float, Transform},
+    core::{Float, TransformComponent},
     ecs::prelude::{Join, ReadExpect, System, Write, WriteStorage},
-    ui::UiText,
+    ui::UiTextComponent,
 };
 
-use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH};
+use crate::pong::{BallComponent, ScoreBoard, ScoreText, ARENA_WIDTH};
 
 pub struct WinnerSystem;
 
 impl<'s> System<'s> for WinnerSystem {
     type SystemData = (
-        WriteStorage<'s, Ball>,
-        WriteStorage<'s, Transform>,
-        WriteStorage<'s, UiText>,
+        WriteStorage<'s, BallComponent>,
+        WriteStorage<'s, TransformComponent>,
+        WriteStorage<'s, UiTextComponent>,
         Write<'s, ScoreBoard>,
         ReadExpect<'s, ScoreText>,
     );

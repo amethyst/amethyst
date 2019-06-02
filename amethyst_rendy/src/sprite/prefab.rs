@@ -1,11 +1,11 @@
 use crate::{
     formats::texture::TexturePrefab,
-    sprite::{SpriteRender, SpriteSheet, SpriteSheetHandle, Sprites},
+    sprite::{SpriteRenderComponent, SpriteSheet, SpriteSheetHandle, Sprites},
 };
 use amethyst_assets::{AssetStorage, Loader, PrefabData, ProgressCounter};
 use amethyst_core::{
     ecs::{Entity, Read, ReadExpect, WriteStorage},
-    Transform,
+    TransformComponent,
 };
 use amethyst_error::Error;
 use derivative::Derivative;
@@ -143,7 +143,7 @@ pub struct SpriteRenderPrefab {
 
 impl<'a> PrefabData<'a> for SpriteRenderPrefab {
     type SystemData = (
-        WriteStorage<'a, SpriteRender>,
+        WriteStorage<'a, SpriteRenderComponent>,
         Read<'a, SpriteSheetLoadedSet>,
     );
     type Result = ();
@@ -159,7 +159,7 @@ impl<'a> PrefabData<'a> for SpriteRenderPrefab {
             log::trace!("Creating sprite: {:?}", handle);
             system_data.0.insert(
                 entity,
-                SpriteRender {
+                SpriteRenderComponent {
                     sprite_sheet: handle,
                     sprite_number: self.sprite_number,
                 },
@@ -195,17 +195,17 @@ impl<'a> PrefabData<'a> for SpriteRenderPrefab {
 pub struct SpriteScenePrefab {
     /// Sprite sheets
     pub sheet: Option<SpriteSheetPrefab>,
-    /// Add `SpriteRender` to the `Entity`
+    /// Add `SpriteRenderComponent` to the `Entity`
     pub render: Option<SpriteRenderPrefab>,
-    /// Add `Transform` to the `Entity`
-    pub transform: Option<Transform>,
+    /// Add `TransformComponent` to the `Entity`
+    pub transform: Option<TransformComponent>,
 }
 
 impl<'a> PrefabData<'a> for SpriteScenePrefab {
     type SystemData = (
         <SpriteSheetPrefab as PrefabData<'a>>::SystemData,
         <SpriteRenderPrefab as PrefabData<'a>>::SystemData,
-        <Transform as PrefabData<'a>>::SystemData,
+        <TransformComponent as PrefabData<'a>>::SystemData,
     );
     type Result = ();
 
@@ -258,7 +258,7 @@ mod tests {
 
     fn setup_sprite_world() -> World {
         let mut world = World::new();
-        world.register::<SpriteRender>();
+        world.register::<SpriteRenderComponent>();
         let loader = Loader::new(".", Arc::new(ThreadPoolBuilder::new().build().unwrap()));
         let tex_storage = AssetStorage::<Texture>::default();
         let ss_storage = AssetStorage::<SpriteSheet>::default();
@@ -377,7 +377,7 @@ mod tests {
         prefab
             .add_to_entity(entity, &mut world.system_data(), &[entity], &[])
             .unwrap();
-        let storage = world.read_storage::<SpriteRender>();
+        let storage = world.read_storage::<SpriteRenderComponent>();
         let render = storage.get(entity);
         assert!(render.is_some());
         let render = render.unwrap();

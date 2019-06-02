@@ -1,12 +1,12 @@
 use crate::{
-    camera::{ActiveCamera, Camera},
+    camera::{ActiveCamera, CameraComponent},
     pod::{self, IntoPod},
     resources::AmbientColor,
 };
 use amethyst_core::{
     ecs::{Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
     math::{convert, Matrix4, Vector3},
-    transform::Transform,
+    transform::TransformComponent,
 };
 use amethyst_window::ScreenDimensions;
 use glsl_layout::*;
@@ -28,13 +28,13 @@ impl CameraGatherer {
 
         let (active_camera, cameras, transforms, dimensions) = <(
             Option<Read<'_, ActiveCamera>>,
-            ReadStorage<'_, Camera>,
-            ReadStorage<'_, Transform>,
+            ReadStorage<'_, CameraComponent>,
+            ReadStorage<'_, TransformComponent>,
             ReadExpect<'_, ScreenDimensions>,
         )>::fetch(res);
 
-        let defcam = Camera::standard_2d(dimensions.width(), dimensions.height());
-        let identity = Transform::default();
+        let defcam = CameraComponent::standard_2d(dimensions.width(), dimensions.height());
+        let identity = TransformComponent::default();
 
         let (camera, transform) = active_camera
             .as_ref()

@@ -11,7 +11,7 @@ use amethyst::{
     core::{
         math::{UnitQuaternion, Vector3},
         timing::Time,
-        transform::{Transform, TransformBundle},
+        transform::{TransformBundle, TransformComponent},
         Float,
     },
     ecs::prelude::{
@@ -24,8 +24,8 @@ use amethyst::{
     },
     prelude::*,
     renderer::{
-        camera::Camera,
-        light::Light,
+        camera::CameraComponent,
+        light::LightComponent,
         palette::{Srgb, Srgba},
         pass::DrawShadedDesc,
         rendy::{
@@ -41,7 +41,7 @@ use amethyst::{
         types::DefaultBackend,
         GraphCreator, RenderingSystem,
     },
-    ui::{DrawUiDesc, UiBundle, UiCreator, UiFinder, UiText},
+    ui::{DrawUiDesc, UiBundle, UiCreator, UiFinder, UiTextComponent},
     utils::{
         application_root_dir,
         fps_counter::{FPSCounter, FPSCounterBundle},
@@ -157,19 +157,19 @@ impl SimpleState for Example {
                     w.exec(
                         |(mut state, mut lights): (
                             Write<'_, DemoState>,
-                            WriteStorage<'_, Light>,
+                            WriteStorage<'_, LightComponent>,
                         )| {
                             if state.directional_light {
                                 state.directional_light = false;
                                 for light in (&mut lights).join() {
-                                    if let Light::Directional(ref mut d) = *light {
+                                    if let LightComponent::Directional(ref mut d) = *light {
                                         d.color = Srgb::new(0.0, 0.0, 0.0);
                                     }
                                 }
                             } else {
                                 state.directional_light = true;
                                 for light in (&mut lights).join() {
-                                    if let Light::Directional(ref mut d) = *light {
+                                    if let LightComponent::Directional(ref mut d) = *light {
                                         d.color = Srgb::new(0.2, 0.2, 0.2);
                                     }
                                 }
@@ -255,12 +255,12 @@ struct ExampleSystem {
 
 impl<'a> System<'a> for ExampleSystem {
     type SystemData = (
-        WriteStorage<'a, Light>,
+        WriteStorage<'a, LightComponent>,
         Read<'a, Time>,
-        ReadStorage<'a, Camera>,
-        WriteStorage<'a, Transform>,
+        ReadStorage<'a, CameraComponent>,
+        WriteStorage<'a, TransformComponent>,
         Write<'a, DemoState>,
-        WriteStorage<'a, UiText>,
+        WriteStorage<'a, UiTextComponent>,
         Read<'a, FPSCounter>,
         UiFinder<'a>,
     );
@@ -290,7 +290,7 @@ impl<'a> System<'a> for ExampleSystem {
             (&mut lights, &mut transforms)
                 .join()
                 .filter_map(|(light, transform)| {
-                    if let Light::Point(ref mut point_light) = *light {
+                    if let LightComponent::Point(ref mut point_light) = *light {
                         Some((point_light, transform))
                     } else {
                         None

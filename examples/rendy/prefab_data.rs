@@ -2,7 +2,7 @@ use amethyst::{
     animation::AnimationSetPrefab,
     assets::{AssetPrefab, Handle, Prefab, PrefabData, ProgressCounter},
     controls::ControlTagPrefab,
-    core::{ecs::Entity, Transform},
+    core::{ecs::Entity, TransformComponent},
     gltf::{GltfSceneAsset, GltfSceneFormat},
     utils::tag::Tag,
     Error,
@@ -14,9 +14,9 @@ use amethyst_rendy::{
     rendy::mesh::{Normal, Position, Tangent, TexCoord},
     sprite::{
         prefab::{SpriteRenderPrefab, SpriteSheetPrefab},
-        SpriteRender,
+        SpriteRenderComponent,
     },
-    transparent::Transparent,
+    transparent::TransparentComponent,
 };
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
@@ -47,10 +47,10 @@ type GenMeshVertex = (Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>);
 #[derivative(Default(bound = ""))]
 #[serde(default)]
 pub struct ScenePrefabData {
-    transform: Option<Transform>,
+    transform: Option<TransformComponent>,
     gltf: Option<AssetPrefab<GltfSceneAsset, GltfSceneFormat>>,
     sprite_sheet: Option<SpriteSheetPrefab>,
-    animation_set: Option<AnimationSetPrefab<SpriteAnimationId, SpriteRender>>,
+    animation_set: Option<AnimationSetPrefab<SpriteAnimationId, SpriteRenderComponent>>,
     camera: Option<CameraPrefab>,
     light: Option<LightPrefab>,
     tag: Option<Tag<AnimationMarker>>,
@@ -58,16 +58,16 @@ pub struct ScenePrefabData {
     sprite: Option<SpriteRenderPrefab>,
     mesh: Option<MeshPrefab<GenMeshVertex>>,
     material: Option<MaterialPrefab>,
-    transparent: Option<Transparent>,
+    transparent: Option<TransparentComponent>,
 }
 
 type PData<'a, T> = <T as PrefabData<'a>>::SystemData;
 impl<'a> PrefabData<'a> for ScenePrefabData {
     type SystemData = (
-        PData<'a, Transform>,
+        PData<'a, TransformComponent>,
         PData<'a, AssetPrefab<GltfSceneAsset, GltfSceneFormat>>,
         PData<'a, SpriteSheetPrefab>,
-        PData<'a, AnimationSetPrefab<SpriteAnimationId, SpriteRender>>,
+        PData<'a, AnimationSetPrefab<SpriteAnimationId, SpriteRenderComponent>>,
         PData<'a, CameraPrefab>,
         PData<'a, LightPrefab>,
         PData<'a, Tag<AnimationMarker>>,

@@ -1,6 +1,6 @@
-use crate::Ball;
+use crate::BallComponent;
 use amethyst::{
-    core::{timing::Time, transform::Transform},
+    core::{timing::Time, transform::TransformComponent},
     ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
 };
 
@@ -10,8 +10,8 @@ pub struct MoveBallsSystem;
 
 impl<'s> System<'s> for MoveBallsSystem {
     type SystemData = (
-        ReadStorage<'s, Ball>,
-        WriteStorage<'s, Transform>,
+        ReadStorage<'s, BallComponent>,
+        WriteStorage<'s, TransformComponent>,
         Read<'s, Time>,
     );
 

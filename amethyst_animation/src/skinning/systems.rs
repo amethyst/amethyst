@@ -3,9 +3,9 @@ use amethyst_core::{
         BitSet, ComponentEvent, Join, ReadStorage, ReaderId, Resources, System, WriteStorage,
     },
     math::{convert, Matrix4},
-    Transform,
+    TransformComponent,
 };
-use amethyst_rendy::skinning::JointTransforms;
+use amethyst_rendy::skinning::JointTransformsComponent;
 
 use log::error;
 
@@ -35,10 +35,10 @@ impl VertexSkinningSystem {
 
 impl<'a> System<'a> for VertexSkinningSystem {
     type SystemData = (
-        ReadStorage<'a, Joint>,
-        ReadStorage<'a, Transform>,
-        WriteStorage<'a, Skin>,
-        WriteStorage<'a, JointTransforms>,
+        ReadStorage<'a, JointComponent>,
+        ReadStorage<'a, TransformComponent>,
+        WriteStorage<'a, SkinComponent>,
+        WriteStorage<'a, JointTransformsComponent>,
     );
 
     fn run(&mut self, (joints, global_transforms, mut skins, mut matrices): Self::SystemData) {
@@ -77,7 +77,7 @@ impl<'a> System<'a> for VertexSkinningSystem {
                             Some((transform, inverse_bind_matrix))
                         } else {
                             error!(
-                                "Missing `Transform` Component for join entity {:?}",
+                                "Missing `TransformComponent` Component for join entity {:?}",
                                 joint_entity
                             );
                             None
@@ -127,7 +127,7 @@ impl<'a> System<'a> for VertexSkinningSystem {
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::ecs::prelude::SystemData;
         Self::SystemData::setup(res);
-        let mut transform = WriteStorage::<Transform>::fetch(res);
+        let mut transform = WriteStorage::<TransformComponent>::fetch(res);
         self.updated_id = Some(transform.register_reader());
     }
 }

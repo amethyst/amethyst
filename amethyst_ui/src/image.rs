@@ -4,13 +4,13 @@ use amethyst_rendy::Texture;
 
 /// Image used UI widgets, often as background.
 #[derive(Debug, Clone, PartialEq)]
-pub enum UiImage {
+pub enum UiImageComponent {
     /// An image backed by texture handle
     Texture(Handle<Texture>),
     /// An image entirely covered by single solid color
     SolidColor([f32; 4]),
 }
 
-impl Component for UiImage {
+impl Component for UiImageComponent {
     type Storage = DenseVecStorage<Self>;
 }

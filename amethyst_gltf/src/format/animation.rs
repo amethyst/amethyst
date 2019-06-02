@@ -8,7 +8,7 @@ use amethyst_animation::{
 };
 use amethyst_core::{
     math::{convert, Vector3, Vector4},
-    Float, Transform,
+    Float, TransformComponent,
 };
 
 use super::Buffers;
@@ -18,7 +18,7 @@ pub fn load_animations(
     gltf: &gltf::Gltf,
     buffers: &Buffers,
     node_map: &HashMap<usize, usize>,
-) -> Result<AnimationSetPrefab<usize, Transform>, Error> {
+) -> Result<AnimationSetPrefab<usize, TransformComponent>, Error> {
     let mut prefab = AnimationSetPrefab::default();
     for animation in gltf.animations() {
         let anim = load_animation(&animation, buffers)?;
@@ -36,7 +36,7 @@ pub fn load_animations(
 fn load_animation(
     animation: &gltf::Animation<'_>,
     buffers: &Buffers,
-) -> Result<AnimationPrefab<Transform>, Error> {
+) -> Result<AnimationPrefab<TransformComponent>, Error> {
     let mut a = AnimationPrefab::default();
     a.samplers = animation
         .channels()

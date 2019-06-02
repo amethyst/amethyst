@@ -7,7 +7,7 @@ use amethyst_core::{
         storage::ComponentEvent, BitSet, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
         ReaderId, Resources, System, Write, WriteStorage,
     },
-    ArcThreadPool, Parent, Time,
+    ArcThreadPool, ParentComponent, Time,
 };
 use amethyst_error::{format_err, Error, ResultExt};
 
@@ -53,7 +53,7 @@ where
         Read<'a, Time>,
         ReadExpect<'a, ArcThreadPool>,
         Option<Read<'a, HotReloadStrategy>>,
-        WriteStorage<'a, Parent>,
+        WriteStorage<'a, ParentComponent>,
         WriteStorage<'a, PrefabTag<T>>,
         T::SystemData,
     );
@@ -121,11 +121,11 @@ where
                         parents
                             .insert(
                                 new_entity,
-                                Parent {
+                                ParentComponent {
                                     entity: self.entities[parent],
                                 },
                             )
-                            .expect("Unable to insert `Parent` for prefab");
+                            .expect("Unable to insert `ParentComponent` for prefab");
 
                         children
                             .entry(parent)

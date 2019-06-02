@@ -1,13 +1,13 @@
 use crate::{
     mtl,
-    resources::Tint as TintComponent,
-    sprite::{SpriteRender, SpriteSheet},
+    resources::TintComponent,
+    sprite::{SpriteRenderComponent, SpriteSheet},
     types::Texture,
 };
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     math::{convert, Matrix4, Vector4},
-    Transform,
+    TransformComponent,
 };
 use glsl_layout::*;
 use rendy::{
@@ -58,7 +58,7 @@ pub struct VertexArgs {
 
 impl VertexArgs {
     #[inline]
-    pub fn from_object_data(transform: &Transform, tint: Option<&TintComponent>) -> Self {
+    pub fn from_object_data(transform: &TransformComponent, tint: Option<&TintComponent>) -> Self {
         let model: [[f32; 4]; 4] = convert::<_, Matrix4<f32>>(*transform.global_matrix()).into();
         VertexArgs {
             model: model.into(),
@@ -104,7 +104,7 @@ impl AsVertex for SkinnedVertexArgs {
 impl SkinnedVertexArgs {
     #[inline]
     pub fn from_object_data(
-        transform: &Transform,
+        transform: &TransformComponent,
         tint: Option<&TintComponent>,
         joints_offset: u32,
     ) -> Self {
@@ -198,8 +198,8 @@ impl SpriteArgs {
     pub fn from_data<'a>(
         tex_storage: &AssetStorage<Texture>,
         sprite_storage: &'a AssetStorage<SpriteSheet>,
-        sprite_render: &SpriteRender,
-        transform: &Transform,
+        sprite_render: &SpriteRenderComponent,
+        transform: &TransformComponent,
     ) -> Option<(Self, &'a Handle<Texture>)> {
         let sprite_sheet = sprite_storage.get(&sprite_render.sprite_sheet)?;
         if !tex_storage.contains(&sprite_sheet.texture) {

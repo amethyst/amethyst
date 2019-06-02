@@ -83,7 +83,7 @@ fn test_name() {
     // Start with the following bundles:
     //
     // * `AnimationBundle::<u32, Material>`
-    // * `AnimationBundle::<u32, SpriteRender>`
+    // * `AnimationBundle::<u32, SpriteRenderComponent>`
     // * `TransformBundle`
     // * `RenderBundle`
     //

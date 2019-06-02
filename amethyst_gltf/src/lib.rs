@@ -9,12 +9,13 @@ use amethyst_assets::{
 use amethyst_core::{
     ecs::prelude::{Entity, Read, ReadExpect, Write, WriteStorage},
     math::{convert, Point3, Vector3},
-    transform::Transform,
-    Float, Named,
+    transform::TransformComponent,
+    Float, NamedComponent,
 };
 use amethyst_error::Error;
 use amethyst_rendy::{
-    formats::mtl::MaterialPrefab, rendy::mesh::MeshBuilder, types::Mesh, visibility::BoundingSphere,
+    formats::mtl::MaterialPrefab, rendy::mesh::MeshBuilder, types::Mesh,
+    visibility::BoundingSphereComponent,
 };
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
@@ -34,9 +35,9 @@ pub type GltfSceneAsset = Prefab<GltfPrefab>;
 /// `PrefabData` for loading Gltf files.
 #[derive(Debug, Default)]
 pub struct GltfPrefab {
-    /// `Transform` will almost always be placed, the only exception is for the main `Entity` for
+    /// `TransformComponent` will almost always be placed, the only exception is for the main `Entity` for
     /// certain scenarios (based on the data in the Gltf file)
-    pub transform: Option<Transform>,
+    pub transform: Option<TransformComponent>,
     /// `MeshData` is placed on all `Entity`s with graphics primitives
     pub mesh: Option<MeshBuilder<'static>>,
     /// Mesh handle after sub asset loading is done
@@ -44,14 +45,14 @@ pub struct GltfPrefab {
     /// `Material` is placed on all `Entity`s with graphics primitives with material
     pub material: Option<MaterialPrefab>,
     /// Loaded animations, if applicable, will always only be placed on the main `Entity`
-    pub animatable: Option<AnimatablePrefab<usize, Transform>>,
+    pub animatable: Option<AnimatablePrefab<usize, TransformComponent>>,
     /// Skin data is placed on `Entity`s involved in the skin, skeleton or graphical primitives
     /// using the skin
     pub skinnable: Option<SkinnablePrefab>,
     /// Node extent
     pub extent: Option<GltfNodeExtent>,
     /// Node name
-    pub name: Option<Named>,
+    pub name: Option<NamedComponent>,
     pub(crate) materials: Option<GltfMaterialSet>,
     pub(crate) material_id: Option<usize>,
 }
@@ -63,7 +64,7 @@ impl GltfPrefab {
             let diff = convert::<_, Vector3<Float>>(target - extent.centroid());
             *self
                 .transform
-                .get_or_insert_with(Transform::default)
+                .get_or_insert_with(TransformComponent::default)
                 .translation_mut() += diff;
         }
     }
@@ -75,7 +76,7 @@ impl GltfPrefab {
             let max = distance.x.max(distance.y).max(distance.z);
             let scale: Float = (max_distance / max).into();
             self.transform
-                .get_or_insert_with(Transform::default)
+                .get_or_insert_with(TransformComponent::default)
                 .set_scale(Vector3::new(scale, scale, scale));
         }
     }
@@ -145,9 +146,9 @@ impl GltfNodeExtent {
     }
 }
 
-impl Into<BoundingSphere> for GltfNodeExtent {
-    fn into(self) -> BoundingSphere {
-        BoundingSphere {
+impl Into<BoundingSphereComponent> for GltfNodeExtent {
+    fn into(self) -> BoundingSphereComponent {
+        BoundingSphereComponent {
             center: convert(self.centroid()),
             radius: convert(self.distance().magnitude() * 0.5),
         }
@@ -201,12 +202,12 @@ pub struct GltfSceneOptions {
 
 impl<'a> PrefabData<'a> for GltfPrefab {
     type SystemData = (
-        <Transform as PrefabData<'a>>::SystemData,
-        <Named as PrefabData<'a>>::SystemData,
+        <TransformComponent as PrefabData<'a>>::SystemData,
+        <NamedComponent as PrefabData<'a>>::SystemData,
         <MaterialPrefab as PrefabData<'a>>::SystemData,
-        <AnimatablePrefab<usize, Transform> as PrefabData<'a>>::SystemData,
+        <AnimatablePrefab<usize, TransformComponent> as PrefabData<'a>>::SystemData,
         <SkinnablePrefab as PrefabData<'a>>::SystemData,
-        WriteStorage<'a, BoundingSphere>,
+        WriteStorage<'a, BoundingSphereComponent>,
         WriteStorage<'a, Handle<Mesh>>,
         Read<'a, AssetStorage<Mesh>>,
         ReadExpect<'a, Loader>,

@@ -1,11 +1,11 @@
 use crate::{
-    camera::{ActiveCamera, Camera},
-    transparent::Transparent,
+    camera::{ActiveCamera, CameraComponent},
+    transparent::TransparentComponent,
 };
 use amethyst_core::{
     ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
     math::{self as na, ComplexField, Point3, Vector3},
-    Float, Hidden, HiddenPropagate, Transform,
+    Float, HiddenComponent, HiddenPropagateComponent, TransformComponent,
 };
 use derivative::Derivative;
 use hibitset::BitSet;
@@ -30,7 +30,7 @@ pub struct SpriteVisibility {
 /// The sprite render pass should draw all sprites without semi-transparent pixels, then draw the
 /// sprites with semi-transparent pixels from far to near.
 ///
-/// Note that this should run after `Transform` has been updated for the current frame, and
+/// Note that this should run after `TransformComponent` has been updated for the current frame, and
 /// before rendering occurs.
 #[derive(Derivative)]
 #[derivative(Default(bound = ""))]
@@ -59,12 +59,12 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
     type SystemData = (
         Entities<'a>,
         Write<'a, SpriteVisibility>,
-        ReadStorage<'a, Hidden>,
-        ReadStorage<'a, HiddenPropagate>,
+        ReadStorage<'a, HiddenComponent>,
+        ReadStorage<'a, HiddenPropagateComponent>,
         Option<Read<'a, ActiveCamera>>,
-        ReadStorage<'a, Camera>,
-        ReadStorage<'a, Transparent>,
-        ReadStorage<'a, Transform>,
+        ReadStorage<'a, CameraComponent>,
+        ReadStorage<'a, TransparentComponent>,
+        ReadStorage<'a, TransformComponent>,
     );
 
     fn run(
@@ -78,7 +78,7 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
 
         // The camera position is used to determine culling, but the sprites are ordered based on
         // the Z coordinate
-        let camera: Option<&Transform> = active
+        let camera: Option<&TransformComponent> = active
             .and_then(|a| transform.get(a.entity))
             .or_else(|| (&camera, &transform).join().map(|ct| ct.1).next());
         let camera_backward = camera

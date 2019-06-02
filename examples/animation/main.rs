@@ -6,7 +6,7 @@ use amethyst::{
         DeferStartRelation, EndControl, StepDirection,
     },
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
-    core::{Transform, TransformBundle},
+    core::{TransformBundle, TransformComponent},
     ecs::prelude::{Entity, ReadExpect, Resources},
     input::{get_key, is_close_requested, is_key_down},
     prelude::*,
@@ -37,7 +37,7 @@ use serde::{Deserialize, Serialize};
 
 type MyPrefabData = (
     Option<BasicScenePrefab<(Vec<Position>, Vec<Normal>, Vec<Tangent>, Vec<TexCoord>)>>,
-    Option<AnimationSetPrefab<AnimationId, Transform>>,
+    Option<AnimationSetPrefab<AnimationId, TransformComponent>>,
 );
 
 const CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
@@ -125,7 +125,7 @@ impl SimpleState for Example {
                 }
 
                 Some((VirtualKeyCode::Left, ElementState::Pressed)) => {
-                    get_animation_set::<AnimationId, Transform>(
+                    get_animation_set::<AnimationId, TransformComponent>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     )
@@ -134,7 +134,7 @@ impl SimpleState for Example {
                 }
 
                 Some((VirtualKeyCode::Right, ElementState::Pressed)) => {
-                    get_animation_set::<AnimationId, Transform>(
+                    get_animation_set::<AnimationId, TransformComponent>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     )
@@ -144,7 +144,7 @@ impl SimpleState for Example {
 
                 Some((VirtualKeyCode::F, ElementState::Pressed)) => {
                     self.rate = 1.0;
-                    get_animation_set::<AnimationId, Transform>(
+                    get_animation_set::<AnimationId, TransformComponent>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     )
@@ -154,7 +154,7 @@ impl SimpleState for Example {
 
                 Some((VirtualKeyCode::V, ElementState::Pressed)) => {
                     self.rate = 0.0;
-                    get_animation_set::<AnimationId, Transform>(
+                    get_animation_set::<AnimationId, TransformComponent>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     )
@@ -164,7 +164,7 @@ impl SimpleState for Example {
 
                 Some((VirtualKeyCode::H, ElementState::Pressed)) => {
                     self.rate = 0.5;
-                    get_animation_set::<AnimationId, Transform>(
+                    get_animation_set::<AnimationId, TransformComponent>(
                         &mut world.write_storage(),
                         self.sphere.unwrap().clone(),
                     )
@@ -210,7 +210,7 @@ fn run<B: Backend>() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
-        .with_bundle(AnimationBundle::<AnimationId, Transform>::new(
+        .with_bundle(AnimationBundle::<AnimationId, TransformComponent>::new(
             "animation_control_system",
             "sampler_interpolation_system",
         ))?
@@ -232,13 +232,14 @@ fn add_animation(
     toggle_if_exists: bool,
 ) {
     let animation = world
-        .read_storage::<AnimationSet<AnimationId, Transform>>()
+        .read_storage::<AnimationSet<AnimationId, TransformComponent>>()
         .get(entity)
         .and_then(|s| s.get(&id))
         .cloned()
         .unwrap();
     let mut sets = world.write_storage();
-    let control_set = get_animation_set::<AnimationId, Transform>(&mut sets, entity).unwrap();
+    let control_set =
+        get_animation_set::<AnimationId, TransformComponent>(&mut sets, entity).unwrap();
     match defer {
         None => {
             if toggle_if_exists && control_set.has_animation(id) {

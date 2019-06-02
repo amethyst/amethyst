@@ -37,11 +37,11 @@ statements to make it through this chapter:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 use amethyst::assets::{AssetStorage, Loader};
-use amethyst::core::transform::Transform;
+use amethyst::core::transform::TransformComponent;
 use amethyst::ecs::prelude::{Component, DenseVecStorage};
 use amethyst::prelude::*;
 use amethyst::renderer::{
-    Camera, Flipped, PngFormat, Projection, SpriteRender, SpriteSheet,
+    Camera, Flipped, PngFormat, Projection, SpriteRenderComponent, SpriteSheet,
     SpriteSheetFormat, SpriteSheetHandle, Texture, TextureMetadata,
 };
 ```
@@ -98,9 +98,9 @@ the entire arena. Let's do it in a new function `initialise_camera`!
 # use amethyst::prelude::*;
 # use amethyst::ecs::World;
 # use amethyst::renderer::{Camera, Projection};
-# use amethyst::core::Transform;
+# use amethyst::core::TransformComponent;
 fn initialise_camera(world: &mut World) {
-    let mut transform = Transform::default();
+    let mut transform = TransformComponent::default();
     transform.set_translation_z(1.0);
     world
         .create_entity()
@@ -117,7 +117,7 @@ fn initialise_camera(world: &mut World) {
 
 We create an entity that will carry our camera, with an orthographic projection
 of the size of our arena (as we want it to cover it all). We attach it a
-`Transform` component, representing its position in the world. Notice that
+`TransformComponent` component, representing its position in the world. Notice that
 we moved that transform a bit back on the **z** axis: this is to make sure that
 the camera can see properly the sprites that will, for the duration of this
 tutorial, sit on the **XY** plane.
@@ -212,15 +212,15 @@ First let's look at our imports:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-use amethyst::core::transform::Transform;
+use amethyst::core::transform::TransformComponent;
 ```
 
-`Transform` is an Amethyst ECS component which carry
+`TransformComponent` is an Amethyst ECS component which carry
 position and orientation information. It is relative
 to a parent, if one exists.
 
 Okay, let's make some entities! We'll define an `initialise_paddles` function
-which will create left and right paddle entities and attach a `Transform`
+which will create left and right paddle entities and attach a `TransformComponent`
 component to each to position them in our world. As we defined earlier,
 our canvas is from `0.0` to `ARENA_WIDTH` in the horizontal dimension and
 from `0.0` to `ARENA_HEIGHT` in the vertical dimension.
@@ -231,7 +231,7 @@ general, as it makes operations like rotation easier.
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
-# use amethyst::core::Transform;
+# use amethyst::core::TransformComponent;
 # use amethyst::ecs::World;
 # enum Side {
 #   Left,
@@ -250,8 +250,8 @@ general, as it makes operations like rotation easier.
 # const ARENA_WIDTH: f32 = 100.0;
 /// Initialises one paddle on the left, and one paddle on the right.
 fn initialise_paddles(world: &mut World) {
-    let mut left_transform = Transform::default();
-    let mut right_transform = Transform::default();
+    let mut left_transform = TransformComponent::default();
+    let mut right_transform = TransformComponent::default();
 
     // Correctly position the paddles.
     let y = ARENA_HEIGHT / 2.0;
@@ -351,12 +351,12 @@ Try adding the resource by inserting it manually or using the `setup` method.
 Ah, oops. We forgot something. Turning on the `nightly` feature, we get:
 
 ```text_ignore
-thread 'main' panicked at 'Tried to fetch a resource of type "ecs::storage::MaskedStorage<transform::components::local_transform::Transform>", but the resource does not exist.
+thread 'main' panicked at 'Tried to fetch a resource of type "ecs::storage::MaskedStorage<transform::components::local_transform::TransformComponent>", but the resource does not exist.
 Try adding the resource by inserting it manually or using the `setup` method.'
 ```
 
 This is the same kind of error as before; this time the `Component` is a
-`Transform`, which is used and hence registered by the `TransformSystem`.
+`TransformComponent`, which is used and hence registered by the `TransformSystem`.
 
 Amethyst has a lot of internal systems it uses to keep things running we need
 to bring into the context of the `World`. For simplicity, these have been
@@ -536,24 +536,24 @@ fn initialise_paddles(world: &mut World, sprite_sheet: SpriteSheetHandle)
 # { }
 ```
 
-Inside `initialise_paddles`, we construct a `SpriteRender` for a paddle. We
+Inside `initialise_paddles`, we construct a `SpriteRenderComponent` for a paddle. We
 only need one here, since the only difference between the two paddles is that
 the right one is flipped horizontally.
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::World;
-# use amethyst::renderer::{SpriteSheetHandle, SpriteRender};
+# use amethyst::renderer::{SpriteSheetHandle, SpriteRenderComponent};
 # fn initialise_paddles(world: &mut World, sprite_sheet: SpriteSheetHandle) {
 // Assign the sprites for the paddles
-let sprite_render = SpriteRender {
+let sprite_render = SpriteRenderComponent {
     sprite_sheet: sprite_sheet.clone(),
     sprite_number: 0, // paddle is the first sprite in the sprite_sheet
 };
 # }
 ```
 
-`SpriteRender` is the `Component` that indicates which sprite of which sprite
+`SpriteRenderComponent` is the `Component` that indicates which sprite of which sprite
 sheet should be drawn for a particular entity. Since the paddle is the first
 sprite in the sprite sheet, we use `0` for the `sprite_number`.
 Additionally, we'll add a `Flipped` component to the right paddle to indicate
@@ -564,10 +564,10 @@ Next we simply add the components to the paddle entities:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::World;
-# use amethyst::renderer::{SpriteSheetHandle, SpriteRender, Flipped};
+# use amethyst::renderer::{SpriteSheetHandle, SpriteRenderComponent, Flipped};
 # use amethyst::prelude::*;
 # fn initialise_paddles(world: &mut World, sprite_sheet: SpriteSheetHandle) {
-# let sprite_render = SpriteRender {
+# let sprite_render = SpriteRenderComponent {
 #   sprite_sheet: sprite_sheet.clone(),
 #   sprite_number: 0, // paddle is the first sprite in the sprite_sheet
 # };

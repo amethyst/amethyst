@@ -4,7 +4,7 @@
 
 pub use crate::{
     bundle::NetworkBundle,
-    connection::{ConnectionState, NetConnection, NetIdentity},
+    connection::{ConnectionState, NetConnection, NetIdentityComponent},
     error::Result,
     net_event::{NetEvent, NetPacket},
     network_socket::NetSocketSystem,

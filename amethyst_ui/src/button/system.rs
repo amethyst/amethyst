@@ -5,7 +5,7 @@ use amethyst_core::{
 };
 use std::collections::HashMap;
 
-use crate::{UiButtonAction, UiButtonActionType::*, UiImage, UiText};
+use crate::{UiButtonAction, UiButtonActionType::*, UiImageComponent, UiTextComponent};
 
 struct ActionChangeStack<T: Clone + PartialEq> {
     initial_value: T,
@@ -59,7 +59,7 @@ where
 #[derive(Default)]
 pub struct UiButtonSystem {
     event_reader: Option<ReaderId<UiButtonAction>>,
-    set_images: HashMap<Entity, ActionChangeStack<UiImage>>,
+    set_images: HashMap<Entity, ActionChangeStack<UiImageComponent>>,
     set_text_colors: HashMap<Entity, ActionChangeStack<[f32; 4]>>,
 }
 
@@ -72,8 +72,8 @@ impl UiButtonSystem {
 
 impl<'s> System<'s> for UiButtonSystem {
     type SystemData = (
-        WriteStorage<'s, UiImage>,
-        WriteStorage<'s, UiText>,
+        WriteStorage<'s, UiImageComponent>,
+        WriteStorage<'s, UiTextComponent>,
         ReadExpect<'s, ParentHierarchy>,
         Write<'s, EventChannel<UiButtonAction>>,
     );

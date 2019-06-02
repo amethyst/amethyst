@@ -10,7 +10,7 @@ Component     | Serialized representation             | Example(s)            | 
 ------------- | ------------------------------------- | --------------------- | ------------------ | ---
 `YourType`    | `Self` &ndash; `YourType`             | `Position`            | `Position`         | [Simple]
 `YourType`    | Multiple &ndash; `V1(..)`, `V2(..)`   | [`Camera`]            | [`CameraPrefab`]   | [Adapter]
-`YourType`    | Subset of `YourType`                  | [`AudioListener`]     | [`AudioPrefab`]    | [Asset]
+`YourType`    | Subset of `YourType`                  | [`AudioListenerComponent`]     | [`AudioPrefab`]    | [Asset]
 `Handle<A>`   | Loaded from `A::Data`                 | [`Mesh`], [`Texture`] | [`MeshData`], [`TexturePrefab`] | [Asset]
 `ManyHandles` | Data that component stores handles of | [`Material`]          | [`MaterialPrefab`] | [Multi-Handle]
 
@@ -92,7 +92,7 @@ Component     | Serialized representation             | Example(s)            | 
     #
     #[derive(Debug, Component)]
     # #[storage(HashMapStorage)]
-    pub struct AudioListener {
+    pub struct AudioListenerComponent {
         /// Output used by this listener to emit sounds to
         pub output: Output, // <--- NOTE: Only available at runtime
         // ..
@@ -146,7 +146,7 @@ Component     | Serialized representation             | Example(s)            | 
 
     Applicable guide: [How to Define Prefabs: Multi-Handle][Multi-Handle].
 
-[`AudioListener`]: https://docs-src.amethyst.rs/stable/amethyst_audio/struct.AudioListener.html
+[`AudioListenerComponent`]: https://docs-src.amethyst.rs/stable/amethyst_audio/struct.AudioListener.html
 [`AudioPrefab`]: https://docs-src.amethyst.rs/stable/amethyst_audio/struct.AudioPrefab.html
 [`Camera`]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.Camera.html
 [`CameraPrefab`]: https://docs-src.amethyst.rs/stable/amethyst_renderer/enum.CameraPrefab.html

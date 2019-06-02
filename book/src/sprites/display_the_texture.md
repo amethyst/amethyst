@@ -7,7 +7,7 @@ For anything rendered by the [`DrawFlat2D`][doc_drawflat2d] pass, it's also poss
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 use amethyst::assets::{AssetStorage, Loader};
-use amethyst::core::Transform;
+use amethyst::core::TransformComponent;
 use amethyst::prelude::*;
 use amethyst::renderer::{Flipped, PngFormat, Texture, TextureMetadata, TextureHandle};
 
@@ -29,7 +29,7 @@ use amethyst::renderer::{Flipped, PngFormat, Texture, TextureMetadata, TextureHa
 
 fn init_image(world: &mut World, texture_handle: &TextureHandle) {
     // Add a transform component to give the image a position
-    let mut transform = Transform::default();
+    let mut transform = TransformComponent::default();
     transform.set_translation_x(0.0);
     transform.set_translation_y(0.0);
 

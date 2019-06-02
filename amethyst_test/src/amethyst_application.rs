@@ -702,8 +702,8 @@ mod test {
     fn game_data_must_update_before_assertion() -> Result<(), Error> {
         let effect_fn = |world: &mut World| {
             let handles = vec![
-                AssetZeroLoader::load(world, AssetZero(10)).unwrap(),
-                AssetZeroLoader::load(world, AssetZero(20)).unwrap(),
+                AssetZeroLoader::load(world, AssetZeroComponent(10)).unwrap(),
+                AssetZeroLoader::load(world, AssetZeroComponent(20)).unwrap(),
             ];
 
             world.add_resource::<Vec<AssetZeroHandle>>(handles);
@@ -711,13 +711,13 @@ mod test {
         let assertion_fn = |world: &mut World| {
             let asset_translation_zero_handles = world.read_resource::<Vec<AssetZeroHandle>>();
 
-            let store = world.read_resource::<AssetStorage<AssetZero>>();
+            let store = world.read_resource::<AssetStorage<AssetZeroComponent>>();
             assert_eq!(
-                Some(&AssetZero(10)),
+                Some(&AssetZeroComponent(10)),
                 store.get(&asset_translation_zero_handles[0])
             );
             assert_eq!(
-                Some(&AssetZero(20)),
+                Some(&AssetZeroComponent(20)),
                 store.get(&asset_translation_zero_handles[1])
             );
         };
@@ -743,15 +743,15 @@ mod test {
             // If `LoadingState` is not run before this, this will panic
             world.read_resource::<LoadResource>();
 
-            let handles = vec![AssetZeroLoader::load(world, AssetZero(10)).unwrap()];
+            let handles = vec![AssetZeroLoader::load(world, AssetZeroComponent(10)).unwrap()];
             world.add_resource(handles);
         };
         let assertion_fn = |world: &mut World| {
             let asset_translation_zero_handles = world.read_resource::<Vec<AssetZeroHandle>>();
 
-            let store = world.read_resource::<AssetStorage<AssetZero>>();
+            let store = world.read_resource::<AssetStorage<AssetZeroComponent>>();
             assert_eq!(
-                Some(&AssetZero(10)),
+                Some(&AssetZeroComponent(10)),
                 store.get(&asset_translation_zero_handles[0])
             );
         };
@@ -783,7 +783,7 @@ mod test {
     #[test]
     fn with_system_runs_system_every_tick() -> Result<(), Error> {
         let effect_fn = |world: &mut World| {
-            let entity = world.create_entity().with(ComponentZero(0)).build();
+            let entity = world.create_entity().with(ZeroComponent(0)).build();
 
             world.add_resource(EffectReturn(entity));
         };
@@ -791,7 +791,7 @@ mod test {
         fn get_component_zero_value(world: &mut World) -> i32 {
             let entity = world.read_resource::<EffectReturn<Entity>>().0.clone();
 
-            let component_zero_storage = world.read_storage::<ComponentZero>();
+            let component_zero_storage = world.read_storage::<ZeroComponent>();
             let component_zero = component_zero_storage
                 .get(entity)
                 .expect("Entity should have a `ComponentZero` component.");
@@ -819,7 +819,7 @@ mod test {
         let assertion_fn = |world: &mut World| {
             let entity = world.read_resource::<EffectReturn<Entity>>().0.clone();
 
-            let component_zero_storage = world.read_storage::<ComponentZero>();
+            let component_zero_storage = world.read_storage::<ZeroComponent>();
             let component_zero = component_zero_storage
                 .get(entity)
                 .expect("Entity should have a `ComponentZero` component.");
@@ -830,9 +830,9 @@ mod test {
 
         AmethystApplication::blank()
             .with_setup(|world| {
-                world.register::<ComponentZero>();
+                world.register::<ZeroComponent>();
 
-                let entity = world.create_entity().with(ComponentZero(0)).build();
+                let entity = world.create_entity().with(ZeroComponent(0)).build();
                 world.add_resource(EffectReturn(entity));
             })
             .with_system_single(SystemEffect, "system_effect", &[])
@@ -1086,7 +1086,7 @@ mod test {
 
     #[derive(Debug)]
     struct SystemEffect;
-    type SystemEffectData<'s> = WriteStorage<'s, ComponentZero>;
+    type SystemEffectData<'s> = WriteStorage<'s, ZeroComponent>;
     impl<'s> System<'s> for SystemEffect {
         type SystemData = SystemEffectData<'s>;
         fn run(&mut self, mut component_zero_storage: Self::SystemData) {
@@ -1121,7 +1121,7 @@ mod test {
     impl<'a, 'b> SystemBundle<'a, 'b> for BundleAsset {
         fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
             builder.add(
-                Processor::<AssetZero>::new(),
+                Processor::<AssetZeroComponent>::new(),
                 "asset_translation_zero_processor",
                 &[],
             );
@@ -1131,41 +1131,43 @@ mod test {
 
     // === Assets === //
     #[derive(Debug, PartialEq)]
-    struct AssetZero(u32);
-    impl Asset for AssetZero {
+    struct AssetZeroComponent(u32);
+    impl Asset for AssetZeroComponent {
         const NAME: &'static str = "amethyst_test::AssetZero";
         type Data = Self;
         type HandleStorage = VecStorage<Handle<Self>>;
     }
-    impl Component for AssetZero {
+    impl Component for AssetZeroComponent {
         type Storage = DenseVecStorage<Self>;
     }
-    impl From<AssetZero> for Result<ProcessingState<AssetZero>, Error> {
-        fn from(asset_translation_zero: AssetZero) -> Result<ProcessingState<AssetZero>, Error> {
+    impl From<AssetZeroComponent> for Result<ProcessingState<AssetZeroComponent>, Error> {
+        fn from(
+            asset_translation_zero: AssetZeroComponent,
+        ) -> Result<ProcessingState<AssetZeroComponent>, Error> {
             Ok(ProcessingState::Loaded(asset_translation_zero))
         }
     }
-    type AssetZeroHandle = Handle<AssetZero>;
+    type AssetZeroHandle = Handle<AssetZeroComponent>;
 
     // === System delegates === //
     struct AssetZeroLoader;
     impl AssetZeroLoader {
         fn load(
             world: &World,
-            asset_translation_zero: AssetZero,
+            asset_translation_zero: AssetZeroComponent,
         ) -> Result<AssetZeroHandle, Error> {
             let loader = world.read_resource::<Loader>();
             Ok(loader.load_from_data(
                 asset_translation_zero,
                 (),
-                &world.read_resource::<AssetStorage<AssetZero>>(),
+                &world.read_resource::<AssetStorage<AssetZeroComponent>>(),
             ))
         }
     }
 
     // === Components === //
-    struct ComponentZero(pub i32);
-    impl Component for ComponentZero {
+    struct ZeroComponent(pub i32);
+    impl Component for ZeroComponent {
         type Storage = DenseVecStorage<Self>;
     }
 }

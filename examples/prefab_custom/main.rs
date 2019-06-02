@@ -7,7 +7,7 @@ use amethyst::{
         AssetStorage, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem,
         ProgressCounter, RonFormat,
     },
-    core::{Named, Parent},
+    core::{NamedComponent, ParentComponent},
     derive::PrefabData,
     ecs::{
         storage::{DenseVecStorage, VecStorage},
@@ -41,7 +41,7 @@ pub enum Weapon {
 #[serde(deny_unknown_fields)]
 pub enum CustomPrefabData {
     Player {
-        name: Named,
+        name: NamedComponent,
         position: Option<Position>,
     },
     Weapon {
@@ -125,7 +125,7 @@ impl CustomPrefabState {
             "| {e:24} | {prefab_handle:33} | {parent:24} | {pos:23} | {named:22} | {weapon:6} |",
             e = "Entity",
             prefab_handle = "Handle<Prefab<CustomPrefabData>>>",
-            parent = "Parent",
+            parent = "ParentComponent",
             pos = "Position",
             named = "Player",
             weapon = "Weapon",
@@ -138,9 +138,9 @@ impl CustomPrefabState {
             |(entities, prefab_handles, parents, positions, nameds, weapons): (
                 Entities,
                 ReadStorage<Handle<Prefab<CustomPrefabData>>>,
-                ReadStorage<Parent>,
+                ReadStorage<ParentComponent>,
                 ReadStorage<Position>,
-                ReadStorage<Named>,
+                ReadStorage<NamedComponent>,
                 ReadStorage<Weapon>,
             )| {
                 (

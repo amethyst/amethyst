@@ -1,11 +1,11 @@
 use crate::{
     audio::{play_bounce, Sounds},
-    Ball, Paddle, Side,
+    BallComponent, PaddleComponent, Side,
 };
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
-    core::{transform::Transform, Float},
+    core::{transform::TransformComponent, Float},
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, WriteStorage},
 };
 use std::ops::Deref;
@@ -16,9 +16,9 @@ pub struct BounceSystem;
 
 impl<'s> System<'s> for BounceSystem {
     type SystemData = (
-        WriteStorage<'s, Ball>,
-        ReadStorage<'s, Paddle>,
-        ReadStorage<'s, Transform>,
+        WriteStorage<'s, BallComponent>,
+        ReadStorage<'s, PaddleComponent>,
+        ReadStorage<'s, TransformComponent>,
         Read<'s, AssetStorage<Source>>,
         ReadExpect<'s, Sounds>,
         Option<Read<'s, Output>>,

@@ -1,11 +1,11 @@
 use crate::{
-    glyphs::{UiGlyphs, UiGlyphsResource},
-    Selected, TextEditing, UiImage, UiTransform,
+    glyphs::{UiGlyphsComponent, UiGlyphsResource},
+    SelectedComponent, TextEditingComponent, UiImageComponent, UiTransformComponent,
 };
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::{
     ecs::{Entities, Entity, Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
-    Hidden, HiddenPropagate,
+    HiddenComponent, HiddenPropagateComponent,
 };
 use amethyst_rendy::{
     batch::OrderedOneLevelBatch,
@@ -28,7 +28,7 @@ use amethyst_rendy::{
         shader::{Shader, SpirvShader},
         texture::palette::load_from_srgba,
     },
-    resources::Tint,
+    resources::TintComponent,
     simple_shader_set,
     submodules::{DynamicUniform, DynamicVertexBuffer, TextureId, TextureSub},
     types::{Backend, Texture},
@@ -184,14 +184,14 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             screen_dimesnions,
         ) = <(
             Entities<'_>,
-            ReadStorage<'_, UiImage>,
-            ReadStorage<'_, UiTransform>,
-            ReadStorage<'_, TextEditing>,
-            ReadStorage<'_, Hidden>,
-            ReadStorage<'_, HiddenPropagate>,
-            ReadStorage<'_, Selected>,
-            ReadStorage<'_, Tint>,
-            ReadStorage<'_, UiGlyphs>,
+            ReadStorage<'_, UiImageComponent>,
+            ReadStorage<'_, UiTransformComponent>,
+            ReadStorage<'_, TextEditingComponent>,
+            ReadStorage<'_, HiddenComponent>,
+            ReadStorage<'_, HiddenPropagateComponent>,
+            ReadStorage<'_, SelectedComponent>,
+            ReadStorage<'_, TintComponent>,
+            ReadStorage<'_, UiGlyphsComponent>,
             ReadExpect<'_, UiGlyphsResource>,
             ReadExpect<'_, ScreenDimensions>,
         ) as SystemData>::fetch(resources);
@@ -469,16 +469,16 @@ fn mul_blend(a: &[f32; 4], b: &[f32; 4]) -> [f32; 4] {
 fn render_image<B: Backend>(
     factory: &Factory<B>,
     resources: &Resources,
-    transform: &UiTransform,
-    raw_image: &UiImage,
+    transform: &UiTransformComponent,
+    raw_image: &UiImageComponent,
     tint: &Option<[f32; 4]>,
     white_tex_id: TextureId,
     textures: &mut TextureSub<B>,
     batches: &mut OrderedOneLevelBatch<TextureId, UiArgs>,
 ) -> bool {
     let color = match (raw_image, tint.as_ref()) {
-        (UiImage::SolidColor(color), Some(t)) => mul_blend(color, t),
-        (UiImage::SolidColor(color), None) => color.clone(),
+        (UiImageComponent::SolidColor(color), Some(t)) => mul_blend(color, t),
+        (UiImageComponent::SolidColor(color), None) => color.clone(),
         (_, Some(t)) => t.clone(),
         (_, None) => [1., 1., 1., 1.],
     };
@@ -491,7 +491,7 @@ fn render_image<B: Backend>(
     };
 
     match raw_image {
-        UiImage::Texture(tex) => {
+        UiImageComponent::Texture(tex) => {
             if let Some((tex_id, this_changed)) = textures.insert(
                 factory,
                 resources,

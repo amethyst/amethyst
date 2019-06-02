@@ -12,20 +12,20 @@ use amethyst_derive::PrefabData;
 use amethyst_error::Error;
 use amethyst_rendy::skinning::JointTransformsPrefab;
 
-/// Joint, attach to an entity with a `Transform`
+/// Joint, attach to an entity with a `TransformComponent`
 #[derive(Debug, Clone)]
-pub struct Joint {
+pub struct JointComponent {
     /// The skins attached to this joint.
     pub skins: Vec<Entity>,
 }
 
-impl Component for Joint {
+impl Component for JointComponent {
     type Storage = DenseVecStorage<Self>;
 }
 
 /// Skin, attach to the root entity in the mesh hierarchy
 #[derive(Debug)]
-pub struct Skin {
+pub struct SkinComponent {
     /// Joint entities for the skin
     pub joints: Vec<Entity>,
     /// Mesh entities that use the skin
@@ -38,7 +38,7 @@ pub struct Skin {
     pub joint_matrices: Vec<Matrix4<Float>>,
 }
 
-impl Skin {
+impl SkinComponent {
     /// Creates a new `Skin`
     pub fn new(
         joints: Vec<Entity>,
@@ -46,7 +46,7 @@ impl Skin {
         inverse_bind_matrices: Vec<Matrix4<Float>>,
     ) -> Self {
         let len = joints.len();
-        Skin {
+        SkinComponent {
             joints,
             meshes,
             inverse_bind_matrices,
@@ -56,7 +56,7 @@ impl Skin {
     }
 }
 
-impl Component for Skin {
+impl Component for SkinComponent {
     type Storage = DenseVecStorage<Self>;
 }
 
@@ -68,7 +68,7 @@ pub struct JointPrefab {
 }
 
 impl<'a> PrefabData<'a> for JointPrefab {
-    type SystemData = WriteStorage<'a, Joint>;
+    type SystemData = WriteStorage<'a, JointComponent>;
     type Result = ();
 
     fn add_to_entity(
@@ -81,7 +81,7 @@ impl<'a> PrefabData<'a> for JointPrefab {
         storage
             .insert(
                 entity,
-                Joint {
+                JointComponent {
                     skins: self.skins.iter().map(|i| entities[*i]).collect(),
                 },
             )
@@ -105,7 +105,7 @@ pub struct SkinPrefab {
 }
 
 impl<'a> PrefabData<'a> for SkinPrefab {
-    type SystemData = WriteStorage<'a, Skin>;
+    type SystemData = WriteStorage<'a, SkinComponent>;
     type Result = ();
 
     fn add_to_entity(
@@ -118,7 +118,7 @@ impl<'a> PrefabData<'a> for SkinPrefab {
         storage
             .insert(
                 entity,
-                Skin {
+                SkinComponent {
                     joints: self.joints.iter().map(|index| entities[*index]).collect(),
                     meshes: self
                         .meshes
@@ -144,6 +144,6 @@ pub struct SkinnablePrefab {
     pub skin: Option<SkinPrefab>,
     /// Place `Joint` on the `Entity`
     pub joint: Option<JointPrefab>,
-    /// Place `JointTransforms` on the `Entity`
+    /// Place `JointTransformsComponent` on the `Entity`
     pub joint_transforms: Option<JointTransformsPrefab>,
 }

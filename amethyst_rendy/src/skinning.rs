@@ -67,20 +67,20 @@ impl AsVertex for JointCombined {
     }
 }
 
-/// Transform storage for the skin, should be attached to all mesh entities that use a skin
+/// TransformComponent storage for the skin, should be attached to all mesh entities that use a skin
 #[derive(Debug, Clone)]
-pub struct JointTransforms {
+pub struct JointTransformsComponent {
     /// Skin entity
     pub skin: Entity,
     /// The current joint matrices
     pub matrices: Vec<Matrix4<f32>>,
 }
 
-impl Component for JointTransforms {
+impl Component for JointTransformsComponent {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
 
-/// Prefab for `JointTransforms`
+/// Prefab for `JointTransformsComponent`
 #[derive(Default, Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct JointTransformsPrefab {
     /// Index of skin `Entity`
@@ -97,7 +97,7 @@ impl JointTransformsPrefab {
 }
 
 impl<'a> PrefabData<'a> for JointTransformsPrefab {
-    type SystemData = WriteStorage<'a, JointTransforms>;
+    type SystemData = WriteStorage<'a, JointTransformsComponent>;
     type Result = ();
 
     fn add_to_entity(
@@ -109,7 +109,7 @@ impl<'a> PrefabData<'a> for JointTransformsPrefab {
     ) -> StdResult<(), Error> {
         storage.insert(
             entity,
-            JointTransforms {
+            JointTransformsComponent {
                 skin: entities[self.skin],
                 matrices: vec![Matrix4::identity(); self.size],
             },

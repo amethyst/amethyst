@@ -1,12 +1,12 @@
 use amethyst::{
     assets::{AssetStorage, Loader},
-    core::transform::Transform,
+    core::transform::TransformComponent,
     ecs::prelude::{Component, DenseVecStorage},
     prelude::*,
     renderer::{
-        camera::{Camera, Projection},
+        camera::{CameraComponent, Projection},
         formats::texture::ImageFormat,
-        sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
+        sprite::{SpriteRenderComponent, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
         Texture,
     },
 };
@@ -44,15 +44,15 @@ pub enum Side {
     Right,
 }
 
-pub struct Paddle {
+pub struct PaddleComponent {
     pub side: Side,
     pub width: f32,
     pub height: f32,
 }
 
-impl Paddle {
-    fn new(side: Side) -> Paddle {
-        Paddle {
+impl PaddleComponent {
+    fn new(side: Side) -> PaddleComponent {
+        PaddleComponent {
             side: side,
             width: PADDLE_WIDTH,
             height: PADDLE_HEIGHT,
@@ -60,16 +60,16 @@ impl Paddle {
     }
 }
 
-impl Component for Paddle {
+impl Component for PaddleComponent {
     type Storage = DenseVecStorage<Self>;
 }
 
-pub struct Ball {
+pub struct BallComponent {
     pub velocity: [f32; 2],
     pub radius: f32,
 }
 
-impl Component for Ball {
+impl Component for BallComponent {
     type Storage = DenseVecStorage<Self>;
 }
 
@@ -102,14 +102,14 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
 
 /// Initialise the camera.
 fn initialise_camera(world: &mut World) {
-    let mut transform = Transform::default();
+    let mut transform = TransformComponent::default();
     transform.set_translation_xyz(0.0, 0.0, 1.0);
 
     world
         .create_entity()
         // A default camera can be created with standard_2d, but we instead create a camera
         // which is centered on our gameplay area (ARENA)
-        .with(Camera::from(Projection::orthographic(
+        .with(CameraComponent::from(Projection::orthographic(
             0.0,
             ARENA_WIDTH,
             0.0,
@@ -123,8 +123,8 @@ fn initialise_camera(world: &mut World) {
 
 /// Initialises one paddle on the left, and one paddle on the right.
 fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
-    let mut left_transform = Transform::default();
-    let mut right_transform = Transform::default();
+    let mut left_transform = TransformComponent::default();
+    let mut right_transform = TransformComponent::default();
 
     // Correctly position the paddles.
     let y = ARENA_HEIGHT / 2.0;
@@ -132,7 +132,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
     right_transform.set_translation_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 
     // Assign the sprites for the paddles
-    let sprite_render = SpriteRender {
+    let sprite_render = SpriteRenderComponent {
         sprite_sheet: sprite_sheet_handle.clone(),
         sprite_number: 0, // paddle is the first sprite in the sprite_sheet
     };
@@ -141,7 +141,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
     world
         .create_entity()
         .with(sprite_render.clone())
-        .with(Paddle::new(Side::Left))
+        .with(PaddleComponent::new(Side::Left))
         .with(left_transform)
         .build();
 
@@ -149,7 +149,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
     world
         .create_entity()
         .with(sprite_render.clone())
-        .with(Paddle::new(Side::Right))
+        .with(PaddleComponent::new(Side::Right))
         .with(right_transform)
         .build();
 }
@@ -157,11 +157,11 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
 /// Initialises one ball in the middle-ish of the arena.
 fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
     // Create the translation.
-    let mut local_transform = Transform::default();
+    let mut local_transform = TransformComponent::default();
     local_transform.set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 
     // Assign the sprite for the ball
-    let sprite_render = SpriteRender {
+    let sprite_render = SpriteRenderComponent {
         sprite_sheet: sprite_sheet_handle,
         sprite_number: 1, // ball is the second sprite on the sprite_sheet
     };
@@ -169,7 +169,7 @@ fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
     world
         .create_entity()
         .with(sprite_render)
-        .with(Ball {
+        .with(BallComponent {
             radius: BALL_RADIUS,
             velocity: [BALL_VELOCITY_X, BALL_VELOCITY_Y],
         })

@@ -3,10 +3,10 @@ use crate::{
     mtl::{FullTextureSet, Material, StaticTextureSet},
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
     pod::{SkinnedVertexArgs, VertexArgs},
-    resources::Tint,
-    skinning::JointTransforms,
+    resources::TintComponent,
+    skinning::JointTransformsComponent,
     submodules::{DynamicVertexBuffer, EnvironmentSub, MaterialId, MaterialSub, SkinningSub},
-    transparent::Transparent,
+    transparent::TransparentComponent,
     types::{Backend, Mesh},
     util,
     visibility::Visibility,
@@ -14,8 +14,8 @@ use crate::{
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     ecs::{Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
-    transform::Transform,
-    Hidden, HiddenPropagate,
+    transform::TransformComponent,
+    HiddenComponent, HiddenPropagateComponent,
 };
 use derivative::Derivative;
 use rendy::{
@@ -182,14 +182,14 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3D<B
         ) = <(
             Read<AssetStorage<Mesh>>,
             Option<Read<Visibility>>,
-            ReadStorage<Transparent>,
-            ReadStorage<Hidden>,
-            ReadStorage<HiddenPropagate>,
+            ReadStorage<TransparentComponent>,
+            ReadStorage<HiddenComponent>,
+            ReadStorage<HiddenPropagateComponent>,
             ReadStorage<Handle<Mesh>>,
             ReadStorage<Handle<Material>>,
-            ReadStorage<Transform>,
-            ReadStorage<JointTransforms>,
-            ReadStorage<Tint>,
+            ReadStorage<TransformComponent>,
+            ReadStorage<JointTransformsComponent>,
+            ReadStorage<TintComponent>,
         )>::fetch(resources);
 
         // Prepare environment
@@ -532,9 +532,9 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3DTr
                 ReadExpect<Visibility>,
                 ReadStorage<Handle<Mesh>>,
                 ReadStorage<Handle<Material>>,
-                ReadStorage<Transform>,
-                ReadStorage<JointTransforms>,
-                ReadStorage<Tint>,
+                ReadStorage<TransformComponent>,
+                ReadStorage<JointTransformsComponent>,
+                ReadStorage<TintComponent>,
             )>::fetch(resources);
 
         // Prepare environment

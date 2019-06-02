@@ -82,7 +82,7 @@ use crate::config::ArenaConfig;
 type SystemData = (
     WriteStorage<'s, Ball>,
     ReadStorage<'s, Paddle>,
-    ReadStorage<'s, Transform>,
+    ReadStorage<'s, TransformComponent>,
     Read<'s, AssetStorage<Source>>,
     ReadExpect<'s, Sounds>,
     Read<'s, Option<Output>>,

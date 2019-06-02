@@ -4,7 +4,7 @@
 
 pub use self::{
     bundles::{ArcBallControlBundle, FlyControlBundle},
-    components::{ArcBallControlTag, ControlTagPrefab, FlyControlTag},
+    components::{ArcBallControlTagComponent, ControlTagPrefab, FlyControlTagComponent},
     resources::{HideCursor, WindowFocus},
     systems::{
         ArcBallRotationSystem, CursorHideSystem, FlyMovementSystem, FreeRotationSystem,

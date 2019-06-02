@@ -1,6 +1,6 @@
 //! `amethyst` audio ecs components
 
-pub use self::{audio_emitter::AudioEmitter, audio_listener::AudioListener};
+pub use self::{audio_emitter::AudioEmitterComponent, audio_listener::AudioListenerComponent};
 
 use amethyst_assets::PrefabData;
 use amethyst_core::{
@@ -19,7 +19,7 @@ mod audio_listener;
 
 /// `PrefabData` for loading audio components
 ///
-/// For `AudioListener`, the currently registered `Output` in the `World` will be used.
+/// For `AudioListenerComponent`, the currently registered `Output` in the `World` will be used.
 #[derive(Clone, Default, Deserialize, Serialize)]
 pub struct AudioPrefab {
     emitter: bool,
@@ -29,8 +29,8 @@ pub struct AudioPrefab {
 
 impl<'a> PrefabData<'a> for AudioPrefab {
     type SystemData = (
-        WriteStorage<'a, AudioEmitter>,
-        WriteStorage<'a, AudioListener>,
+        WriteStorage<'a, AudioEmitterComponent>,
+        WriteStorage<'a, AudioListenerComponent>,
         Option<Read<'a, Output>>,
     );
     type Result = ();
@@ -43,12 +43,14 @@ impl<'a> PrefabData<'a> for AudioPrefab {
         _: &[Entity],
     ) -> Result<(), Error> {
         if self.emitter {
-            system_data.0.insert(entity, AudioEmitter::default())?;
+            system_data
+                .0
+                .insert(entity, AudioEmitterComponent::default())?;
         }
         if let Some((left_ear, right_ear)) = self.listener {
             system_data.1.insert(
                 entity,
-                AudioListener {
+                AudioListenerComponent {
                     left_ear,
                     right_ear,
                 },

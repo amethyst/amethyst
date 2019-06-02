@@ -11,8 +11,8 @@ use serde::{Deserialize, Serialize};
 /// * Dynamically generating the string or loading it from a data file, in which case the name
 ///   would be a `String`.
 ///
-/// To support both of these cases smoothly, `Named` stores the name as [`Cow<'static, str>`].
-/// You can pass either a [`&'static str`][str] or a [`String`] to [`Named::new`], and your code
+/// To support both of these cases smoothly, `NamedComponent` stores the name as [`Cow<'static, str>`].
+/// You can pass either a [`&'static str`][str] or a [`String`] to [`NamedComponent::new`], and your code
 /// can generally treat the `name` field as a [`&str`][str] without needing to know whether the
 /// name is actually an owned or borrowed string.
 ///
@@ -20,18 +20,18 @@ use serde::{Deserialize, Serialize};
 /// [`Cow<'static, str>`]: https://doc.rust-lang.org/std/borrow/enum.Cow.html
 /// [`String`]: https://doc.rust-lang.org/std/string/struct.String.html
 /// [str]: https://doc.rust-lang.org/std/primitive.str.html
-/// [`Named::new`]: #method.new
+/// [`NamedComponent::new`]: #method.new
 ///
 /// # Examples
 ///
 /// Creating a name from string constant:
 ///
 /// ```
-/// use amethyst::core::{Named, WithNamed};
+/// use amethyst::core::{NamedComponent, WithNamed};
 /// use amethyst::ecs::prelude::*;
 ///
 /// let mut world = World::new();
-/// world.register::<Named>();
+/// world.register::<NamedComponent>();
 ///
 /// world
 ///     .create_entity()
@@ -42,11 +42,11 @@ use serde::{Deserialize, Serialize};
 /// Creating a name from a dynamically generated string:
 ///
 /// ```
-/// use amethyst::core::{Named, WithNamed};
+/// use amethyst::core::{NamedComponent, WithNamed};
 /// use amethyst::ecs::prelude::*;
 ///
 /// let mut world = World::new();
-/// world.register::<Named>();
+/// world.register::<NamedComponent>();
 ///
 /// for entity_num in 0..10 {
 ///     world
@@ -59,7 +59,7 @@ use serde::{Deserialize, Serialize};
 /// Accessing a named entity in a system:
 ///
 /// ```
-/// use amethyst::core::Named;
+/// use amethyst::core::NamedComponent;
 /// use amethyst::ecs::prelude::*;
 ///
 /// pub struct NameSystem;
@@ -67,7 +67,7 @@ use serde::{Deserialize, Serialize};
 /// impl<'s> System<'s> for NameSystem {
 ///     type SystemData = (
 ///         Entities<'s>,
-///         ReadStorage<'s, Named>,
+///         ReadStorage<'s, NamedComponent>,
 ///     );
 ///
 ///     fn run(&mut self, (entities, names): Self::SystemData) {
@@ -78,45 +78,45 @@ use serde::{Deserialize, Serialize};
 /// }
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Named {
+pub struct NamedComponent {
     /// The name of the entity this component is attached to.
     pub name: Cow<'static, str>,
 }
 
-impl Named {
-    /// Constructs a new `Named` from a string.
+impl NamedComponent {
+    /// Constructs a new `NamedComponent` from a string.
     ///
     /// # Examples
     ///
     /// From a string constant:
     ///
     /// ```
-    /// use amethyst::core::Named;
+    /// use amethyst::core::NamedComponent;
     ///
-    /// let name_component = Named::new("Super Cool Entity");
+    /// let name_component = NamedComponent::new("Super Cool Entity");
     /// ```
     ///
     /// From a dynamic string:
     ///
     /// ```
-    /// use amethyst::core::Named;
+    /// use amethyst::core::NamedComponent;
     ///
     /// let entity_num = 7;
-    /// let name_component = Named::new(format!("Entity Number {}", entity_num));
+    /// let name_component = NamedComponent::new(format!("Entity Number {}", entity_num));
     /// ```
     pub fn new<S>(name: S) -> Self
     where
         S: Into<Cow<'static, str>>,
     {
-        Named { name: name.into() }
+        NamedComponent { name: name.into() }
     }
 }
 
-impl Component for Named {
+impl Component for NamedComponent {
     type Storage = DenseVecStorage<Self>;
 }
 
-/// An easy way to name an `Entity` and give it a `Named` `Component`.
+/// An easy way to name an `Entity` and give it a `NamedComponent` `Component`.
 pub trait WithNamed
 where
     Self: Sized,
@@ -133,9 +133,9 @@ impl<'a> WithNamed for EntityBuilder<'a> {
         S: Into<Cow<'static, str>>,
     {
         self.world
-            .system_data::<(WriteStorage<'a, Named>,)>()
+            .system_data::<(WriteStorage<'a, NamedComponent>,)>()
             .0
-            .insert(self.entity, Named::new(name))
+            .insert(self.entity, NamedComponent::new(name))
             .expect("Unreachable: Entities should always be valid when just created");
         self
     }
@@ -146,7 +146,8 @@ impl<'a> WithNamed for LazyBuilder<'a> {
     where
         S: Into<Cow<'static, str>>,
     {
-        self.lazy.insert::<Named>(self.entity, Named::new(name));
+        self.lazy
+            .insert::<NamedComponent>(self.entity, NamedComponent::new(name));
         self
     }
 }

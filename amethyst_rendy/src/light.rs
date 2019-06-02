@@ -1,4 +1,4 @@
-//! Light sources.
+//! LightComponent sources.
 //!
 //! TODO: Remove redundant padding once `#[repr(align(...))]` stabilizes.
 
@@ -13,7 +13,7 @@ use amethyst_error::Error;
 /// A light source.
 #[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize, PrefabData)]
 #[prefab(Component)]
-pub enum Light {
+pub enum LightComponent {
     /// An area light.
     /// FIXME: Missing implementation!
     Area,
@@ -51,13 +51,13 @@ impl Default for DirectionalLight {
     }
 }
 
-impl From<DirectionalLight> for Light {
+impl From<DirectionalLight> for LightComponent {
     fn from(dir: DirectionalLight) -> Self {
-        Light::Directional(dir)
+        LightComponent::Directional(dir)
     }
 }
 
-/// A point light source. Uses the `Transform` set of components for positioning.
+/// A point light source. Uses the `TransformComponent` set of components for positioning.
 ///
 /// Lighting calculations are based off of the Frostbite engine's lighting,
 /// which is explained in detail here in [this presentation][fb]. Below is
@@ -104,9 +104,9 @@ impl Default for PointLight {
     }
 }
 
-impl From<PointLight> for Light {
+impl From<PointLight> for LightComponent {
     fn from(pt: PointLight) -> Self {
-        Light::Point(pt)
+        LightComponent::Point(pt)
     }
 }
 
@@ -144,9 +144,9 @@ impl Default for SpotLight {
     }
 }
 
-impl From<SpotLight> for Light {
+impl From<SpotLight> for LightComponent {
     fn from(sp: SpotLight) -> Self {
-        Light::Spot(sp)
+        LightComponent::Spot(sp)
     }
 }
 
@@ -177,13 +177,13 @@ impl Default for SunLight {
     }
 }
 
-impl From<SunLight> for Light {
+impl From<SunLight> for LightComponent {
     fn from(sun: SunLight) -> Self {
-        Light::Sun(sun)
+        LightComponent::Sun(sun)
     }
 }
 
-impl Component for Light {
+impl Component for LightComponent {
     type Storage = DenseVecStorage<Self>;
 }
 
@@ -191,6 +191,6 @@ impl Component for Light {
 #[derive(Default, Clone, serde::Serialize, serde::Deserialize, PrefabData)]
 #[serde(default)]
 pub struct LightPrefab {
-    light: Option<Light>,
+    light: Option<LightComponent>,
     ambient_color: Option<AmbientColor>,
 }

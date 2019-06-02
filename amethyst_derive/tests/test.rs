@@ -62,22 +62,22 @@ where
 }
 
 #[derive(Clone)]
-pub struct External {
+pub struct ExternalComponent {
     inner: u64,
 }
 
-impl Component for External {
+impl Component for ExternalComponent {
     type Storage = DenseVecStorage<Self>;
 }
 
 #[derive(PrefabData, Clone)]
 pub struct Outer {
     #[prefab(Component)]
-    external: External,
+    external: ExternalComponent,
 }
 
 #[derive(PrefabData, Clone)]
-pub struct OuterTuple(#[prefab(Component)] External);
+pub struct OuterTuple(#[prefab(Component)] ExternalComponent);
 
 #[derive(PrefabData, Clone)]
 pub enum EnumPrefab {
@@ -86,11 +86,11 @@ pub enum EnumPrefab {
     },
     Two {
         #[prefab(Component)]
-        component: External,
+        component: ExternalComponent,
     },
     Three {},
     Four,
-    Five(Stuff<String>, #[prefab(Component)] External),
+    Five(Stuff<String>, #[prefab(Component)] ExternalComponent),
 }
 
 #[cfg(test)]
@@ -129,11 +129,11 @@ mod tests {
         assert_prefab!(
             Outer,
             Outer {
-                external: External { inner: 100 }
+                external: ExternalComponent { inner: 100 }
             },
             |world| {
                 let entities = world.read_resource::<EntitiesRes>();
-                let storage = world.read_storage::<External>();
+                let storage = world.read_storage::<ExternalComponent>();
 
                 assert_eq!(
                     (&entities, &storage)
@@ -173,11 +173,11 @@ mod tests {
         assert_prefab!(
             EnumPrefab,
             EnumPrefab::Two {
-                component: External { inner: 2 }
+                component: ExternalComponent { inner: 2 }
             },
             |world| {
                 let entities = world.read_resource::<EntitiesRes>();
-                let storage = world.read_storage::<External>();
+                let storage = world.read_storage::<ExternalComponent>();
 
                 assert_eq!(
                     (&entities, &storage)
@@ -198,12 +198,12 @@ mod tests {
                 Stuff {
                     inner: "three".to_string()
                 },
-                External { inner: 4 }
+                ExternalComponent { inner: 4 }
             ),
             |world| {
                 let entities = world.read_resource::<EntitiesRes>();
                 let stuff_storage = world.read_storage::<Stuff<String>>();
-                let external_storage = world.read_storage::<External>();
+                let external_storage = world.read_storage::<ExternalComponent>();
 
                 assert_eq!(
                     (&entities, &stuff_storage, &external_storage)

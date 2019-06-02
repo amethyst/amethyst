@@ -3,11 +3,11 @@ use amethyst::{
     assets::AssetLoaderSystemData,
     core::{
         ecs::{Builder, ReadExpect, Resources, SystemData},
-        Transform, TransformBundle,
+        TransformBundle, TransformComponent,
     },
     renderer::{
-        camera::Camera,
-        light::{Light, PointLight},
+        camera::CameraComponent,
+        light::{LightComponent, PointLight},
         mtl::{Material, MaterialDefaults},
         palette::{LinSrgba, Srgb},
         pass::DrawPbrDesc,
@@ -64,7 +64,7 @@ impl SimpleState for Example {
                 let roughness = 1.0f32 * (i as f32 / 4.0f32);
                 let metallic = 1.0f32 * (j as f32 / 4.0f32);
 
-                let mut pos = Transform::default();
+                let mut pos = TransformComponent::default();
                 pos.set_translation_xyz(2.0f32 * (i - 2) as f32, 2.0f32 * (j - 2) as f32, 0.0);
 
                 let mtl = world.exec(
@@ -99,24 +99,24 @@ impl SimpleState for Example {
         }
 
         println!("Create lights");
-        let light1: Light = PointLight {
+        let light1: LightComponent = PointLight {
             intensity: 6.0,
             color: Srgb::new(0.8, 0.0, 0.0),
             ..PointLight::default()
         }
         .into();
 
-        let mut light1_transform = Transform::default();
+        let mut light1_transform = TransformComponent::default();
         light1_transform.set_translation_xyz(6.0, 6.0, -6.0);
 
-        let light2: Light = PointLight {
+        let light2: LightComponent = PointLight {
             intensity: 5.0,
             color: Srgb::new(0.0, 0.3, 0.7),
             ..PointLight::default()
         }
         .into();
 
-        let mut light2_transform = Transform::default();
+        let mut light2_transform = TransformComponent::default();
         light2_transform.set_translation_xyz(6.0, -6.0, -6.0);
 
         world
@@ -133,7 +133,7 @@ impl SimpleState for Example {
 
         println!("Put camera");
 
-        let mut transform = Transform::default();
+        let mut transform = TransformComponent::default();
         transform.set_translation_xyz(0.0, 0.0, -12.0);
         transform.prepend_rotation_y_axis(std::f32::consts::PI);
 
@@ -144,7 +144,7 @@ impl SimpleState for Example {
 
         world
             .create_entity()
-            .with(Camera::standard_3d(width, height))
+            .with(CameraComponent::standard_3d(width, height))
             .with(transform)
             .build();
     }

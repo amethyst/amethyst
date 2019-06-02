@@ -42,7 +42,7 @@ Then, we'll create `systems/winner.rs`:
 # }
 #
 use amethyst::{
-    core::transform::Transform,
+    core::transform::TransformComponent,
     ecs::prelude::{Join, System, WriteStorage},
 };
 
@@ -53,7 +53,7 @@ pub struct WinnerSystem;
 impl<'s> System<'s> for WinnerSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
-        WriteStorage<'s, Transform>,
+        WriteStorage<'s, TransformComponent>,
     );
 
     fn run(&mut self, (mut balls, mut locals): Self::SystemData) {
@@ -84,7 +84,7 @@ impl<'s> System<'s> for WinnerSystem {
 ```
 
 Here, we're creating a new system, joining on all `Entities` that have a `Ball`
-and a `Transform` component, and then checking each ball to see if it has
+and a `TransformComponent` component, and then checking each ball to see if it has
 reached either the left or right boundary of the arena. If so, we reverse
 its direction and put it back in the middle of the screen.
 
@@ -271,12 +271,12 @@ game. We'll start by creating some structures in `pong.rs`:
 #
 use amethyst::{
 #     assets::{AssetStorage, Loader},
-#     core::transform::Transform,
+#     core::transform::TransformComponent,
     // --snip--
     ecs::prelude::{Component, DenseVecStorage, Entity},
 #     prelude::*,
 #     renderer::{
-#         Camera, Flipped, PngFormat, Projection, SpriteRender,
+#         Camera, Flipped, PngFormat, Projection, SpriteRenderComponent,
 #         SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, Texture,
 #         TextureMetadata,
 #     },
@@ -389,7 +389,7 @@ pub struct ScoreText {
 # 
 # /// Initialise the camera.
 # fn initialise_camera(world: &mut World) {
-#     let mut transform = Transform::default();
+#     let mut transform = TransformComponent::default();
 #     transform.set_translation_z(1.0);
 #     world
 #         .create_entity()
@@ -404,8 +404,8 @@ pub struct ScoreText {
 # 
 # /// Initialises one paddle on the left, and one paddle on the right.
 # fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
-#     let mut left_transform = Transform::default();
-#     let mut right_transform = Transform::default();
+#     let mut left_transform = TransformComponent::default();
+#     let mut right_transform = TransformComponent::default();
 # 
 #     // Correctly position the paddles.
 #     let y = ARENA_HEIGHT / 2.0;
@@ -413,7 +413,7 @@ pub struct ScoreText {
 #     right_transform.set_translation_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 # 
 #     // Assign the sprites for the paddles
-#     let sprite_render = SpriteRender {
+#     let sprite_render = SpriteRenderComponent {
 #         sprite_sheet: sprite_sheet_handle.clone(),
 #         sprite_number: 0, // paddle is the first sprite in the sprite_sheet
 #     };
@@ -439,11 +439,11 @@ pub struct ScoreText {
 # /// Initialises one ball in the middle-ish of the arena.
 # fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
 #     // Create the translation.
-#     let mut local_transform = Transform::default();
+#     let mut local_transform = TransformComponent::default();
 #     local_transform.set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 # 
 #     // Assign the sprite for the ball
-#     let sprite_render = SpriteRender {
+#     let sprite_render = SpriteRenderComponent {
 #         sprite_sheet: sprite_sheet_handle,
 #         sprite_number: 1, // ball is the second sprite on the sprite sheet
 #     };
@@ -471,16 +471,16 @@ rendered to the screen. We'll create those next:
 #
 use amethyst::{
 #     assets::{AssetStorage, Loader},
-#     core::transform::Transform,
+#     core::transform::TransformComponent,
 #     ecs::prelude::{Component, DenseVecStorage, Entity},
     // --snip--
 #     prelude::*,
 #     renderer::{
-#         Camera, Flipped, PngFormat, Projection, SpriteRender,
+#         Camera, Flipped, PngFormat, Projection, SpriteRenderComponent,
 #         SpriteSheet, SpriteSheetFormat, SpriteSheetHandle, Texture,
 #         TextureMetadata,
 #     },
-    ui::{Anchor, TtfFormat, UiText, UiTransform},
+    ui::{Anchor, TtfFormat, UiTextComponent, UiTransformComponent},
 };
  
 # pub const ARENA_HEIGHT: f32 = 100.0;
@@ -591,7 +591,7 @@ impl SimpleState for Pong {
 # 
 # /// Initialise the camera.
 # fn initialise_camera(world: &mut World) {
-#     let mut transform = Transform::default();
+#     let mut transform = TransformComponent::default();
 #     transform.set_translation_z(1.0);
 #     world
 #         .create_entity()
@@ -606,8 +606,8 @@ impl SimpleState for Pong {
 # 
 # /// Initialises one paddle on the left, and one paddle on the right.
 # fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
-#     let mut left_transform = Transform::default();
-#     let mut right_transform = Transform::default();
+#     let mut left_transform = TransformComponent::default();
+#     let mut right_transform = TransformComponent::default();
 # 
 #     // Correctly position the paddles.
 #     let y = ARENA_HEIGHT / 2.0;
@@ -615,7 +615,7 @@ impl SimpleState for Pong {
 #     right_transform.set_translation_xyz(ARENA_WIDTH - PADDLE_WIDTH * 0.5, y, 0.0);
 # 
 #     // Assign the sprites for the paddles
-#     let sprite_render = SpriteRender {
+#     let sprite_render = SpriteRenderComponent {
 #         sprite_sheet: sprite_sheet_handle.clone(),
 #         sprite_number: 0, // paddle is the first sprite in the sprite_sheet
 #     };
@@ -641,11 +641,11 @@ impl SimpleState for Pong {
 # /// Initialises one ball in the middle-ish of the arena.
 # fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
 #     // Create the translation.
-#     let mut local_transform = Transform::default();
+#     let mut local_transform = TransformComponent::default();
 #     local_transform.set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
 # 
 #     // Assign the sprite for the ball
-#     let sprite_render = SpriteRender {
+#     let sprite_render = SpriteRenderComponent {
 #         sprite_sheet: sprite_sheet_handle,
 #         sprite_number: 1, // ball is the second sprite on the sprite sheet
 #     };
@@ -671,11 +671,11 @@ fn initialise_scoreboard(world: &mut World) {
         (),
         &world.read_resource(),
     );
-    let p1_transform = UiTransform::new(
+    let p1_transform = UiTransformComponent::new(
         "P1".to_string(), Anchor::TopMiddle, Anchor::TopMiddle,
         -50., -50., 1., 200., 50.,
     );
-    let p2_transform = UiTransform::new(
+    let p2_transform = UiTransformComponent::new(
         "P2".to_string(), Anchor::TopMiddle, Anchor::TopMiddle,
         50., -50., 1., 200., 50.,
     );
@@ -683,7 +683,7 @@ fn initialise_scoreboard(world: &mut World) {
     let p1_score = world
         .create_entity()
         .with(p1_transform)
-        .with(UiText::new(
+        .with(UiTextComponent::new(
             font.clone(),
             "0".to_string(),
             [1., 1., 1., 1.],
@@ -693,7 +693,7 @@ fn initialise_scoreboard(world: &mut World) {
     let p2_score = world
         .create_entity()
         .with(p2_transform)
-        .with(UiText::new(
+        .with(UiTextComponent::new(
             font.clone(),
             "0".to_string(),
             [1., 1., 1., 1.],
@@ -711,7 +711,7 @@ Inside `initialise_scoreboard`, we're first going to load up a font which we've
 saved to `font/square.ttf` ([download][font-download]) in the app root. We pull
 in the `TtfFormat` to match this font type, load the font as a resource in the
 world, and then save the handle to a `font` variable (which we'll use to create
-our `UiText` components).
+our `UiTextComponent` components).
 
 Next, we create a transform for each of our two scores by giving them a unique
 id (`P1` and `P2`), a UI `Anchor` at the top middle of our window, and then
@@ -719,7 +719,7 @@ adjust their global `x`, `y`, and `z` coordinates, `width`, `height`, and
 `tab-order`.
 
 After creating the `font` and `transform`s, we'll create an `Entity` in the
-world for each of our players' scores, with their `transform` and a `UiText`
+world for each of our players' scores, with their `transform` and a `UiTextComponent`
 component (with a `font` handle, initial `text`, `color`, and `font_size`).
 
 Finally, we initialize a `ScoreText` structure containing each of our UI
@@ -772,10 +772,10 @@ accordingly:
 # }
 #
 use amethyst::{
-#     core::transform::Transform,
+#     core::transform::TransformComponent,
     // --snip--
     ecs::prelude::{Join, ReadExpect, System, Write, WriteStorage},
-    ui::UiText,
+    ui::UiTextComponent,
 };
 
 use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH};
@@ -785,8 +785,8 @@ pub struct WinnerSystem;
 impl<'s> System<'s> for WinnerSystem {
     type SystemData = (
         WriteStorage<'s, Ball>,
-        WriteStorage<'s, Transform>,
-        WriteStorage<'s, UiText>,
+        WriteStorage<'s, TransformComponent>,
+        WriteStorage<'s, UiTextComponent>,
         Write<'s, ScoreBoard>,
         ReadExpect<'s, ScoreText>,
     );
@@ -844,10 +844,10 @@ impl<'s> System<'s> for WinnerSystem {
 ```
 
 We've added a fair few changes here, so let's go through them. First, we want to
-be able to read and write our scores, so we add the `UiText` storage, which
-holds all `UiText` components, to our `SystemData`. We'll want to select our
+be able to read and write our scores, so we add the `UiTextComponent` storage, which
+holds all `UiTextComponent` components, to our `SystemData`. We'll want to select our
 players' scores from that, so we also add the `ScoreText` structure which holds
-handles to the `UiText` components that we want. Finally, we add the
+handles to the `UiTextComponent` components that we want. Finally, we add the
 `ScoreBoard` resource so we can keep track of the actual score data.
 
 We're using `Write` here to pull in the `ScoreBoard` instead of with
@@ -866,11 +866,11 @@ resource for us automatically.
 
 Inside our `run` method (after updating the signature to match our `SystemData`
 changes), we replace the `println!` statements with code that will update our
-`UiText` components. We first update the score stored in `score_board` by
+`UiTextComponent` components. We first update the score stored in `score_board` by
 adding 1 to it and clamping it to not exceed `999` (mostly because we don't want
-our scores to overlap each other in the window). Then, we use the `UiText`
+our scores to overlap each other in the window). Then, we use the `UiTextComponent`
 `Entity` handle that we stored in our `ScoreText` resource to get a mutable
-reference to our `UiText` component. Lastly, we set the text of the `UiText`
+reference to our `UiTextComponent` component. Lastly, we set the text of the `UiTextComponent`
 component to the player's score, after converting it to a string.
 
 

@@ -22,7 +22,7 @@ use serde::{
 ///
 /// The transforms are preformed in this order: scale, then rotation, then translation.
 #[derive(Getters, Setters, MutGetters, Clone, Debug, PartialEq)]
-pub struct Transform {
+pub struct TransformComponent {
     /// Translation + rotation value
     #[get = "pub"]
     #[set = "pub"]
@@ -37,19 +37,19 @@ pub struct Transform {
     pub(crate) global_matrix: Matrix4<Float>,
 }
 
-impl Transform {
-    /// Create a new Transform.
+impl TransformComponent {
+    /// Create a new TransformComponent.
     ///
     /// # Examples
     ///
     /// ```rust
-    /// # use amethyst_core::transform::Transform;
+    /// # use amethyst_core::transform::TransformComponent;
     /// # use amethyst_core::math::{Isometry3, Translation3, UnitQuaternion, Vector3};
     /// let position = Translation3::new(0.0, 2.0, 4.0);
     /// let rotation = UnitQuaternion::from_euler_angles(0.4, 0.2, 0.0);
     /// let scale = Vector3::new(1.0, 1.0, 1.0);
     ///
-    /// let t = Transform::new(position, rotation, scale);
+    /// let t = TransformComponent::new(position, rotation, scale);
     ///
     /// assert_eq!(t.translation().y, 2.0.into());
     /// ```
@@ -58,7 +58,7 @@ impl Transform {
         rotation: UnitQuaternion<N>,
         scale: Vector3<N>,
     ) -> Self {
-        Transform {
+        TransformComponent {
             isometry: Isometry3::from_parts(na::convert(position), na::convert(rotation)),
             scale: na::convert(scale),
             global_matrix: na::one(),
@@ -82,9 +82,9 @@ impl Transform {
     /// # Examples
     ///
     /// ```rust
-    /// # use amethyst_core::transform::Transform;
+    /// # use amethyst_core::transform::TransformComponent;
     /// # use amethyst_core::math::{UnitQuaternion, Quaternion, Vector3};
-    /// let mut t = Transform::default();
+    /// let mut t = TransformComponent::default();
     /// // No rotation by default
     /// assert_eq!(*t.rotation().quaternion(), Quaternion::identity());
     /// // look up with up pointing backwards
@@ -485,8 +485,8 @@ impl Transform {
     /// rotation about the y axis, and 'yaw' will mean rotation about the z axis.
     ///
     /// ```
-    /// # use amethyst_core::transform::Transform;
-    /// let mut transform = Transform::default();
+    /// # use amethyst_core::transform::TransformComponent;
+    /// let mut transform = TransformComponent::default();
     ///
     /// transform.set_rotation_euler(1.0, 0.0, 0.0);
     ///
@@ -526,7 +526,7 @@ impl Transform {
     /// Concatenates another transform onto `self`.
     ///
     /// Concatenating is roughly equivalent to doing matrix multiplication except for the fact that
-    /// it's done on `Transform` which is decomposed.
+    /// it's done on `TransformComponent` which is decomposed.
     pub fn concat(&mut self, other: &Self) -> &mut Self {
         // The order of these is somewhat important as the translation relies on the rotation and
         // scaling not having been modified already.
@@ -546,7 +546,7 @@ impl Transform {
     }
     /// Calculates the inverse of this transform, which is in effect the 'view matrix' as
     /// commonly seen in computer graphics. This function computes the view matrix for ONLY
-    /// the local transformation, and ignores any `Parent`s of this entity.
+    /// the local transformation, and ignores any `ParentComponent`s of this entity.
     ///
     /// We can exploit the extra information we have to perform this inverse faster than `O(n^3)`.
     pub fn view_matrix(&self) -> Matrix4<Float> {
@@ -563,7 +563,7 @@ impl Transform {
 
     /// Calculates the inverse of this transform, which is in effect the 'view matrix' as
     /// commonly seen in computer graphics. This function computes the view matrix for the
-    /// global transformation of the entity, and so takes into account `Parent`s.
+    /// global transformation of the entity, and so takes into account `ParentComponent`s.
     ///
     /// We can exploit the extra information we have to perform this inverse faster than `O(n^3)`.
     pub fn global_view_matrix(&self) -> Matrix4<Float> {
@@ -587,10 +587,10 @@ impl Transform {
     }
 }
 
-impl Default for Transform {
+impl Default for TransformComponent {
     /// The default transform does nothing when used to transform an entity.
     fn default() -> Self {
-        Transform {
+        TransformComponent {
             isometry: Isometry3::identity(),
             scale: Vector3::from_element(1.0.into()),
             global_matrix: na::one(),
@@ -598,46 +598,46 @@ impl Default for Transform {
     }
 }
 
-impl Component for Transform {
+impl Component for TransformComponent {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
 
-/// Creates a Transform using the `Vector3` as the translation vector.
+/// Creates a TransformComponent using the `Vector3` as the translation vector.
 ///
 /// ```
-/// # use amethyst_core::{transform::Transform, Float};
+/// # use amethyst_core::{transform::TransformComponent, Float};
 /// # use amethyst_core::math::Vector3;
-/// let transform = Transform::from(Vector3::new(Float::from(100.0), Float::from(200.0), Float::from(300.0)));
+/// let transform = TransformComponent::from(Vector3::new(Float::from(100.0), Float::from(200.0), Float::from(300.0)));
 /// assert_eq!(transform.translation().x, 100.0.into());
 /// ```
-impl From<Vector3<Float>> for Transform {
+impl From<Vector3<Float>> for TransformComponent {
     fn from(translation: Vector3<Float>) -> Self {
-        Transform {
+        TransformComponent {
             isometry: Isometry3::new(translation.into(), na::zero()),
             ..Default::default()
         }
     }
 }
-/// Creates a Transform using the `Vector3<f64>` as the translation vector.
+/// Creates a TransformComponent using the `Vector3<f64>` as the translation vector.
 /// Provided for convinience when providing constants.
 /// ```
-/// # use amethyst_core::transform::Transform;
+/// # use amethyst_core::transform::TransformComponent;
 /// # use amethyst_core::math::Vector3;
-/// let transform = Transform::from(Vector3::new(100.0, 200.0, 300.0));
+/// let transform = TransformComponent::from(Vector3::new(100.0, 200.0, 300.0));
 /// assert_eq!(transform.translation().x, 100.0.into());
 ///
-impl From<Vector3<f64>> for Transform {
+impl From<Vector3<f64>> for TransformComponent {
     #[inline]
     fn from(translation: Vector3<f64>) -> Self {
-        Transform {
+        TransformComponent {
             isometry: Isometry3::new(na::convert(translation), na::zero()),
             ..Default::default()
         }
     }
 }
 
-impl<'de> Deserialize<'de> for Transform {
-    fn deserialize<D>(deserializer: D) -> Result<Transform, D::Error>
+impl<'de> Deserialize<'de> for TransformComponent {
+    fn deserialize<D>(deserializer: D) -> Result<TransformComponent, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -653,10 +653,10 @@ impl<'de> Deserialize<'de> for Transform {
         struct TransformVisitor {}
 
         impl<'de> Visitor<'de> for TransformVisitor {
-            type Value = Transform;
+            type Value = TransformComponent;
 
             fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-                formatter.write_str("struct Transform")
+                formatter.write_str("struct TransformComponent")
             }
 
             fn visit_seq<V>(self, mut seq: V) -> Result<Self::Value, V::Error>
@@ -684,7 +684,7 @@ impl<'de> Deserialize<'de> for Transform {
                 );
                 let scale = Vector3::new(scale[0].into(), scale[1].into(), scale[2].into());
 
-                Ok(Transform {
+                Ok(TransformComponent {
                     isometry,
                     scale,
                     ..Default::default()
@@ -737,7 +737,7 @@ impl<'de> Deserialize<'de> for Transform {
                 );
                 let scale = Vector3::new(scale[0], scale[1], scale[2]);
 
-                Ok(Transform {
+                Ok(TransformComponent {
                     isometry,
                     scale,
                     ..Default::default()
@@ -746,11 +746,11 @@ impl<'de> Deserialize<'de> for Transform {
         }
 
         const FIELDS: &'static [&'static str] = &["translation", "rotation", "scale"];
-        deserializer.deserialize_struct("Transform", FIELDS, TransformVisitor::default())
+        deserializer.deserialize_struct("TransformComponent", FIELDS, TransformVisitor::default())
     }
 }
 
-impl Serialize for Transform {
+impl Serialize for TransformComponent {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -782,14 +782,14 @@ mod tests {
     use crate::{
         approx::*,
         math::{UnitQuaternion, Vector3},
-        Transform,
+        TransformComponent,
     };
 
     /// Sanity test for concat operation
     #[test]
     fn test_mul() {
         // For the condition to hold both scales must be uniform
-        let mut first = Transform::default();
+        let mut first = TransformComponent::default();
         first.set_translation_xyz(20., 10., -3.);
         first.set_scale(Vector3::new(2.0, 2.0, 2.0));
         first.set_rotation(
@@ -800,7 +800,7 @@ mod tests {
             .unwrap(),
         );
 
-        let mut second = Transform::default();
+        let mut second = TransformComponent::default();
         second.set_translation_xyz(2., 1., -3.);
         second.set_scale(Vector3::new(1.0, 1.0, 1.0));
         second.set_rotation(
@@ -827,7 +827,7 @@ mod tests {
     /// Test correctness of the view matrix locally
     #[test]
     fn test_view_matrix() {
-        let mut transform = Transform::default();
+        let mut transform = TransformComponent::default();
         transform.set_translation_xyz(5.0, 70.1, 43.7);
         transform.set_scale(Vector3::new(1.0, 5.0, 8.9));
         transform.set_rotation(
@@ -847,7 +847,7 @@ mod tests {
     /// Test correctness of global view matrix vs. inverse matrix globally
     #[test]
     fn test_global_view_matrix() {
-        let mut transform = Transform::default();
+        let mut transform = TransformComponent::default();
         transform.set_translation_xyz(5.0, 70.1, 43.7);
         transform.set_scale(Vector3::new(1.0, 5.0, 8.9));
         transform.set_rotation(
@@ -866,7 +866,7 @@ mod tests {
 
     #[test]
     fn ser_deser() {
-        let mut transform = Transform::default();
+        let mut transform = TransformComponent::default();
         transform.set_translation_xyz(1.0, 2.0, 3.0);
         transform.set_scale(Vector3::new(4.0, 5.0, 6.0));
         transform.set_rotation(
@@ -878,20 +878,20 @@ mod tests {
         );
         let s: String =
             ron::ser::to_string_pretty(&transform, ron::ser::PrettyConfig::default()).unwrap();
-        let transform2: Transform = ron::de::from_str(&s).unwrap();
+        let transform2: TransformComponent = ron::de::from_str(&s).unwrap();
 
         assert_eq!(transform, transform2);
     }
 
     #[test]
     fn deser_seq_default_identity() {
-        let transform: Transform = ron::de::from_str("()").unwrap();
-        assert_eq!(transform, Transform::default());
+        let transform: TransformComponent = ron::de::from_str("()").unwrap();
+        assert_eq!(transform, TransformComponent::default());
     }
 
     #[test]
     fn is_finite() {
-        let mut transform = Transform::default();
+        let mut transform = TransformComponent::default();
         assert!(transform.is_finite());
 
         transform.global_matrix.fill_row(2, std::f32::NAN.into());

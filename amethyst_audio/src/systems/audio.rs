@@ -17,11 +17,11 @@ use amethyst_core::{
         Entities, Entity, Join, Read, ReadStorage, Resources, System, SystemData, WriteStorage,
     },
     math::convert,
-    transform::Transform,
+    transform::TransformComponent,
 };
 
 use crate::{
-    components::{AudioEmitter, AudioListener},
+    components::{AudioEmitterComponent, AudioListenerComponent},
     end_signal::EndSignalSource,
     output::Output,
 };
@@ -37,9 +37,9 @@ impl AudioSystem {
     }
 }
 
-/// Add this structure to world as a resource with ID 0 to select an entity whose AudioListener
+/// Add this structure to world as a resource with ID 0 to select an entity whose AudioListenerComponent
 /// component will be used.  If this resource isn't found then the system will arbitrarily select
-/// the first AudioListener it finds.
+/// the first AudioListenerComponent it finds.
 pub struct SelectedListener(pub Entity);
 
 impl<'a> System<'a> for AudioSystem {
@@ -47,9 +47,9 @@ impl<'a> System<'a> for AudioSystem {
         Option<Read<'a, Output>>,
         Option<Read<'a, SelectedListener>>,
         Entities<'a>,
-        ReadStorage<'a, Transform>,
-        ReadStorage<'a, AudioListener>,
-        WriteStorage<'a, AudioEmitter>,
+        ReadStorage<'a, TransformComponent>,
+        ReadStorage<'a, AudioListenerComponent>,
+        WriteStorage<'a, AudioEmitterComponent>,
     );
 
     fn run(

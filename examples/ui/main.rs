@@ -21,7 +21,7 @@ use amethyst::{
         GraphCreator, RenderingSystem,
     },
     shrev::{EventChannel, ReaderId},
-    ui::{DrawUiDesc, UiBundle, UiCreator, UiEvent, UiFinder, UiText},
+    ui::{DrawUiDesc, UiBundle, UiCreator, UiEvent, UiFinder, UiTextComponent},
     utils::{
         application_root_dir,
         fps_counter::{FPSCounter, FPSCounterBundle},
@@ -99,7 +99,7 @@ impl SimpleState for Example {
             });
         }
 
-        let mut ui_text = world.write_storage::<UiText>();
+        let mut ui_text = world.write_storage::<UiTextComponent>();
         {
             if let Some(fps_display) = self.fps_display.and_then(|entity| ui_text.get_mut(entity)) {
                 if world.read_resource::<Time>().frame_number() % 20 == 0 {

@@ -6,22 +6,22 @@ use amethyst_core::{
 
 /// An audio listener, add this component to the local player character.
 #[derive(Debug)]
-pub struct AudioListener {
+pub struct AudioListenerComponent {
     /// Position of the left ear relative to the global transform on this entity.
     pub left_ear: Point3<Float>,
     /// Position of the right ear relative to the global transform on this entity.
     pub right_ear: Point3<Float>,
 }
 
-impl Default for AudioListener {
+impl Default for AudioListenerComponent {
     fn default() -> Self {
-        AudioListener {
+        AudioListenerComponent {
             left_ear: Point3::new(-one::<Float>(), zero::<Float>(), zero::<Float>()),
             right_ear: Point3::new(one::<Float>(), zero::<Float>(), zero::<Float>()),
         }
     }
 }
 
-impl Component for AudioListener {
+impl Component for AudioListenerComponent {
     type Storage = HashMapStorage<Self>;
 }

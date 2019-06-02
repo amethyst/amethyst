@@ -46,9 +46,9 @@ impl<G: Send + Sync + 'static> Component for Selectable<G> {
 
 /// Component indicating that a Ui entity is currently selected.
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Selected;
+pub struct SelectedComponent;
 
-impl Component for Selected {
+impl Component for SelectedComponent {
     type Storage = DenseVecStorage<Self>;
 }
 
@@ -70,7 +70,7 @@ where
     type SystemData = (
         Read<'a, EventChannel<Event>>,
         Read<'a, CachedSelectionOrder>,
-        WriteStorage<'a, Selected>,
+        WriteStorage<'a, SelectedComponent>,
         Write<'a, EventChannel<UiEvent>>,
         Entities<'a>,
     );
@@ -141,14 +141,14 @@ where
                     };
 
                     selecteds
-                        .insert(target.1, Selected)
+                        .insert(target.1, SelectedComponent)
                         .expect("unreachable: We are inserting");
 
                     ui_events.single_write(UiEvent::new(UiEventType::Focus, target.1));
                 } else if let Some(lowest) = cached.cache.first() {
                     // If None, nothing was selected. Try to take lowest if it exists.
                     selecteds
-                        .insert(lowest.1, Selected)
+                        .insert(lowest.1, SelectedComponent)
                         .expect("unreachable: We are inserting");
 
                     ui_events.single_write(UiEvent::new(UiEventType::Focus, lowest.1));
@@ -179,7 +179,7 @@ where
     type SystemData = (
         Write<'a, EventChannel<UiEvent>>,
         Read<'a, CachedSelectionOrder>,
-        WriteStorage<'a, Selected>,
+        WriteStorage<'a, SelectedComponent>,
         ReadStorage<'a, Selectable<G>>,
         Read<'a, InputHandler<T>>,
         Entities<'a>,
@@ -252,7 +252,7 @@ where
                                         "unreachable: Range has to be inside of the cache range.",
                                     );
                                     selecteds
-                                        .insert(target_entity.1, Selected)
+                                        .insert(target_entity.1, SelectedComponent)
                                         .expect("unreachable: We are inserting");
 
                                     emitted.push(UiEvent::new(UiEventType::Focus, target_entity.1));
@@ -260,7 +260,7 @@ where
                             } else if ctrl || auto_multi_select {
                                 // Select adding single element
                                 selecteds
-                                    .insert(clicked, Selected)
+                                    .insert(clicked, SelectedComponent)
                                     .expect("unreachable: We are inserting");
 
                                 emitted.push(UiEvent::new(UiEventType::Focus, clicked));
@@ -268,7 +268,7 @@ where
                                 // Select replace, because we don't want to be adding elements.
                                 selecteds.clear();
                                 selecteds
-                                    .insert(clicked, Selected)
+                                    .insert(clicked, SelectedComponent)
                                     .expect("unreachable: We are inserting");
 
                                 emitted.push(UiEvent::new(UiEventType::Focus, clicked));
@@ -281,7 +281,7 @@ where
                             selecteds.clear();
 
                             selecteds
-                                .insert(clicked, Selected)
+                                .insert(clicked, SelectedComponent)
                                 .expect("unreachable: We are inserting");
 
                             emitted.push(UiEvent::new(UiEventType::Focus, clicked));
@@ -289,7 +289,7 @@ where
                     } else {
                         // Nothing was previously selected, let's just select single.
                         selecteds
-                            .insert(clicked, Selected)
+                            .insert(clicked, SelectedComponent)
                             .expect("unreachable: We are inserting");
 
                         emitted.push(UiEvent::new(UiEventType::Focus, clicked));

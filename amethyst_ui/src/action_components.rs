@@ -5,7 +5,7 @@ use amethyst_rendy::TextureHandle;
 /// When this component is added to a UI element with a `TextureHandle`
 /// it will change that image based on mouse interaction.
 /// Requires `MouseReactive`.
-pub struct OnUiActionImage {
+pub struct OnUiActionImageComponent {
     /// Default image
     pub(crate) normal_image: Option<UiImage>,
     /// Image used when the mouse hovers over this element
@@ -14,7 +14,7 @@ pub struct OnUiActionImage {
     pub(crate) press_image: Option<UiImage>,
 }
 
-impl OnUiActionImage {
+impl OnUiActionImageComponent {
     /// A constructor for this component
     pub fn new(
         normal_image: Option<UiImage>,
@@ -29,14 +29,14 @@ impl OnUiActionImage {
     }
 }
 
-impl Component for OnUiActionImage {
+impl Component for OnUiActionImageComponent {
     type Storage = DenseVecStorage<Self>;
 }
 
 /// When this component is added to a UI element
 /// it will play sounds based on mouse interaction.
 /// Requires `MouseReactive`.
-pub struct OnUiActionSound {
+pub struct OnUiActionSoundComponent {
     /// Sound made when this button is hovered over
     pub(crate) hover_sound: Option<SourceHandle>,
     /// Sound made when this button is pressed.
@@ -45,7 +45,7 @@ pub struct OnUiActionSound {
     pub(crate) release_sound: Option<SourceHandle>,
 }
 
-impl OnUiActionSound {
+impl OnUiActionSoundComponent {
     /// A constructor for this component
     pub fn new(
         hover_sound: Option<SourceHandle>,
@@ -60,6 +60,6 @@ impl OnUiActionSound {
     }
 }
 
-impl Component for OnUiActionSound {
+impl Component for OnUiActionSoundComponent {
     type Storage = DenseVecStorage<Self>;
 }

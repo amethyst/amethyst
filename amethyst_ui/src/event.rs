@@ -1,4 +1,4 @@
-use crate::transform::UiTransform;
+use crate::transform::UiTransformComponent;
 use amethyst_core::{
     ecs::{
         prelude::{
@@ -46,13 +46,13 @@ pub enum UiEventType {
         /// The entity on which the dragged object was dropped.
         dropped_on: Entity,
     },
-    /// When the value of a UiText element has been changed by user input.
+    /// When the value of a UiTextComponent element has been changed by user input.
     ValueChange,
-    /// When the value of a UiText element has been committed by user action.
+    /// When the value of a UiTextComponent element has been committed by user action.
     ValueCommit,
-    /// When an editable UiText element has gained focus.
+    /// When an editable UiTextComponent element has gained focus.
     Focus,
-    /// When an editable UiText element has lost focus.
+    /// When an editable UiTextComponent element has lost focus.
     Blur,
 }
 
@@ -79,16 +79,16 @@ impl TargetedEvent for UiEvent {
 }
 
 /// A component that tags an entity as reactive to ui events.
-/// Will only work if the entity has a UiTransform component attached to it.
+/// Will only work if the entity has a UiTransformComponent component attached to it.
 /// Without this, the ui element will not generate events.
 #[derive(Default, Serialize, Deserialize, Clone)]
-pub struct Interactable;
+pub struct InteractableComponent;
 
-impl Component for Interactable {
-    type Storage = NullStorage<Interactable>;
+impl Component for InteractableComponent {
+    type Storage = NullStorage<InteractableComponent>;
 }
 
-/// The system that generates events for `Interactable` enabled entities.
+/// The system that generates events for `InteractableComponent` enabled entities.
 /// The generic types A and B represent the A and B generic parameter of the InputHandler<A,B>.
 pub struct UiMouseSystem<T: BindingTypes> {
     was_down: bool,
@@ -112,8 +112,8 @@ impl<T: BindingTypes> UiMouseSystem<T> {
 impl<'a, T: BindingTypes> System<'a> for UiMouseSystem<T> {
     type SystemData = (
         Entities<'a>,
-        ReadStorage<'a, UiTransform>,
-        ReadStorage<'a, Interactable>,
+        ReadStorage<'a, UiTransformComponent>,
+        ReadStorage<'a, InteractableComponent>,
         Read<'a, InputHandler<T>>,
         ReadExpect<'a, ScreenDimensions>,
         Write<'a, EventChannel<UiEvent>>,
@@ -176,7 +176,13 @@ impl<'a, T: BindingTypes> System<'a> for UiMouseSystem<T> {
 /// on if `pos` is over the non-interactable one or not.
 pub fn targeted<'a, I>(pos: (f32, f32), transforms: I) -> Option<Entity>
 where
-    I: Iterator<Item = (Entity, &'a UiTransform, Option<&'a Interactable>)> + 'a,
+    I: Iterator<
+            Item = (
+                Entity,
+                &'a UiTransformComponent,
+                Option<&'a InteractableComponent>,
+            ),
+        > + 'a,
 {
     transforms
         .filter(|(_e, t, _m)| t.opaque && t.position_inside(pos.0, pos.1))

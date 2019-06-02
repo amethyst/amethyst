@@ -81,7 +81,7 @@
 //!     // Start with no bundles
 //!     AmethystApplication::blank();
 //!
-//!     // Start with the Transform, Input, and UI bundles
+//!     // Start with the TransformComponent, Input, and UI bundles
 //!     // The type parameters here are the Axis and Action types for the `InputBundle` and
 //!     // `UiBundle`.
 //!     AmethystApplication::ui_base::<amethyst::input::StringBindings>();

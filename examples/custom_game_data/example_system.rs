@@ -2,11 +2,11 @@ use super::DemoState;
 use amethyst::{
     core::{
         math::{UnitQuaternion, Vector3},
-        Float, Time, Transform,
+        Float, Time, TransformComponent,
     },
     ecs::prelude::{Entity, Join, Read, ReadStorage, System, WriteExpect, WriteStorage},
-    renderer::{camera::Camera, light::Light},
-    ui::{UiFinder, UiText},
+    renderer::{camera::CameraComponent, light::LightComponent},
+    ui::{UiFinder, UiTextComponent},
     utils::fps_counter::FPSCounter,
 };
 
@@ -17,12 +17,12 @@ pub struct ExampleSystem {
 
 impl<'a> System<'a> for ExampleSystem {
     type SystemData = (
-        WriteStorage<'a, Light>,
+        WriteStorage<'a, LightComponent>,
         Read<'a, Time>,
-        ReadStorage<'a, Camera>,
-        WriteStorage<'a, Transform>,
+        ReadStorage<'a, CameraComponent>,
+        WriteStorage<'a, TransformComponent>,
         WriteExpect<'a, DemoState>,
-        WriteStorage<'a, UiText>,
+        WriteStorage<'a, UiTextComponent>,
         Read<'a, FPSCounter>,
         UiFinder<'a>,
     );
@@ -52,7 +52,7 @@ impl<'a> System<'a> for ExampleSystem {
             (&mut lights, &mut transforms)
                 .join()
                 .filter_map(|(light, transform)| {
-                    if let Light::Point(ref mut point_light) = *light {
+                    if let LightComponent::Point(ref mut point_light) = *light {
                         Some((point_light, transform))
                     } else {
                         None

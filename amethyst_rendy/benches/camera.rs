@@ -1,5 +1,5 @@
 use amethyst_core::{
-    components::Transform,
+    components::TransformComponent,
     math::{convert, Matrix4, Translation3, UnitQuaternion},
 };
 
@@ -7,12 +7,12 @@ use criterion::{criterion_group, criterion_main, Criterion};
 
 // Our world-space is +Y Up, +X Right and -Z Away
 // Current render target is +Y Down, +X Right and +Z Away
-fn setup() -> Transform {
+fn setup() -> TransformComponent {
     // Setup common inputs for most of the tests.
     //
     // Sets up a test camera is positioned at (0,0,3) in world space.
     // A camera without rotation is pointing in the (0,0,-1) direction.
-    Transform::new(
+    TransformComponent::new(
         Translation3::new(0.0, 0.0, 3.0),
         // Apply _no_ rotation
         UnitQuaternion::identity(),

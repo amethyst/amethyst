@@ -10,7 +10,7 @@ use amethyst_assets::{
 use amethyst_audio::Source as Audio;
 use amethyst_core::{
     ecs::prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage},
-    HiddenPropagate,
+    HiddenPropagateComponent,
 };
 use amethyst_error::{format_err, Error, ResultExt};
 use amethyst_rendy::TexturePrefab;
@@ -18,12 +18,13 @@ use amethyst_rendy::TexturePrefab;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    get_default_font, Anchor, FontAsset, Interactable, LineMode, Selectable, Stretch, TextEditing,
-    UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionType, UiImage,
-    UiPlaySoundAction, UiSoundRetrigger, UiText, UiTransform, WidgetId, Widgets,
+    get_default_font, Anchor, FontAsset, InteractableComponent, LineMode, Selectable, Stretch,
+    TextEditingComponent, UiButton, UiButtonAction, UiButtonActionRetriggerComponent,
+    UiButtonActionType, UiImageComponent, UiPlaySoundAction, UiSoundRetriggerComponent,
+    UiTextComponent, UiTransformComponent, WidgetId, Widgets,
 };
 
-/// Loadable `UiTransform` data.
+/// Loadable `UiTransformComponent` data.
 /// By default z is equal to one.
 #[derive(Debug, Clone, Deserialize, Serialize, Derivative)]
 #[serde(default)]
@@ -60,9 +61,9 @@ pub struct UiTransformBuilder<G> {
     pub pivot: Anchor,
     /// Allow mouse events on this UI element.
     pub mouse_reactive: bool,
-    /// Hides an entity by adding a [`HiddenPropagate`](../amethyst_renderer/struct.HiddenPropagate.html) component
+    /// Hides an entity by adding a [`HiddenPropagateComponent`](../amethyst_renderer/struct.HiddenPropagate.html) component
     pub hidden: bool,
-    /// Makes the UiTransform selectable through keyboard inputs, mouse inputs and other means.
+    /// Makes the UiTransformComponent selectable through keyboard inputs, mouse inputs and other means.
     /// # Ordering
     /// The UI element tab order.  When the player presses tab the UI focus will shift to the
     /// UI element with the next highest tab order, or if another element with the same tab_order
@@ -105,7 +106,7 @@ impl<G> UiTransformBuilder<G> {
         self
     }
 
-    /// Hides an entity by adding a [`HiddenPropagate`](../amethyst_renderer/struct.HiddenPropagate.html) component
+    /// Hides an entity by adding a [`HiddenPropagateComponent`](../amethyst_renderer/struct.HiddenPropagate.html) component
     pub fn hide(mut self) -> Self {
         self.hidden = true;
         self
@@ -135,9 +136,9 @@ where
     G: Send + Sync + 'static,
 {
     type SystemData = (
-        WriteStorage<'a, UiTransform>,
-        WriteStorage<'a, Interactable>,
-        WriteStorage<'a, HiddenPropagate>,
+        WriteStorage<'a, UiTransformComponent>,
+        WriteStorage<'a, InteractableComponent>,
+        WriteStorage<'a, HiddenPropagateComponent>,
         WriteStorage<'a, Selectable<G>>,
     );
     type Result = ();
@@ -149,7 +150,7 @@ where
         _: &[Entity],
         _: &[Entity],
     ) -> Result<(), Error> {
-        let mut transform = UiTransform::new(
+        let mut transform = UiTransformComponent::new(
             self.id.clone(),
             self.anchor.clone(),
             self.pivot.clone(),
@@ -170,11 +171,11 @@ where
         }
         system_data.0.insert(entity, transform)?;
         if self.mouse_reactive {
-            system_data.1.insert(entity, Interactable)?;
+            system_data.1.insert(entity, InteractableComponent)?;
         }
 
         if self.hidden {
-            system_data.2.insert(entity, HiddenPropagate)?;
+            system_data.2.insert(entity, HiddenPropagateComponent)?;
         }
 
         if let Some(u) = self.selectable {
@@ -185,7 +186,7 @@ where
     }
 }
 
-/// Loadable `UiText` data
+/// Loadable `UiTextComponent` data
 ///
 /// ### Type parameters:
 ///
@@ -204,7 +205,7 @@ pub struct UiTextBuilder {
     /// Should the text be shown as dots instead of the proper characters?
     #[serde(default)]
     pub password: bool,
-    /// Where should the text be aligned from. Relative to its own UiTransform's area.
+    /// Where should the text be aligned from. Relative to its own UiTransformComponent's area.
     pub align: Option<Anchor>,
     /// How should the text behave with line breaks.
     pub line_mode: Option<LineMode>,
@@ -240,8 +241,8 @@ impl Default for TextEditingPrefab {
 
 impl<'a> PrefabData<'a> for UiTextBuilder {
     type SystemData = (
-        WriteStorage<'a, UiText>,
-        WriteStorage<'a, TextEditing>,
+        WriteStorage<'a, UiTextComponent>,
+        WriteStorage<'a, TextEditingComponent>,
         <AssetPrefab<FontAsset> as PrefabData<'a>>::SystemData,
     );
     type Result = ();
@@ -259,7 +260,8 @@ impl<'a> PrefabData<'a> for UiTextBuilder {
             .as_ref()
             .ok_or_else(|| format_err!("did not load sub assets"))?
             .add_to_entity(entity, fonts, &[], &[])?;
-        let mut ui_text = UiText::new(font_handle, self.text.clone(), self.color, self.font_size);
+        let mut ui_text =
+            UiTextComponent::new(font_handle, self.text.clone(), self.color, self.font_size);
         ui_text.password = self.password;
 
         if let Some(ref align) = self.align {
@@ -274,7 +276,7 @@ impl<'a> PrefabData<'a> for UiTextBuilder {
         if let Some(ref editing) = self.editable {
             editables.insert(
                 entity,
-                TextEditing::new(
+                TextEditingComponent::new(
                     editing.max_length,
                     editing.selected_text_color,
                     editing.selected_background_color,
@@ -319,7 +321,7 @@ pub enum UiImageLoadPrefab {
 impl<'a> PrefabData<'a> for UiImagePrefab {
     type SystemData = (
         <UiImageLoadPrefab as PrefabData<'a>>::SystemData,
-        WriteStorage<'a, UiImage>,
+        WriteStorage<'a, UiImageComponent>,
     );
 
     type Result = ();
@@ -346,7 +348,7 @@ impl<'a> PrefabData<'a> for UiImagePrefab {
 
 impl<'a> PrefabData<'a> for UiImageLoadPrefab {
     type SystemData = (<TexturePrefab as PrefabData<'a>>::SystemData);
-    type Result = UiImage;
+    type Result = UiImageComponent;
 
     fn add_to_entity(
         &self,
@@ -354,12 +356,14 @@ impl<'a> PrefabData<'a> for UiImageLoadPrefab {
         textures: &mut Self::SystemData,
         entities: &[Entity],
         children: &[Entity],
-    ) -> Result<UiImage, Error> {
+    ) -> Result<UiImageComponent, Error> {
         let image = match self {
             UiImageLoadPrefab::Texture(tex) => {
-                UiImage::Texture(tex.add_to_entity(entity, textures, entities, children)?)
+                UiImageComponent::Texture(tex.add_to_entity(entity, textures, entities, children)?)
             }
-            UiImageLoadPrefab::SolidColor(r, g, b, a) => UiImage::SolidColor([*r, *g, *b, *a]),
+            UiImageLoadPrefab::SolidColor(r, g, b, a) => {
+                UiImageComponent::SolidColor([*r, *g, *b, *a])
+            }
         };
         Ok(image)
     }
@@ -419,8 +423,8 @@ where
     W: WidgetId,
 {
     type SystemData = (
-        WriteStorage<'a, UiSoundRetrigger>,
-        WriteStorage<'a, UiButtonActionRetrigger>,
+        WriteStorage<'a, UiSoundRetriggerComponent>,
+        WriteStorage<'a, UiButtonActionRetriggerComponent>,
         Write<'a, Widgets<UiButton, W>>,
         <UiImageLoadPrefab as PrefabData<'a>>::SystemData,
         <AssetPrefab<Audio> as PrefabData<'a>>::SystemData,
@@ -528,7 +532,7 @@ where
             || !on_hover_start.is_empty()
             || !on_hover_stop.is_empty()
         {
-            let retrigger = UiButtonActionRetrigger {
+            let retrigger = UiButtonActionRetriggerComponent {
                 on_click_start,
                 on_click_stop,
                 on_hover_start,
@@ -539,7 +543,7 @@ where
         }
 
         if hover_sound.is_some() || press_sound.is_some() || release_sound.is_some() {
-            let retrigger = UiSoundRetrigger {
+            let retrigger = UiSoundRetriggerComponent {
                 on_click_start: press_sound.map(UiPlaySoundAction),
                 on_click_stop: release_sound.map(UiPlaySoundAction),
                 on_hover_start: hover_sound.map(UiPlaySoundAction),

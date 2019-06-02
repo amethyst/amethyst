@@ -110,12 +110,12 @@ fn main() -> amethyst::Result<()> {
     Ok(())
 }
 
-pub struct Ball {
+pub struct BallComponent {
     pub velocity: [f32; 2],
     pub radius: f32,
 }
 
-impl Component for Ball {
+impl Component for BallComponent {
     type Storage = DenseVecStorage<Self>;
 }
 
@@ -125,16 +125,16 @@ pub enum Side {
     Right,
 }
 
-pub struct Paddle {
+pub struct PaddleComponent {
     pub velocity: f32,
     pub side: Side,
     pub width: f32,
     pub height: f32,
 }
 
-impl Paddle {
-    pub fn new(side: Side) -> Paddle {
-        Paddle {
+impl PaddleComponent {
+    pub fn new(side: Side) -> PaddleComponent {
+        PaddleComponent {
             velocity: 1.0,
             side: side,
             width: 1.0,
@@ -143,7 +143,7 @@ impl Paddle {
     }
 }
 
-impl Component for Paddle {
+impl Component for PaddleComponent {
     type Storage = DenseVecStorage<Self>;
 }
 

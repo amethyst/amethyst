@@ -69,13 +69,13 @@ Sometimes, it can be useful to get a component in the storage for a specific ent
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::{Entity, System, WriteStorage};
-# use amethyst::core::Transform;
+# use amethyst::core::TransformComponent;
 struct WalkPlayerUp {
     player: Entity,
 }
 
 impl<'a> System<'a> for WalkPlayerUp {
-    type SystemData = WriteStorage<'a, Transform>;
+    type SystemData = WriteStorage<'a, TransformComponent>;
 
     fn run(&mut self, mut transforms: Self::SystemData) {
         transforms.get_mut(self.player).unwrap().prepend_translation_y(0.1);
@@ -83,7 +83,7 @@ impl<'a> System<'a> for WalkPlayerUp {
 }
 ```
 
-This system makes the player go up by 0.1 unit every iteration of the game loop! To identify what entity the player is, we stored it beforehand in the system's struct. Then, we get its `Transform` from the transform storage, and move it along the Y axis by 0.1.
+This system makes the player go up by 0.1 unit every iteration of the game loop! To identify what entity the player is, we stored it beforehand in the system's struct. Then, we get its `TransformComponent` from the transform storage, and move it along the Y axis by 0.1.
 
 > A transform is a very common structure in game development. It represents the position, rotation and scale of an object in the game world. You will use them a lot, as they are what you need to change when you want to move something around in your game.
 
@@ -105,7 +105,7 @@ Keep in mind that **the `join` method is only available by importing `amethyst::
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::{System, ReadStorage, WriteStorage};
-# use amethyst::core::{Float, Transform};
+# use amethyst::core::{Float, TransformComponent};
 # struct FallingObject;
 # impl amethyst::ecs::Component for FallingObject {
 #   type Storage = amethyst::ecs::DenseVecStorage<FallingObject>;
@@ -116,7 +116,7 @@ struct MakeObjectsFall;
 
 impl<'a> System<'a> for MakeObjectsFall {
     type SystemData = (
-        WriteStorage<'a, Transform>,
+        WriteStorage<'a, TransformComponent>,
         ReadStorage<'a, FallingObject>,
     );
 
@@ -130,7 +130,7 @@ impl<'a> System<'a> for MakeObjectsFall {
 }
 ```
 
-This system will make all entities with both a `Transform` with a positive y coordinate and a `FallingObject` tag component fall by 0.1 unit per game loop iteration. Note that as the `FallingObject` is only here as a tag to restrict the joining operation, we immediately discard it using the `_` syntax.
+This system will make all entities with both a `TransformComponent` with a positive y coordinate and a `FallingObject` tag component fall by 0.1 unit per game loop iteration. Note that as the `FallingObject` is only here as a tag to restrict the joining operation, we immediately discard it using the `_` syntax.
 
 Cool! Now that looks like something we'll actually do in our games!
 
@@ -143,7 +143,7 @@ It is used like this:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::{System, ReadStorage, WriteStorage};
-# use amethyst::core::Transform;
+# use amethyst::core::TransformComponent;
 # struct FallingObject;
 # impl amethyst::ecs::Component for FallingObject {
 #   type Storage = amethyst::ecs::DenseVecStorage<FallingObject>;
@@ -154,7 +154,7 @@ struct NotFallingObjects;
 
 impl<'a> System<'a> for NotFallingObjects {
     type SystemData = (
-        WriteStorage<'a, Transform>,
+        WriteStorage<'a, TransformComponent>,
         ReadStorage<'a, FallingObject>,
     );
 
@@ -180,7 +180,7 @@ Creating an entity while in the context of a system is very similar to the way o
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::{System, WriteStorage, Entities};
-# use amethyst::core::Transform;
+# use amethyst::core::TransformComponent;
 # struct Enemy;
 # impl amethyst::ecs::Component for Enemy {
 #   type Storage = amethyst::ecs::VecStorage<Enemy>;
@@ -191,7 +191,7 @@ struct SpawnEnemies {
 
 impl<'a> System<'a> for SpawnEnemies {
     type SystemData = (
-        WriteStorage<'a, Transform>,
+        WriteStorage<'a, TransformComponent>,
         WriteStorage<'a, Enemy>,
         Entities<'a>,
     );
@@ -200,7 +200,7 @@ impl<'a> System<'a> for SpawnEnemies {
         self.counter += 1;
         if self.counter > 200 {
             entities.build_entity()
-                .with(Transform::default(), &mut transforms)
+                .with(TransformComponent::default(), &mut transforms)
                 .with(Enemy, &mut enemies)
                 .build();
             self.counter = 0;
@@ -234,7 +234,7 @@ Sometimes, when you iterate over components, you may want to also know what enti
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::{Join, System, Entities, WriteStorage, ReadStorage};
-# use amethyst::core::Transform;
+# use amethyst::core::TransformComponent;
 # struct FallingObject;
 # impl amethyst::ecs::Component for FallingObject {
 #   type Storage = amethyst::ecs::VecStorage<FallingObject>;
@@ -244,7 +244,7 @@ struct MakeObjectsFall;
 impl<'a> System<'a> for MakeObjectsFall {
     type SystemData = (
         Entities<'a>,
-        WriteStorage<'a, Transform>,
+        WriteStorage<'a, TransformComponent>,
         ReadStorage<'a, FallingObject>,
     );
 

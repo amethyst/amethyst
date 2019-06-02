@@ -17,7 +17,7 @@ Prefab (
         ),
         (
             data: ( 
-                transform: Transform (
+                transform: TransformComponent (
                     translation: (5.0, -20.0, 15.0),
                 ),
                 light: (
@@ -31,7 +31,7 @@ Prefab (
         ),
         (
             data: (
-                transform: Transform (
+                transform: TransformComponent (
                     translation: (0.0, -20.0, 10.0),
                     rotation: (0.6153864, 0.0, 0.0, 0.7882256),
                 ),

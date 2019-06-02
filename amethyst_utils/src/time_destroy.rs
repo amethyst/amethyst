@@ -10,25 +10,25 @@ use serde::{Deserialize, Serialize};
 
 /// Destroys the entity to which this is attached at the specified time (in seconds).
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DestroyAtTime {
+pub struct DestroyAtTimeComponent {
     /// The time at which the entity should be destroyed in seconds.
     /// Compared to `Time::absolute_time_seconds`.
     pub time: f64,
 }
 
-impl Component for DestroyAtTime {
+impl Component for DestroyAtTimeComponent {
     type Storage = DenseVecStorage<Self>;
 }
 
 /// Destroys the entity to which this is attached after the specified time interval (in seconds).
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DestroyInTime {
+pub struct DestroyInTimeComponent {
     /// The amount of time before the entity should be destroyed in seconds.
     /// Compared to `Time::absolute_time_seconds`.
     pub timer: f64,
 }
 
-impl Component for DestroyInTime {
+impl Component for DestroyInTimeComponent {
     type Storage = DenseVecStorage<Self>;
 }
 
@@ -36,7 +36,11 @@ impl Component for DestroyInTime {
 pub struct DestroyAtTimeSystem;
 
 impl<'a> System<'a> for DestroyAtTimeSystem {
-    type SystemData = (Entities<'a>, ReadStorage<'a, DestroyAtTime>, Read<'a, Time>);
+    type SystemData = (
+        Entities<'a>,
+        ReadStorage<'a, DestroyAtTimeComponent>,
+        Read<'a, Time>,
+    );
     fn run(&mut self, (entities, dat, time): Self::SystemData) {
         for (e, d) in (&entities, &dat).join() {
             if time.absolute_time_seconds() > d.time {
@@ -54,7 +58,7 @@ pub struct DestroyInTimeSystem;
 impl<'a> System<'a> for DestroyInTimeSystem {
     type SystemData = (
         Entities<'a>,
-        WriteStorage<'a, DestroyInTime>,
+        WriteStorage<'a, DestroyInTimeComponent>,
         Read<'a, Time>,
     );
     fn run(&mut self, (entities, mut dit, time): Self::SystemData) {

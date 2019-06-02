@@ -8,7 +8,7 @@ use amethyst::{
         AnimationSetPrefab, EndControl,
     },
     assets::{PrefabData, PrefabLoader, PrefabLoaderSystem, Processor, ProgressCounter, RonFormat},
-    core::transform::{Transform, TransformBundle},
+    core::transform::{TransformBundle, TransformComponent},
     derive::PrefabData,
     ecs::{
         prelude::Entity, Entities, Join, ReadExpect, ReadStorage, Resources, SystemData,
@@ -17,7 +17,7 @@ use amethyst::{
     error::Error,
     prelude::{Builder, World},
     renderer::{
-        camera::Camera,
+        camera::CameraComponent,
         pass::DrawFlat2DDesc,
         rendy::{
             factory::Factory,
@@ -27,7 +27,7 @@ use amethyst::{
             },
             hal::{format::Format, image},
         },
-        sprite::{prefab::SpriteScenePrefab, SpriteRender, SpriteSheet},
+        sprite::{prefab::SpriteScenePrefab, SpriteRenderComponent, SpriteSheet},
         types::DefaultBackend,
         GraphCreator, RenderingSystem,
     },
@@ -50,7 +50,7 @@ struct MyPrefabData {
     /// Information for rendering a scene with sprites
     sprite_scene: SpriteScenePrefab,
     /// Аll animations that can be run on the entity
-    animation_set: AnimationSetPrefab<AnimationId, SpriteRender>,
+    animation_set: AnimationSetPrefab<AnimationId, SpriteRenderComponent>,
 }
 
 /// The main state
@@ -98,8 +98,8 @@ impl SimpleState for Example {
                 world.exec(
                     |(entities, animation_sets, mut control_sets): (
                         Entities,
-                        ReadStorage<AnimationSet<AnimationId, SpriteRender>>,
-                        WriteStorage<AnimationControlSet<AnimationId, SpriteRender>>,
+                        ReadStorage<AnimationSet<AnimationId, SpriteRenderComponent>>,
+                        WriteStorage<AnimationControlSet<AnimationId, SpriteRenderComponent>>,
                     )| {
                         // For each entity that has AnimationSet
                         for (entity, animation_set) in (&entities, &animation_sets).join() {
@@ -131,13 +131,13 @@ fn initialise_camera(world: &mut World) {
     };
     //println!("Init camera with dimensions: {}x{}", width, height);
 
-    let mut camera_transform = Transform::default();
+    let mut camera_transform = TransformComponent::default();
     camera_transform.set_translation_z(1.0);
 
     world
         .create_entity()
         .with(camera_transform)
-        .with(Camera::standard_2d(width, height))
+        .with(CameraComponent::standard_2d(width, height))
         .build();
 }
 
@@ -156,7 +156,7 @@ fn main() -> amethyst::Result<()> {
             "scene_loader",
             &[],
         )
-        .with_bundle(AnimationBundle::<AnimationId, SpriteRender>::new(
+        .with_bundle(AnimationBundle::<AnimationId, SpriteRenderComponent>::new(
             "sprite_animation_control",
             "sprite_sampler_interpolation",
         ))?

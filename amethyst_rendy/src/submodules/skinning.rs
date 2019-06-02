@@ -6,7 +6,7 @@ use crate::{
         memory::Write as _,
         resource::{Buffer, DescriptorSet, DescriptorSetLayout, Escape, Handle as RendyHandle},
     },
-    skinning::JointTransforms,
+    skinning::JointTransformsComponent,
     types::Backend,
     util,
 };
@@ -56,7 +56,7 @@ impl<B: Backend> SkinningSub<B> {
         self.skin_offset_map.clear();
     }
 
-    pub fn insert(&mut self, joints: &JointTransforms) -> u32 {
+    pub fn insert(&mut self, joints: &JointTransformsComponent) -> u32 {
         #[cfg(feature = "profiler")]
         profile_scope!("insert");
 

@@ -7,7 +7,7 @@ The following snippet demonstrates how to set up a `Camera` that sees entities w
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 use amethyst::core::math::Orthographic3;
-use amethyst::core::transform::Transform;
+use amethyst::core::transform::TransformComponent;
 # use amethyst::prelude::*;
 use amethyst::renderer::{
     Camera, Projection, ScreenDimensions
@@ -33,7 +33,7 @@ impl ExampleState {
 
         // Translate the camera to Z coordinate 10.0, and it looks back toward
         // the origin with depth 20.0
-        let mut transform = Transform::default();
+        let mut transform = TransformComponent::default();
         transform.set_translation_xyz(0., 0., 10.);
 
         let camera = world

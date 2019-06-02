@@ -1,17 +1,17 @@
 //! Displays several lines with both methods.
 
 use amethyst::{
-    controls::{FlyControlBundle, FlyControlTag},
+    controls::{FlyControlBundle, FlyControlTagComponent},
     core::{
         math::{Point3, Vector3},
-        transform::{Transform, TransformBundle},
+        transform::{TransformBundle, TransformComponent},
         Time,
     },
     ecs::{Read, ReadExpect, Resources, System, SystemData, Write},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
-        camera::{Camera, Projection},
+        camera::{CameraComponent, Projection},
         debug_drawing::{DebugLines, DebugLinesComponent, DebugLinesParams},
         palette::{Srgb, Srgba},
         pass::{DrawDebugLinesDesc, DrawSkyboxDesc},
@@ -144,12 +144,12 @@ impl SimpleState for ExampleState {
             .build();
 
         // Setup camera
-        let mut local_transform = Transform::default();
+        let mut local_transform = TransformComponent::default();
         local_transform.set_translation_xyz(0.0, 0.5, 2.0);
         data.world
             .create_entity()
-            .with(FlyControlTag)
-            .with(Camera::from(Projection::perspective(
+            .with(FlyControlTagComponent)
+            .with(CameraComponent::from(Projection::perspective(
                 1.33333,
                 std::f32::consts::FRAC_PI_2,
                 0.1,

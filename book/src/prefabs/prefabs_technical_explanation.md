@@ -59,7 +59,7 @@ example, where we have a scene prefab, and the gltf loader (which use the prefab
 
 Ok, so what would a simple implementation of `PrefabData` look like?
 
-Let's take a look at the implementation for `Transform`, which is a core concept in Amethyst:
+Let's take a look at the implementation for `TransformComponent`, which is a core concept in Amethyst:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
@@ -69,13 +69,13 @@ Let's take a look at the implementation for `Transform`, which is a core concept
 #
 # // We declare that struct for the sake of automated testing.
 # #[derive(Default, Clone)]
-# struct Transform;
-# impl Component for Transform {
-#   type Storage = NullStorage<Transform>;
+# struct TransformComponent;
+# impl Component for TransformComponent {
+#   type Storage = NullStorage<TransformComponent>;
 # }
 #
-impl<'a> PrefabData<'a> for Transform {
-    type SystemData = WriteStorage<'a, Transform>;
+impl<'a> PrefabData<'a> for TransformComponent {
+    type SystemData = WriteStorage<'a, TransformComponent>;
     type Result = ();
 
     fn add_to_entity(
@@ -91,14 +91,14 @@ impl<'a> PrefabData<'a> for Transform {
 ```
 
 First, we specify a `SystemData` type, this is the data required from `World` in order to load and
-instantiate this `PrefabData`. Here we only need to write to `Transform`.
+instantiate this `PrefabData`. Here we only need to write to `TransformComponent`.
 
 Second, we specify what result the `add_to_entity` function returns. In our case this is unit `()`, for
 other implementations it could return a `Handle` etc. For an example of this, look at the `TexturePrefab`
 in the renderer crate.
 
 Next, we define the `add_to_entity` function, which is used to actually instantiate data. In our case here,
-we insert the local `Transform` data on the referenced `Entity`. In this scenario we aren't using the third
+we insert the local `TransformComponent` data on the referenced `Entity`. In this scenario we aren't using the third
 parameter to the function. This parameter contains a list of all entities affected by the `Prefab`, the first
 entry in the list will be the main `Entity`, and the rest will be the entities that were created for all the
 entries in the data list inside the `Prefab`.
@@ -188,7 +188,7 @@ where
 }
 ```
 
-So, there are two main differences to this `PrefabData` compared the `Transform` example.
+So, there are two main differences to this `PrefabData` compared the `TransformComponent` example.
 The first difference is that the `add_to_entity` function now return a `Handle<A>`.
 The second difference is that `load_sub_assets` is implemented, this is because we load
 a sub asset. The `load_sub_assets` function here will do the actual loading, and morph the
@@ -248,7 +248,7 @@ Lets look at an example of an aggregate struct:
 # #[macro_use] extern crate amethyst;
 # #[macro_use] extern crate serde_derive;
 # use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
-# use amethyst::core::Transform;
+# use amethyst::core::TransformComponent;
 # use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, DenseVecStorage, Component};
 # use amethyst::renderer::{Mesh, ObjFormat};
 # use amethyst::Error;
@@ -256,11 +256,11 @@ Lets look at an example of an aggregate struct:
 #[derive(PrefabData)]
 pub struct MyScenePrefab {
     mesh: AssetPrefab<Mesh, ObjFormat>,
-    transform: Transform,
+    transform: TransformComponent,
 }
 ```
 
-This can now be used to create `Prefab`s with `Transform` and `Mesh` on entities.
+This can now be used to create `Prefab`s with `TransformComponent` and `Mesh` on entities.
 
 One last example that also adds a custom pure data `Component` into the aggregate `PrefabData`:
 
@@ -268,7 +268,7 @@ One last example that also adds a custom pure data `Component` into the aggregat
 # #[macro_use] extern crate amethyst;
 # #[macro_use] extern crate serde_derive;
 # use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
-# use amethyst::core::Transform;
+# use amethyst::core::TransformComponent;
 # use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, DenseVecStorage, Component};
 # use amethyst::renderer::{Mesh, ObjFormat};
 # use amethyst::Error;
@@ -276,7 +276,7 @@ One last example that also adds a custom pure data `Component` into the aggregat
 #[derive(PrefabData)]
 pub struct MyScenePrefab {
     mesh: AssetPrefab<Mesh, ObjFormat>,
-    transform: Transform,
+    transform: TransformComponent,
 
     #[prefab(Component)]
     some: SomeComponent,
@@ -326,8 +326,8 @@ For an example of a `Prefab` in `ron` format, look at `examples/assets/prefab/ex
 ```rust,ignore
 (
     Option<GraphicsPrefab<ObjFormat, TextureFormat>>,
-    Option<Transform>,
-    Option<Light>,
+    Option<TransformComponent>,
+    Option<LightComponent>,
     Option<CameraPrefab>,
 )
 ```

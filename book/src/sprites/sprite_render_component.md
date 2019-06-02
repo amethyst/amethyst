@@ -1,10 +1,10 @@
-# `SpriteRender` Component
+# `SpriteRenderComponent` Component
 
-After loading the `SpriteSheet`, you need to attach it to an entity using the `SpriteRender` component and indicate which sprite to draw. The `SpriteRender` component looks like this:
+After loading the `SpriteSheet`, you need to attach it to an entity using the `SpriteRenderComponent` component and indicate which sprite to draw. The `SpriteRenderComponent` component looks like this:
 
 ```rust,ignore
 #[derive(Clone, Debug, PartialEq)]
-pub struct SpriteRender {
+pub struct SpriteRenderComponent {
     /// Handle to the sprite sheet of the sprite
     pub sprite_sheet: SpriteSheetHandle,
     /// Index of the sprite on the sprite sheet
@@ -57,15 +57,15 @@ impl SimpleState for ExampleState {
 # fn main() {}
 ```
 
-Cool, finally we have all the parts, let's build a `SpriteRender` and attach it to an entity:
+Cool, finally we have all the parts, let's build a `SpriteRenderComponent` and attach it to an entity:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::assets::{AssetStorage, Loader};
-use amethyst::core::transform::Transform;
+use amethyst::core::transform::TransformComponent;
 # use amethyst::prelude::*;
 use amethyst::renderer::{
-    ScreenDimensions, SpriteRender, SpriteSheet,
+    ScreenDimensions, SpriteRenderComponent, SpriteSheet,
     SpriteSheetHandle, TextureHandle, Transparent
 };
 
@@ -113,10 +113,10 @@ impl ExampleState {
         };
 
         // Move the sprite to the middle of the window
-        let mut sprite_transform = Transform::default();
+        let mut sprite_transform = TransformComponent::default();
         sprite_transform.set_translation_xyz(width / 2., height / 2., 0.);
 
-        let sprite_render = SpriteRender {
+        let sprite_render = SpriteRenderComponent {
             sprite_sheet: sprite_sheet_handle,
             sprite_number: 0, // First sprite
         };

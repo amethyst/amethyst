@@ -9,15 +9,15 @@ use shred_derive::SystemData;
 
 use super::{Anchor, ScaleMode, Stretch};
 
-/// Utility `SystemData` for finding UI entities based on `UiTransform` id
+/// Utility `SystemData` for finding UI entities based on `UiTransformComponent` id
 #[derive(SystemData)]
 pub struct UiFinder<'a> {
     entities: Entities<'a>,
-    storage: ReadStorage<'a, UiTransform>,
+    storage: ReadStorage<'a, UiTransformComponent>,
 }
 
 impl<'a> UiFinder<'a> {
-    /// Find the `UiTransform` entity with the given id
+    /// Find the `UiTransformComponent` entity with the given id
     pub fn find(&self, id: &str) -> Option<Entity> {
         (&*self.entities, &self.storage)
             .join()
@@ -26,11 +26,11 @@ impl<'a> UiFinder<'a> {
     }
 }
 
-/// The UiTransform represents the transformation of a ui element.
+/// The UiTransformComponent represents the transformation of a ui element.
 /// Values are in pixel and the position is calculated from the bottom left of the screen
 /// to the center of the ui element's area.
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct UiTransform {
+pub struct UiTransformComponent {
     /// An identifier. Serves no purpose other than to help you distinguish between UI elements.
     pub id: String,
     /// Indicates where the element sits, relative to the parent (or to the screen, if there is no parent)
@@ -76,8 +76,8 @@ pub struct UiTransform {
     pd: PhantomData<()>,
 }
 
-impl UiTransform {
-    /// Creates a new UiTransform.
+impl UiTransformComponent {
+    /// Creates a new UiTransformComponent.
     /// By default, it is considered opaque.
     pub fn new(
         id: String,
@@ -88,8 +88,8 @@ impl UiTransform {
         z: f32,
         width: f32,
         height: f32,
-    ) -> UiTransform {
-        UiTransform {
+    ) -> UiTransformComponent {
+        UiTransformComponent {
             id,
             anchor,
             pivot,
@@ -109,7 +109,7 @@ impl UiTransform {
             pd: PhantomData,
         }
     }
-    /// Checks if the input position is in the UiTransform rectangle.
+    /// Checks if the input position is in the UiTransformComponent rectangle.
     /// Uses local coordinates (ignores layouting).
     pub fn position_inside_local(&self, x: f32, y: f32) -> bool {
         x > self.local_x - self.width / 2.0
@@ -118,7 +118,7 @@ impl UiTransform {
             && y < self.local_y + self.height / 2.0
     }
 
-    /// Checks if the input position is in the UiTransform rectangle.
+    /// Checks if the input position is in the UiTransformComponent rectangle.
     pub fn position_inside(&self, x: f32, y: f32) -> bool {
         x > self.pixel_x - self.pixel_width / 2.0
             && y > self.pixel_y - self.pixel_height / 2.0
@@ -145,23 +145,23 @@ impl UiTransform {
         self
     }
 
-    /// Returns the global x coordinate of this UiTransform as computed by the `UiTransformSystem`.
+    /// Returns the global x coordinate of this UiTransformComponent as computed by the `UiTransformSystem`.
     pub fn pixel_x(&self) -> f32 {
         self.pixel_x
     }
 
-    /// Returns the global y coordinate of this UiTransform as computed by the `UiTransformSystem`.
+    /// Returns the global y coordinate of this UiTransformComponent as computed by the `UiTransformSystem`.
     pub fn pixel_y(&self) -> f32 {
         self.pixel_y
     }
 
-    /// Returns the global z order of this UiTransform as computed by the `UiTransformSystem`.
+    /// Returns the global z order of this UiTransformComponent as computed by the `UiTransformSystem`.
     pub fn global_z(&self) -> f32 {
         self.global_z
     }
 }
 
-impl Component for UiTransform {
+impl Component for UiTransformComponent {
     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 }
 
@@ -170,7 +170,7 @@ mod tests {
     use super::*;
     #[test]
     fn inside_local() {
-        let tr = UiTransform::new(
+        let tr = UiTransformComponent::new(
             "".to_string(),
             Anchor::TopLeft,
             Anchor::Middle,
@@ -188,7 +188,7 @@ mod tests {
 
     #[test]
     fn inside_global() {
-        let tr = UiTransform::new(
+        let tr = UiTransformComponent::new(
             "".to_string(),
             Anchor::TopLeft,
             Anchor::Middle,

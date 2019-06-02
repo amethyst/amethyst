@@ -5,7 +5,7 @@ use derive_new::new;
 use hibitset::BitSet;
 use std::{cmp::Ordering, marker::PhantomData};
 
-use crate::{Selectable, Selected};
+use crate::{Selectable, SelectedComponent};
 
 // TODO: Optimize by using a tree. Should we enforce tab order = unique? Sort on insert.
 /// A cache sorted by tab order and then by Entity.
@@ -20,7 +20,7 @@ pub struct CachedSelectionOrder {
 
 impl CachedSelectionOrder {
     /// Returns the index of the highest cached element (index in the cache!) that is currently selected.
-    pub fn highest_order_selected_index<T: GenericReadStorage<Component = Selected>>(
+    pub fn highest_order_selected_index<T: GenericReadStorage<Component = SelectedComponent>>(
         &self,
         selected_storage: &T,
     ) -> Option<usize> {
