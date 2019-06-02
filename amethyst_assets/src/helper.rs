@@ -63,4 +63,15 @@ where
     {
         self.loader.load_from_data(data, progress, &*self.storage)
     }
+
+    /// Asynchronously load an asset from data and return a handle.
+    pub fn load_from_data_async<P, F>(&self, data: F, progress: P) -> Handle<A>
+    where
+        A: Asset,
+        P: Progress,
+        F: FnOnce() -> A::Data + Send + Sync + 'static,
+    {
+        self.loader
+            .load_from_data_async(data, progress, &*self.storage)
+    }
 }
