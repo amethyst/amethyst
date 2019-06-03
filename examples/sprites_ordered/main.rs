@@ -473,6 +473,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
                 .with_group(DrawFlat2DTransparentDesc::new().builder())
                 .with_color(color)
                 .with_depth_stencil(depth)
+                .with_dependency(sprite)
                 .into_pass(),
         );
 
