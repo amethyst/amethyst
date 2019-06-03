@@ -69,7 +69,7 @@ impl MonitorIdent {
             .iter()
             .enumerate()
             .filter(|(_, m)| m.get_name().map(|n| n == self.1).unwrap_or(false))
-            .max_by_key(|(i, _)| (*i as i32 - self.0 as i32).abs() as u16)
+            .max_by_key(|(i, _)| (*i as i32 - i32::from(self.0)).abs() as u16)
             .map(|(_, m)| m)
             .unwrap_or_else(|| monitors.primary())
     }

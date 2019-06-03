@@ -36,10 +36,10 @@ pub fn load_skin(
         .map(|matrices| {
             matrices
                 .map(Matrix4::from)
-                .map(|m| convert::<_, Matrix4<Float>>(m))
+                .map(convert::<_, Matrix4<Float>>)
                 .collect()
         })
-        .unwrap_or(vec![Matrix4::identity().into(); joints.len()]);
+        .unwrap_or_else(|| vec![Matrix4::identity(); joints.len()]);
 
     for (_bind_index, joint_index) in joints.iter().enumerate() {
         prefab

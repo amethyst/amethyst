@@ -242,12 +242,10 @@ fn load_node(
             if let Some((material_id, material)) =
                 material_index.and_then(|index| gltf.materials().nth(index).map(|m| (index, m)))
             {
-                if !material_set.materials.contains_key(&material_id) {
-                    material_set.materials.insert(
-                        material_id,
-                        load_material(&material, buffers, source.clone(), name)?,
-                    );
-                }
+                material_set
+                    .materials
+                    .entry(material_id)
+                    .or_insert(load_material(&material, buffers, source.clone(), name)?);
                 prefab_data.material_id = Some(material_id);
             }
             // if we have a skin we need to track the mesh entities
@@ -265,12 +263,10 @@ fn load_node(
                 if let Some((material_id, material)) =
                     material_index.and_then(|index| gltf.materials().nth(index).map(|m| (index, m)))
                 {
-                    if !material_set.materials.contains_key(&material_id) {
-                        material_set.materials.insert(
-                            material_id,
-                            load_material(&material, buffers, source.clone(), name)?,
-                        );
-                    }
+                    material_set
+                        .materials
+                        .entry(material_id)
+                        .or_insert(load_material(&material, buffers, source.clone(), name)?);
                     prefab_data.material_id = Some(material_id);
                 }
 

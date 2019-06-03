@@ -133,7 +133,7 @@ where
                     match NetEvent::<E>::from_packet(packet) {
                         Ok(event) => {
                             for connection in (&mut net_connections).join() {
-                                if &connection.target_addr == &from_addr {
+                                if connection.target_addr == from_addr {
                                     connection.receive_buffer.single_write(event.clone());
                                 }
                             }

@@ -62,7 +62,7 @@ impl<'a, T: BindingTypes> System<'a> for FlyMovementSystem<T> {
 
         if let Some(dir) = Unit::try_new(Vector3::new(x, y, z), convert(1.0e-6)) {
             for (transform, _) in (&mut transform, &tag).join() {
-                let delta_sec = time.delta_seconds() as f64;
+                let delta_sec = f64::from(time.delta_seconds());
                 transform.append_translation_along(dir, delta_sec * self.speed.as_f64());
             }
         }
@@ -154,10 +154,10 @@ impl<'a> System<'a> for FreeRotationSystem {
                     if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
                         for (transform, _) in (&mut transform, &tag).join() {
                             transform.append_rotation_x_axis(
-                                (-y * self.sensitivity_y as f64).to_radians(),
+                                (-y * f64::from(self.sensitivity_y)).to_radians(),
                             );
                             transform.prepend_rotation_y_axis(
-                                (-x * self.sensitivity_x as f64).to_radians(),
+                                (-x * f64::from(self.sensitivity_x)).to_radians(),
                             );
                         }
                     }
@@ -175,6 +175,7 @@ impl<'a> System<'a> for FreeRotationSystem {
 }
 
 /// A system which reads Events and saves if a window has lost focus in a WindowFocus resource
+#[derive(Default)]
 pub struct MouseFocusUpdateSystem {
     event_reader: Option<ReaderId<Event>>,
 }
@@ -182,7 +183,7 @@ pub struct MouseFocusUpdateSystem {
 impl MouseFocusUpdateSystem {
     /// Builds a new MouseFocusUpdateSystem.
     pub fn new() -> MouseFocusUpdateSystem {
-        MouseFocusUpdateSystem { event_reader: None }
+        MouseFocusUpdateSystem::default()
     }
 }
 
@@ -210,6 +211,7 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
 
 /// System which hides the cursor when the window is focused.
 /// Requires the usage MouseFocusUpdateSystem at the same time.
+#[derive(Default)]
 pub struct CursorHideSystem {
     is_hidden: bool,
 }

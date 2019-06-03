@@ -102,7 +102,7 @@ impl<B: Backend> IndexData<B, u32> {
 /// This structure wraps [PerImageDynamicVertexData], managing multiple instances and providing
 /// an easy-to-use interface for having per-image buffers. This is needed because multiple images
 /// (frames) can be in flight at any given time, so multiple buffers are needed for the same data.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct DynamicVertexData<B: Backend, V: VertexDataBufferType, T: 'static> {
     per_image: Vec<PerImageDynamicVertexData<B, V>>,
     marker: PhantomData<T>,

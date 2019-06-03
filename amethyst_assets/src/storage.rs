@@ -185,12 +185,12 @@ impl<A: Asset> AssetStorage<A> {
 
     /// Check if given handle points to a valid asset in the storage.
     pub fn contains(&self, handle: &Handle<A>) -> bool {
-        return self.bitset.contains(handle.id());
+        self.bitset.contains(handle.id())
     }
 
     /// Check if given asset id points to a valid asset in the storage.
     pub fn contains_id(&self, id: u32) -> bool {
-        return self.bitset.contains(id);
+        self.bitset.contains(id)
     }
 
     /// Get an asset by it's handle id without checking the internal bitset.
@@ -498,6 +498,7 @@ impl<A: Asset> Drop for AssetStorage<A> {
 ///
 /// This system can only be used if the asset data implements
 /// `Into<Result<A, BoxedErr>>`.
+#[derive(Default)]
 pub struct Processor<A> {
     marker: PhantomData<A>,
 }

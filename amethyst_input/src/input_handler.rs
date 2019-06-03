@@ -622,7 +622,7 @@ impl<T: BindingTypes> InputHandler<T> {
 
         // check for actions being bound to any invoked mouse wheel
         for (action, combinations) in self.bindings.actions.iter() {
-            for ref combination in combinations {
+            for combination in combinations {
                 if let Some(dir) = dir_x {
                     if combination.contains(&Button::MouseWheel(dir))
                         && combination

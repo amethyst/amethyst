@@ -89,7 +89,7 @@ where
     }
 
     pub fn prune(&mut self) {
-        self.map.retain(|_, b| b.len() > 0);
+        self.map.retain(|_, b| !b.is_empty());
     }
 
     pub fn insert(&mut self, pk: PK, sk: SK, data: impl IntoIterator<Item = C::Item>) {
@@ -115,13 +115,13 @@ where
         }
     }
 
-    pub fn data<'a>(&'a self) -> impl Iterator<Item = &'a C> {
+    pub fn data(&self) -> impl Iterator<Item = &C> {
         self.map
             .iter()
             .flat_map(|(_, batch)| batch.iter().map(|data| &data.1))
     }
 
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a PK, impl Iterator<Item = &'a (SK, C)>)> {
+    pub fn iter(&self) -> impl Iterator<Item = (&PK, impl Iterator<Item = &(SK, C)>)> {
         self.map.iter().map(|(pk, batch)| (pk, batch.iter()))
     }
 
@@ -227,7 +227,7 @@ where
     }
 
     pub fn prune(&mut self) {
-        self.map.retain(|_, b| b.len() > 0);
+        self.map.retain(|_, b| !b.is_empty());
     }
 
     pub fn insert(&mut self, pk: PK, data: impl IntoIterator<Item = D>) {

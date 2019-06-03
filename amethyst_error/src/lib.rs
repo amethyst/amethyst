@@ -14,7 +14,7 @@
 pub use backtrace::Backtrace;
 use std::{
     borrow::Cow,
-    env, error, ffi, fmt, result,
+    env, error, fmt, result,
     sync::atomic::{self, AtomicUsize},
 };
 
@@ -304,8 +304,8 @@ where
 }
 
 /// Test if backtracing is enabled.
-fn is_backtrace_enabled<F: Fn(&str) -> Option<ffi::OsString>>(get_var: F) -> bool {
-    match get_var(RUST_BACKTRACE) {
+fn is_backtrace_enabled() -> bool {
+    match env::var_os(RUST_BACKTRACE) {
         Some(ref val) if val != "0" => true,
         _ => false,
     }
@@ -320,7 +320,7 @@ static BACKTRACE_STATUS: AtomicUsize = AtomicUsize::new(0);
 fn new_backtrace() -> Option<Backtrace> {
     match BACKTRACE_STATUS.load(atomic::Ordering::Relaxed) {
         0 => {
-            let enabled = is_backtrace_enabled(|var| env::var_os(var));
+            let enabled = is_backtrace_enabled();
 
             BACKTRACE_STATUS.store(enabled as usize + 1, atomic::Ordering::Relaxed);
 

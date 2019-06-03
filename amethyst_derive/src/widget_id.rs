@@ -21,13 +21,11 @@ pub fn impl_widget_id(ast: &DeriveInput) -> TokenStream {
                 panic!("Only 1 variant can be marked as default widget id")
             }
 
-            let default_variant = if !maybe_marked_default.is_empty() {
+            if !maybe_marked_default.is_empty() {
                 maybe_marked_default[0].clone()
             } else {
                 data_enum.variants[0].ident.clone()
-            };
-
-            default_variant
+            }
         }
         _ => panic!("WidgetId derive only supports enums"),
     };

@@ -66,7 +66,7 @@ fn load_channel(
             TransformChannel::Translation,
             Sampler {
                 input,
-                function: map_interpolation_type(&sampler.interpolation()),
+                function: map_interpolation_type(sampler.interpolation()),
                 output: translations
                     .map(Vector3::from)
                     .map(|t| convert::<_, Vector3<Float>>(t).into())
@@ -74,7 +74,7 @@ fn load_channel(
             },
         )),
         Rotations(rotations) => {
-            let ty = map_interpolation_type(&sampler.interpolation());
+            let ty = map_interpolation_type(sampler.interpolation());
             let ty = if ty == InterpolationFunction::Linear {
                 InterpolationFunction::SphericalLinear
             } else {
@@ -99,7 +99,7 @@ fn load_channel(
             TransformChannel::Scale,
             Sampler {
                 input,
-                function: map_interpolation_type(&sampler.interpolation()),
+                function: map_interpolation_type(sampler.interpolation()),
                 output: scales
                     .map(Vector3::from)
                     .map(|s| convert::<_, Vector3<Float>>(s).into())
@@ -110,13 +110,13 @@ fn load_channel(
     }
 }
 
-fn map_interpolation_type<T>(ty: &gltf::animation::Interpolation) -> InterpolationFunction<T>
+fn map_interpolation_type<T>(ty: gltf::animation::Interpolation) -> InterpolationFunction<T>
 where
     T: InterpolationPrimitive,
 {
     use gltf::animation::Interpolation::*;
 
-    match *ty {
+    match ty {
         Linear => InterpolationFunction::Linear,
         Step => InterpolationFunction::Step,
         CubicSpline => InterpolationFunction::CubicSpline,
