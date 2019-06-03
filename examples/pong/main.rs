@@ -223,7 +223,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             window_kind,
             1,
             surface_format,
-            Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
+            Some(ClearValue::Color([0., 0., 0., 1.0].into())),
         );
 
         let depth = graph_builder.create_image(

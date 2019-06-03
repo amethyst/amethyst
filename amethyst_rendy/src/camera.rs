@@ -24,7 +24,7 @@ impl Orthographic {
         let mut matrix = Matrix4::<f32>::identity();
 
         matrix[(0, 0)] = 2.0 / (right - left);
-        matrix[(1, 1)] = -2.0 / (top - bottom);
+        matrix[(1, 1)] = 2.0 / (top - bottom);
         matrix[(2, 2)] = -1.0 / (z_far - z_near);
         matrix[(0, 3)] = -(right + left) / (right - left);
         matrix[(1, 3)] = -(top + bottom) / (top - bottom);
@@ -35,12 +35,12 @@ impl Orthographic {
 
     #[inline]
     pub fn top(&self) -> f32 {
-        -((1.0 - self.matrix[(1, 3)]) / self.matrix[(1, 1)])
+        (1.0 - self.matrix[(1, 3)]) / self.matrix[(1, 1)]
     }
 
     #[inline]
     pub fn bottom(&self) -> f32 {
-        -((-1.0 - self.matrix[(1, 3)]) / self.matrix[(1, 1)])
+        (-1.0 - self.matrix[(1, 3)]) / self.matrix[(1, 1)]
     }
 
     #[inline]
@@ -790,9 +790,9 @@ mod tests {
         assert_gt!(x_axis[0], 0.0);
         assert_gt!(x_axis[0] / x_axis[3], 0.0);
 
-        // Y should be negative
-        assert_lt!(y_axis[1], 0.0);
-        assert_lt!(y_axis[1] / y_axis[3], 0.0);
+        // Y should be Positive
+        assert_gt!(y_axis[1], 0.0);
+        assert_gt!(y_axis[1] / y_axis[3], 0.0);
 
         // Z should be in [0; w] resp. [0; 1]
         assert_ge!(z_axis[2], 0.0);
