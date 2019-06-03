@@ -13,9 +13,25 @@ use crate::circular_buffer::CircularBuffer;
 ///
 /// Add it to your resources to be able to use the FPSCounterSystem.
 ///
-/// ## Usage:
+/// # Usage
 /// Get the FPSCounter resource from the world then call either `frame_fps` or `sampled_fps` to
 /// get the FPS.
+/// 
+/// frame_fps will return the framerate of the current frame. That is, the framerate at which the
+/// game would be running if all frames were exactly like this one.
+/// sampled_fls will return the averaged framerate. This gives a better approximation of the "felt"
+/// framerate by the user.
+///
+/// # Example
+/// ```rust
+/// # use amethyst_utils::fps_counter::FpsCounter;
+/// # use amethyst_core::ecs::World;
+/// # let mut world = World::new();
+/// # let counter = FPSCounter::new(2);
+/// # world.add_resource(counter);
+/// let mut counter = world.write_resource::<FPSCounter>();
+///
+/// ```
 pub struct FPSCounter {
     buf: CircularBuffer<u64>,
     sum: u64,
@@ -88,3 +104,4 @@ impl<'a, 'b> SystemBundle<'a, 'b> for FPSCounterBundle {
         Ok(())
     }
 }
+
