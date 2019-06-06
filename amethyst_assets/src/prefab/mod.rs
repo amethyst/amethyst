@@ -225,6 +225,11 @@ impl<T> Prefab<T> {
         self.entities.len()
     }
 
+    /// Returns `true` if the prefab contains no entities.
+    pub fn is_empty(&self) -> bool {
+        self.entities.is_empty()
+    }
+
     /// Create a new entity in the prefab, with no data and no parent
     pub fn new_entity(&mut self) -> usize {
         self.add(None, None)

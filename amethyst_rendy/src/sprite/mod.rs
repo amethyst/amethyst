@@ -108,13 +108,15 @@ impl Sprite {
         let top = (pixel_top) / image_h;
         let bottom = (pixel_bottom) / image_h;
 
-        let (left, right) = match flip_horizontal {
-            false => (left, right),
-            true => (right, left),
+        let (left, right) = if flip_horizontal {
+            (right, left)
+        } else {
+            (left, right)
         };
-        let (top, bottom) = match flip_vertical {
-            false => (top, bottom),
-            true => (bottom, top),
+        let (top, bottom) = if flip_vertical {
+            (bottom, top)
+        } else {
+            (top, bottom)
         };
 
         let tex_coords = TextureCoordinates {

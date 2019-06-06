@@ -402,9 +402,9 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3D<B
             factory
                 .device()
                 .destroy_graphics_pipeline(self.pipeline_basic);
-            self.pipeline_skinned.take().map(|pipeline| {
+            if let Some(pipeline) = self.pipeline_skinned.take() {
                 factory.device().destroy_graphics_pipeline(pipeline);
-            });
+            }
             factory
                 .device()
                 .destroy_pipeline_layout(self.pipeline_layout);
@@ -686,9 +686,9 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3DTr
             factory
                 .device()
                 .destroy_graphics_pipeline(self.pipeline_basic);
-            self.pipeline_skinned.take().map(|pipeline| {
+            if let Some(pipeline) = self.pipeline_skinned.take() {
                 factory.device().destroy_graphics_pipeline(pipeline);
-            });
+            }
             factory
                 .device()
                 .destroy_pipeline_layout(self.pipeline_layout);

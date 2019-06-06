@@ -70,7 +70,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawDebugLinesDesc {
         )?;
 
         Ok(Box::new(DrawDebugLines::<B> {
-            pipeline: pipeline,
+            pipeline,
             pipeline_layout,
             env,
             args,
@@ -164,7 +164,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawDebugLines<B> {
         #[cfg(feature = "profiler")]
         profile_scope!("draw");
 
-        if self.lines.len() == 0 {
+        if self.lines.is_empty() {
             return;
         }
 

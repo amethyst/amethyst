@@ -129,8 +129,8 @@ where
 
                         children
                             .entry(parent)
-                            .or_insert(vec![])
-                            .push(new_entity.clone());
+                            .or_insert_with(Vec::new)
+                            .push(new_entity);
                     }
                     tags.insert(
                         new_entity,

@@ -35,6 +35,7 @@ pub struct Visibility {
 ///
 /// Note that this should run after `Transform` has been updated for the current frame, and
 /// before rendering occurs.
+#[derive(Default)]
 pub struct VisibilitySortingSystem {
     centroids: Vec<Internals>,
     transparent: Vec<Internals>,
@@ -87,10 +88,7 @@ struct Internals {
 impl VisibilitySortingSystem {
     /// Create new sorting system
     pub fn new() -> Self {
-        VisibilitySortingSystem {
-            centroids: Vec::default(),
-            transparent: Vec::default(),
-        }
+        Self::default()
     }
 }
 
@@ -229,6 +227,6 @@ impl Frustum {
                 return false;
             }
         }
-        return true;
+        true
     }
 }

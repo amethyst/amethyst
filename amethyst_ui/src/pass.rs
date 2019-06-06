@@ -308,7 +308,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             };
 
             if let Some(glyph_data) = glyphs.get(entity) {
-                if glyph_data.sel_vertices.len() > 0 {
+                if !glyph_data.vertices.is_empty() {
                     self.batches
                         .insert(white_tex_id, glyph_data.sel_vertices.iter().cloned());
                 }
@@ -357,7 +357,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
                     }
                 }
 
-                if glyph_data.vertices.len() > 0 {
+                if !glyph_data.vertices.is_empty() {
                     self.batches
                         .insert(glyph_tex_id, glyph_data.vertices.iter().cloned());
                 }
@@ -478,8 +478,8 @@ fn render_image<B: Backend>(
 ) -> bool {
     let color = match (raw_image, tint.as_ref()) {
         (UiImage::SolidColor(color), Some(t)) => mul_blend(color, t),
-        (UiImage::SolidColor(color), None) => color.clone(),
-        (_, Some(t)) => t.clone(),
+        (UiImage::SolidColor(color), None) => *color,
+        (_, Some(t)) => *t,
         (_, None) => [1., 1., 1., 1.],
     };
 

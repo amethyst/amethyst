@@ -443,7 +443,7 @@ where
         ) = system_data;
 
         let text_entity = children.get(0).expect("Invalid: Should have text child");
-        let widget = UiButton::new(entity.clone(), text_entity.clone());
+        let widget = UiButton::new(entity, *text_entity);
         if let Some(id) = &self.id {
             widgets.add_with_id(id.clone(), widget);
         } else {

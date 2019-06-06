@@ -71,7 +71,7 @@ fn read_to_end<P: AsRef<Path>>(source: Arc<dyn AssetSource>, path: P) -> Result<
 }
 
 fn parse_data_uri(uri: &str) -> Result<Vec<u8>, Error> {
-    let encoded = uri.split(",").nth(1).expect("URI does not contain ','");
+    let encoded = uri.split(',').nth(1).expect("URI does not contain ','");
     let decoded = base64::decode(&encoded)?;
     Ok(decoded)
 }
@@ -90,7 +90,10 @@ fn load_external_buffers(
                 if uri.starts_with("data:") {
                     parse_data_uri(uri)?
                 } else {
-                    let path = base_path.parent().unwrap_or(Path::new("./")).join(uri);
+                    let path = base_path
+                        .parent()
+                        .unwrap_or_else(|| Path::new("./"))
+                        .join(uri);
                     read_to_end(source.clone(), &path)?
                 }
             }
@@ -123,11 +126,7 @@ fn import_binary(
     source: Arc<dyn AssetSource>,
     base_path: &Path,
 ) -> Result<(Gltf, Buffers), Error> {
-    let gltf::binary::Glb {
-        header: _,
-        json,
-        bin,
-    } = gltf::binary::Glb::from_slice(data)?;
+    let gltf::binary::Glb { json, bin, .. } = gltf::binary::Glb::from_slice(data)?;
     let gltf = Gltf::from_slice(&json)?;
     let bin = bin.map(|x| x.to_vec());
     let buffers = Buffers(load_external_buffers(source, base_path, &gltf, bin)?);
@@ -168,7 +167,10 @@ pub fn get_image_data(
                     Ok((data, ImageFormat::from_mime_type(mimetype)))
                 }
             } else {
-                let path = base_path.parent().unwrap_or(Path::new("./")).join(uri);
+                let path = base_path
+                    .parent()
+                    .unwrap_or_else(|| Path::new("./"))
+                    .join(uri);
                 let data = source.load(
                     path.to_str()
                         .expect("Path contains invalid UTF-8 characters"),

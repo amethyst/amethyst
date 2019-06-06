@@ -90,6 +90,7 @@ impl Component for Interactable {
 
 /// The system that generates events for `Interactable` enabled entities.
 /// The generic types A and B represent the A and B generic parameter of the InputHandler<A,B>.
+#[derive(Default)]
 pub struct UiMouseSystem<T: BindingTypes> {
     was_down: bool,
     click_started_on: Option<Entity>,

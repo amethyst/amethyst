@@ -122,7 +122,7 @@ where
                 #[cfg(feature = "profiler")]
                 profile_scope!("process_mesh");
 
-                b.0.build(*queue_id, &mut factory)
+                b.0.build(*queue_id, &factory)
                     .map(B::wrap_mesh)
                     .map(ProcessingState::Loaded)
                     .map_err(|e| e.compat().into())

@@ -62,10 +62,10 @@ fn prepare_prefab_aggregate_fields(
             }
         };
         let tuple_index = Literal::usize_unsuffixed(i);
-        let name = field.ident.clone().unwrap_or(Ident::new(
-            &format!("field_{}", field_number),
-            Span::call_site(),
-        ));
+        let name = field
+            .ident
+            .clone()
+            .unwrap_or_else(|| Ident::new(&format!("field_{}", field_number), Span::call_site()));
         if is_component {
             subs.push(None);
             add_to_entity.push(quote! {
@@ -290,8 +290,8 @@ fn gen_def_lt_tokens(generics: &Generics) -> TokenStream {
     let lts: Vec<_> = generics
         .lifetimes()
         .map(|x| {
-            let ref lt = x.lifetime;
-            let ref bounds = x.bounds;
+            let lt = &x.lifetime;
+            let bounds = &x.bounds;
 
             if bounds.is_empty() {
                 quote! { #lt }
@@ -308,8 +308,8 @@ fn gen_def_ty_params(generics: &Generics) -> TokenStream {
     let ty_params: Vec<_> = generics
         .type_params()
         .map(|x| {
-            let ref ty = x.ident;
-            let ref bounds = x.bounds;
+            let ty = &x.ident;
+            let bounds = &x.bounds;
 
             quote! { #ty: #( #bounds )+* }
         })
@@ -327,20 +327,17 @@ fn is_component_prefab(attrs: &[Attribute]) -> bool {
                 .expect("prefab attribute incorrectly defined")
         })
     {
-        match meta {
-            Meta::List(l) => {
-                for nested_meta in l.nested.iter() {
-                    match *nested_meta {
-                        NestedMeta::Meta(Meta::Word(ref word)) => {
-                            if word == "Component" {
-                                return true;
-                            }
+        if let Meta::List(l) = meta {
+            for nested_meta in l.nested.iter() {
+                match *nested_meta {
+                    NestedMeta::Meta(Meta::Word(ref word)) => {
+                        if word == "Component" {
+                            return true;
                         }
-                        _ => panic!("prefab attribute does not contain a single word value"),
                     }
+                    _ => panic!("prefab attribute does not contain a single word value"),
                 }
             }
-            _ => (),
         };
     }
     false

@@ -567,7 +567,7 @@ impl Transform {
     ///
     /// We can exploit the extra information we have to perform this inverse faster than `O(n^3)`.
     pub fn global_view_matrix(&self) -> Matrix4<Float> {
-        let mut res = self.global_matrix.clone();
+        let mut res = self.global_matrix;
 
         // Perform an in-place inversion of the 3x3 matrix
         {
@@ -576,7 +576,7 @@ impl Transform {
         }
 
         let mut translation = -res.column(3).xyz();
-        translation = res.clone().fixed_slice::<na::U3, na::U3>(0, 0) * translation;
+        translation = res.fixed_slice::<na::U3, na::U3>(0, 0) * translation;
 
         let mut res_trans = res.column_mut(3);
         res_trans.x = translation.x;
@@ -613,7 +613,7 @@ impl Component for Transform {
 impl From<Vector3<Float>> for Transform {
     fn from(translation: Vector3<Float>) -> Self {
         Transform {
-            isometry: Isometry3::new(translation.into(), na::zero()),
+            isometry: Isometry3::new(translation, na::zero()),
             ..Default::default()
         }
     }
@@ -682,7 +682,7 @@ impl<'de> Deserialize<'de> for Transform {
                         rotation[2],
                     )),
                 );
-                let scale = Vector3::new(scale[0].into(), scale[1].into(), scale[2].into());
+                let scale = Vector3::new(scale[0], scale[1], scale[2]);
 
                 Ok(Transform {
                     isometry,
@@ -745,7 +745,7 @@ impl<'de> Deserialize<'de> for Transform {
             }
         }
 
-        const FIELDS: &'static [&'static str] = &["translation", "rotation", "scale"];
+        const FIELDS: &[&str] = &["translation", "rotation", "scale"];
         deserializer.deserialize_struct("Transform", FIELDS, TransformVisitor::default())
     }
 }

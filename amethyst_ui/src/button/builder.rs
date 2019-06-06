@@ -282,19 +282,19 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
             let retrigger = UiButtonActionRetrigger {
                 on_click_start: actions_with_target(
                     &mut self.on_click_start.into_iter(),
-                    &image_entity,
+                    image_entity,
                 ),
                 on_click_stop: actions_with_target(
                     &mut self.on_click_stop.into_iter(),
-                    &image_entity,
+                    image_entity,
                 ),
                 on_hover_start: actions_with_target(
                     &mut self.on_hover_start.into_iter(),
-                    &image_entity,
+                    image_entity,
                 ),
                 on_hover_stop: actions_with_target(
                     &mut self.on_hover_stop.into_iter(),
-                    &image_entity,
+                    image_entity,
                 ),
             };
 
@@ -412,13 +412,13 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
     }
 }
 
-fn actions_with_target<I>(actions: I, target: &Entity) -> Vec<UiButtonAction>
+fn actions_with_target<I>(actions: I, target: Entity) -> Vec<UiButtonAction>
 where
     I: Iterator<Item = UiButtonActionType>,
 {
     actions
         .map(|action| UiButtonAction {
-            target: *target,
+            target,
             event_type: action,
         })
         .collect()

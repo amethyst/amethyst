@@ -110,7 +110,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawSkyboxDesc {
         )?;
 
         Ok(Box::new(DrawSkybox::<B> {
-            pipeline: pipeline,
+            pipeline,
             pipeline_layout,
             env,
             colors,

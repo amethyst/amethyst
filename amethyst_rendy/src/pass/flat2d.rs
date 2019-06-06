@@ -72,7 +72,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DDesc {
         )?;
 
         Ok(Box::new(DrawFlat2D::<B> {
-            pipeline: pipeline,
+            pipeline,
             pipeline_layout,
             env,
             textures,
@@ -273,7 +273,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DTransparentDesc {
         )?;
 
         Ok(Box::new(DrawFlat2DTransparent::<B> {
-            pipeline: pipeline,
+            pipeline,
             pipeline_layout,
             env,
             textures,
