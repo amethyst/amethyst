@@ -129,7 +129,7 @@ where
 
                         children
                             .entry(parent)
-                            .or_insert_with(|| vec![])
+                            .or_insert_with(Vec::new)
                             .push(new_entity);
                     }
                     tags.insert(
