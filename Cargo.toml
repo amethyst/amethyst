@@ -90,11 +90,15 @@ saveload = [
     "amethyst_core/saveload"
 ]
 server = [
-    "locale", 
+    "locale",
     "network"
 ]
 no-slow-safety-checks = ["amethyst_rendy/no-slow-safety-checks"]
 shader-compiler =  ["amethyst_rendy/shader-compiler"]
+test-support = [
+  "amethyst_rendy/test-support",
+  "amethyst_window/test-support",
+]
 
 [workspace]
 members = [
