@@ -13,25 +13,11 @@ use amethyst::{
     utils::{application_root_dir, scene::BasicScenePrefab},
     window::{ScreenDimensions, WindowBundle},
     winit::{ElementState, VirtualKeyCode, Window},
-};
-use amethyst_rendy::{
-    pass::DrawPbrDesc,
-    rendy::{
-        factory::Factory,
-        graph::{
-            present::PresentNode,
-            render::{RenderGroupBuilder, RenderGroupDesc},
-            GraphBuilder,
-        },
-        hal::{
-            command::{ClearDepthStencil, ClearValue},
-            format::Format,
-            image,
-        },
-        mesh::{Normal, Position, Tangent, TexCoord},
+    renderer::{
+        pass::DrawPbrDesc, types::DefaultBackend, Factory, Format, GraphBuilder, GraphCreator,
+        Kind, RenderGroupDesc, RenderingSystem, SpriteSheet, SubpassBuilder,
+        rendy::mesh::{Normal, Position, Tangent, TexCoord},
     },
-    system::{GraphCreator, RenderingSystem},
-    types::{Backend, DefaultBackend},
 };
 use serde::{Deserialize, Serialize};
 
@@ -292,7 +278,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
 
         use amethyst::shred::SystemData;
 
-        let window = <ReadExpect<'_, std::sync::Arc<Window>>>::fetch(res);
+        let window = <ReadExpect<'_, Window>>::fetch(res);
 
         let surface = factory.create_surface(&window);
         let dimensions = self.dimensions.as_ref().unwrap();

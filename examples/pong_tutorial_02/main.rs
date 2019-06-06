@@ -8,23 +8,12 @@ use amethyst::{
     ecs::{ReadExpect, Resources, SystemData},
     prelude::*,
     renderer::{
-        pass::DrawFlat2DDesc,
-        rendy::{
-            factory::Factory,
-            graph::{
-                render::{RenderGroupDesc, SubpassBuilder},
-                GraphBuilder,
-            },
-            hal::{format::Format, image},
-        },
-        sprite::SpriteSheet,
-        types::DefaultBackend,
-        GraphCreator, RenderingSystem,
+        pass::DrawFlat2DDesc, types::DefaultBackend, Factory, Format, GraphBuilder, GraphCreator,
+        Kind, RenderGroupDesc, RenderingSystem, SpriteSheet, SubpassBuilder,
     },
     utils::application_root_dir,
     window::{ScreenDimensions, Window, WindowBundle},
 };
-use std::sync::Arc;
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
@@ -67,7 +56,6 @@ fn main() -> amethyst::Result<()> {
 #[derive(Default)]
 struct ExampleGraph {
     dimensions: Option<ScreenDimensions>,
-    surface_format: Option<Format>,
     dirty: bool,
 }
 
@@ -102,17 +90,13 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         self.dirty = false;
 
         // Retrieve a reference to the target window, which is created by the WindowBundle
-        let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
+        let window = <ReadExpect<'_, Window>>::fetch(res);
+        let dimensions = self.dimensions.as_ref().unwrap();
+        let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 
         // Create a new drawing surface in our window
         let surface = factory.create_surface(&window);
-        // cache surface format to speed things up
-        let surface_format = *self
-            .surface_format
-            .get_or_insert_with(|| factory.get_surface_format(&surface));
-        let dimensions = self.dimensions.as_ref().unwrap();
-        let window_kind =
-            image::Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
+        let surface_format = factory.get_surface_format(&surface);
 
         // Begin building our RenderGraph
         let mut graph_builder = GraphBuilder::new();
@@ -132,7 +116,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         // Create our single `Subpass`, which is the DrawFlat2D pass.
         // We pass the subpass builder a description of our pass for construction
-        let sprite = graph_builder.add_node(
+        let pass = graph_builder.add_node(
             SubpassBuilder::new()
                 .with_group(DrawFlat2DDesc::new().builder())
                 .with_color(color)
@@ -142,7 +126,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         // Finally, add the pass to the graph
         let _present = graph_builder
-            .add_node(PresentNode::builder(factory, surface, color).with_dependency(sprite));
+            .add_node(PresentNode::builder(factory, surface, color).with_dependency(pass));
 
         graph_builder
     }

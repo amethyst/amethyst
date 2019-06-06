@@ -240,7 +240,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
 
         use amethyst::shred::SystemData;
 
-        let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
+        let window = <ReadExpect<'_, Window>>::fetch(res);
 
         let surface = factory.create_surface(&window);
         let dimensions = self.dimensions.as_ref().unwrap();

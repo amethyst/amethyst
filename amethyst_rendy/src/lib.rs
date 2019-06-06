@@ -52,6 +52,15 @@ pub use util::{simple_shader_set, ChangeDetection};
 #[cfg(feature = "test-support")]
 pub use render_test_bundle::{RenderEmptyBundle, RenderTestBundle};
 
+pub use rendy::{
+    factory::Factory,
+    graph::{
+        render::{RenderGroupDesc, SubpassBuilder},
+        GraphBuilder,
+    },
+    hal::{format::Format, image::Kind},
+};
+
 pub mod loaders {
     pub use rendy::texture::palette::{load_from_linear_rgba, load_from_srgb, load_from_srgba};
 }

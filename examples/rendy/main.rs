@@ -638,7 +638,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         self.dirty = false;
 
         let (window, render_mode) =
-            <(ReadExpect<'_, Arc<Window>>, ReadExpect<'_, RenderMode>)>::fetch(res);
+            <(ReadExpect<'_, Window>, ReadExpect<'_, RenderMode>)>::fetch(res);
 
         let surface = factory.create_surface(&window);
 
@@ -648,12 +648,8 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
             .get_or_insert_with(|| factory.get_surface_format(&surface));
 
         let dimensions = self.dimensions.as_ref().unwrap();
-        let window_kind = image::Kind::D2(
-            dbg!(dimensions.width()) as u32,
-            dimensions.height() as u32,
-            1,
-            1,
-        );
+        let window_kind =
+            image::Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 
         let mut graph_builder = GraphBuilder::new();
         let color = graph_builder.create_image(

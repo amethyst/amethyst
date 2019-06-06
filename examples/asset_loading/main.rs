@@ -211,7 +211,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         };
 
         self.dirty = false;
-        let window = <ReadExpect<'_, std::sync::Arc<Window>>>::fetch(res);
+        let window = <ReadExpect<'_, Window>>::fetch(res);
         let surface = factory.create_surface(&window);
         // cache surface format to speed things up
         let surface_format = *self

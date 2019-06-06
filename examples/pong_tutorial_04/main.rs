@@ -117,7 +117,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         self.dirty = false;
 
         // Retrieve a reference to the target window, which is created by the WindowBundle
-        let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
+        let window = <ReadExpect<'_, Window>>::fetch(res);
 
         // Create a new drawing surface in our window
         let surface = factory.create_surface(&window);

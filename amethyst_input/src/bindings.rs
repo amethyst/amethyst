@@ -509,7 +509,7 @@ mod tests {
     fn add_and_remove_actions() {
         let mut bindings = Bindings::<StringBindings>::new();
         assert_eq!(bindings.actions().next(), None);
-        assert_eq!(bindings.action_bindings(dbg!("test_action")).next(), None);
+        assert_eq!(bindings.action_bindings("test_action").next(), None);
 
         bindings
             .insert_action_binding(
