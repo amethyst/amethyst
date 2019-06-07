@@ -32,6 +32,9 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     In these examples, `Named`, `Position`, and `Weapon` all derive [`PrefabData`].
 
     ```rust,edition2018,no_run,noplaypen
+    # extern crate amethyst;
+    # extern crate serde;
+    # extern crate specs_derive;
     # use amethyst::{
     #     assets::{PrefabData, ProgressCounter},
     #     core::Named,
@@ -64,6 +67,9 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     If you want to mix different types of entities within a single prefab then you must define an enum that implemenets `PrefabData`. Each variant is treated in the same way as `PrefabData` structs.
 
     ```rust,edition2018,no_run,noplaypen
+    # extern crate amethyst;
+    # extern crate serde;
+    # extern crate specs_derive;
     # use amethyst::{
     #     assets::{PrefabData, ProgressCounter},
     #     core::Named,
@@ -83,7 +89,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     #[serde(deny_unknown_fields)]
     pub struct Position(pub f32, pub f32, pub f32);
     
-    #[derive(Clone, Copy, Component, Debug, Derivative, Deserialize, Serialize, PrefabData)]
+    #[derive(Clone, Copy, Component, Debug, Deserialize, Serialize, PrefabData)]
     #[prefab(Component)]
     #[storage(VecStorage)]
     pub enum Weapon {
@@ -112,6 +118,9 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     **Note:** There is an important limitation when building `PrefabData`s, particularly enum `PrefabData`s. No two fields in the `PrefabData` or in any nested `PrefabData`s under it can access the same `Component` unless all accesses are reads. This is still true even if the fields appear in different variants of an enum. This means that the following `PrefabData` will fail at runtime when loaded:
 
     ```rust,edition2018,no_run,noplaypen
+    # extern crate amethyst;
+    # extern crate serde;
+    # extern crate specs_derive;
     # use amethyst::{
     #     assets::{PrefabData, ProgressCounter},
     #     core::Named,
@@ -119,9 +128,9 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     #     ecs::{
     #         storage::{DenseVecStorage, VecStorage},
     #         Component, Entity, WriteStorage,
-    #         renderer::sprite::prefab::SpriteScenePrefab,
     #     },
     #     prelude::*,
+    #     renderer::sprite::prefab::SpriteScenePrefab,
     #     Error,
     # };
     # use serde::{Deserialize, Serialize};
@@ -149,6 +158,9 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     The problem is that both the `SpriteScenePrefab`s need to write to `Trasform` and several other common `Components`. Because Amythest's underlyng ECS system determins what resources are accessed based on static types it can't determine that only one of the `SpriteScenePrefab`s will be accessed at a time and it attempts a double mutable borrow which fails. The solution is to define the `PrefabData` hierarchically so each component only appears once:
 
     ```rust,edition2018,no_run,noplaypen
+    # extern crate amethyst;
+    # extern crate serde;
+    # extern crate specs_derive;
     # use amethyst::{
     #     assets::{PrefabData, ProgressCounter},
     #     core::Named,
@@ -156,9 +168,9 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     #     ecs::{
     #         storage::{DenseVecStorage, VecStorage},
     #         Component, Entity, WriteStorage,
-    #         renderer::sprite::prefab::SpriteScenePrefab,
     #     },
     #     prelude::*,
+    #     renderer::sprite::prefab::SpriteScenePrefab,
     #     Error,
     # };
     # use serde::{Deserialize, Serialize};
@@ -180,7 +192,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
     }
     #[derive(Debug, Deserialize, Serialize, PrefabData)]
     #[serde(deny_unknown_fields)]
-    pub enum CustomPrefabData {
+    pub struct CustomPrefabData {
         sprite: SpriteScenePrefab,
         creature_details: CreatureDetailsPrefab,
     }
