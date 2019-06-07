@@ -34,7 +34,6 @@ use amethyst::{
     window::{ScreenDimensions, Window, WindowBundle},
     winit::VirtualKeyCode,
 };
-use std::sync::Arc;
 
 use log::info;
 

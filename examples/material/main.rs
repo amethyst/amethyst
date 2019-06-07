@@ -29,7 +29,6 @@ use amethyst::{
     window::{ScreenDimensions, Window, WindowBundle},
     Application, GameData, GameDataBuilder, SimpleState, StateData,
 };
-use std::sync::Arc;
 
 struct Example;
 

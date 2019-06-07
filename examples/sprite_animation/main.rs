@@ -36,7 +36,6 @@ use amethyst::{
     Application, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData, Trans,
 };
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 
 /// Animation ids used in a AnimationSet
 #[derive(Eq, PartialOrd, PartialEq, Hash, Debug, Copy, Clone, Deserialize, Serialize)]

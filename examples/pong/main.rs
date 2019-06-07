@@ -30,7 +30,6 @@ use amethyst::{
     utils::application_root_dir,
     window::{ScreenDimensions, Window, WindowBundle},
 };
-use std::sync::Arc;
 
 use crate::{audio::Music, bundle::PongBundle};
 use std::time::Duration;
