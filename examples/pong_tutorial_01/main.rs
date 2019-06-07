@@ -24,7 +24,7 @@ fn main() -> amethyst::Result<()> {
         app_root.join("examples/pong_tutorial_01/resources/display_config.ron");
 
     let game_data = GameDataBuilder::default()
-        // The WindowBundle provides all the scaffolding for opening a window and drawing to it
+        // The WindowBundle provides all the scaffolding for opening a window
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
         // A Processor system is added to handle loading spritesheets.
         .with(
@@ -103,7 +103,8 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             window_kind,
             1,
             surface_format,
-            Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
+            // clear screen to black
+            Some(ClearValue::Color([0.0, 0.0, 0.0, 1.0].into())),
         );
 
         let depth = graph_builder.create_image(
@@ -115,7 +116,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         // Create our single `Subpass`, which is the DrawFlat2D pass.
         // We pass the subpass builder a description of our pass for construction
-        let sprite = graph_builder.add_node(
+        let pass = graph_builder.add_node(
             SubpassBuilder::new()
                 .with_group(DrawFlat2DDesc::new().builder())
                 .with_color(color)
@@ -125,7 +126,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         // Finally, add the pass to the graph
         let _present = graph_builder
-            .add_node(PresentNode::builder(factory, surface, color).with_dependency(sprite));
+            .add_node(PresentNode::builder(factory, surface, color).with_dependency(pass));
 
         graph_builder
     }

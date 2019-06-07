@@ -10,14 +10,16 @@ use amethyst::{
     ecs::prelude::{Entity, ReadExpect, Resources},
     input::{get_key, is_close_requested, is_key_down},
     prelude::*,
+    renderer::{
+        pass::DrawPbrDesc,
+        rendy::mesh::{Normal, Position, Tangent, TexCoord},
+        types::DefaultBackend,
+        Factory, Format, GraphBuilder, GraphCreator, Kind, RenderGroupDesc, RenderingSystem,
+        SubpassBuilder,
+    },
     utils::{application_root_dir, scene::BasicScenePrefab},
     window::{ScreenDimensions, WindowBundle},
     winit::{ElementState, VirtualKeyCode, Window},
-    renderer::{
-        pass::DrawPbrDesc, types::DefaultBackend, Factory, Format, GraphBuilder, GraphCreator,
-        Kind, RenderGroupDesc, RenderingSystem, SpriteSheet, SubpassBuilder,
-        rendy::mesh::{Normal, Position, Tangent, TexCoord},
-    },
 };
 use serde::{Deserialize, Serialize};
 
@@ -178,10 +180,6 @@ impl SimpleState for Example {
 }
 
 fn main() -> amethyst::Result<()> {
-    run::<DefaultBackend>()
-}
-
-fn run<B: Backend>() -> amethyst::Result<()> {
     amethyst::Logger::from_config(amethyst::LoggerConfig {
         log_file: Some("animation_example.log".into()),
         level_filter: log::LevelFilter::Error,
@@ -201,7 +199,9 @@ fn run<B: Backend>() -> amethyst::Result<()> {
             "sampler_interpolation_system",
         ))?
         .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
-        .with_thread_local(RenderingSystem::<B, _>::new(ExampleGraph::default()));
+        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
+            ExampleGraph::default(),
+        ));
     let state: Example = Default::default();
     let mut game = Application::new(resources, state, game_data)?;
     game.run();
@@ -260,7 +260,7 @@ struct ExampleGraph {
     dirty: bool,
 }
 
-impl<B: Backend> GraphCreator<B> for ExampleGraph {
+impl GraphCreator<DefaultBackend> for ExampleGraph {
     fn rebuild(&mut self, res: &Resources) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
         let new_dimensions = res.try_fetch::<ScreenDimensions>();
@@ -273,7 +273,16 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         return self.dirty;
     }
 
-    fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
+    fn builder(
+        &mut self,
+        factory: &mut Factory<DefaultBackend>,
+        res: &Resources,
+    ) -> GraphBuilder<DefaultBackend, Resources> {
+        use amethyst::renderer::rendy::{
+            graph::present::PresentNode,
+            hal::command::{ClearDepthStencil, ClearValue},
+        };
+
         self.dirty = false;
 
         use amethyst::shred::SystemData;
@@ -282,8 +291,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
 
         let surface = factory.create_surface(&window);
         let dimensions = self.dimensions.as_ref().unwrap();
-        let window_kind =
-            image::Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
+        let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 
         let mut graph_builder = GraphBuilder::new();
         let color = graph_builder.create_image(
@@ -301,9 +309,8 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         );
 
         let pass = graph_builder.add_node(
-            DrawPbrDesc::skinned()
-                .builder()
-                .into_subpass()
+            SubpassBuilder::new()
+                .with_group(DrawPbrDesc::skinned().builder())
                 .with_color(color)
                 .with_depth_stencil(depth)
                 .into_pass(),

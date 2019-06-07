@@ -36,13 +36,17 @@ statements to make it through this chapter:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-use amethyst::assets::{AssetStorage, Loader};
-use amethyst::core::transform::Transform;
-use amethyst::ecs::prelude::{Component, DenseVecStorage};
-use amethyst::prelude::*;
-use amethyst::renderer::{
-    Camera, Flipped, PngFormat, Projection, SpriteRender, SpriteSheet,
-    SpriteSheetFormat, SpriteSheetHandle, Texture, TextureMetadata,
+use amethyst::{
+    assets::Processor,
+    core::TransformBundle,
+    ecs::{ReadExpect, Resources, SystemData},
+    prelude::*,
+    renderer::{
+        pass::DrawFlat2DDesc, types::DefaultBackend, Factory, Format, GraphBuilder, GraphCreator,
+        Kind, RenderGroupDesc, RenderingSystem, SpriteSheet, SubpassBuilder,
+    },
+    utils::application_root_dir,
+    window::{ScreenDimensions, Window, WindowBundle},
 };
 ```
 
@@ -55,12 +59,12 @@ We will leave it empty for now, but it will become useful later down the line.
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
-# struct MyState;
-# impl SimpleState for MyState {
-fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+# struct Pong;
+impl SimpleState for Pong {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
 
+    }
 }
-# }
 ```
 
 The `StateData<'_, GameData<'_, '_>>` is a structure given to all State methods. The important
@@ -360,10 +364,11 @@ This is the same kind of error as before; this time the `Component` is a
 
 Amethyst has a lot of internal systems it uses to keep things running we need
 to bring into the context of the `World`. For simplicity, these have been
-wrapped up into "Bundles" which include related systems and resources. We can
-add these to our Application's `GameData` using the `with_bundle` method. We
-already have one of these in `main.rs`: the `RenderBundle`. We can just follow
-the pattern and add the `TransformBundle` after importing it:
+grouped into "Bundles" which include related systems and resources. We can
+add these to our Application's `GameData` using the `with_bundle` method,
+similarily to how you would register a system. We already have `WindowBundle` in place,
+registering another one will look similar. You have to first import
+`TransformBundle`, then register it as follows:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
@@ -385,11 +390,13 @@ fn main() -> amethyst::Result<()> {
 # struct Pong;
 # impl SimpleState for Pong { }
     let game_data = GameDataBuilder::default()
-        .with_bundle(
-          RenderBundle::new(pipe, Some(config))
-            .with_sprite_sheet_processor()
-        )?
-        .with_bundle(TransformBundle::new())?;
+        // The WindowBundle provides all the scaffolding for opening a window
+        .with_bundle(WindowBundle::from_config_path(display_config_path))?
+        // Add the transform bundle which handles tracking entity positions
+        .with_bundle(TransformBundle::new())?
+        // --snip--
+        ;
+
 # let assets_dir = "/";
 # let mut game = Application::new(assets_dir, Pong, game_data)?;
 # Ok(())

@@ -10,23 +10,12 @@ use amethyst::{
     input::{InputBundle, StringBindings},
     prelude::*,
     renderer::{
-        pass::DrawFlat2DDesc,
-        rendy::{
-            factory::Factory,
-            graph::{
-                render::{RenderGroupDesc, SubpassBuilder},
-                GraphBuilder,
-            },
-            hal::{format::Format, image},
-        },
-        sprite::SpriteSheet,
-        types::DefaultBackend,
-        GraphCreator, RenderingSystem,
+        pass::DrawFlat2DDesc, types::DefaultBackend, Factory, Format, GraphBuilder, GraphCreator,
+        Kind, RenderGroupDesc, RenderingSystem, SpriteSheet, SubpassBuilder,
     },
     utils::application_root_dir,
     window::{ScreenDimensions, Window, WindowBundle},
 };
-use std::sync::Arc;
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
@@ -36,7 +25,7 @@ fn main() -> amethyst::Result<()> {
         app_root.join("examples/pong_tutorial_04/resources/display_config.ron");
 
     let game_data = GameDataBuilder::default()
-        // The WindowBundle provides all the scaffolding for opening a window and drawing to it
+        // The WindowBundle provides all the scaffolding for opening a window
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(TransformBundle::new())?
@@ -82,7 +71,6 @@ fn main() -> amethyst::Result<()> {
 #[derive(Default)]
 struct ExampleGraph {
     dimensions: Option<ScreenDimensions>,
-    surface_format: Option<Format>,
     dirty: bool,
 }
 
@@ -118,16 +106,12 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         // Retrieve a reference to the target window, which is created by the WindowBundle
         let window = <ReadExpect<'_, Window>>::fetch(res);
+        let dimensions = self.dimensions.as_ref().unwrap();
+        let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 
         // Create a new drawing surface in our window
         let surface = factory.create_surface(&window);
-        // cache surface format to speed things up
-        let surface_format = *self
-            .surface_format
-            .get_or_insert_with(|| factory.get_surface_format(&surface));
-        let dimensions = self.dimensions.as_ref().unwrap();
-        let window_kind =
-            image::Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
+        let surface_format = factory.get_surface_format(&surface);
 
         // Begin building our RenderGraph
         let mut graph_builder = GraphBuilder::new();
@@ -135,7 +119,8 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             window_kind,
             1,
             surface_format,
-            Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
+            // clear screen to black
+            Some(ClearValue::Color([0.0, 0.0, 0.0, 1.0].into())),
         );
 
         let depth = graph_builder.create_image(

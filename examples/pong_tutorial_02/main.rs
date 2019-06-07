@@ -23,7 +23,7 @@ fn main() -> amethyst::Result<()> {
         app_root.join("examples/pong_tutorial_02/resources/display_config.ron");
 
     let game_data = GameDataBuilder::default()
-        // The WindowBundle provides all the scaffolding for opening a window and drawing to it
+        // The WindowBundle provides all the scaffolding for opening a window
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(TransformBundle::new())?
@@ -104,7 +104,8 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             window_kind,
             1,
             surface_format,
-            Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
+            // clear screen to black
+            Some(ClearValue::Color([0.0, 0.0, 0.0, 1.0].into())),
         );
 
         let depth = graph_builder.create_image(

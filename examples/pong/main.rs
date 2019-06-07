@@ -72,7 +72,7 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
-        // The WindowBundle provides all the scaffolding for opening a window and drawing to it
+        // The WindowBundle provides all the scaffolding for opening a window
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(TransformBundle::new())?
