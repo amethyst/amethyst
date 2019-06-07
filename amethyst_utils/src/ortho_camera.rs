@@ -64,6 +64,25 @@ impl Default for CameraOrthoWorldCoordinates {
 /// to preferences in the "mode" and "world_coordinates" fields.
 /// It adjusts the camera so that the camera's world coordinates are always visible.
 /// You must add the `CameraOrthoSystem` to your dispatcher for this to take effect (no dependencies required).
+///
+/// # Example
+///
+/// ```rust
+/// # use amethyst_core::ecs::{Builder, World};
+/// # use amethyst_core::Transform;
+/// # use amethyst_rendy::camera::Camera;
+/// # use amethyst_utils::ortho_camera::*;
+/// # let mut world = World::new();
+/// # world.register::<Transform>();
+/// # world.register::<Camera>();
+/// # world.register::<CameraOrtho>();
+/// world
+///     .create_entity()
+///     .with(Transform::default())
+///     .with(Camera::standard_2d(1920.0, 1080.0))
+///     .with(CameraOrtho::normalized(CameraNormalizeMode::Contain))
+///     .build();
+/// ```
 #[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, PrefabData)]
 #[prefab(Component)]
 pub struct CameraOrtho {
