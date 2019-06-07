@@ -42,10 +42,15 @@ pub mod util;
 #[cfg(feature = "test-support")]
 mod render_test_bundle;
 
-pub use formats::{mesh::MeshPrefab, texture::TexturePrefab};
+pub use camera::Camera;
+pub use formats::{
+    mesh::MeshPrefab,
+    texture::{ImageFormat, TexturePrefab},
+};
 pub use mtl::{Material, MaterialDefaults};
-pub use sprite::{Sprite, SpriteRender, SpriteSheet};
+pub use sprite::{Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat};
 pub use system::{GraphCreator, RenderingSystem};
+pub use transparent::Transparent;
 pub use types::{Backend, Mesh, Texture};
 pub use util::{simple_shader_set, ChangeDetection};
 
