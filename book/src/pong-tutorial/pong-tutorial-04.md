@@ -398,9 +398,8 @@ fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans 
 # }
 ```
 
-That method allows you to transition out of state,
-and we don't want to do that. For that reason we will always return `Trans::None`,
-which tells it to not transition.
+That method allows you to transition out of state using it's return value.
+Here, we do not want to change any state, so we return `Trans::None`.
 
 Now we have to move paddle creation to that method, and add some delay to it. Our `update` runs every frame,
 so in order to do something only once after given time, we have to use our local state.
