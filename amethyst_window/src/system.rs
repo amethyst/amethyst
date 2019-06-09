@@ -62,8 +62,8 @@ impl WindowSystem {
 impl<'a> System<'a> for WindowSystem {
     type SystemData = (WriteExpect<'a, ScreenDimensions>, ReadExpect<'a, Window>);
 
-    fn run(&mut self, (mut screen_dimesnions, window): Self::SystemData) {
-        self.manage_dimensions(&mut screen_dimesnions, &window);
+    fn run(&mut self, (mut screen_dimensions, window): Self::SystemData) {
+        self.manage_dimensions(&mut screen_dimensions, &window);
     }
     fn setup(&mut self, res: &mut Resources) {
         if let Some(window) = self.window.take() {

@@ -11,7 +11,7 @@ Let's start a new project:
 
 Update the dependencies in the project's `Cargo.toml` so that it contains:
 
-```
+```toml
 [package]
 name = "pong"
 version = "0.1.0"
@@ -24,7 +24,8 @@ features = ["vulkan"]
 ```
 
 Alternatively, if you are developing on macOS, you might want to use `metal` rendering backend instead of `vulkan`. In this case you should change `features` entry in amethyst dependency.
-```
+
+```toml
 [dependencies.amethyst]
 git = "https://github.com/amethyst/amethyst.git"
 features = ["metal"]
@@ -33,7 +34,7 @@ features = ["metal"]
 We can start with editing the `main.rs` file inside `src` directroy.
 You can delete everything in that file, then add these imports:
 
-```rust,edition2018,no_run,noplaypen
+```rust,ignore
 //! Pong Tutorial 1
 
 use amethyst::{
@@ -67,7 +68,7 @@ pub struct Pong;
 We'll be implementing the [`SimpleState`][simplestate] trait on this struct, which is
 used by Amethyst's state machine to start, stop, and update the game.
 
-```rust,edition2018,no_run,noplaypen
+```rust,ignore
 impl SimpleState for Pong {}
 ```
 
@@ -94,7 +95,7 @@ fn main() -> amethyst::Result<()> {
 > **Note:** The [SimpleState][simplestate] is just a simplified version of [State][state] trait.
 > It already implements a bunch of stuff for us, like the `State`'s `update`
 > and `handle_event` methods that you would have to implement yourself were you
-> using just a regular `State`. It's behaviour mostly cares about handling the exit signal cleanly,
+> using just a regular `State`. Its behaviour mostly cares about handling the exit signal cleanly,
 > by just quitting the application directly from current state.
 
 ## Setting up the logger
@@ -103,7 +104,11 @@ Inside `main()` we first start the amethyst logger with a default `LoggerConfig`
 so we can see errors, warnings and debug messages while the program is running.
 
 ```rust,edition2018,no_run,noplaypen
-    amethyst::start_logger(Default::default());
+# extern crate amethyst;
+#
+# fn main() {
+amethyst::start_logger(Default::default());
+# }
 ```
 
 From now on, every info, warning and error will be present and clearly formatted
@@ -148,8 +153,18 @@ In `main()` in `main.rs`, we will prepare the path to a file containing
 the display configuration:
 
 ```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+#
+# use amethyst::{
+#     utils::application_root_dir,
+#     Error,
+# };
+#
+# fn main() -> Result<(), Error>{
     let app_root = application_root_dir()?;
     let display_config_path = app_root.join("resources").join("display_config.ron");
+#     Ok(())
+# }
 ```
 
 ## Opening a window
@@ -159,12 +174,12 @@ we have to create an amethyst application scaffolding and tell it to open a wind
 
 In `main()` in `main.rs` we are going to add the basic application setup:
 
-```rust,edition2018,no_run,noplaypen
+```rust,ignore
     let game_data = GameDataBuilder::default()
         // The WindowBundle provides all the scaffolding for opening a window
         .with_bundle(WindowBundle::from_config_path(display_config_path))?;
 
-    let assets_dir = app_root.join("assets/");
+    let assets_dir = app_root.join("assets");
     let mut game = Application::new(assets_dir, Pong, game_data)?;
     game.run();
 ```
@@ -197,7 +212,7 @@ necessary to show a window, but we need the renderer to display anything inside 
 We'll cover rendering in more depth later in this tutorial, but for now place the
 following code _below_ the `main()` function:
 
-```rust,edition2018,no_run,noplaypen
+```rust,ignore
 // This graph structure is used for creating a proper `RenderGraph` for rendering.
 // A renderGraph can be thought of as the stages during a render pass. In our case,
 // we are only executing one subpass (DrawFlat2D, or the sprite pass). This graph
@@ -300,7 +315,7 @@ so to get that cool green color you can try `[0.00196, 0.23726, 0.21765, 1.0]`.
 Now let's pack everything up and run it back in the `main()` function. We have to
 expand the existing `GameDataBuilder` with `RenderingSystem` that uses our graph:
 
-```rust,edition2018,no_run,noplaypen
+```rust,ignore
     let game_data = GameDataBuilder::default()
         // The WindowBundle provides all the scaffolding for opening a window
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
