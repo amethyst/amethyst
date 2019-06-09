@@ -1,7 +1,7 @@
 # Setting up the project
 
 In this chapter we will go through the basics of setting up the amethyst project,
-starting logger, openning a window and preparing basic rendering setup.
+starting the logger, opening a window and preparing a simple rendering setup.
 
 ## Creating new project
 
@@ -23,7 +23,7 @@ git = "https://github.com/amethyst/amethyst.git"
 features = ["vulkan"]
 ```
 
-Alternatively, if you are developing on macOS, you might want to use `metal` rendering backend instead of `vulkan`. In this case you should change `features` entry in amethyst dependency.
+Alternatively, if you are developing on macOS, you might want to use the `metal` rendering backend instead of `vulkan`. In this case you should change the `features` entry in the `amethyst` dependency table.
 
 ```toml
 [dependencies.amethyst]
@@ -169,7 +169,7 @@ the display configuration:
 
 ## Opening a window
 
-After preparing the display config, now it's time to actually use it. To do that,
+After preparing the display config, it's time to actually use it. To do that,
 we have to create an amethyst application scaffolding and tell it to open a window for us.
 
 In `main()` in `main.rs` we are going to add the basic application setup:
@@ -201,7 +201,7 @@ continue to run until our `SimpleState` returns `Trans::Quit`, or when all state
 have been popped off the state machine's stack.
 
 Try compiling the code now. You should be able to see the window already.
-The contents of that window right now is undefined and up to the operating system.
+The content of that window right now is undefined and up to the operating system.
 It's time to start drawing on it.
 
 ## Setting up basic rendering
