@@ -7,18 +7,18 @@
 ## Assets
 
 * `SimpleFormat` trait has merged into `Format`.
-* `Options` associated type has been removed.
+* `Format::Options` associated type has been removed; options are now stored in the format instance.
 * `NAME` associated constant is now a method call.
 * `Format<A>` type parameter now takes in `Format<D>`, where `D` is `A::Data`.
 * Implement `import_simple` instead of `import`.
-* `Loader#load` no longer takes in the `Options` parameter.
+* `Loader::load` no longer takes in the `Options` parameter.
 
 ## Input
 
 * `Bindings<String, String>` is now `Bindings<StringBindings>`.
 * `Bindings<AX, AC>` is now `Bindings<T>`, where `T` is a new type you must implement:
 
-    ```rust
+    ```rust,ignore
     pub struct ControlBindings;
 
     impl BindingTypes for ControlBindings {
@@ -55,7 +55,7 @@
 * `DisplayConfig`'s `fullscreen` field is now an `Option<MonitorIdent>`. `MonitorIdent` is `MonitorIdent(u16, String)`, indicating the native monitor display ID, and its [name](https://docs.rs/winit/0.19.1/winit/struct.MonitorId.html#method.get_name).
 * `WindowBundle` is now separate from `amethyst_renderer`.
 
-    ```rust
+    ```rust,ignore
     use amethyst::window::WindowBundle;
 
     game_data.with_bundle(WindowBundle::from_config_file(display_config_path))?;
@@ -65,7 +65,7 @@
 
 * `amethyst::renderer::VirtualKeyCode` is now `amethyst::input::VirtualKeyCode`
 * `amethyst::renderer::DisplayConfig` is now `amethyst::window::DisplayConfig`
-* `amethyst::renderer::WindowEvent` is now `amethyst::window::WindowEvent`
+* `amethyst::renderer::WindowEvent` is now `amethyst::winit::WindowEvent`
 * `amethyst::renderer::Event` is no longer re-exported. Use `amethyst::winit::Event`
 * `amethyst::renderer::Transparent` is now under `amethyst::renderer::transparent::Transparent`.
 * `amethyst::renderer::Visibility` is now under `amethyst::renderer::visibility::Visibility`.
@@ -73,7 +73,7 @@
 * `Flipped` component is removed. You can specify `flipped` during sprite loading, or mutating `Transform` at run time.
 * To load a texture in memory, you can't use `[0.; 4].into()` as the `TextureData` anymore. Use:
 
-    ```rust
+    ```rust,ignore
     use amethyst::{
         assets::{AssetStorage, Handle, Loader, Prefab, PrefabLoader},
         ecs::World,
@@ -96,7 +96,7 @@
 
     In `main.rs`:
 
-    ```rust
+    ```rust,ignore
     use amethyst::renderer::{types::DefaultBackend, RenderingSystem};
 
     use crate::render_graph::RenderGraph;
@@ -112,9 +112,9 @@
 
     In `render_graph.rs`:
 
-    ```rust
-    use std::sync::Arc;
-
+    ```rust,edition2018,no_run,noplaypen
+    # extern crate amethyst;
+    #
     use amethyst::{
         ecs::{ReadExpect, Resources, SystemData},
         renderer::{
@@ -142,7 +142,6 @@
     #[derive(Default)]
     pub struct RenderGraph {
         dimensions: Option<ScreenDimensions>,
-        surface_format: Option<Format>,
         dirty: bool,
     }
 
@@ -166,21 +165,19 @@
         ) -> GraphBuilder<DefaultBackend, Resources> {
             self.dirty = false;
 
-            let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
-            let surface = factory.create_surface(&window);
-            // cache surface format to speed things up
-            let surface_format = *self
-                .surface_format
-                .get_or_insert_with(|| factory.get_surface_format(&surface));
+            let window = <ReadExpect<'_, Window>>::fetch(res);
             let dimensions = self.dimensions.as_ref().unwrap();
             let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
+            let surface = factory.create_surface(&window);
+            let surface_format = factory.get_surface_format(&surface);
 
             let mut graph_builder = GraphBuilder::new();
             let color = graph_builder.create_image(
                 window_kind,
                 1,
                 surface_format,
-                Some(ClearValue::Color([0.1, 0.1, 0.1, 1.0].into())),
+                // clear screen to black
+                Some(ClearValue::Color([0.0, 0.0, 0.0, 1.0].into())),
             );
 
             let depth = graph_builder.create_image(
@@ -190,22 +187,17 @@
                 Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
             );
 
-            let sprite = graph_builder.add_node(
+            let sprite_pass = graph_builder.add_node(
                 SubpassBuilder::new()
                     .with_group(DrawFlat2DDesc::new().builder())
-                    .with_color(color)
-                    .with_depth_stencil(depth)
-                    .into_pass(),
-            );
-            let sprite_trans = graph_builder.add_node(
-                SubpassBuilder::new()
                     .with_group(DrawFlat2DTransparentDesc::new().builder())
                     .with_color(color)
                     .with_depth_stencil(depth)
                     .into_pass(),
             );
-            let ui = graph_builder.add_node(
+            let ui_pass = graph_builder.add_node(
                 SubpassBuilder::new()
+                    .with_dependency(sprite_pass)
                     .with_group(DrawUiDesc::new().builder())
                     .with_color(color)
                     .with_depth_stencil(depth)
@@ -214,8 +206,8 @@
 
             let _present = graph_builder.add_node(
                 PresentNode::builder(factory, surface, color)
-                    .with_dependency(sprite_trans)
-                    .with_dependency(sprite),
+                    .with_dependency(sprite_pass)
+                    .with_dependency(ui_pass),
             );
 
             graph_builder
@@ -224,9 +216,9 @@
 
     ```
 
-* `RenderBundle#with_sprite_sheet_processor()` is replaced by:
+* `RenderBundle::with_sprite_sheet_processor()` is replaced by:
 
-    ```rust
+    ```rust,ignore
     game_data.with(
         Processor::<SpriteSheet>::new(),
         "sprite_sheet_processor",
@@ -234,9 +226,9 @@
     );
     ```
 
-* `RenderBundle#with_sprite_visibility_sorting()` is replaced by:
+* `RenderBundle::with_sprite_visibility_sorting()` is replaced by:
 
-    ```rust
+    ```rust,ignore
     use amethyst::rendy::sprite_visibility::SpriteVisibilitySortingSystem;
 
     game_data.with(
@@ -257,7 +249,7 @@ Camera changes:
     +camera: Perspective(aspect: 1.3, fovy: 1.0471975512, znear: 0.1, zfar: 2000.0)
     ```
 
-* `nalgebra`'s `Perspective3`/`Orthographic3` are _no longer compatible_, as they use OpenGL coordinates instead of Vulkan.
+* `nalgebra`'s `Perspective3`/`Orthographic3` are *no longer compatible*, as they use OpenGL coordinates instead of Vulkan.
 
     Amethyst now has amethyst::rendy::camera::Orthographic and Perspective, respectively. These types are mostly feature-parity with nalgebra, but correct for vulkan. You can use as_matrix to get the inner Matrix4 value.
 
@@ -277,7 +269,7 @@ Z-axis direction clarifications:
 
 * The `render_base` function has been changed:
 
-    ```rust
+    ```rust,ignore
     use amethyst_test::{AmethystApplication, RenderBaseAppExt};
 
     AmethystApplication::render_base()
