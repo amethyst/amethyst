@@ -43,9 +43,8 @@ Then let's add a `initialise_ball` function the same way we wrote the
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
-# use amethyst::assets::{Loader, AssetStorage};
-# use amethyst::renderer::{Texture, PngFormat, TextureHandle, SpriteRender,
-#                          TextureCoordinates, Sprite, SpriteSheet, SpriteSheetHandle, TextureMetadata};
+# use amethyst::assets::{Loader, AssetStorage, Handle};
+# use amethyst::renderer::{Texture, TextureHandle, SpriteRender, Sprite, SpriteSheet};
 # use amethyst::ecs::World;
 # use amethyst::core::transform::Transform;
 # use amethyst::ecs::prelude::{Component, DenseVecStorage};
@@ -65,7 +64,7 @@ Then let's add a `initialise_ball` function the same way we wrote the
 # const ARENA_HEIGHT: f32 = 100.0;
 # const ARENA_WIDTH: f32 = 100.0;
 /// Initialises one ball in the middle-ish of the arena.
-fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
+fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
     // Create the translation.
     let mut local_transform = Transform::default();
     local_transform.set_translation_xyz(ARENA_WIDTH / 2.0, ARENA_HEIGHT / 2.0, 0.0);
@@ -98,7 +97,8 @@ Finally, let's make sure the code is working as intended by updating the `on_sta
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
-# use amethyst::renderer::{TextureHandle, SpriteSheetHandle};
+# use amethyst::assets::Handle,
+# use amethyst::renderer::{TextureHandle, SpriteSheet};
 # use amethyst::ecs::World;
 # struct Paddle;
 # impl amethyst::ecs::Component for Paddle {
@@ -108,10 +108,10 @@ Finally, let's make sure the code is working as intended by updating the `on_sta
 # impl amethyst::ecs::Component for Ball {
 #   type Storage = amethyst::ecs::VecStorage<Self>;
 # }
-# fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) { }
-# fn initialise_paddles(world: &mut World, spritesheet: SpriteSheetHandle) { }
+# fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) { }
+# fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) { }
 # fn initialise_camera(world: &mut World) { }
-# fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle { unimplemented!() }
+# fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { unimplemented!() }
 # struct MyState;
 # impl SimpleState for MyState {
 fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
@@ -368,7 +368,123 @@ let game_data = GameDataBuilder::default()
 You should now have a ball moving and bouncing off paddles and off the top
 and bottom of the screen. However, you will quickly notice that if the ball
 goes out of the screen on the right or the left, it never comes back
-and the game is over...
+and the game is over. You might not even see that at all, as the ball might be already
+outside of the screen when the window comes up. You might have to dramatically reduce
+`BALL_VELOCITY_X` in order to see that in action. This obviously isn't a good solution for actual game.
+To fix that problem and better see what's happening we have to spawn the ball with a slight delay.
+
+## Spwaning ball with a delay
+
+The ball now spawns and moves off screen instantly when the game starts. This might be disorienting,
+as you might be thrown into the game and loose your first point before you had the time to notice.
+We also have to give some time for the operating system and the renderer to initialise the window
+before the game starts. Usually you would have a separate state with a game menu, so this isn't an issue.
+Our pong game throws you right into the action, so we have to fix that problem.
+
+Let's delay the first time the ball spawns. This is also a good opportunity to use our game state
+struct to actually hold some data.
+
+First, let's add a new method to our state: `update`.
+Let's add that `update` method just below `on_start`:
+
+```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::prelude::*;
+# struct MyState;
+# impl SimpleState for MyState {
+fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    Trans::None
+}
+# }
+```
+
+That method allows you to transition out of state,
+and we don't want to do that. For that reason we will always return `Trans::None`,
+which tells it to not transition.
+
+Now we have to move paddle creation to that method, and add some delay to it. Our `update` runs every frame,
+so in order to do something only once after given time, we have to use our local state.
+Additionaly, notice that `initialise_paddles` requires us to provide the `sprite_sheet_handle`, but it was created
+as a local variable inside `on_start`. For that reason we have to make it a part of the state too.
+
+Let's add some fields to our `Pong` struct:
+
+```rust,edition2018,no_run,noplaypen
+#[derive(Default)]
+pub struct Pong {
+    ball_spawn_timer: Option<f32>,
+    sprite_sheet_handle: Option<Handle<SpriteSheet>>,
+}
+```
+
+Our timer is represented by `Option<f32>`, which will count down to zero when available, and be replaced with `None` after
+the time has passed. Our sprite sheet handle is also inside `Option`, because we can't create it inside `Pong` constructor.
+It will be created inside `on_start` method instead.
+
+We've also added `#[derive(Default)]`, which will automatically implement `Default` trait for us, which allows to create
+default empty state. Now let's use that inside our `Application` creation code in `main.rs`:
+
+```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::prelude::*;
+#
+# struct Pong;
+# impl SimpleState for Pong { }
+# fn main() -> amethyst::Result<()> {
+#   let game_data = GameDataBuilder::default();
+#   let assets_dir = "/";
+let mut game = Application::new(assets_dir, Pong::default(), game_data)?;
+#   Ok(())
+# }
+```
+
+Now let's finish our timer and ball spawning code. We have to do two things:
+- First, we have to initialize our state and remove `initialise_ball` from `on_start`,
+- then we have to `initialise_ball` once after the time has passed inside `update`:
+
+```rust,edition2018,no_run,noplaypen
+
+# pub struct Pong {
+#     ball_spawn_timer: Option<f32>,
+#     sprite_sheet_handle: Option<Handle<SpriteSheet>>,
+# }
+impl SimpleState for Pong {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        let world = data.world;
+
+        // Wait one second before spawning the ball.
+        self.ball_spawn_timer.replace(1.0);
+
+        // Load the spritesheet necessary to render the graphics.
+        // `spritesheet` is the layout of the sprites on the image;
+        // `texture` is the pixel data.
+        self.sprite_sheet_handle.replace(load_sprite_sheet(world));
+        initialise_paddles(world, self.sprite_sheet_handle.clone().unwrap());
+        initialise_camera(world);
+    }
+
+    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+        if let Some(mut timer) = self.ball_spawn_timer.take() {
+            // If the timer isn't expired yet, substract the time that passed since last update.
+            {
+                let time = data.world.res.fetch::<Time>();
+                timer -= time.delta_seconds();
+            }
+            if timer <= 0.0 {
+                // When timer expire, spawn the ball
+                initialise_ball(data.world, self.sprite_sheet_handle.clone().unwrap());
+            } else {
+                // If timer is not expired yet, put it back onto the state.
+                self.ball_spawn_timer.replace(timer);
+            }
+        }
+        Trans::None
+    }
+}
+```
+
+Now our ball will only show up after a set delay, giving us some breathing room after startup.
+This will give us a better opportunity to see what happens to the ball immediately when it spawns.
 
 ## Summary
 

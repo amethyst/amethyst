@@ -2,6 +2,7 @@
 
 mod pong;
 
+use crate::pong::Pong;
 use amethyst::{
     assets::Processor,
     core::TransformBundle,
@@ -43,7 +44,7 @@ fn main() -> amethyst::Result<()> {
     // of the git repository. It only is a different location to load the assets from.
     let assets_dir = app_root.join("examples/assets/");
 
-    let mut game = Application::new(assets_dir, crate::pong::Pong, game_data)?;
+    let mut game = Application::new(assets_dir, Pong, game_data)?;
     game.run();
     Ok(())
 }

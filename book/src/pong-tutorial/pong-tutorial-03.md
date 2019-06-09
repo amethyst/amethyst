@@ -361,15 +361,16 @@ will take care of that for us, as well as set up the storage.
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
-# use amethyst::renderer::{TextureHandle, SpriteSheetHandle};
+# use amethyst::renderer::{TextureHandle, SpriteSheet};
+# use amethyst::assets::{Handle};
 # use amethyst::ecs::World;
 # struct Paddle;
 # impl amethyst::ecs::Component for Paddle {
 #   type Storage = amethyst::ecs::VecStorage<Paddle>;
 # }
-# fn initialise_paddles(world: &mut World, spritesheet: SpriteSheetHandle) { }
+# fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) { }
 # fn initialise_camera(world: &mut World) { }
-# fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle { unimplemented!() }
+# fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { unimplemented!() }
 # struct MyState;
 # impl SimpleState for MyState {
 fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {

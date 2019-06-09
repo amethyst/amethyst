@@ -586,53 +586,14 @@ mod tests {
         assert_relative_eq!(100.0, proj.far(), max_relative = 0.1);
 
         let camera_standard = Camera::standard_2d(1920.0, 1280.0);
+        let ortho = camera_standard.projection().as_orthographic().unwrap();
 
         // TODO: we need to solve these precision errors
-        assert_relative_eq!(
-            -640.0,
-            camera_standard
-                .projection()
-                .as_orthographic()
-                .unwrap()
-                .bottom(),
-            max_relative = 1.0
-        );
-        assert_relative_eq!(
-            640.0,
-            camera_standard
-                .projection()
-                .as_orthographic()
-                .unwrap()
-                .top(),
-            max_relative = 1.0
-        );
-        assert_relative_eq!(
-            -960.0,
-            camera_standard
-                .projection()
-                .as_orthographic()
-                .unwrap()
-                .left(),
-            max_relative = 1.0
-        );
-        assert_relative_eq!(
-            960.0,
-            camera_standard
-                .projection()
-                .as_orthographic()
-                .unwrap()
-                .right(),
-            max_relative = 1.0
-        );
-        assert_relative_eq!(
-            0.1,
-            camera_standard
-                .projection()
-                .as_orthographic()
-                .unwrap()
-                .near(),
-            max_relative = 1.0
-        );
+        assert_relative_eq!(-640.0, ortho.bottom(), max_relative = 1.0);
+        assert_relative_eq!(640.0, ortho.top(), max_relative = 1.0);
+        assert_relative_eq!(-960.0, ortho.left(), max_relative = 1.0);
+        assert_relative_eq!(960.0, ortho.right(), max_relative = 1.0);
+        assert_relative_eq!(0.1, ortho.near(), max_relative = 1.0);
         //assert_ulps_eq!(2000.0, camera_standard.projection().as_orthographic().unwrap().far());
     }
 

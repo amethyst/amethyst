@@ -21,11 +21,16 @@ use amethyst::{
     gltf::GltfSceneLoaderSystem,
     input::{is_close_requested, is_key_down, Axis, Bindings, Button, InputBundle, StringBindings},
     prelude::*,
-    utils::{application_root_dir, fps_counter::FPSCounterBundle, tag::TagFinder},
+    utils::{
+        application_root_dir,
+        auto_fov::{AutoFov, AutoFovSystem},
+        fps_counter::FPSCounterBundle,
+        tag::TagFinder,
+    },
     window::{ScreenDimensions, Window, WindowBundle},
 };
 use amethyst_rendy::{
-    camera::{ActiveCamera, Camera, Projection},
+    camera::{ActiveCamera, Camera},
     debug_drawing::DebugLines,
     light::{Light, PointLight},
     mtl::{Material, MaterialDefaults},
@@ -42,11 +47,7 @@ use amethyst_rendy::{
             render::{RenderGroupDesc, SubpassBuilder},
             GraphBuilder,
         },
-        hal::{
-            command::{ClearDepthStencil, ClearValue},
-            format::Format,
-            image,
-        },
+        hal::command::{ClearDepthStencil, ClearValue},
         mesh::{Normal, Position, Tangent, TexCoord},
         texture::palette::load_from_linear_rgba,
     },
@@ -58,8 +59,9 @@ use amethyst_rendy::{
     transparent::Transparent,
     types::{Backend, DefaultBackend, Mesh, Texture},
     visibility::{BoundingSphere, VisibilitySortingSystem},
+    Format, Kind,
 };
-use std::{path::Path, sync::Arc};
+use std::path::Path;
 
 use prefab_data::{AnimationMarker, Scene, ScenePrefabData, SpriteAnimationId};
 
@@ -128,40 +130,6 @@ enum RenderMode {
 impl Default for RenderMode {
     fn default() -> Self {
         RenderMode::Pbr
-    }
-}
-
-struct CameraCorrectionSystem {
-    last_aspect: f32,
-}
-
-impl CameraCorrectionSystem {
-    pub fn new() -> Self {
-        Self { last_aspect: 0.0 }
-    }
-}
-
-impl<'a> System<'a> for CameraCorrectionSystem {
-    type SystemData = (
-        ReadExpect<'a, ScreenDimensions>,
-        ReadExpect<'a, ActiveCamera>,
-        WriteStorage<'a, Camera>,
-    );
-
-    fn run(&mut self, (dimensions, active_cam, mut cameras): Self::SystemData) {
-        let current_aspect = dimensions.aspect_ratio();
-
-        if current_aspect != self.last_aspect {
-            self.last_aspect = current_aspect;
-
-            let camera = cameras.get_mut(active_cam.entity).unwrap();
-            *camera = Camera::from(Projection::perspective(
-                current_aspect,
-                std::f32::consts::FRAC_PI_3,
-                0.1,
-                1000.0,
-            ));
-        }
     }
 }
 
@@ -346,14 +314,14 @@ impl SimpleState for Example {
         let mut transform = Transform::default();
         transform.set_translation_xyz(0.0, 4.0, 8.0);
 
+        let mut auto_fov = AutoFov::default();
+        auto_fov.set_base_fovx(std::f32::consts::FRAC_PI_3);
+        auto_fov.set_base_aspect_ratio(13, 10);
+
         let camera = world
             .create_entity()
-            .with(Camera::from(Projection::perspective(
-                1.3,
-                std::f32::consts::FRAC_PI_3,
-                0.1,
-                1000.0,
-            )))
+            .with(Camera::standard_3d(13.0, 10.0))
+            .with(auto_fov)
             .with(transform)
             .with(FlyControlTag)
             .build();
@@ -535,8 +503,7 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with(OrbitSystem, "orbit", &[])
-        .with(CameraCorrectionSystem::new(), "cam", &[])
-        // .with_bundle(TransformBundle::new().with_dep(&["orbit"]))?
+        .with(AutoFovSystem::default(), "auto_fov", &[])
         .with_bundle(FPSCounterBundle::default())?
         .with(
             PrefabLoaderSystem::<ScenePrefabData>::default(),
@@ -590,12 +557,12 @@ fn main() -> amethyst::Result<()> {
         .with(
             SpriteVisibilitySortingSystem::new(),
             "sprite_visibility_system",
-            &["fly_movement", "cam", "transform_system"],
+            &["fly_movement", "auto_fov", "transform_system"],
         )
         .with(
             VisibilitySortingSystem::new(),
             "visibility_system",
-            &["fly_movement", "cam", "transform_system"],
+            &["fly_movement", "auto_fov", "transform_system"],
         )
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
@@ -648,8 +615,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
             .get_or_insert_with(|| factory.get_surface_format(&surface));
 
         let dimensions = self.dimensions.as_ref().unwrap();
-        let window_kind =
-            image::Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
+        let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 
         let mut graph_builder = GraphBuilder::new();
         let color = graph_builder.create_image(

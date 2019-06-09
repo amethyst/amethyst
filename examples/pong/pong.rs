@@ -1,14 +1,11 @@
 use crate::{systems::ScoreText, Ball, Paddle, Side, ARENA_HEIGHT, ARENA_WIDTH};
 use amethyst::{
-    assets::{AssetStorage, Loader},
+    assets::{AssetStorage, Handle, Loader},
     core::transform::Transform,
     ecs::prelude::World,
     prelude::*,
     renderer::{
-        camera::{Camera, Projection},
-        formats::texture::ImageFormat,
-        sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
-        Texture,
+        Camera, ImageFormat, Projection, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture,
     },
     ui::{Anchor, TtfFormat, UiText, UiTransform},
 };
@@ -34,7 +31,7 @@ impl SimpleState for Pong {
     }
 }
 
-fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
+fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
     // Load the sprite sheet necessary to render the graphics.
     // The texture is the pixel data
     // `sprite_sheet` is the layout of the sprites on the image
@@ -83,7 +80,7 @@ fn initialise_camera(world: &mut World) {
 }
 
 /// Initialises one paddle on the left, and one paddle on the right.
-fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
+fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
     use crate::{PADDLE_HEIGHT, PADDLE_VELOCITY, PADDLE_WIDTH};
 
     let mut left_transform = Transform::default();
@@ -128,7 +125,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
 }
 
 /// Initialises one ball in the middle-ish of the arena.
-fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
+fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
     use crate::{BALL_RADIUS, BALL_VELOCITY_X, BALL_VELOCITY_Y};
 
     // Create the translation.

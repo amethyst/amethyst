@@ -29,16 +29,11 @@ initialization code from the Pong code.
     # extern crate amethyst;
     #
     use amethyst::{
-        assets::{AssetStorage, Loader},
+        assets::{AssetStorage, Loader, Handle},
         core::transform::Transform,
         ecs::prelude::{Component, DenseVecStorage},
         prelude::*,
-        renderer::{
-            camera::{Camera, Projection},
-            formats::texture::ImageFormat,
-            sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
-            Texture,
-        },
+        renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
     };
     ```
 
@@ -104,29 +99,29 @@ will.
     # const ARENA_WIDTH: f32 = 100.0;
     # use amethyst::prelude::*;
     # use amethyst::ecs::World;
-    # use amethyst::renderer::camera::{Camera, Projection};
+    # use amethyst::renderer::Camera;
     # use amethyst::core::Transform;
     fn initialise_camera(world: &mut World) {
+        // Setup camera in a way that our screen covers whole arena and (0, 0) is in the bottom left. 
         let mut transform = Transform::default();
-        transform.set_translation_z(1.0);
+        transform.set_translation_xyz(ARENA_WIDTH * 0.5, ARENA_HEIGHT * 0.5, 1.0);
+
         world
             .create_entity()
-            .with(Camera::from(Projection::orthographic(
-                0.0,
-                ARENA_WIDTH,
-                0.0,
-                ARENA_HEIGHT,
-                0.1,
-                2000.0,
-            )))
+            .with(Camera::standard_2d(ARENA_WIDTH, ARENA_HEIGHT))
             .with(transform)
             .build();
     }
     ```
-
     This creates an entity that will carry our camera, with an orthographic
     projection of the size of our arena. We also attach a `Transform` component,
     representing its position in the world.
+
+    A default camera can be created with `standard_2d` which size of our arena.
+    This camera makes the X go right, Y go up and center of screen being at
+    the position of camera in space, i.e. whatever we pass to `set_translation_xyz`.
+    Our setup makes the `(0, 0)` point in space be represented on bottom left of the screen,
+    and `(ARENA_WIDTH, ARENA_HEIGHT)` being at the top right.
 
     Notice that we shifted the camera on the **Z** axis. This is to make sure
     that the camera is able to see the sprites that sit on the **XY** plane
@@ -134,10 +129,7 @@ will.
 
     ![Camera Z shift](../images/pong_tutorial/camera.png)
 
-    Note that as the origin of our camera is in the bottom left corner, we set
-    `ARENA_HEIGHT` as the top and `0.0` as the bottom.
-
-    > Orthographic projections are a type of 3D visualization on 2D screens
+    > **Note:** Orthographic projections are a type of 3D visualization on 2D screens
     > that keeps the size ratio of the 2D images displayed intact. They are very
     > useful in games without actual 3D, like our pong example. Perspective projections
     > are another way of displaying graphics, more useful in 3D scenes.
@@ -453,19 +445,19 @@ First, let's declare the function and load the spritesheet's image.
 # extern crate amethyst;
 #
 # use amethyst::{
-#     assets::{AssetStorage, Loader},
+#     assets::{AssetStorage, Loader, Handle},
 #     core::transform::Transform,
 #     ecs::prelude::{Component, DenseVecStorage},
 #     prelude::*,
 #     renderer::{
 #         camera::{Camera, Projection},
 #         formats::texture::ImageFormat,
-#         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
+#         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat},
 #         Texture,
 #     },
 # };
 #
-fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
+fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
     // Load the sprite sheet necessary to render the graphics.
     // The texture is the pixel data
     // `texture_handle` is a cloneable reference to the texture
@@ -542,12 +534,12 @@ Finally, we load the file containing the position of each sprite on the sheet.
 #     renderer::{
 #         camera::{Camera, Projection},
 #         formats::texture::ImageFormat,
-#         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
+#         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat, Handle<SpriteSheet>},
 #         Texture,
 #     },
 # };
 #
-fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
+fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
 #
 #   let texture_handle = {
 #       let loader = world.read_resource::<Loader>();
@@ -590,8 +582,8 @@ signature to:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::World;
-# use amethyst::renderer::sprite::SpriteSheetHandle;
-fn initialise_paddles(world: &mut World, sprite_sheet: SpriteSheetHandle)
+# use amethyst::renderer::sprite::Handle<SpriteSheet>;
+fn initialise_paddles(world: &mut World, sprite_sheet: Handle<SpriteSheet>)
 # { }
 ```
 
@@ -602,8 +594,8 @@ the right one is flipped horizontally.
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::World;
-# use amethyst::renderer::sprite::{SpriteSheetHandle, SpriteRender};
-# fn initialise_paddles(world: &mut World, sprite_sheet: SpriteSheetHandle) {
+# use amethyst::renderer::sprite::{Handle<SpriteSheet>, SpriteRender};
+# fn initialise_paddles(world: &mut World, sprite_sheet: Handle<SpriteSheet>) {
 // Assign the sprites for the paddles
 let sprite_render = SpriteRender {
     sprite_sheet: sprite_sheet.clone(),
@@ -621,9 +613,9 @@ Next we simply add the components to the paddle entities:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::World;
-# use amethyst::renderer::sprite::{SpriteSheetHandle, SpriteRender};
+# use amethyst::renderer::sprite::{Handle<SpriteSheet>, SpriteRender};
 # use amethyst::prelude::*;
-# fn initialise_paddles(world: &mut World, sprite_sheet: SpriteSheetHandle) {
+# fn initialise_paddles(world: &mut World, sprite_sheet: Handle<SpriteSheet>) {
 # let sprite_render = SpriteRender {
 #   sprite_sheet: sprite_sheet.clone(),
 #   sprite_number: 0, // paddle is the first sprite in the sprite_sheet
@@ -651,15 +643,15 @@ all together in the `on_start()` method:
 # extern crate amethyst;
 # use amethyst::assets::Handle;
 # use amethyst::prelude::*;
-# use amethyst::renderer::{sprite::SpriteSheetHandle, Texture};
+# use amethyst::renderer::{sprite::Handle<SpriteSheet>, Texture};
 # use amethyst::ecs::World;
 # struct Paddle;
 # impl amethyst::ecs::Component for Paddle {
 #   type Storage = amethyst::ecs::VecStorage<Paddle>;
 # }
-# fn initialise_paddles(world: &mut World, spritesheet: SpriteSheetHandle) { }
+# fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) { }
 # fn initialise_camera(world: &mut World) { }
-# fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle { unimplemented!() }
+# fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { unimplemented!() }
 # struct MyState;
 # impl SimpleState for MyState {
 fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
