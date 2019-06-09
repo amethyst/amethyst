@@ -3,13 +3,13 @@
         "left_paddle": Controller(
             controller_id: 0,
             axis: LeftY,
-            invert: true,
+            invert: false,
             dead_zone: 0.2,
         ),
         "right_paddle": Controller(
             controller_id: 0,
             axis: RightY,
-            invert: true,
+            invert: false,
             dead_zone: 0.2,
         ),
     },
