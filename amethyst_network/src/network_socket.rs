@@ -11,10 +11,11 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use super::{
     error::Result,
-    send_event,
+    serialize_event, serialize_packet,
     server::{Host, ServerConfig},
     ConnectionState, NetConnection, NetEvent,
 };
+use std::io::{Error, ErrorKind};
 
 enum InternalSocketEvent<E> {
     SendEvents {
@@ -24,18 +25,19 @@ enum InternalSocketEvent<E> {
     Stop,
 }
 
-// If a client sends both a connect event and other events,
-// only the connect event will be considered valid and all others will be lost.
-/// The System managing the network state and connections.
-/// The T generic parameter corresponds to the network event type.
-/// Receives events and filters them.
-/// Received events will be inserted into the NetReceiveBuffer resource.
-/// To send an event, add it to the NetSendBuffer resource.
+/// The System managing the network state from `NetConnections`.
 ///
-/// If both a connection (Connect or Connected) event is received at the same time as another event from the same connection,
-/// only the connection event will be considered and rest will be filtered out.
-// TODO: add Unchecked Event type list. Those events will be let pass the client connected filter (Example: NetEvent::Connect).
-// Current behaviour: hardcoded passthrough of Connect and Connected events.
+/// This system has a few responsibilities.
+///
+/// - Reading to send packets from `NetConnection` and sending those over to some remote endpoint.
+/// - Listening for incoming packets and queue the received packets (`NetEvent::Packet(...)`) on the accompanying `NetConnection`.
+///
+/// This system is able to create a `NetConnection` and add those to the world when a new client connects.
+/// (This behavior might not be desired and can therefore be deactivated in the configuration).
+///
+/// In both cases when a client connects and disconnects a `NetEvent::Connected` or `NetEvent::Disconnected` will be queued on accompanying `NetConnection`
+///
+/// - `T` corresponds to the network event type.
 pub struct NetSocketSystem<E: 'static>
 where
     E: PartialEq,
@@ -44,6 +46,7 @@ where
     event_sender: Sender<InternalSocketEvent<E>>,
     // receiver from which you can read received packets.
     event_receiver: Receiver<laminar::SocketEvent>,
+    // the configuration with which you can configure the network behaviour.
     config: ServerConfig,
 }
 
@@ -81,11 +84,24 @@ where
                 match control_event {
                     InternalSocketEvent::SendEvents { target, events } => {
                         for ev in events {
-                            match ev {
-                                NetEvent::Packet(packet) => {
-                                    send_event(packet, target, &sender);
+                            let serialize_result = match ev {
+                                NetEvent::Packet(packet) => serialize_packet(packet, target),
+                                NetEvent::Connected(addr) => serialize_event(ev, addr),
+                                NetEvent::Disconnected(addr) => serialize_event(ev, addr),
+                                NetEvent::__Nonexhaustive => {
+                                    Err(Error::new(ErrorKind::Other, "Net event does not exist.")
+                                        .into())
                                 }
-                                _ => { /* TODO, handle connect, disconnect etc. */ }
+                            };
+
+                            match serialize_result {
+                                Ok(packet) => match sender.send(packet) {
+                                    Ok(_qty) => {}
+                                    Err(e) => {
+                                        error!("Failed to send data to network socket: {}", e)
+                                    }
+                                },
+                                Err(e) => error!("Cannot serialize packet. Reason: {}", e),
                             }
                         }
                     }
@@ -147,7 +163,6 @@ where
                 SocketEvent::Connect(addr) => {
                     if self.config.create_net_connection_on_connect {
                         let mut connection: NetConnection<E> = NetConnection::new(addr);
-
                         connection
                             .receive_buffer
                             .single_write(NetEvent::Connected(addr));

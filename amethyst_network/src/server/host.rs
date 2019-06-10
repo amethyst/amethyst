@@ -19,8 +19,11 @@ impl Host {
     /// This will start and return an instance of the host.
     ///
     /// The method uses the config provided when creating a `host` instance.
-    pub fn run(config: &ServerConfig) -> Result<Host> {
-        let (mut socket, packet_sender, packet_receiver) = Socket::bind(config.udp_socket_addr)?;
+    pub fn run(server_config: &ServerConfig) -> Result<Host> {
+        let (mut socket, packet_sender, packet_receiver) = Socket::bind_with_config(
+            server_config.udp_socket_addr,
+            server_config.laminar_config.clone(),
+        )?;
 
         thread::spawn(move || {
             socket.start_polling().unwrap();

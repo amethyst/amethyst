@@ -7,7 +7,12 @@ mod test {
         shred::{Dispatcher, DispatcherBuilder, SystemData},
     };
 
-    use crate::{server::ServerConfig, *};
+    use crate::{
+        net_event::{NetEvent, NetPacket},
+        server::ServerConfig,
+        NetConnection, NetSocketSystem,
+    };
+    use laminar::Config;
 
     #[test]
     fn single_packet_early() {
@@ -24,7 +29,7 @@ mod test {
             "Test Message From Client1".to_string(),
         ));
 
-        conn_to_server.send_buffer.single_write(packet.clone());
+        conn_to_server.queue(packet.clone());
         world_cl.create_entity().with(conn_to_server).build();
 
         let mut rcv = conn_to_client.receive_buffer.register_reader();
@@ -56,8 +61,6 @@ mod test {
         let conn_to_server = NetConnection::<String>::new(server_addr);
         let mut conn_to_client = NetConnection::<String>::new(client_addr);
 
-        use net_event::NetPacket;
-
         let packet = NetEvent::Packet(NetPacket::reliable_unordered(
             "Test Message From Client1".to_string(),
         ));
@@ -73,7 +76,7 @@ mod test {
 
             for cmp in (&mut sto).join() {
                 for _i in 0..100 {
-                    cmp.send_buffer.single_write(packet.clone());
+                    cmp.queue(packet.clone());
                 }
             }
         }
@@ -98,6 +101,7 @@ mod test {
             udp_socket_addr: client_addr,
             max_throughput: 10000,
             create_net_connection_on_connect: false,
+            laminar_config: Config::default(),
         };
 
         // server config
@@ -105,6 +109,7 @@ mod test {
             udp_socket_addr: server_addr,
             max_throughput: 10000,
             create_net_connection_on_connect: false,
+            laminar_config: Config::default(),
         };
 
         let mut cl_dispatch = DispatcherBuilder::new()
