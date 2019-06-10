@@ -17,9 +17,9 @@ make a note of who got the point for the round.
 
 First, we'll add a new module to `systems/mod.rs`
 ```rust,ignore
-mod winner;
-
 pub use self::winner::WinnerSystem;
+
+mod winner;
 ```
 
 Then, we'll create `systems/winner.rs`:
@@ -60,11 +60,11 @@ impl<'s> System<'s> for WinnerSystem {
         for (ball, transform) in (&mut balls, &mut locals).join() {
             let ball_x = transform.translation().x;
 
-            let did_hit = if ball_x <= ball.radius {
+            let did_hit = if ball_x.as_f32() <= ball.radius {
                 // Right player scored on the left side.
                 println!("Player 2 Scores!");
                 true
-            } else if ball_x >= ARENA_WIDTH - ball.radius {
+            } else if ball_x.as_f32() >= ARENA_WIDTH - ball.radius {
                 // Left player scored on the right side.
                 println!("Player 1 Scores!");
                 true
@@ -170,94 +170,43 @@ about the game is just that players have to keep track of the score themselves.
 Our game should be able to do that for us.
 
 In this section, we'll set up UI rendering for our game and create a scoreboard
-to display our players scores.
+to display our players' scores.
 
-First, let's add the UI rendering in `main.rs`:
+First, let's add the UI rendering in `main.rs`. Add the following imports:
 
 ```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-#
-use amethyst::{
-#     prelude::*,
-#     core::transform::TransformBundle,
-#     renderer::{
-#         DisplayConfig,
-#         DrawFlat2D,
-#         Pipeline,
-#         RenderBundle,
-#         Stage,
-#     },
-    // --snip--
-    ui::{DrawUi, UiBundle},
-};
-#
-# mod systems {
-#     use amethyst;
-#     pub struct PaddleSystem;
-#     impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
-#         type SystemData = ();
-#         fn run(&mut self, _: Self::SystemData) { }
-#     }
-#     pub struct MoveBallsSystem;
-#     impl<'a> amethyst::ecs::System<'a> for MoveBallsSystem {
-#         type SystemData = ();
-#         fn run(&mut self, _: Self::SystemData) { }
-#     }
-#     pub struct BounceSystem;
-#     impl<'a> amethyst::ecs::System<'a> for BounceSystem {
-#         type SystemData = ();
-#         fn run(&mut self, _: Self::SystemData) { }
-#     }
-#     pub struct WinnerSystem;
-#     impl<'a> amethyst::ecs::System<'a> for WinnerSystem {
-#         type SystemData = ();
-#         fn run(&mut self, _: Self::SystemData) { }
-#     }
-# }
-
-fn main() -> amethyst::Result<()> {
-    // --snip--
-
-#     let path = "./resources/display_config.ron";
-#     let config = DisplayConfig::load(&path);
-    let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
-          .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-          .with_pass(DrawFlat2D::new())
-          .with_pass(DrawUi::new()), // <-- Add me
-    );
-#     let input_bundle = amethyst::input::InputBundle::<String, String>::new();
-#
-    let game_data = GameDataBuilder::default()
-        .with_bundle(RenderBundle::new(pipe, Some(config))
-        .with_sprite_sheet_processor())?
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(input_bundle)?
-        .with_bundle(UiBundle::<String, String>::new())? // <-- Add me
-
-    // --snip--
-#         .with(systems::PaddleSystem, "paddle_system", &["input_system"])
-#         .with(systems::MoveBallsSystem, "ball_system", &[])
-#         .with(
-#             systems::BounceSystem,
-#             "collision_system",
-#             &["paddle_system", "ball_system"],
-#         )
-#         .with(systems::WinnerSystem, "winner_system", &["ball_system"]);
-#
-# let assets_dir = "/";
-# struct Pong;
-# impl SimpleState for Pong { }
-# let mut game = Application::new(assets_dir, Pong, game_data)?;
-# Ok(())
-}
+use amethyst::ui::{DrawUiDesc, UiBundle};
 ```
 
-We're adding `DrawUi` as an additional render pass to our `Pipeline`, and
-we're also adding the `UiBundle` to our game data. This allows us to start
+Then, change your `GraphCreator` like so:
+
+```rust,edition2018,no_run,noplaypen
+// Create our first `Subpass`, which contains the DrawFlat2D and DrawUi render groups.
+// We pass the subpass builder a description of our pass for construction		        // We pass the subpass builder a description of our groups for construction
+// Create our first `Subpass`, which contains the DrawFlat2D and DrawUi render groups.
+// We pass the subpass builder a description of our groups for construction
+let pass = graph_builder.add_node(
+    SubpassBuilder::new()
+        .with_group(DrawFlat2DDesc::default().builder()) // Draws sprites
+        .with_group(DrawUiDesc::default().builder()) // Draws UI components
+        .with_color(color)
+        .with_depth_stencil(depth)
+        .into_pass(),
+);
+```
+
+Finally, add the `UiBundle` after the `InputBundle`:
+
+```rust,edition2018,no_run,noplaypen
+.with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
+```
+
+We're adding a `DrawUiDesc` to our `SubpassBuilder`, and we're also adding the
+`UiBundle` to our game data. This allows us to start
 rendering UI visuals to our game in addition to the existing background and
 sprites.
 
-_Note_: We're using a `UiBundle` with type `<String, String>` here because the
+> **Note:** We're using a `UiBundle` with type `StringBindings` here because the
 `UiBundle` needs to know what types our `InputHandler` is using to map `actions`
 and `axes`. So just know that your `UiBundle` type should match your
 `InputHandler` type. You can read more about those here: [UiBundle][ui-bundle],
@@ -323,7 +272,6 @@ fn initialise_scoreboard(world: &mut World) {
     let font = world.read_resource::<Loader>().load(
         "font/square.ttf",
         TtfFormat,
-        Default::default(),
         (),
         &world.read_resource(),
     );
@@ -361,10 +309,10 @@ fn initialise_scoreboard(world: &mut World) {
 ```
 
 Here, we add some UI imports and create a new `initialise_scoreboard` function,
-which we'll call in the `on_start` method of the `Pong` gamestate.
+which we'll call in the `on_start` method of the `Pong` game state.
 
 Inside `initialise_scoreboard`, we're first going to load up a font which we've
-saved to `font/square.ttf` ([download][font-download]) in the app root. We pull
+saved to `assets/font/square.ttf` ([download][font-download]). We pull
 in the `TtfFormat` to match this font type, load the font as a resource in the
 world, and then save the handle to a `font` variable (which we'll use to create
 our `UiText` components).
@@ -458,7 +406,7 @@ impl<'s> System<'s> for WinnerSystem {
 #             let ball_x = transform.translation().x;
             // --snip--
 
-            let did_hit = if ball_x <= ball.radius {
+            let did_hit = if ball_x.as_f32() <= ball.radius {
                 // Right player scored on the left side.
                 // We top the score at 999 to avoid text overlap.
                 scores.score_right = (scores.score_right + 1)
@@ -468,7 +416,7 @@ impl<'s> System<'s> for WinnerSystem {
                     text.text = scores.score_right.to_string();
                 }
                 true
-            } else if ball_x >= ARENA_WIDTH - ball.radius {
+            } else if ball_x.as_f32() >= ARENA_WIDTH - ball.radius {
                 // Left player scored on the right side.
                 // We top the score at 999 to avoid text overlap.
                 scores.score_left = (scores.score_left + 1)
@@ -486,7 +434,7 @@ impl<'s> System<'s> for WinnerSystem {
 #                 transform.set_translation_x(ARENA_WIDTH / 2.0); // Reset Position
                 // --snip--
 
-                // Print the score board.
+                // Print the scoreboard.
                 println!(
                     "Score: | {:^3} | {:^3} |",
                     scores.score_left, scores.score_right
@@ -537,7 +485,7 @@ the top of our window.
 
 ![Pong Game with Scores][pong-screenshot]
 
-Now don't go just yet, because in the next chapter, we'll make our Pong game
+Now don't go just yet, because, in the next chapter, we'll make our Pong game
 even better by adding sound effects and even some music!
 
 [pong-screenshot]: ../images/pong_tutorial/pong_05.png

@@ -5,12 +5,12 @@ Amethyst, those "somethings" are called entities.
 
 Amethyst uses an Entity-Component-System (ECS) framework called **specs**, also
 written in Rust. You can learn more about Specs in the [The Specs Book][sb].
-Here's a basic explanation of ECS from the **specs** documentation:
+Here's a basic explanation of ECS from the documentation:
 
-> The term ECS is a shorthand for Entity-component system. These are the three
-> core concepts. Each entity is associated with some components. Those entities
-> and components are processed by systems. This way, you have your data
-> (components) completely separated from the behaviour (systems). An entity just
+> The term ECS is shorthand for Entity-Component-System. These are the three
+> core concepts. Each **entity** is associated with some **components**. Those entities
+> and components are processed by **systems**. This way, you have your data
+> (components) completely separated from the behavior (systems). An entity just
 > logically groups components; so a Velocity component can be applied to the
 > Position component of the same entity.
 
@@ -74,12 +74,12 @@ The `World` structure stores all of the game's runtime data -- entities and comp
 
 ## Rendering the game using the Camera
 
-The first thing we will need in our game is a Camera. This is the component that
-will determine what is rendered on screen. It behaves just like a real life
+The first thing we will need in our game is a `Camera`. This is the component that
+will determine what is rendered on screen. It behaves just like a real-life
 camera: it looks at a specific part of the world and can be moved around at
 will.
 
-1. Define the size of the playable area.
+1. Define the size of the playable area at the top of `pong.rs`.
 
     ```rust,edition2018,no_run,noplaypen
     pub const ARENA_HEIGHT: f32 = 100.0;
@@ -118,9 +118,9 @@ will.
     representing its position in the world.
 
     A default camera can be created with `standard_2d` which size of our arena.
-    This camera makes the X go right, Y go up and center of screen being at
-    the position of camera in space, i.e. whatever we pass to `set_translation_xyz`.
-    Our setup makes the `(0, 0)` point in space be represented on bottom left of the screen,
+    This camera makes the X go right, Y go up and center of the screen being at
+    the position of the camera in space, i.e. whatever we pass to `set_translation_xyz`.
+    Our setup makes the `(0, 0)` point in space be represented on the bottom left of the screen,
     and `(ARENA_WIDTH, ARENA_HEIGHT)` being at the top right.
 
     Notice that we shifted the camera on the **Z** axis. This is to make sure
@@ -156,7 +156,7 @@ Now that our camera is set up, it's time to add the paddles.
 
 ## Our first Component
 
-In this section you will create the `Paddle` component. The code in this section should go into `pong.rs`.
+In this section, you will create the `Paddle` component. The code in this section should go into `pong.rs`.
 
 1. Define constants for the paddle width and height.
 
@@ -222,7 +222,7 @@ In this section you will create the `Paddle` component. The code in this section
 
 ## Initialise some entities
 
-Now that we have a Paddle component, let's define some paddle entities that
+Now that we have a `Paddle` component, let's define some paddle entities that
 include that component and add them to our `World`.
 
 First let's look at our imports:
@@ -232,7 +232,7 @@ First let's look at our imports:
 use amethyst::core::transform::Transform;
 ```
 
-`Transform` is an Amethyst ECS component which carry
+`Transform` is an Amethyst ECS component which carries
 position and orientation information. It is relative
 to a parent, if one exists.
 
@@ -434,12 +434,12 @@ Hooray!
 This section will finally allow us to see something.
 
 The first thing we will have to do is load the sprite sheet we will use for all
-our graphics in the game. Create a `texture` folder in the root of the project.
-This will contain the [spritesheet texture][ss] `pong_spritesheet.png` we will
+our graphics in the game. Create a `texture` folder in the `assets` directory of the project.
+This will contain the [spritesheet texture][ss] `pong_spritesheet.png`, which we
 need to render the elements of the game.  We will perform the loading in a new
 function in `pong.rs` called `load_sprite_sheet`.
 
-First, let's declare the function and load the spritesheet's image.
+First, let's declare the function and load the sprite sheet's image data.
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
@@ -477,26 +477,26 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
 }
 ```
 
-The `Loader` is an asset loader which is defined as a `resource` (not an
-`Entity`, `Component`, or `System`, but still a part of our ECS `world`). It was
+The `Loader` is an asset loader which is defined as a resource (not an
+`Entity`, `Component`, or `System`, but still a part of our ECS `World`). It was
 created when we built our Application in `main.rs`, and it can read assets like
 .obj files, but also it can `load` a .png as a `Texture` as in our use case.
 
 > Resources in Specs are a type of data which can be shared between systems,
-> while being independent from entities, in contrast to components, which are
-> attached to specific entities. We'll explore this more later on.
+> while being independent of entities, in contrast to components, which are
+> attached to specific entities.
 
-The `AssetStorage<Texture>` is also a `resource`, this is where the loader will
-put the `Texture` it will load from our sprite sheet. In order to manage them
+The `AssetStorage<Texture>` is also a resource; this is where the loader
+puts the `Texture` it will load from our sprite sheet. In order to manage them
 while remaining fast, Amethyst does not give us direct access to the assets we load.
 If it did otherwise, we would have to wait for the texture to be fully loaded to do all the
 other things we have to prepare, which would be a waste of time!
-Instead, the `load` function will return a `Handle<Texture>` (also known as `TextureHandle`).
+Instead, the `load` function will return a `Handle<Texture>`.
 This handle "points" to the place where the asset will be loaded. In Rust terms, it is
 equivalent to a reference-counted option. It is extremely useful, especially as cloning
 the handle does not clone the asset in memory, so many things can use the same asset at once.
 
-Alongside our spritesheet texture, we need a file describing where the sprites
+Alongside our sprite sheet texture, we need a file describing where the sprites
 are on the sheet. Let's create, right next to it, a file called
 `pong_spritesheet.ron`. It will contain the following sprite sheet definition:
 
@@ -594,7 +594,7 @@ the right one is flipped horizontally.
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::World;
-# use amethyst::{assets::Handle, renderer::sprite::SpriteSheet};
+# use amethyst::{assets::Handle, renderer::sprite::{SpriteRender, SpriteSheet}};
 # fn initialise_paddles(world: &mut World, sprite_sheet: Handle<SpriteSheet>) {
 // Assign the sprites for the paddles
 let sprite_render = SpriteRender {
@@ -675,10 +675,11 @@ If all is well, we should get something that looks like this:
 
 ![Step two](../images/pong_tutorial/pong_02.png)
 
-In the next chapter we'll explore the "S" in ECS and actually get these paddles
+In the next chapter, we'll explore the "S" in ECS and actually get these paddles
 moving!
 
 [sb]: https://slide-rs.github.io/specs/
 [sb-storage]: https://slide-rs.github.io/specs/05_storages.html#densevecstorage
 [2d]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.Camera.html#method.standard_2d
 [ss]: ../images/pong_tutorial/pong_spritesheet.png
+
