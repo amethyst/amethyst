@@ -29,7 +29,7 @@ type FloatBase = f32;
 #[derive(Alga, Clone, Copy, PartialOrd, PartialEq, Serialize, Deserialize, Debug)]
 #[alga_traits(Field(Additive, Multiplicative))]
 #[serde(transparent)]
-pub struct Float(FloatBase);
+pub struct Float(pub FloatBase);
 
 impl Float {
     /// Get the internal value as a f32. Will cause a loss in precision if using
