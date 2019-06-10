@@ -1,9 +1,9 @@
 # Setting up the project
 
-In this chapter we will go through the basics of setting up the amethyst project,
+In this chapter, we will go through the basics of setting up the amethyst project,
 starting the logger, opening a window and preparing a simple rendering setup.
 
-## Creating new project
+## Creating a new project
 
 Let's start a new project:
 
@@ -23,7 +23,7 @@ git = "https://github.com/amethyst/amethyst.git"
 features = ["vulkan"]
 ```
 
-Alternatively, if you are developing on macOS, you might want to use the `metal` rendering backend instead of `vulkan`. In this case you should change the `features` entry in the `amethyst` dependency table.
+Alternatively, if you are developing on macOS, you might want to use the `metal` rendering backend instead of `vulkan`. In this case, you should change the `features` entry in the `amethyst` dependency table.
 
 ```toml
 [dependencies.amethyst]
@@ -31,7 +31,7 @@ git = "https://github.com/amethyst/amethyst.git"
 features = ["metal"]
 ```
 
-We can start with editing the `main.rs` file inside `src` directroy.
+We can start with editing the `main.rs` file inside `src` directory.
 You can delete everything in that file, then add these imports:
 
 ```rust,ignore
@@ -52,7 +52,7 @@ use amethyst::{
 
 We'll be learning more about these as we go through this tutorial. The prelude
 includes the basic (and most important) types like `Application`, `World`, and
-`State`. We also import all the necessary types to define basic rendering pipeline.
+`State`. We also import all the necessary types to define a basic rendering pipeline.
 
 Now we have all the dependencies installed and imports prepared, we are ready to start
 working on defining our game code.
@@ -72,7 +72,7 @@ used by Amethyst's state machine to start, stop, and update the game.
 impl SimpleState for Pong {}
 ```
 
-Implementing the `SimpleState` teaches our application what to do when close signal
+Implementing the `SimpleState` teaches our application what to do when a close signal
 is received from your operating system. This happens when you press the close
 button in your graphical environment. This allows the application to quit as needed.
 
@@ -95,8 +95,8 @@ fn main() -> amethyst::Result<()> {
 > **Note:** The [SimpleState][simplestate] is just a simplified version of [State][state] trait.
 > It already implements a bunch of stuff for us, like the `State`'s `update`
 > and `handle_event` methods that you would have to implement yourself were you
-> using just a regular `State`. Its behaviour mostly cares about handling the exit signal cleanly,
-> by just quitting the application directly from current state.
+> using just a regular `State`. Its behavior mostly cares about handling the exit signal cleanly,
+> by just quitting the application directly from the current state.
 
 ## Setting up the logger
 
@@ -111,33 +111,33 @@ amethyst::start_logger(Default::default());
 # }
 ```
 
-From now on, every info, warning and error will be present and clearly formatted
+From now on, every info, warning, and error will be present and clearly formatted
 inside your terminal window.
 
 
-> **Note:** There are many ways to configure that logger, for example to write the
-> log to filesystem. You might find more information how to do that in [Logger api
+> **Note:** There are many ways to configure that logger, for example, to write the
+> log to the filesystem. You can find more information about how to do that in [Logger API
 > reference][log].
 > We will use the most basic setup in this tutorial for simplicity.
 
-## Preparing display config
+## Preparing the display config
 
-Next we need to create a `DisplayConfig` to store the configuration for our game's
-window. We can either define the configuration in our code, or better yet load it
+Next, we need to create a `DisplayConfig` to store the configuration for our game's
+window. We can either define the configuration in our code or better yet load it
 from a file. The latter approach is handier, as it allows us to change configuration
 (e.g, the window size) without having to recompile our game every time.
 
 Starting the project with `amethyst new` should have automatically generated 
 `DisplayConfig` data in `resources/display_config.ron`. If you created the
-project manually, go ahead and create those now.
+project manually, go ahead and create it now.
 
 In either case, open `display_config.ron` and change its contents to the
 following:
 
 ```rust,ignore
 (
-  title: "Pong!",
-  dimensions: Some((500, 500)),
+    title: "Pong!",
+    dimensions: Some((500, 500)),
 )
 ```
 
@@ -161,8 +161,8 @@ the display configuration:
 # };
 #
 # fn main() -> Result<(), Error>{
-    let app_root = application_root_dir()?;
-    let display_config_path = app_root.join("resources").join("display_config.ron");
+let app_root = application_root_dir()?;
+let display_config_path = app_root.join("resources").join("display_config.ron");
 #     Ok(())
 # }
 ```
@@ -175,28 +175,28 @@ we have to create an amethyst application scaffolding and tell it to open a wind
 In `main()` in `main.rs` we are going to add the basic application setup:
 
 ```rust,ignore
-    let game_data = GameDataBuilder::default()
-        // The WindowBundle provides all the scaffolding for opening a window
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?;
+let game_data = GameDataBuilder::default()
+    // The WindowBundle provides all the scaffolding for opening a window
+    .with_bundle(WindowBundle::from_config_path(display_config_path))?;
 
-    let assets_dir = app_root.join("assets");
-    let mut game = Application::new(assets_dir, Pong, game_data)?;
-    game.run();
+let assets_dir = app_root.join("assets");
+let mut game = Application::new(assets_dir, Pong, game_data)?;
+game.run();
 ```
 
 Here we're creating a new `WindowBundle` that uses the config we prepared above.
 That bundle is being used as a part of `GameDataBuilder`, a central repository
 of all the game logic that runs periodically during the game runtime.
 
-> **Note:** We will cover systems and bundles in more details later, for now think of the
-> bundle as a group of functionality that together provides certain feature to the engine.
+> **Note:** We will cover systems and bundles in more details later, for now, think of the
+> bundle as a group of functionality that together provides a certain feature to the engine.
 > You will surely be writing your own bundles for your own game's features soon.
 
 That builder is then combined with the game state struct (`Pong`), creating the overarching
 Amethyst's root object: [Application][ap]. It binds the OS event loop, state machines,
 timers and other core components in a central place.
 
-Then we call `.run()` on `game` which begins the gameloop. The game will
+Then we call `.run()` on `game` which starts the game loop. The game will
 continue to run until our `SimpleState` returns `Trans::Quit`, or when all states
 have been popped off the state machine's stack.
 
@@ -299,11 +299,11 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 }
 ```
 
-Here we are creating a `ExampleGraph` struct and implementing a `GraphCreator` trait for it.
+Here we are creating an `ExampleGraph` struct and implementing a `GraphCreator` trait for it.
 This trait is responsible for setting up all the details of our rendering pipeline.
 
-> **Note:** This setup code is directly using `Rendy` crate to define the rendering.
-> You can read about it's concepts in the [rendy graph docs][graph].
+> **Note:** This setup code is directly using `rendy` crate to define the rendering.
+> You can read about its concepts in the [rendy graph docs][graph].
 
 The important thing to note is that this renders a black background.
 It is also ready to draw 2D sprites for us, which we will use in the next chapter.
@@ -316,29 +316,29 @@ Now let's pack everything up and run it back in the `main()` function. We have t
 expand the existing `GameDataBuilder` with `RenderingSystem` that uses our graph:
 
 ```rust,ignore
-    let game_data = GameDataBuilder::default()
-        // The WindowBundle provides all the scaffolding for opening a window
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
-        // A Processor system is added to handle loading spritesheets.
-        .with(
-            Processor::<SpriteSheet>::new(),
-            "sprite_sheet_processor",
-            &[],
-        )
-        // The renderer must be executed on the same thread consecutively, so we initialize it as thread_local
-        // which will always execute on the main thread.
-        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::default(),
-        ));
+let game_data = GameDataBuilder::default()
+    // The WindowBundle provides all the scaffolding for opening a window
+    .with_bundle(WindowBundle::from_config_path(display_config_path))?
+    // A Processor system is added to handle loading spritesheets.
+    .with(
+        Processor::<SpriteSheet>::new(),
+        "sprite_sheet_processor",
+        &[],
+    )
+    // The renderer must be executed on the same thread consecutively, so we initialize it as thread_local
+    // which will always execute on the main thread.
+    .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
+        ExampleGraph::default(),
+    ));
 
-    let assets_dir = app_root.join("assets/");
+let assets_dir = app_root.join("assets/");
 
-    let mut game = Application::new(assets_dir, Pong, game_data)?;
-    game.run();
+let mut game = Application::new(assets_dir, Pong, game_data)?;
+game.run();
 ```
 
 Here we're creating a new `RenderingSystem`, adding the `ExampleGraph` we
-created. Additionaly we are adding a `Processor::<SpriteSheet>` system,
+created. Additionally we are adding a `Processor::<SpriteSheet>` system,
 which will make sure that all `SpriteSheet` assets are being properly loaded.
 We will learn more about those in the next chapter.
 
@@ -354,3 +354,4 @@ get a window. It should look something like this:
 [log]: https://docs-src.amethyst.rs/stable/amethyst/struct.Logger.html
 [displayconf]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.DisplayConfig.html
 [graph]: https://github.com/amethyst/rendy/blob/master/docs/graph.md
+
