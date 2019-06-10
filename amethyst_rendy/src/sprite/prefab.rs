@@ -1,8 +1,8 @@
 use crate::{
     formats::texture::TexturePrefab,
-    sprite::{SpriteRender, SpriteSheet, SpriteSheetHandle, Sprites},
+    sprite::{SpriteRender, SpriteSheet, Sprites},
 };
-use amethyst_assets::{AssetStorage, Loader, PrefabData, ProgressCounter};
+use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, ProgressCounter};
 use amethyst_core::{
     ecs::{Entity, Read, ReadExpect, WriteStorage},
     Transform,
@@ -21,7 +21,7 @@ use std::sync::Mutex;
 pub enum SpriteSheetPrefab {
     /// Spritesheet handle, normally not used outside the prefab system.
     #[serde(skip)]
-    Handle((Option<String>, SpriteSheetHandle)),
+    Handle((Option<String>, Handle<SpriteSheet>)),
     /// Definition of a spritesheet
     Sheet {
         /// This texture contains the images for the spritesheet
@@ -40,7 +40,7 @@ impl<'a> PrefabData<'a> for SpriteSheetPrefab {
         Read<'a, AssetStorage<SpriteSheet>>,
         ReadExpect<'a, Loader>,
     );
-    type Result = (Option<String>, SpriteSheetHandle);
+    type Result = (Option<String>, Handle<SpriteSheet>);
 
     fn add_to_entity(
         &self,
@@ -90,13 +90,13 @@ impl<'a> PrefabData<'a> for SpriteSheetPrefab {
 }
 
 #[derive(Debug)]
-pub struct SpriteSheetLoadedSet(Mutex<Vec<(Option<String>, SpriteSheetHandle)>>);
+pub struct SpriteSheetLoadedSet(Mutex<Vec<(Option<String>, Handle<SpriteSheet>)>>);
 
 impl SpriteSheetLoadedSet {
-    fn push(&self, data: (Option<String>, SpriteSheetHandle)) {
+    fn push(&self, data: (Option<String>, Handle<SpriteSheet>)) {
         self.0.lock().unwrap().push(data);
     }
-    pub fn get(&self, reference: &SpriteSheetReference) -> Option<SpriteSheetHandle> {
+    pub fn get(&self, reference: &SpriteSheetReference) -> Option<Handle<SpriteSheet>> {
         let inner = self.0.lock().unwrap();
         match reference {
             SpriteSheetReference::Index(index) => {
@@ -138,7 +138,7 @@ pub struct SpriteRenderPrefab {
     pub sprite_number: usize,
 
     #[serde(skip_deserializing, skip_serializing)]
-    handle: Option<SpriteSheetHandle>,
+    handle: Option<Handle<SpriteSheet>>,
 }
 
 impl<'a> PrefabData<'a> for SpriteRenderPrefab {
@@ -167,7 +167,7 @@ impl<'a> PrefabData<'a> for SpriteRenderPrefab {
             Ok(())
         } else {
             let message = format!(
-                "`SpriteSheetHandle` was not initialized before call to `add_to_entity()`. \
+                "`Handle<SpriteSheet>` was not initialized before call to `add_to_entity()`. \
                  sheet: {:?}, sprite_number: {}",
                 self.sheet, self.sprite_number
             );

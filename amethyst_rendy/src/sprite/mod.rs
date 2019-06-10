@@ -181,7 +181,7 @@ impl From<[f32; 4]> for TextureCoordinates {
 #[derive(Clone, Debug, PartialEq)]
 pub struct SpriteRender {
     /// Handle to the sprite sheet of the sprite
-    pub sprite_sheet: SpriteSheetHandle,
+    pub sprite_sheet: Handle<SpriteSheet>,
     /// Index of the sprite on the sprite sheet
     pub sprite_number: usize,
 }

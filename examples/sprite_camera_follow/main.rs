@@ -1,5 +1,5 @@
 use amethyst::{
-    assets::{AssetStorage, Loader, Processor},
+    assets::{AssetStorage, Handle, Loader, Processor},
     core::{Named, Parent, Transform, TransformBundle},
     ecs::{
         Component, Entity, Join, NullStorage, Read, ReadExpect, ReadStorage, Resources, System,
@@ -8,28 +8,15 @@ use amethyst::{
     input::{is_close_requested, is_key_down, InputBundle, InputHandler, StringBindings},
     prelude::*,
     renderer::{
-        camera::Camera,
-        formats::texture::ImageFormat,
-        pass::DrawFlat2DTransparentDesc,
-        rendy::{
-            factory::Factory,
-            graph::{
-                render::{RenderGroupDesc, SubpassBuilder},
-                GraphBuilder,
-            },
-            hal::{format::Format, image},
-        },
-        sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
-        sprite_visibility::SpriteVisibilitySortingSystem,
-        transparent::Transparent,
-        types::DefaultBackend,
-        GraphCreator, RenderingSystem, Texture,
+        pass::DrawFlat2DTransparentDesc, sprite_visibility::SpriteVisibilitySortingSystem,
+        types::DefaultBackend, Camera, Factory, Format, GraphBuilder, GraphCreator, ImageFormat,
+        Kind, RenderGroupDesc, RenderingSystem, SpriteRender, SpriteSheet, SpriteSheetFormat,
+        SubpassBuilder, Texture, Transparent,
     },
     utils::application_root_dir,
     window::{ScreenDimensions, Window, WindowBundle},
     winit,
 };
-use std::sync::Arc;
 
 #[derive(Default)]
 struct Player;
@@ -59,7 +46,7 @@ impl<'s> System<'s> for MovementSystem {
     }
 }
 
-fn load_sprite_sheet(world: &mut World, png_path: &str, ron_path: &str) -> SpriteSheetHandle {
+fn load_sprite_sheet(world: &mut World, png_path: &str, ron_path: &str) -> Handle<SpriteSheet> {
     let texture_handle = {
         let loader = world.read_resource::<Loader>();
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
@@ -76,7 +63,7 @@ fn load_sprite_sheet(world: &mut World, png_path: &str, ron_path: &str) -> Sprit
 }
 
 // Initialize a background
-fn init_background_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
+fn init_background_sprite(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) -> Entity {
     let mut transform = Transform::default();
     transform.set_translation_z(-10.0);
     let sprite = SpriteRender {
@@ -93,7 +80,7 @@ fn init_background_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -
 }
 
 // Initialize a sprite as a reference point at a fixed location
-fn init_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
+fn init_reference_sprite(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) -> Entity {
     let mut transform = Transform::default();
     transform.set_translation_xyz(0.0, 0.0, 0.0);
     let sprite = SpriteRender {
@@ -110,7 +97,7 @@ fn init_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) ->
 }
 
 // Initialize a sprite as a reference point
-fn init_screen_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
+fn init_screen_reference_sprite(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) -> Entity {
     let mut transform = Transform::default();
     transform.set_translation_xyz(-250.0, -245.0, -11.0);
     let sprite = SpriteRender {
@@ -126,7 +113,7 @@ fn init_screen_reference_sprite(world: &mut World, sprite_sheet: &SpriteSheetHan
         .build()
 }
 
-fn init_player(world: &mut World, sprite_sheet: &SpriteSheetHandle) -> Entity {
+fn init_player(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) -> Entity {
     let mut transform = Transform::default();
     transform.set_translation_xyz(0.0, 0.0, -3.0);
     let sprite = SpriteRender {
@@ -277,15 +264,14 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         self.dirty = false;
 
-        let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
+        let window = <ReadExpect<'_, Window>>::fetch(res);
         let surface = factory.create_surface(&window);
         // cache surface format to speed things up
         let surface_format = *self
             .surface_format
             .get_or_insert_with(|| factory.get_surface_format(&surface));
         let dimensions = self.dimensions.as_ref().unwrap();
-        let window_kind =
-            image::Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
+        let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 
         let mut graph_builder = GraphBuilder::new();
         let color = graph_builder.create_image(

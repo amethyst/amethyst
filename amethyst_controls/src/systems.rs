@@ -11,7 +11,6 @@ use amethyst_core::{
     Float,
 };
 use amethyst_input::{get_input_axis_simple, BindingTypes, InputHandler};
-use std::sync::Arc;
 use winit::{DeviceEvent, Event, Window, WindowEvent};
 
 /// The system that manages the fly movement.
@@ -225,7 +224,7 @@ impl CursorHideSystem {
 
 impl<'a> System<'a> for CursorHideSystem {
     type SystemData = (
-        ReadExpect<'a, Arc<Window>>,
+        ReadExpect<'a, Window>,
         Read<'a, HideCursor>,
         Read<'a, WindowFocus>,
     );
@@ -252,7 +251,7 @@ impl<'a> System<'a> for CursorHideSystem {
 
         Self::SystemData::setup(res);
 
-        let win = res.fetch::<Arc<Window>>();
+        let win = res.fetch::<Window>();
 
         if let Err(err) = win.grab_cursor(true) {
             log::error!("Unable to grab the cursor. Error: {:?}", err);
