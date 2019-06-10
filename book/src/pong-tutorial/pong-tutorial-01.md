@@ -174,7 +174,12 @@ we have to create an amethyst application scaffolding and tell it to open a wind
 
 In `main()` in `main.rs` we are going to add the basic application setup:
 
-```rust,ignore
+```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::{prelude::*, window::*};
+# fn main() -> Result<(), amethyst::Error>{
+# let display_config_path = "";
+# struct Pong;
 let game_data = GameDataBuilder::default()
     // The WindowBundle provides all the scaffolding for opening a window
     .with_bundle(WindowBundle::from_config_path(display_config_path))?;
@@ -182,6 +187,8 @@ let game_data = GameDataBuilder::default()
 let assets_dir = app_root.join("assets");
 let mut game = Application::new(assets_dir, Pong, game_data)?;
 game.run();
+#     Ok(())
+# }
 ```
 
 Here we're creating a new `WindowBundle` that uses the config we prepared above.
@@ -212,7 +219,19 @@ necessary to show a window, but we need the renderer to display anything inside 
 We'll cover rendering in more depth later in this tutorial, but for now place the
 following code _below_ the `main()` function:
 
-```rust,ignore
+```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::{
+#     assets::Processor,
+#     ecs::{ReadExpect, Resources, SystemData},
+#     prelude::*,
+#     renderer::{
+#         pass::DrawFlat2DDesc, types::DefaultBackend, Factory, Format, GraphBuilder, GraphCreator,
+#         Kind, RenderGroupDesc, RenderingSystem, SpriteSheet, SubpassBuilder,
+#     },
+#     utils::application_root_dir,
+#     window::{ScreenDimensions, Window, WindowBundle},
+# };
 // This graph structure is used for creating a proper `RenderGraph` for rendering.
 // A renderGraph can be thought of as the stages during a render pass. In our case,
 // we are only executing one subpass (DrawFlat2D, or the sprite pass). This graph
