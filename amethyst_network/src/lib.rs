@@ -82,7 +82,7 @@ where
 mod tests {
     use crate::{
         deserialize_event,
-        net_event::{NetEvent, NetPacket},
+        net_event::NetPacket,
         serialize_packet,
     };
     use laminar::{DeliveryGuarantee, OrderingGuarantee};
