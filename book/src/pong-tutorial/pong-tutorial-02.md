@@ -594,7 +594,7 @@ the right one is flipped horizontally.
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::World;
-# use amethyst::{assets::Handle, renderer::sprite::SpriteSheet};
+# use amethyst::{assets::Handle, renderer::sprite::{SpriteRender, SpriteSheet}};
 # fn initialise_paddles(world: &mut World, sprite_sheet: Handle<SpriteSheet>) {
 // Assign the sprites for the paddles
 let sprite_render = SpriteRender {

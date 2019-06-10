@@ -55,15 +55,14 @@ axes we defined. Let's make the following changes to `main.rs`.
 # use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;
 # use amethyst::utils::application_dir;
-# use amethyst::renderer::{DisplayConfig, DrawFlat, Event, Pipeline,
-#                        PosTex, RenderBundle, Stage, VirtualKeyCode};
+# use amethyst::window::DisplayConfig;
 # macro_rules! env { ($x:expr) => ("") }
 # fn main() -> amethyst::Result<()> {
-use amethyst::input::InputBundle;
+use amethyst::input::{InputBundle, StringBindings};
 
 let binding_path = application_dir("resources/bindings_config.ron")?;
 
-let input_bundle = InputBundle::<String, String>::new()
+let input_bundle = InputBundle::<StringBindings>::new()
     .with_bindings_from_file(binding_path)?;
 
 # let path = "./resources/display_config.ron";
@@ -77,7 +76,9 @@ let input_bundle = InputBundle::<String, String>::new()
 let game_data = GameDataBuilder::default()
     .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
     .with_bundle(TransformBundle::new())?
-    .with_bundle(input_bundle)?;
+    .with_bundle(input_bundle)?
+    // ..
+    ;
 let mut game = Application::new("./", Pong, game_data)?;
 game.run();
 # Ok(())
@@ -200,7 +201,7 @@ mod systems; // Import the module
 
 # extern crate amethyst;
 # use amethyst::prelude::*;
-# use amethyst::core::transform::TransformBundle;
+# use amethyst::{core::transform::TransformBundle, input::StringBindings};
 # use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline,
 #                        PosTex, RenderBundle, Stage};
 fn main() -> amethyst::Result<()> {
@@ -220,7 +221,7 @@ fn main() -> amethyst::Result<()> {
 # fn run(&mut self, _: Self::SystemData) { }
 # }
 # }
-# let input_bundle = amethyst::input::InputBundle::<String, String>::new();
+# let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
   let game_data = GameDataBuilder::default()
       .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
       .with_bundle(TransformBundle::new())?
@@ -251,7 +252,7 @@ component of the transform's translation.
 # extern crate amethyst;
 # use amethyst::core::Transform;
 # use amethyst::ecs::{Join, Read, ReadStorage, System, WriteStorage};
-# use amethyst::input::InputHandler;
+# use amethyst::input::{InputHandler, StringBindings};
 # enum Side {
 #   Left,
 #   Right,
@@ -267,7 +268,7 @@ component of the transform's translation.
 #  type SystemData = (
 #    WriteStorage<'s, Transform>,
 #    ReadStorage<'s, Paddle>,
-#    Read<'s, InputHandler<String, String>>,
+#    Read<'s, InputHandler<StringBindings>>,
 #  );
   fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
     for (paddle, mut transform) in (&paddles, &mut transforms).join() {
@@ -307,7 +308,7 @@ Our run function should now look something like this:
 # extern crate amethyst;
 # use amethyst::core::{math::RealField, Float, Transform};
 # use amethyst::ecs::{Join, Read, ReadStorage, System, WriteStorage};
-# use amethyst::input::InputHandler;
+# use amethyst::input::{InputHandler, StringBindings};
 # const PADDLE_HEIGHT: f32 = 16.0;
 # const PADDLE_WIDTH: f32 = 4.0;
 # const ARENA_HEIGHT: f32 = 100.0;
@@ -327,7 +328,7 @@ Our run function should now look something like this:
 #  type SystemData = (
 #    WriteStorage<'s, Transform>,
 #    ReadStorage<'s, Paddle>,
-#    Read<'s, InputHandler<String, String>>,
+#    Read<'s, InputHandler<StringBindings>>,
 #  );
   fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
     for (paddle, mut transform) in (&paddles, &mut transforms).join() {
