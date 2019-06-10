@@ -89,6 +89,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Fix fly_camera example initial camera and cube position. ([#1582])
 * Add to fly_camera example code to release and capture back mouse input, and to show and hide cursor. ([#1582])
 * Updated `rodio` to `0.9`. ([#1683])
+* Make `Float` inner field public. ([#1687])
 
 #### Rendy support
 
@@ -180,6 +181,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1599]: https://github.com/amethyst/amethyst/pull/1599
 [#1642]: https://github.com/amethyst/amethyst/pull/1642
 [#1683]: https://github.com/amethyst/amethyst/pull/1683
+[#1687]: https://github.com/amethyst/amethyst/pull/1687
 
 ## [0.10.0] - 2018-12
 
