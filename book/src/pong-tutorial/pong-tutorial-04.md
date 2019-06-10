@@ -37,7 +37,7 @@ impl Component for Ball {
 
 A ball has a velocity and a radius, so we store that information in the component.
 
-Then let's add a `initialise_ball` function the same way we wrote the
+Then let's add an `initialise_ball` function the same way we wrote the
 `initialise_paddles` function.
 
 ```rust,edition2018,no_run,noplaypen
@@ -190,8 +190,8 @@ ball entities. Here we only have one ball, but if we ever need multiple, the
 system will handle them out of the box.
 In this system, we also want *framerate independence*.
 That is, no matter the framerate, all objects move with the same speed.
-To achieve that, a `delta time` since last frame is used.
-This is commonly known as [`delta timing`][delta_timing].
+To achieve that, a **delta time**, which is the duration since the last frame, is used.
+This is commonly known as ["delta timing"][delta_timing].
 As you can see in the snippet, to gain access to time passed since the last frame,
 you need to use [`amethyst::core::timing::Time`][doc_time], a commonly used
 resource. It has a method called `delta_seconds` that does exactly what we want.
@@ -262,8 +262,8 @@ impl<'s> System<'s> for BounceSystem {
             let ball_y = transform.translation().y;
 
             // Bounce at the top or the bottom of the arena.
-            if (ball_y <= ball.radius && ball.velocity[1] < 0.0)
-                || (ball_y >= ARENA_HEIGHT - ball.radius && ball.velocity[1] > 0.0)
+            if (ball_y.as_f32() <= ball.radius && ball.velocity[1] < 0.0)
+                || (ball_y.as_f32() >= ARENA_HEIGHT - ball.radius && ball.velocity[1] > 0.0)
             {
                 ball.velocity[1] = -ball.velocity[1];
             }
@@ -276,7 +276,7 @@ impl<'s> System<'s> for BounceSystem {
                 // To determine whether the ball has collided with a paddle, we create a larger
                 // rectangle around the current one, by subtracting the ball radius from the
                 // lowest coordinates, and adding the ball radius to the highest ones. The ball
-                // is then within the paddle if its centre is within the larger wrapper
+                // is then within the paddle if its center is within the larger wrapper
                 // rectangle.
                 if point_in_rect(
                     ball_x,
@@ -370,15 +370,15 @@ and bottom of the screen. However, you will quickly notice that if the ball
 goes out of the screen on the right or the left, it never comes back
 and the game is over. You might not even see that at all, as the ball might be already
 outside of the screen when the window comes up. You might have to dramatically reduce
-`BALL_VELOCITY_X` in order to see that in action. This obviously isn't a good solution for actual game.
+`BALL_VELOCITY_X` in order to see that in action. This obviously isn't a good solution for an actual game.
 To fix that problem and better see what's happening we have to spawn the ball with a slight delay.
 
 ## Spwaning ball with a delay
 
 The ball now spawns and moves off screen instantly when the game starts. This might be disorienting,
-as you might be thrown into the game and loose your first point before you had the time to notice.
-We also have to give some time for the operating system and the renderer to initialise the window
-before the game starts. Usually you would have a separate state with a game menu, so this isn't an issue.
+as you might be thrown into the game and lose your first point before you had the time to notice.
+We also have to give some time for the operating system and the renderer to initialize the window
+before the game starts. Usually, you would have a separate state with a game menu, so this isn't an issue.
 Our pong game throws you right into the action, so we have to fix that problem.
 
 Let's delay the first time the ball spawns. This is also a good opportunity to use our game state
@@ -401,10 +401,10 @@ fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans 
 That method allows you to transition out of state using its return value.
 Here, we do not want to change any state, so we return `Trans::None`.
 
-Now we have to move paddle creation to that method, and add some delay to it. Our `update` runs every frame,
-so in order to do something only once after given time, we have to use our local state.
-Additionaly, notice that `initialise_paddles` requires us to provide the `sprite_sheet_handle`, but it was created
-as a local variable inside `on_start`. For that reason we have to make it a part of the state too.
+Now we have to move paddle creation to that method and add some delay to it. Our `update` runs every frame,
+so in order to do something only once after a given time, we have to use our local state.
+Additionally, notice that `initialise_paddles` requires us to provide the `sprite_sheet_handle`, but it was created
+as a local variable inside `on_start`. For that reason, we have to make it a part of the state too.
 
 Let's add some fields to our `Pong` struct:
 
@@ -417,8 +417,8 @@ pub struct Pong {
 ```
 
 Our timer is represented by `Option<f32>`, which will count down to zero when available, and be replaced with `None` after
-the time has passed. Our sprite sheet handle is also inside `Option`, because we can't create it inside `Pong` constructor.
-It will be created inside `on_start` method instead.
+the time has passed. Our sprite sheet handle is also inside `Option` because we can't create it inside `Pong` constructor.
+It will be created inside the `on_start` method instead.
 
 We've also added `#[derive(Default)]`, which will automatically implement `Default` trait for us, which allows to create
 default empty state. Now let's use that inside our `Application` creation code in `main.rs`:
@@ -442,6 +442,7 @@ Now let's finish our timer and ball spawning code. We have to do two things:
 - then we have to `initialise_ball` once after the time has passed inside `update`:
 
 ```rust,edition2018,no_run,noplaypen
+use amethyst::core::timing::Time;
 
 # pub struct Pong {
 #     ball_spawn_timer: Option<f32>,
@@ -464,7 +465,7 @@ impl SimpleState for Pong {
 
     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         if let Some(mut timer) = self.ball_spawn_timer.take() {
-            // If the timer isn't expired yet, substract the time that passed since last update.
+            // If the timer isn't expired yet, subtract the time that passed since the last update.
             {
                 let time = data.world.res.fetch::<Time>();
                 timer -= time.delta_seconds();
