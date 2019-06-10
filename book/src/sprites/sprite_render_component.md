@@ -64,7 +64,7 @@ use amethyst::core::transform::Transform;
 # use amethyst::prelude::*;
 use amethyst::renderer::{
     ScreenDimensions, SpriteRender, SpriteSheet,
-    Handle<SpriteSheet>, Handle<Texture>, Transparent
+    Texture, Transparent
 };
 
 # pub fn load_texture<N>(name: N, world: &World) -> Handle<Texture>

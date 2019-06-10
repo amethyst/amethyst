@@ -527,14 +527,14 @@ Finally, we load the file containing the position of each sprite on the sheet.
 # extern crate amethyst;
 #
 # use amethyst::{
-#     assets::{AssetStorage, Loader},
+#     assets::{AssetStorage, Handle, Loader},
 #     core::transform::Transform,
 #     ecs::prelude::{Component, DenseVecStorage},
 #     prelude::*,
 #     renderer::{
 #         camera::{Camera, Projection},
 #         formats::texture::ImageFormat,
-#         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat, Handle<SpriteSheet>},
+#         sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat},
 #         Texture,
 #     },
 # };
@@ -582,7 +582,7 @@ signature to:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::World;
-# use amethyst::renderer::sprite::Handle<SpriteSheet>;
+# use amethyst::{assets::Handle, renderer::sprite::SpriteSheet};
 fn initialise_paddles(world: &mut World, sprite_sheet: Handle<SpriteSheet>)
 # { }
 ```
@@ -594,7 +594,7 @@ the right one is flipped horizontally.
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::World;
-# use amethyst::renderer::sprite::{Handle<SpriteSheet>, SpriteRender};
+# use amethyst::{assets::Handle, renderer::sprite::SpriteSheet};
 # fn initialise_paddles(world: &mut World, sprite_sheet: Handle<SpriteSheet>) {
 // Assign the sprites for the paddles
 let sprite_render = SpriteRender {
@@ -613,7 +613,8 @@ Next we simply add the components to the paddle entities:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::World;
-# use amethyst::renderer::sprite::{Handle<SpriteSheet>, SpriteRender};
+# use amethyst::assets::Handle;
+# use amethyst::renderer::sprite::{SpriteSheet, SpriteRender};
 # use amethyst::prelude::*;
 # fn initialise_paddles(world: &mut World, sprite_sheet: Handle<SpriteSheet>) {
 # let sprite_render = SpriteRender {
@@ -643,7 +644,7 @@ all together in the `on_start()` method:
 # extern crate amethyst;
 # use amethyst::assets::Handle;
 # use amethyst::prelude::*;
-# use amethyst::renderer::{sprite::Handle<SpriteSheet>, Texture};
+# use amethyst::renderer::{sprite::SpriteSheet, Texture};
 # use amethyst::ecs::World;
 # struct Paddle;
 # impl amethyst::ecs::Component for Paddle {
