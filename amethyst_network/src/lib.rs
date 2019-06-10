@@ -80,11 +80,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        deserialize_event,
-        net_event::NetPacket,
-        serialize_packet,
-    };
+    use crate::{deserialize_event, net_event::NetPacket, serialize_packet};
     use laminar::{DeliveryGuarantee, OrderingGuarantee};
     use std::net::SocketAddr;
 
