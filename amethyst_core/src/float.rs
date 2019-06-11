@@ -29,14 +29,27 @@ type FloatBase = f32;
 #[derive(Alga, Clone, Copy, PartialOrd, PartialEq, Serialize, Deserialize, Debug)]
 #[alga_traits(Field(Additive, Multiplicative))]
 #[serde(transparent)]
-pub struct Float(pub FloatBase);
+pub struct Float(FloatBase);
 
 impl Float {
+    /// Returns a new `Float`.
+    #[cfg(feature = "float64")]
+    pub const fn new(value: f64) -> Self {
+        Float(value)
+    }
+
+    /// Returns a new `Float`.
+    #[cfg(not(feature = "float64"))]
+    pub const fn new(value: f32) -> Self {
+        Float(value)
+    }
+
     /// Get the internal value as a f32. Will cause a loss in precision if using
     /// the "float64" feature.
     pub fn as_f32(self) -> f32 {
         self.0 as f32
     }
+
     /// Get the internal value as a f64. Guaranteed to be lossless.
     pub fn as_f64(self) -> f64 {
         f64::from(self.0)
