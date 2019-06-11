@@ -85,12 +85,12 @@ let pass = graph_builder.add_node(
         .with_depth_stencil(depth)
         .into_pass(),
 );
- 
-         // Finally, add the pass to the graph
-         let _present = graph_builder
-             .add_node(PresentNode::builder(factory, surface, color).with_dependency(pass));
- 
-         graph_builder
+#
+#         // Finally, add the pass to the graph
+#         let _present = graph_builder
+#             .add_node(PresentNode::builder(factory, surface, color).with_dependency(pass));
+# 
+#         graph_builder
 #     }
 # }
 ```

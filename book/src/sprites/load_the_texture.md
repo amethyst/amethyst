@@ -42,9 +42,27 @@ cloneable reference to the texture.
 
     When you use [`loader.load(..)`][doc_load] to load an [`Asset`][doc_asset], the method returns immediately with a unique handle for your texture. The actual asset loading is handled asynchronously, so if you attempt to use the texture handle to retrieve the texture, such as with [`world.read_resource::<AssetStorage<Texture>>()`][doc_read_resource][`.get(texture_handle)`][doc_asset_get], you will get a `None` until the `Texture` has finished loading.
 
-The loaded texture will use linear filter, e.g. screen pixels will be linearly interpolated between the closest image pixels. In layman's terms, if your images have small resolution, sprites will look blury.
-Use `TextureMetadata::srgb_scale()` instead to avoid such effect. Screen pixel will be taken from
- nearest pixel of texture in that case. TODO
+The loaded texture will use nearest filtering, i.e. the pixels won't be interpolated.
+If you want to tweak the sampling, you can change `ImageFormat::default()` to
+`ImageFormat(my_config)`, and create your own `my_config` like this:
+
+```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+use amethyst::renderer::rendy::hal::image::{Filter, SamplerInfo, WrapMode};
+use amethyst::renderer::rendy::texture::image::{ImageTextureConfig, Repr, TextureKind};
+
+let my_config = ImageTextureConfig {
+    // Determine format automatically
+    format: None,
+    // Color channel
+    repr: Repr::Srgb,
+    // Two-dimensional texture
+    kind: TextureKind::D2,
+    sampler_info: SamplerInfo::new(Filter::Linear, WrapMode::Clamp),
+    // Don't generate mipmaps for this image
+    generate_mips: false,
+};
+```
 
 [doc_asset]: https://docs-src.amethyst.rs/stable/amethyst_assets/trait.Asset.html
 [doc_asset_get]: https://docs-src.amethyst.rs/stable/amethyst_assets/struct.AssetStorage.html#method.get

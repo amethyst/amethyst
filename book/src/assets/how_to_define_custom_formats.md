@@ -3,14 +3,13 @@
 This guide explains how to define a new asset format. This will allow Amethyst to load assets stored in a particular encoding.
 
 There is a trait in Amethyst for implementing a format: `Format<A: Asset::Data>`.
-`Format` provides a loading implementation that provides detection when an asset should be reloaded 
-for [hot reloading][doc_hrs]; you don't need to implement it since it has a default implementation.
+`Format` provides a loading implementation that provides detection when an asset should be reloaded for [hot reloading][doc_hrs]; you don't need to implement it since it has a default implementation.
 A blanket implementation will implement `Format::import` and we only need to implement 
 `Format::import_simple`.
 
 `Format` takes a type parameter for the asset data type it supports. This guide covers a type 
-parameterized implementation of `SimpleFormat<A: Asset::Data>` for all `A`, as it is easier to 
-deduce the specific implementation from a parameterized implementation than the other way around.
+parameterized implementation of `Format<D>` where `D` is an arbitrary `Asset::Data`, so we can
+reuse it for any asset which can be loaded from deserializable asset data.
 
 If you are defining a new format that may be useful to others, [please send us a PR!][gh_contributing]
 
@@ -28,7 +27,7 @@ If you are defining a new format that may be useful to others, [please send us a
 
     This is where the logic to deserialize the [asset data type][bk_custom_assets] is provided. 
     Fields of the format struct can be used to specify additional parameters for 
-    deserialization; use the a unit struct if this is not needed.
+    deserialization; use a unit struct if this is not needed.
 
     In this example the RON deserializer is used, though it is [already a supported format][doc_ron_format].
 

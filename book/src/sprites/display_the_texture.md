@@ -2,9 +2,6 @@
 
 With a [`DrawFlat2D`][doc_drawflat2d] render pass set up and a loaded texture, it's already possible to render the full texture. The [`TextureHandle`][doc_tex_handle] itself implements [`Component`][doc_component], so you can just attach the [`Handle`][doc_handle] to an entity and it'll show up!
 
-For anything rendered by the [`DrawFlat2D`][doc_drawflat2d] pass, it's also possible to optionally attach a [`Flipped`][doc_flipped] component to the entity, which will signal to the renderer that you want to flip your texture horizontally or vertically when rendering.
-TODO
-
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 use amethyst::assets::{AssetStorage, Handle, Loader};
@@ -28,10 +25,15 @@ use amethyst::renderer::{ImageFormat, Texture};
 // ...
 
 fn init_image(world: &mut World, texture_handle: &Handle<Texture>) {
+    use amethyst::core::math::RealField;
+
     // Add a transform component to give the image a position
     let mut transform = Transform::default();
     transform.set_translation_x(0.0);
     transform.set_translation_y(0.0);
+    
+    // Flip horizontally
+    transform.set_rotation_y_axis(f32::pi());
 
     world
         .create_entity()

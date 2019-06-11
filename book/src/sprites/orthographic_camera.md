@@ -34,7 +34,7 @@ impl ExampleState {
         // Translate the camera to Z coordinate 10.0, and it looks back toward
         // the origin with depth 20.0
         let mut transform = Transform::default();
-        transform.set_translation_xyz(0., 0., 10.);
+        transform.set_translation_xyz(0., height, 10.);
 
         let mut camera = Camera::standard_3d(width, height);
         camera.set_projection(Projection::orthographic(
