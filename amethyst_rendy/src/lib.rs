@@ -42,7 +42,7 @@ pub mod util;
 #[cfg(feature = "test-support")]
 mod render_test_bundle;
 
-pub use camera::Camera;
+pub use camera::{ActiveCamera, Camera};
 pub use formats::{
     mesh::MeshPrefab,
     texture::{ImageFormat, TexturePrefab},
