@@ -101,6 +101,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Combined input axis/action generics into single type.
 * `Material` is now an asset. Must be turned into handle before putting on an entity.
 * Removed `Flipped` component. Use `flip_horizontal` and `flip_vertical` sprite property instead.
+* Added [Rendy migration guide][rendy_migration]. ([#1626])
 
 ### Removed
 
@@ -118,6 +119,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Fix tuple index generation on `PrefabData` and `EventReader` proc macros. ([#1501])
 * Avoid segmentation fault on Windows when using `AudioBundle` in `amethyst_test`. ([#1595], [#1599])
 
+[rendy_migration]: https://book.amethyst.rs/master/appendices/b_migration_notes/rendy_migration.html
 [#1114]: https://github.com/amethyst/amethyst/pull/1114
 [#1213]: https://github.com/amethyst/amethyst/pull/1213
 [#1237]: https://github.com/amethyst/amethyst/pull/1237
@@ -178,6 +180,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1582]: https://github.com/amethyst/amethyst/pull/1582
 [#1595]: https://github.com/amethyst/amethyst/issues/1595
 [#1599]: https://github.com/amethyst/amethyst/pull/1599
+[#1626]: https://github.com/amethyst/amethyst/pull/1626
 [#1642]: https://github.com/amethyst/amethyst/pull/1642
 [#1683]: https://github.com/amethyst/amethyst/pull/1683
 
