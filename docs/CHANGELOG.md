@@ -44,7 +44,7 @@ it is attached to. ([#1282])
 * Add `amethyst_input::BindingError::MouseWheelAlreadyBound` ([#1642])
 * Add `amethyst_input::InputHandler::send_frame_begin` ([#1642])
 * Add `amethyst_input::InputHandler::mouse_wheel_value` ([#1642])
-* Added `Float::new` `const fn` so `Float` can be used as `const`. ([#1687])
+* Added `Float::from_f32` and `Float::from_f64` `const fn`s so `Float` can be used as `const`. ([#1687])
 
 ### Changed
 

@@ -32,16 +32,14 @@ type FloatBase = f32;
 pub struct Float(FloatBase);
 
 impl Float {
-    /// Returns a new `Float`.
-    #[cfg(feature = "float64")]
-    pub const fn new(value: f64) -> Self {
-        Float(value)
+    /// Returns a new `Float` from a `f64`.
+    pub const fn from_f64(value: f64) -> Self {
+        Float(value as FloatBase)
     }
 
-    /// Returns a new `Float`.
-    #[cfg(not(feature = "float64"))]
-    pub const fn new(value: f32) -> Self {
-        Float(value)
+    /// Returns a new `Float` from a `f32`.
+    pub const fn from_f32(value: f32) -> Self {
+        Float(value as FloatBase)
     }
 
     /// Get the internal value as a f32. Will cause a loss in precision if using
