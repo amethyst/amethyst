@@ -63,9 +63,10 @@ Cool, finally we have all the parts, let's build a `SpriteRender` and attach it 
 use amethyst::core::transform::Transform;
 # use amethyst::prelude::*;
 use amethyst::renderer::{
-    ScreenDimensions, SpriteRender, SpriteSheet,
+    SpriteRender, SpriteSheet,
     Texture, Transparent
 };
+use amethyst::window::ScreenDimensions;
 
 # pub fn load_texture<N>(name: N, world: &World) -> Handle<Texture>
 # where

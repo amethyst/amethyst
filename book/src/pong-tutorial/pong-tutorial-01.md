@@ -179,11 +179,12 @@ In `main()` in `main.rs` we are going to add the basic application setup:
 # use amethyst::{prelude::*, window::*};
 # fn main() -> Result<(), amethyst::Error>{
 # let display_config_path = "";
-# struct Pong;
+# struct Pong; impl SimpleState for Pong {}
 let game_data = GameDataBuilder::default()
     // The WindowBundle provides all the scaffolding for opening a window
     .with_bundle(WindowBundle::from_config_path(display_config_path))?;
 
+# let app_root = std::path::PathBuf::from(".");
 let assets_dir = app_root.join("assets");
 let mut game = Application::new(assets_dir, Pong, game_data)?;
 game.run();

@@ -241,9 +241,7 @@ Then, change your `GraphCreator` like so:
 #         );
 #
 // Create our first `Subpass`, which contains the DrawFlat2D and DrawUi render groups.
-// We pass the subpass builder a description of our pass for construction		        // We pass the subpass builder a description of our groups for construction
-// Create our first `Subpass`, which contains the DrawFlat2D and DrawUi render groups.
-// We pass the subpass builder a description of our groups for construction
+// We pass the subpass builder a description of our pass for construction
 let pass = graph_builder.add_node(
     SubpassBuilder::new()
         .with_group(DrawFlat2DDesc::default().builder()) // Draws sprites

@@ -2,9 +2,15 @@
 
 This guide explains how to define a new asset format. This will allow Amethyst to load assets stored in a particular encoding.
 
-There are two formatting traits in Amethyst &ndash; `Format<A: Asset>` and `SimpleFormat<A: Asset>`. `Format` requests a loading implementation that provides detection when an asset should be reloaded for [hot reloading][doc_hrs]; `SimpleFormat` requires a loading implementation. A blanket implementation will implement `Format` for all `SimpleFormat` implementations, and provides hot reloading detection based on file modification time &ndash; this is sufficient for most applications that require hot reloading. This guide covers implementation of the `SimpleFormat` trait.
+There is a trait in Amethyst for implementing a format: `Format<A: Asset::Data>`.
+`Format` provides a loading implementation that provides detection when an asset should be reloaded 
+for [hot reloading][doc_hrs]; you don't need to implement it since it has a default implementation.
+A blanket implementation will implement `Format::import` and we only need to implement 
+`Format::import_simple`.
 
-`SimpleFormat` takes a type parameter for the asset type it supports. This guide covers a type parameterized implementation of `SimpleFormat<A: Asset>` for all `A`, as it is easier to deduce the specific implementation from a parameterized implementation than the other way around.
+`Format` takes a type parameter for the asset data type it supports. This guide covers a type 
+parameterized implementation of `SimpleFormat<A: Asset::Data>` for all `A`, as it is easier to 
+deduce the specific implementation from a parameterized implementation than the other way around.
 
 If you are defining a new format that may be useful to others, [please send us a PR!][gh_contributing]
 
@@ -18,9 +24,11 @@ If you are defining a new format that may be useful to others, [please send us a
     pub struct MyLangFormat;
     ```
 
-2. Implement the `SimpleFormat` trait.
+2. Implement the `Format` trait.
 
-    This is where the logic to deserialize the [asset data type][bk_custom_assets] is provided. The `Options` associated type can be used to specify additional parameters for deserialization; use the empty tuple `()` if this is not needed.
+    This is where the logic to deserialize the [asset data type][bk_custom_assets] is provided. 
+    Fields of the format struct can be used to specify additional parameters for 
+    deserialization; use the a unit struct if this is not needed.
 
     In this example the RON deserializer is used, though it is [already a supported format][doc_ron_format].
 
@@ -31,7 +39,7 @@ If you are defining a new format that may be useful to others, [please send us a
     #
     use amethyst::{
         error::Error,
-        assets::{Asset, SimpleFormat},
+        assets::{Asset, Format},
     };
     use serde::Deserialize;
     use ron::de::Deserializer; // Replace this in your implementation.
@@ -40,20 +48,17 @@ If you are defining a new format that may be useful to others, [please send us a
     #[derive(Clone, Copy, Debug, Default)]
     pub struct MyLangFormat;
 
-    impl<A> SimpleFormat<A> for MyLangFormat
+    impl<D> Format<D> for MyLangFormat
     where
-        A: Asset,
-        A::Data: for<'a> Deserialize<'a> + Send + Sync + 'static,
+        D: for<'a> Deserialize<'a> + Send + Sync + 'static,
     {
-        const NAME: &'static str = "MyLang";
+        fn name(&self) -> &'static str {
+            "MyLangFormat"
+        }
 
-        // If the deserializer implementation takes parameters,
-        // the parameter type may be specified here.
-        type Options = ();
-
-        fn import(&self, bytes: Vec<u8>, _: ()) -> Result<A::Data, Error> {
+        fn import_simple(&self, bytes: Vec<u8>) -> Result<D, Error> {
             let mut deserializer = Deserializer::from_bytes(&bytes)?;
-            let val = A::Data::deserialize(&mut deserializer)?;
+            let val = D::deserialize(&mut deserializer)?;
             deserializer.end()?;
 
             Ok(val)
@@ -73,7 +78,7 @@ If you are defining a new format that may be useful to others, [please send us a
     #     error::Error,
     #     assets::{
     #         Asset, AssetStorage, Handle, Loader, Processor, ProgressCounter,
-    #         ProcessingState, SimpleFormat,
+    #         ProcessingState, Format,
     #     },
     #     ecs::VecStorage,
     #     prelude::*,
@@ -115,28 +120,25 @@ If you are defining a new format that may be useful to others, [please send us a
     # }
     #
     # /// Format for loading from `.mylang` files.
-    # #[derive(Clone, Copy, Debug, Default)]
-    # pub struct MyLangFormat;
+    #  #[derive(Clone, Copy, Debug, Default)]
+    #  pub struct MyLangFormat;
     #
-    # impl<A> SimpleFormat<A> for MyLangFormat
-    # where
-    #     A: Asset,
-    #     A::Data: for<'a> DeserializeTrait<'a> + Send + Sync + 'static,
-    # {
-    #     const NAME: &'static str = "MyLang";
+    #  impl<D> Format<D> for MyLangFormat
+    #  where
+    #      D: for<'a> DeserializeTrait<'a> + Send + Sync + 'static,
+    #  {
+    #      fn name(&self) -> &'static str {
+    #          "MyLangFormat"
+    #      }
     #
-    #     // If the deserializer implementation takes parameters,
-    #     // the parameter type may be specified here.
-    #     type Options = ();
+    #      fn import_simple(&self, bytes: Vec<u8>) -> Result<D, Error> {
+    #          let mut deserializer = Deserializer::from_bytes(&bytes)?;
+    #          let val = D::deserialize(&mut deserializer)?;
+    #          deserializer.end()?;
     #
-    #     fn import(&self, bytes: Vec<u8>, _: ()) -> Result<A::Data, Error> {
-    #         let mut deserializer = Deserializer::from_bytes(&bytes)?;
-    #         let val = A::Data::deserialize(&mut deserializer)?;
-    #         deserializer.end()?;
-    #
-    #         Ok(val)
-    #     }
-    # }
+    #          Ok(val)
+    #      }
+    #  }
     #
     impl SimpleState for LoadingState {
         fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
@@ -144,7 +146,6 @@ If you are defining a new format that may be useful to others, [please send us a
             let energy_blast_handle = loader.load(
                 "energy_blast.mylang",
                 MyLangFormat,
-                (),
                 &mut self.progress_counter,
                 &data.world.read_resource::<AssetStorage<EnergyBlast>>(),
             );
