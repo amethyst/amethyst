@@ -23,6 +23,8 @@ pub use crate::{
     reload::{HotReloadBundle, HotReloadStrategy, HotReloadSystem, Reload, SingleFile},
     source::{Directory, Source},
     storage::{AssetStorage, Handle, ProcessingState, Processor, WeakHandle},
+    loader_new::{create_asset_type, TypeUuid, AssetUuid},
+    simple_importer::{SourceFileImporter, SimpleImporter},
 };
 
 pub use rayon::ThreadPool;
@@ -39,6 +41,11 @@ mod progress;
 mod reload;
 mod source;
 mod storage;
+mod storage_new;
+mod loader_new;
+mod processor;
+#[cfg(feature = "importers")]
+mod simple_importer;
 
 // used in macros. Private API otherwise.
 #[doc(hidden)]

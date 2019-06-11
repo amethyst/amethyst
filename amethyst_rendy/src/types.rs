@@ -1,5 +1,5 @@
 //! 'Global' rendering type declarations
-use amethyst_assets::{Asset, Handle};
+use amethyst_assets::{Asset, Handle, TypeUuid};
 use amethyst_core::ecs::DenseVecStorage;
 use serde::{Deserialize, Serialize};
 
@@ -38,6 +38,8 @@ macro_rules! impl_backends {
 
         /// Mesh wrapper.
         #[derive(Debug)]
+        #[derive(TypeUuid)]
+        #[uuid = "3017f6f7-b9fa-4d55-8cc5-27f803592569"]
         pub enum Mesh {
             $(
                 #[cfg(feature = $feature)]
@@ -119,25 +121,30 @@ impl_backends!(
 );
 
 impl Asset for Mesh {
-    const NAME: &'static str = "Mesh";
+    fn name() -> &'static str  { "Mesh" }
     type Data = MeshData;
     type HandleStorage = DenseVecStorage<Handle<Self>>;
 }
 
 impl Asset for Texture {
-    const NAME: &'static str = "Mesh";
+    fn name() -> &'static str { "Texture" }
     type Data = TextureData;
     type HandleStorage = DenseVecStorage<Handle<Self>>;
 }
 
 /// Newtype for MeshBuilder prefab usage.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(TypeUuid)]
+#[uuid = "c5870fe0-1733-4fb4-827c-4353f8c6002d"]
 pub struct MeshData(
     #[serde(deserialize_with = "deserialize_data")] pub rendy::mesh::MeshBuilder<'static>,
 );
+amethyst_assets::asset_type!{MeshData => Mesh}
 
 /// Newtype for TextureBuilder prefab usage.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(TypeUuid)]
+#[uuid = "25063afd-6cc0-487e-982f-a63fed7d7393"]
 pub struct TextureData(pub rendy::texture::TextureBuilder<'static>);
 
 impl From<rendy::mesh::MeshBuilder<'static>> for MeshData {

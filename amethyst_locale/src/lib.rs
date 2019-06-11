@@ -43,7 +43,7 @@ pub struct Locale {
 }
 
 impl Asset for Locale {
-    const NAME: &'static str = "locale::Locale";
+    fn name() -> &'static str { "locale::Locale" }
     type Data = Locale;
     type HandleStorage = VecStorage<LocaleHandle>;
 }

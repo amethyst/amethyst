@@ -94,6 +94,7 @@ test-support = [
   "amethyst_rendy/test-support",
   "amethyst_window/test-support",
 ]
+importers = [ "amethyst_assets/importers" ]
 
 [workspace]
 members = [

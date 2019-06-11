@@ -18,7 +18,7 @@ pub struct FontData(Font<'static>);
 amethyst_assets::register_format_type!(FontData);
 
 impl Asset for FontAsset {
-    const NAME: &'static str = "ui::Font";
+    fn name() -> &'static str { "ui::Font" }
     type Data = FontData;
     type HandleStorage = VecStorage<Handle<Self>>;
 }
