@@ -298,6 +298,10 @@ where
         self.data_list.extend(data);
         let added_len = self.data_list.len() as u32 - start;
 
+        if added_len == 0 {
+            return;
+        }
+
         match self.keys_list.last_mut() {
             Some((last_pk, last_len)) if last_pk == &pk => {
                 *last_len += added_len;
