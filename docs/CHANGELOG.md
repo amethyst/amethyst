@@ -40,10 +40,11 @@ it is attached to. ([#1282])
 * Added `events` example which demonstrates working even reader and writer in action. ([#1538])
 *  Implement builder like functionality for `AnimationSet` and `AnimationControlSet` ([#1568])
 * Add `get_mouse_button` and `is_mouse_button_down` utility functions to amethyst_input. ([#1582])
-- Add amethyst_input::Axis::MouseWheel ([#1642])
-- Add amethyst_input::BindingError::MouseWheelAlreadyBound ([#1642])
-- Add amethyst_input::InputHandler::send_frame_begin ([#1642])
-- Add amethyst_input::InputHandler::mouse_wheel_value ([#1642])
+* Add `amethyst_input::Axis::MouseWheel` ([#1642])
+* Add `amethyst_input::BindingError::MouseWheelAlreadyBound` ([#1642])
+* Add `amethyst_input::InputHandler::send_frame_begin` ([#1642])
+* Add `amethyst_input::InputHandler::mouse_wheel_value` ([#1642])
+* Added `Float::new` `const fn` so `Float` can be used as `const`. ([#1687])
 
 ### Changed
 
@@ -89,7 +90,6 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Fix fly_camera example initial camera and cube position. ([#1582])
 * Add to fly_camera example code to release and capture back mouse input, and to show and hide cursor. ([#1582])
 * Updated `rodio` to `0.9`. ([#1683])
-* Make `Float` inner field public. ([#1687])
 
 #### Rendy support
 
