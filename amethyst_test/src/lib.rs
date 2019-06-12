@@ -84,7 +84,7 @@
 //!     // Start with the Transform, Input, and UI bundles
 //!     // The type parameters here are the Axis and Action types for the `InputBundle` and
 //!     // `UiBundle`.
-//!     AmethystApplication::ui_base::<String, String>();
+//!     AmethystApplication::ui_base::<amethyst::input::StringBindings>();
 //!
 //!     // Start with the Animation, Transform, and Render bundles.
 //!     // If you want the Input and UI bundles, you can use the `.with_ui_bundles::<T>()`
@@ -293,7 +293,6 @@
 //! # }
 //! ```
 
-pub(crate) use crate::system_injection_bundle::SystemInjectionBundle;
 pub use crate::{
     amethyst_application::{AmethystApplication, HIDPI, SCREEN_HEIGHT, SCREEN_WIDTH},
     effect_return::EffectReturn,
@@ -304,6 +303,10 @@ pub use crate::{
         SequencerState,
     },
 };
+pub(crate) use crate::{
+    system_injection_bundle::SystemInjectionBundle,
+    thread_local_injection_bundle::ThreadLocalInjectionBundle,
+};
 
 mod amethyst_application;
 mod effect_return;
@@ -312,3 +315,4 @@ mod game_update;
 pub mod prelude;
 mod state;
 mod system_injection_bundle;
+mod thread_local_injection_bundle;

@@ -232,7 +232,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
     fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
         self.dirty = false;
 
-        let window = <ReadExpect<'_, std::sync::Arc<Window>>>::fetch(res);
+        let window = <ReadExpect<'_, Window>>::fetch(res);
 
         let surface = factory.create_surface(&window);
         // cache surface format to speed things up

@@ -66,7 +66,7 @@ let spritesheet_handle = loader.load(
 # }
 ```
 
-This will get you the `SpriteSheetHandle` you will then use to draw the sprites.
+This will get you the `Handle<SpriteSheet>` you will then use to draw the sprites.
 
 ## Load the sheet from code
 

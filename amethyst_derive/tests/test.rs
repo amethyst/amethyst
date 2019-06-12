@@ -75,3 +75,147 @@ pub struct Outer {
     #[prefab(Component)]
     external: External,
 }
+
+#[derive(PrefabData, Clone)]
+pub struct OuterTuple(#[prefab(Component)] External);
+
+#[derive(PrefabData, Clone)]
+pub enum EnumPrefab {
+    One {
+        number: Stuff<usize>,
+    },
+    Two {
+        #[prefab(Component)]
+        component: External,
+    },
+    Three {},
+    Four,
+    Five(Stuff<String>, #[prefab(Component)] External),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use amethyst_assets::{AssetStorage, Loader, Prefab, PrefabLoaderSystem};
+    use amethyst_core::ecs::{world::EntitiesRes, Builder, Join};
+    use amethyst_test::prelude::*;
+
+    macro_rules! assert_prefab {
+        ($prefab_type:ident, $prefab:expr, $assertion:expr) => {
+            assert!(AmethystApplication::blank()
+                .with_system(
+                    PrefabLoaderSystem::<$prefab_type>::default(),
+                    "test_loader",
+                    &[]
+                )
+                .with_effect(|world| {
+                    let handle = {
+                        let loader = world.read_resource::<Loader>();
+                        let storage = world.read_resource::<AssetStorage<Prefab<$prefab_type>>>();
+                        let mut prefab = Prefab::new();
+                        prefab.main(Some($prefab));
+                        loader.load_from_data(prefab, (), &storage)
+                    };
+                    world.create_entity().with(handle).build();
+                })
+                .with_assertion($assertion)
+                .run()
+                .is_ok())
+        };
+    }
+
+    #[test]
+    fn instantiate_struct_prefabs() {
+        assert_prefab!(
+            Outer,
+            Outer {
+                external: External { inner: 100 }
+            },
+            |world| {
+                let entities = world.read_resource::<EntitiesRes>();
+                let storage = world.read_storage::<External>();
+
+                assert_eq!(
+                    (&entities, &storage)
+                        .join()
+                        .map(|(_, ex)| assert_eq!(ex.inner, 100))
+                        .count(),
+                    1
+                );
+            }
+        );
+    }
+
+    #[test]
+    fn instantiate_struct_variant() {
+        assert_prefab!(
+            EnumPrefab,
+            EnumPrefab::One {
+                number: Stuff { inner: 1 }
+            },
+            |world| {
+                let entities = world.read_resource::<EntitiesRes>();
+                let storage = world.read_storage::<Stuff<usize>>();
+
+                assert_eq!(
+                    (&entities, &storage)
+                        .join()
+                        .map(|(_, ex)| assert_eq!(ex.inner, 1))
+                        .count(),
+                    1
+                );
+            }
+        );
+    }
+
+    #[test]
+    fn instantiate_struct_variant_with_component_field() {
+        assert_prefab!(
+            EnumPrefab,
+            EnumPrefab::Two {
+                component: External { inner: 2 }
+            },
+            |world| {
+                let entities = world.read_resource::<EntitiesRes>();
+                let storage = world.read_storage::<External>();
+
+                assert_eq!(
+                    (&entities, &storage)
+                        .join()
+                        .map(|(_, ex)| assert_eq!(ex.inner, 2))
+                        .count(),
+                    1
+                );
+            }
+        );
+    }
+
+    #[test]
+    fn instantiate_tuple_variant() {
+        assert_prefab!(
+            EnumPrefab,
+            EnumPrefab::Five(
+                Stuff {
+                    inner: "three".to_string()
+                },
+                External { inner: 4 }
+            ),
+            |world| {
+                let entities = world.read_resource::<EntitiesRes>();
+                let stuff_storage = world.read_storage::<Stuff<String>>();
+                let external_storage = world.read_storage::<External>();
+
+                assert_eq!(
+                    (&entities, &stuff_storage, &external_storage)
+                        .join()
+                        .map(|(_, st, ex)| {
+                            assert_eq!(st.inner, "three");
+                            assert_eq!(ex.inner, 4);
+                        })
+                        .count(),
+                    1
+                );
+            }
+        );
+    }
+}

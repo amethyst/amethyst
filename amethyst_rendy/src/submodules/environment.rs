@@ -246,6 +246,6 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
             write_into_slice(&mut dst_slice[usize_range(env_range)], Some(env));
         }
 
-        return new_buffer;
+        new_buffer
     }
 }

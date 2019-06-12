@@ -54,19 +54,16 @@ impl<'a> System<'a> for SpamReceiveSystem {
 
         for (e, connection) in (&entities, &mut connections).join() {
             if self.reader.is_none() {
-                self.reader = Some(connection.receive_buffer.register_reader());
+                self.reader = Some(connection.register_reader());
             }
 
             let mut client_disconnected = false;
 
-            for ev in connection
-                .receive_buffer
-                .read(self.reader.as_mut().unwrap())
-            {
+            for ev in connection.received_events(self.reader.as_mut().unwrap()) {
                 count += 1;
                 match ev {
                     NetEvent::Packet(packet) => info!("{}", packet.content()),
-                    NetEvent::Connected(addr) => println!("New Client Connection: {}", addr),
+                    NetEvent::Connected(addr) => info!("New Client Connection: {}", addr),
                     NetEvent::Disconnected(_addr) => {
                         client_disconnected = true;
                     }

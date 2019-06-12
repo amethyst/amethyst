@@ -103,6 +103,12 @@ impl<B: Backend> UiGlyphsSystem<B> {
     }
 }
 
+impl<B: Backend> Default for UiGlyphsSystem<B> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
     type SystemData = (
         Option<Write<'a, Factory<B>>>,
@@ -295,7 +301,7 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                     // There is no other way to inject some glyph metadata than using Z.
                     // Fortunately depth is not required, so this slot is instead used to
                     // distinguish computed glyphs indented to be used for various entities.
-                    z: unsafe { std::mem::transmute(entity.id()) },
+                    z: f32::from_bits(entity.id()),
                     layout: Default::default(), // overriden on queue
                     text,
                 };
@@ -493,7 +499,7 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                                 coords: [g.x + g.advance_width * 0.5, g.y + offset].into(),
                                 dimensions: [g.advance_width, height].into(),
                                 tex_coord_bounds: [0., 0., 1., 1.].into(),
-                                color: bg_color.clone().into(),
+                                color: bg_color.into(),
                             });
                             let mut glyph_data = glyphs.get_mut(entity).unwrap();
                             glyph_data.sel_vertices.extend(iter);
@@ -579,8 +585,8 @@ fn selection_span(editing: &TextEditing, string: &str) -> Option<(usize, usize)>
     let to_end = pos.max(pos_highlight) as usize - start - 1;
 
     let mut indices = string.grapheme_indices(true).map(|i| i.0);
-    let start_byte = indices.nth(start).unwrap_or(string.len());
-    let end_byte = indices.nth(to_end).unwrap_or(string.len());
+    let start_byte = indices.nth(start).unwrap_or_else(|| string.len());
+    let end_byte = indices.nth(to_end).unwrap_or_else(|| string.len());
 
     if start_byte == end_byte {
         None

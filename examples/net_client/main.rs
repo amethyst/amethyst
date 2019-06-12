@@ -61,7 +61,7 @@ impl<'a> System<'a> for SpamSystem {
                     i
                 )));
 
-                conn.send_buffer.single_write(packet);
+                conn.queue(packet);
             }
         }
     }

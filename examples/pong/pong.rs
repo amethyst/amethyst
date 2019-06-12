@@ -1,40 +1,57 @@
 use crate::{systems::ScoreText, Ball, Paddle, Side, ARENA_HEIGHT, ARENA_WIDTH};
 use amethyst::{
-    assets::{AssetStorage, Loader},
-    core::transform::Transform,
+    assets::{AssetStorage, Handle, Loader},
+    core::{timing::Time, transform::Transform},
     ecs::prelude::World,
     prelude::*,
-    renderer::{
-        camera::{Camera, Projection},
-        formats::texture::ImageFormat,
-        sprite::{SpriteRender, SpriteSheet, SpriteSheetFormat, SpriteSheetHandle},
-        Texture,
-    },
+    renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
     ui::{Anchor, TtfFormat, UiText, UiTransform},
 };
 
-pub struct Pong;
+#[derive(Default)]
+pub struct Pong {
+    ball_spawn_timer: Option<f32>,
+    sprite_sheet_handle: Option<Handle<SpriteSheet>>,
+}
 
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
         use crate::audio::initialise_audio;
 
+        // Wait one second before spawning the ball.
+        self.ball_spawn_timer.replace(1.0);
+
         // Load the spritesheet necessary to render the graphics.
         // `spritesheet` is the layout of the sprites on the image;
         // `texture` is the pixel data.
-        let sprite_sheet_handle = load_sprite_sheet(world);
-
-        // Setup our game.
-        initialise_paddles(world, sprite_sheet_handle.clone());
-        initialise_ball(world, sprite_sheet_handle);
+        self.sprite_sheet_handle.replace(load_sprite_sheet(world));
+        initialise_paddles(world, self.sprite_sheet_handle.clone().unwrap());
         initialise_camera(world);
         initialise_audio(world);
         initialise_score(world);
     }
+
+    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+        if let Some(mut timer) = self.ball_spawn_timer.take() {
+            // If the timer isn't expired yet, substract the time that passed since last update.
+            {
+                let time = data.world.res.fetch::<Time>();
+                timer -= time.delta_seconds();
+            }
+            if timer <= 0.0 {
+                // When timer expire, spawn the ball
+                initialise_ball(data.world, self.sprite_sheet_handle.clone().unwrap());
+            } else {
+                // If timer is not expired yet, put it back onto the state.
+                self.ball_spawn_timer.replace(timer);
+            }
+        }
+        Trans::None
+    }
 }
 
-fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
+fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
     // Load the sprite sheet necessary to render the graphics.
     // The texture is the pixel data
     // `sprite_sheet` is the layout of the sprites on the image
@@ -63,27 +80,19 @@ fn load_sprite_sheet(world: &mut World) -> SpriteSheetHandle {
 
 /// Initialise the camera.
 fn initialise_camera(world: &mut World) {
+    // Setup camera in a way that our screen covers whole arena and (0, 0) is in the bottom left.
     let mut transform = Transform::default();
-    transform.set_translation_xyz(0.0, 0.0, 1.0);
+    transform.set_translation_xyz(ARENA_WIDTH * 0.5, ARENA_HEIGHT * 0.5, 1.0);
 
     world
         .create_entity()
-        // A default camera can be created with standard_2d, but we instead create a camera
-        // which is centered on our gameplay area (ARENA)
-        .with(Camera::from(Projection::orthographic(
-            0.0,
-            ARENA_WIDTH,
-            0.0,
-            ARENA_HEIGHT,
-            0.1,
-            2000.0,
-        )))
+        .with(Camera::standard_2d(ARENA_WIDTH, ARENA_HEIGHT))
         .with(transform)
         .build();
 }
 
 /// Initialises one paddle on the left, and one paddle on the right.
-fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
+fn initialise_paddles(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
     use crate::{PADDLE_HEIGHT, PADDLE_VELOCITY, PADDLE_WIDTH};
 
     let mut left_transform = Transform::default();
@@ -128,7 +137,7 @@ fn initialise_paddles(world: &mut World, sprite_sheet_handle: SpriteSheetHandle)
 }
 
 /// Initialises one ball in the middle-ish of the arena.
-fn initialise_ball(world: &mut World, sprite_sheet_handle: SpriteSheetHandle) {
+fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) {
     use crate::{BALL_RADIUS, BALL_VELOCITY_X, BALL_VELOCITY_Y};
 
     // Create the translation.

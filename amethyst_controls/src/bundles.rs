@@ -125,6 +125,12 @@ impl<T: BindingTypes> ArcBallControlBundle<T> {
     }
 }
 
+impl<T: BindingTypes> Default for ArcBallControlBundle<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for ArcBallControlBundle<T> {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(ArcBallRotationSystem::default(), "arc_ball_rotation", &[]);

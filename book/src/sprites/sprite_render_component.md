@@ -6,32 +6,30 @@ After loading the `SpriteSheet`, you need to attach it to an entity using the `S
 #[derive(Clone, Debug, PartialEq)]
 pub struct SpriteRender {
     /// Handle to the sprite sheet of the sprite
-    pub sprite_sheet: SpriteSheetHandle,
+    pub sprite_sheet: Handle<SpriteSheet>,
     /// Index of the sprite on the sprite sheet
     pub sprite_number: usize,
 }
 ```
 
-The sprite number is the index of the sprite loaded in the sprite sheet. What's left is the `SpriteSheetHandle`.
+The sprite number is the index of the sprite loaded in the sprite sheet. What's left is the `Handle<SpriteSheet>`.
 
-In the previous section you wrote a function that returns a `SpriteSheet`. This can be turned into a `SpriteSheetHandle` using the `Loader` resource as follows:
+In the previous section you wrote a function that returns a `SpriteSheet`. This can be turned into a `Handle<SpriteSheet>` using the `Loader` resource as follows:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-use amethyst::assets::{AssetStorage, Loader};
+use amethyst::assets::{AssetStorage, Loader, Handle};
 # use amethyst::prelude::*;
-use amethyst::renderer::{
-    SpriteSheet, SpriteSheetHandle, TextureHandle,
-};
+use amethyst::renderer::{SpriteSheet, Texture};
 
-# pub fn load_texture<N>(name: N, world: &World) -> TextureHandle
+# pub fn load_texture<N>(name: N, world: &World) -> Handle<Texture>
 # where
 #     N: Into<String>,
 # {
 #     unimplemented!();
 # }
 #
-# pub fn load_sprite_sheet(texture: TextureHandle) -> SpriteSheet {
+# pub fn load_sprite_sheet(texture: Handle<Texture>) -> SpriteSheet {
 #     unimplemented!();
 # }
 #[derive(Debug)]
@@ -61,22 +59,22 @@ Cool, finally we have all the parts, let's build a `SpriteRender` and attach it 
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::assets::{AssetStorage, Loader};
+# use amethyst::assets::{AssetStorage, Loader, Handle};
 use amethyst::core::transform::Transform;
 # use amethyst::prelude::*;
 use amethyst::renderer::{
     ScreenDimensions, SpriteRender, SpriteSheet,
-    SpriteSheetHandle, TextureHandle, Transparent
+    Texture, Transparent
 };
 
-# pub fn load_texture<N>(name: N, world: &World) -> TextureHandle
+# pub fn load_texture<N>(name: N, world: &World) -> Handle<Texture>
 # where
 #     N: Into<String>,
 # {
 #     unimplemented!();
 # }
 #
-# pub fn load_sprite_sheet(texture: TextureHandle) -> SpriteSheet {
+# pub fn load_sprite_sheet(texture: Handle<Texture>) -> SpriteSheet {
 #     unimplemented!();
 # }
 #[derive(Debug)]
@@ -105,7 +103,7 @@ impl ExampleState {
     fn initialize_sprite(
         &mut self,
         world: &mut World,
-        sprite_sheet_handle: SpriteSheetHandle,
+        sprite_sheet_handle: Handle<SpriteSheet>,
     ) {
         let (width, height) = {
             let dim = world.read_resource::<ScreenDimensions>();

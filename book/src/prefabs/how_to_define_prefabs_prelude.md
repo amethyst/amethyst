@@ -121,21 +121,18 @@ Component     | Serialized representation             | Example(s)            | 
     # extern crate amethyst;
     #
     # use amethyst::{
+    #     assets::Handle,
     #     ecs::{storage::DenseVecStorage, Component},
-    #     renderer::{TextureHandle, TextureOffset},
+    #     renderer::Texture,
     # };
     #
     /// Material struct.
     #[derive(Clone, PartialEq)]
     pub struct Material {
         /// Diffuse map.
-        pub albedo: TextureHandle,
-        /// Diffuse texture offset
-        pub albedo_offset: TextureOffset,
+        pub albedo: Handle<Texture>,
         /// Emission map.
-        pub emission: TextureHandle,
-        /// Emission texture offset
-        pub emission_offset: TextureOffset,
+        pub emission: Handle<Texture>,
         // ..
     }
 

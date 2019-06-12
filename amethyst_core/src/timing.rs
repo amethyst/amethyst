@@ -172,12 +172,11 @@ impl Time {
     /// This should only be called by the engine.  Bad things might happen if you call this in
     /// your game.
     pub fn step_fixed_update(&mut self) -> bool {
-        match self.fixed_time_accumulator >= self.fixed_seconds {
-            true => {
-                self.fixed_time_accumulator -= self.fixed_seconds;
-                true
-            }
-            false => false,
+        if self.fixed_time_accumulator >= self.fixed_seconds {
+            self.fixed_time_accumulator -= self.fixed_seconds;
+            true
+        } else {
+            false
         }
     }
 

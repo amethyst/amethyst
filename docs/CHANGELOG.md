@@ -40,9 +40,14 @@ it is attached to. ([#1282])
 * Added `events` example which demonstrates working even reader and writer in action. ([#1538])
 *  Implement builder like functionality for `AnimationSet` and `AnimationControlSet` ([#1568])
 * Add `get_mouse_button` and `is_mouse_button_down` utility functions to amethyst_input. ([#1582])
+- Add amethyst_input::Axis::MouseWheel ([#1642])
+- Add amethyst_input::BindingError::MouseWheelAlreadyBound ([#1642])
+- Add amethyst_input::InputHandler::send_frame_begin ([#1642])
+- Add amethyst_input::InputHandler::mouse_wheel_value ([#1642])
 
 ### Changed
 
+* `#[derive(PrefabData)]` now supports enums as well as structs
 * Make `frame_limiter::do_sleep` calculate the amount of time to sleep instead of calling `sleep(0)` ([#1446])
 * Make `application_root_dir` return a `Result<Path>` instead of a `String` ([#1213])
 * Remove unnecessary texture coordinates offset in `Sprite::from_pixel_values` ([#1267])
@@ -83,6 +88,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Added a `pivot` field to `UiTransform`. ([#1571])
 * Fix fly_camera example initial camera and cube position. ([#1582])
 * Add to fly_camera example code to release and capture back mouse input, and to show and hide cursor. ([#1582])
+* Updated `rodio` to `0.9`. ([#1683])
 
 #### Rendy support
 
@@ -95,6 +101,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Combined input axis/action generics into single type.
 * `Material` is now an asset. Must be turned into handle before putting on an entity.
 * Removed `Flipped` component. Use `flip_horizontal` and `flip_vertical` sprite property instead.
+* Added [Rendy migration guide][rendy_migration]. ([#1626])
 
 ### Removed
 
@@ -112,6 +119,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Fix tuple index generation on `PrefabData` and `EventReader` proc macros. ([#1501])
 * Avoid segmentation fault on Windows when using `AudioBundle` in `amethyst_test`. ([#1595], [#1599])
 
+[rendy_migration]: https://book.amethyst.rs/master/appendices/b_migration_notes/rendy_migration.html
 [#1114]: https://github.com/amethyst/amethyst/pull/1114
 [#1213]: https://github.com/amethyst/amethyst/pull/1213
 [#1237]: https://github.com/amethyst/amethyst/pull/1237
@@ -172,6 +180,9 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1582]: https://github.com/amethyst/amethyst/pull/1582
 [#1595]: https://github.com/amethyst/amethyst/issues/1595
 [#1599]: https://github.com/amethyst/amethyst/pull/1599
+[#1626]: https://github.com/amethyst/amethyst/pull/1626
+[#1642]: https://github.com/amethyst/amethyst/pull/1642
+[#1683]: https://github.com/amethyst/amethyst/pull/1683
 
 ## [0.10.0] - 2018-12
 

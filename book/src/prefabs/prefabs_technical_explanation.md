@@ -85,7 +85,7 @@ impl<'a> PrefabData<'a> for Transform {
         _: &[Entity],
         _: &[Entity],
     ) -> Result<(), Error> {
-        storage.insert(entity, self.clone()).map(|_| ())
+        storage.insert(entity, self.clone()).map(|_| ()).map_err(Into::into)
     }
 }
 ```
@@ -121,21 +121,20 @@ load extra `Asset`s as part of a `Prefab`:
 pub enum AssetPrefab<A, F>
 where
     A: Asset,
-    F: Format<A>,
+    F: Format<A::Data>,
 {
     /// From existing handle
     #[serde(skip)]
     Handle(Handle<A>),
 
     /// From file, (name, format, format options)
-    File(String, F, F::Options),
+    File(String, F),
 }
 
 impl<'a, A, F> PrefabData<'a> for AssetPrefab<A, F>
 where
     A: Asset,
-    F: Format<A> + Clone,
-    F::Options: Clone,
+    F: Format<A::Data> + Clone,
 {
     type SystemData = (
         ReadExpect<'a, Loader>,
@@ -154,10 +153,9 @@ where
     ) -> Result<Handle<A>, Error> {
         let handle = match *self {
             AssetPrefab::Handle(ref handle) => handle.clone(),
-            AssetPrefab::File(ref name, ref format, ref options) => system_data.0.load(
-                name.as_ref(),
+            AssetPrefab::File(ref name, ref format) => system_data.0.load(
+                name.as_str(),
                 format.clone(),
-                options.clone(),
                 (),
                 &system_data.2,
             ),
@@ -171,10 +169,9 @@ where
         system_data: &mut Self::SystemData,
     ) -> Result<bool, Error> {
         let handle = match *self {
-            AssetPrefab::File(ref name, ref format, ref options) => Some(system_data.0.load(
-                name.as_ref(),
+            AssetPrefab::File(ref name, ref format) => Some(system_data.0.load(
+                name.as_str(),
                 format.clone(),
-                options.clone(),
                 progress,
                 &system_data.2,
             )),
@@ -207,7 +204,7 @@ There are a few special blanket implementations provided by the asset system:
 Amethyst supplies a derive macro for creating the `PrefabData` implementation for the following scenarios:
 
 * Single `Component`
-* Aggregate `PrefabData` structs which contain other `PrefabData` constructs, and optionally simple data `Component`s
+* Aggregate `PrefabData` structs or enums which contain other `PrefabData` constructs, and optionally simple data `Component`s
 
 In addition, deriving a `Prefab` requires that `amethyst::Error`, `amethyst::ecs::Entity` and
  `amethyst:assets::{PrefabData, ProgressCounter}` are imported
@@ -250,7 +247,7 @@ Lets look at an example of an aggregate struct:
 # use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
 # use amethyst::core::Transform;
 # use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, DenseVecStorage, Component};
-# use amethyst::renderer::{Mesh, ObjFormat};
+# use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
 # use amethyst::Error;
 
 #[derive(PrefabData)]
@@ -270,7 +267,7 @@ One last example that also adds a custom pure data `Component` into the aggregat
 # use amethyst::assets::{Asset, AssetStorage, Loader, Format, Handle, ProgressCounter, PrefabData, AssetPrefab};
 # use amethyst::core::Transform;
 # use amethyst::ecs::{WriteStorage, ReadExpect, Read, Entity, DenseVecStorage, Component};
-# use amethyst::renderer::{Mesh, ObjFormat};
+# use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
 # use amethyst::Error;
 
 #[derive(PrefabData)]

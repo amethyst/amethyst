@@ -257,7 +257,7 @@ fn next_duration(last_frame: Duration, duration: Duration) -> (Duration, u32) {
 
 fn linear_blend<T>(
     channel: &T::Channel,
-    output: &Vec<(f32, T::Channel, T::Primitive)>,
+    output: &[(f32, T::Channel, T::Primitive)],
 ) -> Option<T::Primitive>
 where
     T: AnimationSampling,

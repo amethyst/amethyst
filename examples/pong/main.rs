@@ -13,24 +13,13 @@ use amethyst::{
     input::{InputBundle, StringBindings},
     prelude::*,
     renderer::{
-        pass::DrawFlat2DDesc,
-        rendy::{
-            factory::Factory,
-            graph::{
-                render::{RenderGroupDesc, SubpassBuilder},
-                GraphBuilder,
-            },
-            hal::{format::Format, image},
-        },
-        sprite::SpriteSheet,
-        types::DefaultBackend,
-        GraphCreator, RenderingSystem,
+        pass::DrawFlat2DDesc, types::DefaultBackend, Factory, Format, GraphBuilder, GraphCreator,
+        Kind, RenderGroupDesc, RenderingSystem, SpriteSheet, SubpassBuilder,
     },
     ui::{DrawUiDesc, UiBundle},
     utils::application_root_dir,
     window::{ScreenDimensions, Window, WindowBundle},
 };
-use std::sync::Arc;
 
 use crate::{audio::Music, bundle::PongBundle};
 use std::time::Duration;
@@ -72,7 +61,7 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
-        // The WindowBundle provides all the scaffolding for opening a window and drawing to it
+        // The WindowBundle provides all the scaffolding for opening a window
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(TransformBundle::new())?
@@ -99,7 +88,7 @@ fn main() -> amethyst::Result<()> {
             ExampleGraph::default(),
         ));
 
-    let mut game = Application::build(assets_dir, Pong)?
+    let mut game = Application::build(assets_dir, Pong::default())?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,
@@ -205,7 +194,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         self.dirty = false;
 
         // Retrieve a reference to the target window, which is created by the WindowBundle
-        let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
+        let window = <ReadExpect<'_, Window>>::fetch(res);
 
         // Create a new drawing surface in our window
         let surface = factory.create_surface(&window);
@@ -214,8 +203,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             .surface_format
             .get_or_insert_with(|| factory.get_surface_format(&surface));
         let dimensions = self.dimensions.as_ref().unwrap();
-        let window_kind =
-            image::Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
+        let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 
         // Begin building our RenderGraph
         let mut graph_builder = GraphBuilder::new();

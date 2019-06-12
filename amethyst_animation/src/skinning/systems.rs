@@ -14,6 +14,7 @@ use super::resources::*;
 /// System for performing vertex skinning.
 ///
 /// Needs to run after global transforms have been updated for the current frame.
+#[derive(Default)]
 pub struct VertexSkinningSystem {
     /// Also scratch space, used while determining which skins need to be updated.
     updated: BitSet,
@@ -25,11 +26,7 @@ pub struct VertexSkinningSystem {
 impl VertexSkinningSystem {
     /// Creates a new `VertexSkinningSystem`
     pub fn new() -> Self {
-        Self {
-            updated: BitSet::new(),
-            updated_skins: BitSet::new(),
-            updated_id: None,
-        }
+        Self::default()
     }
 }
 

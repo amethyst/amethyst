@@ -150,10 +150,7 @@ fn load_texture(
     let (data, format) = get_image_data(&texture.source(), buffers, source, name.as_ref())?;
 
     let metadata = ImageTextureConfig {
-        repr: match srgb {
-            true => Repr::Srgb,
-            false => Repr::Unorm,
-        },
+        repr: if srgb { Repr::Srgb } else { Repr::Unorm },
         format: match format {
             ImportDataFormat::Png => Some(DataFormat::PNG),
             ImportDataFormat::Jpeg => Some(DataFormat::JPEG),

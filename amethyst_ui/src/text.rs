@@ -134,6 +134,7 @@ impl Component for TextEditing {
 }
 
 /// This system processes the underlying UI data as needed.
+#[derive(Default)]
 pub struct TextEditingMouseSystem {
     /// A reader for winit events.
     reader: Option<ReaderId<Event>>,

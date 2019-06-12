@@ -219,7 +219,7 @@ where
 /// - `T`: the component type that the animation should be applied to
 ///
 /// [sampler]: struct.Sampler.html
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Animation<T>
 where
     T: AnimationSampling,

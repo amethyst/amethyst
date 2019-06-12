@@ -15,18 +15,15 @@ pub fn impl_event_reader(ast: &DeriveInput) -> TokenStream {
                 .expect("reader attribute incorrectly defined")
         })
     {
-        match meta {
-            Meta::List(l) => {
-                for nested_meta in l.nested.iter() {
-                    match *nested_meta {
-                        NestedMeta::Meta(Meta::Word(ref word)) => {
-                            reader_name = Some(word.clone());
-                        }
-                        _ => panic!("reader attribute does not contain a single name"),
+        if let Meta::List(l) = meta {
+            for nested_meta in l.nested.iter() {
+                match *nested_meta {
+                    NestedMeta::Meta(Meta::Word(ref word)) => {
+                        reader_name = Some(word.clone());
                     }
+                    _ => panic!("reader attribute does not contain a single name"),
                 }
             }
-            _ => (),
         };
     }
 
