@@ -16,6 +16,21 @@ use serde::{
     ser::{Serialize, Serializer},
 };
 
+/// Defines a transforms relationship to any parents it may have.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+pub enum ParentTransformRelation {
+    /// A relative transformation, which is the default, will modify this transform based on its
+    /// parents
+    Relative,
+    /// An absolutely transform will ignore parents and be considered a world transform.
+    Absolute,
+}
+impl Default for ParentTransformRelation {
+    fn default() -> Self {
+        ParentTransformRelation::Relative
+    }
+}
+
 /// Local position, rotation, and scale (from parent if it exists).
 ///
 /// Used for rendering position and orientation.
@@ -35,6 +50,11 @@ pub struct Transform {
     /// The global transformation matrix.
     #[get = "pub"]
     pub(crate) global_matrix: Matrix4<Float>,
+
+    #[get = "pub"]
+    #[set = "pub"]
+    #[get_mut = "pub"]
+    pub(crate) parent_relation: ParentTransformRelation,
 }
 
 impl Transform {
@@ -62,6 +82,7 @@ impl Transform {
             isometry: Isometry3::from_parts(na::convert(position), na::convert(rotation)),
             scale: na::convert(scale),
             global_matrix: na::one(),
+            parent_relation: ParentTransformRelation::default(),
         }
     }
 
@@ -594,6 +615,7 @@ impl Default for Transform {
             isometry: Isometry3::identity(),
             scale: Vector3::from_element(1.0.into()),
             global_matrix: na::one(),
+            parent_relation: ParentTransformRelation::default(),
         }
     }
 }
@@ -647,6 +669,7 @@ impl<'de> Deserialize<'de> for Transform {
             Translation,
             Rotation,
             Scale,
+            ParentRelation,
         };
 
         #[derive(Default)]
@@ -673,6 +696,10 @@ impl<'de> Deserialize<'de> for Transform {
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
+                let parent_relation: ParentTransformRelation = seq
+                    .next_element()?
+                    .map_or_else(|| ParentTransformRelation::Relative, |v| v);
+
                 let isometry = Isometry3::from_parts(
                     Translation3::new(translation[0], translation[1], translation[2]),
                     Unit::new_normalize(Quaternion::new(
@@ -687,6 +714,7 @@ impl<'de> Deserialize<'de> for Transform {
                 Ok(Transform {
                     isometry,
                     scale,
+                    parent_relation,
                     ..Default::default()
                 })
             }
@@ -698,6 +726,7 @@ impl<'de> Deserialize<'de> for Transform {
                 let mut translation = None;
                 let mut rotation = None;
                 let mut scale = None;
+                let mut parent_relation = None;
 
                 while let Some(key) = map.next_key()? {
                     match key {
@@ -719,12 +748,19 @@ impl<'de> Deserialize<'de> for Transform {
                             }
                             scale = Some(map.next_value()?);
                         }
+                        Field::ParentRelation => {
+                            if parent_relation.is_some() {
+                                return Err(de::Error::duplicate_field("parent_relation"));
+                            }
+                            parent_relation = Some(map.next_value()?);
+                        }
                     }
                 }
                 let translation: [Float; 3] = translation.unwrap_or([Float::zero(); 3]);
                 let rotation: [Float; 4] =
                     rotation.unwrap_or([Float::zero(), Float::zero(), Float::zero(), Float::one()]);
                 let scale: [Float; 3] = scale.unwrap_or([Float::one(); 3]);
+                let parent_relation: ParentTransformRelation = parent_relation.unwrap_or_default();
 
                 let isometry = Isometry3::from_parts(
                     Translation3::new(translation[0], translation[1], translation[2]),
@@ -740,6 +776,7 @@ impl<'de> Deserialize<'de> for Transform {
                 Ok(Transform {
                     isometry,
                     scale,
+                    parent_relation,
                     ..Default::default()
                 })
             }

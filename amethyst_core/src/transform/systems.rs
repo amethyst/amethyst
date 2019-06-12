@@ -6,7 +6,9 @@ use crate::ecs::prelude::{
 };
 use hibitset::BitSet;
 
-use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform};
+use crate::transform::{
+    HierarchyEvent, Parent, ParentHierarchy, ParentTransformRelation, Transform,
+};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -94,14 +96,21 @@ impl<'a> System<'a> for TransformSystem {
         for entity in hierarchy.all() {
             let self_dirty = self.local_modified.contains(entity.id());
             if let Some(parent) = parents.get(*entity) {
+                // This moves to pulling from the local storage and checking parent relation and
+                // local transform existence to BEFORE running a contains() on local_modified, which
+                // could be slower. We want our boolean checks to fast-bail the loop.
+                // Additionally, the case of a local_modified when a local doesn't exist is UB
+                let local = locals.get(*entity);
+                if local.is_none()
+                    || local.as_ref().unwrap().parent_relation == ParentTransformRelation::Absolute
+                {
+                    continue;
+                }
+                let local = local.unwrap();
+
                 let parent_dirty = self.local_modified.contains(parent.entity.id());
                 if parent_dirty || self_dirty {
                     let combined_transform = {
-                        let local = locals.get(*entity);
-                        if local.is_none() {
-                            continue;
-                        }
-                        let local = local.unwrap();
                         if let Some(parent_global) = locals.get(parent.entity) {
                             (parent_global.global_matrix * local.matrix())
                         } else {
