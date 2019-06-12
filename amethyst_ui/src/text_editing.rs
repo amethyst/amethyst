@@ -156,7 +156,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                         VirtualKeyCode::Left => {
                             if focused_edit.highlight_vector == 0 || modifiers.shift {
                                 if focused_edit.cursor_position > 0 {
-                                    let delta = if ctrl_or_cmd(&modifiers) {
+                                    let delta = if ctrl_or_cmd(modifiers) {
                                         let mut graphemes = 0;
                                         for word in focused_text.text.split_word_bounds() {
                                             let word_graphemes =
@@ -189,7 +189,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             if focused_edit.highlight_vector == 0 || modifiers.shift {
                                 let glyph_len = focused_text.text.graphemes(true).count();
                                 if (focused_edit.cursor_position as usize) < glyph_len {
-                                    let delta = if ctrl_or_cmd(&modifiers) {
+                                    let delta = if ctrl_or_cmd(modifiers) {
                                         let mut graphemes = 0;
                                         for word in focused_text.text.split_word_bounds() {
                                             graphemes += word.graphemes(true).count() as isize;
@@ -215,14 +215,14 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             }
                         }
                         VirtualKeyCode::A => {
-                            if ctrl_or_cmd(&modifiers) {
+                            if ctrl_or_cmd(modifiers) {
                                 let glyph_len = focused_text.text.graphemes(true).count() as isize;
                                 focused_edit.cursor_position = glyph_len;
                                 focused_edit.highlight_vector = -glyph_len;
                             }
                         }
                         VirtualKeyCode::X => {
-                            if ctrl_or_cmd(&modifiers) {
+                            if ctrl_or_cmd(modifiers) {
                                 let new_clip = extract_highlighted(focused_edit, focused_text);
                                 if !new_clip.is_empty() {
                                     match ClipboardProvider::new().and_then(
@@ -241,7 +241,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             }
                         }
                         VirtualKeyCode::C => {
-                            if ctrl_or_cmd(&modifiers) {
+                            if ctrl_or_cmd(modifiers) {
                                 let new_clip = read_highlighted(focused_edit, focused_text);
                                 if !new_clip.is_empty() {
                                     if let Err(e) = ClipboardProvider::new().and_then(
@@ -255,7 +255,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
                             }
                         }
                         VirtualKeyCode::V => {
-                            if ctrl_or_cmd(&modifiers) {
+                            if ctrl_or_cmd(modifiers) {
                                 delete_highlighted(focused_edit, focused_text);
 
                                 match ClipboardProvider::new()
@@ -341,7 +341,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
 }
 
 /// Returns if the command key is down on OSX, and the CTRL key for everything else.
-fn ctrl_or_cmd(modifiers: &ModifiersState) -> bool {
+fn ctrl_or_cmd(modifiers: ModifiersState) -> bool {
     (cfg!(target_os = "macos") && modifiers.logo)
         || (cfg!(not(target_os = "macos")) && modifiers.ctrl)
 }

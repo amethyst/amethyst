@@ -30,7 +30,7 @@ use amethyst_rendy::{
     },
     resources::Tint,
     simple_shader_set,
-    submodules::{DynamicUniform, DynamicVertex, TextureId, TextureSub},
+    submodules::{DynamicUniform, DynamicVertexBuffer, TextureId, TextureSub},
     types::{Backend, Texture},
     ChangeDetection,
 };
@@ -108,7 +108,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawUiDesc {
     ) -> Result<Box<dyn RenderGroup<B, Resources>>, failure::Error> {
         let env = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)?;
         let textures = TextureSub::new(factory)?;
-        let vertex = DynamicVertex::new();
+        let vertex = DynamicVertexBuffer::new();
 
         let (pipeline, pipeline_layout) = build_ui_pipeline(
             factory,
@@ -147,7 +147,7 @@ pub struct DrawUi<B: Backend> {
     pipeline_layout: B::PipelineLayout,
     env: DynamicUniform<B, UiViewArgs>,
     textures: TextureSub<B>,
-    vertex: DynamicVertex<B, UiArgs>,
+    vertex: DynamicVertexBuffer<B, UiArgs>,
     batches: OrderedOneLevelBatch<TextureId, UiArgs>,
     change: ChangeDetection,
     cached_draw_order: CachedDrawOrder,
@@ -308,7 +308,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             };
 
             if let Some(glyph_data) = glyphs.get(entity) {
-                if glyph_data.sel_vertices.len() > 0 {
+                if !glyph_data.sel_vertices.is_empty() {
                     self.batches
                         .insert(white_tex_id, glyph_data.sel_vertices.iter().cloned());
                 }
@@ -357,7 +357,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
                     }
                 }
 
-                if glyph_data.vertices.len() > 0 {
+                if !glyph_data.vertices.is_empty() {
                     self.batches
                         .insert(glyph_tex_id, glyph_data.vertices.iter().cloned());
                 }
@@ -396,7 +396,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             let layout = &self.pipeline_layout;
             encoder.bind_graphics_pipeline(&self.pipeline);
             self.env.bind(index, &self.pipeline_layout, 0, &mut encoder);
-            self.vertex.bind(index, 0, &mut encoder);
+            self.vertex.bind(index, 0, 0, &mut encoder);
             for (&tex, range) in self.batches.iter() {
                 self.textures.bind(layout, 1, tex, &mut encoder);
                 encoder.draw(0..4, range);
@@ -478,8 +478,8 @@ fn render_image<B: Backend>(
 ) -> bool {
     let color = match (raw_image, tint.as_ref()) {
         (UiImage::SolidColor(color), Some(t)) => mul_blend(color, t),
-        (UiImage::SolidColor(color), None) => color.clone(),
-        (_, Some(t)) => t.clone(),
+        (UiImage::SolidColor(color), None) => *color,
+        (_, Some(t)) => *t,
         (_, None) => [1., 1., 1., 1.],
     };
 

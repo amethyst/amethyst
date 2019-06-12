@@ -44,10 +44,10 @@ Then, you can load it using the texture handle of the sheet's image you loaded e
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::assets::{Loader, AssetStorage};
-# use amethyst::renderer::{SpriteSheetFormat, SpriteSheet, TextureHandle};
+# use amethyst::assets::{Loader, AssetStorage, Handle};
+# use amethyst::renderer::{SpriteSheetFormat, SpriteSheet, Texture};
 #
-# fn load_texture() -> TextureHandle {
+# fn load_texture() -> Handle<Texture> {
 #    unimplemented!()
 # }
 #
@@ -58,15 +58,14 @@ Then, you can load it using the texture handle of the sheet's image you loaded e
 #   let spritesheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
 let spritesheet_handle = loader.load(
     "my_spritesheet.ron",
-    SpriteSheetFormat,
-    texture_handle,
+    SpriteSheetFormat(texture_handle),
     (),
     &spritesheet_storage,
 );
 # }
 ```
 
-This will get you the `SpriteSheetHandle` you will then use to draw the sprites.
+This will get you the `Handle<SpriteSheet>` you will then use to draw the sprites.
 
 ## Load the sheet from code
 
@@ -88,14 +87,15 @@ The following snippet shows you how to naively define a `SpriteSheet`. In a real
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-use amethyst::renderer::{Sprite, SpriteSheet, TextureCoordinates, TextureHandle};
+use amethyst::assets::Handle;
+use amethyst::renderer::{sprite::TextureCoordinates, Sprite, SpriteSheet, Texture};
 
 /// Returns a `SpriteSheet`.
 ///
 /// # Parameters
 ///
 /// * `texture`: Handle of the texture.
-pub fn load_sprite_sheet(texture: TextureHandle) -> SpriteSheet {
+pub fn load_sprite_sheet(texture: Handle<Texture>) -> SpriteSheet {
     let sprite_count = 1; // number of sprites
     let mut sprites = Vec::with_capacity(sprite_count);
 

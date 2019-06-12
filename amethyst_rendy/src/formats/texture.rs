@@ -38,7 +38,7 @@ impl Default for ImageFormat {
                 lod_bias: 0.0.into(),
                 lod_range: std::ops::Range {
                     start: 0.0.into(),
-                    end: 8000.0.into(),
+                    end: 1000.0.into(),
                 },
                 comparison: None,
                 border: PackedColor(0),

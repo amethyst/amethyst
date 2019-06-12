@@ -44,7 +44,6 @@ use amethyst::{
 };
 use log::{error, info};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 
 const CLEAR_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
@@ -240,7 +239,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
 
         use amethyst::shred::SystemData;
 
-        let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
+        let window = <ReadExpect<'_, Window>>::fetch(res);
 
         let surface = factory.create_surface(&window);
         let dimensions = self.dimensions.as_ref().unwrap();

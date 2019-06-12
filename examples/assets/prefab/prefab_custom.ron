@@ -3,16 +3,16 @@ Prefab(
     entities: [
         // Player
         PrefabEntity(
-            data: CustomPrefabData(
-                player: Named(name: "Zero"),
+            data: Player (
+                name: Named(name: "Zero"),
                 position: Position(1.0, 2.0, 3.0),
             ),
         ),
         // Weapon
         PrefabEntity(
             parent: 0,
-            data: CustomPrefabData(
-                weapon: Sword,
+            data: Weapon (
+                weapon_type: Sword,
                 position: Position(4.0, 5.0, 6.0),
             ),
         ),

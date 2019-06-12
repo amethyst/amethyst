@@ -105,7 +105,7 @@ Keep in mind that **the `join` method is only available by importing `amethyst::
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::{System, ReadStorage, WriteStorage};
-# use amethyst::core::Transform;
+# use amethyst::core::{Float, Transform};
 # struct FallingObject;
 # impl amethyst::ecs::Component for FallingObject {
 #   type Storage = amethyst::ecs::DenseVecStorage<FallingObject>;
@@ -122,7 +122,7 @@ impl<'a> System<'a> for MakeObjectsFall {
 
     fn run(&mut self, (mut transforms, falling): Self::SystemData) {
         for (mut transform, _) in (&mut transforms, &falling).join() {
-            if transform.translation().y > 0.0 {
+            if transform.translation().y.as_f32() > 0.0 {
                 transform.prepend_translation_y(-0.1);
             }
         }
@@ -250,7 +250,7 @@ impl<'a> System<'a> for MakeObjectsFall {
 
     fn run(&mut self, (entities, mut transforms, falling): Self::SystemData) {
         for (e, mut transform, _) in (&*entities, &mut transforms, &falling).join() {
-            if transform.translation().y > 0.0 {
+            if transform.translation().y.as_f32() > 0.0 {
                 transform.prepend_translation_y(-0.1);
             } else {
                 entities.delete(e);
@@ -439,14 +439,14 @@ system:
 use amethyst::{
     prelude::*,
     ecs::{System, prelude::*},
-    input::InputHandler,
+    input::{InputHandler, StringBindings},
 };
 
 struct MyGameplaySystem;
 
 impl<'s> System<'s> for MyGameplaySystem {
     type SystemData = (
-        Read<'s, InputHandler<String, String>>,
+        Read<'s, InputHandler<StringBindings>>,
         Write<'s, Game>,
     );
 

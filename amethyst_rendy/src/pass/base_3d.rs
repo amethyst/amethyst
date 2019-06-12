@@ -5,7 +5,7 @@ use crate::{
     pod::{SkinnedVertexArgs, VertexArgs},
     resources::Tint,
     skinning::JointTransforms,
-    submodules::{DynamicVertex, EnvironmentSub, MaterialId, MaterialSub, SkinningSub},
+    submodules::{DynamicVertexBuffer, EnvironmentSub, MaterialId, MaterialSub, SkinningSub},
     transparent::Transparent,
     types::{Backend, Mesh},
     util,
@@ -146,8 +146,8 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroupDesc<B, Resources> for DrawBase
             env,
             materials,
             skinning,
-            models: DynamicVertex::new(),
-            skinned_models: DynamicVertex::new(),
+            models: DynamicVertexBuffer::new(),
+            skinned_models: DynamicVertexBuffer::new(),
             marker: PhantomData,
         }))
     }
@@ -168,8 +168,8 @@ pub struct DrawBase3D<B: Backend, T: Base3DPassDef<B>> {
     env: EnvironmentSub<B>,
     materials: MaterialSub<B, T::TextureSet>,
     skinning: SkinningSub<B>,
-    models: DynamicVertex<B, VertexArgs>,
-    skinned_models: DynamicVertex<B, SkinnedVertexArgs>,
+    models: DynamicVertexBuffer<B, VertexArgs>,
+    skinned_models: DynamicVertexBuffer<B, SkinnedVertexArgs>,
     marker: PhantomData<T>,
 }
 
@@ -351,7 +351,7 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3D<B
         encoder.bind_graphics_pipeline(&self.pipeline_basic);
         self.env.bind(index, &self.pipeline_layout, 0, &mut encoder);
 
-        if self.models.bind(index, models_loc, &mut encoder) {
+        if self.models.bind(index, models_loc, 0, &mut encoder) {
             let mut instances_drawn = 0;
             for (&mat_id, batches) in self.static_batches.iter() {
                 if self.materials.loaded(mat_id) {
@@ -381,7 +381,7 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3D<B
 
             if self
                 .skinned_models
-                .bind(index, skin_models_loc, &mut encoder)
+                .bind(index, skin_models_loc, 0, &mut encoder)
             {
                 self.skinning
                     .bind(index, &self.pipeline_layout, 2, &mut encoder);
@@ -418,9 +418,9 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3D<B
             factory
                 .device()
                 .destroy_graphics_pipeline(self.pipeline_basic);
-            self.pipeline_skinned.take().map(|pipeline| {
+            if let Some(pipeline) = self.pipeline_skinned.take() {
                 factory.device().destroy_graphics_pipeline(pipeline);
-            });
+            }
             factory
                 .device()
                 .destroy_pipeline_layout(self.pipeline_layout);
@@ -506,8 +506,8 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroupDesc<B, Resources>
             env,
             materials,
             skinning,
-            models: DynamicVertex::new(),
-            skinned_models: DynamicVertex::new(),
+            models: DynamicVertexBuffer::new(),
+            skinned_models: DynamicVertexBuffer::new(),
             change: Default::default(),
             marker: PhantomData,
         }))
@@ -528,8 +528,8 @@ pub struct DrawBase3DTransparent<B: Backend, T: Base3DPassDef<B>> {
     env: EnvironmentSub<B>,
     materials: MaterialSub<B, FullTextureSet>,
     skinning: SkinningSub<B>,
-    models: DynamicVertex<B, VertexArgs>,
-    skinned_models: DynamicVertex<B, SkinnedVertexArgs>,
+    models: DynamicVertexBuffer<B, VertexArgs>,
+    skinned_models: DynamicVertexBuffer<B, SkinnedVertexArgs>,
     change: util::ChangeDetection,
     marker: PhantomData<(T)>,
 }
@@ -653,7 +653,7 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3DTr
         encoder.bind_graphics_pipeline(&self.pipeline_basic);
         self.env.bind(index, layout, 0, encoder);
 
-        if self.models.bind(index, models_loc, encoder) {
+        if self.models.bind(index, models_loc, 0, encoder) {
             for (&mat, batches) in self.static_batches.iter() {
                 if self.materials.loaded(mat) {
                     self.materials.bind(layout, 1, mat, encoder);
@@ -673,7 +673,7 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3DTr
         if let Some(pipeline_skinned) = self.pipeline_skinned.as_ref() {
             encoder.bind_graphics_pipeline(pipeline_skinned);
 
-            if self.skinned_models.bind(index, skin_models_loc, encoder) {
+            if self.skinned_models.bind(index, skin_models_loc, 0, encoder) {
                 self.skinning.bind(index, layout, 2, encoder);
                 for (&mat, batches) in self.skinned_batches.iter() {
                     if self.materials.loaded(mat) {
@@ -703,9 +703,9 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3DTr
             factory
                 .device()
                 .destroy_graphics_pipeline(self.pipeline_basic);
-            self.pipeline_skinned.take().map(|pipeline| {
+            if let Some(pipeline) = self.pipeline_skinned.take() {
                 factory.device().destroy_graphics_pipeline(pipeline);
-            });
+            }
             factory
                 .device()
                 .destroy_pipeline_layout(self.pipeline_layout);

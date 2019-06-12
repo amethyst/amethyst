@@ -165,10 +165,9 @@ cargo run --example prefab_multi
 
 ### Multiple Entities, Different Components
 
-The next level is to instantiate multiple entities, each with their own set of [`Component`]s. The current implementation of [`Prefab`] requires the `data` field to be the same type for *every* [`PrefabEntity`] in the list. This means we would be unable to declare something like the following snippet, because it uses a `Player` prefab data in one entity, and `Weapon` in another:
+The next level is to instantiate multiple entities, each with their own set of [`Component`]s. The current implementation of [`Prefab`] requires the `data` field to be the same type for *every* [`PrefabEntity`] in the list. This means that to have different types of entity in the same prefab they must be variants of an enum. For instance, a prefab like this:
 
 ```rust,ignore
-// Note: Invalid / erroneous example
 #![enable(implicit_some)]
 Prefab(
     entities: [
@@ -183,7 +182,7 @@ Prefab(
         PrefabEntity(
             parent: 0,
             data: Weapon(
-                type: Sword,
+                weapon_type: Sword,
                 position: Position(4.0, 5.0, 6.0),
             ),
         ),
@@ -191,7 +190,7 @@ Prefab(
 )
 ```
 
-Instead, the components have to be moved up to a top level [`PrefabData`] type, with components wrapped in an [`Option`]. In the following snippet, the top level [`PrefabData`] is `CustomPrefabData`:
+Could be implemented using an enum like this:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
@@ -230,39 +229,19 @@ pub enum Weapon {
     Sword,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize, PrefabData)]
-#[serde(default)]
+#[derive(Debug, Deserialize, Serialize, PrefabData)]
 #[serde(deny_unknown_fields)]
-pub struct CustomPrefabData {
-    player: Option<Named>,
-    weapon: Option<Weapon>,
-    position: Option<Position>,
+pub enum CustomPrefabData {
+    Player {
+        name: Named,
+        position: Option<Position>,
+    },
+    Weapon {
+        weapon_type: Weapon,
+        position: Option<Position>,
+    },
 }
-```
 
-The prefab is then declared like so:
-
-```rust,ignore
-#![enable(implicit_some)]
-Prefab(
-    entities: [
-        // Player
-        PrefabEntity(
-            data: CustomPrefabData(
-                player: Named(name: "Zero"),
-                position: Position(1.0, 2.0, 3.0),
-            ),
-        ),
-        // Weapon
-        PrefabEntity(
-            parent: 0,
-            data: CustomPrefabData(
-                weapon: Sword,
-                position: Position(4.0, 5.0, 6.0),
-            ),
-        ),
-    ],
-)
 ```
 
 When we run this, we start off by creating one entity:

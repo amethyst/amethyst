@@ -45,56 +45,17 @@ This guide covers the basic usage of assets into Amethyst for existing supported
 
     * `FontAsset` is provided by `amethyst_ui`, `UiBundle` registers `Processor<FontAsset>`.
     * `Source` is provided by `amethyst_audio`, `AudioBundle` registers `Processor<Source>`.
-    * `SpriteSheet` is provided by `amethyst_renderer`, `RenderBundle` registers `Processor<SpriteSheet>` given `.with_sprite_sheet_processor()` is called before adding it to the `GameDataBuilder`.
-
-    ```rust,edition2018,no_run,noplaypen
-    # extern crate amethyst;
-    #
-    # use amethyst::{
-    #     prelude::*,
-    #     renderer::{DisplayConfig, Pipeline, RenderBundle, Stage},
-    #     ui::{DrawUi, UiBundle, StringBindings},
-    #     utils::application_root_dir,
-    # };
-    #
-    # pub struct LoadingState;
-    # impl SimpleState for LoadingState {}
-    #
-    fn main() -> amethyst::Result<()> {
-    #   let app_root = application_root_dir()?;
-    #   let assets_dir = app_root.join("assets");
-    #
-    #   let display_config = DisplayConfig::default();
-    #   let pipeline = Pipeline::build().with_stage(
-    #       Stage::with_backbuffer()
-    #           .clear_target([0.; 4], 0.)
-    #           .with_pass(DrawUi::new()),
-    #   );
-        // ..
-
-        let game_data = GameDataBuilder::default()
-            .with_bundle(UiBundle::<StringBindings>::new())?
-            .with_bundle(
-                RenderBundle::new(pipeline, Some(display_config))
-                    .with_sprite_sheet_processor()
-            )?;
-
-        // ..
-    #   let mut game = Application::new(assets_dir, LoadingState, game_data)?;
-    #
-    #   game.run();
-    #   Ok(())
-    }
-    ```
+    * `SpriteSheet` is not added by a bundle, so `Processor<SpriteSheet>` needs to be added
+      to the builder.
 
 3. Use the [`Loader`][doc_loader] resource to load the asset.
 
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # use amethyst::{
-    #     assets::{AssetStorage, Loader, ProgressCounter},
+    #     assets::{AssetStorage, Handle, Loader, ProgressCounter},
     #     prelude::*,
-    #     renderer::{PngFormat, Texture, TextureMetadata, TextureHandle},
+    #     renderer::{formats::texture::ImageFormat, Texture},
     #     utils::application_root_dir,
     # };
     #
@@ -102,7 +63,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
         /// Tracks loaded assets.
         progress_counter: ProgressCounter,
         /// Handle to the player texture.
-        texture_handle: Option<TextureHandle>,
+        texture_handle: Option<Handle<Texture>>,
     }
 
     impl SimpleState for LoadingState {
@@ -110,8 +71,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
             let loader = &data.world.read_resource::<Loader>();
             let texture_handle = loader.load(
                 "player.png",
-                PngFormat,
-                TextureMetadata::srgb(),
+                ImageFormat::default(),
                 &mut self.progress_counter,
                 &data.world.read_resource::<AssetStorage<Texture>>(),
             );
@@ -146,14 +106,14 @@ This guide covers the basic usage of assets into Amethyst for existing supported
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # use amethyst::{
-    #     assets::ProgressCounter,
+    #     assets::{Handle, ProgressCounter},
     #     prelude::*,
-    #     renderer::TextureHandle,
+    #     renderer::Texture,
     # };
     #
     # pub struct GameState {
     #     /// Handle to the player texture.
-    #     texture_handle: TextureHandle,
+    #     texture_handle: Handle<Texture>,
     # }
     #
     # impl SimpleState for GameState {}
@@ -162,7 +122,7 @@ This guide covers the basic usage of assets into Amethyst for existing supported
     #     /// Tracks loaded assets.
     #     progress_counter: ProgressCounter,
     #     /// Handle to the player texture.
-    #     texture_handle: Option<TextureHandle>,
+    #     texture_handle: Option<Handle<Texture>>,
     # }
     #
     impl SimpleState for LoadingState {
@@ -191,13 +151,14 @@ This guide covers the basic usage of assets into Amethyst for existing supported
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
     # use amethyst::{
+    #     assets::Handle,
     #     prelude::*,
-    #     renderer::TextureHandle,
+    #     renderer::Texture,
     # };
     #
     # pub struct GameState {
     #     /// Handle to the player texture.
-    #     texture_handle: TextureHandle,
+    #     texture_handle: Handle<Texture>,
     # }
     #
     impl SimpleState for GameState {

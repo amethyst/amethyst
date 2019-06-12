@@ -65,7 +65,7 @@ pub fn load_mesh(
         trace!("Loading indices");
         use gltf::mesh::util::ReadIndices;
         let indices = match reader.read_indices() {
-            Some(ReadIndices::U8(iter)) => Indices::U16(iter.map(|i| i as u16).collect()),
+            Some(ReadIndices::U8(iter)) => Indices::U16(iter.map(u16::from).collect()),
             Some(ReadIndices::U16(iter)) => Indices::U16(iter.collect()),
             Some(ReadIndices::U32(iter)) => Indices::U32(iter.collect()),
             None => Indices::None,
@@ -177,7 +177,7 @@ pub fn load_mesh(
 
 fn calculate_normals(positions: &[Position], indices: &Indices) -> Vec<Normal> {
     let mut normals = vec![zero::<Vector3<f32>>(); positions.len()];
-    let num_faces = indices.len().unwrap_or(positions.len()) / 3;
+    let num_faces = indices.len().unwrap_or_else(|| positions.len()) / 3;
     for face in 0..num_faces {
         let i0 = indices.map(face, 0);
         let i1 = indices.map(face, 1);
@@ -203,7 +203,7 @@ fn calculate_tangents(
     indices: &Indices,
 ) -> Vec<Tangent> {
     let mut tangents = vec![Tangent([0.0, 0.0, 0.0, 0.0]); positions.len()];
-    let num_faces = indices.len().unwrap_or(positions.len()) / 3;
+    let num_faces = indices.len().unwrap_or_else(|| positions.len()) / 3;
     mikktspace::generate_tangents(
         &|| 3,
         &|| num_faces,

@@ -4,7 +4,7 @@ This guide explains how to define a new asset type to be used in an Amethyst app
 
 1. Define the type and handle for your asset.
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust,edition2018,ignore,noplaypen
     # extern crate amethyst;
     # extern crate serde_derive;
     #
@@ -39,7 +39,7 @@ This guide explains how to define a new asset type to be used in an Amethyst app
 
     * An enum with different variants &ndash; each for a different data layout:
 
-        ```rust,edition2018,no_run,noplaypen
+        ```rust,edition2018,ignore,noplaypen
         # extern crate serde_derive;
         #
         # use serde_derive::{Deserialize, Serialize};
@@ -246,7 +246,6 @@ This guide explains how to define a new asset type to be used in an Amethyst app
             let energy_blast_handle = loader.load(
                 "energy_blast.ron",
                 RonFormat,
-                (),
                 &mut self.progress_counter,
                 &data.world.read_resource::<AssetStorage<EnergyBlast>>(),
             );

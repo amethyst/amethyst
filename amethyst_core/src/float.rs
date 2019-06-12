@@ -3,7 +3,7 @@ use std::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign},
 };
 
-use crate::num::*;
+use crate::num::{Bounded, FromPrimitive, Num, One, ParseFloatError, Signed, Zero};
 use alga::general::*;
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use nalgebra::Complex;
@@ -32,13 +32,24 @@ type FloatBase = f32;
 pub struct Float(FloatBase);
 
 impl Float {
-    /// Get the internal value as a f32. Can cause a loss of precision or a loss of data if using
+    /// Returns a new `Float` from a `f64`.
+    pub const fn from_f64(value: f64) -> Self {
+        Float(value as FloatBase)
+    }
+
+    /// Returns a new `Float` from a `f32`.
+    pub const fn from_f32(value: f32) -> Self {
+        Float(value as FloatBase)
+    }
+
+    /// Get the internal value as a f32. Will cause a loss in precision if using
     /// the "float64" feature.
-    pub fn as_f32(self) -> f32 {
+    pub const fn as_f32(self) -> f32 {
         self.0 as f32
     }
-    /// Get the internal value as a f64.
-    pub fn as_f64(self) -> f64 {
+
+    /// Get the internal value as a f64. Guaranteed to be lossless.
+    pub const fn as_f64(self) -> f64 {
         self.0 as f64
     }
 }
@@ -693,7 +704,7 @@ impl SubsetOf<f32> for Float {
 impl SubsetOf<f64> for Float {
     #[inline]
     fn to_superset(&self) -> f64 {
-        self.0 as f64
+        f64::from(self.0)
     }
 
     #[inline]
@@ -732,7 +743,7 @@ impl SubsetOf<Float> for f64 {
 
     #[inline]
     unsafe fn from_superset_unchecked(element: &Float) -> Self {
-        element.0 as Self
+        f64::from(element.0)
     }
 
     #[inline]

@@ -111,9 +111,7 @@ macro_rules! impl_data {
             ) -> Result<bool, Error> {
                 let mut ret = false;
                 $(
-                    if self.$i.load_sub_assets(progress, &mut system_data.$i)? {
-                        ret = true;
-                    }
+                    ret |= self.$i.load_sub_assets(progress, &mut system_data.$i)?;
                 )*
                 Ok(ret)
             }

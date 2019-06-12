@@ -192,7 +192,7 @@ pub fn set_layout_bindings(
         .collect()
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct LookupBuilder<I: Hash + Eq> {
     forward: fnv::FnvHashMap<I, usize>,
     len: usize,

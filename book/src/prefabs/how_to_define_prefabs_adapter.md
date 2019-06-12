@@ -131,6 +131,7 @@ If you are attempting to adapt a more complex type, please choose the appropriat
             entity: Entity,
             positions: &mut Self::SystemData,
             _entities: &[Entity],
+            _children: &[Entity],
         ) -> Result<(), Error> {
             let position = match *self {
                 PositionPrefab::Pos3f { x, y, z } => (x, y, z).into(),

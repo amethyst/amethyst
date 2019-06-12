@@ -99,7 +99,7 @@ where
                         .get(&control.animation)
                         .and_then(|animation| {
                             process_animation_control(
-                                &entity,
+                                entity,
                                 animation,
                                 control,
                                 hierarchy,
@@ -126,7 +126,7 @@ where
                 } else {
                     self.state_set.insert(
                         *id,
-                        get_running_duration(&entity, control, hierarchies.get(entity), &samplers),
+                        get_running_duration(entity, control, hierarchies.get(entity), &samplers),
                     );
                 }
             }
@@ -174,7 +174,7 @@ where
                         .get(&def.control.animation)
                         .and_then(|animation| {
                             process_animation_control(
-                                &entity,
+                                entity,
                                 animation,
                                 &mut def.control,
                                 hierarchy,
@@ -213,7 +213,7 @@ where
 }
 
 fn get_running_duration<T>(
-    entity: &Entity,
+    entity: Entity,
     control: &AnimationControl<T>,
     hierarchy: Option<&AnimationHierarchy<T>>,
     samplers: &WriteStorage<'_, SamplerControlSet<T>>,
@@ -227,7 +227,7 @@ where
             samplers.get(
                 *hierarchy
                     .and_then(|h| h.nodes.values().next())
-                    .unwrap_or(entity),
+                    .unwrap_or(&entity),
             ),
         ),
         _ => -1.0,
@@ -279,7 +279,7 @@ where
 /// Optionally returns a new `ControlState` for the animation. This will be the new state of the
 /// control object.
 fn process_animation_control<T>(
-    entity: &Entity,
+    entity: Entity,
     animation: &Animation<T>,
     control: &mut AnimationControl<T>,
     hierarchy: Option<&AnimationHierarchy<T>>,
@@ -295,7 +295,7 @@ where
     T: AnimationSampling + Component + Clone,
 {
     // Checking hierarchy
-    let h_fallback = AnimationHierarchy::new_single(animation.nodes[0].0, *entity);
+    let h_fallback = AnimationHierarchy::new_single(animation.nodes[0].0, entity);
     let hierarchy = match hierarchy {
         Some(h) => h,
         None => {
@@ -447,14 +447,15 @@ where
     T: AnimationSampling + Component + Clone,
 {
     // check that hierarchy is valid, and all samplers exist
-    if animation
+    let valid = animation
         .nodes
         .iter()
-        .any(|&(ref node_index, _, ref sampler_handle)| {
-            !hierarchy.nodes.contains_key(node_index)
-                || sampler_storage.get(sampler_handle).is_none()
-        })
-    {
+        .all(|&(ref node_index, _, ref sampler_handle)| {
+            hierarchy.nodes.contains_key(node_index)
+                && sampler_storage.get(sampler_handle).is_some()
+        });
+
+    if !valid {
         return false;
     }
 
@@ -571,7 +572,7 @@ fn set_blend_weights<T>(
     control_id: u64,
     hierarchy: &AnimationHierarchy<T>,
     controls: &mut WriteStorage<'_, SamplerControlSet<T>>,
-    weights: &Vec<(usize, T::Channel, f32)>,
+    weights: &[(usize, T::Channel, f32)],
 ) where
     T: AnimationSampling,
 {

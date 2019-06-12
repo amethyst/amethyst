@@ -2,7 +2,7 @@ use crate::{
     debug_drawing::{DebugLine, DebugLines, DebugLinesComponent, DebugLinesParams},
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
     pod::ViewArgs,
-    submodules::{gather::CameraGatherer, DynamicUniform, DynamicVertex},
+    submodules::{gather::CameraGatherer, DynamicUniform, DynamicVertexBuffer},
     types::Backend,
     util,
 };
@@ -59,7 +59,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawDebugLinesDesc {
 
         let env = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)?;
         let args = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)?;
-        let vertex = DynamicVertex::new();
+        let vertex = DynamicVertexBuffer::new();
 
         let (pipeline, pipeline_layout) = build_lines_pipeline(
             factory,
@@ -70,7 +70,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawDebugLinesDesc {
         )?;
 
         Ok(Box::new(DrawDebugLines::<B> {
-            pipeline: pipeline,
+            pipeline,
             pipeline_layout,
             env,
             args,
@@ -91,7 +91,7 @@ pub struct DrawDebugLines<B: Backend> {
     pipeline_layout: B::PipelineLayout,
     env: DynamicUniform<B, ViewArgs>,
     args: DynamicUniform<B, DebugLinesArgs>,
-    vertex: DynamicVertex<B, DebugLine>,
+    vertex: DynamicVertexBuffer<B, DebugLine>,
     framebuffer_width: f32,
     framebuffer_height: f32,
     lines: Vec<DebugLine>,
@@ -166,7 +166,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawDebugLines<B> {
         #[cfg(feature = "profiler")]
         profile_scope!("draw");
 
-        if self.lines.len() == 0 {
+        if self.lines.is_empty() {
             return;
         }
 
@@ -174,7 +174,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawDebugLines<B> {
         encoder.bind_graphics_pipeline(&self.pipeline);
         self.env.bind(index, layout, 0, &mut encoder);
         self.args.bind(index, layout, 1, &mut encoder);
-        self.vertex.bind(index, 0, &mut encoder);
+        self.vertex.bind(index, 0, 0, &mut encoder);
         encoder.draw(0..4, 0..self.lines.len() as u32);
     }
 

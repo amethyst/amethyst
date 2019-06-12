@@ -1,15 +1,15 @@
 use crate::{config::DisplayConfig, resources::ScreenDimensions};
 use amethyst_config::Config;
 use amethyst_core::{
-    ecs::{Resources, RunNow, System, SystemData, Write, WriteExpect},
+    ecs::{ReadExpect, Resources, RunNow, System, SystemData, Write, WriteExpect},
     shrev::EventChannel,
 };
-use std::{path::Path, sync::Arc};
+use std::path::Path;
 use winit::{Event, EventsLoop, Window};
 
 /// System for opening and managing the window.
 pub struct WindowSystem {
-    window: Arc<Window>,
+    window: Option<Window>,
 }
 
 impl WindowSystem {
@@ -27,23 +27,23 @@ impl WindowSystem {
 
     pub fn new(window: Window) -> Self {
         Self {
-            window: Arc::new(window),
+            window: Some(window),
         }
     }
 
-    fn manage_dimensions(&mut self, mut screen_dimensions: &mut ScreenDimensions) {
+    fn manage_dimensions(&mut self, mut screen_dimensions: &mut ScreenDimensions, window: &Window) {
         let width = screen_dimensions.w;
         let height = screen_dimensions.h;
 
         // Send resource size changes to the window
         if screen_dimensions.dirty {
-            self.window.set_inner_size((width, height).into());
+            window.set_inner_size((width, height).into());
             screen_dimensions.dirty = false;
         }
 
-        let hidpi = self.window.get_hidpi_factor();
+        let hidpi = window.get_hidpi_factor();
 
-        if let Some(size) = self.window.get_inner_size() {
+        if let Some(size) = window.get_inner_size() {
             let (window_width, window_height): (f64, f64) = size.to_physical(hidpi).into();
 
             // Send window size changes to the resource
@@ -60,20 +60,21 @@ impl WindowSystem {
 }
 
 impl<'a> System<'a> for WindowSystem {
-    type SystemData = WriteExpect<'a, ScreenDimensions>;
+    type SystemData = (WriteExpect<'a, ScreenDimensions>, ReadExpect<'a, Window>);
 
-    fn run(&mut self, mut screen_dimesnions: Self::SystemData) {
-        self.manage_dimensions(&mut screen_dimesnions);
+    fn run(&mut self, (mut screen_dimensions, window): Self::SystemData) {
+        self.manage_dimensions(&mut screen_dimensions, &window);
     }
     fn setup(&mut self, res: &mut Resources) {
-        let (width, height) = self
-            .window
-            .get_inner_size()
-            .expect("Window closed during initialization!")
-            .into();
-        let hidpi = self.window.get_hidpi_factor();
-        res.insert(ScreenDimensions::new(width, height, hidpi));
-        res.insert(self.window.clone());
+        if let Some(window) = self.window.take() {
+            let (width, height) = window
+                .get_inner_size()
+                .expect("Window closed during initialization!")
+                .into();
+            let hidpi = window.get_hidpi_factor();
+            res.insert(ScreenDimensions::new(width, height, hidpi));
+            res.insert(window);
+        }
     }
 }
 

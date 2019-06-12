@@ -2,7 +2,9 @@
 
 # Amethyst
 
-[![Build Status][s1]][jc] [![Crates.io][s2]][ci] [![docs page][docs-badge]][docs] [![MIT/Apache][s3]][li] [![Join us on Discord][s4]][di]  [![Community forum][s5]][ds] [![Reddit][s7]][rd] ![Lines of Code][s6]
+[![Build Status][s1]][jc] [![Crates.io][s2]][ci] [![docs page][docs-badge]][docs] [![MIT/Apache][s3]][li]
+[![Join us on Discord][s4]][di]  [![Community forum][s5]][ds] [![Reddit][s7]][rd]
+[![Code coverage][s8]][cc] ![Lines of Code][s6]
 
 [s1]: https://jenkins.amethyst-engine.org/job/amethyst/job/master/badge/icon
 [s2]: https://img.shields.io/crates/v/amethyst.svg
@@ -13,12 +15,14 @@
 [s5]: https://img.shields.io/badge/discourse-online-green.svg
 [s6]: https://tokei.rs/b1/github/amethyst/amethyst?category=code
 [s7]: https://img.shields.io/badge/dynamic/json.svg?label=r/Amethyst&query=$.data.subscribers&url=https://www.reddit.com/r/Amethyst/about.json
+[s8]: https://img.shields.io/codecov/c/github/amethyst/amethyst.svg
 [jc]: https://jenkins.amethyst-engine.org/blue/organizations/jenkins/amethyst/activity/
 [ci]: https://crates.io/crates/amethyst/
 [li]: COPYING
 [di]: https://discord.gg/amethyst
 [ds]: https://community.amethyst.rs/
 [rd]: https://www.reddit.com/r/Amethyst/
+[cc]: https://codecov.io/gh/amethyst/amethyst
 
 ## What is Amethyst?
 
@@ -108,23 +112,35 @@ If you are compiling on Linux, make sure to install the dependencies below.
 
 Additionally, make sure you have EGL installed. Since the package depends on your drivers, we cannot list it here.
 
+### Arch Linux
+
+```
+$ pacman -Sy grep gcc pkgconfig openssl alsa-lib cmake make python3 freetype2 awk libxcb
+```
+
 ### Debian/Ubuntu
 
 ```
-$ sudo apt install pkg-config libasound2-dev libssl-dev cmake libfreetype6-dev libexpat1-dev libxcb-composite0-dev
+# apt install gcc pkg-config openssl libasound2-dev cmake build-essential python3 libfreetype6-dev libexpat1-dev libxcb-composite0-dev
 ```
 
 ### Fedora
 
 ```
-$ sudo dnf install alsa-lib-devel openssl-devel cmake freetype-devel expat-devel libxcb-devel
+# dnf install pkgconfig gcc openssl-devel alsa-lib-devel cmake make gcc-c++ freetype-devel expat-devel libxcb-devel
+```
+
+### openSUSE
+
+```
+# zypper install gcc pkg-config libopenssl-devel alsa-devel cmake gcc-c++ python3 freetype2-devel libexpat-devel libxcb-devel
 ```
 
 ### Other
 
 See your distribution-specific installation process for the equivalent dependencies.
 
-Please note that you need to have a functional graphics driver installed. If you get a panic about the renderer unable to create the context when trying to run an example, a faulty driver installation could be the issue.
+**Please note that you need to have a functional graphics driver installed. If you get a panic about the renderer unable to create the context when trying to run an example, a faulty driver installation could be the issue.**
 
 ## Building Documentation
 

@@ -37,13 +37,17 @@ pub enum Weapon {
     Sword,
 }
 
-#[derive(Debug, Default, Deserialize, Serialize, PrefabData)]
-#[serde(default)]
+#[derive(Debug, Deserialize, Serialize, PrefabData)]
 #[serde(deny_unknown_fields)]
-pub struct CustomPrefabData {
-    player: Option<Named>,
-    weapon: Option<Weapon>,
-    position: Option<Position>,
+pub enum CustomPrefabData {
+    Player {
+        name: Named,
+        position: Option<Position>,
+    },
+    Weapon {
+        weapon_type: Weapon,
+        position: Option<Position>,
+    },
 }
 
 #[derive(new)]

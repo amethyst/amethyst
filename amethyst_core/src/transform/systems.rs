@@ -12,6 +12,7 @@ use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform};
 use thread_profiler::profile_scope;
 
 /// Handles updating `global_matrix` field from `Transform` components.
+#[derive(Default)]
 pub struct TransformSystem {
     local_modified: BitSet,
     locals_events_id: Option<ReaderId<ComponentEvent>>,
@@ -21,11 +22,7 @@ pub struct TransformSystem {
 impl TransformSystem {
     /// Creates a new transform processor.
     pub fn new() -> TransformSystem {
-        TransformSystem {
-            locals_events_id: None,
-            parent_events_id: None,
-            local_modified: BitSet::default(),
-        }
+        TransformSystem::default()
     }
 }
 

@@ -17,8 +17,8 @@ impl ScreenDimensions {
     /// Creates a new screen dimensions object with the given width and height.
     pub fn new(w: u32, h: u32, hidpi: f64) -> Self {
         ScreenDimensions {
-            w: w as f64,
-            h: h as f64,
+            w: f64::from(w),
+            h: f64::from(h),
             aspect_ratio: w as f32 / h as f32,
             hidpi,
             dirty: false,

@@ -74,12 +74,33 @@ pub mod visibility;
 pub mod pod;
 pub mod util;
 
-#[doc(inline)] pub use formats::{mesh::MeshPrefab, texture::TexturePrefab};
-#[doc(inline)] pub use mtl::{Material, MaterialDefaults};
-#[doc(inline)] pub use sprite::{Sprite, SpriteRender, SpriteSheet};
-#[doc(inline)] pub use system::{GraphCreator, RenderingSystem};
-#[doc(inline)] pub use types::{Backend, Mesh, Texture};
-#[doc(inline)] pub use util::{simple_shader_set, ChangeDetection};
+#[cfg(feature = "test-support")]
+mod render_test_bundle;
+
+#[doc(inline)]
+pub use crate::{camera::Camera;
+    formats::{
+        mesh::MeshPrefab, texture::{ImageFormat, TexturePrefab},
+    },
+    mtl::{Material, MaterialDefaults}.
+    sprite::{Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat}.
+    system::{GraphCreator, RenderingSystem},
+    transparent::Transparent,
+    types::{Backend, Mesh, Texture},
+    util::{simple_shader_set, ChangeDetection}
+};
+
+#[cfg(feature = "test-support")]
+pub use render_test_bundle::{RenderEmptyBundle, RenderTestBundle};
+
+pub use rendy::{
+    factory::Factory,
+    graph::{
+        render::{RenderGroupDesc, SubpassBuilder},
+        GraphBuilder,
+    },
+    hal::{format::Format, image::Kind},
+};
 
 pub mod loaders {
     //! Loaders re-exported from `rendy` for loading the most common image types as textures.

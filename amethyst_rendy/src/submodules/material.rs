@@ -112,7 +112,7 @@ impl<B: Backend> SlottedBuffer<B> {
             .unwrap();
         unsafe {
             let mut writer = mapped
-                .write(factory.device(), 0..0 + data.len() as u64)
+                .write(factory.device(), 0..data.len() as u64)
                 .unwrap();
             writer.write(data);
         }

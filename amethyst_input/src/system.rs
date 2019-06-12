@@ -45,6 +45,7 @@ impl<'a, T: BindingTypes> System<'a> for InputSystem<T> {
     );
 
     fn run(&mut self, (input, mut handler, mut output, screen_dimensions): Self::SystemData) {
+        handler.send_frame_begin();
         for event in input.read(
             &mut self
                 .reader

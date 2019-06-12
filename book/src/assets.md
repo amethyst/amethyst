@@ -10,4 +10,4 @@ When used well, assets enhance the gaming experience. For example, in an asteroi
 
 ## Handles
 
-In a a game, the same asset may be used by different game objects. For example, a fireball texture asset can be used by many different objects that shoot fireballs. Loading the texture mutiple times is an inefficient use of memory; loading it once, and using references to the same loaded asset is *much* more efficient. We call these references, **handles**.
+In a game, the same asset may be used by different game objects. For example, a fireball texture asset can be used by many different objects that shoot fireballs. Loading the texture mutiple times is an inefficient use of memory; loading it once, and using references to the same loaded asset is *much* more efficient. We call these references, **handles**.

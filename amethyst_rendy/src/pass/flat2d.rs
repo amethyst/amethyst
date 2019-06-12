@@ -4,7 +4,7 @@ use crate::{
     pod::SpriteArgs,
     sprite::{SpriteRender, SpriteSheet},
     sprite_visibility::SpriteVisibility,
-    submodules::{DynamicVertex, FlatEnvironmentSub, TextureId, TextureSub},
+    submodules::{DynamicVertexBuffer, FlatEnvironmentSub, TextureId, TextureSub},
     types::{Backend, Texture},
     util,
 };
@@ -60,7 +60,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DDesc {
 
         let env = FlatEnvironmentSub::new(factory)?;
         let textures = TextureSub::new(factory)?;
-        let vertex = DynamicVertex::new();
+        let vertex = DynamicVertexBuffer::new();
 
         let (pipeline, pipeline_layout) = build_sprite_pipeline(
             factory,
@@ -72,7 +72,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DDesc {
         )?;
 
         Ok(Box::new(DrawFlat2D::<B> {
-            pipeline: pipeline,
+            pipeline,
             pipeline_layout,
             env,
             textures,
@@ -89,7 +89,7 @@ pub struct DrawFlat2D<B: Backend> {
     pipeline_layout: B::PipelineLayout,
     env: FlatEnvironmentSub<B>,
     textures: TextureSub<B>,
-    vertex: DynamicVertex<B, SpriteArgs>,
+    vertex: DynamicVertexBuffer<B, SpriteArgs>,
     sprites: OneLevelBatch<TextureId, SpriteArgs>,
 }
 
@@ -214,7 +214,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
         let layout = &self.pipeline_layout;
         encoder.bind_graphics_pipeline(&self.pipeline);
         self.env.bind(index, layout, 0, &mut encoder);
-        self.vertex.bind(index, 0, &mut encoder);
+        self.vertex.bind(index, 0, 0, &mut encoder);
         for (&tex, range) in self.sprites.iter() {
             if self.textures.loaded(tex) {
                 self.textures.bind(layout, 1, tex, &mut encoder);
@@ -262,7 +262,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DTransparentDesc {
 
         let env = FlatEnvironmentSub::new(factory)?;
         let textures = TextureSub::new(factory)?;
-        let vertex = DynamicVertex::new();
+        let vertex = DynamicVertexBuffer::new();
 
         let (pipeline, pipeline_layout) = build_sprite_pipeline(
             factory,
@@ -274,7 +274,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DTransparentDesc {
         )?;
 
         Ok(Box::new(DrawFlat2DTransparent::<B> {
-            pipeline: pipeline,
+            pipeline,
             pipeline_layout,
             env,
             textures,
@@ -292,7 +292,7 @@ pub struct DrawFlat2DTransparent<B: Backend> {
     pipeline_layout: B::PipelineLayout,
     env: FlatEnvironmentSub<B>,
     textures: TextureSub<B>,
-    vertex: DynamicVertex<B, SpriteArgs>,
+    vertex: DynamicVertexBuffer<B, SpriteArgs>,
     sprites: OrderedOneLevelBatch<TextureId, SpriteArgs>,
     change: util::ChangeDetection,
 }
@@ -385,7 +385,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
         let layout = &self.pipeline_layout;
         encoder.bind_graphics_pipeline(&self.pipeline);
         self.env.bind(index, layout, 0, &mut encoder);
-        self.vertex.bind(index, 0, &mut encoder);
+        self.vertex.bind(index, 0, 0, &mut encoder);
         for (&tex, range) in self.sprites.iter() {
             if self.textures.loaded(tex) {
                 self.textures.bind(layout, 1, tex, &mut encoder);
