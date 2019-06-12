@@ -1,4 +1,4 @@
-mod environment;
+//! Various helpers and implementations for sub functions of render passes.
 mod flat_environment;
 mod material;
 mod skinning;

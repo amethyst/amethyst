@@ -1,3 +1,4 @@
+//! Debug Drawing library
 use crate::pod::IntoPod;
 use amethyst_core::{
     ecs::{Component, DenseVecStorage},
@@ -27,6 +28,7 @@ impl DebugLine {
 }
 
 /// Parameters for renderer of debug lines. The params affect all lines.
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct DebugLinesParams {
     /// Width of lines in screen space pixels, default is 1.0 pixel
     pub line_width: f32,

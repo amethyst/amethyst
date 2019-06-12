@@ -1,3 +1,4 @@
+//! 2D Sprite Rendering implementation details.
 use ron::de::from_bytes as from_ron_bytes;
 use serde::{Deserialize, Serialize};
 

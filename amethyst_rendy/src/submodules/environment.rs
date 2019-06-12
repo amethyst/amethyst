@@ -1,3 +1,5 @@
+//! Environment sub-pass for shared environmental descriptor set data.
+//! Fetches and sets projection and lighting descriptor set information.
 use crate::{
     light::Light,
     pod::{self, IntoPod},

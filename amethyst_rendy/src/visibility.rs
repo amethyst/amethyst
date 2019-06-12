@@ -1,3 +1,4 @@
+//! Transparency, visibility sorting and camera centroid culling for 3D Meshes.
 use crate::{
     camera::{ActiveCamera, Camera},
     transparent::Transparent,
@@ -22,7 +23,7 @@ use thread_profiler::profile_scope;
 
 /// Resource for controlling what entities should be rendered, and whether to draw them ordered or
 /// not, which is useful for transparent surfaces.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Visibility {
     /// Visible entities that can be drawn in any order
     pub visible_unordered: BitSet,
