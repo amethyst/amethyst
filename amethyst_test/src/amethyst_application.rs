@@ -131,14 +131,19 @@ where
     /// Returns the built Application.
     ///
     /// If you are intending to call `.run()` on the `Application` in a test, be aware that on
-    /// Linux, this will cause a segfault when `RenderBundle` is added and GL is using software
-    /// rendering, such as when using Xvfb or when the following environmental variable is set:
+    /// Linux, this will cause a segfault when `RenderingSystem` is added and GL software rendering
+    /// is used, such as when using Xvfb or when the following environmental variable is set:
     /// `LIBGL_ALWAYS_SOFTWARE=1`.
     ///
-    /// To avoid this, please call `.run()` instead of this method, which runs the application in a
-    /// separate thread and waits for it to end before returning.
+    /// To avoid this, please run the application in a sub thread, and use the `.run_isolated()`
+    /// method, which will prevent multiple amethyst applications in the same process from running
+    /// simultaneously.
     ///
-    /// See <https://users.rust-lang.org/t/trouble-identifying-cause-of-segfault/18096>
+    /// See the following links for more information:
+    ///
+    /// * <https://github.com/rust-windowing/glutin/issues/1034>
+    /// * <https://github.com/rust-windowing/glutin/issues/1038>
+    /// * <https://users.rust-lang.org/t/trouble-identifying-cause-of-segfault/18096>
     pub fn build(self) -> Result<CoreApplication<'static, GameData<'static, 'static>, E, R>, Error>
     where
         for<'b> R: EventReader<'b, Event = E>,
@@ -886,8 +891,27 @@ mod test {
     /// * That sub-thread is joined.
     /// * Another sub-thread accesses the COM object through the same `lazy_static` variable.
     ///
+    /// To check this:
+    ///
+    /// ```bash
+    /// # On Windows
+    /// cd amethyst_test
+    /// cargo test --features audio
+    /// ```
+    ///
+    /// **Note:** If you simply need an audio file to be loaded, just add a `Processor::<Source>` in
+    /// the test setup:
+    ///
+    /// ```rust,ignore
+    /// use amethyst::{assets::Processor, audio::Source};
+    ///
+    /// AmethystApplication::blank()
+    ///     .with_system(Processor::<Source>::new(), "source_processor", &[])
+    ///     // ...
+    /// ```
+    ///
     /// For more details, see <https://github.com/amethyst/amethyst/issues/1595>.
-    #[cfg(feature = "graphics")]
+    #[cfg(feature = "audio")]
     mod audio_test {
         use amethyst::{
             assets::AssetStorage,
@@ -896,11 +920,10 @@ mod test {
         };
 
         use super::AmethystApplication;
-        use crate::RenderBaseAppExt;
 
         #[test]
         fn audio_zero() -> Result<(), Error> {
-            AmethystApplication::render_base()
+            AmethystApplication::blank()
                 .with_bundle(AudioBundle::default())
                 .with_assertion(|world| {
                     world.read_resource::<AssetStorage<Source>>();
@@ -910,7 +933,7 @@ mod test {
 
         #[test]
         fn audio_one() -> Result<(), Error> {
-            AmethystApplication::render_base()
+            AmethystApplication::blank()
                 .with_bundle(AudioBundle::default())
                 .with_assertion(|world| {
                     world.read_resource::<AssetStorage<Source>>();
@@ -920,7 +943,7 @@ mod test {
 
         #[test]
         fn audio_two() -> Result<(), Error> {
-            AmethystApplication::render_base()
+            AmethystApplication::blank()
                 .with_bundle_fn(|| AudioBundle::default())
                 .with_assertion(|world| {
                     world.read_resource::<AssetStorage<Source>>();
@@ -930,7 +953,7 @@ mod test {
 
         #[test]
         fn audio_three() -> Result<(), Error> {
-            AmethystApplication::render_base()
+            AmethystApplication::blank()
                 .with_bundle_fn(|| AudioBundle::default())
                 .with_assertion(|world| {
                     world.read_resource::<AssetStorage<Source>>();

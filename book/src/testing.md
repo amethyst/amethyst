@@ -61,8 +61,9 @@ fn loading_state_adds_load_resource() -> Result<(), Error> {
 The Amethyst application is initialized with one of the following functions, each providing a different set of bundles:
 
 ```rust,edition2018,no_run,noplaypen
-extern crate amethyst_test;
-
+# extern crate amethyst;
+# extern crate amethyst_test;
+#
 use amethyst_test::prelude::*;
 
 #[test]
@@ -78,19 +79,21 @@ fn test_name() {
     //
     // The type parameters here are the Axis and Action types for the
     // `InputBundle` and `UiBundle`.
-    AmethystApplication::ui_base::<String, String>();
+    use amethyst::input::StringBindings;
+    AmethystApplication::ui_base::<StringBindings>();
 
-    // Start with the following bundles:
+    // If you need types from the rendering bundle, make sure you have
+    // the `"test-support"` feature enabled:
     //
-    // * `AnimationBundle::<u32, Material>`
-    // * `AnimationBundle::<u32, SpriteRender>`
-    // * `TransformBundle`
-    // * `RenderBundle`
+    // ```toml
+    // # Cargo.toml
+    // amethyst = { version = "..", features = ["test-support"] }
+    // ```
     //
-    // If you want the Input and UI bundles, you can use the
-    // `.with_ui_bundles::<T>()` method.
-    let visibility = false; // Whether the window should be shown
-    AmethystApplication::render_base("test_name", visibility);
+    // Then you can include the `RenderEmptyBundle`:
+    use amethyst::renderer::{types::DefaultBackend, RenderEmptyBundle};
+    AmethystApplication::blank()
+        .with_bundle(RenderEmptyBundle::<DefaultBackend>::new());
 }
 ```
 
