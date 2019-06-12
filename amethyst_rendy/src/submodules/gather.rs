@@ -36,7 +36,8 @@ impl CameraGatherer {
         let defcam = Camera::standard_2d(dimensions.width(), dimensions.height());
         let identity = Transform::default();
 
-        let (camera, transform) = active_camera.entity
+        let (camera, transform) = active_camera
+            .entity
             .as_ref()
             .and_then(|ac| {
                 cameras

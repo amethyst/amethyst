@@ -78,7 +78,8 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
 
         // The camera position is used to determine culling, but the sprites are ordered based on
         // the Z coordinate
-        let camera: Option<&Transform> = active.entity
+        let camera: Option<&Transform> = active
+            .entity
             .and_then(|a| transform.get(a))
             .or_else(|| (&camera, &transform).join().map(|ct| ct.1).next());
         let camera_backward = camera

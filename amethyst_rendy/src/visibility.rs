@@ -129,7 +129,8 @@ impl<'a> System<'a> for VisibilitySortingSystem {
         let identity = Transform::default();
 
         let mut camera_join = (&camera, &transform).join();
-        let (camera, camera_transform) = active.entity
+        let (camera, camera_transform) = active
+            .entity
             .and_then(|a| camera_join.get(a, &entities))
             .or_else(|| camera_join.next())
             .unwrap_or((&defcam, &identity));
