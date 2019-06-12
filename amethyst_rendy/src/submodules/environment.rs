@@ -1,4 +1,4 @@
-//! Environment sub-pass for shared environmental descriptor set data.
+//! Environment submodule for shared environmental descriptor set data.
 //! Fetches and sets projection and lighting descriptor set information.
 use crate::{
     light::Light,
@@ -28,12 +28,18 @@ const MAX_POINT_LIGHTS: usize = 128;
 const MAX_DIR_LIGHTS: usize = 16;
 const MAX_SPOT_LIGHTS: usize = 128;
 
+/// Submodule for loading and binding descriptor sets for a 3D, lit environment.
+/// This also abstracts away the need for handling multiple images in flight, as it provides
+/// per-image submissions.
 #[derive(Debug)]
 pub struct EnvironmentSub<B: Backend> {
     layout: RendyHandle<DescriptorSetLayout<B>>,
     per_image: Vec<PerImageEnvironmentSub<B>>,
 }
 
+/// Submodule for loading and binding descriptor sets for a 3D, lit environment.
+/// This is the actual implementation for a given environment, but multiple instances may exist
+/// for each image in flight.
 #[derive(Debug)]
 struct PerImageEnvironmentSub<B: Backend> {
     buffer: Option<Escape<Buffer<B>>>,
@@ -41,6 +47,7 @@ struct PerImageEnvironmentSub<B: Backend> {
 }
 
 impl<B: Backend> EnvironmentSub<B> {
+    /// Create and allocate a new `EnvironmentSub` with the provided rendy `Factory`
     pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
         Ok(Self {
             layout: set_layout! {factory, [1] UniformBuffer VERTEX, [4] UniformBuffer FRAGMENT},
@@ -48,10 +55,12 @@ impl<B: Backend> EnvironmentSub<B> {
         })
     }
 
+    /// Returns the raw `DescriptorSetLayout` for this environment
     pub fn raw_layout(&self) -> &B::DescriptorSetLayout {
         self.layout.raw()
     }
 
+    /// Performs any re-allocation and GPU memory writing required for this environment set.
     pub fn process(&mut self, factory: &Factory<B>, index: usize, res: &Resources) -> bool {
         #[cfg(feature = "profiler")]
         profile_scope!("process");
@@ -66,6 +75,7 @@ impl<B: Backend> EnvironmentSub<B> {
         this_image.process(factory, res)
     }
 
+    /// Binds this environment set for all images.
     #[inline]
     pub fn bind(
         &self,

@@ -1,3 +1,4 @@
+//! 3D Skinned per-image buffer handling.
 use crate::{
     rendy::{
         command::RenderPassEncoder,
@@ -15,6 +16,7 @@ use fnv::FnvHashMap;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
+/// Provides per-image abstraction for submitting skinned mesh skeletal information.
 #[derive(Debug)]
 pub struct SkinningSub<B: Backend> {
     layout: RendyHandle<DescriptorSetLayout<B>>,
@@ -30,6 +32,7 @@ struct PerImageSkinningSub<B: Backend> {
 }
 
 impl<B: Backend> SkinningSub<B> {
+    /// Create a new `SkinningSub`, allocating using the provided `Factory`
     pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
         Ok(Self {
             layout: set_layout! {factory, [1] StorageBuffer VERTEX},
@@ -39,10 +42,12 @@ impl<B: Backend> SkinningSub<B> {
         })
     }
 
+    /// Returns the raw `DescriptorSetLayout` of a skinning submission.
     pub fn raw_layout(&self) -> &B::DescriptorSetLayout {
         self.layout.raw()
     }
 
+    /// Allocates and writes the skinning information to GPU memory
     pub fn commit(&mut self, factory: &Factory<B>, index: usize) {
         let this_image = {
             while self.per_image.len() <= index {
@@ -56,6 +61,7 @@ impl<B: Backend> SkinningSub<B> {
         self.skin_offset_map.clear();
     }
 
+    /// Insert a new `JointTransforms` instance for submission. Returns an index.
     pub fn insert(&mut self, joints: &JointTransforms) -> u32 {
         #[cfg(feature = "profiler")]
         profile_scope!("insert");
@@ -76,6 +82,7 @@ impl<B: Backend> SkinningSub<B> {
             })
     }
 
+    /// Bind the skinned skeletal information.
     #[inline]
     pub fn bind(
         &self,

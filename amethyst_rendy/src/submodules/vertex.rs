@@ -43,8 +43,9 @@ impl<B: Backend, T: 'static> VertexDataBufferType for VertexData<B, T> {
     }
 }
 impl<B: Backend, T: 'static> VertexData<B, T> {
+    /// Bind a vertex buffer
     #[inline]
-    fn bind(
+    pub fn bind(
         binding_id: u32,
         encoder: &mut RenderPassEncoder<'_, B>,
         buffer: &Option<Escape<Buffer<B>>>,
@@ -67,6 +68,7 @@ impl<B: Backend, T: 'static> VertexDataBufferType for IndexData<B, T> {
 }
 
 impl<B: Backend> IndexData<B, u16> {
+    /// Bind a 16-bit index buffer
     #[inline]
     pub fn bind(
         encoder: &mut RenderPassEncoder<'_, B>,
@@ -83,6 +85,7 @@ impl<B: Backend> IndexData<B, u16> {
 }
 
 impl<B: Backend> IndexData<B, u32> {
+    /// Bind a 32-bit index buffer
     #[inline]
     pub fn bind(
         _: u32,

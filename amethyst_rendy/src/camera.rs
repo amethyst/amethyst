@@ -624,9 +624,7 @@ mod tests {
 
     use super::*;
     use amethyst_core::{
-        math::{
-            convert, Isometry3, Matrix4, Point3, Translation3, UnitQuaternion, Vector3, Vector4,
-        },
+        math::{convert, Isometry3, Matrix4, Point3, Translation3, UnitQuaternion, Vector3},
         Transform,
     };
     use ron::{de::from_str, ser::to_string_pretty};

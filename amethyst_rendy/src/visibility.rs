@@ -36,16 +36,18 @@ pub struct Visibility {
 ///
 /// Note that this should run after `Transform` has been updated for the current frame, and
 /// before rendering occurs.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct VisibilitySortingSystem {
     centroids: Vec<Internals>,
     transparent: Vec<Internals>,
 }
 
 /// Defines a object's bounding sphere used by frustum culling.
-#[derive(Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct BoundingSphere {
+    /// Center of the bounding sphere
     pub center: Point3<Float>,
+    /// Radius of the bounding sphere.
     pub radius: Float,
 }
 
@@ -59,6 +61,7 @@ impl Default for BoundingSphere {
 }
 
 impl BoundingSphere {
+    /// Create a new `BoundingSphere` with the supplied radius and center.
     pub fn new(center: Point3<Float>, radius: impl Into<Float>) -> Self {
         Self {
             center,
@@ -66,6 +69,7 @@ impl BoundingSphere {
         }
     }
 
+    /// Returns the center of the sphere.
     pub fn origin(radius: impl Into<Float>) -> Self {
         Self {
             center: Point3::origin(),
@@ -78,7 +82,7 @@ impl Component for BoundingSphere {
     type Storage = DenseVecStorage<Self>;
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 struct Internals {
     entity: Entity,
     transparent: bool,
@@ -195,13 +199,16 @@ impl<'a> System<'a> for VisibilitySortingSystem {
     }
 }
 
+/// Simple view Frustum implementation
 #[derive(Debug)]
-struct Frustum {
-    planes: [Vector4<Float>; 6],
+pub struct Frustum {
+    /// The planes of the frustum
+    pub planes: [Vector4<Float>; 6],
 }
 
 impl Frustum {
-    fn new(matrix: Matrix4<Float>) -> Self {
+    /// Create a new simple frustum from the provided matrix.
+    pub fn new(matrix: Matrix4<Float>) -> Self {
         let planes = [
             (matrix.row(3) + matrix.row(0)).transpose(),
             (matrix.row(3) - matrix.row(0)).transpose(),
@@ -222,7 +229,8 @@ impl Frustum {
         }
     }
 
-    fn check_sphere(&self, center: &Point3<Float>, radius: impl Into<Float>) -> bool {
+    /// Check if the given sphere is within the Frustum
+    pub fn check_sphere(&self, center: &Point3<Float>, radius: impl Into<Float>) -> bool {
         let radius = radius.into();
         for plane in &self.planes {
             if plane.xyz().dot(&center.coords) + plane.w <= -radius {

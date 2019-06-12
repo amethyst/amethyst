@@ -1,3 +1,4 @@
+//! Transparency component implementation
 use amethyst_assets::PrefabData;
 use amethyst_core::ecs::{prelude::Component, storage::NullStorage, Entity, WriteStorage};
 use amethyst_error::Error;
