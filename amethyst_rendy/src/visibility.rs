@@ -98,7 +98,7 @@ impl<'a> System<'a> for VisibilitySortingSystem {
         Write<'a, Visibility>,
         ReadStorage<'a, Hidden>,
         ReadStorage<'a, HiddenPropagate>,
-        Option<Read<'a, ActiveCamera>>,
+        Read<'a, ActiveCamera>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Transparent>,
         ReadStorage<'a, Transform>,
@@ -130,7 +130,8 @@ impl<'a> System<'a> for VisibilitySortingSystem {
 
         let mut camera_join = (&camera, &transform).join();
         let (camera, camera_transform) = active
-            .and_then(|a| camera_join.get(a.entity, &entities))
+            .entity
+            .and_then(|a| camera_join.get(a, &entities))
             .or_else(|| camera_join.next())
             .unwrap_or((&defcam, &identity));
 

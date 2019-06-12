@@ -406,10 +406,10 @@ impl Component for Camera {
 
 /// Active camera resource, used by the renderer to choose which camera to get the view matrix from.
 /// If no active camera is found, the first camera will be used as a fallback.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Default)]
 pub struct ActiveCamera {
     /// Camera entity
-    pub entity: Entity,
+    pub entity: Option<Entity>,
 }
 
 /// Projection prefab
@@ -468,10 +468,11 @@ impl<'a> PrefabData<'a> for CameraPrefab {
 }
 
 /// Active camera prefab
-pub struct ActiveCameraPrefab(usize);
+#[derive(Debug, serde::Deserialize, Clone)]
+pub struct ActiveCameraPrefab(Option<usize>);
 
 impl<'a> PrefabData<'a> for ActiveCameraPrefab {
-    type SystemData = (Option<Write<'a, ActiveCamera>>,);
+    type SystemData = (Write<'a, ActiveCamera>,);
     type Result = ();
 
     fn add_to_entity(
@@ -481,8 +482,8 @@ impl<'a> PrefabData<'a> for ActiveCameraPrefab {
         entities: &[Entity],
         _: &[Entity],
     ) -> Result<(), Error> {
-        if let Some(ref mut cam) = system_data.0 {
-            cam.entity = entities[self.0];
+        if let Some(ref ent) = self.0 {
+            system_data.0.entity = Some(entities[*ent]);
         }
         // TODO: if no `ActiveCamera` insert using `LazyUpdate`, require changes to `specs`
         Ok(())
@@ -511,7 +512,6 @@ mod tests {
     use more_asserts::{assert_ge, assert_gt, assert_le, assert_lt};
 
     #[test]
-    #[ignore]
     fn test_orthographic_serde() {
         let test_ortho = Projection::orthographic(0.0, 100.0, 10.0, 150.0, -5.0, 100.0);
         println!(
@@ -524,7 +524,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_perspective_serde() {
         let test_persp = Projection::perspective(1.7, std::f32::consts::FRAC_PI_3, 0.1, 1000.0);
         println!(

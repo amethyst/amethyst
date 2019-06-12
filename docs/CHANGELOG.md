@@ -40,10 +40,11 @@ it is attached to. ([#1282])
 * Added `events` example which demonstrates working even reader and writer in action. ([#1538])
 *  Implement builder like functionality for `AnimationSet` and `AnimationControlSet` ([#1568])
 * Add `get_mouse_button` and `is_mouse_button_down` utility functions to amethyst_input. ([#1582])
-- Add amethyst_input::Axis::MouseWheel ([#1642])
-- Add amethyst_input::BindingError::MouseWheelAlreadyBound ([#1642])
-- Add amethyst_input::InputHandler::send_frame_begin ([#1642])
-- Add amethyst_input::InputHandler::mouse_wheel_value ([#1642])
+* Add `amethyst_input::Axis::MouseWheel` ([#1642])
+* Add `amethyst_input::BindingError::MouseWheelAlreadyBound` ([#1642])
+* Add `amethyst_input::InputHandler::send_frame_begin` ([#1642])
+* Add `amethyst_input::InputHandler::mouse_wheel_value` ([#1642])
+* Added `Float::from_f32` and `Float::from_f64` `const fn`s so `Float` can be used as `const`. ([#1687])
 
 ### Changed
 
@@ -183,6 +184,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1626]: https://github.com/amethyst/amethyst/pull/1626
 [#1642]: https://github.com/amethyst/amethyst/pull/1642
 [#1683]: https://github.com/amethyst/amethyst/pull/1683
+[#1687]: https://github.com/amethyst/amethyst/pull/1687
 
 ## [0.10.0] - 2018-12
 

@@ -308,7 +308,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             };
 
             if let Some(glyph_data) = glyphs.get(entity) {
-                if !glyph_data.vertices.is_empty() {
+                if !glyph_data.sel_vertices.is_empty() {
                     self.batches
                         .insert(white_tex_id, glyph_data.sel_vertices.iter().cloned());
                 }
