@@ -18,11 +18,6 @@ license = "MIT/Apache-2.0"
 [badges]
 travis-ci = { repository = "amethyst/amethyst", branch = "master" }
 
-[profile.release]
-incremental = true
-debug = true
-debug-assertions = true
-
 [features]
 default = ["animation", "audio", "locale", "network", "renderer"]
 
