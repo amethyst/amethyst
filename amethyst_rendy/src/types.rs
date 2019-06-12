@@ -105,21 +105,6 @@ impl_backends!(
     Empty, "empty", rendy::empty::Backend;
 );
 
-impl Backend for rendy::empty::Backend {
-    fn unwrap_mesh(_: &Mesh) -> Option<&rendy::mesh::Mesh<Self>> {
-        None
-    }
-    fn unwrap_texture(_: &Texture) -> Option<&rendy::texture::Texture<Self>> {
-        None
-    }
-    fn wrap_mesh(_: rendy::mesh::Mesh<Self>) -> Mesh {
-        unimplemented!()
-    }
-    fn wrap_texture(_: rendy::texture::Texture<Self>) -> Texture {
-        unimplemented!()
-    }
-}
-
 impl Asset for Mesh {
     const NAME: &'static str = "Mesh";
     type Data = MeshData;
