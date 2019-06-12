@@ -90,7 +90,7 @@ type SetupData<'a> = (
     ReadStorage<'a, Transform>,
     ReadStorage<'a, SpriteRender>,
     Option<Read<'a, Visibility>>,
-    Option<Read<'a, ActiveCamera>>,
+    Read<'a, ActiveCamera>,
     ReadStorage<'a, JointTransforms>,
 );
 
