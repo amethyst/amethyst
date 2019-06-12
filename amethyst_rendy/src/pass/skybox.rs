@@ -40,7 +40,6 @@ impl Default for SkyboxSettings {
     }
 }
 
-
 #[derive(Clone, Debug, PartialEq, AsStd140)]
 pub(crate) struct SkyboxUniform {
     nadir_color: vec3,

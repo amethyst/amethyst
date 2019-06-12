@@ -46,8 +46,10 @@ extern crate shred_derive;
 #[macro_use]
 mod macros;
 
-#[doc(inline)] pub use palette;
-#[doc(inline)] pub use rendy;
+#[doc(inline)]
+pub use palette;
+#[doc(inline)]
+pub use rendy;
 
 pub mod pass;
 
@@ -78,16 +80,18 @@ pub mod util;
 mod render_test_bundle;
 
 #[doc(inline)]
-pub use crate::{camera::Camera;
+pub use crate::{
+    camera::Camera,
     formats::{
-        mesh::MeshPrefab, texture::{ImageFormat, TexturePrefab},
+        mesh::MeshPrefab,
+        texture::{ImageFormat, TexturePrefab},
     },
-    mtl::{Material, MaterialDefaults}.
-    sprite::{Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat}.
+    mtl::{Material, MaterialDefaults},
+    sprite::{Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat},
     system::{GraphCreator, RenderingSystem},
     transparent::Transparent,
     types::{Backend, Mesh, Texture},
-    util::{simple_shader_set, ChangeDetection}
+    util::{simple_shader_set, ChangeDetection},
 };
 
 #[cfg(feature = "test-support")]

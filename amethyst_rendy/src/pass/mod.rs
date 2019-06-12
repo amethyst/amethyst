@@ -1,6 +1,5 @@
 //! Passes and shaders implemented by amethyst
 
-
 mod base_3d;
 mod debug_lines;
 mod flat;
