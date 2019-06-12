@@ -298,6 +298,10 @@ where
         self.data_list.extend(data);
         let added_len = self.data_list.len() as u32 - start;
 
+        if added_len == 0 {
+            return;
+        }
+
         match self.keys_list.last_mut() {
             Some((last_pk, last_len)) if last_pk == &pk => {
                 *last_len += added_len;
@@ -328,5 +332,39 @@ where
 
     pub fn count(&self) -> usize {
         self.data_list.len()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_ordered_onelevel_batch_single_insert() {
+        let mut batch = OrderedOneLevelBatch::<u32, u32>::default();
+        batch.insert(0, Some(0));
+        assert_eq!(batch.count(), 1);
+        assert_eq!(batch.iter().collect::<Vec<_>>(), vec![(&0, 0..1)]);
+    }
+
+    #[test]
+    fn test_ordered_onelevel_batch_insert_existing() {
+        let mut batch = OrderedOneLevelBatch::<u32, u32>::default();
+        batch.insert(0, Some(0));
+        batch.insert(0, Some(1));
+        batch.insert(1, Some(0));
+        assert_eq!(batch.count(), 3);
+        assert_eq!(
+            batch.iter().collect::<Vec<_>>(),
+            vec![(&0, 0..2), (&1, 2..3)]
+        );
+    }
+
+    #[test]
+    fn test_ordered_onelevel_batch_empty_insert() {
+        let mut batch = OrderedOneLevelBatch::<u32, u32>::default();
+        batch.insert(0, None);
+        assert_eq!(batch.count(), 0);
+        assert_eq!(batch.iter().collect::<Vec<_>>(), vec![]);
     }
 }
