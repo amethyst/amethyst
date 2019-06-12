@@ -797,6 +797,7 @@ impl Serialize for Transform {
             translation: [Float; 3],
             rotation: [Float; 4],
             scale: [Float; 3],
+            parent_relation: ParentTransformRelation,
         }
 
         let pos: [Float; 3] = self.isometry.translation.vector.into();
@@ -808,6 +809,7 @@ impl Serialize for Transform {
                 translation: [pos[0], pos[1], pos[2]],
                 rotation: [rot[0], rot[1], rot[2], rot[3]],
                 scale: [scale[0], scale[1], scale[2]],
+                parent_relation: self.parent_relation,
             },
             serializer,
         )
@@ -819,7 +821,7 @@ mod tests {
     use crate::{
         approx::*,
         math::{UnitQuaternion, Vector3},
-        Transform,
+        ParentTransformRelation, Transform,
     };
 
     /// Sanity test for concat operation
@@ -901,6 +903,7 @@ mod tests {
         );
     }
 
+    // Test with parent relation changed
     #[test]
     fn ser_deser() {
         let mut transform = Transform::default();
@@ -913,6 +916,8 @@ mod tests {
             )
             .unwrap(),
         );
+        transform.set_parent_relation(ParentTransformRelation::Absolute);
+
         let s: String =
             ron::ser::to_string_pretty(&transform, ron::ser::PrettyConfig::default()).unwrap();
         let transform2: Transform = ron::de::from_str(&s).unwrap();
