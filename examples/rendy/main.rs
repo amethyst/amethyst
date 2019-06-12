@@ -326,7 +326,9 @@ impl SimpleState for Example {
             .with(FlyControlTag)
             .build();
 
-        world.add_resource(ActiveCamera { entity: Some(camera) });
+        world.add_resource(ActiveCamera {
+            entity: Some(camera),
+        });
         world.add_resource(RenderMode::default());
         world.add_resource(DebugLines::new());
     }
