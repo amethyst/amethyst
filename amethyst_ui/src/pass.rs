@@ -50,6 +50,7 @@ pub(crate) struct UiArgs {
     pub(crate) dimensions: vec2,
     pub(crate) tex_coord_bounds: vec4,
     pub(crate) color: vec4,
+    pub(crate) color_bias: vec4,
 }
 
 impl AsVertex for UiArgs {
@@ -59,6 +60,7 @@ impl AsVertex for UiArgs {
             (Format::Rg32Sfloat, "dimensions"),
             (Format::Rgba32Sfloat, "tex_coord_bounds"),
             (Format::Rgba32Sfloat, "color"),
+            (Format::Rgba32Sfloat, "color_bias"),
         ))
     }
 }
@@ -352,6 +354,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
                                 dimensions: [w, h].into(),
                                 tex_coord_bounds: [0., 0., 1., 1.].into(),
                                 color: tint.unwrap_or([1., 1., 1., 1.]).into(),
+                                color_bias: [0., 0., 0., 0.].into(),
                             }),
                         )
                     }
@@ -488,6 +491,7 @@ fn render_image<B: Backend>(
         dimensions: [transform.pixel_width, transform.pixel_height].into(),
         tex_coord_bounds: [0., 0., 1., 1.].into(),
         color: color.into(),
+        color_bias: [0., 0., 0., 0.].into(),
     };
 
     match raw_image {
