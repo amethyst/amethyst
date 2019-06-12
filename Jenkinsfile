@@ -80,7 +80,7 @@ pipeline {
                     }
                     steps {
                         echo 'Beginning tests...'
-                        bat 'C:\\Users\\root\\.cargo\\bin\\cargo test --all --features "vulkan sdl_controller json saveload shader-compiler"'
+                        bat 'C:\\Users\\root\\.cargo\\bin\\cargo test --all --features "vulkan sdl_controller json saveload"'
                         echo 'Tests done!'
                     }
                 }
@@ -93,7 +93,7 @@ pipeline {
                     }
                     steps {
                         echo 'Beginning tests...'
-                        sh 'cargo test --all --features "vulkan sdl_controller json saveload shader-compiler"'
+                        sh 'cargo test --all --features "vulkan sdl_controller json saveload"'
                         echo 'Tests done!'
                     }
                 }

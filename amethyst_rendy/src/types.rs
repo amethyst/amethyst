@@ -14,8 +14,8 @@ macro_rules! impl_backends {
 
         impl_single_default!($([$feature, $backend]),*);
 
-        #[cfg(not(any($(feature = $feature),*)))]
-        pub type DefaultBackend = rendy::empty::Backend;
+        //#[cfg(not(any($(feature = $feature),*)))]
+        //pub type DefaultBackend = rendy::empty::Backend;
 
         pub enum BackendVariant {
             $(
@@ -97,6 +97,7 @@ impl_backends!(
     Dx12, "dx12", rendy::dx12::Backend;
     Metal, "metal", rendy::metal::Backend;
     Vulkan, "vulkan", rendy::vulkan::Backend;
+    Empty, "empty", rendy::empty::Backend;
 );
 
 impl Backend for rendy::empty::Backend {

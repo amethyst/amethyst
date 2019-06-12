@@ -70,8 +70,7 @@ pub mod loaders {
     pub use rendy::texture::palette::{load_from_linear_rgba, load_from_srgb, load_from_srgba};
 }
 
-// feature = "dx12" is removed here because rendy does not currently support it.
 static_assertions::assert_cfg!(
-    any(feature = "metal", feature = "vulkan"),
-    "You must specify a graphical backend feature: 'vulkan' or 'metal'"
+    any(feature = "metal", feature = "vulkan", feature = "empty"),
+    "You must specify a graphical backend feature: 'empty' or 'vulkan' or 'metal'"
 );
