@@ -512,7 +512,6 @@ mod tests {
     use more_asserts::{assert_ge, assert_gt, assert_le, assert_lt};
 
     #[test]
-    #[ignore]
     fn test_orthographic_serde() {
         let test_ortho = Projection::orthographic(0.0, 100.0, 10.0, 150.0, -5.0, 100.0);
         println!(
@@ -525,7 +524,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_perspective_serde() {
         let test_persp = Projection::perspective(1.7, std::f32::consts::FRAC_PI_3, 0.1, 1000.0);
         println!(

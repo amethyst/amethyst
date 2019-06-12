@@ -6,11 +6,11 @@ The following snippet demonstrates how to set up a `Camera` that sees entities w
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-use amethyst::core::math::Orthographic3;
-use amethyst::core::transform::Transform;
-# use amethyst::prelude::*;
-use amethyst::renderer::{
-    Camera, Projection, ScreenDimensions
+use amethyst::{
+    core::{math::Orthographic3, transform::Transform},
+    prelude::*,
+    renderer::camera::{Camera, Projection},
+    window::ScreenDimensions,
 };
 
 #[derive(Debug)]
@@ -34,19 +34,22 @@ impl ExampleState {
         // Translate the camera to Z coordinate 10.0, and it looks back toward
         // the origin with depth 20.0
         let mut transform = Transform::default();
-        transform.set_translation_xyz(0., 0., 10.);
+        transform.set_translation_xyz(0., height, 10.);
+
+        let mut camera = Camera::standard_3d(width, height);
+        camera.set_projection(Projection::orthographic(
+            0.0,
+            width,
+            0.0,
+            height,
+            0.0,
+            20.0,
+        ));
 
         let camera = world
             .create_entity()
             .with(transform)
-            .with(Camera::from(Projection::Orthographic(Orthographic3::new(
-                0.0,
-                width,
-                0.0,
-                height,
-                0.0,
-                20.0,
-            ))))
+            .with(camera)
             .build();
     }
 }

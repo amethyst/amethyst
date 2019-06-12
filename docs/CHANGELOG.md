@@ -40,10 +40,11 @@ it is attached to. ([#1282])
 * Added `events` example which demonstrates working even reader and writer in action. ([#1538])
 *  Implement builder like functionality for `AnimationSet` and `AnimationControlSet` ([#1568])
 * Add `get_mouse_button` and `is_mouse_button_down` utility functions to amethyst_input. ([#1582])
-- Add amethyst_input::Axis::MouseWheel ([#1642])
-- Add amethyst_input::BindingError::MouseWheelAlreadyBound ([#1642])
-- Add amethyst_input::InputHandler::send_frame_begin ([#1642])
-- Add amethyst_input::InputHandler::mouse_wheel_value ([#1642])
+* Add `amethyst_input::Axis::MouseWheel` ([#1642])
+* Add `amethyst_input::BindingError::MouseWheelAlreadyBound` ([#1642])
+* Add `amethyst_input::InputHandler::send_frame_begin` ([#1642])
+* Add `amethyst_input::InputHandler::mouse_wheel_value` ([#1642])
+* Added `Float::from_f32` and `Float::from_f64` `const fn`s so `Float` can be used as `const`. ([#1687])
 
 ### Changed
 
@@ -101,6 +102,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Combined input axis/action generics into single type.
 * `Material` is now an asset. Must be turned into handle before putting on an entity.
 * Removed `Flipped` component. Use `flip_horizontal` and `flip_vertical` sprite property instead.
+* Added [Rendy migration guide][rendy_migration]. ([#1626])
 
 ### Removed
 
@@ -118,6 +120,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 * Fix tuple index generation on `PrefabData` and `EventReader` proc macros. ([#1501])
 * Avoid segmentation fault on Windows when using `AudioBundle` in `amethyst_test`. ([#1595], [#1599])
 
+[rendy_migration]: https://book.amethyst.rs/master/appendices/b_migration_notes/rendy_migration.html
 [#1114]: https://github.com/amethyst/amethyst/pull/1114
 [#1213]: https://github.com/amethyst/amethyst/pull/1213
 [#1237]: https://github.com/amethyst/amethyst/pull/1237
@@ -178,8 +181,10 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1582]: https://github.com/amethyst/amethyst/pull/1582
 [#1595]: https://github.com/amethyst/amethyst/issues/1595
 [#1599]: https://github.com/amethyst/amethyst/pull/1599
+[#1626]: https://github.com/amethyst/amethyst/pull/1626
 [#1642]: https://github.com/amethyst/amethyst/pull/1642
 [#1683]: https://github.com/amethyst/amethyst/pull/1683
+[#1687]: https://github.com/amethyst/amethyst/pull/1687
 
 ## [0.10.0] - 2018-12
 

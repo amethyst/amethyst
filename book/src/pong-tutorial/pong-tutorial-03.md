@@ -68,14 +68,9 @@ let input_bundle = InputBundle::<StringBindings>::new()
 
 # let path = "./resources/display_config.ron";
 # let config = DisplayConfig::load(&path);
-# let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
-#       .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-#       .with_pass(DrawFlat::<PosTex>::new()),
-# );
 # struct Pong;
 # impl SimpleState for Pong { }
 let game_data = GameDataBuilder::default()
-    .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
     .with_bundle(TransformBundle::new())?
     .with_bundle(input_bundle)?
     // ..
@@ -203,17 +198,12 @@ mod systems; // Import the module
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::{core::transform::TransformBundle, input::StringBindings};
-# use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline,
-#                        PosTex, RenderBundle, Stage};
+# use amethyst::window::DisplayConfig;
 fn main() -> amethyst::Result<()> {
 // --snip--
 
 # let path = "./resources/display_config.ron";
 # let config = DisplayConfig::load(&path);
-# let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
-#       .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-#       .with_pass(DrawFlat::<PosTex>::new()),
-# );
 # mod systems {
 # use amethyst;
 # pub struct PaddleSystem;
@@ -224,7 +214,6 @@ fn main() -> amethyst::Result<()> {
 # }
 # let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
   let game_data = GameDataBuilder::default()
-      .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
       .with_bundle(TransformBundle::new())?
       .with_bundle(input_bundle)?
       .with(systems::PaddleSystem, "paddle_system", &["input_system"]) // Add this line
@@ -363,10 +352,10 @@ will take care of that for us, as well as set up the storage.
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::prelude::*;
-# use amethyst::renderer::{TextureHandle, SpriteSheet};
-# use amethyst::assets::{Handle};
+# use amethyst::assets::Handle;
 # use amethyst::ecs::World;
+# use amethyst::prelude::*;
+# use amethyst::renderer::SpriteSheet;
 # struct Paddle;
 # impl amethyst::ecs::Component for Paddle {
 #   type Storage = amethyst::ecs::VecStorage<Paddle>;

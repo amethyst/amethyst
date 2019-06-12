@@ -152,6 +152,7 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
             } else {
                 // Rendering system not present which might be the case during testing.
                 // Just do nothing.
+                log::trace!("Rendering not present: glyphs processing skipped");
                 return;
             };
 
@@ -179,15 +180,16 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
         )
             .join()
         {
-            let font_lookup = fonts_map_ref.entry(ui_text.font.id()).or_insert_with(|| {
-                if let Some(font) = font_storage.get(&ui_text.font) {
-                    FontState::Ready(glyph_brush_ref.add_font(font.0.clone()))
-                } else {
-                    FontState::NotFound
-                }
-            });
-
             ui_text.cached_glyphs.clear();
+
+            let font_lookup = fonts_map_ref
+                .entry(ui_text.font.id())
+                .or_insert(FontState::NotFound);
+            if font_lookup.id().is_none() {
+                if let Some(font) = font_storage.get(&ui_text.font) {
+                    *font_lookup = FontState::Ready(glyph_brush_ref.add_font(font.0.clone()));
+                }
+            }
 
             if let Some(font_id) = font_lookup.id() {
                 let tint_color = tint.map_or([1., 1., 1., 1.], |t| {
@@ -327,6 +329,7 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
         loop {
             let action = glyph_brush_ref.process_queued(
                 |rect, data| unsafe {
+                    log::trace!("Upload glyph image at {:?}", rect);
                     factory
                         .upload_image(
                             tex.image().clone(),
@@ -410,6 +413,7 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                     ];
                     let dims = [(coords_max_x - coords_min_x), (coords_max_y - coords_min_y)];
                     let tex_coord_bounds = [uv.min.x, uv.min.y, uv.max.x, uv.max.y];
+                    log::trace!("Push glyph for {}", entity_id);
                     (
                         entity_id,
                         UiArgs {
@@ -424,6 +428,7 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
 
             match action {
                 Ok(BrushAction::Draw(vertices)) => {
+                    log::trace!("Updating glyph data, len {}", vertices.len());
                     // entity ids are guaranteed to be in the same order as queued
                     let mut glyph_ctr = 0;
 
@@ -551,6 +556,8 @@ fn create_glyph_texture<B: Backend>(
     h: u32,
 ) -> Texture {
     use hal::format::{Component as C, Swizzle};
+    log::trace!("Creating new glyph texture with size ({}, {})", w, h);
+
     TextureBuilder::new()
         .with_kind(hal::image::Kind::D2(w, h, 1, 1))
         .with_view_kind(hal::image::ViewKind::D2)

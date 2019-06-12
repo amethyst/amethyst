@@ -44,7 +44,7 @@ Then let's add an `initialise_ball` function the same way we wrote the
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::assets::{Loader, AssetStorage, Handle};
-# use amethyst::renderer::{Texture, TextureHandle, SpriteRender, Sprite, SpriteSheet};
+# use amethyst::renderer::{Texture, SpriteRender, Sprite, SpriteSheet};
 # use amethyst::ecs::World;
 # use amethyst::core::transform::Transform;
 # use amethyst::ecs::prelude::{Component, DenseVecStorage};
@@ -97,8 +97,8 @@ Finally, let's make sure the code is working as intended by updating the `on_sta
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::prelude::*;
-# use amethyst::assets::Handle,
-# use amethyst::renderer::{TextureHandle, SpriteSheet};
+# use amethyst::assets::Handle;
+# use amethyst::renderer::{Texture, SpriteSheet};
 # use amethyst::ecs::World;
 # struct Paddle;
 # impl amethyst::ecs::Component for Paddle {
@@ -317,15 +317,11 @@ as well as adding our new systems to the game data:
 # extern crate amethyst;
 # use amethyst::prelude::*;
 # use amethyst::core::transform::TransformBundle;
-# use amethyst::renderer::{DisplayConfig, DrawFlat, Pipeline,
-#                        PosTex, RenderBundle, Stage};
+# use amethyst::window::DisplayConfig;
+# use amethyst::input::StringBindings;
 # fn main() -> amethyst::Result<()> {
 # let path = "./resources/display_config.ron";
 # let config = DisplayConfig::load(&path);
-# let pipe = Pipeline::build().with_stage(Stage::with_backbuffer()
-#       .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-#       .with_pass(DrawFlat::<PosTex>::new()),
-# );
 # mod systems {
 # use amethyst;
 # pub struct PaddleSystem;
@@ -344,9 +340,8 @@ as well as adding our new systems to the game data:
 # fn run(&mut self, _: Self::SystemData) { }
 # }
 # }
-# let input_bundle = amethyst::input::InputBundle::<String, String>::new();
+# let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
 let game_data = GameDataBuilder::default()
-#    .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor())?
 #    .with_bundle(TransformBundle::new())?
 #    .with_bundle(input_bundle)?
 #    .with(systems::PaddleSystem, "paddle_system", &["input_system"])
@@ -409,6 +404,8 @@ as a local variable inside `on_start`. For that reason, we have to make it a par
 Let's add some fields to our `Pong` struct:
 
 ```rust,edition2018,no_run,noplaypen
+# extern crate amethyst; use amethyst::renderer::SpriteSheet;
+# use amethyst::assets::Handle;
 #[derive(Default)]
 pub struct Pong {
     ball_spawn_timer: Option<f32>,
@@ -427,7 +424,7 @@ default empty state. Now let's use that inside our `Application` creation code i
 # extern crate amethyst;
 # use amethyst::prelude::*;
 #
-# struct Pong;
+# #[derive(Default)] struct Pong;
 # impl SimpleState for Pong { }
 # fn main() -> amethyst::Result<()> {
 #   let game_data = GameDataBuilder::default();
@@ -442,12 +439,28 @@ Now let's finish our timer and ball spawning code. We have to do two things:
 - then we have to `initialise_ball` once after the time has passed inside `update`:
 
 ```rust,edition2018,no_run,noplaypen
+# extern crate amethyst;
+# use amethyst::{assets::Handle, renderer::SpriteSheet};
+# use amethyst::prelude::*;
 use amethyst::core::timing::Time;
 
-# pub struct Pong {
+# struct Paddle;
+# impl amethyst::ecs::Component for Paddle {
+#   type Storage = amethyst::ecs::VecStorage<Self>;
+# }
+# struct Ball;
+# impl amethyst::ecs::Component for Ball {
+#   type Storage = amethyst::ecs::VecStorage<Self>;
+# }
+# fn initialise_ball(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) { }
+# fn initialise_paddles(world: &mut World, spritesheet: Handle<SpriteSheet>) { }
+# fn initialise_camera(world: &mut World) { }
+# fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> { unimplemented!() }
+# #[derive(Default)] pub struct Pong {
 #     ball_spawn_timer: Option<f32>,
 #     sprite_sheet_handle: Option<Handle<SpriteSheet>>,
 # }
+# 
 impl SimpleState for Pong {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
