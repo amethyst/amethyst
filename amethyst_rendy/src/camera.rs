@@ -468,7 +468,7 @@ impl<'a> PrefabData<'a> for CameraPrefab {
 }
 
 /// Active camera prefab
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, serde::Deserialize, Clone)]
 pub struct ActiveCameraPrefab(Option<usize>);
 
 impl<'a> PrefabData<'a> for ActiveCameraPrefab {
