@@ -81,7 +81,7 @@ mod render_test_bundle;
 
 #[doc(inline)]
 pub use crate::{
-    camera::Camera,
+    camera::{ActiveCamera, Camera},
     formats::{
         mesh::MeshPrefab,
         texture::{ImageFormat, TexturePrefab},
