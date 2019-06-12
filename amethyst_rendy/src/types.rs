@@ -12,10 +12,13 @@ pub trait Backend: rendy::hal::Backend {
 macro_rules! impl_backends {
     ($($variant:ident, $feature:literal, $backend:ty;)*) => {
 
+
         impl_single_default!($([$feature, $backend]),*);
 
-        //#[cfg(not(any($(feature = $feature),*)))]
-        //pub type DefaultBackend = rendy::empty::Backend;
+        static_assertions::assert_cfg!(
+            any($(feature = $feature),*),
+            concat!("You must specify at least one graphical backend feature.: ", stringify!($($feature),* "See the wiki article https://github.com/amethyst/amethyst/wiki/GraphicalBackendError for more details."))
+        );
 
         pub enum BackendVariant {
             $(
@@ -94,7 +97,9 @@ macro_rules! impl_single_default {
 }
 
 impl_backends!(
-    Dx12, "dx12", rendy::dx12::Backend;
+    // DirectX 12 is currently disabled because of incomplete gfx-hal support for it.
+    // It will be re-enabled when it actually works.
+    // Dx12, "dx12", rendy::dx12::Backend; 
     Metal, "metal", rendy::metal::Backend;
     Vulkan, "vulkan", rendy::vulkan::Backend;
     Empty, "empty", rendy::empty::Backend;

@@ -69,8 +69,3 @@ pub use rendy::{
 pub mod loaders {
     pub use rendy::texture::palette::{load_from_linear_rgba, load_from_srgb, load_from_srgba};
 }
-
-static_assertions::assert_cfg!(
-    any(feature = "metal", feature = "vulkan", feature = "empty"),
-    "You must specify a graphical backend feature: 'empty' or 'vulkan' or 'metal'"
-);
