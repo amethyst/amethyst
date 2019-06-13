@@ -698,7 +698,7 @@ impl<'de> Deserialize<'de> for Transform {
 
                 let parent_relation: ParentTransformRelation = seq
                     .next_element()?
-                    .map_or_else(|| ParentTransformRelation::Relative, |v| v);
+                    .unwrap_or(ParentTransformRelation::Relative);
 
                 let isometry = Isometry3::from_parts(
                     Translation3::new(translation[0], translation[1], translation[2]),
