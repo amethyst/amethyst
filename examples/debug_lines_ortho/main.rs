@@ -67,27 +67,21 @@ impl SimpleState for ExampleState {
             (screen_dimensions.width(), screen_dimensions.height())
         };
 
-        (0..(screen_h as u16))
-            .step_by(50)
-            .map(f32::from)
-            .for_each(|y| {
-                debug_lines_component.add_line(
-                    [0.0, y, 1.0].into(),
-                    [screen_w, (y + 2.0), 1.0].into(),
-                    Srgba::new(0.3, 0.3, 0.3, 1.0),
-                );
-            });
+        for y in (0..(screen_h as u16)).step_by(50).map(f32::from) {
+            debug_lines_component.add_line(
+                [0.0, y, 1.0].into(),
+                [screen_w, (y + 2.0), 1.0].into(),
+                Srgba::new(0.3, 0.3, 0.3, 1.0),
+            );
+        }
 
-        (0..(screen_w as u16))
-            .step_by(50)
-            .map(f32::from)
-            .for_each(|x| {
-                debug_lines_component.add_line(
-                    [x, 0.0, 1.0].into(),
-                    [x, screen_h, 1.0].into(),
-                    Srgba::new(0.3, 0.3, 0.3, 1.0),
-                );
-            });
+        for x in (0..(screen_w as u16)).step_by(50).map(f32::from) {
+            debug_lines_component.add_line(
+                [x, 0.0, 1.0].into(),
+                [x, screen_h, 1.0].into(),
+                Srgba::new(0.3, 0.3, 0.3, 1.0),
+            );
+        }
 
         debug_lines_component.add_line(
             [20.0, 20.0, 1.0].into(),
@@ -95,7 +89,6 @@ impl SimpleState for ExampleState {
             Srgba::new(1.0, 0.0, 0.2, 1.0), // Red
         );
 
-        data.world.register::<DebugLinesComponent>();
         data.world
             .create_entity()
             .with(debug_lines_component)
