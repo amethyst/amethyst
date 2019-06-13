@@ -9,25 +9,17 @@ use amethyst::{
     input::{is_close_requested, is_key_down},
     prelude::*,
     renderer::{
-        camera::{Camera, Projection},
+        camera::Camera,
         debug_drawing::{DebugLines, DebugLinesComponent, DebugLinesParams},
         palette::Srgba,
         pass::DrawDebugLinesDesc,
         rendy::{
-            factory::Factory,
-            graph::{
-                present::PresentNode,
-                render::{RenderGroupDesc, SubpassBuilder},
-                GraphBuilder,
-            },
-            hal::{
-                command::{ClearDepthStencil, ClearValue},
-                format::Format,
-                image,
-            },
+            graph::present::PresentNode,
+            hal::command::{ClearDepthStencil, ClearValue},
         },
         types::DefaultBackend,
-        Backend, GraphCreator, RenderingSystem,
+        Backend, Factory, Format, GraphBuilder, GraphCreator, Kind, RenderGroupDesc,
+        RenderingSystem, SubpassBuilder,
     },
     utils::application_root_dir,
     window::{ScreenDimensions, Window, WindowBundle},
@@ -68,7 +60,7 @@ impl SimpleState for ExampleState {
             .add_resource(DebugLinesParams { line_width: 2.0 });
 
         // Setup debug lines as a component and add lines to render axis&grid
-        let mut debug_lines_component = DebugLinesComponent::with_capacity(100);
+        let mut debug_lines_component = DebugLinesComponent::new();
 
         let (screen_w, screen_h) = {
             let screen_dimensions = data.world.read_resource::<ScreenDimensions>();
@@ -111,18 +103,10 @@ impl SimpleState for ExampleState {
 
         // Setup camera
         let mut local_transform = Transform::default();
-        local_transform.set_translation_xyz(0.0, screen_h, 10.0);
-        let left = 0.0;
-        let right = screen_w;
-        let bottom = 0.0;
-        let top = screen_h;
-        let znear = 0.0;
-        let zfar = 100.0;
+        local_transform.set_translation_xyz(screen_w / 2., screen_h / 2., 10.0);
         data.world
             .create_entity()
-            .with(Camera::from(Projection::orthographic(
-                left, right, bottom, top, znear, zfar,
-            )))
+            .with(Camera::standard_2d(screen_w, screen_h))
             .with(local_transform)
             .build();
     }
@@ -155,7 +139,7 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with_bundle(TransformBundle::new())?
-        .with(ExampleLinesSystem, "example_lines_system", &[])
+        .with(ExampleLinesSystem, "example_lines_system", &["window"])
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
@@ -168,7 +152,6 @@ fn main() -> amethyst::Result<()> {
 #[derive(Default)]
 struct ExampleGraph {
     dimensions: Option<ScreenDimensions>,
-    surface_format: Option<Format>,
     dirty: bool,
 }
 
@@ -188,16 +171,14 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
     fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
         self.dirty = false;
 
+        // Retrieve a reference to the target window, which is created by the WindowBundle
         let window = <ReadExpect<'_, Window>>::fetch(res);
-
-        let surface = factory.create_surface(&window);
-        // cache surface format to speed things up
-        let surface_format = *self
-            .surface_format
-            .get_or_insert_with(|| factory.get_surface_format(&surface));
         let dimensions = self.dimensions.as_ref().unwrap();
-        let window_kind =
-            image::Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
+        let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
+
+        // Create a new drawing surface in our window
+        let surface = factory.create_surface(&window);
+        let surface_format = factory.get_surface_format(&surface);
 
         let mut graph_builder = GraphBuilder::new();
         let color = graph_builder.create_image(
@@ -214,7 +195,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
             Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
         );
 
-        let opaque = graph_builder.add_node(
+        let pass = graph_builder.add_node(
             SubpassBuilder::new()
                 .with_group(DrawDebugLinesDesc::new().builder())
                 .with_color(color)
@@ -223,7 +204,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         );
 
         let _present = graph_builder
-            .add_node(PresentNode::builder(factory, surface, color).with_dependency(opaque));
+            .add_node(PresentNode::builder(factory, surface, color).with_dependency(pass));
 
         graph_builder
     }
