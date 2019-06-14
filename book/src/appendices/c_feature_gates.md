@@ -41,10 +41,11 @@ those checks can become too costly for a smooth experience with larger games; yo
 them using the `no-slow-safety-checks` feature.
 
 Additionally, there's a `shader-compiler` feature which allows compiling GLSL / HLSL to SPIR-V
-shaders. This is only needed if you're planning to write your own shaders, as Amethyst's built-in 
-shaders come pre-compiled. Please note, that on Windows this feature requires [Ninja] to be 
-installed.
+shaders. This is only needed if you're planning to compile shaders at runtime. Amethyst's 
+built-in shaders come pre-compiled, and you can also precompile your own using `glslc` (provided 
+by [shaderc]). Please note, that on Windows this feature requires [Ninja] to be installed.
 
+[shaderc]: https://github.com/google/shaderc
 [Ninja]: https://ninja-build.org/
 
 ## Float representation
@@ -55,7 +56,7 @@ the `float64` feature.
 
 ## Using Amethyst testing utility
 
-As described in the [Testing chapter](./testing.html), Amethyst has several utilities to help you
+As described in the [Testing chapter](../testing.html), Amethyst has several utilities to help you
 test an application written using Amethyst. For some cases (especially when rendering components 
 are involved in the test), you need to enable the `test-support` feature.
 
