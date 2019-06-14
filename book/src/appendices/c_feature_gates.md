@@ -29,7 +29,7 @@ The available features might change from time to time.
 
 ## Graphics features
 
-Whenever you run your game, you'll need enable one graphics backend. The following features are
+Whenever you run your game, you'll need to enable one graphics backend. The following features are
 available for the backend:
 
 * `empty`
@@ -51,7 +51,7 @@ by [shaderc]). Please note, that on Windows this feature requires [Ninja] to be 
 ## Float representation
 
 We're using the `Float` type in Amethyst to hide the precision of the floating-point numbers.
-This allows to switch to 64-bit precision without breaking code. To do that, you can simply enable
+This allows switching to 64-bit precision without breaking code. To do that, you can simply enable
 the `float64` feature.
 
 ## Using Amethyst testing utility
