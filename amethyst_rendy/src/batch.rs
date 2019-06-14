@@ -303,7 +303,7 @@ where
         self.map.values()
     }
 
-    /// Returns an iterator to a tuple iterator of group keys and data.
+    /// Returns an iterator over batched values, providing batch `PK` and data list.
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a PK, Range<u32>)> {
         let mut offset = 0;
         self.map.iter().map(move |(pk, data)| {
