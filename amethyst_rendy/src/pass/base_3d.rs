@@ -166,7 +166,7 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3D<B
         _subpass: hal::pass::Subpass<'_, B>,
         resources: &Resources,
     ) -> PrepareResult {
-        profile_scope_impl!("prepare");
+        profile_scope_impl!("prepare opaque");
 
         let (
             mesh_storage,
@@ -326,7 +326,7 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3D<B
         _subpass: hal::pass::Subpass<'_, B>,
         resources: &Resources,
     ) {
-        profile_scope_impl!("draw");
+        profile_scope_impl!("draw opaque");
 
         let mesh_storage = <Read<'_, AssetStorage<Mesh>>>::fetch(resources);
         let models_loc = self.vertex_format_base.len() as u32;
@@ -526,6 +526,8 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3DTr
         _subpass: hal::pass::Subpass<'_, B>,
         resources: &Resources,
     ) -> PrepareResult {
+        profile_scope_impl!("prepare transparent");
+
         let (mesh_storage, visibility, meshes, materials, transforms, joints, tints) =
             <(
                 Read<AssetStorage<Mesh>>,
@@ -626,6 +628,8 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3DTr
         _subpass: hal::pass::Subpass<'_, B>,
         resources: &Resources,
     ) {
+        profile_scope_impl!("draw transparent");
+
         let mesh_storage = <Read<'_, AssetStorage<Mesh>>>::fetch(resources);
         let layout = &self.pipeline_layout;
         let encoder = &mut encoder;

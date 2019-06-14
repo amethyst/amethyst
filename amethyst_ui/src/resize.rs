@@ -7,6 +7,9 @@ use amethyst_core::{
 };
 use amethyst_window::ScreenDimensions;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use super::*;
 
 /// Whenever the window is resized the function in this component will be called on this
@@ -59,6 +62,9 @@ impl<'a> System<'a> for ResizeSystem {
     );
 
     fn run(&mut self, (mut transform, mut resize, dimensions): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("resize_system");
+
         self.local_modified.clear();
 
         let self_local_modified = &mut self.local_modified;

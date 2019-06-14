@@ -9,6 +9,9 @@ use derivative::Derivative;
 
 use crate::event::TargetedEvent;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 /// Describes anything that can receive events one by one or in batches. This
 /// lets whoever wants to receive triggered events decide on how they
 /// want to receive them, instead of forcing them to construct certain
@@ -79,6 +82,9 @@ where
     }
 
     fn run(&mut self, (in_channel, mut out_channel, retrigger): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("event_retrigger_system");
+
         let event_reader = self.event_reader.as_mut().expect(
             "`EventRetriggerSystem::setup` was not called before `EventRetriggerSystem::run`",
         );

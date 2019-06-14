@@ -52,6 +52,7 @@ where
     fn run(&mut self, (storage, errors, sink, mut res): Self::SystemData) {
         #[cfg(feature = "profiler")]
         profile_scope!("dj_system");
+
         if let Some(ref sink) = sink {
             if sink.empty() {
                 if let Some(source) = (&mut self.f)(&mut res).and_then(|h| storage.get(&h)) {

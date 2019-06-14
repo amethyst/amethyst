@@ -21,6 +21,9 @@ use amethyst_core::{
 };
 use amethyst_error::{Error, ResultExt};
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{
     asset::{Asset, FormatValue, ProcessableAsset},
     error,
@@ -525,6 +528,9 @@ where
     );
 
     fn run(&mut self, (mut storage, pool, time, strategy): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("processor_system");
+
         use std::ops::Deref;
 
         storage.process(

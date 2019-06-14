@@ -15,6 +15,9 @@ use crate::resources::{
     SamplerControlSet,
 };
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 /// System for interpolating active samplers.
 ///
 /// If other forms of animation is needed, this can be used in isolation, have no direct dependency
@@ -63,6 +66,9 @@ where
     );
 
     fn run(&mut self, (time, samplers, mut control_sets, mut comps, apply_data): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("sampler_interpolation_system");
+
         for (control_set, comp) in (&mut control_sets, &mut comps).join() {
             self.inner.clear();
             for control in control_set.samplers.iter_mut() {

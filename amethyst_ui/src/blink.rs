@@ -5,6 +5,9 @@ use amethyst_core::{
     Hidden, Time,
 };
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 /// # Blink Component
 /// Periodically adds and removes a `Hidden` Component on the entity this is attached to.
 ///
@@ -39,6 +42,9 @@ impl<'a> System<'a> for BlinkSystem {
     );
 
     fn run(&mut self, (entities, mut hiddens, mut blinks, time): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("blink_system");
+
         let abs_sec = time.delta_seconds();
         let abs_unscaled_sec = time.delta_real_seconds();
 

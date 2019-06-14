@@ -63,6 +63,9 @@ impl<'a> System<'a> for WindowSystem {
     type SystemData = (WriteExpect<'a, ScreenDimensions>, ReadExpect<'a, Window>);
 
     fn run(&mut self, (mut screen_dimensions, window): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("window_system");
+
         self.manage_dimensions(&mut screen_dimensions, &window);
     }
     fn setup(&mut self, res: &mut Resources) {

@@ -123,6 +123,9 @@ where
     type SystemData = (WriteStorage<'a, NetConnection<E>>, Entities<'a>);
 
     fn run(&mut self, (mut net_connections, entities): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("net_socket_system");
+
         for connection in (&mut net_connections).join() {
             match connection.state {
                 ConnectionState::Connected | ConnectionState::Connecting => {

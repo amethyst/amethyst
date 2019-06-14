@@ -27,6 +27,9 @@ impl<'a> System<'a> for TextEditingCursorSystem {
     );
 
     fn run(&mut self, (entities, mut transforms, editings, parents, selecteds, mut cursors, mut blinks, mut textures, colors, config): Self::SystemData){
+        #[cfg(feature = "profiler")]
+        profile_scope!("text_editing_cursor_system");
+
         // Go through all text editing entities.
         for (entity, _) in (&*entities, &editings).join() {
 
