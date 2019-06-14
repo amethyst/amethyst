@@ -34,8 +34,8 @@
 
 #![allow(dead_code)]
 #![allow(unused_variables)]
-#![deny(missing_docs)]
-#![deny(missing_debug_implementations)]
+#![warn(missing_docs)]
+#![warn(missing_debug_implementations)]
 
 #[macro_use]
 extern crate amethyst_derive;
