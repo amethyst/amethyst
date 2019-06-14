@@ -80,7 +80,7 @@ pipeline {
                     }
                     steps {
                         echo 'Beginning tests...'
-                        bat 'C:\\Users\\root\\.cargo\\bin\\cargo test --all --features "vulkan sdl_controller json saveload"'
+                        bat 'C:\\Users\\root\\.cargo\\bin\\cargo test --all --features "vulkan json saveload"'
                         echo 'Tests done!'
                     }
                 }
