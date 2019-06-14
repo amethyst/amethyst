@@ -247,7 +247,8 @@ where
     }
 }
 
-/// A batching implementation with one level of indexing. Items of type `D` batched by type `PK`
+/// A batching implementation with one level of indexing. Data type `D` batched by primary key `PK`.
+/// Items with the same `PK` are always grouped.
 #[derive(Derivative, Debug)]
 #[derivative(Default(bound = ""))]
 pub struct OneLevelBatch<PK, D>
