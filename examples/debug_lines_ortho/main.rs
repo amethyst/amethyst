@@ -6,7 +6,6 @@ use amethyst::{
         Time,
     },
     ecs::{Read, ReadExpect, Resources, System, SystemData, Write},
-    input::{is_close_requested, is_key_down},
     prelude::*,
     renderer::{
         camera::Camera,
@@ -23,7 +22,6 @@ use amethyst::{
     },
     utils::application_root_dir,
     window::{ScreenDimensions, Window, WindowBundle},
-    winit::VirtualKeyCode,
 };
 
 struct ExampleLinesSystem;
@@ -102,22 +100,6 @@ impl SimpleState for ExampleState {
             .with(Camera::standard_2d(screen_w, screen_h))
             .with(local_transform)
             .build();
-    }
-
-    fn handle_event(
-        &mut self,
-        _: StateData<'_, GameData<'_, '_>>,
-        event: StateEvent,
-    ) -> SimpleTrans {
-        if let StateEvent::Window(event) = event {
-            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-                Trans::Quit
-            } else {
-                Trans::None
-            }
-        } else {
-            Trans::None
-        }
     }
 }
 
