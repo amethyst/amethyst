@@ -23,7 +23,7 @@ default = ["animation", "audio", "locale", "network", "renderer"]
 
 vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
-dx12 = ["amethyst_rendy/dx12"]
+empty = ["amethyst_rendy/empty"]
 
 animation = [
     "amethyst_animation"
