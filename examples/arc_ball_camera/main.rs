@@ -11,7 +11,9 @@ use amethyst::{
     ecs::prelude::{
         Join, Read, ReadExpect, ReadStorage, Resources, System, SystemData, WriteStorage,
     },
-    input::{InputBundle, InputEvent, ScrollDirection, StringBindings},
+    input::{
+        is_key_down, InputBundle, InputEvent, ScrollDirection, StringBindings, VirtualKeyCode,
+    },
     prelude::*,
     renderer::{
         palette::Srgb,
@@ -43,6 +45,22 @@ impl SimpleState for ExampleState {
             loader.load("prefab/arc_ball_camera.ron", RonFormat, ())
         });
         data.world.create_entity().with(prefab_handle).build();
+    }
+
+    fn handle_event(
+        &mut self,
+        _: StateData<'_, GameData<'_, '_>>,
+        event: StateEvent,
+    ) -> SimpleTrans {
+        if let StateEvent::Window(event) = event {
+            if is_key_down(&event, VirtualKeyCode::Escape) {
+                Trans::Quit
+            } else {
+                Trans::None
+            }
+        } else {
+            Trans::None
+        }
     }
 }
 
