@@ -1,4 +1,5 @@
-//!  FriziBatch 9000
+///! Module containing structures useful for batching draw calls
+///! in scenarios with various known assumptions, e.g. order independence.
 //!
 //!
 
@@ -246,7 +247,8 @@ where
     }
 }
 
-/// A batching implementation with one level of indexing. Items of type `D` batched by type `PK`
+/// A batching implementation with one level of indexing. Data type `D` batched by primary key `PK`.
+/// Items with the same `PK` are always grouped.
 #[derive(Derivative, Debug)]
 #[derivative(Default(bound = ""))]
 pub struct OneLevelBatch<PK, D>
@@ -296,12 +298,12 @@ where
         }
     }
 
-    /// Returns an iterator to raw data for this batch.
+    /// Returns an iterator over batched data lists.
     pub fn data<'a>(&'a self) -> impl Iterator<Item = &'a Vec<D>> {
         self.map.values()
     }
 
-    /// Returns an iterator to a tuple iterator of group keys and data.
+    /// Returns an iterator over batched values, providing batch `PK` and data list.
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a PK, Range<u32>)> {
         let mut offset = 0;
         self.map.iter().map(move |(pk, data)| {
@@ -317,9 +319,9 @@ where
     }
 }
 
-/// A batching implementation with one level of indexing. Items of type `D` batched by type `PK`
+ /// A batching implementation with one level of indexing. Data type `D` batched by primary key `PK`.
 ///
-/// This implementation differs from `OneLevelBatch` in that it is sorted based on `PK`
+/// Items are always kept in insertion order, grouped only by contiguous ranges of equal `PK`.
 #[derive(Derivative, Debug)]
 #[derivative(Default(bound = ""))]
 pub struct OrderedOneLevelBatch<PK, D>
