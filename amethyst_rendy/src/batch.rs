@@ -321,7 +321,7 @@ where
 
  /// A batching implementation with one level of indexing. Data type `D` batched by primary key `PK`.
 ///
-/// This implementation differs from `OneLevelBatch` in that it is sorted based on `PK`
+/// Items are always kept in insertion order, grouped only by contiguous ranges of equal `PK`.
 #[derive(Derivative, Debug)]
 #[derivative(Default(bound = ""))]
 pub struct OrderedOneLevelBatch<PK, D>
