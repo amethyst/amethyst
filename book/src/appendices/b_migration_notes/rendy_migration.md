@@ -265,15 +265,14 @@ Z-axis direction clarifications:
 
 ## Amethyst Test
 
-*Pending: <https://github.com/amethyst/amethyst/pull/1624>*
-
 * The `render_base` function has been changed:
 
-    ```rust,ignore
-    use amethyst_test::{AmethystApplication, RenderBaseAppExt};
-
-    AmethystApplication::render_base()
-        .with_app_name("you_test_name")
+    ```patch
+    -let visibility = false;
+    -AmethystApplication::render_base("test_name", visibility);
+    +use amethyst::renderer::{types::DefaultBackend, RenderEmptyBundle};
+    +AmethystApplication::blank()
+    +    .with_bundle(RenderEmptyBundle::<DefaultBackend>::new());
     ```
 
-* `mark_render()` is renamed to `run_in_thread()`.
+* The `mark_render()` and `.run()` chained call is replaced by a single `run_isolated()` call.
