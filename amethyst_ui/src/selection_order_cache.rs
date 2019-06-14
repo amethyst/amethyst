@@ -7,6 +7,9 @@ use std::{cmp::Ordering, marker::PhantomData};
 
 use crate::{Selectable, Selected};
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 // TODO: Optimize by using a tree. Should we enforce tab order = unique? Sort on insert.
 /// A cache sorted by tab order and then by Entity.
 /// Used to quickly find the next or previous selectable entities.
@@ -58,6 +61,9 @@ where
         ReadStorage<'a, Selectable<G>>,
     );
     fn run(&mut self, (entities, mut cache, selectables): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("cache_selection_order_system");
+
         {
             let mut rm = vec![];
             cache.cache.retain(|&(_t, entity)| {

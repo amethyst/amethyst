@@ -9,6 +9,9 @@ use amethyst_error::Error;
 
 use crate::circular_buffer::CircularBuffer;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 /// The FPSCounter resource needed by the FPSCounterSystem.
 ///
 /// Add it to your resources to be able to use the FPSCounterSystem.
@@ -84,6 +87,9 @@ pub struct FPSCounterSystem;
 impl<'a> System<'a> for FPSCounterSystem {
     type SystemData = (Read<'a, Time>, Write<'a, FPSCounter>);
     fn run(&mut self, (time, mut counter): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("fps_counter_system");
+
         counter.push(duration_to_nanos(time.delta_real_time()));
         //Enable this to debug performance engine wide.
         log::debug!(

@@ -12,6 +12,9 @@ use amethyst_window::ScreenDimensions;
 
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 /// The coordinates that `CameraOrtho` will keep visible in the window.
 /// `bottom` can be a higher value than `top`, as is common in 2D coordinates
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Copy)]
@@ -238,6 +241,9 @@ impl<'a> System<'a> for CameraOrthoSystem {
 
     #[allow(clippy::float_cmp)] // cmp just used to recognize change
     fn run(&mut self, (dimensions, mut cameras, mut ortho_cameras): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("camera_ortho_system");
+
         let aspect = dimensions.aspect_ratio();
 
         for (camera, mut ortho_camera) in (&mut cameras, &mut ortho_cameras).join() {

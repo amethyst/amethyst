@@ -6,6 +6,9 @@
 use crate::ecs::prelude::{Read, System};
 use shred::{RunningTime, SystemData};
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 /// Extension functionality associated systems.
 pub trait SystemExt {
     /// Make a system pausable by tying it to a specific value of a resource.
@@ -112,6 +115,9 @@ where
     type SystemData = (Read<'s, V>, S::SystemData);
 
     fn run(&mut self, data: Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("pauseable_system");
+
         if self.value != *data.0 {
             return;
         }

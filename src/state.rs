@@ -8,6 +8,9 @@ use crate::{ecs::prelude::World, GameData, StateEvent};
 
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 /// Error type for errors occurring in StateMachine
 #[derive(Debug)]
 pub enum StateError {
@@ -392,14 +395,23 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
         let StateData { world, data } = data;
         if self.running {
             let trans = match self.state_stack.last_mut() {
-                Some(state) => state.fixed_update(StateData { world, data }),
+                Some(state) => {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("stack fixed_update");
+                    state.fixed_update(StateData { world, data })
+                }
                 None => Trans::None,
             };
             for state in self.state_stack.iter_mut() {
+                #[cfg(feature = "profiler")]
+                profile_scope!("stack shadow_fixed_update");
                 state.shadow_fixed_update(StateData { world, data });
             }
-
-            self.transition(trans, StateData { world, data });
+            {
+                #[cfg(feature = "profiler")]
+                profile_scope!("stack fixed transition");
+                self.transition(trans, StateData { world, data });
+            }
         }
     }
 
@@ -408,14 +420,24 @@ impl<'a, T, E: Send + Sync + 'static> StateMachine<'a, T, E> {
         let StateData { world, data } = data;
         if self.running {
             let trans = match self.state_stack.last_mut() {
-                Some(state) => state.update(StateData { world, data }),
+                Some(state) => {
+                    #[cfg(feature = "profiler")]
+                    profile_scope!("stack update");
+                    state.update(StateData { world, data })
+                }
                 None => Trans::None,
             };
             for state in self.state_stack.iter_mut() {
+                #[cfg(feature = "profiler")]
+                profile_scope!("stack shadow_update");
                 state.shadow_update(StateData { world, data });
             }
 
-            self.transition(trans, StateData { world, data });
+            {
+                #[cfg(feature = "profiler")]
+                profile_scope!("stack transition");
+                self.transition(trans, StateData { world, data });
+            }
         }
     }
 

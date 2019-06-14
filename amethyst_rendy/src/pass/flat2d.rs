@@ -102,7 +102,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
         resources: &Resources,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
-        profile_scope!("prepare");
+        profile_scope!("prepare opaque");
 
         let (
             sprite_sheet_storage,
@@ -208,7 +208,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
         _resources: &Resources,
     ) {
         #[cfg(feature = "profiler")]
-        profile_scope!("draw");
+        profile_scope!("draw opaque");
 
         let layout = &self.pipeline_layout;
         encoder.bind_graphics_pipeline(&self.pipeline);
@@ -305,7 +305,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
         resources: &Resources,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
-        profile_scope!("prepare_trans");
+        profile_scope!("prepare transparent");
 
         let (sprite_sheet_storage, tex_storage, visibility, sprite_renders, transforms) =
             <(
@@ -378,7 +378,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
         _resources: &Resources,
     ) {
         #[cfg(feature = "profiler")]
-        profile_scope!("draw_trans");
+        profile_scope!("draw transparent");
 
         let layout = &self.pipeline_layout;
         encoder.bind_graphics_pipeline(&self.pipeline);

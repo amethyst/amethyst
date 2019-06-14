@@ -1,3 +1,4 @@
 (
   title: "Rendy Example",
+  dimensions: Some((1280, 720)),
 )

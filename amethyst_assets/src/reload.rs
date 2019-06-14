@@ -147,6 +147,9 @@ impl<'a> System<'a> for HotReloadSystem {
     type SystemData = (Read<'a, Time>, Write<'a, HotReloadStrategy>);
 
     fn run(&mut self, (time, mut strategy): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("hot_reload_system");
+
         match strategy.inner {
             HotReloadStrategyInner::Trigger {
                 ref mut triggered,
