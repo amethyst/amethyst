@@ -298,7 +298,7 @@ where
         }
     }
 
-    /// Returns an iterator to raw data for this batch.
+    /// Returns an iterator over batched data lists.
     pub fn data<'a>(&'a self) -> impl Iterator<Item = &'a Vec<D>> {
         self.map.values()
     }
