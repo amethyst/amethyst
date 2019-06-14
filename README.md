@@ -110,8 +110,6 @@ There are also many open source games and prototypes being made with Amethyst. S
 
 If you are compiling on Linux, make sure to install the dependencies below.
 
-Additionally, make sure you have EGL installed. Since the package depends on your drivers, we cannot list it here.
-
 ### Arch Linux
 
 ```
