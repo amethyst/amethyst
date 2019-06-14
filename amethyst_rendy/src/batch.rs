@@ -1,8 +1,5 @@
-///! Module containing structures useful for batching draw calls
-///! in scenarios with various known assumptions, e.g. order independence.
-//!
-//!
-
+//! Module containing structures useful for batching draw calls
+//! in scenarios with various known assumptions, e.g. order independence.
 use crate::util::TapCountIter;
 use derivative::Derivative;
 use smallvec::{smallvec, SmallVec};
@@ -319,7 +316,7 @@ where
     }
 }
 
- /// A batching implementation with one level of indexing. Data type `D` batched by primary key `PK`.
+/// A batching implementation with one level of indexing. Data type `D` batched by primary key `PK`.
 ///
 /// Items are always kept in insertion order, grouped only by contiguous ranges of equal `PK`.
 #[derive(Derivative, Debug)]
