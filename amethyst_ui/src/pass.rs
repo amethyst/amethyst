@@ -50,6 +50,7 @@ pub(crate) struct UiArgs {
     pub(crate) dimensions: vec2,
     pub(crate) tex_coord_bounds: vec4,
     pub(crate) color: vec4,
+    pub(crate) color_bias: vec4,
 }
 
 impl AsVertex for UiArgs {
@@ -59,6 +60,7 @@ impl AsVertex for UiArgs {
             (Format::Rg32Sfloat, "dimensions"),
             (Format::Rgba32Sfloat, "tex_coord_bounds"),
             (Format::Rgba32Sfloat, "color"),
+            (Format::Rgba32Sfloat, "color_bias"),
         ))
     }
 }
@@ -106,6 +108,9 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawUiDesc {
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
     ) -> Result<Box<dyn RenderGroup<B, Resources>>, failure::Error> {
+        #[cfg(feature = "profiler")]
+        profile_scope!("build");
+
         let env = DynamicUniform::new(factory, pso::ShaderStageFlags::VERTEX)?;
         let textures = TextureSub::new(factory)?;
         let vertex = DynamicVertexBuffer::new();
@@ -170,6 +175,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         resources: &Resources,
     ) -> PrepareResult {
+        #[cfg(feature = "profiler")]
+        profile_scope!("prepare");
+
         let (
             entities,
             images,
@@ -352,6 +360,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
                                 dimensions: [w, h].into(),
                                 tex_coord_bounds: [0., 0., 1., 1.].into(),
                                 color: tint.unwrap_or([1., 1., 1., 1.]).into(),
+                                color_bias: [0., 0., 0., 0.].into(),
                             }),
                         )
                     }
@@ -366,21 +375,27 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
 
         self.textures.maintain(factory, resources);
         changed = changed || self.batches.changed();
-        self.vertex.write(
-            factory,
-            index,
-            self.batches.count() as u64,
-            Some(self.batches.data()),
-        );
 
-        let view_args = UiViewArgs {
-            inverse_window_size: [
-                1.0 / screen_dimesnions.width() as f32,
-                1.0 / screen_dimesnions.height() as f32,
-            ]
-            .into(),
-        };
-        changed = self.env.write(factory, index, view_args.std140()) || changed;
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("write");
+
+            self.vertex.write(
+                factory,
+                index,
+                self.batches.count() as u64,
+                Some(self.batches.data()),
+            );
+
+            let view_args = UiViewArgs {
+                inverse_window_size: [
+                    1.0 / screen_dimesnions.width() as f32,
+                    1.0 / screen_dimesnions.height() as f32,
+                ]
+                .into(),
+            };
+            changed = self.env.write(factory, index, view_args.std140()) || changed;
+        }
 
         self.change.prepare_result(index, changed)
     }
@@ -392,6 +407,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
         _subpass: hal::pass::Subpass<'_, B>,
         _resources: &Resources,
     ) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("draw");
+
         if self.batches.count() > 0 {
             let layout = &self.pipeline_layout;
             encoder.bind_graphics_pipeline(&self.pipeline);
@@ -488,6 +506,7 @@ fn render_image<B: Backend>(
         dimensions: [transform.pixel_width, transform.pixel_height].into(),
         tex_coord_bounds: [0., 0., 1., 1.].into(),
         color: color.into(),
+        color_bias: [0., 0., 0., 0.].into(),
     };
 
     match raw_image {

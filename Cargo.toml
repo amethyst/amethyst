@@ -1,7 +1,7 @@
 [package]
 name = "amethyst"
 version = "0.10.0"
-authors = ["Eyal Kalderon <ebkalderon@gmail.com>"]
+authors = ["Eyal Kalderon <ebkalderon@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Data-oriented game engine written in Rust"
 exclude = ["examples/*", "book/*"]
@@ -23,7 +23,7 @@ default = ["animation", "audio", "locale", "network", "renderer"]
 
 vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
-dx12 = ["amethyst_rendy/dx12"]
+empty = ["amethyst_rendy/empty"]
 
 animation = [
     "amethyst_animation"
@@ -281,6 +281,10 @@ path = "examples/prefab_custom/main.rs"
 [[example]]
 name = "debug_lines"
 path = "examples/debug_lines/main.rs"
+
+[[example]]
+name = "debug_lines_ortho"
+path = "examples/debug_lines_ortho/main.rs"
 
 [[example]]
 name = "state_dispatcher"

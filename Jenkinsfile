@@ -38,8 +38,12 @@ pipeline {
                         }
                     }
                     steps {
-                        echo 'Running Cargo check...'
-                        sh 'cargo check --all --all-targets --features sdl_controller,json,saveload'
+                        // Make sure static_assertion fails
+                        echo 'Confirming static assertion...'
+                        sh 'cargo check --all --all-targets || exit 0'
+
+                        // Perform actual check
+                        sh 'cargo check --all --all-targets --features "vulkan sdl_controller json saveload"'
                     }
                 }
                 stage("nightly") {
@@ -53,8 +57,13 @@ pipeline {
                         }
                     }
                     steps {
+                        // Make sure static_assertion fails
+                        echo 'Confirming static assertion...'
+                        sh 'cargo check --all --all-targets || exit 0'
+
+                        // Perform actual check
                         echo 'Running Cargo check...'
-                        sh 'cargo check --all --all-targets --features nightly'
+                        sh 'cargo check --all --all-targets --features "nightly vulkan sdl_controller json saveload"'
                     }
                 }
             }
@@ -71,7 +80,7 @@ pipeline {
                     }
                     steps {
                         echo 'Beginning tests...'
-                        bat 'C:\\Users\\root\\.cargo\\bin\\cargo test --all'
+                        bat 'C:\\Users\\root\\.cargo\\bin\\cargo test --all --features "vulkan json saveload"'
                         echo 'Tests done!'
                     }
                 }
@@ -84,7 +93,7 @@ pipeline {
                     }
                     steps {
                         echo 'Beginning tests...'
-                        sh 'cargo test --all'
+                        sh 'cargo test --all --features "vulkan sdl_controller json saveload"'
                         echo 'Tests done!'
                     }
                 }
@@ -99,7 +108,7 @@ pipeline {
                     steps {
                         withCredentials([string(credentialsId: 'codecov_token', variable: 'CODECOV_TOKEN')]) {
                             echo 'Building to calculate coverage'
-                            sh 'cargo test --all'
+                            sh 'cargo test --all --features "empty"'
                             echo 'Calculating code coverage...'
                             sh 'for file in target/debug/amethyst_*[^\\.d]; do mkdir -p \"target/cov/$(basename $file)\"; kcov --exclude-pattern=/.cargo,/usr/lib --verify \"target/cov/$(basename $file)\" \"$file\" || true; done'
                             echo "Uploading coverage..."
@@ -119,7 +128,7 @@ pipeline {
                 //     }
                 //     steps {
                 //         echo 'Beginning tests...'
-                //         sh '/Users/jenkins/.cargo/bin/cargo test --all'
+                //         sh '/Users/jenkins/.cargo/bin/cargo test --all --features "empty"'
                 //         echo 'Tests done!'
                 //     }
                 // }

@@ -9,6 +9,9 @@ use amethyst_rendy::skinning::JointTransforms;
 
 use log::error;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use super::resources::*;
 
 /// System for performing vertex skinning.
@@ -39,6 +42,9 @@ impl<'a> System<'a> for VertexSkinningSystem {
     );
 
     fn run(&mut self, (joints, global_transforms, mut skins, mut matrices): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("vertex_skinning_system");
+
         self.updated.clear();
 
         global_transforms

@@ -18,11 +18,13 @@ pub trait Backend: rendy::hal::Backend {
 macro_rules! impl_backends {
     ($($variant:ident, $feature:literal, $backend:ty;)*) => {
 
+
         impl_single_default!($([$feature, $backend]),*);
 
-        /// THIS IS REMOVED IN A NEIGHBORING PR
-        #[cfg(not(any($(feature = $feature),*)))]
-        pub type DefaultBackend = rendy::empty::Backend;
+        static_assertions::assert_cfg!(
+            any($(feature = $feature),*),
+            concat!("You must specify at least one graphical backend feature: ", stringify!($($feature),* "See the wiki article https://github.com/amethyst/amethyst/wiki/GraphicalBackendError for more details."))
+        );
 
         /// Backend wrapper.
         #[derive(Debug)]
@@ -108,25 +110,13 @@ macro_rules! impl_single_default {
 }
 
 impl_backends!(
-    Dx12, "dx12", rendy::dx12::Backend;
+    // DirectX 12 is currently disabled because of incomplete gfx-hal support for it.
+    // It will be re-enabled when it actually works.
+    // Dx12, "dx12", rendy::dx12::Backend; 
     Metal, "metal", rendy::metal::Backend;
     Vulkan, "vulkan", rendy::vulkan::Backend;
+    Empty, "empty", rendy::empty::Backend;
 );
-
-impl Backend for rendy::empty::Backend {
-    fn unwrap_mesh(_: &Mesh) -> Option<&rendy::mesh::Mesh<Self>> {
-        None
-    }
-    fn unwrap_texture(_: &Texture) -> Option<&rendy::texture::Texture<Self>> {
-        None
-    }
-    fn wrap_mesh(_: rendy::mesh::Mesh<Self>) -> Mesh {
-        unimplemented!()
-    }
-    fn wrap_texture(_: rendy::texture::Texture<Self>) -> Texture {
-        unimplemented!()
-    }
-}
 
 impl Asset for Mesh {
     const NAME: &'static str = "Mesh";

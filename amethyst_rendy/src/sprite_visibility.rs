@@ -73,7 +73,7 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
         (entities, mut visibility, hidden, hidden_prop, active, camera, transparent, transform): Self::SystemData,
     ) {
         #[cfg(feature = "profiler")]
-        profile_scope!("run");
+        profile_scope!("sprite_visibility_sorting_system");
 
         let origin = Point3::origin();
 

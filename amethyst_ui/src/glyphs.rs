@@ -17,7 +17,7 @@ use amethyst_rendy::{
         command::QueueId,
         factory::{Factory, ImageState},
         hal,
-        texture::{pixel::R8Srgb, TextureBuilder},
+        texture::{pixel::R8Unorm, TextureBuilder},
     },
     resources::Tint,
     Backend, Texture,
@@ -421,6 +421,7 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                             dimensions: dims.into(),
                             tex_coord_bounds: tex_coord_bounds.into(),
                             color: glyph.color.into(),
+                            color_bias: [1., 1., 1., 0.].into(),
                         },
                     )
                 },
@@ -505,6 +506,7 @@ impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
                                 dimensions: [g.advance_width, height].into(),
                                 tex_coord_bounds: [0., 0., 1., 1.].into(),
                                 color: bg_color.into(),
+                                color_bias: [1., 1., 1., 0.].into(),
                             });
                             let mut glyph_data = glyphs.get_mut(entity).unwrap();
                             glyph_data.sel_vertices.extend(iter);
@@ -563,10 +565,10 @@ fn create_glyph_texture<B: Backend>(
         .with_view_kind(hal::image::ViewKind::D2)
         .with_data_width(w)
         .with_data_height(h)
-        .with_data(vec![R8Srgb { repr: [0] }; (w * h) as _])
-        // TODO: This will not work properly on metal :(
-        // need to add extra uniform and mask in shader for metal
-        .with_swizzle(Swizzle(C::One, C::One, C::One, C::R))
+        .with_data(vec![R8Unorm { repr: [0] }; (w * h) as _])
+        // This swizzle is required when working with `R8Unorm` on metal.
+        // Glyph texture is biased towards 1.0 using "color_bias" attribute instead.
+        .with_swizzle(Swizzle(C::Zero, C::Zero, C::Zero, C::R))
         .build(
             ImageState {
                 queue,

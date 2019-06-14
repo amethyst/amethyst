@@ -146,9 +146,10 @@ impl<'a> System<'a> for UiTransformSystem {
         ReadExpect<'a, ParentHierarchy>,
     );
     fn run(&mut self, data: Self::SystemData) {
-        let (mut transforms, parents, screen_dim, hierarchy) = data;
         #[cfg(feature = "profiler")]
-        profile_scope!("ui_parent_system");
+        profile_scope!("ui_transform_system");
+
+        let (mut transforms, parents, screen_dim, hierarchy) = data;
 
         self.transform_modified.clear();
 

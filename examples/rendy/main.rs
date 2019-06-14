@@ -65,6 +65,9 @@ use std::path::Path;
 
 use prefab_data::{AnimationMarker, Scene, ScenePrefabData, SpriteAnimationId};
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 mod prefab_data;
 
 struct Example {
@@ -135,6 +138,8 @@ impl Default for RenderMode {
 
 impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("example on_start");
         let StateData { world, .. } = data;
 
         let mat_defaults = world.read_resource::<MaterialDefaults>().0.clone();
@@ -316,11 +321,11 @@ impl SimpleState for Example {
 
         let mut auto_fov = AutoFov::default();
         auto_fov.set_base_fovx(std::f32::consts::FRAC_PI_3);
-        auto_fov.set_base_aspect_ratio(13, 10);
+        auto_fov.set_base_aspect_ratio(1, 1);
 
         let camera = world
             .create_entity()
-            .with(Camera::standard_3d(13.0, 10.0))
+            .with(Camera::standard_3d(16.0, 9.0))
             .with(auto_fov)
             .with(transform)
             .with(FlyControlTag)
@@ -338,6 +343,8 @@ impl SimpleState for Example {
         data: StateData<'_, GameData<'_, '_>>,
         event: StateEvent,
     ) -> SimpleTrans {
+        #[cfg(feature = "profiler")]
+        profile_scope!("example handle_event");
         let StateData { world, .. } = data;
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event) || is_key_down(&event, winit::VirtualKeyCode::Escape) {
@@ -367,6 +374,8 @@ impl SimpleState for Example {
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+        #[cfg(feature = "profiler")]
+        profile_scope!("example update");
         if !self.initialised {
             let remove = match self.progress.as_ref().map(|p| p.complete()) {
                 None | Some(Completion::Loading) => false,

@@ -45,6 +45,7 @@ it is attached to. ([#1282])
 * Add `amethyst_input::InputHandler::send_frame_begin` ([#1642])
 * Add `amethyst_input::InputHandler::mouse_wheel_value` ([#1642])
 * Added `Float::from_f32` and `Float::from_f64` `const fn`s so `Float` can be used as `const`. ([#1687])
+* Add `debug_lines_ortho` example. ([#1703])
 
 ### Changed
 
@@ -185,6 +186,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1642]: https://github.com/amethyst/amethyst/pull/1642
 [#1683]: https://github.com/amethyst/amethyst/pull/1683
 [#1687]: https://github.com/amethyst/amethyst/pull/1687
+[#1703]: https://github.com/amethyst/amethyst/pull/1703
 
 ## [0.10.0] - 2018-12
 

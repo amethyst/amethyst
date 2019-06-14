@@ -127,7 +127,7 @@ impl<'a> System<'a> for VisibilitySortingSystem {
         ): Self::SystemData,
     ) {
         #[cfg(feature = "profiler")]
-        profile_scope!("run");
+        profile_scope!("visibility_sorting_system");
 
         let origin = Point3::origin();
         let defcam = Camera::standard_2d(dimensions.width(), dimensions.height());

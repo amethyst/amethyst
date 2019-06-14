@@ -181,7 +181,6 @@ impl SimpleState for Example {
 
 fn main() -> amethyst::Result<()> {
     amethyst::Logger::from_config(amethyst::LoggerConfig {
-        log_file: Some("animation_example.log".into()),
         level_filter: log::LevelFilter::Error,
         ..Default::default()
     })

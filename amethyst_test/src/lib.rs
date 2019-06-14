@@ -81,16 +81,29 @@
 //!     // Start with no bundles
 //!     AmethystApplication::blank();
 //!
-//!     // Start with the Transform, Input, and UI bundles
-//!     // The type parameters here are the Axis and Action types for the `InputBundle` and
-//!     // `UiBundle`.
-//!     AmethystApplication::ui_base::<amethyst::input::StringBindings>();
+//!     // Start with the following bundles:
+//!     //
+//!     // * `TransformBundle`
+//!     // * `InputBundle`
+//!     // * `UiBundle`
+//!     //
+//!     // The type parameters here are the Axis and Action types for the
+//!     // `InputBundle` and `UiBundle`.
+//!     use amethyst::input::StringBindings;
+//!     AmethystApplication::ui_base::<StringBindings>();
 //!
-//!     // Start with the Animation, Transform, and Render bundles.
-//!     // If you want the Input and UI bundles, you can use the `.with_ui_bundles::<T>()`
-//!     // method.
-//!     let visibility = false; // Whether the window should be shown
-//!     AmethystApplication::render_base("test_name", visibility);
+//!     // If you need types from the rendering bundle, make sure you have
+//!     // the `"test-support"` feature enabled:
+//!     //
+//!     // ```toml
+//!     // # Cargo.toml
+//!     // amethyst = { version = "..", features = ["test-support"] }
+//!     // ```
+//!     //
+//!     // Then you can include the `RenderEmptyBundle`:
+//!     use amethyst::renderer::{types::DefaultBackend, RenderEmptyBundle};
+//!     AmethystApplication::blank()
+//!         .with_bundle(RenderEmptyBundle::<DefaultBackend>::new());
 //! }
 //! ```
 //!
