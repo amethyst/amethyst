@@ -14,8 +14,8 @@ use std::{
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-/// Iterator trait for grouping a set of batch items together, which provides access in a
-/// group-by-group manner.
+/// Iterator trait for grouping iterated 2-tuples `(K, V)` by contiguous ranges with equal `K`,
+/// providing access in a group-by-group manner.
 pub trait GroupIterator<K, V>
 where
     Self: Iterator<Item = (K, V)> + Sized,
