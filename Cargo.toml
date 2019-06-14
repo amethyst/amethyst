@@ -283,6 +283,10 @@ name = "debug_lines"
 path = "examples/debug_lines/main.rs"
 
 [[example]]
+name = "debug_lines_ortho"
+path = "examples/debug_lines_ortho/main.rs"
+
+[[example]]
 name = "state_dispatcher"
 path = "examples/state_dispatcher/main.rs"
 

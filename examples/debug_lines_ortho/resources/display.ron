@@ -1,0 +1,4 @@
+(
+  dimensions: Some((800, 600)),
+  title: "Debug lines ortho example",
+)
