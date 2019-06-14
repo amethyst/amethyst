@@ -1,4 +1,5 @@
-//!  FriziBatch 9000
+///! Module containing structures useful for batching draw calls
+///! in scenarios with various known assumptions, e.g. order independence.
 //!
 //!
 
