@@ -130,20 +130,8 @@ where
 {
     /// Returns the built Application.
     ///
-    /// If you are intending to call `.run()` on the `Application` in a test, be aware that on
-    /// Linux, this will cause a segfault when `RenderingSystem` is added and GL software rendering
-    /// is used, such as when using Xvfb or when the following environmental variable is set:
-    /// `LIBGL_ALWAYS_SOFTWARE=1`.
-    ///
-    /// To avoid this, please run the application in a sub thread, and use the `.run_isolated()`
-    /// method, which will prevent multiple amethyst applications in the same process from running
-    /// simultaneously.
-    ///
-    /// See the following links for more information:
-    ///
-    /// * <https://github.com/rust-windowing/glutin/issues/1034>
-    /// * <https://github.com/rust-windowing/glutin/issues/1038>
-    /// * <https://users.rust-lang.org/t/trouble-identifying-cause-of-segfault/18096>
+    /// If you are intending to run the `Application`, you can use the `run()` or `run_isolated()`
+    /// methods instead.
     pub fn build(self) -> Result<CoreApplication<'static, GameData<'static, 'static>, E, R>, Error>
     where
         for<'b> R: EventReader<'b, Event = E>,
