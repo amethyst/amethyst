@@ -317,7 +317,7 @@ where
     }
 }
 
-/// A batching implementation with one level of indexing. Items of type `D` batched by type `PK`
+ /// A batching implementation with one level of indexing. Data type `D` batched by primary key `PK`.
 ///
 /// This implementation differs from `OneLevelBatch` in that it is sorted based on `PK`
 #[derive(Derivative, Debug)]
