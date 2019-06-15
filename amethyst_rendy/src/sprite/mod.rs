@@ -1,6 +1,6 @@
 //! 2D Sprite Rendering implementation details.
 use ron::de::from_bytes as from_ron_bytes;
-use serde::{Deserialize, Serialize};
+use serde::{ser::Serializer, Deserialize, Serialize};
 
 use crate::{error, types::Texture};
 use amethyst_assets::{Asset, Format, Handle};
@@ -21,6 +21,12 @@ pub struct SpriteSheet {
     pub texture: Handle<Texture>,
     /// A list of sprites in this sprite sheet.
     pub sprites: Vec<Sprite>,
+}
+
+impl Serialize for SpriteSheet {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        unimplemented!()
+    }
 }
 
 impl Asset for SpriteSheet {
@@ -464,6 +470,12 @@ impl SpriteGrid {
 #[derive(Clone, Debug)]
 pub struct SpriteSheetFormat(pub Handle<Texture>);
 
+impl Serialize for SpriteSheetFormat {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        unimplemented!()
+    }
+}
+
 impl Format<SpriteSheet> for SpriteSheetFormat {
     fn name(&self) -> &'static str {
         "SPRITE_SHEET"
@@ -479,6 +491,8 @@ impl Format<SpriteSheet> for SpriteSheetFormat {
         })
     }
 }
+
+amethyst_assets::register_format_type!(SpriteSheet);
 
 #[cfg(test)]
 mod test {

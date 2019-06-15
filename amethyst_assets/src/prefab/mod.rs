@@ -8,7 +8,10 @@ use amethyst_core::ecs::prelude::{
 };
 use amethyst_error::Error;
 
-use crate::{Asset, AssetStorage, Format, Handle, Loader, Progress, ProgressCounter};
+use crate::{
+    Asset, AssetStorage, DeserializeFn, Format, FormatRegisteredData, Handle, Loader, Progress,
+    ProgressCounter, Registry,
+};
 
 pub use self::system::PrefabLoaderSystem;
 
@@ -109,6 +112,21 @@ pub struct Prefab<T> {
     entities: Vec<PrefabEntity<T>>,
     #[serde(skip)]
     counter: Option<ProgressCounter>,
+}
+
+impl<T: 'static + Send + Sync> FormatRegisteredData for Prefab<T> {
+    type Registration = ();
+
+    fn get_registration(
+        _name: &'static str,
+        _deserializer: DeserializeFn<dyn Format<Self>>,
+    ) -> Self::Registration {
+        unimplemented!()
+    }
+
+    fn registry() -> &'static Registry<dyn Format<Self>> {
+        unimplemented!()
+    }
 }
 
 /// Prefab data container for a single entity
@@ -359,6 +377,7 @@ where
     A: Asset,
     // A::Data: FormatRegisteredData,
     F: Format<A::Data>,
+    <A as Asset>::Data: FormatRegisteredData,
 {
     /// From existing handle
     #[serde(skip)]
@@ -374,6 +393,7 @@ impl<'a, A, F> PrefabData<'a> for AssetPrefab<A, F>
 where
     A: Asset,
     F: Format<A::Data>,
+    <A as Asset>::Data: FormatRegisteredData,
 {
     type SystemData = (
         ReadExpect<'a, Loader>,
@@ -447,6 +467,7 @@ where
         F: Format<<Prefab<T> as Asset>::Data>,
         N: Into<String>,
         P: Progress,
+        Prefab<T>: FormatRegisteredData,
     {
         self.loader.load(name, format, progress, &self.storage)
     }

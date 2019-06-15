@@ -11,7 +11,7 @@ use amethyst_error::Error;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-use crate::{Format, FormatValue, Loader, Source};
+use crate::{Format, FormatRegisteredData, FormatValue, Loader, Source};
 
 /// This bundle activates hot reload for the `Loader`,
 /// adds a `HotReloadStrategy` and the `HotReloadSystem`.
@@ -250,7 +250,7 @@ impl<D: 'static> Clone for SingleFile<D> {
     }
 }
 
-impl<D: 'static> Reload<D> for SingleFile<D> {
+impl<D: FormatRegisteredData + 'static> Reload<D> for SingleFile<D> {
     fn needs_reload(&self) -> bool {
         self.modified != 0 && (self.source.modified(&self.path).unwrap_or(0) > self.modified)
     }

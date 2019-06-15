@@ -9,8 +9,8 @@
 use crate::Format;
 use serde::{
     de::{self, DeserializeSeed, Expected, SeqAccess, Visitor},
-    ser::SerializeTupleStruct,
-    Deserialize, Deserializer, Serialize, Serializer,
+    ser::{Serialize, SerializeTupleStruct, Serializer},
+    Deserialize, Deserializer,
 };
 use std::{collections::BTreeMap, marker::PhantomData};
 
@@ -139,8 +139,22 @@ impl<D: FormatRegisteredData> Serialize for dyn Format<D> {
     fn serialize<S: Serializer>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> {
         let mut ser = serializer.serialize_tuple_struct("Format", 2)?;
         ser.serialize_field(self.name())?;
-        ser.serialize_field(self)?;
+        ser.serialize_field(&Wrap(self))?;
         ser.end()
+    }
+}
+
+pub struct Wrap<'a, T: ?Sized>(pub &'a T);
+
+impl<'a, T> Serialize for Wrap<'a, T>
+where
+    T: ?Sized + erased_serde::Serialize + 'a,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        erased_serde::serialize(self.0, serializer)
     }
 }
 

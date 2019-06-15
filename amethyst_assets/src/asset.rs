@@ -1,4 +1,4 @@
-use crate::{storage::ProcessingState, Handle, Reload, SingleFile, Source};
+use crate::{storage::ProcessingState, FormatRegisteredData, Handle, Reload, SingleFile, Source};
 use amethyst_core::ecs::storage::UnprotectedStorage;
 use amethyst_error::{Error, ResultExt};
 use std::{fmt::Debug, ops::Deref, sync::Arc};
@@ -51,7 +51,9 @@ impl<T: Asset<Data = T>> ProcessableAsset for T {
 /// The format type itself represents loading options, which are passed to `import`.
 /// E.g. for textures this would be stuff like mipmap levels and
 /// sampler info.
-pub trait Format<D: 'static>: objekt::Clone + Debug + Send + Sync + 'static {
+pub trait Format<D: FormatRegisteredData + 'static>:
+    objekt::Clone + Debug + Send + Sync + erased_serde::Serialize + 'static
+{
     /// A unique identifier for this format.
     fn name(&self) -> &'static str;
 
@@ -105,7 +107,7 @@ pub trait Format<D: 'static>: objekt::Clone + Debug + Send + Sync + 'static {
 objekt::clone_trait_object!(<D> Format<D>);
 
 // Allow using dynamic types on sites that accept format as generic.
-impl<D: 'static> Format<D> for Box<dyn Format<D>> {
+impl<D: FormatRegisteredData + 'static> Format<D> for Box<dyn Format<D>> {
     fn name(&self) -> &'static str {
         self.deref().name()
     }

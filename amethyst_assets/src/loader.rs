@@ -11,7 +11,7 @@ use thread_profiler::profile_scope;
 use crate::{
     error::Error,
     storage::{AssetStorage, Handle, Processed},
-    Asset, Directory, Format, FormatValue, Progress, Source,
+    Asset, Directory, Format, FormatRegisteredData, FormatValue, Progress, Source,
 };
 
 /// The asset loader, holding the sources and a reference to the `ThreadPool`.
@@ -89,6 +89,7 @@ impl Loader {
         F: Format<A::Data>,
         N: Into<String>,
         P: Progress,
+        <A as Asset>::Data: FormatRegisteredData,
     {
         #[cfg(feature = "profiler")]
         profile_scope!("initialise_loading_assets");
@@ -123,6 +124,7 @@ impl Loader {
         P: Progress,
         S: AsRef<str> + Eq + Hash + ?Sized,
         String: Borrow<S>,
+        <A as Asset>::Data: FormatRegisteredData,
     {
         #[cfg(feature = "profiler")]
         profile_scope!("load_asset_from");

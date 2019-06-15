@@ -1,4 +1,4 @@
-use crate::Format;
+use crate::{Format, FormatRegisteredData};
 use amethyst_error::{format_err, Error, ResultExt};
 use serde::{Deserialize, Serialize};
 
@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct RonFormat;
 
-impl<D> Format<D> for RonFormat
+impl<D: FormatRegisteredData> Format<D> for RonFormat
 where
     D: for<'a> Deserialize<'a> + Send + Sync + 'static,
 {
@@ -38,7 +38,7 @@ where
 pub struct JsonFormat;
 
 #[cfg(feature = "json")]
-impl<D> Format<D> for JsonFormat
+impl<D: FormatRegisteredData> Format<D> for JsonFormat
 where
     D: for<'a> Deserialize<'a> + Send + Sync + 'static,
 {
