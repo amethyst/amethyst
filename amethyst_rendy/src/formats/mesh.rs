@@ -1,3 +1,4 @@
+//! Module for mesh support.
 use crate::{
     shape::{FromShape, ShapePrefab},
     types::{Mesh, MeshData},
@@ -10,6 +11,7 @@ use amethyst_error::Error;
 use rendy::mesh::MeshBuilder;
 use serde::{Deserialize, Serialize};
 
+/// 'Obj' mesh format `Format` implementation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct ObjFormat;
 
@@ -43,7 +45,7 @@ impl Format<MeshData> for ObjFormat {
 ///     * `Vec<PosTex>`
 ///     * `Vec<PosNormTex>`
 ///     * `(Vec<Position>, Vec<Normal>)`
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(bound = "")]
 pub enum MeshPrefab<V> {
     /// Load an asset Mesh from file

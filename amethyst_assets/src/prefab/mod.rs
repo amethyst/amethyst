@@ -353,7 +353,7 @@ where
 ///
 /// - `A`: `Asset`,
 /// - `F`: `Format` for loading `A`
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum AssetPrefab<A, F = Box<dyn Format<<A as Asset>::Data>>>
 where
     A: Asset,

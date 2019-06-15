@@ -5,6 +5,7 @@ use rendy::{
     shader::SpirvShader,
 };
 
+/// Implementation of `Base3DPassDef` to describe a flat 3D pass
 #[derive(Debug)]
 pub struct FlatPassDef;
 impl<B: Backend> Base3DPassDef<B> for FlatPassDef {
@@ -31,7 +32,11 @@ impl<B: Backend> Base3DPassDef<B> for FlatPassDef {
     }
 }
 
+/// Describes a Flat 3D pass
 pub type DrawFlatDesc<B> = DrawBase3DDesc<B, FlatPassDef>;
+/// Draws a Flat 3D pass
 pub type DrawFlat<B> = DrawBase3D<B, FlatPassDef>;
+/// Describes a Flat 3D pass with Transparency
 pub type DrawFlatTransparentDesc<B> = DrawBase3DTransparentDesc<B, FlatPassDef>;
+/// Draws a Flat 3D pass with transpency.
 pub type DrawFlatTransparent<B> = DrawBase3DTransparent<B, FlatPassDef>;

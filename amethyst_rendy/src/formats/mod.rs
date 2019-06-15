@@ -1,3 +1,4 @@
+//! Pre-defined graphical formats and data provided by amethyst_rendy
 pub mod mesh;
 pub mod mtl;
 pub mod texture;
@@ -18,7 +19,7 @@ use serde::{Deserialize, Serialize};
 ///     * `Vec<PosTex>`
 ///     * `Vec<PosNormTex>`
 ///     * `(Vec<Position>, Vec<Normal>)`
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct GraphicsPrefab<V> {
     mesh: MeshPrefab<V>,
     material: MaterialPrefab,

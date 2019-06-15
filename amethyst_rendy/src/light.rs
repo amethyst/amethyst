@@ -188,7 +188,7 @@ impl Component for Light {
 }
 
 /// Prefab for lighting
-#[derive(Default, Clone, serde::Serialize, serde::Deserialize, PrefabData)]
+#[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize, PrefabData)]
 #[serde(default)]
 pub struct LightPrefab {
     light: Option<Light>,

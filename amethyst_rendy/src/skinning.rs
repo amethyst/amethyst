@@ -1,3 +1,4 @@
+//! Skinned mesh and bone implementation for renderer.
 use amethyst_assets::PrefabData;
 use amethyst_core::{
     ecs::prelude::{Component, DenseVecStorage, Entity, FlaggedStorage, WriteStorage},
@@ -53,6 +54,7 @@ pub struct JointCombined {
 }
 
 impl JointCombined {
+    /// Create a new set of joint weights for vertex consumption.
     pub fn new<I: Into<JointIds>, W: Into<JointWeights>>(ids: I, weights: W) -> Self {
         Self {
             joint_ids: ids.into(),

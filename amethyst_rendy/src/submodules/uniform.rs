@@ -1,3 +1,4 @@
+//!  Helper abstraction for per-image uniform submission.
 use crate::{
     rendy::{
         command::RenderPassEncoder,
@@ -14,6 +15,7 @@ use crate::{
 use core::marker::PhantomData;
 use glsl_layout::AsStd140;
 
+/// Provides per-image abstraction for an arbitrary `DescriptorSet`.
 #[derive(Debug)]
 pub struct DynamicUniform<B: Backend, T: AsStd140>
 where
@@ -37,6 +39,8 @@ impl<B: Backend, T: AsStd140> DynamicUniform<B, T>
 where
     T::Std140: Sized,
 {
+    /// Create a new `DynamicUniform`, allocating descriptor set memory using the provided `Factory`
+    /// Allocate to the supplied shader.
     pub fn new(
         factory: &Factory<B>,
         flags: hal::pso::ShaderStageFlags,
@@ -53,10 +57,12 @@ where
         })
     }
 
+    /// Returns the `DescriptSetLayout` for this set.
     pub fn raw_layout(&self) -> &B::DescriptorSetLayout {
         self.layout.raw()
     }
 
+    /// Write `T` to this descriptor set memory
     pub fn write(&mut self, factory: &Factory<B>, index: usize, item: T::Std140) -> bool {
         let mut changed = false;
         let this_image = {
@@ -80,6 +86,7 @@ where
         changed
     }
 
+    /// Bind this descriptor set
     #[inline]
     pub fn bind(
         &self,

@@ -1,3 +1,4 @@
+//! Texture formats implementation.
 use crate::types::{Texture, TextureData};
 use amethyst_assets::{AssetStorage, Format, Handle, Loader, PrefabData, ProgressCounter};
 use amethyst_core::ecs::{Entity, Read, ReadExpect};
@@ -15,6 +16,37 @@ use rendy::{
 };
 use serde::{Deserialize, Serialize};
 
+/// Image format description newtype wrapper for `ImageTextureConfig` from rendy.
+///
+/// # Example Usage
+/// ```ignore
+///
+///    let loader = res.fetch_mut::<Loader>();
+///    let texture_storage = res.fetch_mut::<AssetStorage<Texture>>();
+///
+///    let texture_builder = TextureBuilder::new()
+///        .with_data_width(handle.width)
+///        .with_data_height(handle.height)
+///        .with_kind(image::Kind::D2(handle.width, handle.height, 1, 1))
+///        .with_view_kind(image::ViewKind::D2)
+///        .with_sampler_info(SamplerInfo {
+///        min_filter: Filter::Linear,
+///        mag_filter: Filter::Linear,
+///        mip_filter: Filter::Linear,
+///        wrap_mode: (WrapMode::Clamp, WrapMode::Clamp, WrapMode::Clamp),
+///        lod_bias: 0.0.into(),
+///        lod_range: std::ops::Range {
+///            start: 0.0.into(),
+///            end: 1000.0.into(),
+///        },
+///        comparison: None,
+///        border: PackedColor(0),
+///        anisotropic: Anisotropic::Off,
+///        })
+///        .with_raw_data(handle.pixels, Format::Rgba8Unorm);
+///
+///    let tex: Handle<Texture> = loader.load_from_data(TextureData(texture_builder), (), &texture_storage);
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct ImageFormat(pub ImageTextureConfig);
@@ -73,7 +105,7 @@ pub enum TexturePrefab {
     /// Texture data
     Data(TextureData),
 
-    // Generate texture
+    /// Generate texture
     Generate(TextureGenerator),
     /// Load file with format
     File(String, Box<dyn Format<TextureData>>),
@@ -86,10 +118,14 @@ pub enum TexturePrefab {
     Placeholder,
 }
 
+/// Provides enum variant typecasting of texture data.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum TextureGenerator {
+    /// Srgba value (`f32` * 4)
     Srgba(f32, f32, f32, f32),
+    /// LinearRgba value (`f32` * 4)
     LinearRgba(f32, f32, f32, f32),
+    /// SrgbaCorners value (`f32` * 4) + [Filter]
     SrgbaCorners([(f32, f32, f32, f32); 4], Filter),
 }
 
@@ -108,6 +144,7 @@ fn simple_builder<A: AsPixel>(data: Vec<A>, size: Size, filter: Filter) -> Textu
 }
 
 impl TextureGenerator {
+    /// Converts the provided texture enum variant values in a generic TextureData format.
     pub fn data(&self) -> TextureData {
         use palette::{LinSrgba, Srgba};
         use rendy::texture::palette::{load_from_linear_rgba, load_from_srgba};

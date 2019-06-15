@@ -1,3 +1,4 @@
+//! Misc. rendy and rendering utility functions and types.
 use crate::types::{Backend, Texture};
 use amethyst_core::num::PrimInt;
 use core::{
@@ -20,21 +21,28 @@ use smallvec::SmallVec;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
+/// Helper function to clone ranges.
 #[inline]
 pub fn next_range<T: Add<Output = T> + Clone>(prev: &Range<T>, length: T) -> Range<T> {
     prev.end.clone()..prev.end.clone() + length
 }
 
+/// Helper function to convert `Range` to an `Option` range.
 #[inline]
 pub fn opt_range<T>(range: Range<T>) -> Range<Option<T>> {
     Some(range.start)..Some(range.end)
 }
 
+/// Helper function to convert `Range` types.
 #[inline]
 pub fn usize_range(range: Range<u64>) -> Range<usize> {
     range.start as usize..range.end as usize
 }
 
+/// This function is used extensively to ensure buffers are allocated and sized appropriately to
+/// their use. This function will either allocate a new buffer, resize the current buffer, or perform
+/// no action depending on the needs of the function call. This can be used for dynamic buffer
+/// allocation or single static buffer allocation.
 pub fn ensure_buffer<B: Backend>(
     factory: &Factory<B>,
     buffer: &mut Option<Escape<rendy::resource::Buffer<B>>>,
@@ -61,6 +69,7 @@ pub fn ensure_buffer<B: Backend>(
     }
 }
 
+/// Helper function for memory alignment.
 pub fn align_size<T: AsStd140>(align: u64, array_len: usize) -> u64
 where
     T::Std140: Sized,
@@ -69,6 +78,7 @@ where
     ((size + align - 1) / align) * align
 }
 
+/// Helper function to create a `GraphicsShaderSet`
 pub fn simple_shader_set<'a, B: Backend>(
     vertex: &'a B::ShaderModule,
     fragment: Option<&'a B::ShaderModule>,
@@ -76,6 +86,7 @@ pub fn simple_shader_set<'a, B: Backend>(
     simple_shader_set_ext(vertex, fragment, None, None, None)
 }
 
+/// Helper function to create a `GraphicsShaderSet`
 pub fn simple_shader_set_ext<'a, B: Backend>(
     vertex: &'a B::ShaderModule,
     fragment: Option<&'a B::ShaderModule>,
@@ -100,6 +111,8 @@ pub fn simple_shader_set_ext<'a, B: Backend>(
     }
 }
 
+/// Helper function which takes an array of vertex format information and returns allocated
+/// `VertexBufferDesc` and `AttributeDesc` collections.
 pub fn vertex_desc(
     formats: &[(VertexFormat, pso::VertexInputRate)],
 ) -> (Vec<pso::VertexBufferDesc>, Vec<pso::AttributeDesc>) {
@@ -122,6 +135,8 @@ pub fn vertex_desc(
     (vertex_buffers, attributes)
 }
 
+/// Helper function which takes an iterator of tuple-stored vertex buffer descriptions and writes
+/// into `VertexBufferDesc` and `AttributeDesc` collections.
 pub fn push_vertex_desc(
     (elements, stride, rate): (
         impl IntoIterator<Item = pso::Element<format::Format>>,
@@ -149,6 +164,7 @@ pub fn push_vertex_desc(
     }
 }
 
+/// Helper function to create a `DescriptorSetWrite` from arguments
 #[inline]
 pub fn desc_write<'a, B: Backend>(
     set: &'a B::DescriptorSet,
@@ -163,6 +179,7 @@ pub fn desc_write<'a, B: Backend>(
     }
 }
 
+/// Helper function to create a `CombinedImageSampler` from a supplied `Texture` and `Layout`
 #[inline]
 pub fn texture_desc<'a, B: Backend>(
     texture: &'a Texture,
@@ -173,6 +190,9 @@ pub fn texture_desc<'a, B: Backend>(
     })
 }
 
+/// Combines an iterator of descriptor information in tuple form into a `DescriptorSetLayoutBinding`
+/// # Limitations
+/// * All descriptors are created as single count and immutable_samplers is false.
 pub fn set_layout_bindings(
     bindings: impl IntoIterator<Item = (u32, pso::DescriptorType, pso::ShaderStageFlags)>,
 ) -> Vec<pso::DescriptorSetLayoutBinding> {
@@ -192,6 +212,7 @@ pub fn set_layout_bindings(
         .collect()
 }
 
+/// Helper forward lookup struct using `FnvHashMap`
 #[derive(Debug, Default)]
 pub struct LookupBuilder<I: Hash + Eq> {
     forward: fnv::FnvHashMap<I, usize>,
@@ -199,6 +220,7 @@ pub struct LookupBuilder<I: Hash + Eq> {
 }
 
 impl<I: Hash + Eq> LookupBuilder<I> {
+    /// Create a new `LookupBuilder`
     pub fn new() -> LookupBuilder<I> {
         LookupBuilder {
             forward: fnv::FnvHashMap::default(),
@@ -206,6 +228,7 @@ impl<I: Hash + Eq> LookupBuilder<I> {
         }
     }
 
+    /// Return or insert the supplied Id from the table.
     pub fn forward(&mut self, id: I) -> usize {
         if let Some(&id_num) = self.forward.get(&id) {
             id_num
@@ -229,6 +252,7 @@ pub fn slice_as_bytes<T>(slice: &[T]) -> &[u8] {
     }
 }
 
+/// Copy the byte-data from an iterator into a slice
 pub fn write_into_slice<I: IntoIterator>(dst_slice: &mut [u8], iter: I) {
     for (data, dst) in iter
         .into_iter()
@@ -238,14 +262,19 @@ pub fn write_into_slice<I: IntoIterator>(dst_slice: &mut [u8], iter: I) {
     }
 }
 
+/// Iterator counting adapter.
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
+#[allow(missing_debug_implementations)]
 pub struct TapCountIterator<'a, T: PrimInt, I: Iterator> {
     inner: I,
     counter: &'a mut T,
 }
 
+/// Iterator counting adapter.
 pub trait TapCountIter {
+    /// The inner iterator type for this access counter.
     type Iter: Iterator;
+    /// Implemented for counting iterator access.
     fn tap_count<'a, T: PrimInt>(self, counter: &'a mut T) -> TapCountIterator<'a, T, Self::Iter>;
 }
 
@@ -289,15 +318,19 @@ impl<'a, T: PrimInt, I: ExactSizeIterator> ExactSizeIterator for TapCountIterato
 
 impl<'a, T: PrimInt, I: FusedIterator> FusedIterator for TapCountIterator<'a, T, I> {}
 
+/// Helper structure for tracking indexed changes for per-image draw call recording.
 #[derive(Debug, Clone, Copy, Derivative)]
 #[derivative(Default)]
 pub enum ChangeDetection {
+    /// Has not changed, considered stable
     #[derivative(Default)]
     Stable,
+    /// Change occurred, index of value
     Changed(usize),
 }
 
 impl ChangeDetection {
+    /// Returns true if recording is not needed and the image can be re-used.
     pub fn can_reuse(&mut self, index: usize, changed: bool) -> bool {
         use ChangeDetection::*;
         match (*self, changed) {
@@ -314,6 +347,7 @@ impl ChangeDetection {
         }
     }
 
+    /// Returns the proper `PrepareResult` case using `can_reuse`
     pub fn prepare_result(&mut self, index: usize, changed: bool) -> PrepareResult {
         if self.can_reuse(index, changed) {
             PrepareResult::DrawReuse

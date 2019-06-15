@@ -1,3 +1,4 @@
+//! Helper gatherer structures for collecting information about the world.
 use crate::{
     camera::{ActiveCamera, Camera},
     pod::{self, IntoPod},
@@ -16,12 +17,21 @@ use thread_profiler::profile_scope;
 
 type Std140<T> = <T as AsStd140>::Std140;
 
+/// Helper `CameraGatherer` for fetching appropriate matrix information from camera entities.
+#[derive(Debug)]
 pub struct CameraGatherer {
+    /// Fetched camera world position
     pub camera_position: vec3,
+    /// Fetched camera projection matrix.
     pub projview: Std140<pod::ViewArgs>,
 }
 
 impl CameraGatherer {
+    /// Collect `ActiveCamera` and `Camera` instances from the provided resource storage and selects
+    /// the appropriate camera to use for projection, and returns the camera position and extracted
+    /// projection matrix.
+    ///
+    /// The matrix returned is the camera's `Projection` matrix and the camera `Transform::global_view_matrix`
     pub fn gather(res: &Resources) -> Self {
         #[cfg(feature = "profiler")]
         profile_scope!("gather_cameras");
@@ -70,8 +80,11 @@ impl CameraGatherer {
     }
 }
 
+/// If an `AmbientColor` exists in the world, return it - otherwise return pure white.
+#[derive(Debug)]
 pub struct AmbientGatherer;
 impl AmbientGatherer {
+    /// If an `AmbientColor` exists in the world, return it - otherwise return pure white.
     pub fn gather(res: &Resources) -> vec3 {
         let ambient_color = <Option<Read<'_, AmbientColor>>>::fetch(res);
         ambient_color.map_or([0.0, 0.0, 0.0].into(), |c| {
