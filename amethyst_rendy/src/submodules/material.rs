@@ -333,16 +333,14 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         encoder: &mut RenderPassEncoder<'_, B>,
     ) {
         match &self.materials[material_id.0 as usize] {
-            MaterialState::Loaded { set, .. } => {
-                unsafe {
-                    encoder.bind_graphics_descriptor_sets(
-                        pipeline_layout,
-                        set_id,
-                        Some(set.raw()),
-                        std::iter::empty(),
-                    );
-                }
-            }
+            MaterialState::Loaded { set, .. } => unsafe {
+                encoder.bind_graphics_descriptor_sets(
+                    pipeline_layout,
+                    set_id,
+                    Some(set.raw()),
+                    std::iter::empty(),
+                );
+            },
             _ => panic!("Trying to bind unloaded material"),
         };
     }
