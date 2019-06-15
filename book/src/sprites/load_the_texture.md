@@ -61,6 +61,7 @@ let my_config = ImageTextureConfig {
     sampler_info: SamplerInfo::new(Filter::Linear, WrapMode::Clamp),
     // Don't generate mipmaps for this image
     generate_mips: false,
+    premultiply_alpha: true,
 };
 ```
 

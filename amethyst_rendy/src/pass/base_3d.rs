@@ -762,7 +762,7 @@ fn build_pipelines<B: Backend, T: Base3DPassDef<B>>(
         .with_blend_targets(vec![pso::ColorBlendDesc(
             pso::ColorMask::ALL,
             if transparent {
-                pso::BlendState::ALPHA
+                pso::BlendState::PREMULTIPLIED_ALPHA
             } else {
                 pso::BlendState::Off
             },

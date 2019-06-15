@@ -139,11 +139,13 @@ where
         set_id: u32,
         encoder: &mut RenderPassEncoder<'_, B>,
     ) {
-        encoder.bind_graphics_descriptor_sets(
-            pipeline_layout,
-            set_id,
-            Some(self.set.raw()),
-            std::iter::empty(),
-        );
+        unsafe {
+            encoder.bind_graphics_descriptor_sets(
+                pipeline_layout,
+                set_id,
+                Some(self.set.raw()),
+                std::iter::empty(),
+            );
+        }
     }
 }
