@@ -174,7 +174,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawDebugLines<B> {
         self.env.bind(index, layout, 0, &mut encoder);
         self.args.bind(index, layout, 1, &mut encoder);
         self.vertex.bind(index, 0, 0, &mut encoder);
-        encoder.draw(0..4, 0..self.lines.len() as u32);
+        unsafe {
+            encoder.draw(0..4, 0..self.lines.len() as u32);
+        }
     }
 
     fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &Resources) {

@@ -174,7 +174,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawSkybox<B> {
         self.mesh
             .bind(0, &[PosTex::vertex()], &mut encoder)
             .unwrap();
-        encoder.draw(0..self.mesh.len(), 0..1);
+        unsafe {
+            encoder.draw(0..self.mesh.len(), 0..1);
+        }
     }
 
     fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &Resources) {

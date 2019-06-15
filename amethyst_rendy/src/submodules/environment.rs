@@ -103,12 +103,14 @@ impl<B: Backend> PerImageEnvironmentSub<B> {
         set_id: u32,
         encoder: &mut RenderPassEncoder<'_, B>,
     ) {
-        encoder.bind_graphics_descriptor_sets(
-            pipeline_layout,
-            set_id,
-            Some(self.set.raw()),
-            std::iter::empty(),
-        );
+        unsafe {
+            encoder.bind_graphics_descriptor_sets(
+                pipeline_layout,
+                set_id,
+                Some(self.set.raw()),
+                std::iter::empty(),
+            );
+        }
     }
 
     fn process(&mut self, factory: &Factory<B>, res: &Resources) -> bool {

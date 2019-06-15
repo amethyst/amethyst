@@ -417,7 +417,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
             self.vertex.bind(index, 0, 0, &mut encoder);
             for (&tex, range) in self.batches.iter() {
                 self.textures.bind(layout, 1, tex, &mut encoder);
-                encoder.draw(0..4, range);
+                unsafe {
+                    encoder.draw(0..4, range);
+                }
             }
         }
     }

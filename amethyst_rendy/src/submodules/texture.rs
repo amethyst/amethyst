@@ -199,12 +199,14 @@ impl<B: Backend> TextureSub<B> {
     ) {
         match &self.textures[texture_id.0 as usize] {
             TextureState::Loaded { set, .. } => {
-                encoder.bind_graphics_descriptor_sets(
-                    pipeline_layout,
-                    set_id,
-                    Some(set.raw()),
-                    std::iter::empty(),
-                );
+                unsafe {
+                    encoder.bind_graphics_descriptor_sets(
+                        pipeline_layout,
+                        set_id,
+                        Some(set.raw()),
+                        std::iter::empty(),
+                    );
+                }
             }
             _ => panic!("Trying to bind unloaded texture"),
         }

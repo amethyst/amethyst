@@ -218,7 +218,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
         for (&tex, range) in self.sprites.iter() {
             if self.textures.loaded(tex) {
                 self.textures.bind(layout, 1, tex, &mut encoder);
-                encoder.draw(0..4, range);
+                unsafe {
+                    encoder.draw(0..4, range);
+                }
             }
         }
     }
@@ -389,7 +391,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
         for (&tex, range) in self.sprites.iter() {
             if self.textures.loaded(tex) {
                 self.textures.bind(layout, 1, tex, &mut encoder);
-                encoder.draw(0..4, range);
+                unsafe {
+                    encoder.draw(0..4, range);
+                }
             }
         }
     }
@@ -436,7 +440,7 @@ fn build_sprite_pipeline<B: Backend>(
                 .with_blend_targets(vec![pso::ColorBlendDesc(
                     pso::ColorMask::ALL,
                     if transparent {
-                        pso::BlendState::ALPHA
+                        pso::BlendState::PREMULTIPLIED_ALPHA
                     } else {
                         pso::BlendState::Off
                     },
