@@ -73,7 +73,7 @@ Please visit the [features page][feat] for a list of features Amethyst provides.
 
 ## Usage
 
-While the engine can be hard to use at times, we made a lot of [documentation][bks] that will teach you everything you need to use Amethyst comfortably.
+While the engine can be hard to use at times, we made a lot of [documentation][bks11] that will teach you everything you need to use Amethyst comfortably.
 
 If you don't understand a part of the documentation, please let us know. Join us on Discord or open an issue; we are always happy to help!
 
@@ -100,7 +100,7 @@ To compile any of the examples run:
 $ cargo run --example name_of_example
 ```
 
-All available examples are listed under the [examples][exr] directory.
+All available examples are listed under the [examples][exr11] directory.
 
 For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chapter in the book.
 
