@@ -127,13 +127,13 @@ pub enum BindingError<T: BindingTypes> {
     MouseWheelAxisAlreadyBound(T::Axis),
     /// Combo provided for action binding has two (or more) of the same button.
     ComboContainsDuplicates(T::Action),
-    /// Combo provided was already bound to contained action.
+    /// Combo provided was already bound to the contained action.
     ComboAlreadyBound(T::Action),
-    /// A combo of length 1 was provided, and it overlaps with an axis binding.
+    /// A combo of length one was provided, and it overlaps with an axis binding.
     ButtonBoundToAxis(T::Axis, Axis),
-    /// Axis buttons provided have overlap with an existing axis
+    /// Axis buttons provided have overlap with an existing axis.
     AxisButtonAlreadyBoundToAxis(T::Axis, Axis),
-    /// Axis buttons have overlap with an action combo of length 1.
+    /// Axis buttons have overlap with an action combo of length one.
     AxisButtonAlreadyBoundToAction(T::Action, Button),
     /// That specific axis on that specific controller is already in use for an
     /// axis binding.
