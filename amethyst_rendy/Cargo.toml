@@ -1,11 +1,12 @@
 [package]
 name = "amethyst_rendy"
 version = "0.1.0"
-authors = []
+authors = ["Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "High-level rendering engine with multiple backends"
 keywords = ["game", "engine", "renderer", "3d", "amethyst"]
 categories = ["rendering", "rendering::engine"]
+license = "MIT/Apache-2.0"
 
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.7" }
