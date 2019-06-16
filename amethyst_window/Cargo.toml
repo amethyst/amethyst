@@ -14,8 +14,8 @@ appveyor = { repository = "amethyst/amethyst" }
 travis-ci = { repository = "amethyst/amethyst" }
 
 [dependencies]
-amethyst_core = { path = "../amethyst_core", version = "0.5" }
-amethyst_config = { path = "../amethyst_config" }
+amethyst_core = { path = "../amethyst_core", version = "0.6" }
+amethyst_config = { path = "../amethyst_config", version = "0.10" }
 amethyst_error = { path = "../amethyst_error/", version = "0.1.0" }
 
 log = "0.4.6"

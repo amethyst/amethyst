@@ -64,9 +64,11 @@ Please visit the [features page][feat] for a list of features Amethyst provides.
 
 ## Navigation
 
-* [**Link to the book (latest release)**][bks]
+* [**Link to the book (0.11)**][bks11]
+* [**Link to the book (0.10)**][bks10]
 * [**Link to the book (master)**][bkm]
-* [**Link to the examples (latest release)**][exr]
+* [**Link to the examples (0.11)**][exr11]
+* [**Link to the examples (0.10)**][exr10]
 * [**Link to the examples (master)**][exm]
 
 ## Usage
@@ -75,9 +77,11 @@ While the engine can be hard to use at times, we made a lot of [documentation][b
 
 If you don't understand a part of the documentation, please let us know. Join us on Discord or open an issue; we are always happy to help!
 
-[bks]: https://book.amethyst.rs/stable/
+[bks11]: https://book.amethyst.rs/stable/
+[bks10]: https://book.amethyst.rs/v0.10.0/
 [bkm]: https://book.amethyst.rs/master/
-[exr]: https://github.com/amethyst/amethyst/tree/v0.10.0/examples
+[exr11]: https://github.com/amethyst/amethyst/tree/v0.11.0/examples
+[exr10]: https://github.com/amethyst/amethyst/tree/v0.10.0/examples
 [exm]: https://github.com/amethyst/amethyst/tree/master/examples
 
 ## Getting started
