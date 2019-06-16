@@ -100,7 +100,7 @@ To compile any of the examples run:
 $ cargo run --example name_of_example
 ```
 
-All available examples are listed under the [examples][exr] directory.
+All available examples are listed under the [examples][exr11] directory.
 
 For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chapter in the book.
 
