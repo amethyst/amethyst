@@ -22,10 +22,13 @@ if ! type jq 1>/dev/null 2>&1; then
   return 1
 fi
 
+# Builds all crates including tests, but don't run them yet.
+# We will run the tests wrapped in `kcov`.
 test_bins_by_crate="$(
-    cargo test --no-run --message-format=json |
+    cargo test --all --no-run --features "empty" --message-format=json |
     jq -r "select(.profile.test == true) | (.package_id | split(\" \"))[0] + \";\" + .filenames[]"
   )"
+
 crate_coverage_dirs=()
 for test_bin_by_crate in $test_bins_by_crate; do
   crate_name=${test_bin_by_crate%%;*}
