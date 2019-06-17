@@ -12,7 +12,7 @@ Using a custom type to handle input instead of using `String` has many advantage
 
 Defining a custom type for the `InputBundle` is done by implementing the `BindingTypes` trait. This trait contains two types, an `Axis` type and an `Action` type. These types are usually defined as enums, but you can use whatever you want.
 
-```rust,edition2019,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 use serde::{Serialize, Deserialize};
 use amethyst::input::{BindingTypes, Bindings};
 
@@ -49,15 +49,15 @@ impl BindingTypes for MovementBindingTypes {
 
 The `Axis` and `Action` type both need to derive all the traits listed above, the first five are used by Amethyst and the last two are for reading and writing to files correctly. They also need to implement `Display` if you want to add a bindings config file.
 
-For serializing and deserializing you need to add [serde](https://crates.io/crates/serde) to the dependencies like this:
+For serializing and deserializing you need to add [serde](https://crates.io/crates/serde) to the dependencies like this (note that there might be a newer version available, that is also compatible):
 
 ```rust,ignore
-  serde = { version="1.0", features = ["derive"] }
+  serde = { version="1.0.92", features = ["derive"] }
 ```
 
 If you want to add additional information you can add it to the enum or change the `Axis` and `Action` types to a struct.
 
-```rust,edition2019,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 enum AxisBinding {
   Horizontal(usize),
@@ -95,7 +95,7 @@ Here the number after the binding type could be the ID of the player, but you ca
 
 With the config file we can create an `InputBundle` like in the previous section.
 
-```rust,edition2019,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
   let input_bundle = 
     InputBundle::<MovementBindingTypes>::new()
     .with_bindings_from_file(bindings_config)?;
@@ -103,18 +103,18 @@ With the config file we can create an `InputBundle` like in the previous section
 
 And add the `InputBundle` to the game data just like before.
 
-```rust,edition2019,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
   let game_data = GameDataBuilder::default()
     //..
     .with_bundle(input_bundle)?
     //..
 ```
 
-## Using the `InputHandler` with a custom `BindingTypes`
+## Using the `InputHandler` with a Custom `BindingTypes`
 
 Now that we have added an `InputBundle` with a custom `BindingTypes`, we can use the `InputHandler` just like with `StringBindings`, but instead of using `String`s we use our custom enums.
 
-```rust,edition2019,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 struct Player {
   id: usize,
 }
@@ -164,7 +164,7 @@ impl<'s> System<'s> for MovementSystem {
 
 And don't forget to add the `MovementSystem` to the game data.
 
-```rust,edition2019,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
   let game_data = GameDataBuilder::default()
     //..
     .with(MovementSystem, "movement_system", &["input_system"])
