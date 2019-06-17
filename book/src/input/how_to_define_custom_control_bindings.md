@@ -5,7 +5,7 @@ Instead of using `StringBindings` for an `InputBundle` you probably want to use 
 Using a custom type to handle input instead of using `String` has many advantages:
 
 * A `String` uses quite a lot of memory compared to something like an enum.
-* Inputting a `String` when retrieving input data is error-prone if you misstype it or change the name.
+* Inputting a `String` when retrieving input data is error-prone if you mistype it or change the name.
 * You will be able to add additional information to a custom type.
 
 ## Defining a Custom Type
@@ -110,7 +110,7 @@ And add the `InputBundle` to the game data just like before.
     //..
 ```
 
-## Using the `InputHandler` with a Custom Bindings Type
+## Using the `InputHandler` with a custom `BindingTypes`
 
 Now that we have added an `InputBundle` with a custom `BindingTypes`, we can use the `InputHandler` just like with `StringBindings`, but instead of using `String`s we use our custom enums.
 
@@ -162,7 +162,7 @@ impl<'s> System<'s> for MovementSystem {
 }
 ```
 
-And don't forget to add the `MovementSystem` to the game date.
+And don't forget to add the `MovementSystem` to the game data.
 
 ```rust,edition2019,no_run,noplaypen
   let game_data = GameDataBuilder::default()

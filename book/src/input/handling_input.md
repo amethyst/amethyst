@@ -92,7 +92,7 @@ The action is a simple boolean, which is of course set to true if the specified 
 
 The possible inputs you can specify for axis are listed [here](https://docs-src.amethyst.rs/stable/amethyst_input/enum.Axis.html). The possible inputs you can specify for actions are listed [here](https://docs-src.amethyst.rs/stable/amethyst_input/enum.Button.html).
 
-To add these bindings to the `InputBundle` you simple need to call the `with_bindings_from_file` function on the InputBundle.
+To add these bindings to the `InputBundle` you simply need to call the `with_bindings_from_file` function on the InputBundle.
 
 ```rust,edition2019,no_run,noplaypen
   let root = application_root_dir()?;
