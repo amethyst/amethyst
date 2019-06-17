@@ -3,7 +3,7 @@
 Amethyst uses an `InputHandler` to handle user input.
 You initialise this `InputHandler` by creating an `InputBundle` and adding it to the game data.
 
-```rust,edition2019,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 use amethyst{
   prelude::*,
   utils::application_root_dir,
@@ -25,7 +25,7 @@ fn main() -> amethyst::Result<()> {
 
 To use the `InputHandler` inside a `System` you have to add it to the `SystemData`. With this you can check for events from input devices.
 
-```rust,edition2019,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 use amethyst{
   prelude::*,
   input::{InputHandler, ControllerButton, VirtualKeyCode, StringBindings},
@@ -63,7 +63,7 @@ You can find all the methods from `InputHandler` [here](https://docs-src.amethys
 
 Now you have to add the system to the game date, just like you would add any other `System`. A `System` that uses an `InputHandler` needs "input_system" inside its dependencies.
 
-```rust,edition2019,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
   let game_data = GameDataBuilder::default()
     //..
     .with(ExampleSystem, "example_system", &["input_system"])
@@ -94,7 +94,7 @@ The possible inputs you can specify for axis are listed [here](https://docs-src.
 
 To add these bindings to the `InputBundle` you simply need to call the `with_bindings_from_file` function on the InputBundle.
 
-```rust,edition2019,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
   let root = application_root_dir()?;
   let bindings_config = root.join("resources").join("bindings_config.ron");
 
@@ -108,7 +108,7 @@ To add these bindings to the `InputBundle` you simply need to call the `with_bin
 
 And now you can get the [axis](https://docs-src.amethyst.rs/stable/amethyst_input/struct.InputHandler.html#method.axis_value) and [action](https://docs-src.amethyst.rs/stable/amethyst_input/struct.InputHandler.html#method.action_is_down) values from the `InputHandler`.
 
-```rust,edition2019,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen
 use amethyst{
   prelude::*,
   core::Transform;
