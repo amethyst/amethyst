@@ -5,6 +5,7 @@ use rendy::{
     shader::SpirvShader,
 };
 
+/// Implementation of `Base3DPassDef` for Physically-based (PBR) rendering pass.
 #[derive(Debug)]
 pub struct PbrPassDef;
 impl<B: Backend> Base3DPassDef<B> for PbrPassDef {
@@ -38,7 +39,11 @@ impl<B: Backend> Base3DPassDef<B> for PbrPassDef {
     }
 }
 
+/// Describes a Physically-based (PBR) 3d Pass with lighting
 pub type DrawPbrDesc<B> = DrawBase3DDesc<B, PbrPassDef>;
+/// Draws a Physically-based (PBR) 3d Pass with lighting
 pub type DrawPbr<B> = DrawBase3D<B, PbrPassDef>;
+/// Describes a Physically-based (PBR) 3d Pass with lighting and transparency
 pub type DrawPbrTransparentDesc<B> = DrawBase3DTransparentDesc<B, PbrPassDef>;
+/// Draws a Physically-based (PBR) 3d Pass with lighting and transparency
 pub type DrawPbrTransparent<B> = DrawBase3DTransparent<B, PbrPassDef>;

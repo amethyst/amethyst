@@ -1,3 +1,4 @@
+//! 2D Sprite specific prefabs.
 use crate::{
     formats::texture::TexturePrefab,
     sprite::{SpriteRender, SpriteSheet, Sprites},
@@ -89,13 +90,17 @@ impl<'a> PrefabData<'a> for SpriteSheetPrefab {
     }
 }
 
+/// Loaded abstraction for sprite sheets. This is a workaround for prefab humbuggery.
 #[derive(Debug)]
 pub struct SpriteSheetLoadedSet(Mutex<Vec<(Option<String>, Handle<SpriteSheet>)>>);
 
 impl SpriteSheetLoadedSet {
+    /// Push a new spritesheet to this type.
     fn push(&self, data: (Option<String>, Handle<SpriteSheet>)) {
         self.0.lock().unwrap().push(data);
     }
+
+    /// Get the requested [SpriteSheet] via [SpriteSheetReference] from this type
     pub fn get(&self, reference: &SpriteSheetReference) -> Option<Handle<SpriteSheet>> {
         let inner = self.0.lock().unwrap();
         match reference {
@@ -115,10 +120,14 @@ impl Default for SpriteSheetLoadedSet {
     }
 }
 
+/// Prefab humbuggery.
+/// Wraps referencing spritesheets by index or name.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum SpriteSheetReference {
+    /// A `SpriteSheet` referenced by Index
     Index(usize),
+    /// A `SpriteSheet` referenced by Index
     Name(String),
 }
 

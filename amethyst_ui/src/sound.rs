@@ -14,6 +14,9 @@ use crate::{
     EventReceiver,
 };
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 /// Provides an `EventRetriggerSystem` that will handle incoming `UiEvent`s
 /// and trigger `UiPlaySoundAction`s for entities with attached
 /// `UiSoundRetrigger` components.
@@ -95,6 +98,9 @@ impl<'s> System<'s> for UiSoundSystem {
     }
 
     fn run(&mut self, (sound_events, audio_storage, audio_output): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("ui_sound_system");
+
         let event_reader = self
             .event_reader
             .as_mut()

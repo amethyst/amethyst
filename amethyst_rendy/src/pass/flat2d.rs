@@ -82,6 +82,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DDesc {
     }
 }
 
+/// Draws opaque 2D sprites to the screen without lighting.
 #[derive(Debug)]
 pub struct DrawFlat2D<B: Backend> {
     pipeline: B::GraphicsPipeline,
@@ -102,7 +103,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
         resources: &Resources,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
-        profile_scope!("prepare");
+        profile_scope!("prepare opaque");
 
         let (
             sprite_sheet_storage,
@@ -208,7 +209,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
         _resources: &Resources,
     ) {
         #[cfg(feature = "profiler")]
-        profile_scope!("draw");
+        profile_scope!("draw opaque");
 
         let layout = &self.pipeline_layout;
         encoder.bind_graphics_pipeline(&self.pipeline);
@@ -231,7 +232,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
         }
     }
 }
-/// Draw transparent sprites without lighting.
+/// Describes drawing transparent sprites without lighting.
 #[derive(Clone, Debug, PartialEq, Derivative)]
 #[derivative(Default(bound = ""))]
 pub struct DrawFlat2DTransparentDesc;
@@ -284,6 +285,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DTransparentDesc {
     }
 }
 
+/// Draws transparent sprites without lighting.
 #[derive(Debug)]
 pub struct DrawFlat2DTransparent<B: Backend> {
     pipeline: B::GraphicsPipeline,
@@ -305,7 +307,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
         resources: &Resources,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
-        profile_scope!("prepare_trans");
+        profile_scope!("prepare transparent");
 
         let (sprite_sheet_storage, tex_storage, visibility, sprite_renders, transforms) =
             <(
@@ -378,7 +380,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
         _resources: &Resources,
     ) {
         #[cfg(feature = "profiler")]
-        profile_scope!("draw_trans");
+        profile_scope!("draw transparent");
 
         let layout = &self.pipeline_layout;
         encoder.bind_graphics_pipeline(&self.pipeline);

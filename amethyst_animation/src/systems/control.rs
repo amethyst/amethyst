@@ -19,6 +19,9 @@ use crate::resources::{
     Sampler, SamplerControl, SamplerControlSet, StepDirection,
 };
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 /// System for setting up animations, should run before `SamplerInterpolationSystem`.
 ///
 /// Will process all active `AnimationControl` + `AnimationHierarchy`, and do processing of the
@@ -76,6 +79,9 @@ where
     );
 
     fn run(&mut self, data: Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("animation_control_system");
+
         let (
             entities,
             animation_storage,

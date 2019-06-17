@@ -1,3 +1,5 @@
+//! Material type implementation.
+
 use crate::{
     formats::texture::TexturePrefab,
     mtl::{Material, MaterialDefaults, TextureOffset},
@@ -37,6 +39,7 @@ pub struct MaterialPrefab {
 }
 
 impl MaterialPrefab {
+    /// Clone the loaded material prefab to a new instance with an independent transparency value.
     pub fn clone_loaded(&self) -> Self {
         assert!(self.handle.is_some());
 

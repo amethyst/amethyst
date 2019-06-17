@@ -1,3 +1,4 @@
+//! Texture submodule for per-image submission.
 use crate::{
     rendy::{
         command::RenderPassEncoder,
@@ -28,9 +29,11 @@ enum TextureState<B: Backend> {
     },
 }
 
+/// Texture ID newtype, preventing users from creating arbitrary `TextureId`. Represented as a `u32`
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TextureId(u32);
 
+/// Texture helper submodule for allocating and binding textures and abstracting per-image submissions.
 #[derive(Debug)]
 pub struct TextureSub<B: Backend> {
     generation: u32,
@@ -40,6 +43,7 @@ pub struct TextureSub<B: Backend> {
 }
 
 impl<B: Backend> TextureSub<B> {
+    /// Create a new Texture for submission, allocated using the provided `Factory`
     pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
         Ok(Self {
             layout: set_layout! {factory, [1] CombinedImageSampler FRAGMENT},
@@ -49,10 +53,13 @@ impl<B: Backend> TextureSub<B> {
         })
     }
 
+    /// Returns the raw `DescriptorSetLayout` for a Texture
     pub fn raw_layout(&self) -> &B::DescriptorSetLayout {
         self.layout.raw()
     }
 
+    /// Generationally track our currently allocated vs. used textures and release memory for any
+    /// textures which have been removed from this submission set.
     pub fn maintain(&mut self, factory: &Factory<B>, res: &Resources) {
         #[cfg(feature = "profiler")]
         profile_scope!("maintain");
@@ -95,6 +102,7 @@ impl<B: Backend> TextureSub<B> {
         self.generation += self.generation.wrapping_add(1);
     }
 
+    /// Try to insert a new texture for submission in this texture batch. Returns None if it fails.
     fn try_insert(
         &mut self,
         factory: &Factory<B>,
@@ -124,6 +132,7 @@ impl<B: Backend> TextureSub<B> {
         })
     }
 
+    /// Try to insert a new texture for submission in this texture batch.
     pub fn insert(
         &mut self,
         factory: &Factory<B>,
@@ -170,6 +179,7 @@ impl<B: Backend> TextureSub<B> {
         }
     }
 
+    /// Returns true of the supplied `TextureId` is already loaded.
     #[inline]
     pub fn loaded(&self, texture_id: TextureId) -> bool {
         match &self.textures[texture_id.0 as usize] {
@@ -178,6 +188,7 @@ impl<B: Backend> TextureSub<B> {
         }
     }
 
+    /// Bind all textures
     #[inline]
     pub fn bind(
         &self,

@@ -11,6 +11,9 @@ use amethyst_core::{
 };
 use amethyst_error::{format_err, Error, ResultExt};
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 use crate::{AssetStorage, Completion, Handle, HotReloadStrategy, ProcessingState};
 
 use super::{Prefab, PrefabData, PrefabTag};
@@ -59,6 +62,9 @@ where
     );
 
     fn run(&mut self, data: Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("prefab_loader_system");
+
         let (
             entities,
             mut prefab_storage,

@@ -54,19 +54,26 @@ impl Asset for Material {
 /// handle points to a texture which is not loaded already.
 /// Additionally, you can use it to fill up the fields of
 /// `Material` you don't want to specify.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct MaterialDefaults(pub Material);
 
+/// Trait providing generic access to a collection of texture handles
 pub trait StaticTextureSet<'a>:
     Clone + Copy + std::fmt::Debug + PartialEq + Eq + std::hash::Hash + Send + Sync + 'static
 {
+    /// Iterator type to access this texture sets handles
     type Iter: Iterator<Item = &'a Handle<Texture>>;
+
+    /// Returns an iterator to the textures associated with a given material.
     fn textures(mat: &'a Material) -> Self::Iter;
+
+    /// ALWAYS RETURNS 1
     fn len() -> usize {
         1
     }
 }
 
+/// Type alias for a tuple collection of a complete PBR texture set.
 pub type FullTextureSet = (
     TexAlbedo,
     TexEmission,
@@ -78,6 +85,7 @@ pub type FullTextureSet = (
 
 macro_rules! impl_texture {
     ($name:ident, $prop:ident) => {
+        #[doc = "Macro Generated Texture Type"]
         #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
         pub struct $name;
         impl<'a> StaticTextureSet<'a> for $name {

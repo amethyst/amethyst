@@ -8,6 +8,9 @@ use amethyst_core::{
 use log::error;
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 /// Destroys the entity to which this is attached at the specified time (in seconds).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DestroyAtTime {
@@ -38,6 +41,9 @@ pub struct DestroyAtTimeSystem;
 impl<'a> System<'a> for DestroyAtTimeSystem {
     type SystemData = (Entities<'a>, ReadStorage<'a, DestroyAtTime>, Read<'a, Time>);
     fn run(&mut self, (entities, dat, time): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("destroy_at_time_system");
+
         for (e, d) in (&entities, &dat).join() {
             if time.absolute_time_seconds() > d.time {
                 if let Err(err) = entities.delete(e) {
@@ -58,6 +64,9 @@ impl<'a> System<'a> for DestroyInTimeSystem {
         Read<'a, Time>,
     );
     fn run(&mut self, (entities, mut dit, time): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("destroy_in_time_system");
+
         for (e, d) in (&entities, &mut dit).join() {
             if d.timer <= 0.0 {
                 if let Err(err) = entities.delete(e) {

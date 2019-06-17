@@ -26,7 +26,7 @@ use rendy::{
 use thread_profiler::profile_scope;
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct SkyboxSettings {
+struct SkyboxSettings {
     nadir_color: Srgb,
     zenith_color: Srgb,
 }
@@ -41,13 +41,13 @@ impl Default for SkyboxSettings {
 }
 
 #[derive(Clone, Debug, PartialEq, AsStd140)]
-pub struct SkyboxUniform {
+pub(crate) struct SkyboxUniform {
     nadir_color: vec3,
     zenith_color: vec3,
 }
 
 impl SkyboxSettings {
-    fn uniform(&self) -> <SkyboxUniform as AsStd140>::Std140 {
+    pub(crate) fn uniform(&self) -> <SkyboxUniform as AsStd140>::Std140 {
         SkyboxUniform {
             nadir_color: self.nadir_color.into_pod(),
             zenith_color: self.zenith_color.into_pod(),
@@ -56,7 +56,7 @@ impl SkyboxSettings {
     }
 }
 
-/// Draw opaque sprites without lighting.
+/// Describe drawing a skybox around the camera view
 #[derive(Clone, Debug, PartialEq, Derivative)]
 #[derivative(Default(bound = ""))]
 pub struct DrawSkyboxDesc {
@@ -64,11 +64,12 @@ pub struct DrawSkyboxDesc {
 }
 
 impl DrawSkyboxDesc {
-    /// Create instance of `DrawSkybox` render group
+    /// Create instance of [DrawSkybox] render group
     pub fn new() -> Self {
         Default::default()
     }
 
+    /// Defines the [SkyboxSettings] colors to initialize for this render group
     pub fn with_colors(nadir_color: Srgb, zenith_color: Srgb) -> Self {
         Self {
             default_settings: SkyboxSettings {
@@ -120,6 +121,7 @@ impl<B: Backend> RenderGroupDesc<B, Resources> for DrawSkyboxDesc {
     }
 }
 
+/// Draw a skybox around the camera view
 #[derive(Debug)]
 pub struct DrawSkybox<B: Backend> {
     pipeline: B::GraphicsPipeline,

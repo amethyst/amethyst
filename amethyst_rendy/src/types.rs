@@ -1,25 +1,37 @@
+//! 'Global' rendering type declarations
 use amethyst_assets::{Asset, Handle};
 use amethyst_core::ecs::DenseVecStorage;
 use serde::{Deserialize, Serialize};
 
+/// Extension of the rendy Backend trait.
 pub trait Backend: rendy::hal::Backend {
+    /// Unwrap a Backend to a rendy `Mesh`
     fn unwrap_mesh(mesh: &Mesh) -> Option<&rendy::mesh::Mesh<Self>>;
+    /// Unwrap a Backend to a rendy `Texture`
     fn unwrap_texture(texture: &Texture) -> Option<&rendy::texture::Texture<Self>>;
+    /// Wrap a rendy `Mesh` to its Backend generic.
     fn wrap_mesh(mesh: rendy::mesh::Mesh<Self>) -> Mesh;
+    /// Wrap a rendy `Texture` to its Backend generic.
     fn wrap_texture(texture: rendy::texture::Texture<Self>) -> Texture;
 }
 
 macro_rules! impl_backends {
     ($($variant:ident, $feature:literal, $backend:ty;)*) => {
 
+
         impl_single_default!($([$feature, $backend]),*);
 
-        #[cfg(not(any($(feature = $feature),*)))]
-        pub type DefaultBackend = rendy::empty::Backend;
+        static_assertions::assert_cfg!(
+            any($(feature = $feature),*),
+            concat!("You must specify at least one graphical backend feature: ", stringify!($($feature),* "See the wiki article https://github.com/amethyst/amethyst/wiki/GraphicalBackendError for more details."))
+        );
 
+        /// Backend wrapper.
+        #[derive(Debug)]
         pub enum BackendVariant {
             $(
                 #[cfg(feature = $feature)]
+                #[doc = "Backend Variant"]
                 $variant,
             )*
         }
@@ -29,6 +41,7 @@ macro_rules! impl_backends {
         pub enum Mesh {
             $(
                 #[cfg(feature = $feature)]
+                #[doc = "Mesh Variant"]
                 $variant(rendy::mesh::Mesh<$backend>),
             )*
         }
@@ -38,6 +51,7 @@ macro_rules! impl_backends {
         pub enum Texture {
             $(
                 #[cfg(feature = $feature)]
+                #[doc = "Texture Variant"]
                 $variant(rendy::texture::Texture<$backend>),
             )*
         }
@@ -83,10 +97,12 @@ macro_rules! impl_single_default {
     };
     (@ ($($prev:literal)*), ([$cur:literal, $backend:ty]) ) => {
         #[cfg(all( feature = $cur, not(any($(feature = $prev),*)) ))]
+        #[doc = "Default backend"]
         pub type DefaultBackend = $backend;
     };
     (@ ($($prev:literal)*), ([$cur:literal, $backend:ty] $([$nf:literal, $nb:ty])*) ) => {
         #[cfg(all( feature = $cur, not(any($(feature = $prev,)* $(feature = $nf),*)) ))]
+        #[doc = "Default backend"]
         pub type DefaultBackend = $backend;
 
         impl_single_default!(@ ($($prev)* $cur), ($([$nf, $nb])*) );
@@ -94,25 +110,13 @@ macro_rules! impl_single_default {
 }
 
 impl_backends!(
-    Dx12, "dx12", rendy::dx12::Backend;
+    // DirectX 12 is currently disabled because of incomplete gfx-hal support for it.
+    // It will be re-enabled when it actually works.
+    // Dx12, "dx12", rendy::dx12::Backend; 
     Metal, "metal", rendy::metal::Backend;
     Vulkan, "vulkan", rendy::vulkan::Backend;
+    Empty, "empty", rendy::empty::Backend;
 );
-
-impl Backend for rendy::empty::Backend {
-    fn unwrap_mesh(_: &Mesh) -> Option<&rendy::mesh::Mesh<Self>> {
-        None
-    }
-    fn unwrap_texture(_: &Texture) -> Option<&rendy::texture::Texture<Self>> {
-        None
-    }
-    fn wrap_mesh(_: rendy::mesh::Mesh<Self>) -> Mesh {
-        unimplemented!()
-    }
-    fn wrap_texture(_: rendy::texture::Texture<Self>) -> Texture {
-        unimplemented!()
-    }
-}
 
 impl Asset for Mesh {
     const NAME: &'static str = "Mesh";
@@ -126,11 +130,13 @@ impl Asset for Texture {
     type HandleStorage = DenseVecStorage<Handle<Self>>;
 }
 
+/// Newtype for MeshBuilder prefab usage.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MeshData(
     #[serde(deserialize_with = "deserialize_data")] pub rendy::mesh::MeshBuilder<'static>,
 );
 
+/// Newtype for TextureBuilder prefab usage.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TextureData(pub rendy::texture::TextureBuilder<'static>);
 

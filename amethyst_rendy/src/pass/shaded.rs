@@ -9,6 +9,7 @@ use rendy::{
     shader::SpirvShader,
 };
 
+/// Implementation of `Base3DPassDef` describing a simple shaded 3D pass.
 #[derive(Debug)]
 pub struct ShadedPassDef;
 impl<B: Backend> Base3DPassDef<B> for ShadedPassDef {
@@ -36,7 +37,11 @@ impl<B: Backend> Base3DPassDef<B> for ShadedPassDef {
     }
 }
 
+/// Describes a simple shaded 3D pass.
 pub type DrawShadedDesc<B> = DrawBase3DDesc<B, ShadedPassDef>;
+/// Draws a simple shaded 3D pass.
 pub type DrawShaded<B> = DrawBase3D<B, ShadedPassDef>;
+/// Describes a simple shaded 3D pass with transparency
 pub type DrawShadedTransparentDesc<B> = DrawBase3DTransparentDesc<B, ShadedPassDef>;
+/// Draws a simple shaded 3D pass with transparency
 pub type DrawShadedTransparent<B> = DrawBase3DTransparent<B, ShadedPassDef>;

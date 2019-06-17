@@ -32,6 +32,8 @@ use std::sync::Arc;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
+/// Graph trait implementation required by consumers. Builds a graph and manages signaling when
+/// the graph needs to be rebuilt.
 pub trait GraphCreator<B: Backend> {
     /// Check if graph needs to be rebuilt.
     /// This function is evaluated every frame before running the graph.
@@ -41,6 +43,8 @@ pub trait GraphCreator<B: Backend> {
     fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources>;
 }
 
+/// Amethyst rendering system
+#[allow(missing_debug_implementations)]
 pub struct RenderingSystem<B, G>
 where
     B: Backend,
@@ -56,6 +60,7 @@ where
     B: Backend,
     G: GraphCreator<B>,
 {
+    /// Create a new `RenderingSystem` with the supplied graph via `GraphCreator`
     pub fn new(graph_creator: G) -> Self {
         Self {
             graph: None,
@@ -90,7 +95,7 @@ type SetupData<'a> = (
     ReadStorage<'a, Transform>,
     ReadStorage<'a, SpriteRender>,
     Option<Read<'a, Visibility>>,
-    Option<Read<'a, ActiveCamera>>,
+    Read<'a, ActiveCamera>,
     ReadStorage<'a, JointTransforms>,
 );
 

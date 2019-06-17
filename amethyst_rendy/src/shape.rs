@@ -1,3 +1,4 @@
+//! Basic shape prefabs.
 use crate::types::Mesh;
 use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, Progress, ProgressCounter};
 use amethyst_core::{
@@ -30,7 +31,7 @@ fn option_none<T>() -> Option<T> {
 ///     * `Vec<PosNormTex>`
 ///     * `Vec<PosNormTangTex>`
 ///     * `ComboMeshCreator`
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(bound = "")]
 pub struct ShapePrefab<V> {
     #[serde(skip)]
@@ -108,11 +109,13 @@ pub enum Shape {
 
 /// `SystemData` needed to upload a `Shape` directly to create a `Handle<Mesh>`
 #[derive(SystemData)]
+#[allow(missing_debug_implementations)]
 pub struct ShapeUpload<'a> {
     loader: ReadExpect<'a, Loader>,
     storage: Read<'a, AssetStorage<Mesh>>,
 }
 
+/// Vertex data for a basic shape.
 pub type InternalVertexData = ([f32; 3], [f32; 3], [f32; 2], [f32; 3]);
 
 /// Internal Shape, used for transformation from `genmesh` to `MeshBuilder`
@@ -125,11 +128,15 @@ impl InternalShape {
     }
 }
 
+/// Trait for providing conversion from a basic shape type.
 pub trait FromShape {
+    /// Convert from a shape to `Self` type.
     fn from(shape: &InternalShape) -> Self;
 }
 
+/// Internal trait for converting from vertex data to a shape type.
 pub trait FromInternalVertex {
+    /// Convert from a set of vertex data to `Self` type.
     fn from_internal(v: &InternalVertexData) -> Self;
 }
 

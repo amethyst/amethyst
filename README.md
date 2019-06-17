@@ -110,8 +110,6 @@ There are also many open source games and prototypes being made with Amethyst. S
 
 If you are compiling on Linux, make sure to install the dependencies below.
 
-Additionally, make sure you have EGL installed. Since the package depends on your drivers, we cannot list it here.
-
 ### Arch Linux
 
 ```
@@ -121,7 +119,7 @@ $ pacman -Sy grep gcc pkgconfig openssl alsa-lib cmake make python3 freetype2 aw
 ### Debian/Ubuntu
 
 ```
-# apt install gcc pkg-config openssl libasound2-dev cmake build-essential python3 libfreetype6-dev libexpat1-dev libxcb-composite0-dev
+# apt install gcc pkg-config openssl libasound2-dev cmake build-essential python3 libfreetype6-dev libexpat1-dev libxcb-composite0-dev libssl-dev
 ```
 
 ### Fedora

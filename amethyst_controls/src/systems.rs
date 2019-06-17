@@ -13,6 +13,9 @@ use amethyst_core::{
 use amethyst_input::{get_input_axis_simple, BindingTypes, InputHandler};
 use winit::{DeviceEvent, Event, Window, WindowEvent};
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 /// The system that manages the fly movement.
 ///
 /// # Type parameters
@@ -55,6 +58,9 @@ impl<'a, T: BindingTypes> System<'a> for FlyMovementSystem<T> {
     );
 
     fn run(&mut self, (time, mut transform, input, tag): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("fly_movement_system");
+
         let x: Float = get_input_axis_simple(&self.right_input_axis, &input).into();
         let y: Float = get_input_axis_simple(&self.up_input_axis, &input).into();
         let z: Float = get_input_axis_simple(&self.forward_input_axis, &input).into();
@@ -90,6 +96,9 @@ impl<'a> System<'a> for ArcBallRotationSystem {
     );
 
     fn run(&mut self, (mut transforms, tags): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("arc_ball_rotation_system");
+
         let mut position = None;
         for (transform, arc_ball_camera_tag) in (&transforms, &tags).join() {
             let pos_vec = transform.rotation() * -Vector3::z() * arc_ball_camera_tag.distance;
@@ -142,6 +151,9 @@ impl<'a> System<'a> for FreeRotationSystem {
     );
 
     fn run(&mut self, (events, mut transform, tag, focus, hide): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("free_rotation_system");
+
         let focused = focus.is_focused;
         for event in
             events.read(&mut self.event_reader.as_mut().expect(
@@ -190,6 +202,9 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
     type SystemData = (Read<'a, EventChannel<Event>>, Write<'a, WindowFocus>);
 
     fn run(&mut self, (events, mut focus): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("mouse_focus_update_system");
+
         for event in events.read(&mut self.event_reader.as_mut().expect(
             "`MouseFocusUpdateSystem::setup` was not called before `MouseFocusUpdateSystem::run`",
         )) {
@@ -230,6 +245,9 @@ impl<'a> System<'a> for CursorHideSystem {
     );
 
     fn run(&mut self, (win, hide, focus): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("cursor_hide_system");
+
         let should_be_hidden = focus.is_focused && hide.hide;
         if !self.is_hidden && should_be_hidden {
             if let Err(err) = win.grab_cursor(true) {

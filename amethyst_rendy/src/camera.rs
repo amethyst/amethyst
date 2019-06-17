@@ -8,11 +8,29 @@ use amethyst_core::{
 
 use amethyst_error::Error;
 
+/// An appropriate orthographic projection for the coordinate space used by Amethyst.
+/// Because we use vulkan coordinates internally and within the rendering engine, normal nalgebra
+/// projection objects (`Orthographic3` are incorrect for our use case.
+///
+/// This implementation provides an interface with feature parity to nalgebra, but retaining
+/// the vulkan coordinate space.
 #[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Orthographic {
     matrix: Matrix4<f32>,
 }
 impl Orthographic {
+    /// Create a new `Orthographic` projection with the provided parameters.
+    ///
+    /// # Arguments
+    ///
+    /// * `left` - The x-coordinate of the cuboid leftmost face parallel to the yz-plane.
+    /// * `right` - The x-coordinate of the cuboid rightmost face parallel to the yz-plane.
+    /// * `top` - The upper y-coordinate of the cuboid leftmost face parallel to the xz-plane.
+    /// * `bottom` - The lower y-coordinate of the cuboid leftmost face parallel to the xz-plane.
+    /// * `z_near` - The distance between the viewer (the origin) and the closest face of the cuboid parallel to the xy-plane. If used for a 3D rendering application, this is the closest clipping plane.
+    /// * `z_far` - The distance between the viewer (the origin) and the furthest face of the cuboid parallel to the xy-plane. If used for a 3D rendering application, this is the furthest clipping plane.
+    ///
+    /// The projection matrix is right-handed and has a depth range of 0 to 1
     pub fn new(left: f32, right: f32, bottom: f32, top: f32, z_near: f32, z_far: f32) -> Self {
         if cfg!(debug_assertions) {
             assert!(
@@ -33,100 +51,151 @@ impl Orthographic {
         Self { matrix }
     }
 
+    /// Returns the upper y-coordinate of the cuboid leftmost face parallel to the xz-plane.
     #[inline]
     pub fn top(&self) -> f32 {
         -((1.0 - self.matrix[(1, 3)]) / self.matrix[(1, 1)])
     }
 
+    /// Returns the lower y-coordinate of the cuboid leftmost face parallel to the xz-plane.
     #[inline]
     pub fn bottom(&self) -> f32 {
         -((-1.0 - self.matrix[(1, 3)]) / self.matrix[(1, 1)])
     }
 
+    /// Returns the x-coordinate of the cuboid leftmost face parallel to the yz-plane.
     #[inline]
     pub fn left(&self) -> f32 {
         (-1.0 - self.matrix[(0, 3)]) / self.matrix[(0, 0)]
     }
 
+    /// Returns the x-coordinate of the cuboid rightmost face parallel to the yz-plane.
     #[inline]
     pub fn right(&self) -> f32 {
         (1.0 - self.matrix[(0, 3)]) / self.matrix[(0, 0)]
     }
 
+    /// Returns the distance between the viewer (the origin) and the closest face of the cuboid parallel to the xy-plane. If used for a 3D rendering application, this is the closest clipping plane.
     #[inline]
     pub fn near(&self) -> f32 {
         (self.matrix[(2, 3)] / self.matrix[(2, 2)])
     }
 
+    /// Returns the distance between the viewer (the origin) and the furthest face of the cuboid parallel to the xy-plane. If used for a 3D rendering application, this is the furthest clipping plane.
     #[inline]
     pub fn far(&self) -> f32 {
         ((-1.0 + self.matrix[(2, 3)]) / self.matrix[(2, 2)])
     }
 
+    /// Sets the y-coordinate of the cuboid leftmost face parallel to the xz-plane.
+    ///
+    /// # NOTE
+    /// Causes changes to both the top and bottom matrix elements.
     #[inline]
     pub fn set_top(&mut self, top: f32) {
         self.set_bottom_and_top(self.bottom(), top)
     }
 
+    /// Sets the y-coordinate of the cuboid leftmost face parallel to the xz-plane.
+    ///
+    /// # NOTE
+    /// Causes changes to both the top and bottom matrix elements.
     #[inline]
     pub fn set_bottom(&mut self, bottom: f32) {
         self.set_bottom_and_top(bottom, self.top())
     }
 
+    /// Sets y-axis of the projection.
     #[inline]
     pub fn set_bottom_and_top(&mut self, bottom: f32, top: f32) {
         self.matrix[(1, 1)] = -2.0 / (top - bottom);
         self.matrix[(1, 3)] = -(top + bottom) / (top - bottom);
     }
 
+    /// Sets the x-coordinate of the cuboid leftmost face parallel to the yz-plane.
+    ///
+    /// # NOTE
+    /// Causes changes to both the left and right matrix elements.
     #[inline]
     pub fn set_left(&mut self, left: f32) {
         self.set_left_and_right(left, self.right())
     }
 
+    /// Sets the x-coordinate of the cuboid rightmost face parallel to the yz-plane.
+    ///
+    /// # NOTE
+    /// Causes changes to both the left and right matrix elements.
     #[inline]
     pub fn set_right(&mut self, right: f32) {
         self.set_left_and_right(self.left(), right)
     }
 
+    /// Sets x-axis of the projection.
     #[inline]
     pub fn set_left_and_right(&mut self, left: f32, right: f32) {
         self.matrix[(0, 0)] = 2.0 / (right - left);
         self.matrix[(0, 3)] = -(right + left) / (right - left);
     }
 
+    /// Sets z-axis near clip of the projection.
+    ///
+    /// # NOTE
+    /// Causes changes to both the near and far matrix elements.
     #[inline]
     pub fn set_near(&mut self, near: f32) {
         self.set_near_and_far(near, self.far())
     }
 
+    /// Sets the z-axis far clip of the projection.
+    ///
+    /// # NOTE
+    /// Causes changes to both the near and far matrix elements.
     #[inline]
     pub fn set_far(&mut self, far: f32) {
         self.set_near_and_far(self.near(), far)
     }
 
+    /// Sets both the near and far z-axis clip values of the projection.
     #[inline]
     pub fn set_near_and_far(&mut self, z_near: f32, z_far: f32) {
         self.matrix[(2, 2)] = 1.0 / (z_far - z_near);
         self.matrix[(2, 3)] = -z_near / (z_far - z_near);
     }
 
+    /// Returns a reference to the inner matrix representation of this projection.
     #[inline]
     pub fn as_matrix(&self) -> &Matrix4<f32> {
         &self.matrix
     }
 
+    /// Returns a mutable reference to the inner matrix representation of this projection.
     #[inline]
     pub fn as_matrix_mut(&mut self) -> &mut Matrix4<f32> {
         &mut self.matrix
     }
 }
 
+/// An appropriate orthographic projection for the coordinate space used by Amethyst.
+/// Because we use vulkan coordinates internally and within the rendering engine, normal nalgebra
+/// projection objects (`Perspective3`) are incorrect for our use case.
+///
+/// This implementation provides an interface with feature parity to nalgebra, but retaining
+/// the vulkan coordinate space.
+///
+/// The projection matrix is right-handed and has a depth range of 0 to 1
 #[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Perspective {
     matrix: Matrix4<f32>,
 }
 impl Perspective {
+    /// Creates a new `Perspective` projection with the provided arguments.
+    ///
+    /// # Arguments
+    ///
+    /// * aspect - Aspect Ratio represented as a `f32` ratio.
+    /// * fov - Field of View represented in degrees
+    /// * z_near - Near clip plane distance
+    /// * z_far - Far clip plane distance
     pub fn new(aspect: f32, fov: f32, z_near: f32, z_far: f32) -> Self {
         if cfg!(debug_assertions) {
             assert!(
@@ -151,32 +220,44 @@ impl Perspective {
         Self { matrix }
     }
 
+    /// Returns the aspect ratio in radians
     #[inline]
     pub fn aspect(&self) -> f32 {
         (self.matrix[(1, 1)] / self.matrix[(0, 0)]).abs()
     }
 
+    /// Returns the y-axis value of the FOV as a ratio.
     #[inline]
     pub fn fovy(&self) -> f32 {
         -(1.0 / self.matrix[(1, 1)]).atan() * 2.0
     }
 
+    /// Returns the near-clip value.
     #[inline]
     pub fn near(&self) -> f32 {
         (self.matrix[(2, 3)] / self.matrix[(2, 2)])
     }
 
+    /// Returns the far-clip value.
     #[inline]
     pub fn far(&self) -> f32 {
         self.matrix[(2, 3)] / (self.matrix[(2, 2)] + 1.0)
     }
 
+    /// Sets the aspect ratio represented in radians.
+    ///
+    /// # NOTE
+    /// This causes changes to both the fov and aspect ratio matrix elements.
     #[inline]
     pub fn set_aspect(&mut self, aspect: f32) {
         let tan_half_fovy = (self.fovy() / 2.0).tan();
         self.matrix[(0, 0)] = 1.0 / (aspect * tan_half_fovy);
     }
 
+    /// Sets the aspect ratio represented as a `f32` ratio.
+    ///
+    /// # NOTE
+    /// This causes changes to both the fov and aspect ratio matrix elements.
     #[inline]
     pub fn set_fov(&mut self, fov: f32) {
         let tan_half_fovy = (fov / 2.0).tan();
@@ -184,6 +265,10 @@ impl Perspective {
         self.matrix[(1, 1)] = -1.0 / tan_half_fovy;
     }
 
+    /// Sets the aspect ratio represented as a ratio as well as the FOV represented in radians.
+    ///
+    /// # NOTE
+    /// This causes changes to both the fov and aspect ratio matrix elements.
     #[inline]
     pub fn set_fov_and_aspect(&mut self, fov: f32, aspect: f32) {
         let tan_half_fovy = (fov / 2.0).tan();
@@ -191,27 +276,38 @@ impl Perspective {
         self.matrix[(1, 1)] = -1.0 / tan_half_fovy;
     }
 
+    /// Sets the near-clip value
+    ///
+    /// # NOTE
+    /// This causes changes to both the near and far ratio matrix elements.
     #[inline]
     pub fn set_near(&mut self, near: f32) {
         self.set_near_and_far(near, self.far())
     }
 
+    /// Sets the far-clip value.
+    ///
+    /// # NOTE
+    /// This causes changes to both the near and far ratio matrix elements.
     #[inline]
     pub fn set_far(&mut self, far: f32) {
         self.set_near_and_far(self.near(), far)
     }
 
+    /// Sets the near and far clip values.
     #[inline]
     pub fn set_near_and_far(&mut self, z_near: f32, z_far: f32) {
         self.matrix[(2, 2)] = z_far / (z_near - z_far);
         self.matrix[(2, 3)] = -(z_near * z_far) / (z_far - z_near);
     }
 
+    /// Returns a reference to the inner matrix representation of this projection.
     #[inline]
     pub fn as_matrix(&self) -> &Matrix4<f32> {
         &self.matrix
     }
 
+    /// Returns a mutable reference to the inner matrix representation of this projection.
     #[inline]
     pub fn as_matrix_mut(&mut self) -> &mut Matrix4<f32> {
         &mut self.matrix
@@ -255,6 +351,8 @@ impl Projection {
         Projection::Perspective(Perspective::new(aspect, fov, z_near, z_far))
     }
 
+    /// Returns a reference to this `Projection` as [Orthographic] if it is in fact an `Orthographic`
+    /// projection. Otherwise, `None` is returned.
     pub fn as_orthographic(&self) -> Option<&Orthographic> {
         match *self {
             Projection::Orthographic(ref s) => Some(s),
@@ -262,6 +360,8 @@ impl Projection {
         }
     }
 
+    /// Returns a mutable reference to this `Projection` as [Orthographic] if it is in fact an
+    /// `Orthographic` projection. Otherwise, `None` is returned.
     pub fn as_orthographic_mut(&mut self) -> Option<&mut Orthographic> {
         match *self {
             Projection::Orthographic(ref mut s) => Some(s),
@@ -269,6 +369,8 @@ impl Projection {
         }
     }
 
+    /// Returns a reference to this `Projection` as [Perspective] if it is in fact a `Perspective`
+    /// projection. Otherwise, `None` is returned.
     pub fn as_perspective(&self) -> Option<&Perspective> {
         match *self {
             Projection::Perspective(ref s) => Some(s),
@@ -276,6 +378,8 @@ impl Projection {
         }
     }
 
+    /// Returns a mutable reference to this `Projection` as [Perspective] if it is in fact a
+    /// `Perspective` projection. Otherwise, `None` is returned.
     pub fn as_perspective_mut(&mut self) -> Option<&mut Perspective> {
         match *self {
             Projection::Perspective(ref mut s) => Some(s),
@@ -283,6 +387,7 @@ impl Projection {
         }
     }
 
+    /// Returns a reference to the inner matrix represpentation of this projection.
     pub fn as_matrix(&self) -> &Matrix4<f32> {
         match *self {
             Projection::Orthographic(ref s) => s.as_matrix(),
@@ -290,6 +395,7 @@ impl Projection {
         }
     }
 
+    /// Returns a mutable reference to the inner matrix represpentation of this projection.
     pub fn as_matrix_mut(&mut self) -> &mut Matrix4<f32> {
         match *self {
             Projection::Orthographic(ref mut s) => s.as_matrix_mut(),
@@ -373,6 +479,7 @@ impl Camera {
         ))
     }
 
+    /// Returns a reference to the inner `Projection` matrix of this camera.
     pub fn as_matrix(&self) -> &Matrix4<f32> {
         match self.inner {
             Projection::Orthographic(ref p) => p.as_matrix(),
@@ -380,6 +487,7 @@ impl Camera {
         }
     }
 
+    /// Returns a mutable reference to the inner `Projection` matrix of this camera.
     pub fn as_matrix_mut(&mut self) -> &mut Matrix4<f32> {
         match self.inner {
             Projection::Orthographic(ref mut p) => p.as_matrix_mut(),
@@ -387,14 +495,17 @@ impl Camera {
         }
     }
 
+    /// Returns a reference to the inner [Projection] of this camera.
     pub fn projection(&self) -> &Projection {
         &self.inner
     }
 
+    /// Returns a mutable reference to the inner [Projection] of this camera.
     pub fn projection_mut(&mut self) -> &mut Projection {
         &mut self.inner
     }
 
+    /// Sets the inner [Projection] of this camera.
     pub fn set_projection(&mut self, new: Projection) {
         self.inner = new;
     }
@@ -406,27 +517,39 @@ impl Component for Camera {
 
 /// Active camera resource, used by the renderer to choose which camera to get the view matrix from.
 /// If no active camera is found, the first camera will be used as a fallback.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Default)]
 pub struct ActiveCamera {
     /// Camera entity
-    pub entity: Entity,
+    pub entity: Option<Entity>,
 }
 
 /// Projection prefab
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub enum CameraPrefab {
+    /// Orthographic prefab
     Orthographic {
+        /// The x-coordinate of the cuboid leftmost face parallel to the yz-plane.
         left: f32,
+        /// The x-coordinate of the cuboid rightmost face parallel to the yz-plane.
         right: f32,
+        /// The lower y-coordinate of the cuboid leftmost face parallel to the xz-plane.
         bottom: f32,
+        /// The upper y-coordinate of the cuboid leftmost face parallel to the xz-plane.
         top: f32,
+        /// The distance between the viewer (the origin) and the closest face of the cuboid parallel to the xy-plane. If used for a 3D rendering application, this is the closest clipping plane.
         znear: f32,
+        /// The distance between the viewer (the origin) and the furthest face of the cuboid parallel to the xy-plane. If used for a 3D rendering application, this is the furthest clipping plane.
         zfar: f32,
     },
+    /// Perspective prefab
     Perspective {
+        /// Aspect Ratio represented as a `f32` ratio.
         aspect: f32,
+        /// Field of View represented in degrees
         fovy: f32,
+        /// Near clip plane distance
         znear: f32,
+        /// Far clip plane distance
         zfar: f32,
     },
 }
@@ -468,10 +591,11 @@ impl<'a> PrefabData<'a> for CameraPrefab {
 }
 
 /// Active camera prefab
-pub struct ActiveCameraPrefab(usize);
+#[derive(Debug, serde::Deserialize, Clone)]
+pub struct ActiveCameraPrefab(Option<usize>);
 
 impl<'a> PrefabData<'a> for ActiveCameraPrefab {
-    type SystemData = (Option<Write<'a, ActiveCamera>>,);
+    type SystemData = (Write<'a, ActiveCamera>,);
     type Result = ();
 
     fn add_to_entity(
@@ -481,8 +605,8 @@ impl<'a> PrefabData<'a> for ActiveCameraPrefab {
         entities: &[Entity],
         _: &[Entity],
     ) -> Result<(), Error> {
-        if let Some(ref mut cam) = system_data.0 {
-            cam.entity = entities[self.0];
+        if let Some(ref ent) = self.0 {
+            system_data.0.entity = Some(entities[*ent]);
         }
         // TODO: if no `ActiveCamera` insert using `LazyUpdate`, require changes to `specs`
         Ok(())
@@ -500,9 +624,7 @@ mod tests {
 
     use super::*;
     use amethyst_core::{
-        math::{
-            convert, Isometry3, Matrix4, Point3, Translation3, UnitQuaternion, Vector3, Vector4,
-        },
+        math::{convert, Isometry3, Matrix4, Point3, Translation3, UnitQuaternion, Vector3},
         Transform,
     };
     use ron::{de::from_str, ser::to_string_pretty};
@@ -511,7 +633,6 @@ mod tests {
     use more_asserts::{assert_ge, assert_gt, assert_le, assert_lt};
 
     #[test]
-    #[ignore]
     fn test_orthographic_serde() {
         let test_ortho = Projection::orthographic(0.0, 100.0, 10.0, 150.0, -5.0, 100.0);
         println!(
@@ -524,7 +645,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_perspective_serde() {
         let test_persp = Projection::perspective(1.7, std::f32::consts::FRAC_PI_3, 0.1, 1000.0);
         println!(
@@ -805,85 +925,5 @@ mod tests {
         let far = Point3::new(0.0, 0.0, -97.0);
         let projected_point = mvp * far.to_homogeneous();
         assert_abs_diff_eq!(projected_point[2] / projected_point[3], 1.0);
-    }
-
-    #[test]
-    #[ignore]
-    fn perspective_project_cube_centered() {
-        let (camera_transform, _, _) = setup();
-
-        // Cube in worldspace
-        let cube = [
-            Point3::new(1.0, 1.0, 1.0),
-            Point3::new(-1.0, 1.0, 1.0),
-            Point3::new(-1.0, -1.0, 1.0),
-            Point3::new(1.0, -1.0, 1.0),
-            Point3::new(1.0, 1.0, -1.0),
-            Point3::new(-1.0, 1.0, -1.0),
-            Point3::new(-1.0, -1.0, -1.0),
-            Point3::new(1.0, -1.0, -1.0),
-        ];
-
-        let proj = Projection::perspective(1280.0 / 720.0, std::f32::consts::FRAC_PI_3, 0.1, 100.0);
-        let view = gatherer_calc_view_matrix(camera_transform);
-
-        let mvp = proj.as_matrix() * view;
-
-        let _result: Vec<Vector4<f32>> = cube
-            .into_iter()
-            .map(|vertex| mvp * vertex.to_homogeneous())
-            .collect();
-        // TODO: Calc correct result
-        // assert_ulps_eq!(result, Point());
-        unimplemented!()
-    }
-
-    #[test]
-    #[ignore]
-    fn perspective_project_cube_off_centered_rotated() {
-        let (camera_transform, _, _) = setup();
-        // Cube in worldspace
-        let cube = [
-            Point3::new(1.0, 1.0, 1.0),
-            Point3::new(-1.0, 1.0, 1.0),
-            Point3::new(-1.0, -1.0, 1.0),
-            Point3::new(1.0, -1.0, 1.0),
-            Point3::new(1.0, 1.0, -1.0),
-            Point3::new(-1.0, 1.0, -1.0),
-            Point3::new(-1.0, -1.0, -1.0),
-            Point3::new(1.0, -1.0, -1.0),
-        ];
-        let proj = Projection::perspective(1280.0 / 720.0, std::f32::consts::FRAC_PI_3, 0.1, 100.0);
-        let view = gatherer_calc_view_matrix(camera_transform);
-
-        // Rotated x and y axis by 45°
-        let rotation = UnitQuaternion::from_euler_angles(
-            std::f32::consts::FRAC_PI_4,
-            std::f32::consts::FRAC_PI_4,
-            0.0,
-        );
-        let model =
-            Isometry3::from_parts(Translation3::new(-1.0, 0.0, 0.0), rotation).to_homogeneous();
-
-        let mvp = proj.as_matrix() * view * model;
-
-        // Todo: Maybe check more cells of the model matrix
-        assert_ulps_eq!(model.column(0)[0], 0.70710678118);
-        assert_ulps_eq!(model.column(3)[0], -1.0);
-
-        let _result: Vec<Vector4<f32>> = cube
-            .iter()
-            .map(|vertex| mvp * vertex.to_homogeneous())
-            .collect();
-
-        // TODO: Calc correct result
-        // assert_ulps_eq!(result, Point());
-        unimplemented!()
-    }
-
-    #[test]
-    #[ignore]
-    fn orthographic_project_cube_off_centered_rotated() {
-        unimplemented!()
     }
 }

@@ -1,3 +1,5 @@
+//! Module containing structures useful for batching draw calls
+//! in scenarios with various known assumptions, e.g. order independence.
 use crate::util::TapCountIter;
 use derivative::Derivative;
 use smallvec::{smallvec, SmallVec};
@@ -10,6 +12,8 @@ use std::{
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
+/// Iterator trait for grouping iterated 2-tuples `(K, V)` by contiguous ranges with equal `K`,
+/// providing access in a group-by-group manner.
 pub trait GroupIterator<K, V>
 where
     Self: Iterator<Item = (K, V)> + Sized,
@@ -63,6 +67,17 @@ where
     }
 }
 
+/// Batching implementation which provides two levels of indirection and grouping for a given batch.
+/// This batch method is used, for example, batching meshes and textures; for any given draw call,
+/// a user would want to batch all draws using a specific texture together, and then also group all
+/// draw calls for a specific mesh together.
+///
+/// `PK` - First level of batch grouping
+/// `SK` - Secondary level of batch grouping
+/// `C` - the actual final type being batched.
+///
+/// Internally, this batch type is implemented using a `FnvHashMap` for its outer primary batching
+/// layer. The inner layer is then implemented as a tuple indexed `SmallVec`.
 #[derive(Derivative, Debug)]
 #[derivative(Default(bound = ""))]
 pub struct TwoLevelBatch<PK, SK, C>
@@ -81,6 +96,7 @@ where
     C: FromIterator<<C as IntoIterator>::Item>,
     C: Extend<<C as IntoIterator>::Item>,
 {
+    /// Clears all batch data.
     pub fn clear_inner(&mut self) {
         self.data_count = 0;
         for (_, data) in self.map.iter_mut() {
@@ -88,10 +104,12 @@ where
         }
     }
 
+    /// Removes empty batch indices from internal storage.
     pub fn prune(&mut self) {
         self.map.retain(|_, b| !b.is_empty());
     }
 
+    /// Inserts a set of batch items.
     pub fn insert(&mut self, pk: PK, sk: SK, data: impl IntoIterator<Item = C::Item>) {
         #[cfg(feature = "profiler")]
         profile_scope!("twolevel_insert");
@@ -115,21 +133,37 @@ where
         }
     }
 
+    /// Returns an iterator over the internally batched raw data.
     pub fn data(&self) -> impl Iterator<Item = &C> {
         self.map
             .iter()
             .flat_map(|(_, batch)| batch.iter().map(|data| &data.1))
     }
 
+    /// Returns an iterator over the internally batched data, which includes the group keys.
     pub fn iter(&self) -> impl Iterator<Item = (&PK, impl Iterator<Item = &(SK, C)>)> {
         self.map.iter().map(|(pk, batch)| (pk, batch.iter()))
     }
 
+    /// Returns the number of items currently in this batch.
     pub fn count(&self) -> usize {
         self.data_count
     }
 }
 
+/// Batching implementation which provides two levels of indirection and grouping for a given batch.
+/// This batch method is used, for example, batching meshes and textures; for any given draw call,
+/// a user would want to batch all draws using a specific texture together, and then also group all
+/// draw calls for a specific mesh together.
+///
+/// `PK` - First level of batch grouping
+/// `SK` - Secondary level of batch grouping
+/// `D` - the actual final type being batched.
+///
+/// Internally, this batch type is implemented with sorted tuple `Vec` structures.
+///
+/// `OrderedTwoLevelBatch` differs from [TwoLevelBatch] in that it sorts and orders on both levels
+/// of batching.
 #[derive(Derivative, Debug)]
 #[derivative(Default(bound = ""))]
 pub struct OrderedTwoLevelBatch<PK, SK, D>
@@ -149,6 +183,7 @@ where
     PK: PartialEq,
     SK: PartialEq,
 {
+    /// Clears all data and indices from this batch set.
     pub fn swap_clear(&mut self) {
         std::mem::swap(&mut self.old_pk_list, &mut self.pk_list);
         std::mem::swap(&mut self.old_sk_list, &mut self.sk_list);
@@ -157,6 +192,7 @@ where
         self.data_list.clear();
     }
 
+    /// Inserts a set of batch data to the specified grouping.
     pub fn insert(&mut self, pk: PK, sk: SK, data: impl IntoIterator<Item = D>) {
         #[cfg(feature = "profiler")]
         profile_scope!("ordered_twolevel_insert");
@@ -182,6 +218,7 @@ where
         }
     }
 
+    /// Returns the raw storage data of this batch container.
     pub fn data(&self) -> &Vec<D> {
         &self.data_list
     }
@@ -196,15 +233,19 @@ where
         })
     }
 
+    /// Returns true if sorting this batch resulted in a change in order.
     pub fn changed(&self) -> bool {
         self.pk_list != self.old_pk_list || self.sk_list != self.old_sk_list
     }
 
+    /// Returns the number of items currently in this batch.
     pub fn count(&self) -> usize {
         self.data_list.len()
     }
 }
 
+/// A batching implementation with one level of indexing. Data type `D` batched by primary key `PK`.
+/// Items with the same `PK` are always grouped.
 #[derive(Derivative, Debug)]
 #[derivative(Default(bound = ""))]
 pub struct OneLevelBatch<PK, D>
@@ -219,6 +260,7 @@ impl<PK, D> OneLevelBatch<PK, D>
 where
     PK: Eq + std::hash::Hash,
 {
+    /// Clears all data and indices from this batch set.
     pub fn clear_inner(&mut self) {
         self.data_count = 0;
         for (_, data) in self.map.iter_mut() {
@@ -226,10 +268,12 @@ where
         }
     }
 
+    /// Removes any empty grouping indicies.
     pub fn prune(&mut self) {
         self.map.retain(|_, b| !b.is_empty());
     }
 
+    /// Inserts the provided set of batch data for `PK`
     pub fn insert(&mut self, pk: PK, data: impl IntoIterator<Item = D>) {
         #[cfg(feature = "profiler")]
         profile_scope!("onelevel_insert");
@@ -251,10 +295,12 @@ where
         }
     }
 
+    /// Returns an iterator over batched data lists.
     pub fn data<'a>(&'a self) -> impl Iterator<Item = &'a Vec<D>> {
         self.map.values()
     }
 
+    /// Returns an iterator over batched values, providing batch `PK` and data list.
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a PK, Range<u32>)> {
         let mut offset = 0;
         self.map.iter().map(move |(pk, data)| {
@@ -264,11 +310,15 @@ where
         })
     }
 
+    /// Returns the number of items currently in this batch.
     pub fn count(&self) -> usize {
         self.data_count
     }
 }
 
+/// A batching implementation with one level of indexing. Data type `D` batched by primary key `PK`.
+///
+/// Items are always kept in insertion order, grouped only by contiguous ranges of equal `PK`.
 #[derive(Derivative, Debug)]
 #[derivative(Default(bound = ""))]
 pub struct OrderedOneLevelBatch<PK, D>
@@ -284,12 +334,14 @@ impl<PK, D> OrderedOneLevelBatch<PK, D>
 where
     PK: PartialEq,
 {
+    /// Clears all data and indices from this batch set.
     pub fn swap_clear(&mut self) {
         std::mem::swap(&mut self.old_keys, &mut self.keys_list);
         self.keys_list.clear();
         self.data_list.clear();
     }
 
+    /// Inserts the provided set of batch data for `PK`
     pub fn insert(&mut self, pk: PK, data: impl IntoIterator<Item = D>) {
         #[cfg(feature = "profiler")]
         profile_scope!("ordered_onelevel_insert");
@@ -297,6 +349,10 @@ where
         let start = self.data_list.len() as u32;
         self.data_list.extend(data);
         let added_len = self.data_list.len() as u32 - start;
+
+        if added_len == 0 {
+            return;
+        }
 
         match self.keys_list.last_mut() {
             Some((last_pk, last_len)) if last_pk == &pk => {
@@ -308,6 +364,7 @@ where
         }
     }
 
+    /// Returns an iterator to raw data for this batch.
     pub fn data(&self) -> &Vec<D> {
         &self.data_list
     }
@@ -322,11 +379,47 @@ where
         })
     }
 
+    /// Returns an iterator to raw data for this batch.
     pub fn changed(&self) -> bool {
         self.keys_list != self.old_keys
     }
 
+    /// Returns the number of items currently in this batch.
     pub fn count(&self) -> usize {
         self.data_list.len()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_ordered_onelevel_batch_single_insert() {
+        let mut batch = OrderedOneLevelBatch::<u32, u32>::default();
+        batch.insert(0, Some(0));
+        assert_eq!(batch.count(), 1);
+        assert_eq!(batch.iter().collect::<Vec<_>>(), vec![(&0, 0..1)]);
+    }
+
+    #[test]
+    fn test_ordered_onelevel_batch_insert_existing() {
+        let mut batch = OrderedOneLevelBatch::<u32, u32>::default();
+        batch.insert(0, Some(0));
+        batch.insert(0, Some(1));
+        batch.insert(1, Some(0));
+        assert_eq!(batch.count(), 3);
+        assert_eq!(
+            batch.iter().collect::<Vec<_>>(),
+            vec![(&0, 0..2), (&1, 2..3)]
+        );
+    }
+
+    #[test]
+    fn test_ordered_onelevel_batch_empty_insert() {
+        let mut batch = OrderedOneLevelBatch::<u32, u32>::default();
+        batch.insert(0, None);
+        assert_eq!(batch.count(), 0);
+        assert_eq!(batch.iter().collect::<Vec<_>>(), vec![]);
     }
 }

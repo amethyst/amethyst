@@ -1,3 +1,4 @@
+//! Material abstraction submodule.
 use crate::{
     mtl::{Material, StaticTextureSet},
     pod,
@@ -131,9 +132,11 @@ enum MaterialState<B: Backend> {
     },
 }
 
+/// Material ID newtype, preventing users from creating arbitrary `MaterialId`. Represented as a `u32`
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MaterialId(u32);
 
+/// Material helper submodule for allocating and binding materials and their associated textures.
 #[derive(Debug)]
 pub struct MaterialSub<B: Backend, T: for<'a> StaticTextureSet<'a>> {
     generation: u32,
@@ -146,6 +149,7 @@ pub struct MaterialSub<B: Backend, T: for<'a> StaticTextureSet<'a>> {
 }
 
 impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
+    /// Create a new `MaterialSub` using the provided rendy `Factory`
     pub fn new(factory: &Factory<B>) -> Result<Self, failure::Error> {
         Ok(Self {
             layout: set_layout! {factory, [1] UniformBuffer FRAGMENT, [T::len()] CombinedImageSampler FRAGMENT},
@@ -167,14 +171,17 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         SlottedBuffer::new(factory, material_step, 1024, hal::buffer::Usage::UNIFORM)
     }
 
+    /// Returns the raw `DescriptorSetLayout` for this environment
     pub fn raw_layout(&self) -> &B::DescriptorSetLayout {
         self.layout.raw()
     }
 
+    /// Increment the internal generation counter.
     pub fn maintain(&mut self) {
         self.generation += self.generation.wrapping_add(1);
     }
 
+    /// Releases any materials not used in the current generation.
     fn collect_unused(&mut self) {
         let cur_generation = self.generation;
         // let allocator = &mut self.allocator;
@@ -191,6 +198,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         }
     }
 
+    /// Attempts to insert a new material to this collection.
     fn try_insert(
         &mut self,
         factory: &Factory<B>,
@@ -258,6 +266,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         })
     }
 
+    /// Inserts a new material to this collection.
     pub fn insert(
         &mut self,
         factory: &Factory<B>,
@@ -305,6 +314,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         }
     }
 
+    /// Returns `true` if the supplied `MaterialId` is already loaded.
     #[inline]
     pub fn loaded(&self, material_id: MaterialId) -> bool {
         match &self.materials[material_id.0 as usize] {
@@ -313,6 +323,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
         }
     }
 
+    /// Binds all material descriptor sets and textures contained in this collection.
     #[inline]
     pub fn bind(
         &self,

@@ -8,6 +8,9 @@ use amethyst_core::{
 use amethyst_window::ScreenDimensions;
 use winit::Event;
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 /// Input system
 ///
 /// Will read `winit::Event` from `EventHandler<winit::Event>`, process them with `InputHandler`,
@@ -45,6 +48,9 @@ impl<'a, T: BindingTypes> System<'a> for InputSystem<T> {
     );
 
     fn run(&mut self, (input, mut handler, mut output, screen_dimensions): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("input_system");
+
         handler.send_frame_begin();
         for event in input.read(
             &mut self

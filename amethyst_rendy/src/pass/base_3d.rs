@@ -44,17 +44,31 @@ macro_rules! profile_scope_impl {
     };
 }
 
+/// Define drawing opaque 3d meshes with specified shaders and texture set
 pub trait Base3DPassDef<B: Backend>: 'static + std::fmt::Debug + Send + Sync {
+    /// The human readable name of this pass
     const NAME: &'static str;
+
+    /// The [mtl::StaticTextureSet] type implementation for this pass
     type TextureSet: for<'a> StaticTextureSet<'a>;
+
+    /// Returns the vertex `SpirvShader` which will be used for this pass
     fn vertex_shader() -> &'static SpirvShader;
+
+    /// Returns the vertex `SpirvShader` which will be used for this pass on skinned meshes
     fn vertex_skinned_shader() -> &'static SpirvShader;
+
+    /// Returns the fragment `SpirvShader` which will be used for this pass
     fn fragment_shader() -> &'static SpirvShader;
+
+    /// Returns the `VertexFormat` of this pass
     fn base_format() -> Vec<VertexFormat>;
+
+    /// Returns the `VertexFormat` of this pass for skinned meshes
     fn skinned_format() -> Vec<VertexFormat>;
 }
 
-/// Draw opaque 3d mesh with specified shaders and texture set
+/// Draw opaque 3d meshes with specified shaders and texture set
 #[derive(Clone, Derivative)]
 #[derivative(Debug(bound = ""), Default(bound = ""))]
 pub struct DrawBase3DDesc<B: Backend, T: Base3DPassDef<B>> {
@@ -139,6 +153,8 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroupDesc<B, Resources> for DrawBase
     }
 }
 
+/// Base implementation of a 3D render pass which can be consumed by actual 3D render passes,
+/// such as [pass::pbr::DrawPbr]
 #[derive(Derivative)]
 #[derivative(Debug(bound = ""))]
 pub struct DrawBase3D<B: Backend, T: Base3DPassDef<B>> {
@@ -166,7 +182,7 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3D<B
         _subpass: hal::pass::Subpass<'_, B>,
         resources: &Resources,
     ) -> PrepareResult {
-        profile_scope_impl!("prepare");
+        profile_scope_impl!("prepare opaque");
 
         let (
             mesh_storage,
@@ -326,7 +342,7 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3D<B
         _subpass: hal::pass::Subpass<'_, B>,
         resources: &Resources,
     ) {
-        profile_scope_impl!("draw");
+        profile_scope_impl!("draw opaque");
 
         let mesh_storage = <Read<'_, AssetStorage<Mesh>>>::fetch(resources);
         let models_loc = self.vertex_format_base.len() as u32;
@@ -498,6 +514,7 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroupDesc<B, Resources>
     }
 }
 
+/// Draw transparent mesh with physically based lighting
 #[derive(Derivative)]
 #[derivative(Debug(bound = ""))]
 pub struct DrawBase3DTransparent<B: Backend, T: Base3DPassDef<B>> {
@@ -526,6 +543,8 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3DTr
         _subpass: hal::pass::Subpass<'_, B>,
         resources: &Resources,
     ) -> PrepareResult {
+        profile_scope_impl!("prepare transparent");
+
         let (mesh_storage, visibility, meshes, materials, transforms, joints, tints) =
             <(
                 Read<AssetStorage<Mesh>>,
@@ -626,6 +645,8 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3DTr
         _subpass: hal::pass::Subpass<'_, B>,
         resources: &Resources,
     ) {
+        profile_scope_impl!("draw transparent");
+
         let mesh_storage = <Read<'_, AssetStorage<Mesh>>>::fetch(resources);
         let layout = &self.pipeline_layout;
         let encoder = &mut encoder;

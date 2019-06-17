@@ -12,6 +12,9 @@ use amethyst_window::ScreenDimensions;
 
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "profiler")]
+use thread_profiler::profile_scope;
+
 /// A component describing the behavior of the camera in accordance with the screen dimensions
 #[derive(Clone, Deserialize, PrefabData, Serialize)]
 #[prefab(Component)]
@@ -242,6 +245,9 @@ impl<'a> System<'a> for AutoFovSystem {
     }
 
     fn run(&mut self, (screen, auto_fovs, mut cameras): Self::SystemData) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("auto_fov_system");
+
         if self.last_dimensions != *screen {
             for (camera, auto_fov) in (&mut cameras, &auto_fovs).join() {
                 if let Some(perspective) = camera.projection_mut().as_perspective_mut() {

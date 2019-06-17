@@ -1,3 +1,4 @@
+//! GPU POD data types.
 use crate::{
     mtl,
     resources::Tint as TintComponent,
@@ -15,14 +16,24 @@ use rendy::{
     mesh::{AsAttribute, AsVertex, Model, VertexFormat},
 };
 
+/// TextureOffset
+/// ```glsl,ignore
+/// struct UvOffset {
+///    vec2 u_offset;
+///    vec2 v_offset;
+/// };
+/// ```
 #[derive(Clone, Copy, Debug, AsStd140)]
 #[repr(C, align(16))]
 pub struct TextureOffset {
+    /// U-axis offset
     pub u_offset: vec2,
+    /// V-axis offset
     pub v_offset: vec2,
 }
 
 impl TextureOffset {
+    /// Helper function from proper type to Pod type.
     pub fn from_offset(offset: &crate::mtl::TextureOffset) -> Self {
         TextureOffset {
             u_offset: [offset.u.0, offset.u.1].into(),
@@ -31,16 +42,30 @@ impl TextureOffset {
     }
 }
 
+/// ViewArgs
+/// ```glsl,ignore
+/// uniform ViewArgs {
+///    uniform mat4 proj;
+///    uniform mat4 view;
+/// };
+/// ```
 #[derive(Clone, Copy, Debug, AsStd140)]
 #[repr(C, align(16))]
 pub struct ViewArgs {
+    /// Projection matrix
     pub proj: mat4,
+    /// View matrix
     pub view: mat4,
 }
 
+/// Tint
+/// ```glsl,ignore
+/// vec4 tint;
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
 #[repr(C, align(16))]
 pub struct Tint {
+    /// Tint color as `Rgba32Sfloat`
     pub tint: vec4,
 }
 
@@ -49,14 +74,23 @@ impl AsAttribute for Tint {
     const FORMAT: Format = Format::Rgba32Sfloat;
 }
 
+/// Instance-rate vertex arguments
+/// ```glsl,ignore
+///  mat4 model;
+///  vec4 tint;
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 #[repr(C, align(16))]
 pub struct VertexArgs {
+    /// Instance-rate model matrix
     pub model: mat4,
+    /// Instance-rate model `Tint`
     pub tint: vec4,
 }
 
 impl VertexArgs {
+    /// Populates a `VertexArgs` instance-rate structure with the information from a `Transform`
+    /// and `TintComponent` components.
     #[inline]
     pub fn from_object_data(transform: &Transform, tint: Option<&TintComponent>) -> Self {
         let model: [[f32; 4]; 4] = convert::<_, Matrix4<f32>>(*transform.global_matrix()).into();
@@ -76,9 +110,14 @@ impl AsVertex for VertexArgs {
     }
 }
 
+/// Instance-rate joints offset
+/// ```glsl,ignore
+///  uint joints_offset;
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
 #[repr(C, align(4))]
 pub struct JointsOffset {
+    /// `u32` joints offset value
     pub joints_offset: u32,
 }
 
@@ -87,11 +126,20 @@ impl AsAttribute for JointsOffset {
     const FORMAT: Format = Format::R32Uint;
 }
 
+/// Skinned Instance-rate vertex arguments.
+/// ```glsl,ignore
+///  mat4 model;
+///  vec4 tint;
+///  uint joints_offset:
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 #[repr(C, packed)]
 pub struct SkinnedVertexArgs {
+    /// Instance-rate model matrix
     pub model: mat4,
+    /// Instance-rate `Tint`
     pub tint: vec4,
+    /// Instance-rate joint offset as `u32`
     pub joints_offset: u32,
 }
 
@@ -102,6 +150,7 @@ impl AsVertex for SkinnedVertexArgs {
 }
 
 impl SkinnedVertexArgs {
+    /// Populate `SkinnedVertexArgs` from the supplied `Transform` and `TintComponent`
     #[inline]
     pub fn from_object_data(
         transform: &Transform,
@@ -120,48 +169,114 @@ impl SkinnedVertexArgs {
     }
 }
 
+/// point light struct
+/// ```glsl,ignore
+/// struct PointLight {
+///    vec3 position;
+///    vec3 color;
+///    float intensity;
+/// };
+/// ```
 #[derive(Clone, Copy, Debug, AsStd140)]
 pub struct PointLight {
+    /// Light world position
     pub position: vec3,
+    /// Light color
     pub color: vec3,
+    /// Light intensity (0 - infinity)
     pub intensity: float,
 }
 
+/// directional light struct
+/// ```glsl,ignore
+/// struct DirectionalLight {
+///    vec3 color;
+///    float intensity;
+///    vec3 direction;
+/// };
+/// ```
 #[derive(Clone, Copy, Debug, AsStd140)]
 pub struct DirectionalLight {
+    /// Light Color
     pub color: vec3,
+    /// Light intensity (0 - infinity)
     pub intensity: float,
+    /// light cast direction vector
     pub direction: vec3,
 }
 
+/// spot light struct
+/// ```glsl,ignore
+/// struct SpotLight {
+///    vec3 position;
+///    vec3 color;
+///    vec3 direction;
+///    float angle;
+///    float intensity;
+///    float range;
+///    float smoothness;
+/// };
+/// ```
 #[derive(Clone, Copy, Debug, AsStd140)]
 pub struct SpotLight {
+    /// Light world position
     pub position: vec3,
+    /// Light Color
     pub color: vec3,
+    /// Light direction
     pub direction: vec3,
+    /// Angle of the light in radians
     pub angle: float,
+    /// Light intensity (0 - infinity)
     pub intensity: float,
+    /// Spotlight range
     pub range: float,
+    /// Spotlight smoothness
     pub smoothness: float,
 }
 
+/// Environment Uniform
+/// ```glsl,ignore
+/// uniform Environment {
+///    vec3 ambient_color;
+///    vec3 camera_position;
+///    int point_light_count;
+///    int directional_light_count;
+///    int spot_light_count;
+/// };
+/// ```
 #[derive(Clone, Copy, Debug, AsStd140)]
 pub struct Environment {
+    /// Ambient color for the entire image
     pub ambient_color: vec3,
+    /// Camera world position
     pub camera_position: vec3,
+    /// Number of point lights
     pub point_light_count: int,
+    /// Number of directional lights
     pub directional_light_count: int,
+    /// Number of spot lights
     pub spot_light_count: int,
 }
 
+/// Material Uniform
+/// ```glsl,ignore
+/// uniform Material {
+///    UvOffset uv_offset;
+///    float alpha_cutoff;
+/// };
+/// ```
 #[derive(Clone, Copy, Debug, AsStd140)]
 #[repr(C, align(16))]
 pub struct Material {
+    /// UV offset of material
     pub uv_offset: TextureOffset,
+    /// Material alpha cutoff
     pub alpha_cutoff: float,
 }
 
 impl Material {
+    /// Helper function from amethyst_rendy 'proper' type to POD type.
     pub fn from_material(mat: &mtl::Material) -> Self {
         Material {
             uv_offset: TextureOffset::from_offset(&mat.uv_offset),
@@ -170,14 +285,29 @@ impl Material {
     }
 }
 
+/// Sprite Vertex Data
+/// ```glsl,ignore
+/// vec2 dir_x;
+/// vec2 dir_y;
+/// vec2 pos;
+/// vec2 u_offset;
+/// vec2 v_offset;
+/// float depth;
+/// ```
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
 #[repr(C, align(4))]
 pub struct SpriteArgs {
+    /// Rotation of the sprite, X-axis
     pub dir_x: vec2,
+    /// Rotation of the sprite, Y-axis
     pub dir_y: vec2,
+    /// Screen position of the sprite
     pub pos: vec2,
+    /// Upper-left coordinate of the sprite in the spritesheet
     pub u_offset: vec2,
+    /// Bottom-right coordinate of the sprite in the spritesheet
     pub v_offset: vec2,
+    /// Depth value of this sprite
     pub depth: float,
 }
 
@@ -195,6 +325,13 @@ impl AsVertex for SpriteArgs {
 }
 
 impl SpriteArgs {
+    /// Extracts POD vertex data from the provided storages for a sprite.
+    ///
+    /// # Arguments
+    /// * `tex_storage` - `Texture` Storage
+    /// * `sprite_storage` - `SpriteSheet` Storage
+    /// * `sprite_render` - `SpriteRender` component reference
+    /// * `transform` - 'Transform' component reference
     pub fn from_data<'a>(
         tex_storage: &AssetStorage<Texture>,
         sprite_storage: &'a AssetStorage<SpriteSheet>,
@@ -227,7 +364,9 @@ impl SpriteArgs {
     }
 }
 
+/// Trait for auto conversion into standard GLSL POD types.
 pub trait IntoPod<T> {
+    /// Converts `Self` to the supplied `T` GLSL type.
     fn into_pod(self) -> T;
 }
 
