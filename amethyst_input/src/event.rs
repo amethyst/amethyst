@@ -81,7 +81,7 @@ pub enum InputEvent<T> {
         /// The id for the controller connected.
         which: u32,
     },
-    /// Controller was disconnected, it's id might be reused later.
+    /// Controller was disconnected, its id might be reused later.
     ControllerDisconnected {
         /// The id for the controller disconnected.
         which: u32,

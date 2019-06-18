@@ -501,7 +501,7 @@ impl<T: BindingTypes> InputHandler<T> {
         }
     }
 
-    /// Returns the value of an axis by the string id, if the id doesn't exist this returns None.
+    /// Returns the value of an axis by the id, if the id doesn't exist this returns None.
     pub fn axis_value<A>(&self, id: &A) -> Option<f64>
     where
         T::Axis: Borrow<A>,
@@ -509,14 +509,10 @@ impl<T: BindingTypes> InputHandler<T> {
     {
         self.bindings.axes.get(id).map(|a| match *a {
             Axis::Emulated { pos, neg, .. } => {
-                let pos = self.button_is_down(pos);
-                let neg = self.button_is_down(neg);
-                if pos == neg {
-                    0.0
-                } else if pos {
-                    1.0
-                } else {
-                    -1.0
+                match (self.button_is_down(pos), self.button_is_down(neg)) {
+                    (true, false) => 1.0,
+                    (false, true) => -1.0,
+                    _ => 0.0,
                 }
             }
             Axis::Controller {
