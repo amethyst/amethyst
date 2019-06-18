@@ -63,9 +63,9 @@ done the following things first:
    respective branch.
 2. You have processed your source code with `cargo fmt` (we use latest rustup stable).
 3. All of the following commands completed without errors.
-   * `cargo build`
-   * `cargo test --all`
-   * `cargo run --example {example-name}`
+   * `cargo build --features "empty"
+   * `cargo test --all --features "empty"`
+   * `cargo run --example {example-name} --features YOUR_BACKEND`
    * `mdbook test book -L target/debug/deps`
 4. You have granted non-exclusive right to your source code under both the
    [MIT License][lm] and the [Apache License 2.0][la]. Unless you explicitly
