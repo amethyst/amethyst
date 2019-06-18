@@ -16,7 +16,7 @@ pub enum Axis {
     },
     /// Represents an analogue axis of a controller.
     Controller {
-        /// A number representing specific controller, assigned and reused in order of connection.
+        /// A number representing a specific controller, assigned and reused in order of connection.
         controller_id: u32,
         /// The axis being bound
         axis: ControllerAxis,
