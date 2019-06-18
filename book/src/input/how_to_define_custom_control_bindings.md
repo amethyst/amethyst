@@ -5,26 +5,29 @@ Instead of using `StringBindings` for an `InputBundle` you probably want to use 
 Using a custom type to handle input instead of using `String` has many advantages:
 
 * A `String` uses quite a lot of memory compared to something like an enum.
-* Inputting a `String` when retrieving input data is error-prone if you misstype it or change the name.
-* You will be able to add additional information to a custom type.
+* Inputting a `String` when retrieving input data is error-prone if you mistype it or change the name.
+* A custom type can hold additional information.
 
-## Defining a Custom Type
+## Defining Custom Input `BindingTypes`
 
-Defining a custom type for the `InputBundle` is done by implementing the `BindingTypes` trait. This trait contains two types, an `Axis` type and an `Action` type. These types are usually defined as enums, but you can use whatever you want.
+Defining a custom type for the `InputBundle` is done by implementing the `BindingTypes` trait. This trait contains two types, an `Axis` type and an `Action` type. These types are usually defined as enums.
 
-```rust,edition2019,no_run,noplaypen
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# extern crate serde;
+use std::fmt::Display;
 use serde::{Serialize, Deserialize};
 use amethyst::input::{BindingTypes, Bindings};
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 enum AxisBinding {
-  Horizontal,
-  Vertical,
+    Horizontal,
+    Vertical,
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 enum ActionBinding {
-  Shoot,
+    Shoot,
 }
 
 impl Display for AxisBinding {
@@ -42,31 +45,31 @@ impl Display for ActionBinding {
 struct MovementBindingTypes;
 
 impl BindingTypes for MovementBindingTypes {
-  type Axis = AxisBinding;
-  type Action = ActionBinding;
+    type Axis = AxisBinding;
+    type Action = ActionBinding;
 }
 ```
 
 The `Axis` and `Action` type both need to derive all the traits listed above, the first five are used by Amethyst and the last two are for reading and writing to files correctly. They also need to implement `Display` if you want to add a bindings config file.
 
-For serializing and deserializing you need to add [serde](https://crates.io/crates/serde) to the dependencies like this:
+For serializing and deserializing you need to add [serde](https://crates.io/crates/serde) to the dependencies like this (note that there might be a newer version available, that is also compatible):
 
-```rust,ignore
-  serde = { version="1.0", features = ["derive"] }
+```toml,ignore
+serde = { version = "1.0.92", features = ["derive"] }
 ```
 
-If you want to add additional information you can add it to the enum or change the `Axis` and `Action` types to a struct.
+If you want to add additional information you can add it to the enum or change the `Axis` and `Action` types to a struct. For example:
 
-```rust,edition2019,no_run,noplaypen
+```rust,ignore
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 enum AxisBinding {
-  Horizontal(usize),
-  Vertical(usize),
+    Horizontal(usize),
+    Vertical(usize),
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 enum ActionBinding {
-  Shoot(usize),
+    Shoot(usize),
 }
 
 //..
@@ -78,16 +81,16 @@ The config file might look something like this:
 
 ```ron,ignore
 (
-  axes: {
-    Vertical(0): Emulated(pos: Key(W), neg: Key(S)),
-    Horizontal(0): Emulated(pos: Key(D), neg: Key(A)),
-    Vertical(1): Emulated(pos: Key(Up), neg: Key(Down)),
-    Horizontal(1): Emulated(pos: Key(Right), neg: Key(Left)),
-  },
-  actions: {
-    Shoot(0): [[Key(Space)]],
-    Shoot(1): [[Key(Return)]],
-  },
+    axes: {
+        Vertical(0): Emulated(pos: Key(W), neg: Key(S)),
+        Horizontal(0): Emulated(pos: Key(D), neg: Key(A)),
+        Vertical(1): Emulated(pos: Key(Up), neg: Key(Down)),
+        Horizontal(1): Emulated(pos: Key(Right), neg: Key(Left)),
+    },
+    actions: {
+        Shoot(0): [[Key(Space)]],
+        Shoot(1): [[Key(Return)]],
+    },
 )
 ```
 
@@ -95,78 +98,119 @@ Here the number after the binding type could be the ID of the player, but you ca
 
 With the config file we can create an `InputBundle` like in the previous section.
 
-```rust,edition2019,no_run,noplaypen
-  let input_bundle = 
-    InputBundle::<MovementBindingTypes>::new()
-    .with_bindings_from_file(bindings_config)?;
+```rust,ignore
+    let input_bundle = 
+        InputBundle::<MovementBindingTypes>::new()
+        .with_bindings_from_file(bindings_config)?;
 ```
 
 And add the `InputBundle` to the game data just like before.
 
-```rust,edition2019,no_run,noplaypen
-  let game_data = GameDataBuilder::default()
-    //..
-    .with_bundle(input_bundle)?
-    //..
+```rust,ignore
+    let game_data = GameDataBuilder::default()
+        //..
+        .with_bundle(input_bundle)?
+        //..
 ```
 
-## Using the `InputHandler` with a Custom Bindings Type
+## Using the `InputHandler` with a Custom `BindingTypes`
 
 Now that we have added an `InputBundle` with a custom `BindingTypes`, we can use the `InputHandler` just like with `StringBindings`, but instead of using `String`s we use our custom enums.
 
-```rust,edition2019,no_run,noplaypen
-struct Player {
-  id: usize,
-}
-
-impl Player {
-  pub fn shoot(&self) {
-    println!("PEW! {}", self.id);
-  }
-}
-
-impl Component for Player {
-  type Storage = DenseVecStorage<Self>;
-}
+```rust,no_run,noplaypen
+# extern crate amethyst;
+# extern crate serde;
+# use serde::{Serialize, Deserialize};
+use amethyst::{
+    prelude::*,
+    core::Transform,
+    ecs::{Join, Read, ReadStorage, System, WriteStorage},
+    input::InputHandler,
+#   ecs::{DenseVecStorage, Component},
+#   input::BindingTypes,
+};
+# use std::fmt::Display;
+# #[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
+# enum AxisBinding {
+#     Horizontal(usize),
+#     Vertical(usize),
+# }
+# 
+# #[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
+# enum ActionBinding {
+#     Shoot(usize),
+# }
+# 
+# impl Display for AxisBinding {
+#     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+#         write!(f, "{:?}", self)
+#     }
+# }
+# 
+# impl Display for ActionBinding {
+#     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+#         write!(f, "{:?}", self)
+#     }
+# }
+# 
+# struct MovementBindingTypes;
+# 
+# impl BindingTypes for MovementBindingTypes {
+#     type Axis = AxisBinding;
+#     type Action = ActionBinding;
+# }
+# struct Player {
+#     id: usize,
+# }
+# 
+# impl Player {
+#     pub fn shoot(&self) {
+#         println!("PEW! {}", self.id);
+#     }
+# }
+# 
+# impl Component for Player {
+#     type Storage = DenseVecStorage<Self>;
+# }
 
 struct MovementSystem;
 
 impl<'s> System<'s> for MovementSystem {
-  type SystemData = (
-    WriteStorage<'s, Transform>,
-    ReadStorage<'s, Player>,
-    Read<'s, InputHandler<MovementBindingTypes>>,
-  );
+    type SystemData = (
+        WriteStorage<'s, Transform>,
+        ReadStorage<'s, Player>,
+        Read<'s, InputHandler<MovementBindingTypes>>,
+    );
 
-  fn run(&mut self, (mut transform, player, input): Self::SystemData) {
-    for (player, transform) in (&player, &mut transform).join() {
-      let horizontal = input
-        .axis_value(&AxisBinding::Horizontal(player.id))
-        .unwrap_or(0.0);
-      let vertical = input
-        .axis_value(&AxisBinding::Vertical(player.id))
-        .unwrap_or(0.0);
+    fn run(&mut self, (mut transform, player, input): Self::SystemData) {
+        for (player, transform) in (&player, &mut transform).join() {
+            let horizontal = input
+                .axis_value(&AxisBinding::Horizontal(player.id))
+                .unwrap_or(0.0);
+            let vertical = input
+                .axis_value(&AxisBinding::Vertical(player.id))
+                .unwrap_or(0.0);
 
-      let shoot = input
-        .action_is_down(&ActionBinding::Shoot(player.id))
-        .unwrap_or(false);
+            let shoot = input
+                .action_is_down(&ActionBinding::Shoot(player.id))
+                .unwrap_or(false);
 
-      transform.move_up(horizontal);
-      transform.move_right(vertical);
+            transform.move_up(horizontal);
+            transform.move_right(vertical);
 
-      if shoot {
-        player.shoot();
-      }
+            if shoot {
+                player.shoot();
+            }
+        }
     }
-  }
 }
 ```
 
-And don't forget to add the `MovementSystem` to the game date.
+And don't forget to add the `MovementSystem` to the game data.
 
-```rust,edition2019,no_run,noplaypen
-  let game_data = GameDataBuilder::default()
-    //..
-    .with(MovementSystem, "movement_system", &["input_system"])
-    //..
+```rust,ignore
+    let game_data = GameDataBuilder::default()
+        //..
+        .with(MovementSystem, "movement_system", &["input_system"])
+        //..
 ```
