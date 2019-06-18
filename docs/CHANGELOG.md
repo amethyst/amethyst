@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ## [Unreleased]
 
 ## [0.11.0] - 2019-06
+* Fixes and renames regression from ([#1442]) added back `position_from_world` as `screen_to_world`. Also added
+`world_to_screen`. Also adds `Transform::copy_local_to_global()' for `debug_assertion` builds ([#1733])
 
 ### Added
 
@@ -189,6 +191,7 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 [#1683]: https://github.com/amethyst/amethyst/pull/1683
 [#1687]: https://github.com/amethyst/amethyst/pull/1687
 [#1703]: https://github.com/amethyst/amethyst/pull/1703
+[#1733]: https://github.com/amethyst/amethyst/pull/1733
 
 ## [0.10.0] - 2018-12
 
