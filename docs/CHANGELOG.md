@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## [Unreleased]
 
+## [0.11.0] - 2019-06
+
 ### Added
 
 * Introduce `application_dir` utility ([#1213])
@@ -882,7 +884,9 @@ extra bounds from `AnimatablePrefab` and `AnimationSetPrefab` ([#1435])
 
 * Initial release
 
-[Unreleased]: https://github.com/amethyst/amethyst/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/amethyst/amethyst/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/amethyst/amethyst/compare/v0.10.0...v0.11.0
+[0.10.0]: https://github.com/amethyst/amethyst/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/amethyst/amethyst/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/amethyst/amethyst/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/amethyst/amethyst/compare/v0.5.1...v0.7.0

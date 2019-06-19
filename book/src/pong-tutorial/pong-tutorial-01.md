@@ -19,7 +19,7 @@ authors = []
 edition = "2018"
 
 [dependencies.amethyst]
-git = "https://github.com/amethyst/amethyst.git"
+version = "0.11"
 features = ["vulkan"]
 ```
 
@@ -27,7 +27,7 @@ Alternatively, if you are developing on macOS, you might want to use the `metal`
 
 ```toml
 [dependencies.amethyst]
-git = "https://github.com/amethyst/amethyst.git"
+version = "0.11"
 features = ["metal"]
 ```
 
