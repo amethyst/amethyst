@@ -92,9 +92,9 @@ pipeline {
                         }
                     }
                     steps {
-		        sh 'cargo build'
-			echo 'Build all the examples in the book'
-			sh 'mdbook test book -L target/debug/deps'
+                        sh 'cargo build'
+                        echo 'Build all the examples in the book'
+                        sh 'mdbook test book -L target/debug/deps'
                         echo 'Beginning tests...'
                         sh 'cargo test --all --features "vulkan sdl_controller json saveload"'
                         echo 'Tests done!'
@@ -102,11 +102,11 @@ pipeline {
                 }
                 stage('Coverage') {
                     agent {
-			            docker {
-			                image 'amethystrs/builder-linux:stable'
+                        docker {
+                            image 'amethystrs/builder-linux:stable'
                             args '--privileged'
-			                label 'docker'
-			            }
+                            label 'docker'
+                        }
                     }
                     steps {
                         withCredentials([string(credentialsId: 'codecov_token', variable: 'CODECOV_TOKEN')]) {
