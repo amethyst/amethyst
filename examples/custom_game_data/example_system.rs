@@ -7,7 +7,7 @@ use amethyst::{
     ecs::prelude::{Entity, Join, Read, ReadStorage, System, WriteExpect, WriteStorage},
     renderer::{camera::Camera, light::Light},
     ui::{UiFinder, UiText},
-    utils::fps_counter::FPSCounter,
+    utils::fps_counter::FpsCounter,
 };
 
 #[derive(Default)]
@@ -23,7 +23,7 @@ impl<'a> System<'a> for ExampleSystem {
         WriteStorage<'a, Transform>,
         WriteExpect<'a, DemoState>,
         WriteStorage<'a, UiText>,
-        Read<'a, FPSCounter>,
+        Read<'a, FpsCounter>,
         UiFinder<'a>,
     );
 

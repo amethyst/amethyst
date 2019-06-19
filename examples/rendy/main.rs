@@ -24,7 +24,7 @@ use amethyst::{
     utils::{
         application_root_dir,
         auto_fov::{AutoFov, AutoFovSystem},
-        fps_counter::FPSCounterBundle,
+        fps_counter::FpsCounterBundle,
         tag::TagFinder,
     },
     window::{ScreenDimensions, Window, WindowBundle},
@@ -515,7 +515,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with(OrbitSystem, "orbit", &[])
         .with(AutoFovSystem::default(), "auto_fov", &[])
-        .with_bundle(FPSCounterBundle::default())?
+        .with_bundle(FpsCounterBundle::default())?
         .with(
             PrefabLoaderSystem::<ScenePrefabData>::default(),
             "scene_loader",
