@@ -92,7 +92,9 @@ pipeline {
                         }
                     }
                     steps {
-                        sh 'cargo build'
+                        echo 'Cleaning up old build artifacts'
+                        sh 'rm -rf ./target/debug/deps/libamethyst* || true'
+                        sh 'cargo build --all --features empty'
                         echo 'Build all the examples in the book'
                         sh 'mdbook test book -L target/debug/deps'
                         echo 'Beginning tests...'
