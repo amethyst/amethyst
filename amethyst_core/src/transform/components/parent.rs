@@ -15,7 +15,7 @@ pub type ParentHierarchy = Hierarchy<Parent>;
 /// parent rotates 45 degrees around the Z axis, then the child's coordinate
 /// system will start out also rotated by 45 degrees around the Z axis.
 ///
-/// If the parent entity has is own parent (and so on) then the transforms
+/// If the parent entity has its own parent (and so on) then the transforms
 /// will all be applied in order from the oldest ancestor to the child.
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd, new)]
 pub struct Parent {
