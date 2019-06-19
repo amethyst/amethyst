@@ -93,7 +93,7 @@ pipeline {
                     }
                     steps {
                         echo 'Cleaning up old build artifacts'
-                        sh 'rm -rf ./target/debug/deps/libamethyst* || true'
+                        sh './scripts/remove_duplicate_libs.sh'
                         sh 'cargo build --all --features empty'
                         echo 'Build all the examples in the book'
                         sh 'mdbook test book -L target/debug/deps'
