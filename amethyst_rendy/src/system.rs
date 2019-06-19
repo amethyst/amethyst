@@ -39,7 +39,7 @@ pub trait GraphCreator<B: Backend> {
     /// This function is evaluated every frame before running the graph.
     fn rebuild(&mut self, res: &Resources) -> bool;
 
-    /// Retreive configured complete graph builder.
+    /// Retrieve configured complete graph builder.
     fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources>;
 }
 
