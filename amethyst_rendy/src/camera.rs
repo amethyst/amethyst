@@ -3,7 +3,7 @@
 use amethyst_assets::PrefabData;
 use amethyst_core::{
     ecs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
-    math::{Matrix4, Point2, Point3},
+    math::{Matrix4, Point2, Point3, Vector3},
     transform::components::Transform,
 };
 use amethyst_window::ScreenDimensions;
@@ -412,12 +412,13 @@ impl Projection {
         screen_dimensions: &ScreenDimensions,
         camera_transform: &Transform,
     ) -> Point3<f32> {
-        let screen_x = 2.0 * screen_position.x / screen_dimensions.width() - 1.0;
-        let screen_y = 1.0 - 2.0 * screen_position.y / screen_dimensions.height();
+        let screen_x = -(2.0 * screen_position.x / screen_dimensions.width() - 1.0);
+        let screen_y = -(1.0 - 2.0 * screen_position.y / screen_dimensions.height());
         let screen_point = Point3::new(screen_x, screen_y, 0.0).to_homogeneous();
 
         let render_matrix: Matrix4<f32> =
             amethyst_core::math::convert(*camera_transform.global_matrix());
+        println!("Matrix={:?}", render_matrix);
 
         let vector = render_matrix
             * self
@@ -444,6 +445,8 @@ impl Projection {
                 .as_matrix()
                 .try_inverse()
                 .expect("Camera projection matrix is not invertible");
+
+        f.append_nonuniform_scaling(&Vector3::new(1.0, -1.0, 1.0));
 
         let screen_pos = f.transform_point(&world_position);
 
@@ -704,14 +707,14 @@ mod tests {
             ortho
                 .projection()
                 .screen_to_world(top_left, &screen, &transform),
-            Point3::new(-512.0, -384.0, -0.1)
+            Point3::new(512.0, 384.0, -0.1)
         );
 
         assert_ulps_eq!(
             ortho
                 .projection()
                 .screen_to_world(bottom_right, &screen, &transform),
-            Point3::new(511.0, 383.0, -0.1)
+            Point3::new(-511.0, -383.0, -0.1)
         );
 
         transform.set_translation_x(100.0);
@@ -722,6 +725,25 @@ mod tests {
                 .projection()
                 .screen_to_world(center_screen, &screen, &transform),
             Point3::new(100.0, 100.0, -0.1)
+        );
+    }
+
+    #[test]
+    fn world_to_screen() {
+        let screen = ScreenDimensions::new(1024, 768, 1.0);
+
+        let ortho = Camera::standard_2d(screen.width(), screen.height());
+        let transform = Transform::default();
+
+        let center_screen = Point2::new(screen.width() / 2.0, screen.height() / 2.0);
+        let top_left = Point2::new(0.0, 0.0);
+        let bottom_right = Point2::new(screen.width() - 1.0, screen.height() - 1.0);
+
+        assert_ulps_eq!(
+            ortho
+                .projection()
+                .world_to_screen(Point3::new(0.0, 0.0, 0.0), &screen, &transform),
+            Point2::new(512.0, 384.0)
         );
     }
 
