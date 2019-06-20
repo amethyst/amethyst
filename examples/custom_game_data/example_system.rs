@@ -1,7 +1,6 @@
 use super::DemoState;
 use amethyst::{
     core::{
-        f32,
         math::{UnitQuaternion, Vector3},
         Time, Transform,
     },

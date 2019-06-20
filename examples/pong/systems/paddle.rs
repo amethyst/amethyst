@@ -1,6 +1,6 @@
 use crate::Paddle;
 use amethyst::{
-    core::{math::RealField, timing::Time, transform::Transform},
+    core::{timing::Time, transform::Transform},
     ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
     input::{InputHandler, StringBindings},
 };

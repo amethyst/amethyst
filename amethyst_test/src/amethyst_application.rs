@@ -570,7 +570,7 @@ mod test {
     }
 
     #[test]
-    #[should_panic(expected = "Tried to fetch a resource, but the resource does not exist")]
+    #[should_panic] // This cannot be expect explicit because of nightly feature.
     fn assertion_when_resource_is_not_added_should_panic() {
         let assertion_fn = |world: &mut World| {
             // Panics if `ApplicationResource` was not added.
@@ -615,7 +615,7 @@ mod test {
     }
 
     #[test]
-    #[should_panic(expected = "Tried to fetch a resource, but the resource does not exist")]
+    #[should_panic] // This cannot be expect explicit because of nightly feature.
     fn assertion_switch_with_loading_state_without_add_resource_should_panic() {
         let state_fns = || {
             let assertion_fn = |world: &mut World| {
@@ -632,7 +632,7 @@ mod test {
     }
 
     #[test]
-    #[should_panic(expected = "Tried to fetch a resource, but the resource does not exist")]
+    #[should_panic] // This cannot be expect explicit because of nightly feature.
     fn assertion_push_with_loading_state_without_add_resource_should_panic() {
         // Alternative to embedding the `FunctionState` is to switch to a `PopState` but still
         // provide the assertion function

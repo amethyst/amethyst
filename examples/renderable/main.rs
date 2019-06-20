@@ -9,7 +9,6 @@ use amethyst::{
         ProgressCounter, RonFormat,
     },
     core::{
-        f32,
         math::{UnitQuaternion, Vector3},
         timing::Time,
         transform::{Transform, TransformBundle},
@@ -279,7 +278,7 @@ impl<'a> System<'a> for ExampleSystem {
 
         let delta_rot: UnitQuaternion<f32> = UnitQuaternion::from_axis_angle(
             &Vector3::z_axis(),
-            (camera_angular_velocity * time.delta_seconds()).into(),
+            camera_angular_velocity * time.delta_seconds(),
         );
         for (_, transform) in (&camera, &mut transforms).join() {
             // Append the delta rotation to the current transform.

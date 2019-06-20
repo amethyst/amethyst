@@ -576,9 +576,9 @@ impl Component for Transform {
 /// Creates a Transform using the `Vector3` as the translation vector.
 ///
 /// ```
-/// # use amethyst_core::{transform::Transform, f32};
+/// # use amethyst_core::{transform::Transform};
 /// # use amethyst_core::math::Vector3;
-/// let transform = Transform::from(Vector3::new(f32::from(100.0), f32::from(200.0), f32::from(300.0)));
+/// let transform = Transform::from(Vector3::new(100.0, 200.0, 300.0));
 /// assert_eq!(transform.translation().x, 100.0);
 /// ```
 impl From<Vector3<f32>> for Transform {

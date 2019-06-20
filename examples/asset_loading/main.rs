@@ -3,7 +3,7 @@
 
 use amethyst::{
     assets::{Format as AssetFormat, Handle, Loader},
-    core::{f32, math::Vector3, Transform, TransformBundle},
+    core::{math::Vector3, Transform, TransformBundle},
     ecs::{ReadExpect, Resources, SystemData},
     error::Error,
     input::{InputBundle, StringBindings},
