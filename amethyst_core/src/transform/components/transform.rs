@@ -4,7 +4,6 @@ use std::fmt;
 use crate::{
     alga::general::SubsetOf,
     ecs::prelude::{Component, DenseVecStorage, FlaggedStorage},
-    float::Float,
     math::{
         self as na, ComplexField, Isometry3, Matrix4, Quaternion, RealField, Translation3, Unit,
         UnitQuaternion, Vector3,
@@ -27,14 +26,14 @@ pub struct Transform {
     #[get = "pub"]
     #[set = "pub"]
     #[get_mut = "pub"]
-    isometry: Isometry3<Float>,
+    isometry: Isometry3<f32>,
     /// Scale vector
     #[get = "pub"]
     #[get_mut = "pub"]
-    scale: Vector3<Float>,
+    scale: Vector3<f32>,
     /// The global transformation matrix.
     #[get = "pub"]
-    pub(crate) global_matrix: Matrix4<Float>,
+    pub(crate) global_matrix: Matrix4<f32>,
 }
 
 impl Transform {
@@ -53,7 +52,7 @@ impl Transform {
     ///
     /// assert_eq!(t.translation().y, 2.0.into());
     /// ```
-    pub fn new<N: RealField + SubsetOf<Float>>(
+    pub fn new<N: RealField + SubsetOf<f32>>(
         position: Translation3<N>,
         rotation: UnitQuaternion<N>,
         scale: Vector3<N>,
@@ -66,7 +65,7 @@ impl Transform {
     }
 
     /// Set the scaling factor of this transform.
-    pub fn set_scale<N: RealField + SubsetOf<Float>>(&mut self, scale: Vector3<N>) {
+    pub fn set_scale<N: RealField + SubsetOf<f32>>(&mut self, scale: Vector3<N>) {
         self.scale = na::convert(scale);
     }
 
@@ -104,21 +103,21 @@ impl Transform {
     /// assert!((*t.translation() - Vector3::new(0.0.into(), 1.0.into(), 0.0.into())).magnitude() <= 0.0001.into());
     /// ```
     #[inline]
-    pub fn face_towards<N: RealField + SubsetOf<Float>>(
+    pub fn face_towards<N: RealField + SubsetOf<f32>>(
         &mut self,
         target: Vector3<N>,
         up: Vector3<N>,
     ) -> &mut Self {
         self.isometry.rotation = UnitQuaternion::face_towards(
-            &(self.isometry.translation.vector - na::convert::<_, Vector3<Float>>(target)),
-            &na::convert::<_, Vector3<Float>>(up),
+            &(self.isometry.translation.vector - na::convert::<_, Vector3<f32>>(target)),
+            &na::convert::<_, Vector3<f32>>(up),
         );
         self
     }
 
     /// Returns the local object matrix for the transform.
     #[inline]
-    pub fn matrix(&self) -> Matrix4<Float> {
+    pub fn matrix(&self) -> Matrix4<f32> {
         self.isometry
             .to_homogeneous()
             .prepend_nonuniform_scaling(&self.scale)
@@ -126,25 +125,25 @@ impl Transform {
 
     /// Returns a reference to the translation vector.
     #[inline]
-    pub fn translation(&self) -> &Vector3<Float> {
+    pub fn translation(&self) -> &Vector3<f32> {
         &self.isometry.translation.vector
     }
 
     /// Returns a mutable reference to the translation vector.
     #[inline]
-    pub fn translation_mut(&mut self) -> &mut Vector3<Float> {
+    pub fn translation_mut(&mut self) -> &mut Vector3<f32> {
         &mut self.isometry.translation.vector
     }
 
     /// Returns a reference to the rotation quaternion.
     #[inline]
-    pub fn rotation(&self) -> &UnitQuaternion<Float> {
+    pub fn rotation(&self) -> &UnitQuaternion<f32> {
         &self.isometry.rotation
     }
 
     /// Returns a mutable reference to the rotation quaternion.
     #[inline]
-    pub fn rotation_mut(&mut self) -> &mut UnitQuaternion<Float> {
+    pub fn rotation_mut(&mut self) -> &mut UnitQuaternion<f32> {
         &mut self.isometry.rotation
     }
 
@@ -156,7 +155,7 @@ impl Transform {
     /// move along the parent's Z axis rather than its local Z axis (which
     /// is rotated 45 degrees).
     #[inline]
-    pub fn prepend_translation(&mut self, translation: Vector3<Float>) -> &mut Self {
+    pub fn prepend_translation(&mut self, translation: Vector3<f32>) -> &mut Self {
         self.isometry.translation.vector += translation;
         self
     }
@@ -171,7 +170,7 @@ impl Transform {
     /// Equivalent to rotating the translation by the transform's current
     /// rotation before applying.
     #[inline]
-    pub fn append_translation(&mut self, translation: Vector3<Float>) -> &mut Self {
+    pub fn append_translation(&mut self, translation: Vector3<f32>) -> &mut Self {
         self.isometry.translation.vector += self.isometry.rotation * translation;
         self
     }
@@ -186,8 +185,8 @@ impl Transform {
     #[inline]
     pub fn prepend_translation_along(
         &mut self,
-        direction: Unit<Vector3<Float>>,
-        distance: impl Into<Float>,
+        direction: Unit<Vector3<f32>>,
+        distance: impl Into<f32>,
     ) -> &mut Self {
         self.isometry.translation.vector += direction.as_ref() * distance.into();
         self
@@ -197,8 +196,8 @@ impl Transform {
     #[inline]
     pub fn append_translation_along(
         &mut self,
-        direction: Unit<Vector3<Float>>,
-        distance: impl Into<Float>,
+        direction: Unit<Vector3<f32>>,
+        distance: impl Into<f32>,
     ) -> &mut Self {
         self.isometry.translation.vector +=
             self.isometry.rotation * direction.as_ref() * distance.into();
@@ -207,38 +206,38 @@ impl Transform {
 
     /// Move forward relative to current position and orientation.
     #[inline]
-    pub fn move_forward(&mut self, amount: impl Into<Float>) -> &mut Self {
+    pub fn move_forward(&mut self, amount: impl Into<f32>) -> &mut Self {
         // sign is reversed because z comes towards us
         self.append_translation(Vector3::new(0.0.into(), 0.0.into(), -amount.into()))
     }
 
     /// Move backward relative to current position and orientation.
     #[inline]
-    pub fn move_backward(&mut self, amount: impl Into<Float>) -> &mut Self {
+    pub fn move_backward(&mut self, amount: impl Into<f32>) -> &mut Self {
         self.append_translation(Vector3::new(0.0.into(), 0.0.into(), amount.into()))
     }
 
     /// Move right relative to current position and orientation.
     #[inline]
-    pub fn move_right(&mut self, amount: impl Into<Float>) -> &mut Self {
+    pub fn move_right(&mut self, amount: impl Into<f32>) -> &mut Self {
         self.append_translation(Vector3::new(amount.into(), 0.0.into(), 0.0.into()))
     }
 
     /// Move left relative to current position and orientation.
     #[inline]
-    pub fn move_left(&mut self, amount: impl Into<Float>) -> &mut Self {
+    pub fn move_left(&mut self, amount: impl Into<f32>) -> &mut Self {
         self.append_translation(Vector3::new(-amount.into(), 0.0.into(), 0.0.into()))
     }
 
     /// Move up relative to current position and orientation.
     #[inline]
-    pub fn move_up(&mut self, amount: impl Into<Float>) -> &mut Self {
+    pub fn move_up(&mut self, amount: impl Into<f32>) -> &mut Self {
         self.append_translation(Vector3::new(0.0.into(), amount.into(), 0.0.into()))
     }
 
     /// Move down relative to current position and orientation.
     #[inline]
-    pub fn move_down(&mut self, amount: impl Into<Float>) -> &mut Self {
+    pub fn move_down(&mut self, amount: impl Into<f32>) -> &mut Self {
         self.append_translation(Vector3::new(0.0.into(), -amount.into(), 0.0.into()))
     }
 
@@ -246,7 +245,7 @@ impl Transform {
     /// i.e. move relative to the parent's (or global, if no parent exists)
     /// x axis.
     #[inline]
-    pub fn prepend_translation_x(&mut self, amount: impl Into<Float>) -> &mut Self {
+    pub fn prepend_translation_x(&mut self, amount: impl Into<f32>) -> &mut Self {
         self.isometry.translation.vector.x += amount.into();
         self
     }
@@ -255,7 +254,7 @@ impl Transform {
     /// i.e. move relative to the parent's (or global, if no parent exists)
     /// y axis.
     #[inline]
-    pub fn prepend_translation_y(&mut self, amount: impl Into<Float>) -> &mut Self {
+    pub fn prepend_translation_y(&mut self, amount: impl Into<f32>) -> &mut Self {
         self.isometry.translation.vector.y += amount.into();
         self
     }
@@ -264,28 +263,28 @@ impl Transform {
     /// i.e. move relative to the parent's (or global, if no parent exists)
     /// z axis.
     #[inline]
-    pub fn prepend_translation_z(&mut self, amount: impl Into<Float>) -> &mut Self {
+    pub fn prepend_translation_z(&mut self, amount: impl Into<f32>) -> &mut Self {
         self.isometry.translation.vector.z += amount.into();
         self
     }
 
     /// Sets the translation vector's x component to the specified value.
     #[inline]
-    pub fn set_translation_x(&mut self, value: impl Into<Float>) -> &mut Self {
+    pub fn set_translation_x(&mut self, value: impl Into<f32>) -> &mut Self {
         self.isometry.translation.vector.x = value.into();
         self
     }
 
     /// Sets the translation vector's y component to the specified value.
     #[inline]
-    pub fn set_translation_y(&mut self, value: impl Into<Float>) -> &mut Self {
+    pub fn set_translation_y(&mut self, value: impl Into<f32>) -> &mut Self {
         self.isometry.translation.vector.y = value.into();
         self
     }
 
     /// Sets the translation vector's z component to the specified value.
     #[inline]
-    pub fn set_translation_z(&mut self, value: impl Into<Float>) -> &mut Self {
+    pub fn set_translation_z(&mut self, value: impl Into<f32>) -> &mut Self {
         self.isometry.translation.vector.z = value.into();
         self
     }
@@ -295,7 +294,7 @@ impl Transform {
     ///
     /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn prepend_rotation_x_axis(&mut self, delta_angle: impl Into<Float>) -> &mut Self {
+    pub fn prepend_rotation_x_axis(&mut self, delta_angle: impl Into<f32>) -> &mut Self {
         self.prepend_rotation(Vector3::x_axis(), delta_angle.into())
     }
 
@@ -304,7 +303,7 @@ impl Transform {
     ///
     /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn append_rotation_x_axis(&mut self, delta_angle: impl Into<Float>) -> &mut Self {
+    pub fn append_rotation_x_axis(&mut self, delta_angle: impl Into<f32>) -> &mut Self {
         self.append_rotation(Vector3::x_axis(), delta_angle.into())
     }
 
@@ -314,8 +313,8 @@ impl Transform {
     ///
     /// `angle` is specified in radians.
     #[inline]
-    pub fn set_rotation_x_axis(&mut self, angle: impl Into<Float>) -> &mut Self {
-        self.set_rotation_euler(angle.into(), Float::zero(), Float::zero())
+    pub fn set_rotation_x_axis(&mut self, angle: impl Into<f32>) -> &mut Self {
+        self.set_rotation_euler(angle.into(), f32::zero(), f32::zero())
     }
 
     /// Premultiply a rotation about the y axis, i.e. perform a rotation about
@@ -323,7 +322,7 @@ impl Transform {
     ///
     /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn prepend_rotation_y_axis(&mut self, delta_angle: impl Into<Float>) -> &mut Self {
+    pub fn prepend_rotation_y_axis(&mut self, delta_angle: impl Into<f32>) -> &mut Self {
         self.prepend_rotation(Vector3::y_axis(), delta_angle.into())
     }
 
@@ -332,7 +331,7 @@ impl Transform {
     ///
     /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn append_rotation_y_axis(&mut self, delta_angle: impl Into<Float>) -> &mut Self {
+    pub fn append_rotation_y_axis(&mut self, delta_angle: impl Into<f32>) -> &mut Self {
         self.append_rotation(Vector3::y_axis(), delta_angle.into())
     }
 
@@ -342,7 +341,7 @@ impl Transform {
     ///
     /// `angle` is specified in radians.
     #[inline]
-    pub fn set_rotation_y_axis(&mut self, angle: impl Into<Float>) -> &mut Self {
+    pub fn set_rotation_y_axis(&mut self, angle: impl Into<f32>) -> &mut Self {
         self.set_rotation_euler(0.0, angle, 0.0)
     }
 
@@ -351,7 +350,7 @@ impl Transform {
     ///
     /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn prepend_rotation_z_axis(&mut self, delta_angle: impl Into<Float>) -> &mut Self {
+    pub fn prepend_rotation_z_axis(&mut self, delta_angle: impl Into<f32>) -> &mut Self {
         self.prepend_rotation(-Vector3::z_axis(), delta_angle.into())
     }
 
@@ -360,7 +359,7 @@ impl Transform {
     ///
     /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn append_rotation_z_axis(&mut self, delta_angle: impl Into<Float>) -> &mut Self {
+    pub fn append_rotation_z_axis(&mut self, delta_angle: impl Into<f32>) -> &mut Self {
         self.append_rotation(-Vector3::z_axis(), delta_angle.into())
     }
 
@@ -370,7 +369,7 @@ impl Transform {
     ///
     /// `angle` is specified in radians.
     #[inline]
-    pub fn set_rotation_z_axis(&mut self, angle: impl Into<Float>) -> &mut Self {
+    pub fn set_rotation_z_axis(&mut self, angle: impl Into<f32>) -> &mut Self {
         self.set_rotation_euler(0.0, 0.0, angle)
     }
 
@@ -379,7 +378,7 @@ impl Transform {
     ///
     /// `delta_angle` is specified in radians.
     #[inline]
-    pub fn rotate_2d(&mut self, delta_angle: impl Into<Float>) -> &mut Self {
+    pub fn rotate_2d(&mut self, delta_angle: impl Into<f32>) -> &mut Self {
         self.prepend_rotation_z_axis(delta_angle.into())
     }
 
@@ -388,7 +387,7 @@ impl Transform {
     ///
     /// `angle` is specified in radians.
     #[inline]
-    pub fn set_rotation_2d(&mut self, angle: impl Into<Float>) -> &mut Self {
+    pub fn set_rotation_2d(&mut self, angle: impl Into<f32>) -> &mut Self {
         self.set_rotation_euler(0.0, 0.0, angle)
     }
 
@@ -399,8 +398,8 @@ impl Transform {
     #[inline]
     pub fn prepend_rotation(
         &mut self,
-        axis: Unit<Vector3<Float>>,
-        angle: impl Into<Float>,
+        axis: Unit<Vector3<f32>>,
+        angle: impl Into<f32>,
     ) -> &mut Self {
         let q = UnitQuaternion::from_axis_angle(&axis, angle.into());
         self.isometry.rotation = q * self.isometry.rotation;
@@ -414,15 +413,15 @@ impl Transform {
     #[inline]
     pub fn append_rotation(
         &mut self,
-        axis: Unit<Vector3<Float>>,
-        angle: impl Into<Float>,
+        axis: Unit<Vector3<f32>>,
+        angle: impl Into<f32>,
     ) -> &mut Self {
         self.isometry.rotation *= UnitQuaternion::from_axis_angle(&axis, angle.into());
         self
     }
 
     /// Set the position.
-    pub fn set_translation<N: RealField + SubsetOf<Float>>(
+    pub fn set_translation<N: RealField + SubsetOf<f32>>(
         &mut self,
         position: Vector3<N>,
     ) -> &mut Self {
@@ -433,9 +432,9 @@ impl Transform {
     /// Adds the specified amounts to the translation vector.
     pub fn append_translation_xyz(
         &mut self,
-        x: impl Into<Float>,
-        y: impl Into<Float>,
-        z: impl Into<Float>,
+        x: impl Into<f32>,
+        y: impl Into<f32>,
+        z: impl Into<f32>,
     ) -> &mut Self {
         self.append_translation(Vector3::new(x.into(), y.into(), z.into()));
         self
@@ -444,15 +443,15 @@ impl Transform {
     /// Sets the specified values of the translation vector.
     pub fn set_translation_xyz(
         &mut self,
-        x: impl Into<Float>,
-        y: impl Into<Float>,
-        z: impl Into<Float>,
+        x: impl Into<f32>,
+        y: impl Into<f32>,
+        z: impl Into<f32>,
     ) -> &mut Self {
         self.set_translation(Vector3::new(x.into(), y.into(), z.into()))
     }
 
     /// Sets the rotation of the transform.
-    pub fn set_rotation<N: RealField + SubsetOf<Float>>(
+    pub fn set_rotation<N: RealField + SubsetOf<f32>>(
         &mut self,
         rotation: UnitQuaternion<N>,
     ) -> &mut Self {
@@ -494,9 +493,9 @@ impl Transform {
     /// ```
     pub fn set_rotation_euler(
         &mut self,
-        x: impl Into<Float>,
-        y: impl Into<Float>,
-        z: impl Into<Float>,
+        x: impl Into<f32>,
+        y: impl Into<f32>,
+        z: impl Into<f32>,
     ) -> &mut Self {
         self.isometry.rotation = UnitQuaternion::from_euler_angles(x.into(), y.into(), z.into());
         self
@@ -519,7 +518,7 @@ impl Transform {
     /// using `nalgebra`'s `euler_angles` or `from_euler_angles` methods, be aware that
     /// 'roll' in that context will mean rotation about the x axis, 'pitch' will mean
     /// rotation about the y axis, and 'yaw' will mean rotation about the z axis.
-    pub fn euler_angles(&self) -> (Float, Float, Float) {
+    pub fn euler_angles(&self) -> (f32, f32, f32) {
         self.isometry.rotation.euler_angles()
     }
 
@@ -542,18 +541,18 @@ impl Transform {
         self.global_matrix
             .as_slice()
             .iter()
-            .all(|f| Float::is_finite(f))
+            .all(|f| f32::is_finite(*f))
     }
     /// Calculates the inverse of this transform, which is in effect the 'view matrix' as
     /// commonly seen in computer graphics. This function computes the view matrix for ONLY
     /// the local transformation, and ignores any `Parent`s of this entity.
     ///
     /// We can exploit the extra information we have to perform this inverse faster than `O(n^3)`.
-    pub fn view_matrix(&self) -> Matrix4<Float> {
+    pub fn view_matrix(&self) -> Matrix4<f32> {
         let inv_scale = Vector3::new(
-            Float::from(1.0) / self.scale.x,
-            Float::from(1.0) / self.scale.y,
-            Float::from(1.0) / self.scale.z,
+            f32::from(1.0) / self.scale.x,
+            f32::from(1.0) / self.scale.y,
+            f32::from(1.0) / self.scale.z,
         );
         self.isometry
             .inverse()
@@ -566,7 +565,7 @@ impl Transform {
     /// global transformation of the entity, and so takes into account `Parent`s.
     ///
     /// We can exploit the extra information we have to perform this inverse faster than `O(n^3)`.
-    pub fn global_view_matrix(&self) -> Matrix4<Float> {
+    pub fn global_view_matrix(&self) -> Matrix4<f32> {
         let mut res = self.global_matrix;
 
         // Perform an in-place inversion of the 3x3 matrix
@@ -605,13 +604,13 @@ impl Component for Transform {
 /// Creates a Transform using the `Vector3` as the translation vector.
 ///
 /// ```
-/// # use amethyst_core::{transform::Transform, Float};
+/// # use amethyst_core::{transform::Transform, f32};
 /// # use amethyst_core::math::Vector3;
-/// let transform = Transform::from(Vector3::new(Float::from(100.0), Float::from(200.0), Float::from(300.0)));
+/// let transform = Transform::from(Vector3::new(f32::from(100.0), f32::from(200.0), f32::from(300.0)));
 /// assert_eq!(transform.translation().x, 100.0.into());
 /// ```
-impl From<Vector3<Float>> for Transform {
-    fn from(translation: Vector3<Float>) -> Self {
+impl From<Vector3<f32>> for Transform {
+    fn from(translation: Vector3<f32>) -> Self {
         Transform {
             isometry: Isometry3::new(translation, na::zero()),
             ..Default::default()
@@ -663,13 +662,13 @@ impl<'de> Deserialize<'de> for Transform {
             where
                 V: SeqAccess<'de>,
             {
-                let translation: [Float; 3] = seq
+                let translation: [f32; 3] = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(0, &self))?;
-                let rotation: [Float; 4] = seq
+                let rotation: [f32; 4] = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(1, &self))?;
-                let scale: [Float; 3] = seq
+                let scale: [f32; 3] = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
@@ -721,10 +720,10 @@ impl<'de> Deserialize<'de> for Transform {
                         }
                     }
                 }
-                let translation: [Float; 3] = translation.unwrap_or([Float::zero(); 3]);
-                let rotation: [Float; 4] =
-                    rotation.unwrap_or([Float::zero(), Float::zero(), Float::zero(), Float::one()]);
-                let scale: [Float; 3] = scale.unwrap_or([Float::one(); 3]);
+                let translation: [f32; 3] = translation.unwrap_or([f32::zero(); 3]);
+                let rotation: [f32; 4] =
+                    rotation.unwrap_or([f32::zero(), f32::zero(), f32::zero(), f32::one()]);
+                let scale: [f32; 3] = scale.unwrap_or([f32::one(); 3]);
 
                 let isometry = Isometry3::from_parts(
                     Translation3::new(translation[0], translation[1], translation[2]),
@@ -757,14 +756,14 @@ impl Serialize for Transform {
     {
         #[derive(Serialize)]
         struct TransformValues {
-            translation: [Float; 3],
-            rotation: [Float; 4],
-            scale: [Float; 3],
+            translation: [f32; 3],
+            rotation: [f32; 4],
+            scale: [f32; 3],
         }
 
-        let pos: [Float; 3] = self.isometry.translation.vector.into();
-        let rot: [Float; 4] = self.isometry.rotation.as_ref().coords.into();
-        let scale: [Float; 3] = self.scale.into();
+        let pos: [f32; 3] = self.isometry.translation.vector.into();
+        let rot: [f32; 4] = self.isometry.rotation.as_ref().coords.into();
+        let scale: [f32; 3] = self.scale.into();
 
         Serialize::serialize(
             &TransformValues {

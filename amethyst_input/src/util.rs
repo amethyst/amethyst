@@ -47,7 +47,7 @@ pub fn is_close_requested(event: &Event) -> bool {
 pub fn get_input_axis_simple<T: BindingTypes>(
     name: &Option<T::Axis>,
     input: &InputHandler<T>,
-) -> f64 {
+) -> f32 {
     name.as_ref()
         .and_then(|ref n| input.axis_value(n))
         .unwrap_or(0.0)

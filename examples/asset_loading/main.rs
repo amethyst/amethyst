@@ -3,7 +3,7 @@
 
 use amethyst::{
     assets::{Format as AssetFormat, Handle, Loader},
-    core::{math::Vector3, Float, Transform, TransformBundle},
+    core::{f32, math::Vector3, Transform, TransformBundle},
     ecs::{ReadExpect, Resources, SystemData},
     error::Error,
     input::{InputBundle, StringBindings},
@@ -109,11 +109,7 @@ impl SimpleState for AssetsExample {
 
         let mut trans = Transform::default();
         trans.set_translation_xyz(-5.0, 0.0, 0.0);
-        trans.set_scale(Vector3::new(
-            Float::from(2.0),
-            Float::from(2.0),
-            Float::from(2.0),
-        ));
+        trans.set_scale(Vector3::new(f32::from(2.0), f32::from(2.0), f32::from(2.0)));
         world
             .create_entity()
             .with(mesh)

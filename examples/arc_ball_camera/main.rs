@@ -6,7 +6,6 @@ use amethyst::{
     core::{
         shrev::{EventChannel, ReaderId},
         transform::{Transform, TransformBundle},
-        Float,
     },
     ecs::prelude::{
         Join, Read, ReadExpect, ReadStorage, Resources, System, SystemData, WriteStorage,
@@ -87,12 +86,12 @@ impl<'a> System<'a> for CameraDistanceSystem {
                 InputEvent::MouseWheelMoved(direction) => match direction {
                     ScrollDirection::ScrollUp => {
                         for (_, tag) in (&transforms, &mut tags).join() {
-                            tag.distance *= Float::from(0.9);
+                            tag.distance *= f32::from(0.9);
                         }
                     }
                     ScrollDirection::ScrollDown => {
                         for (_, tag) in (&transforms, &mut tags).join() {
-                            tag.distance *= Float::from(1.1);
+                            tag.distance *= f32::from(1.1);
                         }
                     }
                     _ => (),

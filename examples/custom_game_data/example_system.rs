@@ -1,8 +1,9 @@
 use super::DemoState;
 use amethyst::{
     core::{
+        f32,
         math::{UnitQuaternion, Vector3},
-        Float, Time, Transform,
+        Time, Transform,
     },
     ecs::prelude::{Entity, Join, Read, ReadStorage, System, WriteExpect, WriteStorage},
     renderer::{camera::Camera, light::Light},
@@ -39,7 +40,7 @@ impl<'a> System<'a> for ExampleSystem {
         state.light_angle += light_angular_velocity * time.delta_seconds();
         state.camera_angle += camera_angular_velocity * time.delta_seconds();
 
-        let delta_rot: UnitQuaternion<Float> = UnitQuaternion::from_axis_angle(
+        let delta_rot: UnitQuaternion<f32> = UnitQuaternion::from_axis_angle(
             &Vector3::y_axis(),
             (camera_angular_velocity * time.delta_seconds()).into(),
         );

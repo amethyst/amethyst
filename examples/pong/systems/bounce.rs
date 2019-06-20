@@ -5,7 +5,7 @@ use crate::{
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source},
-    core::{transform::Transform, Float},
+    core::{f32, transform::Transform},
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, WriteStorage},
 };
 use std::ops::Deref;
@@ -39,8 +39,8 @@ impl<'s> System<'s> for BounceSystem {
             let ball_y = transform.translation().y;
 
             // Bounce at the top or the bottom of the arena.
-            if (ball_y <= Float::from(ball.radius) && ball.velocity[1] < 0.0)
-                || (ball_y >= Float::from(ARENA_HEIGHT - ball.radius) && ball.velocity[1] > 0.0)
+            if (ball_y <= f32::from(ball.radius) && ball.velocity[1] < 0.0)
+                || (ball_y >= f32::from(ARENA_HEIGHT - ball.radius) && ball.velocity[1] > 0.0)
             {
                 ball.velocity[1] = -ball.velocity[1];
                 play_bounce(&*sounds, &storage, audio_output.as_ref().map(|o| o.deref()));
@@ -78,6 +78,6 @@ impl<'s> System<'s> for BounceSystem {
 
 // A point is in a box when its coordinates are smaller or equal than the top
 // right and larger or equal than the bottom left.
-fn point_in_rect(x: Float, y: Float, left: Float, bottom: Float, right: Float, top: Float) -> bool {
+fn point_in_rect(x: f32, y: f32, left: f32, bottom: f32, right: f32, top: f32) -> bool {
     x >= left && x <= right && y >= bottom && y <= top
 }

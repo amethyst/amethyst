@@ -9,10 +9,10 @@ use amethyst::{
         ProgressCounter, RonFormat,
     },
     core::{
+        f32,
         math::{UnitQuaternion, Vector3},
         timing::Time,
         transform::{Transform, TransformBundle},
-        Float,
     },
     ecs::prelude::{
         Entity, Join, Read, ReadExpect, ReadStorage, Resources, System, SystemData, Write,
@@ -277,7 +277,7 @@ impl<'a> System<'a> for ExampleSystem {
         state.light_angle += light_angular_velocity * time.delta_seconds();
         state.camera_angle += camera_angular_velocity * time.delta_seconds();
 
-        let delta_rot: UnitQuaternion<Float> = UnitQuaternion::from_axis_angle(
+        let delta_rot: UnitQuaternion<f32> = UnitQuaternion::from_axis_angle(
             &Vector3::z_axis(),
             (camera_angular_velocity * time.delta_seconds()).into(),
         );

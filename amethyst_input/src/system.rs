@@ -35,7 +35,7 @@ impl<T: BindingTypes> InputSystem<T> {
         output: &mut EventChannel<InputEvent<T::Action>>,
         hidpi: f64,
     ) {
-        handler.send_event(event, output, hidpi);
+        handler.send_event(event, output, hidpi as f32);
     }
 }
 

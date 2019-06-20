@@ -29,7 +29,6 @@ use std::sync::Arc;
 pub use crate::{
     bundle::SystemBundle,
     event::EventReader,
-    float::Float,
     system_ext::{Pausable, SystemExt},
     timing::*,
     transform::*,
@@ -49,7 +48,6 @@ pub mod transform;
 
 mod axis;
 mod event;
-mod float;
 mod hidden;
 mod hide_system;
 mod named;

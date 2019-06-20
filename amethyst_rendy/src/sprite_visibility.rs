@@ -5,8 +5,8 @@ use crate::{
 };
 use amethyst_core::{
     ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
-    math::{self as na, ComplexField, Point3, Vector3},
-    Float, Hidden, HiddenPropagate, Transform,
+    math::{self as na, Point3, Vector3},
+    Hidden, HiddenPropagate, Transform,
 };
 use derivative::Derivative;
 use hibitset::BitSet;
@@ -44,9 +44,9 @@ pub struct SpriteVisibilitySortingSystem {
 struct Internals {
     entity: Entity,
     transparent: bool,
-    centroid: Point3<Float>,
-    camera_distance: Float,
-    from_camera: Vector3<Float>,
+    centroid: Point3<f32>,
+    camera_distance: f32,
+    from_camera: Vector3<f32>,
 }
 
 impl SpriteVisibilitySortingSystem {

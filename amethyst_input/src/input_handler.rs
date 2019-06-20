@@ -29,14 +29,14 @@ pub struct InputHandler<T: BindingTypes> {
     pressed_mouse_buttons: SmallVec<[MouseButton; 12]>,
     pressed_controller_buttons: SmallVec<[(u32, ControllerButton); 12]>,
     /// Holds current state of all connected controller axes
-    controller_axes: SmallVec<[(u32, ControllerAxis, f64); 24]>,
+    controller_axes: SmallVec<[(u32, ControllerAxis, f32); 24]>,
     /// A list of raw and mapped ids for currently connected controllers.
     /// First number represents mapped ID visible to the user code,
     /// while second is the ID used by incoming events.
     connected_controllers: SmallVec<[(u32, u32); 8]>,
-    mouse_position: Option<(f64, f64)>,
-    mouse_wheel_vertical: f64,
-    mouse_wheel_horizontal: f64,
+    mouse_position: Option<(f32, f32)>,
+    mouse_wheel_vertical: f32,
+    mouse_wheel_horizontal: f32,
 }
 
 impl<T: BindingTypes> InputHandler<T> {
@@ -53,7 +53,7 @@ impl<T: BindingTypes> InputHandler<T> {
         &mut self,
         event: &Event,
         event_handler: &mut EventChannel<InputEvent<T::Action>>,
-        hidpi: f64,
+        hidpi: f32,
     ) {
         match *event {
             Event::WindowEvent { ref event, .. } => match *event {
@@ -215,11 +215,11 @@ impl<T: BindingTypes> InputHandler<T> {
                 } => {
                     if let Some((old_x, old_y)) = self.mouse_position {
                         event_handler.single_write(CursorMoved {
-                            delta_x: x * hidpi - old_x,
-                            delta_y: y * hidpi - old_y,
+                            delta_x: (x as f32) * hidpi - old_x,
+                            delta_y: (y as f32) * hidpi - old_y,
                         });
                     }
-                    self.mouse_position = Some((x * hidpi, y * hidpi));
+                    self.mouse_position = Some(((x as f32) * hidpi, (y as f32) * hidpi));
                 }
                 WindowEvent::Focused(false) => {
                     self.pressed_keys.clear();
@@ -232,7 +232,10 @@ impl<T: BindingTypes> InputHandler<T> {
                 DeviceEvent::MouseMotion {
                     delta: (delta_x, delta_y),
                 } => {
-                    event_handler.single_write(MouseMoved { delta_x, delta_y });
+                    event_handler.single_write(MouseMoved {
+                        delta_x: delta_x as f32,
+                        delta_y: delta_y as f32,
+                    });
                 }
                 DeviceEvent::MouseWheel {
                     delta: MouseScrollDelta::LineDelta(delta_x, delta_y),
@@ -249,12 +252,12 @@ impl<T: BindingTypes> InputHandler<T> {
                     delta: MouseScrollDelta::PixelDelta(LogicalPosition { x, y }),
                 } => {
                     if x != 0.0 {
-                        self.mouse_wheel_horizontal = x.signum();
+                        self.mouse_wheel_horizontal = x.signum() as f32;
                     }
                     if y != 0.0 {
-                        self.mouse_wheel_vertical = y.signum();
+                        self.mouse_wheel_vertical = y.signum() as f32;
                     }
-                    self.invoke_wheel_moved(x, y, event_handler);
+                    self.invoke_wheel_moved(x as f32, y as f32, event_handler);
                 }
                 _ => {}
             },
@@ -417,7 +420,7 @@ impl<T: BindingTypes> InputHandler<T> {
     ///
     /// If "horizontal" is true this will return the horizontal mouse value. You almost always want the
     /// vertical mouse value.
-    pub fn mouse_wheel_value(&self, horizontal: bool) -> f64 {
+    pub fn mouse_wheel_value(&self, horizontal: bool) -> f32 {
         if horizontal {
             self.mouse_wheel_horizontal
         } else {
@@ -471,7 +474,7 @@ impl<T: BindingTypes> InputHandler<T> {
     ///
     /// this method can return None, either if no mouse is connected, or if no mouse events have
     /// been recorded
-    pub fn mouse_position(&self) -> Option<(f64, f64)> {
+    pub fn mouse_position(&self) -> Option<(f32, f32)> {
         self.mouse_position
     }
 
@@ -502,7 +505,7 @@ impl<T: BindingTypes> InputHandler<T> {
     }
 
     /// Returns the value of an axis by the id, if the id doesn't exist this returns None.
-    pub fn axis_value<A>(&self, id: &A) -> Option<f64>
+    pub fn axis_value<A>(&self, id: &A) -> Option<f32>
     where
         T::Axis: Borrow<A>,
         A: Hash + Eq + ?Sized,
@@ -527,6 +530,7 @@ impl<T: BindingTypes> InputHandler<T> {
                 .find(|&&(id, a, _)| id == controller_id && a == axis)
                 .map(|&(_, _, val)| if invert { -val } else { val })
                 .map(|val| {
+                    let dead_zone = dead_zone as f32;
                     if val < -dead_zone {
                         (val + dead_zone) / (1.0 - dead_zone)
                     } else if val > dead_zone {
@@ -584,8 +588,8 @@ impl<T: BindingTypes> InputHandler<T> {
     /// Iterates all input bindings and invokes ActionWheelMoved for each action bound to the mouse wheel
     fn invoke_wheel_moved(
         &self,
-        delta_x: f64,
-        delta_y: f64,
+        delta_x: f32,
+        delta_y: f32,
         event_handler: &mut EventChannel<InputEvent<T::Action>>,
     ) {
         let mut events = Vec::<InputEvent<T::Action>>::new();
@@ -657,7 +661,7 @@ mod tests {
         WindowId,
     };
 
-    const HIDPI: f64 = 1.0;
+    const HIDPI: f32 = 1.0;
 
     #[test]
     fn key_action_response() {

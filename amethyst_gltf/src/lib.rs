@@ -10,7 +10,7 @@ use amethyst_core::{
     ecs::prelude::{Entity, Read, ReadExpect, Write, WriteStorage},
     math::{convert, Point3, Vector3},
     transform::Transform,
-    Float, Named,
+    Named,
 };
 use amethyst_error::Error;
 use amethyst_rendy::{
@@ -60,7 +60,7 @@ impl GltfPrefab {
     /// Move the scene so the center of the bounding box is at the given `target` location.
     pub fn move_to(&mut self, target: Point3<f32>) {
         if let Some(ref extent) = self.extent {
-            let diff = convert::<_, Vector3<Float>>(target - extent.centroid());
+            let diff = convert::<_, Vector3<f32>>(target - extent.centroid());
             *self
                 .transform
                 .get_or_insert_with(Transform::default)
@@ -73,7 +73,7 @@ impl GltfPrefab {
         if let Some(ref extent) = self.extent {
             let distance = extent.distance();
             let max = distance.x.max(distance.y).max(distance.z);
-            let scale: Float = (max_distance / max).into();
+            let scale: f32 = (max_distance / max).into();
             self.transform
                 .get_or_insert_with(Transform::default)
                 .set_scale(Vector3::new(scale, scale, scale));

@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder, math::one, Float};
+use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder, math::one};
 use amethyst_error::Error;
 use amethyst_input::BindingTypes;
 
@@ -30,7 +30,7 @@ use super::*;
 pub struct FlyControlBundle<T: BindingTypes> {
     sensitivity_x: f32,
     sensitivity_y: f32,
-    speed: Float,
+    speed: f32,
     right_input_axis: Option<T::Axis>,
     up_input_axis: Option<T::Axis>,
     forward_input_axis: Option<T::Axis>,
@@ -61,7 +61,7 @@ impl<T: BindingTypes> FlyControlBundle<T> {
     }
 
     /// Alters the speed on this `FlyControlBundle`.
-    pub fn with_speed<N: Into<Float>>(mut self, speed: N) -> Self {
+    pub fn with_speed<N: Into<f32>>(mut self, speed: N) -> Self {
         self.speed = speed.into();
         self
     }

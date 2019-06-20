@@ -8,7 +8,6 @@ use amethyst_core::{
     shrev::{EventChannel, ReaderId},
     timing::Time,
     transform::Transform,
-    Float,
 };
 use amethyst_input::{get_input_axis_simple, BindingTypes, InputHandler};
 use winit::{DeviceEvent, Event, Window, WindowEvent};
@@ -23,7 +22,7 @@ use thread_profiler::profile_scope;
 /// * `T`: This are the keys the `InputHandler` is using for axes and actions. Often, this is a `StringBindings`.
 pub struct FlyMovementSystem<T: BindingTypes> {
     /// The movement speed of the movement in units per second.
-    speed: Float,
+    speed: f32,
     /// The name of the input axis to locally move in the x coordinates.
     right_input_axis: Option<T::Axis>,
     /// The name of the input axis to locally move in the y coordinates.
@@ -34,7 +33,7 @@ pub struct FlyMovementSystem<T: BindingTypes> {
 
 impl<T: BindingTypes> FlyMovementSystem<T> {
     /// Builds a new `FlyMovementSystem` using the provided speeds and axis controls.
-    pub fn new<N: Into<Float>>(
+    pub fn new<N: Into<f32>>(
         speed: N,
         right_input_axis: Option<T::Axis>,
         up_input_axis: Option<T::Axis>,
@@ -61,14 +60,14 @@ impl<'a, T: BindingTypes> System<'a> for FlyMovementSystem<T> {
         #[cfg(feature = "profiler")]
         profile_scope!("fly_movement_system");
 
-        let x: Float = get_input_axis_simple(&self.right_input_axis, &input).into();
-        let y: Float = get_input_axis_simple(&self.up_input_axis, &input).into();
-        let z: Float = get_input_axis_simple(&self.forward_input_axis, &input).into();
+        let x = get_input_axis_simple(&self.right_input_axis, &input);
+        let y = get_input_axis_simple(&self.up_input_axis, &input);
+        let z = get_input_axis_simple(&self.forward_input_axis, &input);
 
         if let Some(dir) = Unit::try_new(Vector3::new(x, y, z), convert(1.0e-6)) {
             for (transform, _) in (&mut transform, &tag).join() {
-                let delta_sec = f64::from(time.delta_seconds());
-                transform.append_translation_along(dir, delta_sec * self.speed.as_f64());
+                let delta_sec = time.delta_seconds();
+                transform.append_translation_along(dir, delta_sec * self.speed);
             }
         }
     }
@@ -165,10 +164,10 @@ impl<'a> System<'a> for FreeRotationSystem {
                     if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
                         for (transform, _) in (&mut transform, &tag).join() {
                             transform.append_rotation_x_axis(
-                                (-y * f64::from(self.sensitivity_y)).to_radians(),
+                                (-(y as f32) * self.sensitivity_y).to_radians(),
                             );
                             transform.prepend_rotation_y_axis(
-                                (-x * f64::from(self.sensitivity_x)).to_radians(),
+                                (-(x as f32) * self.sensitivity_x).to_radians(),
                             );
                         }
                     }

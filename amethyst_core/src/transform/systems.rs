@@ -134,8 +134,8 @@ impl<'a> System<'a> for TransformSystem {
 mod tests {
     use crate::{
         ecs::prelude::{Builder, World},
+        f32,
         math::{Matrix4, Quaternion, Unit, Vector3},
-        Float,
     };
     use shred::RunNow;
     use specs_hierarchy::{Hierarchy, HierarchySystem};
@@ -167,7 +167,7 @@ mod tests {
         (world, hs, ts)
     }
 
-    fn together(global_matrix: Matrix4<Float>, local_matrix: Matrix4<Float>) -> Matrix4<Float> {
+    fn together(global_matrix: Matrix4<f32>, local_matrix: Matrix4<f32>) -> Matrix4<f32> {
         global_matrix * local_matrix
     }
 

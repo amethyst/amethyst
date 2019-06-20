@@ -1,6 +1,6 @@
 use crate::pong::{Paddle, Side, ARENA_HEIGHT, PADDLE_HEIGHT};
 use amethyst::{
-    core::{math::RealField, transform::Transform, Float},
+    core::{f32, math::RealField, transform::Transform},
     ecs::prelude::{Join, Read, ReadStorage, System, WriteStorage},
     input::{InputHandler, StringBindings},
 };
@@ -21,7 +21,7 @@ impl<'s> System<'s> for PaddleSystem {
                 Side::Right => input.axis_value("right_paddle"),
             };
             if let Some(mv_amount) = movement {
-                let scaled_amount = Float::from(1.2 * mv_amount);
+                let scaled_amount = f32::from(1.2 * mv_amount);
                 let paddle_y = transform.translation().y;
                 transform.set_translation_y(
                     (paddle_y + scaled_amount)
