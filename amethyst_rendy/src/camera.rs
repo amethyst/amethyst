@@ -412,7 +412,7 @@ impl Projection {
         screen_dimensions: &ScreenDimensions,
         camera_transform: &Transform,
     ) -> Point3<f32> {
-        let screen_x = -(2.0 * screen_position.x / screen_dimensions.width() - 1.0);
+        let screen_x = 2.0 * screen_position.x / screen_dimensions.width() - 1.0;
         let screen_y = -(1.0 - 2.0 * screen_position.y / screen_dimensions.height());
         let screen_point = Point3::new(screen_x, screen_y, 0.0).to_homogeneous();
 
@@ -707,14 +707,14 @@ mod tests {
             ortho
                 .projection()
                 .screen_to_world(top_left, &screen, &transform),
-            Point3::new(512.0, 384.0, -0.1)
+            Point3::new(-512.0, 384.0, -0.1)
         );
 
         assert_ulps_eq!(
             ortho
                 .projection()
                 .screen_to_world(bottom_right, &screen, &transform),
-            Point3::new(-511.0, -383.0, -0.1)
+            Point3::new(511.0, -383.0, -0.1)
         );
 
         transform.set_translation_x(100.0);
