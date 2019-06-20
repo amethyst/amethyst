@@ -58,7 +58,7 @@ impl<'a> PrefabData<'a> for ControlTagPrefab {
                 entity,
                 ArcBallControlTag {
                     target: entities[index],
-                    distance: f32::from(distance),
+                    distance,
                 },
             )?;
         }

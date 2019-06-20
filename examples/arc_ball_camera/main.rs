@@ -86,12 +86,12 @@ impl<'a> System<'a> for CameraDistanceSystem {
                 InputEvent::MouseWheelMoved(direction) => match direction {
                     ScrollDirection::ScrollUp => {
                         for (_, tag) in (&transforms, &mut tags).join() {
-                            tag.distance *= f32::from(0.9);
+                            tag.distance *= 0.9;
                         }
                     }
                     ScrollDirection::ScrollDown => {
                         for (_, tag) in (&transforms, &mut tags).join() {
-                            tag.distance *= f32::from(1.1);
+                            tag.distance *= 1.1;
                         }
                     }
                     _ => (),
