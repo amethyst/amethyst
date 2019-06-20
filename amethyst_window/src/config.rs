@@ -120,7 +120,7 @@ impl DisplayConfig {
     /// Creates a `winit::WindowBuilder` using the values set in the `DisplayConfig`.
     ///
     /// The `MonitorsAccess` is needed to configure a fullscreen window.
-    pub fn to_window_builder(self, monitors: &impl MonitorsAccess) -> WindowBuilder {
+    pub fn into_window_builder(self, monitors: &impl MonitorsAccess) -> WindowBuilder {
         let attrs = WindowAttributes {
             dimensions: self.dimensions.map(Into::into),
             max_dimensions: self.max_dimensions.map(Into::into),

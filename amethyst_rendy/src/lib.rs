@@ -39,7 +39,8 @@
 #![allow(unused_variables)]
 #![warn(missing_docs)]
 #![warn(missing_debug_implementations)]
-
+#![warn(clippy::all)]
+#![allow(clippy::new_without_default)]
 #[macro_use]
 extern crate amethyst_derive;
 

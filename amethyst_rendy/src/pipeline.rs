@@ -30,6 +30,7 @@ enum LocalBasePipeline<'a, P: 'a> {
 }
 
 /// Builder abstraction for constructing a backend-agnostic rendy `GraphicsPipeline`
+
 #[derive(Derivative, Debug)]
 #[derivative(Clone(bound = ""))]
 pub struct PipelineDescBuilder<'a, B: Backend> {

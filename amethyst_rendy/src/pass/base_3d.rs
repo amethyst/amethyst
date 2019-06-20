@@ -717,6 +717,7 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3DTr
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn build_pipelines<B: Backend, T: Base3DPassDef<B>>(
     factory: &Factory<B>,
     subpass: hal::pass::Subpass<'_, B>,

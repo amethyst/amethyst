@@ -199,6 +199,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     }
 
     /// Attempts to insert a new material to this collection.
+    #[allow(clippy::block_in_if_condition_stmt)]
     fn try_insert(
         &mut self,
         factory: &Factory<B>,

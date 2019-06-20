@@ -19,7 +19,7 @@ impl WindowSystem {
 
     pub fn from_config(events_loop: &EventsLoop, config: DisplayConfig) -> Self {
         let window = config
-            .to_window_builder(events_loop)
+            .into_window_builder(events_loop)
             .build(events_loop)
             .unwrap();
         Self::new(window)
