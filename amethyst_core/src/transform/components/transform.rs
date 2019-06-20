@@ -5,8 +5,8 @@ use crate::{
     alga::general::SubsetOf,
     ecs::prelude::{Component, DenseVecStorage, FlaggedStorage},
     math::{
-        self as na, ComplexField, Isometry3, Matrix4, Quaternion, RealField, Translation3, Unit,
-        UnitQuaternion, Vector3,
+        self as na, Isometry3, Matrix4, Quaternion, RealField, Translation3, Unit, UnitQuaternion,
+        Vector3,
     },
     num::{One, Zero},
 };

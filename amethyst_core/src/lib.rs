@@ -1,12 +1,10 @@
 //! A collection of structures and functions useful across the entire amethyst project.
-
+#![warn(clippy::all)]
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 #[cfg(all(target_os = "emscripten", not(no_threading)))]
 compile_error!("the cfg flag \"no_threading\" is required when building for emscripten");
 
-#[macro_use]
-extern crate alga_derive;
 #[macro_use]
 extern crate serde;
 #[macro_use]
