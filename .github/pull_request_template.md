@@ -19,7 +19,7 @@ Add a brief summary of your PR here, between one sentence and two paragraphs
 
 By placing an x in the boxes I certify that I have:
 
-- [ ] Ran `cargo test --all` locally if this modified any rs files.
+- [ ] Ran `cargo test --all --features "empty"` locally if this modified any rs files.
 - [ ] Ran `cargo +stable fmt --all` locally if this modified any rs files.
 - [ ] Updated the content of the book if this PR would make the book outdated.
 - [ ] Added a changelog entry if this will impact users, or modified more than 5 lines of Rust that wasn't a doc comment.

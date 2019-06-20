@@ -64,7 +64,7 @@ done the following things first:
 2. You have processed your source code with `cargo fmt` (we use latest rustup stable).
 3. All of the following commands completed without errors.
    * `cargo build`
-   * `cargo test --all`
+   * `cargo test --all --features "empty"`
    * `cargo run --example {example-name}`
    * `mdbook test book -L target/debug/deps`
 4. You have granted non-exclusive right to your source code under both the
