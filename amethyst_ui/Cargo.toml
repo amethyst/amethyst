@@ -43,6 +43,7 @@ lazy_static = "1.3"
 failure = "0.1"
 glyph_brush = "0.5.0"
 thread_profiler = { version = "0.3", optional = true }
+type-uuid = "0.1"
 
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]

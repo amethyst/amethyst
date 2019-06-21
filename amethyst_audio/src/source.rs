@@ -5,6 +5,7 @@ use amethyst_assets::{
 };
 use amethyst_core::ecs::prelude::{Entity, Read, ReadExpect, VecStorage};
 use amethyst_error::Error;
+use type_uuid::TypeUuid;
 
 use crate::formats::AudioData;
 
@@ -12,7 +13,8 @@ use crate::formats::AudioData;
 pub type SourceHandle = Handle<Source>;
 
 /// A loaded audio file
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, TypeUuid)]
+#[uuid = "5ba63907-3883-453e-a559-9b778288f5d2"]
 pub struct Source {
     /// The bytes of this audio source.
     pub bytes: Vec<u8>,

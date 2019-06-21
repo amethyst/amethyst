@@ -5,7 +5,6 @@ use crate::{
 };
 use amethyst_core::ecs::{
     prelude::{Component, DenseVecStorage},
-    storage::UnprotectedStorage,
     Resources,
 };
 use atelier_loader::{self, AssetLoadOp, AssetTypeId, Loader as AtelierLoader};
@@ -330,7 +329,7 @@ impl<'a> atelier_loader::AssetStorage for WorldStorages<'a> {
     fn update_asset(
         &self,
         asset_type: &AssetTypeId,
-        handle: &Self::HandleType,
+        _handle: &Self::HandleType,
         data: &dyn AsRef<[u8]>,
         load_handle: &LoadHandle,
         load_op: AssetLoadOp,
@@ -357,7 +356,7 @@ impl<'a> atelier_loader::AssetStorage for WorldStorages<'a> {
     fn commit_asset_version(
         &self,
         asset_type: &AssetTypeId,
-        handle: &Self::HandleType,
+        _handle: &Self::HandleType,
         load_handle: &LoadHandle,
         version: u32,
     ) {
@@ -373,7 +372,7 @@ impl<'a> atelier_loader::AssetStorage for WorldStorages<'a> {
     fn free(
         &self,
         asset_type: &AssetTypeId,
-        storage_handle: Self::HandleType,
+        _storage_handle: Self::HandleType,
         load_handle: LoadHandle,
     ) {
         use std::cell::RefCell; // can't move into closure, so we work around it with a RefCell + Option
@@ -431,22 +430,14 @@ where
 }
 
 #[macro_export]
-macro_rules! asset_type {
-    ($($intermediate:ty => $asset:ty),*,) => {
-        $crate::asset_type! {
-            $(
-                $intermediate => $asset
-            ),*
+macro_rules! register_asset_type {
+    ($intermediate:ty => $asset:ty) => {
+        $crate::register_asset_type!(amethyst_assets; $intermediate => $asset);
+    };
+    ($krate:ident; $intermediate:ty => $asset:ty) => {
+        $crate::inventory::submit!{
+            #![crate = $krate]
+            $crate::create_asset_type::<$asset>()
         }
     };
-    ($($intermediate:ty => $asset:ty),*) => {
-            use $crate::inventory;
-            use $crate::create_asset_type;
-            use super::*;
-            $(
-                inventory::submit! {
-                    create_asset_type::<$asset>()
-                }
-            )*
-    }
 }

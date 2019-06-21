@@ -108,7 +108,6 @@ impl<T> ProcessingQueue<T> {
                 .expect("The mutex of `requeue` in `AssetStorage` was poisoned");
             while let Some(processed) = self.processed.try_pop() {
                 let f = &mut f;
-                log::info!("loaded {}", A::name());
                 match processed {
                     Processed {
                         data,

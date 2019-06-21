@@ -41,17 +41,19 @@ objekt = "0.1.2"
 erased-serde = "0.3.9"
 inventory = "0.1.3"
 lazy_static = "1.3"
-atelier_loader = { path = "../../atelier-assets/loader" }
+atelier_loader = { path = "../../atelier-assets/loader", optional = true }
 atelier_importer = { path = "../../atelier-assets/importer", optional = true }
 uuid = { version = "0.7", optional = true }
-bincode = "1.1"
+bincode = { version = "1.1", optional = true }
 type-uuid = "0.1"
 
 [dev-dependencies]
+atelier_assets = { path = "../../atelier-assets", default-features = false }
+
 
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
 nightly = [ "amethyst_core/nightly" ]
 json = [ "serde_json" ]
 float64 = ["amethyst_core/float64"]
-importers = ["atelier_importer", "uuid"]
+experimental-assets = ["atelier_importer", "atelier_loader", "bincode", "uuid"]

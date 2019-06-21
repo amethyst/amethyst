@@ -23,7 +23,20 @@ pub use crate::{
     reload::{HotReloadBundle, HotReloadStrategy, HotReloadSystem, Reload, SingleFile},
     source::{Directory, Source},
     storage::{AssetStorage, Handle, ProcessingState, Processor, WeakHandle},
-    loader_new::{create_asset_type, TypeUuid, AssetUuid},
+};
+#[cfg(feature = "experimental-assets")]
+pub use crate::{
+    processor::{ProcessingQueue, ProcessingState as NewProcessingState},
+    storage_new::AssetStorage as NewAssetStorage,
+    loader_new::{create_asset_type, 
+            AssetUuid, 
+            Loader as NewLoader, 
+            DefaultLoader as NewDefaultLoader, 
+            Handle as NewHandle, 
+            GenericHandle,
+            AssetHandle,
+            LoadStatus,
+            },
     simple_importer::{SourceFileImporter, SimpleImporter},
 };
 
@@ -41,11 +54,29 @@ mod progress;
 mod reload;
 mod source;
 mod storage;
+
+#[cfg(feature = "experimental-assets")]
 mod storage_new;
+#[cfg(feature = "experimental-assets")]
 mod loader_new;
+#[cfg(feature = "experimental-assets")]
 mod processor;
-#[cfg(feature = "importers")]
+#[cfg(feature = "experimental-assets")]
 mod simple_importer;
+
+
+#[cfg(not(feature = "experimental-assets"))]
+#[macro_export]
+macro_rules! register_importer {
+    ($ext:literal, $format:ty) => {};
+    ($krate:ident; $ext:literal, $format:ty) => {};
+}
+#[cfg(not(feature = "experimental-assets"))]
+#[macro_export]
+macro_rules! register_asset_type {
+    ($intermediate:ty => $asset:ty) => { };
+    ($krate:ident; $intermediate:ty => $asset:ty) => {};
+}
 
 // used in macros. Private API otherwise.
 #[doc(hidden)]

@@ -9,14 +9,18 @@ use amethyst_core::ecs::prelude::VecStorage;
 use amethyst_error::Error;
 use fluent::bundle::FluentBundle;
 use serde::{Deserialize, Serialize};
+use type_uuid::*;
 
 /// Loads the strings from localisation files.
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, TypeUuid, Serialize, Deserialize)]
+#[uuid = "fe7720ec-ecb5-4f59-8a09-656805eb4eff"]
 pub struct LocaleFormat;
 
 amethyst_assets::register_format_type!(Locale);
 
 amethyst_assets::register_format!("FTL", LocaleFormat as Locale);
+// Locale doesn't impl Serialize/Deserialize, so can't register importer :(
+// amethyst_assets::register_importer!(".ftl", LocaleFormat); 
 impl Format<Locale> for LocaleFormat {
     fn name(&self) -> &'static str {
         "FTL"
@@ -37,6 +41,8 @@ impl Format<Locale> for LocaleFormat {
 pub type LocaleHandle = Handle<Locale>;
 
 /// A loaded locale.
+#[derive(TypeUuid)]
+#[uuid = "d9e1870c-9744-40b0-969d-15ec45ea7372"]
 pub struct Locale {
     /// The message context.
     pub bundle: FluentBundle<'static>,

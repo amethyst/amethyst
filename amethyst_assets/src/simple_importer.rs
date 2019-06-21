@@ -2,7 +2,7 @@ use std::io::Read;
 use type_uuid::TypeUuid;
 use serde::{Serialize, Deserialize};
 use atelier_importer::{self as importer, SerdeObj, Importer, ImporterValue, ImportedAsset};
-use crate::{Asset, AssetUuid, Format};
+use crate::{AssetUuid, Format};
 pub use atelier_importer::SourceFileImporter;
 
 /// A simple state for Importer to retain the same UUID between imports
@@ -75,18 +75,15 @@ where
 
 #[macro_export]
 macro_rules! register_importer {
-    ($ext:literal, $format:ty as $data:ty) => {
-        $crate::register_importer!(amethyst_assets; $ext, $format as $data);
+    ($ext:literal, $format:ty) => {
+        $crate::register_importer!(amethyst_assets; $ext, $format);
     };
-    ($ext:literal, $format:ty as $data:ty) => {
-        $crate::register_importer!(amethyst_assets; $ext, $format as $data);
-    };
-    ($krate:ident; $ext:literal, $format:ty as $data:ty) => {
+    ($krate:ident; $ext:literal, $format:ty) => {
         $crate::inventory::submit!{
             #![crate = $krate]
             $crate::SourceFileImporter {
                 extension: $ext,
-                instantiator: || Box::new($crate::SimpleImporter::<$data, $format>::from(<$format as Default>::default())),
+                instantiator: || Box::new($crate::SimpleImporter::from(<$format as Default>::default())),
             }
         }
     };

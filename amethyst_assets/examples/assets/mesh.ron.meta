@@ -1,0 +1,25 @@
+(
+    version: 1,
+    import_hash: Some(15693456974210828597),
+    importer_version: 1,
+    importer_options: (),
+    importer_state: (
+        id: Some((57, 199, 4, 58, 221, 126, 70, 84, 155, 34, 228, 93, 92, 107, 135, 204)),
+    ),
+    assets: [
+        (
+            id: (57, 199, 4, 58, 221, 126, 70, 84, 155, 34, 228, 93, 92, 107, 135, 204),
+            search_tags: [
+                ("file_name", Some("mesh.ron")),
+            ],
+            build_deps: [
+            ],
+            load_deps: [
+            ],
+            instantiate_deps: [
+            ],
+            build_pipeline: None,
+            import_asset_type: (104, 123, 109, 148, 198, 83, 70, 99, 175, 115, 233, 103, 201, 42, 209, 64),
+        ),
+    ],
+)

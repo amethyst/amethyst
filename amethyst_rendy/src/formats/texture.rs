@@ -48,9 +48,8 @@ use type_uuid::TypeUuid;
 ///
 ///    let tex: Handle<Texture> = loader.load_from_data(TextureData(texture_builder), (), &texture_storage);
 /// ```
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TypeUuid)]
 #[serde(transparent)]
-#[derive(TypeUuid)]
 #[uuid = "79f58dea-e7c7-4305-a116-cd8313c04784"]
 pub struct ImageFormat(pub ImageTextureConfig);
 
@@ -88,8 +87,10 @@ impl Default for ImageFormat {
 amethyst_assets::register_format_type!(TextureData);
 
 amethyst_assets::register_format!("IMAGE", ImageFormat as TextureData);
-amethyst_assets::register_importer!(".jpg", ImageFormat as TextureData);
-amethyst_assets::register_importer!(".png", ImageFormat as TextureData);
+amethyst_assets::register_importer!(".jpg", ImageFormat);
+amethyst_assets::register_importer!(".png", ImageFormat);
+amethyst_assets::register_importer!(".tga", ImageFormat);
+amethyst_assets::register_importer!(".bmp", ImageFormat);
 impl Format<TextureData> for ImageFormat {
     fn name(&self) -> &'static str {
         "IMAGE"
