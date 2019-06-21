@@ -418,7 +418,6 @@ impl Projection {
 
         let render_matrix: Matrix4<f32> =
             amethyst_core::math::convert(*camera_transform.global_matrix());
-        println!("Matrix={:?}", render_matrix);
 
         let vector = render_matrix
             * self
