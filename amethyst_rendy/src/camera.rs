@@ -413,7 +413,7 @@ impl Projection {
         camera_transform: &Transform,
     ) -> Point3<f32> {
         let screen_x = 2.0 * screen_position.x / screen_dimensions.width() - 1.0;
-        let screen_y = -(1.0 - 2.0 * screen_position.y / screen_dimensions.height());
+        let screen_y = 2.0 * screen_position.y / screen_dimensions.height() - 1.0;
         let screen_point = Point3::new(screen_x, screen_y, 0.0).to_homogeneous();
 
         let render_matrix: Matrix4<f32> =
