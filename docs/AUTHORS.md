@@ -21,6 +21,7 @@
 * NCrashed (Anton Gushcha)
 * Nikita Chashchinskii
 * Oflor
+* ohnoimdead (Tres Henry)
 * Robbie Cooper
 * Scott Corbeil
 * Simon Rönnberg
