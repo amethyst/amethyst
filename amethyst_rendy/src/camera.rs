@@ -3,7 +3,7 @@
 use amethyst_assets::PrefabData;
 use amethyst_core::{
     ecs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
-    math::{Matrix4, Point2, Point3, Vector3},
+    math::{Matrix4, Point2, Point3},
     transform::components::Transform,
 };
 use amethyst_window::ScreenDimensions;
@@ -439,19 +439,13 @@ impl Projection {
         let render_matrix: Matrix4<f32> =
             amethyst_core::math::convert(*camera_transform.global_matrix());
 
-        let f = render_matrix
-            * self
-                .as_matrix()
-                .try_inverse()
-                .expect("Camera projection matrix is not invertible");
-
-        f.append_nonuniform_scaling(&Vector3::new(1.0, -1.0, 1.0));
+        let f = render_matrix * self.as_matrix();
 
         let screen_pos = f.transform_point(&world_position);
 
         Point2::new(
-            ((screen_pos.x + 1.0) / 2.0) * screen_dimensions.width(),
-            ((1.0 - screen_pos.y) / 2.0) * screen_dimensions.height(),
+            (screen_pos.x + 1.0) * screen_dimensions.width() / 2.0,
+            (screen_pos.y + 1.0) * screen_dimensions.height() / 2.0,
         )
     }
 }
@@ -738,11 +732,28 @@ mod tests {
         let top_left = Point2::new(0.0, 0.0);
         let bottom_right = Point2::new(screen.width() - 1.0, screen.height() - 1.0);
 
+        let top_left_world = Point3::new(-512.0, 384.0, -0.1);
+        let bottom_right_world = Point3::new(511.0, -383.0, -0.1);
+
+        assert_ulps_eq!(
+            ortho
+                .projection()
+                .world_to_screen(top_left_world, &screen, &transform),
+            top_left
+        );
+
+        assert_ulps_eq!(
+            ortho
+                .projection()
+                .world_to_screen(bottom_right_world, &screen, &transform),
+            bottom_right
+        );
+
         assert_ulps_eq!(
             ortho
                 .projection()
                 .world_to_screen(Point3::new(0.0, 0.0, 0.0), &screen, &transform),
-            Point2::new(512.0, 384.0)
+            center_screen
         );
     }
 
