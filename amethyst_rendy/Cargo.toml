@@ -49,6 +49,7 @@ nightly = [ "amethyst_core/nightly", "shred/nightly" ]
 no-slow-safety-checks = ["rendy/no-slow-safety-checks"]
 shader-compiler =  ["rendy/shader-compiler"]
 test-support =  []
+spirv-reflection = ["rendy/spirv-reflection"]
 
 [[bench]]
 name = "camera"
