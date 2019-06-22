@@ -106,6 +106,13 @@ Values between `0.0` and `1.0` are possible when using a controller such as a jo
 
 The action is a boolean, which is set to true when the buttons are pressed. The action binding is defined by a two-level array:
 
+* The inner array specifies the buttons that must be pressed at the same time to send the action.
+* The outer array specifies different combinations of those buttons that send the action.
+
+The possible inputs you can specify for axes are listed [here](https://docs-src.amethyst.rs/stable/amethyst_input/enum.Axis.html). The possible inputs you can specify for actions are listed [here](https://docs-src.amethyst.rs/stable/amethyst_input/enum.Button.html).
+
+To add these bindings to the `InputBundle` you simply need to call the `with_bindings_from_file` function on the `InputBundle`.
+
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::{prelude::*, input::*, utils::*};
@@ -127,12 +134,23 @@ And now you can get the [axis](https://docs-src.amethyst.rs/stable/amethyst_inpu
 use amethyst::{
     prelude::*,
     core::Transform,
-    ecs::{Join, Read, ReadStorage, System, WriteStorage},
+    ecs::{Component, DenseVecStorage, Join, Read, ReadStorage, System, WriteStorage},
     input::{InputHandler, StringBindings},
 };
-# use amethyst::ecs::{Component, VecStorage};
-# struct Player; impl Player { fn shoot(&self) {} }
-# impl Component for Player { type Storage = VecStorage<Self>; }
+
+struct Player {
+    id: usize,
+}
+
+impl Player {
+    pub fn shoot(&self) {
+        println!("PEW! {}", self.id);
+    }
+}
+
+impl Component for Player {
+    type Storage = DenseVecStorage<Self>;
+}
 
 struct MovementSystem;
 
