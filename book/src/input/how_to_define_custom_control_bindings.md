@@ -13,28 +13,31 @@ Using a custom type to handle input instead of using `String` has many advantage
 Defining a custom type for the `InputBundle` is done by implementing the `BindingTypes` trait. This trait contains two types, an `Axis` type and an `Action` type. These types are usually defined as enums, but you can use whatever you want.
 
 ```rust,edition2018,no_run,noplaypen
-use serde::{Serialize, Deserialize};
+# extern crate amethyst;
+use std::fmt::{self, Display};
+
 use amethyst::input::{BindingTypes, Bindings};
+use serde::{Serialize, Deserialize};
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 enum AxisBinding {
-  Horizontal,
-  Vertical,
+    Horizontal,
+    Vertical,
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 enum ActionBinding {
-  Shoot,
+    Shoot,
 }
 
 impl Display for AxisBinding {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self)
     }
 }
 
 impl Display for ActionBinding {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self)
     }
 }
@@ -42,17 +45,17 @@ impl Display for ActionBinding {
 struct MovementBindingTypes;
 
 impl BindingTypes for MovementBindingTypes {
-  type Axis = AxisBinding;
-  type Action = ActionBinding;
+    type Axis = AxisBinding;
+    type Action = ActionBinding;
 }
 ```
 
 The `Axis` and `Action` type both need to derive all the traits listed above, the first five are used by Amethyst and the last two are for reading and writing to files correctly. They also need to implement `Display` if you want to add a bindings config file.
 
-For serializing and deserializing you need to add [serde](https://crates.io/crates/serde) to the dependencies like this (note that there might be a newer version available, that is also compatible):
+For serializing and deserializing you need to add [serde](https://crates.io/crates/serde) to the dependencies like this:
 
-```rust,ignore
-  serde = { version="1.0.92", features = ["derive"] }
+```toml,ignore
+serde = { version = "1", features = ["derive"] }
 ```
 
 If you want to add additional information you can add it to the enum or change the `Axis` and `Action` types to a struct.
@@ -60,13 +63,13 @@ If you want to add additional information you can add it to the enum or change t
 ```rust,edition2018,no_run,noplaypen
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 enum AxisBinding {
-  Horizontal(usize),
-  Vertical(usize),
+    Horizontal(usize),
+    Vertical(usize),
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 enum ActionBinding {
-  Shoot(usize),
+    Shoot(usize),
 }
 
 //..
@@ -96,77 +99,99 @@ Here the number after the binding type could be the ID of the player, but you ca
 With the config file we can create an `InputBundle` like in the previous section.
 
 ```rust,edition2018,no_run,noplaypen
-  let input_bundle = 
+# extern crate amethyst;
+# use amethyst::input::StringBindings as MovementBindingTypes;
+# let bindings_config = "";
+use amethyst::input::InputBundle;
+
+let input_bundle = 
     InputBundle::<MovementBindingTypes>::new()
-    .with_bindings_from_file(bindings_config)?;
+        .with_bindings_from_file(bindings_config)?;
 ```
 
 And add the `InputBundle` to the game data just like before.
 
 ```rust,edition2018,no_run,noplaypen
-  let game_data = GameDataBuilder::default()
+# extern crate amethyst;
+# use amethyst::prelude::*;
+# use amethyst::input::{InputBundle, StringBindings};
+# let input_bundle = InputBundle::<StringBindings>::default();
+let game_data = GameDataBuilder::default()
     //..
     .with_bundle(input_bundle)?
     //..
+#   ;
 ```
 
 ## Using the `InputHandler` with a Custom `BindingTypes`
 
 Now that we have added an `InputBundle` with a custom `BindingTypes`, we can use the `InputHandler` just like with `StringBindings`, but instead of using `String`s we use our custom enums.
 
-```rust,edition2018,no_run,noplaypen
+```rust,edition2018,no_run,noplaypen,ignore
+# extern crate amethyst;
+use amethyst::{
+    core::Transform,
+    ecs::{Component, DenseVecStorage, Join, Read, ReadStorage, System, WriteStorage},
+    input::{AxisBinding, InputHandler},
+};
+
 struct Player {
-  id: usize,
+    id: usize,
 }
 
 impl Player {
-  pub fn shoot(&self) {
-    println!("PEW! {}", self.id);
-  }
+    pub fn shoot(&self) {
+        println!("PEW! {}", self.id);
+    }
 }
 
 impl Component for Player {
-  type Storage = DenseVecStorage<Self>;
+    type Storage = DenseVecStorage<Self>;
 }
 
 struct MovementSystem;
 
 impl<'s> System<'s> for MovementSystem {
-  type SystemData = (
-    WriteStorage<'s, Transform>,
-    ReadStorage<'s, Player>,
-    Read<'s, InputHandler<MovementBindingTypes>>,
-  );
+    type SystemData = (
+        WriteStorage<'s, Transform>,
+        ReadStorage<'s, Player>,
+        Read<'s, InputHandler<MovementBindingTypes>>,
+    );
 
-  fn run(&mut self, (mut transform, player, input): Self::SystemData) {
-    for (player, transform) in (&player, &mut transform).join() {
-      let horizontal = input
-        .axis_value(&AxisBinding::Horizontal(player.id))
-        .unwrap_or(0.0);
-      let vertical = input
-        .axis_value(&AxisBinding::Vertical(player.id))
-        .unwrap_or(0.0);
-
-      let shoot = input
-        .action_is_down(&ActionBinding::Shoot(player.id))
-        .unwrap_or(false);
-
-      transform.move_up(horizontal);
-      transform.move_right(vertical);
-
-      if shoot {
-        player.shoot();
-      }
+    fn run(&mut self, (mut transform, player, input): Self::SystemData) {
+        for (player, transform) in (&player, &mut transform).join() {
+            let horizontal = input
+                .axis_value(&AxisBinding::Horizontal(player.id))
+                .unwrap_or(0.0);
+            let vertical = input
+                .axis_value(&AxisBinding::Vertical(player.id))
+                .unwrap_or(0.0);
+            
+            let shoot = input
+                .action_is_down(&ActionBinding::Shoot(player.id))
+                .unwrap_or(false);
+            
+            transform.move_up(horizontal);
+            transform.move_right(vertical);
+            
+            if shoot {
+                player.shoot();
+            }
+        }
     }
-  }
 }
 ```
 
 And don't forget to add the `MovementSystem` to the game data.
 
 ```rust,edition2018,no_run,noplaypen
-  let game_data = GameDataBuilder::default()
-    //..
+# extern crate amethyst;
+# use amethyst::prelude::*; use amethyst::ecs::*;
+# struct MovementSystem;
+# impl<'a> System<'a> for MovementSystem {type SystemData=(); fn run(&mut self, _: ()) {}}
+let game_data = GameDataBuilder::default()
+//..
     .with(MovementSystem, "movement_system", &["input_system"])
-    //..
+//..
+#   ;
 ```
