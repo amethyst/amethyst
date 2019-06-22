@@ -1,6 +1,8 @@
 //! Texture formats implementation.
 use crate::types::{Texture, TextureData};
-use amethyst_assets::{AssetStorage, Format, Handle, Loader, PrefabData, ProgressCounter};
+use amethyst_assets::{
+    AssetStorage, Format, Handle, Loader, PrefabData, ProgressCounter, SerializableFormat,
+};
 use amethyst_core::ecs::{Entity, Read, ReadExpect};
 use amethyst_error::Error;
 use rendy::{
@@ -97,6 +99,8 @@ impl Format<TextureData> for ImageFormat {
     }
 }
 
+impl SerializableFormat<TextureData> for ImageFormat {}
+
 /// `PrefabData` for loading `Texture`s.
 ///
 /// Will not add any `Component`s to the `Entity`, will only return a `Handle`
@@ -109,7 +113,7 @@ pub enum TexturePrefab {
     /// Generate texture
     Generate(TextureGenerator),
     /// Load file with format
-    File(String, Box<dyn Format<TextureData>>),
+    File(String, Box<dyn SerializableFormat<TextureData>>),
 
     /// Clone handle only
     #[serde(skip)]

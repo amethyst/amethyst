@@ -3,7 +3,7 @@ use std::{borrow::Borrow, hash::Hash};
 use amethyst_core::ecs::{Read, ReadExpect};
 use shred_derive::SystemData;
 
-use crate::{Asset, AssetStorage, Format, FormatRegisteredData, Handle, Loader, Progress};
+use crate::{Asset, AssetStorage, Format, Handle, Loader, Progress};
 
 /// Helper type for loading assets
 #[derive(SystemData)]
@@ -28,7 +28,6 @@ where
         F: Format<A::Data>,
         N: Into<String>,
         P: Progress,
-        <A as Asset>::Data: FormatRegisteredData,
     {
         self.loader.load(name, format, progress, &*self.storage)
     }
@@ -51,7 +50,6 @@ where
         P: Progress,
         S: AsRef<str> + Eq + Hash + ?Sized,
         String: Borrow<S>,
-        <A as Asset>::Data: FormatRegisteredData,
     {
         self.loader
             .load_from(name, format, source, progress, &*self.storage)

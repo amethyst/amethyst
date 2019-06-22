@@ -4,7 +4,7 @@
 
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
-use amethyst_assets::{Asset, Format, Handle};
+use amethyst_assets::{Asset, Format, Handle, SerializableFormat};
 use amethyst_core::ecs::prelude::VecStorage;
 use amethyst_error::Error;
 use fluent::bundle::FluentBundle;
@@ -32,6 +32,8 @@ impl Format<Locale> for LocaleFormat {
         Ok(Locale { bundle })
     }
 }
+
+impl SerializableFormat<Locale> for LocaleFormat {}
 
 /// A handle to a locale.
 pub type LocaleHandle = Handle<Locale>;

@@ -1,4 +1,4 @@
-use crate::{Format, FormatRegisteredData};
+use crate::{Format, FormatRegisteredData, SerializableFormat};
 use amethyst_error::{format_err, Error, ResultExt};
 use serde::{Deserialize, Serialize};
 
@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct RonFormat;
 
-impl<D: FormatRegisteredData> Format<D> for RonFormat
+impl<D> Format<D> for RonFormat
 where
     D: for<'a> Deserialize<'a> + Send + Sync + 'static,
 {
@@ -32,13 +32,18 @@ where
     }
 }
 
+impl<D: FormatRegisteredData> SerializableFormat<D> for RonFormat where
+    D: for<'a> Deserialize<'a> + Send + Sync + 'static
+{
+}
+
 /// Format for loading from Ron files. Mostly useful for prefabs.
 /// This type can only be used as manually specified to the loader.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct JsonFormat;
 
 #[cfg(feature = "json")]
-impl<D: FormatRegisteredData> Format<D> for JsonFormat
+impl<D> Format<D> for JsonFormat
 where
     D: for<'a> Deserialize<'a> + Send + Sync + 'static,
 {
@@ -56,4 +61,10 @@ where
 
         Ok(val)
     }
+}
+
+#[cfg(feature = "json")]
+impl<D: FormatRegisteredData> SerializableFormat<D> for JsonFormat where
+    D: for<'a> Deserialize<'a> + Send + Sync + 'static
+{
 }
