@@ -11,8 +11,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 * Rename FPSCounter, FPSCounterBundle, FPSCounterSystem to FpsCounter, FpsCounterBundle, FpsCounterSystem. ([#1719])
+* Add `load_from_data_async` to Asset Loader. ([#1753])
 
 [#1719]: https://github.com/amethyst/amethyst/pull/1719
+[#1753]: https://github.com/amethyst/amethyst/pull/1753
 
 ## [0.11.0] - 2019-06
 
