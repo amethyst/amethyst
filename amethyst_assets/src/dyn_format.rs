@@ -187,6 +187,7 @@ impl<D: FormatRegisteredData> dyn SerializableFormat<D> {
 macro_rules! register_format_type {
     ($($asset_data:ty),*) => {
         $(
+            #[allow(non_upper_case_globals)]
             const _register_format_type_impl: () = {
                 $crate::inventory::collect!(AssetFormatRegistration);
 
@@ -269,4 +270,56 @@ macro_rules! register_format {
             )
         }
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use serde;
+    use serde_json;
+
+    use super::*;
+    use crate as amethyst_assets;
+    use amethyst_assets::Format;
+    use amethyst_error::Error;
+
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+    struct TestPrefab {
+        test: Box<dyn SerializableFormat<TestData>>,
+    }
+
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
+    struct TestData(String);
+    register_format_type!(TestData);
+
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
+    struct TestFormat(String);
+    register_format!("FOO", TestFormat as TestData);
+
+    impl Format<TestData> for TestFormat {
+        fn name(&self) -> &'static str {
+            "FOO"
+        }
+
+        fn import_simple(&self, _bytes: Vec<u8>) -> Result<TestData, Error> {
+            // Just returning the stored string in order to assert against something meaningful.
+            Ok(TestData(self.0.clone()))
+        }
+    }
+
+    impl SerializableFormat<TestData> for TestFormat {}
+
+    #[test]
+    fn test_format_serialize() {
+        let prefab = TestPrefab {
+            test: Box::new(TestFormat("test string".to_owned())),
+        };
+
+        // Tests that serializing and deserializing dyn SerializableFormat yields the same data.
+        let serialized_prefab = serde_json::to_value(&prefab).unwrap();
+        let deserialized_prefab: TestPrefab = serde_json::from_value(serialized_prefab).unwrap();
+        assert_eq!(
+            prefab.test.import_simple(Vec::new()).unwrap(),
+            deserialized_prefab.test.import_simple(Vec::new()).unwrap()
+        );
+    }
 }
