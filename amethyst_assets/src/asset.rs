@@ -105,7 +105,10 @@ pub trait Format<D: 'static>: objekt::Clone + Debug + Send + Sync + 'static {
 objekt::clone_trait_object!(<D> Format<D>);
 
 /// SerializableFormat is a marker trait which is required for Format types that are supposed
-/// to be serialized.
+/// to be serialized. This trait implies both `Serialize` and `Deserialize` implementation.
+///
+/// **Note:** For deserialize support you need to register the format.
+/// See [FormatRegisteredData](trait.FormatRegisteredData.html) for full example.
 pub trait SerializableFormat<D: FormatRegisteredData + 'static>:
     Format<D> + erased_serde::Serialize + 'static
 {
