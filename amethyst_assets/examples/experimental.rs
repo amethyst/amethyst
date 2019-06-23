@@ -166,11 +166,11 @@ impl State {
 fn main() {
     let examples_dir = PathBuf::from(format!("{}/examples", env!("CARGO_MANIFEST_DIR")));
     let assets_dir = examples_dir.join("assets");
-    atelier_assets::init_logging();
+    atelier_daemon::init_logging();
 
     // launch an asset daemon in a separate thread
     std::thread::spawn(move || {
-        atelier_assets::AssetDaemon::default()
+        atelier_daemon::AssetDaemon::default()
             .with_importers(
                 atelier_importer::get_source_importers().map(|i| (i.extension, (i.instantiator)())),
             )
