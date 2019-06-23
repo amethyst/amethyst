@@ -13,7 +13,6 @@ use amethyst_core::ecs::{
 };
 
 use crate::{
-    asset::{Asset},
     error::{Error},
     loader_new::LoadHandle,
     storage_new::AssetStorage,
@@ -42,7 +41,7 @@ impl<A> Processor<A> {
 
 impl<'a, A> System<'a> for Processor<A>
 where
-    A: Asset,
+    A: crate::asset::Asset,
     A::Data: Into<Result<ProcessingState<A::Data, A>, Error>>,
 {
     type SystemData = (
@@ -97,7 +96,7 @@ impl<T> ProcessingQueue<T> {
         })
     }
     /// Process asset data into assets
-    pub fn process<F, A: Asset>(&mut self, storage: &mut AssetStorage<A>, mut f: F)
+    pub fn process<F, A>(&mut self, storage: &mut AssetStorage<A>, mut f: F)
     where
         F: FnMut(T) -> Result<ProcessingState<T, A>, Error>,
     {

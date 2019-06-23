@@ -1,7 +1,6 @@
 use crate::{
     storage_new::AssetStorage,
     processor::{ProcessingQueue},
-    Asset,
 };
 use amethyst_core::ecs::{
     prelude::{Component, DenseVecStorage},
@@ -45,7 +44,7 @@ impl<T: ?Sized> Drop for Handle<T> {
     }
 }
 impl<T> AssetHandle for Handle<T> {
-    fn get_load_handle(&self) -> &LoadHandle {
+    fn load_handle(&self) -> &LoadHandle {
         &self.id
     }
 }
@@ -72,7 +71,7 @@ impl Drop for GenericHandle {
     }
 }
 impl AssetHandle for GenericHandle {
-    fn get_load_handle(&self) -> &LoadHandle {
+    fn load_handle(&self) -> &LoadHandle {
         &self.id
     }
 }
@@ -94,7 +93,7 @@ impl WeakHandle {
     }
 }
 impl AssetHandle for WeakHandle {
-    fn get_load_handle(&self) -> &LoadHandle {
+    fn load_handle(&self) -> &LoadHandle {
         &self.id
     }
 }
@@ -104,16 +103,16 @@ impl<T: TypeUuid + Send + Sync + 'static> Component for Handle<T> {
 }
 
 pub trait AssetHandle {
-    fn get_load_status<T: Loader>(&self, loader: &T) -> LoadStatus {
-        loader.get_load_status_handle(self.get_load_handle())
+    fn load_status<T: Loader>(&self, loader: &T) -> LoadStatus {
+        loader.get_load_status_handle(self.load_handle())
     }
-    fn get_asset<'a, T: Asset + TypeUuid>(&self, storage: &'a AssetStorage<T>) -> Option<&'a T>
+    fn asset<'a, T: TypeUuid>(&self, storage: &'a AssetStorage<T>) -> Option<&'a T>
     where
         Self: Sized,
     {
         storage.get(self)
     }
-    fn get_asset_mut<'a, T: Asset + TypeUuid>(
+    fn asset_mut<'a, T: TypeUuid>(
         &self,
         storage: &'a mut AssetStorage<T>,
     ) -> Option<&'a mut T>
@@ -122,13 +121,13 @@ pub trait AssetHandle {
     {
         storage.get_mut(self)
     }
-    fn get_version<'a, T: Asset + TypeUuid>(&self, storage: &'a AssetStorage<T>) -> Option<u32>
+    fn asset_version<'a, T: TypeUuid>(&self, storage: &'a AssetStorage<T>) -> Option<u32>
     where
         Self: Sized,
     {
         storage.get_version(self)
     }
-    fn get_asset_with_version<'a, T: Asset + TypeUuid>(
+    fn asset_with_version<'a, T: TypeUuid>(
         &self,
         storage: &'a AssetStorage<T>,
     ) -> Option<(&'a T, u32)>
@@ -139,9 +138,9 @@ pub trait AssetHandle {
     }
     /// Downgrades the handle and creates a `WeakHandle`.
     fn downgrade(&self) -> WeakHandle {
-        WeakHandle::new(*self.get_load_handle())
+        WeakHandle::new(*self.load_handle())
     }
-    fn get_load_handle(&self) -> &LoadHandle;
+    fn load_handle(&self) -> &LoadHandle;
 }
 
 pub trait Loader: Send + Sync {
@@ -150,11 +149,11 @@ pub trait Loader: Send + Sync {
     fn get_load(&self, id: AssetUuid) -> Option<WeakHandle>;
     fn get_load_status(&self, id: AssetUuid) -> LoadStatus {
         self.get_load(id)
-            .map(|h| self.get_load_status_handle(h.get_load_handle()))
+            .map(|h| self.get_load_status_handle(h.load_handle()))
             .unwrap_or(LoadStatus::NotRequested)
     }
     fn get_load_status_handle(&self, handle: &LoadHandle) -> LoadStatus;
-    fn get_asset<'a, T: Asset + TypeUuid>(
+    fn get_asset<'a, T: TypeUuid>(
         &self,
         id: AssetUuid,
         storage: &'a AssetStorage<T>,
@@ -165,7 +164,7 @@ pub trait Loader: Send + Sync {
             .map(|h| storage.get(h))
             .unwrap_or(None)
     }
-    fn get_asset_mut<'a, T: Asset + TypeUuid>(
+    fn get_asset_mut<'a, T: TypeUuid>(
         &self,
         id: AssetUuid,
         storage: &'a mut AssetStorage<T>,
@@ -246,9 +245,9 @@ pub trait AssetTypeStorage {
     fn commit_asset_version(&mut self, handle: &LoadHandle, version: u32);
     fn free(&mut self, handle: LoadHandle);
 }
-impl<A: Asset> AssetTypeStorage for (&ProcessingQueue<A::Data>, &mut AssetStorage<A>)
+impl<Intermediate, Asset: TypeUuid + Send + Sync> AssetTypeStorage for (&ProcessingQueue<Intermediate>, &mut AssetStorage<Asset>)
 where
-    for<'a> A::Data: Deserialize<'a> + TypeUuid,
+    for<'a> Intermediate: Deserialize<'a> + TypeUuid + Send,
 {
     fn allocate(&self, load_handle: &LoadHandle) -> () {}
     fn update_asset(
@@ -258,7 +257,7 @@ where
         load_op: AssetLoadOp,
         version: u32,
     ) -> Result<(), Box<dyn Error>> {
-        let asset = bincode::deserialize::<A::Data>(data.as_ref())?;
+        let asset = bincode::deserialize::<Intermediate>(data.as_ref())?;
         self.0.enqueue(*handle, asset, load_op, version);
         Ok(())
     }
@@ -405,25 +404,25 @@ impl std::fmt::Debug for AssetType {
 }
 crate::inventory::collect!(AssetType);
 
-pub fn create_asset_type<A: Asset + TypeUuid>() -> AssetType
+pub fn create_asset_type<Intermediate, Asset: 'static + TypeUuid + Send + Sync>() -> AssetType
 where
-    for<'a> A::Data: Deserialize<'a> + TypeUuid,
+    for<'a> Intermediate: 'static + Deserialize<'a> + TypeUuid + Send,
 {
     AssetType {
-        data_uuid: A::Data::UUID,
-        asset_uuid: A::UUID,
+        data_uuid: Intermediate::UUID,
+        asset_uuid: Asset::UUID,
         create_storage: |res| {
-            if res.try_fetch::<AssetStorage<A>>().is_none() {
-                res.insert(AssetStorage::<A>::default())
+            if res.try_fetch::<AssetStorage<Asset>>().is_none() {
+                res.insert(AssetStorage::<Asset>::default())
             }
-            if res.try_fetch::<ProcessingQueue<A::Data>>().is_none() {
-                res.insert(ProcessingQueue::<A::Data>::default())
+            if res.try_fetch::<ProcessingQueue<Intermediate>>().is_none() {
+                res.insert(ProcessingQueue::<Intermediate>::default())
             }
         },
         with_storage: |res, func| {
             func(&mut (
-                &*res.fetch::<ProcessingQueue<A::Data>>(),
-                &mut *res.fetch_mut::<AssetStorage<A>>(),
+                &*res.fetch::<ProcessingQueue<Intermediate>>(),
+                &mut *res.fetch_mut::<AssetStorage<Asset>>(),
             ))
         },
     }
@@ -437,7 +436,7 @@ macro_rules! register_asset_type {
     ($krate:ident; $intermediate:ty => $asset:ty) => {
         $crate::inventory::submit!{
             #![crate = $krate]
-            $crate::create_asset_type::<$asset>()
+            $crate::create_asset_type::<$intermediate, $asset>()
         }
     };
 }

@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use crossbeam::queue::SegQueue;
 
 use crate::{
-    asset::{Asset},
     loader_new::AssetHandle,
 };
 
@@ -13,13 +12,13 @@ struct AssetState<A> {
 }
 /// An asset storage, storing the actual assets and allocating
 /// handles to them.
-pub struct AssetStorage<A: Asset> {
+pub struct AssetStorage<A> {
     assets: HashMap<LoadHandle, AssetState<A>>,
     uncommitted: HashMap<LoadHandle, AssetState<A>>,
     to_drop: SegQueue<A>,
 }
 
-impl<A: Asset> AssetStorage<A> {
+impl<A> AssetStorage<A> {
     /// Creates a new asset storage.
     pub fn new() -> Self {
         Default::default()
@@ -66,25 +65,25 @@ impl<A: Asset> AssetStorage<A> {
 
     /// Get an asset from a given asset handle.
     pub fn get<T: AssetHandle>(&self, handle: &T) -> Option<&A> {
-        self.assets.get(handle.get_load_handle()).map(|a| &a.asset)
+        self.assets.get(handle.load_handle()).map(|a| &a.asset)
     }
 
     /// Get an asset mutably from a given asset handle.
     pub fn get_mut<T: AssetHandle>(&mut self, handle: &T) -> Option<&mut A> {
         self.assets
-            .get_mut(handle.get_load_handle())
+            .get_mut(handle.load_handle())
             .map(|a| &mut a.asset)
     }
 
     pub fn get_version<T: AssetHandle>(&self, handle: &T) -> Option<u32> {
         self.assets
-            .get(handle.get_load_handle())
+            .get(handle.load_handle())
             .map(|a| a.version)
     }
 
     pub fn get_asset_with_version<T: AssetHandle>(&self, handle: &T) -> Option<(&A, u32)> {
         self.assets
-            .get(handle.get_load_handle())
+            .get(handle.load_handle())
             .map(|a| (&a.asset, a.version))
     }
 
@@ -100,7 +99,7 @@ impl<A: Asset> AssetStorage<A> {
     }
 }
 
-impl<A: Asset> Default for AssetStorage<A> {
+impl<A> Default for AssetStorage<A> {
     fn default() -> Self {
         AssetStorage {
             assets: Default::default(),

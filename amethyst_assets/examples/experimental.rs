@@ -1,40 +1,26 @@
 //! High level example
+#![warn(rust_2018_idioms, rust_2018_compatibility)]
 
-#![allow(unused)]
+use std::path::PathBuf;
 
-use std::{path::PathBuf, sync::Arc};
-
-use rayon::{ThreadPool, ThreadPoolBuilder};
 use serde::{Deserialize, Serialize};
 
 use amethyst_assets::*;
 use amethyst_core::{
     ecs::{
         common::Errors,
-        prelude::{
-            Builder, Dispatcher, DispatcherBuilder, Read, ReadExpect, System, VecStorage, World,
-            Write,
-        },
+        prelude::{Dispatcher, DispatcherBuilder, System, World, Write},
     },
-    Time,
 };
 use amethyst_error::{format_err, Error, ResultExt};
 use type_uuid::*;
 
-#[derive(TypeUuid)]
+#[derive(Debug, TypeUuid)]
 #[uuid = "28d51c52-be81-4d99-8cdc-20b26eb12448"]
 pub struct MeshAsset {
     /// Left out for simplicity
     /// This would for example be the gfx handle
     buffer: (),
-}
-
-impl Asset for MeshAsset {
-    fn name() -> &'static str {
-        "example::Mesh"
-    }
-    type Data = VertexData;
-    type HandleStorage = VecStorage<Handle<MeshAsset>>;
 }
 
 #[derive(Serialize, Deserialize, TypeUuid)]
@@ -43,6 +29,8 @@ pub struct VertexData {
     positions: Vec<[f32; 3]>,
     tex_coords: Vec<[f32; 2]>,
 }
+// Registers the asset type which automatically prepares AssetStorage & ProcessingQueue
+amethyst_assets::register_asset_type!(VertexData => MeshAsset);
 /// A format the mesh data could be stored with.
 #[derive(Debug, Default, Clone, Serialize, Deserialize, TypeUuid)]
 #[uuid = "df3c6c87-05e6-4cc9-8711-cb6a6aad9942"]
@@ -54,15 +42,12 @@ impl Format<VertexData> for Ron {
     }
 
     fn import_simple(&self, bytes: Vec<u8>) -> Result<VertexData, Error> {
-        use ron::de::from_str;
-        use std::str::from_utf8;
-
-        let s = from_utf8(&bytes)?;
-
-        from_str(s).with_context(|_| format_err!("Failed to decode mesh file"))
+        let s = std::str::from_utf8(&bytes)?;
+        ron::de::from_str(s).with_context(|_| format_err!("Failed to decode mesh file"))
     }
 }
-amethyst_assets::register_asset_type!(VertexData => MeshAsset);
+// Associates the .ron file extension with the Ron Format implementation
+// The AssetDaemon will automatically trigger Ron import when a file is new/changed
 amethyst_assets::register_importer!(".ron", Ron);
 
 struct App {
@@ -76,7 +61,6 @@ impl App {
         let mut world = World::new();
 
         world.add_resource(Errors::new());
-        world.add_resource(Time::default());
         let mut loader = NewDefaultLoader::default();
         loader.init_world(&mut world.res);
         world.add_resource(loader);
@@ -107,18 +91,16 @@ impl App {
         }
     }
 }
-pub struct RenderingSystem;
+pub struct ProcessingSystem;
 
-impl<'a> System<'a> for RenderingSystem {
+impl<'a> System<'a> for ProcessingSystem {
     type SystemData = (
-        Read<'a, NewDefaultLoader>,
-        Read<'a, Time>,
         Write<'a, ProcessingQueue<VertexData>>,
         Write<'a, NewAssetStorage<MeshAsset>>,
     );
 
-    fn run(&mut self, (loader, time, mut processing_queue, mut storage): Self::SystemData) {
-        processing_queue.process(&mut *storage, |vertex_data| {
+    fn run(&mut self, (mut processing_queue, mut storage): Self::SystemData) {
+        processing_queue.process(&mut *storage, |_vertex_data| {
             Ok(NewProcessingState::Loaded(MeshAsset { buffer: () }))
         });
     }
@@ -127,7 +109,7 @@ impl<'a> System<'a> for RenderingSystem {
 enum State {
     Start,
     Loading(GenericHandle),
-    SomethingElse,
+    SomethingElse(GenericHandle),
 }
 
 impl State {
@@ -138,6 +120,8 @@ impl State {
                 let loader = world.read_resource::<NewDefaultLoader>();
                 Some(State::Loading(
                     loader.load_asset_generic(
+                        // TODO: implement a proc macro to parse asset uuids at compile time
+                        // TODO: implement a generator for asset uuid constants based on asset daemon metadata
                         *uuid::Uuid::parse_str("39c7043a-dd7e-4654-9b22-e45d5c6b87cc")
                             .unwrap()
                             .as_bytes(),
@@ -145,16 +129,20 @@ impl State {
                 ))
             }
             State::Loading(handle) => {
+                // Check the load status - this could be a loading screen
                 let loader = world.read_resource::<NewDefaultLoader>();
-                match handle.get_load_status(&*loader) {
-                    LoadStatus::Loaded => Some(State::SomethingElse),
+                match handle.load_status(&*loader) {
+                    LoadStatus::Loaded => Some(State::SomethingElse(
+                        handle,
+                    )),
                     _ => Some(State::Loading(handle)),
                 }
             }
-            State::SomethingElse => {
+            State::SomethingElse(handle) => {
                 // You could now start the actual game, cause the loading is done.
                 // This example however will just quit.
-
+                let storage = world.read_resource::<NewAssetStorage<MeshAsset>>();
+                println!("Loaded asset {:?}", handle.asset_with_version(&storage));
                 println!("Asset is loaded and the game can begin!");
                 println!("Game ending, sorry");
                 None
@@ -166,7 +154,7 @@ impl State {
 fn main() {
     let examples_dir = PathBuf::from(format!("{}/examples", env!("CARGO_MANIFEST_DIR")));
     let assets_dir = examples_dir.join("assets");
-    atelier_daemon::init_logging();
+    atelier_daemon::init_logging().expect("Failed to initialize logging");
 
     // launch an asset daemon in a separate thread
     std::thread::spawn(move || {
@@ -180,7 +168,7 @@ fn main() {
     });
 
     let disp = DispatcherBuilder::new()
-        .with(RenderingSystem, "rendering", &[])
+        .with(ProcessingSystem, "processing", &[])
         .build();
 
     let mut app = App::new(disp, State::Start);
