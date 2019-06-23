@@ -65,12 +65,15 @@ mod processor;
 mod simple_importer;
 
 
+/// Registers an importer for the new experimental asset system
 #[cfg(not(feature = "experimental-assets"))]
 #[macro_export]
 macro_rules! register_importer {
     ($ext:literal, $format:ty) => {};
     ($krate:ident; $ext:literal, $format:ty) => {};
 }
+
+/// Registers an intermediate -> asset type for the new experimental asset system
 #[cfg(not(feature = "experimental-assets"))]
 #[macro_export]
 macro_rules! register_asset_type {
