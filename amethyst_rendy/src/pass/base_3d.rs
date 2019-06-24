@@ -666,8 +666,14 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3DTr
                         if let Some(mesh) =
                             B::unwrap_mesh(unsafe { mesh_storage.get_by_id_unchecked(*mesh) })
                         {
-                            mesh.bind_and_draw(0, &self.vertex_format_base, range.clone(), encoder)
-                                .unwrap();
+                            if let Err(error) = mesh.bind_and_draw(
+                                0,
+                                &self.vertex_format_base,
+                                range.clone(),
+                                encoder,
+                            ) {
+                                log::warn!("Trying to draw a mesh that lacks {:?} vertex attributes. Pass {} requires attributes {:?}.", error.not_found.attributes, T::NAME, T::base_format());
+                            }
                         }
                     }
                 }
@@ -687,13 +693,14 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3DTr
                             if let Some(mesh) =
                                 B::unwrap_mesh(unsafe { mesh_storage.get_by_id_unchecked(*mesh) })
                             {
-                                mesh.bind_and_draw(
+                                if let Err(error) = mesh.bind_and_draw(
                                     0,
                                     &self.vertex_format_skinned,
                                     range.clone(),
                                     encoder,
-                                )
-                                .unwrap();
+                                ) {
+                                    log::warn!("Trying to draw a skinned mesh that lacks {:?} vertex attributes. Pass {} requires attributes {:?}.", error.not_found.attributes, T::NAME, T::skinned_format());
+                                }
                             }
                         }
                     }

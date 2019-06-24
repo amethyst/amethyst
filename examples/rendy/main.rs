@@ -12,8 +12,8 @@ use amethyst::{
     controls::{FlyControlBundle, FlyControlTag},
     core::{
         ecs::{
-            Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
-            Resources, System, SystemData, Write, WriteStorage,
+            Component, DenseVecStorage, DispatcherBuilder, Entities, Entity, Join, Read,
+            ReadExpect, ReadStorage, Resources, System, SystemData, Write, WriteStorage,
         },
         math::{Unit, UnitQuaternion, Vector3},
         Time, Transform, TransformBundle,
@@ -565,34 +565,67 @@ fn main() -> amethyst::Result<()> {
             "animation_control",
             "sampler_interpolation",
         ]))?
-        .with(
-            SpriteVisibilitySortingSystem::new(),
-            "sprite_visibility_system",
-            &["fly_movement", "auto_fov", "transform_system"],
-        )
-        .with(
-            VisibilitySortingSystem::new(),
-            "visibility_system",
-            &["fly_movement", "auto_fov", "transform_system"],
-        )
-        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::default(),
-        ));
+        .with_bundle(RenderingBundle::<DefaultBackend>::new(
+            serde_json::json!({
+                "multisample": 4
+            }),
+        ))?;
 
     let mut game = Application::new(&resources, Example::new(), game_data)?;
     game.run();
     Ok(())
 }
 
-#[derive(Default)]
-struct ExampleGraph {
+/// GRAPH CREATOR PLAYGROUND
+use std::marker::PhantomData;
+use amethyst_error::Error;
+use amethyst_core::{
+    SystemBundle,
+};
+
+
+struct GraphicsSettings(serde_json::Value);
+
+struct RenderingBundle<B: Backend> {
+    settings: Option<GraphicsSettings>,
+    marker: PhantomData<B>,
+    dirty: bool,
     dimensions: Option<ScreenDimensions>,
     last_mode: RenderMode,
     surface_format: Option<Format>,
-    dirty: bool,
 }
 
-impl<B: Backend> GraphCreator<B> for ExampleGraph {
+impl<B: Backend> RenderingBundle<B> {
+    fn new(settings: serde_json::Value) -> Self {
+        Self {
+            settings: Some(GraphicsSettings(settings)),
+            marker: PhantomData,
+            dirty: true,
+            dimensions: None,
+            last_mode: RenderMode::Pbr,
+            surface_format: None,
+        }
+    }
+}
+
+impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        builder.add(
+            SpriteVisibilitySortingSystem::new(),
+            "sprite_visibility_system",
+            &["transform_system"],
+        );
+        builder.add(
+            VisibilitySortingSystem::new(),
+            "visibility_system",
+            &["transform_system"],
+        );
+        builder.add_thread_local(RenderingSystem::<B, _>::new(self));
+        Ok(())
+    }
+}
+
+impl<B: Backend> GraphCreator<B> for RenderingBundle<B> {
     fn rebuild(&mut self, res: &Resources) -> bool {
         let new_mode = res.fetch::<RenderMode>();
 
@@ -613,7 +646,9 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
     }
 
     fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
+        use amethyst::renderer::rendy::graph::render::RenderGroupBuilder;
         self.dirty = false;
+
 
         let (window, render_mode) =
             <(ReadExpect<'_, Window>, ReadExpect<'_, RenderMode>)>::fetch(res);
@@ -643,25 +678,25 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
             Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
         );
 
-        let mut opaque_subpass = SubpassBuilder::new();
-        let mut transparent_subpass = SubpassBuilder::new();
-        match *render_mode {
-            RenderMode::Flat => {
-                opaque_subpass.add_group(DrawFlatDesc::skinned().builder());
-                transparent_subpass.add_group(DrawFlatTransparentDesc::skinned().builder());
-            }
-            RenderMode::Shaded => {
-                opaque_subpass.add_group(DrawShadedDesc::skinned().builder());
-                transparent_subpass.add_group(DrawShadedTransparentDesc::skinned().builder());
-            }
-            RenderMode::Pbr => {
-                opaque_subpass.add_group(DrawPbrDesc::skinned().builder());
-                transparent_subpass.add_group(DrawPbrTransparentDesc::skinned().builder());
-            }
+        type DynGroupBuilder<B> = Box<dyn RenderGroupBuilder<B, Resources>>;
+        let (opaque_3d, transparent_3d): (DynGroupBuilder<B>, DynGroupBuilder<B>) = match *render_mode {
+            RenderMode::Flat => (
+                Box::new(DrawFlatDesc::skinned().builder()),
+                Box::new(DrawFlatTransparentDesc::skinned().builder()),
+            ),
+            RenderMode::Shaded => (
+                Box::new(DrawShadedDesc::skinned().builder()),
+                Box::new(DrawShadedTransparentDesc::skinned().builder()),
+            ),
+            RenderMode::Pbr => (
+                Box::new(DrawPbrDesc::skinned().builder()),
+                Box::new(DrawPbrTransparentDesc::skinned().builder()),
+            ),
         };
 
-        let opaque = graph_builder.add_node(
-            opaque_subpass
+        let pass = graph_builder.add_node(
+            SubpassBuilder::new()
+                .with_dyn_group(opaque_3d)
                 .with_group(DrawFlat2DDesc::new().builder())
                 .with_group(DrawDebugLinesDesc::new().builder())
                 .with_group(
@@ -671,28 +706,14 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
                     )
                     .builder(),
                 )
+                .with_dyn_group(transparent_3d)
+                .with_group(DrawFlat2DTransparentDesc::new().builder())
                 .with_color(color)
                 .with_depth_stencil(depth)
                 .into_pass(),
         );
 
-        let transparent = graph_builder.add_node(
-            transparent_subpass
-                .with_group(
-                    DrawFlat2DTransparentDesc::default()
-                        .builder()
-                        .with_dependency(opaque),
-                )
-                .with_color(color)
-                .with_depth_stencil(depth)
-                .into_pass(),
-        );
-
-        let _present = graph_builder.add_node(
-            PresentNode::builder(factory, surface, color)
-                .with_dependency(opaque)
-                .with_dependency(transparent),
-        );
+        graph_builder.add_node(PresentNode::builder(factory, surface, color).with_dependency(pass));
 
         graph_builder
     }
