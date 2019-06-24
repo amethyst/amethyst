@@ -5,7 +5,6 @@ use crate::{
 };
 use amethyst_assets::{
     AssetPrefab, AssetStorage, Format, Handle, Loader, PrefabData, ProgressCounter,
-    SerializableFormat,
 };
 use amethyst_core::ecs::{Entity, Read, ReadExpect, WriteStorage};
 use amethyst_error::Error;
@@ -37,8 +36,6 @@ impl Format<MeshData> for ObjFormat {
             .map_err(|e| e.compat().into())
     }
 }
-
-impl SerializableFormat<MeshData> for ObjFormat {}
 
 /// Internal mesh loading
 ///

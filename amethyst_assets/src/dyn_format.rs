@@ -269,6 +269,7 @@ macro_rules! register_format {
                 ),
             )
         }
+        impl $crate::SerializableFormat<$data> for $format {}
     };
 }
 
@@ -305,8 +306,6 @@ mod tests {
             Ok(TestData(self.0.clone()))
         }
     }
-
-    impl SerializableFormat<TestData> for TestFormat {}
 
     #[test]
     fn test_format_serialize() {

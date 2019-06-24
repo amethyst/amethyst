@@ -22,8 +22,6 @@ impl Format<AudioData> for WavFormat {
     }
 }
 
-impl SerializableFormat<AudioData> for WavFormat {}
-
 /// Loads audio from Ogg Vorbis files
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct OggFormat;
@@ -38,8 +36,6 @@ impl Format<AudioData> for OggFormat {
         Ok(AudioData(bytes))
     }
 }
-
-impl SerializableFormat<AudioData> for OggFormat {}
 
 /// Loads audio from Flac files.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -56,8 +52,6 @@ impl Format<AudioData> for FlacFormat {
     }
 }
 
-impl SerializableFormat<AudioData> for FlacFormat {}
-
 /// Loads audio from MP3 files.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Mp3Format;
@@ -72,5 +66,3 @@ impl Format<AudioData> for Mp3Format {
         Ok(AudioData(bytes))
     }
 }
-
-impl SerializableFormat<AudioData> for Mp3Format {}

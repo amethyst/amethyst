@@ -99,8 +99,6 @@ impl Format<TextureData> for ImageFormat {
     }
 }
 
-impl SerializableFormat<TextureData> for ImageFormat {}
-
 /// `PrefabData` for loading `Texture`s.
 ///
 /// Will not add any `Component`s to the `Entity`, will only return a `Handle`

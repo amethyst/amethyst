@@ -1,9 +1,7 @@
 use glyph_brush::rusttype::Font;
 use serde::{Deserialize, Serialize};
 
-use amethyst_assets::{
-    Asset, Format, Handle, ProcessableAsset, ProcessingState, SerializableFormat,
-};
+use amethyst_assets::{Asset, Format, Handle, ProcessableAsset, ProcessingState};
 use amethyst_core::ecs::prelude::VecStorage;
 use amethyst_error::{format_err, Error, ResultExt};
 
@@ -51,5 +49,3 @@ impl Format<FontData> for TtfFormat {
             .with_context(|_| format_err!("Font parsing error"))
     }
 }
-
-impl SerializableFormat<FontData> for TtfFormat {}
