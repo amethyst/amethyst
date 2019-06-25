@@ -11,8 +11,10 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 * Rename FPSCounter, FPSCounterBundle, FPSCounterSystem to FpsCounter, FpsCounterBundle, FpsCounterSystem. ([#1719])
+* Remove remaining <N: RealField> type parameter on GameDataBuilder, add Debug derive to LoggerConfig ([#1758])
 
 [#1719]: https://github.com/amethyst/amethyst/pull/1719
+[#1758]: https://github.com/amethyst/amethyst/pull/1758
 
 ## [0.11.0] - 2019-06
 
