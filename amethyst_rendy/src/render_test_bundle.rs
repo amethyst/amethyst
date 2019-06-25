@@ -34,6 +34,9 @@ use crate::{
 ///
 /// This test bundle requires the user to also add the `TransformBundle` and `WindowBundle` to the
 /// dispatcher.
+///
+/// This is only meant for testing and only provides very basic rendering. You need to enable the
+/// `test-support` flag to use this.
 #[derive(Debug, new)]
 pub struct RenderTestBundle<B>(PhantomData<B>);
 
@@ -62,6 +65,9 @@ where
 /// Adds sprite systems and a basic rendering system to the dispatcher.
 ///
 /// This test bundle requires the user to also add the `TransformBundle` to the dispatcher.
+///
+/// This is only meant for automated testing and doesn't render anything. You need to enable the
+///// `test-support` flag to use this.
 #[derive(Debug, new)]
 pub struct RenderEmptyBundle<B>(PhantomData<B>);
 

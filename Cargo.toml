@@ -311,3 +311,5 @@ name = "rendy"
 path = "examples/rendy/main.rs"
 required-features = ["animation", "gltf"]
 
+[package.metadata.docs.rs]
+features = ["animation", "audio", "gltf", "json", "locale", "network", "sdl_controller", "vulkan"]
