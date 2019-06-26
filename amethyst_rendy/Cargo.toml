@@ -8,6 +8,9 @@ keywords = ["game", "engine", "renderer", "3d", "amethyst"]
 categories = ["rendering", "rendering::engine"]
 license = "MIT/Apache-2.0"
 
+[package.metadata.docs.rs]
+features = ["shader-compiler", "test-support", "vulkan"]
+
 [dependencies]
 amethyst_assets = { path = "../amethyst_assets", version = "0.7" }
 amethyst_core = { path = "../amethyst_core", version = "0.6" }
@@ -35,6 +38,7 @@ static_assertions = "0.3"
 
 thread_profiler = { version = "0.3", optional = true }
 approx = "0.3.2"
+serde_json = "1"
 
 [dev-dependencies]
 rayon = "1.0.2"
@@ -54,6 +58,3 @@ test-support =  []
 [[bench]]
 name = "camera"
 harness = false
-
-[package.metadata.docs.rs]
-features = ["shader-compiler", "test-support", "vulkan"]

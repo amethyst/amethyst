@@ -36,14 +36,13 @@ use amethyst_rendy::{
     mtl::{Material, MaterialDefaults},
     palette::{LinSrgba, Srgb, Srgba},
     pass::{
-        DrawDebugLinesDesc, DrawFlat2DDesc, DrawFlat2DTransparentDesc, DrawFlatDesc,
-        DrawFlatTransparentDesc, DrawPbrDesc, DrawPbrTransparentDesc, DrawShadedDesc,
-        DrawShadedTransparentDesc, DrawSkyboxDesc,
+        DrawDebugLinesDesc, DrawFlat2DDesc, DrawFlat2DTransparentDesc, DrawPbrDesc,
+        DrawPbrTransparentDesc, DrawSkyboxDesc,
     },
     rendy::{
         factory::Factory,
         graph::{
-            present::PresentNode,
+            NodeId,
             render::{RenderGroupDesc, SubpassBuilder},
             GraphBuilder,
         },
@@ -61,7 +60,7 @@ use amethyst_rendy::{
     visibility::{BoundingSphere, VisibilitySortingSystem},
     Format, Kind,
 };
-use std::path::Path;
+use std::{collections::HashMap, path::Path};
 
 use prefab_data::{AnimationMarker, Scene, ScenePrefabData, SpriteAnimationId};
 
@@ -472,6 +471,7 @@ fn toggle_or_cycle_animation(
 
 fn main() -> amethyst::Result<()> {
     amethyst::Logger::from_config(amethyst::LoggerConfig {
+        stdout: amethyst::StdoutLog::Off,
         log_file: Some("rendy_example.log".into()),
         level_filter: log::LevelFilter::Error,
         ..Default::default()
@@ -565,74 +565,99 @@ fn main() -> amethyst::Result<()> {
             "animation_control",
             "sampler_interpolation",
         ]))?
-        .with_bundle(RenderingBundle::<DefaultBackend>::new(
-            serde_json::json!({
-                "multisample": 4
-            }),
-        ))?;
+        .with_bundle(
+            RenderPipeline::<DefaultBackend>::with_main_window()
+                .with_settings(serde_json::json!({ "multisample": 4 }))
+                .with_plugin(RenderStandard3d::default())
+                .with_plugin(RenderStandard2d::default())
+                .with_plugin(RenderSkybox::with_colors(
+                    Srgb::new(0.82, 0.51, 0.50),
+                    Srgb::new(0.18, 0.11, 0.85),
+                )),
+        )?;
 
     let mut game = Application::new(&resources, Example::new(), game_data)?;
     game.run();
     Ok(())
 }
 
+use amethyst_core::SystemBundle;
+use amethyst_error::Error;
+use amethyst_rendy::system::GraphicsSettings;
 /// GRAPH CREATOR PLAYGROUND
 use std::marker::PhantomData;
-use amethyst_error::Error;
-use amethyst_core::{
-    SystemBundle,
-};
 
-
-struct GraphicsSettings(serde_json::Value);
-
-struct RenderingBundle<B: Backend> {
+struct RenderPipeline<B: Backend> {
     settings: Option<GraphicsSettings>,
-    marker: PhantomData<B>,
-    dirty: bool,
-    dimensions: Option<ScreenDimensions>,
-    last_mode: RenderMode,
-    surface_format: Option<Format>,
+    plugins: Vec<Box<dyn RenderPlugin<B>>>,
 }
 
-impl<B: Backend> RenderingBundle<B> {
-    fn new(settings: serde_json::Value) -> Self {
+impl<B: Backend> RenderPipeline<B> {
+    pub fn with_main_window() -> Self {
         Self {
-            settings: Some(GraphicsSettings(settings)),
-            marker: PhantomData,
-            dirty: true,
+            settings: Some(GraphicsSettings(serde_json::json!({}))),
+            plugins: Vec::new(),
+        }
+    }
+
+    pub fn set_settings(&mut self, settings: serde_json::Value) {
+        self.settings = Some(GraphicsSettings(settings));
+    }
+
+    pub fn with_settings(mut self, settings: serde_json::Value) -> Self {
+        self.set_settings(settings);
+        self
+    }
+
+    pub fn add_plugin(&mut self, plugin: impl RenderPlugin<B> + 'static) {
+        self.plugins.push(Box::new(plugin));
+    }
+
+    pub fn with_plugin(mut self, plugin: impl RenderPlugin<B> + 'static) -> Self {
+        self.add_plugin(plugin);
+        self
+    }
+
+    fn into_graph(self) -> RenderPipelineGraph<B> {
+        RenderPipelineGraph {
+            plugins: self.plugins,
             dimensions: None,
-            last_mode: RenderMode::Pbr,
-            surface_format: None,
+            dirty: true,
+            marker: PhantomData,
         }
     }
 }
 
-impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
-        builder.add(
-            SpriteVisibilitySortingSystem::new(),
-            "sprite_visibility_system",
-            &["transform_system"],
-        );
-        builder.add(
-            VisibilitySortingSystem::new(),
-            "visibility_system",
-            &["transform_system"],
-        );
-        builder.add_thread_local(RenderingSystem::<B, _>::new(self));
+impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderPipeline<B> {
+    fn build(mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        for plugin in &mut self.plugins {
+            plugin.build(builder)?;
+        }
+
+        builder.add_thread_local(RenderingSystem::<B, _>::new(
+            self.settings.take().unwrap(),
+            self.into_graph(),
+        ));
+
         Ok(())
     }
 }
 
-impl<B: Backend> GraphCreator<B> for RenderingBundle<B> {
-    fn rebuild(&mut self, res: &Resources) -> bool {
-        let new_mode = res.fetch::<RenderMode>();
+struct RenderPipelineGraph<B: Backend> {
+    plugins: Vec<Box<dyn RenderPlugin<B>>>,
+    dimensions: Option<ScreenDimensions>,
+    dirty: bool,
+    marker: PhantomData<B>,
+}
 
-        if *new_mode != self.last_mode {
-            self.last_mode = *new_mode;
-            return true;
-        }
+impl<B: Backend> GraphCreator<B> for RenderPipelineGraph<B> {
+    fn rebuild(&mut self, res: &Resources) -> bool {
+        // let new_mode = res.fetch::<RenderMode>();
+
+        // if *new_mode != self.last_mode {
+        //     self.last_mode = *new_mode;
+        //     return true;
+        // }
 
         // Rebuild when dimensions change, but wait until at least two frames have the same.
         let new_dimensions = res.try_fetch::<ScreenDimensions>();
@@ -646,30 +671,17 @@ impl<B: Backend> GraphCreator<B> for RenderingBundle<B> {
     }
 
     fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
-        use amethyst::renderer::rendy::graph::render::RenderGroupBuilder;
+        // use amethyst::renderer::rendy::graph::render::RenderGroupBuilder;
         self.dirty = false;
 
-
-        let (window, render_mode) =
-            <(ReadExpect<'_, Window>, ReadExpect<'_, RenderMode>)>::fetch(res);
-
+        // let (window, render_mode) =
+        //     <(ReadExpect<'_, Window>, ReadExpect<'_, RenderMode>)>::fetch(res);
+        let window = <ReadExpect<'_, Window>>::fetch(res);
         let surface = factory.create_surface(&window);
-
-        // cache surface format to speed things up
-        let surface_format = *self
-            .surface_format
-            .get_or_insert_with(|| factory.get_surface_format(&surface));
-
         let dimensions = self.dimensions.as_ref().unwrap();
         let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 
         let mut graph_builder = GraphBuilder::new();
-        let color = graph_builder.create_image(
-            window_kind,
-            1,
-            surface_format,
-            Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
-        );
 
         let depth = graph_builder.create_image(
             window_kind,
@@ -678,43 +690,284 @@ impl<B: Backend> GraphCreator<B> for RenderingBundle<B> {
             Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
         );
 
-        type DynGroupBuilder<B> = Box<dyn RenderGroupBuilder<B, Resources>>;
-        let (opaque_3d, transparent_3d): (DynGroupBuilder<B>, DynGroupBuilder<B>) = match *render_mode {
-            RenderMode::Flat => (
-                Box::new(DrawFlatDesc::skinned().builder()),
-                Box::new(DrawFlatTransparentDesc::skinned().builder()),
-            ),
-            RenderMode::Shaded => (
-                Box::new(DrawShadedDesc::skinned().builder()),
-                Box::new(DrawShadedTransparentDesc::skinned().builder()),
-            ),
-            RenderMode::Pbr => (
-                Box::new(DrawPbrDesc::skinned().builder()),
-                Box::new(DrawPbrTransparentDesc::skinned().builder()),
-            ),
-        };
+        let mut plan = RenderPlan::new();
 
-        let pass = graph_builder.add_node(
-            SubpassBuilder::new()
-                .with_dyn_group(opaque_3d)
-                .with_group(DrawFlat2DDesc::new().builder())
-                .with_group(DrawDebugLinesDesc::new().builder())
-                .with_group(
-                    DrawSkyboxDesc::with_colors(
-                        Srgb::new(0.82, 0.51, 0.50),
-                        Srgb::new(0.18, 0.11, 0.85),
-                    )
-                    .builder(),
-                )
-                .with_dyn_group(transparent_3d)
-                .with_group(DrawFlat2DTransparentDesc::new().builder())
-                .with_color(color)
-                .with_depth_stencil(depth)
-                .into_pass(),
-        );
+        for plugin in self.plugins.iter_mut() {
+            plugin.plan(&mut plan).unwrap();
+        }
 
-        graph_builder.add_node(PresentNode::builder(factory, surface, color).with_dependency(pass));
+        // type DynGroup<B> = Box<dyn RenderGroupBuilder<B, Resources>>;
+        // let (opaque_3d, transparent_3d): (DynGroup<B>, DynGroup<B>) = match *render_mode {
+        //     RenderMode::Flat => (
+        //         Box::new(DrawFlatDesc::skinned().builder()),
+        //         Box::new(DrawFlatTransparentDesc::skinned().builder()),
+        //     ),
+        //     RenderMode::Shaded => (
+        //         Box::new(DrawShadedDesc::skinned().builder()),
+        //         Box::new(DrawShadedTransparentDesc::skinned().builder()),
+        //     ),
+        //     RenderMode::Pbr => (
+        //         Box::new(DrawPbrDesc::skinned().builder()),
+        //         Box::new(DrawPbrTransparentDesc::skinned().builder()),
+        //     ),
+        // };
+
+        let mut main_subpass = SubpassBuilder::new()
+            .with_color_surface()
+            .with_depth_stencil(depth);
+
+        for action in plan.target(Target::Main, 1, true).drain_actions() {
+            if let RenedrableAction::RenderGroup(group) = action {
+                main_subpass.add_dyn_group(group);
+            }
+        }
+
+        graph_builder.add_node(main_subpass.into_pass().with_surface(
+            surface,
+            Some(ClearValue::Color([1.0, 1.0, 1.0, 1.0].into())),
+        ));
 
         graph_builder
+    }
+}
+
+trait RenderPlugin<B: Backend> {
+    fn build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        Ok(())
+    }
+    fn plan(&mut self, plan: &mut RenderPlan<B>) -> Result<(), Error>;
+}
+
+// new
+
+struct RenderPlan<B: Backend> {
+    // displays: Vec<DisplayPlan>,
+    targets: HashMap<Target, TargetPlan<B>>,
+}
+
+impl<B: Backend> RenderPlan<B> {
+    fn new() -> Self {
+        Self {
+            // displays: vec![],
+            targets: Default::default(),
+        }
+    }
+
+    pub fn target(&mut self, target: Target, colors: usize, depth: bool) -> &mut TargetPlan<B> {
+        self.targets
+            .entry(target)
+            .or_insert_with(|| TargetPlan::new(target, colors, depth))
+    }
+}
+
+struct RenderPlanExecutor {
+    targets: HashMap<Target, ExecutedTarget>,
+}
+
+struct ExecutedTarget {
+    outputs: Vec<TargetSurface>,
+    node: NodeId,
+}
+
+struct TargetPlan<B: Backend> {
+    key: Target,
+    colors: usize,
+    depth: bool,
+    inputs: Vec<InputSurface>,
+    actions: Vec<(i32, RenedrableAction<B>)>,
+}
+
+enum SurfaceSize {
+    Relative(f32, f32),
+    Absolute(u32, u32),
+}
+
+enum TargetSurface {
+    SurfaceColor,
+    Color(u32, NodeId),
+    Depth(NodeId),
+}
+
+enum InputSurface {
+    Color(Target, u32),
+    Depth(Target),
+}
+
+impl<B: Backend> TargetPlan<B> {
+    fn new(key: Target, colors: usize, depth: bool) -> Self {
+        Self {
+            key,
+            colors,
+            depth,
+            inputs: vec![],
+            actions: vec![],
+        }
+    }
+
+    pub fn add(&mut self, order: impl Into<i32>, action: impl IntoAction<B>) {
+        let action = action.into();
+        assert_eq!(
+            self.colors,
+            action.colors(),
+            "Trying to add render action with {} colors to target {:?} that expects {} colors",
+            action.colors(),
+            self.key,
+            self.colors
+        );
+        assert_eq!(
+            self.depth,
+            action.depth(),
+            "Trying to add render action with depth '{}' to target {:?} that expects depth '{}'",
+            action.depth(),
+            self.key,
+            self.depth
+        );
+
+        self.actions.push((order.into(), action))
+    }
+
+    // pub fn execute(&mut self, builder: &mut GraphBuilder<B, Resources>) {
+        // let subpass = SubpassBuilder::new();
+        // TODO
+    // }
+
+    pub fn drain_actions(&mut self) -> Vec<RenedrableAction<B>> {
+        self.actions.sort_by_key(|a| a.0);
+        self.actions.drain(..).map(|a| a.1).collect()
+    }
+}
+
+use amethyst::renderer::rendy::graph::render::RenderGroupBuilder;
+
+enum RenedrableAction<B: Backend> {
+    RenderGroup(Box<dyn RenderGroupBuilder<B, Resources>>),
+}
+
+impl<B: Backend> RenedrableAction<B> {
+    fn colors(&self) -> usize {
+        match self {
+            RenedrableAction::RenderGroup(g) => g.colors(),
+        }
+    }
+
+    fn depth(&self) -> bool {
+        match self {
+            RenedrableAction::RenderGroup(g) => g.depth(),
+        }
+    }
+}
+
+trait IntoAction<B: Backend> {
+    fn into(self) -> RenedrableAction<B>;
+}
+
+impl<B: Backend, G: RenderGroupBuilder<B, Resources> + 'static> IntoAction<B> for G {
+    fn into(self) -> RenedrableAction<B> {
+        RenedrableAction::RenderGroup(Box::new(self))
+    }
+}
+
+#[repr(i32)]
+enum RenderOrder {
+    BeforeOpaque = 90,
+    Opaque = 100,
+    AfterOpaque = 110,
+    BeforeTransparent = 190,
+    Transparent = 200,
+    AfterTransparent = 210,
+    LinearPostEffects = 300,
+    ToneMap = 400,
+    DisplayPostEffects = 500,
+}
+
+impl Into<i32> for RenderOrder {
+    fn into(self) -> i32 {
+        self as i32
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum Target {
+    Main,
+    Custom(&'static str),
+}
+
+impl Default for Target {
+    fn default() -> Target {
+        Target::Main
+    }
+}
+
+#[derive(Default)]
+struct RenderStandard3d {
+    target: Target,
+}
+
+impl<B: Backend> RenderPlugin<B> for RenderStandard3d {
+    fn build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        builder.add(
+            VisibilitySortingSystem::new(),
+            "visibility_system",
+            &["transform_system"],
+        );
+        Ok(())
+    }
+    fn plan(&mut self, plan: &mut RenderPlan<B>) -> Result<(), Error> {
+        let target = plan.target(self.target, 1, true);
+        target.add(RenderOrder::Opaque, DrawPbrDesc::new().builder());
+        target.add(RenderOrder::Transparent, DrawPbrTransparentDesc::new().builder());
+        Ok(())
+    }
+}
+
+#[derive(Default)]
+struct RenderStandard2d {
+    target: Target,
+}
+
+impl<B: Backend> RenderPlugin<B> for RenderStandard2d {
+    fn build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        builder.add(
+            SpriteVisibilitySortingSystem::new(),
+            "sprite_visibility_system",
+            &["transform_system"],
+        );
+        Ok(())
+    }
+
+    fn plan(&mut self, plan: &mut RenderPlan<B>) -> Result<(), Error> {
+        let target = plan.target(self.target, 1, true);
+        target.add(RenderOrder::Opaque, DrawFlat2DDesc::new().builder());
+        target.add(RenderOrder::Transparent, DrawFlat2DTransparentDesc::new().builder());
+        Ok(())
+    }
+}
+
+#[derive(Default)]
+struct RenderSkybox {
+    target: Target,
+    colors: Option<(Srgb, Srgb)>,
+}
+
+impl RenderSkybox {
+    pub fn with_colors(nadir_color: Srgb, zenith_color: Srgb) -> Self {
+        Self {
+            target: Default::default(),
+            colors: Some((nadir_color, zenith_color)),
+        }
+    }
+}
+
+impl<B: Backend> RenderPlugin<B> for RenderSkybox {
+    fn plan(&mut self, plan: &mut RenderPlan<B>) -> Result<(), Error> {
+        let target = plan.target(self.target, 1, true);
+        let group = if let Some((nadir, zenith)) = self.colors {
+            DrawSkyboxDesc::with_colors(nadir, zenith).builder()
+        } else {
+            DrawSkyboxDesc::new().builder()
+        };
+
+        target.add(RenderOrder::AfterOpaque, group);
+        Ok(())
     }
 }

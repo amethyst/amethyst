@@ -52,8 +52,13 @@ where
 {
     graph: Option<Graph<B, Resources>>,
     families: Option<Families<B>>,
+    settings: Option<GraphicsSettings>,
     graph_creator: G,
 }
+
+/// A typeless set of config properties shared between all graphics plugins.
+#[derive(Debug, Clone, PartialEq)]
+pub struct GraphicsSettings(pub serde_json::Value);
 
 impl<B, G> RenderingSystem<B, G>
 where
@@ -61,10 +66,11 @@ where
     G: GraphCreator<B>,
 {
     /// Create a new `RenderingSystem` with the supplied graph via `GraphCreator`
-    pub fn new(graph_creator: G) -> Self {
+    pub fn new(settings: GraphicsSettings, graph_creator: G) -> Self {
         Self {
             graph: None,
             families: None,
+            settings: Some(settings),
             graph_creator,
         }
     }
@@ -240,6 +246,8 @@ where
         self.families = Some(families);
         res.insert(factory);
         res.insert(queue_id);
+        res.insert(self.settings.take().unwrap());
+
         AssetLoadingData::<B>::setup(res);
         SetupData::setup(res);
 
