@@ -1,6 +1,4 @@
 //! Local transform component.
-use std::fmt;
-
 use crate::{
     alga::general::SubsetOf,
     ecs::prelude::{Component, DenseVecStorage, FlaggedStorage},
@@ -11,17 +9,15 @@ use crate::{
     },
     num::{One, Zero},
 };
-use serde::{
-    de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor},
-    ser::{Serialize, Serializer},
-};
+use serde::{Deserialize, Serialize};
 
 /// Local position, rotation, and scale (from parent if it exists).
 ///
 /// Used for rendering position and orientation.
 ///
 /// The transforms are preformed in this order: scale, then rotation, then translation.
-#[derive(Getters, Setters, MutGetters, Clone, Debug, PartialEq)]
+#[derive(Getters, Setters, MutGetters, Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[serde(from = "TransformValues", into = "TransformValues")]
 pub struct Transform {
     /// Translation + rotation value
     #[get = "pub"]
@@ -636,144 +632,59 @@ impl From<Vector3<f64>> for Transform {
     }
 }
 
-impl<'de> Deserialize<'de> for Transform {
-    fn deserialize<D>(deserializer: D) -> Result<Transform, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        #[derive(Deserialize)]
-        #[serde(field_identifier, rename_all = "snake_case")]
-        enum Field {
-            Translation,
-            Rotation,
-            Scale,
-        };
+#[derive(Serialize, Deserialize)]
+#[serde(rename = "Transform", default)]
+struct TransformValues {
+    translation: [Float; 3],
+    rotation: [Float; 4],
+    scale: [Float; 3],
+}
 
-        #[derive(Default)]
-        struct TransformVisitor {}
-
-        impl<'de> Visitor<'de> for TransformVisitor {
-            type Value = Transform;
-
-            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-                formatter.write_str("struct Transform")
-            }
-
-            fn visit_seq<V>(self, mut seq: V) -> Result<Self::Value, V::Error>
-            where
-                V: SeqAccess<'de>,
-            {
-                let translation: [Float; 3] = seq
-                    .next_element()?
-                    .ok_or_else(|| de::Error::invalid_length(0, &self))?;
-                let rotation: [Float; 4] = seq
-                    .next_element()?
-                    .ok_or_else(|| de::Error::invalid_length(1, &self))?;
-                let scale: [Float; 3] = seq
-                    .next_element()?
-                    .ok_or_else(|| de::Error::invalid_length(2, &self))?;
-
-                let isometry = Isometry3::from_parts(
-                    Translation3::new(translation[0], translation[1], translation[2]),
-                    Unit::new_normalize(Quaternion::new(
-                        rotation[3],
-                        rotation[0],
-                        rotation[1],
-                        rotation[2],
-                    )),
-                );
-                let scale = Vector3::new(scale[0], scale[1], scale[2]);
-
-                Ok(Transform {
-                    isometry,
-                    scale,
-                    ..Default::default()
-                })
-            }
-
-            fn visit_map<V>(self, mut map: V) -> Result<Self::Value, V::Error>
-            where
-                V: MapAccess<'de>,
-            {
-                let mut translation = None;
-                let mut rotation = None;
-                let mut scale = None;
-
-                while let Some(key) = map.next_key()? {
-                    match key {
-                        Field::Translation => {
-                            if translation.is_some() {
-                                return Err(de::Error::duplicate_field("translation"));
-                            }
-                            translation = Some(map.next_value()?);
-                        }
-                        Field::Rotation => {
-                            if rotation.is_some() {
-                                return Err(de::Error::duplicate_field("rotation"));
-                            }
-                            rotation = Some(map.next_value()?);
-                        }
-                        Field::Scale => {
-                            if scale.is_some() {
-                                return Err(de::Error::duplicate_field("scale"));
-                            }
-                            scale = Some(map.next_value()?);
-                        }
-                    }
-                }
-                let translation: [Float; 3] = translation.unwrap_or([Float::zero(); 3]);
-                let rotation: [Float; 4] =
-                    rotation.unwrap_or([Float::zero(), Float::zero(), Float::zero(), Float::one()]);
-                let scale: [Float; 3] = scale.unwrap_or([Float::one(); 3]);
-
-                let isometry = Isometry3::from_parts(
-                    Translation3::new(translation[0], translation[1], translation[2]),
-                    Unit::new_normalize(Quaternion::new(
-                        rotation[3],
-                        rotation[0],
-                        rotation[1],
-                        rotation[2],
-                    )),
-                );
-                let scale = Vector3::new(scale[0], scale[1], scale[2]);
-
-                Ok(Transform {
-                    isometry,
-                    scale,
-                    ..Default::default()
-                })
-            }
+impl Default for TransformValues {
+    /// The default transform does nothing when used to transform an entity.
+    fn default() -> Self {
+        TransformValues {
+            translation: [Float::zero(); 3],
+            rotation: [Float::zero(), Float::zero(), Float::zero(), Float::one()],
+            scale: [Float::one(); 3],
         }
-
-        const FIELDS: &[&str] = &["translation", "rotation", "scale"];
-        deserializer.deserialize_struct("Transform", FIELDS, TransformVisitor::default())
     }
 }
 
-impl Serialize for Transform {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        #[derive(Serialize)]
-        struct TransformValues {
-            translation: [Float; 3],
-            rotation: [Float; 4],
-            scale: [Float; 3],
+impl From<TransformValues> for Transform {
+    fn from(transform_values: TransformValues) -> Self {
+        let TransformValues {
+            translation,
+            rotation,
+            scale,
+        } = transform_values;
+
+        let isometry = Isometry3::from_parts(
+            Translation3::new(translation[0], translation[1], translation[2]),
+            Unit::new_normalize(Quaternion::new(
+                rotation[3],
+                rotation[0],
+                rotation[1],
+                rotation[2],
+            )),
+        );
+        let scale = Vector3::new(scale[0], scale[1], scale[2]);
+
+        Transform {
+            isometry,
+            scale,
+            ..Default::default()
         }
+    }
+}
 
-        let pos: [Float; 3] = self.isometry.translation.vector.into();
-        let rot: [Float; 4] = self.isometry.rotation.as_ref().coords.into();
-        let scale: [Float; 3] = self.scale.into();
-
-        Serialize::serialize(
-            &TransformValues {
-                translation: [pos[0], pos[1], pos[2]],
-                rotation: [rot[0], rot[1], rot[2], rot[3]],
-                scale: [scale[0], scale[1], scale[2]],
-            },
-            serializer,
-        )
+impl Into<TransformValues> for Transform {
+    fn into(self) -> TransformValues {
+        TransformValues {
+            translation: self.isometry.translation.vector.into(),
+            rotation: self.isometry.rotation.as_ref().coords.into(),
+            scale: self.scale.into(),
+        }
     }
 }
 
