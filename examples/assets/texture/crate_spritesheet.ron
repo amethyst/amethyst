@@ -1,0 +1,13 @@
+// Used in the rendy example for sprite Tint
+(
+    texture_width: 32,
+    texture_height: 32,
+    sprites: [
+        (
+            x: 0,
+            y: 0,
+            width: 32,
+            height: 32,
+        ),
+    ],
+)
