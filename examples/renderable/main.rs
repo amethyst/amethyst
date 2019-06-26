@@ -44,7 +44,7 @@ use amethyst::{
     ui::{DrawUiDesc, UiBundle, UiCreator, UiFinder, UiText},
     utils::{
         application_root_dir,
-        fps_counter::{FPSCounter, FPSCounterBundle},
+        fps_counter::{FpsCounter, FpsCounterBundle},
         scene::BasicScenePrefab,
     },
     window::{ScreenDimensions, Window, WindowBundle},
@@ -216,7 +216,7 @@ fn main() -> Result<(), Error> {
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
         .with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
         .with_bundle(HotReloadBundle::default())?
-        .with_bundle(FPSCounterBundle::default())?
+        .with_bundle(FpsCounterBundle::default())?
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
@@ -261,7 +261,7 @@ impl<'a> System<'a> for ExampleSystem {
         WriteStorage<'a, Transform>,
         Write<'a, DemoState>,
         WriteStorage<'a, UiText>,
-        Read<'a, FPSCounter>,
+        Read<'a, FpsCounter>,
         UiFinder<'a>,
     );
 

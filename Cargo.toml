@@ -1,6 +1,6 @@
 [package]
 name = "amethyst"
-version = "0.11.0"
+version = "0.11.1"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Data-oriented game engine written in Rust"
@@ -311,3 +311,5 @@ name = "rendy"
 path = "examples/rendy/main.rs"
 required-features = ["animation", "gltf"]
 
+[package.metadata.docs.rs]
+features = ["animation", "audio", "gltf", "json", "locale", "network", "sdl_controller", "vulkan"]

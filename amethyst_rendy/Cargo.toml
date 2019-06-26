@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_rendy"
-version = "0.1.0"
+version = "0.1.2"
 authors = ["Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "High-level rendering engine with multiple backends"
@@ -53,3 +53,6 @@ test-support =  []
 [[bench]]
 name = "camera"
 harness = false
+
+[package.metadata.docs.rs]
+features = ["shader-compiler", "test-support", "vulkan"]

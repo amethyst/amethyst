@@ -24,7 +24,7 @@ use amethyst::{
     ui::{DrawUiDesc, UiBundle, UiCreator, UiEvent, UiFinder, UiText},
     utils::{
         application_root_dir,
-        fps_counter::{FPSCounter, FPSCounterBundle},
+        fps_counter::{FpsCounter, FpsCounterBundle},
         scene::BasicScenePrefab,
     },
     window::{ScreenDimensions, Window, WindowBundle},
@@ -103,7 +103,7 @@ impl SimpleState for Example {
         {
             if let Some(fps_display) = self.fps_display.and_then(|entity| ui_text.get_mut(entity)) {
                 if world.read_resource::<Time>().frame_number() % 20 == 0 {
-                    let fps = world.read_resource::<FPSCounter>().sampled_fps();
+                    let fps = world.read_resource::<FpsCounter>().sampled_fps();
                     fps_display.text = format!("FPS: {:.*}", 2, fps);
                 }
             }
@@ -142,7 +142,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
         .with(Processor::<Source>::new(), "source_processor", &[])
         .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
-        .with_bundle(FPSCounterBundle::default())?
+        .with_bundle(FpsCounterBundle::default())?
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),

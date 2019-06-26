@@ -9,6 +9,13 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+* Rename FPSCounter, FPSCounterBundle, FPSCounterSystem to FpsCounter, FpsCounterBundle, FpsCounterSystem. ([#1719])
+* Add Tint component support for sprites. ([#1756])
+
+[#1719]: https://github.com/amethyst/amethyst/pull/1719
+[#1756]: https://github.com/amethyst/amethyst/pull/1756
+
 ## [0.11.0] - 2019-06
 * Fixes and renames regression from ([#1442]) added back `position_from_world` as `screen_to_world`. Also added
 `world_to_screen`. Also adds `Transform::copy_local_to_global()' for `debug_assertion` builds ([#1733])

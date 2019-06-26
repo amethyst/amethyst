@@ -8,29 +8,32 @@
 //! ### Submodules
 //!
 //! ### Passes
-//! * [pass::flat2d::DrawFlat2DDesc]
-//! * [pass::flat2d::DrawFlat2DTransparentDesc]
-//! * [pass::pbr::DrawPbrDesc]
-//! * [pass::flat::DrawFlatDesc]
-//! * [pass::shaded::DrawShadedDesc]
-//! * [pass::skybox::DrawSkyboxDesc]
-//! * [pass::debug_lines::DrawDebugLinesDesc]
+//!
+//! * [`DrawFlat2DDesc`](crate::pass::flat2d::DrawFlat2DDesc)
+//! * [`DrawFlat2DTransparentDesc`](crate::pass::flat2d::DrawFlat2DTransparentDesc)
+//! * [`DrawPbrDesc`](crate::pass::pbr::DrawPbrDesc)
+//! * [`DrawFlatDesc`](crate::pass::flat::DrawFlatDesc)
+//! * [`DrawShadedDesc`](crate::pass::shaded::DrawShadedDesc)
+//! * [`DrawSkyboxDesc`](crate::pass::skybox::DrawSkyboxDesc)
+//! * [`DrawDebugLinesDesc`](crate::pass::debug_lines::DrawDebugLinesDesc)
 //!
 //! ## Systems
-//! * [system::RenderingSystem]
-//! * [visibility::VisibilitySortingSystem]
-//! * [sprite_visibility::SpriteVisibilitySortingSystem]
+//!
+//! * [`RenderingSystem`](crate::system::RenderingSystem)
+//! * [`VisibilitySortingSystem`](crate::visibility::VisibilitySortingSystem)
+//! * [`SpriteVisibilitySortingSystem`](crate::sprite_visibility::SpriteVisibilitySortingSystem)
 //!
 //! ## Components
-//! * [camera::Camera]
-//! * [sprite_visibility::SpriteVisibility]
-//! * [visibility::Visibility]
-//! * [visibility::BoundingSphere]
-//! * [debug_drawing::DebugLinesComponent]
-//! * [light::Light]
-//! * [resources::Tint]
-//! * [skinning::JointTransforms]
-//! * [sprite::SpriteRender]
+//!
+//! * [`Camera`](camera::Camera)
+//! * [`SpriteVisibility`](sprite_visibility::SpriteVisibility)
+//! * [`Visibility`](visibility::Visibility)
+//! * [`BoundingSphere`](visibility::BoundingSphere)
+//! * [`DebugLinesComponent`](debug_drawing::DebugLinesComponent)
+//! * [`Light`](light::Light)
+//! * [`Tint`](resources::Tint)
+//! * [`JointTransforms`](skinning::JointTransforms)
+//! * [`SpriteRender`](sprite::SpriteRender)
 
 #![allow(dead_code)]
 #![allow(unused_variables)]
