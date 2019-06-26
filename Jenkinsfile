@@ -68,6 +68,26 @@ pipeline {
                 }
             }
         }
+	stage('Coverage') {
+	    agent {
+			    docker {
+				image 'amethystrs/builder-linux:stable'
+		    args '--privileged'
+				label 'docker'
+			    }
+	    }
+	    steps {
+		withCredentials([string(credentialsId: 'codecov_token', variable: 'CODECOV_TOKEN')]) {
+		    echo 'Building to calculate coverage'
+		    sh 'cargo test --all --features "empty"'
+		    echo 'Calculating code coverage...'
+		    sh 'for file in target/debug/amethyst_*[^\\.d]; do mkdir -p \"target/cov/$(basename $file)\"; kcov --exclude-pattern=/.cargo,/usr/lib --verify \"target/cov/$(basename $file)\" \"$file\" || true; done'
+		    echo "Uploading coverage..."
+		    sh "curl -s https://codecov.io/bash | bash -s - -t $CODECOV_TOKEN"
+		    echo "Uploaded code coverage!"
+		}
+	    }
+	}
         stage('Run Tests') {
             parallel {
                 stage("Test on Windows") {
@@ -97,26 +117,7 @@ pipeline {
                         echo 'Tests done!'
                     }
                 }
-                stage('Coverage') {
-                    agent {
-			            docker {
-			                image 'amethystrs/builder-linux:stable'
-                            args '--privileged'
-			                label 'docker'
-			            }
-                    }
-                    steps {
-                        withCredentials([string(credentialsId: 'codecov_token', variable: 'CODECOV_TOKEN')]) {
-                            echo 'Building to calculate coverage'
-                            sh 'cargo test --all --features "empty"'
-                            echo 'Calculating code coverage...'
-                            sh 'for file in target/debug/amethyst_*[^\\.d]; do mkdir -p \"target/cov/$(basename $file)\"; kcov --exclude-pattern=/.cargo,/usr/lib --verify \"target/cov/$(basename $file)\" \"$file\" || true; done'
-                            echo "Uploading coverage..."
-                            sh "curl -s https://codecov.io/bash | bash -s - -t $CODECOV_TOKEN"
-                            echo "Uploaded code coverage!"
-                        }
-                    }
-                }
+
                 // macOS is commented out due to needing to upgrade the OS, but MacStadium did not do the original install with APFS so we cannot upgrade easily
                 // stage("Test on macOS") {
                 //     environment {
