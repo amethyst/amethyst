@@ -9,10 +9,15 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## [Unreleased]
 
+## Breaking changes
+* Float newtype removed, moved back to f32 primitive for all values ([#1747])
+
 ### Changed
 * Rename FPSCounter, FPSCounterBundle, FPSCounterSystem to FpsCounter, FpsCounterBundle, FpsCounterSystem. ([#1719])
 
 [#1719]: https://github.com/amethyst/amethyst/pull/1719
+[#1747]: https://github.com/amethyst/amethyst/pull/1747
+
 
 ## [0.11.0] - 2019-06
 

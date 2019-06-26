@@ -109,7 +109,7 @@ impl SimpleState for AssetsExample {
 
         let mut trans = Transform::default();
         trans.set_translation_xyz(-5.0, 0.0, 0.0);
-        trans.set_scale(Vector3::new(f32::from(2.0), f32::from(2.0), f32::from(2.0)));
+        trans.set_scale(Vector3::new(2.0, 2.0, 2.0));
         world
             .create_entity()
             .with(mesh)
