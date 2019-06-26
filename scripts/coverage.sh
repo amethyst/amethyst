@@ -29,6 +29,10 @@ test_bins_by_crate="$(
     jq -r "select(.profile.test == true) | (.package_id | split(\" \"))[0] + \";\" + .filenames[]"
   )"
 
+# Set `LD_LIBRARY_PATH` so that tests can link against it
+target_arch=$(rustup target list | grep -F default | cut -d ' ' -f 1)
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:$(rustc --print sysroot)/lib/rustlib/${target_arch}/lib/"
+
 crate_coverage_dirs=()
 for test_bin_by_crate in $test_bins_by_crate; do
   crate_name=${test_bin_by_crate%%;*}
