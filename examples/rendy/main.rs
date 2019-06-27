@@ -36,15 +36,14 @@ use amethyst_rendy::{
     mtl::{Material, MaterialDefaults},
     palette::{LinSrgba, Srgb, Srgba},
     pass::{
-        DrawDebugLinesDesc, DrawFlat2DDesc, DrawFlat2DTransparentDesc, DrawPbrDesc,
-        DrawPbrTransparentDesc, DrawSkyboxDesc,
+        DrawFlat2DDesc, DrawFlat2DTransparentDesc, DrawPbrDesc, DrawPbrTransparentDesc,
+        DrawSkyboxDesc,
     },
     rendy::{
         factory::Factory,
         graph::{
-            NodeId,
-            render::{RenderGroupDesc, SubpassBuilder},
-            GraphBuilder,
+            render::{RenderGroupDesc, RenderPassNodeBuilder, SubpassBuilder},
+            GraphBuilder, NodeId,
         },
         hal::command::{ClearDepthStencil, ClearValue},
         mesh::{Normal, Position, Tangent, TexCoord},
@@ -566,8 +565,9 @@ fn main() -> amethyst::Result<()> {
             "sampler_interpolation",
         ]))?
         .with_bundle(
-            RenderPipeline::<DefaultBackend>::with_main_window()
+            RenderPipeline::<DefaultBackend>::new()
                 .with_settings(serde_json::json!({ "multisample": 4 }))
+                .with_plugin(MainWindowPlugin::default())
                 .with_plugin(RenderStandard3d::default())
                 .with_plugin(RenderStandard2d::default())
                 .with_plugin(RenderSkybox::with_colors(
@@ -582,7 +582,7 @@ fn main() -> amethyst::Result<()> {
 }
 
 use amethyst_core::SystemBundle;
-use amethyst_error::Error;
+use amethyst_error::{format_err, Error};
 use amethyst_rendy::system::GraphicsSettings;
 /// GRAPH CREATOR PLAYGROUND
 use std::marker::PhantomData;
@@ -593,7 +593,7 @@ struct RenderPipeline<B: Backend> {
 }
 
 impl<B: Backend> RenderPipeline<B> {
-    pub fn with_main_window() -> Self {
+    pub fn new() -> Self {
         Self {
             settings: Some(GraphicsSettings(serde_json::json!({}))),
             plugins: Vec::new(),
@@ -652,14 +652,6 @@ struct RenderPipelineGraph<B: Backend> {
 
 impl<B: Backend> GraphCreator<B> for RenderPipelineGraph<B> {
     fn rebuild(&mut self, res: &Resources) -> bool {
-        // let new_mode = res.fetch::<RenderMode>();
-
-        // if *new_mode != self.last_mode {
-        //     self.last_mode = *new_mode;
-        //     return true;
-        // }
-
-        // Rebuild when dimensions change, but wait until at least two frames have the same.
         let new_dimensions = res.try_fetch::<ScreenDimensions>();
         use std::ops::Deref;
         if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
@@ -671,110 +663,163 @@ impl<B: Backend> GraphCreator<B> for RenderPipelineGraph<B> {
     }
 
     fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
-        // use amethyst::renderer::rendy::graph::render::RenderGroupBuilder;
         self.dirty = false;
 
-        // let (window, render_mode) =
-        //     <(ReadExpect<'_, Window>, ReadExpect<'_, RenderMode>)>::fetch(res);
-        let window = <ReadExpect<'_, Window>>::fetch(res);
-        let surface = factory.create_surface(&window);
-        let dimensions = self.dimensions.as_ref().unwrap();
-        let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
-
-        let mut graph_builder = GraphBuilder::new();
-
-        let depth = graph_builder.create_image(
-            window_kind,
-            1,
-            Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
-        );
-
         let mut plan = RenderPlan::new();
-
         for plugin in self.plugins.iter_mut() {
-            plugin.plan(&mut plan).unwrap();
+            plugin.plan(&mut plan, factory, res).unwrap();
         }
 
-        // type DynGroup<B> = Box<dyn RenderGroupBuilder<B, Resources>>;
-        // let (opaque_3d, transparent_3d): (DynGroup<B>, DynGroup<B>) = match *render_mode {
-        //     RenderMode::Flat => (
-        //         Box::new(DrawFlatDesc::skinned().builder()),
-        //         Box::new(DrawFlatTransparentDesc::skinned().builder()),
-        //     ),
-        //     RenderMode::Shaded => (
-        //         Box::new(DrawShadedDesc::skinned().builder()),
-        //         Box::new(DrawShadedTransparentDesc::skinned().builder()),
-        //     ),
-        //     RenderMode::Pbr => (
-        //         Box::new(DrawPbrDesc::skinned().builder()),
-        //         Box::new(DrawPbrTransparentDesc::skinned().builder()),
-        //     ),
-        // };
-
-        let mut main_subpass = SubpassBuilder::new()
-            .with_color_surface()
-            .with_depth_stencil(depth);
-
-        for action in plan.target(Target::Main, 1, true).drain_actions() {
-            if let RenedrableAction::RenderGroup(group) = action {
-                main_subpass.add_dyn_group(group);
-            }
-        }
-
-        graph_builder.add_node(main_subpass.into_pass().with_surface(
-            surface,
-            Some(ClearValue::Color([1.0, 1.0, 1.0, 1.0].into())),
-        ));
-
-        graph_builder
+        plan.build().unwrap()
     }
 }
 
 trait RenderPlugin<B: Backend> {
-    fn build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn build<'a, 'b>(&mut self, _builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         Ok(())
     }
-    fn plan(&mut self, plan: &mut RenderPlan<B>) -> Result<(), Error>;
+    fn plan(
+        &mut self,
+        plan: &mut RenderPlan<B>,
+        factory: &mut Factory<B>,
+        res: &Resources,
+    ) -> Result<(), Error>;
 }
 
-// new
-
 struct RenderPlan<B: Backend> {
-    // displays: Vec<DisplayPlan>,
-    targets: HashMap<Target, TargetPlan<B>>,
+    targets: HashMap<Target, PassPlan<B>>,
+    roots: Vec<Target>,
 }
 
 impl<B: Backend> RenderPlan<B> {
     fn new() -> Self {
         Self {
-            // displays: vec![],
             targets: Default::default(),
+            roots: vec![],
         }
     }
 
-    pub fn target(&mut self, target: Target, colors: usize, depth: bool) -> &mut TargetPlan<B> {
-        self.targets
+    pub fn define_pass(
+        &mut self,
+        target: Target,
+        outputs: PassPlanOutputs<B>,
+    ) -> Result<(), Error> {
+        let pass_plan = self
+            .targets
             .entry(target)
-            .or_insert_with(|| TargetPlan::new(target, colors, depth))
+            .or_insert_with(|| PassPlan::new(target));
+
+        let root = outputs.colors.iter().any(|c| match c {
+            OutputColor::Surface(_, _) => true,
+            _ => false,
+        });
+
+        pass_plan.set_outputs(outputs)?;
+        if dbg!(root) {
+            self.roots.push(target);
+        }
+
+        Ok(())
+    }
+
+    pub fn extend_pass(
+        &mut self,
+        target: Target,
+        closure: impl FnOnce(PassPlanContext<'_, '_, B>) -> Result<(), Error> + 'static,
+    ) {
+        let pass_plan = self
+            .targets
+            .entry(target)
+            .or_insert_with(|| PassPlan::new(target));
+        pass_plan.add_extension(Box::new(closure));
+    }
+
+    pub fn build(mut self) -> Result<GraphBuilder<B, Resources>, Error> {
+        let mut graph_builder = GraphBuilder::new();
+        let mut ctx = PlanContext {
+            passes: Default::default(),
+            graph_builder: &mut graph_builder,
+        };
+
+        for target in self.roots {
+            if !ctx.passes.contains_key(&target) {
+                self.targets
+                    .remove(&target)
+                    .map(|pass| pass.evaluate(&mut ctx))
+                    .transpose()?;
+            }
+        }
+
+        Ok(graph_builder)
     }
 }
 
-struct RenderPlanExecutor {
-    targets: HashMap<Target, ExecutedTarget>,
+enum EvaluationState {
+    Evaluating,
+    Built(NodeId),
 }
 
-struct ExecutedTarget {
-    outputs: Vec<TargetSurface>,
-    node: NodeId,
+struct PlanContext<'a, B: Backend> {
+    passes: HashMap<Target, EvaluationState>,
+    graph_builder: &'a mut GraphBuilder<B, Resources>,
 }
 
-struct TargetPlan<B: Backend> {
-    key: Target,
-    colors: usize,
-    depth: bool,
-    inputs: Vec<InputSurface>,
-    actions: Vec<(i32, RenedrableAction<B>)>,
+impl<'a, B: Backend> PlanContext<'a, B> {
+    fn mark_evaluating(&mut self, target: Target) -> Result<(), Error> {
+        match self.passes.get(&target) {
+            None => {},
+            Some(EvaluationState::Evaluating) => return Err(format_err!("Trying to evaluate {:?} render plan that is already evaluating. Circular dependency detected.", target)),
+            // this case is not a soft runtime error, as this should never be allowed by the API.
+            Some(EvaluationState::Built(_)) => panic!("Trying to reevaluate a render plan for {:?}.", target),
+        };
+        self.passes.insert(target, EvaluationState::Evaluating);
+        Ok(())
+    }
+
+    fn submit_pass(
+        &mut self,
+        target: Target,
+        pass: RenderPassNodeBuilder<B, Resources>,
+    ) -> Result<(), Error> {
+        match self.passes.get(&target) {
+            None => {}
+            Some(EvaluationState::Evaluating) => {}
+            // this case is not a soft runtime error, as this should never be allowed by the API.
+            Some(EvaluationState::Built(_)) => {
+                panic!("Trying to resubmit a render pass for {:?}.", target)
+            }
+        };
+        let node = self.graph_builder.add_node(pass);
+        self.passes.insert(target, EvaluationState::Built(node));
+        Ok(())
+    }
+
+    fn get_image(&mut self, _image: InputImage) -> Result<NodeId, Error> {
+        unimplemented!()
+    }
+}
+
+struct PassPlanContext<'a, 'b, B: Backend> {
+    evaluation: &'a mut PassPlanEvaluation<B>,
+    plan_context: &'a mut PlanContext<'b, B>,
+}
+
+impl<'a, 'b, B: Backend> PassPlanContext<'a, 'b, B> {
+    pub fn add(&mut self, order: impl Into<i32>, action: impl IntoAction<B>) -> Result<(), Error> {
+        self.evaluation.add(order, action)
+    }
+
+    pub fn colors(&self) -> usize {
+        self.evaluation.colors()
+    }
+
+    pub fn depth(&self) -> bool {
+        self.evaluation.depth()
+    }
+
+    pub fn get_image(&mut self, image: InputImage) -> Result<NodeId, Error> {
+        self.plan_context.get_image(image)
+    }
 }
 
 enum SurfaceSize {
@@ -782,58 +827,181 @@ enum SurfaceSize {
     Absolute(u32, u32),
 }
 
-enum TargetSurface {
-    SurfaceColor,
-    Color(u32, NodeId),
-    Depth(NodeId),
-}
-
-enum InputSurface {
+enum InputImage {
     Color(Target, u32),
     Depth(Target),
 }
 
-impl<B: Backend> TargetPlan<B> {
-    fn new(key: Target, colors: usize, depth: bool) -> Self {
+impl InputImage {
+    fn target(&self) -> Target {
+        match self {
+            InputImage::Color(target, _) => *target,
+            InputImage::Depth(target) => *target,
+        }
+    }
+}
+
+struct PassPlanEvaluation<B: Backend> {
+    key: Target,
+    colors: usize,
+    depth: bool,
+    actions: Vec<(i32, RenedrableAction<B>)>,
+}
+
+impl<B: Backend> PassPlanEvaluation<B> {
+    pub fn colors(&self) -> usize {
+        self.colors
+    }
+
+    pub fn depth(&self) -> bool {
+        self.depth
+    }
+
+    fn add(&mut self, order: impl Into<i32>, action: impl IntoAction<B>) -> Result<(), Error> {
+        let action = action.into();
+
+        if self.colors != action.colors() {
+            return Err(format_err!(
+                "Trying to add render action with {} colors to target {:?} that expects {} colors",
+                action.colors(),
+                self.key,
+                self.colors,
+            ));
+        }
+        if self.depth != action.depth() {
+            return Err(format_err!(
+                "Trying to add render action with depth '{}' to target {:?} that expects depth '{}'",
+                action.depth(),
+                self.key,
+                self.depth,
+            ));
+        }
+
+        self.actions.push((order.into(), action));
+        Ok(())
+    }
+}
+
+struct PassPlan<B: Backend> {
+    key: Target,
+    // inputs: Vec<InputSurface>,
+    extensions: Vec<Box<dyn FnOnce(PassPlanContext<'_, '_, B>) -> Result<(), Error> + 'static>>,
+    outputs: Option<PassPlanOutputs<B>>,
+}
+
+struct PassPlanOutputs<B: Backend> {
+    colors: Vec<OutputColor<B>>,
+    depth: Option<ImageOptions>,
+}
+
+struct ImageOptions {
+    kind: amethyst::renderer::rendy::hal::image::Kind,
+    levels: amethyst::renderer::rendy::hal::image::Level,
+    format: amethyst::renderer::rendy::hal::format::Format,
+    clear: Option<amethyst::renderer::rendy::hal::command::ClearValue>,
+}
+
+enum OutputColor<B: Backend> {
+    Image(ImageOptions),
+    Surface(
+        amethyst::renderer::rendy::wsi::Surface<B>,
+        Option<amethyst::renderer::rendy::hal::command::ClearValue>,
+    ),
+}
+
+impl<B: Backend> PassPlan<B> {
+    fn new(key: Target) -> Self {
         Self {
             key,
-            colors,
-            depth,
-            inputs: vec![],
-            actions: vec![],
+            extensions: vec![],
+            outputs: None,
         }
     }
 
-    pub fn add(&mut self, order: impl Into<i32>, action: impl IntoAction<B>) {
-        let action = action.into();
-        assert_eq!(
-            self.colors,
-            action.colors(),
-            "Trying to add render action with {} colors to target {:?} that expects {} colors",
-            action.colors(),
-            self.key,
-            self.colors
-        );
-        assert_eq!(
-            self.depth,
-            action.depth(),
-            "Trying to add render action with depth '{}' to target {:?} that expects depth '{}'",
-            action.depth(),
-            self.key,
-            self.depth
-        );
-
-        self.actions.push((order.into(), action))
+    fn set_outputs(&mut self, outputs: PassPlanOutputs<B>) -> Result<(), Error> {
+        if self.outputs.is_some() {
+            return Err(format_err!("Pass {:?} already defined.", self.key));
+        }
+        self.outputs.replace(outputs);
+        Ok(())
     }
 
-    // pub fn execute(&mut self, builder: &mut GraphBuilder<B, Resources>) {
-        // let subpass = SubpassBuilder::new();
-        // TODO
-    // }
+    fn add_extension(
+        &mut self,
+        extension: Box<dyn FnOnce(PassPlanContext<'_, '_, B>) -> Result<(), Error> + 'static>,
+    ) {
+        self.extensions.push(extension);
+    }
 
-    pub fn drain_actions(&mut self) -> Vec<RenedrableAction<B>> {
-        self.actions.sort_by_key(|a| a.0);
-        self.actions.drain(..).map(|a| a.1).collect()
+    fn evaluate(self, ctx: &mut PlanContext<B>) -> Result<(), Error> {
+        println!("Evaluate {:?}", self.key);
+        if self.outputs.is_none() {
+            return Err(format_err!(
+                "Trying to evaluate not fully defined pass {:?}. Missing `define_pass` call.",
+                self.key
+            ));
+        }
+        let outputs = self.outputs.unwrap();
+
+        ctx.mark_evaluating(self.key)?;
+
+        let mut evaluation = PassPlanEvaluation {
+            key: self.key,
+            actions: vec![],
+            colors: outputs.colors.len(),
+            depth: outputs.depth.is_some(),
+        };
+
+        for extension in self.extensions {
+            extension(PassPlanContext {
+                plan_context: ctx,
+                evaluation: &mut evaluation,
+            })?;
+        }
+
+        let mut subpass = SubpassBuilder::new();
+        let mut pass = RenderPassNodeBuilder::new();
+
+        evaluation.actions.sort_by_key(|a| a.0);
+        for action in evaluation.actions.drain(..).map(|a| a.1) {
+            match action {
+                RenedrableAction::RenderGroup(group) => {
+                    subpass.add_dyn_group(group);
+                }
+            }
+        }
+
+        for color in outputs.colors {
+            match color {
+                OutputColor::Surface(surface, clear) => {
+                    subpass.add_color_surface();
+                    pass.add_surface(surface, clear);
+                }
+                OutputColor::Image(opts) => {
+                    // TODO: export that image node so it can be referenced
+                    let node = ctx.graph_builder.create_image(
+                        opts.kind,
+                        opts.levels,
+                        opts.format,
+                        opts.clear,
+                    );
+                    subpass.add_color(node);
+                }
+            }
+        }
+
+        if let Some(opts) = outputs.depth {
+            // TODO: export that image node so it can be referenced
+            let node =
+                ctx.graph_builder
+                    .create_image(opts.kind, opts.levels, opts.format, opts.clear);
+            subpass.set_depth_stencil(node);
+        }
+
+        pass.add_subpass(subpass);
+        dbg!(&pass);
+        ctx.submit_pass(self.key, pass)?;
+        Ok(())
     }
 }
 
@@ -868,7 +1036,7 @@ impl<B: Backend, G: RenderGroupBuilder<B, Resources> + 'static> IntoAction<B> fo
 }
 
 #[repr(i32)]
-enum RenderOrder {
+pub enum RenderOrder {
     BeforeOpaque = 90,
     Opaque = 100,
     AfterOpaque = 110,
@@ -887,7 +1055,7 @@ impl Into<i32> for RenderOrder {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum Target {
+pub enum Target {
     Main,
     Custom(&'static str),
 }
@@ -895,6 +1063,42 @@ enum Target {
 impl Default for Target {
     fn default() -> Target {
         Target::Main
+    }
+}
+
+#[derive(Default)]
+struct MainWindowPlugin {
+    target: Target,
+}
+
+impl<B: Backend> RenderPlugin<B> for MainWindowPlugin {
+    fn plan(
+        &mut self,
+        plan: &mut RenderPlan<B>,
+        factory: &mut Factory<B>,
+        res: &Resources,
+    ) -> Result<(), Error> {
+        let (window, dimensions) =
+            <(ReadExpect<'_, Window>, ReadExpect<'_, ScreenDimensions>)>::fetch(res);
+        let surface = factory.create_surface(&window);
+        let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
+
+        let depth_options = ImageOptions {
+            kind: window_kind,
+            levels: 1,
+            format: Format::D32Sfloat,
+            clear: Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+        };
+
+        plan.define_pass(
+            self.target,
+            PassPlanOutputs {
+                colors: vec![OutputColor::Surface(surface, None)],
+                depth: Some(depth_options),
+            },
+        )?;
+
+        Ok(())
     }
 }
 
@@ -912,10 +1116,20 @@ impl<B: Backend> RenderPlugin<B> for RenderStandard3d {
         );
         Ok(())
     }
-    fn plan(&mut self, plan: &mut RenderPlan<B>) -> Result<(), Error> {
-        let target = plan.target(self.target, 1, true);
-        target.add(RenderOrder::Opaque, DrawPbrDesc::new().builder());
-        target.add(RenderOrder::Transparent, DrawPbrTransparentDesc::new().builder());
+    fn plan(
+        &mut self,
+        plan: &mut RenderPlan<B>,
+        _factory: &mut Factory<B>,
+        _res: &Resources,
+    ) -> Result<(), Error> {
+        plan.extend_pass(self.target, |mut ctx| {
+            ctx.add(RenderOrder::Opaque, DrawPbrDesc::new().builder())?;
+            ctx.add(
+                RenderOrder::Transparent,
+                DrawPbrTransparentDesc::new().builder(),
+            )?;
+            Ok(())
+        });
         Ok(())
     }
 }
@@ -935,10 +1149,20 @@ impl<B: Backend> RenderPlugin<B> for RenderStandard2d {
         Ok(())
     }
 
-    fn plan(&mut self, plan: &mut RenderPlan<B>) -> Result<(), Error> {
-        let target = plan.target(self.target, 1, true);
-        target.add(RenderOrder::Opaque, DrawFlat2DDesc::new().builder());
-        target.add(RenderOrder::Transparent, DrawFlat2DTransparentDesc::new().builder());
+    fn plan(
+        &mut self,
+        plan: &mut RenderPlan<B>,
+        _factory: &mut Factory<B>,
+        _res: &Resources,
+    ) -> Result<(), Error> {
+        plan.extend_pass(self.target, |mut ctx| {
+            ctx.add(RenderOrder::Opaque, DrawFlat2DDesc::new().builder())?;
+            ctx.add(
+                RenderOrder::Transparent,
+                DrawFlat2DTransparentDesc::new().builder(),
+            )?;
+            Ok(())
+        });
         Ok(())
     }
 }
@@ -959,15 +1183,23 @@ impl RenderSkybox {
 }
 
 impl<B: Backend> RenderPlugin<B> for RenderSkybox {
-    fn plan(&mut self, plan: &mut RenderPlan<B>) -> Result<(), Error> {
-        let target = plan.target(self.target, 1, true);
-        let group = if let Some((nadir, zenith)) = self.colors {
-            DrawSkyboxDesc::with_colors(nadir, zenith).builder()
-        } else {
-            DrawSkyboxDesc::new().builder()
-        };
+    fn plan(
+        &mut self,
+        plan: &mut RenderPlan<B>,
+        _factory: &mut Factory<B>,
+        _res: &Resources,
+    ) -> Result<(), Error> {
+        let colors = self.colors.clone();
+        plan.extend_pass(self.target, move |mut ctx| {
+            let group = if let Some((nadir, zenith)) = colors {
+                DrawSkyboxDesc::with_colors(nadir, zenith).builder()
+            } else {
+                DrawSkyboxDesc::new().builder()
+            };
 
-        target.add(RenderOrder::AfterOpaque, group);
+            ctx.add(RenderOrder::AfterOpaque, group)?;
+            Ok(())
+        });
         Ok(())
     }
 }
