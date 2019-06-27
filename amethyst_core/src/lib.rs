@@ -1,6 +1,11 @@
 //! A collection of structures and functions useful across the entire amethyst project.
+#![warn(
+    missing_debug_implementations,
+    missing_docs,
+    rust_2018_idioms,
+    rust_2018_compatibility
+)]
 #![warn(clippy::all)]
-#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 #[cfg(all(target_os = "emscripten", not(no_threading)))]
 compile_error!("the cfg flag \"no_threading\" is required when building for emscripten");

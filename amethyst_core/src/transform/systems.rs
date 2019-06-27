@@ -12,7 +12,7 @@ use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform};
 use thread_profiler::profile_scope;
 
 /// Handles updating `global_matrix` field from `Transform` components.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct TransformSystem {
     local_modified: BitSet,
     locals_events_id: Option<ReaderId<ComponentEvent>>,

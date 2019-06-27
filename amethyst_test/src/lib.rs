@@ -1,5 +1,10 @@
-#![deny(missing_docs)]
-#![deny(missing_debug_implementations)]
+#![warn(
+    missing_debug_implementations,
+    missing_docs,
+    rust_2018_idioms,
+    rust_2018_compatibility
+)]
+#![warn(clippy::all)]
 
 //! Test harness to support testing of Amethyst types, including:
 //!

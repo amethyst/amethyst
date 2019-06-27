@@ -17,6 +17,7 @@ use thread_profiler::profile_scope;
 ///
 /// During the second half period, the entity is invisible.
 /// [delay/2, delay]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Blink {
     /// Period of a full blink cycle.
     pub delay: f32,
@@ -31,6 +32,7 @@ impl Component for Blink {
 }
 
 /// System updating the `Blink` component.
+#[derive(Debug)]
 pub struct BlinkSystem;
 
 impl<'a> System<'a> for BlinkSystem {

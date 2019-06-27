@@ -2,7 +2,13 @@
 //!
 //! Localisation binding a `Fluent` file to an Asset<Locale> via the use of amethyst_assets.
 
-#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
+#![warn(
+    missing_debug_implementations,
+    missing_docs,
+    rust_2018_idioms,
+    rust_2018_compatibility
+)]
+#![warn(clippy::all)]
 
 use amethyst_assets::{Asset, Format, Handle};
 use amethyst_core::ecs::prelude::VecStorage;
@@ -37,6 +43,7 @@ impl Format<Locale> for LocaleFormat {
 pub type LocaleHandle = Handle<Locale>;
 
 /// A loaded locale.
+#[allow(missing_debug_implementations)]
 pub struct Locale {
     /// The message context.
     pub bundle: FluentBundle<'static>,

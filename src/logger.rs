@@ -17,7 +17,7 @@ pub enum StdoutLog {
 }
 
 /// Logger configuration object.
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoggerConfig {
     /// Determines whether to log to the terminal or not.
     pub stdout: StdoutLog,
@@ -32,8 +32,8 @@ pub struct LoggerConfig {
 }
 
 impl Default for LoggerConfig {
-    fn default() -> LoggerConfig {
-        LoggerConfig {
+    fn default() -> Self {
+        Self {
             stdout: StdoutLog::Colored,
             level_filter: LevelFilter::Info,
             log_file: None,
@@ -53,6 +53,7 @@ impl Default for LoggerConfig {
 ///     .level_for("gfx_glyph", amethyst::LogLevelFilter::Error)
 ///     .start();
 /// ```
+#[allow(missing_debug_implementations)]
 pub struct Logger {
     dispatch: fern::Dispatch,
 }
@@ -67,7 +68,7 @@ impl Logger {
                 message = message,
             ))
         });
-        Logger { dispatch }
+        Self { dispatch }
     }
 
     /// Create a new Logger from [`LoggerConfig`]
@@ -76,7 +77,7 @@ impl Logger {
             env_var_override(&mut config);
         }
 
-        let mut logger = Logger::new();
+        let mut logger = Self::new();
         logger.dispatch = logger.dispatch.level(config.level_filter);
 
         match config.stdout {
@@ -96,9 +97,10 @@ impl Logger {
         }
 
         if let Some(path) = config.log_file {
-            match fern::log_file(path) {
-                Ok(log_file) => logger.dispatch = logger.dispatch.chain(log_file),
-                Err(_) => eprintln!("Unable to access the log file, as such it will not be used"),
+            if let Ok(log_file) = fern::log_file(path) {
+                logger.dispatch = logger.dispatch.chain(log_file)
+            } else {
+                eprintln!("Unable to access the log file, as such it will not be used")
             }
         }
 
@@ -129,18 +131,18 @@ impl Logger {
 /// initialise your own.
 ///
 /// Configuration of the logger can also be controlled via environment variables:
-/// * AMETHYST_LOG_STDOUT - determines the output to the terminal
+/// * `AMETHYST_LOG_STDOUT` - determines the output to the terminal
 ///     * "no" / "off" / "0" disables logging to stdout
 ///     * "plain" / "yes" / "1" enables logging to stdout
 ///     * "colored" / "2" enables logging and makes it colored
-/// * AMETHYST_LOG_LEVEL_FILTER - sets the log level
+/// * `AMETHYST_LOG_LEVEL_FILTER` - sets the log level
 ///     * "off" disables all logging
 ///     * "error" enables only error logging
 ///     * "warn" only errors and warnings are emitted
 ///     * "info" only error, warning and info messages
 ///     * "debug" everything except trace
 ///     * "trace" everything
-/// * AMETHYST_LOG_FILE_PATH - if set, enables logging to the file at the path
+/// * `AMETHYST_LOG_FILE_PATH` - if set, enables logging to the file at the path
 ///     * the value is expected to be a path to the logging file
 pub fn start_logger(config: LoggerConfig) {
     Logger::from_config(config).start();

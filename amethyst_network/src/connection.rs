@@ -2,7 +2,10 @@
 
 use serde::{Deserialize, Serialize};
 use shrev::{EventChannel, EventIterator, ReaderId};
-use std::net::SocketAddr;
+use std::{
+    fmt::{Debug, Formatter},
+    net::SocketAddr,
+};
 use uuid::Uuid;
 
 use amethyst_core::ecs::{Component, VecStorage};
@@ -22,6 +25,7 @@ use crate::NetEvent;
 /// This type acts as a container for to send and received data.
 #[derive(Serialize)]
 #[serde(bound = "")]
+#[allow(missing_debug_implementations)] // TODO: Revisit, this is just because derivative not included in net
 pub struct NetConnection<E: 'static> {
     /// The target remote socket address who is listening for incoming packets.
     pub target_addr: SocketAddr,
@@ -145,11 +149,20 @@ pub enum ConnectionState {
 /// It represents anything that can own an entity or a component.
 /// Think of it as an identity card.
 /// When used as a resource, it designates the local network uuid.
+#[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct NetIdentity {
     /// The uuid identifying this NetIdentity.
     pub uuid: Uuid,
 }
+impl Debug for NetIdentity {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let uuid_str = self.uuid.to_hyphenated().to_string();
 
+        f.debug_struct("NetIdentity")
+            .field("uuid", &uuid_str)
+            .finish()
+    }
+}
 impl Default for NetIdentity {
     fn default() -> Self {
         NetIdentity {

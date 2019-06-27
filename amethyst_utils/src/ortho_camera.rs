@@ -159,7 +159,7 @@ pub enum CameraNormalizeMode {
 impl CameraNormalizeMode {
     /// Get the camera matrix offsets according to the specified options.
     fn camera_offsets(
-        &self,
+        self,
         window_aspect_ratio: f32,
         desired_coordinates: &CameraOrthoWorldCoordinates,
     ) -> (f32, f32, f32, f32) {
@@ -229,7 +229,7 @@ impl Default for CameraNormalizeMode {
 
 /// System that automatically changes the camera matrix according to the settings in
 /// the `CameraOrtho` attached to the camera entity.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct CameraOrthoSystem;
 
 impl<'a> System<'a> for CameraOrthoSystem {

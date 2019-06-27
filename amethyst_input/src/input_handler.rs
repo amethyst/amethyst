@@ -20,7 +20,7 @@ use winit::{
 /// For example, if a key is pressed on the keyboard, this struct will record
 /// that the key is pressed until it is released again.
 #[derive(Derivative)]
-#[derivative(Default(bound = ""))]
+#[derivative(Default(bound = ""), Debug(bound = ""))]
 pub struct InputHandler<T: BindingTypes> {
     /// Maps inputs to actions and axes.
     pub bindings: Bindings<T>,
@@ -241,12 +241,12 @@ impl<T: BindingTypes> InputHandler<T> {
                     delta: MouseScrollDelta::LineDelta(delta_x, delta_y),
                 } => {
                     if delta_x != 0.0 {
-                        self.mouse_wheel_horizontal = delta_x.signum().into();
+                        self.mouse_wheel_horizontal = delta_x.signum();
                     }
                     if delta_y != 0.0 {
-                        self.mouse_wheel_vertical = delta_y.signum().into();
+                        self.mouse_wheel_vertical = delta_y.signum();
                     }
-                    self.invoke_wheel_moved(delta_x.into(), delta_y.into(), event_handler);
+                    self.invoke_wheel_moved(delta_x, delta_y, event_handler);
                 }
                 DeviceEvent::MouseWheel {
                     delta: MouseScrollDelta::PixelDelta(LogicalPosition { x, y }),
@@ -341,13 +341,13 @@ impl<T: BindingTypes> InputHandler<T> {
                         );
                         for (action, combinations) in self.bindings.actions.iter() {
                             for combination in combinations {
+                                let down = combination
+                                    .iter()
+                                    .filter(|b| b != &&Button::Controller(controller_id, button))
+                                    .all(|b| self.button_is_down(*b));
+
                                 if combination.contains(&Button::Controller(controller_id, button))
-                                    && combination
-                                        .iter()
-                                        .filter(|b| {
-                                            b != &&Button::Controller(controller_id, button)
-                                        })
-                                        .all(|b| self.button_is_down(*b))
+                                    && down
                                 {
                                     event_handler.single_write(ActionReleased(action.clone()));
                                 }
@@ -479,7 +479,7 @@ impl<T: BindingTypes> InputHandler<T> {
     }
 
     /// Returns an iterator over all buttons that are down.
-    pub fn buttons_that_are_down<'a>(&self) -> impl Iterator<Item = Button> + '_ {
+    pub fn buttons_that_are_down(&self) -> impl Iterator<Item = Button> + '_ {
         let mouse_buttons = self
             .pressed_mouse_buttons
             .iter()

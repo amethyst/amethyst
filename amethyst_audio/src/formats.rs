@@ -3,7 +3,7 @@ use amethyst_error::Error;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct AudioData(pub Vec<u8>);
 amethyst_assets::register_format_type!(AudioData);
 

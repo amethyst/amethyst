@@ -1,6 +1,12 @@
 //! A crate for loading GLTF format scenes into Amethyst
 
-#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
+#![warn(
+    missing_debug_implementations,
+    missing_docs,
+    rust_2018_idioms,
+    rust_2018_compatibility
+)]
+#![warn(clippy::all)]
 
 use amethyst_animation::{AnimatablePrefab, SkinnablePrefab};
 use amethyst_assets::{
@@ -73,7 +79,7 @@ impl GltfPrefab {
         if let Some(ref extent) = self.extent {
             let distance = extent.distance();
             let max = distance.x.max(distance.y).max(distance.z);
-            let scale: f32 = (max_distance / max).into();
+            let scale: f32 = max_distance / max;
             self.transform
                 .get_or_insert_with(Transform::default)
                 .set_scale(Vector3::new(scale, scale, scale));

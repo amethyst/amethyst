@@ -77,7 +77,6 @@ impl Sprite {
     /// * `pixel_top`: Pixel Y coordinate of the top of the sprite.
     /// * `offsets`: Number of pixels to shift the sprite to the left and down relative to the
     ///              entity.
-    #[allow(clippy::too_many_arguments)]
     pub fn from_pixel_values(
         image_w: u32,
         image_h: u32,

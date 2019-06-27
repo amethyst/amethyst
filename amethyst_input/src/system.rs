@@ -15,6 +15,7 @@ use thread_profiler::profile_scope;
 ///
 /// Will read `winit::Event` from `EventHandler<winit::Event>`, process them with `InputHandler`,
 /// and push the results in `EventHandler<InputEvent>`.
+#[derive(Debug)]
 pub struct InputSystem<T: BindingTypes> {
     reader: Option<ReaderId<Event>>,
     bindings: Option<Bindings<T>>,

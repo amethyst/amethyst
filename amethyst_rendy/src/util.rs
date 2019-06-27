@@ -94,7 +94,7 @@ pub fn simple_shader_set_ext<'a, B: Backend>(
     domain: Option<&'a B::ShaderModule>,
     geometry: Option<&'a B::ShaderModule>,
 ) -> pso::GraphicsShaderSet<'a, B> {
-    fn map_entry_point<B: Backend>(module: &B::ShaderModule) -> pso::EntryPoint<B> {
+    fn map_entry_point<B: Backend>(module: &B::ShaderModule) -> pso::EntryPoint<'_, B> {
         pso::EntryPoint {
             entry: "main",
             module,
@@ -184,7 +184,7 @@ pub fn desc_write<'a, B: Backend>(
 pub fn texture_desc<B: Backend>(
     texture: &Texture,
     layout: hal::image::Layout,
-) -> Option<pso::Descriptor<B>> {
+) -> Option<pso::Descriptor<'_, B>> {
     B::unwrap_texture(texture).map(|inner| {
         pso::Descriptor::CombinedImageSampler(inner.view().raw(), layout, inner.sampler().raw())
     })
@@ -275,12 +275,12 @@ pub trait TapCountIter {
     /// The inner iterator type for this access counter.
     type Iter: Iterator;
     /// Implemented for counting iterator access.
-    fn tap_count<T: PrimInt>(self, counter: &mut T) -> TapCountIterator<T, Self::Iter>;
+    fn tap_count<T: PrimInt>(self, counter: &mut T) -> TapCountIterator<'_, T, Self::Iter>;
 }
 
 impl<I: Iterator> TapCountIter for I {
     type Iter = I;
-    fn tap_count<T: PrimInt>(self, counter: &mut T) -> TapCountIterator<T, I> {
+    fn tap_count<T: PrimInt>(self, counter: &mut T) -> TapCountIterator<'_, T, I> {
         TapCountIterator {
             inner: self,
             counter,

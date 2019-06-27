@@ -9,7 +9,13 @@
 // Parts copied from failure:
 // https://github.com/rust-lang-nursery/failure
 
-#![warn(missing_docs)]
+#![warn(
+    missing_debug_implementations,
+    missing_docs,
+    rust_2018_idioms,
+    rust_2018_compatibility
+)]
+#![warn(clippy::all)]
 
 pub use backtrace::Backtrace;
 use std::{

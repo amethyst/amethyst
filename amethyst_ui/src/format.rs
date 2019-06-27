@@ -7,12 +7,14 @@ use amethyst_error::{format_err, Error, ResultExt};
 
 /// A loaded set of fonts from a file.
 #[derive(Clone)]
+#[allow(missing_debug_implementations)]
 pub struct FontAsset(pub Font<'static>);
 
 /// A handle to font data stored with `amethyst_assets`.
 pub type FontHandle = Handle<FontAsset>;
 
 #[derive(Clone)]
+#[allow(missing_debug_implementations)]
 pub struct FontData(Font<'static>);
 
 amethyst_assets::register_format_type!(FontData);

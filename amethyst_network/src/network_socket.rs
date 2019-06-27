@@ -38,6 +38,7 @@ enum InternalSocketEvent<E> {
 /// In both cases when a client connects and disconnects a `NetEvent::Connected` or `NetEvent::Disconnected` will be queued on accompanying `NetConnection`
 ///
 /// - `T` corresponds to the network event type.
+#[allow(missing_debug_implementations)]
 pub struct NetSocketSystem<E: 'static>
 where
     E: PartialEq,

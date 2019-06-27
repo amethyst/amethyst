@@ -1,5 +1,14 @@
+//! This crate implements various derive macros for easing the use of various amethyst features.
+//! At the moment, this consists of event readers, prefab and UI widget derives.
+
 #![recursion_limit = "256"]
-#![warn(rust_2018_idioms, rust_2018_compatibility)]
+#![warn(
+    missing_debug_implementations,
+    missing_docs,
+    rust_2018_idioms,
+    rust_2018_compatibility
+)]
+#![warn(clippy::all)]
 
 extern crate proc_macro;
 
@@ -10,6 +19,14 @@ mod event_reader;
 mod prefab_data;
 mod widget_id;
 
+/// ```rust,norun
+// #[derive(EventReader)]
+// #[reader(SomeEventReader)]
+// pub enum SomeEvent {{
+//     One(Event1),
+//     Two(Event2),
+// }}
+/// '''
 #[proc_macro_derive(EventReader, attributes(reader))]
 pub fn event_reader_derive(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);

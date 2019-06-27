@@ -11,6 +11,8 @@ use amethyst_core::ecs::{prelude::Component, storage::BTreeStorage};
 use crate::{source::Source, DecoderError};
 
 /// An audio source, add this component to anything that emits sound.
+/// TODO: This should get a proper Debug impl parsing the sinks and sound queue
+#[allow(missing_debug_implementations)]
 #[derive(Default)]
 pub struct AudioEmitter {
     pub(crate) sinks: SmallVec<[(SpatialSink, Arc<AtomicBool>); 4]>,

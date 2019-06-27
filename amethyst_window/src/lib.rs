@@ -1,3 +1,14 @@
+//! Crate abstracting and seperating out the window and display handling within amethyst, and as such
+//! its usage of winit.
+
+#![warn(
+    missing_debug_implementations,
+    missing_docs,
+    rust_2018_idioms,
+    rust_2018_compatibility
+)]
+#![warn(clippy::all)]
+
 mod bundle;
 mod config;
 mod monitor;

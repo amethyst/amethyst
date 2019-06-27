@@ -35,7 +35,8 @@ impl Component for DestroyInTime {
     type Storage = DenseVecStorage<Self>;
 }
 
-/// The system in charge of destroying entities with the `DestroyAtTime` component.
+/// The system in charge of destroying entities with the `DestroyAtTime` component.\
+#[derive(Debug)]
 pub struct DestroyAtTimeSystem;
 
 impl<'a> System<'a> for DestroyAtTimeSystem {
@@ -55,6 +56,7 @@ impl<'a> System<'a> for DestroyAtTimeSystem {
 }
 
 /// The system in charge of destroying entities with the `DestroyInTime` component.
+#[derive(Debug)]
 pub struct DestroyInTimeSystem;
 
 impl<'a> System<'a> for DestroyInTimeSystem {

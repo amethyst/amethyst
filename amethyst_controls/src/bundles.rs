@@ -27,6 +27,7 @@ use super::*;
 /// * `FreeRotationSystem`
 /// * `MouseFocusUpdateSystem`
 /// * `CursorHideSystem`
+#[derive(Debug)]
 pub struct FlyControlBundle<T: BindingTypes> {
     sensitivity_x: f32,
     sensitivity_y: f32,
@@ -101,6 +102,7 @@ impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for FlyControlBundle<T> {
 /// Adding this bundle will grab the mouse, hide it and keep it centered.
 ///
 /// See the `arc_ball_camera` example to see how to use the arc ball camera.
+#[derive(Debug)]
 pub struct ArcBallControlBundle<T: BindingTypes> {
     sensitivity_x: f32,
     sensitivity_y: f32,

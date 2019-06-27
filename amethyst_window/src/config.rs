@@ -6,6 +6,7 @@ use winit::{Icon, WindowAttributes, WindowBuilder};
 
 use crate::monitor::{MonitorIdent, MonitorsAccess};
 
+/// Configuration for a window display.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct DisplayConfig {
     /// Name of the application window.
@@ -24,6 +25,7 @@ pub struct DisplayConfig {
     /// Maximum window dimensions, measured in pixels (px).
     #[serde(default)]
     pub max_dimensions: Option<(u32, u32)>,
+    /// Whether the window should be immediately visible upon creation.
     #[serde(default = "default_visibility")]
     pub visibility: bool,
     /// A path to the icon used for the window.

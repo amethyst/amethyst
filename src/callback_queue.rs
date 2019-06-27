@@ -21,6 +21,7 @@ pub type Callback = Box<dyn Fn(&mut World) + Send>;
 ///     handle.send(|mut world| world.create_entity().build()).expect("Failed to add Callback to CallbackQueue.");
 /// });
 /// ```
+#[allow(missing_debug_implementations)]
 pub struct CallbackQueue {
     sender: Sender<Callback>,
     pub(crate) receiver: Receiver<Callback>,
@@ -29,7 +30,7 @@ pub struct CallbackQueue {
 impl CallbackQueue {
     /// Creates a new `CallbackQueue`.
     pub fn new() -> Self {
-        Default::default()
+        Self::default()
     }
 
     /// Creates a new handle that allows sending `Callback`s to the `CallbackQueue`.
@@ -41,6 +42,6 @@ impl CallbackQueue {
 impl Default for CallbackQueue {
     fn default() -> Self {
         let (sender, receiver) = crossbeam_channel::unbounded();
-        CallbackQueue { sender, receiver }
+        Self { sender, receiver }
     }
 }

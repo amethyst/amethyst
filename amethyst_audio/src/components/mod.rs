@@ -19,7 +19,7 @@ mod audio_listener;
 /// `PrefabData` for loading audio components
 ///
 /// For `AudioListener`, the currently registered `Output` in the `World` will be used.
-#[derive(Clone, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct AudioPrefab {
     emitter: bool,
     /// Left, Right

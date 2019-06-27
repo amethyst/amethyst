@@ -20,6 +20,7 @@ use thread_profiler::profile_scope;
 /// # Type parameters
 ///
 /// * `T`: This are the keys the `InputHandler` is using for axes and actions. Often, this is a `StringBindings`.
+#[derive(Debug)]
 pub struct FlyMovementSystem<T: BindingTypes> {
     /// The movement speed of the movement in units per second.
     speed: f32,
@@ -79,7 +80,7 @@ impl<'a, T: BindingTypes> System<'a> for FlyMovementSystem<T> {
 ///
 /// To modify the orientation of the camera in accordance with the mouse input, please use the
 /// `FreeRotationSystem`.
-///
+#[derive(Debug)]
 pub struct ArcBallRotationSystem;
 
 impl Default for ArcBallRotationSystem {
@@ -123,6 +124,7 @@ impl<'a> System<'a> for ArcBallRotationSystem {
 /// # Type parameters
 ///
 /// * `T`: This are the keys the `InputHandler` is using for axes and actions. Often, this is a `StringBindings`.
+#[derive(Debug)]
 pub struct FreeRotationSystem {
     sensitivity_x: f32,
     sensitivity_y: f32,
@@ -185,7 +187,7 @@ impl<'a> System<'a> for FreeRotationSystem {
 }
 
 /// A system which reads Events and saves if a window has lost focus in a WindowFocus resource
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct MouseFocusUpdateSystem {
     event_reader: Option<ReaderId<Event>>,
 }
@@ -224,7 +226,7 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
 
 /// System which hides the cursor when the window is focused.
 /// Requires the usage MouseFocusUpdateSystem at the same time.
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct CursorHideSystem {
     is_hidden: bool,
 }

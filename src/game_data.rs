@@ -25,6 +25,7 @@ pub trait DataDispose {
 ///
 /// The lifetimes are for the systems inside and can be `'static` unless a system has a borrowed
 /// field.
+#[allow(missing_debug_implementations)]
 pub struct GameData<'a, 'b> {
     dispatcher: Option<Dispatcher<'a, 'b>>,
 }
@@ -63,6 +64,7 @@ impl DataDispose for GameData<'_, '_> {
 }
 
 /// Builder for default game data
+#[allow(missing_debug_implementations)]
 pub struct GameDataBuilder<'a, 'b, N: RealField = f32> {
     disp_builder: DispatcherBuilder<'a, 'b>,
     _marker: PhantomData<N>,

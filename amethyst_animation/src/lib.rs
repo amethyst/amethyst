@@ -45,7 +45,13 @@
 //! [ex_ani]: https://github.com/amethyst/amethyst/tree/master/examples/animation
 //! [ex_gltf]: https://github.com/amethyst/amethyst/tree/master/examples/gltf
 
-#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
+#![warn(
+    missing_debug_implementations,
+    missing_docs,
+    rust_2018_idioms,
+    rust_2018_compatibility
+)]
+#![warn(clippy::all)]
 
 pub use minterpolate::{InterpolationFunction, InterpolationPrimitive};
 

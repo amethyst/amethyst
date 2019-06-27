@@ -53,8 +53,13 @@
 //! ```
 
 #![doc(html_logo_url = "https://amethyst.rs/brand/logo-standard.svg")]
-#![warn(clippy::pedantic, clippy::all)]
-#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
+#![warn(
+    missing_debug_implementations,
+    missing_docs,
+    rust_2018_idioms,
+    rust_2018_compatibility
+)]
+#![warn(clippy::all)]
 
 #[cfg(feature = "animation")]
 pub use amethyst_animation as animation;

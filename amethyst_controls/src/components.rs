@@ -32,7 +32,7 @@ impl Component for ArcBallControlTag {
 /// `PrefabData` for loading control tags on an `Entity`
 ///
 /// Will always load a `FlyControlTag`
-#[derive(Default, Clone, Deserialize, Serialize)]
+#[derive(Debug, Default, Clone, Deserialize, Serialize)]
 pub struct ControlTagPrefab {
     /// Place `ArcBallControlTag` on the `Entity`
     pub arc_ball: Option<(usize, f32)>,
