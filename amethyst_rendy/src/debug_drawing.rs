@@ -129,7 +129,7 @@ impl DebugLinesComponent {
         angles: Vector3<f32>,
         color: Srgba,
     ) {
-        let mut rotation = UnitQuaternion::from_rotation_matrix(&Rotation3::new(angles));
+        let rotation = UnitQuaternion::from_rotation_matrix(&Rotation3::new(angles));
 
         let center = (&min + &Vector2::new(max[0], max[1])) / 2.0;
         let center = Vector3::new(center[0], center[1], z);
