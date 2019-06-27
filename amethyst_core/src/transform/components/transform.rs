@@ -585,6 +585,13 @@ impl Transform {
 
         res
     }
+
+    /// This function allows for test cases of copying the local matrix to the global matrix.
+    /// Useful for tests or other debug type access.
+    #[inline]
+    pub fn copy_local_to_global(&mut self) {
+        self.global_matrix = self.matrix()
+    }
 }
 
 impl Default for Transform {
