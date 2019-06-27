@@ -17,7 +17,7 @@ pub enum StdoutLog {
 }
 
 /// Logger configuration object.
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct LoggerConfig {
     /// Determines whether to log to the terminal or not.
     pub stdout: StdoutLog,
