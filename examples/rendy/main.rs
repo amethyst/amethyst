@@ -511,7 +511,6 @@ fn main() -> amethyst::Result<()> {
     )?;
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with(OrbitSystem, "orbit", &[])
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .with_bundle(FpsCounterBundle::default())?
@@ -567,7 +566,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(
             RenderPipeline::<DefaultBackend>::new()
                 .with_settings(serde_json::json!({ "multisample": 4 }))
-                .with_plugin(MainWindowPlugin::default())
+                .with_plugin(RenderToMainWindow::from_config_path(display_config_path))
                 .with_plugin(RenderStandard3d::default())
                 .with_plugin(RenderStandard2d::default())
                 .with_plugin(RenderSkybox::with_colors(
@@ -621,8 +620,6 @@ impl<B: Backend> RenderPipeline<B> {
     fn into_graph(self) -> RenderPipelineGraph<B> {
         RenderPipelineGraph {
             plugins: self.plugins,
-            dimensions: None,
-            dirty: true,
             marker: PhantomData,
         }
     }
@@ -645,31 +642,23 @@ impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderPipeline<B> {
 
 struct RenderPipelineGraph<B: Backend> {
     plugins: Vec<Box<dyn RenderPlugin<B>>>,
-    dimensions: Option<ScreenDimensions>,
-    dirty: bool,
     marker: PhantomData<B>,
 }
 
 impl<B: Backend> GraphCreator<B> for RenderPipelineGraph<B> {
     fn rebuild(&mut self, res: &Resources) -> bool {
-        let new_dimensions = res.try_fetch::<ScreenDimensions>();
-        use std::ops::Deref;
-        if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
-            self.dirty = true;
-            self.dimensions = new_dimensions.map(|d| d.clone());
-            return false;
+        let mut rebuild = false;
+        for plugin in self.plugins.iter_mut() {
+            rebuild = plugin.rebuild(res) || rebuild;
         }
-        return self.dirty;
+        rebuild
     }
 
     fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
-        self.dirty = false;
-
         let mut plan = RenderPlan::new();
         for plugin in self.plugins.iter_mut() {
             plugin.plan(&mut plan, factory, res).unwrap();
         }
-
         plan.build().unwrap()
     }
 }
@@ -678,6 +667,11 @@ trait RenderPlugin<B: Backend> {
     fn build<'a, 'b>(&mut self, _builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         Ok(())
     }
+
+    fn rebuild(&mut self, _res: &Resources) -> bool {
+        false
+    }
+
     fn plan(
         &mut self,
         plan: &mut RenderPlan<B>,
@@ -715,7 +709,7 @@ impl<B: Backend> RenderPlan<B> {
         });
 
         pass_plan.set_outputs(outputs)?;
-        if dbg!(root) {
+        if root {
             self.roots.push(target);
         }
 
@@ -809,8 +803,17 @@ impl<B: Backend> PlanContext<B> {
         self.passes.insert(target, EvaluationState::Built(node));
         Ok(())
     }
-
     pub fn get_image(&mut self, image_ref: TargetImage) -> Result<ImageId, Error> {
+        self.try_get_image(image_ref)?.ok_or_else(|| {
+            format_err!(
+                "Output image {:?} is not registered by the target.",
+                image_ref
+            )
+        })
+    }
+
+    pub fn try_get_image(&mut self, image_ref: TargetImage) -> Result<Option<ImageId>, Error> {
+
         if !self
             .passes
             .get(&image_ref.target())
@@ -818,15 +821,7 @@ impl<B: Backend> PlanContext<B> {
         {
             self.evaluate_target(image_ref.target())?;
         }
-
-        if let Some(image) = self.outputs.get(&image_ref) {
-            Ok(*image)
-        } else {
-            Err(format_err!(
-                "Output image {:?} is not registered by the target.",
-                image_ref
-            ))
-        }
+        Ok(self.outputs.get(&image_ref).cloned())
     }
 
     pub fn register_output(&mut self, output: TargetImage, image: ImageId) -> Result<(), Error> {
@@ -977,7 +972,6 @@ impl<B: Backend> PassPlan<B> {
     }
 
     fn evaluate(self, ctx: &mut PlanContext<B>) -> Result<(), Error> {
-        println!("Evaluate {:?}", self.key);
         if self.outputs.is_none() {
             return Err(format_err!(
                 "Trying to evaluate not fully defined pass {:?}. Missing `define_pass` call.",
@@ -1102,20 +1096,61 @@ impl Default for Target {
 }
 
 #[derive(Default)]
-struct MainWindowPlugin {
+pub struct RenderToMainWindow {
     target: Target,
+    config: Option<amethyst::window::DisplayConfig>,
+    dimensions: Option<ScreenDimensions>,
+    dirty: bool,
 }
 
-impl<B: Backend> RenderPlugin<B> for MainWindowPlugin {
+impl RenderToMainWindow {
+    pub fn from_config_path(path: impl AsRef<Path>) -> Self {
+        Self::from_config(amethyst::window::DisplayConfig::load(path))
+    }
+
+    pub fn from_config(display_config: amethyst::window::DisplayConfig) -> Self {
+        Self {
+            config: Some(display_config),
+            ..Default::default()
+        }
+    }
+    pub fn with_target(mut self, target: Target) -> Self {
+        self.target = target;
+        self
+    }
+}
+
+impl<B: Backend> RenderPlugin<B> for RenderToMainWindow {
+    fn build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        if let Some(config) = self.config.take() {
+            WindowBundle::from_config(config).build(builder)?;
+        }
+
+        Ok(())
+    }
+
+    fn rebuild(&mut self, res: &Resources) -> bool {
+        let new_dimensions = res.try_fetch::<ScreenDimensions>();
+        use std::ops::Deref;
+        if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
+            self.dirty = true;
+            self.dimensions = new_dimensions.map(|d| d.clone());
+            return false;
+        }
+        return self.dirty;
+    }
+
     fn plan(
         &mut self,
         plan: &mut RenderPlan<B>,
         factory: &mut Factory<B>,
         res: &Resources,
     ) -> Result<(), Error> {
-        let (window, dimensions) =
-            <(ReadExpect<'_, Window>, ReadExpect<'_, ScreenDimensions>)>::fetch(res);
+        self.dirty = false;
+
+        let window = <ReadExpect<'_, Window>>::fetch(res);
         let surface = factory.create_surface(&window);
+        let dimensions = self.dimensions.as_ref().unwrap();
         let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 
         let depth_options = ImageOptions {
@@ -1138,8 +1173,15 @@ impl<B: Backend> RenderPlugin<B> for MainWindowPlugin {
 }
 
 #[derive(Default)]
-struct RenderStandard3d {
+pub struct RenderStandard3d {
     target: Target,
+}
+
+impl RenderStandard3d {
+    pub fn with_target(mut self, target: Target) -> Self {
+        self.target = target;
+        self
+    }
 }
 
 impl<B: Backend> RenderPlugin<B> for RenderStandard3d {
@@ -1170,8 +1212,15 @@ impl<B: Backend> RenderPlugin<B> for RenderStandard3d {
 }
 
 #[derive(Default)]
-struct RenderStandard2d {
+pub struct RenderStandard2d {
     target: Target,
+}
+
+impl RenderStandard2d {
+    pub fn with_target(mut self, target: Target) -> Self {
+        self.target = target;
+        self
+    }
 }
 
 impl<B: Backend> RenderPlugin<B> for RenderStandard2d {
@@ -1203,7 +1252,38 @@ impl<B: Backend> RenderPlugin<B> for RenderStandard2d {
 }
 
 #[derive(Default)]
-struct RenderSkybox {
+pub struct RenderDebugLines {
+    target: Target,
+}
+
+impl RenderDebugLines {
+    pub fn with_target(mut self, target: Target) -> Self {
+        self.target = target;
+        self
+    }
+}
+
+impl<B: Backend> RenderPlugin<B> for RenderDebugLines {
+    fn plan(
+        &mut self,
+        plan: &mut RenderPlan<B>,
+        _factory: &mut Factory<B>,
+        _res: &Resources,
+    ) -> Result<(), Error> {
+        plan.extend_pass(self.target, |mut ctx| {
+            ctx.add(RenderOrder::AfterOpaque, DrawFlat2DDesc::new().builder())?;
+            ctx.add(
+                RenderOrder::Transparent,
+                DrawFlat2DTransparentDesc::new().builder(),
+            )?;
+            Ok(())
+        });
+        Ok(())
+    }
+}
+
+#[derive(Default)]
+pub struct RenderSkybox {
     target: Target,
     colors: Option<(Srgb, Srgb)>,
 }
@@ -1214,6 +1294,11 @@ impl RenderSkybox {
             target: Default::default(),
             colors: Some((nadir_color, zenith_color)),
         }
+    }
+
+    pub fn with_target(mut self, target: Target) -> Self {
+        self.target = target;
+        self
     }
 }
 
