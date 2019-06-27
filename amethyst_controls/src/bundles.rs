@@ -62,8 +62,8 @@ impl<T: BindingTypes> FlyControlBundle<T> {
     }
 
     /// Alters the speed on this `FlyControlBundle`.
-    pub fn with_speed<N: Into<f32>>(mut self, speed: N) -> Self {
-        self.speed = speed.into();
+    pub fn with_speed(mut self, speed: f32) -> Self {
+        self.speed = speed;
         self
     }
 }

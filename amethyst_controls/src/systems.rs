@@ -34,14 +34,14 @@ pub struct FlyMovementSystem<T: BindingTypes> {
 
 impl<T: BindingTypes> FlyMovementSystem<T> {
     /// Builds a new `FlyMovementSystem` using the provided speeds and axis controls.
-    pub fn new<N: Into<f32>>(
-        speed: N,
+    pub fn new(
+        speed: f32,
         right_input_axis: Option<T::Axis>,
         up_input_axis: Option<T::Axis>,
         forward_input_axis: Option<T::Axis>,
     ) -> Self {
         FlyMovementSystem {
-            speed: speed.into(),
+            speed,
             right_input_axis,
             up_input_axis,
             forward_input_axis,

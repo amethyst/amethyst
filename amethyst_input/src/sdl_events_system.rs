@@ -59,7 +59,7 @@ pub struct SdlEventsSystem<T: BindingTypes> {
     event_pump: Option<EventPump>,
     controller_subsystem: GameControllerSubsystem,
     /// Vector of opened controllers and their corresponding joystick indices
-    opened_controllers: Vec<(u32, GameController)>,
+    opened_controllers: Vec<(u32, GameC;ntroller)>,
     marker: PhantomData<T>,
 }
 

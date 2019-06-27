@@ -1,6 +1,6 @@
 use amethyst_core::{
     ecs::{prelude::Component, storage::HashMapStorage},
-    math::{one, zero, Point3},
+    math::Point3,
 };
 
 /// An audio listener, add this component to the local player character.
@@ -15,8 +15,8 @@ pub struct AudioListener {
 impl Default for AudioListener {
     fn default() -> Self {
         AudioListener {
-            left_ear: Point3::new(-one::<f32>(), zero::<f32>(), zero::<f32>()),
-            right_ear: Point3::new(one::<f32>(), zero::<f32>(), zero::<f32>()),
+            left_ear: Point3::new(-1.0, 0.0, 0.0),
+            right_ear: Point3::new(1.0, 0.0, 0.0),
         }
     }
 }

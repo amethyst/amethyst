@@ -5,7 +5,7 @@ use crate::{
 };
 use amethyst_core::{
     ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
-    math::{self as na, Point3, Vector3},
+    math::{Point3, Vector3},
     Hidden, HiddenPropagate, Transform,
 };
 use derivative::Derivative;
@@ -96,7 +96,7 @@ impl<'a> System<'a> for SpriteVisibilitySortingSystem {
                 .join()
                 .map(|(e, t, _, _)| (e, t.global_matrix().transform_point(&origin)))
                 // filter entities behind the camera
-                .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < na::zero())
+                .filter(|(_, c)| (c - camera_centroid).dot(&camera_backward) < 0.0)
                 .map(|(entity, centroid)| Internals {
                     entity,
                     transparent: transparent.contains(entity),

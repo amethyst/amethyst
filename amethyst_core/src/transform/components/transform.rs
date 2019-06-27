@@ -8,7 +8,6 @@ use crate::{
         self as na, Isometry3, Matrix4, Quaternion, RealField, Translation3, Unit, UnitQuaternion,
         Vector3,
     },
-    num::{One, Zero},
 };
 use serde::{
     de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor},
@@ -313,7 +312,7 @@ impl Transform {
     /// `angle` is specified in radians.
     #[inline]
     pub fn set_rotation_x_axis(&mut self, angle: f32) -> &mut Self {
-        self.set_rotation_euler(angle, f32::zero(), f32::zero())
+        self.set_rotation_euler(angle, 0.0, 0.0)
     }
 
     /// Premultiply a rotation about the y axis, i.e. perform a rotation about
@@ -699,10 +698,9 @@ impl<'de> Deserialize<'de> for Transform {
                         }
                     }
                 }
-                let translation: [f32; 3] = translation.unwrap_or([f32::zero(); 3]);
-                let rotation: [f32; 4] =
-                    rotation.unwrap_or([f32::zero(), f32::zero(), f32::zero(), f32::one()]);
-                let scale: [f32; 3] = scale.unwrap_or([f32::one(); 3]);
+                let translation: [f32; 3] = translation.unwrap_or([0.0; 3]);
+                let rotation: [f32; 4] = rotation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+                let scale: [f32; 3] = scale.unwrap_or([1.0; 3]);
 
                 let isometry = Isometry3::from_parts(
                     Translation3::new(translation[0], translation[1], translation[2]),
