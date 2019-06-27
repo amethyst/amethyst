@@ -277,7 +277,7 @@ impl DebugLinesComponent {
 
             for i in 0..(horizontal_points) {
                 let lon = std::f32::consts::PI / f32::from(horizontal_points - 1) * f32::from(i);
-                let x = lon.sin() * (lat + std::f32::consts::FRAC_PI_2).cos();
+                let x = lon.sin() * lat.cos();
                 let y = lon.sin() * lat.sin();
                 let z = lon.cos();
                 let point = [x, y, z].into();
