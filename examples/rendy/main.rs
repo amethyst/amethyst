@@ -43,7 +43,7 @@ use amethyst_rendy::{
         factory::Factory,
         graph::{
             render::{RenderGroupDesc, RenderPassNodeBuilder, SubpassBuilder},
-            GraphBuilder, NodeId,
+            GraphBuilder, ImageId, NodeId,
         },
         hal::command::{ClearDepthStencil, ClearValue},
         mesh::{Normal, Position, Tangent, TexCoord},
@@ -725,7 +725,7 @@ impl<B: Backend> RenderPlan<B> {
     pub fn extend_pass(
         &mut self,
         target: Target,
-        closure: impl FnOnce(PassPlanContext<'_, '_, B>) -> Result<(), Error> + 'static,
+        closure: impl FnOnce(PassPlanContext<'_, B>) -> Result<(), Error> + 'static,
     ) {
         let pass_plan = self
             .targets
@@ -734,23 +734,22 @@ impl<B: Backend> RenderPlan<B> {
         pass_plan.add_extension(Box::new(closure));
     }
 
-    pub fn build(mut self) -> Result<GraphBuilder<B, Resources>, Error> {
-        let mut graph_builder = GraphBuilder::new();
+    pub fn build(self) -> Result<GraphBuilder<B, Resources>, Error> {
         let mut ctx = PlanContext {
+            targets: self.targets,
             passes: Default::default(),
-            graph_builder: &mut graph_builder,
+            outputs: Default::default(),
+            graph_builder: GraphBuilder::new(),
         };
 
         for target in self.roots {
+            // prevent evaluation of roots that were accessed recursively
             if !ctx.passes.contains_key(&target) {
-                self.targets
-                    .remove(&target)
-                    .map(|pass| pass.evaluate(&mut ctx))
-                    .transpose()?;
+                ctx.evaluate_target(target)?;
             }
         }
 
-        Ok(graph_builder)
+        Ok(ctx.graph_builder)
     }
 }
 
@@ -759,13 +758,24 @@ enum EvaluationState {
     Built(NodeId),
 }
 
-struct PlanContext<'a, B: Backend> {
-    passes: HashMap<Target, EvaluationState>,
-    graph_builder: &'a mut GraphBuilder<B, Resources>,
+impl EvaluationState {
+    fn is_built(&self) -> bool {
+        match self {
+            EvaluationState::Built(_) => true,
+            _ => false,
+        }
+    }
 }
 
-impl<'a, B: Backend> PlanContext<'a, B> {
-    fn mark_evaluating(&mut self, target: Target) -> Result<(), Error> {
+pub struct PlanContext<B: Backend> {
+    targets: HashMap<Target, PassPlan<B>>,
+    passes: HashMap<Target, EvaluationState>,
+    outputs: HashMap<TargetImage, ImageId>,
+    graph_builder: GraphBuilder<B, Resources>,
+}
+
+impl<B: Backend> PlanContext<B> {
+    pub fn mark_evaluating(&mut self, target: Target) -> Result<(), Error> {
         match self.passes.get(&target) {
             None => {},
             Some(EvaluationState::Evaluating) => return Err(format_err!("Trying to evaluate {:?} render plan that is already evaluating. Circular dependency detected.", target)),
@@ -776,7 +786,13 @@ impl<'a, B: Backend> PlanContext<'a, B> {
         Ok(())
     }
 
-    fn submit_pass(
+    fn evaluate_target(&mut self, target: Target) -> Result<(), Error> {
+        let target = self.targets.remove(&target);
+        target.map(|pass| pass.evaluate(self)).transpose()?;
+        Ok(())
+    }
+
+    pub fn submit_pass(
         &mut self,
         target: Target,
         pass: RenderPassNodeBuilder<B, Resources>,
@@ -794,17 +810,48 @@ impl<'a, B: Backend> PlanContext<'a, B> {
         Ok(())
     }
 
-    fn get_image(&mut self, _image: InputImage) -> Result<NodeId, Error> {
-        unimplemented!()
+    pub fn get_image(&mut self, image_ref: TargetImage) -> Result<ImageId, Error> {
+        if !self
+            .passes
+            .get(&image_ref.target())
+            .map_or(false, |t| t.is_built())
+        {
+            self.evaluate_target(image_ref.target())?;
+        }
+
+        if let Some(image) = self.outputs.get(&image_ref) {
+            Ok(*image)
+        } else {
+            Err(format_err!(
+                "Output image {:?} is not registered by the target.",
+                image_ref
+            ))
+        }
+    }
+
+    pub fn register_output(&mut self, output: TargetImage, image: ImageId) -> Result<(), Error> {
+        if self.outputs.contains_key(&output) {
+            return Err(format_err!(
+                "Trying to register already registered output image {:?}",
+                output
+            ));
+        }
+        self.outputs.insert(output, image);
+        Ok(())
+    }
+
+    pub fn create_image(&mut self, options: ImageOptions) -> ImageId {
+        self.graph_builder
+            .create_image(options.kind, options.levels, options.format, options.clear)
     }
 }
 
-struct PassPlanContext<'a, 'b, B: Backend> {
+pub struct PassPlanContext<'a, B: Backend> {
     evaluation: &'a mut PassPlanEvaluation<B>,
-    plan_context: &'a mut PlanContext<'b, B>,
+    plan_context: &'a mut PlanContext<B>,
 }
 
-impl<'a, 'b, B: Backend> PassPlanContext<'a, 'b, B> {
+impl<'a, B: Backend> PassPlanContext<'a, B> {
     pub fn add(&mut self, order: impl Into<i32>, action: impl IntoAction<B>) -> Result<(), Error> {
         self.evaluation.add(order, action)
     }
@@ -817,26 +864,22 @@ impl<'a, 'b, B: Backend> PassPlanContext<'a, 'b, B> {
         self.evaluation.depth()
     }
 
-    pub fn get_image(&mut self, image: InputImage) -> Result<NodeId, Error> {
+    pub fn get_image(&mut self, image: TargetImage) -> Result<ImageId, Error> {
         self.plan_context.get_image(image)
     }
 }
 
-enum SurfaceSize {
-    Relative(f32, f32),
-    Absolute(u32, u32),
-}
-
-enum InputImage {
-    Color(Target, u32),
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+pub enum TargetImage {
+    Color(Target, usize),
     Depth(Target),
 }
 
-impl InputImage {
-    fn target(&self) -> Target {
+impl TargetImage {
+    pub fn target(&self) -> Target {
         match self {
-            InputImage::Color(target, _) => *target,
-            InputImage::Depth(target) => *target,
+            TargetImage::Color(target, _) => *target,
+            TargetImage::Depth(target) => *target,
         }
     }
 }
@@ -849,11 +892,11 @@ struct PassPlanEvaluation<B: Backend> {
 }
 
 impl<B: Backend> PassPlanEvaluation<B> {
-    pub fn colors(&self) -> usize {
+    fn colors(&self) -> usize {
         self.colors
     }
 
-    pub fn depth(&self) -> bool {
+    fn depth(&self) -> bool {
         self.depth
     }
 
@@ -885,7 +928,7 @@ impl<B: Backend> PassPlanEvaluation<B> {
 struct PassPlan<B: Backend> {
     key: Target,
     // inputs: Vec<InputSurface>,
-    extensions: Vec<Box<dyn FnOnce(PassPlanContext<'_, '_, B>) -> Result<(), Error> + 'static>>,
+    extensions: Vec<Box<dyn FnOnce(PassPlanContext<'_, B>) -> Result<(), Error> + 'static>>,
     outputs: Option<PassPlanOutputs<B>>,
 }
 
@@ -894,14 +937,14 @@ struct PassPlanOutputs<B: Backend> {
     depth: Option<ImageOptions>,
 }
 
-struct ImageOptions {
+pub struct ImageOptions {
     kind: amethyst::renderer::rendy::hal::image::Kind,
     levels: amethyst::renderer::rendy::hal::image::Level,
     format: amethyst::renderer::rendy::hal::format::Format,
     clear: Option<amethyst::renderer::rendy::hal::command::ClearValue>,
 }
 
-enum OutputColor<B: Backend> {
+pub enum OutputColor<B: Backend> {
     Image(ImageOptions),
     Surface(
         amethyst::renderer::rendy::wsi::Surface<B>,
@@ -928,7 +971,7 @@ impl<B: Backend> PassPlan<B> {
 
     fn add_extension(
         &mut self,
-        extension: Box<dyn FnOnce(PassPlanContext<'_, '_, B>) -> Result<(), Error> + 'static>,
+        extension: Box<dyn FnOnce(PassPlanContext<'_, B>) -> Result<(), Error> + 'static>,
     ) {
         self.extensions.push(extension);
     }
@@ -941,7 +984,7 @@ impl<B: Backend> PassPlan<B> {
                 self.key
             ));
         }
-        let outputs = self.outputs.unwrap();
+        let mut outputs = self.outputs.unwrap();
 
         ctx.mark_evaluating(self.key)?;
 
@@ -971,35 +1014,27 @@ impl<B: Backend> PassPlan<B> {
             }
         }
 
-        for color in outputs.colors {
+        for (i, color) in outputs.colors.drain(..).enumerate() {
             match color {
                 OutputColor::Surface(surface, clear) => {
                     subpass.add_color_surface();
                     pass.add_surface(surface, clear);
                 }
                 OutputColor::Image(opts) => {
-                    // TODO: export that image node so it can be referenced
-                    let node = ctx.graph_builder.create_image(
-                        opts.kind,
-                        opts.levels,
-                        opts.format,
-                        opts.clear,
-                    );
+                    let node = ctx.create_image(opts);
+                    ctx.register_output(TargetImage::Color(self.key, i), node)?;
                     subpass.add_color(node);
                 }
             }
         }
 
         if let Some(opts) = outputs.depth {
-            // TODO: export that image node so it can be referenced
-            let node =
-                ctx.graph_builder
-                    .create_image(opts.kind, opts.levels, opts.format, opts.clear);
+            let node = ctx.create_image(opts);
+            ctx.register_output(TargetImage::Depth(self.key), node)?;
             subpass.set_depth_stencil(node);
         }
 
         pass.add_subpass(subpass);
-        dbg!(&pass);
         ctx.submit_pass(self.key, pass)?;
         Ok(())
     }
@@ -1007,7 +1042,7 @@ impl<B: Backend> PassPlan<B> {
 
 use amethyst::renderer::rendy::graph::render::RenderGroupBuilder;
 
-enum RenedrableAction<B: Backend> {
+pub enum RenedrableAction<B: Backend> {
     RenderGroup(Box<dyn RenderGroupBuilder<B, Resources>>),
 }
 
@@ -1025,7 +1060,7 @@ impl<B: Backend> RenedrableAction<B> {
     }
 }
 
-trait IntoAction<B: Backend> {
+pub trait IntoAction<B: Backend> {
     fn into(self) -> RenedrableAction<B>;
 }
 
