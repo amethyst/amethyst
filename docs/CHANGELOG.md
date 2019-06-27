@@ -10,10 +10,14 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ## [Unreleased]
 
 ### Added
+
 * Fixes and renames regression from ([#1442]) added back `position_from_world` as `screen_to_world`. Also added
 `world_to_screen`. Also adds `Transform::copy_local_to_global()' for `debug_assertion` builds ([#1733])
+* Add `add_square`, `add_rotated_square`, `add_box`, `add_rotated_box`, `add_circle`, `add_rotated_circle`, `add_sphere` functions
+to `DebugLinesComponent` and the corresponding draw functions to `DebugLines` to draw simple shapes with debug lines. ([#1651])
 
 ### Changed
+
 * Rename FPSCounter, FPSCounterBundle, FPSCounterSystem to FpsCounter, FpsCounterBundle, FpsCounterSystem. ([#1719])
 * Add Tint component support for sprites. ([#1756])
 * Remove remaining <N: RealField> type parameter on GameDataBuilder, add Debug derive to LoggerConfig ([#1758])
