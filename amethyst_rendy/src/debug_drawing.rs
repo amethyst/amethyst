@@ -131,7 +131,7 @@ impl DebugLinesComponent {
     ) {
         let rotation = UnitQuaternion::from_rotation_matrix(&Rotation3::new(angles));
 
-        let center = (&min + &Vector2::new(max[0], max[1])) / 2.0;
+        let center = (min + Vector2::new(max[0], max[1])) / 2.0;
         let center = Vector3::new(center[0], center[1], z);
 
         let top_left = Point3::new(min[0], min[1], z);
@@ -139,10 +139,10 @@ impl DebugLinesComponent {
         let bottom_left = Point3::new(max[0], min[1], z);
         let bottom_right = Point3::new(max[0], max[1], z);
 
-        let top_left = &rotation * &(&top_left - &center) + &center;
-        let top_right = &rotation * &(&top_right - &center) + &center;
-        let bottom_left = &rotation * &(&bottom_left - &center) + &center;
-        let bottom_right = &rotation * &(&bottom_right - &center) + &center;
+        let top_left = rotation * (top_left - center) + center;
+        let top_right = rotation * (top_right - center) + center;
+        let bottom_left = rotation * (bottom_left - center) + center;
+        let bottom_right = rotation * (bottom_right - center) + center;
 
         self.add_line(top_left, top_right, color);
         self.add_line(top_left, bottom_left, color);
@@ -178,7 +178,7 @@ impl DebugLinesComponent {
     ) {
         let rotation = UnitQuaternion::from_rotation_matrix(&Rotation3::new(angles));
 
-        let center = (&min + &Vector3::from([max[0], max[1], max[2]])) / 2.0;
+        let center = (min + Vector3::from([max[0], max[1], max[2]])) / 2.0;
         let center = Vector3::new(center[0], center[1], center[2]);
 
         let top_left_back = Point3::new(min[0], min[1], min[2]);
@@ -186,20 +186,20 @@ impl DebugLinesComponent {
         let bottom_left_back = Point3::new(max[0], min[1], min[2]);
         let bottom_right_back = Point3::new(max[0], max[1], min[2]);
 
-        let top_left_back = &rotation * &(&top_left_back - &center) + &center;
-        let top_right_back = &rotation * &(&top_right_back - &center) + &center;
-        let bottom_left_back = &rotation * &(&bottom_left_back - &center) + &center;
-        let bottom_right_back = &rotation * &(&bottom_right_back - &center) + &center;
+        let top_left_back = rotation * (top_left_back - center) + center;
+        let top_right_back = rotation * (top_right_back - center) + center;
+        let bottom_left_back = rotation * (bottom_left_back - center) + center;
+        let bottom_right_back = rotation * (bottom_right_back - center) + center;
 
         let top_left_front = Point3::new(min[0], min[1], max[2]);
         let top_right_front = Point3::new(min[0], max[1], max[2]);
         let bottom_left_front = Point3::new(max[0], min[1], max[2]);
         let bottom_right_front = Point3::new(max[0], max[1], max[2]);
 
-        let top_left_front = &rotation * &(&top_left_front - &center) + &center;
-        let top_right_front = &rotation * &(&top_right_front - &center) + &center;
-        let bottom_left_front = &rotation * &(&bottom_left_front - &center) + &center;
-        let bottom_right_front = &rotation * &(&bottom_right_front - &center) + &center;
+        let top_left_front = rotation * (top_left_front - center) + center;
+        let top_right_front = rotation * (top_right_front - center) + center;
+        let bottom_left_front = rotation * (bottom_left_front - center) + center;
+        let bottom_right_front = rotation * (bottom_right_front - center) + center;
 
         self.add_line(top_left_back, top_right_back, color);
         self.add_line(top_left_back, bottom_left_back, color);
@@ -219,7 +219,7 @@ impl DebugLinesComponent {
     pub fn add_circle(&mut self, center: Point3<f32>, radius: f32, points: i16, color: Srgba) {
         let mut prev = None;
 
-        for i in 0..(points + 1) {
+        for i in 0..=points {
             let a = std::f32::consts::PI * 2.0 / f32::from(points) * f32::from(i);
             let x = a.cos();
             let y = a.sin();
@@ -245,12 +245,12 @@ impl DebugLinesComponent {
         let mut prev = None;
         let rotation = UnitQuaternion::from_rotation_matrix(&Rotation3::new(angles));
 
-        for i in 0..(points + 1) {
+        for i in 0..=points {
             let a = std::f32::consts::PI * 2.0 / f32::from(points) * f32::from(i);
             let x = a.cos();
             let y = a.sin();
             let point = Vector3::new(x, y, center[2]);
-            let point = Point3::from(&rotation * &point);
+            let point = Point3::from(rotation * point);
 
             if let Some(prev) = prev {
                 self.add_line(prev, point, color);
@@ -271,23 +271,23 @@ impl DebugLinesComponent {
     ) {
         let mut prev_row = Vec::new();
 
-        for j in 0..(vertical_points + 1) {
-            let lat = std::f32::consts::PI * 2.0 / f32::from(vertical_points) * f32::from(j);
+        for i in 0..=horizontal_points {
+            let lon = std::f32::consts::PI / f32::from(horizontal_points) * f32::from(i);
             let mut new_prev_row = Vec::new();
 
-            for i in 0..(horizontal_points) {
-                let lon = std::f32::consts::PI / f32::from(horizontal_points - 1) * f32::from(i);
-                let x = lon.sin() * lat.cos();
-                let y = lon.sin() * lat.sin();
-                let z = lon.cos();
-                let point = [x, y, z].into();
+            for j in 0..=vertical_points {
+                let lat = std::f32::consts::PI * 2.0 / f32::from(vertical_points) * f32::from(j);
+                let x = radius * lon.sin() * lat.cos();
+                let y = radius * lon.sin() * lat.sin();
+                let z = radius * lon.cos();
+                let point = center + Vector3::new(x, y, z);
 
                 if !new_prev_row.is_empty() {
-                    self.add_line(new_prev_row[(i - 1) as usize], point, color);
+                    self.add_line(new_prev_row[(j - 1) as usize], point, color);
                 }
 
                 if !prev_row.is_empty() {
-                    self.add_line(prev_row[i as usize], point, color);
+                    self.add_line(prev_row[j as usize], point, color);
                 }
 
                 new_prev_row.push(point);
