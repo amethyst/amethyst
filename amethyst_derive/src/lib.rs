@@ -19,13 +19,14 @@ mod event_reader;
 mod prefab_data;
 mod widget_id;
 
+/// EventReader
 /// ```rust,norun
-// #[derive(EventReader)]
-// #[reader(SomeEventReader)]
-// pub enum SomeEvent {{
-//     One(Event1),
-//     Two(Event2),
-// }}
+/// #[derive(EventReader)]
+/// #[reader(SomeEventReader)]
+/// pub enum SomeEvent {{
+///     One(Event1),
+///     Two(Event2),
+/// }}
 /// '''
 #[proc_macro_derive(EventReader, attributes(reader))]
 pub fn event_reader_derive(input: TokenStream) -> TokenStream {
