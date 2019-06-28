@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ## [Unreleased]
 
 ## Breaking changes
-* Float newtype removed, moved back to f32 primitive for all values ([#1747])
+* `Float` newtype removed, moved back to `f32` primitive for all values ([#1747])
 
 ### Added
 * Fixes and renames regression from ([#1442]) added back `position_from_world` as `screen_to_world`. Also added
