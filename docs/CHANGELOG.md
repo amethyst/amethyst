@@ -13,8 +13,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 * Fixes and renames regression from ([#1442]) added back `position_from_world` as `screen_to_world`. Also added
 `world_to_screen`. Also adds `Transform::copy_local_to_global()' for `debug_assertion` builds ([#1733])
-* Add `add_square`, `add_rotated_square`, `add_box`, `add_rotated_box`, `add_circle`, `add_rotated_circle`, `add_sphere` functions
-to `DebugLinesComponent` and the corresponding draw functions to `DebugLines` to draw simple shapes with debug lines. ([#1651])
+* Add `add_rectangle`, `add_rotated_rectangle`, `add_box`, `add_rotated_box`, `add_circle`, `add_rotated_circle`,
+`add_cylinder`, `add_rotated_cylinder` and `add_sphere` functions to `DebugLinesComponent`
+and the corresponding draw functions to `DebugLines`, to draw simple shapes with debug lines. ([#1651])
 
 ### Changed
 
