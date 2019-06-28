@@ -2,7 +2,6 @@ use super::base_3d::*;
 use crate::{
     mtl::{TexAlbedo, TexEmission},
     skinning::JointCombined,
-    types::Backend,
 };
 use rendy::{
     mesh::{AsVertex, Normal, Position, TexCoord, VertexFormat},
@@ -12,7 +11,7 @@ use rendy::{
 /// Implementation of `Base3DPassDef` describing a simple shaded 3D pass.
 #[derive(Debug)]
 pub struct ShadedPassDef;
-impl<B: Backend> Base3DPassDef<B> for ShadedPassDef {
+impl Base3DPassDef for ShadedPassDef {
     const NAME: &'static str = "Shaded";
     type TextureSet = (TexAlbedo, TexEmission);
     fn vertex_shader() -> &'static SpirvShader {

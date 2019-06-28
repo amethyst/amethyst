@@ -38,14 +38,14 @@ macro_rules! profile_scope_impl {
         let _profile_scope = thread_profiler::ProfileScope::new(format!(
             "{} {}: {}",
             module_path!(),
-            <T as Base3DPassDef<B>>::NAME,
+            <T as Base3DPassDef>::NAME,
             $string
         ));
     };
 }
 
 /// Define drawing opaque 3d meshes with specified shaders and texture set
-pub trait Base3DPassDef<B: Backend>: 'static + std::fmt::Debug + Send + Sync {
+pub trait Base3DPassDef: 'static + std::fmt::Debug + Send + Sync {
     /// The human readable name of this pass
     const NAME: &'static str;
 
@@ -71,12 +71,12 @@ pub trait Base3DPassDef<B: Backend>: 'static + std::fmt::Debug + Send + Sync {
 /// Draw opaque 3d meshes with specified shaders and texture set
 #[derive(Clone, Derivative)]
 #[derivative(Debug(bound = ""), Default(bound = ""))]
-pub struct DrawBase3DDesc<B: Backend, T: Base3DPassDef<B>> {
+pub struct DrawBase3DDesc<B: Backend, T: Base3DPassDef> {
     skinning: bool,
     marker: PhantomData<(B, T)>,
 }
 
-impl<B: Backend, T: Base3DPassDef<B>> DrawBase3DDesc<B, T> {
+impl<B: Backend, T: Base3DPassDef> DrawBase3DDesc<B, T> {
     /// Create pass in default configuration
     pub fn new() -> Self {
         Self {
@@ -94,7 +94,7 @@ impl<B: Backend, T: Base3DPassDef<B>> DrawBase3DDesc<B, T> {
     }
 }
 
-impl<B: Backend, T: Base3DPassDef<B>> RenderGroupDesc<B, Resources> for DrawBase3DDesc<B, T> {
+impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, Resources> for DrawBase3DDesc<B, T> {
     fn build(
         self,
         _ctx: &GraphContext<B>,
@@ -157,7 +157,7 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroupDesc<B, Resources> for DrawBase
 /// such as [pass::pbr::DrawPbr]
 #[derive(Derivative)]
 #[derivative(Debug(bound = ""))]
-pub struct DrawBase3D<B: Backend, T: Base3DPassDef<B>> {
+pub struct DrawBase3D<B: Backend, T: Base3DPassDef> {
     pipeline_basic: B::GraphicsPipeline,
     pipeline_skinned: Option<B::GraphicsPipeline>,
     pipeline_layout: B::PipelineLayout,
@@ -173,7 +173,7 @@ pub struct DrawBase3D<B: Backend, T: Base3DPassDef<B>> {
     marker: PhantomData<T>,
 }
 
-impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3D<B, T> {
+impl<B: Backend, T: Base3DPassDef> RenderGroup<B, Resources> for DrawBase3D<B, T> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
@@ -431,12 +431,12 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3D<B
 /// Draw transparent mesh with physically based lighting
 #[derive(Clone, Derivative)]
 #[derivative(Debug(bound = ""), Default(bound = ""))]
-pub struct DrawBase3DTransparentDesc<B: Backend, T: Base3DPassDef<B>> {
+pub struct DrawBase3DTransparentDesc<B: Backend, T: Base3DPassDef> {
     skinning: bool,
     marker: PhantomData<(B, T)>,
 }
 
-impl<B: Backend, T: Base3DPassDef<B>> DrawBase3DTransparentDesc<B, T> {
+impl<B: Backend, T: Base3DPassDef> DrawBase3DTransparentDesc<B, T> {
     /// Create pass in default configuration
     pub fn new() -> Self {
         Self {
@@ -454,7 +454,7 @@ impl<B: Backend, T: Base3DPassDef<B>> DrawBase3DTransparentDesc<B, T> {
     }
 }
 
-impl<B: Backend, T: Base3DPassDef<B>> RenderGroupDesc<B, Resources>
+impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, Resources>
     for DrawBase3DTransparentDesc<B, T>
 {
     fn build(
@@ -517,7 +517,7 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroupDesc<B, Resources>
 /// Draw transparent mesh with physically based lighting
 #[derive(Derivative)]
 #[derivative(Debug(bound = ""))]
-pub struct DrawBase3DTransparent<B: Backend, T: Base3DPassDef<B>> {
+pub struct DrawBase3DTransparent<B: Backend, T: Base3DPassDef> {
     pipeline_basic: B::GraphicsPipeline,
     pipeline_skinned: Option<B::GraphicsPipeline>,
     pipeline_layout: B::PipelineLayout,
@@ -534,7 +534,7 @@ pub struct DrawBase3DTransparent<B: Backend, T: Base3DPassDef<B>> {
     marker: PhantomData<(T)>,
 }
 
-impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3DTransparent<B, T> {
+impl<B: Backend, T: Base3DPassDef> RenderGroup<B, Resources> for DrawBase3DTransparent<B, T> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
@@ -724,7 +724,7 @@ impl<B: Backend, T: Base3DPassDef<B>> RenderGroup<B, Resources> for DrawBase3DTr
     }
 }
 
-fn build_pipelines<B: Backend, T: Base3DPassDef<B>>(
+fn build_pipelines<B: Backend, T: Base3DPassDef>(
     factory: &Factory<B>,
     subpass: hal::pass::Subpass<'_, B>,
     framebuffer_width: u32,

@@ -1,0 +1,621 @@
+//! A home of [RenderingBundle] with it's rendering plugins system and all types directly related to it.
+
+use crate::{
+    rendy::{
+        factory::Factory,
+        graph::{
+            render::{RenderGroupBuilder, RenderPassNodeBuilder, SubpassBuilder},
+            GraphBuilder, ImageId, NodeId,
+        },
+        hal,
+        wsi::Surface,
+    },
+    system::{GraphCreator, RenderingSystem},
+    types::Backend,
+};
+use amethyst_core::{
+    ecs::{DispatcherBuilder, Resources},
+    SystemBundle,
+};
+use amethyst_error::{format_err, Error};
+use std::collections::HashMap;
+
+/// A bundle of systems used for rendering using `Rendy` render graph.
+///
+/// Provides a mechanism for registering rendering plugins.
+/// By itself doesn't render anything, you must use `with_plugin` method
+/// to define a set of functionalities you want to use.
+#[derive(Debug)]
+pub struct RenderingBundle<B: Backend> {
+    plugins: Vec<Box<dyn RenderPlugin<B>>>,
+}
+
+impl<B: Backend> RenderingBundle<B> {
+    /// Create empty `RenderingBundle`. You must register a plugin using
+    /// `with_plugin` in order to actually display anything.
+    pub fn new() -> Self {
+        Self {
+            plugins: Vec::new(),
+        }
+    }
+
+    /// Register a [RenderPlugin].
+    pub fn add_plugin(&mut self, plugin: impl RenderPlugin<B> + 'static) {
+        self.plugins.push(Box::new(plugin));
+    }
+
+    /// Register a [RenderPlugin].
+    pub fn with_plugin(mut self, plugin: impl RenderPlugin<B> + 'static) -> Self {
+        self.add_plugin(plugin);
+        self
+    }
+
+    fn into_graph_creator(self) -> RenderingBundleGraphCreator<B> {
+        RenderingBundleGraphCreator {
+            plugins: self.plugins,
+        }
+    }
+}
+
+impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
+    fn build(mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        for plugin in &mut self.plugins {
+            plugin.build(builder)?;
+        }
+
+        builder.add_thread_local(RenderingSystem::<B, _>::new(self.into_graph_creator()));
+        Ok(())
+    }
+}
+
+struct RenderingBundleGraphCreator<B: Backend> {
+    plugins: Vec<Box<dyn RenderPlugin<B>>>,
+}
+
+impl<B: Backend> GraphCreator<B> for RenderingBundleGraphCreator<B> {
+    fn rebuild(&mut self, res: &Resources) -> bool {
+        let mut rebuild = false;
+        for plugin in self.plugins.iter_mut() {
+            rebuild = plugin.rebuild(res) || rebuild;
+        }
+        rebuild
+    }
+
+    fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
+        if self.plugins.len() == 0 {
+            log::warn!("RenderingBundle is configured to display nothing. Use `with_plugin` to add functionality.");
+        }
+
+        let mut plan = RenderPlan::new();
+        for plugin in self.plugins.iter_mut() {
+            plugin.plan(&mut plan, factory, res).unwrap();
+        }
+        plan.build().unwrap()
+    }
+}
+
+/// Basic building block of rendering in [RenderingBundle].
+///
+/// Can be used to register rendering-related systems to the dispatcher,
+/// building render graph by registering render targets, adding [RenedrableAction]s to them
+/// and signalling when the graph has to be rebuild.
+pub trait RenderPlugin<B: Backend>: std::fmt::Debug {
+    /// Hook for adding systems and bundles to the dispatcher.
+    fn build<'a, 'b>(&mut self, _builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        Ok(())
+    }
+
+    /// Hook for providing triggers to rebuild the render graph.
+    fn rebuild(&mut self, _res: &Resources) -> bool {
+        false
+    }
+
+    /// Hook for extending the rendering plan.
+    fn plan(
+        &mut self,
+        plan: &mut RenderPlan<B>,
+        factory: &mut Factory<B>,
+        res: &Resources,
+    ) -> Result<(), Error>;
+}
+
+/// Builder of a rendering plan for specfied target.
+#[derive(Debug)]
+pub struct RenderPlan<B: Backend> {
+    targets: HashMap<Target, TargetPlan<B>>,
+    roots: Vec<Target>,
+}
+
+impl<B: Backend> RenderPlan<B> {
+    fn new() -> Self {
+        Self {
+            targets: Default::default(),
+            roots: vec![],
+        }
+    }
+
+    /// Define a render target with predefined set of outputs.
+    pub fn define_pass(
+        &mut self,
+        target: Target,
+        outputs: TargetPlanOutputs<B>,
+    ) -> Result<(), Error> {
+        let target_plan = self
+            .targets
+            .entry(target)
+            .or_insert_with(|| TargetPlan::new(target));
+
+        let root = outputs.colors.iter().any(|c| match c {
+            OutputColor::Surface(_, _) => true,
+            _ => false,
+        });
+
+        target_plan.set_outputs(outputs)?;
+        if root {
+            self.roots.push(target);
+        }
+
+        Ok(())
+    }
+
+    /// Extend the rendering plan of a render target. Target can be defined in other plugins.
+    /// The closure is evaluated only if the target contributes to the rendering result, e.g.
+    /// is rendered to a window or is a dependency of other evaluated target.
+    pub fn extend_target(
+        &mut self,
+        target: Target,
+        closure: impl FnOnce(&mut TargetPlanContext<'_, B>) -> Result<(), Error> + 'static,
+    ) {
+        let target_plan = self
+            .targets
+            .entry(target)
+            .or_insert_with(|| TargetPlan::new(target));
+        target_plan.add_extension(Box::new(closure));
+    }
+
+    fn build(self) -> Result<GraphBuilder<B, Resources>, Error> {
+        let mut ctx = PlanContext {
+            targets: self.targets,
+            passes: Default::default(),
+            outputs: Default::default(),
+            graph_builder: GraphBuilder::new(),
+        };
+
+        for target in self.roots {
+            // prevent evaluation of roots that were accessed recursively
+            if !ctx.passes.contains_key(&target) {
+                ctx.evaluate_target(target)?;
+            }
+        }
+
+        Ok(ctx.graph_builder)
+    }
+}
+
+#[derive(Debug)]
+enum EvaluationState {
+    Evaluating,
+    Built(NodeId),
+}
+
+impl EvaluationState {
+    fn node(&self) -> Option<NodeId> {
+        match self {
+            EvaluationState::Built(node) => Some(*node),
+            _ => None,
+        }
+    }
+
+    fn is_built(&self) -> bool {
+        self.node().is_some()
+    }
+}
+
+#[derive(Debug)]
+struct PlanContext<B: Backend> {
+    targets: HashMap<Target, TargetPlan<B>>,
+    passes: HashMap<Target, EvaluationState>,
+    outputs: HashMap<TargetImage, ImageId>,
+    graph_builder: GraphBuilder<B, Resources>,
+}
+
+impl<B: Backend> PlanContext<B> {
+    pub fn mark_evaluating(&mut self, target: Target) -> Result<(), Error> {
+        match self.passes.get(&target) {
+            None => {},
+            Some(EvaluationState::Evaluating) => return Err(format_err!("Trying to evaluate {:?} render plan that is already evaluating. Circular dependency detected.", target)),
+            // this case is not a soft runtime error, as this should never be allowed by the API.
+            Some(EvaluationState::Built(_)) => panic!("Trying to reevaluate a render plan for {:?}.", target),
+        };
+        self.passes.insert(target, EvaluationState::Evaluating);
+        Ok(())
+    }
+
+    fn evaluate_target(&mut self, target: Target) -> Result<(), Error> {
+        let target = self.targets.remove(&target);
+        target.map(|pass| pass.evaluate(self)).transpose()?;
+        Ok(())
+    }
+
+    fn get_pass_node(&self, target: Target) -> Option<NodeId> {
+        self.passes.get(&target).and_then(|p| p.node())
+    }
+
+    fn submit_pass(
+        &mut self,
+        target: Target,
+        pass: RenderPassNodeBuilder<B, Resources>,
+    ) -> Result<(), Error> {
+        match self.passes.get(&target) {
+            None => {}
+            Some(EvaluationState::Evaluating) => {}
+            // this case is not a soft runtime error, as this should never be allowed by the API.
+            Some(EvaluationState::Built(_)) => panic!(
+                "Trying to resubmit a render pass for {:?}. This is a RenderingBundle bug.",
+                target
+            ),
+        };
+        let node = self.graph_builder.add_node(pass);
+        self.passes.insert(target, EvaluationState::Built(node));
+        Ok(())
+    }
+
+    fn get_image(&mut self, image_ref: TargetImage) -> Result<ImageId, Error> {
+        self.try_get_image(image_ref)?.ok_or_else(|| {
+            format_err!(
+                "Output image {:?} is not registered by the target.",
+                image_ref
+            )
+        })
+    }
+
+    fn try_get_image(&mut self, image_ref: TargetImage) -> Result<Option<ImageId>, Error> {
+        if !self
+            .passes
+            .get(&image_ref.target())
+            .map_or(false, |t| t.is_built())
+        {
+            self.evaluate_target(image_ref.target())?;
+        }
+        Ok(self.outputs.get(&image_ref).cloned())
+    }
+
+    pub fn register_output(&mut self, output: TargetImage, image: ImageId) -> Result<(), Error> {
+        if self.outputs.contains_key(&output) {
+            return Err(format_err!(
+                "Trying to register already registered output image {:?}",
+                output
+            ));
+        }
+        self.outputs.insert(output, image);
+        Ok(())
+    }
+
+    pub fn create_image(&mut self, options: ImageOptions) -> ImageId {
+        self.graph_builder
+            .create_image(options.kind, options.levels, options.format, options.clear)
+    }
+}
+
+/// A planning context focused on specific render target.
+#[derive(Debug)]
+pub struct TargetPlanContext<'a, B: Backend> {
+    plan_context: &'a mut PlanContext<B>,
+    key: Target,
+    colors: usize,
+    depth: bool,
+    actions: Vec<(i32, RenedrableAction<B>)>,
+    deps: Vec<Target>,
+}
+
+impl<'a, B: Backend> TargetPlanContext<'a, B> {
+    /// Add new action to render target in defined order.
+    pub fn add(&mut self, order: impl Into<i32>, action: impl IntoAction<B>) -> Result<(), Error> {
+        let action = action.into();
+
+        if self.colors != action.colors() {
+            return Err(format_err!(
+                "Trying to add render action with {} colors to target {:?} that expects {} colors",
+                action.colors(),
+                self.key,
+                self.colors,
+            ));
+        }
+        if self.depth != action.depth() {
+            return Err(format_err!(
+                "Trying to add render action with depth '{}' to target {:?} that expects depth '{}'",
+                action.depth(),
+                self.key,
+                self.depth,
+            ));
+        }
+
+        self.actions.push((order.into(), action));
+        Ok(())
+    }
+
+    /// Get number of color outputs of current render target.
+    pub fn colors(&self) -> usize {
+        self.colors
+    }
+
+    /// Check if current render target has a depth output.
+    pub fn depth(&self) -> bool {
+        self.depth
+    }
+
+    /// Retreive an image produced by other render target.
+    ///
+    /// Results in an error if such image doesn't exist or
+    /// retreiving it would result in a dependency cycle.
+    pub fn get_image(&mut self, image: TargetImage) -> Result<ImageId, Error> {
+        self.plan_context.get_image(image).map(|i| {
+            self.add_dep(image.target());
+            i
+        })
+    }
+    /// Retreive an image produced by other render target.
+    /// Returns `None` when such image isn't registered.
+    ///
+    /// Results in an error if retreiving it would result in a dependency cycle.
+    pub fn try_get_image(&mut self, image: TargetImage) -> Result<Option<ImageId>, Error> {
+        self.plan_context.try_get_image(image).map(|i| {
+            i.map(|i| {
+                self.add_dep(image.target());
+                i
+            })
+        })
+    }
+
+    /// Add explicit dependency on another target.
+    pub fn add_dep(&mut self, target: Target) {
+        if !self.deps.contains(&target) {
+            self.deps.push(target);
+        }
+    }
+}
+
+/// An identifier for output image of specific render target.
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+pub enum TargetImage {
+    /// Select target color output with given index.
+    Color(Target, usize),
+    /// Select target depth output.
+    Depth(Target),
+}
+
+impl TargetImage {
+    /// Retreive target identifier for this image
+    pub fn target(&self) -> Target {
+        match self {
+            TargetImage::Color(target, _) => *target,
+            TargetImage::Depth(target) => *target,
+        }
+    }
+}
+
+/// Set of options required to create an image node in render graph.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ImageOptions {
+    /// Image kind and size
+    pub kind: hal::image::Kind,
+    /// Number of mipmap levels
+    pub levels: hal::image::Level,
+    /// Image format
+    pub format: hal::format::Format,
+    /// Clear operation performed once per frame.
+    pub clear: Option<hal::command::ClearValue>,
+}
+
+/// Definition of render target color output image.
+#[derive(Debug)]
+pub enum OutputColor<B: Backend> {
+    /// Render to image with specified options
+    Image(ImageOptions),
+    /// Render directly to a window surface.
+    Surface(Surface<B>, Option<hal::command::ClearValue>),
+}
+
+/// Definition for set of outputs for a given render target.
+#[derive(Debug)]
+pub struct TargetPlanOutputs<B: Backend> {
+    /// List of target color outputs with options
+    pub colors: Vec<OutputColor<B>>,
+    /// Settings for optional depth output
+    pub depth: Option<ImageOptions>,
+}
+
+#[derive(derivative::Derivative)]
+#[derivative(Debug(bound = ""))]
+struct TargetPlan<B: Backend> {
+    key: Target,
+    #[derivative(Debug = "ignore")]
+    extensions: Vec<Box<dyn FnOnce(&mut TargetPlanContext<'_, B>) -> Result<(), Error> + 'static>>,
+    outputs: Option<TargetPlanOutputs<B>>,
+}
+
+impl<B: Backend> TargetPlan<B> {
+    fn new(key: Target) -> Self {
+        Self {
+            key,
+            extensions: vec![],
+            outputs: None,
+        }
+    }
+
+    fn set_outputs(&mut self, outputs: TargetPlanOutputs<B>) -> Result<(), Error> {
+        if self.outputs.is_some() {
+            return Err(format_err!("Target {:?} already defined.", self.key));
+        }
+        self.outputs.replace(outputs);
+        Ok(())
+    }
+
+    fn add_extension(
+        &mut self,
+        extension: Box<dyn FnOnce(&mut TargetPlanContext<'_, B>) -> Result<(), Error> + 'static>,
+    ) {
+        self.extensions.push(extension);
+    }
+
+    fn evaluate(self, ctx: &mut PlanContext<B>) -> Result<(), Error> {
+        if self.outputs.is_none() {
+            return Err(format_err!(
+                "Trying to evaluate not fully defined pass {:?}. Missing `define_pass` call.",
+                self.key
+            ));
+        }
+        let mut outputs = self.outputs.unwrap();
+
+        ctx.mark_evaluating(self.key)?;
+
+        let mut target_ctx = TargetPlanContext {
+            plan_context: ctx,
+            key: self.key,
+            actions: vec![],
+            colors: outputs.colors.len(),
+            depth: outputs.depth.is_some(),
+            deps: vec![],
+        };
+        
+        for extension in self.extensions {
+            extension(&mut target_ctx)?;
+        }
+
+        let TargetPlanContext {
+            mut actions,
+            deps,
+            ..
+        } = target_ctx;
+
+        let mut subpass = SubpassBuilder::new();
+        let mut pass = RenderPassNodeBuilder::new();
+
+        actions.sort_by_key(|a| a.0);
+        for action in actions.drain(..).map(|a| a.1) {
+            match action {
+                RenedrableAction::RenderGroup(group) => {
+                    subpass.add_dyn_group(group);
+                }
+            }
+        }
+
+        for (i, color) in outputs.colors.drain(..).enumerate() {
+            match color {
+                OutputColor::Surface(surface, clear) => {
+                    subpass.add_color_surface();
+                    pass.add_surface(surface, clear);
+                }
+                OutputColor::Image(opts) => {
+                    let node = ctx.create_image(opts);
+                    ctx.register_output(TargetImage::Color(self.key, i), node)?;
+                    subpass.add_color(node);
+                }
+            }
+        }
+
+        if let Some(opts) = outputs.depth {
+            let node = ctx.create_image(opts);
+            ctx.register_output(TargetImage::Depth(self.key), node)?;
+            subpass.set_depth_stencil(node);
+        }
+
+        for dep in deps {
+            if let Some(node) = ctx.get_pass_node(dep) {
+                subpass.add_dependency(node);
+            }
+        }
+
+        pass.add_subpass(subpass);
+        ctx.submit_pass(self.key, pass)?;
+        Ok(())
+    }
+}
+
+/// An action that represents a single transformation to the
+/// render graph, e.g. addition of single render group.
+///
+/// TODO: more actions needed for e.g. splitting pass into subpasses.
+#[derive(Debug)]
+pub enum RenedrableAction<B: Backend> {
+    /// Register single render group for evaluation during target rendering
+    RenderGroup(Box<dyn RenderGroupBuilder<B, Resources>>),
+}
+
+impl<B: Backend> RenedrableAction<B> {
+    fn colors(&self) -> usize {
+        match self {
+            RenedrableAction::RenderGroup(g) => g.colors(),
+        }
+    }
+
+    fn depth(&self) -> bool {
+        match self {
+            RenedrableAction::RenderGroup(g) => g.depth(),
+        }
+    }
+}
+
+/// Trait for easy conversion of various types into `RenedrableAction` shell.
+pub trait IntoAction<B: Backend> {
+    /// Convert to `RenedrableAction`.
+    fn into(self) -> RenedrableAction<B>;
+}
+
+impl<B: Backend, G: RenderGroupBuilder<B, Resources> + 'static> IntoAction<B> for G {
+    fn into(self) -> RenedrableAction<B> {
+        RenedrableAction::RenderGroup(Box::new(self))
+    }
+}
+
+/// Collection of predefined constants for action ordering in the targets.
+/// Two actions with the same order will be applied in their insertion order.
+/// The list is provided mostly as a comparison point. If you can't find the exact
+/// ordering you need, provide custom `i32` that fits into the right place.
+///
+/// Crates that provide custom render plugins using their own orders should export
+/// similar enum with ordering they have added.
+#[derive(Debug)]
+#[repr(i32)]
+pub enum RenderOrder {
+    /// register before all opaques
+    BeforeOpaque = 90,
+    /// register for rendering opaque objects
+    Opaque = 100,
+    /// register after rendering opaque objects
+    AfterOpaque = 110,
+    /// register before rendering transparent objects
+    BeforeTransparent = 190,
+    /// register for rendering transparent objects
+    Transparent = 200,
+    /// register after rendering transparent objects
+    AfterTransparent = 210,
+    /// register as post effect in linear color space
+    LinearPostEffects = 300,
+    /// register as tonemapping step
+    ToneMap = 400,
+    /// register as post effect in display color space
+    DisplayPostEffects = 500,
+}
+
+impl Into<i32> for RenderOrder {
+    fn into(self) -> i32 {
+        self as i32
+    }
+}
+
+/// An identifier for render target used in render plugins.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Target {
+    /// Default render target for most operations.
+    /// Usually the one that gets presented to the window.
+    Main,
+    /// Custom render target identifier.
+    Custom(&'static str),
+}
+
+impl Default for Target {
+    fn default() -> Target {
+        Target::Main
+    }
+}
