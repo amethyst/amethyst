@@ -199,7 +199,7 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
     }
 
     /// Attempts to insert a new material to this collection.
-    #[allow(clippy::block_in_if_condition_stmt)]
+
     fn try_insert(
         &mut self,
         factory: &Factory<B>,
@@ -217,11 +217,12 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
 
         let mat = mat_storage.get(handle)?;
 
-        if T::textures(mat).any(|t| {
+        let has_tex = T::textures(mat).any(|t| {
             !tex_storage
                 .get(t)
                 .map_or(false, |tex| B::unwrap_texture(tex).is_some())
-        }) {
+        });
+        if has_tex {
             return None;
         }
 

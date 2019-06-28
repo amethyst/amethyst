@@ -269,7 +269,7 @@ Finally, add the `UiBundle` after the `InputBundle`:
 # fn main() -> Result<(), amethyst::Error>{
 # let display_config_path = "";
 # struct Pong;
-# let game_data = GameDataBuilder::<f32>::default()
+# let game_data = GameDataBuilder::default()
 .with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
 # ;
 # 

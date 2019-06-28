@@ -69,8 +69,8 @@ pub fn get_mouse_button(event: &Event) -> Option<(MouseButton, ElementState)> {
 /// provided `MouseButton`.
 pub fn is_mouse_button_down(event: &Event, button: MouseButton) -> bool {
     if let Some((pressed_button, state)) = get_mouse_button(event) {
-        return pressed_button == button && state == ElementState::Pressed;
+        pressed_button == button && state == ElementState::Pressed
     } else {
-        return false;
+        false
     }
 }

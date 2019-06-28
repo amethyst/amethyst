@@ -229,16 +229,12 @@ where
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
-        let run_result = {
-            // Acquire a lock due to memory access issues when using Rendy:
-            //
-            // See: <https://github.com/amethyst/rendy/issues/151>
-            let _guard = RENDY_MEMORY_MUTEX.lock().unwrap();
+        // Acquire a lock due to memory access issues when using Rendy:
+        //
+        // See: <https://github.com/amethyst/rendy/issues/151>
+        let _guard = RENDY_MEMORY_MUTEX.lock().unwrap();
 
-            self.run()
-        };
-
-        run_result
+        self.run()
     }
 
     fn box_any_to_error(error: Box<dyn Any + Send>) -> Error {

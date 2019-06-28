@@ -42,7 +42,7 @@
     rust_2018_compatibility
 )]
 #![warn(clippy::all)]
-#![allow(unused_variables, dead_code, clippy::new_without_default)]
+#![allow(unused_variables, dead_code)]
 
 #[macro_use]
 extern crate amethyst_derive;

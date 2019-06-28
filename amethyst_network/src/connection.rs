@@ -21,7 +21,7 @@ use crate::NetEvent;
 /// - Read the queued data from the user for transmission.
 ///
 /// # Remark
-/// Note that this type does not perform any reading or writing, this is done only withing systems.
+/// Note that this type does not perform any reading or writing, this is done only within systems.
 /// This type acts as a container for to send and received data.
 #[derive(Serialize)]
 #[serde(bound = "")]
