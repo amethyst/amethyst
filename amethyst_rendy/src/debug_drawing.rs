@@ -97,8 +97,9 @@ impl DebugLinesComponent {
     }
 
     /// Adds multiple lines that form a rectangle to be rendered by giving a Z coordinate, a min and a max position.
+    ///
     /// This rectangle is aligned to the XY plane.
-    pub fn add_rectangle(&mut self, min: Point2<f32>, max: Point2<f32>, z: f32, color: Srgba) {
+    pub fn add_rectangle_2d(&mut self, min: Point2<f32>, max: Point2<f32>, z: f32, color: Srgba) {
         self.add_line(
             [min[0], min[1], z].into(),
             [max[0], min[1], z].into(),
@@ -150,9 +151,11 @@ impl DebugLinesComponent {
     }
 
     /// Adds multiple lines that form a box to be rendered by giving a min and a max position.
+    ///
+    /// This box is an axis aligned box.
     pub fn add_box(&mut self, min: Point3<f32>, max: Point3<f32>, color: Srgba) {
-        self.add_rectangle(min.xy(), max.xy(), min[2], color);
-        self.add_rectangle(min.xy(), max.xy(), max[2], color);
+        self.add_rectangle_2d(min.xy(), max.xy(), min[2], color);
+        self.add_rectangle_2d(min.xy(), max.xy(), max[2], color);
         self.add_line(min, [min[0], min[1], max[2]].into(), color);
         self.add_line(
             [max[0], min[1], min[2]].into(),
@@ -212,15 +215,16 @@ impl DebugLinesComponent {
         self.add_line(bottom_right_front, bottom_right_back, color);
     }
 
-    /// Adds multiple lines that form a circle to be rendered by giving a center and a radius.
+    /// Adds multiple lines that form a circle to be rendered by giving a center, a radius and an amount of points.
+    ///
     /// This circle is aligned to the XY plane.
-    pub fn add_circle(&mut self, center: Point3<f32>, radius: f32, points: u32, color: Srgba) {
+    pub fn add_circle_2d(&mut self, center: Point3<f32>, radius: f32, points: u32, color: Srgba) {
         let mut prev = None;
 
         for i in 0..=points {
             let a = std::f32::consts::PI * 2.0 / (points as f32) * (i as f32);
-            let x = a.cos();
-            let y = a.sin();
+            let x = radius * a.cos();
+            let y = radius * a.sin();
             let point = [center[0] + x, center[1] + y, center[2]].into();
 
             if let Some(prev) = prev {
@@ -231,7 +235,7 @@ impl DebugLinesComponent {
         }
     }
 
-    /// Adds multiple lines that form a rotated circle to be rendered by giving a rotation, a center and a radius.
+    /// Adds multiple lines that form a rotated circle to be rendered by giving a center, a radius, an amount of points and a rotation.
     pub fn add_rotated_circle(
         &mut self,
         center: Point3<f32>,
@@ -244,8 +248,8 @@ impl DebugLinesComponent {
 
         for i in 0..=points {
             let a = std::f32::consts::PI * 2.0 / (points as f32) * (i as f32);
-            let x = a.cos();
-            let y = a.sin();
+            let x = radius * a.cos();
+            let y = radius * a.sin();
             let point = Vector3::new(x, y, center[2]);
             let point = Point3::from(rotation * point);
 
@@ -257,7 +261,7 @@ impl DebugLinesComponent {
         }
     }
 
-    /// Adds multiple lines that form a sphere to be rendered by giving a center, a radius, the amount of vertical points and the amount of horizontal points.
+    /// Adds multiple lines that form a sphere to be rendered by giving a center, a radius, an amount of vertical points and an amount of horizontal points.
     pub fn add_sphere(
         &mut self,
         center: Point3<f32>,
@@ -291,6 +295,72 @@ impl DebugLinesComponent {
             }
 
             prev_row = new_prev_row;
+        }
+    }
+
+    /// Adds multiple lines that form a cylinder to be rendered by giving a center, a radius, a height and an amount of points.
+    ///
+    /// This cylinder is aligned to the y axis.
+    pub fn add_cylinder(
+        &mut self,
+        center: Point3<f32>,
+        radius: f32,
+        height: f32,
+        points: u32,
+        color: Srgba,
+    ) {
+        let mut prev: Option<(Point3<f32>, Point3<f32>)> = None;
+
+        for i in 0..=points {
+            let a = std::f32::consts::PI * 2.0 / (points as f32) * (i as f32);
+            let x = radius * a.cos();
+            let z = radius * a.sin();
+            let point1: Point3<f32> =
+                [center[0] + x, center[1] - height / 2.0, center[2] + z].into();
+            let point2: Point3<f32> = [point1[0], point1[1] + height, point1[2]].into();
+
+            self.add_line(point1, point2, color);
+
+            if let Some(prev) = prev {
+                self.add_line(prev.0, point1, color);
+                self.add_line(prev.1, point2, color);
+            }
+
+            prev = Some((point1, point2));
+        }
+    }
+
+    /// Adds multiple lines that form a rotated cylinder to be rendered by giving a center, a radius, a height, an amount of points and a rotation.
+    pub fn add_rotated_cylinder(
+        &mut self,
+        center: Point3<f32>,
+        radius: f32,
+        height: f32,
+        points: u32,
+        rotation: UnitQuaternion<f32>,
+        color: Srgba,
+    ) {
+        let mut prev: Option<(Point3<f32>, Point3<f32>)> = None;
+        let center = Vector3::new(center[0], center[1], center[2]);
+
+        for i in 0..=points {
+            let a = std::f32::consts::PI * 2.0 / (points as f32) * (i as f32);
+            let x = radius * a.cos();
+            let z = radius * a.sin();
+            let point1: Point3<f32> =
+                [center[0] + x, center[1] - height / 2.0, center[2] + z].into();
+            let point2: Point3<f32> = [point1[0], point1[1] + height, point1[2]].into();
+            let point1 = rotation * (point1 - center) + center;
+            let point2 = rotation * (point2 - center) + center;
+
+            self.add_line(point1, point2, color);
+
+            if let Some(prev) = prev {
+                self.add_line(prev.0, point1, color);
+                self.add_line(prev.1, point2, color);
+            }
+
+            prev = Some((point1, point2));
         }
     }
 
@@ -344,13 +414,14 @@ impl DebugLines {
         self.inner.add_line(start, end, color);
     }
 
-    /// Submits multiple lines that form a rectangle to be rendered by giving a z coordinate, a min and a max position.
+    /// Submits multiple lines that form a rectangle to be rendered by giving a Z coordinate, a min and a max position.
+    ///
     /// This rectangle is aligned to the XY plane.
     pub fn draw_rectangle(&mut self, min: Point2<f32>, max: Point2<f32>, z: f32, color: Srgba) {
-        self.inner.add_rectangle(min, max, z, color);
+        self.inner.add_rectangle_2d(min, max, z, color);
     }
 
-    /// Submits multiple lines that form a rotated rectangle to be rendered by giving a z coordinate, a rotation, a min and a max position.
+    /// Submits multiple lines that form a rotated rectangle to be rendered by giving a Z coordinate, a rotation, a min and a max position.
     pub fn draw_rotated_rectangle(
         &mut self,
         min: Point2<f32>,
@@ -364,11 +435,15 @@ impl DebugLines {
     }
 
     /// Submits multiple lines that form a box to be rendered by giving a min and a max position.
+    ///
+    /// This box is an axis aligned box.
     pub fn draw_box(&mut self, min: Point3<f32>, max: Point3<f32>, color: Srgba) {
         self.inner.add_box(min, max, color);
     }
 
     /// Submits multiple lines that form a rotated box to be rendered by giving a rotation, a min and a max position.
+    ///
+    /// This box is an axis aligned box.
     pub fn draw_rotated_box(
         &mut self,
         min: Point3<f32>,
@@ -379,12 +454,14 @@ impl DebugLines {
         self.inner.add_rotated_box(min, max, rotation, color);
     }
 
-    /// Submits multiple lines that form a circle to be rendered by giving a center and a radius.
+    /// Submits multiple lines that form a circle to be rendered by giving a center, a radius and an amount of points.
+    ///
+    /// This circle is aligned to the XY plane.
     pub fn draw_circle(&mut self, center: Point3<f32>, radius: f32, points: u32, color: Srgba) {
-        self.inner.add_circle(center, radius, points, color);
+        self.inner.add_circle_2d(center, radius, points, color);
     }
 
-    /// Submits multiple lines that form a rotated circle to be rendered by giving a rotation, a center and a radius.
+    /// Submits multiple lines that form a rotated circle to be rendered by giving a center, a radius, an amount of points and a rotation.
     pub fn draw_rotated_circle(
         &mut self,
         center: Point3<f32>,
@@ -397,7 +474,7 @@ impl DebugLines {
             .add_rotated_circle(center, radius, points, rotation, color);
     }
 
-    /// Submits multiple lines that form a sphere to be rendered by giving a center, a radius, the amount of vertical points and the amount of horizontal points.
+    /// Submits multiple lines that form a sphere to be rendered by giving a center, a radius, an amount of vertical points and an amount of horizontal points.
     pub fn draw_sphere(
         &mut self,
         center: Point3<f32>,
@@ -408,6 +485,35 @@ impl DebugLines {
     ) {
         self.inner
             .add_sphere(center, radius, horizontal_points, vertical_points, color);
+    }
+
+    /// Submits multiple lines that form a cylinder to be rendered by giving a center, a radius, a height and an amount of points.
+    ///
+    /// This cylinder is aligned to the y axis.
+    pub fn draw_cylinder(
+        &mut self,
+        center: Point3<f32>,
+        radius: f32,
+        height: f32,
+        points: u32,
+        color: Srgba,
+    ) {
+        self.inner
+            .add_cylinder(center, radius, height, points, color);
+    }
+
+    /// Adds multiple lines that form a rotated cylinder to be rendered by giving a center, a radius, a height, an amount of points and a rotation.
+    pub fn draw_rotated_cylinder(
+        &mut self,
+        center: Point3<f32>,
+        radius: f32,
+        height: f32,
+        points: u32,
+        rotation: UnitQuaternion<f32>,
+        color: Srgba,
+    ) {
+        self.inner
+            .add_rotated_cylinder(center, radius, height, points, rotation, color);
     }
 
     pub(crate) fn drain<'a>(&'a mut self) -> impl Iterator<Item = DebugLine> + 'a {
