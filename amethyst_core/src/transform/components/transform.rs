@@ -685,12 +685,12 @@ impl From<TransformValues> for Transform {
     }
 }
 
-impl Into<TransformValues> for Transform {
-    fn into(self) -> TransformValues {
+impl From<Transform> for TransformValues {
+    fn from(transform: Transform) -> TransformValues {
         TransformValues {
-            translation: self.isometry.translation.vector.into(),
-            rotation: self.isometry.rotation.as_ref().coords.into(),
-            scale: self.scale.into(),
+            translation: transform.isometry.translation.vector.into(),
+            rotation: transform.isometry.rotation.as_ref().coords.into(),
+            scale: transform.scale.into()
         }
     }
 }
