@@ -2,7 +2,7 @@
 use crate::pod::IntoPod;
 use amethyst_core::{
     ecs::{Component, DenseVecStorage},
-    math::{Point2, Point3, Rotation3, UnitQuaternion, Vector2, Vector3},
+    math::{Point2, Point3, UnitQuaternion, Vector2, Vector3},
 };
 use palette::Srgba;
 use rendy::mesh::{AsVertex, Color, PosColor, VertexFormat};
@@ -96,8 +96,9 @@ impl DebugLinesComponent {
         self.lines.push(vertex);
     }
 
-    /// Adds multiple lines that form a square to be rendered by giving a z coordinate, a min and a max position.
-    pub fn add_square(&mut self, min: Point2<f32>, max: Point2<f32>, z: f32, color: Srgba) {
+    /// Adds multiple lines that form a rectangle to be rendered by giving a Z coordinate, a min and a max position.
+    /// This rectangle is aligned to the XY plane.
+    pub fn add_rectangle(&mut self, min: Point2<f32>, max: Point2<f32>, z: f32, color: Srgba) {
         self.add_line(
             [min[0], min[1], z].into(),
             [max[0], min[1], z].into(),
@@ -120,17 +121,15 @@ impl DebugLinesComponent {
         );
     }
 
-    /// Adds multiple lines that form a rotated square to be rendered by giving a z coordinate, a rotation, a min and a max position.
-    pub fn add_rotated_square(
+    /// Adds multiple lines that form a rotated rectangle to be rendered by giving a Z coordinate, a rotation, a min and a max position.
+    pub fn add_rotated_rectangle(
         &mut self,
         min: Point2<f32>,
         max: Point2<f32>,
         z: f32,
-        angles: Vector3<f32>,
+        rotation: UnitQuaternion<f32>,
         color: Srgba,
     ) {
-        let rotation = UnitQuaternion::from_rotation_matrix(&Rotation3::new(angles));
-
         let center = (min + Vector2::new(max[0], max[1])) / 2.0;
         let center = Vector3::new(center[0], center[1], z);
 
@@ -152,8 +151,8 @@ impl DebugLinesComponent {
 
     /// Adds multiple lines that form a box to be rendered by giving a min and a max position.
     pub fn add_box(&mut self, min: Point3<f32>, max: Point3<f32>, color: Srgba) {
-        self.add_square(min.xy(), max.xy(), min[2], color);
-        self.add_square(min.xy(), max.xy(), max[2], color);
+        self.add_rectangle(min.xy(), max.xy(), min[2], color);
+        self.add_rectangle(min.xy(), max.xy(), max[2], color);
         self.add_line(min, [min[0], min[1], max[2]].into(), color);
         self.add_line(
             [max[0], min[1], min[2]].into(),
@@ -173,11 +172,9 @@ impl DebugLinesComponent {
         &mut self,
         min: Point3<f32>,
         max: Point3<f32>,
-        angles: Vector3<f32>,
+        rotation: UnitQuaternion<f32>,
         color: Srgba,
     ) {
-        let rotation = UnitQuaternion::from_rotation_matrix(&Rotation3::new(angles));
-
         let center = (min + Vector3::from([max[0], max[1], max[2]])) / 2.0;
         let center = Vector3::new(center[0], center[1], center[2]);
 
@@ -216,11 +213,12 @@ impl DebugLinesComponent {
     }
 
     /// Adds multiple lines that form a circle to be rendered by giving a center and a radius.
-    pub fn add_circle(&mut self, center: Point3<f32>, radius: f32, points: i16, color: Srgba) {
+    /// This circle is aligned to the XY plane.
+    pub fn add_circle(&mut self, center: Point3<f32>, radius: f32, points: u32, color: Srgba) {
         let mut prev = None;
 
         for i in 0..=points {
-            let a = std::f32::consts::PI * 2.0 / f32::from(points) * f32::from(i);
+            let a = std::f32::consts::PI * 2.0 / (points as f32) * (i as f32);
             let x = a.cos();
             let y = a.sin();
             let point = [center[0] + x, center[1] + y, center[2]].into();
@@ -238,15 +236,14 @@ impl DebugLinesComponent {
         &mut self,
         center: Point3<f32>,
         radius: f32,
-        points: i16,
-        angles: Vector3<f32>,
+        points: u32,
+        rotation: UnitQuaternion<f32>,
         color: Srgba,
     ) {
         let mut prev = None;
-        let rotation = UnitQuaternion::from_rotation_matrix(&Rotation3::new(angles));
 
         for i in 0..=points {
-            let a = std::f32::consts::PI * 2.0 / f32::from(points) * f32::from(i);
+            let a = std::f32::consts::PI * 2.0 / (points as f32) * (i as f32);
             let x = a.cos();
             let y = a.sin();
             let point = Vector3::new(x, y, center[2]);
@@ -265,18 +262,18 @@ impl DebugLinesComponent {
         &mut self,
         center: Point3<f32>,
         radius: f32,
-        horizontal_points: i16,
-        vertical_points: i16,
+        horizontal_points: u32,
+        vertical_points: u32,
         color: Srgba,
     ) {
         let mut prev_row = Vec::new();
 
         for i in 0..=horizontal_points {
-            let lon = std::f32::consts::PI / f32::from(horizontal_points) * f32::from(i);
+            let lon = std::f32::consts::PI / (horizontal_points as f32) * (i as f32);
             let mut new_prev_row = Vec::new();
 
             for j in 0..=vertical_points {
-                let lat = std::f32::consts::PI * 2.0 / f32::from(vertical_points) * f32::from(j);
+                let lat = std::f32::consts::PI * 2.0 / (vertical_points as f32) * (j as f32);
                 let x = radius * lon.sin() * lat.cos();
                 let y = radius * lon.sin() * lat.sin();
                 let z = radius * lon.cos();
@@ -347,21 +344,23 @@ impl DebugLines {
         self.inner.add_line(start, end, color);
     }
 
-    /// Submits multiple lines that form a square to be rendered by giving a z coordinate, a min and a max position.
-    pub fn draw_square(&mut self, min: Point2<f32>, max: Point2<f32>, z: f32, color: Srgba) {
-        self.inner.add_square(min, max, z, color);
+    /// Submits multiple lines that form a rectangle to be rendered by giving a z coordinate, a min and a max position.
+    /// This rectangle is aligned to the XY plane.
+    pub fn draw_rectangle(&mut self, min: Point2<f32>, max: Point2<f32>, z: f32, color: Srgba) {
+        self.inner.add_rectangle(min, max, z, color);
     }
 
-    /// Submits multiple lines that form a rotated square to be rendered by giving a z coordinate, a rotation, a min and a max position.
-    pub fn draw_rotated_square(
+    /// Submits multiple lines that form a rotated rectangle to be rendered by giving a z coordinate, a rotation, a min and a max position.
+    pub fn draw_rotated_rectangle(
         &mut self,
         min: Point2<f32>,
         max: Point2<f32>,
         z: f32,
-        angles: Vector3<f32>,
+        rotation: UnitQuaternion<f32>,
         color: Srgba,
     ) {
-        self.inner.add_rotated_square(min, max, z, angles, color);
+        self.inner
+            .add_rotated_rectangle(min, max, z, rotation, color);
     }
 
     /// Submits multiple lines that form a box to be rendered by giving a min and a max position.
@@ -374,14 +373,14 @@ impl DebugLines {
         &mut self,
         min: Point3<f32>,
         max: Point3<f32>,
-        angles: Vector3<f32>,
+        rotation: UnitQuaternion<f32>,
         color: Srgba,
     ) {
-        self.inner.add_rotated_box(min, max, angles, color);
+        self.inner.add_rotated_box(min, max, rotation, color);
     }
 
     /// Submits multiple lines that form a circle to be rendered by giving a center and a radius.
-    pub fn draw_circle(&mut self, center: Point3<f32>, radius: f32, points: i16, color: Srgba) {
+    pub fn draw_circle(&mut self, center: Point3<f32>, radius: f32, points: u32, color: Srgba) {
         self.inner.add_circle(center, radius, points, color);
     }
 
@@ -390,12 +389,12 @@ impl DebugLines {
         &mut self,
         center: Point3<f32>,
         radius: f32,
-        points: i16,
-        angles: Vector3<f32>,
+        points: u32,
+        rotation: UnitQuaternion<f32>,
         color: Srgba,
     ) {
         self.inner
-            .add_rotated_circle(center, radius, points, angles, color);
+            .add_rotated_circle(center, radius, points, rotation, color);
     }
 
     /// Submits multiple lines that form a sphere to be rendered by giving a center, a radius, the amount of vertical points and the amount of horizontal points.
@@ -403,8 +402,8 @@ impl DebugLines {
         &mut self,
         center: Point3<f32>,
         radius: f32,
-        horizontal_points: i16,
-        vertical_points: i16,
+        horizontal_points: u32,
+        vertical_points: u32,
         color: Srgba,
     ) {
         self.inner
