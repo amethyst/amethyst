@@ -360,6 +360,6 @@ mod tests {
     }
 
     fn test_payload() -> Vec<u8> {
-        return "test".as_bytes().to_vec();
+        "test".as_bytes().to_vec()
     }
 }

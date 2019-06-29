@@ -219,6 +219,6 @@ mod tests {
     }
 
     fn test_connection() -> NetConnection<String> {
-        return NetConnection::new("127.0.0.1:0".parse().unwrap());
+        NetConnection::new("127.0.0.1:0".parse().unwrap())
     }
 }
