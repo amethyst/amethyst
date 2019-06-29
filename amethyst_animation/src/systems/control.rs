@@ -478,13 +478,10 @@ where
         let node_entity = hierarchy.nodes.get(node_index).expect(
             "Unreachable: Existence of all nodes are checked in validation of hierarchy above",
         );
-        let component = rest_states
+        if let Some(component) = rest_states
             .get(*node_entity)
             .map(RestState::state)
-            .or_else(|| targets.get(*node_entity))
-            .expect(
-                "Unreachable: Existence of all nodes are checked in validation of hierarchy above",
-            );
+            .or_else(|| targets.get(*node_entity)) {
         let sampler_control = SamplerControl::<T> {
             control_id: control.id,
             channel: channel.clone(),
@@ -511,6 +508,10 @@ where
                 );
             }
         }
+            } else {
+                error!("Failed to acquire animated component. Is the component you are trying to animate present on the target entity: {:?}", node_entity);
+                return false;
+            }
     }
     true
 }
