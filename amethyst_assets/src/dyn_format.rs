@@ -1,4 +1,4 @@
-//! Dynamic Box<dyn Format<T>> serialization.
+//! Dynamic Box<dyn SerializableFormat<T>> serialization.
 //!
 //! This module implements serializers, deserializers and all the required
 //! machinery to allow and loading asset formats from boxed trait types.
@@ -6,11 +6,11 @@
 //! of asset data types and their formats, and embedding the format name into
 //! the serialization format itself.
 
-use crate::Format;
+use crate::SerializableFormat;
 use serde::{
     de::{self, DeserializeSeed, Expected, SeqAccess, Visitor},
-    ser::SerializeTupleStruct,
-    Deserialize, Deserializer, Serialize, Serializer,
+    ser::{Serialize, SerializeTupleStruct, Serializer},
+    Deserialize, Deserializer,
 };
 use std::{collections::BTreeMap, marker::PhantomData};
 
@@ -34,6 +34,8 @@ use std::{collections::BTreeMap, marker::PhantomData};
 ///         Ok(AudioData(bytes))
 ///     }
 /// }
+
+/// impl SerializableFormat<AudioData> for WavFormat {}
 /// ```
 pub trait FormatRegisteredData: 'static {
     // Used by deserialization. This is a private API.
@@ -42,10 +44,10 @@ pub trait FormatRegisteredData: 'static {
     #[doc(hidden)]
     fn get_registration(
         name: &'static str,
-        deserializer: DeserializeFn<dyn Format<Self>>,
+        deserializer: DeserializeFn<dyn SerializableFormat<Self>>,
     ) -> Self::Registration;
     #[doc(hidden)]
-    fn registry() -> &'static Registry<dyn Format<Self>>;
+    fn registry() -> &'static Registry<dyn SerializableFormat<Self>>;
 }
 
 // Not public API. Used by macros.
@@ -110,10 +112,10 @@ impl<'de, T: ?Sized> DeserializeSeed<'de> for FnApply<T> {
 struct FormatVisitor<D: FormatRegisteredData>(PhantomData<D>);
 
 impl<'de, D: FormatRegisteredData> Visitor<'de> for FormatVisitor<D> {
-    type Value = Box<dyn Format<D>>;
+    type Value = Box<dyn SerializableFormat<D>>;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(formatter, "dyn Format")
+        write!(formatter, "dyn SerializableFormat")
     }
 
     fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
@@ -135,16 +137,30 @@ impl<'de, D: FormatRegisteredData> Visitor<'de> for FormatVisitor<D> {
     }
 }
 
-impl<D: FormatRegisteredData> Serialize for dyn Format<D> {
+impl<D: FormatRegisteredData> Serialize for dyn SerializableFormat<D> {
     fn serialize<S: Serializer>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> {
         let mut ser = serializer.serialize_tuple_struct("Format", 2)?;
         ser.serialize_field(self.name())?;
-        ser.serialize_field(self)?;
+        ser.serialize_field(&SerializableFormatWrapper(self))?;
         ser.end()
     }
 }
 
-impl<'de, D: FormatRegisteredData> Deserialize<'de> for Box<dyn Format<D>> {
+struct SerializableFormatWrapper<'a, T: ?Sized>(pub &'a T);
+
+impl<'a, T> Serialize for SerializableFormatWrapper<'a, T>
+where
+    T: ?Sized + erased_serde::Serialize + 'a,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        erased_serde::serialize(self.0, serializer)
+    }
+}
+
+impl<'de, D: FormatRegisteredData> Deserialize<'de> for Box<dyn SerializableFormat<D>> {
     fn deserialize<DE: Deserializer<'de>>(
         deserializer: DE,
     ) -> std::result::Result<Self, DE::Error> {
@@ -152,7 +168,7 @@ impl<'de, D: FormatRegisteredData> Deserialize<'de> for Box<dyn Format<D>> {
     }
 }
 
-impl<D: FormatRegisteredData> dyn Format<D> {
+impl<D: FormatRegisteredData> dyn SerializableFormat<D> {
     // This code is called by `register_format` macro. Considered a private api otherwise.
     #[doc(hidden)]
     pub fn format_register(
@@ -171,6 +187,7 @@ impl<D: FormatRegisteredData> dyn Format<D> {
 macro_rules! register_format_type {
     ($($asset_data:ty),*) => {
         $(
+            #[allow(non_upper_case_globals)]
             const _register_format_type_impl: () = {
                 $crate::inventory::collect!(AssetFormatRegistration);
 
@@ -178,21 +195,21 @@ macro_rules! register_format_type {
                 #[allow(unused)]
                 pub struct AssetFormatRegistration {
                     name: &'static str,
-                    deserializer: $crate::DeserializeFn<dyn $crate::Format<$asset_data>>,
+                    deserializer: $crate::DeserializeFn<dyn $crate::SerializableFormat<$asset_data>>,
                 }
 
                 impl $crate::FormatRegisteredData for $asset_data {
                     type Registration = AssetFormatRegistration;
-                    fn get_registration(name: &'static str, deserializer: $crate::DeserializeFn<dyn $crate::Format<Self>>) -> Self::Registration {
+                    fn get_registration(name: &'static str, deserializer: $crate::DeserializeFn<dyn $crate::SerializableFormat<Self>>) -> Self::Registration {
                         AssetFormatRegistration { name, deserializer }
                     }
-                    fn registry() -> &'static $crate::Registry<dyn $crate::Format<Self>> {
+                    fn registry() -> &'static $crate::Registry<dyn $crate::SerializableFormat<Self>> {
                         &REGISTRY
                     }
                 }
 
                 $crate::lazy_static::lazy_static! {
-                    static ref REGISTRY: $crate::Registry<dyn $crate::Format<$asset_data>> = {
+                    static ref REGISTRY: $crate::Registry<dyn $crate::SerializableFormat<$asset_data>> = {
                         let mut map = std::collections::BTreeMap::new();
                         let mut names = std::vec::Vec::new();
                         for registered in $crate::inventory::iter::<AssetFormatRegistration> {
@@ -243,7 +260,7 @@ macro_rules! register_format {
     ($krate:ident; $name:literal, $format:ty as $data:ty) => {
         $crate::inventory::submit!{
             #![crate = $krate]
-            <dyn $crate::Format<$data>>::format_register(
+            <dyn $crate::SerializableFormat<$data>>::format_register(
                 $name,
                 |deserializer| std::result::Result::Ok(
                     std::boxed::Box::new(
@@ -252,5 +269,56 @@ macro_rules! register_format {
                 ),
             )
         }
+        impl $crate::SerializableFormat<$data> for $format {}
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use serde;
+    use serde_json;
+
+    use super::*;
+    use crate as amethyst_assets;
+    use amethyst_assets::Format;
+    use amethyst_error::Error;
+
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+    struct TestPrefab {
+        test: Box<dyn SerializableFormat<TestData>>,
+    }
+
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
+    struct TestData(String);
+    register_format_type!(TestData);
+
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
+    struct TestFormat(String);
+    register_format!("FOO", TestFormat as TestData);
+
+    impl Format<TestData> for TestFormat {
+        fn name(&self) -> &'static str {
+            "FOO"
+        }
+
+        fn import_simple(&self, _bytes: Vec<u8>) -> Result<TestData, Error> {
+            // Just returning the stored string in order to assert against something meaningful.
+            Ok(TestData(self.0.clone()))
+        }
+    }
+
+    #[test]
+    fn test_format_serialize() {
+        let prefab = TestPrefab {
+            test: Box::new(TestFormat("test string".to_owned())),
+        };
+
+        // Tests that serializing and deserializing dyn SerializableFormat yields the same data.
+        let serialized_prefab = serde_json::to_value(&prefab).unwrap();
+        let deserialized_prefab: TestPrefab = serde_json::from_value(serialized_prefab).unwrap();
+        assert_eq!(
+            prefab.test.import_simple(Vec::new()).unwrap(),
+            deserialized_prefab.test.import_simple(Vec::new()).unwrap()
+        );
+    }
 }
