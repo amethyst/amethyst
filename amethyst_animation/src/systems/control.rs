@@ -481,37 +481,38 @@ where
         if let Some(component) = rest_states
             .get(*node_entity)
             .map(RestState::state)
-            .or_else(|| targets.get(*node_entity)) {
-        let sampler_control = SamplerControl::<T> {
-            control_id: control.id,
-            channel: channel.clone(),
-            state: start_state.clone(),
-            sampler: sampler_handle.clone(),
-            end: control.end.clone(),
-            after: component.current_sample(channel, apply_data),
-            rate_multiplier: control.rate_multiplier,
-            blend_weight: 1.0,
-        };
-        let add = if let Some(ref mut set) = samplers.get_mut(*node_entity) {
-            set.add_control(sampler_control);
-            None
-        } else {
-            Some(sampler_control)
-        };
-        if let Some(sampler_control) = add {
-            let mut set = SamplerControlSet::default();
-            set.add_control(sampler_control);
-            if let Err(err) = samplers.insert(*node_entity, set) {
-                error!(
-                    "Failed creating SamplerControl for AnimationHierarchy because: {}",
-                    err
-                );
-            }
-        }
+            .or_else(|| targets.get(*node_entity))
+        {
+            let sampler_control = SamplerControl::<T> {
+                control_id: control.id,
+                channel: channel.clone(),
+                state: start_state.clone(),
+                sampler: sampler_handle.clone(),
+                end: control.end.clone(),
+                after: component.current_sample(channel, apply_data),
+                rate_multiplier: control.rate_multiplier,
+                blend_weight: 1.0,
+            };
+            let add = if let Some(ref mut set) = samplers.get_mut(*node_entity) {
+                set.add_control(sampler_control);
+                None
             } else {
-                error!("Failed to acquire animated component. Is the component you are trying to animate present on the target entity: {:?}", node_entity);
-                return false;
+                Some(sampler_control)
+            };
+            if let Some(sampler_control) = add {
+                let mut set = SamplerControlSet::default();
+                set.add_control(sampler_control);
+                if let Err(err) = samplers.insert(*node_entity, set) {
+                    error!(
+                        "Failed creating SamplerControl for AnimationHierarchy because: {}",
+                        err
+                    );
+                }
             }
+        } else {
+            error!("Failed to acquire animated component. Is the component you are trying to animate present on the target entity: {:?}", node_entity);
+            return false;
+        }
     }
     true
 }
