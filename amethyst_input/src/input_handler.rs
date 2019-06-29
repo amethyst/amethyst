@@ -341,15 +341,17 @@ impl<T: BindingTypes> InputHandler<T> {
                         );
                         for (action, combinations) in self.bindings.actions.iter() {
                             for combination in combinations {
-                                let down = combination
-                                    .iter()
-                                    .filter(|b| b != &&Button::Controller(controller_id, button))
-                                    .all(|b| self.button_is_down(*b));
-
                                 if combination.contains(&Button::Controller(controller_id, button))
-                                    && down
                                 {
-                                    event_handler.single_write(ActionReleased(action.clone()));
+                                    let down = combination
+                                        .iter()
+                                        .filter(|b| {
+                                            b != &&Button::Controller(controller_id, button)
+                                        })
+                                        .all(|b| self.button_is_down(*b));
+                                    if down {
+                                        event_handler.single_write(ActionReleased(action.clone()));
+                                    }
                                 }
                             }
                         }
