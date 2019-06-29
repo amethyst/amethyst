@@ -140,9 +140,9 @@ impl<T: BindingTypes> SdlEventsSystem<T> {
                         which: which as u32,
                         axis: axis.into(),
                         value: if value > 0 {
-                            f32::from(value) / 32767f32
+                            f32::from(value) / 32767.0
                         } else {
-                            f32::from(value) / 32768f32
+                            f32::from(value) / 32768.0
                         },
                     },
                     output,
