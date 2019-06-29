@@ -7,6 +7,7 @@
     rust_2018_compatibility
 )]
 #![warn(clippy::all)]
+#![allow(clippy::new_without_default)]
 
 use amethyst_animation::{AnimatablePrefab, SkinnablePrefab};
 use amethyst_assets::{

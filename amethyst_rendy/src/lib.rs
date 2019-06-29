@@ -42,6 +42,7 @@
     rust_2018_compatibility
 )]
 #![warn(clippy::all)]
+#![allow(clippy::new_without_default)]
 #![allow(unused_variables, dead_code)]
 
 #[macro_use]

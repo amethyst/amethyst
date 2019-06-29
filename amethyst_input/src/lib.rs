@@ -7,6 +7,7 @@
     rust_2018_compatibility
 )]
 #![warn(clippy::all)]
+#![allow(clippy::new_without_default)]
 
 #[cfg(feature = "sdl_controller")]
 pub use self::sdl_events_system::SdlEventsSystem;

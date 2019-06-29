@@ -87,7 +87,7 @@ pipeline {
                 }
                 stage("nightly") {
                     environment {
-                        RUSTFLAGS = "-A clippy::new_without_default -D warnings"
+                        RUSTFLAGS = "-D warnings"
                     }
                     agent {
                         docker {

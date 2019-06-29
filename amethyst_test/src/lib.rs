@@ -5,6 +5,7 @@
     rust_2018_compatibility
 )]
 #![warn(clippy::all)]
+#![allow(clippy::new_without_default)]
 
 //! Test harness to support testing of Amethyst types, including:
 //!

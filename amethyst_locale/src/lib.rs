@@ -9,6 +9,7 @@
     rust_2018_compatibility
 )]
 #![warn(clippy::all)]
+#![allow(clippy::new_without_default)]
 
 use amethyst_assets::{Asset, Format, Handle};
 use amethyst_core::ecs::prelude::VecStorage;

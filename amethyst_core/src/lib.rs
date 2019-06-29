@@ -6,6 +6,7 @@
     rust_2018_compatibility
 )]
 #![warn(clippy::all)]
+#![allow(clippy::new_without_default)]
 
 #[cfg(all(target_os = "emscripten", not(no_threading)))]
 compile_error!("the cfg flag \"no_threading\" is required when building for emscripten");
