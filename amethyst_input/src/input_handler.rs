@@ -1010,31 +1010,32 @@ mod tests {
 
     #[test]
     fn basic_mouse_wheel_check() {
+        use approx::assert_ulps_eq;
         let mut handler = InputHandler::<StringBindings>::new();
         let mut events = EventChannel::<InputEvent<String>>::new();
-        assert_eq!(handler.mouse_wheel_value(false), 0.0);
-        assert_eq!(handler.mouse_wheel_value(true), 0.0);
+        assert_ulps_eq!(handler.mouse_wheel_value(false), 0.0);
+        assert_ulps_eq!(handler.mouse_wheel_value(true), 0.0);
         handler.send_event(&mouse_wheel(0.0, 5.0), &mut events, HIDPI);
-        assert_eq!(handler.mouse_wheel_value(false), 1.0);
-        assert_eq!(handler.mouse_wheel_value(true), 0.0);
+        assert_ulps_eq!(handler.mouse_wheel_value(false), 1.0);
+        assert_ulps_eq!(handler.mouse_wheel_value(true), 0.0);
         handler.send_frame_begin();
-        assert_eq!(handler.mouse_wheel_value(false), 0.0);
-        assert_eq!(handler.mouse_wheel_value(true), 0.0);
+        assert_ulps_eq!(handler.mouse_wheel_value(false), 0.0);
+        assert_ulps_eq!(handler.mouse_wheel_value(true), 0.0);
         handler.send_event(&mouse_wheel(5.0, 0.0), &mut events, HIDPI);
-        assert_eq!(handler.mouse_wheel_value(false), 0.0);
-        assert_eq!(handler.mouse_wheel_value(true), 1.0);
+        assert_ulps_eq!(handler.mouse_wheel_value(false), 0.0);
+        assert_ulps_eq!(handler.mouse_wheel_value(true), 1.0);
         handler.send_frame_begin();
-        assert_eq!(handler.mouse_wheel_value(false), 0.0);
-        assert_eq!(handler.mouse_wheel_value(true), 0.0);
+        assert_ulps_eq!(handler.mouse_wheel_value(false), 0.0);
+        assert_ulps_eq!(handler.mouse_wheel_value(true), 0.0);
         handler.send_event(&mouse_wheel(0.0, -5.0), &mut events, HIDPI);
-        assert_eq!(handler.mouse_wheel_value(false), -1.0);
-        assert_eq!(handler.mouse_wheel_value(true), 0.0);
+        assert_ulps_eq!(handler.mouse_wheel_value(false), -1.0);
+        assert_ulps_eq!(handler.mouse_wheel_value(true), 0.0);
         handler.send_frame_begin();
-        assert_eq!(handler.mouse_wheel_value(false), 0.0);
-        assert_eq!(handler.mouse_wheel_value(true), 0.0);
+        assert_ulps_eq!(handler.mouse_wheel_value(false), 0.0);
+        assert_ulps_eq!(handler.mouse_wheel_value(true), 0.0);
         handler.send_event(&mouse_wheel(-5.0, 0.0), &mut events, HIDPI);
-        assert_eq!(handler.mouse_wheel_value(false), 0.0);
-        assert_eq!(handler.mouse_wheel_value(true), -1.0);
+        assert_ulps_eq!(handler.mouse_wheel_value(false), 0.0);
+        assert_ulps_eq!(handler.mouse_wheel_value(true), -1.0);
     }
 
     /// Compares two sets for equality, but not the order

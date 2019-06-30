@@ -41,7 +41,7 @@ impl<'a> System<'a> for ExampleSystem {
 
         let delta_rot: UnitQuaternion<f32> = UnitQuaternion::from_axis_angle(
             &Vector3::y_axis(),
-            (camera_angular_velocity * time.delta_seconds()).into(),
+            camera_angular_velocity * time.delta_seconds(),
         );
         for (_, transform) in (&camera, &mut transforms).join() {
             // Append the delta rotation to the current transform.
@@ -68,7 +68,7 @@ impl<'a> System<'a> for ExampleSystem {
             point_light.color = state.light_color;
         }
 
-        if let None = self.fps_display {
+        if self.fps_display.is_none() {
             if let Some(fps_entity) = finder.find("fps_text") {
                 self.fps_display = Some(fps_entity);
             }

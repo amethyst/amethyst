@@ -42,7 +42,7 @@ impl AssetFormat<MeshData> for Custom {
     /// Reads the given bytes and produces asset data.
     fn import_simple(&self, bytes: Vec<u8>) -> Result<MeshData, Error> {
         let data: String = String::from_utf8(bytes)?;
-        let trimmed: Vec<&str> = data.lines().filter(|line| line.len() >= 1).collect();
+        let trimmed: Vec<&str> = data.lines().filter(|line| !line.is_empty()).collect();
 
         let mut pos = Vec::with_capacity(trimmed.len() * 3);
         let mut norm = Vec::with_capacity(trimmed.len() * 3);
@@ -145,7 +145,7 @@ fn main() -> Result<(), Error> {
 fn initialise_camera(world: &mut World) {
     let mut transform = Transform::default();
     transform.set_translation_xyz(0.0, -20.0, 10.0);
-    transform.prepend_rotation_x_axis(1.3257521);
+    transform.prepend_rotation_x_axis(1.325_752_1);
 
     world
         .create_entity()
@@ -183,6 +183,7 @@ struct ExampleGraph {
     dirty: bool,
 }
 
+#[allow(clippy::map_clone)]
 impl GraphCreator<DefaultBackend> for ExampleGraph {
     fn rebuild(&mut self, res: &Resources) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
@@ -193,7 +194,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             self.dimensions = new_dimensions.map(|d| d.clone());
             return false;
         }
-        return self.dirty;
+        self.dirty
     }
 
     fn builder(

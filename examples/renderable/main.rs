@@ -302,10 +302,10 @@ impl<'a> System<'a> for ExampleSystem {
                 light_z,
             );
 
-            point_light.color = state.light_color.into();
+            point_light.color = state.light_color;
         }
 
-        if let None = self.fps_display {
+        if self.fps_display.is_none() {
             if let Some(fps_entity) = finder.find("fps_text") {
                 self.fps_display = Some(fps_entity);
             }
@@ -328,6 +328,7 @@ struct ExampleGraph {
     dirty: bool,
 }
 
+#[allow(clippy::map_clone)]
 impl GraphCreator<DefaultBackend> for ExampleGraph {
     fn rebuild(&mut self, res: &Resources) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
@@ -338,7 +339,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             self.dimensions = new_dimensions.map(|d| d.clone());
             return false;
         }
-        return self.dirty;
+        self.dirty
     }
 
     fn builder(

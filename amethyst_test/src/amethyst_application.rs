@@ -735,7 +735,7 @@ mod test {
         };
 
         fn get_component_zero_value(world: &mut World) -> i32 {
-            let entity = world.read_resource::<EffectReturn<Entity>>().0.clone();
+            let entity = world.read_resource::<EffectReturn<Entity>>().0;
 
             let component_zero_storage = world.read_storage::<ComponentZero>();
             let component_zero = component_zero_storage
@@ -763,7 +763,7 @@ mod test {
     #[test]
     fn with_system_single_runs_system_once() -> Result<(), Error> {
         let assertion_fn = |world: &mut World| {
-            let entity = world.read_resource::<EffectReturn<Entity>>().0.clone();
+            let entity = world.read_resource::<EffectReturn<Entity>>().0;
 
             let component_zero_storage = world.read_storage::<ComponentZero>();
             let component_zero = component_zero_storage

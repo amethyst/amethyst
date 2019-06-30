@@ -791,12 +791,12 @@ mod tests {
         assert_relative_eq!(
             first.matrix() * second.matrix(),
             first.concat(&second).matrix(),
-            max_relative = 0.000001,
+            max_relative = 0.000_001,
         );
         assert_relative_eq!(
             first.matrix() * second.matrix(),
             first.concat(&second).matrix(),
-            max_relative = 0.000001,
+            max_relative = 0.000_001,
         );
     }
 

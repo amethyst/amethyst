@@ -82,8 +82,8 @@ impl<'a> System<'a> for CameraDistanceSystem {
 
     fn run(&mut self, (events, transforms, mut tags): Self::SystemData) {
         for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
-            match *event {
-                InputEvent::MouseWheelMoved(direction) => match direction {
+            if let InputEvent::MouseWheelMoved(direction) = *event {
+                match direction {
                     ScrollDirection::ScrollUp => {
                         for (_, tag) in (&transforms, &mut tags).join() {
                             tag.distance *= 0.9;
@@ -95,8 +95,7 @@ impl<'a> System<'a> for CameraDistanceSystem {
                         }
                     }
                     _ => (),
-                },
-                _ => (),
+                }
             }
         }
     }
@@ -150,6 +149,7 @@ struct ExampleGraph {
     dirty: bool,
 }
 
+#[allow(clippy::map_clone)]
 impl GraphCreator<DefaultBackend> for ExampleGraph {
     fn rebuild(&mut self, res: &Resources) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
@@ -160,7 +160,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             self.dimensions = new_dimensions.map(|d| d.clone());
             return false;
         }
-        return self.dirty;
+        self.dirty
     }
 
     fn builder(

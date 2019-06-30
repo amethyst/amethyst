@@ -63,13 +63,11 @@ impl<'s> System<'s> for BounceSystem {
                     paddle_y - ball.radius,
                     paddle_x + (paddle.width + ball.radius),
                     paddle_y + (paddle.height + ball.radius),
-                ) {
-                    if (paddle.side == Side::Left && ball.velocity[0] < 0.0)
-                        || (paddle.side == Side::Right && ball.velocity[0] > 0.0)
-                    {
-                        ball.velocity[0] = -ball.velocity[0];
-                        play_bounce(&*sounds, &storage, audio_output.as_ref().map(|o| o.deref()));
-                    }
+                ) && ((paddle.side == Side::Left && ball.velocity[0] < 0.0)
+                    || (paddle.side == Side::Right && ball.velocity[0] > 0.0))
+                {
+                    ball.velocity[0] = -ball.velocity[0];
+                    play_bounce(&*sounds, &storage, audio_output.as_ref().map(|o| o.deref()));
                 }
             }
         }

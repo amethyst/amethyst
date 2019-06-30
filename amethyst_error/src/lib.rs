@@ -443,8 +443,7 @@ mod tests {
 
         assert!(frame_names
             .iter()
-            .find(|n| n.ends_with("a_really_unique_name_42"))
-            .is_some());
+            .any(|n| n.ends_with("a_really_unique_name_42")));
 
         // Test disabled.
         BACKTRACE_STATUS.store(1, atomic::Ordering::Relaxed);
