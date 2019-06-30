@@ -340,7 +340,9 @@ impl<T> Asset for Prefab<T>
 where
     T: Send + Sync + 'static,
 {
-    fn name() -> &'static str { "PREFAB" }
+    fn name() -> &'static str {
+        "PREFAB"
+    }
     type Data = Self;
     type HandleStorage = FlaggedStorage<Handle<Self>, DenseVecStorage<Handle<Self>>>;
 }

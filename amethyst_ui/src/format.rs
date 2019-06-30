@@ -22,7 +22,9 @@ amethyst_assets::register_format_type!(FontData);
 // amethyst_assets::register_asset_type!(FontData => FontAsset);
 
 impl Asset for FontAsset {
-    fn name() -> &'static str { "ui::Font" }
+    fn name() -> &'static str {
+        "ui::Font"
+    }
     type Data = FontData;
     type HandleStorage = VecStorage<Handle<Self>>;
 }

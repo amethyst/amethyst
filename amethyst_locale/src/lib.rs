@@ -20,7 +20,7 @@ amethyst_assets::register_format_type!(Locale);
 
 amethyst_assets::register_format!("FTL", LocaleFormat as Locale);
 // Locale doesn't impl Serialize/Deserialize, so can't register importer :(
-// amethyst_assets::register_importer!(".ftl", LocaleFormat); 
+// amethyst_assets::register_importer!(".ftl", LocaleFormat);
 impl Format<Locale> for LocaleFormat {
     fn name(&self) -> &'static str {
         "FTL"
@@ -49,7 +49,9 @@ pub struct Locale {
 }
 
 impl Asset for Locale {
-    fn name() -> &'static str { "locale::Locale" }
+    fn name() -> &'static str {
+        "locale::Locale"
+    }
     type Data = Locale;
     type HandleStorage = VecStorage<LocaleHandle>;
 }

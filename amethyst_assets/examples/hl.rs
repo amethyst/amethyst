@@ -76,7 +76,9 @@ pub struct MeshAsset {
 }
 
 impl Asset for MeshAsset {
-    fn name() -> &'static str { "example::Mesh" }
+    fn name() -> &'static str {
+        "example::Mesh"
+    }
     type Data = VertexData;
     type HandleStorage = VecStorage<MeshHandle>;
 }

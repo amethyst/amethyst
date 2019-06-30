@@ -1,7 +1,4 @@
-use crate::{
-    storage_new::AssetStorage,
-    processor::{ProcessingQueue},
-};
+use crate::{processor::ProcessingQueue, storage_new::AssetStorage};
 use amethyst_core::ecs::{
     prelude::{Component, DenseVecStorage},
     Resources,
@@ -14,7 +11,7 @@ use serde::de::Deserialize;
 use std::{collections::HashMap, error::Error, marker::PhantomData, sync::Arc};
 
 pub(crate) use atelier_loader::LoadHandle;
-pub use atelier_loader::{TypeUuid, LoadStatus, AssetUuid};
+pub use atelier_loader::{AssetUuid, LoadStatus, TypeUuid};
 
 #[derive(Derivative)]
 #[derivative(
@@ -112,10 +109,7 @@ pub trait AssetHandle {
     {
         storage.get(self)
     }
-    fn asset_mut<'a, T: TypeUuid>(
-        &self,
-        storage: &'a mut AssetStorage<T>,
-    ) -> Option<&'a mut T>
+    fn asset_mut<'a, T: TypeUuid>(&self, storage: &'a mut AssetStorage<T>) -> Option<&'a mut T>
     where
         Self: Sized,
     {
@@ -245,7 +239,8 @@ pub trait AssetTypeStorage {
     fn commit_asset_version(&mut self, handle: &LoadHandle, version: u32);
     fn free(&mut self, handle: LoadHandle);
 }
-impl<Intermediate, Asset: TypeUuid + Send + Sync> AssetTypeStorage for (&ProcessingQueue<Intermediate>, &mut AssetStorage<Asset>)
+impl<Intermediate, Asset: TypeUuid + Send + Sync> AssetTypeStorage
+    for (&ProcessingQueue<Intermediate>, &mut AssetStorage<Asset>)
 where
     for<'a> Intermediate: Deserialize<'a> + TypeUuid + Send,
 {

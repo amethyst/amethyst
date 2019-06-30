@@ -44,7 +44,9 @@ pub struct Material {
 }
 
 impl Asset for Material {
-    fn name() -> &'static str { "renderer::Material" }
+    fn name() -> &'static str {
+        "renderer::Material"
+    }
     type Data = Self;
     type HandleStorage = DenseVecStorage<Handle<Self>>;
 }

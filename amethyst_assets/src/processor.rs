@@ -1,23 +1,14 @@
 use std::{
     marker::PhantomData,
-    sync::{
-        Arc, Mutex,
-    },
+    sync::{Arc, Mutex},
 };
 
-use crossbeam::queue::SegQueue;
 use atelier_loader::AssetLoadOp;
+use crossbeam::queue::SegQueue;
 
-use amethyst_core::ecs::{
-    prelude::{System, Write},
-};
+use amethyst_core::ecs::prelude::{System, Write};
 
-use crate::{
-    error::{Error},
-    loader_new::LoadHandle,
-    storage_new::AssetStorage,
-    progress::Tracker,
-};
+use crate::{error::Error, loader_new::LoadHandle, progress::Tracker, storage_new::AssetStorage};
 
 /// A default implementation for an asset processing system
 /// which converts data to assets and maintains the asset storage
@@ -146,7 +137,7 @@ impl<T> ProcessingQueue<T> {
                                 // } else if let Some(tracker) = tracker {
                                 //     tracker.success();
                                 // }
-                                
+
                                 load_op.complete();
                                 x
                             }

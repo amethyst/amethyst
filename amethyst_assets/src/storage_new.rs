@@ -1,10 +1,8 @@
-use atelier_loader::{LoadHandle};
-use std::collections::HashMap;
+use atelier_loader::LoadHandle;
 use crossbeam::queue::SegQueue;
+use std::collections::HashMap;
 
-use crate::{
-    loader_new::AssetHandle,
-};
+use crate::loader_new::AssetHandle;
 
 struct AssetState<A> {
     version: u32,
@@ -76,9 +74,7 @@ impl<A> AssetStorage<A> {
     }
 
     pub fn get_version<T: AssetHandle>(&self, handle: &T) -> Option<u32> {
-        self.assets
-            .get(handle.load_handle())
-            .map(|a| a.version)
+        self.assets.get(handle.load_handle()).map(|a| a.version)
     }
 
     pub fn get_asset_with_version<T: AssetHandle>(&self, handle: &T) -> Option<(&A, u32)> {

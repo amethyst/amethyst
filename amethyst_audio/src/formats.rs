@@ -1,8 +1,8 @@
 use amethyst_assets::*;
 use amethyst_error::Error;
 
-use type_uuid::*;
 use serde::{Deserialize, Serialize};
+use type_uuid::*;
 
 #[derive(Clone, Serialize, Deserialize, TypeUuid)]
 #[uuid = "caa6e38f-9cfa-428a-91bd-4dab5a7a47d5"]
