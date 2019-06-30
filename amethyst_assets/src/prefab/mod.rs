@@ -8,7 +8,9 @@ use amethyst_core::ecs::prelude::{
 };
 use amethyst_error::Error;
 
-use crate::{Asset, AssetStorage, Format, Handle, Loader, Progress, ProgressCounter};
+use crate::{
+    Asset, AssetStorage, Format, Handle, Loader, Progress, ProgressCounter, SerializableFormat,
+};
 
 pub use self::system::PrefabLoaderSystem;
 
@@ -354,7 +356,7 @@ where
 /// - `A`: `Asset`,
 /// - `F`: `Format` for loading `A`
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub enum AssetPrefab<A, F = Box<dyn Format<<A as Asset>::Data>>>
+pub enum AssetPrefab<A, F = Box<dyn SerializableFormat<<A as Asset>::Data>>>
 where
     A: Asset,
     // A::Data: FormatRegisteredData,
