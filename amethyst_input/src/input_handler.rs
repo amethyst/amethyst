@@ -605,11 +605,11 @@ impl<T: BindingTypes> InputHandler<T> {
 
         // determine if a vertical scroll happend
         let dir_y = match delta_y {
-            dy if dy > 0.0 => {
+            dy if dy < 0.0 => {
                 events.push(MouseWheelMoved(ScrollDirection::ScrollDown));
                 Some(ScrollDirection::ScrollDown)
             }
-            dy if dy < 0.0 => {
+            dy if dy > 0.0 => {
                 events.push(MouseWheelMoved(ScrollDirection::ScrollUp));
                 Some(ScrollDirection::ScrollUp)
             }
