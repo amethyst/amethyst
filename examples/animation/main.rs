@@ -2,11 +2,10 @@
 
 use amethyst::{
     animation::{
-        get_animation_set, AnimationBundle, AnimationCommand, AnimationSet, AnimationSetPrefab,
-        DeferStartRelation, EndControl, StepDirection,
+        *
     },
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
-    core::{Transform, TransformBundle},
+    core::{Transform, TransformBundle, Float},
     ecs::prelude::{Entity, ReadExpect, Resources},
     input::{get_key, is_close_requested, is_key_down},
     prelude::*,
@@ -21,6 +20,7 @@ use amethyst::{
     window::{ScreenDimensions, WindowBundle},
     winit::{ElementState, VirtualKeyCode, Window},
 };
+use amethyst::assets::Loader;
 use serde::{Deserialize, Serialize};
 
 type MyPrefabData = (
@@ -35,6 +35,7 @@ enum AnimationId {
     Scale,
     Rotate,
     Translate,
+    Test,
 }
 
 struct Example {
@@ -61,6 +62,44 @@ impl SimpleState for Example {
             loader.load("prefab/animation.ron", RonFormat, ())
         });
         self.sphere = Some(world.create_entity().with(prefab_handle).build());
+
+        let (animation_set, animation) = {
+            let loader = world.read_resource::<Loader>();
+
+            let sampler = loader.load_from_data(
+                Sampler {
+                    input: vec![0., 1.],
+                    output: vec![
+                        SamplerPrimitive::Vec3([Float::from(0.), Float::from(0.), Float::from(0.)]),
+                        SamplerPrimitive::Vec3([Float::from(0.), Float::from(1.), Float::from(0.)]),
+                    ],
+                    function: InterpolationFunction::Step,
+                },
+                (),
+                &world.read_resource(),
+            );
+
+            let animation = loader.load_from_data(
+                Animation::new_single(0, TransformChannel::Translation, sampler),
+                (),
+                &world.read_resource(),
+            );
+            let mut animation_set: AnimationSet<AnimationId, Transform> = AnimationSet::new();
+            animation_set.insert(AnimationId::Test, animation.clone());
+            (animation_set, animation)
+        };
+
+        let entity = world.create_entity().with(animation_set).build();
+        let mut storage = world
+            .write_storage::<AnimationControlSet<AnimationId, Transform>>();
+        let control_set = get_animation_set(&mut storage, entity).unwrap();
+        control_set.add_animation(
+            AnimationId::Test,
+            &animation,
+            EndControl::Loop(None),
+            1.0,
+            AnimationCommand::Start,
+        );
     }
 
     fn handle_event(
