@@ -68,7 +68,6 @@ pub struct UiTransformBuilder<G> {
     /// UI element with the next highest tab order, or if another element with the same tab_order
     /// as this one exists they are ordered according to Entity creation order.  Shift-tab walks
     /// this ordering backwards.
-    pub tab_order: u32,
     // TODO: Make full prefab for Selectable.
     pub selectable: Option<u32>,
     #[serde(skip)]
