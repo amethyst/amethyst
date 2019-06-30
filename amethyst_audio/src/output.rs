@@ -95,6 +95,7 @@ impl Debug for Output {
 }
 
 /// An iterator over outputs
+#[allow(missing_debug_implementations)]
 pub struct OutputIterator {
     input: OutputDevices,
 }

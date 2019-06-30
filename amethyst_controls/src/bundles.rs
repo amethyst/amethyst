@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder, math::one, Float};
+use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder, math::one};
 use amethyst_error::Error;
 use amethyst_input::BindingTypes;
 
@@ -27,10 +27,11 @@ use super::*;
 /// * `FreeRotationSystem`
 /// * `MouseFocusUpdateSystem`
 /// * `CursorHideSystem`
+#[derive(Debug)]
 pub struct FlyControlBundle<T: BindingTypes> {
     sensitivity_x: f32,
     sensitivity_y: f32,
-    speed: Float,
+    speed: f32,
     right_input_axis: Option<T::Axis>,
     up_input_axis: Option<T::Axis>,
     forward_input_axis: Option<T::Axis>,
@@ -61,8 +62,8 @@ impl<T: BindingTypes> FlyControlBundle<T> {
     }
 
     /// Alters the speed on this `FlyControlBundle`.
-    pub fn with_speed<N: Into<Float>>(mut self, speed: N) -> Self {
-        self.speed = speed.into();
+    pub fn with_speed(mut self, speed: f32) -> Self {
+        self.speed = speed;
         self
     }
 }
@@ -101,6 +102,7 @@ impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for FlyControlBundle<T> {
 /// Adding this bundle will grab the mouse, hide it and keep it centered.
 ///
 /// See the `arc_ball_camera` example to see how to use the arc ball camera.
+#[derive(Debug)]
 pub struct ArcBallControlBundle<T: BindingTypes> {
     sensitivity_x: f32,
     sensitivity_y: f32,

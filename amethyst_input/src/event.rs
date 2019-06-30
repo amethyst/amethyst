@@ -40,16 +40,16 @@ pub enum InputEvent<T> {
     /// The mouse pointer moved on screen
     CursorMoved {
         /// The amount the cursor moved horizontally in pixels.
-        delta_x: f64,
+        delta_x: f32,
         /// The amount the cursor moved vertically in pixels.
-        delta_y: f64,
+        delta_y: f32,
     },
     /// The mouse device moved.  Use this for any use of the mouse that doesn't involve a standard mouse pointer.
     MouseMoved {
         /// The amount the mouse moved horizontally.
-        delta_x: f64,
+        delta_x: f32,
         /// The amount the mouse moved vertically.
-        delta_y: f64,
+        delta_y: f32,
     },
     /// The mousewheel was moved in either direction
     MouseWheelMoved(ScrollDirection),
@@ -60,7 +60,7 @@ pub enum InputEvent<T> {
         /// The axis that moved on the controller.
         axis: ControllerAxis,
         /// The amount that the axis moved.
-        value: f64,
+        value: f32,
     },
     ///  A controller button was pressed.
     ControllerButtonPressed {

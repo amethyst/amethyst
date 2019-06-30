@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ## [Unreleased]
 
+## Breaking changes
+* `Float` newtype removed, moved back to `f32` primitive for all values ([#1747])
+
 ### Added
 
 * Fixes and renames regression from ([#1442]) added back `position_from_world` as `screen_to_world`. Also added
@@ -31,6 +34,7 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 
 [#1766]: https://github.com/amethyst/amethyst/pull/1766
 [#1719]: https://github.com/amethyst/amethyst/pull/1719
+[#1747]: https://github.com/amethyst/amethyst/pull/1747
 [#1767]: https://github.com/amethyst/amethyst/pull/1719
 [#1756]: https://github.com/amethyst/amethyst/pull/1756
 [#1733]: https://github.com/amethyst/amethyst/pull/1733

@@ -110,9 +110,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawDebugLines<B> {
         profile_scope!("prepare");
 
         let (lines_comps, lines_res, line_params) = <(
-            WriteStorage<DebugLinesComponent>,
-            Option<Write<DebugLines>>,
-            Option<Read<DebugLinesParams>>,
+            WriteStorage<'_, DebugLinesComponent>,
+            Option<Write<'_, DebugLines>>,
+            Option<Read<'_, DebugLinesParams>>,
         )>::fetch(resources);
 
         let old_len = self.lines.len();

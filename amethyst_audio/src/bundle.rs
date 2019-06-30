@@ -13,7 +13,7 @@ use crate::{output::Output, source::*, systems::AudioSystem};
 /// `DjSystem` must be added separately if you want to use our background music system.
 ///
 /// The generic N type should be the same as the one in `Transform`.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct AudioBundle(Output);
 
 impl<'a, 'b> SystemBundle<'a, 'b> for AudioBundle {

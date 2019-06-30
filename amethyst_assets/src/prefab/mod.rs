@@ -355,6 +355,7 @@ where
 ///
 /// - `A`: `Asset`,
 /// - `F`: `Format` for loading `A`
+// TODO: Add a debug impl for this that uses Filename correctly by default
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum AssetPrefab<A, F = Box<dyn SerializableFormat<<A as Asset>::Data>>>
 where

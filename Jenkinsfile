@@ -68,6 +68,40 @@ pipeline {
                 }
             }
         }
+        stage('Cargo Clippy') {
+            parallel {
+                stage("stable") {
+                    environment {
+                        RUSTFLAGS = "-D warnings"
+                    }
+                    agent {
+                        docker {
+                            image 'amethystrs/builder-linux:stable'
+                            label 'docker'
+                        }
+                    }
+                    steps {
+                        echo 'Running Cargo clippy...'
+                        sh 'cargo clippy --all --all-targets --features "vulkan sdl_controller json saveload"'
+                    }
+                }
+                stage("nightly") {
+                    environment {
+                        RUSTFLAGS = "-D warnings"
+                    }
+                    agent {
+                        docker {
+                            image 'amethystrs/builder-linux:nightly'
+                            label 'docker'
+                        }
+                    }
+                    steps {
+                        echo 'Running Cargo clippy...'
+                        sh 'cargo clippy --all --all-targets --features "vulkan sdl_controller json saveload"'
+                    }
+                }
+            }
+        }
         // Separate stage for coverage to prevent race condition with the linux test stage (repo lock contention).
         stage('Coverage') {
             agent {

@@ -49,6 +49,7 @@ impl ToNativeWidget for CustomUi {
                 x_move,
                 y_move,
             } => {
+                #[allow(clippy::redundant_closure)] // Inference fails on Default::default otherwise
                 let transform = item
                     .transform()
                     .cloned()
@@ -124,6 +125,7 @@ struct ExampleGraph {
     dirty: bool,
 }
 
+#[allow(clippy::map_clone)]
 impl GraphCreator<DefaultBackend> for ExampleGraph {
     fn rebuild(&mut self, res: &Resources) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
@@ -134,7 +136,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             self.dimensions = new_dimensions.map(|d| d.clone());
             return false;
         }
-        return self.dirty;
+        self.dirty
     }
 
     fn builder(

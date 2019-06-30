@@ -17,7 +17,7 @@ use super::resources::*;
 /// System for performing vertex skinning.
 ///
 /// Needs to run after global transforms have been updated for the current frame.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct VertexSkinningSystem {
     /// Also scratch space, used while determining which skins need to be updated.
     updated: BitSet,

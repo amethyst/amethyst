@@ -4,7 +4,9 @@ use winit::{AvailableMonitorsIter, EventsLoop, MonitorId, Window};
 /// A struct that can resolve monitors.
 /// Usually either a Window or an EventsLoop.
 pub trait MonitorsAccess {
+    /// Returns an iterator over the available monitors
     fn iter(&self) -> AvailableMonitorsIter;
+    /// Returns the `MonitorId` of the primary display
     fn primary(&self) -> MonitorId;
 }
 
@@ -26,6 +28,10 @@ impl MonitorsAccess for Window {
     }
 }
 
+/// Identifier for a given monitor. Because there is no cross platform method to actually uniquely
+/// identify monitors, this tuple wraps two identifiers of a monitor which should prove sufficient
+/// on any given system: The index of the monitor is the retrieved Display array, and the name
+/// of the given monitor.
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub struct MonitorIdent(u16, String);
 

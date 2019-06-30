@@ -8,6 +8,7 @@ use amethyst_error::{Error, ResultExt};
 use crate::{server::ServerConfig, NetSocketSystem};
 
 /// A convenience bundle to create the infrastructure needed to send and receive network messages.
+#[allow(missing_debug_implementations)] // TODO: Revisit for laminar
 pub struct NetworkBundle<T> {
     /// the configuration used for the networking crate.
     config: ServerConfig,

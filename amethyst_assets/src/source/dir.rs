@@ -91,7 +91,7 @@ mod test {
         let directory = Directory::new(test_assets_dir);
 
         assert_eq!(
-            "data".as_bytes().to_vec(),
+            b"data".to_vec(),
             directory
                 .load("subdir/asset")
                 .expect("Failed to load tests/assets/subdir/asset")
@@ -109,7 +109,7 @@ mod test {
         let directory = Directory::new(test_assets_dir);
 
         assert_eq!(
-            "data".as_bytes().to_vec(),
+            b"data".to_vec(),
             // Use forward slash to declare path
             directory
                 .load("subdir/asset")
