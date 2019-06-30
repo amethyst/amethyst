@@ -493,13 +493,9 @@ where
                 rate_multiplier: control.rate_multiplier,
                 blend_weight: 1.0,
             };
-            let add = if let Some(ref mut set) = samplers.get_mut(*node_entity) {
+            if let Some(ref mut set) = samplers.get_mut(*node_entity) {
                 set.add_control(sampler_control);
-                None
             } else {
-                Some(sampler_control)
-            };
-            if let Some(sampler_control) = add {
                 let mut set = SamplerControlSet::default();
                 set.add_control(sampler_control);
                 if let Err(err) = samplers.insert(*node_entity, set) {

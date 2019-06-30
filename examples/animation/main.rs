@@ -1,11 +1,10 @@
 //! Displays a shaded sphere to the user.
 
+use amethyst::assets::Loader;
 use amethyst::{
-    animation::{
-        *
-    },
+    animation::*,
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
-    core::{Transform, TransformBundle, Float},
+    core::{Float, Transform, TransformBundle},
     ecs::prelude::{Entity, ReadExpect, Resources},
     input::{get_key, is_close_requested, is_key_down},
     prelude::*,
@@ -20,7 +19,6 @@ use amethyst::{
     window::{ScreenDimensions, WindowBundle},
     winit::{ElementState, VirtualKeyCode, Window},
 };
-use amethyst::assets::Loader;
 use serde::{Deserialize, Serialize};
 
 type MyPrefabData = (
@@ -90,8 +88,7 @@ impl SimpleState for Example {
         };
 
         let entity = world.create_entity().with(animation_set).build();
-        let mut storage = world
-            .write_storage::<AnimationControlSet<AnimationId, Transform>>();
+        let mut storage = world.write_storage::<AnimationControlSet<AnimationId, Transform>>();
         let control_set = get_animation_set(&mut storage, entity).unwrap();
         control_set.add_animation(
             AnimationId::Test,
