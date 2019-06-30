@@ -25,6 +25,7 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 * Rename FPSCounter, FPSCounterBundle, FPSCounterSystem to FpsCounter, FpsCounterBundle, FpsCounterSystem. ([#1719])
 * Add Tint component support for sprites. ([#1756])
 * Remove remaining <N: RealField> type parameter on GameDataBuilder, add Debug derive to LoggerConfig ([#1758])
+* Inverted mouse wheel scroll direction event. Now using winit's standard.  ([#1767])
 * Add `load_from_data_async` to Asset Loader. ([#1753])
 * Add `SerializableFormat` marker trait which is now needed to be implemented for all the formats that are supposed to be serialized. ([#1720])
 
@@ -34,6 +35,7 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 [#1766]: https://github.com/amethyst/amethyst/pull/1766
 [#1719]: https://github.com/amethyst/amethyst/pull/1719
 [#1747]: https://github.com/amethyst/amethyst/pull/1747
+[#1767]: https://github.com/amethyst/amethyst/pull/1719
 [#1756]: https://github.com/amethyst/amethyst/pull/1756
 [#1733]: https://github.com/amethyst/amethyst/pull/1733
 [#1758]: https://github.com/amethyst/amethyst/pull/1758
