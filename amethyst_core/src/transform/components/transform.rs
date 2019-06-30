@@ -690,7 +690,7 @@ impl From<Transform> for TransformValues {
         TransformValues {
             translation: transform.isometry.translation.vector.into(),
             rotation: transform.isometry.rotation.as_ref().coords.into(),
-            scale: transform.scale.into()
+            scale: transform.scale.into(),
         }
     }
 }
