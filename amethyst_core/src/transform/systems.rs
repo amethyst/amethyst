@@ -351,12 +351,13 @@ mod tests {
     #[test]
     #[should_panic]
     #[cfg(debug_assertions)]
+    #[allow(clippy::eq_op, clippy::zero_divided_by_zero)]
     fn nan_transform() {
         let (mut world, mut hs, mut system) = transform_world();
 
         let mut local = Transform::default();
         // Release the indeterminate forms!
-        local.set_translation_xyz(0.0, 0.0, 0.0);
+        local.set_translation_xyz(0.0 / 0.0, 0.0 / 0.0, 0.0 / 0.0);
 
         world.create_entity().with(local.clone()).build();
 
