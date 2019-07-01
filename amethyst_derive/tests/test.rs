@@ -1,3 +1,8 @@
+#![allow(
+    clippy::unneeded_field_pattern,
+    clippy::block_in_if_condition_stmt,
+    clippy::unneeded_field_pattern
+)]
 use amethyst_derive::{EventReader, PrefabData};
 
 use amethyst_assets::{PrefabData, ProgressCounter};

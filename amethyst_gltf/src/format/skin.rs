@@ -2,10 +2,7 @@ use std::collections::HashMap;
 
 use amethyst_animation::{JointPrefab, SkinPrefab, SkinnablePrefab};
 use amethyst_assets::Prefab;
-use amethyst_core::{
-    math::{convert, Matrix4},
-    Float,
-};
+use amethyst_core::math::{convert, Matrix4};
 use amethyst_error::Error;
 use amethyst_rendy::skinning::JointTransformsPrefab;
 
@@ -36,7 +33,7 @@ pub fn load_skin(
         .map(|matrices| {
             matrices
                 .map(Matrix4::from)
-                .map(convert::<_, Matrix4<Float>>)
+                .map(convert::<_, Matrix4<f32>>)
                 .collect()
         })
         .unwrap_or_else(|| vec![Matrix4::identity(); joints.len()]);

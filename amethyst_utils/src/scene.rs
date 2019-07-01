@@ -25,7 +25,7 @@ use crate::removal::Removal;
 ///     * `Vec<PosNormTangTex>`
 ///     * `ComboMeshCreator`
 /// - `R`: The type of id used by the Removal component.
-#[derive(Deserialize, Serialize, PrefabData)]
+#[derive(Deserialize, Debug, Serialize, PrefabData)]
 #[serde(default)]
 #[serde(deny_unknown_fields)]
 pub struct BasicScenePrefab<V, R = ()>

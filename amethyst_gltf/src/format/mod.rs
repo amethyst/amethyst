@@ -11,7 +11,6 @@ use amethyst_assets::{Format, FormatValue, Prefab, Source};
 use amethyst_core::{
     math::{convert, Quaternion, Unit, Vector3, Vector4},
     transform::Transform,
-    Float,
 };
 use amethyst_error::{format_err, Error, ResultExt};
 
@@ -215,11 +214,11 @@ fn load_node(
     // Load transformation data, default will be identity
     let (translation, rotation, scale) = node.transform().decomposed();
     let mut local_transform = Transform::default();
-    *local_transform.translation_mut() = convert::<_, Vector3<Float>>(Vector3::from(translation));
-    *local_transform.rotation_mut() = Unit::new_normalize(convert::<_, Quaternion<Float>>(
+    *local_transform.translation_mut() = convert::<_, Vector3<f32>>(Vector3::from(translation));
+    *local_transform.rotation_mut() = Unit::new_normalize(convert::<_, Quaternion<f32>>(
         Quaternion::from(Vector4::from(rotation)),
     ));
-    *local_transform.scale_mut() = convert::<_, Vector3<Float>>(Vector3::from(scale));
+    *local_transform.scale_mut() = convert::<_, Vector3<f32>>(Vector3::from(scale));
     prefab.data_or_default(entity_index).transform = Some(local_transform);
 
     // check for skinning

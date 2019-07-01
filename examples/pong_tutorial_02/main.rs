@@ -60,6 +60,7 @@ struct ExampleGraph {
     dirty: bool,
 }
 
+#[allow(clippy::map_clone)]
 impl GraphCreator<DefaultBackend> for ExampleGraph {
     // This trait method reports to the renderer if the graph must be rebuilt, usually because
     // the window has been resized. This implementation checks the screen size and returns true
@@ -73,7 +74,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             self.dimensions = new_dimensions.map(|d| d.clone());
             return false;
         }
-        return self.dirty;
+        self.dirty
     }
 
     // This is the core of a RenderGraph, which is building the actual graph with subpasses and target

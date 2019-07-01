@@ -151,7 +151,7 @@ impl SimpleState for Example {
                 Some((VirtualKeyCode::Left, ElementState::Pressed)) => {
                     get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
-                        self.sphere.unwrap().clone(),
+                        self.sphere.unwrap(),
                     )
                     .unwrap()
                     .step(self.current_animation, StepDirection::Backward);
@@ -160,7 +160,7 @@ impl SimpleState for Example {
                 Some((VirtualKeyCode::Right, ElementState::Pressed)) => {
                     get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
-                        self.sphere.unwrap().clone(),
+                        self.sphere.unwrap(),
                     )
                     .unwrap()
                     .step(self.current_animation, StepDirection::Forward);
@@ -170,7 +170,7 @@ impl SimpleState for Example {
                     self.rate = 1.0;
                     get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
-                        self.sphere.unwrap().clone(),
+                        self.sphere.unwrap(),
                     )
                     .unwrap()
                     .set_rate(self.current_animation, self.rate);
@@ -180,7 +180,7 @@ impl SimpleState for Example {
                     self.rate = 0.0;
                     get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
-                        self.sphere.unwrap().clone(),
+                        self.sphere.unwrap(),
                     )
                     .unwrap()
                     .set_rate(self.current_animation, self.rate);
@@ -190,7 +190,7 @@ impl SimpleState for Example {
                     self.rate = 0.5;
                     get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
-                        self.sphere.unwrap().clone(),
+                        self.sphere.unwrap(),
                     )
                     .unwrap()
                     .set_rate(self.current_animation, self.rate);
@@ -295,6 +295,7 @@ struct ExampleGraph {
     dirty: bool,
 }
 
+#[allow(clippy::map_clone)]
 impl GraphCreator<DefaultBackend> for ExampleGraph {
     fn rebuild(&mut self, res: &Resources) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
@@ -305,7 +306,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             self.dimensions = new_dimensions.map(|d| d.clone());
             return false;
         }
-        return self.dirty;
+        self.dirty
     }
 
     fn builder(

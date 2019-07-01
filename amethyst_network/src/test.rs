@@ -1,134 +1,133 @@
-#[cfg(test)]
-mod test {
-    use std::{net::SocketAddr, thread::sleep, time::Duration};
+#![cfg(test)]
 
-    use amethyst_core::{
-        ecs::{Builder, Join, World, WriteStorage},
-        shred::{Dispatcher, DispatcherBuilder, SystemData},
-    };
+use std::{net::SocketAddr, thread::sleep, time::Duration};
 
-    use crate::{
-        net_event::{NetEvent, NetPacket},
-        server::ServerConfig,
-        NetConnection, NetSocketSystem,
-    };
-    use laminar::Config;
+use amethyst_core::{
+    ecs::{Builder, Join, World, WriteStorage},
+    shred::{Dispatcher, DispatcherBuilder, SystemData},
+};
 
-    #[test]
-    fn single_packet_early() {
-        let server_addr: SocketAddr = "127.0.0.1:21200".parse().unwrap();
-        let client_addr: SocketAddr = "127.0.0.1:21202".parse().unwrap();
+use crate::{
+    net_event::{NetEvent, NetPacket},
+    server::ServerConfig,
+    NetConnection, NetSocketSystem,
+};
+use laminar::Config;
 
-        let (mut world_cl, mut cl_dispatch, mut world_sv, mut sv_dispatch) =
-            build(client_addr, server_addr);
+#[test]
+fn single_packet_early() {
+    let server_addr: SocketAddr = "127.0.0.1:21200".parse().unwrap();
+    let client_addr: SocketAddr = "127.0.0.1:21202".parse().unwrap();
 
-        let mut conn_to_server = NetConnection::<String>::new(server_addr);
-        let mut conn_to_client = NetConnection::<String>::new(client_addr);
+    let (mut world_cl, mut cl_dispatch, mut world_sv, mut sv_dispatch) =
+        build(client_addr, server_addr);
 
-        let packet = NetEvent::Packet(NetPacket::reliable_unordered(
-            "Test Message From Client1".to_string(),
-        ));
+    let mut conn_to_server = NetConnection::<String>::new(server_addr);
+    let mut conn_to_client = NetConnection::<String>::new(client_addr);
 
-        conn_to_server.queue(packet.clone());
-        world_cl.create_entity().with(conn_to_server).build();
+    let packet = NetEvent::Packet(NetPacket::reliable_unordered(
+        "Test Message From Client1".to_string(),
+    ));
 
-        let mut rcv = conn_to_client.receive_buffer.register_reader();
-        let conn_to_client_entity = world_sv.create_entity().with(conn_to_client).build();
+    conn_to_server.queue(packet.clone());
+    world_cl.create_entity().with(conn_to_server).build();
 
-        cl_dispatch.dispatch(&mut world_cl.res);
-        sleep(Duration::from_millis(500));
-        sv_dispatch.dispatch(&mut world_sv.res);
+    let mut rcv = conn_to_client.receive_buffer.register_reader();
+    let conn_to_client_entity = world_sv.create_entity().with(conn_to_client).build();
 
-        let storage = world_sv.read_storage::<NetConnection<String>>();
-        let comp = storage.get(conn_to_client_entity).unwrap();
+    cl_dispatch.dispatch(&world_cl.res);
+    sleep(Duration::from_millis(500));
+    sv_dispatch.dispatch(&world_sv.res);
 
-        assert_eq!(comp.receive_buffer.read(&mut rcv).next(), Some(&packet));
-        // We should have consumed the only event in the iterator by calling next().
-        assert!(comp.receive_buffer.read(&mut rcv).count() == 0);
-    }
+    let storage = world_sv.read_storage::<NetConnection<String>>();
+    let comp = storage.get(conn_to_client_entity).unwrap();
 
-    #[test]
-    #[ignore]
-    fn send_receive_100_packets() {
-        let server_addr: SocketAddr = "127.0.0.1:21204".parse().unwrap();
-        let client_addr: SocketAddr = "127.0.0.1:21206".parse().unwrap();
+    assert_eq!(comp.receive_buffer.read(&mut rcv).next(), Some(&packet));
+    // We should have consumed the only event in the iterator by calling next().
+    assert!(comp.receive_buffer.read(&mut rcv).count() == 0);
+}
 
-        // setup world for client and server
-        let (mut world_cl, mut cl_dispatch, mut world_sv, mut sv_dispatch) =
-            build(client_addr, server_addr);
+#[test]
+#[ignore]
+fn send_receive_100_packets() {
+    let server_addr: SocketAddr = "127.0.0.1:21204".parse().unwrap();
+    let client_addr: SocketAddr = "127.0.0.1:21206".parse().unwrap();
 
-        // setup connections from client -> server and server -> client
-        let conn_to_server = NetConnection::<String>::new(server_addr);
-        let mut conn_to_client = NetConnection::<String>::new(client_addr);
+    // setup world for client and server
+    let (mut world_cl, mut cl_dispatch, mut world_sv, mut sv_dispatch) =
+        build(client_addr, server_addr);
 
-        let packet = NetEvent::Packet(NetPacket::reliable_unordered(
-            "Test Message From Client1".to_string(),
-        ));
+    // setup connections from client -> server and server -> client
+    let conn_to_server = NetConnection::<String>::new(server_addr);
+    let mut conn_to_client = NetConnection::<String>::new(client_addr);
 
-        world_cl.create_entity().with(conn_to_server).build();
+    let packet = NetEvent::Packet(NetPacket::reliable_unordered(
+        "Test Message From Client1".to_string(),
+    ));
 
-        let mut rcv = conn_to_client.receive_buffer.register_reader();
-        let conn_to_client_entity = world_sv.create_entity().with(conn_to_client).build();
+    world_cl.create_entity().with(conn_to_server).build();
 
-        sleep(Duration::from_millis(50));
-        {
-            let mut sto = WriteStorage::<NetConnection<String>>::fetch(&world_cl.res);
+    let mut rcv = conn_to_client.receive_buffer.register_reader();
+    let conn_to_client_entity = world_sv.create_entity().with(conn_to_client).build();
 
-            for cmp in (&mut sto).join() {
-                for _i in 0..100 {
-                    cmp.queue(packet.clone());
-                }
+    sleep(Duration::from_millis(50));
+    {
+        let mut sto = WriteStorage::<NetConnection<String>>::fetch(&world_cl.res);
+
+        for cmp in (&mut sto).join() {
+            for _i in 0..100 {
+                cmp.queue(packet.clone());
             }
         }
-        cl_dispatch.dispatch(&mut world_cl.res);
-        sleep(Duration::from_millis(100));
-        sv_dispatch.dispatch(&mut world_sv.res);
-
-        let storage = world_sv.read_storage::<NetConnection<String>>();
-        let comp = storage.get(conn_to_client_entity).unwrap();
-        assert_eq!(comp.receive_buffer.read(&mut rcv).count(), 100);
     }
+    cl_dispatch.dispatch(&world_cl.res);
+    sleep(Duration::from_millis(100));
+    sv_dispatch.dispatch(&world_sv.res);
 
-    fn build<'a, 'b>(
-        client_addr: SocketAddr,
-        server_addr: SocketAddr,
-    ) -> (World, Dispatcher<'a, 'b>, World, Dispatcher<'a, 'b>) {
-        let mut world_cl = World::new();
-        let mut world_sv = World::new();
+    let storage = world_sv.read_storage::<NetConnection<String>>();
+    let comp = storage.get(conn_to_client_entity).unwrap();
+    assert_eq!(comp.receive_buffer.read(&mut rcv).count(), 100);
+}
 
-        // client config
-        let client_config = ServerConfig {
-            udp_socket_addr: client_addr,
-            max_throughput: 10000,
-            create_net_connection_on_connect: false,
-            laminar_config: Config::default(),
-        };
+fn build<'a, 'b>(
+    client_addr: SocketAddr,
+    server_addr: SocketAddr,
+) -> (World, Dispatcher<'a, 'b>, World, Dispatcher<'a, 'b>) {
+    let mut world_cl = World::new();
+    let mut world_sv = World::new();
 
-        // server config
-        let server_config = ServerConfig {
-            udp_socket_addr: server_addr,
-            max_throughput: 10000,
-            create_net_connection_on_connect: false,
-            laminar_config: Config::default(),
-        };
+    // client config
+    let client_config = ServerConfig {
+        udp_socket_addr: client_addr,
+        max_throughput: 10000,
+        create_net_connection_on_connect: false,
+        laminar_config: Config::default(),
+    };
 
-        let mut cl_dispatch = DispatcherBuilder::new()
-            .with(
-                NetSocketSystem::<String>::new(client_config).unwrap(),
-                "s",
-                &[],
-            )
-            .build();
-        cl_dispatch.setup(&mut world_cl.res);
-        let mut sv_dispatch = DispatcherBuilder::new()
-            .with(
-                NetSocketSystem::<String>::new(server_config).unwrap(),
-                "s",
-                &[],
-            )
-            .build();
-        sv_dispatch.setup(&mut world_sv.res);
+    // server config
+    let server_config = ServerConfig {
+        udp_socket_addr: server_addr,
+        max_throughput: 10000,
+        create_net_connection_on_connect: false,
+        laminar_config: Config::default(),
+    };
 
-        (world_cl, cl_dispatch, world_sv, sv_dispatch)
-    }
+    let mut cl_dispatch = DispatcherBuilder::new()
+        .with(
+            NetSocketSystem::<String>::new(client_config).unwrap(),
+            "s",
+            &[],
+        )
+        .build();
+    cl_dispatch.setup(&mut world_cl.res);
+    let mut sv_dispatch = DispatcherBuilder::new()
+        .with(
+            NetSocketSystem::<String>::new(server_config).unwrap(),
+            "s",
+            &[],
+        )
+        .build();
+    sv_dispatch.setup(&mut world_sv.res);
+
+    (world_cl, cl_dispatch, world_sv, sv_dispatch)
 }

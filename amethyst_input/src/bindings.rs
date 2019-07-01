@@ -62,7 +62,7 @@ use super::{Axis, Button};
 ///   },
 /// )
 /// ```
-pub trait BindingTypes: Send + Sync + 'static {
+pub trait BindingTypes: Debug + Send + Sync + 'static {
     /// Type used for defining axis keys. Usually an enum or string.
     type Axis: Clone + Debug + Hash + Eq + Send + Sync + 'static;
     /// Type used for defining action keys. Usually an enum or string.
@@ -72,6 +72,7 @@ pub trait BindingTypes: Send + Sync + 'static {
 /// The builtin `BindingTypes` implementation, set of types for binding configuration keys.
 /// Uses `String` for both axes and actions. Usage of this type is discouraged
 /// and it's meant mainly for prototypes. Check `BindingTypes` for examples.
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct StringBindings;
 
 impl BindingTypes for StringBindings {
@@ -105,7 +106,7 @@ impl BindingTypes for StringBindings {
 /// )
 /// ```
 #[derive(Derivative, Serialize, Deserialize)]
-#[derivative(Default(bound = ""), Clone(bound = ""))]
+#[derivative(Debug(bound = ""), Default(bound = ""), Clone(bound = ""))]
 #[serde(bound(
     serialize = "T::Axis: Serialize, T::Action: Serialize",
     deserialize = "T::Axis: Deserialize<'de>, T::Action: Deserialize<'de>",

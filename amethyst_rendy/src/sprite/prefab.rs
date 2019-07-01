@@ -265,6 +265,8 @@ mod tests {
     use rayon::ThreadPoolBuilder;
     use std::sync::Arc;
 
+    use approx::assert_ulps_eq;
+
     fn setup_sprite_world() -> World {
         let mut world = World::new();
         world.register::<SpriteRender>();
@@ -313,6 +315,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::assertions_on_constants)]
     fn sprite_sheet_prefab() {
         let mut world = setup_sprite_world();
         let texture = add_texture(&mut world);
@@ -407,24 +410,25 @@ mod tests {
 
         assert_eq!(16, sprites.len());
         for sprite in &sprites {
-            assert_eq!(50., sprite.height);
-            assert_eq!(100., sprite.width);
-            assert_eq!([0., 0.], sprite.offsets);
+            assert_ulps_eq!(50., sprite.height);
+            assert_ulps_eq!(100., sprite.width);
+            assert_ulps_eq!(0., sprite.offsets[0]);
+            assert_ulps_eq!(0., sprite.offsets[1]);
         }
-        assert_eq!(0., sprites[0].tex_coords.left);
-        assert_eq!(0.25, sprites[0].tex_coords.right);
-        assert_eq!(0.0, sprites[0].tex_coords.top);
-        assert_eq!(0.25, sprites[0].tex_coords.bottom);
+        assert_ulps_eq!(0., sprites[0].tex_coords.left);
+        assert_ulps_eq!(0.25, sprites[0].tex_coords.right);
+        assert_ulps_eq!(0.0, sprites[0].tex_coords.top);
+        assert_ulps_eq!(0.25, sprites[0].tex_coords.bottom);
 
-        assert_eq!(0.75, sprites[7].tex_coords.left);
-        assert_eq!(1.0, sprites[7].tex_coords.right);
-        assert_eq!(0.25, sprites[7].tex_coords.top);
-        assert_eq!(0.5, sprites[7].tex_coords.bottom);
+        assert_ulps_eq!(0.75, sprites[7].tex_coords.left);
+        assert_ulps_eq!(1.0, sprites[7].tex_coords.right);
+        assert_ulps_eq!(0.25, sprites[7].tex_coords.top);
+        assert_ulps_eq!(0.5, sprites[7].tex_coords.bottom);
 
-        assert_eq!(0.25, sprites[9].tex_coords.left);
-        assert_eq!(0.5, sprites[9].tex_coords.right);
-        assert_eq!(0.5, sprites[9].tex_coords.top);
-        assert_eq!(0.75, sprites[9].tex_coords.bottom);
+        assert_ulps_eq!(0.25, sprites[9].tex_coords.left);
+        assert_ulps_eq!(0.5, sprites[9].tex_coords.right);
+        assert_ulps_eq!(0.5, sprites[9].tex_coords.top);
+        assert_ulps_eq!(0.75, sprites[9].tex_coords.bottom);
 
         let sprites = SpriteGrid {
             texture_width: 192,
@@ -437,24 +441,25 @@ mod tests {
 
         assert_eq!(12, sprites.len());
         for sprite in &sprites {
-            assert_eq!(32.0, sprite.height);
-            assert_eq!(32.0, sprite.width);
-            assert_eq!([0.0, 0.0], sprite.offsets);
+            assert_ulps_eq!(32.0, sprite.height);
+            assert_ulps_eq!(32.0, sprite.width);
+            assert_ulps_eq!(0., sprite.offsets[0]);
+            assert_ulps_eq!(0., sprite.offsets[1]);
         }
-        assert_eq!(0.0, sprites[0].tex_coords.left);
-        assert_eq!(0.16666667, sprites[0].tex_coords.right);
-        assert_eq!(0.0, sprites[0].tex_coords.top);
-        assert_eq!(0.5, sprites[0].tex_coords.bottom);
+        assert_ulps_eq!(0.0, sprites[0].tex_coords.left);
+        assert_ulps_eq!(0.166_666_67, sprites[0].tex_coords.right);
+        assert_ulps_eq!(0.0, sprites[0].tex_coords.top);
+        assert_ulps_eq!(0.5, sprites[0].tex_coords.bottom);
 
-        assert_eq!(0.16666667, sprites[7].tex_coords.left);
-        assert_eq!(0.33333334, sprites[7].tex_coords.right);
-        assert_eq!(0.5, sprites[7].tex_coords.top);
-        assert_eq!(1.0, sprites[7].tex_coords.bottom);
+        assert_ulps_eq!(0.166_666_67, sprites[7].tex_coords.left);
+        assert_ulps_eq!(0.333_333_34, sprites[7].tex_coords.right);
+        assert_ulps_eq!(0.5, sprites[7].tex_coords.top);
+        assert_ulps_eq!(1.0, sprites[7].tex_coords.bottom);
 
-        assert_eq!(0.5, sprites[9].tex_coords.left);
-        assert_eq!(0.6666667, sprites[9].tex_coords.right);
-        assert_eq!(0.5, sprites[9].tex_coords.top);
-        assert_eq!(1.0, sprites[9].tex_coords.bottom);
+        assert_ulps_eq!(0.5, sprites[9].tex_coords.left);
+        assert_ulps_eq!(0.666_666_7, sprites[9].tex_coords.right);
+        assert_ulps_eq!(0.5, sprites[9].tex_coords.top);
+        assert_ulps_eq!(1.0, sprites[9].tex_coords.bottom);
     }
 
     #[test]
@@ -472,20 +477,21 @@ mod tests {
 
         assert_eq!(5, sprites.len());
         for sprite in &sprites {
-            assert_eq!(32.0, sprite.height);
-            assert_eq!(32.0, sprite.width);
-            assert_eq!([0.0, 0.0], sprite.offsets);
+            assert_ulps_eq!(32.0, sprite.height);
+            assert_ulps_eq!(32.0, sprite.width);
+            assert_ulps_eq!(0., sprite.offsets[0]);
+            assert_ulps_eq!(0., sprite.offsets[1]);
         }
 
-        assert_eq!(0.16666667, sprites[0].tex_coords.left);
-        assert_eq!(0.33333334, sprites[0].tex_coords.right);
-        assert_eq!(0.33333334, sprites[0].tex_coords.top);
-        assert_eq!(0.6666667, sprites[0].tex_coords.bottom);
+        assert_ulps_eq!(0.166_666_67, sprites[0].tex_coords.left);
+        assert_ulps_eq!(0.333_333_34, sprites[0].tex_coords.right);
+        assert_ulps_eq!(0.333_333_34, sprites[0].tex_coords.top);
+        assert_ulps_eq!(0.666_666_7, sprites[0].tex_coords.bottom);
 
-        assert_eq!(0.8333333, sprites[4].tex_coords.left);
-        assert_eq!(1.0, sprites[4].tex_coords.right);
-        assert_eq!(0.33333334, sprites[4].tex_coords.top);
-        assert_eq!(0.6666667, sprites[4].tex_coords.bottom);
+        assert_ulps_eq!(0.833_333_3, sprites[4].tex_coords.left);
+        assert_ulps_eq!(1.0, sprites[4].tex_coords.right);
+        assert_ulps_eq!(0.333_333_34, sprites[4].tex_coords.top);
+        assert_ulps_eq!(0.666_666_7, sprites[4].tex_coords.bottom);
     }
 
     #[test]
