@@ -12,7 +12,7 @@ use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform};
 use thread_profiler::profile_scope;
 
 /// Handles updating `global_matrix` field from `Transform` components.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct TransformSystem {
     local_modified: BitSet,
     locals_events_id: Option<ReaderId<ComponentEvent>>,
@@ -135,7 +135,6 @@ mod tests {
     use crate::{
         ecs::prelude::{Builder, World},
         math::{Matrix4, Quaternion, Unit, Vector3},
-        Float,
     };
     use shred::RunNow;
     use specs_hierarchy::{Hierarchy, HierarchySystem};
@@ -152,12 +151,12 @@ mod tests {
 
         let combined = Matrix4::new_translation(transform.translation())
             * transform.rotation().to_rotation_matrix().to_homogeneous()
-            * Matrix4::new_scaling(2.0.into());
+            * Matrix4::new_scaling(2.0);
 
         assert_eq!(transform.matrix(), combined);
     }
 
-    fn transform_world<'a, 'b>() -> (World, HierarchySystem<Parent>, TransformSystem) {
+    fn transform_world() -> (World, HierarchySystem<Parent>, TransformSystem) {
         let mut world = World::new();
         let mut hs = HierarchySystem::<Parent>::new();
         let mut ts = TransformSystem::new();
@@ -167,7 +166,7 @@ mod tests {
         (world, hs, ts)
     }
 
-    fn together(global_matrix: Matrix4<Float>, local_matrix: Matrix4<Float>) -> Matrix4<Float> {
+    fn together(global_matrix: Matrix4<f32>, local_matrix: Matrix4<f32>) -> Matrix4<f32> {
         global_matrix * local_matrix
     }
 
@@ -180,8 +179,8 @@ mod tests {
 
         let e1 = world.create_entity().with(transform).build();
 
-        hs.run_now(&mut world.res);
-        system.run_now(&mut world.res);
+        hs.run_now(&world.res);
+        system.run_now(&world.res);
 
         let transform = world.read_storage::<Transform>().get(e1).unwrap().clone();
         // let a1: [[f32; 4]; 4] = transform.global_matrix().into();
@@ -205,8 +204,8 @@ mod tests {
 
         let e1 = world.create_entity().with(local.clone()).build();
 
-        hs.run_now(&mut world.res);
-        system.run_now(&mut world.res);
+        hs.run_now(&world.res);
+        system.run_now(&world.res);
 
         let transform = world.read_storage::<Transform>().get(e1).unwrap().clone();
         let a1 = transform.global_matrix();
@@ -245,8 +244,8 @@ mod tests {
             .with(Parent { entity: e2 })
             .build();
 
-        hs.run_now(&mut world.res);
-        system.run_now(&mut world.res);
+        hs.run_now(&world.res);
+        system.run_now(&world.res);
 
         let e1_transform = world.read_storage::<Transform>().get(e1).unwrap().clone();
         let a1 = e1_transform.global_matrix();
@@ -318,14 +317,14 @@ mod tests {
             parents.insert(e3, Parent { entity: e2 }).unwrap();
         }
 
-        hs.run_now(&mut world.res);
-        system.run_now(&mut world.res);
+        hs.run_now(&world.res);
+        system.run_now(&world.res);
 
         let global_matrix1 = {
             let e1_transform = world.read_storage::<Transform>().get(e1).unwrap().clone();
 
             // First entity (top level parent)
-            let a1 = e1_transform.global_matrix().clone();
+            let a1 = *e1_transform.global_matrix();
             let a2 = local1.matrix();
             assert_eq!(a1, a2);
             a1
@@ -334,7 +333,7 @@ mod tests {
         let global_matrix2 = {
             let e2_transform = world.read_storage::<Transform>().get(e2).unwrap().clone();
 
-            let a1 = e2_transform.global_matrix().clone();
+            let a1 = *e2_transform.global_matrix();
             let a2 = together(global_matrix1, local2.matrix());
             assert_eq!(a1, a2);
             a1
@@ -352,6 +351,7 @@ mod tests {
     #[test]
     #[should_panic]
     #[cfg(debug_assertions)]
+    #[allow(clippy::eq_op, clippy::zero_divided_by_zero)]
     fn nan_transform() {
         let (mut world, mut hs, mut system) = transform_world();
 
@@ -361,8 +361,8 @@ mod tests {
 
         world.create_entity().with(local.clone()).build();
 
-        hs.run_now(&mut world.res);
-        system.run_now(&mut world.res);
+        hs.run_now(&world.res);
+        system.run_now(&world.res);
     }
 
     #[test]
@@ -376,8 +376,8 @@ mod tests {
         local.set_translation_xyz(1.0 / 0.0, 1.0 / 0.0, 1.0 / 0.0);
         world.create_entity().with(local.clone()).build();
 
-        hs.run_now(&mut world.res);
-        system.run_now(&mut world.res);
+        hs.run_now(&world.res);
+        system.run_now(&world.res);
     }
 
     #[test]
@@ -405,14 +405,14 @@ mod tests {
             .with(Transform::default())
             .with(Parent { entity: e4 })
             .build();
-        hs.run_now(&mut world.res);
-        system.run_now(&mut world.res);
+        hs.run_now(&world.res);
+        system.run_now(&world.res);
         world.maintain();
         println!("{:?}", world.read_resource::<Hierarchy<Parent>>().all());
 
         let _ = world.delete_entity(e1);
-        hs.run_now(&mut world.res);
-        system.run_now(&mut world.res);
+        hs.run_now(&world.res);
+        system.run_now(&world.res);
         world.maintain();
         println!("{:?}", world.read_resource::<Hierarchy<Parent>>().all());
 
@@ -420,11 +420,11 @@ mod tests {
         assert_eq!(world.is_alive(e2), false);
 
         let _ = world.delete_entity(e3);
-        hs.run_now(&mut world.res);
-        system.run_now(&mut world.res);
+        hs.run_now(&world.res);
+        system.run_now(&world.res);
         world.maintain();
-        hs.run_now(&mut world.res);
-        system.run_now(&mut world.res);
+        hs.run_now(&world.res);
+        system.run_now(&world.res);
         world.maintain();
 
         assert_eq!(world.is_alive(e3), false);
@@ -455,8 +455,8 @@ mod tests {
             transforms.register_reader()
         };
 
-        hs.run_now(&mut world.res);
-        system.run_now(&mut world.res);
+        hs.run_now(&world.res);
+        system.run_now(&world.res);
         world.maintain();
 
         {
@@ -464,8 +464,8 @@ mod tests {
             for _component_event in transforms.channel().read(&mut transform_reader) {}
         }
 
-        hs.run_now(&mut world.res);
-        system.run_now(&mut world.res);
+        hs.run_now(&world.res);
+        system.run_now(&world.res);
         world.maintain();
         {
             let transforms = world.write_storage::<Transform>();

@@ -41,6 +41,7 @@ where
 
 /// Utility lookup for tag components
 #[derive(SystemData)]
+#[allow(missing_debug_implementations)]
 pub struct TagFinder<'a, T>
 where
     T: Clone + Send + Sync + 'static,

@@ -8,23 +8,29 @@ use std::path::Path;
 use winit::{Event, EventsLoop, Window};
 
 /// System for opening and managing the window.
+#[derive(Debug)]
 pub struct WindowSystem {
     window: Option<Window>,
 }
 
 impl WindowSystem {
+    /// Builds and spawns a new `Window`, using the provided `DisplayConfig` and `EventsLoop` as
+    /// sources. Returns a new `WindowSystem`
     pub fn from_config_path(events_loop: &EventsLoop, path: impl AsRef<Path>) -> Self {
         Self::from_config(events_loop, DisplayConfig::load(path.as_ref()))
     }
 
+    /// Builds and spawns a new `Window`, using the provided `DisplayConfig` and `EventsLoop` as
+    /// sources. Returns a new `WindowSystem`
     pub fn from_config(events_loop: &EventsLoop, config: DisplayConfig) -> Self {
         let window = config
-            .to_window_builder(events_loop)
+            .into_window_builder(events_loop)
             .build(events_loop)
             .unwrap();
         Self::new(window)
     }
 
+    /// Create a new `WindowSystem` wrapping the provided `Window`
     pub fn new(window: Window) -> Self {
         Self {
             window: Some(window),
@@ -85,12 +91,14 @@ impl<'a> System<'a> for WindowSystem {
 ///
 /// This system must be active for any `GameState` to receive
 /// any `StateEvent::Window` event into it's `handle_event` method.
+#[derive(Debug)]
 pub struct EventsLoopSystem {
     events_loop: EventsLoop,
     events: Vec<Event>,
 }
 
 impl EventsLoopSystem {
+    /// Creates a new `EventsLoopSystem` using the provided `EventsLoop`
     pub fn new(events_loop: EventsLoop) -> Self {
         Self {
             events_loop,

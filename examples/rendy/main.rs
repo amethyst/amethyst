@@ -664,6 +664,7 @@ struct ExampleGraph {
     dirty: bool,
 }
 
+#[allow(clippy::map_clone)] // This lint is actually wrong, because we are mapping an option not an iterator
 impl<B: Backend> GraphCreator<B> for ExampleGraph {
     fn rebuild(&mut self, res: &Resources) -> bool {
         let new_mode = res.fetch::<RenderMode>();
@@ -681,7 +682,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
             self.dimensions = new_dimensions.map(|d| d.clone());
             return false;
         }
-        return self.dirty;
+        self.dirty
     }
 
     fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {

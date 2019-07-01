@@ -1,5 +1,5 @@
 use amethyst::{
-    core::{transform::Transform, Float},
+    core::transform::Transform,
     ecs::prelude::{Join, ReadStorage, System, WriteStorage},
 };
 
@@ -24,16 +24,16 @@ impl<'s> System<'s> for BounceSystem {
             let ball_y = transform.translation().y;
 
             // Bounce at the top or the bottom of the arena.
-            if (ball_y <= Float::from(ball.radius) && ball.velocity[1] < 0.0)
-                || (ball_y >= Float::from(ARENA_HEIGHT - ball.radius) && ball.velocity[1] > 0.0)
+            if (ball_y <= ball.radius && ball.velocity[1] < 0.0)
+                || (ball_y >= ARENA_HEIGHT - ball.radius && ball.velocity[1] > 0.0)
             {
                 ball.velocity[1] = -ball.velocity[1];
             }
 
             // Bounce at the paddles.
             for (paddle, paddle_transform) in (&paddles, &transforms).join() {
-                let paddle_x = paddle_transform.translation().x - (paddle.width * 0.5).into();
-                let paddle_y = paddle_transform.translation().y - (paddle.height * 0.5).into();
+                let paddle_x = paddle_transform.translation().x - (paddle.width * 0.5);
+                let paddle_y = paddle_transform.translation().y - (paddle.height * 0.5);
 
                 // To determine whether the ball has collided with a paddle, we create a larger
                 // rectangle around the current one, by subtracting the ball radius from the
@@ -43,16 +43,14 @@ impl<'s> System<'s> for BounceSystem {
                 if point_in_rect(
                     ball_x,
                     ball_y,
-                    paddle_x - ball.radius.into(),
-                    paddle_y - ball.radius.into(),
-                    paddle_x + (paddle.width + ball.radius).into(),
-                    paddle_y + (paddle.height + ball.radius).into(),
-                ) {
-                    if (paddle.side == Side::Left && ball.velocity[0] < 0.0)
-                        || (paddle.side == Side::Right && ball.velocity[0] > 0.0)
-                    {
-                        ball.velocity[0] = -ball.velocity[0];
-                    }
+                    paddle_x - ball.radius,
+                    paddle_y - ball.radius,
+                    paddle_x + (paddle.width + ball.radius),
+                    paddle_y + (paddle.height + ball.radius),
+                ) && ((paddle.side == Side::Left && ball.velocity[0] < 0.0)
+                    || (paddle.side == Side::Right && ball.velocity[0] > 0.0))
+                {
+                    ball.velocity[0] = -ball.velocity[0];
                 }
             }
         }
@@ -61,6 +59,6 @@ impl<'s> System<'s> for BounceSystem {
 
 // A point is in a box when its coordinates are smaller or equal than the top
 // right and larger or equal than the bottom left.
-fn point_in_rect(x: Float, y: Float, left: Float, bottom: Float, right: Float, top: Float) -> bool {
+fn point_in_rect(x: f32, y: f32, left: f32, bottom: f32, right: f32, top: f32) -> bool {
     x >= left && x <= right && y >= bottom && y <= top
 }

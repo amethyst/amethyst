@@ -29,6 +29,7 @@ const DEFAULT_TXT_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 
 /// Container for all the resources the builder needs to make a new UiButton.
 #[derive(SystemData)]
+#[allow(missing_debug_implementations)]
 pub struct UiButtonBuilderResources<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId = u32> {
     font_asset: Read<'a, AssetStorage<FontAsset>>,
     texture_asset: Read<'a, AssetStorage<Texture>>,
@@ -377,7 +378,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
                     0.,
                     0.,
                 )
-                .as_transparent()
+                .into_transparent()
                 .with_stretch(Stretch::XY {
                     x_margin: 0.,
                     y_margin: 0.,

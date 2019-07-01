@@ -15,6 +15,7 @@ use thread_profiler::profile_scope;
 ///
 /// Will read `winit::Event` from `EventHandler<winit::Event>`, process them with `InputHandler`,
 /// and push the results in `EventHandler<InputEvent>`.
+#[derive(Debug)]
 pub struct InputSystem<T: BindingTypes> {
     reader: ReaderId<Event>,
     bindings: Option<Bindings<T>>,
@@ -39,9 +40,9 @@ impl<T: BindingTypes> InputSystem<T> {
         event: &Event,
         handler: &mut InputHandler<T>,
         output: &mut EventChannel<InputEvent<T::Action>>,
-        hidpi: f64,
+        hidpi: f32,
     ) {
-        handler.send_event(event, output, hidpi);
+        handler.send_event(event, output, hidpi as f32);
     }
 }
 
@@ -63,7 +64,7 @@ impl<'a, T: BindingTypes> System<'a> for InputSystem<T> {
                 event,
                 &mut *handler,
                 &mut *output,
-                screen_dimensions.hidpi_factor(),
+                screen_dimensions.hidpi_factor() as f32,
             );
         }
     }

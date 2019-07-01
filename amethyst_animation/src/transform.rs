@@ -1,6 +1,6 @@
 use amethyst_core::{
     math::{zero, Quaternion, Unit, Vector3, Vector4},
-    Float, Transform,
+    Transform,
 };
 
 use serde::{Deserialize, Serialize};
@@ -26,10 +26,10 @@ impl<'a> ApplyData<'a> for Transform {
 }
 
 impl AnimationSampling for Transform {
-    type Primitive = SamplerPrimitive<Float>;
+    type Primitive = SamplerPrimitive<f32>;
     type Channel = TransformChannel;
 
-    fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<Float>, _: &()) {
+    fn apply_sample(&mut self, channel: &Self::Channel, data: &SamplerPrimitive<f32>, _: &()) {
         use crate::util::SamplerPrimitive::*;
 
         use self::TransformChannel::*;
@@ -48,7 +48,7 @@ impl AnimationSampling for Transform {
         }
     }
 
-    fn current_sample(&self, channel: &Self::Channel, _: &()) -> SamplerPrimitive<Float> {
+    fn current_sample(&self, channel: &Self::Channel, _: &()) -> SamplerPrimitive<f32> {
         use self::TransformChannel::*;
         match channel {
             Translation => SamplerPrimitive::Vec3((*self.translation()).into()),

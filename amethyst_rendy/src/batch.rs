@@ -296,12 +296,12 @@ where
     }
 
     /// Returns an iterator over batched data lists.
-    pub fn data<'a>(&'a self) -> impl Iterator<Item = &'a Vec<D>> {
+    pub fn data(&self) -> impl Iterator<Item = &Vec<D>> {
         self.map.values()
     }
 
     /// Returns an iterator over batched values, providing batch `PK` and data list.
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a PK, Range<u32>)> {
+    pub fn iter(&self) -> impl Iterator<Item = (&PK, Range<u32>)> {
         let mut offset = 0;
         self.map.iter().map(move |(pk, data)| {
             let range = offset..offset + data.len() as u32;
@@ -370,7 +370,7 @@ where
     }
 
     /// Iterator that returns primary keys and lengths of submitted batch
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (&'a PK, Range<u32>)> {
+    pub fn iter(&self) -> impl Iterator<Item = (&PK, Range<u32>)> {
         let mut offset = 0;
         self.keys_list.iter().map(move |(pk, size)| {
             let range = offset..offset + *size;

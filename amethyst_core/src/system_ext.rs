@@ -101,6 +101,7 @@ where
 /// This is created using the [`SystemExt::pausable`] method.
 ///
 /// [`SystemExt::pausable`]: trait.SystemExt.html#tymethod.pausable
+#[derive(Debug)]
 pub struct Pausable<S, V> {
     system: S,
     value: V,
