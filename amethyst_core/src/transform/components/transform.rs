@@ -609,7 +609,7 @@ impl From<Vector3<f64>> for Transform {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename = "Transform", default)]
 struct TransformValues {
     translation: [f32; 3],
