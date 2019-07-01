@@ -136,7 +136,11 @@ pub struct HotReloadSystem {
 
 impl HotReloadSystem {
     /// Create a new reload system
-    pub fn new(strategy: HotReloadStrategy) -> Self {
+    pub fn new(world: &mut World, strategy: HotReloadStrategy) -> Self {
+        use amethyst_core::ecs::prelude::SystemData;
+        Self::SystemData::setup(world.res);
+        res.insert(self.initial_strategy.clone());
+        res.fetch_mut::<Loader>().set_hot_reload(true);
         HotReloadSystem {
             initial_strategy: strategy,
         }
@@ -172,13 +176,6 @@ impl<'a> System<'a> for HotReloadSystem {
             }
             HotReloadStrategyInner::Never => {}
         }
-    }
-
-    fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(res);
-        res.insert(self.initial_strategy.clone());
-        res.fetch_mut::<Loader>().set_hot_reload(true);
     }
 }
 

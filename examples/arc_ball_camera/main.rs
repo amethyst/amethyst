@@ -65,12 +65,16 @@ impl SimpleState for ExampleState {
 }
 
 struct CameraDistanceSystem {
-    event_reader: Option<ReaderId<InputEvent<String>>>,
+    event_reader: ReaderId<InputEvent<String>>,
 }
 
 impl CameraDistanceSystem {
     pub fn new() -> Self {
-        CameraDistanceSystem { event_reader: None }
+        Self::SystemData::setup(res);
+        let event_reader = world.res.fetch_mut::<EventChannel<InputEvent<String>>>()
+                .register_reader();
+
+        CameraDistanceSystem { event_reader }
     }
 }
 
@@ -82,7 +86,7 @@ impl<'a> System<'a> for CameraDistanceSystem {
     );
 
     fn run(&mut self, (events, transforms, mut tags): Self::SystemData) {
-        for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
+        for event in events.read(&mut self.event_reader) {
             match *event {
                 InputEvent::MouseWheelMoved(direction) => match direction {
                     ScrollDirection::ScrollUp => {
@@ -103,13 +107,7 @@ impl<'a> System<'a> for CameraDistanceSystem {
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        Self::SystemData::setup(res);
-
-        self.event_reader = Some(
-            res.fetch_mut::<EventChannel<InputEvent<String>>>()
-                .register_reader(),
-        );
-    }
+            }
 }
 
 fn main() -> Result<(), Error> {

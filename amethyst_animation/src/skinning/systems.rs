@@ -28,8 +28,16 @@ pub struct VertexSkinningSystem {
 
 impl VertexSkinningSystem {
     /// Creates a new `VertexSkinningSystem`
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(world: &mut World) -> Self {
+        use amethyst_core::ecs::prelude::SystemData;
+        Self::SystemData::setup(world.res);
+        let mut transform = WriteStorage::<Transform>::fetch(world.res);
+        let updated_id = transform.register_reader();
+        Self {
+            updated: BitSet::default(),
+            updated_skins: BitSet::default(),
+            updated_id,
+        }
     }
 }
 
@@ -49,9 +57,7 @@ impl<'a> System<'a> for VertexSkinningSystem {
 
         global_transforms
             .channel()
-            .read(self.updated_id.as_mut().expect(
-                "`VertexSkinningSystem::setup` was not called before `VertexSkinningSystem::run`",
-            ))
+            .read(&mut self.updated_id)
             .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
                     self.updated.add(*id);
@@ -125,12 +131,5 @@ impl<'a> System<'a> for VertexSkinningSystem {
                 }
             }
         }
-    }
-
-    fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(res);
-        let mut transform = WriteStorage::<Transform>::fetch(res);
-        self.updated_id = Some(transform.register_reader());
     }
 }

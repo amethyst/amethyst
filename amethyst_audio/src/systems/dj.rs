@@ -29,7 +29,10 @@ impl<F, R> DjSystem<F, R> {
     /// The closure takes a parameter, which needs to be a reference to
     /// a resource type, e.g. `&MusicLibrary`. This resource will be fetched
     /// by the system and passed to the picker.
-    pub fn new(f: F) -> Self {
+    pub fn new(world: &mut World, f: F) -> Self {
+        use amethyst_core::ecs::prelude::SystemData;
+        Self::SystemData::setup(world.res);
+        init_output(world.res);
         DjSystem {
             f,
             marker: PhantomData,
@@ -60,11 +63,5 @@ where
                 }
             }
         }
-    }
-
-    fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(res);
-        init_output(res);
     }
 }

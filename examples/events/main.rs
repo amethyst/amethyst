@@ -60,21 +60,26 @@ impl<'a> System<'a> for SpammingSystem {
 }
 
 struct ReceivingSystem {
-    reader: Option<ReaderId<MyEvent>>,
+    reader: ReaderId<MyEvent>,
+}
+
+impl ReceivingSystem {
+    pub fn new(world: &mut World) {
+        Self::SystemData::setup(world.res);
+        let reader = world.res.fetch_mut::<EventChannel<MyEvent>>().register_reader();
+        ReceivingSystem {
+            reader
+        }
+    }
 }
 
 impl<'a> System<'a> for ReceivingSystem {
     type SystemData = Read<'a, EventChannel<MyEvent>>;
 
     fn run(&mut self, my_event_channel: Self::SystemData) {
-        for event in my_event_channel.read(self.reader.as_mut().unwrap()) {
+        for event in my_event_channel.read(self.reader) {
             println!("Received an event: {:?}", event);
         }
-    }
-
-    fn setup(&mut self, res: &mut Resources) {
-        Self::SystemData::setup(res);
-        self.reader = Some(res.fetch_mut::<EventChannel<MyEvent>>().register_reader());
     }
 }
 

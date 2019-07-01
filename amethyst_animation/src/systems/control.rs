@@ -50,7 +50,9 @@ where
     I: Eq + Hash,
 {
     /// Creates a new `AnimationControlSystem`
-    pub fn new() -> Self {
+    pub fn new(world: &mut World) -> Self {
+        Self::SystemData::setup(world.res);
+        ReadStorage::<AnimationSet<I, T>>::setup(world.res);
         AnimationControlSystem {
             m: marker::PhantomData,
             next_id: 1,
@@ -210,11 +212,6 @@ where
         for entity in remove_sets {
             controls.remove(entity);
         }
-    }
-
-    fn setup(&mut self, res: &mut Resources) {
-        Self::SystemData::setup(res);
-        ReadStorage::<AnimationSet<I, T>>::setup(res);
     }
 }
 
