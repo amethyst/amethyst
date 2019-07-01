@@ -60,11 +60,11 @@ impl<'s> System<'s> for WinnerSystem {
         for (ball, transform) in (&mut balls, &mut locals).join() {
             let ball_x = transform.translation().x;
 
-            let did_hit = if ball_x.as_f32() <= ball.radius {
+            let did_hit = if ball_x <= ball.radius {
                 // Right player scored on the left side.
                 println!("Player 2 Scores!");
                 true
-            } else if ball_x.as_f32() >= ARENA_WIDTH - ball.radius {
+            } else if ball_x >= ARENA_WIDTH - ball.radius {
                 // Left player scored on the right side.
                 println!("Player 1 Scores!");
                 true
@@ -269,7 +269,7 @@ Finally, add the `UiBundle` after the `InputBundle`:
 # fn main() -> Result<(), amethyst::Error>{
 # let display_config_path = "";
 # struct Pong;
-# let game_data = GameDataBuilder::<f32>::default()
+# let game_data = GameDataBuilder::default()
 .with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
 # ;
 # 
@@ -482,7 +482,7 @@ impl<'s> System<'s> for WinnerSystem {
 #             let ball_x = transform.translation().x;
             // --snip--
 
-            let did_hit = if ball_x.as_f32() <= ball.radius {
+            let did_hit = if ball_x <= ball.radius {
                 // Right player scored on the left side.
                 // We top the score at 999 to avoid text overlap.
                 scores.score_right = (scores.score_right + 1)
@@ -492,7 +492,7 @@ impl<'s> System<'s> for WinnerSystem {
                     text.text = scores.score_right.to_string();
                 }
                 true
-            } else if ball_x.as_f32() >= ARENA_WIDTH - ball.radius {
+            } else if ball_x >= ARENA_WIDTH - ball.radius {
                 // Left player scored on the right side.
                 // We top the score at 999 to avoid text overlap.
                 scores.score_left = (scores.score_left + 1)

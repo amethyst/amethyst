@@ -9,7 +9,14 @@
 // Parts copied from failure:
 // https://github.com/rust-lang-nursery/failure
 
-#![warn(missing_docs)]
+#![warn(
+    missing_debug_implementations,
+    missing_docs,
+    rust_2018_idioms,
+    rust_2018_compatibility
+)]
+#![warn(clippy::all)]
+#![allow(clippy::new_without_default)]
 
 pub use backtrace::Backtrace;
 use std::{
@@ -436,8 +443,7 @@ mod tests {
 
         assert!(frame_names
             .iter()
-            .find(|n| n.ends_with("a_really_unique_name_42"))
-            .is_some());
+            .any(|n| n.ends_with("a_really_unique_name_42")));
 
         // Test disabled.
         BACKTRACE_STATUS.store(1, atomic::Ordering::Relaxed);

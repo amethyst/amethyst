@@ -8,7 +8,7 @@ use amethyst_animation::{
 };
 use amethyst_core::{
     math::{convert, Vector3, Vector4},
-    Float, Transform,
+    Transform,
 };
 
 use super::Buffers;
@@ -48,7 +48,7 @@ fn load_animation(
 fn load_channel(
     channel: &gltf::animation::Channel<'_>,
     buffers: &Buffers,
-) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<Float>>), Error> {
+) -> Result<(usize, TransformChannel, Sampler<SamplerPrimitive<f32>>), Error> {
     use gltf::animation::util::ReadOutputs::*;
     let sampler = channel.sampler();
     let target = channel.target();
@@ -69,7 +69,7 @@ fn load_channel(
                 function: map_interpolation_type(sampler.interpolation()),
                 output: translations
                     .map(Vector3::from)
-                    .map(|t| convert::<_, Vector3<Float>>(t).into())
+                    .map(|t| convert::<_, Vector3<f32>>(t).into())
                     .collect(),
             },
         )),
@@ -89,7 +89,7 @@ fn load_channel(
                     output: rotations
                         .into_f32()
                         .map(Vector4::from)
-                        .map(|q| convert::<_, Vector4<Float>>(q).into())
+                        .map(|q| convert::<_, Vector4<f32>>(q).into())
                         .collect(),
                 },
             ))
@@ -102,7 +102,7 @@ fn load_channel(
                 function: map_interpolation_type(sampler.interpolation()),
                 output: scales
                     .map(Vector3::from)
-                    .map(|s| convert::<_, Vector3<Float>>(s).into())
+                    .map(|s| convert::<_, Vector3<f32>>(s).into())
                     .collect(),
             },
         )),

@@ -48,7 +48,7 @@ pub trait EventRetrigger: Component {
 /// Links up the given in- and output types' `EventChannel`s listening
 /// to incoming events and calling `apply` on the respective `Retrigger`
 /// components.
-#[derive(Derivative)]
+#[derive(Derivative, Debug)]
 #[derivative(Default(bound = ""))]
 pub struct EventRetriggerSystem<T: EventRetrigger> {
     event_reader: Option<ReaderId<T::In>>,

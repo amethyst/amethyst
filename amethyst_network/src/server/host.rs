@@ -10,6 +10,7 @@ use laminar::{Packet, Socket, SocketEvent};
 use std::thread;
 
 /// 'Host' abstracts Laminar udp sockets away.
+#[allow(missing_debug_implementations)] // TODO: Revisit this, laminar doesn't implement debug anywhere
 pub struct Host {
     packet_sender: Sender<Packet>,
     packet_receiver: Receiver<SocketEvent>,

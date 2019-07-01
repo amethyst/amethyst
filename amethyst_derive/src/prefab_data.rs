@@ -1,3 +1,5 @@
+//! PrefabData Implementation
+
 use proc_macro2::{Literal, Span, TokenStream};
 use quote::quote;
 use syn::{

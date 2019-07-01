@@ -48,12 +48,6 @@ by [shaderc]). Please note, that on Windows this feature requires [Ninja] to be 
 [shaderc]: https://github.com/google/shaderc
 [Ninja]: https://ninja-build.org/
 
-## Float representation
-
-We're using the `Float` type in Amethyst to hide the precision of the floating-point numbers.
-This allows switching to 64-bit precision without breaking code. To do that, you can simply enable
-the `float64` feature.
-
 ## Using Amethyst testing utility
 
 As described in the [Testing chapter](../testing.html), Amethyst has several utilities to help you

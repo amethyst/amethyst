@@ -16,7 +16,7 @@ use crate::HiddenPropagate;
 /// This system adds a [HiddenPropagate](struct.HiddenPropagate.html)-component to all children.
 /// Using this system will result in every child being hidden.
 /// Depends on the resource "ParentHierarchy", which is set up by the [TransformBundle](struct.TransformBundle.html)
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct HideHierarchySystem {
     marked_as_modified: BitSet,
 

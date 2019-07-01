@@ -18,6 +18,7 @@ use std::collections::VecDeque;
 /// assert_eq!(*buf.queue(), VecDeque::<u32>::from(vec![2, 3]));
 /// assert_eq!(buf.capacity(), 2);
 /// ```
+#[derive(Debug)]
 pub struct CircularBuffer<A> {
     queue: VecDeque<A>,
     cap: usize,

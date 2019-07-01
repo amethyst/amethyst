@@ -24,6 +24,7 @@ define_widget!(UiLabel =>
 );
 
 /// Container for all the resources the builder needs to make a new UiLabel.
+#[allow(missing_debug_implementations)]
 #[derive(SystemData)]
 pub struct UiLabelBuilderResources<'a, I: WidgetId = u32>
 where
@@ -38,6 +39,7 @@ where
 }
 
 /// Convenience structure for building a label
+#[derive(Debug)]
 pub struct UiLabelBuilder<I = u32>
 where
     I: WidgetId,

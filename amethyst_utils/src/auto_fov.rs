@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 use thread_profiler::profile_scope;
 
 /// A component describing the behavior of the camera in accordance with the screen dimensions
-#[derive(Clone, Deserialize, PrefabData, Serialize)]
+#[derive(Clone, Debug, Deserialize, PrefabData, Serialize)]
 #[prefab(Component)]
 #[serde(default)]
 pub struct AutoFov {
@@ -211,7 +211,7 @@ impl Component for AutoFov {
 impl Default for AutoFov {
     fn default() -> Self {
         AutoFov {
-            base_fovx: 1.861_684_535,
+            base_fovx: 1.861_684_6, // This is actually 1.861_684_535, but float precision is lost beyond this
             fovx_growth_rate: 1.0,
             fixed_growth_rate: false,
             base_aspect_ratio: (16, 9),
@@ -229,6 +229,7 @@ impl Default for AutoFov {
 /// If the camera is being loaded by a prefab, it is best to have the `PrefabLoaderSystem` loading
 /// the camera as a dependency of this system. It enables the system to adjust the camera right
 /// after it is created -- simply put, in the same frame.
+#[derive(Debug)]
 pub struct AutoFovSystem {
     last_dimensions: ScreenDimensions,
 }

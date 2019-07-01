@@ -23,13 +23,14 @@ use thread_profiler::profile_scope;
 // TODO: make gfx type cloneable
 #[derive(Derivative, Debug)]
 #[derivative(Clone(bound = ""))]
-enum LocalBasePipeline<'a, P: 'a> {
+enum LocalBasePipeline<'a, P> {
     Pipeline(&'a P),
     Index(usize),
     None,
 }
 
 /// Builder abstraction for constructing a backend-agnostic rendy `GraphicsPipeline`
+
 #[derive(Derivative, Debug)]
 #[derivative(Clone(bound = ""))]
 pub struct PipelineDescBuilder<'a, B: Backend> {
@@ -51,21 +52,7 @@ pub struct PipelineDescBuilder<'a, B: Backend> {
 impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     /// Create a new builder instance.
     pub fn new() -> Self {
-        Self {
-            shaders: None,
-            rasterizer: Rasterizer::FILL,
-            vertex_buffers: Vec::new(),
-            attributes: Vec::new(),
-            input_assembler: InputAssemblerDesc::new(Primitive::TriangleList),
-            blender: BlendDesc::default(),
-            depth_stencil: DepthStencilDesc::default(),
-            multisampling: None,
-            baked_states: BakedStates::default(),
-            layout: None,
-            subpass: None,
-            flags: PipelineCreationFlags::empty(),
-            parent: LocalBasePipeline::None,
-        }
+        Self::default()
     }
 
     /// Build with the provided `GraphicsShadersSet`
@@ -287,6 +274,26 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
                 LocalBasePipeline::Index(i) => BasePipeline::Index(i),
                 LocalBasePipeline::None => BasePipeline::None,
             },
+        }
+    }
+}
+
+impl<'a, B: Backend> Default for PipelineDescBuilder<'a, B> {
+    fn default() -> Self {
+        Self {
+            shaders: None,
+            rasterizer: Rasterizer::FILL,
+            vertex_buffers: Vec::new(),
+            attributes: Vec::new(),
+            input_assembler: InputAssemblerDesc::new(Primitive::TriangleList),
+            blender: BlendDesc::default(),
+            depth_stencil: DepthStencilDesc::default(),
+            multisampling: None,
+            baked_states: BakedStates::default(),
+            layout: None,
+            subpass: None,
+            flags: PipelineCreationFlags::empty(),
+            parent: LocalBasePipeline::None,
         }
     }
 }

@@ -40,6 +40,7 @@ impl UiGlyphsResource {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct UiGlyphs {
     pub(crate) sel_vertices: Vec<UiArgs>,
     pub(crate) vertices: Vec<UiArgs>,
@@ -84,6 +85,7 @@ impl LineBreaker for CustomLineBreaker {
 }
 
 /// Manages the text editing cursor create, deletion and position.
+#[allow(missing_debug_implementations)]
 pub struct UiGlyphsSystem<B: Backend> {
     glyph_brush: GlyphBrush<'static, (u32, UiArgs)>,
     fonts_map: HashMap<u32, FontState>,
@@ -110,6 +112,7 @@ impl<B: Backend> Default for UiGlyphsSystem<B> {
 }
 
 impl<'a, B: Backend> System<'a> for UiGlyphsSystem<B> {
+    #[allow(clippy::type_complexity)]
     type SystemData = (
         Option<Write<'a, Factory<B>>>,
         Option<Read<'a, QueueId>>,

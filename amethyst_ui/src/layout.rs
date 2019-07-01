@@ -127,7 +127,7 @@ pub enum Stretch {
 /// Manages the `Parent` component on entities having `UiTransform`
 /// It does almost the same as the `TransformSystem`, but with some differences,
 /// like `UiTransform` alignment and stretching.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct UiTransformSystem {
     transform_modified: BitSet,
 

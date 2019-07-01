@@ -112,7 +112,7 @@ impl CustomPrefabState {
             prefab
                 .entities()
                 .for_each(|entity| println!("{:?}", entity));
-            println!("");
+            println!();
         }
     }
 

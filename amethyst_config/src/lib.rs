@@ -1,7 +1,14 @@
 //! Loads RON files into a structure for easy / statically typed usage.
 
 #![crate_name = "amethyst_config"]
-#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
+#![warn(
+    missing_debug_implementations,
+    missing_docs,
+    rust_2018_idioms,
+    rust_2018_compatibility
+)]
+#![warn(clippy::all)]
+#![allow(clippy::new_without_default)]
 
 use std::{
     error::Error,
