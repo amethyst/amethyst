@@ -13,6 +13,7 @@ use std::{collections::HashMap, error::Error, marker::PhantomData, sync::Arc};
 pub(crate) use atelier_loader::LoadHandle;
 pub use atelier_loader::{AssetUuid, LoadStatus, TypeUuid};
 
+/// Handle to an asset.
 #[derive(Derivative)]
 #[derivative(
     Clone(bound = ""),
@@ -26,6 +27,7 @@ pub struct Handle<T: ?Sized> {
     id: LoadHandle,
     marker: PhantomData<T>,
 }
+
 impl<T> Handle<T> {
     fn new(chan: Arc<Sender<RefOp>>, handle: LoadHandle) -> Self {
         Self {
@@ -35,16 +37,22 @@ impl<T> Handle<T> {
         }
     }
 }
+
 impl<T: ?Sized> Drop for Handle<T> {
     fn drop(&mut self) {
         self.chan.send(RefOp::Decrease(self.id))
     }
 }
+
 impl<T> AssetHandle for Handle<T> {
     fn load_handle(&self) -> &LoadHandle {
         &self.id
     }
 }
+
+/// Handle to an asset whose type is unknown during loading.
+///
+/// This is returned by `Loader::load_asset_generic` for assets loaded by UUID.
 #[derive(Derivative)]
 #[derivative(
     Clone(bound = ""),
@@ -57,22 +65,30 @@ pub struct GenericHandle {
     chan: Arc<Sender<RefOp>>,
     id: LoadHandle,
 }
+
 impl GenericHandle {
     fn new(chan: Arc<Sender<RefOp>>, handle: LoadHandle) -> Self {
         Self { chan, id: handle }
     }
 }
+
 impl Drop for GenericHandle {
     fn drop(&mut self) {
         self.chan.send(RefOp::Decrease(self.id))
     }
 }
+
 impl AssetHandle for GenericHandle {
     fn load_handle(&self) -> &LoadHandle {
         &self.id
     }
 }
 
+/// Handle to an asset that does not prevent the asset from being unloaded.
+///
+/// This is useful for balancing performance and memory usage -- frequently or recently used assets
+/// may be held with strong references, and assets that are not used frequently or recently are
+/// downgraded to weak handles so that they may be freed when memory usage is reaching a set limit.
 #[derive(Derivative)]
 #[derivative(
     Clone(bound = ""),
@@ -84,11 +100,13 @@ impl AssetHandle for GenericHandle {
 pub struct WeakHandle {
     id: LoadHandle,
 }
+
 impl WeakHandle {
     fn new(handle: LoadHandle) -> Self {
         WeakHandle { id: handle }
     }
 }
+
 impl AssetHandle for WeakHandle {
     fn load_handle(&self) -> &LoadHandle {
         &self.id
@@ -99,28 +117,83 @@ impl<T: TypeUuid + Send + Sync + 'static> Component for Handle<T> {
     type Storage = DenseVecStorage<Handle<T>>;
 }
 
+/// The contract of an asset handle.
+///
+/// There are two types of asset handles:
+///
+/// * **Typed -- `Handle<T>`:** When the asset's type is known when loading.
+/// * **Generic -- `GenericHandle`:** When only the asset's UUID is known when loading.
 pub trait AssetHandle {
-    fn load_status<T: Loader>(&self, loader: &T) -> LoadStatus {
+    /// Returns the load status of the asset.
+    ///
+    /// # Parameters
+    ///
+    /// * `loader`: Loader that is loading the asset.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `L`: Asset loader type.
+    fn load_status<L: Loader>(&self, loader: &L) -> LoadStatus {
         loader.get_load_status_handle(self.load_handle())
     }
+
+    /// Returns an immutable reference to the asset if it is committed.
+    ///
+    /// # Parameters
+    ///
+    /// * `storage`: Asset storage.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `T`: Asset `TypeUuid`.
     fn asset<'a, T: TypeUuid>(&self, storage: &'a AssetStorage<T>) -> Option<&'a T>
     where
         Self: Sized,
     {
         storage.get(self)
     }
+
+    /// Returns a mutable reference to the asset if it is committed.
+    ///
+    /// # Parameters
+    ///
+    /// * `storage`: Asset storage.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `T`: Asset `TypeUuid`.
     fn asset_mut<'a, T: TypeUuid>(&self, storage: &'a mut AssetStorage<T>) -> Option<&'a mut T>
     where
         Self: Sized,
     {
         storage.get_mut(self)
     }
+
+    /// Returns the version of the asset if it is committed.
+    ///
+    /// # Parameters
+    ///
+    /// * `storage`: Asset storage.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `T`: Asset `TypeUuid`.
     fn asset_version<'a, T: TypeUuid>(&self, storage: &'a AssetStorage<T>) -> Option<u32>
     where
         Self: Sized,
     {
         storage.get_version(self)
     }
+
+    /// Returns the asset with the given version if it is committed.
+    ///
+    /// # Parameters
+    ///
+    /// * `storage`: Asset storage.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `T`: Asset `TypeUuid`.
     fn asset_with_version<'a, T: TypeUuid>(
         &self,
         storage: &'a AssetStorage<T>,
@@ -130,23 +203,93 @@ pub trait AssetHandle {
     {
         storage.get_asset_with_version(self)
     }
-    /// Downgrades the handle and creates a `WeakHandle`.
+
+    /// Downgrades this handle into a `WeakHandle`.
+    ///
+    /// Be aware that if there are no longer any strong handles to the asset, then the underlying
+    /// asset may be freed at any time.
     fn downgrade(&self) -> WeakHandle {
         WeakHandle::new(*self.load_handle())
     }
+
+    /// Returns the `LoadHandle` of this asset handle.
     fn load_handle(&self) -> &LoadHandle;
 }
 
+/// Manages asset loading and storage for an application.
 pub trait Loader: Send + Sync {
+    /// Returns a generic asset handle and Loads the asset for the given UUID asynchronously.
+    ///
+    /// This is useful when loading an asset, but the asset's Rust type is unknown, such as for a
+    /// loading screen that loads arbitrary assets.
+    ///
+    /// # Notes
+    ///
+    /// Be careful not to confuse `AssetUuid` with `AssetTypeUuid`:
+    ///
+    /// * `AssetUuid`: For an asset, such as "player_texture.png".
+    /// * `AssetTypeUuid`: For an asset type, such as `Texture`.
+    ///
+    /// # Parameters
+    ///
+    /// * `id`: UUID of the asset.
     fn load_asset_generic(&self, id: AssetUuid) -> GenericHandle;
+
+    /// Returns an asset handle and Loads the asset for the given UUID asynchronously.
+    ///
+    /// This is useful when loading an asset whose Rust type is known.
+    ///
+    /// # Notes
+    ///
+    /// Be careful not to confuse `AssetUuid` with `AssetTypeUuid`:
+    ///
+    /// * `AssetUuid`: For an asset, such as "player_texture.png".
+    /// * `AssetTypeUuid`: For an asset type, such as `Texture`.
+    ///
+    /// # Parameters
+    ///
+    /// * `id`: UUID of the asset.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `T`: Asset `TypeUuid`.
     fn load_asset<T: TypeUuid>(&self, id: AssetUuid) -> Handle<T>;
+
+    /// Returns a weak handle to the asset of the given UUID, if any.
+    ///
+    /// # Parameters
+    ///
+    /// * `id`: UUID of the asset.
     fn get_load(&self, id: AssetUuid) -> Option<WeakHandle>;
+
+    /// Returns the load status for the asset of the given UUID.
+    ///
+    /// # Parameters
+    ///
+    /// * `id`: UUID of the asset.
     fn get_load_status(&self, id: AssetUuid) -> LoadStatus {
         self.get_load(id)
             .map(|h| self.get_load_status_handle(h.load_handle()))
             .unwrap_or(LoadStatus::NotRequested)
     }
+
+    /// Returns the load status for the asset with the given load handle.
+    ///
+    /// # Parameters
+    ///
+    /// * `handle`: `LoadHandle` of the asset.
     fn get_load_status_handle(&self, handle: &LoadHandle) -> LoadStatus;
+
+    /// Returns an immutable reference to the asset if it is committed.
+    ///
+    /// # Parameters
+    ///
+    /// * `id`: UUID of the asset.
+    /// * `storage`: Asset storage.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `T`: Asset `TypeUuid`.
     fn get_asset<'a, T: TypeUuid>(
         &self,
         id: AssetUuid,
@@ -158,6 +301,17 @@ pub trait Loader: Send + Sync {
             .map(|h| storage.get(h))
             .unwrap_or(None)
     }
+
+    /// Returns a mutable reference to the asset if it is committed.
+    ///
+    /// # Parameters
+    ///
+    /// * `id`: UUID of the asset.
+    /// * `storage`: Asset storage.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `T`: Asset `TypeUuid`.
     fn get_asset_mut<'a, T: TypeUuid>(
         &self,
         id: AssetUuid,
@@ -170,14 +324,31 @@ pub trait Loader: Send + Sync {
             None
         }
     }
+
+    /// Creates the `AssetTypeStorage`'s resources in the `World`.
+    ///
+    /// # Parameters
+    ///
+    /// * `resources`: Resources in the application.
     fn init_world(&mut self, resources: &mut Resources);
+
+    /// Updates asset loading state and removes assets that are no longer referenced.
+    ///
+    /// # Parameters
+    ///
+    /// * `resources`: Resources in the application.
     fn process(&mut self, resources: &Resources) -> Result<(), Box<dyn Error>>;
 }
 
+/// Default loader is the Atelier Assets `RpcLoader`.
 pub type DefaultLoader = LoaderWithStorage<atelier_loader::rpc_loader::RpcLoader<()>>;
+
+/// Operations on an asset reference.
 enum RefOp {
     Decrease(LoadHandle),
 }
+
+/// Asset loader and storage.
 #[derive(Debug)]
 pub struct LoaderWithStorage<T: AtelierLoader<HandleType = ()> + Send + Sync> {
     loader: T,
@@ -185,6 +356,7 @@ pub struct LoaderWithStorage<T: AtelierLoader<HandleType = ()> + Send + Sync> {
     ref_sender: Arc<Sender<RefOp>>,
     ref_receiver: Receiver<RefOp>,
 }
+
 impl<T: AtelierLoader<HandleType = ()> + Send + Sync + Default> Default for LoaderWithStorage<T> {
     fn default() -> Self {
         let (tx, rx) = unbounded();
@@ -227,8 +399,29 @@ impl<T: AtelierLoader<HandleType = ()> + Send + Sync> Loader for LoaderWithStora
     }
 }
 
+/// Storage for a particular asset type.
+///
+/// This trait abtracts over the bridge between `atelier_loader` and Amethyst's asset storage. These
+/// methods are called through dynamic dispatch by `atelier_loader` when an asset is loaded /
+/// unloaded. All of these operations are performed on Amethyst's `AssetStorage`
 pub trait AssetTypeStorage {
+    /// Allocates and returns a handle for an asset.
+    ///
+    /// Currently the handle type is the empty tuple, i.e. no allocation is done.
+    ///
+    /// # Parameters
+    ///
+    /// * `handle`: The load handle of the asset.
     fn allocate(&self, handle: &LoadHandle) -> ();
+
+    /// Updates an asset.
+    ///
+    /// # Parameters
+    ///
+    /// * `handle`: Load handle of the asset.
+    /// * `data`: Asset data bytes (uncompressed).
+    /// * `load_op`: Load operation to notify `atelier_loader` when the asset has been loaded.
+    /// * `version`: Version of the asset -- this will be a new version for each hot reload.
     fn update_asset(
         &self,
         handle: &LoadHandle,
@@ -236,15 +429,29 @@ pub trait AssetTypeStorage {
         load_op: AssetLoadOp,
         version: u32,
     ) -> Result<(), Box<dyn Error>>;
+
+    /// Commits an asset.
+    ///
+    /// # Parameters
+    ///
+    /// * `handle`: Load handle of the asset.
+    /// * `version`: Version of the asset -- this will be a new version for each hot reload.
     fn commit_asset_version(&mut self, handle: &LoadHandle, version: u32);
+
+    /// Frees an asset.
+    ///
+    /// # Parameters
+    ///
+    /// * `handle`: Load handle of the asset.
     fn free(&mut self, handle: LoadHandle);
 }
+
 impl<Intermediate, Asset: TypeUuid + Send + Sync> AssetTypeStorage
     for (&ProcessingQueue<Intermediate>, &mut AssetStorage<Asset>)
 where
     for<'a> Intermediate: Deserialize<'a> + TypeUuid + Send,
 {
-    fn allocate(&self, load_handle: &LoadHandle) -> () {}
+    fn allocate(&self, _load_handle: &LoadHandle) -> () {}
     fn update_asset(
         &self,
         handle: &LoadHandle,
@@ -264,13 +471,19 @@ where
     }
 }
 
+/// Maps of `AssetType`, keyed by either the asset data UUID, or asset type UUID.
+///
+/// Used to discover the Rust `AssetType`, given the asset data UUID or the asset type UUID.
 #[derive(Debug)]
 struct AssetStorageMap {
+    /// Map of `AssetType`s, keyed by asset data UUID.
     pub storages_by_data_uuid: HashMap<AssetTypeId, AssetType>,
+    /// Map of `AssetType`s, keyed by asset type UUID.
     pub storages_by_asset_uuid: HashMap<AssetTypeId, AssetType>,
 }
 
 impl AssetStorageMap {
+    /// Returns a new `AssetStorageMap`.
     pub fn new() -> AssetStorageMap {
         let mut storages_by_asset_uuid = HashMap::new();
         let mut storages_by_data_uuid = HashMap::new();
@@ -284,12 +497,19 @@ impl AssetStorageMap {
         }
     }
 }
+
 impl Default for AssetStorageMap {
     fn default() -> Self {
         AssetStorageMap::new()
     }
 }
 
+/// Asset storage bridge between Amethyst and `atelier-assets`.
+///
+/// This type implements the `atelier_loader::AssetStorage` trait which `atelier_loader` uses as the
+/// storage type for all assets of all asset types.
+///
+/// This contains immutable references to the `AssetStorageMap` and `World` resources.
 struct WorldStorages<'a> {
     storage_map: &'a AssetStorageMap,
     res: &'a Resources,
@@ -306,7 +526,7 @@ impl<'a> atelier_loader::AssetStorage for WorldStorages<'a> {
     fn allocate(
         &self,
         asset_type: &AssetTypeId,
-        id: &AssetUuid,
+        _id: &AssetUuid,
         load_handle: &LoadHandle,
     ) -> Self::HandleType {
         let mut handle = None;
@@ -381,24 +601,36 @@ impl<'a> atelier_loader::AssetStorage for WorldStorages<'a> {
         });
     }
 }
+
+/// Registration information about an asset type.
 #[derive(Clone)]
 pub struct AssetType {
+    /// UUID of the (de)serializable type representing the asset.
     pub data_uuid: AssetTypeId,
+    /// UUID of the type representing the asset.
     pub asset_uuid: AssetTypeId,
+    /// Function to create the `AssetTypeStorage`'s resources in the `World`.
     pub create_storage: fn(&mut Resources),
+    /// Function that runs another function, passing in the `AssetTypeStorage`.
     pub with_storage: fn(&Resources, &mut dyn FnMut(&mut dyn AssetTypeStorage)),
 }
+
 impl std::fmt::Debug for AssetType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "AssetType {{ data_uuid: {:?}, asset_uud: {:?} }}",
+            "AssetType {{ data_uuid: {:?}, asset_uuid: {:?} }}",
             self.data_uuid, self.asset_uuid
         )
     }
 }
+
 crate::inventory::collect!(AssetType);
 
+/// Creates an `AssetType` to be stored in the `AssetType` `inventory`.
+///
+/// This function is not intended to be called be directly. Use the `register_asset_type!` macro
+/// macro instead.
 pub fn create_asset_type<Intermediate, Asset: 'static + TypeUuid + Send + Sync>() -> AssetType
 where
     for<'a> Intermediate: 'static + Deserialize<'a> + TypeUuid + Send,
@@ -423,6 +655,26 @@ where
     }
 }
 
+/// Registers an asset type which automatically prepares `AssetStorage` and `ProcessingQueue`.
+///
+/// # Examples
+///
+/// ```rust,ignore
+/// #[derive(Debug, TypeUuid)]
+/// #[uuid = "28d51c52-be81-4d99-8cdc-20b26eb12448"]
+/// pub struct MeshAsset {
+///     buffer: (),
+/// }
+///
+/// #[derive(Serialize, Deserialize, TypeUuid)]
+/// #[uuid = "687b6d94-c653-4663-af73-e967c92ad140"]
+/// pub struct VertexData {
+///     positions: Vec<[f32; 3]>,
+///     tex_coords: Vec<[f32; 2]>,
+/// }
+///
+/// amethyst_assets::register_asset_type!(VertexData => MeshAsset);
+/// ```
 #[macro_export]
 macro_rules! register_asset_type {
     ($intermediate:ty => $asset:ty) => {

@@ -30,7 +30,9 @@ pub use crate::{
         create_asset_type, AssetHandle, AssetUuid, DefaultLoader as NewDefaultLoader,
         GenericHandle, Handle as NewHandle, LoadStatus, Loader as NewLoader,
     },
-    processor::{ProcessingQueue, ProcessingState as NewProcessingState},
+    processor::{
+        ProcessingQueue, ProcessingState as NewProcessingState, Processor as NewProcessor,
+    },
     simple_importer::{SimpleImporter, SourceFileImporter},
     storage_new::AssetStorage as NewAssetStorage,
 };

@@ -21,8 +21,7 @@ pub struct Processor<A> {
 }
 
 impl<A> Processor<A> {
-    /// Creates a new asset processor for
-    /// assets of type `A`.
+    /// Creates a new asset processor for assets of type `A`.
     pub fn new() -> Self {
         Processor {
             marker: PhantomData,
@@ -46,6 +45,7 @@ where
     }
 }
 
+/// Represents asset data processed by `atelier-assets` that needs to be loaded by Amethyst.
 pub(crate) struct Processed<T> {
     data: Result<T, Error>,
     handle: LoadHandle,
@@ -62,10 +62,16 @@ pub enum ProcessingState<D, A> {
     Loaded(A),
 }
 
+/// Queue of processed asset data, to be loaded by Amethyst.
+///
+/// # Type Parameters
+///
+/// `T`: Asset data type.
 pub struct ProcessingQueue<T> {
     pub(crate) processed: Arc<SegQueue<Processed<T>>>,
     requeue: Mutex<Vec<Processed<T>>>,
 }
+
 impl<T> Default for ProcessingQueue<T> {
     fn default() -> Self {
         Self {
