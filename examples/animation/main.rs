@@ -4,7 +4,7 @@ use amethyst::assets::Loader;
 use amethyst::{
     animation::*,
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
-    core::{Float, Transform, TransformBundle},
+    core::{Transform, TransformBundle},
     ecs::prelude::{Entity, ReadExpect, Resources},
     input::{get_key, is_close_requested, is_key_down},
     prelude::*,
@@ -68,8 +68,8 @@ impl SimpleState for Example {
                 Sampler {
                     input: vec![0., 1.],
                     output: vec![
-                        SamplerPrimitive::Vec3([Float::from(0.), Float::from(0.), Float::from(0.)]),
-                        SamplerPrimitive::Vec3([Float::from(0.), Float::from(1.), Float::from(0.)]),
+                        SamplerPrimitive::Vec3([0., 0., 0.]),
+                        SamplerPrimitive::Vec3([0., 1., 0.]),
                     ],
                     function: InterpolationFunction::Step,
                 },
