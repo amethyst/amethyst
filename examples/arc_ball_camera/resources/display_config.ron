@@ -1,3 +1,8 @@
+/*!
+    @import /amethyst_window/src/config.rs#DisplayConfig
+    DisplayConfig
+*/
+
 (
-  title: "Arc Ball Camera Example",
+  title: "Arc Ball Camera Example"
 )

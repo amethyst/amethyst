@@ -293,6 +293,7 @@ impl Material {
 /// vec2 u_offset;
 /// vec2 v_offset;
 /// float depth;
+/// vec4 tint;
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
 #[repr(C, align(4))]
@@ -309,6 +310,8 @@ pub struct SpriteArgs {
     pub v_offset: vec2,
     /// Depth value of this sprite
     pub depth: float,
+    /// Tint for this this sprite
+    pub tint: vec4,
 }
 
 impl AsVertex for SpriteArgs {
@@ -320,6 +323,7 @@ impl AsVertex for SpriteArgs {
             (Format::Rg32Sfloat, "u_offset"),
             (Format::Rg32Sfloat, "v_offset"),
             (Format::R32Sfloat, "depth"),
+            (Format::Rgba32Sfloat, "tint"),
         ))
     }
 }
@@ -337,6 +341,7 @@ impl SpriteArgs {
         sprite_storage: &'a AssetStorage<SpriteSheet>,
         sprite_render: &SpriteRender,
         transform: &Transform,
+        tint: Option<&TintComponent>,
     ) -> Option<(Self, &'a Handle<Texture>)> {
         let sprite_sheet = sprite_storage.get(&sprite_render.sprite_sheet)?;
         if !tex_storage.contains(&sprite_sheet.texture) {
@@ -358,6 +363,10 @@ impl SpriteArgs {
                 u_offset: [sprite.tex_coords.left, sprite.tex_coords.right].into(),
                 v_offset: [sprite.tex_coords.top, sprite.tex_coords.bottom].into(),
                 depth: pos.z,
+                tint: tint.map_or([1.0; 4].into(), |t| {
+                    let (r, g, b, a) = t.0.into_components();
+                    [r, g, b, a].into()
+                }),
             },
             &sprite_sheet.texture,
         ))

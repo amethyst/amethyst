@@ -408,6 +408,7 @@ where
 /// using a custom set of configuration. This is the normal way an
 /// [`Application`](struct.Application.html)
 /// object is created.
+#[allow(missing_debug_implementations)]
 pub struct ApplicationBuilder<S, T, E, R> {
     // config: Config,
     initial_state: S,
@@ -544,7 +545,7 @@ where
 
         world.register::<Named>();
 
-        Ok(ApplicationBuilder {
+        Ok(Self {
             initial_state,
             world,
             ignore_window_close: false,

@@ -6,8 +6,8 @@ use amethyst::{
         EndControl, VertexSkinningBundle,
     },
     assets::{
-        AssetLoaderSystemData, Completion, PrefabLoader, PrefabLoaderSystem, Processor,
-        ProgressCounter, RonFormat,
+        AssetLoaderSystemData, AssetStorage, Completion, Handle, Loader, PrefabLoader,
+        PrefabLoaderSystem, Processor, ProgressCounter, RonFormat,
     },
     controls::{FlyControlBundle, FlyControlTag},
     core::{
@@ -59,7 +59,7 @@ use amethyst_rendy::{
     transparent::Transparent,
     types::{Backend, DefaultBackend, Mesh, Texture},
     visibility::{BoundingSphere, VisibilitySortingSystem},
-    Format, Kind,
+    Format, ImageFormat, Kind, SpriteSheetFormat,
 };
 use std::path::Path;
 
@@ -316,6 +316,9 @@ impl SimpleState for Example {
             .with(light3_transform)
             .build();
 
+        create_tinted_crates(world);
+
+        // Create the camera
         let mut transform = Transform::default();
         transform.set_translation_xyz(0.0, 4.0, 8.0);
 
@@ -438,6 +441,75 @@ impl SimpleState for Example {
         }
         Trans::None
     }
+}
+
+fn load_crate_spritesheet(world: &mut World) -> Handle<SpriteSheet> {
+    let crate_texture_handle = {
+        let loader = world.read_resource::<Loader>();
+        let texture_storage = world.read_resource::<AssetStorage<Texture>>();
+        loader.load(
+            Path::new("texture").join("crate.png").to_string_lossy(),
+            ImageFormat::default(),
+            (),
+            &texture_storage,
+        )
+    };
+
+    let resource_loader = world.read_resource::<Loader>();
+    let crate_spritesheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
+
+    resource_loader.load(
+        Path::new("texture")
+            .join("crate_spritesheet.ron")
+            .to_string_lossy(),
+        SpriteSheetFormat(crate_texture_handle),
+        (),
+        &crate_spritesheet_store,
+    )
+}
+
+fn create_tinted_crates(world: &mut World) {
+    let crate_spritesheet = load_crate_spritesheet(world);
+
+    let crate_sprite_render = SpriteRender {
+        sprite_sheet: crate_spritesheet.clone(),
+        sprite_number: 0,
+    };
+
+    let crate_scale = Vector3::new(0.01, 0.01, 1.0);
+
+    let mut red_crate_transform = Transform::default();
+    red_crate_transform.set_translation_xyz(4.44, 0.32, 0.5);
+    red_crate_transform.set_scale(crate_scale);
+
+    let mut green_crate_transform = Transform::default();
+    green_crate_transform.set_translation_xyz(4.44, 0.0, 0.5);
+    green_crate_transform.set_scale(crate_scale);
+
+    let mut blue_crate_transform = Transform::default();
+    blue_crate_transform.set_translation_xyz(4.44, -0.32, 0.5);
+    blue_crate_transform.set_scale(crate_scale);
+
+    world
+        .create_entity()
+        .with(crate_sprite_render.clone())
+        .with(red_crate_transform)
+        .with(Tint(Srgb::new(1.0, 0.0, 0.0).into()))
+        .build();
+
+    world
+        .create_entity()
+        .with(crate_sprite_render.clone())
+        .with(green_crate_transform)
+        .with(Tint(Srgb::new(0.0, 1.0, 0.0).into()))
+        .build();
+
+    world
+        .create_entity()
+        .with(crate_sprite_render.clone())
+        .with(blue_crate_transform)
+        .with(Tint(Srgb::new(0.0, 0.0, 1.0).into()))
+        .build();
 }
 
 fn toggle_or_cycle_animation(
@@ -592,6 +664,7 @@ struct ExampleGraph {
     dirty: bool,
 }
 
+#[allow(clippy::map_clone)] // This lint is actually wrong, because we are mapping an option not an iterator
 impl<B: Backend> GraphCreator<B> for ExampleGraph {
     fn rebuild(&mut self, res: &Resources) -> bool {
         let new_mode = res.fetch::<RenderMode>();
@@ -609,7 +682,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
             self.dimensions = new_dimensions.map(|d| d.clone());
             return false;
         }
-        return self.dirty;
+        self.dirty
     }
 
     fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {

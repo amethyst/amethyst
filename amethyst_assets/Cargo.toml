@@ -48,6 +48,8 @@ bincode = { version = "1.1", optional = true }
 type-uuid = "0.1"
 
 [dev-dependencies]
+serde_json = "1"
+
 # I want this to be an optional dev-dependency, but it's not possible :(
 atelier-daemon = { git = "https://github.com/amethyst/atelier-assets.git", default-features = false }
 

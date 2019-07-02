@@ -63,6 +63,7 @@ pub struct ScenePrefabData {
 
 type PData<'a, T> = <T as PrefabData<'a>>::SystemData;
 impl<'a> PrefabData<'a> for ScenePrefabData {
+    #[allow(clippy::type_complexity)]
     type SystemData = (
         PData<'a, Transform>,
         PData<'a, AssetPrefab<GltfSceneAsset, GltfSceneFormat>>,

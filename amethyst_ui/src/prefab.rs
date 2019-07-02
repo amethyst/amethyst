@@ -1,7 +1,10 @@
 use derivative::Derivative;
 use serde::de::DeserializeOwned;
 use shred_derive::SystemData;
-use std::marker::PhantomData;
+use std::{
+    fmt::{Debug, Formatter},
+    marker::PhantomData,
+};
 
 use amethyst_assets::{
     AssetPrefab, AssetStorage, Format, Handle, Loader, Prefab, PrefabData, PrefabLoaderSystem,
@@ -163,10 +166,10 @@ where
             transform = transform.with_stretch(stretch.clone());
         }
         if !self.opaque {
-            transform = transform.as_transparent();
+            transform = transform.into_transparent();
         }
         if self.percent {
-            transform = transform.as_percent();
+            transform = transform.into_percent();
         }
         system_data.0.insert(entity, transform)?;
         if self.mouse_reactive {
@@ -211,6 +214,28 @@ pub struct UiTextBuilder {
     /// Optionally make the text editable
     #[serde(default)]
     pub editable: Option<TextEditingPrefab>,
+}
+impl Debug for UiTextBuilder {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let font = match self.font.as_ref() {
+            Some(asset_prefab) => match asset_prefab {
+                AssetPrefab::File(path, _) => format!("<Font:{}>", path),
+                _ => "<Font>".to_string(),
+            },
+            _ => "<Font>".to_string(),
+        };
+
+        f.debug_struct("UiTextBuilder")
+            .field("text", &self.text)
+            .field("font_size", &self.font_size)
+            .field("font", &font)
+            .field("color", &self.color)
+            .field("password", &self.password)
+            .field("align", &self.align)
+            .field("line_mode", &self.line_mode)
+            .field("editable", &self.editable)
+            .finish()
+    }
 }
 
 /// Loadable `TextEditing` data
@@ -302,12 +327,12 @@ impl<'a> PrefabData<'a> for UiTextBuilder {
 }
 
 /// Loadable `UiImage` data. Adds UiImage component to the entity.
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(transparent)]
 pub struct UiImagePrefab(UiImageLoadPrefab);
 
 /// Loadable `UiImage` data. Returns image component from `add_to_entity` instead of adding it.
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename = "UiImagePrefab")]
 pub enum UiImageLoadPrefab {
     /// A textured image
@@ -412,6 +437,33 @@ pub struct UiButtonBuilder<W: WidgetId = u32> {
     pub press_sound: Option<AssetPrefab<Audio>>,
     /// Sound made when this button is released.
     pub release_sound: Option<AssetPrefab<Audio>>,
+}
+
+impl<W: WidgetId + Debug> Debug for UiButtonBuilder<W> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let font = match self.font.as_ref() {
+            Some(asset_prefab) => match asset_prefab {
+                AssetPrefab::File(path, _) => format!("<Font:{}>", path),
+                _ => "<Font>".to_string(),
+            },
+            _ => "<Font>".to_string(),
+        };
+
+        f.debug_struct("UiTextBuilder")
+            .field("id", &self.id)
+            .field("text", &self.text)
+            .field("font_size", &self.font_size)
+            .field("font", &font)
+            .field("normal_text_color", &self.normal_text_color)
+            .field("normal_image", &self.normal_image)
+            .field("hover_image", &self.hover_image)
+            .field("press_image", &self.press_image)
+            .field("press_text_color", &self.press_text_color)
+            .field("hover_sound", &self.hover_sound)
+            .field("press_sound", &self.press_sound)
+            .field("release_sound", &self.release_sound)
+            .finish()
+    }
 }
 
 impl<'a, W> PrefabData<'a> for UiButtonBuilder<W>
@@ -572,7 +624,8 @@ where
 /// ### Type parameters:
 ///
 /// - `W`: Type used for Widget ID for this widget and its children
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[allow(clippy::large_enum_variant)] // TODO: revisit this for actual memory usage optimization
 pub enum UiWidget<C = NoCustomUi, W = u32, G = ()>
 where
     C: ToNativeWidget<W>,
@@ -688,7 +741,7 @@ where
 }
 
 /// Type used when no custom ui is desired
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 pub enum NoCustomUi {}
 
 impl<W> ToNativeWidget<W> for NoCustomUi
@@ -862,6 +915,7 @@ fn walk_ui_tree<C, W>(
 /// });
 /// ```
 #[derive(SystemData)]
+#[allow(missing_debug_implementations)]
 pub struct UiLoader<'a, C = NoCustomUi, W = u32>
 where
     C: ToNativeWidget<W>,
@@ -904,6 +958,7 @@ where
 /// });
 /// ```
 #[derive(SystemData)]
+#[allow(missing_debug_implementations)]
 pub struct UiCreator<'a, C = NoCustomUi, W = u32>
 where
     C: ToNativeWidget<W>,

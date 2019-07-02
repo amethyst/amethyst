@@ -50,7 +50,7 @@ impl App {
     }
 
     fn update(&mut self) {
-        self.dispatcher.dispatch(&mut self.world.res);
+        self.dispatcher.dispatch(&self.world.res);
         self.world.maintain();
         let mut errors = self.world.write_resource::<Errors>();
         errors.print_and_exit();

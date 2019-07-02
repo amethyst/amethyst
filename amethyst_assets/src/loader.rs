@@ -206,6 +206,39 @@ impl Loader {
         handle
     }
 
+    /// Asynchronously load an asset from data and return a handle.
+    pub fn load_from_data_async<A, P, F>(
+        &self,
+        data: F,
+        mut progress: P,
+        storage: &AssetStorage<A>,
+    ) -> Handle<A>
+    where
+        A: Asset,
+        P: Progress,
+        F: FnOnce() -> A::Data + Send + Sync + 'static,
+    {
+        progress.add_assets(1);
+        let tracker = progress.create_tracker();
+        let tracker = Box::new(tracker);
+        let handle = storage.allocate();
+        let processed = storage.processed.clone();
+
+        self.pool.spawn({
+            let handle = handle.clone();
+            move || {
+                processed.push(Processed::NewAsset {
+                    data: Ok(FormatValue::data(data())),
+                    handle: handle.clone(),
+                    name: "<Data>".into(),
+                    tracker,
+                });
+            }
+        });
+
+        handle
+    }
+
     fn source(&self, source: &str) -> Arc<dyn Source> {
         self.sources
             .get(source)

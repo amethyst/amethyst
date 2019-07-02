@@ -1,3 +1,5 @@
+//! EventReader Implementation
+
 use proc_macro2::{Literal, Span, TokenStream};
 use quote::quote;
 use syn::{Data, DeriveInput, GenericParam, Ident, Lifetime, LifetimeDef, Meta, NestedMeta, Type};

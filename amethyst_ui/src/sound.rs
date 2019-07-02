@@ -68,7 +68,7 @@ impl EventRetrigger for UiSoundRetrigger {
 
 /// Handles any dispatches `UiPlaySoundAction`s and plays the received
 /// sounds through the set `Output`.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct UiSoundSystem {
     event_reader: Option<ReaderId<UiPlaySoundAction>>,
 }

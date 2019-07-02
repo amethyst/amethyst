@@ -31,7 +31,7 @@ pub trait ApplyData<'a> {
 /// Master trait used to define animation sampling on a component
 pub trait AnimationSampling: Send + Sync + 'static + for<'b> ApplyData<'b> {
     /// The interpolation primitive
-    type Primitive: InterpolationPrimitive + Clone + Send + Sync + 'static;
+    type Primitive: InterpolationPrimitive + Debug + Clone + Send + Sync + 'static;
     /// An independent grouping or type of functions that operate on attributes of a component
     ///
     /// For example, `translation`, `scaling` and `rotation` are transformation channels independent
@@ -334,7 +334,7 @@ pub enum EndControl {
 /// ### Type parameters:
 ///
 /// - `T`: the component type that the sampling should be applied to
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SamplerControl<T>
 where
     T: AnimationSampling,
@@ -366,7 +366,7 @@ where
 /// ### Type parameters:
 ///
 /// - `T`: the component type that the sampling should be applied to
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SamplerControlSet<T>
 where
     T: AnimationSampling,
@@ -882,6 +882,7 @@ where
 /// ### Type parameters:
 ///
 /// - `T`: the component type that the animation should be applied to
+#[derive(Debug, Clone)]
 pub struct AnimationSet<I, T>
 where
     I: Eq + Hash,

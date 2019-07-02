@@ -1,9 +1,6 @@
-use std::marker::PhantomData;
-
 use crate::{
     core::{
         ecs::prelude::{Dispatcher, DispatcherBuilder, RunNow, System, World},
-        math::RealField,
         ArcThreadPool, SystemBundle,
     },
     error::Error,
@@ -25,6 +22,7 @@ pub trait DataDispose {
 ///
 /// The lifetimes are for the systems inside and can be `'static` unless a system has a borrowed
 /// field.
+#[allow(missing_debug_implementations)]
 pub struct GameData<'a, 'b> {
     dispatcher: Option<Dispatcher<'a, 'b>>,
 }
@@ -63,23 +61,22 @@ impl DataDispose for GameData<'_, '_> {
 }
 
 /// Builder for default game data
-pub struct GameDataBuilder<'a, 'b, N: RealField = f32> {
+#[allow(missing_debug_implementations)]
+pub struct GameDataBuilder<'a, 'b> {
     disp_builder: DispatcherBuilder<'a, 'b>,
-    _marker: PhantomData<N>,
 }
 
-impl<'a, 'b, N: RealField + Default> Default for GameDataBuilder<'a, 'b, N> {
+impl<'a, 'b> Default for GameDataBuilder<'a, 'b> {
     fn default() -> Self {
         GameDataBuilder::new()
     }
 }
 
-impl<'a, 'b, N: RealField + Default> GameDataBuilder<'a, 'b, N> {
+impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// Create new builder
     pub fn new() -> Self {
         GameDataBuilder {
             disp_builder: DispatcherBuilder::new(),
-            _marker: PhantomData,
         }
     }
 
@@ -109,7 +106,7 @@ impl<'a, 'b, N: RealField + Default> GameDataBuilder<'a, 'b, N> {
     /// // Three systems are added in this example. The "tabby cat" & "tom cat"
     /// // systems will both run in parallel. Only after both cat systems have
     /// // run is the "doggo" system permitted to run them.
-    /// GameDataBuilder::<f32>::default()
+    /// GameDataBuilder::default()
     ///     .with(NopSystem, "tabby cat", &[])
     ///     .with(NopSystem, "tom cat", &[])
     ///     .with_barrier()
@@ -162,7 +159,7 @@ impl<'a, 'b, N: RealField + Default> GameDataBuilder<'a, 'b, N> {
     ///     fn run(&mut self, _: Self::SystemData) {}
     /// }
     ///
-    /// GameDataBuilder::<f32>::default()
+    /// GameDataBuilder::default()
     ///     // This will add the "foo" system to the game loop, in this case
     ///     // the "foo" system will not depend on any systems.
     ///     .with(NopSystem, "foo", &[])
@@ -213,7 +210,7 @@ impl<'a, 'b, N: RealField + Default> GameDataBuilder<'a, 'b, N> {
     ///     fn run(&mut self, _: Self::SystemData) {}
     /// }
     ///
-    /// GameDataBuilder::<f32>::default()
+    /// GameDataBuilder::default()
     ///     // the Nop system is registered here
     ///     .with_thread_local(NopSystem);
     /// ~~~
