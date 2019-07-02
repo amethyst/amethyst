@@ -32,6 +32,10 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 ### Fixed
 * Fix stack overflow on serializing `Box<dyn Format<_>>`. ([#1720])
 
+### Fixed
+
+* Fix animation unwrap on missing animated component. ([#1773])
+
 [#1766]: https://github.com/amethyst/amethyst/pull/1766
 [#1719]: https://github.com/amethyst/amethyst/pull/1719
 [#1747]: https://github.com/amethyst/amethyst/pull/1747
@@ -39,6 +43,7 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 [#1756]: https://github.com/amethyst/amethyst/pull/1756
 [#1733]: https://github.com/amethyst/amethyst/pull/1733
 [#1758]: https://github.com/amethyst/amethyst/pull/1758
+[#1773]: https://github.com/amethyst/amethyst/pull/1773
 [#1753]: https://github.com/amethyst/amethyst/pull/1753
 [#1720]: https://github.com/amethyst/amethyst/pull/1720
 
