@@ -1,4 +1,9 @@
 #![enable(implicit_some)]
+/*!
+    @import /amethyst_assets/src/prefab/mod.rs#Prefab
+    @import ../../spotlights/main.rs#MyPrefabData
+    Prefab<MyPrefabData>
+*/
 
 Prefab (
     entities: [
