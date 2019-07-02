@@ -159,7 +159,7 @@ pub enum CameraNormalizeMode {
 impl CameraNormalizeMode {
     /// Get the camera matrix offsets according to the specified options.
     fn camera_offsets(
-        &self,
+        self,
         window_aspect_ratio: f32,
         desired_coordinates: &CameraOrthoWorldCoordinates,
     ) -> (f32, f32, f32, f32) {
@@ -229,7 +229,7 @@ impl Default for CameraNormalizeMode {
 
 /// System that automatically changes the camera matrix according to the settings in
 /// the `CameraOrtho` attached to the camera entity.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct CameraOrthoSystem;
 
 impl<'a> System<'a> for CameraOrthoSystem {
@@ -329,7 +329,7 @@ mod test {
 
     #[test]
     fn normal_camera_square_lossy_horizontal() {
-        let aspect = 1.0 / 1.0;
+        let aspect = 1.0;
         let cam = CameraOrtho::normalized(CameraNormalizeMode::Lossy {
             stretch_direction: Axis2::X,
         });
@@ -338,7 +338,7 @@ mod test {
 
     #[test]
     fn normal_camera_square_lossy_vertical() {
-        let aspect = 1.0 / 1.0;
+        let aspect = 1.0;
         let cam = CameraOrtho::normalized(CameraNormalizeMode::Lossy {
             stretch_direction: Axis2::Y,
         });
@@ -361,7 +361,7 @@ mod test {
 
     #[test]
     fn normal_camera_square_contain() {
-        let aspect = 1.0 / 1.0;
+        let aspect = 1.0;
         let cam = CameraOrtho::normalized(CameraNormalizeMode::Contain);
         assert_eq!((0.0, 1.0, 0.0, 1.0), cam.camera_offsets(aspect));
     }
@@ -384,7 +384,7 @@ mod test {
 
     #[test]
     fn camera_square_contain() {
-        let aspect = 1.0 / 1.0;
+        let aspect = 1.0;
         let cam = CameraOrtho {
             mode: CameraNormalizeMode::Contain,
             world_coordinates: CameraOrthoWorldCoordinates {

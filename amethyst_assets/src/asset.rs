@@ -1,4 +1,4 @@
-use crate::{storage::ProcessingState, Handle, Reload, SingleFile, Source};
+use crate::{storage::ProcessingState, FormatRegisteredData, Handle, Reload, SingleFile, Source};
 use amethyst_core::ecs::storage::UnprotectedStorage;
 use amethyst_error::{Error, ResultExt};
 use std::{fmt::Debug, ops::Deref, sync::Arc};
@@ -104,6 +104,20 @@ pub trait Format<D: 'static>: objekt::Clone + Debug + Send + Sync + 'static {
 
 objekt::clone_trait_object!(<D> Format<D>);
 
+/// SerializableFormat is a marker trait which is required for Format types that are supposed
+/// to be serialized. This trait implies both `Serialize` and `Deserialize` implementation.
+///
+/// **Note:** This trait should never be implemented manually.
+/// Use the `register_format` macro to register it correctly.
+/// See [FormatRegisteredData](trait.FormatRegisteredData.html) for the full example.
+pub trait SerializableFormat<D: FormatRegisteredData + 'static>:
+    Format<D> + erased_serde::Serialize + 'static
+{
+    // Empty.
+}
+
+objekt::clone_trait_object!(<D> SerializableFormat<D>);
+
 // Allow using dynamic types on sites that accept format as generic.
 impl<D: 'static> Format<D> for Box<dyn Format<D>> {
     fn name(&self) -> &'static str {
@@ -122,6 +136,26 @@ impl<D: 'static> Format<D> for Box<dyn Format<D>> {
         self.deref().import(name, source, create_reload)
     }
 }
+
+impl<D: 'static> Format<D> for Box<dyn SerializableFormat<D>> {
+    fn name(&self) -> &'static str {
+        self.deref().name()
+    }
+    fn import_simple(&self, bytes: Vec<u8>) -> Result<D, Error> {
+        self.deref().import_simple(bytes)
+    }
+
+    fn import(
+        &self,
+        name: String,
+        source: Arc<dyn Source>,
+        create_reload: Option<Box<dyn Format<D>>>,
+    ) -> Result<FormatValue<D>, Error> {
+        self.deref().import(name, source, create_reload)
+    }
+}
+
+impl<D: FormatRegisteredData + 'static> SerializableFormat<D> for Box<dyn SerializableFormat<D>> {}
 
 /// The `Ok` return value of `Format::import` for a given asset type `A`.
 pub struct FormatValue<D> {

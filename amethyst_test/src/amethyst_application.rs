@@ -229,16 +229,12 @@ where
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
-        let run_result = {
-            // Acquire a lock due to memory access issues when using Rendy:
-            //
-            // See: <https://github.com/amethyst/rendy/issues/151>
-            let _guard = RENDY_MEMORY_MUTEX.lock().unwrap();
+        // Acquire a lock due to memory access issues when using Rendy:
+        //
+        // See: <https://github.com/amethyst/rendy/issues/151>
+        let _guard = RENDY_MEMORY_MUTEX.lock().unwrap();
 
-            self.run()
-        };
-
-        run_result
+        self.run()
     }
 
     fn box_any_to_error(error: Box<dyn Any + Send>) -> Error {
@@ -570,7 +566,7 @@ mod test {
     }
 
     #[test]
-    #[should_panic(expected = "Tried to fetch a resource, but the resource does not exist")]
+    #[should_panic] // This cannot be expect explicit because of nightly feature.
     fn assertion_when_resource_is_not_added_should_panic() {
         let assertion_fn = |world: &mut World| {
             // Panics if `ApplicationResource` was not added.
@@ -615,7 +611,7 @@ mod test {
     }
 
     #[test]
-    #[should_panic(expected = "Tried to fetch a resource, but the resource does not exist")]
+    #[should_panic] // This cannot be expect explicit because of nightly feature.
     fn assertion_switch_with_loading_state_without_add_resource_should_panic() {
         let state_fns = || {
             let assertion_fn = |world: &mut World| {
@@ -632,7 +628,7 @@ mod test {
     }
 
     #[test]
-    #[should_panic(expected = "Tried to fetch a resource, but the resource does not exist")]
+    #[should_panic] // This cannot be expect explicit because of nightly feature.
     fn assertion_push_with_loading_state_without_add_resource_should_panic() {
         // Alternative to embedding the `FunctionState` is to switch to a `PopState` but still
         // provide the assertion function
@@ -739,7 +735,7 @@ mod test {
         };
 
         fn get_component_zero_value(world: &mut World) -> i32 {
-            let entity = world.read_resource::<EffectReturn<Entity>>().0.clone();
+            let entity = world.read_resource::<EffectReturn<Entity>>().0;
 
             let component_zero_storage = world.read_storage::<ComponentZero>();
             let component_zero = component_zero_storage
@@ -767,7 +763,7 @@ mod test {
     #[test]
     fn with_system_single_runs_system_once() -> Result<(), Error> {
         let assertion_fn = |world: &mut World| {
-            let entity = world.read_resource::<EffectReturn<Entity>>().0.clone();
+            let entity = world.read_resource::<EffectReturn<Entity>>().0;
 
             let component_zero_storage = world.read_storage::<ComponentZero>();
             let component_zero = component_zero_storage

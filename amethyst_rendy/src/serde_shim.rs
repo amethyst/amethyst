@@ -2,7 +2,7 @@
 //! It is required due to buggy default implementation of those types.
 //! See this issue for more details: https://github.com/Ogeon/palette/issues/130
 //! When above issue will be resolved, this can probably be removed.
-
+#![allow(clippy::many_single_char_names)]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// Srgb serialization shim.

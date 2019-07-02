@@ -33,7 +33,7 @@ use thread_profiler::profile_scope;
 /// - `I`: identifier type for running animations, only one animation can be run at the same time
 ///        with the same id
 /// - `T`: the component type that the animation should be applied to
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct AnimationControlSystem<I, T>
 where
     I: Eq + Hash,
@@ -66,6 +66,7 @@ where
     I: PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
     T: AnimationSampling + Component + Clone,
 {
+    #[allow(clippy::type_complexity)]
     type SystemData = (
         Entities<'a>,
         Read<'a, AssetStorage<Animation<T>>>,

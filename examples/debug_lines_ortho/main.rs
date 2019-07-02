@@ -130,6 +130,7 @@ struct ExampleGraph {
     dirty: bool,
 }
 
+#[allow(clippy::map_clone)]
 impl<B: Backend> GraphCreator<B> for ExampleGraph {
     fn rebuild(&mut self, res: &Resources) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
@@ -140,7 +141,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
             self.dimensions = new_dimensions.map(|d| d.clone());
             return false;
         }
-        return self.dirty;
+        self.dirty
     }
 
     fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {

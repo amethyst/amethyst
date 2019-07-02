@@ -72,7 +72,7 @@ pub enum ControllerEvent {
         /// The controller axis.
         axis: ControllerAxis,
         /// The axis value (range: -32768 to 32767).
-        value: f64,
+        value: f32,
     },
     /// Button press event on a controller.
     ///

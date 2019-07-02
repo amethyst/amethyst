@@ -32,6 +32,9 @@ thread_profiler = { version = "0.3", optional = true }
 version = "0.6"
 features = ["serde"]
 
+[dev-dependencies]
+approx = "0.3"
+
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
 nightly = [ "amethyst_core/nightly" ]

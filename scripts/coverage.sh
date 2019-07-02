@@ -53,6 +53,8 @@ for test_bin_by_crate in $test_bins_by_crate; do
   crate_coverage_dirs+=("${crate_coverage_dir}")
 
   (
+    echo "Running '${test_bin_path}'"
+
     export CARGO_MANIFEST_DIR="$crate_dir"
     kcov --include-pattern="${crate_dir}/src/,${crate_dir}/tests/" \
       "--exclude-line=${kcov_exclude_line}" \
