@@ -16,22 +16,29 @@ pub struct WindowSystem {
 impl WindowSystem {
     /// Builds and spawns a new `Window`, using the provided `DisplayConfig` and `EventsLoop` as
     /// sources. Returns a new `WindowSystem`
-    pub fn from_config_path(events_loop: &EventsLoop, path: impl AsRef<Path>) -> Self {
-        Self::from_config(events_loop, DisplayConfig::load(path.as_ref()))
+    pub fn from_config_path(world: &mut World, events_loop: &EventsLoop, path: impl AsRef<Path>) -> Self {
+        Self::from_config(world, events_loop, DisplayConfig::load(path.as_ref()))
     }
 
     /// Builds and spawns a new `Window`, using the provided `DisplayConfig` and `EventsLoop` as
     /// sources. Returns a new `WindowSystem`
-    pub fn from_config(events_loop: &EventsLoop, config: DisplayConfig) -> Self {
+    pub fn from_config(world: &mut World, events_loop: &EventsLoop, config: DisplayConfig) -> Self {
         let window = config
             .into_window_builder(events_loop)
             .build(events_loop)
             .unwrap();
-        Self::new(window)
+        Self::new(world, window)
     }
 
     /// Create a new `WindowSystem` wrapping the provided `Window`
-    pub fn new(window: Window) -> Self {
+    pub fn new(world: &mut World, window: Window) -> Self {
+        let (width, height) = window
+            .get_inner_size()
+            .expect("Window closed during initialization!")
+            .into();
+        let hidpi = window.get_hidpi_factor();
+        world.res.insert(ScreenDimensions::new(width, height, hidpi));
+        world.res.insert(window);
         Self {
             window: Some(window),
         }
@@ -73,17 +80,6 @@ impl<'a> System<'a> for WindowSystem {
         profile_scope!("window_system");
 
         self.manage_dimensions(&mut screen_dimensions, &window);
-    }
-    fn setup(&mut self, res: &mut Resources) {
-        if let Some(window) = self.window.take() {
-            let (width, height) = window
-                .get_inner_size()
-                .expect("Window closed during initialization!")
-                .into();
-            let hidpi = window.get_hidpi_factor();
-            res.insert(ScreenDimensions::new(width, height, hidpi));
-            res.insert(window);
-        }
     }
 }
 

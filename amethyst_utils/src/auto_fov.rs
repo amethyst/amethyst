@@ -241,10 +241,6 @@ impl<'a> System<'a> for AutoFovSystem {
         WriteStorage<'a, Camera>,
     );
 
-    fn setup(&mut self, res: &mut Resources) {
-        Self::SystemData::setup(res);
-    }
-
     fn run(&mut self, (screen, auto_fovs, mut cameras): Self::SystemData) {
         #[cfg(feature = "profiler")]
         profile_scope!("auto_fov_system");

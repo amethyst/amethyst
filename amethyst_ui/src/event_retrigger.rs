@@ -48,10 +48,9 @@ pub trait EventRetrigger: Component {
 /// Links up the given in- and output types' `EventChannel`s listening
 /// to incoming events and calling `apply` on the respective `Retrigger`
 /// components.
-#[derive(Derivative, Debug)]
-#[derivative(Default(bound = ""))]
+#[derive(Debug)]
 pub struct EventRetriggerSystem<T: EventRetrigger> {
-    event_reader: Option<ReaderId<T::In>>,
+    event_reader: ReaderId<T::In>,
 }
 
 impl<T> EventRetriggerSystem<T>
@@ -61,8 +60,12 @@ where
     /// Constructs a default `EventRetriggerSystem`. Since the `event_reader`
     /// will automatically be fetched when the system is set up, this should
     /// always be used to construct `EventRetriggerSystem`s.
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(world: &mut World) -> Self {
+        Self::SystemData::setup(world.res);
+        let event_reader = world.res.fetch_mut::<EventChannel<T::In>>().register_reader();
+        Self {
+            event_reader,
+        }
     }
 }
 
@@ -76,18 +79,11 @@ where
         ReadStorage<'s, T>,
     );
 
-    fn setup(&mut self, res: &mut Resources) {
-        Self::SystemData::setup(res);
-        self.event_reader = Some(res.fetch_mut::<EventChannel<T::In>>().register_reader());
-    }
-
     fn run(&mut self, (in_channel, mut out_channel, retrigger): Self::SystemData) {
         #[cfg(feature = "profiler")]
         profile_scope!("event_retrigger_system");
 
-        let event_reader = self.event_reader.as_mut().expect(
-            "`EventRetriggerSystem::setup` was not called before `EventRetriggerSystem::run`",
-        );
+        let event_reader = &mut self.event_reader;
 
         for event in in_channel.read(event_reader) {
             if let Some(entity_retrigger) = retrigger.get(event.get_target()) {

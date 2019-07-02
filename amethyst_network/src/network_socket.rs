@@ -197,8 +197,4 @@ where
             }
         }
     }
-
-    fn setup(&mut self, res: &mut Resources) {
-        Self::SystemData::setup(res);
-    }
 }

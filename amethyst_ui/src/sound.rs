@@ -77,8 +77,12 @@ impl UiSoundSystem {
     /// Constructs a default `UiSoundSystem`. Since the `event_reader`
     /// will automatically be fetched when the system is set up, this should
     /// always be used to construct the `UiSoundSystem`.
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(world: &mut World) -> Self {
+        Self::SystemData::setup(world.res);
+        let event_reader = world.res.fetch_mut::<EventChannel<UiPlaySoundAction>>().register_reader();
+        Self {
+            event_reader,
+        }
     }
 }
 
@@ -89,22 +93,11 @@ impl<'s> System<'s> for UiSoundSystem {
         Option<Read<'s, Output>>,
     );
 
-    fn setup(&mut self, res: &mut Resources) {
-        Self::SystemData::setup(res);
-        self.event_reader = Some(
-            res.fetch_mut::<EventChannel<UiPlaySoundAction>>()
-                .register_reader(),
-        );
-    }
-
     fn run(&mut self, (sound_events, audio_storage, audio_output): Self::SystemData) {
         #[cfg(feature = "profiler")]
         profile_scope!("ui_sound_system");
 
-        let event_reader = self
-            .event_reader
-            .as_mut()
-            .expect("`UiSoundSystem::setup` was not called before `UiSoundSystem::run`");
+        let event_reader = &mut self.event_reader;
 
         for event in sound_events.read(event_reader) {
             if let Some(output) = audio_output.as_ref() {

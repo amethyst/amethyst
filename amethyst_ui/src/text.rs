@@ -147,9 +147,12 @@ pub struct TextEditingMouseSystem {
 
 impl TextEditingMouseSystem {
     /// Creates a new instance of this system
-    pub fn new() -> Self {
+    pub fn new(world: &mut World) -> Self {
+        use amethyst_core::ecs::prelude::SystemData;
+        Self::SystemData::setup(world.res);
+        let reader = world.res.fetch_mut::<EventChannel<Event>>().register_reader();
         Self {
-            reader: None,
+            reader,
             left_mouse_button_pressed: false,
             mouse_position: (0., 0.),
         }
@@ -191,9 +194,7 @@ impl<'a> System<'a> for TextEditingMouseSystem {
 
         // Process only if an editable text is selected.
         for event in events.read(
-            self.reader
-                .as_mut()
-                .expect("`UiKeyboardSystem::setup` was not called before `UiKeyboardSystem::run`"),
+            &mut self.reader
         ) {
             for (ref mut text, ref mut text_editing, _) in
                 (&mut texts, &mut text_editings, &selecteds).join()
@@ -263,12 +264,6 @@ impl<'a> System<'a> for TextEditingMouseSystem {
                 }
             }
         }
-    }
-
-    fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(res);
-        self.reader = Some(res.fetch_mut::<EventChannel<Event>>().register_reader());
     }
 }
 

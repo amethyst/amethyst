@@ -15,14 +15,24 @@ use thread_profiler::profile_scope;
 #[derive(Default, Debug)]
 pub struct TransformSystem {
     local_modified: BitSet,
-    locals_events_id: Option<ReaderId<ComponentEvent>>,
-    parent_events_id: Option<ReaderId<HierarchyEvent>>,
+    locals_events_id: ReaderId<ComponentEvent>,
+    parent_events_id: ReaderId<HierarchyEvent>,
 }
 
 impl TransformSystem {
     /// Creates a new transform processor.
-    pub fn new() -> TransformSystem {
-        TransformSystem::default()
+    pub fn new(world: &mut World) -> TransformSystem {
+        use crate::ecs::prelude::SystemData;
+        Self::SystemData::setup(world.res);
+        let mut hierarchy = world.res.fetch_mut::<ParentHierarchy>();
+        let mut locals = WriteStorage::<Transform>::fetch(world.res);
+        let parent_events_id = hierarchy.track();
+        let locals_events_id = locals.register_reader();
+        TransformSystem {
+            local_modified: BitSet::default(),
+            locals_events_id,
+            parent_events_id,
+        }
     }
 }
 
@@ -42,9 +52,7 @@ impl<'a> System<'a> for TransformSystem {
         locals
             .channel()
             .read(
-                self.locals_events_id.as_mut().expect(
-                    "`TransformSystem::setup` was not called before `TransformSystem::run`",
-                ),
+                &mut self.locals_events_id,
             )
             .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
@@ -54,9 +62,7 @@ impl<'a> System<'a> for TransformSystem {
             });
 
         for event in hierarchy.changed().read(
-            self.parent_events_id
-                .as_mut()
-                .expect("`TransformSystem::setup` was not called before `TransformSystem::run`"),
+            &mut self.parent_events_id
         ) {
             match *event {
                 HierarchyEvent::Removed(entity) => {
@@ -117,16 +123,7 @@ impl<'a> System<'a> for TransformSystem {
         // Clear the local event reader.
         locals
             .channel()
-            .read(self.locals_events_id.as_mut().expect("unreachable"));
-    }
-
-    fn setup(&mut self, res: &mut Resources) {
-        use crate::ecs::prelude::SystemData;
-        Self::SystemData::setup(res);
-        let mut hierarchy = res.fetch_mut::<ParentHierarchy>();
-        let mut locals = WriteStorage::<Transform>::fetch(res);
-        self.parent_events_id = Some(hierarchy.track());
-        self.locals_events_id = Some(locals.register_reader());
+            .read(&mut self.locals_events_id);
     }
 }
 

@@ -127,15 +127,29 @@ pub enum Stretch {
 /// Manages the `Parent` component on entities having `UiTransform`
 /// It does almost the same as the `TransformSystem`, but with some differences,
 /// like `UiTransform` alignment and stretching.
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct UiTransformSystem {
     transform_modified: BitSet,
-
-    transform_events_id: Option<ReaderId<ComponentEvent>>,
-
-    parent_events_id: Option<ReaderId<HierarchyEvent>>,
-
+    transform_events_id: ReaderId<ComponentEvent>,
+    parent_events_id: ReaderId<HierarchyEvent>,
     screen_size: (f32, f32),
+}
+
+impl UiTransformSystem {
+    pub fn new(world: &mut World) -> Self {
+        use amethyst_core::ecs::prelude::SystemData;
+        Self::SystemData::setup(world.res);
+        let parent_events_id = world.res.fetch_mut::<ParentHierarchy>().track();
+        let mut transforms = WriteStorage::<UiTransform>::fetch(world.res);
+        let transform_events_id = transforms.register_reader();
+
+        Self {
+            transform_modified: BitSet::default(),
+            transform_events_id,
+            parent_events_id,
+            screen_size: (0.0, 0.0),
+        }
+    }
 }
 
 impl<'a> System<'a> for UiTransformSystem {
@@ -156,9 +170,7 @@ impl<'a> System<'a> for UiTransformSystem {
         let self_transform_modified = &mut self.transform_modified;
 
         let self_transform_events_id = &mut self
-            .transform_events_id
-            .as_mut()
-            .expect("`UiTransformSystem::setup` was not called before `UiTransformSystem::run`");
+            .transform_events_id;
 
         transforms
             .channel()
@@ -173,9 +185,7 @@ impl<'a> System<'a> for UiTransformSystem {
         for event in
             hierarchy
                 .changed()
-                .read(&mut self.parent_events_id.as_mut().expect(
-                    "`UiTransformSystem::setup` was not called before `UiTransformSystem::run`",
-                ))
+                .read(&mut self.parent_events_id)
         {
             if let HierarchyEvent::Modified(entity) = *event {
                 self_transform_modified.add(entity.id());
@@ -316,14 +326,6 @@ impl<'a> System<'a> for UiTransformSystem {
                 }
                 ComponentEvent::Removed(_id) => {}
             });
-    }
-
-    fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(res);
-        self.parent_events_id = Some(res.fetch_mut::<ParentHierarchy>().track());
-        let mut transforms = WriteStorage::<UiTransform>::fetch(res);
-        self.transform_events_id = Some(transforms.register_reader());
     }
 }
 

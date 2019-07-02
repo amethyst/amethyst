@@ -66,7 +66,9 @@ pub struct UiButtonSystem {
 
 impl UiButtonSystem {
     /// Creates a new instance of this structure
-    pub fn new() -> Self {
+    pub fn new(world: &mut World) -> Self {
+        Self::SystemData::setup(world.res);
+        let event_reader = world.res.fetch_mut::<EventChannel<UiButtonAction>>().register_reader();
         Self::default()
     }
 }
@@ -79,22 +81,11 @@ impl<'s> System<'s> for UiButtonSystem {
         Write<'s, EventChannel<UiButtonAction>>,
     );
 
-    fn setup(&mut self, res: &mut Resources) {
-        Self::SystemData::setup(res);
-        self.event_reader = Some(
-            res.fetch_mut::<EventChannel<UiButtonAction>>()
-                .register_reader(),
-        );
-    }
-
     fn run(
         &mut self,
         (mut image_storage, mut text_storage, hierarchy, button_events): Self::SystemData,
     ) {
-        let event_reader = self
-            .event_reader
-            .as_mut()
-            .expect("`UiButtonSystem::setup` was not called before `UiButtonSystem::run`");
+        let event_reader = &mut self.event_reader;
 
         for event in button_events.read(event_reader) {
             match event.event_type {
