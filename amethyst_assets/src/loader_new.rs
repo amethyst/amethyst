@@ -86,9 +86,12 @@ impl AssetHandle for GenericHandle {
 
 /// Handle to an asset that does not prevent the asset from being unloaded.
 ///
-/// This is useful for balancing performance and memory usage -- frequently or recently used assets
-/// may be held with strong references, and assets that are not used frequently or recently are
-/// downgraded to weak handles so that they may be freed when memory usage is reaching a set limit.
+/// Weak handles are primarily used when you want to use something that is already loaded.
+///
+/// For example, a strong handle to an asset may be guaranteed to exist elsewhere in the program,
+/// and so you can simply get and use a weak handle to that asset in other parts of your code. This
+/// removes reference counting overhead, but also ensures that the system which uses the weak handle
+/// is not in control of when to unload the asset.
 #[derive(Derivative)]
 #[derivative(
     Clone(bound = ""),
