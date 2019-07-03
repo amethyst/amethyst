@@ -155,7 +155,7 @@ If you intend to include a [`Component`] that has not yet got a corresponding [`
 
     ```
 
-    The problem is that both the `SpriteScenePrefab`s need to write to `Trasform` and several other common `Components`. Because Amythest's underlyng ECS system determins what resources are accessed based on static types it can't determine that only one of the `SpriteScenePrefab`s will be accessed at a time and it attempts a double mutable borrow which fails. The solution is to define the `PrefabData` hierarchically so each component only appears once:
+    The problem is that both the `SpriteScenePrefab`s need to write to `Transform` and several other common `Components`. Because Amythest's underlyng ECS system determines what resources are accessed based on static types, it can't determine that only one of the `SpriteScenePrefab`s will be accessed at a time and it attempts a double mutable borrow which fails. The solution is to define the `PrefabData` hierarchically so each component only appears once:
 
     ```rust,edition2018,no_run,noplaypen
     # extern crate amethyst;
