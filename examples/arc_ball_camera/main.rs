@@ -8,7 +8,7 @@ use amethyst::{
         transform::{Transform, TransformBundle},
     },
     ecs::prelude::{
-        Join, Read, ReadExpect, ReadStorage, Resources, System, SystemData, WriteStorage,
+        Join, Read, ReadExpect, ReadStorage, Resources, System, SystemData, WriteStorage, World,
     },
     input::{
         is_key_down, InputBundle, InputEvent, ScrollDirection, StringBindings, VirtualKeyCode,
@@ -119,14 +119,17 @@ fn main() -> Result<(), Error> {
 
     let key_bindings_path = app_root.join("examples/arc_ball_camera/resources/input.ron");
 
+    let mut world = World::new();
+
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
-        .with_bundle(TransformBundle::new().with_dep(&[]))?
+        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
+        .with_bundle(&mut world, TransformBundle::new().with_dep(&[]))?
         .with_bundle(
+            &mut world,
             InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
-        .with_bundle(ArcBallControlBundle::<StringBindings>::new())?
+        .with_bundle(&mut world, ArcBallControlBundle::<StringBindings>::new())?
         .with(
             CameraDistanceSystem::new(),
             "camera_distance_system",
@@ -135,7 +138,7 @@ fn main() -> Result<(), Error> {
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
-    let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
+    let mut game = Application::build(resources_directory, ExampleState)?.build(game_data, world)?;
     game.run();
     Ok(())
 }

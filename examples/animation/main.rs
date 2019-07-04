@@ -7,7 +7,7 @@ use amethyst::{
     },
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
     core::{Transform, TransformBundle},
-    ecs::prelude::{Entity, ReadExpect, Resources},
+    ecs::prelude::{Entity, ReadExpect, Resources, World},
     input::{get_key, is_close_requested, is_key_down},
     prelude::*,
     renderer::{
@@ -190,19 +190,21 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/animation/resources/display_config.ron");
     let resources = app_root.join("examples/assets/");
 
+    let mut world = World::new();
+
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
-        .with_bundle(AnimationBundle::<AnimationId, Transform>::new(
+        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
+        .with_bundle(&mut world, AnimationBundle::<AnimationId, Transform>::new(
             "animation_control_system",
             "sampler_interpolation_system",
         ))?
-        .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
+        .with_bundle(&mut world, TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
     let state: Example = Default::default();
-    let mut game = Application::new(resources, state, game_data)?;
+    let mut game = Application::new(resources, state, game_data, world)?;
     game.run();
 
     Ok(())

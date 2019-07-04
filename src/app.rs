@@ -184,7 +184,7 @@ where
     /// let mut game = Application::new("assets/", NullState, ()).expect("Failed to initialize");
     /// game.run();
     /// ~~~
-    pub fn new<P, S, I>(path: P, initial_state: S, init: I) -> Result<Self, Error>
+    pub fn new<P, S, I>(path: P, initial_state: S, init: I, world: World) -> Result<Self, Error>
     where
         P: AsRef<Path>,
         S: State<T, E> + 'a,
@@ -192,20 +192,20 @@ where
         for<'b> R: EventReader<'b, Event = E>,
         R: Default,
     {
-        ApplicationBuilder::new(path, initial_state)?.build(init)
+        ApplicationBuilder::new(path, initial_state, world)?.build(init)
     }
 
     /// Creates a new ApplicationBuilder with the given initial game state.
     ///
     /// This is identical in function to
     /// [ApplicationBuilder::new](struct.ApplicationBuilder.html#method.new).
-    pub fn build<P, S>(path: P, initial_state: S) -> Result<ApplicationBuilder<S, T, E, R>, Error>
+    pub fn build<P, S>(path: P, initial_state: S, world: World) -> Result<ApplicationBuilder<S, T, E, R>, Error>
     where
         P: AsRef<Path>,
         S: State<T, E> + 'a,
         for<'b> R: EventReader<'b, Event = E>,
     {
-        ApplicationBuilder::new(path, initial_state)
+        ApplicationBuilder::new(path, initial_state, world)
     }
 
     /// Run the gameloop until the game state indicates that the game is no
@@ -482,7 +482,7 @@ where
     /// // the game instance can now be run, this exits only when the game is done
     /// game.run();
     /// ~~~
-    pub fn new<P: AsRef<Path>>(path: P, initial_state: S) -> Result<Self, Error> {
+    pub fn new<P: AsRef<Path>>(path: P, initial_state: S, mut world: World) -> Result<Self, Error> {
         if !log_enabled!(Level::Error) {
             eprintln!(
                 "WARNING: No logger detected! Did you forget to call `amethyst::start_logger()`?"
@@ -514,8 +514,6 @@ where
                     .expect("AMETHYST_NUM_THREADS was provided but is not a valid number!")
             })
             .ok();
-
-        let mut world = World::new();
 
         let thread_pool_builder = ThreadPoolBuilder::new();
         #[cfg(feature = "profiler")]
