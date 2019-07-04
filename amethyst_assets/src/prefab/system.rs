@@ -5,7 +5,7 @@ use log::error;
 use amethyst_core::{
     ecs::{
         storage::ComponentEvent, BitSet, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
-        ReaderId, Resources, System, Write, WriteStorage,
+        ReaderId, Resources, System, Write, WriteStorage, World,
     },
     ArcThreadPool, Parent, Time,
 };
@@ -28,15 +28,18 @@ pub struct PrefabLoaderSystem<T> {
     entities: Vec<Entity>,
     finished: Vec<Entity>,
     to_process: BitSet,
-    insert_reader: Option<ReaderId<ComponentEvent>>,
+    insert_reader: ReaderId<ComponentEvent>,
     next_tag: u64,
 }
 
-impl<T> PrefabLoaderSystem<T> {
+impl<'a, T> PrefabLoaderSystem<T> 
+where
+    T: PrefabData<'a> + Send + Sync + 'static,
+{
     /// Creates a new `PrefabLoaderSystem`.
     pub fn new(world: &mut World) -> Self {
         use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world.res);
         let insert_reader = WriteStorage::<Handle<Prefab<T>>>::fetch(&world.res).register_reader();
         Self {
             _m: PhantomData,

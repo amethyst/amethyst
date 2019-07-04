@@ -8,7 +8,7 @@ use winit::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, 
 
 use crate::{LineMode, Selected, TextEditing, UiEvent, UiEventType, UiText};
 use amethyst_core::{
-    ecs::prelude::{Entities, Join, Read, ReadStorage, Resources, System, Write, WriteStorage},
+    ecs::prelude::{Entities, Join, Read, ReadStorage, Resources, System, Write, WriteStorage, World},
     shrev::{EventChannel, ReaderId},
 };
 
@@ -27,7 +27,7 @@ impl TextEditingInputSystem {
     /// Creates a new instance of this system
     pub fn new(world: &mut World) -> Self {
         use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world.res);
         let reader = world.res.fetch_mut::<EventChannel<Event>>().register_reader();
         Self { reader }
     }

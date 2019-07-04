@@ -6,7 +6,7 @@ use crate::{
     },
 };
 use amethyst_core::{
-    ecs::prelude::{Component, DispatcherBuilder},
+    ecs::prelude::{Component, DispatcherBuilder, World},
     SystemBundle,
 };
 use amethyst_error::Error;
@@ -35,9 +35,9 @@ impl<'a> VertexSkinningBundle<'a> {
 }
 
 impl<'a, 'b, 'c> SystemBundle<'a, 'b> for VertexSkinningBundle<'c> {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
-            VertexSkinningSystem::new(),
+            VertexSkinningSystem::new(world),
             "vertex_skinning_system",
             self.dep,
         );
@@ -85,7 +85,7 @@ impl<'a, 'b, 'c, T> SystemBundle<'a, 'b> for SamplingBundle<'c, T>
 where
     T: AnimationSampling + Component,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(SamplerProcessor::<T::Primitive>::new(), "", &[]);
         builder.add(SamplerInterpolationSystem::<T>::new(), self.name, self.dep);
         Ok(())

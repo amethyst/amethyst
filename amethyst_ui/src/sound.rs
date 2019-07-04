@@ -3,7 +3,7 @@ use amethyst_audio::{output::Output, Source, SourceHandle};
 use amethyst_core::{
     ecs::{
         prelude::{Component, DenseVecStorage},
-        Read, Resources, System, SystemData, Write,
+        Read, Resources, System, SystemData, Write, World,
     },
     shrev::{EventChannel, ReaderId},
 };
@@ -68,9 +68,9 @@ impl EventRetrigger for UiSoundRetrigger {
 
 /// Handles any dispatches `UiPlaySoundAction`s and plays the received
 /// sounds through the set `Output`.
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct UiSoundSystem {
-    event_reader: Option<ReaderId<UiPlaySoundAction>>,
+    event_reader: ReaderId<UiPlaySoundAction>,
 }
 
 impl UiSoundSystem {
@@ -78,7 +78,7 @@ impl UiSoundSystem {
     /// will automatically be fetched when the system is set up, this should
     /// always be used to construct the `UiSoundSystem`.
     pub fn new(world: &mut World) -> Self {
-        Self::SystemData::setup(world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world.res);
         let event_reader = world.res.fetch_mut::<EventChannel<UiPlaySoundAction>>().register_reader();
         Self {
             event_reader,

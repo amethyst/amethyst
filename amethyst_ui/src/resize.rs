@@ -1,7 +1,7 @@
 use amethyst_core::{
     ecs::prelude::{
         BitSet, Component, ComponentEvent, FlaggedStorage, Join, ReadExpect, Resources, System,
-        WriteStorage,
+        WriteStorage, World, 
     },
     shrev::ReaderId,
 };
@@ -44,7 +44,7 @@ impl Component for UiResize {
 #[derive(Debug)]
 pub struct ResizeSystem {
     screen_size: (f32, f32),
-    resize_events_id: Option<ReaderId<ComponentEvent>>,
+    resize_events_id: ReaderId<ComponentEvent>,
     local_modified: BitSet,
 }
 
@@ -52,9 +52,9 @@ impl ResizeSystem {
     /// Creates a new ResizeSystem that listens with the given reader Id.
     pub fn new(world: &mut World) -> ResizeSystem {
         use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world.res);
         let screen_size = (0.0, 0.0);
-        let mut resize = WriteStorage::<UiResize>::fetch(world.res);
+        let mut resize = WriteStorage::<UiResize>::fetch(&world.res);
         let resize_events_id = resize.register_reader();
         ResizeSystem {
             screen_size,
@@ -79,8 +79,7 @@ impl<'a> System<'a> for ResizeSystem {
 
         let self_local_modified = &mut self.local_modified;
 
-        let self_resize_events_id = self
-            .resize_events_id;
+        let self_resize_events_id = &mut self.resize_events_id;
         resize
             .channel()
             .read(self_resize_events_id)

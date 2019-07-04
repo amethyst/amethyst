@@ -8,7 +8,7 @@ use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     ecs::{
         Component, DenseVecStorage, Entities, Join, Read, ReadStorage, Resources, System,
-        SystemData, Write, WriteExpect, WriteStorage,
+        SystemData, Write, WriteExpect, WriteStorage, World, 
     },
     Hidden, HiddenPropagate,
 };
@@ -95,7 +95,7 @@ pub struct UiGlyphsSystem<B: Backend> {
 impl<B: Backend> UiGlyphsSystem<B> {
     /// Create new UI glyphs system
     pub fn new(world: &mut World) -> Self {
-        Self::SystemData::setup(world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world.res);
         world.res.insert(UiGlyphsResource { glyph_tex: None });
         Self {
             glyph_brush: GlyphBrushBuilder::using_fonts(vec![])

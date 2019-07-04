@@ -7,9 +7,9 @@ use amethyst_assets::AssetStorage;
 use amethyst_core::{
     ecs::{
         common::Errors,
-        prelude::{Read, System, WriteExpect},
+        prelude::{Read, System, WriteExpect, World},
     },
-    shred::{Resource, Resources},
+    shred::Resource,
 };
 
 use crate::{
@@ -25,15 +25,19 @@ pub struct DjSystem<F, R> {
     marker: PhantomData<R>,
 }
 
-impl<F, R> DjSystem<F, R> {
+impl<F, R> DjSystem<F, R> 
+where
+    F: FnMut(&mut R) -> Option<SourceHandle>,
+    R: Resource,
+{
     /// Creates a new `DjSystem` with the music picker being `f`.
     /// The closure takes a parameter, which needs to be a reference to
     /// a resource type, e.g. `&MusicLibrary`. This resource will be fetched
     /// by the system and passed to the picker.
     pub fn new(world: &mut World, f: F) -> Self {
         use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(world.res);
-        init_output(world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world.res);
+        init_output(&mut world.res);
         DjSystem {
             f,
             marker: PhantomData,

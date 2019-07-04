@@ -7,7 +7,7 @@ use thread_profiler::profile_scope;
 use amethyst_core::{
     ecs::prelude::{
         BitSet, ComponentEvent, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
-        WriteStorage,
+        WriteStorage, World, 
     },
     HierarchyEvent, Parent, ParentHierarchy,
 };
@@ -136,11 +136,12 @@ pub struct UiTransformSystem {
 }
 
 impl UiTransformSystem {
+    /// Creates a new `UiTransformSystem`.
     pub fn new(world: &mut World) -> Self {
         use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world.res);
         let parent_events_id = world.res.fetch_mut::<ParentHierarchy>().track();
-        let mut transforms = WriteStorage::<UiTransform>::fetch(world.res);
+        let mut transforms = WriteStorage::<UiTransform>::fetch(&world.res);
         let transform_events_id = transforms.register_reader();
 
         Self {

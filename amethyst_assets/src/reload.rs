@@ -3,7 +3,7 @@
 use std::{sync::Arc, time::Instant};
 
 use amethyst_core::{
-    ecs::prelude::{DispatcherBuilder, Read, Resources, System, Write},
+    ecs::prelude::{DispatcherBuilder, Read, Resources, System, Write, World},
     SystemBundle, Time,
 };
 use amethyst_error::Error;
@@ -28,8 +28,8 @@ impl HotReloadBundle {
 }
 
 impl<'a, 'b> SystemBundle<'a, 'b> for HotReloadBundle {
-    fn build(self, dispatcher: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
-        dispatcher.add(HotReloadSystem::new(self.strategy), "hot_reload", &[]);
+    fn build(self, world: &mut World, dispatcher: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        dispatcher.add(HotReloadSystem::new(world, self.strategy), "hot_reload", &[]);
         Ok(())
     }
 }
@@ -130,20 +130,16 @@ enum HotReloadStrategyInner {
 }
 
 /// System for updating `HotReloadStrategy`.
-pub struct HotReloadSystem {
-    initial_strategy: HotReloadStrategy,
-}
+pub struct HotReloadSystem;
 
 impl HotReloadSystem {
     /// Create a new reload system
     pub fn new(world: &mut World, strategy: HotReloadStrategy) -> Self {
         use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(world.res);
-        res.insert(self.initial_strategy.clone());
-        res.fetch_mut::<Loader>().set_hot_reload(true);
-        HotReloadSystem {
-            initial_strategy: strategy,
-        }
+        <Self as System<'_>>::SystemData::setup(&mut world.res);
+        world.res.insert(strategy);
+        world.res.fetch_mut::<Loader>().set_hot_reload(true);
+        Self
     }
 }
 

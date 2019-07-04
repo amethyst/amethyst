@@ -47,12 +47,13 @@ where
 
 impl<I, T> AnimationControlSystem<I, T>
 where
-    I: Eq + Hash,
+    I: PartialEq + Eq + Hash + Copy + Send + Sync + 'static,
+    T: AnimationSampling + Component + Clone,
 {
     /// Creates a new `AnimationControlSystem`
     pub fn new(world: &mut World) -> Self {
-        Self::SystemData::setup(world.res);
-        ReadStorage::<AnimationSet<I, T>>::setup(world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world.res);
+        ReadStorage::<AnimationSet<I, T>>::setup(&mut world.res);
         AnimationControlSystem {
             m: marker::PhantomData,
             next_id: 1,

@@ -1,8 +1,8 @@
 //! Scene graph system and types
 
 use crate::ecs::prelude::{
-    ComponentEvent, Entities, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
-    WriteStorage,
+    ComponentEvent, Entities, Join, ReadExpect, ReadStorage, ReaderId, System,
+    WriteStorage, World,
 };
 use hibitset::BitSet;
 
@@ -12,7 +12,7 @@ use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform};
 use thread_profiler::profile_scope;
 
 /// Handles updating `global_matrix` field from `Transform` components.
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct TransformSystem {
     local_modified: BitSet,
     locals_events_id: ReaderId<ComponentEvent>,
@@ -23,9 +23,9 @@ impl TransformSystem {
     /// Creates a new transform processor.
     pub fn new(world: &mut World) -> TransformSystem {
         use crate::ecs::prelude::SystemData;
-        Self::SystemData::setup(world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world.res);
         let mut hierarchy = world.res.fetch_mut::<ParentHierarchy>();
-        let mut locals = WriteStorage::<Transform>::fetch(world.res);
+        let mut locals = WriteStorage::<Transform>::fetch(&world.res);
         let parent_events_id = hierarchy.track();
         let locals_events_id = locals.register_reader();
         TransformSystem {

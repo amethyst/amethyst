@@ -17,21 +17,21 @@ use super::resources::*;
 /// System for performing vertex skinning.
 ///
 /// Needs to run after global transforms have been updated for the current frame.
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct VertexSkinningSystem {
     /// Also scratch space, used while determining which skins need to be updated.
     updated: BitSet,
     updated_skins: BitSet,
     /// Used for tracking modifications to global transforms
-    updated_id: Option<ReaderId<ComponentEvent>>,
+    updated_id: ReaderId<ComponentEvent>,
 }
 
 impl VertexSkinningSystem {
     /// Creates a new `VertexSkinningSystem`
     pub fn new(world: &mut World) -> Self {
         use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(world.res);
-        let mut transform = WriteStorage::<Transform>::fetch(world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world.res);
+        let mut transform = WriteStorage::<Transform>::fetch(&world.res);
         let updated_id = transform.register_reader();
         Self {
             updated: BitSet::default(),

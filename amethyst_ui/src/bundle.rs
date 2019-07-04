@@ -7,7 +7,7 @@ use crate::{
     UiMouseSystem, UiSoundRetriggerSystem, UiSoundSystem, UiTransformSystem, WidgetId,
 };
 use amethyst_assets::Processor;
-use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder};
+use amethyst_core::{bundle::SystemBundle, ecs::prelude::{DispatcherBuilder, World}};
 use amethyst_error::Error;
 use amethyst_input::BindingTypes;
 use amethyst_rendy::Backend;
@@ -34,14 +34,14 @@ where
     W: WidgetId,
     G: Send + Sync + PartialEq + 'static,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
-            UiLoaderSystem::<<C as ToNativeWidget>::PrefabData, W>::default(),
+            UiLoaderSystem::<<C as ToNativeWidget>::PrefabData, W>::new(world),
             "ui_loader",
             &[],
         );
         builder.add(
-            UiTransformSystem::default(),
+            UiTransformSystem::new(world),
             "ui_transform",
             &["transform_system"],
         );
@@ -56,47 +56,47 @@ where
             &[],
         );
         builder.add(
-            SelectionMouseSystem::<G, T>::new(),
+            SelectionMouseSystem::<G, T>::new(world),
             "ui_mouse_selection",
             &[],
         );
         builder.add(
-            SelectionKeyboardSystem::<G>::new(),
+            SelectionKeyboardSystem::<G>::new(world),
             "ui_keyboard_selection",
             // Because when you press tab, you want to override the previously selected elements.
             &["ui_mouse_selection"],
         );
         builder.add(
-            TextEditingMouseSystem::new(),
+            TextEditingMouseSystem::new(world),
             "ui_text_editing_mouse_system",
             &["ui_mouse_selection", "ui_keyboard_selection"],
         );
         builder.add(
-            TextEditingInputSystem::new(),
+            TextEditingInputSystem::new(world),
             "ui_text_editing_input_system",
             // Hard requirement. The system assumes the text to edit is selected.
             &["ui_mouse_selection", "ui_keyboard_selection"],
         );
-        builder.add(ResizeSystem::new(), "ui_resize_system", &[]);
+        builder.add(ResizeSystem::new(world), "ui_resize_system", &[]);
         builder.add(
             UiMouseSystem::<T>::new(),
             "ui_mouse_system",
             &["ui_transform"],
         );
         builder.add(
-            UiButtonSystem::new(),
+            UiButtonSystem::new(world),
             "ui_button_system",
             &["ui_mouse_system"],
         );
 
         builder.add(
-            UiButtonActionRetriggerSystem::new(),
+            UiButtonActionRetriggerSystem::new(world),
             "ui_button_action_retrigger_system",
             &["ui_button_system"],
         );
-        builder.add(UiSoundSystem::new(), "ui_sound_system", &[]);
+        builder.add(UiSoundSystem::new(world), "ui_sound_system", &[]);
         builder.add(
-            UiSoundRetriggerSystem::new(),
+            UiSoundRetriggerSystem::new(world),
             "ui_sound_retrigger_system",
             &["ui_sound_system"],
         );
@@ -104,7 +104,7 @@ where
         // Required for text editing. You want the cursor image to blink.
         builder.add(BlinkSystem, "blink_system", &[]);
         builder.add(
-            UiGlyphsSystem::<B>::new(),
+            UiGlyphsSystem::<B>::new(world),
             "ui_glyphs_system",
             &[
                 "ui_loader",

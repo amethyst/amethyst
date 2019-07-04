@@ -3,7 +3,7 @@ use crate::{
     resources::{HideCursor, WindowFocus},
 };
 use amethyst_core::{
-    ecs::prelude::{Join, Read, ReadExpect, ReadStorage, Resources, System, Write, WriteStorage},
+    ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, Write, WriteStorage, World},
     math::{convert, Unit, Vector3},
     shrev::{EventChannel, ReaderId},
     timing::Time,
@@ -135,7 +135,7 @@ impl FreeRotationSystem {
     /// Builds a new `FreeRotationSystem` with the specified mouse sensitivity values.
     pub fn new(world: &mut World, sensitivity_x: f32, sensitivity_y: f32) -> Self {
         use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world.res);
         let event_reader = world.res.fetch_mut::<EventChannel<Event>>().register_reader();
         FreeRotationSystem {
             sensitivity_x,
@@ -181,16 +181,16 @@ impl<'a> System<'a> for FreeRotationSystem {
 }
 
 /// A system which reads Events and saves if a window has lost focus in a WindowFocus resource
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct MouseFocusUpdateSystem {
     event_reader: ReaderId<Event>,
 }
 
 impl MouseFocusUpdateSystem {
     /// Builds a new MouseFocusUpdateSystem.
-    pub fn new() -> MouseFocusUpdateSystem {
+    pub fn new(world: &mut World) -> MouseFocusUpdateSystem {
         use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world.res);
         let event_reader = world.res.fetch_mut::<EventChannel<Event>>().register_reader();
         Self {
             event_reader
@@ -217,7 +217,7 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
 
 /// System which hides the cursor when the window is focused.
 /// Requires the usage MouseFocusUpdateSystem at the same time.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct CursorHideSystem {
     is_hidden: bool,
 }
@@ -226,7 +226,7 @@ impl CursorHideSystem {
     /// Constructs a new CursorHideSystem
     pub fn new(world: &mut World) -> CursorHideSystem {
         use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world.res);
         let win = world.res.fetch::<Window>();
 
         if let Err(err) = win.grab_cursor(true) {

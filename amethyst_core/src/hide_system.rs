@@ -1,6 +1,6 @@
 use crate::{
     ecs::prelude::{
-        BitSet, ComponentEvent, ReadExpect, ReadStorage, ReaderId, Resources, System, WriteStorage,
+        BitSet, ComponentEvent, ReadExpect, ReadStorage, ReaderId, System, WriteStorage, World,
     },
     transform::components::{HierarchyEvent, Parent, ParentHierarchy},
 };
@@ -16,23 +16,22 @@ use crate::HiddenPropagate;
 /// This system adds a [HiddenPropagate](struct.HiddenPropagate.html)-component to all children.
 /// Using this system will result in every child being hidden.
 /// Depends on the resource "ParentHierarchy", which is set up by the [TransformBundle](struct.TransformBundle.html)
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct HideHierarchySystem {
     marked_as_modified: BitSet,
-
     hidden_events_id: ReaderId<ComponentEvent>,
-
     parent_events_id: ReaderId<HierarchyEvent>,
 }
 
 impl HideHierarchySystem {
+    /// Creates a new `HideHierarchySystem`.
     pub fn new(world: &mut World) -> Self {
         use crate::ecs::prelude::SystemData;
-        Self::SystemData::setup(world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world.res);
         // This fetch_mut panics if `ParentHierarchy` is not set up yet, hence the dependency on "parent_hierarchy_system"
         let parent_events_id = world.res.fetch_mut::<ParentHierarchy>().track();
-        let mut hidden = WriteStorage::<HiddenPropagate>::fetch(world.res);
-        self.hidden_events_id = hidden.register_reader();
+        let mut hidden = WriteStorage::<HiddenPropagate>::fetch(&world.res);
+        let hidden_events_id = hidden.register_reader();
         Self {
             marked_as_modified: BitSet::default(),
             hidden_events_id,

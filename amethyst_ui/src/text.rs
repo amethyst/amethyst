@@ -8,7 +8,7 @@ use winit::{ElementState, Event, MouseButton, WindowEvent};
 use amethyst_core::{
     ecs::prelude::{
         Component, DenseVecStorage, Join, Read, ReadExpect, ReadStorage, Resources, System,
-        WriteStorage,
+        WriteStorage, World,
     },
     shrev::{EventChannel, ReaderId},
     timing::Time,
@@ -135,10 +135,10 @@ impl Component for TextEditing {
 }
 
 /// This system processes the underlying UI data as needed.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct TextEditingMouseSystem {
     /// A reader for winit events.
-    reader: Option<ReaderId<Event>>,
+    reader: ReaderId<Event>,
     /// This is set to true while the left mouse button is pressed.
     left_mouse_button_pressed: bool,
     /// The screen coordinates of the mouse
@@ -149,7 +149,7 @@ impl TextEditingMouseSystem {
     /// Creates a new instance of this system
     pub fn new(world: &mut World) -> Self {
         use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world.res);
         let reader = world.res.fetch_mut::<EventChannel<Event>>().register_reader();
         Self {
             reader,
