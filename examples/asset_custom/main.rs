@@ -76,9 +76,7 @@ impl Source for CodeSource {
         Ok(0)
     }
     fn load(&self, _path: &str) -> Result<Vec<u8>, Error> {
-        let bytes = "EnergyBlast(hp_damage: 10, mp_damage: 10)"
-            .as_bytes()
-            .to_vec();
+        let bytes = b"EnergyBlast(hp_damage: 10, mp_damage: 10)".to_vec();
         Ok(bytes)
     }
 }

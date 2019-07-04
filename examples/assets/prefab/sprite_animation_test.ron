@@ -1,4 +1,10 @@
 #![enable(implicit_some)]
+/*!
+    @import /amethyst_assets/src/prefab/mod.rs#Prefab
+    @import ../../sprite_animation/main.rs#MyPrefabData
+    Prefab<MyPrefabData>
+*/
+
 Prefab(
     entities: [
         // Grey arrow

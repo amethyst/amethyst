@@ -1,21 +1,23 @@
-use std::io::Read;
-use type_uuid::TypeUuid;
-use serde::{Serialize, Deserialize};
-use atelier_importer::{self as importer, SerdeObj, Importer, ImporterValue, ImportedAsset};
 use crate::{AssetUuid, Format};
 pub use atelier_importer::SourceFileImporter;
+use atelier_importer::{self as importer, ImportedAsset, Importer, ImporterValue, SerdeObj};
+use serde::{Deserialize, Serialize};
+use std::io::Read;
+use type_uuid::TypeUuid;
 
 /// A simple state for Importer to retain the same UUID between imports
 /// for all single-asset source files
-#[derive(Default, Serialize, Deserialize)]
-#[derive(TypeUuid)]
+#[derive(Default, Serialize, Deserialize, TypeUuid)]
 #[uuid = "6b00ea4b-f98c-4b43-94e1-e696c96a6b93"]
 pub struct SimpleImporterState {
     id: Option<AssetUuid>,
 }
 
 /// Wrapper struct to be able to impl Importer for any SimpleFormat
-pub struct SimpleImporter<A: 'static, T: Format<A> + TypeUuid>(pub T, ::std::marker::PhantomData<A>);
+pub struct SimpleImporter<A: 'static, T: Format<A> + TypeUuid>(
+    pub T,
+    ::std::marker::PhantomData<A>,
+);
 
 impl<A: 'static, T: Format<A> + TypeUuid + 'static> From<T> for SimpleImporter<A, T> {
     fn from(fmt: T) -> SimpleImporter<A, T> {
@@ -24,7 +26,7 @@ impl<A: 'static, T: Format<A> + TypeUuid + 'static> From<T> for SimpleImporter<A
 }
 impl<A, T: Format<A> + TypeUuid + Send + 'static> TypeUuid for SimpleImporter<A, T>
 where
-    A: SerdeObj, 
+    A: SerdeObj,
 {
     const UUID: AssetUuid = T::UUID;
 }
@@ -57,7 +59,9 @@ where
         }
         let mut bytes = Vec::new();
         source.read_to_end(&mut bytes)?;
-        let import_result = options.import_simple(bytes).map_err(|e| importer::Error::Boxed(e.into_error()))?;
+        let import_result = options
+            .import_simple(bytes)
+            .map_err(|e| importer::Error::Boxed(e.into_error()))?;
         Ok(ImporterValue {
             assets: vec![ImportedAsset {
                 id: state.id.expect("AssetUUID not generated"),
@@ -72,7 +76,21 @@ where
     }
 }
 
-
+/// Associates the given file extension with a `Format` implementation
+///
+/// The `AssetDaemon` will automatically re-import the asset when a file of that format is created
+/// or modified.
+///
+/// # Parameters
+///
+/// * `ext`: File extension including the leading `.`, such as `".ron"`.
+/// * `format`: Type that implements the `Format` trait.
+///
+/// # Examples
+///
+/// ```rust,ignore
+/// amethyst_assets::register_importer!(".ron", Ron);
+/// ```
 #[macro_export]
 macro_rules! register_importer {
     ($ext:literal, $format:ty) => {

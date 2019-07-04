@@ -12,7 +12,7 @@
 #[cfg(feature = "json")]
 pub use crate::formats::JsonFormat;
 pub use crate::{
-    asset::{Asset, Format, FormatValue, ProcessableAsset},
+    asset::{Asset, Format, FormatValue, ProcessableAsset, SerializableFormat},
     cache::Cache,
     dyn_format::FormatRegisteredData,
     formats::RonFormat,
@@ -26,18 +26,15 @@ pub use crate::{
 };
 #[cfg(feature = "experimental-assets")]
 pub use crate::{
-    processor::{ProcessingQueue, ProcessingState as NewProcessingState},
+    loader_new::{
+        create_asset_type, AssetHandle, AssetUuid, DefaultLoader as NewDefaultLoader,
+        GenericHandle, Handle as NewHandle, LoadStatus, Loader as NewLoader,
+    },
+    processor::{
+        ProcessingQueue, ProcessingState as NewProcessingState, Processor as NewProcessor,
+    },
+    simple_importer::{SimpleImporter, SourceFileImporter},
     storage_new::AssetStorage as NewAssetStorage,
-    loader_new::{create_asset_type, 
-            AssetUuid, 
-            Loader as NewLoader, 
-            DefaultLoader as NewDefaultLoader, 
-            Handle as NewHandle, 
-            GenericHandle,
-            AssetHandle,
-            LoadStatus,
-            },
-    simple_importer::{SourceFileImporter, SimpleImporter},
 };
 
 pub use rayon::ThreadPool;
@@ -56,14 +53,13 @@ mod source;
 mod storage;
 
 #[cfg(feature = "experimental-assets")]
-mod storage_new;
-#[cfg(feature = "experimental-assets")]
 mod loader_new;
 #[cfg(feature = "experimental-assets")]
 mod processor;
 #[cfg(feature = "experimental-assets")]
 mod simple_importer;
-
+#[cfg(feature = "experimental-assets")]
+mod storage_new;
 
 /// Registers an importer for the new experimental asset system
 #[cfg(not(feature = "experimental-assets"))]
@@ -77,7 +73,7 @@ macro_rules! register_importer {
 #[cfg(not(feature = "experimental-assets"))]
 #[macro_export]
 macro_rules! register_asset_type {
-    ($intermediate:ty => $asset:ty) => { };
+    ($intermediate:ty => $asset:ty) => {};
     ($krate:ident; $intermediate:ty => $asset:ty) => {};
 }
 

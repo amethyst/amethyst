@@ -86,6 +86,7 @@ impl Component for UiText {
 
 /// If this component is attached to an entity with a UiText then that UiText is editable.
 /// This component also controls how that editing works.
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct TextEditing {
     /// The current editing cursor position, specified in terms of glyphs, not characters.
     pub cursor_position: isize,
@@ -134,7 +135,7 @@ impl Component for TextEditing {
 }
 
 /// This system processes the underlying UI data as needed.
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct TextEditingMouseSystem {
     /// A reader for winit events.
     reader: Option<ReaderId<Event>>,

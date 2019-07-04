@@ -1,14 +1,16 @@
 //! A collection of structures and functions useful across the entire amethyst project.
-
-#![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
+#![warn(
+    missing_debug_implementations,
+    missing_docs,
+    rust_2018_idioms,
+    rust_2018_compatibility
+)]
+#![warn(clippy::all)]
+#![allow(clippy::new_without_default)]
 
 #[cfg(all(target_os = "emscripten", not(no_threading)))]
 compile_error!("the cfg flag \"no_threading\" is required when building for emscripten");
 
-#[macro_use]
-extern crate alga_derive;
-#[macro_use]
-extern crate serde;
 #[macro_use]
 extern crate getset;
 #[macro_use]
@@ -29,7 +31,6 @@ use std::sync::Arc;
 pub use crate::{
     bundle::SystemBundle,
     event::EventReader,
-    float::Float,
     system_ext::{Pausable, SystemExt},
     timing::*,
     transform::*,
@@ -49,7 +50,6 @@ pub mod transform;
 
 mod axis;
 mod event;
-mod float;
 mod hidden;
 mod hide_system;
 mod named;

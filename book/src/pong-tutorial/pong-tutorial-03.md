@@ -120,7 +120,7 @@ We're finally ready to implement the `PaddleSystem` in `systems/paddle.rs`:
 #     pub const PADDLE_HEIGHT: f32 = 16.0;
 # }
 #
-use amethyst::core::{math::RealField, Float, Transform};
+use amethyst::core::Transform;
 use amethyst::ecs::{Join, Read, ReadStorage, System, WriteStorage};
 use amethyst::input::{InputHandler, StringBindings};
 
@@ -297,7 +297,7 @@ Our run function should now look something like this:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::core::{math::RealField, Float, Transform};
+# use amethyst::core::Transform;
 # use amethyst::ecs::{Join, Read, ReadStorage, System, WriteStorage};
 # use amethyst::input::{InputHandler, StringBindings};
 # const PADDLE_HEIGHT: f32 = 16.0;
@@ -331,9 +331,9 @@ fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
             let scaled_amount = 1.2 * mv_amount as f32;
             let paddle_y = transform.translation().y;
             transform.set_translation_y(
-                (paddle_y + Float::from(scaled_amount))
-                    .min(Float::from(ARENA_HEIGHT - PADDLE_HEIGHT * 0.5))
-                    .max(Float::from(PADDLE_HEIGHT * 0.5)),
+                (paddle_y + scaled_amount)
+                    .min(ARENA_HEIGHT - PADDLE_HEIGHT * 0.5)
+                    .max(PADDLE_HEIGHT * 0.5),
             );
         }
     }

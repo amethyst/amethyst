@@ -1,17 +1,19 @@
-use atelier_loader::{LoadHandle};
-use std::collections::HashMap;
+use atelier_loader::LoadHandle;
 use crossbeam::queue::SegQueue;
+use std::collections::HashMap;
 
-use crate::{
-    loader_new::AssetHandle,
-};
+use crate::loader_new::AssetHandle;
 
 struct AssetState<A> {
     version: u32,
     asset: A,
 }
-/// An asset storage, storing the actual assets and allocating
-/// handles to them.
+
+/// An asset storage, storing the actual assets and allocating handles to them.
+///
+/// # Type Parameters
+///
+/// * `A`: Asset Rust type.
 pub struct AssetStorage<A> {
     assets: HashMap<LoadHandle, AssetState<A>>,
     uncommitted: HashMap<LoadHandle, AssetState<A>>,
@@ -63,7 +65,15 @@ impl<A> AssetStorage<A> {
         }
     }
 
-    /// Get an asset from a given asset handle.
+    /// Returns the asset for the given handle, or `None` if has not completed loading.
+    ///
+    /// # Parameters
+    ///
+    /// * `handle`: Handle of the asset.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `T`: Asset handle type.
     pub fn get<T: AssetHandle>(&self, handle: &T) -> Option<&A> {
         self.assets.get(handle.load_handle()).map(|a| &a.asset)
     }
@@ -75,12 +85,28 @@ impl<A> AssetStorage<A> {
             .map(|a| &mut a.asset)
     }
 
+    /// Returns the version of a loaded asset, or `None` if has not completed loading.
+    ///
+    /// # Parameters
+    ///
+    /// * `handle`: Handle of the asset.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `T`: Asset handle type.
     pub fn get_version<T: AssetHandle>(&self, handle: &T) -> Option<u32> {
-        self.assets
-            .get(handle.load_handle())
-            .map(|a| a.version)
+        self.assets.get(handle.load_handle()).map(|a| a.version)
     }
 
+    /// Returns the loaded asset and its version, or `None` if has not completed loading.
+    ///
+    /// # Parameters
+    ///
+    /// * `handle`: Handle of the asset.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `T`: Asset handle type.
     pub fn get_asset_with_version<T: AssetHandle>(&self, handle: &T) -> Option<(&A, u32)> {
         self.assets
             .get(handle.load_handle())
@@ -88,7 +114,16 @@ impl<A> AssetStorage<A> {
     }
 
     /// Process finished asset data and maintain the storage.
-    /// This calls the `drop_fn` closure for assets that were removed from the storage.
+    ///
+    /// This calls the `drop_fn` function for assets that were removed from the storage.
+    ///
+    /// # Parameters
+    ///
+    /// * `drop_fn`: The function to invoke with the asset.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `D`: Drop function type.
     pub fn process_custom_drop<D>(&mut self, mut drop_fn: D)
     where
         D: FnMut(A),

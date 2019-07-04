@@ -35,6 +35,7 @@ use thread_profiler::profile_scope;
 /// let mut counter = world.write_resource::<FpsCounter>();
 ///
 /// ```
+#[derive(Debug)]
 pub struct FpsCounter {
     buf: CircularBuffer<u64>,
     sum: u64,
@@ -82,6 +83,7 @@ impl FpsCounter {
 
 /// Add this system to your game to automatically push FPS values
 /// to the [FpsCounter](../resources/struct.FpsCounter.html) resource with id 0
+#[derive(Debug)]
 pub struct FpsCounterSystem;
 
 impl<'a> System<'a> for FpsCounterSystem {
@@ -101,7 +103,7 @@ impl<'a> System<'a> for FpsCounterSystem {
 }
 
 ///Automatically adds a FpsCounterSystem and a FpsCounter resource with the specified sample size.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct FpsCounterBundle;
 
 impl<'a, 'b> SystemBundle<'a, 'b> for FpsCounterBundle {

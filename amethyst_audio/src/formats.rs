@@ -1,10 +1,10 @@
-use amethyst_assets::*;
+use amethyst_assets::Format;
 use amethyst_error::Error;
 
-use type_uuid::*;
 use serde::{Deserialize, Serialize};
+use type_uuid::TypeUuid;
 
-#[derive(Clone, Serialize, Deserialize, TypeUuid)]
+#[derive(Clone, Debug, Serialize, Deserialize, TypeUuid)]
 #[uuid = "caa6e38f-9cfa-428a-91bd-4dab5a7a47d5"]
 pub struct AudioData(pub Vec<u8>);
 amethyst_assets::register_format_type!(AudioData);

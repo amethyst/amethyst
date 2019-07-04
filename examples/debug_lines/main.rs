@@ -102,7 +102,7 @@ impl SimpleState for ExampleState {
             debug_lines_component.add_direction(position, direction, main_color);
 
             // Sub-grid lines
-            if x != width {
+            if (x - width).abs() < 0.0001 {
                 for sub_x in 1..10 {
                     let sub_offset = Vector3::new((1.0 / 10.0) * sub_x as f32, -0.001, 0.0);
 
@@ -125,7 +125,7 @@ impl SimpleState for ExampleState {
             debug_lines_component.add_direction(position, direction, main_color);
 
             // Sub-grid lines
-            if z != depth {
+            if (z - depth).abs() < 0.0001 {
                 for sub_z in 1..10 {
                     let sub_offset = Vector3::new(0.0, -0.001, (1.0 / 10.0) * sub_z as f32);
 
@@ -216,6 +216,7 @@ struct ExampleGraph {
     dirty: bool,
 }
 
+#[allow(clippy::map_clone)]
 impl<B: Backend> GraphCreator<B> for ExampleGraph {
     fn rebuild(&mut self, res: &Resources) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
@@ -226,7 +227,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
             self.dimensions = new_dimensions.map(|d| d.clone());
             return false;
         }
-        return self.dirty;
+        self.dirty
     }
 
     fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {

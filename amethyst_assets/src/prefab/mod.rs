@@ -8,7 +8,9 @@ use amethyst_core::ecs::prelude::{
 };
 use amethyst_error::Error;
 
-use crate::{Asset, AssetStorage, Format, Handle, Loader, Progress, ProgressCounter};
+use crate::{
+    Asset, AssetStorage, Format, Handle, Loader, Progress, ProgressCounter, SerializableFormat,
+};
 
 pub use self::system::PrefabLoaderSystem;
 
@@ -340,7 +342,9 @@ impl<T> Asset for Prefab<T>
 where
     T: Send + Sync + 'static,
 {
-    fn name() -> &'static str { "PREFAB" }
+    fn name() -> &'static str {
+        "PREFAB"
+    }
     type Data = Self;
     type HandleStorage = FlaggedStorage<Handle<Self>, DenseVecStorage<Handle<Self>>>;
 }
@@ -353,8 +357,9 @@ where
 ///
 /// - `A`: `Asset`,
 /// - `F`: `Format` for loading `A`
+// TODO: Add a debug impl for this that uses Filename correctly by default
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub enum AssetPrefab<A, F = Box<dyn Format<<A as Asset>::Data>>>
+pub enum AssetPrefab<A, F = Box<dyn SerializableFormat<<A as Asset>::Data>>>
 where
     A: Asset,
     // A::Data: FormatRegisteredData,

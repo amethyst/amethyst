@@ -1,4 +1,10 @@
 #![enable(implicit_some)]
+/*!
+    @import /amethyst_assets/src/prefab/mod.rs#Prefab
+    @import ../../prefab_custom/main.rs#CustomPrefabData
+    Prefab<CustomPrefabData>
+*/
+
 Prefab(
     entities: [
         // Player

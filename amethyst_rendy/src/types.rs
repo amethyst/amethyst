@@ -1,8 +1,8 @@
 //! 'Global' rendering type declarations
-use amethyst_assets::{Asset, Handle, TypeUuid};
+use amethyst_assets::{Asset, Handle};
 use amethyst_core::ecs::DenseVecStorage;
-use type_uuid::*;
 use serde::{Deserialize, Serialize};
+use type_uuid::TypeUuid;
 
 /// Extension of the rendy Backend trait.
 pub trait Backend: rendy::hal::Backend {
@@ -18,7 +18,6 @@ pub trait Backend: rendy::hal::Backend {
 
 macro_rules! impl_backends {
     ($($variant:ident, $feature:literal, $backend:ty;)*) => {
-
 
         impl_single_default!($([$feature, $backend]),*);
 
@@ -122,13 +121,17 @@ impl_backends!(
 );
 
 impl Asset for Mesh {
-    fn name() -> &'static str  { "Mesh" }
+    fn name() -> &'static str {
+        "Mesh"
+    }
     type Data = MeshData;
     type HandleStorage = DenseVecStorage<Handle<Self>>;
 }
 
 impl Asset for Texture {
-    fn name() -> &'static str { "Texture" }
+    fn name() -> &'static str {
+        "Texture"
+    }
     type Data = TextureData;
     type HandleStorage = DenseVecStorage<Handle<Self>>;
 }

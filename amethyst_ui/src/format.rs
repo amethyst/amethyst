@@ -8,12 +8,13 @@ use amethyst_error::{format_err, Error, ResultExt};
 
 /// A loaded set of fonts from a file.
 #[derive(Clone)]
+#[allow(missing_debug_implementations)]
 pub struct FontAsset(pub Font<'static>);
 
 /// A handle to font data stored with `amethyst_assets`.
 pub type FontHandle = Handle<FontAsset>;
 
-#[derive(Clone, TypeUuid)]
+#[derive(Clone, Debug, TypeUuid)]
 #[uuid = "85bac271-fe10-48da-85d2-151e93ce98d1"]
 pub struct FontData(Font<'static>);
 
@@ -22,7 +23,9 @@ amethyst_assets::register_format_type!(FontData);
 // amethyst_assets::register_asset_type!(FontData => FontAsset);
 
 impl Asset for FontAsset {
-    fn name() -> &'static str { "ui::Font" }
+    fn name() -> &'static str {
+        "ui::Font"
+    }
     type Data = FontData;
     type HandleStorage = VecStorage<Handle<Self>>;
 }

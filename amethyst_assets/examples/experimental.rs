@@ -6,11 +6,9 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 use amethyst_assets::*;
-use amethyst_core::{
-    ecs::{
-        common::Errors,
-        prelude::{Dispatcher, DispatcherBuilder, System, World, Write},
-    },
+use amethyst_core::ecs::{
+    common::Errors,
+    prelude::{Dispatcher, DispatcherBuilder, System, World, Write},
 };
 use amethyst_error::{format_err, Error, ResultExt};
 use type_uuid::*;
@@ -132,9 +130,7 @@ impl State {
                 // Check the load status - this could be a loading screen
                 let loader = world.read_resource::<NewDefaultLoader>();
                 match handle.load_status(&*loader) {
-                    LoadStatus::Loaded => Some(State::SomethingElse(
-                        handle,
-                    )),
+                    LoadStatus::Loaded => Some(State::SomethingElse(handle)),
                     _ => Some(State::Loading(handle)),
                 }
             }

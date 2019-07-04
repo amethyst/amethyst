@@ -27,7 +27,7 @@ use crate::{
 };
 
 /// Syncs 3D transform data with the audio engine to provide 3D audio.
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct AudioSystem(Output);
 
 impl AudioSystem {
@@ -40,6 +40,7 @@ impl AudioSystem {
 /// Add this structure to world as a resource with ID 0 to select an entity whose AudioListener
 /// component will be used.  If this resource isn't found then the system will arbitrarily select
 /// the first AudioListener it finds.
+#[derive(Debug)]
 pub struct SelectedListener(pub Entity);
 
 impl<'a> System<'a> for AudioSystem {

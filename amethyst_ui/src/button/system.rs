@@ -3,18 +3,19 @@ use amethyst_core::{
     shrev::{EventChannel, ReaderId},
     ParentHierarchy,
 };
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Debug};
 
 use crate::{UiButtonAction, UiButtonActionType::*, UiImage, UiText};
 
-struct ActionChangeStack<T: Clone + PartialEq> {
+#[derive(Debug)]
+struct ActionChangeStack<T: Debug + Clone + PartialEq> {
     initial_value: T,
     stack: Vec<T>,
 }
 
 impl<T> ActionChangeStack<T>
 where
-    T: Clone + PartialEq,
+    T: Debug + Clone + PartialEq,
 {
     pub fn new(initial_value: T) -> Self {
         ActionChangeStack {
@@ -56,7 +57,7 @@ where
 /// when necessary.
 ///
 /// It's automatically registered with the `UiBundle`.
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct UiButtonSystem {
     event_reader: Option<ReaderId<UiButtonAction>>,
     set_images: HashMap<Entity, ActionChangeStack<UiImage>>,

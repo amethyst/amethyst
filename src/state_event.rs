@@ -10,8 +10,9 @@ use crate::{
 };
 use winit::Event;
 
-/// The enum holding the different types of event that can be received in a `State` in the handle_event method.
-#[derive(Clone, EventReader)]
+/// The enum holding the different types of event that can be received in a `State` in the
+/// `handle_event` method.
+#[derive(Clone, EventReader, Debug)]
 #[reader(StateEventReader)]
 pub enum StateEvent<T = String>
 where

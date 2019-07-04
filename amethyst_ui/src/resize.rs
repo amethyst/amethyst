@@ -17,6 +17,7 @@ use super::*;
 ///
 /// The function in this component is also guaranteed to be called at least once by the
 /// `ResizeSystem` when either the component is attached, or the function is changed.
+#[allow(missing_debug_implementations)]
 pub struct UiResize {
     /// The core function of this component
     pub function: Box<dyn FnMut(&mut UiTransform, (f32, f32)) + Send + Sync>,
@@ -40,7 +41,7 @@ impl Component for UiResize {
 
 /// This system rearranges UI elements whenever the screen is resized using their `UiResize`
 /// component.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct ResizeSystem {
     screen_size: (f32, f32),
     resize_events_id: Option<ReaderId<ComponentEvent>>,

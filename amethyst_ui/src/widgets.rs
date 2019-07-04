@@ -59,6 +59,7 @@ impl WidgetId for String {
 /// respective Id type. It's meant to be used as a resource for every widget type.
 #[derive(Derivative)]
 #[derivative(Default(bound = ""))]
+#[allow(missing_debug_implementations)]
 pub struct Widgets<T: Widget, I: WidgetId = u32> {
     items: HashMap<I, T>,
     last_key: Option<I>,

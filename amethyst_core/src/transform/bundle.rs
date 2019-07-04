@@ -18,7 +18,7 @@ use crate::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder, transform::*}
 ///
 /// Panics in `TransformSystem` registration if the bundle is applied twice in the same dispatcher.
 ///
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct TransformBundle<'a> {
     dep: &'a [&'a str],
 }

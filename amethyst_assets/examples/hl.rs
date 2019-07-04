@@ -50,7 +50,7 @@ impl App {
     }
 
     fn update(&mut self) {
-        self.dispatcher.dispatch(&mut self.world.res);
+        self.dispatcher.dispatch(&self.world.res);
         self.world.maintain();
         let mut errors = self.world.write_resource::<Errors>();
         errors.print_and_exit();
@@ -76,7 +76,9 @@ pub struct MeshAsset {
 }
 
 impl Asset for MeshAsset {
-    fn name() -> &'static str { "example::Mesh" }
+    fn name() -> &'static str {
+        "example::Mesh"
+    }
     type Data = VertexData;
     type HandleStorage = VecStorage<MeshHandle>;
 }

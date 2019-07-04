@@ -4,7 +4,6 @@ The names of several `Transform` methods have been changed in order to better re
 
 ## Summary
 
-* `Float` type has been added to wrap `f32` or `f64` for `Transform` coordinates.
 * `GlobalTransform` has been removed, and merged into `Transform`.
 * `set_*` translation methods have been renamed to `set_translation_*`
 * `*_local` transforms have been renamed to `append_*`.
@@ -14,10 +13,6 @@ The names of several `Transform` methods have been changed in order to better re
 * Method aliases for 2D rotation have have been added.
 * `set_rotation` methods have been added.
 * `euler_angles` method has been added.
-
-## `Float` Type
-
-A wrapper type around `f32` and `f64`. It is used to hide the actual type being used internally. Mostly used with the Transform type. The default type is `f32` and you can switch to the `f64` type by enabling the "float64" feature gate.
 
 ## Renamed Transform Methods (Breaking Changes)
 
