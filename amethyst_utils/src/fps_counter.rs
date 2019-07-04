@@ -1,7 +1,7 @@
 //! Util Resources
 
 use amethyst_core::{
-    ecs::prelude::{DispatcherBuilder, Read, System, Write},
+    ecs::prelude::{DispatcherBuilder, Read, System, Write, World},
     timing::{duration_to_nanos, Time},
     SystemBundle,
 };
@@ -107,7 +107,7 @@ impl<'a> System<'a> for FpsCounterSystem {
 pub struct FpsCounterBundle;
 
 impl<'a, 'b> SystemBundle<'a, 'b> for FpsCounterBundle {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn build(self, _world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(FpsCounterSystem, "fps_counter_system", &[]);
         Ok(())
     }

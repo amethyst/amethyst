@@ -241,11 +241,11 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// could result in any number of errors.
     /// See each individual bundle for a description of the errors it could produce.
     ///
-    pub fn with_bundle<B>(mut self, bundle: B) -> Result<Self, Error>
+    pub fn with_bundle<B>(mut self, world: &mut World, bundle: B) -> Result<Self, Error>
     where
         B: SystemBundle<'a, 'b>,
     {
-        bundle.build(&mut self.disp_builder)?;
+        bundle.build(world, &mut self.disp_builder)?;
         Ok(self)
     }
 
