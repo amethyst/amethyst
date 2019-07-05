@@ -3,7 +3,11 @@
 use amethyst_error::Error;
 use specs_hierarchy::HierarchySystem;
 
-use crate::{bundle::SystemBundle, ecs::prelude::{DispatcherBuilder, World}, transform::*};
+use crate::{
+    bundle::SystemBundle,
+    ecs::prelude::{DispatcherBuilder, World},
+    transform::*,
+};
 
 /// Transform bundle
 ///
@@ -39,7 +43,11 @@ impl<'a> TransformBundle<'a> {
 }
 
 impl<'a, 'b, 'c> SystemBundle<'a, 'b> for TransformBundle<'c> {
-    fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn build(
+        self,
+        world: &mut World,
+        builder: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<(), Error> {
         builder.add(
             HierarchySystem::<Parent>::new(),
             "parent_hierarchy_system",

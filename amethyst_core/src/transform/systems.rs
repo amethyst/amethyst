@@ -1,8 +1,7 @@
 //! Scene graph system and types
 
 use crate::ecs::prelude::{
-    ComponentEvent, Entities, Join, ReadExpect, ReadStorage, ReaderId, System,
-    WriteStorage, World,
+    ComponentEvent, Entities, Join, ReadExpect, ReadStorage, ReaderId, System, World, WriteStorage,
 };
 use hibitset::BitSet;
 
@@ -51,9 +50,7 @@ impl<'a> System<'a> for TransformSystem {
 
         locals
             .channel()
-            .read(
-                &mut self.locals_events_id,
-            )
+            .read(&mut self.locals_events_id)
             .for_each(|event| match event {
                 ComponentEvent::Inserted(id) | ComponentEvent::Modified(id) => {
                     self.local_modified.add(*id);
@@ -61,9 +58,7 @@ impl<'a> System<'a> for TransformSystem {
                 ComponentEvent::Removed(_id) => {}
             });
 
-        for event in hierarchy.changed().read(
-            &mut self.parent_events_id
-        ) {
+        for event in hierarchy.changed().read(&mut self.parent_events_id) {
             match *event {
                 HierarchyEvent::Removed(entity) => {
                     // Sometimes the user may have already deleted the entity.
@@ -121,9 +116,7 @@ impl<'a> System<'a> for TransformSystem {
         }
 
         // Clear the local event reader.
-        locals
-            .channel()
-            .read(&mut self.locals_events_id);
+        locals.channel().read(&mut self.locals_events_id);
     }
 }
 

@@ -7,7 +7,10 @@ use crate::{
     UiMouseSystem, UiSoundRetriggerSystem, UiSoundSystem, UiTransformSystem, WidgetId,
 };
 use amethyst_assets::Processor;
-use amethyst_core::{bundle::SystemBundle, ecs::prelude::{DispatcherBuilder, World}};
+use amethyst_core::{
+    bundle::SystemBundle,
+    ecs::prelude::{DispatcherBuilder, World},
+};
 use amethyst_error::Error;
 use amethyst_input::BindingTypes;
 use amethyst_rendy::Backend;
@@ -34,7 +37,11 @@ where
     W: WidgetId,
     G: Send + Sync + PartialEq + 'static,
 {
-    fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn build(
+        self,
+        world: &mut World,
+        builder: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<(), Error> {
         builder.add(
             UiLoaderSystem::<<C as ToNativeWidget>::PrefabData, W>::new(world),
             "ui_loader",

@@ -30,7 +30,10 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         // The WindowBundle provides all the scaffolding for opening a window
-        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(
+            &mut world,
+            WindowBundle::from_config_path(display_config_path),
+        )?
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(&mut world, TransformBundle::new())?
         // A Processor system is added to handle loading spritesheets.
@@ -45,7 +48,10 @@ fn main() -> amethyst::Result<()> {
                 app_root.join("examples/pong_tutorial_05/resources/bindings_config.ron"),
             )?,
         )?
-        .with_bundle(&mut world, UiBundle::<DefaultBackend, StringBindings>::new())?
+        .with_bundle(
+            &mut world,
+            UiBundle::<DefaultBackend, StringBindings>::new(),
+        )?
         // We have now added our own systems, defined in the systems module
         .with(systems::PaddleSystem, "paddle_system", &["input_system"])
         .with(systems::MoveBallsSystem, "ball_system", &[])

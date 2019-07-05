@@ -1,7 +1,7 @@
 use amethyst_core::{
     ecs::{
         Component, DenseVecStorage, Entities, FlaggedStorage, Join, Read, ReadStorage, ReaderId,
-        Resources, System, SystemData, Write, WriteStorage, World,
+        Resources, System, SystemData, World, Write, WriteStorage,
     },
     shrev::EventChannel,
 };
@@ -61,7 +61,6 @@ pub struct SelectionKeyboardSystem<G> {
     phantom: PhantomData<G>,
 }
 
-
 impl<G> SelectionKeyboardSystem<G>
 where
     G: Send + Sync + 'static + PartialEq,
@@ -69,7 +68,10 @@ where
     /// Creates a new `SelectionKeyboardSystem`.
     pub fn new(world: &mut World) -> Self {
         <Self as System<'_>>::SystemData::setup(&mut world.res);
-        let window_reader_id = world.res.fetch_mut::<EventChannel<Event>>().register_reader();
+        let window_reader_id = world
+            .res
+            .fetch_mut::<EventChannel<Event>>()
+            .register_reader();
         Self {
             window_reader_id,
             phantom: PhantomData,
@@ -181,14 +183,17 @@ pub struct SelectionMouseSystem<G, T: BindingTypes> {
     phantom: PhantomData<(G, T)>,
 }
 
-impl<G, T: BindingTypes> SelectionMouseSystem<G, T> 
+impl<G, T: BindingTypes> SelectionMouseSystem<G, T>
 where
     G: Send + Sync + 'static + PartialEq,
 {
     /// Creates a new `SelectionMouseSystem`.
     pub fn new(world: &mut World) -> Self {
         <Self as System<'_>>::SystemData::setup(&mut world.res);
-        let ui_reader_id = world.res.fetch_mut::<EventChannel<UiEvent>>().register_reader();
+        let ui_reader_id = world
+            .res
+            .fetch_mut::<EventChannel<UiEvent>>()
+            .register_reader();
         Self {
             ui_reader_id,
             phantom: PhantomData,

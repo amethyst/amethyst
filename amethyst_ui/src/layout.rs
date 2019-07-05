@@ -6,8 +6,8 @@ use thread_profiler::profile_scope;
 
 use amethyst_core::{
     ecs::prelude::{
-        BitSet, ComponentEvent, Join, ReadExpect, ReadStorage, ReaderId, Resources, System,
-        WriteStorage, World, 
+        BitSet, ComponentEvent, Join, ReadExpect, ReadStorage, ReaderId, Resources, System, World,
+        WriteStorage,
     },
     HierarchyEvent, Parent, ParentHierarchy,
 };
@@ -170,8 +170,7 @@ impl<'a> System<'a> for UiTransformSystem {
 
         let self_transform_modified = &mut self.transform_modified;
 
-        let self_transform_events_id = &mut self
-            .transform_events_id;
+        let self_transform_events_id = &mut self.transform_events_id;
 
         transforms
             .channel()
@@ -183,11 +182,7 @@ impl<'a> System<'a> for UiTransformSystem {
                 ComponentEvent::Removed(_id) => {}
             });
 
-        for event in
-            hierarchy
-                .changed()
-                .read(&mut self.parent_events_id)
-        {
+        for event in hierarchy.changed().read(&mut self.parent_events_id) {
             if let HierarchyEvent::Modified(entity) = *event {
                 self_transform_modified.add(entity.id());
             }

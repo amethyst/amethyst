@@ -199,7 +199,11 @@ where
     ///
     /// This is identical in function to
     /// [ApplicationBuilder::new](struct.ApplicationBuilder.html#method.new).
-    pub fn build<P, S>(path: P, initial_state: S, world: World) -> Result<ApplicationBuilder<S, T, E, R>, Error>
+    pub fn build<P, S>(
+        path: P,
+        initial_state: S,
+        world: World,
+    ) -> Result<ApplicationBuilder<S, T, E, R>, Error>
     where
         P: AsRef<Path>,
         S: State<T, E> + 'a,

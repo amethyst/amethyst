@@ -3,7 +3,7 @@ use crate::{
     resources::{HideCursor, WindowFocus},
 };
 use amethyst_core::{
-    ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, Write, WriteStorage, World},
+    ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, World, Write, WriteStorage},
     math::{convert, Unit, Vector3},
     shrev::{EventChannel, ReaderId},
     timing::Time,
@@ -136,7 +136,10 @@ impl FreeRotationSystem {
     pub fn new(world: &mut World, sensitivity_x: f32, sensitivity_y: f32) -> Self {
         use amethyst_core::ecs::prelude::SystemData;
         <Self as System<'_>>::SystemData::setup(&mut world.res);
-        let event_reader = world.res.fetch_mut::<EventChannel<Event>>().register_reader();
+        let event_reader = world
+            .res
+            .fetch_mut::<EventChannel<Event>>()
+            .register_reader();
         FreeRotationSystem {
             sensitivity_x,
             sensitivity_y,
@@ -159,9 +162,7 @@ impl<'a> System<'a> for FreeRotationSystem {
         profile_scope!("free_rotation_system");
 
         let focused = focus.is_focused;
-        for event in
-            events.read(&mut self.event_reader)
-        {
+        for event in events.read(&mut self.event_reader) {
             if focused && hide.hide {
                 if let Event::DeviceEvent { ref event, .. } = *event {
                     if let DeviceEvent::MouseMotion { delta: (x, y) } = *event {
@@ -191,10 +192,11 @@ impl MouseFocusUpdateSystem {
     pub fn new(world: &mut World) -> MouseFocusUpdateSystem {
         use amethyst_core::ecs::prelude::SystemData;
         <Self as System<'_>>::SystemData::setup(&mut world.res);
-        let event_reader = world.res.fetch_mut::<EventChannel<Event>>().register_reader();
-        Self {
-            event_reader
-        }
+        let event_reader = world
+            .res
+            .fetch_mut::<EventChannel<Event>>()
+            .register_reader();
+        Self { event_reader }
     }
 }
 

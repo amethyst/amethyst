@@ -86,7 +86,10 @@ impl<'a, T: BindingTypes> RunNow<'a> for SdlEventsSystem<T> {
 
 impl<T: BindingTypes> SdlEventsSystem<T> {
     /// Creates a new instance of this system with the provided controller mappings.
-    pub fn new(world: &mut World, mappings: Option<ControllerMappings>) -> Result<Self, SdlSystemError> {
+    pub fn new(
+        world: &mut World,
+        mappings: Option<ControllerMappings>,
+    ) -> Result<Self, SdlSystemError> {
         let sdl_context = sdl2::init().map_err(SdlSystemError::ContextInit)?;
         let event_pump = sdl_context
             .event_pump()

@@ -17,13 +17,13 @@ use core::result::Result;
 struct MyBundle;
 
 impl<'a, 'b> SystemBundle<'a, 'b> for MyBundle {
-    fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn build(
+        self,
+        world: &mut World,
+        builder: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<(), Error> {
         builder.add(SpammingSystem, "spamming_system", &[]);
-        builder.add(
-            ReceivingSystem::new(world),
-            "receiving_system",
-            &[],
-        );
+        builder.add(ReceivingSystem::new(world), "receiving_system", &[]);
         Ok(())
     }
 }
@@ -64,10 +64,11 @@ struct ReceivingSystem {
 impl ReceivingSystem {
     pub fn new(world: &mut World) -> Self {
         <Self as System<'_>>::SystemData::setup(&mut world.res);
-        let reader = world.res.fetch_mut::<EventChannel<MyEvent>>().register_reader();
-        ReceivingSystem {
-            reader
-        }
+        let reader = world
+            .res
+            .fetch_mut::<EventChannel<MyEvent>>()
+            .register_reader();
+        ReceivingSystem { reader }
     }
 }
 

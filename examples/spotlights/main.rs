@@ -44,7 +44,10 @@ fn main() -> amethyst::Result<()> {
     let mut world = World::new();
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(
+            &mut world,
+            WindowBundle::from_config_path(display_config_path),
+        )?
         .with(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
         .with_bundle(&mut world, TransformBundle::new())?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(

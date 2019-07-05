@@ -8,7 +8,7 @@ use amethyst::{
         transform::{Transform, TransformBundle},
     },
     ecs::prelude::{
-        Join, Read, ReadExpect, ReadStorage, Resources, System, SystemData, WriteStorage, World,
+        Join, Read, ReadExpect, ReadStorage, Resources, System, SystemData, World, WriteStorage,
     },
     input::{
         is_key_down, InputBundle, InputEvent, ScrollDirection, StringBindings, VirtualKeyCode,
@@ -70,8 +70,10 @@ struct CameraDistanceSystem {
 impl CameraDistanceSystem {
     pub fn new(world: &mut World) -> Self {
         <Self as System<'_>>::SystemData::setup(&mut world.res);
-        let event_reader = world.res.fetch_mut::<EventChannel<InputEvent<String>>>()
-                .register_reader();
+        let event_reader = world
+            .res
+            .fetch_mut::<EventChannel<InputEvent<String>>>()
+            .register_reader();
 
         CameraDistanceSystem { event_reader }
     }
@@ -119,7 +121,10 @@ fn main() -> Result<(), Error> {
     let mut world = World::new();
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(
+            &mut world,
+            WindowBundle::from_config_path(display_config_path),
+        )?
         .with(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
         .with_bundle(&mut world, TransformBundle::new().with_dep(&[]))?
         .with_bundle(
@@ -135,7 +140,8 @@ fn main() -> Result<(), Error> {
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
-    let mut game = Application::build(resources_directory, ExampleState, world)?.build(game_data)?;
+    let mut game =
+        Application::build(resources_directory, ExampleState, world)?.build(game_data)?;
     game.run();
     Ok(())
 }

@@ -53,7 +53,8 @@ impl<'a> SimpleState for StateB<'a> {
 
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
-    let mut game = Application::build("./", StateA, World::new())?.build(GameDataBuilder::default())?;
+    let mut game =
+        Application::build("./", StateA, World::new())?.build(GameDataBuilder::default())?;
     game.run();
     Ok(())
 }

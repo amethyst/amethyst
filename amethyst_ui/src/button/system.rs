@@ -1,5 +1,5 @@
 use amethyst_core::{
-    ecs::{Entity, ReadExpect, Resources, System, SystemData, Write, WriteStorage, World},
+    ecs::{Entity, ReadExpect, Resources, System, SystemData, World, Write, WriteStorage},
     shrev::{EventChannel, ReaderId},
     ParentHierarchy,
 };
@@ -68,7 +68,10 @@ impl UiButtonSystem {
     /// Creates a new instance of this structure
     pub fn new(world: &mut World) -> Self {
         <Self as System<'_>>::SystemData::setup(&mut world.res);
-        let event_reader = world.res.fetch_mut::<EventChannel<UiButtonAction>>().register_reader();
+        let event_reader = world
+            .res
+            .fetch_mut::<EventChannel<UiButtonAction>>()
+            .register_reader();
         Self {
             event_reader,
             set_images: Default::default(),

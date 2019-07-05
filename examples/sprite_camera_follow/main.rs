@@ -3,7 +3,7 @@ use amethyst::{
     core::{Named, Parent, Transform, TransformBundle},
     ecs::{
         Component, Entity, Join, NullStorage, Read, ReadExpect, ReadStorage, Resources, System,
-        SystemData, WriteStorage, World,
+        SystemData, World, WriteStorage,
     },
     input::{is_close_requested, is_key_down, InputBundle, InputHandler, StringBindings},
     prelude::*,
@@ -208,7 +208,10 @@ fn main() -> amethyst::Result<()> {
     let mut world = World::new();
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(
+            &mut world,
+            WindowBundle::from_config_path(display_config_path),
+        )?
         .with_bundle(&mut world, TransformBundle::new())?
         .with_bundle(
             &mut world,

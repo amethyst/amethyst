@@ -7,8 +7,8 @@ use minterpolate::InterpolationPrimitive;
 use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     ecs::prelude::{
-        Component, Entities, Entity, Join, Read, ReadStorage, System, SystemData,
-        WriteStorage, World,
+        Component, Entities, Entity, Join, Read, ReadStorage, System, SystemData, World,
+        WriteStorage,
     },
     timing::secs_to_duration,
 };

@@ -7,8 +7,8 @@ use winit::{ElementState, Event, MouseButton, WindowEvent};
 
 use amethyst_core::{
     ecs::prelude::{
-        Component, DenseVecStorage, Join, Read, ReadExpect, ReadStorage, Resources, System,
-        WriteStorage, World,
+        Component, DenseVecStorage, Join, Read, ReadExpect, ReadStorage, Resources, System, World,
+        WriteStorage,
     },
     shrev::{EventChannel, ReaderId},
     timing::Time,
@@ -150,7 +150,10 @@ impl TextEditingMouseSystem {
     pub fn new(world: &mut World) -> Self {
         use amethyst_core::ecs::prelude::SystemData;
         <Self as System<'_>>::SystemData::setup(&mut world.res);
-        let reader = world.res.fetch_mut::<EventChannel<Event>>().register_reader();
+        let reader = world
+            .res
+            .fetch_mut::<EventChannel<Event>>()
+            .register_reader();
         Self {
             reader,
             left_mouse_button_pressed: false,
@@ -193,9 +196,7 @@ impl<'a> System<'a> for TextEditingMouseSystem {
         }
 
         // Process only if an editable text is selected.
-        for event in events.read(
-            &mut self.reader
-        ) {
+        for event in events.read(&mut self.reader) {
             for (ref mut text, ref mut text_editing, _) in
                 (&mut texts, &mut text_editings, &selecteds).join()
             {

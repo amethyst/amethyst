@@ -64,7 +64,10 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         // The WindowBundle provides all the scaffolding for opening a window
-        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(
+            &mut world,
+            WindowBundle::from_config_path(display_config_path),
+        )?
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(&mut world, TransformBundle::new())?
         // A Processor system is added to handle loading spritesheets.
@@ -84,7 +87,10 @@ fn main() -> amethyst::Result<()> {
             "dj_system",
             &[],
         )
-        .with_bundle(&mut world, UiBundle::<DefaultBackend, StringBindings>::new())?
+        .with_bundle(
+            &mut world,
+            UiBundle::<DefaultBackend, StringBindings>::new(),
+        )?
         // The renderer must be executed on the same thread consecutively, so we initialize it as thread_local
         // which will always execute on the main thread.
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(

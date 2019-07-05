@@ -3,7 +3,7 @@ use amethyst_audio::{output::Output, Source, SourceHandle};
 use amethyst_core::{
     ecs::{
         prelude::{Component, DenseVecStorage},
-        Read, Resources, System, SystemData, Write, World,
+        Read, Resources, System, SystemData, World, Write,
     },
     shrev::{EventChannel, ReaderId},
 };
@@ -79,10 +79,11 @@ impl UiSoundSystem {
     /// always be used to construct the `UiSoundSystem`.
     pub fn new(world: &mut World) -> Self {
         <Self as System<'_>>::SystemData::setup(&mut world.res);
-        let event_reader = world.res.fetch_mut::<EventChannel<UiPlaySoundAction>>().register_reader();
-        Self {
-            event_reader,
-        }
+        let event_reader = world
+            .res
+            .fetch_mut::<EventChannel<UiPlaySoundAction>>()
+            .register_reader();
+        Self { event_reader }
     }
 }
 

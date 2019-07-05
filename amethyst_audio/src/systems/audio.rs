@@ -14,7 +14,7 @@ use thread_profiler::profile_scope;
 
 use amethyst_core::{
     ecs::prelude::{
-        Entities, Entity, Join, Read, ReadStorage, System, SystemData, WriteStorage, World,
+        Entities, Entity, Join, Read, ReadStorage, System, SystemData, World, WriteStorage,
     },
     math::convert,
     transform::Transform,

@@ -33,8 +33,10 @@ fn main() -> amethyst::Result<()> {
 
     let mut world = World::new();
 
-    let game_data = GameDataBuilder::default()
-        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?;
+    let game_data = GameDataBuilder::default().with_bundle(
+        &mut world,
+        WindowBundle::from_config_path(display_config_path),
+    )?;
 
     let mut game = Application::new("./", ExampleState, game_data, world)?;
     game.run();

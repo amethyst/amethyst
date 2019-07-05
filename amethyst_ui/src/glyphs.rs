@@ -8,7 +8,7 @@ use amethyst_assets::{AssetStorage, Handle};
 use amethyst_core::{
     ecs::{
         Component, DenseVecStorage, Entities, Join, Read, ReadStorage, Resources, System,
-        SystemData, Write, WriteExpect, WriteStorage, World, 
+        SystemData, World, Write, WriteExpect, WriteStorage,
     },
     Hidden, HiddenPropagate,
 };

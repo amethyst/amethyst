@@ -8,7 +8,9 @@ use winit::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, 
 
 use crate::{LineMode, Selected, TextEditing, UiEvent, UiEventType, UiText};
 use amethyst_core::{
-    ecs::prelude::{Entities, Join, Read, ReadStorage, Resources, System, Write, WriteStorage, World},
+    ecs::prelude::{
+        Entities, Join, Read, ReadStorage, Resources, System, World, Write, WriteStorage,
+    },
     shrev::{EventChannel, ReaderId},
 };
 
@@ -28,7 +30,10 @@ impl TextEditingInputSystem {
     pub fn new(world: &mut World) -> Self {
         use amethyst_core::ecs::prelude::SystemData;
         <Self as System<'_>>::SystemData::setup(&mut world.res);
-        let reader = world.res.fetch_mut::<EventChannel<Event>>().register_reader();
+        let reader = world
+            .res
+            .fetch_mut::<EventChannel<Event>>()
+            .register_reader();
         Self { reader }
     }
 }
@@ -54,9 +59,7 @@ impl<'a> System<'a> for TextEditingInputSystem {
             }
         }
 
-        for event in events.read(
-            &mut self.reader
-        ) {
+        for event in events.read(&mut self.reader) {
             // Process events for the focused text element
             if let Some((entity, ref mut focused_text, ref mut focused_edit, _)) =
                 (&*entities, &mut texts, &mut editables, &selecteds)

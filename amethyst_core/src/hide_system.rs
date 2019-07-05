@@ -1,6 +1,6 @@
 use crate::{
     ecs::prelude::{
-        BitSet, ComponentEvent, ReadExpect, ReadStorage, ReaderId, System, WriteStorage, World,
+        BitSet, ComponentEvent, ReadExpect, ReadStorage, ReaderId, System, World, WriteStorage,
     },
     transform::components::{HierarchyEvent, Parent, ParentHierarchy},
 };
@@ -66,10 +66,7 @@ impl<'a> System<'a> for HideHierarchySystem {
                 ComponentEvent::Modified(_id) => {}
             });
 
-        for event in hierarchy
-            .changed()
-            .read(&mut self.parent_events_id)
-        {
+        for event in hierarchy.changed().read(&mut self.parent_events_id) {
             match *event {
                 HierarchyEvent::Removed(entity) => {
                     self_marked_as_modified.add(entity.id());

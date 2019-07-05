@@ -3,7 +3,7 @@
 use std::{sync::Arc, time::Instant};
 
 use amethyst_core::{
-    ecs::prelude::{DispatcherBuilder, Read, Resources, System, Write, World},
+    ecs::prelude::{DispatcherBuilder, Read, Resources, System, World, Write},
     SystemBundle, Time,
 };
 use amethyst_error::Error;
@@ -28,8 +28,16 @@ impl HotReloadBundle {
 }
 
 impl<'a, 'b> SystemBundle<'a, 'b> for HotReloadBundle {
-    fn build(self, world: &mut World, dispatcher: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
-        dispatcher.add(HotReloadSystem::new(world, self.strategy), "hot_reload", &[]);
+    fn build(
+        self,
+        world: &mut World,
+        dispatcher: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<(), Error> {
+        dispatcher.add(
+            HotReloadSystem::new(world, self.strategy),
+            "hot_reload",
+            &[],
+        );
         Ok(())
     }
 }

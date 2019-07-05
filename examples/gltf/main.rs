@@ -195,7 +195,10 @@ fn main() -> Result<(), amethyst::Error> {
     let mut world = World::new();
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(
+            &mut world,
+            WindowBundle::from_config_path(display_config_path),
+        )?
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .with(
             PrefabLoaderSystem::<ScenePrefabData>::new(&mut world),
@@ -218,16 +221,22 @@ fn main() -> Result<(), amethyst::Error> {
                 .with_sensitivity(0.1, 0.1)
                 .with_speed(5.),
         )?
-        .with_bundle(&mut world, TransformBundle::new().with_dep(&[
-            "animation_control",
-            "sampler_interpolation",
-            "fly_movement",
-        ]))?
-        .with_bundle(&mut world, VertexSkinningBundle::new().with_dep(&[
-            "transform_system",
-            "animation_control",
-            "sampler_interpolation",
-        ]))?
+        .with_bundle(
+            &mut world,
+            TransformBundle::new().with_dep(&[
+                "animation_control",
+                "sampler_interpolation",
+                "fly_movement",
+            ]),
+        )?
+        .with_bundle(
+            &mut world,
+            VertexSkinningBundle::new().with_dep(&[
+                "transform_system",
+                "animation_control",
+                "sampler_interpolation",
+            ]),
+        )?
         .with(
             VisibilitySortingSystem::new(),
             "visibility_system",
@@ -237,7 +246,8 @@ fn main() -> Result<(), amethyst::Error> {
             ExampleGraph::default(),
         ));
 
-    let mut game = Application::build(resources_directory, Example::default(), world)?.build(game_data)?;
+    let mut game =
+        Application::build(resources_directory, Example::default(), world)?.build(game_data)?;
     game.run();
     Ok(())
 }

@@ -1,6 +1,6 @@
 use amethyst::{
     core::frame_limiter::FrameRateLimitStrategy,
-    ecs::{Component, Entities, Join, System, VecStorage, WriteStorage, World},
+    ecs::{Component, Entities, Join, System, VecStorage, World, WriteStorage},
     network::*,
     prelude::*,
     shrev::ReaderId,
@@ -17,9 +17,10 @@ fn main() -> Result<()> {
     let mut world = World::new();
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(&mut world, NetworkBundle::<String>::new(
-            "127.0.0.1:3455".parse().unwrap(),
-        ))?
+        .with_bundle(
+            &mut world,
+            NetworkBundle::<String>::new("127.0.0.1:3455".parse().unwrap()),
+        )?
         .with(SpamReceiveSystem::new(), "rcv", &[]);
     let mut game = Application::build("./", State1, world)?
         .with_frame_limit(

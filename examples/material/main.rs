@@ -3,7 +3,7 @@ use amethyst::{
     assets::AssetLoaderSystemData,
     core::{
         ecs::{Builder, ReadExpect, Resources, SystemData, World},
-        Transform, TransformBundle
+        Transform, TransformBundle,
     },
     renderer::{
         camera::Camera,
@@ -159,7 +159,10 @@ fn main() -> amethyst::Result<()> {
     let mut world = World::new();
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(
+            &mut world,
+            WindowBundle::from_config_path(display_config_path),
+        )?
         .with_bundle(&mut world, TransformBundle::new())?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),

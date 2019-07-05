@@ -4,7 +4,7 @@ use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, Processor, RonFormat},
     audio::{output::init_output, Source},
     core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle, Time},
-    ecs::prelude::{Entity, ReadExpect, Resources, System, SystemData, Write, World},
+    ecs::prelude::{Entity, ReadExpect, Resources, System, SystemData, World, Write},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
@@ -138,10 +138,16 @@ fn main() -> amethyst::Result<()> {
     let mut world = World::new();
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(
+            &mut world,
+            WindowBundle::from_config_path(display_config_path),
+        )?
         .with(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
         .with_bundle(&mut world, TransformBundle::new())?
-        .with_bundle(&mut world, UiBundle::<DefaultBackend, StringBindings>::new())?
+        .with_bundle(
+            &mut world,
+            UiBundle::<DefaultBackend, StringBindings>::new(),
+        )?
         .with(Processor::<Source>::new(), "source_processor", &[])
         .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
         .with_bundle(&mut world, FpsCounterBundle::default())?

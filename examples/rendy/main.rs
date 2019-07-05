@@ -13,7 +13,7 @@ use amethyst::{
     core::{
         ecs::{
             Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
-            Resources, System, SystemData, Write, WriteStorage, World,
+            Resources, System, SystemData, World, Write, WriteStorage,
         },
         math::{Unit, UnitQuaternion, Vector3},
         Time, Transform, TransformBundle,
@@ -586,7 +586,10 @@ fn main() -> amethyst::Result<()> {
     )?;
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(
+            &mut world,
+            WindowBundle::from_config_path(display_config_path),
+        )?
         .with(OrbitSystem, "orbit", &[])
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .with_bundle(&mut world, FpsCounterBundle::default())?
@@ -618,7 +621,10 @@ fn main() -> amethyst::Result<()> {
             )
             .with_dep(&["gltf_loader"]),
         )?
-        .with_bundle(&mut world, InputBundle::<StringBindings>::new().with_bindings(bindings))?
+        .with_bundle(
+            &mut world,
+            InputBundle::<StringBindings>::new().with_bindings(bindings),
+        )?
         .with_bundle(
             &mut world,
             FlyControlBundle::<StringBindings>::new(
@@ -629,19 +635,25 @@ fn main() -> amethyst::Result<()> {
             .with_sensitivity(0.1, 0.1)
             .with_speed(5.),
         )?
-        .with_bundle(&mut world, TransformBundle::new().with_dep(&[
-            "animation_control",
-            "sampler_interpolation",
-            "sprite_animation_control",
-            "sprite_sampler_interpolation",
-            "fly_movement",
-            "orbit",
-        ]))?
-        .with_bundle(&mut world, VertexSkinningBundle::new().with_dep(&[
-            "transform_system",
-            "animation_control",
-            "sampler_interpolation",
-        ]))?
+        .with_bundle(
+            &mut world,
+            TransformBundle::new().with_dep(&[
+                "animation_control",
+                "sampler_interpolation",
+                "sprite_animation_control",
+                "sprite_sampler_interpolation",
+                "fly_movement",
+                "orbit",
+            ]),
+        )?
+        .with_bundle(
+            &mut world,
+            VertexSkinningBundle::new().with_dep(&[
+                "transform_system",
+                "animation_control",
+                "sampler_interpolation",
+            ]),
+        )?
         .with(
             SpriteVisibilitySortingSystem::new(),
             "sprite_visibility_system",

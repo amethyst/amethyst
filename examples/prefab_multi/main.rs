@@ -9,7 +9,10 @@ use amethyst::{
     },
     core::{Named, Parent},
     derive::PrefabData,
-    ecs::{storage::DenseVecStorage, Component, Entities, Entity, Join, ReadStorage, WriteStorage, World},
+    ecs::{
+        storage::DenseVecStorage, Component, Entities, Entity, Join, ReadStorage, World,
+        WriteStorage,
+    },
     prelude::*,
     utils::application_root_dir,
     Error,
@@ -160,7 +163,12 @@ fn main() -> Result<(), Error> {
     let game_data =
         GameDataBuilder::default().with(PrefabLoaderSystem::<Player>::new(&mut world), "", &[]);
 
-    let mut game = Application::new(resources_directory, CustomPrefabState::new(), game_data, world)?;
+    let mut game = Application::new(
+        resources_directory,
+        CustomPrefabState::new(),
+        game_data,
+        world,
+    )?;
     game.run();
     Ok(())
 }

@@ -5,7 +5,7 @@ use log::error;
 use amethyst_core::{
     ecs::{
         storage::ComponentEvent, BitSet, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
-        ReaderId, Resources, System, Write, WriteStorage, World,
+        ReaderId, Resources, System, World, Write, WriteStorage,
     },
     ArcThreadPool, Parent, Time,
 };
@@ -32,7 +32,7 @@ pub struct PrefabLoaderSystem<T> {
     next_tag: u64,
 }
 
-impl<'a, T> PrefabLoaderSystem<T> 
+impl<'a, T> PrefabLoaderSystem<T>
 where
     T: PrefabData<'a> + Send + Sync + 'static,
 {

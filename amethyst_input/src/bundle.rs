@@ -2,7 +2,10 @@
 
 use crate::{BindingError, BindingTypes, Bindings, InputSystem};
 use amethyst_config::{Config, ConfigError};
-use amethyst_core::{SystemBundle, ecs::prelude::{DispatcherBuilder, World}};
+use amethyst_core::{
+    ecs::prelude::{DispatcherBuilder, World},
+    SystemBundle,
+};
 use amethyst_error::Error;
 use derivative::Derivative;
 use std::{error, fmt, path::Path};
@@ -77,7 +80,11 @@ impl<T: BindingTypes> InputBundle<T> {
 }
 
 impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for InputBundle<T> {
-    fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn build(
+        self,
+        world: &mut World,
+        builder: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<(), Error> {
         #[cfg(feature = "sdl_controller")]
         {
             use super::SdlEventsSystem;
@@ -86,7 +93,11 @@ impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for InputBundle<T> {
                 SdlEventsSystem::<T>::new(world, self.controller_mappings).unwrap(),
             );
         }
-        builder.add(InputSystem::<T>::new(world, self.bindings), "input_system", &[]);
+        builder.add(
+            InputSystem::<T>::new(world, self.bindings),
+            "input_system",
+            &[],
+        );
         Ok(())
     }
 }

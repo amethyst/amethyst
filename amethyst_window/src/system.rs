@@ -1,7 +1,7 @@
 use crate::{config::DisplayConfig, resources::ScreenDimensions};
 use amethyst_config::Config;
 use amethyst_core::{
-    ecs::{ReadExpect, Resources, RunNow, System, SystemData, Write, WriteExpect, World},
+    ecs::{ReadExpect, Resources, RunNow, System, SystemData, World, Write, WriteExpect},
     shrev::EventChannel,
 };
 use std::path::Path;
@@ -14,7 +14,11 @@ pub struct WindowSystem;
 impl WindowSystem {
     /// Builds and spawns a new `Window`, using the provided `DisplayConfig` and `EventsLoop` as
     /// sources. Returns a new `WindowSystem`
-    pub fn from_config_path(world: &mut World, events_loop: &EventsLoop, path: impl AsRef<Path>) -> Self {
+    pub fn from_config_path(
+        world: &mut World,
+        events_loop: &EventsLoop,
+        path: impl AsRef<Path>,
+    ) -> Self {
         Self::from_config(world, events_loop, DisplayConfig::load(path.as_ref()))
     }
 
@@ -35,7 +39,9 @@ impl WindowSystem {
             .expect("Window closed during initialization!")
             .into();
         let hidpi = window.get_hidpi_factor();
-        world.res.insert(ScreenDimensions::new(width, height, hidpi));
+        world
+            .res
+            .insert(ScreenDimensions::new(width, height, hidpi));
         world.res.insert(window);
         Self
     }

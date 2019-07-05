@@ -1,7 +1,7 @@
 use std::default::Default;
 
 use amethyst_core::{
-    ecs::prelude::{Component, Read, ReadStorage, Resources, System, SystemData, Write, World},
+    ecs::prelude::{Component, Read, ReadStorage, Resources, System, SystemData, World, Write},
     shrev::{Event, EventChannel, ReaderId},
 };
 
@@ -62,10 +62,11 @@ where
     /// always be used to construct `EventRetriggerSystem`s.
     pub fn new(world: &mut World) -> Self {
         <Self as System<'_>>::SystemData::setup(&mut world.res);
-        let event_reader = world.res.fetch_mut::<EventChannel<T::In>>().register_reader();
-        Self {
-            event_reader,
-        }
+        let event_reader = world
+            .res
+            .fetch_mut::<EventChannel<T::In>>()
+            .register_reader();
+        Self { event_reader }
     }
 }
 

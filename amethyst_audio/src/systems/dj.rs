@@ -7,7 +7,7 @@ use amethyst_assets::AssetStorage;
 use amethyst_core::{
     ecs::{
         common::Errors,
-        prelude::{Read, System, WriteExpect, World},
+        prelude::{Read, System, World, WriteExpect},
     },
     shred::Resource,
 };
@@ -25,7 +25,7 @@ pub struct DjSystem<F, R> {
     marker: PhantomData<R>,
 }
 
-impl<F, R> DjSystem<F, R> 
+impl<F, R> DjSystem<F, R>
 where
     F: FnMut(&mut R) -> Option<SourceHandle>,
     R: Resource,

@@ -5,7 +5,7 @@ use amethyst::{
         transform::{Transform, TransformBundle},
         Time,
     },
-    ecs::{Read, ReadExpect, Resources, System, SystemData, Write, World},
+    ecs::{Read, ReadExpect, Resources, System, SystemData, World, Write},
     prelude::*,
     renderer::{
         camera::Camera,
@@ -114,7 +114,10 @@ fn main() -> amethyst::Result<()> {
     let mut world = World::new();
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(
+            &mut world,
+            WindowBundle::from_config_path(display_config_path),
+        )?
         .with_bundle(&mut world, TransformBundle::new())?
         .with(ExampleLinesSystem, "example_lines_system", &["window"])
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(

@@ -2,8 +2,7 @@
 
 use amethyst_assets::PrefabData;
 use amethyst_core::ecs::{
-    Component, Entity, HashMapStorage, Join, ReadExpect, ReadStorage, System,
-    WriteStorage,
+    Component, Entity, HashMapStorage, Join, ReadExpect, ReadStorage, System, WriteStorage,
 };
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
