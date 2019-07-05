@@ -67,11 +67,11 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
         self
     }
 
-    pub fn with_base_bundle<B>(mut self, bundle: B) -> Result<Self, Error>
+    pub fn with_base_bundle<B>(mut self, world: &mut World, bundle: B) -> Result<Self, Error>
     where
         B: SystemBundle<'a, 'b>,
     {
-        bundle.build(&mut self.base)?;
+        bundle.build(world, &mut self.base)?;
         Ok(self)
     }
     pub fn with_thread_local<S>(mut self, system: S) -> Self

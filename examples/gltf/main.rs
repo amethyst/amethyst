@@ -192,34 +192,38 @@ fn main() -> Result<(), amethyst::Error> {
     let display_config_path = app_root.join("examples/gltf/resources/display_config.ron");
     let resources_directory = app_root.join("examples/assets/");
 
+    let mut world = World::new();
+
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .with(
-            PrefabLoaderSystem::<ScenePrefabData>::default(),
+            PrefabLoaderSystem::<ScenePrefabData>::new(&mut world),
             "scene_loader",
             &[],
         )
         .with(
-            GltfSceneLoaderSystem::default(),
+            GltfSceneLoaderSystem::new(&mut world),
             "gltf_loader",
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
         )
         .with_bundle(
+            &mut world,
             AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
                 .with_dep(&["gltf_loader"]),
         )?
         .with_bundle(
+            &mut world,
             FlyControlBundle::<StringBindings>::new(None, None, None)
                 .with_sensitivity(0.1, 0.1)
                 .with_speed(5.),
         )?
-        .with_bundle(TransformBundle::new().with_dep(&[
+        .with_bundle(&mut world, TransformBundle::new().with_dep(&[
             "animation_control",
             "sampler_interpolation",
             "fly_movement",
         ]))?
-        .with_bundle(VertexSkinningBundle::new().with_dep(&[
+        .with_bundle(&mut world, VertexSkinningBundle::new().with_dep(&[
             "transform_system",
             "animation_control",
             "sampler_interpolation",
@@ -233,7 +237,7 @@ fn main() -> Result<(), amethyst::Error> {
             ExampleGraph::default(),
         ));
 
-    let mut game = Application::build(resources_directory, Example::default())?.build(game_data)?;
+    let mut game = Application::build(resources_directory, Example::default(), world)?.build(game_data)?;
     game.run();
     Ok(())
 }

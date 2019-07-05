@@ -4,7 +4,7 @@
 use amethyst::{
     assets::{Format as AssetFormat, Handle, Loader},
     core::{math::Vector3, Transform, TransformBundle},
-    ecs::{ReadExpect, Resources, SystemData},
+    ecs::{ReadExpect, Resources, SystemData, World},
     error::Error,
     input::{InputBundle, StringBindings},
     prelude::*,
@@ -130,14 +130,16 @@ fn main() -> Result<(), Error> {
     let display_config_path =
         app_root.join("{}/examples/asset_loading/resources/display_config.ron");
 
+    let mut world = World::new();
+
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
-        .with_bundle(InputBundle::<StringBindings>::new())?
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(&mut world, InputBundle::<StringBindings>::new())?
+        .with_bundle(&mut world, TransformBundle::new())?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
-    let mut game = Application::new(resources_directory, AssetsExample, game_data)?;
+    let mut game = Application::new(resources_directory, AssetsExample, game_data, world)?;
     game.run();
     Ok(())
 }

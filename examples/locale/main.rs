@@ -2,7 +2,7 @@
 
 use amethyst::{
     assets::{AssetStorage, Handle, Loader, Processor, ProgressCounter},
-    ecs::{Read, ReadExpect},
+    ecs::{Read, ReadExpect, World},
     locale::*,
     prelude::*,
     utils::application_root_dir,
@@ -76,7 +76,7 @@ fn main() -> Result<(), Error> {
 
     let game_data = GameDataBuilder::default().with(Processor::<Locale>::new(), "proc", &[]);
 
-    let mut game = Application::new(resources_directory, Example::new(), game_data)?;
+    let mut game = Application::new(resources_directory, Example::new(), game_data, World::new())?;
     game.run();
     Ok(())
 }

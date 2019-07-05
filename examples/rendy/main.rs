@@ -13,7 +13,7 @@ use amethyst::{
     core::{
         ecs::{
             Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
-            Resources, System, SystemData, Write, WriteStorage,
+            Resources, System, SystemData, Write, WriteStorage, World,
         },
         math::{Unit, UnitQuaternion, Vector3},
         Time, Transform, TransformBundle,
@@ -567,6 +567,8 @@ fn main() -> amethyst::Result<()> {
         .join("display_config.ron");
     let resources = app_root.join("examples").join("assets");
 
+    let mut world = World::new();
+
     let mut bindings = Bindings::new();
     bindings.insert_axis(
         "vertical",
@@ -584,17 +586,17 @@ fn main() -> amethyst::Result<()> {
     )?;
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
         .with(OrbitSystem, "orbit", &[])
         .with(AutoFovSystem::default(), "auto_fov", &[])
-        .with_bundle(FpsCounterBundle::default())?
+        .with_bundle(&mut world, FpsCounterBundle::default())?
         .with(
-            PrefabLoaderSystem::<ScenePrefabData>::default(),
+            PrefabLoaderSystem::<ScenePrefabData>::new(&mut world),
             "scene_loader",
             &[],
         )
         .with(
-            GltfSceneLoaderSystem::default(),
+            GltfSceneLoaderSystem::new(&mut world),
             "gltf_loader",
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
         )
@@ -604,18 +606,21 @@ fn main() -> amethyst::Result<()> {
             &[],
         )
         .with_bundle(
+            &mut world,
             AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
                 .with_dep(&["gltf_loader"]),
         )?
         .with_bundle(
+            &mut world,
             AnimationBundle::<SpriteAnimationId, SpriteRender>::new(
                 "sprite_animation_control",
                 "sprite_sampler_interpolation",
             )
             .with_dep(&["gltf_loader"]),
         )?
-        .with_bundle(InputBundle::<StringBindings>::new().with_bindings(bindings))?
+        .with_bundle(&mut world, InputBundle::<StringBindings>::new().with_bindings(bindings))?
         .with_bundle(
+            &mut world,
             FlyControlBundle::<StringBindings>::new(
                 Some("horizontal".into()),
                 None,
@@ -624,7 +629,7 @@ fn main() -> amethyst::Result<()> {
             .with_sensitivity(0.1, 0.1)
             .with_speed(5.),
         )?
-        .with_bundle(TransformBundle::new().with_dep(&[
+        .with_bundle(&mut world, TransformBundle::new().with_dep(&[
             "animation_control",
             "sampler_interpolation",
             "sprite_animation_control",
@@ -632,7 +637,7 @@ fn main() -> amethyst::Result<()> {
             "fly_movement",
             "orbit",
         ]))?
-        .with_bundle(VertexSkinningBundle::new().with_dep(&[
+        .with_bundle(&mut world, VertexSkinningBundle::new().with_dep(&[
             "transform_system",
             "animation_control",
             "sampler_interpolation",
@@ -651,7 +656,7 @@ fn main() -> amethyst::Result<()> {
             ExampleGraph::default(),
         ));
 
-    let mut game = Application::new(&resources, Example::new(), game_data)?;
+    let mut game = Application::new(&resources, Example::new(), game_data, world)?;
     game.run();
     Ok(())
 }

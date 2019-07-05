@@ -15,7 +15,7 @@ use amethyst::{
     },
     ecs::prelude::{
         Entity, Join, Read, ReadExpect, ReadStorage, Resources, System, SystemData, Write,
-        WriteStorage,
+        WriteStorage, World,
     },
     input::{
         get_key, is_close_requested, is_key_down, ElementState, InputBundle, StringBindings,
@@ -208,19 +208,21 @@ fn main() -> Result<(), Error> {
         .join("resources")
         .join("display_config.ron");
 
+    let mut world = World::new();
+
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
+        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
         .with::<ExampleSystem>(ExampleSystem::default(), "example_system", &[])
-        .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
-        .with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
-        .with_bundle(HotReloadBundle::default())?
-        .with_bundle(FpsCounterBundle::default())?
-        .with_bundle(InputBundle::<StringBindings>::new())?
+        .with_bundle(&mut world, TransformBundle::new().with_dep(&["example_system"]))?
+        .with_bundle(&mut world, UiBundle::<DefaultBackend, StringBindings>::new())?
+        .with_bundle(&mut world, HotReloadBundle::default())?
+        .with_bundle(&mut world, FpsCounterBundle::default())?
+        .with_bundle(&mut world, InputBundle::<StringBindings>::new())?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
-    let mut game = Application::build(resources_directory, Loading::default())?.build(game_data)?;
+    let mut game = Application::build(resources_directory, Loading::default(), world)?.build(game_data)?;
     game.run();
     Ok(())
 }

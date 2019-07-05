@@ -3,7 +3,7 @@ use amethyst::{
         Asset, AssetStorage, Format, Handle, Loader, ProcessingState, Processor, ProgressCounter,
         Source,
     },
-    ecs::VecStorage,
+    ecs::{VecStorage, World},
     error::{format_err, Error, ResultExt},
     prelude::*,
     utils::application_root_dir,
@@ -124,6 +124,8 @@ fn main() -> amethyst::Result<()> {
     let app_root = application_root_dir()?;
     let assets_dir = app_root.join("assets");
 
+    let world = World::new();
+
     let game_data = GameDataBuilder::default().with(Processor::<EnergyBlast>::new(), "", &[]);
     let mut game = Application::new(
         assets_dir,
@@ -132,6 +134,7 @@ fn main() -> amethyst::Result<()> {
             energy_blast_handle: None,
         },
         game_data,
+        world,
     )?;
 
     game.run();

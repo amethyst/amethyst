@@ -5,7 +5,7 @@ use amethyst::{
         transform::{Transform, TransformBundle},
         Time,
     },
-    ecs::{Read, ReadExpect, Resources, System, SystemData, Write},
+    ecs::{Read, ReadExpect, Resources, System, SystemData, Write, World},
     prelude::*,
     renderer::{
         camera::Camera,
@@ -111,15 +111,17 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/debug_lines_ortho/resources/display.ron");
     let resources = app_root.join("examples/assets/");
 
+    let mut world = World::new();
+
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(&mut world, TransformBundle::new())?
         .with(ExampleLinesSystem, "example_lines_system", &["window"])
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
 
-    let mut game = Application::new(resources, ExampleState, game_data)?;
+    let mut game = Application::new(resources, ExampleState, game_data, world)?;
     game.run();
     Ok(())
 }

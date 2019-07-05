@@ -11,7 +11,7 @@ use amethyst::{
     core::transform::TransformBundle,
     ecs::{
         prelude::{Component, Entity, ReadExpect, Resources, SystemData},
-        NullStorage,
+        NullStorage, World,
     },
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
@@ -212,6 +212,8 @@ fn main() -> Result<(), Error> {
     let display_config_path =
         app_root.join("examples/custom_game_data/resources/display_config.ron");
 
+    let mut world = World::new();
+
     // let pipeline_builder = Pipeline::build().with_stage(
     //     Stage::with_backbuffer()
     //         .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
@@ -219,18 +221,18 @@ fn main() -> Result<(), Error> {
     //         .with_pass(DrawUi::new()),
     // );
     let game_data = CustomGameDataBuilder::default()
-        .with_base(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
+        .with_base(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
         .with_running::<ExampleSystem>(ExampleSystem::default(), "example_system", &[])
-        .with_base_bundle(TransformBundle::new())?
-        .with_base_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
-        .with_base_bundle(FpsCounterBundle::default())?
-        .with_base_bundle(InputBundle::<StringBindings>::new())?
-        .with_base_bundle(WindowBundle::from_config_path(display_config_path))?
+        .with_base_bundle(&mut world, TransformBundle::new())?
+        .with_base_bundle(&mut world, UiBundle::<DefaultBackend, StringBindings>::new())?
+        .with_base_bundle(&mut world, FpsCounterBundle::default())?
+        .with_base_bundle(&mut world, InputBundle::<StringBindings>::new())?
+        .with_base_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
 
-    let mut game = Application::build(asset_dir, Loading::default())?.build(game_data)?;
+    let mut game = Application::build(asset_dir, Loading::default(), world)?.build(game_data)?;
     game.run();
 
     Ok(())

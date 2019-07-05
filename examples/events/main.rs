@@ -6,7 +6,7 @@ use amethyst::{
         frame_limiter::FrameRateLimitStrategy,
         shrev::{EventChannel, ReaderId},
     },
-    ecs::{DispatcherBuilder, Read, Resources, System, SystemData, World, Write},
+    ecs::{DispatcherBuilder, Read, System, SystemData, World, Write},
     prelude::*,
 };
 
@@ -17,12 +17,10 @@ use core::result::Result;
 struct MyBundle;
 
 impl<'a, 'b> SystemBundle<'a, 'b> for MyBundle {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(SpammingSystem, "spamming_system", &[]);
         builder.add(
-            ReceivingSystem {
-                reader: Option::None,
-            },
+            ReceivingSystem::new(world),
             "receiving_system",
             &[],
         );
@@ -64,8 +62,8 @@ struct ReceivingSystem {
 }
 
 impl ReceivingSystem {
-    pub fn new(world: &mut World) {
-        Self::SystemData::setup(world.res);
+    pub fn new(world: &mut World) -> Self {
+        <Self as System<'_>>::SystemData::setup(&mut world.res);
         let reader = world.res.fetch_mut::<EventChannel<MyEvent>>().register_reader();
         ReceivingSystem {
             reader
@@ -77,7 +75,7 @@ impl<'a> System<'a> for ReceivingSystem {
     type SystemData = Read<'a, EventChannel<MyEvent>>;
 
     fn run(&mut self, my_event_channel: Self::SystemData) {
-        for event in my_event_channel.read(self.reader) {
+        for event in my_event_channel.read(&mut self.reader) {
             println!("Received an event: {:?}", event);
         }
     }
@@ -91,9 +89,9 @@ fn main() -> amethyst::Result<()> {
     let mut world = World::new();
     world.add_resource(EventChannel::<MyEvent>::new());
 
-    let game_data = GameDataBuilder::default().with_bundle(MyBundle)?;
+    let game_data = GameDataBuilder::default().with_bundle(&mut world, MyBundle)?;
 
-    let mut game = Application::build("./", GameplayState)?
+    let mut game = Application::build("./", GameplayState, world)?
         .with_frame_limit(FrameRateLimitStrategy::Sleep, 1)
         .build(game_data)?;
 

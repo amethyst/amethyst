@@ -68,8 +68,8 @@ struct CameraDistanceSystem {
 }
 
 impl CameraDistanceSystem {
-    pub fn new() -> Self {
-        Self::SystemData::setup(res);
+    pub fn new(world: &mut World) -> Self {
+        <Self as System<'_>>::SystemData::setup(&mut world.res);
         let event_reader = world.res.fetch_mut::<EventChannel<InputEvent<String>>>()
                 .register_reader();
 
@@ -103,9 +103,6 @@ impl<'a> System<'a> for CameraDistanceSystem {
             }
         }
     }
-
-    fn setup(&mut self, res: &mut Resources) {
-            }
 }
 
 fn main() -> Result<(), Error> {
@@ -131,14 +128,14 @@ fn main() -> Result<(), Error> {
         )?
         .with_bundle(&mut world, ArcBallControlBundle::<StringBindings>::new())?
         .with(
-            CameraDistanceSystem::new(),
+            CameraDistanceSystem::new(&mut world),
             "camera_distance_system",
             &["input_system"],
         )
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
-    let mut game = Application::build(resources_directory, ExampleState)?.build(game_data, world)?;
+    let mut game = Application::build(resources_directory, ExampleState, world)?.build(game_data)?;
     game.run();
     Ok(())
 }

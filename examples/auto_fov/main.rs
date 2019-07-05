@@ -5,7 +5,7 @@ use amethyst::{
     },
     core::{Transform, TransformBundle},
     derive::PrefabData,
-    ecs::{Entity, ReadExpect, ReadStorage, Resources, System, WriteStorage},
+    ecs::{Entity, ReadExpect, ReadStorage, Resources, System, WriteStorage, World},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::{
         Application, Builder, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData,
@@ -54,19 +54,21 @@ fn main() -> Result<(), Error> {
     let display_config_path = app_dir.join("auto_fov/resources/display.ron");
     let assets = app_dir.join("assets");
 
+    let mut world = World::new();
+
     let game_data = GameDataBuilder::new()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
-        .with(PrefabLoaderSystem::<ScenePrefab>::default(), "prefab", &[])
+        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with(PrefabLoaderSystem::<ScenePrefab>::new(&mut world), "prefab", &[])
         .with(AutoFovSystem::default(), "auto_fov", &["prefab"]) // This makes the system adjust the camera right after it has been loaded (in the same frame), preventing any flickering
         .with(ShowFovSystem, "show_fov", &["auto_fov"])
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(InputBundle::<StringBindings>::new())?
-        .with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
+        .with_bundle(&mut world, TransformBundle::new())?
+        .with_bundle(&mut world, InputBundle::<StringBindings>::new())?
+        .with_bundle(&mut world, UiBundle::<DefaultBackend, StringBindings>::new())?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
 
-    let mut game = Application::build(assets, Loading::new())?.build(game_data)?;
+    let mut game = Application::build(assets, Loading::new(), world)?.build(game_data)?;
     game.run();
 
     Ok(())

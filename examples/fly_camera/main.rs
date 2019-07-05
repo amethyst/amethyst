@@ -4,7 +4,7 @@ use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
     controls::{FlyControlBundle, HideCursor},
     core::transform::TransformBundle,
-    ecs::{ReadExpect, Resources, SystemData},
+    ecs::{ReadExpect, Resources, SystemData, World},
     input::{is_key_down, is_mouse_button_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
@@ -68,15 +68,16 @@ fn main() -> Result<(), Error> {
     let app_root = application_root_dir()?;
 
     let resources_directory = app_root.join("examples/assets");
-
     let display_config_path = app_root.join("examples/fly_camera/resources/display_config.ron");
-
     let key_bindings_path = app_root.join("examples/fly_camera/resources/input.ron");
 
+    let mut world = World::new();
+
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
+        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
         .with_bundle(
+            &mut world,
             FlyControlBundle::<StringBindings>::new(
                 Some(String::from("move_x")),
                 Some(String::from("move_y")),
@@ -84,14 +85,15 @@ fn main() -> Result<(), Error> {
             )
             .with_sensitivity(0.1, 0.1),
         )?
-        .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
+        .with_bundle(&mut world, TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_bundle(
+            &mut world,
             InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
-    let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
+    let mut game = Application::build(resources_directory, ExampleState, world)?.build(game_data)?;
     game.run();
     Ok(())
 }

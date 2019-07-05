@@ -3,7 +3,7 @@
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
     core::transform::TransformBundle,
-    ecs::prelude::{ReadExpect, Resources, SystemData},
+    ecs::prelude::{ReadExpect, Resources, SystemData, World},
     input::StringBindings,
     prelude::*,
     renderer::{
@@ -105,15 +105,17 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/custom_ui/resources/display.ron");
     let resources = app_root.join("examples/assets");
 
+    let mut world = World::new();
+
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(UiBundle::<DefaultBackend, StringBindings, CustomUi>::new())?
+        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
+        .with_bundle(&mut world, TransformBundle::new())?
+        .with_bundle(&mut world, UiBundle::<DefaultBackend, StringBindings, CustomUi>::new())?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
-    let mut game = Application::new(resources, Example, game_data)?;
+    let mut game = Application::new(resources, Example, game_data, world)?;
     game.run();
     Ok(())
 }

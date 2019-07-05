@@ -4,7 +4,7 @@ use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, Processor, RonFormat},
     audio::{output::init_output, Source},
     core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle, Time},
-    ecs::prelude::{Entity, ReadExpect, Resources, System, SystemData, Write},
+    ecs::prelude::{Entity, ReadExpect, Resources, System, SystemData, Write, World},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
@@ -135,20 +135,22 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/ui/resources/display.ron");
     let resources = app_root.join("examples/assets");
 
+    let mut world = World::new();
+
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
-        .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
+        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
+        .with_bundle(&mut world, TransformBundle::new())?
+        .with_bundle(&mut world, UiBundle::<DefaultBackend, StringBindings>::new())?
         .with(Processor::<Source>::new(), "source_processor", &[])
         .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
-        .with_bundle(FpsCounterBundle::default())?
-        .with_bundle(InputBundle::<StringBindings>::new())?
+        .with_bundle(&mut world, FpsCounterBundle::default())?
+        .with_bundle(&mut world, InputBundle::<StringBindings>::new())?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
 
-    let mut game = Application::build(resources, Example::default())?
+    let mut game = Application::build(resources, Example::default(), world)?
         // Unlimited FPS
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 9999)
         .build(game_data)?;

@@ -1,6 +1,6 @@
 use amethyst::{
     core::frame_limiter::FrameRateLimitStrategy,
-    ecs::{Join, System, WriteStorage},
+    ecs::{Join, System, WriteStorage, World},
     network::*,
     prelude::*,
     shrev::ReaderId,
@@ -14,10 +14,12 @@ use std::time::Duration;
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
+    let mut world = World::new();
+
     let game_data = GameDataBuilder::default()
-        .with_bundle(NetworkBundle::<()>::new("127.0.0.1:23455".parse().unwrap()))?
+        .with_bundle(&mut world, NetworkBundle::<()>::new("127.0.0.1:23455".parse().unwrap()))?
         .with(SpamReceiveSystem::new(), "rcv", &[]);
-    let mut game = Application::build("./", State1)?
+    let mut game = Application::build("./", State1, world)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             1,

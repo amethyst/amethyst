@@ -7,7 +7,7 @@ use crate::pong::Pong;
 use amethyst::{
     assets::Processor,
     core::TransformBundle,
-    ecs::{ReadExpect, Resources, SystemData},
+    ecs::{ReadExpect, Resources, SystemData, World},
     input::{InputBundle, StringBindings},
     prelude::*,
     renderer::{
@@ -26,11 +26,13 @@ fn main() -> amethyst::Result<()> {
     let display_config_path =
         app_root.join("examples/pong_tutorial_05/resources/display_config.ron");
 
+    let mut world = World::new();
+
     let game_data = GameDataBuilder::default()
         // The WindowBundle provides all the scaffolding for opening a window
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
         // Add the transform bundle which handles tracking entity positions
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(&mut world, TransformBundle::new())?
         // A Processor system is added to handle loading spritesheets.
         .with(
             Processor::<SpriteSheet>::new(),
@@ -38,11 +40,12 @@ fn main() -> amethyst::Result<()> {
             &[],
         )
         .with_bundle(
+            &mut world,
             InputBundle::<StringBindings>::new().with_bindings_from_file(
                 app_root.join("examples/pong_tutorial_05/resources/bindings_config.ron"),
             )?,
         )?
-        .with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
+        .with_bundle(&mut world, UiBundle::<DefaultBackend, StringBindings>::new())?
         // We have now added our own systems, defined in the systems module
         .with(systems::PaddleSystem, "paddle_system", &["input_system"])
         .with(systems::MoveBallsSystem, "ball_system", &[])
@@ -62,7 +65,7 @@ fn main() -> amethyst::Result<()> {
     // of the git repository. It only is a different location to load the assets from.
     let assets_dir = app_root.join("examples/assets/");
 
-    let mut game = Application::new(assets_dir, Pong::default(), game_data)?;
+    let mut game = Application::new(assets_dir, Pong::default(), game_data, world)?;
     game.run();
     Ok(())
 }

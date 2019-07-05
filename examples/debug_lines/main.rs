@@ -7,7 +7,7 @@ use amethyst::{
         transform::{Transform, TransformBundle},
         Time,
     },
-    ecs::{Read, ReadExpect, Resources, System, SystemData, Write},
+    ecs::{Read, ReadExpect, Resources, System, SystemData, Write, World},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
@@ -192,19 +192,22 @@ fn main() -> amethyst::Result<()> {
     )
     .with_sensitivity(0.1, 0.1);
 
+    let mut world = World::new();
+
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
         .with_bundle(
+            &mut world,
             InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
         .with(ExampleLinesSystem, "example_lines_system", &[])
-        .with_bundle(fly_control_bundle)?
-        .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
+        .with_bundle(&mut world, fly_control_bundle)?
+        .with_bundle(&mut world, TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
 
-    let mut game = Application::new(resources, ExampleState, game_data)?;
+    let mut game = Application::new(resources, ExampleState, game_data, world)?;
     game.run();
     Ok(())
 }

@@ -148,18 +148,21 @@ fn main() -> amethyst::Result<()> {
     let display_config_path =
         app_root.join("examples/sprite_animation/resources/display_config.ron");
 
+    let mut world = World::new();
+
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
         .with(
-            PrefabLoaderSystem::<MyPrefabData>::default(),
+            PrefabLoaderSystem::<MyPrefabData>::new(&mut world),
             "scene_loader",
             &[],
         )
-        .with_bundle(AnimationBundle::<AnimationId, SpriteRender>::new(
+        .with_bundle(&mut world, AnimationBundle::<AnimationId, SpriteRender>::new(
             "sprite_animation_control",
             "sprite_sampler_interpolation",
         ))?
         .with_bundle(
+            &mut world,
             TransformBundle::new()
                 .with_dep(&["sprite_animation_control", "sprite_sampler_interpolation"]),
         )?
@@ -172,7 +175,7 @@ fn main() -> amethyst::Result<()> {
             ExampleGraph::default(),
         ));
 
-    let mut game = Application::new(assets_directory, Example::default(), game_data)?;
+    let mut game = Application::new(assets_directory, Example::default(), game_data, world)?;
     game.run();
 
     Ok(())

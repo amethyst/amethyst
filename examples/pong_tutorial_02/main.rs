@@ -6,7 +6,7 @@ use crate::pong::Pong;
 use amethyst::{
     assets::Processor,
     core::TransformBundle,
-    ecs::{ReadExpect, Resources, SystemData},
+    ecs::{ReadExpect, Resources, SystemData, World},
     prelude::*,
     renderer::{
         pass::DrawFlat2DDesc, types::DefaultBackend, Factory, Format, GraphBuilder, GraphCreator,
@@ -23,11 +23,13 @@ fn main() -> amethyst::Result<()> {
     let display_config_path =
         app_root.join("examples/pong_tutorial_02/resources/display_config.ron");
 
+    let mut world = World::new();
+
     let game_data = GameDataBuilder::default()
         // The WindowBundle provides all the scaffolding for opening a window
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
         // Add the transform bundle which handles tracking entity positions
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(&mut world, TransformBundle::new())?
         // A Processor system is added to handle loading spritesheets.
         .with(
             Processor::<SpriteSheet>::new(),
@@ -44,7 +46,7 @@ fn main() -> amethyst::Result<()> {
     // of the git repository. It only is a different location to load the assets from.
     let assets_dir = app_root.join("examples/assets/");
 
-    let mut game = Application::new(assets_dir, Pong, game_data)?;
+    let mut game = Application::new(assets_dir, Pong, game_data, world)?;
     game.run();
     Ok(())
 }

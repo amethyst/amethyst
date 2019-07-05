@@ -2,8 +2,8 @@
 use amethyst::{
     assets::AssetLoaderSystemData,
     core::{
-        ecs::{Builder, ReadExpect, Resources, SystemData},
-        Transform, TransformBundle,
+        ecs::{Builder, ReadExpect, Resources, SystemData, World},
+        Transform, TransformBundle
     },
     renderer::{
         camera::Camera,
@@ -156,14 +156,16 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/material/resources/display_config.ron");
     let resources = app_root.join("examples/assets/");
 
+    let mut world = World::new();
+
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(&mut world, TransformBundle::new())?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
 
-    let mut game = Application::new(&resources, Example, game_data)?;
+    let mut game = Application::new(&resources, Example, game_data, world)?;
     game.run();
     Ok(())
 }

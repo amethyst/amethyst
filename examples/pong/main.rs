@@ -9,7 +9,7 @@ use amethyst::{
     assets::Processor,
     audio::{AudioBundle, DjSystem},
     core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle},
-    ecs::{Component, DenseVecStorage, ReadExpect, Resources, SystemData},
+    ecs::{Component, DenseVecStorage, ReadExpect, Resources, SystemData, World},
     input::{InputBundle, StringBindings},
     prelude::*,
     renderer::{
@@ -60,11 +60,13 @@ fn main() -> amethyst::Result<()> {
 
     let assets_dir = app_root.join("examples/assets/");
 
+    let mut world = World::new();
+
     let game_data = GameDataBuilder::default()
         // The WindowBundle provides all the scaffolding for opening a window
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
         // Add the transform bundle which handles tracking entity positions
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(&mut world, TransformBundle::new())?
         // A Processor system is added to handle loading spritesheets.
         .with(
             Processor::<SpriteSheet>::new(),
@@ -72,23 +74,24 @@ fn main() -> amethyst::Result<()> {
             &[],
         )
         .with_bundle(
+            &mut world,
             InputBundle::<StringBindings>::new().with_bindings_from_file(key_bindings_path)?,
         )?
-        .with_bundle(PongBundle)?
-        .with_bundle(AudioBundle::default())?
+        .with_bundle(&mut world, PongBundle)?
+        .with_bundle(&mut world, AudioBundle::default())?
         .with(
-            DjSystem::new(|music: &mut Music| music.music.next()),
+            DjSystem::new(&mut world, |music: &mut Music| music.music.next()),
             "dj_system",
             &[],
         )
-        .with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
+        .with_bundle(&mut world, UiBundle::<DefaultBackend, StringBindings>::new())?
         // The renderer must be executed on the same thread consecutively, so we initialize it as thread_local
         // which will always execute on the main thread.
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
 
-    let mut game = Application::build(assets_dir, Pong::default())?
+    let mut game = Application::build(assets_dir, Pong::default(), world)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,

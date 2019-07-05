@@ -9,7 +9,7 @@ mod sprite_sheet_loader;
 use amethyst::{
     assets::{AssetStorage, Handle, Loader, Processor},
     core::{Hidden, Transform, TransformBundle},
-    ecs::{Entity, ReadExpect, Resources, SystemData},
+    ecs::{Entity, ReadExpect, Resources, SystemData, World},
     input::{get_key, is_close_requested, is_key_down, ElementState},
     prelude::*,
     renderer::{
@@ -370,9 +370,11 @@ fn main() -> amethyst::Result<()> {
 
     let assets_directory = app_root.join("examples/assets/");
 
+    let mut world = World::new();
+
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
-        .with_bundle(TransformBundle::new())?
+        .with_bundle(&mut world, WindowBundle::from_config_path(display_config_path))?
+        .with_bundle(&mut world, TransformBundle::new())?
         .with(
             Processor::<SpriteSheet>::new(),
             "sprite_sheet_processor",
@@ -387,7 +389,7 @@ fn main() -> amethyst::Result<()> {
             ExampleGraph::default(),
         ));
 
-    let mut game = Application::new(assets_directory, Example::new(), game_data)?;
+    let mut game = Application::new(assets_directory, Example::new(), game_data, world)?;
     game.run();
 
     Ok(())

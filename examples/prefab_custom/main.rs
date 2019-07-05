@@ -11,7 +11,7 @@ use amethyst::{
     derive::PrefabData,
     ecs::{
         storage::{DenseVecStorage, VecStorage},
-        Component, Entities, Entity, Join, ReadStorage, WriteStorage,
+        Component, Entities, Entity, Join, ReadStorage, WriteStorage, World,
     },
     prelude::*,
     utils::application_root_dir,
@@ -185,10 +185,12 @@ fn main() -> Result<(), Error> {
     // Add our meshes directory to the asset loader.
     let resources_directory = app_root.join("examples/assets");
 
-    let game_data =
-        GameDataBuilder::default().with(PrefabLoaderSystem::<CustomPrefabData>::default(), "", &[]);
+    let mut world = World::new();
 
-    let mut game = Application::new(resources_directory, CustomPrefabState::new(), game_data)?;
+    let game_data =
+        GameDataBuilder::default().with(PrefabLoaderSystem::<CustomPrefabData>::new(&mut world), "", &[]);
+
+    let mut game = Application::new(resources_directory, CustomPrefabState::new(), game_data, world)?;
     game.run();
     Ok(())
 }
