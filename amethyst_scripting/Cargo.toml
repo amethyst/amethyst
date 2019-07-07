@@ -1,0 +1,21 @@
+[package]
+name = "amethyst_scripting"
+version = "0.6.0"
+authors = ["Fletcher Haynes <fletcher@amethyst-engine.org>"]
+edition = "2018"
+description = "Amethyst scripting library. Based on https://github.com/wasmerio/wasmer-rust-example"
+
+documentation = "https://docs-src.amethyst.rs/stable/amethyst_scripting/"
+homepage = "https://amethyst.rs/"
+repository = "https://github.com/amethyst/amethyst"
+
+license = "MIT/Apache-2.0"
+
+[dependencies]
+log = "0.4.6"
+thread_profiler = { version = "0.3", optional = true }
+wasmer-runtime = "0.2.0"
+
+[features]
+profiler = [ "thread_profiler/thread_profiler" ]
+nightly = [ "shred/nightly" ]

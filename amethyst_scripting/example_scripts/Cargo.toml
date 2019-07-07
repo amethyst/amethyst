@@ -1,0 +1,10 @@
+[package]
+name = "wasm-sample-app"
+version = "0.1.0"
+authors = ["Fletcher Haynes <fletcher@amethyst-engine.org>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
