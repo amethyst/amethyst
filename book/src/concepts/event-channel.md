@@ -188,7 +188,7 @@ Then, in the `System`'s setup method:
 #   type SystemData = ();
 #   fn run(&mut self, _: Self::SystemData) { }
 #   fn setup(&mut self, res: &mut amethyst::ecs::Resources) {
-    // IMPORTANT: You need to setup your system data BEFORE you try to fetch the resource. Especially if you plan use `Default` to create your resource.
+    // IMPORTANT: You need to setup your system data BEFORE you try to fetch the resource. Especially if you plan to use `Default` to create your resource.
     Self::SystemData::setup(res);
     self.reader = Some(res.fetch_mut::<EventChannel<MyEvent>>().register_reader());
 #   }
