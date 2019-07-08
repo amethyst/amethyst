@@ -37,6 +37,7 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 
 * Fix animation unwrap on missing animated component. ([#1773])
 
+[#1791]: https://github.com/amethyst/amethyst/pull/1791
 [#1766]: https://github.com/amethyst/amethyst/pull/1766
 [#1719]: https://github.com/amethyst/amethyst/pull/1719
 [#1747]: https://github.com/amethyst/amethyst/pull/1747
