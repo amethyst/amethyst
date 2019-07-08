@@ -39,7 +39,7 @@ mod skin;
 /// See `GltfSceneOptions` for more information about the load options.
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct GltfSceneFormat(GltfSceneOptions);
+pub struct GltfSceneFormat(pub GltfSceneOptions);
 
 impl Format<Prefab<GltfPrefab>> for GltfSceneFormat {
     fn name(&self) -> &'static str {
