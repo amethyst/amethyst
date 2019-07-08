@@ -330,7 +330,7 @@ fn run(&mut self, (mut transforms, paddles, input): Self::SystemData) {
         };
         if let Some(mv_amount) = movement {
             let scaled_amount = 1.2 * mv_amount as f32;
-            let paddle_y = transform.translation().y;
+            let paddle_y = transform.translation().y.as_f32();
             transform.set_translation_y(
                 (paddle_y + scaled_amount)
                     .min(ARENA_HEIGHT - PADDLE_HEIGHT * 0.5)
