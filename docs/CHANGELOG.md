@@ -28,6 +28,7 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 * Inverted mouse wheel scroll direction event. Now using winit's standard.  ([#1767])
 * Add `load_from_data_async` to Asset Loader. ([#1753])
 * Add `SerializableFormat` marker trait which is now needed to be implemented for all the formats that are supposed to be serialized. ([#1720])
+* Make the GltfSceneOptions field of GltfSceneFormat public. ([#1791])
 
 ### Fixed
 * Fix stack overflow on serializing `Box<dyn Format<_>>`. ([#1720])
