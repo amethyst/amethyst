@@ -1,11 +1,7 @@
-use std::default::Default;
-
 use amethyst_core::{
-    ecs::prelude::{Component, Read, ReadStorage, Resources, System, SystemData, World, Write},
+    ecs::prelude::{Component, Read, ReadStorage, System, SystemData, World, Write},
     shrev::{Event, EventChannel, ReaderId},
 };
-
-use derivative::Derivative;
 
 use crate::event::TargetedEvent;
 

@@ -7,7 +7,7 @@ use winit::{ElementState, Event, MouseButton, WindowEvent};
 
 use amethyst_core::{
     ecs::prelude::{
-        Component, DenseVecStorage, Join, Read, ReadExpect, ReadStorage, Resources, System, World,
+        Component, DenseVecStorage, Join, Read, ReadExpect, ReadStorage, System, World,
         WriteStorage,
     },
     shrev::{EventChannel, ReaderId},

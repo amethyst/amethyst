@@ -3,7 +3,7 @@
 use std::{sync::Arc, time::Instant};
 
 use amethyst_core::{
-    ecs::prelude::{DispatcherBuilder, Read, Resources, System, World, Write},
+    ecs::prelude::{DispatcherBuilder, Read, System, World, Write},
     SystemBundle, Time,
 };
 use amethyst_error::Error;

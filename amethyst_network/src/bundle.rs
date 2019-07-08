@@ -48,7 +48,7 @@ where
     /// Build the networking bundle by adding the networking system to the application.
     fn build(
         self,
-        world: &mut World,
+        _world: &mut World,
         builder: &mut DispatcherBuilder<'_, '_>,
     ) -> Result<(), Error> {
         let socket_system = NetSocketSystem::<T>::new(self.config)

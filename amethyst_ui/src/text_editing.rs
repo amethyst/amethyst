@@ -9,7 +9,7 @@ use winit::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, 
 use crate::{LineMode, Selected, TextEditing, UiEvent, UiEventType, UiText};
 use amethyst_core::{
     ecs::prelude::{
-        Entities, Join, Read, ReadStorage, Resources, System, World, Write, WriteStorage,
+        Entities, Join, Read, ReadStorage, System, World, Write, WriteStorage,
     },
     shrev::{EventChannel, ReaderId},
 };

@@ -1,7 +1,7 @@
 use amethyst_core::{
     ecs::{
         Component, DenseVecStorage, Entities, FlaggedStorage, Join, Read, ReadStorage, ReaderId,
-        Resources, System, SystemData, World, Write, WriteStorage,
+        System, SystemData, World, Write, WriteStorage,
     },
     shrev::EventChannel,
 };

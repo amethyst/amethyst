@@ -6,7 +6,7 @@ use thread_profiler::profile_scope;
 
 use amethyst_core::{
     ecs::prelude::{
-        BitSet, ComponentEvent, Join, ReadExpect, ReadStorage, ReaderId, Resources, System, World,
+        BitSet, ComponentEvent, Join, ReadExpect, ReadStorage, ReaderId, System, World,
         WriteStorage,
     },
     HierarchyEvent, Parent, ParentHierarchy,

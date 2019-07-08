@@ -1,5 +1,5 @@
 use amethyst_core::{
-    ecs::{Entity, ReadExpect, Resources, System, SystemData, World, Write, WriteStorage},
+    ecs::{Entity, ReadExpect, System, SystemData, World, Write, WriteStorage},
     shrev::{EventChannel, ReaderId},
     ParentHierarchy,
 };

@@ -5,7 +5,7 @@ use log::error;
 use amethyst_core::{
     ecs::{
         storage::ComponentEvent, BitSet, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
-        ReaderId, Resources, System, World, Write, WriteStorage,
+        ReaderId, System, World, Write, WriteStorage,
     },
     ArcThreadPool, Parent, Time,
 };

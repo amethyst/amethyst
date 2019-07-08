@@ -34,7 +34,7 @@ impl<T: BindingTypes> InputSystem<T> {
             world.res.fetch_mut::<InputHandler<T>>().bindings = bindings.clone();
         }
         InputSystem {
-            reader: reader,
+            reader,
             bindings,
         }
     }

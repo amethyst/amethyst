@@ -2,7 +2,7 @@
 
 use std::{clone::Clone, net::SocketAddr, thread};
 
-use amethyst_core::ecs::{Entities, Join, Resources, System, SystemData, WriteStorage};
+use amethyst_core::ecs::{Entities, Join, System, WriteStorage};
 
 use crossbeam_channel::{Receiver, Sender};
 use laminar::{Packet, SocketEvent};
