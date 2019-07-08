@@ -28,10 +28,16 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 * Inverted mouse wheel scroll direction event. Now using winit's standard.  ([#1767])
 * Add `load_from_data_async` to Asset Loader. ([#1753])
 * Add `SerializableFormat` marker trait which is now needed to be implemented for all the formats that are supposed to be serialized. ([#1720])
+* Make the GltfSceneOptions field of GltfSceneFormat public. ([#1791])
 
 ### Fixed
 * Fix stack overflow on serializing `Box<dyn Format<_>>`. ([#1720])
 
+### Fixed
+
+* Fix animation unwrap on missing animated component. ([#1773])
+
+[#1791]: https://github.com/amethyst/amethyst/pull/1791
 [#1766]: https://github.com/amethyst/amethyst/pull/1766
 [#1719]: https://github.com/amethyst/amethyst/pull/1719
 [#1747]: https://github.com/amethyst/amethyst/pull/1747
@@ -39,6 +45,7 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 [#1756]: https://github.com/amethyst/amethyst/pull/1756
 [#1733]: https://github.com/amethyst/amethyst/pull/1733
 [#1758]: https://github.com/amethyst/amethyst/pull/1758
+[#1773]: https://github.com/amethyst/amethyst/pull/1773
 [#1753]: https://github.com/amethyst/amethyst/pull/1753
 [#1720]: https://github.com/amethyst/amethyst/pull/1720
 
