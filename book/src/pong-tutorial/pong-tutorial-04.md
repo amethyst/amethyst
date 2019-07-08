@@ -368,7 +368,7 @@ outside of the screen when the window comes up. You might have to dramatically r
 `BALL_VELOCITY_X` in order to see that in action. This obviously isn't a good solution for an actual game.
 To fix that problem and better see what's happening we have to spawn the ball with a slight delay.
 
-## Spwaning ball with a delay
+## Spawning ball with a delay
 
 The ball now spawns and moves off screen instantly when the game starts. This might be disorienting,
 as you might be thrown into the game and lose your first point before you had the time to notice.
