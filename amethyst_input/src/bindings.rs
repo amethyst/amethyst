@@ -39,6 +39,7 @@ use super::{Axis, Button};
 ///     UsePowerup(PlayerId),
 /// }
 ///
+/// #[derive(Debug)]
 /// struct DriverBindingTypes;
 /// impl BindingTypes for DriverBindingTypes {
 ///     type Axis = AxisBinding;
