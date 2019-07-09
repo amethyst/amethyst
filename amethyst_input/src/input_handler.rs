@@ -87,44 +87,7 @@ where
                             .iter()
                             .cloned(),
                         );
-                        for (axis, input_axis) in self.bindings.axes.iter() {
-                            if let Axis::Emulated { pos, neg } = input_axis {
-                                let value = self
-                                    .axis_value(axis)
-                                    .expect("Unreachable: `axis` is from bindings axes.");
-                                match *pos {
-                                    Button::Key(key_code_pos) if key_code_pos == key_code => {
-                                        event_handler.single_write(AxisMoved {
-                                            axis: axis.clone(),
-                                            value,
-                                        });
-                                    }
-                                    Button::ScanCode(scancode_pos) if scancode_pos == scancode => {
-                                        event_handler.single_write(AxisMoved {
-                                            axis: axis.clone(),
-                                            value,
-                                        });
-                                    }
-                                    _ => {}
-                                }
-
-                                match *neg {
-                                    Button::Key(key_code_neg) if key_code_neg == key_code => {
-                                        event_handler.single_write(AxisMoved {
-                                            axis: axis.clone(),
-                                            value,
-                                        });
-                                    }
-                                    Button::ScanCode(scancode_neg) if scancode_neg == scancode => {
-                                        event_handler.single_write(AxisMoved {
-                                            axis: axis.clone(),
-                                            value,
-                                        });
-                                    }
-                                    _ => {}
-                                }
-                            }
-                        }
+                        self.send_axis_moved_events_key(event_handler, key_code, scancode);
                         for (action, combinations) in self.bindings.actions.iter() {
                             for combination in combinations.iter().filter(|c| {
                                 c.contains(&Button::Key(key_code))
@@ -162,44 +125,7 @@ where
                             .iter()
                             .cloned(),
                         );
-                        for (axis, input_axis) in self.bindings.axes.iter() {
-                            if let Axis::Emulated { pos, neg } = input_axis {
-                                let value = self
-                                    .axis_value(axis)
-                                    .expect("Unreachable: `axis` is from bindings axes.");
-                                match *pos {
-                                    Button::Key(key_code_pos) if key_code_pos == key_code => {
-                                        event_handler.single_write(AxisMoved {
-                                            axis: axis.clone(),
-                                            value,
-                                        });
-                                    }
-                                    Button::ScanCode(scancode_pos) if scancode_pos == scancode => {
-                                        event_handler.single_write(AxisMoved {
-                                            axis: axis.clone(),
-                                            value,
-                                        });
-                                    }
-                                    _ => {}
-                                }
-
-                                match *neg {
-                                    Button::Key(key_code_neg) if key_code_neg == key_code => {
-                                        event_handler.single_write(AxisMoved {
-                                            axis: axis.clone(),
-                                            value,
-                                        });
-                                    }
-                                    Button::ScanCode(scancode_neg) if scancode_neg == scancode => {
-                                        event_handler.single_write(AxisMoved {
-                                            axis: axis.clone(),
-                                            value,
-                                        });
-                                    }
-                                    _ => {}
-                                }
-                            }
-                        }
+                        self.send_axis_moved_events_key(event_handler, key_code, scancode);
                         for (action, combinations) in self.bindings.actions.iter() {
                             for combination in combinations {
                                 if combination.contains(&Button::Key(key_code))
@@ -242,36 +168,7 @@ where
                             .iter()
                             .cloned(),
                         );
-                        for (axis, input_axis) in self.bindings.axes.iter() {
-                            if let Axis::Emulated { pos, neg } = input_axis {
-                                let value = self
-                                    .axis_value(axis)
-                                    .expect("Unreachable: `axis` is from bindings axes.");
-                                match *pos {
-                                    Button::Mouse(mouse_button_pos)
-                                        if mouse_button_pos == mouse_button =>
-                                    {
-                                        event_handler.single_write(AxisMoved {
-                                            axis: axis.clone(),
-                                            value,
-                                        });
-                                    }
-                                    _ => {}
-                                }
-
-                                match *neg {
-                                    Button::Mouse(mouse_button_neg)
-                                        if mouse_button_neg == mouse_button =>
-                                    {
-                                        event_handler.single_write(AxisMoved {
-                                            axis: axis.clone(),
-                                            value,
-                                        });
-                                    }
-                                    _ => {}
-                                }
-                            }
-                        }
+                        self.send_axis_moved_events_mouse(event_handler, mouse_button);
                         for (action, combinations) in self.bindings.actions.iter() {
                             for combination in combinations
                                 .iter()
@@ -307,36 +204,7 @@ where
                             .iter()
                             .cloned(),
                         );
-                        for (axis, input_axis) in self.bindings.axes.iter() {
-                            if let Axis::Emulated { pos, neg } = input_axis {
-                                let value = self
-                                    .axis_value(axis)
-                                    .expect("Unreachable: `axis` is from bindings axes.");
-                                match *pos {
-                                    Button::Mouse(mouse_button_pos)
-                                        if mouse_button_pos == mouse_button =>
-                                    {
-                                        event_handler.single_write(AxisMoved {
-                                            axis: axis.clone(),
-                                            value,
-                                        });
-                                    }
-                                    _ => {}
-                                }
-
-                                match *neg {
-                                    Button::Mouse(mouse_button_neg)
-                                        if mouse_button_neg == mouse_button =>
-                                    {
-                                        event_handler.single_write(AxisMoved {
-                                            axis: axis.clone(),
-                                            value,
-                                        });
-                                    }
-                                    _ => {}
-                                }
-                            }
-                        }
+                        self.send_axis_moved_events_mouse(event_handler, mouse_button);
                         for (action, combinations) in self.bindings.actions.iter() {
                             for combination in combinations {
                                 if combination.contains(&Button::Mouse(mouse_button))
@@ -792,6 +660,85 @@ where
 
         // send all collected events
         event_handler.iter_write(events);
+    }
+
+    fn send_axis_moved_events_key(
+        &self,
+        event_handler: &mut EventChannel<InputEvent<T>>,
+        key_code: VirtualKeyCode,
+        scancode: u32,
+    ) {
+        for (axis, input_axis) in self.bindings.axes.iter() {
+            if let Axis::Emulated { pos, neg } = input_axis {
+                let value = self
+                    .axis_value(axis)
+                    .expect("Unreachable: `axis` is from bindings axes.");
+                match *pos {
+                    Button::Key(key_code_pos) if key_code_pos == key_code => {
+                        event_handler.single_write(AxisMoved {
+                            axis: axis.clone(),
+                            value,
+                        });
+                    }
+                    Button::ScanCode(scancode_pos) if scancode_pos == scancode => {
+                        event_handler.single_write(AxisMoved {
+                            axis: axis.clone(),
+                            value,
+                        });
+                    }
+                    _ => {}
+                }
+
+                match *neg {
+                    Button::Key(key_code_neg) if key_code_neg == key_code => {
+                        event_handler.single_write(AxisMoved {
+                            axis: axis.clone(),
+                            value,
+                        });
+                    }
+                    Button::ScanCode(scancode_neg) if scancode_neg == scancode => {
+                        event_handler.single_write(AxisMoved {
+                            axis: axis.clone(),
+                            value,
+                        });
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    fn send_axis_moved_events_mouse(
+        &self,
+        event_handler: &mut EventChannel<InputEvent<T>>,
+        mouse_button: MouseButton,
+    ) {
+        for (axis, input_axis) in self.bindings.axes.iter() {
+            if let Axis::Emulated { pos, neg } = input_axis {
+                let value = self
+                    .axis_value(axis)
+                    .expect("Unreachable: `axis` is from bindings axes.");
+                match *pos {
+                    Button::Mouse(mouse_button_pos) if mouse_button_pos == mouse_button => {
+                        event_handler.single_write(AxisMoved {
+                            axis: axis.clone(),
+                            value,
+                        });
+                    }
+                    _ => {}
+                }
+
+                match *neg {
+                    Button::Mouse(mouse_button_neg) if mouse_button_neg == mouse_button => {
+                        event_handler.single_write(AxisMoved {
+                            axis: axis.clone(),
+                            value,
+                        });
+                    }
+                    _ => {}
+                }
+            }
+        }
     }
 }
 
