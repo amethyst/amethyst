@@ -68,6 +68,7 @@ let input_bundle = InputBundle::<StringBindings>::new()
 
 # let path = "./resources/display_config.ron";
 # let config = DisplayConfig::load(&path);
+# let assets_dir = "assets";
 # struct Pong;
 # impl SimpleState for Pong { }
 let game_data = GameDataBuilder::default()
@@ -75,7 +76,7 @@ let game_data = GameDataBuilder::default()
     .with_bundle(input_bundle)?
     // ..
     ;
-let mut game = Application::new("./", Pong, game_data)?;
+let mut game = Application::new(assets_dir, Pong, game_data)?;
 game.run();
 # Ok(())
 # }
@@ -387,4 +388,4 @@ explore another key concept in real-time games: time. We'll make our game aware
 of time, and add a ball for our paddles to bounce back and forth.
 
 [doc_time]: https://docs-src.amethyst.rs/stable/amethyst_core/timing/struct.Time.html
-[doc_bindings]: https://docs-src.amethyst.rs/stable/amethyst_input/struct.Bindings.html 
+[doc_bindings]: https://docs-src.amethyst.rs/stable/amethyst_input/struct.Bindings.html
