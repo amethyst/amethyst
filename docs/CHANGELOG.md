@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 * Add `add_rectangle`, `add_rotated_rectangle`, `add_box`, `add_rotated_box`, `add_circle`, `add_rotated_circle`,
 `add_cylinder`, `add_rotated_cylinder` and `add_sphere` functions to `DebugLinesComponent`
 and the corresponding draw functions to `DebugLines`, to draw simple shapes with debug lines. ([#1766])
+* Add `EntityUuid` component for tracking entities across game sessions, and across networked machines. ([#1798])
 
 ### Changed
 
@@ -48,6 +49,7 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 [#1773]: https://github.com/amethyst/amethyst/pull/1773
 [#1753]: https://github.com/amethyst/amethyst/pull/1753
 [#1720]: https://github.com/amethyst/amethyst/pull/1720
+[#1798]: https://github.com/amethyst/amethyst/pull/1798
 
 ## [0.11.0] - 2019-06
 
