@@ -6,7 +6,12 @@
 //! identification in a networked multiplayer situation.
 
 use fnv::FnvHashMap;
-use specs::{Component, DenseVecStorage, Entity};
+use hibitset::BitSetLike;
+use shrev::ReaderId;
+use specs::{
+    storage::ComponentEvent, BitSet, Component, Entities, Entity, FlaggedStorage, ReadStorage,
+    Resources, System, SystemData, Write, WriteStorage,
+};
 use uuid::Uuid;
 
 /// An identifier for an entity which can persist across game sessions, and across machines.
@@ -21,7 +26,7 @@ pub struct EntityUuid {
 }
 
 impl Component for EntityUuid {
-    type Storage = DenseVecStorage<Self>;
+    type Storage = FlaggedStorage<Self>;
 }
 
 impl EntityUuid {
@@ -44,7 +49,7 @@ impl EntityUuid {
 }
 
 /// An ECS resource which allows you to create new EntityUuid components, and later retrieve the entities with the contained UUID.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct EntityUuidMap {
     map: FnvHashMap<Uuid, Entity>,
 }
@@ -52,9 +57,7 @@ pub struct EntityUuidMap {
 impl EntityUuidMap {
     /// Create an empty instance of this resource.
     pub fn new() -> Self {
-        Self {
-            map: FnvHashMap::default(),
-        }
+        Self::default()
     }
 
     /// Create a new EntityUuid component with a new randomly generated Uuid.
@@ -73,6 +76,59 @@ impl EntityUuidMap {
     /// Retrieve the entity associated with this Uuid, if any.
     pub fn fetch_entity(&self, uuid: &Uuid) -> Option<Entity> {
         self.map.get(uuid).cloned()
+    }
+}
+
+/// This system removes unused Uuid<->Entity mappings from the map.
+#[derive(Debug)]
+pub struct EntityUuidSystem {
+    reader: Option<ReaderId<ComponentEvent>>,
+    removed: BitSet,
+}
+
+impl EntityUuidSystem {
+    /// Create a new instance of this system.
+    pub fn new() -> Self {
+        Self {
+            reader: None,
+            removed: BitSet::new(),
+        }
+    }
+}
+
+impl<'s> System<'s> for EntityUuidSystem {
+    type SystemData = (
+        ReadStorage<'s, EntityUuid>,
+        Write<'s, EntityUuidMap>,
+        Entities<'s>,
+    );
+
+    fn setup(&mut self, res: &mut Resources) {
+        Self::SystemData::setup(res);
+        self.reader = Some(
+            res.fetch_mut::<WriteStorage<'_, EntityUuid>>()
+                .channel_mut()
+                .register_reader(),
+        );
+    }
+
+    fn run(&mut self, (storage, mut map, entities): Self::SystemData) {
+        self.removed.clear();
+        let self_events_id = &mut self
+            .reader
+            .as_mut()
+            .expect("EntityUuidSystem::setup was not called before EntityUuidSystem::run");
+        for event in storage.channel().read(self_events_id) {
+            match event {
+                ComponentEvent::Removed(id) => {
+                    self.removed.add(*id);
+                }
+                _ => {}
+            }
+        }
+        for entity in (&self.removed).iter().map(|i| entities.entity(i)) {
+            map.map.retain(|_, &mut e| e != entity);
+        }
     }
 }
 
