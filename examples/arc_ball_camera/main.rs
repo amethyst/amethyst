@@ -64,7 +64,7 @@ impl SimpleState for ExampleState {
 }
 
 struct CameraDistanceSystem {
-    event_reader: Option<ReaderId<InputEvent<String>>>,
+    event_reader: Option<ReaderId<InputEvent<StringBindings>>>,
 }
 
 impl CameraDistanceSystem {
@@ -75,7 +75,7 @@ impl CameraDistanceSystem {
 
 impl<'a> System<'a> for CameraDistanceSystem {
     type SystemData = (
-        Read<'a, EventChannel<InputEvent<String>>>,
+        Read<'a, EventChannel<InputEvent<StringBindings>>>,
         ReadStorage<'a, Transform>,
         WriteStorage<'a, ArcBallControlTag>,
     );
@@ -104,7 +104,7 @@ impl<'a> System<'a> for CameraDistanceSystem {
         Self::SystemData::setup(res);
 
         self.event_reader = Some(
-            res.fetch_mut::<EventChannel<InputEvent<String>>>()
+            res.fetch_mut::<EventChannel<InputEvent<StringBindings>>>()
                 .register_reader(),
         );
     }
