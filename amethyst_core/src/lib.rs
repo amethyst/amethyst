@@ -44,6 +44,7 @@ pub use self::{
 };
 
 pub mod bundle;
+pub mod entity_uuid;
 pub mod frame_limiter;
 pub mod timing;
 pub mod transform;

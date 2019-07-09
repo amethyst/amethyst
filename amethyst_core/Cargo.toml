@@ -33,6 +33,7 @@ specs-hierarchy = { version = "0.3" }
 shrev = "1.0"
 getset = "0.0.7"
 derive-new = "0.5.6"
+uuid = { version = "0.7", features = ["serde", "v4"] }
 
 thread_profiler = { version = "0.3", optional = true }
 
