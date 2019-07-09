@@ -12,9 +12,11 @@ use amethyst_error::Error;
 struct DummyAsset(String);
 
 impl Asset for DummyAsset {
-    const NAME: &'static str = "example::DummyAsset";
     type Data = String;
     type HandleStorage = VecStorage<Handle<DummyAsset>>;
+    fn name() -> &'static str {
+        "example::DummyAsset"
+    }
 }
 
 #[derive(Clone, Debug)]
