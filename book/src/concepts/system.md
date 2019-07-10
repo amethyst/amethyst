@@ -540,22 +540,3 @@ impl<'a> System<'a> for MyFirstSystem {
 }
 ```
 
-## The setup method
-
-Systems have a method called setup which is called a single time, before any of the system runs.
-Here is how to use it:
-
-```rust,edition2018,no_run,noplaypen
-# extern crate amethyst;
-# use amethyst::ecs::{System, Resources, SystemData, Entity};
-# struct MySystem { entity: Entity }
-# impl<'a> System<'a> for MySystem {
-#   type SystemData = ();
-#   fn run(&mut self, _: Self::SystemData) { }
-    fn setup(&mut self, res: &mut Resources) {
-        // Ensures that resources that implement `Default` and are present in your `SystemData` are added to `Resources`.
-        Self::SystemData::setup(res);
-        // Do what you want with `Resources` past this point.
-    }
-# }
-```

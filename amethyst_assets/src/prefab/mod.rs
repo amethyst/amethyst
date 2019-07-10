@@ -487,7 +487,7 @@ mod tests {
         world.add_resource(pool.clone());
         world.add_resource(Loader::new(".", pool));
         world.add_resource(Time::default());
-        let mut system = PrefabLoaderSystem::<MyPrefab>::default();
+        let mut system = PrefabLoaderSystem::<MyPrefab>::new(&mut world);
         RunNow::setup(&mut system, &mut world.res);
 
         let prefab = Prefab::new_main(Transform::default());

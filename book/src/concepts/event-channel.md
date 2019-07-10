@@ -173,7 +173,7 @@ and you also need to get read access:
 # }
 ```
 
-Then, in the `System`'s setup method:
+Then, in the `System`'s new method:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::shrev::{EventChannel, ReaderId};
@@ -183,15 +183,18 @@ Then, in the `System`'s setup method:
 #   A,
 #   B,
 # }
-# struct MySystem { reader: Option<ReaderId<MyEvent>>, }
+# struct MySystem { reader: ReaderId<MyEvent>, }
+#
+# impl MySystem {
+#    pub fn new(world: &mut World) -> Self {
+#        <Self as System<'_>>::SystemData::setup(&mut world.res);
+#        Self {
+#            reader: world.res.fetch_mut::<EventChannel<MyEvent>>().register_reader(),
+#        }
+#
 # impl<'a> amethyst::ecs::System<'a> for MySystem {
 #   type SystemData = ();
 #   fn run(&mut self, _: Self::SystemData) { }
-#   fn setup(&mut self, res: &mut amethyst::ecs::Resources) {
-    // IMPORTANT: You need to setup your system data BEFORE you try to fetch the resource. Especially if you plan use `Default` to create your resource.
-    Self::SystemData::setup(res);
-    self.reader = Some(res.fetch_mut::<EventChannel<MyEvent>>().register_reader());
-#   }
 # }
 
 ```
@@ -207,12 +210,12 @@ Finally, you can read events from your `System`.
 #   B,
 # }
 # struct MySystem {
-#   reader: Option<amethyst::shrev::ReaderId<MyEvent>>,
+#   reader: amethyst::shrev::ReaderId<MyEvent>,
 # }
 # impl<'a> amethyst::ecs::System<'a> for MySystem {
 #   type SystemData = Read<'a, EventChannel<MyEvent>>;
     fn run(&mut self, my_event_channel: Self::SystemData) {
-        for event in my_event_channel.read(self.reader.as_mut().unwrap()) {
+        for event in my_event_channel.read(&mut self.reader) {
             println!("Received an event: {:?}", event);
         }
     }

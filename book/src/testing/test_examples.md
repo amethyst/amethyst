@@ -20,24 +20,26 @@
 # #[derive(Debug)]
 # struct MySystem;
 #
+# impl MySystem {
+#     pub fn new(world: &mut World) -> Self {
+#         <Self as System<'_>>::SystemData::setup(&mut world.res);
+#         world.res.insert(ApplicationResource);
+#         Self
+#     }
+#
 # impl<'s> System<'s> for MySystem {
 #     type SystemData = ReadExpect<'s, ApplicationResource>;
 #
 #     fn run(&mut self, _: Self::SystemData) {}
-#
-#     fn setup(&mut self, res: &mut Resources) {
-#         Self::SystemData::setup(res);
-#         res.insert(ApplicationResource);
-#     }
 # }
 #
 #[derive(Debug)]
 struct MyBundle;
 
 impl<'a, 'b> SystemBundle<'a, 'b> for MyBundle {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         // System that adds `ApplicationResource` to the `World`
-        builder.add(MySystem, "my_system", &[]);
+        builder.add(MySystem::new(&mut world), "my_system", &[]);
         Ok(())
     }
 }
