@@ -340,7 +340,7 @@ pub struct TargetPlanContext<'a, B: Backend> {
     colors: usize,
     depth: bool,
     actions: Vec<(i32, RenderableAction<B>)>,
-    deps: Vec<Target>,
+    deps: Vec<NodeId>,
 }
 
 impl<'a, B: Backend> TargetPlanContext<'a, B> {
@@ -385,7 +385,9 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
     /// retreiving it would result in a dependency cycle.
     pub fn get_image(&mut self, image: TargetImage) -> Result<ImageId, Error> {
         self.plan_context.get_image(image).map(|i| {
-            self.add_dep(image.target());
+            let node = self.plan_context.get_pass_node_raw(image.target())
+                .expect("Image without target node");
+            self.add_dep(node);
             i
         })
     }
@@ -396,17 +398,29 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
     pub fn try_get_image(&mut self, image: TargetImage) -> Result<Option<ImageId>, Error> {
         self.plan_context.try_get_image(image).map(|i| {
             i.map(|i| {
-                self.add_dep(image.target());
+                let node = self.plan_context.get_pass_node_raw(image.target())
+                    .expect("Image without target node");
+                self.add_dep(node);
                 i
             })
         })
     }
 
-    /// Add explicit dependency on another target.
-    pub fn add_dep(&mut self, target: Target) {
-        if !self.deps.contains(&target) {
-            self.deps.push(target);
+    /// Add explicit dependency on another node.
+    /// 
+    /// This is done automatically when you use `get_image`.
+    pub fn add_dep(&mut self, node: NodeId) {
+        if !self.deps.contains(&node) {
+            self.deps.push(node);
         }
+    }
+    
+    /// Access underlying rendy's GraphBuilder directly.
+    /// This is useful for adding custom rendering nodes
+    /// that are not just standard graphics render passes,
+    /// e.g. for compute dispatch.
+    pub fn graph(&mut self) -> &mut GraphBuilder<B, Resources> {
+        self.plan_context.graph()
     }
 }
 
@@ -602,10 +616,8 @@ impl<B: Backend> TargetPlan<B> {
             subpass.set_depth_stencil(node);
         }
 
-        for dep in deps {
-            if let Some(node) = ctx.get_pass_node_raw(dep) {
-                subpass.add_dependency(node);
-            }
+        for node in deps {
+            subpass.add_dependency(node);
         }
 
         pass.add_subpass(subpass);
