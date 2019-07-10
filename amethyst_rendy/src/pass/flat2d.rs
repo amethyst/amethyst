@@ -108,7 +108,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
         let (
             sprite_sheet_storage,
             tex_storage,
-            visibilities,
+            visibility,
             hiddens,
             hidden_props,
             sprite_renders,
@@ -116,7 +116,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
         ) = <(
             Read<'_, AssetStorage<SpriteSheet>>,
             Read<'_, AssetStorage<Texture>>,
-            Option<Read<'_, SpriteVisibility>>,
+            ReadExpect<'_, SpriteVisibility>,
             ReadStorage<'_, Hidden>,
             ReadStorage<'_, HiddenPropagate>,
             ReadStorage<'_, SpriteRender>,
@@ -130,57 +130,30 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
 
         sprites_ref.clear_inner();
 
-        match visibilities {
-            None => {
-                #[cfg(feature = "profiler")]
-                profile_scope!("gather_novisibility");
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("gather_visibility");
 
-                (&sprite_renders, &transforms, !&hiddens, !&hidden_props)
-                    .join()
-                    .filter_map(|(sprite_render, global, _, _)| {
-                        let (batch_data, texture) = SpriteArgs::from_data(
-                            &tex_storage,
-                            &sprite_sheet_storage,
-                            &sprite_render,
-                            &global,
-                        )?;
-                        let (tex_id, _) = textures_ref.insert(
-                            factory,
-                            resources,
-                            texture,
-                            hal::image::Layout::ShaderReadOnlyOptimal,
-                        )?;
-                        Some((tex_id, batch_data))
-                    })
-                    .for_each_group(|tex_id, batch_data| {
-                        sprites_ref.insert(tex_id, batch_data.drain(..))
-                    });
-            }
-            Some(ref visibility) => {
-                #[cfg(feature = "profiler")]
-                profile_scope!("gather_visibility");
-
-                (&sprite_renders, &transforms, &visibility.visible_unordered)
-                    .join()
-                    .filter_map(|(sprite_render, global, _)| {
-                        let (batch_data, texture) = SpriteArgs::from_data(
-                            &tex_storage,
-                            &sprite_sheet_storage,
-                            &sprite_render,
-                            &global,
-                        )?;
-                        let (tex_id, _) = textures_ref.insert(
-                            factory,
-                            resources,
-                            texture,
-                            hal::image::Layout::ShaderReadOnlyOptimal,
-                        )?;
-                        Some((tex_id, batch_data))
-                    })
-                    .for_each_group(|tex_id, batch_data| {
-                        sprites_ref.insert(tex_id, batch_data.drain(..))
-                    });
-            }
+            (&sprite_renders, &transforms, &visibility.visible_unordered)
+                .join()
+                .filter_map(|(sprite_render, global, _)| {
+                    let (batch_data, texture) = SpriteArgs::from_data(
+                        &tex_storage,
+                        &sprite_sheet_storage,
+                        &sprite_render,
+                        &global,
+                    )?;
+                    let (tex_id, _) = textures_ref.insert(
+                        factory,
+                        resources,
+                        texture,
+                        hal::image::Layout::ShaderReadOnlyOptimal,
+                    )?;
+                    Some((tex_id, batch_data))
+                })
+                .for_each_group(|tex_id, batch_data| {
+                    sprites_ref.insert(tex_id, batch_data.drain(..))
+                });
         }
 
         self.textures.maintain(factory, resources);

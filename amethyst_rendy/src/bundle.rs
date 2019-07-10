@@ -90,14 +90,14 @@ impl<B: Backend> GraphCreator<B> for RenderingBundleGraphCreator<B> {
         for plugin in self.plugins.iter_mut() {
             plugin.plan(&mut plan, factory, res).unwrap();
         }
-        plan.build().unwrap()
+        plan.build(factory).unwrap()
     }
 }
 
 /// Basic building block of rendering in [RenderingBundle].
 ///
 /// Can be used to register rendering-related systems to the dispatcher,
-/// building render graph by registering render targets, adding [RenedrableAction]s to them
+/// building render graph by registering render targets, adding [RenderableAction]s to them
 /// and signalling when the graph has to be rebuild.
 pub trait RenderPlugin<B: Backend>: std::fmt::Debug {
     /// Hook for adding systems and bundles to the dispatcher.
@@ -173,8 +173,13 @@ impl<B: Backend> RenderPlan<B> {
         target_plan.add_extension(Box::new(closure));
     }
 
-    fn build(self) -> Result<GraphBuilder<B, Resources>, Error> {
+    fn build(self, factory: &Factory<B>) -> Result<GraphBuilder<B, Resources>, Error> {
         let mut ctx = PlanContext {
+            target_metadata: self
+                .targets
+                .iter()
+                .filter_map(|(k, t)| unsafe { t.metadata(factory.physical()) }.map(|m| (*k, m)))
+                .collect(),
             targets: self.targets,
             passes: Default::default(),
             outputs: Default::default(),
@@ -211,9 +216,17 @@ impl EvaluationState {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+struct TargetMetadata {
+    width: u32,
+    height: u32,
+    layers: u16,
+}
+
 #[derive(Debug)]
 struct PlanContext<B: Backend> {
     targets: HashMap<Target, TargetPlan<B>>,
+    target_metadata: HashMap<Target, TargetMetadata>,
     passes: HashMap<Target, EvaluationState>,
     outputs: HashMap<TargetImage, ImageId>,
     graph_builder: GraphBuilder<B, Resources>,
@@ -237,10 +250,6 @@ impl<B: Backend> PlanContext<B> {
         Ok(())
     }
 
-    fn get_pass_node(&self, target: Target) -> Option<NodeId> {
-        self.passes.get(&target).and_then(|p| p.node())
-    }
-
     fn submit_pass(
         &mut self,
         target: Target,
@@ -258,6 +267,28 @@ impl<B: Backend> PlanContext<B> {
         let node = self.graph_builder.add_node(pass);
         self.passes.insert(target, EvaluationState::Built(node));
         Ok(())
+    }
+
+    fn get_pass_node_raw(&self, target: Target) -> Option<NodeId> {
+        self.passes.get(&target).and_then(|p| p.node())
+    }
+
+    pub fn get_pass_node(&mut self, target: Target) -> Result<NodeId, Error> {
+        match self.get_pass_node_raw(target) {
+            Some(node) => Ok(node),
+            None => {
+                self.evaluate_target(target)?;
+                Ok(self
+                    .passes
+                    .get(&target)
+                    .and_then(|p| p.node())
+                    .expect("Just built"))
+            }
+        }
+    }
+
+    pub fn target_metadata(&self, target: Target) -> Option<TargetMetadata> {
+        self.target_metadata.get(&target).copied()
     }
 
     fn get_image(&mut self, image_ref: TargetImage) -> Result<ImageId, Error> {
@@ -291,6 +322,10 @@ impl<B: Backend> PlanContext<B> {
         Ok(())
     }
 
+    pub fn graph(&mut self) -> &mut GraphBuilder<B, Resources> {
+        &mut self.graph_builder
+    }
+
     pub fn create_image(&mut self, options: ImageOptions) -> ImageId {
         self.graph_builder
             .create_image(options.kind, options.levels, options.format, options.clear)
@@ -304,7 +339,7 @@ pub struct TargetPlanContext<'a, B: Backend> {
     key: Target,
     colors: usize,
     depth: bool,
-    actions: Vec<(i32, RenedrableAction<B>)>,
+    actions: Vec<(i32, RenderableAction<B>)>,
     deps: Vec<Target>,
 }
 
@@ -443,6 +478,55 @@ impl<B: Backend> TargetPlan<B> {
         }
     }
 
+    // safety:
+    // * `physical_device` must be created from same `Instance` as the `Surface` present in output
+    unsafe fn metadata(&self, physical_device: &B::PhysicalDevice) -> Option<TargetMetadata> {
+        self.outputs
+            .as_ref()
+            .map(|TargetPlanOutputs { colors, depth }| {
+                use std::cmp::min;
+                let mut framebuffer_width = u32::max_value();
+                let mut framebuffer_height = u32::max_value();
+                let mut framebuffer_layers = u16::max_value();
+
+                for color in colors {
+                    match color {
+                        OutputColor::Surface(surface, _) => {
+                            if let Some(extent) = surface.extent(physical_device) {
+                                framebuffer_width = min(framebuffer_width, extent.width);
+                                framebuffer_height = min(framebuffer_height, extent.height);
+                                framebuffer_layers = min(framebuffer_layers, 1);
+                            } else {
+                                // Window was just closed, using size of 1 is the least bad option
+                                // to default to. The output won't be used, things won't crash and
+                                // graph is either going to be destroyed or rebuilt next frame.
+                                framebuffer_width = min(framebuffer_width, 1);
+                                framebuffer_height = min(framebuffer_height, 1);
+                            }
+                            framebuffer_layers = min(framebuffer_layers, 1);
+                        }
+                        OutputColor::Image(options) => {
+                            let extent = options.kind.extent();
+                            framebuffer_width = min(framebuffer_width, extent.width);
+                            framebuffer_height = min(framebuffer_height, extent.height);
+                            framebuffer_layers = min(framebuffer_layers, options.kind.num_layers());
+                        }
+                    };
+                }
+                if let Some(options) = depth {
+                    let extent = options.kind.extent();
+                    framebuffer_width = min(framebuffer_width, extent.width);
+                    framebuffer_height = min(framebuffer_height, extent.height);
+                    framebuffer_layers = min(framebuffer_layers, options.kind.num_layers());
+                }
+                TargetMetadata {
+                    width: framebuffer_width,
+                    height: framebuffer_height,
+                    layers: framebuffer_layers,
+                }
+            })
+    }
+
     fn set_outputs(&mut self, outputs: TargetPlanOutputs<B>) -> Result<(), Error> {
         if self.outputs.is_some() {
             return Err(format_err!("Target {:?} already defined.", self.key));
@@ -477,15 +561,13 @@ impl<B: Backend> TargetPlan<B> {
             depth: outputs.depth.is_some(),
             deps: vec![],
         };
-        
+
         for extension in self.extensions {
             extension(&mut target_ctx)?;
         }
 
         let TargetPlanContext {
-            mut actions,
-            deps,
-            ..
+            mut actions, deps, ..
         } = target_ctx;
 
         let mut subpass = SubpassBuilder::new();
@@ -494,7 +576,7 @@ impl<B: Backend> TargetPlan<B> {
         actions.sort_by_key(|a| a.0);
         for action in actions.drain(..).map(|a| a.1) {
             match action {
-                RenedrableAction::RenderGroup(group) => {
+                RenderableAction::RenderGroup(group) => {
                     subpass.add_dyn_group(group);
                 }
             }
@@ -521,7 +603,7 @@ impl<B: Backend> TargetPlan<B> {
         }
 
         for dep in deps {
-            if let Some(node) = ctx.get_pass_node(dep) {
+            if let Some(node) = ctx.get_pass_node_raw(dep) {
                 subpass.add_dependency(node);
             }
         }
@@ -537,43 +619,43 @@ impl<B: Backend> TargetPlan<B> {
 ///
 /// TODO: more actions needed for e.g. splitting pass into subpasses.
 #[derive(Debug)]
-pub enum RenedrableAction<B: Backend> {
+pub enum RenderableAction<B: Backend> {
     /// Register single render group for evaluation during target rendering
     RenderGroup(Box<dyn RenderGroupBuilder<B, Resources>>),
 }
 
-impl<B: Backend> RenedrableAction<B> {
+impl<B: Backend> RenderableAction<B> {
     fn colors(&self) -> usize {
         match self {
-            RenedrableAction::RenderGroup(g) => g.colors(),
+            RenderableAction::RenderGroup(g) => g.colors(),
         }
     }
 
     fn depth(&self) -> bool {
         match self {
-            RenedrableAction::RenderGroup(g) => g.depth(),
+            RenderableAction::RenderGroup(g) => g.depth(),
         }
     }
 }
 
-/// Trait for easy conversion of various types into `RenedrableAction` shell.
+/// Trait for easy conversion of various types into `RenderableAction` shell.
 pub trait IntoAction<B: Backend> {
-    /// Convert to `RenedrableAction`.
-    fn into(self) -> RenedrableAction<B>;
+    /// Convert to `RenderableAction`.
+    fn into(self) -> RenderableAction<B>;
 }
 
 impl<B: Backend, G: RenderGroupBuilder<B, Resources> + 'static> IntoAction<B> for G {
-    fn into(self) -> RenedrableAction<B> {
-        RenedrableAction::RenderGroup(Box::new(self))
+    fn into(self) -> RenderableAction<B> {
+        RenderableAction::RenderGroup(Box::new(self))
     }
 }
 
-/// Collection of predefined constants for action ordering in the targets.
+/// Collection of predefined constants for action ordering in the builtin targets.
 /// Two actions with the same order will be applied in their insertion order.
 /// The list is provided mostly as a comparison point. If you can't find the exact
 /// ordering you need, provide custom `i32` that fits into the right place.
 ///
-/// Crates that provide custom render plugins using their own orders should export
+/// Modules that provide custom render plugins using their own orders should export
 /// similar enum with ordering they have added.
 #[derive(Debug)]
 #[repr(i32)]
@@ -605,11 +687,18 @@ impl Into<i32> for RenderOrder {
 }
 
 /// An identifier for render target used in render plugins.
+/// Predefined targets are part of default rendering flow
+/// used by builtin amethyst render plugins, but the list
+/// can be arbitrarily extended for custom usage in user
+/// plugins using custom str identifiers.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Target {
     /// Default render target for most operations.
     /// Usually the one that gets presented to the window.
     Main,
+    /// Render target for shadow mapping.
+    /// Builtin plugins use cascaded shadow maps.
+    ShadowMap,
     /// Custom render target identifier.
     Custom(&'static str),
 }

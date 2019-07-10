@@ -37,7 +37,7 @@ use amethyst::{
         transparent::Transparent,
         types::{DefaultBackend, Mesh, Texture},
         visibility::BoundingSphere,
-        RenderFlat2D, RenderPbr3D, RenderSkybox, RenderToWindow, RenderingBundle, RenderDebugLines,
+        RenderDebugLines, RenderFlat2D, RenderPbr3D, RenderSkybox, RenderToWindow, RenderingBundle,
     },
     utils::{
         application_root_dir,

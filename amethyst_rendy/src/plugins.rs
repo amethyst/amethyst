@@ -225,7 +225,10 @@ impl<B: Backend> RenderPlugin<B> for RenderDebugLines {
         _res: &Resources,
     ) -> Result<(), Error> {
         plan.extend_target(self.target, |ctx| {
-            ctx.add(RenderOrder::AfterOpaque, DrawDebugLinesDesc::new().builder())?;
+            ctx.add(
+                RenderOrder::AfterOpaque,
+                DrawDebugLinesDesc::new().builder(),
+            )?;
             Ok(())
         });
         Ok(())

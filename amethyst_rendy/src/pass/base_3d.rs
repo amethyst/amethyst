@@ -197,7 +197,7 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, Resources> for DrawBase3D<B, T
             tints,
         ) = <(
             Read<AssetStorage<Mesh>>,
-            Option<Read<Visibility>>,
+            ReadExpect<Visibility>,
             ReadStorage<Transparent>,
             ReadStorage<Hidden>,
             ReadStorage<HiddenPropagate>,
@@ -221,94 +221,44 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, Resources> for DrawBase3D<B, T
         let skinned_ref = &mut self.skinned_batches;
 
         let static_input = || ((&materials, &meshes, &transforms, tints.maybe()), !&joints);
-
         let skinned_input = || (&materials, &meshes, &transforms, tints.maybe(), &joints);
-
-        match &visibility {
-            None => {
-                profile_scope_impl!("gather_novisibility");
-
-                (static_input(), (!&hiddens, !&hiddens_prop, !&transparent))
-                    .join()
-                    .map(|(((mat, mesh, tform, tint), _), _)| {
-                        ((mat, mesh.id()), VertexArgs::from_object_data(tform, tint))
-                    })
-                    .for_each_group(|(mat, mesh_id), data| {
-                        if mesh_storage.contains_id(mesh_id) {
-                            if let Some((mat, _)) = materials_ref.insert(factory, resources, mat) {
-                                statics_ref.insert(mat, mesh_id, data.drain(..));
-                            }
+        {
+            profile_scope_impl!("prepare");
+            (static_input(), &visibility.visible_unordered)
+                .join()
+                .map(|(((mat, mesh, tform, tint), _), _)| {
+                    ((mat, mesh.id()), VertexArgs::from_object_data(tform, tint))
+                })
+                .for_each_group(|(mat, mesh_id), data| {
+                    if mesh_storage.contains_id(mesh_id) {
+                        if let Some((mat, _)) = materials_ref.insert(factory, resources, mat) {
+                            statics_ref.insert(mat, mesh_id, data.drain(..));
                         }
-                    });
+                    }
+                });
+        }
+        if self.pipeline_skinned.is_some() {
+            profile_scope_impl!("prepare_skinning");
 
-                if self.pipeline_skinned.is_some() {
-                    profile_scope_impl!("gather_novisibility_skinning");
-
-                    (skinned_input(), (!&hiddens, !&hiddens_prop))
-                        .join()
-                        .map(|((mat, mesh, tform, tint, joints), _)| {
-                            (
-                                (mat, mesh.id()),
-                                SkinnedVertexArgs::from_object_data(
-                                    tform,
-                                    tint,
-                                    skinning_ref.insert(joints),
-                                ),
-                            )
-                        })
-                        .for_each_group(|(mat, mesh_id), data| {
-                            if mesh_storage.contains_id(mesh_id) {
-                                if let Some((mat, _)) =
-                                    materials_ref.insert(factory, resources, mat)
-                                {
-                                    skinned_ref.insert(mat, mesh_id, data.drain(..));
-                                }
-                            }
-                        });
-                }
-            }
-            Some(visibility) => {
-                profile_scope_impl!("prepare_visibility");
-
-                (static_input(), &visibility.visible_unordered)
-                    .join()
-                    .map(|(((mat, mesh, tform, tint), _), _)| {
-                        ((mat, mesh.id()), VertexArgs::from_object_data(tform, tint))
-                    })
-                    .for_each_group(|(mat, mesh_id), data| {
-                        if mesh_storage.contains_id(mesh_id) {
-                            if let Some((mat, _)) = materials_ref.insert(factory, resources, mat) {
-                                statics_ref.insert(mat, mesh_id, data.drain(..));
-                            }
+            (skinned_input(), &visibility.visible_unordered)
+                .join()
+                .map(|((mat, mesh, tform, tint, joints), _)| {
+                    (
+                        (mat, mesh.id()),
+                        SkinnedVertexArgs::from_object_data(
+                            tform,
+                            tint,
+                            skinning_ref.insert(joints),
+                        ),
+                    )
+                })
+                .for_each_group(|(mat, mesh_id), data| {
+                    if mesh_storage.contains_id(mesh_id) {
+                        if let Some((mat, _)) = materials_ref.insert(factory, resources, mat) {
+                            skinned_ref.insert(mat, mesh_id, data.drain(..));
                         }
-                    });
-
-                if self.pipeline_skinned.is_some() {
-                    profile_scope_impl!("prepare_visibility_skinning");
-
-                    (skinned_input(), &visibility.visible_unordered)
-                        .join()
-                        .map(|((mat, mesh, tform, tint, joints), _)| {
-                            (
-                                (mat, mesh.id()),
-                                SkinnedVertexArgs::from_object_data(
-                                    tform,
-                                    tint,
-                                    skinning_ref.insert(joints),
-                                ),
-                            )
-                        })
-                        .for_each_group(|(mat, mesh_id), data| {
-                            if mesh_storage.contains_id(mesh_id) {
-                                if let Some((mat, _)) =
-                                    materials_ref.insert(factory, resources, mat)
-                                {
-                                    skinned_ref.insert(mat, mesh_id, data.drain(..));
-                                }
-                            }
-                        });
-                }
-            }
+                    }
+                });
         };
 
         {
