@@ -14,7 +14,7 @@
 use amethyst_assets::{Asset, Format, Handle};
 use amethyst_core::ecs::prelude::VecStorage;
 use amethyst_error::Error;
-use fluent::bundle::FluentBundle;
+pub use fluent::*;
 use serde::{Deserialize, Serialize};
 
 /// Loads the strings from localisation files.
@@ -32,11 +32,9 @@ impl Format<Locale> for LocaleFormat {
     fn import_simple(&self, bytes: Vec<u8>) -> Result<Locale, Error> {
         let s = String::from_utf8(bytes)?;
 
-        let mut bundle = FluentBundle::new::<&'static str>(&[]);
-        bundle
-            .add_messages(&s)
-            .expect("Error creating fluent bundle!");
-        Ok(Locale { bundle })
+        let resource = FluentResource::try_new(s).expect("Failed to parse locale data");
+
+        Ok(Locale{resource})
     }
 }
 
@@ -46,8 +44,8 @@ pub type LocaleHandle = Handle<Locale>;
 /// A loaded locale.
 #[allow(missing_debug_implementations)]
 pub struct Locale {
-    /// The message context.
-    pub bundle: FluentBundle<'static>,
+    /// The backing fluent resource.
+    pub resource: FluentResource,
 }
 
 impl Asset for Locale {
