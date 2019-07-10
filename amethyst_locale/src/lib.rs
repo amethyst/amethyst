@@ -34,7 +34,7 @@ impl Format<Locale> for LocaleFormat {
 
         let resource = FluentResource::try_new(s).expect("Failed to parse locale data");
 
-        Ok(Locale{resource})
+        Ok(Locale { resource })
     }
 }
 
