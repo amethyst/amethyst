@@ -273,7 +273,7 @@ impl<B: Backend> PlanContext<B> {
         self.passes.get(&target).and_then(|p| p.node())
     }
 
-    pub fn get_pass_node(&mut self, target: Target) -> Result<NodeId, Error> {
+    pub fn get_node(&mut self, target: Target) -> Result<NodeId, Error> {
         match self.get_pass_node_raw(target) {
             Some(node) => Ok(node),
             None => {
@@ -311,7 +311,7 @@ impl<B: Backend> PlanContext<B> {
         Ok(self.outputs.get(&image_ref).cloned())
     }
 
-    pub fn register_output(&mut self, output: TargetImage, image: ImageId) -> Result<(), Error> {
+    fn register_output(&mut self, output: TargetImage, image: ImageId) -> Result<(), Error> {
         if self.outputs.contains_key(&output) {
             return Err(format_err!(
                 "Trying to register already registered output image {:?}",
@@ -421,6 +421,16 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
     /// e.g. for compute dispatch.
     pub fn graph(&mut self) -> &mut GraphBuilder<B, Resources> {
         self.plan_context.graph()
+    }
+
+    /// Retreive render target metadata, e.g. size. 
+    pub fn target_metadata(&self, target: Target) -> Option<TargetMetadata> {
+        self.plan_context.target_metadata(target)
+    }
+
+    /// Access computed NodeId of render target.
+    pub fn get_node(&mut self, target: Target) -> Result<NodeId, Error> {
+        self.plan_context.get_node(target)
     }
 }
 
