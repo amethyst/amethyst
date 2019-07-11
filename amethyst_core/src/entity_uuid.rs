@@ -6,57 +6,14 @@
 //! identification in a networked multiplayer situation.
 
 use fnv::FnvHashMap;
-use specs::{
-    Component, Entity, FlaggedStorage,
-    System, Write,
-};
-use serde::{Deserialize, Serialize};
+use specs::{Entity, Entities, System, Write};
 use uuid::Uuid;
 
-use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
-
-/// An identifier for an entity which can persist across game sessions, and across machines.
-///
-/// These properties make it useful for serializing a reference to an entity to disk, such as saving the game, or for
-/// identification in a networked multiplayer situation.
-///
-/// Once the Uuid is initialized in this structure it should not be altered.
-#[derive(Debug, Deserialize, Serialize)]
-pub struct EntityUuid {
-    uuid: Uuid,
-    #[serde(skip)]
-    dead_signal: Arc<AtomicBool>,
-}
-
-impl Component for EntityUuid {
-    type Storage = FlaggedStorage<Self>;
-}
-
-impl EntityUuid {
-    /// Create a new instance with a pre-defined Uuid, typically the Uuid would be deserialized from the disk or network.
-    fn new_from_uuid(uuid: Uuid) -> Self {
-        Self {
-            uuid,
-            dead_signal: Arc::new(AtomicBool::new(false)),
-        }
-    }
-
-    /// Retrieve the Uuid structure contained in this component.
-    pub fn uuid(&self) -> &Uuid {
-        &self.uuid
-    }
-}
-
-impl Drop for EntityUuid {
-    fn drop(&mut self) {
-        self.dead_signal.store(true, Ordering::Relaxed);
-    }
-}
-
-/// An ECS resource which allows you to create new EntityUuid components, and later retrieve the entities with the contained UUID.
+/// An ECS resource that presents a bi-directional mapping between Uuids and Entities.
 #[derive(Debug, Default)]
 pub struct EntityUuidMap {
-    map: FnvHashMap<Uuid, (Entity, Arc<AtomicBool>)>,
+    uuid_to_entity: FnvHashMap<Uuid, Entity>,
+    entity_to_uuid: FnvHashMap<Entity, Uuid>,
 }
 
 impl EntityUuidMap {
@@ -65,21 +22,55 @@ impl EntityUuidMap {
         Self::default()
     }
 
-    /// Create a new EntityUuid component with a new randomly generated Uuid.
-    pub fn new_uuid(&mut self, e: Entity) -> EntityUuid {
-        self.with_uuid(Uuid::new_v4(), e)
+    /// Create a new Uuid and associate it with the entity given.
+    pub fn new_uuid(&mut self, e: Entity) -> Uuid {
+        let u = Uuid::new_v4();
+        self.add_relationship(u, e);
+        u
     }
 
-    /// Create a new EntityUuid component with a pre-defined Uuid, typically the Uuid would be deserialized from the disk or network.
-    pub fn with_uuid(&mut self, uuid: Uuid, e: Entity) -> EntityUuid {
-        let r = EntityUuid::new_from_uuid(uuid);
-        self.map.insert(uuid, (e, r.dead_signal.clone()));
-        r
+    /// Create a new relationship between an Entity and a Uuid.
+    pub fn add_relationship(&mut self, uuid: Uuid, e: Entity) {
+        self.uuid_to_entity.insert(uuid, e);
+        self.entity_to_uuid.insert(e, uuid);
     }
 
     /// Retrieve the entity associated with this Uuid, if any.
     pub fn fetch_entity(&self, uuid: &Uuid) -> Option<Entity> {
-        self.map.get(uuid).map(|v| &v.0).cloned()
+        self.uuid_to_entity.get(uuid).cloned()
+    }
+
+    /// Retrieve the Uuid associated with this entity, if any.
+    pub fn fetch_uuid(&self, entity: Entity) -> Option<&Uuid> {
+        self.entity_to_uuid.get(&entity)
+    }
+
+    /// Remove the relationship containing this Uuid. Returns true if
+    /// successful.
+    pub fn remove_by_uuid(&mut self, uuid: &Uuid) -> bool {
+        if let Some(e) = self.fetch_entity(uuid) {
+            self.entity_to_uuid.remove(&e);
+            self.uuid_to_entity.remove(uuid);
+            return true;
+        }
+        false
+    }
+
+    /// Remove the relationship containing this Entity. Returns true if
+    /// successful.
+    pub fn remove_by_entity(&mut self, e: Entity) -> bool {
+        if let Some(u) = self.fetch_uuid(e).cloned() {
+            self.entity_to_uuid.remove(&e);
+            self.uuid_to_entity.remove(&u);
+            return true;
+        }
+        false
+    }
+
+    /// Clear out old mappings that are no longer useful.
+    pub fn maintain(&mut self, entities: &Entities<'_>) {
+        self.entity_to_uuid.retain(|e, _u| entities.is_alive(*e));
+        self.uuid_to_entity.retain(|_u, e| entities.is_alive(*e));
     }
 }
 
@@ -88,71 +79,65 @@ impl EntityUuidMap {
 pub struct EntityUuidSystem;
 
 impl<'s> System<'s> for EntityUuidSystem {
-    type SystemData = Write<'s, EntityUuidMap>;
+    type SystemData = (
+        Write<'s, EntityUuidMap>,
+        Entities<'s>,
+    );
 
-    fn run(&mut self, mut map: Self::SystemData) {
-        map.map.retain(|_, (_, a)| !a.load(Ordering::Relaxed));
+    fn run(&mut self, (mut map, entities): Self::SystemData) {
+        map.maintain(&entities);
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use specs::{world::Builder, World, DispatcherBuilder};
-    use uuid::Uuid;
+    use specs::{World, world::Builder, System, SystemData};
 
     #[test]
     fn test_uuid_map() {
         let mut w = World::new();
-        w.register::<EntityUuid>();
-        let mut d = DispatcherBuilder::new()
-            .with(EntityUuidSystem, "entity_uuid", &[])
-            .build();
-        d.setup(&mut w.res);
+        w.add_resource(EntityUuidMap::new());
         let e1 = w.create_entity().build();
         let e2 = w.create_entity().build();
-        let uc1 = w.write_resource::<EntityUuidMap>().new_uuid(e1);
-        let u1 = uc1.uuid().clone();
-        let uc2 = w.write_resource::<EntityUuidMap>().new_uuid(e2);
-        let u2 = uc2.uuid().clone();
-        w.write_storage::<EntityUuid>().insert(e1, uc1).unwrap();
-        w.write_storage::<EntityUuid>().insert(e2, uc2).unwrap();
-        assert_ne!(u1, u2);
-        assert_eq!(w.read_resource::<EntityUuidMap>().fetch_entity(&u1), Some(e1));
-        assert_eq!(w.read_resource::<EntityUuidMap>().fetch_entity(&u2), Some(e2));
-        let u = Uuid::new_v4();
-        let e3 = w.create_entity().build();
-        let uc3 = w.write_resource::<EntityUuidMap>().with_uuid(u, e3);
-        let u3 = uc3.uuid().clone();
-        w.write_storage::<EntityUuid>().insert(e3, uc3).unwrap();
-        assert_eq!(u3, u);
-        assert_eq!(w.read_resource::<EntityUuidMap>().fetch_entity(&u), Some(e3));
+        let u3;
+        let u4;
+        {
+            let mut e = w.write_resource::<EntityUuidMap>();
+            let u1 = e.new_uuid(e1);
+            let u2 = e.new_uuid(e2);
+            assert_eq!(e.fetch_entity(&u1), Some(e1));
+            assert_eq!(e.fetch_entity(&u2), Some(e2));
+            assert_eq!(e.fetch_uuid(e1), Some(&u1));
+            assert_eq!(e.fetch_uuid(e2), Some(&u2));
+            assert!(e.remove_by_entity(e1));
+            assert_eq!(e.fetch_entity(&u1), None);
+            assert_eq!(e.fetch_entity(&u2), Some(e2));
+            assert_eq!(e.fetch_uuid(e1), None);
+            assert_eq!(e.fetch_uuid(e2), Some(&u2));
+            assert!(e.remove_by_uuid(&u2));
+            assert_eq!(e.fetch_entity(&u1), None);
+            assert_eq!(e.fetch_entity(&u2), None);
+            assert_eq!(e.fetch_uuid(e1), None);
+            assert_eq!(e.fetch_uuid(e2), None);
+            u3 = Uuid::new_v4();
+            u4 = Uuid::new_v4();
+            e.add_relationship(u3, e1);
+            e.add_relationship(u4, e2);
+            assert_eq!(e.fetch_entity(&u3), Some(e1));
+            assert_eq!(e.fetch_entity(&u4), Some(e2));
+            assert_eq!(e.fetch_uuid(e1), Some(&u3));
+            assert_eq!(e.fetch_uuid(e2), Some(&u4));
+        }
+        
         w.delete_entity(e1).unwrap();
-        d.dispatch(&mut w.res);
-        assert_eq!(w.read_resource::<EntityUuidMap>().fetch_entity(&u1), None);
-        assert_eq!(w.read_resource::<EntityUuidMap>().fetch_entity(&u2), Some(e2));
-        assert_eq!(w.read_resource::<EntityUuidMap>().fetch_entity(&u3), Some(e3));
-
-        // Now we're going to create an entity with a UUID, delete it, and then
-        // make another in the same frame. Since we're only checking by id
-        // in the system, this makes sure we don't risk deleting a UUID
-        // if the entity index were to be re-used.
-        let e4 = w.create_entity().build();
-        let uc4 = w.write_resource::<EntityUuidMap>().new_uuid(e4);
-        let u4 = uc4.uuid().clone();
-        w.write_storage::<EntityUuid>().insert(e4, uc4).unwrap();
-        w.delete_entity(e4).unwrap();
-        let e5 = w.create_entity().build();
-        let uc5 = w.write_resource::<EntityUuidMap>().new_uuid(e5);
-        let u5 = uc5.uuid().clone();
-        w.write_storage::<EntityUuid>().insert(e5, uc5).unwrap();
-        d.dispatch(&mut w.res);
-        assert_eq!(w.read_resource::<EntityUuidMap>().fetch_entity(&u1), None);
-        assert_eq!(w.read_resource::<EntityUuidMap>().fetch_entity(&u2), Some(e2));
-        assert_eq!(w.read_resource::<EntityUuidMap>().fetch_entity(&u3), Some(e3));
-        assert_eq!(w.read_resource::<EntityUuidMap>().fetch_entity(&u4), None);
-        assert_eq!(w.read_resource::<EntityUuidMap>().fetch_entity(&u5), Some(e5));
-
-
+        w.delete_entity(e2).unwrap();
+        let mut s = EntityUuidSystem;
+        s.run(<EntityUuidSystem as System<'_>>::SystemData::fetch(&w.res));
+        let e = w.write_resource::<EntityUuidMap>();
+        assert_eq!(e.fetch_entity(&u3), None);
+        assert_eq!(e.fetch_entity(&u4), None);
+        assert_eq!(e.fetch_uuid(e1), None);
+        assert_eq!(e.fetch_uuid(e2), None);
     }
 }
