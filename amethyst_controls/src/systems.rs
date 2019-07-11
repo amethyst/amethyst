@@ -266,16 +266,7 @@ impl<'a> System<'a> for CursorHideSystem {
 
     fn setup(&mut self, res: &mut Resources) {
         use amethyst_core::ecs::prelude::SystemData;
-
         Self::SystemData::setup(res);
-
-        let win = res.fetch::<Window>();
-
-        if let Err(err) = win.grab_cursor(true) {
-            log::error!("Unable to grab the cursor. Error: {:?}", err);
-        }
-        win.hide_cursor(true);
-
-        self.is_hidden = true;
+        self.is_hidden = false;
     }
 }

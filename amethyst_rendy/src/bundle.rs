@@ -59,6 +59,9 @@ impl<B: Backend> RenderingBundle<B> {
 
 impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
     fn build(mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        // make sure that all renderer-specific systems run after game code
+        builder.add_barrier();
+
         for plugin in &mut self.plugins {
             plugin.build(builder)?;
         }
@@ -877,7 +880,6 @@ mod tests {
         let surface2 = factory.create_surface(&window);
 
         plan.extend_target(Target::Main, |ctx| {
-            ctx.add(RenderOrder::Transparent, TestGroup1.builder())?;
             ctx.add(RenderOrder::Opaque, TestGroup2.builder())?;
             Ok(())
         });
@@ -896,6 +898,11 @@ mod tests {
             },
         )
         .unwrap();
+
+        plan.extend_target(Target::Main, |ctx| {
+            ctx.add(RenderOrder::Transparent, TestGroup1.builder())?;
+            Ok(())
+        });
 
         let planned_graph = plan.build(&factory).unwrap();
 

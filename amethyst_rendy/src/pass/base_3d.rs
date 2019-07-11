@@ -92,6 +92,12 @@ impl<B: Backend, T: Base3DPassDef> DrawBase3DDesc<B, T> {
             marker: PhantomData,
         }
     }
+
+    /// Create pass in with vertex skinning enabled if true is passed
+    pub fn with_skinning(mut self, skinned: bool) -> Self {
+        self.skinning = skinned;
+        self
+    }
 }
 
 impl<B: Backend, T: Base3DPassDef> RenderGroupDesc<B, Resources> for DrawBase3DDesc<B, T> {
@@ -401,6 +407,12 @@ impl<B: Backend, T: Base3DPassDef> DrawBase3DTransparentDesc<B, T> {
             skinning: true,
             marker: PhantomData,
         }
+    }
+
+    /// Create pass in with vertex skinning enabled if true is passed
+    pub fn with_skinning(mut self, skinned: bool) -> Self {
+        self.skinning = skinned;
+        self
     }
 }
 

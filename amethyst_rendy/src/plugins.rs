@@ -19,7 +19,7 @@ use amethyst_window::{DisplayConfig, ScreenDimensions, Window, WindowBundle};
 use palette::Srgb;
 use rendy::{
     graph::render::RenderGroupDesc,
-    hal::command::{ClearDepthStencil, ClearValue},
+    hal::command::{ClearColor, ClearDepthStencil, ClearValue},
 };
 use std::path::Path;
 
@@ -32,6 +32,7 @@ pub struct RenderToWindow {
     config: Option<DisplayConfig>,
     dimensions: Option<ScreenDimensions>,
     dirty: bool,
+    clear: Option<ClearColor>,
 }
 
 impl RenderToWindow {
@@ -51,6 +52,12 @@ impl RenderToWindow {
     /// Select render target which will be presented to window.
     pub fn with_target(mut self, target: Target) -> Self {
         self.target = target;
+        self
+    }
+
+    /// Clear window with specified color every frame.
+    pub fn with_clear(mut self, clear: impl Into<ClearColor>) -> Self {
+        self.clear = Some(clear.into());
         self
     }
 }
@@ -99,7 +106,10 @@ impl<B: Backend> RenderPlugin<B> for RenderToWindow {
         plan.define_pass(
             self.target,
             TargetPlanOutputs {
-                colors: vec![OutputColor::Surface(surface, None)],
+                colors: vec![OutputColor::Surface(
+                    surface,
+                    self.clear.map(|c| ClearValue::Color(c)),
+                )],
                 depth: Some(depth_options),
             },
         )?;
@@ -121,6 +131,7 @@ pub type RenderPbr3D = RenderBase3D<crate::pass::PbrPassDef>;
 #[derivative(Default(bound = ""), Debug(bound = ""))]
 pub struct RenderBase3D<D: Base3DPassDef> {
     target: Target,
+    skinning: bool,
     marker: std::marker::PhantomData<D>,
 }
 
@@ -128,6 +139,14 @@ impl<D: Base3DPassDef> RenderBase3D<D> {
     /// Set target to which 3d meshes will be rendered.
     pub fn with_target(mut self, target: Target) -> Self {
         self.target = target;
+        self
+    }
+
+    /// Enable rendering for skinned meshes.
+    ///
+    /// NOTE: You must register `VertexSkinningBundle` yourself.
+    pub fn with_skinning(mut self) -> Self {
+        self.skinning = true;
         self
     }
 }
@@ -139,6 +158,10 @@ impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
             "visibility_system",
             &["transform_system"],
         );
+
+        // TODO: We should ideally register `VertexSkinningBundle` here,
+        // but that would make renderer dependant on animation crate.
+
         Ok(())
     }
 
@@ -148,11 +171,19 @@ impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
         _factory: &mut Factory<B>,
         _res: &Resources,
     ) -> Result<(), Error> {
-        plan.extend_target(self.target, |ctx| {
-            ctx.add(RenderOrder::Opaque, DrawBase3DDesc::<B, D>::new().builder())?;
+        let skinning = self.skinning;
+        plan.extend_target(self.target, move |ctx| {
+            ctx.add(
+                RenderOrder::Opaque,
+                DrawBase3DDesc::<B, D>::new()
+                    .with_skinning(skinning)
+                    .builder(),
+            )?;
             ctx.add(
                 RenderOrder::Transparent,
-                DrawBase3DTransparentDesc::<B, D>::new().builder(),
+                DrawBase3DTransparentDesc::<B, D>::new()
+                    .with_skinning(skinning)
+                    .builder(),
             )?;
             Ok(())
         });
@@ -227,7 +258,7 @@ impl<B: Backend> RenderPlugin<B> for RenderDebugLines {
     ) -> Result<(), Error> {
         plan.extend_target(self.target, |ctx| {
             ctx.add(
-                RenderOrder::AfterOpaque,
+                RenderOrder::BeforeTransparent,
                 DrawDebugLinesDesc::new().builder(),
             )?;
             Ok(())
