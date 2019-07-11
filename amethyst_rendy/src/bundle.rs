@@ -134,6 +134,14 @@ impl<B: Backend> RenderPlan<B> {
         }
     }
 
+    /// Mark rander target as root. Root render targets are always
+    /// evaluated, even if nothing depends on them.
+    pub fn add_root(&mut self, target: Target) {
+        if !self.roots.contains(&target) {
+            self.roots.push(target);
+        }
+    }
+
     /// Define a render target with predefined set of outputs.
     pub fn define_pass(
         &mut self,
@@ -145,15 +153,7 @@ impl<B: Backend> RenderPlan<B> {
             .entry(target)
             .or_insert_with(|| TargetPlan::new(target));
 
-        let root = outputs.colors.iter().any(|c| match c {
-            OutputColor::Surface(_, _) => true,
-            _ => false,
-        });
-
         target_plan.set_outputs(outputs)?;
-        if root {
-            self.roots.push(target);
-        }
 
         Ok(())
     }
@@ -187,7 +187,7 @@ impl<B: Backend> RenderPlan<B> {
         };
 
         for target in self.roots {
-            // prevent evaluation of roots that were accessed recursively
+            // prevent evaluation of roots that were accessed recursively or undefined
             if !ctx.passes.contains_key(&target) {
                 ctx.evaluate_target(target)?;
             }
@@ -216,8 +216,10 @@ impl EvaluationState {
     }
 }
 
+/// Metadata for a planned render target.
+/// Defines effective size and layer count that target's renderpass will operate on.
 #[derive(Debug, Clone, Copy)]
-struct TargetMetadata {
+pub struct TargetMetadata {
     width: u32,
     height: u32,
     layers: u16,
@@ -350,7 +352,7 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
 
         if self.colors != action.colors() {
             return Err(format_err!(
-                "Trying to add render action with {} colors to target {:?} that expects {} colors",
+                "Trying to add render action with {} colors to target {:?} that expects {} colors.",
                 action.colors(),
                 self.key,
                 self.colors,
@@ -358,7 +360,7 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
         }
         if self.depth != action.depth() {
             return Err(format_err!(
-                "Trying to add render action with depth '{}' to target {:?} that expects depth '{}'",
+                "Trying to add render action with depth '{}' to target {:?} that expects depth '{}'.",
                 action.depth(),
                 self.key,
                 self.depth,
@@ -385,7 +387,9 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
     /// retreiving it would result in a dependency cycle.
     pub fn get_image(&mut self, image: TargetImage) -> Result<ImageId, Error> {
         self.plan_context.get_image(image).map(|i| {
-            let node = self.plan_context.get_pass_node_raw(image.target())
+            let node = self
+                .plan_context
+                .get_pass_node_raw(image.target())
                 .expect("Image without target node");
             self.add_dep(node);
             i
@@ -398,7 +402,9 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
     pub fn try_get_image(&mut self, image: TargetImage) -> Result<Option<ImageId>, Error> {
         self.plan_context.try_get_image(image).map(|i| {
             i.map(|i| {
-                let node = self.plan_context.get_pass_node_raw(image.target())
+                let node = self
+                    .plan_context
+                    .get_pass_node_raw(image.target())
                     .expect("Image without target node");
                 self.add_dep(node);
                 i
@@ -407,14 +413,14 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
     }
 
     /// Add explicit dependency on another node.
-    /// 
+    ///
     /// This is done automatically when you use `get_image`.
     pub fn add_dep(&mut self, node: NodeId) {
         if !self.deps.contains(&node) {
             self.deps.push(node);
         }
     }
-    
+
     /// Access underlying rendy's GraphBuilder directly.
     /// This is useful for adding custom rendering nodes
     /// that are not just standard graphics render passes,
@@ -423,7 +429,7 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
         self.plan_context.graph()
     }
 
-    /// Retreive render target metadata, e.g. size. 
+    /// Retreive render target metadata, e.g. size.
     pub fn target_metadata(&self, target: Target) -> Option<TargetMetadata> {
         self.plan_context.target_metadata(target)
     }
@@ -728,5 +734,193 @@ pub enum Target {
 impl Default for Target {
     fn default() -> Target {
         Target::Main
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        rendy::{
+            command::QueueId,
+            graph::{
+                render::{RenderGroup, RenderGroupDesc},
+                GraphContext, NodeBuffer, NodeImage,
+            },
+        },
+        types::{Backend, DefaultBackend},
+    };
+    use hal::{
+        command::{ClearDepthStencil, ClearValue},
+        format::Format,
+    };
+
+    #[derive(Debug)]
+    struct TestGroup1;
+    #[derive(Debug)]
+    struct TestGroup2;
+
+    impl<B: Backend, T> RenderGroupDesc<B, T> for TestGroup1 {
+        fn build<'a>(
+            self,
+            ctx: &GraphContext<B>,
+            factory: &mut Factory<B>,
+            queue: QueueId,
+            aux: &T,
+            framebuffer_width: u32,
+            framebuffer_height: u32,
+            subpass: hal::pass::Subpass<'_, B>,
+            buffers: Vec<NodeBuffer>,
+            images: Vec<NodeImage>,
+        ) -> Result<Box<dyn RenderGroup<B, T>>, failure::Error> {
+            unimplemented!()
+        }
+    }
+    impl<B: Backend, T> RenderGroupDesc<B, T> for TestGroup2 {
+        fn build<'a>(
+            self,
+            ctx: &GraphContext<B>,
+            factory: &mut Factory<B>,
+            queue: QueueId,
+            aux: &T,
+            framebuffer_width: u32,
+            framebuffer_height: u32,
+            subpass: hal::pass::Subpass<'_, B>,
+            buffers: Vec<NodeBuffer>,
+            images: Vec<NodeImage>,
+        ) -> Result<Box<dyn RenderGroup<B, T>>, failure::Error> {
+            unimplemented!()
+        }
+    }
+
+    #[test]
+    fn main_pass_color_image_plan() {
+        let config: rendy::factory::Config = Default::default();
+        let (factory, families): (Factory<DefaultBackend>, _) =
+            rendy::factory::init(config).unwrap();
+        let mut plan = RenderPlan::<DefaultBackend>::new();
+
+        plan.extend_target(Target::Main, |ctx| {
+            ctx.add(RenderOrder::Transparent, TestGroup1.builder())?;
+            ctx.add(RenderOrder::Opaque, TestGroup2.builder())?;
+            Ok(())
+        });
+
+        let kind = crate::Kind::D2(1920, 1080, 1, 1);
+        plan.add_root(Target::Main);
+        plan.define_pass(
+            Target::Main,
+            TargetPlanOutputs {
+                colors: vec![OutputColor::Image(ImageOptions {
+                    kind,
+                    levels: 1,
+                    format: Format::Rgb8Unorm,
+                    clear: None,
+                })],
+                depth: Some(ImageOptions {
+                    kind,
+                    levels: 1,
+                    format: Format::D32Sfloat,
+                    clear: Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+                }),
+            },
+        )
+        .unwrap();
+
+        let planned_graph = plan.build(&factory).unwrap();
+
+        let mut manual_graph = GraphBuilder::<DefaultBackend, Resources>::new();
+        let color = manual_graph.create_image(kind, 1, Format::Rgb8Unorm, None);
+        let depth = manual_graph.create_image(
+            kind,
+            1,
+            Format::D32Sfloat,
+            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+        );
+        manual_graph.add_node(
+            RenderPassNodeBuilder::new().with_subpass(
+                SubpassBuilder::new()
+                    .with_group(TestGroup2.builder())
+                    .with_group(TestGroup1.builder())
+                    .with_color(color)
+                    .with_depth_stencil(depth),
+            ),
+        );
+
+        assert_eq!(
+            format!("{:?}", planned_graph),
+            format!("{:?}", manual_graph)
+        );
+    }
+
+    #[test]
+    fn main_pass_surface_plan() {
+        use winit::{EventsLoop, WindowBuilder};
+
+        let ev_loop = EventsLoop::new();
+        let mut window_builder = WindowBuilder::new();
+        window_builder.window.visible = false;
+        let window = window_builder.build(&ev_loop).unwrap();
+
+        let size = window
+            .get_inner_size()
+            .unwrap()
+            .to_physical(window.get_hidpi_factor());
+        let window_kind = crate::Kind::D2(size.width as u32, size.height as u32, 1, 1);
+
+        let config: rendy::factory::Config = Default::default();
+        let (mut factory, families): (Factory<DefaultBackend>, _) =
+            rendy::factory::init(config).unwrap();
+        let mut plan = RenderPlan::<DefaultBackend>::new();
+
+        let surface1 = factory.create_surface(&window);
+        let surface2 = factory.create_surface(&window);
+
+        plan.extend_target(Target::Main, |ctx| {
+            ctx.add(RenderOrder::Transparent, TestGroup1.builder())?;
+            ctx.add(RenderOrder::Opaque, TestGroup2.builder())?;
+            Ok(())
+        });
+
+        plan.add_root(Target::Main);
+        plan.define_pass(
+            Target::Main,
+            TargetPlanOutputs {
+                colors: vec![OutputColor::Surface(surface1, None)],
+                depth: Some(ImageOptions {
+                    kind: window_kind,
+                    levels: 1,
+                    format: Format::D32Sfloat,
+                    clear: Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+                }),
+            },
+        )
+        .unwrap();
+
+        let planned_graph = plan.build(&factory).unwrap();
+
+        let mut manual_graph = GraphBuilder::<DefaultBackend, Resources>::new();
+        let depth = manual_graph.create_image(
+            window_kind,
+            1,
+            Format::D32Sfloat,
+            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+        );
+        manual_graph.add_node(
+            RenderPassNodeBuilder::new()
+                .with_subpass(
+                    SubpassBuilder::new()
+                        .with_group(TestGroup2.builder())
+                        .with_group(TestGroup1.builder())
+                        .with_color_surface()
+                        .with_depth_stencil(depth),
+                )
+                .with_surface(surface2, None),
+        );
+
+        assert_eq!(
+            format!("{:?}", planned_graph),
+            format!("{:?}", manual_graph)
+        );
     }
 }

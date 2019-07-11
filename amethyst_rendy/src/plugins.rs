@@ -95,6 +95,7 @@ impl<B: Backend> RenderPlugin<B> for RenderToWindow {
             clear: Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
         };
 
+        plan.add_root(Target::Main);
         plan.define_pass(
             self.target,
             TargetPlanOutputs {
