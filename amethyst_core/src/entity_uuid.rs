@@ -6,7 +6,7 @@
 //! identification in a networked multiplayer situation.
 
 use fnv::FnvHashMap;
-use specs::{Entity, Entities, System, Write};
+use specs::{Entities, Entity, System, Write};
 use uuid::Uuid;
 
 /// An ECS resource that presents a bi-directional mapping between Uuids and Entities.
@@ -79,10 +79,7 @@ impl EntityUuidMap {
 pub struct EntityUuidSystem;
 
 impl<'s> System<'s> for EntityUuidSystem {
-    type SystemData = (
-        Write<'s, EntityUuidMap>,
-        Entities<'s>,
-    );
+    type SystemData = (Write<'s, EntityUuidMap>, Entities<'s>);
 
     fn run(&mut self, (mut map, entities): Self::SystemData) {
         map.maintain(&entities);
@@ -92,7 +89,7 @@ impl<'s> System<'s> for EntityUuidSystem {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use specs::{World, world::Builder, System, SystemData};
+    use specs::{world::Builder, System, SystemData, World};
 
     #[test]
     fn test_uuid_map() {
@@ -129,7 +126,7 @@ mod tests {
             assert_eq!(e.fetch_uuid(e1), Some(&u3));
             assert_eq!(e.fetch_uuid(e2), Some(&u4));
         }
-        
+
         w.delete_entity(e1).unwrap();
         w.delete_entity(e2).unwrap();
         let mut s = EntityUuidSystem;
