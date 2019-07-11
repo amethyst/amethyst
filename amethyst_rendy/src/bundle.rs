@@ -709,6 +709,8 @@ pub enum RenderOrder {
     ToneMap = 400,
     /// register as post effect in display color space
     DisplayPostEffects = 500,
+    /// register as overlay on final render
+    Overlay = 600,
 }
 
 impl Into<i32> for RenderOrder {

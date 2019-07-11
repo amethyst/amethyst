@@ -20,7 +20,7 @@ pub use self::{
     image::UiImage,
     label::{UiLabel, UiLabelBuilder, UiLabelBuilderResources},
     layout::{Anchor, ScaleMode, Stretch, UiTransformSystem},
-    pass::{DrawUi, DrawUiDesc},
+    pass::{DrawUi, DrawUiDesc, RenderUi},
     prefab::{
         NoCustomUi, ToNativeWidget, UiCreator, UiFormat, UiImagePrefab, UiLoader, UiLoaderSystem,
         UiPrefab, UiTextBuilder, UiTransformBuilder, UiWidget,
