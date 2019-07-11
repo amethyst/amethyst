@@ -273,10 +273,10 @@ mod tests {
         let loader = Loader::new(".", Arc::new(ThreadPoolBuilder::new().build().unwrap()));
         let tex_storage = AssetStorage::<Texture>::default();
         let ss_storage = AssetStorage::<SpriteSheet>::default();
-        world.add_resource(tex_storage);
-        world.add_resource(ss_storage);
-        world.add_resource(SpriteSheetLoadedSet::default());
-        world.add_resource(loader);
+        world.insert(tex_storage);
+        world.insert(ss_storage);
+        world.insert(SpriteSheetLoadedSet::default());
+        world.insert(loader);
         world
     }
 

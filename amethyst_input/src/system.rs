@@ -23,15 +23,14 @@ pub struct InputSystem<T: BindingTypes> {
 
 impl<T: BindingTypes> InputSystem<T> {
     /// Create a new input system. Needs a reader id for `EventHandler<winit::Event>`.
-    pub fn new(world: &mut World, bindings: Option<Bindings<T>>) -> Self {
+    pub fn new(mut world: &mut World, bindings: Option<Bindings<T>>) -> Self {
         use amethyst_core::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(&mut world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world);
         let reader = world
-            .res
             .fetch_mut::<EventChannel<Event>>()
             .register_reader();
         if let Some(ref bindings) = bindings {
-            world.res.fetch_mut::<InputHandler<T>>().bindings = bindings.clone();
+            world.fetch_mut::<InputHandler<T>>().bindings = bindings.clone();
         }
         InputSystem {
             reader,

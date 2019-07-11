@@ -3,7 +3,7 @@ use std::{marker::PhantomData, ops::Deref, sync::Arc};
 use amethyst_assets::Processor;
 use amethyst_core::{
     bundle::SystemBundle,
-    ecs::{DispatcherBuilder, ReadExpect, Resources, SystemData},
+    ecs::{DispatcherBuilder, ReadExpect, World, SystemData},
 };
 use amethyst_error::Error;
 use amethyst_window::{ScreenDimensions, Window};
@@ -109,7 +109,7 @@ impl<B> GraphCreator<B> for RenderGraph<B>
 where
     B: Backend,
 {
-    fn rebuild(&mut self, res: &Resources) -> bool {
+    fn rebuild(&mut self, world: &World) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
         let new_dimensions = res.try_fetch::<ScreenDimensions>();
         if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
@@ -120,7 +120,7 @@ where
         self.dirty
     }
 
-    fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
+    fn builder(&mut self, factory: &mut Factory<B>, world: &World) -> GraphBuilder<B, World> {
         self.dirty = false;
 
         let window = <ReadExpect<'_, Arc<Window>>>::fetch(res);
@@ -181,15 +181,15 @@ impl<B> GraphCreator<B> for EmptyGraph<B>
 where
     B: Backend,
 {
-    fn rebuild(&mut self, _res: &Resources) -> bool {
+    fn rebuild(&mut self, _world: &World) -> bool {
         false
     }
 
     fn builder(
         &mut self,
         _factory: &mut Factory<B>,
-        _res: &Resources,
-    ) -> GraphBuilder<B, Resources> {
+        _world: &World,
+    ) -> GraphBuilder<B, World> {
         GraphBuilder::new()
     }
 }

@@ -40,9 +40,9 @@ impl<'a, 'b> CustomGameData<'a, 'b> {
     /// Update game data
     pub fn update(&mut self, world: &World, running: bool) {
         if running {
-            self.running_dispatcher.dispatch(&world.res);
+            self.running_dispatcher.dispatch(&world);
         }
-        self.core_dispatcher.dispatch(&world.res);
+        self.core_dispatcher.dispatch(&world);
     }
 }
 ```
@@ -108,8 +108,8 @@ impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> 
 
         let mut core_dispatcher = self.core.with_pool(pool.clone()).build();
         let mut running_dispatcher = self.running.with_pool(pool.clone()).build();
-        core_dispatcher.setup(&mut world.res);
-        running_dispatcher.setup(&mut world.res);
+        core_dispatcher.setup(&mut world);
+        running_dispatcher.setup(&mut world);
 
         CustomGameData { core_dispatcher, running_dispatcher }
     }
@@ -135,9 +135,9 @@ our `Application`, but first we should create some `State`s.
 #     /// Update game data
 #     pub fn update(&mut self, world: &World, running: bool) {
 #         if running {
-#             self.running_dispatcher.dispatch(&world.res);
+#             self.running_dispatcher.dispatch(&world);
 #         }
-#         self.core_dispatcher.dispatch(&world.res);
+#         self.core_dispatcher.dispatch(&world);
 #     }
 # }
 #

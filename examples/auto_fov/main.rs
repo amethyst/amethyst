@@ -5,7 +5,7 @@ use amethyst::{
     },
     core::{Transform, TransformBundle},
     derive::PrefabData,
-    ecs::{Entity, ReadExpect, ReadStorage, Resources, System, World, WriteStorage},
+    ecs::{Entity, ReadExpect, ReadStorage, World, System, WorldExt, WriteStorage},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::{
         Application, Builder, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData,
@@ -235,24 +235,24 @@ struct ExampleGraph {
 
 #[allow(clippy::map_clone)]
 impl<B: Backend> GraphCreator<B> for ExampleGraph {
-    fn rebuild(&mut self, res: &Resources) -> bool {
+    fn rebuild(&mut self, world: &World) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
-        let new_dimensions = res.try_fetch::<ScreenDimensions>();
+        let new_dimensions = world.try_fetch::<ScreenDimensions>();
         use std::ops::Deref;
         if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
             self.dirty = true;
-            self.dimensions = new_dimensions.map(|d| d.clone());
+            self.dimensions = new_dimensions.cloned();
             return false;
         }
         self.dirty
     }
 
-    fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
+    fn builder(&mut self, factory: &mut Factory<B>, world: &World) -> GraphBuilder<B, World> {
         self.dirty = false;
 
         use amethyst::shred::SystemData;
 
-        let window = <ReadExpect<'_, Window>>::fetch(res);
+        let window = <ReadExpect<'_, Window>>::fetch(world);
 
         let surface = factory.create_surface(&window);
         let dimensions = self.dimensions.as_ref().unwrap();

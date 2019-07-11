@@ -25,7 +25,6 @@ amethyst_derive = { path = "../amethyst_derive", version = "0.4.0" }
 amethyst_rendy = { path = "../amethyst_rendy", version = "0.1.0" }
 derivative = "1.0"
 fnv = "1"
-hibitset = { version = "0.5.1", features = ["parallel"] }
 itertools = "0.7.8"
 log = "0.4.6"
 minterpolate = { version = "0.4", features = ["serde"] }

@@ -4,7 +4,7 @@ use crate::{
 };
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::{
-    ecs::{Entities, Entity, Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
+    ecs::{hibitset::BitSet, Entities, Entity, Join, Read, ReadExpect, ReadStorage, World, SystemData},
     Hidden, HiddenPropagate,
 };
 use amethyst_rendy::{
@@ -37,7 +37,6 @@ use amethyst_rendy::{
 use amethyst_window::ScreenDimensions;
 use derivative::Derivative;
 use glsl_layout::{vec2, vec4, AsStd140};
-use hibitset::BitSet;
 use std::cmp::Ordering;
 
 #[cfg(feature = "profiler")]
@@ -95,19 +94,19 @@ impl DrawUiDesc {
     }
 }
 
-impl<B: Backend> RenderGroupDesc<B, Resources> for DrawUiDesc {
+impl<B: Backend> RenderGroupDesc<B, World> for DrawUiDesc {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        resources: &Resources,
+        resources: &World,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, Resources>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
@@ -166,14 +165,14 @@ struct CachedDrawOrder {
     pub cache: Vec<(f32, Entity)>,
 }
 
-impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
+impl<B: Backend> RenderGroup<B, World> for DrawUi<B> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &Resources,
+        resources: &World,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare");
@@ -405,7 +404,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        _resources: &Resources,
+        _resources: &World,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("draw");
@@ -424,7 +423,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawUi<B> {
         }
     }
 
-    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &Resources) {
+    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
         unsafe {
             factory.device().destroy_graphics_pipeline(self.pipeline);
             factory
@@ -488,7 +487,7 @@ fn mul_blend(a: &[f32; 4], b: &[f32; 4]) -> [f32; 4] {
 
 fn render_image<B: Backend>(
     factory: &Factory<B>,
-    resources: &Resources,
+    resources: &World,
     transform: &UiTransform,
     raw_image: &UiImage,
     tint: &Option<[f32; 4]>,

@@ -22,8 +22,8 @@
 #
 # impl MySystem {
 #     pub fn new(world: &mut World) -> Self {
-#         <Self as System<'_>>::SystemData::setup(&mut world.res);
-#         world.res.insert(ApplicationResource);
+#         <Self as System<'_>>::SystemData::setup(&mut world);
+#         world.insert(ApplicationResource);
 #         Self
 #     }
 #
@@ -96,7 +96,7 @@ fn system_increases_component_value_by_one() -> Result<(), Error> {
         .with_system(MySystem, "my_system", &[])
         .with_effect(|world| {
             let entity = world.create_entity().with(MyComponent(0)).build();
-            world.add_resource(EffectReturn(entity));
+            world.insert(EffectReturn(entity));
         })
         .with_assertion(|world| {
             let entity = world.read_resource::<EffectReturn<Entity>>().0.clone();
@@ -150,7 +150,7 @@ impl<'s> System<'s> for MySystem {
 fn system_increases_resource_value_by_one() -> Result<(), Error> {
     AmethystApplication::blank()
         .with_setup(|world| {
-            world.add_resource(MyResource(0));
+            world.insert(MyResource(0));
         })
         .with_system_single(MySystem, "my_system", &[])
         .with_assertion(|world| {

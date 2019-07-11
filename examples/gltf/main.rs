@@ -12,7 +12,7 @@ use amethyst::{
     controls::{ControlTagPrefab, FlyControlBundle},
     core::transform::{Transform, TransformBundle},
     derive::PrefabData,
-    ecs::{Entity, ReadExpect, ReadStorage, Resources, SystemData, Write, WriteStorage},
+    ecs::{Entity, ReadExpect, ReadStorage, World, SystemData, Write, WriteStorage},
     input::{is_close_requested, is_key_down, StringBindings, VirtualKeyCode},
     prelude::*,
     renderer::{
@@ -261,7 +261,7 @@ struct ExampleGraph {
 
 #[allow(clippy::map_clone)]
 impl GraphCreator<DefaultBackend> for ExampleGraph {
-    fn rebuild(&mut self, res: &Resources) -> bool {
+    fn rebuild(&mut self, world: &World) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
         let new_dimensions = res.try_fetch::<ScreenDimensions>();
         use std::ops::Deref;
@@ -276,8 +276,8 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
     fn builder(
         &mut self,
         factory: &mut Factory<DefaultBackend>,
-        res: &Resources,
-    ) -> GraphBuilder<DefaultBackend, Resources> {
+        world: &World,
+    ) -> GraphBuilder<DefaultBackend, World> {
         use amethyst::renderer::rendy::{
             graph::present::PresentNode,
             hal::command::{ClearDepthStencil, ClearValue},

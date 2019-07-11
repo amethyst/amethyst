@@ -4,12 +4,14 @@ use crate::{
     transparent::Transparent,
 };
 use amethyst_core::{
-    ecs::prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
+    ecs::{
+        prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
+        hibitset::BitSet, 
+    },
     math::{Point3, Vector3},
     Hidden, HiddenPropagate, Transform,
 };
 use derivative::Derivative;
-use hibitset::BitSet;
 use std::cmp::Ordering;
 
 #[cfg(feature = "profiler")]

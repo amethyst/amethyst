@@ -11,7 +11,7 @@ use crate::{
 };
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    ecs::{Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
+    ecs::{Join, Read, ReadExpect, ReadStorage, World, SystemData},
     transform::Transform,
     Hidden, HiddenPropagate,
 };
@@ -43,19 +43,19 @@ impl DrawFlat2DDesc {
     }
 }
 
-impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DDesc {
+impl<B: Backend> RenderGroupDesc<B, World> for DrawFlat2DDesc {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _aux: &Resources,
+        _aux: &World,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, Resources>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("build");
 
@@ -94,14 +94,14 @@ pub struct DrawFlat2D<B: Backend> {
     sprites: OneLevelBatch<TextureId, SpriteArgs>,
 }
 
-impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
+impl<B: Backend> RenderGroup<B, World> for DrawFlat2D<B> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &Resources,
+        world: &World,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare opaque");
@@ -124,9 +124,9 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
             ReadStorage<'_, SpriteRender>,
             ReadStorage<'_, Transform>,
             ReadStorage<'_, Tint>,
-        )>::fetch(resources);
+        )>::fetch(world);
 
-        self.env.process(factory, index, resources);
+        self.env.process(factory, index, world);
 
         let sprites_ref = &mut self.sprites;
         let textures_ref = &mut self.textures;
@@ -156,7 +156,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
                         )?;
                         let (tex_id, _) = textures_ref.insert(
                             factory,
-                            resources,
+                            world,
                             texture,
                             hal::image::Layout::ShaderReadOnlyOptimal,
                         )?;
@@ -187,7 +187,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
                         )?;
                         let (tex_id, _) = textures_ref.insert(
                             factory,
-                            resources,
+                            world,
                             texture,
                             hal::image::Layout::ShaderReadOnlyOptimal,
                         )?;
@@ -199,7 +199,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
             }
         }
 
-        self.textures.maintain(factory, resources);
+        self.textures.maintain(factory, world);
 
         {
             #[cfg(feature = "profiler")]
@@ -222,7 +222,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        _resources: &Resources,
+        _resources: &World,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("draw opaque");
@@ -241,7 +241,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
         }
     }
 
-    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &Resources) {
+    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
         unsafe {
             factory.device().destroy_graphics_pipeline(self.pipeline);
             factory
@@ -262,19 +262,19 @@ impl DrawFlat2DTransparentDesc {
     }
 }
 
-impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DTransparentDesc {
+impl<B: Backend> RenderGroupDesc<B, World> for DrawFlat2DTransparentDesc {
     fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _aux: &Resources,
+        _aux: &World,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
         _buffers: Vec<NodeBuffer>,
         _images: Vec<NodeImage>,
-    ) -> Result<Box<dyn RenderGroup<B, Resources>>, failure::Error> {
+    ) -> Result<Box<dyn RenderGroup<B, World>>, failure::Error> {
         #[cfg(feature = "profiler")]
         profile_scope!("build_trans");
 
@@ -315,14 +315,14 @@ pub struct DrawFlat2DTransparent<B: Backend> {
     change: util::ChangeDetection,
 }
 
-impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
+impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
     fn prepare(
         &mut self,
         factory: &Factory<B>,
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &Resources,
+        resources: &World,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare transparent");
@@ -397,7 +397,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        _resources: &Resources,
+        _resources: &World,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("draw transparent");
@@ -416,7 +416,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
         }
     }
 
-    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &Resources) {
+    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
         unsafe {
             factory.device().destroy_graphics_pipeline(self.pipeline);
             factory

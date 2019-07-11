@@ -56,10 +56,9 @@ where
     /// Constructs a default `EventRetriggerSystem`. Since the `event_reader`
     /// will automatically be fetched when the system is set up, this should
     /// always be used to construct `EventRetriggerSystem`s.
-    pub fn new(world: &mut World) -> Self {
-        <Self as System<'_>>::SystemData::setup(&mut world.res);
+    pub fn new(mut world: &mut World) -> Self {
+        <Self as System<'_>>::SystemData::setup(&mut world);
         let event_reader = world
-            .res
             .fetch_mut::<EventChannel<T::In>>()
             .register_reader();
         Self { event_reader }

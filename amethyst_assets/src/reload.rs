@@ -53,7 +53,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for HotReloadBundle {
 /// # fn main() {
 /// let mut world = World::new();
 /// // Assets will be reloaded every two seconds (in case they changed)
-/// world.add_resource(HotReloadStrategy::every(2));
+/// world.insert(HotReloadStrategy::every(2));
 /// # }
 /// ```
 #[derive(Clone)]
@@ -142,11 +142,11 @@ pub struct HotReloadSystem;
 
 impl HotReloadSystem {
     /// Create a new reload system
-    pub fn new(world: &mut World, strategy: HotReloadStrategy) -> Self {
+    pub fn new(mut world: &mut World, strategy: HotReloadStrategy) -> Self {
         use amethyst_core::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(&mut world.res);
-        world.res.insert(strategy);
-        world.res.fetch_mut::<Loader>().set_hot_reload(true);
+        <Self as System<'_>>::SystemData::setup(&mut world);
+        world.insert(strategy);
+        world.fetch_mut::<Loader>().set_hot_reload(true);
         Self
     }
 }

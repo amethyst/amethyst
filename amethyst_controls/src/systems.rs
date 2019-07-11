@@ -133,11 +133,10 @@ pub struct FreeRotationSystem {
 
 impl FreeRotationSystem {
     /// Builds a new `FreeRotationSystem` with the specified mouse sensitivity values.
-    pub fn new(world: &mut World, sensitivity_x: f32, sensitivity_y: f32) -> Self {
+    pub fn new(mut world: &mut World, sensitivity_x: f32, sensitivity_y: f32) -> Self {
         use amethyst_core::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(&mut world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world);
         let event_reader = world
-            .res
             .fetch_mut::<EventChannel<Event>>()
             .register_reader();
         FreeRotationSystem {
@@ -189,11 +188,10 @@ pub struct MouseFocusUpdateSystem {
 
 impl MouseFocusUpdateSystem {
     /// Builds a new MouseFocusUpdateSystem.
-    pub fn new(world: &mut World) -> MouseFocusUpdateSystem {
+    pub fn new(mut world: &mut World) -> MouseFocusUpdateSystem {
         use amethyst_core::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(&mut world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world);
         let event_reader = world
-            .res
             .fetch_mut::<EventChannel<Event>>()
             .register_reader();
         Self { event_reader }
@@ -226,10 +224,10 @@ pub struct CursorHideSystem {
 
 impl CursorHideSystem {
     /// Constructs a new CursorHideSystem
-    pub fn new(world: &mut World) -> CursorHideSystem {
+    pub fn new(mut world: &mut World) -> CursorHideSystem {
         use amethyst_core::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(&mut world.res);
-        let win = world.res.fetch::<Window>();
+        <Self as System<'_>>::SystemData::setup(&mut world);
+        let win = world.fetch::<Window>();
 
         if let Err(err) = win.grab_cursor(true) {
             log::error!("Unable to grab the cursor. Error: {:?}", err);

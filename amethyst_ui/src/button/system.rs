@@ -66,10 +66,9 @@ pub struct UiButtonSystem {
 
 impl UiButtonSystem {
     /// Creates a new instance of this structure
-    pub fn new(world: &mut World) -> Self {
-        <Self as System<'_>>::SystemData::setup(&mut world.res);
+    pub fn new(mut world: &mut World) -> Self {
+        <Self as System<'_>>::SystemData::setup(&mut world);
         let event_reader = world
-            .res
             .fetch_mut::<EventChannel<UiButtonAction>>()
             .register_reader();
         Self {

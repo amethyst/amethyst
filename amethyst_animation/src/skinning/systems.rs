@@ -28,10 +28,10 @@ pub struct VertexSkinningSystem {
 
 impl VertexSkinningSystem {
     /// Creates a new `VertexSkinningSystem`
-    pub fn new(world: &mut World) -> Self {
+    pub fn new(mut world: &mut World) -> Self {
         use amethyst_core::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(&mut world.res);
-        let mut transform = WriteStorage::<Transform>::fetch(&world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world);
+        let mut transform = WriteStorage::<Transform>::fetch(&world);
         let updated_id = transform.register_reader();
         Self {
             updated: BitSet::default(),

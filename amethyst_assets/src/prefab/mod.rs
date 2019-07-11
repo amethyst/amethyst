@@ -1,10 +1,9 @@
 use std::marker::PhantomData;
 
 use serde::{Deserialize, Serialize};
-use shred_derive::SystemData;
 
 use amethyst_core::ecs::prelude::{
-    Component, DenseVecStorage, Entity, FlaggedStorage, Read, ReadExpect, SystemData, WriteStorage,
+    Component, DenseVecStorage, Entity, FlaggedStorage, Read, ReadExpect, SystemData, WriteStorage, World, ResourceId
 };
 use amethyst_error::Error;
 
@@ -470,7 +469,7 @@ mod tests {
     use rayon::ThreadPoolBuilder;
 
     use amethyst_core::{
-        ecs::{Builder, RunNow, World},
+        ecs::{Builder, RunNow, World, WorldExt},
         Time, Transform,
     };
 
@@ -484,11 +483,11 @@ mod tests {
     fn test_prefab_load() {
         let mut world = World::new();
         let pool = Arc::new(ThreadPoolBuilder::default().build().unwrap());
-        world.add_resource(pool.clone());
-        world.add_resource(Loader::new(".", pool));
-        world.add_resource(Time::default());
+        world.insert(pool.clone());
+        world.insert(Loader::new(".", pool));
+        world.insert(Time::default());
         let mut system = PrefabLoaderSystem::<MyPrefab>::new(&mut world);
-        RunNow::setup(&mut system, &mut world.res);
+        RunNow::setup(&mut system, &mut world);
 
         let prefab = Prefab::new_main(Transform::default());
 
@@ -498,7 +497,7 @@ mod tests {
             &world.read_resource::<AssetStorage<Prefab<MyPrefab>>>(),
         );
         let root_entity = world.create_entity().with(handle).build();
-        system.run_now(&world.res);
+        system.run_now(&world);
         assert_eq!(
             Some(&Transform::default()),
             world.read_storage().get(root_entity)

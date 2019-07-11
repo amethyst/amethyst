@@ -118,7 +118,7 @@ Create the event channel and add it to to the world during `State` creation:
 # }
 # fn main() {
 #   let mut world = amethyst::ecs::World::new();
-world.add_resource(
+world.insert(
     EventChannel::<MyEvent>::new(),
 );
 # }
@@ -187,9 +187,9 @@ Then, in the `System`'s new method:
 #
 # impl MySystem {
 #    pub fn new(world: &mut World) -> Self {
-#        <Self as System<'_>>::SystemData::setup(&mut world.res);
+#        <Self as System<'_>>::SystemData::setup(&mut world);
 #        Self {
-#            reader: world.res.fetch_mut::<EventChannel<MyEvent>>().register_reader(),
+#            reader: world.fetch_mut::<EventChannel<MyEvent>>().register_reader(),
 #        }
 #
 # impl<'a> amethyst::ecs::System<'a> for MySystem {

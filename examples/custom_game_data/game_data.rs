@@ -1,6 +1,6 @@
 use amethyst::{
     core::{ArcThreadPool, SystemBundle},
-    ecs::prelude::{Dispatcher, DispatcherBuilder, RunNow, System, World},
+    ecs::prelude::{Dispatcher, DispatcherBuilder, RunNow, System, World, WorldExt},
     error::Error,
     DataDispose, DataInit,
 };
@@ -15,21 +15,21 @@ impl<'a, 'b> CustomGameData<'a, 'b> {
     pub fn update(&mut self, world: &World, running: bool) {
         if running {
             if let Some(running) = &mut self.running {
-                running.dispatch(&world.res);
+                running.dispatch(&world);
             }
         }
         if let Some(base) = &mut self.base {
-            base.dispatch(&world.res);
+            base.dispatch(&world);
         }
     }
 
     /// Dispose game data, dropping the dispatcher
     pub fn dispose(&mut self, world: &mut World) {
         if let Some(base) = self.base.take() {
-            base.dispose(&mut world.res);
+            base.dispose(&mut world);
         }
         if let Some(running) = self.running.take() {
-            running.dispose(&mut world.res);
+            running.dispose(&mut world);
         }
     }
 }
@@ -100,13 +100,13 @@ impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> 
         let mut base = self.base.with_pool(pool.clone()).build();
         #[cfg(no_threading)]
         let mut base = self.base.build();
-        base.setup(&mut world.res);
+        base.setup(&mut world);
 
         #[cfg(not(no_threading))]
-        let mut running = self.running.with_pool(pool.clone()).build();
+        let mut running = self.running.with_pool((*pool).clone()).build();
         #[cfg(no_threading)]
         let mut running = self.running.build();
-        running.setup(&mut world.res);
+        running.setup(&mut world);
 
         CustomGameData {
             base: Some(base),

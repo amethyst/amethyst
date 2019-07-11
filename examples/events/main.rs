@@ -63,9 +63,8 @@ struct ReceivingSystem {
 
 impl ReceivingSystem {
     pub fn new(world: &mut World) -> Self {
-        <Self as System<'_>>::SystemData::setup(&mut world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world);
         let reader = world
-            .res
             .fetch_mut::<EventChannel<MyEvent>>()
             .register_reader();
         ReceivingSystem { reader }
@@ -88,7 +87,7 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let mut world = World::new();
-    world.add_resource(EventChannel::<MyEvent>::new());
+    world.insert(EventChannel::<MyEvent>::new());
 
     let game_data = GameDataBuilder::default().with_bundle(&mut world, MyBundle)?;
 

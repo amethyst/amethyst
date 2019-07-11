@@ -66,10 +66,9 @@ where
     G: Send + Sync + 'static + PartialEq,
 {
     /// Creates a new `SelectionKeyboardSystem`.
-    pub fn new(world: &mut World) -> Self {
-        <Self as System<'_>>::SystemData::setup(&mut world.res);
+    pub fn new(mut world: &mut World) -> Self {
+        <Self as System<'_>>::SystemData::setup(&mut world);
         let window_reader_id = world
-            .res
             .fetch_mut::<EventChannel<Event>>()
             .register_reader();
         Self {
@@ -188,10 +187,9 @@ where
     G: Send + Sync + 'static + PartialEq,
 {
     /// Creates a new `SelectionMouseSystem`.
-    pub fn new(world: &mut World) -> Self {
-        <Self as System<'_>>::SystemData::setup(&mut world.res);
+    pub fn new(mut world: &mut World) -> Self {
+        <Self as System<'_>>::SystemData::setup(&mut world);
         let ui_reader_id = world
-            .res
             .fetch_mut::<EventChannel<UiEvent>>()
             .register_reader();
         Self {

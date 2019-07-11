@@ -137,11 +137,11 @@ pub struct UiTransformSystem {
 
 impl UiTransformSystem {
     /// Creates a new `UiTransformSystem`.
-    pub fn new(world: &mut World) -> Self {
+    pub fn new(mut world: &mut World) -> Self {
         use amethyst_core::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(&mut world.res);
-        let parent_events_id = world.res.fetch_mut::<ParentHierarchy>().track();
-        let mut transforms = WriteStorage::<UiTransform>::fetch(&world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world);
+        let parent_events_id = world.fetch_mut::<ParentHierarchy>().track();
+        let mut transforms = WriteStorage::<UiTransform>::fetch(&world);
         let transform_events_id = transforms.register_reader();
 
         Self {

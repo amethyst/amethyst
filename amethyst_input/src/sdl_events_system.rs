@@ -8,7 +8,7 @@ use sdl2::{
 };
 
 use amethyst_core::{
-    ecs::prelude::{Resources, RunNow, SystemData, Write},
+    ecs::prelude::{World, RunNow, SystemData, Write},
     shrev::EventChannel,
 };
 
@@ -69,7 +69,7 @@ type SdlEventsData<'a, T> = (
 );
 
 impl<'a, T: BindingTypes> RunNow<'a> for SdlEventsSystem<T> {
-    fn run_now(&mut self, res: &'a Resources) {
+    fn run_now(&mut self, world: &'a World) {
         let (mut handler, mut output) = SdlEventsData::fetch(res);
 
         let mut event_pump = self
@@ -119,7 +119,7 @@ impl<T: BindingTypes> SdlEventsSystem<T> {
             opened_controllers: vec![],
             marker: PhantomData,
         };
-        let (mut handler, mut output) = SdlEventsData::fetch(world.res);
+        let (mut handler, mut output) = SdlEventsData::fetch(world);
         sys.initialize_controllers(&mut handler, &mut output);
         Ok(sys)
     }

@@ -10,7 +10,7 @@ use amethyst::{
     },
     core::transform::TransformBundle,
     ecs::{
-        prelude::{Component, Entity, ReadExpect, Resources, SystemData},
+        prelude::{Component, Entity, ReadExpect, World, SystemData},
         NullStorage, World,
     },
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
@@ -84,7 +84,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Loading {
             data.world
                 .exec(|loader: UiLoader<'_>| loader.load("ui/paused.ron", &mut self.progress)),
         );
-        data.world.add_resource::<DemoState>(DemoState {
+        data.world.insert::<DemoState>(DemoState {
             light_angle: 0.0,
             light_color: Srgb::new(1.0, 1.0, 1.0),
             camera_angle: 0.0,
@@ -253,7 +253,7 @@ struct ExampleGraph {
 
 #[allow(clippy::map_clone)]
 impl GraphCreator<DefaultBackend> for ExampleGraph {
-    fn rebuild(&mut self, res: &Resources) -> bool {
+    fn rebuild(&mut self, world: &World) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
         let new_dimensions = res.try_fetch::<ScreenDimensions>();
         use std::ops::Deref;
@@ -268,8 +268,8 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
     fn builder(
         &mut self,
         factory: &mut Factory<DefaultBackend>,
-        res: &Resources,
-    ) -> GraphBuilder<DefaultBackend, Resources> {
+        world: &World,
+    ) -> GraphBuilder<DefaultBackend, World> {
         use amethyst::renderer::rendy::{
             graph::present::PresentNode,
             hal::command::{ClearDepthStencil, ClearValue},

@@ -2,7 +2,10 @@
 use crate::types::Mesh;
 use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, Progress, ProgressCounter};
 use amethyst_core::{
-    ecs::prelude::{Entity, Read, ReadExpect, WriteStorage},
+    ecs::{
+        shred::{SystemData, ResourceId},
+        prelude::{Entity, Read, ReadExpect, WriteStorage, World},
+    },
     math::Vector3,
 };
 use amethyst_error::Error;

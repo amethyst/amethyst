@@ -1,11 +1,12 @@
-use shred::SystemData;
-use shred_derive::SystemData;
 use smallvec::{smallvec, SmallVec};
 
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_audio::SourceHandle;
 use amethyst_core::{
-    ecs::prelude::{Entities, Entity, Read, ReadExpect, World, WriteExpect, WriteStorage},
+    ecs::{
+        shred::{SystemData, ResourceId},
+        prelude::{Entities, Entity, Read, ReadExpect, World, WriteExpect, WriteStorage},
+    },
     Parent,
 };
 use amethyst_rendy::{palette::Srgba, rendy::texture::palette::load_from_srgba, Texture};
@@ -30,7 +31,7 @@ const DEFAULT_TXT_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 /// Container for all the resources the builder needs to make a new UiButton.
 #[derive(SystemData)]
 #[allow(missing_debug_implementations)]
-pub struct UiButtonBuilderResources<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId = u32> {
+pub struct UiButtonBuilderWorld<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId = u32> {
     font_asset: Read<'a, AssetStorage<FontAsset>>,
     texture_asset: Read<'a, AssetStorage<Texture>>,
     loader: ReadExpect<'a, Loader>,
@@ -257,8 +258,8 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
         self
     }
 
-    /// Build this with the `UiButtonBuilderResources`.
-    pub fn build(mut self, mut res: UiButtonBuilderResources<'a, G, I>) -> (I, UiButton) {
+    /// Build this with the `UiButtonBuilderWorld`.
+    pub fn build(mut self, mut res: UiButtonBuilderWorld<'a, G, I>) -> (I, UiButton) {
         let image_entity = res.entities.create();
         let text_entity = res.entities.create();
         let widget = UiButton::new(text_entity, image_entity);
@@ -409,7 +410,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
 
     /// Create the UiButton based on provided configuration parameters.
     pub fn build_from_world(self, world: &World) -> (I, UiButton) {
-        self.build(UiButtonBuilderResources::<G, I>::fetch(&world.res))
+        self.build(UiButtonBuilderWorld::<G, I>::fetch(&world))
     }
 }
 

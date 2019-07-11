@@ -22,8 +22,7 @@ use crate::{
         ArcThreadPool, EventReader, Named,
     },
     ecs::{
-        common::Errors,
-        prelude::{Component, Read, World, Write},
+        prelude::{Component, Read, World, WorldExt, Write},
     },
     error::Error,
     game_data::{DataDispose, DataInit},
@@ -379,11 +378,6 @@ where
         #[cfg(feature = "profiler")]
         profile_scope!("maintain");
         self.world.maintain();
-
-        // TODO: replace this with a more customizable method.
-        // TODO: effectively, the user should have more control over error handling here
-        // TODO: because right now the app will just exit in case of an error.
-        self.world.write_resource::<Errors>().print_and_exit();
     }
 
     /// Cleans up after the quit signal is received.
@@ -534,16 +528,15 @@ where
         } else {
             pool = thread_pool_builder.build().map(Arc::new)?;
         }
-        world.add_resource(Loader::new(path.as_ref().to_owned(), pool.clone()));
-        world.add_resource(pool);
-        world.add_resource(EventChannel::<Event>::with_capacity(2000));
-        world.add_resource(EventChannel::<UiEvent>::with_capacity(40));
-        world.add_resource(EventChannel::<TransEvent<T, StateEvent>>::with_capacity(2));
-        world.add_resource(Errors::default());
-        world.add_resource(FrameLimiter::default());
-        world.add_resource(Stopwatch::default());
-        world.add_resource(Time::default());
-        world.add_resource(CallbackQueue::default());
+        world.insert(Loader::new(path.as_ref().to_owned(), pool.clone()));
+        world.insert(pool);
+        world.insert(EventChannel::<Event>::with_capacity(2000));
+        world.insert(EventChannel::<UiEvent>::with_capacity(40));
+        world.insert(EventChannel::<TransEvent<T, StateEvent>>::with_capacity(2));
+        world.insert(FrameLimiter::default());
+        world.insert(Stopwatch::default());
+        world.insert(Time::default());
+        world.insert(CallbackQueue::default());
 
         world.register::<Named>();
 
@@ -616,7 +609,7 @@ where
 
     /// Adds the supplied ECS resource which can be accessed from game systems.
     ///
-    /// Resources are common data that is shared with one or more game system.
+    /// World are common data that is shared with one or more game system.
     ///
     /// If a resource is added with the identical type as an existing resource,
     /// the new resource will replace the old one and the old resource will
@@ -662,7 +655,7 @@ where
     where
         R: Resource,
     {
-        self.world.add_resource(resource);
+        self.world.insert(resource);
         self
     }
 
@@ -791,7 +784,7 @@ where
     /// This function returns the ApplicationBuilder after modifying it.
     pub fn with_frame_limit(mut self, strategy: FrameRateLimitStrategy, max_fps: u32) -> Self {
         self.world
-            .add_resource(FrameLimiter::new(strategy, max_fps));
+            .insert(FrameLimiter::new(strategy, max_fps));
         self
     }
 
@@ -805,7 +798,7 @@ where
     ///
     /// This function returns the ApplicationBuilder after modifying it.
     pub fn with_frame_limit_config(mut self, config: FrameRateLimitConfig) -> Self {
-        self.world.add_resource(FrameLimiter::from_config(config));
+        self.world.insert(FrameLimiter::from_config(config));
         self
     }
 
@@ -875,7 +868,7 @@ where
         profile_scope!("new");
 
         let mut reader = X::default();
-        reader.setup(&mut self.world.res);
+        reader.setup(&mut self.world);
         let data = init.build(&mut self.world);
         let event_reader_id = self
             .world

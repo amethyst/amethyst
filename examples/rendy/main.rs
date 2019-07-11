@@ -13,7 +13,7 @@ use amethyst::{
     core::{
         ecs::{
             Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
-            Resources, System, SystemData, World, Write, WriteStorage,
+            World, System, SystemData, World, Write, WriteStorage,
         },
         math::{Unit, UnitQuaternion, Vector3},
         Time, Transform, TransformBundle,
@@ -334,11 +334,11 @@ impl SimpleState for Example {
             .with(FlyControlTag)
             .build();
 
-        world.add_resource(ActiveCamera {
+        world.insert(ActiveCamera {
             entity: Some(camera),
         });
-        world.add_resource(RenderMode::default());
-        world.add_resource(DebugLines::new());
+        world.insert(RenderMode::default());
+        world.insert(DebugLines::new());
     }
 
     fn handle_event(
@@ -683,7 +683,7 @@ struct ExampleGraph {
 
 #[allow(clippy::map_clone)] // This lint is actually wrong, because we are mapping an option not an iterator
 impl<B: Backend> GraphCreator<B> for ExampleGraph {
-    fn rebuild(&mut self, res: &Resources) -> bool {
+    fn rebuild(&mut self, world: &World) -> bool {
         let new_mode = res.fetch::<RenderMode>();
 
         if *new_mode != self.last_mode {
@@ -702,7 +702,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         self.dirty
     }
 
-    fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
+    fn builder(&mut self, factory: &mut Factory<B>, world: &World) -> GraphBuilder<B, World> {
         self.dirty = false;
 
         let (window, render_mode) =

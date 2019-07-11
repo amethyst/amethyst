@@ -91,7 +91,7 @@ impl<'a, 'b> SimpleState for CustomState<'a, 'b> {
         let mut dispatcher = dispatcher_builder
             .with_pool(world.read_resource::<ArcThreadPool>().clone())
             .build();
-        dispatcher.setup(&mut world.res);
+        dispatcher.setup(&mut world);
 
         self.dispatcher = Some(dispatcher);
     }
@@ -130,14 +130,14 @@ impl<'a, 'b> SimpleState for CustomState<'a, 'b> {
  
         // Build and setup the `Dispatcher`.
         let mut dispatcher = dispatcher_builder.build();
-        dispatcher.setup(&mut world.res);
+        dispatcher.setup(&mut world);
  
         self.dispatcher = Some(dispatcher);
     }
  
     fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans {
         if let Some(dispatcher) = self.dispatcher.as_mut() {
-            dispatcher.dispatch(&data.world.res);
+            dispatcher.dispatch(&data.world);
         }
 
         Trans::None

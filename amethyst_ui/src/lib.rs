@@ -14,7 +14,7 @@ pub use self::{
     bundle::UiBundle,
     button::{
         UiButton, UiButtonAction, UiButtonActionRetrigger, UiButtonActionRetriggerSystem,
-        UiButtonActionType, UiButtonBuilder, UiButtonBuilderResources, UiButtonSystem,
+        UiButtonActionType, UiButtonBuilder, UiButtonBuilderWorld, UiButtonSystem,
     },
     event::{targeted, Interactable, UiEvent, UiEventType, UiMouseSystem},
     event_retrigger::{EventReceiver, EventRetriggerSystem},
@@ -25,7 +25,7 @@ pub use self::{
     format::{FontAsset, FontHandle, TtfFormat},
     glyphs::UiGlyphsSystem,
     image::UiImage,
-    label::{UiLabel, UiLabelBuilder, UiLabelBuilderResources},
+    label::{UiLabel, UiLabelBuilder, UiLabelBuilderWorld},
     layout::{Anchor, ScaleMode, Stretch, UiTransformSystem},
     pass::{DrawUi, DrawUiDesc},
     prefab::{

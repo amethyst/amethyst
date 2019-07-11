@@ -7,7 +7,7 @@ use crate::pong::Pong;
 use amethyst::{
     assets::Processor,
     core::TransformBundle,
-    ecs::{ReadExpect, Resources, SystemData, World},
+    ecs::{ReadExpect, World, SystemData, WorldExt},
     input::{InputBundle, StringBindings},
     prelude::*,
     renderer::{
@@ -92,13 +92,13 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
     // This trait method reports to the renderer if the graph must be rebuilt, usually because
     // the window has been resized. This implementation checks the screen size and returns true
     // if it has changed.
-    fn rebuild(&mut self, res: &Resources) -> bool {
+    fn rebuild(&mut self, world: &World) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
-        let new_dimensions = res.try_fetch::<ScreenDimensions>();
+        let new_dimensions = world.try_fetch::<ScreenDimensions>();
         use std::ops::Deref;
         if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
             self.dirty = true;
-            self.dimensions = new_dimensions.map(|d| d.clone());
+            self.dimensions = *new_dimensions.map(|d| d.clone());
             return false;
         }
         self.dirty
@@ -109,8 +109,8 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
     fn builder(
         &mut self,
         factory: &mut Factory<DefaultBackend>,
-        res: &Resources,
-    ) -> GraphBuilder<DefaultBackend, Resources> {
+        world: &World,
+    ) -> GraphBuilder<DefaultBackend, World> {
         use amethyst::renderer::rendy::{
             graph::present::PresentNode,
             hal::command::{ClearDepthStencil, ClearValue},
@@ -119,7 +119,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         self.dirty = false;
 
         // Retrieve a reference to the target window, which is created by the WindowBundle
-        let window = <ReadExpect<'_, Window>>::fetch(res);
+        let window = <ReadExpect<'_, Window>>::fetch(world);
         let dimensions = self.dimensions.as_ref().unwrap();
         let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 

@@ -52,7 +52,7 @@
 //! #     fn update(&mut self, data: StateData<'_, GameData<'_, '_>>) -> Trans<GameData<'a, 'b>, E> {
 //! #         data.data.update(&data.world);
 //! #
-//! #         data.world.add_resource(LoadResource);
+//! #         data.world.insert(LoadResource);
 //! #
 //! #         Trans::Pop
 //! #     }
@@ -175,7 +175,7 @@
 //! #
 //! #     fn run(&mut self, _: Self::SystemData) {}
 //! #
-//! #     fn setup(&mut self, res: &mut Resources) {
+//! #     fn setup(&mut self, world: &mut World) {
 //! #         Self::SystemData::setup(res);
 //! #         res.insert(ApplicationResource);
 //! #     }
@@ -241,7 +241,7 @@
 //!             .with_system(MySystem, "my_system", &[])
 //!             .with_effect(|world| {
 //!                 let entity = world.create_entity().with(MyComponent(0)).build();
-//!                 world.add_resource(EffectReturn(entity));
+//!                 world.insert(EffectReturn(entity));
 //!             })
 //!             .with_assertion(|world| {
 //!                 let entity = world.read_resource::<EffectReturn<Entity>>().0.clone();
@@ -293,7 +293,7 @@
 //!     assert!(
 //!         AmethystApplication::blank()
 //!             .with_setup(|world| {
-//!                 world.add_resource(MyResource(0));
+//!                 world.insert(MyResource(0));
 //!             })
 //!             .with_system_single(MySystem, "my_system", &[])
 //!             .with_assertion(|world| {
