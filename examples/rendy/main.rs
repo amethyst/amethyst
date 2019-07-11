@@ -12,16 +12,18 @@ use amethyst::{
     controls::{FlyControlBundle, FlyControlTag},
     core::{
         ecs::{
-            Component, DenseVecStorage, Entities, Entity, Join, Read, ReadStorage, System, Write,
-            WriteStorage,
+            Component, DenseVecStorage, DispatcherBuilder, Entities, Entity, Join, Read,
+            ReadStorage, Resources, System, SystemData, Write, WriteStorage,
         },
         math::{Unit, UnitQuaternion, Vector3},
         Time, Transform, TransformBundle,
     },
+    error::Error,
     gltf::GltfSceneLoaderSystem,
     input::{is_close_requested, is_key_down, Axis, Bindings, Button, InputBundle, StringBindings},
     prelude::*,
     renderer::{
+        bundle::{RenderPlan, RenderPlugin},
         camera::{ActiveCamera, Camera},
         debug_drawing::DebugLines,
         light::{Light, PointLight},
@@ -37,7 +39,8 @@ use amethyst::{
         transparent::Transparent,
         types::{DefaultBackend, Mesh, Texture},
         visibility::BoundingSphere,
-        RenderDebugLines, RenderFlat2D, RenderPbr3D, RenderSkybox, RenderToWindow, RenderingBundle,
+        Factory, RenderDebugLines, RenderFlat2D, RenderFlat3D, RenderPbr3D, RenderShaded3D,
+        RenderSkybox, RenderToWindow, RenderingBundle,
     },
     utils::{
         application_root_dir,
@@ -553,7 +556,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path))
-                .with_plugin(RenderPbr3D::default())
+                .with_plugin(RenderSwitchable3D::default())
                 .with_plugin(RenderFlat2D::default())
                 .with_plugin(RenderDebugLines::default())
                 .with_plugin(RenderSkybox::with_colors(
@@ -565,4 +568,38 @@ fn main() -> amethyst::Result<()> {
     let mut game = Application::new(&resources, Example::new(), game_data)?;
     game.run();
     Ok(())
+}
+
+#[derive(Default, Debug)]
+struct RenderSwitchable3D {
+    pbr: RenderPbr3D,
+    shaded: RenderShaded3D,
+    flat: RenderFlat3D,
+    last_mode: RenderMode,
+}
+
+impl RenderPlugin<DefaultBackend> for RenderSwitchable3D {
+    fn build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        <RenderPbr3D as RenderPlugin<DefaultBackend>>::build(&mut self.pbr, builder)
+    }
+
+    fn rebuild(&mut self, res: &Resources) -> bool {
+        let mode = *<Read<'_, RenderMode>>::fetch(res);
+        self.last_mode != mode
+    }
+
+    fn plan(
+        &mut self,
+        plan: &mut RenderPlan<DefaultBackend>,
+        factory: &mut Factory<DefaultBackend>,
+        res: &Resources,
+    ) -> Result<(), Error> {
+        let mode = *<Read<'_, RenderMode>>::fetch(res);
+        self.last_mode = mode;
+        match mode {
+            RenderMode::Pbr => self.pbr.plan(plan, factory, res),
+            RenderMode::Shaded => self.shaded.plan(plan, factory, res),
+            RenderMode::Flat => self.flat.plan(plan, factory, res),
+        }
+    }
 }
