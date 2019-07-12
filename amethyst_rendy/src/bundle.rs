@@ -1,6 +1,7 @@
 //! A home of [RenderingBundle] with it's rendering plugins system and all types directly related to it.
 
 use crate::{
+    mtl::Material,
     rendy::{
         factory::Factory,
         graph::{
@@ -10,9 +11,10 @@ use crate::{
         hal,
         wsi::Surface,
     },
-    system::{GraphCreator, RenderingSystem},
+    system::{GraphCreator, MeshProcessor, RenderingSystem, TextureProcessor},
     types::Backend,
 };
+use amethyst_assets::Processor;
 use amethyst_core::{
     ecs::{DispatcherBuilder, Resources},
     SystemBundle,
@@ -59,6 +61,10 @@ impl<B: Backend> RenderingBundle<B> {
 
 impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
     fn build(mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        builder.add(MeshProcessor::<B>::default(), "mesh_processor", &[]);
+        builder.add(TextureProcessor::<B>::default(), "texture_processor", &[]);
+        builder.add(Processor::<Material>::new(), "material_processor", &[]);
+
         // make sure that all renderer-specific systems run after game code
         builder.add_barrier();
 
