@@ -1,6 +1,5 @@
 use derivative::Derivative;
 use serde::de::DeserializeOwned;
-use shred_derive::SystemData;
 use std::{
     fmt::{Debug, Formatter},
     marker::PhantomData,
@@ -12,7 +11,10 @@ use amethyst_assets::{
 };
 use amethyst_audio::Source as Audio;
 use amethyst_core::{
-    ecs::prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage},
+    ecs::{
+        shred::{SystemData, ResourceId},
+        prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage, World},
+    },
     HiddenPropagate,
 };
 use amethyst_error::{format_err, Error, ResultExt};

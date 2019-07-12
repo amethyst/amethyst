@@ -32,9 +32,9 @@ pub struct AudioSystem(Output);
 
 impl AudioSystem {
     /// Produces a new AudioSystem that uses the given output.
-    pub fn new(world: &mut World, output: Output) -> Self {
-        <Self as System<'_>>::SystemData::setup(&mut world.res);
-        world.res.insert(output.clone());
+    pub fn new(mut world: &mut World, output: Output) -> Self {
+        <Self as System<'_>>::SystemData::setup(&mut world);
+        world.insert(output.clone());
         AudioSystem(output)
     }
 }

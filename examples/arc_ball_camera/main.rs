@@ -8,7 +8,7 @@ use amethyst::{
         transform::{Transform, TransformBundle},
     },
     ecs::prelude::{
-        Join, Read, ReadExpect, ReadStorage, Resources, System, SystemData, World, WriteStorage,
+        Join, Read, ReadExpect, ReadStorage, System, SystemData, World, WorldExt, WriteStorage,
     },
     input::{
         is_key_down, InputBundle, InputEvent, ScrollDirection, StringBindings, VirtualKeyCode,
@@ -69,9 +69,8 @@ struct CameraDistanceSystem {
 
 impl CameraDistanceSystem {
     pub fn new(world: &mut World) -> Self {
-        <Self as System<'_>>::SystemData::setup(&mut world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world);
         let event_reader = world
-            .res
             .fetch_mut::<EventChannel<InputEvent<String>>>()
             .register_reader();
 
@@ -155,13 +154,13 @@ struct ExampleGraph {
 
 #[allow(clippy::map_clone)]
 impl GraphCreator<DefaultBackend> for ExampleGraph {
-    fn rebuild(&mut self, res: &Resources) -> bool {
+    fn rebuild(&mut self, world: &World) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
-        let new_dimensions = res.try_fetch::<ScreenDimensions>();
+        let new_dimensions = world.try_fetch::<ScreenDimensions>();
         use std::ops::Deref;
         if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
             self.dirty = true;
-            self.dimensions = new_dimensions.map(|d| d.clone());
+            self.dimensions = *new_dimensions.map(|d| d.clone());
             return false;
         }
         self.dirty
@@ -170,8 +169,8 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
     fn builder(
         &mut self,
         factory: &mut Factory<DefaultBackend>,
-        res: &Resources,
-    ) -> GraphBuilder<DefaultBackend, Resources> {
+        world: &World,
+    ) -> GraphBuilder<DefaultBackend, World> {
         use amethyst::renderer::rendy::{
             graph::present::PresentNode,
             hal::command::{ClearDepthStencil, ClearValue},
@@ -179,7 +178,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         self.dirty = false;
 
-        let window = <ReadExpect<'_, Window>>::fetch(res);
+        let window = <ReadExpect<'_, Window>>::fetch(world);
         let surface = factory.create_surface(&window);
         // cache surface format to speed things up
         let surface_format = *self

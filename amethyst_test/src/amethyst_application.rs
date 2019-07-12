@@ -366,7 +366,7 @@ where
             .push(Box::new(move |world: &mut World| {
                 let resource = resource_opt.take();
                 if resource.is_some() {
-                    world.add_resource(resource.unwrap());
+                    world.insert(resource.unwrap());
                 }
             }));
         self
@@ -652,7 +652,7 @@ mod test {
                 AssetZeroLoader::load(world, AssetZero(20)).unwrap(),
             ];
 
-            world.add_resource::<Vec<AssetZeroHandle>>(handles);
+            world.insert::<Vec<AssetZeroHandle>>(handles);
         };
         let assertion_fn = |world: &mut World| {
             let asset_translation_zero_handles = world.read_resource::<Vec<AssetZeroHandle>>();
@@ -678,7 +678,7 @@ mod test {
     #[test]
     fn execution_order_is_setup_state_effect_assertion() -> Result<(), Error> {
         struct Setup;
-        let setup_fns = |world: &mut World| world.add_resource(Setup);
+        let setup_fns = |world: &mut World| world.insert(Setup);
         let state_fns = || {
             LoadingState::new(FunctionState::new(|world: &mut World| {
                 // Panics if setup is not run before this.
@@ -690,7 +690,7 @@ mod test {
             world.read_resource::<LoadResource>();
 
             let handles = vec![AssetZeroLoader::load(world, AssetZero(10)).unwrap()];
-            world.add_resource(handles);
+            world.insert(handles);
         };
         let assertion_fn = |world: &mut World| {
             let asset_translation_zero_handles = world.read_resource::<Vec<AssetZeroHandle>>();
@@ -731,7 +731,7 @@ mod test {
         let effect_fn = |world: &mut World| {
             let entity = world.create_entity().with(ComponentZero(0)).build();
 
-            world.add_resource(EffectReturn(entity));
+            world.insert(EffectReturn(entity));
         };
 
         fn get_component_zero_value(world: &mut World) -> i32 {
@@ -779,7 +779,7 @@ mod test {
                 world.register::<ComponentZero>();
 
                 let entity = world.create_entity().with(ComponentZero(0)).build();
-                world.add_resource(EffectReturn(entity));
+                world.insert(EffectReturn(entity));
             })
             .with_system_single(SystemEffect, "system_effect", &[])
             .with_assertion(assertion_fn)
@@ -794,7 +794,7 @@ mod test {
     fn with_setup_invoked_twice_should_run_in_specified_order() -> Result<(), Error> {
         AmethystApplication::blank()
             .with_setup(|world| {
-                world.add_resource(ApplicationResource);
+                world.insert(ApplicationResource);
             })
             .with_setup(|world| {
                 world.read_resource::<ApplicationResource>();
@@ -806,7 +806,7 @@ mod test {
     fn with_effect_invoked_twice_should_run_in_the_specified_order() -> Result<(), Error> {
         AmethystApplication::blank()
             .with_effect(|world| {
-                world.add_resource(ApplicationResource);
+                world.insert(ApplicationResource);
             })
             .with_effect(|world| {
                 world.read_resource::<ApplicationResource>();
@@ -818,7 +818,7 @@ mod test {
     fn with_assertion_invoked_twice_should_run_in_the_specified_order() -> Result<(), Error> {
         AmethystApplication::blank()
             .with_assertion(|world| {
-                world.add_resource(ApplicationResource);
+                world.insert(ApplicationResource);
             })
             .with_assertion(|world| {
                 world.read_resource::<ApplicationResource>();
@@ -831,7 +831,7 @@ mod test {
         AmethystApplication::blank()
             .with_state(|| {
                 FunctionState::new(|world| {
-                    world.add_resource(ApplicationResource);
+                    world.insert(ApplicationResource);
                 })
             })
             .with_state(|| {
@@ -847,7 +847,7 @@ mod test {
         AmethystApplication::blank()
             .with_state(|| {
                 FunctionState::new(|world| {
-                    world.add_resource(ApplicationResource);
+                    world.insert(ApplicationResource);
                 })
             })
             .with_setup(|world| {
@@ -946,7 +946,7 @@ mod test {
         }
     }
 
-    // === Resources === //
+    // === World === //
     #[derive(Debug, Default)]
     struct ApplicationResource;
     #[derive(Debug)]
@@ -982,7 +982,7 @@ mod test {
     {
         fn update(&mut self, data: StateData<'_, GameData<'_, '_>>) -> Trans<GameData<'a, 'b>, E> {
             data.data.update(&data.world);
-            data.world.add_resource(LoadResource);
+            data.world.insert(LoadResource);
             Trans::Switch(Box::new(self.next_state.take().unwrap()))
         }
     }
@@ -1040,12 +1040,12 @@ mod test {
         type SystemData = SystemNonDefaultData<'s>;
         fn run(&mut self, _: Self::SystemData) {}
 
-        fn setup(&mut self, res: &mut Resources) {
+        fn setup(&mut self, mut world: &mut World) {
             // Must be called when we override `.setup()`
-            SystemNonDefaultData::setup(res);
+            SystemNonDefaultData::setup(world);
 
             // Need to manually insert this when the resource is `!Default`
-            res.insert(ApplicationResourceNonDefault);
+            world.insert(ApplicationResourceNonDefault);
         }
     }
 

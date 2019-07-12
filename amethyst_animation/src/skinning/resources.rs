@@ -1,10 +1,12 @@
 use derivative::Derivative;
-use hibitset::BitSet;
 use serde::{Deserialize, Serialize};
 
 use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_core::{
-    ecs::prelude::{Component, DenseVecStorage, Entity, WriteStorage},
+    ecs::{
+        hibitset::BitSet,
+        prelude::{Component, DenseVecStorage, Entity, WriteStorage},
+    },
     math::Matrix4,
 };
 use amethyst_derive::PrefabData;

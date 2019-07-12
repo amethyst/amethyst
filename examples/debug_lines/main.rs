@@ -7,7 +7,7 @@ use amethyst::{
         transform::{Transform, TransformBundle},
         Time,
     },
-    ecs::{Read, ReadExpect, Resources, System, SystemData, World, Write},
+    ecs::{Read, ReadExpect, World, System, SystemData, WorldExt, Write},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
@@ -65,10 +65,10 @@ struct ExampleState;
 impl SimpleState for ExampleState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         // Setup debug lines as a resource
-        data.world.add_resource(DebugLines::new());
+        data.world.insert(DebugLines::new());
         // Configure width of lines. Optional step
         data.world
-            .add_resource(DebugLinesParams { line_width: 2.0 });
+            .insert(DebugLinesParams { line_width: 2.0 });
 
         // Setup debug lines as a component and add lines to render axis&grid
         let mut debug_lines_component = DebugLinesComponent::with_capacity(100);
@@ -227,9 +227,9 @@ struct ExampleGraph {
 
 #[allow(clippy::map_clone)]
 impl<B: Backend> GraphCreator<B> for ExampleGraph {
-    fn rebuild(&mut self, res: &Resources) -> bool {
+    fn rebuild(&mut self, world: &World) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
-        let new_dimensions = res.try_fetch::<ScreenDimensions>();
+        let new_dimensions = world.try_fetch::<ScreenDimensions>();
         use std::ops::Deref;
         if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
             self.dirty = true;
@@ -239,10 +239,10 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         self.dirty
     }
 
-    fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
+    fn builder(&mut self, factory: &mut Factory<B>, world: &World) -> GraphBuilder<B, World> {
         self.dirty = false;
 
-        let window = <ReadExpect<'_, Window>>::fetch(res);
+        let window = <ReadExpect<'_, Window>>::fetch(world);
 
         let surface = factory.create_surface(&window);
         // cache surface format to speed things up

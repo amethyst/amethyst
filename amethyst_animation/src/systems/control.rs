@@ -51,9 +51,9 @@ where
     T: AnimationSampling + Component + Clone,
 {
     /// Creates a new `AnimationControlSystem`
-    pub fn new(world: &mut World) -> Self {
-        <Self as System<'_>>::SystemData::setup(&mut world.res);
-        ReadStorage::<AnimationSet<I, T>>::setup(&mut world.res);
+    pub fn new(mut world: &mut World) -> Self {
+        <Self as System<'_>>::SystemData::setup(&mut world);
+        ReadStorage::<AnimationSet<I, T>>::setup(&mut world);
         AnimationControlSystem {
             m: marker::PhantomData,
             next_id: 1,

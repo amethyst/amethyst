@@ -191,7 +191,7 @@ Then, change your `GraphCreator` like so:
 # }
 # 
 # impl GraphCreator<DefaultBackend> for ExampleGraph {
-#     fn rebuild(&mut self, res: &Resources) -> bool {
+#     fn rebuild(&mut self, world: &World) -> bool {
 #         let new_dimensions = res.try_fetch::<ScreenDimensions>();
 #         use std::ops::Deref;
 #         if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
@@ -205,7 +205,7 @@ Then, change your `GraphCreator` like so:
 #     fn builder(
 #         &mut self,
 #         factory: &mut Factory<DefaultBackend>,
-#         res: &Resources,
+#         world: &World,
 #     ) -> GraphBuilder<DefaultBackend, Resources> {
 #         use amethyst::renderer::rendy::{
 #             graph::present::PresentNode,
@@ -380,7 +380,7 @@ fn initialise_scoreboard(world: &mut World) {
         )).build();
 
 # pub struct ScoreText {pub p1_score: Entity,pub p2_score: Entity,}
-    world.add_resource(ScoreText { p1_score, p2_score });
+    world.insert(ScoreText { p1_score, p2_score });
 }
 ```
 

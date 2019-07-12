@@ -25,12 +25,12 @@ pub struct HideHierarchySystem {
 
 impl HideHierarchySystem {
     /// Creates a new `HideHierarchySystem`.
-    pub fn new(world: &mut World) -> Self {
+    pub fn new(mut world: &mut World) -> Self {
         use crate::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(&mut world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world);
         // This fetch_mut panics if `ParentHierarchy` is not set up yet, hence the dependency on "parent_hierarchy_system"
-        let parent_events_id = world.res.fetch_mut::<ParentHierarchy>().track();
-        let mut hidden = WriteStorage::<HiddenPropagate>::fetch(&world.res);
+        let parent_events_id = world.fetch_mut::<ParentHierarchy>().track();
+        let mut hidden = WriteStorage::<HiddenPropagate>::fetch(&world);
         let hidden_events_id = hidden.register_reader();
         Self {
             marked_as_modified: BitSet::default(),

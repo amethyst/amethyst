@@ -94,9 +94,9 @@ pub struct UiGlyphsSystem<B: Backend> {
 
 impl<B: Backend> UiGlyphsSystem<B> {
     /// Create new UI glyphs system
-    pub fn new(world: &mut World) -> Self {
-        <Self as System<'_>>::SystemData::setup(&mut world.res);
-        world.res.insert(UiGlyphsResource { glyph_tex: None });
+    pub fn new(mut world: &mut World) -> Self {
+        <Self as System<'_>>::SystemData::setup(&mut world);
+        world.insert(UiGlyphsResource { glyph_tex: None });
         Self {
             glyph_brush: GlyphBrushBuilder::using_fonts(vec![])
                 .initial_cache_size((512, 512))

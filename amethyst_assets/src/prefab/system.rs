@@ -37,10 +37,10 @@ where
     T: PrefabData<'a> + Send + Sync + 'static,
 {
     /// Creates a new `PrefabLoaderSystem`.
-    pub fn new(world: &mut World) -> Self {
+    pub fn new(mut world: &mut World) -> Self {
         use amethyst_core::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(&mut world.res);
-        let insert_reader = WriteStorage::<Handle<Prefab<T>>>::fetch(&world.res).register_reader();
+        <Self as System<'_>>::SystemData::setup(&mut world);
+        let insert_reader = WriteStorage::<Handle<Prefab<T>>>::fetch(&world).register_reader();
         Self {
             _m: PhantomData,
             entities: Vec::default(),

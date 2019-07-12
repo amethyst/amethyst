@@ -248,7 +248,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
     // This trait method reports to the renderer if the graph must be rebuilt, usually because
     // the window has been resized. This implementation checks the screen size and returns true
     // if it has changed.
-    fn rebuild(&mut self, res: &Resources) -> bool {
+    fn rebuild(&mut self, world: &World) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
         let new_dimensions = res.try_fetch::<ScreenDimensions>();
         use std::ops::Deref;
@@ -265,7 +265,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
     fn builder(
         &mut self,
         factory: &mut Factory<DefaultBackend>,
-        res: &Resources,
+        world: &World,
     ) -> GraphBuilder<DefaultBackend, Resources> {
         use amethyst::renderer::rendy::{
             graph::present::PresentNode,

@@ -50,11 +50,11 @@ pub struct ResizeSystem {
 
 impl ResizeSystem {
     /// Creates a new ResizeSystem that listens with the given reader Id.
-    pub fn new(world: &mut World) -> ResizeSystem {
+    pub fn new(mut world: &mut World) -> ResizeSystem {
         use amethyst_core::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(&mut world.res);
+        <Self as System<'_>>::SystemData::setup(&mut world);
         let screen_size = (0.0, 0.0);
-        let mut resize = WriteStorage::<UiResize>::fetch(&world.res);
+        let mut resize = WriteStorage::<UiResize>::fetch(&world);
         let resize_events_id = resize.register_reader();
         ResizeSystem {
             screen_size,

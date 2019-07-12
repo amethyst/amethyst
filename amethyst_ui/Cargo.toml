@@ -26,11 +26,8 @@ derive-new = "0.5.6"
 fnv = "1"
 gfx = { version = "0.17", features = ["serialize"] }
 glsl-layout = "0.3"
-hibitset = { version = "0.5.1", features = ["parallel"] }
 ron = "0.5"
 serde = { version = "1.0", features = ["derive"] }
-shred-derive = "0.5"
-shred = "0.7"
 smallvec = "0.6"
 unicode-normalization = "0.1"
 unicode-segmentation = "1.2"

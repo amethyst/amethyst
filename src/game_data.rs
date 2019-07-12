@@ -1,6 +1,6 @@
 use crate::{
     core::{
-        ecs::prelude::{Dispatcher, DispatcherBuilder, RunNow, System, World},
+        ecs::prelude::{Dispatcher, DispatcherBuilder, RunNow, System, World, WorldExt},
         ArcThreadPool, SystemBundle,
     },
     error::Error,
@@ -38,14 +38,14 @@ impl<'a, 'b> GameData<'a, 'b> {
     /// Update game data
     pub fn update(&mut self, world: &World) {
         if let Some(dispatcher) = &mut self.dispatcher {
-            dispatcher.dispatch(&world.res);
+            dispatcher.dispatch(&world);
         }
     }
 
     /// Dispose game data, dropping the dispatcher
-    pub fn dispose(&mut self, world: &mut World) {
+    pub fn dispose(&mut self, mut world: &mut World) {
         if let Some(dispatcher) = self.dispatcher.take() {
-            dispatcher.dispose(&mut world.res);
+            dispatcher.dispose(&mut world);
         }
     }
 }
@@ -289,15 +289,15 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> DataInit<GameData<'a, 'b>> for GameDataBuilder<'a, 'b> {
-    fn build(self, world: &mut World) -> GameData<'a, 'b> {
+    fn build(self, mut world: &mut World) -> GameData<'a, 'b> {
         #[cfg(not(no_threading))]
-        let pool = world.read_resource::<ArcThreadPool>().clone();
+        let pool = (*world.read_resource::<ArcThreadPool>()).clone();
 
         #[cfg(not(no_threading))]
         let mut dispatcher = self.disp_builder.with_pool(pool).build();
         #[cfg(no_threading)]
         let mut dispatcher = self.disp_builder.build();
-        dispatcher.setup(&mut world.res);
+        dispatcher.setup(&mut world);
         GameData::new(dispatcher)
     }
 }

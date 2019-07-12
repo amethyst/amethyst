@@ -9,7 +9,7 @@ use amethyst::{
     },
     ecs::{
         storage::DenseVecStorage, Component, Entities, Entity, Join, ReadStorage, World,
-        WriteStorage,
+        WriteStorage, WorldExt,
     },
     prelude::*,
     utils::application_root_dir,

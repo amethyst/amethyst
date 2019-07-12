@@ -22,7 +22,7 @@ fn main() {
     let my = MyResource;
     
     // We add the resource to the world.
-    world.add_resource(my);
+    world.insert(my);
 }
 ```
 
@@ -44,7 +44,7 @@ If you are not sure that the resource will be present, use the methods available
 # struct MyResource;
 # fn main() {
 #   let mut world = amethyst::ecs::World::new();
-    let my = world.res.entry::<MyResource>().or_insert_with(|| MyResource);
+    let my = world.entry::<MyResource>().or_insert_with(|| MyResource);
 # }
 ```
 

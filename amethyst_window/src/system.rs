@@ -1,7 +1,7 @@
 use crate::{config::DisplayConfig, resources::ScreenDimensions};
 use amethyst_config::Config;
 use amethyst_core::{
-    ecs::{ReadExpect, Resources, RunNow, System, SystemData, World, Write, WriteExpect},
+    ecs::{ReadExpect, RunNow, System, SystemData, World, Write, WriteExpect},
     shrev::EventChannel,
 };
 use std::path::Path;
@@ -39,10 +39,8 @@ impl WindowSystem {
             .expect("Window closed during initialization!")
             .into();
         let hidpi = window.get_hidpi_factor();
-        world
-            .res
-            .insert(ScreenDimensions::new(width, height, hidpi));
-        world.res.insert(window);
+        world.insert(ScreenDimensions::new(width, height, hidpi));
+        world.insert(window);
         Self
     }
 
@@ -106,8 +104,8 @@ impl EventsLoopSystem {
 }
 
 impl<'a> RunNow<'a> for EventsLoopSystem {
-    fn run_now(&mut self, res: &'a Resources) {
-        let mut event_handler = <Write<'a, EventChannel<Event>>>::fetch(res);
+    fn run_now(&mut self, world: &'a World) {
+        let mut event_handler = <Write<'a, EventChannel<Event>>>::fetch(world);
 
         let events = &mut self.events;
         self.events_loop.poll_events(|event| {
@@ -116,7 +114,7 @@ impl<'a> RunNow<'a> for EventsLoopSystem {
         event_handler.drain_vec_write(events);
     }
 
-    fn setup(&mut self, res: &mut Resources) {
-        <Write<'a, EventChannel<Event>>>::setup(res);
+    fn setup(&mut self, world: &mut World) {
+        <Write<'a, EventChannel<Event>>>::setup(world);
     }
 }

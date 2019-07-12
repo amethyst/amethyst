@@ -480,7 +480,7 @@ impl SimpleState for Pong {
         if let Some(mut timer) = self.ball_spawn_timer.take() {
             // If the timer isn't expired yet, subtract the time that passed since the last update.
             {
-                let time = data.world.res.fetch::<Time>();
+                let time = data.world.fetch::<Time>();
                 timer -= time.delta_seconds();
             }
             if timer <= 0.0 {

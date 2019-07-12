@@ -27,7 +27,7 @@ To enable this you have to do the following:
 # }
 # 
 # impl GraphCreator<DefaultBackend> for ExampleGraph {
-#     fn rebuild(&mut self, res: &Resources) -> bool {
+#     fn rebuild(&mut self, world: &World) -> bool {
 #         let new_dimensions = res.try_fetch::<ScreenDimensions>();
 #         use std::ops::Deref;
 #         if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
@@ -41,7 +41,7 @@ To enable this you have to do the following:
 #     fn builder(
 #         &mut self,
 #         factory: &mut Factory<DefaultBackend>,
-#         res: &Resources,
+#         world: &World,
 #     ) -> GraphBuilder<DefaultBackend, Resources> {
 #         use amethyst::renderer::rendy::{
 #             graph::present::PresentNode,

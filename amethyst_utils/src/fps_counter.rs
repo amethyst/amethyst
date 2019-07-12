@@ -1,4 +1,4 @@
-//! Util Resources
+//! Util World
 
 use amethyst_core::{
     ecs::prelude::{DispatcherBuilder, Read, System, World, Write},
@@ -31,7 +31,7 @@ use thread_profiler::profile_scope;
 /// # use amethyst_core::ecs::World;
 /// # let mut world = World::new();
 /// # let counter = FpsCounter::new(2);
-/// # world.add_resource(counter);
+/// # world.insert(counter);
 /// let mut counter = world.write_resource::<FpsCounter>();
 ///
 /// ```

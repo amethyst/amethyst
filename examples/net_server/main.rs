@@ -1,6 +1,6 @@
 use amethyst::{
     core::frame_limiter::FrameRateLimitStrategy,
-    ecs::{Component, Entities, Join, System, VecStorage, World, WriteStorage},
+    ecs::{Component, Entities, Join, System, VecStorage, World, WorldExt, WriteStorage},
     network::*,
     prelude::*,
     shrev::ReaderId,

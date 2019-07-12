@@ -4,16 +4,18 @@ use crate::{
     transparent::Transparent,
 };
 use amethyst_core::{
-    ecs::prelude::{
-        Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage, System,
-        Write,
+    ecs::{
+        prelude::{
+            Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage, System,
+            Write,
+        },
+        hibitset::BitSet,
     },
     math::{convert, distance_squared, Matrix4, Point3, Vector4},
     Hidden, HiddenPropagate, Transform,
 };
 use amethyst_window::ScreenDimensions;
 
-use hibitset::BitSet;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 

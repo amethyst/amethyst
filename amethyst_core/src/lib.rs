@@ -20,8 +20,8 @@ pub use alga;
 pub use approx;
 pub use nalgebra as math;
 pub use num_traits as num;
-pub use shred;
-pub use shrev;
+pub use specs::shred;
+pub use specs::shrev;
 pub use specs as ecs;
 
 use rayon;

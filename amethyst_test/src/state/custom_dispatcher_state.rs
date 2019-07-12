@@ -42,7 +42,7 @@ impl<'a, 'b> CustomDispatcherState<'a, 'b> {
                     "Expected `dispatcher_builder` to exist when `dispatcher` is not yet built.",
                 )
                 .build();
-            dispatcher.setup(&mut world.res);
+            dispatcher.setup(&mut world);
             self.dispatcher = Some(dispatcher);
         }
     }
@@ -68,7 +68,7 @@ where
 
     fn update(&mut self, data: StateData<'_, T>) -> Trans<T, E> {
         data.data.update(&data.world);
-        self.dispatcher.as_mut().unwrap().dispatch(&data.world.res);
+        self.dispatcher.as_mut().unwrap().dispatch(&data.world);
 
         Trans::Pop
     }
