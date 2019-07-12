@@ -138,7 +138,6 @@ env_logger = "0.6.1"
 genmesh = "0.6"
 ron = "0.5"
 specs-derive = "0.4"
-serde_json = "1"
 
 [build-dependencies]
 dirs = "1.0.5"

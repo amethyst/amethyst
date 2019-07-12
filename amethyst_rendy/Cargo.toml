@@ -39,7 +39,6 @@ static_assertions = "0.3"
 
 thread_profiler = { version = "0.3", optional = true }
 approx = "0.3.2"
-serde_json = "1"
 
 [dev-dependencies]
 rayon = "1.0.2"
