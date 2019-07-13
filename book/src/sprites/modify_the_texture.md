@@ -1,15 +1,15 @@
 # Modify The `Texture`
 
-The colours of the sprite will show up exactly as in the source file,
-but sometimes being able to slightly modify the overall colour
-is useful - for instance, colouring an angry enemy more red, or
+The colors of the sprite will show up exactly as in the source file,
+but sometimes being able to slightly modify the overall color
+is useful - for instance, coloring an angry enemy more red, or
 making a frozen enemy blue. Amethyst has a [`Component`][doc_component] called
 [`Tint`][doc_tint] to do this.
 
 To use [`Tint`][doc_tint], register [`Tint`][doc_tint] as a new
 [`Component`][doc_component] with the world and build it as part of the entity.
-[`Tint`][doc_tint] will multiply the colour values of the sprite by its
-own values, so a [`Tint`][doc_tint] with a white colour will have no
+[`Tint`][doc_tint] will multiply the color values of the sprite by its
+own values, so a [`Tint`][doc_tint] with a white color will have no
 effect on the sprite.
 
 ```rust,edition2018,no_run,noplaypen
@@ -32,14 +32,14 @@ fn init_image(world: &mut World, texture_handle: &Handle<Texture>) {
     // Flip horizontally
     transform.set_rotation_y_axis(f32::pi());
 
-    // Colour white to show as normal, then update later
-    let colour = Tint(Srgba::new(1.0, 1.0, 1.0, 1.0));
+    // Color white to show as normal, then update later
+    let color = Tint(Srgba::new(1.0, 1.0, 1.0, 1.0));
 
     world
         .create_entity()
         .with(transform)
-        .with(colour)
-        .with(texture_handle.clone()) // Use the texture handle as a component
+        .with(color)
+        .with(texture_handle.clone())
         .build();
 }
 
