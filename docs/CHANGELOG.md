@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Added
 
+* Add a feature flag `sentry` to disable the sentry dependency. ([#1804])
 * Fixes and renames regression from ([#1442]) added back `position_from_world` as `screen_to_world`. Also added
 `world_to_screen`. Also adds `Transform::copy_local_to_global()' for `debug_assertion` builds ([#1733])
 * Add `add_rectangle`, `add_rotated_rectangle`, `add_box`, `add_rotated_box`, `add_circle`, `add_rotated_circle`,
@@ -37,6 +38,7 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 
 * Fix animation unwrap on missing animated component. ([#1773])
 
+[#1804]: https://github.com/amethyst/amethyst/pull/1804
 [#1791]: https://github.com/amethyst/amethyst/pull/1791
 [#1766]: https://github.com/amethyst/amethyst/pull/1766
 [#1719]: https://github.com/amethyst/amethyst/pull/1719
