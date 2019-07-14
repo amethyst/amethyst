@@ -21,7 +21,7 @@ use amethyst::renderer::{ImageFormat, Texture};
 use amethsyt::renderer::resources::Tint;
 use amethyst::renderer::palette::rgb::Srgba;
 
-fn init_image(world: &mut World, texture_handle: &Handle<Texture>) {
+fn init_image(world: &mut World, texture_handle: Handle<Texture>) {
     use amethyst::core::math::RealField;
 
     // Add a transform component to give the image a position
@@ -39,7 +39,7 @@ fn init_image(world: &mut World, texture_handle: &Handle<Texture>) {
         .create_entity()
         .with(transform)
         .with(color)
-        .with(texture_handle.clone())
+        .with(texture_handle)
         .build();
 }
 
@@ -52,7 +52,7 @@ impl SimpleState for ExampleState {
         let texture_handle = load_texture("texture/sprite_sheet.png", world);
 
         // show the image!
-        init_image(world, &texture_handle);
+        init_image(world, texture_handle);
     }
 }
 ```
