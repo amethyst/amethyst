@@ -48,7 +48,7 @@ you should get `Cargo.toml`, `src/main.rs` and `resources/display_config.ron`.
 
 ### Starter Project
 
-If you want to get running as quickly as possibly and start playing around with Amethyst, you can also use a starter project. These are specifically made for certain times of games, and will set you up with the groundwork needed to start right away.  
+If you want to get running as quickly as possibly and start playing around with Amethyst, you can also use a starter project. These are specifically made for certain types of games, and will set you up with the groundwork needed to start right away.  
 The `README.md` file on these will include everything you need to know to run the starter project.
 
 > **Note:** Right now, the only starter available is for 2D games. This will expand over time, and offer more options for different types of games.
