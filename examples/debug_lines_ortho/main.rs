@@ -5,7 +5,7 @@ use amethyst::{
         transform::{Transform, TransformBundle},
         Time,
     },
-    ecs::{Read, ReadExpect, World, System, SystemData, WorldExt, Write},
+    ecs::{Read, ReadExpect, System, SystemData, World, WorldExt, Write},
     prelude::*,
     renderer::{
         camera::Camera,
@@ -54,8 +54,7 @@ impl SimpleState for ExampleState {
         // Setup debug lines as a resource
         data.world.insert(DebugLines::new());
         // Configure width of lines. Optional step
-        data.world
-            .insert(DebugLinesParams { line_width: 2.0 });
+        data.world.insert(DebugLinesParams { line_width: 2.0 });
 
         // Setup debug lines as a component and add lines to render axis&grid
         let mut debug_lines_component = DebugLinesComponent::new();
@@ -143,7 +142,7 @@ impl<B: Backend> GraphCreator<B> for ExampleGraph {
         use std::ops::Deref;
         if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
             self.dirty = true;
-            self.dimensions = new_dimensions.map(|d| d.clone());
+            self.dimensions = new_dimensions.map(|d| (*d).clone());
             return false;
         }
         self.dirty

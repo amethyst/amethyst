@@ -3,7 +3,7 @@
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
     core::transform::TransformBundle,
-    ecs::prelude::{ReadExpect, World, SystemData, WorldExt},
+    ecs::prelude::{ReadExpect, SystemData, World, WorldExt},
     prelude::*,
     renderer::{
         pass::DrawShadedDesc,
@@ -76,7 +76,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         use std::ops::Deref;
         if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
             self.dirty = true;
-            self.dimensions = new_dimensions.cloned();
+            self.dimensions = new_dimensions.map(|d| (*d).clone());
             return false;
         }
         self.dirty

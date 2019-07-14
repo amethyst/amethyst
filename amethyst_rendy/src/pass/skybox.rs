@@ -7,7 +7,7 @@ use crate::{
     types::Backend,
     util,
 };
-use amethyst_core::ecs::{Read, World, SystemData};
+use amethyst_core::ecs::{Read, SystemData, World};
 use derivative::Derivative;
 use glsl_layout::{vec3, AsStd140};
 use rendy::{

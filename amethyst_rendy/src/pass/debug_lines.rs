@@ -6,7 +6,7 @@ use crate::{
     types::Backend,
     util,
 };
-use amethyst_core::ecs::{Join, Read, World, SystemData, Write, WriteStorage};
+use amethyst_core::ecs::{Join, Read, SystemData, World, Write, WriteStorage};
 use derivative::Derivative;
 use glsl_layout::*;
 use rendy::{

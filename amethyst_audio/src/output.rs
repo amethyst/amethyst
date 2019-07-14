@@ -123,7 +123,8 @@ pub fn outputs() -> OutputIterator {
 /// Initialize default output
 pub fn init_output(world: &mut World) {
     if let Some(o) = default_output() {
-        world.entry::<AudioSink>()
+        world
+            .entry::<AudioSink>()
             .or_insert_with(|| AudioSink::new(&o));
         world.entry::<Output>().or_insert_with(|| o);
     } else {

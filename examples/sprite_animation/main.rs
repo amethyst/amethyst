@@ -10,10 +10,7 @@ use amethyst::{
     assets::{PrefabData, PrefabLoader, PrefabLoaderSystem, Processor, ProgressCounter, RonFormat},
     core::transform::{Transform, TransformBundle},
     derive::PrefabData,
-    ecs::{
-        prelude::Entity, Entities, Join, ReadExpect, ReadStorage, SystemData,
-        WriteStorage,
-    },
+    ecs::{prelude::Entity, Entities, Join, ReadExpect, ReadStorage, SystemData, WriteStorage},
     error::Error,
     prelude::{Builder, World, WorldExt},
     renderer::{
@@ -202,7 +199,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         use std::ops::Deref;
         if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
             self.dirty = true;
-            self.dimensions = new_dimensions.map(|d| d.clone());
+            self.dimensions = new_dimensions.map(|d| (*d).clone());
             return false;
         }
         self.dirty

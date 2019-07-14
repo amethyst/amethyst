@@ -24,7 +24,7 @@ impl<'a, 'b> CustomGameData<'a, 'b> {
     }
 
     /// Dispose game data, dropping the dispatcher
-    pub fn dispose(&mut self, world: &mut World) {
+    pub fn dispose(&mut self, mut world: &mut World) {
         if let Some(base) = self.base.take() {
             base.dispose(&mut world);
         }
@@ -92,20 +92,25 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
 }
 
 impl<'a, 'b> DataInit<CustomGameData<'a, 'b>> for CustomGameDataBuilder<'a, 'b> {
-    fn build(self, world: &mut World) -> CustomGameData<'a, 'b> {
-        #[cfg(not(no_threading))]
-        let pool = world.read_resource::<ArcThreadPool>().clone();
+    fn build(self, mut world: &mut World) -> CustomGameData<'a, 'b> {
+        let (mut base, mut running) = {
+            #[cfg(not(no_threading))]
+            let pool = world.read_resource::<ArcThreadPool>().clone();
 
-        #[cfg(not(no_threading))]
-        let mut base = self.base.with_pool(pool.clone()).build();
-        #[cfg(no_threading)]
-        let mut base = self.base.build();
+            #[cfg(not(no_threading))]
+            let base = self.base.with_pool((*pool).clone()).build();
+            #[cfg(no_threading)]
+            let base = self.base.build();
+
+            #[cfg(not(no_threading))]
+            let running = self.running.with_pool((*pool).clone()).build();
+            #[cfg(no_threading)]
+            let running = self.running.build();
+
+            (base, running)
+        };
+
         base.setup(&mut world);
-
-        #[cfg(not(no_threading))]
-        let mut running = self.running.with_pool((*pool).clone()).build();
-        #[cfg(no_threading)]
-        let mut running = self.running.build();
         running.setup(&mut world);
 
         CustomGameData {

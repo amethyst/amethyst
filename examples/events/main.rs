@@ -62,11 +62,9 @@ struct ReceivingSystem {
 }
 
 impl ReceivingSystem {
-    pub fn new(world: &mut World) -> Self {
+    pub fn new(mut world: &mut World) -> Self {
         <Self as System<'_>>::SystemData::setup(&mut world);
-        let reader = world
-            .fetch_mut::<EventChannel<MyEvent>>()
-            .register_reader();
+        let reader = world.fetch_mut::<EventChannel<MyEvent>>().register_reader();
         ReceivingSystem { reader }
     }
 }

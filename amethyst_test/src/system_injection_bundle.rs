@@ -25,7 +25,11 @@ impl<'a, 'b, Sys> SystemBundle<'a, 'b> for SystemInjectionBundle<'a, Sys>
 where
     Sys: for<'s> System<'s> + Send + 'a,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn build(
+        self,
+        _world: &mut World,
+        builder: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<(), Error> {
         builder.add(
             self.system,
             &self.system_name,

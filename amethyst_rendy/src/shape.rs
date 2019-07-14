@@ -3,8 +3,8 @@ use crate::types::Mesh;
 use amethyst_assets::{AssetStorage, Handle, Loader, PrefabData, Progress, ProgressCounter};
 use amethyst_core::{
     ecs::{
-        shred::{SystemData, ResourceId},
-        prelude::{Entity, Read, ReadExpect, WriteStorage, World},
+        prelude::{Entity, Read, ReadExpect, World, WriteStorage},
+        shred::{ResourceId, SystemData},
     },
     math::Vector3,
 };

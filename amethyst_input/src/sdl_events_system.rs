@@ -8,7 +8,7 @@ use sdl2::{
 };
 
 use amethyst_core::{
-    ecs::prelude::{World, RunNow, SystemData, Write},
+    ecs::prelude::{RunNow, SystemData, World, Write},
     shrev::EventChannel,
 };
 

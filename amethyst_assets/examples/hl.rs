@@ -9,11 +9,9 @@ use serde::{Deserialize, Serialize};
 
 use amethyst_assets::*;
 use amethyst_core::{
-    ecs::{
-        prelude::{
-            Builder, Dispatcher, DispatcherBuilder, Read, ReadExpect, System, VecStorage, World, WorldExt,
-            Write,
-        },
+    ecs::prelude::{
+        Builder, Dispatcher, DispatcherBuilder, Read, ReadExpect, System, VecStorage, World,
+        WorldExt, Write,
     },
     Time,
 };

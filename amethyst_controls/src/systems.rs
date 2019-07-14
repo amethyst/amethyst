@@ -136,9 +136,7 @@ impl FreeRotationSystem {
     pub fn new(mut world: &mut World, sensitivity_x: f32, sensitivity_y: f32) -> Self {
         use amethyst_core::ecs::prelude::SystemData;
         <Self as System<'_>>::SystemData::setup(&mut world);
-        let event_reader = world
-            .fetch_mut::<EventChannel<Event>>()
-            .register_reader();
+        let event_reader = world.fetch_mut::<EventChannel<Event>>().register_reader();
         FreeRotationSystem {
             sensitivity_x,
             sensitivity_y,
@@ -191,9 +189,7 @@ impl MouseFocusUpdateSystem {
     pub fn new(mut world: &mut World) -> MouseFocusUpdateSystem {
         use amethyst_core::ecs::prelude::SystemData;
         <Self as System<'_>>::SystemData::setup(&mut world);
-        let event_reader = world
-            .fetch_mut::<EventChannel<Event>>()
-            .register_reader();
+        let event_reader = world.fetch_mut::<EventChannel<Event>>().register_reader();
         Self { event_reader }
     }
 }

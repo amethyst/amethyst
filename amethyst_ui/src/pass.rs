@@ -4,7 +4,9 @@ use crate::{
 };
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::{
-    ecs::{hibitset::BitSet, Entities, Entity, Join, Read, ReadExpect, ReadStorage, World, SystemData},
+    ecs::{
+        hibitset::BitSet, Entities, Entity, Join, Read, ReadExpect, ReadStorage, SystemData, World,
+    },
     Hidden, HiddenPropagate,
 };
 use amethyst_rendy::{

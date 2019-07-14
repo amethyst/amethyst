@@ -15,7 +15,7 @@ use crate::{
     util::{self, TapCountIter},
 };
 use amethyst_core::{
-    ecs::{Join, ReadStorage, World, SystemData},
+    ecs::{Join, ReadStorage, SystemData, World},
     math::{convert, Vector3},
     transform::Transform,
 };

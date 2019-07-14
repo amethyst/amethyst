@@ -558,7 +558,7 @@ mod tests {
 
     #[test]
     fn switch_pop() {
-        use crate::ecs::prelude::World;
+        use crate::ecs::prelude::{World, WorldExt};
 
         let mut world = World::new();
 

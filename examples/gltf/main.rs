@@ -12,7 +12,7 @@ use amethyst::{
     controls::{ControlTagPrefab, FlyControlBundle},
     core::transform::{Transform, TransformBundle},
     derive::PrefabData,
-    ecs::{Entity, ReadExpect, ReadStorage, World, SystemData, Write, WriteStorage},
+    ecs::{Entity, ReadExpect, ReadStorage, SystemData, World, Write, WriteStorage},
     input::{is_close_requested, is_key_down, StringBindings, VirtualKeyCode},
     prelude::*,
     renderer::{

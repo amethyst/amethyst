@@ -5,11 +5,11 @@ use crate::{
 };
 use amethyst_core::{
     ecs::{
-        prelude::{
-            Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage, System,
-            Write,
-        },
         hibitset::BitSet,
+        prelude::{
+            Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
+            System, Write,
+        },
     },
     math::{convert, distance_squared, Matrix4, Point3, Vector4},
     Hidden, HiddenPropagate, Transform,

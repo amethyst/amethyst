@@ -13,7 +13,7 @@ use amethyst::{
     core::{
         ecs::{
             Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
-            World, System, SystemData, World, Write, WriteStorage,
+            System, SystemData, World, World, Write, WriteStorage,
         },
         math::{Unit, UnitQuaternion, Vector3},
         Time, Transform, TransformBundle,

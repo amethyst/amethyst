@@ -3,7 +3,8 @@ use std::marker::PhantomData;
 use serde::{Deserialize, Serialize};
 
 use amethyst_core::ecs::prelude::{
-    Component, DenseVecStorage, Entity, FlaggedStorage, Read, ReadExpect, SystemData, WriteStorage, World, ResourceId
+    Component, DenseVecStorage, Entity, FlaggedStorage, Read, ReadExpect, ResourceId, SystemData,
+    World, WriteStorage,
 };
 use amethyst_error::Error;
 

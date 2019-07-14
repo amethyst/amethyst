@@ -4,8 +4,8 @@ use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_audio::SourceHandle;
 use amethyst_core::{
     ecs::{
-        shred::{SystemData, ResourceId},
         prelude::{Entities, Entity, Read, ReadExpect, World, WriteExpect, WriteStorage},
+        shred::{ResourceId, SystemData},
     },
     Parent,
 };

@@ -16,7 +16,7 @@ use amethyst_assets::{
 };
 use amethyst_core::{
     components::Transform,
-    ecs::{Read, ReadExpect, ReadStorage, World, RunNow, SystemData, Write, WriteExpect},
+    ecs::{Read, ReadExpect, ReadStorage, RunNow, SystemData, World, Write, WriteExpect},
     timing::Time,
     Hidden, HiddenPropagate,
 };

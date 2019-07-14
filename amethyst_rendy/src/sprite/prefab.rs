@@ -261,7 +261,7 @@ mod tests {
         Texture,
     };
     use amethyst_assets::{Handle, Loader};
-    use amethyst_core::ecs::{Builder, Read, ReadExpect, World};
+    use amethyst_core::ecs::{Builder, Read, ReadExpect, World, WorldExt};
     use rayon::ThreadPoolBuilder;
     use std::sync::Arc;
 

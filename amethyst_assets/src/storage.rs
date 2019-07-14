@@ -13,9 +13,9 @@ use rayon::ThreadPool;
 
 use amethyst_core::{
     ecs::{
+        hibitset::BitSet,
         prelude::{Component, Read, ReadExpect, System, VecStorage, Write},
         storage::UnprotectedStorage,
-        hibitset::BitSet
     },
     Time,
 };

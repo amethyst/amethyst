@@ -21,9 +21,7 @@ use crate::{
         timing::{Stopwatch, Time},
         ArcThreadPool, EventReader, Named,
     },
-    ecs::{
-        prelude::{Component, Read, World, WorldExt, Write},
-    },
+    ecs::prelude::{Component, Read, World, WorldExt, Write},
     error::Error,
     game_data::{DataDispose, DataInit},
     state::{State, StateData, StateMachine, TransEvent},
@@ -783,8 +781,7 @@ where
     ///
     /// This function returns the ApplicationBuilder after modifying it.
     pub fn with_frame_limit(mut self, strategy: FrameRateLimitStrategy, max_fps: u32) -> Self {
-        self.world
-            .insert(FrameLimiter::new(strategy, max_fps));
+        self.world.insert(FrameLimiter::new(strategy, max_fps));
         self
     }
 
