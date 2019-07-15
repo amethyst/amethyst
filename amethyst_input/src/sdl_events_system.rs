@@ -65,7 +65,7 @@ pub struct SdlEventsSystem<T: BindingTypes> {
 
 type SdlEventsData<'a, T> = (
     Write<'a, InputHandler<T>>,
-    Write<'a, EventChannel<InputEvent<<T as BindingTypes>::Action>>>,
+    Write<'a, EventChannel<InputEvent<T>>>,
 );
 
 impl<'a, T: BindingTypes> RunNow<'a> for SdlEventsSystem<T> {
@@ -127,7 +127,7 @@ impl<T: BindingTypes> SdlEventsSystem<T> {
         &mut self,
         event: &Event,
         handler: &mut InputHandler<T>,
-        output: &mut EventChannel<InputEvent<T::Action>>,
+        output: &mut EventChannel<InputEvent<T>>,
     ) {
         use self::ControllerEvent::*;
 
@@ -209,7 +209,7 @@ impl<T: BindingTypes> SdlEventsSystem<T> {
     fn initialize_controllers(
         &mut self,
         handler: &mut InputHandler<T>,
-        output: &mut EventChannel<InputEvent<T::Action>>,
+        output: &mut EventChannel<InputEvent<T>>,
     ) {
         use crate::controller::ControllerEvent::ControllerConnected;
 
