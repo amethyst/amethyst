@@ -94,6 +94,7 @@ test-support = [
   "amethyst_rendy/test-support",
   "amethyst_window/test-support",
 ]
+experimental-spirv-reflection = ["amethyst_rendy/experimental-spirv-reflection"]
 
 [workspace]
 members = [

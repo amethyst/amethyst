@@ -44,7 +44,8 @@ approx = "0.3.2"
 rayon = "1.0.2"
 more-asserts = "0.2.1"
 criterion = "0.2.11"
-winit = { version = "0.19" }
+winit = "0.19"
+approx = "0.3"
 
 [features]
 metal = ["rendy/metal"]
@@ -55,6 +56,7 @@ nightly = [ "amethyst_core/nightly", "shred/nightly" ]
 no-slow-safety-checks = ["rendy/no-slow-safety-checks"]
 shader-compiler =  ["rendy/shader-compiler"]
 test-support =  []
+experimental-spirv-reflection = ["rendy/spirv-reflection"]
 
 [[bench]]
 name = "camera"

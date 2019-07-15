@@ -216,11 +216,12 @@ impl<B: Backend, T: for<'a> StaticTextureSet<'a>> MaterialSub<B, T> {
 
         let mat = mat_storage.get(handle)?;
 
-        if T::textures(mat).any(|t| {
+        let has_tex = T::textures(mat).any(|t| {
             !tex_storage
                 .get(t)
                 .map_or(false, |tex| B::unwrap_texture(tex).is_some())
-        }) {
+        });
+        if has_tex {
             return None;
         }
 

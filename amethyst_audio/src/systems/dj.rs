@@ -19,6 +19,7 @@ use crate::{
 };
 
 /// Calls a closure if the `AudioSink` is empty.
+#[derive(Debug)]
 pub struct DjSystem<F, R> {
     f: F,
     marker: PhantomData<R>,

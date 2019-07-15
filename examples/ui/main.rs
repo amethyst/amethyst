@@ -105,7 +105,7 @@ impl SimpleState for Example {
             if let Some(random_text) = self.random_text.and_then(|entity| ui_text.get_mut(entity)) {
                 if let Ok(value) = random_text.text.parse::<i32>() {
                     let mut new_value = value * 10;
-                    if new_value > 100000 {
+                    if new_value > 100_000 {
                         new_value = 1;
                     }
                     random_text.text = new_value.to_string();
@@ -153,13 +153,14 @@ fn main() -> amethyst::Result<()> {
 }
 
 /// This shows how to handle UI events.
+#[derive(Default)]
 pub struct UiEventHandlerSystem {
     reader_id: Option<ReaderId<UiEvent>>,
 }
 
 impl UiEventHandlerSystem {
     pub fn new() -> Self {
-        UiEventHandlerSystem { reader_id: None }
+        Self::default()
     }
 }
 

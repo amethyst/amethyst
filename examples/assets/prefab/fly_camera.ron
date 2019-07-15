@@ -1,39 +1,45 @@
 #![enable(implicit_some)]
+/*!
+    @import /amethyst_assets/src/prefab/mod.rs#Prefab
+    @import ../../fly_camera/main.rs#MyPrefabData
+    Prefab<MyPrefabData>
+*/
+
 Prefab (
     entities: [
         (
             data: (
-                light: (ambient_color: ((0.1, 0.1, 0.1, 1.0))),
-            ),
+                light: (ambient_color: ((0.1, 0.1, 0.1, 1.0)))
+            )
         ),
         (
             data: (
                 graphics: (
                     mesh: Asset(File("mesh/cube.obj", ("OBJ", ()))),
                     material: (
-                        albedo: Generate(Srgba(0.0, 0.0, 1.0, 1.0)),
-                    ),
+                        albedo: Generate(Srgba(0.0, 0.0, 1.0, 1.0))
+                    )
                 ),
                 transform: (
-                    translation: (0.0, 0.0, -4.0),
-                ),
-            ),
+                    translation: (0.0, 0.0, -4.0)
+                )
+            )
         ),
         (
             data: (
                 transform: (
                     translation: (0.0, 1.5, 0.0),
-                    rotation: (-0.13, 0.0, 0.0, 0.99),
+                    rotation: (-0.13, 0.0, 0.0, 0.99)
                 ),
                 camera: Perspective(
                     aspect: 1.3,
                     fovy: 1.0471975512,
                     znear: 0.1,
-                    zfar: 2000.0,
+                    zfar: 2000.0
                 ),
                 // fly control tag
-                control_tag: (),
-            ),
-        ),
-    ],
+                control_tag: ()
+            )
+        )
+    ]
 )

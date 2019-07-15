@@ -1,3 +1,8 @@
+/*!
+    @import /amethyst_window/src/config.rs#DisplayConfig
+    DisplayConfig
+*/
+
 (
   title: "Ordered sprites example",
   dimensions: Some((400, 75)),

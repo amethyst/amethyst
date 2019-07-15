@@ -170,29 +170,29 @@ impl<'a> System<'a> for ShowFovSystem {
 
     fn run(&mut self, (tag_finder, ui_finder, mut ui_texts, cameras, screen): Self::SystemData) {
         let screen_aspect = screen.aspect_ratio();
-        ui_finder
+        if let Some(t) = ui_finder
             .find("screen_aspect")
             .and_then(|e| ui_texts.get_mut(e))
-            .map(|t| {
-                t.text = format!("Screen Aspect Ratio: {:.2}", screen_aspect);
-            });
+        {
+            t.text = format!("Screen Aspect Ratio: {:.2}", screen_aspect);
+        }
 
         if let Some(entity) = tag_finder.find() {
             if let Some(camera) = cameras.get(entity) {
                 let fovy = get_fovy(camera);
                 let camera_aspect = get_aspect(camera);
-                ui_finder
+                if let Some(t) = ui_finder
                     .find("camera_aspect")
                     .and_then(|e| ui_texts.get_mut(e))
-                    .map(|t| {
-                        t.text = format!("Camera Aspect Ratio: {:.2}", camera_aspect);
-                    });
-                ui_finder
+                {
+                    t.text = format!("Camera Aspect Ratio: {:.2}", camera_aspect);
+                }
+                if let Some(t) = ui_finder
                     .find("camera_fov")
                     .and_then(|e| ui_texts.get_mut(e))
-                    .map(|t| {
-                        t.text = format!("Camera Fov: ({:.2}, {:.2})", fovy * camera_aspect, fovy);
-                    });
+                {
+                    t.text = format!("Camera Fov: ({:.2}, {:.2})", fovy * camera_aspect, fovy);
+                }
             }
         }
     }

@@ -117,7 +117,7 @@ where
             self.dimensions = new_dimensions.map(|d| d.clone());
             return false;
         }
-        return self.dirty;
+        self.dirty
     }
 
     fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {

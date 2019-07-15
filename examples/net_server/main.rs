@@ -1,6 +1,6 @@
 use amethyst::{
     core::frame_limiter::FrameRateLimitStrategy,
-    ecs::{Entities, Join, System, WriteStorage},
+    ecs::{Component, Entities, Join, System, VecStorage, WriteStorage},
     network::*,
     prelude::*,
     shrev::ReaderId,
@@ -35,31 +35,41 @@ impl SimpleState for State1 {
     fn on_start(&mut self, _data: StateData<'_, GameData<'_, '_>>) {}
 }
 
-/// A simple system that receives a ton of network events.
-struct SpamReceiveSystem {
-    pub reader: Option<ReaderId<NetEvent<String>>>,
+/// Component to store client's event subscription
+struct SpamReader(ReaderId<NetEvent<String>>);
+
+impl Component for SpamReader {
+    type Storage = VecStorage<Self>;
 }
+
+/// A simple system that receives a ton of network events.
+struct SpamReceiveSystem {}
 
 impl SpamReceiveSystem {
     pub fn new() -> Self {
-        SpamReceiveSystem { reader: None }
+        SpamReceiveSystem {}
     }
 }
 
 impl<'a> System<'a> for SpamReceiveSystem {
-    type SystemData = (WriteStorage<'a, NetConnection<String>>, Entities<'a>);
-    fn run(&mut self, (mut connections, entities): Self::SystemData) {
+    type SystemData = (
+        WriteStorage<'a, NetConnection<String>>,
+        WriteStorage<'a, SpamReader>,
+        Entities<'a>,
+    );
+    fn run(&mut self, (mut connections, mut readers, entities): Self::SystemData) {
         let mut count = 0;
         let mut connection_count = 0;
 
         for (e, connection) in (&entities, &mut connections).join() {
-            if self.reader.is_none() {
-                self.reader = Some(connection.register_reader());
-            }
+            let reader = readers
+                .entry(e)
+                .expect("Cannot get reader")
+                .or_insert_with(|| SpamReader(connection.register_reader()));
 
             let mut client_disconnected = false;
 
-            for ev in connection.received_events(self.reader.as_mut().unwrap()) {
+            for ev in connection.received_events(&mut reader.0) {
                 count += 1;
                 match ev {
                     NetEvent::Packet(packet) => info!("{}", packet.content()),

@@ -3,6 +3,7 @@ use std::net::SocketAddr;
 
 #[derive(Clone)]
 /// The configuration used for the networking system.
+#[allow(missing_debug_implementations)] // TODO: revisit this. Laminar is missing Debug on a lot of things
 pub struct ServerConfig {
     /// Address at which the UDP server will listen for incoming packets.
     pub udp_socket_addr: SocketAddr,

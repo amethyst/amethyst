@@ -25,7 +25,7 @@ use crate::sdl_events_system::ControllerMappings;
 ///
 /// No errors returned from this bundle.
 ///
-#[derive(Derivative)]
+#[derive(Debug, Derivative)]
 #[derivative(Default(bound = ""))]
 pub struct InputBundle<T: BindingTypes> {
     bindings: Option<Bindings<T>>,

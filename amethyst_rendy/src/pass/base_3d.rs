@@ -202,16 +202,16 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, Resources> for DrawBase3D<B, T
             joints,
             tints,
         ) = <(
-            Read<AssetStorage<Mesh>>,
-            ReadExpect<Visibility>,
-            ReadStorage<Transparent>,
-            ReadStorage<Hidden>,
-            ReadStorage<HiddenPropagate>,
-            ReadStorage<Handle<Mesh>>,
-            ReadStorage<Handle<Material>>,
-            ReadStorage<Transform>,
-            ReadStorage<JointTransforms>,
-            ReadStorage<Tint>,
+            Read<'_, AssetStorage<Mesh>>,
+            ReadExpect<'_, Visibility>,
+            ReadStorage<'_, Transparent>,
+            ReadStorage<'_, Hidden>,
+            ReadStorage<'_, HiddenPropagate>,
+            ReadStorage<'_, Handle<Mesh>>,
+            ReadStorage<'_, Handle<Material>>,
+            ReadStorage<'_, Transform>,
+            ReadStorage<'_, JointTransforms>,
+            ReadStorage<'_, Tint>,
         )>::fetch(resources);
 
         // Prepare environment
@@ -509,13 +509,13 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, Resources> for DrawBase3DTrans
 
         let (mesh_storage, visibility, meshes, materials, transforms, joints, tints) =
             <(
-                Read<AssetStorage<Mesh>>,
-                ReadExpect<Visibility>,
-                ReadStorage<Handle<Mesh>>,
-                ReadStorage<Handle<Material>>,
-                ReadStorage<Transform>,
-                ReadStorage<JointTransforms>,
-                ReadStorage<Tint>,
+                Read<'_, AssetStorage<Mesh>>,
+                ReadExpect<'_, Visibility>,
+                ReadStorage<'_, Handle<Mesh>>,
+                ReadStorage<'_, Handle<Material>>,
+                ReadStorage<'_, Transform>,
+                ReadStorage<'_, JointTransforms>,
+                ReadStorage<'_, Tint>,
             )>::fetch(resources);
 
         // Prepare environment

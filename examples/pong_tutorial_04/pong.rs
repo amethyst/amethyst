@@ -71,7 +71,7 @@ pub struct Paddle {
 impl Paddle {
     fn new(side: Side) -> Paddle {
         Paddle {
-            side: side,
+            side,
             width: PADDLE_WIDTH,
             height: PADDLE_HEIGHT,
         }

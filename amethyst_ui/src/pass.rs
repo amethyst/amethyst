@@ -134,7 +134,7 @@ impl DrawUiDesc {
 }
 
 impl<B: Backend> RenderGroupDesc<B, Resources> for DrawUiDesc {
-    fn build<'a>(
+    fn build(
         self,
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,

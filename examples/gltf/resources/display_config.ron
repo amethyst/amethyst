@@ -1,3 +1,8 @@
+/*!
+    @import /amethyst_window/src/config.rs#DisplayConfig
+    DisplayConfig
+*/
+
 (
   dimensions: Some((1024, 768)),
   title: "GLTF example",

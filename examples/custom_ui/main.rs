@@ -40,6 +40,7 @@ impl ToNativeWidget for CustomUi {
                 x_move,
                 y_move,
             } => {
+                #[allow(clippy::redundant_closure)] // Inference fails on Default::default otherwise
                 let transform = item
                     .transform()
                     .cloned()

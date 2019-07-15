@@ -2,6 +2,7 @@ use crate::{
     batch::{GroupIterator, OneLevelBatch, OrderedOneLevelBatch},
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
     pod::SpriteArgs,
+    resources::Tint,
     sprite::{SpriteRender, SpriteSheet},
     sprite_visibility::SpriteVisibility,
     submodules::{DynamicVertexBuffer, FlatEnvironmentSub, TextureId, TextureSub},
@@ -113,6 +114,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
             hidden_props,
             sprite_renders,
             transforms,
+            tints,
         ) = <(
             Read<'_, AssetStorage<SpriteSheet>>,
             Read<'_, AssetStorage<Texture>>,
@@ -121,6 +123,7 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
             ReadStorage<'_, HiddenPropagate>,
             ReadStorage<'_, SpriteRender>,
             ReadStorage<'_, Transform>,
+            ReadStorage<'_, Tint>,
         )>::fetch(resources);
 
         self.env.process(factory, index, resources);
@@ -134,14 +137,15 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
             #[cfg(feature = "profiler")]
             profile_scope!("gather_visibility");
 
-            (&sprite_renders, &transforms, &visibility.visible_unordered)
+            (&sprite_renders, &transforms, tints.maybe(), &visibility.visible_unordered)
                 .join()
-                .filter_map(|(sprite_render, global, _)| {
+                .filter_map(|(sprite_render, global, tint, _)| {
                     let (batch_data, texture) = SpriteArgs::from_data(
                         &tex_storage,
                         &sprite_sheet_storage,
                         &sprite_render,
                         &global,
+                        tint,
                     )?;
                     let (tex_id, _) = textures_ref.insert(
                         factory,
@@ -284,13 +288,14 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare transparent");
 
-        let (sprite_sheet_storage, tex_storage, visibility, sprite_renders, transforms) =
+        let (sprite_sheet_storage, tex_storage, visibility, sprite_renders, transforms, tints) =
             <(
                 Read<'_, AssetStorage<SpriteSheet>>,
                 Read<'_, AssetStorage<Texture>>,
                 ReadExpect<'_, SpriteVisibility>,
                 ReadStorage<'_, SpriteRender>,
                 ReadStorage<'_, Transform>,
+                ReadStorage<'_, Tint>,
             )>::fetch(resources);
 
         self.env.process(factory, index, resources);
@@ -304,17 +309,18 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2DTransparent<B> {
             #[cfg(feature = "profiler")]
             profile_scope!("gather_sprites_trans");
 
-            let mut joined = (&sprite_renders, &transforms).join();
+            let mut joined = (&sprite_renders, &transforms, tints.maybe()).join();
             visibility
                 .visible_ordered
                 .iter()
                 .filter_map(|e| joined.get_unchecked(e.id()))
-                .filter_map(|(sprite_render, global)| {
+                .filter_map(|(sprite_render, global, tint)| {
                     let (batch_data, texture) = SpriteArgs::from_data(
                         &tex_storage,
                         &sprite_sheet_storage,
                         &sprite_render,
                         &global,
+                        tint,
                     )?;
                     let (tex_id, this_changed) = textures_ref.insert(
                         factory,

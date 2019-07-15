@@ -17,7 +17,7 @@ use amethyst_core::{
 /// * Adds and removes text.
 /// * Moves selection cursor.
 /// * Grows and shrinks selected text zone.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct TextEditingInputSystem {
     /// A reader for winit events.
     reader: Option<ReaderId<Event>>,

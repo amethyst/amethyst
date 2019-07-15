@@ -19,7 +19,7 @@ use std::marker::PhantomData;
 /// The generic type T represent the T generic parameter of the InputHandler<T>.
 ///
 /// Will fail with error 'No resource with the given id' if the InputBundle is not added.
-#[derive(new)]
+#[derive(new, Debug)]
 pub struct UiBundle<T: BindingTypes, C = NoCustomUi, W = u32, G = ()> {
     #[new(default)]
     _marker: PhantomData<(T, C, W, G)>,

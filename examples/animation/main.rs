@@ -1,10 +1,8 @@
 //! Displays a shaded sphere to the user.
 
+use amethyst::assets::Loader;
 use amethyst::{
-    animation::{
-        get_animation_set, AnimationBundle, AnimationCommand, AnimationSet, AnimationSetPrefab,
-        DeferStartRelation, EndControl, StepDirection,
-    },
+    animation::*,
     assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
     core::{Transform, TransformBundle},
     ecs::prelude::Entity,
@@ -33,6 +31,7 @@ enum AnimationId {
     Scale,
     Rotate,
     Translate,
+    Test,
 }
 
 struct Example {
@@ -59,6 +58,43 @@ impl SimpleState for Example {
             loader.load("prefab/animation.ron", RonFormat, ())
         });
         self.sphere = Some(world.create_entity().with(prefab_handle).build());
+
+        let (animation_set, animation) = {
+            let loader = world.read_resource::<Loader>();
+
+            let sampler = loader.load_from_data(
+                Sampler {
+                    input: vec![0., 1.],
+                    output: vec![
+                        SamplerPrimitive::Vec3([0., 0., 0.]),
+                        SamplerPrimitive::Vec3([0., 1., 0.]),
+                    ],
+                    function: InterpolationFunction::Step,
+                },
+                (),
+                &world.read_resource(),
+            );
+
+            let animation = loader.load_from_data(
+                Animation::new_single(0, TransformChannel::Translation, sampler),
+                (),
+                &world.read_resource(),
+            );
+            let mut animation_set: AnimationSet<AnimationId, Transform> = AnimationSet::new();
+            animation_set.insert(AnimationId::Test, animation.clone());
+            (animation_set, animation)
+        };
+
+        let entity = world.create_entity().with(animation_set).build();
+        let mut storage = world.write_storage::<AnimationControlSet<AnimationId, Transform>>();
+        let control_set = get_animation_set(&mut storage, entity).unwrap();
+        control_set.add_animation(
+            AnimationId::Test,
+            &animation,
+            EndControl::Loop(None),
+            1.0,
+            AnimationCommand::Start,
+        );
     }
 
     fn handle_event(
@@ -113,7 +149,7 @@ impl SimpleState for Example {
                 Some((VirtualKeyCode::Left, ElementState::Pressed)) => {
                     get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
-                        self.sphere.unwrap().clone(),
+                        self.sphere.unwrap(),
                     )
                     .unwrap()
                     .step(self.current_animation, StepDirection::Backward);
@@ -122,7 +158,7 @@ impl SimpleState for Example {
                 Some((VirtualKeyCode::Right, ElementState::Pressed)) => {
                     get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
-                        self.sphere.unwrap().clone(),
+                        self.sphere.unwrap(),
                     )
                     .unwrap()
                     .step(self.current_animation, StepDirection::Forward);
@@ -132,7 +168,7 @@ impl SimpleState for Example {
                     self.rate = 1.0;
                     get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
-                        self.sphere.unwrap().clone(),
+                        self.sphere.unwrap(),
                     )
                     .unwrap()
                     .set_rate(self.current_animation, self.rate);
@@ -142,7 +178,7 @@ impl SimpleState for Example {
                     self.rate = 0.0;
                     get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
-                        self.sphere.unwrap().clone(),
+                        self.sphere.unwrap(),
                     )
                     .unwrap()
                     .set_rate(self.current_animation, self.rate);
@@ -152,7 +188,7 @@ impl SimpleState for Example {
                     self.rate = 0.5;
                     get_animation_set::<AnimationId, Transform>(
                         &mut world.write_storage(),
-                        self.sphere.unwrap().clone(),
+                        self.sphere.unwrap(),
                     )
                     .unwrap()
                     .set_rate(self.current_animation, self.rate);

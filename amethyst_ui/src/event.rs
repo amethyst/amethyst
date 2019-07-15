@@ -81,7 +81,7 @@ impl TargetedEvent for UiEvent {
 /// A component that tags an entity as reactive to ui events.
 /// Will only work if the entity has a UiTransform component attached to it.
 /// Without this, the ui element will not generate events.
-#[derive(Default, Serialize, Deserialize, Clone)]
+#[derive(Default, Debug, Serialize, Deserialize, Clone)]
 pub struct Interactable;
 
 impl Component for Interactable {
@@ -90,7 +90,7 @@ impl Component for Interactable {
 
 /// The system that generates events for `Interactable` enabled entities.
 /// The generic types A and B represent the A and B generic parameter of the InputHandler<A,B>.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct UiMouseSystem<T: BindingTypes> {
     was_down: bool,
     click_started_on: Option<Entity>,
