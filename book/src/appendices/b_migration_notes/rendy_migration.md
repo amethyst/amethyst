@@ -146,6 +146,7 @@
     }
 
     impl GraphCreator<DefaultBackend> for RenderGraph {
+        #[allow(clippy::map_clone)]
         fn rebuild(&mut self, res: &Resources) -> bool {
             // Rebuild when dimensions change, but wait until at least two frames have the same.
             let new_dimensions = res.try_fetch::<ScreenDimensions>();
@@ -155,7 +156,7 @@
                 self.dimensions = new_dimensions.map(|d| d.clone());
                 return false;
             }
-            return self.dirty;
+            self.dirty
         }
 
         fn builder(

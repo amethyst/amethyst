@@ -71,6 +71,7 @@ impl<B: Backend> RenderPlugin<B> for RenderToWindow {
         Ok(())
     }
 
+    #[allow(clippy::map_clone)]
     fn rebuild(&mut self, res: &Resources) -> bool {
         let new_dimensions = res.try_fetch::<ScreenDimensions>();
         use std::ops::Deref;
@@ -79,7 +80,7 @@ impl<B: Backend> RenderPlugin<B> for RenderToWindow {
             self.dimensions = new_dimensions.map(|d| d.clone());
             return false;
         }
-        return self.dirty;
+        self.dirty
     }
 
     fn plan(
@@ -108,7 +109,7 @@ impl<B: Backend> RenderPlugin<B> for RenderToWindow {
             TargetPlanOutputs {
                 colors: vec![OutputColor::Surface(
                     surface,
-                    self.clear.map(|c| ClearValue::Color(c)),
+                    self.clear.map(ClearValue::Color),
                 )],
                 depth: Some(depth_options),
             },
@@ -293,7 +294,7 @@ impl<B: Backend> RenderPlugin<B> for RenderSkybox {
         _factory: &mut Factory<B>,
         _res: &Resources,
     ) -> Result<(), Error> {
-        let colors = self.colors.clone();
+        let colors = self.colors;
         plan.extend_target(self.target, move |ctx| {
             let group = if let Some((nadir, zenith)) = colors {
                 DrawSkyboxDesc::with_colors(nadir, zenith).builder()

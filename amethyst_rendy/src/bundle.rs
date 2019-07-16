@@ -91,7 +91,7 @@ impl<B: Backend> GraphCreator<B> for RenderingBundleGraphCreator<B> {
     }
 
     fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
-        if self.plugins.len() == 0 {
+        if self.plugins.is_empty() {
             log::warn!("RenderingBundle is configured to display nothing. Use `with_plugin` to add functionality.");
         }
 
@@ -772,7 +772,7 @@ mod tests {
     struct TestGroup2;
 
     impl<B: Backend, T> RenderGroupDesc<B, T> for TestGroup1 {
-        fn build<'a>(
+        fn build(
             self,
             ctx: &GraphContext<B>,
             factory: &mut Factory<B>,
@@ -788,7 +788,7 @@ mod tests {
         }
     }
     impl<B: Backend, T> RenderGroupDesc<B, T> for TestGroup2 {
-        fn build<'a>(
+        fn build(
             self,
             ctx: &GraphContext<B>,
             factory: &mut Factory<B>,
