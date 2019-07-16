@@ -24,10 +24,8 @@ use amethyst::{
     prelude::*,
     renderer::{
         bundle::{RenderPlan, RenderPlugin},
-        camera::{ActiveCamera, Camera},
         debug_drawing::DebugLines,
         light::{Light, PointLight},
-        mtl::{Material, MaterialDefaults},
         palette::{LinSrgba, Srgb, Srgba},
         rendy::{
             mesh::{Normal, Position, Tangent, TexCoord},
@@ -35,12 +33,11 @@ use amethyst::{
         },
         resources::Tint,
         shape::Shape,
-        sprite::{SpriteRender, SpriteSheet},
-        transparent::Transparent,
         types::{DefaultBackend, Mesh, Texture},
         visibility::BoundingSphere,
-        Factory, RenderDebugLines, RenderFlat2D, RenderFlat3D, RenderPbr3D, RenderShaded3D,
-        RenderSkybox, RenderToWindow, RenderingBundle,
+        ActiveCamera, Camera, Factory, ImageFormat, Material, MaterialDefaults, RenderDebugLines,
+        RenderFlat2D, RenderFlat3D, RenderPbr3D, RenderShaded3D, RenderSkybox, RenderToWindow,
+        RenderingBundle, SpriteRender, SpriteSheet, SpriteSheetFormat, Transparent,
     },
     utils::{
         application_root_dir,
