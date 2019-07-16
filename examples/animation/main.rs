@@ -1,9 +1,8 @@
 //! Displays a shaded sphere to the user.
 
-use amethyst::assets::Loader;
 use amethyst::{
     animation::*,
-    assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
+    assets::{Loader, PrefabLoader, PrefabLoaderSystem, RonFormat},
     core::{Transform, TransformBundle},
     ecs::prelude::Entity,
     input::{get_key, is_close_requested, is_key_down},

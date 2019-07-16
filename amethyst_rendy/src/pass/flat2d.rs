@@ -137,7 +137,12 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
             #[cfg(feature = "profiler")]
             profile_scope!("gather_visibility");
 
-            (&sprite_renders, &transforms, tints.maybe(), &visibility.visible_unordered)
+            (
+                &sprite_renders,
+                &transforms,
+                tints.maybe(),
+                &visibility.visible_unordered,
+            )
                 .join()
                 .filter_map(|(sprite_render, global, tint, _)| {
                     let (batch_data, texture) = SpriteArgs::from_data(
