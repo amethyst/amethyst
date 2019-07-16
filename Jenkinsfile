@@ -142,7 +142,7 @@ pipeline {
                 //     }
                 //     steps {
                 //         echo 'Beginning tests...'
-                //         sh '/Users/jenkins/.cargo/bin/cargo test --all --features "empty"'
+                //         sh '/Users/jenkins/.cargo/bin/cargo test --all --features "metal"'
                 //         echo 'Tests done!'
                 //     }
                 // }

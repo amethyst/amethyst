@@ -805,6 +805,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore] // CI can't run tests requring actual backend
     fn main_pass_color_image_plan() {
         let config: rendy::factory::Config = Default::default();
         let (factory, families): (Factory<DefaultBackend>, _) =
@@ -865,6 +866,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore] // CI can't run tests requring actual backend
     fn main_pass_surface_plan() {
         use winit::{EventsLoop, WindowBuilder};
 
