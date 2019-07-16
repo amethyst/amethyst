@@ -201,16 +201,16 @@ fn main() -> amethyst::Result<()> {
         .start();
 
     let app_root = application_root_dir()?;
-    let assets_directory = app_root.join("examples/sprite_camera_follow/resources");
-    let display_config_path =
-        app_root.join("examples/sprite_camera_follow/resources/display_config.ron");
+    let assets_directory = app_root.join("examples/sprite_camera_follow/assets");
+    let display_config_path = app_root.join("examples/sprite_camera_follow/config/display.ron");
 
     let game_data = GameDataBuilder::default()
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with_bundle(TransformBundle::new())?
         .with_bundle(
-            InputBundle::<StringBindings>::new()
-                .with_bindings_from_file(assets_directory.join("input.ron"))?,
+            InputBundle::<StringBindings>::new().with_bindings_from_file(
+                app_root.join("examples/sprite_camera_follow/config/input.ron"),
+            )?,
         )?
         .with(MovementSystem, "movement", &[])
         .with(

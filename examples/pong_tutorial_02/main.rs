@@ -20,8 +20,7 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let display_config_path =
-        app_root.join("examples/pong_tutorial_02/resources/display_config.ron");
+    let display_config_path = app_root.join("examples/pong_tutorial_02/config/display.ron");
 
     let game_data = GameDataBuilder::default()
         // The WindowBundle provides all the scaffolding for opening a window

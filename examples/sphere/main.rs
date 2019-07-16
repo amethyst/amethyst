@@ -41,8 +41,8 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples/sphere/resources/display_config.ron");
-    let resources = app_root.join("examples/assets/");
+    let display_config_path = app_root.join("examples/sphere/config/display.ron");
+    let assets_directory = app_root.join("examples/assets/");
     let game_data = GameDataBuilder::default()
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
@@ -50,7 +50,7 @@ fn main() -> amethyst::Result<()> {
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
-    let mut game = Application::new(resources, Example, game_data)?;
+    let mut game = Application::new(assets_directory, Example, game_data)?;
     game.run();
     Ok(())
 }

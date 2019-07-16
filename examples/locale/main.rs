@@ -72,11 +72,11 @@ impl SimpleState for Example {
 fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
-    let resources_directory = application_root_dir()?.join("examples/assets");
+    let assets_directory = application_root_dir()?.join("examples/assets");
 
     let game_data = GameDataBuilder::default().with(Processor::<Locale>::new(), "proc", &[]);
 
-    let mut game = Application::new(resources_directory, Example::new(), game_data)?;
+    let mut game = Application::new(assets_directory, Example::new(), game_data)?;
     game.run();
     Ok(())
 }

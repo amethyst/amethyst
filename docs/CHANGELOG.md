@@ -25,6 +25,7 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 
 ### Changed
 
+* Splitted the `/resources` directory of amethyst projects into `/assets` and `/config`. ([#1806])
 * Rename FPSCounter, FPSCounterBundle, FPSCounterSystem to FpsCounter, FpsCounterBundle, FpsCounterSystem. ([#1719])
 * Add Tint component support for sprites. ([#1756])
 * Remove remaining <N: RealField> type parameter on GameDataBuilder, add Debug derive to LoggerConfig ([#1758])

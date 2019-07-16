@@ -67,11 +67,11 @@ fn main() -> Result<(), Error> {
 
     let app_root = application_root_dir()?;
 
-    let resources_directory = app_root.join("examples/assets");
+    let assets_directory = app_root.join("examples/assets");
 
-    let display_config_path = app_root.join("examples/fly_camera/resources/display_config.ron");
+    let display_config_path = app_root.join("examples/fly_camera/config/display.ron");
 
-    let key_bindings_path = app_root.join("examples/fly_camera/resources/input.ron");
+    let key_bindings_path = app_root.join("examples/fly_camera/config/input.ron");
 
     let game_data = GameDataBuilder::default()
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
@@ -91,7 +91,7 @@ fn main() -> Result<(), Error> {
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
-    let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
+    let mut game = Application::build(assets_directory, ExampleState)?.build(game_data)?;
     game.run();
     Ok(())
 }

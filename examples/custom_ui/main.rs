@@ -102,8 +102,8 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let display_config_path = app_root.join("examples/custom_ui/resources/display.ron");
-    let resources = app_root.join("examples/assets");
+    let display_config_path = app_root.join("examples/custom_ui/config/display.ron");
+    let assets = app_root.join("examples/assets");
 
     let game_data = GameDataBuilder::default()
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
@@ -113,7 +113,7 @@ fn main() -> amethyst::Result<()> {
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
-    let mut game = Application::new(resources, Example, game_data)?;
+    let mut game = Application::new(assets, Example, game_data)?;
     game.run();
     Ok(())
 }

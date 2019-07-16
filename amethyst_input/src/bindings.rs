@@ -48,7 +48,7 @@ use super::{Axis, Button};
 ///
 /// type GameBindings = Bindings<DriverBindingTypes>;
 /// ```
-/// And the `bindings_config.ron`:
+/// And the `bindings.ron`:
 /// ```ron
 /// (
 ///   axes: {

@@ -365,8 +365,7 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path =
-        app_root.join("examples/sprites_ordered/resources/display_config.ron");
+    let display_config_path = app_root.join("examples/sprites_ordered/config/display.ron");
 
     let assets_directory = app_root.join("examples/assets/");
 
