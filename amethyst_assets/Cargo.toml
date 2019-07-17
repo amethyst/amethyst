@@ -29,7 +29,7 @@ fnv = "1"
 hibitset = { version = "0.5.1", features = ["parallel"] }
 log = "0.4.6"
 parking_lot = "0.6"
-rayon = "1.0.2"
+rayon = "1.1.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", optional = true }
 shred = { version = "0.7" }

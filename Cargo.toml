@@ -124,7 +124,7 @@ crossbeam-channel = "0.3.1"
 derivative = "1.0"
 fern = { version = "0.5", features = ["colored"] }
 log = { version = "0.4.6", features = ["serde"] }
-rayon = "1.0.2"
+rayon = "1.1.0"
 rustc_version_runtime = "0.1"
 sentry = "0.15.4"
 winit = { version = "0.19", features = ["serde", "icon_loading"] }
