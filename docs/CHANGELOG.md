@@ -36,6 +36,7 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 * Add `SerializableFormat` marker trait which is now needed to be implemented for all the formats that are supposed to be serialized. ([#1720])
 * Make the GltfSceneOptions field of GltfSceneFormat public. ([#1791])
  `InputEvent<T>` now takes in the `BindingTypes` as a type parameter. ([#1797])
+* Fix the steps for enabling the nightly flag in the pong tutorial ([#1805])
 
 ### Fixed
 
