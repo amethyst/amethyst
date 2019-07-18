@@ -7,10 +7,7 @@ use crate::{
     visibility::VisibilitySortingSystem,
     Backend, Factory,
 };
-use amethyst_core::{
-    ecs::{DispatcherBuilder, ReadExpect, Resources, SystemData},
-    SystemBundle,
-};
+use amethyst_core::ecs::{DispatcherBuilder, ReadExpect, Resources};
 use amethyst_error::Error;
 use palette::Srgb;
 use rendy::graph::render::RenderGroupDesc;
@@ -26,6 +23,7 @@ mod window {
         Format, Kind,
     };
     use amethyst_config::Config;
+    use amethyst_core::{ecs::SystemData, SystemBundle};
     use amethyst_window::{DisplayConfig, ScreenDimensions, Window, WindowBundle};
     use rendy::hal::command::{ClearColor, ClearDepthStencil, ClearValue};
     use std::path::Path;
@@ -70,7 +68,10 @@ mod window {
     }
 
     impl<B: Backend> RenderPlugin<B> for RenderToWindow {
-        fn on_build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        fn on_build<'a, 'b>(
+            &mut self,
+            builder: &mut DispatcherBuilder<'a, 'b>,
+        ) -> Result<(), Error> {
             if let Some(config) = self.config.take() {
                 WindowBundle::from_config(config).build(builder)?;
             }

@@ -20,7 +20,10 @@ use amethyst::{
     },
     error::Error,
     gltf::GltfSceneLoaderSystem,
-    input::{is_close_requested, is_key_down, is_key_up, Axis, Bindings, Button, InputBundle, StringBindings},
+    input::{
+        is_close_requested, is_key_down, is_key_up, Axis, Bindings, Button, InputBundle,
+        StringBindings,
+    },
     prelude::*,
     renderer::{
         bundle::{RenderPlan, RenderPlugin},
