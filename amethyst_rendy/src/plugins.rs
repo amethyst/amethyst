@@ -1,121 +1,129 @@
 //! Set of predefined implementations of `RenderPlugin` for use with `RenderingBundle`.
 
 use crate::{
-    bundle::{
-        ImageOptions, OutputColor, RenderOrder, RenderPlan, RenderPlugin, Target, TargetPlanOutputs,
-    },
+    bundle::{RenderOrder, RenderPlan, RenderPlugin, Target, TargetPlanOutputs},
     pass::*,
     sprite_visibility::SpriteVisibilitySortingSystem,
     visibility::VisibilitySortingSystem,
-    Backend, Factory, Format, Kind,
+    Backend, Factory,
 };
-use amethyst_config::Config;
 use amethyst_core::{
     ecs::{DispatcherBuilder, ReadExpect, Resources, SystemData},
     SystemBundle,
 };
 use amethyst_error::Error;
-use amethyst_window::{DisplayConfig, ScreenDimensions, Window, WindowBundle};
 use palette::Srgb;
-use rendy::{
-    graph::render::RenderGroupDesc,
-    hal::command::{ClearColor, ClearDepthStencil, ClearValue},
-};
-use std::path::Path;
+use rendy::graph::render::RenderGroupDesc;
 
-/// A [RenderPlugin] for opening a window and displaying a render target to it.
-///
-/// When you provide [DisplayConfig], it opens a window for you using [WindowBundle].
-#[derive(Default, Debug)]
-pub struct RenderToWindow {
-    target: Target,
-    config: Option<DisplayConfig>,
-    dimensions: Option<ScreenDimensions>,
-    dirty: bool,
-    clear: Option<ClearColor>,
-}
+#[cfg(feature = "amethyst_window")]
+pub use window::RenderToWindow;
 
-impl RenderToWindow {
-    /// Create RenderToWindow plugin with [WindowBundle] using specified config path.
-    pub fn from_config_path(path: impl AsRef<Path>) -> Self {
-        Self::from_config(DisplayConfig::load(path))
+#[cfg(feature = "amethyst_window")]
+mod window {
+    use super::*;
+    use crate::{
+        bundle::{ImageOptions, OutputColor},
+        Format, Kind,
+    };
+    use amethyst_config::Config;
+    use amethyst_window::{DisplayConfig, ScreenDimensions, Window, WindowBundle};
+    use rendy::hal::command::{ClearColor, ClearDepthStencil, ClearValue};
+    use std::path::Path;
+
+    /// A [RenderPlugin] for opening a window and displaying a render target to it.
+    ///
+    /// When you provide [`DisplayConfig`], it opens a window for you using [`WindowBundle`].
+    #[derive(Default, Debug)]
+    pub struct RenderToWindow {
+        target: Target,
+        config: Option<DisplayConfig>,
+        dimensions: Option<ScreenDimensions>,
+        dirty: bool,
+        clear: Option<ClearColor>,
     }
 
-    /// Create RenderToWindow plugin with [WindowBundle] using specified config.
-    pub fn from_config(display_config: DisplayConfig) -> Self {
-        Self {
-            config: Some(display_config),
-            ..Default::default()
+    impl RenderToWindow {
+        /// Create RenderToWindow plugin with [`WindowBundle`] using specified config path.
+        pub fn from_config_path(path: impl AsRef<Path>) -> Self {
+            Self::from_config(DisplayConfig::load(path))
+        }
+
+        /// Create RenderToWindow plugin with [`WindowBundle`] using specified config.
+        pub fn from_config(display_config: DisplayConfig) -> Self {
+            Self {
+                config: Some(display_config),
+                ..Default::default()
+            }
+        }
+
+        /// Select render target which will be presented to window.
+        pub fn with_target(mut self, target: Target) -> Self {
+            self.target = target;
+            self
+        }
+
+        /// Clear window with specified color every frame.
+        pub fn with_clear(mut self, clear: impl Into<ClearColor>) -> Self {
+            self.clear = Some(clear.into());
+            self
         }
     }
 
-    /// Select render target which will be presented to window.
-    pub fn with_target(mut self, target: Target) -> Self {
-        self.target = target;
-        self
-    }
+    impl<B: Backend> RenderPlugin<B> for RenderToWindow {
+        fn build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+            if let Some(config) = self.config.take() {
+                WindowBundle::from_config(config).build(builder)?;
+            }
 
-    /// Clear window with specified color every frame.
-    pub fn with_clear(mut self, clear: impl Into<ClearColor>) -> Self {
-        self.clear = Some(clear.into());
-        self
-    }
-}
-
-impl<B: Backend> RenderPlugin<B> for RenderToWindow {
-    fn build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
-        if let Some(config) = self.config.take() {
-            WindowBundle::from_config(config).build(builder)?;
+            Ok(())
         }
 
-        Ok(())
-    }
-
-    #[allow(clippy::map_clone)]
-    fn rebuild(&mut self, res: &Resources) -> bool {
-        let new_dimensions = res.try_fetch::<ScreenDimensions>();
-        use std::ops::Deref;
-        if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
-            self.dirty = true;
-            self.dimensions = new_dimensions.map(|d| d.clone());
-            return false;
+        #[allow(clippy::map_clone)]
+        fn rebuild(&mut self, res: &Resources) -> bool {
+            let new_dimensions = res.try_fetch::<ScreenDimensions>();
+            use std::ops::Deref;
+            if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
+                self.dirty = true;
+                self.dimensions = new_dimensions.map(|d| d.clone());
+                return false;
+            }
+            self.dirty
         }
-        self.dirty
-    }
 
-    fn plan(
-        &mut self,
-        plan: &mut RenderPlan<B>,
-        factory: &mut Factory<B>,
-        res: &Resources,
-    ) -> Result<(), Error> {
-        self.dirty = false;
+        fn plan(
+            &mut self,
+            plan: &mut RenderPlan<B>,
+            factory: &mut Factory<B>,
+            res: &Resources,
+        ) -> Result<(), Error> {
+            self.dirty = false;
 
-        let window = <ReadExpect<'_, Window>>::fetch(res);
-        let surface = factory.create_surface(&window);
-        let dimensions = self.dimensions.as_ref().unwrap();
-        let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
+            let window = <ReadExpect<'_, Window>>::fetch(res);
+            let surface = factory.create_surface(&window);
+            let dimensions = self.dimensions.as_ref().unwrap();
+            let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
 
-        let depth_options = ImageOptions {
-            kind: window_kind,
-            levels: 1,
-            format: Format::D32Sfloat,
-            clear: Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
-        };
+            let depth_options = ImageOptions {
+                kind: window_kind,
+                levels: 1,
+                format: Format::D32Sfloat,
+                clear: Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
+            };
 
-        plan.add_root(Target::Main);
-        plan.define_pass(
-            self.target,
-            TargetPlanOutputs {
-                colors: vec![OutputColor::Surface(
-                    surface,
-                    self.clear.map(ClearValue::Color),
-                )],
-                depth: Some(depth_options),
-            },
-        )?;
+            plan.add_root(Target::Main);
+            plan.define_pass(
+                self.target,
+                TargetPlanOutputs {
+                    colors: vec![OutputColor::Surface(
+                        surface,
+                        self.clear.map(ClearValue::Color),
+                    )],
+                    depth: Some(depth_options),
+                },
+            )?;
 
-        Ok(())
+            Ok(())
+        }
     }
 }
 

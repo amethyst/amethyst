@@ -5,14 +5,13 @@ mod systems;
 
 use crate::pong::Pong;
 use amethyst::{
-    assets::Processor,
     core::TransformBundle,
     input::{InputBundle, StringBindings},
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
         types::DefaultBackend,
-        RenderingBundle, SpriteSheet,
+        RenderingBundle,
     },
     utils::application_root_dir,
 };
@@ -27,12 +26,6 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(TransformBundle::new())?
-        // A Processor system is added to handle loading spritesheets.
-        .with(
-            Processor::<SpriteSheet>::new(),
-            "sprite_sheet_processor",
-            &[],
-        )
         .with_bundle(
             InputBundle::<StringBindings>::new().with_bindings_from_file(
                 app_root.join("examples/pong_tutorial_03/resources/bindings_config.ron"),

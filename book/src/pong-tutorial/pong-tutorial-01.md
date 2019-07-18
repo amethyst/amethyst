@@ -38,12 +38,11 @@ You can delete everything in that file, then add these imports:
 //! Pong Tutorial 1
 
 use amethyst::{
-    assets::Processor,
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
         types::DefaultBackend,
-        RenderingBundle, SpriteSheet,
+        RenderingBundle,
     },
     utils::application_root_dir,
 };
@@ -212,12 +211,6 @@ Last time we left our `GameDataBuilder` instance empty, now we can add some syst
 # use amethyst::{prelude::*};
 # fn main() -> Result<(), amethyst::Error>{
 let game_data = GameDataBuilder::default()
-    // A Processor system is added to handle loading spritesheets.
-    .with(
-        Processor::<SpriteSheet>::new(),
-        "sprite_sheet_processor",
-        &[],
-    )
     .with_bundle(
         RenderingBundle::<DefaultBackend>::new()
             // The RenderToWindow plugin provides all the scaffolding for opening a window and drawing on it
@@ -231,10 +224,7 @@ let game_data = GameDataBuilder::default()
 # Ok(()) }
 ```
 
-Here we are adding a system `Processor::<SpriteSheet>`. This system is responsible for making
-sure that any `SpriteSheet` assets that we will load later are actually being loaded and ready to use.
-
-After that, we are adding a `RenderingBundle`. Bundles are essentially sets of systems
+Here we are adding a `RenderingBundle`. Bundles are essentially sets of systems
 preconfigured to work together, so you don't have to write them all down one by one.
 
 > **Note:** We will cover systems and bundles in more details later, for now, think of the

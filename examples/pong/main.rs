@@ -6,7 +6,6 @@ mod pong;
 mod systems;
 
 use amethyst::{
-    assets::Processor,
     audio::{AudioBundle, DjSystem},
     core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle},
     ecs::{Component, DenseVecStorage},
@@ -15,7 +14,7 @@ use amethyst::{
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
         types::DefaultBackend,
-        RenderingBundle, SpriteSheet,
+        RenderingBundle,
     },
     ui::{RenderUi, UiBundle},
     utils::application_root_dir,
@@ -63,12 +62,6 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(TransformBundle::new())?
-        // A Processor system is added to handle loading spritesheets.
-        .with(
-            Processor::<SpriteSheet>::new(),
-            "sprite_sheet_processor",
-            &[],
-        )
         .with_bundle(
             InputBundle::<StringBindings>::new().with_bindings_from_file(key_bindings_path)?,
         )?

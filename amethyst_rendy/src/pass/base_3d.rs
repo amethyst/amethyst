@@ -634,7 +634,12 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, Resources> for DrawBase3DTrans
                                 range.clone(),
                                 encoder,
                             ) {
-                                log::warn!("Trying to draw a mesh that lacks {:?} vertex attributes. Pass {} requires attributes {:?}.", error.not_found.attributes, T::NAME, T::base_format());
+                                log::warn!(
+                                    "Trying to draw a mesh that lacks {:?} vertex attributes. Pass {} requires attributes {:?}.",
+                                    error.not_found.attributes,
+                                    T::NAME,
+                                    T::base_format(),
+                                );
                             }
                         }
                     }
@@ -661,7 +666,12 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, Resources> for DrawBase3DTrans
                                     range.clone(),
                                     encoder,
                                 ) {
-                                    log::warn!("Trying to draw a skinned mesh that lacks {:?} vertex attributes. Pass {} requires attributes {:?}.", error.not_found.attributes, T::NAME, T::skinned_format());
+                                    log::warn!(
+                                        "Trying to draw a skinned mesh that lacks {:?} vertex attributes. Pass {} requires attributes {:?}.",
+                                        error.not_found.attributes,
+                                        T::NAME,
+                                        T::skinned_format(),
+                                    );
                                 }
                             }
                         }

@@ -4,13 +4,12 @@ mod pong;
 
 use crate::pong::Pong;
 use amethyst::{
-    assets::Processor,
     core::TransformBundle,
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
         types::DefaultBackend,
-        RenderingBundle, SpriteSheet,
+        RenderingBundle,
     },
     utils::application_root_dir,
 };
@@ -25,12 +24,6 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(TransformBundle::new())?
-        // A Processor system is added to handle loading spritesheets.
-        .with(
-            Processor::<SpriteSheet>::new(),
-            "sprite_sheet_processor",
-            &[],
-        )
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 // The RenderToWindow plugin provides all the scaffolding for opening a window and drawing on it

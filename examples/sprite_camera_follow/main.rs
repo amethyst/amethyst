@@ -1,5 +1,5 @@
 use amethyst::{
-    assets::{AssetStorage, Handle, Loader, Processor},
+    assets::{AssetStorage, Handle, Loader},
     core::{Named, Parent, Transform, TransformBundle},
     ecs::{Component, Entity, Join, NullStorage, Read, ReadStorage, System, WriteStorage},
     input::{is_close_requested, is_key_down, InputBundle, InputHandler, StringBindings},
@@ -209,11 +209,6 @@ fn main() -> amethyst::Result<()> {
                 .with_bindings_from_file(assets_directory.join("input.ron"))?,
         )?
         .with(MovementSystem, "movement", &[])
-        .with(
-            Processor::<SpriteSheet>::new(),
-            "sprite_sheet_processor",
-            &[],
-        )
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(

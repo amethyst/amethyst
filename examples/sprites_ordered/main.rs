@@ -7,7 +7,7 @@ mod sprite;
 mod sprite_sheet_loader;
 
 use amethyst::{
-    assets::{AssetStorage, Handle, Loader, Processor},
+    assets::{AssetStorage, Handle, Loader},
     core::{Hidden, Transform, TransformBundle},
     ecs::Entity,
     input::{get_key, is_close_requested, is_key_down, ElementState},
@@ -370,11 +370,6 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
-        .with(
-            Processor::<SpriteSheet>::new(),
-            "sprite_sheet_processor",
-            &[],
-        )
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(

@@ -13,6 +13,7 @@ use crate::{
     },
     system::{GraphCreator, MeshProcessor, RenderingSystem, TextureProcessor},
     types::Backend,
+    SpriteSheet,
 };
 use amethyst_assets::Processor;
 use amethyst_core::{
@@ -34,22 +35,24 @@ pub struct RenderingBundle<B: Backend> {
 
 impl<B: Backend> RenderingBundle<B> {
     /// Create empty `RenderingBundle`. You must register a plugin using
-    /// `with_plugin` in order to actually display anything.
+    /// [`with_plugin`] in order to actually display anything.
     pub fn new() -> Self {
         Self {
             plugins: Vec::new(),
         }
     }
 
-    /// Register a [RenderPlugin].
-    pub fn add_plugin(&mut self, plugin: impl RenderPlugin<B> + 'static) {
-        self.plugins.push(Box::new(plugin));
-    }
-
-    /// Register a [RenderPlugin].
+    /// Register a [`RenderPlugin`].
+    ///
+    /// If you want the non-consuming version of this method, see [`add_plugin`].
     pub fn with_plugin(mut self, plugin: impl RenderPlugin<B> + 'static) -> Self {
         self.add_plugin(plugin);
         self
+    }
+
+    /// Register a [`RenderPlugin`].
+    pub fn add_plugin(&mut self, plugin: impl RenderPlugin<B> + 'static) {
+        self.plugins.push(Box::new(plugin));
     }
 
     fn into_graph_creator(self) -> RenderingBundleGraphCreator<B> {
@@ -64,6 +67,11 @@ impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
         builder.add(MeshProcessor::<B>::default(), "mesh_processor", &[]);
         builder.add(TextureProcessor::<B>::default(), "texture_processor", &[]);
         builder.add(Processor::<Material>::new(), "material_processor", &[]);
+        builder.add(
+            Processor::<SpriteSheet>::new(),
+            "sprite_sheet_processor",
+            &[],
+        );
 
         // make sure that all renderer-specific systems run after game code
         builder.add_barrier();
@@ -128,7 +136,7 @@ pub trait RenderPlugin<B: Backend>: std::fmt::Debug {
     ) -> Result<(), Error>;
 }
 
-/// Builder of a rendering plan for specfied target.
+/// Builder of a rendering plan for specified target.
 #[derive(Debug)]
 pub struct RenderPlan<B: Backend> {
     targets: HashMap<Target, TargetPlan<B>>,
@@ -143,7 +151,7 @@ impl<B: Backend> RenderPlan<B> {
         }
     }
 
-    /// Mark rander target as root. Root render targets are always
+    /// Mark render target as root. Root render targets are always
     /// evaluated, even if nothing depends on them.
     pub fn add_root(&mut self, target: Target) {
         if !self.roots.contains(&target) {
@@ -196,10 +204,7 @@ impl<B: Backend> RenderPlan<B> {
         };
 
         for target in self.roots {
-            // prevent evaluation of roots that were accessed recursively or undefined
-            if !ctx.passes.contains_key(&target) {
-                ctx.evaluate_target(target)?;
-            }
+            ctx.evaluate_target(target)?;
         }
 
         Ok(ctx.graph_builder)
@@ -256,8 +261,10 @@ impl<B: Backend> PlanContext<B> {
     }
 
     fn evaluate_target(&mut self, target: Target) -> Result<(), Error> {
-        let target = self.targets.remove(&target);
-        target.map(|pass| pass.evaluate(self)).transpose()?;
+        // prevent evaluation of roots that were accessed recursively or undefined
+        if let Some(pass) = self.targets.remove(&target) {
+            pass.evaluate(self)?;
+        }
         Ok(())
     }
 
@@ -390,7 +397,7 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
         self.depth
     }
 
-    /// Retreive an image produced by other render target.
+    /// Retrieve an image produced by other render target.
     ///
     /// Results in an error if such image doesn't exist or
     /// retreiving it would result in a dependency cycle.
@@ -404,7 +411,7 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
             i
         })
     }
-    /// Retreive an image produced by other render target.
+    /// Retrieve an image produced by other render target.
     /// Returns `None` when such image isn't registered.
     ///
     /// Results in an error if retreiving it would result in a dependency cycle.
@@ -438,7 +445,7 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
         self.plan_context.graph()
     }
 
-    /// Retreive render target metadata, e.g. size.
+    /// Retrieve render target metadata, e.g. size.
     pub fn target_metadata(&self, target: Target) -> Option<TargetMetadata> {
         self.plan_context.target_metadata(target)
     }
@@ -459,7 +466,7 @@ pub enum TargetImage {
 }
 
 impl TargetImage {
-    /// Retreive target identifier for this image
+    /// Retrieve target identifier for this image
     pub fn target(&self) -> Target {
         match self {
             TargetImage::Color(target, _) => *target,
@@ -805,7 +812,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // CI can't run tests requring actual backend
+    #[ignore] // CI can't run tests requiring actual backend
     fn main_pass_color_image_plan() {
         let config: rendy::factory::Config = Default::default();
         let (factory, families): (Factory<DefaultBackend>, _) =
@@ -866,7 +873,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // CI can't run tests requring actual backend
+    #[ignore] // CI can't run tests requiring actual backend
     fn main_pass_surface_plan() {
         use winit::{EventsLoop, WindowBuilder};
 

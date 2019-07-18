@@ -3,10 +3,9 @@
 use amethyst_assets::PrefabData;
 use amethyst_core::{
     ecs::prelude::{Component, Entity, HashMapStorage, Write, WriteStorage},
-    math::{Matrix4, Point2, Point3},
+    math::{Matrix4, Point2, Point3, Vector2},
     transform::components::Transform,
 };
-use amethyst_window::ScreenDimensions;
 
 use amethyst_error::Error;
 
@@ -409,11 +408,11 @@ impl Projection {
     pub fn screen_to_world(
         &self,
         screen_position: Point2<f32>,
-        screen_dimensions: &ScreenDimensions,
+        screen_diagonal: Vector2<f32>,
         camera_transform: &Transform,
     ) -> Point3<f32> {
-        let screen_x = 2.0 * screen_position.x / screen_dimensions.width() - 1.0;
-        let screen_y = 2.0 * screen_position.y / screen_dimensions.height() - 1.0;
+        let screen_x = 2.0 * screen_position.x / screen_diagonal.x - 1.0;
+        let screen_y = 2.0 * screen_position.y / screen_diagonal.y - 1.0;
         let screen_point = Point3::new(screen_x, screen_y, 0.0).to_homogeneous();
 
         let render_matrix: Matrix4<f32> =
@@ -433,7 +432,7 @@ impl Projection {
     pub fn world_to_screen(
         &self,
         world_position: Point3<f32>,
-        screen_dimensions: &ScreenDimensions,
+        screen_diagonal: Vector2<f32>,
         camera_transform: &Transform,
     ) -> Point2<f32> {
         let render_matrix: Matrix4<f32> =
@@ -444,8 +443,8 @@ impl Projection {
         let screen_pos = f.transform_point(&world_position);
 
         Point2::new(
-            (screen_pos.x + 1.0) * screen_dimensions.width() / 2.0,
-            (screen_pos.y + 1.0) * screen_dimensions.height() / 2.0,
+            (screen_pos.x + 1.0) * screen_diagonal.x / 2.0,
+            (screen_pos.y + 1.0) * screen_diagonal.y / 2.0,
         )
     }
 }

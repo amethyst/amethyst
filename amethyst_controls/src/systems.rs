@@ -264,10 +264,4 @@ impl<'a> System<'a> for CursorHideSystem {
             self.is_hidden = false;
         }
     }
-
-    fn setup(&mut self, res: &mut Resources) {
-        use amethyst_core::ecs::prelude::SystemData;
-        Self::SystemData::setup(res);
-        self.is_hidden = false;
-    }
 }

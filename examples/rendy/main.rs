@@ -7,7 +7,7 @@ use amethyst::{
     },
     assets::{
         AssetLoaderSystemData, AssetStorage, Completion, Handle, Loader, PrefabLoader,
-        PrefabLoaderSystem, Processor, ProgressCounter, RonFormat,
+        PrefabLoaderSystem, ProgressCounter, RonFormat,
     },
     controls::{FlyControlBundle, FlyControlTag},
     core::{
@@ -582,11 +582,6 @@ fn main() -> amethyst::Result<()> {
             GltfSceneLoaderSystem::default(),
             "gltf_loader",
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
-        )
-        .with(
-            Processor::<SpriteSheet>::new(),
-            "sprite_sheet_processor",
-            &[],
         )
         .with_bundle(
             AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")

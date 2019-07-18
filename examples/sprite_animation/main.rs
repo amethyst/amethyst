@@ -7,7 +7,7 @@ use amethyst::{
         get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSet, AnimationSet,
         AnimationSetPrefab, EndControl,
     },
-    assets::{PrefabData, PrefabLoader, PrefabLoaderSystem, Processor, ProgressCounter, RonFormat},
+    assets::{PrefabData, PrefabLoader, PrefabLoaderSystem, ProgressCounter, RonFormat},
     core::transform::{Transform, TransformBundle},
     derive::PrefabData,
     ecs::{prelude::Entity, Entities, Join, ReadStorage, WriteStorage},
@@ -16,7 +16,7 @@ use amethyst::{
     renderer::{
         camera::Camera,
         plugins::{RenderFlat2D, RenderToWindow},
-        sprite::{prefab::SpriteScenePrefab, SpriteRender, SpriteSheet},
+        sprite::{prefab::SpriteScenePrefab, SpriteRender},
         types::DefaultBackend,
         RenderingBundle,
     },
@@ -151,11 +151,6 @@ fn main() -> amethyst::Result<()> {
             TransformBundle::new()
                 .with_dep(&["sprite_animation_control", "sprite_sampler_interpolation"]),
         )?
-        .with(
-            Processor::<SpriteSheet>::new(),
-            "sprite_sheet_processor",
-            &[],
-        )
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
