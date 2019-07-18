@@ -62,12 +62,12 @@ impl RenderUi {
 }
 
 impl<B: Backend> RenderPlugin<B> for RenderUi {
-    fn build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn on_build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(crate::UiGlyphsSystem::<B>::new(), "ui_glyphs_system", &[]);
         Ok(())
     }
 
-    fn plan(
+    fn on_plan(
         &mut self,
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,

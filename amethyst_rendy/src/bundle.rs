@@ -77,7 +77,7 @@ impl<'a, 'b, B: Backend> SystemBundle<'a, 'b> for RenderingBundle<B> {
         builder.add_barrier();
 
         for plugin in &mut self.plugins {
-            plugin.build(builder)?;
+            plugin.on_build(builder)?;
         }
 
         builder.add_thread_local(RenderingSystem::<B, _>::new(self.into_graph_creator()));
@@ -93,7 +93,7 @@ impl<B: Backend> GraphCreator<B> for RenderingBundleGraphCreator<B> {
     fn rebuild(&mut self, res: &Resources) -> bool {
         let mut rebuild = false;
         for plugin in self.plugins.iter_mut() {
-            rebuild = plugin.rebuild(res) || rebuild;
+            rebuild = plugin.should_rebuild(res) || rebuild;
         }
         rebuild
     }
@@ -105,7 +105,7 @@ impl<B: Backend> GraphCreator<B> for RenderingBundleGraphCreator<B> {
 
         let mut plan = RenderPlan::new();
         for plugin in self.plugins.iter_mut() {
-            plugin.plan(&mut plan, factory, res).unwrap();
+            plugin.on_plan(&mut plan, factory, res).unwrap();
         }
         plan.build(factory).unwrap()
     }
@@ -118,17 +118,17 @@ impl<B: Backend> GraphCreator<B> for RenderingBundleGraphCreator<B> {
 /// and signalling when the graph has to be rebuild.
 pub trait RenderPlugin<B: Backend>: std::fmt::Debug {
     /// Hook for adding systems and bundles to the dispatcher.
-    fn build<'a, 'b>(&mut self, _builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn on_build<'a, 'b>(&mut self, _builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         Ok(())
     }
 
     /// Hook for providing triggers to rebuild the render graph.
-    fn rebuild(&mut self, _res: &Resources) -> bool {
+    fn should_rebuild(&mut self, _res: &Resources) -> bool {
         false
     }
 
     /// Hook for extending the rendering plan.
-    fn plan(
+    fn on_plan(
         &mut self,
         plan: &mut RenderPlan<B>,
         factory: &mut Factory<B>,

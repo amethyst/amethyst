@@ -643,16 +643,16 @@ struct RenderSwitchable3D {
 }
 
 impl RenderPlugin<DefaultBackend> for RenderSwitchable3D {
-    fn build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
-        <RenderPbr3D as RenderPlugin<DefaultBackend>>::build(&mut self.pbr, builder)
+    fn on_build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        <RenderPbr3D as RenderPlugin<DefaultBackend>>::on_build(&mut self.pbr, builder)
     }
 
-    fn rebuild(&mut self, res: &Resources) -> bool {
+    fn should_rebuild(&mut self, res: &Resources) -> bool {
         let mode = *<Read<'_, RenderMode>>::fetch(res);
         self.last_mode != mode
     }
 
-    fn plan(
+    fn on_plan(
         &mut self,
         plan: &mut RenderPlan<DefaultBackend>,
         factory: &mut Factory<DefaultBackend>,
@@ -661,9 +661,9 @@ impl RenderPlugin<DefaultBackend> for RenderSwitchable3D {
         let mode = *<Read<'_, RenderMode>>::fetch(res);
         self.last_mode = mode;
         match mode {
-            RenderMode::Pbr => self.pbr.plan(plan, factory, res),
-            RenderMode::Shaded => self.shaded.plan(plan, factory, res),
-            RenderMode::Flat => self.flat.plan(plan, factory, res),
+            RenderMode::Pbr => self.pbr.on_plan(plan, factory, res),
+            RenderMode::Shaded => self.shaded.on_plan(plan, factory, res),
+            RenderMode::Flat => self.flat.on_plan(plan, factory, res),
         }
     }
 }

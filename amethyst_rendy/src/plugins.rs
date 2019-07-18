@@ -70,7 +70,7 @@ mod window {
     }
 
     impl<B: Backend> RenderPlugin<B> for RenderToWindow {
-        fn build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        fn on_build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
             if let Some(config) = self.config.take() {
                 WindowBundle::from_config(config).build(builder)?;
             }
@@ -79,7 +79,7 @@ mod window {
         }
 
         #[allow(clippy::map_clone)]
-        fn rebuild(&mut self, res: &Resources) -> bool {
+        fn should_rebuild(&mut self, res: &Resources) -> bool {
             let new_dimensions = res.try_fetch::<ScreenDimensions>();
             use std::ops::Deref;
             if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
@@ -90,7 +90,7 @@ mod window {
             self.dirty
         }
 
-        fn plan(
+        fn on_plan(
             &mut self,
             plan: &mut RenderPlan<B>,
             factory: &mut Factory<B>,
@@ -161,7 +161,7 @@ impl<D: Base3DPassDef> RenderBase3D<D> {
 }
 
 impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
-    fn build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn on_build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(VisibilitySortingSystem::new(), "visibility_system", &[]);
 
         // TODO: We should ideally register `VertexSkinningBundle` here,
@@ -170,7 +170,7 @@ impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
         Ok(())
     }
 
-    fn plan(
+    fn on_plan(
         &mut self,
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
@@ -212,7 +212,7 @@ impl RenderFlat2D {
 }
 
 impl<B: Backend> RenderPlugin<B> for RenderFlat2D {
-    fn build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn on_build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(
             SpriteVisibilitySortingSystem::new(),
             "sprite_visibility_system",
@@ -221,7 +221,7 @@ impl<B: Backend> RenderPlugin<B> for RenderFlat2D {
         Ok(())
     }
 
-    fn plan(
+    fn on_plan(
         &mut self,
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
@@ -255,7 +255,7 @@ impl RenderDebugLines {
 }
 
 impl<B: Backend> RenderPlugin<B> for RenderDebugLines {
-    fn plan(
+    fn on_plan(
         &mut self,
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
@@ -296,7 +296,7 @@ impl RenderSkybox {
 }
 
 impl<B: Backend> RenderPlugin<B> for RenderSkybox {
-    fn plan(
+    fn on_plan(
         &mut self,
         plan: &mut RenderPlan<B>,
         _factory: &mut Factory<B>,
