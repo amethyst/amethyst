@@ -20,7 +20,7 @@ use amethyst::{
     },
     error::Error,
     gltf::GltfSceneLoaderSystem,
-    input::{is_close_requested, is_key_down, Axis, Bindings, Button, InputBundle, StringBindings},
+    input::{is_close_requested, is_key_down, is_key_up, Axis, Bindings, Button, InputBundle, StringBindings},
     prelude::*,
     renderer::{
         bundle::{RenderPlan, RenderPlugin},
@@ -59,6 +59,7 @@ struct Example {
     entity: Option<Entity>,
     initialised: bool,
     progress: Option<ProgressCounter>,
+    bullet_time: bool,
 }
 
 impl Example {
@@ -67,6 +68,7 @@ impl Example {
             entity: None,
             initialised: false,
             progress: None,
+            bullet_time: false,
         }
     }
 }
@@ -335,6 +337,12 @@ impl SimpleState for Example {
         profile_scope!("example handle_event");
         let StateData { world, .. } = data;
         if let StateEvent::Window(event) = &event {
+            if is_key_down(&event, winit::VirtualKeyCode::LShift) {
+                self.bullet_time = true;
+            } else if is_key_up(&event, winit::VirtualKeyCode::LShift) {
+                self.bullet_time = false;
+            }
+
             if is_close_requested(&event) || is_key_down(&event, winit::VirtualKeyCode::Escape) {
                 Trans::Quit
             } else if is_key_down(&event, winit::VirtualKeyCode::Space) {
@@ -364,6 +372,12 @@ impl SimpleState for Example {
     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         #[cfg(feature = "profiler")]
         profile_scope!("example update");
+
+        {
+            let mut time = data.world.write_resource::<Time>();
+            time.set_time_scale(if self.bullet_time { 0.2 } else { 1.0 });
+        }
+
         if !self.initialised {
             let remove = match self.progress.as_ref().map(|p| p.complete()) {
                 None | Some(Completion::Loading) => false,
@@ -559,6 +573,13 @@ fn main() -> amethyst::Result<()> {
         Axis::Emulated {
             pos: Button::Key(winit::VirtualKeyCode::S),
             neg: Button::Key(winit::VirtualKeyCode::W),
+        },
+    )?;
+    bindings.insert_axis(
+        "horizontal",
+        Axis::Emulated {
+            pos: Button::Key(winit::VirtualKeyCode::D),
+            neg: Button::Key(winit::VirtualKeyCode::A),
         },
     )?;
     bindings.insert_axis(
