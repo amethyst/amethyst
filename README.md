@@ -106,8 +106,17 @@ For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chap
 
 [gs]: https://book.amethyst.rs/stable/getting-started.html
 
-There are also many open source games and prototypes being made with Amethyst. See our showcase in the regularly updated [Games Made With Amethyst][gmwa] thread on the community forum for some good sources of inspiration.
+### Showcase games
 
+Our official showcase games demonstrate larger, continuously developed game projects made with Amethyst:
+
+- [Evoli][evoli] - 3D, ecosystem simulator
+- [Space Menace][menace] - 2D, action platformer
+
+For more examples see [Games Made With Amethyst][gmwa] topic on the community forum for some good sources of inspiration.
+
+[evoli]: https://github.com/amethyst/evoli
+[menace]: https://github.com/amethyst/space-menace
 [gmwa]: https://community.amethyst.rs/t/games-made-with-amethyst/134
 
 ## Dependencies
