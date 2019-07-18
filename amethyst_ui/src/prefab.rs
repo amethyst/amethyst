@@ -12,8 +12,8 @@ use amethyst_assets::{
 use amethyst_audio::Source as Audio;
 use amethyst_core::{
     ecs::{
-        shred::{SystemData, ResourceId},
-        prelude::{Entities, Entity, Read, ReadExpect, Write, WriteStorage, World},
+        prelude::{Entities, Entity, Read, ReadExpect, World, Write, WriteStorage},
+        shred::{ResourceId, SystemData},
     },
     HiddenPropagate,
 };

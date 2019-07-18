@@ -1,5 +1,6 @@
 use amethyst_core::ecs::{
-    hibitset::BitSet, storage::GenericReadStorage, Entities, Entity, Join, ReadStorage, System, Write,
+    hibitset::BitSet, storage::GenericReadStorage, Entities, Entity, Join, ReadStorage, System,
+    Write,
 };
 use derive_new::new;
 use std::{cmp::Ordering, marker::PhantomData};

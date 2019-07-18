@@ -3,7 +3,7 @@ use std::{marker::PhantomData, ops::Deref, sync::Arc};
 use amethyst_assets::Processor;
 use amethyst_core::{
     bundle::SystemBundle,
-    ecs::{DispatcherBuilder, ReadExpect, World, SystemData},
+    ecs::{DispatcherBuilder, ReadExpect, SystemData, World},
 };
 use amethyst_error::Error;
 use amethyst_window::{ScreenDimensions, Window};
@@ -185,11 +185,7 @@ where
         false
     }
 
-    fn builder(
-        &mut self,
-        _factory: &mut Factory<B>,
-        _world: &World,
-    ) -> GraphBuilder<B, World> {
+    fn builder(&mut self, _factory: &mut Factory<B>, _world: &World) -> GraphBuilder<B, World> {
         GraphBuilder::new()
     }
 }

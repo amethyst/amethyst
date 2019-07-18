@@ -11,7 +11,7 @@ use crate::{
 };
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    ecs::{Join, Read, ReadExpect, ReadStorage, World, SystemData},
+    ecs::{Join, Read, ReadExpect, ReadStorage, SystemData, World},
     transform::Transform,
     Hidden, HiddenPropagate,
 };

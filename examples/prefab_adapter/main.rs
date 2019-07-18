@@ -8,8 +8,8 @@ use amethyst::{
         ProgressCounter, RonFormat,
     },
     ecs::{
-        storage::DenseVecStorage, Component, Entities, Entity, Join, ReadStorage, World,
-        WriteStorage, WorldExt,
+        storage::DenseVecStorage, Component, Entities, Entity, Join, ReadStorage, World, WorldExt,
+        WriteStorage,
     },
     prelude::*,
     utils::application_root_dir,

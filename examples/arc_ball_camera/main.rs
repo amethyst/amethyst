@@ -68,7 +68,7 @@ struct CameraDistanceSystem {
 }
 
 impl CameraDistanceSystem {
-    pub fn new(world: &mut World) -> Self {
+    pub fn new(mut world: &mut World) -> Self {
         <Self as System<'_>>::SystemData::setup(&mut world);
         let event_reader = world
             .fetch_mut::<EventChannel<InputEvent<String>>>()
@@ -160,7 +160,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         use std::ops::Deref;
         if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
             self.dirty = true;
-            self.dimensions = *new_dimensions.map(|d| d.clone());
+            self.dimensions = new_dimensions.map(|d| (*d).clone());
             return false;
         }
         self.dirty

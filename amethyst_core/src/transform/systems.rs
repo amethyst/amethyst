@@ -1,10 +1,11 @@
 //! Scene graph system and types
 
 use crate::ecs::{
-    prelude::{
-        ComponentEvent, Entities, Join, ReadExpect, ReadStorage, ReaderId, System, World, WriteStorage,
-    },
     hibitset::BitSet,
+    prelude::{
+        ComponentEvent, Entities, Join, ReadExpect, ReadStorage, ReaderId, System, World,
+        WriteStorage,
+    },
 };
 
 use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform};
@@ -126,12 +127,11 @@ impl<'a> System<'a> for TransformSystem {
 mod tests {
     use crate::{
         ecs::{
+            prelude::{Builder, World, WorldExt},
             shred::RunNow,
-            prelude::{Builder, World},
         },
         math::{Matrix4, Quaternion, Unit, Vector3},
     };
-    use shred::RunNow;
     use specs_hierarchy::{Hierarchy, HierarchySystem};
 
     use crate::transform::{Parent, Transform, TransformSystem};
@@ -154,7 +154,7 @@ mod tests {
     fn transform_world() -> (World, HierarchySystem<Parent>, TransformSystem) {
         let mut world = World::new();
         let mut hs = HierarchySystem::<Parent>::new();
-        let mut ts = TransformSystem::new();
+        let mut ts = TransformSystem::new(&mut world);
         hs.setup(&mut world);
         ts.setup(&mut world);
 

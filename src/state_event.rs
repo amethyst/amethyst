@@ -1,6 +1,6 @@
 use crate::{
     core::{
-        ecs::{Read, World, SystemData},
+        ecs::{Read, SystemData, World},
         shrev::{EventChannel, ReaderId},
         EventReader,
     },

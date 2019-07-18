@@ -4,7 +4,7 @@ use amethyst_core::ecs::{
     prelude::{
         Component, DenseVecStorage, Entities, Entity, FlaggedStorage, Join, ReadStorage, World,
     },
-    shred::{SystemData, ResourceId},
+    shred::{ResourceId, SystemData},
 };
 
 use serde::{Deserialize, Serialize};

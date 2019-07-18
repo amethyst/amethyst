@@ -9,7 +9,7 @@ mod sprite_sheet_loader;
 use amethyst::{
     assets::{AssetStorage, Handle, Loader, Processor},
     core::{Hidden, Transform, TransformBundle},
-    ecs::{Entity, ReadExpect, World, SystemData, WorldExt},
+    ecs::{Entity, ReadExpect, SystemData, World, WorldExt},
     input::{get_key, is_close_requested, is_key_down, ElementState},
     prelude::*,
     renderer::{
@@ -413,7 +413,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         use std::ops::Deref;
         if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
             self.dirty = true;
-            self.dimensions = new_dimensions.map(|d| d.clone());
+            self.dimensions = new_dimensions.map(|d| (*d).clone());
             return false;
         }
         self.dirty

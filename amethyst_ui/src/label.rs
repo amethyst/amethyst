@@ -5,10 +5,8 @@ use crate::{
 
 use amethyst_assets::{AssetStorage, Loader};
 use amethyst_core::ecs::{
-    shred::{SystemData, ResourceId},
-    prelude::{
-        Entities, Entity, Read, ReadExpect, World, WriteExpect, WriteStorage,
-    },
+    prelude::{Entities, Entity, Read, ReadExpect, World, WriteExpect, WriteStorage},
+    shred::{ResourceId, SystemData},
 };
 
 const DEFAULT_Z: f32 = 1.0;

@@ -91,6 +91,9 @@ where
     state_fns: Vec<FnState<T, E>>,
     /// Game data and event type.
     state_data: PhantomData<(T, E, R)>,
+    /// World used for setup.
+    #[derivative(Debug = "ignore")]
+    world: World,
 }
 
 impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader> {
@@ -102,6 +105,7 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
             resource_add_fns: Vec::new(),
             state_fns: Vec::new(),
             state_data: PhantomData,
+            world: World::new(),
         }
     }
 
@@ -137,7 +141,7 @@ where
         for<'b> R: EventReader<'b, Event = E>,
     {
         let params = (self.bundle_add_fns, self.resource_add_fns, self.state_fns);
-        Self::build_internal(params)
+        Self::build_internal(params, self.world)
     }
 
     // Hack to get around `S` or `T` not being `Send`
@@ -154,6 +158,7 @@ where
             Vec<FnResourceAdd>,
             Vec<FnState<GameData<'static, 'static>, E>>,
         ),
+        world: World,
     ) -> Result<CoreApplication<'static, GameData<'static, 'static>, E, R>, Error>
     where
         for<'b> R: EventReader<'b, Event = E>,
@@ -170,20 +175,26 @@ where
             .into_iter()
             .rev()
             .for_each(|state_fn| states.push(state_fn.call()));
-        Self::build_application(SequencerState::new(states), game_data, resource_add_fns)
+        Self::build_application(
+            SequencerState::new(states),
+            game_data,
+            resource_add_fns,
+            world,
+        )
     }
 
     fn build_application<S>(
         first_state: S,
         game_data: GameDataBuilder<'static, 'static>,
         resource_add_fns: Vec<FnResourceAdd>,
+        world: World,
     ) -> Result<CoreApplication<'static, GameData<'static, 'static>, E, R>, Error>
     where
         S: State<GameData<'static, 'static>, E> + 'static,
         for<'b> R: EventReader<'b, Event = E>,
     {
         let mut application_builder =
-            CoreApplication::build(AmethystApplication::assets_dir()?, first_state)?;
+            CoreApplication::build(AmethystApplication::assets_dir()?, first_state, world)?;
         {
             let world = &mut application_builder.world;
             for mut function in resource_add_fns {
@@ -202,7 +213,7 @@ where
 
         // `CoreApplication` is `!UnwindSafe`, but wrapping it in a `Mutex` allows us to
         // recover from a panic.
-        let application = Mutex::new(Self::build_internal(params)?);
+        let application = Mutex::new(Self::build_internal(params, self.world)?);
         panic::catch_unwind(move || {
             application
                 .lock()
@@ -283,6 +294,7 @@ where
             resource_add_fns: self.resource_add_fns,
             state_fns: Vec::new(),
             state_data: PhantomData,
+            world: self.world,
         }
     }
 
@@ -313,7 +325,9 @@ where
         //
         // See <https://users.rust-lang.org/t/move-a-boxed-function-inside-a-closure/18199>
         self.bundle_add_fns.push(SendBoxFnOnce::from(
-            |game_data: GameDataBuilder<'static, 'static>| game_data.with_bundle(bundle),
+            |game_data: GameDataBuilder<'static, 'static>| {
+                game_data.with_bundle(&mut self.world, bundle)
+            },
         ));
         self
     }
@@ -333,7 +347,7 @@ where
     {
         self.bundle_add_fns.push(SendBoxFnOnce::from(
             move |game_data: GameDataBuilder<'static, 'static>| {
-                game_data.with_bundle(bundle_function())
+                game_data.with_bundle(&mut self.world, bundle_function())
             },
         ));
         self
@@ -1065,7 +1079,11 @@ mod test {
     #[derive(Debug)]
     struct BundleZero;
     impl<'a, 'b> SystemBundle<'a, 'b> for BundleZero {
-        fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        fn build(
+            self,
+            _world: &mut World,
+            builder: &mut DispatcherBuilder<'a, 'b>,
+        ) -> Result<(), Error> {
             builder.add(SystemZero, "system_zero", &[]);
             Ok(())
         }
@@ -1074,7 +1092,11 @@ mod test {
     #[derive(Debug)]
     struct BundleOne;
     impl<'a, 'b> SystemBundle<'a, 'b> for BundleOne {
-        fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        fn build(
+            self,
+            _world: &mut World,
+            builder: &mut DispatcherBuilder<'a, 'b>,
+        ) -> Result<(), Error> {
             builder.add(SystemOne, "system_one", &["system_zero"]);
             builder.add(SystemNonDefault, "system_non_default", &[]);
             Ok(())
@@ -1084,7 +1106,11 @@ mod test {
     #[derive(Debug)]
     struct BundleAsset;
     impl<'a, 'b> SystemBundle<'a, 'b> for BundleAsset {
-        fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        fn build(
+            self,
+            _world: &mut World,
+            builder: &mut DispatcherBuilder<'a, 'b>,
+        ) -> Result<(), Error> {
             builder.add(
                 Processor::<AssetZero>::new(),
                 "asset_translation_zero_processor",

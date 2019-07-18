@@ -58,9 +58,7 @@ where
     /// always be used to construct `EventRetriggerSystem`s.
     pub fn new(mut world: &mut World) -> Self {
         <Self as System<'_>>::SystemData::setup(&mut world);
-        let event_reader = world
-            .fetch_mut::<EventChannel<T::In>>()
-            .register_reader();
+        let event_reader = world.fetch_mut::<EventChannel<T::In>>().register_reader();
         Self { event_reader }
     }
 }

@@ -5,8 +5,8 @@ use crate::{
 };
 use amethyst_core::{
     ecs::{
+        hibitset::BitSet,
         prelude::{Entities, Entity, Join, Read, ReadStorage, System, Write},
-        hibitset::BitSet, 
     },
     math::{Point3, Vector3},
     Hidden, HiddenPropagate, Transform,

@@ -4,7 +4,7 @@
 use amethyst::{
     assets::{Format as AssetFormat, Handle, Loader},
     core::{math::Vector3, Transform, TransformBundle},
-    ecs::{ReadExpect, World, SystemData, WorldExt},
+    ecs::{ReadExpect, SystemData, World, WorldExt},
     error::Error,
     input::{InputBundle, StringBindings},
     prelude::*,
@@ -196,7 +196,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         use std::ops::Deref;
         if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
             self.dirty = true;
-            self.dimensions = new_dimensions.map(|d| d.clone());
+            self.dimensions = new_dimensions.map(|d| (*d).clone());
             return false;
         }
         self.dirty

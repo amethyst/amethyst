@@ -5,7 +5,7 @@ use thread_profiler::profile_scope;
 
 use amethyst_assets::AssetStorage;
 use amethyst_core::{
-    ecs::prelude::{Read, System, World, WriteExpect, SystemData},
+    ecs::prelude::{Read, System, SystemData, World, WriteExpect},
     shred::Resource,
 };
 

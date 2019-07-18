@@ -4,7 +4,7 @@ use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, Processor, RonFormat},
     audio::{output::init_output, Source},
     core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle, Time},
-    ecs::prelude::{Entity, ReadExpect, World, System, SystemData, World, Write},
+    ecs::prelude::{Entity, ReadExpect, System, SystemData, World, WorldExt, Write},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
@@ -42,7 +42,7 @@ struct Example {
 
 impl SimpleState for Example {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        let StateData { world, .. } = data;
+        let StateData { mut world, .. } = data;
         // Initialise the scene with an object, a light and a camera.
         let handle = world.exec(|loader: PrefabLoader<'_, MyPrefabData>| {
             loader.load("prefab/sphere.ron", RonFormat, ())
@@ -202,11 +202,11 @@ struct ExampleGraph {
 impl GraphCreator<DefaultBackend> for ExampleGraph {
     fn rebuild(&mut self, world: &World) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
-        let new_dimensions = res.try_fetch::<ScreenDimensions>();
+        let new_dimensions = world.try_fetch::<ScreenDimensions>();
         use std::ops::Deref;
         if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
             self.dirty = true;
-            self.dimensions = new_dimensions.map(|d| d.clone());
+            self.dimensions = new_dimensions.map(|d| (*d).clone());
             return false;
         }
         self.dirty
@@ -224,7 +224,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
 
         self.dirty = false;
 
-        let window = <ReadExpect<'_, Window>>::fetch(res);
+        let window = <ReadExpect<'_, Window>>::fetch(world);
         let surface = factory.create_surface(&window);
         // cache surface format to speed things up
         let surface_format = *self

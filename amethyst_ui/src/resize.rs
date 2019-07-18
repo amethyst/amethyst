@@ -1,7 +1,7 @@
 use amethyst_core::{
     ecs::prelude::{
-        BitSet, Component, ComponentEvent, FlaggedStorage, Join, ReadExpect, System,
-        World, WriteStorage,
+        BitSet, Component, ComponentEvent, FlaggedStorage, Join, ReadExpect, System, World,
+        WriteStorage,
     },
     shrev::ReaderId,
 };

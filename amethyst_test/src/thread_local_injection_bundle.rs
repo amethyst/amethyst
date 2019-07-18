@@ -20,7 +20,11 @@ impl<'a, 'b, Sys> SystemBundle<'a, 'b> for ThreadLocalInjectionBundle<Sys>
 where
     Sys: for<'s> RunNow<'s> + 'b,
 {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+    fn build(
+        self,
+        _world: &mut World,
+        builder: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<(), Error> {
         builder.add_thread_local(self.system);
         Ok(())
     }

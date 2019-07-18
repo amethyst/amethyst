@@ -24,7 +24,7 @@ pub trait EventReader<'a> {
 #[cfg(test)]
 mod tests {
     use crate::ecs::Read;
-    use shrev::{EventChannel, ReaderId};
+    use crate::shrev::{EventChannel, ReaderId};
 
     use super::*;
 
