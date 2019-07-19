@@ -28,7 +28,7 @@ pub struct VertexData {
     tex_coords: Vec<[f32; 2]>,
 }
 // Registers the asset type which automatically prepares AssetStorage & ProcessingQueue
-amethyst_assets::register_asset_type!(VertexData => MeshAsset);
+amethyst_assets::register_asset_type!(VertexData => MeshAsset; ProcessingSystem);
 /// A format the mesh data could be stored with.
 #[derive(Debug, Default, Clone, Serialize, Deserialize, TypeUuid)]
 #[uuid = "df3c6c87-05e6-4cc9-8711-cb6a6aad9942"]
@@ -55,16 +55,19 @@ struct App {
 }
 
 impl App {
-    fn new(dispatcher: Dispatcher<'static, 'static>, state: State) -> Self {
+    fn new(state: State) -> Self {
+        let mut disp_builder = DispatcherBuilder::new();
+
         let mut world = World::new();
 
         world.add_resource(Errors::new());
         let mut loader = NewDefaultLoader::default();
         loader.init_world(&mut world.res);
+        loader.init_dispatcher(&mut disp_builder);
         world.add_resource(loader);
 
         App {
-            dispatcher,
+            dispatcher: disp_builder.build(),
             state: Some(state),
             world,
         }
@@ -74,7 +77,7 @@ impl App {
         self.dispatcher.dispatch(&mut self.world.res);
         self.world.maintain();
         let mut loader = self.world.write_resource::<NewDefaultLoader>();
-        loader.process(&self.world.res);
+        loader.process(&self.world.res).unwrap(); // TODO unwrap
         let mut errors = self.world.write_resource::<Errors>();
         errors.print_and_exit();
     }
@@ -89,6 +92,8 @@ impl App {
         }
     }
 }
+
+#[derive(Default)]
 pub struct ProcessingSystem;
 
 impl<'a> System<'a> for ProcessingSystem {
@@ -155,18 +160,12 @@ fn main() {
     // launch an asset daemon in a separate thread
     std::thread::spawn(move || {
         atelier_daemon::AssetDaemon::default()
-            .with_importers(
-                atelier_importer::get_source_importers().map(|i| (i.extension, (i.instantiator)())),
-            )
+            .with_importers(atelier_importer::get_source_importers())
             .with_asset_dirs(vec![assets_dir])
             .with_db_path(examples_dir.join(".asset_db"))
             .run();
     });
 
-    let disp = DispatcherBuilder::new()
-        .with(ProcessingSystem, "processing", &[])
-        .build();
-
-    let mut app = App::new(disp, State::Start);
+    let mut app = App::new(State::Start);
     app.run();
 }

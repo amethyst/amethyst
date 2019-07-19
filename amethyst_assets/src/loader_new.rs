@@ -1,7 +1,7 @@
 use crate::{processor::ProcessingQueue, storage_new::AssetStorage};
 use amethyst_core::ecs::{
     prelude::{Component, DenseVecStorage},
-    Resources,
+    DispatcherBuilder, Resources, System,
 };
 use atelier_loader::{self, AssetLoadOp, AssetTypeId, Loader as AtelierLoader};
 use bincode;
@@ -335,6 +335,13 @@ pub trait Loader: Send + Sync {
     /// * `resources`: Resources in the application.
     fn init_world(&mut self, resources: &mut Resources);
 
+    /// Registers processing systems in the `Dispatcher`.
+    ///
+    /// # Parameters
+    ///
+    /// * `builder`: DispatcherBuilder in the application.
+    fn init_dispatcher(&mut self, builder: &mut DispatcherBuilder<'static, 'static>);
+
     /// Updates asset loading state and removes assets that are no longer referenced.
     ///
     /// # Parameters
@@ -390,6 +397,12 @@ impl<T: AtelierLoader<HandleType = ()> + Send + Sync> Loader for LoaderWithStora
             (storage.create_storage)(resources);
         }
     }
+    fn init_dispatcher(&mut self, builder: &mut DispatcherBuilder<'static, 'static>) {
+        for (_, storage) in self.storage_map.storages_by_asset_uuid.iter() {
+            (storage.register_system)(builder);
+        }
+    }
+
     fn process(&mut self, resources: &Resources) -> Result<(), Box<dyn Error>> {
         loop {
             match self.ref_receiver.try_recv() {
@@ -614,6 +627,7 @@ pub struct AssetType {
     pub asset_uuid: AssetTypeId,
     /// Function to create the `AssetTypeStorage`'s resources in the `World`.
     pub create_storage: fn(&mut Resources),
+    pub register_system: fn(&mut DispatcherBuilder<'static, 'static>),
     /// Function that runs another function, passing in the `AssetTypeStorage`.
     pub with_storage: fn(&Resources, &mut dyn FnMut(&mut dyn AssetTypeStorage)),
 }
@@ -634,8 +648,10 @@ crate::inventory::collect!(AssetType);
 ///
 /// This function is not intended to be called be directly. Use the `register_asset_type!` macro
 /// macro instead.
-pub fn create_asset_type<Intermediate, Asset: 'static + TypeUuid + Send + Sync>() -> AssetType
+pub fn create_asset_type<Intermediate, Asset, Processor>() -> AssetType
 where
+    Asset: 'static + TypeUuid + Send + Sync,
+    for<'a> Processor: System<'a> + Send + Default + 'static,
     for<'a> Intermediate: 'static + Deserialize<'a> + TypeUuid + Send,
 {
     AssetType {
@@ -649,6 +665,7 @@ where
                 res.insert(ProcessingQueue::<Intermediate>::default())
             }
         },
+        register_system: |builder| builder.add(Processor::default(), "", &[]),
         with_storage: |res, func| {
             func(&mut (
                 &*res.fetch::<ProcessingQueue<Intermediate>>(),
@@ -676,17 +693,17 @@ where
 ///     tex_coords: Vec<[f32; 2]>,
 /// }
 ///
-/// amethyst_assets::register_asset_type!(VertexData => MeshAsset);
+/// amethyst_assets::register_asset_type!(VertexData => MeshAsset; MeshProcessorSystem);
 /// ```
 #[macro_export]
 macro_rules! register_asset_type {
-    ($intermediate:ty => $asset:ty) => {
-        $crate::register_asset_type!(amethyst_assets; $intermediate => $asset);
+    ($intermediate:ty => $asset:ty; $system:ty) => {
+        $crate::register_asset_type!(amethyst_assets; $intermediate => $asset; $system);
     };
-    ($krate:ident; $intermediate:ty => $asset:ty) => {
+    ($krate:ident; $intermediate:ty => $asset:ty; $system:ty) => {
         $crate::inventory::submit!{
             #![crate = $krate]
-            $crate::create_asset_type::<$intermediate, $asset>()
+            $crate::create_asset_type::<$intermediate, $asset, $system>()
         }
     };
 }

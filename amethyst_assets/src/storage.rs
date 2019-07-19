@@ -501,9 +501,14 @@ impl<A: Asset> Drop for AssetStorage<A> {
 ///
 /// This system can only be used if the asset data implements
 /// `Into<Result<A, BoxedErr>>`.
-#[derive(Default)]
 pub struct Processor<A> {
     marker: PhantomData<A>,
+}
+
+impl<A> Default for Processor<A> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<A> Processor<A> {

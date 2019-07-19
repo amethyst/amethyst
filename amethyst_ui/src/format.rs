@@ -20,7 +20,7 @@ pub struct FontData(Font<'static>);
 
 amethyst_assets::register_format_type!(FontData);
 // FontData/FontAsset does not implement Serialize/Deserialize, so we cannot register asset type :(
-// amethyst_assets::register_asset_type!(FontData => FontAsset);
+// amethyst_assets::register_asset_type!(FontData => FontAsset; Processor<FontAsset>);
 
 impl Asset for FontAsset {
     fn name() -> &'static str {

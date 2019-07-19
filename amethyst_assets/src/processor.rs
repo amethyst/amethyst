@@ -20,6 +20,12 @@ pub struct Processor<A> {
     marker: PhantomData<A>,
 }
 
+impl<A> Default for Processor<A> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<A> Processor<A> {
     /// Creates a new asset processor for assets of type `A`.
     pub fn new() -> Self {

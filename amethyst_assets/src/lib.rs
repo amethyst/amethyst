@@ -73,8 +73,8 @@ macro_rules! register_importer {
 #[cfg(not(feature = "experimental-assets"))]
 #[macro_export]
 macro_rules! register_asset_type {
-    ($intermediate:ty => $asset:ty) => {};
-    ($krate:ident; $intermediate:ty => $asset:ty) => {};
+    ($intermediate:ty => $asset:ty; $system:ty) => {};
+    ($krate:ident; $intermediate:ty => $asset:ty; $system:ty) => {};
 }
 
 // used in macros. Private API otherwise.
