@@ -79,10 +79,7 @@ pub struct DrawBase3DDesc<B: Backend, T: Base3DPassDef> {
 impl<B: Backend, T: Base3DPassDef> DrawBase3DDesc<B, T> {
     /// Create pass in default configuration
     pub fn new() -> Self {
-        Self {
-            skinning: false,
-            marker: PhantomData,
-        }
+        Default::default()
     }
 
     /// Create pass in with vertex skinning enabled

@@ -679,33 +679,33 @@ mod tests {
 
     #[test]
     fn screen_to_world() {
-        let screen = ScreenDimensions::new(1024, 768, 1.0);
+        let diagonal = Vector2::new(1024.0, 768.0);
 
-        let ortho = Camera::standard_2d(screen.width(), screen.height());
+        let ortho = Camera::standard_2d(diagonal.x, diagonal.y);
         let mut transform = Transform::default();
 
-        let center_screen = Point2::new(screen.width() / 2.0, screen.height() / 2.0);
+        let center_screen = Point2::new(diagonal.x / 2.0, diagonal.y / 2.0);
         let top_left = Point2::new(0.0, 0.0);
-        let bottom_right = Point2::new(screen.width() - 1.0, screen.height() - 1.0);
+        let bottom_right = Point2::new(diagonal.x - 1.0, diagonal.y - 1.0);
 
         assert_ulps_eq!(
             ortho
                 .projection()
-                .screen_to_world(center_screen, &screen, &transform),
+                .screen_to_world(center_screen, diagonal, &transform),
             Point3::new(0.0, 0.0, -0.1)
         );
 
         assert_ulps_eq!(
             ortho
                 .projection()
-                .screen_to_world(top_left, &screen, &transform),
+                .screen_to_world(top_left, diagonal, &transform),
             Point3::new(-512.0, 384.0, -0.1)
         );
 
         assert_ulps_eq!(
             ortho
                 .projection()
-                .screen_to_world(bottom_right, &screen, &transform),
+                .screen_to_world(bottom_right, diagonal, &transform),
             Point3::new(511.0, -383.0, -0.1)
         );
 
@@ -715,21 +715,21 @@ mod tests {
         assert_ulps_eq!(
             ortho
                 .projection()
-                .screen_to_world(center_screen, &screen, &transform),
+                .screen_to_world(center_screen, diagonal, &transform),
             Point3::new(100.0, 100.0, -0.1)
         );
     }
 
     #[test]
     fn world_to_screen() {
-        let screen = ScreenDimensions::new(1024, 768, 1.0);
+        let diagonal = Vector2::new(1024.0, 768.0);
 
-        let ortho = Camera::standard_2d(screen.width(), screen.height());
+        let ortho = Camera::standard_2d(diagonal.x, diagonal.y);
         let transform = Transform::default();
 
-        let center_screen = Point2::new(screen.width() / 2.0, screen.height() / 2.0);
+        let center_screen = Point2::new(diagonal.x / 2.0, diagonal.y / 2.0);
         let top_left = Point2::new(0.0, 0.0);
-        let bottom_right = Point2::new(screen.width() - 1.0, screen.height() - 1.0);
+        let bottom_right = Point2::new(diagonal.x - 1.0, diagonal.y - 1.0);
 
         let top_left_world = Point3::new(-512.0, 384.0, -0.1);
         let bottom_right_world = Point3::new(511.0, -383.0, -0.1);
@@ -737,21 +737,21 @@ mod tests {
         assert_ulps_eq!(
             ortho
                 .projection()
-                .world_to_screen(top_left_world, &screen, &transform),
+                .world_to_screen(top_left_world, diagonal, &transform),
             top_left
         );
 
         assert_ulps_eq!(
             ortho
                 .projection()
-                .world_to_screen(bottom_right_world, &screen, &transform),
+                .world_to_screen(bottom_right_world, diagonal, &transform),
             bottom_right
         );
 
         assert_ulps_eq!(
             ortho
                 .projection()
-                .world_to_screen(Point3::new(0.0, 0.0, 0.0), &screen, &transform),
+                .world_to_screen(Point3::new(0.0, 0.0, 0.0), diagonal, &transform),
             center_screen
         );
     }

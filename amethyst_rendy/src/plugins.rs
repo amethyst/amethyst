@@ -1,13 +1,13 @@
 //! Set of predefined implementations of `RenderPlugin` for use with `RenderingBundle`.
 
 use crate::{
-    bundle::{RenderOrder, RenderPlan, RenderPlugin, Target, TargetPlanOutputs},
+    bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
     pass::*,
     sprite_visibility::SpriteVisibilitySortingSystem,
     visibility::VisibilitySortingSystem,
     Backend, Factory,
 };
-use amethyst_core::ecs::{DispatcherBuilder, ReadExpect, Resources};
+use amethyst_core::ecs::{DispatcherBuilder, Resources};
 use amethyst_error::Error;
 use palette::Srgb;
 use rendy::graph::render::RenderGroupDesc;
@@ -23,7 +23,10 @@ mod window {
         Format, Kind,
     };
     use amethyst_config::Config;
-    use amethyst_core::{ecs::SystemData, SystemBundle};
+    use amethyst_core::{
+        ecs::{ReadExpect, SystemData},
+        SystemBundle,
+    };
     use amethyst_window::{DisplayConfig, ScreenDimensions, Window, WindowBundle};
     use rendy::hal::command::{ClearColor, ClearDepthStencil, ClearValue};
     use std::path::Path;
@@ -114,7 +117,7 @@ mod window {
             plan.add_root(Target::Main);
             plan.define_pass(
                 self.target,
-                TargetPlanOutputs {
+                crate::bundle::TargetPlanOutputs {
                     colors: vec![OutputColor::Surface(
                         surface,
                         self.clear.map(ClearValue::Color),
