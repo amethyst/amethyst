@@ -26,7 +26,7 @@ where
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         let mut bundle = RenderingBundle::<B>::new().with_plugin(crate::plugins::RenderFlat2D);
 
-        #[cfg(feature = "amethyst_window")]
+        #[cfg(feature = "window")]
         bundle.add_plugin(crate::plugins::RenderToWindow::from_config(
             amethyst_window::DisplayConfig {
                 visibility: false,

@@ -12,10 +12,10 @@ use amethyst_error::Error;
 use palette::Srgb;
 use rendy::graph::render::RenderGroupDesc;
 
-#[cfg(feature = "amethyst_window")]
+#[cfg(feature = "window")]
 pub use window::RenderToWindow;
 
-#[cfg(feature = "amethyst_window")]
+#[cfg(feature = "window")]
 mod window {
     use super::*;
     use crate::{
