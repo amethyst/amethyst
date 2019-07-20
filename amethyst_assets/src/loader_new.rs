@@ -351,7 +351,7 @@ pub trait Loader: Send + Sync {
 }
 
 /// Default loader is the Atelier Assets `RpcLoader`.
-pub type DefaultLoader = LoaderWithStorage<atelier_loader::rpc_loader::RpcLoader<()>>;
+pub type DefaultLoader = LoaderWithStorage<atelier_loader::rpc_loader::RpcLoader>;
 
 /// Operations on an asset reference.
 enum RefOp {
@@ -360,14 +360,14 @@ enum RefOp {
 
 /// Asset loader and storage.
 #[derive(Debug)]
-pub struct LoaderWithStorage<T: AtelierLoader<HandleType = ()> + Send + Sync> {
+pub struct LoaderWithStorage<T: AtelierLoader + Send + Sync> {
     loader: T,
     storage_map: AssetStorageMap,
     ref_sender: Arc<Sender<RefOp>>,
     ref_receiver: Receiver<RefOp>,
 }
 
-impl<T: AtelierLoader<HandleType = ()> + Send + Sync + Default> Default for LoaderWithStorage<T> {
+impl<T: AtelierLoader + Send + Sync + Default> Default for LoaderWithStorage<T> {
     fn default() -> Self {
         let (tx, rx) = unbounded();
         Self {
@@ -379,7 +379,7 @@ impl<T: AtelierLoader<HandleType = ()> + Send + Sync + Default> Default for Load
     }
 }
 
-impl<T: AtelierLoader<HandleType = ()> + Send + Sync> Loader for LoaderWithStorage<T> {
+impl<T: AtelierLoader + Send + Sync> Loader for LoaderWithStorage<T> {
     fn load_asset_generic(&self, id: AssetUuid) -> GenericHandle {
         GenericHandle::new(self.ref_sender.clone(), self.loader.add_ref(id))
     }
@@ -421,15 +421,6 @@ impl<T: AtelierLoader<HandleType = ()> + Send + Sync> Loader for LoaderWithStora
 /// methods are called through dynamic dispatch by `atelier_loader` when an asset is loaded /
 /// unloaded. All of these operations are performed on Amethyst's `AssetStorage`
 pub trait AssetTypeStorage {
-    /// Allocates and returns a handle for an asset.
-    ///
-    /// Currently the handle type is the empty tuple, i.e. no allocation is done.
-    ///
-    /// # Parameters
-    ///
-    /// * `handle`: The load handle of the asset.
-    fn allocate(&self, handle: &LoadHandle) -> ();
-
     /// Updates an asset.
     ///
     /// # Parameters
@@ -441,7 +432,7 @@ pub trait AssetTypeStorage {
     fn update_asset(
         &self,
         handle: &LoadHandle,
-        data: &dyn AsRef<[u8]>,
+        data: &[u8],
         load_op: AssetLoadOp,
         version: u32,
     ) -> Result<(), Box<dyn Error>>;
@@ -467,11 +458,10 @@ impl<Intermediate, Asset: TypeUuid + Send + Sync> AssetTypeStorage
 where
     for<'a> Intermediate: Deserialize<'a> + TypeUuid + Send,
 {
-    fn allocate(&self, _load_handle: &LoadHandle) -> () {}
     fn update_asset(
         &self,
         handle: &LoadHandle,
-        data: &dyn AsRef<[u8]>,
+        data: &[u8],
         load_op: AssetLoadOp,
         version: u32,
     ) -> Result<(), Box<dyn Error>> {
@@ -538,29 +528,10 @@ impl<'a> WorldStorages<'a> {
 }
 
 impl<'a> atelier_loader::AssetStorage for WorldStorages<'a> {
-    type HandleType = ();
-    fn allocate(
-        &self,
-        asset_type: &AssetTypeId,
-        _id: &AssetUuid,
-        load_handle: &LoadHandle,
-    ) -> Self::HandleType {
-        let mut handle = None;
-        (self
-            .storage_map
-            .storages_by_data_uuid
-            .get(asset_type)
-            .expect("could not find asset type")
-            .with_storage)(self.res, &mut |storage: &mut dyn AssetTypeStorage| {
-            handle = Some(storage.allocate(load_handle));
-        });
-        handle.unwrap()
-    }
     fn update_asset(
         &self,
         asset_type: &AssetTypeId,
-        _handle: &Self::HandleType,
-        data: &dyn AsRef<[u8]>,
+        data: &[u8],
         load_handle: &LoadHandle,
         load_op: AssetLoadOp,
         version: u32,
@@ -586,7 +557,6 @@ impl<'a> atelier_loader::AssetStorage for WorldStorages<'a> {
     fn commit_asset_version(
         &self,
         asset_type: &AssetTypeId,
-        _handle: &Self::HandleType,
         load_handle: &LoadHandle,
         version: u32,
     ) {
@@ -599,12 +569,8 @@ impl<'a> atelier_loader::AssetStorage for WorldStorages<'a> {
             storage.commit_asset_version(load_handle, version);
         });
     }
-    fn free(
-        &self,
-        asset_type: &AssetTypeId,
-        _storage_handle: Self::HandleType,
-        load_handle: LoadHandle,
-    ) {
+    fn free(&self, asset_type: &AssetTypeId, load_handle: LoadHandle) {
+        // TODO: this RefCell dance is probably not needed
         use std::cell::RefCell; // can't move into closure, so we work around it with a RefCell + Option
         let moved_handle = RefCell::new(Some(load_handle));
         (self
