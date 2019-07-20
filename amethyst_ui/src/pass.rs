@@ -32,7 +32,7 @@ use amethyst_rendy::{
     simple_shader_set,
     submodules::{DynamicUniform, DynamicVertexBuffer, TextureId, TextureSub},
     types::{Backend, Texture},
-    ChangeDetection,
+    ChangeDetection, SpriteRender, SpriteSheet,
 };
 use amethyst_window::ScreenDimensions;
 use derivative::Derivative;
@@ -40,6 +40,7 @@ use glsl_layout::{vec2, vec4, AsStd140};
 use hibitset::BitSet;
 use std::cmp::Ordering;
 
+use palette::chromatic_adaptation::AdaptInto;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
@@ -503,10 +504,22 @@ fn render_image<B: Backend>(
         (_, None) => [1., 1., 1., 1.],
     };
 
+    let tex_coords = match raw_image {
+        UiImage::Sprite(sprite_renderer) => {
+            let sprite_sheets = resources.fetch::<AssetStorage<SpriteSheet>>();
+            let sprite_sheet = sprite_sheets.get(&sprite_renderer.sprite_sheet).unwrap();
+            sprite_sheet.sprites[sprite_renderer.sprite_number]
+                .tex_coords
+                .clone()
+                .into()
+        }
+        _ => [0.0_f32, 0., 1., 1.],
+    };
+
     let args = UiArgs {
         coords: [transform.pixel_x(), transform.pixel_y()].into(),
         dimensions: [transform.pixel_width, transform.pixel_height].into(),
-        tex_coord_bounds: [0., 0., 1., 1.].into(),
+        tex_coord_bounds: tex_coords.into(),
         color: color.into(),
         color_bias: [0., 0., 0., 0.].into(),
     };
@@ -517,6 +530,21 @@ fn render_image<B: Backend>(
                 factory,
                 resources,
                 tex,
+                hal::image::Layout::ShaderReadOnlyOptimal,
+            ) {
+                batches.insert(tex_id, Some(args));
+                this_changed
+            } else {
+                false
+            }
+        }
+        UiImage::Sprite(sprite_renderer) => {
+            let sprite_sheets = resources.fetch::<AssetStorage<SpriteSheet>>();
+            let sprite_sheet = sprite_sheets.get(&sprite_renderer.sprite_sheet).unwrap();
+            if let Some((tex_id, this_changed)) = textures.insert(
+                factory,
+                resources,
+                &sprite_sheet.texture,
                 hal::image::Layout::ShaderReadOnlyOptimal,
             ) {
                 batches.insert(tex_id, Some(args));

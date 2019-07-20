@@ -77,6 +77,7 @@ impl Sprite {
     /// * `pixel_top`: Pixel Y coordinate of the top of the sprite.
     /// * `offsets`: Number of pixels to shift the sprite to the left and down relative to the
     ///              entity.
+    ///              entity.
     pub fn from_pixel_values(
         image_w: u32,
         image_h: u32,
@@ -172,6 +173,12 @@ impl From<[f32; 4]> for TextureCoordinates {
             bottom: uv[2],
             top: uv[3],
         }
+    }
+}
+
+impl Into<[f32; 4]> for TextureCoordinates {
+    fn into(self) -> [f32; 4] {
+        [self.left, self.right, self.bottom, self.top]
     }
 }
 
