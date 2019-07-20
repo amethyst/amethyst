@@ -31,7 +31,7 @@ use amethyst::{
         GraphCreator, RenderingSystem,
     },
     ui::{DrawUiDesc, UiBundle, UiCreator, UiLoader, UiPrefab},
-    utils::{application_root_dir, fps_counter::FPSCounterBundle, scene::BasicScenePrefab},
+    utils::{application_root_dir, fps_counter::FpsCounterBundle, scene::BasicScenePrefab},
     window::{ScreenDimensions, Window, WindowBundle},
     winit::VirtualKeyCode,
     Error,
@@ -223,7 +223,7 @@ fn main() -> Result<(), Error> {
         .with_running::<ExampleSystem>(ExampleSystem::default(), "example_system", &[])
         .with_base_bundle(TransformBundle::new())?
         .with_base_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
-        .with_base_bundle(FPSCounterBundle::default())?
+        .with_base_bundle(FpsCounterBundle::default())?
         .with_base_bundle(InputBundle::<StringBindings>::new())?
         .with_base_bundle(WindowBundle::from_config_path(display_config_path))?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
@@ -243,6 +243,7 @@ struct ExampleGraph {
     dirty: bool,
 }
 
+#[allow(clippy::map_clone)]
 impl GraphCreator<DefaultBackend> for ExampleGraph {
     fn rebuild(&mut self, res: &Resources) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
@@ -253,7 +254,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             self.dimensions = new_dimensions.map(|d| d.clone());
             return false;
         }
-        return self.dirty;
+        self.dirty
     }
 
     fn builder(

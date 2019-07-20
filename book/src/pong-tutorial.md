@@ -7,7 +7,7 @@ steps so it's easier to understand what everything is doing.
 
 ## Prerequisites
 
-Make sure to follow the [Getting started chapter](./getting_started.html) before
+Make sure to follow the [Getting started chapter](./getting-started.html) before
 starting with the tutorial / running the examples.
 
 ## Running the code after a chapter

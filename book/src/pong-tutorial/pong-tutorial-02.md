@@ -117,15 +117,18 @@ will.
     projection of the size of our arena. We also attach a `Transform` component,
     representing its position in the world.
 
-    A default camera can be created with `standard_2d` which size of our arena.
-    This camera makes the X go right, Y go up and center of the screen being at
-    the position of the camera in space, i.e. whatever we pass to `set_translation_xyz`.
-    Our setup makes the `(0, 0)` point in space be represented on the bottom left of the screen,
-    and `(ARENA_WIDTH, ARENA_HEIGHT)` being at the top right.
+    The `Camera::standard_2d` function creates a default 2D camera that is
+    pointed along the world's **Z** axis. The area in front of the camera has a
+    horizontal **X** axis, and a vertical **Y** axis. The **X** axis increases
+    moving to the right, and the **Y** axis increases moving up. The camera's
+    position is the center of the viewable area. We position the camera with
+    `set_translation_xyz` to the middle of our game arena so that `(0, 0)` is
+    the bottom left of the viewable area, and `(ARENA_WIDTH, ARENA_HEIGHT)` is
+    the top right.
 
-    Notice that we shifted the camera on the **Z** axis. This is to make sure
-    that the camera is able to see the sprites that sit on the **XY** plane
-    where **Z** is 0.0:
+    Notice that we also shifted the camera `1.0` along the **Z** axis. This is
+    to make sure that the camera is able to see the sprites that sit on the
+    **XY** plane where **Z** is 0.0:
 
     ![Camera Z shift](../images/pong_tutorial/camera.png)
 
@@ -359,21 +362,6 @@ automatically registered. However, as we haven't got any `System`s, we have to
 live with registering the `Paddle` component manually.
 
 Let's run the game again.
-
-```text,ignore
-thread 'main' panicked at 'Tried to fetch a resource, but the resource does not exist.
-Try adding the resource by inserting it manually or using the `setup` method.
-```
-
-Ah, oops. We forgot something. Turning on the `nightly` feature, we get:
-
-```text_ignore
-thread 'main' panicked at 'Tried to fetch a resource of type "ecs::storage::MaskedStorage<transform::components::local_transform::Transform>", but the resource does not exist.
-Try adding the resource by inserting it manually or using the `setup` method.'
-```
-
-This is the same kind of error as before; this time the `Component` is a
-`Transform`, which is used and hence registered by the `TransformSystem`.
 
 Amethyst has a lot of internal systems it uses to keep things running we need
 to bring into the context of the `World`. For simplicity, these have been

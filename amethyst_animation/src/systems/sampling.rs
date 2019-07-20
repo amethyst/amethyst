@@ -29,7 +29,7 @@ use thread_profiler::profile_scope;
 /// ### Type parameters:
 ///
 /// - `T`: the component type that the animation should be applied to
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct SamplerInterpolationSystem<T>
 where
     T: AnimationSampling,

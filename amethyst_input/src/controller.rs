@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::event::InputEvent;
+use crate::{bindings::BindingTypes, event::InputEvent};
 
 /// Controller axes matching SDL controller model
 #[derive(Eq, PartialEq, Debug, Copy, Clone, Serialize, Deserialize)]
@@ -72,7 +72,7 @@ pub enum ControllerEvent {
         /// The controller axis.
         axis: ControllerAxis,
         /// The axis value (range: -32768 to 32767).
-        value: f64,
+        value: f32,
     },
     /// Button press event on a controller.
     ///
@@ -118,7 +118,10 @@ pub enum ControllerEvent {
     },
 }
 
-impl<'a, T> Into<InputEvent<T>> for &'a ControllerEvent {
+impl<'a, T> Into<InputEvent<T>> for &'a ControllerEvent
+where
+    T: BindingTypes,
+{
     fn into(self) -> InputEvent<T> {
         use self::ControllerEvent::*;
         match *self {

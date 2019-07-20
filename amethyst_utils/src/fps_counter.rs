@@ -12,12 +12,12 @@ use crate::circular_buffer::CircularBuffer;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
-/// The FPSCounter resource needed by the FPSCounterSystem.
+/// The FpsCounter resource needed by the FpsCounterSystem.
 ///
-/// Add it to your resources to be able to use the FPSCounterSystem.
+/// Add it to your resources to be able to use the FpsCounterSystem.
 ///
 /// # Usage
-/// Get the FPSCounter resource from the world then call either `frame_fps` or `sampled_fps` to
+/// Get the FpsCounter resource from the world then call either `frame_fps` or `sampled_fps` to
 /// get the FPS.
 ///
 /// frame_fps will return the framerate of the current frame. That is, the framerate at which the
@@ -27,29 +27,30 @@ use thread_profiler::profile_scope;
 ///
 /// # Example
 /// ```rust
-/// # use amethyst_utils::fps_counter::FPSCounter;
+/// # use amethyst_utils::fps_counter::FpsCounter;
 /// # use amethyst_core::ecs::World;
 /// # let mut world = World::new();
-/// # let counter = FPSCounter::new(2);
+/// # let counter = FpsCounter::new(2);
 /// # world.add_resource(counter);
-/// let mut counter = world.write_resource::<FPSCounter>();
+/// let mut counter = world.write_resource::<FpsCounter>();
 ///
 /// ```
-pub struct FPSCounter {
+#[derive(Debug)]
+pub struct FpsCounter {
     buf: CircularBuffer<u64>,
     sum: u64,
 }
 
-impl Default for FPSCounter {
+impl Default for FpsCounter {
     fn default() -> Self {
-        FPSCounter::new(20)
+        FpsCounter::new(20)
     }
 }
 
-impl FPSCounter {
-    ///Creates a new FPSCounter that calculates the average fps over samplesize values.
-    pub fn new(samplesize: usize) -> FPSCounter {
-        FPSCounter {
+impl FpsCounter {
+    ///Creates a new FpsCounter that calculates the average fps over samplesize values.
+    pub fn new(samplesize: usize) -> FpsCounter {
+        FpsCounter {
             buf: CircularBuffer::<u64>::new(samplesize),
             sum: 0,
         }
@@ -81,11 +82,12 @@ impl FPSCounter {
 }
 
 /// Add this system to your game to automatically push FPS values
-/// to the [FPSCounter](../resources/struct.FPSCounter.html) resource with id 0
-pub struct FPSCounterSystem;
+/// to the [FpsCounter](../resources/struct.FpsCounter.html) resource with id 0
+#[derive(Debug)]
+pub struct FpsCounterSystem;
 
-impl<'a> System<'a> for FPSCounterSystem {
-    type SystemData = (Read<'a, Time>, Write<'a, FPSCounter>);
+impl<'a> System<'a> for FpsCounterSystem {
+    type SystemData = (Read<'a, Time>, Write<'a, FpsCounter>);
     fn run(&mut self, (time, mut counter): Self::SystemData) {
         #[cfg(feature = "profiler")]
         profile_scope!("fps_counter_system");
@@ -100,13 +102,13 @@ impl<'a> System<'a> for FPSCounterSystem {
     }
 }
 
-///Automatically adds a FPSCounterSystem and a FPSCounter resource with the specified sample size.
-#[derive(Default)]
-pub struct FPSCounterBundle;
+///Automatically adds a FpsCounterSystem and a FpsCounter resource with the specified sample size.
+#[derive(Default, Debug)]
+pub struct FpsCounterBundle;
 
-impl<'a, 'b> SystemBundle<'a, 'b> for FPSCounterBundle {
+impl<'a, 'b> SystemBundle<'a, 'b> for FpsCounterBundle {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
-        builder.add(FPSCounterSystem, "fps_counter_system", &[]);
+        builder.add(FpsCounterSystem, "fps_counter_system", &[]);
         Ok(())
     }
 }

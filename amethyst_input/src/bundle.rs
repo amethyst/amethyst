@@ -12,7 +12,7 @@ use crate::sdl_events_system::ControllerMappings;
 
 /// Bundle for adding the `InputHandler`.
 ///
-/// This also adds the Winit EventHandler and the `InputEvent<T::Action>` EventHandler
+/// This also adds the Winit EventHandler and the `InputEvent<T>` EventHandler
 /// where `T::Action` is the type for Actions you have assigned here.
 ///
 /// ## Type parameters
@@ -25,7 +25,7 @@ use crate::sdl_events_system::ControllerMappings;
 ///
 /// No errors returned from this bundle.
 ///
-#[derive(Derivative)]
+#[derive(Debug, Derivative)]
 #[derivative(Default(bound = ""))]
 pub struct InputBundle<T: BindingTypes> {
     bindings: Option<Bindings<T>>,

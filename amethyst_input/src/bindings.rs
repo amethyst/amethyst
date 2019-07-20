@@ -39,6 +39,7 @@ use super::{Axis, Button};
 ///     UsePowerup(PlayerId),
 /// }
 ///
+/// #[derive(Debug)]
 /// struct DriverBindingTypes;
 /// impl BindingTypes for DriverBindingTypes {
 ///     type Axis = AxisBinding;
@@ -62,7 +63,7 @@ use super::{Axis, Button};
 ///   },
 /// )
 /// ```
-pub trait BindingTypes: Send + Sync + 'static {
+pub trait BindingTypes: Debug + Send + Sync + 'static {
     /// Type used for defining axis keys. Usually an enum or string.
     type Axis: Clone + Debug + Hash + Eq + Send + Sync + 'static;
     /// Type used for defining action keys. Usually an enum or string.
@@ -72,6 +73,7 @@ pub trait BindingTypes: Send + Sync + 'static {
 /// The builtin `BindingTypes` implementation, set of types for binding configuration keys.
 /// Uses `String` for both axes and actions. Usage of this type is discouraged
 /// and it's meant mainly for prototypes. Check `BindingTypes` for examples.
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct StringBindings;
 
 impl BindingTypes for StringBindings {
@@ -105,7 +107,7 @@ impl BindingTypes for StringBindings {
 /// )
 /// ```
 #[derive(Derivative, Serialize, Deserialize)]
-#[derivative(Default(bound = ""), Clone(bound = ""))]
+#[derivative(Debug(bound = ""), Default(bound = ""), Clone(bound = ""))]
 #[serde(bound(
     serialize = "T::Axis: Serialize, T::Action: Serialize",
     deserialize = "T::Axis: Deserialize<'de>, T::Action: Deserialize<'de>",
@@ -127,13 +129,13 @@ pub enum BindingError<T: BindingTypes> {
     MouseWheelAxisAlreadyBound(T::Axis),
     /// Combo provided for action binding has two (or more) of the same button.
     ComboContainsDuplicates(T::Action),
-    /// Combo provided was already bound to contained action.
+    /// Combo provided was already bound to the contained action.
     ComboAlreadyBound(T::Action),
-    /// A combo of length 1 was provided, and it overlaps with an axis binding.
+    /// A combo of length one was provided, and it overlaps with an axis binding.
     ButtonBoundToAxis(T::Axis, Axis),
-    /// Axis buttons provided have overlap with an existing axis
+    /// Axis buttons provided have overlap with an existing axis.
     AxisButtonAlreadyBoundToAxis(T::Axis, Axis),
-    /// Axis buttons have overlap with an action combo of length 1.
+    /// Axis buttons have overlap with an action combo of length one.
     AxisButtonAlreadyBoundToAction(T::Action, Button),
     /// That specific axis on that specific controller is already in use for an
     /// axis binding.

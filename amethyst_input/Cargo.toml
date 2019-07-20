@@ -1,6 +1,6 @@
 [package]
 name = "amethyst_input"
-version = "0.7.0"
+version = "0.7.1"
 authors = ["Rhuagh <seamonr@gmail.com>", "Xaeroxe <kieseljake@gmail.com>"]
 edition = "2018"
 description = "Input rebinding "
@@ -31,6 +31,9 @@ thread_profiler = { version = "0.3", optional = true }
 [dependencies.smallvec]
 version = "0.6"
 features = ["serde"]
+
+[dev-dependencies]
+approx = "0.3"
 
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]

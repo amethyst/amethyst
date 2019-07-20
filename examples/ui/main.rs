@@ -24,7 +24,7 @@ use amethyst::{
     ui::{DrawUiDesc, UiBundle, UiCreator, UiEvent, UiFinder, UiText},
     utils::{
         application_root_dir,
-        fps_counter::{FPSCounter, FPSCounterBundle},
+        fps_counter::{FpsCounter, FpsCounterBundle},
         scene::BasicScenePrefab,
     },
     window::{ScreenDimensions, Window, WindowBundle},
@@ -103,7 +103,7 @@ impl SimpleState for Example {
         {
             if let Some(fps_display) = self.fps_display.and_then(|entity| ui_text.get_mut(entity)) {
                 if world.read_resource::<Time>().frame_number() % 20 == 0 {
-                    let fps = world.read_resource::<FPSCounter>().sampled_fps();
+                    let fps = world.read_resource::<FpsCounter>().sampled_fps();
                     fps_display.text = format!("FPS: {:.*}", 2, fps);
                 }
             }
@@ -113,7 +113,7 @@ impl SimpleState for Example {
             if let Some(random_text) = self.random_text.and_then(|entity| ui_text.get_mut(entity)) {
                 if let Ok(value) = random_text.text.parse::<i32>() {
                     let mut new_value = value * 10;
-                    if new_value > 100000 {
+                    if new_value > 100_000 {
                         new_value = 1;
                     }
                     random_text.text = new_value.to_string();
@@ -142,7 +142,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
         .with(Processor::<Source>::new(), "source_processor", &[])
         .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
-        .with_bundle(FPSCounterBundle::default())?
+        .with_bundle(FpsCounterBundle::default())?
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
@@ -157,13 +157,14 @@ fn main() -> amethyst::Result<()> {
 }
 
 /// This shows how to handle UI events.
+#[derive(Default)]
 pub struct UiEventHandlerSystem {
     reader_id: Option<ReaderId<UiEvent>>,
 }
 
 impl UiEventHandlerSystem {
     pub fn new() -> Self {
-        UiEventHandlerSystem { reader_id: None }
+        Self::default()
     }
 }
 
@@ -189,6 +190,7 @@ struct ExampleGraph {
     dirty: bool,
 }
 
+#[allow(clippy::map_clone)]
 impl GraphCreator<DefaultBackend> for ExampleGraph {
     fn rebuild(&mut self, res: &Resources) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
@@ -199,7 +201,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             self.dimensions = new_dimensions.map(|d| d.clone());
             return false;
         }
-        return self.dirty;
+        self.dirty
     }
 
     fn builder(

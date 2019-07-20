@@ -91,7 +91,7 @@ However, this approach is pretty rare because most of the time you don't know wh
 
 ### Getting all entities with specific components
 
-Most of the time, you will want to perform logic on all entities with a specific components, or even all entities with a selection of components.
+Most of the time, you will want to perform logic on all entities with a specific component, or even all entities with a selection of components.
 
 This is possible using the `join` method. You may be familiar with joining operations if you have ever worked with databases. The `join` method takes multiple storages, and iterates over all entities that have a component in each of those storages.
 It works like an "AND" gate. It will return an iterator containing a tuple of all the requested components if they are **ALL** on the same entity.
@@ -105,7 +105,7 @@ Keep in mind that **the `join` method is only available by importing `amethyst::
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::{System, ReadStorage, WriteStorage};
-# use amethyst::core::{Float, Transform};
+# use amethyst::core::Transform;
 # struct FallingObject;
 # impl amethyst::ecs::Component for FallingObject {
 #   type Storage = amethyst::ecs::DenseVecStorage<FallingObject>;
@@ -122,7 +122,7 @@ impl<'a> System<'a> for MakeObjectsFall {
 
     fn run(&mut self, (mut transforms, falling): Self::SystemData) {
         for (mut transform, _) in (&mut transforms, &falling).join() {
-            if transform.translation().y.as_f32() > 0.0 {
+            if transform.translation().y > 0.0 {
                 transform.prepend_translation_y(-0.1);
             }
         }
@@ -250,7 +250,7 @@ impl<'a> System<'a> for MakeObjectsFall {
 
     fn run(&mut self, (entities, mut transforms, falling): Self::SystemData) {
         for (e, mut transform, _) in (&*entities, &mut transforms, &falling).join() {
-            if transform.translation().y.as_f32() > 0.0 {
+            if transform.translation().y > 0.0 {
                 transform.prepend_translation_y(-0.1);
             } else {
                 entities.delete(e);

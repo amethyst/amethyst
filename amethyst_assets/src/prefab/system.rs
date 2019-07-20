@@ -49,6 +49,7 @@ impl<'a, T> System<'a> for PrefabLoaderSystem<T>
 where
     T: PrefabData<'a> + Send + Sync + 'static,
 {
+    #[allow(clippy::type_complexity)]
     type SystemData = (
         Entities<'a>,
         Write<'a, AssetStorage<Prefab<T>>>,

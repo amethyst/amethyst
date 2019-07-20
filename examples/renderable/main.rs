@@ -12,7 +12,6 @@ use amethyst::{
         math::{UnitQuaternion, Vector3},
         timing::Time,
         transform::{Transform, TransformBundle},
-        Float,
     },
     ecs::prelude::{
         Entity, Join, Read, ReadExpect, ReadStorage, Resources, System, SystemData, Write,
@@ -44,7 +43,7 @@ use amethyst::{
     ui::{DrawUiDesc, UiBundle, UiCreator, UiFinder, UiText},
     utils::{
         application_root_dir,
-        fps_counter::{FPSCounter, FPSCounterBundle},
+        fps_counter::{FpsCounter, FpsCounterBundle},
         scene::BasicScenePrefab,
     },
     window::{ScreenDimensions, Window, WindowBundle},
@@ -216,7 +215,7 @@ fn main() -> Result<(), Error> {
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
         .with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
         .with_bundle(HotReloadBundle::default())?
-        .with_bundle(FPSCounterBundle::default())?
+        .with_bundle(FpsCounterBundle::default())?
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
@@ -261,7 +260,7 @@ impl<'a> System<'a> for ExampleSystem {
         WriteStorage<'a, Transform>,
         Write<'a, DemoState>,
         WriteStorage<'a, UiText>,
-        Read<'a, FPSCounter>,
+        Read<'a, FpsCounter>,
         UiFinder<'a>,
     );
 
@@ -277,9 +276,9 @@ impl<'a> System<'a> for ExampleSystem {
         state.light_angle += light_angular_velocity * time.delta_seconds();
         state.camera_angle += camera_angular_velocity * time.delta_seconds();
 
-        let delta_rot: UnitQuaternion<Float> = UnitQuaternion::from_axis_angle(
+        let delta_rot: UnitQuaternion<f32> = UnitQuaternion::from_axis_angle(
             &Vector3::z_axis(),
-            (camera_angular_velocity * time.delta_seconds()).into(),
+            camera_angular_velocity * time.delta_seconds(),
         );
         for (_, transform) in (&camera, &mut transforms).join() {
             // Append the delta rotation to the current transform.
@@ -303,10 +302,10 @@ impl<'a> System<'a> for ExampleSystem {
                 light_z,
             );
 
-            point_light.color = state.light_color.into();
+            point_light.color = state.light_color;
         }
 
-        if let None = self.fps_display {
+        if self.fps_display.is_none() {
             if let Some(fps_entity) = finder.find("fps_text") {
                 self.fps_display = Some(fps_entity);
             }
@@ -329,6 +328,7 @@ struct ExampleGraph {
     dirty: bool,
 }
 
+#[allow(clippy::map_clone)]
 impl GraphCreator<DefaultBackend> for ExampleGraph {
     fn rebuild(&mut self, res: &Resources) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
@@ -339,7 +339,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             self.dimensions = new_dimensions.map(|d| d.clone());
             return false;
         }
-        return self.dirty;
+        self.dirty
     }
 
     fn builder(

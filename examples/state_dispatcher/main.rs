@@ -46,7 +46,7 @@ impl<'a> Default for StateB<'a> {
 impl<'a> SimpleState for StateB<'a> {
     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         println!("StateB::update()");
-        self.dispatcher.dispatch(&mut data.world.res);
+        self.dispatcher.dispatch(&data.world.res);
         Trans::Quit
     }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "amethyst"
-version = "0.11.0"
+version = "0.11.1"
 authors = ["Eyal Kalderon <ebkalderon@gmail.com>", "Amethyst Foundation <contact@amethyst.rs>"]
 edition = "2018"
 description = "Data-oriented game engine written in Rust"
@@ -94,6 +94,7 @@ test-support = [
   "amethyst_rendy/test-support",
   "amethyst_window/test-support",
 ]
+experimental-spirv-reflection = ["amethyst_rendy/experimental-spirv-reflection"]
 
 [workspace]
 members = [
@@ -123,7 +124,7 @@ crossbeam-channel = "0.3.1"
 derivative = "1.0"
 fern = { version = "0.5", features = ["colored"] }
 log = { version = "0.4.6", features = ["serde"] }
-rayon = "1.0.2"
+rayon = "1.1.0"
 rustc_version_runtime = "0.1"
 sentry = "0.15.4"
 winit = { version = "0.19", features = ["serde", "icon_loading"] }
@@ -311,3 +312,5 @@ name = "rendy"
 path = "examples/rendy/main.rs"
 required-features = ["animation", "gltf"]
 
+[package.metadata.docs.rs]
+features = ["animation", "audio", "gltf", "json", "locale", "network", "sdl_controller", "vulkan"]

@@ -6,7 +6,6 @@ use amethyst::{
     core::{
         shrev::{EventChannel, ReaderId},
         transform::{Transform, TransformBundle},
-        Float,
     },
     ecs::prelude::{
         Join, Read, ReadExpect, ReadStorage, Resources, System, SystemData, WriteStorage,
@@ -65,7 +64,7 @@ impl SimpleState for ExampleState {
 }
 
 struct CameraDistanceSystem {
-    event_reader: Option<ReaderId<InputEvent<String>>>,
+    event_reader: Option<ReaderId<InputEvent<StringBindings>>>,
 }
 
 impl CameraDistanceSystem {
@@ -76,28 +75,27 @@ impl CameraDistanceSystem {
 
 impl<'a> System<'a> for CameraDistanceSystem {
     type SystemData = (
-        Read<'a, EventChannel<InputEvent<String>>>,
+        Read<'a, EventChannel<InputEvent<StringBindings>>>,
         ReadStorage<'a, Transform>,
         WriteStorage<'a, ArcBallControlTag>,
     );
 
     fn run(&mut self, (events, transforms, mut tags): Self::SystemData) {
         for event in events.read(&mut self.event_reader.as_mut().unwrap()) {
-            match *event {
-                InputEvent::MouseWheelMoved(direction) => match direction {
+            if let InputEvent::MouseWheelMoved(direction) = *event {
+                match direction {
                     ScrollDirection::ScrollUp => {
                         for (_, tag) in (&transforms, &mut tags).join() {
-                            tag.distance *= Float::from(0.9);
+                            tag.distance *= 0.9;
                         }
                     }
                     ScrollDirection::ScrollDown => {
                         for (_, tag) in (&transforms, &mut tags).join() {
-                            tag.distance *= Float::from(1.1);
+                            tag.distance *= 1.1;
                         }
                     }
                     _ => (),
-                },
-                _ => (),
+                }
             }
         }
     }
@@ -106,7 +104,7 @@ impl<'a> System<'a> for CameraDistanceSystem {
         Self::SystemData::setup(res);
 
         self.event_reader = Some(
-            res.fetch_mut::<EventChannel<InputEvent<String>>>()
+            res.fetch_mut::<EventChannel<InputEvent<StringBindings>>>()
                 .register_reader(),
         );
     }
@@ -151,6 +149,7 @@ struct ExampleGraph {
     dirty: bool,
 }
 
+#[allow(clippy::map_clone)]
 impl GraphCreator<DefaultBackend> for ExampleGraph {
     fn rebuild(&mut self, res: &Resources) -> bool {
         // Rebuild when dimensions change, but wait until at least two frames have the same.
@@ -161,7 +160,7 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
             self.dimensions = new_dimensions.map(|d| d.clone());
             return false;
         }
-        return self.dirty;
+        self.dirty
     }
 
     fn builder(
