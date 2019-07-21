@@ -176,9 +176,9 @@ impl From<[f32; 4]> for TextureCoordinates {
     }
 }
 
-impl Into<[f32; 4]> for TextureCoordinates {
-    fn into(self) -> [f32; 4] {
-        [self.left, self.right, self.bottom, self.top]
+impl From<&TextureCoordinates> for [f32; 4] {
+    fn from(item: &TextureCoordinates) -> Self {
+        [item.left, item.right, item.bottom, item.top]
     }
 }
 

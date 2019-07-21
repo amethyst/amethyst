@@ -508,11 +508,9 @@ fn render_image<B: Backend>(
         UiImage::Sprite(sprite_renderer) => {
             let sprite_sheets = resources.fetch::<AssetStorage<SpriteSheet>>();
             let sprite_sheet = sprite_sheets.get(&sprite_renderer.sprite_sheet).unwrap();
-            sprite_sheet.sprites[sprite_renderer.sprite_number]
-                .tex_coords
-                .clone()
-                .into()
+            (&sprite_sheet.sprites[sprite_renderer.sprite_number].tex_coords).into()
         }
+        UiImage::Partial_Texture(_, tex_coord) => tex_coord.into(),
         _ => [0.0_f32, 0., 1., 1.],
     };
 
@@ -526,6 +524,19 @@ fn render_image<B: Backend>(
 
     match raw_image {
         UiImage::Texture(tex) => {
+            if let Some((tex_id, this_changed)) = textures.insert(
+                factory,
+                resources,
+                tex,
+                hal::image::Layout::ShaderReadOnlyOptimal,
+            ) {
+                batches.insert(tex_id, Some(args));
+                this_changed
+            } else {
+                false
+            }
+        }
+        UiImage::Partial_Texture(tex, _) => {
             if let Some((tex_id, this_changed)) = textures.insert(
                 factory,
                 resources,
