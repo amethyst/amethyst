@@ -48,13 +48,13 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples/pong/resources/display.ron");
+    let display_config_path = app_root.join("examples/pong/config/display.ron");
 
     let key_bindings_path = {
         if cfg!(feature = "sdl_controller") {
-            app_root.join("examples/pong/resources/input_controller.ron")
+            app_root.join("examples/pong/config/input_controller.ron")
         } else {
-            app_root.join("examples/pong/resources/input.ron")
+            app_root.join("examples/pong/config/input.ron")
         }
     };
 

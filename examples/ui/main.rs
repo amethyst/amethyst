@@ -132,8 +132,8 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples/ui/resources/display.ron");
-    let resources = app_root.join("examples/assets");
+    let display_config_path = app_root.join("examples/ui/config/display.ron");
+    let assets_directory = app_root.join("examples/assets");
 
     let game_data = GameDataBuilder::default()
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
@@ -148,7 +148,7 @@ fn main() -> amethyst::Result<()> {
             ExampleGraph::default(),
         ));
 
-    let mut game = Application::build(resources, Example::default())?
+    let mut game = Application::build(assets_directory, Example::default())?
         // Unlimited FPS
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 9999)
         .build(game_data)?;

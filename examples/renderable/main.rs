@@ -200,13 +200,13 @@ fn main() -> Result<(), Error> {
     let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let resources_directory = app_root.join("examples").join("assets");
+    let assets_directory = app_root.join("examples").join("assets");
 
     let display_config_path = app_root
         .join("examples")
         .join("renderable")
-        .join("resources")
-        .join("display_config.ron");
+        .join("config")
+        .join("display.ron");
 
     let game_data = GameDataBuilder::default()
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
@@ -220,7 +220,7 @@ fn main() -> Result<(), Error> {
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
-    let mut game = Application::build(resources_directory, Loading::default())?.build(game_data)?;
+    let mut game = Application::build(assets_directory, Loading::default())?.build(game_data)?;
     game.run();
     Ok(())
 }

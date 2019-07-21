@@ -128,10 +128,10 @@ from a file. The latter approach is handier, as it allows us to change configura
 (e.g, the window size) without having to recompile our game every time.
 
 Starting the project with `amethyst new` should have automatically generated 
-`DisplayConfig` data in `resources/display_config.ron`. If you created the
+`DisplayConfig` data in `config/display.ron`. If you created the
 project manually, go ahead and create it now.
 
-In either case, open `display_config.ron` and change its contents to the
+In either case, open `display.ron` and change its contents to the
 following:
 
 ```rust,ignore
@@ -162,7 +162,7 @@ the display configuration:
 #
 # fn main() -> Result<(), Error>{
 let app_root = application_root_dir()?;
-let display_config_path = app_root.join("resources").join("display_config.ron");
+let display_config_path = app_root.join("config").join("display.ron");
 #     Ok(())
 # }
 ```

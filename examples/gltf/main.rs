@@ -189,8 +189,8 @@ fn main() -> Result<(), amethyst::Error> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples/gltf/resources/display_config.ron");
-    let resources_directory = app_root.join("examples/assets/");
+    let display_config_path = app_root.join("examples/gltf/config/display.ron");
+    let assets_directory = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
         .with_bundle(WindowBundle::from_config_path(display_config_path))?
@@ -233,7 +233,7 @@ fn main() -> Result<(), amethyst::Error> {
             ExampleGraph::default(),
         ));
 
-    let mut game = Application::build(resources_directory, Example::default())?.build(game_data)?;
+    let mut game = Application::build(assets_directory, Example::default())?.build(game_data)?;
     game.run();
     Ok(())
 }

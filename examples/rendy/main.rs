@@ -563,9 +563,9 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root
         .join("examples")
         .join("rendy")
-        .join("resources")
-        .join("display_config.ron");
-    let resources = app_root.join("examples").join("assets");
+        .join("config")
+        .join("display.ron");
+    let assets_directory = app_root.join("examples").join("assets");
 
     let mut bindings = Bindings::new();
     bindings.insert_axis(
@@ -651,7 +651,7 @@ fn main() -> amethyst::Result<()> {
             ExampleGraph::default(),
         ));
 
-    let mut game = Application::new(&resources, Example::new(), game_data)?;
+    let mut game = Application::new(&assets_directory, Example::new(), game_data)?;
     game.run();
     Ok(())
 }
