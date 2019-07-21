@@ -32,7 +32,7 @@ use amethyst_rendy::{
     simple_shader_set,
     submodules::{DynamicUniform, DynamicVertexBuffer, TextureId, TextureSub},
     types::{Backend, Texture},
-    ChangeDetection, SpriteRender, SpriteSheet,
+    ChangeDetection, SpriteSheet,
 };
 use amethyst_window::ScreenDimensions;
 use derivative::Derivative;
@@ -40,7 +40,6 @@ use glsl_layout::{vec2, vec4, AsStd140};
 use hibitset::BitSet;
 use std::cmp::Ordering;
 
-use palette::chromatic_adaptation::AdaptInto;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
@@ -510,7 +509,7 @@ fn render_image<B: Backend>(
             let sprite_sheet = sprite_sheets.get(&sprite_renderer.sprite_sheet).unwrap();
             (&sprite_sheet.sprites[sprite_renderer.sprite_number].tex_coords).into()
         }
-        UiImage::Partial_Texture(_, tex_coord) => tex_coord.into(),
+        UiImage::PartialTexture(_, tex_coord) => tex_coord.into(),
         _ => [0.0_f32, 0., 1., 1.],
     };
 
@@ -536,7 +535,7 @@ fn render_image<B: Backend>(
                 false
             }
         }
-        UiImage::Partial_Texture(tex, _) => {
+        UiImage::PartialTexture(tex, _) => {
             if let Some((tex_id, this_changed)) = textures.insert(
                 factory,
                 resources,
