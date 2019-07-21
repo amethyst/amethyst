@@ -31,8 +31,8 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples/sphere/resources/display_config.ron");
-    let resources = app_root.join("examples/assets/");
+    let display_config_path = app_root.join("examples/sphere/config/display.ron");
+    let assets_directory = app_root.join("examples/assets/");
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
@@ -44,7 +44,7 @@ fn main() -> amethyst::Result<()> {
                 )
                 .with_plugin(RenderShaded3D::default()),
         )?;
-    let mut game = Application::new(resources, Example, game_data)?;
+    let mut game = Application::new(assets_directory, Example, game_data)?;
     game.run();
     Ok(())
 }

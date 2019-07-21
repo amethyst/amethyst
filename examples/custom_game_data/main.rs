@@ -200,8 +200,7 @@ fn main() -> Result<(), Error> {
     // Add our meshes directory to the asset loader.
     let asset_dir = app_root.join("examples/assets");
 
-    let display_config_path =
-        app_root.join("examples/custom_game_data/resources/display_config.ron");
+    let display_config_path = app_root.join("examples/custom_game_data/config/display.ron");
 
     let game_data = CustomGameDataBuilder::default()
         .with_base(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])

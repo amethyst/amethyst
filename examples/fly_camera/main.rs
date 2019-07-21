@@ -57,11 +57,11 @@ fn main() -> Result<(), Error> {
 
     let app_root = application_root_dir()?;
 
-    let resources_directory = app_root.join("examples/assets");
+    let assets_directory = app_root.join("examples/assets");
 
-    let display_config_path = app_root.join("examples/fly_camera/resources/display_config.ron");
+    let display_config_path = app_root.join("examples/fly_camera/config/display.ron");
 
-    let key_bindings_path = app_root.join("examples/fly_camera/resources/input.ron");
+    let key_bindings_path = app_root.join("examples/fly_camera/config/input.ron");
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
@@ -86,7 +86,7 @@ fn main() -> Result<(), Error> {
                 .with_plugin(RenderShaded3D::default()),
         )?;
 
-    let mut game = Application::build(resources_directory, ExampleState)?.build(game_data)?;
+    let mut game = Application::build(assets_directory, ExampleState)?.build(game_data)?;
     game.run();
     Ok(())
 }

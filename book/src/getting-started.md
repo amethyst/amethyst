@@ -44,7 +44,7 @@ and then run
 amethyst new <game-name>
 ```
 
-you should get `Cargo.toml`, `src/main.rs` and `resources/display_config.ron`.
+you should get `Cargo.toml`, `src/main.rs` and `config/display.ron`.
 
 ### Starter Project
 
@@ -60,7 +60,7 @@ The `README.md` file on these will include everything you need to know to run th
 In case you're doing this with `cargo`, here's what you need to do:
 
 * Add `amethyst` as dependency in your `Cargo.toml`.
-* Create a `resources` folder and put a `display_config.ron` in it.
+* Create a `config` folder and put a `display.ron` in it.
 * (Optional) Copy the code from one of amethyst's examples.
 
 ### Important note on versioning

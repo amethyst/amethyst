@@ -219,7 +219,7 @@ let game_data = CustomGameDataBuilder::default()
     .with_base_bundle(RenderBundle::new(pipeline_builder, Some(display_config)))?
     .with_base_bundle(InputBundle::<String, String>::new())?;
 
-let mut game = Application::new(resources_directory, Main, game_data)?;
+let mut game = Application::new(assets_directory, Main, game_data)?;
 game.run();
 ```
 

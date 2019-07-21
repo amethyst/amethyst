@@ -167,9 +167,9 @@ fn main() -> amethyst::Result<()> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples/debug_lines/resources/display.ron");
-    let key_bindings_path = app_root.join("examples/debug_lines/resources/input.ron");
-    let resources = app_root.join("examples/assets/");
+    let display_config_path = app_root.join("examples/debug_lines/config/display.ron");
+    let key_bindings_path = app_root.join("examples/debug_lines/config/input.ron");
+    let assets_directory = app_root.join("examples/assets/");
 
     let fly_control_bundle = FlyControlBundle::<StringBindings>::new(
         Some(String::from("move_x")),
@@ -192,7 +192,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderSkybox::default()),
         )?;
 
-    let mut game = Application::new(resources, ExampleState, game_data)?;
+    let mut game = Application::new(assets_directory, ExampleState, game_data)?;
     game.run();
     Ok(())
 }

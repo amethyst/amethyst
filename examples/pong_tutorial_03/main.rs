@@ -20,15 +20,14 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let display_config_path =
-        app_root.join("examples/pong_tutorial_03/resources/display_config.ron");
+    let display_config_path = app_root.join("examples/pong_tutorial_03/config/display.ron");
 
     let game_data = GameDataBuilder::default()
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(TransformBundle::new())?
         .with_bundle(
             InputBundle::<StringBindings>::new().with_bindings_from_file(
-                app_root.join("examples/pong_tutorial_03/resources/bindings_config.ron"),
+                app_root.join("examples/pong_tutorial_03/config/bindings.ron"),
             )?,
         )?
         // We have now added our own system, the PaddleSystem, defined in systems/paddle.rs
