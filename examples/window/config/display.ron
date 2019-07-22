@@ -5,5 +5,5 @@
 
 (
   title: "Windowing example",
-  icon: Some("examples/window/resources/logo.png"),
+  icon: Some("examples/window/assets/logo.png"),
 )

@@ -280,8 +280,15 @@ where
                         Vector3::new(v.normal.x * x, v.normal.y * y, v.normal.z * z).normalize()
                     })
                     .unwrap_or_else(|| Vector3::from(v.normal));
-                let up = Vector3::y();
-                let tangent = normal.cross(&up).cross(&normal);
+                let tangent1 = normal.cross(&Vector3::x());
+                let tangent2 = normal.cross(&Vector3::y());
+                let tangent = if tangent1.norm_squared() > tangent2.norm_squared() {
+                    tangent1
+                } else {
+                    tangent2
+                }
+                .cross(&normal);
+
                 (
                     pos.into(),
                     normal.into(),

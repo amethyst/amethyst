@@ -13,7 +13,7 @@ use amethyst::{
     core::{
         ecs::{
             Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
-            System, SystemData, World, World, Write, WriteStorage,
+            System, SystemData, World, Write, WriteStorage,
         },
         math::{Unit, UnitQuaternion, Vector3},
         Time, Transform, TransformBundle,
@@ -563,9 +563,9 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root
         .join("examples")
         .join("rendy")
-        .join("resources")
-        .join("display_config.ron");
-    let resources = app_root.join("examples").join("assets");
+        .join("config")
+        .join("display.ron");
+    let assets_directory = app_root.join("examples").join("assets");
 
     let mut world = World::new();
 
@@ -668,7 +668,7 @@ fn main() -> amethyst::Result<()> {
             ExampleGraph::default(),
         ));
 
-    let mut game = Application::new(&resources, Example::new(), game_data, world)?;
+    let mut game = Application::new(&assets_directory, Example::new(), game_data, world)?;
     game.run();
     Ok(())
 }

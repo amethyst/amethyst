@@ -118,7 +118,7 @@ To add these bindings to the `InputBundle` you simply need to call the `with_bin
 # use amethyst::{prelude::*, input::*, utils::*};
 # fn main() -> amethyst::Result::<()> {
 let root = application_root_dir()?;
-let bindings_config = root.join("resources").join("bindings_config.ron");
+let bindings_config = root.join("config").join("bindings.ron");
 
 let input_bundle = InputBundle::<StringBindings>::new()
     .with_bindings_from_file(bindings_config)?;

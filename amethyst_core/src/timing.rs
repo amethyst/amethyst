@@ -33,16 +33,22 @@ pub struct Time {
 
 impl Time {
     /// Gets the time difference between frames in seconds.
+    ///
+    /// This function should not be used during `fixed_update`s, use `fixed_seconds` instead.
     pub fn delta_seconds(&self) -> f32 {
         self.delta_seconds
     }
 
     /// Gets the time difference between frames.
+    ///
+    /// This function should not be used during `fixed_update`s, use `fixed_time` instead.
     pub fn delta_time(&self) -> Duration {
         self.delta_time
     }
 
     /// Gets the time difference between frames in seconds ignoring the time speed multiplier.
+    ///
+    /// This function should not be used during `fixed_update`s.
     pub fn delta_real_seconds(&self) -> f32 {
         self.delta_real_seconds
     }

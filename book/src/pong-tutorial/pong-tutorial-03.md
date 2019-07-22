@@ -22,8 +22,8 @@ Let's get started.
 ## Capturing user input
 
 To capture user input, we'll need to introduce a few more files to our game.
-Let's start by creating a resource file under the `resources` directory of our
-project, called `bindings_config.ron`, which will contain a RON representation
+Let's start by creating a config file under the `config` directory of our
+project, called `bindings.ron`, which will contain a RON representation
 of the [amethyst_input::Bindings][doc_bindings] struct:
 
 ```ron,ignore
@@ -61,12 +61,12 @@ axes we defined. Let's make the following changes to `main.rs`.
 use amethyst::input::{InputBundle, StringBindings};
 
 # let app_root = application_root_dir()?;
-let binding_path = app_root.join("resources").join("bindings_config.ron");
+let binding_path = app_root.join("config").join("bindings.ron");
 
 let input_bundle = InputBundle::<StringBindings>::new()
     .with_bindings_from_file(binding_path)?;
 
-# let path = "./resources/display_config.ron";
+# let path = "./config/display.ron";
 # let config = DisplayConfig::load(&path);
 # let assets_dir = "assets";
 # struct Pong;
@@ -83,7 +83,7 @@ game.run();
 ```
 
 For `InputBundle<StringBundle>`, the parameter type determines how `axes` and `actions`
-are identified in the `bindings_config.ron` file
+are identified in the `bindings.ron` file
 (in this example, `String`s are used; e.g. `"left_paddle"`).
 
 At this point, we're ready to write a system that reads input from the
@@ -203,7 +203,7 @@ mod systems; // Import the module
 fn main() -> amethyst::Result<()> {
 // --snip--
 
-# let path = "./resources/display_config.ron";
+# let path = "./config/display.ron";
 # let config = DisplayConfig::load(&path);
 # mod systems {
 # use amethyst;

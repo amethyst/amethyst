@@ -39,6 +39,7 @@ use super::{Axis, Button};
 ///     UsePowerup(PlayerId),
 /// }
 ///
+/// #[derive(Debug)]
 /// struct DriverBindingTypes;
 /// impl BindingTypes for DriverBindingTypes {
 ///     type Axis = AxisBinding;
@@ -47,7 +48,7 @@ use super::{Axis, Button};
 ///
 /// type GameBindings = Bindings<DriverBindingTypes>;
 /// ```
-/// And the `bindings_config.ron`:
+/// And the `bindings.ron`:
 /// ```ron
 /// (
 ///   axes: {

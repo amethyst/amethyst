@@ -106,8 +106,17 @@ For a full-blown "Hello World" tutorial check out the [Getting Started][gs] chap
 
 [gs]: https://book.amethyst.rs/stable/getting-started.html
 
-There are also many open source games and prototypes being made with Amethyst. See our showcase in the regularly updated [Games Made With Amethyst][gmwa] thread on the community forum for some good sources of inspiration.
+### Showcase games
 
+Our official showcase games demonstrate larger, continuously developed game projects made with Amethyst:
+
+- [Evoli][evoli] - 3D, ecosystem simulator
+- [Space Menace][menace] - 2D, action platformer
+
+For more examples see [Games Made With Amethyst][gmwa] topic on the community forum for some good sources of inspiration.
+
+[evoli]: https://github.com/amethyst/evoli
+[menace]: https://github.com/amethyst/space-menace
 [gmwa]: https://community.amethyst.rs/t/games-made-with-amethyst/134
 
 ## Dependencies
@@ -123,7 +132,7 @@ $ pacman -Sy grep gcc pkgconfig openssl alsa-lib cmake make python3 freetype2 aw
 ### Debian/Ubuntu
 
 ```
-# apt install gcc pkg-config openssl libasound2-dev cmake build-essential python3 libfreetype6-dev libexpat1-dev libxcb-composite0-dev libssl-dev
+# apt install gcc pkg-config openssl libasound2-dev cmake build-essential python3 libfreetype6-dev libexpat1-dev libxcb-composite0-dev libssl-dev libx11-dev
 ```
 
 ### Fedora

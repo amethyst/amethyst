@@ -200,13 +200,13 @@ fn main() -> Result<(), Error> {
     let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let resources_directory = app_root.join("examples").join("assets");
+    let assets_directory = app_root.join("examples").join("assets");
 
     let display_config_path = app_root
         .join("examples")
         .join("renderable")
-        .join("resources")
-        .join("display_config.ron");
+        .join("config")
+        .join("display.ron");
 
     let mut world = World::new();
 
@@ -232,7 +232,7 @@ fn main() -> Result<(), Error> {
             ExampleGraph::default(),
         ));
     let mut game =
-        Application::build(resources_directory, Loading::default(), world)?.build(game_data)?;
+        Application::build(assets_directory, Loading::default(), world)?.build(game_data)?;
     game.run();
     Ok(())
 }

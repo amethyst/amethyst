@@ -363,21 +363,6 @@ live with registering the `Paddle` component manually.
 
 Let's run the game again.
 
-```text,ignore
-thread 'main' panicked at 'Tried to fetch a resource, but the resource does not exist.
-Try adding the resource by inserting it manually or using the `setup` method.
-```
-
-Ah, oops. We forgot something. Turning on the `nightly` feature, we get:
-
-```text_ignore
-thread 'main' panicked at 'Tried to fetch a resource of type "ecs::storage::MaskedStorage<transform::components::local_transform::Transform>", but the resource does not exist.
-Try adding the resource by inserting it manually or using the `setup` method.'
-```
-
-This is the same kind of error as before; this time the `Component` is a
-`Transform`, which is used and hence registered by the `TransformSystem`.
-
 Amethyst has a lot of internal systems it uses to keep things running we need
 to bring into the context of the `World`. For simplicity, these have been
 grouped into "Bundles" which include related systems and resources. We can
@@ -411,7 +396,7 @@ fn main() -> amethyst::Result<()> {
 #
 #   let app_root = application_root_dir()?;
 #   let display_config_path =
-#       app_root.join("examples/pong_tutorial_02/resources/display_config.ron");
+#       app_root.join("examples/pong_tutorial_02/config/display.ron");
 #
     // ...
 
