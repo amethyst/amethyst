@@ -57,6 +57,7 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 [#1720]: https://github.com/amethyst/amethyst/pull/1720
 [#1797]: https://github.com/amethyst/amethyst/pull/1797
 [#1772]: https://github.com/amethyst/amethyst/pull/1772
+[#1805]: https://github.com/amethyst/amethyst/pull/1805
 
 ## [0.11.0] - 2019-06
 

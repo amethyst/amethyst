@@ -334,7 +334,8 @@ thread 'main' panicked at 'Tried to fetch a resource of type "amethyst::ecs::sto
 Try adding the resource by inserting it manually or using the `setup` method.'
 ```
 
-To turn on the `nightly` feature, enable the `nightly` flag for the Amethyst crate in your Cargo.toml file.
+To turn on the `nightly` feature, enable the `nightly` flag for the Amethyst crate in your Cargo.toml file.  
+Use *one* of the below methods for declaring dependencies (using both will result in an error):
 #### In Dependencies:
 ```
 [dependencies]
@@ -346,7 +347,7 @@ amethyst = { version = "X.XX", features = ["nightly"] }
 version = "X.XX"
 features = ["nightly"]
 ```
-Run using the nightly channel if you don't have it as your default: `cargo +nightly run`.
+Run the project using the nightly channel if you don't have it as your default: `cargo +nightly run`.
 
 For a `Component` to be used, there must be a `Storage<ComponentType>` resource
 set up in the `World`. The error message above means we have registered the
