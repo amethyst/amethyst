@@ -42,7 +42,7 @@ impl<'a, 'b> CustomDispatcherState<'a, 'b> {
                     "Expected `dispatcher_builder` to exist when `dispatcher` is not yet built.",
                 )
                 .build();
-            dispatcher.setup(&mut world);
+            dispatcher.setup(world);
             self.dispatcher = Some(dispatcher);
         }
     }

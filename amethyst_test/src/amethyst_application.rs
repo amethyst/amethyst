@@ -14,7 +14,6 @@ use amethyst::{
     window::ScreenDimensions,
     StateEventReader,
 };
-use boxfnonce::SendBoxFnOnce;
 use derivative::Derivative;
 use lazy_static::lazy_static;
 
@@ -23,10 +22,11 @@ use crate::{
     ThreadLocalInjectionBundle,
 };
 
-type BundleAddFn = SendBoxFnOnce<
-    'static,
-    (GameDataBuilder<'static, 'static>,),
-    Result<GameDataBuilder<'static, 'static>, Error>,
+type BundleAddFn = Box<
+    dyn FnOnce(
+        &mut World,
+        GameDataBuilder<'static, 'static>,
+    ) -> Result<GameDataBuilder<'static, 'static>, Error>,
 >;
 // Hack: Ideally we want a `SendBoxFnOnce`. However implementing it got too crazy:
 //
@@ -41,7 +41,7 @@ type BundleAddFn = SendBoxFnOnce<
 //   in a scope greater than the `AmethystApplication`'s lifetime, which detracts from the
 //   ergonomics of this test harness.
 type FnResourceAdd = Box<dyn FnMut(&mut World) + Send>;
-type FnState<T, E> = SendBoxFnOnce<'static, (), Box<dyn State<T, E>>>;
+type FnState<T, E> = Box<dyn FnOnce() -> Box<dyn State<T, E>>>;
 
 /// Screen width used in predefined display configuration.
 pub const SCREEN_WIDTH: u32 = 800;
@@ -158,7 +158,7 @@ where
             Vec<FnResourceAdd>,
             Vec<FnState<GameData<'static, 'static>, E>>,
         ),
-        world: World,
+        mut world: World,
     ) -> Result<CoreApplication<'static, GameData<'static, 'static>, E, R>, Error>
     where
         for<'b> R: EventReader<'b, Event = E>,
@@ -166,7 +166,7 @@ where
         let game_data = bundle_add_fns.into_iter().fold(
             Ok(GameDataBuilder::default()),
             |game_data: Result<GameDataBuilder<'_, '_>, Error>, function: BundleAddFn| {
-                game_data.and_then(|game_data| function.call(game_data))
+                game_data.and_then(|game_data| function(&mut world, game_data))
             },
         )?;
 
@@ -174,7 +174,7 @@ where
         state_fns
             .into_iter()
             .rev()
-            .for_each(|state_fn| states.push(state_fn.call()));
+            .for_each(|state_fn| states.push(state_fn()));
         Self::build_application(
             SequencerState::new(states),
             game_data,
@@ -265,8 +265,9 @@ where
 
 impl<T, E, R> AmethystApplication<T, E, R>
 where
-    T: GameUpdate,
+    T: GameUpdate + 'static,
     E: Send + Sync + 'static,
+    R: 'static,
 {
     /// Use the specified custom event type instead of `()`.
     ///
@@ -324,9 +325,9 @@ where
         // `SendBoxFnOnce` is an implementation of this.
         //
         // See <https://users.rust-lang.org/t/move-a-boxed-function-inside-a-closure/18199>
-        self.bundle_add_fns.push(SendBoxFnOnce::from(
-            |game_data: GameDataBuilder<'static, 'static>| {
-                game_data.with_bundle(&mut self.world, bundle)
+        self.bundle_add_fns.push(Box::new(
+            |world: &mut World, game_data: GameDataBuilder<'static, 'static>| {
+                game_data.with_bundle(world, bundle)
             },
         ));
         self
@@ -345,9 +346,9 @@ where
         FnBundle: FnOnce() -> B + Send + 'static,
         B: SystemBundle<'static, 'static> + 'static,
     {
-        self.bundle_add_fns.push(SendBoxFnOnce::from(
-            move |game_data: GameDataBuilder<'static, 'static>| {
-                game_data.with_bundle(&mut self.world, bundle_function())
+        self.bundle_add_fns.push(Box::new(
+            move |world: &mut World, game_data: GameDataBuilder<'static, 'static>| {
+                game_data.with_bundle(world, bundle_function())
             },
         ));
         self
@@ -398,7 +399,7 @@ where
     {
         // Box up the state
         let closure = move || Box::new((state_fn)()) as Box<dyn State<T, E>>;
-        self.state_fns.push(SendBoxFnOnce::from(closure));
+        self.state_fns.push(Box::new(closure));
         self
     }
 
@@ -1054,7 +1055,7 @@ mod test {
         type SystemData = SystemNonDefaultData<'s>;
         fn run(&mut self, _: Self::SystemData) {}
 
-        fn setup(&mut self, mut world: &mut World) {
+        fn setup(&mut self, world: &mut World) {
             // Must be called when we override `.setup()`
             SystemNonDefaultData::setup(world);
 
