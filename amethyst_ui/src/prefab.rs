@@ -339,8 +339,6 @@ pub enum UiImageLoadPrefab {
     Texture(TexturePrefab),
     /// A partial textured image
     PartialTexture(TexturePrefab, f32, f32, f32, f32),
-    /// A sprite image
-    //Sprite(SpriteRenderPrefab ),
     /// Solid color image
     SolidColor(f32, f32, f32, f32),
 }
