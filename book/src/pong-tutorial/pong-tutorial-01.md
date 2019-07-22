@@ -187,7 +187,7 @@ game.run();
 
 Here we're creating a new instance of `GameDataBuilder`, a central repository
 of all the game logic that runs periodically during the game runtime. Right now it's empty,
-but soon we will start adding there all sorts of systems and bundles that run our game code.
+but soon we will start adding all sorts of systems and bundles to it - which will run our game code.
 
 That builder is then combined with the game state struct (`Pong`), creating the overarching
 Amethyst's root object: [Application][ap]. It binds the OS event loop, state machines,
@@ -197,14 +197,15 @@ Then we call `.run()` on `game` which starts the game loop. The game will
 continue to run until our `SimpleState` returns `Trans::Quit`, or when all states
 have been popped off the state machine's stack.
 
-Try compiling the code now. You should be able to see that application starts but nothing
-happens and it hangs your terminal until you kill the process. That means the core game loop
-is running and awaiting for tasks to run. Let's give it something to do by adding a renderer.
+Try compiling the code now.  You should be able to see the application start, but nothing
+will happen and your terminal will hang until you kill the process. This means that the
+core game loop is running in circles, and is awaiting tasks. Let's give it something
+to do by adding a renderer!
 
 ## Setting up basic rendering
 
 After preparing the display config and application scaffolding, it's time to actually use it.
-Last time we left our `GameDataBuilder` instance empty, now we can add some systems to it.
+Last time we left our `GameDataBuilder` instance empty, now we'll add some systems to it.
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
@@ -218,7 +219,7 @@ let game_data = GameDataBuilder::default()
                 RenderToWindow::from_config_path(display_config_path)
                     .with_clear([0.0, 0.0, 0.0, 1.0]),
             )
-            // RenderFlat2D plugin is used to render entities with `SpriteRender` component.
+            // RenderFlat2D plugin is used to render entities with a `SpriteRender` component.
             .with_plugin(RenderFlat2D::default()),
     )?;
 # Ok(()) }
@@ -227,23 +228,23 @@ let game_data = GameDataBuilder::default()
 Here we are adding a `RenderingBundle`. Bundles are essentially sets of systems
 preconfigured to work together, so you don't have to write them all down one by one.
 
-> **Note:** We will cover systems and bundles in more details later, for now, think of the
-> bundle as a group of functionality that together provides a certain feature to the engine.
+> **Note:** We will cover systems and bundles in more detail later. For now, think of a bundle
+> as a collection of systems that, in combination, will provide a certain feature to the engine.
 > You will surely be writing your own bundles for your own game's features soon.
 
-The `RenderingBundle` is actually a bit special, as it doesn't really do anything on its own,
-but relies on it's own plugin system to define what should be rendered and how. We have to use
-`with_plugin` method to tell it that we want `RenderToWindow` and `RenderFlat2D` plugins.
-Those plugins will equip our renderer with ability to open a window and draw 2D sprites on it. 
+The `RenderingBundle` has a difference to most other bundles: It doesn't really do much by itself.
+Instead, it relies on its own plugin system to define what should be rendered and how. We use the
+`with_plugin` method to tell it that we want to add the `RenderToWindow` and `RenderFlat2D` plugins.
+Those plugins will equip our renderer with the ability to open a window and draw sprites to it.
 
 In this configuration, our window will have a black background.
 If you want to use a different color, you can tweak the RGBA
 values inside `with_clear`. Values range from `0.0` to `1.0`, to get that cool green color
 you can try `[0.00196, 0.23726, 0.21765, 1.0]`.
 
-> **Note:** This setup code is using amethyst's `RenderPlugin` trait based system that
+> **Note:** This setup code is using Amethyst's `RenderPlugin` trait based system that
 > uses `rendy` crate to define the rendering. If you plan to go beyond the rendering
-> building blocks that amethyst provides out of the box, you can read about
+> building blocks that Amethyst provides out of the box, you can read about
 > render graph in the [rendy graph docs][graph].
 
 Success! Now we can compile and run this code with `cargo run` and

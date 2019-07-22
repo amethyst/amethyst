@@ -167,10 +167,6 @@ impl<D: Base3DPassDef> RenderBase3D<D> {
 impl<B: Backend, D: Base3DPassDef> RenderPlugin<B> for RenderBase3D<D> {
     fn on_build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
         builder.add(VisibilitySortingSystem::new(), "visibility_system", &[]);
-
-        // TODO: We should ideally register `VertexSkinningBundle` here,
-        // but that would make renderer dependant on animation crate.
-
         Ok(())
     }
 
