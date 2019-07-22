@@ -506,8 +506,11 @@ fn render_image<B: Backend>(
     let tex_coords = match raw_image {
         UiImage::Sprite(sprite_renderer) => {
             let sprite_sheets = resources.fetch::<AssetStorage<SpriteSheet>>();
-            let sprite_sheet = sprite_sheets.get(&sprite_renderer.sprite_sheet).unwrap();
-            (&sprite_sheet.sprites[sprite_renderer.sprite_number].tex_coords).into()
+            if let Some(sprite_sheet) = sprite_sheets.get(&sprite_renderer.sprite_sheet) {
+                (&sprite_sheet.sprites[sprite_renderer.sprite_number].tex_coords).into()
+            } else {
+                [0.0_f32, 0., 1., 1.]
+            }
         }
         UiImage::PartialTexture(_, tex_coord) => tex_coord.into(),
         _ => [0.0_f32, 0., 1., 1.],
@@ -550,15 +553,18 @@ fn render_image<B: Backend>(
         }
         UiImage::Sprite(sprite_renderer) => {
             let sprite_sheets = resources.fetch::<AssetStorage<SpriteSheet>>();
-            let sprite_sheet = sprite_sheets.get(&sprite_renderer.sprite_sheet).unwrap();
-            if let Some((tex_id, this_changed)) = textures.insert(
-                factory,
-                resources,
-                &sprite_sheet.texture,
-                hal::image::Layout::ShaderReadOnlyOptimal,
-            ) {
-                batches.insert(tex_id, Some(args));
-                this_changed
+            if let Some(sprite_sheet) = sprite_sheets.get(&sprite_renderer.sprite_sheet) {
+                if let Some((tex_id, this_changed)) = textures.insert(
+                    factory,
+                    resources,
+                    &sprite_sheet.texture,
+                    hal::image::Layout::ShaderReadOnlyOptimal,
+                ) {
+                    batches.insert(tex_id, Some(args));
+                    this_changed
+                } else {
+                    false
+                }
             } else {
                 false
             }

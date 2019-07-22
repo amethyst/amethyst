@@ -8,7 +8,7 @@ use amethyst_rendy::{SpriteRender, Texture};
 pub enum UiImage {
     /// An image backed by texture handle
     Texture(Handle<Texture>),
-    /// An image backed by partial texture
+    /// An image backed by a texture cropped to specified rectangle
     PartialTexture(Handle<Texture>, TextureCoordinates),
     /// An image backed by a Sprite
     Sprite(SpriteRender),

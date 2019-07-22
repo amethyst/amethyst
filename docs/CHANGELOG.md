@@ -22,7 +22,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 `add_cylinder`, `add_rotated_cylinder` and `add_sphere` functions to `DebugLinesComponent`
 and the corresponding draw functions to `DebugLines`, to draw simple shapes with debug lines. ([#1766])
 * `InputEvent::AxisMoved` is sent upon button press / release. ([#1512], [#1797])
-* `UiImage` is updated to allow for partial textures and sprites. ([#1809])
+* `UiImage` is updated to allow for partial textures and sprites. ([#1809],[#1811])
 
 ### Changed
 
@@ -53,7 +53,8 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 [#1753]: https://github.com/amethyst/amethyst/pull/1753
 [#1720]: https://github.com/amethyst/amethyst/pull/1720
 [#1797]: https://github.com/amethyst/amethyst/pull/1797
-[#1809]: https://github.com/amethyst/amethyst/pull/1809
+[#1809]: https://github.com/amethyst/amethyst/issues/1809
+[#1811]: https://github.com/amethyst/amethyst/pull/1811
 
 ## [0.11.0] - 2019-06
 
