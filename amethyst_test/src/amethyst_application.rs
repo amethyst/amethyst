@@ -407,12 +407,13 @@ where
     ///
     /// # Parameters
     ///
-    /// * `system`: The `System` to register.
+    /// * `system_fn`: Function to instantiate the `System`.
     /// * `name`: Name to register the system with, used for dependency ordering.
     /// * `deps`: Names of systems that must run before this system.
-    pub fn with_system<N, Sys>(self, system: Sys, name: N, deps: &[N]) -> Self
+    pub fn with_system<N, SysFn, Sys>(self, system_fn: SysFn, name: N, deps: &[N]) -> Self
     where
         N: Into<String> + Clone,
+        SysFn: FnOnce(&mut World) -> Sys + Send + Sync + 'static,
         Sys: for<'sys_local> System<'sys_local> + Send + 'static,
     {
         let name = name.into();
@@ -420,34 +421,20 @@ where
             .iter()
             .map(|dep| dep.clone().into())
             .collect::<Vec<String>>();
-        self.with_bundle_fn(move || SystemInjectionBundle::new(system, name, deps))
+        self.with_bundle_fn(move || SystemInjectionBundle::new(system_fn, name, deps))
     }
 
     /// Registers a thread local `System` into this application's `GameData`.
-    ///
-    /// # Parameters
-    ///
-    /// * `system`: The thread local system.
-    pub fn with_thread_local<Sys>(self, system: Sys) -> Self
-    where
-        Sys: for<'sys_local> RunNow<'sys_local> + Send + 'static,
-    {
-        self.with_bundle_fn(move || ThreadLocalInjectionBundle::new(system))
-    }
-
-    /// Registers a thread local `System` into this application's `GameData`.
-    ///
-    /// This is a separate function in case the thread local system is `!Send`.
     ///
     /// # Parameters
     ///
     /// * `system_fn`: Function to instantiate the thread local system.
-    pub fn with_thread_local_fn<FnSysLocal, Sys>(self, system_fn: FnSysLocal) -> Self
+    pub fn with_thread_local<SysFn, Sys>(self, system_fn: SysFn) -> Self
     where
-        FnSysLocal: FnOnce() -> Sys + Send + 'static,
-        Sys: for<'sys_local> RunNow<'sys_local> + 'static,
+        SysFn: FnOnce(&mut World) -> Sys + Send + Sync + 'static,
+        Sys: for<'sys_local> RunNow<'sys_local> + Send + 'static,
     {
-        self.with_bundle_fn(move || ThreadLocalInjectionBundle::new(system_fn()))
+        self.with_bundle_fn(move || ThreadLocalInjectionBundle::new(system_fn))
     }
 
     /// Registers a `System` to run in a `CustomDispatcherState`.
@@ -457,12 +444,13 @@ where
     ///
     /// # Parameters
     ///
-    /// * `system`: The `System` to register.
+    /// * `system_fn`: Function to instantiate the `System`.
     /// * `name`: Name to register the system with, used for dependency ordering.
     /// * `deps`: Names of systems that must run before this system.
-    pub fn with_system_single<N, Sys>(self, system: Sys, name: N, deps: &[N]) -> Self
+    pub fn with_system_single<N, SysFn, Sys>(self, system_fn: SysFn, name: N, deps: &[N]) -> Self
     where
         N: Into<String> + Clone,
+        SysFn: FnOnce(&mut World) -> Sys + Send + Sync + 'static,
         Sys: for<'sys_local> System<'sys_local> + Send + Sync + 'static,
     {
         let name = name.into();
@@ -472,11 +460,7 @@ where
             .collect::<Vec<String>>();
         self.with_state(move || {
             CustomDispatcherStateBuilder::new()
-                .with(
-                    system,
-                    &name,
-                    &deps.iter().map(|dep| dep.as_ref()).collect::<Vec<&str>>(),
-                )
+                .with(system_fn, name, deps)
                 .build()
         })
     }
@@ -761,7 +745,7 @@ mod test {
         };
 
         AmethystApplication::blank()
-            .with_system(SystemEffect, "system_effect", &[])
+            .with_system(|_| SystemEffect, "system_effect", &[])
             .with_effect(effect_fn)
             .with_assertion(|world| assert_eq!(1, get_component_zero_value(world)))
             .with_assertion(|world| assert_eq!(2, get_component_zero_value(world)))
@@ -771,8 +755,8 @@ mod test {
     #[test]
     fn with_system_invoked_twice_should_not_panic() {
         AmethystApplication::blank()
-            .with_system(SystemZero, "zero", &[])
-            .with_system(SystemOne, "one", &["zero"]);
+            .with_system(|_| SystemZero, "zero", &[])
+            .with_system(|_| SystemOne, "one", &["zero"]);
     }
 
     #[test]
@@ -796,7 +780,7 @@ mod test {
                 let entity = world.create_entity().with(ComponentZero(0)).build();
                 world.insert(EffectReturn(entity));
             })
-            .with_system_single(SystemEffect, "system_effect", &[])
+            .with_system_single(|_| SystemEffect, "system_effect", &[])
             .with_assertion(assertion_fn)
             .with_assertion(assertion_fn)
             .run()
