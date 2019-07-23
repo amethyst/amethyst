@@ -320,7 +320,7 @@ as well as adding our new systems to the game data:
 # use amethyst::window::DisplayConfig;
 # use amethyst::input::StringBindings;
 # fn main() -> amethyst::Result<()> {
-# let path = "./resources/display_config.ron";
+# let path = "./config/display.ron";
 # let config = DisplayConfig::load(&path);
 # mod systems {
 # use amethyst;

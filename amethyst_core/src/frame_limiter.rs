@@ -118,7 +118,7 @@ impl Default for FrameRateLimitStrategy {
 /// use amethyst::prelude::*;
 /// use amethyst::core::frame_limiter::FrameRateLimitConfig;
 ///
-/// let config = FrameRateLimitConfig::load("./resources/frame_limiter.ron");
+/// let config = FrameRateLimitConfig::load("./config/frame_limiter.ron");
 /// ```
 ///
 /// [`FrameLimiter`]: ./struct.FrameLimiter.html

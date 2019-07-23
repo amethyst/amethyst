@@ -6,32 +6,34 @@ use derive_new::new;
 
 /// Adds a specified `System` to the dispatcher.
 #[derive(Debug, new)]
-pub(crate) struct SystemInjectionBundle<'a, Sys>
+pub(crate) struct SystemInjectionBundle<'a, SysFn, Sys>
 where
+    SysFn: FnOnce(&mut World) -> Sys,
     Sys: for<'s> System<'s> + Send,
 {
-    /// `System` to add to the dispatcher.
-    system: Sys,
+    /// Function to instantiate `System` to add to the dispatcher.
+    system_fn: SysFn,
     /// Name to register the system with.
     system_name: String,
     /// Names of the system dependencies.
     system_dependencies: Vec<String>,
     /// Marker for `'a` lifetime.
     #[new(default)]
-    system_marker: PhantomData<&'a Sys>,
+    system_marker: PhantomData<(SysFn, &'a Sys)>,
 }
 
-impl<'a, 'b, Sys> SystemBundle<'a, 'b> for SystemInjectionBundle<'a, Sys>
+impl<'a, 'b, SysFn, Sys> SystemBundle<'a, 'b> for SystemInjectionBundle<'a, SysFn, Sys>
 where
+    SysFn: FnOnce(&mut World) -> Sys,
     Sys: for<'s> System<'s> + Send + 'a,
 {
     fn build(
         self,
-        _world: &mut World,
+        world: &mut World,
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
         builder.add(
-            self.system,
+            (self.system_fn)(world),
             &self.system_name,
             &self
                 .system_dependencies

@@ -189,8 +189,8 @@ fn main() -> Result<(), amethyst::Error> {
 
     let app_root = application_root_dir()?;
 
-    let display_config_path = app_root.join("examples/gltf/resources/display_config.ron");
-    let resources_directory = app_root.join("examples/assets/");
+    let display_config_path = app_root.join("examples/gltf/config/display.ron");
+    let assets_directory = app_root.join("examples/assets/");
 
     let mut world = World::new();
 
@@ -247,7 +247,7 @@ fn main() -> Result<(), amethyst::Error> {
         ));
 
     let mut game =
-        Application::build(resources_directory, Example::default(), world)?.build(game_data)?;
+        Application::build(assets_directory, Example::default(), world)?.build(game_data)?;
     game.run();
     Ok(())
 }

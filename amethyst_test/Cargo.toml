@@ -14,7 +14,6 @@ license = "MIT/Apache-2.0"
 
 [dependencies]
 amethyst = { path = "..", version = "0.11.0" }
-boxfnonce = "0.1"
 derivative = "1.0"
 derive-new = "0.5"
 lazy_static = "1.3"
@@ -22,6 +21,9 @@ lazy_static = "1.3"
 [features]
 default = []
 nightly = ["amethyst/nightly"]
+empty = ["amethyst/empty"]
+metal = ["amethyst/metal"]
+vulkan = ["amethyst/vulkan"]
 
 # Used to tag tests that need an audio backend to run.
 audio = []

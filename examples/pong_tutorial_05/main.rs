@@ -23,8 +23,7 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let display_config_path =
-        app_root.join("examples/pong_tutorial_05/resources/display_config.ron");
+    let display_config_path = app_root.join("examples/pong_tutorial_05/config/display.ron");
 
     let mut world = World::new();
 
@@ -45,7 +44,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(
             &mut world,
             InputBundle::<StringBindings>::new().with_bindings_from_file(
-                app_root.join("examples/pong_tutorial_05/resources/bindings_config.ron"),
+                app_root.join("examples/pong_tutorial_05/config/bindings.ron"),
             )?,
         )?
         .with_bundle(

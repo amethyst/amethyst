@@ -153,7 +153,7 @@ mod tests {
 
     fn transform_world() -> (World, HierarchySystem<Parent>, TransformSystem) {
         let mut world = World::new();
-        let mut hs = HierarchySystem::<Parent>::new();
+        let mut hs = HierarchySystem::<Parent>::new(&mut world);
         let mut ts = TransformSystem::new(&mut world);
         hs.setup(&mut world);
         ts.setup(&mut world);

@@ -7,7 +7,7 @@ use amethyst_derive::{EventReader, PrefabData};
 
 use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_core::{
-    ecs::{Component, DenseVecStorage, Entity, Read, SystemData, World, WriteStorage},
+    ecs::{Component, DenseVecStorage, Entity, Read, SystemData, World, WorldExt, WriteStorage},
     shrev::{EventChannel, ReaderId},
     EventReader,
 };
@@ -109,7 +109,7 @@ mod tests {
         ($prefab_type:ident, $prefab:expr, $assertion:expr) => {
             assert!(AmethystApplication::blank()
                 .with_system(
-                    PrefabLoaderSystem::<$prefab_type>::default(),
+                    |world| PrefabLoaderSystem::<$prefab_type>::new(world),
                     "test_loader",
                     &[]
                 )

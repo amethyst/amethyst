@@ -1,9 +1,8 @@
 //! Displays a shaded sphere to the user.
 
-use amethyst::assets::Loader;
 use amethyst::{
     animation::*,
-    assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
+    assets::{Loader, PrefabLoader, PrefabLoaderSystem, RonFormat},
     core::{Transform, TransformBundle},
     ecs::prelude::{Entity, ReadExpect, World, WorldExt},
     input::{get_key, is_close_requested, is_key_down},
@@ -223,8 +222,8 @@ fn main() -> amethyst::Result<()> {
     .start();
 
     let app_root = application_root_dir()?;
-    let display_config_path = app_root.join("examples/animation/resources/display_config.ron");
-    let resources = app_root.join("examples/assets/");
+    let display_config_path = app_root.join("examples/animation/config/display.ron");
+    let assets_directory = app_root.join("examples/assets/");
 
     let mut world = World::new();
 
@@ -249,7 +248,7 @@ fn main() -> amethyst::Result<()> {
             ExampleGraph::default(),
         ));
     let state: Example = Default::default();
-    let mut game = Application::new(resources, state, game_data, world)?;
+    let mut game = Application::new(assets_directory, state, game_data, world)?;
     game.run();
 
     Ok(())

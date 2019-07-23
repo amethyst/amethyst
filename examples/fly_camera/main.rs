@@ -67,9 +67,11 @@ fn main() -> Result<(), Error> {
 
     let app_root = application_root_dir()?;
 
-    let resources_directory = app_root.join("examples/assets");
-    let display_config_path = app_root.join("examples/fly_camera/resources/display_config.ron");
-    let key_bindings_path = app_root.join("examples/fly_camera/resources/input.ron");
+    let assets_directory = app_root.join("examples/assets");
+
+    let display_config_path = app_root.join("examples/fly_camera/config/display.ron");
+
+    let key_bindings_path = app_root.join("examples/fly_camera/config/input.ron");
 
     let mut world = World::new();
 
@@ -99,8 +101,7 @@ fn main() -> Result<(), Error> {
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
-    let mut game =
-        Application::build(resources_directory, ExampleState, world)?.build(game_data)?;
+    let mut game = Application::build(assets_directory, ExampleState, world)?.build(game_data)?;
     game.run();
     Ok(())
 }

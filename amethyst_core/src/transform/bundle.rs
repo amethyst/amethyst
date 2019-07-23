@@ -49,7 +49,7 @@ impl<'a, 'b, 'c> SystemBundle<'a, 'b> for TransformBundle<'c> {
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
         builder.add(
-            HierarchySystem::<Parent>::new(),
+            HierarchySystem::<Parent>::new(world),
             "parent_hierarchy_system",
             self.dep,
         );

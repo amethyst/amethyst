@@ -51,8 +51,8 @@ fn main() -> Result<(), Error> {
     amethyst::start_logger(Default::default());
 
     let app_dir = amethyst::utils::application_dir("examples")?;
-    let display_config_path = app_dir.join("auto_fov/resources/display.ron");
-    let assets = app_dir.join("assets");
+    let display_config_path = app_dir.join("auto_fov/config/display.ron");
+    let assets_directory = app_dir.join("assets");
 
     let mut world = World::new();
 
@@ -78,7 +78,7 @@ fn main() -> Result<(), Error> {
             ExampleGraph::default(),
         ));
 
-    let mut game = Application::build(assets, Loading::new(), world)?.build(game_data)?;
+    let mut game = Application::build(assets_directory, Loading::new(), world)?.build(game_data)?;
     game.run();
 
     Ok(())

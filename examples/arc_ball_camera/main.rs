@@ -64,14 +64,14 @@ impl SimpleState for ExampleState {
 }
 
 struct CameraDistanceSystem {
-    event_reader: ReaderId<InputEvent<String>>,
+    event_reader: ReaderId<InputEvent<StringBindings>>,
 }
 
 impl CameraDistanceSystem {
     pub fn new(mut world: &mut World) -> Self {
         <Self as System<'_>>::SystemData::setup(&mut world);
         let event_reader = world
-            .fetch_mut::<EventChannel<InputEvent<String>>>()
+            .fetch_mut::<EventChannel<InputEvent<StringBindings>>>()
             .register_reader();
 
         CameraDistanceSystem { event_reader }
@@ -80,7 +80,7 @@ impl CameraDistanceSystem {
 
 impl<'a> System<'a> for CameraDistanceSystem {
     type SystemData = (
-        Read<'a, EventChannel<InputEvent<String>>>,
+        Read<'a, EventChannel<InputEvent<StringBindings>>>,
         ReadStorage<'a, Transform>,
         WriteStorage<'a, ArcBallControlTag>,
     );
@@ -111,11 +111,10 @@ fn main() -> Result<(), Error> {
 
     let app_root = application_root_dir()?;
 
-    let resources_directory = app_root.join("examples/assets");
-    let display_config_path =
-        app_root.join("examples/arc_ball_camera/resources/display_config.ron");
+    let assets_directory = app_root.join("examples/assets");
+    let display_config_path = app_root.join("examples/arc_ball_camera/config/display.ron");
 
-    let key_bindings_path = app_root.join("examples/arc_ball_camera/resources/input.ron");
+    let key_bindings_path = app_root.join("examples/arc_ball_camera/config/input.ron");
 
     let mut world = World::new();
 
@@ -139,8 +138,7 @@ fn main() -> Result<(), Error> {
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
             ExampleGraph::default(),
         ));
-    let mut game =
-        Application::build(resources_directory, ExampleState, world)?.build(game_data)?;
+    let mut game = Application::build(assets_directory, ExampleState, world)?.build(game_data)?;
     game.run();
     Ok(())
 }
