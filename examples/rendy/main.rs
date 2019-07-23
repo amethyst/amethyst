@@ -7,59 +7,47 @@ use amethyst::{
     },
     assets::{
         AssetLoaderSystemData, AssetStorage, Completion, Handle, Loader, PrefabLoader,
-        PrefabLoaderSystem, Processor, ProgressCounter, RonFormat,
+        PrefabLoaderSystem, ProgressCounter, RonFormat,
     },
     controls::{FlyControlBundle, FlyControlTag},
     core::{
         ecs::{
-            Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
-            Resources, System, SystemData, Write, WriteStorage,
+            Component, DenseVecStorage, DispatcherBuilder, Entities, Entity, Join, Read,
+            ReadStorage, Resources, System, SystemData, Write, WriteStorage,
         },
         math::{Unit, UnitQuaternion, Vector3},
         Time, Transform, TransformBundle,
     },
+    error::Error,
     gltf::GltfSceneLoaderSystem,
-    input::{is_close_requested, is_key_down, Axis, Bindings, Button, InputBundle, StringBindings},
+    input::{
+        is_close_requested, is_key_down, is_key_up, Axis, Bindings, Button, InputBundle,
+        StringBindings,
+    },
     prelude::*,
+    renderer::{
+        bundle::{RenderPlan, RenderPlugin},
+        debug_drawing::DebugLines,
+        light::{Light, PointLight},
+        palette::{LinSrgba, Srgb, Srgba},
+        rendy::{
+            mesh::{Normal, Position, Tangent, TexCoord},
+            texture::palette::load_from_linear_rgba,
+        },
+        resources::Tint,
+        shape::Shape,
+        types::{DefaultBackend, Mesh, Texture},
+        visibility::BoundingSphere,
+        ActiveCamera, Camera, Factory, ImageFormat, Material, MaterialDefaults, RenderDebugLines,
+        RenderFlat2D, RenderFlat3D, RenderPbr3D, RenderShaded3D, RenderSkybox, RenderToWindow,
+        RenderingBundle, SpriteRender, SpriteSheet, SpriteSheetFormat, Transparent,
+    },
     utils::{
         application_root_dir,
         auto_fov::{AutoFov, AutoFovSystem},
         fps_counter::FpsCounterBundle,
         tag::TagFinder,
     },
-    window::{ScreenDimensions, Window, WindowBundle},
-};
-use amethyst_rendy::{
-    camera::{ActiveCamera, Camera},
-    debug_drawing::DebugLines,
-    light::{Light, PointLight},
-    mtl::{Material, MaterialDefaults},
-    palette::{LinSrgba, Srgb, Srgba},
-    pass::{
-        DrawDebugLinesDesc, DrawFlat2DDesc, DrawFlat2DTransparentDesc, DrawFlatDesc,
-        DrawFlatTransparentDesc, DrawPbrDesc, DrawPbrTransparentDesc, DrawShadedDesc,
-        DrawShadedTransparentDesc, DrawSkyboxDesc,
-    },
-    rendy::{
-        factory::Factory,
-        graph::{
-            present::PresentNode,
-            render::{RenderGroupDesc, SubpassBuilder},
-            GraphBuilder,
-        },
-        hal::command::{ClearDepthStencil, ClearValue},
-        mesh::{Normal, Position, Tangent, TexCoord},
-        texture::palette::load_from_linear_rgba,
-    },
-    resources::Tint,
-    shape::Shape,
-    sprite::{SpriteRender, SpriteSheet},
-    sprite_visibility::SpriteVisibilitySortingSystem,
-    system::{GraphCreator, RenderingSystem},
-    transparent::Transparent,
-    types::{Backend, DefaultBackend, Mesh, Texture},
-    visibility::{BoundingSphere, VisibilitySortingSystem},
-    Format, ImageFormat, Kind, SpriteSheetFormat,
 };
 use std::path::Path;
 
@@ -74,6 +62,7 @@ struct Example {
     entity: Option<Entity>,
     initialised: bool,
     progress: Option<ProgressCounter>,
+    bullet_time: bool,
 }
 
 impl Example {
@@ -82,6 +71,7 @@ impl Example {
             entity: None,
             initialised: false,
             progress: None,
+            bullet_time: false,
         }
     }
 }
@@ -350,6 +340,12 @@ impl SimpleState for Example {
         profile_scope!("example handle_event");
         let StateData { world, .. } = data;
         if let StateEvent::Window(event) = &event {
+            if is_key_down(&event, winit::VirtualKeyCode::LShift) {
+                self.bullet_time = true;
+            } else if is_key_up(&event, winit::VirtualKeyCode::LShift) {
+                self.bullet_time = false;
+            }
+
             if is_close_requested(&event) || is_key_down(&event, winit::VirtualKeyCode::Escape) {
                 Trans::Quit
             } else if is_key_down(&event, winit::VirtualKeyCode::Space) {
@@ -379,6 +375,12 @@ impl SimpleState for Example {
     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         #[cfg(feature = "profiler")]
         profile_scope!("example update");
+
+        {
+            let mut time = data.world.write_resource::<Time>();
+            time.set_time_scale(if self.bullet_time { 0.2 } else { 1.0 });
+        }
+
         if !self.initialised {
             let remove = match self.progress.as_ref().map(|p| p.complete()) {
                 None | Some(Completion::Loading) => false,
@@ -544,6 +546,7 @@ fn toggle_or_cycle_animation(
 
 fn main() -> amethyst::Result<()> {
     amethyst::Logger::from_config(amethyst::LoggerConfig {
+        stdout: amethyst::StdoutLog::Off,
         log_file: Some("rendy_example.log".into()),
         level_filter: log::LevelFilter::Error,
         ..Default::default()
@@ -582,9 +585,15 @@ fn main() -> amethyst::Result<()> {
             neg: Button::Key(winit::VirtualKeyCode::A),
         },
     )?;
+    bindings.insert_axis(
+        "horizontal",
+        Axis::Emulated {
+            pos: Button::Key(winit::VirtualKeyCode::D),
+            neg: Button::Key(winit::VirtualKeyCode::A),
+        },
+    )?;
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with(OrbitSystem, "orbit", &[])
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .with_bundle(FpsCounterBundle::default())?
@@ -597,11 +606,6 @@ fn main() -> amethyst::Result<()> {
             GltfSceneLoaderSystem::default(),
             "gltf_loader",
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
-        )
-        .with(
-            Processor::<SpriteSheet>::new(),
-            "sprite_sheet_processor",
-            &[],
         )
         .with_bundle(
             AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
@@ -637,136 +641,53 @@ fn main() -> amethyst::Result<()> {
             "animation_control",
             "sampler_interpolation",
         ]))?
-        .with(
-            SpriteVisibilitySortingSystem::new(),
-            "sprite_visibility_system",
-            &["fly_movement", "auto_fov", "transform_system"],
-        )
-        .with(
-            VisibilitySortingSystem::new(),
-            "visibility_system",
-            &["fly_movement", "auto_fov", "transform_system"],
-        )
-        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::default(),
-        ));
+        .with_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(RenderToWindow::from_config_path(display_config_path))
+                .with_plugin(RenderSwitchable3D::default())
+                .with_plugin(RenderFlat2D::default())
+                .with_plugin(RenderDebugLines::default())
+                .with_plugin(RenderSkybox::with_colors(
+                    Srgb::new(0.82, 0.51, 0.50),
+                    Srgb::new(0.18, 0.11, 0.85),
+                )),
+        )?;
 
     let mut game = Application::new(&assets_directory, Example::new(), game_data)?;
     game.run();
     Ok(())
 }
 
-#[derive(Default)]
-struct ExampleGraph {
-    dimensions: Option<ScreenDimensions>,
+#[derive(Default, Debug)]
+struct RenderSwitchable3D {
+    pbr: RenderPbr3D,
+    shaded: RenderShaded3D,
+    flat: RenderFlat3D,
     last_mode: RenderMode,
-    surface_format: Option<Format>,
-    dirty: bool,
 }
 
-#[allow(clippy::map_clone)] // This lint is actually wrong, because we are mapping an option not an iterator
-impl<B: Backend> GraphCreator<B> for ExampleGraph {
-    fn rebuild(&mut self, res: &Resources) -> bool {
-        let new_mode = res.fetch::<RenderMode>();
-
-        if *new_mode != self.last_mode {
-            self.last_mode = *new_mode;
-            return true;
-        }
-
-        // Rebuild when dimensions change, but wait until at least two frames have the same.
-        let new_dimensions = res.try_fetch::<ScreenDimensions>();
-        use std::ops::Deref;
-        if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
-            self.dirty = true;
-            self.dimensions = new_dimensions.map(|d| d.clone());
-            return false;
-        }
-        self.dirty
+impl RenderPlugin<DefaultBackend> for RenderSwitchable3D {
+    fn on_build<'a, 'b>(&mut self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
+        <RenderPbr3D as RenderPlugin<DefaultBackend>>::on_build(&mut self.pbr, builder)
     }
 
-    fn builder(&mut self, factory: &mut Factory<B>, res: &Resources) -> GraphBuilder<B, Resources> {
-        self.dirty = false;
+    fn should_rebuild(&mut self, res: &Resources) -> bool {
+        let mode = *<Read<'_, RenderMode>>::fetch(res);
+        self.last_mode != mode
+    }
 
-        let (window, render_mode) =
-            <(ReadExpect<'_, Window>, ReadExpect<'_, RenderMode>)>::fetch(res);
-
-        let surface = factory.create_surface(&window);
-
-        // cache surface format to speed things up
-        let surface_format = *self
-            .surface_format
-            .get_or_insert_with(|| factory.get_surface_format(&surface));
-
-        let dimensions = self.dimensions.as_ref().unwrap();
-        let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
-
-        let mut graph_builder = GraphBuilder::new();
-        let color = graph_builder.create_image(
-            window_kind,
-            1,
-            surface_format,
-            Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
-        );
-
-        let depth = graph_builder.create_image(
-            window_kind,
-            1,
-            Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
-        );
-
-        let mut opaque_subpass = SubpassBuilder::new();
-        let mut transparent_subpass = SubpassBuilder::new();
-        match *render_mode {
-            RenderMode::Flat => {
-                opaque_subpass.add_group(DrawFlatDesc::skinned().builder());
-                transparent_subpass.add_group(DrawFlatTransparentDesc::skinned().builder());
-            }
-            RenderMode::Shaded => {
-                opaque_subpass.add_group(DrawShadedDesc::skinned().builder());
-                transparent_subpass.add_group(DrawShadedTransparentDesc::skinned().builder());
-            }
-            RenderMode::Pbr => {
-                opaque_subpass.add_group(DrawPbrDesc::skinned().builder());
-                transparent_subpass.add_group(DrawPbrTransparentDesc::skinned().builder());
-            }
-        };
-
-        let opaque = graph_builder.add_node(
-            opaque_subpass
-                .with_group(DrawFlat2DDesc::new().builder())
-                .with_group(DrawDebugLinesDesc::new().builder())
-                .with_group(
-                    DrawSkyboxDesc::with_colors(
-                        Srgb::new(0.82, 0.51, 0.50),
-                        Srgb::new(0.18, 0.11, 0.85),
-                    )
-                    .builder(),
-                )
-                .with_color(color)
-                .with_depth_stencil(depth)
-                .into_pass(),
-        );
-
-        let transparent = graph_builder.add_node(
-            transparent_subpass
-                .with_group(
-                    DrawFlat2DTransparentDesc::default()
-                        .builder()
-                        .with_dependency(opaque),
-                )
-                .with_color(color)
-                .with_depth_stencil(depth)
-                .into_pass(),
-        );
-
-        let _present = graph_builder.add_node(
-            PresentNode::builder(factory, surface, color)
-                .with_dependency(opaque)
-                .with_dependency(transparent),
-        );
-
-        graph_builder
+    fn on_plan(
+        &mut self,
+        plan: &mut RenderPlan<DefaultBackend>,
+        factory: &mut Factory<DefaultBackend>,
+        res: &Resources,
+    ) -> Result<(), Error> {
+        let mode = *<Read<'_, RenderMode>>::fetch(res);
+        self.last_mode = mode;
+        match mode {
+            RenderMode::Pbr => self.pbr.on_plan(plan, factory, res),
+            RenderMode::Shaded => self.shaded.on_plan(plan, factory, res),
+            RenderMode::Flat => self.flat.on_plan(plan, factory, res),
+        }
     }
 }

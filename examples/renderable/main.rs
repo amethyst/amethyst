@@ -13,40 +13,27 @@ use amethyst::{
         timing::Time,
         transform::{Transform, TransformBundle},
     },
-    ecs::prelude::{
-        Entity, Join, Read, ReadExpect, ReadStorage, Resources, System, SystemData, Write,
-        WriteStorage,
-    },
+    ecs::prelude::{Entity, Join, Read, ReadStorage, System, Write, WriteStorage},
     input::{
         get_key, is_close_requested, is_key_down, ElementState, InputBundle, StringBindings,
         VirtualKeyCode,
     },
     prelude::*,
     renderer::{
-        camera::Camera,
         light::Light,
         palette::{Srgb, Srgba},
-        pass::DrawShadedDesc,
-        rendy::{
-            factory::Factory,
-            graph::{
-                render::{RenderGroupDesc, SubpassBuilder},
-                GraphBuilder,
-            },
-            hal::{format::Format, image},
-            mesh::{Normal, Position, TexCoord},
-        },
+        plugins::{RenderShaded3D, RenderToWindow},
+        rendy::mesh::{Normal, Position, TexCoord},
         resources::AmbientColor,
         types::DefaultBackend,
-        GraphCreator, RenderingSystem,
+        Camera, RenderingBundle,
     },
-    ui::{DrawUiDesc, UiBundle, UiCreator, UiFinder, UiText},
+    ui::{RenderUi, UiBundle, UiCreator, UiFinder, UiText},
     utils::{
         application_root_dir,
         fps_counter::{FpsCounter, FpsCounterBundle},
         scene::BasicScenePrefab,
     },
-    window::{ScreenDimensions, Window, WindowBundle},
     Error,
 };
 
@@ -209,17 +196,22 @@ fn main() -> Result<(), Error> {
         .join("display.ron");
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with::<ExampleSystem>(ExampleSystem::default(), "example_system", &[])
         .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
-        .with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
+        .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(HotReloadBundle::default())?
         .with_bundle(FpsCounterBundle::default())?
         .with_bundle(InputBundle::<StringBindings>::new())?
-        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::default(),
-        ));
+        .with_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)
+                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                )
+                .with_plugin(RenderShaded3D::default())
+                .with_plugin(RenderUi::default()),
+        )?;
     let mut game = Application::build(assets_directory, Loading::default())?.build(game_data)?;
     game.run();
     Ok(())
@@ -318,78 +310,5 @@ impl<'a> System<'a> for ExampleSystem {
                 }
             }
         }
-    }
-}
-
-#[derive(Default)]
-struct ExampleGraph {
-    dimensions: Option<ScreenDimensions>,
-    surface_format: Option<Format>,
-    dirty: bool,
-}
-
-#[allow(clippy::map_clone)]
-impl GraphCreator<DefaultBackend> for ExampleGraph {
-    fn rebuild(&mut self, res: &Resources) -> bool {
-        // Rebuild when dimensions change, but wait until at least two frames have the same.
-        let new_dimensions = res.try_fetch::<ScreenDimensions>();
-        use std::ops::Deref;
-        if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
-            self.dirty = true;
-            self.dimensions = new_dimensions.map(|d| d.clone());
-            return false;
-        }
-        self.dirty
-    }
-
-    fn builder(
-        &mut self,
-        factory: &mut Factory<DefaultBackend>,
-        res: &Resources,
-    ) -> GraphBuilder<DefaultBackend, Resources> {
-        use amethyst::renderer::rendy::{
-            graph::present::PresentNode,
-            hal::command::{ClearDepthStencil, ClearValue},
-        };
-
-        self.dirty = false;
-        let window = <ReadExpect<'_, Window>>::fetch(res);
-        let surface = factory.create_surface(&window);
-        // cache surface format to speed things up
-        let surface_format = *self
-            .surface_format
-            .get_or_insert_with(|| factory.get_surface_format(&surface));
-        let dimensions = self.dimensions.as_ref().unwrap();
-        let window_kind =
-            image::Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
-
-        let mut graph_builder = GraphBuilder::new();
-        let color = graph_builder.create_image(
-            window_kind,
-            1,
-            surface_format,
-            Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
-        );
-
-        let depth = graph_builder.create_image(
-            window_kind,
-            1,
-            Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
-        );
-
-        let pass = graph_builder.add_node(
-            SubpassBuilder::new()
-                .with_group(DrawShadedDesc::new().builder())
-                .with_group(DrawUiDesc::new().builder())
-                .with_color(color)
-                .with_depth_stencil(depth)
-                .into_pass(),
-        );
-
-        let _present = graph_builder
-            .add_node(PresentNode::builder(factory, surface, color).with_dependency(pass));
-
-        graph_builder
     }
 }

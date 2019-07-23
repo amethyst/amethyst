@@ -10,29 +10,20 @@ use amethyst::{
     },
     core::transform::TransformBundle,
     ecs::{
-        prelude::{Component, Entity, ReadExpect, Resources, SystemData},
+        prelude::{Component, Entity},
         NullStorage,
     },
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
         palette::Srgb,
-        pass::DrawShadedDesc,
-        rendy::{
-            factory::Factory,
-            graph::{
-                render::{RenderGroupDesc, SubpassBuilder},
-                GraphBuilder,
-            },
-            hal::{format::Format, image},
-            mesh::{Normal, Position, TexCoord},
-        },
+        plugins::{RenderShaded3D, RenderToWindow},
+        rendy::mesh::{Normal, Position, TexCoord},
         types::DefaultBackend,
-        GraphCreator, RenderingSystem,
+        RenderingBundle,
     },
-    ui::{DrawUiDesc, UiBundle, UiCreator, UiLoader, UiPrefab},
+    ui::{RenderUi, UiBundle, UiCreator, UiLoader, UiPrefab},
     utils::{application_root_dir, fps_counter::FpsCounterBundle, scene::BasicScenePrefab},
-    window::{ScreenDimensions, Window, WindowBundle},
     winit::VirtualKeyCode,
     Error,
 };
@@ -211,105 +202,25 @@ fn main() -> Result<(), Error> {
 
     let display_config_path = app_root.join("examples/custom_game_data/config/display.ron");
 
-    // let pipeline_builder = Pipeline::build().with_stage(
-    //     Stage::with_backbuffer()
-    //         .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-    //         .with_pass(DrawShaded::<PosNormTex>::new())
-    //         .with_pass(DrawUi::new()),
-    // );
     let game_data = CustomGameDataBuilder::default()
         .with_base(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_running::<ExampleSystem>(ExampleSystem::default(), "example_system", &[])
         .with_base_bundle(TransformBundle::new())?
-        .with_base_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
+        .with_base_bundle(UiBundle::<StringBindings>::new())?
         .with_base_bundle(FpsCounterBundle::default())?
         .with_base_bundle(InputBundle::<StringBindings>::new())?
-        .with_base_bundle(WindowBundle::from_config_path(display_config_path))?
-        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::default(),
-        ));
+        .with_base_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)
+                        .with_clear([0.0, 0.0, 0.0, 1.0]),
+                )
+                .with_plugin(RenderShaded3D::default())
+                .with_plugin(RenderUi::default()),
+        )?;
 
     let mut game = Application::build(asset_dir, Loading::default())?.build(game_data)?;
     game.run();
 
     Ok(())
-}
-
-#[derive(Default)]
-struct ExampleGraph {
-    dimensions: Option<ScreenDimensions>,
-    surface_format: Option<Format>,
-    dirty: bool,
-}
-
-#[allow(clippy::map_clone)]
-impl GraphCreator<DefaultBackend> for ExampleGraph {
-    fn rebuild(&mut self, res: &Resources) -> bool {
-        // Rebuild when dimensions change, but wait until at least two frames have the same.
-        let new_dimensions = res.try_fetch::<ScreenDimensions>();
-        use std::ops::Deref;
-        if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
-            self.dirty = true;
-            self.dimensions = new_dimensions.map(|d| d.clone());
-            return false;
-        }
-        self.dirty
-    }
-
-    fn builder(
-        &mut self,
-        factory: &mut Factory<DefaultBackend>,
-        res: &Resources,
-    ) -> GraphBuilder<DefaultBackend, Resources> {
-        use amethyst::renderer::rendy::{
-            graph::present::PresentNode,
-            hal::command::{ClearDepthStencil, ClearValue},
-        };
-
-        self.dirty = false;
-        let window = <ReadExpect<'_, Window>>::fetch(res);
-        let surface = factory.create_surface(&window);
-        // cache surface format to speed things up
-        let surface_format = *self
-            .surface_format
-            .get_or_insert_with(|| factory.get_surface_format(&surface));
-        let dimensions = self.dimensions.as_ref().unwrap();
-        let window_kind =
-            image::Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
-
-        let mut graph_builder = GraphBuilder::new();
-        let color = graph_builder.create_image(
-            window_kind,
-            1,
-            surface_format,
-            Some(ClearValue::Color([0.0, 0.0, 0.0, 1.0].into())),
-        );
-
-        let depth = graph_builder.create_image(
-            window_kind,
-            1,
-            Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
-        );
-        let opaque = graph_builder.add_node(
-            SubpassBuilder::new()
-                .with_group(DrawShadedDesc::new().builder())
-                .with_color(color)
-                .with_depth_stencil(depth)
-                .into_pass(),
-        );
-
-        let ui = graph_builder.add_node(
-            SubpassBuilder::new()
-                .with_group(DrawUiDesc::new().builder().with_dependency(opaque))
-                .with_color(color)
-                .with_depth_stencil(depth)
-                .into_pass(),
-        );
-
-        let _present = graph_builder
-            .add_node(PresentNode::builder(factory, surface, color).with_dependency(ui));
-
-        graph_builder
-    }
 }

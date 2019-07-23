@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ## Breaking changes
 
 * `Float` newtype removed, moved back to `f32` primitive for all values ([#1747])
+* `TextureProcessor` and `MeshProcessor` systems are now separated from `RenderingSystem` ([#1772])
 
 ### Added
 
@@ -22,6 +23,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 `add_cylinder`, `add_rotated_cylinder` and `add_sphere` functions to `DebugLinesComponent`
 and the corresponding draw functions to `DebugLines`, to draw simple shapes with debug lines. ([#1766])
 * `InputEvent::AxisMoved` is sent upon button press / release. ([#1512], [#1797])
+* Added `RenderingBundle` with a rendering plugin system, making rendering setup easier ([#1772])
 
 ### Changed
 
@@ -53,6 +55,7 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 [#1753]: https://github.com/amethyst/amethyst/pull/1753
 [#1720]: https://github.com/amethyst/amethyst/pull/1720
 [#1797]: https://github.com/amethyst/amethyst/pull/1797
+[#1772]: https://github.com/amethyst/amethyst/pull/1772
 
 ## [0.11.0] - 2019-06
 

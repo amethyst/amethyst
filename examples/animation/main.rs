@@ -1,23 +1,20 @@
 //! Displays a shaded sphere to the user.
 
-use amethyst::assets::Loader;
 use amethyst::{
     animation::*,
-    assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
+    assets::{Loader, PrefabLoader, PrefabLoaderSystem, RonFormat},
     core::{Transform, TransformBundle},
-    ecs::prelude::{Entity, ReadExpect, Resources},
+    ecs::prelude::Entity,
     input::{get_key, is_close_requested, is_key_down},
     prelude::*,
     renderer::{
-        pass::DrawPbrDesc,
+        plugins::{RenderPbr3D, RenderToWindow},
         rendy::mesh::{Normal, Position, Tangent, TexCoord},
         types::DefaultBackend,
-        Factory, Format, GraphBuilder, GraphCreator, Kind, RenderGroupDesc, RenderingSystem,
-        SubpassBuilder,
+        RenderingBundle,
     },
     utils::{application_root_dir, scene::BasicScenePrefab},
-    window::{ScreenDimensions, WindowBundle},
-    winit::{ElementState, VirtualKeyCode, Window},
+    winit::{ElementState, VirtualKeyCode},
 };
 use serde::{Deserialize, Serialize};
 
@@ -227,16 +224,19 @@ fn main() -> amethyst::Result<()> {
     let assets_directory = app_root.join("examples/assets/");
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
         .with(PrefabLoaderSystem::<MyPrefabData>::default(), "", &[])
         .with_bundle(AnimationBundle::<AnimationId, Transform>::new(
             "animation_control_system",
             "sampler_interpolation_system",
         ))?
         .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
-        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::default(),
-        ));
+        .with_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path).with_clear(CLEAR_COLOR),
+                )
+                .with_plugin(RenderPbr3D::default()),
+        )?;
     let state: Example = Default::default();
     let mut game = Application::new(assets_directory, state, game_data)?;
     game.run();
@@ -286,76 +286,5 @@ fn add_animation(
                 defer_relation,
             );
         }
-    }
-}
-
-#[derive(Default)]
-struct ExampleGraph {
-    dimensions: Option<ScreenDimensions>,
-    dirty: bool,
-}
-
-#[allow(clippy::map_clone)]
-impl GraphCreator<DefaultBackend> for ExampleGraph {
-    fn rebuild(&mut self, res: &Resources) -> bool {
-        // Rebuild when dimensions change, but wait until at least two frames have the same.
-        let new_dimensions = res.try_fetch::<ScreenDimensions>();
-        use std::ops::Deref;
-        if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
-            self.dirty = true;
-            self.dimensions = new_dimensions.map(|d| d.clone());
-            return false;
-        }
-        self.dirty
-    }
-
-    fn builder(
-        &mut self,
-        factory: &mut Factory<DefaultBackend>,
-        res: &Resources,
-    ) -> GraphBuilder<DefaultBackend, Resources> {
-        use amethyst::renderer::rendy::{
-            graph::present::PresentNode,
-            hal::command::{ClearDepthStencil, ClearValue},
-        };
-
-        self.dirty = false;
-
-        use amethyst::shred::SystemData;
-
-        let window = <ReadExpect<'_, Window>>::fetch(res);
-
-        let surface = factory.create_surface(&window);
-        let dimensions = self.dimensions.as_ref().unwrap();
-        let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
-
-        let mut graph_builder = GraphBuilder::new();
-        let color = graph_builder.create_image(
-            window_kind,
-            1,
-            factory.get_surface_format(&surface),
-            Some(ClearValue::Color(CLEAR_COLOR.into())),
-        );
-
-        let depth = graph_builder.create_image(
-            window_kind,
-            1,
-            Format::D16Unorm,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
-        );
-
-        let pass = graph_builder.add_node(
-            SubpassBuilder::new()
-                .with_group(DrawPbrDesc::skinned().builder())
-                .with_color(color)
-                .with_depth_stencil(depth)
-                .into_pass(),
-        );
-
-        let present_builder = PresentNode::builder(factory, surface, color).with_dependency(pass);
-
-        graph_builder.add_node(present_builder);
-
-        graph_builder
     }
 }

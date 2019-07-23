@@ -1,6 +1,6 @@
 use amethyst::{
     core::{ArcThreadPool, SystemBundle},
-    ecs::prelude::{Dispatcher, DispatcherBuilder, RunNow, System, World},
+    ecs::prelude::{Dispatcher, DispatcherBuilder, System, World},
     error::Error,
     DataDispose, DataInit,
 };
@@ -73,13 +73,6 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
     {
         bundle.build(&mut self.base)?;
         Ok(self)
-    }
-    pub fn with_thread_local<S>(mut self, system: S) -> Self
-    where
-        for<'c> S: RunNow<'c> + 'b,
-    {
-        self.base.add_thread_local(system);
-        self
     }
 
     pub fn with_running<S>(mut self, system: S, name: &str, dependencies: &[&str]) -> Self
