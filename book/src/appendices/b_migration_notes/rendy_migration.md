@@ -112,7 +112,7 @@
 
     In `render_graph.rs`:
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust,ignore
     # extern crate amethyst;
     #
     use amethyst::{

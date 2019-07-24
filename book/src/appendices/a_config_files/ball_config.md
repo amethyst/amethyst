@@ -102,7 +102,7 @@ Now, modify the `run()` function, from
 let arena_config = ArenaConfig::load(&config);
 [..]
     .with_resource(arena_config)
-    .with_bundle(PongBundle::default())?
+    .with_bundle(&mut world, PongBundle::default())?
 ```
 
 to
@@ -112,7 +112,7 @@ let pong_config = PongConfig::load(&config);
 [..]
     .with_resource(pong_config.arena)
     .with_resource(pong_config.ball)
-    .with_bundle(PongBundle::default())?
+    .with_bundle(&mut world, PongBundle::default())?
 ```
 
 ## Adding the BallConfig to `config.ron`

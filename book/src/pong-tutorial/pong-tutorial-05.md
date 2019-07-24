@@ -95,8 +95,9 @@ keep playing after someone scores and log who got the point.
 # extern crate amethyst;
 #
 # use amethyst::{
-#    prelude::*,
 #    core::transform::TransformBundle,
+#    ecs::{World, WorldExt},
+#    prelude::*,
 #    input::StringBindings,
 #    window::DisplayConfig,
 # };
@@ -131,9 +132,10 @@ keep playing after someone scores and log who got the point.
 # let config = DisplayConfig::load(&path);
 # let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
 #
+# let mut world = World::new();
 let game_data = GameDataBuilder::default()
-#    .with_bundle(TransformBundle::new())?
-#    .with_bundle(input_bundle)?
+#    .with_bundle(&mut world, TransformBundle::new())?
+#    .with_bundle(&mut world, input_bundle)?
 #    .with(systems::PaddleSystem, "paddle_system", &["input_system"])
 #    .with(systems::MoveBallsSystem, "ball_system", &[])
 #    .with(
@@ -146,7 +148,7 @@ let game_data = GameDataBuilder::default()
 # let assets_dir = "/";
 # struct Pong;
 # impl SimpleState for Pong { }
-# let mut game = Application::new(assets_dir, Pong, game_data)?;
+# let mut game = Application::new(assets_dir, Pong, game_data, world)?;
 # Ok(())
 # }
 ```
@@ -170,14 +172,21 @@ use amethyst::ui::{RenderUi, UiBundle};
 
 Then, add a `RenderUi` plugin to your `RenderBundle` like so:
 
-
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::{prelude::*};
+# use amethyst::{
+#     ecs::{World, WorldExt},
+#     prelude::*,
+#     renderer::{
+#         types::DefaultBackend,
+#         RenderingBundle,
+#     },
+#     ui::RenderUi,
+# };
 # fn main() -> Result<(), amethyst::Error>{
+# let mut world = World::new();
 # let game_data = GameDataBuilder::default()
-    .with_bundle(
-        RenderingBundle::<DefaultBackend>::new()
+    .with_bundle(&mut world, RenderingBundle::<DefaultBackend>::new()
         // ...
             .with_plugin(RenderUi::default()),
     )?;
@@ -188,13 +197,18 @@ Finally, add the `UiBundle` after the `InputBundle`:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::{prelude::*, input::StringBindings};
+# use amethyst::{
+#     ecs::{World, WorldExt},
+#     input::StringBindings,
+#     prelude::*,
+# };
 # use amethyst::ui::UiBundle;
 # fn main() -> Result<(), amethyst::Error>{
 # let display_config_path = "";
 # struct Pong;
+# let mut world = World::new();
 # let game_data = GameDataBuilder::default()
-.with_bundle(UiBundle::<StringBindings>::new())?
+.with_bundle(&mut world, UiBundle::<StringBindings>::new())?
 # ;
 # 
 # Ok(())

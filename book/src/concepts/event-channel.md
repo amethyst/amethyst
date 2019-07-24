@@ -110,14 +110,14 @@ It goes as follow:
 Create the event channel and add it to to the world during `State` creation:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::shrev::EventChannel;
+# use amethyst::{ecs::{World, WorldExt}, shrev::EventChannel};
 # #[derive(Debug)]
 # pub enum MyEvent {
 #   A,
 #   B,
 # }
 # fn main() {
-#   let mut world = amethyst::ecs::World::new();
+#   let mut world = World::new();
 world.insert(
     EventChannel::<MyEvent>::new(),
 );
@@ -177,7 +177,7 @@ Then, in the `System`'s new method:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::shrev::{EventChannel, ReaderId};
-# use amethyst::ecs::SystemData;
+# use amethyst::ecs::{System, SystemData, World};
 # #[derive(Debug)]
 # pub enum MyEvent {
 #   A,
@@ -185,18 +185,18 @@ Then, in the `System`'s new method:
 # }
 # struct MySystem { reader: ReaderId<MyEvent>, }
 #
-# impl MySystem {
-#    pub fn new(world: &mut World) -> Self {
-#        <Self as System<'_>>::SystemData::setup(&mut world);
-#        Self {
-#            reader: world.fetch_mut::<EventChannel<MyEvent>>().register_reader(),
-#        }
+impl MySystem {
+    pub fn new(world: &mut World) -> Self {
+        <Self as System<'_>>::SystemData::setup(world);
+        let reader = world.fetch_mut::<EventChannel<MyEvent>>().register_reader();
+        Self { reader }
+    }
+}
 #
 # impl<'a> amethyst::ecs::System<'a> for MySystem {
 #   type SystemData = ();
 #   fn run(&mut self, _: Self::SystemData) { }
 # }
-
 ```
 
 Finally, you can read events from your `System`.
@@ -212,12 +212,12 @@ Finally, you can read events from your `System`.
 # struct MySystem {
 #   reader: amethyst::shrev::ReaderId<MyEvent>,
 # }
-# impl<'a> amethyst::ecs::System<'a> for MySystem {
-#   type SystemData = Read<'a, EventChannel<MyEvent>>;
+impl<'a> amethyst::ecs::System<'a> for MySystem {
+    type SystemData = Read<'a, EventChannel<MyEvent>>;
     fn run(&mut self, my_event_channel: Self::SystemData) {
         for event in my_event_channel.read(&mut self.reader) {
             println!("Received an event: {:?}", event);
         }
     }
-# }
+}
 ```

@@ -341,9 +341,10 @@ as well as adding our new systems to the game data:
 # }
 # }
 # let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
+let mut world = World::new();
 let game_data = GameDataBuilder::default()
-#    .with_bundle(TransformBundle::new())?
-#    .with_bundle(input_bundle)?
+#    .with_bundle(&mut world, TransformBundle::new())?
+#    .with_bundle(&mut world, input_bundle)?
 #    .with(systems::PaddleSystem, "paddle_system", &["input_system"])
     // ...other systems...
     .with(systems::MoveBallsSystem, "ball_system", &[])
@@ -355,7 +356,7 @@ let game_data = GameDataBuilder::default()
 # let assets_dir = "/";
 # struct Pong;
 # impl SimpleState for Pong { }
-# let mut game = Application::new(assets_dir, Pong, game_data)?;
+# let mut game = Application::new(assets_dir, Pong, game_data, world)?;
 # Ok(())
 # }
 ```
@@ -422,14 +423,18 @@ default empty state. Now let's use that inside our `Application` creation code i
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::prelude::*;
+# use amethyst::{
+#     ecs::{World, WorldExt},
+#     prelude::*,
+# };
 #
 # #[derive(Default)] struct Pong;
 # impl SimpleState for Pong { }
 # fn main() -> amethyst::Result<()> {
 #   let game_data = GameDataBuilder::default();
 #   let assets_dir = "/";
-let mut game = Application::new(assets_dir, Pong::default(), game_data)?;
+#   let world = World::new();
+let mut game = Application::new(assets_dir, Pong::default(), game_data, world)?;
 #   Ok(())
 # }
 ```

@@ -491,7 +491,10 @@ Please note that tuples of structs implementing `SystemData` are themselves `Sys
 # extern crate shred;
 # #[macro_use] extern crate shred_derive;
 #
-# use amethyst::ecs::{ReadStorage, WriteStorage, SystemData, Component, VecStorage, System, Join};
+# use amethyst::{
+#     ecs::{Component, Join, ReadStorage, System, SystemData, VecStorage, World, WriteStorage},
+#     shred::ResourceId,
+# };
 #
 # struct FooComponent {
 #   stuff: f32,

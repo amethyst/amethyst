@@ -172,14 +172,18 @@ In `main()` in `main.rs` we are going to add the basic application setup:
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::{prelude::*};
-# fn main() -> Result<(), amethyst::Error>{
+# use amethyst::{
+#     prelude::*,
+#     utils::application_root_dir,
+# };
+# fn main() -> Result<(), amethyst::Error> {
 # struct Pong; impl SimpleState for Pong {}
 let game_data = GameDataBuilder::default();
 
-# let app_root = std::path::PathBuf::from(".");
+# let app_root = application_root_dir()?;
 let assets_dir = app_root.join("assets");
-let mut game = Application::new(assets_dir, Pong, game_data)?;
+let mut world = World::new();
+let mut game = Application::new(assets_dir, Pong, game_data, world)?;
 game.run();
 #     Ok(())
 # }
@@ -209,10 +213,24 @@ Last time we left our `GameDataBuilder` instance empty, now we'll add some syste
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::{prelude::*};
+# use amethyst::{
+#     prelude::*,
+#     renderer::{
+#         plugins::{RenderFlat2D, RenderToWindow},
+#         types::DefaultBackend,
+#         RenderingBundle,
+#     },
+#     utils::application_root_dir,
+# };
 # fn main() -> Result<(), amethyst::Error>{
+let app_root = application_root_dir()?;
+
+let display_config_path = app_root.join("config").join("display.ron");
+
+let mut world = World::new();
 let game_data = GameDataBuilder::default()
     .with_bundle(
+        &mut world,
         RenderingBundle::<DefaultBackend>::new()
             // The RenderToWindow plugin provides all the scaffolding for opening a window and drawing on it
             .with_plugin(

@@ -344,12 +344,13 @@ this by adding the following line before `initialise_paddles(world)` in the
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
+# use amethyst::ecs::{World, WorldExt};
 # struct Paddle;
 # impl amethyst::ecs::Component for Paddle {
 #   type Storage = amethyst::ecs::VecStorage<Paddle>;
 # }
 # fn register() {
-#   let mut world = amethyst::ecs::World::new();
+#   let mut world = World::new();
 world.register::<Paddle>();
 # }
 ```
@@ -377,7 +378,6 @@ registering another one will look similar. You have to first import
 use amethyst::core::transform::TransformBundle;
 #
 # use amethyst::{
-#     core::TransformBundle,
 #     prelude::*,
 #     utils::application_root_dir,
 # };
@@ -393,15 +393,15 @@ fn main() -> amethyst::Result<()> {
 #       app_root.join("examples/pong_tutorial_02/config/display.ron");
 #
     // ...
-
+    let mut world = World::new();
     let game_data = GameDataBuilder::default()
         // ...
 
         // Add the transform bundle which handles tracking entity positions
-        .with_bundle(TransformBundle::new())?;
+        .with_bundle(&mut world, TransformBundle::new())?;
 
 #   let assets_dir = "/";
-#   let mut game = Application::new(assets_dir, Pong, game_data)?;
+#   let mut game = Application::new(assets_dir, Pong, game_data, world)?;
 #   Ok(())
 }
 ```

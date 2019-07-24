@@ -123,8 +123,8 @@
 //!         .with_bundle(&mut world, MyBundle::new())                // Registers a bundle.
 //!         .with_bundle_fn(|| MyNonSendBundle::new())   // Registers a `!Send` bundle.
 //!         .with_resource(MyResource::new())            // Adds a resource to the world.
-//!         .with_system(MySystem::new(), "my_sys", &[]) // Registers a system with the main
-//!                                                      // dispatcher.
+//!         .with_system(|_| MySystem::new(), "my_sys", &[]) // Registers a system with the main
+//!                                                          // dispatcher.
 //!
 //!         // These are run in the order they are invoked.
 //!         // You may invoke them multiple times.
@@ -238,7 +238,7 @@
 //! fn system_increases_component_value_by_one() {
 //!     assert!(
 //!         AmethystApplication::blank()
-//!             .with_system(MySystem, "my_system", &[])
+//!             .with_system(|_| MySystem, "my_system", &[])
 //!             .with_effect(|world| {
 //!                 let entity = world.create_entity().with(MyComponent(0)).build();
 //!                 world.insert(EffectReturn(entity));
@@ -295,7 +295,7 @@
 //!             .with_setup(|world| {
 //!                 world.insert(MyResource(0));
 //!             })
-//!             .with_system_single(MySystem, "my_system", &[])
+//!             .with_system_single(|_| MySystem, "my_system", &[])
 //!             .with_assertion(|world| {
 //!                 let my_resource = world.read_resource::<MyResource>();
 //!

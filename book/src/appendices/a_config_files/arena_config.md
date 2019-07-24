@@ -45,7 +45,7 @@ it. We do this by adding the config as a resource during `Application` creation:
 
 ```rust,ignore
     .with_resource(arena_config)
-    .with_bundle(PongBundle::default())?
+    .with_bundle(&mut world, PongBundle::default())?
 ```
 
 Now for the difficult part: replacing every use of `ARENA_WIDTH` and `ARENA_HEIGHT` with our config object.
