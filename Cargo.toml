@@ -133,9 +133,6 @@ palette = { version = "0.4", features = ["serde"] }
 
 thread_profiler = { version = "0.3", optional = true }
 
-[patch.crates-io]
-specs-hierarchy = { git = "https://github.com/azriel91/specs-hierarchy.git", branch = "bugfix/add-missing-system-setup" }
-
 [dev-dependencies]
 derive-new = "0.5"
 env_logger = "0.6.1"
