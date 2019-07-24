@@ -80,6 +80,7 @@ impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for FlyControlBundle<T> {
     ) -> Result<(), Error> {
         builder.add(
             FlyMovementSystem::<T>::new(
+                world,
                 self.speed,
                 self.right_input_axis,
                 self.up_input_axis,

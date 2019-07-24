@@ -5,12 +5,15 @@ use crate::{
 use amethyst_assets::{AssetStorage, Handle, Loader};
 use amethyst_core::{
     ecs::{
-        hibitset::BitSet, Entities, Entity, Join, Read, ReadExpect, ReadStorage, SystemData, World,
+        hibitset::BitSet, DispatcherBuilder, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
+        SystemData, World,
     },
     Hidden, HiddenPropagate,
 };
+use amethyst_error::Error;
 use amethyst_rendy::{
     batch::OrderedOneLevelBatch,
+    bundle::{RenderOrder, RenderPlan, RenderPlugin, Target},
     palette,
     pipeline::{PipelineDescBuilder, PipelinesBuilder},
     rendy::{
@@ -33,8 +36,7 @@ use amethyst_rendy::{
     resources::Tint,
     simple_shader_set,
     submodules::{DynamicUniform, DynamicVertexBuffer, TextureId, TextureSub},
-    types::{Backend, Texture},
-    ChangeDetection,
+    Backend, ChangeDetection, Texture,
 };
 use amethyst_window::ScreenDimensions;
 use derivative::Derivative;
@@ -43,6 +45,48 @@ use std::cmp::Ordering;
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+/// A [RenderPlugin] for rendering UI elements.
+#[derive(Debug, Default)]
+pub struct RenderUi {
+    target: Target,
+}
+
+impl RenderUi {
+    /// Select render target on which UI should be rendered.
+    pub fn with_target(mut self, target: Target) -> Self {
+        self.target = target;
+        self
+    }
+}
+
+impl<B: Backend> RenderPlugin<B> for RenderUi {
+    fn on_build<'a, 'b>(
+        &mut self,
+        world: &mut World,
+        builder: &mut DispatcherBuilder<'a, 'b>,
+    ) -> Result<(), Error> {
+        builder.add(
+            crate::UiGlyphsSystem::<B>::new(world),
+            "ui_glyphs_system",
+            &[],
+        );
+        Ok(())
+    }
+
+    fn on_plan(
+        &mut self,
+        plan: &mut RenderPlan<B>,
+        _factory: &mut Factory<B>,
+        _world: &World,
+    ) -> Result<(), Error> {
+        plan.extend_target(self.target, |ctx| {
+            ctx.add(RenderOrder::Overlay, DrawUiDesc::new().builder())?;
+            Ok(())
+        });
+        Ok(())
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, AsStd140)]
 #[repr(C, align(4))]

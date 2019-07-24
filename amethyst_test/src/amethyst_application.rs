@@ -7,7 +7,6 @@ use amethyst::{
     error::Error,
     input::{BindingTypes, InputBundle},
     prelude::*,
-    renderer::types::DefaultBackend,
     shred::Resource,
     ui::UiBundle,
     utils::application_root_dir,
@@ -364,7 +363,7 @@ where
     /// * `B`: Type representing the input binding types.
     pub fn with_ui_bundles<B: BindingTypes>(self) -> Self {
         self.with_bundle(InputBundle::<B>::new())
-            .with_bundle(UiBundle::<DefaultBackend, B>::new())
+            .with_bundle(UiBundle::<B>::new())
     }
 
     /// Adds a resource to the `World`.
@@ -907,7 +906,7 @@ mod test {
         #[test]
         fn audio_zero() -> Result<(), Error> {
             AmethystApplication::blank()
-                .with_bundle(AudioBundle::default())
+                .with_bundle(&mut world, AudioBundle::default())
                 .with_assertion(|world| {
                     world.read_resource::<AssetStorage<Source>>();
                 })
@@ -917,7 +916,7 @@ mod test {
         #[test]
         fn audio_one() -> Result<(), Error> {
             AmethystApplication::blank()
-                .with_bundle(AudioBundle::default())
+                .with_bundle(&mut world, AudioBundle::default())
                 .with_assertion(|world| {
                     world.read_resource::<AssetStorage<Source>>();
                 })

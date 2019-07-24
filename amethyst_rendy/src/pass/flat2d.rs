@@ -109,7 +109,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2D<B> {
         let (
             sprite_sheet_storage,
             tex_storage,
-            visibilities,
+            visibility,
             hiddens,
             hidden_props,
             sprite_renders,
@@ -118,7 +118,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2D<B> {
         ) = <(
             Read<'_, AssetStorage<SpriteSheet>>,
             Read<'_, AssetStorage<Texture>>,
-            Option<Read<'_, SpriteVisibility>>,
+            ReadExpect<'_, SpriteVisibility>,
             ReadStorage<'_, Hidden>,
             ReadStorage<'_, HiddenPropagate>,
             ReadStorage<'_, SpriteRender>,
@@ -133,70 +133,36 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2D<B> {
 
         sprites_ref.clear_inner();
 
-        match visibilities {
-            None => {
-                #[cfg(feature = "profiler")]
-                profile_scope!("gather_novisibility");
+        {
+            #[cfg(feature = "profiler")]
+            profile_scope!("gather_visibility");
 
-                (
-                    &sprite_renders,
-                    &transforms,
-                    tints.maybe(),
-                    !&hiddens,
-                    !&hidden_props,
-                )
-                    .join()
-                    .filter_map(|(sprite_render, global, tint, _, _)| {
-                        let (batch_data, texture) = SpriteArgs::from_data(
-                            &tex_storage,
-                            &sprite_sheet_storage,
-                            &sprite_render,
-                            &global,
-                            tint,
-                        )?;
-                        let (tex_id, _) = textures_ref.insert(
-                            factory,
-                            world,
-                            texture,
-                            hal::image::Layout::ShaderReadOnlyOptimal,
-                        )?;
-                        Some((tex_id, batch_data))
-                    })
-                    .for_each_group(|tex_id, batch_data| {
-                        sprites_ref.insert(tex_id, batch_data.drain(..))
-                    });
-            }
-            Some(ref visibility) => {
-                #[cfg(feature = "profiler")]
-                profile_scope!("gather_visibility");
-
-                (
-                    &sprite_renders,
-                    &transforms,
-                    &visibility.visible_unordered,
-                    tints.maybe(),
-                )
-                    .join()
-                    .filter_map(|(sprite_render, global, _, tint)| {
-                        let (batch_data, texture) = SpriteArgs::from_data(
-                            &tex_storage,
-                            &sprite_sheet_storage,
-                            &sprite_render,
-                            &global,
-                            tint,
-                        )?;
-                        let (tex_id, _) = textures_ref.insert(
-                            factory,
-                            world,
-                            texture,
-                            hal::image::Layout::ShaderReadOnlyOptimal,
-                        )?;
-                        Some((tex_id, batch_data))
-                    })
-                    .for_each_group(|tex_id, batch_data| {
-                        sprites_ref.insert(tex_id, batch_data.drain(..))
-                    });
-            }
+            (
+                &sprite_renders,
+                &transforms,
+                tints.maybe(),
+                &visibility.visible_unordered,
+            )
+                .join()
+                .filter_map(|(sprite_render, global, tint, _)| {
+                    let (batch_data, texture) = SpriteArgs::from_data(
+                        &tex_storage,
+                        &sprite_sheet_storage,
+                        &sprite_render,
+                        &global,
+                        tint,
+                    )?;
+                    let (tex_id, _) = textures_ref.insert(
+                        factory,
+                        world,
+                        texture,
+                        hal::image::Layout::ShaderReadOnlyOptimal,
+                    )?;
+                    Some((tex_id, batch_data))
+                })
+                .for_each_group(|tex_id, batch_data| {
+                    sprites_ref.insert(tex_id, batch_data.drain(..))
+                });
         }
 
         self.textures.maintain(factory, world);
@@ -222,7 +188,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2D<B> {
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        _resources: &World,
+        _world: &World,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("draw opaque");
@@ -241,7 +207,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2D<B> {
         }
     }
 
-    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _aux: &World) {
+    fn dispose(self: Box<Self>, factory: &mut Factory<B>, _world: &World) {
         unsafe {
             factory.device().destroy_graphics_pipeline(self.pipeline);
             factory
@@ -268,7 +234,7 @@ impl<B: Backend> RenderGroupDesc<B, World> for DrawFlat2DTransparentDesc {
         _ctx: &GraphContext<B>,
         factory: &mut Factory<B>,
         _queue: QueueId,
-        _aux: &World,
+        _world: &World,
         framebuffer_width: u32,
         framebuffer_height: u32,
         subpass: hal::pass::Subpass<'_, B>,
@@ -322,7 +288,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
         _queue: QueueId,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        resources: &World,
+        world: &World,
     ) -> PrepareResult {
         #[cfg(feature = "profiler")]
         profile_scope!("prepare transparent");
@@ -335,9 +301,9 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
                 ReadStorage<'_, SpriteRender>,
                 ReadStorage<'_, Transform>,
                 ReadStorage<'_, Tint>,
-            )>::fetch(resources);
+            )>::fetch(world);
 
-        self.env.process(factory, index, resources);
+        self.env.process(factory, index, world);
         self.sprites.swap_clear();
         let mut changed = false;
 
@@ -363,7 +329,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
                     )?;
                     let (tex_id, this_changed) = textures_ref.insert(
                         factory,
-                        resources,
+                        world,
                         texture,
                         hal::image::Layout::ShaderReadOnlyOptimal,
                     )?;
@@ -374,7 +340,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
                     sprites_ref.insert(tex_id, batch_data.drain(..));
                 });
         }
-        self.textures.maintain(factory, resources);
+        self.textures.maintain(factory, world);
         changed = changed || self.sprites.changed();
 
         {
@@ -397,7 +363,7 @@ impl<B: Backend> RenderGroup<B, World> for DrawFlat2DTransparent<B> {
         mut encoder: RenderPassEncoder<'_, B>,
         index: usize,
         _subpass: hal::pass::Subpass<'_, B>,
-        _resources: &World,
+        _world: &World,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("draw transparent");

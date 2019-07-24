@@ -109,7 +109,7 @@
 //!     // Then you can include the `RenderEmptyBundle`:
 //!     use amethyst::renderer::{types::DefaultBackend, RenderEmptyBundle};
 //!     AmethystApplication::blank()
-//!         .with_bundle(RenderEmptyBundle::<DefaultBackend>::new());
+//!         .with_bundle(&mut world, RenderEmptyBundle::<DefaultBackend>::new());
 //! }
 //! ```
 //!
@@ -120,7 +120,7 @@
 //! fn test_name() {
 //!     let visibility = false; // Whether the window should be shown
 //!     AmethystApplication::render_base::<String, String, _>("test_name", visibility)
-//!         .with_bundle(MyBundle::new())                // Registers a bundle.
+//!         .with_bundle(&mut world, MyBundle::new())                // Registers a bundle.
 //!         .with_bundle_fn(|| MyNonSendBundle::new())   // Registers a `!Send` bundle.
 //!         .with_resource(MyResource::new())            // Adds a resource to the world.
 //!         .with_system(MySystem::new(), "my_sys", &[]) // Registers a system with the main
@@ -194,7 +194,7 @@
 //! fn bundle_registers_system_with_resource() {
 //!     assert!(
 //!         AmethystApplication::blank()
-//!             .with_bundle(MyBundle)
+//!             .with_bundle(&mut world, MyBundle)
 //!             .with_assertion(|world| { world.read_resource::<ApplicationResource>(); })
 //!             .run()
 //!             .is_ok()

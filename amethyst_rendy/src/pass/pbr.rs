@@ -1,5 +1,5 @@
 use super::base_3d::*;
-use crate::{mtl::FullTextureSet, skinning::JointCombined, types::Backend};
+use crate::{mtl::FullTextureSet, skinning::JointCombined};
 use rendy::{
     mesh::{AsVertex, Normal, Position, Tangent, TexCoord, VertexFormat},
     shader::SpirvShader,
@@ -8,7 +8,7 @@ use rendy::{
 /// Implementation of `Base3DPassDef` for Physically-based (PBR) rendering pass.
 #[derive(Debug)]
 pub struct PbrPassDef;
-impl<B: Backend> Base3DPassDef<B> for PbrPassDef {
+impl Base3DPassDef for PbrPassDef {
     const NAME: &'static str = "Pbr";
     type TextureSet = FullTextureSet;
     fn vertex_shader() -> &'static SpirvShader {

@@ -132,7 +132,7 @@ Prefab (
                                 (x: 0,   y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
                                 (x: 32,  y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
                                 (x: 64,  y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
-                                (x: 92,  y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
+                                (x: 96,  y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
                                 (x: 128,  y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
                                 (x: 160, y: 32, width: 32, height: 32, offsets: (0.0, 0.0)),
 
@@ -788,6 +788,20 @@ Prefab (
                         ),
                         Linear
                     )),
+                ),
+            ),
+        ),
+
+        (
+            data: (
+                transform: (
+                    translation: (0.0, -11.0, 0.0),
+                    scale: (15.0, 15.0, 15.0),
+                    rotation: (-0.7071068, 0, 0, 0.7071068),
+                ),
+                mesh: Shape(( shape: Plane(None), )),
+                material: (
+                    albedo: Generate(Srgba(0.7, 0.7, 0.7, 1.0))
                 ),
             ),
         ),
