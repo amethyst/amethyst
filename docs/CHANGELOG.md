@@ -36,11 +36,12 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 * Add `SerializableFormat` marker trait which is now needed to be implemented for all the formats that are supposed to be serialized. ([#1720])
 * Make the GltfSceneOptions field of GltfSceneFormat public. ([#1791])
 * Updated fluent to version 0.6. ([#1800])
+ `InputEvent<T>` now takes in the `BindingTypes` as a type parameter. ([#1797])
+* Updated `crossbeam` to `0.7.2`. ([#1822]) 
 
 ### Fixed
 
 * Fix stack overflow on serializing `Box<dyn Format<_>>`. ([#1720])
- `InputEvent<T>` now takes in the `BindingTypes` as a type parameter. ([#1797])
 * Fix the steps for enabling the nightly flag in the pong tutorial. ([#1805])
 * Fix animation unwrap on missing animated component. ([#1773])
 
@@ -60,6 +61,7 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 [#1797]: https://github.com/amethyst/amethyst/pull/1797
 [#1800]: https://github.com/amethyst/amethyst/pull/1800
 [#1805]: https://github.com/amethyst/amethyst/pull/1805
+[#1822]: https://github.com/amethyst/amethyst/pull/1822
 
 ## [0.11.0] - 2019-06
 
