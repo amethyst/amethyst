@@ -36,7 +36,8 @@ use amethyst_rendy::{
     resources::Tint,
     simple_shader_set,
     submodules::{DynamicUniform, DynamicVertexBuffer, TextureId, TextureSub},
-    Backend, ChangeDetection, Texture,
+    types::{Backend, Texture},
+    ChangeDetection, SpriteSheet,
 };
 use amethyst_window::ScreenDimensions;
 use derivative::Derivative;
@@ -541,10 +542,23 @@ fn render_image<B: Backend>(
         (_, None) => [1., 1., 1., 1.],
     };
 
+    let tex_coords = match raw_image {
+        UiImage::Sprite(sprite_renderer) => {
+            let sprite_sheets = resources.fetch::<AssetStorage<SpriteSheet>>();
+            if let Some(sprite_sheet) = sprite_sheets.get(&sprite_renderer.sprite_sheet) {
+                (&sprite_sheet.sprites[sprite_renderer.sprite_number].tex_coords).into()
+            } else {
+                [0.0_f32, 0., 1., 1.]
+            }
+        }
+        UiImage::PartialTexture(_, tex_coord) => tex_coord.into(),
+        _ => [0.0_f32, 0., 1., 1.],
+    };
+
     let args = UiArgs {
         coords: [transform.pixel_x(), transform.pixel_y()].into(),
         dimensions: [transform.pixel_width, transform.pixel_height].into(),
-        tex_coord_bounds: [0., 0., 1., 1.].into(),
+        tex_coord_bounds: tex_coords.into(),
         color: color.into(),
         color_bias: [0., 0., 0., 0.].into(),
     };
@@ -559,6 +573,37 @@ fn render_image<B: Backend>(
             ) {
                 batches.insert(tex_id, Some(args));
                 this_changed
+            } else {
+                false
+            }
+        }
+        UiImage::PartialTexture(tex, _) => {
+            if let Some((tex_id, this_changed)) = textures.insert(
+                factory,
+                resources,
+                tex,
+                hal::image::Layout::ShaderReadOnlyOptimal,
+            ) {
+                batches.insert(tex_id, Some(args));
+                this_changed
+            } else {
+                false
+            }
+        }
+        UiImage::Sprite(sprite_renderer) => {
+            let sprite_sheets = resources.fetch::<AssetStorage<SpriteSheet>>();
+            if let Some(sprite_sheet) = sprite_sheets.get(&sprite_renderer.sprite_sheet) {
+                if let Some((tex_id, this_changed)) = textures.insert(
+                    factory,
+                    resources,
+                    &sprite_sheet.texture,
+                    hal::image::Layout::ShaderReadOnlyOptimal,
+                ) {
+                    batches.insert(tex_id, Some(args));
+                    this_changed
+                } else {
+                    false
+                }
             } else {
                 false
             }
