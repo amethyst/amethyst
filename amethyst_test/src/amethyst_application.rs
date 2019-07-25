@@ -947,7 +947,7 @@ mod test {
         }
     }
 
-    // === World === //
+    // === Resources === //
     #[derive(Debug, Default)]
     struct ApplicationResource;
     #[derive(Debug)]

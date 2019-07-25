@@ -1,4 +1,4 @@
-//! Util World
+//! Util Resources
 
 use amethyst_core::{
     ecs::prelude::{DispatcherBuilder, Read, System, World, Write},

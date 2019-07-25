@@ -31,7 +31,7 @@ const DEFAULT_TXT_COLOR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 /// Container for all the resources the builder needs to make a new UiButton.
 #[derive(SystemData)]
 #[allow(missing_debug_implementations)]
-pub struct UiButtonBuilderWorld<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId = u32> {
+pub struct UiButtonBuilderResources<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId = u32> {
     font_asset: Read<'a, AssetStorage<FontAsset>>,
     texture_asset: Read<'a, AssetStorage<Texture>>,
     loader: ReadExpect<'a, Loader>,
@@ -258,8 +258,8 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
         self
     }
 
-    /// Build this with the `UiButtonBuilderWorld`.
-    pub fn build(mut self, mut res: UiButtonBuilderWorld<'a, G, I>) -> (I, UiButton) {
+    /// Build this with the `UiButtonBuilderResources`.
+    pub fn build(mut self, mut res: UiButtonBuilderResources<'a, G, I>) -> (I, UiButton) {
         let image_entity = res.entities.create();
         let text_entity = res.entities.create();
         let widget = UiButton::new(text_entity, image_entity);
@@ -410,7 +410,7 @@ impl<'a, G: PartialEq + Send + Sync + 'static, I: WidgetId> UiButtonBuilder<G, I
 
     /// Create the UiButton based on provided configuration parameters.
     pub fn build_from_world(self, world: &World) -> (I, UiButton) {
-        self.build(UiButtonBuilderWorld::<G, I>::fetch(&world))
+        self.build(UiButtonBuilderResources::<G, I>::fetch(&world))
     }
 }
 

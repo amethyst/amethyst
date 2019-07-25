@@ -173,7 +173,7 @@ and you also need to get read access:
 # }
 ```
 
-Then, in the `System`'s new method:
+Then, in the `System`'s `new` method:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::shrev::{EventChannel, ReaderId};

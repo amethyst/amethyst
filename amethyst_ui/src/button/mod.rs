@@ -1,6 +1,6 @@
 pub use self::{
     actions::{UiButtonAction, UiButtonActionType},
-    builder::{UiButtonBuilder, UiButtonBuilderWorld},
+    builder::{UiButtonBuilder, UiButtonBuilderResources},
     retrigger::{UiButtonActionRetrigger, UiButtonActionRetriggerSystem},
     system::UiButtonSystem,
 };

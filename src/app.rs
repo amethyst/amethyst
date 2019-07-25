@@ -581,7 +581,7 @@ where
 
     /// Adds the supplied ECS resource which can be accessed from game systems.
     ///
-    /// World are common data that is shared with one or more game system.
+    /// Resources are common data that is shared with one or more game system.
     ///
     /// If a resource is added with the identical type as an existing resource,
     /// the new resource will replace the old one and the old resource will
