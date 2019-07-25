@@ -35,12 +35,13 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 * Add `load_from_data_async` to Asset Loader. ([#1753])
 * Add `SerializableFormat` marker trait which is now needed to be implemented for all the formats that are supposed to be serialized. ([#1720])
 * Make the GltfSceneOptions field of GltfSceneFormat public. ([#1791])
- `InputEvent<T>` now takes in the `BindingTypes` as a type parameter. ([#1797])
-* Fix the steps for enabling the nightly flag in the pong tutorial ([#1805])
+* Updated fluent to version 0.6. ([#1800])
 
 ### Fixed
 
 * Fix stack overflow on serializing `Box<dyn Format<_>>`. ([#1720])
+ `InputEvent<T>` now takes in the `BindingTypes` as a type parameter. ([#1797])
+* Fix the steps for enabling the nightly flag in the pong tutorial. ([#1805])
 * Fix animation unwrap on missing animated component. ([#1773])
 
 [#1512]: https://github.com/amethyst/amethyst/issues/1512
@@ -55,8 +56,9 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 [#1773]: https://github.com/amethyst/amethyst/pull/1773
 [#1753]: https://github.com/amethyst/amethyst/pull/1753
 [#1720]: https://github.com/amethyst/amethyst/pull/1720
-[#1797]: https://github.com/amethyst/amethyst/pull/1797
 [#1772]: https://github.com/amethyst/amethyst/pull/1772
+[#1797]: https://github.com/amethyst/amethyst/pull/1797
+[#1800]: https://github.com/amethyst/amethyst/pull/1800
 [#1805]: https://github.com/amethyst/amethyst/pull/1805
 
 ## [0.11.0] - 2019-06
