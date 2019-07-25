@@ -7,14 +7,12 @@ use amethyst_core::{
     ecs::{
         hibitset::BitSet,
         prelude::{
-            Component, DenseVecStorage, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
-            System, Write,
+            Component, DenseVecStorage, Entities, Entity, Join, Read, ReadStorage, System, Write,
         },
     },
     math::{convert, distance_squared, Matrix4, Point3, Vector4},
     Hidden, HiddenPropagate, Transform,
 };
-use amethyst_window::ScreenDimensions;
 
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
@@ -106,7 +104,6 @@ impl<'a> System<'a> for VisibilitySortingSystem {
         ReadStorage<'a, Transparent>,
         ReadStorage<'a, Transform>,
         ReadStorage<'a, BoundingSphere>,
-        ReadExpect<'a, ScreenDimensions>,
     );
 
     fn run(
@@ -121,14 +118,13 @@ impl<'a> System<'a> for VisibilitySortingSystem {
             transparent,
             transform,
             bound,
-            dimensions,
         ): Self::SystemData,
     ) {
         #[cfg(feature = "profiler")]
         profile_scope!("visibility_sorting_system");
 
         let origin = Point3::origin();
-        let defcam = Camera::standard_2d(dimensions.width(), dimensions.height());
+        let defcam = Camera::standard_2d(1.0, 1.0);
         let identity = Transform::default();
 
         let mut camera_join = (&camera, &transform).join();

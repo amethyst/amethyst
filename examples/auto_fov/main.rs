@@ -8,38 +8,25 @@ use amethyst::{
     ecs::{Entity, ReadExpect, ReadStorage, System, World, WorldExt, WriteStorage},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::{
-        Application, Builder, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData,
-        StateEvent, Trans,
+        AmethystWorldExt, Application, Builder, GameData, GameDataBuilder, SimpleState,
+        SimpleTrans, StateData, StateEvent, Trans,
     },
     renderer::{
         camera::{Camera, CameraPrefab},
         formats::GraphicsPrefab,
         light::LightPrefab,
-        pass::DrawShadedDesc,
-        rendy::{
-            factory::Factory,
-            graph::{
-                present::PresentNode,
-                render::{RenderGroupDesc, SubpassBuilder},
-                GraphBuilder,
-            },
-            hal::{
-                command::{ClearDepthStencil, ClearValue},
-                format::Format,
-                image,
-            },
-            mesh::{Normal, Position, Tangent, TexCoord},
-        },
-        system::{GraphCreator, RenderingSystem},
-        types::{Backend, DefaultBackend},
+        plugins::{RenderShaded3D, RenderToWindow},
+        rendy::mesh::{Normal, Position, Tangent, TexCoord},
+        types::DefaultBackend,
+        RenderingBundle,
     },
-    ui::{DrawUiDesc, UiBundle, UiCreator, UiFinder, UiText},
+    ui::{RenderUi, UiBundle, UiCreator, UiFinder, UiText},
     utils::{
         auto_fov::{AutoFov, AutoFovSystem},
         tag::{Tag, TagFinder},
     },
-    window::{ScreenDimensions, WindowBundle},
-    winit::{VirtualKeyCode, Window},
+    window::ScreenDimensions,
+    winit::VirtualKeyCode,
     Error,
 };
 use log::{error, info};
@@ -52,33 +39,34 @@ fn main() -> Result<(), Error> {
 
     let app_dir = amethyst::utils::application_dir("examples")?;
     let display_config_path = app_dir.join("auto_fov/config/display.ron");
-    let assets_directory = app_dir.join("assets");
+    let assets_dir = app_dir.join("assets");
 
-    let mut world = World::new();
+    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::new()
-        .with_bundle(
-            &mut world,
-            WindowBundle::from_config_path(display_config_path),
-        )?
         .with(
             PrefabLoaderSystem::<ScenePrefab>::new(&mut world),
             "prefab",
             &[],
         )
-        .with(AutoFovSystem::default(), "auto_fov", &["prefab"]) // This makes the system adjust the camera right after it has been loaded (in the same frame), preventing any flickering
-        .with(ShowFovSystem, "show_fov", &["auto_fov"])
-        .with_bundle(&mut world, TransformBundle::new())?
-        .with_bundle(&mut world, InputBundle::<StringBindings>::new())?
+        // This makes the system adjust the camera right after it has been loaded (in the same
+        // frame), preventing any flickering
+        .with(AutoFovSystem::new(&mut world), "auto_fov", &["prefab"])
+        .with(ShowFovSystem::new(&mut world), "show_fov", &["auto_fov"])
         .with_bundle(
             &mut world,
-            UiBundle::<DefaultBackend, StringBindings>::new(),
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path).with_clear(CLEAR_COLOR),
+                )
+                .with_plugin(RenderShaded3D::default())
+                .with_plugin(RenderUi::default()),
         )?
-        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::default(),
-        ));
+        .with_bundle(&mut world, TransformBundle::new())?
+        .with_bundle(&mut world, InputBundle::<StringBindings>::new())?
+        .with_bundle(&mut world, UiBundle::<StringBindings>::new())?;
 
-    let mut game = Application::build(assets_directory, Loading::new(), world)?.build(game_data)?;
+    let mut game = Application::build(Loading::new(), world)?.build(game_data)?;
     game.run();
 
     Ok(())
@@ -180,6 +168,14 @@ impl SimpleState for Example {
 
 struct ShowFovSystem;
 
+impl ShowFovSystem {
+    pub fn new(world: &mut World) -> Self {
+        use amethyst::ecs::prelude::SystemData;
+        <Self as System<'_>>::SystemData::setup(world);
+        Self
+    }
+}
+
 impl<'a> System<'a> for ShowFovSystem {
     type SystemData = (
         TagFinder<'a, ShowFov>,
@@ -225,69 +221,4 @@ fn get_fovy(camera: &Camera) -> f32 {
 
 fn get_aspect(camera: &Camera) -> f32 {
     (camera.as_matrix()[(1, 1)] / camera.as_matrix()[(0, 0)]).abs()
-}
-
-#[derive(Default)]
-struct ExampleGraph {
-    dimensions: Option<ScreenDimensions>,
-    dirty: bool,
-}
-
-#[allow(clippy::map_clone)]
-impl<B: Backend> GraphCreator<B> for ExampleGraph {
-    fn rebuild(&mut self, world: &World) -> bool {
-        // Rebuild when dimensions change, but wait until at least two frames have the same.
-        let new_dimensions = world.try_fetch::<ScreenDimensions>();
-        use std::ops::Deref;
-        if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
-            self.dirty = true;
-            self.dimensions = new_dimensions.map(|d| (*d).clone());
-            return false;
-        }
-        self.dirty
-    }
-
-    fn builder(&mut self, factory: &mut Factory<B>, world: &World) -> GraphBuilder<B, World> {
-        self.dirty = false;
-
-        use amethyst::shred::SystemData;
-
-        let window = <ReadExpect<'_, Window>>::fetch(world);
-
-        let surface = factory.create_surface(&window);
-        let dimensions = self.dimensions.as_ref().unwrap();
-        let window_kind =
-            image::Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
-
-        let mut graph_builder = GraphBuilder::new();
-
-        let color = graph_builder.create_image(
-            window_kind,
-            1,
-            factory.get_surface_format(&surface),
-            Some(ClearValue::Color(CLEAR_COLOR.into())),
-        );
-
-        let depth = graph_builder.create_image(
-            window_kind,
-            1,
-            Format::D16Unorm,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
-        );
-
-        let pass = graph_builder.add_node(
-            SubpassBuilder::new()
-                .with_group(DrawUiDesc::new().builder())
-                .with_group(DrawShadedDesc::new().builder())
-                .with_color(color)
-                .with_depth_stencil(depth)
-                .into_pass(),
-        );
-
-        let present_builder = PresentNode::builder(factory, surface, color).with_dependency(pass);
-
-        graph_builder.add_node(present_builder);
-
-        graph_builder
-    }
 }

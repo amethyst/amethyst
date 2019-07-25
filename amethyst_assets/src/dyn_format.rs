@@ -280,7 +280,7 @@ mod tests {
 
     use super::*;
     use crate as amethyst_assets;
-    use amethyst_assets::Format;
+    use crate::Format;
     use amethyst_error::Error;
 
     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

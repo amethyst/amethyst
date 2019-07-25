@@ -3,8 +3,10 @@
 //! This modules contains an extension trait for the System trait which adds useful transformation
 //! functions.
 
-use crate::ecs::prelude::{Read, System};
-use crate::shred::{RunningTime, SystemData};
+use crate::{
+    ecs::prelude::{Read, System},
+    shred::{RunningTime, SystemData},
+};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;

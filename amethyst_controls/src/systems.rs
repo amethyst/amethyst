@@ -35,11 +35,14 @@ pub struct FlyMovementSystem<T: BindingTypes> {
 impl<T: BindingTypes> FlyMovementSystem<T> {
     /// Builds a new `FlyMovementSystem` using the provided speeds and axis controls.
     pub fn new(
+        world: &mut World,
         speed: f32,
         right_input_axis: Option<T::Axis>,
         up_input_axis: Option<T::Axis>,
         forward_input_axis: Option<T::Axis>,
     ) -> Self {
+        use amethyst_core::ecs::prelude::SystemData;
+        <Self as System<'_>>::SystemData::setup(world);
         FlyMovementSystem {
             speed,
             right_input_axis,

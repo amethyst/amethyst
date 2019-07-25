@@ -2,7 +2,7 @@
 
 use amethyst_assets::PrefabData;
 use amethyst_core::ecs::{
-    Component, Entity, HashMapStorage, Join, ReadExpect, ReadStorage, System, WriteStorage,
+    Component, Entity, HashMapStorage, Join, ReadExpect, ReadStorage, System, World, WriteStorage,
 };
 use amethyst_derive::PrefabData;
 use amethyst_error::Error;
@@ -173,9 +173,9 @@ impl AutoFov {
         assert!(
             max >= min,
             format!(
-                "`max_fovx` should be larger than or equal to `min_fovx` which is `{}`, but `{}` given",
-                min,
-                max,
+                "`max_fovx` should be larger than or equal to `min_fovx` which is `{}`, but `{}` \
+                 given",
+                min, max,
             ),
         );
         self.min_fovx = min;
@@ -210,7 +210,8 @@ impl Component for AutoFov {
 impl Default for AutoFov {
     fn default() -> Self {
         AutoFov {
-            base_fovx: 1.861_684_6, // This is actually 1.861_684_535, but float precision is lost beyond this
+            // This is actually 1.861_684_535, but float precision is lost beyond this
+            base_fovx: 1.861_684_6,
             fovx_growth_rate: 1.0,
             fixed_growth_rate: false,
             base_aspect_ratio: (16, 9),
@@ -231,6 +232,18 @@ impl Default for AutoFov {
 #[derive(Debug)]
 pub struct AutoFovSystem {
     last_dimensions: ScreenDimensions,
+}
+
+impl AutoFovSystem {
+    /// Sets up `SystemData` and returns a new `AutoFovSystem`.
+    pub fn new(world: &mut World) -> Self {
+        use amethyst_core::ecs::prelude::SystemData;
+        <Self as System<'_>>::SystemData::setup(world);
+
+        Self {
+            last_dimensions: ScreenDimensions::new(0, 0, 0.0),
+        }
+    }
 }
 
 impl<'a> System<'a> for AutoFovSystem {

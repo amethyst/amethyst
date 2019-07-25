@@ -27,7 +27,7 @@ num-traits = "0.2.0"
 rayon = "1.1.0"
 serde = { version = "1", features = ["derive"] }
 specs = { version = "0.15", features = ["shred-derive"] }
-specs-hierarchy = "0.5"
+specs-hierarchy = "0.5.1"
 getset = "0.0.7"
 derive-new = "0.5.6"
 

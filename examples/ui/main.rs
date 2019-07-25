@@ -4,30 +4,22 @@ use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystem, Processor, RonFormat},
     audio::{output::init_output, Source},
     core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle, Time},
-    ecs::prelude::{Entity, ReadExpect, System, SystemData, World, WorldExt, Write},
+    ecs::prelude::{Entity, System, World, WorldExt, Write},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
-        rendy::{
-            factory::Factory,
-            graph::{
-                render::{RenderGroupDesc, SubpassBuilder},
-                GraphBuilder,
-            },
-            hal::{format::Format, image},
-            mesh::{Normal, Position, TexCoord},
-        },
+        plugins::RenderToWindow,
+        rendy::mesh::{Normal, Position, TexCoord},
         types::DefaultBackend,
-        GraphCreator, RenderingSystem,
+        RenderingBundle,
     },
     shrev::{EventChannel, ReaderId},
-    ui::{DrawUiDesc, UiBundle, UiCreator, UiEvent, UiFinder, UiText},
+    ui::{RenderUi, UiBundle, UiCreator, UiEvent, UiFinder, UiText},
     utils::{
         application_root_dir,
         fps_counter::{FpsCounter, FpsCounterBundle},
         scene::BasicScenePrefab,
     },
-    window::{ScreenDimensions, Window, WindowBundle},
     winit::VirtualKeyCode,
 };
 use log::info;
@@ -133,30 +125,29 @@ fn main() -> amethyst::Result<()> {
     let app_root = application_root_dir()?;
 
     let display_config_path = app_root.join("examples/ui/config/display.ron");
-    let assets_directory = app_root.join("examples/assets");
+    let assets_dir = app_root.join("examples/assets");
 
-    let mut world = World::new();
+    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(
-            &mut world,
-            WindowBundle::from_config_path(display_config_path),
-        )?
         .with(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
-        .with_bundle(&mut world, TransformBundle::new())?
         .with_bundle(
             &mut world,
-            UiBundle::<DefaultBackend, StringBindings>::new(),
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)
+                        .with_clear([0.34, 0.36, 0.52, 1.0]),
+                )
+                .with_plugin(RenderUi::default()),
         )?
+        .with_bundle(&mut world, TransformBundle::new())?
+        .with_bundle(&mut world, UiBundle::<StringBindings>::new())?
         .with(Processor::<Source>::new(), "source_processor", &[])
         .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
         .with_bundle(&mut world, FpsCounterBundle::default())?
-        .with_bundle(&mut world, InputBundle::<StringBindings>::new())?
-        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::default(),
-        ));
+        .with_bundle(&mut world, InputBundle::<StringBindings>::new())?;
 
-    let mut game = Application::build(assets_directory, Example::default(), world)?
+    let mut game = Application::build(Example::default(), world)?
         // Unlimited FPS
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 9999)
         .build(game_data)?;
@@ -188,78 +179,5 @@ impl<'a> System<'a> for UiEventHandlerSystem {
         for ev in events.read(reader_id) {
             info!("[SYSTEM] You just interacted with a ui element: {:?}", ev);
         }
-    }
-}
-
-#[derive(Default)]
-struct ExampleGraph {
-    dimensions: Option<ScreenDimensions>,
-    surface_format: Option<Format>,
-    dirty: bool,
-}
-
-#[allow(clippy::map_clone)]
-impl GraphCreator<DefaultBackend> for ExampleGraph {
-    fn rebuild(&mut self, world: &World) -> bool {
-        // Rebuild when dimensions change, but wait until at least two frames have the same.
-        let new_dimensions = world.try_fetch::<ScreenDimensions>();
-        use std::ops::Deref;
-        if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
-            self.dirty = true;
-            self.dimensions = new_dimensions.map(|d| (*d).clone());
-            return false;
-        }
-        self.dirty
-    }
-
-    fn builder(
-        &mut self,
-        factory: &mut Factory<DefaultBackend>,
-        world: &World,
-    ) -> GraphBuilder<DefaultBackend, World> {
-        use amethyst::renderer::rendy::{
-            graph::present::PresentNode,
-            hal::command::{ClearDepthStencil, ClearValue},
-        };
-
-        self.dirty = false;
-
-        let window = <ReadExpect<'_, Window>>::fetch(world);
-        let surface = factory.create_surface(&window);
-        // cache surface format to speed things up
-        let surface_format = *self
-            .surface_format
-            .get_or_insert_with(|| factory.get_surface_format(&surface));
-        let dimensions = self.dimensions.as_ref().unwrap();
-        let window_kind =
-            image::Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
-
-        let mut graph_builder = GraphBuilder::new();
-        let color = graph_builder.create_image(
-            window_kind,
-            1,
-            surface_format,
-            Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
-        );
-
-        let depth = graph_builder.create_image(
-            window_kind,
-            1,
-            Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
-        );
-
-        let ui = graph_builder.add_node(
-            SubpassBuilder::new()
-                .with_group(DrawUiDesc::new().builder())
-                .with_color(color)
-                .with_depth_stencil(depth)
-                .into_pass(),
-        );
-
-        let _present = graph_builder
-            .add_node(PresentNode::builder(factory, surface, color).with_dependency(ui));
-
-        graph_builder
     }
 }

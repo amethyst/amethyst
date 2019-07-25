@@ -75,7 +75,7 @@ pub struct DisplayConfig {
     /// config.loaded_icon = Some(Icon::from_rgba(icon, 128, 128).unwrap());
     ///
     /// // Now, feed this into the `GameDataBuilder` using
-    /// // `.with_bundle(WindowBundle::from_config(config))`
+    /// // `.with_bundle(&mut world, WindowBundle::from_config(config))`
     /// ```
     #[serde(skip)]
     pub loaded_icon: Option<Icon>,

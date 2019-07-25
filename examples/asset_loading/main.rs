@@ -4,7 +4,7 @@
 use amethyst::{
     assets::{Format as AssetFormat, Handle, Loader},
     core::{math::Vector3, Transform, TransformBundle},
-    ecs::{ReadExpect, SystemData, World, WorldExt},
+    ecs::{World, WorldExt},
     error::Error,
     input::{InputBundle, StringBindings},
     prelude::*,
@@ -13,22 +13,15 @@ use amethyst::{
         light::{Light, PointLight},
         mtl::{Material, MaterialDefaults},
         palette::{Srgb, Srgba},
-        pass::{DrawShadedDesc, DrawSkyboxDesc},
+        plugins::{RenderShaded3D, RenderSkybox, RenderToWindow},
         rendy::{
-            factory::Factory,
-            graph::{
-                render::{RenderGroupDesc, SubpassBuilder},
-                GraphBuilder,
-            },
-            hal::{format::Format, image},
             mesh::{MeshBuilder, Normal, Position, TexCoord},
             texture::palette::load_from_srgba,
         },
         types::{DefaultBackend, Mesh, MeshData},
-        GraphCreator, RenderingSystem,
+        RenderingBundle,
     },
     utils::application_root_dir,
-    window::{ScreenDimensions, Window, WindowBundle},
 };
 
 #[derive(Clone, Debug)]
@@ -125,23 +118,26 @@ fn main() -> Result<(), Error> {
     let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let assets_directory = app_root.join("examples/assets");
+    let assets_dir = app_root.join("examples/assets");
 
-    let display_config_path = app_root.join("{}/examples/asset_loading/config/display.ron");
+    let display_config_path = app_root.join("examples/asset_loading/config/display.ron");
 
-    let mut world = World::new();
+    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
             &mut world,
-            WindowBundle::from_config_path(display_config_path),
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(RenderToWindow::from_config_path(display_config_path))
+                .with_plugin(RenderShaded3D::default())
+                .with_plugin(RenderSkybox::with_colors(
+                    Srgb::new(0.82, 0.51, 0.50),
+                    Srgb::new(0.18, 0.11, 0.85),
+                )),
         )?
         .with_bundle(&mut world, InputBundle::<StringBindings>::new())?
-        .with_bundle(&mut world, TransformBundle::new())?
-        .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
-            ExampleGraph::default(),
-        ));
-    let mut game = Application::new(assets_directory, AssetsExample, game_data, world)?;
+        .with_bundle(&mut world, TransformBundle::new())?;
+    let mut game = Application::new(AssetsExample, game_data, world)?;
     game.run();
     Ok(())
 }
@@ -178,83 +174,4 @@ fn initialise_lights(world: &mut World) {
 
     // Add point light.
     world.create_entity().with(light).with(transform).build();
-}
-
-#[derive(Default)]
-struct ExampleGraph {
-    dimensions: Option<ScreenDimensions>,
-    surface_format: Option<Format>,
-    dirty: bool,
-}
-
-#[allow(clippy::map_clone)]
-impl GraphCreator<DefaultBackend> for ExampleGraph {
-    fn rebuild(&mut self, world: &World) -> bool {
-        // Rebuild when dimensions change, but wait until at least two frames have the same.
-        let new_dimensions = world.try_fetch::<ScreenDimensions>();
-        use std::ops::Deref;
-        if self.dimensions.as_ref() != new_dimensions.as_ref().map(|d| d.deref()) {
-            self.dirty = true;
-            self.dimensions = new_dimensions.map(|d| (*d).clone());
-            return false;
-        }
-        self.dirty
-    }
-
-    fn builder(
-        &mut self,
-        factory: &mut Factory<DefaultBackend>,
-        world: &World,
-    ) -> GraphBuilder<DefaultBackend, World> {
-        use amethyst::renderer::rendy::{
-            graph::present::PresentNode,
-            hal::command::{ClearDepthStencil, ClearValue},
-        };
-
-        self.dirty = false;
-        let window = <ReadExpect<'_, Window>>::fetch(world);
-        let surface = factory.create_surface(&window);
-        // cache surface format to speed things up
-        let surface_format = *self
-            .surface_format
-            .get_or_insert_with(|| factory.get_surface_format(&surface));
-        let dimensions = self.dimensions.as_ref().unwrap();
-        let window_kind =
-            image::Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
-
-        let mut graph_builder = GraphBuilder::new();
-        let color = graph_builder.create_image(
-            window_kind,
-            1,
-            surface_format,
-            Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
-        );
-
-        let depth = graph_builder.create_image(
-            window_kind,
-            1,
-            Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
-        );
-
-        let opaque = graph_builder.add_node(
-            SubpassBuilder::new()
-                .with_group(DrawShadedDesc::new().builder())
-                .with_group(
-                    DrawSkyboxDesc::with_colors(
-                        Srgb::new(0.82, 0.51, 0.50),
-                        Srgb::new(0.18, 0.11, 0.85),
-                    )
-                    .builder(),
-                )
-                .with_color(color)
-                .with_depth_stencil(depth)
-                .into_pass(),
-        );
-
-        let _present = graph_builder
-            .add_node(PresentNode::builder(factory, surface, color).with_dependency(opaque));
-
-        graph_builder
-    }
 }

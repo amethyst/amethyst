@@ -45,6 +45,7 @@ Then, you can load it using the texture handle of the sheet's image you loaded e
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::assets::{Loader, AssetStorage, Handle};
+# use amethyst::ecs::{World, WorldExt};
 # use amethyst::renderer::{SpriteSheetFormat, SpriteSheet, Texture};
 #
 # fn load_texture() -> Handle<Texture> {
@@ -52,7 +53,7 @@ Then, you can load it using the texture handle of the sheet's image you loaded e
 # }
 #
 # fn load_sprite_sheet() {
-#   let world = amethyst::ecs::World::new(); // Normally, you would use Amethyst's world
+#   let world = World::new();
 #   let loader = world.read_resource::<Loader>();
 #   let texture_handle = load_texture();
 #   let spritesheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();

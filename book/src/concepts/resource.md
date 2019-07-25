@@ -2,57 +2,57 @@
 
 ## What is a resource?
 
-A `Resource` is any type that stores data that you might need for your game AND that is not specific to an entity.
+A resource is any type that stores data that you might need for your game AND that is not specific to an entity.
 For example, the score of a pong game is global to the whole game and isn't owned by any of the entities (paddle, ball and even the ui score text).
 
 ## Creating a resource
 
-Resources are stored in a, well, `Resources` type. This type is usually stored into a `World` instance, which is covered in the next chapter.
-Normally you don't create a `Resources` instance yourself. It is usually made by amethyst automatically.
+Resources are stored in the `World` container.
 
-Adding a resource to a `Resources` instance is done like this:
+Adding a resource to a `World` instance is done like this:
+
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-use amethyst::ecs::{Resources};
+use amethyst::ecs::World;
 
 struct MyResource {
     pub game_score: i32,
 }
 
 fn main() {
-    let mut resources = Resources::new();
+    let mut world = World::empty();
     
     let my = MyResource {
         game_score: 0,
     };
     
-    resources.insert(my);
+    world.insert(my);
 }
 ```
 
-## Fetching a resource (from `Resources`)
+## Fetching a resource (from `World`)
 
 Fetching a resource can be done like this:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::ecs::{Resources};
+# use amethyst::ecs::World;
 # #[derive(Debug, PartialEq)]
 # struct MyResource {
 #   pub game_score: i32,
 # }
 # fn main() {
-#   let mut resources = Resources::new();
+#   let mut world = World::empty();
 #   let my = MyResource{
 #     game_score: 0,
 #   };
-#   resources.insert(my);
+#   world.insert(my);
   // try_fetch returns a Option<Fetch<MyResource>>
-  let fetched = resources.try_fetch::<MyResource>();
+  let fetched = world.try_fetch::<MyResource>();
   if let Some(fetched_resource) = fetched {
       //dereference Fetch<MyResource> to access data
       assert_eq!(*fetched_resource, MyResource{ game_score: 0, });
   } else {
-      println!("No MyResource present in Resources");
+      println!("No MyResource present in `World`");
   }
 # }
 ```
@@ -60,38 +60,38 @@ Fetching a resource can be done like this:
 If you want to get a resource and create it if it doesn't exist:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::ecs::{Resources};
+# use amethyst::ecs::World;
 # struct MyResource;
 # fn main() {
-#   let mut resources = Resources::new();
+#   let mut world = World::empty();
 #   let my = MyResource;
-  // If the resource isn't inside `Resources`, 
+  // If the resource isn't inside `World`, 
   // it will insert the instance we created earlier.
-let fetched = resources.entry::<MyResource>().or_insert_with(|| my);
+let fetched = world.entry::<MyResource>().or_insert_with(|| my);
 # }
 ```
 
-If you want to change a resource that is already inside of `Resources`:
+If you want to change a resource that is already inside of `World`:
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::ecs::{Resources};
+# use amethyst::ecs::World;
 # struct MyResource {
 #   pub game_score: i32,
 # }
 # fn main() {
-#   let mut resources = Resources::new();
+#   let mut world = World::empty();
 #   let my = MyResource{
 #     game_score: 0,
 #   };
-#   resources.insert(my);
+#   world.insert(my);
   // try_fetch_mut returns a Option<FetchMut<MyResource>>
-  let fetched = resources.try_fetch_mut::<MyResource>();
+  let fetched = world.try_fetch_mut::<MyResource>();
   if let Some(mut fetched_resource) = fetched {
     assert_eq!(fetched_resource.game_score, 0);
     fetched_resource.game_score = 10;
     assert_eq!(fetched_resource.game_score, 10);
   } else {
-    println!("No MyResource present in Resources");
+    println!("No MyResource present in `World`");
   }
 # }
 ```
@@ -107,7 +107,7 @@ The usual method to achieve something similar is to add an `Option<MyResource>` 
 
 A `Component`'s `Storage` is a resource.
 The components are "attached" to entities, but as said previously, they are not "owned" by the entities at the implementation level.
-By storing them into `Storage`s and by having `Storage` be placed inside `Resources`,
+By storing them into `Storage`s and by having `Storage` be placed inside `World`,
 it allows global access to all of the components at runtime with minimal effort.
 
 Actually accessing the components inside `Storage`s will be covered in the world and system sections of the book.

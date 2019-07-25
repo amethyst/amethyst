@@ -28,7 +28,7 @@ use thread_profiler::profile_scope;
 /// # Example
 /// ```rust
 /// # use amethyst_utils::fps_counter::FpsCounter;
-/// # use amethyst_core::ecs::World;
+/// # use amethyst_core::ecs::{World, WorldExt};
 /// # let mut world = World::new();
 /// # let counter = FpsCounter::new(2);
 /// # world.insert(counter);

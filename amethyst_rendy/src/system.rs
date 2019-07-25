@@ -11,12 +11,10 @@ use crate::{
     types::{Backend, Mesh, Texture},
     visibility::Visibility,
 };
-use amethyst_assets::{
-    AssetStorage, Handle, HotReloadStrategy, ProcessableAsset, ProcessingState, ThreadPool,
-};
+use amethyst_assets::{AssetStorage, Handle, HotReloadStrategy, ProcessingState, ThreadPool};
 use amethyst_core::{
     components::Transform,
-    ecs::{Read, ReadExpect, ReadStorage, RunNow, SystemData, World, Write, WriteExpect},
+    ecs::{Read, ReadExpect, ReadStorage, RunNow, System, SystemData, World, Write, WriteExpect},
     timing::Time,
     Hidden, HiddenPropagate,
 };
@@ -27,7 +25,7 @@ use rendy::{
     graph::{Graph, GraphBuilder},
     texture::palette::{load_from_linear_rgba, load_from_srgba},
 };
-use std::sync::Arc;
+use std::{marker::PhantomData, sync::Arc};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
@@ -70,17 +68,6 @@ where
     }
 }
 
-type AssetLoadingData<'a, B> = (
-    Read<'a, Time>,
-    ReadExpect<'a, Arc<ThreadPool>>,
-    Option<Read<'a, HotReloadStrategy>>,
-    WriteExpect<'a, Factory<B>>,
-    Write<'a, AssetStorage<Mesh>>,
-    Write<'a, AssetStorage<Texture>>,
-    Write<'a, AssetStorage<Material>>,
-    ReadExpect<'a, QueueId>,
-);
-
 type SetupData<'a> = (
     ReadStorage<'a, Handle<Mesh>>,
     ReadStorage<'a, Handle<Texture>>,
@@ -99,81 +86,11 @@ type SetupData<'a> = (
     ReadStorage<'a, JointTransforms>,
 );
 
-// struct MeshProcessor<B: Backend>(PhantomData<B>);
-
 impl<B, G> RenderingSystem<B, G>
 where
     B: Backend,
     G: GraphCreator<B>,
 {
-    fn asset_loading(
-        &mut self,
-        (
-            time,
-            pool,
-            strategy,
-            mut factory,
-            mut mesh_storage,
-            mut texture_storage,
-            mut material_storage,
-            queue_id,
-        ): AssetLoadingData<'_, B>,
-    ) {
-        use std::ops::Deref;
-        let strategy = strategy.as_ref().map(Deref::deref);
-
-        mesh_storage.process(
-            |b| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("process_mesh");
-
-                b.0.build(*queue_id, &factory)
-                    .map(B::wrap_mesh)
-                    .map(ProcessingState::Loaded)
-                    .map_err(|e| e.compat().into())
-            },
-            time.frame_number(),
-            &**pool,
-            strategy,
-        );
-
-        texture_storage.process(
-            |b| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("process_texture");
-
-                b.0.build(
-                    ImageState {
-                        queue: *queue_id,
-                        stage: rendy::hal::pso::PipelineStage::VERTEX_SHADER
-                            | rendy::hal::pso::PipelineStage::FRAGMENT_SHADER,
-                        access: rendy::hal::image::Access::SHADER_READ,
-                        layout: rendy::hal::image::Layout::ShaderReadOnlyOptimal,
-                    },
-                    &mut factory,
-                )
-                .map(B::wrap_texture)
-                .map(ProcessingState::Loaded)
-                .map_err(|e| e.compat().into())
-            },
-            time.frame_number(),
-            &**pool,
-            strategy,
-        );
-
-        material_storage.process(
-            |b| {
-                #[cfg(feature = "profiler")]
-                profile_scope!("process_material");
-
-                ProcessableAsset::process(b)
-            },
-            time.frame_number(),
-            &**pool,
-            strategy,
-        );
-    }
-
     fn rebuild_graph(&mut self, world: &World) {
         #[cfg(feature = "profiler")]
         profile_scope!("rebuild_graph");
@@ -219,8 +136,6 @@ where
     G: GraphCreator<B>,
 {
     fn run_now(&mut self, world: &'a World) {
-        self.asset_loading(SystemData::fetch(world));
-
         let rebuild = self.graph_creator.rebuild(world);
         if self.graph.is_none() || rebuild {
             self.rebuild_graph(world);
@@ -240,7 +155,7 @@ where
         self.families = Some(families);
         world.insert(factory);
         world.insert(queue_id);
-        AssetLoadingData::<B>::setup(world);
+
         SetupData::setup(world);
 
         let mat = create_default_mat::<B>(world);
@@ -264,6 +179,93 @@ where
 
         log::debug!("Drop families");
         drop(self.families);
+    }
+}
+
+/// Asset processing system for `Mesh` asset type.
+#[derive(Debug, derivative::Derivative)]
+#[derivative(Default(bound = ""))]
+pub struct MeshProcessor<B: Backend>(PhantomData<B>);
+impl<'a, B: Backend> System<'a> for MeshProcessor<B> {
+    type SystemData = (
+        Write<'a, AssetStorage<Mesh>>,
+        ReadExpect<'a, QueueId>,
+        Read<'a, Time>,
+        ReadExpect<'a, Arc<ThreadPool>>,
+        Option<Read<'a, HotReloadStrategy>>,
+        ReadExpect<'a, Factory<B>>,
+    );
+
+    fn run(
+        &mut self,
+        (mut mesh_storage, queue_id, time, pool, strategy, factory): Self::SystemData,
+    ) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("mesh_processor");
+
+        use std::ops::Deref;
+        mesh_storage.process(
+            |b| {
+                #[cfg(feature = "profiler")]
+                profile_scope!("process_mesh");
+
+                b.0.build(*queue_id, &factory)
+                    .map(B::wrap_mesh)
+                    .map(ProcessingState::Loaded)
+                    .map_err(|e| e.compat().into())
+            },
+            time.frame_number(),
+            &**pool,
+            strategy.as_ref().map(Deref::deref),
+        );
+    }
+}
+
+/// Asset processing system for `Texture` asset type.
+#[derive(Debug, derivative::Derivative)]
+#[derivative(Default(bound = ""))]
+pub struct TextureProcessor<B: Backend>(PhantomData<B>);
+impl<'a, B: Backend> System<'a> for TextureProcessor<B> {
+    type SystemData = (
+        Write<'a, AssetStorage<Texture>>,
+        ReadExpect<'a, QueueId>,
+        Read<'a, Time>,
+        ReadExpect<'a, Arc<ThreadPool>>,
+        Option<Read<'a, HotReloadStrategy>>,
+        WriteExpect<'a, Factory<B>>,
+    );
+
+    fn run(
+        &mut self,
+        (mut texture_storage, queue_id, time, pool, strategy, mut factory): Self::SystemData,
+    ) {
+        #[cfg(feature = "profiler")]
+        profile_scope!("texture_processor");
+
+        use std::ops::Deref;
+        texture_storage.process(
+            |b| {
+                #[cfg(feature = "profiler")]
+                profile_scope!("process_texture");
+
+                b.0.build(
+                    ImageState {
+                        queue: *queue_id,
+                        stage: rendy::hal::pso::PipelineStage::VERTEX_SHADER
+                            | rendy::hal::pso::PipelineStage::FRAGMENT_SHADER,
+                        access: rendy::hal::image::Access::SHADER_READ,
+                        layout: rendy::hal::image::Layout::ShaderReadOnlyOptimal,
+                    },
+                    &mut factory,
+                )
+                .map(B::wrap_texture)
+                .map(ProcessingState::Loaded)
+                .map_err(|e| e.compat().into())
+            },
+            time.frame_number(),
+            &**pool,
+            strategy.as_ref().map(Deref::deref),
+        );
     }
 }
 

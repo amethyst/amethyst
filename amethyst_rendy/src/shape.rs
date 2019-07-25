@@ -91,11 +91,12 @@ where
 /// Shape generators
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub enum Shape {
-    /// Sphere, number of points around the equator, number of points pole to pole
+    /// Sphere, number of points around the equator, number of points pole to pole.
+    /// Sphere has radius of 1, so it's diameter is 2 units
     Sphere(usize, usize),
     /// Cone, number of subdivisions around the radius, must be > 1
     Cone(usize),
-    /// Cube
+    /// Cube with vertices in [-1, +1] range, so it's width is 2 units
     Cube,
     /// Cylinder, number of points across the radius, optional subdivides along the height
     Cylinder(usize, Option<usize>),

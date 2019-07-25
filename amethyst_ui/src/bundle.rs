@@ -3,8 +3,8 @@
 use crate::{
     BlinkSystem, CacheSelectionOrderSystem, FontAsset, NoCustomUi, ResizeSystem,
     SelectionKeyboardSystem, SelectionMouseSystem, TextEditingInputSystem, TextEditingMouseSystem,
-    ToNativeWidget, UiButtonActionRetriggerSystem, UiButtonSystem, UiGlyphsSystem, UiLoaderSystem,
-    UiMouseSystem, UiSoundRetriggerSystem, UiSoundSystem, UiTransformSystem, WidgetId,
+    ToNativeWidget, UiButtonActionRetriggerSystem, UiButtonSystem, UiLoaderSystem, UiMouseSystem,
+    UiSoundRetriggerSystem, UiSoundSystem, UiTransformSystem, WidgetId,
 };
 use amethyst_assets::Processor;
 use amethyst_core::{
@@ -13,7 +13,6 @@ use amethyst_core::{
 };
 use amethyst_error::Error;
 use amethyst_input::BindingTypes;
-use amethyst_rendy::Backend;
 use derive_new::new;
 use std::marker::PhantomData;
 
@@ -24,14 +23,13 @@ use std::marker::PhantomData;
 ///
 /// Will fail with error 'No resource with the given id' if the InputBundle is not added.
 #[derive(new, Debug)]
-pub struct UiBundle<B: Backend, T: BindingTypes, C = NoCustomUi, W = u32, G = ()> {
+pub struct UiBundle<T: BindingTypes, C = NoCustomUi, W = u32, G = ()> {
     #[new(default)]
-    _marker: PhantomData<(B, T, C, W, G)>,
+    _marker: PhantomData<(T, C, W, G)>,
 }
 
-impl<'a, 'b, B, T, C, W, G> SystemBundle<'a, 'b> for UiBundle<B, T, C, W, G>
+impl<'a, 'b, T, C, W, G> SystemBundle<'a, 'b> for UiBundle<T, C, W, G>
 where
-    B: Backend,
     T: BindingTypes,
     C: ToNativeWidget,
     W: WidgetId,
@@ -110,17 +108,6 @@ where
 
         // Required for text editing. You want the cursor image to blink.
         builder.add(BlinkSystem, "blink_system", &[]);
-        builder.add(
-            UiGlyphsSystem::<B>::new(world),
-            "ui_glyphs_system",
-            &[
-                "ui_loader",
-                "ui_transform",
-                "font_processor",
-                "ui_text_editing_mouse_system",
-                "ui_text_editing_input_system",
-            ],
-        );
 
         Ok(())
     }

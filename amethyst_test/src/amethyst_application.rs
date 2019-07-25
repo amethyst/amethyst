@@ -7,7 +7,6 @@ use amethyst::{
     error::Error,
     input::{BindingTypes, InputBundle},
     prelude::*,
-    renderer::types::DefaultBackend,
     shred::Resource,
     ui::UiBundle,
     utils::application_root_dir,
@@ -100,12 +99,16 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
     /// Returns an Amethyst application without any bundles.
     pub fn blank() -> AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader>
     {
+        let assets_dir =
+            AmethystApplication::assets_dir().expect("Failed to get default assets dir.");
+        let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)
+            .expect("Failed to initialize `World`.");
         AmethystApplication {
             bundle_add_fns: Vec::new(),
             resource_add_fns: Vec::new(),
             state_fns: Vec::new(),
             state_data: PhantomData,
-            world: World::new(),
+            world,
         }
     }
 
@@ -193,8 +196,7 @@ where
         S: State<GameData<'static, 'static>, E> + 'static,
         for<'b> R: EventReader<'b, Event = E>,
     {
-        let mut application_builder =
-            CoreApplication::build(AmethystApplication::assets_dir()?, first_state, world)?;
+        let mut application_builder = CoreApplication::build(first_state, world)?;
         {
             let world = &mut application_builder.world;
             for mut function in resource_add_fns {
@@ -364,7 +366,7 @@ where
     /// * `B`: Type representing the input binding types.
     pub fn with_ui_bundles<B: BindingTypes>(self) -> Self {
         self.with_bundle(InputBundle::<B>::new())
-            .with_bundle(UiBundle::<DefaultBackend, B>::new())
+            .with_bundle(UiBundle::<B>::new())
     }
 
     /// Adds a resource to the `World`.
@@ -907,7 +909,7 @@ mod test {
         #[test]
         fn audio_zero() -> Result<(), Error> {
             AmethystApplication::blank()
-                .with_bundle(AudioBundle::default())
+                .with_bundle(&mut world, AudioBundle::default())
                 .with_assertion(|world| {
                     world.read_resource::<AssetStorage<Source>>();
                 })
@@ -917,7 +919,7 @@ mod test {
         #[test]
         fn audio_one() -> Result<(), Error> {
             AmethystApplication::blank()
-                .with_bundle(AudioBundle::default())
+                .with_bundle(&mut world, AudioBundle::default())
                 .with_assertion(|world| {
                     world.read_resource::<AssetStorage<Source>>();
                 })

@@ -109,7 +109,7 @@
 //!     // Then you can include the `RenderEmptyBundle`:
 //!     use amethyst::renderer::{types::DefaultBackend, RenderEmptyBundle};
 //!     AmethystApplication::blank()
-//!         .with_bundle(RenderEmptyBundle::<DefaultBackend>::new());
+//!         .with_bundle(&mut world, RenderEmptyBundle::<DefaultBackend>::new());
 //! }
 //! ```
 //!
@@ -120,11 +120,11 @@
 //! fn test_name() {
 //!     let visibility = false; // Whether the window should be shown
 //!     AmethystApplication::render_base::<String, String, _>("test_name", visibility)
-//!         .with_bundle(MyBundle::new())                // Registers a bundle.
+//!         .with_bundle(&mut world, MyBundle::new())                // Registers a bundle.
 //!         .with_bundle_fn(|| MyNonSendBundle::new())   // Registers a `!Send` bundle.
 //!         .with_resource(MyResource::new())            // Adds a resource to the world.
-//!         .with_system(MySystem::new(), "my_sys", &[]) // Registers a system with the main
-//!                                                      // dispatcher.
+//!         .with_system(|_| MySystem::new(), "my_sys", &[]) // Registers a system with the main
+//!                                                          // dispatcher.
 //!
 //!         // These are run in the order they are invoked.
 //!         // You may invoke them multiple times.
@@ -176,15 +176,16 @@
 //! #     fn run(&mut self, _: Self::SystemData) {}
 //! #
 //! #     fn setup(&mut self, world: &mut World) {
-//! #         Self::SystemData::setup(res);
-//! #         res.insert(ApplicationResource);
+//! #         Self::SystemData::setup(world);
+//! #         world.insert(ApplicationResource);
 //! #     }
 //! # }
 //! #
 //! # #[derive(Debug)]
 //! # struct MyBundle;
 //! # impl<'a, 'b> SystemBundle<'a, 'b> for MyBundle {
-//! #     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> amethyst::Result<()> {
+//! #     fn build(self, _world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>)
+//! #     -> amethyst::Result<()> {
 //! #         builder.add(MySystem, "my_system", &[]);
 //! #         Ok(())
 //! #     }
@@ -238,7 +239,7 @@
 //! fn system_increases_component_value_by_one() {
 //!     assert!(
 //!         AmethystApplication::blank()
-//!             .with_system(MySystem, "my_system", &[])
+//!             .with_system(|_| MySystem, "my_system", &[])
 //!             .with_effect(|world| {
 //!                 let entity = world.create_entity().with(MyComponent(0)).build();
 //!                 world.insert(EffectReturn(entity));
@@ -295,7 +296,7 @@
 //!             .with_setup(|world| {
 //!                 world.insert(MyResource(0));
 //!             })
-//!             .with_system_single(MySystem, "my_system", &[])
+//!             .with_system_single(|_| MySystem, "my_system", &[])
 //!             .with_assertion(|world| {
 //!                 let my_resource = world.read_resource::<MyResource>();
 //!

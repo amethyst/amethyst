@@ -14,17 +14,12 @@ layout(location = 1) in vec4 color_a;
 layout(location = 2) in vec3 position_b;
 layout(location = 3) in vec4 color_b;
 
-const mat2 dir_mats[2] = mat2[](
-    mat2(0.0, 1.0, -1.0, 0.0),
-    mat2(0.0, -1.0, 1.0, 0.0)
-);
-
 layout(location = 0) out VertexData {
     vec4 color;
 } vertex;
 
 void main() {
-    float factor = float((gl_VertexIndex & 2) >> 1);
+    float factor = float(gl_VertexIndex >> 1);
     vertex.color = mix(color_a, color_b, factor);
 
     mat4 proj_view = proj * view;
@@ -43,7 +38,14 @@ void main() {
         vec2 screen_a = projected_a.xy / projected_a.w;
         vec2 screen_b = projected_b.xy / projected_b.w;
         vec2 dir = normalize(screen_b - screen_a);
-        vec2 normal = dir * dir_mats[gl_VertexIndex & 1];
+
+        vec2 normal;
+        if (mod(gl_VertexIndex, 2) == 0) {
+            normal = vec2(-dir.y, dir.x);
+        } else {
+            normal = vec2(dir.y, -dir.x);
+        }
+        
         normal *= proj_current.w * screen_space_thickness;
         gl_Position = proj_current + vec4(normal, 0.0, 0.0);
     }

@@ -8,6 +8,7 @@ use amethyst::{
     },
     ecs::{DispatcherBuilder, Read, System, SystemData, World, Write},
     prelude::*,
+    utils::application_root_dir,
 };
 
 use amethyst::Error;
@@ -84,12 +85,13 @@ impl SimpleState for GameplayState {}
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
-    let mut world = World::new();
+    let assets_dir = application_root_dir()?.join("./");
+    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
     world.insert(EventChannel::<MyEvent>::new());
 
     let game_data = GameDataBuilder::default().with_bundle(&mut world, MyBundle)?;
 
-    let mut game = Application::build("./", GameplayState, world)?
+    let mut game = Application::build(GameplayState, world)?
         .with_frame_limit(FrameRateLimitStrategy::Sleep, 1)
         .build(game_data)?;
 

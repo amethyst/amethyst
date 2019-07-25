@@ -71,12 +71,13 @@ let input_bundle = InputBundle::<StringBindings>::new()
 # let assets_dir = "assets";
 # struct Pong;
 # impl SimpleState for Pong { }
+let mut world = World::new();
 let game_data = GameDataBuilder::default()
-    .with_bundle(TransformBundle::new())?
-    .with_bundle(input_bundle)?
+    .with_bundle(&mut world, TransformBundle::new())?
+    .with_bundle(&mut world, input_bundle)?
     // ..
     ;
-let mut game = Application::new(assets_dir, Pong, game_data)?;
+let mut game = Application::new(assets_dir, Pong, game_data, world)?;
 game.run();
 # Ok(())
 # }
@@ -214,16 +215,18 @@ fn main() -> amethyst::Result<()> {
 # }
 # }
 # let input_bundle = amethyst::input::InputBundle::<StringBindings>::new();
-  let game_data = GameDataBuilder::default()
-      .with_bundle(TransformBundle::new())?
-      .with_bundle(input_bundle)?
-      .with(systems::PaddleSystem, "paddle_system", &["input_system"]) // Add this line
-      // ...
-#     ;
+let mut world = World::new();
+let game_data = GameDataBuilder::default()
+    // ...
+    .with_bundle(&mut world, TransformBundle::new())?
+    .with_bundle(&mut world, input_bundle)?
+    .with(systems::PaddleSystem, "paddle_system", &["input_system"]) // Add this line
+    // ...
+#   ;
 # let assets_dir = "/";
 # struct Pong;
 # impl SimpleState for Pong { }
-# let mut game = Application::new(assets_dir, Pong, game_data)?;
+# let mut game = Application::new(assets_dir, Pong, game_data, world)?;
 # Ok(())
 }
 ```

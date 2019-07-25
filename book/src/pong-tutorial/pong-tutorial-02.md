@@ -344,12 +344,13 @@ this by adding the following line before `initialise_paddles(world)` in the
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
+# use amethyst::ecs::{World, WorldExt};
 # struct Paddle;
 # impl amethyst::ecs::Component for Paddle {
 #   type Storage = amethyst::ecs::VecStorage<Paddle>;
 # }
 # fn register() {
-#   let mut world = amethyst::ecs::World::new();
+#   let mut world = World::new();
 world.register::<Paddle>();
 # }
 ```
@@ -367,7 +368,7 @@ Amethyst has a lot of internal systems it uses to keep things running we need
 to bring into the context of the `World`. For simplicity, these have been
 grouped into "Bundles" which include related systems and resources. We can
 add these to our Application's `GameData` using the `with_bundle` method,
-similarly to how you would register a system. We already have `WindowBundle` in place,
+similarly to how you would register a system. We already have `RenderBundle` in place,
 registering another one will look similar. You have to first import
 `TransformBundle`, then register it as follows:
 
@@ -377,15 +378,8 @@ registering another one will look similar. You have to first import
 use amethyst::core::transform::TransformBundle;
 #
 # use amethyst::{
-#     assets::Processor,
-#     ecs::{ReadExpect, Resources, SystemData},
 #     prelude::*,
-#     renderer::{
-#         pass::DrawFlat2DDesc, types::DefaultBackend, Factory, Format, GraphBuilder, GraphCreator,
-#         Kind, RenderGroupDesc, RenderingSystem, SpriteSheet, SubpassBuilder,
-#     },
 #     utils::application_root_dir,
-#     window::{ScreenDimensions, Window, WindowBundle},
 # };
 #
 # struct Pong;
@@ -399,17 +393,15 @@ fn main() -> amethyst::Result<()> {
 #       app_root.join("examples/pong_tutorial_02/config/display.ron");
 #
     // ...
-
+    let mut world = World::new();
     let game_data = GameDataBuilder::default()
-        // The WindowBundle provides all the scaffolding for opening a window
-        .with_bundle(WindowBundle::from_config_path(display_config_path))?
-        // Add the transform bundle which handles tracking entity positions
-        .with_bundle(TransformBundle::new())?
         // ...
-        ;
+
+        // Add the transform bundle which handles tracking entity positions
+        .with_bundle(&mut world, TransformBundle::new())?;
 
 #   let assets_dir = "/";
-#   let mut game = Application::new(assets_dir, Pong, game_data)?;
+#   let mut game = Application::new(assets_dir, Pong, game_data, world)?;
 #   Ok(())
 }
 ```
@@ -582,7 +574,7 @@ the right one is flipped horizontally.
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
 # use amethyst::ecs::World;
-# use amethyst::{assets::Handle, renderer::sprite::{SpriteRender, SpriteSheet}};
+# use amethyst::{assets::Handle, renderer::{SpriteRender, SpriteSheet}};
 # fn initialise_paddles(world: &mut World, sprite_sheet: Handle<SpriteSheet>) {
 // Assign the sprites for the paddles
 let sprite_render = SpriteRender {

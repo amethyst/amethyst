@@ -172,6 +172,7 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     # use amethyst::{
     #     error::Error,
     #     assets::{AssetStorage, Loader, ProcessingState, ProgressCounter, RonFormat},
+    #     ecs::{World, WorldExt},
     #     prelude::*,
     #     utils::application_root_dir,
     # };
@@ -258,6 +259,7 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     #   let app_root = application_root_dir()?;
     #   let assets_dir = app_root.join("assets");
     #
+    #   let world = World::new();
     #   let game_data = GameDataBuilder::default();
     #   let mut game = Application::new(
     #       assets_dir,
@@ -266,6 +268,7 @@ This guide explains how to define a new asset type to be used in an Amethyst app
     #           energy_blast_handle: None,
     #       },
     #       game_data,
+    #       world,
     #   )?;
     #
     #   game.run();

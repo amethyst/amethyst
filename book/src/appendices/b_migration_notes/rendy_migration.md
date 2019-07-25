@@ -112,7 +112,7 @@
 
     In `render_graph.rs`:
 
-    ```rust,edition2018,no_run,noplaypen
+    ```rust,ignore
     # extern crate amethyst;
     #
     use amethyst::{
@@ -146,6 +146,7 @@
     }
 
     impl GraphCreator<DefaultBackend> for RenderGraph {
+        #[allow(clippy::map_clone)]
         fn rebuild(&mut self, world: &World) -> bool {
             // Rebuild when dimensions change, but wait until at least two frames have the same.
             let new_dimensions = res.try_fetch::<ScreenDimensions>();
@@ -155,7 +156,7 @@
                 self.dimensions = new_dimensions.map(|d| d.clone());
                 return false;
             }
-            return self.dirty;
+            self.dirty
         }
 
         fn builder(

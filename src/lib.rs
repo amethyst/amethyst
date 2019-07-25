@@ -45,10 +45,12 @@
 //!     }
 //! }
 //!
-//! fn main() {
-//!     let mut game = Application::new("assets/", GameState, GameDataBuilder::default())
+//! fn main() -> amethyst::Result<()> {
+//!     let world = World::with_application_resources::<GameData<'_, '_>, _>("assets/")?;
+//!     let mut game = Application::new(GameState, GameDataBuilder::default(), world)
 //!         .expect("Fatal error");
 //!     game.run();
+//!     Ok(())
 //! }
 //! ```
 
@@ -90,6 +92,7 @@ pub use crate::core::{ecs, shred, shrev};
 pub use crate::derive::*;
 
 pub use self::{
+    amethyst_world_ext::AmethystWorldExt,
     app::{Application, ApplicationBuilder, CoreApplication},
     callback_queue::{Callback, CallbackQueue},
     error::Error,
@@ -107,6 +110,7 @@ pub type Result<T> = std::result::Result<T, error::Error>;
 
 pub mod prelude;
 
+mod amethyst_world_ext;
 mod app;
 mod callback_queue;
 mod game_data;

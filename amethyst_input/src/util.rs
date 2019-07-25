@@ -31,6 +31,16 @@ pub fn is_key_down(event: &Event, key_code: VirtualKeyCode) -> bool {
     false
 }
 
+/// Returns true if the event passed in is a key up event for the
+/// provided `VirtualKeyCode`.
+pub fn is_key_up(event: &Event, key_code: VirtualKeyCode) -> bool {
+    if let Some((key, state)) = get_key(event) {
+        return key == key_code && state == ElementState::Released;
+    }
+
+    false
+}
+
 /// Returns true if the event passed in is a request to close the game window.
 pub fn is_close_requested(event: &Event) -> bool {
     match *event {

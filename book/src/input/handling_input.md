@@ -16,9 +16,10 @@ fn main() -> amethyst::Result<()> {
     // StringBindings is the default BindingTypes
     let input_bundle = InputBundle::<StringBindings>::new();
 
+    let mut world = World::new();
     let game_data = GameDataBuilder::default()
     //..
-    .with_bundle(input_bundle)?
+    .with_bundle(&mut world, input_bundle)?
     //..
 #   ;
 
@@ -161,8 +162,8 @@ impl<'s> System<'s> for MovementSystem {
         Read<'s, InputHandler<StringBindings>>,
     );
     
-    fn run(&mut self, (mut transform, mut player, input): Self::SystemData) {
-        for (player, transform) in (&mut player, &mut transform).join() {
+    fn run(&mut self, (mut transforms, players, input): Self::SystemData) {
+        for (player, transform) in (&players, &mut transforms).join() {
             let horizontal = input.axis_value("horizontal").unwrap_or(0.0);
             let vertical = input.axis_value("vertical").unwrap_or(0.0);
             
