@@ -102,7 +102,7 @@ pub enum EnumPrefab {
 mod tests {
     use super::*;
     use amethyst_assets::{AssetStorage, Loader, Prefab, PrefabLoaderSystem};
-    use amethyst_core::ecs::{world::EntitiesRes, Builder, Join};
+    use amethyst_core::ecs::{world::EntitiesRes, Builder, Join, WorldExt};
     use amethyst_test::prelude::*;
 
     macro_rules! assert_prefab {
