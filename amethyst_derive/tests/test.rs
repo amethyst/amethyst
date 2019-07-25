@@ -7,7 +7,7 @@ use amethyst_derive::{EventReader, PrefabData};
 
 use amethyst_assets::{PrefabData, ProgressCounter};
 use amethyst_core::{
-    ecs::{Component, DenseVecStorage, Entity, Read, SystemData, World, WorldExt, WriteStorage},
+    ecs::{Component, DenseVecStorage, Entity, Read, SystemData, World, WriteStorage},
     shrev::{EventChannel, ReaderId},
     EventReader,
 };
