@@ -83,7 +83,7 @@ impl<'a, T: BindingTypes> RunNow<'a> for SdlEventsSystem<T> {
         self.event_pump = Some(event_pump);
     }
 
-    fn setup(&mut self, world: &mut World) {}
+    fn setup(&mut self, _world: &mut World) {}
 }
 
 impl<T: BindingTypes> SdlEventsSystem<T> {
