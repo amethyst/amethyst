@@ -175,6 +175,12 @@ impl From<[f32; 4]> for TextureCoordinates {
     }
 }
 
+impl From<&TextureCoordinates> for [f32; 4] {
+    fn from(item: &TextureCoordinates) -> Self {
+        [item.left, item.right, item.bottom, item.top]
+    }
+}
+
 /// Information for rendering a sprite.
 ///
 /// Instead of using a `Mesh` on a `DrawFlat` render pass, we can use a simpler set of shaders to

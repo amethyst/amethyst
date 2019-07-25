@@ -13,6 +13,7 @@
 * Joël Lupien
 * khskarl (Karll Henning)
 * Konstantin Zverev
+* Lucas Ince
 * Lucio Franco
 * Lukas Schmierer
 * Matthias Schuster

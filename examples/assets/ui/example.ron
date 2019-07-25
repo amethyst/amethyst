@@ -47,6 +47,20 @@ Container(
             ),
             image: Texture(File("texture/logo_transparent.png", ("IMAGE", ()))),
         ),
+         // Partial Texture logo
+        Image(
+            transform: (
+                id: "Partial Texture Logo",
+                x: -120.,
+                y: -16.,
+                width: 64.,
+                height: 32.,
+                tab_order: 1,
+                anchor: TopRight,
+                mouse_reactive: true,
+            ),
+            image: PartialTexture(File("texture/test_texture.png", ("IMAGE", ())),0.34,0.0,1.0,0.333),
+        ),
 
         // Editable text single line.
         Container(
