@@ -44,14 +44,23 @@ and then run
 amethyst new <game-name>
 ```
 
-you should get `Cargo.toml`, `src/main.rs` and `resources/display_config.ron`.
+you should get `Cargo.toml`, `src/main.rs` and `config/display.ron`.
+
+### Starter Project
+
+If you want to get running as quickly as possibly and start playing around with Amethyst, you can also use a starter project. These are specifically made for certain types of games, and will set you up with the groundwork needed to start right away.  
+The `README.md` file on these will include everything you need to know to run the starter project.
+
+> **Note:** Right now, the only starter available is for 2D games. This will expand over time, and offer more options for different types of games.
+
+* [2D Starter](https://github.com/amethyst/amethyst-starter-2d)
 
 ### Cargo (Manual)
 
 In case you're doing this with `cargo`, here's what you need to do:
 
 * Add `amethyst` as dependency in your `Cargo.toml`.
-* Create a `resources` folder and put a `display_config.ron` in it.
+* Create a `config` folder and put a `display.ron` in it.
 * (Optional) Copy the code from one of amethyst's examples.
 
 ### Important note on versioning
@@ -63,7 +72,7 @@ Amethyst is divided in two major versions:
 
 > **Note:** You can see which version you're currently looking at by checking the URL
   in your browser. The book / documentation for `master` contains "master" in the address,
-  the crates.io version is called "latest".
+  the crates.io version is called "stable".
 
 Depending on the book version that you choose to read, make sure that the amethyst version in your Cargo.toml matches that.
 

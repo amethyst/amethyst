@@ -1,5 +1,5 @@
 use super::base_3d::*;
-use crate::{mtl::TexAlbedo, skinning::JointCombined, types::Backend};
+use crate::{mtl::TexAlbedo, skinning::JointCombined};
 use rendy::{
     mesh::{AsVertex, Position, TexCoord, VertexFormat},
     shader::SpirvShader,
@@ -8,7 +8,7 @@ use rendy::{
 /// Implementation of `Base3DPassDef` to describe a flat 3D pass
 #[derive(Debug)]
 pub struct FlatPassDef;
-impl<B: Backend> Base3DPassDef<B> for FlatPassDef {
+impl Base3DPassDef for FlatPassDef {
     const NAME: &'static str = "Flat";
     type TextureSet = TexAlbedo;
     fn vertex_shader() -> &'static SpirvShader {

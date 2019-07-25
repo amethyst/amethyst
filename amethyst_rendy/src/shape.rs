@@ -88,11 +88,12 @@ where
 /// Shape generators
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub enum Shape {
-    /// Sphere, number of points around the equator, number of points pole to pole
+    /// Sphere, number of points around the equator, number of points pole to pole.
+    /// Sphere has radius of 1, so it's diameter is 2 units
     Sphere(usize, usize),
     /// Cone, number of subdivisions around the radius, must be > 1
     Cone(usize),
-    /// Cube
+    /// Cube with vertices in [-1, +1] range, so it's width is 2 units
     Cube,
     /// Cylinder, number of points across the radius, optional subdivides along the height
     Cylinder(usize, Option<usize>),
@@ -277,8 +278,15 @@ where
                         Vector3::new(v.normal.x * x, v.normal.y * y, v.normal.z * z).normalize()
                     })
                     .unwrap_or_else(|| Vector3::from(v.normal));
-                let up = Vector3::y();
-                let tangent = normal.cross(&up).cross(&normal);
+                let tangent1 = normal.cross(&Vector3::x());
+                let tangent2 = normal.cross(&Vector3::y());
+                let tangent = if tangent1.norm_squared() > tangent2.norm_squared() {
+                    tangent1
+                } else {
+                    tangent2
+                }
+                .cross(&normal);
+
                 (
                     pos.into(),
                     normal.into(),

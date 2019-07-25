@@ -33,7 +33,7 @@ impl<T: BindingTypes> InputSystem<T> {
     fn process_event(
         event: &Event,
         handler: &mut InputHandler<T>,
-        output: &mut EventChannel<InputEvent<T::Action>>,
+        output: &mut EventChannel<InputEvent<T>>,
         hidpi: f32,
     ) {
         handler.send_event(event, output, hidpi as f32);
@@ -44,7 +44,7 @@ impl<'a, T: BindingTypes> System<'a> for InputSystem<T> {
     type SystemData = (
         Read<'a, EventChannel<Event>>,
         Write<'a, InputHandler<T>>,
-        Write<'a, EventChannel<InputEvent<T::Action>>>,
+        Write<'a, EventChannel<InputEvent<T>>>,
         ReadExpect<'a, ScreenDimensions>,
     );
 
