@@ -38,7 +38,6 @@ use amethyst_rendy::{
     submodules::{DynamicUniform, DynamicVertexBuffer, TextureId, TextureSub},
     types::{Backend, Texture},
     ChangeDetection, SpriteSheet,
-
 };
 use amethyst_window::ScreenDimensions;
 use derivative::Derivative;
