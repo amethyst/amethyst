@@ -70,7 +70,7 @@ type SdlEventsData<'a, T> = (
 
 impl<'a, T: BindingTypes> RunNow<'a> for SdlEventsSystem<T> {
     fn run_now(&mut self, world: &'a World) {
-        let (mut handler, mut output) = SdlEventsData::fetch(res);
+        let (mut handler, mut output) = SdlEventsData::fetch(world);
 
         let mut event_pump = self
             .event_pump
@@ -83,7 +83,7 @@ impl<'a, T: BindingTypes> RunNow<'a> for SdlEventsSystem<T> {
         self.event_pump = Some(event_pump);
     }
 
-    fn setup(&mut self, res: &mut Resources) {}
+    fn setup(&mut self, world: &mut World) {}
 }
 
 impl<T: BindingTypes> SdlEventsSystem<T> {
