@@ -37,7 +37,7 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 * Make the GltfSceneOptions field of GltfSceneFormat public. ([#1791])
 * Updated fluent to version 0.6. ([#1800])
  `InputEvent<T>` now takes in the `BindingTypes` as a type parameter. ([#1797])
-* Updated `crossbeam` to `0.7.2`. ([#1822]) 
+* Use `crossbeam-queue` crate directly. ([#1822]) 
 
 ### Fixed
 

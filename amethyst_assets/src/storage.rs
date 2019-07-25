@@ -6,7 +6,7 @@ use std::{
     },
 };
 
-use crossbeam::queue::SegQueue;
+use crossbeam_queue::SegQueue;
 use derivative::Derivative;
 use hibitset::BitSet;
 use log::{debug, error, trace, warn};
