@@ -118,11 +118,11 @@ fn main() -> Result<(), Error> {
     let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let assets_directory = app_root.join("examples/assets");
+    let assets_dir = app_root.join("examples/assets");
 
     let display_config_path = app_root.join("examples/asset_loading/config/display.ron");
 
-    let mut world = World::new();
+    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
@@ -137,7 +137,7 @@ fn main() -> Result<(), Error> {
         )?
         .with_bundle(&mut world, InputBundle::<StringBindings>::new())?
         .with_bundle(&mut world, TransformBundle::new())?;
-    let mut game = Application::new(assets_directory, AssetsExample, game_data, world)?;
+    let mut game = Application::new(AssetsExample, game_data, world)?;
     game.run();
     Ok(())
 }

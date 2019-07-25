@@ -12,7 +12,7 @@ use amethyst::{
     derive::PrefabData,
     ecs::{prelude::Entity, Entities, Join, ReadStorage, WriteStorage},
     error::Error,
-    prelude::{Builder, World, WorldExt},
+    prelude::{AmethystWorldExt, Builder, World, WorldExt},
     renderer::{
         camera::Camera,
         plugins::{RenderFlat2D, RenderToWindow},
@@ -133,10 +133,10 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let app_root = application_root_dir()?;
-    let assets_directory = app_root.join("examples/assets/");
+    let assets_dir = app_root.join("examples/assets/");
     let display_config_path = app_root.join("examples/sprite_animation/config/display.ron");
 
-    let mut world = World::new();
+    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
         .with(
@@ -166,7 +166,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderFlat2D::default()),
         )?;
 
-    let mut game = Application::new(assets_directory, Example::default(), game_data, world)?;
+    let mut game = Application::new(Example::default(), game_data, world)?;
     game.run();
 
     Ok(())

@@ -31,16 +31,16 @@ fn main() -> amethyst::Result<()> {
     let app_root = application_root_dir()?;
     let display_config_path = app_root.join("examples/window/config/display.ron");
 
-    let assets_directory = app_root.join("examples/window/assets/");
+    let assets_dir = app_root.join("examples/window/assets/");
 
-    let mut world = World::new();
+    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default().with_bundle(
         &mut world,
         WindowBundle::from_config_path(display_config_path),
     )?;
 
-    let mut game = Application::new(assets_directory, ExampleState, game_data, world)?;
+    let mut game = Application::new(ExampleState, game_data, world)?;
     game.run();
 
     Ok(())

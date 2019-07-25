@@ -99,12 +99,16 @@ impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReade
     /// Returns an Amethyst application without any bundles.
     pub fn blank() -> AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader>
     {
+        let assets_dir =
+            AmethystApplication::assets_dir().expect("Failed to get default assets dir.");
+        let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)
+            .expect("Failed to initialize `World`.");
         AmethystApplication {
             bundle_add_fns: Vec::new(),
             resource_add_fns: Vec::new(),
             state_fns: Vec::new(),
             state_data: PhantomData,
-            world: World::new(),
+            world,
         }
     }
 
@@ -192,8 +196,7 @@ where
         S: State<GameData<'static, 'static>, E> + 'static,
         for<'b> R: EventReader<'b, Event = E>,
     {
-        let mut application_builder =
-            CoreApplication::build(AmethystApplication::assets_dir()?, first_state, world)?;
+        let mut application_builder = CoreApplication::build(first_state, world)?;
         {
             let world = &mut application_builder.world;
             for mut function in resource_add_fns {

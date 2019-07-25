@@ -58,13 +58,13 @@ fn main() -> Result<(), Error> {
 
     let app_root = application_root_dir()?;
 
-    let assets_directory = app_root.join("examples/assets");
+    let assets_dir = app_root.join("examples/assets");
 
     let display_config_path = app_root.join("examples/fly_camera/config/display.ron");
 
     let key_bindings_path = app_root.join("examples/fly_camera/config/input.ron");
 
-    let mut world = World::new();
+    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
@@ -95,7 +95,7 @@ fn main() -> Result<(), Error> {
             InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
         )?;
 
-    let mut game = Application::build(assets_directory, ExampleState, world)?.build(game_data)?;
+    let mut game = Application::build(ExampleState, world)?.build(game_data)?;
     game.run();
     Ok(())
 }

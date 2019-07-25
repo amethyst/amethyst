@@ -365,9 +365,9 @@ fn main() -> amethyst::Result<()> {
 
     let display_config_path = app_root.join("examples/sprites_ordered/config/display.ron");
 
-    let assets_directory = app_root.join("examples/assets/");
+    let assets_dir = app_root.join("examples/assets/");
 
-    let mut world = World::new();
+    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
@@ -381,7 +381,7 @@ fn main() -> amethyst::Result<()> {
         )?
         .with_bundle(&mut world, TransformBundle::new())?;
 
-    let mut game = Application::new(assets_directory, Example::new(), game_data, world)?;
+    let mut game = Application::new(Example::new(), game_data, world)?;
     game.run();
 
     Ok(())

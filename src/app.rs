@@ -1,11 +1,10 @@
 //! The core engine framework.
 
-use std::{env, marker::PhantomData, path::Path, sync::Arc, time::Duration};
+use std::{marker::PhantomData, time::Duration};
 
 use crate::shred::Resource;
 use derivative::Derivative;
-use log::{debug, info, log_enabled, trace, Level};
-use rayon::ThreadPoolBuilder;
+use log::{info, log_enabled, trace, Level};
 use sentry::integrations::panic::register_panic_handler;
 use winit::Event;
 
@@ -19,14 +18,13 @@ use crate::{
         frame_limiter::{FrameLimiter, FrameRateLimitConfig, FrameRateLimitStrategy},
         shrev::{EventChannel, ReaderId},
         timing::{Stopwatch, Time},
-        ArcThreadPool, EventReader, Named,
+        EventReader,
     },
     ecs::prelude::{Component, Read, World, WorldExt, Write},
     error::Error,
     game_data::{DataDispose, DataInit},
     state::{State, StateData, StateMachine, TransEvent},
     state_event::{StateEvent, StateEventReader},
-    ui::UiEvent,
 };
 
 /// `CoreApplication` is the application implementation for the game engine. This is fully generic
@@ -89,7 +87,8 @@ where
 ///     amethyst::start_logger(Default::default());
 ///
 ///     // Build the application instance to initialize the default logger.
-///     let mut game = Application::build("assets/", NullState)?
+///     let mut world = World::with_application_resources::<GameData<'_, '_>, _>("assets/")?;
+///     let mut game = Application::build(NullState, world)?
 ///         .build(())?;
 ///
 ///     // Now logging can be performed as normal.
@@ -118,7 +117,8 @@ where
 ///
 ///     // The default logger will be automatically disabled and any logging amethyst does
 ///     // will go through your custom logger.
-///     let mut game = Application::build("assets/", NullState)?
+///     let mut world = World::with_application_resources::<GameData<'_, '_>, _>("assets/")?;
+///     let mut game = Application::build(NullState, world)?
 ///         .build(())?;
 ///
 ///     Ok(())
@@ -178,35 +178,35 @@ where
     /// struct NullState;
     /// impl EmptyState for NullState {}
     ///
-    /// let mut game = Application::new("assets/", NullState, ()).expect("Failed to initialize");
+    /// # fn main() -> amethyst::Result<()> {
+    /// #
+    /// let world = World::with_application_resources::<GameData<'_, '_>, _>("assets/")?;
+    /// let mut game = Application::new(NullState, (), world).expect("Failed to initialize");
     /// game.run();
+    ///
+    /// #     Ok(())
+    /// # }
     /// ~~~
-    pub fn new<P, S, I>(path: P, initial_state: S, init: I, world: World) -> Result<Self, Error>
+    pub fn new<S, I>(initial_state: S, init: I, world: World) -> Result<Self, Error>
     where
-        P: AsRef<Path>,
         S: State<T, E> + 'a,
         I: DataInit<T>,
         for<'b> R: EventReader<'b, Event = E>,
         R: Default,
     {
-        ApplicationBuilder::new(path, initial_state, world)?.build(init)
+        ApplicationBuilder::new(initial_state, world)?.build(init)
     }
 
     /// Creates a new ApplicationBuilder with the given initial game state.
     ///
     /// This is identical in function to
     /// [ApplicationBuilder::new](struct.ApplicationBuilder.html#method.new).
-    pub fn build<P, S>(
-        path: P,
-        initial_state: S,
-        world: World,
-    ) -> Result<ApplicationBuilder<S, T, E, R>, Error>
+    pub fn build<S>(initial_state: S, world: World) -> Result<ApplicationBuilder<S, T, E, R>, Error>
     where
-        P: AsRef<Path>,
         S: State<T, E> + 'a,
         for<'b> R: EventReader<'b, Event = E>,
     {
-        ApplicationBuilder::new(path, initial_state, world)
+        ApplicationBuilder::new(initial_state, world)
     }
 
     /// Run the gameloop until the game state indicates that the game is no
@@ -459,11 +459,14 @@ where
     /// struct NullState;
     /// impl EmptyState for NullState {}
     ///
+    /// # fn main() -> amethyst::Result<()> {
+    /// #
     /// // initialize the builder, the `ApplicationBuilder` object
     /// // follows the use pattern of most builder objects found
     /// // in the rust ecosystem. Each function modifies the object
     /// // returning a new object with the modified configuration.
-    /// let mut game = Application::build("assets/", NullState)
+    /// let mut world = World::with_application_resources::<GameData<'_, '_>, _>("assets/")?;
+    /// let mut game = Application::build(NullState, world)
     ///     .expect("Failed to initialize")
     ///
     /// // components can be registered at this stage
@@ -477,8 +480,11 @@ where
     ///
     /// // the game instance can now be run, this exits only when the game is done
     /// game.run();
+    ///
+    /// # Ok(())
+    /// # }
     /// ~~~
-    pub fn new<P: AsRef<Path>>(path: P, initial_state: S, mut world: World) -> Result<Self, Error> {
+    pub fn new(initial_state: S, world: World) -> Result<Self, Error> {
         if !log_enabled!(Level::Error) {
             eprintln!(
                 "WARNING: No logger detected! Did you forget to call `amethyst::start_logger()`?"
@@ -501,42 +507,6 @@ where
         if let Some(hash) = rustc_meta.commit_hash {
             info!("Rustc git commit: {}", hash);
         }
-
-        let thread_count: Option<usize> = env::var("AMETHYST_NUM_THREADS")
-            .as_ref()
-            .map(|s| {
-                s.as_str()
-                    .parse()
-                    .expect("AMETHYST_NUM_THREADS was provided but is not a valid number!")
-            })
-            .ok();
-
-        let thread_pool_builder = ThreadPoolBuilder::new();
-        #[cfg(feature = "profiler")]
-        let thread_pool_builder = thread_pool_builder.start_handler(|_index| {
-            register_thread_with_profiler();
-        });
-        let pool: ArcThreadPool;
-        if let Some(thread_count) = thread_count {
-            debug!("Running Amethyst with fixed thread pool: {}", thread_count);
-            pool = thread_pool_builder
-                .num_threads(thread_count)
-                .build()
-                .map(Arc::new)?;
-        } else {
-            pool = thread_pool_builder.build().map(Arc::new)?;
-        }
-        world.insert(Loader::new(path.as_ref().to_owned(), pool.clone()));
-        world.insert(pool);
-        world.insert(EventChannel::<Event>::with_capacity(2000));
-        world.insert(EventChannel::<UiEvent>::with_capacity(40));
-        world.insert(EventChannel::<TransEvent<T, StateEvent>>::with_capacity(2));
-        world.insert(FrameLimiter::default());
-        world.insert(Stopwatch::default());
-        world.insert(Time::default());
-        world.insert(CallbackQueue::default());
-
-        world.register::<Named>();
 
         Ok(Self {
             initial_state,
@@ -591,9 +561,13 @@ where
     ///
     /// // After creating a builder, we can add any number of components
     /// // using the register method.
-    /// Application::build("assets/", NullState)
+    /// # fn main() -> amethyst::Result<()> {
+    /// let mut world = World::with_application_resources::<GameData<'_, '_>, _>("assets/")?;
+    /// let mut game = Application::build(NullState, world)
     ///     .expect("Failed to initialize")
     ///     .register::<Velocity>();
+    /// #     Ok(())
+    /// # }
     /// ~~~
     ///
     pub fn register<C>(mut self) -> Self
@@ -643,10 +617,14 @@ where
     ///     user: String
     /// }
     ///
+    /// # fn main() -> amethyst::Result<()> {
     /// let score_board = HighScores(Vec::new());
-    /// Application::build("assets/", NullState)
+    /// let mut world = World::with_application_resources::<GameData<'_, '_>, _>("assets/")?;
+    /// let mut game = Application::build(NullState, world)
     ///     .expect("Failed to initialize")
     ///     .with_resource(score_board);
+    /// #     Ok(())
+    /// # }
     ///
     /// ~~~
     pub fn with_resource<R>(mut self, resource: R) -> Self
@@ -686,13 +664,17 @@ where
     /// use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
     /// use amethyst::ecs::prelude::World;
     ///
-    /// let mut game = Application::build("assets/", LoadingState)
+    /// # fn main() -> amethyst::Result<()> {
+    /// let mut world = World::with_application_resources::<GameData<'_, '_>, _>("assets/")?;
+    /// let mut game = Application::build(LoadingState, world)
     ///     .expect("Failed to initialize")
     ///     // Register the directory "custom_directory" under the name "resources".
     ///     .with_source("custom_store", Directory::new("custom_directory"))
     ///     .build(GameDataBuilder::default())
     ///     .expect("Failed to build game")
     ///     .run();
+    /// #     Ok(())
+    /// # }
     ///
     /// struct LoadingState;
     /// impl SimpleState for LoadingState {
@@ -740,13 +722,17 @@ where
     /// use amethyst::renderer::{Mesh, formats::mesh::ObjFormat};
     /// use amethyst::ecs::prelude::World;
     ///
-    /// let mut game = Application::build("assets/", LoadingState)
+    /// # fn main() -> amethyst::Result<()> {
+    /// let mut world = World::with_application_resources::<GameData<'_, '_>, _>("assets/")?;
+    /// let mut game = Application::build(LoadingState, world)
     ///     .expect("Failed to initialize")
     ///     // Register the directory "custom_directory" as default source for the loader.
     ///     .with_default_source(Directory::new("custom_directory"))
     ///     .build(GameDataBuilder::default())
     ///     .expect("Failed to build game")
     ///     .run();
+    /// #     Ok(())
+    /// # }
     ///
     /// struct LoadingState;
     /// impl SimpleState for LoadingState {

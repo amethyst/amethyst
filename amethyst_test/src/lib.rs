@@ -176,15 +176,16 @@
 //! #     fn run(&mut self, _: Self::SystemData) {}
 //! #
 //! #     fn setup(&mut self, world: &mut World) {
-//! #         Self::SystemData::setup(res);
-//! #         res.insert(ApplicationResource);
+//! #         Self::SystemData::setup(world);
+//! #         world.insert(ApplicationResource);
 //! #     }
 //! # }
 //! #
 //! # #[derive(Debug)]
 //! # struct MyBundle;
 //! # impl<'a, 'b> SystemBundle<'a, 'b> for MyBundle {
-//! #     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> amethyst::Result<()> {
+//! #     fn build(self, _world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>)
+//! #     -> amethyst::Result<()> {
 //! #         builder.add(MySystem, "my_system", &[]);
 //! #         Ok(())
 //! #     }
@@ -194,7 +195,7 @@
 //! fn bundle_registers_system_with_resource() {
 //!     assert!(
 //!         AmethystApplication::blank()
-//!             .with_bundle(&mut world, MyBundle)
+//!             .with_bundle(MyBundle)
 //!             .with_assertion(|world| { world.read_resource::<ApplicationResource>(); })
 //!             .run()
 //!             .is_ok()

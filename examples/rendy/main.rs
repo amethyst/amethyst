@@ -568,9 +568,9 @@ fn main() -> amethyst::Result<()> {
         .join("rendy")
         .join("config")
         .join("display.ron");
-    let assets_directory = app_root.join("examples").join("assets");
+    let assets_dir = app_root.join("examples").join("assets");
 
-    let mut world = World::new();
+    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let mut bindings = Bindings::new();
     bindings.insert_axis(
@@ -691,7 +691,7 @@ impl RenderPlugin<DefaultBackend> for RenderSwitchable3D {
     }
 
     fn should_rebuild(&mut self, world: &World) -> bool {
-        let mode = *<Read<'_, RenderMode>>::fetch(res);
+        let mode = *<Read<'_, RenderMode>>::fetch(world);
         self.last_mode != mode
     }
 
@@ -701,12 +701,12 @@ impl RenderPlugin<DefaultBackend> for RenderSwitchable3D {
         factory: &mut Factory<DefaultBackend>,
         world: &World,
     ) -> Result<(), Error> {
-        let mode = *<Read<'_, RenderMode>>::fetch(res);
+        let mode = *<Read<'_, RenderMode>>::fetch(world);
         self.last_mode = mode;
         match mode {
-            RenderMode::Pbr => self.pbr.on_plan(plan, factory, res),
-            RenderMode::Shaded => self.shaded.on_plan(plan, factory, res),
-            RenderMode::Flat => self.flat.on_plan(plan, factory, res),
+            RenderMode::Pbr => self.pbr.on_plan(plan, factory, world),
+            RenderMode::Shaded => self.shaded.on_plan(plan, factory, world),
+            RenderMode::Flat => self.flat.on_plan(plan, factory, world),
         }
     }
 }

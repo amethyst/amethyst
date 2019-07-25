@@ -48,7 +48,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for HotReloadBundle {
 ///
 /// ```
 /// # use amethyst_assets::HotReloadStrategy;
-/// # use amethyst_core::ecs::prelude::World;
+/// # use amethyst_core::ecs::{World, WorldExt};
 /// #
 /// # fn main() {
 /// let mut world = World::new();

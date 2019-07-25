@@ -187,7 +187,7 @@ fn main() -> Result<(), Error> {
     let app_root = application_root_dir()?;
 
     // Add our meshes directory to the asset loader.
-    let assets_directory = app_root.join("examples").join("assets");
+    let assets_dir = app_root.join("examples").join("assets");
 
     let display_config_path = app_root
         .join("examples")
@@ -195,7 +195,7 @@ fn main() -> Result<(), Error> {
         .join("config")
         .join("display.ron");
 
-    let mut world = World::new();
+    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
@@ -218,8 +218,7 @@ fn main() -> Result<(), Error> {
         .with_bundle(&mut world, HotReloadBundle::default())?
         .with_bundle(&mut world, FpsCounterBundle::default())?
         .with_bundle(&mut world, InputBundle::<StringBindings>::new())?;
-    let mut game =
-        Application::build(assets_directory, Loading::default(), world)?.build(game_data)?;
+    let mut game = Application::build(Loading::default(), world)?.build(game_data)?;
     game.run();
     Ok(())
 }

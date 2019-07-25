@@ -124,11 +124,10 @@ fn main() -> amethyst::Result<()> {
     let app_root = application_root_dir()?;
     let assets_dir = app_root.join("assets");
 
-    let world = World::new();
+    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default().with(Processor::<EnergyBlast>::new(), "", &[]);
     let mut game = Application::new(
-        assets_dir,
         LoadingState {
             progress_counter: ProgressCounter::new(),
             energy_blast_handle: None,

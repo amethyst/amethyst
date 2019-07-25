@@ -8,8 +8,8 @@ use amethyst::{
     ecs::{Entity, ReadExpect, ReadStorage, System, World, WorldExt, WriteStorage},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::{
-        Application, Builder, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData,
-        StateEvent, Trans,
+        AmethystWorldExt, Application, Builder, GameData, GameDataBuilder, SimpleState,
+        SimpleTrans, StateData, StateEvent, Trans,
     },
     renderer::{
         camera::{Camera, CameraPrefab},
@@ -39,9 +39,9 @@ fn main() -> Result<(), Error> {
 
     let app_dir = amethyst::utils::application_dir("examples")?;
     let display_config_path = app_dir.join("auto_fov/config/display.ron");
-    let assets_directory = app_dir.join("assets");
+    let assets_dir = app_dir.join("assets");
 
-    let mut world = World::new();
+    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::new()
         .with(
@@ -66,7 +66,7 @@ fn main() -> Result<(), Error> {
         .with_bundle(&mut world, InputBundle::<StringBindings>::new())?
         .with_bundle(&mut world, UiBundle::<StringBindings>::new())?;
 
-    let mut game = Application::build(assets_directory, Loading::new(), world)?.build(game_data)?;
+    let mut game = Application::build(Loading::new(), world)?.build(game_data)?;
     game.run();
 
     Ok(())

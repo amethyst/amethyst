@@ -177,7 +177,7 @@ fn main() -> amethyst::Result<()> {
 
     let display_config_path = app_root.join("examples/debug_lines/config/display.ron");
     let key_bindings_path = app_root.join("examples/debug_lines/config/input.ron");
-    let assets_directory = app_root.join("examples/assets/");
+    let assets_dir = app_root.join("examples/assets/");
 
     let fly_control_bundle = FlyControlBundle::<StringBindings>::new(
         Some(String::from("move_x")),
@@ -186,7 +186,7 @@ fn main() -> amethyst::Result<()> {
     )
     .with_sensitivity(0.1, 0.1);
 
-    let mut world = World::new();
+    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
@@ -211,7 +211,7 @@ fn main() -> amethyst::Result<()> {
             TransformBundle::new().with_dep(&["fly_movement"]),
         )?;
 
-    let mut game = Application::new(assets_directory, ExampleState, game_data, world)?;
+    let mut game = Application::new(ExampleState, game_data, world)?;
     game.run();
     Ok(())
 }

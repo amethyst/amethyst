@@ -4,6 +4,7 @@ use amethyst::{
     network::*,
     prelude::*,
     shrev::ReaderId,
+    utils::application_root_dir,
     Result,
 };
 
@@ -14,7 +15,8 @@ use std::time::Duration;
 fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
-    let mut world = World::new();
+    let assets_dir = application_root_dir()?.join("./");
+    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
@@ -22,7 +24,7 @@ fn main() -> Result<()> {
             NetworkBundle::<()>::new("127.0.0.1:23455".parse().unwrap()),
         )?
         .with(SpamReceiveSystem::new(), "rcv", &[]);
-    let mut game = Application::build("./", State1, world)?
+    let mut game = Application::build(State1, world)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             1,
