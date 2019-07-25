@@ -23,7 +23,7 @@ pub use self::{
     system::InputSystem,
     util::{
         get_input_axis_simple, get_key, get_mouse_button, is_close_requested, is_key_down,
-        is_mouse_button_down,
+        is_key_up, is_mouse_button_down,
     },
 };
 pub use winit::{ElementState, VirtualKeyCode};

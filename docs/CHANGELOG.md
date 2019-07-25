@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 ## Breaking changes
 
 * `Float` newtype removed, moved back to `f32` primitive for all values ([#1747])
+* `TextureProcessor` and `MeshProcessor` systems are now separated from `RenderingSystem` ([#1772])
 
 ### Added
 
@@ -23,9 +24,11 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 and the corresponding draw functions to `DebugLines`, to draw simple shapes with debug lines. ([#1766])
 * `InputEvent::AxisMoved` is sent upon button press / release. ([#1512], [#1797])
 * `UiImage` is updated to allow for partial textures and sprites. ([#1809],[#1811])
+* Added `RenderingBundle` with a rendering plugin system, making rendering setup easier ([#1772])
 
 ### Changed
 
+* Splitted the `/resources` directory of amethyst projects into `/assets` and `/config`. ([#1806])
 * Rename FPSCounter, FPSCounterBundle, FPSCounterSystem to FpsCounter, FpsCounterBundle, FpsCounterSystem. ([#1719])
 * Add Tint component support for sprites. ([#1756])
 * Remove remaining <N: RealField> type parameter on GameDataBuilder, add Debug derive to LoggerConfig ([#1758])
@@ -34,6 +37,7 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 * Add `SerializableFormat` marker trait which is now needed to be implemented for all the formats that are supposed to be serialized. ([#1720])
 * Make the GltfSceneOptions field of GltfSceneFormat public. ([#1791])
  `InputEvent<T>` now takes in the `BindingTypes` as a type parameter. ([#1797])
+* Fix the steps for enabling the nightly flag in the pong tutorial ([#1805])
 
 ### Fixed
 
@@ -55,6 +59,8 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 [#1797]: https://github.com/amethyst/amethyst/pull/1797
 [#1809]: https://github.com/amethyst/amethyst/issues/1809
 [#1811]: https://github.com/amethyst/amethyst/pull/1811
+[#1772]: https://github.com/amethyst/amethyst/pull/1772
+[#1805]: https://github.com/amethyst/amethyst/pull/1805
 
 ## [0.11.0] - 2019-06
 

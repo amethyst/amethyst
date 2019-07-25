@@ -1,3 +1,5 @@
+use amethyst_core::math::Vector2;
+
 /// World resource that stores screen dimensions.
 #[derive(Debug, PartialEq, Clone)]
 pub struct ScreenDimensions {
@@ -23,6 +25,11 @@ impl ScreenDimensions {
             hidpi,
             dirty: false,
         }
+    }
+
+    /// Retursn the current logical size of window as diagonal vector.
+    pub fn diagonal(&self) -> Vector2<f32> {
+        Vector2::new(self.width(), self.height())
     }
 
     /// Returns the current logical width of the window.

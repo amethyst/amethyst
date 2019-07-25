@@ -5,11 +5,10 @@ use crate::{
     resources::AmbientColor,
 };
 use amethyst_core::{
-    ecs::{Join, Read, ReadExpect, ReadStorage, Resources, SystemData},
+    ecs::{Join, Read, ReadStorage, Resources, SystemData},
     math::{convert, Matrix4, Vector3},
     transform::Transform,
 };
-use amethyst_window::ScreenDimensions;
 use glsl_layout::*;
 
 #[cfg(feature = "profiler")]
@@ -36,14 +35,13 @@ impl CameraGatherer {
         #[cfg(feature = "profiler")]
         profile_scope!("gather_cameras");
 
-        let (active_camera, cameras, transforms, dimensions) = <(
+        let (active_camera, cameras, transforms) = <(
             Read<'_, ActiveCamera>,
             ReadStorage<'_, Camera>,
             ReadStorage<'_, Transform>,
-            ReadExpect<'_, ScreenDimensions>,
         )>::fetch(res);
 
-        let defcam = Camera::standard_2d(dimensions.width(), dimensions.height());
+        let defcam = Camera::standard_2d(1.0, 1.0);
         let identity = Transform::default();
 
         let (camera, transform) = active_camera

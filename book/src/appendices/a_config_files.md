@@ -36,8 +36,8 @@ use std::path::Path;
 use amethyst::config::Config;
 ```
 
-For this project, we'll be placing a `config.ron` file in the same location as the `display_config.ron` and 
-`input.ron` files (likely the `resources/` folder).
+For this project, we'll be placing a `config.ron` file in the same location as the `display.ron` and 
+`input.ron` files (likely the `config/` folder).
 
 ## Chapters
 
