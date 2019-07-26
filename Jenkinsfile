@@ -103,13 +103,13 @@ pipeline {
                 stage("Test on Linux") {
                     agent {
                         docker {
-                            image 'amethystrs/builder-linux:nightly'
+                            image 'amethystrs/builder-linux:stable'
                             label 'docker'
                         }
                     }
                     steps {
                         echo 'Beginning tests...'
-                        sh 'cargo test --all --features "vulkan sdl_controller json saveload nightly"'
+                        sh 'cargo test --all --features "vulkan sdl_controller json saveload"'
                         echo 'Tests done!'
                     }
                 }
