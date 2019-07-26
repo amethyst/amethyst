@@ -114,7 +114,7 @@ impl<T: BindingTypes> SdlEventsSystem<T> {
             None => {}
         };
 
-        SdlEventsData::setup(world);
+        SdlEventsData::<T>::setup(world);
         let mut sys = SdlEventsSystem {
             sdl_context,
             event_pump: Some(event_pump),
