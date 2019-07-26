@@ -34,4 +34,4 @@ uuid = { version = "0.7.1", features = ["v4","serde"] }
 thread_profiler = { version = "0.3" , optional = true }
 laminar = "0.2.3"
 err-derive = "0.1"
-crossbeam-channel = "0.3.8"
+crossbeam-channel = "0.3.9"
