@@ -14,48 +14,85 @@ effect on the sprite.
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-use amethyst::assets::{AssetStorage, Handle, Loader};
-use amethyst::core::Transform;
-use amethyst::prelude::*;
-use amethyst::renderer::{ImageFormat, Texture};
-use amethsyt::renderer::resources::Tint;
-use amethyst::renderer::palette::Srgba;
+# use amethyst::assets::{AssetStorage, Loader, Handle};
+use amethyst::core::transform::Transform;
+# use amethyst::prelude::*;
+use amethyst::renderer::{
+    palette::Srgba,
+    resources::Tint,
+    SpriteRender, SpriteSheet,
+    Texture, Transparent
+};
+use amethyst::window::ScreenDimensions;
 
-fn init_image(world: &mut World, texture_handle: Handle<Texture>) {
-    use amethyst::core::math::RealField;
-
-    // Add a transform component to give the image a position
-    let mut transform = Transform::default();
-    transform.set_translation_x(0.0);
-    transform.set_translation_y(0.0);
-    
-    // Flip horizontally
-    transform.set_rotation_y_axis(f32::pi());
-
-    // Color white to show the sprite as normal.
-    // You can change the color at any point to modify the sprite's tint.
-    let color = Tint(Srgba::new(1.0, 1.0, 1.0, 1.0));
-
-    world
-        .create_entity()
-        .with(transform)
-        .with(color)
-        .with(texture_handle)
-        .build();
-}
-
+# pub fn load_texture<N>(name: N, world: &World) -> Handle<Texture>
+# where
+#     N: Into<String>,
+# {
+#     unimplemented!();
+# }
+#
+# pub fn load_sprite_sheet(texture: Handle<Texture>) -> SpriteSheet {
+#     unimplemented!();
+# }
 #[derive(Debug)]
 struct ExampleState;
 
 impl SimpleState for ExampleState {
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        let world = data.world;
-        let texture_handle = load_texture("texture/sprite_sheet.png", world);
+    fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
+#         let texture_handle = load_texture("texture/sprite_sheet.png", &data.world);
+# 
+#         let sprite_sheet = load_sprite_sheet(texture_handle);
+#         let sprite_sheet_handle = {
+#             let loader = data.world.read_resource::<Loader>();
+#             loader.load_from_data(
+#                 sprite_sheet,
+#                 (),
+#                 &data.world.read_resource::<AssetStorage<SpriteSheet>>(),
+#             )
+#         };
+        // ...
 
-        // show the image!
-        init_image(world, texture_handle);
+        self.initialize_sprite(&mut data.world, sprite_sheet_handle);
     }
 }
+
+impl ExampleState {
+    fn initialize_sprite(
+        &mut self,
+        world: &mut World,
+        sprite_sheet_handle: Handle<SpriteSheet>,
+    ) {
+        // ..
+
+#         let (width, height) = {
+#             let dim = world.read_resource::<ScreenDimensions>();
+#             (dim.width(), dim.height())
+#         };
+# 
+#         // Move the sprite to the middle of the window
+#         let mut sprite_transform = Transform::default();
+#         sprite_transform.set_translation_xyz(width / 2., height / 2., 0.);
+# 
+#         let sprite_render = SpriteRender {
+#             sprite_sheet: sprite_sheet_handle,
+#             sprite_number: 0, // First sprite
+#         };
+
+        // White shows the sprite as normal.
+        // You can change the color at any point to modify the sprite's tint.
+        let tint = Tint(Srgba::new(1.0, 1.0, 1.0, 1.0));
+
+        world
+            .create_entity()
+            .with(sprite_render)
+            .with(sprite_transform)
+            .with(tint)
+            .build();
+    }
+}
+#
+# fn main() {}
 ```
 
 [doc_tint]: https://docs-src.amethyst.rs/stable/amethyst_rendy/resources/struct.Tint.html
