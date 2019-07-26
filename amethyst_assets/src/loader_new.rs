@@ -228,10 +228,10 @@ pub trait Loader: Send + Sync {
     ///
     /// # Notes
     ///
-    /// Be careful not to confuse `AssetUuid` with `AssetTypeUuid`:
+    /// Be careful not to confuse `AssetUuid` with `AssetTypeId`:
     ///
     /// * `AssetUuid`: For an asset, such as "player_texture.png".
-    /// * `AssetTypeUuid`: For an asset type, such as `Texture`.
+    /// * `AssetTypeId`: For an asset type, such as `Texture`.
     ///
     /// # Parameters
     ///
@@ -244,10 +244,10 @@ pub trait Loader: Send + Sync {
     ///
     /// # Notes
     ///
-    /// Be careful not to confuse `AssetUuid` with `AssetTypeUuid`:
+    /// Be careful not to confuse `AssetUuid` with `AssetTypeId`:
     ///
     /// * `AssetUuid`: For an asset, such as "player_texture.png".
-    /// * `AssetTypeUuid`: For an asset type, such as `Texture`.
+    /// * `AssetTypeId`: For an asset type, such as `Texture`.
     ///
     /// # Parameters
     ///

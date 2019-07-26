@@ -89,6 +89,7 @@ impl App {
                 Some(state) => self.state = Some(state),
                 None => return,
             }
+            std::thread::sleep(std::time::Duration::from_millis(16));
         }
     }
 }
