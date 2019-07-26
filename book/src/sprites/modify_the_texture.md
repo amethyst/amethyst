@@ -19,7 +19,7 @@ use amethyst::core::Transform;
 use amethyst::prelude::*;
 use amethyst::renderer::{ImageFormat, Texture};
 use amethsyt::renderer::resources::Tint;
-use amethyst::renderer::palette::rgb::Srgba;
+use amethyst::renderer::palette::Srgba;
 
 fn init_image(world: &mut World, texture_handle: Handle<Texture>) {
     use amethyst::core::math::RealField;
@@ -32,7 +32,8 @@ fn init_image(world: &mut World, texture_handle: Handle<Texture>) {
     // Flip horizontally
     transform.set_rotation_y_axis(f32::pi());
 
-    // Color white to show as normal, then update later
+    // Color white to show the sprite as normal.
+    // You can change the color at any point to modify the sprite's tint.
     let color = Tint(Srgba::new(1.0, 1.0, 1.0, 1.0));
 
     world
