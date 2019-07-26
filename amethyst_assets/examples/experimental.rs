@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-use amethyst_assets::*;
+use amethyst_assets::{Format, experimental::*};
 use amethyst_core::ecs::{
     common::Errors,
     prelude::{Dispatcher, DispatcherBuilder, System, World, Write},
@@ -61,7 +61,7 @@ impl App {
         let mut world = World::new();
 
         world.add_resource(Errors::new());
-        let mut loader = NewDefaultLoader::default();
+        let mut loader = DefaultLoader::default();
         loader.init_world(&mut world.res);
         loader.init_dispatcher(&mut disp_builder);
         world.add_resource(loader);
@@ -76,7 +76,7 @@ impl App {
     fn update(&mut self) {
         self.dispatcher.dispatch(&mut self.world.res);
         self.world.maintain();
-        let mut loader = self.world.write_resource::<NewDefaultLoader>();
+        let mut loader = self.world.write_resource::<DefaultLoader>();
         loader.process(&self.world.res).unwrap(); // TODO unwrap
         let mut errors = self.world.write_resource::<Errors>();
         errors.print_and_exit();
@@ -100,12 +100,12 @@ pub struct ProcessingSystem;
 impl<'a> System<'a> for ProcessingSystem {
     type SystemData = (
         Write<'a, ProcessingQueue<VertexData>>,
-        Write<'a, NewAssetStorage<MeshAsset>>,
+        Write<'a, AssetStorage<MeshAsset>>,
     );
 
     fn run(&mut self, (mut processing_queue, mut storage): Self::SystemData) {
         processing_queue.process(&mut *storage, |_vertex_data| {
-            Ok(NewProcessingState::Loaded(MeshAsset { buffer: () }))
+            Ok(ProcessingState::Loaded(MeshAsset { buffer: () }))
         });
     }
 }
@@ -121,7 +121,7 @@ impl State {
     fn update(self, world: &mut World) -> Option<Self> {
         match self {
             State::Start => {
-                let loader = world.read_resource::<NewDefaultLoader>();
+                let loader = world.read_resource::<DefaultLoader>();
                 Some(State::Loading(
                     loader.load_asset_generic(
                         // TODO: implement a proc macro to parse asset uuids at compile time
@@ -134,7 +134,7 @@ impl State {
             }
             State::Loading(handle) => {
                 // Check the load status - this could be a loading screen
-                let loader = world.read_resource::<NewDefaultLoader>();
+                let loader = world.read_resource::<DefaultLoader>();
                 match handle.load_status(&*loader) {
                     LoadStatus::Loaded => Some(State::SomethingElse(handle)),
                     _ => Some(State::Loading(handle)),
@@ -143,7 +143,7 @@ impl State {
             State::SomethingElse(handle) => {
                 // You could now start the actual game, cause the loading is done.
                 // This example however will just quit.
-                let storage = world.read_resource::<NewAssetStorage<MeshAsset>>();
+                let storage = world.read_resource::<AssetStorage<MeshAsset>>();
                 println!("Loaded asset {:?}", handle.asset_with_version(&storage));
                 println!("Asset is loaded and the game can begin!");
                 println!("Game ending, sorry");

@@ -1,4 +1,4 @@
-use crate::{AssetUuid, Format};
+use crate::{experimental::AssetUuid, Format};
 pub use atelier_importer::SourceFileImporter;
 use atelier_importer::{self as importer, ImportedAsset, Importer, ImporterValue, SerdeObj};
 use serde::{Deserialize, Serialize};
@@ -99,9 +99,9 @@ macro_rules! register_importer {
     ($krate:ident; $ext:literal, $format:ty) => {
         $crate::inventory::submit!{
             #![crate = $krate]
-            $crate::SourceFileImporter {
+            $crate::experimental::SourceFileImporter {
                 extension: $ext,
-                instantiator: || Box::new($crate::SimpleImporter::from(<$format as Default>::default())),
+                instantiator: || Box::new($crate::experimental::SimpleImporter::from(<$format as Default>::default())),
             }
         }
     };

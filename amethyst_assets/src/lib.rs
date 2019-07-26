@@ -24,18 +24,6 @@ pub use crate::{
     source::{Directory, Source},
     storage::{AssetStorage, Handle, ProcessingState, Processor, WeakHandle},
 };
-#[cfg(feature = "experimental-assets")]
-pub use crate::{
-    loader_new::{
-        create_asset_type, AssetHandle, AssetUuid, DefaultLoader as NewDefaultLoader,
-        GenericHandle, Handle as NewHandle, LoadStatus, Loader as NewLoader,
-    },
-    processor::{
-        ProcessingQueue, ProcessingState as NewProcessingState, Processor as NewProcessor,
-    },
-    simple_importer::{SimpleImporter, SourceFileImporter},
-    storage_new::AssetStorage as NewAssetStorage,
-};
 
 pub use rayon::ThreadPool;
 
@@ -60,6 +48,20 @@ mod processor;
 mod simple_importer;
 #[cfg(feature = "experimental-assets")]
 mod storage_new;
+#[cfg(feature = "experimental-assets")]
+pub mod experimental {
+    pub use crate::{
+        loader_new::{
+            create_asset_type, AssetHandle, AssetUuid, DefaultLoader,
+            GenericHandle, Handle, LoadStatus, Loader,
+        },
+        processor::{
+            ProcessingQueue, ProcessingState, Processor,
+        },
+        simple_importer::{SimpleImporter, SourceFileImporter},
+        storage_new::AssetStorage,
+    };
+}
 
 /// Registers an importer for the new experimental asset system
 #[cfg(not(feature = "experimental-assets"))]
