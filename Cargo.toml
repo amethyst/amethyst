@@ -19,7 +19,7 @@ license = "MIT/Apache-2.0"
 travis-ci = { repository = "amethyst/amethyst", branch = "master" }
 
 [features]
-default = ["animation", "audio", "locale", "network", "renderer"]
+default = ["animation", "audio", "locale", "network", "renderer", "sentry"]
 
 vulkan = ["amethyst_rendy/vulkan"]
 metal = ["amethyst_rendy/metal"]
@@ -126,7 +126,7 @@ fern = { version = "0.5", features = ["colored"] }
 log = { version = "0.4.6", features = ["serde"] }
 rayon = "1.1.0"
 rustc_version_runtime = "0.1"
-sentry = "0.15.4"
+sentry = { version = "0.15.4", optional = true }
 winit = { version = "0.19", features = ["serde", "icon_loading"] }
 serde = { version = "1.0", features = ["derive"] }
 palette = { version = "0.4", features = ["serde"] }

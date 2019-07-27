@@ -6,6 +6,7 @@ use crate::shred::Resource;
 use derivative::Derivative;
 use log::{debug, info, log_enabled, trace, Level};
 use rayon::ThreadPoolBuilder;
+#[cfg(feature = "sentry")]
 use sentry::integrations::panic::register_panic_handler;
 use winit::Event;
 
@@ -221,6 +222,7 @@ where
     where
         for<'b> R: EventReader<'b, Event = E>,
     {
+        #[cfg(feature = "sentry")]
         let _sentry_guard = if let Some(dsn) = option_env!("SENTRY_DSN") {
             let guard = sentry::init(dsn);
             register_panic_handler();
@@ -493,8 +495,11 @@ where
         info!("Version: {}", env!("CARGO_PKG_VERSION"));
         info!("Platform: {}", env!("VERGEN_TARGET_TRIPLE"));
         info!("Amethyst git commit: {}", env!("VERGEN_SHA"));
-        if let Some(sentry) = option_env!("SENTRY_DSN") {
-            info!("Sentry DSN: {}", sentry);
+        #[cfg(feature = "sentry")]
+        {
+            if let Some(sentry) = option_env!("SENTRY_DSN") {
+                info!("Sentry DSN: {}", sentry);
+            }
         }
 
         let rustc_meta = rustc_version_runtime::version_meta();
