@@ -1,223 +1,24 @@
-use crate::{processor::ProcessingQueue, storage_new::AssetStorage};
+use crate::{
+    handle_new::{GenericHandle, Handle, SerdeContext, WeakHandle, AssetHandle},
+    processor::ProcessingQueue,
+    storage_new::AssetStorage,
+};
 use amethyst_core::ecs::{
-    prelude::{Component, DenseVecStorage},
     DispatcherBuilder, Resources, System,
 };
-use atelier_loader::{self, AssetLoadOp, AssetTypeId, Loader as AtelierLoader};
+use atelier_loader::{self, AssetLoadOp, AssetTypeId, Loader as AtelierLoader, LoaderInfoProvider};
 use bincode;
 use crossbeam::channel::{unbounded, Receiver, Sender};
-use derivative::Derivative;
 use serde::de::Deserialize;
-use std::{collections::HashMap, error::Error, marker::PhantomData, sync::Arc};
+use std::{
+    cell::RefCell,
+    collections::HashMap,
+    error::Error,
+    sync::Arc,
+};
 
 pub(crate) use atelier_loader::LoadHandle;
 pub use atelier_loader::{AssetUuid, LoadStatus, TypeUuid};
-
-/// Handle to an asset.
-#[derive(Derivative)]
-#[derivative(
-    Clone(bound = ""),
-    Eq(bound = ""),
-    Hash(bound = ""),
-    PartialEq(bound = ""),
-    Debug(bound = "")
-)]
-pub struct Handle<T: ?Sized> {
-    chan: Arc<Sender<RefOp>>,
-    id: LoadHandle,
-    marker: PhantomData<T>,
-}
-
-impl<T> Handle<T> {
-    fn new(chan: Arc<Sender<RefOp>>, handle: LoadHandle) -> Self {
-        Self {
-            chan,
-            id: handle,
-            marker: PhantomData,
-        }
-    }
-}
-
-impl<T: ?Sized> Drop for Handle<T> {
-    fn drop(&mut self) {
-        self.chan.send(RefOp::Decrease(self.id))
-    }
-}
-
-impl<T> AssetHandle for Handle<T> {
-    fn load_handle(&self) -> &LoadHandle {
-        &self.id
-    }
-}
-
-/// Handle to an asset whose type is unknown during loading.
-///
-/// This is returned by `Loader::load_asset_generic` for assets loaded by UUID.
-#[derive(Derivative)]
-#[derivative(
-    Clone(bound = ""),
-    Eq(bound = ""),
-    Hash(bound = ""),
-    PartialEq(bound = ""),
-    Debug(bound = "")
-)]
-pub struct GenericHandle {
-    chan: Arc<Sender<RefOp>>,
-    id: LoadHandle,
-}
-
-impl GenericHandle {
-    fn new(chan: Arc<Sender<RefOp>>, handle: LoadHandle) -> Self {
-        Self { chan, id: handle }
-    }
-}
-
-impl Drop for GenericHandle {
-    fn drop(&mut self) {
-        self.chan.send(RefOp::Decrease(self.id))
-    }
-}
-
-impl AssetHandle for GenericHandle {
-    fn load_handle(&self) -> &LoadHandle {
-        &self.id
-    }
-}
-
-/// Handle to an asset that does not prevent the asset from being unloaded.
-///
-/// Weak handles are primarily used when you want to use something that is already loaded.
-///
-/// For example, a strong handle to an asset may be guaranteed to exist elsewhere in the program,
-/// and so you can simply get and use a weak handle to that asset in other parts of your code. This
-/// removes reference counting overhead, but also ensures that the system which uses the weak handle
-/// is not in control of when to unload the asset.
-#[derive(Derivative)]
-#[derivative(
-    Clone(bound = ""),
-    Eq(bound = ""),
-    Hash(bound = ""),
-    PartialEq(bound = ""),
-    Debug(bound = "")
-)]
-pub struct WeakHandle {
-    id: LoadHandle,
-}
-
-impl WeakHandle {
-    fn new(handle: LoadHandle) -> Self {
-        WeakHandle { id: handle }
-    }
-}
-
-impl AssetHandle for WeakHandle {
-    fn load_handle(&self) -> &LoadHandle {
-        &self.id
-    }
-}
-
-impl<T: TypeUuid + Send + Sync + 'static> Component for Handle<T> {
-    type Storage = DenseVecStorage<Handle<T>>;
-}
-
-/// The contract of an asset handle.
-///
-/// There are two types of asset handles:
-///
-/// * **Typed -- `Handle<T>`:** When the asset's type is known when loading.
-/// * **Generic -- `GenericHandle`:** When only the asset's UUID is known when loading.
-pub trait AssetHandle {
-    /// Returns the load status of the asset.
-    ///
-    /// # Parameters
-    ///
-    /// * `loader`: Loader that is loading the asset.
-    ///
-    /// # Type Parameters
-    ///
-    /// * `L`: Asset loader type.
-    fn load_status<L: Loader>(&self, loader: &L) -> LoadStatus {
-        loader.get_load_status_handle(self.load_handle())
-    }
-
-    /// Returns an immutable reference to the asset if it is committed.
-    ///
-    /// # Parameters
-    ///
-    /// * `storage`: Asset storage.
-    ///
-    /// # Type Parameters
-    ///
-    /// * `T`: Asset `TypeUuid`.
-    fn asset<'a, T: TypeUuid>(&self, storage: &'a AssetStorage<T>) -> Option<&'a T>
-    where
-        Self: Sized,
-    {
-        storage.get(self)
-    }
-
-    /// Returns a mutable reference to the asset if it is committed.
-    ///
-    /// # Parameters
-    ///
-    /// * `storage`: Asset storage.
-    ///
-    /// # Type Parameters
-    ///
-    /// * `T`: Asset `TypeUuid`.
-    fn asset_mut<'a, T: TypeUuid>(&self, storage: &'a mut AssetStorage<T>) -> Option<&'a mut T>
-    where
-        Self: Sized,
-    {
-        storage.get_mut(self)
-    }
-
-    /// Returns the version of the asset if it is committed.
-    ///
-    /// # Parameters
-    ///
-    /// * `storage`: Asset storage.
-    ///
-    /// # Type Parameters
-    ///
-    /// * `T`: Asset `TypeUuid`.
-    fn asset_version<'a, T: TypeUuid>(&self, storage: &'a AssetStorage<T>) -> Option<u32>
-    where
-        Self: Sized,
-    {
-        storage.get_version(self)
-    }
-
-    /// Returns the asset with the given version if it is committed.
-    ///
-    /// # Parameters
-    ///
-    /// * `storage`: Asset storage.
-    ///
-    /// # Type Parameters
-    ///
-    /// * `T`: Asset `TypeUuid`.
-    fn asset_with_version<'a, T: TypeUuid>(
-        &self,
-        storage: &'a AssetStorage<T>,
-    ) -> Option<(&'a T, u32)>
-    where
-        Self: Sized,
-    {
-        storage.get_asset_with_version(self)
-    }
-
-    /// Downgrades this handle into a `WeakHandle`.
-    ///
-    /// Be aware that if there are no longer any strong handles to the asset, then the underlying
-    /// asset may be freed at any time.
-    fn downgrade(&self) -> WeakHandle {
-        WeakHandle::new(*self.load_handle())
-    }
-
-    /// Returns the `LoadHandle` of this asset handle.
-    fn load_handle(&self) -> &LoadHandle;
-}
 
 /// Manages asset loading and storage for an application.
 pub trait Loader: Send + Sync {
@@ -354,8 +155,9 @@ pub trait Loader: Send + Sync {
 pub type DefaultLoader = LoaderWithStorage<atelier_loader::rpc_loader::RpcLoader>;
 
 /// Operations on an asset reference.
-enum RefOp {
+pub(crate) enum RefOp {
     Decrease(LoadHandle),
+    Increase(AssetUuid),
 }
 
 /// Asset loader and storage.
@@ -408,9 +210,12 @@ impl<T: AtelierLoader + Send + Sync> Loader for LoaderWithStorage<T> {
             match self.ref_receiver.try_recv() {
                 None => break,
                 Some(RefOp::Decrease(ref handle)) => self.loader.remove_ref(handle),
+                Some(RefOp::Increase(uuid)) => {
+                    self.loader.add_ref(uuid);
+                }
             }
         }
-        let storages = WorldStorages::new(resources, &self.storage_map);
+        let storages = WorldStorages::new(resources, &self.storage_map, &self.ref_sender);
         self.loader.process(&storages)
     }
 }
@@ -518,25 +323,35 @@ impl Default for AssetStorageMap {
 /// This contains immutable references to the `AssetStorageMap` and `World` resources.
 struct WorldStorages<'a> {
     storage_map: &'a AssetStorageMap,
+    ref_sender: &'a Arc<Sender<RefOp>>,
     res: &'a Resources,
 }
 
 impl<'a> WorldStorages<'a> {
-    fn new(res: &'a Resources, storage_map: &'a AssetStorageMap) -> WorldStorages<'a> {
-        WorldStorages { storage_map, res }
+    fn new(
+        res: &'a Resources,
+        storage_map: &'a AssetStorageMap,
+        ref_sender: &'a Arc<Sender<RefOp>>,
+    ) -> WorldStorages<'a> {
+        WorldStorages {
+            storage_map,
+            ref_sender,
+            res,
+        }
     }
 }
 
 impl<'a> atelier_loader::AssetStorage for WorldStorages<'a> {
     fn update_asset(
         &self,
+        loader_info: &dyn LoaderInfoProvider,
         asset_type: &AssetTypeId,
         data: &[u8],
         load_handle: &LoadHandle,
         load_op: AssetLoadOp,
         version: u32,
     ) -> Result<(), Box<dyn Error>> {
-        use std::cell::RefCell; // can't move into closure, so we work around it with a RefCell + Option
+        // can't move into closure, so we work around it with a RefCell + Option
         let moved_op = RefCell::new(Some(load_op));
         let mut result = None;
         (self
@@ -545,12 +360,14 @@ impl<'a> atelier_loader::AssetStorage for WorldStorages<'a> {
             .get(asset_type)
             .expect("could not find asset type")
             .with_storage)(self.res, &mut |storage: &mut dyn AssetTypeStorage| {
-            result = Some(storage.update_asset(
-                load_handle,
-                data,
-                moved_op.replace(None).unwrap(),
-                version,
-            ));
+            SerdeContext::with(loader_info, self.ref_sender.clone(), || {
+                result = Some(storage.update_asset(
+                    load_handle,
+                    data,
+                    moved_op.replace(None).unwrap(),
+                    version,
+                ));
+            });
         });
         result.unwrap()
     }
@@ -571,7 +388,7 @@ impl<'a> atelier_loader::AssetStorage for WorldStorages<'a> {
     }
     fn free(&self, asset_type: &AssetTypeId, load_handle: LoadHandle) {
         // TODO: this RefCell dance is probably not needed
-        use std::cell::RefCell; // can't move into closure, so we work around it with a RefCell + Option
+        // can't move into closure, so we work around it with a RefCell + Option
         let moved_handle = RefCell::new(Some(load_handle));
         (self
             .storage_map

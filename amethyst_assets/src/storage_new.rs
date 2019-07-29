@@ -2,7 +2,7 @@ use atelier_loader::LoadHandle;
 use crossbeam::queue::SegQueue;
 use std::collections::HashMap;
 
-use crate::loader_new::AssetHandle;
+use crate::handle_new::AssetHandle;
 
 struct AssetState<A> {
     version: u32,
