@@ -89,7 +89,7 @@ fn main() -> amethyst::Result<()> {
     let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
     world.insert(EventChannel::<MyEvent>::new());
 
-    let game_data = GameDataBuilder::default().with_bundle(&mut world, MyBundle)?;
+    let game_data = GameDataBuilder::default().with_bundle(MyBundle)?;
 
     let mut game = Application::build(GameplayState, world)?
         .with_frame_limit(FrameRateLimitStrategy::Sleep, 1)

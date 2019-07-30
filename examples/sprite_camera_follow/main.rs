@@ -208,7 +208,6 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
-            &mut world,
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)
@@ -216,9 +215,8 @@ fn main() -> amethyst::Result<()> {
                 )
                 .with_plugin(RenderFlat2D::default()),
         )?
-        .with_bundle(&mut world, TransformBundle::new())?
+        .with_bundle(TransformBundle::new())?
         .with_bundle(
-            &mut world,
             InputBundle::<StringBindings>::new().with_bindings_from_file(
                 app_root.join("examples/sprite_camera_follow/config/input.ron"),
             )?,

@@ -16,10 +16,9 @@ fn main() -> Result<()> {
     let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
-        .with_bundle(
-            &mut world,
-            NetworkBundle::<String>::new("127.0.0.1:3457".parse().unwrap()),
-        )?
+        .with_bundle(NetworkBundle::<String>::new(
+            "127.0.0.1:3457".parse().unwrap(),
+        ))?
         .with(SpamSystem::new(), "spam", &[]);
     let mut game = Application::build(State1, world)?
         .with_frame_limit(

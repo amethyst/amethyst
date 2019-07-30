@@ -144,20 +144,15 @@ fn main() -> amethyst::Result<()> {
             "scene_loader",
             &[],
         )
+        .with_bundle(AnimationBundle::<AnimationId, SpriteRender>::new(
+            "sprite_animation_control",
+            "sprite_sampler_interpolation",
+        ))?
         .with_bundle(
-            &mut world,
-            AnimationBundle::<AnimationId, SpriteRender>::new(
-                "sprite_animation_control",
-                "sprite_sampler_interpolation",
-            ),
-        )?
-        .with_bundle(
-            &mut world,
             TransformBundle::new()
                 .with_dep(&["sprite_animation_control", "sprite_sampler_interpolation"]),
         )?
         .with_bundle(
-            &mut world,
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)

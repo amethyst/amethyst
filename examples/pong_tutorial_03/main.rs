@@ -31,7 +31,6 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
-            &mut world,
             RenderingBundle::<DefaultBackend>::new()
                 // The RenderToWindow plugin provides all the scaffolding for opening a window and
                 // drawing on it
@@ -43,9 +42,8 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderFlat2D::default()),
         )?
         // Add the transform bundle which handles tracking entity positions
-        .with_bundle(&mut world, TransformBundle::new())?
+        .with_bundle(TransformBundle::new())?
         .with_bundle(
-            &mut world,
             InputBundle::<StringBindings>::new().with_bindings_from_file(
                 app_root.join("examples/pong_tutorial_03/config/bindings.ron"),
             )?,

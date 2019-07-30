@@ -299,14 +299,14 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     //                 .with_pass(pass)
     //                 .with_pass(DrawUi::new()),
     //         );
-    //         self.with_bundle(&mut world, RenderBundle::new(pipe, Some(config)))
+    //         self.with_bundle(RenderBundle::new(pipe, Some(config)))
     //     } else {
     //         let pipe = Pipeline::build().with_stage(
     //             Stage::with_backbuffer()
     //                 .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
     //                 .with_pass(pass),
     //         );
-    //         self.with_bundle(&mut world, RenderBundle::new(pipe, Some(config)))
+    //         self.with_bundle(RenderBundle::new(pipe, Some(config)))
     //     }
     // }
 }

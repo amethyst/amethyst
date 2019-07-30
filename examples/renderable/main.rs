@@ -201,7 +201,6 @@ fn main() -> Result<(), Error> {
         .with(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
         .with::<ExampleSystem>(ExampleSystem::default(), "example_system", &[])
         .with_bundle(
-            &mut world,
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)
@@ -210,14 +209,11 @@ fn main() -> Result<(), Error> {
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),
         )?
-        .with_bundle(
-            &mut world,
-            TransformBundle::new().with_dep(&["example_system"]),
-        )?
-        .with_bundle(&mut world, UiBundle::<StringBindings>::new())?
-        .with_bundle(&mut world, HotReloadBundle::default())?
-        .with_bundle(&mut world, FpsCounterBundle::default())?
-        .with_bundle(&mut world, InputBundle::<StringBindings>::new())?;
+        .with_bundle(TransformBundle::new().with_dep(&["example_system"]))?
+        .with_bundle(UiBundle::<StringBindings>::new())?
+        .with_bundle(HotReloadBundle::default())?
+        .with_bundle(FpsCounterBundle::default())?
+        .with_bundle(InputBundle::<StringBindings>::new())?;
     let mut game = Application::build(Loading::default(), world)?.build(game_data)?;
     game.run();
     Ok(())

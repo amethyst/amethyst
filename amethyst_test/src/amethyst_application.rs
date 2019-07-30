@@ -23,7 +23,6 @@ use crate::{
 
 type BundleAddFn = Box<
     dyn FnOnce(
-        &mut World,
         GameDataBuilder<'static, 'static>,
     ) -> Result<GameDataBuilder<'static, 'static>, Error>,
 >;
@@ -161,7 +160,7 @@ where
             Vec<FnResourceAdd>,
             Vec<FnState<GameData<'static, 'static>, E>>,
         ),
-        mut world: World,
+        world: World,
     ) -> Result<CoreApplication<'static, GameData<'static, 'static>, E, R>, Error>
     where
         for<'b> R: EventReader<'b, Event = E>,
@@ -169,7 +168,7 @@ where
         let game_data = bundle_add_fns.into_iter().fold(
             Ok(GameDataBuilder::default()),
             |game_data: Result<GameDataBuilder<'_, '_>, Error>, function: BundleAddFn| {
-                game_data.and_then(|game_data| function(&mut world, game_data))
+                game_data.and_then(|game_data| function(game_data))
             },
         )?;
 
@@ -327,11 +326,10 @@ where
         // `SendBoxFnOnce` is an implementation of this.
         //
         // See <https://users.rust-lang.org/t/move-a-boxed-function-inside-a-closure/18199>
-        self.bundle_add_fns.push(Box::new(
-            |world: &mut World, game_data: GameDataBuilder<'static, 'static>| {
-                game_data.with_bundle(world, bundle)
-            },
-        ));
+        self.bundle_add_fns
+            .push(Box::new(|game_data: GameDataBuilder<'static, 'static>| {
+                game_data.with_bundle(bundle)
+            }));
         self
     }
 
@@ -349,8 +347,8 @@ where
         B: SystemBundle<'static, 'static> + 'static,
     {
         self.bundle_add_fns.push(Box::new(
-            move |world: &mut World, game_data: GameDataBuilder<'static, 'static>| {
-                game_data.with_bundle(world, bundle_function())
+            move |game_data: GameDataBuilder<'static, 'static>| {
+                game_data.with_bundle(bundle_function())
             },
         ));
         self
@@ -909,7 +907,7 @@ mod test {
         #[test]
         fn audio_zero() -> Result<(), Error> {
             AmethystApplication::blank()
-                .with_bundle(&mut world, AudioBundle::default())
+                .with_bundle(AudioBundle::default())
                 .with_assertion(|world| {
                     world.read_resource::<AssetStorage<Source>>();
                 })
@@ -919,7 +917,7 @@ mod test {
         #[test]
         fn audio_one() -> Result<(), Error> {
             AmethystApplication::blank()
-                .with_bundle(&mut world, AudioBundle::default())
+                .with_bundle(AudioBundle::default())
                 .with_assertion(|world| {
                     world.read_resource::<AssetStorage<Source>>();
                 })

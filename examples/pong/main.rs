@@ -64,7 +64,6 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(
-            &mut world,
             RenderingBundle::<DefaultBackend>::new()
                 // The RenderToWindow plugin provides all the scaffolding for opening a window and
                 // drawing on it
@@ -75,19 +74,18 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderFlat2D::default())
                 .with_plugin(RenderUi::default()),
         )?
-        .with_bundle(&mut world, TransformBundle::new())?
+        .with_bundle(TransformBundle::new())?
         .with_bundle(
-            &mut world,
             InputBundle::<StringBindings>::new().with_bindings_from_file(key_bindings_path)?,
         )?
-        .with_bundle(&mut world, PongBundle)?
-        .with_bundle(&mut world, AudioBundle::default())?
+        .with_bundle(PongBundle)?
+        .with_bundle(AudioBundle::default())?
         .with(
             DjSystem::new(&mut world, |music: &mut Music| music.music.next()),
             "dj_system",
             &[],
         )
-        .with_bundle(&mut world, UiBundle::<StringBindings>::new())?;
+        .with_bundle(UiBundle::<StringBindings>::new())?;
 
     let mut game = Application::build(Pong::default(), world)?
         .with_frame_limit(

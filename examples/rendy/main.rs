@@ -598,7 +598,7 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with(OrbitSystem, "orbit", &[])
         .with(AutoFovSystem::default(), "auto_fov", &[])
-        .with_bundle(&mut world, FpsCounterBundle::default())?
+        .with_bundle(FpsCounterBundle::default())?
         .with(
             PrefabLoaderSystem::<ScenePrefabData>::new(&mut world),
             "scene_loader",
@@ -610,24 +610,18 @@ fn main() -> amethyst::Result<()> {
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
         )
         .with_bundle(
-            &mut world,
             AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
                 .with_dep(&["gltf_loader"]),
         )?
         .with_bundle(
-            &mut world,
             AnimationBundle::<SpriteAnimationId, SpriteRender>::new(
                 "sprite_animation_control",
                 "sprite_sampler_interpolation",
             )
             .with_dep(&["gltf_loader"]),
         )?
+        .with_bundle(InputBundle::<StringBindings>::new().with_bindings(bindings))?
         .with_bundle(
-            &mut world,
-            InputBundle::<StringBindings>::new().with_bindings(bindings),
-        )?
-        .with_bundle(
-            &mut world,
             FlyControlBundle::<StringBindings>::new(
                 Some("horizontal".into()),
                 None,
@@ -636,27 +630,20 @@ fn main() -> amethyst::Result<()> {
             .with_sensitivity(0.1, 0.1)
             .with_speed(5.),
         )?
+        .with_bundle(TransformBundle::new().with_dep(&[
+            "animation_control",
+            "sampler_interpolation",
+            "sprite_animation_control",
+            "sprite_sampler_interpolation",
+            "fly_movement",
+            "orbit",
+        ]))?
+        .with_bundle(VertexSkinningBundle::new().with_dep(&[
+            "transform_system",
+            "animation_control",
+            "sampler_interpolation",
+        ]))?
         .with_bundle(
-            &mut world,
-            TransformBundle::new().with_dep(&[
-                "animation_control",
-                "sampler_interpolation",
-                "sprite_animation_control",
-                "sprite_sampler_interpolation",
-                "fly_movement",
-                "orbit",
-            ]),
-        )?
-        .with_bundle(
-            &mut world,
-            VertexSkinningBundle::new().with_dep(&[
-                "transform_system",
-                "animation_control",
-                "sampler_interpolation",
-            ]),
-        )?
-        .with_bundle(
-            &mut world,
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path))
                 .with_plugin(RenderSwitchable3D::default())

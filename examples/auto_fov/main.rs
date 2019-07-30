@@ -54,7 +54,6 @@ fn main() -> Result<(), Error> {
         .with(AutoFovSystem::new(&mut world), "auto_fov", &["prefab"])
         .with(ShowFovSystem::new(&mut world), "show_fov", &["auto_fov"])
         .with_bundle(
-            &mut world,
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path).with_clear(CLEAR_COLOR),
@@ -62,9 +61,9 @@ fn main() -> Result<(), Error> {
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),
         )?
-        .with_bundle(&mut world, TransformBundle::new())?
-        .with_bundle(&mut world, InputBundle::<StringBindings>::new())?
-        .with_bundle(&mut world, UiBundle::<StringBindings>::new())?;
+        .with_bundle(TransformBundle::new())?
+        .with_bundle(InputBundle::<StringBindings>::new())?
+        .with_bundle(UiBundle::<StringBindings>::new())?;
 
     let mut game = Application::build(Loading::new(), world)?.build(game_data)?;
     game.run();

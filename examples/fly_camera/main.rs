@@ -69,7 +69,6 @@ fn main() -> Result<(), Error> {
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
         .with_bundle(
-            &mut world,
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)
@@ -78,7 +77,6 @@ fn main() -> Result<(), Error> {
                 .with_plugin(RenderShaded3D::default()),
         )?
         .with_bundle(
-            &mut world,
             FlyControlBundle::<StringBindings>::new(
                 Some(String::from("move_x")),
                 Some(String::from("move_y")),
@@ -86,12 +84,8 @@ fn main() -> Result<(), Error> {
             )
             .with_sensitivity(0.1, 0.1),
         )?
+        .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_bundle(
-            &mut world,
-            TransformBundle::new().with_dep(&["fly_movement"]),
-        )?
-        .with_bundle(
-            &mut world,
             InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
         )?;
 

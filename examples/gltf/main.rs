@@ -202,39 +202,30 @@ fn main() -> Result<(), amethyst::Error> {
         // There is currently no way to pass the dependencies to that system. However, since that
         // system is thread local as part of rendering, it runs after all of the systems anyway.
         .with_bundle(
-            &mut world,
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path))
                 .with_plugin(RenderPbr3D::default().with_skinning())
                 .with_plugin(RenderSkybox::default()),
         )?
         .with_bundle(
-            &mut world,
             AnimationBundle::<usize, Transform>::new("animation_control", "sampler_interpolation")
                 .with_dep(&["gltf_loader"]),
         )?
         .with_bundle(
-            &mut world,
             FlyControlBundle::<StringBindings>::new(None, None, None)
                 .with_sensitivity(0.1, 0.1)
                 .with_speed(5.),
         )?
-        .with_bundle(
-            &mut world,
-            TransformBundle::new().with_dep(&[
-                "animation_control",
-                "sampler_interpolation",
-                "fly_movement",
-            ]),
-        )?
-        .with_bundle(
-            &mut world,
-            VertexSkinningBundle::new().with_dep(&[
-                "transform_system",
-                "animation_control",
-                "sampler_interpolation",
-            ]),
-        )?;
+        .with_bundle(TransformBundle::new().with_dep(&[
+            "animation_control",
+            "sampler_interpolation",
+            "fly_movement",
+        ]))?
+        .with_bundle(VertexSkinningBundle::new().with_dep(&[
+            "transform_system",
+            "animation_control",
+            "sampler_interpolation",
+        ]))?;
 
     let mut game = Application::build(Example::default(), world)?.build(game_data)?;
     game.run();

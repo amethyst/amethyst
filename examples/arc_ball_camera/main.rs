@@ -110,7 +110,6 @@ fn main() -> Result<(), Error> {
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
         .with_bundle(
-            &mut world,
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path))
                 .with_plugin(RenderShaded3D::default())
@@ -119,12 +118,11 @@ fn main() -> Result<(), Error> {
                     Srgb::new(0.18, 0.11, 0.85),
                 )),
         )?
-        .with_bundle(&mut world, TransformBundle::new().with_dep(&[]))?
+        .with_bundle(TransformBundle::new().with_dep(&[]))?
         .with_bundle(
-            &mut world,
             InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
-        .with_bundle(&mut world, ArcBallControlBundle::<StringBindings>::new())?
+        .with_bundle(ArcBallControlBundle::<StringBindings>::new())?
         .with(
             CameraDistanceSystem::new(&mut world),
             "camera_distance_system",

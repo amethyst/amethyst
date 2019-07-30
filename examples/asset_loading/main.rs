@@ -126,7 +126,6 @@ fn main() -> Result<(), Error> {
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
-            &mut world,
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path))
                 .with_plugin(RenderShaded3D::default())
@@ -135,8 +134,8 @@ fn main() -> Result<(), Error> {
                     Srgb::new(0.18, 0.11, 0.85),
                 )),
         )?
-        .with_bundle(&mut world, InputBundle::<StringBindings>::new())?
-        .with_bundle(&mut world, TransformBundle::new())?;
+        .with_bundle(InputBundle::<StringBindings>::new())?
+        .with_bundle(TransformBundle::new())?;
     let mut game = Application::new(AssetsExample, game_data, world)?;
     game.run();
     Ok(())

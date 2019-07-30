@@ -123,7 +123,6 @@ fn main() -> amethyst::Result<()> {
             &[],
         )
         .with_bundle(
-            &mut world,
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)
@@ -131,7 +130,7 @@ fn main() -> amethyst::Result<()> {
                 )
                 .with_plugin(RenderDebugLines::default()),
         )?
-        .with_bundle(&mut world, TransformBundle::new())?;
+        .with_bundle(TransformBundle::new())?;
 
     let mut game = Application::new(ExampleState, game_data, world)?;
     game.run();

@@ -190,14 +190,12 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
-            &mut world,
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path))
                 .with_plugin(RenderDebugLines::default())
                 .with_plugin(RenderSkybox::default()),
         )?
         .with_bundle(
-            &mut world,
             InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
         .with(
@@ -205,11 +203,8 @@ fn main() -> amethyst::Result<()> {
             "example_lines_system",
             &[],
         )
-        .with_bundle(&mut world, fly_control_bundle)?
-        .with_bundle(
-            &mut world,
-            TransformBundle::new().with_dep(&["fly_movement"]),
-        )?;
+        .with_bundle(fly_control_bundle)?
+        .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?;
 
     let mut game = Application::new(ExampleState, game_data, world)?;
     game.run();
