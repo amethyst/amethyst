@@ -8,9 +8,19 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [kc]: http://keepachangelog.com/
 [sv]: http://semver.org/
 
-## [Unreleased]
+## Unreleased
 
-## Breaking changes
+### Major breaking changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+## [0.12.0] - 2019-07-30
+
+### Breaking changes
 
 * `Float` newtype removed, moved back to `f32` primitive for all values ([#1747])
 * `TextureProcessor` and `MeshProcessor` systems are now separated from `RenderingSystem` ([#1772])
