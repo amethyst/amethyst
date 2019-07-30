@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 [kc]: http://keepachangelog.com/
 [sv]: http://semver.org/
 
-## Unreleased
+## [Unreleased]
 
 ### Major breaking changes
 
