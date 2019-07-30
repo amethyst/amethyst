@@ -414,6 +414,7 @@ impl SpriteGrid {
 ///
 /// Example:
 /// ```text,ignore
+/// #![enable(implicit_some)]
 /// (
 ///     // Width of the texture
 ///     texture_width: 48,
