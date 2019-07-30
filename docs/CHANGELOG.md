@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Added
 
-* Add a feature flag `sentry` to disable the sentry dependency. ([#1804])
+* Add a feature flag `sentry` to disable the sentry dependency. ([#1804]) ([#1825])
 * Fixes and renames regression from ([#1442]) added back `position_from_world` as `screen_to_world`. Also added
 `world_to_screen`. Also adds `Transform::copy_local_to_global()' for `debug_assertion` builds ([#1733])
 * Add `add_rectangle`, `add_rotated_rectangle`, `add_box`, `add_rotated_box`, `add_circle`, `add_rotated_circle`,
@@ -47,29 +47,31 @@ and the corresponding draw functions to `DebugLines`, to draw simple shapes with
 * Fix stack overflow on serializing `Box<dyn Format<_>>`. ([#1720])
 * Fix the steps for enabling the nightly flag in the pong tutorial. ([#1805])
 * Fix animation unwrap on missing animated component. ([#1773])
+* Fix tangent generation in procedural shapes. ([#1807])
 
 [#1512]: https://github.com/amethyst/amethyst/issues/1512
-[#1791]: https://github.com/amethyst/amethyst/pull/1791
-[#1766]: https://github.com/amethyst/amethyst/pull/1766
 [#1719]: https://github.com/amethyst/amethyst/pull/1719
-[#1747]: https://github.com/amethyst/amethyst/pull/1747
-[#1767]: https://github.com/amethyst/amethyst/pull/1719
-[#1756]: https://github.com/amethyst/amethyst/pull/1756
-[#1733]: https://github.com/amethyst/amethyst/pull/1733
-[#1758]: https://github.com/amethyst/amethyst/pull/1758
-[#1773]: https://github.com/amethyst/amethyst/pull/1773
-[#1753]: https://github.com/amethyst/amethyst/pull/1753
 [#1720]: https://github.com/amethyst/amethyst/pull/1720
-[#1797]: https://github.com/amethyst/amethyst/pull/1797
-[#1809]: https://github.com/amethyst/amethyst/issues/1809
-[#1811]: https://github.com/amethyst/amethyst/pull/1811
+[#1733]: https://github.com/amethyst/amethyst/pull/1733
+[#1747]: https://github.com/amethyst/amethyst/pull/1747
+[#1753]: https://github.com/amethyst/amethyst/pull/1753
+[#1756]: https://github.com/amethyst/amethyst/pull/1756
+[#1758]: https://github.com/amethyst/amethyst/pull/1758
+[#1766]: https://github.com/amethyst/amethyst/pull/1766
+[#1767]: https://github.com/amethyst/amethyst/pull/1719
 [#1772]: https://github.com/amethyst/amethyst/pull/1772
+[#1773]: https://github.com/amethyst/amethyst/pull/1773
+[#1791]: https://github.com/amethyst/amethyst/pull/1791
 [#1797]: https://github.com/amethyst/amethyst/pull/1797
 [#1800]: https://github.com/amethyst/amethyst/pull/1800
 [#1802]: https://github.com/amethyst/amethyst/pull/1802
-[#1805]: https://github.com/amethyst/amethyst/pull/1805
 [#1804]: https://github.com/amethyst/amethyst/pull/1804
+[#1805]: https://github.com/amethyst/amethyst/pull/1805
+[#1807]: https://github.com/amethyst/amethyst/pull/1807
+[#1809]: https://github.com/amethyst/amethyst/issues/1809
+[#1811]: https://github.com/amethyst/amethyst/pull/1811
 [#1822]: https://github.com/amethyst/amethyst/pull/1822
+[#1825]: https://github.com/amethyst/amethyst/pull/1825
 
 ## [0.11.0] - 2019-06
 
