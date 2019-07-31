@@ -82,7 +82,7 @@ game.run();
 # }
 ```
 
-For `InputBundle<StringBundle>`, the parameter type determines how `axes` and `actions`
+For `InputBundle<StringBindings>`, the parameter type determines how `axes` and `actions`
 are identified in the `bindings.ron` file
 (in this example, `String`s are used; e.g. `"left_paddle"`).
 
