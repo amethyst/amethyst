@@ -37,29 +37,26 @@ pub(crate) struct SerdeContext<'a> {
 }
 
 impl<'a> SerdeContext<'a> {
-    pub(crate) fn with<F, R>(loader: &dyn LoaderInfoProvider, sender: Arc<Sender<RefOp>>, f: F) -> R
+    pub(crate) fn with_active<R>(f: impl FnOnce(Option<&&'static dyn LoaderInfoProvider>, Option<&Arc<Sender<RefOp>>>) -> R) -> R {
+        LOADER.with(|l| {
+            REFOP_SENDER.with(|r| {
+                f(l.borrow().as_ref(), r.borrow().as_ref())
+            })
+        })
+    }
+    pub(crate) fn with<F, R>(loader: &'a dyn LoaderInfoProvider, sender: Arc<Sender<RefOp>>, f: F) -> R
     where
         F: FnOnce() -> R,
     {
-        // The loader lifetime needs to be transmuted to 'static to be able to be stored in the static.
-        // This is safe since SerdeContext's lifetime cannot be longer than 'a due to its marker,
-        // and the reference in the static is removed in `Drop`.
-        let loader = unsafe {
-            LOADER.with(|l| {
-                l.replace(Some(std::mem::transmute::<
-                    &dyn LoaderInfoProvider,
-                    &'static dyn LoaderInfoProvider,
-                >(loader)))
-            })
-        };
-        let sender = REFOP_SENDER.with(|r| r.replace(Some(sender)));
+        let mut ctx = Self::enter(loader, sender);
         let result = f();
-        // restore the previous loader & sender
-        LOADER.with(|l| l.replace(loader));
-        REFOP_SENDER.with(|r| r.replace(sender));
+        ctx.exit();
         result
     }
     fn enter(loader: &'a dyn LoaderInfoProvider, sender: Arc<Sender<RefOp>>) -> Self {
+        // The loader lifetime needs to be transmuted to 'static to be able to be stored in the static.
+        // This is safe since SerdeContext's lifetime cannot be longer than 'a due to its marker,
+        // and the reference in the static is removed in `Drop`.
         let loader = unsafe {
             LOADER.with(|l| {
                 l.replace(Some(std::mem::transmute::<
@@ -76,6 +73,7 @@ impl<'a> SerdeContext<'a> {
         }
     }
     fn exit(&mut self) {
+        // restore the previous loader & sender
         LOADER.with(|l| l.replace(self.loader.take()));
         REFOP_SENDER.with(|r| r.replace(self.sender.take()));
     }
@@ -130,7 +128,7 @@ impl LoaderInfoProvider for DummySerdeContext {
     }
 }
 struct DummySerdeContextHandle<'a> {
-    dummy: Arc<DummySerdeContext>,
+    _dummy: Arc<DummySerdeContext>,
     ctx: SerdeContext<'a>,
 }
 impl<'a> atelier_importer::ImporterContextHandle for DummySerdeContextHandle<'a> {
@@ -148,7 +146,7 @@ impl atelier_importer::ImporterContext for DummySerdeContextProvider {
         let ctx = unsafe {
             SerdeContext::enter(std::mem::transmute(dummy_ref), self.0.ref_sender.clone())
         };
-        Box::new(DummySerdeContextHandle { ctx, dummy })
+        Box::new(DummySerdeContextHandle { ctx, _dummy: dummy })
     }
 }
 
@@ -198,12 +196,10 @@ fn serialize_handle<S>(load: LoadHandle, serializer: S) -> Result<S::Ok, S::Erro
 where
     S: Serializer,
 {
-    LOADER.with(|l| {
+    SerdeContext::with_active(|loader, _| {
+        let loader = loader.expect("expected loader when serializing handle");
         use ser::SerializeSeq;
-        let uuid: AssetUuid = l
-            .borrow()
-            .map(|loader| loader.get_asset_id(&load))
-            .unwrap_or(None)
+        let uuid: AssetUuid = loader.get_asset_id(&load)
             .unwrap_or(Default::default());
         let mut seq = serializer.serialize_seq(Some(uuid.len()))?;
         for element in &uuid {
@@ -229,12 +225,15 @@ impl Serialize for GenericHandle {
     }
 }
 
-fn uuid_to_handle(uuid: AssetUuid) -> LoadHandle {
-    LOADER.with(|l| {
-        l.borrow()
-            .as_ref()
+fn add_uuid_handle_ref(uuid: AssetUuid) -> (LoadHandle, Arc<Sender<RefOp>>) {
+    SerdeContext::with_active(|loader, sender| {
+        let sender = sender
+            .expect("no Sender<RefOp> set when deserializing handle").clone();
+        sender.send(RefOp::Increase(uuid));
+        let handle = loader
             .expect("no loader set in TLS when deserializing handle")
-            .add_ref(uuid)
+            .add_ref(uuid);
+        (handle, sender)
     })
 }
 
@@ -244,16 +243,8 @@ impl<'de, T> Deserialize<'de> for Handle<T> {
         D: de::Deserializer<'de>,
     {
         let uuid = deserializer.deserialize_seq(AssetUuidVisitor)?;
-        Ok(REFOP_SENDER.with(|r| {
-            let sender = r
-                .borrow()
-                .as_ref()
-                .expect("no Sender<RefOp> set when deserializing handle")
-                .clone();
-            sender.send(RefOp::Increase(uuid));
-            let handle = uuid_to_handle(uuid);
-            Handle::new(sender, handle)
-        }))
+        let (handle, sender) = add_uuid_handle_ref(uuid);
+        Ok(Handle::new(sender, handle))
     }
 }
 
@@ -263,16 +254,8 @@ impl<'de> Deserialize<'de> for GenericHandle {
         D: de::Deserializer<'de>,
     {
         let uuid = deserializer.deserialize_seq(AssetUuidVisitor)?;
-        Ok(REFOP_SENDER.with(|r| {
-            let sender = r
-                .borrow()
-                .as_ref()
-                .expect("no Sender<RefOp> set when deserializing handle")
-                .clone();
-            sender.send(RefOp::Increase(uuid));
-            let handle = uuid_to_handle(uuid);
-            GenericHandle::new(sender, handle)
-        }))
+        let (handle, sender) = add_uuid_handle_ref(uuid);
+        Ok(GenericHandle::new(sender, handle))
     }
 }
 
