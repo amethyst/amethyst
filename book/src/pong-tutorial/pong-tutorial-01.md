@@ -19,7 +19,7 @@ authors = []
 edition = "2018"
 
 [dependencies.amethyst]
-version = "0.11"
+version = "0.12"
 features = ["vulkan"]
 ```
 
@@ -27,7 +27,7 @@ Alternatively, if you are developing on macOS, you might want to use the `metal`
 
 ```toml
 [dependencies.amethyst]
-version = "0.11"
+version = "0.12"
 features = ["metal"]
 ```
 
@@ -112,7 +112,6 @@ amethyst::start_logger(Default::default());
 From now on, every info, warning, and error will be present and clearly formatted
 inside your terminal window.
 
-
 > **Note:** There are many ways to configure that logger, for example, to write the
 > log to the filesystem. You can find more information about how to do that in [Logger API
 > reference][log].
@@ -125,7 +124,7 @@ window. We can either define the configuration in our code or better yet load it
 from a file. The latter approach is handier, as it allows us to change configuration
 (e.g, the window size) without having to recompile our game every time.
 
-Starting the project with `amethyst new` should have automatically generated 
+Starting the project with `amethyst new` should have automatically generated
 `DisplayConfig` data in `config/display.ron`. If you created the
 project manually, go ahead and create it now.
 
@@ -139,7 +138,7 @@ following:
 )
 ```
 
-> **Note:** If you have never run into Rusty Object Notation before (or RON for short), 
+> **Note:** If you have never run into Rusty Object Notation before (or RON for short),
 > it is a data storage format that mirrors Rust's syntax. Here, the
 > data represents the [`DisplayConfig`][displayconf] struct. If you want to
 > learn more about the RON syntax, you can visit the [official repository][ron].
@@ -166,7 +165,6 @@ let display_config_path = app_root.join("config").join("display.ron");
 ```
 
 ## Creating an application
-
 
 In `main()` in `main.rs` we are going to add the basic application setup:
 
@@ -197,7 +195,7 @@ Then we call `.run()` on `game` which starts the game loop. The game will
 continue to run until our `SimpleState` returns `Trans::Quit`, or when all states
 have been popped off the state machine's stack.
 
-Try compiling the code now.  You should be able to see the application start, but nothing
+Try compiling the code now. You should be able to see the application start, but nothing
 will happen and your terminal will hang until you kill the process. This means that the
 core game loop is running in circles, and is awaiting tasks. Let's give it something
 to do by adding a renderer!
@@ -259,4 +257,3 @@ get a window. It should look something like this:
 [log]: https://docs-src.amethyst.rs/stable/amethyst/struct.Logger.html
 [displayconf]: https://docs-src.amethyst.rs/stable/amethyst_renderer/struct.DisplayConfig.html
 [graph]: https://github.com/amethyst/rendy/blob/master/docs/graph.md
-
