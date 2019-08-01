@@ -16,7 +16,7 @@ use amethyst::{
         palette::Srgba,
         plugins::{RenderDebugLines, RenderSkybox, RenderToWindow},
         types::DefaultBackend,
-        RenderingBundle,
+        PluggableRenderingBundle,
     },
     utils::application_root_dir,
     winit::VirtualKeyCode,
@@ -186,7 +186,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(fly_control_bundle)?
         .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            PluggableRenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path))
                 .with_plugin(RenderDebugLines::default())
                 .with_plugin(RenderSkybox::default()),

@@ -20,7 +20,7 @@ use amethyst::{
         light::LightPrefab,
         plugins::{RenderPbr3D, RenderSkybox, RenderToWindow},
         types::DefaultBackend,
-        RenderingBundle,
+        PluggableRenderingBundle,
     },
     utils::{
         application_root_dir,
@@ -214,7 +214,7 @@ fn main() -> Result<(), amethyst::Error> {
             "sampler_interpolation",
         ]))?
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            PluggableRenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path))
                 .with_plugin(RenderPbr3D::default().with_skinning())
                 .with_plugin(RenderSkybox::default()),

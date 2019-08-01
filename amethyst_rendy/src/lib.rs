@@ -91,7 +91,7 @@ mod render_test_bundle;
 
 #[doc(inline)]
 pub use crate::{
-    bundle::{RenderPlugin, RenderingBundle},
+    bundle::{RenderingBundle, PluggableRenderingBundle, RenderPlugin},
     camera::{ActiveCamera, Camera},
     formats::{
         mesh::MeshPrefab,
@@ -100,7 +100,7 @@ pub use crate::{
     mtl::{Material, MaterialDefaults},
     plugins::*,
     sprite::{Sprite, SpriteRender, SpriteSheet, SpriteSheetFormat},
-    system::{GraphCreator, RenderingSystem},
+    system::{GraphCreator, MeshProcessorSystem, RenderingSystem, TextureProcessorSystem},
     transparent::Transparent,
     types::{Backend, Mesh, Texture},
     util::{simple_shader_set, ChangeDetection},

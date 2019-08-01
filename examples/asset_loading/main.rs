@@ -18,7 +18,7 @@ use amethyst::{
             texture::palette::load_from_srgba,
         },
         types::{DefaultBackend, Mesh, MeshData},
-        RenderingBundle,
+        PluggableRenderingBundle,
     },
     utils::application_root_dir,
 };
@@ -125,7 +125,7 @@ fn main() -> Result<(), Error> {
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(TransformBundle::new())?
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            PluggableRenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path))
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderSkybox::with_colors(

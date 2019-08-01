@@ -7,8 +7,8 @@ use amethyst::{
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
         types::DefaultBackend,
-        Camera, ImageFormat, RenderingBundle, SpriteRender, SpriteSheet, SpriteSheetFormat,
-        Texture, Transparent,
+        Camera, ImageFormat, PluggableRenderingBundle, SpriteRender, SpriteSheet,
+        SpriteSheetFormat, Texture, Transparent,
     },
     utils::application_root_dir,
     window::ScreenDimensions,
@@ -210,7 +210,7 @@ fn main() -> amethyst::Result<()> {
         )?
         .with(MovementSystem, "movement", &[])
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            PluggableRenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)
                         .with_clear([0.34, 0.36, 0.52, 1.0]),

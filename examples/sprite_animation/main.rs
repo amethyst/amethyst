@@ -18,7 +18,7 @@ use amethyst::{
         plugins::{RenderFlat2D, RenderToWindow},
         sprite::{prefab::SpriteScenePrefab, SpriteRender},
         types::DefaultBackend,
-        RenderingBundle,
+        PluggableRenderingBundle,
     },
     utils::application_root_dir,
     window::ScreenDimensions,
@@ -151,7 +151,7 @@ fn main() -> amethyst::Result<()> {
                 .with_dep(&["sprite_animation_control", "sprite_sampler_interpolation"]),
         )?
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            PluggableRenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)
                         .with_clear([0.34, 0.36, 0.52, 1.0]),

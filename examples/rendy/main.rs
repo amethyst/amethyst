@@ -38,9 +38,10 @@ use amethyst::{
         shape::Shape,
         types::{DefaultBackend, Mesh, Texture},
         visibility::BoundingSphere,
-        ActiveCamera, Camera, Factory, ImageFormat, Material, MaterialDefaults, RenderDebugLines,
-        RenderFlat2D, RenderFlat3D, RenderPbr3D, RenderShaded3D, RenderSkybox, RenderToWindow,
-        RenderingBundle, SpriteRender, SpriteSheet, SpriteSheetFormat, Transparent,
+        ActiveCamera, Camera, Factory, ImageFormat, Material, MaterialDefaults,
+        PluggableRenderingBundle, RenderDebugLines, RenderFlat2D, RenderFlat3D, RenderPbr3D,
+        RenderShaded3D, RenderSkybox, RenderToWindow, SpriteRender, SpriteSheet, SpriteSheetFormat,
+        Transparent,
     },
     utils::{
         application_root_dir,
@@ -642,7 +643,7 @@ fn main() -> amethyst::Result<()> {
             "sampler_interpolation",
         ]))?
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            PluggableRenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path))
                 .with_plugin(RenderSwitchable3D::default())
                 .with_plugin(RenderFlat2D::default())

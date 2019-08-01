@@ -20,7 +20,7 @@ use amethyst::{
         plugins::{RenderShaded3D, RenderToWindow},
         rendy::mesh::{Normal, Position, TexCoord},
         types::DefaultBackend,
-        RenderingBundle,
+        PluggableRenderingBundle,
     },
     ui::{RenderUi, UiBundle, UiCreator, UiLoader, UiPrefab},
     utils::{application_root_dir, fps_counter::FpsCounterBundle, scene::BasicScenePrefab},
@@ -210,7 +210,7 @@ fn main() -> Result<(), Error> {
         .with_base_bundle(FpsCounterBundle::default())?
         .with_base_bundle(InputBundle::<StringBindings>::new())?
         .with_base_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            PluggableRenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)
                         .with_clear([0.0, 0.0, 0.0, 1.0]),

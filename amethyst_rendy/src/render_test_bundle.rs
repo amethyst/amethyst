@@ -4,7 +4,7 @@ use amethyst_core::{bundle::SystemBundle, ecs::DispatcherBuilder};
 use amethyst_error::Error;
 use derive_new::new;
 
-use crate::{types::Backend, RenderingBundle};
+use crate::{types::Backend, PluggableRenderingBundle};
 
 /// Adds basic rendering system to the dispatcher.
 ///
@@ -20,8 +20,8 @@ where
     B: Backend,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
-        let mut bundle =
-            RenderingBundle::<B>::new().with_plugin(crate::plugins::RenderFlat2D::default());
+        let mut bundle = PluggableRenderingBundle::<B>::new()
+            .with_plugin(crate::plugins::RenderFlat2D::default());
 
         #[cfg(feature = "window")]
         bundle.add_plugin(crate::plugins::RenderToWindow::from_config(
@@ -48,7 +48,7 @@ where
     B: Backend,
 {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<(), Error> {
-        let bundle = RenderingBundle::<B>::new();
+        let bundle = PluggableRenderingBundle::<B>::new();
         bundle.build(builder)?;
         Ok(())
     }

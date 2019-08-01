@@ -11,7 +11,7 @@ use amethyst::{
         plugins::{RenderPbr3D, RenderToWindow},
         rendy::mesh::{Normal, Position, Tangent, TexCoord},
         types::DefaultBackend,
-        RenderingBundle,
+        PluggableRenderingBundle,
     },
     utils::{application_root_dir, scene::BasicScenePrefab},
     winit::{ElementState, VirtualKeyCode},
@@ -231,7 +231,7 @@ fn main() -> amethyst::Result<()> {
         ))?
         .with_bundle(TransformBundle::new().with_dep(&["sampler_interpolation_system"]))?
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            PluggableRenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path).with_clear(CLEAR_COLOR),
                 )

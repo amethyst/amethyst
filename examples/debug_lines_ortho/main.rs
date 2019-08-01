@@ -13,7 +13,7 @@ use amethyst::{
         palette::Srgba,
         plugins::{RenderDebugLines, RenderToWindow},
         types::DefaultBackend,
-        RenderingBundle,
+        PluggableRenderingBundle,
     },
     utils::application_root_dir,
     window::ScreenDimensions,
@@ -110,7 +110,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(TransformBundle::new())?
         .with(ExampleLinesSystem, "example_lines_system", &[])
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            PluggableRenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)
                         .with_clear([0.0, 0.0, 0.0, 1.0]),

@@ -17,7 +17,7 @@ use amethyst::{
         plugins::{RenderShaded3D, RenderSkybox, RenderToWindow},
         rendy::mesh::{Normal, Position, TexCoord},
         types::DefaultBackend,
-        RenderingBundle,
+        PluggableRenderingBundle,
     },
     utils::{application_root_dir, scene::BasicScenePrefab},
     Error,
@@ -122,7 +122,7 @@ fn main() -> Result<(), Error> {
             &["input_system"],
         )
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            PluggableRenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path))
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderSkybox::with_colors(

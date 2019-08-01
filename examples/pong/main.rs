@@ -14,7 +14,7 @@ use amethyst::{
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
         types::DefaultBackend,
-        RenderingBundle,
+        PluggableRenderingBundle,
     },
     ui::{RenderUi, UiBundle},
     utils::application_root_dir,
@@ -74,7 +74,7 @@ fn main() -> amethyst::Result<()> {
         )
         .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            PluggableRenderingBundle::<DefaultBackend>::new()
                 // The RenderToWindow plugin provides all the scaffolding for opening a window and drawing on it
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)

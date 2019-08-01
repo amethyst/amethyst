@@ -26,7 +26,7 @@ use amethyst::{
         rendy::mesh::{Normal, Position, TexCoord},
         resources::AmbientColor,
         types::DefaultBackend,
-        Camera, RenderingBundle,
+        Camera, PluggableRenderingBundle,
     },
     ui::{RenderUi, UiBundle, UiCreator, UiFinder, UiText},
     utils::{
@@ -204,7 +204,7 @@ fn main() -> Result<(), Error> {
         .with_bundle(FpsCounterBundle::default())?
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            PluggableRenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)
                         .with_clear([0.34, 0.36, 0.52, 1.0]),

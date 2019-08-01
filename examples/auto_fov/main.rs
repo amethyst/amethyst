@@ -18,7 +18,7 @@ use amethyst::{
         plugins::{RenderShaded3D, RenderToWindow},
         rendy::mesh::{Normal, Position, Tangent, TexCoord},
         types::DefaultBackend,
-        RenderingBundle,
+        PluggableRenderingBundle,
     },
     ui::{RenderUi, UiBundle, UiCreator, UiFinder, UiText},
     utils::{
@@ -49,7 +49,7 @@ fn main() -> Result<(), Error> {
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(
-            RenderingBundle::<DefaultBackend>::new()
+            PluggableRenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path).with_clear(CLEAR_COLOR),
                 )
