@@ -1,11 +1,12 @@
 //! Demonstrates how to use the fly camera
 
 use amethyst::{
-    assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
+    assets::{PrefabLoader, PrefabLoaderSystemDesc, RonFormat},
     controls::{ArcBallControlBundle, ArcBallControlTag},
     core::{
         shrev::{EventChannel, ReaderId},
         transform::{Transform, TransformBundle},
+        SystemDesc,
     },
     ecs::prelude::{Join, Read, ReadStorage, System, SystemData, World, WorldExt, WriteStorage},
     input::{
@@ -52,17 +53,28 @@ impl SimpleState for ExampleState {
     }
 }
 
+/// Builds a `CameraDistanceSystem`.
+#[derive(Default, Debug)]
+pub struct CameraDistanceSystemDesc;
+
+impl<'a, 'b> SystemDesc<'a, 'b, CameraDistanceSystem> for CameraDistanceSystemDesc {
+    fn build(self, world: &mut World) -> CameraDistanceSystem {
+        <CameraDistanceSystem as System<'_>>::SystemData::setup(world);
+
+        let event_reader = world
+            .fetch_mut::<EventChannel<InputEvent<StringBindings>>>()
+            .register_reader();
+
+        CameraDistanceSystem::new(event_reader)
+    }
+}
+
 struct CameraDistanceSystem {
     event_reader: ReaderId<InputEvent<StringBindings>>,
 }
 
 impl CameraDistanceSystem {
-    pub fn new(mut world: &mut World) -> Self {
-        <Self as System<'_>>::SystemData::setup(&mut world);
-        let event_reader = world
-            .fetch_mut::<EventChannel<InputEvent<StringBindings>>>()
-            .register_reader();
-
+    pub fn new(event_reader: ReaderId<InputEvent<StringBindings>>) -> Self {
         CameraDistanceSystem { event_reader }
     }
 }
@@ -105,10 +117,10 @@ fn main() -> Result<(), Error> {
 
     let key_bindings_path = app_root.join("examples/arc_ball_camera/config/input.ron");
 
-    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
+    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
+        .with(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path))
@@ -124,7 +136,7 @@ fn main() -> Result<(), Error> {
         )?
         .with_bundle(ArcBallControlBundle::<StringBindings>::new())?
         .with(
-            CameraDistanceSystem::new(&mut world),
+            CameraDistanceSystemDesc::default(),
             "camera_distance_system",
             &["input_system"],
         );

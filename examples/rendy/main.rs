@@ -1,5 +1,5 @@
 //! Displays spheres with physically based materials.
-//!
+
 use amethyst::{
     animation::{
         get_animation_set, AnimationBundle, AnimationCommand, AnimationControlSet, AnimationSet,
@@ -7,7 +7,7 @@ use amethyst::{
     },
     assets::{
         AssetLoaderSystemData, AssetStorage, Completion, Handle, Loader, PrefabLoader,
-        PrefabLoaderSystem, ProgressCounter, RonFormat,
+        PrefabLoaderSystemDesc, ProgressCounter, RonFormat,
     },
     controls::{FlyControlBundle, FlyControlTag},
     core::{
@@ -16,7 +16,7 @@ use amethyst::{
             ReadExpect, ReadStorage, System, SystemData, World, Write, WriteStorage,
         },
         math::{Unit, UnitQuaternion, Vector3},
-        Time, Transform, TransformBundle,
+        SystemDesc, Time, Transform, TransformBundle,
     },
     error::Error,
     gltf::GltfSceneLoaderSystem,
@@ -570,7 +570,7 @@ fn main() -> amethyst::Result<()> {
         .join("display.ron");
     let assets_dir = app_root.join("examples").join("assets");
 
-    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
+    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let mut bindings = Bindings::new();
     bindings.insert_axis(
@@ -600,7 +600,7 @@ fn main() -> amethyst::Result<()> {
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .with_bundle(FpsCounterBundle::default())?
         .with(
-            PrefabLoaderSystem::<ScenePrefabData>::new(&mut world),
+            PrefabLoaderSystemDesc::<ScenePrefabData>::default().build(&mut world),
             "scene_loader",
             &[],
         )

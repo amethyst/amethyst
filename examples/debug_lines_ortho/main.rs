@@ -3,9 +3,10 @@
 use amethyst::{
     core::{
         transform::{Transform, TransformBundle},
-        Time,
+        SystemDesc, Time,
     },
-    ecs::{Read, ReadExpect, System, World, WorldExt, Write},
+    derive::SystemDesc,
+    ecs::{Read, ReadExpect, System, SystemData, World, WorldExt, Write},
     prelude::*,
     renderer::{
         camera::Camera,
@@ -19,12 +20,11 @@ use amethyst::{
     window::ScreenDimensions,
 };
 
+#[derive(SystemDesc)]
 struct ExampleLinesSystem;
 
 impl ExampleLinesSystem {
-    pub fn new(world: &mut World) -> Self {
-        use amethyst::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(world);
+    pub fn new() -> Self {
         Self
     }
 }
@@ -114,14 +114,10 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/debug_lines_ortho/config/display.ron");
     let assets_dir = app_root.join("examples/assets/");
 
-    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
+    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
-        .with(
-            ExampleLinesSystem::new(&mut world),
-            "example_lines_system",
-            &[],
-        )
+        .with(ExampleLinesSystem::new(), "example_lines_system", &[])
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(

@@ -1,10 +1,10 @@
 //! Displays a shaded sphere to the user.
 
 use amethyst::{
-    assets::{PrefabLoader, PrefabLoaderSystem, Processor, RonFormat},
+    assets::{PrefabLoader, PrefabLoaderSystemDesc, Processor, RonFormat},
     audio::{output::init_output, Source},
-    core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle, Time},
-    ecs::prelude::{Entity, System, World, WorldExt, Write},
+    core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle, SystemDesc, Time},
+    ecs::prelude::{Entity, System, SystemData, World, WorldExt, Write},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
@@ -127,10 +127,10 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/ui/config/display.ron");
     let assets_dir = app_root.join("examples/assets");
 
-    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
+    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
+        .with(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -142,7 +142,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(TransformBundle::new())?
         .with_bundle(UiBundle::<StringBindings>::new())?
         .with(Processor::<Source>::new(), "source_processor", &[])
-        .with(UiEventHandlerSystem::new(), "ui_event_handler", &[])
+        .with(UiEventHandlerSystemDesc::default(), "ui_event_handler", &[])
         .with_bundle(FpsCounterBundle::default())?
         .with_bundle(InputBundle::<StringBindings>::new())?;
 
@@ -154,15 +154,28 @@ fn main() -> amethyst::Result<()> {
     Ok(())
 }
 
+/// Builds a `UiEventHandlerSystem`.
+#[derive(Default, Debug)]
+pub struct UiEventHandlerSystemDesc;
+
+impl<'a, 'b> SystemDesc<'a, 'b, UiEventHandlerSystem> for UiEventHandlerSystemDesc {
+    fn build(self, world: &mut World) -> UiEventHandlerSystem {
+        <UiEventHandlerSystem as System<'_>>::SystemData::setup(world);
+
+        let reader_id = Write::<'_, EventChannel<UiEvent>>::fetch(world).register_reader();
+
+        UiEventHandlerSystem::new(reader_id)
+    }
+}
+
 /// This shows how to handle UI events.
-#[derive(Default)]
 pub struct UiEventHandlerSystem {
-    reader_id: Option<ReaderId<UiEvent>>,
+    reader_id: ReaderId<UiEvent>,
 }
 
 impl UiEventHandlerSystem {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(reader_id: ReaderId<UiEvent>) -> Self {
+        Self { reader_id }
     }
 }
 
@@ -170,12 +183,8 @@ impl<'a> System<'a> for UiEventHandlerSystem {
     type SystemData = Write<'a, EventChannel<UiEvent>>;
 
     fn run(&mut self, mut events: Self::SystemData) {
-        let reader_id = self
-            .reader_id
-            .get_or_insert_with(|| events.register_reader());
-
         // Reader id was just initialized above if empty
-        for ev in events.read(reader_id) {
+        for ev in events.read(&mut self.reader_id) {
             info!("[SYSTEM] You just interacted with a ui element: {:?}", ev);
         }
     }

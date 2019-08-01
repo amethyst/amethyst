@@ -1,6 +1,7 @@
 use amethyst::{
-    core::frame_limiter::FrameRateLimitStrategy,
-    ecs::{Component, Entities, Join, System, VecStorage, World, WriteStorage},
+    core::{frame_limiter::FrameRateLimitStrategy, SystemDesc},
+    derive::SystemDesc,
+    ecs::{Component, Entities, Join, System, SystemData, VecStorage, World, WriteStorage},
     network::*,
     prelude::*,
     shrev::ReaderId,
@@ -16,7 +17,7 @@ fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
     let assets_dir = application_root_dir()?.join("./");
-    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
+    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
         .with_bundle(NetworkBundle::<String>::new(
@@ -47,6 +48,7 @@ impl Component for SpamReader {
 }
 
 /// A simple system that receives a ton of network events.
+#[derive(SystemDesc)]
 struct SpamReceiveSystem {}
 
 impl SpamReceiveSystem {

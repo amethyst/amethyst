@@ -1,7 +1,7 @@
 //! Demonstrates how to use the fly camera
 
 use amethyst::{
-    assets::{PrefabLoader, PrefabLoaderSystem, RonFormat},
+    assets::{PrefabLoader, PrefabLoaderSystemDesc, RonFormat},
     controls::{FlyControlBundle, HideCursor},
     core::transform::TransformBundle,
     ecs::{World, WorldExt},
@@ -64,10 +64,10 @@ fn main() -> Result<(), Error> {
 
     let key_bindings_path = app_root.join("examples/fly_camera/config/input.ron");
 
-    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
+    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
+        .with(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(

@@ -1,6 +1,7 @@
 use amethyst::{
-    core::{frame_limiter::FrameRateLimitStrategy, Time},
-    ecs::{Join, Read, System, World, WriteStorage},
+    core::{frame_limiter::FrameRateLimitStrategy, SystemDesc, Time},
+    derive::SystemDesc,
+    ecs::{Join, Read, System, SystemData, World, WriteStorage},
     network::*,
     prelude::*,
     utils::application_root_dir,
@@ -13,7 +14,7 @@ fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
     let assets_dir = application_root_dir()?.join("./");
-    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
+    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
         .with_bundle(NetworkBundle::<String>::new(
@@ -44,6 +45,7 @@ impl SimpleState for State1 {
 
 /// A simple system that sends a ton of messages to all connections.
 /// In this case, only the server is connected.
+#[derive(SystemDesc)]
 struct SpamSystem;
 
 impl SpamSystem {

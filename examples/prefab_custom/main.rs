@@ -4,7 +4,7 @@ use std::fmt::Debug;
 
 use amethyst::{
     assets::{
-        AssetStorage, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem,
+        AssetStorage, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystemDesc,
         ProgressCounter, RonFormat,
     },
     core::{Named, Parent},
@@ -185,10 +185,10 @@ fn main() -> Result<(), Error> {
     // Add our meshes directory to the asset loader.
     let assets_dir = app_root.join("examples/assets");
 
-    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
+    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default().with(
-        PrefabLoaderSystem::<CustomPrefabData>::new(&mut world),
+        PrefabLoaderSystemDesc::<CustomPrefabData>::default(),
         "",
         &[],
     );

@@ -6,11 +6,14 @@ use amethyst::{
         EndControl, VertexSkinningBundle,
     },
     assets::{
-        AssetPrefab, Completion, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem,
+        AssetPrefab, Completion, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystemDesc,
         ProgressCounter, RonFormat,
     },
     controls::{ControlTagPrefab, FlyControlBundle},
-    core::transform::{Transform, TransformBundle},
+    core::{
+        transform::{Transform, TransformBundle},
+        SystemDesc,
+    },
     derive::PrefabData,
     ecs::{Entity, ReadStorage, World, Write, WriteStorage},
     input::{is_close_requested, is_key_down, StringBindings, VirtualKeyCode},
@@ -182,17 +185,17 @@ fn main() -> Result<(), amethyst::Error> {
     let display_config_path = app_root.join("examples/gltf/config/display.ron");
     let assets_dir = app_root.join("examples/assets/");
 
-    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
+    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .with(
-            PrefabLoaderSystem::<ScenePrefabData>::new(&mut world),
+            PrefabLoaderSystemDesc::<ScenePrefabData>::default(),
             "scene_loader",
             &[],
         )
         .with(
-            GltfSceneLoaderSystem::new(&mut world),
+            GltfSceneLoaderSystemDesc::default(),
             "gltf_loader",
             &["scene_loader"], // This is important so that entity instantiation is performed in a single frame.
         )

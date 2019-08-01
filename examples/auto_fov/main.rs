@@ -1,11 +1,11 @@
 use amethyst::{
     assets::{
-        Completion, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystem, ProgressCounter,
-        RonFormat,
+        Completion, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystemDesc,
+        ProgressCounter, RonFormat,
     },
-    core::{Transform, TransformBundle},
-    derive::PrefabData,
-    ecs::{Entity, ReadExpect, ReadStorage, System, World, WorldExt, WriteStorage},
+    core::{SystemDesc, Transform, TransformBundle},
+    derive::{PrefabData, SystemDesc},
+    ecs::{Entity, ReadExpect, ReadStorage, System, SystemData, World, WorldExt, WriteStorage},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::{
         AmethystWorldExt, Application, Builder, GameData, GameDataBuilder, SimpleState,
@@ -41,18 +41,18 @@ fn main() -> Result<(), Error> {
     let display_config_path = app_dir.join("auto_fov/config/display.ron");
     let assets_dir = app_dir.join("assets");
 
-    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
+    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::new()
         .with(
-            PrefabLoaderSystem::<ScenePrefab>::new(&mut world),
+            PrefabLoaderSystemDesc::<ScenePrefab>::default(),
             "prefab",
             &[],
         )
         // This makes the system adjust the camera right after it has been loaded (in the same
         // frame), preventing any flickering
-        .with(AutoFovSystem::new(&mut world), "auto_fov", &["prefab"])
-        .with(ShowFovSystem::new(&mut world), "show_fov", &["auto_fov"])
+        .with(AutoFovSystem::new(), "auto_fov", &["prefab"])
+        .with(ShowFovSystem::new(), "show_fov", &["auto_fov"])
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -165,12 +165,11 @@ impl SimpleState for Example {
     }
 }
 
+#[derive(SystemDesc)]
 struct ShowFovSystem;
 
 impl ShowFovSystem {
-    pub fn new(world: &mut World) -> Self {
-        use amethyst::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(world);
+    pub fn new() -> Self {
         Self
     }
 }

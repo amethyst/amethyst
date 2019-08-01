@@ -122,7 +122,7 @@ fn main() -> Result<(), Error> {
 
     let display_config_path = app_root.join("examples/asset_loading/config/display.ron");
 
-    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
+    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
         .with_bundle(

@@ -6,7 +6,8 @@ use crate::{
 };
 use amethyst::{
     assets::{
-        Completion, Handle, Prefab, PrefabLoader, PrefabLoaderSystem, ProgressCounter, RonFormat,
+        Completion, Handle, Prefab, PrefabLoader, PrefabLoaderSystemDesc, ProgressCounter,
+        RonFormat,
     },
     core::transform::TransformBundle,
     ecs::{
@@ -202,13 +203,12 @@ fn main() -> Result<(), Error> {
 
     let display_config_path = app_root.join("examples/custom_game_data/config/display.ron");
 
-    let mut world = World::with_application_resources::<CustomGameData<'_, '_>, _>(assets_dir)?;
+    let world = World::with_application_resources::<CustomGameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = CustomGameDataBuilder::default()
-        .with_base(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
-        .with_running::<ExampleSystem>(ExampleSystem::default(), "example_system", &[])
+        .with_base(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
+        .with_running(ExampleSystem::default(), "example_system", &[])
         .with_base_bundle(
-            &mut world,
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
                     RenderToWindow::from_config_path(display_config_path)
@@ -216,11 +216,11 @@ fn main() -> Result<(), Error> {
                 )
                 .with_plugin(RenderShaded3D::default())
                 .with_plugin(RenderUi::default()),
-        )?
-        .with_base_bundle(&mut world, TransformBundle::new())?
-        .with_base_bundle(&mut world, UiBundle::<StringBindings>::new())?
-        .with_base_bundle(&mut world, FpsCounterBundle::default())?
-        .with_base_bundle(&mut world, InputBundle::<StringBindings>::new())?;
+        )
+        .with_base_bundle(TransformBundle::new())
+        .with_base_bundle(UiBundle::<StringBindings>::new())
+        .with_base_bundle(FpsCounterBundle::default())
+        .with_base_bundle(InputBundle::<StringBindings>::new());
 
     let mut game = Application::build(Loading::default(), world)?.build(game_data)?;
     game.run();

@@ -5,9 +5,10 @@ use amethyst::{
     core::{
         math::{Point3, Vector3},
         transform::{Transform, TransformBundle},
-        Time,
+        SystemDesc, Time,
     },
-    ecs::{Read, System, World, WorldExt, Write},
+    derive::SystemDesc,
+    ecs::{Read, System, SystemData, World, WorldExt, Write},
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
     prelude::*,
     renderer::{
@@ -22,15 +23,8 @@ use amethyst::{
     winit::VirtualKeyCode,
 };
 
+#[derive(SystemDesc)]
 struct ExampleLinesSystem;
-
-impl ExampleLinesSystem {
-    pub fn new(world: &mut World) -> Self {
-        use amethyst::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(world);
-        Self
-    }
-}
 
 impl<'s> System<'s> for ExampleLinesSystem {
     type SystemData = (
@@ -186,7 +180,7 @@ fn main() -> amethyst::Result<()> {
     )
     .with_sensitivity(0.1, 0.1);
 
-    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
+    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
@@ -198,11 +192,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(
             InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
-        .with(
-            ExampleLinesSystem::new(&mut world),
-            "example_lines_system",
-            &[],
-        )
+        .with(ExampleLinesSystem, "example_lines_system", &[])
         .with_bundle(fly_control_bundle)?
         .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?;
 

@@ -150,7 +150,7 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/material/config/display.ron");
     let assets_dir = app_root.join("examples/assets/");
 
-    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
+    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
         .with_bundle(

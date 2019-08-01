@@ -1,6 +1,7 @@
 use amethyst::{
-    core::frame_limiter::FrameRateLimitStrategy,
-    ecs::{Join, System, World, WriteStorage},
+    core::{frame_limiter::FrameRateLimitStrategy, SystemDesc},
+    derive::SystemDesc,
+    ecs::{Join, System, SystemData, World, WriteStorage},
     network::*,
     prelude::*,
     shrev::ReaderId,
@@ -16,7 +17,7 @@ fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
     let assets_dir = application_root_dir()?.join("./");
-    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
+    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
         .with_bundle(NetworkBundle::<()>::new("127.0.0.1:23455".parse().unwrap()))?
@@ -43,6 +44,7 @@ impl SimpleState for State1 {
 }
 
 /// A simple system that receives a ton of network events.
+#[derive(SystemDesc)]
 struct SpamReceiveSystem {
     pub reader: Option<ReaderId<NetEvent<()>>>,
 }

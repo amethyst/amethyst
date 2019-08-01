@@ -5,15 +5,19 @@
 
 use amethyst::{
     assets::{
-        Completion, Handle, HotReloadBundle, Prefab, PrefabLoader, PrefabLoaderSystem,
+        Completion, Handle, HotReloadBundle, Prefab, PrefabLoader, PrefabLoaderSystemDesc,
         ProgressCounter, RonFormat,
     },
     core::{
         math::{UnitQuaternion, Vector3},
         timing::Time,
         transform::{Transform, TransformBundle},
+        SystemDesc,
     },
-    ecs::prelude::{Entity, Join, Read, ReadStorage, System, World, WorldExt, Write, WriteStorage},
+    derive::SystemDesc,
+    ecs::prelude::{
+        Entity, Join, Read, ReadStorage, System, SystemData, World, WorldExt, Write, WriteStorage,
+    },
     input::{
         get_key, is_close_requested, is_key_down, ElementState, InputBundle, StringBindings,
         VirtualKeyCode,
@@ -195,11 +199,11 @@ fn main() -> Result<(), Error> {
         .join("config")
         .join("display.ron");
 
-    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
+    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystem::<MyPrefabData>::new(&mut world), "", &[])
-        .with::<ExampleSystem>(ExampleSystem::default(), "example_system", &[])
+        .with(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
+        .with(ExampleSystem::default(), "example_system", &[])
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -241,7 +245,7 @@ impl Default for DemoState {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, SystemDesc)]
 struct ExampleSystem {
     fps_display: Option<Entity>,
 }

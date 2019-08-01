@@ -5,7 +5,9 @@ use amethyst::{
         bundle::SystemBundle,
         frame_limiter::FrameRateLimitStrategy,
         shrev::{EventChannel, ReaderId},
+        SystemDesc,
     },
+    derive::SystemDesc,
     ecs::{DispatcherBuilder, Read, System, SystemData, World, Write},
     prelude::*,
     utils::application_root_dir,
@@ -24,7 +26,11 @@ impl<'a, 'b> SystemBundle<'a, 'b> for MyBundle {
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
         builder.add(SpammingSystem, "spamming_system", &[]);
-        builder.add(ReceivingSystem::new(world), "receiving_system", &[]);
+        builder.add(
+            ReceivingSystemDesc::default().build(world),
+            "receiving_system",
+            &[],
+        );
         Ok(())
     }
 }
@@ -43,6 +49,7 @@ pub enum MyEvent {
 
 struct GameplayState;
 
+#[derive(SystemDesc)]
 struct SpammingSystem;
 
 impl<'a> System<'a> for SpammingSystem {
@@ -58,14 +65,26 @@ impl<'a> System<'a> for SpammingSystem {
     }
 }
 
+/// Builds a `ReceivingSystem`.
+#[derive(Default, Debug)]
+pub struct ReceivingSystemDesc;
+
+impl<'a, 'b> SystemDesc<'a, 'b, ReceivingSystem> for ReceivingSystemDesc {
+    fn build(self, world: &mut World) -> ReceivingSystem {
+        <ReceivingSystem as System<'_>>::SystemData::setup(world);
+
+        let reader = world.fetch_mut::<EventChannel<MyEvent>>().register_reader();
+
+        ReceivingSystem::new(reader)
+    }
+}
+
 struct ReceivingSystem {
     reader: ReaderId<MyEvent>,
 }
 
 impl ReceivingSystem {
-    pub fn new(mut world: &mut World) -> Self {
-        <Self as System<'_>>::SystemData::setup(&mut world);
-        let reader = world.fetch_mut::<EventChannel<MyEvent>>().register_reader();
+    pub fn new(reader: ReaderId<MyEvent>) -> Self {
         ReceivingSystem { reader }
     }
 }
@@ -86,8 +105,7 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let assets_dir = application_root_dir()?.join("./");
-    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
-    world.insert(EventChannel::<MyEvent>::new());
+    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default().with_bundle(MyBundle)?;
 

@@ -6,7 +6,7 @@ mod pong;
 mod systems;
 
 use amethyst::{
-    audio::{AudioBundle, DjSystem},
+    audio::{AudioBundle, DjSystemDesc},
     core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle},
     ecs::{Component, DenseVecStorage},
     input::{InputBundle, StringBindings},
@@ -59,7 +59,7 @@ fn main() -> amethyst::Result<()> {
 
     let assets_dir = app_root.join("examples/assets/");
 
-    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
+    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
         // Add the transform bundle which handles tracking entity positions
@@ -81,7 +81,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(PongBundle)?
         .with_bundle(AudioBundle::default())?
         .with(
-            DjSystem::new(&mut world, |music: &mut Music| music.music.next()),
+            DjSystemDesc::new(|music: &mut Music| music.music.next()),
             "dj_system",
             &[],
         )

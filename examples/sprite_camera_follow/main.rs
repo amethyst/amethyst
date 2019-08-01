@@ -1,9 +1,10 @@
 use amethyst::{
     assets::{AssetStorage, Handle, Loader},
-    core::{Named, Parent, Transform, TransformBundle},
+    core::{Named, Parent, SystemDesc, Transform, TransformBundle},
+    derive::SystemDesc,
     ecs::{
-        Component, Entity, Join, NullStorage, Read, ReadStorage, System, World, WorldExt,
-        WriteStorage,
+        Component, Entity, Join, NullStorage, Read, ReadStorage, System, SystemData, World,
+        WorldExt, WriteStorage,
     },
     input::{is_close_requested, is_key_down, InputBundle, InputHandler, StringBindings},
     prelude::*,
@@ -25,6 +26,7 @@ impl Component for Player {
     type Storage = NullStorage<Self>;
 }
 
+#[derive(SystemDesc)]
 struct MovementSystem;
 
 impl<'s> System<'s> for MovementSystem {
@@ -204,7 +206,7 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/sprite_camera_follow/assets");
     let display_config_path = app_root.join("examples/sprite_camera_follow/config/display.ron");
 
-    let mut world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
+    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
