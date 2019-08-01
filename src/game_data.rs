@@ -100,9 +100,12 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// # Examples
     ///
     /// ~~~no_run
+    /// use amethyst::derive::SystemDesc;
+    /// use amethyst::core::SystemDesc;
     /// use amethyst::prelude::*;
-    /// use amethyst::ecs::prelude::System;
+    /// use amethyst::ecs::prelude::{System, SystemData, World};
     ///
+    /// #[derive(SystemDesc)]
     /// struct NopSystem;
     /// impl<'a> System<'a> for NopSystem {
     ///     type SystemData = ();
@@ -156,9 +159,12 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// # Examples
     ///
     /// ~~~no_run
+    /// use amethyst::core::SystemDesc;
+    /// use amethyst::derive::SystemDesc;
     /// use amethyst::prelude::*;
-    /// use amethyst::ecs::prelude::System;
+    /// use amethyst::ecs::prelude::{System, SystemData, World};
     ///
+    /// #[derive(SystemDesc)]
     /// struct NopSystem;
     /// impl<'a> System<'a> for NopSystem {
     ///     type SystemData = ();
@@ -219,9 +225,12 @@ impl<'a, 'b> GameDataBuilder<'a, 'b> {
     /// # Examples
     ///
     /// ~~~no_run
+    /// use amethyst::core::SystemDesc;
+    /// use amethyst::derive::SystemDesc;
     /// use amethyst::prelude::*;
-    /// use amethyst::ecs::prelude::System;
+    /// use amethyst::ecs::prelude::{System, SystemData, World};
     ///
+    /// #[derive(SystemDesc)]
     /// struct NopSystem;
     /// impl<'a> System<'a> for NopSystem {
     ///     type SystemData = ();

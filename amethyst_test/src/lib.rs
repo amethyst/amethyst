@@ -116,6 +116,21 @@
 //! Next, attach the logic you wish to test using the various `.with_*(..)` methods:
 //!
 //! ```rust,no_run
+//! # use amethyst::{
+//! #     core::{bundle::SystemBundle, SystemDesc},
+//! #     derive::SystemDesc,
+//! #     ecs::prelude::*,
+//! #     prelude::*,
+//! # };
+//! #
+//! # #[derive(Debug, SystemDesc)]
+//! # struct MySystem;
+//! #
+//! # impl<'s> System<'s> for MySystem {
+//! #     type SystemData = ();
+//! #     fn run(&mut self, _: Self::SystemData) {}
+//! # }
+//! #
 //! #[test]
 //! fn test_name() {
 //!     let visibility = false; // Whether the window should be shown
@@ -123,8 +138,8 @@
 //!         .with_bundle(MyBundle::new())                // Registers a bundle.
 //!         .with_bundle_fn(|| MyNonSendBundle::new())   // Registers a `!Send` bundle.
 //!         .with_resource(MyResource::new())            // Adds a resource to the world.
-//!         .with_system(|_| MySystem::new(), "my_sys", &[]) // Registers a system with the main
-//!                                                          // dispatcher.
+//!         .with_system(MySystem, "my_sys", &[])        // Registers a system with the main
+//!                                                      // dispatcher.
 //!
 //!         // These are run in the order they are invoked.
 //!         // You may invoke them multiple times.
@@ -159,7 +174,8 @@
 //! ```rust
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
-//! #     core::bundle::SystemBundle,
+//! #     core::{bundle::SystemBundle, SystemDesc},
+//! #     derive::SystemDesc,
 //! #     ecs::prelude::*,
 //! #     prelude::*,
 //! # };
@@ -167,26 +183,22 @@
 //! # #[derive(Debug)]
 //! # struct ApplicationResource;
 //! #
-//! # #[derive(Debug)]
+//! # #[derive(Debug, SystemDesc)]
+//! # #[system_desc(insert(ApplicationResource))]
 //! # struct MySystem;
 //! #
 //! # impl<'s> System<'s> for MySystem {
 //! #     type SystemData = ReadExpect<'s, ApplicationResource>;
 //! #
 //! #     fn run(&mut self, _: Self::SystemData) {}
-//! #
-//! #     fn setup(&mut self, world: &mut World) {
-//! #         Self::SystemData::setup(world);
-//! #         world.insert(ApplicationResource);
-//! #     }
 //! # }
 //! #
 //! # #[derive(Debug)]
 //! # struct MyBundle;
 //! # impl<'a, 'b> SystemBundle<'a, 'b> for MyBundle {
-//! #     fn build(self, _world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>)
+//! #     fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>)
 //! #     -> amethyst::Result<()> {
-//! #         builder.add(MySystem, "my_system", &[]);
+//! #         builder.add(MySystem.build(world), "my_system", &[]);
 //! #         Ok(())
 //! #     }
 //! # }
@@ -212,6 +224,8 @@
 //! ```rust
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
+//! #     core::SystemDesc,
+//! #     derive::SystemDesc,
 //! #     ecs::prelude::*,
 //! #     prelude::*,
 //! # };
@@ -222,7 +236,7 @@
 //! #     type Storage = DenseVecStorage<Self>;
 //! # }
 //! #
-//! # #[derive(Debug)]
+//! # #[derive(Debug, SystemDesc)]
 //! # struct MySystem;
 //! #
 //! # impl<'s> System<'s> for MySystem {
@@ -239,7 +253,7 @@
 //! fn system_increases_component_value_by_one() {
 //!     assert!(
 //!         AmethystApplication::blank()
-//!             .with_system(|_| MySystem, "my_system", &[])
+//!             .with_system(MySystem, "my_system", &[])
 //!             .with_effect(|world| {
 //!                 let entity = world.create_entity().with(MyComponent(0)).build();
 //!                 world.insert(EffectReturn(entity));
@@ -271,6 +285,8 @@
 //! ```rust
 //! # use amethyst_test::prelude::*;
 //! # use amethyst::{
+//! #     core::SystemDesc,
+//! #     derive::SystemDesc,
 //! #     ecs::prelude::*,
 //! #     prelude::*,
 //! # };
@@ -278,7 +294,7 @@
 //! # // !Default
 //! # struct MyResource(pub i32);
 //! #
-//! # #[derive(Debug)]
+//! # #[derive(Debug, SystemDesc)]
 //! # struct MySystem;
 //! #
 //! # impl<'s> System<'s> for MySystem {
@@ -296,7 +312,7 @@
 //!             .with_setup(|world| {
 //!                 world.insert(MyResource(0));
 //!             })
-//!             .with_system_single(|_| MySystem, "my_system", &[])
+//!             .with_system_single(MySystem, "my_system", &[])
 //!             .with_assertion(|world| {
 //!                 let my_resource = world.read_resource::<MyResource>();
 //!
