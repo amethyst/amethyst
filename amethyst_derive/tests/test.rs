@@ -101,7 +101,7 @@ pub enum EnumPrefab {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use amethyst_assets::{AssetStorage, Loader, Prefab, PrefabLoaderSystem};
+    use amethyst_assets::{AssetStorage, Loader, Prefab, PrefabLoaderSystemDesc};
     use amethyst_core::ecs::{world::EntitiesRes, Builder, Join, WorldExt};
     use amethyst_test::prelude::*;
 
@@ -109,7 +109,7 @@ mod tests {
         ($prefab_type:ident, $prefab:expr, $assertion:expr) => {
             assert!(AmethystApplication::blank()
                 .with_system(
-                    |world| PrefabLoaderSystem::<$prefab_type>::new(world),
+                    PrefabLoaderSystemDesc::<$prefab_type>::default(),
                     "test_loader",
                     &[]
                 )
