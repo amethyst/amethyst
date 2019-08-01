@@ -103,7 +103,6 @@ pub use self::{
         TransEvent,
     },
     state_event::{StateEvent, StateEventReader},
-    system_desc::SystemDesc,
 };
 
 /// Convenience alias for use in main functions that uses Amethyst.
@@ -118,4 +117,3 @@ mod game_data;
 mod logger;
 mod state;
 mod state_event;
-mod system_desc;
