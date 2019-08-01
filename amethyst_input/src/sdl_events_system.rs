@@ -1,5 +1,6 @@
 use std::{fmt, marker::PhantomData, path::PathBuf};
 
+use derive_new::new;
 use sdl2::{
     self,
     controller::{AddMappingError, Axis, Button, GameController},
@@ -51,6 +52,29 @@ pub enum ControllerMappings {
     FromString(String),
 }
 
+/// Builds a `SdlEventsSystem`.
+#[derive(Derivative, Debug, new)]
+#[derivative(Default(bound = ""))]
+pub struct SdlEventsSystemDesc<T>
+where
+    T: BindingTypes,
+{
+    mappings: Option<ControllerMappings>,
+    marker: PhantomData<T>,
+}
+
+impl<'a, 'b, T> SystemDesc<'a, 'b, SdlEventsSystem<T>> for SdlEventsSystemDesc<T>
+where
+    T: BindingTypes,
+{
+    fn build(self, world: &mut World) -> SdlEventsSystem<T> {
+        <SdlEventsSystem<T> as System<'_>>::SystemData::setup(world);
+
+        SdlEventsSystem::new(world, self.mappings)
+            .unwrap_or_else(|e| panic!("Failed to build SdlEventsSystem. Error: {}", e))
+    }
+}
+
 /// A system that pumps SDL events into the `amethyst_input` APIs.
 #[allow(missing_debug_implementations)]
 pub struct SdlEventsSystem<T: BindingTypes> {
@@ -93,9 +117,10 @@ impl<T: BindingTypes> SdlEventsSystem<T> {
         mappings: Option<ControllerMappings>,
     ) -> Result<Self, SdlSystemError> {
         let sdl_context = sdl2::init().map_err(SdlSystemError::ContextInit)?;
+
         let event_pump = sdl_context
             .event_pump()
-            .map_err(SdlSystemError::ContextInit)?;
+            .map_err(SdlSystemError::ContextInit);
         let controller_subsystem = sdl_context
             .game_controller()
             .map_err(SdlSystemError::ControllerSubsystemInit)?;

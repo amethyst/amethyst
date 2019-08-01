@@ -4,10 +4,11 @@ use amethyst_assets::Processor;
 use amethyst_core::{
     bundle::SystemBundle,
     ecs::prelude::{DispatcherBuilder, World},
+    SystemDesc,
 };
 use amethyst_error::Error;
 
-use crate::{output::Output, source::*, systems::AudioSystem};
+use crate::{output::Output, source::*, systems::AudioSystemDesc};
 
 /// Audio bundle
 ///
@@ -25,7 +26,11 @@ impl<'a, 'b> SystemBundle<'a, 'b> for AudioBundle {
         world: &mut World,
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
-        builder.add(AudioSystem::new(world, self.0), "audio_system", &[]);
+        builder.add(
+            AudioSystemDesc::new(self.0).build(world),
+            "audio_system",
+            &[],
+        );
         builder.add(Processor::<Source>::new(), "source_processor", &[]);
         Ok(())
     }

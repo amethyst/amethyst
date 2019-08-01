@@ -1,8 +1,10 @@
 use crate::{
     ecs::prelude::{
-        BitSet, ComponentEvent, ReadExpect, ReadStorage, ReaderId, System, World, WriteStorage,
+        BitSet, ComponentEvent, ReadExpect, ReadStorage, ReaderId, System, SystemData, World,
+        WriteStorage,
     },
     transform::components::{HierarchyEvent, Parent, ParentHierarchy},
+    SystemDesc,
 };
 
 #[cfg(feature = "profiler")]
@@ -12,10 +14,31 @@ use log::error;
 
 use crate::HiddenPropagate;
 
-// Based on the [UiTransformSystem](struct.UiTransformSystem.html).
+/// Builds a `HideHierarchySystem`.
+#[derive(Default, Debug)]
+pub struct HideHierarchySystemDesc;
+
+impl<'a, 'b> SystemDesc<'a, 'b, HideHierarchySystem> for HideHierarchySystemDesc {
+    fn build(self, world: &mut World) -> HideHierarchySystem {
+        <HideHierarchySystem as System<'_>>::SystemData::setup(world);
+
+        // This fetch_mut panics if `ParentHierarchy` is not set up yet, hence the dependency on
+        // "parent_hierarchy_system"
+        let parent_events_id = world.fetch_mut::<ParentHierarchy>().track();
+        let mut hidden = WriteStorage::<HiddenPropagate>::fetch(&world);
+        let hidden_events_id = hidden.register_reader();
+
+        HideHierarchySystem::new(hidden_events_id, parent_events_id)
+    }
+}
+
 /// This system adds a [HiddenPropagate](struct.HiddenPropagate.html)-component to all children.
+///
 /// Using this system will result in every child being hidden.
-/// Depends on the resource "ParentHierarchy", which is set up by the [TransformBundle](struct.TransformBundle.html)
+/// Depends on the resource "ParentHierarchy", which is set up by the
+/// [TransformBundle](struct.TransformBundle.html)
+///
+/// Based on the [UiTransformSystem](struct.UiTransformSystem.html).
 #[derive(Debug)]
 pub struct HideHierarchySystem {
     marked_as_modified: BitSet,
@@ -25,13 +48,10 @@ pub struct HideHierarchySystem {
 
 impl HideHierarchySystem {
     /// Creates a new `HideHierarchySystem`.
-    pub fn new(mut world: &mut World) -> Self {
-        use crate::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(&mut world);
-        // This fetch_mut panics if `ParentHierarchy` is not set up yet, hence the dependency on "parent_hierarchy_system"
-        let parent_events_id = world.fetch_mut::<ParentHierarchy>().track();
-        let mut hidden = WriteStorage::<HiddenPropagate>::fetch(&world);
-        let hidden_events_id = hidden.register_reader();
+    pub fn new(
+        hidden_events_id: ReaderId<ComponentEvent>,
+        parent_events_id: ReaderId<HierarchyEvent>,
+    ) -> Self {
         Self {
             marked_as_modified: BitSet::default(),
             hidden_events_id,
@@ -83,7 +103,13 @@ impl<'a> System<'a> for HideHierarchySystem {
             {
                 let self_dirty = self_marked_as_modified.contains(entity.id());
 
-                let parent_entity = parents.get(*entity).expect("Unreachable: All entities in `ParentHierarchy` should also be in `Parents`").entity;
+                let parent_entity = parents
+                    .get(*entity)
+                    .expect(
+                        "Unreachable: All entities in `ParentHierarchy` should also be in \
+                         `Parents`",
+                    )
+                    .entity;
                 let parent_dirty = self_marked_as_modified.contains(parent_entity.id());
                 if parent_dirty {
                     if hidden.contains(parent_entity) {
@@ -98,8 +124,9 @@ impl<'a> System<'a> for HideHierarchySystem {
                         }
                     }
                 } else if self_dirty {
-                    // in case the parent was already dirty, this entity and its children have already been hidden,
-                    // therefore it only needs to be an else-if, instead of a stand-alone if.
+                    // in case the parent was already dirty, this entity and its children have
+                    // already been hidden, therefore it only needs to be an else-if, instead of a
+                    // stand-alone if.
                     if hidden.contains(*entity) {
                         for child in hierarchy.all_children_iter(*entity) {
                             if let Err(e) = hidden.insert(child, HiddenPropagate::default()) {
@@ -114,8 +141,8 @@ impl<'a> System<'a> for HideHierarchySystem {
                 }
             }
             // Populate the modifications we just did.
-            // Happens inside the for-loop, so that the changes are picked up in the next iteration already,
-            // instead of on the next `system.run()`
+            // Happens inside the for-loop, so that the changes are picked up in the next iteration
+            // already, instead of on the next `system.run()`
             hidden
                 .channel()
                 .read(self_hidden_events_id)

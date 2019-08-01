@@ -14,8 +14,9 @@ pub use self::{
     components::{ArcBallControlTag, ControlTagPrefab, FlyControlTag},
     resources::{HideCursor, WindowFocus},
     systems::{
-        ArcBallRotationSystem, CursorHideSystem, FlyMovementSystem, FreeRotationSystem,
-        MouseFocusUpdateSystem,
+        ArcBallRotationSystem, CursorHideSystem, CursorHideSystemDesc, FlyMovementSystem,
+        FlyMovementSystemDesc, FreeRotationSystem, FreeRotationSystemDesc, MouseFocusUpdateSystem,
+        MouseFocusUpdateSystemDesc,
     },
 };
 

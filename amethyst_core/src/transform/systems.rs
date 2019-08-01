@@ -1,17 +1,37 @@
 //! Scene graph system and types
 
-use crate::ecs::{
-    hibitset::BitSet,
-    prelude::{
-        ComponentEvent, Entities, Join, ReadExpect, ReadStorage, ReaderId, System, World,
-        WriteStorage,
+use crate::{
+    ecs::{
+        hibitset::BitSet,
+        prelude::{
+            ComponentEvent, Entities, Join, ReadExpect, ReadStorage, ReaderId, System, SystemData,
+            World, WriteStorage,
+        },
     },
+    SystemDesc,
 };
 
 use crate::transform::{HierarchyEvent, Parent, ParentHierarchy, Transform};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+/// Builds a `TransformSystem`.
+#[derive(Default, Debug)]
+pub struct TransformSystemDesc;
+
+impl<'a, 'b> SystemDesc<'a, 'b, TransformSystem> for TransformSystemDesc {
+    fn build(self, world: &mut World) -> TransformSystem {
+        <TransformSystem as System<'_>>::SystemData::setup(world);
+
+        let mut hierarchy = world.fetch_mut::<ParentHierarchy>();
+        let mut locals = WriteStorage::<Transform>::fetch(&world);
+        let parent_events_id = hierarchy.track();
+        let locals_events_id = locals.register_reader();
+
+        TransformSystem::new(locals_events_id, parent_events_id)
+    }
+}
 
 /// Handles updating `global_matrix` field from `Transform` components.
 #[derive(Debug)]
@@ -23,13 +43,10 @@ pub struct TransformSystem {
 
 impl TransformSystem {
     /// Creates a new transform processor.
-    pub fn new(mut world: &mut World) -> TransformSystem {
-        use crate::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(&mut world);
-        let mut hierarchy = world.fetch_mut::<ParentHierarchy>();
-        let mut locals = WriteStorage::<Transform>::fetch(&world);
-        let parent_events_id = hierarchy.track();
-        let locals_events_id = locals.register_reader();
+    pub fn new(
+        locals_events_id: ReaderId<ComponentEvent>,
+        parent_events_id: ReaderId<HierarchyEvent>,
+    ) -> TransformSystem {
         TransformSystem {
             local_modified: BitSet::default(),
             locals_events_id,
@@ -131,10 +148,10 @@ mod tests {
             shred::RunNow,
         },
         math::{Matrix4, Quaternion, Unit, Vector3},
+        transform::{Parent, Transform, TransformSystem, TransformSystemDesc},
+        SystemDesc,
     };
     use specs_hierarchy::{Hierarchy, HierarchySystem};
-
-    use crate::transform::{Parent, Transform, TransformSystem};
 
     // If this works, then all other tests should work.
     #[test]
@@ -154,7 +171,7 @@ mod tests {
     fn transform_world() -> (World, HierarchySystem<Parent>, TransformSystem) {
         let mut world = World::new();
         let mut hs = HierarchySystem::<Parent>::new(&mut world);
-        let mut ts = TransformSystem::new(&mut world);
+        let mut ts = TransformSystemDesc::default().build(&mut world);
         hs.setup(&mut world);
         ts.setup(&mut world);
 

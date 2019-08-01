@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use amethyst::{ecs::prelude::*, prelude::*};
+use amethyst::{core::SystemDesc, ecs::prelude::*, prelude::*};
 
 use derivative::Derivative;
 use derive_new::new;
@@ -92,20 +92,20 @@ pub struct CustomDispatcherStateBuilder<'a, 'b> {
     system_fns: Vec<Box<dyn SystemFn<'a, 'b> + 'a>>,
 }
 
-impl<'a, 'b> CustomDispatcherStateBuilder<'a, 'b> {
+impl<'a, 'b: 'a> CustomDispatcherStateBuilder<'a, 'b> {
     /// Registers a `System` with the dispatcher builder.
     ///
     /// # Parameters
     ///
-    /// * `system_fn`: Function to instantiate the `System`.
+    /// * `system_desc`: Descriptor to instantiate the `System`.
     /// * `name`: Name to register the system with, used for dependency ordering.
     /// * `deps`: Names of systems that must run before this system.
-    pub fn with<SysFn, Sys>(mut self, system_fn: SysFn, name: String, deps: Vec<String>) -> Self
+    pub fn with<SD, S>(mut self, system_desc: SD, name: String, deps: Vec<String>) -> Self
     where
-        SysFn: FnOnce(&mut World) -> Sys + 'a,
-        Sys: for<'c> System<'c> + Send + Sync + 'static,
+        SD: SystemDesc<'a, 'b, S> + 'a,
+        S: for<'c> System<'c> + Send + Sync + 'b,
     {
-        let system_fn_data = SystemFnData::new(system_fn, name, deps);
+        let system_fn_data = SystemFnData::new(system_desc, name, deps);
         self.system_fns.push(Box::new(system_fn_data));
         self
     }
@@ -126,33 +126,32 @@ trait SystemFn<'a, 'b> {
 
 /// Sized type to wrap functions that create `System`s.
 #[derive(Debug, new)]
-struct SystemFnData<'a, SysFn, Sys>
+struct SystemFnData<'a, 'b, SD, S>
 where
-    SysFn: FnOnce(&mut World) -> Sys,
-    Sys: for<'s> System<'s> + Send,
+    SD: SystemDesc<'a, 'b, S>,
+    S: for<'s> System<'s> + Send,
 {
-    /// Function to instantiate `System` to add to the dispatcher.
-    system_fn: SysFn,
+    /// Descriptor to instantiate `System` to add to the dispatcher.
+    system_desc: SD,
     /// Name to register the system with.
     system_name: String,
     /// Names of the system dependencies.
     system_dependencies: Vec<String>,
     /// Marker.
-    #[new(default)]
-    system_marker: PhantomData<(SysFn, &'a Sys)>,
+    system_marker: PhantomData<(&'a SD, &'b S)>,
 }
 
-impl<'a, 'b, SysFn, Sys> SystemFn<'a, 'b> for SystemFnData<'a, SysFn, Sys>
+impl<'a, 'b, SD, S> SystemFn<'a, 'b> for SystemFnData<'a, 'b, SD, S>
 where
-    SysFn: FnOnce(&mut World) -> Sys,
-    Sys: for<'s> System<'s> + Send + 'a,
+    SD: SystemDesc<'a, 'b, S>,
+    S: for<'s> System<'s> + Send + 'a,
 {
     fn build(
         self: Box<Self>,
         world: &mut World,
         dispatcher_builder: &mut DispatcherBuilder<'a, 'b>,
     ) {
-        let system = (self.system_fn)(world);
+        let system = self.system_desc.build(world);
         dispatcher_builder.add(
             system,
             &self.system_name,

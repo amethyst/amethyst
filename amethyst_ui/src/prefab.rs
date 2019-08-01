@@ -7,7 +7,7 @@ use std::{
 
 use amethyst_assets::{
     AssetPrefab, AssetStorage, Format, Handle, Loader, Prefab, PrefabData, PrefabLoaderSystem,
-    Progress, ProgressCounter,
+    PrefabLoaderSystemDesc, Progress, ProgressCounter,
 };
 use amethyst_audio::Source as Audio;
 use amethyst_core::{
@@ -1011,6 +1011,9 @@ where
         entity
     }
 }
+
+/// Builds a `UiLoaderSystem`.
+pub type UiLoaderSystemDesc<CD, W> = PrefabLoaderSystemDesc<UiPrefabData<CD, W>>;
 
 /// Prefab loader system for UI
 ///

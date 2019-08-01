@@ -6,16 +6,20 @@ use amethyst_core::{
         Read, System, SystemData, World, Write,
     },
     shrev::{EventChannel, ReaderId},
+    SystemDesc,
 };
 
 use crate::{
     event::{UiEvent, UiEventType::*},
-    event_retrigger::{EventRetrigger, EventRetriggerSystem},
+    event_retrigger::{EventRetrigger, EventRetriggerSystem, EventRetriggerSystemDesc},
     EventReceiver,
 };
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+/// Builds a `UiSoundRetriggerSystem`.
+pub type UiSoundRetriggerSystemDesc = EventRetriggerSystemDesc<UiSoundRetrigger>;
 
 /// Provides an `EventRetriggerSystem` that will handle incoming `UiEvent`s
 /// and trigger `UiPlaySoundAction`s for entities with attached
@@ -66,6 +70,22 @@ impl EventRetrigger for UiSoundRetrigger {
     }
 }
 
+/// Builds a `UiSoundSystem`.
+#[derive(Default, Debug)]
+pub struct UiSoundSystemDesc;
+
+impl<'a, 'b> SystemDesc<'a, 'b, UiSoundSystem> for UiSoundSystemDesc {
+    fn build(self, world: &mut World) -> UiSoundSystem {
+        <UiSoundSystem as System<'_>>::SystemData::setup(world);
+
+        let event_reader = world
+            .fetch_mut::<EventChannel<UiPlaySoundAction>>()
+            .register_reader();
+
+        UiSoundSystem::new(event_reader)
+    }
+}
+
 /// Handles any dispatches `UiPlaySoundAction`s and plays the received
 /// sounds through the set `Output`.
 #[derive(Debug)]
@@ -77,11 +97,7 @@ impl UiSoundSystem {
     /// Constructs a default `UiSoundSystem`. Since the `event_reader`
     /// will automatically be fetched when the system is set up, this should
     /// always be used to construct the `UiSoundSystem`.
-    pub fn new(mut world: &mut World) -> Self {
-        <Self as System<'_>>::SystemData::setup(&mut world);
-        let event_reader = world
-            .fetch_mut::<EventChannel<UiPlaySoundAction>>()
-            .register_reader();
+    pub fn new(event_reader: ReaderId<UiPlaySoundAction>) -> Self {
         Self { event_reader }
     }
 }

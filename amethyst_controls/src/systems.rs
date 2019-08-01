@@ -1,27 +1,38 @@
-use crate::{
-    components::{ArcBallControlTag, FlyControlTag},
-    resources::{HideCursor, WindowFocus},
-};
-use amethyst_core::{
-    ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, World, Write, WriteStorage},
-    math::{convert, Unit, Vector3},
-    shrev::{EventChannel, ReaderId},
-    timing::Time,
-    transform::Transform,
-};
-use amethyst_input::{get_input_axis_simple, BindingTypes, InputHandler};
+use derive_new::new;
 use winit::{DeviceEvent, Event, Window, WindowEvent};
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+use amethyst_core::{
+    ecs::prelude::{
+        Join, Read, ReadExpect, ReadStorage, System, SystemData, World, Write, WriteStorage,
+    },
+    math::{convert, Unit, Vector3},
+    shrev::{EventChannel, ReaderId},
+    timing::Time,
+    transform::Transform,
+    SystemDesc,
+};
+use amethyst_derive::SystemDesc;
+use amethyst_input::{get_input_axis_simple, BindingTypes, InputHandler};
+
+use crate::{
+    components::{ArcBallControlTag, FlyControlTag},
+    resources::{HideCursor, WindowFocus},
+};
 
 /// The system that manages the fly movement.
 ///
 /// # Type parameters
 ///
 /// * `T`: This are the keys the `InputHandler` is using for axes and actions. Often, this is a `StringBindings`.
-#[derive(Debug)]
-pub struct FlyMovementSystem<T: BindingTypes> {
+#[derive(Debug, SystemDesc)]
+#[system_desc(name(FlyMovementSystemDesc))]
+pub struct FlyMovementSystem<T>
+where
+    T: BindingTypes,
+{
     /// The movement speed of the movement in units per second.
     speed: f32,
     /// The name of the input axis to locally move in the x coordinates.
@@ -35,14 +46,11 @@ pub struct FlyMovementSystem<T: BindingTypes> {
 impl<T: BindingTypes> FlyMovementSystem<T> {
     /// Builds a new `FlyMovementSystem` using the provided speeds and axis controls.
     pub fn new(
-        world: &mut World,
         speed: f32,
         right_input_axis: Option<T::Axis>,
         up_input_axis: Option<T::Axis>,
         forward_input_axis: Option<T::Axis>,
     ) -> Self {
-        use amethyst_core::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(world);
         FlyMovementSystem {
             speed,
             right_input_axis,
@@ -83,14 +91,8 @@ impl<'a, T: BindingTypes> System<'a> for FlyMovementSystem<T> {
 ///
 /// To modify the orientation of the camera in accordance with the mouse input, please use the
 /// `FreeRotationSystem`.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct ArcBallRotationSystem;
-
-impl Default for ArcBallRotationSystem {
-    fn default() -> Self {
-        Self
-    }
-}
 
 impl<'a> System<'a> for ArcBallRotationSystem {
     type SystemData = (
@@ -117,35 +119,37 @@ impl<'a> System<'a> for ArcBallRotationSystem {
     }
 }
 
+/// Builds a `FreeRotationSystem`.
+#[derive(Default, Debug, new)]
+pub struct FreeRotationSystemDesc {
+    /// Sensitivity on the x axis.
+    pub sensitivity_x: f32,
+    /// Sensitivity on the y axis.
+    pub sensitivity_y: f32,
+}
+
+impl<'a, 'b> SystemDesc<'a, 'b, FreeRotationSystem> for FreeRotationSystemDesc {
+    fn build(self, world: &mut World) -> FreeRotationSystem {
+        <FreeRotationSystem as System<'_>>::SystemData::setup(world);
+
+        let event_reader = world.fetch_mut::<EventChannel<Event>>().register_reader();
+
+        FreeRotationSystem::new(self.sensitivity_x, self.sensitivity_y, event_reader)
+    }
+}
+
 /// The system that manages the view rotation.
+///
 /// Controlled by the mouse.
 /// Goes into an inactive state if the window is not focused (`WindowFocus` resource).
 ///
 /// Can be manually disabled by making the mouse visible using the `HideCursor` resource:
 /// `HideCursor.hide = false`
-///
-/// # Type parameters
-///
-/// * `T`: This are the keys the `InputHandler` is using for axes and actions. Often, this is a `StringBindings`.
-#[derive(Debug)]
+#[derive(Debug, new)]
 pub struct FreeRotationSystem {
     sensitivity_x: f32,
     sensitivity_y: f32,
     event_reader: ReaderId<Event>,
-}
-
-impl FreeRotationSystem {
-    /// Builds a new `FreeRotationSystem` with the specified mouse sensitivity values.
-    pub fn new(mut world: &mut World, sensitivity_x: f32, sensitivity_y: f32) -> Self {
-        use amethyst_core::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(&mut world);
-        let event_reader = world.fetch_mut::<EventChannel<Event>>().register_reader();
-        FreeRotationSystem {
-            sensitivity_x,
-            sensitivity_y,
-            event_reader,
-        }
-    }
 }
 
 impl<'a> System<'a> for FreeRotationSystem {
@@ -181,20 +185,24 @@ impl<'a> System<'a> for FreeRotationSystem {
     }
 }
 
-/// A system which reads Events and saves if a window has lost focus in a WindowFocus resource
-#[derive(Debug)]
-pub struct MouseFocusUpdateSystem {
-    event_reader: ReaderId<Event>,
+/// Builds a `MouseFocusUpdateSystem`.
+#[derive(Default, Debug)]
+pub struct MouseFocusUpdateSystemDesc;
+
+impl<'a, 'b> SystemDesc<'a, 'b, MouseFocusUpdateSystem> for MouseFocusUpdateSystemDesc {
+    fn build(self, world: &mut World) -> MouseFocusUpdateSystem {
+        <MouseFocusUpdateSystem as System<'_>>::SystemData::setup(world);
+
+        let event_reader = world.fetch_mut::<EventChannel<Event>>().register_reader();
+
+        MouseFocusUpdateSystem::new(event_reader)
+    }
 }
 
-impl MouseFocusUpdateSystem {
-    /// Builds a new MouseFocusUpdateSystem.
-    pub fn new(mut world: &mut World) -> MouseFocusUpdateSystem {
-        use amethyst_core::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(&mut world);
-        let event_reader = world.fetch_mut::<EventChannel<Event>>().register_reader();
-        Self { event_reader }
-    }
+/// A system which reads Events and saves if a window has lost focus in a WindowFocus resource
+#[derive(Debug, new)]
+pub struct MouseFocusUpdateSystem {
+    event_reader: ReaderId<Event>,
 }
 
 impl<'a> System<'a> for MouseFocusUpdateSystem {
@@ -214,18 +222,14 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
     }
 }
 
-/// System which hides the cursor when the window is focused.
-/// Requires the usage MouseFocusUpdateSystem at the same time.
-#[derive(Debug)]
-pub struct CursorHideSystem {
-    is_hidden: bool,
-}
+/// Builds a `CursorHideSystem`.
+#[derive(Default, Debug)]
+pub struct CursorHideSystemDesc;
 
-impl CursorHideSystem {
-    /// Constructs a new CursorHideSystem
-    pub fn new(mut world: &mut World) -> CursorHideSystem {
-        use amethyst_core::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(&mut world);
+impl<'a, 'b> SystemDesc<'a, 'b, CursorHideSystem> for CursorHideSystemDesc {
+    fn build(self, world: &mut World) -> CursorHideSystem {
+        <CursorHideSystem as System<'_>>::SystemData::setup(world);
+
         let win = world.fetch::<Window>();
 
         if let Err(err) = win.grab_cursor(true) {
@@ -233,8 +237,16 @@ impl CursorHideSystem {
         }
         win.hide_cursor(true);
 
-        CursorHideSystem { is_hidden: true }
+        CursorHideSystem::new()
     }
+}
+
+/// System which hides the cursor when the window is focused.
+/// Requires the usage MouseFocusUpdateSystem at the same time.
+#[derive(Debug, new)]
+pub struct CursorHideSystem {
+    #[new(value = "true")]
+    is_hidden: bool,
 }
 
 impl<'a> System<'a> for CursorHideSystem {

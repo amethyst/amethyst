@@ -1,5 +1,7 @@
 use std::marker::PhantomData;
 
+use derive_new::new;
+use log::error;
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
@@ -7,9 +9,8 @@ use amethyst_assets::AssetStorage;
 use amethyst_core::{
     ecs::prelude::{Read, System, SystemData, World, WriteExpect},
     shred::Resource,
+    SystemDesc,
 };
-
-use log::error;
 
 use crate::{
     output::init_output,
@@ -17,30 +18,35 @@ use crate::{
     source::{Source, SourceHandle},
 };
 
-/// Calls a closure if the `AudioSink` is empty.
-#[derive(Debug)]
-pub struct DjSystem<F, R> {
+/// Creates a new `DjSystem` with the music picker being `f`.
+///
+/// The closure takes a parameter, which needs to be a reference to a resource type,
+/// e.g. `&MusicLibrary`. This resource will be fetched by the system and passed to the picker.
+#[derive(Debug, new)]
+pub struct DjSystemDesc<F, R> {
     f: F,
     marker: PhantomData<R>,
 }
 
-impl<F, R> DjSystem<F, R>
+impl<'a, 'b, F, R> SystemDesc<'a, 'b, DjSystem<F, R>> for DjSystemDesc<F, R>
 where
     F: FnMut(&mut R) -> Option<SourceHandle>,
     R: Resource,
 {
-    /// Creates a new `DjSystem` with the music picker being `f`.
-    /// The closure takes a parameter, which needs to be a reference to
-    /// a resource type, e.g. `&MusicLibrary`. This resource will be fetched
-    /// by the system and passed to the picker.
-    pub fn new(mut world: &mut World, f: F) -> Self {
-        <Self as System<'_>>::SystemData::setup(&mut world);
-        init_output(&mut world);
-        DjSystem {
-            f,
-            marker: PhantomData,
-        }
+    fn build(self, world: &mut World) -> DjSystem<F, R> {
+        <DjSystem<F, R> as System<'_>>::SystemData::setup(world);
+
+        init_output(world);
+
+        DjSystem::new(self.f)
     }
+}
+
+/// Calls a closure if the `AudioSink` is empty.
+#[derive(Debug, new)]
+pub struct DjSystem<F, R> {
+    f: F,
+    marker: PhantomData<R>,
 }
 
 impl<'a, F, R> System<'a> for DjSystem<F, R>

@@ -1,9 +1,10 @@
 use amethyst_core::{
     ecs::prelude::{
-        BitSet, ComponentEvent, Join, ReadStorage, ReaderId, System, World, WriteStorage,
+        BitSet, ComponentEvent, Join, ReadStorage, ReaderId, System, SystemData, World,
+        WriteStorage,
     },
     math::{convert, Matrix4},
-    Transform,
+    SystemDesc, Transform,
 };
 use amethyst_rendy::skinning::JointTransforms;
 
@@ -13,6 +14,20 @@ use log::error;
 use thread_profiler::profile_scope;
 
 use super::resources::*;
+
+/// Builds a `VertexSkinningSystem`.
+#[derive(Default, Debug)]
+pub struct VertexSkinningSystemDesc;
+
+impl<'a, 'b> SystemDesc<'a, 'b, VertexSkinningSystem> for VertexSkinningSystemDesc {
+    fn build(self, world: &mut World) -> VertexSkinningSystem {
+        <VertexSkinningSystem as System<'_>>::SystemData::setup(world);
+        let mut transform = WriteStorage::<Transform>::fetch(&world);
+        let updated_id = transform.register_reader();
+
+        VertexSkinningSystem::new(updated_id)
+    }
+}
 
 /// System for performing vertex skinning.
 ///
@@ -28,11 +43,7 @@ pub struct VertexSkinningSystem {
 
 impl VertexSkinningSystem {
     /// Creates a new `VertexSkinningSystem`
-    pub fn new(mut world: &mut World) -> Self {
-        use amethyst_core::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(&mut world);
-        let mut transform = WriteStorage::<Transform>::fetch(&world);
-        let updated_id = transform.register_reader();
+    pub fn new(updated_id: ReaderId<ComponentEvent>) -> Self {
         Self {
             updated: BitSet::default(),
             updated_skins: BitSet::default(),

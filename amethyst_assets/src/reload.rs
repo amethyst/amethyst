@@ -2,9 +2,11 @@
 
 use std::{sync::Arc, time::Instant};
 
+use derive_new::new;
+
 use amethyst_core::{
-    ecs::prelude::{DispatcherBuilder, Read, System, World, Write},
-    SystemBundle, Time,
+    ecs::prelude::{DispatcherBuilder, Read, System, SystemData, World, Write},
+    SystemBundle, SystemDesc, Time,
 };
 use amethyst_error::Error;
 
@@ -34,7 +36,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for HotReloadBundle {
         dispatcher: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
         dispatcher.add(
-            HotReloadSystem::new(world, self.strategy),
+            HotReloadSystemDesc::new(self.strategy).build(world),
             "hot_reload",
             &[],
         );
@@ -56,7 +58,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for HotReloadBundle {
 /// world.insert(HotReloadStrategy::every(2));
 /// # }
 /// ```
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct HotReloadStrategy {
     inner: HotReloadStrategyInner,
 }
@@ -123,7 +125,7 @@ impl Default for HotReloadStrategy {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum HotReloadStrategyInner {
     Every {
         interval: u8,
@@ -137,19 +139,27 @@ enum HotReloadStrategyInner {
     Never,
 }
 
-/// System for updating `HotReloadStrategy`.
-pub struct HotReloadSystem;
+/// Builds a `HotReloadSystem`.
+#[derive(Debug, new)]
+pub struct HotReloadSystemDesc {
+    /// The `HotReloadStrategy`.
+    pub strategy: HotReloadStrategy,
+}
 
-impl HotReloadSystem {
-    /// Create a new reload system
-    pub fn new(mut world: &mut World, strategy: HotReloadStrategy) -> Self {
-        use amethyst_core::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(&mut world);
-        world.insert(strategy);
+impl<'a, 'b> SystemDesc<'a, 'b, HotReloadSystem> for HotReloadSystemDesc {
+    fn build(self, world: &mut World) -> HotReloadSystem {
+        <HotReloadSystem as System<'_>>::SystemData::setup(world);
+
+        world.insert(self.strategy);
         world.fetch_mut::<Loader>().set_hot_reload(true);
-        Self
+
+        HotReloadSystem::new()
     }
 }
+
+/// System for updating `HotReloadStrategy`.
+#[derive(Debug, new)]
+pub struct HotReloadSystem;
 
 impl<'a> System<'a> for HotReloadSystem {
     type SystemData = (Read<'a, Time>, Write<'a, HotReloadStrategy>);

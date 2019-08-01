@@ -24,6 +24,7 @@ amethyst_assets = { path = "../amethyst_assets", version = "0.7.0"}
 amethyst_core = { path = "../amethyst_core", version = "0.6.0"}
 amethyst_error = { path = "../amethyst_error", version = "0.1.0"}
 cpal = "0.8"
+derive-new = "0.5"
 log = "0.4.6"
 rodio = "0.9"
 serde = { version = "1.0", features = ["derive"] }

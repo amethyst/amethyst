@@ -1,33 +1,39 @@
 use std::marker::PhantomData;
 
-use amethyst::{core::bundle::SystemBundle, ecs::prelude::*, error::Error};
+use amethyst::{
+    core::{bundle::SystemBundle, SystemDesc},
+    ecs::prelude::*,
+    error::Error,
+};
 use derive_new::new;
 
 /// Adds a specified thread local `System` to the dispatcher.
 #[derive(Debug, new)]
-pub struct ThreadLocalInjectionBundle<SysFn, Sys>
+pub struct ThreadLocalInjectionBundle<'a, 'b, SD, S>
 where
-    SysFn: FnOnce(&mut World) -> Sys,
-    Sys: for<'s> RunNow<'s>,
+    SD: SystemDesc<'a, 'b, S>,
+    S: for<'s> System<'s>,
+    // S: for<'s> RunNow<'s>,
 {
     /// Function to instantiate `System` to add to the dispatcher.
-    system_fn: SysFn,
+    system_desc: SD,
     /// Marker for `'a` lifetime.
     #[new(default)]
-    system_marker: PhantomData<(SysFn, Sys)>,
+    system_marker: PhantomData<(&'a SD, &'b S)>,
 }
 
-impl<'a, 'b, SysFn, Sys> SystemBundle<'a, 'b> for ThreadLocalInjectionBundle<SysFn, Sys>
+impl<'a, 'b, SD, S> SystemBundle<'a, 'b> for ThreadLocalInjectionBundle<'a, 'b, SD, S>
 where
-    SysFn: FnOnce(&mut World) -> Sys,
-    Sys: for<'s> RunNow<'s> + 'b,
+    SD: SystemDesc<'a, 'b, S>,
+    S: for<'s> System<'s>,
+    // S: for<'s> RunNow<'s> + 'b,
 {
     fn build(
         self,
         world: &mut World,
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
-        let system = (self.system_fn)(world);
+        let system = self.system_desc.build(world);
         builder.add_thread_local(system);
         Ok(())
     }

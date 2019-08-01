@@ -7,6 +7,7 @@ use std::{
     },
 };
 
+use derive_new::new;
 use rodio::SpatialSink;
 
 #[cfg(feature = "profiler")]
@@ -18,6 +19,7 @@ use amethyst_core::{
     },
     math::convert,
     transform::Transform,
+    SystemDesc,
 };
 
 use crate::{
@@ -26,18 +28,26 @@ use crate::{
     output::Output,
 };
 
-/// Syncs 3D transform data with the audio engine to provide 3D audio.
-#[derive(Debug, Default)]
-pub struct AudioSystem(Output);
+/// Builds an `AudioSystem`.
+#[derive(Default, Debug, new)]
+pub struct AudioSystemDesc {
+    /// Audio `Output`.
+    pub output: Output,
+}
 
-impl AudioSystem {
-    /// Produces a new AudioSystem that uses the given output.
-    pub fn new(mut world: &mut World, output: Output) -> Self {
-        <Self as System<'_>>::SystemData::setup(&mut world);
-        world.insert(output.clone());
-        AudioSystem(output)
+impl<'a, 'b> SystemDesc<'a, 'b, AudioSystem> for AudioSystemDesc {
+    fn build(self, world: &mut World) -> AudioSystem {
+        <AudioSystem as System<'_>>::SystemData::setup(world);
+
+        world.insert(self.output.clone());
+
+        AudioSystem::new(self.output)
     }
 }
+
+/// Syncs 3D transform data with the audio engine to provide 3D audio.
+#[derive(Debug, Default, new)]
+pub struct AudioSystem(Output);
 
 /// Add this structure to world as a resource with ID 0 to select an entity whose AudioListener
 /// component will be used.  If this resource isn't found then the system will arbitrarily select

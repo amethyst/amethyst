@@ -44,6 +44,7 @@ winit = "0.19"
 approx = "0.3"
 
 [features]
+default = ["rendy/vulkan"]
 metal = ["rendy/metal"]
 vulkan = ["rendy/vulkan"]
 empty = ["rendy/empty"]

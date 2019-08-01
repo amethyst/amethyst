@@ -1,10 +1,10 @@
 //! ECS input bundle
 
-use crate::{BindingError, BindingTypes, Bindings, InputSystem};
+use crate::{BindingError, BindingTypes, Bindings, InputSystemDesc};
 use amethyst_config::{Config, ConfigError};
 use amethyst_core::{
     ecs::prelude::{DispatcherBuilder, World},
-    SystemBundle,
+    SystemBundle, SystemDesc,
 };
 use amethyst_error::Error;
 use derivative::Derivative;
@@ -94,7 +94,7 @@ impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for InputBundle<T> {
             );
         }
         builder.add(
-            InputSystem::<T>::new(world, self.bindings),
+            InputSystemDesc::<T>::new(self.bindings).build(world),
             "input_system",
             &[],
         );

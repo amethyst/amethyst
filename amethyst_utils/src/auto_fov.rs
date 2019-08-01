@@ -1,10 +1,14 @@
 //! Utility to adjust the aspect ratio of cameras automatically
 
 use amethyst_assets::PrefabData;
-use amethyst_core::ecs::{
-    Component, Entity, HashMapStorage, Join, ReadExpect, ReadStorage, System, World, WriteStorage,
+use amethyst_core::{
+    ecs::{
+        Component, Entity, HashMapStorage, Join, ReadExpect, ReadStorage, System, SystemData,
+        World, WriteStorage,
+    },
+    SystemDesc,
 };
-use amethyst_derive::PrefabData;
+use amethyst_derive::{PrefabData, SystemDesc};
 use amethyst_error::Error;
 use amethyst_rendy::camera::Camera;
 use amethyst_window::ScreenDimensions;
@@ -229,17 +233,14 @@ impl Default for AutoFov {
 /// If the camera is being loaded by a prefab, it is best to have the `PrefabLoaderSystem` loading
 /// the camera as a dependency of this system. It enables the system to adjust the camera right
 /// after it is created -- simply put, in the same frame.
-#[derive(Debug)]
+#[derive(Debug, SystemDesc)]
 pub struct AutoFovSystem {
     last_dimensions: ScreenDimensions,
 }
 
 impl AutoFovSystem {
     /// Sets up `SystemData` and returns a new `AutoFovSystem`.
-    pub fn new(world: &mut World) -> Self {
-        use amethyst_core::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(world);
-
+    pub fn new() -> Self {
         Self {
             last_dimensions: ScreenDimensions::new(0, 0, 0.0),
         }

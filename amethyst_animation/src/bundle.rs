@@ -1,13 +1,14 @@
 use crate::{
     resources::AnimationSampling,
-    skinning::VertexSkinningSystem,
+    skinning::VertexSkinningSystemDesc,
     systems::{
-        AnimationControlSystem, AnimationProcessor, SamplerInterpolationSystem, SamplerProcessor,
+        AnimationControlSystemDesc, AnimationProcessor, SamplerInterpolationSystem,
+        SamplerProcessor,
     },
 };
 use amethyst_core::{
     ecs::prelude::{Component, DispatcherBuilder, World},
-    SystemBundle,
+    SystemBundle, SystemDesc,
 };
 use amethyst_error::Error;
 use std::{hash::Hash, marker};
@@ -41,7 +42,7 @@ impl<'a, 'b, 'c> SystemBundle<'a, 'b> for VertexSkinningBundle<'c> {
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
         builder.add(
-            VertexSkinningSystem::new(world),
+            VertexSkinningSystemDesc::default().build(world),
             "vertex_skinning_system",
             self.dep,
         );
@@ -155,7 +156,7 @@ where
     ) -> Result<(), Error> {
         builder.add(AnimationProcessor::<T>::new(), "", &[]);
         builder.add(
-            AnimationControlSystem::<I, T>::new(world),
+            AnimationControlSystemDesc::<I, T>::default().build(world),
             self.animation_name,
             self.dep,
         );

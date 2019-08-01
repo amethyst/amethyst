@@ -12,7 +12,7 @@ use crate::{
     Asset, AssetStorage, Format, Handle, Loader, Progress, ProgressCounter, SerializableFormat,
 };
 
-pub use self::system::PrefabLoaderSystem;
+pub use self::system::{PrefabLoaderSystem, PrefabLoaderSystemDesc};
 
 mod impls;
 mod system;
@@ -471,7 +471,7 @@ mod tests {
 
     use amethyst_core::{
         ecs::{Builder, RunNow, World, WorldExt},
-        Time, Transform,
+        SystemDesc, Time, Transform,
     };
 
     use crate::Loader;
@@ -487,7 +487,7 @@ mod tests {
         world.insert(pool.clone());
         world.insert(Loader::new(".", pool));
         world.insert(Time::default());
-        let mut system = PrefabLoaderSystem::<MyPrefab>::new(&mut world);
+        let mut system = PrefabLoaderSystemDesc::<MyPrefab>::default().build(&mut world);
         RunNow::setup(&mut system, &mut world);
 
         let prefab = Prefab::new_main(Transform::default());

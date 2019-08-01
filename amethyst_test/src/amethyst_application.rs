@@ -2,7 +2,7 @@ use std::{any::Any, marker::PhantomData, panic, path::PathBuf, sync::Mutex};
 
 use amethyst::{
     self,
-    core::{transform::TransformBundle, EventReader, SystemBundle},
+    core::{transform::TransformBundle, EventReader, SystemBundle, SystemDesc},
     ecs::prelude::*,
     error::Error,
     input::{BindingTypes, InputBundle},
@@ -407,34 +407,37 @@ where
     ///
     /// # Parameters
     ///
-    /// * `system_fn`: Function to instantiate the `System`.
+    /// * `system_desc`: Descriptor to instantiate the `System`.
     /// * `name`: Name to register the system with, used for dependency ordering.
     /// * `deps`: Names of systems that must run before this system.
-    pub fn with_system<N, SysFn, Sys>(self, system_fn: SysFn, name: N, deps: &[N]) -> Self
+    pub fn with_system<N, SD, S>(self, system_desc: SD, name: N, deps: &[N]) -> Self
     where
         N: Into<String> + Clone,
-        SysFn: FnOnce(&mut World) -> Sys + Send + Sync + 'static,
-        Sys: for<'sys_local> System<'sys_local> + Send + 'static,
+        SD: SystemDesc<'static, 'static, S> + Send + Sync + 'static,
+        S: for<'sys_local> System<'sys_local> + Send + 'static,
     {
         let name = name.into();
         let deps = deps
             .iter()
             .map(|dep| dep.clone().into())
             .collect::<Vec<String>>();
-        self.with_bundle_fn(move || SystemInjectionBundle::new(system_fn, name, deps))
+        self.with_bundle_fn(move || SystemInjectionBundle::new(system_desc, name, deps))
     }
 
     /// Registers a thread local `System` into this application's `GameData`.
     ///
     /// # Parameters
     ///
-    /// * `system_fn`: Function to instantiate the thread local system.
-    pub fn with_thread_local<SysFn, Sys>(self, system_fn: SysFn) -> Self
+    /// * `system_desc`: Descriptor to instantiate the thread local system.
+    pub fn with_thread_local<SD, S>(self, system_desc: SD) -> Self
     where
-        SysFn: FnOnce(&mut World) -> Sys + Send + Sync + 'static,
-        Sys: for<'sys_local> RunNow<'sys_local> + Send + 'static,
+        SD: SystemDesc<'static, 'static, S> + Send + Sync + 'static,
+        S: for<'sys_local> System<'sys_local> + Send + 'static,
+        // Ideally we can use the following lesser bound, but this would cause a duplication of
+        // traits and types which may not be worth it at this point in time.
+        // S: for<'sys_local> RunNow<'sys_local> + Send + 'static,
     {
-        self.with_bundle_fn(move || ThreadLocalInjectionBundle::new(system_fn))
+        self.with_bundle_fn(move || ThreadLocalInjectionBundle::new(system_desc))
     }
 
     /// Registers a `System` to run in a `CustomDispatcherState`.
@@ -444,14 +447,14 @@ where
     ///
     /// # Parameters
     ///
-    /// * `system_fn`: Function to instantiate the `System`.
+    /// * `system_desc`: Descriptor to instantiate the `System`.
     /// * `name`: Name to register the system with, used for dependency ordering.
     /// * `deps`: Names of systems that must run before this system.
-    pub fn with_system_single<N, SysFn, Sys>(self, system_fn: SysFn, name: N, deps: &[N]) -> Self
+    pub fn with_system_single<N, SD, S>(self, system_desc: SD, name: N, deps: &[N]) -> Self
     where
         N: Into<String> + Clone,
-        SysFn: FnOnce(&mut World) -> Sys + Send + Sync + 'static,
-        Sys: for<'sys_local> System<'sys_local> + Send + Sync + 'static,
+        SD: SystemDesc<'static, 'static, S> + Send + Sync + 'static,
+        S: for<'sys_local> System<'sys_local> + Send + Sync + 'static,
     {
         let name = name.into();
         let deps = deps
@@ -460,7 +463,7 @@ where
             .collect::<Vec<String>>();
         self.with_state(move || {
             CustomDispatcherStateBuilder::new()
-                .with(system_fn, name, deps)
+                .with(system_desc, name, deps)
                 .build()
         })
     }
@@ -526,7 +529,8 @@ mod test {
 
     use amethyst::{
         assets::{Asset, AssetStorage, Handle, Loader, ProcessingState, Processor},
-        core::bundle::SystemBundle,
+        core::{bundle::SystemBundle, SystemDesc},
+        derive::SystemDesc,
         ecs::prelude::*,
         error::Error,
         prelude::*,
@@ -745,7 +749,7 @@ mod test {
         };
 
         AmethystApplication::blank()
-            .with_system(|_| SystemEffect, "system_effect", &[])
+            .with_system(SystemEffect, "system_effect", &[])
             .with_effect(effect_fn)
             .with_assertion(|world| assert_eq!(1, get_component_zero_value(world)))
             .with_assertion(|world| assert_eq!(2, get_component_zero_value(world)))
@@ -755,8 +759,8 @@ mod test {
     #[test]
     fn with_system_invoked_twice_should_not_panic() {
         AmethystApplication::blank()
-            .with_system(|_| SystemZero, "zero", &[])
-            .with_system(|_| SystemOne, "one", &["zero"]);
+            .with_system(SystemZero, "zero", &[])
+            .with_system(SystemOne, "one", &["zero"]);
     }
 
     #[test]
@@ -780,7 +784,7 @@ mod test {
                 let entity = world.create_entity().with(ComponentZero(0)).build();
                 world.insert(EffectReturn(entity));
             })
-            .with_system_single(|_| SystemEffect, "system_effect", &[])
+            .with_system_single(SystemEffect, "system_effect", &[])
             .with_assertion(assertion_fn)
             .with_assertion(assertion_fn)
             .run()
@@ -1017,14 +1021,14 @@ mod test {
     }
 
     // === Systems === //
-    #[derive(Debug)]
+    #[derive(Debug, SystemDesc)]
     struct SystemZero;
     impl<'s> System<'s> for SystemZero {
         type SystemData = ();
         fn run(&mut self, _: Self::SystemData) {}
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, SystemDesc)]
     struct SystemOne;
     type SystemOneData<'s> = Read<'s, ApplicationResource>;
     impl<'s> System<'s> for SystemOne {
@@ -1032,23 +1036,16 @@ mod test {
         fn run(&mut self, _: Self::SystemData) {}
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, SystemDesc)]
+    #[system_desc(insert(ApplicationResourceNonDefault))]
     struct SystemNonDefault;
     type SystemNonDefaultData<'s> = ReadExpect<'s, ApplicationResourceNonDefault>;
     impl<'s> System<'s> for SystemNonDefault {
         type SystemData = SystemNonDefaultData<'s>;
         fn run(&mut self, _: Self::SystemData) {}
-
-        fn setup(&mut self, world: &mut World) {
-            // Must be called when we override `.setup()`
-            SystemNonDefaultData::setup(world);
-
-            // Need to manually insert this when the resource is `!Default`
-            world.insert(ApplicationResourceNonDefault);
-        }
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, SystemDesc)]
     struct SystemEffect;
     type SystemEffectData<'s> = WriteStorage<'s, ComponentZero>;
     impl<'s> System<'s> for SystemEffect {
@@ -1079,11 +1076,11 @@ mod test {
     impl<'a, 'b> SystemBundle<'a, 'b> for BundleOne {
         fn build(
             self,
-            _world: &mut World,
+            world: &mut World,
             builder: &mut DispatcherBuilder<'a, 'b>,
         ) -> Result<(), Error> {
             builder.add(SystemOne, "system_one", &["system_zero"]);
-            builder.add(SystemNonDefault, "system_non_default", &[]);
+            builder.add(SystemNonDefault.build(world), "system_non_default", &[]);
             Ok(())
         }
     }

@@ -7,6 +7,7 @@ use crate::{
     bundle::SystemBundle,
     ecs::prelude::{DispatcherBuilder, World},
     transform::*,
+    SystemDesc,
 };
 
 /// Transform bundle
@@ -54,7 +55,7 @@ impl<'a, 'b, 'c> SystemBundle<'a, 'b> for TransformBundle<'c> {
             self.dep,
         );
         builder.add(
-            TransformSystem::new(world),
+            TransformSystemDesc::default().build(world),
             "transform_system",
             &["parent_hierarchy_system"],
         );

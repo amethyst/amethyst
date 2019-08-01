@@ -1,13 +1,14 @@
 use std::{collections::HashMap, marker::PhantomData, ops::Deref};
 
+use derivative::Derivative;
 use log::error;
 
 use amethyst_core::{
     ecs::{
         storage::ComponentEvent, BitSet, Entities, Entity, Join, Read, ReadExpect, ReadStorage,
-        ReaderId, System, World, Write, WriteStorage,
+        ReaderId, System, SystemData, World, Write, WriteStorage,
     },
-    ArcThreadPool, Parent, Time,
+    ArcThreadPool, Parent, SystemDesc, Time,
 };
 use amethyst_error::{format_err, Error, ResultExt};
 
@@ -17,6 +18,26 @@ use thread_profiler::profile_scope;
 use crate::{AssetStorage, Completion, Handle, HotReloadStrategy, ProcessingState};
 
 use super::{Prefab, PrefabData, PrefabTag};
+
+/// Builds a `PrefabLoaderSystem`.
+#[derive(Derivative, Debug)]
+#[derivative(Default(bound = ""))]
+pub struct PrefabLoaderSystemDesc<T> {
+    marker: PhantomData<T>,
+}
+
+impl<'a, 'b, T> SystemDesc<'a, 'b, PrefabLoaderSystem<T>> for PrefabLoaderSystemDesc<T>
+where
+    T: PrefabData<'a> + Send + Sync + 'static,
+{
+    fn build(self, world: &mut World) -> PrefabLoaderSystem<T> {
+        <PrefabLoaderSystem<T> as System<'_>>::SystemData::setup(world);
+
+        let insert_reader = WriteStorage::<Handle<Prefab<T>>>::fetch(&world).register_reader();
+
+        PrefabLoaderSystem::new(insert_reader)
+    }
+}
 
 /// System that load `Prefab`s for `PrefabData` `T`.
 ///
@@ -37,10 +58,7 @@ where
     T: PrefabData<'a> + Send + Sync + 'static,
 {
     /// Creates a new `PrefabLoaderSystem`.
-    pub fn new(mut world: &mut World) -> Self {
-        use amethyst_core::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(&mut world);
-        let insert_reader = WriteStorage::<Handle<Prefab<T>>>::fetch(&world).register_reader();
+    pub fn new(insert_reader: ReaderId<ComponentEvent>) -> Self {
         Self {
             _m: PhantomData,
             entities: Vec::default(),

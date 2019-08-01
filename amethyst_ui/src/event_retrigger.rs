@@ -1,6 +1,11 @@
+use std::marker::PhantomData;
+
+use derivative::Derivative;
+
 use amethyst_core::{
     ecs::prelude::{Component, Read, ReadStorage, System, SystemData, World, Write},
     shrev::{Event, EventChannel, ReaderId},
+    SystemDesc,
 };
 
 use crate::event::TargetedEvent;
@@ -41,6 +46,26 @@ pub trait EventRetrigger: Component {
         R: EventReceiver<Self::Out>;
 }
 
+/// Builds an `EventRetriggerSystem`.
+#[derive(Derivative, Debug)]
+#[derivative(Default(bound = ""))]
+pub struct EventRetriggerSystemDesc<T> {
+    marker: PhantomData<T>,
+}
+
+impl<'a, 'b, T> SystemDesc<'a, 'b, EventRetriggerSystem<T>> for EventRetriggerSystemDesc<T>
+where
+    T: EventRetrigger,
+{
+    fn build(self, world: &mut World) -> EventRetriggerSystem<T> {
+        <EventRetriggerSystem<T> as System<'_>>::SystemData::setup(world);
+
+        let event_reader = world.fetch_mut::<EventChannel<T::In>>().register_reader();
+
+        EventRetriggerSystem::new(event_reader)
+    }
+}
+
 /// Links up the given in- and output types' `EventChannel`s listening
 /// to incoming events and calling `apply` on the respective `Retrigger`
 /// components.
@@ -56,9 +81,7 @@ where
     /// Constructs a default `EventRetriggerSystem`. Since the `event_reader`
     /// will automatically be fetched when the system is set up, this should
     /// always be used to construct `EventRetriggerSystem`s.
-    pub fn new(mut world: &mut World) -> Self {
-        <Self as System<'_>>::SystemData::setup(&mut world);
-        let event_reader = world.fetch_mut::<EventChannel<T::In>>().register_reader();
+    pub fn new(event_reader: ReaderId<T::In>) -> Self {
         Self { event_reader }
     }
 }

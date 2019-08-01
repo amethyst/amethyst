@@ -3,13 +3,14 @@
 use crate::{
     BlinkSystem, CacheSelectionOrderSystem, FontAsset, NoCustomUi, ResizeSystem,
     SelectionKeyboardSystem, SelectionMouseSystem, TextEditingInputSystem, TextEditingMouseSystem,
-    ToNativeWidget, UiButtonActionRetriggerSystem, UiButtonSystem, UiLoaderSystem, UiMouseSystem,
-    UiSoundRetriggerSystem, UiSoundSystem, UiTransformSystem, WidgetId,
+    ToNativeWidget, UiButtonActionRetriggerSystemDesc, UiButtonSystemDesc, UiLoaderSystemDesc,
+    UiMouseSystem, UiSoundRetriggerSystemDesc, UiSoundSystemDesc, UiTransformSystemDesc, WidgetId,
 };
 use amethyst_assets::Processor;
 use amethyst_core::{
     bundle::SystemBundle,
     ecs::prelude::{DispatcherBuilder, World},
+    SystemDesc,
 };
 use amethyst_error::Error;
 use amethyst_input::BindingTypes;
@@ -41,12 +42,12 @@ where
         builder: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
         builder.add(
-            UiLoaderSystem::<<C as ToNativeWidget>::PrefabData, W>::new(world),
+            UiLoaderSystemDesc::<<C as ToNativeWidget>::PrefabData, W>::default().build(world),
             "ui_loader",
             &[],
         );
         builder.add(
-            UiTransformSystem::new(world),
+            UiTransformSystemDesc::default().build(world),
             "ui_transform",
             &["transform_system"],
         );
@@ -89,19 +90,23 @@ where
             &["ui_transform"],
         );
         builder.add(
-            UiButtonSystem::new(world),
+            UiButtonSystemDesc::default().build(world),
             "ui_button_system",
             &["ui_mouse_system"],
         );
 
         builder.add(
-            UiButtonActionRetriggerSystem::new(world),
+            UiButtonActionRetriggerSystemDesc::default().build(world),
             "ui_button_action_retrigger_system",
             &["ui_button_system"],
         );
-        builder.add(UiSoundSystem::new(world), "ui_sound_system", &[]);
         builder.add(
-            UiSoundRetriggerSystem::new(world),
+            UiSoundSystemDesc::default().build(world),
+            "ui_sound_system",
+            &[],
+        );
+        builder.add(
+            UiSoundRetriggerSystemDesc::default().build(world),
             "ui_sound_retrigger_system",
             &["ui_sound_system"],
         );

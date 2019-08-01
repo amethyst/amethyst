@@ -1,5 +1,10 @@
-use std::{hash::Hash, marker, time::Duration};
+use std::{
+    hash::Hash,
+    marker::{self, PhantomData},
+    time::Duration,
+};
 
+use derivative::Derivative;
 use fnv::FnvHashMap;
 use log::error;
 use minterpolate::InterpolationPrimitive;
@@ -11,6 +16,7 @@ use amethyst_core::{
         WriteStorage,
     },
     timing::secs_to_duration,
+    SystemDesc,
 };
 
 use crate::resources::{
@@ -21,6 +27,27 @@ use crate::resources::{
 
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
+
+/// Builds an `AnimationControlSystem`.
+#[derive(Derivative, Debug)]
+#[derivative(Default(bound = ""))]
+pub struct AnimationControlSystemDesc<I, T> {
+    marker: PhantomData<(I, T)>,
+}
+
+impl<'a, 'b, I, T> SystemDesc<'a, 'b, AnimationControlSystem<I, T>>
+    for AnimationControlSystemDesc<I, T>
+where
+    I: Copy + Eq + Hash + Send + Sync + 'static,
+    T: AnimationSampling + Component + Clone,
+{
+    fn build(self, world: &mut World) -> AnimationControlSystem<I, T> {
+        <AnimationControlSystem<I, T> as System<'_>>::SystemData::setup(world);
+        ReadStorage::<AnimationSet<I, T>>::setup(world);
+
+        AnimationControlSystem::new()
+    }
+}
 
 /// System for setting up animations, should run before `SamplerInterpolationSystem`.
 ///
@@ -51,9 +78,7 @@ where
     T: AnimationSampling + Component + Clone,
 {
     /// Creates a new `AnimationControlSystem`
-    pub fn new(mut world: &mut World) -> Self {
-        <Self as System<'_>>::SystemData::setup(&mut world);
-        ReadStorage::<AnimationSet<I, T>>::setup(&mut world);
+    pub fn new() -> Self {
         AnimationControlSystem {
             m: marker::PhantomData,
             next_id: 1,

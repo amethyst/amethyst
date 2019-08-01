@@ -1,7 +1,7 @@
 use amethyst_core::{
     ecs::{Entity, ReadExpect, System, SystemData, World, Write, WriteStorage},
     shrev::{EventChannel, ReaderId},
-    ParentHierarchy,
+    ParentHierarchy, SystemDesc,
 };
 use std::{collections::HashMap, fmt::Debug};
 
@@ -53,6 +53,22 @@ where
     }
 }
 
+/// Builds a `UiButtonSystem`.
+#[derive(Default, Debug)]
+pub struct UiButtonSystemDesc;
+
+impl<'a, 'b> SystemDesc<'a, 'b, UiButtonSystem> for UiButtonSystemDesc {
+    fn build(self, world: &mut World) -> UiButtonSystem {
+        <UiButtonSystem as System<'_>>::SystemData::setup(world);
+
+        let event_reader = world
+            .fetch_mut::<EventChannel<UiButtonAction>>()
+            .register_reader();
+
+        UiButtonSystem::new(event_reader)
+    }
+}
+
 /// This system manages button mouse events.  It changes images and text colors, as well as playing audio
 /// when necessary.
 ///
@@ -66,11 +82,7 @@ pub struct UiButtonSystem {
 
 impl UiButtonSystem {
     /// Creates a new instance of this structure
-    pub fn new(mut world: &mut World) -> Self {
-        <Self as System<'_>>::SystemData::setup(&mut world);
-        let event_reader = world
-            .fetch_mut::<EventChannel<UiButtonAction>>()
-            .register_reader();
+    pub fn new(event_reader: ReaderId<UiButtonAction>) -> Self {
         Self {
             event_reader,
             set_images: Default::default(),
