@@ -1,12 +1,10 @@
 use std::marker::PhantomData;
 
-use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder, math::one};
+use amethyst_core::{bundle::SystemBundle, ecs::prelude::DispatcherBuilder};
 use amethyst_error::Error;
 use amethyst_input::BindingTypes;
 
 use super::*;
-
-use derive_new::new;
 
 /// The bundle that creates a flying movement system.
 ///
@@ -35,7 +33,7 @@ pub struct FlyControlBundle<T: BindingTypes> {
     sensitivity_x: f32,
     #[new(value = "1.0")]
     sensitivity_y: f32,
-    #[new(value = "one()")]
+    #[new(value = "1.0")]
     speed: f32,
     right_input_axis: Option<T::Axis>,
     up_input_axis: Option<T::Axis>,

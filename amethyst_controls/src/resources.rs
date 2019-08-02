@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use derive_new::new;
-
 /// Struct which holds information about whether the window is focused.
 /// Written to by MouseFocusUpdateSystem
 #[derive(new, Debug, Clone, Copy, Default, Serialize, Deserialize)]

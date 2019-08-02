@@ -21,6 +21,9 @@ pub use self::{
 
 use amethyst_core;
 
+#[macro_use]
+extern crate derive_new;
+
 mod bundles;
 mod components;
 mod resources;
