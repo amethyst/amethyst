@@ -159,7 +159,7 @@ where
         let game_data = bundle_add_fns.into_iter().fold(
             Ok(GameDataBuilder::default()),
             |game_data: Result<GameDataBuilder<'_, '_>, Error>, function: BundleAddFn| {
-                game_data.and_then(|game_data| function(game_data))
+                game_data.and_then(function)
             },
         )?;
 
