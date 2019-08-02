@@ -4,7 +4,7 @@ pub use crate::{
     app::{Application, ApplicationBuilder, CoreApplication},
     callback_queue::{Callback, CallbackQueue},
     config::Config,
-    core::{SystemExt, WithNamed},
+    core::{SystemDesc, SystemExt, WithNamed},
     ecs::prelude::{Builder, World, WorldExt},
     game_data::{DataInit, GameData, GameDataBuilder},
     state::{
