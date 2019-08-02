@@ -1,5 +1,6 @@
 use std::{fmt, marker::PhantomData, path::PathBuf};
 
+use derivative::Derivative;
 use derive_new::new;
 use sdl2::{
     self,
@@ -9,8 +10,9 @@ use sdl2::{
 };
 
 use amethyst_core::{
-    ecs::prelude::{RunNow, SystemData, World, Write},
+    ecs::prelude::{RunNow, System, SystemData, World, Write},
     shrev::EventChannel,
+    SystemDesc,
 };
 
 use super::{
