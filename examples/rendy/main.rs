@@ -570,8 +570,6 @@ fn main() -> amethyst::Result<()> {
         .join("display.ron");
     let assets_dir = app_root.join("examples").join("assets");
 
-    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
-
     let mut bindings = Bindings::new();
     bindings.insert_axis(
         "vertical",
@@ -655,7 +653,12 @@ fn main() -> amethyst::Result<()> {
                 )),
         )?;
 
-    let mut game = Application::new(&assets_directory, Example::new(), game_data, world)?;
+    let mut game = Application::new(
+        assets_dir & assets_directory,
+        Example::new(),
+        game_data,
+        world,
+    )?;
     game.run();
     Ok(())
 }

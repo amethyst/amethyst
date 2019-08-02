@@ -11,5 +11,4 @@ pub use crate::{
         EmptyState, EmptyTrans, SimpleState, SimpleTrans, State, StateData, Trans, TransEvent,
     },
     state_event::StateEvent,
-    AmethystWorldExt,
 };

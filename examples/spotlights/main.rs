@@ -1,7 +1,7 @@
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystemDesc, RonFormat},
     core::transform::TransformBundle,
-    ecs::{World, WorldExt},
+    ecs::WorldExt,
     prelude::*,
     renderer::{
         plugins::{RenderPbr3D, RenderToWindow},
@@ -32,8 +32,6 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/spotlights/config/display.ron");
     let assets_dir = app_root.join("examples/assets/");
 
-    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
-
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
@@ -45,7 +43,7 @@ fn main() -> amethyst::Result<()> {
                 )
                 .with_plugin(RenderPbr3D::default()),
         )?;
-    let mut game = Application::new(Example, game_data, world)?;
+    let mut game = Application::new(assets_dir, Example, game_data)?;
     game.run();
     Ok(())
 }

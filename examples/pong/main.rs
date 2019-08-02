@@ -59,8 +59,6 @@ fn main() -> amethyst::Result<()> {
 
     let assets_dir = app_root.join("examples/assets/");
 
-    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
-
     let game_data = GameDataBuilder::default()
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(
@@ -87,7 +85,7 @@ fn main() -> amethyst::Result<()> {
         )
         .with_bundle(UiBundle::<StringBindings>::new())?;
 
-    let mut game = Application::build(Pong::default(), world)?
+    let mut game = Application::build(assets_dir, Pong::default())?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             144,

@@ -26,8 +26,8 @@
 //! # struct GameState;
 //! # impl SimpleState for GameState {}
 //! # fn main() -> amethyst::Result<()> {
-//! let mut world = World::with_application_resources::<GameData<'_, '_>, _>("./")?;
-//! let mut game = Application::build(GameState, world)?
+//! let assets_dir = "./";
+//! let mut game = Application::build(assets_dir, GameState)?
 //!     .with_frame_limit(
 //!         FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
 //!         144,

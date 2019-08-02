@@ -89,25 +89,17 @@ where
     state_fns: Vec<FnState<T, E>>,
     /// Game data and event type.
     state_data: PhantomData<(T, E, R)>,
-    /// World used for setup.
-    #[derivative(Debug = "ignore")]
-    world: World,
 }
 
 impl AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader> {
     /// Returns an Amethyst application without any bundles.
     pub fn blank() -> AmethystApplication<GameData<'static, 'static>, StateEvent, StateEventReader>
     {
-        let assets_dir =
-            AmethystApplication::assets_dir().expect("Failed to get default assets dir.");
-        let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)
-            .expect("Failed to initialize `World`.");
         AmethystApplication {
             bundle_add_fns: Vec::new(),
             resource_add_fns: Vec::new(),
             state_fns: Vec::new(),
             state_data: PhantomData,
-            world,
         }
     }
 
@@ -143,7 +135,7 @@ where
         for<'b> R: EventReader<'b, Event = E>,
     {
         let params = (self.bundle_add_fns, self.resource_add_fns, self.state_fns);
-        Self::build_internal(params, self.world)
+        Self::build_internal(params)
     }
 
     // Hack to get around `S` or `T` not being `Send`
@@ -160,7 +152,6 @@ where
             Vec<FnResourceAdd>,
             Vec<FnState<GameData<'static, 'static>, E>>,
         ),
-        world: World,
     ) -> Result<CoreApplication<'static, GameData<'static, 'static>, E, R>, Error>
     where
         for<'b> R: EventReader<'b, Event = E>,
@@ -177,25 +168,21 @@ where
             .into_iter()
             .rev()
             .for_each(|state_fn| states.push(state_fn()));
-        Self::build_application(
-            SequencerState::new(states),
-            game_data,
-            resource_add_fns,
-            world,
-        )
+        Self::build_application(SequencerState::new(states), game_data, resource_add_fns)
     }
 
     fn build_application<S>(
         first_state: S,
         game_data: GameDataBuilder<'static, 'static>,
         resource_add_fns: Vec<FnResourceAdd>,
-        world: World,
     ) -> Result<CoreApplication<'static, GameData<'static, 'static>, E, R>, Error>
     where
         S: State<GameData<'static, 'static>, E> + 'static,
         for<'b> R: EventReader<'b, Event = E>,
     {
-        let mut application_builder = CoreApplication::build(first_state, world)?;
+        let assets_dir =
+            AmethystApplication::assets_dir().expect("Failed to get default assets dir.");
+        let mut application_builder = CoreApplication::build(assets_dir, first_state)?;
         {
             let world = &mut application_builder.world;
             for mut function in resource_add_fns {
@@ -214,7 +201,7 @@ where
 
         // `CoreApplication` is `!UnwindSafe`, but wrapping it in a `Mutex` allows us to
         // recover from a panic.
-        let application = Mutex::new(Self::build_internal(params, self.world)?);
+        let application = Mutex::new(Self::build_internal(params)?);
         panic::catch_unwind(move || {
             application
                 .lock()
@@ -296,7 +283,6 @@ where
             resource_add_fns: self.resource_add_fns,
             state_fns: Vec::new(),
             state_data: PhantomData,
-            world: self.world,
         }
     }
 

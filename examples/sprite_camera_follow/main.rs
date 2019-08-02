@@ -206,8 +206,6 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/sprite_camera_follow/assets");
     let display_config_path = app_root.join("examples/sprite_camera_follow/config/display.ron");
 
-    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
-
     let game_data = GameDataBuilder::default()
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
@@ -225,7 +223,7 @@ fn main() -> amethyst::Result<()> {
         )?
         .with(MovementSystem, "movement", &[]);
 
-    let mut game = Application::build(Example, world)?.build(game_data)?;
+    let mut game = Application::build(assets_dir, Example)?.build(game_data)?;
     game.run();
     Ok(())
 }

@@ -105,11 +105,10 @@ fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
     let assets_dir = application_root_dir()?.join("./");
-    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default().with_bundle(MyBundle)?;
 
-    let mut game = Application::build(GameplayState, world)?
+    let mut game = Application::build(assets_dir, GameplayState)?
         .with_frame_limit(FrameRateLimitStrategy::Sleep, 1)
         .build(game_data)?;
 

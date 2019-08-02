@@ -414,7 +414,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(&mut world, TransformBundle::new())?;
 
 #   let assets_dir = "/";
-#   let mut game = Application::new(assets_dir, Pong, game_data, world)?;
+#   let mut game = Application::new(assets_dir, Pong, game_data)?;
 #   Ok(())
 }
 ```

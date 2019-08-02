@@ -17,14 +17,13 @@ fn main() -> Result<()> {
     amethyst::start_logger(Default::default());
 
     let assets_dir = application_root_dir()?.join("./");
-    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
         .with_bundle(NetworkBundle::<String>::new(
             "127.0.0.1:3455".parse().unwrap(),
         ))?
         .with(SpamReceiveSystem::new(), "rcv", &[]);
-    let mut game = Application::build(State1, world)?
+    let mut game = Application::build(assets_dir, State1)?
         .with_frame_limit(
             FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
             1,

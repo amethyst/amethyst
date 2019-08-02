@@ -7,7 +7,7 @@ use amethyst::{
         AssetStorage, Handle, Prefab, PrefabData, PrefabLoader, PrefabLoaderSystemDesc,
         ProgressCounter, RonFormat,
     },
-    core::{Parent, SystemDesc},
+    core::Parent,
     derive::PrefabData,
     ecs::{
         storage::DenseVecStorage, Component, Entities, Entity, Join, ReadStorage, World,
@@ -144,12 +144,10 @@ fn main() -> Result<(), Error> {
     // Add our meshes directory to the asset loader.
     let assets_dir = app_root.join("examples/assets");
 
-    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
-
     let game_data =
         GameDataBuilder::default().with(PrefabLoaderSystemDesc::<Position>::default(), "", &[]);
 
-    let mut game = Application::new(CustomPrefabState::new(), game_data, world)?;
+    let mut game = Application::new(assets_dir, CustomPrefabState::new(), game_data)?;
     game.run();
     Ok(())
 }

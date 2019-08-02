@@ -199,8 +199,6 @@ fn main() -> Result<(), Error> {
         .join("config")
         .join("display.ron");
 
-    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
-
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with(ExampleSystem::default(), "example_system", &[])
@@ -218,7 +216,7 @@ fn main() -> Result<(), Error> {
         .with_bundle(HotReloadBundle::default())?
         .with_bundle(FpsCounterBundle::default())?
         .with_bundle(InputBundle::<StringBindings>::new())?;
-    let mut game = Application::build(Loading::default(), world)?.build(game_data)?;
+    let mut game = Application::build(assets_dir, Loading::default())?.build(game_data)?;
     game.run();
     Ok(())
 }

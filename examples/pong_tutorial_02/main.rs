@@ -5,7 +5,6 @@ mod pong;
 use crate::pong::Pong;
 use amethyst::{
     core::TransformBundle,
-    ecs::World,
     prelude::*,
     renderer::{
         plugins::{RenderFlat2D, RenderToWindow},
@@ -25,8 +24,6 @@ fn main() -> amethyst::Result<()> {
     // of the git repository. It only is a different location to load the assets from.
     let assets_dir = app_root.join("examples/assets/");
 
-    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
-
     let game_data = GameDataBuilder::default()
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
@@ -42,7 +39,7 @@ fn main() -> amethyst::Result<()> {
         // Add the transform bundle which handles tracking entity positions
         .with_bundle(TransformBundle::new())?;
 
-    let mut game = Application::new(Pong, game_data, world)?;
+    let mut game = Application::new(assets_dir, Pong, game_data)?;
     game.run();
     Ok(())
 }

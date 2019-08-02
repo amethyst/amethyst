@@ -185,15 +185,13 @@ fn main() -> Result<(), Error> {
     // Add our meshes directory to the asset loader.
     let assets_dir = app_root.join("examples/assets");
 
-    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
-
     let game_data = GameDataBuilder::default().with(
         PrefabLoaderSystemDesc::<CustomPrefabData>::default(),
         "",
         &[],
     );
 
-    let mut game = Application::new(CustomPrefabState::new(), game_data, world)?;
+    let mut game = Application::new(assets_dir, CustomPrefabState::new(), game_data)?;
     game.run();
     Ok(())
 }

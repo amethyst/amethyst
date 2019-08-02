@@ -11,7 +11,7 @@ use amethyst::{
     },
     core::transform::TransformBundle,
     ecs::{
-        prelude::{Component, Entity, World},
+        prelude::{Component, Entity},
         NullStorage, WorldExt,
     },
     input::{is_close_requested, is_key_down, InputBundle, StringBindings},
@@ -203,8 +203,6 @@ fn main() -> Result<(), Error> {
 
     let display_config_path = app_root.join("examples/custom_game_data/config/display.ron");
 
-    let world = World::with_application_resources::<CustomGameData<'_, '_>, _>(assets_dir)?;
-
     let game_data = CustomGameDataBuilder::default()
         .with_base(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_running(ExampleSystem::default(), "example_system", &[])
@@ -222,7 +220,7 @@ fn main() -> Result<(), Error> {
         .with_base_bundle(FpsCounterBundle::default())
         .with_base_bundle(InputBundle::<StringBindings>::new());
 
-    let mut game = Application::build(Loading::default(), world)?.build(game_data)?;
+    let mut game = Application::build(assets_dir, Loading::default())?.build(game_data)?;
     game.run();
 
     Ok(())

@@ -185,8 +185,6 @@ fn main() -> Result<(), amethyst::Error> {
     let display_config_path = app_root.join("examples/gltf/config/display.ron");
     let assets_dir = app_root.join("examples/assets/");
 
-    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
-
     let game_data = GameDataBuilder::default()
         .with(AutoFovSystem::default(), "auto_fov", &[])
         .with(
@@ -230,7 +228,7 @@ fn main() -> Result<(), amethyst::Error> {
             "sampler_interpolation",
         ]))?;
 
-    let mut game = Application::build(Example::default(), world)?.build(game_data)?;
+    let mut game = Application::build(assets_dir, Example::default())?.build(game_data)?;
     game.run();
     Ok(())
 }

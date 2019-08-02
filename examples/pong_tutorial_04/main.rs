@@ -6,7 +6,6 @@ mod systems;
 use crate::pong::Pong;
 use amethyst::{
     core::TransformBundle,
-    ecs::World,
     input::{InputBundle, StringBindings},
     prelude::*,
     renderer::{
@@ -26,8 +25,6 @@ fn main() -> amethyst::Result<()> {
     // This line is not mentioned in the pong tutorial as it is specific to the context
     // of the git repository. It only is a different location to load the assets from.
     let assets_dir = app_root.join("examples/assets/");
-
-    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
@@ -57,7 +54,7 @@ fn main() -> amethyst::Result<()> {
             &["paddle_system", "ball_system"],
         );
 
-    let mut game = Application::new(Pong::default(), game_data, world)?;
+    let mut game = Application::new(assets_dir, Pong::default(), game_data)?;
     game.run();
     Ok(())
 }

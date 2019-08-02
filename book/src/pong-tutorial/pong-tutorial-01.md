@@ -183,7 +183,7 @@ let game_data = GameDataBuilder::default();
 # let app_root = application_root_dir()?;
 let assets_dir = app_root.join("assets");
 let mut world = World::new();
-let mut game = Application::new(assets_dir, Pong, game_data, world)?;
+let mut game = Application::new(assets_dir, Pong, game_data)?;
 game.run();
 #     Ok(())
 # }

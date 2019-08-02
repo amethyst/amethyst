@@ -180,8 +180,6 @@ fn main() -> amethyst::Result<()> {
     )
     .with_sensitivity(0.1, 0.1);
 
-    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
-
     let game_data = GameDataBuilder::default()
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
@@ -196,7 +194,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(fly_control_bundle)?
         .with_bundle(TransformBundle::new().with_dep(&["fly_movement"]))?;
 
-    let mut game = Application::new(ExampleState, game_data, world)?;
+    let mut game = Application::new(assets_dir, ExampleState, game_data)?;
     game.run();
     Ok(())
 }

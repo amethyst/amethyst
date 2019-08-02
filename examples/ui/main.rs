@@ -127,8 +127,6 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/ui/config/display.ron");
     let assets_dir = app_root.join("examples/assets");
 
-    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
-
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(
@@ -146,7 +144,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(FpsCounterBundle::default())?
         .with_bundle(InputBundle::<StringBindings>::new())?;
 
-    let mut game = Application::build(Example::default(), world)?
+    let mut game = Application::build(assets_dir, Example::default())?
         // Unlimited FPS
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 9999)
         .build(game_data)?;
@@ -182,7 +180,7 @@ impl UiEventHandlerSystem {
 impl<'a> System<'a> for UiEventHandlerSystem {
     type SystemData = Write<'a, EventChannel<UiEvent>>;
 
-    fn run(&mut self, mut events: Self::SystemData) {
+    fn run(&mut self, events: Self::SystemData) {
         // Reader id was just initialized above if empty
         for ev in events.read(&mut self.reader_id) {
             info!("[SYSTEM] You just interacted with a ui element: {:?}", ev);

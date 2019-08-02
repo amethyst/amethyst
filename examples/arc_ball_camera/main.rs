@@ -117,8 +117,6 @@ fn main() -> Result<(), Error> {
 
     let key_bindings_path = app_root.join("examples/arc_ball_camera/config/input.ron");
 
-    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
-
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(
@@ -141,7 +139,7 @@ fn main() -> Result<(), Error> {
             &["input_system"],
         );
 
-    let mut game = Application::build(ExampleState, world)?.build(game_data)?;
+    let mut game = Application::build(assets_dir, ExampleState)?.build(game_data)?;
     game.run();
     Ok(())
 }

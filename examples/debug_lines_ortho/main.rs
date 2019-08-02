@@ -114,8 +114,6 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/debug_lines_ortho/config/display.ron");
     let assets_dir = app_root.join("examples/assets/");
 
-    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
-
     let game_data = GameDataBuilder::default()
         .with(ExampleLinesSystem::new(), "example_lines_system", &[])
         .with_bundle(
@@ -128,7 +126,7 @@ fn main() -> amethyst::Result<()> {
         )?
         .with_bundle(TransformBundle::new())?;
 
-    let mut game = Application::new(ExampleState, game_data, world)?;
+    let mut game = Application::new(assets_dir, ExampleState, game_data)?;
     game.run();
     Ok(())
 }

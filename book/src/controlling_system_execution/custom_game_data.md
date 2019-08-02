@@ -288,7 +288,7 @@ let game_data = CustomGameDataBuilder::default()
         InputBundle::<StringBindings>::new().with_bindings_from_file(key_bindings_path)?,
     )?;
 
-let mut game = Application::new(assets_directory, Main, game_data, world)?;
+let mut game = Application::new(assets_directory, Main, game_data)?;
 game.run();
 #
 # }

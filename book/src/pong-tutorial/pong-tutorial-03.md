@@ -77,7 +77,7 @@ let game_data = GameDataBuilder::default()
     .with_bundle(&mut world, input_bundle)?
     // ..
     ;
-let mut game = Application::new(assets_dir, Pong, game_data, world)?;
+let mut game = Application::new(assets_dir, Pong, game_data)?;
 game.run();
 # Ok(())
 # }
@@ -226,7 +226,7 @@ let game_data = GameDataBuilder::default()
 # let assets_dir = "/";
 # struct Pong;
 # impl SimpleState for Pong { }
-# let mut game = Application::new(assets_dir, Pong, game_data, world)?;
+# let mut game = Application::new(assets_dir, Pong, game_data)?;
 # Ok(())
 }
 ```

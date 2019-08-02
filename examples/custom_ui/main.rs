@@ -3,7 +3,7 @@
 use amethyst::{
     assets::{PrefabLoader, PrefabLoaderSystemDesc, RonFormat},
     core::transform::TransformBundle,
-    ecs::prelude::{World, WorldExt},
+    ecs::prelude::WorldExt,
     input::StringBindings,
     prelude::*,
     renderer::{
@@ -97,8 +97,6 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/custom_ui/config/display.ron");
     let assets_dir = app_root.join("examples/assets");
 
-    let world = World::with_application_resources::<GameData<'_, '_>, _>(assets_dir)?;
-
     let game_data = GameDataBuilder::default()
         .with(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
@@ -112,7 +110,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderUi::default()),
         )?;
 
-    let mut game = Application::new(Example, game_data, world)?;
+    let mut game = Application::new(assets_dir, Example, game_data)?;
     game.run();
     Ok(())
 }

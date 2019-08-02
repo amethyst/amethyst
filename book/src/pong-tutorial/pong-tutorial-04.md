@@ -356,7 +356,7 @@ let game_data = GameDataBuilder::default()
 # let assets_dir = "/";
 # struct Pong;
 # impl SimpleState for Pong { }
-# let mut game = Application::new(assets_dir, Pong, game_data, world)?;
+# let mut game = Application::new(assets_dir, Pong, game_data)?;
 # Ok(())
 # }
 ```
