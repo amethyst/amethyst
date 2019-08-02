@@ -19,7 +19,7 @@ fn main() -> amethyst::Result<()> {
     let mut world = World::new();
     let game_data = GameDataBuilder::default()
     //..
-    .with_bundle(&mut world, input_bundle)?
+    .with_bundle(input_bundle)?
     //..
 #   ;
 
@@ -34,9 +34,12 @@ To use the `InputHandler` inside a `System` you have to add it to the `SystemDat
 use amethyst::{
     prelude::*,
     input::{InputHandler, ControllerButton, VirtualKeyCode, StringBindings},
-    ecs::{Read, System},
+    core::SystemDesc,
+    derive::SystemDesc,
+    ecs::{Read, System, SystemData, World},
 };
 
+#[derive(SystemDesc)]
 struct ExampleSystem;
 
 impl<'s> System<'s> for ExampleSystem {
@@ -70,7 +73,8 @@ Now you have to add the `System` to the game data, just like you would do with a
 
 ```rust,edition2018,no_run,noplaypen
 # extern crate amethyst;
-# use amethyst::{prelude::*, ecs::*};
+# use amethyst::{prelude::*, ecs::*, core::SystemDesc, derive::SystemDesc};
+# #[derive(SystemDesc)]
 # struct ExampleSystem; 
 # impl<'a> System<'a> for ExampleSystem { type SystemData = (); fn run(&mut self, _: ()) {}}
 #
@@ -134,8 +138,9 @@ And now you can get the [axis](https://docs-src.amethyst.rs/stable/amethyst_inpu
 # extern crate amethyst;
 use amethyst::{
     prelude::*,
-    core::Transform,
-    ecs::{Component, DenseVecStorage, Join, Read, ReadStorage, System, WriteStorage},
+    core::{Transform, SystemDesc},
+    derive::SystemDesc,
+    ecs::{Component, DenseVecStorage, Join, Read, ReadStorage, System, SystemData, World, WriteStorage},
     input::{InputHandler, StringBindings},
 };
 
@@ -153,6 +158,7 @@ impl Component for Player {
     type Storage = DenseVecStorage<Self>;
 }
 
+#[derive(SystemDesc)]
 struct MovementSystem;
 
 impl<'s> System<'s> for MovementSystem {

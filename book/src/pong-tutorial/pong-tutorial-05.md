@@ -43,11 +43,14 @@ Then, we'll create `systems/winner.rs`:
 #
 use amethyst::{
     core::transform::Transform,
-    ecs::prelude::{Join, System, WriteStorage},
+    core::SystemDesc,
+    derive::SystemDesc,
+    ecs::prelude::{Join, System, SystemData, World, WriteStorage},
 };
 
 use crate::pong::{Ball, ARENA_WIDTH};
 
+#[derive(SystemDesc)]
 pub struct WinnerSystem;
 
 impl<'s> System<'s> for WinnerSystem {
@@ -104,21 +107,29 @@ keep playing after someone scores and log who got the point.
 #
 # mod systems {
 #     use amethyst;
+#     use amethyst::core::SystemDesc;
+#     use amethyst::core::ecs::{System, SystemData, World};
+#     use amethyst::derive::SystemDesc;
+#
+#     #[derive(SystemDesc)]
 #     pub struct PaddleSystem;
 #     impl<'a> amethyst::ecs::System<'a> for PaddleSystem {
 #         type SystemData = ();
 #         fn run(&mut self, _: Self::SystemData) { }
 #     }
+#     #[derive(SystemDesc)]
 #     pub struct MoveBallsSystem;
 #     impl<'a> amethyst::ecs::System<'a> for MoveBallsSystem {
 #         type SystemData = ();
 #         fn run(&mut self, _: Self::SystemData) { }
 #     }
+#     #[derive(SystemDesc)]
 #     pub struct BounceSystem;
 #     impl<'a> amethyst::ecs::System<'a> for BounceSystem {
 #         type SystemData = ();
 #         fn run(&mut self, _: Self::SystemData) { }
 #     }
+#     #[derive(SystemDesc)]
 #     pub struct WinnerSystem;
 #     impl<'a> amethyst::ecs::System<'a> for WinnerSystem {
 #         type SystemData = ();
@@ -134,8 +145,8 @@ keep playing after someone scores and log who got the point.
 #
 # let mut world = World::new();
 let game_data = GameDataBuilder::default()
-#    .with_bundle(&mut world, TransformBundle::new())?
-#    .with_bundle(&mut world, input_bundle)?
+#    .with_bundle(TransformBundle::new())?
+#    .with_bundle(input_bundle)?
 #    .with(systems::PaddleSystem, "paddle_system", &["input_system"])
 #    .with(systems::MoveBallsSystem, "ball_system", &[])
 #    .with(
@@ -186,7 +197,7 @@ Then, add a `RenderUi` plugin to your `RenderBundle` like so:
 # fn main() -> Result<(), amethyst::Error>{
 # let mut world = World::new();
 # let game_data = GameDataBuilder::default()
-    .with_bundle(&mut world, RenderingBundle::<DefaultBackend>::new()
+    .with_bundle(RenderingBundle::<DefaultBackend>::new()
         // ...
             .with_plugin(RenderUi::default()),
     )?;
@@ -208,7 +219,7 @@ Finally, add the `UiBundle` after the `InputBundle`:
 # struct Pong;
 # let mut world = World::new();
 # let game_data = GameDataBuilder::default()
-.with_bundle(&mut world, UiBundle::<StringBindings>::new())?
+.with_bundle(UiBundle::<StringBindings>::new())?
 # ;
 # 
 # Ok(())
@@ -391,13 +402,16 @@ accordingly:
 #
 use amethyst::{
 #     core::transform::Transform,
+#     core::SystemDesc,
+#     derive::SystemDesc,
     // --snip--
-    ecs::prelude::{Join, ReadExpect, System, Write, WriteStorage},
+    ecs::prelude::{Join, ReadExpect, System, SystemData, World, Write, WriteStorage},
     ui::UiText,
 };
 
 use crate::pong::{Ball, ScoreBoard, ScoreText, ARENA_WIDTH};
 
+#[derive(SystemDesc)]
 pub struct WinnerSystem;
 
 impl<'s> System<'s> for WinnerSystem {

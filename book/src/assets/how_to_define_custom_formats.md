@@ -165,7 +165,6 @@ If you are defining a new format that may be useful to others, [please send us a
     #     let app_root = application_root_dir()?;
     #     let assets_dir = app_root.join("assets");
     #
-    #     let world = World::new();
     #     let game_data = GameDataBuilder::default()
     #         .with(Processor::<EnergyBlast>::new(), "", &[]);
     #     let mut game = Application::new(
@@ -175,7 +174,6 @@ If you are defining a new format that may be useful to others, [please send us a
     #             energy_blast_handle: None,
     #         },
     #         game_data,
-    #         world,
     #     )?;
     #
     #     game.run();

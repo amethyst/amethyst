@@ -230,7 +230,6 @@ let display_config_path = app_root.join("config").join("display.ron");
 let mut world = World::new();
 let game_data = GameDataBuilder::default()
     .with_bundle(
-        &mut world,
         RenderingBundle::<DefaultBackend>::new()
             // The RenderToWindow plugin provides all the scaffolding for opening a window and drawing on it
             .with_plugin(

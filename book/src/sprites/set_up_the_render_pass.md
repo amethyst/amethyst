@@ -17,10 +17,8 @@ use amethyst::{
 };
 # fn main() -> Result<(), amethyst::Error> {
 #
-# let mut world = World::new();
 # let game_data = GameDataBuilder::default()
 #     .with_bundle(
-#         &mut world,
 #
 // inside your rendering bundle setup
 RenderingBundle::<DefaultBackend>::new()

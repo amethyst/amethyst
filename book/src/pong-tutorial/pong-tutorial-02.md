@@ -337,16 +337,20 @@ Try adding the resource by inserting it manually or using the `setup` method.'
 To turn on the `nightly` feature, enable the `nightly` flag for the Amethyst crate in your Cargo.toml file.  
 Use *one* of the below methods for declaring dependencies (using both will result in an error):
 #### In Dependencies:
-```
+
+```toml
 [dependencies]
 amethyst = { version = "X.XX", features = ["nightly"] }
 ```
+
 #### In Separate Table:
-```
+
+```toml
 [dependencies.amethyst]
 version = "X.XX"
 features = ["nightly"]
 ```
+
 Run the project using the nightly channel if you don't have it as your default: `cargo +nightly run`.
 
 For a `Component` to be used, there must be a `Storage<ComponentType>` resource
@@ -411,7 +415,7 @@ fn main() -> amethyst::Result<()> {
         // ...
 
         // Add the transform bundle which handles tracking entity positions
-        .with_bundle(&mut world, TransformBundle::new())?;
+        .with_bundle(TransformBundle::new())?;
 
 #   let assets_dir = "/";
 #   let mut game = Application::new(assets_dir, Pong, game_data)?;
