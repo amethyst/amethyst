@@ -44,30 +44,18 @@ pub trait GraphCreator<B: Backend> {
 }
 
 /// Amethyst rendering system
+#[derive(new)]
 #[allow(missing_debug_implementations)]
 pub struct RenderingSystem<B, G>
 where
     B: Backend,
     G: GraphCreator<B>,
 {
+    #[new(default)]
     graph: Option<Graph<B, Resources>>,
+    #[new(default)]
     families: Option<Families<B>>,
     graph_creator: G,
-}
-
-impl<B, G> RenderingSystem<B, G>
-where
-    B: Backend,
-    G: GraphCreator<B>,
-{
-    /// Create a new `RenderingSystem` with the supplied graph via `GraphCreator`
-    pub fn new(graph_creator: G) -> Self {
-        Self {
-            graph: None,
-            families: None,
-            graph_creator,
-        }
-    }
 }
 
 type SetupData<'a> = (

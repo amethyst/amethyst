@@ -485,10 +485,11 @@ impl From<Projection> for Camera {
 /// |¯¯¯+x
 /// |
 /// +y
-#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize, Getters, Setters, MutGetters)]
 pub struct Camera {
     /// Graphical projection of the camera.
-    inner: Projection,
+    #[get = "pub"] #[set = "pub"] #[get_mut = "pub"]
+    projection: Projection,
 }
 
 impl Camera {
@@ -526,7 +527,7 @@ impl Camera {
 
     /// Returns a reference to the inner `Projection` matrix of this camera.
     pub fn as_matrix(&self) -> &Matrix4<f32> {
-        match self.inner {
+        match self.projection {
             Projection::Orthographic(ref p) => p.as_matrix(),
             Projection::Perspective(ref p) => p.as_matrix(),
         }
@@ -534,25 +535,10 @@ impl Camera {
 
     /// Returns a mutable reference to the inner `Projection` matrix of this camera.
     pub fn as_matrix_mut(&mut self) -> &mut Matrix4<f32> {
-        match self.inner {
+        match self.projection {
             Projection::Orthographic(ref mut p) => p.as_matrix_mut(),
             Projection::Perspective(ref mut p) => p.as_matrix_mut(),
         }
-    }
-
-    /// Returns a reference to the inner [Projection] of this camera.
-    pub fn projection(&self) -> &Projection {
-        &self.inner
-    }
-
-    /// Returns a mutable reference to the inner [Projection] of this camera.
-    pub fn projection_mut(&mut self) -> &mut Projection {
-        &mut self.inner
-    }
-
-    /// Sets the inner [Projection] of this camera.
-    pub fn set_projection(&mut self, new: Projection) {
-        self.inner = new;
     }
 }
 

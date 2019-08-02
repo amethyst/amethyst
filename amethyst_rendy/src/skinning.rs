@@ -83,19 +83,12 @@ impl Component for JointTransforms {
 }
 
 /// Prefab for `JointTransforms`
-#[derive(Default, Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Default, Clone, Debug, serde::Deserialize, serde::Serialize, new)]
 pub struct JointTransformsPrefab {
     /// Index of skin `Entity`
     pub skin: usize,
     /// Number of joints in the skin
     pub size: usize,
-}
-
-impl JointTransformsPrefab {
-    /// Creates a new `JointTransformsPrefab`.
-    pub fn new(skin: usize, size: usize) -> Self {
-        JointTransformsPrefab { skin, size }
-    }
 }
 
 impl<'a> PrefabData<'a> for JointTransformsPrefab {

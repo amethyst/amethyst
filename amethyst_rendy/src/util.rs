@@ -213,21 +213,15 @@ pub fn set_layout_bindings(
 }
 
 /// Helper forward lookup struct using `FnvHashMap`
-#[derive(Debug, Default)]
+#[derive(Debug, Default, new)]
 pub struct LookupBuilder<I: Hash + Eq> {
+    #[new(default)]
     forward: fnv::FnvHashMap<I, usize>,
+    #[new(default)]
     len: usize,
 }
 
 impl<I: Hash + Eq> LookupBuilder<I> {
-    /// Create a new `LookupBuilder`
-    pub fn new() -> LookupBuilder<I> {
-        LookupBuilder {
-            forward: fnv::FnvHashMap::default(),
-            len: 0,
-        }
-    }
-
     /// Return or insert the supplied Id from the table.
     pub fn forward(&mut self, id: I) -> usize {
         if let Some(&id_num) = self.forward.get(&id) {

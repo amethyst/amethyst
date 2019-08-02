@@ -164,7 +164,7 @@ where
 ///
 /// `OrderedTwoLevelBatch` differs from [TwoLevelBatch] in that it sorts and orders on both levels
 /// of batching.
-#[derive(Derivative, Debug)]
+#[derive(Derivative, Debug, Getters)]
 #[derivative(Default(bound = ""))]
 pub struct OrderedTwoLevelBatch<PK, SK, D>
 where
@@ -175,7 +175,8 @@ where
     old_sk_list: Vec<(SK, Range<u32>)>,
     pk_list: Vec<(PK, u32)>,
     sk_list: Vec<(SK, Range<u32>)>,
-    data_list: Vec<D>,
+    #[get = "pub"]
+    data: Vec<D>,
 }
 
 impl<PK, SK, D> OrderedTwoLevelBatch<PK, SK, D>
@@ -189,7 +190,7 @@ where
         std::mem::swap(&mut self.old_sk_list, &mut self.sk_list);
         self.pk_list.clear();
         self.sk_list.clear();
-        self.data_list.clear();
+        self.data.clear();
     }
 
     /// Inserts a set of batch data to the specified grouping.
@@ -197,9 +198,9 @@ where
         #[cfg(feature = "profiler")]
         profile_scope!("ordered_twolevel_insert");
 
-        let start = self.data_list.len() as u32;
-        self.data_list.extend(data);
-        let end = self.data_list.len() as u32;
+        let start = self.data.len() as u32;
+        self.data.extend(data);
+        let end = self.data.len() as u32;
 
         match (self.pk_list.last_mut(), self.sk_list.last_mut()) {
             (Some((last_pk, _)), Some((last_sk, last_sk_range)))
@@ -216,11 +217,6 @@ where
                 self.sk_list.push((sk, start..end));
             }
         }
-    }
-
-    /// Returns the raw storage data of this batch container.
-    pub fn data(&self) -> &Vec<D> {
-        &self.data_list
     }
 
     /// Iterator that returns primary keys and all inner submitted batches
@@ -240,7 +236,7 @@ where
 
     /// Returns the number of items currently in this batch.
     pub fn count(&self) -> usize {
-        self.data_list.len()
+        self.data.len()
     }
 }
 
@@ -319,7 +315,7 @@ where
 /// A batching implementation with one level of indexing. Data type `D` batched by primary key `PK`.
 ///
 /// Items are always kept in insertion order, grouped only by contiguous ranges of equal `PK`.
-#[derive(Derivative, Debug)]
+#[derive(Derivative, Debug, Getters)]
 #[derivative(Default(bound = ""))]
 pub struct OrderedOneLevelBatch<PK, D>
 where
@@ -327,7 +323,8 @@ where
 {
     old_keys: Vec<(PK, u32)>,
     keys_list: Vec<(PK, u32)>,
-    data_list: Vec<D>,
+    #[get = "pub"]
+    data: Vec<D>,
 }
 
 impl<PK, D> OrderedOneLevelBatch<PK, D>
@@ -338,7 +335,7 @@ where
     pub fn swap_clear(&mut self) {
         std::mem::swap(&mut self.old_keys, &mut self.keys_list);
         self.keys_list.clear();
-        self.data_list.clear();
+        self.data.clear();
     }
 
     /// Inserts the provided set of batch data for `PK`
@@ -346,9 +343,9 @@ where
         #[cfg(feature = "profiler")]
         profile_scope!("ordered_onelevel_insert");
 
-        let start = self.data_list.len() as u32;
-        self.data_list.extend(data);
-        let added_len = self.data_list.len() as u32 - start;
+        let start = self.data.len() as u32;
+        self.data.extend(data);
+        let added_len = self.data.len() as u32 - start;
 
         if added_len == 0 {
             return;
@@ -362,11 +359,6 @@ where
                 self.keys_list.push((pk, added_len));
             }
         }
-    }
-
-    /// Returns an iterator to raw data for this batch.
-    pub fn data(&self) -> &Vec<D> {
-        &self.data_list
     }
 
     /// Iterator that returns primary keys and lengths of submitted batch
@@ -386,7 +378,7 @@ where
 
     /// Returns the number of items currently in this batch.
     pub fn count(&self) -> usize {
-        self.data_list.len()
+        self.data.len()
     }
 }
 

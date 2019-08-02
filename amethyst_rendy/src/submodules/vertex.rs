@@ -111,21 +111,14 @@ impl<B: Backend> IndexData<B, u32> {
 /// This structure wraps [PerImageDynamicVertexData], managing multiple instances and providing
 /// an easy-to-use interface for having per-image buffers. This is needed because multiple images
 /// (frames) can be in flight at any given time, so multiple buffers are needed for the same data.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, new)]
 pub struct DynamicVertexData<B: Backend, V: VertexDataBufferType, T: 'static> {
+    #[new(default)]
     per_image: Vec<PerImageDynamicVertexData<B, V>>,
     marker: PhantomData<T>,
 }
 
 impl<B: Backend, V: VertexDataBufferType, T: 'static> DynamicVertexData<B, V, T> {
-    /// Creates a new `DynamicVertexData`
-    pub fn new() -> Self {
-        Self {
-            per_image: Vec::new(),
-            marker: PhantomData,
-        }
-    }
-
     /// Write to the allocated rendy buffer for the specified frame index.
     pub fn write<I>(
         &mut self,
@@ -207,21 +200,14 @@ impl<B: Backend> DynamicVertexData<B, IndexData<B, u32>, u32> {
 /// an easy-to-use interface for managing, growing and binding a given vertex buffer type. This
 /// implementation also leverages the [VertexDataBufferType] trait type for statically dispatching
 /// the appropriate binding and allocation functions, preventing hot-path branching.
-#[derive(Debug)]
+#[derive(Debug, Default, new)]
 struct PerImageDynamicVertexData<B: Backend, V: VertexDataBufferType> {
+    #[new(default)]
     buffer: Option<Escape<Buffer<B>>>,
     marker: PhantomData<V>,
 }
 
 impl<B: Backend, V: VertexDataBufferType> PerImageDynamicVertexData<B, V> {
-    /// Creates a new 'PerImageDynamicVertexData'
-    fn new() -> Self {
-        Self {
-            buffer: None,
-            marker: PhantomData,
-        }
-    }
-
     /// Garuntees that at least max_size bytes of memory is allocated for this buffer
     /// Calls the utility function, [util::ensure_buffer] to dynamically grow the buffer if needed.
     fn ensure(&mut self, factory: &Factory<B>, max_size: u64) -> bool {

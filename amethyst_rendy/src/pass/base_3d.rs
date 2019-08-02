@@ -69,19 +69,15 @@ pub trait Base3DPassDef: 'static + std::fmt::Debug + Send + Sync {
 }
 
 /// Draw opaque 3d meshes with specified shaders and texture set
-#[derive(Clone, Derivative)]
+#[derive(Clone, Derivative, new)]
 #[derivative(Debug(bound = ""), Default(bound = ""))]
 pub struct DrawBase3DDesc<B: Backend, T: Base3DPassDef> {
+    #[new(default)]
     skinning: bool,
     marker: PhantomData<(B, T)>,
 }
 
 impl<B: Backend, T: Base3DPassDef> DrawBase3DDesc<B, T> {
-    /// Create pass in default configuration
-    pub fn new() -> Self {
-        Default::default()
-    }
-
     /// Create pass in with vertex skinning enabled
     pub fn skinned() -> Self {
         Self {
@@ -382,22 +378,15 @@ impl<B: Backend, T: Base3DPassDef> RenderGroup<B, Resources> for DrawBase3D<B, T
 }
 
 /// Draw transparent mesh with physically based lighting
-#[derive(Clone, Derivative)]
+#[derive(Clone, Derivative, new)]
 #[derivative(Debug(bound = ""), Default(bound = ""))]
 pub struct DrawBase3DTransparentDesc<B: Backend, T: Base3DPassDef> {
+    #[new(default)]
     skinning: bool,
     marker: PhantomData<(B, T)>,
 }
 
 impl<B: Backend, T: Base3DPassDef> DrawBase3DTransparentDesc<B, T> {
-    /// Create pass in default configuration
-    pub fn new() -> Self {
-        Self {
-            skinning: false,
-            marker: PhantomData,
-        }
-    }
-
     /// Create pass in with vertex skinning enabled
     pub fn skinned() -> Self {
         Self {

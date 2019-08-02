@@ -31,30 +31,38 @@ enum LocalBasePipeline<'a, P> {
 
 /// Builder abstraction for constructing a backend-agnostic rendy `GraphicsPipeline`
 
-#[derive(Derivative, Debug)]
+#[derive(Derivative, Debug, Setters, new)]
 #[derivative(Clone(bound = ""))]
 pub struct PipelineDescBuilder<'a, B: Backend> {
+    #[new(default)]
     shaders: Option<GraphicsShaderSet<'a, B>>,
+    #[new(default)] #[set]
     rasterizer: Rasterizer,
+    #[new(default)] #[set]
     vertex_buffers: Vec<VertexBufferDesc>,
+    #[new(default)] #[set]
     attributes: Vec<AttributeDesc>,
+    #[new(default)] #[set]
     input_assembler: InputAssemblerDesc,
+    #[new(default)] #[set]
     blender: BlendDesc,
+    #[new(default)] #[set]
     depth_stencil: DepthStencilDesc,
+    #[new(default)] #[set]
     multisampling: Option<Multisampling>,
+    #[new(default)] #[set]
     baked_states: BakedStates,
+    #[new(default)]
     layout: Option<&'a B::PipelineLayout>,
+    #[new(default)]
     subpass: Option<Subpass<'a, B>>,
+    #[new(default)] #[set]
     flags: PipelineCreationFlags,
+    #[new(default)]
     parent: LocalBasePipeline<'a, B::GraphicsPipeline>,
 }
 
 impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
-    /// Create a new builder instance.
-    pub fn new() -> Self {
-        Self::default()
-    }
-
     /// Build with the provided `GraphicsShadersSet`
     pub fn with_shaders(mut self, shaders: GraphicsShaderSet<'a, B>) -> Self {
         self.set_shaders(shaders);
@@ -70,19 +78,11 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
         self.set_rasterizer(rasterizer);
         self
     }
-    /// Set to use the provided `Rasterizer`
-    pub fn set_rasterizer(&mut self, rasterizer: Rasterizer) {
-        self.rasterizer = rasterizer;
-    }
 
     /// Build with the provided `VertexBufferDesc` collection
     pub fn with_vertex_buffers(mut self, vertex_buffers: Vec<VertexBufferDesc>) -> Self {
         self.set_vertex_buffers(vertex_buffers);
         self
-    }
-    /// Set to use the provided `VertexBufferDesc` collection.
-    pub fn set_vertex_buffers(&mut self, vertex_buffers: Vec<VertexBufferDesc>) {
-        self.vertex_buffers = vertex_buffers;
     }
 
     /// Build with the provided `AttributeDesc` collection
@@ -90,19 +90,11 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
         self.set_attributes(attributes);
         self
     }
-    /// Set to use the provided `AttributeDesc` collection.
-    pub fn set_attributes(&mut self, attributes: Vec<AttributeDesc>) {
-        self.attributes = attributes;
-    }
 
     /// Build with the provided `InputAssemblerDesc`
     pub fn with_input_assembler(mut self, input_assembler: InputAssemblerDesc) -> Self {
         self.set_input_assembler(input_assembler);
         self
-    }
-    /// Set to use the provided `InputAssemblerDesc`
-    pub fn set_input_assembler(&mut self, input_assembler: InputAssemblerDesc) {
-        self.input_assembler = input_assembler;
     }
 
     /// Build with the provided `BlendDesc`
@@ -110,19 +102,11 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
         self.set_blender(blender);
         self
     }
-    /// Set to use the provided `BlendDesc`
-    pub fn set_blender(&mut self, blender: BlendDesc) {
-        self.blender = blender;
-    }
 
     /// Build with the provided `DepthStencilDesc`
     pub fn with_depth_stencil(mut self, depth_stencil: DepthStencilDesc) -> Self {
         self.set_depth_stencil(depth_stencil);
         self
-    }
-    /// Set to use the provided `DepthStencilDesc`
-    pub fn set_depth_stencil(&mut self, depth_stencil: DepthStencilDesc) {
-        self.depth_stencil = depth_stencil;
     }
 
     /// Build with the provided `Multisampling`
@@ -130,19 +114,11 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
         self.set_multisampling(multisampling);
         self
     }
-    /// Set to use the provided `Multisampling`
-    pub fn set_multisampling(&mut self, multisampling: Option<Multisampling>) {
-        self.multisampling = multisampling;
-    }
 
     /// Build with the provided `BakedStates`
     pub fn with_baked_states(mut self, baked_states: BakedStates) -> Self {
         self.set_baked_states(baked_states);
         self
-    }
-    /// Set to use the provided `BakedStates`
-    pub fn set_baked_states(&mut self, baked_states: BakedStates) {
-        self.baked_states = baked_states;
     }
 
     /// Build with the provided `PipelineLayout`
@@ -169,10 +145,6 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
     pub fn with_flags(mut self, flags: PipelineCreationFlags) -> Self {
         self.set_flags(flags);
         self
-    }
-    /// Set to use the provided `PipelineCreationFlags`
-    pub fn set_flags(&mut self, flags: PipelineCreationFlags) {
-        self.flags = flags;
     }
 
     /// Build with the provided `BasePipeline`
@@ -299,19 +271,13 @@ impl<'a, B: Backend> Default for PipelineDescBuilder<'a, B> {
 }
 
 /// Pipeline builder set.
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, new)]
 pub struct PipelinesBuilder<'a, B: Backend> {
+    #[new(default)]
     builders: Vec<PipelineDescBuilder<'a, B>>,
 }
 
 impl<'a, B: Backend> PipelinesBuilder<'a, B> {
-    /// Create a new pipeline builder.
-    pub fn new() -> Self {
-        Self {
-            builders: Vec::new(),
-        }
-    }
-
     /// Build with an additional `PipelineDescBuilder` instance.
     pub fn with_pipeline(mut self, builder: PipelineDescBuilder<'a, B>) -> Self {
         self.add_pipeline(builder);

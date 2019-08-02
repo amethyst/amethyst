@@ -30,16 +30,9 @@ struct DebugLinesArgs {
 }
 
 /// Draw opaque sprites without lighting.
-#[derive(Clone, Debug, PartialEq, Derivative)]
+#[derive(Clone, Debug, PartialEq, Derivative, new)]
 #[derivative(Default(bound = ""))]
 pub struct DrawDebugLinesDesc;
-
-impl DrawDebugLinesDesc {
-    /// Create instance of `DrawDebugLines` render group
-    pub fn new() -> Self {
-        Default::default()
-    }
-}
 
 impl<B: Backend> RenderGroupDesc<B, Resources> for DrawDebugLinesDesc {
     fn build(

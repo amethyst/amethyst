@@ -10,7 +10,6 @@ use amethyst_core::{
     math::{convert, distance_squared, Matrix4, Point3, Vector4},
     Hidden, HiddenPropagate, Transform,
 };
-
 use hibitset::BitSet;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
@@ -33,14 +32,16 @@ pub struct Visibility {
 ///
 /// Note that this should run after `Transform` has been updated for the current frame, and
 /// before rendering occurs.
-#[derive(Default, Debug)]
+#[derive(Default, Debug, new)]
 pub struct VisibilitySortingSystem {
+    #[new(default)]
     centroids: Vec<Internals>,
+    #[new(default)]
     transparent: Vec<Internals>,
 }
 
 /// Defines a object's bounding sphere used by frustum culling.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, new)]
 pub struct BoundingSphere {
     /// Center of the bounding sphere
     pub center: Point3<f32>,
@@ -58,11 +59,6 @@ impl Default for BoundingSphere {
 }
 
 impl BoundingSphere {
-    /// Create a new `BoundingSphere` with the supplied radius and center.
-    pub fn new(center: Point3<f32>, radius: f32) -> Self {
-        Self { center, radius }
-    }
-
     /// Returns the center of the sphere.
     pub fn origin(radius: f32) -> Self {
         Self {
@@ -82,13 +78,6 @@ struct Internals {
     transparent: bool,
     centroid: Point3<f32>,
     camera_distance: f32,
-}
-
-impl VisibilitySortingSystem {
-    /// Create new sorting system
-    pub fn new() -> Self {
-        Self::default()
-    }
 }
 
 impl<'a> System<'a> for VisibilitySortingSystem {

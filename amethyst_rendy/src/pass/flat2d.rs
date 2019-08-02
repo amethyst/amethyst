@@ -32,16 +32,9 @@ use rendy::{
 use thread_profiler::profile_scope;
 
 /// Draw opaque sprites without lighting.
-#[derive(Clone, Debug, PartialEq, Derivative)]
+#[derive(Clone, Debug, PartialEq, Derivative, new)]
 #[derivative(Default(bound = ""))]
 pub struct DrawFlat2DDesc;
-
-impl DrawFlat2DDesc {
-    /// Create instance of `DrawFlat2D` render group
-    pub fn new() -> Self {
-        Default::default()
-    }
-}
 
 impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DDesc {
     fn build(
@@ -216,17 +209,11 @@ impl<B: Backend> RenderGroup<B, Resources> for DrawFlat2D<B> {
         }
     }
 }
+
 /// Describes drawing transparent sprites without lighting.
-#[derive(Clone, Debug, PartialEq, Derivative)]
+#[derive(Clone, Debug, PartialEq, Derivative, new)]
 #[derivative(Default(bound = ""))]
 pub struct DrawFlat2DTransparentDesc;
-
-impl DrawFlat2DTransparentDesc {
-    /// Create instance of `DrawFlat2D` render group
-    pub fn new() -> Self {
-        Default::default()
-    }
-}
 
 impl<B: Backend> RenderGroupDesc<B, Resources> for DrawFlat2DTransparentDesc {
     fn build(

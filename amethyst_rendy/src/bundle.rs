@@ -28,20 +28,13 @@ use std::collections::HashMap;
 /// Provides a mechanism for registering rendering plugins.
 /// By itself doesn't render anything, you must use `with_plugin` method
 /// to define a set of functionalities you want to use.
-#[derive(Debug)]
+#[derive(Debug, Default, new)]
 pub struct RenderingBundle<B: Backend> {
+    #[new(default)]
     plugins: Vec<Box<dyn RenderPlugin<B>>>,
 }
 
 impl<B: Backend> RenderingBundle<B> {
-    /// Create empty `RenderingBundle`. You must register a plugin using
-    /// [`with_plugin`] in order to actually display anything.
-    pub fn new() -> Self {
-        Self {
-            plugins: Vec::new(),
-        }
-    }
-
     /// Register a [`RenderPlugin`].
     ///
     /// If you want the non-consuming version of this method, see [`add_plugin`].
@@ -137,20 +130,15 @@ pub trait RenderPlugin<B: Backend>: std::fmt::Debug {
 }
 
 /// Builder of a rendering plan for specified target.
-#[derive(Debug)]
+#[derive(Debug, Default, new)]
 pub struct RenderPlan<B: Backend> {
+    #[new(default)]
     targets: HashMap<Target, TargetPlan<B>>,
+    #[new(default)]
     roots: Vec<Target>,
 }
 
 impl<B: Backend> RenderPlan<B> {
-    fn new() -> Self {
-        Self {
-            targets: Default::default(),
-            roots: vec![],
-        }
-    }
-
     /// Mark render target as root. Root render targets are always
     /// evaluated, even if nothing depends on them.
     pub fn add_root(&mut self, target: Target) {
@@ -239,13 +227,14 @@ pub struct TargetMetadata {
     layers: u16,
 }
 
-#[derive(Debug)]
+#[derive(Debug, MutGetters)]
 struct PlanContext<B: Backend> {
     targets: HashMap<Target, TargetPlan<B>>,
     target_metadata: HashMap<Target, TargetMetadata>,
     passes: HashMap<Target, EvaluationState>,
     outputs: HashMap<TargetImage, ImageId>,
-    graph_builder: GraphBuilder<B, Resources>,
+    #[get_mut = "pub"]
+    graph: GraphBuilder<B, Resources>,
 }
 
 impl<B: Backend> PlanContext<B> {
@@ -282,7 +271,7 @@ impl<B: Backend> PlanContext<B> {
                 target
             ),
         };
-        let node = self.graph_builder.add_node(pass);
+        let node = self.graph.add_node(pass);
         self.passes.insert(target, EvaluationState::Built(node));
         Ok(())
     }
@@ -340,12 +329,8 @@ impl<B: Backend> PlanContext<B> {
         Ok(())
     }
 
-    pub fn graph(&mut self) -> &mut GraphBuilder<B, Resources> {
-        &mut self.graph_builder
-    }
-
     pub fn create_image(&mut self, options: ImageOptions) -> ImageId {
-        self.graph_builder
+        self.graph
             .create_image(options.kind, options.levels, options.format, options.clear)
     }
 }
@@ -506,24 +491,18 @@ pub struct TargetPlanOutputs<B: Backend> {
     pub depth: Option<ImageOptions>,
 }
 
-#[derive(derivative::Derivative)]
+#[derive(derivative::Derivative, new)]
 #[derivative(Debug(bound = ""))]
 struct TargetPlan<B: Backend> {
     key: Target,
+    #[new(default)]
     #[derivative(Debug = "ignore")]
     extensions: Vec<Box<dyn FnOnce(&mut TargetPlanContext<'_, B>) -> Result<(), Error> + 'static>>,
+    #[new(default)]
     outputs: Option<TargetPlanOutputs<B>>,
 }
 
 impl<B: Backend> TargetPlan<B> {
-    fn new(key: Target) -> Self {
-        Self {
-            key,
-            extensions: vec![],
-            outputs: None,
-        }
-    }
-
     // safety:
     // * `physical_device` must be created from same `Instance` as the `Surface` present in output
     unsafe fn metadata(&self, physical_device: &B::PhysicalDevice) -> Option<TargetMetadata> {
