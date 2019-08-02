@@ -23,6 +23,7 @@ amethyst_input = { path = "../amethyst_input", version = "0.8.0" }
 serde = { version = "1.0", features = ["derive"] }
 winit = { version = "0.19", features = ["serde"] }
 log = "0.4.6"
+derive-new="0.5.7"
 
 thread_profiler = { version = "0.3", optional = true }
 

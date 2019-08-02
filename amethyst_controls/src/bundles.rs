@@ -6,6 +6,8 @@ use amethyst_input::BindingTypes;
 
 use super::*;
 
+use derive_new::new;
+
 /// The bundle that creates a flying movement system.
 ///
 /// Note: Will not actually create a moving entity. It will only register the needed resources and
@@ -27,10 +29,13 @@ use super::*;
 /// * `FreeRotationSystem`
 /// * `MouseFocusUpdateSystem`
 /// * `CursorHideSystem`
-#[derive(Debug)]
+#[derive(new, Debug)]
 pub struct FlyControlBundle<T: BindingTypes> {
+    #[new(value = "1.0")]
     sensitivity_x: f32,
+    #[new(value = "1.0")]
     sensitivity_y: f32,
+    #[new(value = "one()")]
     speed: f32,
     right_input_axis: Option<T::Axis>,
     up_input_axis: Option<T::Axis>,
@@ -38,22 +43,6 @@ pub struct FlyControlBundle<T: BindingTypes> {
 }
 
 impl<T: BindingTypes> FlyControlBundle<T> {
-    /// Builds a new fly control bundle using the provided axes as controls.
-    pub fn new(
-        right_input_axis: Option<T::Axis>,
-        up_input_axis: Option<T::Axis>,
-        forward_input_axis: Option<T::Axis>,
-    ) -> Self {
-        FlyControlBundle {
-            sensitivity_x: 1.0,
-            sensitivity_y: 1.0,
-            speed: one(),
-            right_input_axis,
-            up_input_axis,
-            forward_input_axis,
-        }
-    }
-
     /// Alters the mouse sensitivy on this `FlyControlBundle`
     pub fn with_sensitivity(mut self, x: f32, y: f32) -> Self {
         self.sensitivity_x = x;
@@ -100,25 +89,17 @@ impl<'a, 'b, T: BindingTypes> SystemBundle<'a, 'b> for FlyControlBundle<T> {
 /// The generic parameters A and B are the ones used in InputHandler<A,B>.
 /// You might want to add "fly_movement" and "free_rotation" as dependencies of the TransformSystem.
 /// Adding this bundle will grab the mouse, hide it and keep it centered.
-///
 /// See the `arc_ball_camera` example to see how to use the arc ball camera.
-#[derive(Debug)]
+#[derive(new, Debug)]
 pub struct ArcBallControlBundle<T: BindingTypes> {
+    #[new(value = "1.0")]
     sensitivity_x: f32,
+    #[new(value = "1.0")]
     sensitivity_y: f32,
     _marker: PhantomData<T>,
 }
 
 impl<T: BindingTypes> ArcBallControlBundle<T> {
-    /// Builds a new `ArcBallControlBundle` with a default sensitivity of 1.0
-    pub fn new() -> Self {
-        ArcBallControlBundle {
-            sensitivity_x: 1.0,
-            sensitivity_y: 1.0,
-            _marker: PhantomData,
-        }
-    }
-
     /// Builds a new `ArcBallControlBundle` with the provided mouse sensitivity values.
     pub fn with_sensitivity(mut self, x: f32, y: f32) -> Self {
         self.sensitivity_x = x;

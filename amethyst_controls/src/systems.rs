@@ -12,6 +12,8 @@ use amethyst_core::{
 use amethyst_input::{get_input_axis_simple, BindingTypes, InputHandler};
 use winit::{DeviceEvent, Event, Window, WindowEvent};
 
+use derive_new::new;
+
 #[cfg(feature = "profiler")]
 use thread_profiler::profile_scope;
 
@@ -20,7 +22,7 @@ use thread_profiler::profile_scope;
 /// # Type parameters
 ///
 /// * `T`: This are the keys the `InputHandler` is using for axes and actions. Often, this is a `StringBindings`.
-#[derive(Debug)]
+#[derive(new, Debug)]
 pub struct FlyMovementSystem<T: BindingTypes> {
     /// The movement speed of the movement in units per second.
     speed: f32,
@@ -30,23 +32,6 @@ pub struct FlyMovementSystem<T: BindingTypes> {
     up_input_axis: Option<T::Axis>,
     /// The name of the input axis to locally move in the z coordinates.
     forward_input_axis: Option<T::Axis>,
-}
-
-impl<T: BindingTypes> FlyMovementSystem<T> {
-    /// Builds a new `FlyMovementSystem` using the provided speeds and axis controls.
-    pub fn new(
-        speed: f32,
-        right_input_axis: Option<T::Axis>,
-        up_input_axis: Option<T::Axis>,
-        forward_input_axis: Option<T::Axis>,
-    ) -> Self {
-        FlyMovementSystem {
-            speed,
-            right_input_axis,
-            up_input_axis,
-            forward_input_axis,
-        }
-    }
 }
 
 impl<'a, T: BindingTypes> System<'a> for FlyMovementSystem<T> {
@@ -124,22 +109,12 @@ impl<'a> System<'a> for ArcBallRotationSystem {
 /// # Type parameters
 ///
 /// * `T`: This are the keys the `InputHandler` is using for axes and actions. Often, this is a `StringBindings`.
-#[derive(Debug)]
+#[derive(new, Debug)]
 pub struct FreeRotationSystem {
     sensitivity_x: f32,
     sensitivity_y: f32,
+    #[new(default)]
     event_reader: Option<ReaderId<Event>>,
-}
-
-impl FreeRotationSystem {
-    /// Builds a new `FreeRotationSystem` with the specified mouse sensitivity values.
-    pub fn new(sensitivity_x: f32, sensitivity_y: f32) -> Self {
-        FreeRotationSystem {
-            sensitivity_x,
-            sensitivity_y,
-            event_reader: None,
-        }
-    }
 }
 
 impl<'a> System<'a> for FreeRotationSystem {
@@ -187,16 +162,10 @@ impl<'a> System<'a> for FreeRotationSystem {
 }
 
 /// A system which reads Events and saves if a window has lost focus in a WindowFocus resource
-#[derive(Debug, Default)]
+#[derive(new, Debug, Default)]
 pub struct MouseFocusUpdateSystem {
+    #[new(default)]
     event_reader: Option<ReaderId<Event>>,
-}
-
-impl MouseFocusUpdateSystem {
-    /// Builds a new MouseFocusUpdateSystem.
-    pub fn new() -> MouseFocusUpdateSystem {
-        MouseFocusUpdateSystem::default()
-    }
 }
 
 impl<'a> System<'a> for MouseFocusUpdateSystem {
@@ -226,16 +195,10 @@ impl<'a> System<'a> for MouseFocusUpdateSystem {
 
 /// System which hides the cursor when the window is focused.
 /// Requires the usage MouseFocusUpdateSystem at the same time.
-#[derive(Debug, Default)]
+#[derive(new, Debug, Default)]
 pub struct CursorHideSystem {
+    #[new(default)]
     is_hidden: bool,
-}
-
-impl CursorHideSystem {
-    /// Constructs a new CursorHideSystem
-    pub fn new() -> CursorHideSystem {
-        CursorHideSystem { is_hidden: false }
-    }
 }
 
 impl<'a> System<'a> for CursorHideSystem {
