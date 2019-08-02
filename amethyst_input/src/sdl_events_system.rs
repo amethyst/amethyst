@@ -10,7 +10,7 @@ use sdl2::{
 };
 
 use amethyst_core::{
-    ecs::prelude::{RunNow, System, SystemData, World, Write},
+    ecs::prelude::{System, SystemData, World, Write},
     shrev::EventChannel,
     SystemDesc,
 };
@@ -94,10 +94,10 @@ type SdlEventsData<'a, T> = (
     Write<'a, EventChannel<InputEvent<T>>>,
 );
 
-impl<'a, T: BindingTypes> RunNow<'a> for SdlEventsSystem<T> {
-    fn run_now(&mut self, world: &'a World) {
-        let (mut handler, mut output) = SdlEventsData::fetch(world);
+impl<'a, T: BindingTypes> System<'a> for SdlEventsSystem<T> {
+    type SystemData = SdlEventsData<'a, T>;
 
+    fn run(&mut self, (mut handler, mut output): Self::SystemData) {
         let mut event_pump = self
             .event_pump
             .take()
@@ -108,8 +108,6 @@ impl<'a, T: BindingTypes> RunNow<'a> for SdlEventsSystem<T> {
         }
         self.event_pump = Some(event_pump);
     }
-
-    fn setup(&mut self, _world: &mut World) {}
 }
 
 impl<T: BindingTypes> SdlEventsSystem<T> {
@@ -122,7 +120,7 @@ impl<T: BindingTypes> SdlEventsSystem<T> {
 
         let event_pump = sdl_context
             .event_pump()
-            .map_err(SdlSystemError::ContextInit);
+            .map_err(SdlSystemError::ContextInit)?;
         let controller_subsystem = sdl_context
             .game_controller()
             .map_err(SdlSystemError::ControllerSubsystemInit)?;
