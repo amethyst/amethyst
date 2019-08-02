@@ -390,7 +390,7 @@ fn field_type_name(field: &Field) -> &Ident {
             .ident
             .as_ref()
             .map(|ident| format!("`{:?}` ", ident))
-            .unwrap_or(String::from(""))
+            .unwrap_or_else(|| String::from(""))
     );
 }
 
@@ -422,6 +422,7 @@ fn contains_skip_marker(field: &Field) -> bool {
 }
 
 /// Extracts the name from the `#[system_desc(name(..))]` attribute.
+#[allow(clippy::let_and_return)] // Needed due to bug in clippy.
 fn system_desc_name(ast: &DeriveInput) -> Option<Ident> {
     let meta_lists = ast
         .attrs
