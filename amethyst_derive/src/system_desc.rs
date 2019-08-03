@@ -39,9 +39,15 @@ pub fn impl_system_desc(ast: &DeriveInput) -> TokenStream {
         is_self,
     };
 
-    let system_desc_struct = system_desc_struct(&context);
-    let constructor = impl_constructor(&context);
-    let call_system_constructor = call_system_constructor(&context);
+    let (system_desc_struct, constructor, call_system_constructor) = if is_self {
+        (TokenStream::new(), TokenStream::new(), quote!(self))
+    } else {
+        (
+            system_desc_struct(&context),
+            impl_constructor(&context),
+            call_system_constructor(&context),
+        )
+    };
     let resource_insertion_expressions = resource_insertion_expressions(&ast);
 
     let Context {
@@ -95,13 +101,8 @@ fn system_desc_struct(context: &Context<'_>) -> TokenStream {
         ref system_desc_fields,
         ref ty_generics,
         ref where_clause,
-        ref is_self,
         ..
     } = context;
-
-    if *is_self {
-        return TokenStream::new();
-    }
 
     let system_desc_fields = system_desc_fields
         .as_ref()
@@ -151,13 +152,8 @@ fn impl_constructor(context: &Context<'_>) -> TokenStream {
         ref ty_generics,
         ref where_clause,
         ref is_default,
-        ref is_self,
         ..
     } = context;
-
-    if *is_self {
-        return TokenStream::new();
-    }
 
     let constructor_parameters = impl_constructor_parameters(context);
     let constructor_body = impl_constructor_body(context);
@@ -191,13 +187,8 @@ fn impl_constructor_body(context: &Context<'_>) -> TokenStream {
     let Context {
         ref system_desc_name,
         ref system_desc_fields,
-        ref is_self,
         ..
     } = context;
-
-    if *is_self {
-        return TokenStream::new();
-    }
 
     let system_desc_fields = system_desc_fields
         .as_ref()
@@ -252,13 +243,8 @@ fn impl_constructor_body(context: &Context<'_>) -> TokenStream {
 fn impl_constructor_parameters(context: &Context<'_>) -> TokenStream {
     let Context {
         ref system_desc_fields,
-        ref is_self,
         ..
     } = context;
-
-    if *is_self {
-        return TokenStream::new();
-    }
 
     let system_desc_fields = system_desc_fields
         .as_ref()
@@ -307,13 +293,8 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
     let Context {
         ref system_name,
         ref system_desc_fields,
-        ref is_self,
         ..
     } = context;
-
-    if *is_self {
-        return quote!(self);
-    }
 
     let system_desc_fields = system_desc_fields
         .as_ref()
