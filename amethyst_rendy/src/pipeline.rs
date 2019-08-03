@@ -36,29 +36,50 @@ enum LocalBasePipeline<'a, P> {
 pub struct PipelineDescBuilder<'a, B: Backend> {
     #[new(default)]
     shaders: Option<GraphicsShaderSet<'a, B>>,
-    #[new(default)] #[set]
+
+    #[new(value = "Rasterizer::FILL")]
+    #[set]
     rasterizer: Rasterizer,
-    #[new(default)] #[set]
+
+    #[new(default)]
+    #[set]
     vertex_buffers: Vec<VertexBufferDesc>,
-    #[new(default)] #[set]
+
+    #[new(default)]
+    #[set]
     attributes: Vec<AttributeDesc>,
-    #[new(default)] #[set]
+
+    #[new(value = "InputAssemblerDesc::new(Primitive::TriangleList)")]
+    #[set]
     input_assembler: InputAssemblerDesc,
-    #[new(default)] #[set]
+
+    #[new(default)]
+    #[set]
     blender: BlendDesc,
-    #[new(default)] #[set]
+
+    #[new(default)]
+    #[set]
     depth_stencil: DepthStencilDesc,
-    #[new(default)] #[set]
+
+    #[new(default)]
+    #[set]
     multisampling: Option<Multisampling>,
-    #[new(default)] #[set]
+
+    #[new(default)]
+    #[set]
     baked_states: BakedStates,
+
     #[new(default)]
     layout: Option<&'a B::PipelineLayout>,
+
     #[new(default)]
     subpass: Option<Subpass<'a, B>>,
-    #[new(default)] #[set]
+
+    #[new(value = "PipelineCreationFlags::empty()")]
+    #[set]
     flags: PipelineCreationFlags,
-    #[new(default)]
+
+    #[new(value = "LocalBasePipeline::None")]
     parent: LocalBasePipeline<'a, B::GraphicsPipeline>,
 }
 
@@ -182,7 +203,7 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
             }),
             scissor: Some(rect),
             ..old_baked_states
-        })
+        });
     }
 
     /// Build with the provided `DepthTest`
@@ -252,21 +273,7 @@ impl<'a, B: Backend> PipelineDescBuilder<'a, B> {
 
 impl<'a, B: Backend> Default for PipelineDescBuilder<'a, B> {
     fn default() -> Self {
-        Self {
-            shaders: None,
-            rasterizer: Rasterizer::FILL,
-            vertex_buffers: Vec::new(),
-            attributes: Vec::new(),
-            input_assembler: InputAssemblerDesc::new(Primitive::TriangleList),
-            blender: BlendDesc::default(),
-            depth_stencil: DepthStencilDesc::default(),
-            multisampling: None,
-            baked_states: BakedStates::default(),
-            layout: None,
-            subpass: None,
-            flags: PipelineCreationFlags::empty(),
-            parent: LocalBasePipeline::None,
-        }
+        Self::new()
     }
 }
 

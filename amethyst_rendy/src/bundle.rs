@@ -188,14 +188,14 @@ impl<B: Backend> RenderPlan<B> {
             targets: self.targets,
             passes: Default::default(),
             outputs: Default::default(),
-            graph_builder: GraphBuilder::new(),
+            graph: GraphBuilder::new(),
         };
 
         for target in self.roots {
             ctx.evaluate_target(target)?;
         }
 
-        Ok(ctx.graph_builder)
+        Ok(ctx.graph)
     }
 }
 
@@ -427,7 +427,7 @@ impl<'a, B: Backend> TargetPlanContext<'a, B> {
     /// that are not just standard graphics render passes,
     /// e.g. for compute dispatch.
     pub fn graph(&mut self) -> &mut GraphBuilder<B, Resources> {
-        self.plan_context.graph()
+        self.plan_context.graph_mut()
     }
 
     /// Retrieve render target metadata, e.g. size.

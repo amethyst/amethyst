@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Changed
 
+* PlanContext::graph() renamed to PlanContext::graph_mut()
+
 ### Fixed
 
 ## [0.12.0] - 2019-07-30

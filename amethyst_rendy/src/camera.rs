@@ -463,7 +463,7 @@ impl From<Perspective> for Projection {
 
 impl From<Projection> for Camera {
     fn from(proj: Projection) -> Self {
-        Camera { inner: proj }
+        Camera { projection: proj }
     }
 }
 
@@ -485,10 +485,14 @@ impl From<Projection> for Camera {
 /// |¯¯¯+x
 /// |
 /// +y
-#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize, Getters, Setters, MutGetters)]
+#[derive(
+    Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize, Getters, Setters, MutGetters,
+)]
 pub struct Camera {
     /// Graphical projection of the camera.
-    #[get = "pub"] #[set = "pub"] #[get_mut = "pub"]
+    #[get = "pub"]
+    #[set = "pub"]
+    #[get_mut = "pub"]
     projection: Projection,
 }
 
@@ -599,7 +603,7 @@ impl<'a> PrefabData<'a> for CameraPrefab {
         storage.insert(
             entity,
             Camera {
-                inner: match *self {
+                projection: match *self {
                     CameraPrefab::Orthographic {
                         left,
                         right,
@@ -895,7 +899,7 @@ mod tests {
 
         // Our standrd projection has a far clipping plane of 2000.0
         let proj = Projection::orthographic(left, right, bottom, top, 0.1, 2000.0);
-        let our_proj = Camera::standard_2d(width, height).inner;
+        let our_proj = Camera::standard_2d(width, height).projection;
 
         assert_ulps_eq!(our_proj.as_matrix(), proj.as_matrix());
     }
@@ -908,7 +912,7 @@ mod tests {
         // Our standrd projection has a far clipping plane of 2000.0
         let proj =
             Projection::perspective(width / height, std::f32::consts::FRAC_PI_3, 0.1, 2000.0);
-        let our_proj = Camera::standard_3d(width, height).inner;
+        let our_proj = Camera::standard_3d(width, height).projection;
 
         assert_ulps_eq!(our_proj.as_matrix(), proj.as_matrix());
     }
