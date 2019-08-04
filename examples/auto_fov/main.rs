@@ -42,7 +42,7 @@ fn main() -> Result<(), Error> {
     let assets_dir = app_dir.join("assets");
 
     let game_data = GameDataBuilder::new()
-        .with(
+        .with_system_desc(
             PrefabLoaderSystemDesc::<ScenePrefab>::default(),
             "prefab",
             &[],

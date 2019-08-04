@@ -128,7 +128,7 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/assets");
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
+        .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -140,7 +140,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(TransformBundle::new())?
         .with_bundle(UiBundle::<StringBindings>::new())?
         .with(Processor::<Source>::new(), "source_processor", &[])
-        .with(UiEventHandlerSystemDesc::default(), "ui_event_handler", &[])
+        .with_system_desc(UiEventHandlerSystemDesc::default(), "ui_event_handler", &[])
         .with_bundle(FpsCounterBundle::default())?
         .with_bundle(InputBundle::<StringBindings>::new())?;
 

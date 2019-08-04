@@ -78,7 +78,7 @@ fn main() -> amethyst::Result<()> {
         )?
         .with_bundle(PongBundle)?
         .with_bundle(AudioBundle::default())?
-        .with(
+        .with_system_desc(
             DjSystemDesc::new(|music: &mut Music| music.music.next()),
             "dj_system",
             &[],

@@ -108,7 +108,7 @@ impl<'a, 'b> SystemDesc<'a, 'b, AudioSystem> for AudioSystemDesc {
 
 // in `main.rs`:
 // let game_data = GameDataBuilder::default()
-//     .with(AudioSystemDesc::default(), "", &[]);
+//     .with_system_desc(AudioSystemDesc::default(), "", &[]);
 ```
 
 ## Accessing the context of the game

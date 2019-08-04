@@ -137,7 +137,7 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = app_root.join("examples/sprite_animation/config/display.ron");
 
     let game_data = GameDataBuilder::default()
-        .with(
+        .with_system_desc(
             PrefabLoaderSystemDesc::<MyPrefabData>::default(),
             "scene_loader",
             &[],

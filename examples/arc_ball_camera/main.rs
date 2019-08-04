@@ -118,7 +118,7 @@ fn main() -> Result<(), Error> {
     let key_bindings_path = app_root.join("examples/arc_ball_camera/config/input.ron");
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
+        .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(RenderToWindow::from_config_path(display_config_path))
@@ -133,7 +133,7 @@ fn main() -> Result<(), Error> {
             InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
         .with_bundle(ArcBallControlBundle::<StringBindings>::new())?
-        .with(
+        .with_system_desc(
             CameraDistanceSystemDesc::default(),
             "camera_distance_system",
             &["input_system"],

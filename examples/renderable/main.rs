@@ -200,7 +200,7 @@ fn main() -> Result<(), Error> {
         .join("display.ron");
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
+        .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with(ExampleSystem::default(), "example_system", &[])
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()

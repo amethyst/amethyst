@@ -39,7 +39,7 @@ fn main() -> Result<(), Error> {
     let display_config_path = app_root.join("examples/prefab/config/display.ron");
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
+        .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(

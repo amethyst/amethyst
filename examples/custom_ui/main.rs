@@ -98,7 +98,7 @@ fn main() -> amethyst::Result<()> {
     let assets_dir = app_root.join("examples/assets");
 
     let game_data = GameDataBuilder::default()
-        .with(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
+        .with_system_desc(PrefabLoaderSystemDesc::<MyPrefabData>::default(), "", &[])
         .with_bundle(TransformBundle::new())?
         .with_bundle(UiBundle::<StringBindings, CustomUi>::new())?
         .with_bundle(
