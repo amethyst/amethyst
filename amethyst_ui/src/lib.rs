@@ -33,7 +33,7 @@ pub use self::{
         NoCustomUi, ToNativeWidget, UiCreator, UiFormat, UiImagePrefab, UiLoader, UiLoaderSystem,
         UiLoaderSystemDesc, UiPrefab, UiTextBuilder, UiTransformBuilder, UiWidget,
     },
-    resize::{ResizeSystem, UiResize},
+    resize::{ResizeSystem, ResizeSystemDesc, UiResize},
     selection::{
         Selectable, Selected, SelectionKeyboardSystem, SelectionKeyboardSystemDesc,
         SelectionMouseSystem, SelectionMouseSystemDesc,
@@ -43,8 +43,8 @@ pub use self::{
         UiPlaySoundAction, UiSoundRetrigger, UiSoundRetriggerSystem, UiSoundRetriggerSystemDesc,
         UiSoundSystem, UiSoundSystemDesc,
     },
-    text::{LineMode, TextEditing, TextEditingMouseSystem, UiText},
-    text_editing::TextEditingInputSystem,
+    text::{LineMode, TextEditing, TextEditingMouseSystem, TextEditingMouseSystemDesc, UiText},
+    text_editing::{TextEditingInputSystem, TextEditingInputSystemDesc},
     transform::{UiFinder, UiTransform},
     widgets::{Widget, WidgetId, Widgets},
 };

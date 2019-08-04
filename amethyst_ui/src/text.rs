@@ -7,11 +7,12 @@ use winit::{ElementState, Event, MouseButton, WindowEvent};
 
 use amethyst_core::{
     ecs::prelude::{
-        Component, DenseVecStorage, Join, Read, ReadExpect, ReadStorage, System, World,
+        Component, DenseVecStorage, Join, Read, ReadExpect, ReadStorage, System, SystemData, World,
         WriteStorage,
     },
     shrev::{EventChannel, ReaderId},
     timing::Time,
+    SystemDesc,
 };
 use amethyst_window::ScreenDimensions;
 
@@ -134,6 +135,20 @@ impl Component for TextEditing {
     type Storage = DenseVecStorage<Self>;
 }
 
+/// Builds a `TextEditingMouseSystem`.
+#[derive(Default, Debug)]
+pub struct TextEditingMouseSystemDesc;
+
+impl<'a, 'b> SystemDesc<'a, 'b, TextEditingMouseSystem> for TextEditingMouseSystemDesc {
+    fn build(self, world: &mut World) -> TextEditingMouseSystem {
+        <TextEditingMouseSystem as System<'_>>::SystemData::setup(world);
+
+        let reader = world.fetch_mut::<EventChannel<Event>>().register_reader();
+
+        TextEditingMouseSystem::new(reader)
+    }
+}
+
 /// This system processes the underlying UI data as needed.
 #[derive(Debug)]
 pub struct TextEditingMouseSystem {
@@ -147,10 +162,7 @@ pub struct TextEditingMouseSystem {
 
 impl TextEditingMouseSystem {
     /// Creates a new instance of this system
-    pub fn new(mut world: &mut World) -> Self {
-        use amethyst_core::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(&mut world);
-        let reader = world.fetch_mut::<EventChannel<Event>>().register_reader();
+    pub fn new(reader: ReaderId<Event>) -> Self {
         Self {
             reader,
             left_mouse_button_pressed: false,

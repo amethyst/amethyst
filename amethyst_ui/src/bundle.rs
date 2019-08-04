@@ -1,11 +1,11 @@
 //! ECS rendering bundle
 
 use crate::{
-    BlinkSystem, CacheSelectionOrderSystem, FontAsset, NoCustomUi, ResizeSystem,
-    SelectionKeyboardSystemDesc, SelectionMouseSystemDesc, TextEditingInputSystem,
-    TextEditingMouseSystem, ToNativeWidget, UiButtonActionRetriggerSystemDesc, UiButtonSystemDesc,
-    UiLoaderSystemDesc, UiMouseSystem, UiSoundRetriggerSystemDesc, UiSoundSystemDesc,
-    UiTransformSystemDesc, WidgetId,
+    BlinkSystem, CacheSelectionOrderSystem, FontAsset, NoCustomUi, ResizeSystemDesc,
+    SelectionKeyboardSystemDesc, SelectionMouseSystemDesc, TextEditingInputSystemDesc,
+    TextEditingMouseSystemDesc, ToNativeWidget, UiButtonActionRetriggerSystemDesc,
+    UiButtonSystemDesc, UiLoaderSystemDesc, UiMouseSystem, UiSoundRetriggerSystemDesc,
+    UiSoundSystemDesc, UiTransformSystemDesc, WidgetId,
 };
 use amethyst_assets::Processor;
 use amethyst_core::{
@@ -74,17 +74,21 @@ where
             &["ui_mouse_selection"],
         );
         builder.add(
-            TextEditingMouseSystem::new(world),
+            TextEditingMouseSystemDesc::default().build(world),
             "ui_text_editing_mouse_system",
             &["ui_mouse_selection", "ui_keyboard_selection"],
         );
         builder.add(
-            TextEditingInputSystem::new(world),
+            TextEditingInputSystemDesc::default().build(world),
             "ui_text_editing_input_system",
             // Hard requirement. The system assumes the text to edit is selected.
             &["ui_mouse_selection", "ui_keyboard_selection"],
         );
-        builder.add(ResizeSystem::new(world), "ui_resize_system", &[]);
+        builder.add(
+            ResizeSystemDesc::default().build(world),
+            "ui_resize_system",
+            &[],
+        );
         builder.add(
             UiMouseSystem::<T>::new(),
             "ui_mouse_system",

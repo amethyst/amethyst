@@ -1,9 +1,10 @@
 use amethyst_core::{
     ecs::prelude::{
-        BitSet, Component, ComponentEvent, FlaggedStorage, Join, ReadExpect, System, World,
-        WriteStorage,
+        BitSet, Component, ComponentEvent, FlaggedStorage, Join, ReadExpect, System, SystemData,
+        World, WriteStorage,
     },
     shrev::ReaderId,
+    SystemDesc,
 };
 use amethyst_window::ScreenDimensions;
 
@@ -39,6 +40,21 @@ impl Component for UiResize {
     type Storage = FlaggedStorage<Self>;
 }
 
+/// Builds a `ResizeSystem`.
+#[derive(Default, Debug)]
+pub struct ResizeSystemDesc;
+
+impl<'a, 'b> SystemDesc<'a, 'b, ResizeSystem> for ResizeSystemDesc {
+    fn build(self, world: &mut World) -> ResizeSystem {
+        <ResizeSystem as System<'_>>::SystemData::setup(world);
+
+        let mut resize = WriteStorage::<UiResize>::fetch(&world);
+        let resize_events_id = resize.register_reader();
+
+        ResizeSystem::new(resize_events_id)
+    }
+}
+
 /// This system rearranges UI elements whenever the screen is resized using their `UiResize`
 /// component.
 #[derive(Debug)]
@@ -50,12 +66,9 @@ pub struct ResizeSystem {
 
 impl ResizeSystem {
     /// Creates a new ResizeSystem that listens with the given reader Id.
-    pub fn new(mut world: &mut World) -> ResizeSystem {
-        use amethyst_core::ecs::prelude::SystemData;
-        <Self as System<'_>>::SystemData::setup(&mut world);
+    pub fn new(resize_events_id: ReaderId<ComponentEvent>) -> ResizeSystem {
         let screen_size = (0.0, 0.0);
-        let mut resize = WriteStorage::<UiResize>::fetch(&world);
-        let resize_events_id = resize.register_reader();
+
         ResizeSystem {
             screen_size,
             resize_events_id,
