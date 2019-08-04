@@ -13,6 +13,7 @@ use palette::Srgb;
 use rendy::graph::render::RenderGroupDesc;
 
 #[cfg(feature = "window")]
+#[doc(no_inline)]
 pub use window::RenderToWindow;
 
 #[cfg(feature = "window")]

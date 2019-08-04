@@ -1,5 +1,6 @@
 use amethyst_error::Error;
 
+#[doc(no_inline)]
 pub use self::dir::Directory;
 
 #[cfg(feature = "profiler")]

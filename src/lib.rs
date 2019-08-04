@@ -85,10 +85,12 @@ pub use amethyst_utils as utils;
 pub use amethyst_window as window;
 pub use winit;
 
+#[doc(no_inline)]
 pub use crate::core::{ecs, shred, shrev};
 #[doc(hidden)]
 pub use crate::derive::*;
 
+#[doc(no_inline)]
 pub use self::{
     app::{Application, ApplicationBuilder, CoreApplication},
     callback_queue::{Callback, CallbackQueue},

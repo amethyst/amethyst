@@ -1,5 +1,6 @@
 //! Contains common types that can be glob-imported (`*`) for convenience.
 
+#[doc(no_inline)]
 pub use crate::{
     app::{Application, ApplicationBuilder, CoreApplication},
     callback_queue::{Callback, CallbackQueue},

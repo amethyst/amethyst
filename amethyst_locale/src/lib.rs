@@ -13,6 +13,7 @@
 use amethyst_assets::{Asset, Format, Handle};
 use amethyst_core::ecs::prelude::VecStorage;
 use amethyst_error::Error;
+#[doc(no_inline)]
 pub use fluent::*;
 use serde::{Deserialize, Serialize};
 use unic_langid::langid;

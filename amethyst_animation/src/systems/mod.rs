@@ -2,6 +2,7 @@ use amethyst_assets::Processor;
 
 use crate::resources::{Animation, Sampler};
 
+#[doc(no_inline)]
 pub use self::{control::AnimationControlSystem, sampling::SamplerInterpolationSystem};
 
 mod control;

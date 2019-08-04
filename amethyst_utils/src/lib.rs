@@ -9,6 +9,7 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
+#[doc(no_inline)]
 pub use self::app_root_dir::*;
 
 pub mod app_root_dir;

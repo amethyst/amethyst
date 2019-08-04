@@ -27,6 +27,7 @@ use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, ops::Range};
 
+#[doc(no_inline)]
 pub use crate::format::GltfSceneFormat;
 
 mod error;

@@ -8,6 +8,7 @@ mod pbr;
 mod shaded;
 mod skybox;
 
+#[doc(no_inline)]
 pub use self::{base_3d::*, debug_lines::*, flat::*, flat2d::*, pbr::*, shaded::*, skybox::*};
 
 use rendy::{hal::pso::ShaderStageFlags, shader::SpirvShader};

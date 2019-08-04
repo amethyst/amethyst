@@ -9,6 +9,7 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
+#[doc(no_inline)]
 pub use self::{
     blink::BlinkSystem,
     bundle::UiBundle,

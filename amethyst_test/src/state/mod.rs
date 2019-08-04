@@ -1,3 +1,4 @@
+#[doc(no_inline)]
 pub use self::{
     custom_dispatcher_state::{CustomDispatcherState, CustomDispatcherStateBuilder},
     function_state::FunctionState,

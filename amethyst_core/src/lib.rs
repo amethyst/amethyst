@@ -28,6 +28,7 @@ use rayon;
 
 use std::sync::Arc;
 
+#[doc(no_inline)]
 pub use crate::{
     bundle::SystemBundle,
     event::EventReader,
@@ -36,6 +37,7 @@ pub use crate::{
     transform::*,
 };
 
+#[doc(no_inline)]
 pub use self::{
     axis::{Axis2, Axis3},
     hidden::{Hidden, HiddenPropagate},

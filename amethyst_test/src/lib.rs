@@ -312,6 +312,7 @@
 //! # }
 //! ```
 
+#[doc(no_inline)]
 pub use crate::{
     amethyst_application::{AmethystApplication, HIDPI, SCREEN_HEIGHT, SCREEN_WIDTH},
     effect_return::EffectReturn,

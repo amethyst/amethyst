@@ -1,5 +1,6 @@
 //! `amethyst` audio ecs components
 
+#[doc(no_inline)]
 pub use self::{audio_emitter::AudioEmitter, audio_listener::AudioListener};
 
 use amethyst_assets::PrefabData;

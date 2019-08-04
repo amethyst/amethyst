@@ -18,6 +18,7 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
+#[doc(no_inline)]
 pub use backtrace::Backtrace;
 use std::{
     borrow::Cow,

@@ -54,8 +54,10 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
+#[doc(no_inline)]
 pub use minterpolate::{InterpolationFunction, InterpolationPrimitive};
 
+#[doc(no_inline)]
 pub use self::{
     bundle::{AnimationBundle, SamplingBundle, VertexSkinningBundle},
     material::{MaterialChannel, MaterialPrimitive},

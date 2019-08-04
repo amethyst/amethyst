@@ -1,5 +1,6 @@
 use crate::ecs::prelude::{Component, DenseVecStorage, Entity, FlaggedStorage};
 
+#[doc(no_inline)]
 pub use specs_hierarchy::HierarchyEvent;
 use specs_hierarchy::{Hierarchy, Parent as HParent};
 

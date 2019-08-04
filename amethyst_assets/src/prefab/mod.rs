@@ -12,6 +12,7 @@ use crate::{
     Asset, AssetStorage, Format, Handle, Loader, Progress, ProgressCounter, SerializableFormat,
 };
 
+#[doc(no_inline)]
 pub use self::system::PrefabLoaderSystem;
 
 mod impls;

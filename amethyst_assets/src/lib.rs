@@ -10,7 +10,9 @@
 #![warn(missing_docs, rust_2018_idioms, rust_2018_compatibility)]
 
 #[cfg(feature = "json")]
+#[doc(no_inline)]
 pub use crate::formats::JsonFormat;
+#[doc(no_inline)]
 pub use crate::{
     asset::{Asset, Format, FormatValue, ProcessableAsset, SerializableFormat},
     cache::Cache,
@@ -25,6 +27,7 @@ pub use crate::{
     storage::{AssetStorage, Handle, ProcessingState, Processor, WeakHandle},
 };
 
+#[doc(no_inline)]
 pub use rayon::ThreadPool;
 
 mod asset;

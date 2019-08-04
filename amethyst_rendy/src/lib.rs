@@ -54,9 +54,9 @@ extern crate shred_derive;
 #[macro_use]
 mod macros;
 
-#[doc(inline)]
+#[doc(no_inline)]
 pub use palette;
-#[doc(inline)]
+#[doc(no_inline)]
 pub use rendy;
 
 pub mod pass;
@@ -89,7 +89,7 @@ pub mod util;
 #[cfg(feature = "test-support")]
 mod render_test_bundle;
 
-#[doc(inline)]
+#[doc(no_inline)]
 pub use crate::{
     bundle::{RenderPlugin, RenderingBundle},
     camera::{ActiveCamera, Camera},
@@ -107,8 +107,10 @@ pub use crate::{
 };
 
 #[cfg(feature = "test-support")]
+#[doc(no_inline)]
 pub use render_test_bundle::{RenderEmptyBundle, RenderTestBundle};
 
+#[doc(no_inline)]
 pub use rendy::{
     factory::Factory,
     graph::{
@@ -121,5 +123,6 @@ pub use rendy::{
 pub mod loaders {
     //! Loaders re-exported from `rendy` for loading the most common image types as textures.
 
+    #[doc(no_inline)]
     pub use rendy::texture::palette::{load_from_linear_rgba, load_from_srgb, load_from_srgba};
 }

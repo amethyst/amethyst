@@ -1,3 +1,4 @@
+#[doc(no_inline)]
 pub use log::LevelFilter;
 
 use log::debug;

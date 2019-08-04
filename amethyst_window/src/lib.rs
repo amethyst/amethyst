@@ -17,7 +17,9 @@ mod resources;
 mod system;
 
 #[cfg(feature = "test-support")]
+#[doc(no_inline)]
 pub use crate::bundle::{SCREEN_HEIGHT, SCREEN_WIDTH};
+#[doc(no_inline)]
 pub use crate::{
     bundle::WindowBundle,
     config::DisplayConfig,
@@ -25,4 +27,5 @@ pub use crate::{
     resources::ScreenDimensions,
     system::{EventsLoopSystem, WindowSystem},
 };
+#[doc(no_inline)]
 pub use winit::{Icon, Window};

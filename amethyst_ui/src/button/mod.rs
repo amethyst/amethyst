@@ -1,3 +1,4 @@
+#[doc(no_inline)]
 pub use self::{
     actions::{UiButtonAction, UiButtonActionType},
     builder::{UiButtonBuilder, UiButtonBuilderResources},

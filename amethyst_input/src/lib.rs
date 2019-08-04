@@ -10,7 +10,9 @@
 #![allow(clippy::new_without_default)]
 
 #[cfg(feature = "sdl_controller")]
+#[doc(no_inline)]
 pub use self::sdl_events_system::SdlEventsSystem;
+#[doc(no_inline)]
 pub use self::{
     axis::Axis,
     bindings::{BindingError, BindingTypes, Bindings, StringBindings},
@@ -26,6 +28,7 @@ pub use self::{
         is_key_up, is_mouse_button_down,
     },
 };
+#[doc(no_inline)]
 pub use winit::{ElementState, VirtualKeyCode};
 
 use std::iter::Iterator;

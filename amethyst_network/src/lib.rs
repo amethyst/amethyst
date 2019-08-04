@@ -9,6 +9,7 @@
 #![warn(clippy::all)]
 #![allow(clippy::new_without_default)]
 
+#[doc(no_inline)]
 pub use crate::{
     bundle::NetworkBundle,
     connection::{ConnectionState, NetConnection, NetIdentity},
