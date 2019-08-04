@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Major breaking changes
 
-* Systems are registered with the `GameData` though a `SystemDesc` intermediate builder. ([#1780])
+* Systems needing initialization with world resources must go through a `SystemDesc` intermediate builder. ([#1780])
 
 ### Added
 
