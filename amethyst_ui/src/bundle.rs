@@ -2,9 +2,10 @@
 
 use crate::{
     BlinkSystem, CacheSelectionOrderSystem, FontAsset, NoCustomUi, ResizeSystem,
-    SelectionKeyboardSystem, SelectionMouseSystem, TextEditingInputSystem, TextEditingMouseSystem,
-    ToNativeWidget, UiButtonActionRetriggerSystemDesc, UiButtonSystemDesc, UiLoaderSystemDesc,
-    UiMouseSystem, UiSoundRetriggerSystemDesc, UiSoundSystemDesc, UiTransformSystemDesc, WidgetId,
+    SelectionKeyboardSystemDesc, SelectionMouseSystemDesc, TextEditingInputSystem,
+    TextEditingMouseSystem, ToNativeWidget, UiButtonActionRetriggerSystemDesc, UiButtonSystemDesc,
+    UiLoaderSystemDesc, UiMouseSystem, UiSoundRetriggerSystemDesc, UiSoundSystemDesc,
+    UiTransformSystemDesc, WidgetId,
 };
 use amethyst_assets::Processor;
 use amethyst_core::{
@@ -62,12 +63,12 @@ where
             &[],
         );
         builder.add(
-            SelectionMouseSystem::<G, T>::new(world),
+            SelectionMouseSystemDesc::<G, T>::default().build(world),
             "ui_mouse_selection",
             &[],
         );
         builder.add(
-            SelectionKeyboardSystem::<G>::new(world),
+            SelectionKeyboardSystemDesc::<G>::default().build(world),
             "ui_keyboard_selection",
             // Because when you press tab, you want to override the previously selected elements.
             &["ui_mouse_selection"],

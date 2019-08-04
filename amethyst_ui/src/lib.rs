@@ -34,7 +34,10 @@ pub use self::{
         UiLoaderSystemDesc, UiPrefab, UiTextBuilder, UiTransformBuilder, UiWidget,
     },
     resize::{ResizeSystem, UiResize},
-    selection::{Selectable, Selected, SelectionKeyboardSystem, SelectionMouseSystem},
+    selection::{
+        Selectable, Selected, SelectionKeyboardSystem, SelectionKeyboardSystemDesc,
+        SelectionMouseSystem, SelectionMouseSystemDesc,
+    },
     selection_order_cache::{CacheSelectionOrderSystem, CachedSelectionOrder},
     sound::{
         UiPlaySoundAction, UiSoundRetrigger, UiSoundRetriggerSystem, UiSoundRetriggerSystemDesc,
