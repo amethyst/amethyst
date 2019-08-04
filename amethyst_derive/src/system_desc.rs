@@ -1,13 +1,13 @@
 //! PrefabData Implementation
 
 use heck::SnakeCase;
-use proc_macro2::{Literal, TokenStream};
-use proc_macro_roids::DeriveInputStructExt;
+use proc_macro2::{Literal, Span, TokenStream};
+use proc_macro_roids::{DeriveInputStructExt, FieldExt};
 use quote::quote;
 use syn::{
-    parse_quote, punctuated::Pair, Attribute, DeriveInput, Expr, Field, Fields, FieldsNamed,
-    FieldsUnnamed, GenericParam, Ident, ImplGenerics, LifetimeDef, Lit, Meta, MetaList, NestedMeta,
-    PathSegment, Type, TypeGenerics, TypePath, WhereClause,
+    parse_quote, Attribute, DeriveInput, Expr, Field, Fields, FieldsNamed, FieldsUnnamed,
+    GenericParam, Ident, ImplGenerics, LifetimeDef, Lit, Meta, MetaList, NestedMeta, TypeGenerics,
+    WhereClause,
 };
 
 pub fn impl_system_desc(ast: &DeriveInput) -> TokenStream {
@@ -22,7 +22,7 @@ pub fn impl_system_desc(ast: &DeriveInput) -> TokenStream {
         (None, false)
     } else {
         let system_desc_fields = system_desc_fields(&ast);
-        let is_default = system_desc_fields.iter().all(is_phantom_data);
+        let is_default = system_desc_fields.iter().all(FieldExt::is_phantom_data);
 
         (Some(system_desc_fields), is_default)
     };
@@ -130,7 +130,7 @@ fn system_desc_fields(ast: &DeriveInput) -> Fields {
     let fields_to_copy = ast
         .fields()
         .iter()
-        .filter(|field| !contains_skip_marker(field))
+        .filter(|field| !field.contains_tag("system_desc", "skip"))
         .collect::<Vec<&Field>>();
 
     if fields_to_copy.is_empty() {
@@ -200,10 +200,11 @@ fn impl_constructor_body(context: &Context<'_>) -> TokenStream {
                 .unnamed
                 .iter()
                 .map(|field| {
-                    if is_phantom_data(field) {
+                    if field.is_phantom_data() {
                         quote!(std::marker::PhantomData::default())
                     } else {
-                        let type_name_snake = field_type_name(field).to_string().to_snake_case();
+                        let type_name_snake = field.type_name().to_string().to_snake_case();
+                        let type_name_snake = Ident::new(&type_name_snake, Span::call_site());
                         quote!(#type_name_snake)
                     }
                 })
@@ -223,7 +224,7 @@ fn impl_constructor_body(context: &Context<'_>) -> TokenStream {
                         .as_ref()
                         .expect("Expected named field to have an ident.");
 
-                    if is_phantom_data(field) {
+                    if field.is_phantom_data() {
                         quote!(#field_name: std::marker::PhantomData::default())
                     } else {
                         quote!(#field_name)
@@ -255,9 +256,10 @@ fn impl_constructor_parameters(context: &Context<'_>) -> TokenStream {
             let constructor_parameters = fields_unnamed
                 .unnamed
                 .iter()
-                .filter(|field| !is_phantom_data(field))
+                .filter(|field| !field.is_phantom_data())
                 .map(|field| {
-                    let type_name_snake = field_type_name(field).to_string().to_snake_case();
+                    let type_name_snake = field.type_name().to_string().to_snake_case();
+                    let type_name_snake = Ident::new(&type_name_snake, Span::call_site());
                     let field_type = &field.ty;
                     quote!(#type_name_snake: #field_type)
                 })
@@ -271,7 +273,7 @@ fn impl_constructor_parameters(context: &Context<'_>) -> TokenStream {
             let constructor_parameters = fields_named
                 .named
                 .iter()
-                .filter(|field| !is_phantom_data(field))
+                .filter(|field| !field.is_phantom_data())
                 .map(|field| {
                     let field_name = field
                         .ident
@@ -307,7 +309,7 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
                 .iter()
                 .enumerate()
                 // Only pass through non-`PhantomData` fields.
-                .filter(|(_, field)| !is_phantom_data(field))
+                .filter(|(_, field)| !field.is_phantom_data())
                 .map(|(index, _)| {
                     let index = Literal::usize_unsuffixed(index);
                     quote!(self.#index)
@@ -323,7 +325,7 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
                 .named
                 .iter()
                 // Only pass through non-`PhantomData` fields.
-                .filter(|field| !is_phantom_data(field))
+                .filter(|field| !field.is_phantom_data())
                 .map(|field| {
                     let field_name = field
                         .ident
@@ -341,65 +343,6 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
             }
         }
     }
-}
-
-/// Returns whether a field is a `PhantomData`.
-fn is_phantom_data(field: &Field) -> bool {
-    if let Type::Path(TypePath { path, .. }) = &field.ty {
-        if let Some(Pair::End(PathSegment { ident, .. })) = path.segments.last() {
-            ident == "PhantomData"
-        } else {
-            false
-        }
-    } else {
-        false
-    }
-}
-
-/// Returns the simple type name of a field.
-///
-/// For example, the `PhantomData` in `std::marker::PhantomData<T>`.
-fn field_type_name(field: &Field) -> &Ident {
-    if let Type::Path(TypePath { path, .. }) = &field.ty {
-        if let Some(Pair::End(PathSegment { ident, .. })) = path.segments.last() {
-            return ident;
-        }
-    }
-    panic!(
-        "Expected {}field type to be a `Path` with a segment.",
-        field
-            .ident
-            .as_ref()
-            .map(|ident| format!("`{:?}` ", ident))
-            .unwrap_or_else(|| String::from(""))
-    );
-}
-
-/// Returns whether a field has the `#[system_desc(skip)]` attribute marker.
-fn contains_skip_marker(field: &Field) -> bool {
-    field
-        .attrs
-        .iter()
-        .map(Attribute::parse_meta)
-        .filter_map(Result::ok)
-        .filter(|meta| meta.name() == "system_desc")
-        .any(|meta| {
-            if let Meta::List(meta_list) = meta {
-                meta_list
-                    .nested
-                    .iter()
-                    .filter_map(|nested_meta| {
-                        if let NestedMeta::Meta(meta) = nested_meta {
-                            Some(meta)
-                        } else {
-                            None
-                        }
-                    })
-                    .any(|meta| meta.name() == "skip")
-            } else {
-                false
-            }
-        })
 }
 
 /// Extracts the name from the `#[system_desc(name(..))]` attribute.
