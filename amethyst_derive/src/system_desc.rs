@@ -317,7 +317,7 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
                 .collect::<Vec<TokenStream>>();
 
             quote! {
-                #system_name(#(#field_initializers,)*)
+                #system_name::new(#(#field_initializers,)*)
             }
         }
         Fields::Named(fields_named) => {
@@ -332,14 +332,12 @@ fn call_system_constructor(context: &Context<'_>) -> TokenStream {
                         .as_ref()
                         .expect("Expected named field to have an ident.");
 
-                    quote!(#field_name: self.#field_name)
+                    quote!(self.#field_name)
                 })
                 .collect::<Vec<TokenStream>>();
 
             quote! {
-                #system_name {
-                    #(#field_initializers,)*
-                }
+                #system_name::new(#(#field_initializers,)*)
             }
         }
     }

@@ -10,8 +10,9 @@ use amethyst_core::{
         Component, DenseVecStorage, Entities, Join, Read, ReadStorage, System, SystemData, World,
         Write, WriteExpect, WriteStorage,
     },
-    Hidden, HiddenPropagate,
+    Hidden, HiddenPropagate, SystemDesc,
 };
+use amethyst_derive::SystemDesc;
 use amethyst_rendy::{
     rendy::{
         command::QueueId,
@@ -86,17 +87,22 @@ impl LineBreaker for CustomLineBreaker {
 
 /// Manages the text editing cursor create, deletion and position.
 #[allow(missing_debug_implementations)]
+#[derive(SystemDesc)]
+#[system_desc(name(UiGlyphsSystemDesc))]
+#[system_desc(insert("UiGlyphsResource { glyph_tex: None }"))]
 pub struct UiGlyphsSystem<B: Backend> {
+    #[system_desc(skip)]
     glyph_brush: GlyphBrush<'static, (u32, UiArgs)>,
+    #[system_desc(skip)]
     fonts_map: HashMap<u32, FontState>,
     marker: PhantomData<B>,
 }
 
 impl<B: Backend> UiGlyphsSystem<B> {
     /// Create new UI glyphs system
-    pub fn new(mut world: &mut World) -> Self {
-        <Self as System<'_>>::SystemData::setup(&mut world);
-        world.insert(UiGlyphsResource { glyph_tex: None });
+    ///
+    /// This is not public as users should use the `UiGlyphsSystemDesc` system descriptor instead.
+    pub(crate) fn new() -> Self {
         Self {
             glyph_brush: GlyphBrushBuilder::using_fonts(vec![])
                 .initial_cache_size((512, 512))
