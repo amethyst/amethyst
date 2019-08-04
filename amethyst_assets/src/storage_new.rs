@@ -26,13 +26,13 @@ impl<A> AssetStorage<A> {
         Default::default()
     }
 
-    pub(crate) fn update_asset(&mut self, handle: &LoadHandle, asset: A, version: u32) {
-        if let Some(data) = self.uncommitted.remove(handle) {
+    pub(crate) fn update_asset(&mut self, handle: LoadHandle, asset: A, version: u32) {
+        if let Some(data) = self.uncommitted.remove(&handle) {
             // uncommitted data already exists for the handle, drop it
             self.to_drop.push(data.asset);
         }
         self.uncommitted
-            .insert(*handle, AssetState { version, asset });
+            .insert(handle, AssetState { version, asset });
     }
 
     pub(crate) fn remove_asset(&mut self, handle: LoadHandle) {
@@ -44,17 +44,17 @@ impl<A> AssetStorage<A> {
         }
     }
 
-    pub(crate) fn commit_asset(&mut self, handle: &LoadHandle, version: u32) {
-        if let Some(data) = self.uncommitted.remove(handle) {
+    pub(crate) fn commit_asset(&mut self, handle: LoadHandle, version: u32) {
+        if let Some(data) = self.uncommitted.remove(&handle) {
             if data.version != version {
                 panic!("attempted to commit asset version which mismatches with existing uncommitted version")
             }
-            if let Some(existing) = self.assets.remove(handle) {
+            if let Some(existing) = self.assets.remove(&handle) {
                 // data already exists for the handle, drop it
                 self.to_drop.push(existing.asset);
             }
             self.assets.insert(
-                *handle,
+                handle,
                 AssetState {
                     version,
                     asset: data.asset,
@@ -75,13 +75,13 @@ impl<A> AssetStorage<A> {
     ///
     /// * `T`: Asset handle type.
     pub fn get<T: AssetHandle>(&self, handle: &T) -> Option<&A> {
-        self.assets.get(handle.load_handle()).map(|a| &a.asset)
+        self.assets.get(&handle.load_handle()).map(|a| &a.asset)
     }
 
     /// Get an asset mutably from a given asset handle.
     pub fn get_mut<T: AssetHandle>(&mut self, handle: &T) -> Option<&mut A> {
         self.assets
-            .get_mut(handle.load_handle())
+            .get_mut(&handle.load_handle())
             .map(|a| &mut a.asset)
     }
 
@@ -95,7 +95,7 @@ impl<A> AssetStorage<A> {
     ///
     /// * `T`: Asset handle type.
     pub fn get_version<T: AssetHandle>(&self, handle: &T) -> Option<u32> {
-        self.assets.get(handle.load_handle()).map(|a| a.version)
+        self.assets.get(&handle.load_handle()).map(|a| a.version)
     }
 
     /// Returns the loaded asset and its version, or `None` if has not completed loading.
@@ -109,7 +109,7 @@ impl<A> AssetStorage<A> {
     /// * `T`: Asset handle type.
     pub fn get_asset_with_version<T: AssetHandle>(&self, handle: &T) -> Option<(&A, u32)> {
         self.assets
-            .get(handle.load_handle())
+            .get(&handle.load_handle())
             .map(|a| (&a.asset, a.version))
     }
 

@@ -185,7 +185,7 @@ impl<T> ProcessingQueue<T> {
                                 continue;
                             }
                         };
-                        storage.update_asset(&handle, asset, version);
+                        storage.update_asset(handle, asset, version);
                     }
                 };
             }

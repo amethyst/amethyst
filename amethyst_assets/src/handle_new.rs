@@ -113,11 +113,11 @@ impl DummySerdeContext {
 }
 
 impl LoaderInfoProvider for DummySerdeContext {
-    fn get_load(&self, id: AssetUuid) -> Option<LoadHandle> {
+    fn get_load_handle(&self, id: AssetUuid) -> Option<LoadHandle> {
         self.uuid_to_load.get(&id).map(|l| *l)
     }
-    fn get_asset_id(&self, load: &LoadHandle) -> Option<AssetUuid> {
-        self.load_to_uuid.get(load).map(|l| *l)
+    fn get_asset_id(&self, load: LoadHandle) -> Option<AssetUuid> {
+        self.load_to_uuid.get(&load).map(|l| *l)
     }
     fn add_ref(&self, id: AssetUuid) -> LoadHandle {
         *self.uuid_to_load.get_or_insert_with(&id, || {
@@ -187,8 +187,8 @@ impl<T: ?Sized> Drop for Handle<T> {
 }
 
 impl<T> AssetHandle for Handle<T> {
-    fn load_handle(&self) -> &LoadHandle {
-        &self.id
+    fn load_handle(&self) -> LoadHandle {
+        self.id
     }
 }
 
@@ -199,7 +199,7 @@ where
     SerdeContext::with_active(|loader, _| {
         let loader = loader.expect("expected loader when serializing handle");
         use ser::SerializeSeq;
-        let uuid: AssetUuid = loader.get_asset_id(&load)
+        let uuid: AssetUuid = loader.get_asset_id(load)
             .unwrap_or(Default::default());
         let mut seq = serializer.serialize_seq(Some(uuid.len()))?;
         for element in &uuid {
@@ -344,8 +344,8 @@ impl Drop for GenericHandle {
 }
 
 impl AssetHandle for GenericHandle {
-    fn load_handle(&self) -> &LoadHandle {
-        &self.id
+    fn load_handle(&self) -> LoadHandle {
+        self.id
     }
 }
 
@@ -375,8 +375,8 @@ impl WeakHandle {
 }
 
 impl AssetHandle for WeakHandle {
-    fn load_handle(&self) -> &LoadHandle {
-        &self.id
+    fn load_handle(&self) -> LoadHandle {
+        self.id
     }
 }
 
@@ -476,9 +476,9 @@ pub trait AssetHandle {
     /// Be aware that if there are no longer any strong handles to the asset, then the underlying
     /// asset may be freed at any time.
     fn downgrade(&self) -> WeakHandle {
-        WeakHandle::new(*self.load_handle())
+        WeakHandle::new(self.load_handle())
     }
 
     /// Returns the `LoadHandle` of this asset handle.
-    fn load_handle(&self) -> &LoadHandle;
+    fn load_handle(&self) -> LoadHandle;
 }

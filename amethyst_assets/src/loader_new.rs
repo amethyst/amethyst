@@ -82,7 +82,7 @@ pub trait Loader: Send + Sync {
     /// # Parameters
     ///
     /// * `handle`: `LoadHandle` of the asset.
-    fn get_load_status_handle(&self, handle: &LoadHandle) -> LoadStatus;
+    fn get_load_status_handle(&self, handle: LoadHandle) -> LoadStatus;
 
     /// Returns an immutable reference to the asset if it is committed.
     ///
@@ -191,7 +191,7 @@ impl<T: AtelierLoader + Send + Sync> Loader for LoaderWithStorage<T> {
     fn get_load(&self, id: AssetUuid) -> Option<WeakHandle> {
         self.loader.get_load(id).map(|h| WeakHandle::new(h))
     }
-    fn get_load_status_handle(&self, handle: &LoadHandle) -> LoadStatus {
+    fn get_load_status_handle(&self, handle: LoadHandle) -> LoadStatus {
         self.loader.get_load_status(handle)
     }
     fn init_world(&mut self, resources: &mut Resources) {
@@ -209,7 +209,7 @@ impl<T: AtelierLoader + Send + Sync> Loader for LoaderWithStorage<T> {
         loop {
             match self.ref_receiver.try_recv() {
                 None => break,
-                Some(RefOp::Decrease(ref handle)) => self.loader.remove_ref(handle),
+                Some(RefOp::Decrease(handle)) => self.loader.remove_ref(handle),
                 Some(RefOp::Increase(uuid)) => {
                     self.loader.add_ref(uuid);
                 }
@@ -236,7 +236,7 @@ pub trait AssetTypeStorage {
     /// * `version`: Version of the asset -- this will be a new version for each hot reload.
     fn update_asset(
         &self,
-        handle: &LoadHandle,
+        handle: LoadHandle,
         data: &[u8],
         load_op: AssetLoadOp,
         version: u32,
@@ -248,7 +248,7 @@ pub trait AssetTypeStorage {
     ///
     /// * `handle`: Load handle of the asset.
     /// * `version`: Version of the asset -- this will be a new version for each hot reload.
-    fn commit_asset_version(&mut self, handle: &LoadHandle, version: u32);
+    fn commit_asset_version(&mut self, handle: LoadHandle, version: u32);
 
     /// Frees an asset.
     ///
@@ -265,16 +265,16 @@ where
 {
     fn update_asset(
         &self,
-        handle: &LoadHandle,
+        handle: LoadHandle,
         data: &[u8],
         load_op: AssetLoadOp,
         version: u32,
     ) -> Result<(), Box<dyn Error>> {
         let asset = bincode::deserialize::<Intermediate>(data.as_ref())?;
-        self.0.enqueue(*handle, asset, load_op, version);
+        self.0.enqueue(handle, asset, load_op, version);
         Ok(())
     }
-    fn commit_asset_version(&mut self, handle: &LoadHandle, version: u32) {
+    fn commit_asset_version(&mut self, handle: LoadHandle, version: u32) {
         self.1.commit_asset(handle, version);
     }
     fn free(&mut self, handle: LoadHandle) {
@@ -347,7 +347,7 @@ impl<'a> atelier_loader::AssetStorage for WorldStorages<'a> {
         loader_info: &dyn LoaderInfoProvider,
         asset_type: &AssetTypeId,
         data: &[u8],
-        load_handle: &LoadHandle,
+        load_handle: LoadHandle,
         load_op: AssetLoadOp,
         version: u32,
     ) -> Result<(), Box<dyn Error>> {
@@ -374,7 +374,7 @@ impl<'a> atelier_loader::AssetStorage for WorldStorages<'a> {
     fn commit_asset_version(
         &self,
         asset_type: &AssetTypeId,
-        load_handle: &LoadHandle,
+        load_handle: LoadHandle,
         version: u32,
     ) {
         (self
