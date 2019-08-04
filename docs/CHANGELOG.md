@@ -12,11 +12,17 @@ The format is based on [Keep a Changelog][kc], and this project adheres to
 
 ### Major breaking changes
 
+* Systems are registered with the `GameData` though a `SystemDesc` intermediate builder. ([#1780])
+
 ### Added
+
+* `SystemDesc` proc macro derive to simplify defining `SystemDesc`s. ([#1780])
 
 ### Changed
 
 ### Fixed
+
+[#1780]: https://github.com/amethyst/amethyst/pull/1780
 
 ## [0.12.0] - 2019-07-30
 
