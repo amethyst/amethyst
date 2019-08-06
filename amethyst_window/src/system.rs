@@ -87,20 +87,11 @@ impl<'a> System<'a> for WindowSystem {
 ///
 /// This system must be active for any `GameState` to receive
 /// any `StateEvent::Window` event into it's `handle_event` method.
-#[derive(Debug)]
+#[derive(Debug, new)]
 pub struct EventsLoopSystem {
     events_loop: EventsLoop,
+    #[new(value = "Vec::with_capacity(128)")]
     events: Vec<Event>,
-}
-
-impl EventsLoopSystem {
-    /// Creates a new `EventsLoopSystem` using the provided `EventsLoop`
-    pub fn new(events_loop: EventsLoop) -> Self {
-        Self {
-            events_loop,
-            events: Vec::with_capacity(128),
-        }
-    }
 }
 
 impl<'a> RunNow<'a> for EventsLoopSystem {

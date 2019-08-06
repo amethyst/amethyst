@@ -22,6 +22,8 @@ log = "0.4.6"
 serde = { version = "1", features = ["derive"] }
 thread_profiler = { version = "0.3", optional = true }
 winit = { version = "0.19", features = ["serde", "icon_loading"] }
+derive-new = "0.5.7"
+getset = "0.0.7"
 
 [features]
 profiler = [ "thread_profiler/thread_profiler" ]
